@@ -2536,7 +2536,7 @@ Element::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
   return GetOrCreateListenerManager();
 }
 
-Element::nsAttrInfo
+nsAttrInfo
 Element::GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const
 {
   NS_ASSERTION(nullptr != aName, "must have attribute name");
@@ -2544,14 +2544,22 @@ Element::GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const
                "must have a real namespace ID!");
 
   int32_t index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
-  if (index >= 0) {
-    return nsAttrInfo(mAttrsAndChildren.AttrNameAt(index),
-                      mAttrsAndChildren.AttrAt(index));
+  if (index < 0) {
+    return nsAttrInfo(nullptr, nullptr);
   }
 
-  return nsAttrInfo(nullptr, nullptr);
+  return mAttrsAndChildren.AttrInfoAt(index);
 }
 
+nsAttrInfo
+Element::GetAttrInfoAt(uint32_t aIndex) const
+{
+  if (aIndex >= mAttrsAndChildren.AttrCount()) {
+    return nsAttrInfo(nullptr, nullptr);
+  }
+
+  return mAttrsAndChildren.AttrInfoAt(aIndex);
+}
 
 bool
 Element::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,

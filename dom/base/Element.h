@@ -509,6 +509,7 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) override;
   virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override;
+  virtual nsAttrInfo GetAttrInfoAt(uint32_t aIndex) const override;
   virtual uint32_t GetAttrCount() const override;
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
@@ -937,20 +938,6 @@ public:
   nsIFrame* GetPrimaryFrame(mozFlushType aType);
   // Work around silly C++ name hiding stuff
   nsIFrame* GetPrimaryFrame() const { return nsIContent::GetPrimaryFrame(); }
-
-  /**
-   * Struct that stores info on an attribute.  The name and value must
-   * either both be null or both be non-null.
-   */
-  struct nsAttrInfo {
-    nsAttrInfo(const nsAttrName* aName, const nsAttrValue* aValue) :
-      mName(aName), mValue(aValue) {}
-    nsAttrInfo(const nsAttrInfo& aOther) :
-      mName(aOther.mName), mValue(aOther.mValue) {}
-
-    const nsAttrName* mName;
-    const nsAttrValue* mValue;
-  };
 
   const nsAttrValue* GetParsedAttr(nsIAtom* aAttr) const
   {

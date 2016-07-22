@@ -48,6 +48,7 @@ EXPORTS += [
     'mozFlushType.h',
     'nsAtomListUtils.h',
     'nsAttrAndChildArray.h',
+    'nsAttrInfo.h',
     'nsAttrName.h',
     'nsAttrValue.h',
     'nsAttrValueInlines.h',
