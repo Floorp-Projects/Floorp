@@ -1173,7 +1173,7 @@ class MockExtension {
   }
 
   shutdown() {
-    this.addon.uninstall(true);
+    this.addon.uninstall();
     return this.cleanupGeneratedFile();
   }
 
