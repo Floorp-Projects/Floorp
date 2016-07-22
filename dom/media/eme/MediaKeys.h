@@ -50,10 +50,7 @@ public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MediaKeys)
 
   MediaKeys(nsPIDOMWindowInner* aParentWindow,
-            const nsAString& aKeySystem,
-            const nsAString& aCDMVersion,
-            bool aDistinctiveIdentifierRequired,
-            bool aPersistentStateRequired);
+            const nsAString& aKeySystem, const nsAString& aCDMVersion);
 
   already_AddRefed<DetailedPromise> Init(ErrorResult& aRv);
 
@@ -150,8 +147,6 @@ private:
   RefPtr<nsIPrincipal> mPrincipal;
   RefPtr<nsIPrincipal> mTopLevelPrincipal;
 
-  const bool mDistinctiveIdentifierRequired;
-  const bool mPersistentStateRequired;
 };
 
 } // namespace dom
