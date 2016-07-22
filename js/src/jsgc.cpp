@@ -3553,13 +3553,14 @@ GCRuntime::sweepZones(FreeOp* fop, bool destroyingRuntime)
                 // We are about to delete the Zone; this will leave the Zone*
                 // in the arena header dangling if there are any arenas
                 // remaining at this point.
-                zone->arenas.checkEmptyArenaLists();
+                mozilla::DebugOnly<bool> arenasEmpty = zone->arenas.checkEmptyArenaLists();
 
                 if (callback)
                     callback(zone);
 
                 zone->sweepCompartments(fop, false, destroyingRuntime);
                 MOZ_ASSERT(zone->compartments.empty());
+                MOZ_ASSERT_IF(arenasEmpty, zone->typeDescrObjects.empty());
                 fop->delete_(zone);
                 stats.sweptZone();
                 continue;
@@ -3587,9 +3588,10 @@ FOR_EACH_ALLOCKIND(MAKE_CASE)
 }
 #endif // DEBUG
 
-void
+bool
 ArenaLists::checkEmptyArenaList(AllocKind kind)
 {
+    bool empty = true;
 #ifdef DEBUG
     if (!arenaLists[kind].isEmpty()) {
         for (Arena* current = arenaLists[kind].head(); current; current = current->next) {
@@ -3598,10 +3600,12 @@ ArenaLists::checkEmptyArenaList(AllocKind kind)
                 MOZ_ASSERT(t->asTenured().isMarked(), "unmarked cells should have been finalized");
                 fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
                         t, AllocKindToAscii(kind));
+                empty = false;
             }
         }
     }
 #endif // DEBUG
+    return empty;
 }
 
 void
