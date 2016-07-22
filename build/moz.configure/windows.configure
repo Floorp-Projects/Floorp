@@ -13,7 +13,12 @@ def is_windows(target):
     return target.kernel == 'WINNT'
 
 
-@depends_when('--with-windows-version', when=is_windows)
+@template
+def depends_win(*args):
+    return depends_when(*args, when=is_windows)
+
+
+@depends_win('--with-windows-version')
 @imports(_from='__builtin__', _import='ValueError')
 def valid_windows_version(value):
     if not value:
@@ -27,6 +32,90 @@ def valid_windows_version(value):
 
     die('Invalid value for --with-windows-version (%s)', value[0])
 
+
+option(env='WINDOWSSDKDIR', nargs=1,
+       help='Directory containing the Windows SDK')
+
+@depends_win('WINDOWSSDKDIR', host)
+def windows_sdk_dir(value, host):
+    if value:
+        return value
+    if host.kernel != 'WINNT':
+        return ()
+
+    return tuple(x[1] for x in get_registry_values(
+        r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots'
+        r'\KitsRoot*'))
+
+@imports(_from='mozbuild.shellutil', _import='quote')
+def valid_windows_sdk_dir_result(value):
+    if value:
+        return '0x%04x in %s' % (value.version, quote(value.path))
+
+@depends_win(c_compiler, windows_sdk_dir, valid_windows_version,
+             'WINDOWSSDKDIR')
+@checking('for Windows SDK', valid_windows_sdk_dir_result)
+@imports(_from='__builtin__', _import='sorted')
+@imports(_from='textwrap', _import='dedent')
+def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
+                          windows_sdk_dir_env):
+    if windows_sdk_dir_env:
+        windows_sdk_dir_env = windows_sdk_dir_env[0]
+    sdks = {}
+    for d in windows_sdk_dir:
+        um_dir = os.path.join(d, 'include', 'um')
+        shared_dir = os.path.join(d, 'include', 'shared')
+        if os.path.isdir(um_dir) and os.path.isdir(shared_dir):
+            check = dedent('''\
+            #include <winsdkver.h>
+            WINVER_MAXVER
+            ''')
+            result = try_preprocess(compiler.wrapper + [compiler.compiler] +
+                                    compiler.flags +
+                                    ['-I', um_dir, '-I', shared_dir], 'C',
+                                    check)
+            if result:
+                maxver = result.splitlines()[-1]
+                try:
+                    maxver = int(maxver, 0)
+                except:
+                    pass
+                else:
+                    sdks[d] = maxver
+                    continue
+        if d == windows_sdk_dir_env:
+            raise FatalCheckError(
+                'Error while checking the version of the SDK in '
+                'WINDOWSSDKDIR (%s). Please verify it contains a valid and '
+                'complete SDK installation.' % windows_sdk_dir_env)
+
+    valid_sdks = sorted(sdks, key=lambda x: sdks[x], reverse=True)
+    if valid_sdks:
+        biggest_version = sdks[valid_sdks[0]]
+    if not valid_sdks or biggest_version < target_version:
+        if windows_sdk_dir_env:
+            raise FatalCheckError(
+                'You are targeting Windows version 0x%04x, but your SDK only '
+                'supports up to version 0x%04x. Install and use an updated SDK, '
+                'or target a lower version using --with-windows-version. '
+                'Alternatively, try running the Windows SDK Configuration Tool '
+                'and selecting a newer SDK. See '
+                'https://developer.mozilla.org/En/Windows_SDK_versions for '
+                'details on fixing this.' % (target_version, biggest_version))
+
+        raise FatalCheckError(
+            'Cannot find a Windows SDK for version >= 0x%04x.' % target_version)
+
+    return namespace(
+        path=valid_sdks[0],
+        version=biggest_version,
+    )
+
+
 add_old_configure_assignment(
-    'MOZ_WINSDK_TARGETVER',
-    depends(valid_windows_version)(lambda x: '%04x0000' % x if x else None))
+    'WINDOWSSDKDIR',
+    delayed_getattr(valid_windows_sdk_dir, 'path'))
+add_old_configure_assignment(
+    'MOZ_WINSDK_MAXVER',
+    depends(valid_windows_sdk_dir)(
+        lambda x: '0x%04X0000' % x.version if x else None))
