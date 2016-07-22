@@ -656,7 +656,10 @@
   }
 }
 
-/* Filter buttons */
+/*
+ * Filter buttons
+ * @TODO : Fix when https://bugzilla.mozilla.org/show_bug.cgi?id=1255116 lands
+ */
 .menu-filter-button {
   -moz-appearance: none;
   background: rgba(128,128,128,0.1);
