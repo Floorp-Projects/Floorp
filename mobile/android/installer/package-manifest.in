@@ -449,6 +449,10 @@
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 
+; [Extensions]
+@BINPATH@/components/extensions-toolkit.manifest
+@BINPATH@/components/extensions-mobile.manifest
+
 ; Features
 @BINPATH@/features/*
 
