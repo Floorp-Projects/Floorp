@@ -25,6 +25,7 @@
 #include "mozilla/AutoRestore.h"        // for AutoRestore
 #include "mozilla/ClearOnShutdown.h"    // for ClearOnShutdown
 #include "mozilla/DebugOnly.h"          // for DebugOnly
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/gfx/2D.h"          // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -1941,19 +1942,6 @@ CompositorBridgeParent::DeallocateLayerTreeId(uint64_t aId)
   CompositorLoop()->PostTask(NewRunnableFunction(&EraseLayerState, aId));
 }
 
-/* static */ void
-CompositorBridgeParent::SwapLayerTreeObservers(uint64_t aLayerId, uint64_t aOtherLayerId)
-{
-  EnsureLayerTreeMapReady();
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  NS_ASSERTION(sIndirectLayerTrees.find(aLayerId) != sIndirectLayerTrees.end(),
-    "SwapLayerTrees missing layer 1");
-  NS_ASSERTION(sIndirectLayerTrees.find(aOtherLayerId) != sIndirectLayerTrees.end(),
-    "SwapLayerTrees missing layer 2");
-  std::swap(sIndirectLayerTrees[aLayerId].mLayerTreeReadyObserver,
-    sIndirectLayerTrees[aOtherLayerId].mLayerTreeReadyObserver);
-}
-
 static void
 UpdateControllerForLayersId(uint64_t aLayersId,
                             GeckoContentController* aController)
@@ -2028,22 +2016,6 @@ CompositorBridgeParent::PostInsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
     CompositorLoop()->PostTask(
       NewRunnableFunction(InsertVsyncProfilerMarker, aVsyncTimestamp));
   }
-}
-
-/* static */ void
-CompositorBridgeParent::RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver)
-{
-  EnsureLayerTreeMapReady();
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  sIndirectLayerTrees[aLayersId].mLayerTreeReadyObserver = aObserver;
-}
-
-/* static */ void
-CompositorBridgeParent::RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver)
-{
-  EnsureLayerTreeMapReady();
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  sIndirectLayerTrees[aLayersId].mLayerTreeClearedObserver = aObserver;
 }
 
 widget::PCompositorWidgetParent*
@@ -2698,10 +2670,8 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
     mNotifyAfterRemotePaint = false;
   }
 
-  if (state->mLayerTreeReadyObserver) {
-    RefPtr<CompositorUpdateObserver> observer = state->mLayerTreeReadyObserver;
-    state->mLayerTreeReadyObserver = nullptr;
-    observer->ObserveUpdate(id, true);
+  if (aLayerTree->ShouldParentObserveEpoch()) {
+    dom::TabParent::ObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), true);
   }
 
   aLayerTree->SetPendingTransactionId(aTransactionId);
@@ -2930,15 +2900,7 @@ CrossProcessCompositorBridgeParent::NotifyClearCachedResources(LayerTransactionP
   uint64_t id = aLayerTree->GetId();
   MOZ_ASSERT(id != 0);
 
-  RefPtr<CompositorUpdateObserver> observer;
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    observer = sIndirectLayerTrees[id].mLayerTreeClearedObserver;
-    sIndirectLayerTrees[id].mLayerTreeClearedObserver = nullptr;
-  }
-  if (observer) {
-    observer->ObserveUpdate(id, false);
-  }
+  dom::TabParent::ObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), false);
 }
 
 bool

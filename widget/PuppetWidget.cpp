@@ -1105,6 +1105,14 @@ PuppetWidget::PaintTask::Run()
   return NS_OK;
 }
 
+void
+PuppetWidget::PaintNowIfNeeded()
+{
+  if (IsVisible() && mPaintTask.IsPending()) {
+    Paint();
+  }
+}
+
 NS_IMPL_ISUPPORTS(PuppetWidget::MemoryPressureObserver, nsIObserver)
 
 NS_IMETHODIMP

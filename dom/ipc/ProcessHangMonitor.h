@@ -22,6 +22,7 @@ namespace mozilla {
 
 namespace dom {
 class ContentParent;
+class TabParent;
 } // namespace dom
 
 class PProcessHangMonitorParent;
@@ -44,6 +45,10 @@ class ProcessHangMonitor final
   static void RemoveProcess(PProcessHangMonitorParent* aParent);
 
   static void ClearHang();
+
+  static void ForcePaint(PProcessHangMonitorParent* aParent,
+                         dom::TabParent* aTab,
+                         uint64_t aLayerObserverEpoch);
 
   enum SlowScriptAction {
     Continue,

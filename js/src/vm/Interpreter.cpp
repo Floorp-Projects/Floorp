@@ -362,6 +362,9 @@ js::RunScript(JSContext* cx, RunState& state)
 {
     JS_CHECK_RECURSION(cx, return false);
 
+    // Since any script can conceivably GC, make sure it's safe to do so.
+    JS::AutoAssertOnGC::VerifyIsSafeToGC(cx->runtime());
+
     if (!Debugger::checkNoExecute(cx, state.script()))
         return false;
 
