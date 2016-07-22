@@ -5897,13 +5897,95 @@ extern JS_PUBLIC_API(void)
 SetOutOfMemoryCallback(JSContext* cx, OutOfMemoryCallback cb, void* data);
 
 /**
+ * Capture all frames.
+ */
+struct AllFrames { };
+
+/**
+ * Capture at most this many frames.
+ */
+struct MaxFrames
+{
+    unsigned maxFrames;
+
+    explicit MaxFrames(unsigned max)
+      : maxFrames(max)
+    {
+        MOZ_ASSERT(max > 0);
+    }
+};
+
+/**
+ * Capture the first frame with the given principals. By default, do not
+ * consider self-hosted frames with the given principals as satisfying the stack
+ * capture.
+ */
+struct FirstSubsumedFrame
+{
+    JSContext* cx;
+    JSPrincipals* principals;
+    bool ignoreSelfHosted;
+
+    /**
+     * Use the cx's current compartment's principals.
+     */
+    explicit FirstSubsumedFrame(JSContext* cx, bool ignoreSelfHostedFrames = true);
+
+    explicit FirstSubsumedFrame(JSContext* ctx, JSPrincipals* p, bool ignoreSelfHostedFrames = true)
+      : cx(ctx)
+      , principals(p)
+      , ignoreSelfHosted(ignoreSelfHostedFrames)
+    {
+        JS_HoldPrincipals(principals);
+    }
+
+    // No copying because we want to avoid holding and dropping principals
+    // unnecessarily.
+    FirstSubsumedFrame(const FirstSubsumedFrame&) = delete;
+    FirstSubsumedFrame& operator=(const FirstSubsumedFrame&) = delete;
+
+    FirstSubsumedFrame(FirstSubsumedFrame&& rhs)
+      : principals(rhs.principals)
+      , ignoreSelfHosted(rhs.ignoreSelfHosted)
+    {
+        MOZ_ASSERT(this != &rhs, "self move disallowed");
+        rhs.principals = nullptr;
+    }
+
+    FirstSubsumedFrame& operator=(FirstSubsumedFrame&& rhs) {
+        new (this) FirstSubsumedFrame(mozilla::Move(rhs));
+        return *this;
+    }
+
+    ~FirstSubsumedFrame() {
+        if (principals)
+            JS_DropPrincipals(cx, principals);
+    }
+};
+
+using StackCapture = mozilla::Variant<AllFrames, MaxFrames, FirstSubsumedFrame>;
+
+/**
  * Capture the current call stack as a chain of SavedFrame JSObjects, and set
  * |stackp| to the SavedFrame for the youngest stack frame, or nullptr if there
- * are no JS frames on the stack. If |maxFrameCount| is non-zero, capture at
- * most the youngest |maxFrameCount| frames.
+ * are no JS frames on the stack.
+ *
+ * The |capture| parameter describes the portion of the JS stack to capture:
+ *
+ *   * |JS::AllFrames|: Capture all frames on the stack.
+ *
+ *   * |JS::MaxFrames|: Capture no more than |JS::MaxFrames::maxFrames| from the
+ *      stack.
+ *
+ *   * |JS::FirstSubsumedFrame|: Capture the first frame whose principals are
+ *     subsumed by |JS::FirstSubsumedFrame::principals|. By default, do not
+ *     consider self-hosted frames; this can be controlled via the
+ *     |JS::FirstSubsumedFrame::ignoreSelfHosted| flag. Do not capture any async
+ *     stack.
  */
 extern JS_PUBLIC_API(bool)
-CaptureCurrentStack(JSContext* cx, MutableHandleObject stackp, unsigned maxFrameCount = 0);
+CaptureCurrentStack(JSContext* cx, MutableHandleObject stackp,
+                    StackCapture&& capture = StackCapture(AllFrames()));
 
 /*
  * This is a utility function for preparing an async stack to be used
