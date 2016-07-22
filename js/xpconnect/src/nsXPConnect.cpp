@@ -31,8 +31,8 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
-#include "nsIPermissionManager.h"
 #include "nsContentUtils.h"
+
 #include "jsfriendapi.h"
 
 using namespace mozilla;
@@ -442,13 +442,7 @@ InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
     short status = aPrincipal->GetAppStatus();
 
     // Enable the ECMA-402 experimental formatToParts in certified apps.
-    uint32_t perm = nsIPermissionManager::DENY_ACTION;
-    nsCOMPtr<nsIPermissionManager> permissionManager = services::GetPermissionManager();
-    if (permissionManager) {
-        permissionManager->TestPermissionFromPrincipal(aPrincipal, "previously-certified-app", &perm);
-    }
-
-    if (perm == nsIPermissionManager::ALLOW_ACTION) {
+    if (status == nsIPrincipal::APP_STATUS_CERTIFIED) {
         aOptions.creationOptions()
                 .setExperimentalDateTimeFormatFormatToPartsEnabled(true);
     }
