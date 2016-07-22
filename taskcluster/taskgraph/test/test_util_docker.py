@@ -31,8 +31,8 @@ class TestDocker(unittest.TestCase):
             with open(os.path.join(tmpdir, 'docker', 'my-image', 'a-file'), "w") as f:
                 f.write("data\n")
             self.assertEqual(
-                docker.generate_context_hash('docker/my-image'),
-                '781143fcc6cc72c9024b058665265cb6bae3fb8031cad7227dd169ffbfced434'
+                docker.generate_context_hash(docker.GECKO, 'docker/my-image', 'my-image'),
+                '872d76a656f47ea17c043023ecc9ae6a222ba6d2a8df67b75498bba382e4fb07'
                 )
         finally:
             docker.GECKO = old_GECKO
