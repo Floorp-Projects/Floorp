@@ -253,9 +253,9 @@ void*
 wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
 {
     switch (imm) {
-      case SymbolicAddress::Runtime:
-        return cx->runtimeAddressForJit();
-      case SymbolicAddress::RuntimeInterruptUint32:
+      case SymbolicAddress::Context:
+        return cx->contextAddressForJit();
+      case SymbolicAddress::InterruptUint32:
         return cx->runtimeAddressOfInterruptUint32();
       case SymbolicAddress::ReportOverRecursed:
         return FuncCast(WasmReportOverRecursed, Args_General0);
