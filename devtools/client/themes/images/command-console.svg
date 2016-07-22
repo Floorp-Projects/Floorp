@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="whitesmoke">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="#0b0b0b">
   <path d="M6.8 9.7c0-.2 0-.3-.2-.4L4.9 7.6c-.3-.3-.7-.3-.9 0s-.3.6 0 .9l1.3 1.4L4 11.3c-.3.3-.3.6 0 .9s.6.3.9 0l1.8-1.8c.1-.2.2-.5.1-.7z"/>
   <path d="M14.2 2H1.8c-.4 0-.8.4-.8.9v11.2c0 .4.3.9.8.9h12.4c.4 0 .8-.4.8-.9V2.9c0-.7-.6-.9-.8-.9zM14 14H2V6h12v8zm0-9H2V3h12v2z"/>
 </svg>
