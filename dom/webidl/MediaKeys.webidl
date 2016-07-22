@@ -10,20 +10,14 @@
  * W3C liability, trademark and document use rules apply.
  */
 
-// Note: "persistent-usage-record" session type is unsupported yet, as
-// it's marked as "at risk" in the spec, and Chrome doesn't support it. 
-enum MediaKeySessionType {
-  "temporary",
-  "persistent-license",
-  // persistent-usage-record,
-};
+enum SessionType { "temporary", "persistent" };
 
 [Pref="media.eme.apiVisible"]
 interface MediaKeys {
   readonly attribute DOMString keySystem;
 
   [NewObject, Throws]
-  MediaKeySession createSession(optional MediaKeySessionType sessionType = "temporary");
+  MediaKeySession createSession(optional SessionType sessionType = "temporary");
 
   [NewObject]
   Promise<void> setServerCertificate((ArrayBufferView or ArrayBuffer) serverCertificate);
