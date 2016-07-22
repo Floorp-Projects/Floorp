@@ -2453,27 +2453,22 @@ GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, s
 //
 // The main dependencies are:
 //
-//   - Updating a shape makes use of its base shape
 //   - Updating a JSObject makes use of its shape
 //   - Updating a typed object makes use of its type descriptor object
 //
-// This means we require at least four phases for update:
+// This means we require at least three phases for update:
 //
-//  1) base shapes
-//  2) shapes
-//  3) typed object type descriptor objects
-//  4) all other objects
+//  1) shapes
+//  2) typed object type descriptor objects
+//  3) all other objects
 //
 // Since we want to minimize the number of phases, we put everything else into
-// the second phase and label it the 'misc' phase.
-
-static const AllocKinds UpdatePhaseBaseShapes {
-    AllocKind::BASE_SHAPE
-};
+// the first phase and label it the 'misc' phase.
 
 static const AllocKinds UpdatePhaseMisc {
     AllocKind::SCRIPT,
     AllocKind::LAZY_SCRIPT,
+    AllocKind::BASE_SHAPE,
     AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE,
     AllocKind::OBJECT_GROUP,
@@ -2504,8 +2499,6 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
     AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
 
     size_t bgTaskCount = CellUpdateBackgroundTaskCount();
-
-    updateCellPointers(trc, zone, UpdatePhaseBaseShapes, bgTaskCount);
 
     updateCellPointers(trc, zone, UpdatePhaseMisc, bgTaskCount);
 
