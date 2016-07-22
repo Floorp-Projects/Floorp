@@ -129,34 +129,33 @@ bool
 WebGLContext::ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
                                    uint32_t tailPixels, webgl::TexUnpackBlob* blob)
 {
+    auto skipPixels = CheckedUint32(blob->mSkipPixels);
+    skipPixels += CheckedUint32(blob->mSkipRows);
+
     const auto usedPixelsPerRow = CheckedUint32(blob->mSkipPixels) + blob->mWidth;
-    const auto usedRowsPerImage = CheckedUint32(blob->mSkipRows) + blob->mHeight;
-    const auto usedImages = CheckedUint32(blob->mSkipImages) + blob->mDepth;
-
-    if (!usedPixelsPerRow.isValid() ||
-        !usedRowsPerImage.isValid() ||
-        !usedImages.isValid())
-    {
-        ErrorOutOfMemory("%s: Invalid calculation for e.g. UNPACK_SKIP_PIXELS + width.",
-                         funcName);
-        return false;
-    }
-
-    //////
-
-    if (usedPixelsPerRow.value() > blob->mRowLength ||
-        usedRowsPerImage.value() > blob->mImageHeight)
-    {
-        ErrorInvalidOperation("%s: UNPACK_ROW_LENGTH or UNPACK_IMAGE_HEIGHT too small.",
+    if (!usedPixelsPerRow.isValid() || usedPixelsPerRow.value() > blob->mRowLength) {
+        ErrorInvalidOperation("%s: UNPACK_SKIP_PIXELS + height > UNPACK_ROW_LENGTH.",
                               funcName);
         return false;
     }
 
+    if (blob->mHeight > blob->mImageHeight) {
+        ErrorInvalidOperation("%s: height > UNPACK_IMAGE_HEIGHT.", funcName);
+        return false;
+    }
+
     //////
 
-    auto fullRowsNeeded = (usedImages - 1) * blob->mImageHeight;
-    fullRowsNeeded += usedRowsPerImage - 1;
+    // The spec doesn't bound SKIP_ROWS + height <= IMAGE_HEIGHT, unfortunately.
+    auto skipFullRows = CheckedUint32(blob->mSkipImages) * blob->mImageHeight;
+    skipFullRows += blob->mSkipRows;
 
+    MOZ_ASSERT(blob->mDepth >= 1);
+    MOZ_ASSERT(blob->mHeight >= 1);
+    auto usedFullRows = CheckedUint32(blob->mDepth - 1) * blob->mImageHeight;
+    usedFullRows += blob->mHeight - 1; // Full rows in the final image, excluding the tail.
+
+    const auto fullRowsNeeded = skipFullRows + usedFullRows;
     if (!fullRowsNeeded.isValid()) {
         ErrorOutOfMemory("%s: Invalid calculation for required row count.",
                          funcName);
