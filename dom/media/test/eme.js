@@ -1,10 +1,4 @@
-const CLEARKEY_KEYSYSTEM = "org.w3.clearkey";
-
-const gCencMediaKeySystemConfig = [{
-  initDataTypes: ['cenc'],
-  videoCapabilities: [{ contentType: 'video/mp4' }],
-  audioCapabilities: [{ contentType: 'audio/mp4' }],
-}];
+const KEYSYSTEM_TYPE = "org.w3.clearkey";
 
 function IsMacOSSnowLeopardOrEarlier() {
   var re = /Mac OS X (\d+)\.(\d+)/;
@@ -382,7 +376,7 @@ function SetupEME(test, token, params)
         options.audioCapabilities = [{contentType: streamType("audio")}];
       }
 
-      var p = navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, [options]);
+      var p = navigator.requestMediaKeySystemAccess(KEYSYSTEM_TYPE, [options]);
       var r = bail(token + " Failed to request key system access.");
       chain(p, r)
       .then(function(keySystemAccess) {
