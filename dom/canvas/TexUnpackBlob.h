@@ -86,12 +86,13 @@ public:
 class TexUnpackBytes final : public TexUnpackBlob
 {
 public:
-    const void* const mBytes;
+    const bool mIsClientData;
+    const void* const mPtr;
 
     TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target, uint32_t width,
-                   uint32_t height, uint32_t depth, const void* bytes);
+                   uint32_t height, uint32_t depth, bool isClientData, const void* ptr);
 
-    virtual bool HasData() const override { return bool(mBytes); }
+    virtual bool HasData() const override { return !mIsClientData || bool(mPtr); }
 
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                WebGLTexture* tex, TexImageTarget target, GLint level,
@@ -126,10 +127,10 @@ public:
                      bool isAlphaPremult);
 
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
-                                 WebGLTexture* tex, TexImageTarget target, GLint level,
-                                 const webgl::DriverUnpackInfo* dui, GLint xOffset,
-                                 GLint yOffset, GLint zOffset,
-                                 GLenum* const out_error) const override;
+                               WebGLTexture* tex, TexImageTarget target, GLint level,
+                               const webgl::DriverUnpackInfo* dui, GLint xOffset,
+                               GLint yOffset, GLint zOffset,
+                               GLenum* const out_error) const override;
 };
 
 } // namespace webgl

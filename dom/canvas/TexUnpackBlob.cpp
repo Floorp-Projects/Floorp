@@ -319,11 +319,12 @@ DoTexOrSubImage(bool isSubImage, gl::GLContext* gl, TexImageTarget target, GLint
 
 TexUnpackBytes::TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target,
                                uint32_t width, uint32_t height, uint32_t depth,
-                               const void* bytes)
+                               bool isClientData, const void* ptr)
     : TexUnpackBlob(webgl, target,
                     FallbackOnZero(webgl->mPixelStore_UnpackRowLength, width), width,
                     height, depth, false)
-    , mBytes(bytes)
+    , mIsClientData(isClientData)
+    , mPtr(ptr)
 { }
 
 bool
@@ -347,8 +348,9 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
 
     const void* uploadBytes;
     UniqueBuffer tempBuffer;
-    if (!ConvertIfNeeded(webgl, funcName, mBytes, rowStride.value(), bytesPerPixel,
-                         format, dui, &uploadBytes, &tempBuffer))
+    if (mIsClientData &&
+        !ConvertIfNeeded(webgl, funcName, mPtr, rowStride.value(), bytesPerPixel, format,
+                         dui, &uploadBytes, &tempBuffer))
     {
         return false;
     }
