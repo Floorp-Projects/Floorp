@@ -8972,11 +8972,11 @@ CodeGenerator::visitRest(LRest* lir)
 }
 
 bool
-CodeGenerator::generateWasm(uint32_t sigIndex, wasm::FuncOffsets* offsets)
+CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::FuncOffsets* offsets)
 {
     JitSpew(JitSpew_Codegen, "# Emitting asm.js code");
 
-    wasm::GenerateFunctionPrologue(masm, frameSize(), sigIndex, offsets);
+    wasm::GenerateFunctionPrologue(masm, frameSize(), sigId, offsets);
 
     // Overflow checks are omitted by CodeGenerator in some cases (leaf
     // functions with small framePushed). Perform overflow-checking after
