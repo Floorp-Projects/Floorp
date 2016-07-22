@@ -4,10 +4,12 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-var Bookmarks = PlacesUtils.bookmarks;
-
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "Bookmarks", () => {
+  Cu.import("resource://gre/modules/PlacesUtils.jsm");
+  return PlacesUtils.bookmarks;
+});
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");

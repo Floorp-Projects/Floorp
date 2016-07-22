@@ -574,6 +574,10 @@
 @RESPATH@/components/PACGenerator.js
 @RESPATH@/components/PACGenerator.manifest
 
+; [Extensions]
+@RESPATH@/components/extensions-toolkit.manifest
+@RESPATH@/browser/components/extensions-browser.manifest
+
 ; Modules
 @RESPATH@/browser/modules/*
 @RESPATH@/modules/*
