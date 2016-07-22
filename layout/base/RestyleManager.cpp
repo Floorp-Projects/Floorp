@@ -3804,7 +3804,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
 
   LOG_RESTYLE("RestyleSelf %s, aRestyleHint = %s",
               FrameTagToString(aSelf).get(),
-              RestyleManager::RestyleHintToString(aRestyleHint).get());
+              RestyleManagerBase::RestyleHintToString(aRestyleHint).get());
   LOG_RESTYLE_INDENT();
 
   // Initially assume that it is safe to stop restyling.
@@ -5060,40 +5060,6 @@ RestyleManager::StructsToLog()
   return structs;
 }
 #endif
-
-/* static */ nsCString
-RestyleManager::RestyleHintToString(nsRestyleHint aHint)
-{
-  nsCString result;
-  bool any = false;
-  const char* names[] = {
-    "Self", "SomeDescendants", "Subtree", "LaterSiblings", "CSSTransitions",
-    "CSSAnimations", "SVGAttrAnimations", "StyleAttribute",
-    "StyleAttribute_Animations", "Force", "ForceDescendants"
-  };
-  uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
-  uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
-  for (uint32_t i = 0; i < ArrayLength(names); i++) {
-    if (hint & (1 << i)) {
-      if (any) {
-        result.AppendLiteral(" | ");
-      }
-      result.AppendPrintf("eRestyle_%s", names[i]);
-      any = true;
-    }
-  }
-  if (rest) {
-    if (any) {
-      result.AppendLiteral(" | ");
-    }
-    result.AppendPrintf("0x%0x", rest);
-  } else {
-    if (!any) {
-      result.AppendLiteral("0");
-    }
-  }
-  return result;
-}
 
 #ifdef DEBUG
 /* static */ nsCString
