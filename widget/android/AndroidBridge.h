@@ -400,7 +400,6 @@ protected:
     int (* AndroidBitmap_unlockPixels)(JNIEnv *env, jobject bitmap);
 
     void* (*ANativeWindow_fromSurface)(JNIEnv *env, jobject surface);
-    void* (*ANativeWindow_fromSurfaceTexture)(JNIEnv *env, jobject surfaceTexture);
     void (*ANativeWindow_release)(void *window);
     int (*ANativeWindow_setBuffersGeometry)(void *window, int width, int height, int format);
 
