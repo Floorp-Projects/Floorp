@@ -481,6 +481,7 @@ private:
   already_AddRefed<CSSValue> DoGetScrollSnapPointsY();
   already_AddRefed<CSSValue> DoGetScrollSnapDestination();
   already_AddRefed<CSSValue> DoGetScrollSnapCoordinate();
+  already_AddRefed<CSSValue> DoGetShapeOutside();
 
   /* User interface properties */
   already_AddRefed<CSSValue> DoGetCursor();
@@ -645,9 +646,17 @@ private:
   already_AddRefed<CSSValue> CreatePrimitiveValueForStyleFilter(
     const nsStyleFilter& aStyleFilter);
 
-  already_AddRefed<CSSValue> CreatePrimitiveValueForClipPath(
+  template<typename ReferenceBox>
+  already_AddRefed<CSSValue>
+  GetShapeSource(const mozilla::StyleShapeSource<ReferenceBox>& aShapeSource,
+                 const KTableEntry aBoxKeywordTable[]);
+
+  template<typename ReferenceBox>
+  already_AddRefed<CSSValue>
+  CreatePrimitiveValueForShapeSource(
     const mozilla::StyleBasicShape* aStyleBasicShape,
-    mozilla::StyleClipPathGeometryBox aSizingBox);
+    ReferenceBox aReferenceBox,
+    const KTableEntry aBoxKeywordTable[]);
 
   // Helper function for computing basic shape styles.
   already_AddRefed<CSSValue> CreatePrimitiveValueForBasicShape(

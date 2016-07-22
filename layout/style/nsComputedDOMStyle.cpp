@@ -5994,10 +5994,12 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
   return functionValue.forget();
 }
 
+template<typename ReferenceBox>
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
+nsComputedDOMStyle::CreatePrimitiveValueForShapeSource(
   const StyleBasicShape* aStyleBasicShape,
-  StyleClipPathGeometryBox aSizingBox)
+  ReferenceBox aReferenceBox,
+  const KTableEntry aBoxKeywordTable[])
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   if (aStyleBasicShape) {
@@ -6005,36 +6007,35 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
       CreatePrimitiveValueForBasicShape(aStyleBasicShape));
   }
 
-  if (aSizingBox == StyleClipPathGeometryBox::NoBox) {
+  if (aReferenceBox == ReferenceBox::NoBox) {
     return valueList.forget();
   }
 
-  nsAutoString boxString;
-  AppendASCIItoUTF16(
-    nsCSSProps::ValueToKeyword(aSizingBox,
-                               nsCSSProps::kClipPathGeometryBoxKTable),
-                               boxString);
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetString(boxString);
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(aReferenceBox, aBoxKeywordTable));
   valueList->AppendCSSValue(val.forget());
 
   return valueList.forget();
 }
 
+template<typename ReferenceBox>
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetClipPath()
+nsComputedDOMStyle::GetShapeSource(
+  const StyleShapeSource<ReferenceBox>& aShapeSource,
+  const KTableEntry aBoxKeywordTable[])
 {
-  const nsStyleSVGReset* svg = StyleSVGReset();
-  switch (svg->mClipPath.GetType()) {
+  switch (aShapeSource.GetType()) {
     case StyleShapeSourceType::Shape:
-      return CreatePrimitiveValueForClipPath(svg->mClipPath.GetBasicShape(),
-                                             svg->mClipPath.GetReferenceBox());
+      return CreatePrimitiveValueForShapeSource(aShapeSource.GetBasicShape(),
+                                                aShapeSource.GetReferenceBox(),
+                                                aBoxKeywordTable);
     case StyleShapeSourceType::Box:
-      return CreatePrimitiveValueForClipPath(nullptr,
-                                             svg->mClipPath.GetReferenceBox());
+      return CreatePrimitiveValueForShapeSource(nullptr,
+                                                aShapeSource.GetReferenceBox(),
+                                                aBoxKeywordTable);
     case StyleShapeSourceType::URL: {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      SetValueToFragmentOrURL(svg->mClipPath.GetURL(), val);
+      SetValueToFragmentOrURL(aShapeSource.GetURL(), val);
       return val.forget();
     }
     case StyleShapeSourceType::None_: {
@@ -6046,6 +6047,20 @@ nsComputedDOMStyle::DoGetClipPath()
       NS_NOTREACHED("unexpected type");
   }
   return nullptr;
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetClipPath()
+{
+  return GetShapeSource(StyleSVGReset()->mClipPath,
+                        nsCSSProps::kClipPathGeometryBoxKTable);
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetShapeOutside()
+{
+  return GetShapeSource(StyleDisplay()->mShapeOutside,
+                        nsCSSProps::kShapeOutsideShapeBoxKTable);
 }
 
 void

@@ -119,6 +119,14 @@ SetImageRequest(function<void(imgRequestProxy*)> aCallback,
   }
 }
 
+template<typename ReferenceBox>
+static void
+SetStyleShapeSourceToCSSValue(StyleShapeSource<ReferenceBox>* aShapeSource,
+                              const nsCSSValue* aValue,
+                              nsStyleContext* aStyleContext,
+                              nsPresContext* aPresContext,
+                              RuleNodeCacheConditions& aConditions);
+
 /* Helper function to convert a CSS <position> specified value into its
  * computed-style form. */
 static void
@@ -6434,6 +6442,35 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
            parentDisplay->mOrient,
            NS_STYLE_ORIENT_INLINE);
 
+  // shape-outside: none | [ <basic-shape> || <shape-box> ] | <image>
+  const nsCSSValue* shapeOutsideValue = aRuleData->ValueForShapeOutside();
+  switch (shapeOutsideValue->GetUnit()) {
+    case eCSSUnit_Null:
+      break;
+    case eCSSUnit_None:
+    case eCSSUnit_Initial:
+    case eCSSUnit_Unset:
+      display->mShapeOutside = StyleShapeOutside();
+      break;
+    case eCSSUnit_Inherit:
+      conditions.SetUncacheable();
+      display->mShapeOutside = parentDisplay->mShapeOutside;
+      break;
+    case eCSSUnit_URL: {
+      display->mShapeOutside = StyleShapeOutside();
+      display->mShapeOutside.SetURL(shapeOutsideValue);
+      break;
+    }
+    case eCSSUnit_Array: {
+      display->mShapeOutside = StyleShapeOutside();
+      SetStyleShapeSourceToCSSValue(&display->mShapeOutside, shapeOutsideValue,
+                                    aContext, mPresContext, conditions);
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unrecognized shape-outside unit!");
+  }
+
   COMPUTE_END_RESET(Display, display)
 }
 
@@ -9730,44 +9767,42 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
   return basicShape.forget();
 }
 
+template<typename ReferenceBox>
 static void
-SetStyleClipPathToCSSValue(StyleClipPath* aStyleClipPath,
-                           const nsCSSValue* aValue,
-                           nsStyleContext* aStyleContext,
-                           nsPresContext* aPresContext,
-                           RuleNodeCacheConditions& aConditions)
+SetStyleShapeSourceToCSSValue(
+  StyleShapeSource<ReferenceBox>* aShapeSource,
+  const nsCSSValue* aValue,
+  nsStyleContext* aStyleContext,
+  nsPresContext* aPresContext,
+  RuleNodeCacheConditions& aConditions)
 {
   MOZ_ASSERT(aValue->GetUnit() == eCSSUnit_Array,
              "expected a basic shape or reference box");
 
   const nsCSSValue::Array* array = aValue->GetArrayValue();
   MOZ_ASSERT(array->Count() == 1 || array->Count() == 2,
-             "Expect one or both of a shape function and geometry-box");
+             "Expect one or both of a shape function and a reference box");
 
-  StyleClipPathGeometryBox sizingBox = StyleClipPathGeometryBox::NoBox;
+  ReferenceBox referenceBox = ReferenceBox::NoBox;
   RefPtr<StyleBasicShape> basicShape;
+
   for (size_t i = 0; i < array->Count(); ++i) {
-    if (array->Item(i).GetUnit() == eCSSUnit_Enumerated) {
-      int32_t type = array->Item(i).GetIntValue();
-      if (type > uint8_t(StyleClipPathGeometryBox::View) ||
-          type < uint8_t(StyleClipPathGeometryBox::NoBox)) {
-        NS_NOTREACHED("unexpected reference box");
-        return;
-      }
-      sizingBox = static_cast<StyleClipPathGeometryBox>(type);
-    } else if (array->Item(i).GetUnit() == eCSSUnit_Function) {
-      basicShape = GetStyleBasicShapeFromCSSValue(array->Item(i), aStyleContext,
+    const nsCSSValue& item = array->Item(i);
+    if (item.GetUnit() == eCSSUnit_Enumerated) {
+      referenceBox = static_cast<ReferenceBox>(item.GetIntValue());
+    } else if (item.GetUnit() == eCSSUnit_Function) {
+      basicShape = GetStyleBasicShapeFromCSSValue(item, aStyleContext,
                                                   aPresContext, aConditions);
     } else {
-      NS_NOTREACHED("unexpected value");
+      MOZ_ASSERT_UNREACHABLE("Unexpected unit!");
       return;
     }
   }
 
   if (basicShape) {
-    aStyleClipPath->SetBasicShape(basicShape, sizingBox);
+    aShapeSource->SetBasicShape(basicShape, referenceBox);
   } else {
-    aStyleClipPath->SetReferenceBox(sizingBox);
+    aShapeSource->SetReferenceBox(referenceBox);
   }
 }
 
@@ -9892,8 +9927,8 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
     }
     case eCSSUnit_Array: {
       svgReset->mClipPath = StyleClipPath();
-      SetStyleClipPathToCSSValue(&svgReset->mClipPath, clipPathValue, aContext,
-                                 mPresContext, conditions);
+      SetStyleShapeSourceToCSSValue(&svgReset->mClipPath, clipPathValue, aContext,
+                                    mPresContext, conditions);
       break;
     }
     default:
