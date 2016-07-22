@@ -257,6 +257,11 @@ if toolkit == 'windows':
         'windows/PCompositorWidget.ipdl',
         'windows/PlatformWidgetTypes.ipdlh',
     ]
+elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT'] and CONFIG['MOZ_X11']:
+    IPDL_SOURCES = [
+        'gtk/PCompositorWidget.ipdl',
+        'gtk/PlatformWidgetTypes.ipdlh',
+    ]
 else:
     IPDL_SOURCES = [
         'PCompositorWidget.ipdl',
