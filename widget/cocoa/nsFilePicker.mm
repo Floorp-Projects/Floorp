@@ -458,6 +458,21 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   // set up default file name
   NSString* defaultFilename = [NSString stringWithCharacters:(const unichar*)inDefaultName.get() length:inDefaultName.Length()];
 
+  // set up allowed types; this prevents the extension from being selected
+  // use the UTI for the file type to allow alternate extensions (e.g., jpg vs. jpeg)
+  NSString* extension = defaultFilename.pathExtension;
+  if (extension.length != 0) {
+    CFStringRef type = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (CFStringRef)extension, NULL);
+
+    if (type) {
+      thePanel.allowedFileTypes = @[(NSString*)type];
+      CFRelease(type);
+    } else {
+      // if there's no UTI for the file extension, use the extension itself.
+      thePanel.allowedFileTypes = @[extension];
+    }
+  }
+
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
   if (theDir) {
