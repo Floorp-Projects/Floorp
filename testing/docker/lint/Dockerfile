@@ -4,10 +4,9 @@ MAINTAINER    Andrew Halberstadt <ahalberstadt@mozilla.com>
 RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
 
-# Install tooltool directly from github.
 RUN mkdir /build
-ADD https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py /build/tooltool.py
-RUN chmod +rx /build/tooltool.py
+# %include testing/docker/decision/tooltool.py
+ADD topsrcdir/testing/docker/decision/tooltool.py /build/tooltool.py
 
 # Install lint packages
 ADD           system-setup.sh   /tmp/system-setup.sh
