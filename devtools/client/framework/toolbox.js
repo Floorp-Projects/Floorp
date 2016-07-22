@@ -1103,7 +1103,9 @@ Toolbox.prototype = {
     radio.setAttribute("ordinal", toolDefinition.ordinal);
     radio.setAttribute("tooltiptext", toolDefinition.tooltip);
     if (toolDefinition.invertIconForLightTheme) {
-      radio.setAttribute("icon-invertable", "true");
+      radio.setAttribute("icon-invertable", "light-theme");
+    } else if (toolDefinition.invertIconForDarkTheme) {
+      radio.setAttribute("icon-invertable", "dark-theme");
     }
 
     radio.addEventListener("command", () => {

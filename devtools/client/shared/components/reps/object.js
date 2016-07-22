@@ -36,18 +36,10 @@ define(function (require, exports, module) {
       return "Object";
     },
 
-    longPropIterator: function (object) {
+    safePropIterator: function (object, max) {
+      max = (typeof max === "undefined") ? 3 : max;
       try {
-        return this.propIterator(object, 100);
-      } catch (err) {
-        console.error(err);
-      }
-      return [];
-    },
-
-    shortPropIterator: function (object) {
-      try {
-        return this.propIterator(object, 3);
+        return this.propIterator(object, max);
       } catch (err) {
         console.error(err);
       }
@@ -141,7 +133,7 @@ define(function (require, exports, module) {
 
     render: function () {
       let object = this.props.object;
-      let props = this.shortPropIterator(object);
+      let props = this.safePropIterator(object);
       let objectLink = this.props.objectLink || span;
 
       if (this.props.mode == "tiny" || !props.length) {

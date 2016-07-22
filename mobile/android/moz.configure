@@ -39,7 +39,7 @@ project_flag('MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
 
 project_flag('MOZ_ANDROID_CUSTOM_TABS',
              help='Enable support for Android custom tabs',
-             default=False)
+             default=delayed_getattr(milestone, 'is_nightly'))
 
 # Enable the Switchboard A/B framework code.
 # Note: The framework is always included in the app. This flag controls

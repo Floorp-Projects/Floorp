@@ -99,8 +99,7 @@ function InspectorPanel(iframeWindow, toolbox) {
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
   this.onDetached = this.onDetached.bind(this);
-  this.onPaneToggleButtonActivated = this.onPaneToggleButtonActivated.bind(this);
-  this.onPaneToggleButtonPressed = this.onPaneToggleButtonPressed.bind(this);
+  this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
 
   let doc = this.panelDoc;
@@ -464,21 +463,21 @@ InspectorPanel.prototype = {
     }
 
     this.setupSidebarToggle();
-    this.setupSidebarWidth();
+    this.setupSidebarSize();
 
     this.sidebar.show(defaultTab);
   },
 
   /**
-   * Sidebar width is currently driven by vbox.inspector-sidebar-container
-   * element, which is located at the left side of the side bar splitter.
-   * It's width is changed by the splitter and stored into preferences.
+   * Sidebar size is currently driven by vbox.inspector-sidebar-container
+   * element, which is located at the left/bottom side of the side bar splitter.
+   * Its size is changed by the splitter and stored into preferences.
    * As soon as bug 1260552 is fixed and new HTML based splitter in place
-   * the width can be driven by div.inspector-sidebar element. This element
-   * represents the ToolSidebar and so, the entire logic related to width
+   * the size can be driven by div.inspector-sidebar element. This element
+   * represents the ToolSidebar and so, the entire logic related to size
    * persistence can be done inside the ToolSidebar.
    */
-  setupSidebarWidth: function () {
+  setupSidebarSize: function () {
     let sidePaneContainer = this.panelDoc.querySelector(
       "#inspector-sidebar-container");
 
@@ -486,21 +485,31 @@ InspectorPanel.prototype = {
       try {
         sidePaneContainer.width = Services.prefs.getIntPref(
           "devtools.toolsidebar-width.inspector");
+        sidePaneContainer.height = Services.prefs.getIntPref(
+          "devtools.toolsidebar-height.inspector");
       } catch (e) {
         // The default width is the min-width set in CSS
         // for #inspector-sidebar-container
+        // Set width and height of the sidebar container. Only one
+        // value is really useful at a time depending on the current
+        // toolbox orientation and having both doesn't break anything.
         sidePaneContainer.width = 450;
+        sidePaneContainer.height = 450;
       }
     });
 
     this.sidebar.on("hide", () => {
       Services.prefs.setIntPref("devtools.toolsidebar-width.inspector",
         sidePaneContainer.width);
+      Services.prefs.setIntPref("devtools.toolsidebar-height.inspector",
+        sidePaneContainer.height);
     });
 
     this.sidebar.on("destroy", () => {
       Services.prefs.setIntPref("devtools.toolsidebar-width.inspector",
         sidePaneContainer.width);
+      Services.prefs.setIntPref("devtools.toolsidebar-height.inspector",
+        sidePaneContainer.height);
     });
   },
 
@@ -512,8 +521,7 @@ InspectorPanel.prototype = {
       "devtools/client/shared/components/sidebar-toggle"));
 
     let sidebarToggle = SidebarToggle({
-      onClick: this.onPaneToggleButtonActivated,
-      onKeyDown: this.onPaneToggleButtonPressed,
+      onClick: this.onPaneToggleButtonClicked,
       collapsed: false,
       expandPaneTitle: strings.GetStringFromName("inspector.expandPane"),
       collapsePaneTitle: strings.GetStringFromName("inspector.collapsePane"),
@@ -1208,24 +1216,12 @@ InspectorPanel.prototype = {
   },
 
   /**
-  * When the pane toggle button is pressed with space and return keys toggle
-  * the pane, change the button state and tooltip.
-  */
-  onPaneToggleButtonPressed: function (event) {
-    if (ViewHelpers.isSpaceOrReturn(event)) {
-      this.onPaneToggleButtonActivated(event);
-    }
-  },
-
-  /**
-   * When the pane toggle button is clicked, toggle the pane, change the button
+   * When the pane toggle button is clicked or pressed, toggle the pane, change the button
    * state and tooltip.
    */
-  onPaneToggleButtonActivated: function (e) {
+  onPaneToggleButtonClicked: function (e) {
     let sidePaneContainer = this.panelDoc.querySelector("#inspector-sidebar-container");
     let isVisible = !this._sidebarToggle.state.collapsed;
-    let sidePane = this.panelDoc.querySelector(
-      "#inspector-sidebar .devtools-sidebar-tabs");
 
     // Make sure the sidebar has width and height attributes before collapsing
     // because ViewHelpers needs it.
@@ -1233,12 +1229,10 @@ InspectorPanel.prototype = {
       let rect = sidePaneContainer.getBoundingClientRect();
       if (!sidePaneContainer.hasAttribute("width")) {
         sidePaneContainer.setAttribute("width", rect.width);
-        sidePane.style.width = rect.width + "px";
       }
       // always refresh the height attribute before collapsing, it could have
       // been modified by resizing the container.
       sidePaneContainer.setAttribute("height", rect.height);
-      sidePane.style.height = rect.height + "px";
     }
 
     let onAnimationDone = () => {

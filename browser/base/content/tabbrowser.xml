@@ -1884,6 +1884,7 @@
             notificationbox.id = uniqueId;
             aTab.linkedPanel = uniqueId;
             aTab.linkedBrowser = browser;
+            aTab.hasBrowser = true;
             this._tabForBrowser.set(browser, aTab);
 
             // Inject the <browser> into the DOM if necessary.
@@ -4470,6 +4471,7 @@
           this.mCurrentTab.lastAccessed = Infinity;
           this.mCurrentTab.cachePosition = 0;
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
+          this.mCurrentTab.hasBrowser = true;
           this._tabForBrowser.set(this.mCurrentBrowser, this.mCurrentTab);
 
           // set up the shared autoscroll popup

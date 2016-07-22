@@ -67,6 +67,7 @@ function generateCssProperties() {
 
   return properties;
 }
+exports.generateCssProperties = generateCssProperties;
 
 /**
  * Test if a CSS is property is known using server-code.
