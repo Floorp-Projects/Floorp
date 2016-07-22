@@ -9,9 +9,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/SVGContextPaint.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
-#include "gfxSVGGlyphs.h"
 #include "gfxTextRun.h"
 #include "nsAutoPtr.h"
 #include "nsIContent.h" // for GetContent
@@ -151,10 +151,10 @@ public:
                                                 const gfxMatrix& aCTM) override;
 
   void SetFillOpacity(float aOpacity) { mFillOpacity = aOpacity; }
-  float GetFillOpacity() override { return mFillOpacity; }
+  float GetFillOpacity() const override { return mFillOpacity; }
 
   void SetStrokeOpacity(float aOpacity) { mStrokeOpacity = aOpacity; }
-  float GetStrokeOpacity() override { return mStrokeOpacity; }
+  float GetStrokeOpacity() const override { return mStrokeOpacity; }
 
   struct Paint {
     Paint() : mPaintType(eStyleSVGPaintType_None) {}
