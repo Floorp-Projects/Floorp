@@ -73,7 +73,7 @@ static DashState
 GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
                   nsSVGElement* aElement,
                   const nsStyleSVG* aStyleSVG,
-                  gfxTextContextPaint *aContextPaint)
+                  SVGContextPaint* aContextPaint)
 {
   size_t dashArrayLength;
   Float totalLengthOfDashes = 0.0, totalLengthOfGaps = 0.0;
@@ -170,7 +170,7 @@ void
 SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                   nsSVGElement* aElement,
                                   nsStyleContext* aStyleContext,
-                                  gfxTextContextPaint *aContextPaint,
+                                  SVGContextPaint* aContextPaint,
                                   StrokeOptionFlags aFlags)
 {
   RefPtr<nsStyleContext> styleContext;
@@ -245,7 +245,7 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
 Float
 SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
                                 nsStyleContext* aStyleContext,
-                                gfxTextContextPaint *aContextPaint)
+                                SVGContextPaint* aContextPaint)
 {
   RefPtr<nsStyleContext> styleContext;
   if (aStyleContext) {

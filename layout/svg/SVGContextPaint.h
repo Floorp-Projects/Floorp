@@ -16,6 +16,8 @@
 class gfxContext;
 class nsIDocument;
 
+namespace mozilla {
+
 /**
  * This class is used to pass information about a context element through to
  * SVG painting code in order to resolve the 'context-fill' and related
@@ -28,15 +30,15 @@ class nsIDocument;
  * in an SVG embedded by an <img> element to come from the embedding <img>
  * element.
  */
-class gfxTextContextPaint
+class SVGContextPaint
 {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
-  gfxTextContextPaint() {}
+  SVGContextPaint() {}
 
 public:
-  virtual ~gfxTextContextPaint() {}
+  virtual ~SVGContextPaint() {}
 
   virtual already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
                                                       float aOpacity,
@@ -90,7 +92,7 @@ private:
 class MOZ_RAII AutoSetRestoreSVGContextPaint
 {
 public:
-  AutoSetRestoreSVGContextPaint(gfxTextContextPaint* aContextPaint,
+  AutoSetRestoreSVGContextPaint(SVGContextPaint* aContextPaint,
                                 nsIDocument* aSVGDocument);
   ~AutoSetRestoreSVGContextPaint();
 private:
@@ -99,6 +101,8 @@ private:
   // aContextPaint:
   void* mOuterContextPaint;
 };
+
+} // namespace mozilla
 
 #endif // MOZILLA_SVGCONTEXTPAINT_H_
 

@@ -7,11 +7,11 @@
 #include "gfxContext.h"
 #include "nsIDocument.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 void
-gfxTextContextPaint::InitStrokeGeometry(gfxContext* aContext,
-                                        float devUnitsPerSVGUnit)
+SVGContextPaint::InitStrokeGeometry(gfxContext* aContext,
+                                    float devUnitsPerSVGUnit)
 {
   mStrokeWidth = aContext->CurrentLineWidth() / devUnitsPerSVGUnit;
   aContext->CurrentDash(mDashes, &mDashOffset);
@@ -22,7 +22,7 @@ gfxTextContextPaint::InitStrokeGeometry(gfxContext* aContext,
 }
 
 AutoSetRestoreSVGContextPaint::AutoSetRestoreSVGContextPaint(
-                                 gfxTextContextPaint* aContextPaint,
+                                 SVGContextPaint* aContextPaint,
                                  nsIDocument* aSVGDocument)
   : mSVGDocument(aSVGDocument)
   , mOuterContextPaint(aSVGDocument->GetProperty(nsGkAtoms::svgContextPaint))
@@ -55,3 +55,5 @@ AutoSetRestoreSVGContextPaint::~AutoSetRestoreSVGContextPaint()
     NS_WARN_IF_FALSE(NS_SUCCEEDED(res), "Failed to restore context paint");
   }
 }
+
+} // namespace mozilla
