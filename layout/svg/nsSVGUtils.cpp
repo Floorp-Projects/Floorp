@@ -1300,7 +1300,7 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
   return color;
 }
 
-/* static */ gfxTextContextPaint*
+/* static */ SVGContextPaint*
 nsSVGUtils::GetContextPaint(nsIContent* aContent)
 {
   nsIDocument* ownerDoc = aContent->OwnerDoc();
@@ -1309,7 +1309,7 @@ nsSVGUtils::GetContextPaint(nsIContent* aContent)
     return nullptr;
   }
 
-  return static_cast<gfxTextContextPaint*>(
+  return static_cast<SVGContextPaint*>(
            ownerDoc->GetProperty(nsGkAtoms::svgContextPaint));
 }
 
@@ -1328,7 +1328,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
                       const gfxMatrix& aContextMatrix,
                       nsIFrame* aFrame,
                       float& aOpacity,
-                      gfxTextContextPaint* aOuterContextPaint,
+                      SVGContextPaint* aOuterContextPaint,
                       SVGTextContextPaint::Paint& aTargetPaint,
                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                       nsSVGEffects::PaintingPropertyDescriptor aProperty)
@@ -1374,7 +1374,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
 nsSVGUtils::SetupContextPaint(const DrawTarget* aDrawTarget,
                               const gfxMatrix& aContextMatrix,
                               nsIFrame* aFrame,
-                              gfxTextContextPaint* aOuterContextPaint,
+                              SVGContextPaint* aOuterContextPaint,
                               SVGTextContextPaint* aThisContextPaint)
 {
   DrawMode toDraw = DrawMode(0);
@@ -1424,7 +1424,7 @@ nsSVGUtils::SetupContextPaint(const DrawTarget* aDrawTarget,
 nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
                                gfxContext* aContext,
                                GeneralPattern* aOutPattern,
-                               gfxTextContextPaint* aContextPaint)
+                               SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mFill.mType == eStyleSVGPaintType_None) {
@@ -1492,7 +1492,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
 nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
                                  gfxContext* aContext,
                                  GeneralPattern* aOutPattern,
-                                 gfxTextContextPaint* aContextPaint)
+                                 SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mStroke.mType == eStyleSVGPaintType_None) {
@@ -1559,7 +1559,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
 /* static */ float
 nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                        const float& aOpacity,
-                       gfxTextContextPaint *aContextPaint)
+                       SVGContextPaint *aContextPaint)
 {
   float opacity = 1.0f;
   switch (aOpacityType) {
@@ -1587,14 +1587,14 @@ nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
 }
 
 bool
-nsSVGUtils::HasStroke(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
+nsSVGUtils::HasStroke(nsIFrame* aFrame, SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   return style->HasStroke() && GetStrokeWidth(aFrame, aContextPaint) > 0;
 }
 
 float
-nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
+nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   if (aContextPaint && style->StrokeWidthFromObject()) {
@@ -1615,7 +1615,7 @@ static bool
 GetStrokeDashData(nsIFrame* aFrame,
                   nsTArray<gfxFloat>& aDashes,
                   gfxFloat* aDashOffset,
-                  gfxTextContextPaint *aContextPaint)
+                  SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   nsIContent *content = aFrame->GetContent();
@@ -1675,7 +1675,7 @@ GetStrokeDashData(nsIFrame* aFrame,
 void
 nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
                                      gfxContext *aContext,
-                                     gfxTextContextPaint *aContextPaint)
+                                     SVGContextPaint* aContextPaint)
 {
   float width = GetStrokeWidth(aFrame, aContextPaint);
   if (width <= 0)

@@ -213,7 +213,7 @@ gfxSVGGlyphsDocument::FindGlyphElements(Element *aElem)
  */
 bool
 gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
-                          gfxTextContextPaint *aContextPaint)
+                          SVGContextPaint* aContextPaint)
 {
     gfxContextAutoSaveRestore aContextRestorer(aContext);
 

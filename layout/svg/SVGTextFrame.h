@@ -139,7 +139,7 @@ private:
 };
 
 // Slightly horrible callback for deferring application of opacity
-struct SVGTextContextPaint : public gfxTextContextPaint {
+struct SVGTextContextPaint : public SVGContextPaint {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 public:
@@ -172,7 +172,7 @@ public:
       mPaintDefinition.mColor = aColor;
     }
 
-    void SetContextPaint(gfxTextContextPaint *aContextPaint,
+    void SetContextPaint(SVGContextPaint* aContextPaint,
                          nsStyleSVGPaintType aPaintType) {
       NS_ASSERTION(aPaintType == eStyleSVGPaintType_ContextFill ||
                    aPaintType == eStyleSVGPaintType_ContextStroke,
@@ -183,7 +183,7 @@ public:
 
     union {
       nsSVGPaintServerFrame *mPaintServerFrame;
-      gfxTextContextPaint *mContextPaint;
+      SVGContextPaint* mContextPaint;
       nscolor mColor;
     } mPaintDefinition;
 
