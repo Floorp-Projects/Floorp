@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace layers {
 class APZEventState;
-class APZCTreeManager;
+class IAPZCTreeManager;
 }
 namespace widget {
 
@@ -27,7 +27,7 @@ class AndroidContentController final
 public:
     AndroidContentController(nsWindow* aWindow,
                              mozilla::layers::APZEventState* aAPZEventState,
-                             mozilla::layers::APZCTreeManager* aAPZCTreeManager)
+                             mozilla::layers::IAPZCTreeManager* aAPZCTreeManager)
       : mozilla::layers::ChromeProcessController(aWindow, aAPZEventState, aAPZCTreeManager)
       , mAndroidWindow(aWindow)
     {}
@@ -44,7 +44,7 @@ public:
                               APZStateChange aChange,
                               int aArg) override;
 
-    static void NotifyDefaultPrevented(mozilla::layers::APZCTreeManager* aManager,
+    static void NotifyDefaultPrevented(mozilla::layers::IAPZCTreeManager* aManager,
                                        uint64_t aInputBlockId, bool aDefaultPrevented);
 private:
     nsWindow* mAndroidWindow;

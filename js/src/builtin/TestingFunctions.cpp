@@ -1103,7 +1103,7 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    unsigned maxFrameCount = 0;
+    JS::StackCapture capture((JS::AllFrames()));
     if (args.length() >= 1) {
         double d;
         if (!ToNumber(cx, args[0], &d))
@@ -1114,7 +1114,8 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
                                   "not a valid maximum frame count", NULL);
             return false;
         }
-        maxFrameCount = d;
+        if (d > 0)
+            capture = JS::StackCapture(JS::MaxFrames(d));
     }
 
     JSCompartment* targetCompartment = cx->compartment();
@@ -1134,7 +1135,7 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
     RootedObject stack(cx);
     {
         AutoCompartment ac(cx, targetCompartment);
-        if (!JS::CaptureCurrentStack(cx, &stack, maxFrameCount))
+        if (!JS::CaptureCurrentStack(cx, &stack, mozilla::Move(capture)))
             return false;
     }
 
@@ -1142,6 +1143,37 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setObjectOrNull(stack);
+    return true;
+}
+
+static bool
+CaptureFirstSubsumedFrame(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "captureFirstSubsumedFrame", 1))
+        return false;
+
+    if (!args[0].isObject()) {
+        JS_ReportError(cx, "The argument must be an object");
+        return false;
+    }
+
+    RootedObject obj(cx, &args[0].toObject());
+    obj = CheckedUnwrap(obj);
+    if (!obj) {
+        JS_ReportError(cx, "Denied permission to object.");
+        return false;
+    }
+
+    JS::StackCapture capture(JS::FirstSubsumedFrame(cx, obj->compartment()->principals()));
+    if (args.length() > 1)
+        capture.as<JS::FirstSubsumedFrame>().ignoreSelfHosted = JS::ToBoolean(args[1]);
+
+    JS::RootedObject capturedStack(cx);
+    if (!JS::CaptureCurrentStack(cx, &capturedStack, mozilla::Move(capture)))
+        return false;
+
+    args.rval().setObjectOrNull(capturedStack);
     return true;
 }
 
@@ -3602,6 +3634,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Capture a stack. If 'maxDepth' is given, capture at most 'maxDepth' number\n"
 "  of frames. If 'compartment' is given, allocate the js::SavedFrame instances\n"
 "  with the given object's compartment."),
+
+    JS_FN_HELP("captureFirstSubsumedFrame", CaptureFirstSubsumedFrame, 1, 0,
+"saveStack(object [, shouldIgnoreSelfHosted = true]])",
+"  Capture a stack back to the first frame whose principals are subsumed by the\n"
+"  object's compartment's principals. If 'shouldIgnoreSelfHosted' is given,\n"
+"  control whether self-hosted frames are considered when checking principals."),
 
     JS_FN_HELP("callFunctionFromNativeFrame", CallFunctionFromNativeFrame, 1, 0,
 "callFunctionFromNativeFrame(function)",

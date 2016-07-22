@@ -57,7 +57,7 @@ public class AnnotationProcessor {
                 "#include \"mozilla/jni/Refs.h\"\n" +
                 "\n" +
                 "namespace mozilla {\n" +
-                "namespace widget {\n" +
+                "namespace java {\n" +
                 "\n");
 
         implementationFile.append(
@@ -65,7 +65,7 @@ public class AnnotationProcessor {
                 "#include \"mozilla/jni/Accessors.h\"\n" +
                 "\n" +
                 "namespace mozilla {\n" +
-                "namespace widget {\n" +
+                "namespace java {\n" +
                 "\n");
 
         nativesFile.append(
@@ -76,7 +76,7 @@ public class AnnotationProcessor {
                 "#include \"mozilla/jni/Natives.h\"\n" +
                 "\n" +
                 "namespace mozilla {\n" +
-                "namespace widget {\n" +
+                "namespace java {\n" +
                 "\n");
 
         while (jarClassIterator.hasNext()) {

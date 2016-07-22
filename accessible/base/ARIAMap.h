@@ -203,14 +203,55 @@ namespace aria {
 extern nsRoleMapEntry gEmptyRoleMap;
 
 /**
+ * Constants for the role map entry index to indicate that the role map entry
+ * isn't in sWAIRoleMaps, but rather is a special entry: nullptr,
+ * gEmptyRoleMap, and sLandmarkRoleMap
+ */
+const uint8_t NO_ROLE_MAP_ENTRY_INDEX = UINT8_MAX - 2;
+const uint8_t EMPTY_ROLE_MAP_ENTRY_INDEX = UINT8_MAX - 1;
+const uint8_t LANDMARK_ROLE_MAP_ENTRY_INDEX = UINT8_MAX;
+
+/**
  * Get the role map entry for a given DOM node. This will use the first
  * ARIA role if the role attribute provides a space delimited list of roles.
  *
- * @param aNode  [in] the DOM node to get the role map entry for
+ * @param aEl     [in] the DOM node to get the role map entry for
  * @return        a pointer to the role map entry for the ARIA role, or nullptr
  *                if none
  */
 const nsRoleMapEntry* GetRoleMap(dom::Element* aEl);
+
+/**
+ * Get the role map entry pointer's index for a given DOM node. This will use
+ * the first ARIA role if the role attribute provides a space delimited list of
+ * roles.
+ *
+ * @param aEl     [in] the DOM node to get the role map entry for
+ * @return        the index of the pointer to the role map entry for the ARIA
+ *                role, or NO_ROLE_MAP_ENTRY_INDEX if none
+ */
+uint8_t GetRoleMapIndex(dom::Element* aEl);
+
+/**
+ * Get the role map entry pointer for a given role map entry index.
+ *
+ * @param aRoleMapIndex  [in] the role map index to get the role map entry
+ *                       pointer for
+ * @return               a pointer to the role map entry for the ARIA role,
+ *                       or nullptr, if none
+ */
+const nsRoleMapEntry* GetRoleMapFromIndex(uint8_t aRoleMapIndex);
+
+/**
+ * Get the role map entry index for a given role map entry pointer. If the role
+ * map entry is within sWAIRoleMaps, return the index within that array,
+ * otherwise return one of the special index constants listed above.
+ *
+ * @param aRoleMap  [in] the role map entry pointer to get the index for
+ * @return          the index of the pointer to the role map entry, or
+ *                  NO_ROLE_MAP_ENTRY_INDEX if none
+ */
+uint8_t GetIndexFromRoleMap(const nsRoleMapEntry* aRoleMap);
 
 /**
  * Return accessible state from ARIA universal states applied to the given

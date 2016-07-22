@@ -1251,9 +1251,10 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     callData->SetOriginAttributes(BasePrincipal::Cast(principal)->OriginAttributesRef());
   }
 
-  uint32_t maxDepth = ShouldIncludeStackTrace(aMethodName) ?
-                      DEFAULT_MAX_STACKTRACE_DEPTH : 1;
-  nsCOMPtr<nsIStackFrame> stack = CreateStack(aCx, maxDepth);
+  JS::StackCapture captureMode = ShouldIncludeStackTrace(aMethodName) ?
+    JS::StackCapture(JS::MaxFrames(DEFAULT_MAX_STACKTRACE_DEPTH)) :
+    JS::StackCapture(JS::FirstSubsumedFrame(aCx));
+  nsCOMPtr<nsIStackFrame> stack = CreateStack(aCx, mozilla::Move(captureMode));
 
   if (stack) {
     callData->mTopStackFrame.emplace();

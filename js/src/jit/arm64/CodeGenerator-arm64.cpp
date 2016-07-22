@@ -692,15 +692,15 @@ CodeGeneratorARM64::visitEffectiveAddress(LEffectiveAddress* ins)
 }
 
 void
-CodeGeneratorARM64::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
+CodeGeneratorARM64::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 {
-    MOZ_CRASH("visitAsmJSLoadGlobalVar");
+    MOZ_CRASH("visitWasmLoadGlobalVar");
 }
 
 void
-CodeGeneratorARM64::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins)
+CodeGeneratorARM64::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 {
-    MOZ_CRASH("visitAsmJSStoreGlobalVar");
+    MOZ_CRASH("visitWasmStoreGlobalVar");
 }
 
 void

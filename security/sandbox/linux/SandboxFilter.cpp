@@ -574,8 +574,8 @@ public:
     case __NR_mprotect:
     case __NR_brk:
     case __NR_madvise:
-#if defined(ANDROID) && !defined(MOZ_MEMORY)
-      // Android's libc's realloc uses mremap.
+#if !defined(MOZ_MEMORY)
+      // libc's realloc uses mremap (Bug 1286119).
     case __NR_mremap:
 #endif
       return Allow();
@@ -668,6 +668,11 @@ public:
       // usually do something reasonable on error.
     case __NR_clone:
       return ClonePolicy(Error(EPERM));
+
+#ifdef __NR_fadvise64
+    case __NR_fadvise64:
+      return Allow();
+#endif
 
 #endif // DESKTOP
 

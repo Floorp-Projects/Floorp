@@ -424,11 +424,12 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * protocol.  If you depend on this you're likely to break soon.
    */
   rawNode: function (rawNode) {
-    if (!this.conn._transport._serverConnection) {
+    if (!this.isLocalToBeDeprecated()) {
       console.warn("Tried to use rawNode on a remote connection.");
       return null;
     }
-    let actor = this.conn._transport._serverConnection.getActor(this.actorID);
+    const { DebuggerServer } = require("devtools/server/main");
+    let actor = DebuggerServer._searchAllConnectionsForActor(this.actorID);
     if (!actor) {
       // Can happen if we try to get the raw node for an already-expired
       // actor.
@@ -895,8 +896,8 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       console.warn("Tried to use frontForRawNode on a remote connection.");
       return null;
     }
-    let walkerActor = this.conn._transport._serverConnection
-      .getActor(this.actorID);
+    const { DebuggerServer } = require("devtools/server/main");
+    let walkerActor = DebuggerServer._searchAllConnectionsForActor(this.actorID);
     if (!walkerActor) {
       throw Error("Could not find client side for actor " + this.actorID);
     }
@@ -916,7 +917,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       // Imported an already-orphaned node.
       this._orphaned.add(top);
       walkerActor._orphaned
-        .add(this.conn._transport._serverConnection.getActor(top.actorID));
+        .add(DebuggerServer._searchAllConnectionsForActor(top.actorID));
     }
     return returnNode;
   },

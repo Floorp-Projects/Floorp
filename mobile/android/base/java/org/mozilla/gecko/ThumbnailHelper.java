@@ -154,9 +154,11 @@ public final class ThumbnailHelper {
         }
 
         Log.d(LOGTAG, "Sending thumbnail event: " + mWidth + ", " + mHeight);
-        GeckoEvent e = GeckoEvent.createThumbnailEvent(tab.getId(), mWidth, mHeight, mBuffer);
-        GeckoAppShell.sendEventToGecko(e);
+        requestThumbnail(mBuffer, tab.getId(), mWidth, mHeight);
     }
+
+    @WrapForJNI
+    private static native void requestThumbnail(ByteBuffer data, int tabId, int width, int height);
 
     /* This method is invoked by JNI once the thumbnail data is ready. */
     @WrapForJNI(stubName = "SendThumbnail")

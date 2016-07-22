@@ -108,8 +108,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(Accessible, LastRelease())
 Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc),
   mParent(nullptr), mIndexInParent(-1),
-  mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0),
-  mRoleMapEntry(nullptr)
+  mRoleMapEntryIndex(aria::NO_ROLE_MAP_ENTRY_INDEX),
+  mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0)
 {
   mBits.groupInfo = nullptr;
   mInt.mIndexOfEmbeddedChild = -1;
@@ -442,8 +442,9 @@ Accessible::NativeState()
     state |= states::HASPOPUP;
 
   // Bypass the link states specialization for non links.
-  if (!mRoleMapEntry || mRoleMapEntry->roleRule == kUseNativeRole ||
-      mRoleMapEntry->role == roles::LINK)
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (!roleMapEntry || roleMapEntry->roleRule == kUseNativeRole ||
+      roleMapEntry->role == roles::LINK)
     state |= NativeLinkState();
 
   return state;
@@ -690,7 +691,7 @@ Accessible::SetSelected(bool aSelect)
   Accessible* select = nsAccUtils::GetSelectableContainer(this, State());
   if (select) {
     if (select->State() & states::MULTISELECTABLE) {
-      if (mRoleMapEntry) {
+      if (ARIARoleMap()) {
         if (aSelect) {
           mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected,
                             NS_LITERAL_STRING("true"), true);
@@ -929,8 +930,9 @@ Accessible::Attributes()
 
   // If there is no aria-live attribute then expose default value of 'live'
   // object attribute used for ARIA role of this accessible.
-  if (mRoleMapEntry) {
-    if (mRoleMapEntry->Is(nsGkAtoms::searchbox)) {
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry) {
+    if (roleMapEntry->Is(nsGkAtoms::searchbox)) {
       nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType,
                              NS_LITERAL_STRING("search"));
     }
@@ -938,7 +940,7 @@ Accessible::Attributes()
     nsAutoString live;
     nsAccUtils::GetAccAttr(attributes, nsGkAtoms::live, live);
     if (live.IsEmpty()) {
-      if (nsAccUtils::GetLiveAttrValue(mRoleMapEntry->liveAttRule, live))
+      if (nsAccUtils::GetLiveAttrValue(roleMapEntry->liveAttRule, live))
         nsAccUtils::SetAccAttr(attributes, nsGkAtoms::live, live);
     }
   }
@@ -1143,13 +1145,14 @@ Accessible::State()
   // If this is an ARIA item of the selectable widget and if it's focused and
   // not marked unselected explicitly (i.e. aria-selected="false") then expose
   // it as selected to make ARIA widget authors life easier.
-  if (mRoleMapEntry && !(state & states::SELECTED) &&
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry && !(state & states::SELECTED) &&
       !mContent->AttrValueIs(kNameSpaceID_None,
                              nsGkAtoms::aria_selected,
                              nsGkAtoms::_false, eCaseMatters)) {
     // Special case for tabs: focused tab or focus inside related tab panel
     // implies selected state.
-    if (mRoleMapEntry->role == roles::PAGETAB) {
+    if (roleMapEntry->role == roles::PAGETAB) {
       if (state & states::FOCUSED) {
         state |= states::SELECTED;
       } else {
@@ -1222,12 +1225,13 @@ Accessible::ApplyARIAState(uint64_t* aState) const
   // Test for universal states first
   *aState |= aria::UniversalStatesFor(element);
 
-  if (mRoleMapEntry) {
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry) {
 
     // We only force the readonly bit off if we have a real mapping for the aria
     // role. This preserves the ability for screen readers to use readonly
     // (primarily on the document) as the hint for creating a virtual buffer.
-    if (mRoleMapEntry->role != roles::NOTHING)
+    if (roleMapEntry->role != roles::NOTHING)
       *aState &= ~states::READONLY;
 
     if (mContent->HasID()) {
@@ -1263,21 +1267,21 @@ Accessible::ApplyARIAState(uint64_t* aState) const
   if (IsButton() || IsMenuButton())
     aria::MapToState(aria::eARIAPressed, element, aState);
 
-  if (!mRoleMapEntry)
+  if (!roleMapEntry)
     return;
 
-  *aState |= mRoleMapEntry->state;
+  *aState |= roleMapEntry->state;
 
-  if (aria::MapToState(mRoleMapEntry->attributeMap1, element, aState) &&
-      aria::MapToState(mRoleMapEntry->attributeMap2, element, aState) &&
-      aria::MapToState(mRoleMapEntry->attributeMap3, element, aState))
-    aria::MapToState(mRoleMapEntry->attributeMap4, element, aState);
+  if (aria::MapToState(roleMapEntry->attributeMap1, element, aState) &&
+      aria::MapToState(roleMapEntry->attributeMap2, element, aState) &&
+      aria::MapToState(roleMapEntry->attributeMap3, element, aState))
+    aria::MapToState(roleMapEntry->attributeMap4, element, aState);
 
   // ARIA gridcell inherits editable/readonly states from the grid until it's
   // overridden.
-  if ((mRoleMapEntry->Is(nsGkAtoms::gridcell) ||
-       mRoleMapEntry->Is(nsGkAtoms::columnheader) ||
-       mRoleMapEntry->Is(nsGkAtoms::rowheader)) &&
+  if ((roleMapEntry->Is(nsGkAtoms::gridcell) ||
+       roleMapEntry->Is(nsGkAtoms::columnheader) ||
+       roleMapEntry->Is(nsGkAtoms::rowheader)) &&
       !(*aState & (states::READONLY | states::EDITABLE))) {
     const TableCellAccessible* cell = AsTableCell();
     if (cell) {
@@ -1295,10 +1299,11 @@ Accessible::ApplyARIAState(uint64_t* aState) const
 void
 Accessible::Value(nsString& aValue)
 {
-  if (!mRoleMapEntry)
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (!roleMapEntry)
     return;
 
-  if (mRoleMapEntry->valueRule != eNoValue) {
+  if (roleMapEntry->valueRule != eNoValue) {
     // aria-valuenow is a number, and aria-valuetext is the optional text
     // equivalent. For the string value, we will try the optional text
     // equivalent first.
@@ -1311,13 +1316,13 @@ Accessible::Value(nsString& aValue)
   }
 
   // Value of textbox is a textified subtree.
-  if (mRoleMapEntry->Is(nsGkAtoms::textbox)) {
+  if (roleMapEntry->Is(nsGkAtoms::textbox)) {
     nsTextEquivUtils::GetTextEquivFromSubtree(this, aValue);
     return;
   }
 
   // Value of combobox is a text of current or selected item.
-  if (mRoleMapEntry->Is(nsGkAtoms::combobox)) {
+  if (roleMapEntry->Is(nsGkAtoms::combobox)) {
     Accessible* option = CurrentItem();
     if (!option) {
       uint32_t childCount = ChildCount();
@@ -1362,7 +1367,8 @@ Accessible::CurValue() const
 bool
 Accessible::SetCurValue(double aValue)
 {
-  if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (!roleMapEntry || roleMapEntry->valueRule == eNoValue)
     return false;
 
   const uint32_t kValueCannotChange = states::READONLY | states::UNAVAILABLE;
@@ -1436,8 +1442,9 @@ Accessible::ARIATransformRole(role aRole)
 nsIAtom*
 Accessible::LandmarkRole() const
 {
-  return mRoleMapEntry && mRoleMapEntry->IsOfType(eLandmark) ?
-    *(mRoleMapEntry->roleAtom) : nullptr;
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  return roleMapEntry && roleMapEntry->IsOfType(eLandmark) ?
+    *(roleMapEntry->roleAtom) : nullptr;
 }
 
 role
@@ -1550,6 +1557,8 @@ Accessible::RelationByType(RelationType aType)
   if (!HasOwnContent())
     return Relation();
 
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+
   // Relationships are defined on the same content node that the role would be
   // defined on.
   switch (aType) {
@@ -1601,9 +1610,9 @@ Accessible::RelationByType(RelationType aType)
       Relation rel;
       // This is an ARIA tree or treegrid that doesn't use owns, so we need to
       // get the parent the hard way.
-      if (mRoleMapEntry && (mRoleMapEntry->role == roles::OUTLINEITEM ||
-                            mRoleMapEntry->role == roles::LISTITEM ||
-                            mRoleMapEntry->role == roles::ROW)) {
+      if (roleMapEntry && (roleMapEntry->role == roles::OUTLINEITEM ||
+                            roleMapEntry->role == roles::LISTITEM ||
+                            roleMapEntry->role == roles::ROW)) {
         rel.AppendTarget(GetGroupInfo()->ConceptualParent());
       }
 
@@ -1629,13 +1638,13 @@ Accessible::RelationByType(RelationType aType)
     case RelationType::NODE_PARENT_OF: {
       // ARIA tree or treegrid can do the hierarchy by @aria-level, ARIA trees
       // also can be organized by groups.
-      if (mRoleMapEntry &&
-          (mRoleMapEntry->role == roles::OUTLINEITEM ||
-           mRoleMapEntry->role == roles::LISTITEM ||
-           mRoleMapEntry->role == roles::ROW ||
-           mRoleMapEntry->role == roles::OUTLINE ||
-           mRoleMapEntry->role == roles::LIST ||
-           mRoleMapEntry->role == roles::TREE_TABLE)) {
+      if (roleMapEntry &&
+          (roleMapEntry->role == roles::OUTLINEITEM ||
+           roleMapEntry->role == roles::LISTITEM ||
+           roleMapEntry->role == roles::ROW ||
+           roleMapEntry->role == roles::OUTLINE ||
+           roleMapEntry->role == roles::LIST ||
+           roleMapEntry->role == roles::TREE_TABLE)) {
         return Relation(new ItemIterator(this));
       }
 
@@ -2443,7 +2452,8 @@ Accessible::IsActiveWidget() const
 
   // If text entry of combobox widget has a focus then the combobox widget is
   // active.
-  if (mRoleMapEntry && mRoleMapEntry->Is(nsGkAtoms::combobox)) {
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::combobox)) {
     uint32_t childCount = ChildCount();
     for (uint32_t idx = 0; idx < childCount; idx++) {
       Accessible* child = mChildren.ElementAt(idx);
@@ -2572,7 +2582,8 @@ Accessible::GetSiblingAtOffset(int32_t aOffset, nsresult* aError) const
 double
 Accessible::AttrNumericValue(nsIAtom* aAttr) const
 {
-  if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (!roleMapEntry || roleMapEntry->valueRule == eNoValue)
     return UnspecifiedNaN<double>();
 
   nsAutoString attrValue;
@@ -2602,9 +2613,10 @@ Accessible::GetActionRule() const
     return eClickAction;
 
   // Get an action based on ARIA role.
-  if (mRoleMapEntry &&
-      mRoleMapEntry->actionRule != eNoAction)
-    return mRoleMapEntry->actionRule;
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry &&
+      roleMapEntry->actionRule != eNoAction)
+    return roleMapEntry->actionRule;
 
   // Get an action based on ARIA attribute.
   if (nsAccUtils::HasDefinedARIAToken(mContent,

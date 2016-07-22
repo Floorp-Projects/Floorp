@@ -146,8 +146,8 @@ GetObject(const MDefinition* ins)
       case MDefinition::Op_WasmStore:
       case MDefinition::Op_AsmJSCompareExchangeHeap:
       case MDefinition::Op_AsmJSAtomicBinopHeap:
-      case MDefinition::Op_AsmJSLoadGlobalVar:
-      case MDefinition::Op_AsmJSStoreGlobalVar:
+      case MDefinition::Op_WasmLoadGlobalVar:
+      case MDefinition::Op_WasmStoreGlobalVar:
       case MDefinition::Op_ArrayJoin:
         return nullptr;
       default:

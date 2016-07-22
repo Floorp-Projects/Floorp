@@ -135,7 +135,7 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         // but oh well.
         RootedObject stack(cx);
         if (cx->options().asyncStack() || cx->compartment()->isDebuggee()) {
-            if (!JS::CaptureCurrentStack(cx, &stack, 0))
+            if (!JS::CaptureCurrentStack(cx, &stack, JS::StackCapture(JS::AllFrames())))
                 return nullptr;
         }
         promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectOrNullValue(stack));
@@ -425,7 +425,7 @@ PromiseObject::onSettled(JSContext* cx)
     Rooted<PromiseObject*> promise(cx, this);
     RootedObject stack(cx);
     if (cx->options().asyncStack() || cx->compartment()->isDebuggee()) {
-        if (!JS::CaptureCurrentStack(cx, &stack, 0)) {
+        if (!JS::CaptureCurrentStack(cx, &stack, JS::StackCapture(JS::AllFrames()))) {
             cx->clearPendingException();
             return;
         }

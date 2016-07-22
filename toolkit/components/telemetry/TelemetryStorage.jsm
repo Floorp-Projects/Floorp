@@ -121,6 +121,15 @@ function waitForAll(it) {
   return Promise.all(promises);
 }
 
+/**
+ * Permanently intern the given string. This is mainly used for the ping.type
+ * strings that can be excessively duplicated in the _archivedPings map. Do not
+ * pass large or temporary strings to this function.
+ */
+function internString(str) {
+  return Symbol.keyFor(Symbol.for(str));
+}
+
 this.TelemetryStorage = {
   get pingDirectoryPath() {
     return OS.Path.join(OS.Constants.Path.profileDir, "saved-telemetry-pings");
@@ -668,7 +677,7 @@ var TelemetryStorageImpl = {
 
     this._archivedPings.set(ping.id, {
       timestampCreated: creationDate.getTime(),
-      type: ping.type,
+      type: internString(ping.type),
     });
 
     Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SESSION_PING_COUNT").add();
@@ -1222,7 +1231,7 @@ var TelemetryStorageImpl = {
 
         this._archivedPings.set(data.id, {
           timestampCreated: data.timestamp,
-          type: data.type,
+          type: internString(data.type),
         });
       }
     }

@@ -704,6 +704,14 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClassWithSpec(webAudio
    * so we can proxy the function calls.
    */
   _onGlobalCreated: function () {
+    // Used to track when something is happening with the web audio API
+    // the first time, to ultimately fire `start-context` event
+    this._firstNodeCreated = false;
+
+    // Clear out stored nativeIDs on reload as we do not want to track
+    // AudioNodes that are no longer on this document.
+    this._nativeToActorID.clear();
+
     this._callWatcher.resumeRecording();
   },
 

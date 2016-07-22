@@ -156,7 +156,7 @@ function test_close_client_while_sending_requests() {
   let expectReply = promise.defer();
   gClient.expectReply("root", function (response) {
     do_check_eq(response.error, "connectionClosed");
-    do_check_eq(response.message, "server side packet from 'root' can't be received as the connection just closed.");
+    do_check_eq(response.message, "server side packet can't be received as the connection just closed.");
     expectReply.resolve();
   });
 

@@ -34,6 +34,30 @@ namespace dom {
 
 namespace {
 
+template<typename T>
+void
+CreateObjectURLInternal(const GlobalObject& aGlobal, T aObject,
+                        nsAString& aResult, ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal =
+    nsContentUtils::ObjectPrincipal(aGlobal.Get());
+
+  nsAutoCString url;
+  aRv = nsHostObjectProtocolHandler::AddDataEntry(aObject, principal, url);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  global->RegisterHostObjectURI(url);
+  CopyASCIItoUTF16(url, aResult);
+}
+
 // The URL implementation for the main-thread
 class URLMainThread final : public URL
 {
@@ -60,9 +84,7 @@ public:
                   ErrorResult& aRv)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    CreateObjectURLInternal(aGlobal, aBlob.Impl(),
-                            NS_LITERAL_CSTRING(BLOBURI_SCHEME), aOptions,
-                            aResult, aRv);
+    CreateObjectURLInternal(aGlobal, aBlob.Impl(), aResult, aRv);
   }
 
   static void
@@ -71,21 +93,13 @@ public:
                   ErrorResult& aRv)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    CreateObjectURLInternal(aGlobal, &aStream,
-                            NS_LITERAL_CSTRING(MEDIASTREAMURI_SCHEME), aOptions,
-                            aResult, aRv);
+    CreateObjectURLInternal(aGlobal, &aStream, aResult, aRv);
   }
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
                   const objectURLOptions& aOptions, nsAString& aResult,
                   ErrorResult& aRv);
-
-  static void
-  CreateObjectURLInternal(const GlobalObject& aGlobal, nsISupports* aObject,
-                          const nsACString& aScheme,
-                          const objectURLOptions& aOptions,
-                          nsAString& aResult, ErrorResult& aRv);
 
   static void
   RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
@@ -246,9 +260,7 @@ URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
     nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsAutoCString url;
-  aRv = nsHostObjectProtocolHandler::
-    AddDataEntry(NS_LITERAL_CSTRING(MEDIASOURCEURI_SCHEME),
-                 &aSource, principal, url);
+  aRv = nsHostObjectProtocolHandler::AddDataEntry(&aSource, principal, url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -260,34 +272,6 @@ URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
 
   nsContentUtils::RunInStableState(revocation.forget());
 
-  CopyASCIItoUTF16(url, aResult);
-}
-
-/* static */ void
-URLMainThread::CreateObjectURLInternal(const GlobalObject& aGlobal,
-                                       nsISupports* aObject,
-                                       const nsACString& aScheme,
-                                       const objectURLOptions& aOptions,
-                                       nsAString& aResult, ErrorResult& aRv)
-{
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal =
-    nsContentUtils::ObjectPrincipal(aGlobal.Get());
-
-  nsAutoCString url;
-  nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(aScheme, aObject,
-                                                          principal, url);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
-  }
-
-  global->RegisterHostObjectURI(url);
   CopyASCIItoUTF16(url, aResult);
 }
 
@@ -826,9 +810,8 @@ public:
     nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
 
     nsAutoCString url;
-    nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(
-        NS_LITERAL_CSTRING(BLOBURI_SCHEME),
-        mBlobImpl, principal, url);
+    nsresult rv =
+      nsHostObjectProtocolHandler::AddDataEntry(mBlobImpl, principal, url);
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to add data entry for the blob!");

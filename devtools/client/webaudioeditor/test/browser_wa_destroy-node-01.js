@@ -16,12 +16,12 @@ add_task(function* () {
 
   let started = once(gFront, "start-context");
 
-  reload(target);
-
-  let [created] = yield Promise.all([
+  let events = Promise.all([
     getNSpread(gAudioNodes, "add", 13),
     waitForGraphRendered(panelWin, 13, 2)
   ]);
+  reload(target);
+  let [created] = yield events;
 
   // Flatten arrays of event arguments and take the first (AudioNodeModel)
   // and get its ID.

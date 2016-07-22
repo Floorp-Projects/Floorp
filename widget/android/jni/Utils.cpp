@@ -60,6 +60,7 @@ template<> const char ObjectBase<TypedObject<jlongArray>, jlongArray>::name[] = 
 template<> const char ObjectBase<TypedObject<jfloatArray>, jfloatArray>::name[] = "[F";
 template<> const char ObjectBase<TypedObject<jdoubleArray>, jdoubleArray>::name[] = "[D";
 template<> const char ObjectBase<TypedObject<jobjectArray>, jobjectArray>::name[] = "[Ljava/lang/Object;";
+template<> const char ObjectBase<ByteBuffer, jobject>::name[] = "java/nio/ByteBuffer";
 
 
 JNIEnv* sGeckoThreadEnv;
@@ -151,7 +152,7 @@ bool HandleUncaughtException(JNIEnv* aEnv)
     MOZ_ASSERT(e);
 
     aEnv->ExceptionClear();
-    String::LocalRef stack = widget::GeckoAppShell::HandleUncaughtException(e);
+    String::LocalRef stack = java::GeckoAppShell::HandleUncaughtException(e);
 
 #ifdef MOZ_CRASHREPORTER
     if (stack) {

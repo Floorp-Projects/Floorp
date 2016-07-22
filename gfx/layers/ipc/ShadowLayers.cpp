@@ -1031,13 +1031,7 @@ ShadowLayerForwarder::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
       return false;
     }
     GfxMemoryImageReporter::DidAlloc(data);
-#ifdef XP_MACOSX
-    // Workaround a bug in Quartz where drawing an a8 surface to another a8
-    // surface with OP_SOURCE still requires the destination to be clear.
-    if (format == gfx::SurfaceFormat::A8) {
-      memset(data, 0, size);
-    }
-#endif
+    memset(data, 0, size);
     bufferDesc = reinterpret_cast<uintptr_t>(data);
   } else {
 

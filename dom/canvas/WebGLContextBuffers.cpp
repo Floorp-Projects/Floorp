@@ -322,7 +322,7 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
                             const dom::Nullable<dom::ArrayBuffer>& maybeData)
 {
     if (maybeData.IsNull()) {
-        // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
+        ErrorInvalidValue("BufferSubData: returnedData is null.");
         return;
     }
     BufferSubDataT(target, byteOffset, maybeData.Value());

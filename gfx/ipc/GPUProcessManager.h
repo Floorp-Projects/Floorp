@@ -23,7 +23,7 @@ class nsBaseWidget;
 
 namespace mozilla {
 namespace layers {
-class APZCTreeManager;
+class IAPZCTreeManager;
 class CompositorSession;
 class ClientLayerManager;
 class CompositorUpdateObserver;
@@ -52,9 +52,9 @@ class PVRManagerChild;
 // to the compositor via CompositorBridgeParent.
 class GPUProcessManager final : public GPUProcessHost::Listener
 {
-  typedef layers::APZCTreeManager APZCTreeManager;
   typedef layers::ClientLayerManager ClientLayerManager;
   typedef layers::CompositorSession CompositorSession;
+  typedef layers::IAPZCTreeManager IAPZCTreeManager;
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
   typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
   typedef layers::PImageBridgeChild PImageBridgeChild;
@@ -91,7 +91,7 @@ public:
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
-  already_AddRefed<APZCTreeManager> GetAPZCTreeManagerForLayers(uint64_t aLayersId);
+  already_AddRefed<IAPZCTreeManager> GetAPZCTreeManagerForLayers(uint64_t aLayersId);
 
   // Allocate an ID that can be used to refer to a layer tree and
   // associated resources that live only on the compositor thread.

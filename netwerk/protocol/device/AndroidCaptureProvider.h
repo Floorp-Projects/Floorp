@@ -25,7 +25,7 @@ class AndroidCaptureProvider final : public nsDeviceCaptureProvider {
 
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    nsresult Init(nsACString& aContentType, nsCaptureParams* aParams, nsIInputStream** aStream);
+    nsresult Init(nsACString& aContentType, nsCaptureParams* aParams, nsIInputStream** aStream) override;
     static AndroidCaptureProvider* sInstance;
 };
 
@@ -42,7 +42,7 @@ class AndroidCameraInputStream final : public nsIAsyncInputStream, mozilla::net:
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
 
-    void ReceiveFrame(char* frame, uint32_t length);
+    void ReceiveFrame(char* frame, uint32_t length) override;
 
   protected:
     void NotifyListeners();

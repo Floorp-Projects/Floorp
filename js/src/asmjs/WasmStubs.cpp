@@ -564,9 +564,9 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
     // 2.1. Get ExitDatum
     uint32_t globalDataOffset = fi.exitGlobalDataOffset();
 #if defined(JS_CODEGEN_X64)
-    masm.append(AsmJSGlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
+    masm.append(GlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
-    masm.append(AsmJSGlobalAccess(masm.movlWithPatch(Imm32(0), callee), globalDataOffset));
+    masm.append(GlobalAccess(masm.movlWithPatch(Imm32(0), callee), globalDataOffset));
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
       defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     masm.computeEffectiveAddress(Address(GlobalReg, globalDataOffset - AsmJSGlobalRegBias), callee);

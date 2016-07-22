@@ -11,23 +11,23 @@ add_task(function* () {
   let { panelWin } = panel;
   let { gFront, $ } = panelWin;
 
-  reload(target);
-
-  var [actors] = yield Promise.all([
+  let events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
+  reload(target);
+  yield events;
 
   var { nodes, edges } = countGraphObjects(panelWin);
   is(nodes, 3, "should only be 3 nodes.");
   is(edges, 2, "should only be 2 edges.");
 
-  navigate(target, SIMPLE_NODES_URL);
-
-  var [actors] = yield Promise.all([
+  events = Promise.all([
     getN(gFront, "create-node", 15),
     waitForGraphRendered(panelWin, 15, 0)
   ]);
+  navigate(target, SIMPLE_NODES_URL);
+  yield events;
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden after context found after navigation.");

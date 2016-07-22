@@ -784,7 +784,6 @@ struct ChunkInfo
 {
     void init() {
         next = prev = nullptr;
-        age = 0;
     }
 
   private:
@@ -801,7 +800,7 @@ struct ChunkInfo
      * Calculating sizes and offsets is simpler if sizeof(ChunkInfo) is
      * architecture-independent.
      */
-    char            padding[20];
+    char            padding[24];
 #endif
 
     /*
@@ -816,9 +815,6 @@ struct ChunkInfo
 
     /* Number of free, committed arenas. */
     uint32_t        numArenasFreeCommitted;
-
-    /* Number of GC cycles this chunk has survived. */
-    uint32_t        age;
 
     /* Information shared by all Chunk types. */
     ChunkTrailer    trailer;

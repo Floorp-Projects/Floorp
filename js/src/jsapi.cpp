@@ -6536,8 +6536,14 @@ JS::SetOutOfMemoryCallback(JSContext* cx, OutOfMemoryCallback cb, void* data)
     cx->oomCallbackData = data;
 }
 
+JS::FirstSubsumedFrame::FirstSubsumedFrame(JSContext* cx,
+                                           bool ignoreSelfHostedFrames /* = true */)
+  : JS::FirstSubsumedFrame(cx, cx->compartment()->principals(), ignoreSelfHostedFrames)
+{ }
+
 JS_PUBLIC_API(bool)
-JS::CaptureCurrentStack(JSContext* cx, JS::MutableHandleObject stackp, unsigned maxFrameCount)
+JS::CaptureCurrentStack(JSContext* cx, JS::MutableHandleObject stackp,
+                        JS::StackCapture&& capture /* = JS::StackCapture(JS::AllFrames()) */)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -6545,7 +6551,7 @@ JS::CaptureCurrentStack(JSContext* cx, JS::MutableHandleObject stackp, unsigned 
 
     JSCompartment* compartment = cx->compartment();
     Rooted<SavedFrame*> frame(cx);
-    if (!compartment->savedStacks().saveCurrentStack(cx, &frame, maxFrameCount))
+    if (!compartment->savedStacks().saveCurrentStack(cx, &frame, mozilla::Move(capture)))
         return false;
     stackp.set(frame.get());
     return true;

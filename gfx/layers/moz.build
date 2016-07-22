@@ -98,6 +98,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.layers += [
     'apz/public/GeckoContentController.h',
+    'apz/public/IAPZCTreeManager.h',
     # exporting things from apz/src is temporary until we extract a
     # proper interface for the code there
     'apz/src/APZCTreeManager.h',
@@ -153,6 +154,8 @@ EXPORTS.mozilla.layers += [
     'Effects.h',
     'ImageDataSerializer.h',
     'ipc/APZChild.h',
+    'ipc/APZCTreeManagerChild.h',
+    'ipc/APZCTreeManagerParent.h',
     'ipc/AsyncTransactionTracker.h',
     'ipc/CompositableForwarder.h',
     'ipc/CompositableTransactionParent.h',
@@ -262,6 +265,7 @@ if CONFIG['MOZ_ANDROID_APZ']:
     ]
 
 UNIFIED_SOURCES += [
+    'apz/public/IAPZCTreeManager.cpp',
     'apz/src/APZCTreeManager.cpp',
     'apz/src/AsyncPanZoomController.cpp',
     'apz/src/Axis.cpp',
@@ -340,6 +344,8 @@ UNIFIED_SOURCES += [
     'ImageDataSerializer.cpp',
     'ImageLayers.cpp',
     'ipc/APZChild.cpp',
+    'ipc/APZCTreeManagerChild.cpp',
+    'ipc/APZCTreeManagerParent.cpp',
     'ipc/AsyncTransactionTracker.cpp',
     'ipc/CompositableTransactionParent.cpp',
     'ipc/CompositorBench.cpp',
@@ -412,6 +418,7 @@ IPDL_SOURCES = [
     'ipc/LayersMessages.ipdlh',
     'ipc/LayersSurfaces.ipdlh',
     'ipc/PAPZ.ipdl',
+    'ipc/PAPZCTreeManager.ipdl',
     'ipc/PCompositable.ipdl',
     'ipc/PCompositorBridge.ipdl',
     'ipc/PImageBridge.ipdl',
