@@ -384,8 +384,17 @@ pub struct NewSessionParameters {
 
 impl NewSessionParameters {
     pub fn get(&self, name: &str) -> Option<&Json> {
-        debug!("Getting {} from capabilities", name);
         self.required.get(name).or_else(|| self.desired.get(name))
+    }
+
+    pub fn consume(&mut self, name: &str) -> Option<Json> {
+        let required = self.required.remove(name);
+        let desired = self.desired.remove(name);
+        if required.is_some() {
+            required
+        } else {
+            desired
+        }
     }
 }
 
