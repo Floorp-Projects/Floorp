@@ -5501,3 +5501,12 @@ ContentParent::SendGetFilesResponseAndForget(const nsID& aUUID,
     Unused << SendGetFilesResponse(aUUID, aResult);
   }
 }
+
+void
+ContentParent::ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch)
+{
+  if (!mHangMonitorActor) {
+    return;
+  }
+  ProcessHangMonitor::ForcePaint(mHangMonitorActor, aTabParent, aLayerObserverEpoch);
+}

@@ -551,6 +551,11 @@ parent:
     async RemotePaintIsReady();
 
     /**
+     * Child informs the parent that the layer tree is already available.
+     */
+    async ForcePaintNoOp(uint64_t aLayerObserverEpoch);
+
+    /**
      * Sent by the child to the parent to inform it that an update to the
      * dimensions has been requested, likely through win.moveTo or resizeTo
      */
@@ -721,7 +726,7 @@ child:
     /**
      * Update the child side docShell active (resource use) state.
      */
-    async SetDocShellIsActive(bool aIsActive, bool aIsHidden);
+    async SetDocShellIsActive(bool aIsActive, bool aIsHidden, uint64_t aLayerObserverEpoch);
 
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.
