@@ -422,7 +422,9 @@ private:
 
     // CreateVertexArrayImpl is assumed to be infallible.
     virtual WebGLVertexArray* CreateVertexArrayImpl() override;
-    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info) override;
+    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type,
+                                           uint32_t* alignment,
+                                           const char* info) override;
     virtual bool ValidateBufferTarget(GLenum target, const char* info) override;
     virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) override;
     virtual bool ValidateBufferUsageEnum(GLenum usage, const char* info) override;
