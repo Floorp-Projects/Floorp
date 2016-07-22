@@ -23,7 +23,7 @@ class WebGLSampler final
     friend class WebGLTexture;
 
 public:
-    explicit WebGLSampler(WebGLContext* webgl, GLuint sampler);
+    WebGLSampler(WebGLContext* webgl, GLuint sampler);
 
     const GLuint mGLName;
 
