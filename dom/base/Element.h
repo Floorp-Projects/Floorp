@@ -509,7 +509,7 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) override;
   virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override;
-  virtual nsAttrInfo GetAttrInfoAt(uint32_t aIndex) const override;
+  virtual BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const override;
   virtual uint32_t GetAttrCount() const override;
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
@@ -973,7 +973,7 @@ public:
    * is, this should only be called from methods that only care about attrs
    * that effectively live in mAttrsAndChildren.
    */
-  virtual nsAttrInfo GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const;
+  virtual BorrowedAttrInfo GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const;
 
   virtual void NodeInfoChanged()
   {

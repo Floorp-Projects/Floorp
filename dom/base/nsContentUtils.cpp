@@ -4445,7 +4445,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
       uint32_t index;
 
       for (index = 0; index < count; index++) {
-        const nsAttrInfo info = content->GetAttrInfoAt(index);
+        const BorrowedAttrInfo info = content->GetAttrInfoAt(index);
         const nsAttrName* name = info.mName;
         if (name->NamespaceEquals(kNameSpaceID_XMLNS)) {
           info.mValue->ToString(uriStr);

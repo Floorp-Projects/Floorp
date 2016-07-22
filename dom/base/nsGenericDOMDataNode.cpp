@@ -647,10 +647,10 @@ nsGenericDOMDataNode::GetAttrNameAt(uint32_t aIndex) const
   return nullptr;
 }
 
-nsAttrInfo
+BorrowedAttrInfo
 nsGenericDOMDataNode::GetAttrInfoAt(uint32_t aIndex) const
 {
-  return nsAttrInfo(nullptr, nullptr);
+  return BorrowedAttrInfo(nullptr, nullptr);
 }
 
 uint32_t
