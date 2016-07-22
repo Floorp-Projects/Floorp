@@ -443,7 +443,7 @@ private:
   // Given an enum table and a particular entry in that table, return
   // the actual integer value we should store.
   int32_t EnumTableEntryToValue(const EnumTable* aEnumTable,
-                                const EnumTable* aTableEntry);  
+                                const EnumTable* aTableEntry);
 
   static nsTArray<const EnumTable*>* sEnumTableArray;
 
