@@ -8,6 +8,7 @@
 #include <algorithm>
 
 #include "CanvasUtils.h"
+#include "gfxPrefs.h"
 #include "GLBlitHelper.h"
 #include "GLContext.h"
 #include "mozilla/gfx/2D.h"

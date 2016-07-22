@@ -6,6 +6,7 @@
 #ifndef _CANVASUTILS_H_
 #define _CANVASUTILS_H_
 
+#include "CanvasRenderingContextHelper.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "jsapi.h"
