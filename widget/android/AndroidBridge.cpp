@@ -1298,31 +1298,6 @@ AndroidBridge::GetNativeWindowSize(void* window)
   return IntSize(ANativeWindow_getWidth(window), ANativeWindow_getHeight(window));
 }
 
-void*
-AndroidBridge::AcquireNativeWindowFromSurfaceTexture(JNIEnv* aEnv, jobject aSurfaceTexture)
-{
-    OpenGraphicsLibraries();
-
-    if (mHasNativeWindowAccess && ANativeWindow_fromSurfaceTexture)
-        return ANativeWindow_fromSurfaceTexture(aEnv, aSurfaceTexture);
-
-    if (mHasNativeWindowAccess && android_SurfaceTexture_getNativeWindow) {
-        android::sp<AndroidRefable> window = android_SurfaceTexture_getNativeWindow(aEnv, aSurfaceTexture);
-        return window.get();
-    }
-
-    return nullptr;
-}
-
-void
-AndroidBridge::ReleaseNativeWindowForSurfaceTexture(void *window)
-{
-    if (!window)
-        return;
-
-    // FIXME: we don't ref the pointer we get, so nothing to do currently. We should ref it.
-}
-
 jobject
 AndroidBridge::GetGlobalContextRef() {
     if (sGlobalContext) {
