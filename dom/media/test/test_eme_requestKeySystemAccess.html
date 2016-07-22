@@ -290,6 +290,18 @@ var tests = [
     shouldPass: true,
   },
   {
+    name: 'Persistent-usage-record should not be supported by ClearKey',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        sessionTypes: ['persistent-usage-record'],
+        persistentState: 'required',
+      }
+    ],
+    shouldPass: false,
+  },  
+  {
     name: 'MP4 audio container',
     options: [
       {
