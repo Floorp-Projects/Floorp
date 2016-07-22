@@ -116,7 +116,9 @@ PerformanceObserver::Notify()
 
   ErrorResult rv;
   mCallback->Call(this, *list, *this, rv);
-  NS_WARN_IF(rv.Failed());
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
+  }
   mQueuedEntries.Clear();
 }
 

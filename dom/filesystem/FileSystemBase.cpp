@@ -84,12 +84,14 @@ FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
   ErrorResult rv;
   aFile->GetMozFullPathInternal(filePath, rv);
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return false;
   }
 
   rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(filePath),
                              true, aPath);
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return false;
   }
 

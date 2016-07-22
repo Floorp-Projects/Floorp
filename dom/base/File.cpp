@@ -924,7 +924,9 @@ BlobImplFile::GetType(nsAString& aType)
 
       ErrorResult rv;
       runnable->Dispatch(rv);
-      NS_WARN_IF(rv.Failed());
+      if (NS_WARN_IF(rv.Failed())) {
+        rv.SuppressException();
+      }
       return;
     }
 
