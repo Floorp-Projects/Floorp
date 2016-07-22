@@ -1214,7 +1214,8 @@ TSFTextStore::~TSFTextStore()
 }
 
 bool
-TSFTextStore::Init(nsWindowBase* aWidget)
+TSFTextStore::Init(nsWindowBase* aWidget,
+                   const InputContext& aContext)
 {
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("TSF: 0x%p TSFTextStore::Init(aWidget=0x%p)",
@@ -1263,6 +1264,8 @@ TSFTextStore::Init(nsWindowBase* aWidget)
     mDocumentMgr = nullptr;
     return false;
   }
+
+  SetInputScope(aContext.mHTMLInputType, aContext.mHTMLInputInputmode);
 
   hr = mDocumentMgr->Push(mContext);
   if (FAILED(hr)) {
@@ -4392,7 +4395,7 @@ TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
   // So, we should set sEnabledTextStore directly.
   RefPtr<TSFTextStore> textStore = new TSFTextStore();
   sEnabledTextStore = textStore;
-  if (NS_WARN_IF(!textStore->Init(aFocusedWidget))) {
+  if (NS_WARN_IF(!textStore->Init(aFocusedWidget, aContext))) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF:   TSFTextStore::CreateAndSetFocus() FAILED due to "
             "TSFTextStore::Init() failure"));
@@ -4431,8 +4434,6 @@ TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
             "ITfTheadMgr::AssociateFocus() failure"));
     return false;
   }
-  textStore->SetInputScope(aContext.mHTMLInputType,
-                           aContext.mHTMLInputInputmode);
 
   if (textStore->mSink) {
     MOZ_LOG(sTextStoreLog, LogLevel::Info,

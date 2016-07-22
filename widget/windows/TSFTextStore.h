@@ -246,7 +246,7 @@ protected:
   static void MarkContextAsKeyboardDisabled(ITfContext* aContext);
   static void MarkContextAsEmpty(ITfContext* aContext);
 
-  bool     Init(nsWindowBase* aWidget);
+  bool     Init(nsWindowBase* aWidget, const InputContext& aContext);
   bool     Destroy();
 
   bool     IsReadLock(DWORD aLock) const
