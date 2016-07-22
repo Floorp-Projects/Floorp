@@ -6036,9 +6036,9 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitGetLocal());
           case Expr::SetLocal:
             CHECK_NEXT(emitSetLocal());
-          case Expr::LoadGlobal:
+          case Expr::GetGlobal:
             CHECK_NEXT(emitGetGlobal());
-          case Expr::StoreGlobal:
+          case Expr::SetGlobal:
             CHECK_NEXT(emitSetGlobal());
 
           // Select

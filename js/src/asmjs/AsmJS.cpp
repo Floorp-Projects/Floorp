@@ -3905,7 +3905,7 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
           case ModuleValidator::Global::ConstantImport:
           case ModuleValidator::Global::Variable: {
             *type = global->varOrConstType();
-            return f.encoder().writeExpr(Expr::LoadGlobal) &&
+            return f.encoder().writeExpr(Expr::GetGlobal) &&
                    f.encoder().writeVarU32(global->varOrConstIndex());
           }
           case ModuleValidator::Global::Function:
@@ -4197,7 +4197,7 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
         Type globType = global->varOrConstType();
         if (!(rhsType <= globType))
             return f.failf(lhs, "%s is not a subtype of %s", rhsType.toChars(), globType.toChars());
-        if (!f.encoder().writeExpr(Expr::StoreGlobal))
+        if (!f.encoder().writeExpr(Expr::SetGlobal))
             return false;
         if (!f.encoder().writeVarU32(global->varOrConstIndex()))
             return false;

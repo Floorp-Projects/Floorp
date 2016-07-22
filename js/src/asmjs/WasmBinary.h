@@ -271,13 +271,15 @@ enum class Expr
     // i64.eqz.
     I64Eqz                               = 0xba,
 
+    // Global access.
+    GetGlobal                            = 0xc0,
+    SetGlobal                            = 0xc1,
+
     // ------------------------------------------------------------------------
     // The rest of these operators are currently only emitted internally when
     // compiling asm.js and are rejected by wasm validation.
 
     // asm.js-specific operators
-    LoadGlobal                           = 0xc0,
-    StoreGlobal,
     I32Min,
     I32Max,
     I32Neg,
