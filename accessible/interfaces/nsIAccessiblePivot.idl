@@ -20,7 +20,7 @@ interface nsIAccessiblePivotObserver;
  * provides traversal methods to move the pivot to next/prev state that complies 
  * to a given rule.
  */
-[scriptable, builtinclass, uuid(81fe5144-059b-42db-bd3a-f6ce3158d5e9)]
+[scriptable, uuid(81fe5144-059b-42db-bd3a-f6ce3158d5e9)]
 interface nsIAccessiblePivot : nsISupports
 {
   const TextBoundaryType CHAR_BOUNDARY = 0;
@@ -191,7 +191,7 @@ interface nsIAccessiblePivot : nsISupports
 /**
  * An observer interface for pivot changes.
  */
-[scriptable, builtinclass, uuid(6006e502-3861-49bd-aba1-fa6d2e74e237)]
+[scriptable, uuid(6006e502-3861-49bd-aba1-fa6d2e74e237)]
 interface nsIAccessiblePivotObserver : nsISupports
 {
   /**
@@ -213,7 +213,7 @@ interface nsIAccessiblePivotObserver : nsISupports
                       in boolean aIsFromUserInput);
 };
 
-[scriptable, builtinclass, uuid(e197460d-1eff-4247-b4bb-a43be1840dae)]
+[scriptable, uuid(e197460d-1eff-4247-b4bb-a43be1840dae)]
 interface nsIAccessibleTraversalRule : nsISupports
 {
   /* Ignore this accessible object */
