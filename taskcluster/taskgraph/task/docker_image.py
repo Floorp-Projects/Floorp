@@ -85,7 +85,7 @@ class DockerImageTask(base.Task):
                 # TODO: generate context tarballs using subdirectory clones in
                 # the image-building task so we don't have to worry about this.
                 image_parameters['context_url'] = 'file:///tmp/' + image_artifact_path
-                context_hash = generate_context_hash(context_path)
+                context_hash = generate_context_hash(GECKO, context_path, image_name)
 
             image_parameters['context_hash'] = context_hash
 
