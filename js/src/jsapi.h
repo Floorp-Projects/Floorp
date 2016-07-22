@@ -1592,7 +1592,7 @@ JS_strdup(JSRuntime* rt, const char* s);
  * Register externally maintained GC roots.
  *
  * traceOp: the trace operation. For each root the implementation should call
- *          JS_CallTracer whenever the root contains a traceable thing.
+ *          JS::TraceEdge whenever the root contains a traceable thing.
  * data:    the data argument to pass to each invocation of traceOp.
  */
 extern JS_PUBLIC_API(bool)
