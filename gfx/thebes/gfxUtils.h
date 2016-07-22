@@ -293,16 +293,6 @@ Color ToDeviceColor(Color aColor);
 Color ToDeviceColor(nscolor aColor);
 
 /**
- * Returns the first integer greater than |aNumber| which is a power of two.
- */
-static int
-NextPowerOfTwo(int aNumber)
-{
-    MOZ_ASSERT(aNumber >= 0);
-    return RoundUpPow2((size_t)aNumber + 1);
-}
-
-/**
  * Performs a checked multiply of the given width, height, and bytes-per-pixel
  * values.
  */

@@ -261,8 +261,8 @@ TexImage2DHelper(GLContext* gl,
 
             // Pad out texture width and height to the next power of two
             // as we don't support/want non power of two texture uploads
-            GLsizei paddedWidth = NextPowerOfTwo(width);
-            GLsizei paddedHeight = NextPowerOfTwo(height);
+            GLsizei paddedWidth = RoundUpPow2((uint32_t)width);
+            GLsizei paddedHeight = RoundUpPow2((uint32_t)height);
 
             GLvoid* paddedPixels = new unsigned char[paddedWidth * paddedHeight * pixelsize];
 
