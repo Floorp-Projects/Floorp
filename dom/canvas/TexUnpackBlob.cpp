@@ -133,6 +133,12 @@ FormatForPackingInfo(const PackingInfo& pi)
 ////////////////////
 
 static uint32_t
+ZeroOn2D(TexImageTarget target, uint32_t val)
+{
+    return (IsTarget3D(target) ? val : 0);
+}
+
+static uint32_t
 FallbackOnZero(uint32_t val, uint32_t fallback)
 {
     return (val ? val : fallback);
@@ -143,11 +149,13 @@ TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
                              uint32_t depth, bool isSrcPremult)
     : mAlignment(webgl->mPixelStore_UnpackAlignment)
     , mRowLength(rowLength)
-    , mImageHeight(FallbackOnZero(webgl->mPixelStore_UnpackImageHeight, height))
+    , mImageHeight(FallbackOnZero(ZeroOn2D(target,
+                                           webgl->mPixelStore_UnpackImageHeight),
+                                  height))
 
     , mSkipPixels(webgl->mPixelStore_UnpackSkipPixels)
     , mSkipRows(webgl->mPixelStore_UnpackSkipRows)
-    , mSkipImages(IsTarget3D(target) ? webgl->mPixelStore_UnpackSkipImages : 0)
+    , mSkipImages(ZeroOn2D(target, webgl->mPixelStore_UnpackSkipImages))
 
     , mWidth(width)
     , mHeight(height)
@@ -393,41 +401,54 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
                                      zOffset, mWidth, mHeight, mDepth, nullptr);
         gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER,
                         webgl->mBoundPixelUnpackBuffer->mGLName);
+        if (*out_error)
+            return false;
     }
 
     //////
+
+    // Make our sometimes-implicit values explicit. Also this keeps them constant when we
+    // ask for height=mHeight-1 and such.
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mRowLength);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, mImageHeight);
 
     if (mDepth > 1) {
         *out_error = DoTexOrSubImage(true, gl, target, level, dui, xOffset, yOffset,
                                      zOffset, mWidth, mHeight, mDepth-1, uploadPtr);
     }
 
+    // Skip the images we uploaded.
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, mSkipImages + mDepth - 1);
+
     if (mHeight > 1) {
         *out_error = DoTexOrSubImage(true, gl, target, level, dui, xOffset, yOffset,
                                      zOffset+mDepth-1, mWidth, mHeight-1, 1, uploadPtr);
     }
 
-    const uint32_t imageStride = rowStride.value() * mImageHeight;
+    const auto totalSkipRows = CheckedUint32(mSkipImages) * mImageHeight + mSkipRows;
+    const auto totalFullRows = CheckedUint32(mDepth - 1) * mImageHeight + mHeight - 1;
+    const auto tailOffsetRows = totalSkipRows + totalFullRows;
 
-    const uint32_t usedImages = mSkipImages + mDepth;
-    const uint32_t usedRows = mSkipRows + mHeight;
+    const auto tailOffsetBytes = tailOffsetRows * rowStride;
 
-    uploadPtr += (usedImages - 1) * imageStride;
-    uploadPtr += (usedRows - 1) * rowStride.value();
+    uploadPtr += tailOffsetBytes.value();
 
     //////
 
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
-    gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0);
-    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, 0);
-    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, 0);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);   // No stride padding.
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);  // No padding in general.
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, 0); // Don't skip images,
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, 0);   // or rows.
+                                                      // Keep skipping pixels though!
 
     *out_error = DoTexOrSubImage(true, gl, target, level, dui, xOffset,
                                  yOffset+mHeight-1, zOffset+mDepth-1, mWidth, 1, 1,
                                  uploadPtr);
 
+    // Reset all our modified state.
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, webgl->mPixelStore_UnpackAlignment);
     gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, webgl->mPixelStore_UnpackImageHeight);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, webgl->mPixelStore_UnpackRowLength);
     gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, webgl->mPixelStore_UnpackSkipImages);
     gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, webgl->mPixelStore_UnpackSkipRows);
 
