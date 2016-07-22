@@ -9,13 +9,13 @@ import json
 import os
 import re
 import urllib2
-import tarfile
 import time
 
 from . import base
 from taskgraph.util.docker import (
+    create_context_tar,
     docker_image,
-    generate_context_hash
+    generate_context_hash,
 )
 from taskgraph.util.templates import Templates
 
@@ -138,8 +138,7 @@ class DockerImageTask(base.Task):
         if not os.path.exists(os.path.dirname(destination)):
             os.makedirs(os.path.dirname(destination))
 
-        with tarfile.open(destination, 'w:gz') as tar:
-            tar.add(context_dir, arcname=image_name)
+        create_context_tar(context_dir, destination, image_name)
 
     @classmethod
     def from_json(cls, task_dict):
