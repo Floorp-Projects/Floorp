@@ -7,7 +7,6 @@
 SOURCES += [
     'WidevineAdapter.cpp',
     'WidevineDecryptor.cpp',
-    'WidevineFileIO.cpp',
     'WidevineUtils.cpp',
     'WidevineVideoDecoder.cpp',
     'WidevineVideoFrame.cpp',
