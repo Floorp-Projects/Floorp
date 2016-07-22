@@ -558,24 +558,6 @@ GPUProcessManager::DeallocateLayerTreeId(uint64_t aLayersId)
 }
 
 void
-GPUProcessManager::RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver)
-{
-  CompositorBridgeParent::RequestNotifyLayerTreeReady(aLayersId, aObserver);
-}
-
-void
-GPUProcessManager::RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver)
-{
-  CompositorBridgeParent::RequestNotifyLayerTreeCleared(aLayersId, aObserver);
-}
-
-void
-GPUProcessManager::SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer)
-{
-  CompositorBridgeParent::SwapLayerTreeObservers(aLayer, aOtherLayer);
-}
-
-void
 GPUProcessManager::EnsureVsyncIOThread()
 {
   if (mVsyncIOThread) {

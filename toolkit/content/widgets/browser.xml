@@ -296,12 +296,10 @@
         </setter>
       </property>
 
-      <method name="setDocShellIsActiveAndForeground">
-        <parameter name="isActive"/>
+      <method name="preserveLayers">
+        <parameter name="preserve"/>
         <body>
-          <![CDATA[
-            this.docShell && this.docShell.setIsActiveAndForeground(isActive);
-          ]]>
+          // Only useful for remote browsers.
         </body>
       </method>
 
@@ -1288,6 +1286,11 @@
             if (aOtherBrowser._remoteFinder)
               aOtherBrowser._remoteFinder.swapBrowser(aOtherBrowser);
           }
+
+          event = new CustomEvent("EndSwapDocShells", {"detail": aOtherBrowser});
+          this.dispatchEvent(event);
+          event = new CustomEvent("EndSwapDocShells", {"detail": this});
+          aOtherBrowser.dispatchEvent(event);
         ]]>
         </body>
       </method>
@@ -1333,9 +1336,6 @@
           ]]>
         </body>
       </method>
-
-      <!-- This will go away if the binding has been removed for some reason. -->
-      <field name="_alive">true</field>
     </implementation>
 
     <handlers>

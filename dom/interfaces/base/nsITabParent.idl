@@ -25,13 +25,11 @@ interface nsITabParent : nsISupports
   /**
     * As an optimisation, setting the docshell's active state to
     * inactive also triggers a layer invalidation to free up some
-    * potentially unhelpful memory usage. This attribute should be
-    * used where callers would like to set the docshell's state
-    * without losing any layer data.
-    *
-    * Otherwise, this does the same as setting the attribute above.
+    * potentially unhelpful memory usage. Calling preserveLayers
+    * will cause the layers to be preserved even for inactive
+    * docshells.
     */
-  void setDocShellIsActiveAndForeground(in boolean aIsActive);
+  void preserveLayers(in boolean aPreserveLayers);
 
   /**
    * During interactions where painting performance

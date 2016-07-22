@@ -194,6 +194,9 @@ public:
 
   virtual bool NeedsPaint() override;
 
+  // Paint the widget immediately if any paints are queued up.
+  void PaintNowIfNeeded();
+
   virtual TabChild* GetOwningTabChild() override { return mTabChild; }
 
   void UpdateBackingScaleCache(float aDpi, double aScale)
