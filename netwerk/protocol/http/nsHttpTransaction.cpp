@@ -33,7 +33,6 @@
 #include "nsIEventTarget.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIInputStream.h"
-#include "nsIThrottledInputChannel.h"
 #include "nsITransport.h"
 #include "nsIOService.h"
 #include "nsIRequestContext.h"
@@ -233,7 +232,6 @@ nsHttpTransaction::Init(uint32_t caps,
     MOZ_ASSERT(cinfo);
     MOZ_ASSERT(requestHead);
     MOZ_ASSERT(target);
-    MOZ_ASSERT(NS_IsMainThread());
 
     mActivityDistributor = do_GetService(NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -380,25 +378,6 @@ nsHttpTransaction::Init(uint32_t caps,
     }
     else
         mRequestStream = headers;
-
-    nsCOMPtr<nsIThrottledInputChannel> throttled = do_QueryInterface(mChannel);
-    nsIInputChannelThrottleQueue* queue;
-    if (throttled) {
-        rv = throttled->GetThrottleQueue(&queue);
-        // In case of failure, just carry on without throttling.
-        if (NS_SUCCEEDED(rv) && queue) {
-            nsCOMPtr<nsIAsyncInputStream> wrappedStream;
-            rv = queue->WrapStream(mRequestStream, getter_AddRefs(wrappedStream));
-            // Failure to throttle isn't sufficient reason to fail
-            // initialization
-            if (NS_SUCCEEDED(rv)) {
-                MOZ_ASSERT(wrappedStream != nullptr);
-                LOG(("nsHttpTransaction::Init %p wrapping input stream using throttle queue %p\n",
-                     this, queue));
-                mRequestStream = do_QueryInterface(wrappedStream);
-            }
-        }
-    }
 
     uint64_t size_u64;
     rv = mRequestStream->Available(&size_u64);

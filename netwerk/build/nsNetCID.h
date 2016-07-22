@@ -625,16 +625,6 @@
     {0x96, 0x1f, 0x65, 0x53, 0xcd, 0x60, 0xb1, 0xa2} \
 }
 
-#define NS_THROTTLEQUEUE_CONTRACTID \
-    "@mozilla.org/network/throttlequeue;1"
-#define NS_THROTTLEQUEUE_CID                            \
-{ /* 4c39159c-cd90-4dd3-97a7-06af5e6d84c4 */            \
-    0x4c39159c,                                         \
-    0xcd90,                                             \
-    0x4dd3,                                             \
-    {0x97, 0xa7, 0x06, 0xaf, 0x5e, 0x6d, 0x84, 0xc4}    \
-}
-
 /******************************************************************************
  * netwerk/protocol/ftp/ classes
  */
