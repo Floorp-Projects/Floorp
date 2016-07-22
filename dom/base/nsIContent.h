@@ -7,7 +7,7 @@
 #define nsIContent_h___
 
 #include "mozilla/Attributes.h"
-#include "nsAttrInfo.h"
+#include "mozilla/dom/BorrowedAttrInfo.h"
 #include "nsCaseTreatment.h" // for enum, cannot be forward-declared
 #include "nsINode.h"
 
@@ -468,7 +468,7 @@ public:
   /**
    * Gets the attribute info (name and value) for this content at a given index.
    */
-  virtual nsAttrInfo GetAttrInfoAt(uint32_t aIndex) const = 0;
+  virtual mozilla::dom::BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const = 0;
 
   /**
    * Get the number of all specified attributes.

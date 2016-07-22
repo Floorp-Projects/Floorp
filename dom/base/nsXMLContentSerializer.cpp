@@ -730,7 +730,7 @@ nsXMLContentSerializer::ScanNamespaceDeclarations(nsIContent* aContent,
   uint32_t skipAttr = count;
   for (index = 0; index < count; index++) {
 
-    const nsAttrInfo info = aContent->GetAttrInfoAt(index);
+    const BorrowedAttrInfo info = aContent->GetAttrInfoAt(index);
     const nsAttrName* name = info.mName;
 
     int32_t namespaceID = name->NamespaceID();

@@ -8,9 +8,9 @@
 #define mozilla_dom_DocumentFragment_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsAttrInfo.h"
 
 class nsIAtom;
 class nsAString;
@@ -89,9 +89,9 @@ public:
   {
     return nullptr;
   }
-  virtual nsAttrInfo GetAttrInfoAt(uint32_t aIndex) const override
+  virtual BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const override
   {
-    return nsAttrInfo(nullptr, nullptr);
+    return BorrowedAttrInfo(nullptr, nullptr);
   }
   virtual uint32_t GetAttrCount() const override
   {

@@ -1125,7 +1125,7 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
     uint32_t attributes = mBinding->GetAttrCount();
     nsAutoString attrValue;
     for (uint32_t i = 0; i < attributes; ++i) {
-      nsAttrInfo attrInfo = mBinding->GetAttrInfoAt(i);
+      BorrowedAttrInfo attrInfo = mBinding->GetAttrInfoAt(i);
       const nsAttrName* name = attrInfo.mName;
       nsDependentAtomString attrName(attrInfo.mName->LocalName());
       attrInfo.mValue->ToString(attrValue);
@@ -1415,7 +1415,7 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
     // Write out the namespace id, the namespace prefix, the local tag name,
     // and the value, in that order.
 
-    const nsAttrInfo attrInfo = aNode->GetAttrInfoAt(i);
+    const BorrowedAttrInfo attrInfo = aNode->GetAttrInfoAt(i);
     const nsAttrName* name = attrInfo.mName;
 
     // XXXndeakin don't write out xbl:inherits?

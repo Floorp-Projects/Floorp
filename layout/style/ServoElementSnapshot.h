@@ -9,9 +9,9 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/dom/BorrowedAttrInfo.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
-#include "nsAttrInfo.h"
 #include "nsChangeHint.h"
 #include "nsIAtom.h"
 
@@ -61,6 +61,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoElementSnapshotFlags)
  */
 class ServoElementSnapshot
 {
+  typedef dom::BorrowedAttrInfo BorrowedAttrInfo;
   typedef dom::Element Element;
   typedef EventStates::ServoType ServoStateType;
 
@@ -116,12 +117,12 @@ public:
   /**
    * Needed methods for attribute matching.
    */
-  nsAttrInfo GetAttrInfoAt(uint32_t aIndex) const
+  BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const
   {
     if (aIndex >= mAttrs.Length()) {
-      return nsAttrInfo(nullptr, nullptr);
+      return BorrowedAttrInfo(nullptr, nullptr);
     }
-    return nsAttrInfo(&mAttrs[aIndex].mName, &mAttrs[aIndex].mValue);
+    return BorrowedAttrInfo(&mAttrs[aIndex].mName, &mAttrs[aIndex].mValue);
   }
 
   const nsAttrValue* GetParsedAttr(nsIAtom* aLocalName) const
