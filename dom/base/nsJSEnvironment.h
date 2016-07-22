@@ -87,7 +87,6 @@ public:
                                 IsIncremental aIncremental = NonIncrementalGC,
                                 IsShrinking aShrinking = NonShrinkingGC,
                                 int64_t aSliceMillis = 0);
-  static void ShrinkGCBuffersNow();
 
   // If aExtraForgetSkippableCalls is -1, forgetSkippable won't be
   // called even if the previous collection was GC.
@@ -111,9 +110,6 @@ public:
 
   static void PokeGC(JS::gcreason::Reason aReason, int aDelay = 0);
   static void KillGCTimer();
-
-  static void PokeShrinkGCBuffers();
-  static void KillShrinkGCBuffersTimer();
 
   static void PokeShrinkingGC();
   static void KillShrinkingGCTimer();

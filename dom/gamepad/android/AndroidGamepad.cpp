@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AndroidBridge.h"
+#include "GeneratedJNIWrappers.h"
 
 namespace mozilla {
 namespace dom {
 
 void StartGamepadMonitoring()
 {
-  widget::GeckoAppShell::StartMonitoringGamepad();
+  java::GeckoAppShell::StartMonitoringGamepad();
 }
 
 void StopGamepadMonitoring()
 {
-  widget::GeckoAppShell::StopMonitoringGamepad();
+  java::GeckoAppShell::StopMonitoringGamepad();
 }
 
 } // namespace dom

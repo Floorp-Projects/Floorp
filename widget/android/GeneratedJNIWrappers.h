@@ -10,7 +10,7 @@
 #include "mozilla/jni/Refs.h"
 
 namespace mozilla {
-namespace widget {
+namespace java {
 
 class ANRReporter : public mozilla::jni::ObjectBase<ANRReporter, jobject>
 {
@@ -2955,7 +2955,7 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
+                mozilla::jni::ByteBuffer::Param,
                 int32_t,
                 bool,
                 bool> Args;
@@ -2967,10 +2967,28 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto SendThumbnail(mozilla::jni::Object::Param, int32_t, bool, bool) -> void;
+    static auto SendThumbnail(mozilla::jni::ByteBuffer::Param, int32_t, bool, bool) -> void;
+
+    struct RequestThumbnail_t {
+        typedef ThumbnailHelper Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::ByteBuffer::Param,
+                int32_t,
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "requestThumbnail";
+        static constexpr char signature[] =
+                "(Ljava/nio/ByteBuffer;III)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
 
     static const bool isMultithreaded = false;
 
+    template<class Impl> class Natives;
 };
 
 class Distribution : public mozilla::jni::ObjectBase<Distribution, jobject>
@@ -3616,7 +3634,7 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
+                mozilla::jni::ByteBuffer::Param> Args;
         static constexpr char name[] = "updateZoomedView";
         static constexpr char signature[] =
                 "(Ljava/nio/ByteBuffer;)V";
@@ -3625,7 +3643,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto updateZoomedView(mozilla::jni::Object::Param) -> void;
+    static auto updateZoomedView(mozilla::jni::ByteBuffer::Param) -> void;
 
     static const bool isMultithreaded = true;
 

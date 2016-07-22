@@ -926,7 +926,8 @@ class GCRuntime
      * Return the list of chunks that can be released outside the GC lock.
      * Must be called either during the GC or with the GC lock taken.
      */
-    ChunkPool expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC& lock);
+    friend class BackgroundDecommitTask;
+    ChunkPool expireEmptyChunkPool(const AutoLockGC& lock);
     void freeEmptyChunks(JSRuntime* rt, const AutoLockGC& lock);
     void prepareToFreeChunk(ChunkInfo& info);
 
@@ -984,7 +985,6 @@ class GCRuntime
     void sweepZones(FreeOp* fop, bool lastGC);
     void decommitAllWithoutUnlocking(const AutoLockGC& lock);
     void startDecommit();
-    void expireChunksAndArenas(bool shouldShrink, AutoLockGC& lock);
     void queueZonesForBackgroundSweep(ZoneList& zones);
     void sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadType threadType);
     void assertBackgroundSweepingFinished();

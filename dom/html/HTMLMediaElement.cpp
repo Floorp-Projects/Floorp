@@ -1500,9 +1500,15 @@ nsresult HTMLMediaElement::LoadResource()
   mCORSMode = AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 
 #ifdef MOZ_EME
+  bool isBlob = false;
   if (mMediaKeys &&
-      !IsMediaSourceURI(mLoadingSrc) &&
-      Preferences::GetBool("media.eme.mse-only", true)) {
+      Preferences::GetBool("media.eme.mse-only", true) &&
+      // We only want mediaSource URLs, but they are BlobURL, so we have to
+      // check the schema and if they are not MediaStream or real Blob.
+      (NS_FAILED(mLoadingSrc->SchemeIs(BLOBURI_SCHEME, &isBlob)) ||
+       !isBlob ||
+       IsMediaStreamURI(mLoadingSrc) ||
+       IsBlobURI(mLoadingSrc))) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 #endif

@@ -58,9 +58,9 @@ using mozilla::Unused;
 #include "Layers.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
-#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "ScopedGLHelpers.h"
@@ -85,8 +85,9 @@ using mozilla::Unused;
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::widget;
 using namespace mozilla::layers;
+using namespace mozilla::java;
+using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
@@ -277,8 +278,7 @@ private:
             , mOldEnd(aIMENotification.mTextChangeData.mRemovedEndOffset)
             , mNewEnd(aIMENotification.mTextChangeData.mAddedEndOffset)
         {
-            MOZ_ASSERT(aIMENotification.mMessage ==
-                           mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE,
+            MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE,
                        "IMETextChange initialized with wrong notification");
             MOZ_ASSERT(aIMENotification.mTextChangeData.IsValid(),
                        "The text change notification isn't initialized");
@@ -290,7 +290,7 @@ private:
     };
 
     // GeckoEditable instance used by this nsWindow;
-    mozilla::widget::GeckoEditable::GlobalRef mEditable;
+    java::GeckoEditable::GlobalRef mEditable;
     AutoTArray<mozilla::UniquePtr<mozilla::WidgetEvent>, 8> mIMEKeyEvents;
     AutoTArray<IMETextChange, 4> mIMETextChanges;
     InputContext mInputContext;
@@ -472,7 +472,7 @@ public:
             return;
         }
 
-        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
         RefPtr<CompositorBridgeParent> compositor = mWindow->GetCompositorBridgeParent();
         if (controller && compositor) {
             // TODO: Pass in correct values for presShellId and viewId.
@@ -491,7 +491,7 @@ public:
             return;
         }
 
-        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
         if (controller) {
             controller->AdjustScrollForSurfaceShift(
                 ScreenPoint(aX, aY));
@@ -502,7 +502,10 @@ public:
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-        APZCTreeManager::SetLongTapEnabled(aIsLongpressEnabled);
+        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
+        if (controller) {
+            controller->SetLongTapEnabled(aIsLongpressEnabled);
+        }
     }
 
     bool HandleScrollEvent(int64_t aTime, int32_t aMetaState,
@@ -517,7 +520,7 @@ public:
             return false;
         }
 
-        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
         if (!controller) {
             return false;
         }
@@ -568,13 +571,13 @@ public:
         MouseInput::ButtonType result = MouseInput::NONE;
 
         switch (button) {
-            case widget::sdk::MotionEvent::BUTTON_PRIMARY:
+            case java::sdk::MotionEvent::BUTTON_PRIMARY:
                 result = MouseInput::LEFT_BUTTON;
                 break;
-            case widget::sdk::MotionEvent::BUTTON_SECONDARY:
+            case java::sdk::MotionEvent::BUTTON_SECONDARY:
                 result = MouseInput::RIGHT_BUTTON;
                 break;
-            case widget::sdk::MotionEvent::BUTTON_TERTIARY:
+            case java::sdk::MotionEvent::BUTTON_TERTIARY:
                 result = MouseInput::MIDDLE_BUTTON;
                 break;
             default:
@@ -587,19 +590,19 @@ public:
     static int16_t ConvertButtons(int buttons) {
         int16_t result = 0;
 
-        if (buttons & widget::sdk::MotionEvent::BUTTON_PRIMARY) {
+        if (buttons & java::sdk::MotionEvent::BUTTON_PRIMARY) {
             result |= WidgetMouseEventBase::eLeftButtonFlag;
         }
-        if (buttons & widget::sdk::MotionEvent::BUTTON_SECONDARY) {
+        if (buttons & java::sdk::MotionEvent::BUTTON_SECONDARY) {
             result |= WidgetMouseEventBase::eRightButtonFlag;
         }
-        if (buttons & widget::sdk::MotionEvent::BUTTON_TERTIARY) {
+        if (buttons & java::sdk::MotionEvent::BUTTON_TERTIARY) {
             result |= WidgetMouseEventBase::eMiddleButtonFlag;
         }
-        if (buttons & widget::sdk::MotionEvent::BUTTON_BACK) {
+        if (buttons & java::sdk::MotionEvent::BUTTON_BACK) {
             result |= WidgetMouseEventBase::e4thButtonFlag;
         }
-        if (buttons & widget::sdk::MotionEvent::BUTTON_FORWARD) {
+        if (buttons & java::sdk::MotionEvent::BUTTON_FORWARD) {
             result |= WidgetMouseEventBase::e5thButtonFlag;
         }
 
@@ -617,7 +620,7 @@ public:
             return false;
         }
 
-        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
         if (!controller) {
             return false;
         }
@@ -710,7 +713,7 @@ public:
             return false;
         }
 
-        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
         if (!controller) {
             return false;
         }
@@ -832,7 +835,7 @@ public:
 
     void HandleMotionEventVelocity(int64_t aTime, float aSpeedY)
     {
-        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
         if (controller) {
             controller->ProcessTouchVelocity((uint32_t)aTime, aSpeedY);
         }
@@ -2466,7 +2469,7 @@ ConvertAndroidScanCodeToCodeNameIndex(int scanCode)
 static bool
 IsModifierKey(int32_t keyCode)
 {
-    using mozilla::widget::sdk::KeyEvent;
+    using mozilla::java::sdk::KeyEvent;
     return keyCode == KeyEvent::KEYCODE_ALT_LEFT ||
            keyCode == KeyEvent::KEYCODE_ALT_RIGHT ||
            keyCode == KeyEvent::KEYCODE_SHIFT_LEFT ||
@@ -2480,7 +2483,7 @@ IsModifierKey(int32_t keyCode)
 static Modifiers
 GetModifiers(int32_t metaState)
 {
-    using mozilla::widget::sdk::KeyEvent;
+    using mozilla::java::sdk::KeyEvent;
     return (metaState & KeyEvent::META_ALT_MASK ? MODIFIER_ALT : 0)
         | (metaState & KeyEvent::META_SHIFT_MASK ? MODIFIER_SHIFT : 0)
         | (metaState & KeyEvent::META_CTRL_MASK ? MODIFIER_CONTROL : 0)

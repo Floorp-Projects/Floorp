@@ -18,7 +18,6 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        const { DebuggerServer } = require("devtools/server/main");
         let win;
 
         SimpleTest.registerCleanupFunction(() => {
@@ -98,17 +97,14 @@
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 3, "Found 3 runtime buttons");
 
-          let deferred = promise.defer();
-          win.AppManager.connection.once(
-              win.Connection.Events.CONNECTED,
-              () => deferred.resolve());
-
+          let connectionsChanged = waitForConnectionChange("opened", 2);
           items[0].click();
 
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
           yield win.UI._busyPromise;
 
-          is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
+          yield connectionsChanged;
+          is(Object.keys(DebuggerServer._connections).length, 2, "Connected");
 
           yield waitForUpdate(win, "runtime-global-actors");
 
@@ -129,19 +125,23 @@
           ok(isPlayActive(), "play button is enabled 3");
           ok(!isStopActive(), "stop button is disabled 3");
 
+          connectionsChanged = waitForConnectionChange("closed", 2);
           yield win.Cmds.disconnectRuntime();
 
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
 
           ok(win.AppManager.selectedProject, "A project is still selected");
           ok(!isPlayActive(), "play button is disabled 4");
           ok(!isStopActive(), "stop button is disabled 4");
 
+          connectionsChanged = waitForConnectionChange("opened", 2);
           docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
 
           yield waitForUpdate(win, "runtime-targets");
 
-          is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
+          yield connectionsChanged;
+          is(Object.keys(DebuggerServer._connections).length, 2, "Locally connected");
 
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
 

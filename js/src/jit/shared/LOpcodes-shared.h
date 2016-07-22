@@ -389,11 +389,11 @@
     _(WasmLoadI64)                  \
     _(WasmStore)                    \
     _(WasmBoundsCheck)              \
+    _(WasmLoadGlobalVar)            \
+    _(WasmStoreGlobalVar)           \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSLoadFuncPtr)             \
-    _(AsmJSLoadGlobalVar)           \
-    _(AsmJSStoreGlobalVar)          \
     _(AsmJSLoadFFIFunc)             \
     _(AsmJSParameter)               \
     _(AsmJSReturn)                  \

@@ -11,7 +11,7 @@
 #include "mozilla/jni/Natives.h"
 
 namespace mozilla {
-namespace widget {
+namespace java {
 
 template<class Impl>
 class ANRReporter::Natives : public mozilla::jni::NativeImpl<ANRReporter, Impl>
@@ -324,6 +324,21 @@ const JNINativeMethod PrefsHelper::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<PrefsHelper::SetPref_t>(
             mozilla::jni::NativeStub<PrefsHelper::SetPref_t, Impl>
             ::template Wrap<&Impl::SetPref>)
+};
+
+template<class Impl>
+class ThumbnailHelper::Natives : public mozilla::jni::NativeImpl<ThumbnailHelper, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod ThumbnailHelper::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<ThumbnailHelper::RequestThumbnail_t>(
+            mozilla::jni::NativeStub<ThumbnailHelper::RequestThumbnail_t, Impl>
+            ::template Wrap<&Impl::RequestThumbnail>)
 };
 
 template<class Impl>

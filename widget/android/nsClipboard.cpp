@@ -43,7 +43,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   nsAutoString buffer;
   supportsString->GetData(buffer);
 
-  widget::Clipboard::SetClipboardText(buffer);
+  java::Clipboard::SetClipboardText(buffer);
   return NS_OK;
 }
 
@@ -84,7 +84,7 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
 {
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  widget::Clipboard::ClearText();
+  java::Clipboard::ClearText();
   
   return NS_OK;
 }
@@ -100,7 +100,7 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
 
   for (uint32_t k = 0; k < aLength; k++) {
     if (strcmp(aFlavorList[k], kUnicodeMime) == 0) {
-      *aHasText = widget::Clipboard::HasText();
+      *aHasText = java::Clipboard::HasText();
       break;
     }
   }

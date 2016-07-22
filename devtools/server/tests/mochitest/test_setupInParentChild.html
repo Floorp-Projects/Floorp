@@ -40,7 +40,7 @@ function runTests() {
   iframe.mozbrowser = true;
   document.body.appendChild(iframe);
 
-  let mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+  let mm = iframe.frameLoader.messageManager;
 
   // Instantiate a minimal server
   if (!DebuggerServer.initialized) {

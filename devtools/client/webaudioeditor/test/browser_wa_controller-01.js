@@ -14,13 +14,13 @@ add_task(function* () {
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
-  reload(target);
-
-  let [actors] = yield Promise.all([
+  let events = Promise.all([
     once(gAudioNodes, "add", 2),
     once(gAudioNodes, "disconnect"),
     waitForGraphRendered(panelWin, 2, 0)
   ]);
+  reload(target);
+  yield events;
 
   ok(true, "Successfully disconnected a just-created node.");
 

@@ -19,8 +19,6 @@
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function*() {
-          const { DebuggerServer } = require("devtools/server/main");
-
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
             DebuggerServer.addBrowserActors();
@@ -53,21 +51,24 @@
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 1, "Found one runtime button");
 
-          let deferred = promise.defer();
-          win.AppManager.connection.once(
-              win.Connection.Events.CONNECTED,
-              () => deferred.resolve());
+          let connectionsChanged = waitForConnectionChange("opened", 2);
           items[0].click();
 
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
           yield win.UI._busyPromise;
-          is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
+
+          yield connectionsChanged;
+          is(Object.keys(DebuggerServer._connections).length, 2, "Connected");
+
+          connectionsChanged = waitForConnectionChange("closed", 2);
 
           yield nextTick();
-
           yield closeWebIDE(win);
 
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
+
+          connectionsChanged = waitForConnectionChange("opened", 2);
 
           win = yield openWebIDE();
 
@@ -76,7 +77,8 @@
 
           yield waitForUpdate(win, "runtime-targets");
 
-          is(Object.keys(DebuggerServer._connections).length, 1, "Automatically reconnected");
+          yield connectionsChanged;
+          is(Object.keys(DebuggerServer._connections).length, 2, "Automatically reconnected");
 
           yield win.Cmds.disconnectRuntime();
 

@@ -696,7 +696,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        auto* load = MAsmJSLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst);
+        auto* load = MWasmLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst);
         curBlock_->add(load);
         return load;
     }
@@ -705,7 +705,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return;
-        curBlock_->add(MAsmJSStoreGlobalVar::New(alloc(), globalDataOffset, v));
+        curBlock_->add(MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v));
     }
 
     void addInterruptCheck()

@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsParentalControlsService.h"
-#include "AndroidBridge.h"
 #include "nsString.h"
 #include "nsIFile.h"
+#include "GeneratedJNIWrappers.h"
+
+namespace java = mozilla::java;
 
 NS_IMPL_ISUPPORTS(nsParentalControlsService, nsIParentalControlsService)
 
@@ -14,7 +16,7 @@ nsParentalControlsService::nsParentalControlsService() :
   mEnabled(false)
 {
   if (mozilla::jni::IsAvailable()) {
-    mEnabled = mozilla::widget::Restrictions::IsUserRestricted();
+    mEnabled = java::Restrictions::IsUserRestricted();
   }
 }
 
@@ -92,7 +94,7 @@ nsParentalControlsService::IsAllowed(int16_t aAction,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    *_retval = mozilla::widget::Restrictions::IsAllowed(aAction,
+    *_retval = java::Restrictions::IsAllowed(aAction,
                                                     NS_ConvertUTF8toUTF16(url));
     return rv;
   }

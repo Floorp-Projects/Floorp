@@ -4,24 +4,25 @@
 
 "use strict";
 
-/* global addMessageListener, removeMessageListener, sendAsyncMessage */
+/* global addEventListener, addMessageListener, removeMessageListener, sendAsyncMessage */
 
 try {
   var chromeGlobal = this;
 
   // Encapsulate in its own scope to allows loading this frame script more than once.
   (function () {
-    let Cu = Components.utils;
-    let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const Cu = Components.utils;
+    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+
     const DevToolsUtils = require("devtools/shared/DevToolsUtils");
     const { dumpn } = DevToolsUtils;
     const { DebuggerServer, ActorPool } = require("devtools/server/main");
 
-    // Note that this frame script may be evaluated in non-e10s build. In such case,
-    // DebuggerServer is already going to be initialized.
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
-      DebuggerServer.isInChildProcess = true;
+      // For non-e10s mode, there is only one server instance, so be sure the browser
+      // actors get loaded.
+      DebuggerServer.addBrowserActors();
     }
 
     // In case of apps being loaded in parent process, DebuggerServer is already
@@ -97,6 +98,16 @@ try {
       }
     });
     addMessageListener("debug:disconnect", onDisconnect);
+
+    // In non-e10s mode, the "debug:disconnect" message isn't always received before the
+    // messageManager connection goes away.  Watching for "unload" here ensures we close
+    // any connections when the frame is unloaded.
+    addEventListener("unload", () => {
+      for (let conn of connections.values()) {
+        conn.close();
+      }
+      connections.clear();
+    });
 
     let onInspect = DevToolsUtils.makeInfallible(function (msg) {
       // Store the node to be inspected in a global variable (gInspectingNode). Later

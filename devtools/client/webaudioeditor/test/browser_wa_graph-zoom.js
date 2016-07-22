@@ -13,8 +13,8 @@ add_task(function* () {
   let started = once(gFront, "start-context");
 
   yield Promise.all([
+    waitForGraphRendered(panelWin, 3, 2),
     reload(target),
-    waitForGraphRendered(panelWin, 3, 2)
   ]);
 
   is(ContextView.getCurrentScale(), 1, "Default graph scale is 1.");
@@ -31,8 +31,8 @@ add_task(function* () {
   is(ContextView.getCurrentTranslation()[1], 400, "After zoom, y-translation is 400.");
 
   yield Promise.all([
+    waitForGraphRendered(panelWin, 3, 2),
     reload(target),
-    waitForGraphRendered(panelWin, 3, 2)
   ]);
 
   is(ContextView.getCurrentScale(), 1, "After refresh, graph scale is 1.");

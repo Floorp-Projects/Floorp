@@ -599,7 +599,7 @@ RenderLayers(ContainerT* aContainer,
     }
 
     if (gfxPrefs::LayersDrawFPS()) {
-      for (auto metadata : layer->GetAllScrollMetadata()) {
+      for (const auto& metadata : layer->GetAllScrollMetadata()) {
         if (metadata.IsApzForceDisabled()) {
           aManager->DisabledApzWarning();
           break;

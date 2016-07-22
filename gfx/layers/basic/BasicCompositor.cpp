@@ -706,6 +706,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     // placeholder so that CreateRenderTarget() works. This is only used to create a new buffered
     // draw target that we composite into, then copy the results the destination.
     mDrawTarget = mTarget;
+    bufferMode = BufferMode::BUFFER_NONE;
   } else {
     // StartRemoteDrawingInRegion can mutate mInvalidRegion.
     mDrawTarget = mWidget->StartRemoteDrawingInRegion(mInvalidRegion, &bufferMode);
@@ -795,7 +796,7 @@ BasicCompositor::EndFrame()
   // Pop aInvalidregion
   mRenderTarget->mDrawTarget->PopClip();
 
-  if (mTarget || mRenderTarget->mDrawTarget != mDrawTarget) {
+  if (mRenderTarget->mDrawTarget != mDrawTarget) {
     // Note: Most platforms require us to buffer drawing to the widget surface.
     // That's why we don't draw to mDrawTarget directly.
     RefPtr<SourceSurface> source;

@@ -2644,8 +2644,9 @@ ContentChild::RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistration
       static_cast<BlobChild*>(registration.blobChild())->GetBlobImpl();
     MOZ_ASSERT(blobImpl);
 
-    nsHostObjectProtocolHandler::AddDataEntry(registration.url(), blobImpl,
-                                              registration.principal());
+    nsHostObjectProtocolHandler::AddDataEntry(registration.url(),
+                                              registration.principal(),
+                                              blobImpl);
   }
 
   return true;
@@ -3396,7 +3397,7 @@ ContentChild::RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobCh
   RefPtr<BlobImpl> blobImpl = static_cast<BlobChild*>(aBlobChild)->GetBlobImpl();
   MOZ_ASSERT(blobImpl);
 
-  nsHostObjectProtocolHandler::AddDataEntry(aURI, blobImpl, aPrincipal);
+  nsHostObjectProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl);
   return true;
 }
 

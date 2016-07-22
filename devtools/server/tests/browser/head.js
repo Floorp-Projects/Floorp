@@ -61,7 +61,9 @@ function initDebuggerServer() {
     // Sometimes debugger server does not get destroyed correctly by previous
     // tests.
     DebuggerServer.destroy();
-  } catch (ex) { }
+  } catch (e) {
+    info(`DebuggerServer destroy error: ${e}\n${e.stack}`);
+  }
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 }

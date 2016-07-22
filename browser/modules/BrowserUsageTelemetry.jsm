@@ -10,18 +10,26 @@ this.EXPORTED_SYMBOLS = ["BrowserUsageTelemetry"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+// The upper bound for the count of the visited unique domain names.
+const MAX_UNIQUE_VISITED_DOMAINS = 100;
 
 // Observed topic names.
 const WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const TELEMETRY_SUBSESSIONSPLIT_TOPIC = "internal-telemetry-after-subsession-split";
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
-const DOMWINDOW_CLOSED_TOPIC = "domwindowclosed";
 
 // Probe names.
 const MAX_TAB_COUNT_SCALAR_NAME = "browser.engagement.max_concurrent_tab_count";
 const MAX_WINDOW_COUNT_SCALAR_NAME = "browser.engagement.max_concurrent_window_count";
 const TAB_OPEN_EVENT_COUNT_SCALAR_NAME = "browser.engagement.tab_open_event_count";
 const WINDOW_OPEN_EVENT_COUNT_SCALAR_NAME = "browser.engagement.window_open_event_count";
+const UNIQUE_DOMAINS_COUNT_SCALAR_NAME = "browser.engagement.unique_domains_count";
+const TOTAL_URI_COUNT_SCALAR_NAME = "browser.engagement.total_uri_count";
 
 function getOpenTabsAndWinsCounts() {
   let tabCount = 0;
@@ -36,6 +44,59 @@ function getOpenTabsAndWinsCounts() {
 
   return { tabCount, winCount };
 }
+
+let URICountListener = {
+  // A set containing the visited domains, see bug 1271310.
+  _domainSet: new Set(),
+
+  onLocationChange(browser, webProgress, request, uri, flags) {
+    // Don't count this URI if it's an error page.
+    if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+      return;
+    }
+
+    // We only care about top level loads.
+    if (!webProgress.isTopLevel) {
+      return;
+    }
+
+    // Only consider http(s) schemas.
+    if (!uri.schemeIs("http") && !uri.schemeIs("https")) {
+      return;
+    }
+
+    // Update the URI counts.
+    Services.telemetry.scalarAdd(TOTAL_URI_COUNT_SCALAR_NAME, 1);
+
+    // We only want to count the unique domains up to MAX_UNIQUE_VISITED_DOMAINS.
+    if (this._domainSet.size == MAX_UNIQUE_VISITED_DOMAINS) {
+      return;
+    }
+
+    // Unique domains should be aggregated by (eTLD + 1): x.test.com and y.test.com
+    // are counted once as test.com.
+    try {
+      // Even if only considering http(s) URIs, |getBaseDomain| could still throw
+      // due to the URI containing invalid characters or the domain actually being
+      // an ipv4 or ipv6 address.
+      this._domainSet.add(Services.eTLD.getBaseDomain(uri));
+    } catch (e) {
+      return;
+    }
+
+    Services.telemetry.scalarSet(UNIQUE_DOMAINS_COUNT_SCALAR_NAME, this._domainSet.size);
+  },
+
+  /**
+   * Reset the counts. This should be called when breaking a session in Telemetry.
+   */
+  reset() {
+    this._domainSet.clear();
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference]),
+};
 
 let BrowserUsageTelemetry = {
   init() {
@@ -52,11 +113,13 @@ let BrowserUsageTelemetry = {
     const counts = getOpenTabsAndWinsCounts();
     Services.telemetry.scalarSetMaximum(MAX_TAB_COUNT_SCALAR_NAME, counts.tabCount);
     Services.telemetry.scalarSetMaximum(MAX_WINDOW_COUNT_SCALAR_NAME, counts.winCount);
+
+    // Reset the URI counter.
+    URICountListener.reset();
   },
 
   uninit() {
     Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC, false);
-    Services.obs.removeObserver(this, DOMWINDOW_CLOSED_TOPIC, false);
     Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC, false);
     Services.obs.removeObserver(this, WINDOWS_RESTORED_TOPIC, false);
   },
@@ -69,9 +132,6 @@ let BrowserUsageTelemetry = {
       case DOMWINDOW_OPENED_TOPIC:
         this._onWindowOpen(subject);
         break;
-      case DOMWINDOW_CLOSED_TOPIC:
-        this._unregisterWindow(subject);
-        break;
       case TELEMETRY_SUBSESSIONSPLIT_TOPIC:
         this.afterSubsessionSplit();
         break;
@@ -82,6 +142,9 @@ let BrowserUsageTelemetry = {
     switch(event.type) {
       case "TabOpen":
         this._onTabOpen();
+        break;
+      case "unload":
+        this._unregisterWindow(event.target);
         break;
     }
   },
@@ -94,7 +157,6 @@ let BrowserUsageTelemetry = {
   _setupAfterRestore() {
     // Make sure to catch new chrome windows and subsession splits.
     Services.obs.addObserver(this, DOMWINDOW_OPENED_TOPIC, false);
-    Services.obs.addObserver(this, DOMWINDOW_CLOSED_TOPIC, false);
     Services.obs.addObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC, false);
 
     // Attach the tabopen handlers to the existing Windows.
@@ -113,20 +175,28 @@ let BrowserUsageTelemetry = {
    * Adds listeners to a single chrome window.
    */
   _registerWindow(win) {
+    win.addEventListener("unload", this);
     win.addEventListener("TabOpen", this, true);
+
+    // Don't include URI and domain counts when in private mode.
+    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+      return;
+    }
+    win.gBrowser.addTabsProgressListener(URICountListener);
   },
 
   /**
    * Removes listeners from a single chrome window.
    */
   _unregisterWindow(win) {
-    // Ignore non-browser windows.
-    if (!(win instanceof Ci.nsIDOMWindow) ||
-        win.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
+    win.removeEventListener("unload", this);
+    win.removeEventListener("TabOpen", this, true);
+
+    // Don't include URI and domain counts when in private mode.
+    if (PrivateBrowsingUtils.isWindowPrivate(win.defaultView)) {
       return;
     }
-
-    win.removeEventListener("TabOpen", this, true);
+    win.defaultView.gBrowser.removeTabsProgressListener(URICountListener);
   },
 
   /**

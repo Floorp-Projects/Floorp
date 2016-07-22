@@ -21,37 +21,60 @@ namespace a11y {
 inline mozilla::a11y::role
 Accessible::Role()
 {
-  if (!mRoleMapEntry || mRoleMapEntry->roleRule != kUseMapRole)
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole)
     return ARIATransformRole(NativeRole());
 
-  return ARIATransformRole(mRoleMapEntry->role);
+  return ARIATransformRole(roleMapEntry->role);
+}
+
+inline bool
+Accessible::HasARIARole() const
+{
+  return mRoleMapEntryIndex != aria::NO_ROLE_MAP_ENTRY_INDEX;
 }
 
 inline bool
 Accessible::IsARIARole(nsIAtom* aARIARole) const
 {
-  return mRoleMapEntry && mRoleMapEntry->Is(aARIARole);
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  return roleMapEntry && roleMapEntry->Is(aARIARole);
 }
 
 inline bool
 Accessible::HasStrongARIARole() const
 {
-  return mRoleMapEntry && mRoleMapEntry->roleRule == kUseMapRole;
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  return roleMapEntry && roleMapEntry->roleRule == kUseMapRole;
+}
+
+inline const nsRoleMapEntry*
+Accessible::ARIARoleMap() const
+{
+  return aria::GetRoleMapFromIndex(mRoleMapEntryIndex);
 }
 
 inline mozilla::a11y::role
 Accessible::ARIARole()
 {
-  if (!mRoleMapEntry || mRoleMapEntry->roleRule != kUseMapRole)
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole)
     return mozilla::a11y::roles::NOTHING;
 
-  return ARIATransformRole(mRoleMapEntry->role);
+  return ARIATransformRole(roleMapEntry->role);
+}
+
+inline void
+Accessible::SetRoleMapEntry(const nsRoleMapEntry* aRoleMapEntry)
+{
+  mRoleMapEntryIndex = aria::GetIndexFromRoleMap(aRoleMapEntry);
 }
 
 inline bool
 Accessible::IsSearchbox() const
 {
-  return (mRoleMapEntry && mRoleMapEntry->Is(nsGkAtoms::searchbox)) ||
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  return (roleMapEntry && roleMapEntry->Is(nsGkAtoms::searchbox)) ||
     (mContent->IsHTMLElement(nsGkAtoms::input) &&
      mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                            nsGkAtoms::textInputType, eCaseMatters));
@@ -60,8 +83,9 @@ Accessible::IsSearchbox() const
 inline bool
 Accessible::HasGenericType(AccGenericType aType) const
 {
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return (mGenericTypes & aType) ||
-    (mRoleMapEntry && mRoleMapEntry->IsOfType(aType));
+    (roleMapEntry && roleMapEntry->IsOfType(aType));
 }
 
 inline bool
@@ -70,7 +94,8 @@ Accessible::HasNumericValue() const
   if (mStateFlags & eHasNumericValue)
     return true;
 
-  return mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue;
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  return roleMapEntry && roleMapEntry->valueRule != eNoValue;
 }
 
 inline void

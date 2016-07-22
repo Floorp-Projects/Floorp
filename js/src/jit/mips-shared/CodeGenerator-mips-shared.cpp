@@ -2235,9 +2235,9 @@ CodeGeneratorMIPSShared::visitEffectiveAddress(LEffectiveAddress* ins)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
+CodeGeneratorMIPSShared::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 {
-    const MAsmJSLoadGlobalVar* mir = ins->mir();
+    const MWasmLoadGlobalVar* mir = ins->mir();
     unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
     if (mir->type() == MIRType::Int32)
         masm.load32(Address(GlobalReg, addr), ToRegister(ins->output()));
@@ -2248,9 +2248,9 @@ CodeGeneratorMIPSShared::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins)
+CodeGeneratorMIPSShared::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 {
-    const MAsmJSStoreGlobalVar* mir = ins->mir();
+    const MWasmStoreGlobalVar* mir = ins->mir();
 
     MOZ_ASSERT(IsNumberType(mir->value()->type()));
     unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;

@@ -51,7 +51,7 @@ namespace layers {
 class BasicLayerManager;
 class CompositorBridgeChild;
 class CompositorBridgeParent;
-class APZCTreeManager;
+class IAPZCTreeManager;
 class GeckoContentController;
 class APZEventState;
 class CompositorSession;
@@ -119,7 +119,7 @@ protected:
   typedef mozilla::layers::BufferMode BufferMode;
   typedef mozilla::layers::CompositorBridgeChild CompositorBridgeChild;
   typedef mozilla::layers::CompositorBridgeParent CompositorBridgeParent;
-  typedef mozilla::layers::APZCTreeManager APZCTreeManager;
+  typedef mozilla::layers::IAPZCTreeManager IAPZCTreeManager;
   typedef mozilla::layers::GeckoContentController GeckoContentController;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::APZEventState APZEventState;
@@ -609,7 +609,7 @@ protected:
   RefPtr<CompositorSession> mCompositorSession;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
   RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
-  RefPtr<APZCTreeManager> mAPZC;
+  RefPtr<IAPZCTreeManager> mAPZC;
   RefPtr<GeckoContentController> mRootContentController;
   RefPtr<APZEventState> mAPZEventState;
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;

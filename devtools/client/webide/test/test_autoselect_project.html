@@ -19,8 +19,6 @@
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function* () {
-          const { DebuggerServer } = require("devtools/server/main");
-
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
             DebuggerServer.addBrowserActors();
@@ -35,11 +33,13 @@
           is(items.length, 2, "Found 2 runtime buttons");
 
           // Connect to local runtime
+          let connectionsChanged = waitForConnectionChange("opened", 2);
           items[1].click();
 
           yield waitForUpdate(win, "runtime-targets");
 
-          is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
+          yield connectionsChanged;
+          is(Object.keys(DebuggerServer._connections).length, 2, "Locally connected");
 
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
 
@@ -55,10 +55,15 @@
           let lastProject = Services.prefs.getCharPref("devtools.webide.lastSelectedProject");
           is(lastProject, "mainProcess:", "Last project is main process");
 
+          connectionsChanged = waitForConnectionChange("closed", 2);
+
           yield nextTick();
           yield closeWebIDE(win);
 
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
+
+          connectionsChanged = waitForConnectionChange("opened", 2);
 
           // Re-open, should reselect main process after connection
           win = yield openWebIDE();
@@ -74,7 +79,8 @@
 
           yield waitForUpdate(win, "runtime-targets");
 
-          is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
+          yield connectionsChanged;
+          is(Object.keys(DebuggerServer._connections).length, 2, "Locally connected");
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
           is(win.AppManager.selectedProject.type, "mainProcess", "Main process reselected");
 

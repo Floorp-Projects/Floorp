@@ -60,14 +60,14 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitAsmJSCall(LAsmJSCall* ins);
     void visitWasmLoad(LWasmLoad* ins);
     void visitWasmStore(LWasmStore* ins);
+    void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
+    void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
     void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins);
     void visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
-    void visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins);
-    void visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins);
     void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins);
     void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
     void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins);

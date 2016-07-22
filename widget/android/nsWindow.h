@@ -249,7 +249,7 @@ private:
     void CreateLayerManager(int aCompositorWidth, int aCompositorHeight);
     void RedrawAll();
 
-    mozilla::widget::LayerRenderer::Frame::GlobalRef mLayerRendererFrame;
+    mozilla::java::LayerRenderer::Frame::GlobalRef mLayerRendererFrame;
 };
 
 #endif /* NSWINDOW_H_ */

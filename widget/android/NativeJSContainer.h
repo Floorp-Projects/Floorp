@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace widget {
 
-NativeJSContainer::LocalRef CreateNativeJSContainer(
-        JSContext* cx, JS::HandleObject object);
+java::NativeJSContainer::LocalRef
+CreateNativeJSContainer(JSContext* cx, JS::HandleObject object);
 
 } // namespace widget
 } // namespace mozilla

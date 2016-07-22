@@ -718,6 +718,19 @@ bool
 Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
                                  const ScriptFrameIter* maybeIter, MutableHandleValue vp)
 {
+    Rooted<DebuggerFrame*> result(cx);
+    if (!Debugger::getScriptFrameWithIter(cx, referent, maybeIter, &result))
+        return false;
+
+    vp.setObject(*result);
+    return true;
+}
+
+bool
+Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
+                                 const ScriptFrameIter* maybeIter,
+                                 MutableHandle<DebuggerFrame*> result)
+{
     MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == referent);
     MOZ_ASSERT(!referent.script()->selfHosted());
 
@@ -730,8 +743,8 @@ Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
         RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
         RootedNativeObject debugger(cx, object);
 
-        RootedNativeObject frame(cx, DebuggerFrame::create(cx, proto, referent, maybeIter,
-                                                           debugger));
+        Rooted<DebuggerFrame*> frame(cx, DebuggerFrame::create(cx, proto, referent, maybeIter,
+                                                               debugger));
         if (!frame)
             return false;
 
@@ -744,7 +757,7 @@ Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
         }
     }
 
-    vp.setObject(*p->value());
+    result.set(&p->value()->as<DebuggerFrame>());
     return true;
 }
 
@@ -7174,6 +7187,105 @@ DebuggerFrame::getIsGenerator(Handle<DebuggerFrame*> frame)
     return DebuggerFrame::getReferent(frame).script()->isGenerator();
 }
 
+/* static */ bool
+DebuggerFrame::getOffset(JSContext* cx, Handle<DebuggerFrame*> frame, size_t& result)
+{
+    MOZ_ASSERT(frame->isLive());
+
+    Maybe<ScriptFrameIter> maybeIter;
+    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
+        return false;
+    ScriptFrameIter& iter = *maybeIter;
+
+    JSScript* script = iter.script();
+    UpdateFrameIterPc(iter);
+    jsbytecode* pc = iter.pc();
+    result = script->pcToOffset(pc);
+    return true;
+}
+
+/* static */ bool
+DebuggerFrame::getOlder(JSContext* cx, Handle<DebuggerFrame*> frame,
+                        MutableHandle<DebuggerFrame*> result)
+{
+    MOZ_ASSERT(frame->isLive());
+
+    Debugger* dbg = frame->owner();
+
+    Maybe<ScriptFrameIter> maybeIter;
+    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
+        return false;
+    ScriptFrameIter& iter = *maybeIter;
+
+    for (++iter; !iter.done(); ++iter) {
+        if (dbg->observesFrame(iter)) {
+            if (iter.isIon() && !iter.ensureHasRematerializedFrame(cx))
+                return false;
+            return dbg->getScriptFrame(cx, iter, result);
+        }
+    }
+
+    result.set(nullptr);
+    return true;
+}
+
+/* static */ bool
+DebuggerFrame::getThis(JSContext* cx, Handle<DebuggerFrame*> frame, MutableHandleValue result)
+{
+    MOZ_ASSERT(frame->isLive());
+
+    Debugger* dbg = frame->owner();
+
+    Maybe<ScriptFrameIter> maybeIter;
+    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
+        return false;
+    ScriptFrameIter& iter = *maybeIter;
+
+    {
+        AbstractFramePtr frame = iter.abstractFramePtr();
+        AutoCompartment ac(cx, frame.scopeChain());
+
+        UpdateFrameIterPc(iter);
+
+        if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, iter.pc(), result))
+            return false;
+    }
+
+    return dbg->wrapDebuggeeValue(cx, result);
+}
+
+/* static */ DebuggerFrameType
+DebuggerFrame::getType(Handle<DebuggerFrame*> frame)
+{
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+
+    /*
+     * Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
+     * order of checks here is significant.
+     */
+    if (referent.isEvalFrame())
+        return DebuggerFrameType::Eval;
+    else if (referent.isGlobalFrame())
+        return DebuggerFrameType::Global;
+    else if (referent.isFunctionFrame())
+        return DebuggerFrameType::Call;
+    else if (referent.isModuleFrame())
+        return DebuggerFrameType::Module;
+    MOZ_CRASH("Unknown frame type");
+}
+
+/* static */ DebuggerFrameImplementation
+DebuggerFrame::getImplementation(Handle<DebuggerFrame*> frame)
+{
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+
+    if (referent.isBaselineFrame())
+        return DebuggerFrameImplementation::Baseline;
+    else if (referent.isRematerializedFrame())
+        return DebuggerFrameImplementation::Ion;
+    return DebuggerFrameImplementation::Interpreter;
+}
+
 /* statuc */ bool
 DebuggerFrame::isLive() const
 {
@@ -7346,42 +7458,56 @@ DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname
     THIS_FRAME_ITER(cx, argc, vp, fnname, args, thisobj, maybeIter, iter);               \
     Debugger* dbg = Debugger::fromChildJSObject(thisobj)
 
-static bool
-DebuggerFrame_getType(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::typeGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME(cx, argc, vp, "get type", args, thisobj, frame);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get type", args, frame);
 
-    /*
-     * Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
-     * order of checks here is significant.
-     */
-    JSString* type;
-    if (frame.isEvalFrame())
-        type = cx->names().eval;
-    else if (frame.isGlobalFrame())
-        type = cx->names().global;
-    else if (frame.isFunctionFrame())
-        type = cx->names().call;
-    else if (frame.isModuleFrame())
-        type = cx->names().module;
-    else
-        MOZ_CRASH("Unknown frame type");
-    args.rval().setString(type);
+    DebuggerFrameType type = DebuggerFrame::getType(frame);
+
+    JSString* str;
+    switch (type) {
+      case DebuggerFrameType::Eval:
+        str = cx->names().eval;
+        break;
+      case DebuggerFrameType::Global:
+        str = cx->names().global;
+        break;
+      case DebuggerFrameType::Call:
+        str = cx->names().call;
+        break;
+      case DebuggerFrameType::Module:
+        str = cx->names().module;
+        break;
+      default:
+        MOZ_CRASH("bad DebuggerFrameType value");
+    }
+
+    args.rval().setString(str);
     return true;
 }
 
-static bool
-DebuggerFrame_getImplementation(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::implementationGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME(cx, argc, vp, "get implementation", args, thisobj, frame);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get implementation", args, frame);
+
+    DebuggerFrameImplementation implementation = DebuggerFrame::getImplementation(frame);
 
     const char* s;
-    if (frame.isBaselineFrame())
+    switch (implementation) {
+      case DebuggerFrameImplementation::Baseline:
         s = "baseline";
-    else if (frame.isRematerializedFrame())
+        break;
+      case DebuggerFrameImplementation::Ion:
         s = "ion";
-    else
+        break;
+      case DebuggerFrameImplementation::Interpreter:
         s = "interpreter";
+        break;
+      default:
+        MOZ_CRASH("bad DebuggerFrameImplementation value");
+    }
 
     JSAtom* str = Atomize(cx, s, strlen(s));
     if (!str)
@@ -7439,41 +7565,24 @@ DebuggerFrame::constructingGetter(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerFrame_getThis(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::thisGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME_ITER(cx, argc, vp, "get this", args, thisobj, _, iter);
-    RootedValue thisv(cx);
-    {
-        AbstractFramePtr frame = iter.abstractFramePtr();
-        AutoCompartment ac(cx, frame.scopeChain());
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get this", args, frame);
 
-        UpdateFrameIterPc(iter);
-
-        if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, iter.pc(), &thisv))
-            return false;
-    }
-
-    if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &thisv))
-        return false;
-    args.rval().set(thisv);
-    return true;
+    return DebuggerFrame::getThis(cx, frame, args.rval());
 }
 
-static bool
-DebuggerFrame_getOlder(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::olderGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME_ITER(cx, argc, vp, "get this", args, thisobj, _, iter);
-    Debugger* dbg = Debugger::fromChildJSObject(thisobj);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get older", args, frame);
 
-    for (++iter; !iter.done(); ++iter) {
-        if (dbg->observesFrame(iter)) {
-            if (iter.isIon() && !iter.ensureHasRematerializedFrame(cx))
-                return false;
-            return dbg->getScriptFrame(cx, iter, args.rval());
-        }
-    }
-    args.rval().setNull();
+    Rooted<DebuggerFrame*> result(cx);
+    if (!DebuggerFrame::getOlder(cx, frame, &result))
+        return false;
+
+    args.rval().setObjectOrNull(result);
     return true;
 }
 
@@ -7623,15 +7732,16 @@ DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerFrame_getOffset(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::offsetGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME_ITER(cx, argc, vp, "get offset", args, thisobj, _, iter);
-    JSScript* script = iter.script();
-    UpdateFrameIterPc(iter);
-    jsbytecode* pc = iter.pc();
-    size_t offset = script->pcToOffset(pc);
-    args.rval().setNumber(double(offset));
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get offset", args, frame);
+
+    size_t result;
+    if (!DebuggerFrame::getOffset(cx, frame, result))
+        return false;
+
+    args.rval().setNumber(double(result));
     return true;
 }
 
@@ -7954,12 +8064,12 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("environment", DebuggerFrame::environmentGetter, 0),
     JS_PSG("generator", DebuggerFrame::generatorGetter, 0),
     JS_PSG("live", DebuggerFrame::liveGetter, 0),
-    JS_PSG("offset", DebuggerFrame_getOffset, 0),
-    JS_PSG("older", DebuggerFrame_getOlder, 0),
+    JS_PSG("offset", DebuggerFrame::offsetGetter, 0),
+    JS_PSG("older", DebuggerFrame::olderGetter, 0),
     JS_PSG("script", DebuggerFrame_getScript, 0),
-    JS_PSG("this", DebuggerFrame_getThis, 0),
-    JS_PSG("type", DebuggerFrame_getType, 0),
-    JS_PSG("implementation", DebuggerFrame_getImplementation, 0),
+    JS_PSG("this", DebuggerFrame::thisGetter, 0),
+    JS_PSG("type", DebuggerFrame::typeGetter, 0),
+    JS_PSG("implementation", DebuggerFrame::implementationGetter, 0),
     JS_PSGS("onStep", DebuggerFrame_getOnStep, DebuggerFrame_setOnStep, 0),
     JS_PSGS("onPop", DebuggerFrame_getOnPop, DebuggerFrame_setOnPop, 0),
     JS_PS_END

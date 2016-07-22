@@ -246,6 +246,7 @@ typedef mozilla::Variant<JSScript*, WasmInstanceObject*> DebuggerScriptReferent;
 typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*> DebuggerSourceReferent;
 
 class DebuggerEnvironment;
+class DebuggerFrame;
 class DebuggerObject;
 
 class Debugger : private mozilla::LinkedListElement<Debugger>
@@ -765,6 +766,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     MOZ_MUST_USE bool getScriptFrameWithIter(JSContext* cx, AbstractFramePtr frame,
                                              const ScriptFrameIter* maybeIter,
                                              MutableHandleValue vp);
+    MOZ_MUST_USE bool getScriptFrameWithIter(JSContext* cx, AbstractFramePtr frame,
+                                             const ScriptFrameIter* maybeIter,
+                                             MutableHandle<DebuggerFrame*> result);
 
     inline Breakpoint* firstBreakpoint() const;
 
@@ -979,7 +983,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     }
 
     /*
-     * Store the Debugger.Frame object for iter in *vp. Eagerly copies a
+     * Store the Debugger.Frame object for iter in *vp/result. Eagerly copies a
      * ScriptFrameIter::Data.
      *
      * Use this if you had to make a ScriptFrameIter to get the required
@@ -990,6 +994,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                      MutableHandleValue vp) {
         return getScriptFrameWithIter(cx, iter.abstractFramePtr(), &iter, vp);
     }
+    MOZ_MUST_USE bool getScriptFrame(JSContext* cx, const ScriptFrameIter& iter,
+                                     MutableHandle<DebuggerFrame*> result);
+
 
     /*
      * Set |*status| and |*value| to a (JSTrapStatus, Value) pair reflecting a
@@ -1130,6 +1137,19 @@ class DebuggerEnvironment : public NativeObject
     static MOZ_MUST_USE bool setVariableMethod(JSContext* cx, unsigned argc, Value* vp);
 };
 
+enum class DebuggerFrameType {
+    Eval,
+    Global,
+    Call,
+    Module
+};
+
+enum class DebuggerFrameImplementation {
+    Interpreter,
+    Baseline,
+    Ion
+};
+
 class DebuggerFrame : public NativeObject
 {
   public:
@@ -1154,6 +1174,14 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
                                             MutableHandle<DebuggerEnvironment*> result);
     static bool getIsGenerator(Handle<DebuggerFrame*> frame);
+    static MOZ_MUST_USE bool getOffset(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                       size_t& offset);
+    static MOZ_MUST_USE bool getOlder(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                      MutableHandle<DebuggerFrame*> result);
+    static MOZ_MUST_USE bool getThis(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                     MutableHandleValue result);
+    static DebuggerFrameType getType(Handle<DebuggerFrame*> frame);
+    static DebuggerFrameImplementation getImplementation(Handle<DebuggerFrame*> frame);
 
     bool isLive() const;
 
@@ -1175,6 +1203,11 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool generatorGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool liveGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool offsetGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool olderGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool thisGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool implementationGetter(JSContext* cx, unsigned argc, Value* vp);
 
     Debugger* owner() const;
 };

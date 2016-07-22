@@ -315,10 +315,6 @@ BrowserTabList.prototype._getChildren = function (window) {
   });
 };
 
-BrowserTabList.prototype._isRemoteBrowser = function (browser) {
-  return browser.getAttribute("remote") == "true";
-};
-
 BrowserTabList.prototype.getList = function () {
   let topXULWindow = Services.wm.getMostRecentWindow(
     DebuggerServer.chromeWindowType);
@@ -367,17 +363,12 @@ BrowserTabList.prototype._getActorForBrowser = function (browser) {
   if (actor) {
     this._foundCount++;
     return actor.update();
-  } else if (this._isRemoteBrowser(browser)) {
-    actor = new RemoteBrowserTabActor(this._connection, browser);
-    this._actorByBrowser.set(browser, actor);
-    this._checkListening();
-    return actor.connect();
   }
 
   actor = new BrowserTabActor(this._connection, browser);
   this._actorByBrowser.set(browser, actor);
   this._checkListening();
-  return promise.resolve(actor);
+  return actor.connect();
 };
 
 BrowserTabList.prototype.getTab = function ({ outerWindowID, tabId }) {
@@ -618,8 +609,7 @@ DevToolsUtils.makeInfallible(function (event) {
       break;
     }
     case "TabRemotenessChange": {
-      // We have to remove the cached actor as we have to create a new instance
-      // based on BrowserTabActor or RemoteBrowserTabActor.
+      // We have to remove the cached actor as we have to create a new instance.
       let actor = this._actorByBrowser.get(browser);
       if (actor) {
         this._actorByBrowser.delete(browser);
@@ -846,9 +836,8 @@ exports.BrowserTabList = BrowserTabList;
  *  - window-ready
  *  - navigate
  *
- * This class is subclassed by BrowserTabActor and
- * ContentActor. Subclasses are expected to implement a getter
- * for the docShell property.
+ * This class is subclassed by ContentActor and others.
+ * Subclasses are expected to implement a getter for the docShell property.
  *
  * @param connection DebuggerServerConnection
  *        The conection to the client.
@@ -2143,127 +2132,44 @@ TabActor.prototype.requestTypes = {
 exports.TabActor = TabActor;
 
 /**
- * Creates a tab actor for handling requests to a single in-process
- * <xul:browser> tab, or <html:iframe>.
- * Most of the implementation comes from TabActor.
- *
- * @param connection DebuggerServerConnection
- *        The connection to the client.
- * @param browser browser
- *        The frame instance that contains this tab.
- */
-function BrowserTabActor(connection, browser) {
-  TabActor.call(this, connection, browser);
-  this._browser = browser;
-  if (typeof browser.getTabBrowser == "function") {
-    this._tabbrowser = browser.getTabBrowser();
-  }
-
-  Object.defineProperty(this, "docShell", {
-    value: this._browser.docShell,
-    configurable: true
-  });
-}
-
-BrowserTabActor.prototype = Object.create(TabActor.prototype);
-
-BrowserTabActor.prototype.constructor = BrowserTabActor;
-
-Object.defineProperty(BrowserTabActor.prototype, "title", {
-  get() {
-    // On Fennec, we can check the session store data for zombie tabs
-    if (this._browser.__SS_restore) {
-      let sessionStore = this._browser.__SS_data;
-      // Get the last selected entry
-      let entry = sessionStore.entries[sessionStore.index - 1];
-      return entry.title;
-    }
-    let title = this.contentDocument.title || this._browser.contentTitle;
-    // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
-    // tabbrowser (i.e. desktop Firefox, but not Fennec), we can use the label
-    // as the title.
-    if (!title && this._tabbrowser) {
-      let tab = this._tabbrowser._getTabForContentWindow(this.window);
-      if (tab) {
-        title = tab.label;
-      }
-    }
-    return title;
-  },
-  enumerable: true,
-  configurable: false
-});
-
-Object.defineProperty(BrowserTabActor.prototype, "url", {
-  get() {
-    // On Fennec, we can check the session store data for zombie tabs
-    if (this._browser.__SS_restore) {
-      let sessionStore = this._browser.__SS_data;
-      // Get the last selected entry
-      let entry = sessionStore.entries[sessionStore.index - 1];
-      return entry.url;
-    }
-    if (this.webNavigation.currentURI) {
-      return this.webNavigation.currentURI.spec;
-    }
-    return null;
-  },
-  enumerable: true,
-  configurable: true
-});
-
-Object.defineProperty(BrowserTabActor.prototype, "browser", {
-  get() {
-    return this._browser;
-  },
-  enumerable: true,
-  configurable: false
-});
-
-BrowserTabActor.prototype.disconnect = function () {
-  TabActor.prototype.disconnect.call(this);
-  this._browser = null;
-  this._tabbrowser = null;
-};
-
-BrowserTabActor.prototype.exit = function () {
-  TabActor.prototype.exit.call(this);
-  this._browser = null;
-  this._tabbrowser = null;
-};
-
-exports.BrowserTabActor = BrowserTabActor;
-
-/**
- * This actor is a shim that connects to a ContentActor in a remote
- * browser process. All RDP packets get forwarded using the message
- * manager.
+ * Creates a tab actor for handling requests to a single browser frame.
+ * Both <xul:browser> and <iframe mozbrowser> are supported.
+ * This actor is a shim that connects to a ContentActor in a remote browser process.
+ * All RDP packets get forwarded using the message manager.
  *
  * @param connection The main RDP connection.
- * @param browser XUL <browser> element to connect to.
+ * @param browser <xul:browser> or <iframe mozbrowser> element to connect to.
  */
-function RemoteBrowserTabActor(connection, browser) {
+function BrowserTabActor(connection, browser) {
   this._conn = connection;
   this._browser = browser;
   this._form = null;
 }
 
-RemoteBrowserTabActor.prototype = {
+BrowserTabActor.prototype = {
   connect() {
     let onDestroy = () => {
       this._form = null;
     };
-    let connect = DebuggerServer.connectToChild(
-      this._conn, this._browser, onDestroy);
+    let connect = DebuggerServer.connectToChild(this._conn, this._browser, onDestroy);
     return connect.then(form => {
       this._form = form;
       return this;
     });
   },
 
+  get _tabbrowser() {
+    if (typeof this._browser.getTabBrowser == "function") {
+      return this._browser.getTabBrowser();
+    }
+    return null;
+  },
+
   get _mm() {
-    return this._browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader
-           .messageManager;
+    // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
+    // or else fallback to asking the frameLoader itself.
+    return this._browser.messageManager ||
+           this._browser.frameLoader.messageManager;
   },
 
   update() {
@@ -2289,8 +2195,57 @@ RemoteBrowserTabActor.prototype = {
     return this.connect();
   },
 
+  /**
+   * If we don't have a title from the content side because it's a zombie tab, try to find
+   * it on the chrome side.
+   */
+  get title() {
+    // On Fennec, we can check the session store data for zombie tabs
+    if (this._browser.__SS_restore) {
+      let sessionStore = this._browser.__SS_data;
+      // Get the last selected entry
+      let entry = sessionStore.entries[sessionStore.index - 1];
+      return entry.title;
+    }
+    // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
+    // tabbrowser (i.e. desktop Firefox, but not Fennec), we can use the label
+    // as the title.
+    if (this._tabbrowser) {
+      let tab = this._tabbrowser.getTabForBrowser(this._browser);
+      if (tab) {
+        return tab.label;
+      }
+    }
+    return "";
+  },
+
+  /**
+   * If we don't have a url from the content side because it's a zombie tab, try to find
+   * it on the chrome side.
+   */
+  get url() {
+    // On Fennec, we can check the session store data for zombie tabs
+    if (this._browser.__SS_restore) {
+      let sessionStore = this._browser.__SS_data;
+      // Get the last selected entry
+      let entry = sessionStore.entries[sessionStore.index - 1];
+      return entry.url;
+    }
+    return null;
+  },
+
   form() {
-    return this._form;
+    let form = Object.assign({}, this._form);
+    // In some cases, the title and url fields might be empty.  Zombie tabs (not yet
+    // restored) are a good example.  In such cases, try to look up values for these
+    // fields using other data in the parent process.
+    if (!form.title) {
+      form.title = this.title;
+    }
+    if (!form.url) {
+      form.url = this.url;
+    }
+    return form;
   },
 
   exit() {
@@ -2298,7 +2253,7 @@ RemoteBrowserTabActor.prototype = {
   },
 };
 
-exports.RemoteBrowserTabActor = RemoteBrowserTabActor;
+exports.BrowserTabActor = BrowserTabActor;
 
 function BrowserAddonList(connection) {
   this._connection = connection;

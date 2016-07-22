@@ -81,8 +81,25 @@ function matchRequest(channel, filters) {
 
   if (filters.topFrame) {
     let topFrame = NetworkHelper.getTopFrameForRequest(channel);
-    if (topFrame && topFrame === filters.topFrame) {
-      return true;
+    while (topFrame) {
+      // In the normal case, a topFrame filter should match the request's topFrame if it
+      // will match at all.
+      if (topFrame === filters.topFrame) {
+        return true;
+      }
+      // As a stop gap approach for RDM, where `filters.topFrame` will be the
+      // <xul:browser> frame for an entire tab and the request's `topFrame` is the
+      // <iframe mozbrower> that triggered the request, we try to climb up parent frames
+      // above the request's `topFrame` to see if they might also match the filter.
+      // In bug 1240912, we want to rework this, since we don't really want to be passing
+      // a frame down to the network monitor.
+      if (!topFrame.ownerGlobal) {
+        break;
+      }
+      topFrame = topFrame.ownerGlobal
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils)
+                         .containerElement;
     }
   }
 
@@ -1583,8 +1600,9 @@ NetworkEventActorProxy.prototype = {
  */
 function NetworkMonitorManager(frame, id) {
   this.id = id;
-  let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader
-      .messageManager;
+  // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
+  // or else fallback to asking the frameLoader itself.
+  let mm = frame.messageManager || frame.frameLoader.messageManager;
   this.messageManager = mm;
   this.frame = frame;
   this.onNetMonitorMessage = this.onNetMonitorMessage.bind(this);

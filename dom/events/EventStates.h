@@ -12,6 +12,8 @@
 
 namespace mozilla {
 
+#define NS_EVENT_STATE_HIGHEST_SERVO_BIT 6
+
 /**
  * EventStates is the class used to represent the event states of nsIContent
  * instances. These states are calculated by IntrinsicState() and
@@ -23,6 +25,7 @@ class EventStates
 {
 public:
   typedef uint64_t InternalType;
+  typedef uint8_t ServoType;
 
   constexpr EventStates()
     : mStates(0)
@@ -155,6 +158,14 @@ public:
     return mStates;
   }
 
+  /**
+   * Method used to get the appropriate state representation for Servo.
+   */
+  ServoType ServoValue() const
+  {
+    return mStates & ((1 << (NS_EVENT_STATE_HIGHEST_SERVO_BIT + 1)) - 1);
+  }
+
 private:
   InternalType mStates;
 };
@@ -200,10 +211,11 @@ private:
 // Content is in the indeterminate state.
 #define NS_EVENT_STATE_INDETERMINATE NS_DEFINE_EVENT_STATE_MACRO(6)
 
-#define NS_EVENT_STATE_HIGHEST_SERVO_BIT 6
-
 /*
  * Bits below here do not have Servo-related ordering constraints.
+ *
+ * Remember to change NS_EVENT_STATE_HIGHEST_SERVO_BIT at the top of the file if
+ * this changes!
  */
 
 // Drag is hovering over content.

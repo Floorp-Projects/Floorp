@@ -97,7 +97,6 @@ private:
   nsCOMPtr<nsIFile> mBackupDirectory;
   nsCOMPtr<nsIFile> mToDeleteDirectory;
   nsCOMPtr<nsICryptoHash> mCryptoHash;
-  nsTArray<HashStore*> mHashStores;
   nsTArray<LookupCache*> mLookupCaches;
   nsTArray<nsCString> mActiveTablesCache;
   uint32_t mHashKey;

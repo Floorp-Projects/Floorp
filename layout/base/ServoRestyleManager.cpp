@@ -17,20 +17,25 @@ ServoRestyleManager::ServoRestyleManager(nsPresContext* aPresContext)
 }
 
 /* static */ void
-ServoRestyleManager::DirtyTree(nsIContent* aContent)
+ServoRestyleManager::DirtyTree(nsIContent* aContent, bool aIncludingRoot)
 {
-  if (aContent->IsDirtyForServo()) {
-    return;
-  }
+  if (aIncludingRoot) {
+    // XXX: This can in theory leave nodes not dirty, but in practice this is not
+    // a problem, at least for now, since right now element dirty implies
+    // descendants dirty. Remove this early return if this ever changes.
+    if (aContent->IsDirtyForServo()) {
+      return;
+    }
 
-  aContent->SetIsDirtyForServo();
+    aContent->SetIsDirtyForServo();
+  }
 
   FlattenedChildIterator it(aContent);
 
   nsIContent* n = it.GetNextChild();
   bool hadChildren = bool(n);
-  for ( ; n; n = it.GetNextChild()) {
-    DirtyTree(n);
+  for (; n; n = it.GetNextChild()) {
+    DirtyTree(n, true);
   }
 
   if (hadChildren) {
@@ -48,26 +53,22 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return;
   }
 
-  if (aRestyleHint == 0 && !aMinChangeHint) {
-    // Nothing to do here
-    return;
+  if (aRestyleHint == 0 && !aMinChangeHint && !HasPendingRestyles()) {
+    return; // Nothing to do.
+  }
+
+  // Note that unlike in Servo, we don't mark elements as dirty until we process
+  // the restyle hints in ProcessPendingRestyles.
+  if (aRestyleHint || aMinChangeHint) {
+    ServoElementSnapshot* snapshot = SnapshotForElement(aElement);
+    snapshot->AddExplicitRestyleHint(aRestyleHint);
+    snapshot->AddExplicitChangeHint(aMinChangeHint);
   }
 
   nsIPresShell* presShell = PresContext()->PresShell();
   if (!ObservingRefreshDriver()) {
-    SetObservingRefreshDriver(PresContext()->RefreshDriver()->
-        AddStyleFlushObserver(presShell));
-  }
-
-  // Propagate the IS_DIRTY flag down the tree.
-  DirtyTree(aElement);
-
-  // Propagate the HAS_DIRTY_DESCENDANTS flag to the root.
-  nsINode* cur = aElement;
-  while ((cur = cur->GetParentNode())) {
-    if (cur->HasDirtyDescendantsForServo())
-      break;
-    cur->SetHasDirtyDescendantsForServo();
+    SetObservingRefreshDriver(
+      PresContext()->RefreshDriver()->AddStyleFlushObserver(presShell));
   }
 
   presShell->GetDocument()->SetNeedStyleFlush();
@@ -137,6 +138,50 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
   }
 }
 
+static void
+MarkParentsAsHavingDirtyDescendants(Element* aElement)
+{
+  nsINode* cur = aElement;
+  while ((cur = cur->GetParentNode())) {
+    if (cur->HasDirtyDescendantsForServo()) {
+      break;
+    }
+
+    cur->SetHasDirtyDescendantsForServo();
+  }
+}
+
+void
+ServoRestyleManager::NoteRestyleHint(Element* aElement, nsRestyleHint aHint)
+{
+  if (aHint & eRestyle_Self) {
+    aElement->SetIsDirtyForServo();
+    MarkParentsAsHavingDirtyDescendants(aElement);
+    // NB: Using Servo's style system marking the subtree as dirty is necessary
+    // so we inherit correctly the style structs.
+    aHint |= eRestyle_Subtree;
+  }
+
+  if (aHint & eRestyle_Subtree) {
+    DirtyTree(aElement, /* aIncludingRoot = */ false);
+    MarkParentsAsHavingDirtyDescendants(aElement);
+  }
+
+  if (aHint & eRestyle_LaterSiblings) {
+    for (nsINode* cur = aElement->GetNextSibling(); cur;
+         cur = cur->GetNextSibling()) {
+      if (cur->IsContent()) {
+        DirtyTree(cur->AsContent(), /* aIncludingRoot = */ true);
+      }
+    }
+  }
+
+  // TODO: Handle all other nsRestyleHint values.
+  if (aHint & ~(eRestyle_Self | eRestyle_Subtree | eRestyle_LaterSiblings)) {
+    NS_ERROR("stylo: Unhandled restyle hint");
+  }
+}
+
 void
 ServoRestyleManager::ProcessPendingRestyles()
 {
@@ -149,9 +194,25 @@ ServoRestyleManager::ProcessPendingRestyles()
 
   Element* root = doc->GetRootElement();
   if (root) {
+    for (auto iter = mModifiedElements.Iter(); !iter.Done(); iter.Next()) {
+      ServoElementSnapshot* snapshot = iter.UserData();
+      Element* element = iter.Key();
+
+      // TODO: avoid the ComputeRestyleHint call if we already have the highest
+      // explicit restyle hint?
+      nsRestyleHint hint = styleSet->ComputeRestyleHint(element, snapshot);
+      hint |= snapshot->ExplicitRestyleHint();
+
+      if (hint) {
+        NoteRestyleHint(element, hint);
+      }
+    }
+
     styleSet->RestyleSubtree(root, /* aForce = */ false);
     RecreateStyleContexts(root, nullptr, styleSet);
   }
+
+  mModifiedElements.Clear();
 
   // NB: we restyle from the root element, but the document also gets the
   // HAS_DIRTY_DESCENDANTS flag as part of the loop on PostRestyleEvent, and we
@@ -188,7 +249,7 @@ ServoRestyleManager::RestyleForRemove(Element* aContainer,
 
 nsresult
 ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
-                                         EventStates aStateMask)
+                                         EventStates aChangedBits)
 {
   if (!aContent->IsElement()) {
     return NS_OK;
@@ -197,7 +258,32 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   Element* aElement = aContent->AsElement();
   nsChangeHint changeHint;
   nsRestyleHint restyleHint;
-  ContentStateChangedInternal(aElement, aStateMask, &changeHint, &restyleHint);
+
+  // NOTE: restyleHint here is effectively always 0, since that's what
+  // ServoStyleSet::HasStateDependentStyle returns. Servo computes on
+  // ProcessPendingRestyles using the ElementSnapshot, but in theory could
+  // compute it sequentially easily.
+  //
+  // Determine what's the best way to do it, and how much work do we save
+  // processing the restyle hint early (i.e., computing the style hint here
+  // sequentially, potentially saving the snapshot), vs lazily (snapshot
+  // approach).
+  //
+  // If we take the sequential approach we need to specialize Servo's restyle
+  // hints system a bit more, and mesure whether we save something storing the
+  // restyle hint in the table and deferring the dirtiness setting until
+  // ProcessPendingRestyles (that's a requirement if we store snapshots though),
+  // vs processing the restyle hint in-place, dirtying the nodes on
+  // PostRestyleEvent.
+  //
+  // If we definitely take the snapshot approach, we should take rid of
+  // HasStateDependentStyle, etc (though right now they're no-ops).
+  ContentStateChangedInternal(aElement, aChangedBits, &changeHint,
+                              &restyleHint);
+
+  EventStates previousState = aElement->StyleState() ^ aChangedBits;
+  ServoElementSnapshot* snapshot = SnapshotForElement(aElement);
+  snapshot->AddState(previousState);
 
   PostRestyleEvent(aElement, restyleHint, changeHint);
   return NS_OK;
@@ -206,18 +292,16 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
 void
 ServoRestyleManager::AttributeWillChange(Element* aElement,
                                          int32_t aNameSpaceID,
-                                         nsIAtom* aAttribute,
-                                         int32_t aModType,
+                                         nsIAtom* aAttribute, int32_t aModType,
                                          const nsAttrValue* aNewValue)
 {
-  NS_ERROR("stylo: ServoRestyleManager::AttributeWillChange not implemented");
+  ServoElementSnapshot* snapshot = SnapshotForElement(aElement);
+  snapshot->AddAttrs(aElement);
 }
 
 void
-ServoRestyleManager::AttributeChanged(Element* aElement,
-                                      int32_t aNameSpaceID,
-                                      nsIAtom* aAttribute,
-                                      int32_t aModType,
+ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
+                                      nsIAtom* aAttribute, int32_t aModType,
                                       const nsAttrValue* aOldValue)
 {
   NS_ERROR("stylo: ServoRestyleManager::AttributeChanged not implemented");
@@ -227,6 +311,18 @@ nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
   MOZ_CRASH("stylo: ServoRestyleManager::ReparentStyleContext not implemented");
+}
+
+ServoElementSnapshot*
+ServoRestyleManager::SnapshotForElement(Element* aElement)
+{
+  ServoElementSnapshot* snapshot = mModifiedElements.LookupOrAdd(aElement);
+  if (!snapshot->HasAny(
+        ServoElementSnapshot::Flags::HTMLElementInHTMLDocument)) {
+    snapshot->SetIsHTMLElementInHTMLDocument(
+      aElement->IsHTMLElement() && aElement->OwnerDoc()->IsHTMLDocument());
+  }
+  return snapshot;
 }
 
 } // namespace mozilla

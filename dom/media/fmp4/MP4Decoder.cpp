@@ -22,7 +22,6 @@
 #endif
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsIGfxInfo.h"
-#include "AndroidBridge.h"
 #endif
 #include "mozilla/layers/LayersTypes.h"
 

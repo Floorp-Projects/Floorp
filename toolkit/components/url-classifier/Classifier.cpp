@@ -372,10 +372,6 @@ Classifier::SetLastUpdateTime(const nsACString &aTable,
 void
 Classifier::DropStores()
 {
-  for (uint32_t i = 0; i < mHashStores.Length(); i++) {
-    delete mHashStores[i];
-  }
-  mHashStores.Clear();
   for (uint32_t i = 0; i < mLookupCaches.Length(); i++) {
     delete mLookupCaches[i];
   }

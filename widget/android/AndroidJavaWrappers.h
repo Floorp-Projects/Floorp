@@ -591,7 +591,6 @@ public:
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         VIEWPORT = 20,
-        THUMBNAIL = 25,
         NATIVE_GESTURE_EVENT = 31,
         CALL_OBSERVER = 33,
         REMOVE_OBSERVER = 34,
