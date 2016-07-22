@@ -63,7 +63,6 @@ class Instance
     void** addressOfTableBase(size_t tableIndex) const;
     const void** addressOfSigId(const SigIdDesc& sigId) const;
     FuncImportExit& funcImportToExit(const FuncImport& fi);
-    MOZ_MUST_USE bool toggleProfiling(JSContext* cx);
 
     // Get this instance's TLS data pointer for the current thread.
     TlsData* tlsData() { return &tlsData_; }
@@ -113,6 +112,7 @@ class Instance
     // Otherwise, the ProfilingFrameIterator will skip any activations of this
     // instance.
 
+    MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
     bool profilingEnabled() const { return profilingEnabled_; }
     const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
 
