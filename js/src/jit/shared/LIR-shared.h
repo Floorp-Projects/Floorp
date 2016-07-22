@@ -8062,6 +8062,15 @@ class LWasmLoadGlobalVar : public LInstructionHelper<1, 0, 0>
     }
 };
 
+class LWasmLoadGlobalVarI64 : public LInstructionHelper<INT64_PIECES, 0, 0>
+{
+  public:
+    LIR_HEADER(WasmLoadGlobalVarI64);
+    MWasmLoadGlobalVar* mir() const {
+        return mir_->toWasmLoadGlobalVar();
+    }
+};
+
 class LWasmStoreGlobalVar : public LInstructionHelper<0, 1, 0>
 {
   public:
@@ -8075,6 +8084,19 @@ class LWasmStoreGlobalVar : public LInstructionHelper<0, 1, 0>
     const LAllocation* value() {
         return getOperand(0);
     }
+};
+
+class LWasmStoreGlobalVarI64 : public LInstructionHelper<0, INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(WasmStoreGlobalVarI64);
+    explicit LWasmStoreGlobalVarI64(const LInt64Allocation& value) {
+        setInt64Operand(0, value);
+    }
+    MWasmStoreGlobalVar* mir() const {
+        return mir_->toWasmStoreGlobalVar();
+    }
+    static const uint32_t InputIndex = 0;
 };
 
 class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 0>
