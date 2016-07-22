@@ -1565,6 +1565,7 @@ CacheCreator::DeleteCache()
   // running.
   RefPtr<Promise> promise = mCacheStorage->Delete(mCacheName, rv);
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return;
   }
 

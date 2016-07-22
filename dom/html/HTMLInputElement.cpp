@@ -508,7 +508,9 @@ GetDOMFileOrDirectoryName(const OwningFileOrDirectory& aData,
     MOZ_ASSERT(aData.IsDirectory());
     ErrorResult rv;
     aData.GetAsDirectory()->GetName(aName, rv);
-    NS_WARN_IF(rv.Failed());
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+    }
   }
 }
 
