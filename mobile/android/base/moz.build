@@ -426,6 +426,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/HomeListView.java',
     'home/HomePager.java',
     'home/HomePanelsManager.java',
+    'home/HomeScreen.java',
     'home/ImageLoader.java',
     'home/MultiTypeCursorAdapter.java',
     'home/PanelAuthCache.java',

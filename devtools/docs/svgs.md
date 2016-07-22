@@ -7,7 +7,7 @@ Since so many of our SVGs appear so small, designing them on the pixel grid will
 ## Panel Icon Requirements
 The devtools panel icons do a couple of things in a specific way; following these guidelines will help stick your patch:
 
-1. **Inline fill colors.** Devtools panel icons all use ```fill="whitesmoke"``` in the ```<svg>``` tag.
+1. **Inline fill colors.** Devtools panel icons all use ```fill="#0b0b0b"``` in the ```<svg>``` tag.
 2. **Inline opacities.** Devtools panel icons also inline opacities on their relevant path.
 
 ## Illustrator
