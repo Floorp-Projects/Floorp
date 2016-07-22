@@ -298,6 +298,24 @@ ContentCacheInChild::QueryCharRect(nsIWidget* aWidget,
 }
 
 bool
+ContentCacheInChild::QueryCharRectArray(nsIWidget* aWidget,
+                                        uint32_t aOffset,
+                                        uint32_t aLength,
+                                        RectArray& aCharRectArray) const
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetQueryContentEvent textRects(true, eQueryTextRectArray, aWidget);
+  textRects.InitForQueryTextRectArray(aOffset, aLength);
+  aWidget->DispatchEvent(&textRects, status);
+  if (NS_WARN_IF(!textRects.mSucceeded)) {
+    aCharRectArray.Clear();
+    return false;
+  }
+  aCharRectArray = Move(textRects.mReply.mRectArray);
+  return true;
+}
+
+bool
 ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
                                     const IMENotification* aNotification)
 {
@@ -309,8 +327,8 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
 
   mCompositionStart = UINT32_MAX;
   mTextRectArray.Clear();
-  mSelection.mAnchorCharRect.SetEmpty();
-  mSelection.mFocusCharRect.SetEmpty();
+  mSelection.ClearAnchorCharRects();
+  mSelection.ClearFocusCharRects();
   mSelection.mRect.SetEmpty();
   mFirstCharRect.SetEmpty();
 
@@ -330,41 +348,76 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
     // is called while some of them are performed.
     uint32_t length = textComposition->LastData().Length();
     mTextRectArray.mStart = mCompositionStart;
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetQueryContentEvent textRects(true, eQueryTextRectArray, aWidget);
-    textRects.InitForQueryTextRectArray(mTextRectArray.mStart, length);
-    aWidget->DispatchEvent(&textRects, status);
-
-    mTextRectArray.mRects = Move(textRects.mReply.mRectArray);
-  }
-
-  if (mTextRectArray.InRange(mSelection.mAnchor)) {
-    mSelection.mAnchorCharRect = mTextRectArray.GetRect(mSelection.mAnchor);
-  } else {
-    LayoutDeviceIntRect charRect;
-    if (NS_WARN_IF(!QueryCharRect(aWidget, mSelection.mAnchor, charRect))) {
+    if (NS_WARN_IF(!QueryCharRectArray(aWidget, mTextRectArray.mStart, length,
+                                       mTextRectArray.mRects))) {
       MOZ_LOG(sContentCacheLog, LogLevel::Error,
         ("0x%p CacheTextRects(), FAILED, "
-         "couldn't retrieve text rect at anchor of selection (%u)",
-         this, mSelection.mAnchor));
+         "couldn't retrieve text rect array of the composition string", this));
     }
-    mSelection.mAnchorCharRect = charRect;
+  }
+
+  if (mTextRectArray.InRange(mSelection.mAnchor) &&
+      (!mSelection.mAnchor || mTextRectArray.InRange(mSelection.mAnchor - 1))) {
+    mSelection.mAnchorCharRects[eNextCharRect] =
+      mTextRectArray.GetRect(mSelection.mAnchor);
+    if (mSelection.mAnchor) {
+      mSelection.mAnchorCharRects[ePrevCharRect] =
+        mTextRectArray.GetRect(mSelection.mAnchor - 1);
+    }
+  } else {
+    RectArray rects;
+    uint32_t startOffset = mSelection.mAnchor ? mSelection.mAnchor - 1 : 0;
+    uint32_t length = mSelection.mAnchor ? 2 : 1;
+    if (NS_WARN_IF(!QueryCharRectArray(aWidget, startOffset, length, rects))) {
+      MOZ_LOG(sContentCacheLog, LogLevel::Error,
+        ("0x%p CacheTextRects(), FAILED, "
+         "couldn't retrieve text rect array around the selection anchor (%u)",
+         this, mSelection.mAnchor));
+      MOZ_ASSERT(mSelection.mAnchorCharRects[ePrevCharRect].IsEmpty());
+      MOZ_ASSERT(mSelection.mAnchorCharRects[eNextCharRect].IsEmpty());
+    } else {
+      if (rects.Length() > 1) {
+        mSelection.mAnchorCharRects[ePrevCharRect] = rects[0];
+        mSelection.mAnchorCharRects[eNextCharRect] = rects[1];
+      } else if (rects.Length()) {
+        mSelection.mAnchorCharRects[eNextCharRect] = rects[0];
+        MOZ_ASSERT(mSelection.mAnchorCharRects[ePrevCharRect].IsEmpty());
+      }
+    }
   }
 
   if (mSelection.Collapsed()) {
-    mSelection.mFocusCharRect = mSelection.mAnchorCharRect;
-  } else if (mTextRectArray.InRange(mSelection.mFocus)) {
-    mSelection.mFocusCharRect = mTextRectArray.GetRect(mSelection.mFocus);
+    mSelection.mFocusCharRects[0] = mSelection.mAnchorCharRects[0];
+    mSelection.mFocusCharRects[1] = mSelection.mAnchorCharRects[1];
+  } else if (mTextRectArray.InRange(mSelection.mFocus) &&
+             (!mSelection.mFocus ||
+              mTextRectArray.InRange(mSelection.mFocus - 1))) {
+    mSelection.mFocusCharRects[eNextCharRect] =
+      mTextRectArray.GetRect(mSelection.mFocus);
+    if (mSelection.mFocus) {
+      mSelection.mFocusCharRects[ePrevCharRect] =
+        mTextRectArray.GetRect(mSelection.mFocus - 1);
+    }
   } else {
-    LayoutDeviceIntRect charRect;
-    if (NS_WARN_IF(!QueryCharRect(aWidget, mSelection.mFocus, charRect))) {
+    RectArray rects;
+    uint32_t startOffset = mSelection.mFocus ? mSelection.mFocus - 1 : 0;
+    uint32_t length = mSelection.mFocus ? 2 : 1;
+    if (NS_WARN_IF(!QueryCharRectArray(aWidget, startOffset, length, rects))) {
       MOZ_LOG(sContentCacheLog, LogLevel::Error,
         ("0x%p CacheTextRects(), FAILED, "
-         "couldn't retrieve text rect at focus of selection (%u)",
+         "couldn't retrieve text rect array around the selection focus (%u)",
          this, mSelection.mFocus));
+      MOZ_ASSERT(mSelection.mFocusCharRects[ePrevCharRect].IsEmpty());
+      MOZ_ASSERT(mSelection.mFocusCharRects[eNextCharRect].IsEmpty());
+    } else {
+      if (rects.Length() > 1) {
+        mSelection.mFocusCharRects[ePrevCharRect] = rects[0];
+        mSelection.mFocusCharRects[eNextCharRect] = rects[1];
+      } else if (rects.Length()) {
+        mSelection.mFocusCharRects[eNextCharRect] = rects[0];
+        MOZ_ASSERT(mSelection.mFocusCharRects[ePrevCharRect].IsEmpty());
+      }
     }
-    mSelection.mFocusCharRect = charRect;
   }
 
   if (!mSelection.Collapsed()) {
@@ -383,9 +436,13 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
   }
 
   if (!mSelection.mFocus) {
-    mFirstCharRect = mSelection.mFocusCharRect;
+    mFirstCharRect = mSelection.mFocusCharRects[eNextCharRect];
+  } else if (mSelection.mFocus == 1) {
+    mFirstCharRect = mSelection.mFocusCharRects[ePrevCharRect];
   } else if (!mSelection.mAnchor) {
-    mFirstCharRect = mSelection.mAnchorCharRect;
+    mFirstCharRect = mSelection.mAnchorCharRects[eNextCharRect];
+  } else if (mSelection.mAnchor == 1) {
+    mFirstCharRect = mSelection.mFocusCharRects[ePrevCharRect];
   } else if (mTextRectArray.InRange(0)) {
     mFirstCharRect = mTextRectArray.GetRect(0);
   } else {
@@ -402,12 +459,17 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p CacheTextRects(), Succeeded, "
      "mText.Length()=%u, mTextRectArray={ mStart=%u, mRects.Length()=%u }, "
-     "mSelection={ mAnchor=%u, mAnchorCharRect=%s, mFocus=%u, "
-     "mFocusCharRect=%s, mRect=%s }, mFirstCharRect=%s",
+     "mSelection={ mAnchor=%u, mAnchorCharRects[eNextCharRect]=%s, "
+     "mAnchorCharRects[ePrevCharRect]=%s, mFocus=%u, "
+     "mFocusCharRects[eNextCharRect]=%s, mFocusCharRects[ePrevCharRect]=%s, "
+     "mRect=%s }, mFirstCharRect=%s",
      this, mText.Length(), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), mSelection.mAnchor,
-     GetRectText(mSelection.mAnchorCharRect).get(), mSelection.mFocus,
-     GetRectText(mSelection.mFocusCharRect).get(),
+     GetRectText(mSelection.mAnchorCharRects[eNextCharRect]).get(),
+     GetRectText(mSelection.mAnchorCharRects[ePrevCharRect]).get(),
+     mSelection.mFocus,
+     GetRectText(mSelection.mFocusCharRects[eNextCharRect]).get(),
+     GetRectText(mSelection.mFocusCharRects[ePrevCharRect]).get(),
      GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get()));
   return true;
 }
@@ -475,15 +537,19 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p AssignContent(aNotification=%s), "
      "Succeeded, mText.Length()=%u, mSelection={ mAnchor=%u, mFocus=%u, "
-     "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s, mRect=%s }, "
+     "mWritingMode=%s, mAnchorCharRects[eNextCharRect]=%s, "
+     "mAnchorCharRects[ePrevCharRect]=%s, mFocusCharRects[eNextCharRect]=%s, "
+     "mFocusCharRects[ePrevCharRect]=%s, mRect=%s }, "
      "mFirstCharRect=%s, mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ "
      "mStart=%u, mRects.Length()=%u }, mIsComposing=%s, mCompositionStart=%u, "
      "mEditorRect=%s",
      this, GetNotificationName(aNotification),
      mText.Length(), mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
-     GetRectText(mSelection.mAnchorCharRect).get(),
-     GetRectText(mSelection.mFocusCharRect).get(),
+     GetRectText(mSelection.mAnchorCharRects[eNextCharRect]).get(),
+     GetRectText(mSelection.mAnchorCharRects[ePrevCharRect]).get(),
+     GetRectText(mSelection.mFocusCharRects[eNextCharRect]).get(),
+     GetRectText(mSelection.mFocusCharRects[ePrevCharRect]).get(),
      GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get(),
      mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), GetBoolName(mIsComposing),
@@ -775,13 +841,23 @@ ContentCacheInParent::GetTextRect(uint32_t aOffset,
     return !aTextRect.IsEmpty();
   }
   if (aOffset == mSelection.mAnchor) {
-    NS_WARN_IF(mSelection.mAnchorCharRect.IsEmpty());
-    aTextRect = mSelection.mAnchorCharRect;
+    NS_WARN_IF(mSelection.mAnchorCharRects[eNextCharRect].IsEmpty());
+    aTextRect = mSelection.mAnchorCharRects[eNextCharRect];
+    return !aTextRect.IsEmpty();
+  }
+  if (mSelection.mAnchor && aOffset == mSelection.mAnchor - 1) {
+    NS_WARN_IF(mSelection.mAnchorCharRects[ePrevCharRect].IsEmpty());
+    aTextRect = mSelection.mAnchorCharRects[ePrevCharRect];
     return !aTextRect.IsEmpty();
   }
   if (aOffset == mSelection.mFocus) {
-    NS_WARN_IF(mSelection.mFocusCharRect.IsEmpty());
-    aTextRect = mSelection.mFocusCharRect;
+    NS_WARN_IF(mSelection.mFocusCharRects[eNextCharRect].IsEmpty());
+    aTextRect = mSelection.mFocusCharRects[eNextCharRect];
+    return !aTextRect.IsEmpty();
+  }
+  if (mSelection.mFocus && aOffset == mSelection.mFocus - 1) {
+    NS_WARN_IF(mSelection.mFocusCharRects[ePrevCharRect].IsEmpty());
+    aTextRect = mSelection.mFocusCharRects[ePrevCharRect];
     return !aTextRect.IsEmpty();
   }
 
@@ -844,13 +920,23 @@ ContentCacheInParent::GetUnionTextRects(
       return !aUnionTextRect.IsEmpty();
     }
     if (aOffset == mSelection.mAnchor) {
-      NS_WARN_IF(mSelection.mAnchorCharRect.IsEmpty());
-      aUnionTextRect = mSelection.mAnchorCharRect;
+      NS_WARN_IF(mSelection.mAnchorCharRects[eNextCharRect].IsEmpty());
+      aUnionTextRect = mSelection.mAnchorCharRects[eNextCharRect];
+      return !aUnionTextRect.IsEmpty();
+    }
+    if (mSelection.mAnchor && aOffset == mSelection.mAnchor - 1) {
+      NS_WARN_IF(mSelection.mAnchorCharRects[ePrevCharRect].IsEmpty());
+      aUnionTextRect = mSelection.mAnchorCharRects[ePrevCharRect];
       return !aUnionTextRect.IsEmpty();
     }
     if (aOffset == mSelection.mFocus) {
-      NS_WARN_IF(mSelection.mFocusCharRect.IsEmpty());
-      aUnionTextRect = mSelection.mFocusCharRect;
+      NS_WARN_IF(mSelection.mFocusCharRects[eNextCharRect].IsEmpty());
+      aUnionTextRect = mSelection.mFocusCharRects[eNextCharRect];
+      return !aUnionTextRect.IsEmpty();
+    }
+    if (mSelection.mFocus && aOffset == mSelection.mFocus - 1) {
+      NS_WARN_IF(mSelection.mFocusCharRects[ePrevCharRect].IsEmpty());
+      aUnionTextRect = mSelection.mFocusCharRects[ePrevCharRect];
       return !aUnionTextRect.IsEmpty();
     }
   }
@@ -879,11 +965,24 @@ ContentCacheInParent::GetUnionTextRects(
     aUnionTextRect = aUnionTextRect.Union(mFirstCharRect);
   }
   if (aOffset <= mSelection.mAnchor && mSelection.mAnchor < endOffset.value()) {
-    aUnionTextRect = aUnionTextRect.Union(mSelection.mAnchorCharRect);
+    aUnionTextRect =
+      aUnionTextRect.Union(mSelection.mAnchorCharRects[eNextCharRect]);
+  }
+  if (mSelection.mAnchor && aOffset <= mSelection.mAnchor - 1 &&
+      mSelection.mAnchor - 1 < endOffset.value()) {
+    aUnionTextRect =
+      aUnionTextRect.Union(mSelection.mAnchorCharRects[ePrevCharRect]);
   }
   if (aOffset <= mSelection.mFocus && mSelection.mFocus < endOffset.value()) {
-    aUnionTextRect = aUnionTextRect.Union(mSelection.mFocusCharRect);
+    aUnionTextRect =
+      aUnionTextRect.Union(mSelection.mFocusCharRects[eNextCharRect]);
   }
+  if (mSelection.mFocus && aOffset <= mSelection.mFocus - 1 &&
+      mSelection.mFocus - 1 < endOffset.value()) {
+    aUnionTextRect =
+      aUnionTextRect.Union(mSelection.mFocusCharRects[ePrevCharRect]);
+  }
+
   return !aUnionTextRect.IsEmpty();
 }
 
@@ -897,15 +996,18 @@ ContentCacheInParent::GetCaretRect(uint32_t aOffset,
      "aRoundToExistingOffset=%s), "
      "mCaret={ mOffset=%u, mRect=%s, IsValid()=%s }, mTextRectArray={ "
      "mStart=%u, mRects.Length()=%u }, mSelection={ mAnchor=%u, mFocus=%u, "
-     "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s }, "
-     "mFirstCharRect=%s",
+     "mWritingMode=%s, mAnchorCharRects[eNextCharRect]=%s, "
+     "mAnchorCharRects[ePrevCharRect]=%s, mFocusCharRects[eNextCharRect]=%s, "
+     "mFocusCharRects[ePrevCharRect]=%s }, mFirstCharRect=%s",
      this, aOffset, GetBoolName(aRoundToExistingOffset),
      mCaret.mOffset, GetRectText(mCaret.mRect).get(),
      GetBoolName(mCaret.IsValid()), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
-     GetRectText(mSelection.mAnchorCharRect).get(),
-     GetRectText(mSelection.mFocusCharRect).get(),
+     GetRectText(mSelection.mAnchorCharRects[eNextCharRect]).get(),
+     GetRectText(mSelection.mAnchorCharRects[ePrevCharRect]).get(),
+     GetRectText(mSelection.mFocusCharRects[eNextCharRect]).get(),
+     GetRectText(mSelection.mFocusCharRects[ePrevCharRect]).get(),
      GetRectText(mFirstCharRect).get()));
 
   if (mCaret.IsValid() && mCaret.mOffset == aOffset) {
