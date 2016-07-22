@@ -166,7 +166,8 @@ ServoRestyleManager::NoteRestyleHint(Element* aElement, nsRestyleHint aHint)
 
   // TODO: Handle all other nsRestyleHint values.
   if (aHint & ~(eRestyle_Self | eRestyle_Subtree | eRestyle_LaterSiblings)) {
-    NS_ERROR("stylo: Unhandled restyle hint");
+    NS_ERROR(nsPrintfCString("stylo: Unhandled restyle hint %s",
+                             RestyleManagerBase::RestyleHintToString(aHint).get()).get());
   }
 }
 
