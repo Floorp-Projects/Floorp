@@ -127,7 +127,7 @@ DoesJSTypeMatchUnpackType(GLenum unpackType, js::Scalar::Type jsType)
 
 bool
 WebGLContext::ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
-                                   uint32_t tailPixels, const webgl::TexUnpackBlob* blob)
+                                   uint32_t tailPixels, webgl::TexUnpackBlob* blob)
 {
     const auto usedPixelsPerRow = CheckedUint32(blob->mSkipPixels) + blob->mWidth;
     const auto usedRowsPerImage = CheckedUint32(blob->mSkipRows) + blob->mHeight;
@@ -166,8 +166,10 @@ WebGLContext::ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
     if (fullRows > fullRowsNeeded.value())
         return true;
 
-    if (fullRows == fullRowsNeeded.value() && tailPixels >= usedPixelsPerRow.value())
+    if (fullRows == fullRowsNeeded.value() && tailPixels >= usedPixelsPerRow.value()) {
+        blob->mNeedsExactUpload = true;
         return true;
+    }
 
     ErrorInvalidOperation("%s: Desired upload requires more data than is available: (%u"
                           " rows plus %u pixels needed, %u rows plus %u pixels"
@@ -180,7 +182,7 @@ WebGLContext::ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
 static bool
 ValidateUnpackBytes(WebGLContext* webgl, const char* funcName, uint32_t width,
                     uint32_t height, uint32_t depth, const webgl::PackingInfo& pi,
-                    uint32_t byteCount, const webgl::TexUnpackBlob* blob)
+                    uint32_t byteCount, webgl::TexUnpackBlob* blob)
 {
     const auto bytesPerPixel = webgl::BytesPerPixel(pi);
     const auto bytesPerRow = CheckedUint32(blob->mRowLength) * bytesPerPixel;
@@ -241,7 +243,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
 
     ////
 
-    const void* bytes = nullptr;
+    const uint8_t* bytes = nullptr;
     uint32_t byteCount = 0;
 
     if (!maybeView.IsNull()) {
@@ -263,8 +265,8 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     }
 
     const bool isClientData = true;
-    const webgl::TexUnpackBytes blob(mContext, target, width, height, depth, isClientData,
-                                     bytes);
+    webgl::TexUnpackBytes blob(mContext, target, width, height, depth, isClientData,
+                               bytes);
 
     if (bytes &&
         !ValidateUnpackBytes(mContext, funcName, width, height, depth, pi, byteCount,
@@ -305,9 +307,8 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     }
 
     const bool isClientData = false;
-    const auto ptr = (const void*)offset;
-    const webgl::TexUnpackBytes blob(mContext, target, width, height, depth, isClientData,
-                                     ptr);
+    const auto ptr = (const uint8_t*)offset;
+    webgl::TexUnpackBytes blob(mContext, target, width, height, depth, isClientData, ptr);
 
     const auto& packBuffer = mContext->mBoundPixelUnpackBuffer;
     const auto bufferByteCount = packBuffer->ByteLength();
@@ -396,8 +397,8 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     //  non-premultiplied alpha values."
     const bool isAlphaPremult = false;
 
-    const webgl::TexUnpackSurface blob(mContext, target, width, height, depth, surf,
-                                       isAlphaPremult);
+    webgl::TexUnpackSurface blob(mContext, target, width, height, depth, surf,
+                                 isAlphaPremult);
 
     const uint32_t fullRows = imageData->Height();
     const uint32_t tailPixels = 0;
@@ -506,7 +507,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     //////
     // Ok, we're good!
 
-    UniquePtr<const webgl::TexUnpackBlob> blob;
+    UniquePtr<webgl::TexUnpackBlob> blob;
     const bool isAlphaPremult = sfer.mIsPremultiplied;
 
     if (layersImage) {

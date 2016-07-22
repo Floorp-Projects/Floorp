@@ -59,6 +59,8 @@ public:
     const uint32_t mDepth;
     const bool mIsSrcPremult;
 
+    bool mNeedsExactUpload;
+
 protected:
     TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target, uint32_t rowLength,
                   uint32_t width, uint32_t height, uint32_t depth, bool isSrcPremult);
@@ -67,10 +69,11 @@ public:
     virtual ~TexUnpackBlob() { }
 
 protected:
-    bool ConvertIfNeeded(WebGLContext* webgl, const char* funcName, const void* srcBytes,
-                         uint32_t srcStride, uint8_t srcBPP, WebGLTexelFormat srcFormat,
+    bool ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
+                         const uint8_t* srcBytes, uint32_t srcStride, uint8_t srcBPP,
+                         WebGLTexelFormat srcFormat,
                          const webgl::DriverUnpackInfo* dstDUI,
-                         const void** const out_bytes,
+                         const uint8_t** const out_bytes,
                          UniqueBuffer* const out_anchoredBuffer) const;
 
 public:
@@ -87,10 +90,10 @@ class TexUnpackBytes final : public TexUnpackBlob
 {
 public:
     const bool mIsClientData;
-    const void* const mPtr;
+    const uint8_t* const mPtr;
 
     TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target, uint32_t width,
-                   uint32_t height, uint32_t depth, bool isClientData, const void* ptr);
+                   uint32_t height, uint32_t depth, bool isClientData, const uint8_t* ptr);
 
     virtual bool HasData() const override { return !mIsClientData || bool(mPtr); }
 
