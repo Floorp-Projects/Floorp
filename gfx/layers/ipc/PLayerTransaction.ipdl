@@ -70,6 +70,8 @@ parent:
                      bool isRepeatTransaction, TimeStamp transactionStart,
                      int32_t paintSyncId);
 
+  async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
+
   // Testing APIs
 
   // Enter test mode, set the sample time to sampleTime, and resample
