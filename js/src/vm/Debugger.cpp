@@ -31,6 +31,7 @@
 #include "js/GCAPI.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
+#include "proxy/ScriptedProxyHandler.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/DebuggerMemory.h"
 #include "vm/SPSProfiler.h"
@@ -44,8 +45,6 @@
 
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
-
-#include "proxy/ScriptedProxyHandler.h"
 
 using namespace js;
 
