@@ -20,9 +20,9 @@ class nsIDocument;
 class nsIContentViewer;
 class nsIPresShell;
 class gfxSVGGlyphs;
-class gfxTextContextPaint;
 
 namespace mozilla {
+class SVGContextPaint;
 namespace dom {
 class Element;
 } // namespace dom
@@ -118,10 +118,10 @@ public:
     /**
      * Render the SVG glyph for |aGlyphId|
      * @param aContextPaint Information on text context paints.
-     *   See |gfxTextContextPaint|.
+     *   See |SVGContextPaint|.
      */
     bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
-                     gfxTextContextPaint *aContextPaint);
+                     mozilla::SVGContextPaint* aContextPaint);
 
     /**
      * Get the extents for the SVG glyph associated with |aGlyphId|
@@ -174,7 +174,7 @@ private:
  * Moz2D the less likely it is that this hack will work.  It will also make
  * converting to Moz2D harder.
  */
-class SimpleTextContextPaint : public gfxTextContextPaint
+class SimpleTextContextPaint : public mozilla::SVGContextPaint
 {
 private:
     static const mozilla::gfx::Color sZero;

@@ -3724,7 +3724,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   TextRenderedRunIterator it(this, TextRenderedRunIterator::eVisibleFrames);
   TextRenderedRun run = it.Current();
 
-  gfxTextContextPaint* outerContextPaint = nsSVGUtils::GetContextPaint(mContent);
+  SVGContextPaint* outerContextPaint = nsSVGUtils::GetContextPaint(mContent);
 
   nsRenderingContext rendCtx(&aContext);
 
