@@ -1015,6 +1015,7 @@ public:
     bool IsContentXBLScope() { return mIsContentXBLScope; }
     bool AllowContentXBLScope();
     bool UseContentXBLScope() { return mUseContentXBLScope; }
+    void ClearContentXBLScope() { mContentXBLScope = nullptr; }
 
     bool IsAddonScope() { return mIsAddonScope; }
 

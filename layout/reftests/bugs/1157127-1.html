@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<body>
+  <script>
+    document.domain = document.domain;
+    var ifr = document.createElement("iframe");
+    ifr.src = "1157127-subframe.xml";
+    document.body.appendChild(ifr);
+
+    var doc = ifr.contentDocument;
+    var div = doc.createElement("div");
+    div.style.resize = "both";
+    div.style.overflow = "scroll";
+    doc.body.appendChild(div);
+    div.offsetWidth;
+  </script>
+</body>
