@@ -435,6 +435,19 @@ def check_places_and_android_history(places, android_history):
     if places and android_history:
         die('Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.')
 
+# gpsd support
+# ==============================================================
+option('--enable-gpsd', env='MOZ_GPSD',
+       help='Enable gpsd support')
+
+@depends('--enable-gpsd')
+def gpsd(value):
+    return bool(value)
+
+system_gpsd = pkg_check_modules('MOZ_GPSD', 'libgps >= 3.11', gpsd)
+
+set_config('MOZ_GPSD', system_gpsd)
+
 # Miscellaneous programs
 # ==============================================================
 
