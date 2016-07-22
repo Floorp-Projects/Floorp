@@ -17,6 +17,10 @@ EXPORTS += [
     'SVGImageContext.h',
 ]
 
+EXPORTS.mozilla += [
+    'SVGContextPaint.h',
+]
+
 UNIFIED_SOURCES += [
     'nsCSSClipPathInstance.cpp',
     'nsCSSFilterInstance.cpp',
@@ -43,6 +47,7 @@ UNIFIED_SOURCES += [
     'nsSVGSwitchFrame.cpp',
     'nsSVGUseFrame.cpp',
     'nsSVGUtils.cpp',
+    'SVGContextPaint.cpp',
     'SVGFEContainerFrame.cpp',
     'SVGFEImageFrame.cpp',
     'SVGFELeafFrame.cpp',
