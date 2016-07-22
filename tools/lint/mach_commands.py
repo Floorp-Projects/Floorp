@@ -96,18 +96,18 @@ class MachCommands(MachCommandBase):
         module_path = self.get_eslint_module_path()
 
         # eslint requires at least node 4.2.3
-        nodePath = self.getNodeOrNpmPath("node", LooseVersion("4.2.3"))
+        nodePath = self.get_node_or_npm_path("node", LooseVersion("4.2.3"))
         if not nodePath:
             return 1
 
         if setup:
             return self.eslint_setup()
 
-        npmPath = self.getNodeOrNpmPath("npm")
+        npmPath = self.get_node_or_npm_path("npm")
         if not npmPath:
             return 1
 
-        if self.eslintModuleHasIssues():
+        if self.eslint_module_has_issues():
             install = self._prompt_yn("\nContinuing will automatically fix "
                                       "these issues. Would you like to "
                                       "continue")
@@ -178,7 +178,7 @@ class MachCommands(MachCommandBase):
         # we manually switch folders here instead.
         os.chdir(module_path)
 
-        npmPath = self.getNodeOrNpmPath("npm")
+        npmPath = self.get_node_or_npm_path("npm")
         if not npmPath:
             return 1
 
@@ -198,7 +198,7 @@ class MachCommands(MachCommandBase):
 
                 print("Installing %s v%s using \"%s\"..."
                       % (name, version, " ".join(cmd)))
-                success = self.callProcess(pkg, cmd)
+                success = self.call_process(pkg, cmd)
 
             if not success:
                 return 1
@@ -210,7 +210,7 @@ class MachCommands(MachCommandBase):
 
         os.chdir(orig_cwd)
 
-    def callProcess(self, name, cmd, cwd=None):
+    def call_process(self, name, cmd, cwd=None):
         try:
             with open(os.devnull, "w") as fnull:
                 subprocess.check_call(cmd, cwd=cwd, stdout=fnull)
@@ -224,7 +224,7 @@ class MachCommands(MachCommandBase):
 
         return True
 
-    def eslintModuleHasIssues(self):
+    def eslint_module_has_issues(self):
         has_issues = False
         node_module_path = os.path.join(self.get_eslint_module_path(), "node_modules")
 
@@ -247,7 +247,7 @@ class MachCommands(MachCommandBase):
 
     def node_package_installed(self, package_name="", globalInstall=False, cwd=None):
         try:
-            npmPath = self.getNodeOrNpmPath("npm")
+            npmPath = self.get_node_or_npm_path("npm")
 
             cmd = [npmPath, "ls", "--parseable", package_name]
 
@@ -261,7 +261,7 @@ class MachCommands(MachCommandBase):
         except subprocess.CalledProcessError:
             return False
 
-    def getPossibleNodePathsWin(self):
+    def get_possible_node_paths_win(self):
         """
         Return possible nodejs paths on Windows.
         """
@@ -275,7 +275,7 @@ class MachCommands(MachCommandBase):
             os.path.join(os.environ.get("PROGRAMFILES"), "nodejs")
         })
 
-    def getNodeOrNpmPath(self, filename, minversion=None):
+    def get_node_or_npm_path(self, filename, minversion=None):
         """
         Return the nodejs or npm path.
         """
@@ -283,7 +283,7 @@ class MachCommands(MachCommandBase):
             for ext in [".cmd", ".exe", ""]:
                 try:
                     nodeOrNpmPath = which.which(filename + ext,
-                                                path=self.getPossibleNodePathsWin())
+                                                path=self.get_possible_node_paths_win())
                     if self.is_valid(nodeOrNpmPath, minversion):
                         return nodeOrNpmPath
                 except which.WhichError:
@@ -302,7 +302,7 @@ class MachCommands(MachCommandBase):
             print(NPM_NOT_FOUND_MESSAGE)
 
         if platform.system() == "Windows":
-            appPaths = self.getPossibleNodePathsWin()
+            appPaths = self.get_possible_node_paths_win()
 
             for p in appPaths:
                 print("  - %s" % p)
