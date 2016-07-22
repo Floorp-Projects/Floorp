@@ -60,7 +60,7 @@ def generate_context_hash(image_path):
     return context_hash.hexdigest()
 
 
-def create_context_tar(context_dir, out_path, prefix):
+def create_context_tar(topsrcdir, context_dir, out_path, prefix):
     """Create a context tarball.
 
     A directory ``context_dir`` containing a Dockerfile will be assembled into
