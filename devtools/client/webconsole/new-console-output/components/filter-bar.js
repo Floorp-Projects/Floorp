@@ -50,7 +50,7 @@ const FilterBar = createClass({
     let configFilterBarVisible = ui.configFilterBarVisible;
     let children = [];
 
-    children.push(dom.div({className: "devtools-toolbar webconsole-filteringbar-primary"},
+    children.push(dom.div({className: "devtools-toolbar webconsole-filterbar-primary"},
       dom.button({
         className: "devtools-button devtools-clear-icon",
         title: "Clear output",
@@ -63,7 +63,7 @@ const FilterBar = createClass({
         onClick: this.onToggleFilterConfigBarButtonClick
       }),
       dom.input({
-        className: "devtools-searchinput",
+        className: "devtools-plain-input",
         type: "search",
         value: filter.searchText,
         placeholder: "Filter output",
