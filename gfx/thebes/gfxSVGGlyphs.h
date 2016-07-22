@@ -13,6 +13,7 @@
 #include "nsHashKeys.h"
 #include "gfxPattern.h"
 #include "mozilla/gfx/UserData.h"
+#include "mozilla/SVGContextPaint.h"
 #include "nsRefreshDriver.h"
 
 class nsIDocument;
@@ -163,94 +164,21 @@ private:
 };
 
 /**
- * RAII class used to temporarily set and remove SVG context paint while
- * painting a piece of SVG.  The context paint is set on the SVG's owner
- * document, as expected by nsSVGUtils::GetContextPaint.  Any pre-existing
- * context paint is restored after this class removes the context paint that it
- * set.
- */
-class MOZ_RAII AutoSetRestoreSVGContextPaint
-{
-public:
-  AutoSetRestoreSVGContextPaint(gfxTextContextPaint* aContextPaint,
-                                nsIDocument* aSVGDocument);
-  ~AutoSetRestoreSVGContextPaint();
-private:
-  nsIDocument* mSVGDocument;
-  // The context paint that needs to be restored by our dtor after it removes
-  // aContextPaint:
-  void* mOuterContextPaint;
-};
-
-/**
- * Used for trickling down paint information through to SVG glyphs.
- */
-class gfxTextContextPaint
-{
-protected:
-    typedef mozilla::gfx::DrawTarget DrawTarget;
-
-    gfxTextContextPaint() { }
-
-public:
-    /*
-     * Get text context pattern with the specified opacity value.
-     * This lets us inherit paints and paint opacities (i.e. fill/stroke and
-     * fill-opacity/stroke-opacity) separately.
-     */
-    virtual already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
-                                                        float aOpacity,
-                                                        const gfxMatrix& aCTM) = 0;
-    virtual already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
-                                                          float aOpacity,
-                                                          const gfxMatrix& aCTM) = 0;
-
-    virtual float GetFillOpacity() { return 1.0f; }
-    virtual float GetStrokeOpacity() { return 1.0f; }
-
-    void InitStrokeGeometry(gfxContext *aContext,
-                            float devUnitsPerSVGUnit);
-
-    FallibleTArray<gfxFloat>& GetStrokeDashArray() {
-        return mDashes;
-    }
-
-    gfxFloat GetStrokeDashOffset() {
-        return mDashOffset;
-    }
-
-    gfxFloat GetStrokeWidth() {
-        return mStrokeWidth;
-    }
-
-    already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
-                                                const gfxMatrix& aCTM) {
-        return GetFillPattern(aDrawTarget, GetFillOpacity(), aCTM);
-    }
-
-    already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
-                                                  const gfxMatrix& aCTM) {
-        return GetStrokePattern(aDrawTarget, GetStrokeOpacity(), aCTM);
-    }
-
-    virtual ~gfxTextContextPaint() { }
-
-private:
-    FallibleTArray<gfxFloat> mDashes;
-    gfxFloat mDashOffset;
-    gfxFloat mStrokeWidth;
-};
-
-/**
- * For passing in patterns where the text context has no separate pattern
- * opacity value.
+ * XXX This is a complete hack and should die (see bug 1291494).
+ *
+ * This class is used when code fails to pass through an SVGContextPaint from
+ * the context in which we are painting.  In that case we create one of these
+ * as a fallback and have it wrap the gfxContext's current gfxPattern and
+ * pretend that that is the paint context's fill pattern.  In some contexts
+ * that will be the case, in others it will not.  As we convert more code to
+ * Moz2D the less likely it is that this hack will work.  It will also make
+ * converting to Moz2D harder.
  */
 class SimpleTextContextPaint : public gfxTextContextPaint
 {
 private:
     static const mozilla::gfx::Color sZero;
 
-public:
     static gfxMatrix SetupDeviceToPatternMatrix(gfxPattern *aPattern,
                                                 const gfxMatrix& aCTM)
     {
@@ -264,6 +192,7 @@ public:
         return deviceToUser * aPattern->GetMatrix();
     }
 
+public:
     SimpleTextContextPaint(gfxPattern *aFillPattern, gfxPattern *aStrokePattern,
                           const gfxMatrix& aCTM) :
         mFillPattern(aFillPattern ? aFillPattern : new gfxPattern(sZero)),
@@ -293,11 +222,11 @@ public:
         return strokePattern.forget();
     }
 
-    float GetFillOpacity() {
+    float GetFillOpacity() const {
         return mFillPattern ? 1.0f : 0.0f;
     }
 
-    float GetStrokeOpacity() {
+    float GetStrokeOpacity() const {
         return mStrokePattern ? 1.0f : 0.0f;
     }
 
