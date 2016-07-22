@@ -1510,19 +1510,30 @@ CodeGeneratorShared::emitAsmJSCall(LAsmJSCall* ins)
 
     MAsmJSCall::Callee callee = mir->callee();
     switch (callee.which()) {
-      case MAsmJSCall::Callee::Internal:
+      case MAsmJSCall::Callee::Internal: {
         masm.call(mir->desc(), callee.internal());
         break;
+      }
       case MAsmJSCall::Callee::Dynamic: {
-        if (callee.dynamicHasSigIndex())
-            masm.move32(Imm32(callee.dynamicSigIndex()), WasmTableCallSigReg);
+        wasm::SigIdDesc sigId = callee.dynamicSigId();
+        switch (sigId.kind()) {
+          case wasm::SigIdDesc::Kind::Global:
+            masm.loadWasmGlobalPtr(sigId.globalDataOffset(), WasmTableCallSigReg);
+            break;
+          case wasm::SigIdDesc::Kind::Immediate:
+            masm.move32(Imm32(sigId.immediate()), WasmTableCallSigReg);
+            break;
+          case wasm::SigIdDesc::Kind::None:
+            break;
+        }
         MOZ_ASSERT(WasmTableCallPtrReg == ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
         masm.call(mir->desc(), WasmTableCallPtrReg);
         break;
       }
-      case MAsmJSCall::Callee::Builtin:
+      case MAsmJSCall::Callee::Builtin: {
         masm.call(callee.builtin());
         break;
+      }
     }
 
     if (mir->spIncrement())
