@@ -143,7 +143,7 @@ class DockerImageTask(base.Task):
         if not os.path.exists(os.path.dirname(destination)):
             os.makedirs(os.path.dirname(destination))
 
-        return create_context_tar(context_dir, destination, image_name)
+        return create_context_tar(GECKO, context_dir, destination, image_name)
 
     @classmethod
     def from_json(cls, task_dict):
