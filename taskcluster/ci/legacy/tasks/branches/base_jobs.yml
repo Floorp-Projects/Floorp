@@ -345,10 +345,3 @@ tasks:
         file_patterns:
           - 'build/build-clang/**'
           - 'taskcluster/scripts/misc/build-clang-linux.sh'
-  linux64-binutils:
-    task: tasks/builds/linux64_binutils.yml
-    root: true
-    when:
-        file_patterns:
-          - 'build/unix/build-binutils/**'
-          - 'taskcluster/scripts/misc/build-binutils-linux.sh'
