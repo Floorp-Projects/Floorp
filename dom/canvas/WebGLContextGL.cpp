@@ -776,6 +776,25 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
 
     switch (pname) {
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+        switch (attachment) {
+        case LOCAL_GL_BACK:
+            break;
+        case LOCAL_GL_DEPTH:
+            if (!mOptions.depth) {
+              return JS::Int32Value(LOCAL_GL_NONE);
+            }
+            break;
+        case LOCAL_GL_STENCIL:
+            if (!mOptions.stencil) {
+              return JS::Int32Value(LOCAL_GL_NONE);
+            }
+            break;
+        default:
+            ErrorInvalidEnum("%s: With the default framebuffer, can only query COLOR, DEPTH,"
+                             " or STENCIL for GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE",
+                             funcName);
+            return JS::NullValue();
+        }
         return JS::Int32Value(LOCAL_GL_FRAMEBUFFER_DEFAULT);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
@@ -791,27 +810,63 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         return JS::NumberValue(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
-        if (attachment == LOCAL_GL_BACK)
-            return JS::NumberValue(mOptions.alpha ? 8 : 0);
+        if (attachment == LOCAL_GL_BACK) {
+            if (mOptions.alpha) {
+                return JS::NumberValue(8);
+            }
+            ErrorInvalidOperation("The default framebuffer doesn't contain an alpha buffer");
+            return JS::NullValue();
+        }
         return JS::NumberValue(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
-        if (attachment == LOCAL_GL_DEPTH)
-            return JS::NumberValue(mOptions.depth ? 24 : 0);
+        if (attachment == LOCAL_GL_DEPTH) {
+            if (mOptions.depth) {
+                return JS::NumberValue(24);
+            }
+            ErrorInvalidOperation("The default framebuffer doesn't contain an depth buffer");
+            return JS::NullValue();
+        }
         return JS::NumberValue(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
-        if (attachment == LOCAL_GL_STENCIL)
-            return JS::NumberValue(mOptions.stencil ? 8 : 0);
+        if (attachment == LOCAL_GL_STENCIL) {
+            if (mOptions.stencil) {
+                return JS::NumberValue(8);
+            }
+            ErrorInvalidOperation("The default framebuffer doesn't contain an stencil buffer");
+            return JS::NullValue();
+        }
         return JS::NumberValue(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
-        if (attachment == LOCAL_GL_STENCIL)
-            return JS::NumberValue(LOCAL_GL_UNSIGNED_INT);
-        else
+        if (attachment == LOCAL_GL_STENCIL) {
+            if (mOptions.stencil) {
+                return JS::NumberValue(LOCAL_GL_UNSIGNED_INT);
+            }
+            ErrorInvalidOperation("The default framebuffer doesn't contain an stencil buffer");
+        } else if (attachment == LOCAL_GL_DEPTH) {
+            if (mOptions.depth) {
+                return JS::NumberValue(LOCAL_GL_UNSIGNED_NORMALIZED);
+            }
+            ErrorInvalidOperation("The default framebuffer doesn't contain an depth buffer");
+        } else { // LOCAL_GL_BACK
             return JS::NumberValue(LOCAL_GL_UNSIGNED_NORMALIZED);
+        }
+        return JS::NullValue();
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
+        if (attachment == LOCAL_GL_STENCIL) {
+            if (!mOptions.stencil) {
+                ErrorInvalidOperation("The default framebuffer doesn't contain an stencil buffer");
+                return JS::NullValue();
+            }
+        } else if (attachment == LOCAL_GL_DEPTH) {
+            if (!mOptions.depth) {
+                ErrorInvalidOperation("The default framebuffer doesn't contain an depth buffer");
+                return JS::NullValue();
+            }
+        }
         return JS::NumberValue(LOCAL_GL_LINEAR);
     }
 
