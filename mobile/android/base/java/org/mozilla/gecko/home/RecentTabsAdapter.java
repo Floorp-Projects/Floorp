@@ -123,12 +123,14 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
     }
 
     private void readPreviousSessionData() {
-        // Make sure that the start up code has had a chance to update sessionstore.bak as necessary.
-        GeckoProfile.get(context).waitForOldSessionDataProcessing();
-
-        ThreadUtils.postToBackgroundThread(new Runnable() {
+        // If we happen to initialise before GeckoApp, waiting on either the main or the background
+        // thread can lead to a deadlock, so we have to run on a separate thread instead.
+        final Thread parseThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                // Make sure that the start up code has had a chance to update sessionstore.bak as necessary.
+                GeckoProfile.get(context).waitForOldSessionDataProcessing();
+
                 final String jsonString = GeckoProfile.get(context).readSessionFile(true);
                 if (jsonString == null) {
                     // No previous session data.
@@ -175,7 +177,9 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                     }
                 });
             }
-        });
+        }, "LastSessionTabsThread");
+
+        parseThread.start();
     }
 
     public void clearLastSessionData() {
