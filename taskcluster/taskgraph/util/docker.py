@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
 import os
+import tempfile
 
 from mozpack.archive import (
     create_tar_gz_from_files,
@@ -33,31 +34,17 @@ def docker_image(name):
     return '{}/{}:{}'.format(registry, name, version)
 
 
-def generate_context_hash(image_path):
-    '''Generates a sha256 hash for context directory used to build an image.
+def generate_context_hash(topsrcdir, image_path, image_name):
+    """Generates a sha256 hash for context directory used to build an image."""
 
-    Contents of the directory are sorted alphabetically, contents of each file is hashed,
-    and then a hash is created for both the file hashs as well as their paths.
-
-    This ensures that hashs are consistent and also change based on if file locations
-    within the context directory change.
-    '''
-    context_hash = hashlib.sha256()
-    files = []
-
-    for dirpath, dirnames, filenames in os.walk(os.path.join(GECKO, image_path)):
-        for filename in filenames:
-            files.append(os.path.join(dirpath, filename))
-
-    for filename in sorted(files):
-        relative_filename = filename.replace(GECKO, '')
-        with open(filename, 'rb') as f:
-            file_hash = hashlib.sha256()
-            data = f.read()
-            file_hash.update(data)
-            context_hash.update(file_hash.hexdigest() + '\t' + relative_filename + '\n')
-
-    return context_hash.hexdigest()
+    # It is a bit unfortunate we have to create a temp file here - it would
+    # be nicer to use an in-memory buffer.
+    fd, p = tempfile.mkstemp()
+    os.close(fd)
+    try:
+        return create_context_tar(topsrcdir, image_path, p, image_name)
+    finally:
+        os.unlink(p)
 
 
 def create_context_tar(topsrcdir, context_dir, out_path, prefix):
