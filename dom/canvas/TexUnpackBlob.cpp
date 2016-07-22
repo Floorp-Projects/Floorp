@@ -12,6 +12,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/RefPtr.h"
 #include "nsLayoutUtils.h"
+#include "WebGLBuffer.h"
 #include "WebGLContext.h"
 #include "WebGLTexelConversions.h"
 #include "WebGLTexture.h"
@@ -153,16 +154,18 @@ TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
     , mDepth(depth)
 
     , mIsSrcPremult(isSrcPremult)
+
+    , mNeedsExactUpload(false)
 {
     MOZ_ASSERT_IF(!IsTarget3D(target), mDepth == 1);
 }
 
 bool
 TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
-                               const void* srcBytes, uint32_t srcStride, uint8_t srcBPP,
-                               WebGLTexelFormat srcFormat,
+                               const uint8_t* srcBytes, uint32_t srcStride,
+                               uint8_t srcBPP, WebGLTexelFormat srcFormat,
                                const webgl::DriverUnpackInfo* dstDUI,
-                               const void** const out_bytes,
+                               const uint8_t** const out_bytes,
                                UniqueBuffer* const out_anchoredBuffer) const
 {
     *out_bytes = srcBytes;
@@ -181,7 +184,7 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     }
     const uint32_t skipBytes = offset.value();
 
-    auto const srcBegin = (const uint8_t*)srcBytes + skipBytes;
+    auto const srcBegin = srcBytes + skipBytes;
 
     //////
 
@@ -237,13 +240,15 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     // We need some sort of conversion, so create the dest buffer.
 
     *out_anchoredBuffer = calloc(1, dstSize.value());
-    *out_bytes = out_anchoredBuffer->get();
-    if (!*out_bytes) {
+    const auto dstBytes = (uint8_t*)out_anchoredBuffer->get();
+
+    if (!dstBytes) {
         webgl->ErrorOutOfMemory("%s: Unable to allocate buffer during conversion.",
                                 funcName);
         return false;
     }
-    const auto dstBegin = (uint8_t*)(*out_bytes) + skipBytes;
+    *out_bytes = dstBytes;
+    const auto dstBegin = dstBytes + skipBytes;
 
     //////
     // Row conversion
@@ -319,7 +324,7 @@ DoTexOrSubImage(bool isSubImage, gl::GLContext* gl, TexImageTarget target, GLint
 
 TexUnpackBytes::TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target,
                                uint32_t width, uint32_t height, uint32_t depth,
-                               bool isClientData, const void* ptr)
+                               bool isClientData, const uint8_t* ptr)
     : TexUnpackBlob(webgl, target,
                     FallbackOnZero(webgl->mPixelStore_UnpackRowLength, width), width,
                     height, depth, false)
@@ -346,17 +351,86 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
 
     const auto format = FormatForPackingInfo(pi);
 
-    const void* uploadBytes;
+    auto uploadPtr = mPtr;
     UniqueBuffer tempBuffer;
     if (mIsClientData &&
         !ConvertIfNeeded(webgl, funcName, mPtr, rowStride.value(), bytesPerPixel, format,
-                         dui, &uploadBytes, &tempBuffer))
+                         dui, &uploadPtr, &tempBuffer))
     {
         return false;
     }
 
-    *out_error = DoTexOrSubImage(isSubImage, webgl->gl, target, level, dui, xOffset,
-                                 yOffset, zOffset, mWidth, mHeight, mDepth, uploadBytes);
+    const auto& gl = webgl->gl;
+
+    //////
+
+    bool useParanoidHandling = false;
+    if (mNeedsExactUpload && webgl->mBoundPixelUnpackBuffer) {
+        webgl->GenerateWarning("%s: Uploads from a buffer with a final row with a byte"
+                               " count smaller than the row stride can incur extra"
+                               " overhead.",
+                               funcName);
+
+        if (gl->WorkAroundDriverBugs()) {
+            useParanoidHandling |= (gl->Vendor() == gl::GLVendor::NVIDIA);
+        }
+    }
+
+    if (!useParanoidHandling) {
+        *out_error = DoTexOrSubImage(isSubImage, gl, target, level, dui, xOffset, yOffset,
+                                     zOffset, mWidth, mHeight, mDepth, uploadPtr);
+        return true;
+    }
+
+    //////
+
+    MOZ_ASSERT(webgl->mBoundPixelUnpackBuffer);
+
+    if (!isSubImage) {
+        // Alloc first to catch OOMs.
+        gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+        *out_error = DoTexOrSubImage(false, gl, target, level, dui, xOffset, yOffset,
+                                     zOffset, mWidth, mHeight, mDepth, nullptr);
+        gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER,
+                        webgl->mBoundPixelUnpackBuffer->mGLName);
+    }
+
+    //////
+
+    if (mDepth > 1) {
+        *out_error = DoTexOrSubImage(true, gl, target, level, dui, xOffset, yOffset,
+                                     zOffset, mWidth, mHeight, mDepth-1, uploadPtr);
+    }
+
+    if (mHeight > 1) {
+        *out_error = DoTexOrSubImage(true, gl, target, level, dui, xOffset, yOffset,
+                                     zOffset+mDepth-1, mWidth, mHeight-1, 1, uploadPtr);
+    }
+
+    const uint32_t imageStride = rowStride.value() * mImageHeight;
+
+    const uint32_t usedImages = mSkipImages + mDepth;
+    const uint32_t usedRows = mSkipRows + mHeight;
+
+    uploadPtr += (usedImages - 1) * imageStride;
+    uploadPtr += (usedRows - 1) * rowStride.value();
+
+    //////
+
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, 0);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, 0);
+
+    *out_error = DoTexOrSubImage(true, gl, target, level, dui, xOffset,
+                                 yOffset+mHeight-1, zOffset+mDepth-1, mWidth, 1, 1,
+                                 uploadPtr);
+
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, webgl->mPixelStore_UnpackAlignment);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, webgl->mPixelStore_UnpackImageHeight);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, webgl->mPixelStore_UnpackSkipImages);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, webgl->mPixelStore_UnpackSkipRows);
+
     return true;
 }
 
@@ -557,7 +631,7 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
     webgl->GenerateWarning("%s: Incurred CPU-side conversion, which is very slow.",
                            funcName);
 
-    const void* uploadBytes;
+    const uint8_t* uploadBytes;
     UniqueBuffer tempBuffer;
     if (!ConvertIfNeeded(webgl, funcName, srcBytes, srcStride, srcBPP, srcFormat,
                          dstDUI, &uploadBytes, &tempBuffer))
