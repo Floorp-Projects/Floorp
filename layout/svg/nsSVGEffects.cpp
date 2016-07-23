@@ -913,10 +913,10 @@ nsSVGEffects::GetMarkerURI(nsIFrame* aFrame,
 }
 
 already_AddRefed<nsIURI>
-nsSVGEffects::GetClipPathURI(nsIFrame *aFrame)
+nsSVGEffects::GetClipPathURI(nsIFrame* aFrame)
 {
   const nsStyleSVGReset* svgResetStyle = aFrame->StyleSVGReset();
-  MOZ_ASSERT(svgResetStyle->mClipPath.GetType() == NS_STYLE_CLIP_PATH_URL);
+  MOZ_ASSERT(svgResetStyle->mClipPath.GetType() == StyleClipPathType::URL);
 
   FragmentOrURL* url = svgResetStyle->mClipPath.GetURL();
   return ResolveFragmentOrURL(aFrame, url);
