@@ -485,14 +485,14 @@ class JS_PUBLIC_API(AutoAssertOnGC)
 
   public:
     AutoAssertOnGC();
-    explicit AutoAssertOnGC(JSRuntime* rt);
+    explicit AutoAssertOnGC(JSContext* cx);
     ~AutoAssertOnGC();
 
     static void VerifyIsSafeToGC(JSRuntime* rt);
 #else
   public:
     AutoAssertOnGC() {}
-    explicit AutoAssertOnGC(JSRuntime* rt) {}
+    explicit AutoAssertOnGC(JSContext* cx) {}
     ~AutoAssertOnGC() {}
 
     static void VerifyIsSafeToGC(JSRuntime* rt) {}
@@ -510,13 +510,13 @@ class JS_PUBLIC_API(AutoAssertNoAlloc)
 
   public:
     AutoAssertNoAlloc() : gc(nullptr) {}
-    explicit AutoAssertNoAlloc(JSRuntime* rt);
+    explicit AutoAssertNoAlloc(JSContext* cx);
     void disallowAlloc(JSRuntime* rt);
     ~AutoAssertNoAlloc();
 #else
   public:
     AutoAssertNoAlloc() {}
-    explicit AutoAssertNoAlloc(JSRuntime* rt) {}
+    explicit AutoAssertNoAlloc(JSContext* cx) {}
     void disallowAlloc(JSRuntime* rt) {}
 #endif
 };
@@ -539,7 +539,7 @@ class JS_PUBLIC_API(AutoSuppressGCAnalysis) : public AutoAssertNoAlloc
 {
   public:
     AutoSuppressGCAnalysis() : AutoAssertNoAlloc() {}
-    explicit AutoSuppressGCAnalysis(JSRuntime* rt) : AutoAssertNoAlloc(rt) {}
+    explicit AutoSuppressGCAnalysis(JSContext* cx) : AutoAssertNoAlloc(cx) {}
 } JS_HAZ_GC_SUPPRESSED;
 
 /**
@@ -570,7 +570,7 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
 {
   public:
     AutoCheckCannotGC() : AutoAssertOnGC() {}
-    explicit AutoCheckCannotGC(JSRuntime* rt) : AutoAssertOnGC(rt) {}
+    explicit AutoCheckCannotGC(JSContext* cx) : AutoAssertOnGC(cx) {}
 } JS_HAZ_GC_INVALIDATED;
 
 /**

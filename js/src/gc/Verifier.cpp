@@ -508,7 +508,7 @@ bool
 CheckHeapTracer::check(AutoLockForExclusiveAccess& lock)
 {
     // The analysis thinks that markRuntime might GC by calling a GC callback.
-    JS::AutoSuppressGCAnalysis nogc(rt);
+    JS::AutoSuppressGCAnalysis nogc;
     rt->gc.markRuntime(this, GCRuntime::TraceRuntime, lock);
 
     while (!stack.empty()) {

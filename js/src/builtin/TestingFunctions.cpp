@@ -2827,7 +2827,7 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
     Vector<Vector<Vector<JS::ubi::EdgeName>>> names(cx);
 
     {
-        JS::AutoCheckCannotGC noGC(cx->runtime());
+        JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
         if (!targets.init()) {
