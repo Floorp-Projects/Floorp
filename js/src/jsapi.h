@@ -957,19 +957,19 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun);
 /*
  * Locking, contexts, and memory allocation.
  *
- * It is important that SpiderMonkey be initialized, and the first runtime and
- * first context be created, in a single-threaded fashion.  Otherwise the
- * behavior of the library is undefined.
+ * It is important that SpiderMonkey be initialized, and the first context
+ * be created, in a single-threaded fashion.  Otherwise the behavior of the
+ * library is undefined.
  * See: http://developer.mozilla.org/en/docs/Category:JSAPI_Reference
  */
 
-extern JS_PUBLIC_API(JSRuntime*)
-JS_NewRuntime(uint32_t maxbytes,
+extern JS_PUBLIC_API(JSContext*)
+JS_NewContext(uint32_t maxbytes,
               uint32_t maxNurseryBytes = JS::DefaultNurseryBytes,
-              JSRuntime* parentRuntime = nullptr);
+              JSContext* parentContext = nullptr);
 
 extern JS_PUBLIC_API(void)
-JS_DestroyRuntime(JSRuntime* rt);
+JS_DestroyContext(JSContext* cx);
 
 typedef double (*JS_CurrentEmbedderTimeFunction)();
 
@@ -999,8 +999,8 @@ JS_SetContextPrivate(JSContext* cx, void* data);
 extern JS_PUBLIC_API(JSRuntime*)
 JS_GetRuntime(JSContext* cx);
 
-extern JS_PUBLIC_API(JSRuntime*)
-JS_GetParentRuntime(JSRuntime* rt);
+extern JS_PUBLIC_API(JSContext*)
+JS_GetParentContext(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext* cx);

@@ -16,7 +16,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     /* Full GC, non-incremental. */
     FinalizeCalls = 0;
     JS_GC(cx);
-    CHECK(rt->gc.isFullGc());
+    CHECK(cx->gc.isFullGc());
     CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
     CHECK(checkFinalizeIsCompartmentGC(false));
@@ -25,12 +25,12 @@ BEGIN_TEST(testGCFinalizeCallback)
     FinalizeCalls = 0;
     JS::PrepareForFullGC(cx);
     JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
-    while (rt->gc.isIncrementalGCInProgress()) {
+    while (cx->gc.isIncrementalGCInProgress()) {
         JS::PrepareForFullGC(cx);
         JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
     }
-    CHECK(!rt->gc.isIncrementalGCInProgress());
-    CHECK(rt->gc.isFullGc());
+    CHECK(!cx->gc.isIncrementalGCInProgress());
+    CHECK(cx->gc.isFullGc());
     CHECK(checkMultipleGroups());
     CHECK(checkFinalizeStatus());
     CHECK(checkFinalizeIsCompartmentGC(false));
@@ -46,7 +46,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     FinalizeCalls = 0;
     JS::PrepareZoneForGC(global1->zone());
     JS::GCForReason(cx, GC_NORMAL, JS::gcreason::API);
-    CHECK(!rt->gc.isFullGc());
+    CHECK(!cx->gc.isFullGc());
     CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
     CHECK(checkFinalizeIsCompartmentGC(true));
@@ -57,7 +57,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS::PrepareZoneForGC(global2->zone());
     JS::PrepareZoneForGC(global3->zone());
     JS::GCForReason(cx, GC_NORMAL, JS::gcreason::API);
-    CHECK(!rt->gc.isFullGc());
+    CHECK(!cx->gc.isFullGc());
     CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
     CHECK(checkFinalizeIsCompartmentGC(true));
@@ -66,12 +66,12 @@ BEGIN_TEST(testGCFinalizeCallback)
     FinalizeCalls = 0;
     JS::PrepareZoneForGC(global1->zone());
     JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
-    while (rt->gc.isIncrementalGCInProgress()) {
+    while (cx->gc.isIncrementalGCInProgress()) {
         JS::PrepareZoneForGC(global1->zone());
         JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
     }
-    CHECK(!rt->gc.isIncrementalGCInProgress());
-    CHECK(!rt->gc.isFullGc());
+    CHECK(!cx->gc.isIncrementalGCInProgress());
+    CHECK(!cx->gc.isFullGc());
     CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
     CHECK(checkFinalizeIsCompartmentGC(true));
@@ -82,14 +82,14 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS::PrepareZoneForGC(global2->zone());
     JS::PrepareZoneForGC(global3->zone());
     JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
-    while (rt->gc.isIncrementalGCInProgress()) {
+    while (cx->gc.isIncrementalGCInProgress()) {
         JS::PrepareZoneForGC(global1->zone());
         JS::PrepareZoneForGC(global2->zone());
         JS::PrepareZoneForGC(global3->zone());
         JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
     }
-    CHECK(!rt->gc.isIncrementalGCInProgress());
-    CHECK(!rt->gc.isFullGc());
+    CHECK(!cx->gc.isIncrementalGCInProgress());
+    CHECK(!cx->gc.isFullGc());
     CHECK(checkMultipleGroups());
     CHECK(checkFinalizeStatus());
     CHECK(checkFinalizeIsCompartmentGC(true));
@@ -102,17 +102,17 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS_SetGCZeal(cx, 9, 1000000);
     JS::PrepareForFullGC(cx);
     js::SliceBudget budget(js::WorkBudget(1));
-    rt->gc.startDebugGC(GC_NORMAL, budget);
-    CHECK(rt->gc.state() == js::gc::MARK);
-    CHECK(rt->gc.isFullGc());
+    cx->gc.startDebugGC(GC_NORMAL, budget);
+    CHECK(cx->gc.state() == js::gc::MARK);
+    CHECK(cx->gc.isFullGc());
 
     JS::RootedObject global4(cx, createTestGlobal());
     budget = js::SliceBudget(js::WorkBudget(1));
-    rt->gc.debugGCSlice(budget);
-    while (rt->gc.isIncrementalGCInProgress())
-        rt->gc.debugGCSlice(budget);
-    CHECK(!rt->gc.isIncrementalGCInProgress());
-    CHECK(!rt->gc.isFullGc());
+    cx->gc.debugGCSlice(budget);
+    while (cx->gc.isIncrementalGCInProgress())
+        cx->gc.debugGCSlice(budget);
+    CHECK(!cx->gc.isIncrementalGCInProgress());
+    CHECK(!cx->gc.isFullGc());
     CHECK(checkMultipleGroups());
     CHECK(checkFinalizeStatus());
 

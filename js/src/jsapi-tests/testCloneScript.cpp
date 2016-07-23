@@ -67,19 +67,19 @@ struct Principals final : public JSPrincipals
 
 class AutoDropPrincipals
 {
-    JSRuntime* rt;
+    JSContext* cx;
     JSPrincipals* principals;
 
   public:
-    AutoDropPrincipals(JSRuntime* rt, JSPrincipals* principals)
-      : rt(rt), principals(principals)
+    AutoDropPrincipals(JSContext* cx, JSPrincipals* principals)
+      : cx(cx), principals(principals)
     {
         JS_HoldPrincipals(principals);
     }
 
     ~AutoDropPrincipals()
     {
-        JS_DropPrincipals(JS_GetContext(rt), principals);
+        JS_DropPrincipals(cx, principals);
     }
 };
 
@@ -95,9 +95,9 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
     JS_InitDestroyPrincipalsCallback(cx, DestroyPrincipals);
 
     JSPrincipals* principalsA = new Principals();
-    AutoDropPrincipals dropA(rt, principalsA);
+    AutoDropPrincipals dropA(cx, principalsA);
     JSPrincipals* principalsB = new Principals();
-    AutoDropPrincipals dropB(rt, principalsB);
+    AutoDropPrincipals dropB(cx, principalsB);
 
     JS::RootedObject A(cx, createGlobal(principalsA));
     JS::RootedObject B(cx, createGlobal(principalsB));

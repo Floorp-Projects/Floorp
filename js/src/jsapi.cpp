@@ -457,23 +457,26 @@ JS::isGCEnabled()
 JS_FRIEND_API(bool) JS::isGCEnabled() { return true; }
 #endif
 
-JS_PUBLIC_API(JSRuntime*)
-JS_NewRuntime(uint32_t maxbytes, uint32_t maxNurseryBytes, JSRuntime* parentRuntime)
+JS_PUBLIC_API(JSContext*)
+JS_NewContext(uint32_t maxbytes, uint32_t maxNurseryBytes, JSContext* parentContext)
 {
     MOZ_ASSERT(JS::detail::libraryInitState == JS::detail::InitState::Running,
-               "must call JS_Init prior to creating any JSRuntimes");
+               "must call JS_Init prior to creating any JSContexts");
 
     // Make sure that all parent runtimes are the topmost parent.
-    while (parentRuntime && parentRuntime->parentRuntime)
-        parentRuntime = parentRuntime->parentRuntime;
+    JSRuntime* parentRuntime = nullptr;
+    if (parentContext) {
+        parentRuntime = parentContext->runtime();
+        while (parentRuntime && parentRuntime->parentRuntime)
+            parentRuntime = parentRuntime->parentRuntime;
+    }
 
     return NewContext(maxbytes, maxNurseryBytes, parentRuntime);
 }
 
 JS_PUBLIC_API(void)
-JS_DestroyRuntime(JSRuntime* rt)
+JS_DestroyContext(JSContext* cx)
 {
-    JSContext* cx = rt->contextFromMainThread();
     DestroyContext(cx);
 }
 
@@ -568,10 +571,10 @@ JS_GetContext(JSRuntime* rt)
     return rt->contextFromMainThread();
 }
 
-JS_PUBLIC_API(JSRuntime*)
-JS_GetParentRuntime(JSRuntime* rt)
+JS_PUBLIC_API(JSContext*)
+JS_GetParentContext(JSContext* cx)
 {
-    return rt->parentRuntime ? rt->parentRuntime : rt;
+    return cx->parentRuntime ? cx->parentRuntime->unsafeContextFromAnyThread() : cx;
 }
 
 JS_PUBLIC_API(JSVersion)

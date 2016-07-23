@@ -143,7 +143,7 @@ protected:
   CycleCollectedJSRuntime();
   virtual ~CycleCollectedJSRuntime();
 
-  nsresult Initialize(JSRuntime* aParentRuntime,
+  nsresult Initialize(JSContext* aParentContext,
                       uint32_t aMaxBytes,
                       uint32_t aMaxNurseryBytes);
 
