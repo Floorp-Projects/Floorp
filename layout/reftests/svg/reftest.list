@@ -439,3 +439,5 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-differenc
 == use-localRef-marker-01.svg use-localRef-marker-01-ref.svg
 == use-localRef-clipPath-01.svg use-localRef-clipPath-01-ref.svg
 == use-localRef-filter-01.svg use-localRef-filter-01-ref.svg
+== use-localRef-fill-01.svg use-localRef-fill-01-ref.svg
+== use-localRef-stroke-01.svg use-localRef-stroke-01-ref.svg
