@@ -67,7 +67,7 @@ this.ContextualIdentityService = {
       accessKey: "userContextShopping.accesskey",
       telemetryId: 4,
     },
-    { userContextId: Math.pow(2, 31) - 1,
+    { userContextId: 5,
       public: false,
       icon: "",
       color: "",
@@ -77,6 +77,7 @@ this.ContextualIdentityService = {
 
   _identities: null,
   _openedIdentities: new Set(),
+  _lastUserContextId: 0,
 
   _path: null,
   _dataReady: false,
@@ -101,7 +102,16 @@ this.ContextualIdentityService = {
       }
 
       try {
-        this._identities = JSON.parse(gTextDecoder.decode(bytes));
+        let data = JSON.parse(gTextDecoder.decode(bytes));
+        if (data.version != 1) {
+          dump("ERROR - ContextualIdentityService - Unknown version found in " + this._path + "\n");
+          this.loadError(null);
+          return;
+        }
+
+        this._identities = data.identities;
+        this._lastUserContextId = data.lastUserContextId;
+
         this._dataReady = true;
       } catch(error) {
         this.loadError(error);
@@ -112,7 +122,8 @@ this.ContextualIdentityService = {
   },
 
   loadError(error) {
-    if (!(error instanceof OS.File.Error && error.becauseNoSuchFile) &&
+    if (error != null &&
+        !(error instanceof OS.File.Error && error.becauseNoSuchFile) &&
         !(error instanceof Components.Exception &&
           error.result == Cr.NS_ERROR_FILE_NOT_FOUND)) {
       // Let's report the error.
@@ -125,6 +136,8 @@ this.ContextualIdentityService = {
     }
 
     this._identities = this._defaultIdentities;
+    this._lastUserContextId = this._defaultIdentities.length;
+
     this._dataReady = true;
 
     this.saveSoon();
@@ -135,7 +148,13 @@ this.ContextualIdentityService = {
   },
 
   save() {
-   let bytes = gTextEncoder.encode(JSON.stringify(this._identities));
+   let object = {
+     version: 1,
+     lastUserContextId: this._lastUserContextId,
+     identities: this._identities
+   };
+
+   let bytes = gTextEncoder.encode(JSON.stringify(object));
    return OS.File.writeAtomic(this._path, bytes,
                               { tmpPath: this._path + ".tmp" });
   },
