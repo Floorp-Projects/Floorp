@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
+this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData", "InternalTestAPI"];
 
 /* globals Extension ExtensionData */
 
@@ -1549,3 +1549,13 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     return this.localize(this.manifest.name);
   },
 });
+
+// Expose a limited subset of the Management API for testing.
+this.InternalTestAPI = {
+  on(...args) {
+    return Management.on(...args);
+  },
+  off(...args) {
+    return Management.off(...args);
+  },
+};
