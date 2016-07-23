@@ -438,3 +438,4 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-differenc
 # https://drafts.csswg.org/css-values/#local-urls
 == use-localRef-marker-01.svg use-localRef-marker-01-ref.svg
 == use-localRef-clipPath-01.svg use-localRef-clipPath-01-ref.svg
+== use-localRef-filter-01.svg use-localRef-filter-01-ref.svg

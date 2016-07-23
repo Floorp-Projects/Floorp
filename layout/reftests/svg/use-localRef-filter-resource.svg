@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <filter id="blurFilter1" x="-10" y="-10" width="100" height="100">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
+    </filter>
+    <filter id="blurFilter2" x="-10" y="-10" width="100" height="100">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0" />
+    </filter>
+    <filter id="blurFilter3" x="-10" y="-10" width="100" height="100">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0" />
+    </filter>
+  </defs>
+  <rect id="f1" x="10" y="10" width="80" height="80" fill="blue" filter="url(#blurFilter1)"/>
+  <rect id="f2" x="10" y="110" width="80" height="80" fill="blue"/>
+  <rect id="f3" x="10" y="210" width="80" height="80" fill="blue"/>
+</svg>
