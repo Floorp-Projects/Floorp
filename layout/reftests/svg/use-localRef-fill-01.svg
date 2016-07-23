@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase for fill linked to local-ref URL</title>
+  <defs>
+    <linearGradient id="gradient1">
+      <stop offset="0%" stop-color="blue"/>
+      <stop offset="100%" stop-color="blue"/>
+    </linearGradient>
+    <linearGradient id="gradient2">
+      <stop offset="0%" stop-color="white"/>
+      <stop offset="100%" stop-color="blue"/>
+    </linearGradient>
+    <linearGradient id="gradient3">
+      <stop offset="0%" stop-color="white"/>
+      <stop offset="100%" stop-color="blue"/>
+    </linearGradient>
+  </defs>
+  <style>
+    #fill3 {
+      fill: url(#gradient3);
+    }
+  </style>
+  <use xlink:href="use-localRef-fill-resource.svg#fill1"/>
+  <use xlink:href="use-localRef-fill-resource.svg#fill2" fill="url(#gradient2)"/>
+  <use xlink:href="use-localRef-fill-resource.svg#fill3"/>
+</svg>

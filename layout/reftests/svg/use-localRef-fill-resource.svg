@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="gradient1">
+      <stop offset="0%" stop-color="white"/>
+      <stop offset="100%" stop-color="blue"/>
+    </linearGradient>
+    <linearGradient id="gradient2">
+      <stop offset="0%" stop-color="blue"/>
+      <stop offset="100%" stop-color="blue"/>
+    </linearGradient>
+    <linearGradient id="gradient3">
+      <stop offset="0%" stop-color="blue"/>
+      <stop offset="100%" stop-color="blue"/>
+    </linearGradient>
+  </defs>
+  <rect id="fill1" x="10" y="10" width="80" height="80" fill="url(#gradient1)"/>
+  <rect id="fill2" x="10" y="110" width="80" height="80"/>
+  <rect id="fill3" x="10" y="210" width="80" height="80"/>
+</svg>
