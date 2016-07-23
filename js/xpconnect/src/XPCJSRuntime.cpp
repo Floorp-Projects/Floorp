@@ -1356,7 +1356,7 @@ WatchdogMain(void* arg)
                     if (dbg)
                         dbg->GetIsDebuggerAttached(&debuggerAttached);
                     if (!debuggerAttached)
-                        JS_RequestInterruptCallback(manager->Runtime()->Runtime());
+                        JS_RequestInterruptCallback(manager->Runtime()->Context());
                 }
             }
         }

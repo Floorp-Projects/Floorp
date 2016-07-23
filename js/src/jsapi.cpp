@@ -4901,9 +4901,9 @@ JS::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
 }
 
 JS_PUBLIC_API(void)
-JS_RequestInterruptCallback(JSRuntime* rt)
+JS_RequestInterruptCallback(JSContext* cx)
 {
-    rt->requestInterrupt(JSRuntime::RequestInterruptUrgent);
+    cx->requestInterrupt(JSRuntime::RequestInterruptUrgent);
 }
 
 JS_PUBLIC_API(bool)
