@@ -10,8 +10,8 @@
 BEGIN_TEST(testIsInsideNursery)
 {
     /* Non-GC things are never inside the nursery. */
-    CHECK(!rt->gc.nursery.isInside(rt));
-    CHECK(!rt->gc.nursery.isInside((void*)nullptr));
+    CHECK(!cx->gc.nursery.isInside(cx));
+    CHECK(!cx->gc.nursery.isInside((void*)nullptr));
 
     JS_GC(cx);
 
