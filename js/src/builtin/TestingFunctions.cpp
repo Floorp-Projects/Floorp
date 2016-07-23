@@ -3286,7 +3286,7 @@ struct MajorGC {
 };
 
 static void
-majorGC(JSRuntime* rt, JSGCStatus status, void* data)
+majorGC(JSContext* cx, JSGCStatus status, void* data)
 {
     auto info = static_cast<MajorGC*>(data);
     if (!(info->phases & (1 << status)))
@@ -3294,8 +3294,8 @@ majorGC(JSRuntime* rt, JSGCStatus status, void* data)
 
     if (info->depth > 0) {
         info->depth--;
-        JS::PrepareForFullGC(rt->contextFromMainThread());
-        JS::GCForReason(rt->contextFromMainThread(), GC_NORMAL, JS::gcreason::API);
+        JS::PrepareForFullGC(cx);
+        JS::GCForReason(cx, GC_NORMAL, JS::gcreason::API);
         info->depth++;
     }
 }
@@ -3306,7 +3306,7 @@ struct MinorGC {
 };
 
 static void
-minorGC(JSRuntime* rt, JSGCStatus status, void* data)
+minorGC(JSContext* cx, JSGCStatus status, void* data)
 {
     auto info = static_cast<MinorGC*>(data);
     if (!(info->phases & (1 << status)))
@@ -3314,7 +3314,7 @@ minorGC(JSRuntime* rt, JSGCStatus status, void* data)
 
     if (info->active) {
         info->active = false;
-        rt->gc.evictNursery(JS::gcreason::DEBUG_GC);
+        cx->gc.evictNursery(JS::gcreason::DEBUG_GC);
         info->active = true;
     }
 }

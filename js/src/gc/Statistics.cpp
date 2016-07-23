@@ -975,6 +975,27 @@ Statistics::endGC()
 }
 
 void
+Statistics::beginNurseryCollection(JS::gcreason::Reason reason)
+{
+    count(STAT_MINOR_GC);
+    if (nurseryCollectionCallback) {
+        (*nurseryCollectionCallback)(runtime->contextFromMainThread(),
+                                     JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START,
+                                     reason);
+    }
+}
+
+void
+Statistics::endNurseryCollection(JS::gcreason::Reason reason)
+{
+    if (nurseryCollectionCallback) {
+        (*nurseryCollectionCallback)(runtime->contextFromMainThread(),
+                                     JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END,
+                                     reason);
+    }
+}
+
+void
 Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
                        SliceBudget budget, JS::gcreason::Reason reason)
 {
@@ -999,7 +1020,8 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
     if (gcDepth == 1) {
         bool wasFullGC = zoneStats.isCollectingAllZones();
         if (sliceCallback)
-            (*sliceCallback)(runtime, first ? JS::GC_CYCLE_BEGIN : JS::GC_SLICE_BEGIN,
+            (*sliceCallback)(runtime->contextFromMainThread(),
+                             first ? JS::GC_CYCLE_BEGIN : JS::GC_SLICE_BEGIN,
                              JS::GCDescription(!wasFullGC, gckind, reason));
     }
 }
@@ -1039,7 +1061,8 @@ Statistics::endSlice()
     if (gcDepth == 1 && !aborted) {
         bool wasFullGC = zoneStats.isCollectingAllZones();
         if (sliceCallback)
-            (*sliceCallback)(runtime, last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
+            (*sliceCallback)(runtime->contextFromMainThread(),
+                             last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
                              JS::GCDescription(!wasFullGC, gckind, slices.back().reason));
     }
 

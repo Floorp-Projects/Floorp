@@ -552,15 +552,15 @@ public:
     void CustomGCCallback(JSGCStatus status) override;
     void CustomOutOfMemoryCallback() override;
     void CustomLargeAllocationFailureCallback() override;
-    static void GCSliceCallback(JSRuntime* rt,
+    static void GCSliceCallback(JSContext* cx,
                                 JS::GCProgress progress,
                                 const JS::GCDescription& desc);
     static void FinalizeCallback(JSFreeOp* fop,
                                  JSFinalizeStatus status,
                                  bool isCompartmentGC,
                                  void* data);
-    static void WeakPointerZoneGroupCallback(JSRuntime* rt, void* data);
-    static void WeakPointerCompartmentCallback(JSRuntime* rt, JSCompartment* comp, void* data);
+    static void WeakPointerZoneGroupCallback(JSContext* cx, void* data);
+    static void WeakPointerCompartmentCallback(JSContext* cx, JSCompartment* comp, void* data);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
