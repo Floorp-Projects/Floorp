@@ -674,6 +674,9 @@ public:
       return Allow();
 #endif
 
+    case __NR_fallocate:
+      return Allow();
+
 #endif // DESKTOP
 
 #ifdef __NR_getrandom
