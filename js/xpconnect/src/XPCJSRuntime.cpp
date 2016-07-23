@@ -615,7 +615,7 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
     for (e = mObjectHolderRoots; e; e = e->GetNextRoot())
         static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
 
-    dom::TraceBlackJS(trc, JS_GetGCParameter(Runtime(), JSGC_NUMBER),
+    dom::TraceBlackJS(trc, JS_GetGCParameter(Context(), JSGC_NUMBER),
                       nsXPConnect::XPConnect()->IsShuttingDown());
 }
 
@@ -1822,8 +1822,8 @@ xpc::RemoveGCCallback(xpcGCCallback cb)
 static int64_t
 JSMainRuntimeGCHeapDistinguishedAmount()
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    return int64_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
+    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    return int64_t(JS_GetGCParameter(cx, JSGC_TOTAL_CHUNKS)) *
            js::gc::ChunkSize;
 }
 
@@ -2727,7 +2727,7 @@ class JSMainRuntimeCompartmentsReporter final : public nsIMemoryReporter
 
         Data data;
         data.anonymizeID = anonymize ? 1 : 0;
-        JS_IterateCompartments(nsXPConnect::GetRuntimeInstance()->Runtime(),
+        JS_IterateCompartments(nsXPConnect::GetRuntimeInstance()->Context(),
                                &data, CompartmentCallback);
 
         for (size_t i = 0; i < data.paths.length(); i++)

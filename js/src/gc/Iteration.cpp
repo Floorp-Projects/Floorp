@@ -128,11 +128,11 @@ js::IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
 }
 
 JS_PUBLIC_API(void)
-JS_IterateCompartments(JSRuntime* rt, void* data,
+JS_IterateCompartments(JSContext* cx, void* data,
                        JSIterateCompartmentCallback compartmentCallback)
 {
-    AutoTraceSession session(rt);
+    AutoTraceSession session(cx);
 
-    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next())
-        (*compartmentCallback)(rt, data, c);
+    for (CompartmentsIter c(cx, WithAtoms); !c.done(); c.next())
+        (*compartmentCallback)(cx, data, c);
 }

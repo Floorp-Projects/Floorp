@@ -472,7 +472,7 @@ XPCJSRuntime::AssertInvalidWrappedJSNotInTable(nsXPCWrappedJS* wrapper) const
     if (!wrapper->IsValid()) {
         MOZ_ASSERT(!GetMultiCompartmentWrappedJSMap()->HasWrapper(wrapper));
         if (!mGCIsRunning)
-            JS_IterateCompartments(Runtime(), wrapper, NotHasWrapperAssertionCallback);
+            JS_IterateCompartments(Context(), wrapper, NotHasWrapperAssertionCallback);
     }
 #endif
 }
