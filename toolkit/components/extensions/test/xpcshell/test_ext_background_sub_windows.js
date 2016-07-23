@@ -1,21 +1,10 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for sub-frames of WebExtension background pages</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 add_task(function* testBackgroundWindow() {
   let extension = ExtensionTestUtils.loadExtension({
-    background: "new " + function() {
+    background() {
       browser.test.log("background script executed");
 
       browser.test.sendMessage("background-script-load");
@@ -41,8 +30,6 @@ add_task(function* testBackgroundWindow() {
     },
   });
 
-  info("extension loaded");
-
   let loadCount = 0;
   extension.onMessage("background-script-load", () => {
     loadCount++;
@@ -50,16 +37,9 @@ add_task(function* testBackgroundWindow() {
 
   yield extension.startup();
 
-  info("startup complete loaded");
-
   yield extension.awaitFinish("background sub-window test done");
 
-  is(loadCount, 1, "background script loaded only once");
+  equal(loadCount, 1, "background script loaded only once");
 
   yield extension.unload();
 });
-
-</script>
-
-</body>
-</html>
