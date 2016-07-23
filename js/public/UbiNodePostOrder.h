@@ -83,7 +83,7 @@ struct PostOrder {
     using Stack = js::Vector<OriginAndEdges, 256, js::SystemAllocPolicy>;
     using Set = js::HashSet<Node, js::DefaultHasher<Node>, js::SystemAllocPolicy>;
 
-    JSRuntime*               rt;
+    JSContext*               cx;
     Set                      seen;
     Stack                    stack;
 #ifdef DEBUG
@@ -102,7 +102,7 @@ struct PostOrder {
 
     MOZ_MUST_USE bool pushForTraversing(const Node& node) {
         EdgeVector edges;
-        auto range = node.edges(rt, /* wantNames */ false);
+        auto range = node.edges(cx, /* wantNames */ false);
         return range &&
             fillEdgesFromRange(edges, range) &&
             stack.append(OriginAndEdges(node, mozilla::Move(edges)));
@@ -115,8 +115,8 @@ struct PostOrder {
     // The traversal asserts that no GC happens in its runtime during its
     // lifetime via the `AutoCheckCannotGC&` parameter. We do nothing with it,
     // other than require it to exist with a lifetime that encloses our own.
-    PostOrder(JSRuntime* rt, AutoCheckCannotGC&)
-      : rt(rt)
+    PostOrder(JSContext* cx, AutoCheckCannotGC&)
+      : cx(cx)
       , seen()
       , stack()
 #ifdef DEBUG

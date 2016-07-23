@@ -158,7 +158,7 @@ class Concrete<FakeNode> : public Base
     return concreteTypeName;
   }
 
-  js::UniquePtr<EdgeRange> edges(JSRuntime*, bool) const override {
+  js::UniquePtr<EdgeRange> edges(JSContext*, bool) const override {
     return js::UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
   }
 
@@ -209,8 +209,8 @@ void AddEdge(FakeNode& node, FakeNode& referent, const char16_t* edgeName = null
 namespace testing {
 
 // Ensure that given node has the expected number of edges.
-MATCHER_P2(EdgesLength, rt, expectedLength, "") {
-  auto edges = arg.edges(rt);
+MATCHER_P2(EdgesLength, cx, expectedLength, "") {
+  auto edges = arg.edges(cx);
   if (!edges)
     return false;
 
@@ -223,8 +223,8 @@ MATCHER_P2(EdgesLength, rt, expectedLength, "") {
 }
 
 // Get the nth edge and match it with the given matcher.
-MATCHER_P3(Edge, rt, n, matcher, "") {
-  auto edges = arg.edges(rt);
+MATCHER_P3(Edge, cx, n, matcher, "") {
+  auto edges = arg.edges(cx);
   if (!edges)
     return false;
 
