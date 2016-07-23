@@ -36,9 +36,9 @@ BEGIN_TEST(testGCSuppressions)
     JS::AutoCheckCannotGC checkgc;
     JS::AutoSuppressGCAnalysis noanalysis;
 
-    JS::AutoAssertOnGC nogcRt(cx->runtime());
-    JS::AutoCheckCannotGC checkgcRt(cx->runtime());
-    JS::AutoSuppressGCAnalysis noanalysisRt(cx->runtime());
+    JS::AutoAssertOnGC nogcCx(cx);
+    JS::AutoCheckCannotGC checkgcCx(cx);
+    JS::AutoSuppressGCAnalysis noanalysisCx(cx);
 
     return true;
 }
