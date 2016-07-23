@@ -269,8 +269,13 @@ GetFilesHelperBase::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aFile)
     return NS_OK;
   }
 
+  nsresult rv = AddExploredDirectory(aFile);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = aFile->GetDirectoryEntries(getter_AddRefs(entries));
+  rv = aFile->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -292,13 +297,18 @@ GetFilesHelperBase::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aFile)
     bool isLink, isSpecial, isFile, isDir;
     if (NS_WARN_IF(NS_FAILED(currFile->IsSymlink(&isLink)) ||
                    NS_FAILED(currFile->IsSpecial(&isSpecial))) ||
-        isLink || isSpecial) {
+        isSpecial) {
       continue;
     }
 
     if (NS_WARN_IF(NS_FAILED(currFile->IsFile(&isFile)) ||
                    NS_FAILED(currFile->IsDirectory(&isDir))) ||
         !(isFile || isDir)) {
+      continue;
+    }
+
+    // We don't want to explore loops of links.
+    if (isDir && isLink && !ShouldFollowSymLink(currFile)) {
       continue;
     }
 
@@ -342,6 +352,69 @@ GetFilesHelperBase::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aFile)
   }
 
   return NS_OK;
+}
+
+nsresult
+GetFilesHelperBase::AddExploredDirectory(nsIFile* aDir)
+{
+  nsresult rv;
+
+#ifdef DEBUG
+  bool isDir;
+  rv = aDir->IsDirectory(&isDir);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(isDir, "Why are we here?");
+#endif
+
+  bool isLink;
+  rv = aDir->IsSymlink(&isLink);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoCString path;
+
+  if (!isLink) {
+    nsAutoString path16;
+    rv = aDir->GetPath(path16);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    path = NS_ConvertUTF16toUTF8(path16);
+  } else {
+    rv = aDir->GetNativeTarget(path);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  mExploredDirectories.PutEntry(path);
+  return NS_OK;
+}
+
+bool
+GetFilesHelperBase::ShouldFollowSymLink(nsIFile* aDir)
+{
+#ifdef DEBUG
+  bool isLink, isDir;
+  if (NS_WARN_IF(NS_FAILED(aDir->IsSymlink(&isLink)) ||
+                 NS_FAILED(aDir->IsDirectory(&isDir)))) {
+    return false;
+  }
+
+  MOZ_ASSERT(isLink && isDir, "Why are we here?");
+#endif
+
+  nsAutoCString targetPath;
+  if (NS_WARN_IF(NS_FAILED(aDir->GetNativeTarget(targetPath)))) {
+    return false;
+  }
+
+  return !mExploredDirectories.Contains(targetPath);
 }
 
 void
