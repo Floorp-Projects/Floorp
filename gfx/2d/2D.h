@@ -1041,7 +1041,7 @@ public:
   /**
    * Create a SourceSurface for a type of NativeSurface. This may fail if the
    * draw target does not know how to deal with the type of NativeSurface passed
-   * in.
+   * in. If this succeeds, the SourceSurface takes the ownersip of the NativeSurface.
    */
   virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const = 0;
