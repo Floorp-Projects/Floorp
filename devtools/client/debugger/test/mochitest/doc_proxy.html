@@ -1,0 +1,39 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger + Proxy test page</title>
+  </head>
+
+  <body>
+    <script>
+    window.target = {name: "target"};
+    window.handler = { /* Debugging a proxy shouldn't run any trap */
+      name: "handler",
+      getPrototypeOf() { throw new Error("proxy getPrototypeOf trap was called"); },
+      setPrototypeOf() { throw new Error("proxy setPrototypeOf trap was called"); },
+      isExtensible() { throw new Error("proxy isExtensible trap was called"); },
+      preventExtensions() { throw new Error("proxy preventExtensions trap was called"); },
+      getOwnPropertyDescriptor() { throw new Error("proxy getOwnPropertyDescriptor trap was called"); },
+      defineProperty() { throw new Error("proxy defineProperty trap was called"); },
+      has() { throw new Error("proxy has trap was called"); },
+      get() { throw new Error("proxy get trap was called"); },
+      set() { throw new Error("proxy set trap was called"); },
+      deleteProperty() { throw new Error("proxy deleteProperty trap was called"); },
+      ownKeys() { throw new Error("proxy ownKeys trap was called"); },
+      apply() { throw new Error("proxy apply trap was called"); },
+      construct() { throw new Error("proxy construct trap was called"); }
+    };
+    window.proxy = new Proxy(target, handler);
+
+    window.doPause = function () {
+      var proxy = window.proxy;
+      debugger;
+    };
+    </script>
+  </body>
+
+</html>
