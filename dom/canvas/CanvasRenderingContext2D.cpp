@@ -1055,9 +1055,6 @@ DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 CanvasRenderingContext2D::CanvasRenderingContext2D()
   : mRenderingMode(RenderingMode::OpenGLBackendMode)
-#ifdef USE_SKIA_GPU
-  , mVideoTexture(0)
-#endif
   // these are the default values from the Canvas spec
   , mWidth(0), mHeight(0)
   , mZero(false), mOpaque(false)
@@ -1099,15 +1096,6 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
   if (!sNumLivingContexts) {
     NS_IF_RELEASE(sErrorTarget);
   }
-#ifdef USE_SKIA_GPU
-  if (mVideoTexture) {
-    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-    MOZ_ASSERT(glue);
-    glue->GetGLContext()->MakeCurrent();
-    glue->GetGLContext()->fDeleteTextures(1, &mVideoTexture);
-  }
-#endif
-
   RemoveDemotableContext(this);
 }
 
@@ -1343,15 +1331,6 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   if ((aRenderingMode == RenderingMode::OpenGLBackendMode) &&
       !gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
       return false;
-  }
-
-  if (mRenderingMode == RenderingMode::OpenGLBackendMode) {
-    if (mVideoTexture) {
-      gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->MakeCurrent();
-      gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->fDeleteTextures(1, &mVideoTexture);
-    }
-    mCurrentVideoSize.width = 0;
-    mCurrentVideoSize.height = 0;
   }
 #endif
 
@@ -4650,46 +4629,44 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     }
 
     gl->MakeCurrent();
-    if (!mVideoTexture) {
-      gl->fGenTextures(1, &mVideoTexture);
-    }
+    GLuint videoTexture = 0;
+    gl->fGenTextures(1, &videoTexture);
     // skiaGL expect upload on drawing, and uses texture 0 for texturing,
     // so we must active texture 0 and bind the texture for it.
     gl->fActiveTexture(LOCAL_GL_TEXTURE0);
-    gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mVideoTexture);
+    gl->fBindTexture(LOCAL_GL_TEXTURE_2D, videoTexture);
 
-    bool dimensionsMatch = mCurrentVideoSize.width == srcImage->GetSize().width &&
-                           mCurrentVideoSize.height == srcImage->GetSize().height;
-    if (!dimensionsMatch) {
-      // we need to allocation
-      mCurrentVideoSize.width = srcImage->GetSize().width;
-      mCurrentVideoSize.height = srcImage->GetSize().height;
-      gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGB, srcImage->GetSize().width, srcImage->GetSize().height, 0, LOCAL_GL_RGB, LOCAL_GL_UNSIGNED_SHORT_5_6_5, nullptr);
-      gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-      gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-      gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-      gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-    }
+    gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGB, srcImage->GetSize().width, srcImage->GetSize().height, 0, LOCAL_GL_RGB, LOCAL_GL_UNSIGNED_SHORT_5_6_5, nullptr);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+
     const gl::OriginPos destOrigin = gl::OriginPos::TopLeft;
     bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage, srcImage->GetSize(),
-                                                   mVideoTexture, LOCAL_GL_TEXTURE_2D,
+                                                   videoTexture, LOCAL_GL_TEXTURE_2D,
                                                    destOrigin);
     if (ok) {
       NativeSurface texSurf;
       texSurf.mType = NativeSurfaceType::OPENGL_TEXTURE;
       texSurf.mFormat = SurfaceFormat::R5G6B5_UINT16;
-      texSurf.mSize.width = mCurrentVideoSize.width;
-      texSurf.mSize.height = mCurrentVideoSize.height;
-      texSurf.mSurface = (void*)((uintptr_t)mVideoTexture);
+      texSurf.mSize.width = srcImage->GetSize().width;
+      texSurf.mSize.height = srcImage->GetSize().height;
+      texSurf.mSurface = (void*)((uintptr_t)videoTexture);
 
       srcSurf = mTarget->CreateSourceSurfaceFromNativeSurface(texSurf);
-      imgSize.width = mCurrentVideoSize.width;
-      imgSize.height = mCurrentVideoSize.height;
+      if (!srcSurf) {
+        gl->fDeleteTextures(1, &videoTexture);
+      }
+      imgSize.width = srcImage->GetSize().width;
+      imgSize.height = srcImage->GetSize().height;
 
       int32_t displayWidth = video->VideoWidth();
       int32_t displayHeight = video->VideoHeight();
       aSw *= (double)imgSize.width / (double)displayWidth;
       aSh *= (double)imgSize.height / (double)displayHeight;
+    } else {
+      gl->fDeleteTextures(1, &videoTexture);
     }
     srcImage = nullptr;
 
