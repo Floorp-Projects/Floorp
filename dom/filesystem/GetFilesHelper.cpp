@@ -72,8 +72,8 @@ GetFilesHelper::Create(nsIGlobalObject* aGlobal,
 }
 
 GetFilesHelper::GetFilesHelper(nsIGlobalObject* aGlobal, bool aRecursiveFlag)
-  : mGlobal(aGlobal)
-  , mRecursiveFlag(aRecursiveFlag)
+  : GetFilesHelperBase(aRecursiveFlag)
+  , mGlobal(aGlobal)
   , mListingCompleted(false)
   , mErrorResult(NS_OK)
   , mMutex("GetFilesHelper::mMutex")
@@ -259,7 +259,7 @@ GetFilesHelper::RunMainThread()
 }
 
 nsresult
-GetFilesHelper::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aFile)
+GetFilesHelperBase::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aFile)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aFile);
