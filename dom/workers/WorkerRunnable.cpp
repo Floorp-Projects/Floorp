@@ -677,13 +677,13 @@ WorkerProxyToMainThreadRunnable::Dispatch()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (NS_WARN_IF(!mWorkerPrivate->ModifyBusyCountFromWorker(true))) {
+  if (NS_WARN_IF(!HoldWorker())) {
     RunBackOnWorkerThread();
     return false;
   }
 
   if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
-    mWorkerPrivate->ModifyBusyCountFromWorker(false);
+    ReleaseWorker();
     RunBackOnWorkerThread();
     return false;
   }
@@ -733,7 +733,7 @@ WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread()
       mRunnable->RunBackOnWorkerThread();
 
       // Let's release the worker thread.
-      aWorkerPrivate->ModifyBusyCountFromWorker(false);
+      mRunnable->ReleaseWorker();
       return true;
     }
 
@@ -745,4 +745,38 @@ WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread()
   RefPtr<WorkerControlRunnable> runnable =
     new ReleaseRunnable(mWorkerPrivate, this);
   NS_WARN_IF(!runnable->Dispatch());
+}
+
+bool
+WorkerProxyToMainThreadRunnable::HoldWorker()
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(!mWorkerHolder);
+
+  class SimpleWorkerHolder final : public WorkerHolder
+  {
+  public:
+    bool Notify(Status aStatus) override
+    {
+      // We don't care about the notification. We just want to keep the
+      // mWorkerPrivate alive.
+      return true;
+    }
+  };
+
+  UniquePtr<WorkerHolder> workerHolder(new SimpleWorkerHolder());
+  if (NS_WARN_IF(!workerHolder->HoldWorker(mWorkerPrivate))) {
+    return false;
+  }
+
+  mWorkerHolder = Move(workerHolder);
+  return true;
+}
+
+void
+WorkerProxyToMainThreadRunnable::ReleaseWorker()
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(mWorkerHolder);
+  mWorkerHolder = nullptr;
 }
