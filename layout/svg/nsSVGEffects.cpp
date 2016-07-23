@@ -292,14 +292,21 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterChainObserver)
 NS_INTERFACE_MAP_END
 
 nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
-                                                   nsIContent* aFilteredElement)
+                                                   nsIContent* aFilteredElement,
+                                                   nsIFrame* aFilteredFrame)
 {
   for (uint32_t i = 0; i < aFilters.Length(); i++) {
     if (aFilters[i].GetType() != NS_STYLE_FILTER_URL)
       continue;
 
+    // aFilteredFrame can be null if this filter belongs to a
+    // CanvasRenderingContext2D.
+    nsCOMPtr<nsIURI> filterURL = aFilteredFrame
+      ? nsSVGEffects::GetFilterURI(aFilteredFrame, i)
+      : aFilters[i].GetURL()->Resolve(aFilteredElement);
+
     RefPtr<nsSVGFilterReference> reference =
-      new nsSVGFilterReference(aFilters[i].GetURL(), aFilteredElement, this);
+      new nsSVGFilterReference(filterURL, aFilteredElement, this);
     mReferences.AppendElement(reference);
   }
 }
@@ -920,4 +927,23 @@ nsSVGEffects::GetClipPathURI(nsIFrame* aFrame)
 
   FragmentOrURL* url = svgResetStyle->mClipPath.GetURL();
   return ResolveFragmentOrURL(aFrame, url);
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetFilterURI(nsIFrame* aFrame, uint32_t aIndex)
+{
+  const nsStyleEffects* effects = aFrame->StyleEffects();
+  MOZ_ASSERT(effects->mFilters.Length() > aIndex);
+  MOZ_ASSERT(effects->mFilters[aIndex].GetType() == NS_STYLE_FILTER_URL);
+
+  return ResolveFragmentOrURL(aFrame, effects->mFilters[aIndex].GetURL());
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter)
+{
+  MOZ_ASSERT(aFrame->StyleEffects()->mFilters.Length());
+  MOZ_ASSERT(aFilter.GetType() == NS_STYLE_FILTER_URL);
+
+  return ResolveFragmentOrURL(aFrame, aFilter.GetURL());
 }
