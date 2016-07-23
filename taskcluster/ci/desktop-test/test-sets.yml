@@ -56,3 +56,9 @@ asan-tests:
     - reftest
     - reftest-no-accel
     - xpcshell
+
+ccov-code-coverage-tests:
+    - mochitest-browser-chrome
+
+jsdcov-code-coverage-tests:
+    - mochitest-browser-chrome
