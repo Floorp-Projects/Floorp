@@ -189,13 +189,30 @@ mochitest-a11y:
             - --mochitest-suite=a11y
 
 mochitest-browser-chrome:
-    description: "Mochitest browser-chrome run"
-    suite: mochitest/browser-chrome-chunked
+    description:
+        by-test-platform:
+            linux64-jsdcov/opt: "Mochitest browser-chrome JSDebugger code coverage run"
+            linux64-ccov/opt: "Mochitest browser-chrome GCOV code coverage run"
+            default: "Mochitest browser-chrome run"
+    suite:
+        by-test-platform:
+            linux64-jsdcov/opt: mochitest/browser-chrome-coverage
+            default: mochitest/browser-chrome-chunked
     treeherder-symbol: tc-M(bc)
     loopback-video: true
-    chunks: 7
+    chunks:
+        by-test-platform:
+            linux64-jsdcov/opt: 35
+            default: 7
+    e10s:
+        by-test-platform:
+            linux64-jsdcov/opt: false
+            linux64-ccov/opt: false
+            default: both
     max-run-time:
         by-test-platform:
+            linux64-jsdcov/opt: 7200
+            linux64-ccov/opt: 7200
             linux64/debug: 5400
             default: 3600
     mozharness:
@@ -207,9 +224,20 @@ mochitest-browser-chrome:
                     - mozharness/configs/unittests/linux_unittest.py
                     - mozharness/configs/remove_executables.py
         extra-options:
-            - --mochitest-suite=browser-chrome-chunked
+            by-test-platform:
+                linux64-jsdcov/opt:
+                    - --mochitest-suite=browser-chrome-coverage
+                linux64-ccov/opt:
+                    - --mochitest-suite=browser-chrome-chunked
+                    - --code-coverage
+                default:
+                    - --mochitest-suite=browser-chrome-chunked
     # Bug 1281241: migrating to m3.large instances
-    instance-size: legacy
+    instance-size:
+        by-test-platform:
+            linux64-jsdcov/opt: xlarge
+            linux64-ccov/opt: xlarge
+            default: legacy
     allow-software-gl-layers: false
 
 mochitest-chrome:
