@@ -2380,9 +2380,12 @@ class MochitestDesktop(MochitestBase):
             else:
                 timeout = 330.0  # default JS harness timeout is 300 seconds
 
-            # detect shutdown leaks for m-bc runs
-            detectShutdownLeaks = mozinfo.info[
-                "debug"] and options.flavor == 'browser'
+            # Detect shutdown leaks for m-bc runs if
+            # code coverage is not enabled.
+            detectShutdownLeaks = False
+            if options.jscov_dir_prefix is None:
+                detectShutdownLeaks = mozinfo.info[
+                    "debug"] and options.flavor == 'browser'
 
             self.start_script_args.append(self.normflavor(options.flavor))
             marionette_args = {
@@ -2427,10 +2430,20 @@ class MochitestDesktop(MochitestBase):
         finally:
             self.stopServers()
 
+        ignoreMissingLeaks = options.ignoreMissingLeaks
+        leakThresholds = options.leakThresholds
+
+        # Stop leak detection if m-bc code coverage is enabled
+        # by maxing out the leak threshold for all processes.
+        if options.jscov_dir_prefix:
+            for processType in leakThresholds:
+                ignoreMissingLeaks.append(processType)
+                leakThresholds[processType] = sys.maxsize
+
         mozleak.process_leak_log(
             self.leak_report_file,
-            leak_thresholds=options.leakThresholds,
-            ignore_missing_leaks=options.ignoreMissingLeaks,
+            leak_thresholds=leakThresholds,
+            ignore_missing_leaks=ignoreMissingLeaks,
             log=self.log,
             stack_fixer=get_stack_fixer_function(options.utilityPath,
                                                  options.symbolsPath),

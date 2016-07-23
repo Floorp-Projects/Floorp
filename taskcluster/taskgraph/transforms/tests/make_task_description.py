@@ -82,6 +82,7 @@ def make_task_description(config, tests):
         taskdesc['deadline-after'] = '1 day'
         taskdesc['expires-after'] = test['expires-after']
         taskdesc['routes'] = []
+        taskdesc['run-on-projects'] = test.get('run-on-projects', ['all'])
         taskdesc['scopes'] = []
         taskdesc['extra'] = {
             'chunks': {
