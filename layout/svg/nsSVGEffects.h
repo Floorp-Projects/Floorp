@@ -255,7 +255,8 @@ class nsSVGFilterChainObserver : public nsISupports
 {
 public:
   nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
-                           nsIContent* aFilteredElement);
+                           nsIContent* aFilteredElement,
+                           nsIFrame* aFiltedFrame = nullptr);
 
   bool ReferencesValidResources();
   bool IsInObserverLists() const;
@@ -287,7 +288,8 @@ class nsSVGFilterProperty : public nsSVGFilterChainObserver
 public:
   nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
                       nsIFrame *aFilteredFrame)
-    : nsSVGFilterChainObserver(aFilters, aFilteredFrame->GetContent())
+    : nsSVGFilterChainObserver(aFilters, aFilteredFrame->GetContent(),
+                               aFilteredFrame)
     , mFrameReference(aFilteredFrame)
   {}
 
@@ -604,6 +606,18 @@ public:
    */
   static already_AddRefed<nsIURI>
   GetClipPathURI(nsIFrame* aFrame);
+
+  /**
+   * A helper function to resolve filter URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetFilterURI(nsIFrame* aFrame, uint32_t aIndex);
+
+  /**
+   * A helper function to resolve filter URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter);
 };
 
 #endif /*NSSVGEFFECTS_H_*/
