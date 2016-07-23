@@ -1295,12 +1295,6 @@ JS_freeop(JSFreeOp* fop, void* p)
     return FreeOp::get(fop)->free_(p);
 }
 
-JS_PUBLIC_API(JSFreeOp*)
-JS_GetDefaultFreeOp(JSRuntime* rt)
-{
-    return rt->defaultFreeOp();
-}
-
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext* cx, size_t nbytes)
 {
@@ -1433,10 +1427,10 @@ JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value)
 }
 
 JS_PUBLIC_API(uint32_t)
-JS_GetGCParameter(JSRuntime* rt, JSGCParamKey key)
+JS_GetGCParameter(JSContext* cx, JSGCParamKey key)
 {
-    AutoLockGC lock(rt);
-    return rt->gc.getParameter(key, lock);
+    AutoLockGC lock(cx);
+    return cx->gc.getParameter(key, lock);
 }
 
 static const size_t NumGCConfigs = 14;

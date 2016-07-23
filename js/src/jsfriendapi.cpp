@@ -590,9 +590,9 @@ js::TraceWeakMaps(WeakMapTracer* trc)
 }
 
 extern JS_FRIEND_API(bool)
-js::AreGCGrayBitsValid(JSRuntime* rt)
+js::AreGCGrayBitsValid(JSContext* cx)
 {
-    return rt->gc.areGrayBitsValid();
+    return cx->gc.areGrayBitsValid();
 }
 
 JS_FRIEND_API(bool)
