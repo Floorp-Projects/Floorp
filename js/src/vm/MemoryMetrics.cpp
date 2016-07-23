@@ -326,7 +326,7 @@ StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone)
 }
 
 static void
-StatsCompartmentCallback(JSRuntime* rt, void* data, JSCompartment* compartment)
+StatsCompartmentCallback(JSContext* cx, void* data, JSCompartment* compartment)
 {
     // Append a new CompartmentStats to the vector.
     RuntimeStats* rtStats = static_cast<StatsClosure*>(data)->rtStats;
@@ -334,7 +334,7 @@ StatsCompartmentCallback(JSRuntime* rt, void* data, JSCompartment* compartment)
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->compartmentStatsVector.growBy(1));
     CompartmentStats& cStats = rtStats->compartmentStatsVector.back();
-    if (!cStats.initClasses(rt))
+    if (!cStats.initClasses(cx))
         MOZ_CRASH("oom");
     rtStats->initExtraCompartmentStats(compartment, &cStats);
 

@@ -1064,11 +1064,11 @@ DumpHeapVisitZone(JSRuntime* rt, void* data, Zone* zone)
 }
 
 static void
-DumpHeapVisitCompartment(JSRuntime* rt, void* data, JSCompartment* comp)
+DumpHeapVisitCompartment(JSContext* cx, void* data, JSCompartment* comp)
 {
     char name[1024];
-    if (rt->compartmentNameCallback)
-        (*rt->compartmentNameCallback)(rt, comp, name, sizeof(name));
+    if (cx->compartmentNameCallback)
+        (*cx->compartmentNameCallback)(cx, comp, name, sizeof(name));
     else
         strcpy(name, "<unknown>");
 

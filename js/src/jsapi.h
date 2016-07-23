@@ -544,10 +544,10 @@ typedef enum JSGCStatus {
 } JSGCStatus;
 
 typedef void
-(* JSGCCallback)(JSRuntime* rt, JSGCStatus status, void* data);
+(* JSGCCallback)(JSContext* cx, JSGCStatus status, void* data);
 
 typedef void
-(* JSObjectsTenuredCallback)(JSRuntime* rt, void* data);
+(* JSObjectsTenuredCallback)(JSContext* cx, void* data);
 
 typedef enum JSFinalizeStatus {
     /**
@@ -575,10 +575,10 @@ typedef void
 (* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, bool isCompartment, void* data);
 
 typedef void
-(* JSWeakPointerZoneGroupCallback)(JSRuntime* rt, void* data);
+(* JSWeakPointerZoneGroupCallback)(JSContext* cx, void* data);
 
 typedef void
-(* JSWeakPointerCompartmentCallback)(JSRuntime* rt, JSCompartment* comp, void* data);
+(* JSWeakPointerCompartmentCallback)(JSContext* cx, JSCompartment* comp, void* data);
 
 typedef bool
 (* JSInterruptCallback)(JSContext* cx);
@@ -694,7 +694,7 @@ typedef void
 (* JSZoneCallback)(JS::Zone* zone);
 
 typedef void
-(* JSCompartmentNameCallback)(JSRuntime* rt, JSCompartment* compartment,
+(* JSCompartmentNameCallback)(JSContext* cx, JSCompartment* compartment,
                               char* buf, size_t bufsize);
 
 /************************************************************************/
@@ -1359,7 +1359,7 @@ JS_EnterCompartment(JSContext* cx, JSObject* target);
 extern JS_PUBLIC_API(void)
 JS_LeaveCompartment(JSContext* cx, JSCompartment* oldCompartment);
 
-typedef void (*JSIterateCompartmentCallback)(JSRuntime* rt, void* data, JSCompartment* compartment);
+typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JSCompartment* compartment);
 
 /**
  * This function calls |compartmentCallback| on every compartment. Beware that
