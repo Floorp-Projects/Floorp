@@ -89,6 +89,10 @@ public:
                             cairo_font_face_t* fontFace, FcPattern* pattern);
     virtual ~SkScalerContext_CairoFT();
 
+    bool isValid() const {
+        return fScaledFont != nullptr;
+    }
+
 protected:
     virtual unsigned generateGlyphCount() override;
     virtual uint16_t generateCharToGlyph(SkUnichar uniChar) override;
@@ -188,8 +192,14 @@ public:
 
     virtual SkScalerContext* onCreateScalerContext(const SkDescriptor* desc) const override
     {
-        return new SkScalerContext_CairoFT(const_cast<SkCairoFTTypeface*>(this), desc,
-                                           fFontFace, fPattern);
+        SkScalerContext_CairoFT* ctx =
+            new SkScalerContext_CairoFT(const_cast<SkCairoFTTypeface*>(this), desc,
+                                        fFontFace, fPattern);
+        if (!ctx->isValid()) {
+            delete ctx;
+            return nullptr;
+        }
+        return ctx;
     }
 
     virtual void onFilterRec(SkScalerContextRec* rec) const override
@@ -526,7 +536,7 @@ bool SkScalerContext_CairoFT::computeShapeMatrix(const SkMatrix& m)
     // If the font is not scalable, then choose the best available size.
     CairoLockedFTFace faceLock(fScaledFont);
     FT_Face face = faceLock.getFace();
-    if (!FT_IS_SCALABLE(face)) {
+    if (face && !FT_IS_SCALABLE(face)) {
         double bestDist = DBL_MAX;
         FT_Int bestSize = -1;
         for (FT_Int i = 0; i < face->num_fixed_sizes; i++) {
