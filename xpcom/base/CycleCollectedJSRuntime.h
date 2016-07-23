@@ -207,10 +207,10 @@ private:
 
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
-  static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
-  static void GCSliceCallback(JSRuntime* aRuntime, JS::GCProgress aProgress,
+  static void GCCallback(JSContext* aContext, JSGCStatus aStatus, void* aData);
+  static void GCSliceCallback(JSContext* aContext, JS::GCProgress aProgress,
                               const JS::GCDescription& aDesc);
-  static void GCNurseryCollectionCallback(JSRuntime* aRuntime,
+  static void GCNurseryCollectionCallback(JSContext* aContext,
                                           JS::GCNurseryProgress aProgress,
                                           JS::gcreason::Reason aReason);
   static void OutOfMemoryCallback(JSContext* aContext, void* aData);
