@@ -29,10 +29,16 @@ from voluptuous import (
 # *****WARNING*****
 test_description_schema = Schema({
     # description of the suite, for the task metadata
-    'description': basestring,
+    Required('description'): Any(
+        basestring,
+        {'by-test-platform': {basestring: basestring}},
+    ),
 
     # test suite name, or <suite>/<flavor>
-    'suite': basestring,
+    Required('suite'): Any(
+        basestring,
+        {'by-test-platform': {basestring: basestring}},
+    ),
 
     # the name by which this test suite is addressed in try syntax; defaults to
     # the test-name
@@ -138,7 +144,10 @@ test_description_schema = Schema({
 
         # additional command-line options for mozharness, beyond those
         # automatically added
-        Required('extra-options', default=[]): [basestring],
+        Required('extra-options', default=[]): Any(
+            [basestring],
+            {'by-test-platform': {basestring: [basestring]}},
+        ),
 
         # the artifact name (including path) to test on the build task; this is
         # generally set in a per-kind transformation

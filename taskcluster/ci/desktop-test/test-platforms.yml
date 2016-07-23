@@ -25,3 +25,9 @@ linux64-pgo/opt:
 linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-set: asan-tests
+linux64-ccov/opt:
+    build-platform: linux64-ccov/opt
+    test-set: ccov-code-coverage-tests
+linux64-jsdcov/opt:
+    build-platform: linux64-jsdcov/opt
+    test-set: jsdcov-code-coverage-tests
