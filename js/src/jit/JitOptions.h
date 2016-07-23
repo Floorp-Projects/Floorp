@@ -61,6 +61,7 @@ struct DefaultJitOptions
     bool disableRangeAnalysis;
     bool disableRecoverIns;
     bool disableScalarReplacement;
+    bool disableCacheIR;
     bool disableSharedStubs;
     bool disableSincos;
     bool disableSink;
