@@ -398,16 +398,6 @@ SetCalcValue(const PixelCalcValue& aCalc, nsCSSValue& aValue)
   aValue.SetArrayValue(arr, eCSSUnit_Calc);
 }
 
-static already_AddRefed<nsStringBuffer>
-GetURIAsUtf16StringBuffer(nsIURI* aUri)
-{
-  nsAutoCString utf8String;
-  nsresult rv = aUri->GetSpec(utf8String);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return nsCSSValue::BufferFromString(NS_ConvertUTF8toUTF16(utf8String));
-}
-
 double
 CalcPositionSquareDistance(const nsCSSValue& aPos1,
                            const nsCSSValue& aPos2)
@@ -3999,10 +3989,12 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             int32_t type = filter.GetType();
             if (type == NS_STYLE_FILTER_URL) {
               nsIDocument* doc = aStyleContext->PresContext()->Document();
+              nsString pathString;
+              filter.GetURL()->GetSourceString(pathString);
               RefPtr<nsStringBuffer> uriAsStringBuffer =
-                GetURIAsUtf16StringBuffer(filter.GetURL());
+                nsCSSValue::BufferFromString(pathString);
               RefPtr<mozilla::css::URLValue> url =
-                new mozilla::css::URLValue(filter.GetURL(),
+                new mozilla::css::URLValue(filter.GetURL()->GetSourceURL(),
                                            uriAsStringBuffer,
                                            doc->GetDocumentURI(),
                                            doc->NodePrincipal());

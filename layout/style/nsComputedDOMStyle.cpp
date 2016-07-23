@@ -6066,7 +6066,9 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
   // Handle url().
   if (aStyleFilter.GetType() == NS_STYLE_FILTER_URL) {
-    value->SetURI(aStyleFilter.GetURL());
+    // Bug 1288812 - we should only serialize fragment for local-ref URL.
+    nsCOMPtr<nsIURI> filterURI = aStyleFilter.GetURL()->GetSourceURL();
+    value->SetURI(filterURI);
     return value.forget();
   }
 
