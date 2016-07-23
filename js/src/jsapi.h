@@ -1367,7 +1367,7 @@ typedef void (*JSIterateCompartmentCallback)(JSRuntime* rt, void* data, JSCompar
  * returns. Also, barriers are disabled via the TraceSession.
  */
 extern JS_PUBLIC_API(void)
-JS_IterateCompartments(JSRuntime* rt, void* data,
+JS_IterateCompartments(JSContext* cx, void* data,
                        JSIterateCompartmentCallback compartmentCallback);
 
 /**
@@ -1575,9 +1575,6 @@ JS_free(JSContext* cx, void* p);
 extern JS_PUBLIC_API(void)
 JS_freeop(JSFreeOp* fop, void* p);
 
-extern JS_PUBLIC_API(JSFreeOp*)
-JS_GetDefaultFreeOp(JSRuntime* rt);
-
 extern JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext* cx, size_t nbytes);
 
@@ -1765,7 +1762,7 @@ extern JS_PUBLIC_API(void)
 JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value);
 
 extern JS_PUBLIC_API(uint32_t)
-JS_GetGCParameter(JSRuntime* rt, JSGCParamKey key);
+JS_GetGCParameter(JSContext* cx, JSGCParamKey key);
 
 extern JS_PUBLIC_API(void)
 JS_SetGCParametersBasedOnAvailableMemory(JSContext* cx, uint32_t availMem);

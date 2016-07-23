@@ -407,7 +407,7 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
 
     // Request mode.
     if (args.length() == 1) {
-        uint32_t value = JS_GetGCParameter(cx->runtime(), param);
+        uint32_t value = JS_GetGCParameter(cx, param);
         args.rval().setNumber(value);
         return true;
     }
@@ -438,7 +438,7 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (param == JSGC_MAX_BYTES) {
-        uint32_t gcBytes = JS_GetGCParameter(cx->runtime(), JSGC_BYTES);
+        uint32_t gcBytes = JS_GetGCParameter(cx, JSGC_BYTES);
         if (value < gcBytes) {
             JS_ReportError(cx,
                            "attempt to set maxBytes to the value less than the current "

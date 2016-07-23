@@ -1235,8 +1235,8 @@ CycleCollectedJSRuntime::FixWeakMappingGrayBits() const
 bool
 CycleCollectedJSRuntime::AreGCGrayBitsValid() const
 {
-  MOZ_ASSERT(mJSRuntime);
-  return js::AreGCGrayBitsValid(mJSRuntime);
+  MOZ_ASSERT(mJSContext);
+  return js::AreGCGrayBitsValid(mJSContext);
 }
 
 void
