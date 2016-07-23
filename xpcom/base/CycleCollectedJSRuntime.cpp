@@ -478,7 +478,7 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   mConsumedRejections.reset();
 #endif // SPIDERMONKEY_PROMISE
 
-  JS_DestroyRuntime(mJSRuntime);
+  JS_DestroyContext(mJSContext);
   mJSRuntime = nullptr;
   mJSContext = nullptr;
   nsCycleCollector_forgetJSRuntime();
@@ -496,22 +496,22 @@ MozCrashWarningReporter(JSContext*, const char*, JSErrorReport*)
 }
 
 nsresult
-CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
+CycleCollectedJSRuntime::Initialize(JSContext* aParentContext,
                                     uint32_t aMaxBytes,
                                     uint32_t aMaxNurseryBytes)
 {
-  MOZ_ASSERT(!mJSRuntime);
+  MOZ_ASSERT(!mJSContext);
 
   mOwningThread->SetScriptObserver(this);
   // The main thread has a base recursion depth of 0, workers of 1.
   mBaseRecursionDepth = RecursionDepth();
 
   mozilla::dom::InitScriptSettings();
-  mJSRuntime = JS_NewRuntime(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
-  if (!mJSRuntime) {
+  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentContext);
+  if (!mJSContext) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mJSContext = JS_GetContext(mJSRuntime);
+  mJSRuntime = JS_GetRuntime(mJSContext);
 
   if (!JS_AddExtraGCRootsTracer(mJSContext, TraceBlackJS, this)) {
     MOZ_CRASH("JS_AddExtraGCRootsTracer failed");
