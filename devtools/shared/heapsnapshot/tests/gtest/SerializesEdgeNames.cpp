@@ -28,12 +28,12 @@ DEF_TEST(SerializesEdgeNames, {
     // Should get the node with edges once.
     EXPECT_CALL(
       writer,
-      writeNode(AllOf(EdgesLength(rt, 3),
-                      Edge(rt, 0, Field(&JS::ubi::Edge::name,
+      writeNode(AllOf(EdgesLength(cx, 3),
+                      Edge(cx, 0, Field(&JS::ubi::Edge::name,
                                         UniqueUTF16StrEq(edgeName))),
-                      Edge(rt, 1, Field(&JS::ubi::Edge::name,
+                      Edge(cx, 1, Field(&JS::ubi::Edge::name,
                                         UniqueUTF16StrEq(emptyStr))),
-                      Edge(rt, 2, Field(&JS::ubi::Edge::name,
+                      Edge(cx, 2, Field(&JS::ubi::Edge::name,
                                         UniqueIsNull()))),
                 _)
     )
