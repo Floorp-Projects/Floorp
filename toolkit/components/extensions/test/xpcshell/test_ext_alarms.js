@@ -57,37 +57,6 @@ add_task(function* test_alarm_fires() {
 });
 
 
-add_task(function* test_cleared_alarm_does_not_fire() {
-  function backgroundScript() {
-    let ALARM_NAME = "test_ext_alarms";
-
-    browser.alarms.onAlarm.addListener(alarm => {
-      browser.test.fail("cleared alarm does not fire");
-      browser.test.notifyFail("alarm-cleared");
-    });
-    browser.alarms.create(ALARM_NAME, {when: Date.now() + 1000});
-
-    browser.alarms.clear(ALARM_NAME).then(wasCleared => {
-      browser.test.assertTrue(wasCleared, "alarm was cleared");
-      setTimeout(() => {
-        browser.test.notifyPass("alarm-cleared");
-      }, 2000);
-    });
-  }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
-    manifest: {
-      permissions: ["alarms"],
-    },
-  });
-
-  yield extension.startup();
-  yield extension.awaitFinish("alarm-cleared");
-  yield extension.unload();
-});
-
-
 add_task(function* test_alarm_fires_with_when() {
   function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";
@@ -180,47 +149,6 @@ add_task(function* test_alarm_get_and_clear_single_argument() {
 });
 
 
-add_task(function* test_periodic_alarm_fires() {
-  function backgroundScript() {
-    const ALARM_NAME = "test_ext_alarms";
-    let count = 0;
-    let timer;
-
-    browser.alarms.onAlarm.addListener(alarm => {
-      browser.test.assertEq(alarm.name, ALARM_NAME, "alarm has the expected name");
-      if (count++ === 3) {
-        clearTimeout(timer);
-        browser.alarms.clear(ALARM_NAME).then(wasCleared => {
-          browser.test.assertTrue(wasCleared, "alarm was cleared");
-          browser.test.notifyPass("alarm-periodic");
-        });
-      }
-    });
-
-    browser.alarms.create(ALARM_NAME, {periodInMinutes: 0.02});
-
-    timer = setTimeout(() => {
-      browser.test.fail("alarm fired expected number of times");
-      browser.alarms.clear(ALARM_NAME).then(wasCleared => {
-        browser.test.assertTrue(wasCleared, "alarm was cleared");
-      });
-      browser.test.notifyFail("alarm-periodic");
-    }, 30000);
-  }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
-    manifest: {
-      permissions: ["alarms"],
-    },
-  });
-
-  yield extension.startup();
-  yield extension.awaitFinish("alarm-periodic");
-  yield extension.unload();
-});
-
-
 add_task(function* test_get_get_all_clear_all_alarms() {
   function backgroundScript() {
     const ALARM_NAME = "test_alarm";
@@ -289,46 +217,5 @@ add_task(function* test_get_get_all_clear_all_alarms() {
     extension.awaitMessage("get-invalid"),
     extension.awaitMessage("clearAll"),
   ]);
-  yield extension.unload();
-});
-
-add_task(function* test_duplicate_alarm_name_replaces_alarm() {
-  function backgroundScript() {
-    let count = 0;
-
-    browser.alarms.onAlarm.addListener(alarm => {
-      if (alarm.name === "master alarm") {
-        browser.alarms.create("child alarm", {delayInMinutes: 0.05});
-        browser.alarms.getAll().then(results => {
-          browser.test.assertEq(2, results.length, "exactly two alarms exist");
-          browser.test.assertEq("master alarm", results[0].name, "first alarm has the expected name");
-          browser.test.assertEq("child alarm", results[1].name, "second alarm has the expected name");
-        }).then(() => {
-          if (count++ === 3) {
-            browser.alarms.clear("master alarm").then(wasCleared => {
-              return browser.alarms.clear("child alarm");
-            }).then(wasCleared => {
-              browser.test.notifyPass("alarm-duplicate");
-            });
-          }
-        });
-      } else {
-        browser.test.fail("duplicate named alarm replaced existing alarm");
-        browser.test.notifyFail("alarm-duplicate");
-      }
-    });
-
-    browser.alarms.create("master alarm", {delayInMinutes: 0.025, periodInMinutes: 0.025});
-  }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
-    manifest: {
-      permissions: ["alarms"],
-    },
-  });
-
-  yield extension.startup();
-  yield extension.awaitFinish("alarm-duplicate");
   yield extension.unload();
 });
