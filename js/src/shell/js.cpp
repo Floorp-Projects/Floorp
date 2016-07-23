@@ -3203,7 +3203,7 @@ WatchdogMain(JSContext* cx)
                  * Time hasn't expired yet. Simulate an interrupt callback
                  * which doesn't abort execution.
                  */
-                JS_RequestInterruptCallback(cx->runtime());
+                JS_RequestInterruptCallback(cx);
             }
 
             TimeDuration sleepDuration = sc->watchdogTimeout
@@ -3271,7 +3271,7 @@ CancelExecution(JSContext* cx)
 {
     ShellContext* sc = GetShellContext(cx);
     sc->serviceInterrupt = true;
-    JS_RequestInterruptCallback(cx->runtime());
+    JS_RequestInterruptCallback(cx);
 
     if (sc->haveInterruptFunc) {
         static const char msg[] = "Script runs for too long, terminating.\n";
@@ -3344,7 +3344,7 @@ InterruptIf(JSContext* cx, unsigned argc, Value* vp)
 
     if (ToBoolean(args[0])) {
         GetShellContext(cx)->serviceInterrupt = true;
-        JS_RequestInterruptCallback(cx->runtime());
+        JS_RequestInterruptCallback(cx);
     }
 
     args.rval().setUndefined();
@@ -3361,7 +3361,7 @@ InvokeInterruptCallbackWrapper(JSContext* cx, unsigned argc, Value* vp)
     }
 
     GetShellContext(cx)->serviceInterrupt = true;
-    JS_RequestInterruptCallback(cx->runtime());
+    JS_RequestInterruptCallback(cx);
     bool interruptRv = CheckForInterrupt(cx);
 
     // The interrupt handler could have set a pending exception. Since we call

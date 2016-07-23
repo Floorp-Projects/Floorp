@@ -4306,7 +4306,7 @@ JS_CheckForInterrupt(JSContext* cx);
 /*
  * These functions allow setting an interrupt callback that will be called
  * from the JS thread some time after any thread triggered the callback using
- * JS_RequestInterruptCallback(rt).
+ * JS_RequestInterruptCallback(cx).
  *
  * To schedule the GC and for other activities the engine internally triggers
  * interrupt callbacks. The embedding should thus not rely on callbacks being
@@ -4323,7 +4323,7 @@ extern JS_PUBLIC_API(JSInterruptCallback)
 JS_GetInterruptCallback(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
-JS_RequestInterruptCallback(JSRuntime* rt);
+JS_RequestInterruptCallback(JSContext* cx);
 
 namespace JS {
 
