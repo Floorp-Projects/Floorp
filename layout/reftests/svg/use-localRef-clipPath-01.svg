@@ -1,0 +1,23 @@
+<?xml-stylesheet href="use-localRef.css" type="text/css"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase for clipPath linked to local-ref URL</title>
+  <defs>
+    <clipPath id="circleClip1">
+      <circle cx="50" cy="50" r="0"/>
+    </clipPath>
+    <clipPath id="circleClip2">
+      <circle cx="50" cy="150" r="50"/>
+    </clipPath>
+    <clipPath id="circleClip3">
+      <circle cx="50" cy="250" r="50"/>
+    </clipPath>
+  </defs>
+  <style>
+    #cp3 {
+      clip-path: url(#circleClip3);
+    }
+  </style>
+  <use xlink:href="use-localRef-clipPath-resource.svg#cp1"/>
+  <use xlink:href="use-localRef-clipPath-resource.svg#cp2" clip-path="url(#circleClip2)"/>
+  <use xlink:href="use-localRef-clipPath-resource.svg#cp3"/>
+</svg>
