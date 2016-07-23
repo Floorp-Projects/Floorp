@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Reference for marker linked to local-ref URL</title>
+  <defs>
+    <marker id="limeCircle" markerWidth="8" markerHeight="8" refX="5" refY="5">
+      <circle cx="5" cy="5" r="2" style="stroke: none; fill:lime;"/>
+    </marker>
+     <marker id="blueCircle" markerWidth="8" markerHeight="8" refX="5" refY="5">
+      <circle cx="5" cy="5" r="2" style="stroke: none; fill:blue;"/>
+    </marker>
+    <marker id="purpleCircle" markerWidth="8" markerHeight="8" refX="5" refY="5">
+      <circle cx="5" cy="5" r="2" style="stroke: none; fill:purple;"/>
+    </marker>
+  </defs>
+  <style>
+    path {
+      stroke: blue;
+      stroke-width: 2px;
+    }
+  </style>
+  <path d="M20,20 L70,20 L120,20" style="marker-start: url(#limeCircle);"/>
+  <path d="M20,40 L70,40 L120,40" style="marker-start: url(#blueCircle);"/>
+  <path d="M20,60 L70,60 L120,60" style="marker-start: url(#blueCircle);"/>
+  <path d="M20,80 L70,80 L120,80" style="marker-mid: url(#limeCircle);"/>
+  <path d="M20,100 L70,100 L120,100" style="marker-mid: url(#blueCircle);"/>
+  <path d="M20,120 L70,120 L120,120" style="marker-mid: url(#blueCircle);"/>
+  <path d="M20,140 L70,140 L120,140" style="marker-end: url(#limeCircle);"/>
+  <path d="M20,160 L70,160 L120,160" style="marker-end: url(#blueCircle);"/>
+  <path d="M20,180 L70,180 L120,180" style="marker-end: url(#blueCircle);"/>
+</svg>
