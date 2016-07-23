@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script teardown</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+add_task(function* test_contentscript_reload_and_unload() {
+  function contentScript() {
+    browser.test.sendMessage("contentscript-run");
+  }
+  function backgroundScript() {
+    let removedTabs = 0;
+    browser.tabs.onRemoved.addListener(() => {
+      browser.test.assertEq(1, ++removedTabs,
+          "Expected only one tab to be removed during the test");
+      browser.test.sendMessage("tab-closed");
+    });
+    browser.test.sendMessage("background-ready");
+  }
+
+  let extensionData = {
+    background: `(${backgroundScript})();`,
+    manifest: {
+      content_scripts: [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "js": ["contentscript.js"],
+      }],
+    },
+
+    files: {
+      "contentscript.js": `(${contentScript})();`,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  yield extension.awaitMessage("background-ready");
+
+  let chromeScript = SpecialPowers.loadChromeScript(
+      SimpleTest.getTestFileURL("file_teardown_test.js"));
+  yield chromeScript.promiseOneMessage("chromescript-startup");
+  function* getContextEvents() {
+    chromeScript.sendAsyncMessage("get-context-events");
+    let contextEvents = yield chromeScript.promiseOneMessage("context-events");
+    return contextEvents.filter(event => event.extensionId == extension.id);
+  }
+
+  let win = window.open("file_sample.html");
+  yield extension.awaitMessage("contentscript-run");
+  let tabUrl = win.location.href;
+
+  let contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 1,
+      "ExtensionContext state change after loading a content script");
+  is(contextEvents[0].eventType, "load",
+      "Create ExtensionContext for content script");
+  is(contextEvents[0].url, tabUrl, "ExtensionContext URL = page");
+
+  let promiseReload = extension.awaitMessage("contentscript-run");
+  win.location.reload();
+  yield promiseReload;
+  contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 2,
+      "ExtensionContext state changes after reloading a content script");
+  is(contextEvents[0].eventType, "unload", "Unload old ExtensionContext");
+  is(contextEvents[0].url, tabUrl, "ExtensionContext URL = page");
+  is(contextEvents[1].eventType, "load",
+      "Create new ExtensionContext for content script");
+  is(contextEvents[1].url, tabUrl, "ExtensionContext URL = page");
+
+  let tabClosePromise = extension.awaitMessage("tab-closed");
+  win.close();
+  yield tabClosePromise;
+
+  contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 1,
+      "ExtensionContext state change after unloading a content script");
+  is(contextEvents[0].eventType, "unload",
+      "Unload ExtensionContext after closing the tab with the content script");
+  is(contextEvents[0].url, tabUrl, "ExtensionContext URL = page");
+
+  chromeScript.sendAsyncMessage("cleanup");
+  chromeScript.destroy();
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
