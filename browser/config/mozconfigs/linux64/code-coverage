@@ -1,6 +1,13 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
 
+TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
+
+ac_add_options --disable-install-strip
+ac_add_options --disable-jemalloc
+ac_add_options --disable-crashreporter
+ac_add_options --disable-elf-hack
+
 MOZ_CODE_COVERAGE=1
 export CFLAGS="-fprofile-arcs -ftest-coverage"
 export CXXFLAGS="-fprofile-arcs -ftest-coverage"
-export LDFLAGS="-fprofile-arcs -ftest-coverage -lgcov"
+export LDFLAGS="-fprofile-arcs -ftest-coverage -lgcov -L$TOOLTOOL_DIR/gtk3/usr/local/lib"
