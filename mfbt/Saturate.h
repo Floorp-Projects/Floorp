@@ -11,8 +11,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
-#include "mozilla/NumericLimits.h"
 #include "mozilla/TypeTraits.h"
+
+#include <limits>
 
 namespace mozilla {
 namespace detail {
@@ -63,8 +64,8 @@ public:
 
   const T& operator+=(const T& aRhs) const
   {
-    const T min = NumericLimits<T>::min();
-    const T max = NumericLimits<T>::max();
+    const T min = std::numeric_limits<T>::min();
+    const T max = std::numeric_limits<T>::max();
 
     if (aRhs > static_cast<T>(0)) {
       mValue = (max - aRhs) < mValue ? max : mValue + aRhs;
@@ -76,8 +77,8 @@ public:
 
   const T& operator-=(const T& aRhs) const
   {
-    const T min = NumericLimits<T>::min();
-    const T max = NumericLimits<T>::max();
+    const T min = std::numeric_limits<T>::min();
+    const T max = std::numeric_limits<T>::max();
 
     if (aRhs > static_cast<T>(0)) {
       mValue = (min + aRhs) > mValue ? min : mValue - aRhs;
