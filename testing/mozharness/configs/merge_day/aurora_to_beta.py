@@ -60,7 +60,6 @@ config = {
          "# Enable enforcing that add-ons are signed by the trusted root")
     ],
 
-    "use_vcs_unique_share": True,
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     # "hg_share_base": None,
     "tools_repo_url": "https://hg.mozilla.org/build/tools",

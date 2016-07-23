@@ -156,6 +156,11 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                     "branch": self.config.get("%s_repo_branch" % (k,), "default"),
                     "dest": dirs['abs_%s_dir' % k],
                     "vcs": "hg",
+                    # "hg" vcs uses robustcheckout extension requires the use of a share
+                    # but having a share breaks migration logic when merging repos.
+                    # Solution: tell hg vcs to create a unique share directory for each
+                    # gecko repo. see mozharness/base/vcs/mercurial.py for implementation
+                    "use_vcs_unique_share": True,
                 })
             else:
                 self.warning("Skipping %s" % repo_key)
