@@ -33,17 +33,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 
-function _ContextualIdentityService(path) {
-  this.init(path);
-}
-
-_ContextualIdentityService.prototype = {
+this.ContextualIdentityService = {
   _defaultIdentities: [
     { userContextId: 1,
       public: true,
       icon: "chrome://browser/skin/usercontext/personal.svg",
       color: "#00a7e0",
-      l10nID: "userContextPersonal.label",
+      label: "userContextPersonal.label",
       accessKey: "userContextPersonal.accesskey",
       telemetryId: 1,
     },
@@ -51,7 +47,7 @@ _ContextualIdentityService.prototype = {
       public: true,
       icon: "chrome://browser/skin/usercontext/work.svg",
       color: "#f89c24",
-      l10nID: "userContextWork.label",
+      label: "userContextWork.label",
       accessKey: "userContextWork.accesskey",
       telemetryId: 2,
     },
@@ -59,7 +55,7 @@ _ContextualIdentityService.prototype = {
       public: true,
       icon: "chrome://browser/skin/usercontext/banking.svg",
       color: "#7dc14c",
-      l10nID: "userContextBanking.label",
+      label: "userContextBanking.label",
       accessKey: "userContextBanking.accesskey",
       telemetryId: 3,
     },
@@ -67,7 +63,7 @@ _ContextualIdentityService.prototype = {
       public: true,
       icon: "chrome://browser/skin/usercontext/shopping.svg",
       color: "#ee5195",
-      l10nID: "userContextShopping.label",
+      label: "userContextShopping.label",
       accessKey: "userContextShopping.accesskey",
       telemetryId: 4,
     },
@@ -75,7 +71,7 @@ _ContextualIdentityService.prototype = {
       public: false,
       icon: "",
       color: "",
-      name: "userContextIdInternal.thumbnail",
+      label: "userContextIdInternal.thumbnail",
       accessKey: "" },
   ],
 
@@ -88,8 +84,9 @@ _ContextualIdentityService.prototype = {
 
   _saver: null,
 
-  init(path) {
-    this._path = path;
+  init() {
+    this._path = OS.Path.join(OS.Constants.Path.profileDir, "containers.json");
+
     this._saver = new DeferredTask(() => this.save(), SAVE_DELAY_MS);
     AsyncShutdown.profileBeforeChange.addBlocker("ContextualIdentityService: writing data",
                                                  () => this._saver.finalize());
@@ -162,49 +159,6 @@ _ContextualIdentityService.prototype = {
                               { tmpPath: this._path + ".tmp" });
   },
 
-  create(name, icon, color) {
-    let identity = {
-      userContextId: ++this._lastUserContextId,
-      public: true,
-      icon,
-      color,
-      name
-    };
-
-    this._identities.push(identity);
-    this.saveSoon();
-
-    return Cu.cloneInto(identity, {});
-  },
-
-  update(userContextId, name, icon, color) {
-    let identity = this._identities.find(identity => identity.userContextId == userContextId &&
-                                         identity.public);
-    if (identity) {
-      identity.name = name;
-      identity.color = color;
-      identity.icon = icon;
-      delete identity.l10nID;
-      delete identity.accessKey;
-      this.saveSoon();
-    }
-
-    return !!identity;
-  },
-
-  remove(userContextId) {
-    let index = this._identities.findIndex(i => i.userContextId == userContextId && i.public);
-    if (index == -1) {
-      return false;
-    }
-
-    this._identities.splice(index, 1);
-    this._openedIdentities.delete(userContextId);
-    this.saveSoon();
-
-    return true;
-  },
-
   ensureDataReady() {
     if (this._dataReady) {
       return;
@@ -232,18 +186,17 @@ _ContextualIdentityService.prototype = {
 
   getIdentities() {
     this.ensureDataReady();
-    return Cu.cloneInto(this._identities.filter(info => info.public), {});
+    return this._identities.filter(info => info.public);
   },
 
-  getPrivateIdentity(name) {
+  getPrivateIdentity(label) {
     this.ensureDataReady();
-    return Cu.cloneInto(this._identities.find(info => !info.public && info.name == name), {});
+    return this._identities.find(info => !info.public && info.label == label);
   },
 
   getIdentityFromId(userContextId) {
     this.ensureDataReady();
-    return Cu.cloneInto(this._identities.find(info => info.userContextId == userContextId &&
-                                              info.public), {});
+    return this._identities.find(info => info.userContextId == userContextId);
   },
 
   getUserContextLabel(userContextId) {
@@ -251,13 +204,7 @@ _ContextualIdentityService.prototype = {
     if (!identity.public) {
       return "";
     }
-
-    // We cannot localize the user-created identity names.
-    if (identity.name) {
-      return identity.name;
-    }
-
-    return gBrowserBundle.GetStringFromName(identity.l10nID);
+    return gBrowserBundle.GetStringFromName(identity.label);
   },
 
   setTabStyle(tab) {
@@ -299,11 +246,6 @@ _ContextualIdentityService.prototype = {
                         .add(identity.telemetryId);
     }
   },
+}
 
-  createNewInstanceForTesting(path) {
-    return new _ContextualIdentityService(path);
-  },
-};
-
-let path = OS.Path.join(OS.Constants.Path.profileDir, "containers.json");
-this.ContextualIdentityService = new _ContextualIdentityService(path);
+ContextualIdentityService.init();
