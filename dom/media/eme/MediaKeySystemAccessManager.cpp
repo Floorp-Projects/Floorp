@@ -266,7 +266,7 @@ MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
 {
   EME_LOG("MediaKeySystemAccessManager::Observe %s", aTopic);
 
-  if (!strcmp(aTopic, "gmp-path-added")) {
+  if (!strcmp(aTopic, "gmp-changed")) {
     nsTArray<PendingRequest> requests(Move(mRequests));
     // Retry all pending requests, but this time fail if the CDM is not installed.
     for (PendingRequest& request : requests) {
@@ -299,7 +299,7 @@ MediaKeySystemAccessManager::EnsureObserversAdded()
   if (NS_WARN_IF(!obsService)) {
     return false;
   }
-  mAddedObservers = NS_SUCCEEDED(obsService->AddObserver(this, "gmp-path-added", false));
+  mAddedObservers = NS_SUCCEEDED(obsService->AddObserver(this, "gmp-changed", false));
   return mAddedObservers;
 }
 
@@ -316,7 +316,7 @@ MediaKeySystemAccessManager::Shutdown()
   if (mAddedObservers) {
     nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
     if (obsService) {
-      obsService->RemoveObserver(this, "gmp-path-added");
+      obsService->RemoveObserver(this, "gmp-changed");
       mAddedObservers = false;
     }
   }
