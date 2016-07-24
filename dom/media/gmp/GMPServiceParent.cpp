@@ -1107,7 +1107,6 @@ GeckoMediaPluginServiceParent::AddOnGMPThread(nsString aDirectory)
         MutexAutoLock lock(self->mMutex);
         self->mPlugins.AppendElement(gmp);
       }
-      NS_DispatchToMainThread(new NotifyObserversTask("gmp-path-added"), NS_DISPATCH_NORMAL);
     },
     [dir]() -> void {
       LOGD(("%s::%s: %s Failed", __CLASS__, __FUNCTION__, dir.get()));
