@@ -104,9 +104,7 @@ private:
            nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain,
            const nsTArray<nsCString>& aUnsafeHeaders,
            bool aForcePreflight,
-           bool aIsPreflight,
-           bool aForceHSTSPriming,
-           bool aMixedContentWouldBlock);
+           bool aIsPreflight);
   LoadInfo(const LoadInfo& rhs);
 
   friend nsresult
@@ -147,9 +145,6 @@ private:
   nsTArray<nsCString>              mCorsUnsafeHeaders;
   bool                             mForcePreflight;
   bool                             mIsPreflight;
-
-  bool                             mForceHSTSPriming : 1;
-  bool                             mMixedContentWouldBlock : 1;
 };
 
 } // namespace net

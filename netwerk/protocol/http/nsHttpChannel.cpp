@@ -98,8 +98,6 @@
 #include "nsISocketProvider.h"
 #include "mozilla/net/Predictor.h"
 #include "CacheControlParser.h"
-#include "nsMixedContentBlocker.h"
-#include "HSTSPrimerListener.h"
 
 namespace mozilla { namespace net {
 
@@ -407,50 +405,12 @@ nsHttpChannel::Connect()
         // otherwise, let's just proceed without using the cache.
     }
 
-    return TryHSTSPriming();
-}
-
-nsresult
-nsHttpChannel::TryHSTSPriming()
-{
-    if (mLoadInfo) {
-        // HSTS priming requires the LoadInfo provided with AsyncOpen2
-        bool requireHSTSPriming =
-            mLoadInfo->GetForceHSTSPriming();
-
-        if (requireHSTSPriming &&
-                nsMixedContentBlocker::sSendHSTSPriming &&
-                mInterceptCache == DO_NOT_INTERCEPT) {
-            bool isHttpsScheme;
-            nsresult rv = mURI->SchemeIs("https", &isHttpsScheme);
-            NS_ENSURE_SUCCESS(rv, rv);
-            if (!isHttpsScheme) {
-                rv = HSTSPrimingListener::StartHSTSPriming(this, this);
-
-                if (NS_FAILED(rv)) {
-                    CloseCacheEntry(false);
-                    return rv;
-                }
-
-                return NS_OK;
-            }
-
-            // The request was already upgraded, for example by
-            // upgrade-insecure-requests or a prior successful priming request
-            Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
-                    HSTSPrimingResult::eHSTS_PRIMING_ALREADY_UPGRADED);
-            mLoadInfo->ClearHSTSPriming();
-        }
-    }
-
     return ContinueConnect();
 }
 
 nsresult
 nsHttpChannel::ContinueConnect()
 {
-    // If we have had HSTS priming, we need to reevaluate whether we need
-    // a CORS preflight. Bug: 1272440
     // If we need to start a CORS preflight, do it now!
     // Note that it is important to do this before the early returns below.
     if (!mIsCorsPreflightDone && mRequireCORSPreflight &&
@@ -4058,7 +4018,7 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntry *entry,
         return NS_OK;
     }
 
-    return TryHSTSPriming();
+    return ContinueConnect();
 }
 
 nsresult
@@ -5398,7 +5358,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY(nsICorsPreflightCallback)
-    NS_INTERFACE_MAP_ENTRY(nsIHstsPrimingCallback)
     NS_INTERFACE_MAP_ENTRY(nsIChannelWithDivertableParentListener)
     // we have no macro that covers this case.
     if (aIID.Equals(NS_GET_IID(nsHttpChannel)) ) {
@@ -7716,103 +7675,6 @@ nsHttpChannel::OnPreflightFailed(nsresult aError)
 
     CloseCacheEntry(false);
     AsyncAbort(aError);
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsIHstsPrimingCallback functions
-//-----------------------------------------------------------------------------
-
-/*
- * May be invoked synchronously if HSTS priming has already been performed
- * for the host.
- */
-NS_IMETHODIMP
-nsHttpChannel::OnHSTSPrimingSucceeded(bool aCached)
-{
-    if (nsMixedContentBlocker::sUseHSTS) {
-        // redirect the channel to HTTPS if the pref
-        // "security.mixed_content.use_hsts" is true
-        LOG(("HSTS Priming succeeded, redirecting to HTTPS [this=%p]", this));
-        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
-                (aCached) ? HSTSPrimingResult::eHSTS_PRIMING_CACHED_DO_UPGRADE :
-                            HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED);
-        return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
-    }
-
-    // If "security.mixed_content.use_hsts" is false, record the result of
-    // HSTS priming and block or proceed with the load as required by
-    // mixed-content blocking
-    bool wouldBlock = mLoadInfo->GetMixedContentWouldBlock();
-
-    // preserve the mixed-content-before-hsts order and block if required
-    if (wouldBlock) {
-        LOG(("HSTS Priming succeeded, blocking for mixed-content [this=%p]",
-                    this));
-        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
-                              HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED_BLOCK);
-        CloseCacheEntry(false);
-        return AsyncAbort(NS_ERROR_CONTENT_BLOCKED);
-    }
-
-    LOG(("HSTS Priming succeeded, loading insecure: [this=%p]", this));
-    Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
-                          HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED_HTTP);
-
-    nsresult rv = ContinueConnect();
-    if (NS_FAILED(rv)) {
-        CloseCacheEntry(false);
-        return AsyncAbort(rv);
-    }
-
-    return NS_OK;
-}
-
-/*
- * May be invoked synchronously if HSTS priming has already been performed
- * for the host.
- */
-NS_IMETHODIMP
-nsHttpChannel::OnHSTSPrimingFailed(nsresult aError, bool aCached)
-{
-    bool wouldBlock = mLoadInfo->GetMixedContentWouldBlock();
-
-    LOG(("HSTS Priming Failed [this=%p], %s the load", this,
-                (wouldBlock) ? "blocking" : "allowing"));
-    if (aCached) {
-        // Between the time we marked for priming and started the priming request,
-        // the host was found to not allow the upgrade, probably from another
-        // priming request.
-        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
-                (wouldBlock) ?  HSTSPrimingResult::eHSTS_PRIMING_CACHED_BLOCK :
-                                HSTSPrimingResult::eHSTS_PRIMING_CACHED_NO_UPGRADE);
-    } else {
-        // A priming request was sent, and no HSTS header was found that allows
-        // the upgrade.
-        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
-                (wouldBlock) ?  HSTSPrimingResult::eHSTS_PRIMING_FAILED_BLOCK :
-                                HSTSPrimingResult::eHSTS_PRIMING_FAILED_ACCEPT);
-    }
-
-    // Don't visit again for at least one day
-    nsISiteSecurityService* sss = gHttpHandler->GetSSService();
-    NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
-    nsresult rv = sss->CacheNegativeHSTSResult(mURI, 24 * 60 * 60);
-    NS_WARN_IF(NS_FAILED(rv));
-
-    // If we would block, go ahead and abort with the error provided
-    if (wouldBlock) {
-        CloseCacheEntry(false);
-        return AsyncAbort(aError);
-    }
-
-    // we can continue the load and the UI has been updated as mixed content
-    rv = ContinueConnect();
-    if (NS_FAILED(rv)) {
-        CloseCacheEntry(false);
-        return AsyncAbort(rv);
-    }
-
     return NS_OK;
 }
 
