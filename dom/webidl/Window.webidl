@@ -36,6 +36,8 @@ typedef any Transferable;
   [PutForwards=href, Unforgeable, Throws,
    CrossOriginReadable, CrossOriginWritable] readonly attribute Location? location;
   [Throws] readonly attribute History history;
+  [Func="CustomElementsRegistry::IsCustomElementsEnabled"]
+  readonly attribute CustomElementsRegistry customElements;
   [Replaceable, Throws] readonly attribute BarProp locationbar;
   [Replaceable, Throws] readonly attribute BarProp menubar;
   [Replaceable, Throws] readonly attribute BarProp personalbar;
