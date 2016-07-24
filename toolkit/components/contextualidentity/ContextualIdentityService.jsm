@@ -41,6 +41,7 @@ this.ContextualIdentityService = {
       color: "#00a7e0",
       label: "userContextPersonal.label",
       accessKey: "userContextPersonal.accesskey",
+      alreadyOpened: false,
       telemetryId: 1,
     },
     { userContextId: 2,
@@ -49,6 +50,7 @@ this.ContextualIdentityService = {
       color: "#f89c24",
       label: "userContextWork.label",
       accessKey: "userContextWork.accesskey",
+      alreadyOpened: false,
       telemetryId: 2,
     },
     { userContextId: 3,
@@ -57,6 +59,7 @@ this.ContextualIdentityService = {
       color: "#7dc14c",
       label: "userContextBanking.label",
       accessKey: "userContextBanking.accesskey",
+      alreadyOpened: false,
       telemetryId: 3,
     },
     { userContextId: 4,
@@ -65,6 +68,7 @@ this.ContextualIdentityService = {
       color: "#ee5195",
       label: "userContextShopping.label",
       accessKey: "userContextShopping.accesskey",
+      alreadyOpened: false,
       telemetryId: 4,
     },
     { userContextId: Math.pow(2, 31) - 1,
@@ -72,11 +76,11 @@ this.ContextualIdentityService = {
       icon: "",
       color: "",
       label: "userContextIdInternal.thumbnail",
-      accessKey: "" },
+      accessKey: "",
+      alreadyOpened: false },
   ],
 
   _identities: null,
-  _openedIdentities: new Set(),
 
   _path: null,
   _dataReady: false,
@@ -215,8 +219,8 @@ this.ContextualIdentityService = {
       return;
     }
 
-    if (this._openedIdentities.has(userContextId)) {
-      this._openedIdentities.add(userContextId);
+    if (!identity.alreadyOpened) {
+      identity.alreadyOpened = true;
       Services.telemetry.getHistogramById("UNIQUE_CONTAINERS_OPENED").add(1);
     }
 
