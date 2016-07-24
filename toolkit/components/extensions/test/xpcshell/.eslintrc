@@ -1,3 +1,7 @@
 {
   "extends": "../../../../../testing/xpcshell/xpcshell.eslintrc",
+
+  "globals": {
+    "browser": false,
+  },
 }
