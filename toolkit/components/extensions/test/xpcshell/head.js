@@ -8,6 +8,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionData",
                                   "resource://gre/modules/Extension.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestUtils",
+                                  "resource://testing-common/ExtensionXPCShellUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
@@ -15,37 +17,4 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-/* exported normalizeManifest */
-
-let BASE_MANIFEST = {
-  "applications": {"gecko": {"id": "test@web.ext"}},
-
-  "manifest_version": 2,
-
-  "name": "name",
-  "version": "0",
-};
-
-function* normalizeManifest(manifest, baseManifest = BASE_MANIFEST) {
-  const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
-
-  yield Management.lazyInit();
-
-  let errors = [];
-  let context = {
-    url: null,
-
-    logError: error => {
-      errors.push(error);
-    },
-
-    preprocessors: {},
-  };
-
-  manifest = Object.assign({}, baseManifest, manifest);
-
-  let normalized = Schemas.normalize(manifest, "manifest.WebExtensionManifest", context);
-  normalized.errors = errors;
-
-  return normalized;
-}
+ExtensionTestUtils.init(this);
