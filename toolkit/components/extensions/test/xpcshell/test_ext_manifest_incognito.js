@@ -4,7 +4,7 @@
 
 
 add_task(function* test_manifest_incognito() {
-  let normalized = yield normalizeManifest({
+  let normalized = yield ExtensionTestUtils.normalizeManifest({
     "incognito": "spanning",
   });
 
@@ -14,7 +14,7 @@ add_task(function* test_manifest_incognito() {
         "spanning",
         "Should have the expected incognito string");
 
-  normalized = yield normalizeManifest({
+  normalized = yield ExtensionTestUtils.normalizeManifest({
     "incognito": "split",
   });
 
