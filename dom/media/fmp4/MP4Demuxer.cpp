@@ -22,9 +22,9 @@
 
 #include "nsAutoPtr.h"
 
+extern mozilla::LazyLogModule gMediaDemuxerLog;
 mozilla::LogModule* GetDemuxerLog() {
-  static mozilla::LazyLogModule log("MP4Demuxer");
-  return log;
+  return gMediaDemuxerLog;
 }
 
 namespace mozilla {

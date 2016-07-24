@@ -9,11 +9,10 @@
 #include "nsThreadUtils.h"
 #include <algorithm>
 
-#define WEBM_DEBUG(arg, ...) MOZ_LOG(gWebMDemuxerLog, mozilla::LogLevel::Debug, ("WebMBufferedParser(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+extern mozilla::LazyLogModule gMediaDemuxerLog;
+#define WEBM_DEBUG(arg, ...) MOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug, ("WebMBufferedParser(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
-
-extern LazyLogModule gWebMDemuxerLog;
 
 static uint32_t
 VIntLength(unsigned char aFirstByte, uint32_t* aMask)
