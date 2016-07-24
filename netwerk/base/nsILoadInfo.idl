@@ -542,32 +542,6 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean isPreflight;
 
   /**
-   * When this request would be mixed-content and we do not have an
-   * entry in the HSTS cache, we send an HSTS priming request to
-   * determine if it is ok to upgrade the request to HTTPS.
-   */
-  /**
-   * True if this is a mixed-content load and HSTS priming request will be sent.
-   */
-  [noscript, infallible] readonly attribute boolean forceHSTSPriming;
-  /**
-   * Carry the decision whether this load would be blocked by mixed content so
-   * that if HSTS priming fails, the correct decision can be made.
-   */
-  [noscript, infallible] readonly attribute boolean mixedContentWouldBlock;
-
-  /**
-   * Mark this LoadInfo as needing HSTS Priming
-   *
-   * @param wouldBlock Carry the decision of Mixed Content Blocking to be
-   * applied when HSTS priming is complete.
-   */
-  [noscript, notxpcom, nostdcall]
-  void setHSTSPriming(in boolean mixeContentWouldBlock);
-  [noscript, notxpcom, nostdcall]
-  void clearHSTSPriming();
-
-  /**
   * Constants reflecting the channel tainting.  These are mainly defined here
   * for script.  Internal C++ code should use the enum defined in LoadTainting.h.
   * See LoadTainting.h for documentation.
