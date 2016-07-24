@@ -30,13 +30,13 @@
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
 
-#define WEBM_DEBUG(arg, ...) MOZ_LOG(gWebMDemuxerLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define WEBM_DEBUG(arg, ...) MOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+extern mozilla::LazyLogModule gMediaDemuxerLog;
 
 namespace mozilla {
 
 using namespace gfx;
 
-LazyLogModule gWebMDemuxerLog("WebMDemuxer");
 LazyLogModule gNesteggLog("Nestegg");
 
 // How far ahead will we look when searching future keyframe. In microseconds.
