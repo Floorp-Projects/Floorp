@@ -86,7 +86,6 @@ config = {
         8,  # Fennec aurora channel
         10,  # Firefox aurora channel
         18,  # MetroFirefox aurora channel
-        106,  # Fennec api-9 aurora channel
     ],
     "balrog_credentials_file": "oauth.txt",
 
