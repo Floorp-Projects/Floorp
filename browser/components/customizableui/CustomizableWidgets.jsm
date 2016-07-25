@@ -1135,7 +1135,7 @@ const CustomizableWidgets = [
 
       ContextualIdentityService.getIdentities().forEach(identity => {
         let bundle = doc.getElementById("bundle_browser");
-        let label = bundle.getString(identity.label);
+        let label = ContextualIdentityService.getUserContextLabel(identity.userContextId);
 
         let item = doc.createElementNS(kNSXUL, "toolbarbutton");
         item.setAttribute("label", label);
