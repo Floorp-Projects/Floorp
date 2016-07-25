@@ -39,6 +39,11 @@ VideoFrameContainer::~VideoFrameContainer()
 PrincipalHandle VideoFrameContainer::GetLastPrincipalHandle()
 {
   MutexAutoLock lock(mMutex);
+  return GetLastPrincipalHandleLocked();
+}
+
+PrincipalHandle VideoFrameContainer::GetLastPrincipalHandleLocked()
+{
   return mLastPrincipalHandle;
 }
 
@@ -46,6 +51,12 @@ void VideoFrameContainer::UpdatePrincipalHandleForFrameID(const PrincipalHandle&
                                                           const ImageContainer::FrameID& aFrameID)
 {
   MutexAutoLock lock(mMutex);
+  UpdatePrincipalHandleForFrameIDLocked(aPrincipalHandle, aFrameID);
+}
+
+void VideoFrameContainer::UpdatePrincipalHandleForFrameIDLocked(const PrincipalHandle& aPrincipalHandle,
+                                                                const ImageContainer::FrameID& aFrameID)
+{
   if (mPendingPrincipalHandle == aPrincipalHandle) {
     return;
   }
@@ -147,7 +158,7 @@ void VideoFrameContainer::SetCurrentFrames(const VideoSegment& aSegment)
 
   bool principalHandleChanged =
      lastPrincipalHandle != PRINCIPAL_HANDLE_NONE &&
-     lastPrincipalHandle != GetLastPrincipalHandle();
+     lastPrincipalHandle != GetLastPrincipalHandleLocked();
 
   // Add the frames from this iteration.
   for (auto& image : newImages) {
@@ -156,8 +167,8 @@ void VideoFrameContainer::SetCurrentFrames(const VideoSegment& aSegment)
   }
 
   if (principalHandleChanged) {
-    UpdatePrincipalHandleForFrameID(lastPrincipalHandle,
-                                    newImages.LastElement().mFrameID);
+    UpdatePrincipalHandleForFrameIDLocked(lastPrincipalHandle,
+                                          newImages.LastElement().mFrameID);
   }
 
   SetCurrentFramesLocked(mLastPlayedVideoFrame.GetIntrinsicSize(), images);
