@@ -1040,7 +1040,7 @@ const KTableEntry nsCSSProps::kBoxDecorationBreakKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBoxShadowTypeKTable[] = {
-  { eCSSKeyword_inset, NS_STYLE_BOX_SHADOW_INSET },
+  { eCSSKeyword_inset, uint8_t(StyleBoxShadowType::Inset) },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

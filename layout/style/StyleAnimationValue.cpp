@@ -275,7 +275,7 @@ AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
     arr->Item(4).SetColorValue(aShadow->mColor);
   }
   if (aShadow->mInset) {
-    arr->Item(5).SetIntValue(NS_STYLE_BOX_SHADOW_INSET,
+    arr->Item(5).SetIntValue(uint8_t(StyleBoxShadowType::Inset),
                              eCSSUnit_Enumerated);
   }
 

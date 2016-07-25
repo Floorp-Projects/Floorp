@@ -4253,7 +4253,8 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     }
 
     if (aIsBoxShadow && arr->Item(5).GetUnit() == eCSSUnit_Enumerated) {
-      NS_ASSERTION(arr->Item(5).GetIntValue() == NS_STYLE_BOX_SHADOW_INSET,
+      NS_ASSERTION(arr->Item(5).GetIntValue()
+                   == uint8_t(StyleBoxShadowType::Inset),
                    "invalid keyword type for box shadow");
       item->mInset = true;
     } else {
