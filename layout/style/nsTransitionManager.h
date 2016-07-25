@@ -211,7 +211,7 @@ public:
       const TimeDuration& aStartTime,
       double aPlaybackRate);
 
-  void SetEffect(KeyframeEffectReadOnly* aEffect) override;
+  void SetEffect(AnimationEffectReadOnly* aEffect) override;
 
 protected:
   virtual ~CSSTransition()
