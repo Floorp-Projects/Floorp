@@ -477,7 +477,7 @@ nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnha
         PrintTimeString(buf, sizeof(buf), aLastModified);
         mBuffer.Append(buf);
     } else {
-        mBuffer.AppendLiteral("No last modified time (bug 1000338)");
+        mBuffer.AppendLiteral("No last modified time");
     }
     mBuffer.AppendLiteral("</td>\n");
 
