@@ -184,11 +184,11 @@
                         type="search"
                         placeholder="&previewHint;"/>
           </html:div>
+          <html:label id="font-showall" class="theme-link" title="&showAllFonts;">&showAllFontsUsed;</html:label>
         </html:div>
 
         <html:div id="font-container">
           <html:ul id="all-fonts"></html:ul>
-          <html:button id="font-showall">&showAllFonts;</html:button>
         </html:div>
 
         <html:div id="font-template">
