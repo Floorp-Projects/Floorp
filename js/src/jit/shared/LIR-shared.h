@@ -8157,6 +8157,13 @@ class LAsmJSCall final : public LInstruction
         return true;
     }
 
+    bool isCallPreserved(AnyRegister reg) const {
+        // WebAssembly functions preserve the TLS pointer register.
+        if (reg.isFloat() || reg.gpr() != WasmTlsReg)
+            return false;
+        return mir()->preservesTlsReg();
+    }
+
     // LInstruction interface
     size_t numDefs() const {
         return def_.isBogusTemp() ? 0 : 1;
