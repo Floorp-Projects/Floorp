@@ -42,44 +42,46 @@ function getSender(context, target, sender) {
   }
 }
 
-// WeakMap[ExtensionContext -> {tab, parentWindow}]
-var pageDataMap = new WeakMap();
+function getDocShellOwner(docShell) {
+  let browser = docShell.chromeEventHandler;
+
+  let xulWindow = browser.ownerGlobal;
+
+  let {gBrowser} = xulWindow;
+  if (gBrowser) {
+    let tab = gBrowser.getTabForBrowser(browser);
+
+    return {xulWindow, tab};
+  }
+
+  return {};
+}
 
 /* eslint-disable mozilla/balanced-listeners */
 // This listener fires whenever an extension page opens in a tab
 // (either initiated by the extension or the user). Its job is to fill
 // in some tab-specific details and keep data around about the
 // ExtensionContext.
-extensions.on("page-load", (type, page, params, sender, delegate) => {
+extensions.on("page-load", (type, context, params, sender, delegate) => {
   if (params.type == "tab" || params.type == "popup") {
-    let browser = params.docShell.chromeEventHandler;
+    let {xulWindow, tab} = getDocShellOwner(params.docShell);
 
-    let parentWindow = browser.ownerGlobal;
-    page.windowId = WindowManager.getId(parentWindow);
-
-    let tab = parentWindow.gBrowser.getTabForBrowser(browser);
+    // FIXME: Handle tabs being moved between windows.
+    context.windowId = WindowManager.getId(xulWindow);
     if (tab) {
       sender.tabId = TabManager.getId(tab);
-      page.tabId = TabManager.getId(tab);
+      context.tabId = TabManager.getId(tab);
     }
-
-    pageDataMap.set(page, {tab, parentWindow});
   }
 
   delegate.getSender = getSender;
 });
 
-extensions.on("page-unload", (type, page) => {
-  pageDataMap.delete(page);
-});
-
-extensions.on("page-shutdown", (type, page) => {
-  if (pageDataMap.has(page)) {
-    let {tab, parentWindow} = pageDataMap.get(page);
-    pageDataMap.delete(page);
-
+extensions.on("page-shutdown", (type, context) => {
+  if (context.type == "tab") {
+    let {xulWindow, tab} = getDocShellOwner(context.docShell);
     if (tab) {
-      parentWindow.gBrowser.removeTab(tab);
+      xulWindow.gBrowser.removeTab(tab);
     }
   }
 });
@@ -96,9 +98,9 @@ extensions.on("fill-browser-data", (type, browser, data, result) => {
 /* eslint-enable mozilla/balanced-listeners */
 
 global.currentWindow = function(context) {
-  let pageData = pageDataMap.get(context);
-  if (pageData) {
-    return pageData.parentWindow;
+  let {xulWindow} = getDocShellOwner(context.docShell);
+  if (xulWindow) {
+    return xulWindow;
   }
   return WindowManager.topWindow;
 };

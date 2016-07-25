@@ -8543,8 +8543,8 @@ nsIFrame::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
       StyleContext()->GetPseudo() != nsCSSAnonBoxes::anonymousFlexItem &&
       StyleContext()->GetPseudo() != nsCSSAnonBoxes::anonymousGridItem) {
     const nsStyleUserInterface* ui = StyleUserInterface();
-    if (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
-        ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
+    if (ui->mUserFocus != StyleUserFocus::Ignore &&
+        ui->mUserFocus != StyleUserFocus::None_) {
       // Pass in default tabindex of -1 for nonfocusable and 0 for focusable
       tabIndex = 0;
     }

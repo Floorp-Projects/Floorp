@@ -223,7 +223,6 @@
   width: 16px;
   height: 16px;
   margin-inline-end: 4px;
-  cursor: pointer;
 }
 
 .security-state-insecure {
@@ -269,7 +268,6 @@
   margin: 0;
   margin-inline-end: 3px;
   -moz-user-select: none;
-  cursor: pointer;
 }
 
 .requests-menu-transferred {

@@ -45,24 +45,38 @@ android {
     }
 
     productFlavors {
-        // For fast local development.  If you have an API 21 device, you should
-        // use this.
+        // For API 21+ - with multi dex, this will be faster for local development.
         local {
-            // Setting `minSdkVersion 21` allows the Android gradle plugin to
+            // For multi dex, setting `minSdkVersion 21` allows the Android gradle plugin to
             // pre-DEX each module and produce an APK that can be tested on
             // Android Lollipop without time consuming DEX merging processes.
             minSdkVersion 21
             dexOptions {
                 preDexLibraries true
+                // We only call `MultiDex.install()` for the automation build flavor
+                // so this may not work. However, I don't think the multidex support
+                // library is necessary for 21+, so I expect that it will work.
                 multiDexEnabled true
             }
         }
-        // For local development on older devices.  Use this only if you only
-        // have a pre-API 21 device, or if you want to test API-specific things.
+        // For API < 21 - does not support multi dex because local development
+        // is slow in that case. Most builds will not require multi dex so this
+        // should not be an issue.
         localOld {
         }
         // Automation builds.
         automation {
+            dexOptions {
+                // As of FF48 on beta, the "test", "lint", etc. treeherder jobs fail because they
+                // exceed the method limit. Beta includes Adjust and its GPS dependencies, which
+                // increase the method count & explain the failures. Furthermore, this error only
+                // occurs on debug builds because we don't proguard.
+                //
+                // We enable multidex as an easy, quick-fix with minimal side effects but before we
+                // move to gradle for our production builds, we should re-evaluate this decision
+                // (bug 1286677).
+                multiDexEnabled true
+            }
         }
     }
 
@@ -171,6 +185,8 @@ android {
 }
 
 dependencies {
+    compile 'com.android.support:multidex:1.0.0'
+
     compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
     compile "com.android.support:appcompat-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
     compile "com.android.support:cardview-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"

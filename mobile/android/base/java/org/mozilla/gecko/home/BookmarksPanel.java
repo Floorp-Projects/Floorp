@@ -15,7 +15,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.distribution.PartnerBookmarksProviderClient;
+import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
 import org.mozilla.gecko.home.BookmarksListAdapter.FolderInfo;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.BookmarksListAdapter.RefreshType;
@@ -235,7 +235,7 @@ public class BookmarksPanel extends HomeFragment {
 
             if (GeckoSharedPrefs.forProfile(getContext()).getBoolean(GeckoPreferences.PREFS_READ_PARTNER_BOOKMARKS_PROVIDER, false)
                     && (isRootFolder || mFolderInfo.id <= Bookmarks.FAKE_PARTNER_BOOKMARKS_START)) {
-                partnerCursor = PartnerBookmarksProviderClient.getBookmarksInFolder(contentResolver, mFolderInfo.id);
+                partnerCursor = contentResolver.query(PartnerBookmarksProviderProxy.getUriForBookmarks(getContext(), mFolderInfo.id), null, null, null, null, null);
             }
 
             if (isRootFolder || mFolderInfo.id > Bookmarks.FAKE_PARTNER_BOOKMARKS_START) {

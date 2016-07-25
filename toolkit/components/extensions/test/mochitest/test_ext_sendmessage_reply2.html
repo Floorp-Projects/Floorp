@@ -23,10 +23,10 @@ function backgroundScript(token) {
     }
 
     let tabId = sender.tab.id;
-    browser.tabs.sendMessage(tabId, token + "-tabMessage");
+    browser.tabs.sendMessage(tabId, `${token}-tabMessage`);
 
     browser.test.assertEq(msg, token, "token matches");
-    sendReply(token + "-done");
+    sendReply(`${token}-done`);
   });
 }
 
@@ -34,7 +34,7 @@ function contentScript(token) {
   let gotTabMessage = false;
   let badTabMessage = false;
   browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
-    if (msg == token + "-tabMessage") {
+    if (msg == `${token}-tabMessage`) {
       gotTabMessage = true;
     } else {
       badTabMessage = true;
@@ -42,7 +42,7 @@ function contentScript(token) {
   });
 
   browser.runtime.sendMessage(token, function(resp) {
-    if (resp != token + "-done" || !gotTabMessage || badTabMessage) {
+    if (resp != `${token}-done` || !gotTabMessage || badTabMessage) {
       return; // test failed
     }
     browser.runtime.sendMessage("done");
@@ -72,8 +72,8 @@ function makeExtension() {
 add_task(function* test_contentscript() {
   let extension1 = ExtensionTestUtils.loadExtension(makeExtension());
   let extension2 = ExtensionTestUtils.loadExtension(makeExtension());
+
   yield Promise.all([extension1.startup(), extension2.startup()]);
-  info("extensions loaded");
 
   let win = window.open("file_sample.html");
 

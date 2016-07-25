@@ -913,6 +913,30 @@ function RedirectLoad({ target: browser, data }) {
   }
 }
 
+addEventListener("DOMContentLoaded", function onDCL() {
+  removeEventListener("DOMContentLoaded", onDCL);
+
+  // There are some windows, like macBrowserOverlay.xul, that
+  // load browser.js, but never load tabbrowser.xml. We can ignore
+  // those cases.
+  if (!gBrowser || !gBrowser.updateBrowserRemoteness) {
+    return;
+  }
+
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(nsIWebNavigation)
+        .QueryInterface(Ci.nsIDocShellTreeItem).treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIXULWindow)
+        .XULBrowserWindow = window.XULBrowserWindow;
+  window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
+    new nsBrowserAccess();
+
+  let initBrowser =
+    document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
+  gBrowser.updateBrowserRemoteness(initBrowser, gMultiProcessBrowser);
+});
+
 var gBrowserInit = {
   delayedStartupFinished: false,
 
@@ -943,19 +967,11 @@ var gBrowserInit = {
     mm.loadFrameScript("chrome://browser/content/content-UITour.js", true);
     mm.loadFrameScript("chrome://global/content/manifestMessages.js", true);
 
-    window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
-
     // initialize observers and listeners
     // and give C++ access to gBrowser
     XULBrowserWindow.init();
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(nsIWebNavigation)
-          .QueryInterface(Ci.nsIDocShellTreeItem).treeOwner
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIXULWindow)
-          .XULBrowserWindow = window.XULBrowserWindow;
-    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
-      new nsBrowserAccess();
+
+    window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
 
     if (!gMultiProcessBrowser) {
       // There is a Content:Click message manually sent from content.
@@ -1102,6 +1118,13 @@ var gBrowserInit = {
         // make sure it has a docshell
         gBrowser.docShell;
 
+        // We must set usercontextid before updateBrowserRemoteness()
+        // so that the newly created remote tab child has correct usercontextid
+        if (tabToOpen.hasAttribute("usercontextid")) {
+          let usercontextid = tabToOpen.getAttribute("usercontextid");
+          gBrowser.selectedBrowser.setAttribute("usercontextid", usercontextid);
+        }
+
         // If the browser that we're swapping in was remote, then we'd better
         // be able to support remote browsers, and then make our selectedTab
         // remote.
@@ -1111,14 +1134,12 @@ var gBrowserInit = {
               throw new Error("Cannot drag a remote browser into a window " +
                               "without the remote tabs load context.");
             }
-
-            // We must set usercontextid before updateBrowserRemoteness()
-            // so that the newly created remote tab child has correct usercontextid
-            if (tabToOpen.hasAttribute("usercontextid")) {
-              let usercontextid = tabToOpen.getAttribute("usercontextid");
-              gBrowser.selectedBrowser.setAttribute("usercontextid", usercontextid);
-            }
             gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true);
+          } else if (gBrowser.selectedBrowser.isRemoteBrowser) {
+            // If the browser is remote, then it's implied that
+            // gMultiProcessBrowser is true. We need to flip the remoteness
+            // of this tab to false in order for the tab drag to work.
+            gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, false);
           }
           gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToOpen);
         } catch(e) {
@@ -4197,8 +4218,13 @@ var XULBrowserWindow = {
   forceInitialBrowserRemote: function() {
     let initBrowser =
       document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
-    gBrowser.updateBrowserRemoteness(initBrowser, true);
     return initBrowser.frameLoader.tabParent;
+  },
+
+  forceInitialBrowserNonRemote: function() {
+    let initBrowser =
+      document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
+    gBrowser.updateBrowserRemoteness(initBrowser, false);
   },
 
   setDefaultStatus: function (status) {
@@ -7732,21 +7758,6 @@ XPCOMUtils.defineLazyGetter(ResponsiveUI, "ResponsiveUIManager", function() {
   let tmp = {};
   Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", tmp);
   return tmp.ResponsiveUIManager;
-});
-
-function openEyedropper() {
-  var eyedropper = new this.Eyedropper(this, { context: "menu",
-                                               copyOnSelect: true });
-  eyedropper.open();
-}
-
-Object.defineProperty(this, "Eyedropper", {
-  get: function() {
-    let devtools = Cu.import("resource://devtools/shared/Loader.jsm", {}).devtools;
-    return devtools.require("devtools/client/eyedropper/eyedropper").Eyedropper;
-  },
-  configurable: true,
-  enumerable: true
 });
 
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {

@@ -30,6 +30,8 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 var contentLog = new logging.ContentLogger();
 
 var isB2G = false;
@@ -927,13 +929,83 @@ function pollForReadyState(msg, start, callback) {
  */
 function get(msg) {
   let start = new Date().getTime();
+  let requestedURL = new URL(msg.json.url).toString();
+  let docShell = curContainer.frame
+                             .document
+                             .defaultView
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIWebNavigation)
+                             .QueryInterface(Ci.nsIDocShell);
+  let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebProgress);
+  let sawLoad = false;
+
+  // It's possible that a site we're being sent to will end up redirecting
+  // us before we end up on a page that fires DOMContentLoaded. We can ensure
+  // This loadListener ensures that we don't send a success signal back to
+  // the caller until we've seen the load of the requested URL attempted
+  // on this frame.
+  let loadListener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                           Ci.nsISupportsWeakReference]),
+    onStateChange(webProgress, request, state, status) {
+      if (!(request instanceof Ci.nsIChannel)) {
+        return;
+      }
+
+      let isDocument = state & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+      let isStart = state & Ci.nsIWebProgressListener.STATE_START;
+      let loadedURL = request.URI.spec;
+      // We have to look at the originalURL because for about: pages,
+      // the loadedURL is what the about: page resolves to, and is
+      // not the one that was requested.
+      let originalURL = request.originalURI.spec;
+      let isRequestedURL = loadedURL == requestedURL ||
+                           originalURL == requestedURL;
+
+      if (isDocument && isStart && isRequestedURL) {
+        // We started loading the requested document. This document
+        // might not be the one that ends up firing DOMContentLoaded
+        // (if it, for example, redirects), but because we've started
+        // loading this URL, we know that any future DOMContentLoaded's
+        // are fair game to tell the Marionette client about.
+        sawLoad = true;
+      }
+    },
+
+    onLocationChange() {},
+    onProgressChange() {},
+    onStatusChange() {},
+    onSecurityChange() {},
+  };
+
+  webProgress.addProgressListener(loadListener,
+                                  Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 
   // Prevent DOMContentLoaded events from frames from invoking this
   // code, unless the event is coming from the frame associated with
   // the current window (i.e. someone has used switch_to_frame).
   onDOMContentLoaded = function onDOMContentLoaded(event) {
-    if (!event.originalTarget.defaultView.frameElement ||
-        event.originalTarget.defaultView.frameElement == curContainer.frame.frameElement) {
+    let correctFrame =
+      !event.originalTarget.defaultView.frameElement ||
+      event.originalTarget.defaultView.frameElement == curContainer.frame.frameElement;
+
+    // If the page we're at fired DOMContentLoaded and appears
+    // to be the one we asked to load, then we definitely
+    // saw the load occur. We need this because for error
+    // pages, like about:neterror for unsupported protocols,
+    // we don't end up opening a channel that our
+    // WebProgressListener can monitor.
+    if (curContainer.frame.location == requestedURL) {
+      sawLoad = true;
+    }
+
+    // We also need to make sure that the DOMContentLoaded we saw isn't
+    // for the initial about:blank of a newly created docShell.
+    let loadedNonAboutBlank = docShell.hasLoadedNonBlankURI;
+
+    if (correctFrame && sawLoad && loadedNonAboutBlank) {
+      webProgress.removeProgressListener(loadListener);
       pollForReadyState(msg, start, () => {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
       });
@@ -942,6 +1014,7 @@ function get(msg) {
 
   function timerFunc() {
     removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+    webProgress.removeProgressListener(loadListener);
     sendError(new TimeoutError("Error loading page, timed out (onDOMContentLoaded)"), msg.json.command_id);
   }
   if (msg.json.pageTimeout != null) {
@@ -949,12 +1022,12 @@ function get(msg) {
   }
   addEventListener("DOMContentLoaded", onDOMContentLoaded, false);
   if (isB2G) {
-    curContainer.frame.location = msg.json.url;
+    curContainer.frame.location = requestedURL;
   } else {
     // We need to move to the top frame before navigating
     sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
     curContainer.frame = content;
-    curContainer.frame.location = msg.json.url;
+    curContainer.frame.location = requestedURL;
   }
 }
 

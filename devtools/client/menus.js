@@ -37,7 +37,8 @@ const Services = require("Services");
 const isMac = Services.appinfo.OS === "Darwin";
 
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
-loader.lazyRequireGetter(this, "Eyedropper", "devtools/client/eyedropper/eyedropper", true);
+loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "ResponsiveUIManager", "resource://devtools/client/responsivedesign/responsivedesign.jsm");
@@ -144,9 +145,13 @@ exports.menuitems = [
     l10nKey: "eyedropper",
     oncommand(event) {
       let window = event.target.ownerDocument.defaultView;
-      let eyedropper = new Eyedropper(window, { context: "menu",
-                                                copyOnSelect: true });
-      eyedropper.open();
+      let target = TargetFactory.forTab(window.gBrowser.selectedTab);
+
+      CommandUtils.createRequisition(target, {
+        environment: CommandUtils.createEnvironment({target})
+      }).then(requisition => {
+        requisition.updateExec("eyedropper --frommenu");
+      }, e => console.error(e));
     },
     checkbox: true
   },
