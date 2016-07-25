@@ -29,7 +29,6 @@ public:
   void OnDestroyWindow() override;
   void UpdateTransparency(nsTransparencyMode aMode) override;
   void ClearTransparentWindow() override;
-  void ResizeTransparentWindow(const gfx::IntSize& aSize) override;
   HDC GetTransparentDC() const override;
 
   bool RecvObserveVsync() override;

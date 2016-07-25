@@ -24,7 +24,6 @@ public:
   bool RecvLeavePresentLock() override;
   bool RecvUpdateTransparency(const int32_t& aMode) override;
   bool RecvClearTransparentWindow() override;
-  bool RecvResizeTransparentWindow(const IntSize& aSize) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   nsIWidget* RealWidget() override;
