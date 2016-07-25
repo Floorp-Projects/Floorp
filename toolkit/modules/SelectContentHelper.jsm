@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
                                   "resource://gre/modules/DeferredTask.jsm");
 
+const kStateActive = 0x00000001; // NS_EVENT_STATE_ACTIVE
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
 // A process global state for whether or not content thinks
@@ -137,6 +138,9 @@ this.SelectContentHelper.prototype = {
               cancelable: true,
             });
             this.element.dispatchEvent(mouseEvent);
+            if (eventName == "mouseup") {
+              DOMUtils.removeContentState(this.element, kStateActive);
+            }
           }
         }
 
