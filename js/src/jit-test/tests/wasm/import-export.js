@@ -267,6 +267,7 @@ assertEq(tbl, e.bar);
 // Non-existent export errors
 
 assertErrorMessage(() => new Module(textToBinary('(module (export "a" 0))')), TypeError, /exported function index out of bounds/);
+assertErrorMessage(() => new Module(textToBinary('(module (export "a" global 0))')), TypeError, /exported global index out of bounds/);
 assertErrorMessage(() => new Module(textToBinary('(module (export "a" memory))')), TypeError, /exported memory index out of bounds/);
 assertErrorMessage(() => new Module(textToBinary('(module (export "a" table))')), TypeError, /exported table index out of bounds/);
 
