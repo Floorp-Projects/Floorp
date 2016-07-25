@@ -726,6 +726,13 @@ class LNode
     virtual bool isCall() const {
         return false;
     }
+
+    // Does this call preserve the given register?
+    // By default, it is assumed that all registers are clobbered by a call.
+    virtual bool isCallPreserved(AnyRegister reg) const {
+        return false;
+    }
+
     uint32_t id() const {
         return id_;
     }

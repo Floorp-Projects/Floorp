@@ -13531,9 +13531,14 @@ class MAsmJSCall final
     Callee callee_;
     FixedList<AnyRegister> argRegs_;
     size_t spIncrement_;
+    bool preservesTlsReg_;
 
-    MAsmJSCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement)
-     : desc_(desc), callee_(callee), spIncrement_(spIncrement)
+    MAsmJSCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement,
+               bool preservesTlsReg)
+      : desc_(desc)
+      , callee_(callee)
+      , spIncrement_(spIncrement)
+      , preservesTlsReg_(preservesTlsReg)
     { }
 
   public:
@@ -13547,7 +13552,8 @@ class MAsmJSCall final
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
     static MAsmJSCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-                           const Args& args, MIRType resultType, size_t spIncrement);
+                           const Args& args, MIRType resultType, size_t spIncrement,
+                           bool preservesTlsReg);
 
     size_t numArgs() const {
         return argRegs_.length();
@@ -13569,6 +13575,11 @@ class MAsmJSCall final
     }
     size_t spIncrement() const {
         return spIncrement_;
+    }
+
+    // Does this call preserve the value of the TLS pointer register?
+    bool preservesTlsReg() const {
+        return preservesTlsReg_;
     }
 
     bool possiblyCalls() const override {
