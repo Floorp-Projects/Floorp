@@ -23,6 +23,15 @@
 #include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/services/linux_syscalls.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#include "nsICrashReporter.h"
+#define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
+#include "nsIPrefService.h"
+#include "nsIMemoryInfoDumper.h"
+#endif
+
+
 // A note about assertions: in general, the worst thing this module
 // should be able to do is disable sandboxing features, so release
 // asserts or MOZ_CRASH should be avoided, even for seeming
@@ -271,6 +280,16 @@ SandboxInfo::SubmitTelemetry()
                         sandboxInfo.Test(SandboxInfo::kEnabledForContent));
   Telemetry::Accumulate(Telemetry::SANDBOX_MEDIA_ENABLED,
                         sandboxInfo.Test(SandboxInfo::kEnabledForMedia));
+}
+
+void
+SandboxInfo::AnnotateCrashReport() const
+{
+  nsAutoCString flagsString;
+  flagsString.AppendInt(mFlags);
+
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
 }
 
 } // namespace mozilla
