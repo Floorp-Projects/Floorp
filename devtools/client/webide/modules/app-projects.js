@@ -5,7 +5,7 @@
 const {Cc, Ci, Cu, Cr} = require("chrome");
 const promise = require("promise");
 
-const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
+const EventEmitter = require("devtools/shared/event-emitter");
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {indexedDB} = require("sdk/indexed-db");

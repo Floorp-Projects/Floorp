@@ -54,6 +54,8 @@ def GCC_BASE(version):
         '__GNUC_MINOR__': version.minor,
         '__GNUC_PATCHLEVEL__': version.patch,
         '__STDC__': 1,
+        '__ORDER_LITTLE_ENDIAN__': 1234,
+        '__ORDER_BIG_ENDIAN__': 4321,
     })
 
 
@@ -73,6 +75,60 @@ GCC_4_9 = GCC('4.9.3')
 GXX_4_9 = GXX('4.9.3')
 GCC_5 = GCC('5.2.1') + DEFAULT_C11
 GXX_5 = GXX('5.2.1')
+
+GCC_PLATFORM_LITTLE_ENDIAN = {
+    '__BYTE_ORDER__': 1234,
+}
+
+GCC_PLATFORM_BIG_ENDIAN = {
+    '__BYTE_ORDER__': 4321,
+}
+
+GCC_PLATFORM_X86 = FakeCompiler(GCC_PLATFORM_LITTLE_ENDIAN) + {
+    None: {
+        '__i386__': 1,
+    },
+    '-m64': {
+        '__i386__': False,
+        '__x86_64__': 1,
+    },
+}
+
+GCC_PLATFORM_X86_64 = FakeCompiler(GCC_PLATFORM_LITTLE_ENDIAN) + {
+    None: {
+        '__x86_64__': 1,
+    },
+    '-m32': {
+        '__x86_64__': False,
+        '__i386__': 1,
+    },
+}
+
+GCC_PLATFORM_ARM = FakeCompiler(GCC_PLATFORM_LITTLE_ENDIAN) + {
+    '__arm__': 1,
+}
+
+GCC_PLATFORM_LINUX = {
+    '__linux__': 1,
+}
+
+GCC_PLATFORM_DARWIN = {
+    '__APPLE__': 1,
+}
+
+GCC_PLATFORM_WIN = {
+    '_WIN32': 1,
+}
+
+GCC_PLATFORM_X86_LINUX = FakeCompiler(GCC_PLATFORM_X86, GCC_PLATFORM_LINUX)
+GCC_PLATFORM_X86_64_LINUX = FakeCompiler(GCC_PLATFORM_X86_64,
+                                         GCC_PLATFORM_LINUX)
+GCC_PLATFORM_ARM_LINUX = FakeCompiler(GCC_PLATFORM_ARM, GCC_PLATFORM_LINUX)
+GCC_PLATFORM_X86_OSX = FakeCompiler(GCC_PLATFORM_X86, GCC_PLATFORM_DARWIN)
+GCC_PLATFORM_X86_64_OSX = FakeCompiler(GCC_PLATFORM_X86_64,
+                                       GCC_PLATFORM_DARWIN)
+GCC_PLATFORM_X86_WIN = FakeCompiler(GCC_PLATFORM_X86, GCC_PLATFORM_WIN)
+GCC_PLATFORM_X86_64_WIN = FakeCompiler(GCC_PLATFORM_X86_64, GCC_PLATFORM_WIN)
 
 
 @memoize
@@ -107,6 +163,29 @@ CLANGXX_3_6 = CLANGXX('3.6.2') + {
 }
 
 
+def CLANG_PLATFORM(gcc_platform):
+    base = {
+        '--target=x86_64-linux-gnu': GCC_PLATFORM_X86_64_LINUX[None],
+        '--target=x86_64-darwin11.2.0': GCC_PLATFORM_X86_64_OSX[None],
+        '--target=i686-linux-gnu': GCC_PLATFORM_X86_LINUX[None],
+        '--target=i686-darwin11.2.0': GCC_PLATFORM_X86_OSX[None],
+        '--target=arm-linux-gnu': GCC_PLATFORM_ARM_LINUX[None],
+    }
+    undo_gcc_platform = {
+        k: {symbol: False for symbol in gcc_platform[None]}
+        for k in base
+    }
+    return FakeCompiler(gcc_platform, undo_gcc_platform, base)
+
+
+CLANG_PLATFORM_X86_LINUX = CLANG_PLATFORM(GCC_PLATFORM_X86_LINUX)
+CLANG_PLATFORM_X86_64_LINUX = CLANG_PLATFORM(GCC_PLATFORM_X86_64_LINUX)
+CLANG_PLATFORM_X86_OSX = CLANG_PLATFORM(GCC_PLATFORM_X86_OSX)
+CLANG_PLATFORM_X86_64_OSX = CLANG_PLATFORM(GCC_PLATFORM_X86_64_OSX)
+CLANG_PLATFORM_X86_WIN = CLANG_PLATFORM(GCC_PLATFORM_X86_WIN)
+CLANG_PLATFORM_X86_64_WIN = CLANG_PLATFORM(GCC_PLATFORM_X86_64_WIN)
+
+
 @memoize
 def VS(version):
     version = Version(version)
@@ -126,6 +205,17 @@ VS_2015 = VS('19.00.23026')
 VS_2015u1 = VS('19.00.23506')
 VS_2015u2 = VS('19.00.23918')
 
+VS_PLATFORM_X86 = {
+    '_M_IX86': 600,
+    '_WIN32': 1,
+}
+
+VS_PLATFORM_X86_64 = {
+    '_M_X64': 100,
+    '_WIN32': 1,
+    '_WIN64': 1,
+}
+
 # Note: In reality, the -std=gnu* options are only supported when preceded by
 # -Xclang.
 CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
@@ -136,6 +226,9 @@ CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
     },
     '-fms-compatibility-version=18.00.30723': VS('18.00.30723')[None],
 }
+
+CLANG_CL_PLATFORM_X86 = FakeCompiler(VS_PLATFORM_X86, GCC_PLATFORM_X86[None])
+CLANG_CL_PLATFORM_X86_64 = FakeCompiler(VS_PLATFORM_X86_64, GCC_PLATFORM_X86_64[None])
 
 
 class BaseToolchainTest(BaseConfigureTest):
@@ -197,18 +290,18 @@ class BaseToolchainTest(BaseConfigureTest):
 
 class LinuxToolchainTest(BaseToolchainTest):
     PATHS = {
-        '/usr/bin/gcc': GCC_4_9,
-        '/usr/bin/g++': GXX_4_9,
-        '/usr/bin/gcc-4.7': GCC_4_7,
-        '/usr/bin/g++-4.7': GXX_4_7,
-        '/usr/bin/gcc-5': GCC_5,
-        '/usr/bin/g++-5': GXX_5,
-        '/usr/bin/clang': CLANG_3_6,
-        '/usr/bin/clang++': CLANGXX_3_6,
-        '/usr/bin/clang-3.6': CLANG_3_6,
-        '/usr/bin/clang++-3.6': CLANGXX_3_6,
-        '/usr/bin/clang-3.3': CLANG_3_3,
-        '/usr/bin/clang++-3.3': CLANGXX_3_3,
+        '/usr/bin/gcc': GCC_4_9 + GCC_PLATFORM_X86_64_LINUX,
+        '/usr/bin/g++': GXX_4_9 + GCC_PLATFORM_X86_64_LINUX,
+        '/usr/bin/gcc-4.7': GCC_4_7 + GCC_PLATFORM_X86_64_LINUX,
+        '/usr/bin/g++-4.7': GXX_4_7 + GCC_PLATFORM_X86_64_LINUX,
+        '/usr/bin/gcc-5': GCC_5 + GCC_PLATFORM_X86_64_LINUX,
+        '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_64_LINUX,
+        '/usr/bin/clang': CLANG_3_6 + CLANG_PLATFORM_X86_64_LINUX,
+        '/usr/bin/clang++': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_LINUX,
+        '/usr/bin/clang-3.6': CLANG_3_6 + CLANG_PLATFORM_X86_64_LINUX,
+        '/usr/bin/clang++-3.6': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_LINUX,
+        '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_LINUX,
+        '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_LINUX,
     }
     GCC_4_7_RESULT = ('Only GCC 4.8 or newer is supported '
                       '(found version 4.7.3).')
@@ -406,8 +499,8 @@ class LinuxToolchainTest(BaseToolchainTest):
     def test_absolute_path(self):
         paths = dict(self.PATHS)
         paths.update({
-            '/opt/clang/bin/clang': CLANG_3_6,
-            '/opt/clang/bin/clang++': CLANGXX_3_6,
+            '/opt/clang/bin/clang': paths['/usr/bin/clang'],
+            '/opt/clang/bin/clang++': paths['/usr/bin/clang++'],
         })
         result = {
             'c_compiler': self.CLANG_3_6_RESULT + {
@@ -429,8 +522,8 @@ class LinuxToolchainTest(BaseToolchainTest):
     def test_atypical_name(self):
         paths = dict(self.PATHS)
         paths.update({
-            '/usr/bin/afl-clang-fast': CLANG_3_6,
-            '/usr/bin/afl-clang-fast++': CLANGXX_3_6,
+            '/usr/bin/afl-clang-fast': paths['/usr/bin/clang'],
+            '/usr/bin/afl-clang-fast++': paths['/usr/bin/clang++'],
         })
         self.do_toolchain_test(paths, {
             'c_compiler': self.CLANG_3_6_RESULT + {
@@ -467,9 +560,98 @@ class LinuxToolchainTest(BaseToolchainTest):
         })
 
 
+class LinuxSimpleCrossToolchainTest(BaseToolchainTest):
+    TARGET = 'i686-pc-linux-gnu'
+    PATHS = LinuxToolchainTest.PATHS
+    GCC_4_9_RESULT = LinuxToolchainTest.GCC_4_9_RESULT
+    GXX_4_9_RESULT = LinuxToolchainTest.GXX_4_9_RESULT
+    CLANG_3_6_RESULT = LinuxToolchainTest.CLANG_3_6_RESULT
+    CLANGXX_3_6_RESULT = LinuxToolchainTest.CLANGXX_3_6_RESULT
+
+    def test_cross_gcc(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.GCC_4_9_RESULT + {
+                'flags': ['-m32']
+            },
+            'cxx_compiler': self.GXX_4_9_RESULT + {
+                'flags': ['-m32']
+            },
+            'host_c_compiler': self.GCC_4_9_RESULT,
+            'host_cxx_compiler': self.GXX_4_9_RESULT,
+        })
+
+    def test_cross_clang(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.CLANG_3_6_RESULT + {
+                'flags': ['--target=i686-linux-gnu'],
+            },
+            'cxx_compiler': self.CLANGXX_3_6_RESULT + {
+                'flags': ['--target=i686-linux-gnu'],
+            },
+            'host_c_compiler': self.CLANG_3_6_RESULT,
+            'host_cxx_compiler': self.CLANGXX_3_6_RESULT,
+        }, environ={
+            'CC': 'clang',
+        })
+
+
+class LinuxX86_64CrossToolchainTest(BaseToolchainTest):
+    HOST = 'i686-pc-linux-gnu'
+    TARGET = 'x86_64-pc-linux-gnu'
+    PATHS = {
+        '/usr/bin/gcc': GCC_4_9 + GCC_PLATFORM_X86_LINUX,
+        '/usr/bin/g++': GXX_4_9 + GCC_PLATFORM_X86_LINUX,
+        '/usr/bin/clang': CLANG_3_6 + CLANG_PLATFORM_X86_LINUX,
+        '/usr/bin/clang++': CLANGXX_3_6 + CLANG_PLATFORM_X86_LINUX,
+    }
+    GCC_4_9_RESULT = LinuxToolchainTest.GCC_4_9_RESULT
+    GXX_4_9_RESULT = LinuxToolchainTest.GXX_4_9_RESULT
+    CLANG_3_6_RESULT = LinuxToolchainTest.CLANG_3_6_RESULT
+    CLANGXX_3_6_RESULT = LinuxToolchainTest.CLANGXX_3_6_RESULT
+
+    def test_cross_gcc(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.GCC_4_9_RESULT + {
+                'flags': ['-m64']
+            },
+            'cxx_compiler': self.GXX_4_9_RESULT + {
+                'flags': ['-m64']
+            },
+            'host_c_compiler': self.GCC_4_9_RESULT,
+            'host_cxx_compiler': self.GXX_4_9_RESULT,
+        })
+
+    def test_cross_clang(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.CLANG_3_6_RESULT + {
+                'flags': ['--target=x86_64-linux-gnu'],
+            },
+            'cxx_compiler': self.CLANGXX_3_6_RESULT + {
+                'flags': ['--target=x86_64-linux-gnu'],
+            },
+            'host_c_compiler': self.CLANG_3_6_RESULT,
+            'host_cxx_compiler': self.CLANGXX_3_6_RESULT,
+        }, environ={
+            'CC': 'clang',
+        })
+
+
 class OSXToolchainTest(BaseToolchainTest):
     HOST = 'x86_64-apple-darwin11.2.0'
-    PATHS = LinuxToolchainTest.PATHS
+    PATHS = {
+        '/usr/bin/gcc': GCC_4_9 + GCC_PLATFORM_X86_64_OSX,
+        '/usr/bin/g++': GXX_4_9 + GCC_PLATFORM_X86_64_OSX,
+        '/usr/bin/gcc-4.7': GCC_4_7 + GCC_PLATFORM_X86_64_OSX,
+        '/usr/bin/g++-4.7': GXX_4_7 + GCC_PLATFORM_X86_64_OSX,
+        '/usr/bin/gcc-5': GCC_5 + GCC_PLATFORM_X86_64_OSX,
+        '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang': CLANG_3_6 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang++': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang-3.6': CLANG_3_6 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang++-3.6': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_OSX,
+    }
     CLANG_3_3_RESULT = LinuxToolchainTest.CLANG_3_3_RESULT
     CLANGXX_3_3_RESULT = LinuxToolchainTest.CLANGXX_3_3_RESULT
     CLANG_3_6_RESULT = LinuxToolchainTest.CLANG_3_6_RESULT
@@ -530,14 +712,25 @@ class WindowsToolchainTest(BaseToolchainTest):
     # For the purpose of this test, it doesn't matter that the paths are not
     # real Windows paths.
     PATHS = {
-        '/opt/VS_2013u2/bin/cl': VS_2013u2,
-        '/opt/VS_2013u3/bin/cl': VS_2013u3,
-        '/opt/VS_2015/bin/cl': VS_2015,
-        '/opt/VS_2015u1/bin/cl': VS_2015u1,
-        '/usr/bin/cl': VS_2015u2,
-        '/usr/bin/clang-cl': CLANG_CL_3_9,
+        '/opt/VS_2013u2/bin/cl': VS_2013u2 + VS_PLATFORM_X86,
+        '/opt/VS_2013u3/bin/cl': VS_2013u3 + VS_PLATFORM_X86,
+        '/opt/VS_2015/bin/cl': VS_2015 + VS_PLATFORM_X86,
+        '/opt/VS_2015u1/bin/cl': VS_2015u1 + VS_PLATFORM_X86,
+        '/usr/bin/cl': VS_2015u2 + VS_PLATFORM_X86,
+        '/usr/bin/clang-cl': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86,
+        '/usr/bin/gcc': GCC_4_9 + GCC_PLATFORM_X86_WIN,
+        '/usr/bin/g++': GXX_4_9 + GCC_PLATFORM_X86_WIN,
+        '/usr/bin/gcc-4.7': GCC_4_7 + GCC_PLATFORM_X86_WIN,
+        '/usr/bin/g++-4.7': GXX_4_7 + GCC_PLATFORM_X86_WIN,
+        '/usr/bin/gcc-5': GCC_5 + GCC_PLATFORM_X86_WIN,
+        '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_WIN,
+        '/usr/bin/clang': CLANG_3_6 + CLANG_PLATFORM_X86_WIN,
+        '/usr/bin/clang++': CLANGXX_3_6 + CLANG_PLATFORM_X86_WIN,
+        '/usr/bin/clang-3.6': CLANG_3_6 + CLANG_PLATFORM_X86_WIN,
+        '/usr/bin/clang++-3.6': CLANGXX_3_6 + CLANG_PLATFORM_X86_WIN,
+        '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_WIN,
+        '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_WIN,
     }
-    PATHS.update(LinuxToolchainTest.PATHS)
 
     VS_2013u2_RESULT = (
         'This version (18.00.30501) of the MSVC compiler is not supported.\n'
@@ -667,16 +860,61 @@ class WindowsToolchainTest(BaseToolchainTest):
             'CXX': 'clang++-3.3',
         })
 
+    def test_cannot_cross(self):
+        paths = {
+            '/usr/bin/cl': VS_2015u2 + VS_PLATFORM_X86_64,
+        }
+        self.do_toolchain_test(paths, {
+            'c_compiler': ('Target C compiler target CPU (x86_64) '
+                           'does not match --target CPU (i686)'),
+        })
 
-class CrossCompileToolchainTest(BaseToolchainTest):
+
+class Windows64ToolchainTest(WindowsToolchainTest):
+    HOST = 'x86_64-pc-mingw32'
+
+    # For the purpose of this test, it doesn't matter that the paths are not
+    # real Windows paths.
+    PATHS = {
+        '/opt/VS_2013u2/bin/cl': VS_2013u2 + VS_PLATFORM_X86_64,
+        '/opt/VS_2013u3/bin/cl': VS_2013u3 + VS_PLATFORM_X86_64,
+        '/opt/VS_2015/bin/cl': VS_2015 + VS_PLATFORM_X86_64,
+        '/opt/VS_2015u1/bin/cl': VS_2015u1 + VS_PLATFORM_X86_64,
+        '/usr/bin/cl': VS_2015u2 + VS_PLATFORM_X86_64,
+        '/usr/bin/clang-cl': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86_64,
+        '/usr/bin/gcc': GCC_4_9 + GCC_PLATFORM_X86_64_WIN,
+        '/usr/bin/g++': GXX_4_9 + GCC_PLATFORM_X86_64_WIN,
+        '/usr/bin/gcc-4.7': GCC_4_7 + GCC_PLATFORM_X86_64_WIN,
+        '/usr/bin/g++-4.7': GXX_4_7 + GCC_PLATFORM_X86_64_WIN,
+        '/usr/bin/gcc-5': GCC_5 + GCC_PLATFORM_X86_64_WIN,
+        '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_64_WIN,
+        '/usr/bin/clang': CLANG_3_6 + CLANG_PLATFORM_X86_64_WIN,
+        '/usr/bin/clang++': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_WIN,
+        '/usr/bin/clang-3.6': CLANG_3_6 + CLANG_PLATFORM_X86_64_WIN,
+        '/usr/bin/clang++-3.6': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_WIN,
+        '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_WIN,
+        '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_WIN,
+    }
+
+    def test_cannot_cross(self):
+        paths = {
+            '/usr/bin/cl': VS_2015u2 + VS_PLATFORM_X86,
+        }
+        self.do_toolchain_test(paths, {
+            'c_compiler': ('Target C compiler target CPU (x86) '
+                           'does not match --target CPU (x86_64)'),
+        })
+
+
+class LinuxCrossCompileToolchainTest(BaseToolchainTest):
     TARGET = 'arm-unknown-linux-gnu'
     PATHS = {
-        '/usr/bin/arm-linux-gnu-gcc': GCC_4_9,
-        '/usr/bin/arm-linux-gnu-g++': GXX_4_9,
-        '/usr/bin/arm-linux-gnu-gcc-4.7': GCC_4_7,
-        '/usr/bin/arm-linux-gnu-g++-4.7': GXX_4_7,
-        '/usr/bin/arm-linux-gnu-gcc-5': GCC_5,
-        '/usr/bin/arm-linux-gnu-g++-5': GXX_5,
+        '/usr/bin/arm-linux-gnu-gcc': GCC_4_9 + GCC_PLATFORM_ARM_LINUX,
+        '/usr/bin/arm-linux-gnu-g++': GXX_4_9 + GCC_PLATFORM_ARM_LINUX,
+        '/usr/bin/arm-linux-gnu-gcc-4.7': GCC_4_7 + GCC_PLATFORM_ARM_LINUX,
+        '/usr/bin/arm-linux-gnu-g++-4.7': GXX_4_7 + GCC_PLATFORM_ARM_LINUX,
+        '/usr/bin/arm-linux-gnu-gcc-5': GCC_5 + GCC_PLATFORM_ARM_LINUX,
+        '/usr/bin/arm-linux-gnu-g++-5': GXX_5 + GCC_PLATFORM_ARM_LINUX,
     }
     PATHS.update(LinuxToolchainTest.PATHS)
     ARM_GCC_4_7_RESULT = LinuxToolchainTest.GXX_4_7_RESULT
@@ -691,17 +929,170 @@ class CrossCompileToolchainTest(BaseToolchainTest):
     GCC_4_9_RESULT = LinuxToolchainTest.GCC_4_9_RESULT
     GXX_4_9_RESULT = LinuxToolchainTest.GXX_4_9_RESULT
 
-    def test_cross_gcc(self):
-        self.do_toolchain_test(self.PATHS, {
+    little_endian = FakeCompiler(GCC_PLATFORM_LINUX,
+                                 GCC_PLATFORM_LITTLE_ENDIAN)
+    big_endian = FakeCompiler(GCC_PLATFORM_LINUX, GCC_PLATFORM_BIG_ENDIAN)
+
+    PLATFORMS = {
+        'i686-pc-linux-gnu': GCC_PLATFORM_X86_LINUX,
+        'x86_64-pc-linux-gnu': GCC_PLATFORM_X86_64_LINUX,
+        'arm-unknown-linux-gnu': GCC_PLATFORM_ARM_LINUX,
+        'aarch64-unknown-linux-gnu': little_endian + {
+            '__aarch64__': 1,
+        },
+        'ia64-unknown-linux-gnu': little_endian + {
+            '__ia64__': 1,
+        },
+        's390x-unknown-linux-gnu': big_endian + {
+            '__s390x__': 1,
+            '__s390__': 1,
+        },
+        's390-unknown-linux-gnu': big_endian + {
+            '__s390__': 1,
+        },
+        'powerpc64-unknown-linux-gnu': big_endian + {
+            None: {
+                '__powerpc64__': 1,
+                '__powerpc__': 1,
+            },
+            '-m32': {
+                '__powerpc64__': False,
+            },
+        },
+        'powerpc-unknown-linux-gnu': big_endian + {
+            None: {
+                '__powerpc__': 1,
+            },
+            '-m64': {
+                '__powerpc64__': 1,
+            },
+        },
+        'alpha-unknown-linux-gnu': little_endian + {
+            '__alpha__': 1,
+        },
+        'hppa-unknown-linux-gnu': big_endian + {
+            '__hppa__': 1,
+        },
+        'sparc64-unknown-linux-gnu': big_endian + {
+            None: {
+                '__arch64__': 1,
+                '__sparc__': 1,
+            },
+            '-m32': {
+                '__arch64__': False,
+            },
+        },
+        'sparc-unknown-linux-gnu': big_endian + {
+            None: {
+                '__sparc__': 1,
+            },
+            '-m64': {
+                '__arch64__': 1,
+            },
+        },
+        'mips64-unknown-linux-gnuabi64': big_endian + {
+            '__mips64': 1,
+            '__mips__': 1,
+        },
+        'mips-unknown-linux-gnu': big_endian + {
+            '__mips__': 1,
+        },
+    }
+
+    PLATFORMS['powerpc64le-unknown-linux-gnu'] = \
+        PLATFORMS['powerpc64-unknown-linux-gnu'] + GCC_PLATFORM_LITTLE_ENDIAN
+    PLATFORMS['mips64el-unknown-linux-gnuabi64'] = \
+        PLATFORMS['mips64-unknown-linux-gnuabi64'] + GCC_PLATFORM_LITTLE_ENDIAN
+    PLATFORMS['mipsel-unknown-linux-gnu'] = \
+        PLATFORMS['mips-unknown-linux-gnu'] + GCC_PLATFORM_LITTLE_ENDIAN
+
+    def do_test_cross_gcc_32_64(self, host, target):
+        self.HOST = host
+        self.TARGET = target
+        paths = {
+            '/usr/bin/gcc': GCC_4_9 + self.PLATFORMS[host],
+            '/usr/bin/g++': GXX_4_9 + self.PLATFORMS[host],
+        }
+        cross_flags = {
+            'flags': ['-m64' if '64' in target else '-m32']
+        }
+        self.do_toolchain_test(paths, {
+            'c_compiler': self.GCC_4_9_RESULT + cross_flags,
+            'cxx_compiler': self.GXX_4_9_RESULT + cross_flags,
+            'host_c_compiler': self.GCC_4_9_RESULT,
+            'host_cxx_compiler': self.GXX_4_9_RESULT,
+        })
+        self.HOST = LinuxCrossCompileToolchainTest.HOST
+        self.TARGET = LinuxCrossCompileToolchainTest.TARGET
+
+    def test_cross_x86_x64(self):
+        self.do_test_cross_gcc_32_64(
+            'i686-pc-linux-gnu', 'x86_64-pc-linux-gnu')
+        self.do_test_cross_gcc_32_64(
+            'x86_64-pc-linux-gnu', 'i686-pc-linux-gnu')
+
+    def test_cross_sparc_sparc64(self):
+        self.do_test_cross_gcc_32_64(
+            'sparc-unknown-linux-gnu', 'sparc64-unknown-linux-gnu')
+        self.do_test_cross_gcc_32_64(
+            'sparc64-unknown-linux-gnu', 'sparc-unknown-linux-gnu')
+
+    def test_cross_ppc_ppc64(self):
+        self.do_test_cross_gcc_32_64(
+            'powerpc-unknown-linux-gnu', 'powerpc64-unknown-linux-gnu')
+        self.do_test_cross_gcc_32_64(
+            'powerpc64-unknown-linux-gnu', 'powerpc-unknown-linux-gnu')
+
+    def do_test_cross_gcc(self, host, target):
+        self.HOST = host
+        self.TARGET = target
+        host_cpu = host.split('-')[0]
+        cpu, manufacturer, os = target.split('-', 2)
+        toolchain_prefix = '/usr/bin/%s-%s' % (cpu, os)
+        paths = {
+            '/usr/bin/gcc': GCC_4_9 + self.PLATFORMS[host],
+            '/usr/bin/g++': GXX_4_9 + self.PLATFORMS[host],
+        }
+        self.do_toolchain_test(paths, {
+            'c_compiler': ('Target C compiler target CPU (%s) '
+                           'does not match --target CPU (%s)'
+                           % (host_cpu, cpu)),
+        })
+
+        paths.update({
+            '%s-gcc' % toolchain_prefix: GCC_4_9 + self.PLATFORMS[target],
+            '%s-g++' % toolchain_prefix: GXX_4_9 + self.PLATFORMS[target],
+        })
+        self.do_toolchain_test(paths, {
             'c_compiler': self.GCC_4_9_RESULT + {
-                'compiler': '/usr/bin/arm-linux-gnu-gcc',
+                'compiler': '%s-gcc' % toolchain_prefix,
             },
             'cxx_compiler': self.GXX_4_9_RESULT + {
-                'compiler': '/usr/bin/arm-linux-gnu-g++',
+                'compiler': '%s-g++' % toolchain_prefix,
             },
             'host_c_compiler': self.GCC_4_9_RESULT,
             'host_cxx_compiler': self.GXX_4_9_RESULT,
         })
+        self.HOST = LinuxCrossCompileToolchainTest.HOST
+        self.TARGET = LinuxCrossCompileToolchainTest.TARGET
+
+    def test_cross_gcc_misc(self):
+        for target in self.PLATFORMS:
+            if not target.endswith('-pc-linux-gnu'):
+                self.do_test_cross_gcc('x86_64-pc-linux-gnu', target)
+
+    def test_cannot_cross(self):
+        self.TARGET = 'mipsel-unknown-linux-gnu'
+
+        paths = {
+            '/usr/bin/gcc': GCC_4_9 + self.PLATFORMS['mips-unknown-linux-gnu'],
+            '/usr/bin/g++': GXX_4_9 + self.PLATFORMS['mips-unknown-linux-gnu'],
+        }
+        self.do_toolchain_test(paths, {
+            'c_compiler': ('Target C compiler target endianness (big) '
+                           'does not match --target endianness (little)'),
+        })
+        self.TARGET = LinuxCrossCompileToolchainTest.TARGET
 
     def test_overridden_cross_gcc(self):
         self.do_toolchain_test(self.PATHS, {
@@ -752,6 +1143,87 @@ class CrossCompileToolchainTest(BaseToolchainTest):
             'CC': 'arm-linux-gnu-gcc-5',
             'CXX': 'arm-linux-gnu-g++-5',
             'HOST_CC': 'clang',
+        })
+
+    def test_cross_clang(self):
+        cross_clang_result = self.CLANG_3_6_RESULT + {
+            'flags': ['--target=arm-linux-gnu'],
+        }
+        cross_clangxx_result = self.CLANGXX_3_6_RESULT + {
+            'flags': ['--target=arm-linux-gnu'],
+        }
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': cross_clang_result,
+            'cxx_compiler': cross_clangxx_result,
+            'host_c_compiler': self.CLANG_3_6_RESULT,
+            'host_cxx_compiler': self.CLANGXX_3_6_RESULT,
+        }, environ={
+            'CC': 'clang',
+            'HOST_CC': 'clang',
+        })
+
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': cross_clang_result,
+            'cxx_compiler': cross_clangxx_result,
+            'host_c_compiler': self.CLANG_3_6_RESULT,
+            'host_cxx_compiler': self.CLANGXX_3_6_RESULT,
+        }, environ={
+            'CC': 'clang',
+        })
+
+    def test_cross_atypical_clang(self):
+        paths = dict(self.PATHS)
+        paths.update({
+            '/usr/bin/afl-clang-fast': paths['/usr/bin/clang'],
+            '/usr/bin/afl-clang-fast++': paths['/usr/bin/clang++'],
+        })
+        afl_clang_result = self.CLANG_3_6_RESULT + {
+            'compiler': '/usr/bin/afl-clang-fast',
+        }
+        afl_clangxx_result = self.CLANGXX_3_6_RESULT + {
+            'compiler': '/usr/bin/afl-clang-fast++',
+        }
+        self.do_toolchain_test(paths, {
+            'c_compiler': afl_clang_result + {
+                'flags': ['--target=arm-linux-gnu'],
+            },
+            'cxx_compiler': afl_clangxx_result + {
+                'flags': ['--target=arm-linux-gnu'],
+            },
+            'host_c_compiler': afl_clang_result,
+            'host_cxx_compiler': afl_clangxx_result,
+        }, environ={
+            'CC': 'afl-clang-fast',
+            'CXX': 'afl-clang-fast++',
+        })
+
+
+class OSXCrossToolchainTest(BaseToolchainTest):
+    TARGET = 'i686-apple-darwin11.2.0'
+    PATHS = LinuxToolchainTest.PATHS
+    CLANG_3_6_RESULT = LinuxToolchainTest.CLANG_3_6_RESULT
+    CLANGXX_3_6_RESULT = LinuxToolchainTest.CLANGXX_3_6_RESULT
+
+    def test_osx_cross(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.CLANG_3_6_RESULT + {
+                'flags': ['--target=i686-darwin11.2.0'],
+            },
+            'cxx_compiler': self.CLANGXX_3_6_RESULT + {
+                'flags': ['--target=i686-darwin11.2.0'],
+            },
+            'host_c_compiler': self.CLANG_3_6_RESULT,
+            'host_cxx_compiler': self.CLANGXX_3_6_RESULT,
+        }, environ={
+            'CC': 'clang',
+        })
+
+    def test_cannot_osx_cross(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': 'Target C compiler target kernel (Linux) does not '
+                          'match --target kernel (Darwin)',
+        }, environ={
+            'CC': 'gcc',
         })
 
 

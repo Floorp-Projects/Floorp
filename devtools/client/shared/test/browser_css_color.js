@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URI = "data:text/html;charset=utf-8,browser_css_color.js";
-var {colorUtils} = require("devtools/client/shared/css-color");
+var {colorUtils} = require("devtools/shared/css-color");
 var origColorUnit;
 
 add_task(function* () {

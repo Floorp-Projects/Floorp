@@ -14,12 +14,11 @@
 <script type="text/javascript;version=1.8">
 window.onload = Task.async(function* () {
   const {
-    SEVERITY_CLASS_FRAGMENTS,
     SEVERITY_ERROR,
   } = require("devtools/client/webconsole/new-console-output/constants");
   const { MessageIcon } = require("devtools/client/webconsole/new-console-output/components/message-icon");
 
-  let severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_ERROR];
+  let severity = SEVERITY_ERROR;
   const iconRendered = renderComponent(MessageIcon, { severity });
   ok(iconRendered.classList.contains("icon"), "MessageIcon has expected class");
   is(iconRendered.getAttribute("title"), "Error",

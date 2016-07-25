@@ -16,7 +16,6 @@ const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
-loader.lazyImporter(this, "EventEmitter", "resource://devtools/shared/event-emitter.js");
 
 loader.lazyGetter(this, "prefBranch", function () {
   return Services.prefs.getBranch(null)
@@ -32,6 +31,7 @@ loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/shared/webcon
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants", true);
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 /**
  * A collection of utilities to help working with commands

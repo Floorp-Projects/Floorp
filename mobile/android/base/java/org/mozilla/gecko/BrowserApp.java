@@ -766,6 +766,10 @@ public class BrowserApp extends GeckoApp
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onCreate(this, savedInstanceState);
         }
+
+        // We want to get an understanding of how our user base is spread (bug 1221646).
+        final String installerPackageName = getPackageManager().getInstallerPackageName(getPackageName());
+        Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH, TelemetryContract.Method.SYSTEM, "installer_" + installerPackageName);
     }
 
     /**

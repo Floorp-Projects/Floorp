@@ -748,6 +748,13 @@ const CustomizableWidgets = [
           updateZoomResetButton();
         }.bind(this),
 
+        onWidgetUndoMove: function(aWidgetNode) {
+          if (aWidgetNode != node)
+            return;
+          updateCombinedWidgetStyle(node, this.currentArea, true);
+          updateZoomResetButton();
+        }.bind(this),
+
         onWidgetMoved: function(aWidgetId, aArea) {
           if (aWidgetId != this.id)
             return;
@@ -854,6 +861,12 @@ const CustomizableWidgets = [
         }.bind(this),
 
         onWidgetReset: function(aWidgetNode) {
+          if (aWidgetNode != node)
+            return;
+          updateCombinedWidgetStyle(node, this.currentArea);
+        }.bind(this),
+
+        onWidgetUndoMove: function(aWidgetNode) {
           if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea);
