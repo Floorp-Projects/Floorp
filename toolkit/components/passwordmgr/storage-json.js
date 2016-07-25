@@ -150,7 +150,7 @@ this.LoginManagerStorage_json.prototype = {
     this._store.saveSoon();
 
     // Send a notification that a login was added.
-    LoginHelper.notifyStorageChanged("addLogin", loginClone);
+    this._sendNotification("addLogin", loginClone);
   },
 
   removeLogin(login) {
@@ -166,7 +166,7 @@ this.LoginManagerStorage_json.prototype = {
       this._store.saveSoon();
     }
 
-    LoginHelper.notifyStorageChanged("removeLogin", storedLogin);
+    this._sendNotification("removeLogin", storedLogin);
   },
 
   modifyLogin(oldLogin, newLoginData) {
@@ -218,7 +218,7 @@ this.LoginManagerStorage_json.prototype = {
       }
     }
 
-    LoginHelper.notifyStorageChanged("modifyLogin", [oldStoredLogin, newLogin]);
+    this._sendNotification("modifyLogin", [oldStoredLogin, newLogin]);
   },
 
   /**
@@ -376,7 +376,48 @@ this.LoginManagerStorage_json.prototype = {
     this._store.data.logins = [];
     this._store.saveSoon();
 
-    LoginHelper.notifyStorageChanged("removeAllLogins", null);
+    this._sendNotification("removeAllLogins", null);
+  },
+
+  getAllDisabledHosts(count) {
+    this._store.ensureDataReady();
+
+    let disabledHosts = this._store.data.disabledHosts.slice(0);
+
+    this.log("_getAllDisabledHosts: returning", disabledHosts.length, "disabled hosts.");
+    if (count)
+      count.value = disabledHosts.length; // needed for XPCOM
+    return disabledHosts;
+  },
+
+  getLoginSavingEnabled(hostname) {
+    this._store.ensureDataReady();
+
+    this.log("Getting login saving is enabled for", hostname);
+    return this._store.data.disabledHosts.indexOf(hostname) == -1;
+  },
+
+  setLoginSavingEnabled(hostname, enabled) {
+    this._store.ensureDataReady();
+
+    // Throws if there are bogus values.
+    LoginHelper.checkHostnameValue(hostname);
+
+    this.log("Setting login saving enabled for", hostname, "to", enabled);
+    let foundIndex = this._store.data.disabledHosts.indexOf(hostname);
+    if (enabled) {
+      if (foundIndex != -1) {
+        this._store.data.disabledHosts.splice(foundIndex, 1);
+        this._store.saveSoon();
+      }
+    } else {
+      if (foundIndex == -1) {
+        this._store.data.disabledHosts.push(hostname);
+        this._store.saveSoon();
+      }
+    }
+
+    this._sendNotification(enabled ? "hostSavingEnabled" : "hostSavingDisabled", hostname);
   },
 
   findLogins(count, hostname, formSubmitURL, httpRealm) {
@@ -422,6 +463,25 @@ this.LoginManagerStorage_json.prototype = {
 
   get isLoggedIn() {
     return this._crypto.isLoggedIn;
+  },
+
+  /**
+   * Send a notification when stored data is changed.
+   */
+  _sendNotification(changeType, data) {
+    let dataObject = data;
+    // Can't pass a raw JS string or array though notifyObservers(). :-(
+    if (data instanceof Array) {
+      dataObject = Cc["@mozilla.org/array;1"].
+                   createInstance(Ci.nsIMutableArray);
+      for (let i = 0; i < data.length; i++)
+        dataObject.appendElement(data[i], false);
+    } else if (typeof(data) == "string") {
+      dataObject = Cc["@mozilla.org/supports-string;1"].
+                   createInstance(Ci.nsISupportsString);
+      dataObject.data = data;
+    }
+    Services.obs.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
   },
 
   /**
