@@ -37,12 +37,15 @@
 /* Autocomplete Popup */
 
 .devtools-autocomplete-popup {
-  -moz-appearance: none !important;
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
   background-color: transparent;
   border-radius: 3px;
   overflow-x: hidden;
   max-height: 20rem;
+
+  /* Devtools autocompletes display technical english keywords and should be displayed
+     using LTR direction. */
+  direction: ltr !important;
 }
 
 /* Reset list styles. */
@@ -73,8 +76,6 @@
   background-color: transparent;
   border-radius: 4px;
   padding: 1px 0;
-  /* Force text-align even in RTL locales to ensure a correct display of the popup */
-  text-align: left;
 }
 
 .devtools-autocomplete-listbox .autocomplete-selected {
