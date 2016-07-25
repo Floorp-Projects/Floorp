@@ -2246,14 +2246,6 @@ public:
   static bool HasCurrentTransitions(const nsIFrame* aFrame);
 
   /**
-   * Returns true if the frame has any current animations or transitions
-   * for any of the specified properties.
-   */
-  static bool HasCurrentAnimationsForProperties(const nsIFrame* aFrame,
-                                                const nsCSSProperty* aProperties,
-                                                size_t aPropertyCount);
-
-  /**
    * Returns true if the frame has current or in-effect (i.e. in before phase,
    * running or filling) animations or transitions for the
    * property.

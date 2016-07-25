@@ -496,20 +496,6 @@ nsLayoutUtils::HasCurrentTransitions(const nsIFrame* aFrame)
 }
 
 bool
-nsLayoutUtils::HasCurrentAnimationsForProperties(const nsIFrame* aFrame,
-                                                 const nsCSSProperty* aProperties,
-                                                 size_t aPropertyCount)
-{
-  return HasMatchingAnimations(aFrame,
-    [&aProperties, &aPropertyCount](KeyframeEffectReadOnly& aEffect)
-    {
-      return aEffect.IsCurrent() &&
-        aEffect.HasAnimationOfProperties(aProperties, aPropertyCount);
-    }
-  );
-}
-
-bool
 nsLayoutUtils::HasRelevantAnimationOfProperty(const nsIFrame* aFrame,
                                               nsCSSProperty aProperty)
 {
