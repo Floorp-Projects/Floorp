@@ -78,6 +78,46 @@ add_task(function* testBadPermissions() {
     manifest: {"permissions": ["http://example.com/", "tabs"]},
   });
 
+  info("Test no special permissions, commands, key press");
+  yield testHasNoPermission({
+    manifest: {
+      "permissions": ["http://example.com/"],
+      "commands": {
+        "test-tabs-executeScript": {
+          "suggested_key": {
+            "default": "Alt+Shift+K",
+          },
+        },
+      },
+    },
+    contentSetup() {
+      browser.commands.onCommand.addListener(function(command) {
+        if (command == "test-tabs-executeScript") {
+          browser.test.sendMessage("tabs-command-key-pressed");
+        }
+      });
+      return Promise.resolve();
+    },
+    setup: function* (extension) {
+      yield EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      yield extension.awaitMessage("tabs-command-key-pressed");
+    },
+  });
+
+  info("Test active tab, commands, no key press");
+  yield testHasNoPermission({
+    manifest: {
+      "permissions": ["http://example.com/", "activeTab"],
+      "commands": {
+        "test-tabs-executeScript": {
+          "suggested_key": {
+            "default": "Alt+Shift+K",
+          },
+        },
+      },
+    },
+  });
+
   info("Test active tab, browser action, no click");
   yield testHasNoPermission({
     manifest: {
