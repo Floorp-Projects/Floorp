@@ -24,7 +24,6 @@ DIRS += [
     'themes/core',
     'app',
     'fonts',
-    'geckoview_library',
 ]
 
 if CONFIG['MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER']:
