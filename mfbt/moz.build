@@ -83,6 +83,7 @@ EXPORTS.mozilla = [
     'SizePrintfMacros.h',
     'Snprintf.h',
     'SplayTree.h',
+    'StaticAnalysisFunctions.h',
     'TaggedAnonymousMemory.h',
     'TemplateLib.h',
     'ThreadLocal.h',
