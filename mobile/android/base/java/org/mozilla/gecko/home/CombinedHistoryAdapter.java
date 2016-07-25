@@ -175,12 +175,9 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         final long PRIME_SECTION_HEADERS = 32416187737L;
 
         // RecyclerView.NO_ID is -1, so let's start from -2 for our hard-coded IDs.
-        final int RECENT_TABS_ID = -2;
-        final int SYNCED_DEVICES_ID = -3;
+        final int SYNCED_DEVICES_ID = -2;
 
         switch (getItemTypeForPosition(position)) {
-            case RECENT_TABS:
-                return RECENT_TABS_ID;
             case SYNCED_DEVICES:
                 return SYNCED_DEVICES_ID;
             case SECTION_HEADER:
