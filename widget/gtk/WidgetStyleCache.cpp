@@ -225,6 +225,17 @@ CreateTextViewWidget()
 }
 
 static GtkWidget*
+CreateMenuSeparatorWidget()
+{
+  GtkWidget* widget = gtk_separator_menu_item_new();
+  gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)),
+                        widget);
+  gtk_widget_realize(widget);
+  return widget;
+}
+
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -252,6 +263,8 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateMenuItemWidget(MOZ_GTK_MENUBAR);
     case MOZ_GTK_MENUITEM:
       return CreateMenuItemWidget(MOZ_GTK_MENUPOPUP);
+    case MOZ_GTK_MENUSEPARATOR:
+      return CreateMenuSeparatorWidget();
     case MOZ_GTK_EXPANDER:
       return CreateExpanderWidget();
     case MOZ_GTK_FRAME:

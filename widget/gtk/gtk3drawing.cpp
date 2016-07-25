@@ -36,7 +36,6 @@ static GtkWidget* gTreeViewWidget;
 static GtkTreeViewColumn* gMiddleTreeViewColumn;
 static GtkWidget* gTreeHeaderCellWidget;
 static GtkWidget* gTreeHeaderSortArrowWidget;
-static GtkWidget* gMenuSeparatorWidget;
 static GtkWidget* gHPanedWidget;
 static GtkWidget* gVPanedWidget;
 
@@ -339,18 +338,6 @@ ensure_image_menu_item_widget()
         gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)),
                               gImageMenuItemWidget);
         gtk_widget_realize(gImageMenuItemWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_menu_separator_widget()
-{
-    if (!gMenuSeparatorWidget) {
-        gMenuSeparatorWidget = gtk_separator_menu_item_new();
-        gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)),
-                              gMenuSeparatorWidget);
-        gtk_widget_realize(gMenuSeparatorWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -2116,12 +2103,10 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     gint x, y, w;
     GtkBorder padding;
 
-    ensure_menu_separator_widget();
-    gtk_widget_set_direction(gMenuSeparatorWidget, direction);
-
-    border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuSeparatorWidget));
-
-    style = gtk_widget_get_style_context(gMenuSeparatorWidget);
+    border_width =
+        gtk_container_get_border_width(GTK_CONTAINER(
+                                       GetWidget(MOZ_GTK_MENUSEPARATOR)));
+    style = ClaimStyleContext(MOZ_GTK_MENUSEPARATOR, direction);
     gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
     x = rect->x + border_width;
@@ -2151,6 +2136,7 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     }
 
     gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2695,11 +2681,11 @@ moz_gtk_get_menu_separator_height(gint *size)
     GtkStyleContext* style;
     guint border_width;
 
-    ensure_menu_separator_widget();
+    border_width =
+        gtk_container_get_border_width(GTK_CONTAINER(
+                                       GetWidget(MOZ_GTK_MENUSEPARATOR)));
 
-    border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuSeparatorWidget));
-
-    style = gtk_widget_get_style_context(gMenuSeparatorWidget);
+    style = ClaimStyleContext(MOZ_GTK_MENUSEPARATOR);
     gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
     gtk_style_context_save(style);
@@ -2711,6 +2697,7 @@ moz_gtk_get_menu_separator_height(gint *size)
                                 NULL);
 
     gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
 
     *size = padding.top + padding.bottom + border_width*2;
     *size += (wide_separators) ? separator_height : 1;
@@ -3082,7 +3069,6 @@ moz_gtk_shutdown()
     gMiddleTreeViewColumn = NULL;
     gTreeHeaderCellWidget = NULL;
     gTreeHeaderSortArrowWidget = NULL;
-    gMenuSeparatorWidget = NULL;
     gHPanedWidget = NULL;
     gVPanedWidget = NULL;
 
