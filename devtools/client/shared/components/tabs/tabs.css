@@ -16,10 +16,6 @@
   margin: 0;
 }
 
-.tabs .tabs-menu-item {
-  float: inline-start;
-}
-
 .tabs .tabs-menu-item a {
   display: block;
   color: #A9A9A9;
