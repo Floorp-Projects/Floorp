@@ -29,6 +29,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=484459
       SimpleTest.finish();
     }
 
-    SpecialPowers.exactGC(window, callback);
+    SpecialPowers.exactGC(callback);
   ]]></script>
 </window>

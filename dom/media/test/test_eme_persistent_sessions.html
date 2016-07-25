@@ -86,7 +86,7 @@ function startTest(test, token)
 
         // Once the session is closed, reload the MediaKeys and reload the session
         .then(function() {
-          return navigator.requestMediaKeySystemAccess(KEYSYSTEM_TYPE, [{initDataTypes:["cenc"]}]);
+          return navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, gCencMediaKeySystemConfig);
         })
 
         .then(function(requestedKeySystemAccess) {
@@ -96,7 +96,7 @@ function startTest(test, token)
 
         .then(function(mediaKeys) {
           Log(token, "re-created MediaKeys object ok");
-          recreatedSession = mediaKeys.createSession("persistent");
+          recreatedSession = mediaKeys.createSession("persistent-license");
           Log(token, "Created recreatedSession, loading sessionId=" + sessionId);
           return recreatedSession.load(sessionId);
         })
@@ -127,7 +127,7 @@ function startTest(test, token)
         .then(function(mediaKeys) {
           Log(token, "re-re-created MediaKeys object ok");
           // Trying to load the removed persistent session should fail.
-          return mediaKeys.createSession("persistent").load(sessionId);
+          return mediaKeys.createSession("persistent-license").load(sessionId);
         })
 
         .then(function(suceeded) {
@@ -142,7 +142,7 @@ function startTest(test, token)
         });
 
       },
-      sessionType: "persistent",
+      sessionType: "persistent-license",
     }
   );
 

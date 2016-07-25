@@ -122,10 +122,6 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
     Log("cdm: 0x%x", cdm);
     sCDMWrapper = new CDMWrapper(cdm);
     decryptor->SetCDM(RefPtr<CDMWrapper>(sCDMWrapper));
-
-    cdm->Initialize(false, /* allow_distinctive_identifier */
-                    false /* allow_persistent_state */);
-
     *aPluginAPI = decryptor;
 
   } else if (!strcmp(aAPIName, GMP_API_VIDEO_DECODER)) {

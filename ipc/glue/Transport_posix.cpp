@@ -60,7 +60,8 @@ OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
 UniquePtr<Transport>
 OpenDescriptor(const FileDescriptor& aFd, Transport::Mode aMode)
 {
-  return MakeUnique<Transport>(aFd.PlatformHandle(), aMode, nullptr);
+  auto rawFD = aFd.ClonePlatformHandle();
+  return MakeUnique<Transport>(rawFD.release(), aMode, nullptr);
 }
 
 TransportDescriptor

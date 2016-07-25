@@ -19,7 +19,7 @@ BEGIN_TEST(testGCChunkPool)
 
     // Create.
     for (int i = 0; i < N; ++i) {
-        js::gc::Chunk* chunk = js::gc::Chunk::allocate(rt);
+        js::gc::Chunk* chunk = js::gc::Chunk::allocate(cx);
         CHECK(chunk);
         pool.push(chunk);
     }
@@ -58,7 +58,7 @@ BEGIN_TEST(testGCChunkPool)
     pool.push(chunk);
 
     // Destruct.
-    js::AutoLockGC lock(rt);
+    js::AutoLockGC lock(cx);
     for (js::gc::ChunkPool::Iter iter(pool); !iter.done();) {
         js::gc::Chunk* chunk = iter.get();
         iter.next();

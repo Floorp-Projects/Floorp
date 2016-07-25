@@ -99,6 +99,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
     ErrorResult rv;
     cloneData.Read(cx, &value, rv);
     if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
       return true;
     }
   }
@@ -112,8 +113,8 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   ErrorResult rv;
   RefPtr<MessageEvent> event =
     MessageEvent::Constructor(mBC, NS_LITERAL_STRING("message"), init, rv);
-  if (rv.Failed()) {
-    NS_WARNING("Failed to create a MessageEvent object.");
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return true;
   }
 

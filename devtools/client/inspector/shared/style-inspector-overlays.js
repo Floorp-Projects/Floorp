@@ -293,7 +293,7 @@ TooltipsOverlay.prototype = {
 
     if (this.isRuleView) {
       // Color picker tooltip
-      this.colorPicker = new SwatchColorPickerTooltip(toolbox);
+      this.colorPicker = new SwatchColorPickerTooltip(toolbox, this.view.inspector);
       // Cubic bezier tooltip
       this.cubicBezier = new SwatchCubicBezierTooltip(toolbox);
       // Filter editor tooltip

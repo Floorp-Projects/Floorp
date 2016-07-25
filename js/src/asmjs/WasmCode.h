@@ -466,6 +466,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 
     FuncImportVector      funcImports;
     FuncExportVector      funcExports;
+    SigWithIdVector       sigIds;
     TableDescVector       tables;
     MemoryAccessVector    memoryAccesses;
     BoundsCheckVector     boundsChecks;

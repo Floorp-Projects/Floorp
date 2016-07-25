@@ -1240,6 +1240,16 @@ pref("geo.provider.use_corelocation", true);
 pref("geo.provider.ms-windows-location", false);
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_GPSD
+#ifdef RELEASE_BUILD
+pref("geo.provider.use_gpsd", false);
+#else
+pref("geo.provider.use_gpsd", true);
+#endif
+#endif
+#endif
+
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:
 // currently irrelevant for desktop e10s
 pref("network.disable.ipc.security", true);
@@ -1463,5 +1473,5 @@ pref("signon.schemeUpgrades", true);
 pref("print.use_simplify_page", true);
 
 // Space separated list of URLS that are allowed to send objects (instead of
-// only strings) through webchannels.
+// only strings) through webchannels. This list is duplicated in mobile/android/app/mobile.js
 pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://hello.firefox.com https://input.mozilla.org https://support.mozilla.org https://install.mozilla.org");

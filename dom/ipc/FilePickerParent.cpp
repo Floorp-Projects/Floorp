@@ -110,11 +110,13 @@ FilePickerParent::IORunnable::Run()
     ErrorResult error;
     blobImpl->GetSize(error);
     if (NS_WARN_IF(error.Failed())) {
+      error.SuppressException();
       continue;
     }
 
     blobImpl->GetLastModified(error);
     if (NS_WARN_IF(error.Failed())) {
+      error.SuppressException();
       continue;
     }
 

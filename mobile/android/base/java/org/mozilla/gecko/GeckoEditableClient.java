@@ -19,4 +19,15 @@ interface GeckoEditableClient {
     void setSuppressKeyUp(boolean suppress);
     Handler setInputConnectionHandler(Handler handler);
     void postToInputConnection(Runnable runnable);
+
+    // The following value is used by requestCursorUpdates
+
+    // ONE_SHOT calls updateCompositionRects() after getting current composing character rects.
+    public static final int ONE_SHOT = 1;
+    // START_MONITOR start the monitor for composing character rects.  If is is updaed,  call updateCompositionRects()
+    public static final int START_MONITOR = 2;
+    // ENDT_MONITOR stops the monitor for composing character rects.
+    public static final int END_MONITOR = 3;
+
+    void requestCursorUpdates(int requestMode);
 }

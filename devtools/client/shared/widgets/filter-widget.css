@@ -5,10 +5,12 @@
 /* Main container: Displays the filters and presets in 2 columns */
 
 #filter-container {
-  height: 100%;
+  width: 510px;
+  height: 200px;
   display: flex;
   position: relative;
   padding: 5px;
+  box-sizing: border-box;
   /* when opened in a xul:panel, a gray color is applied to text */
   color: var(--theme-body-color);
 }
@@ -138,12 +140,6 @@ input {
   width: 8em;
 }
 
-.theme-light .add,
-.theme-light .remove-button,
-.theme-light #toggle-presets {
-  filter: invert(1);
-}
-
 .preset {
   display: flex;
   margin-bottom: 10px;
@@ -172,10 +168,6 @@ input {
 
 .preset:hover label, .preset:hover span {
   color: var(--theme-selection-color);
-}
-
-.theme-light .preset:hover .remove-button {
-  filter: invert(0);
 }
 
 .preset .remove-button {
@@ -236,6 +228,12 @@ input {
 
 #toggle-presets {
   background: url(chrome://devtools/skin/images/pseudo-class.svg);
+}
+
+.add,
+.remove-button,
+#toggle-presets {
+  filter: var(--icon-filter);
 }
 
 .show-presets #toggle-presets {

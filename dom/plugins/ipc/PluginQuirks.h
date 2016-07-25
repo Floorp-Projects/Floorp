@@ -47,19 +47,14 @@ enum PluginQuirks {
   // Mac: Allow the plugin to use offline renderer mode.
   // Use this only if the plugin is certified the support the offline renderer.
   QUIRK_ALLOW_OFFLINE_RENDERER                    = 1 << 9,
-  // Mac: Work around a Flash bug that can cause plugin process crashes
-  // in CoreGraphics mode:  The Flash plugin sometimes accesses the
-  // CGContextRef we pass to it in NPP_HandleEvent(NPCocoaEventDrawRect)
-  // outside of that call.  See bug 804606.
-  QUIRK_FLASH_AVOID_CGMODE_CRASHES                = 1 << 10,
   // Work around a Flash bug where it fails to check the error code of a
   // NPN_GetValue(NPNVdocumentOrigin) call before trying to dereference
   // its char* output.
-  QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN        = 1 << 11,
+  QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN        = 1 << 10,
   // Win: Addresses a Unity bug with mouse capture.
-  QUIRK_UNITY_FIXUP_MOUSE_CAPTURE                 = 1 << 12,
+  QUIRK_UNITY_FIXUP_MOUSE_CAPTURE                 = 1 << 11,
   // Win: Hook IMM32 API to handle IME event on windowless plugin
-  QUIRK_WINLESS_HOOK_IME                          = 1 << 13,
+  QUIRK_WINLESS_HOOK_IME                          = 1 << 12,
 };
 
 int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,

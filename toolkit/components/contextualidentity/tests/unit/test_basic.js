@@ -1,0 +1,67 @@
+"use strict";
+
+do_get_profile();
+
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+Cu.import("resource://gre/modules/ContextualIdentityService.jsm");
+
+const TEST_STORE_FILE_NAME = "test-containers.json";
+
+let cis;
+
+// Basic tests
+add_task(function() {
+  ok(!!ContextualIdentityService, "ContextualIdentityService exists");
+
+  cis = ContextualIdentityService.createNewInstanceForTesting(TEST_STORE_FILE_NAME);
+  ok(!!cis, "We have our instance of ContextualIdentityService");
+
+  equal(cis.getIdentities().length, 4, "By default, 4 containers.");
+  equal(cis.getIdentityFromId(0), null, "No identity with id 0");
+
+  ok(!!cis.getIdentityFromId(1), "Identity 1 exists");
+  ok(!!cis.getIdentityFromId(2), "Identity 2 exists");
+  ok(!!cis.getIdentityFromId(3), "Identity 3 exists");
+  ok(!!cis.getIdentityFromId(4), "Identity 4 exists");
+});
+
+// Create a new identity
+add_task(function() {
+  equal(cis.getIdentities().length, 4, "By default, 4 containers.");
+
+  let identity = cis.create("New Container", "Icon", "Color");
+  ok(!!identity, "New container created");
+  equal(identity.name, "New Container", "Name matches");
+  equal(identity.icon, "Icon", "Icon matches");
+  equal(identity.color, "Color", "Color matches");
+
+  equal(cis.getIdentities().length, 5, "Expected 5 containers.");
+
+  ok(!!cis.getIdentityFromId(identity.userContextId), "Identity exists");
+  equal(cis.getIdentityFromId(identity.userContextId).name, "New Container", "Identity name is OK");
+  equal(cis.getIdentityFromId(identity.userContextId).icon, "Icon", "Identity icon is OK");
+  equal(cis.getIdentityFromId(identity.userContextId).color, "Color", "Identity color is OK");
+  equal(cis.getUserContextLabel(identity.userContextId), "New Container", "Identity label is OK");
+
+  // Remove an identity
+  equal(cis.remove(-1), false, "cis.remove() returns false if identity doesn't exist.");
+  equal(cis.remove(1), true, "cis.remove() returns true if identity exists.");
+
+  equal(cis.getIdentities().length, 4, "Expected 4 containers.");
+});
+
+// Update an identity
+add_task(function() {
+  ok(!!cis.getIdentityFromId(2), "Identity 2 exists");
+
+  equal(cis.update(-1, "Container", "Icon", "Color"), false, "Update returns false if the identity doesn't exist");
+
+  equal(cis.update(2, "Container", "Icon", "Color"), true, "Update returns true if everything is OK");
+
+  ok(!!cis.getIdentityFromId(2), "Identity exists");
+  equal(cis.getIdentityFromId(2).name, "Container", "Identity name is OK");
+  equal(cis.getIdentityFromId(2).icon, "Icon", "Identity icon is OK");
+  equal(cis.getIdentityFromId(2).color, "Color", "Identity color is OK");
+  equal(cis.getUserContextLabel(2), "Container", "Identity label is OK");
+});

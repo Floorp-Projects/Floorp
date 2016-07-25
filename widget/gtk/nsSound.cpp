@@ -184,7 +184,7 @@ nsSound::Init()
 {
     // This function is designed so that no library is compulsory, and
     // one library missing doesn't cause the other(s) to not be used.
-    if (mInited) 
+    if (mInited)
         return NS_OK;
 
     mInited = true;
@@ -429,7 +429,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 
     // create a nsIFile and then a nsIFileURL from that
     nsCOMPtr <nsIFile> soundFile;
-    rv = NS_NewLocalFile(aSoundAlias, true, 
+    rv = NS_NewLocalFile(aSoundAlias, true,
                          getter_AddRefs(soundFile));
     NS_ENSURE_SUCCESS(rv,rv);
 

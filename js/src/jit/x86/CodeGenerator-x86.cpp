@@ -901,35 +901,6 @@ CodeGeneratorX86::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
     masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
 }
 
-void
-CodeGeneratorX86::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
-{
-    const MAsmJSLoadFuncPtr* mir = ins->mir();
-
-    Register index = ToRegister(ins->index());
-    Register out = ToRegister(ins->output());
-
-    if (mir->hasLimit()) {
-        masm.branch32(Assembler::Condition::AboveOrEqual, index, Imm32(mir->limit()),
-                      wasm::JumpTarget::OutOfBounds);
-    }
-
-    CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), out);
-    masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
-
-    masm.loadPtr(Operand(out, index, ScalePointer), out);
-}
-
-void
-CodeGeneratorX86::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
-{
-    MAsmJSLoadFFIFunc* mir = ins->mir();
-
-    Register out = ToRegister(ins->output());
-    CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), out);
-    masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
-}
-
 namespace js {
 namespace jit {
 

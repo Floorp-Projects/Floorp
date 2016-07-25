@@ -508,7 +508,7 @@ extern JS_FRIEND_API(void)
 TraceWeakMaps(WeakMapTracer* trc);
 
 extern JS_FRIEND_API(bool)
-AreGCGrayBitsValid(JSRuntime* rt);
+AreGCGrayBitsValid(JSContext* cx);
 
 extern JS_FRIEND_API(bool)
 ZoneGlobalsAreAllGray(JS::Zone* zone);
@@ -1243,10 +1243,9 @@ struct ExpandoAndGeneration {
       generation(0)
   {}
 
-  void Unlink()
+  void OwnerUnlinked()
   {
       ++generation;
-      expando.setUndefined();
   }
 
   static size_t offsetOfExpando()

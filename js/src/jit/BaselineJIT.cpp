@@ -121,7 +121,7 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
     // this point). We use Maybe<> here so we can call reset() to call the
     // AutoAssertOnGC destructor before we enter JIT code.
     mozilla::Maybe<JS::AutoAssertOnGC> nogc;
-    nogc.emplace(cx->runtime());
+    nogc.emplace(cx);
 #endif
 
     MOZ_ASSERT(jit::IsBaselineEnabled(cx));

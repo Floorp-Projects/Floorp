@@ -63,22 +63,22 @@ nsDeviceContextSpecAndroid::EndDocument()
   nsXPIDLString targetPath;
   nsCOMPtr<nsIFile> destFile;
   mPrintSettings->GetToFileName(getter_Copies(targetPath));
-  
+
   nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(targetPath),
                                       false, getter_AddRefs(destFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsAutoString destLeafName;
   rv = destFile->GetLeafName(destLeafName);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsCOMPtr<nsIFile> destDir;
   rv = destFile->GetParent(getter_AddRefs(destDir));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   rv = mTempFile->MoveTo(destDir, destLeafName);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   destFile->SetPermissions(0666);
   return NS_OK;
 }

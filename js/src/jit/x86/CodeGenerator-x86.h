@@ -68,8 +68,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
-    void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins);
-    void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
     void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins);
 
     void visitOutOfLineTruncate(OutOfLineTruncate* ool);
