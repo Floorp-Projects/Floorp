@@ -104,6 +104,52 @@ function testStoreOOB(type, ext, base, offset, align, value) {
     assertErrorMessage(() => storeModule(type, ext, offset, align).store(base, value), Error, /invalid or out-of-range index/);
 }
 
+function badLoadModule(type, ext) {
+    return wasmEvalText( `(module (func (param i32) (${type}.load${ext} (get_local 0))) (export "" 0))`);
+}
+
+function badStoreModule(type, ext) {
+    return wasmEvalText( `(module (func (param i32) (${type}.store${ext} (get_local 0) (${type}.const 0))) (export "" 0))`);
+}
+
+// Can't touch memory.
+for (let [type, ext] of [
+    ['i32', ''],
+    ['i32', '8_s'],
+    ['i32', '8_u'],
+    ['i32', '16_s'],
+    ['i32', '16_u'],
+    ['i64', ''],
+    ['i64', '8_s'],
+    ['i64', '8_u'],
+    ['i64', '16_s'],
+    ['i64', '16_u'],
+    ['i64', '32_s'],
+    ['i64', '32_u'],
+    ['f32', ''],
+    ['f64', ''],
+])
+{
+    if (type !== 'i64' || hasI64())
+        assertErrorMessage(() => badLoadModule(type, ext), TypeError, /can't touch memory/);
+}
+
+for (let [type, ext] of [
+    ['i32', ''],
+    ['i32', '8'],
+    ['i32', '16'],
+    ['i64', ''],
+    ['i64', '8'],
+    ['i64', '16'],
+    ['i64', '32'],
+    ['f32', ''],
+    ['f64', ''],
+])
+{
+    if (type !== 'i64' || hasI64())
+        assertErrorMessage(() => badStoreModule(type, ext), TypeError, /can't touch memory/);
+}
+
 // Test bounds checks and edge cases.
 const align = 0;
 
