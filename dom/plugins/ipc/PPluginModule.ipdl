@@ -48,6 +48,11 @@ both:
 child:
   async DisableFlashProtectedMode();
 
+  // Sync query to check if a Flash library indicates it
+  // supports async rendering mode.
+  intr ModuleSupportsAsyncRender()
+    returns (bool result);
+
   // Forces the child process to update its plugin function table.
   intr NP_GetEntryPoints()
     returns (NPError rv);
