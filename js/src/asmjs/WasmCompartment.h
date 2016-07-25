@@ -48,6 +48,7 @@ class Compartment
   public:
     explicit Compartment(Zone* zone);
     ~Compartment();
+    void trace(JSTracer* trc);
 
     // Before a WasmInstanceObject can be considered fully constructed and
     // valid, it must be registered with the Compartment. If this method fails,

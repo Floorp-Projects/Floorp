@@ -411,6 +411,13 @@ js::TraceEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
 
 template <typename T>
 void
+js::TraceEdge(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
+{
+    DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
+}
+
+template <typename T>
+void
 js::TraceNullableEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
 {
     if (InternalBarrierMethods<T>::isMarkable(thingp->get()))
@@ -529,6 +536,7 @@ js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
 // Instantiate a copy of the Tracing templates for each derived type.
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
     template void js::TraceEdge<type>(JSTracer*, WriteBarrieredBase<type>*, const char*); \
+    template void js::TraceEdge<type>(JSTracer*, ReadBarriered<type>*, const char*); \
     template void js::TraceNullableEdge<type>(JSTracer*, WriteBarrieredBase<type>*, const char*); \
     template void js::TraceManuallyBarrieredEdge<type>(JSTracer*, type*, const char*); \
     template void js::TraceWeakEdge<type>(JSTracer*, WeakRef<type>*, const char*); \
