@@ -208,6 +208,23 @@ CreateEntryWidget()
 }
 
 static GtkWidget*
+CreateScrolledWindowWidget()
+{
+  GtkWidget* widget = gtk_scrolled_window_new(nullptr, nullptr);
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateTextViewWidget()
+{
+  GtkWidget* widget = gtk_text_view_new();
+  gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_SCROLLED_WINDOW)),
+                    widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -257,6 +274,10 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateButtonArrowWidget();
     case MOZ_GTK_ENTRY:
       return CreateEntryWidget();
+    case MOZ_GTK_SCROLLED_WINDOW: 
+      return CreateScrolledWindowWidget();
+    case MOZ_GTK_TEXT_VIEW:
+      return CreateTextViewWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -405,6 +426,14 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       // TODO - create from CSS node
       return GetWidgetStyleWithClass(MOZ_GTK_SPINBUTTON,
                                      GTK_STYLE_CLASS_ENTRY);
+    case MOZ_GTK_SCROLLED_WINDOW:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_SCROLLED_WINDOW,
+                                     GTK_STYLE_CLASS_FRAME);
+    case MOZ_GTK_TEXT_VIEW:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_TEXT_VIEW,
+                                     GTK_STYLE_CLASS_VIEW);
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -465,6 +494,12 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_SPINBUTTON_ENTRY:
       return GetWidgetStyleWithClass(MOZ_GTK_SPINBUTTON,
                                      GTK_STYLE_CLASS_ENTRY);
+    case MOZ_GTK_SCROLLED_WINDOW:
+      return GetWidgetStyleWithClass(MOZ_GTK_SCROLLED_WINDOW,
+                                     GTK_STYLE_CLASS_FRAME);
+    case MOZ_GTK_TEXT_VIEW:
+      return GetWidgetStyleWithClass(MOZ_GTK_TEXT_VIEW,
+                                     GTK_STYLE_CLASS_VIEW);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);

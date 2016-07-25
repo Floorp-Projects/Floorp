@@ -30,7 +30,6 @@ static GtkWidget* gComboBoxEntryTextareaWidget;
 static GtkWidget* gComboBoxEntryButtonWidget;
 static GtkWidget* gComboBoxEntryArrowWidget;
 static GtkWidget* gTabWidget;
-static GtkWidget* gTextViewWidget;
 static GtkWidget* gImageMenuItemWidget;
 static GtkWidget* gCheckMenuItemWidget;
 static GtkWidget* gTreeViewWidget;
@@ -40,7 +39,6 @@ static GtkWidget* gTreeHeaderSortArrowWidget;
 static GtkWidget* gMenuSeparatorWidget;
 static GtkWidget* gHPanedWidget;
 static GtkWidget* gVPanedWidget;
-static GtkWidget* gScrolledWindowWidget;
 
 static style_prop_t style_prop_func;
 static gboolean have_arrow_scaling;
@@ -421,27 +419,6 @@ ensure_tree_header_cell_widget()
         gTreeHeaderSortArrowWidget = gtk_button_new();
     }
     return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_scrolled_window_widget()
-{
-    if (!gScrolledWindowWidget) {
-        gScrolledWindowWidget = gtk_scrolled_window_new(NULL, NULL);
-        setup_widget_prototype(gScrolledWindowWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static void
-ensure_text_view_widget()
-{
-    if (gTextViewWidget)
-        return;
-
-    gTextViewWidget = gtk_text_view_new();
-    ensure_scrolled_window_widget();
-    gtk_container_add(GTK_CONTAINER(gScrolledWindowWidget), gTextViewWidget);
 }
 
 gint
@@ -1214,34 +1191,19 @@ moz_gtk_text_view_paint(cairo_t *cr, GdkRectangle* rect,
                         GtkWidgetState* state,
                         GtkTextDirection direction)
 {
-    ensure_text_view_widget();
-    ensure_scrolled_window_widget();
+    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
 
-    gtk_widget_set_direction(gTextViewWidget, direction);
-    gtk_widget_set_direction(gScrolledWindowWidget, direction);
-
-    GtkStyleContext* style = gtk_widget_get_style_context(gTextViewWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_VIEW);
-
-    GtkStyleContext* style_frame = gtk_widget_get_style_context(gScrolledWindowWidget);
-    gtk_style_context_save(style_frame);
-    gtk_style_context_add_class(style_frame, GTK_STYLE_CLASS_FRAME);
-
-    if (state->focused && !state->disabled) {
-        gtk_style_context_set_state(style, GTK_STATE_FLAG_FOCUSED);
-    }
-
-    if (state->disabled) {
-        gtk_style_context_set_state(style, GTK_STATE_FLAG_INSENSITIVE);
-        gtk_style_context_set_state(style_frame, GTK_STATE_FLAG_INSENSITIVE);
-    }
+    GtkStyleContext* style_frame =
+        ClaimStyleContext(MOZ_GTK_SCROLLED_WINDOW, direction, state_flags);
     gtk_render_frame(style_frame, cr, rect->x, rect->y, rect->width, rect->height);
 
     GtkBorder border, padding;
-    GtkStateFlags state_flags = gtk_style_context_get_state(style);
     gtk_style_context_get_border(style_frame, state_flags, &border);
     gtk_style_context_get_padding(style_frame, state_flags, &padding);
+    ReleaseStyleContext(style_frame);
+
+    GtkStyleContext* style =
+        ClaimStyleContext(MOZ_GTK_TEXT_VIEW, direction, state_flags);
 
     gint xthickness = border.left + padding.left;
     gint ythickness = border.top + padding.top;
@@ -1251,8 +1213,7 @@ moz_gtk_text_view_paint(cairo_t *cr, GdkRectangle* rect,
                           rect->width - 2 * xthickness,
                           rect->height - 2 * ythickness);
 
-    gtk_style_context_restore(style);
-    gtk_style_context_restore(style_frame);
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1269,18 +1230,13 @@ moz_gtk_treeview_paint(cairo_t *cr, GdkRectangle* rect,
     GtkBorder border;
 
     ensure_tree_view_widget();
-    ensure_scrolled_window_widget();
-
     gtk_widget_set_direction(gTreeViewWidget, direction);
-    gtk_widget_set_direction(gScrolledWindowWidget, direction);
 
     /* only handle disabled and normal states, otherwise the whole background
      * area will be painted differently with other states */
     state_flags = state->disabled ? GTK_STATE_FLAG_INSENSITIVE : GTK_STATE_FLAG_NORMAL;
 
-    style = gtk_widget_get_style_context(gScrolledWindowWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_FRAME);    
+    style = ClaimStyleContext(MOZ_GTK_SCROLLED_WINDOW, direction);
     gtk_style_context_get_border(style, state_flags, &border);
     xthickness = border.left;
     ythickness = border.top;    
@@ -1295,7 +1251,7 @@ moz_gtk_treeview_paint(cairo_t *cr, GdkRectangle* rect,
                           rect->height - 2 * ythickness);
     gtk_render_frame(style, cr, 
                      rect->x, rect->y, rect->width, rect->height); 
-    gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
     gtk_style_context_restore(style_tree);
     return MOZ_GTK_SUCCESS;
 }
@@ -1672,14 +1628,11 @@ moz_gtk_resizer_paint(cairo_t *cr, GdkRectangle* rect,
     // GTK_STYLE_CLASS_VIEW to match the background with textarea elements.
     // The resizer is drawn with shaded variants of the background color, and
     // so a transparent background would lead to a transparent resizer.
-    ensure_text_view_widget();
-    gtk_widget_set_direction(gTextViewWidget, GTK_TEXT_DIR_LTR);
-
-    style = gtk_widget_get_style_context(gTextViewWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_VIEW);
+    style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW, GTK_TEXT_DIR_LTR,
+                              GetStateFlagsFromGtkWidgetState(state));
+    // TODO - we need to save/restore style when gtk 3.20 CSS node path
+    // is used
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_GRIP);
-    gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
 
     // Workaround unico not respecting the text direction for resizers.
     // See bug 1174248.
@@ -1693,7 +1646,7 @@ moz_gtk_resizer_paint(cairo_t *cr, GdkRectangle* rect,
 
     gtk_render_handle(style, cr, rect->x, rect->y, rect->width, rect->height);
     cairo_restore(cr);
-    gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2415,12 +2368,9 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_TEXT_VIEW:
     case MOZ_GTK_TREEVIEW:
         {
-            ensure_scrolled_window_widget();
-            style = gtk_widget_get_style_context(gScrolledWindowWidget);
-            gtk_style_context_save(style);
-            gtk_style_context_add_class(style, GTK_STYLE_CLASS_FRAME);
+            style = ClaimStyleContext(MOZ_GTK_SCROLLED_WINDOW);
             moz_gtk_add_style_border(style, left, top, right, bottom);
-            gtk_style_context_restore(style);
+            ReleaseStyleContext(style);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_TREE_HEADER_CELL:
@@ -3126,7 +3076,6 @@ moz_gtk_shutdown()
     gComboBoxEntryArrowWidget = NULL;
     gComboBoxEntryTextareaWidget = NULL;
     gTabWidget = NULL;
-    gTextViewWidget = nullptr;
     gImageMenuItemWidget = NULL;
     gCheckMenuItemWidget = NULL;
     gTreeViewWidget = NULL;
@@ -3136,7 +3085,6 @@ moz_gtk_shutdown()
     gMenuSeparatorWidget = NULL;
     gHPanedWidget = NULL;
     gVPanedWidget = NULL;
-    gScrolledWindowWidget = NULL;
 
     is_initialized = FALSE;
 
