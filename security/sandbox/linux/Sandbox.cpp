@@ -643,14 +643,14 @@ SandboxEarlyInit(GeckoProcessType aType, bool aIsNuwa)
  *
  * Will normally make the process exit on failure.
 */
-void
+bool
 SetContentProcessSandbox(int aBrokerFd)
 {
   if (!SandboxInfo::Get().Test(SandboxInfo::kEnabledForContent)) {
     if (aBrokerFd >= 0) {
       close(aBrokerFd);
     }
-    return;
+    return false;
   }
 
   // This needs to live until the process exits.
@@ -660,6 +660,7 @@ SetContentProcessSandbox(int aBrokerFd)
   }
 
   SetCurrentProcessSandbox(GetContentSandboxPolicy(sBroker.ptrOr(nullptr)));
+  return true;
 }
 #endif // MOZ_CONTENT_SANDBOX
 
