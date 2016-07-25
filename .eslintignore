@@ -112,10 +112,12 @@ devtools/client/webconsole/**
 !devtools/client/webconsole/console-commands.js
 devtools/client/webide/**
 !devtools/client/webide/components/webideCli.js
-devtools/server/**
+devtools/server/*.js
+devtools/server/*.jsm
 !devtools/server/child.js
 !devtools/server/css-logic.js
 !devtools/server/main.js
+devtools/server/actors/**
 !devtools/server/actors/inspector.js
 !devtools/server/actors/highlighters/eye-dropper.js
 !devtools/server/actors/webbrowser.js
@@ -123,6 +125,8 @@ devtools/server/**
 !devtools/server/actors/styles.js
 !devtools/server/actors/string.js
 !devtools/server/actors/csscoverage.js
+devtools/server/performance/**
+devtools/server/tests/**
 devtools/shared/*.js
 !devtools/shared/css-lexer.js
 !devtools/shared/defer.js
