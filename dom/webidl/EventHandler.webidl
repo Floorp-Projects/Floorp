@@ -44,7 +44,7 @@ interface GlobalEventHandlers {
            attribute EventHandler ondrag;
            attribute EventHandler ondragend;
            attribute EventHandler ondragenter;
-           //(Not implemented)attribute EventHandler ondragexit;
+           attribute EventHandler ondragexit;
            attribute EventHandler ondragleave;
            attribute EventHandler ondragover;
            attribute EventHandler ondragstart;
