@@ -109,7 +109,7 @@ private:
  * This class should be flattened into SVGContextPaint once we get rid of the
  * other sub-class (SimpleTextContextPaint).
  */
-struct SVGTextContextPaint : public SVGContextPaint
+struct SVGContextPaintImpl : public SVGContextPaint
 {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;

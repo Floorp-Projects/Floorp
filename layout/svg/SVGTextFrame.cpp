@@ -3653,7 +3653,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     // when they use context-fill etc.
     aContext.SetMatrix(initialMatrix);
 
-    SVGTextContextPaint contextPaint;
+    SVGContextPaintImpl contextPaint;
     DrawMode drawMode =
       nsSVGUtils::SetupContextPaint(&aDrawTarget, aContext.CurrentMatrix(),
                                     frame, outerContextPaint, &contextPaint);
