@@ -198,6 +198,9 @@ _ContextualIdentityService.prototype = {
       return false;
     }
 
+    Services.obs.notifyObservers(null, "clear-origin-data",
+                                 JSON.stringify({ userContextId }));
+
     this._identities.splice(index, 1);
     this._openedIdentities.delete(userContextId);
     this.saveSoon();
