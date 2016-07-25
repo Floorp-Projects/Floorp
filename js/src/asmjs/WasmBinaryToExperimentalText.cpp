@@ -1565,9 +1565,9 @@ PrintExport(WasmPrintContext& c, AstExport& export_, const AstModule::FuncVector
         if (!c.buffer.append("memory"))
           return false;
     } else {
-        const AstFunc* func = funcs[export_.func().index()];
+        const AstFunc* func = funcs[export_.ref().index()];
         if (func->name().empty()) {
-            if (!PrintInt32(c, export_.func().index()))
+            if (!PrintInt32(c, export_.ref().index()))
                 return false;
         } else {
             if (!PrintName(c, func->name()))
