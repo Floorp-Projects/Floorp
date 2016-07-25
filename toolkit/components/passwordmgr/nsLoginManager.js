@@ -6,8 +6,6 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-const PERMISSION_SAVE_LOGINS = "login-saving";
-
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -349,29 +347,14 @@ LoginManager.prototype = {
   /**
    * Get a list of all origins for which logins are disabled.
    *
-   * @param {Number} count - only needed for XPCOM.
+   * |count| is only needed for XPCOM.
    *
    * @return {String[]} of disabled origins. If there are no disabled origins,
    *                    the array is empty.
    */
   getAllDisabledHosts(count) {
     log.debug("Getting a list of all disabled origins");
-
-    let disabledHosts = [];
-    let enumerator = Services.perms.enumerator;
-
-    while (enumerator.hasMoreElements()) {
-      let perm = enumerator.getNext();
-      if (perm.type == PERMISSION_SAVE_LOGINS && perm.capability == Services.perms.DENY_ACTION) {
-        disabledHosts.push(perm.principal.URI.prePath);
-      }
-    }
-
-    if (count)
-      count.value = disabledHosts.length; // needed for XPCOM
-
-    log.debug("getAllDisabledHosts: returning", disabledHosts.length, "disabled hosts.");
-    return disabledHosts;
+    return this._storage.getAllDisabledHosts(count);
   },
 
 
@@ -440,8 +423,7 @@ LoginManager.prototype = {
       return false;
     }
 
-    let uri = Services.io.newURI(origin, null, null);
-    return Services.perms.testPermission(uri, PERMISSION_SAVE_LOGINS) != Services.perms.DENY_ACTION;
+    return this._storage.getLoginSavingEnabled(origin);
   },
 
 
@@ -449,18 +431,13 @@ LoginManager.prototype = {
    * Enable or disable storing logins for the specified origin.
    */
   setLoginSavingEnabled(origin, enabled) {
-    // Throws if there are bogus values.
-    LoginHelper.checkHostnameValue(origin);
-
-    let uri = Services.io.newURI(origin, null, null);
-    if (enabled) {
-      Services.perms.remove(uri, PERMISSION_SAVE_LOGINS);
-    } else {
-      Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
+    // Nulls won't round-trip with getAllDisabledHosts().
+    if (origin.indexOf("\0") != -1) {
+      throw new Error("Invalid hostname");
     }
 
     log.debug("Login saving for", origin, "now enabled?", enabled);
-    LoginHelper.notifyStorageChanged(enabled ? "hostSavingEnabled" : "hostSavingDisabled", origin);
+    return this._storage.setLoginSavingEnabled(origin, enabled);
   },
 
   /**

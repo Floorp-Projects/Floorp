@@ -285,7 +285,7 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     // Send a notification that a login was added.
-    LoginHelper.notifyStorageChanged("addLogin", loginClone);
+    this._sendNotification("addLogin", loginClone);
   },
 
 
@@ -317,7 +317,7 @@ LoginManagerStorage_mozStorage.prototype = {
         stmt.reset();
       }
     }
-    LoginHelper.notifyStorageChanged("removeLogin", storedLogin);
+    this._sendNotification("removeLogin", storedLogin);
   },
 
 
@@ -399,7 +399,7 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
 
-    LoginHelper.notifyStorageChanged("modifyLogin", [oldStoredLogin, newLogin]);
+    this._sendNotification("modifyLogin", [oldStoredLogin, newLogin]);
   },
 
 
@@ -621,7 +621,66 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
 
-    LoginHelper.notifyStorageChanged("removeAllLogins", null);
+    this._sendNotification("removeAllLogins", null);
+  },
+
+
+  /*
+   * getAllDisabledHosts
+   *
+   */
+  getAllDisabledHosts : function (count) {
+    let disabledHosts = this._queryDisabledHosts(null);
+
+    this.log("_getAllDisabledHosts: returning " + disabledHosts.length + " disabled hosts.");
+    if (count)
+      count.value = disabledHosts.length; // needed for XPCOM
+    return disabledHosts;
+  },
+
+
+  /*
+   * getLoginSavingEnabled
+   *
+   */
+  getLoginSavingEnabled : function (hostname) {
+    this.log("Getting login saving is enabled for " + hostname);
+    return this._queryDisabledHosts(hostname).length == 0
+  },
+
+
+  /*
+   * setLoginSavingEnabled
+   *
+   */
+  setLoginSavingEnabled : function (hostname, enabled) {
+    // Throws if there are bogus values.
+    LoginHelper.checkHostnameValue(hostname);
+
+    this.log("Setting login saving enabled for " + hostname + " to " + enabled);
+    let query;
+    if (enabled)
+      query = "DELETE FROM moz_disabledHosts " +
+              "WHERE hostname = :hostname";
+    else
+      query = "INSERT INTO moz_disabledHosts " +
+              "(hostname) VALUES (:hostname)";
+    let params = { hostname: hostname };
+
+    let stmt
+    try {
+      stmt = this._dbCreateStatement(query, params);
+      stmt.execute();
+    } catch (e) {
+      this.log("setLoginSavingEnabled failed: " + e.name + " : " + e.message);
+      throw new Error("Couldn't write to database");
+    } finally {
+      if (stmt) {
+        stmt.reset();
+      }
+    }
+
+    this._sendNotification(enabled ? "hostSavingEnabled" : "hostSavingDisabled", hostname);
   },
 
 
@@ -705,6 +764,28 @@ LoginManagerStorage_mozStorage.prototype = {
 
 
   /*
+   * _sendNotification
+   *
+   * Send a notification when stored data is changed.
+   */
+  _sendNotification : function (changeType, data) {
+    let dataObject = data;
+    // Can't pass a raw JS string or array though notifyObservers(). :-(
+    if (data instanceof Array) {
+      dataObject = Cc["@mozilla.org/array;1"].
+                   createInstance(Ci.nsIMutableArray);
+      for (let i = 0; i < data.length; i++)
+        dataObject.appendElement(data[i], false);
+    } else if (typeof(data) == "string") {
+      dataObject = Cc["@mozilla.org/supports-string;1"].
+                   createInstance(Ci.nsISupportsString);
+      dataObject.data = data;
+    }
+    Services.obs.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
+  },
+
+
+  /*
    * _getIdForLogin
    *
    * Returns an array with two items: [id, login]. If the login was not
@@ -738,6 +819,40 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     return [id, foundLogin];
+  },
+
+
+  /*
+   * _queryDisabledHosts
+   *
+   * Returns an array of hostnames from the database according to the
+   * criteria given in the argument. If the argument hostname is null, the
+   * result array contains all hostnames
+   */
+  _queryDisabledHosts : function (hostname) {
+    let disabledHosts = [];
+
+    let query = "SELECT hostname FROM moz_disabledHosts";
+    let params = {};
+    if (hostname) {
+      query += " WHERE hostname = :hostname";
+      params = { hostname: hostname };
+    }
+
+    let stmt;
+    try {
+      stmt = this._dbCreateStatement(query, params);
+      while (stmt.executeStep())
+        disabledHosts.push(stmt.row.hostname);
+    } catch (e) {
+      this.log("_queryDisabledHosts failed: " + e.name + " : " + e.message);
+    } finally {
+      if (stmt) {
+        stmt.reset();
+      }
+    }
+
+    return disabledHosts;
   },
 
 

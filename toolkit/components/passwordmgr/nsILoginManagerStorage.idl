@@ -145,6 +145,48 @@ interface nsILoginManagerStorage : nsISupports {
 
 
   /**
+   * Obtain a list of all hosts for which password saving is disabled.
+   *
+   * @param count
+   *        The number of elements in the array. JS callers can simply use
+   *        the array's .length property and omit this param.
+   * @param hostnames
+   *        An array of hostname strings, in origin URL format without a
+   *        pathname. For example: "https://www.site.com".
+   *
+   * NOTE: This can be called from JS as:
+   *       var logins = pwmgr.getAllDisabledHosts();
+   */
+  void getAllDisabledHosts([optional] out unsigned long count,
+                    [retval, array, size_is(count)] out wstring hostnames);
+
+
+  /**
+   * Check to see if saving logins has been disabled for a host.
+   *
+   * @param aHost
+   *        The hostname to check. This argument should be in the origin
+   *        URL format, without a pathname. For example: "http://foo.com".
+   */
+  boolean getLoginSavingEnabled(in AString aHost);
+
+
+  /**
+   * Disable (or enable) storing logins for the specified host. When
+   * disabled, the login manager will not prompt to store logins for
+   * that host. Existing logins are not affected.
+   *
+   * @param aHost
+   *        The hostname to set. This argument should be in the origin
+   *        URL format, without a pathname. For example: "http://foo.com".
+   * @param isEnabled
+   *        Specify if saving logins should be enabled (true) or
+   *        disabled (false)
+   */
+  void setLoginSavingEnabled(in AString aHost, in boolean isEnabled);
+
+
+  /**
    * Search for logins matching the specified criteria. Called when looking
    * for logins that might be applicable to a form or authentication request.
    *
