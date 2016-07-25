@@ -8,6 +8,7 @@ BROWSER_CHROME_MANIFESTS += [
     # Each test is in it's own directory so it gets run in a clean profile with
     # run-by-dir.
     'browser.ini',
+    'controlCenter/browser.ini',
     'devtools/browser.ini',
     'permissionPrompts/browser.ini',
     'preferences/browser.ini',
