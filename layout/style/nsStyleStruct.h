@@ -3506,18 +3506,18 @@ struct nsStyleClipPath
     return !(*this == aOther);
   }
 
-  int32_t GetType() const {
+  mozilla::StyleClipPathType GetType() const {
     return mType;
   }
 
   nsIURI* GetURL() const {
-    NS_ASSERTION(mType == NS_STYLE_CLIP_PATH_URL, "wrong clip-path type");
+    NS_ASSERTION(mType == mozilla::StyleClipPathType::URL, "wrong clip-path type");
     return mURL;
   }
   void SetURL(nsIURI* aURL);
 
   nsStyleBasicShape* GetBasicShape() const {
-    NS_ASSERTION(mType == NS_STYLE_CLIP_PATH_SHAPE, "wrong clip-path type");
+    NS_ASSERTION(mType == mozilla::StyleClipPathType::Shape, "wrong clip-path type");
     return mBasicShape;
   }
 
@@ -3532,11 +3532,11 @@ private:
   void ReleaseRef();
   void* operator new(size_t) = delete;
 
-  int32_t mType; // see NS_STYLE_CLIP_PATH_* constants in nsStyleConsts.h
   union {
     nsStyleBasicShape* mBasicShape;
     nsIURI* mURL;
   };
+  mozilla::StyleClipPathType    mType;
   mozilla::StyleClipShapeSizing mSizingBox;
 };
 
@@ -3625,7 +3625,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   }
 
   bool HasClipPath() const {
-    return mClipPath.GetType() != NS_STYLE_CLIP_PATH_NONE;
+    return mClipPath.GetType() != mozilla::StyleClipPathType::None_;
   }
 
   bool HasNonScalingStroke() const {

@@ -60,6 +60,15 @@ enum class StyleBoxSizing : uint8_t {
   Border
 };
 
+// clip-path type
+// X11 has a #define for None causing conflicts, so we use None_ here
+enum class StyleClipPathType : uint8_t {
+  None_,
+  URL,
+  Shape,
+  Box,
+};
+
 // clip-path sizing
 enum class StyleClipShapeSizing : uint8_t {
   NoBox,
@@ -562,12 +571,6 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_FLOAT_RIGHT                    2
 #define NS_STYLE_FLOAT_INLINE_START             3
 #define NS_STYLE_FLOAT_INLINE_END               4
-
-// See nsStyleClipPath
-#define NS_STYLE_CLIP_PATH_NONE                 0
-#define NS_STYLE_CLIP_PATH_URL                  1
-#define NS_STYLE_CLIP_PATH_SHAPE                2
-#define NS_STYLE_CLIP_PATH_BOX                  3
 
 // See nsStyleFilter
 #define NS_STYLE_FILTER_NONE                    0

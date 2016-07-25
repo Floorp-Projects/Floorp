@@ -5976,7 +5976,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
   const nsStyleBasicShape* aStyleBasicShape,
-  mozilla::StyleClipShapeSizing aSizingBox)
+  StyleClipShapeSizing aSizingBox)
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   if (aStyleBasicShape) {
@@ -6005,18 +6005,18 @@ nsComputedDOMStyle::DoGetClipPath()
 {
   const nsStyleSVGReset* svg = StyleSVGReset();
   switch (svg->mClipPath.GetType()) {
-    case NS_STYLE_CLIP_PATH_SHAPE:
+    case StyleClipPathType::Shape:
       return CreatePrimitiveValueForClipPath(svg->mClipPath.GetBasicShape(),
                                              svg->mClipPath.GetSizingBox());
-    case NS_STYLE_CLIP_PATH_BOX:
+    case StyleClipPathType::Box:
       return CreatePrimitiveValueForClipPath(nullptr,
                                              svg->mClipPath.GetSizingBox());
-    case NS_STYLE_CLIP_PATH_URL: {
+    case StyleClipPathType::URL: {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
       val->SetURI(svg->mClipPath.GetURL());
       return val.forget();
     }
-    case NS_STYLE_CLIP_PATH_NONE: {
+    case StyleClipPathType::None_: {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
       val->SetIdent(eCSSKeyword_none);
       return val.forget();
