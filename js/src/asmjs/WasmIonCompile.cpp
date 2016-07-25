@@ -1848,8 +1848,46 @@ EmitGetGlobal(FunctionCompiler& f)
         return false;
 
     const GlobalDesc& global = f.mg().globals[id];
-    f.iter().setResult(f.loadGlobalVar(global.globalDataOffset, global.isConst,
-                                       ToMIRType(global.type)));
+    if (!global.isConstant()) {
+        f.iter().setResult(f.loadGlobalVar(global.offset(), !global.isMutable(),
+                                           ToMIRType(global.type())));
+        return true;
+    }
+
+    Val value = global.constantValue();
+    MIRType mirType = ToMIRType(value.type());
+
+    MDefinition* result;
+    switch (value.type()) {
+      case ValType::I32:
+        result = f.constant(Int32Value(value.i32()), mirType);
+        break;
+      case ValType::I64:
+        result = f.constant(value.i64());
+        break;
+      case ValType::F32:
+        result = f.constant(Float32Value(value.f32()), mirType);
+        break;
+      case ValType::F64:
+        result = f.constant(DoubleValue(value.f64()), mirType);
+        break;
+      case ValType::I8x16:
+        result = f.constant(SimdConstant::CreateX16(value.i8x16()), mirType);
+        break;
+      case ValType::I16x8:
+        result = f.constant(SimdConstant::CreateX8(value.i16x8()), mirType);
+        break;
+      case ValType::I32x4:
+        result = f.constant(SimdConstant::CreateX4(value.i32x4()), mirType);
+        break;
+      case ValType::F32x4:
+        result = f.constant(SimdConstant::CreateX4(value.f32x4()), mirType);
+        break;
+      default:
+        MOZ_CRASH("unexpected type in EmitGetGlobal");
+    }
+
+    f.iter().setResult(result);
     return true;
 }
 
@@ -1862,7 +1900,9 @@ EmitSetGlobal(FunctionCompiler& f)
         return false;
 
     const GlobalDesc& global = f.mg().globals[id];
-    f.storeGlobalVar(global.globalDataOffset, value);
+    MOZ_ASSERT(global.isMutable());
+
+    f.storeGlobalVar(global.offset(), value);
     return true;
 }
 

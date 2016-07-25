@@ -136,6 +136,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishLinkData(Bytes& code);
     MOZ_MUST_USE bool addFuncImport(const Sig& sig, uint32_t globalDataOffset);
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
+    MOZ_MUST_USE bool allocateGlobal(GlobalDesc* global);
 
   public:
     explicit ModuleGenerator(ImportVector&& imports);
@@ -165,8 +166,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     const SigWithId& funcSig(uint32_t funcIndex) const;
 
     // Globals:
-    MOZ_MUST_USE bool allocateGlobal(ValType type, bool isConst, uint32_t* index);
-    const GlobalDesc& global(unsigned index) const { return shared_->globals[index]; }
+    const GlobalDescVector& globals() const { return shared_->globals; }
 
     // Imports:
     uint32_t numFuncImports() const;
@@ -176,6 +176,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool addFuncExport(UniqueChars fieldName, uint32_t funcIndex);
     MOZ_MUST_USE bool addTableExport(UniqueChars fieldName);
     MOZ_MUST_USE bool addMemoryExport(UniqueChars fieldName);
+    MOZ_MUST_USE bool addGlobalExport(UniqueChars fieldName, uint32_t globalIndex);
 
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
@@ -201,6 +202,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
     void initMemoryUsage(MemoryUsage memoryUsage);
     void bumpMinMemoryLength(uint32_t newMinMemoryLength);
+    MOZ_MUST_USE bool addGlobal(ValType type, bool isConst, uint32_t* index);
 
     // Finish compilation, provided the list of imports and source bytecode.
     // Both these Vectors may be empty (viz., b/c asm.js does different things

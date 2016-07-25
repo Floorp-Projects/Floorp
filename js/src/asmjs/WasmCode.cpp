@@ -417,6 +417,7 @@ Metadata::serializedSize() const
            SerializedVectorSize(funcImports) +
            SerializedVectorSize(funcExports) +
            SerializedVectorSize(sigIds) +
+           SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
            SerializedPodVectorSize(memoryAccesses) +
            SerializedPodVectorSize(boundsChecks) +
@@ -435,6 +436,7 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, funcExports);
     cursor = SerializeVector(cursor, sigIds);
+    cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
     cursor = SerializePodVector(cursor, memoryAccesses);
     cursor = SerializePodVector(cursor, boundsChecks);
@@ -454,6 +456,7 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializeVector(cursor, &funcImports)) &&
     (cursor = DeserializeVector(cursor, &funcExports)) &&
     (cursor = DeserializeVector(cursor, &sigIds)) &&
+    (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
     (cursor = DeserializePodVector(cursor, &boundsChecks)) &&
@@ -472,6 +475,7 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
     return SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
            SizeOfVectorExcludingThis(funcExports, mallocSizeOf) +
            SizeOfVectorExcludingThis(sigIds, mallocSizeOf) +
+           globals.sizeOfExcludingThis(mallocSizeOf) +
            tables.sizeOfExcludingThis(mallocSizeOf) +
            memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
            boundsChecks.sizeOfExcludingThis(mallocSizeOf) +
