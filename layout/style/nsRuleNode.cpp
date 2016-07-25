@@ -1302,7 +1302,7 @@ struct SetEnumValueHelper
 
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
   DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
-  DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None, SelectMenu)
+  DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None_, SelectMenu)
 
 #undef DEF_SET_ENUMERATED_VALUE
 };
