@@ -4404,7 +4404,7 @@ nsComputedDOMStyle::DoGetFloatEdge()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleBorder()->mFloatEdge,
+    nsCSSProps::ValueToKeywordEnum(uint8_t(StyleBorder()->mFloatEdge),
                                    nsCSSProps::kFloatEdgeKTable));
   return val.forget();
 }
