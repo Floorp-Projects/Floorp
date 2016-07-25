@@ -74,6 +74,32 @@ add_task(function* testGoodPermissions() {
     manifest: {"permissions": ["<all_urls>"]},
   });
 
+  info("Test activeTab permission with a command key press");
+  yield testHasPermission({
+    manifest: {
+      "permissions": ["activeTab"],
+      "commands": {
+        "test-tabs-executeScript": {
+          "suggested_key": {
+            "default": "Alt+Shift+K",
+          },
+        },
+      },
+    },
+    contentSetup() {
+      browser.commands.onCommand.addListener(function(command) {
+        if (command == "test-tabs-executeScript") {
+          browser.test.sendMessage("tabs-command-key-pressed");
+        }
+      });
+      return Promise.resolve();
+    },
+    setup: function* (extension) {
+      yield EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      yield extension.awaitMessage("tabs-command-key-pressed");
+    },
+  });
+
   info("Test activeTab permission with a browser action click");
   yield testHasPermission({
     manifest: {
