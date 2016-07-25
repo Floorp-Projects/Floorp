@@ -274,6 +274,8 @@ mochitest-media:
     treeherder-symbol: tc-M(mda)
     max-run-time: 5400
     loopback-video: true
+    instance-size: large
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: mozharness/scripts/desktop_unittest.py
         no-read-buildbot-config: true

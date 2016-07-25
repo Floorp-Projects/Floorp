@@ -12,6 +12,7 @@ images_path: '../../../testing/docker'
 # knowledge that unnecessary images will be omitted from the target task graph
 images:
   - desktop-test
+  - desktop1604-test
   - desktop-build
   - builder
   - tester
