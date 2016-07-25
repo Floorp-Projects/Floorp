@@ -46,6 +46,7 @@ bool CubebLatencyPrefSet();
 #if defined(__ANDROID__) && defined(MOZ_B2G)
 cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel);
 #endif
+void GetCurrentBackend(nsAString& aBackend);
 
 } // namespace CubebUtils
 } // namespace mozilla

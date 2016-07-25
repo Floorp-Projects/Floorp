@@ -367,6 +367,8 @@ var dataProviders = {
     });
     promises.push(promise);
 
+    data.currentAudioBackend = winUtils.currentAudioBackend;
+
     if (!data.numAcceleratedWindows && gfxInfo) {
       let win = AppConstants.platform == "win";
       let feature = win ? gfxInfo.FEATURE_DIRECT3D_9_LAYERS :
