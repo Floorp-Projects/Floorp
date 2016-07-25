@@ -11,10 +11,12 @@
 #include "gfxTypes.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/gfx/2D.h"
+#include "nsStyleStruct.h"
 #include "nsTArray.h"
 
 class gfxContext;
 class nsIDocument;
+class nsSVGPaintServerFrame;
 
 namespace mozilla {
 
@@ -100,6 +102,83 @@ private:
   // The context paint that needs to be restored by our dtor after it removes
   // aContextPaint:
   void* mOuterContextPaint;
+};
+
+
+/**
+ * This class should be flattened into SVGContextPaint once we get rid of the
+ * other sub-class (SimpleTextContextPaint).
+ */
+struct SVGTextContextPaint : public SVGContextPaint
+{
+protected:
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+public:
+  already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                              float aOpacity,
+                                              const gfxMatrix& aCTM) override;
+  already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                float aOpacity,
+                                                const gfxMatrix& aCTM) override;
+
+  void SetFillOpacity(float aOpacity) { mFillOpacity = aOpacity; }
+  float GetFillOpacity() const override { return mFillOpacity; }
+
+  void SetStrokeOpacity(float aOpacity) { mStrokeOpacity = aOpacity; }
+  float GetStrokeOpacity() const override { return mStrokeOpacity; }
+
+  struct Paint {
+    Paint() : mPaintType(eStyleSVGPaintType_None) {}
+
+    void SetPaintServer(nsIFrame* aFrame,
+                        const gfxMatrix& aContextMatrix,
+                        nsSVGPaintServerFrame* aPaintServerFrame) {
+      mPaintType = eStyleSVGPaintType_Server;
+      mPaintDefinition.mPaintServerFrame = aPaintServerFrame;
+      mFrame = aFrame;
+      mContextMatrix = aContextMatrix;
+    }
+
+    void SetColor(const nscolor &aColor) {
+      mPaintType = eStyleSVGPaintType_Color;
+      mPaintDefinition.mColor = aColor;
+    }
+
+    void SetContextPaint(SVGContextPaint* aContextPaint,
+                         nsStyleSVGPaintType aPaintType) {
+      NS_ASSERTION(aPaintType == eStyleSVGPaintType_ContextFill ||
+                   aPaintType == eStyleSVGPaintType_ContextStroke,
+                   "Invalid context paint type");
+      mPaintType = aPaintType;
+      mPaintDefinition.mContextPaint = aContextPaint;
+    }
+
+    union {
+      nsSVGPaintServerFrame* mPaintServerFrame;
+      SVGContextPaint* mContextPaint;
+      nscolor mColor;
+    } mPaintDefinition;
+
+    nsIFrame* mFrame;
+    // CTM defining the user space for the pattern we will use.
+    gfxMatrix mContextMatrix;
+    nsStyleSVGPaintType mPaintType;
+
+    // Device-space-to-pattern-space
+    gfxMatrix mPatternMatrix;
+    nsRefPtrHashtable<nsFloatHashKey, gfxPattern> mPatternCache;
+
+    already_AddRefed<gfxPattern> GetPattern(const DrawTarget* aDrawTarget,
+                                            float aOpacity,
+                                            nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                            const gfxMatrix& aCTM);
+  };
+
+  Paint mFillPaint;
+  Paint mStrokePaint;
+
+  float mFillOpacity;
+  float mStrokeOpacity;
 };
 
 } // namespace mozilla
