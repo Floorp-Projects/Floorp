@@ -191,6 +191,13 @@ static const GUID DXVA2_Intel_ModeH264_E = {
 bool
 D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  gfx::D3D9VideoCrashGuard crashGuard;
+  if (crashGuard.Crashed()) {
+    NS_WARNING("DXVA2D3D9 crash detected");
+    return false;
+  }
+
   DXVA2_VideoDesc desc;
   HRESULT hr = ConvertMFTypeToDXVAType(aType, &desc);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
@@ -542,6 +549,13 @@ private:
 bool
 D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  gfx::D3D11VideoCrashGuard crashGuard;
+  if (crashGuard.Crashed()) {
+    NS_WARNING("DXVA2D3D9 crash detected");
+    return false;
+  }
+
   RefPtr<ID3D11VideoDevice> videoDevice;
   HRESULT hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
