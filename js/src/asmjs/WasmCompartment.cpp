@@ -40,6 +40,17 @@ Compartment::~Compartment()
     MOZ_ASSERT(!instances_.initialized() || instances_.empty());
 }
 
+void
+Compartment::trace(JSTracer* trc)
+{
+    // A WasmInstanceObject that was initially reachable when called can become
+    // unreachable while executing on the stack. Since wasm does not otherwise
+    // scan the stack during GC to identify live instances, we mark all instance
+    // objects live if there is any running wasm in the compartment.
+    if (activationCount_)
+        instances_.get().trace(trc);
+}
+
 bool
 Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj)
 {
