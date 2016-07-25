@@ -1683,20 +1683,6 @@ public:
     XPCNativeScriptableInfo*
     GetScriptableInfo()   {return mScriptableInfo;}
 
-    uint32_t
-    GetClassInfoFlags() const {return mClassInfoFlags;}
-
-#ifdef GET_IT
-#undef GET_IT
-#endif
-#define GET_IT(f_) const {return !!(mClassInfoFlags & nsIClassInfo:: f_ );}
-
-    bool ClassIsSingleton()           GET_IT(SINGLETON)
-    bool ClassIsDOMObject()           GET_IT(DOM_OBJECT)
-    bool ClassIsPluginObject()        GET_IT(PLUGIN_OBJECT)
-
-#undef GET_IT
-
     void SetScriptableInfo(XPCNativeScriptableInfo* si)
         {MOZ_ASSERT(!mScriptableInfo, "leak here!"); mScriptableInfo = si;}
 
@@ -1756,7 +1742,6 @@ protected:
     // hide ctor
     XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
                           nsIClassInfo* ClassInfo,
-                          uint32_t ClassInfoFlags,
                           XPCNativeSet* Set);
 
     bool Init(const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
@@ -1771,7 +1756,6 @@ private:
     XPCWrappedNativeScope*   mScope;
     JS::ObjectPtr            mJSProtoObject;
     nsCOMPtr<nsIClassInfo>   mClassInfo;
-    uint32_t                 mClassInfoFlags;
     XPCNativeSet*            mSet;
     XPCNativeScriptableInfo* mScriptableInfo;
 };
