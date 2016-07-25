@@ -669,14 +669,15 @@ typedef AstVector<AstDataSegment*> AstDataSegmentVector;
 
 class AstElemSegment : public AstNode
 {
-    uint32_t offset_;
+    AstExpr* offset_;
     AstRefVector elems_;
 
   public:
-    AstElemSegment(uint32_t offset, AstRefVector&& elems)
+    AstElemSegment(AstExpr* offset, AstRefVector&& elems)
       : offset_(offset), elems_(Move(elems))
     {}
-    uint32_t offset() const { return offset_; }
+
+    AstExpr* offset() const { return offset_; }
     AstRefVector& elems() { return elems_; }
     const AstRefVector& elems() const { return elems_; }
 };
