@@ -17,6 +17,7 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
+#include "mozilla/StaticAnalysisFunctions.h"
 #ifdef MOZ_DUMP_ASSERTION_STACK
 #include "nsTraceRefcnt.h"
 #endif
@@ -368,7 +369,7 @@ struct AssertionConditionType
 #define MOZ_ASSERT_HELPER1(expr) \
   do { \
     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
-    if (MOZ_UNLIKELY(!(expr))) { \
+    if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) { \
       MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
       MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ")"); \
       MOZ_REALLY_CRASH(); \
@@ -378,7 +379,7 @@ struct AssertionConditionType
 #define MOZ_ASSERT_HELPER2(expr, explain) \
   do { \
     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
-    if (MOZ_UNLIKELY(!(expr))) { \
+    if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) { \
       MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
       MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ") (" explain ")"); \
       MOZ_REALLY_CRASH(); \
