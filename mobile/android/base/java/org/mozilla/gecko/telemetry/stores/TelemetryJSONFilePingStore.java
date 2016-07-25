@@ -129,7 +129,15 @@ public class TelemetryJSONFilePingStore extends TelemetryPingStore {
 
     @Override
     public ArrayList<TelemetryPing> getAllPings() {
-        final List<File> files = Arrays.asList(storeDir.listFiles(uuidFilenameFilter));
+        final File[] fileArray = storeDir.listFiles(uuidFilenameFilter);
+        if (fileArray == null) {
+            // Intentionally don't log all info for the store directory to prevent leaking the path.
+            Log.w(LOGTAG, "listFiles unexpectedly returned null - unable to retrieve pings. Debug: exists? " +
+                    storeDir.exists() + "; directory? " + storeDir.isDirectory());
+            return new ArrayList<>(1);
+        }
+
+        final List<File> files = Arrays.asList(fileArray);
         Collections.sort(files, fileLastModifiedComparator); // oldest to newest
         final ArrayList<TelemetryPing> out = new ArrayList<>(files.size());
         for (final File file : files) {
