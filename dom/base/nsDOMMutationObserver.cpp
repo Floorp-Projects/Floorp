@@ -390,12 +390,18 @@ void
 nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
                                              AnimationMutation aMutationType)
 {
-  mozilla::dom::KeyframeEffectReadOnly* effect = aAnimation->GetEffect();
+  mozilla::dom::AnimationEffectReadOnly* effect = aAnimation->GetEffect();
   if (!effect) {
     return;
   }
 
-  Maybe<NonOwningAnimationTarget> animationTarget = effect->GetTarget();
+  mozilla::dom::KeyframeEffectReadOnly* keyframeEffect =
+    effect->AsKeyframeEffect();
+  if (!keyframeEffect) {
+    return;
+  }
+
+  Maybe<NonOwningAnimationTarget> animationTarget = keyframeEffect->GetTarget();
   if (!animationTarget) {
     return;
   }

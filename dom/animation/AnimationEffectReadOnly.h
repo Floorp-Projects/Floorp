@@ -12,9 +12,14 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+
+struct ElementPropertyTransition;
+
 namespace dom {
 
+class Animation;
 class AnimationEffectTimingReadOnly;
+class KeyframeEffectReadOnly;
 struct ComputedTimingProperties;
 
 class AnimationEffectReadOnly : public nsISupports,
@@ -29,11 +34,33 @@ public:
   {
   }
 
+  virtual KeyframeEffectReadOnly* AsKeyframeEffect() { return nullptr; }
+
+  virtual ElementPropertyTransition* AsTransition() { return nullptr; }
+  virtual const ElementPropertyTransition* AsTransition() const
+  {
+    return nullptr;
+  }
+
   nsISupports* GetParentObject() const { return mDocument; }
 
-  virtual already_AddRefed<AnimationEffectTimingReadOnly> Timing() const = 0;
+  virtual bool IsInPlay() const = 0;
+  virtual bool IsCurrent() const = 0;
+  virtual bool IsInEffect() const = 0;
 
-  virtual void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const = 0;
+  virtual already_AddRefed<AnimationEffectTimingReadOnly> Timing() const = 0;
+  virtual const TimingParams& SpecifiedTiming() const = 0;
+  virtual void SetSpecifiedTiming(const TimingParams& aTiming) = 0;
+  virtual void NotifyAnimationTimingUpdated() = 0;
+
+  // Shortcut that gets the computed timing using the current local time as
+  // calculated from the timeline time.
+  virtual ComputedTiming GetComputedTiming(
+    const TimingParams* aTiming = nullptr) const = 0;
+  virtual void GetComputedTimingAsDict(
+    ComputedTimingProperties& aRetVal) const = 0;
+
+  virtual void SetAnimation(Animation* aAnimation) = 0;
 
 protected:
   virtual ~AnimationEffectReadOnly() = default;
