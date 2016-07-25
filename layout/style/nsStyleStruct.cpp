@@ -1005,22 +1005,22 @@ nsStyleBasicShape::GetShapeTypeName() const
 // nsStyleClipPath
 //
 nsStyleClipPath::nsStyleClipPath()
-  : mType(NS_STYLE_CLIP_PATH_NONE)
-  , mURL(nullptr)
-  , mSizingBox(mozilla::StyleClipShapeSizing::NoBox)
+  : mURL(nullptr)
+  , mType(StyleClipPathType::None_)
+  , mSizingBox(StyleClipShapeSizing::NoBox)
 {
 }
 
 nsStyleClipPath::nsStyleClipPath(const nsStyleClipPath& aSource)
-  : mType(NS_STYLE_CLIP_PATH_NONE)
-  , mURL(nullptr)
-  , mSizingBox(mozilla::StyleClipShapeSizing::NoBox)
+  : mURL(nullptr)
+  , mType(StyleClipPathType::None_)
+  , mSizingBox(StyleClipShapeSizing::NoBox)
 {
-  if (aSource.mType == NS_STYLE_CLIP_PATH_URL) {
+  if (aSource.mType == StyleClipPathType::URL) {
     SetURL(aSource.mURL);
-  } else if (aSource.mType == NS_STYLE_CLIP_PATH_SHAPE) {
+  } else if (aSource.mType == StyleClipPathType::Shape) {
     SetBasicShape(aSource.mBasicShape, aSource.mSizingBox);
-  } else if (aSource.mType == NS_STYLE_CLIP_PATH_BOX) {
+  } else if (aSource.mType == StyleClipPathType::Box) {
     SetSizingBox(aSource.mSizingBox);
   }
 }
@@ -1037,16 +1037,16 @@ nsStyleClipPath::operator=(const nsStyleClipPath& aOther)
     return *this;
   }
 
-  if (aOther.mType == NS_STYLE_CLIP_PATH_URL) {
+  if (aOther.mType == StyleClipPathType::URL) {
     SetURL(aOther.mURL);
-  } else if (aOther.mType == NS_STYLE_CLIP_PATH_SHAPE) {
+  } else if (aOther.mType == StyleClipPathType::Shape) {
     SetBasicShape(aOther.mBasicShape, aOther.mSizingBox);
-  } else if (aOther.mType == NS_STYLE_CLIP_PATH_BOX) {
+  } else if (aOther.mType == StyleClipPathType::Box) {
     SetSizingBox(aOther.mSizingBox);
   } else {
     ReleaseRef();
-    mSizingBox = mozilla::StyleClipShapeSizing::NoBox;
-    mType = NS_STYLE_CLIP_PATH_NONE;
+    mSizingBox = StyleClipShapeSizing::NoBox;
+    mType = StyleClipPathType::None_;
   }
   return *this;
 }
@@ -1058,12 +1058,12 @@ nsStyleClipPath::operator==(const nsStyleClipPath& aOther) const
     return false;
   }
 
-  if (mType == NS_STYLE_CLIP_PATH_URL) {
+  if (mType == StyleClipPathType::URL) {
     return EqualURIs(mURL, aOther.mURL);
-  } else if (mType == NS_STYLE_CLIP_PATH_SHAPE) {
+  } else if (mType == StyleClipPathType::Shape) {
     return *mBasicShape == *aOther.mBasicShape &&
            mSizingBox == aOther.mSizingBox;
-  } else if (mType == NS_STYLE_CLIP_PATH_BOX) {
+  } else if (mType == StyleClipPathType::Box) {
     return mSizingBox == aOther.mSizingBox;
   }
 
@@ -1073,10 +1073,10 @@ nsStyleClipPath::operator==(const nsStyleClipPath& aOther) const
 void
 nsStyleClipPath::ReleaseRef()
 {
-  if (mType == NS_STYLE_CLIP_PATH_SHAPE) {
+  if (mType == StyleClipPathType::Shape) {
     NS_ASSERTION(mBasicShape, "expected pointer");
     mBasicShape->Release();
-  } else if (mType == NS_STYLE_CLIP_PATH_URL) {
+  } else if (mType == StyleClipPathType::URL) {
     NS_ASSERTION(mURL, "expected pointer");
     mURL->Release();
   }
@@ -1092,27 +1092,27 @@ nsStyleClipPath::SetURL(nsIURI* aURL)
   ReleaseRef();
   mURL = aURL;
   mURL->AddRef();
-  mType = NS_STYLE_CLIP_PATH_URL;
+  mType = StyleClipPathType::URL;
 }
 
 void
 nsStyleClipPath::SetBasicShape(nsStyleBasicShape* aBasicShape,
-                               mozilla::StyleClipShapeSizing aSizingBox)
+                               StyleClipShapeSizing aSizingBox)
 {
   NS_ASSERTION(aBasicShape, "expected pointer");
   ReleaseRef();
   mBasicShape = aBasicShape;
   mBasicShape->AddRef();
   mSizingBox = aSizingBox;
-  mType = NS_STYLE_CLIP_PATH_SHAPE;
+  mType = StyleClipPathType::Shape;
 }
 
 void
-nsStyleClipPath::SetSizingBox(mozilla::StyleClipShapeSizing aSizingBox)
+nsStyleClipPath::SetSizingBox(StyleClipShapeSizing aSizingBox)
 {
   ReleaseRef();
   mSizingBox = aSizingBox;
-  mType = NS_STYLE_CLIP_PATH_BOX;
+  mType = StyleClipPathType::Box;
 }
 
 // --------------------
@@ -2821,7 +2821,7 @@ nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
   mFunc.mY2 = timingFunctionValues[aTimingFunctionType][3];
 }
 
-mozilla::StyleTransition::StyleTransition(const StyleTransition& aCopy)
+StyleTransition::StyleTransition(const StyleTransition& aCopy)
   : mTimingFunction(aCopy.mTimingFunction)
   , mDuration(aCopy.mDuration)
   , mDelay(aCopy.mDelay)
@@ -2831,7 +2831,7 @@ mozilla::StyleTransition::StyleTransition(const StyleTransition& aCopy)
 }
 
 void
-mozilla::StyleTransition::SetInitialValues()
+StyleTransition::SetInitialValues()
 {
   mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
   mDuration = 0.0;
@@ -2840,7 +2840,7 @@ mozilla::StyleTransition::SetInitialValues()
 }
 
 void
-mozilla::StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
+StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
                                              const nsAString& aPropertyString)
 {
   MOZ_ASSERT(nsCSSProps::LookupProperty(aPropertyString,
@@ -2855,7 +2855,7 @@ mozilla::StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
 }
 
 bool
-mozilla::StyleTransition::operator==(const mozilla::StyleTransition& aOther) const
+StyleTransition::operator==(const mozilla::StyleTransition& aOther) const
 {
   return mTimingFunction == aOther.mTimingFunction &&
          mDuration == aOther.mDuration &&
@@ -2865,7 +2865,7 @@ mozilla::StyleTransition::operator==(const mozilla::StyleTransition& aOther) con
           mUnknownProperty == aOther.mUnknownProperty);
 }
 
-mozilla::StyleAnimation::StyleAnimation(const mozilla::StyleAnimation& aCopy)
+StyleAnimation::StyleAnimation(const mozilla::StyleAnimation& aCopy)
   : mTimingFunction(aCopy.mTimingFunction)
   , mDuration(aCopy.mDuration)
   , mDelay(aCopy.mDelay)
@@ -2878,7 +2878,7 @@ mozilla::StyleAnimation::StyleAnimation(const mozilla::StyleAnimation& aCopy)
 }
 
 void
-mozilla::StyleAnimation::SetInitialValues()
+StyleAnimation::SetInitialValues()
 {
   mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
   mDuration = 0.0;
@@ -2891,7 +2891,7 @@ mozilla::StyleAnimation::SetInitialValues()
 }
 
 bool
-mozilla::StyleAnimation::operator==(const mozilla::StyleAnimation& aOther) const
+StyleAnimation::operator==(const mozilla::StyleAnimation& aOther) const
 {
   return mTimingFunction == aOther.mTimingFunction &&
          mDuration == aOther.mDuration &&
