@@ -1491,8 +1491,8 @@ KTableEntry nsCSSProps::kFloatKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kFloatEdgeKTable[] = {
-  { eCSSKeyword_content_box, NS_STYLE_FLOAT_EDGE_CONTENT_BOX },
-  { eCSSKeyword_margin_box, NS_STYLE_FLOAT_EDGE_MARGIN_BOX },
+  { eCSSKeyword_content_box, uint8_t(StyleFloatEdge::ContentBox) },
+  { eCSSKeyword_margin_box, uint8_t(StyleFloatEdge::MarginBox) },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

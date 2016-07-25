@@ -332,7 +332,7 @@ nsStyleBorder::nsStyleBorder(StyleStructContext aContext)
   , mBorderImageFill(NS_STYLE_BORDER_IMAGE_SLICE_NOFILL)
   , mBorderImageRepeatH(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH)
   , mBorderImageRepeatV(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH)
-  , mFloatEdge(NS_STYLE_FLOAT_EDGE_CONTENT_BOX)
+  , mFloatEdge(StyleFloatEdge::ContentBox)
   , mBoxDecorationBreak(NS_STYLE_BOX_DECORATION_BREAK_SLICE)
   , mComputedBorder(0, 0, 0, 0)
 {
@@ -2855,7 +2855,7 @@ StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
 }
 
 bool
-StyleTransition::operator==(const mozilla::StyleTransition& aOther) const
+StyleTransition::operator==(const StyleTransition& aOther) const
 {
   return mTimingFunction == aOther.mTimingFunction &&
          mDuration == aOther.mDuration &&
@@ -2865,7 +2865,7 @@ StyleTransition::operator==(const mozilla::StyleTransition& aOther) const
           mUnknownProperty == aOther.mUnknownProperty);
 }
 
-StyleAnimation::StyleAnimation(const mozilla::StyleAnimation& aCopy)
+StyleAnimation::StyleAnimation(const StyleAnimation& aCopy)
   : mTimingFunction(aCopy.mTimingFunction)
   , mDuration(aCopy.mDuration)
   , mDelay(aCopy.mDelay)
@@ -2891,7 +2891,7 @@ StyleAnimation::SetInitialValues()
 }
 
 bool
-StyleAnimation::operator==(const mozilla::StyleAnimation& aOther) const
+StyleAnimation::operator==(const StyleAnimation& aOther) const
 {
   return mTimingFunction == aOther.mTimingFunction &&
          mDuration == aOther.mDuration &&
