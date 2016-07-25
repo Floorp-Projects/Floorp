@@ -20,7 +20,7 @@ window.onload = Task.async(function* () {
   const message = prepareMessage(packet);
   const rendered = renderComponent(PageError, {message});
 
-  const queryPath = "div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace";
+  const queryPath = "div.message span.message-body-wrapper.message-body.devtools-monospace";
   const messageBody = rendered.querySelectorAll(queryPath);
   is(messageBody.length, 1, "PageError outputs expected HTML structure");
   is(messageBody[0].textContent, testCommands.get("pageError").expectedText, "PageError outputs expected text");

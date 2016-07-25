@@ -1579,8 +1579,8 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
   nsIDocument* subdoc = doc->GetSubDocumentFor(aContent);
   if (subdoc && IsWindowVisible(subdoc->GetWindow())) {
     const nsStyleUserInterface* ui = frame->StyleUserInterface();
-    int32_t tabIndex = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE ||
-                        ui->mUserFocus == NS_STYLE_USER_FOCUS_NONE) ? -1 : 0;
+    int32_t tabIndex = (ui->mUserFocus == StyleUserFocus::Ignore ||
+                        ui->mUserFocus == StyleUserFocus::None_) ? -1 : 0;
     return aContent->IsFocusable(&tabIndex, aFlags & FLAG_BYMOUSE) ? aContent : nullptr;
   }
   

@@ -25,10 +25,9 @@ ConsoleApiCall.propTypes = {
 function ConsoleApiCall(props) {
   const { message } = props;
 
-  const counter = message.data.counter;
-  const messageBody = counter ?
-    `${counter.label}: ${counter.count}` :
-    message.data.arguments.map((arg) => GripMessageBody({grip: arg}));
+  const messageBody = message.parameters ?
+    message.parameters.map((grip) => GripMessageBody({grip})) :
+    message.messageText;
 
   const icon = MessageIcon({severity: message.severity});
   const repeat = MessageRepeat({repeat: message.repeat});

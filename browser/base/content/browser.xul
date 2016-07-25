@@ -665,12 +665,6 @@
 #endif
     </toolbar>
 
-    <!--
-           CAVEAT EMPTOR
-           Should you need to add items to the toolbar here, make sure to also add them
-           to the default placements of buttons in CustomizableUI.jsm, so the
-           customization code doesn't get confused.
-      -->
     <toolbar id="nav-bar"
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
