@@ -7,7 +7,14 @@
 #ifndef mozilla_dom_AnimationEffectReadOnly_h
 #define mozilla_dom_AnimationEffectReadOnly_h
 
+#include "mozilla/ComputedTiming.h"
+#include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Nullable.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/StickyTimeDuration.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/TimingParams.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -29,10 +36,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffectReadOnly)
 
-  explicit AnimationEffectReadOnly(nsIDocument* aDocument)
-    : mDocument(aDocument)
-  {
-  }
+  AnimationEffectReadOnly(nsIDocument* aDocument,
+                          AnimationEffectTimingReadOnly* aTiming);
 
   virtual KeyframeEffectReadOnly* AsKeyframeEffect() { return nullptr; }
 
@@ -44,29 +49,49 @@ public:
 
   nsISupports* GetParentObject() const { return mDocument; }
 
-  virtual bool IsInPlay() const = 0;
-  virtual bool IsCurrent() const = 0;
-  virtual bool IsInEffect() const = 0;
+  bool IsInPlay() const;
+  bool IsCurrent() const;
+  bool IsInEffect() const;
 
-  virtual already_AddRefed<AnimationEffectTimingReadOnly> Timing() const = 0;
-  virtual const TimingParams& SpecifiedTiming() const = 0;
-  virtual void SetSpecifiedTiming(const TimingParams& aTiming) = 0;
+  already_AddRefed<AnimationEffectTimingReadOnly> Timing();
+  const TimingParams& SpecifiedTiming() const
+  {
+    return mTiming->AsTimingParams();
+  }
+  void SetSpecifiedTiming(const TimingParams& aTiming);
   virtual void NotifyAnimationTimingUpdated() = 0;
 
+  // This function takes as input the timing parameters of an animation and
+  // returns the computed timing at the specified local time.
+  //
+  // The local time may be null in which case only static parameters such as the
+  // active duration are calculated. All other members of the returned object
+  // are given a null/initial value.
+  //
+  // This function returns a null mProgress member of the return value
+  // if the animation should not be run
+  // (because it is not currently active and is not filling at this time).
+  static ComputedTiming
+  GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
+                      const TimingParams& aTiming,
+                      double aPlaybackRate);
   // Shortcut that gets the computed timing using the current local time as
   // calculated from the timeline time.
-  virtual ComputedTiming GetComputedTiming(
-    const TimingParams* aTiming = nullptr) const = 0;
-  virtual void GetComputedTimingAsDict(
-    ComputedTimingProperties& aRetVal) const = 0;
+  ComputedTiming GetComputedTiming(const TimingParams* aTiming = nullptr) const;
+  void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const;
 
-  virtual void SetAnimation(Animation* aAnimation) = 0;
+  void SetAnimation(Animation* aAnimation);
+  Animation* GetAnimation() const { return mAnimation; };
 
 protected:
-  virtual ~AnimationEffectReadOnly() = default;
+  virtual ~AnimationEffectReadOnly();
+
+  Nullable<TimeDuration> GetLocalTime() const;
 
 protected:
   RefPtr<nsIDocument> mDocument;
+  RefPtr<AnimationEffectTimingReadOnly> mTiming;
+  RefPtr<Animation> mAnimation;
 };
 
 } // namespace dom
