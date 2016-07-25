@@ -78,8 +78,13 @@ class DockerImageTask(base.Task):
                     "artifacts/decision_task/image_contexts/{}/context.tar.gz".format(image_name))
                 image_parameters['context_url'] = ARTIFACT_URL.format(
                     os.environ['TASK_ID'], image_artifact_path)
-                context_hash = cls.create_context_tar(context_path, destination,
-                                                      image_name)
+
+                destination = os.path.abspath(destination)
+                if not os.path.exists(os.path.dirname(destination)):
+                    os.makedirs(os.path.dirname(destination))
+
+                context_hash = create_context_tar(GECKO, context_path,
+                                                  destination, image_name)
             else:
                 # skip context generation since this isn't a decision task
                 # TODO: generate context tarballs using subdirectory clones in
@@ -132,18 +137,6 @@ class DockerImageTask(base.Task):
                 pass
 
         return False, None
-
-    @classmethod
-    def create_context_tar(cls, context_dir, destination, image_name):
-        """Creates a tar file of a particular context directory.
-
-        Returns the SHA-256 hex digest of the created file.
-        """
-        destination = os.path.abspath(destination)
-        if not os.path.exists(os.path.dirname(destination)):
-            os.makedirs(os.path.dirname(destination))
-
-        return create_context_tar(GECKO, context_dir, destination, image_name)
 
     @classmethod
     def from_json(cls, task_dict):
