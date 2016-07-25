@@ -101,14 +101,17 @@ enum class StyleFloatEdge : uint8_t {
 };
 
 // user-focus
-#define NS_STYLE_USER_FOCUS_NONE            0
-#define NS_STYLE_USER_FOCUS_IGNORE          1
-#define NS_STYLE_USER_FOCUS_NORMAL          2
-#define NS_STYLE_USER_FOCUS_SELECT_ALL      3
-#define NS_STYLE_USER_FOCUS_SELECT_BEFORE   4
-#define NS_STYLE_USER_FOCUS_SELECT_AFTER    5
-#define NS_STYLE_USER_FOCUS_SELECT_SAME     6
-#define NS_STYLE_USER_FOCUS_SELECT_MENU     7
+// X11 has a #define for None causing conflicts, so we use None_ here
+enum class StyleUserFocus : uint8_t {
+  None_,
+  Ignore,
+  Normal,
+  SelectAll,
+  SelectBefore,
+  SelectAfter,
+  SelectSame,
+  SelectMenu,
+};
 
 // user-select
 #define NS_STYLE_USER_SELECT_NONE       0

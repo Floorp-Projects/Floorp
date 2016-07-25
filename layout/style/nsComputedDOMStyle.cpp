@@ -4453,7 +4453,7 @@ nsComputedDOMStyle::DoGetUserFocus()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleUserInterface()->mUserFocus,
+    nsCSSProps::ValueToKeywordEnum(uint8_t(StyleUserInterface()->mUserFocus),
                                    nsCSSProps::kUserFocusKTable));
   return val.forget();
 }
