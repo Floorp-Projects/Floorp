@@ -16,20 +16,13 @@
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ComputedTiming.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/KeyframeEffectParams.h"
 #include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
-#include "mozilla/Maybe.h"
-#include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/TimingParams.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
-#include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/Nullable.h"
 
 struct JSContext;
 class nsCSSPropertyIDSet;
@@ -237,44 +230,7 @@ public:
     mEffectOptions.GetSpacingAsString(aRetVal);
   }
 
-  already_AddRefed<AnimationEffectTimingReadOnly> Timing() const override;
-
-  const TimingParams& SpecifiedTiming() const override
-  {
-    return mTiming->AsTimingParams();
-  }
-  void SetSpecifiedTiming(const TimingParams& aTiming) override;
   void NotifyAnimationTimingUpdated() override;
-
-  Nullable<TimeDuration> GetLocalTime() const;
-
-  // This function takes as input the timing parameters of an animation and
-  // returns the computed timing at the specified local time.
-  //
-  // The local time may be null in which case only static parameters such as the
-  // active duration are calculated. All other members of the returned object
-  // are given a null/initial value.
-  //
-  // This function returns a null mProgress member of the return value
-  // if the animation should not be run
-  // (because it is not currently active and is not filling at this time).
-  static ComputedTiming
-  GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
-                      const TimingParams& aTiming,
-                      double aPlaybackRate);
-
-  ComputedTiming
-  GetComputedTiming(const TimingParams* aTiming = nullptr) const override;
-
-  void
-  GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const override;
-
-  bool IsInPlay() const override;
-  bool IsCurrent() const override;
-  bool IsInEffect() const override;
-
-  void SetAnimation(Animation* aAnimation) override;
-  Animation* GetAnimation() const { return mAnimation; }
 
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv);
@@ -351,7 +307,7 @@ protected:
                          AnimationEffectTimingReadOnly* aTiming,
                          const KeyframeEffectParams& aOptions);
 
-  virtual ~KeyframeEffectReadOnly();
+  ~KeyframeEffectReadOnly() override = default;
 
   template<class KeyframeEffectType, class OptionsType>
   static already_AddRefed<KeyframeEffectType>
@@ -394,9 +350,7 @@ protected:
   GetTargetStyleContext();
 
   Maybe<OwningAnimationTarget> mTarget;
-  RefPtr<Animation> mAnimation;
 
-  RefPtr<AnimationEffectTimingReadOnly> mTiming;
   KeyframeEffectParams mEffectOptions;
 
   // The specified keyframes.
@@ -469,9 +423,6 @@ public:
   // that to update the properties rather than calling
   // GetStyleContextForElement.
   void SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
-
-protected:
-  ~KeyframeEffect() override;
 };
 
 } // namespace dom
