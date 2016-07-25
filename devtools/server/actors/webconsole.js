@@ -594,8 +594,11 @@ WebConsoleActor.prototype =
           break;
         case "ConsoleAPI":
           if (!this.consoleAPIListener) {
+            // Create the consoleAPIListener (and apply the filtering options defined
+            // in the parent actor).
             this.consoleAPIListener =
-              new ConsoleAPIListener(window, this);
+              new ConsoleAPIListener(window, this,
+                                     this.parentActor.consoleAPIListenerOptions);
             this.consoleAPIListener.init();
           }
           startedListeners.push(listener);
