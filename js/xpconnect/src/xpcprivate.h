@@ -409,7 +409,7 @@ private:
     mozilla::Maybe<StringType> mStrings[2];
 };
 
-class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
+class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime
 {
 public:
     static XPCJSRuntime* newXPCJSRuntime();
@@ -667,7 +667,7 @@ private:
 //
 // Note that most accessors are inlined.
 
-class MOZ_STACK_CLASS XPCCallContext : public nsAXPCNativeCallContext
+class MOZ_STACK_CLASS XPCCallContext final : public nsAXPCNativeCallContext
 {
 public:
     NS_IMETHOD GetCallee(nsISupports** aResult);
@@ -848,7 +848,7 @@ typedef nsTArray<InterpositionWhitelistPair> InterpositionWhitelistArray;
 
 class nsIAddonInterposition;
 class nsXPCComponentsBase;
-class XPCWrappedNativeScope : public PRCList
+class XPCWrappedNativeScope final : public PRCList
 {
 public:
 
@@ -1114,7 +1114,7 @@ private:
 
 // Tight. No virtual methods. Can be bitwise copied (until any resolution done).
 
-class XPCNativeMember
+class XPCNativeMember final
 {
 public:
     static bool GetCallInfo(JSObject* funobj,
@@ -1211,7 +1211,7 @@ private:
 
 // Tight. No virtual methods.
 
-class XPCNativeInterface
+class XPCNativeInterface final
 {
   public:
     static XPCNativeInterface* GetNewOrUsed(const nsIID* iid);
@@ -1288,7 +1288,7 @@ private:
 /***************************************************************************/
 // XPCNativeSetKey is used to key a XPCNativeSet in a NativeSetMap.
 
-class XPCNativeSetKey
+class XPCNativeSetKey final
 {
 public:
     explicit XPCNativeSetKey(XPCNativeSet*       BaseSet  = nullptr,
@@ -1338,7 +1338,7 @@ private:
 /***************************************************************************/
 // XPCNativeSet represents an ordered collection of XPCNativeInterface pointers.
 
-class XPCNativeSet
+class XPCNativeSet final
 {
   public:
     static XPCNativeSet* GetNewOrUsed(const nsIID* iid);
@@ -1457,7 +1457,7 @@ class XPCNativeSet
 
 #define XPC_WN_SJSFLAGS_MARK_FLAG JS_BIT(31) // only high bit of 32 is set
 
-class XPCNativeScriptableFlags
+class XPCNativeScriptableFlags final
 {
 private:
     uint32_t mFlags;
@@ -1521,7 +1521,7 @@ public:
 // was a big problem when wrappers are reparented to different scopes (and
 // thus different protos (the DOM does this).
 
-class XPCNativeScriptableShared
+class XPCNativeScriptableShared final
 {
 public:
     const XPCNativeScriptableFlags& GetFlags() const { return mFlags; }
@@ -1559,7 +1559,7 @@ private:
 // XPCNativeScriptableInfo is used to hold the nsIXPCScriptable state for a
 // given class or instance.
 
-class XPCNativeScriptableInfo
+class XPCNativeScriptableInfo final
 {
 public:
     static XPCNativeScriptableInfo*
@@ -1616,7 +1616,7 @@ private:
 // it abstracts out the scriptable interface pointer and the flags. After
 // creation these are factored differently using XPCNativeScriptableInfo.
 
-class MOZ_STACK_CLASS XPCNativeScriptableCreateInfo
+class MOZ_STACK_CLASS XPCNativeScriptableCreateInfo final
 {
 public:
 
@@ -1653,7 +1653,7 @@ private:
 // XPCWrappedNativeProto hold the additional shared wrapper data
 // for XPCWrappedNative whose native objects expose nsIClassInfo.
 
-class XPCWrappedNativeProto
+class XPCWrappedNativeProto final
 {
 public:
     static XPCWrappedNativeProto*
@@ -1780,7 +1780,7 @@ private:
 // XPCWrappedNativeTearOff represents the info needed to make calls to one
 // interface on the underlying native object of a XPCWrappedNative.
 
-class XPCWrappedNativeTearOff
+class XPCWrappedNativeTearOff final
 {
 public:
     bool IsAvailable() const {return mInterface == nullptr;}
@@ -2355,8 +2355,8 @@ private:
 
 /***************************************************************************/
 
-class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder,
-                          public XPCRootSetElem
+class XPCJSObjectHolder final : public nsIXPConnectJSObjectHolder,
+                                public XPCRootSetElem
 {
 public:
     // all the interface method declarations...
