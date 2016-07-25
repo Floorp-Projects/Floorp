@@ -896,8 +896,6 @@ ModuleGenerator::finishFuncDefs()
 bool
 ModuleGenerator::addElemSegment(ElemSegment&& seg)
 {
-    MOZ_ASSERT(seg.offset + seg.elems.length() <= shared_->tables[seg.tableIndex].initial);
-
     if (externalTable_) {
         for (uint32_t funcIndex : seg.elems) {
             if (!exportedFuncs_.put(funcIndex))
@@ -942,7 +940,7 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncInd
     uint32_t tableIndex = shared_->asmJSSigToTableIndex[sigIndex];
     MOZ_ASSERT(shared_->tables[tableIndex].initial == elemFuncIndices.length());
 
-    return elemSegments_.emplaceBack(tableIndex, 0, Move(elemFuncIndices));
+    return elemSegments_.emplaceBack(tableIndex, InitExpr(Val(uint32_t(0))), Move(elemFuncIndices));
 }
 
 SharedModule

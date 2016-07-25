@@ -220,8 +220,8 @@ var code = textToBinary(`(module
     (func $g (result i32) (i32.const 2))
     (func $h (result i32) (i32.const 3))
     (table (resizable 4))
-    (elem 0 $f)
-    (elem 2 $g)
+    (elem (i32.const 0) $f)
+    (elem (i32.const 2) $g)
     (export "f1" $f)
     (export "tbl1" table)
     (export "f2" $f)
@@ -310,8 +310,8 @@ assertEq(i8[102], 0x0);
 var m = new Module(textToBinary(`
     (module
         (import "a" "b" (table 10))
-        (elem 0 $one $two)
-        (elem 3 $three $four)
+        (elem (i32.const 0) $one $two)
+        (elem (i32.const 3) $three $four)
         (func $one (result i32) (i32.const 1))
         (func $two (result i32) (i32.const 2))
         (func $three (result i32) (i32.const 3))

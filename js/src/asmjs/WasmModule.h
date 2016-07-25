@@ -162,11 +162,11 @@ typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 struct ElemSegment
 {
     uint32_t tableIndex;
-    uint32_t offset;
+    InitExpr offset;
     Uint32Vector elems;
 
     ElemSegment() = default;
-    ElemSegment(uint32_t tableIndex, uint32_t offset, Uint32Vector&& elems)
+    ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elems)
       : tableIndex(tableIndex), offset(offset), elems(Move(elems))
     {}
 
@@ -202,7 +202,7 @@ class Module : public RefCounted<Module>
     bool instantiateTable(JSContext* cx, HandleWasmTableObject tableImport,
                           SharedTableVector* tables) const;
     bool initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                   HandleWasmTableObject tableObj) const;
+                   const ValVector& globalImports, HandleWasmTableObject tableObj) const;
 
   public:
     Module(Bytes&& code,
