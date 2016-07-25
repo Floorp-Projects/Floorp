@@ -95,8 +95,10 @@ enum class StyleClipShapeSizing : uint8_t {
 };
 
 // float-edge
-#define NS_STYLE_FLOAT_EDGE_CONTENT_BOX    0
-#define NS_STYLE_FLOAT_EDGE_MARGIN_BOX     1
+enum class StyleFloatEdge : uint8_t {
+  ContentBox,
+  MarginBox,
+};
 
 // user-focus
 #define NS_STYLE_USER_FOCUS_NONE            0
