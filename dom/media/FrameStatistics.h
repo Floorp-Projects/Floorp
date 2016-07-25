@@ -29,6 +29,15 @@ struct FrameStatisticsData
   // composition deadline.
   uint64_t mDroppedFrames = 0;
 
+  // Sum of all inter-keyframe segment durations, in microseconds.
+  // Dividing by count will give the average inter-keyframe time.
+  uint64_t mInterKeyframeSum_us = 0;
+  // Number of inter-keyframe segments summed so far.
+  size_t mInterKeyframeCount = 0;
+
+  // Maximum inter-keyframe segment duration, in microseconds.
+  uint64_t mInterKeyFrameMax_us = 0;
+
   FrameStatisticsData() = default;
   FrameStatisticsData(uint64_t aParsed, uint64_t aDecoded, uint64_t aDropped)
     : mParsedFrames(aParsed)
@@ -43,6 +52,12 @@ struct FrameStatisticsData
     mDecodedFrames += aStats.mDecodedFrames;
     mPresentedFrames += aStats.mPresentedFrames;
     mDroppedFrames += aStats.mDroppedFrames;
+    mInterKeyframeSum_us += aStats.mInterKeyframeSum_us;
+    mInterKeyframeCount += aStats.mInterKeyframeCount;
+    // It doesn't make sense to add max numbers, instead keep the bigger one.
+    if (mInterKeyFrameMax_us < aStats.mInterKeyFrameMax_us) {
+      mInterKeyFrameMax_us = aStats.mInterKeyFrameMax_us;
+    }
   }
 };
 
