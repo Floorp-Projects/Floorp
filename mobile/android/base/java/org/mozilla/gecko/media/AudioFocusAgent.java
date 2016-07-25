@@ -88,10 +88,6 @@ public class AudioFocusAgent {
     }
 
     private void requestAudioFocusIfNeeded() {
-        // Workaround for bug 1287116, disable audio focus only on FF48.
-        if (true) {
-            return;
-        }
         if (!isFirstAudibleElement()) {
             return;
         }
@@ -103,7 +99,9 @@ public class AudioFocusAgent {
         String focusMsg = (result == AudioManager.AUDIOFOCUS_GAIN) ?
             "AudioFocus request granted" : "AudioFoucs request failed";
         Log.d(LOGTAG, focusMsg);
-        // TODO : Enable media control when get the AudioFocus, see bug1240423.
+        if (result == AudioManager.AUDIOFOCUS_GAIN) {
+          notifyObservers("AudioFocusChanged", "Gain");
+        }
     }
 
     private void abandonAudioFocusIfNeeded() {
