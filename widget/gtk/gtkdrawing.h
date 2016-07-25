@@ -210,6 +210,8 @@ typedef enum {
   MOZ_GTK_WINDOW_CONTAINER,
   /* Paints a GtkInfoBar, for notifications. */
   MOZ_GTK_INFO_BAR,
+  /* Used for scrolled window shell. */
+  MOZ_GTK_SCROLLED_WINDOW,
 
   MOZ_GTK_WIDGET_NODE_COUNT
 } WidgetNodeType;
