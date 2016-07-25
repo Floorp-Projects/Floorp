@@ -1,7 +1,16 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="#aaa">
-  <path fill-opacity=".3" d="M6.6 8.4c0-.6-1.7.3-1.7-.3 0-.4-1.7-2.7-1.7-2.7H13s-1.8 2-1.8 2.7c0 .3-2.1-.1-2.1.3v6.1H7s-.4-4.1-.4-6.1z"/>
-  <path d="M2 2v2.3L4.7 9H6v5.4l2.1 1 1.8-.9V9h1.3L14 4.3V2H2zm11 2l-2.2 4H9v5.8l-.9.4-1.1-.5V8H5.2L3 4V3h10v1z"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="#0b0b0b">
+  <style>
+    /* Use a fill that's visible on both light and dark themes for filter inputs */
+    #filterinput:target + #icon {
+      fill: #aaa;
+    }
+  </style>
+  <g id="filterinput"/>
+  <g id="icon">
+    <path fill-opacity=".3" d="M6.6 8.4c0-.6-1.7.3-1.7-.3 0-.4-1.7-2.7-1.7-2.7H13s-1.8 2-1.8 2.7c0 .3-2.1-.1-2.1.3v6.1H7s-.4-4.1-.4-6.1z"/>
+    <path d="M2 2v2.3L4.7 9H6v5.4l2.1 1 1.8-.9V9h1.3L14 4.3V2H2zm11 2l-2.2 4H9v5.8l-.9.4-1.1-.5V8H5.2L3 4V3h10v1z"/>
+  </g>
 </svg>
