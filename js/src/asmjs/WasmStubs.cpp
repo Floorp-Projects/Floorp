@@ -91,10 +91,10 @@ static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * siz
 #endif
 static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void*);
 
-// Generate a stub that enters wasm from a C++ caller via the native ABI.
-// The signature of the entry point is Module::CodePtr. The exported wasm
+// Generate a stub that enters wasm from a C++ caller via the native ABI. The
+// signature of the entry point is Module::ExportFuncPtr. The exported wasm
 // function has an ABI derived from its specific signature, so this function
-// must map from the ABI of CodePtr to the export's signature's ABI.
+// must map from the ABI of ExportFuncPtr to the export's signature's ABI.
 Offsets
 wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
 {
@@ -131,6 +131,19 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
     // register already having been loaded.
     if (usesHeap)
         masm.loadAsmJSHeapRegisterFromGlobalData();
+
+    // Put the per-thread, per-module TLS pointer into WasmTlsReg.
+    // This is the third argument in the ExportFuncPtr prototype.
+#if defined(JS_CODEGEN_X86)
+    masm.loadPtr(
+      Address(masm.getStackPointer(), EntryFrameSize + masm.framePushed() + 2 * sizeof(void*)),
+      WasmTlsReg);
+#else
+    masm.movePtr(IntArgReg2, WasmTlsReg);
+#endif
+    // Make sure the TLS pointer is not clobbered by the following code.
+    MOZ_ASSERT(WasmTlsReg != ABINonArgReg0, "TLS pointer can't be scratch reg");
+    MOZ_ASSERT(WasmTlsReg != ABINonArgReg1, "TLS pointer can't be scratch reg");
 
     // Put the 'argv' argument into a non-argument/return register so that we
     // can use 'argv' while we fill in the arguments for the asm.js callee.
