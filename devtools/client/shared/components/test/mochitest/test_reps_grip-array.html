@@ -32,6 +32,8 @@ window.onload = Task.async(function* () {
     yield testMoreThanShortMaxProps();
     yield testMoreThanLongMaxProps();
     yield testRecursiveArray();
+
+    yield testNamedNodeMap();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -48,7 +50,7 @@ window.onload = Task.async(function* () {
     is(renderedRep.type, GripArray.rep, `Rep correctly selects ${GripArray.rep.displayName}`);
 
     // Test rendering
-    const defaultOutput = `[]`;
+    const defaultOutput = `Array[]`;
 
     const modeTests = [
       {
@@ -76,7 +78,7 @@ window.onload = Task.async(function* () {
     // Test array: `[1, "foo", {}]`;
     const testName = "testMaxProps";
 
-    const defaultOutput = `[1, "foo", Object]`;
+    const defaultOutput = `Array[1, "foo", Object]`;
 
     const modeTests = [
       {
@@ -104,7 +106,7 @@ window.onload = Task.async(function* () {
     // Test array = `["test string"…] //4 items`
     const testName = "testMoreThanShortMaxProps";
 
-    const defaultOutput = `[${Array(maxLength.short).fill("\"test string\"").join(", ")}, more…]`;
+    const defaultOutput = `Array[${Array(maxLength.short).fill("\"test string\"").join(", ")}, more…]`;
 
     const modeTests = [
       {
@@ -121,7 +123,7 @@ window.onload = Task.async(function* () {
       },
       {
         mode: "long",
-        expectedOutput: `[${Array(maxLength.short + 1).fill("\"test string\"").join(", ")}]`,
+        expectedOutput: `Array[${Array(maxLength.short + 1).fill("\"test string\"").join(", ")}]`,
       }
     ];
 
@@ -132,8 +134,8 @@ window.onload = Task.async(function* () {
     // Test array = `["test string"…] //301 items`
     const testName = "testMoreThanLongMaxProps";
 
-    const defaultShortOutput = `[${Array(maxLength.short).fill("\"test string\"").join(", ")}, more…]`;
-    const defaultLongOutput = `[${Array(maxLength.long).fill("\"test string\"").join(", ")}, more…]`;
+    const defaultShortOutput = `Array[${Array(maxLength.short).fill("\"test string\"").join(", ")}, more…]`;
+    const defaultLongOutput = `Array[${Array(maxLength.long).fill("\"test string\"").join(", ")}, more…]`;
 
     const modeTests = [
       {
@@ -164,7 +166,7 @@ window.onload = Task.async(function* () {
     // Test array = `let a = []; a = [a]`
     const testName = "testRecursiveArray";
 
-    const defaultOutput = `[[1]]`;
+    const defaultOutput = `Array[[1]]`;
 
     const modeTests = [
       {
@@ -174,6 +176,33 @@ window.onload = Task.async(function* () {
       {
         mode: "tiny",
         expectedOutput: `[1]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testNamedNodeMap() {
+    const testName = "testNamedNodeMap";
+
+    const defaultOutput = `NamedNodeMap[class="myclass", cellpadding="7", border="3"]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[3]`,
       },
       {
         mode: "short",
@@ -311,6 +340,68 @@ window.onload = Task.async(function* () {
             ]
           }
         };
+
+        case "testNamedNodeMap":
+          return {
+            "type": "object",
+            "class": "NamedNodeMap",
+            "actor": "server1.conn3.obj42",
+            "extensible": true,
+            "frozen": false,
+            "sealed": false,
+            "ownPropertyLength": 6,
+            "preview": {
+              "kind": "ArrayLike",
+              "length": 3,
+              "items": [
+                {
+                  "type": "object",
+                  "class": "Attr",
+                  "actor": "server1.conn3.obj43",
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "ownPropertyLength": 0,
+                  "preview": {
+                    "kind": "DOMNode",
+                    "nodeType": 2,
+                    "nodeName": "class",
+                    "value": "myclass"
+                  }
+                },
+                {
+                  "type": "object",
+                  "class": "Attr",
+                  "actor": "server1.conn3.obj44",
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "ownPropertyLength": 0,
+                  "preview": {
+                    "kind": "DOMNode",
+                    "nodeType": 2,
+                    "nodeName": "cellpadding",
+                    "value": "7"
+                  }
+                },
+                {
+                  "type": "object",
+                  "class": "Attr",
+                  "actor": "server1.conn3.obj44",
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "ownPropertyLength": 0,
+                  "preview": {
+                    "kind": "DOMNode",
+                    "nodeType": 2,
+                    "nodeName": "border",
+                    "value": "3"
+                  }
+                }
+              ]
+            }
+          };
     }
   }
 });

@@ -174,7 +174,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
 
   let doc = this.styleDocument;
-  this.element = doc.getElementById("ruleview-container");
+  this.element = doc.getElementById("ruleview-container-focusable");
   this.addRuleButton = doc.getElementById("ruleview-add-rule-button");
   this.searchField = doc.getElementById("ruleview-searchbox");
   this.searchClearButton = doc.getElementById("ruleview-searchinput-clear");

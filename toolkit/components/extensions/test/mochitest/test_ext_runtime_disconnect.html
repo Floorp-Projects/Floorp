@@ -49,7 +49,6 @@ let extensionData = {
 add_task(function* test_contentscript() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
-  info("extension loaded");
 
   let win = window.open("file_sample.html");
   yield Promise.all([waitForLoad(win), extension.awaitMessage("connected")]);

@@ -3,6 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  --eyedropper-image: url(images/command-eyedropper.svg);
+}
+
+.theme-firebug {
+  --eyedropper-image: url(images/firebug/command-eyedropper.svg);
+}
+
 /* Use flex layout for the Inspector toolbar. For now, it's done
    specifically for the Inspector toolbar since general rule applied
    on .devtools-toolbar breaks breadcrubs and also toolbars in other
@@ -76,6 +84,17 @@
   white-space: nowrap;
   flex-shrink: 0;
   font: message-box;
+}
+
+/* Eyedropper toolbar button */
+
+#inspector-eyedropper-toggle {
+  /* hidden by default, until we can check that the required highlighter exists */
+  display: none;
+}
+
+#inspector-eyedropper-toggle::before {
+  background-image: var(--eyedropper-image);
 }
 
 /* Add element toolbar button */

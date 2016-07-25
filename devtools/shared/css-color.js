@@ -7,7 +7,7 @@
 const Services = require("Services");
 
 const {getCSSLexer} = require("devtools/shared/css-lexer");
-const {cssColors} = require("devtools/client/shared/css-color-db");
+const {cssColors} = require("devtools/shared/css-color-db");
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
