@@ -850,11 +850,11 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
     inspector.once("color-picked", color => {
       toolbox.win.focus();
       this._selectColor(color);
+      this._onEyeDropperDone();
     });
 
     inspector.once("color-pick-canceled", () => {
-      this.eyedropperOpen = false;
-      this.activeSwatch = null;
+      this._onEyeDropperDone();
     });
 
     this.eyedropperOpen = true;
@@ -863,6 +863,11 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
     this.hide();
 
     this.tooltip.emit("eyedropper-opened");
+  },
+
+  _onEyeDropperDone: function () {
+    this.eyedropperOpen = false;
+    this.activeSwatch = null;
   },
 
   _colorToRgba: function (color) {
