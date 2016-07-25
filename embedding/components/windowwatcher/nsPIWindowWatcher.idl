@@ -54,9 +54,6 @@ interface nsPIWindowWatcher : nsISupports
       @param aDialog use dialog defaults (see nsIDOMWindow::openDialog)
       @param aNavigate true if we should navigate the new window to the
              specified URL.
-      @param aOpeningTab the nsITabParent that is opening the new window. The
-                         nsITabParent is a remote tab belonging to aParent. Can
-                         be nullptr if this window is not being opened from a tab.
       @param aArgs Window argument
       @param aOpenerFullZoom the full zoom multiplier for the opener window.
                              this can be null in the single process case where
@@ -77,9 +74,40 @@ interface nsPIWindowWatcher : nsISupports
                                  in boolean aCalledFromScript,
                                  in boolean aDialog,
                                  in boolean aNavigate,
-                                 in nsITabParent aOpeningTab,
                                  in nsISupports aArgs,
                                  [optional] in float aOpenerFullZoom);
+
+  /**
+   * Opens a new window using the most recent non-private browser
+   * window as its parent.
+   *
+   * @return the nsITabParent of the initial browser for the newly opened
+   *         window.
+   */
+  nsITabParent openWindowWithoutParent();
+
+  /**
+   * Opens a new window so that the window that aOpeningTab belongs to
+   * is set as the parent window. The newly opened window will also
+   * inherit load context information from aOpeningTab.
+   *
+   * @param aOpeningTab
+   *        The nsITabParent that is requesting the new window be opened.
+   * @param aFeatures
+   *        Window features if called with window.open or similar.
+   * @param aCalledFromJS
+   *        True if called via window.open or similar.
+   * @param aOpenerFullZoom
+   *        The current zoom multiplier for the opener tab. This is then
+   *        applied to the newly opened window.
+   *
+   * @return the nsITabParent of the initial browser for the newly opened
+   *         window.
+   */
+  nsITabParent openWindowWithTabParent(in nsITabParent aOpeningTab,
+                                       in ACString aFeatures,
+                                       in boolean aCalledFromJS,
+                                       in float aOpenerFullZoom);
 
   /**
    * Find a named docshell tree item amongst all windows registered

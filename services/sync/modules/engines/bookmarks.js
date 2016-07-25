@@ -1536,6 +1536,7 @@ BookmarksTracker.prototype = {
   onEndUpdateBatch: function () {
     if (--this._batchDepth === 0 && this._batchSawScoreIncrement) {
       this.score += SCORE_INCREMENT_XLARGE;
+      this._batchSawScoreIncrement = false;
     }
   },
   onItemVisited: function () {}

@@ -1,34 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-function test() {
-  waitForExplicitFinish();
+/**
+ * Tests that we fire the last-pb-context-exited observer notification
+ * when the last private browsing window closes, even if a chrome window
+ * was opened from that private browsing window.
+ */
+add_task(function* () {
+  let win = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  let chromeWin = win.open("chrome://browser/content/places/places.xul", "_blank",
+    "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+  yield BrowserTestUtils.waitForEvent(chromeWin, "load");
+  let obsPromise = TestUtils.topicObserved("last-pb-context-exited");
+  yield BrowserTestUtils.closeWindow(win);
+  yield obsPromise;
+  Assert.ok(true, "Got the last-pb-context-exited notification");
+  chromeWin.close();
+});
 
-  let windowsToClose = [];
-  registerCleanupFunction(function() {
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
-  });
-
-  let win = OpenBrowserWindow({private: true});
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
-    let chromeWin = win.open("chrome://browser/content/places/places.xul",
-      "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
-    chromeWin.addEventListener("load", function chromeWinLoad() {
-      chromeWin.removeEventListener("load", chromeWinLoad, false);
-      win.close();
-    }, false);
-    windowsToClose.push(chromeWin);
-  }, false);
-
-  let observer = function() {
-    is(true, true, "observer fired");
-    Services.obs.removeObserver(observer, "last-pb-context-exited");
-    executeSoon(finish);
-  };
-  Services.obs.addObserver(observer, "last-pb-context-exited", false);
-  windowsToClose.push(win);
-}

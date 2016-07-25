@@ -40,7 +40,7 @@ function EvaluationResult(props) {
     dom.span(
       {className: "message-body-wrapper message-body devtools-monospace"},
       dom.span({},
-        GripMessageBody({grip: message.data})
+        GripMessageBody({grip: message.parameters})
       )
     )
   );

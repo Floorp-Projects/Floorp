@@ -25,6 +25,7 @@ Cu.importGlobalProperties(["TextEncoder"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/ExtensionContent.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");

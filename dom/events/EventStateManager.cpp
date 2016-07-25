@@ -2954,7 +2954,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // we click on a non-focusable element like a <div>.
           // We have to use |aEvent->mTarget| to not make sure we do not check
           // an anonymous node of the targeted element.
-          suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
+          suppressBlur = (ui->mUserFocus == StyleUserFocus::Ignore);
 
           if (!suppressBlur) {
             nsCOMPtr<Element> element = do_QueryInterface(aEvent->mTarget);
@@ -4346,9 +4346,6 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     aWidget->SynthesizeNativeMouseMove(
       sLastRefPoint + aWidget->WidgetToScreenOffset(), nullptr);
 
-    // Retarget all events to this element via capture.
-    nsIPresShell::SetCapturingContent(aElement, CAPTURE_POINTERLOCK);
-
     // Suppress DnD
     if (dragService) {
       dragService->Suppress();
@@ -4366,9 +4363,6 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
       aWidget->SynthesizeNativeMouseMove(
         mPreLockPoint + aWidget->WidgetToScreenOffset(), nullptr);
     }
-
-    // Don't retarget events to this element any more.
-    nsIPresShell::SetCapturingContent(nullptr, CAPTURE_POINTERLOCK);
 
     // Unsuppress DnD
     if (dragService) {

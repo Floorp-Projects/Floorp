@@ -571,7 +571,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 
   result.mFilter = GetOrCreateFilterProperty(aFrame);
 
-  if (style->mClipPath.GetType() == NS_STYLE_CLIP_PATH_URL) {
+  if (style->mClipPath.GetType() == StyleClipPathType::URL) {
     result.mClipPath =
       GetPaintingProperty(style->mClipPath.GetURL(), aFrame, ClipPathProperty());
   } else {

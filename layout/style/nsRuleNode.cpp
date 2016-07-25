@@ -1301,6 +1301,8 @@ struct SetEnumValueHelper
   }
 
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
+  DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
+  DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None_, SelectMenu)
 
 #undef DEF_SET_ENUMERATED_VALUE
 };
@@ -4253,7 +4255,8 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     }
 
     if (aIsBoxShadow && arr->Item(5).GetUnit() == eCSSUnit_Enumerated) {
-      NS_ASSERTION(arr->Item(5).GetIntValue() == NS_STYLE_BOX_SHADOW_INSET,
+      NS_ASSERTION(arr->Item(5).GetIntValue()
+                   == uint8_t(StyleBoxShadowType::Inset),
                    "invalid keyword type for box shadow");
       item->mInset = true;
     } else {
@@ -5067,7 +5070,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
            ui->mUserFocus, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            parentUI->mUserFocus,
-           NS_STYLE_USER_FOCUS_NONE);
+           StyleUserFocus::None_);
 
   // pointer-events: enum, inherit, initial
   SetValue(*aRuleData->ValueForPointerEvents(), ui->mPointerEvents,
@@ -7577,7 +7580,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
            border->mFloatEdge, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentBorder->mFloatEdge,
-           NS_STYLE_FLOAT_EDGE_CONTENT_BOX);
+           StyleFloatEdge::ContentBox);
 
   // border-image-source
   const nsCSSValue* borderImageSource = aRuleData->ValueForBorderImageSource();

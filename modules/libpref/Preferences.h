@@ -368,6 +368,8 @@ public:
 
   static int64_t SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeOf);
 
+  static void DirtyCallback();
+
 protected:
   virtual ~Preferences();
 
@@ -388,6 +390,7 @@ protected:
 
 private:
   nsCOMPtr<nsIFile>        mCurrentFile;
+  bool                     mDirty;
 
   static Preferences*      sPreferences;
   static nsIPrefBranch*    sRootBranch;

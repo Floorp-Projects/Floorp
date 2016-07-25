@@ -36,15 +36,6 @@ add_task(function* test_add_interesting_window() {
     content.location = PAGE;
   });
 
-  // for e10s, this will cause a remoteness switch, since the
-  // initial browser in a newly opened window will not be remote.
-  // We need to wait for that remoteness change before we attach
-  // our OnHistoryReplaceEntry listener.
-  if (gMultiProcessBrowser) {
-    yield BrowserTestUtils.waitForEvent(newWin.gBrowser.selectedTab,
-                                        "TabRemotenessChange");
-  }
-
   yield promiseContentMessage(browser, "ss-test:OnHistoryReplaceEntry");
 
   // Clear out the userTypedValue so that the new window looks like

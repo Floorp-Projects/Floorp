@@ -726,11 +726,12 @@ var CustomizableUIInternal = {
           continue;
         }
 
+        let widget = null;
         // If the placements have items in them which are (now) no longer removable,
         // we shouldn't be moving them:
         if (provider == CustomizableUI.PROVIDER_API) {
-          let widgetInfo = gPalette.get(id);
-          if (!widgetInfo.removable && aArea != widgetInfo.defaultArea) {
+          widget = gPalette.get(id);
+          if (!widget.removable && aArea != widget.defaultArea) {
             placementsToRemove.add(id);
             continue;
           }
@@ -740,11 +741,8 @@ var CustomizableUIInternal = {
           continue;
         } // Special widgets are always removable, so no need to check them
 
-        if (inPrivateWindow && provider == CustomizableUI.PROVIDER_API) {
-          let widget = gPalette.get(id);
-          if (!widget.showInPrivateBrowsing && inPrivateWindow) {
-            continue;
-          }
+        if (inPrivateWindow && widget && !widget.showInPrivateBrowsing) {
+          continue;
         }
 
         this.ensureButtonContextMenu(node, aAreaNode);
@@ -756,6 +754,10 @@ var CustomizableUIInternal = {
           }
         }
 
+        // This needs updating in case we're resetting / undoing a reset.
+        if (widget) {
+          widget.currentArea = aArea;
+        }
         this.insertWidgetBefore(node, currentNode, container, aArea);
         if (gResetting) {
           this.notifyListeners("onWidgetReset", node, container);

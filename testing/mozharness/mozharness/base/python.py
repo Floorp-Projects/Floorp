@@ -466,6 +466,12 @@ class ResourceMonitoringMixin(object):
                                         method='pip', optional=True)
         self.register_virtualenv_module('jsonschema==2.5.1',
                                         method='pip')
+        # explicitly install functools32, because some slaves aren't using
+        # a version of pip recent enough to install it automatically with
+        # jsonschema (which depends on it)
+        # https://github.com/Julian/jsonschema/issues/233
+        self.register_virtualenv_module('functools32==3.2.3-2',
+                                        method='pip')
         self._resource_monitor = None
 
         # 2-tuple of (name, options) to assign Perfherder resource monitor

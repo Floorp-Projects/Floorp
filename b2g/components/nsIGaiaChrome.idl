@@ -1,0 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(92a18a98-ab5d-4d02-a024-bdbb3bc89ce1)]
+interface nsIGaiaChrome : nsISupports
+{
+    void register();
+};
+
+%{ C++
+#define GAIACHROME_CONTRACTID "@mozilla.org/b2g/gaia-chrome;1"
+%}
