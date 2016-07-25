@@ -78,6 +78,7 @@ EXPORTS += [
     'nsStringStream.h',
     'nsUnicharInputStream.h',
     'nsWildCard.h',
+    'SlicedInputStream.h',
     'SpecialSystemDirectory.h',
 ]
 
@@ -111,6 +112,7 @@ UNIFIED_SOURCES += [
     'nsStringStream.cpp',
     'nsUnicharInputStream.cpp',
     'nsWildCard.cpp',
+    'SlicedInputStream.cpp',
     'SnappyCompressOutputStream.cpp',
     'SnappyFrameUtils.cpp',
     'SnappyUncompressInputStream.cpp',
