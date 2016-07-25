@@ -11723,8 +11723,13 @@ class CGDOMJSProxyHandler(CGClass):
             methods.append(CGDOMJSProxyHandler_call())
             methods.append(CGDOMJSProxyHandler_isCallable())
 
+        if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
+            parentClass = 'ShadowingDOMProxyHandler'
+        else:
+            parentClass = 'mozilla::dom::DOMProxyHandler'
+
         CGClass.__init__(self, 'DOMProxyHandler',
-                         bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
+                         bases=[ClassBase(parentClass)],
                          constructors=constructors,
                          methods=methods)
 

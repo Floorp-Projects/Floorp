@@ -582,10 +582,10 @@ pulse_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 }
 
 static int
-pulse_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
+pulse_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_frames)
 {
   // According to PulseAudio developers, this is a safe minimum.
-  *latency_ms = 25;
+  *latency_frames = 25 * params.rate / 1000;
 
   return CUBEB_OK;
 }
@@ -670,12 +670,12 @@ create_pa_stream(cubeb_stream * stm,
 }
 
 static pa_buffer_attr
-set_buffering_attribute(unsigned int latency, pa_sample_spec * sample_spec)
+set_buffering_attribute(unsigned int latency_frames, pa_sample_spec * sample_spec)
 {
   pa_buffer_attr battr;
   battr.maxlength = -1;
   battr.prebuf    = -1;
-  battr.tlength   = WRAP(pa_usec_to_bytes)(latency * PA_USEC_PER_MSEC, sample_spec);
+  battr.tlength   = latency_frames * WRAP(pa_frame_size)(sample_spec);
   battr.minreq    = battr.tlength / 4;
   battr.fragsize  = battr.minreq;
 
@@ -693,7 +693,7 @@ pulse_stream_init(cubeb * context,
                   cubeb_stream_params * input_stream_params,
                   cubeb_devid output_device,
                   cubeb_stream_params * output_stream_params,
-                  unsigned int latency,
+                  unsigned int latency_frames,
                   cubeb_data_callback data_callback,
                   cubeb_state_callback state_callback,
                   void * user_ptr)
@@ -734,7 +734,7 @@ pulse_stream_init(cubeb * context,
     WRAP(pa_stream_set_state_callback)(stm->output_stream, stream_state_callback, stm);
     WRAP(pa_stream_set_write_callback)(stm->output_stream, stream_write_callback, stm);
 
-    battr = set_buffering_attribute(latency, &stm->output_sample_spec);
+    battr = set_buffering_attribute(latency_frames, &stm->output_sample_spec);
     WRAP(pa_stream_connect_playback)(stm->output_stream,
                                      output_device,
                                      &battr,
@@ -757,7 +757,7 @@ pulse_stream_init(cubeb * context,
     WRAP(pa_stream_set_state_callback)(stm->input_stream, stream_state_callback, stm);
     WRAP(pa_stream_set_read_callback)(stm->input_stream, stream_read_callback, stm);
 
-    battr = set_buffering_attribute(latency, &stm->input_sample_spec);
+    battr = set_buffering_attribute(latency_frames, &stm->input_sample_spec);
     WRAP(pa_stream_connect_record)(stm->input_stream,
                                    input_device,
                                    &battr,
@@ -1056,8 +1056,8 @@ pulse_sink_info_cb(pa_context * context, const pa_sink_info * info,
   devinfo->max_rate = PA_RATE_MAX;
   devinfo->default_rate = info->sample_spec.rate;
 
-  devinfo->latency_lo_ms = 25;
-  devinfo->latency_hi_ms = 400;
+  devinfo->latency_lo = 0;
+  devinfo->latency_hi = 0;
 
   pulse_ensure_dev_list_data_list_size (list_data);
   list_data->devinfo[list_data->count++] = devinfo;
@@ -1116,8 +1116,8 @@ pulse_source_info_cb(pa_context * context, const pa_source_info * info,
   devinfo->max_rate = PA_RATE_MAX;
   devinfo->default_rate = info->sample_spec.rate;
 
-  devinfo->latency_lo_ms = 1;
-  devinfo->latency_hi_ms = 10;
+  devinfo->latency_lo = 0;
+  devinfo->latency_hi = 0;
 
   pulse_ensure_dev_list_data_list_size (list_data);
   list_data->devinfo[list_data->count++] = devinfo;

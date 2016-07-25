@@ -11,14 +11,18 @@ import java.lang.reflect.Proxy;
 import java.util.concurrent.SynchronousQueue;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,6 +39,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
@@ -72,6 +77,7 @@ class GeckoInputConnection
     private boolean mBatchSelectionChanged;
     private boolean mBatchTextChanged;
     private final InputConnection mKeyInputConnection;
+    private CursorAnchorInfo.Builder mCursorAnchorInfoBuilder;
 
     // Prevent showSoftInput and hideSoftInput from causing reentrant calls on some devices.
     private volatile boolean mSoftInputReentrancyGuard;
@@ -389,6 +395,96 @@ class GeckoInputConnection
         }
         imm.updateSelection(v, start, end, getComposingSpanStart(editable),
                             getComposingSpanEnd(editable));
+    }
+
+    @Override
+    public void updateCompositionRects(final RectF[] aRects) {
+        if (!Versions.feature21Plus) {
+            return;
+        }
+
+        if (mCursorAnchorInfoBuilder == null) {
+            mCursorAnchorInfoBuilder = new CursorAnchorInfo.Builder();
+        }
+        mCursorAnchorInfoBuilder.reset();
+
+        // Calculate Gecko logical coords to screen coords
+        final View v = getView();
+        if (v == null) {
+            return;
+        }
+
+        int[] viewCoords = new int[2];
+        v.getLocationOnScreen(viewCoords);
+
+        DynamicToolbarAnimator animator = GeckoAppShell.getLayerView().getDynamicToolbarAnimator();
+        float toolbarHeight = animator.getMaxTranslation() - animator.getToolbarTranslation();
+
+        Matrix matrix = GeckoAppShell.getLayerView().getMatrixForLayerRectToViewRect();
+        if (matrix == null) {
+            if (DEBUG) {
+                Log.d(LOGTAG, "Cannot get Matrix to convert from Gecko coords to layer view coords");
+            }
+            return;
+        }
+        matrix.postTranslate(viewCoords[0], viewCoords[1] + toolbarHeight);
+        mCursorAnchorInfoBuilder.setMatrix(matrix);
+
+        final Editable content = getEditable();
+        if (content == null) {
+            return;
+        }
+        int composingStart = getComposingSpanStart(content);
+        int composingEnd = getComposingSpanEnd(content);
+        if (composingStart < 0 || composingEnd < 0) {
+            if (DEBUG) {
+                Log.d(LOGTAG, "No composition for updates");
+            }
+            return;
+        }
+
+        for (int i = 0; i < aRects.length; i++) {
+            mCursorAnchorInfoBuilder.addCharacterBounds(i,
+                                                        aRects[i].left,
+                                                        aRects[i].top,
+                                                        aRects[i].right,
+                                                        aRects[i].bottom,
+                                                        CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION);
+        }
+
+        mCursorAnchorInfoBuilder.setComposingText(0, content.subSequence(composingStart, composingEnd));
+
+        updateCursor();
+    }
+
+    @TargetApi(21)
+    private void updateCursor() {
+        if (mCursorAnchorInfoBuilder == null) {
+            return;
+        }
+
+        final InputMethodManager imm = getInputMethodManager();
+        final View v = getView();
+        if (imm == null || v == null) {
+            return;
+        }
+
+        imm.updateCursorAnchorInfo(v, mCursorAnchorInfoBuilder.build());
+    }
+
+    @Override
+    public boolean requestCursorUpdates(int cursorUpdateMode) {
+
+        if ((cursorUpdateMode & InputConnection.CURSOR_UPDATE_IMMEDIATE) != 0) {
+            mEditableClient.requestCursorUpdates(GeckoEditableClient.ONE_SHOT);
+        }
+
+        if ((cursorUpdateMode & InputConnection.CURSOR_UPDATE_MONITOR) != 0) {
+            mEditableClient.requestCursorUpdates(GeckoEditableClient.START_MONITOR);
+        } else {
+            mEditableClient.requestCursorUpdates(GeckoEditableClient.END_MONITOR);
+        }
+        return true;
     }
 
     @Override

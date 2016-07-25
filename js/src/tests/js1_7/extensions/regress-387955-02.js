@@ -6,7 +6,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 387955;
-var summary = 'Do not Crash [@ JS_CallTracer]';
+var summary = 'Do not Crash [@ TraceEdge]';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

@@ -30,3 +30,5 @@ load 1229932-1.html
 load 1244850-1.html
 load 1246775-1.html
 skip-if(d2d) load 1287515-1.html
+load 1288872-1.html
+

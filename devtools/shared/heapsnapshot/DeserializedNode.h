@@ -270,7 +270,7 @@ public:
 
   // We ignore the `bool wantNames` parameter because we can't control whether
   // the core dump was serialized with edge names or not.
-  js::UniquePtr<EdgeRange> edges(JSRuntime* rt, bool) const override;
+  js::UniquePtr<EdgeRange> edges(JSContext* cx, bool) const override;
 
   static const char16_t concreteTypeName[];
 };

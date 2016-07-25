@@ -12,6 +12,7 @@ DevToolsModules(
     'auto-refresh.js',
     'box-model.js',
     'css-transform.js',
+    'eye-dropper.js',
     'geometry-editor.js',
     'measuring-tool.js',
     'rect.js',

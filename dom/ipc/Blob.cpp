@@ -859,6 +859,7 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
   }
 
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return nullptr;
   }
 
@@ -4394,6 +4395,7 @@ BlobParent::RecvGetFilePath(nsString* aFilePath)
   ErrorResult rv;
   mBlobImpl->GetMozFullPathInternal(filePath, rv);
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return false;
   }
 

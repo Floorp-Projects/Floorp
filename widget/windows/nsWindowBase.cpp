@@ -87,7 +87,7 @@ nsWindowBase::InjectTouchPoint(uint32_t aId, LayoutDeviceIntPoint& aPoint,
   info.touchMask = TOUCH_MASK_CONTACTAREA|TOUCH_MASK_ORIENTATION|TOUCH_MASK_PRESSURE;
   info.pressure = aPressure;
   info.orientation = aOrientation;
-  
+
   info.pointerInfo.pointerFlags = aFlags;
   info.pointerInfo.pointerType =  PT_TOUCH;
   info.pointerInfo.pointerId = aId;
@@ -98,7 +98,7 @@ nsWindowBase::InjectTouchPoint(uint32_t aId, LayoutDeviceIntPoint& aPoint,
   info.rcContact.bottom = info.pointerInfo.ptPixelLocation.y + 2;
   info.rcContact.left = info.pointerInfo.ptPixelLocation.x - 2;
   info.rcContact.right = info.pointerInfo.ptPixelLocation.x + 2;
-  
+
   if (!sInjectTouchFuncPtr(1, &info)) {
     WinUtils::Log("InjectTouchInput failure. GetLastError=%d", GetLastError());
     return false;

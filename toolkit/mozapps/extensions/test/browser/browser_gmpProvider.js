@@ -381,7 +381,7 @@ add_task(function* testEmeSupport() {
     let doc = gManagerWindow.document;
     let item = get_addon_element(gManagerWindow, addon.id);
     if (addon.id == GMPScope.EME_ADOBE_ID) {
-      if (Services.appinfo.OS == "WINNT") {
+      if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
         Assert.ok(item, "Adobe EME supported, found add-on element.");
       } else {
         Assert.ok(!item,
@@ -389,7 +389,8 @@ add_task(function* testEmeSupport() {
       }
     } else if (addon.id == GMPScope.WIDEVINE_ID) {
       if (AppConstants.isPlatformAndVersionAtLeast("win", "6") ||
-          AppConstants.isPlatformAndVersionAtLeast("macosx", "10.7")) {
+          AppConstants.platform == "macosx" ||
+          AppConstants.platform == "linux") {
         Assert.ok(item, "Widevine supported, found add-on element.");
       } else {
         Assert.ok(!item,

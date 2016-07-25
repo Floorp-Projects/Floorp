@@ -1213,7 +1213,7 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         return decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 2)) &&
                write("(...)");
       case JSOP_SPREADCALL:
-        return decompilePCForStackOperand(pc, -int32_t(3)) &&
+        return decompilePCForStackOperand(pc, -3) &&
                write("(...)");
       case JSOP_NEWARRAY:
         return write("[]");

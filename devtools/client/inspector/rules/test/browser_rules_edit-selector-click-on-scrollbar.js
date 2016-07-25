@@ -76,7 +76,7 @@ add_task(function* () {
 });
 
 function* clickOnRuleviewScrollbar(view) {
-  let container = view.element;
+  let container = view.element.parentNode;
   let onScroll = once(container, "scroll");
   let rect = container.getBoundingClientRect();
   // click 5 pixels before the bottom-right corner should hit the scrollbar

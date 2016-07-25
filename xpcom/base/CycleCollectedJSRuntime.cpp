@@ -406,7 +406,7 @@ NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing)
 static const JSZoneParticipant sJSZoneCycleCollectorGlobal;
 
 static
-void JSObjectsTenuredCb(JSRuntime* aRuntime, void* aData)
+void JSObjectsTenuredCb(JSContext* aContext, void* aData)
 {
   static_cast<CycleCollectedJSRuntime*>(aData)->JSObjectsTenured();
 }
@@ -478,7 +478,7 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   mConsumedRejections.reset();
 #endif // SPIDERMONKEY_PROMISE
 
-  JS_DestroyRuntime(mJSRuntime);
+  JS_DestroyContext(mJSContext);
   mJSRuntime = nullptr;
   mJSContext = nullptr;
   nsCycleCollector_forgetJSRuntime();
@@ -496,22 +496,22 @@ MozCrashWarningReporter(JSContext*, const char*, JSErrorReport*)
 }
 
 nsresult
-CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
+CycleCollectedJSRuntime::Initialize(JSContext* aParentContext,
                                     uint32_t aMaxBytes,
                                     uint32_t aMaxNurseryBytes)
 {
-  MOZ_ASSERT(!mJSRuntime);
+  MOZ_ASSERT(!mJSContext);
 
   mOwningThread->SetScriptObserver(this);
   // The main thread has a base recursion depth of 0, workers of 1.
   mBaseRecursionDepth = RecursionDepth();
 
   mozilla::dom::InitScriptSettings();
-  mJSRuntime = JS_NewRuntime(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
-  if (!mJSRuntime) {
+  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentContext);
+  if (!mJSContext) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mJSContext = JS_GetContext(mJSRuntime);
+  mJSRuntime = JS_GetRuntime(mJSContext);
 
   if (!JS_AddExtraGCRootsTracer(mJSContext, TraceBlackJS, this)) {
     MOZ_CRASH("JS_AddExtraGCRootsTracer failed");
@@ -798,35 +798,35 @@ CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData)
 }
 
 /* static */ void
-CycleCollectedJSRuntime::GCCallback(JSRuntime* aRuntime,
+CycleCollectedJSRuntime::GCCallback(JSContext* aContext,
                                     JSGCStatus aStatus,
                                     void* aData)
 {
   CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
 
-  MOZ_ASSERT(aRuntime == self->Runtime());
+  MOZ_ASSERT(aContext == self->Context());
 
   self->OnGC(aStatus);
 }
 
 /* static */ void
-CycleCollectedJSRuntime::GCSliceCallback(JSRuntime* aRuntime,
+CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
                                          JS::GCProgress aProgress,
                                          const JS::GCDescription& aDesc)
 {
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
-  MOZ_ASSERT(self->Runtime() == aRuntime);
+  MOZ_ASSERT(self->Context() == aContext);
 
   if (aProgress == JS::GC_CYCLE_END) {
     JS::gcreason::Reason reason = aDesc.reason_;
-    NS_WARN_IF(NS_FAILED(DebuggerOnGCRunnable::Enqueue(aRuntime, aDesc)) &&
+    NS_WARN_IF(NS_FAILED(DebuggerOnGCRunnable::Enqueue(aContext, aDesc)) &&
                reason != JS::gcreason::SHUTDOWN_CC &&
                reason != JS::gcreason::DESTROY_RUNTIME &&
                reason != JS::gcreason::XPCONNECT_SHUTDOWN);
   }
 
   if (self->mPrevGCSliceCallback) {
-    self->mPrevGCSliceCallback(aRuntime, aProgress, aDesc);
+    self->mPrevGCSliceCallback(aContext, aProgress, aDesc);
   }
 }
 
@@ -879,12 +879,12 @@ public:
 };
 
 /* static */ void
-CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSRuntime* aRuntime,
+CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSContext* aContext,
                                                      JS::GCNurseryProgress aProgress,
                                                      JS::gcreason::Reason aReason)
 {
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
-  MOZ_ASSERT(self->Runtime() == aRuntime);
+  MOZ_ASSERT(self->Context() == aContext);
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
@@ -895,7 +895,7 @@ CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSRuntime* aRuntime,
   }
 
   if (self->mPrevGCNurseryCollectionCallback) {
-    self->mPrevGCNurseryCollectionCallback(aRuntime, aProgress, aReason);
+    self->mPrevGCNurseryCollectionCallback(aContext, aProgress, aReason);
   }
 }
 
@@ -1235,8 +1235,8 @@ CycleCollectedJSRuntime::FixWeakMappingGrayBits() const
 bool
 CycleCollectedJSRuntime::AreGCGrayBitsValid() const
 {
-  MOZ_ASSERT(mJSRuntime);
-  return js::AreGCGrayBitsValid(mJSRuntime);
+  MOZ_ASSERT(mJSContext);
+  return js::AreGCGrayBitsValid(mJSContext);
 }
 
 void

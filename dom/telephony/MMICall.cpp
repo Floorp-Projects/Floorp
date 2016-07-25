@@ -31,6 +31,7 @@ MMICall::MMICall(nsPIDOMWindowInner* aWindow, const nsAString& aServiceCode)
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
+    rv.SuppressException();
     return;
   }
 

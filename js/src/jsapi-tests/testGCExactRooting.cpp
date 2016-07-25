@@ -36,9 +36,9 @@ BEGIN_TEST(testGCSuppressions)
     JS::AutoCheckCannotGC checkgc;
     JS::AutoSuppressGCAnalysis noanalysis;
 
-    JS::AutoAssertOnGC nogcRt(cx->runtime());
-    JS::AutoCheckCannotGC checkgcRt(cx->runtime());
-    JS::AutoSuppressGCAnalysis noanalysisRt(cx->runtime());
+    JS::AutoAssertOnGC nogcCx(cx);
+    JS::AutoCheckCannotGC checkgcCx(cx);
+    JS::AutoSuppressGCAnalysis noanalysisCx(cx);
 
     return true;
 }
@@ -93,7 +93,7 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
         bool same;
 
         // Automatic move from stack to heap.
-        JS::PersistentRooted<MyContainer> heap(rt, container);
+        JS::PersistentRooted<MyContainer> heap(cx->runtime(), container);
 
         // clear prior rooting.
         container.obj() = nullptr;
@@ -126,7 +126,7 @@ END_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
 static JS::PersistentRooted<JSObject*> sLongLived;
 BEGIN_TEST(testGCPersistentRootedOutlivesRuntime)
 {
-    sLongLived.init(rt, JS_NewObject(cx, nullptr));
+    sLongLived.init(cx, JS_NewObject(cx, nullptr));
     CHECK(sLongLived);
     return true;
 }
@@ -142,7 +142,7 @@ BEGIN_TEST(testGCPersistentRootedTraceableCannotOutliveRuntime)
     JS::Rooted<MyContainer> container(cx);
     container.obj() = JS_NewObject(cx, nullptr);
     container.str() = JS_NewStringCopyZ(cx, "Hello");
-    sContainer.init(rt, container);
+    sContainer.init(cx, container);
 
     // Commenting the following line will trigger an assertion that the
     // PersistentRooted outlives the runtime it is attached to.

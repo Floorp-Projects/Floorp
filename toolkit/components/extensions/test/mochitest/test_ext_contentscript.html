@@ -93,7 +93,6 @@ add_task(function* test_contentscript() {
   let chromeNamespacePromise = extension.awaitMessage("chrome-namespace-ok");
 
   yield extension.startup();
-  info("extension loaded");
 
   let win = window.open("file_sample.html");
 

@@ -23,6 +23,7 @@ import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
+import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
@@ -142,6 +143,9 @@ final class GeckoEditable extends JNIObject
 
     @WrapForJNI
     private native void onImeUpdateComposition(int start, int end);
+
+    @WrapForJNI
+    private native void onImeRequestCursorUpdates(int requestMode);
 
     /* An action that alters the Editable
 
@@ -779,6 +783,11 @@ final class GeckoEditable extends JNIObject
         mIcPostHandler.post(runnable);
     }
 
+    @Override // GeckoEditableClient
+    public void requestCursorUpdates(int requestMode) {
+        onImeRequestCursorUpdates(requestMode);
+    }
+
     private void geckoSetIcHandler(final Handler newHandler) {
         geckoPostToIc(new Runnable() { // posting to old IC thread
             @Override
@@ -1136,6 +1145,24 @@ final class GeckoEditable extends JNIObject
                     return;
                 }
                 mListener.onDefaultKeyEvent(event);
+            }
+        });
+    }
+
+    @WrapForJNI @Override
+    public void updateCompositionRects(final RectF[] aRects) {
+        if (DEBUG) {
+            // GeckoEditableListener methods should all be called from the Gecko thread
+            ThreadUtils.assertOnGeckoThread();
+            Log.d(LOGTAG, "updateCompositionRects(aRects.length = " + aRects.length + ")");
+        }
+        geckoPostToIc(new Runnable() {
+            @Override
+            public void run() {
+                if (mListener == null) {
+                    return;
+                }
+                mListener.updateCompositionRects(aRects);
             }
         });
     }

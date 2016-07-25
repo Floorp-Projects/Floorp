@@ -7,8 +7,8 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.ZoomConstraints;
 
+import android.graphics.Matrix;
 import android.graphics.PointF;
-import android.graphics.RectF;
 
 public interface PanZoomTarget {
     public ImmutableViewportMetrics getViewportMetrics();
@@ -28,5 +28,6 @@ public interface PanZoomTarget {
     public void removeRenderTask(RenderTask task);
     public Object getLock();
     public PointF convertViewPointToLayerPoint(PointF viewPoint);
+    public Matrix getMatrixForLayerRectToViewRect();
     public void setScrollingRootContent(boolean isRootContent);
 }

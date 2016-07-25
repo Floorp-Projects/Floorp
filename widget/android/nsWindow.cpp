@@ -114,6 +114,11 @@ static bool sFailedToCreateGLContext = false;
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
 static const double SWIPE_MIN_DISTANCE_INCHES = 0.6;
 
+// Sync with GeckoEditableView class
+static const int IME_MONITOR_CURSOR_ONE_SHOT = 1;
+static const int IME_MONITOR_CURSOR_START_MONITOR = 2;
+static const int IME_MONITOR_CURSOR_END_MONITOR = 3;
+
 static Modifiers GetModifiers(int32_t metaState);
 
 template<typename Lambda, bool IsStatic, typename InstanceType, class Impl>
@@ -220,6 +225,7 @@ public:
         , mIMEUpdatingContext(false)
         , mIMESelectionChanged(false)
         , mIMETextChangedDuringFlush(false)
+        , mIMEMonitorCursor(false)
     {
         Base::AttachNative(aInstance, this);
         EditableBase::AttachNative(mEditable, this);
@@ -299,6 +305,7 @@ private:
     bool mIMEUpdatingContext;
     bool mIMESelectionChanged;
     bool mIMETextChangedDuringFlush;
+    bool mIMEMonitorCursor;
 
     void SendIMEDummyKeyEvents();
     void AddIMETextChange(const IMETextChange& aChange);
@@ -310,6 +317,7 @@ private:
     void PostFlushIMEChanges();
     void FlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
     void AsyncNotifyIME(int32_t aNotification);
+    void UpdateCompositionRects();
 
 public:
     bool NotifyIME(const IMENotification& aIMENotification);
@@ -351,6 +359,9 @@ public:
 
     // Update styling for the active composition using previous-added ranges.
     void OnImeUpdateComposition(int32_t aStart, int32_t aEnd);
+
+    // Set cursor mode whether IME requests
+    void OnImeRequestCursorUpdates(int aRequestMode);
 };
 
 /**
@@ -2898,6 +2909,46 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
     }
 }
 
+static jni::ObjectArray::LocalRef
+ConvertRectArrayToJavaRectFArray(JNIEnv* aJNIEnv, const nsTArray<LayoutDeviceIntRect>& aRects, const LayoutDeviceIntPoint& aOffset, const CSSToLayoutDeviceScale aScale)
+{
+    size_t length = aRects.Length();
+    jobjectArray rects = aJNIEnv->NewObjectArray(length, sdk::RectF::Context().ClassRef(), nullptr);
+    auto rectsRef = jni::ObjectArray::LocalRef::Adopt(aJNIEnv, rects);
+    for (size_t i = 0; i < length; i++) {
+        sdk::RectF::LocalRef rect(aJNIEnv);
+        LayoutDeviceIntRect tmp = aRects[i] + aOffset;
+        sdk::RectF::New(tmp.x / aScale.scale, tmp.y / aScale.scale,
+                        (tmp.x + tmp.width) / aScale.scale,
+                        (tmp.y + tmp.height) / aScale.scale,
+                        &rect);
+        rectsRef->SetElement(i, rect);
+    }
+    return rectsRef;
+}
+
+void
+nsWindow::GeckoViewSupport::UpdateCompositionRects()
+{
+    const auto composition(window.GetIMEComposition());
+    if (NS_WARN_IF(!composition)) {
+        return;
+    }
+
+    uint32_t offset = composition->NativeOffsetOfStartComposition();
+    WidgetQueryContentEvent textRects(true, eQueryTextRectArray, &window);
+    textRects.InitForQueryTextRectArray(offset, composition->String().Length());
+    window.DispatchEvent(&textRects);
+
+    auto rects =
+        ConvertRectArrayToJavaRectFArray(jni::GetGeckoThreadEnv(),
+                                         textRects.mReply.mRectArray,
+                                         window.WidgetToScreenOffset(),
+                                         window.GetDefaultScale());
+
+    mEditable->UpdateCompositionRects(rects);
+}
+
 void
 nsWindow::GeckoViewSupport::AsyncNotifyIME(int32_t aNotification)
 {
@@ -2949,6 +3000,9 @@ nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
 
         case NOTIFY_IME_OF_FOCUS: {
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
+            // IME will call requestCursorUpdates after getting context.
+            // So reset cursor update mode before getting context.
+            mIMEMonitorCursor = false;
             mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OF_FOCUS);
             return true;
         }
@@ -2983,6 +3037,16 @@ nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
             PostFlushIMEChanges();
             mIMESelectionChanged = true;
             AddIMETextChange(IMETextChange(aIMENotification));
+            return true;
+        }
+
+        case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED: {
+            ALOGIME("IME: NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED");
+
+            // Hardware keyboard support requires each string rect.
+            if (AndroidBridge::Bridge() && AndroidBridge::Bridge()->GetAPIVersion() >= 21 && mIMEMonitorCursor) {
+                UpdateCompositionRects();
+            }
             return true;
         }
 
@@ -3337,6 +3401,17 @@ nsWindow::GeckoViewSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
     if (window.GetIMEComposition()) {
         window.DispatchEvent(&event);
     }
+}
+
+void
+nsWindow::GeckoViewSupport::OnImeRequestCursorUpdates(int aRequestMode)
+{
+    if (aRequestMode == IME_MONITOR_CURSOR_ONE_SHOT) {
+        UpdateCompositionRects();
+        return;
+    }
+
+    mIMEMonitorCursor = (aRequestMode == IME_MONITOR_CURSOR_START_MONITOR);
 }
 
 void

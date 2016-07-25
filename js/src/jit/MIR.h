@@ -13475,14 +13475,14 @@ class MAsmJSCall final
     class Callee {
       public:
         enum Which { Internal, Dynamic, Builtin };
-        static const uint32_t NoSigIndex = UINT32_MAX;
       private:
         Which which_;
-        union {
+        union U {
+            U() {}
             uint32_t internal_;
             struct {
                 MDefinition* callee_;
-                uint32_t sigIndex_;
+                wasm::SigIdDesc sigId_;
             } dynamic;
             wasm::SymbolicAddress builtin_;
         } u;
@@ -13491,9 +13491,11 @@ class MAsmJSCall final
         explicit Callee(uint32_t callee) : which_(Internal) {
             u.internal_ = callee;
         }
-        explicit Callee(MDefinition* callee, uint32_t sigIndex = NoSigIndex) : which_(Dynamic) {
+        explicit Callee(MDefinition* callee, wasm::SigIdDesc sigId = wasm::SigIdDesc())
+          : which_(Dynamic)
+        {
             u.dynamic.callee_ = callee;
-            u.dynamic.sigIndex_ = sigIndex;
+            u.dynamic.sigId_ = sigId;
         }
         explicit Callee(wasm::SymbolicAddress callee) : which_(Builtin) {
             u.builtin_ = callee;
@@ -13509,13 +13511,9 @@ class MAsmJSCall final
             MOZ_ASSERT(which_ == Dynamic);
             return u.dynamic.callee_;
         }
-        bool dynamicHasSigIndex() const {
+        wasm::SigIdDesc dynamicSigId() const {
             MOZ_ASSERT(which_ == Dynamic);
-            return u.dynamic.sigIndex_ != NoSigIndex;
-        }
-        uint32_t dynamicSigIndex() const {
-            MOZ_ASSERT(dynamicHasSigIndex());
-            return u.dynamic.sigIndex_;
+            return u.dynamic.sigId_;
         }
         wasm::SymbolicAddress builtin() const {
             MOZ_ASSERT(which_ == Builtin);
