@@ -77,10 +77,12 @@ CommandList.prototype = {
     for (let name of Object.keys(manifest.commands)) {
       let command = manifest.commands[name];
       let shortcut = command.suggested_key[os] || command.suggested_key.default;
-      commands.set(name, {
-        description: command.description,
-        shortcut: shortcut.replace(/\s+/g, ""),
-      });
+      if (shortcut) {
+        commands.set(name, {
+          description: command.description,
+          shortcut: shortcut.replace(/\s+/g, ""),
+        });
+      }
     }
     return commands;
   },
