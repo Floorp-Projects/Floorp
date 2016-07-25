@@ -638,6 +638,13 @@ var Printing = {
       let print = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIWebBrowserPrint);
       print.print(printSettings, null);
+
+      let histogram = Services.telemetry.getKeyedHistogramById("PRINT_COUNT");
+      if (print.doingPrintPreview) {
+        histogram.add("WITH_PREVIEW");
+      } else {
+        histogram.add("WITHOUT_PREVIEW");
+      }
     } catch(e) {
       // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
       // causing an exception to be thrown which we catch here.
