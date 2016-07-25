@@ -197,6 +197,9 @@ var PrintUtils = {
       this._sourceBrowser = aListenerObj.getSourceBrowser();
       this._originalTitle = this._sourceBrowser.contentTitle;
       this._originalURL = this._sourceBrowser.currentURI.spec;
+
+      // Here we log telemetry data for when the user enters print preview.
+      this.logTelemetry("PRINT_PREVIEW_OPENED_COUNT");
     } else {
       // collapse the browser here -- it will be shown in
       // enterPrintPreview; this forces a reflow which fixes display
@@ -633,6 +636,12 @@ var PrintUtils = {
     this.setSimplifiedMode(false);
 
     this._listener.onExit();
+  },
+
+  logTelemetry: function (ID)
+  {
+    let histogram = Services.telemetry.getHistogramById(ID);
+    histogram.add(true);
   },
 
   onKeyDownPP: function (aEvent)
