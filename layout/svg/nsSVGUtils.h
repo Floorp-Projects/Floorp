@@ -498,15 +498,6 @@ public:
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
-  static SVGContextPaint* GetContextPaint(nsIContent* aContent);
-
-  static DrawMode
-  SetupContextPaint(const DrawTarget* aDrawTarget,
-                    const gfxMatrix& aContextMatrix,
-                    nsIFrame* aFrame,
-                    SVGContextPaint* aOuterContextPaint,
-                    SVGContextPaintImpl* aThisContextPaint);
-
   static void
   MakeFillPatternFor(nsIFrame *aFrame,
                      gfxContext* aContext,

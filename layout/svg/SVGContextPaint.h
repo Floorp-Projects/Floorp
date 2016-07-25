@@ -6,6 +6,7 @@
 #ifndef MOZILLA_SVGCONTEXTPAINT_H_
 #define MOZILLA_SVGCONTEXTPAINT_H_
 
+#include "DrawMode.h"
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
 #include "gfxTypes.h"
@@ -61,6 +62,8 @@ public:
     return GetStrokePattern(aDrawTarget, GetStrokeOpacity(), aCTM);
   }
 
+  static SVGContextPaint* GetContextPaint(nsIContent* aContent);
+
   // XXX This gets the geometry params from the gfxContext.  We should get that
   // information from the actual paint context!
   void InitStrokeGeometry(gfxContext *aContext,
@@ -87,7 +90,7 @@ private:
 /**
  * RAII class used to temporarily set and remove an SVGContextPaint while a
  * piece of SVG is being painted.  The context paint is set on the SVG's owner
- * document, as expected by nsSVGUtils::GetContextPaint.  Any pre-existing
+ * document, as expected by SVGContextPaint::GetContextPaint.  Any pre-existing
  * context paint is restored after this class removes the context paint that it
  * set.
  */
@@ -114,6 +117,11 @@ struct SVGContextPaintImpl : public SVGContextPaint
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 public:
+  DrawMode Init(const DrawTarget* aDrawTarget,
+                const gfxMatrix& aContextMatrix,
+                nsIFrame* aFrame,
+                SVGContextPaint* aOuterContextPaint);
+
   already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
                                               float aOpacity,
                                               const gfxMatrix& aCTM) override;
