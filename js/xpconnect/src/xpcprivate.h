@@ -172,7 +172,6 @@
 /***************************************************************************/
 // default initial sizes for maps (hashtables)
 
-#define XPC_CONTEXT_MAP_LENGTH                   8
 #define XPC_JS_MAP_LENGTH                       32
 #define XPC_JS_CLASS_MAP_LENGTH                 32
 
@@ -184,7 +183,6 @@
 #define XPC_NATIVE_SET_MAP_LENGTH               32
 #define XPC_NATIVE_JSCLASS_MAP_LENGTH           16
 #define XPC_THIS_TRANSLATOR_MAP_LENGTH           4
-#define XPC_NATIVE_WRAPPER_MAP_LENGTH            8
 #define XPC_WRAPPER_MAP_LENGTH                   8
 
 /***************************************************************************/
@@ -212,8 +210,6 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 
 
 #define WRAPPER_FLAGS JSCLASS_HAS_PRIVATE
-
-#define INVALID_OBJECT ((JSObject*)1)
 
 // If IS_WN_CLASS for the JSClass of an object is true, the object is a
 // wrappednative wrapper, holding the XPCWrappedNative in its private slot.
@@ -1243,8 +1239,6 @@ class XPCNativeInterface
 
     void DebugDump(int16_t depth);
 
-#define XPC_NATIVE_IFACE_MARK_FLAG ((uint16_t)JS_BIT(15)) // only high bit of 16 is set
-
     void Mark() {
         mMarked = 1;
     }
@@ -1401,8 +1395,6 @@ class XPCNativeSet
 
     inline bool MatchesSetUpToInterface(const XPCNativeSet* other,
                                           XPCNativeInterface* iface) const;
-
-#define XPC_NATIVE_SET_MARK_FLAG ((uint16_t)JS_BIT(15)) // only high bit of 16 is set
 
     inline void Mark();
 
@@ -2039,8 +2031,7 @@ public:
         // If this got called, we're being kept alive by someone who really
         // needs us alive and whole.  Do not let our mFlatJSObject go away.
         // This is the only time we should be tracing our mFlatJSObject,
-        // normally somebody else is doing that. Be careful not to trace the
-        // bogus INVALID_OBJECT value we can have during init, though.
+        // normally somebody else is doing that.
         JS::TraceEdge(trc, &mFlatJSObject, "XPCWrappedNative::mFlatJSObject");
     }
 
