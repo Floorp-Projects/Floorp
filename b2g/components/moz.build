@@ -79,7 +79,18 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     ]
 
 XPIDL_SOURCES += [
+    'nsIGaiaChrome.idl',
     'nsISystemMessagesInternal.idl'
 ]
 
 XPIDL_MODULE = 'gaia_chrome'
+
+UNIFIED_SOURCES += [
+    'GaiaChrome.cpp'
+]
+
+LOCAL_INCLUDES += [
+    '/chrome'
+]
+
+FINAL_LIBRARY = 'xul'

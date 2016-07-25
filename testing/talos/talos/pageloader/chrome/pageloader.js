@@ -229,12 +229,11 @@ function plInit() {
         // able to resize the window and not have it get clobbered
         // by the persisted values
         setTimeout(function () {
-                     // For e10s windows, the initial browser is not remote until it attempts to
-                     // browse to a URI that should be remote (landed at bug 1047603).
-                     // However, when it loads such URI and reinitialize as remote, we lose the
+                     // For e10s windows, since bug 1261842, the initial browser is remote unless
+                     // it attempts to browse to a URI that should be non-remote (landed at bug 1047603).
+                     //
+                     // However, when it loads such URI and reinitializes as non-remote, we lose the
                      // load listener and the injected tpRecordTime.
-                     // The same thing happens if the initial browser starts as remote but the
-                     // first page is not-remote (such as with TART/CART which load a chrome URI).
                      //
                      // The preferred pageloader behaviour in e10s is to run the pages as as remote,
                      // so if the page can load as remote, we will load it as remote.
@@ -244,9 +243,9 @@ function plInit() {
                      // pages should be able to load in the same mode as the initial page - due
                      // to this reinitialization on the switch.
                      if (browserWindow.gMultiProcessBrowser) {
-                       if (firstPageCanLoadAsRemote())
-                         browserWindow.XULBrowserWindow.forceInitialBrowserRemote();
-                       // Implicit else: initial browser in e10s is non-remote by default.
+                       if (!firstPageCanLoadAsRemote())
+                         browserWindow.XULBrowserWindow.forceInitialBrowserNonRemote();
+                       // Implicit else: initial browser in e10s is remote by default.
                      }
 
                      browserWindow.resizeTo(winWidth, winHeight);

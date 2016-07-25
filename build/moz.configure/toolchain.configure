@@ -195,6 +195,10 @@ def try_preprocess(compiler, language, source):
 
 
 @imports(_from='mozbuild.configure.constants', _import='CompilerType')
+@imports(_from='mozbuild.configure.constants',
+         _import='CPU_preprocessor_checks')
+@imports(_from='mozbuild.configure.constants',
+         _import='kernel_preprocessor_checks')
 @imports(_from='textwrap', _import='dedent')
 def get_compiler_info(compiler, language):
     '''Returns information about the given `compiler` (command line in the
@@ -245,6 +249,36 @@ def get_compiler_info(compiler, language):
         #endif
     ''')
 
+    # While we're doing some preprocessing, we might as well do some more
+    # preprocessor-based tests at the same time, to check the toolchain
+    # matches what we want.
+    for name, preprocessor_checks in (
+        ('CPU', CPU_preprocessor_checks),
+        ('KERNEL', kernel_preprocessor_checks),
+    ):
+        for n, (value, condition) in enumerate(preprocessor_checks.iteritems()):
+            check += dedent('''\
+                #%(if)s %(condition)s
+                %%%(name)s %(value)s
+            ''' % {
+                'if': 'elif' if n else 'if',
+                'condition': condition,
+                'name': name,
+                'value': value,
+            })
+        check += '#endif\n'
+
+    # Also check for endianness. The advantage of living in modern times is
+    # that all the modern compilers we support now have __BYTE_ORDER__ defined
+    # by the preprocessor, except MSVC, which only supports little endian.
+    check += dedent('''\
+        #if _MSC_VER || __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        %ENDIANNESS little
+        #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        %ENDIANNESS big
+        #endif
+    ''')
+
     result = try_preprocess(compiler, language, check)
 
     if not result:
@@ -283,13 +317,16 @@ def get_compiler_info(compiler, language):
     return namespace(
         type=type,
         version=version,
+        cpu=data.get('CPU'),
+        kernel=data.get('KERNEL'),
+        endianness=data.get('ENDIANNESS'),
         language='C++' if cplusplus else 'C',
         language_version=cplusplus if cplusplus else stdc_version,
     )
 
 
 @imports(_from='mozbuild.shellutil', _import='quote')
-def check_compiler(compiler, language):
+def check_compiler(compiler, language, target):
     info = get_compiler_info(compiler, language)
 
     flags = []
@@ -329,9 +366,36 @@ def check_compiler(compiler, language):
         flags.append('-fms-compatibility-version=18.00.30723')
         flags.append('-fallback')
 
+    # Check compiler target
+    # --------------------------------------------------------------------
+    if not info.cpu or info.cpu != target.cpu:
+        if info.type == 'clang':
+            append_flag('--target=%s' % target.toolchain)
+        elif info.type == 'gcc':
+            same_arch_different_bits = (
+                ('x86', 'x86_64'),
+                ('ppc', 'ppc64'),
+                ('sparc', 'sparc64'),
+            )
+            if (target.cpu, info.cpu) in same_arch_different_bits:
+                append_flag('-m32')
+            elif (info.cpu, target.cpu) in same_arch_different_bits:
+                append_flag('-m64')
+
+    if not info.kernel or info.kernel != target.kernel:
+        if info.type == 'clang':
+            append_flag('--target=%s' % target.toolchain)
+
+    if not info.endianness or info.endianness != target.endianness:
+        if info.type == 'clang':
+            append_flag('--target=%s' % target.toolchain)
+
     return namespace(
         type=info.type,
         version=info.version,
+        target_cpu=info.cpu,
+        target_kernel=info.kernel,
+        target_endianness=info.endianness,
         flags=flags,
     )
 
@@ -453,6 +517,9 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # explicit compiler was given and we're not cross compiling. For the C++
     # compiler, though, prefer to derive from the host C compiler when it
     # doesn't match the target C compiler.
+    # As a special case, since clang supports all kinds of targets in the same
+    # executable, when cross compiling with clang, default to the same compiler
+    # as the target compiler, resetting flags.
     if host_or_target == host:
         args = (c_compiler, other_c_compiler) if other_c_compiler else ()
 
@@ -463,6 +530,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             c_compiler, other_c_compiler = args if args else (None, None)
             if not cross_compiling and c_compiler == other_c_compiler:
                 return other_compiler
+            if cross_compiling and other_compiler.type == 'clang':
+                return namespace(**{
+                    k: [] if k == 'flags' else v
+                    for k, v in other_compiler.__dict__.iteritems()
+                })
 
     # Normally, we'd use `var` instead of `_var`, but the interaction with
     # old-configure complicates things, and for now, we a) can't take the plain
@@ -471,10 +543,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     compiler = check_prog('_%s' % var, what=what, progs=default_compilers,
                           input=delayed_getattr(provided_compiler, 'compiler'))
 
-    @depends(compiler, provided_compiler, compiler_wrapper)
+    @depends(compiler, provided_compiler, compiler_wrapper, host_or_target)
     @checking('whether %s can be used' % what, lambda x: bool(x))
     @imports(_from='mozbuild.shellutil', _import='quote')
-    def valid_compiler(compiler, provided_compiler, compiler_wrapper):
+    def valid_compiler(compiler, provided_compiler, compiler_wrapper,
+                       host_or_target):
         wrapper = list(compiler_wrapper or ())
         if provided_compiler:
             provided_wrapper = list(provided_compiler.wrapper)
@@ -508,13 +581,39 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                     quote(os.path.dirname(found_compiler)),
                     quote(os.path.dirname(full_path)))
 
-        info = check_compiler(wrapper + [compiler] + flags, language)
+        info = check_compiler(wrapper + [compiler] + flags, language,
+                              host_or_target)
 
         # Check that the additional flags we got are enough to not require any
         # more flags.
         if info.flags:
             flags += info.flags
-            info = check_compiler(wrapper + [compiler] + flags, language)
+            info = check_compiler(wrapper + [compiler] + flags, language,
+                                  host_or_target)
+
+        if not info.target_cpu or info.target_cpu != host_or_target.cpu:
+            raise FatalCheckError(
+                '%s %s compiler target CPU (%s) does not match --%s CPU (%s)'
+                % (host_or_target_str.capitalize(), language,
+                   info.target_cpu or 'unknown', host_or_target_str,
+                   host_or_target.raw_cpu))
+
+        if not info.target_kernel or (info.target_kernel !=
+                                      host_or_target.kernel):
+            raise FatalCheckError(
+                '%s %s compiler target kernel (%s) does not match --%s kernel (%s)'
+                % (host_or_target_str.capitalize(), language,
+                   info.target_kernel or 'unknown', host_or_target_str,
+                   host_or_target.kernel))
+
+        if not info.target_endianness or (info.target_endianness !=
+                                          host_or_target.endianness):
+            raise FatalCheckError(
+                '%s %s compiler target endianness (%s) does not match --%s '
+                'endianness (%s)'
+                % (host_or_target_str.capitalize(), language,
+                   info.target_endianness or 'unknown', host_or_target_str,
+                   host_or_target.endianness))
 
         if info.flags:
             raise FatalCheckError(

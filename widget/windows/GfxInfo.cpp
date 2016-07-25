@@ -908,12 +908,6 @@ GfxInfo::GetGfxDriverInfo()
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_LESS_THAN, V(8,56,1,15), "FEATURE_FAILURE_AMD2", "8.56.1.15" );
 
-    // Bug 1277526
-    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows7,
-      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
-      GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_EQUAL, V(8,850,0,0), "FEATURE_FAILURE_BUG_1277526");
-
     // Bug 1099252
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows7,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,

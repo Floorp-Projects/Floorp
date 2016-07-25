@@ -109,7 +109,7 @@ this.DOMApplicationRegistry = {
 
     // We need to prime the cache with the list of apps.
     let list = this.cpmm.sendSyncMessage("Webapps:GetList", { })[0];
-    this.webapps = list.webapps;
+    this.webapps = list ? list.webapps : { };
     // We need a fast mapping from localId -> app, so we add an index.
     // We also add the manifest to the app object.
     this.localIdIndex = { };

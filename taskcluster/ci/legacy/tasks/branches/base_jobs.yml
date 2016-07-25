@@ -273,7 +273,6 @@ tasks:
         - 'python/mozlint/**'
         - 'tools/lint/**'
         - 'testing/docker/lint/**'
-        - 'taskcluster/**'
   taskgraph-tests:
     task: tasks/tests/taskgraph-tests.yml
     root: true

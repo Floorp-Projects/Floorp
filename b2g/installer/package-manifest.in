@@ -231,6 +231,7 @@
 #endif
 @RESPATH@/components/find.xpt
 @RESPATH@/components/gfx.xpt
+@RESPATH@/components/gaia_chrome.xpt
 @RESPATH@/components/hal.xpt
 @RESPATH@/components/html5.xpt
 @RESPATH@/components/htmlparser.xpt

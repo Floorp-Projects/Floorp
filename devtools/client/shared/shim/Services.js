@@ -501,6 +501,24 @@ const Services = {
       return true;
     },
   },
+
+  /**
+   * A no-op implementation of Services.telemetry.  This supports just
+   * the subset of Services.telemetry that is used by devtools.
+   */
+  telemetry: {
+    getHistogramById: function (name) {
+      return {
+        add: () => {}
+      };
+    },
+
+    getKeyedHistogramById: function (name) {
+      return {
+        add: () => {}
+      };
+    },
+  },
 };
 
 /**

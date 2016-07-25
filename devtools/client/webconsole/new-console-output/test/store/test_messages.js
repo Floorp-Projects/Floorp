@@ -58,11 +58,11 @@ add_task(function* () {
  */
 add_task(function* () {
   const message1 = prepareMessage(packet);
-  const message2 = prepareMessage(packet);
+  let message2 = prepareMessage(packet);
   equal(getRepeatId(message1), getRepeatId(message2),
     "getRepeatId() returns same repeat id for objects with the same values");
 
-  message2.data.arguments = ["new args"];
+  message2 = message2.set("parameters", ["new args"]);
   notEqual(getRepeatId(message1), getRepeatId(message2),
     "getRepeatId() returns different repeat ids for different values");
 });
@@ -75,16 +75,14 @@ add_task(function*() {
 
   dispatch(actions.messageAdd(packet));
 
-  const expectedMessage = prepareMessage(packet);
-
   let messages = getAllMessages(getState());
-  deepEqual(messages.toArray(), [expectedMessage],
+  equal(messages.size, 1,
     "MESSAGE_ADD action adds a message");
 
   dispatch(actions.messageAdd(clearPacket));
 
   messages = getAllMessages(getState());
-  deepEqual(messages.toArray(), [prepareMessage(clearPacket)],
+  deepEqual(messages.first(), prepareMessage(clearPacket),
     "console.clear clears existing messages and add a new one");
 });
 
@@ -104,7 +102,7 @@ add_task(function* () {
 
   let messages = getAllMessages(getState());
   equal(messages.count(), logLimit, "Messages are pruned up to the log limit");
-  deepEqual(messages.last().data.arguments, [messageNumber],
+  deepEqual(messages.last().parameters, [messageNumber],
     "The last message is the expected one");
 });
 
@@ -119,7 +117,7 @@ add_task(function* () {
 
   let newPacket = Object.assign({}, packet);
   for (let i = 1; i <= userSetLimit + 1; i++) {
-    newPacket.message.arguments = [i];
+    newPacket.message.parameters = [i];
     dispatch(actions.messageAdd(newPacket));
   }
 

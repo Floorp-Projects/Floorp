@@ -606,7 +606,7 @@ private:
                            spec.get(),
                            nullptr,
                            nullptr,
-                           false, false, true, nullptr, nullptr, 1.0f, 0,
+                           false, false, true, nullptr, 1.0f, 0,
                            getter_AddRefs(newWindow));
       nsCOMPtr<nsPIDOMWindowOuter> pwindow = nsPIDOMWindowOuter::From(newWindow);
       pwindow.forget(aWindow);

@@ -75,6 +75,14 @@ namespace mozilla {
 #define INITIAL_PREF_FILES 10
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
+void
+Preferences::DirtyCallback()
+{
+  if (gHashTable && sPreferences && !sPreferences->mDirty) {
+    sPreferences->mDirty = true;
+  }
+}
+
 // Prototypes
 static nsresult openPrefFile(nsIFile* aFile);
 static nsresult pref_InitInitialObjects(void);
@@ -479,6 +487,7 @@ Preferences::Shutdown()
  */
 
 Preferences::Preferences()
+  : mDirty(false)
 {
 }
 
@@ -528,6 +537,7 @@ Preferences::Init()
 {
   nsresult rv;
 
+  PREF_SetDirtyCallback(&DirtyCallback);
   PREF_Init();
 
   rv = pref_InitInitialObjects();
@@ -795,7 +805,7 @@ Preferences::GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
 
 NS_IMETHODIMP
 Preferences::GetDirty(bool *_retval) {
-  *_retval = gDirty;
+  *_retval = mDirty;
   return NS_OK;
 }
 
@@ -914,11 +924,12 @@ nsresult
 Preferences::SavePrefFileInternal(nsIFile *aFile)
 {
   if (nullptr == aFile) {
-    // the gDirty flag tells us if we should write to mCurrentFile
+    // the mDirty flag tells us if we should write to mCurrentFile
     // we only check this flag when the caller wants to write to the default
-    if (!gDirty)
+    if (!mDirty) {
       return NS_OK;
-    
+    }
+
     // It's possible that we never got a prefs file.
     nsresult rv = NS_OK;
     if (mCurrentFile)
@@ -1004,7 +1015,7 @@ Preferences::WritePrefFile(nsIFile* aFile)
     }
   }
 
-  gDirty = false;
+  mDirty = false;
   return NS_OK;
 }
 
