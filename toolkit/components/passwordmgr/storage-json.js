@@ -27,9 +27,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-// The permission type we store in the permission manager.
-const PERMISSION_SAVE_LOGINS = "login-saving";
-
 this.LoginManagerStorage_json = function () {};
 
 this.LoginManagerStorage_json.prototype = {
@@ -87,24 +84,7 @@ this.LoginManagerStorage_json.prototype = {
 
         // We won't attempt import again on next startup.
         Services.prefs.setBoolPref("signon.importedFromSqlite", true);
-      }.bind(this)).catch(Cu.reportError)
-      .then(Task.spawn(function () {
-        // If the storage has a disabledHosts entry we migrate them
-        // to the permissions manager (bug 1058438)
-        if (!this._store.data || !this._store.data.disabledHosts) {
-          return; // already migrated.
-        }
-        for (let host of this._store.data.disabledHosts) {
-          try {
-            let uri = Services.io.newURI(host, null, null);
-            Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
-          } catch (e) {
-            Cu.reportError(e);
-          }
-        }
-        delete this._store.data.disabledHosts;
-        this._store.saveSoon();
-      }.bind(this))).catch(Cu.reportError);
+      }.bind(this)).catch(Cu.reportError);
     } catch (e) {
       this.log("Initialization failed:", e);
       throw new Error("Initialization failed");
@@ -386,6 +366,8 @@ this.LoginManagerStorage_json.prototype = {
 
   /**
    * Removes all logins from storage.
+   *
+   * Disabled hosts are kept, as one presumably doesn't want to erase those.
    */
   removeAllLogins() {
     this._store.ensureDataReady();
