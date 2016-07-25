@@ -936,7 +936,7 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     /* raddr, rport */
     raddr = (cand->stream->ctx->flags &
              (NR_ICE_CTX_FLAGS_RELAY_ONLY |
-              NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS)) ?
+              NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES)) ?
       &cand->addr : &cand->base;
 
     switch(cand->type){
