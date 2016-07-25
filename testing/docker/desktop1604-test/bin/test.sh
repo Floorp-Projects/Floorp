@@ -22,17 +22,17 @@ fail() {
 }
 
 ####
-# Now get the test-linux.sh script from the given Gecko tree and run it with
-# the same arguments.
+# Now get the test-linux.sh/test-ubuntu.sh script from the given Gecko tree
+# and run it with the same arguments.
 ####
 
 [ -d $WORKSPACE ] || mkdir -p $WORKSPACE
 cd $WORKSPACE
 
-script=taskcluster/scripts/tester/test-ubuntu1204.sh
+script=taskcluster/scripts/tester/test-ubuntu1604.sh
 url=${GECKO_HEAD_REPOSITORY}/raw-file/${GECKO_HEAD_REV}/${script}
 if ! curl --fail -o ./test-linux.sh --retry 10 $url; then
-    fail "failed downloading test-linux.sh from ${GECKO_HEAD_REPOSITORY}"
+    fail "failed downloading test-ubuntu1604.sh from ${GECKO_HEAD_REPOSITORY}"
 fi
 chmod +x ./test-linux.sh
 exec ./test-linux.sh "${@}"
