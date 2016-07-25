@@ -23,6 +23,7 @@ loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true)
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
+loader.lazyRequireGetter(this, "WebExtensionActor", "devtools/server/actors/webextension", true);
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker", true);
 loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker", true);
 loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
@@ -889,6 +890,14 @@ function TabActor(connection) {
 TabActor.prototype = {
   traits: null,
 
+  // Optional console API listener options (e.g. used by the WebExtensionActor to
+  // filter console messages by addonID), set to an empty (no options) object by default.
+  consoleAPIListenerOptions: {},
+
+  // Optional TabSources filter function (e.g. used by the WebExtensionActor to filter
+  // sources by addonID), allow all sources by default.
+  _allowSource() { return true; },
+
   get exited() {
     return this._exited;
   },
@@ -1059,7 +1068,7 @@ TabActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      this._sources = new TabSources(this.threadActor);
+      this._sources = new TabSources(this.threadActor, this._allowSource);
     }
     return this._sources;
   },
@@ -1364,17 +1373,28 @@ TabActor.prototype = {
                          .getInterface(Ci.nsIDOMWindowUtils)
                          .outerWindowID;
       }
+
+      // Collect the addonID from the document origin attributes.
+      let addonID = window.document.nodePrincipal.originAttributes.addonId;
+
       return {
-        id: id,
+        id,
+        parentID,
+        addonID,
         url: window.location.href,
         title: window.document.title,
-        parentID: parentID
       };
     });
   },
 
   _notifyDocShellsUpdate(docshells) {
     let windows = this._docShellsToWindows(docshells);
+
+    // Do not send the `frameUpdate` event if the windows array is empty.
+    if (windows.length == 0) {
+      return;
+    }
+
     this.conn.send({ from: this.actorID,
                      type: "frameUpdate",
                      frames: windows
@@ -2267,7 +2287,12 @@ BrowserAddonList.prototype.getList = function () {
     for (let addon of addons) {
       let actor = this._actorByAddonId.get(addon.id);
       if (!actor) {
-        actor = new BrowserAddonActor(this._connection, addon);
+        if (addon.isWebExtension) {
+          actor = new WebExtensionActor(this._connection, addon);
+        } else {
+          actor = new BrowserAddonActor(this._connection, addon);
+        }
+
         this._actorByAddonId.set(addon.id, actor);
       }
     }

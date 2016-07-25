@@ -62,6 +62,7 @@ DevToolsModules(
     'webaudio.js',
     'webbrowser.js',
     'webconsole.js',
+    'webextension.js',
     'webgl.js',
     'worker.js',
 )

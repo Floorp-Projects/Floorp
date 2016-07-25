@@ -119,6 +119,7 @@ devtools/server/**
 !devtools/server/actors/inspector.js
 !devtools/server/actors/highlighters/eye-dropper.js
 !devtools/server/actors/webbrowser.js
+!devtools/server/actors/webextension.js
 !devtools/server/actors/styles.js
 !devtools/server/actors/string.js
 !devtools/server/actors/csscoverage.js
