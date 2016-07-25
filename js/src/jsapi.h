@@ -5903,9 +5903,9 @@ struct AllFrames { };
  */
 struct MaxFrames
 {
-    unsigned maxFrames;
+    uint32_t maxFrames;
 
-    explicit MaxFrames(unsigned max)
+    explicit MaxFrames(uint32_t max)
       : maxFrames(max)
     {
         MOZ_ASSERT(max > 0);
