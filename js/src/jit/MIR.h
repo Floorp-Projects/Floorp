@@ -13422,11 +13422,12 @@ class MAsmJSParameter : public MNullaryInstruction
 };
 
 class MAsmJSReturn
-  : public MAryControlInstruction<1, 0>,
+  : public MAryControlInstruction<2, 0>,
     public NoTypePolicy::Data
 {
-    explicit MAsmJSReturn(MDefinition* ins) {
+    explicit MAsmJSReturn(MDefinition* ins, MDefinition* tlsPtr) {
         initOperand(0, ins);
+        initOperand(1, tlsPtr);
     }
 
   public:
@@ -13435,9 +13436,13 @@ class MAsmJSReturn
 };
 
 class MAsmJSVoidReturn
-  : public MAryControlInstruction<0, 0>,
+  : public MAryControlInstruction<1, 0>,
     public NoTypePolicy::Data
 {
+    explicit MAsmJSVoidReturn(MDefinition* tlsPtr) {
+        initOperand(0, tlsPtr);
+    }
+
   public:
     INSTRUCTION_HEADER(AsmJSVoidReturn)
     TRIVIAL_NEW_WRAPPERS

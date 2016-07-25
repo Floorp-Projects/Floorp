@@ -8107,13 +8107,13 @@ class LAsmJSParameter : public LInstructionHelper<1, 0, 0>
     LIR_HEADER(AsmJSParameter);
 };
 
-class LAsmJSReturn : public LInstructionHelper<0, 1, 0>
+class LAsmJSReturn : public LInstructionHelper<0, 2, 0>
 {
   public:
     LIR_HEADER(AsmJSReturn);
 };
 
-class LAsmJSVoidReturn : public LInstructionHelper<0, 0, 0>
+class LAsmJSVoidReturn : public LInstructionHelper<0, 1, 0>
 {
   public:
     LIR_HEADER(AsmJSVoidReturn);
