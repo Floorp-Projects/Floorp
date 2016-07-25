@@ -160,13 +160,6 @@ richlistitem.download button {
 
 /*** Downloads panel multiview (main view and blocked-downloads subview) ***/
 
-#downloadsPanel,
-#downloadsPanel .panel-viewstack[viewtype=main]:not([transitioning]) #downloadsPanel-mainView {
-  /* Tiny hack to ensure the panel shrinks back to its original
-     size after closing a subview that is bigger than the main view. */
-  max-height: 0;
-}
-
 /* Hide all the usual buttons. */
 #downloadsPanel-mainView .download-state[state="8"] .downloadCancel,
 #downloadsPanel-mainView .download-state[state="8"] .downloadConfirmBlock,

@@ -709,6 +709,8 @@ const DownloadsView = {
       DownloadsPanel.panel.removeAttribute("hasdownloads");
     }
 
+    DownloadsBlockedSubview.view.setHeightToFit();
+
     // If we've got some hidden downloads, we should activate the
     // DownloadsSummary. The DownloadsSummary will determine whether or not
     // it's appropriate to actually display the summary.
