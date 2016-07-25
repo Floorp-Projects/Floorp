@@ -652,8 +652,9 @@ MacroAssembler::popcnt32(Register input,  Register output, Register tmp)
 // ===============================================================
 // Branch functions
 
+template <class L>
 void
-MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* label)
+MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, L label)
 {
     ma_cmp(lhs, rhs);
     ma_b(label, cond);

@@ -1543,10 +1543,10 @@ class MOZ_STACK_CLASS ModuleValidator
     class NamedSig
     {
         PropertyName* name_;
-        const DeclaredSig* sig_;
+        const SigWithId* sig_;
 
       public:
-        NamedSig(PropertyName* name, const DeclaredSig& sig)
+        NamedSig(PropertyName* name, const SigWithId& sig)
           : name_(name), sig_(&sig)
         {}
         PropertyName* name() const {
@@ -1570,7 +1570,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
     };
     typedef HashMap<NamedSig, uint32_t, NamedSig> ImportMap;
-    typedef HashMap<const DeclaredSig*, uint32_t, SigHashPolicy> SigMap;
+    typedef HashMap<const SigWithId*, uint32_t, SigHashPolicy> SigMap;
     typedef HashMap<PropertyName*, Global*> GlobalMap;
     typedef HashMap<PropertyName*, MathBuiltin> MathNameMap;
     typedef HashMap<PropertyName*, AsmJSAtomicsBuiltinFunction> AtomicsNameMap;

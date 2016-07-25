@@ -3335,6 +3335,7 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
     ErrorResult rv;
     aInitialData->Write(jsapi.cx(), init, rv);
     if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
       return false;
     }
   }
@@ -4921,9 +4922,9 @@ ContentParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
 #else
   MOZ_ASSERT(0 > mChildXSocketFdDup.get(),
              "Already backed up X resources??");
-  mChildXSocketFdDup.forget();
   if (aXSocketFd.IsValid()) {
-    mChildXSocketFdDup.reset(aXSocketFd.PlatformHandle());
+    auto rawFD = aXSocketFd.ClonePlatformHandle();
+    mChildXSocketFdDup.reset(rawFD.release());
   }
 #endif
   return true;

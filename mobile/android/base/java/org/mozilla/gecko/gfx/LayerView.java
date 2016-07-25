@@ -25,6 +25,7 @@ import org.mozilla.gecko.ZoomConstraints;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -350,6 +351,10 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     public PointF convertViewPointToLayerPoint(PointF viewPoint) {
         return mLayerClient.convertViewPointToLayerPoint(viewPoint);
+    }
+
+    public Matrix getMatrixForLayerRectToViewRect() {
+        return mLayerClient.getMatrixForLayerRectToViewRect();
     }
 
     int getBackgroundColor() {

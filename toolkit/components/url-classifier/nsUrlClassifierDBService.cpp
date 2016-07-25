@@ -1601,9 +1601,6 @@ nsUrlClassifierDBService::GetCompleter(const nsACString &tableName,
     return false;
   }
 
-  MOZ_ASSERT(!StringBeginsWith(tableName, NS_LITERAL_CSTRING("test-")),
-             "We should never fetch hash completions for test tables");
-
   // Otherwise, call gethash to find the hash completions.
   return NS_SUCCEEDED(CallGetService(NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID,
                                      completer));

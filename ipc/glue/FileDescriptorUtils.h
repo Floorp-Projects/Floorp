@@ -44,8 +44,8 @@ private:
   void CloseFile();
 };
 
-// On failure, FileDescriptorToFILE closes the given descriptor; on
-// success, fclose()ing the returned FILE* will close the handle.
+// On failure, FileDescriptorToFILE returns nullptr; on success,
+// returns duplicated FILE*.
 // This is meant for use with FileDescriptors received over IPC.
 FILE* FileDescriptorToFILE(const FileDescriptor& aDesc,
                            const char* aOpenMode);

@@ -113,7 +113,7 @@
 
           for (let i = 0; i < 3; i++) {
             info("Running GC");
-            SpecialPowers.exactGC(window, sendToGenerator);
+            SpecialPowers.exactGC(sendToGenerator);
             yield undefined;
 
             info("Waiting the event queue to clear");

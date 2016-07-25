@@ -49,7 +49,7 @@ if CONFIG['OS_ARCH'] == 'OpenBSD':
 
 if CONFIG['OS_TARGET'] == 'Darwin':
     SOURCES += [
-        'cubeb_audiounit.c',
+        'cubeb_audiounit.cpp',
         'cubeb_resampler.cpp'
     ]
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

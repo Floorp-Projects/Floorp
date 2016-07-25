@@ -17,7 +17,7 @@ class CallArgs;
 
 namespace mozilla { namespace net {
 
-class JSRuntimeWrapper;
+class JSContextWrapper;
 union NetAddr;
 
 // The ProxyAutoConfig class is meant to be created and run on a
@@ -103,7 +103,7 @@ private:
   bool MyIPAddressTryHost(const nsCString &hostName, unsigned int timeout,
                           const JS::CallArgs &aArgs, bool* aResult);
 
-  JSRuntimeWrapper *mJSRuntime;
+  JSContextWrapper *mJSContext;
   bool              mJSNeedsSetup;
   bool              mShutdown;
   nsCString         mPACScript;

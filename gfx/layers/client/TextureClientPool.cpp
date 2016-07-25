@@ -35,6 +35,7 @@ TextureClientPool::TextureClientPool(LayersBackend aLayersBackend,
   , mPoolIncrementSize(aPoolIncrementSize)
   , mOutstandingClients(0)
   , mSurfaceAllocator(aAllocator)
+  , mDestroyed(false)
 {
   TCP_LOG("TexturePool %p created with maximum unused texture clients %u\n",
       this, mInitialPoolSize);
@@ -149,7 +150,7 @@ TextureClientPool::AllocateTextureClients(size_t aSize)
 void
 TextureClientPool::ReturnTextureClient(TextureClient *aClient)
 {
-  if (!aClient) {
+  if (!aClient || mDestroyed) {
     return;
   }
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
@@ -170,7 +171,7 @@ TextureClientPool::ReturnTextureClient(TextureClient *aClient)
 void
 TextureClientPool::ReturnTextureClientDeferred(TextureClient* aClient)
 {
-  if (!aClient) {
+  if (!aClient || mDestroyed) {
     return;
   }
   MOZ_ASSERT(aClient->GetReadLock());
@@ -285,6 +286,7 @@ TextureClientPool::Clear()
 void TextureClientPool::Destroy()
 {
   Clear();
+  mDestroyed = true;
   mInitialPoolSize = 0;
   mPoolIncrementSize = 0;
 }

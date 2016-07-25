@@ -27,6 +27,7 @@ _mochitest_summary = {
 
 TinderBoxPrintRe = {
     "mochitest_summary": _mochitest_summary,
+    "mochitest-chrome_summary": _mochitest_summary,
     "mochitest-gl_summary": _mochitest_summary,
     "mochitest-media_summary": _mochitest_summary,
     "mochitest-plain-clipboard_summary": _mochitest_summary,

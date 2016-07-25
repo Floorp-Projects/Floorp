@@ -195,7 +195,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
       document.body.removeChild(frame);
       frame = null;
 
-      SpecialPowers.exactGC(window, function() {
+      SpecialPowers.exactGC(function() {
         // This should not crash.
         SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', 'en-GB']]}, nextTest);
       });

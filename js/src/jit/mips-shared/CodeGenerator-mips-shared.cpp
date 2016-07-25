@@ -2263,32 +2263,6 @@ CodeGeneratorMIPSShared::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
-{
-    const MAsmJSLoadFuncPtr* mir = ins->mir();
-
-    Register index = ToRegister(ins->index());
-    Register out = ToRegister(ins->output());
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
-
-    if (mir->hasLimit()) {
-        masm.branch32(Assembler::Condition::AboveOrEqual, index, Imm32(mir->limit()),
-                      wasm::JumpTarget::OutOfBounds);
-    }
-
-    BaseIndex source(GlobalReg, index, ScalePointer, addr);
-    masm.loadPtr(source, out);
-}
-
-void
-CodeGeneratorMIPSShared::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
-{
-    const MAsmJSLoadFFIFunc* mir = ins->mir();
-    masm.loadPtr(Address(GlobalReg, mir->globalDataOffset() - AsmJSGlobalRegBias),
-                 ToRegister(ins->output()));
-}
-
-void
 CodeGeneratorMIPSShared::visitNegI(LNegI* ins)
 {
     Register input = ToRegister(ins->input());

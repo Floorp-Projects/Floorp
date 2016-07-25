@@ -33,6 +33,10 @@
 #include "gmp-video-decode.h"
 #include "DecoderDoctorDiagnostics.h"
 #include "WebMDecoder.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "nsUnicharUtils.h"
+#include "mozilla/dom/MediaSource.h"
 
 namespace mozilla {
 namespace dom {
@@ -88,7 +92,11 @@ MediaKeySystemAccess::GetConfiguration(MediaKeySystemConfiguration& aConfig)
 already_AddRefed<Promise>
 MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
 {
-  RefPtr<MediaKeys> keys(new MediaKeys(mParent, mKeySystem, mCDMVersion));
+  RefPtr<MediaKeys> keys(new MediaKeys(mParent,
+                                       mKeySystem,
+                                       mCDMVersion,
+                                       mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
+                                       mConfig.mPersistentState == MediaKeysRequirement::Required));
   return keys->Init(aRv);
 }
 
@@ -313,252 +321,836 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
   return MediaKeySystemStatus::Cdm_not_supported;
 }
 
+typedef nsCString GMPCodecString;
+
+#define GMP_CODEC_AAC NS_LITERAL_CSTRING("aac")
+#define GMP_CODEC_OPUS NS_LITERAL_CSTRING("opus")
+#define GMP_CODEC_VORBIS NS_LITERAL_CSTRING("vorbis")
+#define GMP_CODEC_H264 NS_LITERAL_CSTRING("h264")
+#define GMP_CODEC_VP8 NS_LITERAL_CSTRING("vp8")
+#define GMP_CODEC_VP9 NS_LITERAL_CSTRING("vp9")
+
+GMPCodecString
+ToGMPAPICodecString(const nsString& aCodec)
+{
+  if (IsAACCodecString(aCodec)) {
+    return GMP_CODEC_AAC;
+  }
+  if (aCodec.EqualsLiteral("opus")) {
+    return GMP_CODEC_OPUS;
+  }
+  if (aCodec.EqualsLiteral("vorbis")) {
+    return GMP_CODEC_VORBIS;
+  }
+  if (IsH264CodecString(aCodec)) {
+    return GMP_CODEC_H264;
+  }
+  if (IsVP8CodecString(aCodec)) {
+    return GMP_CODEC_VP8;
+  }
+  if (IsVP9CodecString(aCodec)) {
+    return GMP_CODEC_VP9;
+  }
+  return EmptyCString();
+}
+
+// A codec can be decrypted-and-decoded by the CDM, or only decrypted
+// by the CDM and decoded by Gecko. Not both.
+struct KeySystemContainerSupport
+{
+  bool IsSupported() const
+  {
+    return !mCodecsDecoded.IsEmpty() || !mCodecsDecrypted.IsEmpty();
+  }
+
+  // CDM decrypts and decodes using a DRM robust decoder, and passes decoded
+  // samples back to Gecko for rendering.
+  bool DecryptsAndDecodes(GMPCodecString aCodec) const
+  {
+    return mCodecsDecoded.Contains(aCodec);
+  }
+
+  // CDM decrypts and passes the decrypted samples back to Gecko for decoding.
+  bool Decrypts(GMPCodecString aCodec) const
+  {
+    return mCodecsDecrypted.Contains(aCodec);
+  }
+
+  void SetCanDecryptAndDecode(GMPCodecString aCodec)
+  {
+    // Can't both decrypt and decrypt-and-decode a codec.
+    MOZ_ASSERT(!Decrypts(aCodec));
+    // Prevent duplicates.
+    MOZ_ASSERT(!DecryptsAndDecodes(aCodec));
+    mCodecsDecoded.AppendElement(aCodec);
+  }
+
+  void SetCanDecrypt(GMPCodecString aCodec)
+  {
+    // Prevent duplicates.
+    MOZ_ASSERT(!Decrypts(aCodec));
+    // Can't both decrypt and decrypt-and-decode a codec.
+    MOZ_ASSERT(!DecryptsAndDecodes(aCodec));
+    mCodecsDecrypted.AppendElement(aCodec);
+  }
+
+private:
+  nsTArray<GMPCodecString> mCodecsDecoded;
+  nsTArray<GMPCodecString> mCodecsDecrypted;
+};
+
+enum class KeySystemFeatureSupport
+{
+  Prohibited = 1,
+  Requestable = 2,
+  Required = 3,
+};
+
+struct KeySystemConfig
+{
+  nsString mKeySystem;
+  nsTArray<nsString> mInitDataTypes;
+  KeySystemFeatureSupport mPersistentState = KeySystemFeatureSupport::Prohibited;
+  KeySystemFeatureSupport mDistinctiveIdentifier = KeySystemFeatureSupport::Prohibited;
+  nsTArray<MediaKeySessionType> mSessionTypes;
+  nsTArray<nsString> mVideoRobustness;
+  nsTArray<nsString> mAudioRobustness;
+  KeySystemContainerSupport mMP4;
+  KeySystemContainerSupport mWebM;
+};
+
+StaticAutoPtr<nsTArray<KeySystemConfig>> sKeySystemConfigs;
+
+static const nsTArray<KeySystemConfig>&
+GetSupportedKeySystems()
+{
+  if (!sKeySystemConfigs) {
+    sKeySystemConfigs = new nsTArray<KeySystemConfig>();
+    ClearOnShutdown(&sKeySystemConfigs);
+
+    {
+      KeySystemConfig clearkey;
+      clearkey.mKeySystem = NS_LITERAL_STRING("org.w3.clearkey");
+      clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
+      clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("keyids"));
+      clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("webm"));
+      clearkey.mPersistentState = KeySystemFeatureSupport::Requestable;
+      clearkey.mDistinctiveIdentifier = KeySystemFeatureSupport::Prohibited;
+      clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
+      clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Persistent_license);
+#if defined(XP_WIN)
+      // Clearkey CDM uses WMF decoders on Windows.
+      if (WMFDecoderModule::HasAAC()) {
+        clearkey.mMP4.SetCanDecryptAndDecode(GMP_CODEC_AAC);
+      } else {
+        clearkey.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
+      }
+      if (WMFDecoderModule::HasH264()) {
+        clearkey.mMP4.SetCanDecryptAndDecode(GMP_CODEC_H264);
+      } else {
+        clearkey.mMP4.SetCanDecrypt(GMP_CODEC_H264);
+      }
+#else
+      clearkey.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
+      clearkey.mMP4.SetCanDecrypt(GMP_CODEC_H264);
+#endif
+      clearkey.mWebM.SetCanDecrypt(GMP_CODEC_VORBIS);
+      clearkey.mWebM.SetCanDecrypt(GMP_CODEC_OPUS);
+      clearkey.mWebM.SetCanDecrypt(GMP_CODEC_VP8);
+      clearkey.mWebM.SetCanDecrypt(GMP_CODEC_VP9);
+      sKeySystemConfigs->AppendElement(Move(clearkey));
+    }
+    {
+      KeySystemConfig widevine;
+      widevine.mKeySystem = NS_LITERAL_STRING("com.widevine.alpha");
+      widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
+      widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("keyids"));
+      widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("webm"));
+      widevine.mPersistentState = KeySystemFeatureSupport::Requestable;
+      widevine.mDistinctiveIdentifier = KeySystemFeatureSupport::Prohibited;
+      widevine.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
+      widevine.mAudioRobustness.AppendElement(NS_LITERAL_STRING("SW_SECURE_CRYPTO"));
+      widevine.mVideoRobustness.AppendElement(NS_LITERAL_STRING("SW_SECURE_DECODE"));
+#if defined(XP_WIN)
+      // Widevine CDM doesn't include an AAC decoder. So if WMF can't
+      // decode AAC, and a codec wasn't specified, be conservative
+      // and reject the MediaKeys request, since our policy is to prevent
+      //  the Adobe GMP's unencrypted AAC decoding path being used to
+      // decode content decrypted by the Widevine CDM.
+      if (WMFDecoderModule::HasAAC()) {
+        widevine.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
+      }
+#else
+      widevine.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
+#endif
+      widevine.mMP4.SetCanDecryptAndDecode(GMP_CODEC_H264);
+      // TODO: Enable Widevine/WebM once bug 1279077 lands.
+      //widevine.mWebM.SetCanDecrypt(GMP_CODEC_VORBIS);
+      //widevine.mWebM.SetCanDecrypt(GMP_CODEC_OPUS);
+      //widevine.mWebM.SetCanDecryptAndDecode(GMP_CODEC_VP8);
+      //widevine.mWebM.SetCanDecryptAndDecode(GMP_CODEC_VP9);
+      sKeySystemConfigs->AppendElement(Move(widevine));
+    }
+    {
+      KeySystemConfig primetime;
+      primetime.mKeySystem = NS_LITERAL_STRING("com.adobe.primetime");
+      primetime.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
+      primetime.mPersistentState = KeySystemFeatureSupport::Required;
+      primetime.mDistinctiveIdentifier = KeySystemFeatureSupport::Required;
+      primetime.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
+      primetime.mMP4.SetCanDecryptAndDecode(GMP_CODEC_AAC);
+      primetime.mMP4.SetCanDecryptAndDecode(GMP_CODEC_H264);
+      sKeySystemConfigs->AppendElement(Move(primetime));
+    }
+  }
+  return *sKeySystemConfigs;
+}
+
+static const KeySystemConfig*
+GetKeySystemConfig(const nsAString& aKeySystem)
+{
+  for (const KeySystemConfig& config : GetSupportedKeySystems()) {
+    if (config.mKeySystem.Equals(aKeySystem)) {
+      return &config;
+    }
+  }
+  return nullptr;
+}
+
+enum CodecType
+{
+  Audio,
+  Video,
+  Invalid
+};
+
 static bool
-GMPDecryptsAndDecodesAAC(mozIGeckoMediaPluginService* aGMPS,
-                         const nsAString& aKeySystem,
+CanDecryptAndDecode(mozIGeckoMediaPluginService* aGMPService,
+                    const nsString& aKeySystem,
+                    const nsString& aContentType,
+                    CodecType aCodecType,
+                    const KeySystemContainerSupport& aContainerSupport,
+                    const nsTArray<GMPCodecString>& aCodecs,
+                    DecoderDoctorDiagnostics* aDiagnostics)
+{
+  MOZ_ASSERT(aCodecType != Invalid);
+  MOZ_ASSERT(HaveGMPFor(aGMPService,
+                        NS_ConvertUTF16toUTF8(aKeySystem),
+                        NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
+  for (const GMPCodecString& codec : aCodecs) {
+    MOZ_ASSERT(!codec.IsEmpty());
+
+    nsCString api = (aCodecType == Audio) ? NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER)
+                                          : NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
+    if (aContainerSupport.DecryptsAndDecodes(codec) &&
+        HaveGMPFor(aGMPService,
+                   NS_ConvertUTF16toUTF8(aKeySystem),
+                   api,
+                   codec)) {
+      // GMP can decrypt-and-decode this codec.
+      continue;
+    }
+
+    if (aContainerSupport.Decrypts(codec) &&
+        NS_SUCCEEDED(MediaSource::IsTypeSupported(aContentType, aDiagnostics))) {
+      // GMP can decrypt and is allowed to return compressed samples to
+      // Gecko to decode, and Gecko has a decoder.
+      continue;
+    }
+
+    // Neither the GMP nor Gecko can both decrypt and decode. We don't
+    // support this codec.
+
+#if defined(XP_WIN)
+    // Widevine CDM doesn't include an AAC decoder. So if WMF can't
+    // decode AAC, and a codec wasn't specified, be conservative
+    // and reject the MediaKeys request, since our policy is to prevent
+    //  the Adobe GMP's unencrypted AAC decoding path being used to
+    // decode content decrypted by the Widevine CDM.
+    if (codec == GMP_CODEC_AAC &&
+        aKeySystem.EqualsLiteral("com.widevine.alpha") &&
+        !WMFDecoderModule::HasAAC()) {
+      if (aDiagnostics) {
+        aDiagnostics->SetKeySystemIssue(
+          DecoderDoctorDiagnostics::eWidevineWithNoWMF);
+      }
+    }
+#endif
+    return false;
+  }
+  return true;
+}
+
+static bool
+ToSessionType(const nsAString& aSessionType, MediaKeySessionType& aOutType)
+{
+  using MediaKeySessionTypeValues::strings;
+  const char* temporary =
+    strings[static_cast<uint32_t>(MediaKeySessionType::Temporary)].value;
+  if (aSessionType.EqualsASCII(temporary)) {
+    aOutType = MediaKeySessionType::Temporary;
+    return true;
+  }
+  const char* persistentLicense =
+    strings[static_cast<uint32_t>(MediaKeySessionType::Persistent_license)].value;
+  if (aSessionType.EqualsASCII(persistentLicense)) {
+    aOutType = MediaKeySessionType::Persistent_license;
+    return true;
+  }
+  return false;
+}
+
+// 5.2.1 Is persistent session type?
+static bool
+IsPersistentSessionType(MediaKeySessionType aSessionType)
+{
+  return aSessionType == MediaKeySessionType::Persistent_license;
+}
+
+CodecType
+GetMajorType(const nsAString& aContentType)
+{
+  if (CaseInsensitiveFindInReadable(NS_LITERAL_STRING("audio/"), aContentType)) {
+    return Audio;
+  }
+  if (CaseInsensitiveFindInReadable(NS_LITERAL_STRING("video/"), aContentType)) {
+    return Video;
+  }
+  return Invalid;
+}
+
+static CodecType
+GetCodecType(const GMPCodecString& aCodec)
+{
+  if (aCodec.Equals(GMP_CODEC_AAC) ||
+      aCodec.Equals(GMP_CODEC_OPUS) ||
+      aCodec.Equals(GMP_CODEC_VORBIS)) {
+    return Audio;
+  }
+  if (aCodec.Equals(GMP_CODEC_H264) ||
+      aCodec.Equals(GMP_CODEC_VP8) ||
+      aCodec.Equals(GMP_CODEC_VP9)) {
+    return Video;
+  }
+  return Invalid;
+}
+
+static bool
+AllCodecsOfType(const nsTArray<GMPCodecString>& aCodecs, const CodecType aCodecType)
+{
+  for (const GMPCodecString& codec : aCodecs) {
+    if (GetCodecType(codec) != aCodecType) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// 3.1.2.3 Get Supported Capabilities for Audio/Video Type
+static Sequence<MediaKeySystemMediaCapability>
+GetSupportedCapabilities(const CodecType aCodecType,
+                         mozIGeckoMediaPluginService* aGMPService,
+                         const nsTArray<MediaKeySystemMediaCapability>& aRequestedCapabilities,
+                         const MediaKeySystemConfiguration& aPartialConfig,
+                         const KeySystemConfig& aKeySystem,
                          DecoderDoctorDiagnostics* aDiagnostics)
 {
-  MOZ_ASSERT(HaveGMPFor(aGMPS,
-                        NS_ConvertUTF16toUTF8(aKeySystem),
-                        NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
-  return HaveGMPFor(aGMPS,
-                    NS_ConvertUTF16toUTF8(aKeySystem),
-                    NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                    NS_LITERAL_CSTRING("aac"));
-}
+  // Let local accumulated configuration be a local copy of partial configuration.
+  // (Note: It's not necessary for us to maintain a local copy, as we don't need
+  // to test whether capabilites from previous calls to this algorithm work with
+  // the capabilities currently being considered in this call. )
 
-static bool
-GMPDecryptsAndDecodesH264(mozIGeckoMediaPluginService* aGMPS,
-                          const nsAString& aKeySystem,
-                          DecoderDoctorDiagnostics* aDiagnostics)
-{
-  MOZ_ASSERT(HaveGMPFor(aGMPS,
-                        NS_ConvertUTF16toUTF8(aKeySystem),
-                        NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
-  return HaveGMPFor(aGMPS,
-                    NS_ConvertUTF16toUTF8(aKeySystem),
-                    NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                    NS_LITERAL_CSTRING("h264"));
-}
+  // Let supported media capabilities be an empty sequence of
+  // MediaKeySystemMediaCapability dictionaries.
+  Sequence<MediaKeySystemMediaCapability> supportedCapabilities;
 
-// If this keysystem's CDM explicitly says it doesn't support decoding,
-// that means it's OK with passing the decrypted samples back to Gecko
-// for decoding.
-static bool
-GMPDecryptsAndGeckoDecodesH264(mozIGeckoMediaPluginService* aGMPService,
-                               const nsAString& aKeySystem,
-                               const nsAString& aContentType,
-                               DecoderDoctorDiagnostics* aDiagnostics)
-{
-  MOZ_ASSERT(HaveGMPFor(aGMPService,
-                        NS_ConvertUTF16toUTF8(aKeySystem),
-                        NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
-  MOZ_ASSERT(IsH264ContentType(aContentType));
-  return !HaveGMPFor(aGMPService,
-                     NS_ConvertUTF16toUTF8(aKeySystem),
-                     NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                     NS_LITERAL_CSTRING("h264")) &&
-         MP4Decoder::CanHandleMediaType(aContentType, aDiagnostics);
-}
-
-static bool
-GMPDecryptsAndGeckoDecodesAAC(mozIGeckoMediaPluginService* aGMPService,
-                              const nsAString& aKeySystem,
-                              const nsAString& aContentType,
-                              DecoderDoctorDiagnostics* aDiagnostics)
-{
-  MOZ_ASSERT(HaveGMPFor(aGMPService,
-                        NS_ConvertUTF16toUTF8(aKeySystem),
-                        NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
-  MOZ_ASSERT(IsAACContentType(aContentType));
-
-  if (HaveGMPFor(aGMPService,
-    NS_ConvertUTF16toUTF8(aKeySystem),
-    NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-    NS_LITERAL_CSTRING("aac"))) {
-    // We do have a GMP for AAC -> Gecko itself does *not* decode AAC.
-    return false;
-  }
-#if defined(XP_WIN)
-  // Widevine CDM doesn't include an AAC decoder. So if WMF can't
-  // decode AAC, and a codec wasn't specified, be conservative
-  // and reject the MediaKeys request, since our policy is to prevent
-  //  the Adobe GMP's unencrypted AAC decoding path being used to
-  // decode content decrypted by the Widevine CDM.
-  if (aKeySystem.EqualsLiteral("com.widevine.alpha") &&
-      !WMFDecoderModule::HasAAC()) {
-    if (aDiagnostics) {
-      aDiagnostics->SetKeySystemIssue(
-        DecoderDoctorDiagnostics::eWidevineWithNoWMF);
+  // For each requested media capability in requested media capabilities:
+  for (const MediaKeySystemMediaCapability& capabilities : aRequestedCapabilities) {
+    // Let content type be requested media capability's contentType member.
+    const nsString& contentType = capabilities.mContentType;
+    // Let robustness be requested media capability's robustness member.
+    const nsString& robustness = capabilities.mRobustness;
+    // If content type is the empty string, return null.
+    if (contentType.IsEmpty()) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') "
+              "MediaKeySystemMediaCapability('%s','%s') rejected; "
+              "audio or video capability has empty contentType.",
+              NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+              NS_ConvertUTF16toUTF8(contentType).get(),
+              NS_ConvertUTF16toUTF8(robustness).get());
+      return Sequence<MediaKeySystemMediaCapability>();
     }
-    return false;
+    // If content type is an invalid or unrecognized MIME type, continue
+    // to the next iteration.
+    nsAutoString container;
+    nsTArray<nsString> codecStrings;
+    if (!ParseMIMETypeString(contentType, container, codecStrings)) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') "
+              "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+              "failed to parse contentType as MIME type.",
+              NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+              NS_ConvertUTF16toUTF8(contentType).get(),
+              NS_ConvertUTF16toUTF8(robustness).get());
+      continue;
+    }
+    bool invalid = false;
+    nsTArray<GMPCodecString> codecs;
+    for (const nsString& codecString : codecStrings) {
+      GMPCodecString gmpCodec = ToGMPAPICodecString(codecString);
+      if (gmpCodec.IsEmpty()) {
+        invalid = true;
+        EME_LOG("MediaKeySystemConfiguration (label='%s') "
+                "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+                "'%s' is an invalid codec string.",
+                NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+                NS_ConvertUTF16toUTF8(contentType).get(),
+                NS_ConvertUTF16toUTF8(robustness).get(),
+                NS_ConvertUTF16toUTF8(codecString).get());
+        break;
+      }
+      codecs.AppendElement(gmpCodec);
+    }
+    if (invalid) {
+      continue;
+    }
+
+    // If the user agent does not support container, continue to the next iteration.
+    // The case-sensitivity of string comparisons is determined by the appropriate RFC.
+    // (Note: Per RFC 6838 [RFC6838], "Both top-level type and subtype names are
+    // case-insensitive."'. We're using nsContentTypeParser and that is
+    // case-insensitive and converts all its parameter outputs to lower case.)
+    NS_ConvertUTF16toUTF8 container_utf8(container);
+    const bool isMP4 = DecoderTraits::IsMP4TypeAndEnabled(container_utf8, aDiagnostics);
+    if (isMP4 && !aKeySystem.mMP4.IsSupported()) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') "
+              "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+              "MP4 requested but unsupported.",
+              NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+              NS_ConvertUTF16toUTF8(contentType).get(),
+              NS_ConvertUTF16toUTF8(robustness).get());
+      continue;
+    }
+    const bool isWebM = DecoderTraits::IsWebMTypeAndEnabled(container_utf8);
+    if (isWebM && !aKeySystem.mWebM.IsSupported()) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') "
+              "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+              "WebM requested but unsupported.",
+              NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+              NS_ConvertUTF16toUTF8(contentType).get(),
+              NS_ConvertUTF16toUTF8(robustness).get());
+      continue;
+    }
+    if (!isMP4 && !isWebM) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') "
+              "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+              "Unsupported or unrecognized container requested.",
+              NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+              NS_ConvertUTF16toUTF8(contentType).get(),
+              NS_ConvertUTF16toUTF8(robustness).get());
+      continue;
+    }
+
+    // Let parameters be the RFC 6381[RFC6381] parameters, if any, specified by
+    // content type.
+    // If the user agent does not recognize one or more parameters, continue to
+    // the next iteration.
+    // Let media types be the set of codecs and codec constraints specified by
+    // parameters. The case-sensitivity of string comparisons is determined by
+    // the appropriate RFC or other specification.
+    // (Note: codecs array is 'parameter').
+
+    // If media types is empty:
+    if (codecs.IsEmpty()) {
+      // If container normatively implies a specific set of codecs and codec constraints:
+      // Let parameters be that set.
+      if (isMP4) {
+        if (aCodecType == Audio) {
+          codecs.AppendElement(GMP_CODEC_AAC);
+        } else if (aCodecType == Video) {
+          codecs.AppendElement(GMP_CODEC_H264);
+        }
+      } else if (isWebM) {
+        if (aCodecType == Audio) {
+          codecs.AppendElement(GMP_CODEC_VORBIS);
+        } else if (aCodecType == Video) {
+          codecs.AppendElement(GMP_CODEC_VP8);
+        }
+      }
+      // Otherwise: Continue to the next iteration.
+      // (Note: all containers we support have implied codecs, so don't continue here.)
+    }
+
+    // If content type is not strictly a audio/video type, continue to the next iteration.
+    const auto majorType = GetMajorType(container);
+    if (majorType == Invalid) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') "
+              "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+              "MIME type is not an audio or video MIME type.",
+              NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+              NS_ConvertUTF16toUTF8(contentType).get(),
+              NS_ConvertUTF16toUTF8(robustness).get());
+      continue;
+    }
+    if (majorType != aCodecType || !AllCodecsOfType(codecs, aCodecType)) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') "
+              "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+              "MIME type mixes audio codecs in video capabilities "
+              "or video codecs in audio capabilities.",
+              NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+              NS_ConvertUTF16toUTF8(contentType).get(),
+              NS_ConvertUTF16toUTF8(robustness).get());
+      continue;
+    }
+    // If robustness is not the empty string and contains an unrecognized
+    // value or a value not supported by implementation, continue to the
+    // next iteration. String comparison is case-sensitive.
+    if (!robustness.IsEmpty()) {
+      if (majorType == Audio && !aKeySystem.mAudioRobustness.Contains(robustness)) {
+        EME_LOG("MediaKeySystemConfiguration (label='%s') "
+                "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+                "unsupported robustness string.",
+                NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+                NS_ConvertUTF16toUTF8(contentType).get(),
+                NS_ConvertUTF16toUTF8(robustness).get());
+        continue;
+      }
+      if (majorType == Video && !aKeySystem.mVideoRobustness.Contains(robustness)) {
+        EME_LOG("MediaKeySystemConfiguration (label='%s') "
+                "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+                "unsupported robustness string.",
+                NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+                NS_ConvertUTF16toUTF8(contentType).get(),
+                NS_ConvertUTF16toUTF8(robustness).get());
+        continue;
+      }
+      // Note: specified robustness requirements are satisfied.
+    }
+
+    // If the user agent and implementation definitely support playback of
+    // encrypted media data for the combination of container, media types,
+    // robustness and local accumulated configuration in combination with
+    // restrictions...
+    const auto& containerSupport = isMP4 ? aKeySystem.mMP4 : aKeySystem.mWebM;
+    if (!CanDecryptAndDecode(aGMPService,
+                             aKeySystem.mKeySystem,
+                             contentType,
+                             majorType,
+                             containerSupport,
+                             codecs,
+                             aDiagnostics)) {
+        EME_LOG("MediaKeySystemConfiguration (label='%s') "
+                "MediaKeySystemMediaCapability('%s','%s') unsupported; "
+                "codec unsupported by CDM requested.",
+                NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
+                NS_ConvertUTF16toUTF8(contentType).get(),
+                NS_ConvertUTF16toUTF8(robustness).get());
+        continue;
+    }
+
+    // ... add requested media capability to supported media capabilities.
+    if (!supportedCapabilities.AppendElement(capabilities, mozilla::fallible)) {
+      NS_WARNING("GetSupportedCapabilities: Malloc failure");
+      return Sequence<MediaKeySystemMediaCapability>();
+    }
+
+    // Note: omitting steps 3.13.2, our robustness is not sophisticated enough
+    // to require considering all requirements together.
   }
-#endif
-  return MP4Decoder::CanHandleMediaType(aContentType, aDiagnostics);
+  return Move(supportedCapabilities);
 }
 
+// "Get Supported Configuration and Consent" algorithm, steps 4-7 for
+// distinctive identifier, and steps 8-11 for persistent state. The steps
+// are the same for both requirements/features, so we factor them out into
+// a single function.
 static bool
-GMPDecryptsAndGeckoDecodesVorbis(mozIGeckoMediaPluginService* aGMPService,
-                                const nsAString& aKeySystem,
-                                const nsAString& aContentType,
-                                DecoderDoctorDiagnostics* aDiagnostics)
+CheckRequirement(const MediaKeysRequirement aRequirement,
+                 const KeySystemFeatureSupport aFeatureSupport,
+                 MediaKeysRequirement& aOutRequirement)
 {
-  MOZ_ASSERT(HaveGMPFor(aGMPService,
-             NS_ConvertUTF16toUTF8(aKeySystem),
-             NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
-  MOZ_ASSERT(IsVorbisContentType(aContentType));
-  return !HaveGMPFor(aGMPService,
-                     NS_ConvertUTF16toUTF8(aKeySystem),
-                     NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                     NS_LITERAL_CSTRING("vorbis")) &&
-         WebMDecoder::CanHandleMediaType(aContentType);
-}
-
-static bool
-GMPDecryptsAndGeckoDecodesVP8(mozIGeckoMediaPluginService* aGMPService,
-                             const nsAString& aKeySystem,
-                             const nsAString& aContentType,
-                             DecoderDoctorDiagnostics* aDiagnostics)
-{
-  MOZ_ASSERT(HaveGMPFor(aGMPService,
-             NS_ConvertUTF16toUTF8(aKeySystem),
-             NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
-  MOZ_ASSERT(IsVP8ContentType(aContentType));
-  return !HaveGMPFor(aGMPService,
-                     NS_ConvertUTF16toUTF8(aKeySystem),
-                     NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                     NS_LITERAL_CSTRING("vp8")) &&
-         WebMDecoder::CanHandleMediaType(aContentType);
-}
-
-static bool
-GMPDecryptsAndGeckoDecodesVP9(mozIGeckoMediaPluginService* aGMPService,
-                             const nsAString& aKeySystem,
-                             const nsAString& aContentType,
-                             DecoderDoctorDiagnostics* aDiagnostics)
-{
-  MOZ_ASSERT(HaveGMPFor(aGMPService,
-             NS_ConvertUTF16toUTF8(aKeySystem),
-             NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
-  MOZ_ASSERT(IsVP9ContentType(aContentType));
-  return !HaveGMPFor(aGMPService,
-                     NS_ConvertUTF16toUTF8(aKeySystem),
-                     NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                     NS_LITERAL_CSTRING("vp9")) &&
-         WebMDecoder::CanHandleMediaType(aContentType);
-}
-
-static bool
-IsSupportedAudio(mozIGeckoMediaPluginService* aGMPService,
-                 const nsAString& aKeySystem,
-                 const nsAString& aAudioType,
-                 DecoderDoctorDiagnostics* aDiagnostics)
-{
-  if (IsAACContentType(aAudioType)) {
-    return GMPDecryptsAndDecodesAAC(aGMPService, aKeySystem, aDiagnostics) ||
-           GMPDecryptsAndGeckoDecodesAAC(aGMPService, aKeySystem, aAudioType, aDiagnostics);
+  // Let requirement be the value of candidate configuration's member.
+  MediaKeysRequirement requirement = aRequirement;
+  // If requirement is "optional" and feature is not allowed according to
+  // restrictions, set requirement to "not-allowed".
+  if (aRequirement == MediaKeysRequirement::Optional &&
+      aFeatureSupport == KeySystemFeatureSupport::Prohibited) {
+    requirement = MediaKeysRequirement::Not_allowed;
   }
-  if (IsVorbisContentType(aAudioType) && aKeySystem.EqualsLiteral("org.w3.clearkey")) {
-    // GMP does not decode Vorbis, so don't bother checking
-    return GMPDecryptsAndGeckoDecodesVorbis(aGMPService, aKeySystem, aAudioType, aDiagnostics);
+
+  // Follow the steps for requirement from the following list:
+  switch (requirement) {
+    case MediaKeysRequirement::Required: {
+      // If the implementation does not support use of requirement in combination
+      // with accumulated configuration and restrictions, return NotSupported.
+      if (aFeatureSupport == KeySystemFeatureSupport::Prohibited) {
+        return false;
+      }
+      break;
+    }
+    case MediaKeysRequirement::Optional: {
+      // Continue with the following steps.
+      break;
+    }
+    case MediaKeysRequirement::Not_allowed: {
+      // If the implementation requires use of feature in combination with
+      // accumulated configuration and restrictions, return NotSupported.
+      if (aFeatureSupport == KeySystemFeatureSupport::Required) {
+        return false;
+      }
+      break;
+    }
+    default: {
+      return false;
+    }
   }
-  return false;
+
+  // Set the requirement member of accumulated configuration to equal
+  // calculated requirement.
+  aOutRequirement = requirement;
+
+  return true;
 }
 
-static bool
-IsSupportedVideo(mozIGeckoMediaPluginService* aGMPService,
-                 const nsAString& aKeySystem,
-                 const nsAString& aVideoType,
-                 DecoderDoctorDiagnostics* aDiagnostics)
+// 3.1.2.2, step 12
+// Follow the steps for the first matching condition from the following list:
+// If the sessionTypes member is present in candidate configuration.
+// Let session types be candidate configuration's sessionTypes member.
+// Otherwise let session types be ["temporary"].
+// Note: This returns an empty array on malloc failure.
+static Sequence<nsString>
+UnboxSessionTypes(const Optional<Sequence<nsString>>& aSessionTypes)
 {
-  if (IsH264ContentType(aVideoType)) {
-    return GMPDecryptsAndDecodesH264(aGMPService, aKeySystem, aDiagnostics) ||
-           GMPDecryptsAndGeckoDecodesH264(aGMPService, aKeySystem, aVideoType, aDiagnostics);
+  Sequence<nsString> sessionTypes;
+  if (aSessionTypes.WasPassed()) {
+    sessionTypes = aSessionTypes.Value();
+  } else {
+    using MediaKeySessionTypeValues::strings;
+    const char* temporary = strings[static_cast<uint32_t>(MediaKeySessionType::Temporary)].value;
+    // Note: fallible. Results in an empty array.
+    sessionTypes.AppendElement(NS_ConvertUTF8toUTF16(nsDependentCString(temporary)), mozilla::fallible);
   }
-  if (IsVP8ContentType(aVideoType) && aKeySystem.EqualsLiteral("org.w3.clearkey")) {
-    return GMPDecryptsAndGeckoDecodesVP8(aGMPService, aKeySystem, aVideoType, aDiagnostics);
-  }
-  if (IsVP9ContentType(aVideoType) && aKeySystem.EqualsLiteral("org.w3.clearkey")) {
-    return GMPDecryptsAndGeckoDecodesVP9(aGMPService, aKeySystem, aVideoType, aDiagnostics);
-  }
-  return false;
+  return sessionTypes;
 }
 
-static bool
-IsSupportedInitDataType(const nsString& aCandidate, const nsAString& aKeySystem)
-{
-  // All supported keySystems can handle "cenc" initDataType.
-  // ClearKey also supports "keyids" and "webm" initDataTypes.
-  return aCandidate.EqualsLiteral("cenc") ||
-    ((aKeySystem.EqualsLiteral("org.w3.clearkey")
-    || aKeySystem.EqualsLiteral("com.widevine.alpha")) &&
-    (aCandidate.EqualsLiteral("keyids") || aCandidate.EqualsLiteral("webm")));
-}
-
+// 3.1.2.2 Get Supported Configuration and Consent
 static bool
 GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
-                   const nsAString& aKeySystem,
+                   const KeySystemConfig& aKeySystem,
                    const MediaKeySystemConfiguration& aCandidate,
                    MediaKeySystemConfiguration& aOutConfig,
                    DecoderDoctorDiagnostics* aDiagnostics)
 {
+  // Let accumulated configuration be a new MediaKeySystemConfiguration dictionary.
   MediaKeySystemConfiguration config;
+  // Set the label member of accumulated configuration to equal the label member of
+  // candidate configuration.
   config.mLabel = aCandidate.mLabel;
-  if (aCandidate.mInitDataTypes.WasPassed()) {
-    nsTArray<nsString> initDataTypes;
-    for (const nsString& candidate : aCandidate.mInitDataTypes.Value()) {
-      if (IsSupportedInitDataType(candidate, aKeySystem)) {
-        initDataTypes.AppendElement(candidate);
+  // If the initDataTypes member of candidate configuration is non-empty, run the
+  // following steps:
+  if (!aCandidate.mInitDataTypes.IsEmpty()) {
+    // Let supported types be an empty sequence of DOMStrings.
+    nsTArray<nsString> supportedTypes;
+    // For each value in candidate configuration's initDataTypes member:
+    for (const nsString& initDataType : aCandidate.mInitDataTypes) {
+      // Let initDataType be the value.
+      // If the implementation supports generating requests based on initDataType,
+      // add initDataType to supported types. String comparison is case-sensitive.
+      // The empty string is never supported.
+      if (aKeySystem.mInitDataTypes.Contains(initDataType)) {
+        supportedTypes.AppendElement(initDataType);
       }
     }
-    if (initDataTypes.IsEmpty()) {
+    // If supported types is empty, return NotSupported.
+    if (supportedTypes.IsEmpty()) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+              "no supported initDataTypes provided.",
+              NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
       return false;
     }
-    config.mInitDataTypes.Construct();
-    config.mInitDataTypes.Value().Assign(initDataTypes);
-  }
-  if (aCandidate.mAudioCapabilities.WasPassed()) {
-    nsTArray<MediaKeySystemMediaCapability> caps;
-    for (const MediaKeySystemMediaCapability& cap : aCandidate.mAudioCapabilities.Value()) {
-      if (IsSupportedAudio(aGMPService, aKeySystem, cap.mContentType, aDiagnostics)) {
-        caps.AppendElement(cap);
-      }
+    // Set the initDataTypes member of accumulated configuration to supported types.
+    if (!config.mInitDataTypes.Assign(supportedTypes)) {
+      return false;
     }
+  }
+
+  if (!CheckRequirement(aCandidate.mDistinctiveIdentifier,
+                        aKeySystem.mDistinctiveIdentifier,
+                        config.mDistinctiveIdentifier)) {
+    EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+            "distinctiveIdentifier requirement not satisfied.",
+            NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
+    return false;
+  }
+
+  if (!CheckRequirement(aCandidate.mPersistentState,
+                        aKeySystem.mPersistentState,
+                        config.mPersistentState)) {
+    EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+            "persistentState requirement not satisfied.",
+            NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
+    return false;
+  }
+
+  Sequence<nsString> sessionTypes(UnboxSessionTypes(aCandidate.mSessionTypes));
+  if (sessionTypes.IsEmpty()) {
+    // Malloc failure.
+    return false;
+  }
+
+  // For each value in session types:
+  for (const auto& sessionTypeString : sessionTypes) {
+    // Let session type be the value.
+    MediaKeySessionType sessionType;
+    if (!ToSessionType(sessionTypeString, sessionType)) {
+      // (Assume invalid sessionType is unsupported as per steps below).
+      EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+              "invalid session type specified.",
+              NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
+      return false;
+    }
+    // If accumulated configuration's persistentState value is "not-allowed"
+    // and the Is persistent session type? algorithm returns true for session
+    // type return NotSupported.
+    if (config.mPersistentState == MediaKeysRequirement::Not_allowed &&
+        IsPersistentSessionType(sessionType)) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+              "persistent session requested but keysystem doesn't"
+              "support persistent state.",
+              NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
+      return false;
+    }
+    // If the implementation does not support session type in combination
+    // with accumulated configuration and restrictions for other reasons,
+    // return NotSupported.
+    if (!aKeySystem.mSessionTypes.Contains(sessionType)) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+              "session type '%s' unsupported by keySystem.",
+              NS_ConvertUTF16toUTF8(aCandidate.mLabel).get(),
+              NS_ConvertUTF16toUTF8(sessionTypeString).get());
+      return false;
+    }
+    // If accumulated configuration's persistentState value is "optional"
+    // and the result of running the Is persistent session type? algorithm
+    // on session type is true, change accumulated configuration's
+    // persistentState value to "required".
+    if (config.mPersistentState == MediaKeysRequirement::Optional &&
+        IsPersistentSessionType(sessionType)) {
+      config.mPersistentState = MediaKeysRequirement::Required;
+    }
+  }
+  // Set the sessionTypes member of accumulated configuration to session types.
+  config.mSessionTypes.Construct(Move(sessionTypes));
+
+  // If the videoCapabilities and audioCapabilities members in candidate
+  // configuration are both empty, return NotSupported.
+  // TODO: Most sites using EME still don't pass capabilities, so we
+  // can't reject on it yet without breaking them. So add this later.
+
+  // If the videoCapabilities member in candidate configuration is non-empty:
+  if (!aCandidate.mVideoCapabilities.IsEmpty()) {
+    // Let video capabilities be the result of executing the Get Supported
+    // Capabilities for Audio/Video Type algorithm on Video, candidate
+    // configuration's videoCapabilities member, accumulated configuration,
+    // and restrictions.
+    Sequence<MediaKeySystemMediaCapability> caps =
+      GetSupportedCapabilities(Video,
+                               aGMPService,
+                               aCandidate.mVideoCapabilities,
+                               config,
+                               aKeySystem,
+                               aDiagnostics);
+    // If video capabilities is null, return NotSupported.
     if (caps.IsEmpty()) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+              "no supported video capabilities.",
+              NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
       return false;
     }
-    config.mAudioCapabilities.Construct();
-    config.mAudioCapabilities.Value().Assign(caps);
+    // Set the videoCapabilities member of accumulated configuration to video capabilities.
+    config.mVideoCapabilities = Move(caps);
+  } else {
+    // Otherwise:
+    // Set the videoCapabilities member of accumulated configuration to an empty sequence.
   }
-  if (aCandidate.mVideoCapabilities.WasPassed()) {
-    nsTArray<MediaKeySystemMediaCapability> caps;
-    for (const MediaKeySystemMediaCapability& cap : aCandidate.mVideoCapabilities.Value()) {
-      if (IsSupportedVideo(aGMPService, aKeySystem, cap.mContentType, aDiagnostics)) {
-        caps.AppendElement(cap);
-      }
-    }
+
+  // If the audioCapabilities member in candidate configuration is non-empty:
+  if (!aCandidate.mAudioCapabilities.IsEmpty()) {
+    // Let audio capabilities be the result of executing the Get Supported Capabilities
+    // for Audio/Video Type algorithm on Audio, candidate configuration's audioCapabilities
+    // member, accumulated configuration, and restrictions.
+    Sequence<MediaKeySystemMediaCapability> caps =
+      GetSupportedCapabilities(Audio,
+                               aGMPService,
+                               aCandidate.mAudioCapabilities,
+                               config,
+                               aKeySystem,
+                               aDiagnostics);
+    // If audio capabilities is null, return NotSupported.
     if (caps.IsEmpty()) {
+      EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+              "no supported audio capabilities.",
+              NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
       return false;
     }
-    config.mVideoCapabilities.Construct();
-    config.mVideoCapabilities.Value().Assign(caps);
+    // Set the audioCapabilities member of accumulated configuration to audio capabilities.
+    config.mAudioCapabilities = Move(caps);
+  } else {
+    // Otherwise:
+    // Set the audioCapabilities member of accumulated configuration to an empty sequence.
   }
+
+  // If accumulated configuration's distinctiveIdentifier value is "optional", follow the
+  // steps for the first matching condition from the following list:
+  if (config.mDistinctiveIdentifier == MediaKeysRequirement::Optional) {
+    // If the implementation requires use Distinctive Identifier(s) or
+    // Distinctive Permanent Identifier(s) for any of the combinations
+    // in accumulated configuration
+    if (aKeySystem.mDistinctiveIdentifier == KeySystemFeatureSupport::Required) {
+      // Change accumulated configuration's distinctiveIdentifier value to "required".
+      config.mDistinctiveIdentifier = MediaKeysRequirement::Required;
+    } else {
+      // Otherwise, change accumulated configuration's distinctiveIdentifier
+      // value to "not-allowed".
+      config.mDistinctiveIdentifier = MediaKeysRequirement::Not_allowed;
+    }
+  }
+
+  // If accumulated configuration's persistentState value is "optional", follow the
+  // steps for the first matching condition from the following list:
+  if (config.mPersistentState == MediaKeysRequirement::Optional) {
+    // If the implementation requires persisting state for any of the combinations
+    // in accumulated configuration
+    if (aKeySystem.mPersistentState == KeySystemFeatureSupport::Required) {
+      // Change accumulated configuration's persistentState value to "required".
+      config.mPersistentState = MediaKeysRequirement::Required;
+    } else {
+      // Otherwise, change accumulated configuration's persistentState
+      // value to "not-allowed".
+      config.mPersistentState = MediaKeysRequirement::Not_allowed;
+    }
+  }
+
+  // Note: Omitting steps 20-22. We don't ask for consent.
 
 #if defined(XP_WIN)
   // Widevine CDM doesn't include an AAC decoder. So if WMF can't decode AAC,
   // and a codec wasn't specified, be conservative and reject the MediaKeys request.
-  if (aKeySystem.EqualsLiteral("com.widevine.alpha") &&
-      (!aCandidate.mAudioCapabilities.WasPassed() ||
-       !aCandidate.mVideoCapabilities.WasPassed()) &&
+  if (aKeySystem.mKeySystem.EqualsLiteral("com.widevine.alpha") &&
+      (aCandidate.mAudioCapabilities.IsEmpty() ||
+       aCandidate.mVideoCapabilities.IsEmpty()) &&
      !WMFDecoderModule::HasAAC()) {
     if (aDiagnostics) {
       aDiagnostics->SetKeySystemIssue(
         DecoderDoctorDiagnostics::eWidevineWithNoWMF);
     }
+    EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+            "WMF required for Widevine decoding, but it's not available.",
+            NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
     return false;
   }
 #endif
 
+  // Return accumulated configuration.
   aOutConfig = config;
 
   return true;
@@ -576,16 +1168,19 @@ MediaKeySystemAccess::GetSupportedConfig(const nsAString& aKeySystem,
   if (NS_WARN_IF(!mps)) {
     return false;
   }
-
+  const KeySystemConfig* implementation = nullptr;
   if (!HaveGMPFor(mps,
                   NS_ConvertUTF16toUTF8(aKeySystem),
-                  NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
+                  NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)) ||
+      !(implementation = GetKeySystemConfig(aKeySystem))) {
     return false;
   }
-
-  for (const MediaKeySystemConfiguration& config : aConfigs) {
-    if (mozilla::dom::GetSupportedConfig(
-          mps, aKeySystem, config, aOutConfig, aDiagnostics)) {
+  for (const MediaKeySystemConfiguration& candidate : aConfigs) {
+    if (mozilla::dom::GetSupportedConfig(mps,
+                                         *implementation,
+                                         candidate,
+                                         aOutConfig,
+                                         aDiagnostics)) {
       return true;
     }
   }

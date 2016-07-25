@@ -38,11 +38,11 @@ class FunctionGenerator;
 
 struct FuncImportGenDesc
 {
-    const DeclaredSig* sig;
+    const SigWithId* sig;
     uint32_t globalDataOffset;
 
     FuncImportGenDesc() : sig(nullptr), globalDataOffset(0) {}
-    explicit FuncImportGenDesc(const DeclaredSig* sig) : sig(sig), globalDataOffset(0) {}
+    explicit FuncImportGenDesc(const SigWithId* sig) : sig(sig), globalDataOffset(0) {}
 };
 
 typedef Vector<FuncImportGenDesc, 0, SystemAllocPolicy> FuncImportGenDescVector;
@@ -55,16 +55,12 @@ struct ModuleGeneratorData
     mozilla::Atomic<uint32_t> minMemoryLength;
     uint32_t                  maxMemoryLength;
 
-    DeclaredSigVector         sigs;
-    DeclaredSigPtrVector      funcSigs;
+    SigWithIdVector           sigs;
+    SigWithIdPtrVector        funcSigs;
     FuncImportGenDescVector   funcImports;
     GlobalDescVector          globals;
     TableDescVector           tables;
     Uint32Vector              asmJSSigToTableIndex;
-
-    uint32_t funcSigIndex(uint32_t funcIndex) const {
-        return funcSigs[funcIndex] - sigs.begin();
-    }
 
     explicit ModuleGeneratorData(SignalUsage usesSignal, ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
@@ -161,11 +157,11 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Signatures:
     uint32_t numSigs() const { return numSigs_; }
-    const DeclaredSig& sig(uint32_t sigIndex) const;
+    const SigWithId& sig(uint32_t sigIndex) const;
 
     // Function declarations:
     uint32_t numFuncSigs() const { return shared_->funcSigs.length(); }
-    const DeclaredSig& funcSig(uint32_t funcIndex) const;
+    const SigWithId& funcSig(uint32_t funcIndex) const;
 
     // Globals:
     MOZ_MUST_USE bool allocateGlobal(ValType type, bool isConst, uint32_t* index);

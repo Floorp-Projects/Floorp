@@ -87,7 +87,7 @@ add_task(function* () {
 
 function waitForDestroyedDocuments() {
   let deferred = promise.defer();
-  SpecialPowers.exactGC(window, deferred.resolve);
+  SpecialPowers.exactGC(deferred.resolve);
   return deferred.promise;
 }
 

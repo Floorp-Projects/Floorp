@@ -5,6 +5,7 @@
 
 // Services = object with smart getters for common XPCOM services
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/ContextualIdentityService.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -12,9 +13,6 @@ Components.utils.import("resource:///modules/RecentWindow.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ShellService",
                                   "resource:///modules/ShellService.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource://gre/modules/ContextualIdentityService.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
@@ -447,8 +445,12 @@ function createUserContextMenu(event, addCommandAttribute = true, excludeUserCon
 
     let menuitem = document.createElement("menuitem");
     menuitem.setAttribute("usercontextid", identity.userContextId);
-    menuitem.setAttribute("label", bundle.getString(identity.label));
-    menuitem.setAttribute("accesskey", bundle.getString(identity.accessKey));
+    menuitem.setAttribute("label", ContextualIdentityService.getUserContextLabel(identity.userContextId));
+
+    if (identity.accessKey) {
+      menuitem.setAttribute("accesskey", bundle.getString(identity.accessKey));
+    }
+
     menuitem.classList.add("menuitem-iconic");
 
     if (addCommandAttribute) {

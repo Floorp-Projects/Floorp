@@ -65,6 +65,7 @@ public:
   void ClearLiveSeekableRange(ErrorResult& aRv);
 
   static bool IsTypeSupported(const GlobalObject&, const nsAString& aType);
+  static nsresult IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics);
 
   static bool Enabled(JSContext* cx, JSObject* aGlobal);
 

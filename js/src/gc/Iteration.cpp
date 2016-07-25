@@ -30,13 +30,13 @@ js::TraceRuntime(JSTracer* trc)
 }
 
 static void
-IterateCompartmentsArenasCells(JSRuntime* rt, Zone* zone, void* data,
+IterateCompartmentsArenasCells(JSContext* cx, Zone* zone, void* data,
                                JSIterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback)
 {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-        (*compartmentCallback)(rt, data, comp);
+        (*compartmentCallback)(cx, data, comp);
 
     for (auto thingKind : AllAllocKinds()) {
         JS::TraceKind traceKind = MapAllocToTraceKind(thingKind);
@@ -44,9 +44,9 @@ IterateCompartmentsArenasCells(JSRuntime* rt, Zone* zone, void* data,
 
         for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {
             Arena* arena = aiter.get();
-            (*arenaCallback)(rt, data, arena, traceKind, thingSize);
+            (*arenaCallback)(cx, data, arena, traceKind, thingSize);
             for (ArenaCellIterUnderGC iter(arena); !iter.done(); iter.next())
-                (*cellCallback)(rt, data, iter.getCell(), traceKind, thingSize);
+                (*cellCallback)(cx, data, iter.getCell(), traceKind, thingSize);
         }
     }
 }
@@ -128,11 +128,11 @@ js::IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
 }
 
 JS_PUBLIC_API(void)
-JS_IterateCompartments(JSRuntime* rt, void* data,
+JS_IterateCompartments(JSContext* cx, void* data,
                        JSIterateCompartmentCallback compartmentCallback)
 {
-    AutoTraceSession session(rt);
+    AutoTraceSession session(cx);
 
-    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next())
-        (*compartmentCallback)(rt, data, c);
+    for (CompartmentsIter c(cx, WithAtoms); !c.done(); c.next())
+        (*compartmentCallback)(cx, data, c);
 }

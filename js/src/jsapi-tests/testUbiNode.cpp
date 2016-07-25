@@ -50,7 +50,7 @@ class Concrete<FakeNode> : public Base
   public:
     static void construct(void* storage, FakeNode* ptr) { new (storage) Concrete(ptr); }
 
-    UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override {
+    UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override {
         return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
     }
 
@@ -375,8 +375,8 @@ BEGIN_TEST(test_ubiPostOrder)
         // `expectedEdges` as we find them to ensure that we only find each edge
         // once.
 
-        JS::AutoCheckCannotGC nogc(rt);
-        JS::ubi::PostOrder traversal(rt, nogc);
+        JS::AutoCheckCannotGC nogc(cx);
+        JS::ubi::PostOrder traversal(cx, nogc);
         CHECK(traversal.init());
         CHECK(traversal.addStart(&r));
 
@@ -523,8 +523,8 @@ BEGIN_TEST(test_JS_ubi_DominatorTree)
 
     mozilla::Maybe<JS::ubi::DominatorTree> maybeTree;
     {
-        JS::AutoCheckCannotGC noGC(rt);
-        maybeTree = JS::ubi::DominatorTree::Create(rt, noGC, &r);
+        JS::AutoCheckCannotGC noGC(cx);
+        maybeTree = JS::ubi::DominatorTree::Create(cx, noGC, &r);
     }
 
     CHECK(maybeTree.isSome());
@@ -693,13 +693,13 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_no_path)
 
     mozilla::Maybe<JS::ubi::ShortestPaths> maybeShortestPaths;
     {
-        JS::AutoCheckCannotGC noGC(rt);
+        JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
         CHECK(targets.init());
         CHECK(targets.put(&b));
 
-        maybeShortestPaths = JS::ubi::ShortestPaths::Create(rt, noGC, 10, &a,
+        maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
                                                             mozilla::Move(targets));
     }
 
@@ -735,13 +735,13 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_one_path)
 
     mozilla::Maybe<JS::ubi::ShortestPaths> maybeShortestPaths;
     {
-        JS::AutoCheckCannotGC noGC(rt);
+        JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
         CHECK(targets.init());
         CHECK(targets.put(&b));
 
-        maybeShortestPaths = JS::ubi::ShortestPaths::Create(rt, noGC, 10, &a,
+        maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
                                                             mozilla::Move(targets));
     }
 
@@ -802,13 +802,13 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_multiple_paths)
 
     mozilla::Maybe<JS::ubi::ShortestPaths> maybeShortestPaths;
     {
-        JS::AutoCheckCannotGC noGC(rt);
+        JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
         CHECK(targets.init());
         CHECK(targets.put(&f));
 
-        maybeShortestPaths = JS::ubi::ShortestPaths::Create(rt, noGC, 10, &a,
+        maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
                                                             mozilla::Move(targets));
     }
 
@@ -894,13 +894,13 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_more_paths_than_max)
 
     mozilla::Maybe<JS::ubi::ShortestPaths> maybeShortestPaths;
     {
-        JS::AutoCheckCannotGC noGC(rt);
+        JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
         CHECK(targets.init());
         CHECK(targets.put(&f));
 
-        maybeShortestPaths = JS::ubi::ShortestPaths::Create(rt, noGC, 1, &a,
+        maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 1, &a,
                                                             mozilla::Move(targets));
     }
 
@@ -944,13 +944,13 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_multiple_edges_to_target)
 
     mozilla::Maybe<JS::ubi::ShortestPaths> maybeShortestPaths;
     {
-        JS::AutoCheckCannotGC noGC(rt);
+        JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
         CHECK(targets.init());
         CHECK(targets.put(&b));
 
-        maybeShortestPaths = JS::ubi::ShortestPaths::Create(rt, noGC, 10, &a,
+        maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
                                                             mozilla::Move(targets));
     }
 

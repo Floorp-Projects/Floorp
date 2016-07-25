@@ -9,6 +9,7 @@ import copy
 import datetime
 import glob
 import os
+import re
 import sys
 import signal
 import socket
@@ -36,14 +37,28 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         ["--test-suite"],
         {"action": "store",
          "dest": "test_suite",
-         }
+        }
     ], [
         ["--adb-path"],
         {"action": "store",
          "dest": "adb_path",
          "default": None,
          "help": "Path to adb",
-         }
+        }
+    ], [
+        ["--total-chunk"],
+        {"action": "store",
+         "dest": "total_chunks",
+         "default": None,
+         "help": "Number of total chunks",
+        }
+    ], [
+        ["--this-chunk"],
+        {"action": "store",
+         "dest": "this_chunk",
+         "default": None,
+         "help": "Number of this chunk",
+        }
     ]] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options)
 
@@ -101,19 +116,25 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         self.robocop_path = os.path.join(abs_dirs['abs_work_dir'], "robocop.apk")
         self.minidump_stackwalk_path = c.get("minidump_stackwalk_path")
         self.emulator = c.get('emulator')
-        self.test_suite_definitions = c['test_suite_definitions']
         self.test_suite = c.get('test_suite')
+        self.this_chunk = c.get('this_chunk')
+        self.total_chunks = c.get('total_chunks')
+        if self.test_suite not in self.config["suite_definitions"]:
+            # accept old-style test suite name like "mochitest-3"
+            m = re.match("(.*)-(\d*)", self.test_suite)
+            if m:
+                self.test_suite = m.group(1)
+                if self.this_chunk is None:
+                    self.this_chunk = m.group(2)
         self.sdk_level = None
         self.xre_path = None
-        assert self.test_suite in self.test_suite_definitions
 
     def _query_tests_dir(self):
         dirs = self.query_abs_dirs()
-        suite_category = self.test_suite_definitions[self.test_suite]["category"]
         try:
-            test_dir = self.config["suite_definitions"][suite_category]["testsdir"]
+            test_dir = self.config["suite_definitions"][self.test_suite]["testsdir"]
         except:
-            test_dir = suite_category
+            test_dir = self.test_suite
         return os.path.join(dirs['abs_test_install_dir'], test_dir)
 
     def query_abs_dirs(self):
@@ -435,17 +456,16 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
     def _build_command(self):
         c = self.config
         dirs = self.query_abs_dirs()
-        suite_category = self.test_suite_definitions[self.test_suite]["category"]
 
-        if suite_category not in self.config["suite_definitions"]:
-            self.fatal("Key '%s' not defined in the config!" % suite_category)
+        if self.test_suite not in self.config["suite_definitions"]:
+            self.fatal("Key '%s' not defined in the config!" % self.test_suite)
 
         cmd = [
             self.query_python_path('python'),
             '-u',
             os.path.join(
                 self._query_tests_dir(),
-                self.config["suite_definitions"][suite_category]["run_filename"]
+                self.config["suite_definitions"][self.test_suite]["run_filename"]
             ),
         ]
 
@@ -476,21 +496,25 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 'device_ip': c['device_ip'],
                 'device_port': str(self.emulator['sut_port1']),
             })
-        for option in self.config["suite_definitions"][suite_category]["options"]:
+        for option in self.config["suite_definitions"][self.test_suite]["options"]:
+            opt = option.split('=')[0]
+            # override configured chunk options with script args, if specified
+            if opt == '--this-chunk' and self.this_chunk is not None:
+                continue
+            if opt == '--total-chunks' and self.total_chunks is not None:
+                continue
             cmd.extend([option % str_format_values])
 
-        for arg in self.test_suite_definitions[self.test_suite]["extra_args"]:
-            argname = arg.split('=')[0]
-            # only add the extra arg if it wasn't already defined by in-tree configs
-            if any(a.split('=')[0] == argname for a in cmd):
-                continue
-            cmd.append(arg)
+        if self.this_chunk is not None:
+            cmd.extend(['--this-chunk', self.this_chunk])
+        if self.total_chunks is not None:
+            cmd.extend(['--total-chunks', self.total_chunks])
 
-        try_options, try_tests = self.try_args(suite_category)
+        try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)
         cmd.extend(self.query_tests_args(
-            self.config["suite_definitions"][suite_category].get("tests"),
-            self.test_suite_definitions[self.test_suite].get("tests"),
+            self.config["suite_definitions"][self.test_suite].get("tests"),
+            None,
             try_tests))
 
         return cmd
@@ -621,8 +645,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         Download and extract fennec APK, tests.zip, host utils, and robocop (if required).
         """
-        suite_category = self.test_suite_definitions[self.test_suite]['category']
-        super(AndroidEmulatorTest, self).download_and_extract(suite_categories=[suite_category])
+        super(AndroidEmulatorTest, self).download_and_extract(suite_categories=[self.test_suite])
         dirs = self.query_abs_dirs()
         if self.test_suite.startswith('robocop'):
             robocop_url = self.installer_url[:self.installer_url.rfind('/')] + '/robocop.apk'
@@ -690,8 +713,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'jsreftest-debug': 'jsreftest',
             'crashtest-debug': 'crashtest',
         }
-        suite_category = self.test_suite_definitions[self.test_suite]["category"]
-        suite_category = aliases.get(suite_category, suite_category)
+        suite_category = aliases.get(self.test_suite, self.test_suite)
         parser = self.get_test_output_parser(
             suite_category,
             config=self.config,

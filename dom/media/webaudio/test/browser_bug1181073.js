@@ -55,7 +55,7 @@ add_task(function*() {
   ok(time < 1000, "Interval is not throttled with audio playing (" + time + " ms)");
 
   // Destroy the oscillator, but not the audio context
-  yield new Promise(resolve => SpecialPowers.exactGC(browser.contentWindow, resolve));
+  yield new Promise(resolve => SpecialPowers.exactGC(resolve));
   yield oscillatorDemisePromise;
 
   time = yield ContentTask.spawn(browser, null, function () {

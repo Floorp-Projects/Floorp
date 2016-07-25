@@ -517,8 +517,8 @@ struct JSCompartment
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
 
     // All wasm live instances in the compartment.
-    using WasmInstanceObjectSet = js::GCHashSet<js::HeapPtr<js::WasmInstanceObject*>,
-                                                js::MovableCellHasher<js::HeapPtr<js::WasmInstanceObject*>>,
+    using WasmInstanceObjectSet = js::GCHashSet<js::ReadBarriered<js::WasmInstanceObject*>,
+                                                js::MovableCellHasher<js::ReadBarriered<js::WasmInstanceObject*>>,
                                                 js::SystemAllocPolicy>;
     JS::WeakCache<WasmInstanceObjectSet> wasmInstances;
 

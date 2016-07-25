@@ -20,7 +20,7 @@ DEF_TEST(SerializesTypeNames, {
       .Times(1)
       .WillOnce(Return(true));
 
-    JS::AutoCheckCannotGC noGC(rt);
+    JS::AutoCheckCannotGC noGC(cx);
     ASSERT_TRUE(WriteHeapGraph(cx,
                                JS::ubi::Node(&node),
                                writer,

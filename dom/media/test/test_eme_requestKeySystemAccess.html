@@ -11,7 +11,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-const CLEARKEY_ID = 'org.w3.clearkey';
 const SUPPORTED_LABEL = "pass label";
 
 function ValidateConfig(name, expected, observed) {
@@ -36,6 +35,12 @@ function ValidateConfig(name, expected, observed) {
     ok(observed.videoCapabilities.length == 1, "Test function can only handle one capability.");
     is(observed.videoCapabilities[0].contentType, expected.videoCapabilities[0].contentType, name + " videoCapabilities should match.");
   }
+  if (expected.sessionTypes) {
+    is(expected.sessionTypes.length, observed.sessionTypes.length, "Should have expected number of sessionTypes");
+    for (var i = 0; i < expected.sessionTypes.length; i++) {
+      is(expected[i], observed[i], "Session type " + i + " should match");
+    }
+  }
 }
 
 function Test(test) {
@@ -43,14 +48,15 @@ function Test(test) {
   return new Promise(function(resolve, reject) {
     var p;
     if (test.options) {
-      p = navigator.requestMediaKeySystemAccess(test.keySystem, test.options);
+      var keySystem = (test.keySystem !== undefined) ? test.keySystem : CLEARKEY_KEYSYSTEM;
+      p = navigator.requestMediaKeySystemAccess(keySystem, test.options);
     } else {
-      p = navigator.requestMediaKeySystemAccess(test.keySystem);
+      p = navigator.requestMediaKeySystemAccess(keySystem);
     }
     p.then(
       function(keySystemAccess) {
         ok(test.shouldPass, name + " passed and was expected to " + (test.shouldPass ? "pass" : "fail"));
-        is(keySystemAccess.keySystem, CLEARKEY_ID, "CDM keySystem should be in MediaKeySystemAccess.keySystem");
+        is(keySystemAccess.keySystem, CLEARKEY_KEYSYSTEM, "CDM keySystem should be in MediaKeySystemAccess.keySystem");
         ValidateConfig(name, test.expectedConfig, keySystemAccess.getConfiguration());
         resolve();
       },
@@ -78,28 +84,27 @@ var tests = [
   },
   {
     name: 'Empty options specified',
-    keySystem: CLEARKEY_ID,
     options: [ ],
     shouldPass: false,
   },
   {
     name: 'Undefined options',
-    keySystem: CLEARKEY_ID,
     shouldPass: false,
   },
   {
     name: 'Basic MP4 cenc',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
         initDataTypes: ['cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4'}],
         videoCapabilities: [{contentType: 'video/mp4'}],
       }
     ],
     expectedConfig: {
       label: SUPPORTED_LABEL,
       initDataTypes: ['cenc'],
+      audioCapabilities: [{contentType: 'audio/mp4'}],
       videoCapabilities: [{contentType: 'video/mp4'}],
     },
     shouldPass: true,
@@ -117,42 +122,32 @@ var tests = [
   },
   {
     name: 'Invalid initDataType',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['bogus'],
+        audioCapabilities: [{contentType: 'audio/mp4'}],
       }
     ],
     shouldPass: false,
   },
   {
     name: 'Valid initDataType after invalid',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
         initDataTypes: ['bogus', 'invalid', 'cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4'}],
       }
     ],
     expectedConfig: {
       label: SUPPORTED_LABEL,
       initDataTypes: ['cenc'],
+      audioCapabilities: [{contentType: 'audio/mp4'}],
     },
     shouldPass: true,
   },
   {
-    name: 'Empty initDataTypes',
-    keySystem: CLEARKEY_ID,
-    options: [
-      {
-        initDataTypes: [],
-      }
-    ],
-    shouldPass: false,
-  },
-  {
     name: 'Invalid videoType',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['cenc'],
@@ -162,15 +157,57 @@ var tests = [
     shouldPass: false,
   },
   {
-    name: 'distinctiveIdentifier, persistentState, and robustness ignored',
-    keySystem: CLEARKEY_ID,
+    name: 'Invalid distinctiveIdentifier fails',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        distinctiveIdentifier: 'bogus',
+        persistentState: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'distinctiveIdentifier is prohibited for ClearKey',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        distinctiveIdentifier: 'required',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid persistentState fails',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        persistentState: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid robustness unsupported',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4', robustness: 'very much so'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Unexpected config entry should be ignored',
     options: [
       {
         label: SUPPORTED_LABEL,
         initDataTypes: ['cenc'],
-        videoCapabilities: [{contentType: 'video/mp4', robustness: 'somewhat'}],
-        distinctiveIdentifier: 'bogus',
-        persistentState: 'bogus',
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        unexpectedEntry: 'this should be ignored',
       }
     ],
     expectedConfig: {
@@ -181,60 +218,7 @@ var tests = [
     shouldPass: true,
   },
   {
-    name: 'Only unrecognised dict entries specified with unrecognised video type',
-    keySystem: CLEARKEY_ID,
-    options: [
-      {
-        videoCapabilities: [{robustness: 'very much so'}],
-        distinctiveIdentifier: 'required',
-        persistentState: 'required',
-      }
-    ],
-    shouldPass: false,
-  },
-  {
-    name: 'Only unrecognised dict entries specified should be ignored',
-    keySystem: CLEARKEY_ID,
-    options: [
-      {
-        label: SUPPORTED_LABEL,
-        distinctiveIdentifier: 'required',
-        persistentState: 'required',
-      }
-    ],
-    expectedConfig: {
-      label: SUPPORTED_LABEL,
-    },
-    shouldPass: true,
-  },
-  {
-    name: 'Empty config dict',
-    keySystem: CLEARKEY_ID,
-    options: [{ label: SUPPORTED_LABEL }],
-    expectedConfig: {
-      label: SUPPORTED_LABEL
-    },
-    shouldPass: true,
-  },
-  {
-    name: 'Unexpected config entry should be ignored',
-    keySystem: CLEARKEY_ID,
-    options: [
-      {
-        label: SUPPORTED_LABEL,
-        initDataTypes: ['cenc'],
-        unexpectedEntry: 'this should be ignored',
-      }
-    ],
-    expectedConfig: {
-      label: SUPPORTED_LABEL,
-      initDataTypes: ['cenc'],
-    },
-    shouldPass: true,
-  },
-  {
     name: 'Invalid option followed by valid',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: "this config should not be supported",
@@ -254,8 +238,71 @@ var tests = [
     shouldPass: true,
   },
   {
+    name: 'Persistent sessions; persistence required',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        sessionTypes: ['temporary','persistent-license'],
+        persistentState: 'required',
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      videoCapabilities: [{contentType: 'video/mp4'}],
+      sessionTypes: ['temporary','persistent-license'],
+      persistentState: 'required',
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Persistent sessions not allowed when persistentState prohibited',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        sessionTypes: ['temporary','persistent-license'],
+        persistentState: 'not-allowed',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Persistent sessions; should bump optional persistState to required',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        sessionTypes: ['temporary','persistent-license'],
+        persistentState: 'optional',
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      videoCapabilities: [{contentType: 'video/mp4'}],
+      sessionTypes: ['temporary','persistent-license'],
+      persistentState: 'required',
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Persistent-usage-record should not be supported by ClearKey',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        sessionTypes: ['persistent-usage-record'],
+        persistentState: 'required',
+      }
+    ],
+    shouldPass: false,
+  },  
+  {
     name: 'MP4 audio container',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -272,7 +319,6 @@ var tests = [
   },
   {
     name: 'MP4 audio container with AAC-LC',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -289,7 +335,6 @@ var tests = [
   },
   {
     name: 'MP4 audio container with invalid codecs',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['cenc'],
@@ -300,7 +345,6 @@ var tests = [
   },
   {
     name: 'MP4 audio container with mp3 is unsupported',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['cenc'],
@@ -311,7 +355,6 @@ var tests = [
   },
   {
     name: 'MP4 video container type with an mp3 codec is unsupported',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['cenc'],
@@ -322,7 +365,6 @@ var tests = [
   },
   {
     name: 'MP4 audio container type with a video codec is unsupported',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['cenc'],
@@ -333,7 +375,6 @@ var tests = [
   },
   {
     name: 'MP4 video container with constrained baseline h.264',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -350,7 +391,6 @@ var tests = [
   },
   {
     name: 'MP4 video container with invalid codecs',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['cenc'],
@@ -361,7 +401,6 @@ var tests = [
   },
   {
     name: 'MP4 video container with both audio and video codec type in videoType',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['cenc'],
@@ -372,7 +411,6 @@ var tests = [
   },
   {
     name: 'MP4 audio and video type both specified',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -391,7 +429,6 @@ var tests = [
   },
   {
     name: 'Basic WebM video',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -408,7 +445,6 @@ var tests = [
   },
   {
     name: 'Basic WebM audio',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -425,7 +461,6 @@ var tests = [
   },
   {
     name: 'Webm with Vorbis audio and VP8 video.',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -444,7 +479,6 @@ var tests = [
   },
   {
     name: 'Webm with Vorbis audio and VP9 video.',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -463,7 +497,6 @@ var tests = [
   },
   {
     name: 'Webm with bogus video.',
-    keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['webm'],
@@ -474,7 +507,7 @@ var tests = [
   },
   {
     name: "CDM version less than",
-    keySystem: CLEARKEY_ID + ".0",
+    keySystem: CLEARKEY_KEYSYSTEM + ".0",
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -491,7 +524,7 @@ var tests = [
   },
   {
     name: "CDM version equal to",
-    keySystem: CLEARKEY_ID + ".1",
+    keySystem: CLEARKEY_KEYSYSTEM + ".1",
     options: [
       {
         label: SUPPORTED_LABEL,
@@ -508,7 +541,7 @@ var tests = [
   },
   {
     name: "CDM version greater than",
-    keySystem: CLEARKEY_ID + ".2",
+    keySystem: CLEARKEY_KEYSYSTEM + ".2",
     options: [
       {
         initDataTypes: ['cenc'],
@@ -519,7 +552,7 @@ var tests = [
   },
   {
     name: "Non-whole number CDM version",
-    keySystem: CLEARKEY_ID + ".0.1",
+    keySystem: CLEARKEY_KEYSYSTEM + ".0.1",
     options: [
       {
         initDataTypes: ['cenc'],

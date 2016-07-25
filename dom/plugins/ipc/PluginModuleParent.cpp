@@ -1914,9 +1914,9 @@ PluginModuleParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
 #else
     MOZ_ASSERT(0 > mPluginXSocketFdDup.get(),
                "Already backed up X resources??");
-    mPluginXSocketFdDup.forget();
     if (aXSocketFd.IsValid()) {
-      mPluginXSocketFdDup.reset(aXSocketFd.PlatformHandle());
+      auto rawFD = aXSocketFd.ClonePlatformHandle();
+      mPluginXSocketFdDup.reset(rawFD.release());
     }
 #endif
     return true;

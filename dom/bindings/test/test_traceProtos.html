@@ -29,7 +29,7 @@ function callback() {
 }
 
 delete window.XMLHttpRequestUpload;
-SpecialPowers.exactGC(window, callback);
+SpecialPowers.exactGC(callback);
 
 </script>
 </pre>

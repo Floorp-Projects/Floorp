@@ -901,10 +901,11 @@ class FunctionCompiler
             MInstruction* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), maskedIndex, globalDataOffset);
             curBlock_->add(ptrFun);
             callee = MAsmJSCall::Callee(ptrFun);
+            MOZ_ASSERT(mg_.sigs[sigIndex].id.kind() == SigIdDesc::Kind::None);
         } else {
             MInstruction* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), index, length, globalDataOffset);
             curBlock_->add(ptrFun);
-            callee = MAsmJSCall::Callee(ptrFun, sigIndex);
+            callee = MAsmJSCall::Callee(ptrFun, mg_.sigs[sigIndex].id);
         }
 
         return callPrivate(callee, args, mg_.sigs[sigIndex].ret(), def);
@@ -3384,10 +3385,10 @@ wasm::IonCompileFunction(IonCompileTask* task)
         if (!lir)
             return false;
 
-        uint32_t sigIndex = task->mg().funcSigIndex(func.index());
+        SigIdDesc sigId = task->mg().funcSigs[func.index()]->id;
 
         CodeGenerator codegen(&mir, lir, &results.masm());
-        if (!codegen.generateWasm(sigIndex, &results.offsets()))
+        if (!codegen.generateWasm(sigId, &results.offsets()))
             return false;
     }
 

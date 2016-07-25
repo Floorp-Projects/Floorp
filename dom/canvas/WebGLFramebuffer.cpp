@@ -528,7 +528,7 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
     if (!usage)
         return JS::NullValue();
 
-    const auto format = usage->format;
+    auto format = usage->format;
 
     GLint ret = 0;
     switch (pname) {
@@ -559,10 +559,38 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
         MOZ_ASSERT(attachment != LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
 
+        if (format->componentType == webgl::ComponentType::Special) {
+            // Special format is used for DS mixed format(e.g. D24S8 and D32FS8).
+            MOZ_ASSERT(format->unsizedFormat == webgl::UnsizedFormat::DS);
+            MOZ_ASSERT(attachment == LOCAL_GL_DEPTH_ATTACHMENT ||
+                       attachment == LOCAL_GL_STENCIL_ATTACHMENT);
+
+            if (attachment == LOCAL_GL_DEPTH_ATTACHMENT) {
+                switch (format->effectiveFormat) {
+                case webgl::EffectiveFormat::DEPTH24_STENCIL8:
+                    format = webgl::GetFormat(webgl::EffectiveFormat::DEPTH_COMPONENT24);
+                    break;
+                case webgl::EffectiveFormat::DEPTH32F_STENCIL8:
+                    format = webgl::GetFormat(webgl::EffectiveFormat::DEPTH_COMPONENT32F);
+                    break;
+                default:
+                    MOZ_ASSERT(false, "no matched DS format");
+                    break;
+                }
+            } else if (attachment == LOCAL_GL_STENCIL_ATTACHMENT) {
+                switch (format->effectiveFormat) {
+                case webgl::EffectiveFormat::DEPTH24_STENCIL8:
+                case webgl::EffectiveFormat::DEPTH32F_STENCIL8:
+                    format = webgl::GetFormat(webgl::EffectiveFormat::STENCIL_INDEX8);
+                    break;
+                default:
+                    MOZ_ASSERT(false, "no matched DS format");
+                    break;
+                }
+            }
+        }
+
         switch (format->componentType) {
-        case webgl::ComponentType::Special:
-            MOZ_ASSERT(false, "Should never happen.");
-            break;
         case webgl::ComponentType::None:
             ret = LOCAL_GL_NONE;
             break;
@@ -580,6 +608,9 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
             break;
         case webgl::ComponentType::Float:
             ret = LOCAL_GL_FLOAT;
+            break;
+        default:
+            MOZ_ASSERT(false, "No matched component type");
             break;
         }
         break;

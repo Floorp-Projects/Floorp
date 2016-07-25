@@ -45,18 +45,18 @@ dumpNode(const JS::ubi::Node& node)
 }
 
 JS_PUBLIC_API(void)
-dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
+dumpPaths(JSContext* cx, Node node, uint32_t maxNumPaths /* = 10 */)
 {
     mozilla::Maybe<AutoCheckCannotGC> nogc;
 
-    JS::ubi::RootList rootList(rt, nogc, true);
+    JS::ubi::RootList rootList(cx, nogc, true);
     MOZ_ASSERT(rootList.init());
 
     NodeSet targets;
     bool ok = targets.init() && targets.putNew(node);
     MOZ_ASSERT(ok);
 
-    auto paths = ShortestPaths::Create(rt, nogc.ref(), maxNumPaths, &rootList, mozilla::Move(targets));
+    auto paths = ShortestPaths::Create(cx, nogc.ref(), maxNumPaths, &rootList, mozilla::Move(targets));
     MOZ_ASSERT(paths.isSome());
 
     int i = 0;

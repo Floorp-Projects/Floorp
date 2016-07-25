@@ -159,7 +159,7 @@ JS::Zone* Concrete<void>::zone() const             { MOZ_CRASH("null ubi::Node")
 JSCompartment* Concrete<void>::compartment() const { MOZ_CRASH("null ubi::Node"); }
 
 UniquePtr<EdgeRange>
-Concrete<void>::edges(JSRuntime*, bool) const {
+Concrete<void>::edges(JSContext*, bool) const {
     MOZ_CRASH("null ubi::Node");
 }
 
@@ -314,24 +314,24 @@ template JS::Zone* TracerConcrete<JSString>::zone() const;
 
 template<typename Referent>
 UniquePtr<EdgeRange>
-TracerConcrete<Referent>::edges(JSRuntime* rt, bool wantNames) const {
+TracerConcrete<Referent>::edges(JSContext* cx, bool wantNames) const {
     UniquePtr<SimpleEdgeRange, JS::DeletePolicy<SimpleEdgeRange>> range(js_new<SimpleEdgeRange>());
     if (!range)
         return nullptr;
 
-    if (!range->init(rt, ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames))
+    if (!range->init(cx, ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames))
         return nullptr;
 
     return UniquePtr<EdgeRange>(range.release());
 }
 
-template UniquePtr<EdgeRange> TracerConcrete<JSScript>::edges(JSRuntime* rt, bool wantNames) const;
-template UniquePtr<EdgeRange> TracerConcrete<js::LazyScript>::edges(JSRuntime* rt, bool wantNames) const;
-template UniquePtr<EdgeRange> TracerConcrete<js::Shape>::edges(JSRuntime* rt, bool wantNames) const;
-template UniquePtr<EdgeRange> TracerConcrete<js::BaseShape>::edges(JSRuntime* rt, bool wantNames) const;
-template UniquePtr<EdgeRange> TracerConcrete<js::ObjectGroup>::edges(JSRuntime* rt, bool wantNames) const;
-template UniquePtr<EdgeRange> TracerConcrete<JS::Symbol>::edges(JSRuntime* rt, bool wantNames) const;
-template UniquePtr<EdgeRange> TracerConcrete<JSString>::edges(JSRuntime* rt, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<JSScript>::edges(JSContext* cx, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::LazyScript>::edges(JSContext* cx, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::Shape>::edges(JSContext* cx, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::BaseShape>::edges(JSContext* cx, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::ObjectGroup>::edges(JSContext* cx, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<JS::Symbol>::edges(JSContext* cx, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<JSString>::edges(JSContext* cx, bool wantNames) const;
 
 template<typename Referent>
 JSCompartment*
@@ -398,9 +398,9 @@ const char16_t Concrete<js::ObjectGroup>::concreteTypeName[] = u"js::ObjectGroup
 namespace JS {
 namespace ubi {
 
-RootList::RootList(JSRuntime* rt, Maybe<AutoCheckCannotGC>& noGC, bool wantNames /* = false */)
+RootList::RootList(JSContext* cx, Maybe<AutoCheckCannotGC>& noGC, bool wantNames /* = false */)
   : noGC(noGC),
-    rt(rt),
+    cx(cx),
     edges(),
     wantNames(wantNames)
 { }
@@ -409,11 +409,11 @@ RootList::RootList(JSRuntime* rt, Maybe<AutoCheckCannotGC>& noGC, bool wantNames
 bool
 RootList::init()
 {
-    EdgeVectorTracer tracer(rt, &edges, wantNames);
+    EdgeVectorTracer tracer(cx, &edges, wantNames);
     js::TraceRuntime(&tracer);
     if (!tracer.okay)
         return false;
-    noGC.emplace(rt);
+    noGC.emplace(cx);
     return true;
 }
 
@@ -421,7 +421,7 @@ bool
 RootList::init(CompartmentSet& debuggees)
 {
     EdgeVector allRootEdges;
-    EdgeVectorTracer tracer(rt, &allRootEdges, wantNames);
+    EdgeVectorTracer tracer(cx, &allRootEdges, wantNames);
 
     ZoneSet debuggeeZones;
     if (!debuggeeZones.init())
@@ -453,7 +453,7 @@ RootList::init(CompartmentSet& debuggees)
             return false;
     }
 
-    noGC.emplace(rt);
+    noGC.emplace(cx);
     return true;
 }
 
@@ -506,7 +506,7 @@ RootList::addRoot(Node node, const char16_t* edgeName)
 const char16_t Concrete<RootList>::concreteTypeName[] = u"JS::ubi::RootList";
 
 UniquePtr<EdgeRange>
-Concrete<RootList>::edges(JSRuntime* rt, bool wantNames) const {
+Concrete<RootList>::edges(JSContext* cx, bool wantNames) const {
     MOZ_ASSERT_IF(wantNames, get().wantNames);
     return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
 }

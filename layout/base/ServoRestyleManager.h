@@ -67,7 +67,7 @@ public:
                         const nsAttrValue* aOldValue);
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
-  bool HasPendingRestyles() { return mModifiedElements.Count() != 0; }
+  bool HasPendingRestyles() { return !mModifiedElements.IsEmpty(); }
 
 protected:
   ~ServoRestyleManager() {}

@@ -199,8 +199,8 @@ partial interface HTMLInputElement {
 };
 
 partial interface HTMLInputElement {
-  [Pref="dom.input.dirpicker", BinaryName="DirectoryAttr", SetterThrows]
-  attribute boolean directory;
+  [Pref="dom.input.dirpicker", SetterThrows]
+  attribute boolean allowdirs;
 
   [Pref="dom.input.dirpicker"]
   readonly attribute boolean isFilesAndDirectoriesSupported;

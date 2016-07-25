@@ -55,6 +55,7 @@ class Instance
     // Internal helpers:
     uint8_t** addressOfMemoryBase() const;
     void** addressOfTableBase(size_t tableIndex) const;
+    const void** addressOfSigId(const SigIdDesc& sigId) const;
     FuncImportExit& funcImportToExit(const FuncImport& fi);
     MOZ_MUST_USE bool toggleProfiling(JSContext* cx);
 
@@ -80,6 +81,7 @@ class Instance
              SharedTableVector&& tables,
              Handle<FunctionVector> funcImports);
     ~Instance();
+    bool init(JSContext* cx);
     void trace(JSTracer* trc);
 
     const CodeSegment& codeSegment() const { return *codeSegment_; }

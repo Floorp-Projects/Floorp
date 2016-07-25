@@ -25,8 +25,7 @@ void InvokeNativeEventLoop();
 // Need to call back and send a cocoa draw event to the plugin.
 typedef void (*DrawPluginFunc) (CGContextRef, void*, nsIntRect aUpdateRect);
 
-void* GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance,
-                 bool aAvoidCGCrashes, double aContentsScaleFactor);
+void* GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance, double aContentsScaleFactor);
 void ReleaseCGLayer(void* cgLayer);
 void Repaint(void* cgLayer, nsIntRect aRect);
 

@@ -79,12 +79,12 @@ public:
     static void ReleaseGlobals();
 
     NS_DECL_ISUPPORTS_INHERITED
-    
+
     void CommonCreate(nsIWidget *aParent, bool aListenForResizes);
-    
+
     virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                    nsEventStatus& aStatus) override;
-    
+
     // called when we are destroyed
     virtual void OnDestroy(void) override;
 
@@ -100,7 +100,7 @@ public:
     NS_IMETHOD         Destroy(void) override;
     virtual nsIWidget *GetParent() override;
     virtual float      GetDPI() override;
-    virtual double     GetDefaultScaleInternal() override; 
+    virtual double     GetDefaultScaleInternal() override;
     // Under Gtk, we manage windows using device pixels so no scaling is needed:
     mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final
     {
@@ -529,7 +529,7 @@ private:
     // full translucency at this time; each pixel is either fully opaque
     // or fully transparent.
     gchar*       mTransparencyBitmap;
- 
+
     // all of our DND stuff
     void   InitDragEvent(mozilla::WidgetDragEvent& aEvent);
 

@@ -559,7 +559,7 @@ AudioCallbackDriver::Init()
 {
   cubeb_stream_params output;
   cubeb_stream_params input;
-  uint32_t latency;
+  uint32_t latency_frames;
   bool firstStream = CubebUtils::GetFirstStream();
 
   MOZ_ASSERT(!NS_IsMainThread(),
@@ -588,7 +588,7 @@ AudioCallbackDriver::Init()
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  if (cubeb_get_min_latency(CubebUtils::GetCubebContext(), output, &latency) != CUBEB_OK) {
+  if (cubeb_get_min_latency(CubebUtils::GetCubebContext(), output, &latency_frames) != CUBEB_OK) {
     NS_WARNING("Could not get minimal latency from cubeb.");
     return;
   }
@@ -624,7 +624,7 @@ AudioCallbackDriver::Init()
                           input_id,
                           mGraphImpl->mInputWanted ? &input : nullptr,
                           output_id,
-                          mGraphImpl->mOutputWanted ? &output : nullptr, latency,
+                          mGraphImpl->mOutputWanted ? &output : nullptr, latency_frames,
                           DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
       mAudioStream.own(stream);
       DebugOnly<int> rv = cubeb_stream_set_volume(mAudioStream, CubebUtils::GetVolumeScale());

@@ -291,6 +291,9 @@ CompositorBridgeChild::RecvCompositorUpdated(const uint64_t& aLayersId,
     if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
       child->CompositorUpdated(aNewIdentifier);
     }
+    if (!mCanSend) {
+      return true;
+    }
     SendAcknowledgeCompositorUpdate(aLayersId);
   }
   return true;
@@ -416,6 +419,9 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
   // Any plugins we didn't update need to be hidden, as they are
   // not associated with visible content.
   nsIWidget::UpdateRegisteredPluginWindowVisibility((uintptr_t)parent, visiblePluginIds);
+  if (!mCanSend) {
+    return true;
+  }
   SendRemotePluginsReady();
   return true;
 #endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
@@ -461,6 +467,9 @@ CompositorBridgeChild::RecvHideAllPlugins(const uintptr_t& aParentWidget)
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<uintptr_t> list;
   nsIWidget::UpdateRegisteredPluginWindowVisibility(aParentWidget, list);
+  if (!mCanSend) {
+    return true;
+  }
   SendRemotePluginsReady();
   return true;
 #endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
@@ -653,6 +662,9 @@ CompositorBridgeChild::RequestNotifyAfterRemotePaint(TabChild* aTabChild)
 {
   MOZ_ASSERT(aTabChild, "NULL TabChild not allowed in CompositorBridgeChild::RequestNotifyAfterRemotePaint");
   mWeakTabChild = do_GetWeakReference( static_cast<dom::TabChildBase*>(aTabChild) );
+  if (!mCanSend) {
+    return;
+  }
   Unused << SendRequestNotifyAfterRemotePaint();
 }
 

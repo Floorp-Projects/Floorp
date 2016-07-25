@@ -11,9 +11,6 @@ interface nsILocalCertCallback;
 [scriptable, uuid(9702fdd4-4c2c-439c-ba2e-19cda018eb99)]
 interface nsILocalCertService : nsISupports
 {
-  const unsigned long KEY_TYPE_EC = 0;
-  const unsigned long KEY_TYPE_RSA = 1;
-
   /**
    * Get or create a new self-signed X.509 cert to represent this device over a
    * secure transport, like TLS.
@@ -24,11 +21,8 @@ interface nsILocalCertService : nsISupports
    *
    * @param nickname Nickname that identifies the cert
    * @param cb       Callback to be notified with the result
-   * @param keyType  A KEY_TYPE_* constant that specifies the key type.
-   *                 KEY_TYPE_EC if absent.
    */
-  void getOrCreateCert(in ACString nickname, in nsILocalCertGetCallback cb,
-                       [optional] in unsigned long keyType);
+  void getOrCreateCert(in ACString nickname, in nsILocalCertGetCallback cb);
 
   /**
    * Remove a X.509 cert with the given nickname.

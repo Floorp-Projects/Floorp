@@ -127,7 +127,7 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
 void nsMenuBarX::ConstructNativeMenus()
 {
   uint32_t count = mContent->GetChildCount();
-  for (uint32_t i = 0; i < count; i++) { 
+  for (uint32_t i = 0; i < count; i++) {
     nsIContent *menuContent = mContent->GetChildAt(i);
     if (menuContent &&
         menuContent->IsXULElement(nsGkAtoms::menu)) {
@@ -140,7 +140,7 @@ void nsMenuBarX::ConstructNativeMenus()
           delete newMenu;
       }
     }
-  }  
+  }
 }
 
 void nsMenuBarX::ConstructFallbackNativeMenus()
@@ -270,7 +270,7 @@ void nsMenuBarX::ObserveAttributeChanged(nsIDocument* aDocument,
 }
 
 void nsMenuBarX::ObserveContentRemoved(nsIDocument* aDocument,
-                                       nsIContent* aChild, 
+                                       nsIContent* aChild,
                                        int32_t aIndexInContainer)
 {
   RemoveMenuAtIndex(aIndexInContainer);
@@ -478,7 +478,7 @@ void nsMenuBarX::ResetNativeApplicationMenu()
 void nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode)
 {
   nsCOMPtr<nsIDOMElement> menuItem;
-  inDoc->GetElementById(inID, getter_AddRefs(menuItem));  
+  inDoc->GetElementById(inID, getter_AddRefs(menuItem));
   nsCOMPtr<nsIContent> menuContent(do_QueryInterface(menuItem));
   if (menuContent) {
     menuContent->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, NS_LITERAL_STRING("true"), false);
@@ -505,7 +505,7 @@ void nsMenuBarX::AquifyMenuBar()
     HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent));
     if (!sQuitItemContent)
       sQuitItemContent = mQuitItemContent;
-    
+
     // remove prefs item and its separator, but save off the pref content node
     // so we can invoke its command later.
     HideItem(domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nullptr);
@@ -586,7 +586,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
 
   // put together the actual NSMenuItem
   NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:labelString action:action keyEquivalent:keyEquiv];
-  
+
   [newMenuItem setTag:tag];
   [newMenuItem setTarget:target];
   [newMenuItem setKeyEquivalentModifierMask:macKeyModifiers];
@@ -609,36 +609,36 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
   // the nib in cocoa widgets. We do not have a way to create an application
   // menu manually, so we grab the one from the nib and use that.
   sApplicationMenu = [[[[NSApp mainMenu] itemAtIndex:0] submenu] retain];
-  
+
 /*
   We support the following menu items here:
 
   Menu Item                DOM Node ID             Notes
-  
+
   ========================
   = About This App       = <- aboutName
   ========================
   = Preferences...       = <- menu_preferences
   ========================
   = Services     >       = <- menu_mac_services    <- (do not define key equivalent)
-  ======================== 
+  ========================
   = Hide App             = <- menu_mac_hide_app
   = Hide Others          = <- menu_mac_hide_others
   = Show All             = <- menu_mac_show_all
-  ======================== 
+  ========================
   = Quit                 = <- menu_FileQuitItem
-  ======================== 
-  
+  ========================
+
   If any of them are ommitted from the application's DOM, we just don't add
   them. We always add a "Quit" item, but if an app developer does not provide a
   DOM node with the right ID for the Quit item, we add it in English. App
   developers need only add each node with a label and a key equivalent (if they
   want one). Other attributes are optional. Like so:
-  
+
   <menuitem id="menu_preferences"
          label="&preferencesCmdMac.label;"
            key="open_prefs_key"/>
-  
+
   We need to use this system for localization purposes, until we have a better way
   to define the Application menu to be used on Mac OS X.
 */
@@ -681,21 +681,21 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
                                              0, nil);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
-      
+
       // set this menu item up as the Mac OS X Services menu
       NSMenu* servicesMenu = [[GeckoServicesNSMenu alloc] initWithTitle:@""];
       [itemBeingAdded setSubmenu:servicesMenu];
       [NSApp setServicesMenu:servicesMenu];
-      
+
       [itemBeingAdded release];
       itemBeingAdded = nil;
-      
+
       // Add separator after Services menu
-      [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
+      [sApplicationMenu addItem:[NSMenuItem separatorItem]];
     }
-    
+
     BOOL addHideShowSeparator = FALSE;
-    
+
     // Add menu item to hide this application
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_hide_app"), @selector(menuItemHit:),
                                              eCommand_ID_HideApp, nsMenuBarX::sNativeEventTarget);
@@ -703,10 +703,10 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
       itemBeingAdded = nil;
-      
+
       addHideShowSeparator = TRUE;
     }
-    
+
     // Add menu item to hide other applications
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_hide_others"), @selector(menuItemHit:),
                                              eCommand_ID_HideOthers, nsMenuBarX::sNativeEventTarget);
@@ -714,10 +714,10 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
       itemBeingAdded = nil;
-      
+
       addHideShowSeparator = TRUE;
     }
-    
+
     // Add menu item to show all applications
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_show_all"), @selector(menuItemHit:),
                                              eCommand_ID_ShowAll, nsMenuBarX::sNativeEventTarget);
@@ -725,14 +725,14 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
       itemBeingAdded = nil;
-      
+
       addHideShowSeparator = TRUE;
     }
-    
+
     // Add a separator after the hide/show menus if at least one exists
     if (addHideShowSeparator)
       [sApplicationMenu addItem:[NSMenuItem separatorItem]];
-    
+
     // Add quit menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_FileQuitItem"), @selector(menuItemHit:),
                                              eCommand_ID_Quit, nsMenuBarX::sNativeEventTarget);
@@ -751,7 +751,7 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
       [sApplicationMenu addItem:defaultQuitItem];
     }
   }
-  
+
   return (sApplicationMenu) ? NS_OK : NS_ERROR_FAILURE;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

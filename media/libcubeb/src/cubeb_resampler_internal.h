@@ -263,7 +263,7 @@ public:
    * number of output frames will be exactly equal. */
   uint32_t input_needed_for_output(uint32_t output_frame_count)
   {
-    return (uint32_t)ceilf((output_frame_count - samples_to_frames(resampling_in_buffer.length()))
+    return (uint32_t)ceilf((output_frame_count - samples_to_frames(resampling_out_buffer.length()))
                           * resampling_ratio);
 
   }
@@ -332,7 +332,7 @@ private:
   /** Additional latency inserted into the pipeline for synchronisation. */
   uint32_t additional_latency;
   /** When `input_buffer` is called, this allows tracking the number of samples
-      that where in the buffer. */
+      that were in the buffer. */
   uint32_t leftover_samples;
 };
 

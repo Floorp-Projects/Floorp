@@ -9,6 +9,12 @@ const ADD_CHUNKNUM = 524;
 const SUB_CHUNKNUM = 523;
 const HASHLEN = 32;
 
+const PREFS = {
+  PROVIDER_LISTS : "browser.safebrowsing.provider.mozilla.lists",
+  DISALLOW_COMPLETIONS : "urlclassifier.disallow_completions",
+  PROVIDER_GETHASHURL : "browser.safebrowsing.provider.mozilla.gethashURL"
+};
+
 // addUrlToDB & removeUrlFromDB are asynchronous, queue the task to ensure
 // the callback follow correct order.
 classifierHelper._updates = [];
@@ -16,6 +22,27 @@ classifierHelper._updates = [];
 // Keep urls added to database, those urls should be automatically
 // removed after test complete.
 classifierHelper._updatesToCleanup = [];
+
+// This function is used to allow completion for specific "list",
+// some lists like "test-malware-simple" is default disabled to ask for complete.
+// "list" is the db we would like to allow it
+// "url" is the completion server
+classifierHelper.allowCompletion = function(lists, url) {
+  for (var list of lists) {
+    // Add test db to provider
+    var pref = SpecialPowers.getCharPref(PREFS.PROVIDER_LISTS);
+    pref += "," + list;
+    SpecialPowers.setCharPref(PREFS.PROVIDER_LISTS, pref);
+
+    // Rename test db so we will not disallow it from completions
+    pref = SpecialPowers.getCharPref(PREFS.DISALLOW_COMPLETIONS);
+    pref = pref.replace(list, list + "-backup");
+    SpecialPowers.setCharPref(PREFS.DISALLOW_COMPLETIONS, pref);
+  }
+
+  // Set get hash url
+  SpecialPowers.setCharPref(PREFS.PROVIDER_GETHASHURL, url);
+}
 
 // Pass { url: ..., db: ... } to add url to database,
 // onsuccess/onerror will be called when update complete.
@@ -26,6 +53,7 @@ classifierHelper.addUrlToDB = function(updateData) {
       var LISTNAME = update.db;
       var CHUNKDATA = update.url;
       var CHUNKLEN = CHUNKDATA.length;
+      var HASHLEN = update.len ? update.len : 32;
 
       classifierHelper._updatesToCleanup.push(update);
       testUpdate +=
@@ -49,6 +77,7 @@ classifierHelper.removeUrlFromDB = function(updateData) {
       var LISTNAME = update.db;
       var CHUNKDATA = ADD_CHUNKNUM + ":" + update.url;
       var CHUNKLEN = CHUNKDATA.length;
+      var HASHLEN = update.len ? update.len : 32;
 
       testUpdate +=
         "n:1000\n" +
@@ -127,6 +156,11 @@ classifierHelper._setup = function() {
 };
 
 classifierHelper._cleanup = function() {
+  // clean all the preferences may touch by helper
+  for (var pref in PREFS) {
+    SpecialPowers.clearUserPref(pref);
+  }
+
   if (!classifierHelper._updatesToCleanup) {
     return Promise.resolve();
   }

@@ -66,7 +66,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
 
   public:
     MOZ_MUST_USE bool generate();
-    MOZ_MUST_USE bool generateWasm(uint32_t sigIndex, wasm::FuncOffsets *offsets);
+    MOZ_MUST_USE bool generateWasm(wasm::SigIdDesc sigId, wasm::FuncOffsets *offsets);
     MOZ_MUST_USE bool link(JSContext* cx, CompilerConstraintList* constraints);
     MOZ_MUST_USE bool linkSharedStubs(JSContext* cx);
 
@@ -363,6 +363,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitAsmJSParameter(LAsmJSParameter* lir);
     void visitAsmJSReturn(LAsmJSReturn* ret);
     void visitAsmJSVoidReturn(LAsmJSVoidReturn* ret);
+    void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins);
+    void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
     void visitLexicalCheck(LLexicalCheck* ins);
     void visitThrowRuntimeLexicalError(LThrowRuntimeLexicalError* ins);
     void visitGlobalNameConflictsCheck(LGlobalNameConflictsCheck* ins);

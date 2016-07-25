@@ -1252,15 +1252,15 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
     closer = new CloseFileRunnable(aFileDescriptor->mFileDescriptor);
   }
   nsresult rv;
-  int fd = aFileDescriptor->mFileDescriptor.PlatformHandle();
+  auto rawFD = aFileDescriptor->mFileDescriptor.ClonePlatformHandle();
   if (aOptions) {
-    rv = SetupRecording(fd, aOptions->rotation, aOptions->maxFileSizeBytes,
+    rv = SetupRecording(rawFD.get(), aOptions->rotation, aOptions->maxFileSizeBytes,
                         aOptions->maxVideoLengthMs);
     if (NS_SUCCEEDED(rv)) {
       rv = SetupRecordingFlash(aOptions->autoEnableLowLightTorch);
     }
   } else {
-    rv = SetupRecording(fd, 0, 0, 0);
+    rv = SetupRecording(rawFD.get(), 0, 0, 0);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

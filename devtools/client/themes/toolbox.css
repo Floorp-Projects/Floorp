@@ -381,3 +381,22 @@
 .toolbox-panel[selected] {
   visibility: visible;
 }
+
+/**
+ * When panels are collapsed or hidden, making sure that they are also
+ * inaccessible by keyboard. This is not the case by default because the are
+ * predominantly hidden using visibility: collapse; style or collapsed
+ * attribute.
+ */
+.toolbox-panel *,
+#toolbox-panel-webconsole[collapsed] * {
+  -moz-user-focus: ignore;
+}
+
+/**
+ * Enrure that selected toolbox panel's contents are keyboard accessible as they
+ * are explicitly made not to be when hidden (default).
+ */
+.toolbox-panel[selected] * {
+  -moz-user-focus: normal;
+}

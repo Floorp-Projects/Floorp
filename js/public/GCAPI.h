@@ -340,15 +340,15 @@ struct JS_PUBLIC_API(GCDescription) {
     GCDescription(bool isCompartment, JSGCInvocationKind kind, gcreason::Reason reason)
       : isCompartment_(isCompartment), invocationKind_(kind), reason_(reason) {}
 
-    char16_t* formatSliceMessage(JSRuntime* rt) const;
-    char16_t* formatSummaryMessage(JSRuntime* rt) const;
-    char16_t* formatJSON(JSRuntime* rt, uint64_t timestamp) const;
+    char16_t* formatSliceMessage(JSContext* cx) const;
+    char16_t* formatSummaryMessage(JSContext* cx) const;
+    char16_t* formatJSON(JSContext* cx, uint64_t timestamp) const;
 
-    JS::dbg::GarbageCollectionEvent::Ptr toGCEvent(JSRuntime* rt) const;
+    JS::dbg::GarbageCollectionEvent::Ptr toGCEvent(JSContext* cx) const;
 };
 
 typedef void
-(* GCSliceCallback)(JSRuntime* rt, GCProgress progress, const GCDescription& desc);
+(* GCSliceCallback)(JSContext* cx, GCProgress progress, const GCDescription& desc);
 
 /**
  * The GC slice callback is called at the beginning and end of each slice. This
@@ -376,7 +376,7 @@ enum class GCNurseryProgress {
  * A nursery collection callback receives the progress of the nursery collection
  * and the reason for the collection.
  */
-using GCNurseryCollectionCallback = void(*)(JSRuntime* rt, GCNurseryProgress progress,
+using GCNurseryCollectionCallback = void(*)(JSContext* cx, GCNurseryProgress progress,
                                             gcreason::Reason reason);
 
 /**
@@ -485,14 +485,14 @@ class JS_PUBLIC_API(AutoAssertOnGC)
 
   public:
     AutoAssertOnGC();
-    explicit AutoAssertOnGC(JSRuntime* rt);
+    explicit AutoAssertOnGC(JSContext* cx);
     ~AutoAssertOnGC();
 
     static void VerifyIsSafeToGC(JSRuntime* rt);
 #else
   public:
     AutoAssertOnGC() {}
-    explicit AutoAssertOnGC(JSRuntime* rt) {}
+    explicit AutoAssertOnGC(JSContext* cx) {}
     ~AutoAssertOnGC() {}
 
     static void VerifyIsSafeToGC(JSRuntime* rt) {}
@@ -510,13 +510,13 @@ class JS_PUBLIC_API(AutoAssertNoAlloc)
 
   public:
     AutoAssertNoAlloc() : gc(nullptr) {}
-    explicit AutoAssertNoAlloc(JSRuntime* rt);
+    explicit AutoAssertNoAlloc(JSContext* cx);
     void disallowAlloc(JSRuntime* rt);
     ~AutoAssertNoAlloc();
 #else
   public:
     AutoAssertNoAlloc() {}
-    explicit AutoAssertNoAlloc(JSRuntime* rt) {}
+    explicit AutoAssertNoAlloc(JSContext* cx) {}
     void disallowAlloc(JSRuntime* rt) {}
 #endif
 };
@@ -539,7 +539,7 @@ class JS_PUBLIC_API(AutoSuppressGCAnalysis) : public AutoAssertNoAlloc
 {
   public:
     AutoSuppressGCAnalysis() : AutoAssertNoAlloc() {}
-    explicit AutoSuppressGCAnalysis(JSRuntime* rt) : AutoAssertNoAlloc(rt) {}
+    explicit AutoSuppressGCAnalysis(JSContext* cx) : AutoAssertNoAlloc(cx) {}
 } JS_HAZ_GC_SUPPRESSED;
 
 /**
@@ -570,7 +570,7 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
 {
   public:
     AutoCheckCannotGC() : AutoAssertOnGC() {}
-    explicit AutoCheckCannotGC(JSRuntime* rt) : AutoAssertOnGC(rt) {}
+    explicit AutoCheckCannotGC(JSContext* cx) : AutoAssertOnGC(cx) {}
 } JS_HAZ_GC_INVALIDATED;
 
 /**

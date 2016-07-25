@@ -204,7 +204,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('use-yasm')
         with self.assertRaisesRegexp(SandboxValidationError,
             'yasm is not available'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
         # When yasm is available, this should work.
         reader = self.reader('use-yasm',
@@ -273,19 +273,19 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('generated-files-no-script')
         with self.assertRaisesRegexp(SandboxValidationError,
             'Script for generating bar.c does not exist'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_generated_files_no_inputs(self):
         reader = self.reader('generated-files-no-inputs')
         with self.assertRaisesRegexp(SandboxValidationError,
             'Input for generating foo.c does not exist'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_generated_files_no_python_script(self):
         reader = self.reader('generated-files-no-python-script')
         with self.assertRaisesRegexp(SandboxValidationError,
             'Script for generating bar.c does not end in .py'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_exports(self):
         reader = self.reader('exports')
@@ -314,7 +314,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('exports-missing')
         with self.assertRaisesRegexp(SandboxValidationError,
              'File listed in EXPORTS does not exist:'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_exports_missing_generated(self):
         '''
@@ -323,7 +323,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('exports-missing-generated')
         with self.assertRaisesRegexp(SandboxValidationError,
              'Objdir file listed in EXPORTS not in GENERATED_FILES:'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_exports_generated(self):
         reader = self.reader('exports-generated')
@@ -360,7 +360,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('test-harness-files-root')
         with self.assertRaisesRegexp(SandboxValidationError,
             'Cannot install files to the root of TEST_HARNESS_FILES'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_branding_files(self):
         reader = self.reader('branding-files')
@@ -540,7 +540,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('test-python-unit-test-missing')
         with self.assertRaisesRegexp(SandboxValidationError,
             'Path specified in PYTHON_UNIT_TESTS does not exist:'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_test_manifest_keys_extracted(self):
         """Ensure all metadata from test manifests is extracted."""
@@ -990,7 +990,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('final-target-pp-files-non-srcdir')
         with self.assertRaisesRegexp(SandboxValidationError,
              'Only source directory paths allowed in FINAL_TARGET_PP_FILES:'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_android_res_dirs(self):
         """Test that ANDROID_RES_DIRS works properly."""

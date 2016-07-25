@@ -760,6 +760,7 @@ public:
       RefPtr<ExtendableMessageEvent> event = ExtendableMessageEvent::Constructor(
         aTarget, NS_LITERAL_STRING("message"), init, rv);
       if (NS_WARN_IF(rv.Failed())) {
+        rv.SuppressException();
         return false;
       }
       event->SetSource(client);
@@ -2498,11 +2499,7 @@ WorkerPrivateParent<Derived>::DispatchControlRunnable(
 
     if (JSContext* cx = self->mJSContext) {
       MOZ_ASSERT(self->mThread);
-
-      JSRuntime* rt = JS_GetRuntime(cx);
-      MOZ_ASSERT(rt);
-
-      JS_RequestInterruptCallback(rt);
+      JS_RequestInterruptCallback(cx);
     }
 
     mCondVar.Notify();
@@ -4907,13 +4904,12 @@ WorkerPrivate::BlockAndCollectRuntimeStats(JS::RuntimeStats* aRtStats,
   mMemoryReporterRunning = true;
 
   NS_ASSERTION(mJSContext, "This must never be null!");
-  JSRuntime* rt = JS_GetRuntime(mJSContext);
 
   // If the worker is not already blocked (e.g. waiting for a worker event or
   // currently in a ctypes call) then we need to trigger the interrupt
   // callback to trap the worker.
   if (!mBlockedForMemoryReporter) {
-    JS_RequestInterruptCallback(rt);
+    JS_RequestInterruptCallback(mJSContext);
 
     // Wait until the worker actually blocks.
     while (!mBlockedForMemoryReporter) {
@@ -6571,6 +6567,7 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx,
   ErrorResult rv;
   RefPtr<MessagePort> port = MessagePort::Create(globalScope, aIdentifier, rv);
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return false;
   }
 

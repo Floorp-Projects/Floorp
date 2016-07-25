@@ -105,11 +105,11 @@ public:
   NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override;
   NS_DECL_NSIJUMPLISTSHORTCUT
 
-  static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item, 
-                               RefPtr<IShellLinkW>& aShellLink, 
+  static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
+                               RefPtr<IShellLinkW>& aShellLink,
                                nsCOMPtr<nsIThread> &aIOThread);
   static nsresult GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJumpListShortcut>& aShortcut);
-  static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI, 
+  static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
                                     nsCOMPtr<nsIFile> &aICOFile);
 
 protected:
@@ -118,10 +118,10 @@ protected:
   nsCOMPtr<nsILocalHandlerApp> mHandlerApp;
 
   bool ExecutableExists(nsCOMPtr<nsILocalHandlerApp>& handlerApp);
-  static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI, 
+  static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
                                        nsString &aICOFilePath,
                                        nsCOMPtr<nsIThread> &aIOThread);
-  static nsresult CacheIconFileFromFaviconURIAsync(nsCOMPtr<nsIURI> aFaviconPageURI, 
+  static nsresult CacheIconFileFromFaviconURIAsync(nsCOMPtr<nsIURI> aFaviconPageURI,
                                                    nsCOMPtr<nsIFile> aICOFile,
                                                    nsCOMPtr<nsIThread> &aIOThread);
 };
