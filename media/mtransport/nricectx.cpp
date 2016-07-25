@@ -537,8 +537,18 @@ NrIceCtx::Initialize(bool hide_non_default,
   UINT4 flags = offerer_ ? NR_ICE_CTX_FLAGS_OFFERER:
       NR_ICE_CTX_FLAGS_ANSWERER;
   flags |= NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION;
-  if (policy_ == ICE_POLICY_RELAY) {
-    flags |= NR_ICE_CTX_FLAGS_RELAY_ONLY;
+  switch (policy_) {
+    case ICE_POLICY_NONE:
+      MOZ_CRASH();
+      break;
+    case ICE_POLICY_RELAY:
+      flags |= NR_ICE_CTX_FLAGS_RELAY_ONLY;
+      break;
+    case ICE_POLICY_NO_HOST:
+      flags |= NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES;
+      break;
+    case ICE_POLICY_ALL:
+      break;
   }
 
   if (hide_non_default)

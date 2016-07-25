@@ -783,9 +783,9 @@ PeerConnectionMedia::GetPrefDefaultAddressOnly() const
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   bool default_address_only = Preferences::GetBool(
-    "media.peerconnection.ice.default_address_only", false);
+    "media.peerconnection.ice.default_address_only", true);
 #else
-  bool default_address_only = false;
+  bool default_address_only = true;
 #endif
   return default_address_only;
 }

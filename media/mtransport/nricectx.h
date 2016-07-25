@@ -211,6 +211,7 @@ class NrIceCtx {
 
   enum Policy { ICE_POLICY_NONE,
                 ICE_POLICY_RELAY,
+                ICE_POLICY_NO_HOST,
                 ICE_POLICY_ALL
   };
 
