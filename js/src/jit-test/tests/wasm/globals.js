@@ -93,6 +93,23 @@ for (let i = 0; i < 5; i++) {
     assertEq(module[`get${i}`](), values[i]);
 }
 
+// Initializer expressions can also be used in elem section initializers.
+assertErrorMessage(() => evalText(`(module (import "globals" "a" (global f32 immutable)) (table (resizable 4)) (elem (get_global 0) $f) (func $f))`), TypeError, /type mismatch/);
+
+module = evalText(`(module
+    (import "globals" "a" (global i32 immutable))
+    (table (resizable 4))
+    (elem (get_global 0) $f)
+    (func $f)
+    (export "f" $f)
+    (export "tbl" table)
+)`, {
+    globals: {
+        a: 1
+    }
+});
+assertEq(module.f, module.tbl.get(1));
+
 // Import/export rules.
 assertErrorMessage(() => evalText(`(module (import "globals" "x" (global i32)))`), TypeError, /can't import.* mutable globals in the MVP/);
 assertErrorMessage(() => evalText(`(module (global i32 (i32.const 42)) (export "" global 0))`), TypeError, /can't .*export mutable globals in the MVP/);

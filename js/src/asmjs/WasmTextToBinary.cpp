@@ -2612,15 +2612,19 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         return false;
     }
 
-    AstElemSegment* segment = new(c.lifo) AstElemSegment(0, Move(elems));
+    auto* zero = new(c.lifo) AstConst(Val(uint32_t(0)));
+    if (!zero)
+        return false;
+
+    AstElemSegment* segment = new(c.lifo) AstElemSegment(zero, Move(elems));
     return segment && module->append(segment);
 }
 
 static AstElemSegment*
 ParseElemSegment(WasmParseContext& c)
 {
-    WasmToken offset;
-    if (!c.ts.match(WasmToken::Index, &offset, c.error))
+    AstExpr* offset = ParseExpr(c);
+    if (!offset)
         return nullptr;
 
     AstRefVector elems(c.lifo);
@@ -2631,7 +2635,7 @@ ParseElemSegment(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstElemSegment(offset.index(), Move(elems));
+    return new(c.lifo) AstElemSegment(offset, Move(elems));
 }
 
 static AstGlobal*
@@ -3258,6 +3262,11 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
 
     if (module->hasStartFunc()) {
         if (!r.resolveFunction(module->startFunc().func()))
+            return false;
+    }
+
+    for (AstElemSegment* segment : module->elemSegments()) {
+        if (!ResolveExpr(r, *segment->offset()))
             return false;
     }
 
@@ -4073,9 +4082,9 @@ EncodeElemSegment(Encoder& e, AstElemSegment& segment)
     if (!e.writeVarU32(0)) // table index
         return false;
 
-    if (!e.writeExpr(Expr::I32Const))
+    if (!EncodeExpr(e, *segment.offset()))
         return false;
-    if (!e.writeVarU32(segment.offset()))
+    if (!e.writeExpr(Expr::End))
         return false;
 
     if (!e.writeVarU32(segment.elems().length()))

@@ -266,6 +266,7 @@ size_t
 ElemSegment::serializedSize() const
 {
     return sizeof(tableIndex) +
+           sizeof(offset) +
            SerializedPodVectorSize(elems);
 }
 
@@ -273,6 +274,7 @@ uint8_t*
 ElemSegment::serialize(uint8_t* cursor) const
 {
     cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
+    cursor = WriteBytes(cursor, &offset, sizeof(offset));
     cursor = SerializePodVector(cursor, elems);
     return cursor;
 }
@@ -281,6 +283,7 @@ const uint8_t*
 ElemSegment::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
+    (cursor = ReadBytes(cursor, &offset, sizeof(offset))) &&
     (cursor = DeserializePodVector(cursor, &elems));
     return cursor;
 }
@@ -405,7 +408,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 
 bool
 Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                  HandleWasmTableObject tableObj) const
+                  const ValVector& globalImports, HandleWasmTableObject tableObj) const
 {
     Instance& instance = instanceObj->instance();
     const CodeSegment& codeSegment = instance.codeSegment();
@@ -423,20 +426,53 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
     }
 
     // Now that all tables have been initialized, write elements.
+    Vector<uint32_t> prevEnds(cx);
+    if (!prevEnds.appendN(0, tables.length()))
+        return false;
+
     for (const ElemSegment& seg : elemSegments_) {
         Table& table = *tables[seg.tableIndex];
-        MOZ_ASSERT(seg.offset + seg.elems.length() <= table.length());
+
+        uint32_t offset;
+        switch (seg.offset.kind()) {
+          case InitExpr::Kind::Constant: {
+            offset = seg.offset.val().i32();
+            break;
+          }
+          case InitExpr::Kind::GetGlobal: {
+            const GlobalDesc& global = metadata_->globals[seg.offset.globalIndex()];
+            offset = globalImports[global.importIndex()].i32();
+            break;
+          }
+        }
+
+        uint32_t& prevEnd = prevEnds[seg.tableIndex];
+
+        if (offset < prevEnd) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
+                                 "elem segments must be disjoint and ordered");
+            return false;
+        }
+
+        uint32_t tableLength = instance.metadata().tables[seg.tableIndex].initial;
+        if (offset > tableLength || tableLength - offset < seg.elems.length()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
+                                 "element segment does not fit");
+            return false;
+        }
 
         if (tableObj) {
             MOZ_ASSERT(seg.tableIndex == 0);
             for (uint32_t i = 0; i < seg.elems.length(); i++) {
-                if (!tableObj->setInstance(cx, seg.offset + i, instanceObj))
+                if (!tableObj->setInstance(cx, offset + i, instanceObj))
                     return false;
             }
         }
 
         for (uint32_t i = 0; i < seg.elems.length(); i++)
-            table.array()[seg.offset + i] = codeSegment.code() + seg.elems[i];
+            table.array()[offset + i] = codeSegment.code() + seg.elems[i];
+
+        prevEnd = offset + seg.elems.length();
     }
 
     return true;
@@ -715,7 +751,7 @@ Module::instantiate(JSContext* cx,
     // initialization as the final step after the instance is fully live since
     // it is observable (in the case of an imported Table object).
 
-    if (!initElems(cx, instanceObj, table))
+    if (!initElems(cx, instanceObj, globalImports, table))
         return false;
 
     // Done! Notify the Debugger of the new Instance.
