@@ -6,6 +6,7 @@
 
 #include "builtin/TestingFunctions.h"
 
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/Move.h"
 #include "mozilla/unused.h"
 
@@ -1105,17 +1106,18 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
 
     JS::StackCapture capture((JS::AllFrames()));
     if (args.length() >= 1) {
-        double d;
-        if (!ToNumber(cx, args[0], &d))
+        double maxDouble;
+        if (!ToNumber(cx, args[0], &maxDouble))
             return false;
-        if (d < 0) {
+        if (mozilla::IsNaN(maxDouble) || maxDouble < 0 || maxDouble > UINT32_MAX) {
             ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
                                   JSDVG_SEARCH_STACK, args[0], nullptr,
                                   "not a valid maximum frame count", NULL);
             return false;
         }
-        if (d > 0)
-            capture = JS::StackCapture(JS::MaxFrames(d));
+        uint32_t max = uint32_t(maxDouble);
+        if (max > 0)
+            capture = JS::StackCapture(JS::MaxFrames(max));
     }
 
     JSCompartment* targetCompartment = cx->compartment();
