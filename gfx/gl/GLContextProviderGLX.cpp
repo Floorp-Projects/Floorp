@@ -14,6 +14,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/widget/CompositorWidget.h"
 
 #include "prenv.h"
 #include "GLContextProvider.h"
@@ -41,6 +42,7 @@ namespace mozilla {
 namespace gl {
 
 using namespace mozilla::gfx;
+using namespace mozilla::widget;
 
 GLXLibrary sGLXLibrary;
 
@@ -1085,6 +1087,12 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
     }
 
     return nullptr;
+}
+
+already_AddRefed<GLContext>
+GLContextProviderGLX::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
+{
+    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
 }
 
 already_AddRefed<GLContext>

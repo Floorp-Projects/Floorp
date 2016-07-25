@@ -101,6 +101,7 @@
 #include "GLLibraryEGL.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/widget/CompositorWidget.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "nsThreadUtils.h"
@@ -111,6 +112,8 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace gl {
+
+using namespace mozilla::widget;
 
 #define ADD_ATTR_2(_array, _k, _v) do {         \
     (_array).AppendElement(_k);                 \
@@ -755,6 +758,12 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
     gl->mOwnsContext = false;
 
     return gl.forget();
+}
+
+already_AddRefed<GLContext>
+GLContextProviderEGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
+{
+    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
