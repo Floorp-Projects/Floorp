@@ -200,13 +200,17 @@ nsUrlClassifierUtils::GetKeyForURI(nsIURI * uri, nsACString & _retval)
 
 // We use "goog-*-proto" as the list name for v4, where "proto" indicates
 // it's updated (as well as hash completion) via protobuf.
+//
+// In the mozilla official build, we are allowed to use the
+// private phishing list (goog-phish-proto). See Bug 1288840.
 static const struct {
   const char* mListName;
   uint32_t mThreatType;
 } THREAT_TYPE_CONV_TABLE[] = {
   { "goog-malware-proto",  MALWARE_THREAT},            // 1
-  { "goog-phish-proto",    SOCIAL_ENGINEERING_PUBLIC}, // 2
+  { "googpub-phish-proto", SOCIAL_ENGINEERING_PUBLIC}, // 2
   { "goog-unwanted-proto", UNWANTED_SOFTWARE},         // 3
+  { "goog-phish-proto", SOCIAL_ENGINEERING},           // 5
 };
 
 NS_IMETHODIMP
