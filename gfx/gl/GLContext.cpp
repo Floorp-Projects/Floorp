@@ -3067,6 +3067,7 @@ GetBytesPerTexel(GLenum format, GLenum type)
             case LOCAL_GL_RGB:
                 return 3 * multiplier;
             case LOCAL_GL_RGBA:
+            case LOCAL_GL_BGRA_EXT:
                 return 4 * multiplier;
             default:
                 break;
@@ -3079,7 +3080,6 @@ GetBytesPerTexel(GLenum format, GLenum type)
     }
 
     gfxCriticalError() << "Unknown texture type " << type << " or format " << format;
-    MOZ_CRASH();
     return 0;
 }
 
