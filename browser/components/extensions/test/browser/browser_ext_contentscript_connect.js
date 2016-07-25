@@ -43,7 +43,10 @@ add_task(function* () {
         });
       });
 
-      browser.tabs.executeScript({file: "script.js"});
+      browser.tabs.executeScript({file: "script.js"}).catch(e => {
+        browser.test.fail(`Error: ${e} :: ${e.stack}`);
+        browser.test.notifyFail("contentscript_connect.pass");
+      });
     },
 
     files: {

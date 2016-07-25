@@ -1,10 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_eyedropper.js</p><div>test</div>";
-
-var {EyedropperManager} = require("devtools/client/eyedropper/eyedropper");
 
 add_task(function* () {
   yield addTab(TEST_URI);
@@ -23,15 +22,10 @@ add_task(function* () {
 });
 
 function* testButton(toolbox, Telemetry) {
-  let button = toolbox.doc.querySelector("#command-button-eyedropper");
-  ok(button, "Captain, we have the eyedropper button");
-
-  let clicked = toolbox._requisition.commandOutputManager.onOutput.once();
-
-  info("clicking the button to open the eyedropper");
-  button.click();
-
-  yield clicked;
+  info("Calling the eyedropper button's callback");
+  // We call the button callback directly because we don't need to test the UI here, we're
+  // only concerned about testing the telemetry probe.
+  yield toolbox.getPanel("inspector").showEyeDropper();
 
   checkResults("_EYEDROPPER_", Telemetry);
 }

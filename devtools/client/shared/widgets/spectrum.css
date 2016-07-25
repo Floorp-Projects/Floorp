@@ -8,7 +8,7 @@
 }
 
 #eyedropper-button::before {
-  background-image: url("chrome://devtools/skin/images/command-eyedropper.svg");
+  background-image: url(chrome://devtools/skin/images/command-eyedropper.svg);
 }
 
 /* Mix-in classes */
@@ -36,6 +36,10 @@
 }
 
 /* Elements */
+
+#spectrum-tooltip {
+  padding: 4px;
+}
 
 .spectrum-container {
   position: relative;

@@ -268,7 +268,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'DevToolsAuthHelper.java',
     'distribution/Distribution.java',
     'distribution/DistributionStoreCallback.java',
-    'distribution/PartnerBookmarksProviderClient.java',
+    'distribution/PartnerBookmarksProviderProxy.java',
     'distribution/PartnerBrowserCustomizationsClient.java',
     'distribution/ReferrerDescriptor.java',
     'distribution/ReferrerReceiver.java',

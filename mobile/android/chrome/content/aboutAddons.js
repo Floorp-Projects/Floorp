@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", function() {
            .getInterface(Ci.nsIDOMWindow)
            .QueryInterface(Ci.nsIDOMChromeWindow);
 });
+XPCOMUtils.defineLazyModuleGetter(window, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 var ContextMenus = {
   target: null,
