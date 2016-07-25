@@ -1329,7 +1329,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
                       nsIFrame* aFrame,
                       float& aOpacity,
                       SVGContextPaint* aOuterContextPaint,
-                      SVGTextContextPaint::Paint& aTargetPaint,
+                      SVGContextPaintImpl::Paint& aTargetPaint,
                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                       nsSVGEffects::PaintingPropertyDescriptor aProperty)
 {
@@ -1375,7 +1375,7 @@ nsSVGUtils::SetupContextPaint(const DrawTarget* aDrawTarget,
                               const gfxMatrix& aContextMatrix,
                               nsIFrame* aFrame,
                               SVGContextPaint* aOuterContextPaint,
-                              SVGTextContextPaint* aThisContextPaint)
+                              SVGContextPaintImpl* aThisContextPaint)
 {
   DrawMode toDraw = DrawMode(0);
 

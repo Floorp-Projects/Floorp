@@ -25,7 +25,7 @@ SVGContextPaint::InitStrokeGeometry(gfxContext* aContext,
 }
 
 already_AddRefed<gfxPattern>
-SVGTextContextPaint::GetFillPattern(const DrawTarget* aDrawTarget,
+SVGContextPaintImpl::GetFillPattern(const DrawTarget* aDrawTarget,
                                     float aOpacity,
                                     const gfxMatrix& aCTM)
 {
@@ -33,7 +33,7 @@ SVGTextContextPaint::GetFillPattern(const DrawTarget* aDrawTarget,
 }
 
 already_AddRefed<gfxPattern>
-SVGTextContextPaint::GetStrokePattern(const DrawTarget* aDrawTarget,
+SVGContextPaintImpl::GetStrokePattern(const DrawTarget* aDrawTarget,
                                       float aOpacity,
                                       const gfxMatrix& aCTM)
 {
@@ -41,7 +41,7 @@ SVGTextContextPaint::GetStrokePattern(const DrawTarget* aDrawTarget,
 }
 
 already_AddRefed<gfxPattern>
-SVGTextContextPaint::Paint::GetPattern(const DrawTarget* aDrawTarget,
+SVGContextPaintImpl::Paint::GetPattern(const DrawTarget* aDrawTarget,
                                        float aOpacity,
                                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                        const gfxMatrix& aCTM)
