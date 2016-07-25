@@ -82,6 +82,7 @@
   background-color: #fbfbfb;
   -moz-user-select: none;
   border-right: 1px solid #b5b5b5;
+  z-index: 1;
 }
 
 .button {

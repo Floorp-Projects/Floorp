@@ -18,6 +18,11 @@ this.EXPORTED_SYMBOLS = [ "Narrator" ];
 // Maximum time into paragraph when pressing "skip previous" will go
 // to previous paragraph and not the start of current one.
 const PREV_THRESHOLD = 2000;
+// All text-related style rules that we should copy over to the highlight node.
+const kTextStylesRules = ["font-family", "font-kerning", "font-size",
+  "font-size-adjust", "font-stretch", "font-variant", "font-weight",
+  "line-height", "letter-spacing", "text-orientation",
+  "text-transform", "word-spacing"];
 
 function Narrator(win) {
   this._winRef = Cu.getWeakReference(win);
@@ -160,6 +165,8 @@ Narrator.prototype = {
 
     this._startTime = Date.now();
 
+    let highlighter = new Highlighter(paragraph);
+
     return new Promise((resolve, reject) => {
       utterance.addEventListener("start", () => {
         paragraph.classList.add("narrating");
@@ -183,6 +190,7 @@ Narrator.prototype = {
           return;
         }
 
+        highlighter.remove();
         paragraph.classList.remove("narrating");
         this._startTime = 0;
         if (this._inTest) {
@@ -200,6 +208,23 @@ Narrator.prototype = {
 
       utterance.addEventListener("error", () => {
         reject("speech synthesis failed");
+      });
+
+      utterance.addEventListener("boundary", e => {
+        if (e.name != "word") {
+          // We are only interested in word boundaries for now.
+          return;
+        }
+
+        // Match non-whitespace. This isn't perfect, but the most universal
+        // solution for now.
+        let reWordBoundary = /\S+/g;
+        // Match the first word from the boundary event offset.
+        reWordBoundary.lastIndex = e.charIndex;
+        let firstIndex = reWordBoundary.exec(paragraph.textContent);
+        if (firstIndex) {
+          highlighter.highlight(firstIndex.index, reWordBoundary.lastIndex);
+        }
       });
 
       this._win.speechSynthesis.speak(utterance);
@@ -264,5 +289,144 @@ Narrator.prototype = {
       }
     }
     this._win.speechSynthesis.cancel();
+  }
+};
+
+/**
+ * The Highlighter class is used to highlight a range of text in a container.
+ *
+ * @param {nsIDOMElement} container a text container
+ */
+function Highlighter(container) {
+  this.container = container;
+}
+
+Highlighter.prototype = {
+  /**
+   * Highlight the range within offsets relative to the container.
+   *
+   * @param {Number} startOffset the start offset
+   * @param {Number} endOffset the end offset
+   */
+  highlight: function(startOffset, endOffset) {
+    let containerRect = this.container.getBoundingClientRect();
+    let range = this._getRange(startOffset, endOffset);
+    let rangeRects = range.getClientRects();
+    let win = this.container.ownerDocument.defaultView;
+    let computedStyle = win.getComputedStyle(range.endContainer.parentNode);
+    let nodes = this._getFreshHighlightNodes(rangeRects.length);
+
+    let textStyle = {};
+    for (let textStyleRule of kTextStylesRules) {
+      textStyle[textStyleRule] = computedStyle[textStyleRule];
+    }
+
+    for (let i = 0; i < rangeRects.length; i++) {
+      let r = rangeRects[i];
+      let node = nodes[i];
+
+      let style = Object.assign({
+        "top": `${r.top - containerRect.top + r.height / 2}px`,
+        "left": `${r.left - containerRect.left + r.width / 2}px`,
+        "width": `${r.width}px`,
+        "height": `${r.height}px`
+      }, textStyle);
+
+      // Enables us to vary the CSS transition on a line change.
+      node.classList.toggle("newline", style.top != node.dataset.top);
+      node.dataset.top = style.top;
+
+      // Enables CSS animations.
+      node.classList.remove("animate");
+      win.requestAnimationFrame(() => {
+        node.classList.add("animate");
+      });
+
+      // Enables alternative word display with a CSS pseudo-element.
+      node.dataset.word = range.toString();
+
+      // Apply style
+      node.style = Object.entries(style).map(
+        s => `${s[0]}: ${s[1]};`).join(" ");
+    }
+  },
+
+  /**
+   * Releases reference to container and removes all highlight nodes.
+   */
+  remove: function() {
+    for (let node of this._nodes) {
+      node.remove();
+    }
+
+    this.container = null;
+  },
+
+  /**
+   * Returns specified amount of highlight nodes. Creates new ones if necessary
+   * and purges any additional nodes that are not needed.
+   *
+   * @param {Number} count number of nodes needed
+   */
+  _getFreshHighlightNodes: function(count) {
+    let doc = this.container.ownerDocument;
+    let nodes = Array.from(this._nodes);
+
+    // Remove nodes we don't need anymore (nodes.length - count > 0).
+    for (let toRemove = 0; toRemove < nodes.length - count; toRemove++) {
+      nodes.shift().remove();
+    }
+
+    // Add additional nodes if we need them (count - nodes.length > 0).
+    for (let toAdd = 0; toAdd < count - nodes.length; toAdd++) {
+      let node = doc.createElement("div");
+      node.className = "narrate-word-highlight";
+      this.container.appendChild(node);
+      nodes.push(node);
+    }
+
+    return nodes;
+  },
+
+  /**
+   * Create and return a range object with the start and end offsets relative
+   * to the container node.
+   *
+   * @param {Number} startOffset the start offset
+   * @param {Number} endOffset the end offset
+   */
+  _getRange: function(startOffset, endOffset) {
+    let doc = this.container.ownerDocument;
+    let i = 0;
+    let treeWalker = doc.createTreeWalker(
+      this.container, doc.defaultView.NodeFilter.SHOW_TEXT);
+    let node = treeWalker.nextNode();
+
+    function _findNodeAndOffset(offset) {
+      do {
+        let length = node.data.length;
+        if (offset >= i && offset <= i + length) {
+          return [node, offset - i];
+        }
+        i += length;
+      } while ((node = treeWalker.nextNode()));
+
+      // Offset is out of bounds, return last offset of last node.
+      node = treeWalker.lastChild();
+      return [node, node.data.length];
+    }
+
+    let range = doc.createRange();
+    range.setStart(..._findNodeAndOffset(startOffset));
+    range.setEnd(..._findNodeAndOffset(endOffset));
+
+    return range;
+  },
+
+  /*
+   * Get all existing highlight nodes for container.
+   */
+  get _nodes() {
+    return this.container.querySelectorAll(".narrate-word-highlight")
   }
 };
