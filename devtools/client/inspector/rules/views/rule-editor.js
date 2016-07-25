@@ -5,9 +5,6 @@
 "use strict";
 
 /* eslint-disable mozilla/reject-some-requires */
-const {Ci} = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
-/* eslint-disable mozilla/reject-some-requires */
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 /* eslint-enable mozilla/reject-some-requires */
 const {l10n} = require("devtools/shared/inspector/css-logic");
@@ -584,7 +581,7 @@ RuleEditor.prototype = {
    *        The move focus direction number.
    */
   _moveSelectorFocus: function (direction) {
-    if (!direction || direction === Ci.nsIFocusManager.MOVEFOCUS_BACKWARD) {
+    if (!direction || direction === Services.focus.MOVEFOCUS_BACKWARD) {
       return;
     }
 
