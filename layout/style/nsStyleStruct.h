@@ -3105,10 +3105,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
     return nsChangeHint_NeedReflow;
   }
 
-  uint8_t   mUserInput;       // [inherited]
-  uint8_t   mUserModify;      // [inherited] (modify-content)
-  uint8_t   mUserFocus;       // [inherited] (auto-select)
-  uint8_t   mPointerEvents;   // [inherited] see nsStyleConsts.h
+  uint8_t                   mUserInput;       // [inherited]
+  uint8_t                   mUserModify;      // [inherited] (modify-content)
+  mozilla::StyleUserFocus   mUserFocus;       // [inherited] (auto-select)
+  uint8_t                   mPointerEvents;   // [inherited] see nsStyleConsts.h
 
   uint8_t   mCursor;          // [inherited] See nsStyleConsts.h
 

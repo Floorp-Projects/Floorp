@@ -2120,14 +2120,14 @@ const KTableEntry nsCSSProps::kUnicodeBidiKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kUserFocusKTable[] = {
-  { eCSSKeyword_none,           NS_STYLE_USER_FOCUS_NONE },
-  { eCSSKeyword_normal,         NS_STYLE_USER_FOCUS_NORMAL },
-  { eCSSKeyword_ignore,         NS_STYLE_USER_FOCUS_IGNORE },
-  { eCSSKeyword_select_all,     NS_STYLE_USER_FOCUS_SELECT_ALL },
-  { eCSSKeyword_select_before,  NS_STYLE_USER_FOCUS_SELECT_BEFORE },
-  { eCSSKeyword_select_after,   NS_STYLE_USER_FOCUS_SELECT_AFTER },
-  { eCSSKeyword_select_same,    NS_STYLE_USER_FOCUS_SELECT_SAME },
-  { eCSSKeyword_select_menu,    NS_STYLE_USER_FOCUS_SELECT_MENU },
+  { eCSSKeyword_none,           uint8_t(StyleUserFocus::None_) },
+  { eCSSKeyword_normal,         uint8_t(StyleUserFocus::Normal) },
+  { eCSSKeyword_ignore,         uint8_t(StyleUserFocus::Ignore) },
+  { eCSSKeyword_select_all,     uint8_t(StyleUserFocus::SelectAll) },
+  { eCSSKeyword_select_before,  uint8_t(StyleUserFocus::SelectBefore) },
+  { eCSSKeyword_select_after,   uint8_t(StyleUserFocus::SelectAfter) },
+  { eCSSKeyword_select_same,    uint8_t(StyleUserFocus::SelectSame) },
+  { eCSSKeyword_select_menu,    uint8_t(StyleUserFocus::SelectMenu) },
   { eCSSKeyword_UNKNOWN,        -1 }
 };
 

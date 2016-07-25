@@ -2954,7 +2954,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // we click on a non-focusable element like a <div>.
           // We have to use |aEvent->mTarget| to not make sure we do not check
           // an anonymous node of the targeted element.
-          suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
+          suppressBlur = (ui->mUserFocus == StyleUserFocus::Ignore);
 
           if (!suppressBlur) {
             nsCOMPtr<Element> element = do_QueryInterface(aEvent->mTarget);
