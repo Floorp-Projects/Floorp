@@ -54,10 +54,23 @@ static inline css::Side operator++(css::Side& side, int) {
 #define NS_SIDE_TO_HALF_CORNER(side_, second_, parallel_) \
   ((((side_) + !!(second_))*2 + ((side_) + !(parallel_))%2) % 8)
 
+// Basic Shapes (currently unused)
+enum class StyleBasicShape : uint8_t{
+  Polygon,
+  Circle,
+  Ellipse,
+  Inset,
+};
+
 // box-sizing
 enum class StyleBoxSizing : uint8_t {
   Content,
   Border
+};
+
+// box-shadow
+enum class StyleBoxShadowType : uint8_t {
+  Inset,
 };
 
 // clip-path type
@@ -80,15 +93,6 @@ enum class StyleClipShapeSizing : uint8_t {
   Stroke,
   View,
 };
-
-// Basic Shapes
-#define NS_STYLE_BASIC_SHAPE_POLYGON       0
-#define NS_STYLE_BASIC_SHAPE_CIRCLE        1
-#define NS_STYLE_BASIC_SHAPE_ELLIPSE       2
-#define NS_STYLE_BASIC_SHAPE_INSET         3
-
-// box-shadow
-#define NS_STYLE_BOX_SHADOW_INSET         0
 
 // float-edge
 #define NS_STYLE_FLOAT_EDGE_CONTENT_BOX    0
