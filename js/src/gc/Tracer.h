@@ -56,6 +56,10 @@ template <typename T>
 void
 TraceEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name);
 
+template <typename T>
+void
+TraceEdge(JSTracer* trc, ReadBarriered<T>* thingp, const char* name);
+
 // Trace through an edge in the live object graph on behalf of tracing.
 template <typename T>
 void
