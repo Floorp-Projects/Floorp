@@ -168,7 +168,6 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
   }
 
   ogg_packet pkt = InitVorbisPacket(aData, aLength, false, false, -1, mPacketCount++);
-  bool first_packet = mPacketCount == 4;
 
   if (vorbis_synthesis(&mVorbisBlock, &pkt) != 0) {
     return -1;
@@ -181,19 +180,9 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 
   VorbisPCMValue** pcm = 0;
   int32_t frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
-  // If the first packet of audio in the media produces no data, we
-  // still need to produce an AudioData for it so that the correct media
-  // start time is calculated.  Otherwise we'd end up with a media start
-  // time derived from the timecode of the first packet that produced
-  // data.
-  if (frames == 0 && first_packet) {
-    mCallback->Output(new AudioData(aOffset,
-                                    aTstampUsecs,
-                                    0,
-                                    0,
-                                    AlignedAudioBuffer(),
-                                    mVorbisDsp.vi->channels,
-                                    mVorbisDsp.vi->rate));
+  if (frames == 0) {
+    mCallback->InputExhausted();
+    return 0;
   }
   while (frames > 0) {
     uint32_t channels = mVorbisDsp.vi->channels;
