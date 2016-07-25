@@ -30,8 +30,6 @@ loader.lazyGetter(this, "DOMUtils", function () {
  * border radius, cubic-bezier etc.).
  *
  * Usage:
- *   const {require} =
- *      Cu.import("resource://devtools/shared/Loader.jsm", {});
  *   const {OutputParser} = require("devtools/client/shared/output-parser");
  *
  *   let parser = new OutputParser(document, supportsType);

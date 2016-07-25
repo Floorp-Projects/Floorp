@@ -344,6 +344,9 @@ GeckoTouchDispatcher::DispatchTouchEvent(MultiTouchInput aMultiTouch)
       case MultiTouchInput::MULTITOUCH_CANCEL:
         touchAction = "Touch_Event_Up";
         break;
+      case MultiTouchInput::MULTITOUCH_SENTINEL:
+        MOZ_ASSERT_UNREACHABLE("Invalid MultTouchInput.");
+        break;
     }
 
     const ScreenIntPoint& touchPoint = aMultiTouch.mTouches[0].mScreenPoint;

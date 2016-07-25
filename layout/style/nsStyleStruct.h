@@ -1260,7 +1260,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   }
 
 public:
-  nsBorderColors** mBorderColors;        // [reset] composite (stripe) colors
+  nsBorderColors** mBorderColors;     // [reset] composite (stripe) colors
   nsStyleCorners mBorderRadius;       // [reset] coord, percent
   nsStyleImage   mBorderImageSource;  // [reset]
   nsStyleSides   mBorderImageSlice;   // [reset] factor, percent
@@ -1270,7 +1270,7 @@ public:
   uint8_t        mBorderImageFill;    // [reset]
   uint8_t        mBorderImageRepeatH; // [reset] see nsStyleConsts.h
   uint8_t        mBorderImageRepeatV; // [reset]
-  uint8_t        mFloatEdge;          // [reset]
+  mozilla::StyleFloatEdge mFloatEdge; // [reset]
   uint8_t        mBoxDecorationBreak; // [reset] see nsStyleConsts.h
 
 protected:
@@ -3105,10 +3105,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
     return nsChangeHint_NeedReflow;
   }
 
-  uint8_t   mUserInput;       // [inherited]
-  uint8_t   mUserModify;      // [inherited] (modify-content)
-  uint8_t   mUserFocus;       // [inherited] (auto-select)
-  uint8_t   mPointerEvents;   // [inherited] see nsStyleConsts.h
+  uint8_t                   mUserInput;       // [inherited]
+  uint8_t                   mUserModify;      // [inherited] (modify-content)
+  mozilla::StyleUserFocus   mUserFocus;       // [inherited] (auto-select)
+  uint8_t                   mPointerEvents;   // [inherited] see nsStyleConsts.h
 
   uint8_t   mCursor;          // [inherited] See nsStyleConsts.h
 
@@ -3506,18 +3506,18 @@ struct nsStyleClipPath
     return !(*this == aOther);
   }
 
-  int32_t GetType() const {
+  mozilla::StyleClipPathType GetType() const {
     return mType;
   }
 
   nsIURI* GetURL() const {
-    NS_ASSERTION(mType == NS_STYLE_CLIP_PATH_URL, "wrong clip-path type");
+    NS_ASSERTION(mType == mozilla::StyleClipPathType::URL, "wrong clip-path type");
     return mURL;
   }
   void SetURL(nsIURI* aURL);
 
   nsStyleBasicShape* GetBasicShape() const {
-    NS_ASSERTION(mType == NS_STYLE_CLIP_PATH_SHAPE, "wrong clip-path type");
+    NS_ASSERTION(mType == mozilla::StyleClipPathType::Shape, "wrong clip-path type");
     return mBasicShape;
   }
 
@@ -3532,11 +3532,11 @@ private:
   void ReleaseRef();
   void* operator new(size_t) = delete;
 
-  int32_t mType; // see NS_STYLE_CLIP_PATH_* constants in nsStyleConsts.h
   union {
     nsStyleBasicShape* mBasicShape;
     nsIURI* mURL;
   };
+  mozilla::StyleClipPathType    mType;
   mozilla::StyleClipShapeSizing mSizingBox;
 };
 
@@ -3625,7 +3625,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   }
 
   bool HasClipPath() const {
-    return mClipPath.GetType() != NS_STYLE_CLIP_PATH_NONE;
+    return mClipPath.GetType() != mozilla::StyleClipPathType::None_;
   }
 
   bool HasNonScalingStroke() const {

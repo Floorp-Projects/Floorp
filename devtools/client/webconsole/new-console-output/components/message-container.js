@@ -13,6 +13,11 @@ const {
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 
+const {
+  MESSAGE_SOURCE,
+  MESSAGE_TYPE
+} = require("devtools/client/webconsole/new-console-output/constants");
+
 const componentMap = new Map([
   ["ConsoleApiCall", require("./message-types/console-api-call").ConsoleApiCall],
   ["ConsoleCommand", require("./message-types/console-command").ConsoleCommand],
@@ -36,22 +41,24 @@ const MessageContainer = createClass({
 });
 
 function getMessageComponent(message) {
-  // @TODO Once packets have been converted to Chrome RDP structure, remove.
-  if (message.messageType) {
-    let {messageType} = message;
-    if (!componentMap.has(messageType)) {
-      return componentMap.get("DefaultRenderer");
-    }
-    return componentMap.get(messageType);
-  }
-
   switch (message.source) {
-    case "javascript":
+    case MESSAGE_SOURCE.CONSOLE_API:
+      return componentMap.get("ConsoleApiCall");
+    case MESSAGE_SOURCE.JAVASCRIPT:
       switch (message.type) {
-        case "command":
+        case MESSAGE_TYPE.COMMAND:
           return componentMap.get("ConsoleCommand");
+        case MESSAGE_TYPE.RESULT:
+          return componentMap.get("EvaluationResult");
+        // @TODO this is probably not the right behavior, but works for now.
+        // Chrome doesn't distinguish between page errors and log messages. We
+        // may want to remove the PageError component and just handle errors
+        // with ConsoleApiCall.
+        case MESSAGE_TYPE.LOG:
+          return componentMap.get("PageError");
+        default:
+          componentMap.get("DefaultRenderer");
       }
-      break;
   }
 
   return componentMap.get("DefaultRenderer");

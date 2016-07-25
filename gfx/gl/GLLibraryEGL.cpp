@@ -189,6 +189,10 @@ public:
 
     void logError(const char *errorMessage) override
     {
+        if (!mFailureId) {
+            return;
+        }
+
         nsCString str(errorMessage);
         Tokenizer tokenizer(str);
 
