@@ -476,14 +476,12 @@ gfxWindowsPlatform::HandleDeviceReset()
   return true;
 }
 
-static const BackendType SOFTWARE_BACKEND = BackendType::CAIRO;
-
 void
 gfxWindowsPlatform::UpdateBackendPrefs()
 {
-  uint32_t canvasMask = BackendTypeBit(SOFTWARE_BACKEND);
-  uint32_t contentMask = BackendTypeBit(SOFTWARE_BACKEND);
-  BackendType defaultBackend = SOFTWARE_BACKEND;
+  uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO);
+  uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
+  BackendType defaultBackend = BackendType::CAIRO;
   if (gfxConfig::IsEnabled(Feature::DIRECT2D) && Factory::GetD2D1Device()) {
     contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
@@ -536,12 +534,18 @@ gfxWindowsPlatform::ForceDeviceReset(ForcedDeviceResetReason aReason)
 mozilla::gfx::BackendType
 gfxWindowsPlatform::GetContentBackendFor(mozilla::layers::LayersBackend aLayers)
 {
+  mozilla::gfx::BackendType defaultBackend = gfxPlatform::GetDefaultContentBackend();
   if (aLayers == LayersBackend::LAYERS_D3D11) {
-    return gfxPlatform::GetDefaultContentBackend();
+    return defaultBackend;
   }
 
-  // If we're not accelerated with D3D11, never use D2D.
-  return SOFTWARE_BACKEND;
+  if (defaultBackend == BackendType::DIRECT2D1_1) {
+    // We can't have D2D without D3D11 layers, so fallback to Cairo.
+    return BackendType::CAIRO;
+  }
+
+  // Otherwise we have some non-accelerated backend and that's ok.
+  return defaultBackend;
 }
 
 gfxPlatformFontList*
