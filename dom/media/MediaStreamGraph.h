@@ -543,7 +543,9 @@ public:
   }
 
 protected:
-  void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
+  // |AdvanceTimeVaryingValuesToCurrentTime| will be override in SourceMediaStream.
+  virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime,
+                                                     GraphTime aBlockedTime)
   {
     mTracksStartTime += aBlockedTime;
     mTracks.ForgetUpTo(aCurrentTime - mTracksStartTime);
@@ -805,6 +807,11 @@ public:
    */
   bool HasPendingAudioTrack();
 
+  TimeStamp GetStreamTracksStrartTimeStamp() {
+    MutexAutoLock lock(mMutex);
+    return mStreamTracksStartTimeStamp;
+  }
+
   // XXX need a Reset API
 
   friend class MediaStreamGraphImpl;
@@ -869,6 +876,15 @@ protected:
   void NotifyDirectConsumers(TrackData *aTrack,
                              MediaSegment *aSegment);
 
+  virtual void
+  AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime,
+                                        GraphTime aBlockedTime) override;
+  void SetStreamTracksStartTimeStamp(const TimeStamp& aTimeStamp)
+  {
+    MutexAutoLock lock(mMutex);
+    mStreamTracksStartTimeStamp = aTimeStamp;
+  }
+
   // Only accessed on the MSG thread.  Used so to ask the MSGImpl to usecount
   // users of a specific input.
   // XXX Should really be a CubebUtils::AudioDeviceID, but they aren't
@@ -880,6 +896,10 @@ protected:
   Mutex mMutex;
   // protected by mMutex
   StreamTime mUpdateKnownTracksTime;
+  // This time stamp will be updated in adding and blocked SourceMediaStream,
+  // |AddStreamGraphThread| and |AdvanceTimeVaryingValuesToCurrentTime| in
+  // particularly.
+  TimeStamp mStreamTracksStartTimeStamp;
   nsTArray<TrackData> mUpdateTracks;
   nsTArray<TrackData> mPendingTracks;
   nsTArray<RefPtr<DirectMediaStreamListener>> mDirectListeners;
