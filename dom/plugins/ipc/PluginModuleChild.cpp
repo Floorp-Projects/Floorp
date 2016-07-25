@@ -123,6 +123,7 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
 #ifdef OS_WIN
   , mNestedEventHook(nullptr)
   , mGlobalCallWndProcHook(nullptr)
+  , mAsyncRenderSupport(false)
 #endif
 {
     memset(&mFunctions, 0, sizeof(mFunctions));
@@ -243,26 +244,29 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
 
     nsPluginFile pluginFile(localFile);
 
-#if defined(MOZ_X11) || defined(XP_MACOSX)
     nsPluginInfo info = nsPluginInfo();
     if (NS_FAILED(pluginFile.GetPluginInfo(info, &mLibrary))) {
         return false;
     }
 
+#if defined(XP_WIN)
+    // XXX quirks isn't initialized yet
+    mAsyncRenderSupport = info.fSupportsAsyncRender;
+#endif
 #if defined(MOZ_X11)
     NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
     if (StringBeginsWith(nsDependentCString(info.fDescription), flash10Head)) {
         AddQuirk(QUIRK_FLASH_EXPOSE_COORD_TRANSLATION);
     }
-#else // defined(XP_MACOSX)
+#endif
+#if defined(XP_MACOSX)
     const char* namePrefix = "Plugin Content";
     char nameBuffer[80];
     snprintf(nameBuffer, sizeof(nameBuffer), "%s (%s)", namePrefix, info.fName);
     mozilla::plugins::PluginUtilsOSX::SetProcessName(nameBuffer);
 #endif
-
     pluginFile.FreePluginInfo(info);
-
+#if defined(MOZ_X11) || defined(XP_MACOSX)
     if (!mLibrary)
 #endif
     {
@@ -2102,6 +2106,18 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     }
 
     mQuirks = GetQuirksFromMimeTypeAndFilename(aMimeType, mPluginFilename);
+}
+
+bool
+PluginModuleChild::AnswerModuleSupportsAsyncRender(bool* aResult)
+{
+#if defined(XP_WIN)
+    *aResult = gChromeInstance->mAsyncRenderSupport;
+    return true;
+#else
+    NS_NOTREACHED("Shouldn't get here!");
+    return false;
+#endif
 }
 
 bool
