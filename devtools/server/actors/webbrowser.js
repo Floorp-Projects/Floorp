@@ -6,6 +6,8 @@
 
 "use strict";
 
+/* global XPCNativeWrapper */
+
 var { Ci, Cu } = require("chrome");
 var Services = require("Services");
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
@@ -559,34 +561,36 @@ BrowserTabList.prototype._listenForEventsIf =
  * @param aMessageNames array of strings
  *    An array of message names.
  */
-BrowserTabList.prototype._listenForMessagesIf = function (aShouldListen, aGuard, aMessageNames) {
-  if (!aShouldListen !== !this[aGuard]) {
-    let op = aShouldListen ? "addMessageListener" : "removeMessageListener";
-    for (let win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
-      for (let name of aMessageNames) {
-        win.messageManager[op](name, this);
+BrowserTabList.prototype._listenForMessagesIf =
+  function (shouldListen, guard, messageNames) {
+    if (!shouldListen !== !this[guard]) {
+      let op = shouldListen ? "addMessageListener" : "removeMessageListener";
+      for (let win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
+        for (let name of messageNames) {
+          win.messageManager[op](name, this);
+        }
       }
+      this[guard] = shouldListen;
     }
-    this[aGuard] = aShouldListen;
-  }
-};
+  };
 
 /**
  * Implement nsIMessageListener.
  */
-BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(function (message) {
-  let browser = message.target;
-  switch (message.name) {
-    case "DOMTitleChanged": {
-      let actor = this._actorByBrowser.get(browser);
-      if (actor) {
-        this._notifyListChanged();
-        this._checkListening();
+BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(
+  function (message) {
+    let browser = message.target;
+    switch (message.name) {
+      case "DOMTitleChanged": {
+        let actor = this._actorByBrowser.get(browser);
+        if (actor) {
+          this._notifyListChanged();
+          this._checkListening();
+        }
+        break;
       }
-      break;
     }
-  }
-});
+  });
 
 /**
  * Implement nsIDOMEventListener.
@@ -896,7 +900,9 @@ TabActor.prototype = {
 
   // Optional TabSources filter function (e.g. used by the WebExtensionActor to filter
   // sources by addonID), allow all sources by default.
-  _allowSource() { return true; },
+  _allowSource() {
+    return true;
+  },
 
   get exited() {
     return this._exited;
@@ -2047,7 +2053,7 @@ TabActor.prototype = {
       // We are very explicitly examining the "console" property of
       // the non-Xrayed object here.
       let console = window.wrappedJSObject.console;
-      isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE
+      isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
     } catch (ex) {
       // ignore
     }
@@ -2339,12 +2345,10 @@ BrowserAddonList.prototype._adjustListener = function () {
     // As long as the callback exists, we need to listen for changes
     // so we can notify about add-on changes.
     AddonManager.addAddonListener(this);
-  } else {
+  } else if (this._actorByAddonId.size === 0) {
     // When the callback does not exist, we only need to keep listening
     // if the actor cache will need adjusting when add-ons change.
-    if (this._actorByAddonId.size === 0) {
-      AddonManager.removeAddonListener(this);
-    }
+    AddonManager.removeAddonListener(this);
   }
 };
 
