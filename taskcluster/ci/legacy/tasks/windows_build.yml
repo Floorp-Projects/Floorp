@@ -13,6 +13,7 @@ task:
   extra:
     treeherderEnv:
       - staging
+      - production
     treeherder:
       tier: 2
       jobKind: build
