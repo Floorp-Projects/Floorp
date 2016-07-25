@@ -1574,14 +1574,6 @@ public:
     const JSClass*
     GetJSClass()          {return mShared->GetJSClass();}
 
-    XPCNativeScriptableShared*
-    GetScriptableShared() {return mShared;}
-
-    void
-    SetCallback(nsIXPCScriptable* s) {mCallback = s;}
-    void
-    SetCallback(already_AddRefed<nsIXPCScriptable>&& s) {mCallback = s;}
-
     void
     SetScriptableShared(XPCNativeScriptableShared* shared) {mShared = shared;}
 
@@ -1682,9 +1674,6 @@ public:
 
     XPCNativeScriptableInfo*
     GetScriptableInfo()   {return mScriptableInfo;}
-
-    void SetScriptableInfo(XPCNativeScriptableInfo* si)
-        {MOZ_ASSERT(!mScriptableInfo, "leak here!"); mScriptableInfo = si;}
 
     bool CallPostCreatePrototype();
     void JSProtoObjectFinalized(js::FreeOp* fop, JSObject* obj);
