@@ -5933,7 +5933,8 @@ struct FirstSubsumedFrame
       , principals(p)
       , ignoreSelfHosted(ignoreSelfHostedFrames)
     {
-        JS_HoldPrincipals(principals);
+        if (principals)
+            JS_HoldPrincipals(principals);
     }
 
     // No copying because we want to avoid holding and dropping principals
