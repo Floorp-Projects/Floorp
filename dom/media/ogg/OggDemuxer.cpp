@@ -858,7 +858,7 @@ OggDemuxer::GetCrypto()
   return nullptr;
 }
 
-RefPtr<MediaRawData>
+ogg_packet*
 OggDemuxer::GetNextPacket(TrackInfo::TrackType aType)
 {
   OggCodecState* state = GetTrackCodecState(aType);
@@ -873,21 +873,7 @@ OggDemuxer::GetNextPacket(TrackInfo::TrackType aType)
     packet = state->PacketPeek();
   } while (packet && state->IsHeader(packet));
 
-  if (!packet) {
-    return nullptr;
-  }
-
-  // Check the eos state in case we need to look for chained streams.
-  bool eos = packet->e_o_s;
-
-  RefPtr<MediaRawData> data = state->PacketOutAsMediaRawData();;
-
-  if (eos) {
-    // We've encountered an end of bitstream packet; check for a chained
-    // bitstream following this one.
-    ReadOggChain();
-  }
-  return data;
+  return packet;
 }
 
 void
@@ -1029,24 +1015,17 @@ OggDemuxer::FindStartTime(int64_t& aOutStartTime)
   int64_t audioStartTime = INT64_MAX;
 
   if (HasVideo()) {
-    DemuxUntilPacketAvailable(mTheoraState);
-    ogg_packet* pkt = mTheoraState->PacketPeek();
+    ogg_packet* pkt = GetNextPacket(TrackInfo::kVideoTrack);
     if (pkt) {
       videoStartTime = mTheoraState->PacketStartTime(pkt);
       OGG_DEBUG("OggDemuxer::FindStartTime() video=%lld", videoStartTime);
     }
   }
   if (HasAudio()) {
-    OggCodecState* audioState;
-    if (mVorbisState) {
-      audioState = mVorbisState;
-    } else {
-      audioState = mOpusState;
-    }
-    DemuxUntilPacketAvailable(audioState);
-    ogg_packet* pkt = audioState->PacketPeek();
+    OggCodecState* state = GetTrackCodecState(TrackInfo::kAudioTrack);
+    ogg_packet* pkt = GetNextPacket(TrackInfo::kAudioTrack);
     if (pkt) {
-      audioStartTime = audioState->PacketStartTime(pkt);
+      audioStartTime = state->PacketStartTime(pkt);
       OGG_DEBUG("OggReader::FindStartTime() audio=%lld", audioStartTime);
     }
   }
@@ -1311,7 +1290,6 @@ OggTrackDemuxer::Seek(TimeUnit aTime)
 {
   // Seeks to aTime. Upon success, SeekPromise will be resolved with the
   // actual time seeked to. Typically the random access point time
-
   mQueuedSample = nullptr;
   TimeUnit seekTime = aTime;
   if (mParent->SeekInternal(aTime) == NS_OK) {
@@ -1333,14 +1311,25 @@ OggTrackDemuxer::Seek(TimeUnit aTime)
 RefPtr<MediaRawData>
 OggTrackDemuxer::NextSample()
 {
-  RefPtr<MediaRawData> nextSample;
   if (mQueuedSample) {
-    nextSample = mQueuedSample;
-  } else {
-    nextSample = mParent->GetNextPacket(mType);
+    RefPtr<MediaRawData> nextSample = mQueuedSample;
+    mQueuedSample = nullptr;
+    return nextSample;
   }
-  mQueuedSample = mParent->GetNextPacket(mType);
-  return nextSample;
+  ogg_packet* packet = mParent->GetNextPacket(mType);
+  if (!packet) {
+    return nullptr;
+  }
+  // Check the eos state in case we need to look for chained streams.
+  bool eos = packet->e_o_s;
+  OggCodecState* state = mParent->GetTrackCodecState(mType);
+  RefPtr<MediaRawData> data = state->PacketOutAsMediaRawData();;
+  if (eos) {
+    // We've encountered an end of bitstream packet; check for a chained
+    // bitstream following this one.
+    mParent->ReadOggChain();
+  }
+  return data;
 }
 
 RefPtr<OggTrackDemuxer::SamplesPromise>
