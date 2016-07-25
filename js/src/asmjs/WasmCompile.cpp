@@ -236,6 +236,10 @@ DecodeExpr(FunctionDecoder& f)
         return f.iter().readGetLocal(f.locals(), nullptr);
       case Expr::SetLocal:
         return f.iter().readSetLocal(f.locals(), nullptr, nullptr);
+      case Expr::GetGlobal:
+        return f.iter().readGetGlobal(f.mg().globals(), nullptr);
+      case Expr::SetGlobal:
+        return f.iter().readSetGlobal(f.mg().globals(), nullptr, nullptr);
       case Expr::Select:
         return f.iter().readSelect(nullptr, nullptr, nullptr, nullptr);
       case Expr::Block:
@@ -747,6 +751,48 @@ DecodeResizableTable(Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
+DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable)
+{
+    if (!d.readValType(type))
+        return Fail(d, "bad global type");
+
+    if (*type == ValType::I64 && !IsI64Implemented())
+        return Fail(d, "int64 NYI");
+
+    uint32_t flags;
+    if (!d.readVarU32(&flags))
+        return Fail(d, "expected flags");
+
+    if (flags & ~uint32_t(GlobalFlags::AllowedMask))
+        return Fail(d, "unexpected bits set in flags");
+
+    *isMutable = flags & uint32_t(GlobalFlags::IsMutable);
+    return true;
+}
+
+static bool
+GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
+{
+    switch (type) {
+      case ValType::I32:
+      case ValType::F32:
+      case ValType::F64:
+        break;
+      case ValType::I64:
+        if (!JitOptions.wasmTestMode)
+            return Fail(d, "can't import/export an Int64 global to JS");
+        break;
+      default:
+        return Fail(d, "unexpected variable type in global import/export");
+    }
+
+    if (isMutable)
+        return Fail(d, "can't import/export mutable globals in the MVP");
+
+    return true;
+}
+
+static bool
 DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector* imports)
 {
     if (!newFormat) {
@@ -807,6 +853,17 @@ DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector
       }
       case DefinitionKind::Memory: {
         if (!DecodeResizableMemory(d, init))
+            return false;
+        break;
+      }
+      case DefinitionKind::Global: {
+        ValType type;
+        bool isMutable;
+        if (!DecodeGlobalType(d, &type, &isMutable))
+            return false;
+        if (!GlobalIsJSCompatible(d, type, isMutable))
+            return false;
+        if (!init->globals.append(GlobalDesc(type, isMutable, init->globals.length())))
             return false;
         break;
       }
@@ -946,6 +1003,105 @@ DecodeMemorySection(Decoder& d, bool newFormat, ModuleGeneratorData* init, bool*
     return true;
 }
 
+static bool
+DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
+                            InitExpr* init)
+{
+    Expr expr;
+    if (!d.readExpr(&expr))
+        return Fail(d, "failed to read initializer type");
+
+    switch (expr) {
+      case Expr::I32Const: {
+        int32_t i32;
+        if (!d.readVarS32(&i32))
+            return Fail(d, "failed to read initializer i32 expression");
+        *init = InitExpr(Val(uint32_t(i32)));
+        break;
+      }
+      case Expr::I64Const: {
+        int64_t i64;
+        if (!d.readVarS64(&i64))
+            return Fail(d, "failed to read initializer i64 expression");
+        *init = InitExpr(Val(uint64_t(i64)));
+        break;
+      }
+      case Expr::F32Const: {
+        float f32;
+        if (!d.readFixedF32(&f32))
+            return Fail(d, "failed to read initializer f32 expression");
+        *init = InitExpr(Val(f32));
+        break;
+      }
+      case Expr::F64Const: {
+        double f64;
+        if (!d.readFixedF64(&f64))
+            return Fail(d, "failed to read initializer f64 expression");
+        *init = InitExpr(Val(f64));
+        break;
+      }
+      case Expr::GetGlobal: {
+        uint32_t i;
+        if (!d.readVarU32(&i))
+            return Fail(d, "failed to read get_global index in initializer expression");
+        if (i >= globals.length())
+            return Fail(d, "global index out of range in initializer expression");
+        if (!globals[i].isImport() || globals[i].isMutable())
+            return Fail(d, "initializer expression must reference a global immutable import");
+        *init = InitExpr(i, globals[i].type());
+        break;
+      }
+      default: {
+        return Fail(d, "unexpected initializer expression");
+      }
+    }
+
+    if (expected != init->type())
+        return Fail(d, "type mismatch: initializer type and expected type don't match");
+
+    Expr end;
+    if (!d.readExpr(&end) || end != Expr::End)
+        return Fail(d, "failed to read end of initializer expression");
+
+    return true;
+}
+
+static bool
+DecodeGlobalSection(Decoder& d, ModuleGeneratorData* init)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(GlobalSectionId, &sectionStart, &sectionSize))
+        return Fail(d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numGlobals;
+    if (!d.readVarU32(&numGlobals))
+        return Fail(d, "expected number of globals");
+
+    if (numGlobals > MaxGlobals)
+        return Fail(d, "too many globals");
+
+    for (uint32_t i = 0; i < numGlobals; i++) {
+        ValType type;
+        bool isMutable;
+        if (!DecodeGlobalType(d, &type, &isMutable))
+            return false;
+
+        InitExpr initializer;
+        if (!DecodeInitializerExpression(d, init->globals, type, &initializer))
+            return false;
+
+        if (!init->globals.append(GlobalDesc(initializer, isMutable)))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize))
+        return Fail(d, "globals section byte size mismatch");
+
+    return true;
+}
+
 typedef HashSet<const char*, CStringHasher, SystemAllocPolicy> CStringSet;
 
 static UniqueChars
@@ -1031,6 +1187,20 @@ DecodeExport(Decoder& d, bool newFormat, ModuleGenerator& mg, CStringSet* dupSet
             return Fail(d, "exported memory index out of bounds");
 
         return mg.addMemoryExport(Move(fieldName));
+      }
+      case DefinitionKind::Global: {
+        uint32_t globalIndex;
+        if (!d.readVarU32(&globalIndex))
+            return Fail(d, "expected global index");
+
+        if (globalIndex >= mg.globals().length())
+            return Fail(d, "exported global index out of bounds");
+
+        const GlobalDesc& global = mg.globals()[globalIndex];
+        if (!GlobalIsJSCompatible(d, global.type(), global.isMutable()))
+            return false;
+
+        return mg.addGlobalExport(Move(fieldName), globalIndex);
       }
       default:
         return Fail(d, "unexpected export kind");
@@ -1457,6 +1627,9 @@ wasm::Compile(const ShareableBytes& bytecode, CompileArgs&& args, UniqueChars* e
 
     bool memoryExported = false;
     if (!DecodeMemorySection(d, newFormat, init.get(), &memoryExported))
+        return nullptr;
+
+    if (!DecodeGlobalSection(d, init.get()))
         return nullptr;
 
     ModuleGenerator mg(Move(imports));
