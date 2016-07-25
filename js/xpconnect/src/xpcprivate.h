@@ -1586,9 +1586,8 @@ public:
     void AutoTrace(JSTracer* trc) {}
 
 protected:
-    explicit XPCNativeScriptableInfo(nsIXPCScriptable* scriptable = nullptr,
-                                     XPCNativeScriptableShared* shared = nullptr)
-        : mCallback(scriptable), mShared(shared)
+    explicit XPCNativeScriptableInfo(nsIXPCScriptable* scriptable)
+        : mCallback(scriptable), mShared(nullptr)
                                {MOZ_COUNT_CTOR(XPCNativeScriptableInfo);}
 public:
     ~XPCNativeScriptableInfo() {MOZ_COUNT_DTOR(XPCNativeScriptableInfo);}
