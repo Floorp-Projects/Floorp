@@ -67,6 +67,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mDemuxer(aDemuxer)
   , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
+  , mPreviousDecodedKeyframeTime_us(sNoPreviousDecodedKeyframe)
   , mLayersBackendType(aLayersBackend)
   , mInitDone(false)
   , mIsEncrypted(false)
@@ -1159,6 +1160,8 @@ MediaFormatReader::Update(TrackType aTrack)
     if (time >= target.Time()) {
       // We have reached our internal seek target.
       decoder.mTimeThreshold.reset();
+      // We might have dropped some keyframes.
+      mPreviousDecodedKeyframeTime_us = sNoPreviousDecodedKeyframe;
     }
     if (time < target.Time() || (target.mDropTarget && target.Contains(time))) {
       LOGV("Internal Seeking: Dropping %s frame time:%f wanted:%f (kf:%d)",
@@ -1194,6 +1197,18 @@ MediaFormatReader::Update(TrackType aTrack)
           decoder.mNumSamplesOutputTotal - mLastReportedNumDecodedFrames;
         a.mStats.mDecodedFrames = static_cast<uint32_t>(delta);
         mLastReportedNumDecodedFrames = decoder.mNumSamplesOutputTotal;
+        if (output->mKeyframe) {
+          if (mPreviousDecodedKeyframeTime_us < output->mTime) {
+            // There is a previous keyframe -> Record inter-keyframe stats.
+            uint64_t segment_us = output->mTime - mPreviousDecodedKeyframeTime_us;
+            a.mStats.mInterKeyframeSum_us += segment_us;
+            a.mStats.mInterKeyframeCount += 1;
+            if (a.mStats.mInterKeyFrameMax_us < segment_us) {
+              a.mStats.mInterKeyFrameMax_us = segment_us;
+            }
+          }
+          mPreviousDecodedKeyframeTime_us = output->mTime;
+        }
         nsCString error;
         mVideo.mIsHardwareAccelerated =
           mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated(error);
@@ -1757,6 +1772,8 @@ MediaFormatReader::OnVideoSeekCompleted(media::TimeUnit aTime)
   LOGV("Video seeked to %lld", aTime.ToMicroseconds());
   mVideo.mSeekRequest.Complete();
 
+  mPreviousDecodedKeyframeTime_us = sNoPreviousDecodedKeyframe;
+
   SetVideoDecodeThreshold();
 
   if (HasAudio() && !mOriginalSeekTarget.IsVideoOnly()) {
@@ -1771,6 +1788,13 @@ MediaFormatReader::OnVideoSeekCompleted(media::TimeUnit aTime)
     mPendingSeekTime.reset();
     mSeekPromise.Resolve(aTime, __func__);
   }
+}
+
+void
+MediaFormatReader::OnVideoSeekFailed(DemuxerFailureReason aFailure)
+{
+  mPreviousDecodedKeyframeTime_us = sNoPreviousDecodedKeyframe;
+  OnSeekFailed(TrackType::kVideoTrack, aFailure);
 }
 
 void
@@ -1831,6 +1855,12 @@ MediaFormatReader::OnAudioSeekCompleted(media::TimeUnit aTime)
   mAudio.mSeekRequest.Complete();
   mPendingSeekTime.reset();
   mSeekPromise.Resolve(aTime, __func__);
+}
+
+void
+MediaFormatReader::OnAudioSeekFailed(DemuxerFailureReason aFailure)
+{
+  OnSeekFailed(TrackType::kAudioTrack, aFailure);
 }
 
 media::TimeIntervals
