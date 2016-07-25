@@ -1,3 +1,8 @@
+.narrating {
+  position: relative;
+  z-index: 1;
+}
+
 body.light .narrating {
   background-color: #ffc;
 }
@@ -8,4 +13,34 @@ body.sepia .narrating {
 
 body.dark .narrating {
   background-color: #242424;
+}
+
+.narrate-word-highlight {
+  position: absolute;
+  display: none;
+  transform: translate(-50%, calc(-50% - 2px));
+  z-index: -1;
+  border-bottom-style: solid;
+  border-bottom-width: 7px;
+  transition: left 0.1s ease;
+}
+
+.narrating > .narrate-word-highlight {
+  display: inline-block;
+}
+
+.narrate-word-highlight.newline {
+  transition: none;
+}
+
+body.light .narrate-word-highlight {
+  border-bottom-color: #ffe087;
+}
+
+body.sepia .narrate-word-highlight {
+  border-bottom-color: #bdb5a5;
+}
+
+body.dark .narrate-word-highlight {
+  border-bottom-color: #6f6f6f;
 }
