@@ -77,8 +77,8 @@ test_description_schema = Schema({
 
     # The EC2 instance size to run these tests on.
     Required('instance-size', default='default'): Any(
-        Any('default', 'xlarge'),
-        {'by-test-platform': {basestring: Any('default', 'xlarge')}},
+        Any('default', 'large', 'xlarge'),
+        {'by-test-platform': {basestring: Any('default', 'large', 'xlarge')}},
     ),
 
     # Whether the task requires loopback audio or video (whatever that may mean
