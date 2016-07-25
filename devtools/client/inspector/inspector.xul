@@ -45,8 +45,11 @@
           timeout="50"
           class="devtools-searchinput"
           placeholder="&inspectorSearchHTML.label3;"/>
+        <html:button id="inspector-eyedropper-toggle"
+          title="&inspectorEyeDropper.label;"
+          class="devtools-button command-button-invertable" />
         <div xmlns="http://www.w3.org/1999/xhtml"
-             id="inspector-sidebar-toggle-box" />
+          id="inspector-sidebar-toggle-box" />
       </html:div>
       <vbox flex="1" id="markup-box">
       </vbox>
@@ -88,83 +91,87 @@
         </html:div>
 
         <html:div id="ruleview-container" class="ruleview">
+          <html:div id="ruleview-container-focusable" tabindex="-1">
+          </html:div>
         </html:div>
       </html:div>
 
       <html:div id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel">
-        <html:div class="devtools-toolbar">
-          <html:div class="devtools-searchbox">
-            <html:input id="computedview-searchbox"
-                        class="devtools-filterinput devtools-rule-searchbox"
-                        type="search"
-                        placeholder="&filterStylesPlaceholder;"/>
-            <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
-          </html:div>
-          <html:label id="browser-style-checkbox-label" for="browser-style-checkbox">
-            <html:input id="browser-style-checkbox"
-                        type="checkbox"
-                        class="includebrowserstyles"
-                        label="&browserStylesLabel;"/>&browserStylesLabel;</html:label>
-        </html:div>
-
         <html:div id="computedview-container">
-          <html:div id="layout-wrapper" class="theme-separator" tabindex="0">
-            <html:div id="layout-header">
-              <html:div id="layout-expander" class="expander theme-twisty expandable" open=""></html:div>
-              <html:span>&layoutViewTitle;</html:span>
-              <html:button class="devtools-button" id="layout-geometry-editor" title="&geometry.button.tooltip;"></html:button>
-            </html:div>
+          <html:div id="computedview-container-focusable" tabindex="-1">
+            <html:div id="layout-wrapper" tabindex="0">
+              <html:div id="layout-header">
+                <html:div id="layout-expander" class="expander theme-twisty expandable" open=""></html:div>
+                <html:span>&layoutViewTitle;</html:span>
+                <html:button class="devtools-button" id="layout-geometry-editor" title="&geometry.button.tooltip;"></html:button>
+              </html:div>
 
-            <html:div id="layout-container">
-              <html:div id="layout-main">
-                <html:span class="layout-legend" data-box="margin" title="&margin.tooltip;">&margin.tooltip;</html:span>
-                <html:div id="layout-margins" data-box="margin" title="&margin.tooltip;">
-                  <html:span class="layout-legend" data-box="border" title="&border.tooltip;">&border.tooltip;</html:span>
-                  <html:div id="layout-borders" data-box="border" title="&border.tooltip;">
-                    <html:span class="layout-legend" data-box="padding" title="&padding.tooltip;">&padding.tooltip;</html:span>
-                    <html:div id="layout-padding" data-box="padding" title="&padding.tooltip;">
-                      <html:div id="layout-content" data-box="content" title="&content.tooltip;">
+              <html:div id="layout-container">
+                <html:div id="layout-main">
+                  <html:span class="layout-legend" data-box="margin" title="&margin.tooltip;">&margin.tooltip;</html:span>
+                  <html:div id="layout-margins" data-box="margin" title="&margin.tooltip;">
+                    <html:span class="layout-legend" data-box="border" title="&border.tooltip;">&border.tooltip;</html:span>
+                    <html:div id="layout-borders" data-box="border" title="&border.tooltip;">
+                      <html:span class="layout-legend" data-box="padding" title="&padding.tooltip;">&padding.tooltip;</html:span>
+                      <html:div id="layout-padding" data-box="padding" title="&padding.tooltip;">
+                        <html:div id="layout-content" data-box="content" title="&content.tooltip;">
+                        </html:div>
                       </html:div>
                     </html:div>
                   </html:div>
+
+                  <html:p class="layout-margin layout-top"><html:span data-box="margin" class="layout-editable" title="margin-top"></html:span></html:p>
+                  <html:p class="layout-margin layout-right"><html:span data-box="margin" class="layout-editable" title="margin-right"></html:span></html:p>
+                  <html:p class="layout-margin layout-bottom"><html:span data-box="margin" class="layout-editable" title="margin-bottom"></html:span></html:p>
+                  <html:p class="layout-margin layout-left"><html:span data-box="margin" class="layout-editable" title="margin-left"></html:span></html:p>
+
+                  <html:p class="layout-border layout-top"><html:span data-box="border" class="layout-editable" title="border-top"></html:span></html:p>
+                  <html:p class="layout-border layout-right"><html:span data-box="border" class="layout-editable" title="border-right"></html:span></html:p>
+                  <html:p class="layout-border layout-bottom"><html:span data-box="border" class="layout-editable" title="border-bottom"></html:span></html:p>
+                  <html:p class="layout-border layout-left"><html:span data-box="border" class="layout-editable" title="border-left"></html:span></html:p>
+
+                  <html:p class="layout-padding layout-top"><html:span data-box="padding" class="layout-editable" title="padding-top"></html:span></html:p>
+                  <html:p class="layout-padding layout-right"><html:span data-box="padding" class="layout-editable" title="padding-right"></html:span></html:p>
+                  <html:p class="layout-padding layout-bottom"><html:span data-box="padding" class="layout-editable" title="padding-bottom"></html:span></html:p>
+                  <html:p class="layout-padding layout-left"><html:span data-box="padding" class="layout-editable" title="padding-left"></html:span></html:p>
+
+                  <html:p class="layout-size"><html:span data-box="content" title="&content.tooltip;"></html:span></html:p>
                 </html:div>
 
-                <html:p class="layout-margin layout-top"><html:span data-box="margin" class="layout-editable" title="margin-top"></html:span></html:p>
-                <html:p class="layout-margin layout-right"><html:span data-box="margin" class="layout-editable" title="margin-right"></html:span></html:p>
-                <html:p class="layout-margin layout-bottom"><html:span data-box="margin" class="layout-editable" title="margin-bottom"></html:span></html:p>
-                <html:p class="layout-margin layout-left"><html:span data-box="margin" class="layout-editable" title="margin-left"></html:span></html:p>
+                <html:div id="layout-info">
+                  <html:span id="layout-element-size"></html:span>
+                  <html:section id="layout-position-group">
+                    <html:span id="layout-element-position"></html:span>
+                  </html:section>
+                </html:div>
 
-                <html:p class="layout-border layout-top"><html:span data-box="border" class="layout-editable" title="border-top"></html:span></html:p>
-                <html:p class="layout-border layout-right"><html:span data-box="border" class="layout-editable" title="border-right"></html:span></html:p>
-                <html:p class="layout-border layout-bottom"><html:span data-box="border" class="layout-editable" title="border-bottom"></html:span></html:p>
-                <html:p class="layout-border layout-left"><html:span data-box="border" class="layout-editable" title="border-left"></html:span></html:p>
-
-                <html:p class="layout-padding layout-top"><html:span data-box="padding" class="layout-editable" title="padding-top"></html:span></html:p>
-                <html:p class="layout-padding layout-right"><html:span data-box="padding" class="layout-editable" title="padding-right"></html:span></html:p>
-                <html:p class="layout-padding layout-bottom"><html:span data-box="padding" class="layout-editable" title="padding-bottom"></html:span></html:p>
-                <html:p class="layout-padding layout-left"><html:span data-box="padding" class="layout-editable" title="padding-left"></html:span></html:p>
-
-                <html:p class="layout-size"><html:span data-box="content" title="&content.tooltip;"></html:span></html:p>
-              </html:div>
-
-              <html:div id="layout-info">
-                <html:span id="layout-element-size"></html:span>
-                <html:section id="layout-position-group">
-                  <html:span id="layout-element-position"></html:span>
-                </html:section>
-              </html:div>
-
-              <html:div style="display: none">
-                <html:p id="layout-dummy"></html:p>
+                <html:div style="display: none">
+                  <html:p id="layout-dummy"></html:p>
+                </html:div>
               </html:div>
             </html:div>
-          </html:div>
 
-          <html:div id="propertyContainer" class="theme-separator" tabindex="0">
-          </html:div>
+            <html:div id="computedview-toolbar" class="devtools-toolbar">
+              <html:div class="devtools-searchbox">
+                <html:input id="computedview-searchbox"
+                            class="devtools-filterinput devtools-rule-searchbox"
+                            type="search"
+                            placeholder="&filterStylesPlaceholder;"/>
+                <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
+              </html:div>
+              <html:label id="browser-style-checkbox-label" for="browser-style-checkbox">
+                <html:input id="browser-style-checkbox"
+                            type="checkbox"
+                            class="includebrowserstyles"
+                            label="&browserStylesLabel;"/>&browserStylesLabel;</html:label>
+            </html:div>
 
-          <html:div id="computedview-no-results" hidden="">
-            &noPropertiesFound;
+            <html:div id="propertyContainer" class="theme-separator" tabindex="0">
+            </html:div>
+
+            <html:div id="computedview-no-results" hidden="">
+              &noPropertiesFound;
+            </html:div>
           </html:div>
         </html:div>
       </html:div>

@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.337';
-var pdfjsBuild = '11381cd';
+var pdfjsVersion = '1.5.345';
+var pdfjsBuild = '10f9f11';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -1080,7 +1080,7 @@ function isSpace(ch) {
  *
  * @typedef {Object} PromiseCapability
  * @property {Promise} promise - A promise object.
- * @property {function} resolve - Fullfills the promise.
+ * @property {function} resolve - Fulfills the promise.
  * @property {function} reject - Rejects the promise.
  */
 
@@ -1103,8 +1103,8 @@ function createPromiseCapability() {
 /**
  * Polyfill for Promises:
  * The following promise implementation tries to generally implement the
- * Promise/A+ spec. Some notable differences from other promise libaries are:
- * - There currently isn't a seperate deferred and promise object.
+ * Promise/A+ spec. Some notable differences from other promise libraries are:
+ * - There currently isn't a separate deferred and promise object.
  * - Unhandled rejections eventually show an error if they aren't handled.
  *
  * Based off of the work in:
@@ -3615,7 +3615,7 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
     // MAX_PATTERN_SIZE is used to avoid OOM situation.
     var MAX_PATTERN_SIZE = 3000; // 10in @ 300dpi shall be enough
     // We need to keep transparent border around our pattern for fill():
-    // createPattern with 'no-repeat' will bleed edges accross entire area.
+    // createPattern with 'no-repeat' will bleed edges across entire area.
     var BORDER_SIZE = 2;
 
     var offsetX = Math.floor(bounds[0]);
@@ -5688,7 +5688,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var currentCtx = this.ctx;
       // TODO non-isolated groups - according to Rik at adobe non-isolated
       // group results aren't usually that different and they even have tools
-      // that ignore this setting. Notes from Rik on implmenting:
+      // that ignore this setting. Notes from Rik on implementing:
       // - When you encounter an transparency group, create a new canvas with
       // the dimensions of the bbox
       // - copy the content from the previous canvas to the new canvas

@@ -20,8 +20,6 @@ DevToolsModules(
     'autocomplete-popup.js',
     'browser-loader.js',
     'css-angle.js',
-    'css-color-db.js',
-    'css-color.js',
     'css-reload.js',
     'Curl.jsm',
     'demangle.js',

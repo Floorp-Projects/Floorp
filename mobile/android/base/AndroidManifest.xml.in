@@ -279,6 +279,10 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:exported="false"/>
 
+        <provider android:name="org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.partnerbookmarks"
+                  android:exported="false"/>
+
         <!-- Share overlay activity
 
              Setting launchMode="singleTop" ensures onNewIntent is called when the Activity is

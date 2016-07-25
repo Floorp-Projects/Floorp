@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for background page canvas rendering</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_background_canvas() {
+  function background() {
+    try {
+      let canvas = document.createElement("canvas");
+
+      let context = canvas.getContext("2d");
+
+      // This ensures that we have a working PresShell, and can successfully
+      // calculate font metrics.
+      context.font = "8pt fixed";
+
+      browser.test.notifyPass("background-canvas");
+    } catch (e) {
+      browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      browser.test.notifyFail("background-canvas");
+    }
+  }
+
+  let extensionData = {
+    background: `(${background})()`,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  yield extension.startup();
+  yield extension.awaitFinish("background-canvas");
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

@@ -11,7 +11,22 @@
   height: 100%;
 }
 
-#sidebar-panel-computedview > .devtools-toolbar {
+#computedview-container {
+  overflow: auto;
+  height: 100%;
+}
+
+/* This extra wrapper only serves as a way to get the content of the view focusable.
+   So that when the user reaches it either via keyboard or mouse, we know that the view
+   is focused and therefore can handle shortcuts.
+   However, for accessibility reasons, tabindex is set to -1 to avoid having to tab
+   through it, and the outline is hidden. */
+#computedview-container-focusable {
+  height: 100%;
+  outline: none;
+}
+
+#computedview-toolbar {
   display: flex;
 }
 
@@ -32,17 +47,11 @@
   align-items: center;
 }
 
-#computedview-container {
-  overflow: auto;
-}
-
 #propertyContainer {
   -moz-user-select: text;
   overflow-y: auto;
   overflow-x: hidden;
   flex: auto;
-  border-top-width: 1px;
-  border-top-style: dotted;
 }
 
 .row-striped {

@@ -422,6 +422,7 @@ const getHighlighterHelperFor = (type) => Task.async(
       set prefix(value) {
         prefix = value;
       },
+
       get highlightedNode() {
         if (!highlightedNode) {
           return null;
@@ -435,9 +436,9 @@ const getHighlighterHelperFor = (type) => Task.async(
         };
       },
 
-      show: function* (selector = ":root") {
+      show: function* (selector = ":root", options) {
         highlightedNode = yield getNodeFront(selector, inspector);
-        return yield highlighter.show(highlightedNode);
+        return yield highlighter.show(highlightedNode, options);
       },
 
       hide: function* () {
@@ -462,6 +463,10 @@ const getHighlighterHelperFor = (type) => Task.async(
       synthesizeMouse: function* (options) {
         options = Object.assign({selector: ":root"}, options);
         yield testActor.synthesizeMouse(options);
+      },
+
+      synthesizeKey: function* (options) {
+        yield testActor.synthesizeKey(options);
       },
 
       // This object will synthesize any "mouse" prefixed event to the

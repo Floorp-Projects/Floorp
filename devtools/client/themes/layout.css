@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/ */
 
+#layout-wrapper {
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-color: var(--theme-splitter-color);
+}
+
 #layout-container {
   /* The view will grow bigger as the window gets resized, until 400px */
   max-width: 400px;

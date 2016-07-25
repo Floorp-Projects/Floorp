@@ -920,3 +920,7 @@ pref("dom.presentation.discovery.legacy.enabled", true); // for TV 2.5 backward 
 
 pref("dom.audiochannel.audioCompeting", true);
 pref("dom.audiochannel.mediaControl", true);
+
+// Space separated list of URLS that are allowed to send objects (instead of
+// only strings) through webchannels. This list is duplicated in browser/app/profile/firefox.js
+pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://hello.firefox.com https://input.mozilla.org https://support.mozilla.org https://install.mozilla.org");

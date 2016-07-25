@@ -371,6 +371,16 @@ exports.walkerSpec = walkerSpec;
 const inspectorSpec = generateActorSpec({
   typeName: "inspector",
 
+  events: {
+    "color-picked": {
+      type: "colorPicked",
+      color: Arg(0, "string")
+    },
+    "color-pick-canceled": {
+      type: "colorPickCanceled"
+    }
+  },
+
   methods: {
     getWalker: {
       request: {
@@ -409,6 +419,14 @@ const inspectorSpec = generateActorSpec({
     resolveRelativeURL: {
       request: {url: Arg(0, "string"), node: Arg(1, "nullable:domnode")},
       response: {value: RetVal("string")}
+    },
+    pickColorFromPage: {
+      request: {options: Arg(0, "nullable:json")},
+      response: {}
+    },
+    cancelPickColorFromPage: {
+      request: {},
+      response: {}
     }
   }
 });

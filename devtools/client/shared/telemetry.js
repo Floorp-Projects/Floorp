@@ -187,6 +187,10 @@ Telemetry.prototype = {
       histogram: "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT",
       userHistogram: "DEVTOOLS_PICKER_EYEDROPPER_OPENED_PER_USER_FLAG",
     },
+    toolbareyedropper: {
+      histogram: "DEVTOOLS_TOOLBAR_EYEDROPPER_OPENED_COUNT",
+      userHistogram: "DEVTOOLS_TOOLBAR_EYEDROPPER_OPENED_PER_USER_FLAG",
+    },
     developertoolbar: {
       histogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_COUNT",
       userHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_PER_USER_FLAG",

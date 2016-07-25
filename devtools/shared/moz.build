@@ -42,6 +42,8 @@ DevToolsModules(
     'async-utils.js',
     'builtin-modules.js',
     'content-observer.js',
+    'css-color-db.js',
+    'css-color.js',
     'css-lexer.js',
     'css-parsing-utils.js',
     'css-properties-db.js',

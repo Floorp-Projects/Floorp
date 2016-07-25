@@ -7761,21 +7761,6 @@ XPCOMUtils.defineLazyGetter(ResponsiveUI, "ResponsiveUIManager", function() {
   return tmp.ResponsiveUIManager;
 });
 
-function openEyedropper() {
-  var eyedropper = new this.Eyedropper(this, { context: "menu",
-                                               copyOnSelect: true });
-  eyedropper.open();
-}
-
-Object.defineProperty(this, "Eyedropper", {
-  get: function() {
-    let devtools = Cu.import("resource://devtools/shared/Loader.jsm", {}).devtools;
-    return devtools.require("devtools/client/eyedropper/eyedropper").Eyedropper;
-  },
-  configurable: true,
-  enumerable: true
-});
-
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
   // Only show resizers on Windows 2000 and XP
   return AppConstants.isPlatformAndVersionAtMost("win", "5.9");

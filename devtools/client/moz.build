@@ -13,7 +13,6 @@ DIRS += [
     'commandline',
     'debugger',
     'dom',
-    'eyedropper',
     'framework',
     'inspector',
     'jsonview',
