@@ -11,12 +11,15 @@
 #include "gfxFailure.h"
 #include "prenv.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/widget/CompositorWidget.h"
 #include "GeckoProfiler.h"
 
 #import <UIKit/UIKit.h>
 
 namespace mozilla {
 namespace gl {
+
+using namespace mozilla::widget;
 
 GLContextEAGL::GLContextEAGL(CreateContextFlags flags, const SurfaceCaps& caps,
                              EAGLContext* context, GLContext* sharedContext,
@@ -202,6 +205,12 @@ CreateEAGLContext(CreateContextFlags flags, bool aOffscreen, GLContextEAGL* shar
     }
 
     return glContext.forget();
+}
+
+already_AddRefed<GLContext>
+GLContextProviderEAGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
+{
+    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
