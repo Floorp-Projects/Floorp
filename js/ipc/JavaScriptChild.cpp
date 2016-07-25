@@ -21,7 +21,7 @@ using namespace mozilla::jsipc;
 using mozilla::AutoSafeJSContext;
 
 static void
-UpdateChildWeakPointersBeforeSweepingZoneGroup(JSRuntime* rt, void* data)
+UpdateChildWeakPointersBeforeSweepingZoneGroup(JSContext* cx, void* data)
 {
     static_cast<JavaScriptChild*>(data)->updateWeakPointers();
 }

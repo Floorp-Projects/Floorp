@@ -20,7 +20,7 @@ function DoSetMediaKeys(v, test)
     videoCapabilities: [{contentType: test.videoType}],
   }];
 
-  return navigator.requestMediaKeySystemAccess("org.w3.clearkey", options)
+  return navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, options)
 
   .then(function(keySystemAccess) {
     return keySystemAccess.createMediaKeys();

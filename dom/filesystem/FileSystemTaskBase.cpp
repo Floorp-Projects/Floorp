@@ -150,6 +150,7 @@ FileSystemTaskChildBase::Start()
   ErrorResult rv;
   FileSystemParams params = GetRequestParams(serialization, rv);
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return;
   }
 

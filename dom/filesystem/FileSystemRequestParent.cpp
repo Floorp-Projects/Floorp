@@ -35,6 +35,7 @@ FileSystemRequestParent::~FileSystemRequestParent()
       MOZ_ASSERT(mFileSystem);                                                 \
       mTask = name##TaskParent::Create(mFileSystem, p, this, rv);              \
       if (NS_WARN_IF(rv.Failed())) {                                           \
+        rv.SuppressException();                                                \
         return false;                                                          \
       }                                                                        \
       break;                                                                   \

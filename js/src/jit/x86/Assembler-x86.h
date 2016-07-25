@@ -920,9 +920,9 @@ class Assembler : public AssemblerX86Shared
         return CodeOffset(masm.currentOffset());
     }
 
-    void loadWasmActivation(Register dest) {
+    void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
         CodeOffset label = movlWithPatch(PatchedAbsoluteAddress(), dest);
-        append(wasm::GlobalAccess(label, wasm::ActivationGlobalDataOffset));
+        append(wasm::GlobalAccess(label, globalDataOffset));
     }
     void loadAsmJSHeapRegisterFromGlobalData() {
         // x86 doesn't have a pinned heap register.

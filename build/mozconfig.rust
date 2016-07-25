@@ -4,6 +4,7 @@
 # Assume this is compiled with --enable-rpath so we don't
 # have to set LD_LIBRARY_PATH.
 RUSTC="$topsrcdir/rustc/bin/rustc"
+CARGO="$topsrcdir/cargo/bin/cargo"
 
 # Enable rust in the build.
 ac_add_options --enable-rust

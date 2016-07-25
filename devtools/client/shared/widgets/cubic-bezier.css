@@ -7,11 +7,12 @@
 
 .cubic-bezier-container {
   display: flex;
-  width: 500px;
+  width: 510px;
   height: 370px;
   flex-direction: row-reverse;
   overflow: hidden;
   padding: 5px;
+  box-sizing: border-box;
 }
 
 .display-wrap {
@@ -30,11 +31,6 @@
   position: relative;
 }
 
-.theme-dark .coordinate-plane:before,
-.theme-dark .coordinate-plane:after {
-  border-color: #eee;
-}
-
 .control-point {
   position: absolute;
   z-index: 1;
@@ -51,28 +47,34 @@
 }
 
 .display-wrap {
-  background: repeating-linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 15px) no-repeat, repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 15px) no-repeat;
+  background:
+  repeating-linear-gradient(0deg,
+    transparent,
+    var(--bezier-grid-color) 0,
+    var(--bezier-grid-color) 1px,
+    transparent 1px,
+    transparent 15px) no-repeat,
+  repeating-linear-gradient(90deg,
+    transparent,
+    var(--bezier-grid-color) 0,
+    var(--bezier-grid-color) 1px,
+    transparent 1px,
+    transparent 15px) no-repeat;
   background-size: 100% 100%, 100% 100%;
   background-position: -2px 5px, -2px 5px;
 
   -moz-user-select: none;
 }
 
-.theme-dark .display-wrap {
-  background: repeating-linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.2) 0, rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 15px) no-repeat, repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.2) 0, rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 15px) no-repeat;
-  background-size: 100% 100%, 100% 100%;
-  background-position: -2px 5px, -2px 5px;
-
-  -moz-user-select: none;
-}
 canvas.curve {
-  background: linear-gradient(-45deg, transparent 49.7%, rgba(0,0,0,.2) 49.7%, rgba(0,0,0,.2) 50.3%, transparent 50.3%) center no-repeat;
+  background:
+    linear-gradient(-45deg,
+      transparent 49.7%,
+      var(--bezier-diagonal-color) 49.7%,
+      var(--bezier-diagonal-color) 50.3%,
+      transparent 50.3%) center no-repeat;
   background-size: 100% 100%;
   background-position: 0 0;
-}
-
-.theme-dark canvas.curve {
-  background: linear-gradient(-45deg, transparent 49.7%, #eee 49.7%, #eee 50.3%, transparent 50.3%) center no-repeat;
 }
 
 /* Timing Function Preview Widget */
@@ -184,14 +186,10 @@ canvas.curve {
 
 .preset canvas {
   display: block;
-  border: 1px solid #ccc;
+  border: 1px solid var(--theme-splitter-color);
   border-radius: 3px;
   background-color: var(--theme-body-background);
   margin: 0 auto;
-}
-
-.theme-dark .preset canvas {
-  border-color: #444e58;
 }
 
 .preset p {
@@ -211,8 +209,8 @@ canvas.curve {
   border-color: var(--theme-selection-background);
 }
 
-.active-preset canvas, .active-preset:hover canvas,
-.theme-dark .active-preset canvas, .theme-dark .preset:hover canvas {
+.active-preset canvas,
+.active-preset:hover canvas {
   background-color: var(--theme-selection-background-semitransparent);
   border-color: var(--theme-selection-background);
 }

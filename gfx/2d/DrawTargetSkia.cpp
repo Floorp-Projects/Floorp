@@ -1354,7 +1354,7 @@ DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurfa
     texInfo.fID = (GrGLuint)(uintptr_t)aSurface.mSurface;
     texDesc.fTextureHandle = reinterpret_cast<GrBackendObject>(&texInfo);
 
-    SkAutoTUnref<GrTexture> texture(mGrContext->textureProvider()->wrapBackendTexture(texDesc));
+    SkAutoTUnref<GrTexture> texture(mGrContext->textureProvider()->wrapBackendTexture(texDesc, kAdopt_GrWrapOwnership));
 
     RefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
     if (newSurf->InitFromGrTexture(texture, aSurface.mSize, aSurface.mFormat)) {

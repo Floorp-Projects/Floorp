@@ -106,10 +106,6 @@ class Simulator;
 #endif
 } // namespace jit
 
-namespace wasm {
-class Module;
-} // namespace wasm
-
 /*
  * A FreeOp can do one thing: free memory. For convenience, it has delete_
  * convenience methods that also call destructors.

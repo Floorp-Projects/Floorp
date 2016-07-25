@@ -223,8 +223,8 @@ GetFilesTaskParent::GetFilesTaskParent(FileSystemBase* aFileSystem,
                                        const FileSystemGetFilesParams& aParam,
                                        FileSystemRequestParent* aParent)
   : FileSystemTaskParentBase(aFileSystem, aParam, aParent)
+  , GetFilesHelperBase(aParam.recursiveFlag())
   , mDirectoryDOMPath(aParam.domPath())
-  , mRecursiveFlag(aParam.recursiveFlag())
 {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
   AssertIsOnBackgroundThread();
@@ -239,16 +239,16 @@ GetFilesTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
   InfallibleTArray<PBlobParent*> blobs;
 
   FallibleTArray<FileSystemFileResponse> inputs;
-  if (!inputs.SetLength(mTargetData.Length(), mozilla::fallible_t())) {
+  if (!inputs.SetLength(mTargetPathArray.Length(), mozilla::fallible_t())) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     FileSystemFilesResponse response;
     return response;
   }
 
-  for (unsigned i = 0; i < mTargetData.Length(); i++) {
+  for (unsigned i = 0; i < mTargetPathArray.Length(); i++) {
     FileSystemFileResponse fileData;
-    fileData.realPath() = mTargetData[i].mRealPath;
-    fileData.domPath() = mTargetData[i].mDOMPath;
+    fileData.realPath() = mTargetPathArray[i].mRealPath;
+    fileData.domPath() = mTargetPathArray[i].mDomPath;
     inputs[i] = fileData;
   }
 
@@ -278,25 +278,8 @@ GetFilesTaskParent::IOWork()
     return NS_OK;
   }
 
-  // Get isDirectory.
-  rv = ExploreDirectory(mDirectoryDOMPath, mTargetPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-GetFilesTaskParent::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aPath)
-{
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Only call from parent process!");
-  MOZ_ASSERT(!NS_IsMainThread(), "Only call on worker thread!");
-  MOZ_ASSERT(aPath);
-
   bool isDir;
-  nsresult rv = aPath->IsDirectory(&isDir);
+  rv = mTargetPath->IsDirectory(&isDir);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -305,78 +288,10 @@ GetFilesTaskParent::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aPath)
     return NS_ERROR_DOM_FILESYSTEM_TYPE_MISMATCH_ERR;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
-  rv = aPath->GetDirectoryEntries(getter_AddRefs(entries));
+  // Get isDirectory.
+  rv = ExploreDirectory(mDirectoryDOMPath, mTargetPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  for (;;) {
-    bool hasMore = false;
-    if (NS_WARN_IF(NS_FAILED(entries->HasMoreElements(&hasMore))) || !hasMore) {
-      break;
-    }
-    nsCOMPtr<nsISupports> supp;
-    if (NS_WARN_IF(NS_FAILED(entries->GetNext(getter_AddRefs(supp))))) {
-      break;
-    }
-
-    nsCOMPtr<nsIFile> currFile = do_QueryInterface(supp);
-    MOZ_ASSERT(currFile);
-
-    bool isLink, isSpecial, isFile;
-    if (NS_WARN_IF(NS_FAILED(currFile->IsSymlink(&isLink)) ||
-                   NS_FAILED(currFile->IsSpecial(&isSpecial))) ||
-        isLink || isSpecial) {
-      continue;
-    }
-
-    if (NS_WARN_IF(NS_FAILED(currFile->IsFile(&isFile)) ||
-                   NS_FAILED(currFile->IsDirectory(&isDir))) ||
-        !(isFile || isDir)) {
-      continue;
-    }
-
-    nsAutoString domPath;
-    domPath.Assign(aDOMPath);
-
-    // This is specific for unix root filesystem.
-    if (!aDOMPath.EqualsLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL)) {
-      domPath.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
-    }
-
-    nsAutoString leafName;
-    if (NS_WARN_IF(NS_FAILED(currFile->GetLeafName(leafName)))) {
-      continue;
-    }
-    domPath.Append(leafName);
-
-    if (isFile) {
-      FileData data;
-      data.mDOMPath.Append(domPath);
-
-      if (NS_WARN_IF(NS_FAILED(currFile->GetPath(data.mRealPath)))) {
-        continue;
-      }
-
-      if (!mTargetData.AppendElement(data, fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      continue;
-    }
-
-    MOZ_ASSERT(isDir);
-
-    if (!mRecursiveFlag) {
-      continue;
-    }
-
-    // Recursive.
-    rv = ExploreDirectory(domPath, currFile);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
   }
 
   return NS_OK;

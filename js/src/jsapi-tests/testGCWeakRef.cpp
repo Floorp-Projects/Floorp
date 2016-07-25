@@ -32,7 +32,7 @@ BEGIN_TEST(testGCWeakRef)
     JS::Rooted<MyHeap> heap(cx, MyHeap(obj));
     obj = nullptr;
 
-    rt->gc.minorGC(JS::gcreason::API);
+    cx->gc.minorGC(JS::gcreason::API);
 
     // The minor collection should have treated the weak ref as a strong ref,
     // so the object should still be live, despite not having any other live

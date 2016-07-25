@@ -21,7 +21,7 @@ int main(int argc, char * argv[])
   int r;
   uint32_t max_channels;
   uint32_t preferred_rate;
-  uint32_t latency_ms;
+  uint32_t latency_frames;
 
   LOG("latency_test start");
   r = cubeb_init(&ctx, "Cubeb audio test");
@@ -47,10 +47,10 @@ int main(int argc, char * argv[])
     preferred_rate,
     max_channels
   };
-  r = cubeb_get_min_latency(ctx, params, &latency_ms);
+  r = cubeb_get_min_latency(ctx, params, &latency_frames);
   assert(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED);
   if (r == CUBEB_OK) {
-    assert(latency_ms > 0 && "Invalid minimal latency.");
+    assert(latency_frames > 0 && "Invalid minimal latency.");
     LOG("cubeb_get_min_latency ok");
   }
 

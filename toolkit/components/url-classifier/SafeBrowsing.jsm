@@ -27,8 +27,6 @@ function log(...stuff) {
   dump(Services.urlFormatter.trimSensitiveURLs(msg) + "\n");
 }
 
-// Skip all the ones containining "test", because we never need to ask for
-// updates for them.
 function getLists(prefName) {
   log("getLists: " + prefName);
   let pref = null;
@@ -42,7 +40,6 @@ function getLists(prefName) {
     return [];
   }
   return pref.split(",")
-    .filter(function(value) { return value.indexOf("test-") == -1; })
     .map(function(value) { return value.trim(); });
 }
 

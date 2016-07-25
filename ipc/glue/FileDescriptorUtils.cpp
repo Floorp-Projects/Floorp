@@ -62,19 +62,7 @@ CloseFileRunnable::CloseFile()
 {
   // It's possible for this to happen on the main thread if the dispatch to the
   // stream service fails so we can't assert the thread on which we're running.
-
-  MOZ_ASSERT(mFileDescriptor.IsValid());
-
-  PRFileDesc* fd =
-    PR_ImportFile(PROsfd(mFileDescriptor.PlatformHandle()));
-  NS_WARN_IF_FALSE(fd, "Failed to import file handle!");
-
   mFileDescriptor = FileDescriptor();
-
-  if (fd) {
-    PR_Close(fd);
-    fd = nullptr;
-  }
 }
 
 NS_IMETHODIMP
@@ -93,21 +81,19 @@ FILE*
 FileDescriptorToFILE(const FileDescriptor& aDesc,
                      const char* aOpenMode)
 {
-  // Debug builds check whether the handle was "used", even if it's
-  // invalid, so that needs to happen first.
-  FileDescriptor::PlatformHandleType handle = aDesc.PlatformHandle();
   if (!aDesc.IsValid()) {
     errno = EBADF;
     return nullptr;
   }
+  auto handle = aDesc.ClonePlatformHandle();
 #ifdef XP_WIN
-  int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handle), 0);
+  int fd = _open_osfhandle(static_cast<intptr_t>(handle.get()), 0);
   if (fd == -1) {
-    CloseHandle(handle);
     return nullptr;
   }
+  Unused << handle.release();
 #else
-  int fd = handle;
+  int fd = handle.release();
 #endif
   FILE* file = fdopen(fd, aOpenMode);
   if (!file) {

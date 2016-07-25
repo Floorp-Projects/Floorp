@@ -157,6 +157,7 @@ public:
       AudioBuffer::Create(context, mNumberOfChannels, mLength, mSampleRate,
                           mBuffer.forget(), rv);
     if (rv.Failed()) {
+      rv.SuppressException();
       return;
     }
 

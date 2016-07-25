@@ -38,101 +38,9 @@ extern "C" {
 }
 #endif
 
-#define MAC_OS_X_VERSION_10_7_HEX 0x00001070
-
-static int sOnLionOrLater = -1;
-
-static bool OnLionOrLater()
-{
-  if (sOnLionOrLater < 0) {
-    SInt32 major = 0, minor = 0;
-
-    CFURLRef url =
-      CFURLCreateWithString(kCFAllocatorDefault,
-                            CFSTR("file:///System/Library/CoreServices/SystemVersion.plist"),
-                            NULL);
-    CFReadStreamRef stream =
-      CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
-    CFReadStreamOpen(stream);
-    CFDictionaryRef sysVersionPlist = (CFDictionaryRef)
-      CFPropertyListCreateWithStream(kCFAllocatorDefault,
-                                     stream, 0, kCFPropertyListImmutable,
-                                     NULL, NULL);
-    CFReadStreamClose(stream);
-    CFRelease(stream);
-    CFRelease(url);
-
-    CFStringRef versionString = (CFStringRef)
-      CFDictionaryGetValue(sysVersionPlist, CFSTR("ProductVersion"));
-    CFArrayRef versions =
-      CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault,
-                                             versionString, CFSTR("."));
-    CFIndex count = CFArrayGetCount(versions);
-    if (count > 0) {
-      CFStringRef component = (CFStringRef) CFArrayGetValueAtIndex(versions, 0);
-      major = CFStringGetIntValue(component);
-      if (count > 1) {
-        component = (CFStringRef) CFArrayGetValueAtIndex(versions, 1);
-        minor = CFStringGetIntValue(component);
-      }
-    }
-    CFRelease(sysVersionPlist);
-    CFRelease(versions);
-
-    if (major < 10) {
-      sOnLionOrLater = 0;
-    } else {
-      int version = 0x1000 + (minor << 4);
-      sOnLionOrLater = version >= MAC_OS_X_VERSION_10_7_HEX ? 1 : 0;
-    }
-  }
-
-  return sOnLionOrLater > 0 ? true : false;
-}
-
-static bool sCssmInitialized = false;
-static CSSM_VERSION sCssmVersion = {2, 0};
-static const CSSM_GUID sMozCssmGuid =
-  { 0x9243121f, 0x5820, 0x4b41,
-    { 0xa6, 0x52, 0xba, 0xb6, 0x3f, 0x9d, 0x3d, 0x7f }};
-static CSSM_CSP_HANDLE sCspHandle = CSSM_INVALID_HANDLE;
-
-void* cssmMalloc (CSSM_SIZE aSize, void* aAllocRef) {
-  (void)aAllocRef;
-  return malloc(aSize);
-}
-
-void cssmFree (void* aPtr, void* aAllocRef) {
-  (void)aAllocRef;
-  free(aPtr);
-  return;
-}
-
-void* cssmRealloc (void* aPtr, CSSM_SIZE aSize, void* aAllocRef) {
-  (void)aAllocRef;
-  return realloc(aPtr, aSize);
-}
-
-void* cssmCalloc (uint32 aNum, CSSM_SIZE aSize, void* aAllocRef) {
-  (void)aAllocRef;
-  return calloc(aNum, aSize);
-}
-
-static CSSM_API_MEMORY_FUNCS cssmMemFuncs = {
-    &cssmMalloc,
-    &cssmFree,
-    &cssmRealloc,
-    &cssmCalloc,
-    NULL
- };
-
 CryptoX_Result
 CryptoMac_InitCryptoProvider()
 {
-  if (!OnLionOrLater()) {
-    return CryptoX_Success;
-  }
-
   if (!SecTransformCreateReadTransformWithReadStreamPtr) {
     SecTransformCreateReadTransformWithReadStreamPtr =
       (SecTransformCreateReadTransformWithReadStreamFunc)
@@ -171,18 +79,6 @@ CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData)
     return CryptoX_Error;
   }
 
-  if (!OnLionOrLater()) {
-    CSSM_DATA_PTR cssmData = (CSSM_DATA_PTR)malloc(sizeof(CSSM_DATA));
-    if (!cssmData) {
-      CFRelease(inputData);
-      return CryptoX_Error;
-    }
-    cssmData->Data = (uint8*)inputData;
-    cssmData->Length = 0;
-    *aInputData = cssmData;
-    return CryptoX_Success;
-  }
-
   *aInputData = inputData;
   return CryptoX_Success;
 }
@@ -198,13 +94,7 @@ CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData, void* aBuf,
     return CryptoX_Error;
   }
 
-  CFMutableDataRef inputData;
-  if (!OnLionOrLater()) {
-    inputData = (CFMutableDataRef)((CSSM_DATA_PTR)*aInputData)->Data;
-    ((CSSM_DATA_PTR)*aInputData)->Length += aLen;
-  } else {
-    inputData = (CFMutableDataRef)*aInputData;
-  }
+  CFMutableDataRef inputData = (CFMutableDataRef)*aInputData;
 
   CFDataAppendBytes(inputData, (const uint8*)aBuf, aLen);
   return CryptoX_Success;
@@ -219,51 +109,6 @@ CryptoMac_LoadPublicKey(const unsigned char* aCertData,
     return CryptoX_Error;
   }
   *aPublicKey = NULL;
-
-  if (!OnLionOrLater()) {
-    if (!sCspHandle) {
-      CSSM_RETURN rv;
-      if (!sCssmInitialized) {
-        CSSM_PVC_MODE pvcPolicy = CSSM_PVC_NONE;
-        rv = CSSM_Init(&sCssmVersion,
-                       CSSM_PRIVILEGE_SCOPE_PROCESS,
-                       &sMozCssmGuid,
-                       CSSM_KEY_HIERARCHY_NONE,
-                       &pvcPolicy,
-                       NULL);
-        if (rv != CSSM_OK) {
-          return CryptoX_Error;
-        }
-        sCssmInitialized = true;
-      }
-
-      rv = CSSM_ModuleLoad(&gGuidAppleCSP,
-                           CSSM_KEY_HIERARCHY_NONE,
-                           NULL,
-                           NULL);
-      if (rv != CSSM_OK) {
-        return CryptoX_Error;
-      }
-
-      CSSM_CSP_HANDLE cspHandle;
-      rv = CSSM_ModuleAttach(&gGuidAppleCSP,
-                             &sCssmVersion,
-                             &cssmMemFuncs,
-                             0,
-                             CSSM_SERVICE_CSP,
-                             0,
-                             CSSM_KEY_HIERARCHY_NONE,
-                             NULL,
-                             0,
-                             NULL,
-                             &cspHandle);
-      if (rv != CSSM_OK) {
-        return CryptoX_Error;
-      }
-      sCspHandle = cspHandle;
-    }
-  }
-
   CFDataRef certData = CFDataCreate(kCFAllocatorDefault,
                                     aCertData,
                                     aDataSize);
@@ -297,46 +142,6 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
   if (!aInputData || !*aInputData || !aPublicKey || !*aPublicKey ||
       !aSignature || aSignatureLen == 0) {
     return CryptoX_Error;
-  }
-
-  if (!OnLionOrLater()) {
-    if (!sCspHandle) {
-      return CryptoX_Error;
-    }
-
-    CSSM_KEY* publicKey;
-    OSStatus status = SecKeyGetCSSMKey((SecKeyRef)*aPublicKey,
-                                       (const CSSM_KEY**)&publicKey);
-    if (status) {
-      return CryptoX_Error;
-    }
-
-    CSSM_CC_HANDLE ccHandle;
-    if (CSSM_CSP_CreateSignatureContext(sCspHandle,
-                                        CSSM_ALGID_SHA1WithRSA,
-                                        NULL,
-                                        publicKey,
-                                        &ccHandle) != CSSM_OK) {
-      return CryptoX_Error;
-    }
-
-    CryptoX_Result result = CryptoX_Error;
-    CSSM_DATA signatureData;
-    signatureData.Data = (uint8*)aSignature;
-    signatureData.Length = aSignatureLen;
-    CSSM_DATA inputData;
-    inputData.Data =
-      CFDataGetMutableBytePtr((CFMutableDataRef)
-                                (((CSSM_DATA_PTR)*aInputData)->Data));
-    inputData.Length = ((CSSM_DATA_PTR)*aInputData)->Length;
-    if (CSSM_VerifyData(ccHandle,
-                        &inputData,
-                        1,
-                        CSSM_ALGID_NONE,
-                        &signatureData) == CSSM_OK) {
-      result = CryptoX_Success;
-    }
-    return result;
   }
 
   CFDataRef signatureData = CFDataCreate(kCFAllocatorDefault,
@@ -392,16 +197,9 @@ CryptoMac_FreeSignatureHandle(CryptoX_SignatureHandle* aInputData)
   }
 
   CFMutableDataRef inputData = NULL;
-  if (OnLionOrLater()) {
-    inputData = (CFMutableDataRef)*aInputData;
-  } else {
-    inputData = (CFMutableDataRef)((CSSM_DATA_PTR)*aInputData)->Data;
-  }
+  inputData = (CFMutableDataRef)*aInputData;
 
   CFRelease(inputData);
-  if (!OnLionOrLater()) {
-    free((CSSM_DATA_PTR)*aInputData);
-  }
 }
 
 void
@@ -410,9 +208,6 @@ CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey)
   if (!aPublicKey || !*aPublicKey) {
     return;
   }
-  if (!OnLionOrLater() && sCspHandle != CSSM_INVALID_HANDLE) {
-    CSSM_ModuleDetach(sCspHandle);
-    sCspHandle = CSSM_INVALID_HANDLE;
-  }
+
   CFRelease((SecKeyRef)*aPublicKey);
 }

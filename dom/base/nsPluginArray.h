@@ -60,6 +60,10 @@ private:
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsTArray<RefPtr<nsPluginElement> > mPlugins;
+  /* A separate list of click-to-play plugins that we don't tell content
+   * about but keep track of so we can still prompt the user to click to play.
+   */
+  nsTArray<RefPtr<nsPluginElement> > mCTPPlugins;
 };
 
 class nsPluginElement final : public nsISupports,

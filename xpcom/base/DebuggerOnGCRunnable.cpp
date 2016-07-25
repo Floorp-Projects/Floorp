@@ -14,9 +14,9 @@
 namespace mozilla {
 
 /* static */ NS_METHOD
-DebuggerOnGCRunnable::Enqueue(JSRuntime* aRt, const JS::GCDescription& aDesc)
+DebuggerOnGCRunnable::Enqueue(JSContext* aCx, const JS::GCDescription& aDesc)
 {
-  auto gcEvent = aDesc.toGCEvent(aRt);
+  auto gcEvent = aDesc.toGCEvent(aCx);
   if (!gcEvent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
