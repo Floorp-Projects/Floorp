@@ -690,26 +690,6 @@ this.LoginHelper = {
     let hasMP = slot.status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED &&
                 slot.status != Ci.nsIPKCS11Slot.SLOT_READY;
     return hasMP;
-  },
-
-  /**
-   * Send a notification when stored data is changed.
-   */
-  notifyStorageChanged(changeType, data) {
-    let dataObject = data;
-    // Can't pass a raw JS string or array though notifyObservers(). :-(
-    if (Array.isArray(data)) {
-      dataObject = Cc["@mozilla.org/array;1"].
-                   createInstance(Ci.nsIMutableArray);
-      for (let i = 0; i < data.length; i++) {
-        dataObject.appendElement(data[i], false);
-      }
-    } else if (typeof(data) == "string") {
-      dataObject = Cc["@mozilla.org/supports-string;1"].
-                   createInstance(Ci.nsISupportsString);
-      dataObject.data = data;
-    }
-    Services.obs.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
   }
 };
 
