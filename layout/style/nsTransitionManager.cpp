@@ -268,7 +268,7 @@ CSSTransition::GetCurrentTimeAt(const DocumentTimeline& aTimeline,
 }
 
 void
-CSSTransition::SetEffect(KeyframeEffectReadOnly* aEffect)
+CSSTransition::SetEffect(AnimationEffectReadOnly* aEffect)
 {
   Animation::SetEffect(aEffect);
 

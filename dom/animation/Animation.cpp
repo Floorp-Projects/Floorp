@@ -124,7 +124,7 @@ Animation::SetId(const nsAString& aId)
 }
 
 void
-Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
+Animation::SetEffect(AnimationEffectReadOnly* aEffect)
 {
   RefPtr<Animation> kungFuDeathGrip(this);
 
@@ -517,15 +517,20 @@ Animation::Tick()
 
   if (IsPossiblyOrphanedPendingAnimation()) {
     MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
-               "Orphaned pending animtaions should have an active timeline");
+               "Orphaned pending animations should have an active timeline");
     FinishPendingAt(mTimeline->GetCurrentTime().Value());
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 
+  if (!mEffect) {
+    return;
+  }
+
   // Update layers if we are newly finished.
-  if (mEffect &&
-      !mEffect->Properties().IsEmpty() &&
+  KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+  if (keyframeEffect &&
+      !keyframeEffect->Properties().IsEmpty() &&
       !mFinishedAtLastComposeStyle &&
       PlayState() == AnimationPlayState::Finished) {
     PostUpdate();
@@ -826,7 +831,10 @@ Animation::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
       }
     }
 
-    mEffect->ComposeStyle(aStyleRule, aSetProperties);
+    KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+    if (keyframeEffect) {
+      keyframeEffect->ComposeStyle(aStyleRule, aSetProperties);
+    }
   }
 
   MOZ_ASSERT(playState == PlayState(),
@@ -1115,17 +1123,22 @@ Animation::FlushStyle() const
 void
 Animation::PostUpdate()
 {
-  nsPresContext* presContext = GetPresContext();
-  if (!presContext) {
-    return;
-  }
-
   if (!mEffect) {
     return;
   }
 
-  Maybe<NonOwningAnimationTarget> target = mEffect->GetTarget();
+  KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+  if (!keyframeEffect) {
+    return;
+  }
+
+  Maybe<NonOwningAnimationTarget> target = keyframeEffect->GetTarget();
   if (!target) {
+    return;
+  }
+
+  nsPresContext* presContext = keyframeEffect->GetPresContext();
+  if (!presContext) {
     return;
   }
 
@@ -1226,21 +1239,11 @@ Animation::EffectEnd() const
 nsIDocument*
 Animation::GetRenderedDocument() const
 {
-  if (!mEffect) {
+  if (!mEffect || !mEffect->AsKeyframeEffect()) {
     return nullptr;
   }
 
-  return mEffect->GetRenderedDocument();
-}
-
-nsPresContext*
-Animation::GetPresContext() const
-{
-  if (!mEffect) {
-    return nullptr;
-  }
-
-  return mEffect->GetPresContext();
+  return mEffect->AsKeyframeEffect()->GetRenderedDocument();
 }
 
 void
@@ -1312,7 +1315,9 @@ Animation::DispatchPlaybackEvent(const nsAString& aName)
 bool
 Animation::IsRunningOnCompositor() const
 {
-  return mEffect && mEffect->IsRunningOnCompositor();
+  return mEffect &&
+         mEffect->AsKeyframeEffect() &&
+         mEffect->AsKeyframeEffect()->IsRunningOnCompositor();
 }
 
 } // namespace dom

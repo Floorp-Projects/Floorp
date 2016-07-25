@@ -205,11 +205,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual ElementPropertyTransition* AsTransition() { return nullptr; }
-  virtual const ElementPropertyTransition* AsTransition() const
-  {
-    return nullptr;
-  }
+  KeyframeEffectReadOnly* AsKeyframeEffect() override { return this; }
 
   // KeyframeEffectReadOnly interface
   static already_AddRefed<KeyframeEffectReadOnly>
@@ -243,12 +239,12 @@ public:
 
   already_AddRefed<AnimationEffectTimingReadOnly> Timing() const override;
 
-  const TimingParams& SpecifiedTiming() const
+  const TimingParams& SpecifiedTiming() const override
   {
     return mTiming->AsTimingParams();
   }
-  void SetSpecifiedTiming(const TimingParams& aTiming);
-  void NotifyAnimationTimingUpdated();
+  void SetSpecifiedTiming(const TimingParams& aTiming) override;
+  void NotifyAnimationTimingUpdated() override;
 
   Nullable<TimeDuration> GetLocalTime() const;
 
@@ -267,19 +263,17 @@ public:
                       const TimingParams& aTiming,
                       double aPlaybackRate);
 
-  // Shortcut for that gets the computed timing using the current local time as
-  // calculated from the timeline time.
   ComputedTiming
-  GetComputedTiming(const TimingParams* aTiming = nullptr) const;
+  GetComputedTiming(const TimingParams* aTiming = nullptr) const override;
 
   void
   GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const override;
 
-  bool IsInPlay() const;
-  bool IsCurrent() const;
-  bool IsInEffect() const;
+  bool IsInPlay() const override;
+  bool IsCurrent() const override;
+  bool IsInEffect() const override;
 
-  void SetAnimation(Animation* aAnimation);
+  void SetAnimation(Animation* aAnimation) override;
   Animation* GetAnimation() const { return mAnimation; }
 
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
@@ -288,13 +282,16 @@ public:
                     nsStyleContext* aStyleContext);
   const AnimationProperty*
   GetAnimationOfProperty(nsCSSPropertyID aProperty) const;
-  bool HasAnimationOfProperty(nsCSSPropertyID aProperty) const {
+  bool HasAnimationOfProperty(nsCSSPropertyID aProperty) const
+  {
     return GetAnimationOfProperty(aProperty) != nullptr;
   }
-  const InfallibleTArray<AnimationProperty>& Properties() const {
+  const InfallibleTArray<AnimationProperty>& Properties() const
+  {
     return mProperties;
   }
-  InfallibleTArray<AnimationProperty>& Properties() {
+  InfallibleTArray<AnimationProperty>& Properties()
+  {
     return mProperties;
   }
 
