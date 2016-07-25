@@ -28,6 +28,7 @@ marionette.jar:
 #ifdef ENABLE_TESTS
   content/test.xul  (harness/marionette/chrome/test.xul)
   content/test2.xul  (harness/marionette/chrome/test2.xul)
+  content/test_dialog.xul  (harness/marionette/chrome/test_dialog.xul)
   content/test_nested_iframe.xul  (harness/marionette/chrome/test_nested_iframe.xul)
   content/test_anonymous_content.xul  (harness/marionette/chrome/test_anonymous_content.xul)
 #endif
