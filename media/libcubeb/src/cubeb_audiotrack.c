@@ -250,9 +250,6 @@ audiotrack_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * l
     return CUBEB_ERROR;
   }
 
-  /* Convert to milliseconds. */
-  *latency_ms = *latency_ms * 1000 / params.rate;
-
   return CUBEB_OK;
 }
 

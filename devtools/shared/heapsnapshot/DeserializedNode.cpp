@@ -121,7 +121,7 @@ Concrete<DeserializedNode>::allocationStack() const
 
 
 js::UniquePtr<EdgeRange>
-Concrete<DeserializedNode>::edges(JSRuntime* rt, bool) const
+Concrete<DeserializedNode>::edges(JSContext* cx, bool) const
 {
   js::UniquePtr<DeserializedEdgeRange> range(js_new<DeserializedEdgeRange>(get()));
 

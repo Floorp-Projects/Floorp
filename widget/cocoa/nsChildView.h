@@ -13,7 +13,6 @@
 #include "mozAccessibleProtocol.h"
 #endif
 
-#include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
 #include "nsWeakPtr.h"
@@ -627,7 +626,7 @@ protected:
 
   // Used in OMTC BasicLayers mode. Presents the BasicCompositor result
   // surface to the screen using an OpenGL context.
-  nsAutoPtr<GLPresenter> mGLPresenter;
+  mozilla::UniquePtr<GLPresenter> mGLPresenter;
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;

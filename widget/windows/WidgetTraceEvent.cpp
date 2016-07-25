@@ -60,7 +60,7 @@ public:
     }
 
     nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
-    
+
     if (!baseWindow)
       return NS_ERROR_FAILURE;
 

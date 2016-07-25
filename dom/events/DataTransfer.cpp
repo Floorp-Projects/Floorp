@@ -1286,7 +1286,9 @@ DataTransfer::SetDataWithPrincipalFromOtherProcess(const nsAString& aFormat,
     RefPtr<DataTransferItem> item =
       mItems->SetDataWithPrincipal(format, aData, aIndex, aPrincipal,
                                    /* aInsertOnly = */ false, aHidden, rv);
-    NS_WARN_IF(rv.Failed());
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+    }
   }
 }
 

@@ -198,7 +198,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 
   NS_ASSERTION(printerName, "We have to have a printer name");
   if (!printerName || !*printerName) return rv;
- 
+
   return GetDataFromPrinter(printerName, mPrintSettings);
 }
 
@@ -318,13 +318,13 @@ void nsDeviceContextSpecWin::SetDevMode(LPDEVMODEW aDevMode)
 }
 
 //------------------------------------------------------------------
-void 
+void
 nsDeviceContextSpecWin::GetDevMode(LPDEVMODEW &aDevMode)
 {
   aDevMode = mDevMode;
 }
 
-#define DISPLAY_LAST_ERROR 
+#define DISPLAY_LAST_ERROR
 
 //----------------------------------------------------------------------------------
 // Setup the object's data member with the selected printer's data
@@ -344,7 +344,7 @@ nsDeviceContextSpecWin::GetDataFromPrinter(char16ptr_t aName, nsIPrintSettings* 
 
   HANDLE hPrinter = nullptr;
   wchar_t *name = (wchar_t*)aName; // Windows APIs use non-const name argument
-  
+
   BOOL status = ::OpenPrinterW(name, &hPrinter, nullptr);
   if (status) {
 
@@ -426,7 +426,7 @@ NS_IMPL_ISUPPORTS(nsPrinterEnumeratorWin, nsIPrinterEnumerator)
 
 //----------------------------------------------------------------------------------
 // Return the Default Printer name
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPrinterEnumeratorWin::GetDefaultPrinterName(char16_t * *aDefaultPrinterName)
 {
   NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
@@ -436,7 +436,7 @@ nsPrinterEnumeratorWin::GetDefaultPrinterName(char16_t * *aDefaultPrinterName)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const char16_t *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
   NS_ENSURE_ARG_POINTER(aPrinterName);
@@ -498,7 +498,7 @@ nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const char16_t *aPrinterNam
 //----------------------------------------------------------------------------------
 // Enumerate all the Printers from the global array and pass their
 // names back (usually to script)
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPrinterEnumeratorWin::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {
   NS_ENSURE_ARG_POINTER(aPrinterNameList);
@@ -530,7 +530,7 @@ nsPrinterEnumeratorWin::GetPrinterNameList(nsIStringEnumerator **aPrinterNameLis
 
 //----------------------------------------------------------------------------------
 // THe array hold the name and port for each printer
-void 
+void
 GlobalPrinters::ReallocatePrinters()
 {
   if (PrintersAreAllocated()) {
@@ -541,7 +541,7 @@ GlobalPrinters::ReallocatePrinters()
 }
 
 //----------------------------------------------------------------------------------
-void 
+void
 GlobalPrinters::FreeGlobalPrinters()
 {
   if (mPrinters != nullptr) {
@@ -554,14 +554,14 @@ GlobalPrinters::FreeGlobalPrinters()
 }
 
 //----------------------------------------------------------------------------------
-nsresult 
+nsresult
 GlobalPrinters::EnumerateNativePrinters()
 {
   nsresult rv = NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   PR_PL(("-----------------------\n"));
   PR_PL(("EnumerateNativePrinters\n"));
 
-  WCHAR szDefaultPrinterName[1024];    
+  WCHAR szDefaultPrinterName[1024];
   DWORD status = GetProfileStringW(L"devices", 0, L",",
                                    szDefaultPrinterName,
                                    ArrayLength(szDefaultPrinterName));
@@ -588,18 +588,18 @@ GlobalPrinters::EnumerateNativePrinters()
 
 //------------------------------------------------------------------
 // Uses the GetProfileString to get the default printer from the registry
-void 
+void
 GlobalPrinters::GetDefaultPrinterName(nsString& aDefaultPrinterName)
 {
   aDefaultPrinterName.Truncate();
-  WCHAR szDefaultPrinterName[1024];    
+  WCHAR szDefaultPrinterName[1024];
   DWORD status = GetProfileStringW(L"windows", L"device", 0,
                                    szDefaultPrinterName,
                                    ArrayLength(szDefaultPrinterName));
   if (status > 0) {
     WCHAR comma = ',';
     LPWSTR sPtr = szDefaultPrinterName;
-    while (*sPtr != comma && *sPtr != 0) 
+    while (*sPtr != comma && *sPtr != 0)
       sPtr++;
     if (*sPtr == comma) {
       *sPtr = 0;
@@ -615,7 +615,7 @@ GlobalPrinters::GetDefaultPrinterName(nsString& aDefaultPrinterName)
 //----------------------------------------------------------------------------------
 // This goes and gets the list of available printers and puts
 // the default printer at the beginning of the list
-nsresult 
+nsresult
 GlobalPrinters::EnumeratePrinterList()
 {
   // reallocate and get a new list each time it is asked for

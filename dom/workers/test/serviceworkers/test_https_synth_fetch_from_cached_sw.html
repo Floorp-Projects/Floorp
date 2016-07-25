@@ -38,7 +38,7 @@
         // properly store and retrieve the security info from the cache.
         iframe.parentNode.removeChild(iframe);
         iframe = null;
-        SpecialPowers.exactGC(window, function() {
+        SpecialPowers.exactGC(function() {
           iframe = document.createElement("iframe");
           iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/synth.html";
           document.body.appendChild(iframe);

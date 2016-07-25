@@ -220,12 +220,13 @@ GMPDecryptorChild::GetPluginVoucher(const uint8_t** aVoucher,
 }
 
 bool
-GMPDecryptorChild::RecvInit()
+GMPDecryptorChild::RecvInit(const bool& aDistinctiveIdentifierRequired,
+                            const bool& aPersistentStateRequired)
 {
   if (!mSession) {
     return false;
   }
-  mSession->Init(this);
+  mSession->Init(this, aDistinctiveIdentifierRequired, aPersistentStateRequired);
   return true;
 }
 

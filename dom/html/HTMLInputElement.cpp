@@ -508,7 +508,9 @@ GetDOMFileOrDirectoryName(const OwningFileOrDirectory& aData,
     MOZ_ASSERT(aData.IsDirectory());
     ErrorResult rv;
     aData.GetAsDirectory()->GetName(aName, rv);
-    NS_WARN_IF(rv.Failed());
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+    }
   }
 }
 
@@ -2823,8 +2825,7 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
   nsXPIDLString value;
 
   if (mFilesOrDirectories.IsEmpty()) {
-    if ((Preferences::GetBool("dom.input.dirpicker", false) &&
-         HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) ||
+    if ((Preferences::GetBool("dom.input.dirpicker", false) && Allowdirs()) ||
         (Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
          HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
@@ -2971,8 +2972,7 @@ HTMLInputElement::GetFiles()
     return nullptr;
   }
 
-  if (Preferences::GetBool("dom.input.dirpicker", false) &&
-      HasAttr(kNameSpaceID_None, nsGkAtoms::directory) &&
+  if (Preferences::GetBool("dom.input.dirpicker", false) && Allowdirs() &&
       (!Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) ||
        !HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
     return nullptr;
@@ -4089,8 +4089,7 @@ HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor)
     if (target &&
         target->GetParent() == this &&
         target->IsRootOfNativeAnonymousSubtree() &&
-        ((Preferences::GetBool("dom.input.dirpicker", false) &&
-          HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) ||
+        ((Preferences::GetBool("dom.input.dirpicker", false) && Allowdirs()) ||
          (Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
           HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)))) {
       type = FILE_PICKER_DIRECTORY;
@@ -5386,7 +5385,7 @@ HTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   if (aAttribute == nsGkAtoms::type ||
       // The presence or absence of the 'directory' attribute determines what
       // buttons we show for type=file.
-      aAttribute == nsGkAtoms::directory ||
+      aAttribute == nsGkAtoms::allowdirs ||
       aAttribute == nsGkAtoms::webkitdirectory) {
     retval |= nsChangeHint_ReconstructFrame;
   } else if (mType == NS_FORM_INPUT_IMAGE &&

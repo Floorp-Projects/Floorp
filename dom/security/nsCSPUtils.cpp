@@ -18,6 +18,8 @@
 #include "nsReadableUtils.h"
 #include "nsSandboxFlags.h"
 
+#define DEFAULT_PORT -1
+
 static mozilla::LogModule*
 GetCspUtilsLog()
 {
@@ -437,6 +439,89 @@ nsCSPHostSrc::~nsCSPHostSrc()
 {
 }
 
+/*
+ * Checks whether the current directive permits a specific port.
+ * @param aEnforcementScheme
+ *        The scheme that this directive allows
+ *        (used to query the default port for that scheme)
+ * @param aEnforcementPort
+ *        The port that this directive allows
+ * @param aResourceURI
+ *        The uri of the subresource load
+ */
+bool
+permitsPort(const nsAString& aEnforcementScheme,
+            const nsAString& aEnforcementPort,
+            nsIURI* aResourceURI)
+{
+  // If enforcement port is the wildcard, don't block the load.
+  if (aEnforcementPort.EqualsASCII("*")) {
+    return true;
+  }
+
+  int32_t resourcePort;
+  nsresult rv = aResourceURI->GetPort(&resourcePort);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Avoid unnecessary string creation/manipulation and don't block the
+  // load if the resource to be loaded uses the default port for that
+  // scheme and there is no port to be enforced.
+  // Note, this optimization relies on scheme checks within permitsScheme().
+  if (resourcePort == DEFAULT_PORT && aEnforcementPort.IsEmpty()) {
+    return true;
+  }
+
+  // By now we know at that either the resourcePort does not use the default
+  // port or there is a port restriction to be enforced. A port value of -1
+  // corresponds to the protocol's default port (eg. -1 implies port 80 for
+  // http URIs), in such a case we have to query the default port of the
+  // resource to be loaded.
+  if (resourcePort == DEFAULT_PORT) {
+    nsAutoCString resourceScheme;
+    rv = aResourceURI->GetScheme(resourceScheme);
+    NS_ENSURE_SUCCESS(rv, false);
+    resourcePort = NS_GetDefaultPort(resourceScheme.get());
+  }
+
+  // If there is a port to be enforced and the ports match, then
+  // don't block the load.
+  nsString resourcePortStr;
+  resourcePortStr.AppendInt(resourcePort);
+  if (aEnforcementPort.Equals(resourcePortStr)) {
+    return true;
+  }
+
+  // If there is no port to be enforced, query the default port for the load.
+  nsString enforcementPort(aEnforcementPort);
+  if (enforcementPort.IsEmpty()) {
+    // For scheme less sources, our parser always generates a scheme
+    // which is the scheme of the protected resource.
+    MOZ_ASSERT(!aEnforcementScheme.IsEmpty(),
+               "need a scheme to query default port");
+    int32_t defaultEnforcementPort =
+      NS_GetDefaultPort(NS_ConvertUTF16toUTF8(aEnforcementScheme).get());
+    enforcementPort.Truncate();
+    enforcementPort.AppendInt(defaultEnforcementPort);
+  }
+
+  // If default ports match, don't block the load
+  if (enforcementPort.Equals(resourcePortStr)) {
+    return true;
+  }
+
+  // Additional port matching where the regular URL matching algorithm
+  // treats insecure ports as matching their secure variants.
+  // default port for http is  :80
+  // default port for https is :443
+  if (enforcementPort.EqualsLiteral("80") &&
+      resourcePortStr.EqualsLiteral("443")) {
+    return true;
+  }
+
+  // ports do not match, block the load.
+  return false;
+}
+
 bool
 nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
                       bool aReportOnly, bool aUpgradeInsecure) const
@@ -502,6 +587,11 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
     return false;
   }
 
+  // Port matching: Check if the ports match.
+  if (!permitsPort(mScheme, mPort, aUri)) {
+    return false;
+  }
+
   // 4.9) Path matching: If there is a path, we have to enforce
   // path-level matching, unless the channel got redirected, see:
   // http://www.w3.org/TR/CSP11/#source-list-paths-and-redirects
@@ -534,46 +624,7 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
     }
   }
 
-  // 4.8) Port matching: If port uses wildcard, allow the load.
-  if (mPort.EqualsASCII("*")) {
-    return true;
-  }
-
-  // Before we can check if the port matches, we have to
-  // query the port from aUri.
-  int32_t uriPort;
-  rv = aUri->GetPort(&uriPort);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  nsAutoCString scheme;
-  rv = aUri->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  uriPort = (uriPort > 0) ? uriPort : NS_GetDefaultPort(scheme.get());
-
-  // 4.7) Default port matching: If mPort is empty, we have to compare default ports.
-  if (mPort.IsEmpty()) {
-    int32_t port = NS_GetDefaultPort(NS_ConvertUTF16toUTF8(mScheme).get());
-    if (port != uriPort) {
-      // We should not return false for scheme-less sources where the protected resource
-      // is http and the load is https, see: http://www.w3.org/TR/CSP2/#match-source-expression
-      // BUT, we only allow scheme-less sources to be upgraded from http to https if CSP
-      // does not explicitly define a port.
-      if (!(uriPort == NS_GetDefaultPort("https"))) {
-        return false;
-      }
-    }
-  }
-  // 4.7) Port matching: Compare the ports.
-  else {
-    nsString portStr;
-    portStr.AppendInt(uriPort);
-    if (!mPort.Equals(portStr)) {
-      return false;
-    }
-  }
-
-  // At the end: scheme, host, path, and port match -> allow the load.
+  // At the end: scheme, host, port and path match -> allow the load.
   return true;
 }
 

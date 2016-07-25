@@ -1781,6 +1781,20 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
+    struct OnImeRequestCursorUpdates_t {
+        typedef GeckoEditable Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t> Args;
+        static constexpr char name[] = "onImeRequestCursorUpdates";
+        static constexpr char signature[] =
+                "(I)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct OnImeSynchronize_t {
         typedef GeckoEditable Owner;
         typedef void ReturnType;
@@ -1885,6 +1899,22 @@ public:
     };
 
     auto OnViewChange(mozilla::jni::Object::Param) const -> void;
+
+    struct UpdateCompositionRects_t {
+        typedef GeckoEditable Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::ObjectArray::Param> Args;
+        static constexpr char name[] = "updateCompositionRects";
+        static constexpr char signature[] =
+                "([Landroid/graphics/RectF;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto UpdateCompositionRects(mozilla::jni::ObjectArray::Param) const -> void;
 
     static const bool isMultithreaded = false;
 

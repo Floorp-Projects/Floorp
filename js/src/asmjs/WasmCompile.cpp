@@ -550,7 +550,7 @@ DecodeTypeSection(Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeSignatureIndex(Decoder& d, const ModuleGeneratorData& init, const DeclaredSig** sig)
+DecodeSignatureIndex(Decoder& d, const ModuleGeneratorData& init, const SigWithId** sig)
 {
     uint32_t sigIndex;
     if (!d.readVarU32(&sigIndex))
@@ -723,7 +723,7 @@ static bool
 DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector* imports)
 {
     if (!newFormat) {
-        const DeclaredSig* sig = nullptr;
+        const SigWithId* sig = nullptr;
         if (!DecodeSignatureIndex(d, *init, &sig))
             return false;
 
@@ -764,7 +764,7 @@ DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector
 
     switch (DefinitionKind(importKind)) {
       case DefinitionKind::Function: {
-        const DeclaredSig* sig = nullptr;
+        const SigWithId* sig = nullptr;
         if (!DecodeSignatureIndex(d, *init, &sig))
             return false;
         if (!CheckTypeForJS(d, *sig))
@@ -1067,7 +1067,7 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
         return false;
 
     ValTypeVector locals;
-    const DeclaredSig& sig = mg.funcSig(funcIndex);
+    const Sig& sig = mg.funcSig(funcIndex);
     if (!locals.appendAll(sig.args()))
         return false;
 
@@ -1120,7 +1120,7 @@ DecodeStartSection(Decoder& d, ModuleGenerator& mg)
     if (startFuncIndex >= mg.numFuncSigs())
         return Fail(d, "unknown start function");
 
-    const DeclaredSig& sig = mg.funcSig(startFuncIndex);
+    const Sig& sig = mg.funcSig(startFuncIndex);
     if (sig.ret() != ExprType::Void)
         return Fail(d, "start function must not return anything");
 

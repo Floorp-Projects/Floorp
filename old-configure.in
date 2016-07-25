@@ -4515,8 +4515,9 @@ AC_SUBST(MOZ_NO_EV_CERTS)
 dnl ========================================================
 dnl = Sandboxing support
 dnl ========================================================
-if test -n "$MOZ_TSAN"; then
+if test -n "$MOZ_TSAN" -o -n "$MOZ_ASAN"; then
     # Bug 1182565: TSan conflicts with sandboxing on Linux.
+    # Bug 1287971: LSan also conflicts with sandboxing on Linux.
     case $OS_TARGET in
     Linux|Android)
         MOZ_SANDBOX=

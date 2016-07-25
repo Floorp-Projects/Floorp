@@ -12,7 +12,8 @@ cp $1/src/cubeb-speex-resampler.h src
 cp $1/src/cubeb.c src
 cp $1/src/cubeb_alsa.c src
 cp $1/src/cubeb_audiotrack.c src
-cp $1/src/cubeb_audiounit.c src
+cp $1/src/cubeb_audiounit.cpp src
+cp $1/src/cubeb_osx_run_loop.h src
 cp $1/src/cubeb_jack.cpp src
 cp $1/src/cubeb_opensl.c src
 cp $1/src/cubeb_panner.cpp src

@@ -41,6 +41,59 @@ using namespace js::wasm;
 using mozilla::BinarySearch;
 using mozilla::Swap;
 
+class SigIdSet
+{
+    typedef HashMap<const Sig*, uint32_t, SigHashPolicy, SystemAllocPolicy> Map;
+    Map map_;
+
+  public:
+    ~SigIdSet() {
+        MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !map_.initialized() || map_.empty());
+    }
+
+    bool ensureInitialized(JSContext* cx) {
+        if (!map_.initialized() && !map_.init()) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool allocateSigId(JSContext* cx, const Sig& sig, const void** sigId) {
+        Map::AddPtr p = map_.lookupForAdd(sig);
+        if (p) {
+            MOZ_ASSERT(p->value() > 0);
+            p->value()++;
+            *sigId = p->key();
+            return true;
+        }
+
+        UniquePtr<Sig> clone = MakeUnique<Sig>();
+        if (!clone || !clone->clone(sig) || !map_.add(p, clone.get(), 1)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        *sigId = clone.release();
+        MOZ_ASSERT(!(uintptr_t(*sigId) & SigIdDesc::ImmediateBit));
+        return true;
+    }
+
+    void deallocateSigId(const Sig& sig, const void* sigId) {
+        Map::Ptr p = map_.lookup(sig);
+        MOZ_RELEASE_ASSERT(p && p->key() == sigId && p->value() > 0);
+
+        p->value()--;
+        if (!p->value()) {
+            js_delete(p->key());
+            map_.remove(p);
+        }
+    }
+};
+
+ExclusiveData<SigIdSet> sigIdSet;
+
 uint8_t**
 Instance::addressOfMemoryBase() const
 {
@@ -52,6 +105,13 @@ Instance::addressOfTableBase(size_t tableIndex) const
 {
     MOZ_ASSERT(metadata_->tables[tableIndex].globalDataOffset >= InitialGlobalDataBytes);
     return (void**)(codeSegment_->globalData() + metadata_->tables[tableIndex].globalDataOffset);
+}
+
+const void**
+Instance::addressOfSigId(const SigIdDesc& sigId) const
+{
+    MOZ_ASSERT(sigId.globalDataOffset() >= InitialGlobalDataBytes);
+    return (const void**)(codeSegment_->globalData() + sigId.globalDataOffset());
 }
 
 FuncImportExit&
@@ -388,12 +448,42 @@ Instance::Instance(UniqueCodeSegment codeSegment,
         *addressOfTableBase(i) = tables_[i]->array();
 }
 
+bool
+Instance::init(JSContext* cx)
+{
+    if (!metadata_->sigIds.empty()) {
+        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
+
+        if (!lockedSigIdSet->ensureInitialized(cx))
+            return false;
+
+        for (const SigWithId& sig : metadata_->sigIds) {
+            const void* sigId;
+            if (!lockedSigIdSet->allocateSigId(cx, sig, &sigId))
+                return false;
+
+            *addressOfSigId(sig.id) = sigId;
+        }
+    }
+
+    return true;
+}
+
 Instance::~Instance()
 {
     for (unsigned i = 0; i < metadata_->funcImports.length(); i++) {
         FuncImportExit& exit = funcImportToExit(metadata_->funcImports[i]);
         if (exit.baselineScript)
             exit.baselineScript->removeDependentWasmImport(*this, i);
+    }
+
+    if (!metadata_->sigIds.empty()) {
+        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
+
+        for (const SigWithId& sig : metadata_->sigIds) {
+            if (const void* sigId = *addressOfSigId(sig.id))
+                lockedSigIdSet->deallocateSigId(sig, sigId);
+        }
     }
 }
 

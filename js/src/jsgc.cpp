@@ -1360,7 +1360,7 @@ void
 GCRuntime::callGCCallback(JSGCStatus status) const
 {
     if (gcCallback.op)
-        gcCallback.op(rt, status, gcCallback.data);
+        gcCallback.op(rt->contextFromMainThread(), status, gcCallback.data);
 }
 
 void
@@ -1375,7 +1375,7 @@ void
 GCRuntime::callObjectsTenuredCallback()
 {
     if (tenuredCallback.op)
-        tenuredCallback.op(rt, tenuredCallback.data);
+        tenuredCallback.op(rt->contextFromMainThread(), tenuredCallback.data);
 }
 
 namespace {
@@ -1450,7 +1450,7 @@ void
 GCRuntime::callWeakPointerZoneGroupCallbacks() const
 {
     for (auto const& p : updateWeakPointerZoneGroupCallbacks) {
-        p.op(rt, p.data);
+        p.op(rt->contextFromMainThread(), p.data);
     }
 }
 
@@ -1476,7 +1476,7 @@ void
 GCRuntime::callWeakPointerCompartmentCallbacks(JSCompartment* comp) const
 {
     for (auto const& p : updateWeakPointerCompartmentCallbacks) {
-        p.op(rt, comp, p.data);
+        p.op(rt->contextFromMainThread(), comp, p.data);
     }
 }
 
@@ -1885,7 +1885,7 @@ AllocRelocatedCell(Zone* zone, AllocKind thingKind, size_t thingSize)
 static void
 RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind, size_t thingSize)
 {
-    JS::AutoSuppressGCAnalysis nogc(zone->runtimeFromMainThread());
+    JS::AutoSuppressGCAnalysis nogc(zone->contextFromMainThread());
 
     // Allocate a new cell.
     MOZ_ASSERT(zone == src->zone());
@@ -2441,19 +2441,34 @@ GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, s
     }
 }
 
-// Pointer updates run in three phases because of depdendencies between the
-// different types of GC thing. The most important consideration is the
-// dependency:
+// After cells have been relocated any pointers to a cell's old locations must
+// be updated to point to the new location.  This happens by iterating through
+// all cells in heap and tracing their children (non-recursively) to update
+// them.
 //
-//    object ---> shape ---> base shape
-
-static const AllocKinds UpdatePhaseBaseShapes {
-    AllocKind::BASE_SHAPE
-};
+// This is complicated by the fact that updating a GC thing sometimes depends on
+// making use of other GC things.  After a moving GC these things may not be in
+// a valid state since they may contain pointers which have not been updated
+// yet.
+//
+// The main dependencies are:
+//
+//   - Updating a JSObject makes use of its shape
+//   - Updating a typed object makes use of its type descriptor object
+//
+// This means we require at least three phases for update:
+//
+//  1) shapes
+//  2) typed object type descriptor objects
+//  3) all other objects
+//
+// Since we want to minimize the number of phases, we put everything else into
+// the first phase and label it the 'misc' phase.
 
 static const AllocKinds UpdatePhaseMisc {
     AllocKind::SCRIPT,
     AllocKind::LAZY_SCRIPT,
+    AllocKind::BASE_SHAPE,
     AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE,
     AllocKind::OBJECT_GROUP,
@@ -2484,8 +2499,6 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
     AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
 
     size_t bgTaskCount = CellUpdateBackgroundTaskCount();
-
-    updateCellPointers(trc, zone, UpdatePhaseBaseShapes, bgTaskCount);
 
     updateCellPointers(trc, zone, UpdatePhaseMisc, bgTaskCount);
 
@@ -3540,13 +3553,14 @@ GCRuntime::sweepZones(FreeOp* fop, bool destroyingRuntime)
                 // We are about to delete the Zone; this will leave the Zone*
                 // in the arena header dangling if there are any arenas
                 // remaining at this point.
-                zone->arenas.checkEmptyArenaLists();
+                mozilla::DebugOnly<bool> arenasEmpty = zone->arenas.checkEmptyArenaLists();
 
                 if (callback)
                     callback(zone);
 
                 zone->sweepCompartments(fop, false, destroyingRuntime);
                 MOZ_ASSERT(zone->compartments.empty());
+                MOZ_ASSERT_IF(arenasEmpty, zone->typeDescrObjects.empty());
                 fop->delete_(zone);
                 stats.sweptZone();
                 continue;
@@ -3574,9 +3588,10 @@ FOR_EACH_ALLOCKIND(MAKE_CASE)
 }
 #endif // DEBUG
 
-void
+bool
 ArenaLists::checkEmptyArenaList(AllocKind kind)
 {
+    bool empty = true;
 #ifdef DEBUG
     if (!arenaLists[kind].isEmpty()) {
         for (Arena* current = arenaLists[kind].head(); current; current = current->next) {
@@ -3585,10 +3600,12 @@ ArenaLists::checkEmptyArenaList(AllocKind kind)
                 MOZ_ASSERT(t->asTenured().isMarked(), "unmarked cells should have been finalized");
                 fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
                         t, AllocKindToAscii(kind));
+                empty = false;
             }
         }
     }
 #endif // DEBUG
+    return empty;
 }
 
 void
@@ -7004,8 +7021,8 @@ JS::AutoAssertOnGC::AutoAssertOnGC()
     }
 }
 
-JS::AutoAssertOnGC::AutoAssertOnGC(JSRuntime* rt)
-  : gc(&rt->gc), gcNumber(rt->gc.gcNumber())
+JS::AutoAssertOnGC::AutoAssertOnGC(JSContext* cx)
+  : gc(&cx->gc), gcNumber(cx->gc.gcNumber())
 {
     gc->enterUnsafeRegion();
 }
@@ -7030,10 +7047,10 @@ JS::AutoAssertOnGC::VerifyIsSafeToGC(JSRuntime* rt)
         MOZ_CRASH("[AutoAssertOnGC] possible GC in GC-unsafe region");
 }
 
-JS::AutoAssertNoAlloc::AutoAssertNoAlloc(JSRuntime* rt)
+JS::AutoAssertNoAlloc::AutoAssertNoAlloc(JSContext* cx)
   : gc(nullptr)
 {
-    disallowAlloc(rt);
+    disallowAlloc(cx);
 }
 
 void JS::AutoAssertNoAlloc::disallowAlloc(JSRuntime* rt)
@@ -7213,9 +7230,9 @@ JS::AbortIncrementalGC(JSContext* cx)
 }
 
 char16_t*
-JS::GCDescription::formatSliceMessage(JSRuntime* rt) const
+JS::GCDescription::formatSliceMessage(JSContext* cx) const
 {
-    UniqueChars cstr = rt->gc.stats.formatCompactSliceMessage();
+    UniqueChars cstr = cx->gc.stats.formatCompactSliceMessage();
 
     size_t nchars = strlen(cstr.get());
     UniqueTwoByteChars out(js_pod_malloc<char16_t>(nchars + 1));
@@ -7228,9 +7245,9 @@ JS::GCDescription::formatSliceMessage(JSRuntime* rt) const
 }
 
 char16_t*
-JS::GCDescription::formatSummaryMessage(JSRuntime* rt) const
+JS::GCDescription::formatSummaryMessage(JSContext* cx) const
 {
-    UniqueChars cstr = rt->gc.stats.formatCompactSummaryMessage();
+    UniqueChars cstr = cx->gc.stats.formatCompactSummaryMessage();
 
     size_t nchars = strlen(cstr.get());
     UniqueTwoByteChars out(js_pod_malloc<char16_t>(nchars + 1));
@@ -7243,15 +7260,15 @@ JS::GCDescription::formatSummaryMessage(JSRuntime* rt) const
 }
 
 JS::dbg::GarbageCollectionEvent::Ptr
-JS::GCDescription::toGCEvent(JSRuntime* rt) const
+JS::GCDescription::toGCEvent(JSContext* cx) const
 {
-    return JS::dbg::GarbageCollectionEvent::Create(rt, rt->gc.stats, rt->gc.majorGCCount());
+    return JS::dbg::GarbageCollectionEvent::Create(cx, cx->gc.stats, cx->gc.majorGCCount());
 }
 
 char16_t*
-JS::GCDescription::formatJSON(JSRuntime* rt, uint64_t timestamp) const
+JS::GCDescription::formatJSON(JSContext* cx, uint64_t timestamp) const
 {
-    UniqueChars cstr = rt->gc.stats.formatJsonMessage(timestamp);
+    UniqueChars cstr = cx->gc.stats.formatJsonMessage(timestamp);
 
     size_t nchars = strlen(cstr.get());
     UniqueTwoByteChars out(js_pod_malloc<char16_t>(nchars + 1));
@@ -7585,7 +7602,8 @@ StateName(State state)
         "Mark",
         "Sweep",
         "Finalize",
-        "Compact"
+        "Compact",
+        "Decommit"
     };
     MOZ_ASSERT(ArrayLength(names) == NUM_STATES);
     MOZ_ASSERT(state < NUM_STATES);

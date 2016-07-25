@@ -26,7 +26,7 @@
 namespace mozilla {
 namespace widget {
 
-/* 
+/*
  * To take advantage of what Vista+ have to offer with respect to audio,
  * we need to maintain an audio session.  This class wraps IAudioSessionControl
  * and implements IAudioSessionEvents (for callbacks from Windows)
@@ -201,7 +201,7 @@ AudioSession::Start()
     MOZ_ASSERT(XRE_IsParentProcess(),
                "Should only get here in a chrome process!");
 
-    nsCOMPtr<nsIStringBundleService> bundleService = 
+    nsCOMPtr<nsIStringBundleService> bundleService =
       do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     NS_ENSURE_TRUE(bundleService, NS_ERROR_FAILURE);
     nsCOMPtr<nsIStringBundle> bundle;

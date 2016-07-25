@@ -675,7 +675,7 @@ protected:
 
   // When On*Composition() is called without document lock, we need to flush
   // the recorded actions at quitting the method.
-  // AutoPendingActionAndContentFlusher class is usedful for it.  
+  // AutoPendingActionAndContentFlusher class is usedful for it.
   class MOZ_STACK_CLASS AutoPendingActionAndContentFlusher final
   {
   public:
@@ -866,7 +866,7 @@ protected:
     DWORD Cookie() const { return mCookie; }
     bool OnMouseButtonEvent(ULONG aEdge, ULONG aQuadrant, DWORD aButtonStatus);
     LONG RangeStart() const { return mStart; }
-  
+
   private:
     RefPtr<ITfMouseSink> mSink;
     LONG mStart;

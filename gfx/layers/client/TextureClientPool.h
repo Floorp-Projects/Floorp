@@ -151,6 +151,11 @@ private:
   RefPtr<nsITimer> mTimer;
   // This mSurfaceAllocator owns us, so no need to hold a ref to it
   TextureForwarder* mSurfaceAllocator;
+
+  // Keep track of whether this pool has been destroyed or not. If it has,
+  // we won't accept returns of TextureClients anymore, and the refcounting
+  // should take care of their destruction.
+  bool mDestroyed;
 };
 
 } // namespace layers

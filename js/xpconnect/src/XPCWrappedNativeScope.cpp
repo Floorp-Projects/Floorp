@@ -375,6 +375,12 @@ UseContentXBLScope(JSCompartment* c)
   return scope && scope->UseContentXBLScope();
 }
 
+void
+ClearContentXBLScope(JSObject* global)
+{
+    CompartmentPrivate::Get(global)->scope->ClearContentXBLScope();
+}
+
 } /* namespace xpc */
 
 JSObject*

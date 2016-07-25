@@ -26,8 +26,8 @@
 #define BEGIN_TEST fprintf(stderr, "START %s\n", __func__)
 #define END_TEST fprintf(stderr, "END %s\n", __func__)
 
-#define STREAM_LATENCY 100
 #define STREAM_RATE 44100
+#define STREAM_LATENCY 100 * STREAM_RATE / 1000
 #define STREAM_CHANNELS 1
 #if (defined(_WIN32) || defined(__WIN32__))
 #define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE

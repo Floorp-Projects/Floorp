@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import android.graphics.RectF;
 import android.view.KeyEvent;
 
 /**
@@ -38,4 +39,5 @@ interface GeckoEditableListener {
     void onSelectionChange(int start, int end);
     void onTextChange(CharSequence text, int start, int oldEnd, int newEnd);
     void onDefaultKeyEvent(KeyEvent event);
+    void updateCompositionRects(final RectF[] aRects);
 }

@@ -1247,34 +1247,6 @@ CodeGeneratorX64::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 }
 
 void
-CodeGeneratorX64::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
-{
-    const MAsmJSLoadFuncPtr* mir = ins->mir();
-
-    Register index = ToRegister(ins->index());
-    Register out = ToRegister(ins->output());
-
-    if (mir->hasLimit()) {
-        masm.branch32(Assembler::Condition::AboveOrEqual, index, Imm32(mir->limit()),
-                      wasm::JumpTarget::OutOfBounds);
-    }
-
-    CodeOffset label = masm.loadRipRelativeInt64(out);
-    masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
-
-    masm.loadPtr(Operand(out, index, ScalePointer, 0), out);
-}
-
-void
-CodeGeneratorX64::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
-{
-    MAsmJSLoadFFIFunc* mir = ins->mir();
-
-    CodeOffset label = masm.loadRipRelativeInt64(ToRegister(ins->output()));
-    masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
-}
-
-void
 CodeGeneratorX64::visitTruncateDToInt32(LTruncateDToInt32* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());

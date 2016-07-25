@@ -232,9 +232,6 @@ public:
     void ReleaseNativeWindow(void *window);
     mozilla::gfx::IntSize GetNativeWindowSize(void* window);
 
-    void *AcquireNativeWindowFromSurfaceTexture(JNIEnv* aEnv, jobject aSurface);
-    void ReleaseNativeWindowForSurfaceTexture(void *window);
-
     void HandleGeckoMessage(JSContext* cx, JS::HandleObject message);
 
     bool InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps);
@@ -403,7 +400,6 @@ protected:
     int (* AndroidBitmap_unlockPixels)(JNIEnv *env, jobject bitmap);
 
     void* (*ANativeWindow_fromSurface)(JNIEnv *env, jobject surface);
-    void* (*ANativeWindow_fromSurfaceTexture)(JNIEnv *env, jobject surfaceTexture);
     void (*ANativeWindow_release)(void *window);
     int (*ANativeWindow_setBuffersGeometry)(void *window, int width, int height, int format);
 

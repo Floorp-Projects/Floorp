@@ -123,6 +123,11 @@ AllowContentXBLScope(JSCompartment* c);
 bool
 UseContentXBLScope(JSCompartment* c);
 
+// Clear out the content XBL scope (if any) on the given global.  This will
+// force creation of a new one if one is needed again.
+void
+ClearContentXBLScope(JSObject* global);
+
 bool
 IsInAddonScope(JSObject* obj);
 

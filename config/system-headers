@@ -498,6 +498,7 @@ glib-object.h
 gmodule.h
 gnome.h
 gnu/libc-version.h
+gps.h
 grp.h
 gssapi_generic.h
 gssapi/gssapi_generic.h

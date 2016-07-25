@@ -808,6 +808,9 @@ constexpr char GeckoEditable::OnImeAddCompositionRange_t::signature[];
 constexpr char GeckoEditable::OnImeReplaceText_t::name[];
 constexpr char GeckoEditable::OnImeReplaceText_t::signature[];
 
+constexpr char GeckoEditable::OnImeRequestCursorUpdates_t::name[];
+constexpr char GeckoEditable::OnImeRequestCursorUpdates_t::signature[];
+
 constexpr char GeckoEditable::OnImeSynchronize_t::name[];
 constexpr char GeckoEditable::OnImeSynchronize_t::signature[];
 
@@ -839,6 +842,14 @@ constexpr char GeckoEditable::OnViewChange_t::signature[];
 auto GeckoEditable::OnViewChange(mozilla::jni::Object::Param a0) const -> void
 {
     return mozilla::jni::Method<OnViewChange_t>::Call(GeckoEditable::mCtx, nullptr, a0);
+}
+
+constexpr char GeckoEditable::UpdateCompositionRects_t::name[];
+constexpr char GeckoEditable::UpdateCompositionRects_t::signature[];
+
+auto GeckoEditable::UpdateCompositionRects(mozilla::jni::ObjectArray::Param a0) const -> void
+{
+    return mozilla::jni::Method<UpdateCompositionRects_t>::Call(GeckoEditable::mCtx, nullptr, a0);
 }
 
 const char GeckoEditableListener::name[] =

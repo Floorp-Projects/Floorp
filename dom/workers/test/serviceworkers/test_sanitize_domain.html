@@ -58,7 +58,7 @@
         iframe.src = "about:blank";
         document.body.removeChild(iframe);
         iframe = null;
-        SpecialPowers.exactGC(window, function() {
+        SpecialPowers.exactGC(function() {
           resolve(message.data);
         });
       };

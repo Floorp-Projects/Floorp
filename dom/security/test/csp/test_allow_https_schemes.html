@@ -28,7 +28,12 @@ SimpleTest.waitForExplicitFinish();
 var policies = [
   ["allowed", "example.com"],
   ["allowed", "example.com:443"],
-  ["blocked", "example.com:80"]
+  ["allowed", "example.com:80"],
+  ["allowed", "http://*:80"],
+  ["allowed", "https://*:443"],
+  // our testing framework only supports :80 and :443, but
+  // using :8000 in a policy does the trick for the test.
+  ["blocked", "example.com:8000"],
 ]
 
 var counter = 0;

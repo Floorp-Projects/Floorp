@@ -457,7 +457,7 @@ XPCJSRuntime::RemoveWrappedJS(nsXPCWrappedJS* wrapper)
 
 #ifdef DEBUG
 static void
-NotHasWrapperAssertionCallback(JSRuntime* rt, void* data, JSCompartment* comp)
+NotHasWrapperAssertionCallback(JSContext* cx, void* data, JSCompartment* comp)
 {
     auto wrapper = static_cast<nsXPCWrappedJS*>(data);
     auto xpcComp = xpc::CompartmentPrivate::Get(comp);
@@ -472,7 +472,7 @@ XPCJSRuntime::AssertInvalidWrappedJSNotInTable(nsXPCWrappedJS* wrapper) const
     if (!wrapper->IsValid()) {
         MOZ_ASSERT(!GetMultiCompartmentWrappedJSMap()->HasWrapper(wrapper));
         if (!mGCIsRunning)
-            JS_IterateCompartments(Runtime(), wrapper, NotHasWrapperAssertionCallback);
+            JS_IterateCompartments(Context(), wrapper, NotHasWrapperAssertionCallback);
     }
 #endif
 }

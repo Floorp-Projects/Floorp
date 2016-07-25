@@ -5683,6 +5683,23 @@
     "releaseChannelCollection": "opt-out",
     "description": "A counter incremented every time the browser enters simplified mode on print preview."
   },
+  "PRINT_PREVIEW_SIMPLIFY_PAGE_UNAVAILABLE_COUNT": {
+     "alert_emails": ["carnold@mozilla.org"],
+     "bug_numbers": [1287587],
+     "expires_in_version": "56",
+     "kind": "count",
+     "releaseChannelCollection": "opt-out",
+     "description": "A counter incremented every time the simplified mode is unavailable on print preview."
+   },
+  "PRINT_COUNT": {
+     "alert_emails": ["carnold@mozilla.org"],
+     "bug_numbers": [1287587],
+     "expires_in_version": "56",
+     "kind": "count",
+     "keyed": true,
+     "releaseChannelCollection": "opt-out",
+     "description": "A counter incremented every time the user prints a document."
+   },
   "DEVTOOLS_DEBUGGER_DISPLAY_SOURCE_LOCAL_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7537,6 +7554,13 @@
     "kind": "enumerated",
     "n_values": 64,
     "description": "TLS/SSL version intolerance was falsely detected, server rejected handshake (see tlsIntoleranceTelemetryBucket() in nsNSSIOLayer.cpp)."
+  },
+  "SSL_WEAK_CIPHERS_FALLBACK": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "Fallback attempted when server did not support any strong cipher suites"
   },
   "SSL_CIPHER_SUITE_FULL": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],

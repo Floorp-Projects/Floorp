@@ -92,6 +92,8 @@ class ScriptedProxyHandler : public BaseProxyHandler
     // The "function extended" slot index in which the revocation object is stored. Per spec, this
     // is to be cleared during the first revocation.
     static const int REVOKE_SLOT = 0;
+
+    static JSObject* handlerObject(const JSObject* proxy);
 };
 
 bool
