@@ -87,6 +87,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsScriptLoadRequest)
 nsScriptLoadRequest::~nsScriptLoadRequest()
 {
   js_free(mScriptTextBuf);
+
+  // We should always clean up any off-thread script parsing resources.
+  MOZ_ASSERT(!mOffThreadToken);
+
+  // But play it safe in release builds and try to clean them up here
+  // as a fail safe.
+  MaybeCancelOffThreadScript();
 }
 
 void
@@ -94,6 +101,27 @@ nsScriptLoadRequest::SetReady()
 {
   MOZ_ASSERT(mProgress != Progress::Ready);
   mProgress = Progress::Ready;
+}
+
+void
+nsScriptLoadRequest::Cancel()
+{
+  MaybeCancelOffThreadScript();
+  mIsCanceled = true;
+}
+
+void
+nsScriptLoadRequest::MaybeCancelOffThreadScript()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mOffThreadToken) {
+    return;
+  }
+
+  JSContext* cx = JS_GetContext(xpc::GetJSRuntime());
+  JS::CancelOffThreadScript(cx, mOffThreadToken);
+  mOffThreadToken = nullptr;
 }
 
 //////////////////////////////////////////////////////////////
@@ -1829,9 +1857,7 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
     // (disappearing window, some other error, ...). Finish the
     // request to avoid leaks in the JS engine.
     MOZ_ASSERT(!aRequest->IsModuleRequest());
-    JSContext* cx = JS_GetContext(xpc::GetJSRuntime());
-    JS::CancelOffThreadScript(cx, aRequest->mOffThreadToken);
-    aRequest->mOffThreadToken = nullptr;
+    aRequest->MaybeCancelOffThreadScript();
   }
 
   // Free any source data.

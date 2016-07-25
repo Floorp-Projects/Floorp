@@ -118,10 +118,7 @@ public:
     return mElement == nullptr;
   }
 
-  virtual void Cancel()
-  {
-    mIsCanceled = true;
-  }
+  virtual void Cancel();
 
   bool IsCanceled() const
   {
@@ -151,6 +148,8 @@ public:
     return mProgress == Progress::Compiling ||
            (IsReadyToRun() && mWasCompiledOMT);
   }
+
+  void MaybeCancelOffThreadScript();
 
   using super::getNext;
   using super::isInList;
