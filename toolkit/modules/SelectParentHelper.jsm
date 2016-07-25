@@ -49,7 +49,6 @@ this.SelectParentHelper = {
                                      constraintRect.width, constraintRect.height);
     menulist.menupopup.setConstraintRect(constraintRect);
     menulist.menupopup.openPopupAtScreenRect("after_start", rect.left, rect.top, rect.width, rect.height, false, false);
-    menulist.selectedItem.scrollIntoView();
   },
 
   hide: function(menulist, browser) {
