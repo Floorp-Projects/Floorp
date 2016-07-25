@@ -381,8 +381,8 @@ typedef bool
 /**
  * Function type for trace operation of the class called to enumerate all
  * traceable things reachable from obj's private data structure. For each such
- * thing, a trace implementation must call one of the JS_Call*Tracer variants
- * on the thing.
+ * thing, a trace implementation must call JS::TraceEdge on the thing's
+ * location.
  *
  * JSTraceOp implementation can assume that no other threads mutates object
  * state. It must not change state of the object or corresponding native

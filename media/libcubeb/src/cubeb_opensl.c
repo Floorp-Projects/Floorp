@@ -425,7 +425,7 @@ opensl_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 }
 
 static int
-opensl_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
+opensl_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_frames)
 {
   /* https://android.googlesource.com/platform/ndk.git/+/master/docs/opensles/index.html
    * We don't want to deal with JNI here (and we don't have Java on b2g anyways),
@@ -475,7 +475,7 @@ opensl_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * laten
   /* To get a fast track in Android's mixer, we need to be at the native
    * samplerate, which is device dependant. Some devices might be able to
    * resample when playing a fast track, but it's pretty rare. */
-  *latency_ms = NBUFS * primary_buffer_size / (primary_sampling_rate / 1000);
+  *latency_frames = NBUFS * primary_buffer_size;
 
   dlclose(libmedia);
 
@@ -502,7 +502,7 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
                    cubeb_stream_params * input_stream_params,
                    cubeb_devid output_device,
                    cubeb_stream_params * output_stream_params,
-                   unsigned int latency,
+                   unsigned int latency_frames,
                    cubeb_data_callback data_callback, cubeb_state_callback state_callback,
                    void * user_ptr)
 {
@@ -516,11 +516,6 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   }
 
   *stream = NULL;
-
-  if (output_stream_params->channels < 1 || output_stream_params->channels > 32 ||
-      latency < 1 || latency > 2000) {
-    return CUBEB_ERROR_INVALID_FORMAT;
-  }
 
   SLDataFormat_PCM format;
 
@@ -554,7 +549,7 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   stm->user_ptr = user_ptr;
 
   stm->inputrate = output_stream_params->rate;
-  stm->latency = latency;
+  stm->latency = latency_frames;
   stm->stream_type = output_stream_params->stream_type;
   stm->framesize = output_stream_params->channels * sizeof(int16_t);
   stm->lastPosition = -1;
@@ -594,11 +589,11 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   if (get_android_version() >= ANDROID_VERSION_MARSHMALLOW) {
     // Reset preferred samping rate to trigger fallback to native sampling rate.
     preferred_sampling_rate = 0;
-    if (opensl_get_min_latency(ctx, *output_stream_params, &latency) != CUBEB_OK) {
+    if (opensl_get_min_latency(ctx, *output_stream_params, &latency_frames) != CUBEB_OK) {
       // Default to AudioFlinger's advertised fast track latency of 10ms.
-      latency = 10;
+      latency_frames = 440;
     }
-    stm->latency = latency;
+    stm->latency = latency_frames;
   }
 #endif
 
@@ -627,7 +622,7 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
 
   stm->outputrate = preferred_sampling_rate;
   stm->bytespersec = stm->outputrate * stm->framesize;
-  stm->queuebuf_len = (stm->bytespersec * latency) / (1000 * NBUFS);
+  stm->queuebuf_len = stm->framesize * latency_frames / NBUFS;
   // round up to the next multiple of stm->framesize, if needed.
   if (stm->queuebuf_len % stm->framesize) {
     stm->queuebuf_len += stm->framesize - (stm->queuebuf_len % stm->framesize);

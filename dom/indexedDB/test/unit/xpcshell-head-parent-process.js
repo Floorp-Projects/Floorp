@@ -217,7 +217,7 @@ function gc()
 
 function scheduleGC()
 {
-  SpecialPowers.exactGC(null, continueToNextStep);
+  SpecialPowers.exactGC(continueToNextStep);
 }
 
 function setTimeout(fun, timeout) {
@@ -492,7 +492,7 @@ var SpecialPowers = {
     this._getPrefs().clearUserPref(prefName);
   },
   // Copied (and slightly adjusted) from specialpowersAPI.js
-  exactGC: function(win, callback) {
+  exactGC: function(callback) {
     let count = 0;
 
     function doPreciseGCandCC() {

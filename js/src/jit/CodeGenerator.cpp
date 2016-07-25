@@ -8972,11 +8972,11 @@ CodeGenerator::visitRest(LRest* lir)
 }
 
 bool
-CodeGenerator::generateWasm(uint32_t sigIndex, wasm::FuncOffsets* offsets)
+CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::FuncOffsets* offsets)
 {
     JitSpew(JitSpew_Codegen, "# Emitting asm.js code");
 
-    wasm::GenerateFunctionPrologue(masm, frameSize(), sigIndex, offsets);
+    wasm::GenerateFunctionPrologue(masm, frameSize(), sigId, offsets);
 
     // Overflow checks are omitted by CodeGenerator in some cases (leaf
     // functions with small framePushed). Perform overflow-checking after
@@ -11226,6 +11226,29 @@ CodeGenerator::visitAsmJSVoidReturn(LAsmJSVoidReturn* lir)
     // Don't emit a jump to the return label if this is the last block.
     if (current->mir() != *gen->graph().poBegin())
         masm.jump(&returnLabel_);
+}
+
+void
+CodeGenerator::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
+{
+    const MAsmJSLoadFuncPtr* mir = ins->mir();
+
+    Register index = ToRegister(ins->index());
+    Register out = ToRegister(ins->output());
+
+    if (mir->hasLimit()) {
+        masm.branch32(Assembler::Condition::AboveOrEqual, index, Imm32(mir->limit()),
+                      wasm::JumpTarget::OutOfBounds);
+    }
+
+    masm.loadWasmGlobalPtr(mir->globalDataOffset(), out);
+    masm.loadPtr(BaseIndex(out, index, ScalePointer), out);
+}
+
+void
+CodeGenerator::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
+{
+    masm.loadWasmGlobalPtr(ins->mir()->globalDataOffset(), ToRegister(ins->output()));
 }
 
 void

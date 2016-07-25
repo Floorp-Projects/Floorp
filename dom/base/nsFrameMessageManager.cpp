@@ -792,6 +792,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
     retval[i].Read(aCx, &ret, rv);
     if (rv.Failed()) {
       MOZ_ASSERT(false, "Unable to read structured clone in SendMessage");
+      rv.SuppressException();
       return NS_ERROR_UNEXPECTED;
     }
 

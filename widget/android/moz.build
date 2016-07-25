@@ -58,7 +58,6 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
     '/netwerk/cache',
     '/widget',
-    '/widget/android/android',
 ]
 
 CXXFLAGS += ['-Wno-error=shadow']

@@ -59,7 +59,9 @@ public:
 
   virtual uint32_t GetPluginId() const = 0;
 
-  virtual nsresult Init(GMPDecryptorProxyCallback* aCallback) = 0;
+  virtual nsresult Init(GMPDecryptorProxyCallback* aCallback,
+                        bool aDistinctiveIdentifierRequired,
+                        bool aPersistentStateRequired) = 0;
 
   virtual void CreateSession(uint32_t aCreateSessionToken,
                              uint32_t aPromiseId,

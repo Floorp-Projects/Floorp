@@ -36,7 +36,6 @@
 #include "mozilla/dom/ScreenOrientation.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMClientRect.h"
-#include "StrongPointer.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsPrintfCString.h"
 #include "NativeJSContainer.h"
@@ -69,9 +68,6 @@ class AndroidRefable {
     void incStrong(void* thing) { }
     void decStrong(void* thing) { }
 };
-
-// This isn't in AndroidBridge.h because including StrongPointer.h there is gross
-static android::sp<AndroidRefable> (*android_SurfaceTexture_getNativeWindow)(JNIEnv* env, jobject surfaceTexture) = nullptr;
 
 jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
 {
@@ -728,18 +724,9 @@ AndroidBridge::OpenGraphicsLibraries()
             ANativeWindow_getWidth = (int (*)(void*))dlsym(handle, "ANativeWindow_getWidth");
             ANativeWindow_getHeight = (int (*)(void*))dlsym(handle, "ANativeWindow_getHeight");
 
-            // This is only available in Honeycomb and ICS. It was removed in Jelly Bean
-            ANativeWindow_fromSurfaceTexture = (void* (*)(JNIEnv*, jobject))dlsym(handle, "ANativeWindow_fromSurfaceTexture");
-
             mHasNativeWindowAccess = ANativeWindow_fromSurface && ANativeWindow_release;
 
             ALOG_BRIDGE("Successfully opened libandroid.so, have native window access? %d", mHasNativeWindowAccess);
-        }
-
-        // We need one symbol from here on Jelly Bean
-        handle = dlopen("libandroid_runtime.so", RTLD_LAZY | RTLD_LOCAL);
-        if (handle) {
-            android_SurfaceTexture_getNativeWindow = (android::sp<AndroidRefable> (*)(JNIEnv*, jobject))dlsym(handle, "_ZN7android38android_SurfaceTexture_getNativeWindowEP7_JNIEnvP8_jobject");
         }
 
         if (mHasNativeWindowAccess)
@@ -1296,31 +1283,6 @@ AndroidBridge::GetNativeWindowSize(void* window)
   }
 
   return IntSize(ANativeWindow_getWidth(window), ANativeWindow_getHeight(window));
-}
-
-void*
-AndroidBridge::AcquireNativeWindowFromSurfaceTexture(JNIEnv* aEnv, jobject aSurfaceTexture)
-{
-    OpenGraphicsLibraries();
-
-    if (mHasNativeWindowAccess && ANativeWindow_fromSurfaceTexture)
-        return ANativeWindow_fromSurfaceTexture(aEnv, aSurfaceTexture);
-
-    if (mHasNativeWindowAccess && android_SurfaceTexture_getNativeWindow) {
-        android::sp<AndroidRefable> window = android_SurfaceTexture_getNativeWindow(aEnv, aSurfaceTexture);
-        return window.get();
-    }
-
-    return nullptr;
-}
-
-void
-AndroidBridge::ReleaseNativeWindowForSurfaceTexture(void *window)
-{
-    if (!window)
-        return;
-
-    // FIXME: we don't ref the pointer we get, so nothing to do currently. We should ref it.
 }
 
 jobject

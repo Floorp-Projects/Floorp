@@ -2076,7 +2076,7 @@ NotifyGCEndRunnable::Run()
 }
 
 static void
-DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescription &aDesc)
+DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescription &aDesc)
 {
   NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
 
@@ -2093,7 +2093,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
       if (sPostGCEventsToConsole) {
         NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f)[%s] ");
         nsString prefix, gcstats;
-        gcstats.Adopt(aDesc.formatSummaryMessage(aRt));
+        gcstats.Adopt(aDesc.formatSummaryMessage(aCx));
         prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
                                                double(delta) / PR_USEC_PER_SEC,
                                                ProcessNameForCollectorLog()));
@@ -2106,7 +2106,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
 
       if (sPostGCEventsToObserver) {
         nsString json;
-        json.Adopt(aDesc.formatJSON(aRt, PR_Now()));
+        json.Adopt(aDesc.formatJSON(aCx, PR_Now()));
         RefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
         NS_DispatchToMainThread(notify);
       }
@@ -2167,7 +2167,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
 
       if (sPostGCEventsToConsole) {
         nsString gcstats;
-        gcstats.Adopt(aDesc.formatSliceMessage(aRt));
+        gcstats.Adopt(aDesc.formatSliceMessage(aCx));
         nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
           cs->LogStringMessage(gcstats.get());
@@ -2181,7 +2181,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
   }
 
   if (sPrevGCSliceCallback) {
-    (*sPrevGCSliceCallback)(aRt, aProgress, aDesc);
+    (*sPrevGCSliceCallback)(aCx, aProgress, aDesc);
   }
 
 }

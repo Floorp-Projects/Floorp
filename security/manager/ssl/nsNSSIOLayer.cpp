@@ -1051,12 +1051,25 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
     return false;
   }
 
+  // Disallow PR_CONNECT_RESET_ERROR if fallback limit reached.
+  bool fallbackLimitReached =
+    helpers.fallbackLimitReached(socketInfo->GetHostName(), range.max);
+  if (err == PR_CONNECT_RESET_ERROR && fallbackLimitReached) {
+    return false;
+  }
+
   if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR ||
        err == PR_CONNECT_RESET_ERROR) &&
-      nsNSSComponent::AreAnyFallbackCiphersEnabled()) {
-    if (helpers.rememberStrongCiphersFailed(socketInfo->GetHostName(),
-                                            socketInfo->GetPort(), err)) {
-      return true;
+       nsNSSComponent::AreAnyWeakCiphersEnabled()) {
+    if (helpers.isInsecureFallbackSite(socketInfo->GetHostName()) ||
+        helpers.mUnrestrictedRC4Fallback) {
+      if (helpers.rememberStrongCiphersFailed(socketInfo->GetHostName(),
+                                              socketInfo->GetPort(), err)) {
+        Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK,
+                              tlsIntoleranceTelemetryBucket(err));
+        return true;
+      }
+      Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK, 0);
     }
   }
 
@@ -2400,7 +2413,7 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
          ("[%p] nsSSLIOLayerSetOptions: using TLS version range (0x%04x,0x%04x)%s\n",
           fd, static_cast<unsigned int>(range.min),
               static_cast<unsigned int>(range.max),
-          strongCiphersStatus == StrongCiphersFailed ? " with fallback ciphers" : ""));
+          strongCiphersStatus == StrongCiphersFailed ? " with weak ciphers" : ""));
 
   if (SSL_VersionRangeSet(fd, &range) != SECSuccess) {
     return NS_ERROR_FAILURE;
@@ -2408,7 +2421,7 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   infoObject->SetTLSVersionRange(range);
 
   if (strongCiphersStatus == StrongCiphersFailed) {
-    nsNSSComponent::UseFallbackCiphersOnSocket(fd);
+    nsNSSComponent::UseWeakCiphersOnSocket(fd);
   }
 
   // when adjustForTLSIntolerance tweaks the maximum version downward,

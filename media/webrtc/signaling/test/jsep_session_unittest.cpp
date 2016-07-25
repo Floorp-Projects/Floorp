@@ -2120,6 +2120,21 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport)
             answererPairs[0].mRtpTransport.get());
 }
 
+TEST_P(JsepSessionTest, ParseRejectsBadMediaFormat)
+{
+  if (GetParam() == "datachannel") {
+    return;
+  }
+  AddTracks(mSessionOff);
+  std::string offer = CreateOffer();
+  UniquePtr<Sdp> munge(Parse(offer));
+  SdpMediaSection& mediaSection = munge->GetMediaSection(0);
+  mediaSection.AddCodec("75", "DummyFormatVal", 8000, 1);
+  std::string sdpString = munge->ToString();
+  nsresult rv = mSessionOff.SetLocalDescription(kJsepSdpOffer, sdpString);
+  ASSERT_EQ(NS_ERROR_INVALID_ARG, rv);
+}
+
 TEST_P(JsepSessionTest, FullCallWithCandidates)
 {
   AddTracks(mSessionOff);

@@ -2802,7 +2802,7 @@ EnterIon(JSContext* cx, EnterJitData& data)
 #ifdef DEBUG
     // See comment in EnterBaseline.
     mozilla::Maybe<JS::AutoAssertOnGC> nogc;
-    nogc.emplace(cx->runtime());
+    nogc.emplace(cx);
 #endif
 
     EnterJitCode enter = cx->runtime()->jitRuntime()->enterIon();
@@ -2939,7 +2939,7 @@ jit::FastInvoke(JSContext* cx, HandleFunction fun, CallArgs& args)
 #ifdef DEBUG
     // See comment in EnterBaseline.
     mozilla::Maybe<JS::AutoAssertOnGC> nogc;
-    nogc.emplace(cx->runtime());
+    nogc.emplace(cx);
 #endif
 
     IonScript* ion = script->ionScript();

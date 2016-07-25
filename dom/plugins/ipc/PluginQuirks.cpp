@@ -50,7 +50,6 @@ int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
     // Whitelist Flash and Quicktime to support offline renderer
     NS_NAMED_LITERAL_CSTRING(quicktime, "QuickTime Plugin.plugin");
     if (specialType == nsPluginHost::eSpecialType_Flash) {
-        quirks |= QUIRK_FLASH_AVOID_CGMODE_CRASHES;
         quirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
     } else if (FindInReadable(quicktime, aPluginFilename)) {
         quirks |= QUIRK_ALLOW_OFFLINE_RENDERER;

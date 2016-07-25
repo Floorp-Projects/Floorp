@@ -1336,14 +1336,12 @@ protected:
    * Builds an ImageLayer for the appropriate backend; the mask is relative to
    * aLayer's visible region.
    * aLayer is the layer to be clipped.
-   * aLayerVisibleRegion is the region that will be set as aLayer's visible region,
    * relative to the container reference frame
    * aRoundedRectClipCount is used when building mask layers for PaintedLayers,
    * SetupMaskLayer will build a mask layer for only the first
    * aRoundedRectClipCount rounded rects in aClip
    */
   void SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
-                      const nsIntRegion& aLayerVisibleRegion,
                       uint32_t aRoundedRectClipCount = UINT32_MAX);
 
   /**
@@ -3192,7 +3190,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       commonClipCount = data->mItemClip.GetRoundedRectCount();
     } else {
       commonClipCount = std::max(0, data->mCommonClipCount);
-      SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion, commonClipCount);
+      SetupMaskLayer(layer, data->mItemClip, commonClipCount);
     }
     // copy commonClipCount to the entry
     FrameLayerBuilder::PaintedLayerItemsEntry* entry = mLayerBuilder->
@@ -3200,7 +3198,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     entry->mCommonClipCount = commonClipCount;
   } else {
     // mask layer for image and color layers
-    SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion);
+    SetupMaskLayer(layer, data->mItemClip);
   }
 
   uint32_t flags = 0;
@@ -4123,13 +4121,13 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
           // rounded rectangle clipping using mask layers
           // (must be done after visible rect is set on layer)
-          if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
-            SetupMaskLayer(ownLayer, layerClip, itemVisibleRect);
+          if (layerClip.GetRoundedRectCount() > 0) {
+            SetupMaskLayer(ownLayer, layerClip);
           }
         } else {
           LayerClip scrolledClip;
           scrolledClip.SetClipRect(layerClipRect);
-          if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
+          if (layerClip.GetRoundedRectCount() > 0) {
             scrolledClip.SetMaskLayerIndex(
                 SetupMaskLayerForScrolledClip(ownLayer.get(), layerClip));
           }
@@ -5988,7 +5986,6 @@ SetClipCount(PaintedDisplayItemLayerUserData* apaintedData,
 void
 ContainerState::SetupMaskLayer(Layer *aLayer,
                                const DisplayItemClip& aClip,
-                               const nsIntRegion& aLayerVisibleRegion,
                                uint32_t aRoundedRectClipCount)
 {
   // if the number of clips we are going to mask has decreased, then aLayer might have
@@ -6002,10 +5999,8 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
   }
 
   // don't build an unnecessary mask
-  nsIntRect layerBounds = aLayerVisibleRegion.GetBounds();
   if (aClip.GetRoundedRectCount() == 0 ||
-      aRoundedRectClipCount == 0 ||
-      layerBounds.IsEmpty()) {
+      aRoundedRectClipCount == 0) {
     SetClipCount(paintedData, 0);
     return;
   }

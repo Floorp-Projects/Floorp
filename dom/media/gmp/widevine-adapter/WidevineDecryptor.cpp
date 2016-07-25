@@ -7,6 +7,7 @@
 
 #include "WidevineAdapter.h"
 #include "WidevineUtils.h"
+#include "WidevineFileIO.h"
 #include <mozilla/SizePrintfMacros.h>
 #include <stdarg.h>
 
@@ -35,10 +36,21 @@ WidevineDecryptor::SetCDM(RefPtr<CDMWrapper> aCDM)
 }
 
 void
-WidevineDecryptor::Init(GMPDecryptorCallback* aCallback)
+WidevineDecryptor::Init(GMPDecryptorCallback* aCallback,
+                        bool aDistinctiveIdentifierRequired,
+                        bool aPersistentStateRequired)
 {
+  Log("WidevineDecryptor::Init() this=%p distinctiveId=%d persistentState=%d",
+      this, aDistinctiveIdentifierRequired, aPersistentStateRequired);
   MOZ_ASSERT(aCallback);
   mCallback = aCallback;
+  MOZ_ASSERT(mCDM);
+  mDistinctiveIdentifierRequired = aDistinctiveIdentifierRequired;
+  mPersistentStateRequired = aPersistentStateRequired;
+  if (CDM()) {
+    CDM()->Initialize(aDistinctiveIdentifierRequired,
+                      aPersistentStateRequired);
+  }
 }
 
 static SessionType
@@ -484,9 +496,10 @@ FileIO*
 WidevineDecryptor::CreateFileIO(FileIOClient* aClient)
 {
   Log("Decryptor::CreateFileIO()");
-  // Persistent storage not required or supported!
-  MOZ_ASSERT(false);
-  return nullptr;
+  if (!mPersistentStateRequired) {
+    return nullptr;
+  }
+  return new WidevineFileIO(aClient);
 }
 
 } // namespace mozilla

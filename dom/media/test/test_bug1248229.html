@@ -20,7 +20,7 @@ function doTest() {
   v.onended = function() {
     info("Got ended.");
     v.onended = null;
-    SpecialPowers.exactGC(window, function() {
+    SpecialPowers.exactGC(function() {
       info("GC completed.");
       v.play();
       SimpleTest.finish();

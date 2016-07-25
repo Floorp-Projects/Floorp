@@ -7,10 +7,10 @@
 #include <mozilla/Saturate.h>
 
 #include <mozilla/Assertions.h>
-#include <mozilla/NumericLimits.h>
+
+#include <limits>
 
 using mozilla::detail::Saturate;
-using mozilla::NumericLimits;
 
 #define A(a) MOZ_RELEASE_ASSERT(a, "Test \'" #a "\'  failed.")
 
@@ -50,7 +50,7 @@ uint8_t
 StartValue<uint8_t>()
 {
   // Picking a value near middle of uint8_t's range.
-  return static_cast<uint8_t>(NumericLimits<int8_t>::max());
+  return static_cast<uint8_t>(std::numeric_limits<int8_t>::max());
 }
 
 template<>
@@ -58,7 +58,7 @@ uint16_t
 StartValue<uint16_t>()
 {
   // Picking a value near middle of uint16_t's range.
-  return static_cast<uint8_t>(NumericLimits<int16_t>::max());
+  return static_cast<uint8_t>(std::numeric_limits<int16_t>::max());
 }
 
 template<>
@@ -66,7 +66,7 @@ uint32_t
 StartValue<uint32_t>()
 {
   // Picking a value near middle of uint32_t's range.
-  return static_cast<uint8_t>(NumericLimits<int32_t>::max());
+  return static_cast<uint8_t>(std::numeric_limits<int32_t>::max());
 }
 
 // Add
@@ -154,28 +154,28 @@ template<typename T>
 static void
 TestUpperBound()
 {
-  Saturate<T> satValue(NumericLimits<T>::max());
+  Saturate<T> satValue(std::numeric_limits<T>::max());
 
-  A(--satValue == (NumericLimits<T>::max() - 1));
-  A(++satValue == (NumericLimits<T>::max()));
-  A(++satValue == (NumericLimits<T>::max())); // don't overflow here
-  A(++satValue == (NumericLimits<T>::max())); // don't overflow here
-  A(--satValue == (NumericLimits<T>::max() - 1)); // back at (max - 1)
-  A(--satValue == (NumericLimits<T>::max() - 2));
+  A(--satValue == (std::numeric_limits<T>::max() - 1));
+  A(++satValue == (std::numeric_limits<T>::max()));
+  A(++satValue == (std::numeric_limits<T>::max())); // don't overflow here
+  A(++satValue == (std::numeric_limits<T>::max())); // don't overflow here
+  A(--satValue == (std::numeric_limits<T>::max() - 1)); // back at (max - 1)
+  A(--satValue == (std::numeric_limits<T>::max() - 2));
 }
 
 template<typename T>
 static void
 TestLowerBound()
 {
-  Saturate<T> satValue(NumericLimits<T>::min());
+  Saturate<T> satValue(std::numeric_limits<T>::min());
 
-  A(++satValue == (NumericLimits<T>::min() + 1));
-  A(--satValue == (NumericLimits<T>::min()));
-  A(--satValue == (NumericLimits<T>::min())); // don't overflow here
-  A(--satValue == (NumericLimits<T>::min())); // don't overflow here
-  A(++satValue == (NumericLimits<T>::min() + 1)); // back at (max + 1)
-  A(++satValue == (NumericLimits<T>::min() + 2));
+  A(++satValue == (std::numeric_limits<T>::min() + 1));
+  A(--satValue == (std::numeric_limits<T>::min()));
+  A(--satValue == (std::numeric_limits<T>::min())); // don't overflow here
+  A(--satValue == (std::numeric_limits<T>::min())); // don't overflow here
+  A(++satValue == (std::numeric_limits<T>::min() + 1)); // back at (max + 1)
+  A(++satValue == (std::numeric_limits<T>::min() + 2));
 }
 
 // Framework
@@ -187,8 +187,8 @@ TestAll()
 {
   // Assert that we don't accidently hit type's range limits in tests.
   const T value = StartValue<T>();
-  A(NumericLimits<T>::min() + static_cast<T>(sNumOps) <= value);
-  A(NumericLimits<T>::max() - static_cast<T>(sNumOps) >= value);
+  A(std::numeric_limits<T>::min() + static_cast<T>(sNumOps) <= value);
+  A(std::numeric_limits<T>::max() - static_cast<T>(sNumOps) >= value);
 
   TestPrefixIncr<T>();
   TestPostfixIncr<T>();

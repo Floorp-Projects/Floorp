@@ -249,53 +249,17 @@ CodeSegment::~CodeSegment()
     DeallocateExecutableMemory(bytes_, totalLength(), gc::SystemPageSize());
 }
 
-static size_t
-SerializedSigSize(const Sig& sig)
-{
-    return sizeof(ExprType) +
-           SerializedPodVectorSize(sig.args());
-}
-
-static uint8_t*
-SerializeSig(uint8_t* cursor, const Sig& sig)
-{
-    cursor = WriteScalar<ExprType>(cursor, sig.ret());
-    cursor = SerializePodVector(cursor, sig.args());
-    return cursor;
-}
-
-static const uint8_t*
-DeserializeSig(const uint8_t* cursor, Sig* sig)
-{
-    ExprType ret;
-    cursor = ReadScalar<ExprType>(cursor, &ret);
-
-    ValTypeVector args;
-    cursor = DeserializePodVector(cursor, &args);
-    if (!cursor)
-        return nullptr;
-
-    *sig = Sig(Move(args), ret);
-    return cursor;
-}
-
-static size_t
-SizeOfSigExcludingThis(const Sig& sig, MallocSizeOf mallocSizeOf)
-{
-    return sig.args().sizeOfExcludingThis(mallocSizeOf);
-}
-
 size_t
 FuncExport::serializedSize() const
 {
-    return SerializedSigSize(sig_) +
+    return sig_.serializedSize() +
            sizeof(pod);
 }
 
 uint8_t*
 FuncExport::serialize(uint8_t* cursor) const
 {
-    cursor = SerializeSig(cursor, sig_);
+    cursor = sig_.serialize(cursor);
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
     return cursor;
 }
@@ -303,7 +267,7 @@ FuncExport::serialize(uint8_t* cursor) const
 const uint8_t*
 FuncExport::deserialize(const uint8_t* cursor)
 {
-    (cursor = DeserializeSig(cursor, &sig_)) &&
+    (cursor = sig_.deserialize(cursor)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
     return cursor;
 }
@@ -311,20 +275,20 @@ FuncExport::deserialize(const uint8_t* cursor)
 size_t
 FuncExport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return SizeOfSigExcludingThis(sig_, mallocSizeOf);
+    return sig_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
 FuncImport::serializedSize() const
 {
-    return SerializedSigSize(sig_) +
+    return sig_.serializedSize() +
            sizeof(pod);
 }
 
 uint8_t*
 FuncImport::serialize(uint8_t* cursor) const
 {
-    cursor = SerializeSig(cursor, sig_);
+    cursor = sig_.serialize(cursor);
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
     return cursor;
 }
@@ -332,7 +296,7 @@ FuncImport::serialize(uint8_t* cursor) const
 const uint8_t*
 FuncImport::deserialize(const uint8_t* cursor)
 {
-    (cursor = DeserializeSig(cursor, &sig_)) &&
+    (cursor = sig_.deserialize(cursor)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
     return cursor;
 }
@@ -340,7 +304,7 @@ FuncImport::deserialize(const uint8_t* cursor)
 size_t
 FuncImport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return SizeOfSigExcludingThis(sig_, mallocSizeOf);
+    return sig_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 CodeRange::CodeRange(Kind kind, Offsets offsets)
@@ -452,6 +416,7 @@ Metadata::serializedSize() const
     return sizeof(pod()) +
            SerializedVectorSize(funcImports) +
            SerializedVectorSize(funcExports) +
+           SerializedVectorSize(sigIds) +
            SerializedPodVectorSize(tables) +
            SerializedPodVectorSize(memoryAccesses) +
            SerializedPodVectorSize(boundsChecks) +
@@ -469,6 +434,7 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, funcExports);
+    cursor = SerializeVector(cursor, sigIds);
     cursor = SerializePodVector(cursor, tables);
     cursor = SerializePodVector(cursor, memoryAccesses);
     cursor = SerializePodVector(cursor, boundsChecks);
@@ -487,6 +453,7 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
     (cursor = DeserializeVector(cursor, &funcImports)) &&
     (cursor = DeserializeVector(cursor, &funcExports)) &&
+    (cursor = DeserializeVector(cursor, &sigIds)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
     (cursor = DeserializePodVector(cursor, &boundsChecks)) &&
@@ -504,6 +471,7 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
            SizeOfVectorExcludingThis(funcExports, mallocSizeOf) +
+           SizeOfVectorExcludingThis(sigIds, mallocSizeOf) +
            tables.sizeOfExcludingThis(mallocSizeOf) +
            memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
            boundsChecks.sizeOfExcludingThis(mallocSizeOf) +

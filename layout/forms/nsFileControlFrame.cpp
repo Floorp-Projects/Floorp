@@ -267,6 +267,7 @@ nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTra
   ErrorResult rv;
   RefPtr<DOMStringList> types = dataTransfer->GetTypes(rv);
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return false;
   }
 

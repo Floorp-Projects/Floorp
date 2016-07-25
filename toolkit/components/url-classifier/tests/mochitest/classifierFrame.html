@@ -15,6 +15,14 @@ function checkLoads() {
   var style = document.defaultView.getComputedStyle(elt, "");
   window.parent.isnot(style.visibility, "hidden", "Should not load bad css");
 
+  elt = document.getElementById("styleBad");
+  style = document.defaultView.getComputedStyle(elt, "");
+  window.parent.isnot(style.visibility, "hidden", "Should not load bad css");
+
+  elt = document.getElementById("styleImport");
+  style = document.defaultView.getComputedStyle(elt, "");
+  window.parent.isnot(style.visibility, "visible", "Should import clean css");
+
   // Call parent.loadTestFrame again to test classification metadata in HTTP
   // cache entries.
   if (window.parent.firstLoad) {
@@ -36,7 +44,6 @@ function checkLoads() {
 <!-- Try loading from an uwanted software css URI -->
 <link rel="stylesheet" type="text/css" href="http://unwanted.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
 
-<!-- XXX How is this part of the test supposed to work (= be checked)? -->
 <!-- Try loading a marked-as-malware css through an @import from a clean URI -->
 <link rel="stylesheet" type="text/css" href="import.css"></link>
 </head>
@@ -44,5 +51,7 @@ function checkLoads() {
 <body onload="checkLoads()">
 The following should not be hidden:
 <div id="styleCheck">STYLE TEST</div>
+<div id="styleBad">STYLE BAD</div>
+<div id="styleImport">STYLE IMPORT</div>
 </body>
 </html>

@@ -442,8 +442,9 @@ MacroAssembler::rshift32Arithmetic(Imm32 shift, Register srcDest)
 // ===============================================================
 // Branch instructions
 
+template <class L>
 void
-MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* label)
+MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, L label)
 {
     cmp32(lhs, rhs);
     j(cond, label);

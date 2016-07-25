@@ -29,6 +29,8 @@ public:
   typedef T* UserDataType;
   typedef nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*> base_type;
 
+  using base_type::IsEmpty;
+
   nsClassHashtable() {}
   explicit nsClassHashtable(uint32_t aInitLength)
     : nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*>(aInitLength)

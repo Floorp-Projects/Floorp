@@ -20,7 +20,8 @@ async protocol PGMPDecryptor
   manager PGMPContent;
 child:
 
-  async Init();
+  async Init(bool aDistinctiveIdentifierRequired,
+             bool aPersistentStateRequired);
 
   async CreateSession(uint32_t aCreateSessionToken,
                       uint32_t aPromiseId,
