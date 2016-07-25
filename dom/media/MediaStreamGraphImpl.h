@@ -412,10 +412,6 @@ public:
    */
   StreamTime PlayAudio(MediaStream* aStream);
   /**
-   * Set the correct current video frame for stream aStream.
-   */
-  void PlayVideo(MediaStream* aStream);
-  /**
    * No more data will be forthcoming for aStream. The stream will end
    * at the current buffer end point. The StreamTracks's tracks must be
    * explicitly set to finished by the caller.

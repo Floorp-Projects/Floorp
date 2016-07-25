@@ -498,6 +498,7 @@ WriteVideoToMediaStream(MediaStream* aStream,
                         int64_t aEndMicroseconds,
                         int64_t aStartMicroseconds,
                         const mozilla::gfx::IntSize& aIntrinsicSize,
+                        const TimeStamp& aTimeStamp,
                         VideoSegment* aOutput,
                         const PrincipalHandle& aPrincipalHandle)
 {
@@ -505,7 +506,8 @@ WriteVideoToMediaStream(MediaStream* aStream,
   StreamTime duration =
       aStream->MicrosecondsToStreamTimeRoundDown(aEndMicroseconds) -
       aStream->MicrosecondsToStreamTimeRoundDown(aStartMicroseconds);
-  aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize, aPrincipalHandle);
+  aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize,
+                       aPrincipalHandle, false, aTimeStamp);
 }
 
 static bool
@@ -537,6 +539,13 @@ DecodedStream::SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHa
   // is ref-counted.
   mVideoQueue.GetElementsAfter(mData->mNextVideoTime, &video);
 
+  // tracksStartTimeStamp might be null when the SourceMediaStream not yet
+  // be added to MediaStreamGraph.
+  TimeStamp tracksStartTimeStamp = sourceStream->GetStreamTracksStrartTimeStamp();
+  if (tracksStartTimeStamp.IsNull()) {
+    tracksStartTimeStamp = TimeStamp::Now();
+  }
+
   for (uint32_t i = 0; i < video.Length(); ++i) {
     VideoData* v = video[i]->As<VideoData>();
 
@@ -551,14 +560,17 @@ DecodedStream::SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHa
       // and capture happens at 15 sec, we'll have to append a black frame
       // that is 15 sec long.
       WriteVideoToMediaStream(sourceStream, mData->mLastVideoImage, v->mTime,
-          mData->mNextVideoTime, mData->mLastVideoImageDisplaySize, &output,
-          aPrincipalHandle);
+          mData->mNextVideoTime, mData->mLastVideoImageDisplaySize,
+          tracksStartTimeStamp + TimeDuration::FromMicroseconds(v->mTime),
+          &output, aPrincipalHandle);
       mData->mNextVideoTime = v->mTime;
     }
 
     if (mData->mNextVideoTime < v->GetEndTime()) {
       WriteVideoToMediaStream(sourceStream, v->mImage, v->GetEndTime(),
-          mData->mNextVideoTime, v->mDisplay, &output, aPrincipalHandle);
+          mData->mNextVideoTime, v->mDisplay,
+          tracksStartTimeStamp + TimeDuration::FromMicroseconds(v->GetEndTime()),
+          &output, aPrincipalHandle);
       mData->mNextVideoTime = v->GetEndTime();
       mData->mLastVideoImage = v->mImage;
       mData->mLastVideoImageDisplaySize = v->mDisplay;
@@ -585,7 +597,9 @@ DecodedStream::SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHa
       int64_t deviation_usec = sourceStream->StreamTimeToMicroseconds(1);
       WriteVideoToMediaStream(sourceStream, mData->mLastVideoImage,
           mData->mNextVideoTime + deviation_usec, mData->mNextVideoTime,
-          mData->mLastVideoImageDisplaySize, &endSegment, aPrincipalHandle);
+          mData->mLastVideoImageDisplaySize,
+          tracksStartTimeStamp + TimeDuration::FromMicroseconds(mData->mNextVideoTime + deviation_usec),
+          &endSegment, aPrincipalHandle);
       mData->mNextVideoTime += deviation_usec;
       MOZ_ASSERT(endSegment.GetDuration() > 0);
       if (!aIsSameOrigin) {
