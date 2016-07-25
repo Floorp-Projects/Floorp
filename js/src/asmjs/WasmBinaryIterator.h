@@ -1211,7 +1211,7 @@ ExprIter<Policy>::readGetGlobal(const GlobalDescVector& globals, uint32_t* id)
     if (Validate && validateId >= globals.length())
         return fail("get_global index out of range");
 
-    if (!push(ToExprType(globals[validateId].type)))
+    if (!push(ToExprType(globals[validateId].type())))
         return false;
 
     if (Output)
@@ -1233,7 +1233,10 @@ ExprIter<Policy>::readSetGlobal(const GlobalDescVector& globals, uint32_t* id, V
     if (Validate && validateId >= globals.length())
         return fail("set_global index out of range");
 
-    if (!topWithType(ToExprType(globals[validateId].type), value))
+    if (Validate && !globals[validateId].isMutable())
+        return fail("can't write an immutable global");
+
+    if (!topWithType(ToExprType(globals[validateId].type()), value))
         return false;
 
     if (Output)
