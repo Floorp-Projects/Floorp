@@ -15,7 +15,7 @@ namespace gfx {
 struct D3D11Checks
 {
   static bool DoesRenderTargetViewNeedRecreating(ID3D11Device* aDevice);
-  static bool DoesD3D11DeviceWork();
+  static bool DoesDeviceWork();
   static bool DoesTextureSharingWork(ID3D11Device *device);
   static bool DoesAlphaTextureSharingWork(ID3D11Device *device);
   static void WarnOnAdapterMismatch(ID3D11Device* device);
