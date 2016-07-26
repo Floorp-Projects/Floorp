@@ -43,7 +43,6 @@
 #forward-button > .toolbarbutton-icon {
   background: var(--chrome-nav-buttons-background) !important;
   border-radius: 0 !important;
-  width: auto !important;
   height: auto !important;
   padding: var(--toolbarbutton-vertical-inner-padding) 5px !important;
   margin: 0 !important;
@@ -51,28 +50,19 @@
   box-shadow: none !important;
 }
 
+#back-button > .toolbarbutton-icon {
+  /* 18px icon + 2 * 5px padding + 2 * 1px border */
+  width: 30px !important;
+}
+
+#forward-button > .toolbarbutton-icon {
+  /* 18px icon + 2 * 5px padding + 1 * 1px border */
+  width: 29px !important;
+}
+
 /* the normal theme adds box-shadow: <stuff> !important when the back-button is [open]. Fix: */
 #back-button[open="true"] > .toolbarbutton-icon {
   box-shadow: none !important;
-}
-
-/* Force 1x image for back/forward button for now, otherwise it breaks the
-   layout - Bug 1165360. */
-@media (min-resolution: 1.1dppx) {
-  #back-button,
-  #forward-button {
-    list-style-image: url("chrome://browser/skin/Toolbar.png");
-  }
-
-  toolbar[brighttext] #back-button,
-  toolbar[brighttext] #forward-button {
-    list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
-  }
-
-  /* The back button region is already set in devedition.inc.css */
-  #forward-button {
-    -moz-image-region: rect(0px, 72px, 18px, 54px);
-  }
 }
 
 #forward-button > .toolbarbutton-icon {
