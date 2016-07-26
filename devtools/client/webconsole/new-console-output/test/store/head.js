@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* exported storeFactory */
+/* exported configureStore */
 
 "use strict";
 
@@ -15,7 +15,7 @@ flags.testing = true;
 flags.wantLogging = true;
 flags.wantVerbose = false;
 
-const { storeFactory } = require("devtools/client/webconsole/new-console-output/store");
+const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
 const testPackets = new Map();
 testPackets.set("console.log", {

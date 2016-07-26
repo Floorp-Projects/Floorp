@@ -19,7 +19,7 @@ function run_test() {
  * Test adding a message to the store.
  */
 add_task(function* () {
-  const { getState, dispatch } = storeFactory();
+  const { getState, dispatch } = configureStore();
 
   dispatch(actions.messageAdd(packet));
 
@@ -39,7 +39,7 @@ add_task(function* () {
  * Test repeating messages in the store.
  */
 add_task(function* () {
-  const { getState, dispatch } = storeFactory();
+  const { getState, dispatch } = configureStore();
 
   dispatch(actions.messageAdd(packet));
   dispatch(actions.messageAdd(packet));
@@ -62,7 +62,7 @@ add_task(function* () {
  * Test adding a console.clear message to the store.
  */
 add_task(function*() {
-  const { getState, dispatch } = storeFactory();
+  const { getState, dispatch } = configureStore();
 
   dispatch(actions.messageAdd(packet));
 
@@ -81,7 +81,7 @@ add_task(function*() {
  * Test message limit on the store.
  */
 add_task(function* () {
-  const { getState, dispatch } = storeFactory();
+  const { getState, dispatch } = configureStore();
   const logLimit = 1000;
   const messageNumber = logLimit + 1;
 
@@ -104,7 +104,7 @@ add_task(function* () {
   const userSetLimit = 10;
   Services.prefs.setIntPref("devtools.hud.loglimit", userSetLimit);
 
-  const { getState, dispatch } = storeFactory();
+  const { getState, dispatch } = configureStore();
 
   let newPacket = Object.assign({}, packet);
   for (let i = 1; i <= userSetLimit + 1; i++) {
