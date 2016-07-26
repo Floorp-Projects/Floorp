@@ -508,6 +508,11 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
         ParentLayerPoint translation = TransformBy(localTransformTyped, transformedAnchor)
                                      - TransformBy(localTransformTyped, anchor);
 
+        // A fixed layer will "consume" (be unadjusted by) the entire translation
+        // calculated above. A sticky layer may consume all, part, or none of it,
+        // depending on where we are relative to its sticky scroll range.
+        bool translationConsumed = true;
+
         if (layer->GetIsStickyPosition()) {
           // For sticky positioned layers, the difference between the two rectangles
           // defines a pair of translation intervals in each dimension through which
@@ -519,10 +524,14 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
 
           // TODO: There's a unit mismatch here, as |translation| is in ParentLayer
           //       space while |stickyOuter| and |stickyInner| are in Layer space.
+          ParentLayerPoint originalTranslation = translation;
           translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
                           IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
           translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
                           IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
+          if (translation != originalTranslation) {
+            translationConsumed = false;
+          }
         }
 
         // Finally, apply the translation to the layer transform. Note that in cases
@@ -533,7 +542,13 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
         TranslateShadowLayer(layer, ThebesPoint(translation.ToUnknownPoint()),
             true, aClipPartsCache);
 
-        return TraversalFlag::Skip;
+        // If we didn't consume the entire translation, continue the traversal
+        // to allow a descendant fixed or sticky layer to consume the rest.
+        // TODO: We curently don't handle the case where we consume part but not
+        //       all of the translation correctly. In such a case,
+        //       |a[Previous|Current]TransformForRoot| would need to be adjusted
+        //       to reflect only the unconsumed part of the translation.
+        return translationConsumed ? TraversalFlag::Skip : TraversalFlag::Continue;
       });
 }
 

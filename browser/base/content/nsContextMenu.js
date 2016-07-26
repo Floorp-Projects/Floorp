@@ -223,8 +223,9 @@ nsContextMenu.prototype = {
     this.showItem("context-sendvideo", this.onVideo);
     this.showItem("context-castvideo", this.onVideo);
     this.showItem("context-sendaudio", this.onAudio);
-    this.setItemAttr("context-sendvideo", "disabled", !this.mediaURL);
-    this.setItemAttr("context-sendaudio", "disabled", !this.mediaURL);
+    let mediaIsBlob = this.mediaURL.startsWith("blob:");
+    this.setItemAttr("context-sendvideo", "disabled", !this.mediaURL || mediaIsBlob);
+    this.setItemAttr("context-sendaudio", "disabled", !this.mediaURL || mediaIsBlob);
     let shouldShowCast = Services.prefs.getBoolPref("browser.casting.enabled");
     // getServicesForVideo alone would be sufficient here (it depends on
     // SimpleServiceDiscovery.services), but SimpleServiceDiscovery is guaranteed
@@ -382,7 +383,7 @@ nsContextMenu.prototype = {
     this.showItem("context-sharelink", shareEnabled && (this.onLink || this.onPlainTextLink) && !this.onMailtoLink);
     this.showItem("context-shareimage", shareEnabled && this.onImage);
     this.showItem("context-sharevideo", shareEnabled && this.onVideo);
-    this.setItemAttr("context-sharevideo", "disabled", !this.mediaURL);
+    this.setItemAttr("context-sharevideo", "disabled", !this.mediaURL || this.mediaURL.startsWith("blob:"));
   },
 
   initSpellingItems: function() {
@@ -1641,7 +1642,10 @@ nsContextMenu.prototype = {
   },
 
   isMediaURLReusable: function(aURL) {
-    return !/^(?:blob|mediasource):/.test(aURL);
+    if (aURL.startsWith("blob:")) {
+      return URL.isValidURL(aURL);
+    }
+    return true;
   },
 
   toString: function () {

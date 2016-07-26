@@ -413,9 +413,9 @@ void nsCSSValue::SetPercentValue(float aValue)
 
 void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit)
 {
-  MOZ_ASSERT(eCSSUnit_Number <= aUnit, "not a float value");
+  MOZ_ASSERT(IsFloatUnit(aUnit), "not a float value");
   Reset();
-  if (eCSSUnit_Number <= aUnit) {
+  if (IsFloatUnit(aUnit)) {
     mUnit = aUnit;
     mValue.mFloat = aValue;
     MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));

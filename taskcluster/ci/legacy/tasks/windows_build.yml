@@ -2,7 +2,7 @@ $inherits:
   from: 'tasks/build.yml'
 
 task:
-  workerType: win2012
+  workerType: gecko-1-b-win2012
   payload:
     artifacts:
       -
@@ -13,6 +13,7 @@ task:
   extra:
     treeherderEnv:
       - staging
+      - production
     treeherder:
       tier: 2
       jobKind: build

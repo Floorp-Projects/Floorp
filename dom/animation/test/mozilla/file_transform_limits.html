@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+// We clamp +infinity or -inifinity value in floating point to
+// maximum floating point value or -maximum floating point value.
+const max_float = 3.40282e+38;
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style = "width: 1px; height: 1px;";
+  var anim = div.animate([ { transform: 'scale(1)' },
+                           { transform: 'scale(3.5e+38)'},
+                           { transform: 'scale(3)' } ], 100 * MS_PER_SEC);
+
+  anim.pause();
+  anim.currentTime = 50 * MS_PER_SEC;
+  assert_equals(getComputedStyle(div).transform,
+                'matrix(' + max_float + ', 0, 0, ' + max_float + ', 0, 0)');
+}, 'Test that the parameter of transform scale is clamped' );
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style = "width: 1px; height: 1px;";
+  var anim = div.animate([ { transform: 'translate(1px)' },
+                           { transform: 'translate(3.5e+38px)'},
+                           { transform: 'translate(3px)' } ], 100 * MS_PER_SEC);
+
+  anim.pause();
+  anim.currentTime = 50 * MS_PER_SEC;
+  assert_equals(getComputedStyle(div).transform,
+                'matrix(1, 0, 0, 1, ' + max_float + ', 0)');
+}, 'Test that the parameter of transform translate is clamped' );
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style = "width: 1px; height: 1px;";
+  var anim = div.animate([ { transform: 'matrix(0.5, 0, 0, 0.5, 0, 0)' },
+                           { transform: 'matrix(2, 0, 0, 2, 3.5e+38, 0)'},
+                           { transform: 'matrix(0, 2, 0, -2, 0, 0)' } ],
+                         100 * MS_PER_SEC);
+
+  anim.pause();
+  anim.currentTime = 50 * MS_PER_SEC;
+  assert_equals(getComputedStyle(div).transform,
+                'matrix(2, 0, 0, 2, ' + max_float + ', 0)');
+}, 'Test that the parameter of transform matrix is clamped' );
+
+done();
+
+</script>
+</body>

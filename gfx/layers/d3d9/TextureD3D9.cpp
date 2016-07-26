@@ -761,8 +761,8 @@ DXGID3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                             IDirect3DDevice9* aDevice)
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
-  MOZ_ASSERT(aFormat == gfx::SurfaceFormat::B8G8R8X8);
-  if (aFormat != gfx::SurfaceFormat::B8G8R8X8) {
+  MOZ_ASSERT(aFormat == gfx::SurfaceFormat::B8G8R8A8);
+  if (aFormat != gfx::SurfaceFormat::B8G8R8A8) {
     return nullptr;
   }
 
@@ -771,7 +771,7 @@ DXGID3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   HRESULT hr = aDevice->CreateTexture(aSize.width, aSize.height,
                                       1,
                                       D3DUSAGE_RENDERTARGET,
-                                      D3DFMT_X8R8G8B8,
+                                      D3DFMT_A8R8G8B8,
                                       D3DPOOL_DEFAULT,
                                       getter_AddRefs(texture),
                                       &shareHandle);

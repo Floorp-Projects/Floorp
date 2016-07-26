@@ -574,7 +574,8 @@ Module::instantiate(JSContext* cx,
         if (!instanceObj)
             return false;
 
-        auto instance = cx->make_unique<Instance>(Move(codeSegment),
+        auto instance = cx->make_unique<Instance>(cx,
+                                                  Move(codeSegment),
                                                   *metadata_,
                                                   maybeBytecode,
                                                   memory,

@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGL2Context.h"
+
 #include "GLContext.h"
+#include "WebGLFramebuffer.h"
 
 namespace mozilla {
 
