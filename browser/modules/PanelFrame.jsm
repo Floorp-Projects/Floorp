@@ -81,11 +81,6 @@ var PanelFrameInternal = {
         attrs["message"] = "true";
         attrs["messagemanagergroup"] = aType;
       }
-      if (aType == "loop") {
-        attrs.message = true;
-        attrs.messagemanagergroup = "social";
-        attrs.autocompletepopup = "PopupAutoComplete";
-      }
       for (let [k, v] of Iterator(attrs)) {
         frame.setAttribute(k, v);
       }
