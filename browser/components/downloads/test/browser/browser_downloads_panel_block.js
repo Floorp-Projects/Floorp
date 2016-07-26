@@ -39,7 +39,8 @@ add_task(function* mainTest() {
     // Click the Open button.  The alert blocked-download dialog should be
     // shown.
     let dialogPromise = promiseAlertDialogOpen("cancel");
-    DownloadsBlockedSubview.elements.openButton.click();
+    EventUtils.synthesizeMouse(DownloadsBlockedSubview.elements.openButton,
+                               10, 10, {}, window);
     yield dialogPromise;
 
     window.focus();
@@ -53,7 +54,8 @@ add_task(function* mainTest() {
 
     // Click the Remove button.  The panel should close and the item should be
     // removed from it.
-    DownloadsBlockedSubview.elements.deleteButton.click();
+    EventUtils.synthesizeMouse(DownloadsBlockedSubview.elements.deleteButton,
+                               10, 10, {}, window);
     yield promisePanelHidden();
     yield openPanel();
 
@@ -151,15 +153,24 @@ function makeDownload(verdict) {
 
 function promiseSubviewShown(shown) {
   return new Promise(resolve => {
-    if (shown == DownloadsBlockedSubview.view.showingSubView) {
+    if (shown == DownloadsBlockedSubview.view.showingSubView &&
+        !DownloadsBlockedSubview.view._transitioning) {
+      info("promiseSubviewShown: already showing");
       resolve();
       return;
     }
-    let event = shown ? "ViewShowing" : "ViewHiding";
-    let subview = DownloadsBlockedSubview.subview;
-    subview.addEventListener(event, function showing() {
-      subview.removeEventListener(event, showing);
-      resolve();
-    });
+    let subviews = DownloadsBlockedSubview.view._subViews;
+    let onTransition = event => {
+      info("promiseSubviewShown: transitionend observed," +
+           " target=" + event.target +
+           " target.className=" + event.target.className);
+      if (event.target == subviews) {
+        info("promiseSubviewShown: got transitionend");
+        subviews.removeEventListener("transitionend", onTransition);
+        setTimeout(resolve, 0);
+      }
+    };
+    subviews.addEventListener("transitionend", onTransition);
+    info("promiseSubviewShown: waiting on transitionend");
   });
 }
