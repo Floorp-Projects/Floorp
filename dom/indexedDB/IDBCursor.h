@@ -154,6 +154,12 @@ public:
   Continue(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
 
   void
+  ContinuePrimaryKey(JSContext* aCx,
+                     JS::Handle<JS::Value> aKey,
+                     JS::Handle<JS::Value> aPrimaryKey,
+                     ErrorResult& aRv);
+
+  void
   Advance(uint32_t aCount, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>

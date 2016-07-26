@@ -8426,6 +8426,7 @@ private:
 
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
+  nsCString mContinuePrimaryKeyQuery;
   nsCString mLocale;
 
   Key mKey;
@@ -16157,6 +16158,34 @@ Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const
           default:
             MOZ_CRASH("Should never get here!");
         }
+      }
+      break;
+    }
+
+    case CursorRequestParams::TContinuePrimaryKeyParams: {
+      const Key& key = aParams.get_ContinuePrimaryKeyParams().key();
+      const Key& primaryKey = aParams.get_ContinuePrimaryKeyParams().primaryKey();
+      MOZ_ASSERT(!key.IsUnset());
+      MOZ_ASSERT(!primaryKey.IsUnset());
+      switch (mDirection) {
+        case IDBCursor::NEXT:
+          if (NS_WARN_IF(key < sortKey ||
+                         (key == sortKey && primaryKey <= mObjectKey))) {
+            ASSERT_UNLESS_FUZZING();
+            return false;
+          }
+          break;
+
+        case IDBCursor::PREV:
+          if (NS_WARN_IF(key > sortKey ||
+                         (key == sortKey && primaryKey >= mObjectKey))) {
+            ASSERT_UNLESS_FUZZING();
+            return false;
+          }
+          break;
+
+        default:
+          MOZ_CRASH("Should never get here!");
       }
       break;
     }
@@ -27335,6 +27364,13 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
         NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
         directionClause +
         openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+        queryStart +
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key "
+                            "AND index_table.object_data_key >= :object_key "
+                          ) +
+        directionClause +
+        openLimit;
       break;
     }
 
@@ -27378,6 +27414,13 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
       mCursor->mContinueToQuery =
         queryStart +
         NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
+        directionClause +
+        openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+        queryStart +
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key "
+                            "AND index_table.object_data_key <= :object_key "
+                          ) +
         directionClause +
         openLimit;
       break;
@@ -27557,6 +27600,13 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
         NS_LITERAL_CSTRING(" AND sort_column >= :current_key ") +
         directionClause +
         openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+        queryStart +
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key "
+                            "AND object_data_key >= :object_key "
+                          ) +
+        directionClause +
+        openLimit;
       break;
     }
 
@@ -27602,6 +27652,13 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
         NS_LITERAL_CSTRING(" AND sort_column <= :current_key ") +
         directionClause +
         openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+        queryStart +
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key "
+                            "AND object_data_key <= :object_key "
+                          ) +
+        directionClause +
+        openLimit;
       break;
     }
 
@@ -27642,6 +27699,7 @@ OpenOp::DoDatabaseWork(DatabaseConnection* aConnection)
   MOZ_ASSERT(mCursor);
   MOZ_ASSERT(mCursor->mContinueQuery.IsEmpty());
   MOZ_ASSERT(mCursor->mContinueToQuery.IsEmpty());
+  MOZ_ASSERT(mCursor->mContinuePrimaryKeyQuery.IsEmpty());
   MOZ_ASSERT(mCursor->mKey.IsUnset());
   MOZ_ASSERT(mCursor->mRangeKey.IsUnset());
 
@@ -27724,6 +27782,10 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
     mCursor->mType == OpenCursorParams::TIndexOpenCursorParams ||
     mCursor->mType == OpenCursorParams::TIndexOpenKeyCursorParams;
 
+  MOZ_ASSERT_IF(isIndex &&
+                (mCursor->mDirection == IDBCursor::NEXT ||
+                 mCursor->mDirection == IDBCursor::PREV),
+                !mCursor->mContinuePrimaryKeyQuery.IsEmpty());
   MOZ_ASSERT_IF(isIndex, mCursor->mIndexId);
   MOZ_ASSERT_IF(isIndex, !mCursor->mObjectKey.IsUnset());
 
@@ -27741,21 +27803,35 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
   bool hasContinueKey = false;
+  bool hasContinuePrimaryKey = false;
   uint32_t advanceCount = 1;
+  Key& currentKey = mCursor->IsLocaleAware() ? mCursor->mSortKey : mCursor->mKey;
 
-  if (mParams.type() == CursorRequestParams::TContinueParams) {
-    // Always go to the next result.
-    if (mParams.get_ContinueParams().key().IsUnset()) {
-      hasContinueKey = false;
-    } else {
+  switch (mParams.type()) {
+    case CursorRequestParams::TContinueParams:
+      if (!mParams.get_ContinueParams().key().IsUnset()) {
+        hasContinueKey = true;
+        currentKey = mParams.get_ContinueParams().key();
+      }
+      break;
+    case CursorRequestParams::TContinuePrimaryKeyParams:
+      MOZ_ASSERT(!mParams.get_ContinuePrimaryKeyParams().key().IsUnset());
+      MOZ_ASSERT(!mParams.get_ContinuePrimaryKeyParams().primaryKey().IsUnset());
+      MOZ_ASSERT(mCursor->mDirection == IDBCursor::NEXT ||
+                 mCursor->mDirection == IDBCursor::PREV);
       hasContinueKey = true;
-    }
-  } else {
-    advanceCount = mParams.get_AdvanceParams().count();
-    hasContinueKey = false;
+      hasContinuePrimaryKey = true;
+      currentKey = mParams.get_ContinuePrimaryKeyParams().key();
+      break;
+    case CursorRequestParams::TAdvanceParams:
+      advanceCount = mParams.get_AdvanceParams().count();
+      break;
+    default:
+      MOZ_CRASH("Should never get here!");
   }
 
   const nsCString& continueQuery =
+    hasContinuePrimaryKey ? mCursor->mContinuePrimaryKeyQuery :
     hasContinueKey ? mCursor->mContinueToQuery : mCursor->mContinueQuery;
 
   MOZ_ASSERT(advanceCount > 0);
@@ -27767,15 +27843,6 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
   NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
   NS_NAMED_LITERAL_CSTRING(objectKeyName, "object_key");
-
-  const bool localeAware = mCursor->IsLocaleAware();
-
-  Key& currentKey = mCursor->mKey;
-  if (hasContinueKey) {
-    currentKey = mParams.get_ContinueParams().key();
-  } else if (localeAware) {
-    currentKey = mCursor->mSortKey;
-  }
 
   const bool usingRangeKey = !mCursor->mRangeKey.IsUnset();
 
@@ -27817,6 +27884,16 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return rv;
     }
   }
+
+  // Bind object key if primaryKey is specified.
+  if (hasContinuePrimaryKey) {
+    rv = mParams.get_ContinuePrimaryKeyParams().primaryKey()
+      .BindToStatement(stmt, objectKeyName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
 
   bool hasResult;
   for (uint32_t index = 0; index < advanceCount; index++) {
