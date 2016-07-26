@@ -1479,6 +1479,9 @@ pref("browser.esedbreader.loglevel", "Error");
 pref("browser.laterrun.enabled", false);
 
 pref("browser.migrate.automigrate.enabled", false);
+// 4 here means the suggestion notification will be automatically
+// hidden the 4th day, so it will actually be shown on 3 different days.
+pref("browser.migrate.automigrate.daysToOfferUndo", 4);
 
 // Enable browser frames for use on desktop.  Only exposed to chrome callers.
 pref("dom.mozBrowserFramesEnabled", true);
