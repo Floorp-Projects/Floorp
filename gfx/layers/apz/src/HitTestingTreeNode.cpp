@@ -267,7 +267,7 @@ HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
   if (!pointInLayerPixels) {
     return HitTestResult::HitNothing;
   }
-  LayerIntPoint point = RoundedToInt(pointInLayerPixels.ref());
+  auto point = LayerIntPoint::Round(pointInLayerPixels.ref());
 
   // test against event regions in Layer coordinate space
   if (!mEventRegions.mHitRegion.Contains(point.x, point.y)) {

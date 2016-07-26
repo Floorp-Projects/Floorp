@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta charset="utf-8"></head>
+<body onload="checkResults()">
+<b>Sub Frame 2 Navigated</b><br/>
+
+<script type='application/javascript'>
+  function checkResults() {
+  	// query the uri of the loadingPrincipal and the TriggeringPrincipal and pass
+  	// that information on to the parent for verification.
+    var channel = SpecialPowers.wrap(document).docShell.currentDocumentChannel;
+    var triggeringPrincipalURI = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
+    var loadingPrincipalURI = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+    var referrerURI = document.referrer;
+    window.parent.parent.postMessage({triggeringPrincipalURI,
+    	                              loadingPrincipalURI,
+    	                              referrerURI}, '*');
+  }
+</script>
+</body>
+</html>

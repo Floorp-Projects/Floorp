@@ -161,7 +161,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget()
     }
   }
 
-  IntSize size(width, height);
+  IntSize size = IntSize::Truncate(width, height);
 
   if (format == nsIPrintSettings::kOutputFormatPDF) {
     return PrintTargetPDF::CreateOrNull(stream, size);
