@@ -430,7 +430,7 @@ APZCCallbackHelper::ApplyCallbackTransform(const LayoutDeviceIntPoint& aPoint,
 {
     LayoutDevicePoint point = LayoutDevicePoint(aPoint.x, aPoint.y);
     point = ApplyCallbackTransform(point / aScale, aGuid) * aScale;
-    return gfx::RoundedToInt(point);
+    return LayoutDeviceIntPoint::Round(point);
 }
 
 void
