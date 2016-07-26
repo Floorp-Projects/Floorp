@@ -182,7 +182,6 @@ richlistitem.download button {
 #downloadsPanel-multiView > .panel-viewcontainer,
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack,
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack > .panel-mainview {
-  overflow: visible;
   max-width: unset;
 }
 
