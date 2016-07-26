@@ -49,10 +49,11 @@ private:
     }
     ogg_sync_state mState;
   };
-  media::TimeIntervals GetBuffered();
+  media::TimeIntervals GetBuffered(TrackInfo::TrackType aType);
   void FindStartTime(int64_t& aOutStartTime);
+  void FindStartTime(TrackInfo::TrackType, int64_t& aOutStartTime);
 
-  nsresult SeekInternal(const media::TimeUnit& aTarget);
+  nsresult SeekInternal(TrackInfo::TrackType aType, const media::TimeUnit& aTarget);
 
   // Seeks to the keyframe preceding the target time using available
   // keyframe indexes.
@@ -61,10 +62,10 @@ private:
     SEEK_INDEX_FAIL,  // Failure due to no index, or invalid index.
     SEEK_FATAL_ERROR  // Error returned by a stream operation.
   };
-  IndexedSeekResult SeekToKeyframeUsingIndex(int64_t aTarget);
+  IndexedSeekResult SeekToKeyframeUsingIndex(TrackInfo::TrackType aType, int64_t aTarget);
 
   // Rolls back a seek-using-index attempt, returning a failure error code.
-  IndexedSeekResult RollbackIndexedSeek(int64_t aOffset);
+  IndexedSeekResult RollbackIndexedSeek(TrackInfo::TrackType aType, int64_t aOffset);
 
   // Represents a section of contiguous media, with a start and end offset,
   // and the timestamps of the start and end of that range, that is cached.
@@ -100,8 +101,9 @@ private:
     int64_t mTimeStart, mTimeEnd; // in usecs.
   };
 
-  nsresult GetSeekRanges(nsTArray<SeekRange>& aRanges);
-  SeekRange SelectSeekRange(const nsTArray<SeekRange>& ranges,
+  nsresult GetSeekRanges(TrackInfo::TrackType aType, nsTArray<SeekRange>& aRanges);
+  SeekRange SelectSeekRange(TrackInfo::TrackType aType,
+                            const nsTArray<SeekRange>& ranges,
                             int64_t aTarget,
                             int64_t aStartTime,
                             int64_t aEndTime,
@@ -113,7 +115,8 @@ private:
   // necessary. aStartTime must be the presentation time at the start of media,
   // and aEndTime the time at end of media. aRanges must be the time/byte ranges
   // buffered in the media cache as per GetSeekRanges().
-  nsresult SeekInBufferedRange(int64_t aTarget,
+  nsresult SeekInBufferedRange(TrackInfo::TrackType aType,
+                               int64_t aTarget,
                                int64_t aAdjustedTarget,
                                int64_t aStartTime,
                                int64_t aEndTime,
@@ -126,7 +129,8 @@ private:
   // search space. aStartTime must be the presentation time at the start of
   // media, and aEndTime the time at end of media. aRanges must be the time/byte
   // ranges buffered in the media cache as per GetSeekRanges().
-  nsresult SeekInUnbuffered(int64_t aTarget,
+  nsresult SeekInUnbuffered(TrackInfo::TrackType aType,
+                            int64_t aTarget,
                             int64_t aStartTime,
                             int64_t aEndTime,
                             const nsTArray<SeekRange>& aRanges);
@@ -137,7 +141,8 @@ private:
   // i.e. it will only read inside of the aRange's start and end offsets.
   // aFuzz is the number of usecs of leniency we'll allow; we'll terminate the
   // seek when we land in the range (aTime - aFuzz, aTime) usecs.
-  nsresult SeekBisection(int64_t aTarget,
+  nsresult SeekBisection(TrackInfo::TrackType aType,
+                         int64_t aTarget,
                          const SeekRange& aRange,
                          uint32_t aFuzz);
 
@@ -161,9 +166,7 @@ private:
   // Demux next Ogg packet
   ogg_packet* GetNextPacket(TrackInfo::TrackType aType);
 
-  nsresult ResetTrackState(TrackInfo::TrackType aType);
-
-  nsresult Reset();
+  nsresult Reset(TrackInfo::TrackType aType);
 
   static const nsString GetKind(const nsCString& aRole);
   static void InitTrack(MessageField* aMsgInfo,
@@ -172,7 +175,6 @@ private:
 
   // Really private!
   ~OggDemuxer();
-  void Cleanup();
 
   // Read enough of the file to identify track information and header
   // packets necessary for decoding to begin.
@@ -180,21 +182,21 @@ private:
 
   // Read a page of data from the Ogg file. Returns true if a page has been
   // read, false if the page read failed or end of file reached.
-  bool ReadOggPage(ogg_page* aPage);
+  bool ReadOggPage(TrackInfo::TrackType aType, ogg_page* aPage);
 
   // Send a page off to the individual streams it belongs to.
   // Reconstructed packets, if any are ready, will be available
   // on the individual OggCodecStates.
-  nsresult DemuxOggPage(ogg_page* aPage);
+  nsresult DemuxOggPage(TrackInfo::TrackType aType, ogg_page* aPage);
 
   // Read data and demux until a packet is available on the given stream state
-  void DemuxUntilPacketAvailable(OggCodecState* aState);
+  void DemuxUntilPacketAvailable(TrackInfo::TrackType aType, OggCodecState* aState);
 
   // Reads and decodes header packets for aState, until either header decode
   // fails, or is complete. Initializes the codec state before returning.
   // Returns true if reading headers and initializtion of the stream
   // succeeds.
-  bool ReadHeaders(OggCodecState* aState, OggHeaders& aHeaders);
+  bool ReadHeaders(TrackInfo::TrackType aType, OggCodecState* aState, OggHeaders& aHeaders);
 
   // Reads the next link in the chain.
   bool ReadOggChain();
@@ -220,7 +222,7 @@ private:
 
   // Get the end time of aEndOffset. This is the playback position we'd reach
   // after playback finished at aEndOffset.
-  int64_t RangeEndTime(int64_t aEndOffset);
+  int64_t RangeEndTime(TrackInfo::TrackType aType, int64_t aEndOffset);
 
   // Get the end time of aEndOffset, without reading before aStartOffset.
   // This is the playback position we'd reach after playback finished at
@@ -229,14 +231,15 @@ private:
   // regular blocking reads from the media stream. If bool aCachedDataOnly
   // is true, this can safely be called on the main thread, otherwise it
   // must be called on the state machine thread.
-  int64_t RangeEndTime(int64_t aStartOffset,
+  int64_t RangeEndTime(TrackInfo::TrackType aType,
+                       int64_t aStartOffset,
                        int64_t aEndOffset,
                        bool aCachedDataOnly);
 
   // Get the start time of the range beginning at aOffset. This is the start
-  // time of the first frame and or audio sample we'd be able to play if we
+  // time of the first aType sample we'd be able to play if we
   // started playback at aOffset.
-  int64_t RangeStartTime(int64_t aOffset);
+  int64_t RangeStartTime(TrackInfo::TrackType aType, int64_t aOffset);
 
 
   MediaInfo mInfo;
@@ -256,6 +259,7 @@ private:
 
   // Get the bitstream decode state for the given track type
   OggCodecState* GetTrackCodecState(TrackInfo::TrackType aType) const;
+  TrackInfo::TrackType GetCodecStateType(OggCodecState* aState) const;
 
   // Represents the user pref media.opus.enabled at the time our
   // contructor was called. We can't check it dynamically because
@@ -266,7 +270,18 @@ private:
   SkeletonState* mSkeletonState;
 
   // Ogg decoding state.
-  ogg_sync_state mOggState;
+  struct OggStateContext {
+    explicit OggStateContext(MediaResource* aResource) : mResource(aResource) {}
+    nsAutoOggSyncState mOggState;
+    MediaResourceIndex mResource;
+    Maybe<media::TimeUnit> mStartTime;
+  };
+
+  ogg_sync_state* OggState(TrackInfo::TrackType aType);
+  MediaResourceIndex* Resource(TrackInfo::TrackType aType);
+  MediaResourceIndex* CommonResource();
+  OggStateContext mAudioOggState;
+  OggStateContext mVideoOggState;
 
   // Vorbis/Opus/Theora data used to compute timestamps. This is written on the
   // decoder thread and read on the main thread. All reading on the main
@@ -290,7 +305,9 @@ private:
     return mSkeletonState != 0 && mSkeletonState->mActive;
   }
   bool HaveStartTime () const;
+  bool HaveStartTime (TrackInfo::TrackType aType);
   int64_t StartTime() const;
+  int64_t StartTime(TrackInfo::TrackType aType);
 
   // The picture region inside Theora frame to be displayed, if we have
   // a Theora video track.
@@ -301,8 +318,6 @@ private:
 
   // Number of audio frames decoded so far.
   int64_t mDecodedAudioFrames;
-
-  MediaResourceIndex mResource;
 
   friend class OggTrackDemuxer;
 };

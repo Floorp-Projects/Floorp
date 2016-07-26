@@ -1590,7 +1590,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
   MOZ_ASSERT(OnTaskQueue());
   nsresult res;
 
-  if (aTarget == aRange.mTimeStart) {
+  if (aTarget <= aRange.mTimeStart) {
     if (NS_FAILED(ResetDecode())) {
       return NS_ERROR_FAILURE;
     }
