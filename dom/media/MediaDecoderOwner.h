@@ -134,8 +134,10 @@ public:
   // ImageContainer containing the video data.
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
 
-  // Called by the media decoder object, on the main thread,
+  // Called by the decoder object, on the main thread,
   // when the connection between Rtsp server and client gets lost.
+  // The decoder owner should call Shutdown() on the decoder and drop the
+  // reference to the decoder to prevent further calls into the decoder.
   virtual void ResetConnectionState() = 0;
 
   // Called by media decoder when the audible state changed
