@@ -10,17 +10,17 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include "libyuv/basic_types.h"
 #include "libyuv/cpu_id.h"
+#include "libyuv/row.h"
 #include "libyuv/scale.h"
 #include "libyuv/scale_row.h"
 #include "../unit_test/unit_test.h"
 
 namespace libyuv {
 
-TEST_F(LibYUVBaseTest, TestFixedDiv) {
+TEST_F(libyuvTest, TestFixedDiv) {
   int num[1280];
   int div[1280];
   int result_opt[1280];
@@ -65,6 +65,7 @@ TEST_F(LibYUVBaseTest, TestFixedDiv) {
   }
   EXPECT_EQ(123 * 65536, libyuv::FixedDiv(123, 1));
 
+  srandom(time(NULL));
   MemRandomize(reinterpret_cast<uint8*>(&num[0]), sizeof(num));
   MemRandomize(reinterpret_cast<uint8*>(&div[0]), sizeof(div));
   for (int j = 0; j < 1280; ++j) {
@@ -84,12 +85,13 @@ TEST_F(LibYUVBaseTest, TestFixedDiv) {
   }
 }
 
-TEST_F(LibYUVBaseTest, TestFixedDiv_Opt) {
+TEST_F(libyuvTest, TestFixedDiv_Opt) {
   int num[1280];
   int div[1280];
   int result_opt[1280];
   int result_c[1280];
 
+  srandom(time(NULL));
   MemRandomize(reinterpret_cast<uint8*>(&num[0]), sizeof(num));
   MemRandomize(reinterpret_cast<uint8*>(&div[0]), sizeof(div));
   for (int j = 0; j < 1280; ++j) {
@@ -118,12 +120,13 @@ TEST_F(LibYUVBaseTest, TestFixedDiv_Opt) {
   }
 }
 
-TEST_F(LibYUVBaseTest, TestFixedDiv1_Opt) {
+TEST_F(libyuvTest, TestFixedDiv1_Opt) {
   int num[1280];
   int div[1280];
   int result_opt[1280];
   int result_c[1280];
 
+  srandom(time(NULL));
   MemRandomize(reinterpret_cast<uint8*>(&num[0]), sizeof(num));
   MemRandomize(reinterpret_cast<uint8*>(&div[0]), sizeof(div));
   for (int j = 0; j < 1280; ++j) {
