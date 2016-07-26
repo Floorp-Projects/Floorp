@@ -2691,29 +2691,37 @@ public class BrowserApp extends GeckoApp
         }
 
         if (mHomeScreen == null) {
-            final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
-            mHomeScreen = (HomePager) homePagerStub.inflate();
+            if (AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
+                final ViewStub asStub = (ViewStub) findViewById(R.id.activity_stream_stub);
+                mHomeScreen = (HomeScreen) asStub.inflate();
+            } else {
+                final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
+                mHomeScreen = (HomeScreen) homePagerStub.inflate();
 
-            mHomeScreen.setOnPanelChangeListener(new HomeScreen.OnPanelChangeListener() {
-                @Override
-                public void onPanelSelected(String panelId) {
-                    final Tab currentTab = Tabs.getInstance().getSelectedTab();
-                    if (currentTab != null) {
-                        currentTab.setMostRecentHomePanel(panelId);
+                // For now these listeners are HomePager specific. In future we might want
+                // to have a more abstracted data storage, with one Bundle containing all
+                // relevant restore data.
+                mHomeScreen.setOnPanelChangeListener(new HomeScreen.OnPanelChangeListener() {
+                    @Override
+                    public void onPanelSelected(String panelId) {
+                        final Tab currentTab = Tabs.getInstance().getSelectedTab();
+                        if (currentTab != null) {
+                            currentTab.setMostRecentHomePanel(panelId);
+                        }
                     }
-                }
-            });
+                });
 
-            // Set this listener to persist restore data (via the Tab) every time panel state changes.
-            mHomeScreen.setPanelStateChangeListener(new HomeFragment.PanelStateChangeListener() {
-                @Override
-                public void onStateChanged(Bundle bundle) {
-                    final Tab currentTab = Tabs.getInstance().getSelectedTab();
-                    if (currentTab != null) {
-                        currentTab.setMostRecentHomePanelData(bundle);
+                // Set this listener to persist restore data (via the Tab) every time panel state changes.
+                mHomeScreen.setPanelStateChangeListener(new HomeFragment.PanelStateChangeListener() {
+                    @Override
+                    public void onStateChanged(Bundle bundle) {
+                        final Tab currentTab = Tabs.getInstance().getSelectedTab();
+                        if (currentTab != null) {
+                            currentTab.setMostRecentHomePanelData(bundle);
+                        }
                     }
-                }
-            });
+                });
+            }
 
             // Don't show the banner in guest mode.
             if (!Restrictions.isUserRestricted()) {
