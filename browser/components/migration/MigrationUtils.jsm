@@ -10,19 +10,21 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const TOPIC_WILL_IMPORT_BOOKMARKS = "initial-migration-will-import-default-bookmarks";
 const TOPIC_DID_IMPORT_BOOKMARKS = "initial-migration-did-import-default-bookmarks";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
-                                  "resource://gre/modules/BookmarkHTMLUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AutoMigrate",
                                   "resource:///modules/AutoMigrate.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
+                                  "resource://gre/modules/BookmarkHTMLUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+                                  "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 
 var gMigrators = null;
 var gProfileStartup = null;
@@ -197,6 +199,10 @@ this.MigratorPrototype = {
     return types.reduce((a, b) => a |= b, 0);
   },
 
+  getKey: function MP_getKey() {
+    return this.contractID.match(/\=([^\=]+)$/)[1];
+  },
+
   /**
    * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
    * migrate for each resource.
@@ -216,6 +222,31 @@ this.MigratorPrototype = {
       return new Promise(resolve => {
         Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
       });
+    };
+
+    let getHistogramForResourceType = resourceType => {
+      if (resourceType == MigrationUtils.resourceTypes.HISTORY) {
+        return "FX_MIGRATION_HISTORY_IMPORT_MS";
+      }
+      if (resourceType == MigrationUtils.resourceTypes.BOOKMARKS) {
+        return "FX_MIGRATION_BOOKMARKS_IMPORT_MS";
+      }
+      if (resourceType == MigrationUtils.resourceTypes.PASSWORDS) {
+        return "FX_MIGRATION_LOGINS_IMPORT_MS";
+      }
+      return null;
+    };
+    let maybeStartTelemetryStopwatch = (resourceType, resource) => {
+      let histogram = getHistogramForResourceType(resourceType);
+      if (histogram) {
+        TelemetryStopwatch.startKeyed(histogram, this.getKey(), resource);
+      }
+    };
+    let maybeStopTelemetryStopwatch = (resourceType, resource) => {
+      let histogram = getHistogramForResourceType(resourceType);
+      if (histogram) {
+        TelemetryStopwatch.finishKeyed(histogram, this.getKey(), resource);
+      }
     };
 
     // Called either directly or through the bookmarks import callback.
@@ -246,8 +277,10 @@ this.MigratorPrototype = {
         for (let res of itemResources) {
           // Workaround bug 449811.
           let resource = res;
+          maybeStartTelemetryStopwatch(migrationType, resource);
           let completeDeferred = PromiseUtils.defer();
           let resourceDone = function(aSuccess) {
+            maybeStopTelemetryStopwatch(migrationType, resource);
             itemResources.delete(resource);
             itemSuccess |= aSuccess;
             if (itemResources.size == 0) {
