@@ -13,7 +13,7 @@
 
 namespace libyuv {
 
-TEST_F(libyuvTest, Endian) {
+TEST_F(LibYUVBaseTest, Endian) {
   uint16 v16 = 0x1234u;
   uint8 first_byte = *reinterpret_cast<uint8*>(&v16);
 #if defined(LIBYUV_LITTLE_ENDIAN)
@@ -23,7 +23,7 @@ TEST_F(libyuvTest, Endian) {
 #endif
 }
 
-TEST_F(libyuvTest, SizeOfTypes) {
+TEST_F(LibYUVBaseTest, SizeOfTypes) {
   int8 i8 = -1;
   uint8 u8 = 1u;
   int16 i16 = -1;
@@ -50,7 +50,7 @@ TEST_F(libyuvTest, SizeOfTypes) {
   EXPECT_LT(0u, u64);
 }
 
-TEST_F(libyuvTest, SizeOfConstants) {
+TEST_F(LibYUVBaseTest, SizeOfConstants) {
   EXPECT_EQ(8u, sizeof(INT64_C(0)));
   EXPECT_EQ(8u, sizeof(UINT64_C(0)));
   EXPECT_EQ(8u, sizeof(INT64_C(0x1234567887654321)));
