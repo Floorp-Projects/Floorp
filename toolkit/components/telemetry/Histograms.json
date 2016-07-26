@@ -3404,7 +3404,7 @@
     "description": "PLACES: Number of unique pages"
   },
   "PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS": {
-    "alert_emails": ["mbonardo@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "low": 30,
@@ -4541,15 +4541,15 @@
     "description": "Windows only. Counts occurrences of touch events"
   },
   "FX_URLBAR_SELECTED_RESULT_INDEX": {
-    "alert_emails": ["mbonardo@mozilla.com"],
-    "expires_in_version": "50",
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 17,
     "bug_numbers": [775825],
     "description": "Firefox: The index of the selected result in the URL bar popup"
   },
   "FX_URLBAR_SELECTED_RESULT_TYPE": {
-    "alert_emails": ["mbonardo@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 14,
@@ -8338,40 +8338,24 @@
   },
   "FX_SANITIZE_CACHE": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
     "description": "Sanitize: Time it takes to sanitize the cache (ms)"
   },
-  "FX_SANITIZE_COOKIES": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 20,
-    "description": "Sanitize: Time it takes to sanitize cookies (ms)"
-  },
   "FX_SANITIZE_COOKIES_2": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
     "description": "Sanitize: Time it takes to sanitize firefox cookies (ms). A subset of FX_SANITIZE_COOKIES."
   },
-  "FX_SANITIZE_PLUGINS": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 20,
-    "description": "Sanitize: Time it takes to sanitize plugin cookies (ms). A subset of FX_SANITIZE_COOKIES."
-  },
   "FX_SANITIZE_LOADED_FLASH": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1251469],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
@@ -8380,23 +8364,15 @@
   "FX_SANITIZE_UNLOADED_FLASH": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1251469],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
     "description": "Sanitize: Time it takes to sanitize Flash when it's not yet loaded (ms). A subset of FX_SANITIZE_PLUGINS."
   },
-  "FX_SANITIZE_OFFLINEAPPS": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 20,
-    "description": "Sanitize: Time it takes to sanitize stored offline app data (ms)"
-  },
   "FX_SANITIZE_HISTORY": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
@@ -8404,7 +8380,7 @@
   },
   "FX_SANITIZE_FORMDATA": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
@@ -8412,7 +8388,7 @@
   },
   "FX_SANITIZE_DOWNLOADS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
@@ -8420,7 +8396,7 @@
   },
   "FX_SANITIZE_SESSIONS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
@@ -8428,7 +8404,7 @@
   },
   "FX_SANITIZE_SITESETTINGS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
@@ -8436,7 +8412,7 @@
   },
   "FX_SANITIZE_OPENWINDOWS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
