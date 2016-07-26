@@ -153,6 +153,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t minMemoryLength() const { return shared_->minMemoryLength; }
 
     // Tables:
+    uint32_t numTables() const { return numTables_; }
     const TableDescVector& tables() const { return shared_->tables; }
 
     // Signatures:

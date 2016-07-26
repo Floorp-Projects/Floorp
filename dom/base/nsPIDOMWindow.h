@@ -44,6 +44,7 @@ class AudioContext;
 class Element;
 class Performance;
 class ServiceWorkerRegistration;
+class CustomElementsRegistry;
 } // namespace dom
 namespace gfx {
 class VRDeviceProxy;
@@ -96,7 +97,7 @@ public:
   const nsPIDOMWindowOuter* AsOuter() const;
 
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
-
+  virtual mozilla::dom::CustomElementsRegistry* CustomElements() = 0;
   // Outer windows only.
   virtual void ActivateOrDeactivate(bool aActivate) = 0;
 
@@ -321,7 +322,7 @@ public:
   {
     return mMayHavePaintEventListener;
   }
-  
+
   /**
    * Call this to indicate that some node (this window, its document,
    * or content in that document) has a touch event listener.

@@ -7,13 +7,10 @@
 #define TEX_UNPACK_BLOB_H_
 
 #include "GLContextTypes.h"
-#include "GLTypes.h"
+#include "mozilla/RefPtr.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLTypes.h"
 
-
-template <class T>
-class RefPtr;
 
 namespace mozilla {
 
@@ -30,10 +27,6 @@ class HTMLVideoElement;
 namespace gfx {
 class DataSourceSurface;
 } // namespace gfx
-
-namespace gl {
-class GLContext;
-} // namespace gl
 
 namespace layers {
 class Image;
@@ -59,6 +52,8 @@ public:
     const uint32_t mDepth;
     const bool mIsSrcPremult;
 
+    bool mNeedsExactUpload;
+
 protected:
     TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target, uint32_t rowLength,
                   uint32_t width, uint32_t height, uint32_t depth, bool isSrcPremult);
@@ -67,10 +62,11 @@ public:
     virtual ~TexUnpackBlob() { }
 
 protected:
-    bool ConvertIfNeeded(WebGLContext* webgl, const char* funcName, const void* srcBytes,
-                         uint32_t srcStride, uint8_t srcBPP, WebGLTexelFormat srcFormat,
+    bool ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
+                         const uint8_t* srcBytes, uint32_t srcStride, uint8_t srcBPP,
+                         WebGLTexelFormat srcFormat,
                          const webgl::DriverUnpackInfo* dstDUI,
-                         const void** const out_bytes,
+                         const uint8_t** const out_bytes,
                          UniqueBuffer* const out_anchoredBuffer) const;
 
 public:
@@ -86,12 +82,13 @@ public:
 class TexUnpackBytes final : public TexUnpackBlob
 {
 public:
-    const void* const mBytes;
+    const bool mIsClientData;
+    const uint8_t* const mPtr;
 
     TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target, uint32_t width,
-                   uint32_t height, uint32_t depth, const void* bytes);
+                   uint32_t height, uint32_t depth, bool isClientData, const uint8_t* ptr);
 
-    virtual bool HasData() const override { return bool(mBytes); }
+    virtual bool HasData() const override { return !mIsClientData || bool(mPtr); }
 
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                WebGLTexture* tex, TexImageTarget target, GLint level,
@@ -108,6 +105,8 @@ public:
     TexUnpackImage(const WebGLContext* webgl, TexImageTarget target, uint32_t width,
                    uint32_t height, uint32_t depth, layers::Image* image,
                    bool isAlphaPremult);
+
+    ~TexUnpackImage(); // Prevent needing to define layers::Image in the header.
 
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                WebGLTexture* tex, TexImageTarget target, GLint level,
@@ -126,10 +125,10 @@ public:
                      bool isAlphaPremult);
 
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
-                                 WebGLTexture* tex, TexImageTarget target, GLint level,
-                                 const webgl::DriverUnpackInfo* dui, GLint xOffset,
-                                 GLint yOffset, GLint zOffset,
-                                 GLenum* const out_error) const override;
+                               WebGLTexture* tex, TexImageTarget target, GLint level,
+                               const webgl::DriverUnpackInfo* dui, GLint xOffset,
+                               GLint yOffset, GLint zOffset,
+                               GLenum* const out_error) const override;
 };
 
 } // namespace webgl

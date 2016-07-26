@@ -9,13 +9,13 @@ import json
 import os
 import re
 import urllib2
-import tarfile
 import time
 
 from . import base
 from taskgraph.util.docker import (
+    create_context_tar,
     docker_image,
-    generate_context_hash
+    generate_context_hash,
 )
 from taskgraph.util.templates import Templates
 
@@ -64,10 +64,8 @@ class DockerImageTask(base.Task):
         templates = Templates(path)
         for image_name in config['images']:
             context_path = os.path.join('testing', 'docker', image_name)
-            context_hash = generate_context_hash(context_path)
 
             image_parameters = dict(parameters)
-            image_parameters['context_hash'] = context_hash
             image_parameters['context_path'] = context_path
             image_parameters['artifact_path'] = 'public/image.tar'
             image_parameters['image_name'] = image_name
@@ -80,12 +78,21 @@ class DockerImageTask(base.Task):
                     "artifacts/decision_task/image_contexts/{}/context.tar.gz".format(image_name))
                 image_parameters['context_url'] = ARTIFACT_URL.format(
                     os.environ['TASK_ID'], image_artifact_path)
-                cls.create_context_tar(context_path, destination, image_name)
+
+                destination = os.path.abspath(destination)
+                if not os.path.exists(os.path.dirname(destination)):
+                    os.makedirs(os.path.dirname(destination))
+
+                context_hash = create_context_tar(GECKO, context_path,
+                                                  destination, image_name)
             else:
                 # skip context generation since this isn't a decision task
                 # TODO: generate context tarballs using subdirectory clones in
                 # the image-building task so we don't have to worry about this.
                 image_parameters['context_url'] = 'file:///tmp/' + image_artifact_path
+                context_hash = generate_context_hash(GECKO, context_path, image_name)
+
+            image_parameters['context_hash'] = context_hash
 
             image_task = templates.load('image.yml', image_parameters)
 
@@ -130,16 +137,6 @@ class DockerImageTask(base.Task):
                 pass
 
         return False, None
-
-    @classmethod
-    def create_context_tar(cls, context_dir, destination, image_name):
-        'Creates a tar file of a particular context directory.'
-        destination = os.path.abspath(destination)
-        if not os.path.exists(os.path.dirname(destination)):
-            os.makedirs(os.path.dirname(destination))
-
-        with tarfile.open(destination, 'w:gz') as tar:
-            tar.add(context_dir, arcname=image_name)
 
     @classmethod
     def from_json(cls, task_dict):

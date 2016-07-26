@@ -105,6 +105,10 @@ public:
   RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
                   ErrorResult& aRv);
 
+  static bool
+  IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
+             ErrorResult& aRv);
+
   URLMainThread(nsISupports* aParent, already_AddRefed<nsIURI> aURI)
     : URL(aParent)
     , mURI(aURI)
@@ -294,10 +298,18 @@ URLMainThread::RevokeObjectURL(const GlobalObject& aGlobal,
     nsHostObjectProtocolHandler::GetDataEntryPrincipal(asciiurl);
 
   if (urlPrincipal && principal->Subsumes(urlPrincipal)) {
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
     global->UnregisterHostObjectURI(asciiurl);
     nsHostObjectProtocolHandler::RemoveDataEntry(asciiurl);
   }
+}
+
+/* static */ bool
+URLMainThread::IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
+                          ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_LossyConvertUTF16toASCII asciiurl(aURL);
+  return nsHostObjectProtocolHandler::HasDataEntry(asciiurl);
 }
 
 void
@@ -668,6 +680,10 @@ public:
   RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl,
                   ErrorResult& aRv);
 
+  static bool
+  IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
+             ErrorResult& aRv);
+
   URLWorker(WorkerPrivate* aWorkerPrivate, URLProxy* aURLProxy);
 
   virtual void
@@ -894,6 +910,40 @@ public:
     }
 
     return true;
+  }
+};
+
+// This class checks if an URL is valid on the main thread.
+class IsValidURLRunnable : public WorkerMainThreadRunnable
+{
+private:
+  const nsString mURL;
+  bool mValid;
+
+public:
+  IsValidURLRunnable(WorkerPrivate* aWorkerPrivate,
+                     const nsAString& aURL)
+  : WorkerMainThreadRunnable(aWorkerPrivate,
+                             NS_LITERAL_CSTRING("URL :: IsValidURL"))
+  , mURL(aURL)
+  , mValid(false)
+  {}
+
+  bool
+  MainThreadRun()
+  {
+    AssertIsOnMainThread();
+
+    NS_ConvertUTF16toUTF8 url(mURL);
+    mValid = nsHostObjectProtocolHandler::HasDataEntry(url);
+
+    return true;
+  }
+
+  bool
+  IsValidURL() const
+  {
+    return mValid;
   }
 };
 
@@ -1307,6 +1357,24 @@ URLWorker::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl,
   }
 }
 
+/* static */ bool
+URLWorker::IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
+                      ErrorResult& aRv)
+{
+  JSContext* cx = aGlobal.Context();
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
+
+  RefPtr<IsValidURLRunnable> runnable =
+    new IsValidURLRunnable(workerPrivate, aUrl);
+
+  runnable->Dispatch(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return false;
+  }
+
+  return runnable->IsValidURL();
+}
+
 URLWorker::URLWorker(WorkerPrivate* aWorkerPrivate, URLProxy* aURLProxy)
   : URL(nullptr)
   , mWorkerPrivate(aWorkerPrivate)
@@ -1697,6 +1765,16 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
   } else {
     URLWorker::RevokeObjectURL(aGlobal, aURL, aRv);
   }
+}
+
+bool
+URL::IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
+                ErrorResult& aRv)
+{
+  if (NS_IsMainThread()) {
+    return URLMainThread::IsValidURL(aGlobal, aURL, aRv);
+  }
+  return URLWorker::IsValidURL(aGlobal, aURL, aRv);
 }
 
 URLSearchParams*

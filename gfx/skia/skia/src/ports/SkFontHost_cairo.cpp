@@ -495,9 +495,11 @@ void SkScalerContext_CairoFT::resolvePattern(FcPattern* pattern)
     if (!pattern) {
         return;
     }
-    SkAutoTUnref<FcPattern> scalePattern(FcPatternDuplicate(pattern));
-    if (scalePattern) {
-        if (FcPatternAddDouble(scalePattern, FC_PIXEL_SIZE, fScaleY) &&
+    FcValue value;
+    if (FcPatternGet(pattern, FC_PIXEL_SIZE, 0, &value) == FcResultNoMatch) {
+        SkAutoTUnref<FcPattern> scalePattern(FcPatternDuplicate(pattern));
+        if (scalePattern &&
+            FcPatternAddDouble(scalePattern, FC_PIXEL_SIZE, fScaleY) &&
             FcConfigSubstitute(nullptr, scalePattern, FcMatchPattern)) {
             FcDefaultSubstitute(scalePattern);
             FcResult result;

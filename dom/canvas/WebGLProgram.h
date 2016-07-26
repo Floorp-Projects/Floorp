@@ -17,8 +17,8 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 
+#include "WebGLContext.h"
 #include "WebGLObjectModel.h"
-
 
 namespace mozilla {
 class ErrorResult;

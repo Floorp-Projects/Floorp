@@ -145,12 +145,13 @@ def set_interactive_task(task, interactive):
 
 
 def remove_caches_from_task(task):
-    r"""Remove all caches but tc-vcs from the task.
+    r"""Remove all caches but vcs from the task.
 
     :param task: task definition.
     """
     whitelist = [
         re.compile("^level-[123]-.*-tc-vcs(-public-sources)?$"),
+        re.compile("^level-[123]-hg-shared"),
         re.compile("^tooltool-cache$"),
     ]
     try:

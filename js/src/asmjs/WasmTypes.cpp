@@ -181,8 +181,6 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return cx->runtimeAddressForJit();
       case SymbolicAddress::RuntimeInterruptUint32:
         return cx->runtimeAddressOfInterruptUint32();
-      case SymbolicAddress::StackLimit:
-        return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case SymbolicAddress::ReportOverRecursed:
         return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:

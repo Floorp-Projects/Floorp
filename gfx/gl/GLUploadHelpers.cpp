@@ -7,6 +7,7 @@
 
 #include "GLContext.h"
 #include "mozilla/gfx/2D.h"
+#include "gfxUtils.h"
 #include "mozilla/gfx/Tools.h"  // For BytesPerPixel
 #include "nsRegion.h"
 #include "GfxTexturesReporter.h"
@@ -17,39 +18,6 @@ namespace mozilla {
 using namespace gfx;
 
 namespace gl {
-
-/* These two techniques are suggested by "Bit Twiddling Hacks"
- */
-
-/**
- * Returns true if |aNumber| is a power of two
- * 0 is incorreclty considered a power of two
- */
-static bool
-IsPowerOfTwo(int aNumber)
-{
-    return (aNumber & (aNumber - 1)) == 0;
-}
-
-/**
- * Returns the first integer greater than |aNumber| which is a power of two
- * Undefined for |aNumber| < 0
- */
-static int
-NextPowerOfTwo(int aNumber)
-{
-#if defined(__arm__)
-    return 1 << (32 - __builtin_clz(aNumber - 1));
-#else
-    --aNumber;
-    aNumber |= aNumber >> 1;
-    aNumber |= aNumber >> 2;
-    aNumber |= aNumber >> 4;
-    aNumber |= aNumber >> 8;
-    aNumber |= aNumber >> 16;
-    return ++aNumber;
-#endif
-}
 
 static unsigned int
 DataOffset(const IntPoint& aPoint, int32_t aStride, SurfaceFormat aFormat)
@@ -285,15 +253,16 @@ TexImage2DHelper(GLContext* gl,
         NS_ASSERTION(format == (GLenum)internalformat,
                     "format and internalformat not the same for glTexImage2D on GLES2");
 
+        MOZ_ASSERT(width >= 0 && height >= 0);
         if (!CanUploadNonPowerOfTwo(gl)
             && (stride != width * pixelsize
-            || !IsPowerOfTwo(width)
-            || !IsPowerOfTwo(height))) {
+            || !IsPowerOfTwo((uint32_t)width)
+            || !IsPowerOfTwo((uint32_t)height))) {
 
             // Pad out texture width and height to the next power of two
             // as we don't support/want non power of two texture uploads
-            GLsizei paddedWidth = NextPowerOfTwo(width);
-            GLsizei paddedHeight = NextPowerOfTwo(height);
+            GLsizei paddedWidth = RoundUpPow2((uint32_t)width);
+            GLsizei paddedHeight = RoundUpPow2((uint32_t)height);
 
             GLvoid* paddedPixels = new unsigned char[paddedWidth * paddedHeight * pixelsize];
 

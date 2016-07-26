@@ -106,6 +106,7 @@ class BarProp;
 struct ChannelPixelLayout;
 class Console;
 class Crypto;
+class CustomElementsRegistry;
 class External;
 class Function;
 class Gamepad;
@@ -205,7 +206,6 @@ public:
   // stack depth at which timeout is firing
   uint32_t mFiringDepth;
 
-  // 
   uint32_t mNestingLevel;
 
   // The popup state at timeout creation time if not created from
@@ -878,6 +878,7 @@ public:
   nsLocation* GetLocation(mozilla::ErrorResult& aError);
   nsIDOMLocation* GetLocation() override;
   nsHistory* GetHistory(mozilla::ErrorResult& aError);
+  mozilla::dom::CustomElementsRegistry* CustomElements() override;
   mozilla::dom::BarProp* GetLocationbar(mozilla::ErrorResult& aError);
   mozilla::dom::BarProp* GetMenubar(mozilla::ErrorResult& aError);
   mozilla::dom::BarProp* GetPersonalbar(mozilla::ErrorResult& aError);
@@ -1838,6 +1839,7 @@ protected:
   uint32_t                      mTimeoutFiringDepth;
   RefPtr<nsLocation>          mLocation;
   RefPtr<nsHistory>           mHistory;
+  RefPtr<mozilla::dom::CustomElementsRegistry> mCustomElements;
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;

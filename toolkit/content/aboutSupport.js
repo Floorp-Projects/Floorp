@@ -368,6 +368,7 @@ var snapshotFormatters = {
     addRowFromKey("features", "webglRenderer");
     addRowFromKey("features", "webgl2Renderer");
     addRowFromKey("features", "supportsHardwareH264", "hardwareH264");
+    addRowFromKey("features", "currentAudioBackend", "audioBackend");
     addRowFromKey("features", "direct2DEnabled", "#Direct2D");
 
     if ("directWriteEnabled" in data) {
