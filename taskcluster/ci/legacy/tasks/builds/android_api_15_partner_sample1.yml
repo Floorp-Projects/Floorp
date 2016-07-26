@@ -62,6 +62,7 @@ task:
       - production
       - staging
     treeherder:
+      tier: 2
       machine:
         # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
         platform: android-4-0-armv7-api15-partner1
