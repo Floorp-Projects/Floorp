@@ -510,7 +510,7 @@ IDBCursor::Continue(JSContext* aCx,
                  IDB_LOG_STRINGIFY(key));
   }
 
-  mBackgroundActor->SendContinueInternal(ContinueParams(key), mKey);
+  mBackgroundActor->SendContinueInternal(ContinueParams(key));
 
   mContinueCalled = true;
 }
@@ -568,7 +568,7 @@ IDBCursor::Advance(uint32_t aCount, ErrorResult &aRv)
                  aCount);
   }
 
-  mBackgroundActor->SendContinueInternal(AdvanceParams(aCount), mKey);
+  mBackgroundActor->SendContinueInternal(AdvanceParams(aCount));
 
   mContinueCalled = true;
 }
@@ -602,8 +602,6 @@ IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
   MOZ_ASSERT(mType == Type_ObjectStore || mType == Type_Index);
   MOZ_ASSERT(!mKey.IsUnset());
   MOZ_ASSERT_IF(mType == Type_Index, !mPrimaryKey.IsUnset());
-
-  mBackgroundActor->InvalidateCachedResponses();
 
   IDBObjectStore* objectStore;
   if (mType == Type_ObjectStore) {
@@ -721,8 +719,6 @@ IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv)
 
   MOZ_ASSERT(mType == Type_ObjectStore || mType == Type_Index);
   MOZ_ASSERT(!mKey.IsUnset());
-
-  mBackgroundActor->InvalidateCachedResponses();
 
   IDBObjectStore* objectStore;
   if (mType == Type_ObjectStore) {
