@@ -79,11 +79,24 @@ var gCookiesWindow = {
                                                aCookieB.originAttributes);
   },
 
+  _isPrivateCookie: function (aCookie) {
+      let { userContextId } = aCookie.originAttributes;
+      if (!userContextId) {
+        // Default identity is public.
+        return false;
+      }
+      return !ContextualIdentityService.getIdentityFromId(userContextId).public;
+  },
+
   observe: function (aCookie, aTopic, aData) {
     if (aTopic != "cookie-changed")
       return;
 
     if (aCookie instanceof Components.interfaces.nsICookie) {
+      if (this._isPrivateCookie(aCookie)) {
+        return;
+      }
+
       var strippedHost = this._makeStrippedHost(aCookie.host);
       if (aData == "changed")
         this._handleCookieChanged(aCookie, strippedHost);
@@ -490,6 +503,10 @@ var gCookiesWindow = {
     while (e.hasMoreElements()) {
       var cookie = e.getNext();
       if (cookie && cookie instanceof Components.interfaces.nsICookie) {
+        if (this._isPrivateCookie(cookie)) {
+          continue;
+        }
+
         var strippedHost = this._makeStrippedHost(cookie.host);
         this._addCookie(strippedHost, cookie, hostCount);
       }
