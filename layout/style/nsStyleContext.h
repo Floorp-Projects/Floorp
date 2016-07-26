@@ -398,6 +398,14 @@ public:
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs);
 
+private:
+  template<class StyleContextLike>
+  nsChangeHint CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
+                                           nsChangeHint aParentHintsNotHandledForDescendants,
+                                           uint32_t* aEqualStructs,
+                                           uint32_t* aSamePointerStructs);
+public:
+
   /**
    * Get a color that depends on link-visitedness using this and
    * this->GetStyleIfVisited().
