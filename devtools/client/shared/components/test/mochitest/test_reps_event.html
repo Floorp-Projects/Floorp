@@ -35,22 +35,30 @@ window.onload = Task.async(function* () {
 
   function testEvent() {
     const renderedComponent = renderComponent(Event.rep, { object: getGripStub("testEvent") });
-    is(renderedComponent.textContent, "beforeprint", "Event rep has expected text content for an event");
+    is(renderedComponent.textContent,
+       "Event { isTrusted: true, eventPhase: 2, bubbles: false, 7 more… }",
+       "Event rep has expected text content for an event");
   }
 
   function testMouseEvent() {
     const renderedComponent = renderComponent(Event.rep, { object: getGripStub("testMouseEvent") });
-    is(renderedComponent.textContent, "clickclientX=62, clientY=18", "Event rep has expected text content for a mouse event");
+    is(renderedComponent.textContent,
+       "MouseEvent { buttons: 0, clientX: 62, clientY: 18, 2 more… }",
+       "Event rep has expected text content for a mouse event");
   }
 
   function testKeyboardEvent() {
     const renderedComponent = renderComponent(Event.rep, { object: getGripStub("testKeyboardEvent") });
-    is(renderedComponent.textContent, "keyupcharCode=0, keyCode=17", "Event rep has expected text content for a keyboard event");
+    is(renderedComponent.textContent,
+       "KeyboardEvent { key: \"Control\", charCode: 0, keyCode: 17 }",
+       "Event rep has expected text content for a keyboard event");
   }
 
   function testMessageEvent() {
     const renderedComponent = renderComponent(Event.rep, { object: getGripStub("testMessageEvent") });
-    is(renderedComponent.textContent, "messageorigin=null, data=test data", "Event rep has expected text content for a message event");
+    is(renderedComponent.textContent,
+       "MessageEvent { isTrusted: false, data: \"test data\", origin: \"null\", 7 more… }",
+       "Event rep has expected text content for a message event");
   }
 
   function getGripStub(name) {
