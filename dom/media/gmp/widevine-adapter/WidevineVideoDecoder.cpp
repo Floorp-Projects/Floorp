@@ -155,7 +155,7 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
 class CounterHelper {
 public:
   // RAII, increment counter
-  CounterHelper(int32_t& counter)
+  explicit CounterHelper(int32_t& counter)
     : mCounter(counter)
   {
     mCounter++;
@@ -176,7 +176,7 @@ private:
 // if forgotten with ForgetFrame.
 class FrameDestroyerHelper {
 public:
-  FrameDestroyerHelper(GMPVideoi420Frame*& frame)
+  explicit FrameDestroyerHelper(GMPVideoi420Frame*& frame)
     : frame(frame)
   {
   }
