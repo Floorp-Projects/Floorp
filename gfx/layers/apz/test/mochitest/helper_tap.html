@@ -10,12 +10,6 @@
   <script type="application/javascript">
 
 function clickButton() {
-  if (!window.TouchEvent) {
-    ok(true, "Touch events are not supported on this platform, sorry!\n");
-    subtestDone();
-    return;
-  }
-
   document.addEventListener('click', clicked, false);
 
   synthesizeNativeTap(document.getElementById('b'), 5, 5, function() {
