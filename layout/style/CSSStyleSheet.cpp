@@ -233,7 +233,11 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
                      required.GetUnit() == eCSSUnit_Centimeter,
                      "bad required value");
         float actualDPI = actual.GetFloatValue();
-        if (actual.GetUnit() == eCSSUnit_Centimeter) {
+        float overrideDPPX = aPresContext->GetOverrideDPPX();
+
+        if (overrideDPPX > 0) {
+          actualDPI = overrideDPPX * 96.0f;
+        } else if (actual.GetUnit() == eCSSUnit_Centimeter) {
           actualDPI = actualDPI * 2.54f;
         } else if (actual.GetUnit() == eCSSUnit_Pixel) {
           actualDPI = actualDPI * 96.0f;
