@@ -124,37 +124,37 @@ IsForeignChild(const nsIFrame* aFrame)
     aFrame->GetType() == nsGkAtoms::blockFrame;
 }
 
-NS_DECLARE_FRAME_PROPERTY_DELETABLE(HTMLReflowMetricsProperty,
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(HTMLReflowOutputProperty,
                                     ReflowOutput)
 
 /* static */ void
 nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*                  aFrame,
-                                                        const ReflowOutput& aReflowMetrics,
+                                                        const ReflowOutput& aReflowOutput,
                                                         const nsBoundingMetrics&   aBoundingMetrics)
 {
-  ReflowOutput *metrics = new ReflowOutput(aReflowMetrics);
+  ReflowOutput *metrics = new ReflowOutput(aReflowOutput);
   metrics->mBoundingMetrics = aBoundingMetrics;
-  aFrame->Properties().Set(HTMLReflowMetricsProperty(), metrics);
+  aFrame->Properties().Set(HTMLReflowOutputProperty(), metrics);
 }
 
 // helper method to facilitate getting the reflow and bounding metrics
 /* static */ void
 nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
-                                                       ReflowOutput& aReflowMetrics,
+                                                       ReflowOutput& aReflowOutput,
                                                        nsBoundingMetrics&   aBoundingMetrics,
                                                        eMathMLFrameType*    aMathMLFrameType)
 {
   NS_PRECONDITION(aFrame, "null arg");
 
   ReflowOutput* metrics =
-    aFrame->Properties().Get(HTMLReflowMetricsProperty());
+    aFrame->Properties().Get(HTMLReflowOutputProperty());
 
   // IMPORTANT: This function is only meant to be called in Place() methods
   // where it is assumed that SaveReflowAndBoundingMetricsFor has recorded the
   // information.
   NS_ASSERTION(metrics, "Didn't SaveReflowAndBoundingMetricsFor frame!");
   if (metrics) {
-    aReflowMetrics = *metrics;
+    aReflowOutput = *metrics;
     aBoundingMetrics = metrics->mBoundingMetrics;
   }
 
@@ -177,7 +177,7 @@ nsMathMLContainerFrame::ClearSavedChildMetrics()
   nsIFrame* childFrame = mFrames.FirstChild();
   FramePropertyTable* props = PresContext()->PropertyTable();
   while (childFrame) {
-    props->Delete(childFrame, HTMLReflowMetricsProperty());
+    props->Delete(childFrame, HTMLReflowOutputProperty());
     childFrame = childFrame->GetNextSibling();
   }
 }
