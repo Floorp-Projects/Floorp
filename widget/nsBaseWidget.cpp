@@ -1121,7 +1121,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
       if (touchEvent->mMessage == eTouchStart) {
         if (gfxPrefs::TouchActionEnabled()) {
           APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(this,
-              *(original->AsTouchEvent()), aInputBlockId,
+              GetDocument(), *(original->AsTouchEvent()), aInputBlockId,
               mSetAllowedTouchBehaviorCallback);
         }
         APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(),
