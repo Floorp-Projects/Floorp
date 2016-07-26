@@ -37,7 +37,7 @@ using namespace js::jit;
 using namespace js::wasm;
 
 void
-Val::writePayload(uint8_t* dst)
+Val::writePayload(uint8_t* dst) const
 {
     switch (type_) {
       case ValType::I32:

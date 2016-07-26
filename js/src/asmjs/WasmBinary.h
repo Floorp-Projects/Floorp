@@ -28,6 +28,7 @@ static const uint32_t MagicNumber        = 0x6d736100; // "\0asm"
 static const uint32_t EncodingVersion    = 0x0b;
 
 static const char TypeSectionId[]        = "type";
+static const char GlobalSectionId[]      = "global";
 static const char ImportSectionId[]      = "import";
 static const char FunctionSectionId[]    = "function";
 static const char TableSectionId[]       = "table";
@@ -70,7 +71,8 @@ enum class DefinitionKind
 {
     Function                             = 0x00,
     Table                                = 0x01,
-    Memory                               = 0x02
+    Memory                               = 0x02,
+    Global                               = 0x03
 };
 
 enum class ResizableFlags
@@ -78,6 +80,12 @@ enum class ResizableFlags
     Default                              = 0x1,
     HasMaximum                           = 0x2,
     AllowedMask                          = 0x3
+};
+
+enum class GlobalFlags
+{
+    IsMutable                            = 0x1,
+    AllowedMask                          = 0x1
 };
 
 enum class Expr
@@ -271,13 +279,15 @@ enum class Expr
     // i64.eqz.
     I64Eqz                               = 0xba,
 
+    // Global access.
+    GetGlobal                            = 0xc0,
+    SetGlobal                            = 0xc1,
+
     // ------------------------------------------------------------------------
     // The rest of these operators are currently only emitted internally when
     // compiling asm.js and are rejected by wasm validation.
 
     // asm.js-specific operators
-    LoadGlobal                           = 0xc0,
-    StoreGlobal,
     I32Min,
     I32Max,
     I32Neg,

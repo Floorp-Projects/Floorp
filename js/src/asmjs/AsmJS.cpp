@@ -111,7 +111,6 @@ class AsmJSGlobal
         Which which_;
         union {
             struct {
-                uint32_t globalDataOffset_;
                 VarInitKind initKind_;
                 union {
                     ValType importType_;
@@ -149,10 +148,6 @@ class AsmJSGlobal
     }
     Which which() const {
         return pod.which_;
-    }
-    uint32_t varGlobalDataOffset() const {
-        MOZ_ASSERT(pod.which_ == Variable);
-        return pod.u.var.globalDataOffset_;
     }
     VarInitKind varInitKind() const {
         MOZ_ASSERT(pod.which_ == Variable);
@@ -1447,7 +1442,6 @@ class MOZ_STACK_CLASS ModuleValidator
         }
         unsigned varOrConstIndex() const {
             MOZ_ASSERT(which_ == Variable || which_ == ConstantImport);
-            MOZ_ASSERT(u.varOrConst.index_ != -1u);
             return u.varOrConst.index_;
         }
         bool isConst() const {
@@ -1851,7 +1845,7 @@ class MOZ_STACK_CLASS ModuleValidator
         MOZ_ASSERT(type == Type::canonicalize(Type::lit(lit)));
 
         uint32_t index;
-        if (!mg_.allocateGlobal(type.canonicalToValType(), isConst, &index))
+        if (!mg_.addGlobal(type.canonicalToValType(), isConst, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
@@ -1868,7 +1862,6 @@ class MOZ_STACK_CLASS ModuleValidator
         AsmJSGlobal g(AsmJSGlobal::Variable, nullptr);
         g.pod.u.var.initKind_ = AsmJSGlobal::InitConstant;
         g.pod.u.var.u.val_ = lit.value();
-        g.pod.u.var.globalDataOffset_ = mg_.global(index).globalDataOffset;
         return asmJSMetadata_->asmJSGlobals.append(Move(g));
     }
     bool addGlobalVarImport(PropertyName* var, PropertyName* field, Type type, bool isConst) {
@@ -1880,7 +1873,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         uint32_t index;
         ValType valType = type.canonicalToValType();
-        if (!mg_.allocateGlobal(valType, isConst, &index))
+        if (!mg_.addGlobal(valType, isConst, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantImport : Global::Variable;
@@ -1895,7 +1888,6 @@ class MOZ_STACK_CLASS ModuleValidator
         AsmJSGlobal g(AsmJSGlobal::Variable, Move(fieldChars));
         g.pod.u.var.initKind_ = AsmJSGlobal::InitImport;
         g.pod.u.var.u.importType_ = valType;
-        g.pod.u.var.globalDataOffset_ = mg_.global(index).globalDataOffset;
         return asmJSMetadata_->asmJSGlobals.append(Move(g));
     }
     bool addArrayView(PropertyName* var, Scalar::Type vt, PropertyName* maybeField) {
@@ -3905,7 +3897,7 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
           case ModuleValidator::Global::ConstantImport:
           case ModuleValidator::Global::Variable: {
             *type = global->varOrConstType();
-            return f.encoder().writeExpr(Expr::LoadGlobal) &&
+            return f.encoder().writeExpr(Expr::GetGlobal) &&
                    f.encoder().writeVarU32(global->varOrConstIndex());
           }
           case ModuleValidator::Global::Function:
@@ -4197,7 +4189,7 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
         Type globType = global->varOrConstType();
         if (!(rhsType <= globType))
             return f.failf(lhs, "%s is not a subtype of %s", rhsType.toChars(), globType.toChars());
-        if (!f.encoder().writeExpr(Expr::StoreGlobal))
+        if (!f.encoder().writeExpr(Expr::SetGlobal))
             return false;
         if (!f.encoder().writeVarU32(global->varOrConstIndex()))
             return false;
@@ -7817,25 +7809,9 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
 }
 
 static bool
-TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata& metadata,
-               MutableHandleWasmInstanceObject instanceObj, MutableHandleObject exportObj)
+GetImports(JSContext* cx, const AsmJSMetadata& metadata, HandleValue globalVal,
+           HandleValue importVal, MutableHandle<FunctionVector> funcImports, ValVector* valImports)
 {
-    HandleValue globalVal = args.get(0);
-    HandleValue importVal = args.get(1);
-    HandleValue bufferVal = args.get(2);
-
-    RootedArrayBufferObjectMaybeShared buffer(cx);
-    RootedWasmMemoryObject memory(cx);
-    if (module.metadata().usesMemory()) {
-        if (!CheckBuffer(cx, metadata, bufferVal, &buffer))
-            return false;
-
-        memory = WasmMemoryObject::create(cx, buffer, nullptr);
-        if (!memory)
-            return false;
-    }
-
-    Vector<Val> valImports(cx);
     Rooted<FunctionVector> ffis(cx, FunctionVector(cx));
     if (!ffis.resize(metadata.numFFIs))
         return false;
@@ -7843,12 +7819,10 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
     for (const AsmJSGlobal& global : metadata.asmJSGlobals) {
         switch (global.which()) {
           case AsmJSGlobal::Variable: {
-            // We don't have any global data into which to write the imported
-            // values until after instantiation, so save them in a Vector.
             Val val;
             if (!ValidateGlobalVariable(cx, global, importVal, &val))
                 return false;
-            if (!valImports.append(val))
+            if (!valImports->append(val))
                 return false;
             break;
           }
@@ -7884,14 +7858,40 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
         }
     }
 
-    Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
     for (const AsmJSImport& import : metadata.asmJSImports) {
-        if (!funcs.append(ffis[import.ffiIndex()]))
+        if (!funcImports.append(ffis[import.ffiIndex()]))
             return false;
     }
 
+    return true;
+}
+
+static bool
+TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata& metadata,
+               MutableHandleWasmInstanceObject instanceObj, MutableHandleObject exportObj)
+{
+    HandleValue globalVal = args.get(0);
+    HandleValue importVal = args.get(1);
+    HandleValue bufferVal = args.get(2);
+
+    RootedArrayBufferObjectMaybeShared buffer(cx);
+    RootedWasmMemoryObject memory(cx);
+    if (module.metadata().usesMemory()) {
+        if (!CheckBuffer(cx, metadata, bufferVal, &buffer))
+            return false;
+
+        memory = WasmMemoryObject::create(cx, buffer, nullptr);
+        if (!memory)
+            return false;
+    }
+
+    ValVector valImports;
+    Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
+    if (!GetImports(cx, metadata, globalVal, importVal, &funcs, &valImports))
+        return false;
+
     RootedWasmTableObject table(cx);
-    if (!module.instantiate(cx, funcs, table, memory, nullptr, instanceObj))
+    if (!module.instantiate(cx, funcs, table, memory, valImports, nullptr, instanceObj))
         return false;
 
     RootedValue exportObjVal(cx);
@@ -7900,16 +7900,6 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
 
     MOZ_RELEASE_ASSERT(exportObjVal.isObject());
     exportObj.set(&exportObjVal.toObject());
-
-    // Now write the imported values into global data.
-    uint8_t* globalData = instanceObj->instance().codeSegment().globalData();
-    uint32_t valIndex = 0;
-    for (const AsmJSGlobal& global : metadata.asmJSGlobals) {
-        if (global.which() == AsmJSGlobal::Variable)
-            valImports[valIndex++].writePayload(globalData + global.varGlobalDataOffset());
-    }
-    MOZ_ASSERT(valIndex == valImports.length());
-
     return true;
 }
 
