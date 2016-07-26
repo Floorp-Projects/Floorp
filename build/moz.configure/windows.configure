@@ -119,3 +119,77 @@ add_old_configure_assignment(
     'MOZ_WINSDK_MAXVER',
     depends(valid_windows_sdk_dir)(
         lambda x: '0x%04X0000' % x.version if x else None))
+
+
+option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool')
+
+@depends_win(valid_windows_sdk_dir)
+@imports(_from='os', _import='environ')
+@imports('platform')
+def sdk_bin_path(valid_windows_sdk_dir):
+    if not valid_windows_sdk_dir:
+        return
+
+    vc_host = {
+        'x86': 'x86',
+        'AMD64': 'x64',
+    }.get(platform.machine())
+
+    result = [
+        environ['PATH'],
+        os.path.join(valid_windows_sdk_dir.path, 'bin', vc_host)
+    ]
+    if vc_host == 'x64':
+        result.append(
+            os.path.join(valid_windows_sdk_dir.path, 'bin', 'x86'))
+    return result
+
+
+# Normally, we'd use `MT` instead of `_MT`, but for now, we want MT to only contain
+# mt.exe.
+mt = check_prog('_MT', depends_win()(lambda: ('mt.exe',)), what='mt',
+                input='MT', paths=sdk_bin_path)
+
+
+# Check that MT is not something unexpected like "magnetic tape manipulation
+# utility".
+@depends_win(mt)
+@checking('whether MT is really Microsoft Manifest Tool', lambda x: bool(x))
+@imports('re')
+@imports('subprocess')
+def valid_mt(path):
+    try:
+        out = subprocess.check_output([path]).splitlines()
+        out = '\n'.join(l for l in out
+                        if 'Microsoft (R) Manifest Tool' in l)
+        if out:
+              m = re.search(r'(?<=[^!-~])[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+',
+                            out)
+              if not m:
+                  raise FatalCheckError(
+                      'Unknown version of the Microsoft Manifest Tool')
+              return namespace(
+                  path=path,
+                  version=Version(m.group(0)),
+              )
+    except subprocess.CalledProcessError:
+        pass
+    raise FatalCheckError('%s is not Microsoft Manifest Tool')
+
+
+set_config('MT', depends_if(valid_mt)(lambda x: os.path.basename(x.path)))
+set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
+
+
+# Normally, we'd just have CC, etc. set to absolute paths, but the build system
+# doesn't currently handle properly the case where the paths contain spaces.
+# Additionally, there's the issue described in toolchain.configure, in
+# valid_compiler().
+@depends_win(sdk_bin_path)
+@imports('os')
+def alter_path(sdk_bin_path):
+    path = os.pathsep.join(sdk_bin_path)
+    os.environ['PATH'] = path
+    return path
+
+set_config('PATH', alter_path)

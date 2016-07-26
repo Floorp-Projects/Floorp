@@ -73,8 +73,6 @@ DBUS_VERSION=0.60
 SQLITE_VERSION=3.13.0
 FONTCONFIG_VERSION=2.7.0
 
-MSMANIFEST_TOOL=
-
 dnl Set various checks
 dnl ========================================================
 MISSING_X=
@@ -346,26 +344,6 @@ case "$target" in
           fi
           WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd -W`
         fi
-
-        dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
-        dnl not something else like "magnetic tape manipulation utility".
-        MT=${MT-mt.exe}
-        MSMT_TOOL=`${MT} 2>&1|grep 'Microsoft (R) Manifest Tool'`
-        if test -z "$MSMT_TOOL"; then
-          AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
-        fi
-
-        changequote(,)
-        _MSMT_VER_FILTER='s|.*[^!-~]\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
-        changequote([,])
-        MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
-        if test -z "$MSMANIFEST_TOOL_VERSION"; then
-          AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
-        fi
-
-        MSMANIFEST_TOOL=1
-        unset MSMT_TOOL
-        AC_SUBST(MT)
 
         # Check linker version
         _LD_FULL_VERSION=`"${LD}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
@@ -6504,7 +6482,6 @@ AC_SUBST(BIN_SUFFIX)
 AC_SUBST(IMPORT_LIB_SUFFIX)
 AC_SUBST(USE_N32)
 AC_SUBST(CC_VERSION)
-AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
