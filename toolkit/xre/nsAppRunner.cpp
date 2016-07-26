@@ -202,6 +202,7 @@
 #if defined(MOZ_SANDBOX)
 #if defined(XP_LINUX) && !defined(ANDROID)
 #include "mozilla/SandboxInfo.h"
+#include "mozilla/widget/LSBUtils.h"
 #elif defined(XP_WIN)
 #include "SandboxBroker.h"
 #endif
@@ -3484,7 +3485,21 @@ static void PR_CALLBACK AnnotateSystemManufacturer_ThreadStart(void*)
 
   CoUninitialize();
 }
-#endif
+#endif // XP_WIN
+
+#if defined(XP_LINUX) && !defined(ANDROID)
+
+static void
+AnnotateLSBRelease(void*)
+{
+  nsCString dist, desc, release, codename;
+  if (widget::lsb::GetLSBRelease(dist, desc, release, codename)) {
+    CrashReporter::AppendAppNotesToCrashReport(desc);
+  }
+}
+
+#endif // defined(XP_LINUX) && !defined(ANDROID)
+
 #endif
 
 namespace mozilla {
@@ -3998,6 +4013,11 @@ XREMain::XRE_mainRun()
 #ifdef XP_WIN
   PR_CreateThread(PR_USER_THREAD, AnnotateSystemManufacturer_ThreadStart, 0,
                   PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+#endif
+
+#if defined(XP_LINUX) && !defined(ANDROID)
+  PR_CreateThread(PR_USER_THREAD, AnnotateLSBRelease, 0, PR_PRIORITY_LOW,
+                  PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
 #endif
 
 #endif

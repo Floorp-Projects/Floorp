@@ -173,6 +173,14 @@ UNIFIED_SOURCES += [
     'WidgetUtils.cpp',
 ]
 
+if CONFIG['OS_ARCH'] == 'Linux':
+    EXPORTS.mozilla.widget += [
+        'LSBUtils.h'
+    ]
+    SOURCES += [
+        'LSBUtils.cpp'
+    ]
+
 if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     EXPORTS += [
         'nsDeviceContextSpecProxy.h',
