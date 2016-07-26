@@ -557,6 +557,7 @@ public:
 
     bool ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surface);
 
+    void SetDeviceLost();
     bool EnsureInitialized(bool forceAccel, nsACString* const out_failureId);
 
     void DumpEGLConfig(EGLConfig cfg);

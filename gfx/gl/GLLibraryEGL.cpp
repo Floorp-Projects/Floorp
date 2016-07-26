@@ -289,6 +289,14 @@ GLLibraryEGL::ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surfa
     return true;
 }
 
+void
+GLLibraryEGL::SetDeviceLost()
+{
+    fTerminate(mEGLDisplay);
+    mEGLDisplay = nullptr;
+    mInitialized = false;
+}
+
 bool
 GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId)
 {
