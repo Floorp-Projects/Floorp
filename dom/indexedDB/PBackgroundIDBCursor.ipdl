@@ -80,7 +80,7 @@ protocol PBackgroundIDBCursor
 parent:
   async DeleteMe();
 
-  async Continue(CursorRequestParams params, Key key);
+  async Continue(CursorRequestParams params);
 
 child:
   async __delete__();
