@@ -15,6 +15,12 @@
 class gfxContext;
 struct gfxRect;
 
+namespace mozilla {
+namespace gfx {
+class DrawTarget;
+} // namespace gfx
+} // namespace mozilla
+
 /**
  * This stores glyph bounds information for a particular gfxFont, at
  * a particular appunits-per-dev-pixel ratio (because the compressed glyph
@@ -29,6 +35,8 @@ struct gfxRect;
  * assumed to be zero.
  */
 class gfxGlyphExtents {
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
 public:
     explicit gfxGlyphExtents(int32_t aAppUnitsPerDevUnit) :
         mAppUnitsPerDevUnit(aAppUnitsPerDevUnit) {

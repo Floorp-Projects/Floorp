@@ -47,6 +47,7 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class FeatureState;
+class DeviceManagerD3D11;
 }
 namespace layers {
 class DeviceManagerD3D9;
@@ -97,7 +98,10 @@ struct ClearTypeParameterInfo {
     int32_t     enhancedContrast;
 };
 
-class gfxWindowsPlatform : public gfxPlatform {
+class gfxWindowsPlatform : public gfxPlatform
+{
+  friend class mozilla::gfx::DeviceManagerD3D11;
+
 public:
     enum TextRenderingMode {
         TEXT_RENDERING_NO_CLEARTYPE,
@@ -206,34 +210,37 @@ public:
     IDWriteRenderingParams *GetRenderingParams(TextRenderingMode aRenderMode)
     { return mRenderingParams[aRenderMode]; }
 
+private:
     bool GetD3D11Device(RefPtr<ID3D11Device>* aOutDevice);
-    bool GetD3D11DeviceForCurrentThread(RefPtr<ID3D11Device>* aOutDevice);
     bool GetD3D11ImageBridgeDevice(RefPtr<ID3D11Device>* aOutDevice);
+    bool GetD3D11DeviceForCurrentThread(RefPtr<ID3D11Device>* aOutDevice);
+    ID3D11Device *GetD3D11ContentDevice();
+    already_AddRefed<ID3D11Device> CreateD3D11DecoderDevice();
+    unsigned GetD3D11Version();
 
+    // Create a D3D11 device to be used for DXVA decoding.
+    bool CreateD3D11DecoderDeviceHelper(
+      IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice,
+      HRESULT& aResOut);
+
+    // Returns whether the compositor's D3D11 device supports texture sharing.
+    bool CompositorD3D11TextureSharingWorks() const {
+      return mCompositorD3D11TextureSharingWorks;
+    }
+
+    bool IsWARP() const { return mIsWARP; }
+
+public:
     void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
     already_AddRefed<mozilla::layers::DeviceManagerD3D9> GetD3D9DeviceManager();
     IDirect3DDevice9* GetD3D9Device();
     void D3D9DeviceReset();
-    ID3D11Device *GetD3D11ContentDevice();
-
-    // Create a D3D11 device to be used for DXVA decoding.
-    already_AddRefed<ID3D11Device> CreateD3D11DecoderDevice();
-    bool CreateD3D11DecoderDeviceHelper(
-      IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice,
-      HRESULT& aResOut);
 
     bool DwmCompositionEnabled();
 
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
 
     static bool IsOptimus();
-
-    bool IsWARP() const { return mIsWARP; }
-
-    // Returns whether the compositor's D3D11 device supports texture sharing.
-    bool CompositorD3D11TextureSharingWorks() const {
-      return mCompositorD3D11TextureSharingWorks;
-    }
 
     bool SupportsApzWheelInput() const override {
       return true;
@@ -244,8 +251,6 @@ public:
     // reset occurred.
     bool HandleDeviceReset();
     void UpdateBackendPrefs();
-
-    unsigned GetD3D11Version();
 
     void TestDeviceReset(DeviceResetReason aReason);
 
