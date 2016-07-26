@@ -1778,7 +1778,7 @@ EditableFieldsEngine.prototype = {
    *         The node to copy styles to.
    */
   copyStyles: function (source, destination) {
-    let style = source.ownerGlobal.getComputedStyle(source);
+    let style = source.ownerDocument.defaultView.getComputedStyle(source);
     let props = [
       "borderTopWidth",
       "borderRightWidth",

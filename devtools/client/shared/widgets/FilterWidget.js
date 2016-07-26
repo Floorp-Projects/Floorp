@@ -119,7 +119,7 @@ const SPECIAL_VALUES = new Set(["none", "unset", "initial", "inherit"]);
  */
 function CSSFilterEditorWidget(el, value = "") {
   this.doc = el.ownerDocument;
-  this.win = this.doc.ownerGlobal;
+  this.win = this.doc.defaultView;
   this.el = el;
 
   this._addButtonClick = this._addButtonClick.bind(this);
