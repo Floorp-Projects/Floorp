@@ -1082,13 +1082,15 @@ AddCSSValueAngle(double aCoeff1, const nsCSSValue &aValue1,
 {
   if (aValue1.GetUnit() == aValue2.GetUnit()) {
     // To avoid floating point error, if the units match, maintain the unit.
-    aResult.SetFloatValue(aCoeff1 * aValue1.GetFloatValue() +
-                          aCoeff2 * aValue2.GetFloatValue(),
-                          aValue1.GetUnit());
+    aResult.SetFloatValue(
+      EnsureNotNan(aCoeff1 * aValue1.GetFloatValue() +
+                   aCoeff2 * aValue2.GetFloatValue()),
+      aValue1.GetUnit());
   } else {
-    aResult.SetFloatValue(aCoeff1 * aValue1.GetAngleValueInRadians() +
-                          aCoeff2 * aValue2.GetAngleValueInRadians(),
-                          eCSSUnit_Radian);
+    aResult.SetFloatValue(
+      EnsureNotNan(aCoeff1 * aValue1.GetAngleValueInRadians() +
+                   aCoeff2 * aValue2.GetAngleValueInRadians()),
+      eCSSUnit_Radian);
   }
 }
 
@@ -1254,7 +1256,7 @@ AddTransformScale(double aCoeff1, const nsCSSValue &aValue1,
   float v1 = aValue1.GetFloatValue() - 1.0f,
         v2 = aValue2.GetFloatValue() - 1.0f;
   float result = v1 * aCoeff1 + v2 * aCoeff2;
-  aResult.SetFloatValue(result + 1.0f, eCSSUnit_Number);
+  aResult.SetFloatValue(EnsureNotNan(result + 1.0f), eCSSUnit_Number);
 }
 
 /* static */ already_AddRefed<nsCSSValue::Array>

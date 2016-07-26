@@ -9,7 +9,6 @@ ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
 config = {
     "log_name": "staging_beta",
 
-    "use_vcs_unique_share": True,
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
     "tools_repo_branch": "default",

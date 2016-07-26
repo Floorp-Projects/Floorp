@@ -516,6 +516,8 @@ public:
     { return eCSSUnit_Point <= aUnit && aUnit <= eCSSUnit_Pixel; }
   bool      IsPixelLengthUnit() const
     { return IsPixelLengthUnit(mUnit); }
+  static bool IsFloatUnit(nsCSSUnit aUnit)
+    { return eCSSUnit_Number <= aUnit; }
   bool      IsAngularUnit() const  
     { return eCSSUnit_Degree <= mUnit && mUnit <= eCSSUnit_Turn; }
   bool      IsFrequencyUnit() const  

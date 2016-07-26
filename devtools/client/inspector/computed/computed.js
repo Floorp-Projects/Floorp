@@ -8,7 +8,9 @@
 
 "use strict";
 
+/* eslint-disable mozilla/reject-some-requires */
 const {Cc, Ci} = require("chrome");
+/* eslint-enable mozilla/reject-some-requires */
 
 const ToolDefinitions = require("devtools/client/definitions").Tools;
 const CssLogic = require("devtools/shared/inspector/css-logic");
@@ -20,7 +22,9 @@ const {OutputParser} = require("devtools/client/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
+/* eslint-disable mozilla/reject-some-requires */
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+/* eslint-enable mozilla/reject-some-requires */
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 loader.lazyRequireGetter(this, "overlays",

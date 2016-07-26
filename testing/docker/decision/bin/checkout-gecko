@@ -1,13 +1,11 @@
 #! /bin/bash -e
 
-set -e
+set -ex
 
 # Ensure we have at least enough to check gecko out...
 test $GECKO_BASE_REPOSITORY
 
-# Workspace to checkout gecko into...
-WORKSPACE=$1
-mkdir -p $WORKSPACE
+DESTDIR=$1
 
 res=`curl --fail --retry 5 http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint`
 FP=`echo $res | jq -r .secret.content`
@@ -18,16 +16,16 @@ if [[ ! "$FP" =~ ^[a-f0-9:]+$ ]]; then
     exit 1
 fi
 
-mkdir /etc/mercurial
-cat >/etc/mercurial/hgrc <<EOF
-[hostfingerprints]
-hg.mozilla.org = $FP
-EOF
+if [ -n "${GECKO_HEAD_REV}" ]; then
+  args="--revision ${GECKO_HEAD_REV}"
+else
+  args="--branch ${GECKO_HEAD_REF}"
+fi
 
-# Note that tc-vcs requires only the first two arguments so others are optional.
-# This is intended to make it easier to clone local directories.
-tc-vcs checkout $WORKSPACE/gecko \
-  $GECKO_BASE_REPOSITORY \
-  $GECKO_HEAD_REPOSITORY \
-  $GECKO_HEAD_REV \
-  $GECKO_HEAD_REF
+hg --config hostfingerprints.hg.mozilla.org=${FP} robustcheckout \
+  --sharebase /home/worker/hg-shared \
+  --purge \
+  ${args} \
+  --upstream ${GECKO_BASE_REPOSITORY} \
+  ${GECKO_HEAD_REPOSITORY} \
+  ${DESTDIR}

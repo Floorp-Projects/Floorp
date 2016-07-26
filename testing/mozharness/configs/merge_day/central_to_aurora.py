@@ -69,7 +69,6 @@ config = {
         "mobile/android/locales/all-locales"
     ],
 
-    "use_vcs_unique_share": True,
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     # "hg_share_base": None,
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
@@ -86,7 +85,6 @@ config = {
         8,  # Fennec aurora channel
         10,  # Firefox aurora channel
         18,  # MetroFirefox aurora channel
-        106,  # Fennec api-9 aurora channel
     ],
     "balrog_credentials_file": "oauth.txt",
 

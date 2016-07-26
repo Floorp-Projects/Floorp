@@ -66,6 +66,11 @@
                           android:layout_width="match_parent"
                           android:layout_height="match_parent"/>
 
+                <ViewStub android:id="@+id/activity_stream_stub"
+                          android:layout="@layout/activity_stream"
+                          android:layout_width="match_parent"
+                          android:layout_height="match_parent"/>
+
                 <ViewStub android:id="@+id/home_banner_stub"
                           android:layout="@layout/home_banner"
                           android:layout_width="match_parent"

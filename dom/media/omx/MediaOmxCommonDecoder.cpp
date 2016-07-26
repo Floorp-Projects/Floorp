@@ -138,7 +138,7 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG(LogLevel::Debug, ("%s current time %f", __PRETTY_FUNCTION__, mLogicalPosition));
 
-  if (mShuttingDown) {
+  if (IsShutdown()) {
     return;
   }
 
@@ -156,8 +156,6 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   // Call Seek of MediaDecoderStateMachine to suppress seek events.
   GetStateMachine()->InvokeSeek(target);
 
-  mNextState = mPlayState;
-  ChangeState(PLAY_STATE_LOADING);
   // exit dormant state
   GetStateMachine()->DispatchSetDormant(false);
   UpdateLogicalPosition();

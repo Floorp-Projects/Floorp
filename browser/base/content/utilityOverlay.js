@@ -627,7 +627,7 @@ function openPreferences(paneID, extraArgs)
     win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
                                  "_blank", "chrome,dialog=no,all", windowArguments);
   } else {
-    newLoad = !win.switchToTabHavingURI(preferencesURL, true, {ignoreFragment: true});
+    newLoad = !win.switchToTabHavingURI(preferencesURL, true, { ignoreFragment: true, replaceQueryString: true });
     browser = win.gBrowser.selectedBrowser;
   }
 

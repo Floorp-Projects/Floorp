@@ -364,7 +364,7 @@
 }
 
 .devtools-filterinput {
-  background-image: var(--filter-image);
+  background-image: url(images/filter.svg#filterinput);
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl),
