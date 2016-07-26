@@ -213,6 +213,7 @@ class CompositorBridgeParent final : public PCompositorBridgeParent,
 
 public:
   explicit CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
+                                  const TimeDuration& aVsyncRate,
                                   bool aUseExternalSurfaceSize,
                                   const gfx::IntSize& aSurfaceSize);
 
@@ -604,6 +605,7 @@ protected:
   widget::CompositorWidget* mWidget;
   TimeStamp mTestTime;
   CSSToLayoutDeviceScale mScale;
+  TimeDuration mVsyncRate;
   bool mIsTesting;
 
   uint64_t mPendingTransaction;
