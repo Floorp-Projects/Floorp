@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1181370 - Test triggeringPrincipal for iframe navigations</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe1"></iframe>
+<iframe style="width:100%;" id="testframe2"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ *
+ * +------------------------------------+
+ * |  +----------+   +--------------+   |
+ * |  | Frame 1  |   | Frame 2      |   |
+ * |  +----------+   |              |   |
+ * |                 | +----------+ |   |
+ * |                 | | Subframe | |   |
+ * |                 | +----------+ |   |
+ * |                 +--------------+   |
+ * +------------------------------------+
+ *
+ * Frame1:   test1.mochi.test
+ * Frame2:   test2.mochi.test
+ * Subframe: test2.mochi.test
+ *
+ * (*) Frame1 and Subframe set their document.domain to mochi.test
+ * (*) Frame1 navigates the Subframe
+ * (*) TriggeringPrincipal for the Subframe navigation should be
+ *     ==> test1.mochi.test
+ * (*) LoadingPrincipal for the Subframe navigation should be
+ *     ==> test2.mochi.test
+ */
+
+const BASEURL1 = "http://test1.mochi.test:8888/tests/docshell/test/navigation/";
+const BASEURL2 = "http://test2.mochi.test:8888/tests/docshell/test/navigation/";
+const TRIGGERINGPRINCIPALURI = BASEURL1 + "file_triggeringprincipal_frame_1.html";
+const LOADINGPRINCIPALURI = BASEURL2 + "file_triggeringprincipal_frame_2.html";
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+  is(event.data.triggeringPrincipalURI, TRIGGERINGPRINCIPALURI,
+  	 "TriggeringPrincipal should be the navigating iframe (Frame 1)");
+  is(event.data.loadingPrincipalURI, LOADINGPRINCIPALURI,
+  	 "LoadingPrincipal should be the enclosing iframe (Frame 2)");
+  is(event.data.referrerURI, TRIGGERINGPRINCIPALURI,
+     "Referrer and TriggeringPrincipal should be identical (Frame 1)");
+
+  window.removeEventListener("message", receiveMessage, false);
+  SimpleTest.finish();
+}
+
+var frame1 = document.getElementById("testframe1");
+frame1.src = BASEURL1 + "file_triggeringprincipal_frame_1.html";
+
+var frame2 = document.getElementById("testframe2");
+frame2.src = BASEURL2 + "file_triggeringprincipal_frame_2.html";
+
+</script>
+</body>
+</html>
