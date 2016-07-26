@@ -41,7 +41,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
 
     mTempDrawTarget =
       Factory::CreateDrawTarget(BackendType::COREGRAPHICS,
-                                IntSize(mNativeRect.width, mNativeRect.height),
+                                IntSize::Truncate(mNativeRect.width, mNativeRect.height),
                                 SurfaceFormat::B8G8R8A8);
 
     if (mTempDrawTarget) {
