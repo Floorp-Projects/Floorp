@@ -778,17 +778,24 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
 void
 APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
         nsIWidget* aWidget,
+        nsIDocument* aDocument,
         const WidgetTouchEvent& aEvent,
         uint64_t aInputBlockId,
         const SetAllowedTouchBehaviorCallback& aCallback)
 {
-  nsTArray<TouchBehaviorFlags> flags;
-  for (uint32_t i = 0; i < aEvent.mTouches.Length(); i++) {
-    flags.AppendElement(
-      TouchActionHelper::GetAllowedTouchBehavior(aWidget,
-        aEvent.mTouches[i]->mRefPoint));
+  if (nsIPresShell* shell = aDocument->GetShell()) {
+    if (nsIFrame* rootFrame = shell->GetRootFrame()) {
+      rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
+
+      nsTArray<TouchBehaviorFlags> flags;
+      for (uint32_t i = 0; i < aEvent.mTouches.Length(); i++) {
+        flags.AppendElement(
+          TouchActionHelper::GetAllowedTouchBehavior(aWidget,
+                rootFrame, aEvent.mTouches[i]->mRefPoint));
+      }
+      aCallback(aInputBlockId, Move(flags));
+    }
   }
-  aCallback(aInputBlockId, Move(flags));
 }
 
 void

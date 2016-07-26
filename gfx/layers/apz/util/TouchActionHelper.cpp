@@ -9,7 +9,6 @@
 #include "nsContainerFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsView.h"
 
 namespace mozilla {
 namespace layers {
@@ -46,22 +45,16 @@ TouchActionHelper::UpdateAllowedBehavior(uint32_t aTouchActionValue,
 
 TouchBehaviorFlags
 TouchActionHelper::GetAllowedTouchBehavior(nsIWidget* aWidget,
+                                           nsIFrame* aRootFrame,
                                            const LayoutDeviceIntPoint& aPoint)
 {
-  nsView *view = nsView::GetViewFor(aWidget);
   TouchBehaviorFlags behavior = AllowedTouchBehavior::VERTICAL_PAN | AllowedTouchBehavior::HORIZONTAL_PAN |
                                 AllowedTouchBehavior::PINCH_ZOOM | AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
 
-  if (!view) {
-    return behavior;
-  }
-
-  nsIFrame *viewFrame = view->GetFrame();
-
   nsPoint relativePoint =
-    nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aPoint, viewFrame);
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aPoint, aRootFrame);
 
-  nsIFrame *target = nsLayoutUtils::GetFrameForPoint(viewFrame, relativePoint, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
+  nsIFrame *target = nsLayoutUtils::GetFrameForPoint(aRootFrame, relativePoint, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
   if (!target) {
     return behavior;
   }
