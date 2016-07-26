@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(28915cca-3366-4034-ba1d-b7afb9b37639)]
+[scriptable, builtinclass, uuid(28915cca-3366-4034-ba1d-b7afb9b37639)]
 interface nsIAccessibleEditableText : nsISupports
 {
   /**
