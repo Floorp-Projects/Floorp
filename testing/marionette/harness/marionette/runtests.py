@@ -62,18 +62,11 @@ class MarionetteHarness(object):
             self._testcase_class.pydebugger = __import__(self.args['pydebugger'])
 
     def run(self):
-        try:
-            self.process_args()
-            tests = self.args.pop('tests')
-            runner = self._runner_class(**self.args)
-            runner.run_tests(tests)
-            return runner.failed + runner.crashed
-        except Exception:
-            logger = self.args.get('logger')
-            if logger:
-                logger.error('Failure during test execution.',
-                                       exc_info=True)
-            raise
+        self.process_args()
+        tests = self.args.pop('tests')
+        runner = self._runner_class(**self.args)
+        runner.run_tests(tests)
+        return runner.failed + runner.crashed
 
 
 def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
@@ -88,11 +81,13 @@ def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
     """
     logger = mozlog.commandline.setup_logging('Marionette test runner', {})
     try:
-        failed = harness_class(runner_class, parser_class, testcase_class, args=args).run()
+        harness_instance = harness_class(runner_class, parser_class, testcase_class,
+                                         args=args)
+        failed = harness_instance.run()
         if failed > 0:
             sys.exit(10)
     except Exception:
-        logger.error('Failure during harness setup', exc_info=True)
+        logger.error('Failure during harness execution', exc_info=True)
         sys.exit(1)
     sys.exit(0)
 

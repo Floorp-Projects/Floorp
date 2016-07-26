@@ -21,7 +21,7 @@ ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 def load_image_by_name(image_name):
     context_path = os.path.join(GECKO, 'testing', 'docker', image_name)
-    context_hash = docker.generate_context_hash(context_path)
+    context_hash = docker.generate_context_hash(GECKO, context_path, image_name)
 
     image_index_url = INDEX_URL.format('mozilla-central', image_name, context_hash)
     print("Fetching", image_index_url)
