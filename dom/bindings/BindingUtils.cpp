@@ -86,13 +86,15 @@ GetErrorArgCount(const ErrNum aErrorNumber)
   return GetErrorMessage(nullptr, aErrorNumber)->argCount;
 }
 
-void
-binding_detail::ThrowErrorMessage(JSContext* aCx, const unsigned aErrorNumber, ...)
+bool
+ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...)
 {
   va_list ap;
   va_start(ap, aErrorNumber);
-  JS_ReportErrorNumberVA(aCx, GetErrorMessage, nullptr, aErrorNumber, ap);
+  JS_ReportErrorNumberVA(aCx, GetErrorMessage, nullptr,
+                         static_cast<const unsigned>(aErrorNumber), ap);
   va_end(ap);
+  return false;
 }
 
 bool
