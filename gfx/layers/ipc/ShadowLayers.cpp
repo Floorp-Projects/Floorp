@@ -30,6 +30,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
+#include "mozilla/layers/PTextureChild.h"
 #include "ShadowLayerUtils.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
@@ -436,6 +437,7 @@ ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
   for (auto& t : aTextures) {
     MOZ_ASSERT(t.mTextureClient);
     MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
+    MOZ_RELEASE_ASSERT(t.mTextureClient->GetIPDLActor()->GetIPCChannel() == mShadowManager->GetIPCChannel());
     FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
     ReadLockDescriptor readLock;
     t.mTextureClient->SerializeReadLock(readLock);
@@ -471,6 +473,8 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
   MOZ_ASSERT(aTextureOnBlack->GetIPDLActor());
   MOZ_ASSERT(aTextureOnWhite->GetIPDLActor());
   MOZ_ASSERT(aTextureOnBlack->GetSize() == aTextureOnWhite->GetSize());
+  MOZ_RELEASE_ASSERT(aTextureOnWhite->GetIPDLActor()->GetIPCChannel() == mShadowManager->GetIPCChannel());
+  MOZ_RELEASE_ASSERT(aTextureOnBlack->GetIPDLActor()->GetIPCChannel() == mShadowManager->GetIPCChannel());
 
   ReadLockDescriptor readLockW;
   ReadLockDescriptor readLockB;
@@ -540,6 +544,7 @@ ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aComposi
   MOZ_ASSERT(aTexture);
   MOZ_ASSERT(aCompositable->IsConnected());
   MOZ_ASSERT(aTexture->GetIPDLActor());
+  MOZ_RELEASE_ASSERT(aTexture->GetIPDLActor()->GetIPCChannel() == mShadowManager->GetIPCChannel());
   if (!aCompositable->IsConnected() || !aTexture->GetIPDLActor()) {
     // We don't have an actor anymore, don't try to use it!
     return;
