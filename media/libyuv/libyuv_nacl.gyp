@@ -21,6 +21,9 @@
         'build_newlib': 0,
         'build_pnacl_newlib': 1,
       },
+      'dependencies': [
+        '../../native_client/tools.gyp:prep_toolchain',
+      ],
       'include_dirs': [
         'include',
       ],

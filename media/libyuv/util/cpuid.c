@@ -66,8 +66,10 @@ int main(int argc, const char* argv[]) {
     printf("Has NEON %x\n", has_neon);
   }
   if (has_mips) {
-    int has_dspr2 = TestCpuFlag(kCpuHasDSPR2);
-    printf("Has DSPR2 %x\n", has_dspr2);
+    int has_mips_dsp = TestCpuFlag(kCpuHasMIPS_DSP);
+    int has_mips_dspr2 = TestCpuFlag(kCpuHasMIPS_DSPR2);
+    printf("Has MIPS DSP %x\n", has_mips_dsp);
+    printf("Has MIPS DSPR2 %x\n", has_mips_dspr2);
   }
   if (has_x86) {
     int has_sse2 = TestCpuFlag(kCpuHasSSE2);
@@ -76,7 +78,6 @@ int main(int argc, const char* argv[]) {
     int has_sse42 = TestCpuFlag(kCpuHasSSE42);
     int has_avx = TestCpuFlag(kCpuHasAVX);
     int has_avx2 = TestCpuFlag(kCpuHasAVX2);
-    int has_avx3 = TestCpuFlag(kCpuHasAVX3);
     int has_erms = TestCpuFlag(kCpuHasERMS);
     int has_fma3 = TestCpuFlag(kCpuHasFMA3);
     printf("Has SSE2 %x\n", has_sse2);
@@ -85,7 +86,6 @@ int main(int argc, const char* argv[]) {
     printf("Has SSE4.2 %x\n", has_sse42);
     printf("Has AVX %x\n", has_avx);
     printf("Has AVX2 %x\n", has_avx2);
-    printf("Has AVX3 %x\n", has_avx3);
     printf("Has ERMS %x\n", has_erms);
     printf("Has FMA3 %x\n", has_fma3);
   }
