@@ -1823,7 +1823,7 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
     return IntSize(0, 0);
   }
 
-  IntSize destSize(ceil(aDest.width), ceil(aDest.height));
+  IntSize destSize = IntSize::Ceil(aDest.width, aDest.height);
 
   if (aSamplingFilter == SamplingFilter::GOOD &&
       CanDownscaleDuringDecode(destSize, aFlags)) {
