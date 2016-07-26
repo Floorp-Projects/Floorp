@@ -131,9 +131,8 @@ public class GeckoApplication extends Application
             mPausedGecko = false;
         }
 
-        final Context applicationContext = getApplicationContext();
-        GeckoBatteryManager.getInstance().start(applicationContext);
-        GeckoNetworkManager.getInstance().start();
+        GeckoBatteryManager.getInstance().start(this);
+        GeckoNetworkManager.getInstance().start(this);
 
         mInBackground = false;
     }
