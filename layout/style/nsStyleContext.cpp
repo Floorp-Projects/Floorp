@@ -82,6 +82,12 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   , mCachedResetData(nullptr)
   , mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT)
   , mRefCnt(0)
+#ifdef MOZ_STYLO
+  , mStoredChangeHint(nsChangeHint(0))
+#ifdef DEBUG
+  , mHasStoredChangeHint(false)
+#endif
+#endif
 #ifdef DEBUG
   , mFrameRefCnt(0)
   , mComputingStruct(nsStyleStructID_None)
@@ -391,6 +397,10 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
                                    NonOwningStyleContextSource aSourceIfVisited,
                                    bool aRelevantLinkVisited)
 {
+#ifdef MOZ_STYLO
+  MOZ_ASSERT(!mHasStoredChangeHint);
+#endif
+
   uint32_t threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 

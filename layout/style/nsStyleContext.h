@@ -527,6 +527,29 @@ public:
 
   mozilla::NonOwningStyleContextSource StyleSource() const { return mSource.AsRaw(); }
 
+#ifdef MOZ_STYLO
+  void StoreChangeHint(nsChangeHint aHint)
+  {
+    MOZ_ASSERT(!mHasStoredChangeHint);
+    MOZ_ASSERT(!IsShared());
+    mStoredChangeHint = aHint;
+#ifdef DEBUG
+    mHasStoredChangeHint = true;
+#endif
+  }
+
+  nsChangeHint ConsumeStoredChangeHint()
+  {
+    MOZ_ASSERT(mHasStoredChangeHint);
+    nsChangeHint result = mStoredChangeHint;
+    mStoredChangeHint = nsChangeHint(0);
+#ifdef DEBUG
+    mHasStoredChangeHint = false;
+#endif
+    return result;
+  }
+#endif
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~nsStyleContext();
@@ -736,6 +759,15 @@ private:
   uint64_t                mBits;
 
   uint32_t                mRefCnt;
+
+  // For now we store change hints on the style context during parallel traversal.
+  // We should improve this - see bug 1289861.
+#ifdef MOZ_STYLO
+  nsChangeHint            mStoredChangeHint;
+#ifdef DEBUG
+  bool                    mHasStoredChangeHint;
+#endif
+#endif
 
 #ifdef DEBUG
   uint32_t                mFrameRefCnt; // number of frames that use this
