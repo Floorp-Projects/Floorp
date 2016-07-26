@@ -424,7 +424,6 @@ typedef Vector<char16_t, 64> TwoByteName;
 // Metadata is built incrementally by ModuleGenerator and then shared immutably
 // between modules.
 
-
 class MetadataCacheablePod
 {
     static const uint32_t NO_START_FUNCTION = UINT32_MAX;
@@ -467,6 +466,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     FuncImportVector      funcImports;
     FuncExportVector      funcExports;
     SigWithIdVector       sigIds;
+    GlobalDescVector      globals;
     TableDescVector       tables;
     MemoryAccessVector    memoryAccesses;
     BoundsCheckVector     boundsChecks;
