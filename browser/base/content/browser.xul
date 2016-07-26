@@ -295,18 +295,6 @@
            noautofocus="true"
            position="topcenter topright"/>
 
-    <panel id="loop-notification-panel"
-           class="loop-panel social-panel"
-           type="arrow"
-           hidden="true"
-           noautofocus="true"/>
-
-    <panel id="loop-panel"
-           class="loop-panel social-panel"
-           type="arrow"
-           orient="horizontal"
-           hidden="true"/>
-
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
