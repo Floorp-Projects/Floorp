@@ -4289,18 +4289,18 @@ ContentParent::RecvIsSecureURI(const uint32_t& type,
   if (!ourURI) {
     return false;
   }
-  nsresult rv = sss->IsSecureURI(type, ourURI, flags, isSecureURI, nullptr);
+  nsresult rv = sss->IsSecureURI(type, ourURI, flags, isSecureURI);
   return NS_SUCCEEDED(rv);
 }
 
 bool
-ContentParent::RecvAccumulateMixedContentHSTS(const URIParams& aURI, const bool& aActive, const bool& aHSTSPriming)
+ContentParent::RecvAccumulateMixedContentHSTS(const URIParams& aURI, const bool& aActive)
 {
   nsCOMPtr<nsIURI> ourURI = DeserializeURI(aURI);
   if (!ourURI) {
     return false;
   }
-  nsMixedContentBlocker::AccumulateMixedContentHSTS(ourURI, aActive, aHSTSPriming);
+  nsMixedContentBlocker::AccumulateMixedContentHSTS(ourURI, aActive);
   return true;
 }
 
