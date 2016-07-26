@@ -79,8 +79,7 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIURI overrides
-    virtual mozilla::net::nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
-                                                  const nsACString& newRef) override;
+    virtual mozilla::net::nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode) override;
 
     // nsISerializable overrides
     NS_IMETHOD Read(nsIObjectInputStream* aStream) override;

@@ -161,12 +161,11 @@ nsHostObjectURI::SetScheme(const nsACString& aScheme)
 // nsIURI methods:
 nsresult
 nsHostObjectURI::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
-                               const nsACString& newRef,
                                nsIURI** aClone)
 {
   nsCOMPtr<nsIURI> simpleClone;
   nsresult rv =
-    mozilla::net::nsSimpleURI::CloneInternal(aRefHandlingMode, newRef, getter_AddRefs(simpleClone));
+    mozilla::net::nsSimpleURI::CloneInternal(aRefHandlingMode, getter_AddRefs(simpleClone));
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG

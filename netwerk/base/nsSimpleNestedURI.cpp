@@ -149,27 +149,20 @@ nsSimpleNestedURI::EqualsInternal(nsIURI* other,
 }
 
 /* virtual */ nsSimpleURI*
-nsSimpleNestedURI::StartClone(nsSimpleURI::RefHandlingEnum refHandlingMode,
-                              const nsACString& newRef)
+nsSimpleNestedURI::StartClone(nsSimpleURI::RefHandlingEnum refHandlingMode)
 {
     NS_ENSURE_TRUE(mInnerURI, nullptr);
     
     nsCOMPtr<nsIURI> innerClone;
-    nsresult rv;
-    if (refHandlingMode == eHonorRef) {
-        rv = mInnerURI->Clone(getter_AddRefs(innerClone));
-    } else if (refHandlingMode == eReplaceRef) {
-        rv = mInnerURI->CloneWithNewRef(newRef, getter_AddRefs(innerClone));
-    } else {
-        rv = mInnerURI->CloneIgnoringRef(getter_AddRefs(innerClone));
-    }
+    nsresult rv = refHandlingMode == eHonorRef ?
+        mInnerURI->Clone(getter_AddRefs(innerClone)) :
+        mInnerURI->CloneIgnoringRef(getter_AddRefs(innerClone));
 
     if (NS_FAILED(rv)) {
         return nullptr;
     }
 
     nsSimpleNestedURI* url = new nsSimpleNestedURI(innerClone);
-    SetRefOnClone(url, refHandlingMode, newRef);
     url->SetMutable(false);
 
     return url;

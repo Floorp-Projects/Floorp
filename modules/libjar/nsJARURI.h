@@ -67,8 +67,7 @@ protected:
     // enum used in a few places to specify how .ref attribute should be handled
     enum RefHandlingEnum {
         eIgnoreRef,
-        eHonorRef,
-        eReplaceRef
+        eHonorRef
     };
 
     // Helper to share code between Equals methods.
@@ -76,13 +75,9 @@ protected:
                                     RefHandlingEnum refHandlingMode,
                                     bool* result);
 
-    // Helpers to share code between Clone methods.
+    // Helper to share code between Clone methods.
     nsresult CloneWithJARFileInternal(nsIURI *jarFile,
                                       RefHandlingEnum refHandlingMode,
-                                      nsIJARURI **result);
-    nsresult CloneWithJARFileInternal(nsIURI *jarFile,
-                                      RefHandlingEnum refHandlingMode,
-                                      const nsACString& newRef,
                                       nsIJARURI **result);
     nsCOMPtr<nsIURI> mJARFile;
     // mJarEntry stored as a URL so that we can easily access things
