@@ -378,11 +378,11 @@ ProcLoaderLoadRunner::ShuffleFds()
 
   for (i = 0; i < mFdsRemap.Length(); i++) {
     const FDRemap *map = &mFdsRemap[i];
-    int fd = map->fd().PlatformHandle();
+    auto rawFD = map->fd().ClonePlatformHandle();
     int tofd = map->mapto();
 
     // The FD that is dup2()'d from needs to be closed after shuffling.
-    fd_shuffle.push_back(InjectionArc(fd, tofd, /*in_close=*/true));
+    fd_shuffle.push_back(InjectionArc(rawFD.get(), tofd, /*in_close=*/true));
 
     // Erase from sReservedFds we will use.
     for (int* toErase = sReservedFds->begin();

@@ -67,6 +67,9 @@ elif test -z "$CCACHE_DIR" -a -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$
 
             # set a dummy master
             case "${region}" in
+            eu-central-1)
+                master=dummy.euc1.mozilla.com
+                ;;
             us-east-1)
                 master=dummy.use1.mozilla.com
                 ;;
@@ -102,7 +105,7 @@ else
     fi
     mk_add_options "export SCCACHE_BUCKET=$bucket"
     case "$master" in
-    *us[ew][12].mozilla.com*)
+    *us[ew][12].mozilla.com*|*euc1.mozilla.com*)
         mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
         ;;
     esac
