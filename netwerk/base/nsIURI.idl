@@ -246,12 +246,6 @@ interface nsIURI : nsISupports
     nsIURI cloneIgnoringRef();
 
     /**
-     * Clones the current URI, replacing the 'ref' attribute in the clone with
-     * the ref supplied.
-     */
-    nsIURI cloneWithNewRef(in AUTF8String newRef);
-
-    /**
      * returns a string for the current URI with the ref element cleared.
      */
    readonly attribute AUTF8String specIgnoringRef;

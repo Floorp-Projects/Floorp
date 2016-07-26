@@ -471,51 +471,28 @@ nsSimpleURI::SchemeIs(const char *i_Scheme, bool *o_Equals)
 }
 
 /* virtual */ nsSimpleURI*
-nsSimpleURI::StartClone(nsSimpleURI::RefHandlingEnum refHandlingMode,
-                        const nsACString& newRef)
+nsSimpleURI::StartClone(nsSimpleURI::RefHandlingEnum /* ignored */)
 {
-    nsSimpleURI* url = new nsSimpleURI();
-    SetRefOnClone(url, refHandlingMode, newRef);
-    return url;
-}
-
-/* virtual */ void
-nsSimpleURI::SetRefOnClone(nsSimpleURI* url,
-                           nsSimpleURI::RefHandlingEnum refHandlingMode,
-                           const nsACString& newRef)
-{
-    if (refHandlingMode == eHonorRef) {
-        url->mRef = mRef;
-        url->mIsRefValid = mIsRefValid;
-    } else if (refHandlingMode == eReplaceRef) {
-        url->SetRef(newRef);
-    }
+    return new nsSimpleURI();
 }
 
 NS_IMETHODIMP
 nsSimpleURI::Clone(nsIURI** result)
 {
-    return CloneInternal(eHonorRef, EmptyCString(), result);
+    return CloneInternal(eHonorRef, result);
 }
 
 NS_IMETHODIMP
 nsSimpleURI::CloneIgnoringRef(nsIURI** result)
 {
-    return CloneInternal(eIgnoreRef, EmptyCString(), result);
-}
-
-NS_IMETHODIMP
-nsSimpleURI::CloneWithNewRef(const nsACString &newRef, nsIURI** result)
-{
-    return CloneInternal(eReplaceRef, newRef, result);
+    return CloneInternal(eIgnoreRef, result);
 }
 
 nsresult
 nsSimpleURI::CloneInternal(nsSimpleURI::RefHandlingEnum refHandlingMode,
-                           const nsACString &newRef,
                            nsIURI** result)
 {
-    RefPtr<nsSimpleURI> url = StartClone(refHandlingMode, newRef);
+    RefPtr<nsSimpleURI> url = StartClone(refHandlingMode);
     if (!url)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -523,6 +500,10 @@ nsSimpleURI::CloneInternal(nsSimpleURI::RefHandlingEnum refHandlingMode,
     // don't call any setter methods.
     url->mScheme = mScheme;
     url->mPath = mPath;
+    if (refHandlingMode == eHonorRef) {
+        url->mRef = mRef;
+        url->mIsRefValid = mIsRefValid;
+    }
 
     url.forget(result);
     return NS_OK;
