@@ -107,6 +107,7 @@ WEBIDL_FILES = [
     'CSSTransition.webidl',
     'CSSValue.webidl',
     'CSSValueList.webidl',
+    'CustomElementsRegistry.webidl',
     'DataContainerEvent.webidl',
     'DataTransfer.webidl',
     'DataTransferItem.webidl',

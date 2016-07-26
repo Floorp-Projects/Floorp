@@ -1042,7 +1042,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 
 /* Combobox dropdown renderer */
 #ContentSelectDropdown > menupopup {
-  max-height: 350px;
   /* The menupopup itself should always be rendered LTR to ensure the scrollbar aligns with
    * the dropdown arrow on the dropdown widget. If a menuitem is RTL, its style will be set accordingly */
   direction: ltr;

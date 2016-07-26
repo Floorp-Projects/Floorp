@@ -48,6 +48,13 @@ project_flag('MOZ_SWITCHBOARD',
              help='Include Switchboard A/B framework on Android',
              default=True)
 
+option(env='MOZ_ANDROID_ACTIVITY_STREAM',
+       help='Enable Activity Stream on Android (replacing the default HomePager)',
+       default=False)
+
+set_config('MOZ_ANDROID_ACTIVITY_STREAM',
+           depends_if('MOZ_ANDROID_ACTIVITY_STREAM')(lambda _: True))
+
 option('--disable-android-apz', env='MOZ_ANDROID_APZ',
        help='Disable the C++ async pan/zoom code and use the Java version instead')
 

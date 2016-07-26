@@ -113,7 +113,7 @@ public:
     MOZ_ASSERT(mMapCount == 0);
   }
 
-  virtual uint8_t *GetData() override { return mArray; }
+  virtual uint8_t* GetData() override { return mArray; }
   virtual int32_t Stride() override { return mStride; }
 
   virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
@@ -142,11 +142,9 @@ private:
 
   bool Init(const IntSize &aSize,
             SurfaceFormat aFormat,
-            bool aZero);
-  bool InitWithStride(const IntSize &aSize,
-                      SurfaceFormat aFormat,
-                      int32_t aStride,
-                      bool aZero);
+            bool aClearMem,
+            uint8_t aClearValue,
+            int32_t aStride = 0);
 
   AlignedArray<uint8_t> mArray;
   int32_t mStride;
