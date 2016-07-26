@@ -9,6 +9,7 @@
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
+#include "WebGLStrongTypes.h"
 
 namespace mozilla {
 
@@ -22,7 +23,7 @@ class WebGLSampler final
     friend class WebGLTexture;
 
 public:
-    explicit WebGLSampler(WebGLContext* webgl, GLuint sampler);
+    WebGLSampler(WebGLContext* webgl, GLuint sampler);
 
     const GLuint mGLName;
 

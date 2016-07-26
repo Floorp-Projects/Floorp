@@ -51,33 +51,3 @@ def set_treeherder_machine_platform(config, tests):
         build_platform = test['build-platform']
         test['treeherder-machine-platform'] = translation.get(build_platform, build_platform)
         yield test
-
-
-@transforms.add
-def set_chunk_args(config, tests):
-    # Android tests do not take the --this-chunk/--total-chunk args like linux
-    # tests, preferring to define a --test-suite argument for each chunk.
-    # Where debug and opt have different chunk counts, there are *different*
-    # test-suite definitions for the debug and opt runs.
-    #
-    # Within the mozharness scripts, there is a translation *back* to
-    # --this-chunk/--total-chunk.
-    #
-    # TODO: remove the need for this with some changes to the mozharness script
-    # to take --total-chunk/this-chunk
-
-    for test in tests:
-        test['mozharness']['chunking-args'] = 'test-suite-suffix'
-
-        # if the chunks are an integer, then they do not differ between
-        # platforms, so the suffix is always "-<CHUNK>"
-        if isinstance(test['chunks'], int):
-            test['mozharness']['chunk-suffix'] = "-<CHUNK>"
-        else:
-            # otherwise, by convention, the debug version has "-debug" in the
-            # suite name and the opt version does not
-            if test['test-platform'].endswith('debug'):
-                test['mozharness']['chunk-suffix'] = '-debug-<CHUNK>'
-            else:
-                test['mozharness']['chunk-suffix'] = '-<CHUNK>'
-        yield test

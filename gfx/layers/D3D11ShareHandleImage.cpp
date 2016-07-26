@@ -84,7 +84,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   context->CopyResource(softTexture, texture);
 
   RefPtr<gfx::DataSourceSurface> surface =
-    gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8X8);
+    gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!surface)) {
     return nullptr;
   }

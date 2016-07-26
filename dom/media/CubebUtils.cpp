@@ -296,5 +296,15 @@ cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
 }
 #endif
 
+void GetCurrentBackend(nsAString& aBackend)
+{
+  const char* backend = cubeb_get_backend_id(GetCubebContext());
+  if (!backend) {
+    aBackend.AssignLiteral("unknown");
+    return;
+  }
+  aBackend.AssignASCII(backend);
+}
+
 } // namespace CubebUtils
 } // namespace mozilla
