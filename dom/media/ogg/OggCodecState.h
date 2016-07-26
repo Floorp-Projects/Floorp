@@ -251,20 +251,20 @@ public:
   explicit VorbisState(ogg_page* aBosPage);
   virtual ~VorbisState();
 
-  CodecType GetType() { return TYPE_VORBIS; }
-  bool DecodeHeader(ogg_packet* aPacket);
-  int64_t Time(int64_t granulepos);
-  int64_t PacketDuration(ogg_packet* aPacket);
-  bool Init();
-  nsresult Reset();
-  bool IsHeader(ogg_packet* aPacket);
-  nsresult PageIn(ogg_page* aPage); 
+  CodecType GetType() override { return TYPE_VORBIS; }
+  bool DecodeHeader(ogg_packet* aPacket) override;
+  int64_t Time(int64_t granulepos) override;
+  int64_t PacketDuration(ogg_packet* aPacket) override;
+  bool Init() override;
+  nsresult Reset() override;
+  bool IsHeader(ogg_packet* aPacket) override;
+  nsresult PageIn(ogg_page* aPage) override;
 
   // Return a hash table with tag metadata.
-  MetadataTags* GetTags();
+  MetadataTags* GetTags() override;
 
   // Returns the end time that a granulepos represents.
-  static int64_t Time(vorbis_info* aInfo, int64_t aGranulePos); 
+  static int64_t Time(vorbis_info* aInfo, int64_t aGranulePos);
 
   vorbis_info mInfo;
   vorbis_comment mComment;
@@ -325,15 +325,15 @@ public:
   explicit TheoraState(ogg_page* aBosPage);
   virtual ~TheoraState();
 
-  CodecType GetType() { return TYPE_THEORA; }
-  bool DecodeHeader(ogg_packet* aPacket);
-  int64_t Time(int64_t granulepos);
-  int64_t StartTime(int64_t granulepos);
-  int64_t PacketDuration(ogg_packet* aPacket);
-  bool Init();
-  bool IsHeader(ogg_packet* aPacket);
-  bool IsKeyframe(ogg_packet* aPacket);
-  nsresult PageIn(ogg_page* aPage); 
+  CodecType GetType() override { return TYPE_THEORA; }
+  bool DecodeHeader(ogg_packet* aPacket) override;
+  int64_t Time(int64_t granulepos) override;
+  int64_t StartTime(int64_t granulepos) override;
+  int64_t PacketDuration(ogg_packet* aPacket) override;
+  bool Init() override;
+  bool IsHeader(ogg_packet* aPacket) override;
+  bool IsKeyframe(ogg_packet* aPacket) override;
+  nsresult PageIn(ogg_page* aPage) override;
 
   // Returns the maximum number of microseconds which a keyframe can be offset
   // from any given interframe.
@@ -365,15 +365,15 @@ public:
   explicit OpusState(ogg_page* aBosPage);
   virtual ~OpusState();
 
-  CodecType GetType() { return TYPE_OPUS; }
-  bool DecodeHeader(ogg_packet* aPacket);
-  int64_t Time(int64_t aGranulepos);
-  int64_t PacketDuration(ogg_packet* aPacket);
-  bool Init();
-  nsresult Reset();
+  CodecType GetType() override { return TYPE_OPUS; }
+  bool DecodeHeader(ogg_packet* aPacket) override;
+  int64_t Time(int64_t aGranulepos) override;
+  int64_t PacketDuration(ogg_packet* aPacket) override;
+  bool Init() override;
+  nsresult Reset() override;
   nsresult Reset(bool aStart);
-  bool IsHeader(ogg_packet* aPacket);
-  nsresult PageIn(ogg_page* aPage);
+  bool IsHeader(ogg_packet* aPacket) override;
+  nsresult PageIn(ogg_page* aPage) override;
 
   // Returns the end time that a granulepos represents.
   static int64_t Time(int aPreSkip, int64_t aGranulepos);
@@ -397,7 +397,7 @@ public:
   int64_t mPrevPacketGranulepos;
 
   // Construct and return a table of tags from the metadata header.
-  MetadataTags* GetTags();
+  MetadataTags* GetTags() override;
 
 private:
 
@@ -448,11 +448,11 @@ public:
 
   nsClassHashtable<nsUint32HashKey, MessageField> mMsgFieldStore;
 
-  CodecType GetType() { return TYPE_SKELETON; }
-  bool DecodeHeader(ogg_packet* aPacket);
-  int64_t Time(int64_t granulepos) { return -1; }
-  bool Init() { return true; }
-  bool IsHeader(ogg_packet* aPacket) { return true; }
+  CodecType GetType() override { return TYPE_SKELETON; }
+  bool DecodeHeader(ogg_packet* aPacket) override;
+  int64_t Time(int64_t granulepos) override { return -1; }
+  bool Init() override { return true; }
+  bool IsHeader(ogg_packet* aPacket) override { return true; }
 
   // Return true if the given time (in milliseconds) is within
   // the presentation time defined in the skeleton track.
