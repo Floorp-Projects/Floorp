@@ -25,7 +25,6 @@
     'clang%': 0,
     # Link-Time Optimizations.
     'use_lto%': 0,
-    'yuv_disable_asm%': 0,
     'build_neon': 0,
     'conditions': [
        ['(target_arch == "armv7" or target_arch == "armv7s" or \
@@ -79,14 +78,6 @@
                 # '-marm',  # arm32 not thumb
               ],
             }],
-          ],
-        }],
-        [ 'yuv_disable_asm != 0', {
-          'defines': [
-            # Enable the following 3 macros to turn off assembly for specified CPU.
-            'LIBYUV_DISABLE_X86',
-            'LIBYUV_DISABLE_NEON',
-            'LIBYUV_DISABLE_MIPS',
           ],
         }],
         ['build_with_mozilla == 1', {
