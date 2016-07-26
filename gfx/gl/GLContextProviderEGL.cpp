@@ -341,6 +341,9 @@ bool
 GLContextEGL::MakeCurrentImpl(bool aForce) {
     bool succeeded = true;
 
+    if (IsContextLost())
+        return false;
+
     // Assume that EGL has the same problem as WGL does,
     // where MakeCurrent with an already-current context is
     // still expensive.
@@ -368,6 +371,7 @@ GLContextEGL::MakeCurrentImpl(bool aForce) {
         if (!succeeded) {
             int eglError = sEGLLibrary.fGetError();
             if (eglError == LOCAL_EGL_CONTEXT_LOST) {
+                sEGLLibrary.SetDeviceLost();
                 mContextLost = true;
                 NS_WARNING("EGL context has been lost.");
             } else {
@@ -381,6 +385,11 @@ GLContextEGL::MakeCurrentImpl(bool aForce) {
         }
     } else {
         MOZ_ASSERT(sEGLLibrary.CachedCurrentContextMatches());
+
+        if (sEGLLibrary.HasRobustness() && fGetGraphicsResetStatus() != NO_ERROR) {
+            sEGLLibrary.SetDeviceLost();
+            mContextLost = true;
+        }
     }
 
     return succeeded;
@@ -510,6 +519,8 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
     if (sEGLLibrary.HasRobustness()) {
 //    contextAttribs.AppendElement(LOCAL_EGL_CONTEXT_ROBUST_ACCESS_EXT);
 //    contextAttribs.AppendElement(LOCAL_EGL_TRUE);
+      contextAttribs.AppendElement(LOCAL_EGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_EXT);
+      contextAttribs.AppendElement(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
     }
 
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(gTerminationAttribs); i++) {
