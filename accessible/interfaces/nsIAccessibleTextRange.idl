@@ -13,7 +13,7 @@ interface nsIVariant;
 /**
  * A range representing a piece of text in the document.
  */
-[scriptable, uuid(c4515623-55f9-4543-a3d5-c1e9afa588f4)]
+[scriptable, builtinclass, uuid(c4515623-55f9-4543-a3d5-c1e9afa588f4)]
 interface nsIAccessibleTextRange : nsISupports
 {
   readonly attribute nsIAccessibleText startContainer;
