@@ -45,7 +45,7 @@
         'optimize': 'max',  # enable O2 and ltcg.
       },
       # Allows libyuv.a redistributable library without external dependencies.
-      # 'standalone_static_library': 1,
+      'standalone_static_library': 1,
       'conditions': [
        # Disable -Wunused-parameter
         ['clang == 1', {
@@ -80,7 +80,7 @@
             }],
           ],
         }],
-        ['OS != "ios" and libyuv_disable_jpeg != 1 and build_with_mozilla != 1', {
+        ['OS != "ios" and libyuv_disable_jpeg != 1', {
           'defines': [
             'HAVE_JPEG'
           ],
