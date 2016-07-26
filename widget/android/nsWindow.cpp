@@ -1620,8 +1620,9 @@ nsWindow::Resize(double aX,
     mBounds.width = NSToIntRound(aWidth);
     mBounds.height = NSToIntRound(aHeight);
 
-    if (needSizeDispatch)
-        OnSizeChanged(gfx::IntSize(aWidth, aHeight));
+    if (needSizeDispatch) {
+        OnSizeChanged(gfx::IntSize::Truncate(aWidth, aHeight));
+    }
 
     // Should we skip honoring aRepaint here?
     if (aRepaint && FindTopLevel() == nsWindow::TopWindow())
