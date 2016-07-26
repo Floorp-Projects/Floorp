@@ -364,4 +364,11 @@ public class AppConstants {
         // Do nothing.
 //#endif
     }
+
+    public static final boolean MOZ_ANDROID_ACTIVITY_STREAM =
+//#ifdef MOZ_ANDROID_ACTIVITY_STREAM
+        true;
+//#else
+        false;
+//#endif
 }

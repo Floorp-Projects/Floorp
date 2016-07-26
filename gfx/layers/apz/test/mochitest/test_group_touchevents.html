@@ -70,6 +70,7 @@ var subtests = [
 ];
 
 if (isApzEnabled()) {
+  ok(window.TouchEvent, "Check if TouchEvent is supported (it should be, the test harness forces it on everywhere)");
   if (getPlatform() == "android") {
     // This has a lot of subtests, and Android emulators are slow.
     SimpleTest.requestLongerTimeout(2);

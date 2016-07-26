@@ -33,14 +33,19 @@
     (js::jit::Simulator::Current()->call(                               \
         JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 2, p0, p1))
 
+#define CALL_GENERATED_3(entry, p0, p1, p2)                             \
+    (js::jit::Simulator::Current()->call(                               \
+        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 3, p0, p1, p2))
+
 #else
 
 // Call into jitted code by following the ABI of the native architecture.
 #define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7)   \
   entry(p0, p1, p2, p3, p4, p5, p6, p7)
 
-#define CALL_GENERATED_1(entry, p0)      entry(p0)
-#define CALL_GENERATED_2(entry, p0, p1)  entry(p0, p1)
+#define CALL_GENERATED_1(entry, p0)         entry(p0)
+#define CALL_GENERATED_2(entry, p0, p1)     entry(p0, p1)
+#define CALL_GENERATED_3(entry, p0, p1, p2) entry(p0, p1, p2)
 
 #endif
 

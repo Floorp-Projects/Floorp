@@ -126,8 +126,8 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
 
             gfx::IntSize realTexSize = srcSize;
             if (!CanUploadNonPowerOfTwo(gl)) {
-                realTexSize = gfx::IntSize(gfx::NextPowerOfTwo(srcSize.width),
-                                           gfx::NextPowerOfTwo(srcSize.height));
+                realTexSize = gfx::IntSize(RoundUpPow2(srcSize.width),
+                                           RoundUpPow2(srcSize.height));
             }
 
             if (aSrc->GetWrapMode() == LOCAL_GL_REPEAT) {

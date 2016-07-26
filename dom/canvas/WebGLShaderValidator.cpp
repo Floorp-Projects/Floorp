@@ -43,6 +43,12 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         options |= SH_LIMIT_EXPRESSION_COMPLEXITY;
     }
 
+    // Sampler arrays indexed with non-constant expressions are forbidden in
+    // GLSL 1.30 and later.
+    // ESSL 3 requires constant-integral-expressions for this as well.
+    // Just do it universally.
+    options |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
+
     if (gfxPrefs::WebGLAllANGLEOptions()) {
         return options |
                SH_VALIDATE_LOOP_INDEXING |
@@ -76,11 +82,6 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         // Work around bug 735560
         if (gl->Vendor() == gl::GLVendor::Intel) {
             options |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-        }
-
-        // Work around bug 636926
-        if (gl->Vendor() == gl::GLVendor::NVIDIA) {
-            options |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
         }
 
         // Work around that Mac drivers handle struct scopes incorrectly.
@@ -129,13 +130,8 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
     if (mBypassShaderValidation)
         return nullptr;
 
-    ShShaderSpec spec = IsWebGL2() ? SH_WEBGL2_SPEC : SH_WEBGL_SPEC;
-    ShShaderOutput outputLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT
-                                                 : SH_GLSL_COMPATIBILITY_OUTPUT;
-
-    // If we're using WebGL2 we want a more specific version of GLSL
-    if (IsWebGL2())
-        outputLanguage = ShaderOutput(gl);
+    const auto spec = (IsWebGL2() ? SH_WEBGL2_SPEC : SH_WEBGL_SPEC);
+    const auto outputLanguage = ShaderOutput(gl);
 
     ShBuiltInResources resources;
     memset(&resources, 0, sizeof(resources));
@@ -253,7 +249,8 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
         return false;
     }
 
-    if (ShGetShaderVersion(prev->mHandle) != ShGetShaderVersion(mHandle)) {
+    const auto shaderVersion = ShGetShaderVersion(mHandle);
+    if (ShGetShaderVersion(prev->mHandle) != shaderVersion) {
         nsPrintfCString error("Vertex shader version %d does not match"
                               " fragment shader version %d.",
                               ShGetShaderVersion(prev->mHandle),
@@ -319,7 +316,7 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
                 if (vertVarying.name != fragVarying.name)
                     continue;
 
-                if (!vertVarying.isSameVaryingAtLinkTime(fragVarying)) {
+                if (!vertVarying.isSameVaryingAtLinkTime(fragVarying, shaderVersion)) {
                     nsPrintfCString error("Varying `%s`is not linkable between"
                                           " attached shaders.",
                                           fragVarying.name.c_str());
@@ -355,7 +352,8 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
         }
     }
 
-    {
+    if (shaderVersion == 100) {
+        // Enforce ESSL1 invariant linking rules.
         bool isInvariant_Position = false;
         bool isInvariant_PointSize = false;
         bool isInvariant_FragCoord = false;

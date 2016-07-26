@@ -896,7 +896,7 @@ public:
     // WebGLTextureUpload.cpp
 public:
     bool ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
-                              uint32_t tailPixels, const webgl::TexUnpackBlob* blob);
+                              uint32_t tailPixels, webgl::TexUnpackBlob* blob);
 
 protected:
     bool ValidateTexImageSpecification(const char* funcName, uint8_t funcDims,
@@ -914,8 +914,8 @@ protected:
                                    WebGLTexture** const out_texture,
                                    WebGLTexture::ImageInfo** const out_imageInfo);
 
-    bool ValidateUnpackInfo(const char* funcName, GLenum format, GLenum type,
-                            webgl::PackingInfo* const out);
+    bool ValidateUnpackInfo(const char* funcName, bool usePBOs, GLenum format,
+                            GLenum type, webgl::PackingInfo* const out);
 
 // -----------------------------------------------------------------------------
 // Vertices Feature (WebGLContextVertices.cpp)
@@ -1311,7 +1311,7 @@ private:
     // Context customization points
     virtual WebGLVertexArray* CreateVertexArrayImpl();
 
-    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info) = 0;
+    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, uint32_t* alignment, const char* info) = 0;
     virtual bool ValidateBufferTarget(GLenum target, const char* info) = 0;
     virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) = 0;
     virtual bool ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer, const char* info);
