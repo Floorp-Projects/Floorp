@@ -11406,6 +11406,14 @@
         "url": "/IndexedDB/idbcursor-continue.htm"
       },
       {
+        "path": "IndexedDB/idbcursor-continuePrimaryKey.htm",
+        "url": "/IndexedDB/idbcursor-continuePrimaryKey.htm"
+      },
+      {
+        "path": "IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm",
+        "url": "/IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm"
+      },
+      {
         "path": "IndexedDB/idbcursor-direction-index-keyrange.htm",
         "url": "/IndexedDB/idbcursor-direction-index-keyrange.htm"
       },
