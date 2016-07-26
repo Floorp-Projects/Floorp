@@ -187,11 +187,11 @@ class GeckoInstance(object):
 class FennecInstance(GeckoInstance):
     def __init__(self, emulator_binary=None, avd_home=None, avd=None,
                  adb_path=None, serial=None, connect_to_running_emulator=False,
-                 *args, **kwargs):
+                 package_name=None, *args, **kwargs):
         super(FennecInstance, self).__init__(*args, **kwargs)
         self.runner_class = FennecEmulatorRunner
         # runner args
-        self._package_name = None
+        self._package_name = package_name
         self.emulator_binary = emulator_binary
         self.avd_home = avd_home
         self.adb_path = adb_path
