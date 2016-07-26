@@ -701,8 +701,8 @@ void
 Element::Scroll(double aXScroll, double aYScroll)
 {
   // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
-  CSSIntPoint scrollPos(mozilla::ToZeroIfNonfinite(aXScroll),
-                        mozilla::ToZeroIfNonfinite(aYScroll));
+  auto scrollPos = CSSIntPoint::Truncate(mozilla::ToZeroIfNonfinite(aXScroll),
+                                         mozilla::ToZeroIfNonfinite(aYScroll));
 
   Scroll(scrollPos, ScrollOptions());
 }
@@ -741,8 +741,8 @@ Element::ScrollBy(double aXScrollDif, double aYScrollDif)
   nsIScrollableFrame *sf = GetScrollFrame();
   if (sf) {
     CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
-    scrollPos += CSSIntPoint(mozilla::ToZeroIfNonfinite(aXScrollDif),
-                             mozilla::ToZeroIfNonfinite(aYScrollDif));
+    scrollPos += CSSIntPoint::Truncate(mozilla::ToZeroIfNonfinite(aXScrollDif),
+                                       mozilla::ToZeroIfNonfinite(aYScrollDif));
     Scroll(scrollPos, ScrollOptions());
   }
 }

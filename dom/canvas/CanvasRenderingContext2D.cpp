@@ -4820,8 +4820,8 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
 
   // Scale the image size to the dest rect, and adjust the source rect to match.
   gfxSize scale(aDest.width / aSrc.width, aDest.height / aSrc.height);
-  nsIntSize scaledImageSize(std::ceil(aImgSize.width * scale.width),
-                            std::ceil(aImgSize.height * scale.height));
+  IntSize scaledImageSize = IntSize::Ceil(aImgSize.width * scale.width,
+                                          aImgSize.height * scale.height);
   aSrc.Scale(scale.width, scale.height);
 
   // We're wrapping tempTarget's (our) DrawTarget here, so we need to restore
@@ -5045,7 +5045,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
                                 matrix._22, matrix._31, matrix._32));
   } else {
     drawDT =
-      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(ceil(sw), ceil(sh)),
+      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize::Ceil(sw, sh),
                                                                    SurfaceFormat::B8G8R8A8);
     if (!drawDT || !drawDT->IsValid()) {
       aError.Throw(NS_ERROR_FAILURE);

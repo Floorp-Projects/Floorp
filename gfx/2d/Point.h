@@ -33,6 +33,33 @@ template<> struct IsPixel<gfx::UnknownUnits> : TrueType {};
 
 namespace gfx {
 
+/// Use this for parameters of functions to allow implicit conversions to
+/// integer types but not floating point types.
+/// We use this wrapper to prevent IntSize and IntPoint's constructors to
+/// take foating point values as parameters, and not require their constructors
+/// to have implementations for each permutation of integer types.
+template<typename T>
+struct IntParam {
+  constexpr MOZ_IMPLICIT IntParam(char val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(unsigned char val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(short val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(unsigned short val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(int val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(unsigned int val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(long val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(unsigned long val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(long long val) : value(val) {}
+  constexpr MOZ_IMPLICIT IntParam(unsigned long long val) : value(val) {}
+  template<typename Unit>
+  constexpr MOZ_IMPLICIT IntParam(IntCoordTyped<Unit> val) : value(val) {}
+
+  // Disable the evil ones!
+  MOZ_IMPLICIT IntParam(float val) = delete;
+  MOZ_IMPLICIT IntParam(double val) = delete;
+
+  T value;
+};
+
 template<class units>
 struct IntPointTyped :
   public BasePoint< int32_t, IntPointTyped<units>, IntCoordTyped<units> >,
@@ -40,16 +67,28 @@ struct IntPointTyped :
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
+  typedef IntParam<int32_t> ToInt;
   typedef IntCoordTyped<units> Coord;
   typedef BasePoint< int32_t, IntPointTyped<units>, IntCoordTyped<units> > Super;
 
   constexpr IntPointTyped() : Super() {}
-  constexpr IntPointTyped(int32_t aX, int32_t aY) : Super(Coord(aX), Coord(aY)) {}
-  // The mixed-type constructors (int, Coord) and (Coord, int) are needed to
-  // avoid ambiguities because Coord is implicitly convertible to int.
-  constexpr IntPointTyped(int32_t aX, Coord aY) : Super(Coord(aX), aY) {}
-  constexpr IntPointTyped(Coord aX, int32_t aY) : Super(aX, Coord(aY)) {}
-  constexpr IntPointTyped(Coord aX, Coord aY) : Super(aX, aY) {}
+  constexpr IntPointTyped(ToInt aX, ToInt aY) : Super(Coord(aX.value), Coord(aY.value)) {}
+
+  static IntPointTyped<units> Round(float aX, float aY) {
+    return IntPointTyped(int32_t(floorf(aX + 0.5)), int32_t(floorf(aY + 0.5)));
+  }
+
+  static IntPointTyped<units> Ceil(float aX, float aY) {
+    return IntPointTyped(int32_t(ceil(aX)), int32_t(ceil(aY)));
+  }
+
+  static IntPointTyped<units> Floor(float aX, float aY) {
+    return IntPointTyped(int32_t(floorf(aX)), int32_t(floorf(aY)));
+  }
+
+  static IntPointTyped<units> Truncate(float aX, float aY) {
+    return IntPointTyped(int32_t(aX), int32_t(aY));
+  }
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
@@ -99,14 +138,12 @@ typedef PointTyped<UnknownUnits, double> PointDouble;
 
 template<class units>
 IntPointTyped<units> RoundedToInt(const PointTyped<units>& aPoint) {
-  return IntPointTyped<units>(int32_t(floorf(aPoint.x + 0.5f)),
-                              int32_t(floorf(aPoint.y + 0.5f)));
+  return IntPointTyped<units>::Round(aPoint.x, aPoint.y);
 }
-
+  
 template<class units>
 IntPointTyped<units> TruncatedToInt(const PointTyped<units>& aPoint) {
-  return IntPointTyped<units>(int32_t(aPoint.x),
-                              int32_t(aPoint.y));
+  return IntPointTyped<units>::Truncate(aPoint.x, aPoint.y);
 }
 
 template<class units, class F = Float>
@@ -170,10 +207,27 @@ struct IntSizeTyped :
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
+  typedef IntParam<int32_t> ToInt;
   typedef BaseSize< int32_t, IntSizeTyped<units> > Super;
 
   constexpr IntSizeTyped() : Super() {}
-  constexpr IntSizeTyped(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
+  constexpr IntSizeTyped(ToInt aWidth, ToInt aHeight) : Super(aWidth.value, aHeight.value) {}
+
+  static IntSizeTyped<units> Round(float aWidth, float aHeight) {
+    return IntSizeTyped(int32_t(floorf(aWidth + 0.5)), int32_t(floorf(aHeight + 0.5)));
+  }
+
+  static IntSizeTyped<units> Truncate(float aWidth, float aHeight) {
+    return IntSizeTyped(int32_t(aWidth), int32_t(aHeight));
+  }
+
+  static IntSizeTyped<units> Ceil(float aWidth, float aHeight) {
+    return IntSizeTyped(int32_t(ceil(aWidth)), int32_t(ceil(aHeight)));
+  }
+
+  static IntSizeTyped<units> Floor(float aWidth, float aHeight) {
+    return IntSizeTyped(int32_t(floorf(aWidth)), int32_t(floorf(aHeight)));
+  }
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
