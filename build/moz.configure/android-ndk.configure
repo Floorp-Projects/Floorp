@@ -85,6 +85,13 @@ def android_platform(target, android_version, ndk):
 
 add_old_configure_assignment('android_platform', android_platform)
 
+@depends(android_platform)
+def extra_toolchain_flags(platform_dir):
+    if not platform_dir:
+        return []
+    return ['-idirafter',
+            os.path.join(platform_dir, 'usr', 'include')]
+
 @depends(target, host, ndk, '--with-android-toolchain',
          '--with-android-gnu-compiler-version')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
