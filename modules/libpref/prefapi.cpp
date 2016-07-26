@@ -330,9 +330,16 @@ pref_SetPref(const dom::PrefSetting& aPref)
 }
 
 UniquePtr<char*[]>
-pref_savePrefs(PLDHashTable* aTable)
+pref_savePrefs(PLDHashTable* aTable, uint32_t* aPrefCount)
 {
+    // This function allocates the entries in the savedPrefs array it returns.
+    // It is the callers responsibility to go through the array and free
+    // all of them.  The aPrefCount entries will be non-null.  Any end padding
+    // is an implementation detail and may change.
+    MOZ_ASSERT(aPrefCount);
     auto savedPrefs = MakeUnique<char*[]>(aTable->EntryCount());
+
+    // This is not necessary, but leaving it in for now
     memset(savedPrefs.get(), 0, aTable->EntryCount() * sizeof(char*));
 
     int32_t j = 0;
@@ -380,6 +387,7 @@ pref_savePrefs(PLDHashTable* aTable)
                                        prefValue +
                                        NS_LITERAL_CSTRING(");"));
     }
+    *aPrefCount = j;
 
     return savedPrefs;
 }
