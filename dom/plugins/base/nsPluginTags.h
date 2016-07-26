@@ -133,6 +133,7 @@ public:
               bool aIsJavaPlugin,
               bool aIsFlashPlugin,
               bool aSupportsAsyncInit,
+              bool aSupportsAsyncRender,
               int64_t aLastModifiedTime,
               bool aFromExtension,
               int32_t aSandboxLevel);
@@ -172,6 +173,7 @@ public:
   bool          mIsJavaPlugin;
   bool          mIsFlashPlugin;
   bool          mSupportsAsyncInit;
+  bool          mSupportsAsyncRender;
   nsCString     mFullPath; // UTF-8
   int64_t       mLastModifiedTime;
   nsCOMPtr<nsITimer> mUnloadTimer;

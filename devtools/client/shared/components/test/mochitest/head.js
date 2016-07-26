@@ -1,5 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+
 "use strict";
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;

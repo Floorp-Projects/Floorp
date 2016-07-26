@@ -153,7 +153,11 @@
   color: var(--theme-body-color);
 }
 
-.theme-firebug .tabs .tabs-menu-item a:hover,
+.theme-firebug .tabs .tabs-menu-item.is-active:hover:active a {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
 .theme-firebug .tabs .tabs-menu-item a {
   border: 1px solid transparent;
 }

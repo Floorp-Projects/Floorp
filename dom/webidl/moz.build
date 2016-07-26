@@ -545,6 +545,7 @@ WEBIDL_FILES = [
     'TelephonyCallGroup.webidl',
     'TelephonyCallId.webidl',
     'Text.webidl',
+    'TextClause.webidl',
     'TextDecoder.webidl',
     'TextEncoder.webidl',
     'TextTrack.webidl',

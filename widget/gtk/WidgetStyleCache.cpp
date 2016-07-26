@@ -67,7 +67,7 @@ CreateCheckboxWidget()
 static GtkWidget*
 CreateRadiobuttonWidget()
 {
-  GtkWidget* widget = gtk_radio_button_new_with_label(NULL, "M");
+  GtkWidget* widget = gtk_radio_button_new_with_label(nullptr, "M");
   AddToWindowContainer(widget);
   return widget;
 }
@@ -166,6 +166,76 @@ CreateInfoBarWidget()
 }
 
 static GtkWidget*
+CreateButtonWidget()
+{
+  GtkWidget* widget = gtk_button_new_with_label("M");
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateToggleButtonWidget()
+{
+  GtkWidget* widget = gtk_toggle_button_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateButtonArrowWidget()
+{
+  GtkWidget* widget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
+  gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_TOGGLE_BUTTON)), widget);
+  gtk_widget_realize(widget);
+  gtk_widget_show(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateSpinWidget()
+{
+  GtkWidget* widget = gtk_spin_button_new(nullptr, 1, 0);
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateEntryWidget()
+{
+  GtkWidget* widget = gtk_entry_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateScrolledWindowWidget()
+{
+  GtkWidget* widget = gtk_scrolled_window_new(nullptr, nullptr);
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateTextViewWidget()
+{
+  GtkWidget* widget = gtk_text_view_new();
+  gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_SCROLLED_WINDOW)),
+                    widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateMenuSeparatorWidget()
+{
+  GtkWidget* widget = gtk_separator_menu_item_new();
+  gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)),
+                        widget);
+  gtk_widget_realize(widget);
+  return widget;
+}
+
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -193,6 +263,8 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateMenuItemWidget(MOZ_GTK_MENUBAR);
     case MOZ_GTK_MENUITEM:
       return CreateMenuItemWidget(MOZ_GTK_MENUPOPUP);
+    case MOZ_GTK_MENUSEPARATOR:
+      return CreateMenuSeparatorWidget();
     case MOZ_GTK_EXPANDER:
       return CreateExpanderWidget();
     case MOZ_GTK_FRAME:
@@ -205,6 +277,20 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateToolbarSeparatorWidget();
     case MOZ_GTK_INFO_BAR:
       return CreateInfoBarWidget();
+    case MOZ_GTK_SPINBUTTON:
+      return CreateSpinWidget();
+    case MOZ_GTK_BUTTON:
+      return CreateButtonWidget();
+    case MOZ_GTK_TOGGLE_BUTTON:
+      return CreateToggleButtonWidget();
+    case MOZ_GTK_BUTTON_ARROW:
+      return CreateButtonArrowWidget();
+    case MOZ_GTK_ENTRY:
+      return CreateEntryWidget();
+    case MOZ_GTK_SCROLLED_WINDOW: 
+      return CreateScrolledWindowWidget();
+    case MOZ_GTK_TEXT_VIEW:
+      return CreateTextViewWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -349,6 +435,18 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       // TODO - create from CSS node
       return GetWidgetStyleWithClass(MOZ_GTK_INFO_BAR,
                                      GTK_STYLE_CLASS_INFO);
+    case MOZ_GTK_SPINBUTTON_ENTRY:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_SPINBUTTON,
+                                     GTK_STYLE_CLASS_ENTRY);
+    case MOZ_GTK_SCROLLED_WINDOW:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_SCROLLED_WINDOW,
+                                     GTK_STYLE_CLASS_FRAME);
+    case MOZ_GTK_TEXT_VIEW:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_TEXT_VIEW,
+                                     GTK_STYLE_CLASS_VIEW);
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -406,6 +504,15 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_INFO_BAR:
       return GetWidgetStyleWithClass(MOZ_GTK_INFO_BAR,
                                      GTK_STYLE_CLASS_INFO);
+    case MOZ_GTK_SPINBUTTON_ENTRY:
+      return GetWidgetStyleWithClass(MOZ_GTK_SPINBUTTON,
+                                     GTK_STYLE_CLASS_ENTRY);
+    case MOZ_GTK_SCROLLED_WINDOW:
+      return GetWidgetStyleWithClass(MOZ_GTK_SCROLLED_WINDOW,
+                                     GTK_STYLE_CLASS_FRAME);
+    case MOZ_GTK_TEXT_VIEW:
+      return GetWidgetStyleWithClass(MOZ_GTK_TEXT_VIEW,
+                                     GTK_STYLE_CLASS_VIEW);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);

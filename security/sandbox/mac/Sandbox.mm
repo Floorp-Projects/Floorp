@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "mozilla/Assertions.h"
+
 // XXX There are currently problems with the /usr/include/sandbox.h file on
 // some/all of the Macs in Mozilla's build system.  For the time being (until
 // this problem is resolved), we refer directly to what we need from it,
@@ -490,6 +492,7 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
     }
   }
   else if (aInfo.type == MacSandboxType_Content) {
+    MOZ_ASSERT(aInfo.level >= 1);
     if (aInfo.level >= 1) {
       asprintf(&profile, contentSandboxRules, aInfo.level,
                OSXVersion::OSXVersionMinor(),
@@ -501,7 +504,7 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
     } else {
       fprintf(stderr,
         "Content sandbox disabled due to sandbox level setting\n");
-      return (true);
+      return false;
     }
   }
   else {

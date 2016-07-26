@@ -645,6 +645,7 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(nsIPrincipal* aPrincipa
       scheme.EqualsLiteral("file") ||
       scheme.EqualsLiteral("resource") ||
       scheme.EqualsLiteral("app") ||
+      scheme.EqualsLiteral("moz-extension") ||
       scheme.EqualsLiteral("wss")) {
     *aIsTrustWorthy = true;
     return NS_OK;
