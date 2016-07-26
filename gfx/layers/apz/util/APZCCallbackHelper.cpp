@@ -778,8 +778,8 @@ APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
   nsTArray<TouchBehaviorFlags> flags;
   for (uint32_t i = 0; i < aEvent.mTouches.Length(); i++) {
     flags.AppendElement(
-      widget::TouchActionHelper::GetAllowedTouchBehavior(
-                               aWidget, aEvent.mTouches[i]->mRefPoint));
+      TouchActionHelper::GetAllowedTouchBehavior(aWidget,
+        aEvent.mTouches[i]->mRefPoint));
   }
   aCallback(aInputBlockId, Move(flags));
 }
