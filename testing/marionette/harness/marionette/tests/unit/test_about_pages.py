@@ -12,7 +12,7 @@ class TestAboutPages(MarionetteTestCase):
 
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        if self.marionette.session_capabilities['platformName'] == 'Darwin':
+        if self.marionette.session_capabilities['platformName'] == 'darwin':
             self.mod_key = Keys.META
         else:
             self.mod_key = Keys.CONTROL
