@@ -273,53 +273,9 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
         mSynthesizedTouchInput = MakeUnique<MultiTouchInput>();
     }
 
-    ScreenIntPoint pointerScreenPoint = ViewAs<ScreenPixel>(aPoint,
-        PixelCastJustification::LayoutDeviceIsScreenForBounds);
-
-    // We can't dispatch mSynthesizedTouchInput directly because (a) dispatching
-    // it might inadvertently modify it and (b) in the case of touchend or
-    // touchcancel events mSynthesizedTouchInput will hold the touches that are
-    // still down whereas the input dispatched needs to hold the removed
-    // touch(es). We use |inputToDispatch| for this purpose.
-    MultiTouchInput inputToDispatch;
-    inputToDispatch.mInputType = MULTITOUCH_INPUT;
-
-    int32_t index = mSynthesizedTouchInput->IndexOfTouch((int32_t)aPointerId);
-    if (aPointerState == TOUCH_CONTACT) {
-        if (index >= 0) {
-            // found an existing touch point, update it
-            SingleTouchData& point = mSynthesizedTouchInput->mTouches[index];
-            point.mScreenPoint = pointerScreenPoint;
-            point.mRotationAngle = (float)aPointerOrientation;
-            point.mForce = (float)aPointerPressure;
-            inputToDispatch.mType = MultiTouchInput::MULTITOUCH_MOVE;
-        } else {
-            // new touch point, add it
-            mSynthesizedTouchInput->mTouches.AppendElement(SingleTouchData(
-                (int32_t)aPointerId,
-                pointerScreenPoint,
-                ScreenSize(0, 0),
-                (float)aPointerOrientation,
-                (float)aPointerPressure));
-            inputToDispatch.mType = MultiTouchInput::MULTITOUCH_START;
-        }
-        inputToDispatch.mTouches = mSynthesizedTouchInput->mTouches;
-    } else {
-        MOZ_ASSERT(aPointerState == TOUCH_REMOVE || aPointerState == TOUCH_CANCEL);
-        // a touch point is being lifted, so remove it from the stored list
-        if (index >= 0) {
-            mSynthesizedTouchInput->mTouches.RemoveElementAt(index);
-        }
-        inputToDispatch.mType = (aPointerState == TOUCH_REMOVE
-            ? MultiTouchInput::MULTITOUCH_END
-            : MultiTouchInput::MULTITOUCH_CANCEL);
-        inputToDispatch.mTouches.AppendElement(SingleTouchData(
-            (int32_t)aPointerId,
-            pointerScreenPoint,
-            ScreenSize(0, 0),
-            (float)aPointerOrientation,
-            (float)aPointerPressure));
-    }
+    MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
+        mSynthesizedTouchInput.get(), aPointerId, aPointerState,
+        aPoint, aPointerPressure, aPointerOrientation);
 
     // Can't use NewRunnableMethod here because that will pass a const-ref
     // argument to DispatchTouchInputViaAPZ whereas that function takes a
