@@ -3371,7 +3371,7 @@ static uint32_t sPersistentTimeoutDays;
 bool
 nsObjectLoadingContent::ShouldBlockContent()
 {
-  if (mContentBlockingDisabled)
+  if (mContentBlockingDisabled || !mURI)
     return false;
 
   if (!IsFlashMIME(mContentType) || !Preferences::GetBool(kPrefBlockURIs)) {
