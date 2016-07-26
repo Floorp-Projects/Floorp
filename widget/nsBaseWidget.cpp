@@ -2072,6 +2072,65 @@ nsIWidget::ClearNativeTouchSequence(nsIObserver* aObserver)
   return NS_OK;
 }
 
+MultiTouchInput
+nsBaseWidget::UpdateSynthesizedTouchState(MultiTouchInput* aState,
+                                          uint32_t aPointerId,
+                                          TouchPointerState aPointerState,
+                                          LayoutDeviceIntPoint aPoint,
+                                          double aPointerPressure,
+                                          uint32_t aPointerOrientation)
+{
+  ScreenIntPoint pointerScreenPoint = ViewAs<ScreenPixel>(aPoint,
+      PixelCastJustification::LayoutDeviceIsScreenForBounds);
+
+  // We can't dispatch *aState directly because (a) dispatching
+  // it might inadvertently modify it and (b) in the case of touchend or
+  // touchcancel events aState will hold the touches that are
+  // still down whereas the input dispatched needs to hold the removed
+  // touch(es). We use |inputToDispatch| for this purpose.
+  MultiTouchInput inputToDispatch;
+  inputToDispatch.mInputType = MULTITOUCH_INPUT;
+
+  int32_t index = aState->IndexOfTouch((int32_t)aPointerId);
+  if (aPointerState == TOUCH_CONTACT) {
+    if (index >= 0) {
+      // found an existing touch point, update it
+      SingleTouchData& point = aState->mTouches[index];
+      point.mScreenPoint = pointerScreenPoint;
+      point.mRotationAngle = (float)aPointerOrientation;
+      point.mForce = (float)aPointerPressure;
+      inputToDispatch.mType = MultiTouchInput::MULTITOUCH_MOVE;
+    } else {
+      // new touch point, add it
+      aState->mTouches.AppendElement(SingleTouchData(
+          (int32_t)aPointerId,
+          pointerScreenPoint,
+          ScreenSize(0, 0),
+          (float)aPointerOrientation,
+          (float)aPointerPressure));
+      inputToDispatch.mType = MultiTouchInput::MULTITOUCH_START;
+    }
+    inputToDispatch.mTouches = aState->mTouches;
+  } else {
+    MOZ_ASSERT(aPointerState == TOUCH_REMOVE || aPointerState == TOUCH_CANCEL);
+    // a touch point is being lifted, so remove it from the stored list
+    if (index >= 0) {
+      aState->mTouches.RemoveElementAt(index);
+    }
+    inputToDispatch.mType = (aPointerState == TOUCH_REMOVE
+        ? MultiTouchInput::MULTITOUCH_END
+        : MultiTouchInput::MULTITOUCH_CANCEL);
+    inputToDispatch.mTouches.AppendElement(SingleTouchData(
+        (int32_t)aPointerId,
+        pointerScreenPoint,
+        ScreenSize(0, 0),
+        (float)aPointerOrientation,
+        (float)aPointerPressure));
+  }
+
+  return inputToDispatch;
+}
+
 void
 nsBaseWidget::RegisterPluginWindowForRemoteUpdates()
 {
