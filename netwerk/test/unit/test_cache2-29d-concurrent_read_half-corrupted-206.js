@@ -65,6 +65,11 @@ function run_test()
 
   do_get_profile();
 
+  if (!newCacheBackEndUsed()) {
+    do_check_true(true, "This test doesn't run when the old cache back end is used since the behavior is different");
+    return;
+  }
+
   Services.prefs.setIntPref("browser.cache.disk.max_entry_size", 1);
 
   httpServer = new HttpServer();
