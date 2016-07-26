@@ -13,6 +13,8 @@
 #ifndef UTIL_PSNR_H_  // NOLINT
 #define UTIL_PSNR_H_
 
+#include <math.h>  // For log10()
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,13 +26,17 @@ typedef unsigned char uint8;
 
 static const double kMaxPSNR = 128.0;
 
-// PSNR formula: psnr = 10 * log10 (Peak Signal^2 * size / sse).
-// Returns 128.0 (kMaxPSNR) if sse is 0 (perfect match).
-double ComputePSNR(double sse, double size);
-
+// libyuv provides this function when linking library for jpeg support.
+// TODO(fbarchard): make psnr lib compatible subset of libyuv.
+#if !defined(HAVE_JPEG)
 // Computer Sum of Squared Error (SSE).
 // Pass this to ComputePSNR for final result.
 double ComputeSumSquareError(const uint8* org, const uint8* rec, int size);
+#endif
+
+// PSNR formula: psnr = 10 * log10 (Peak Signal^2 * size / sse)
+// Returns 128.0 (kMaxPSNR) if sse is 0 (perfect match).
+double ComputePSNR(double sse, double size);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -16,7 +16,7 @@
 #include "libyuv/basic_types.h"
 #include "libyuv/compare.h"
 #include "libyuv/cpu_id.h"
-#include "libyuv/row.h"
+#include "libyuv/video_common.h"
 
 namespace libyuv {
 
@@ -31,10 +31,10 @@ static uint32 ReferenceHashDjb2(const uint8* src, uint64 count, uint32 seed) {
   return hash;
 }
 
-TEST_F(libyuvTest, Djb2_Test) {
+TEST_F(LibYUVBaseTest, Djb2_Test) {
   const int kMaxTest = benchmark_width_ * benchmark_height_;
-  align_buffer_64(src_a, kMaxTest);
-  align_buffer_64(src_b, kMaxTest);
+  align_buffer_page_end(src_a, kMaxTest);
+  align_buffer_page_end(src_b, kMaxTest);
 
   const char* fox = "The quick brown fox jumps over the lazy dog"
       " and feels as if he were in the seventh heaven of typography"
@@ -44,8 +44,8 @@ TEST_F(libyuvTest, Djb2_Test) {
   EXPECT_EQ(kExpectedFoxHash, foxhash);
 
   for (int i = 0; i < kMaxTest; ++i) {
-    src_a[i] = (random() & 0xff);
-    src_b[i] = (random() & 0xff);
+    src_a[i] = (fastrand() & 0xff);
+    src_b[i] = (fastrand() & 0xff);
   }
   // Compare different buffers. Expect hash is different.
   uint32 h1 = HashDjb2(src_a, kMaxTest, 5381);
@@ -111,13 +111,13 @@ TEST_F(libyuvTest, Djb2_Test) {
   h2 = HashDjb2(src_a, kMaxTest / 2, 0);
   EXPECT_EQ(h1, h2);
 
-  free_aligned_buffer_64(src_a);
-  free_aligned_buffer_64(src_b);
+  free_aligned_buffer_page_end(src_a);
+  free_aligned_buffer_page_end(src_b);
 }
 
-TEST_F(libyuvTest, BenchmarkDjb2_Opt) {
+TEST_F(LibYUVBaseTest, BenchmarkDjb2_Opt) {
   const int kMaxTest = benchmark_width_ * benchmark_height_;
-  align_buffer_64(src_a, kMaxTest);
+  align_buffer_page_end(src_a, kMaxTest);
 
   for (int i = 0; i < kMaxTest; ++i) {
     src_a[i] = i;
@@ -128,12 +128,12 @@ TEST_F(libyuvTest, BenchmarkDjb2_Opt) {
     h1 = HashDjb2(src_a, kMaxTest, 5381);
   }
   EXPECT_EQ(h1, h2);
-  free_aligned_buffer_64(src_a);
+  free_aligned_buffer_page_end(src_a);
 }
 
-TEST_F(libyuvTest, BenchmarkDjb2_Unaligned) {
+TEST_F(LibYUVBaseTest, BenchmarkDjb2_Unaligned) {
   const int kMaxTest = benchmark_width_ * benchmark_height_;
-  align_buffer_64(src_a, kMaxTest + 1);
+  align_buffer_page_end(src_a, kMaxTest + 1);
   for (int i = 0; i < kMaxTest; ++i) {
     src_a[i + 1] = i;
   }
@@ -143,13 +143,68 @@ TEST_F(libyuvTest, BenchmarkDjb2_Unaligned) {
     h1 = HashDjb2(src_a + 1, kMaxTest, 5381);
   }
   EXPECT_EQ(h1, h2);
-  free_aligned_buffer_64(src_a);
+  free_aligned_buffer_page_end(src_a);
 }
 
-TEST_F(libyuvTest, BenchmarkSumSquareError_Opt) {
+TEST_F(LibYUVBaseTest, BenchmarkARGBDetect_Opt) {
+  uint32 fourcc;
+  const int kMaxTest = benchmark_width_ * benchmark_height_ * 4;
+  align_buffer_page_end(src_a, kMaxTest);
+  for (int i = 0; i < kMaxTest; ++i) {
+    src_a[i] = 255;
+  }
+
+  src_a[0] = 0;
+  fourcc = ARGBDetect(src_a, benchmark_width_ * 4,
+                      benchmark_width_, benchmark_height_);
+  EXPECT_EQ(libyuv::FOURCC_BGRA, fourcc);
+  src_a[0] = 255;
+  src_a[3] = 0;
+  fourcc = ARGBDetect(src_a, benchmark_width_ * 4,
+                      benchmark_width_, benchmark_height_);
+  EXPECT_EQ(libyuv::FOURCC_ARGB, fourcc);
+  src_a[3] = 255;
+
+  for (int i = 0; i < benchmark_iterations_; ++i) {
+    fourcc = ARGBDetect(src_a, benchmark_width_ * 4,
+                        benchmark_width_, benchmark_height_);
+  }
+  EXPECT_EQ(0, fourcc);
+
+  free_aligned_buffer_page_end(src_a);
+}
+
+TEST_F(LibYUVBaseTest, BenchmarkARGBDetect_Unaligned) {
+  uint32 fourcc;
+  const int kMaxTest = benchmark_width_ * benchmark_height_ * 4 + 1;
+  align_buffer_page_end(src_a, kMaxTest);
+  for (int i = 1; i < kMaxTest; ++i) {
+    src_a[i] = 255;
+  }
+
+  src_a[0 + 1] = 0;
+  fourcc = ARGBDetect(src_a + 1, benchmark_width_ * 4,
+                      benchmark_width_, benchmark_height_);
+  EXPECT_EQ(libyuv::FOURCC_BGRA, fourcc);
+  src_a[0 + 1] = 255;
+  src_a[3 + 1] = 0;
+  fourcc = ARGBDetect(src_a + 1, benchmark_width_ * 4,
+                      benchmark_width_, benchmark_height_);
+  EXPECT_EQ(libyuv::FOURCC_ARGB, fourcc);
+  src_a[3 + 1] = 255;
+
+  for (int i = 0; i < benchmark_iterations_; ++i) {
+    fourcc = ARGBDetect(src_a + 1, benchmark_width_ * 4,
+                        benchmark_width_, benchmark_height_);
+  }
+  EXPECT_EQ(0, fourcc);
+
+  free_aligned_buffer_page_end(src_a);
+}
+TEST_F(LibYUVBaseTest, BenchmarkSumSquareError_Opt) {
   const int kMaxWidth = 4096 * 3;
-  align_buffer_64(src_a, kMaxWidth);
-  align_buffer_64(src_b, kMaxWidth);
+  align_buffer_page_end(src_a, kMaxWidth);
+  align_buffer_page_end(src_b, kMaxWidth);
   memset(src_a, 0, kMaxWidth);
   memset(src_b, 0, kMaxWidth);
 
@@ -173,14 +228,14 @@ TEST_F(libyuvTest, BenchmarkSumSquareError_Opt) {
 
   EXPECT_EQ(0, h1);
 
-  free_aligned_buffer_64(src_a);
-  free_aligned_buffer_64(src_b);
+  free_aligned_buffer_page_end(src_a);
+  free_aligned_buffer_page_end(src_b);
 }
 
-TEST_F(libyuvTest, SumSquareError) {
+TEST_F(LibYUVBaseTest, SumSquareError) {
   const int kMaxWidth = 4096 * 3;
-  align_buffer_64(src_a, kMaxWidth);
-  align_buffer_64(src_b, kMaxWidth);
+  align_buffer_page_end(src_a, kMaxWidth);
+  align_buffer_page_end(src_b, kMaxWidth);
   memset(src_a, 0, kMaxWidth);
   memset(src_b, 0, kMaxWidth);
 
@@ -200,34 +255,32 @@ TEST_F(libyuvTest, SumSquareError) {
 
   EXPECT_EQ(kMaxWidth * 3 * 3, err);
 
-  srandom(time(NULL));
-
   for (int i = 0; i < kMaxWidth; ++i) {
-    src_a[i] = (random() & 0xff);
-    src_b[i] = (random() & 0xff);
+    src_a[i] = (fastrand() & 0xff);
+    src_b[i] = (fastrand() & 0xff);
   }
 
-  MaskCpuFlags(0);
+  MaskCpuFlags(disable_cpu_flags_);
   uint64 c_err = ComputeSumSquareError(src_a, src_b, kMaxWidth);
 
-  MaskCpuFlags(-1);
+  MaskCpuFlags(benchmark_cpu_info_);
   uint64 opt_err = ComputeSumSquareError(src_a, src_b, kMaxWidth);
 
   EXPECT_EQ(c_err, opt_err);
 
-  free_aligned_buffer_64(src_a);
-  free_aligned_buffer_64(src_b);
+  free_aligned_buffer_page_end(src_a);
+  free_aligned_buffer_page_end(src_b);
 }
 
-TEST_F(libyuvTest, BenchmarkPsnr_Opt) {
-  align_buffer_64(src_a, benchmark_width_ * benchmark_height_);
-  align_buffer_64(src_b, benchmark_width_ * benchmark_height_);
+TEST_F(LibYUVBaseTest, BenchmarkPsnr_Opt) {
+  align_buffer_page_end(src_a, benchmark_width_ * benchmark_height_);
+  align_buffer_page_end(src_b, benchmark_width_ * benchmark_height_);
   for (int i = 0; i < benchmark_width_ * benchmark_height_; ++i) {
     src_a[i] = i;
     src_b[i] = i;
   }
 
-  MaskCpuFlags(-1);
+  MaskCpuFlags(benchmark_cpu_info_);
 
   double opt_time = get_time();
   for (int i = 0; i < benchmark_iterations_; ++i)
@@ -240,18 +293,43 @@ TEST_F(libyuvTest, BenchmarkPsnr_Opt) {
 
   EXPECT_EQ(0, 0);
 
-  free_aligned_buffer_64(src_a);
-  free_aligned_buffer_64(src_b);
+  free_aligned_buffer_page_end(src_a);
+  free_aligned_buffer_page_end(src_b);
 }
 
-TEST_F(libyuvTest, Psnr) {
+TEST_F(LibYUVBaseTest, BenchmarkPsnr_Unaligned) {
+  align_buffer_page_end(src_a, benchmark_width_ * benchmark_height_ + 1);
+  align_buffer_page_end(src_b, benchmark_width_ * benchmark_height_);
+  for (int i = 0; i < benchmark_width_ * benchmark_height_; ++i) {
+    src_a[i + 1] = i;
+    src_b[i] = i;
+  }
+
+  MaskCpuFlags(benchmark_cpu_info_);
+
+  double opt_time = get_time();
+  for (int i = 0; i < benchmark_iterations_; ++i)
+    CalcFramePsnr(src_a + 1, benchmark_width_,
+                  src_b, benchmark_width_,
+                  benchmark_width_, benchmark_height_);
+
+  opt_time = (get_time() - opt_time) / benchmark_iterations_;
+  printf("BenchmarkPsnr_Opt - %8.2f us opt\n", opt_time * 1e6);
+
+  EXPECT_EQ(0, 0);
+
+  free_aligned_buffer_page_end(src_a);
+  free_aligned_buffer_page_end(src_b);
+}
+
+TEST_F(LibYUVBaseTest, Psnr) {
   const int kSrcWidth = benchmark_width_;
   const int kSrcHeight = benchmark_height_;
   const int b = 128;
   const int kSrcPlaneSize = (kSrcWidth + b * 2) * (kSrcHeight + b * 2);
   const int kSrcStride = 2 * b + kSrcWidth;
-  align_buffer_64(src_a, kSrcPlaneSize);
-  align_buffer_64(src_b, kSrcPlaneSize);
+  align_buffer_page_end(src_a, kSrcPlaneSize);
+  align_buffer_page_end(src_b, kSrcPlaneSize);
   memset(src_a, 0, kSrcPlaneSize);
   memset(src_b, 0, kSrcPlaneSize);
 
@@ -292,26 +370,24 @@ TEST_F(libyuvTest, Psnr) {
     EXPECT_LT(err, 6.0);
   }
 
-  srandom(time(NULL));
-
   memset(src_a, 0, kSrcPlaneSize);
   memset(src_b, 0, kSrcPlaneSize);
 
   for (int i = b; i < (kSrcHeight + b); ++i) {
     for (int j = b; j < (kSrcWidth + b); ++j) {
-      src_a[(i * kSrcStride) + j] = (random() & 0xff);
-      src_b[(i * kSrcStride) + j] = (random() & 0xff);
+      src_a[(i * kSrcStride) + j] = (fastrand() & 0xff);
+      src_b[(i * kSrcStride) + j] = (fastrand() & 0xff);
     }
   }
 
-  MaskCpuFlags(0);
+  MaskCpuFlags(disable_cpu_flags_);
   double c_err, opt_err;
 
   c_err = CalcFramePsnr(src_a + kSrcStride * b + b, kSrcStride,
                         src_b + kSrcStride * b + b, kSrcStride,
                         kSrcWidth, kSrcHeight);
 
-  MaskCpuFlags(-1);
+  MaskCpuFlags(benchmark_cpu_info_);
 
   opt_err = CalcFramePsnr(src_a + kSrcStride * b + b, kSrcStride,
                           src_b + kSrcStride * b + b, kSrcStride,
@@ -319,19 +395,19 @@ TEST_F(libyuvTest, Psnr) {
 
   EXPECT_EQ(opt_err, c_err);
 
-  free_aligned_buffer_64(src_a);
-  free_aligned_buffer_64(src_b);
+  free_aligned_buffer_page_end(src_a);
+  free_aligned_buffer_page_end(src_b);
 }
 
-TEST_F(libyuvTest, DISABLED_BenchmarkSsim_Opt) {
-  align_buffer_64(src_a, benchmark_width_ * benchmark_height_);
-  align_buffer_64(src_b, benchmark_width_ * benchmark_height_);
+TEST_F(LibYUVBaseTest, DISABLED_BenchmarkSsim_Opt) {
+  align_buffer_page_end(src_a, benchmark_width_ * benchmark_height_);
+  align_buffer_page_end(src_b, benchmark_width_ * benchmark_height_);
   for (int i = 0; i < benchmark_width_ * benchmark_height_; ++i) {
     src_a[i] = i;
     src_b[i] = i;
   }
 
-  MaskCpuFlags(-1);
+  MaskCpuFlags(benchmark_cpu_info_);
 
   double opt_time = get_time();
   for (int i = 0; i < benchmark_iterations_; ++i)
@@ -344,18 +420,18 @@ TEST_F(libyuvTest, DISABLED_BenchmarkSsim_Opt) {
 
   EXPECT_EQ(0, 0);  // Pass if we get this far.
 
-  free_aligned_buffer_64(src_a);
-  free_aligned_buffer_64(src_b);
+  free_aligned_buffer_page_end(src_a);
+  free_aligned_buffer_page_end(src_b);
 }
 
-TEST_F(libyuvTest, Ssim) {
+TEST_F(LibYUVBaseTest, Ssim) {
   const int kSrcWidth = benchmark_width_;
   const int kSrcHeight = benchmark_height_;
   const int b = 128;
   const int kSrcPlaneSize = (kSrcWidth + b * 2) * (kSrcHeight + b * 2);
   const int kSrcStride = 2 * b + kSrcWidth;
-  align_buffer_64(src_a, kSrcPlaneSize);
-  align_buffer_64(src_b, kSrcPlaneSize);
+  align_buffer_page_end(src_a, kSrcPlaneSize);
+  align_buffer_page_end(src_b, kSrcPlaneSize);
   memset(src_a, 0, kSrcPlaneSize);
   memset(src_b, 0, kSrcPlaneSize);
 
@@ -406,22 +482,21 @@ TEST_F(libyuvTest, Ssim) {
     EXPECT_LT(err, 0.01);
   }
 
-  srandom(time(NULL));
   for (int i = b; i < (kSrcHeight + b); ++i) {
     for (int j = b; j < (kSrcWidth + b); ++j) {
-      src_a[(i * kSrcStride) + j] = (random() & 0xff);
-      src_b[(i * kSrcStride) + j] = (random() & 0xff);
+      src_a[(i * kSrcStride) + j] = (fastrand() & 0xff);
+      src_b[(i * kSrcStride) + j] = (fastrand() & 0xff);
     }
   }
 
-  MaskCpuFlags(0);
+  MaskCpuFlags(disable_cpu_flags_);
   double c_err, opt_err;
 
   c_err = CalcFrameSsim(src_a + kSrcStride * b + b, kSrcStride,
                         src_b + kSrcStride * b + b, kSrcStride,
                         kSrcWidth, kSrcHeight);
 
-  MaskCpuFlags(-1);
+  MaskCpuFlags(benchmark_cpu_info_);
 
   opt_err = CalcFrameSsim(src_a + kSrcStride * b + b, kSrcStride,
                           src_b + kSrcStride * b + b, kSrcStride,
@@ -431,8 +506,8 @@ TEST_F(libyuvTest, Ssim) {
     EXPECT_EQ(opt_err, c_err);
   }
 
-  free_aligned_buffer_64(src_a);
-  free_aligned_buffer_64(src_b);
+  free_aligned_buffer_page_end(src_a);
+  free_aligned_buffer_page_end(src_b);
 }
 
 }  // namespace libyuv

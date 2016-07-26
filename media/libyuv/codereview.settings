@@ -1,9 +1,10 @@
 # This file is used by gcl to get repository specific information.
-# The LibYuv code review is via WebRtc's code review
-CODE_REVIEW_SERVER: webrtc-codereview.appspot.com
+CODE_REVIEW_SERVER: codereview.chromium.org
 #CC_LIST:
-VIEW_VC: https://code.google.com/p/libyuv/source/detail?r=
+VIEW_VC: https://chromium.googlesource.com/libyuv/libyuv/+/
 #STATUS:
+FORCE_HTTPS_COMMIT_URL: True
+PROJECT: libyuv
 TRY_ON_UPLOAD: False
 TRYSERVER_ROOT: src
 TRYSERVER_SVN_URL: svn://svn.chromium.org/chrome-try/try-libyuv
