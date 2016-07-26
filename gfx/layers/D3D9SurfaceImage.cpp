@@ -49,14 +49,14 @@ D3D9SurfaceImage::AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
   hr = d3d9->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT,
                                          D3DDEVTYPE_HAL,
                                          desc.Format,
-                                         D3DFMT_X8R8G8B8);
+                                         D3DFMT_A8R8G8B8);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   // DXVA surfaces aren't created sharable, so we need to copy the surface
   // to a sharable texture to that it's accessible to the layer manager's
   // device.
   RefPtr<TextureClient> textureClient =
-    aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8X8, aRegion.Size());
+    aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, aRegion.Size());
   if (!textureClient) {
     return E_FAIL;
   }
@@ -133,7 +133,7 @@ D3D9SurfaceImage::GetAsSourceSurface()
   RefPtr<IDirect3DSurface9> systemMemorySurface;
   hr = device->CreateOffscreenPlainSurface(mSize.width,
                                            mSize.height,
-                                           D3DFMT_X8R8G8B8,
+                                           D3DFMT_A8R8G8B8,
                                            D3DPOOL_SYSTEMMEM,
                                            getter_AddRefs(systemMemorySurface),
                                            0);

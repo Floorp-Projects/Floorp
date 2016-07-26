@@ -1401,6 +1401,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute jsval supportsHardwareH264Decoding;
 
   /**
+   * Returns the current audio backend as a free-form string.
+   */
+  readonly attribute AString currentAudioBackend;
+
+  /**
    * Record (and return) frame-intervals for frames which were presented
    *   between calling StartFrameTimeRecording and StopFrameTimeRecording.
    *

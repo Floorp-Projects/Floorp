@@ -12,7 +12,7 @@ const PREF_SIGNATURE_ROOT = "security.content.signature.root_hash";
 const TEST_DATA_DIR = "test_content_signing/";
 
 const ONECRL_NAME = "oneCRL-signer.mozilla.org";
-const ABOUT_NEWTAB_NAME = "remote-newtab-signer.mozilla.org";
+const ABOUT_NEWTAB_NAME = "remotenewtab.content-signature.mozilla.org";
 
 function getSignatureVerifier() {
   return Cc["@mozilla.org/security/contentsignatureverifier;1"]

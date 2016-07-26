@@ -133,6 +133,10 @@ menulist[editable="true"] > menupopup {
   -moz-appearance: none;
 }
 
-menulist[editable="true"] > menupopup > .popup-internal-box {
+menulist > menupopup > .popup-internal-box {
   padding: 0;
+}
+
+menulist:not([editable="true"]) > menupopup {
+  padding: 4px 0;
 }

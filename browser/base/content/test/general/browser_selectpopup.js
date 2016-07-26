@@ -368,6 +368,7 @@ add_task(function* test_large_popup() {
       select.add(new content.Option("Test" + i));
     }
 
+    select.options[60].selected = true;
     select.focus();
   });
 
@@ -387,6 +388,16 @@ add_task(function* test_large_popup() {
     let rect = selectPopup.getBoundingClientRect();
     ok(rect.top >= browserRect.top, "Popup top position in within browser area");
     ok(rect.bottom <= browserRect.bottom, "Popup bottom position in within browser area");
+
+    // Don't check the scroll position for the last step as the popup will be cut off.
+    if (positions.length == 1) {
+      let cs = window.getComputedStyle(selectPopup);
+      let bpBottom = parseFloat(cs.paddingBottom) + parseFloat(cs.borderBottomWidth);
+
+      is(selectPopup.childNodes[60].getBoundingClientRect().bottom,
+         selectPopup.getBoundingClientRect().bottom - bpBottom,
+         "Popup scroll at correct position " + bpBottom);
+    }
 
     yield hideSelectPopup(selectPopup, false);
 

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+/home/worker/bin/run-wizard;
+
+SPAWN="$SHELL";
+
+if [ "$SHELL" = "bash" ]; then
+  SPAWN="bash -li";
+fi;
+
+exec $SPAWN;

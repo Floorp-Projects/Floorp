@@ -55,6 +55,21 @@
   </menupopup>
 </menulist>
 
+<menulist id="menulist4">
+  <menupopup id="menulist-popup4">
+    <label value="One"/>
+    <menuitem label="Two"/>
+    <menuitem label="Three"/>
+    <menuitem label="Four"/>
+    <menuitem label="Five"/>
+    <menuitem label="Six" selected="true"/>
+    <menuitem label="Seven"/>
+    <menuitem label="Eight"/>
+    <menuitem label="Nine"/>
+    <label value="Ten"/>
+  </menupopup>
+</menulist>
+
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
@@ -65,13 +80,20 @@ let test;
 // Windows allows disabled items to be selected.
 let isWindows = navigator.platform.indexOf("Win") >= 0;
 
+// Fields:
+//  list - menulist id
+//  initial - initial selected index
+//  scroll - index of item at top of the visible scrolled area, -1 to skip this test
+//  downs - array of indicies that will be selected when pressing down in sequence
+//  ups - array of indicies that will be selected when pressing up in sequence
 let tests = [
-  { list: "menulist1", initial: 0, downs: [3, 6, 9, 9],
+  { list: "menulist1", initial: 0, scroll: 0, downs: [3, 6, 9, 9],
                                    ups: [6, 3, 0, 0] },
-  { list: "menulist2", initial: 1, downs: [4, 7, isWindows ? 9 : 8, isWindows ? 9 : 8],
+  { list: "menulist2", initial: 1, scroll: 0, downs: [4, 7, isWindows ? 9 : 8, isWindows ? 9 : 8],
                                    ups: [isWindows ? 6 : 5, isWindows ? 3 : 2, isWindows ? 0 : 1] },
-  { list: "menulist3", initial: 1, downs: [isWindows ? 4 : 6, isWindows ? 7 : 8, 8],
-                                   ups: [isWindows ? 5 : 3, isWindows ? 2 : 1, 1] }
+  { list: "menulist3", initial: 1, scroll: -1, downs: [isWindows ? 4 : 6, isWindows ? 7 : 8, 8],
+                                   ups: [isWindows ? 5 : 3, isWindows ? 2 : 1, 1] },
+  { list: "menulist4", initial: 5, scroll: 2, downs: [], ups: [] }
 ];
 
 function startTest()
@@ -86,6 +108,7 @@ function startTest()
   popup.height = height;
   document.getElementById("menulist-popup2").height = height;
   document.getElementById("menulist-popup3").height = height;
+  document.getElementById("menulist-popup4").height = height;
 
   runTest();
 }
@@ -105,6 +128,16 @@ function menulistShown()
 {
   let menulist = document.getElementById(test.list);
   is(menulist.menuBoxObject.activeChild.label, menulist.getItemAtIndex(test.initial).label, test.list + " initial selection");
+
+  let cs = window.getComputedStyle(menulist.menupopup);
+  let bpTop = parseFloat(cs.paddingTop) + parseFloat(cs.borderTopWidth);
+
+  // Skip menulist3 as it has a label that scrolling doesn't need normally deal with.
+  if (test.scroll >= 0) {
+    is(menulist.menupopup.childNodes[test.scroll].getBoundingClientRect().top,
+       menulist.menupopup.getBoundingClientRect().top + bpTop,
+       "Popup scroll at correct position");
+  }
 
   for (let i = 0; i < test.downs.length; i++) {
     sendKey("PAGE_DOWN");

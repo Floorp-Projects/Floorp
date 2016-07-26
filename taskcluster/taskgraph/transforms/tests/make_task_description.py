@@ -126,6 +126,7 @@ def docker_worker_setup(config, test, taskdesc):
 
     taskdesc['worker-type'] = {
         'default': 'aws-provisioner-v1/desktop-test',
+        'large': 'aws-provisioner-v1/desktop-test-large',
         'xlarge': 'aws-provisioner-v1/desktop-test-xlarge',
     }[test['instance-size']]
 

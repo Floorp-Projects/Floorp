@@ -261,7 +261,8 @@ partial interface Document {
 
 //http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html#dfn-document-register
 partial interface Document {
-    [Throws, Func="nsDocument::IsWebComponentsEnabled"]
+    // this is deprecated from CustomElements v0
+    [Throws, Func="CustomElementsRegistry::IsCustomElementsEnabled"]
     object registerElement(DOMString name, optional ElementRegistrationOptions options);
 };
 

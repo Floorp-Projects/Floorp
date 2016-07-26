@@ -576,6 +576,12 @@ nsHostObjectProtocolHandler::RemoveDataEntries()
   gDataTable = nullptr;
 }
 
+/* static */ bool
+nsHostObjectProtocolHandler::HasDataEntry(const nsACString& aUri)
+{
+  return !!GetDataInfo(aUri);
+}
+
 nsresult
 nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
                                                nsIPrincipal* aPrincipal,

@@ -96,6 +96,9 @@ class FunctionCompiler
 
     FuncCompileResults&        compileResults_;
 
+    // TLS pointer argument to the current function.
+    MAsmJSParameter*           tlsPointer_;
+
   public:
     FunctionCompiler(const ModuleGeneratorData& mg,
                      Decoder& decoder,
@@ -117,7 +120,8 @@ class FunctionCompiler
         maxStackArgBytes_(0),
         loopDepth_(0),
         blockDepth_(0),
-        compileResults_(compileResults)
+        compileResults_(compileResults),
+        tlsPointer_(nullptr)
     {}
 
     const ModuleGeneratorData& mg() const    { return mg_; }
@@ -144,6 +148,12 @@ class FunctionCompiler
             if (!mirGen_.ensureBallast())
                 return false;
         }
+
+        // Set up a parameter that receives the hidden TLS pointer argument.
+        tlsPointer_ = MAsmJSParameter::New(alloc(), ABIArg(WasmTlsReg), MIRType::Pointer);
+        curBlock_->add(tlsPointer_);
+        if (!mirGen_.ensureBallast())
+            return false;
 
         for (size_t i = args.length(); i < locals_.length(); i++) {
             MInstruction* ins = nullptr;
@@ -780,6 +790,7 @@ class FunctionCompiler
         MAsmJSCall::Args regArgs_;
         Vector<MAsmJSPassStackArg*, 0, SystemAllocPolicy> stackArgs_;
         bool childClobbers_;
+        bool preservesTlsReg_;
 
         friend class FunctionCompiler;
 
@@ -788,7 +799,8 @@ class FunctionCompiler
           : lineOrBytecode_(lineOrBytecode),
             maxChildStackBytes_(0),
             spIncrement_(0),
-            childClobbers_(false)
+            childClobbers_(false),
+            preservesTlsReg_(false)
         { }
     };
 
@@ -811,6 +823,16 @@ class FunctionCompiler
         auto* mir = MAsmJSPassStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
         curBlock_->add(mir);
         return args->stackArgs_.append(mir);
+    }
+
+    // Add the hidden TLS pointer argument to CallArgs, and assume that it will
+    // be preserved by the call.
+    bool passTlsPointer(CallArgs* args)
+    {
+        if (inDeadCode())
+            return true;
+        args->preservesTlsReg_ = true;
+        return args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_));
     }
 
     void propagateMaxStackArgBytes(uint32_t stackBytes)
@@ -867,8 +889,9 @@ class FunctionCompiler
           case MAsmJSCall::Callee::Builtin:  kind = CallSiteDesc::Register; break;
         }
 
-        MAsmJSCall* ins = MAsmJSCall::New(alloc(), CallSiteDesc(args.lineOrBytecode_, kind),
-                                          callee, args.regArgs_, ToMIRType(ret), args.spIncrement_);
+        MAsmJSCall* ins =
+          MAsmJSCall::New(alloc(), CallSiteDesc(args.lineOrBytecode_, kind), callee, args.regArgs_,
+                          ToMIRType(ret), args.spIncrement_, args.preservesTlsReg_);
         if (!ins)
             return false;
 
@@ -939,7 +962,8 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return;
-        MAsmJSReturn* ins = MAsmJSReturn::New(alloc(), expr);
+
+        MAsmJSReturn* ins = MAsmJSReturn::New(alloc(), expr, tlsPointer_);
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }
@@ -948,7 +972,8 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return;
-        MAsmJSVoidReturn* ins = MAsmJSVoidReturn::New(alloc());
+
+        MAsmJSVoidReturn* ins = MAsmJSVoidReturn::New(alloc(), tlsPointer_);
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }
@@ -1656,8 +1681,16 @@ EmitReturn(FunctionCompiler& f)
     return true;
 }
 
+// Is a callee within the same module instance?
+enum class IntraModule
+{
+    False,
+    True
+};
+
 static bool
-EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::CallArgs* args)
+EmitCallArgs(FunctionCompiler& f, const Sig& sig, IntraModule intraModule,
+             FunctionCompiler::CallArgs* args)
 {
     if (!f.startCallArgs(args))
         return false;
@@ -1676,6 +1709,11 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::CallArgs* ar
     if (!f.iter().readCallArgsEnd(numArgs))
         return false;
 
+    // Calls within the module pass the module's TLS pointer.
+    // Calls to other modules go through stubs that set up their TLS pointers.
+    if (intraModule == IntraModule::True)
+        f.passTlsPointer(args);
+
     f.finishCallArgs(args);
     return true;
 }
@@ -1693,7 +1731,7 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = *f.mg().funcSigs[calleeIndex];
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &args))
+    if (!EmitCallArgs(f, sig, IntraModule::True, &args))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
@@ -1723,7 +1761,7 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = f.mg().sigs[sigIndex];
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &args))
+    if (!EmitCallArgs(f, sig, IntraModule::True, &args))
         return false;
 
     MDefinition* callee;
@@ -1762,7 +1800,7 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = *funcImport.sig;
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &args))
+    if (!EmitCallArgs(f, sig, IntraModule::False, &args))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
