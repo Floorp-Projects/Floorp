@@ -16,7 +16,6 @@ config = {
         "ac_add_options --with-branding=mobile/android/branding/beta",
         "ac_add_options --with-branding=mobile/android/branding/official")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
-                  "mobile/android/config/mozconfigs/android-api-9-10-constrained/",
                   "mobile/android/config/mozconfigs/android-x86/"]
         for f in ["debug", "nightly", "l10n-nightly", "l10n-release", "release"]
     ] + [
@@ -29,7 +28,6 @@ config = {
          "MAR_CHANNEL_ID=firefox-mozilla-release"),
     ],
 
-    "use_vcs_unique_share": True,
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     # "hg_share_base": None,
     "tools_repo_url": "https://hg.mozilla.org/build/tools",

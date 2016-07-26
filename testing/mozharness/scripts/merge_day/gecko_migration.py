@@ -156,6 +156,11 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                     "branch": self.config.get("%s_repo_branch" % (k,), "default"),
                     "dest": dirs['abs_%s_dir' % k],
                     "vcs": "hg",
+                    # "hg" vcs uses robustcheckout extension requires the use of a share
+                    # but having a share breaks migration logic when merging repos.
+                    # Solution: tell hg vcs to create a unique share directory for each
+                    # gecko repo. see mozharness/base/vcs/mercurial.py for implementation
+                    "use_vcs_unique_share": True,
                 })
             else:
                 self.warning("Skipping %s" % repo_key)
@@ -177,7 +182,11 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         return dirs.get('abs_from_dir'), dirs.get('abs_to_dir')
 
     def query_push_args(self, cwd):
-        return ['-r', '.']
+        if cwd == self.query_abs_dirs()['abs_to_dir'] and \
+                self.config['migration_behavior'] == 'beta_to_release':
+            return ['--new-branch', '-r', '.']
+        else:
+            return ['-r', '.']
 
     def query_from_revision(self):
         """ Shortcut to get the revision for the from repo

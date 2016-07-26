@@ -23,16 +23,21 @@ task:
     - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}'
     - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}'
   scopes:
-    # Nearly all of our build tasks use tc-vcs so just include the scope across
-    # the board.
-    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
+    - 'docker-worker:cache:level-{{level}}-hg-shared'
+    - 'docker-worker:cache:level-{{level}}-workspace'
 
   payload:
     # Thirty minutes should be enough for lint checks
     maxRunTime: 1800
 
     cache:
-      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
+      level-{{level}}-hg-shared: '/home/worker/hg-shared'
+      level-{{level}}-workspace: '/home/worker/workspace'
+
+    env:
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
 
   extra:
     build_product: '{{build_product}}'

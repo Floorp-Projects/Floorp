@@ -220,7 +220,7 @@ public:
   virtual double GetDuration();
 
   // Return true if the stream is infinite (see SetInfinite).
-  virtual bool IsInfinite();
+  bool IsInfinite() const;
 
   // Called by MediaResource when some data has been received.
   // Call on the main thread only.
@@ -232,12 +232,12 @@ public:
 
   // Return true if we are currently seeking in the media resource.
   // Call on the main thread only.
-  virtual bool IsSeeking() const;
+  bool IsSeeking() const;
 
   // Return true if the decoder has reached the end of playback or the decoder
   // has shutdown.
   // Call on the main thread only.
-  virtual bool IsEndedOrShutdown() const;
+  bool IsEndedOrShutdown() const;
 
   // Return true if the MediaDecoderOwner's error attribute is not null.
   // If the MediaDecoder is shutting down, OwnerHasError will return true.
@@ -493,7 +493,7 @@ private:
   void UpdateReadyState()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if (!mShuttingDown) {
+    if (!IsShutdown()) {
       mOwner->UpdateReadyState();
     }
   }
@@ -527,6 +527,8 @@ protected:
 
   // Return true if the decoder has reached the end of playback
   bool IsEnded() const;
+
+  bool IsShutdown() const;
 
   // Called by the state machine to notify the decoder that the duration
   // has changed.
@@ -682,12 +684,6 @@ protected:
   // while seeking.
   bool mPinnedForSeek;
 
-  // True if the decoder is being shutdown. At this point all events that
-  // are currently queued need to return immediately to prevent javascript
-  // being run that operates on the element and decoder during shutdown.
-  // Read/Write from the main thread only.
-  bool mShuttingDown;
-
   // True if the playback is paused because the playback rate member is 0.0.
   bool mPausedForPlaybackRateNull;
 
@@ -714,12 +710,6 @@ protected:
 
   // True if MediaDecoder is in dormant state.
   bool mIsDormant;
-
-  // True if MediaDecoder was PLAY_STATE_ENDED state, when entering to dormant.
-  // When MediaCodec is in dormant during PLAY_STATE_ENDED state, PlayState
-  // becomes different from PLAY_STATE_ENDED. But the MediaDecoder need to act
-  // as in PLAY_STATE_ENDED state to MediaDecoderOwner.
-  bool mWasEndedWhenEnteredDormant;
 
   // True if heuristic dormant is supported.
   const bool mIsHeuristicDormantSupported;

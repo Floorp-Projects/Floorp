@@ -66,33 +66,14 @@ tasks:
         env:
           # checkout-gecko uses these to check out the source; the inputs
           # to `mach taskgraph decision` are all on the command line.
-          GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
+          GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-unified'
           GECKO_HEAD_REPOSITORY: '{{{url}}}'
           GECKO_HEAD_REF: '{{revision}}'
           GECKO_HEAD_REV: '{{revision}}'
-
-        cache:
-          level-{{level}}-{{project}}-tc-vcs-public-sources: /home/worker/.tc-vcs/
-          level-{{level}}-{{project}}-gecko-decision: /home/worker/workspace
-
-        features:
-          taskclusterProxy: true
-
-        # Note: This task is built server side without the context or tooling that
-        # exist in tree so we must hard code the version
-        image: 'taskcluster/decision:0.1.0'
-
-        maxRunTime: 1800
-
-        command:
-          - /bin/bash
-          - -cx
-          - >
-            mkdir -p /home/worker/artifacts &&
-            checkout-gecko workspace &&
-            cd workspace/gecko &&
-            ln -s /home/worker/artifacts artifacts &&
-            ./mach taskgraph decision
+          # Arguments passed into `mach taskgraph decision`
+          # TODO use mozilla-unified for the base repository once the tc-vcs
+          # tar.gz archives are created or tc-vcs isn't being used.
+          DECISION_ARGS: >
             --pushlog-id='{{pushlog_id}}'
             --project='{{project}}'
             --message='{{comment}}'
@@ -103,6 +84,22 @@ tasks:
             --head-ref='{{revision}}'
             --head-rev='{{revision}}'
             --revision-hash='{{revision_hash}}'
+
+        cache:
+          level-{{level}}-hg-shared: /home/worker/hg-shared
+          level-{{level}}-{{project}}-gecko-decision: /home/worker/workspace
+
+        features:
+          taskclusterProxy: true
+
+        # Note: This task is built server side without the context or tooling that
+        # exist in tree so we must hard code the version
+        image: 'taskcluster/decision:0.1.2'
+
+        maxRunTime: 1800
+
+        command:
+          - /home/worker/bin/run-decision
 
         artifacts:
           'public':

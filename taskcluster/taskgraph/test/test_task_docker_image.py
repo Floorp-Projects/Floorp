@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
-import tempfile
 import os
 
 from ..task import docker_image
@@ -31,12 +30,6 @@ class TestDockerImageKind(unittest.TestCase):
 
     # TODO: optimize_task
 
-    def test_create_context_tar(self):
-        image_dir = os.path.join(docker_image.GECKO, 'testing', 'docker', 'image_builder')
-        tarball = tempfile.mkstemp()[1]
-        self.task.create_context_tar(image_dir, tarball, 'image_builder')
-        self.failUnless(os.path.exists(tarball))
-        os.unlink(tarball)
 
 if __name__ == '__main__':
     main()
