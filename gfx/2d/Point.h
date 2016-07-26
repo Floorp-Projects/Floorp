@@ -60,6 +60,9 @@ struct IntParam {
   T value;
 };
 
+template<class units, class> struct PointTyped;
+template<class units, class> struct SizeTyped;
+
 template<class units>
 struct IntPointTyped :
   public BasePoint< int32_t, IntPointTyped<units>, IntCoordTyped<units> >,
@@ -89,6 +92,11 @@ struct IntPointTyped :
   static IntPointTyped<units> Truncate(float aX, float aY) {
     return IntPointTyped(int32_t(aX), int32_t(aY));
   }
+
+  static IntPointTyped<units> Round(const PointTyped<units, float>& aPoint);
+  static IntPointTyped<units> Ceil(const PointTyped<units, float>& aPoint);
+  static IntPointTyped<units> Floor(const PointTyped<units, float>& aPoint);
+  static IntPointTyped<units> Truncate(const PointTyped<units, float>& aPoint);
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
@@ -171,6 +179,34 @@ struct Point3DTyped :
 typedef Point3DTyped<UnknownUnits> Point3D;
 typedef Point3DTyped<UnknownUnits, double> PointDouble3D;
 
+template<typename units>
+IntPointTyped<units>
+IntPointTyped<units>::Round(const PointTyped<units, float>& aPoint)
+{
+  return IntPointTyped::Round(aPoint.x, aPoint.y);
+}
+
+template<typename units>
+IntPointTyped<units>
+IntPointTyped<units>::Ceil(const PointTyped<units, float>& aPoint)
+{
+  return IntPointTyped::Ceil(aPoint.x, aPoint.y);
+}
+
+template<typename units>
+IntPointTyped<units>
+IntPointTyped<units>::Floor(const PointTyped<units, float>& aPoint)
+{
+  return IntPointTyped::Floor(aPoint.x, aPoint.y);
+}
+
+template<typename units>
+IntPointTyped<units>
+IntPointTyped<units>::Truncate(const PointTyped<units, float>& aPoint)
+{
+  return IntPointTyped::Truncate(aPoint.x, aPoint.y);
+}
+
 template<class units, class F = Float>
 struct Point4DTyped :
   public BasePoint4D< F, Point4DTyped<units, F> > {
@@ -229,6 +265,11 @@ struct IntSizeTyped :
     return IntSizeTyped(int32_t(floorf(aWidth)), int32_t(floorf(aHeight)));
   }
 
+  static IntSizeTyped<units> Round(const SizeTyped<units, float>& aSize);
+  static IntSizeTyped<units> Ceil(const SizeTyped<units, float>& aSize);
+  static IntSizeTyped<units> Floor(const SizeTyped<units, float>& aSize);
+  static IntSizeTyped<units> Truncate(const SizeTyped<units, float>& aSize);
+
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
 
@@ -274,6 +315,26 @@ template<class units>
 IntSizeTyped<units> RoundedToInt(const SizeTyped<units>& aSize) {
   return IntSizeTyped<units>(int32_t(floorf(aSize.width + 0.5f)),
                              int32_t(floorf(aSize.height + 0.5f)));
+}
+
+template<typename units> IntSizeTyped<units>
+IntSizeTyped<units>::Round(const SizeTyped<units, float>& aSize) {
+  return IntSizeTyped::Round(aSize.width, aSize.height);
+}
+
+template<typename units> IntSizeTyped<units>
+IntSizeTyped<units>::Ceil(const SizeTyped<units, float>& aSize) {
+  return IntSizeTyped::Ceil(aSize.width, aSize.height);
+}
+
+template<typename units> IntSizeTyped<units>
+IntSizeTyped<units>::Floor(const SizeTyped<units, float>& aSize) {
+  return IntSizeTyped::Floor(aSize.width, aSize.height);
+}
+
+template<typename units> IntSizeTyped<units>
+IntSizeTyped<units>::Truncate(const SizeTyped<units, float>& aSize) {
+  return IntSizeTyped::Truncate(aSize.width, aSize.height);
 }
 
 } // namespace gfx
