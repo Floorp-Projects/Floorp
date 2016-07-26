@@ -86,6 +86,10 @@ var AboutTabCrashed = {
         this.onClick(event);
         break;
       }
+      case "input": {
+        this.onInput(event);
+        break;
+      }
     }
   },
 
@@ -94,6 +98,9 @@ var AboutTabCrashed = {
       let el = document.getElementById(targetID);
       el.addEventListener("click", this);
     });
+
+    // For setting "emailMe" checkbox automatically on email value change.
+    document.getElementById("email").addEventListener("input", this);
 
     // Error pages are loaded as LOAD_BACKGROUND, so they don't get load events.
     let event = new CustomEvent("AboutTabCrashedLoad", {bubbles:true});
@@ -126,6 +133,14 @@ var AboutTabCrashed = {
     }
   },
 
+  onInput(event) {
+    switch(event.target.id) {
+      case "email": {
+        document.getElementById("emailMe").checked = !!event.target.value;
+        break;
+      }
+    }
+  },
   /**
    * After this page tells the parent that it has loaded, the parent
    * will respond with whether or not a crash report is available. This
