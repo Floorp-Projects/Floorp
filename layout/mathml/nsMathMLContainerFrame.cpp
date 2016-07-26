@@ -132,9 +132,9 @@ nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*               
                                                         const ReflowOutput& aReflowOutput,
                                                         const nsBoundingMetrics&   aBoundingMetrics)
 {
-  ReflowOutput *metrics = new ReflowOutput(aReflowOutput);
-  metrics->mBoundingMetrics = aBoundingMetrics;
-  aFrame->Properties().Set(HTMLReflowOutputProperty(), metrics);
+  ReflowOutput* reflowOutput = new ReflowOutput(aReflowOutput);
+  reflowOutput->mBoundingMetrics = aBoundingMetrics;
+  aFrame->Properties().Set(HTMLReflowOutputProperty(), reflowOutput);
 }
 
 // helper method to facilitate getting the reflow and bounding metrics
@@ -146,16 +146,16 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
 {
   NS_PRECONDITION(aFrame, "null arg");
 
-  ReflowOutput* metrics =
+  ReflowOutput* reflowOutput =
     aFrame->Properties().Get(HTMLReflowOutputProperty());
 
   // IMPORTANT: This function is only meant to be called in Place() methods
   // where it is assumed that SaveReflowAndBoundingMetricsFor has recorded the
   // information.
-  NS_ASSERTION(metrics, "Didn't SaveReflowAndBoundingMetricsFor frame!");
-  if (metrics) {
-    aReflowOutput = *metrics;
-    aBoundingMetrics = metrics->mBoundingMetrics;
+  NS_ASSERTION(reflowOutput, "Didn't SaveReflowAndBoundingMetricsFor frame!");
+  if (reflowOutput) {
+    aReflowOutput = *reflowOutput;
+    aBoundingMetrics = reflowOutput->mBoundingMetrics;
   }
 
   if (aMathMLFrameType) {
@@ -196,9 +196,9 @@ nsMathMLContainerFrame::GetPreferredStretchSize(DrawTarget*          aDrawTarget
   }
   else if (aOptions & STRETCH_CONSIDER_EMBELLISHMENTS) {
     // compute our up-to-date size using Place()
-    ReflowOutput metrics(GetWritingMode()); // ???
-    Place(aDrawTarget, false, metrics);
-    aPreferredStretchSize = metrics.mBoundingMetrics;
+    ReflowOutput reflowOutput(GetWritingMode());
+    Place(aDrawTarget, false, reflowOutput);
+    aPreferredStretchSize = reflowOutput.mBoundingMetrics;
   }
   else {
     // compute a size that includes embellishments iff the container stretches
