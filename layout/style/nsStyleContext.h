@@ -398,6 +398,17 @@ public:
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs);
 
+#ifdef MOZ_STYLO
+  /*
+   * Like the above, but does not require the new style context to exist yet.
+   * Servo uses this to compute change hints during parallel traversal.
+   */
+  nsChangeHint CalcStyleDifference(ServoComputedValues* aNewComputedValues,
+                                   nsChangeHint aParentHintsNotHandledForDescendants,
+                                   uint32_t* aEqualStructs,
+                                   uint32_t* aSamePointerStructs);
+#endif
+
 private:
   template<class StyleContextLike>
   nsChangeHint CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
