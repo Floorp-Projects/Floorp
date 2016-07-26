@@ -49,6 +49,7 @@ task:
       groupSymbol: tc
       groupName: Submitted by taskcluster for your pleasure
       symbol: H
+      tier: 1
       collection:
         debug: true
     # Rather then enforcing particular conventions we require that all build
