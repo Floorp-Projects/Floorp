@@ -459,21 +459,10 @@ def toolchain_search_path(vc_compiler_path):
     if vc_compiler_path:
         result = [os.environ.get('PATH')]
         result.extend(vc_compiler_path)
+        # We're going to alter PATH for good in windows.configure, but we also
+        # need to do it for the valid_compiler() check below.
+        os.environ['PATH'] = os.pathsep.join(result)
         return result
-
-
-# Normally, we'd just have CC, etc. set to absolute paths, but the build system
-# doesn't currently handle properly the case where the paths contain spaces.
-# Additionally, there's the issue described further below in valid_compiler().
-@depends(toolchain_search_path)
-@imports('os')
-def alter_path(toolchain_search_path):
-    if toolchain_search_path:
-        path = os.pathsep.join(toolchain_search_path)
-        os.environ['PATH'] = path
-        return path
-
-set_config('PATH', alter_path)
 
 
 @template
