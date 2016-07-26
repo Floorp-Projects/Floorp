@@ -80,6 +80,7 @@ devtools/client/commandline/**
 devtools/client/debugger/**
 devtools/client/eyedropper/**
 devtools/client/framework/**
+!devtools/client/framework/selection.js
 devtools/client/jsonview/lib/**
 devtools/client/memory/**
 devtools/client/netmonitor/test/**
