@@ -401,6 +401,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'health/HealthRecorder.java',
     'health/SessionInformation.java',
     'health/StubbedHealthRecorder.java',
+    'home/activitystream/ActivityStream.java',
     'home/BookmarkFolderView.java',
     'home/BookmarkScreenshotRow.java',
     'home/BookmarksListAdapter.java',
@@ -965,7 +966,8 @@ for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZ_DEBUG',
             'MOZ_ANDROID_DOWNLOADS_INTEGRATION', 'MOZ_INSTALL_TRACKING',
             'MOZ_ANDROID_GCM', 'MOZ_ANDROID_EXCLUDE_FONTS', 'MOZ_LOCALE_SWITCHER',
             'MOZ_ANDROID_BEAM', 'MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
-            'MOZ_SWITCHBOARD', 'MOZ_ANDROID_CUSTOM_TABS'):
+            'MOZ_SWITCHBOARD', 'MOZ_ANDROID_CUSTOM_TABS',
+            'MOZ_ANDROID_ACTIVITY_STREAM'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
