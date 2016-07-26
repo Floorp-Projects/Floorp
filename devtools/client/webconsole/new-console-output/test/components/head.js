@@ -29,7 +29,7 @@ let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 let React = browserRequire("devtools/client/shared/vendor/react");
 var TestUtils = React.addons.TestUtils;
 
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/stubs");
+const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
 
 // @TODO Remove this.
 let testCommands = new Map();

@@ -57,10 +57,12 @@ function timeit(cb) {
 }
 
 window.onload = Task.async(function* () {
-  const { store } = browserRequire("devtools/client/webconsole/new-console-output/store");
+  const { configureStore } = browserRequire("devtools/client/webconsole/new-console-output/store");
   const { messagesSearch, filtersClear } = browserRequire("devtools/client/webconsole/new-console-output/actions/messages");
   const NewConsoleOutputWrapper = browserRequire("devtools/client/webconsole/new-console-output/new-console-output-wrapper");
   const wrapper = new NewConsoleOutputWrapper(document.querySelector("#output"), {});
+
+  const store = configureStore();
 
   let time = yield timeit(() => {
     testPackets.forEach((message) => {
