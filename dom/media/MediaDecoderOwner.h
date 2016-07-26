@@ -57,8 +57,10 @@ public:
   // when it has read the first frame of the video or audio.
   virtual void FirstFrameLoaded() = 0;
 
-  // Called by the video decoder object, on the main thread,
+  // Called by the decoder object, on the main thread,
   // when the resource has a network error during loading.
+  // The decoder owner should call Shutdown() on the decoder and drop the
+  // reference to the decoder to prevent further calls into the decoder.
   virtual void NetworkError() = 0;
 
   // Called by the decoder object, on the main thread, when the
