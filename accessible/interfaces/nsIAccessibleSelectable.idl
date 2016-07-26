@@ -11,7 +11,7 @@ interface nsIArray;
 /**
  * An accessibility interface for selectable widgets.
  */
-[scriptable, uuid(8efb03d4-1354-4875-94cf-261336057626)]
+[scriptable, builtinclass, uuid(8efb03d4-1354-4875-94cf-261336057626)]
 interface nsIAccessibleSelectable : nsISupports
 {
   /**

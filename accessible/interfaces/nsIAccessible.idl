@@ -30,7 +30,7 @@ class Accessible;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(de2869d9-563c-4943-996b-31a4daa4d097)]
+[scriptable, builtinclass, uuid(de2869d9-563c-4943-996b-31a4daa4d097)]
 interface nsIAccessible : nsISupports
 {
   /**
