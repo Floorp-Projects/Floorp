@@ -127,6 +127,7 @@ interface IDBCursor {
     IDBRequest update (any value);
     void       advance ([EnforceRange] unsigned long count);
     void       continue (optional any key);
+    void       continuePrimaryKey(any key, any primaryKey);
     IDBRequest delete ();
 };
 
