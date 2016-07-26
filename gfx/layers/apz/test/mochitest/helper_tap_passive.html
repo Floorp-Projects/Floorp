@@ -12,12 +12,6 @@
 var touchdownTime;
 
 function longPressLink() {
-  if (!window.TouchEvent) {
-    ok(true, "Touch events are not supported on this platform, sorry!\n");
-    subtestDone();
-    return;
-  }
-
   synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
     dump("Finished synthesizing touch-start, waiting for events...\n");
   });
