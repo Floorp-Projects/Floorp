@@ -1081,7 +1081,7 @@ GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize, nsIAtom* aFrameTyp
 
   // Currently the only type of replaced frame that we can get the intrinsic
   // size for is an image frame
-  // XXX We should add back the GetReflowMetrics() function and one of the
+  // XXX We should add back the GetReflowOutput() function and one of the
   // things should be the intrinsic size...
   if (aFrameType == nsGkAtoms::imageFrame) {
     nsImageFrame* imageFrame = (nsImageFrame*)aFrame;
