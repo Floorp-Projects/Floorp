@@ -270,15 +270,8 @@ function getHost(uri, href) {
   } catch (ex) {}
   if (!host) {
     if (uri && uri.scheme.toLowerCase() == "about") {
-      // Special case-ing Loop/ Hello gUM requests.
-      if (uri.specIgnoringRef == "about:loopconversation") {
-        const kBundleURI = "chrome://browser/locale/loop/loop.properties";
-        let bundle = Services.strings.createBundle(kBundleURI);
-        host = bundle.GetStringFromName("clientShortname2");
-      } else {
-        // For other about URIs, just use the full spec, without any #hash parts.
-        host = uri.specIgnoringRef;
-      }
+      // For about URIs, just use the full spec, without any #hash parts.
+      host = uri.specIgnoringRef;
     } else {
       // This is unfortunate, but we should display *something*...
       const kBundleURI = "chrome://browser/locale/browser.properties";
