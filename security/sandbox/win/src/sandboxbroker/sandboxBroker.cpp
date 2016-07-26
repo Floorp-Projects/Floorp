@@ -188,10 +188,15 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "With these static arguments AddRule should never fail, what happened?");
 
-  // The content process needs to be able to duplicate shared memory to the
-  // broker process, which are Section type handles.
+  // The content process needs to be able to duplicate shared memory handles,
+  // which are Section handles, to the broker process and other child processes.
   result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
                             sandbox::TargetPolicy::HANDLES_DUP_BROKER,
+                            L"Section");
+  MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                     "With these static arguments AddRule should never fail, what happened?");
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
+                            sandbox::TargetPolicy::HANDLES_DUP_ANY,
                             L"Section");
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "With these static arguments AddRule should never fail, what happened?");

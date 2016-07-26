@@ -9,6 +9,7 @@ const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+const JSOL = require("devtools/client/shared/vendor/jsol");
 
 loader.lazyRequireGetter(this, "TreeWidget",
                          "devtools/client/shared/widgets/TreeWidget", true);
@@ -224,12 +225,15 @@ StorageUI.prototype = {
     return this.storageTypes[type];
   },
 
-  makeFieldsEditable: function* () {
-    let actor = this.getCurrentActor();
-
-    if (typeof actor.getEditableFields !== "undefined") {
-      let fields = yield actor.getEditableFields();
-      this.table.makeFieldsEditable(fields);
+  /**
+   *  Make column fields editable
+   *
+   *  @param {Array} editableFields
+   *         An array of keys of columns to be made editable
+   */
+  makeFieldsEditable: function* (editableFields) {
+    if (editableFields && editableFields.length > 0) {
+      this.table.makeFieldsEditable(editableFields);
     } else if (this.table._editableFieldsEngine) {
       this.table._editableFieldsEngine.destroy();
     }
@@ -485,11 +489,25 @@ StorageUI.prototype = {
     }
 
     try {
+      if (reason === REASON.POPULATE) {
+        let subType = null;
+        // The indexedDB type could have sub-type data to fetch.
+        // If having names specified, then it means
+        // we are fetching details of specific database or of object store.
+        if (type == "indexedDB" && names) {
+          let [ dbName, objectStoreName ] = JSON.parse(names[0]);
+          if (dbName) {
+            subType = "database";
+          }
+          if (objectStoreName) {
+            subType = "object store";
+          }
+        }
+        yield this.resetColumns(type, host, subType);
+      }
+
       let {data} = yield storageType.getStoreObjects(host, names, fetchOpts);
       if (data.length) {
-        if (reason === REASON.POPULATE) {
-          yield this.resetColumns(data[0], type, host);
-        }
         this.populateTable(data, reason);
       }
       this.emit("store-objects-updated");
@@ -618,7 +636,7 @@ StorageUI.prototype = {
   parseItemValue: function (name, value) {
     let json = null;
     try {
-      json = JSON.parse(value);
+      json = JSOL.parse(value);
     } catch (ex) {
       json = null;
     }
@@ -730,36 +748,46 @@ StorageUI.prototype = {
   /**
    * Resets the column headers in the storage table with the pased object `data`
    *
-   * @param {object} data
-   *        The object from which key and values will be used for naming the
-   *        headers of the columns
    * @param {string} type
    *        The type of storage corresponding to the after-reset columns in the
    *        table.
    * @param {string} host
    *        The host name corresponding to the table after reset.
+   *
+   * @param {string} [subType]
+   *        The sub type under the given type.
    */
-  resetColumns: function* (data, type, host) {
-    let columns = {};
+  resetColumns: function* (type, host, subtype) {
+    this.table.host = host;
+    this.table.datatype = type;
+
     let uniqueKey = null;
-    for (let key in data) {
+    let columns = {};
+    let editableFields = [];
+    let fields = yield this.getCurrentActor().getFields(subtype);
+
+    fields.forEach(f => {
       if (!uniqueKey) {
-        this.table.uniqueId = uniqueKey = key;
+        this.table.uniqueId = uniqueKey = f.name;
       }
-      columns[key] = key;
+
+      if (f.editable) {
+        editableFields.push(f.name);
+      }
+
+      columns[f.name] = f.name;
       try {
-        columns[key] = L10N.getStr("table.headers." + type + "." + key);
+        columns[f.name] = L10N.getStr("table.headers." + type + "." + f.name);
       } catch (e) {
         console.error("Unable to localize table header type:" + type +
-                      " key:" + key);
+                      " key:" + f.name);
       }
-    }
+    });
+
     this.table.setColumns(columns, null, HIDDEN_COLUMNS);
-    this.table.datatype = type;
-    this.table.host = host;
     this.hideSidebar();
 
-    yield this.makeFieldsEditable();
+    yield this.makeFieldsEditable(editableFields);
   },
 
   /**

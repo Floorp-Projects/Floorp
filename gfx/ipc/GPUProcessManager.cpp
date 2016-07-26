@@ -21,6 +21,7 @@
 #include "VRManagerParent.h"
 #include "VsyncBridgeChild.h"
 #include "VsyncIOThreadHolder.h"
+#include "VsyncSource.h"
 
 namespace mozilla {
 namespace gfx {
@@ -352,9 +353,13 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
   CompositorWidgetInitData initData;
   aWidget->GetCompositorWidgetInitData(&initData);
 
+  TimeDuration vsyncRate =
+    gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().GetVsyncRate();
+
   bool ok = mGPUChild->SendNewWidgetCompositor(
     Move(parentPipe),
     aScale,
+    vsyncRate,
     aUseExternalSurfaceSize,
     aSurfaceSize);
   if (!ok) {

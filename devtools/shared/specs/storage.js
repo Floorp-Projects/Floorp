@@ -18,6 +18,14 @@ function createStorageSpec(options) {
         options: Arg(2, "nullable:json")
       },
       response: RetVal(options.storeObjectType)
+    },
+    getFields: {
+      request: {
+        subType: Arg(0, "nullable:string")
+      },
+      response: {
+        value: RetVal("json")
+      }
     }
   };
 
