@@ -33,6 +33,7 @@ task:
       machine:
         # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
         platform: linux64
+      tier: 1
     # Rather then enforcing particular conventions we require that all build
     # tasks provide the "build" extra field to specify where the build and tests
     # files are located.
