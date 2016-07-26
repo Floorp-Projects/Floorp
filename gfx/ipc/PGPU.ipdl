@@ -8,6 +8,7 @@ include protocol PImageBridge;
 include protocol PVRManager;
 include protocol PVsyncBridge;
 
+using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 
@@ -42,6 +43,7 @@ parent:
   // Create a new top-level compositor.
   async NewWidgetCompositor(Endpoint<PCompositorBridgeParent> endpoint,
                             CSSToLayoutDeviceScale scale,
+                            TimeDuration vsyncRate,
                             bool useExternalSurface,
                             IntSize surfaceSize);
 
