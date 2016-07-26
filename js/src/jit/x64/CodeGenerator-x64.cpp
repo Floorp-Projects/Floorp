@@ -1212,6 +1212,15 @@ CodeGeneratorX64::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 }
 
 void
+CodeGeneratorX64::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
+{
+    MWasmLoadGlobalVar* mir = ins->mir();
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+    CodeOffset label = masm.loadRipRelativeInt64(ToRegister(ins->output()));
+    masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
+}
+
+void
 CodeGeneratorX64::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 {
     MWasmStoreGlobalVar* mir = ins->mir();
@@ -1243,6 +1252,16 @@ CodeGeneratorX64::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
         MOZ_CRASH("unexpected type in visitWasmStoreGlobalVar");
     }
 
+    masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
+}
+
+void
+CodeGeneratorX64::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
+{
+    MWasmStoreGlobalVar* mir = ins->mir();
+    MOZ_ASSERT(mir->value()->type() == MIRType::Int64);
+    Register value = ToRegister(ins->getOperand(LWasmStoreGlobalVarI64::InputIndex));
+    CodeOffset label = masm.storeRipRelativeInt64(value);
     masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
 }
 

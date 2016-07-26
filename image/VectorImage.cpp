@@ -1302,7 +1302,7 @@ VectorImage::OptimalImageSizeForDest(const gfxSize& aDest,
              "Unexpected destination size");
 
   // We can rescale SVGs freely, so just return the provided destination size.
-  return nsIntSize(ceil(aDest.width), ceil(aDest.height));
+  return nsIntSize::Ceil(aDest.width, aDest.height);
 }
 
 already_AddRefed<imgIContainer>

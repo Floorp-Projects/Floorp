@@ -307,8 +307,8 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
       return;
     }
 
-    dt = destDT->CreateSimilarDrawTarget(IntSize(ceil(destRect.width),
-                                                 ceil(destRect.height)),
+    dt = destDT->CreateSimilarDrawTarget(IntSize::Ceil(destRect.width,
+                                                       destRect.height),
                                          SurfaceFormat::B8G8R8A8);
     if (dt && dt->IsValid()) {
       RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);

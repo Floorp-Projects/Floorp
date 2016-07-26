@@ -36,7 +36,7 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
       : SurfaceFormat::B8G8R8A8;
 
   RefPtr<DataSourceSurface> dataSurface =
-    Factory::CreateDataSourceSurface(IntSize(ioWidth, ioHeight), format);
+    Factory::CreateDataSourceSurface(IntSize::Truncate(ioWidth, ioHeight), format);
   if (NS_WARN_IF(!dataSurface)) {
     return nullptr;
   }
@@ -75,14 +75,14 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
     PlanarYCbCrData data;
     data.mYChannel = (uint8_t*)aSurface->GetBaseAddressOfPlane(0);
     data.mYStride = aSurface->GetBytesPerRow(0);
-    data.mYSize = IntSize(ioWidth, ioHeight);
+    data.mYSize = IntSize::Truncate(ioWidth, ioHeight);
     data.mCbChannel = cbPlane.get();
     data.mCrChannel = crPlane.get();
     data.mCbCrStride = cbCrWidth;
-    data.mCbCrSize = IntSize(cbCrWidth, cbCrHeight);
+    data.mCbCrSize = IntSize::Truncate(cbCrWidth, cbCrHeight);
     data.mPicSize = data.mYSize;
 
-    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, IntSize(ioWidth, ioHeight), mappedSurface.mData, mappedSurface.mStride);
+    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, IntSize::Truncate(ioWidth, ioHeight), mappedSurface.mData, mappedSurface.mStride);
   } else if (ioFormat == SurfaceFormat::YUV422) {
     /* Convert to YV16 */
     size_t cbCrWidth = (ioWidth+1)>>1;
@@ -128,14 +128,14 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
     PlanarYCbCrData data;
     data.mYChannel = ALIGNEDPTR_32(yPlane.get());
     data.mYStride = cbCrStride * 2;
-    data.mYSize = IntSize(ioWidth, ioHeight);
+    data.mYSize = IntSize::Truncate(ioWidth, ioHeight);
     data.mCbChannel = ALIGNEDPTR_32(cbPlane.get());
     data.mCrChannel = ALIGNEDPTR_32(crPlane.get());
     data.mCbCrStride = cbCrStride;
-    data.mCbCrSize = IntSize(cbCrWidth, cbCrHeight);
+    data.mCbCrSize = IntSize::Truncate(cbCrWidth, cbCrHeight);
     data.mPicSize = data.mYSize;
 
-    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, IntSize(ioWidth, ioHeight), mappedSurface.mData, mappedSurface.mStride);
+    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, IntSize::Truncate(ioWidth, ioHeight), mappedSurface.mData, mappedSurface.mStride);
   } else {
     unsigned char* ioData = (unsigned char*)aSurface->GetBaseAddress();
 

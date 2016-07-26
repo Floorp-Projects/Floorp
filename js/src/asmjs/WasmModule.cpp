@@ -21,14 +21,61 @@
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmJS.h"
 #include "asmjs/WasmSerialize.h"
+#include "jit/JitOptions.h"
 
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Debugger-inl.h"
 
 using namespace js;
+using namespace js::jit;
 using namespace js::wasm;
 
 const char wasm::InstanceExportField[] = "exports";
+
+JSObject*
+js::wasm::CreateI64Object(JSContext* cx, int64_t i64)
+{
+    RootedObject result(cx, JS_NewPlainObject(cx));
+    if (!result)
+        return nullptr;
+
+    RootedValue val(cx, Int32Value(uint32_t(i64)));
+    if (!JS_DefineProperty(cx, result, "low", val, JSPROP_ENUMERATE))
+        return nullptr;
+
+    val = Int32Value(uint32_t(i64 >> 32));
+    if (!JS_DefineProperty(cx, result, "high", val, JSPROP_ENUMERATE))
+        return nullptr;
+
+    return result;
+}
+
+bool
+js::wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
+{
+    if (!v.isObject()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
+                             "i64 JS value must be an object");
+        return false;
+    }
+
+    RootedObject obj(cx, &v.toObject());
+
+    int32_t* i32 = (int32_t*)i64;
+
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, obj, "low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32[0]))
+        return false;
+
+    if (!JS_GetProperty(cx, obj, "high", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32[1]))
+        return false;
+
+    return true;
+}
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 // On MIPS, CodeLabels are instruction immediates so InternalLinks only
@@ -158,25 +205,32 @@ Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            func.sizeOfExcludingThis(mallocSizeOf);
 }
 
-Export::Export(UniqueChars fieldName, uint32_t funcIndex)
+Export::Export(UniqueChars fieldName, uint32_t index, DefinitionKind kind)
   : fieldName_(Move(fieldName))
 {
-    pod.kind_ = DefinitionKind::Function;
-    pod.funcIndex_ = funcIndex;
+    pod.kind_ = kind;
+    pod.index_ = index;
 }
 
 Export::Export(UniqueChars fieldName, DefinitionKind kind)
   : fieldName_(Move(fieldName))
 {
     pod.kind_ = kind;
-    pod.funcIndex_ = 0;
+    pod.index_ = 0;
 }
 
 uint32_t
 Export::funcIndex() const
 {
     MOZ_ASSERT(pod.kind_ == DefinitionKind::Function);
-    return pod.funcIndex_;
+    return pod.index_;
+}
+
+uint32_t
+Export::globalIndex() const
+{
+    MOZ_ASSERT(pod.kind_ == DefinitionKind::Global);
+    return pod.index_;
 }
 
 size_t
@@ -212,6 +266,7 @@ size_t
 ElemSegment::serializedSize() const
 {
     return sizeof(tableIndex) +
+           sizeof(offset) +
            SerializedPodVectorSize(elems);
 }
 
@@ -219,6 +274,7 @@ uint8_t*
 ElemSegment::serialize(uint8_t* cursor) const
 {
     cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
+    cursor = WriteBytes(cursor, &offset, sizeof(offset));
     cursor = SerializePodVector(cursor, elems);
     return cursor;
 }
@@ -227,6 +283,7 @@ const uint8_t*
 ElemSegment::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
+    (cursor = ReadBytes(cursor, &offset, sizeof(offset))) &&
     (cursor = DeserializePodVector(cursor, &elems));
     return cursor;
 }
@@ -351,7 +408,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 
 bool
 Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                  HandleWasmTableObject tableObj) const
+                  const ValVector& globalImports, HandleWasmTableObject tableObj) const
 {
     Instance& instance = instanceObj->instance();
     const CodeSegment& codeSegment = instance.codeSegment();
@@ -369,20 +426,53 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
     }
 
     // Now that all tables have been initialized, write elements.
+    Vector<uint32_t> prevEnds(cx);
+    if (!prevEnds.appendN(0, tables.length()))
+        return false;
+
     for (const ElemSegment& seg : elemSegments_) {
         Table& table = *tables[seg.tableIndex];
-        MOZ_ASSERT(seg.offset + seg.elems.length() <= table.length());
+
+        uint32_t offset;
+        switch (seg.offset.kind()) {
+          case InitExpr::Kind::Constant: {
+            offset = seg.offset.val().i32();
+            break;
+          }
+          case InitExpr::Kind::GetGlobal: {
+            const GlobalDesc& global = metadata_->globals[seg.offset.globalIndex()];
+            offset = globalImports[global.importIndex()].i32();
+            break;
+          }
+        }
+
+        uint32_t& prevEnd = prevEnds[seg.tableIndex];
+
+        if (offset < prevEnd) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
+                                 "elem segments must be disjoint and ordered");
+            return false;
+        }
+
+        uint32_t tableLength = instance.metadata().tables[seg.tableIndex].initial;
+        if (offset > tableLength || tableLength - offset < seg.elems.length()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
+                                 "element segment does not fit");
+            return false;
+        }
 
         if (tableObj) {
             MOZ_ASSERT(seg.tableIndex == 0);
             for (uint32_t i = 0; i < seg.elems.length(); i++) {
-                if (!tableObj->setInstance(cx, seg.offset + i, instanceObj))
+                if (!tableObj->setInstance(cx, offset + i, instanceObj))
                     return false;
             }
         }
 
         for (uint32_t i = 0; i < seg.elems.length(); i++)
-            table.array()[seg.offset + i] = codeSegment.code() + seg.elems[i];
+            table.array()[offset + i] = codeSegment.code() + seg.elems[i];
+
+        prevEnd = offset + seg.elems.length();
     }
 
     return true;
@@ -469,10 +559,53 @@ Module::instantiateTable(JSContext* cx, HandleWasmTableObject tableImport,
 }
 
 static bool
+ExportGlobalValue(JSContext* cx, const GlobalDescVector& globals, uint32_t globalIndex,
+                  const ValVector& globalImports, MutableHandleValue jsval)
+{
+    const GlobalDesc& global = globals[globalIndex];
+
+    // Imports are located upfront in the globals array.
+    Val val;
+    switch (global.kind()) {
+      case GlobalKind::Import:   val = globalImports[globalIndex]; break;
+      case GlobalKind::Variable: MOZ_CRASH("mutable variables can't be exported");
+      case GlobalKind::Constant: val = global.constantValue(); break;
+    }
+
+    switch (global.type()) {
+      case ValType::I32: {
+        jsval.set(Int32Value(val.i32()));
+        return true;
+      }
+      case ValType::I64: {
+        MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
+        RootedObject obj(cx, CreateI64Object(cx, val.i64()));
+        if (!obj)
+            return false;
+        jsval.set(ObjectValue(*obj));
+        return true;
+      }
+      case ValType::F32: {
+        jsval.set(DoubleValue(double(val.f32())));
+        return true;
+      }
+      case ValType::F64: {
+        jsval.set(DoubleValue(val.f64()));
+        return true;
+      }
+      default: {
+        break;
+      }
+    }
+    MOZ_CRASH("unexpected type when creating global exports");
+}
+
+static bool
 CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
                    MutableHandleWasmTableObject tableObj,
                    HandleWasmMemoryObject memoryObj,
+                   const ValVector& globalImports,
                    const ExportVector& exports,
                    MutableHandleObject exportObj)
 {
@@ -523,6 +656,11 @@ CreateExportObject(JSContext* cx,
                 val = ObjectValue(memoryObj->buffer());
             break;
           }
+          case DefinitionKind::Global: {
+            if (!ExportGlobalValue(cx, metadata.globals, exp.globalIndex(), globalImports, &val))
+                return false;
+            break;
+          }
         }
 
         if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
@@ -537,6 +675,7 @@ Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
                     HandleWasmTableObject tableImport,
                     HandleWasmMemoryObject memoryImport,
+                    const ValVector& globalImports,
                     HandleObject instanceProto,
                     MutableHandleWasmInstanceObject instanceObj) const
 {
@@ -580,7 +719,8 @@ Module::instantiate(JSContext* cx,
                                                   maybeBytecode,
                                                   memory,
                                                   Move(tables),
-                                                  funcImports);
+                                                  funcImports,
+                                                  globalImports);
         if (!instance)
             return false;
 
@@ -594,7 +734,7 @@ Module::instantiate(JSContext* cx,
 
     RootedObject exportObj(cx);
     RootedWasmTableObject table(cx, tableImport);
-    if (!CreateExportObject(cx, instanceObj, &table, memory, exports_, &exportObj))
+    if (!CreateExportObject(cx, instanceObj, &table, memory, globalImports, exports_, &exportObj))
         return false;
 
     JSAtom* atom = Atomize(cx, InstanceExportField, strlen(InstanceExportField));
@@ -611,7 +751,7 @@ Module::instantiate(JSContext* cx,
     // initialization as the final step after the instance is fully live since
     // it is observable (in the case of an imported Table object).
 
-    if (!initElems(cx, instanceObj, table))
+    if (!initElems(cx, instanceObj, globalImports, table))
         return false;
 
     // Done! Notify the Debugger of the new Instance.

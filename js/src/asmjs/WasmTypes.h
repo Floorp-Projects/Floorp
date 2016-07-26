@@ -361,8 +361,10 @@ class Val
         return u.f32x4_;
     }
 
-    void writePayload(uint8_t* dst);
+    void writePayload(uint8_t* dst) const;
 };
+
+typedef Vector<Val, 0, SystemAllocPolicy> ValVector;
 
 // The Sig class represents a WebAssembly function signature which takes a list
 // of value types and returns an expression type. The engine uses two in-memory
@@ -412,6 +414,142 @@ struct SigHashPolicy
     static HashNumber hash(Lookup sig) { return sig.hash(); }
     static bool match(const Sig* lhs, Lookup rhs) { return *lhs == rhs; }
 };
+
+// An InitExpr describes a deferred initializer expression, used to initialize
+// a global or a table element offset. Such expressions are created during
+// decoding and actually executed on module instantiation.
+
+class InitExpr
+{
+  public:
+    enum class Kind {
+        Constant,
+        GetGlobal
+    };
+
+  private:
+    Kind kind_;
+    union {
+        Val val_;
+        struct {
+            uint32_t index_;
+            ValType type_;
+        } global;
+    } u;
+
+  public:
+    InitExpr() = default;
+
+    explicit InitExpr(Val val) : kind_(Kind::Constant) {
+        u.val_ = val;
+    }
+
+    explicit InitExpr(uint32_t globalIndex, ValType type) : kind_(Kind::GetGlobal) {
+        u.global.index_ = globalIndex;
+        u.global.type_ = type;
+    }
+
+    Kind kind() const { return kind_; }
+
+    bool isVal() const { return kind() == Kind::Constant; }
+    Val val() const { MOZ_ASSERT(isVal()); return u.val_; }
+
+    uint32_t globalIndex() const { MOZ_ASSERT(kind() == Kind::GetGlobal); return u.global.index_; }
+
+    ValType type() const {
+        switch (kind()) {
+          case Kind::Constant: return u.val_.type();
+          case Kind::GetGlobal: return u.global.type_;
+        }
+        MOZ_CRASH("unexpected initExpr type");
+    }
+};
+
+// A GlobalDesc describes a single global variable. Currently, asm.js and wasm
+// exposes mutable and immutable private globals, but can't import nor export
+// mutable globals.
+
+enum class GlobalKind
+{
+    Import,
+    Constant,
+    Variable
+};
+
+class GlobalDesc
+{
+    union {
+        struct {
+            union {
+                InitExpr initial_;
+                struct {
+                    ValType type_;
+                    uint32_t index_;
+                } import;
+            } val;
+            unsigned offset_;
+            bool isMutable_;
+        } var;
+        Val cst_;
+    } u;
+    GlobalKind kind_;
+
+  public:
+    GlobalDesc() = default;
+
+    explicit GlobalDesc(InitExpr initial, bool isMutable)
+      : kind_((isMutable || !initial.isVal()) ? GlobalKind::Variable : GlobalKind::Constant)
+    {
+        if (isVariable()) {
+            u.var.val.initial_ = initial;
+            u.var.isMutable_ = isMutable;
+            u.var.offset_ = UINT32_MAX;
+        } else {
+            u.cst_ = initial.val();
+        }
+    }
+
+    explicit GlobalDesc(ValType type, bool isMutable, uint32_t importIndex)
+      : kind_(GlobalKind::Import)
+    {
+        u.var.val.import.type_ = type;
+        u.var.val.import.index_ = importIndex;
+        u.var.isMutable_ = isMutable;
+        u.var.offset_ = UINT32_MAX;
+    }
+
+    void setOffset(unsigned offset) {
+        MOZ_ASSERT(!isConstant());
+        MOZ_ASSERT(u.var.offset_ == UINT32_MAX);
+        u.var.offset_ = offset;
+    }
+    unsigned offset() const {
+        MOZ_ASSERT(!isConstant());
+        MOZ_ASSERT(u.var.offset_ != UINT32_MAX);
+        return u.var.offset_;
+    }
+
+    GlobalKind kind() const { return kind_; }
+    bool isVariable() const { return kind_ == GlobalKind::Variable; }
+    bool isConstant() const { return kind_ == GlobalKind::Constant; }
+    bool isImport() const { return kind_ == GlobalKind::Import; }
+
+    bool isMutable() const { return !isConstant() && u.var.isMutable_; }
+    Val constantValue() const { MOZ_ASSERT(isConstant()); return u.cst_; }
+    const InitExpr& initExpr() const { MOZ_ASSERT(isVariable()); return u.var.val.initial_; }
+    uint32_t importIndex() const { MOZ_ASSERT(isImport()); return u.var.val.import.index_; }
+
+    ValType type() const {
+        switch (kind_) {
+          case GlobalKind::Import:   return u.var.val.import.type_;
+          case GlobalKind::Variable: return u.var.val.initial_.type();
+          case GlobalKind::Constant: return u.cst_.type();
+        }
+        MOZ_CRASH("unexpected global kind");
+    }
+};
+
+typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
 // SigIdDesc describes a signature id that can be used by call_indirect and
 // table-entry prologues to structurally compare whether the caller and callee's
@@ -467,21 +605,6 @@ struct SigWithId : Sig
 
 typedef Vector<SigWithId, 0, SystemAllocPolicy> SigWithIdVector;
 typedef Vector<const SigWithId*, 0, SystemAllocPolicy> SigWithIdPtrVector;
-
-// A GlobalDesc describes a single global variable. Currently, globals are only
-// exposed through asm.js.
-
-struct GlobalDesc
-{
-    ValType type;
-    unsigned globalDataOffset;
-    bool isConst;
-    GlobalDesc(ValType type, unsigned offset, bool isConst)
-      : type(type), globalDataOffset(offset), isConst(isConst)
-    {}
-};
-
-typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
 // The (,Profiling,Func)Offsets classes are used to record the offsets of
 // different key points in a CodeRange during compilation.
@@ -940,6 +1063,7 @@ static const unsigned InitialGlobalDataBytes     = NaN32GlobalDataOffset + sizeo
 
 static const unsigned MaxSigs                    =        4 * 1024;
 static const unsigned MaxFuncs                   =      512 * 1024;
+static const unsigned MaxGlobals                 =        4 * 1024;
 static const unsigned MaxLocals                  =       64 * 1024;
 static const unsigned MaxImports                 =       64 * 1024;
 static const unsigned MaxExports                 =       64 * 1024;

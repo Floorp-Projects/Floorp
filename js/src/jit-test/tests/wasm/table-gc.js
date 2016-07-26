@@ -21,7 +21,7 @@ var callee = i => `(func $f${i} (type $v2i) (result i32) (i32.const ${i}))`;
 // should not hold their originating table alive. Live exported functions should
 // hold instances alive. Nothing should hold the export object alive.
 resetFinalizeCount();
-var i = evalText(`(module (table (resizable 2)) (export "tbl" table) (elem 0 $f0) ${callee(0)} ${caller})`);
+var i = evalText(`(module (table (resizable 2)) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
@@ -59,7 +59,7 @@ assertEq(finalizeCount(), 5);
 
 // A table should hold the instance of any of its elements alive.
 resetFinalizeCount();
-var i = evalText(`(module (table (resizable 1)) (export "tbl" table) (elem 0 $f0) ${callee(0)} ${caller})`);
+var i = evalText(`(module (table (resizable 1)) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);

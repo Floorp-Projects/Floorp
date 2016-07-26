@@ -146,7 +146,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget()
     GetPaperRect(&top, &left, &bottom, &right);
     const double width = right - left;
     const double height = bottom - top;
-    IntSize size(floor(width), floor(height));
+    IntSize size = IntSize::Floor(width, height);
 
     CGContextRef context;
     ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
