@@ -40,6 +40,7 @@ task:
       MH_CUSTOM_BUILD_VARIANT_CFG: api-15-partner-sample1
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
 
       # space separated list of repositories required for this build
       # for each ITEM in list you want checked out, you must also supply tc-vcs args:
