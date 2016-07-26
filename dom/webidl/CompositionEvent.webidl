@@ -13,6 +13,13 @@ interface CompositionEvent : UIEvent
 {
   readonly attribute DOMString? data;
   readonly attribute DOMString  locale;
+
+ /**
+  * ranges is trying to expose TextRangeArray in Gecko so a
+  * js-plugin couble be able to know the clauses information
+  */
+  [ChromeOnly,Cached,Pure]
+  readonly attribute sequence<TextClause> ranges;
 };
 
 partial interface CompositionEvent

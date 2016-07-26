@@ -548,6 +548,7 @@ public:
 
     mData = aEvent.mData;
     mOriginalMessage = aEvent.mOriginalMessage;
+    mRanges = aEvent.mRanges;
 
     // Currently, we don't need to copy the other members because they are
     // for internal use only (not available from JS).
