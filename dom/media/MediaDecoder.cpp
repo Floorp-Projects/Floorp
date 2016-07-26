@@ -1025,14 +1025,8 @@ MediaDecoder::ResetConnectionState()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
-
-  // Notify the media element that connection gets lost.
   mOwner->ResetConnectionState();
-
-  // Since we have notified the media element the connection
-  // lost event, the decoder will be reloaded when user tries
-  // to play the Rtsp streaming next time.
-  Shutdown();
+  MOZ_ASSERT(IsShutdown());
 }
 
 void
