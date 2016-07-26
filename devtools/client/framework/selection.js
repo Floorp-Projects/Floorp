@@ -7,7 +7,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const nodeConstants = require("devtools/shared/dom-node-constants.js")
+const nodeConstants = require("devtools/shared/dom-node-constants");
 const { getRootBindingParent } = require("devtools/shared/layout/utils");
 var EventEmitter = require("devtools/shared/event-emitter");
 
@@ -46,8 +46,10 @@ var EventEmitter = require("devtools/shared/event-emitter");
  *   "new-node" when the inner node changed
  *   "before-new-node" when the inner node is set to change
  *   "attribute-changed" when an attribute is changed (only if tracked)
- *   "detached" when the node (or one of its parents) is removed from the document (only if tracked)
- *   "reparented" when the node (or one of its parents) is moved under a different node (only if tracked)
+ *   "detached" when the node (or one of its parents) is removed from
+ *   the document (only if tracked)
+ *   "reparented" when the node (or one of its parents) is moved under
+ *   a different node (only if tracked)
  */
 
 /**
@@ -60,7 +62,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
  *    the node change.
  *
  */
-function Selection(walker, node = null, track = {attributes:true, detached:true}) {
+function Selection(walker, node = null, track = {attributes: true, detached: true}) {
   EventEmitter.decorate(this);
 
   this._onMutations = this._onMutations.bind(this);
@@ -179,7 +181,6 @@ Selection.prototype = {
     this.emit("before-new-node", rawValue, reason);
     this.emit("before-new-node-front", value, reason);
     let previousNode = this._node;
-    let previousFront = this._nodeFront;
     this._node = rawValue;
     this._nodeFront = value;
     this.emit("new-node", previousNode, this.reason);
@@ -257,13 +258,13 @@ Selection.prototype = {
   },
 
   isHTMLNode: function () {
-    let xhtml_ns = "http://www.w3.org/1999/xhtml";
-    return this.isNode() && this.nodeFront.namespaceURI == xhtml_ns;
+    let xhtmlNs = "http://www.w3.org/1999/xhtml";
+    return this.isNode() && this.nodeFront.namespaceURI == xhtmlNs;
   },
 
   // Node type
 
-  isElementNode: function() {
+  isElementNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.ELEMENT_NODE;
   },
 
@@ -275,35 +276,38 @@ Selection.prototype = {
     return this.isNode() && this.nodeFront.isAnonymous;
   },
 
-  isAttributeNode: function() {
+  isAttributeNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.ATTRIBUTE_NODE;
   },
 
-  isTextNode: function() {
+  isTextNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.TEXT_NODE;
   },
 
-  isCDATANode: function() {
+  isCDATANode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.CDATA_SECTION_NODE;
   },
 
-  isEntityRefNode: function() {
-    return this.isNode() && this.nodeFront.nodeType == nodeConstants.ENTITY_REFERENCE_NODE;
+  isEntityRefNode: function () {
+    return this.isNode() &&
+      this.nodeFront.nodeType == nodeConstants.ENTITY_REFERENCE_NODE;
   },
 
-  isEntityNode: function() {
+  isEntityNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.ENTITY_NODE;
   },
 
-  isProcessingInstructionNode: function() {
-    return this.isNode() && this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE;
+  isProcessingInstructionNode: function () {
+    return this.isNode() &&
+      this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isCommentNode: function() {
-    return this.isNode() && this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE;
+  isCommentNode: function () {
+    return this.isNode() &&
+      this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isDocumentNode: function() {
+  isDocumentNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_NODE;
   },
 
@@ -325,15 +329,16 @@ Selection.prototype = {
            this.nodeFront.nodeName === "HEAD";
   },
 
-  isDocumentTypeNode: function() {
+  isDocumentTypeNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_TYPE_NODE;
   },
 
-  isDocumentFragmentNode: function() {
-    return this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_FRAGMENT_NODE;
+  isDocumentFragmentNode: function () {
+    return this.isNode() &&
+      this.nodeFront.nodeType == nodeConstants.DOCUMENT_FRAGMENT_NODE;
   },
 
-  isNotationNode: function() {
+  isNotationNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.NOTATION_NODE;
   },
 };
