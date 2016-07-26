@@ -162,6 +162,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
   }
 
   function startTest() {
+    // Set prefs to use mixed-content before HSTS
+    SpecialPowers.pushPrefEnv({'set': [["security.mixed_content.use_hsts", false],
+                                       ["security.mixed_content.send_hsts_priming", false]]});
     //Set the first set of mixed content settings and increment the counter.
     //Enable <picture> and <img srcset> for the test.
     changePrefs([[ "dom.image.srcset.enabled", true ], [ "dom.image.picture.enabled", true ]],
