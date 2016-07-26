@@ -74,6 +74,7 @@
 #include "VsyncSource.h"
 #include "DriverCrashGuard.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -358,6 +359,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
+  DeviceManagerD3D11::Shutdown();
   mDeviceManager = nullptr;
   mD3D11Device = nullptr;
   mD3D11ContentDevice = nullptr;
@@ -394,6 +396,8 @@ gfxWindowsPlatform::InitAcceleration()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_1);
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
+
+  DeviceManagerD3D11::Init();
 
   InitializeConfig();
   InitializeDevices();

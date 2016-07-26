@@ -16,6 +16,7 @@
 #include "prprf.h"
 #include "GfxDriverInfo.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/gfx/Logging.h"
 #include "nsPrintfCString.h"
 #include "jsapi.h"
@@ -1321,21 +1322,20 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
 
   JS::Rooted<JSObject*> obj(aCx);
 
-  gfxWindowsPlatform* platform = gfxWindowsPlatform::GetPlatform();
-
   gfx::FeatureStatus d3d11 = gfxConfig::GetValue(Feature::D3D11_COMPOSITING);
   if (!InitFeatureObject(aCx, aObj, "d3d11", FEATURE_DIRECT3D_11_ANGLE,
                          Some(d3d11), &obj)) {
     return;
   }
   if (d3d11 == gfx::FeatureStatus::Available) {
-    JS::Rooted<JS::Value> val(aCx, JS::Int32Value(platform->GetD3D11Version()));
+    DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+    JS::Rooted<JS::Value> val(aCx, JS::Int32Value(dm->GetD3D11Version()));
     JS_SetProperty(aCx, obj, "version", val);
 
-    val = JS::BooleanValue(platform->IsWARP());
+    val = JS::BooleanValue(dm->IsWARP());
     JS_SetProperty(aCx, obj, "warp", val);
 
-    val = JS::BooleanValue(platform->CompositorD3D11TextureSharingWorks());
+    val = JS::BooleanValue(dm->TextureSharingWorks());
     JS_SetProperty(aCx, obj, "textureSharing", val);
 
     bool blacklisted = false;
