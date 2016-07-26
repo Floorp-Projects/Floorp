@@ -1170,7 +1170,7 @@ class nsMathMLContainerFrame::RowChildFrameIterator {
 public:
   explicit RowChildFrameIterator(nsMathMLContainerFrame* aParentFrame) :
     mParentFrame(aParentFrame),
-    mSize(aParentFrame->GetWritingMode()), // ???
+    mReflowOutput(aParentFrame->GetWritingMode()),
     mX(0),
     mCarrySpace(0),
     mFromFrameType(eMathMLFrameType_UNKNOWN),
@@ -1191,7 +1191,7 @@ public:
   RowChildFrameIterator& operator++()
   {
     // add child size + italic correction
-    mX += mSize.mBoundingMetrics.width + mItalicCorrection;
+    mX += mReflowOutput.mBoundingMetrics.width + mItalicCorrection;
 
     if (!mRTL) {
       mChildFrame = mChildFrame->GetNextSibling();
@@ -1217,17 +1217,17 @@ public:
 
   nsIFrame* Frame() const { return mChildFrame; }
   nscoord X() const { return mX; }
-  const ReflowOutput& ReflowMetrics() const { return mSize; }
-  nscoord Ascent() const { return mSize.BlockStartAscent(); }
-  nscoord Descent() const { return mSize.Height() - mSize.BlockStartAscent(); }
+  const ReflowOutput& GetReflowOutput() const { return mReflowOutput; }
+  nscoord Ascent() const { return mReflowOutput.BlockStartAscent(); }
+  nscoord Descent() const { return mReflowOutput.Height() - mReflowOutput.BlockStartAscent(); }
   const nsBoundingMetrics& BoundingMetrics() const {
-    return mSize.mBoundingMetrics;
+    return mReflowOutput.mBoundingMetrics;
   }
 
 private:
   const nsMathMLContainerFrame* mParentFrame;
   nsIFrame* mChildFrame;
-  ReflowOutput mSize;
+  ReflowOutput mReflowOutput;
   nscoord mX;
 
   nscoord mItalicCorrection;
@@ -1239,10 +1239,10 @@ private:
 
   void InitMetricsForChild()
   {
-    GetReflowAndBoundingMetricsFor(mChildFrame, mSize, mSize.mBoundingMetrics,
+    GetReflowAndBoundingMetricsFor(mChildFrame, mReflowOutput, mReflowOutput.mBoundingMetrics,
                                    &mChildFrameType);
     nscoord leftCorrection, rightCorrection;
-    GetItalicCorrection(mSize.mBoundingMetrics,
+    GetItalicCorrection(mReflowOutput.mBoundingMetrics,
                         leftCorrection, rightCorrection);
     if (!mChildFrame->GetPrevSibling() &&
         mParentFrame->GetContent()->IsMathMLElement(nsGkAtoms::msqrt_)) {
@@ -1313,7 +1313,7 @@ nsMathMLContainerFrame::PositionRowChildFrames(nscoord aOffsetX,
   while (child.Frame()) {
     nscoord dx = aOffsetX + child.X();
     nscoord dy = aBaseline - child.Ascent();
-    FinishReflowChild(child.Frame(), PresContext(), child.ReflowMetrics(),
+    FinishReflowChild(child.Frame(), PresContext(), child.GetReflowOutput(),
                       nullptr, dx, dy, 0);
     ++child;
   }
