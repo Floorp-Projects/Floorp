@@ -87,6 +87,10 @@ typedef enum {
   MOZ_GTK_BUTTON,
   /* Paints a button with image and no text */
   MOZ_GTK_TOOLBAR_BUTTON,
+  /* Paints a toggle button */
+  MOZ_GTK_TOGGLE_BUTTON,
+  /* Paints a button arrow */
+  MOZ_GTK_BUTTON_ARROW,
 
   /* Paints the container part of a GtkCheckButton. */
   MOZ_GTK_CHECKBUTTON_CONTAINER,
@@ -206,6 +210,8 @@ typedef enum {
   MOZ_GTK_WINDOW_CONTAINER,
   /* Paints a GtkInfoBar, for notifications. */
   MOZ_GTK_INFO_BAR,
+  /* Used for scrolled window shell. */
+  MOZ_GTK_SCROLLED_WINDOW,
 
   MOZ_GTK_WIDGET_NODE_COUNT
 } WidgetNodeType;

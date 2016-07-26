@@ -36,6 +36,7 @@
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 # include "mozilla/widget/CompositorWidgetChild.h"
 #endif
+#include "VsyncSource.h"
 
 using mozilla::layers::LayerTransactionChild;
 using mozilla::dom::TabChildBase;
@@ -197,8 +198,11 @@ CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
                                        bool aUseExternalSurface,
                                        const gfx::IntSize& aSurfaceSize)
 {
+  TimeDuration vsyncRate =
+    gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().GetVsyncRate();
+
   mCompositorBridgeParent =
-    new CompositorBridgeParent(aScale, aUseExternalSurface, aSurfaceSize);
+    new CompositorBridgeParent(aScale, vsyncRate, aUseExternalSurface, aSurfaceSize);
 
   mCanSend = Open(mCompositorBridgeParent->GetIPCChannel(),
                   CompositorThreadHolder::Loop(),
