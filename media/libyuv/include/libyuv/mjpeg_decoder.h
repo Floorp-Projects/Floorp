@@ -43,6 +43,17 @@ enum JpegSubsamplingType {
   kJpegUnknown
 };
 
+struct Buffer {
+  const uint8* data;
+  int len;
+};
+
+struct BufferVector {
+  Buffer* buffers;
+  int len;
+  int pos;
+};
+
 struct SetJmpErrorMgr;
 
 // MJPEG ("Motion JPEG") is a pseudo-standard video codec where the frames are
@@ -142,27 +153,6 @@ class LIBYUV_API MJpegDecoder {
      int* subsample_x, int* subsample_y, int number_of_components);
 
  private:
-  struct Buffer {
-    const uint8* data;
-    int len;
-  };
-
-  struct BufferVector {
-    Buffer* buffers;
-    int len;
-    int pos;
-  };
-
-  // Methods that are passed to jpeglib.
-  static int fill_input_buffer(jpeg_decompress_struct* cinfo);
-  static void init_source(jpeg_decompress_struct* cinfo);
-  static void skip_input_data(jpeg_decompress_struct* cinfo,
-                              long num_bytes);  // NOLINT
-  static void term_source(jpeg_decompress_struct* cinfo);
-
-  static void ErrorHandler(jpeg_common_struct* cinfo);
-  static void OutputHandler(jpeg_common_struct* cinfo);
-
   void AllocOutputBuffers(int num_outbufs);
   void DestroyOutputBuffers();
 
