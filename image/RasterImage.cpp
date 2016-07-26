@@ -355,18 +355,29 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     return DrawableFrameRef();
   }
 
-  if (result.DrawableRef()->GetCompositingFailed()) {
+  // OK, we've got an ISurfaceProvider. Ask it to give us a surface containing
+  // the frame we're looking for. (This could be computationally expensive in
+  // some cases.)
+  DrawableFrameRef drawableRef = result.Provider()->DrawableRef();
+  if (!drawableRef) {
+    // An ISurfaceProvider will only fail to give us a surface in catastrophic
+    // cases such as the operating system freeing our volatile buffers. Our best
+    // bet is to throw everything out and attempt to recover.
+    RecoverFromInvalidFrames(aSize, aFlags);
     return DrawableFrameRef();
   }
 
-  MOZ_ASSERT(!result.DrawableRef()->GetIsPaletted(),
-             "Should not have a paletted frame");
+  if (drawableRef->GetCompositingFailed()) {
+    return DrawableFrameRef();
+  }
+
+  MOZ_ASSERT(!drawableRef->GetIsPaletted(), "Should not have a paletted frame");
 
   // Sync decoding guarantees that we got the frame, but if it's owned by an
   // async decoder that's currently running, the contents of the frame may not
   // be available yet. Make sure we get everything.
   if (mHasSourceData && (aFlags & FLAG_SYNC_DECODE)) {
-    result.DrawableRef()->WaitUntilFinished();
+    drawableRef->WaitUntilFinished();
   }
 
   // If we could have done some decoding in this function we need to check if
@@ -374,11 +385,11 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
   // to avoid calling IsAborted if we weren't passed any sync decode flag because
   // IsAborted acquires the monitor for the imgFrame.
   if (aFlags & (FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST) &&
-    result.DrawableRef()->IsAborted()) {
+      drawableRef->IsAborted()) {
     return DrawableFrameRef();
   }
 
-  return Move(result.DrawableRef());
+  return Move(drawableRef);
 }
 
 uint32_t
