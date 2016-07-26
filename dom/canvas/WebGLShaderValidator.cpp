@@ -43,6 +43,12 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         options |= SH_LIMIT_EXPRESSION_COMPLEXITY;
     }
 
+    // Sampler arrays indexed with non-constant expressions are forbidden in
+    // GLSL 1.30 and later.
+    // ESSL 3 requires constant-integral-expressions for this as well.
+    // Just do it universally.
+    options |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
+
     if (gfxPrefs::WebGLAllANGLEOptions()) {
         return options |
                SH_VALIDATE_LOOP_INDEXING |
@@ -76,11 +82,6 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         // Work around bug 735560
         if (gl->Vendor() == gl::GLVendor::Intel) {
             options |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-        }
-
-        // Work around bug 636926
-        if (gl->Vendor() == gl::GLVendor::NVIDIA) {
-            options |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
         }
 
         // Work around that Mac drivers handle struct scopes incorrectly.
