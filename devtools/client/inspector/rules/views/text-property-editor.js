@@ -4,7 +4,9 @@
 
 "use strict";
 
+/* eslint-disable mozilla/reject-some-requires */
 const {Ci} = require("chrome");
+/* eslint-enable mozilla/reject-some-requires */
 const {l10n} = require("devtools/shared/inspector/css-logic");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {InplaceEditor, editableField} =

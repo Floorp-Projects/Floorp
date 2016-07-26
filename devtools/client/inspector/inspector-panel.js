@@ -8,7 +8,9 @@
 
 "use strict";
 
+/* eslint-disable mozilla/reject-some-requires */
 const {Cc, Ci} = require("chrome");
+/* eslint-enable mozilla/reject-some-requires */
 
 var Services = require("Services");
 var promise = require("promise");

@@ -10,7 +10,9 @@ var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 var { Task } = require("devtools/shared/task");
+/* eslint-disable mozilla/reject-some-requires */
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+/* eslint-enable mozilla/reject-some-requires */
 
 /**
  * This object represents replacement for ToolSidebar

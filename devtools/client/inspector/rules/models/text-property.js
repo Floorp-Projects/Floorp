@@ -6,10 +6,14 @@
 
 "use strict";
 
+/* eslint-disable mozilla/reject-some-requires */
 const {Cc, Ci} = require("chrome");
+/* eslint-enable mozilla/reject-some-requires */
 const {escapeCSSComment} = require("devtools/shared/css-parsing-utils");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
+/* eslint-disable mozilla/reject-some-requires */
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+/* eslint-enable mozilla/reject-some-requires */
 
 XPCOMUtils.defineLazyGetter(this, "domUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);

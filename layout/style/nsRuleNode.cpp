@@ -4184,13 +4184,12 @@ inline uint32_t ListLength(const T* aList)
   return len;
 }
 
-
-
-already_AddRefed<nsCSSShadowArray>
-nsRuleNode::GetShadowData(const nsCSSValueList* aList,
-                          nsStyleContext* aContext,
-                          bool aIsBoxShadow,
-                          RuleNodeCacheConditions& aConditions)
+static already_AddRefed<nsCSSShadowArray>
+GetShadowData(const nsCSSValueList* aList,
+              nsStyleContext* aContext,
+              bool aIsBoxShadow,
+              nsPresContext* aPresContext,
+              RuleNodeCacheConditions& aConditions)
 {
   uint32_t arrayLength = ListLength(aList);
 
@@ -4213,13 +4212,13 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
     unitOK = SetCoord(arr->Item(0), tempCoord, nsStyleCoord(),
                       SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
-                      aContext, mPresContext, aConditions);
+                      aContext, aPresContext, aConditions);
     NS_ASSERTION(unitOK, "unexpected unit");
     item->mXOffset = tempCoord.GetCoordValue();
 
     unitOK = SetCoord(arr->Item(1), tempCoord, nsStyleCoord(),
                       SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
-                      aContext, mPresContext, aConditions);
+                      aContext, aPresContext, aConditions);
     NS_ASSERTION(unitOK, "unexpected unit");
     item->mYOffset = tempCoord.GetCoordValue();
 
@@ -4228,7 +4227,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
       unitOK = SetCoord(arr->Item(2), tempCoord, nsStyleCoord(),
                         SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY |
                           SETCOORD_CALC_CLAMP_NONNEGATIVE,
-                        aContext, mPresContext, aConditions);
+                        aContext, aPresContext, aConditions);
       NS_ASSERTION(unitOK, "unexpected unit");
       item->mRadius = tempCoord.GetCoordValue();
     } else {
@@ -4239,7 +4238,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     if (aIsBoxShadow && arr->Item(3).GetUnit() != eCSSUnit_Null) {
       unitOK = SetCoord(arr->Item(3), tempCoord, nsStyleCoord(),
                         SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
-                        aContext, mPresContext, aConditions);
+                        aContext, aPresContext, aConditions);
       NS_ASSERTION(unitOK, "unexpected unit");
       item->mSpread = tempCoord.GetCoordValue();
     } else {
@@ -4249,7 +4248,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     if (arr->Item(4).GetUnit() != eCSSUnit_Null) {
       item->mHasColor = true;
       // 2nd argument can be bogus since inherit is not a valid color
-      unitOK = SetColor(arr->Item(4), 0, mPresContext, aContext, item->mColor,
+      unitOK = SetColor(arr->Item(4), 0, aPresContext, aContext, item->mColor,
                         aConditions);
       NS_ASSERTION(unitOK, "unexpected unit");
     }
@@ -4452,7 +4451,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                textShadowValue->GetUnit() == eCSSUnit_ListDep) {
       // List of arrays
       text->mTextShadow = GetShadowData(textShadowValue->GetListValue(),
-                                        aContext, false, conditions);
+                                        aContext, false, mPresContext, conditions);
     }
   }
 
@@ -9549,11 +9548,11 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   COMPUTE_END_INHERITED(SVG, svg)
 }
 
-already_AddRefed<nsStyleBasicShape>
-nsRuleNode::GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
-                                           nsStyleContext* aStyleContext,
-                                           nsPresContext* aPresContext,
-                                           RuleNodeCacheConditions& aConditions)
+static already_AddRefed<nsStyleBasicShape>
+GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
+                               nsStyleContext* aStyleContext,
+                               nsPresContext* aPresContext,
+                               RuleNodeCacheConditions& aConditions)
 {
   RefPtr<nsStyleBasicShape> basicShape;
 
@@ -9698,12 +9697,12 @@ nsRuleNode::GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
   return basicShape.forget();
 }
 
-void
-nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
-                                       const nsCSSValue* aValue,
-                                       nsStyleContext* aStyleContext,
-                                       nsPresContext* aPresContext,
-                                       RuleNodeCacheConditions& aConditions)
+static void
+SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
+                           const nsCSSValue* aValue,
+                           nsStyleContext* aStyleContext,
+                           nsPresContext* aPresContext,
+                           RuleNodeCacheConditions& aConditions)
 {
   MOZ_ASSERT(aValue->GetUnit() == eCSSUnit_Array,
              "expected a basic shape or reference box");
@@ -9740,12 +9739,12 @@ nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
 }
 
 // Returns true if the nsStyleFilter was successfully set using the nsCSSValue.
-bool
-nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
-                                     const nsCSSValue& aValue,
-                                     nsStyleContext* aStyleContext,
-                                     nsPresContext* aPresContext,
-                                     RuleNodeCacheConditions& aConditions)
+static bool
+SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
+                         const nsCSSValue& aValue,
+                         nsStyleContext* aStyleContext,
+                         nsPresContext* aPresContext,
+                         RuleNodeCacheConditions& aConditions)
 {
   nsCSSUnit unit = aValue.GetUnit();
   if (unit == eCSSUnit_URL) {
@@ -9773,6 +9772,7 @@ nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
       filterFunction->Item(1).GetListValue(),
       aStyleContext,
       false,
+      aPresContext,
       aConditions);
     aStyleFilter->SetDropShadow(shadowArray);
     return true;
@@ -10161,7 +10161,7 @@ nsRuleNode::ComputeEffectsData(void* aStartStruct,
   case eCSSUnit_List:
   case eCSSUnit_ListDep:
     effects->mBoxShadow = GetShadowData(boxShadowValue->GetListValue(),
-                                        aContext, true, conditions);
+                                        aContext, true, mPresContext, conditions);
     break;
 
   default:
