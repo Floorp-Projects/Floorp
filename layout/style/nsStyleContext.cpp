@@ -891,11 +891,12 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 #undef GET_UNIQUE_STYLE_DATA
 }
 
+template<class StyleContextLike>
 nsChangeHint
-nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
-                                    nsChangeHint aParentHintsNotHandledForDescendants,
-                                    uint32_t* aEqualStructs,
-                                    uint32_t* aSamePointerStructs)
+nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
+                                            nsChangeHint aParentHintsNotHandledForDescendants,
+                                            uint32_t* aEqualStructs,
+                                            uint32_t* aSamePointerStructs)
 {
   PROFILER_LABEL("nsStyleContext", "CalcStyleDifference",
     js::ProfileEntry::Category::CSS);
@@ -1211,6 +1212,16 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
   }
 
   return hint & ~nsChangeHint_NeutralChange;
+}
+
+nsChangeHint
+nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
+                                    nsChangeHint aParentHintsNotHandledForDescendants,
+                                    uint32_t* aEqualStructs,
+                                    uint32_t* aSamePointerStructs)
+{
+  return CalcStyleDifferenceInternal(aNewContext, aParentHintsNotHandledForDescendants,
+                                     aEqualStructs, aSamePointerStructs);
 }
 
 #ifdef DEBUG
