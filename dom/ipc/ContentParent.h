@@ -822,7 +822,8 @@ private:
                                const uint32_t& aFlags, bool* aIsSecureURI) override;
 
   virtual bool RecvAccumulateMixedContentHSTS(const URIParams& aURI,
-                                              const bool& aActive) override;
+                                              const bool& aActive,
+                                              const bool& aHSTSPriming) override;
 
   virtual bool DeallocPHalParent(PHalParent*) override;
 
