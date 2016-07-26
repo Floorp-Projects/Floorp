@@ -49,6 +49,10 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
 
     private static GeckoNetworkManager instance;
 
+    // We hackishly (yet harmlessly, in this case) keep a Context reference passed in via the start method.
+    // See context handling notes in handleManagerEvent, and Bug 1277333.
+    private Context context;
+
     public static void destroy() {
         if (instance != null) {
             instance.onDestroy();
@@ -120,7 +124,8 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         handleManagerEvent(ManagerEvent.receivedUpdate);
     }
 
-    public void start() {
+    public void start(final Context context) {
+        this.context = context;
         handleManagerEvent(ManagerEvent.start);
     }
 
@@ -152,7 +157,26 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
             return false;
         }
 
-        performActionsForStateEvent(currentState, event);
+        // We're being deliberately careful about handling context here; it's possible that in some
+        // rare cases and possibly related to timing of when this is called (seems to be early in the startup phase),
+        // GeckoAppShell.getApplicationContext() will be null, and .start() wasn't called yet,
+        // so we don't have a local Context reference either. If both of these are true, we have to drop the event.
+        // NB: this is hacky (and these checks attempt to isolate the hackiness), and root cause
+        // seems to be how this class fits into the larger ecosystem and general flow of events.
+        // See Bug 1277333.
+        final Context contextForAction;
+        if (context != null) {
+            contextForAction = context;
+        } else {
+            contextForAction = GeckoAppShell.getApplicationContext();
+        }
+
+        if (contextForAction == null) {
+            Log.w(LOGTAG, "Context is not available while processing event " + event + " for state " + currentState);
+            return false;
+        }
+
+        performActionsForStateEvent(contextForAction, currentState, event);
         currentState = nextState;
 
         return true;
@@ -221,7 +245,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      * @param currentState State which we are leaving
      * @param event Event which is causing us to leave the state
      */
-    private void performActionsForStateEvent(ManagerState currentState, ManagerEvent event) {
+    private void performActionsForStateEvent(final Context context, final ManagerState currentState, final ManagerEvent event) {
         // NB: network state might be queried via getCurrentInformation at any time; pre-rewrite behaviour was
         // that network state was updated whenever enableNotifications was called. To avoid deviating
         // from previous behaviour and causing weird side-effects, we call updateNetworkStateAndConnectionType
@@ -229,39 +253,39 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         switch (currentState) {
             case OffNoListeners:
                 if (event == ManagerEvent.start) {
-                    updateNetworkStateAndConnectionType();
-                    registerBroadcastReceiver();
+                    updateNetworkStateAndConnectionType(context);
+                    registerBroadcastReceiver(context, this);
                 }
                 if (event == ManagerEvent.enableNotifications) {
-                    updateNetworkStateAndConnectionType();
+                    updateNetworkStateAndConnectionType(context);
                 }
                 break;
             case OnNoListeners:
                 if (event == ManagerEvent.receivedUpdate) {
-                    updateNetworkStateAndConnectionType();
-                    sendNetworkStateToListeners();
+                    updateNetworkStateAndConnectionType(context);
+                    sendNetworkStateToListeners(context);
                 }
                 if (event == ManagerEvent.enableNotifications) {
-                    updateNetworkStateAndConnectionType();
-                    registerBroadcastReceiver();
+                    updateNetworkStateAndConnectionType(context);
+                    registerBroadcastReceiver(context, this);
                 }
                 if (event == ManagerEvent.stop) {
-                    unregisterBroadcastReceiver();
+                    unregisterBroadcastReceiver(context, this);
                 }
                 break;
             case OnWithListeners:
                 if (event == ManagerEvent.receivedUpdate) {
-                    updateNetworkStateAndConnectionType();
-                    sendNetworkStateToListeners();
+                    updateNetworkStateAndConnectionType(context);
+                    sendNetworkStateToListeners(context);
                 }
                 if (event == ManagerEvent.stop) {
-                    unregisterBroadcastReceiver();
+                    unregisterBroadcastReceiver(context, this);
                 }
                 /* no-op event: ManagerEvent.disableNotifications */
                 break;
             case OffWithListeners:
                 if (event == ManagerEvent.start) {
-                    registerBroadcastReceiver();
+                    registerBroadcastReceiver(context, this);
                 }
                 /* no-op event: ManagerEvent.disableNotifications */
                 break;
@@ -273,9 +297,8 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     /**
      * Update current network state and connection types.
      */
-    private void updateNetworkStateAndConnectionType() {
-        final Context applicationContext = GeckoAppShell.getApplicationContext();
-        final ConnectivityManager connectivityManager = (ConnectivityManager) applicationContext.getSystemService(
+    private void updateNetworkStateAndConnectionType(final Context context) {
+        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         // Type/status getters below all have a defined behaviour for when connectivityManager == null
         if (connectivityManager == null) {
@@ -297,7 +320,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     /**
      * Send current network state and connection type as a GeckoEvent, to whomever is listening.
      */
-    private void sendNetworkStateToListeners() {
+    private void sendNetworkStateToListeners(final Context context) {
         if (currentConnectionType != previousConnectionType ||
                 currentConnectionSubtype != previousConnectionSubtype) {
             previousConnectionType = currentConnectionType;
@@ -305,7 +328,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
 
             final boolean isWifi = currentConnectionType == ConnectionType.WIFI;
             final int gateway = !isWifi ? 0 :
-                    wifiDhcpGatewayAddress(GeckoAppShell.getApplicationContext());
+                    wifiDhcpGatewayAddress(context);
 
             if (GeckoThread.isRunning()) {
                 onConnectionChanged(currentConnectionType.value,
@@ -338,19 +361,19 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     /**
      * Stop listening for network state updates.
      */
-    private void unregisterBroadcastReceiver() {
-        GeckoAppShell.getApplicationContext().unregisterReceiver(this);
+    private static void unregisterBroadcastReceiver(final Context context, final BroadcastReceiver receiver) {
+        context.unregisterReceiver(receiver);
     }
 
     /**
      * Start listening for network state updates.
      */
-    private void registerBroadcastReceiver() {
+    private static void registerBroadcastReceiver(final Context context, final BroadcastReceiver receiver) {
         final IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        GeckoAppShell.getApplicationContext().registerReceiver(this, filter);
+        context.registerReceiver(receiver, filter);
     }
 
-    private static int wifiDhcpGatewayAddress(Context context) {
+    private static int wifiDhcpGatewayAddress(final Context context) {
         if (context == null) {
             return 0;
         }
@@ -398,7 +421,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         }
     }
 
-    // This function only works for IPv4
+    // This function only works for IPv4; not part of the state machine flow.
     private void getWifiIPAddress(final EventCallback callback) {
         final WifiManager mgr = (WifiManager) GeckoAppShell.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
@@ -453,6 +476,8 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      *
      * Note that these methods must only be called after GeckoAppShell has been
      * initialized: they depend on access to the context.
+     *
+     * Not part of the state machine flow.
      */
     @JNITarget
     public static int getMCC() {
