@@ -81,6 +81,10 @@ var StorageActors = {};
  *                     so that it can be transferred over wire.
  *   - populateStoresForHost : Given a host, populate the map of all store
  *                             objects for it
+ *   - getFields: Given a subType(optional), get an array of objects containing
+ *                column field info. The info includes,
+ *                "name" is name of colume key.
+ *                "editable" is 1 means editable field; 0 means uneditable.
  *
  * @param {string} typeName
  *        The typeName of the actor.
@@ -548,21 +552,17 @@ StorageActors.createActor({
     return null;
   },
 
-  /**
-   * This method marks the table as editable.
-   *
-   * @return {Array}
-   *         An array of column header ids.
-   */
-  getEditableFields: Task.async(function* () {
+  getFields: Task.async(function* () {
     return [
-      "name",
-      "path",
-      "host",
-      "expires",
-      "value",
-      "isSecure",
-      "isHttpOnly"
+      { name: "name", editable: 1},
+      { name: "path", editable: 1},
+      { name: "host", editable: 1},
+      { name: "expires", editable: 1},
+      { name: "lastAccessed", editable: 0},
+      { name: "value", editable: 1},
+      { name: "isDomain", editable: 0},
+      { name: "isSecure", editable: 1},
+      { name: "isHttpOnly", editable: 1}
     ];
   }),
 
@@ -1012,16 +1012,10 @@ function getObjectForLocalOrSessionStorage(type) {
       }
     },
 
-    /**
-     * This method marks the fields as editable.
-     *
-     * @return {Array}
-     *         An array of field ids.
-     */
-    getEditableFields: Task.async(function* () {
+    getFields: Task.async(function* () {
       return [
-        "name",
-        "value"
+        { name: "name", editable: 1},
+        { name: "value", editable: 1}
       ];
     }),
 
@@ -1197,6 +1191,13 @@ StorageActors.createActor({
       url: String(request.url),
       status: String(response.statusText),
     };
+  }),
+
+  getFields: Task.async(function* () {
+    return [
+      { name: "url", editable: 0 },
+      { name: "status", editable: 0 }
+    ];
   }),
 
   getHostName(location) {
@@ -1653,6 +1654,35 @@ StorageActors.createActor({
       return deferred.promise;
     }
   },
+
+  getFields: Task.async(function* (subType) {
+    switch (subType) {
+      // Detail of database
+      case "database":
+        return [
+          { name: "objectStore", editable: 0 },
+          { name: "keyPath", editable: 0 },
+          { name: "autoIncrement", editable: 0 },
+          { name: "indexes", editable: 0 },
+        ];
+
+      // Detail of object store
+      case "object store":
+        return [
+          { name: "name", editable: 0 },
+          { name: "value", editable: 0 }
+        ];
+
+      // Detail of indexedDB for one origin
+      default:
+        return [
+          { name: "db", editable: 0 },
+          { name: "origin", editable: 0 },
+          { name: "version", editable: 0 },
+          { name: "objectStores", editable: 0 },
+        ];
+    }
+  })
 });
 
 var indexedDBHelpers = {
