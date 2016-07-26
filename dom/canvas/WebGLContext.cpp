@@ -1626,6 +1626,13 @@ WebGLContext::DummyReadFramebufferOperation(const char* funcName)
     }
 }
 
+bool
+WebGLContext::HasTimestampBits() const
+{
+    // 'sync' provides glGetInteger64v either by supporting ARB_sync, GL3+, or GLES3+.
+    return gl->IsSupported(GLFeature::sync);
+}
+
 static bool
 CheckContextLost(GLContext* gl, bool* const out_isGuilty)
 {
