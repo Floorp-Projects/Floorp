@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    'nsIHstsPrimingCallback.idl',
     'nsIHttpActivityObserver.idl',
     'nsIHttpAuthenticableChannel.idl',
     'nsIHttpAuthenticator.idl',
@@ -54,6 +55,7 @@ SOURCES += [
 UNIFIED_SOURCES += [
     'CacheControlParser.cpp',
     'ConnectionDiagnostics.cpp',
+    'HSTSPrimerListener.cpp',
     'Http2Compression.cpp',
     'Http2Push.cpp',
     'Http2Session.cpp',

@@ -2339,7 +2339,7 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
     bool isStsHost = false;
     uint32_t flags = aPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
     rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
-                          &isStsHost);
+                          nullptr, &isStsHost);
 
     // if the SSS check fails, it's likely because this load is on a
     // malformed URI or something else in the setup is wrong, so any error
