@@ -32,6 +32,10 @@
 
 #include "./psnr.h"
 #include "./ssim.h"
+#ifdef HAVE_JPEG
+#include "libyuv/compare.h"
+#include "libyuv/convert.h"
+#endif
 
 struct metric {
   double y, u, v, all;
@@ -75,6 +79,29 @@ bool ExtractResolutionFromFilename(const char* name,
       }
     }
   }
+
+#ifdef HAVE_JPEG
+  // Try parsing file as a jpeg.
+  FILE* const file_org = fopen(name, "rb");
+  if (file_org == NULL) {
+    fprintf(stderr, "Cannot open %s\n", name);
+    return false;
+  }
+  fseek(file_org, 0, SEEK_END);
+  size_t total_size  = ftell(file_org);
+  fseek(file_org, 0, SEEK_SET);
+  uint8* const ch_org = new uint8[total_size];
+  memset(ch_org, 0, total_size);
+  size_t bytes_org = fread(ch_org, sizeof(uint8), total_size, file_org);
+  fclose(file_org);
+  if (bytes_org == total_size) {
+    if (0 == libyuv::MJPGSize(ch_org, total_size, width_ptr, height_ptr)) {
+      delete[] ch_org;
+      return true;
+    }
+  }
+  delete[] ch_org;
+#endif  // HAVE_JPEG
   return false;
 }
 
@@ -94,6 +121,9 @@ double GetMSE(double sse, double size) {
 
 void PrintHelp(const char * program) {
   printf("%s [-options] org_seq rec_seq [rec_seq2.. etc]\n", program);
+#ifdef HAVE_JPEG
+  printf("jpeg or raw YUV 420 supported.\n");
+#endif
   printf("options:\n");
   printf(" -s <width> <height> .... specify YUV size, mandatory if none of the "
          "sequences have the\n");
@@ -215,9 +245,18 @@ bool UpdateMetrics(uint8* ch_org, uint8* ch_rec,
   const uint8* const v_org = ch_org + y_size + (uv_size - uv_offset);
   const uint8* const v_rec = ch_rec + y_size + uv_size;
   if (do_psnr) {
+#ifdef HAVE_JPEG
+    double y_err = static_cast<double>(
+      libyuv::ComputeSumSquareError(ch_org, ch_rec, y_size));
+    double u_err = static_cast<double>(
+      libyuv::ComputeSumSquareError(u_org, u_rec, uv_size));
+    double v_err = static_cast<double>(
+      libyuv::ComputeSumSquareError(v_org, v_rec, uv_size));
+#else
     double y_err = ComputeSumSquareError(ch_org, ch_rec, y_size);
     double u_err = ComputeSumSquareError(u_org, u_rec, uv_size);
     double v_err = ComputeSumSquareError(v_org, v_rec, uv_size);
+#endif
     const double total_err = y_err + u_err + v_err;
     cur_distortion_psnr->global_y += y_err;
     cur_distortion_psnr->global_u += u_err;
@@ -230,10 +269,10 @@ bool UpdateMetrics(uint8* ch_org, uint8* ch_rec,
                                        static_cast<double>(total_size));
   } else {
     distorted_frame->y = CalcSSIM(ch_org, ch_rec, image_width, image_height);
-    distorted_frame->u = CalcSSIM(u_org, u_rec, image_width / 2,
-                                 image_height / 2);
-    distorted_frame->v = CalcSSIM(v_org, v_rec, image_width / 2,
-                                 image_height / 2);
+    distorted_frame->u = CalcSSIM(u_org, u_rec, (image_width + 1) / 2,
+                                 (image_height + 1) / 2);
+    distorted_frame->v = CalcSSIM(v_org, v_rec, (image_width + 1) / 2,
+                                 (image_height + 1) / 2);
     distorted_frame->all =
       (distorted_frame->y + distorted_frame->u + distorted_frame->v)
         / total_size;
@@ -386,14 +425,62 @@ int main(int argc, const char* argv[]) {
       break;
 
     size_t bytes_org = fread(ch_org, sizeof(uint8), total_size, file_org);
-    if (bytes_org < total_size)
+    if (bytes_org < total_size) {
+#ifdef HAVE_JPEG
+      // Try parsing file as a jpeg.
+      uint8* const ch_jpeg = new uint8[bytes_org];
+      memcpy(ch_jpeg, ch_org, bytes_org);
+      memset(ch_org, 0, total_size);
+
+      if (0 != libyuv::MJPGToI420(ch_jpeg, bytes_org,
+                                  ch_org,
+                                  image_width,
+                                  ch_org + y_size,
+                                  (image_width + 1) / 2,
+                                  ch_org + y_size + uv_size,
+                                  (image_width + 1) / 2,
+                                  image_width,
+                                  image_height,
+                                  image_width,
+                                  image_height)) {
+        delete[] ch_jpeg;
+        break;
+      }
+      delete[] ch_jpeg;
+#else
       break;
+#endif  // HAVE_JPEG
+    }
 
     for (int cur_rec = 0; cur_rec < num_rec; ++cur_rec) {
       size_t bytes_rec = fread(ch_rec, sizeof(uint8),
                                total_size, file_rec[cur_rec]);
-      if (bytes_rec < total_size)
+      if (bytes_rec < total_size) {
+#ifdef HAVE_JPEG
+        // Try parsing file as a jpeg.
+        uint8* const ch_jpeg = new uint8[bytes_rec];
+        memcpy(ch_jpeg, ch_rec, bytes_rec);
+        memset(ch_rec, 0, total_size);
+
+        if (0 != libyuv::MJPGToI420(ch_jpeg, bytes_rec,
+                                    ch_rec,
+                                    image_width,
+                                    ch_rec + y_size,
+                                    (image_width + 1) / 2,
+                                    ch_rec + y_size + uv_size,
+                                    (image_width + 1) / 2,
+                                    image_width,
+                                    image_height,
+                                    image_width,
+                                    image_height)) {
+          delete[] ch_jpeg;
+          break;
+        }
+        delete[] ch_jpeg;
+#else
         break;
+#endif  // HAVE_JPEG
+      }
 
       if (verbose) {
         printf("%5d", number_of_frames);
