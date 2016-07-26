@@ -89,7 +89,8 @@ class Instance
              const ShareableBytes* maybeBytecode,
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
-             Handle<FunctionVector> funcImports);
+             Handle<FunctionVector> funcImports,
+             const ValVector& globalImports);
     ~Instance();
     bool init(JSContext* cx);
     void trace(JSTracer* trc);

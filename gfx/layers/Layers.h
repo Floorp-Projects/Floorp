@@ -1387,7 +1387,7 @@ public:
    * visible regions of higher siblings of this layer and each ancestor.
    *
    * Note translation values for offsets of visible regions and accumulated
-   * aLayerOffset are integer rounded using Point's RoundedToInt.
+   * aLayerOffset are integer rounded using IntPoint::Round.
    *
    * @param aResult - the resulting visible region of this layer.
    * @param aLayerOffset - this layer's total offset from the root layer.

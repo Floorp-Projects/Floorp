@@ -5210,7 +5210,7 @@ nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY,
 
         // if we've determined that we should still rollup, do it.
         bool usePoint = !aIsWheel && !aAlwaysRollup;
-        nsIntPoint point(aMouseX, aMouseY);
+        IntPoint point = IntPoint::Truncate(aMouseX, aMouseY);
         if (rollup && rollupListener->Rollup(popupsToRollup, true, usePoint ? &point : nullptr, nullptr)) {
             retVal = true;
         }
@@ -6811,7 +6811,7 @@ LayoutDeviceIntPoint
 nsWindow::GdkEventCoordsToDevicePixels(gdouble x, gdouble y)
 {
     gint scale = GdkScaleFactor();
-    return LayoutDeviceIntPoint(floor(x * scale + 0.5), floor(y * scale + 0.5));
+    return LayoutDeviceIntPoint::Round(x * scale, y * scale);
 }
 
 LayoutDeviceIntPoint

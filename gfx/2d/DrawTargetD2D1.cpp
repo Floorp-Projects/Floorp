@@ -339,7 +339,7 @@ DrawTargetD2D1::MaskSurface(const Pattern &aSource,
     return;
   }
 
-  IntSize size = IntSize(bitmap->GetSize().width, bitmap->GetSize().height);
+  IntSize size = IntSize::Truncate(bitmap->GetSize().width, bitmap->GetSize().height);
 
   Rect maskRect = Rect(0.f, 0.f, Float(size.width), Float(size.height));
 

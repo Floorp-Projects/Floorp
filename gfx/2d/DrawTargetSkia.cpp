@@ -538,7 +538,7 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
   SkPaint shadowPaint;
   shadowPaint.setXfermodeMode(GfxOpToSkiaOp(aOperator));
 
-  IntPoint shadowDest = RoundedToInt(aDest + aOffset);
+  auto shadowDest = IntPoint::Round(aDest + aOffset);
 
   SkBitmap blurMask;
   if (!UsingSkiaGPU() &&
@@ -569,7 +569,7 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
   }
 
   // Composite the original image after the shadow
-  IntPoint dest = RoundedToInt(aDest);
+  auto dest = IntPoint::Round(aDest);
   mCanvas->drawBitmap(bitmap, dest.x, dest.y, &paint);
 
   mCanvas->restore();

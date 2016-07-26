@@ -172,6 +172,13 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
                 sig.id = SigIdDesc::immediate(sig);
             }
         }
+
+        for (GlobalDesc& global : shared_->globals) {
+            if (global.isConstant())
+                continue;
+            if (!allocateGlobal(&global))
+                return false;
+        }
     } else {
         MOZ_ASSERT(shared_->sigs.length() == MaxSigs);
         MOZ_ASSERT(shared_->tables.length() == MaxTables);
@@ -590,11 +597,11 @@ ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* g
 }
 
 bool
-ModuleGenerator::allocateGlobal(ValType type, bool isConst, uint32_t* index)
+ModuleGenerator::allocateGlobal(GlobalDesc* global)
 {
     MOZ_ASSERT(!startedFuncDefs_);
     unsigned width = 0;
-    switch (type) {
+    switch (global->type()) {
       case ValType::I32:
       case ValType::F32:
         width = 4;
@@ -621,8 +628,22 @@ ModuleGenerator::allocateGlobal(ValType type, bool isConst, uint32_t* index)
     if (!allocateGlobalBytes(width, width, &offset))
         return false;
 
+    global->setOffset(offset);
+    return true;
+}
+
+bool
+ModuleGenerator::addGlobal(ValType type, bool isConst, uint32_t* index)
+{
+    MOZ_ASSERT(isAsmJS());
+    MOZ_ASSERT(!startedFuncDefs_);
+
     *index = shared_->globals.length();
-    return shared_->globals.append(GlobalDesc(type, offset, isConst));
+    GlobalDesc global(type, !isConst, *index);
+    if (!allocateGlobal(&global))
+        return false;
+
+    return shared_->globals.append(global);
 }
 
 void
@@ -713,7 +734,7 @@ ModuleGenerator::funcImport(uint32_t funcImportIndex) const
 bool
 ModuleGenerator::addFuncExport(UniqueChars fieldName, uint32_t funcIndex)
 {
-    return exports_.emplaceBack(Move(fieldName), funcIndex) &&
+    return exports_.emplaceBack(Move(fieldName), funcIndex, DefinitionKind::Function) &&
            exportedFuncs_.put(funcIndex);
 }
 
@@ -729,6 +750,12 @@ bool
 ModuleGenerator::addMemoryExport(UniqueChars fieldName)
 {
     return exports_.emplaceBack(Move(fieldName), DefinitionKind::Memory);
+}
+
+bool
+ModuleGenerator::addGlobalExport(UniqueChars fieldName, uint32_t globalIndex)
+{
+    return exports_.emplaceBack(Move(fieldName), globalIndex, DefinitionKind::Global);
 }
 
 bool
@@ -869,8 +896,6 @@ ModuleGenerator::finishFuncDefs()
 bool
 ModuleGenerator::addElemSegment(ElemSegment&& seg)
 {
-    MOZ_ASSERT(seg.offset + seg.elems.length() <= shared_->tables[seg.tableIndex].initial);
-
     if (externalTable_) {
         for (uint32_t funcIndex : seg.elems) {
             if (!exportedFuncs_.put(funcIndex))
@@ -915,7 +940,7 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncInd
     uint32_t tableIndex = shared_->asmJSSigToTableIndex[sigIndex];
     MOZ_ASSERT(shared_->tables[tableIndex].initial == elemFuncIndices.length());
 
-    return elemSegments_.emplaceBack(tableIndex, 0, Move(elemFuncIndices));
+    return elemSegments_.emplaceBack(tableIndex, InitExpr(Val(uint32_t(0))), Move(elemFuncIndices));
 }
 
 SharedModule
@@ -970,6 +995,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     metadata_->minMemoryLength = shared_->minMemoryLength;
     metadata_->maxMemoryLength = shared_->maxMemoryLength;
     metadata_->tables = Move(shared_->tables);
+    metadata_->globals = Move(shared_->globals);
 
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
