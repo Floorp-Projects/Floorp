@@ -1473,6 +1473,8 @@ protected:
     bool mNeedsFakeNoStencil;
     bool mNeedsEmulatedLoneDepthStencil;
 
+    bool HasTimestampBits() const;
+
     struct ScopedMaskWorkaround {
         WebGLContext& mWebGL;
         const bool mFakeNoAlpha;
