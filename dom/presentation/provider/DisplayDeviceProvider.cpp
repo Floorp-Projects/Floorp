@@ -265,24 +265,22 @@ DisplayDeviceProvider::StartTCPService()
    * If |servicePort| is non-zero, it means PresentationServer is running.
    * Otherwise, we should make it start serving.
    */
-  if (!servicePort) {
-    rv = mPresentationService->SetListener(mWrappedListener);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = mPresentationService->StartServer(0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = mPresentationService->GetPort(&servicePort);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (servicePort) {
+    mPort = servicePort;
+    return NS_OK;
   }
 
-  mPort = servicePort;
+  rv = mPresentationService->SetListener(mWrappedListener);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // 1-UA doesn't need encryption.
+  rv = mPresentationService->StartServer(/* aEncrypted = */ false,
+                                         /* aPort = */ 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -367,10 +365,26 @@ DisplayDeviceProvider::ForceDiscovery()
 
 // nsIPresentationControlServerListener
 NS_IMETHODIMP
-DisplayDeviceProvider::OnPortChange(uint16_t aPort)
+DisplayDeviceProvider::OnServerReady(uint16_t aPort,
+                                     const nsACString& aCertFingerprint)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mPort = aPort;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DisplayDeviceProvider::OnServerStopped(nsresult aResult)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Try restart server if it is stopped abnormally.
+  if (NS_FAILED(aResult)) {
+    return NS_DispatchToMainThread(
+             NewRunnableMethod(this, &DisplayDeviceProvider::StartTCPService));
+  }
+
   return NS_OK;
 }
 

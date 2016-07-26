@@ -149,8 +149,10 @@ private:
   };
 
   virtual ~MulticastDNSDeviceProvider();
-  nsresult RegisterService();
-  nsresult UnregisterService(nsresult aReason);
+  nsresult StartServer();
+  nsresult StopServer();
+  nsresult RegisterMDNSService();
+  nsresult UnregisterMDNSService(nsresult aReason);
   nsresult StopDiscovery(nsresult aReason);
   nsresult Connect(Device* aDevice,
                    nsIPresentationControlChannel** aRetVal);
@@ -206,6 +208,7 @@ private:
   nsCOMPtr<nsITimer> mDiscoveryTimer;
 
   bool mDiscoverable = false;
+  bool mDiscoverableEncrypted = false;
 
   nsCString mServiceName;
   nsCString mRegisteredName;

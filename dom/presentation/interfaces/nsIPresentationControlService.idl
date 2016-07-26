@@ -29,13 +29,23 @@ interface nsITCPDeviceInfo: nsISupports
 interface nsIPresentationControlServerListener: nsISupports
 {
   /**
-   * Callback while the server socket changes port.
-   * This event won't be cached so you should get current port after setting
-   * this listener to make sure the value is updated.
+   * Callback while the server is ready or restarted.
    * @param   aPort
    *          The port of the server socket.
+   * @param   aCertFingerprint
+   *          The SHA-256 fingerprint of TLS server certificate.
+   *          Empty string represents server started without encryption.
    */
-  void onPortChange(in uint16_t aPort);
+  void onServerReady(in uint16_t aPort, in AUTF8String aCertFingerprint);
+
+  /**
+   * Callback while the server is stopped or fails to start.
+   * @param   aResult
+   *          The error cause of server stopped or the reason of
+   *          start failure.
+   *          NS_OK means the server is stopped by close.
+   */
+  void onServerStopped(in nsresult aResult);
 
   /**
    * Callback while the remote host is requesting to start a presentation session.
@@ -82,14 +92,17 @@ interface nsIPresentationControlServerListener: nsISupports
 interface nsIPresentationControlService: nsISupports
 {
   /**
-   * This method initialize server socket.
+   * This method initializes server socket. Caller should set listener and
+   * monitor onServerReady event to get the correct server info.
+   * @param   aEncrypted
+   *          True for using TLS control channel.
    * @param   aPort
    *          The port of the server socket.  Pass 0 or opt-out to indicate no
    *          preference, and a port will be selected automatically.
    * @throws  NS_ERROR_FAILURE if the server socket has been inited or the
    *          server socket can not be inited.
    */
-  void startServer([optional] in uint16_t aPort);
+  void startServer(in boolean aEncrypted, [optional] in uint16_t aPort);
 
   /**
    * Request connection to designated remote presentation control receiver.
@@ -113,8 +126,8 @@ interface nsIPresentationControlService: nsISupports
   void close();
 
   /**
-   * Get the listen port of the TCP socket, valid after |init|. 0 indicates
-   * the server socket is not inited or closed.
+   * Get the listen port of the TCP socket, valid after the server is ready.
+   * 0 indicates the server socket is not ready or is closed.
    */
   readonly attribute uint16_t port;
 
@@ -130,7 +143,14 @@ interface nsIPresentationControlService: nsISupports
   attribute AUTF8String id;
 
   /**
-   * the listener for handling events of this presentation control server
+   * The fingerprint of the TLS server certificate.
+   * Empty string indicates the server is not ready or not encrypted.
+   */
+  attribute AUTF8String certFingerprint;
+
+  /**
+   * The listener for handling events of this presentation control server.
+   * Listener must be provided before invoke |startServer| and |close|.
    */
   attribute nsIPresentationControlServerListener listener;
 };

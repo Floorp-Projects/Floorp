@@ -23,6 +23,7 @@
 #define PREF_PRESENTATION_DISCOVERY "dom.presentation.discovery.enabled"
 #define PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS "dom.presentation.discovery.timeout_ms"
 #define PREF_PRESENTATION_DISCOVERABLE "dom.presentation.discoverable"
+#define PREF_PRESENTATION_DISCOVERABLE_ENCRYPTED "dom.presentation.discoverable.encrypted"
 #define PREF_PRESENTATION_DEVICE_NAME "dom.presentation.device.name"
 
 #define SERVICE_TYPE "_presentation-ctrl._tcp"
@@ -149,6 +150,7 @@ MulticastDNSDeviceProvider::Init()
   mDiscoveryEnabled = Preferences::GetBool(PREF_PRESENTATION_DISCOVERY);
   mDiscoveryTimeoutMs = Preferences::GetUint(PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS);
   mDiscoverable = Preferences::GetBool(PREF_PRESENTATION_DISCOVERABLE);
+  mDiscoverableEncrypted = Preferences::GetBool(PREF_PRESENTATION_DISCOVERABLE_ENCRYPTED);
   mServiceName = Preferences::GetCString(PREF_PRESENTATION_DEVICE_NAME);
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -165,7 +167,7 @@ MulticastDNSDeviceProvider::Init()
     return rv;
   }
 
-  if (mDiscoverable && NS_WARN_IF(NS_FAILED(rv = RegisterService()))) {
+  if (mDiscoverable && NS_WARN_IF(NS_FAILED(rv = StartServer()))) {
     return rv;
   }
 
@@ -187,7 +189,7 @@ MulticastDNSDeviceProvider::Uninit()
   Preferences::RemoveObservers(this, kObservedPrefs);
 
   StopDiscovery(NS_OK);
-  UnregisterService(NS_OK);
+  StopServer();
 
   mMulticastDNS = nullptr;
 
@@ -201,9 +203,9 @@ MulticastDNSDeviceProvider::Uninit()
 }
 
 nsresult
-MulticastDNSDeviceProvider::RegisterService()
+MulticastDNSDeviceProvider::StartServer()
 {
-  LOG_I("RegisterService: %s (%d)", mServiceName.get(), mDiscoverable);
+  LOG_I("StartServer: %s (%d)", mServiceName.get(), mDiscoverable);
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mDiscoverable) {
@@ -218,25 +220,59 @@ MulticastDNSDeviceProvider::RegisterService()
   }
 
   /**
-    * If |servicePort| is non-zero, it means PresentationServer is running.
+    * If |servicePort| is non-zero, it means PresentationControlService is running.
     * Otherwise, we should make it start serving.
     */
-  if (!servicePort) {
-    if (NS_WARN_IF(NS_FAILED(rv = mPresentationService->SetListener(mWrappedListener)))) {
-      return rv;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv = mPresentationService->StartServer(0)))) {
-      return rv;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv = mPresentationService->GetPort(&servicePort)))) {
-      return rv;
-    }
+  if (servicePort) {
+    return RegisterMDNSService();
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv = mPresentationService->SetListener(mWrappedListener)))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv = mPresentationService->StartServer(mDiscoverableEncrypted, 0)))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+MulticastDNSDeviceProvider::StopServer()
+{
+  LOG_I("StopServer: %s", mServiceName.get());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  UnregisterMDNSService(NS_OK);
+
+  if (mPresentationService) {
+    mPresentationService->SetListener(nullptr);
+    mPresentationService->Close();
+  }
+
+  return NS_OK;
+}
+
+nsresult
+MulticastDNSDeviceProvider::RegisterMDNSService()
+{
+  LOG_I("RegisterMDNSService: %s", mServiceName.get());
+
+  if (!mDiscoverable) {
+    return NS_OK;
   }
 
   // Cancel on going service registration.
-  if (mRegisterRequest) {
-    mRegisterRequest->Cancel(NS_OK);
-    mRegisterRequest = nullptr;
+  UnregisterMDNSService(NS_OK);
+
+  nsresult rv;
+
+  uint16_t servicePort;
+  if (NS_FAILED(rv = mPresentationService->GetPort(&servicePort)) ||
+      !servicePort) {
+    // Abort service registration if server port is not available.
+    return rv;
   }
 
   /**
@@ -269,6 +305,17 @@ MulticastDNSDeviceProvider::RegisterService()
   rv = propBag->SetPropertyAsUint32(NS_LITERAL_STRING(PROTOCOL_VERSION_TAG),
                                     version);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  if (mDiscoverableEncrypted) {
+    nsAutoCString certFingerprint;
+    rv = mPresentationService->GetCertFingerprint(certFingerprint);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    rv = propBag->SetPropertyAsACString(NS_LITERAL_STRING(CERT_FINGERPRINT_TAG),
+                                        certFingerprint);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
   if (NS_WARN_IF(NS_FAILED(rv = serviceInfo->SetAttributes(propBag)))) {
     return rv;
   }
@@ -279,18 +326,14 @@ MulticastDNSDeviceProvider::RegisterService()
 }
 
 nsresult
-MulticastDNSDeviceProvider::UnregisterService(nsresult aReason)
+MulticastDNSDeviceProvider::UnregisterMDNSService(nsresult aReason)
 {
+  LOG_I("UnregisterMDNSService: %s (0x%08x)", mServiceName.get(), aReason);
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mRegisterRequest) {
     mRegisterRequest->Cancel(aReason);
     mRegisterRequest = nullptr;
-  }
-
-  if (mPresentationService) {
-    mPresentationService->SetListener(nullptr);
-    mPresentationService->Close();
   }
 
   return NS_OK;
@@ -768,7 +811,7 @@ MulticastDNSDeviceProvider::OnRegistrationFailed(nsIDNSServiceInfo* aServiceInfo
 
   if (aErrorCode == nsIDNSRegistrationListener::ERROR_SERVICE_NOT_RUNNING) {
     return NS_DispatchToMainThread(
-             NewRunnableMethod(this, &MulticastDNSDeviceProvider::RegisterService));
+             NewRunnableMethod(this, &MulticastDNSDeviceProvider::RegisterMDNSService));
   }
 
   return NS_OK;
@@ -880,13 +923,30 @@ MulticastDNSDeviceProvider::OnResolveFailed(nsIDNSServiceInfo* aServiceInfo,
 
 // nsIPresentationControlServerListener
 NS_IMETHODIMP
-MulticastDNSDeviceProvider::OnPortChange(uint16_t aPort)
+MulticastDNSDeviceProvider::OnServerReady(uint16_t aPort,
+                                          const nsACString& aCertFingerprint)
 {
-  LOG_I("OnPortChange: %d", aPort);
+  LOG_I("OnServerReady: %d, %s", aPort, PromiseFlatCString(aCertFingerprint).get());
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mDiscoverable) {
-    RegisterService();
+    RegisterMDNSService();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MulticastDNSDeviceProvider::OnServerStopped(nsresult aResult)
+{
+  LOG_I("OnServerStopped: (0x%08x)", aResult);
+
+  UnregisterMDNSService(aResult);
+
+  // Try restart server if it is stopped abnormally.
+  if (NS_FAILED(aResult) && mDiscoverable) {
+    return NS_DispatchToMainThread(
+             NewRunnableMethod(this, &MulticastDNSDeviceProvider::StartServer));
   }
 
   return NS_OK;
@@ -1060,10 +1120,10 @@ MulticastDNSDeviceProvider::OnDiscoverableChanged(bool aEnabled)
   mDiscoverable = aEnabled;
 
   if (mDiscoverable) {
-    return RegisterService();
+    return StartServer();
   }
 
-  return UnregisterService(NS_OK);
+  return StopServer();
 }
 
 nsresult
@@ -1075,12 +1135,12 @@ MulticastDNSDeviceProvider::OnServiceNameChanged(const nsACString& aServiceName)
   mServiceName = aServiceName;
 
   nsresult rv;
-  if (NS_WARN_IF(NS_FAILED(rv = UnregisterService(NS_OK)))) {
+  if (NS_WARN_IF(NS_FAILED(rv = UnregisterMDNSService(NS_OK)))) {
     return rv;
   }
 
   if (mDiscoverable) {
-    return RegisterService();
+    return RegisterMDNSService();
   }
 
   return NS_OK;
