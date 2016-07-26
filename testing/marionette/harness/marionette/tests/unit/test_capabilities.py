@@ -15,7 +15,7 @@ class TestCapabilities(MarionetteTestCase):
             self.appinfo = self.marionette.execute_script(
                 "return Services.appinfo")
             self.os_name = self.marionette.execute_script(
-                "return Services.sysinfo.getProperty('name')")
+                "return Services.sysinfo.getProperty('name')").lower()
             self.os_version = self.marionette.execute_script(
                 "return Services.sysinfo.getProperty('version')")
 
@@ -30,7 +30,7 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("platformVersion", self.caps)
         self.assertIn("specificationLevel", self.caps)
 
-        self.assertEqual(self.caps["browserName"], self.appinfo["name"])
+        self.assertEqual(self.caps["browserName"], self.appinfo["name"].lower())
         self.assertEqual(self.caps["browserVersion"], self.appinfo["version"])
         self.assertEqual(self.caps["platformName"], self.os_name)
         self.assertEqual(self.caps["platformVersion"], self.os_version)
@@ -78,12 +78,12 @@ class TestCapabilities(MarionetteTestCase):
         capabilities = {"desiredCapabilities": {"browserName": "ChocolateCake"}}
         self.marionette.start_session(capabilities)
         caps = self.marionette.session_capabilities
-        self.assertEqual(caps["browserName"], self.appinfo["name"],
-                         "This should have appname not ChocolateCake")
+        self.assertEqual(caps["browserName"], self.appinfo["name"].lower(),
+                         "This should have appname not ChocolateCake.")
 
     def test_we_can_pass_in_required_capabilities_on_session_start(self):
         self.marionette.delete_session()
-        capabilities = {"requiredCapabilities": {"browserName": self.appinfo["name"]}}
+        capabilities = {"requiredCapabilities": {"browserName": self.appinfo["name"].lower()}}
         self.marionette.start_session(capabilities)
         caps = self.marionette.session_capabilities
         self.assertIn("browserName", caps)
