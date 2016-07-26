@@ -4,8 +4,12 @@
 
 "use strict";
 
+/* eslint-disable mozilla/reject-some-requires */
 const {Ci} = require("chrome");
+/* eslint-enable mozilla/reject-some-requires */
+/* eslint-disable mozilla/reject-some-requires */
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+/* eslint-enable mozilla/reject-some-requires */
 const {l10n} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const {PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");

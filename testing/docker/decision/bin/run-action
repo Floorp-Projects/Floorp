@@ -1,0 +1,19 @@
+#!/bin/bash
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+set -ex
+
+# The script starts executing as root. We need to change ownership
+# of the caches because they are initially owned by root:root.
+if [ $(id -u) = 0 ]; then
+    chown worker:worker /home/worker/hg-shared /home/worker/workspace
+
+    exec sudo -E -u worker /home/worker/bin/run-action "${@}"
+fi
+
+/home/worker/bin/checkout-gecko /home/worker/workspace/gecko
+cd /home/worker/workspace/gecko
+ln -s /home/worker/artifacts artifacts &&
+eval "./mach taskgraph action-task ${ACTION_ARGS}"

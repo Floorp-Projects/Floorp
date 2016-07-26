@@ -2050,6 +2050,15 @@ FrameLayerBuilder::GetDebugSingleOldPaintedLayerForFrame(nsIFrame* aFrame)
   return layer->AsPaintedLayer();
 }
 
+// Reset state that should not persist when a layer is recycled.
+static void
+ResetLayerStateForRecycling(Layer* aLayer) {
+  // Currently, this clears the mask layer and ancestor mask layers.
+  // Other cleanup may be added here.
+  aLayer->SetMaskLayer(nullptr);
+  aLayer->SetAncestorMaskLayers({});
+}
+
 already_AddRefed<ColorLayer>
 ContainerState::CreateOrRecycleColorLayer(PaintedLayer *aPainted)
 {
@@ -2057,7 +2066,7 @@ ContainerState::CreateOrRecycleColorLayer(PaintedLayer *aPainted)
       static_cast<PaintedDisplayItemLayerUserData*>(aPainted->GetUserData(&gPaintedDisplayItemLayerUserData));
   RefPtr<ColorLayer> layer = data->mColorLayer;
   if (layer) {
-    layer->SetMaskLayer(nullptr);
+    ResetLayerStateForRecycling(layer);
     layer->ClearExtraDumpInfo();
   } else {
     // Create a new layer
@@ -2081,7 +2090,7 @@ ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aPainted)
       static_cast<PaintedDisplayItemLayerUserData*>(aPainted->GetUserData(&gPaintedDisplayItemLayerUserData));
   RefPtr<ImageLayer> layer = data->mImageLayer;
   if (layer) {
-    layer->SetMaskLayer(nullptr);
+    ResetLayerStateForRecycling(layer);
     layer->ClearExtraDumpInfo();
   } else {
     // Create a new layer
@@ -2268,8 +2277,7 @@ ContainerState::RecyclePaintedLayer(PaintedLayer* aLayer,
 {
   // Clear clip rect and mask layer so we don't accidentally stay clipped.
   // We will reapply any necessary clipping.
-  aLayer->SetMaskLayer(nullptr);
-  aLayer->SetAncestorMaskLayers({});
+  ResetLayerStateForRecycling(aLayer);
   aLayer->ClearExtraDumpInfo();
 
   PaintedDisplayItemLayerUserData* data =
@@ -5230,8 +5238,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
         NS_ASSERTION(oldLayer->GetType() == Layer::TYPE_CONTAINER,
                      "Wrong layer type");
         containerLayer = static_cast<ContainerLayer*>(oldLayer);
-        containerLayer->SetMaskLayer(nullptr);
-        containerLayer->SetAncestorMaskLayers({});
+        ResetLayerStateForRecycling(containerLayer);
       }
     }
   }
@@ -5417,7 +5424,7 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
     // layer rendering.
     return nullptr;
   }
-  layer->SetMaskLayer(nullptr);
+  ResetLayerStateForRecycling(layer);
   return layer;
 }
 

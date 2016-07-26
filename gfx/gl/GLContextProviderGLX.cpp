@@ -987,20 +987,6 @@ GLContextGLX::SwapBuffers()
     return true;
 }
 
-Maybe<gfx::IntSize>
-GLContextGLX::GetTargetSize()
-{
-    unsigned int width = 0, height = 0;
-    Window root;
-    int x, y;
-    unsigned int border, depth;
-    XGetGeometry(mDisplay, mDrawable, &root, &x, &y, &width, &height,
-                 &border, &depth);
-    Maybe<gfx::IntSize> size;
-    size.emplace(width, height);
-    return size;
-}
-
 bool
 GLContextGLX::OverrideDrawable(GLXDrawable drawable)
 {

@@ -4,7 +4,9 @@
 
 "use strict";
 
+/* eslint-disable mozilla/reject-some-requires */
 const {Ci} = require("chrome");
+/* eslint-enable mozilla/reject-some-requires */
 const promise = require("promise");
 const {Task} = require("devtools/shared/task");
 

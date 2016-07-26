@@ -783,27 +783,6 @@ protected:
   inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID,
                                              const nsRuleData* aRuleData);
 
-  already_AddRefed<nsCSSShadowArray>
-              GetShadowData(const nsCSSValueList* aList,
-                            nsStyleContext* aContext,
-                            bool aIsBoxShadow,
-                            mozilla::RuleNodeCacheConditions& aConditions);
-  already_AddRefed<nsStyleBasicShape>
-  GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
-                                 nsStyleContext* aStyleContext,
-                                 nsPresContext* aPresContext,
-                                 mozilla::RuleNodeCacheConditions& aConditions);
-  bool SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
-                                const nsCSSValue& aValue,
-                                nsStyleContext* aStyleContext,
-                                nsPresContext* aPresContext,
-                                mozilla::RuleNodeCacheConditions& aConditions);
-  void SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
-                                  const nsCSSValue* aValue,
-                                  nsStyleContext* aStyleContext,
-                                  nsPresContext* aPresContext,
-                                  mozilla::RuleNodeCacheConditions& aConditions);
-
 private:
   nsRuleNode(nsPresContext* aPresContext, nsRuleNode* aParent,
              nsIStyleRule* aRule, mozilla::SheetType aLevel, bool aIsImportant);
