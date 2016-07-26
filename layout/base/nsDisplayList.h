@@ -1351,6 +1351,7 @@ public:
     , mScrollClip(nullptr)
     , mReferenceFrame(nullptr)
     , mAnimatedGeometryRoot(nullptr)
+    , mForceNotVisible(false)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
