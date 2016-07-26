@@ -1,14 +1,19 @@
 #!/bin/bash -vex
 
+set -e
+
 : WORKSPACE ${WORKSPACE:=$PWD}
+: TOOLTOOL ${TOOLTOOL:=python $WORKSPACE/tooltool.py}
 
 CORES=$(nproc || grep -c ^processor /proc/cpuinfo || sysctl -n hw.ncpu)
 echo Building on $CORES cpus...
 
-OPTIONS="--disable-elf-tls --disable-docs"
+OPTIONS="--enable-debuginfo --disable-docs"
 TARGETS="x86_64-apple-darwin,i686-apple-darwin"
 
 PREFIX=${WORKSPACE}/rustc
+
+set -v
 
 mkdir -p ${WORKSPACE}/gecko-rust-mac
 pushd ${WORKSPACE}/gecko-rust-mac
@@ -25,6 +30,7 @@ popd
 
 # Package the toolchain for upload.
 pushd ${WORKSPACE}
+rustc/bin/rustc --version
 tar cvjf rustc.tar.bz2 rustc/*
-python tooltool.py add --visibility=public --unpack rustc.tar.bz2
+${TOOLTOOL} add --visibility=public --unpack rustc.tar.bz2
 popd
