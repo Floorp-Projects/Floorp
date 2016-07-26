@@ -62,7 +62,6 @@ void init_source(jpeg_decompress_struct* cinfo);
 void skip_input_data(jpeg_decompress_struct* cinfo, long num_bytes);  // NOLINT
 void term_source(jpeg_decompress_struct* cinfo);
 void ErrorHandler(jpeg_common_struct* cinfo);
-void OutputHandler(jpeg_common_struct* cinfo);
 
 MJpegDecoder::MJpegDecoder()
     : has_scanline_padding_(LIBYUV_FALSE),
@@ -78,9 +77,6 @@ MJpegDecoder::MJpegDecoder()
   decompress_struct_->err = jpeg_std_error(&error_mgr_->base);
   // Override standard exit()-based error handler.
   error_mgr_->base.error_exit = &ErrorHandler;
-#ifndef DEBUG_MJPEG
-  error_mgr_->base.output_message = &OutputHandler;
-#endif
 #endif
   decompress_struct_->client_data = NULL;
   source_mgr_->init_source = &init_source;
@@ -460,13 +456,7 @@ void ErrorHandler(j_common_ptr cinfo) {
   // and causes it to return (for a second time) with value 1.
   longjmp(mgr->setjmp_buffer, 1);
 }
-
-#ifndef DEBUG_MJPEG
-void OutputHandler(j_common_ptr cinfo) {
-  // silently eat messages
-}
 #endif
-#endif // HAVE_SETJMP
 
 void MJpegDecoder::AllocOutputBuffers(int num_outbufs) {
   if (num_outbufs != num_outbufs_) {
