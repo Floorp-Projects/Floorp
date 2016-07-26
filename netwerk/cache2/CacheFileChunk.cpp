@@ -587,7 +587,7 @@ CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen)
 
   mIsDirty = true;
 
-  int64_t fileSize = kChunkSize * mIndex + aOffset + aLen;
+  int64_t fileSize = static_cast<int64_t>(kChunkSize) * mIndex + aOffset + aLen;
   bool notify = false;
 
   if (fileSize > mFile->mDataSize) {

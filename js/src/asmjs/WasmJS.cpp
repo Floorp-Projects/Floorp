@@ -22,11 +22,14 @@
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmModule.h"
 
+#include "jit/JitOptions.h"
+
 #include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
+using namespace js::jit;
 using namespace js::wasm;
 
 bool
@@ -89,15 +92,21 @@ GetProperty(JSContext* cx, HandleObject obj, const char* chars, MutableHandleVal
 
 static bool
 GetImports(JSContext* cx,
+           const Module& module,
            HandleObject importObj,
-           const ImportVector& imports,
            MutableHandle<FunctionVector> funcImports,
            MutableHandleWasmTableObject tableImport,
-           MutableHandleWasmMemoryObject memoryImport)
+           MutableHandleWasmMemoryObject memoryImport,
+           ValVector* globalImports)
 {
+    const ImportVector& imports = module.imports();
     if (!imports.empty() && !importObj)
         return Throw(cx, "no import object given");
 
+    const Metadata& metadata = module.metadata();
+
+    uint32_t globalIndex = 0;
+    const GlobalDescVector& globals = metadata.globals;
     for (const Import& import : imports) {
         RootedValue v(cx);
         if (!GetProperty(cx, importObj, import.module.get(), &v))
@@ -135,8 +144,52 @@ GetImports(JSContext* cx,
             MOZ_ASSERT(!memoryImport);
             memoryImport.set(&v.toObject().as<WasmMemoryObject>());
             break;
+
+          case DefinitionKind::Global:
+            Val val;
+            const GlobalDesc& global = globals[globalIndex++];
+            MOZ_ASSERT(global.importIndex() == globalIndex - 1);
+            MOZ_ASSERT(!global.isMutable());
+            switch (global.type()) {
+              case ValType::I32: {
+                int32_t i32;
+                if (!ToInt32(cx, v, &i32))
+                    return false;
+                val = Val(uint32_t(i32));
+                break;
+              }
+              case ValType::I64: {
+                MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in JS");
+                int64_t i64;
+                if (!ReadI64Object(cx, v, &i64))
+                    return false;
+                val = Val(uint64_t(i64));
+                break;
+              }
+              case ValType::F32: {
+                double d;
+                if (!ToNumber(cx, v, &d))
+                    return false;
+                val = Val(float(d));
+                break;
+              }
+              case ValType::F64: {
+                double d;
+                if (!ToNumber(cx, v, &d))
+                    return false;
+                val = Val(d);
+                break;
+              }
+              default: {
+                MOZ_CRASH("unexpected import value type");
+              }
+            }
+            if (!globalImports->append(val))
+                return false;
         }
     }
+
+    MOZ_ASSERT(globalIndex == globals.length() || !globals[globalIndex].isImport());
 
     return true;
 }
@@ -184,10 +237,11 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
     RootedWasmTableObject table(cx);
     RootedWasmMemoryObject memory(cx);
-    if (!GetImports(cx, importObj, module->imports(), &funcs, &table, &memory))
+    ValVector globals;
+    if (!GetImports(cx, *module, importObj, &funcs, &table, &memory, &globals))
         return false;
 
-    return module->instantiate(cx, funcs, table, memory, nullptr, instanceObj);
+    return module->instantiate(cx, funcs, table, memory, globals, nullptr, instanceObj);
 }
 
 static bool
@@ -511,12 +565,13 @@ WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
     RootedWasmTableObject table(cx);
     RootedWasmMemoryObject memory(cx);
-    if (!GetImports(cx, importObj, module.imports(), &funcs, &table, &memory))
+    ValVector globals;
+    if (!GetImports(cx, module, importObj, &funcs, &table, &memory, &globals))
         return false;
 
     RootedObject instanceProto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
     RootedWasmInstanceObject instanceObj(cx);
-    if (!module.instantiate(cx, funcs, table, memory, instanceProto, &instanceObj))
+    if (!module.instantiate(cx, funcs, table, memory, globals, instanceProto, &instanceObj))
         return false;
 
     args.rval().setObject(*instanceObj);

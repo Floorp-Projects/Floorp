@@ -86,8 +86,11 @@ class WasmToken
         Export,
         Float,
         Func,
+        GetGlobal,
         GetLocal,
+        Global,
         If,
+        Immutable,
         Import,
         Index,
         Memory,
@@ -105,6 +108,7 @@ class WasmToken
         Result,
         Return,
         Segment,
+        SetGlobal,
         SetLocal,
         SignedInteger,
         Start,
@@ -978,8 +982,12 @@ WasmTokenStream::next()
         break;
 
       case 'g':
+        if (consume(u"get_global"))
+            return WasmToken(WasmToken::GetGlobal, begin, cur_);
         if (consume(u"get_local"))
             return WasmToken(WasmToken::GetLocal, begin, cur_);
+        if (consume(u"global"))
+            return WasmToken(WasmToken::Global, begin, cur_);
         break;
 
       case 'i':
@@ -1266,6 +1274,8 @@ WasmTokenStream::next()
             }
             break;
         }
+        if (consume(u"immutable"))
+            return WasmToken(WasmToken::Immutable, begin, cur_);
         if (consume(u"import"))
             return WasmToken(WasmToken::Import, begin, cur_);
         if (consume(u"infinity"))
@@ -1317,6 +1327,8 @@ WasmTokenStream::next()
       case 's':
         if (consume(u"select"))
             return WasmToken(WasmToken::TernaryOpcode, Expr::Select, begin, cur_);
+        if (consume(u"set_global"))
+            return WasmToken(WasmToken::SetGlobal, begin, cur_);
         if (consume(u"set_local"))
             return WasmToken(WasmToken::SetLocal, begin, cur_);
         if (consume(u"segment"))
@@ -1841,6 +1853,29 @@ ParseGetLocal(WasmParseContext& c)
     return new(c.lifo) AstGetLocal(local);
 }
 
+static AstGetGlobal*
+ParseGetGlobal(WasmParseContext& c)
+{
+    AstRef local;
+    if (!c.ts.matchRef(&local, c.error))
+        return nullptr;
+    return new(c.lifo) AstGetGlobal(local);
+}
+
+static AstSetGlobal*
+ParseSetGlobal(WasmParseContext& c)
+{
+    AstRef global;
+    if (!c.ts.matchRef(&global, c.error))
+        return nullptr;
+
+    AstExpr* value = ParseExpr(c);
+    if (!value)
+        return nullptr;
+
+    return new(c.lifo) AstSetGlobal(global, *value);
+}
+
 static AstSetLocal*
 ParseSetLocal(WasmParseContext& c)
 {
@@ -2176,6 +2211,8 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseConversionOperator(c, token.expr());
       case WasmToken::If:
         return ParseIf(c);
+      case WasmToken::GetGlobal:
+        return ParseGetGlobal(c);
       case WasmToken::GetLocal:
         return ParseGetLocal(c);
       case WasmToken::Load:
@@ -2184,6 +2221,8 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseBlock(c, Expr::Loop);
       case WasmToken::Return:
         return ParseReturn(c);
+      case WasmToken::SetGlobal:
+        return ParseSetGlobal(c);
       case WasmToken::SetLocal:
         return ParseSetLocal(c);
       case WasmToken::Store:
@@ -2423,6 +2462,20 @@ ParseStartFunc(WasmParseContext& c, WasmToken token, AstModule* module)
     return true;
 }
 
+static bool
+ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, uint32_t* flags)
+{
+    if (!c.ts.match(WasmToken::ValueType, typeToken, c.error))
+        return false;
+
+    // Mutable by default.
+    *flags = 0x1;
+    if (c.ts.getIf(WasmToken::Immutable))
+        *flags = 0x0;
+
+    return true;
+}
+
 static AstImport*
 ParseImport(WasmParseContext& c, bool newFormat, AstModule* module)
 {
@@ -2457,6 +2510,16 @@ ParseImport(WasmParseContext& c, bool newFormat, AstModule* module)
                     return nullptr;
                 return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
                                              DefinitionKind::Table, table);
+            }
+            if (c.ts.getIf(WasmToken::Global)) {
+                WasmToken typeToken;
+                uint32_t flags = 0;
+                if (!ParseGlobalType(c, &typeToken, &flags))
+                    return nullptr;
+                if (!c.ts.match(WasmToken::CloseParen, c.error))
+                    return nullptr;
+                return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
+                                             AstGlobal(AstName(), typeToken.valueType(), flags));
             }
         }
 
@@ -2494,13 +2557,21 @@ ParseExport(WasmParseContext& c)
     WasmToken exportee = c.ts.get();
     switch (exportee.kind()) {
       case WasmToken::Index:
-        return new(c.lifo) AstExport(name.text(), AstRef(AstName(), exportee.index()));
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function,
+                                     AstRef(AstName(), exportee.index()));
       case WasmToken::Name:
-        return new(c.lifo) AstExport(name.text(), AstRef(exportee.name(), AstNoIndex));
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function,
+                                     AstRef(exportee.name(), AstNoIndex));
       case WasmToken::Table:
         return new(c.lifo) AstExport(name.text(), DefinitionKind::Table);
       case WasmToken::Memory:
         return new(c.lifo) AstExport(name.text(), DefinitionKind::Memory);
+      case WasmToken::Global: {
+        AstRef ref;
+        if (!c.ts.matchRef(&ref, c.error))
+            return nullptr;
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Global, ref);
+      }
       default:
         break;
     }
@@ -2541,15 +2612,19 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         return false;
     }
 
-    AstElemSegment* segment = new(c.lifo) AstElemSegment(0, Move(elems));
+    auto* zero = new(c.lifo) AstConst(Val(uint32_t(0)));
+    if (!zero)
+        return false;
+
+    AstElemSegment* segment = new(c.lifo) AstElemSegment(zero, Move(elems));
     return segment && module->append(segment);
 }
 
 static AstElemSegment*
 ParseElemSegment(WasmParseContext& c)
 {
-    WasmToken offset;
-    if (!c.ts.match(WasmToken::Index, &offset, c.error))
+    AstExpr* offset = ParseExpr(c);
+    if (!offset)
         return nullptr;
 
     AstRefVector elems(c.lifo);
@@ -2560,7 +2635,24 @@ ParseElemSegment(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstElemSegment(offset.index(), Move(elems));
+    return new(c.lifo) AstElemSegment(offset, Move(elems));
+}
+
+static AstGlobal*
+ParseGlobal(WasmParseContext& c)
+{
+    AstName name = c.ts.getIfName();
+
+    WasmToken typeToken;
+    uint32_t flags = 0;
+    if (!ParseGlobalType(c, &typeToken, &flags))
+        return nullptr;
+
+    AstExpr* init = ParseExpr(c);
+    if (!init)
+        return nullptr;
+
+    return new(c.lifo) AstGlobal(name, typeToken.valueType(), flags, Some(init));
 }
 
 static AstModule*
@@ -2594,6 +2686,12 @@ ParseModule(const char16_t* text, bool newFormat, LifoAlloc& lifo, UniqueChars* 
           }
           case WasmToken::Memory: {
             if (!ParseMemory(c, section, module))
+                return nullptr;
+            break;
+          }
+          case WasmToken::Global: {
+            AstGlobal* global = ParseGlobal(c);
+            if (!global || !module->append(global))
                 return nullptr;
             break;
           }
@@ -2658,6 +2756,7 @@ class Resolver
 {
     UniqueChars* error_;
     AstNameMap varMap_;
+    AstNameMap globalMap_;
     AstNameMap sigMap_;
     AstNameMap funcMap_;
     AstNameMap importMap_;
@@ -2703,13 +2802,18 @@ class Resolver
     explicit Resolver(LifoAlloc& lifo, UniqueChars* error)
       : error_(error),
         varMap_(lifo),
+        globalMap_(lifo),
         sigMap_(lifo),
         funcMap_(lifo),
         importMap_(lifo),
         targetStack_(lifo)
     {}
     bool init() {
-        return sigMap_.init() && funcMap_.init() && importMap_.init() && varMap_.init();
+        return sigMap_.init() &&
+               funcMap_.init() &&
+               importMap_.init() &&
+               varMap_.init() &&
+               globalMap_.init();
     }
     void beginFunc() {
         varMap_.clear();
@@ -2726,6 +2830,9 @@ class Resolver
     }
     bool registerVarName(AstName name, size_t index) {
         return name.empty() || registerName(varMap_, name, index);
+    }
+    bool registerGlobalName(AstName name, size_t index) {
+        return name.empty() || registerName(globalMap_, name, index);
     }
     bool pushTarget(AstName name) {
         return targetStack_.append(name);
@@ -2753,6 +2860,11 @@ class Resolver
     bool resolveLocal(AstRef& ref) {
         if (!ref.name().empty() && !resolveRef(varMap_, ref))
             return failResolveLabel("local", ref.name());
+        return true;
+    }
+    bool resolveGlobal(AstRef& ref) {
+        if (!ref.name().empty() && !resolveRef(globalMap_, ref))
+            return failResolveLabel("global", ref.name());
         return true;
     }
     bool resolveBranchTarget(AstRef& ref) {
@@ -2888,6 +3000,24 @@ ResolveSetLocal(Resolver& r, AstSetLocal& sl)
 }
 
 static bool
+ResolveGetGlobal(Resolver& r, AstGetGlobal& gl)
+{
+    return r.resolveGlobal(gl.global());
+}
+
+static bool
+ResolveSetGlobal(Resolver& r, AstSetGlobal& sl)
+{
+    if (!ResolveExpr(r, sl.value()))
+        return false;
+
+    if (!r.resolveGlobal(sl.global()))
+        return false;
+
+    return true;
+}
+
+static bool
 ResolveUnaryOperator(Resolver& r, AstUnaryOperator& b)
 {
     return ResolveExpr(r, *b.op());
@@ -3006,6 +3136,8 @@ ResolveExpr(Resolver& r, AstExpr& expr)
         return true;
       case AstExprKind::ConversionOperator:
         return ResolveConversionOperator(r, expr.as<AstConversionOperator>());
+      case AstExprKind::GetGlobal:
+        return ResolveGetGlobal(r, expr.as<AstGetGlobal>());
       case AstExprKind::GetLocal:
         return ResolveGetLocal(r, expr.as<AstGetLocal>());
       case AstExprKind::If:
@@ -3014,6 +3146,8 @@ ResolveExpr(Resolver& r, AstExpr& expr)
         return ResolveLoad(r, expr.as<AstLoad>());
       case AstExprKind::Return:
         return ResolveReturn(r, expr.as<AstReturn>());
+      case AstExprKind::SetGlobal:
+        return ResolveSetGlobal(r, expr.as<AstSetGlobal>());
       case AstExprKind::SetLocal:
         return ResolveSetLocal(r, expr.as<AstSetLocal>());
       case AstExprKind::Store:
@@ -3033,8 +3167,7 @@ ResolveFunc(Resolver& r, AstFunc& func)
 {
     r.beginFunc();
 
-    size_t numVars = func.locals().length();
-    for (size_t i = 0; i < numVars; i++) {
+    for (size_t i = 0; i < func.locals().length(); i++) {
         if (!r.registerVarName(func.locals()[i], i))
             return r.fail("duplicate var");
     }
@@ -3078,15 +3211,19 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     }
 
     size_t numImports = module->imports().length();
+    size_t lastGlobalIndex = 0;
     for (size_t i = 0; i < numImports; i++) {
         AstImport* imp = module->imports()[i];
-        if (!r.registerImportName(imp->name(), i))
-            return r.fail("duplicate import");
-
         switch (imp->kind()) {
           case DefinitionKind::Function:
+            if (!r.registerImportName(imp->name(), i))
+                return r.fail("duplicate import");
             if (!r.resolveSignature(imp->funcSig()))
                 return false;
+            break;
+          case DefinitionKind::Global:
+            if (!r.registerGlobalName(imp->name(), lastGlobalIndex++))
+                return r.fail("duplicate import");
             break;
           case DefinitionKind::Memory:
           case DefinitionKind::Table:
@@ -3094,11 +3231,28 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
         }
     }
 
-    for (AstExport* export_ : module->exports()) {
-        if (export_->kind() != DefinitionKind::Function)
-            continue;
-        if (!r.resolveFunction(export_->func()))
+    const AstGlobalVector& globals = module->globals();
+    for (const AstGlobal* global : globals) {
+        if (!r.registerGlobalName(global->name(), lastGlobalIndex++))
+            return r.fail("duplicate import");
+        if (global->hasInit() && !ResolveExpr(r, global->init()))
             return false;
+    }
+
+    for (AstExport* export_ : module->exports()) {
+        switch (export_->kind()) {
+          case DefinitionKind::Function:
+            if (!r.resolveFunction(export_->ref()))
+                return false;
+            break;
+          case DefinitionKind::Global:
+            if (!r.resolveGlobal(export_->ref()))
+                return false;
+            break;
+          case DefinitionKind::Table:
+          case DefinitionKind::Memory:
+            break;
+        }
     }
 
     for (AstFunc* func : module->funcs()) {
@@ -3108,6 +3262,11 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
 
     if (module->hasStartFunc()) {
         if (!r.resolveFunction(module->startFunc().func()))
+            return false;
+    }
+
+    for (AstElemSegment* segment : module->elemSegments()) {
+        if (!ResolveExpr(r, *segment->offset()))
             return false;
     }
 
@@ -3259,6 +3418,21 @@ EncodeSetLocal(Encoder& e, AstSetLocal& sl)
     return EncodeExpr(e, sl.value()) &&
            e.writeExpr(Expr::SetLocal) &&
            e.writeVarU32(sl.local().index());
+}
+
+static bool
+EncodeGetGlobal(Encoder& e, AstGetGlobal& gg)
+{
+    return e.writeExpr(Expr::GetGlobal) &&
+           e.writeVarU32(gg.global().index());
+}
+
+static bool
+EncodeSetGlobal(Encoder& e, AstSetGlobal& sg)
+{
+    return EncodeExpr(e, sg.value()) &&
+           e.writeExpr(Expr::SetGlobal) &&
+           e.writeVarU32(sg.global().index());
 }
 
 static bool
@@ -3427,6 +3601,8 @@ EncodeExpr(Encoder& e, AstExpr& expr)
         return EncodeConversionOperator(e, expr.as<AstConversionOperator>());
       case AstExprKind::GetLocal:
         return EncodeGetLocal(e, expr.as<AstGetLocal>());
+      case AstExprKind::GetGlobal:
+        return EncodeGetGlobal(e, expr.as<AstGetGlobal>());
       case AstExprKind::If:
         return EncodeIf(e, expr.as<AstIf>());
       case AstExprKind::Load:
@@ -3435,6 +3611,8 @@ EncodeExpr(Encoder& e, AstExpr& expr)
         return EncodeReturn(e, expr.as<AstReturn>());
       case AstExprKind::SetLocal:
         return EncodeSetLocal(e, expr.as<AstSetLocal>());
+      case AstExprKind::SetGlobal:
+        return EncodeSetGlobal(e, expr.as<AstSetGlobal>());
       case AstExprKind::Store:
         return EncodeStore(e, expr.as<AstStore>());
       case AstExprKind::BranchTable:
@@ -3569,6 +3747,13 @@ EncodeImport(Encoder& e, bool newFormat, AstImport& imp)
         if (!e.writeVarU32(imp.funcSig().index()))
             return false;
         break;
+      case DefinitionKind::Global:
+        MOZ_ASSERT(!imp.global().hasInit());
+        if (!e.writeValType(imp.global().type()))
+            return false;
+        if (!e.writeVarU32(imp.global().flags()))
+            return false;
+        break;
       case DefinitionKind::Table:
       case DefinitionKind::Memory:
         if (!EncodeResizable(e, imp.resizable()))
@@ -3641,13 +3826,41 @@ EncodeMemorySection(Encoder& e, bool newFormat, AstModule& module)
 }
 
 static bool
+EncodeGlobalSection(Encoder& e, AstModule& module)
+{
+    size_t offset;
+    if (!e.startSection(GlobalSectionId, &offset))
+        return false;
+
+    const AstGlobalVector& globals = module.globals();
+
+    if (!e.writeVarU32(globals.length()))
+        return false;
+
+    for (const AstGlobal* global : globals) {
+        MOZ_ASSERT(global->hasInit());
+        if (!e.writeValType(global->type()))
+            return false;
+        if (!e.writeVarU32(global->flags()))
+            return false;
+        if (!EncodeExpr(e, global->init()))
+            return false;
+        if (!e.writeExpr(Expr::End))
+            return false;
+    }
+
+    e.finishSection(offset);
+    return true;
+}
+
+static bool
 EncodeExport(Encoder& e, bool newFormat, AstExport& exp)
 {
     if (!newFormat) {
         if (exp.kind() != DefinitionKind::Function)
             return true;
 
-        if (!e.writeVarU32(exp.func().index()))
+        if (!e.writeVarU32(exp.ref().index()))
             return false;
 
         if (!EncodeBytes(e, exp.name()))
@@ -3664,7 +3877,8 @@ EncodeExport(Encoder& e, bool newFormat, AstExport& exp)
 
     switch (exp.kind()) {
       case DefinitionKind::Function:
-        if (!e.writeVarU32(exp.func().index()))
+      case DefinitionKind::Global:
+        if (!e.writeVarU32(exp.ref().index()))
             return false;
         break;
       case DefinitionKind::Table:
@@ -3868,9 +4082,9 @@ EncodeElemSegment(Encoder& e, AstElemSegment& segment)
     if (!e.writeVarU32(0)) // table index
         return false;
 
-    if (!e.writeExpr(Expr::I32Const))
+    if (!EncodeExpr(e, *segment.offset()))
         return false;
-    if (!e.writeVarU32(segment.offset()))
+    if (!e.writeExpr(Expr::End))
         return false;
 
     if (!e.writeVarU32(segment.elems().length()))
@@ -3930,6 +4144,9 @@ EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
         return false;
 
     if (!EncodeMemorySection(e, newFormat, module))
+        return false;
+
+    if (!EncodeGlobalSection(e, module))
         return false;
 
     if (!EncodeExportSection(e, newFormat, module))

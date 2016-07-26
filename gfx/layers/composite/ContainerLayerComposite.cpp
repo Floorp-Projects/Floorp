@@ -726,7 +726,7 @@ CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
   gfx::Matrix4x4 transform = aContainer->GetEffectiveTransform();
   DebugOnly<gfx::Matrix> transform2d;
   MOZ_ASSERT(transform.Is2D(&transform2d) && !gfx::ThebesMatrix(transform2d).HasNonIntegerTranslation());
-  sourcePoint += gfx::IntPoint(transform._41, transform._42);
+  sourcePoint += gfx::IntPoint::Truncate(transform._41, transform._42);
 
   sourcePoint -= compositor->GetCurrentRenderTarget()->GetOrigin();
 

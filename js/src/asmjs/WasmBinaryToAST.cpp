@@ -1392,6 +1392,71 @@ AstDecodeMemorySection(AstDecodeContext& c)
 }
 
 static bool
+AstDecodeGlobal(AstDecodeContext& c, uint32_t i, AstGlobal* global)
+{
+    AstName name;
+    if (!AstDecodeGenerateName(c, AstName(u"global"), i, &name))
+        return false;
+
+    ValType type;
+    if (!c.d.readValType(&type))
+        return AstDecodeFail(c, "bad global type");
+
+    uint32_t flags;
+    if (!c.d.readVarU32(&flags))
+        return AstDecodeFail(c, "expected flags");
+
+    if (flags & ~uint32_t(GlobalFlags::AllowedMask))
+        return AstDecodeFail(c, "unexpected bits set in flags");
+
+    if (!AstDecodeExpr(c))
+        return false;
+
+    AstDecodeStackItem item = c.iter().getResult();
+    MOZ_ASSERT(item.popped == 0);
+    if (!item.expr)
+        return AstDecodeFail(c, "missing initializer expression");
+
+    AstExpr* init = item.expr;
+
+    if (!AstDecodeEnd(c))
+        return AstDecodeFail(c, "missing initializer end");
+
+    item = c.iter().getResult();
+    MOZ_ASSERT(item.terminationKind == AstDecodeTerminationKind::End);
+
+    *global = AstGlobal(name, type, flags, Some(init));
+    return true;
+}
+
+static bool
+AstDecodeGlobalSection(AstDecodeContext& c)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!c.d.startSection(GlobalSectionId, &sectionStart, &sectionSize))
+        return AstDecodeFail(c, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numGlobals;
+    if (!c.d.readVarU32(&numGlobals))
+        return AstDecodeFail(c, "expected number of globals");
+
+    for (uint32_t i = 0; i < numGlobals; i++) {
+        auto* global = new(c.lifo) AstGlobal;
+        if (!AstDecodeGlobal(c, i, global))
+            return false;
+        if (!c.module().append(global))
+            return false;
+    }
+
+    if (!c.d.finishSection(sectionStart, sectionSize))
+        return AstDecodeFail(c, "globals section byte size mismatch");
+
+    return true;
+}
+
+static bool
 AstDecodeFunctionExport(AstDecodeContext& c, AstExport** export_)
 {
     uint32_t funcIndex;
@@ -1405,7 +1470,8 @@ AstDecodeFunctionExport(AstDecodeContext& c, AstExport** export_)
     if (!AstDecodeName(c, &fieldName))
         return AstDecodeFail(c, "expected export name");
 
-    *export_ = new(c.lifo) AstExport(fieldName, AstRef(AstName(), funcIndex));
+    *export_ = new(c.lifo) AstExport(fieldName, DefinitionKind::Function,
+                                     AstRef(AstName(), funcIndex));
     if (!*export_)
         return false;
 
@@ -1645,6 +1711,9 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length,
         return false;
 
     if (!AstDecodeMemorySection(c))
+        return false;
+
+    if (!AstDecodeGlobalSection(c))
         return false;
 
     if (!AstDecodeExportSection(c))
