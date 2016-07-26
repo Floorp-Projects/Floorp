@@ -53,6 +53,7 @@ CDMCaps::AutoLock::IsKeyUsable(const CencKeyId& aKeyId)
       continue;
     }
     if (keys[i].mStatus == kGMPUsable ||
+        keys[i].mStatus == kGMPOutputRestricted ||
         keys[i].mStatus == kGMPOutputDownscaled) {
       return true;
     }
