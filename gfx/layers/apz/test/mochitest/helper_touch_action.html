@@ -28,7 +28,7 @@ function* test(testDriver) {
   // switch style to pan-x
   document.body.style.touchAction = 'pan-x';
   ok(true, "Waiting for pan-x to propagate...");
-  yield waitForAllPaints(function() {
+  yield waitForAllPaintsFlushed(function() {
     flushApzRepaints(testDriver);
   });
 
@@ -54,7 +54,7 @@ function* test(testDriver) {
   // switch style back to pan-y
   document.body.style.touchAction = 'pan-y';
   ok(true, "Waiting for pan-y to propagate...");
-  yield waitForAllPaints(function() {
+  yield waitForAllPaintsFlushed(function() {
     flushApzRepaints(testDriver);
   });
 
@@ -68,7 +68,7 @@ function* test(testDriver) {
   // switch style to none
   document.body.style.touchAction = 'none';
   ok(true, "Waiting for none to propagate...");
-  yield waitForAllPaints(function() {
+  yield waitForAllPaintsFlushed(function() {
     flushApzRepaints(testDriver);
   });
 
@@ -81,7 +81,7 @@ function* test(testDriver) {
 
   document.body.style.touchAction = 'manipulation';
   ok(true, "Waiting for manipulation to propagate...");
-  yield waitForAllPaints(function() {
+  yield waitForAllPaintsFlushed(function() {
     flushApzRepaints(testDriver);
   });
 
