@@ -98,6 +98,9 @@ class BaseRunner(object):
         if debug_args:
             cmd = list(debug_args) + cmd
 
+        logger = get_default_logger()
+        if logger:
+            logger.info('Application command: %s' % ' '.join(cmd))
         if interactive:
             self.process_handler = subprocess.Popen(cmd, env=self.env)
             # TODO: other arguments
