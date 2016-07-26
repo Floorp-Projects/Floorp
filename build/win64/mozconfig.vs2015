@@ -1,9 +1,10 @@
 if [ -z "${VSPATH}" ]; then
     TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
     VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2015u2"
+    VSWINPATH="$(cd ${TOOLTOOL_DIR} && pwd -W)/vs2015u2"
 fi
 
-export WINDOWSSDKDIR="${VSPATH}/SDK"
+export WINDOWSSDKDIR="${VSWINPATH}/SDK"
 export WIN32_REDIST_DIR=${VSPATH}/VC/redist/x64/Microsoft.VC140.CRT
 export WIN_UCRT_REDIST_DIR="${VSPATH}/SDK/Redist/ucrt/DLLs/x64"
 
