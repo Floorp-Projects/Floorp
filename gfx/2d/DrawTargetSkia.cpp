@@ -102,6 +102,73 @@ ReleaseTemporarySurface(void* aPixels, void* aContext)
   }
 }
 
+#ifdef DEBUG
+static bool
+VerifyRGBXFormat(uint8_t* aData, const IntSize &aSize, const int32_t aStride, SurfaceFormat aFormat)
+{
+  if (aFormat != SurfaceFormat::B8G8R8X8 || aSize.IsEmpty()) {
+    return true;
+  }
+  // We should've initialized the data to be opaque already
+  // On debug builds, verify that this is actually true.
+  int height = aSize.height;
+  int width = aSize.width;
+
+  for (int row = 0; row < height; ++row) {
+    for (int column = 0; column < width; column += 4) {
+#ifdef IS_BIG_ENDIAN
+      MOZ_ASSERT(aData[column] == 0xFF);
+#else
+      MOZ_ASSERT(aData[column + 3] == 0xFF);
+#endif
+    }
+    aData += aStride;
+  }
+
+  return true;
+}
+
+// Since checking every pixel is expensive, this only checks the four corners and center
+// of a surface that their alpha value is 0xFF.
+static bool
+VerifyRGBXCorners(uint8_t* aData, const IntSize &aSize, const int32_t aStride, SurfaceFormat aFormat)
+{
+  if (aFormat != SurfaceFormat::B8G8R8X8 || aSize.IsEmpty()) {
+    return true;
+  }
+
+  int height = aSize.height;
+  int width = aSize.width;
+  const int pixelSize = 4;
+  const int strideDiff = aStride - (width * pixelSize);
+  MOZ_ASSERT(width * pixelSize <= aStride);
+
+#ifdef IS_BIG_ENDIAN
+  const int alphaOffset = 0;
+#else
+  const int alphaOffset = 3;
+#endif
+
+  const int topLeft = alphaOffset;
+  const int topRight = width * pixelSize + alphaOffset - pixelSize;
+  const int bottomRight = aStride * height - strideDiff + alphaOffset - pixelSize;
+  const int bottomLeft = aStride * height - aStride + alphaOffset;
+
+  // Lastly the center pixel
+  int middleRowHeight = height / 2;
+  int middleRowWidth = (width / 2) * pixelSize;
+  const int middle = aStride * middleRowHeight + middleRowWidth + alphaOffset;
+
+  MOZ_ASSERT(aData[topLeft] == 0xFF);
+  MOZ_ASSERT(aData[topRight] == 0xFF);
+  MOZ_ASSERT(aData[bottomRight] == 0xFF);
+  MOZ_ASSERT(aData[bottomLeft] == 0xFF);
+  MOZ_ASSERT(aData[middle] == 0xFF);
+
+  return true;
+}
+#endif
+
 static SkBitmap
 GetBitmapForSurface(SourceSurface* aSurface)
 {
@@ -129,6 +196,9 @@ GetBitmapForSurface(SourceSurface* aSurface)
     gfxDebug() << "Failed installing pixels on Skia bitmap for temporary surface";
   }
 
+  // Skia doesn't support RGBX surfaces so ensure that the alpha value is opaque white.
+  MOZ_ASSERT(VerifyRGBXCorners(surf->GetData(), surf->GetSize(),
+                               surf->Stride(), surf->GetFormat()));
   return bitmap;
 }
 
@@ -1334,7 +1404,10 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
   // uploading, so any data surface is fine. Call GetDataSurface
   // to trigger any required readback so that it only happens
   // once.
-  return aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
+  MOZ_ASSERT(VerifyRGBXFormat(dataSurface->GetData(), dataSurface->GetSize(),
+                              dataSurface->Stride(), dataSurface->GetFormat()));
+  return dataSurface.forget();
 }
 
 already_AddRefed<SourceSurface>
@@ -1415,7 +1488,8 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
     return false;
   }
 
-  bitmap.eraseColor(SK_ColorTRANSPARENT);
+  SkColor clearColor = (aFormat == SurfaceFormat::B8G8R8X8) ? SK_ColorBLACK : SK_ColorTRANSPARENT;
+  bitmap.eraseColor(clearColor);
 
   mCanvas.adopt(new SkCanvas(bitmap));
   mSize = aSize;
@@ -1477,30 +1551,6 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
 
 #endif
 
-#ifdef DEBUG
-bool
-VerifyRGBXFormat(uint8_t* aData, const IntSize &aSize, const int32_t aStride, SurfaceFormat aFormat)
-{
-  // We should've initialized the data to be opaque already
-  // On debug builds, verify that this is actually true.
-  int height = aSize.height;
-  int width = aSize.width;
-
-  for (int row = 0; row < height; ++row) {
-    for (int column = 0; column < width; column += 4) {
-#ifdef IS_BIG_ENDIAN
-      MOZ_ASSERT(aData[column] == 0xFF);
-#else
-      MOZ_ASSERT(aData[column + 3] == 0xFF);
-#endif
-    }
-    aData += aStride;
-  }
-
-  return true;
-}
-#endif
-
 void
 DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized)
 {
@@ -1558,7 +1608,8 @@ DrawTargetSkia::ClearRect(const Rect &aRect)
   MarkChanged();
   mCanvas->save();
   mCanvas->clipRect(RectToSkRect(aRect), SkRegion::kIntersect_Op, true);
-  mCanvas->clear(SK_ColorTRANSPARENT);
+  SkColor clearColor = (mFormat == SurfaceFormat::B8G8R8X8) ? SK_ColorBLACK : SK_ColorTRANSPARENT;
+  mCanvas->clear(clearColor);
   mCanvas->restore();
 }
 

@@ -6,7 +6,9 @@
 
 const l10n = require("gcli/l10n");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+/* eslint-disable mozilla/reject-some-requires */
 const {EyeDropper, HighlighterEnvironment} = require("devtools/server/actors/highlighters");
+/* eslint-enable mozilla/reject-some-requires */
 const Telemetry = require("devtools/client/shared/telemetry");
 
 exports.items = [{

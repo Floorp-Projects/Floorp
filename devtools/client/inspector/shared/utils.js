@@ -6,7 +6,9 @@
 
 "use strict";
 
+/* eslint-disable mozilla/reject-some-requires */
 const {Ci} = require("chrome");
+/* eslint-enable mozilla/reject-some-requires */
 const {parseDeclarations} = require("devtools/shared/css-parsing-utils");
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css-lexer");

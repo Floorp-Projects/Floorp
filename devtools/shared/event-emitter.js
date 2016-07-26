@@ -5,24 +5,46 @@
 "use strict";
 
 (function (factory) {
+  // This file can be loaded in several different ways.  It can be
+  // require()d, either from the main thread or from a worker thread;
+  // or it can be imported via Cu.import.  These different forms
+  // explain some of the hairiness of this code.
+  //
+  // It's important for the devtools-as-html project that a require()
+  // on the main thread not use any chrome privileged APIs.  Instead,
+  // the body of the main function can only require() (not Cu.import)
+  // modules that are available in the devtools content mode.  This,
+  // plus the lack of |console| in workers, results in some gyrations
+  // in the definition of |console|.
   if (this.module && module.id.indexOf("event-emitter") >= 0) {
+    let console;
+    if (isWorker) {
+      console = {
+        error: () => {}
+      };
+    } else {
+      console = this.console;
+    }
     // require
-    factory.call(this, require, exports, module);
+    factory.call(this, require, exports, module, console);
   } else {
-    // Cu.import
+    // Cu.import.  This snippet implements a sort of miniature loader,
+    // which is responsible for appropriately translating require()
+    // requests from the client function.  This code can use
+    // Cu.import, because it is never run in the devtools-in-content
+    // mode.
     this.isWorker = false;
+    const Cu = Components.utils;
+    let console = Cu.import("resource://gre/modules/Console.jsm", {}).console;
     // Bug 1259045: This module is loaded early in firefox startup as a JSM,
     // but it doesn't depends on any real module. We can save a few cycles
     // and bytes by not loading Loader.jsm.
     let require = function (module) {
-      const Cu = Components.utils;
       switch (module) {
         case "devtools/shared/defer":
           return Cu.import("resource://gre/modules/Promise.jsm", {}).Promise.defer;
         case "Services":
           return Cu.import("resource://gre/modules/Services.jsm", {}).Services;
-        case "resource://gre/modules/Console.jsm":
-          return Cu.import("resource://gre/modules/Console.jsm", {});
         case "chrome":
           return {
             Cu,
@@ -31,10 +53,13 @@
       }
       return null;
     };
-    factory.call(this, require, this, { exports: this });
+    factory.call(this, require, this, { exports: this }, console);
     this.EXPORTED_SYMBOLS = ["EventEmitter"];
   }
-}).call(this, function (require, exports, module) {
+}).call(this, function (require, exports, module, console) {
+  // ⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠
+  // After this point the code may not use Cu.import, and should only
+  // require() modules that are "clean-for-content".
   let EventEmitter = this.EventEmitter = function () {};
   module.exports = EventEmitter;
 
@@ -44,18 +69,13 @@
   const defer = require("devtools/shared/defer");
   let loggingEnabled = true;
 
-  let console = {};
   if (!isWorker) {
-    console = require("resource://gre/modules/Console.jsm").console;
     loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
     Services.prefs.addObserver("devtools.dump.emit", {
       observe: () => {
         loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
       }
     }, false);
-  } else {
-    // Workers can't load JSMs, so we can't import Console.jsm here.
-    console.error = () => {};
   }
 
   /**

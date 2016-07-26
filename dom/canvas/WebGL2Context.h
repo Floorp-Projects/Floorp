@@ -122,10 +122,10 @@ public:
     template<class T>
     inline void
     TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
-                  GLenum unpackFormat, GLenum unpackType, T& elem, ErrorResult& out_rv)
+                  GLenum unpackFormat, GLenum unpackType, T& any, ErrorResult& out_rv)
     {
         TexSubImage3D(target, level, xOffset, yOffset, zOffset, unpackFormat, unpackType,
-                      &elem, &out_rv);
+                      &any, &out_rv);
     }
 
     void CopyTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
@@ -140,6 +140,64 @@ public:
                                  GLsizei depth, GLenum sizedUnpackFormat,
                                  const dom::ArrayBufferView& data);
 
+    ////////////////
+    // Texture PBOs
+
+    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
+                    GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
+                    GLenum unpackType, WebGLsizeiptr offset, ErrorResult&);
+
+    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
+                       GLsizei width, GLsizei height, GLenum unpackFormat,
+                       GLenum unpackType, WebGLsizeiptr offset, ErrorResult&);
+
+    void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
+                    GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
+                    GLenum unpackType, WebGLsizeiptr offset);
+
+    void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                       GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
+                       GLenum unpackFormat, GLenum unpackType, WebGLsizeiptr offset,
+                       ErrorResult&);
+
+    ////////////////
+    // WebGL1 overloads
+
+    void
+    TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat, GLsizei width,
+               GLsizei height, GLint border, GLenum unpackFormat, GLenum unpackType,
+               const dom::Nullable<dom::ArrayBufferView>& pixels, ErrorResult& out_rv)
+    {
+        WebGLContext::TexImage2D(texImageTarget, level, internalFormat, width, height,
+                                 border, unpackFormat, unpackType, pixels, out_rv);
+    }
+
+    template<typename T>
+    void
+    TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
+               GLenum unpackFormat, GLenum unpackType, T& any, ErrorResult& out_rv)
+    {
+        WebGLContext::TexImage2D(texImageTarget, level, internalFormat, unpackFormat,
+                                 unpackType, any, out_rv);
+    }
+
+    void
+    TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
+                  GLsizei width, GLsizei height, GLenum unpackFormat, GLenum unpackType,
+                  const dom::Nullable<dom::ArrayBufferView>& pixels, ErrorResult& out_rv)
+    {
+        WebGLContext::TexSubImage2D(texImageTarget, level, xOffset, yOffset, width,
+                                    height, unpackFormat, unpackType, pixels, out_rv);
+    }
+
+    template<typename T>
+    inline void
+    TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
+                  GLenum unpackFormat, GLenum unpackType, T& any, ErrorResult& out_rv)
+    {
+        WebGLContext::TexSubImage2D(texImageTarget, level, xOffset, yOffset, unpackFormat,
+                                    unpackType, any, out_rv);
+    }
 
     // -------------------------------------------------------------------------
     // Programs and shaders - WebGL2ContextPrograms.cpp
@@ -364,7 +422,9 @@ private:
 
     // CreateVertexArrayImpl is assumed to be infallible.
     virtual WebGLVertexArray* CreateVertexArrayImpl() override;
-    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info) override;
+    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type,
+                                           uint32_t* alignment,
+                                           const char* info) override;
     virtual bool ValidateBufferTarget(GLenum target, const char* info) override;
     virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) override;
     virtual bool ValidateBufferUsageEnum(GLenum usage, const char* info) override;

@@ -403,6 +403,8 @@ if (hasI64()) {
     assertErrorMessage(() => wasmEvalText('(module (import "a" "" (result i64)))'), TypeError, /NYI/);
 }
 
+assertErrorMessage(() => wasmEvalText(`(module (type $t (func)) (func (call_indirect $t (i32.const 0))))`), TypeError, /can't call_indirect without a table/);
+
 var {v2i, i2i, i2v} = wasmEvalText(`(module
     (type (func (result i32)))
     (type (func (param i32) (result i32)))

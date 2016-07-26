@@ -40,7 +40,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTimerQuery)
 
 private:
-  explicit WebGLTimerQuery(WebGLContext* webgl, GLuint name);
+  WebGLTimerQuery(WebGLContext* webgl, GLuint name);
   ~WebGLTimerQuery();
 
   GLenum mTarget;

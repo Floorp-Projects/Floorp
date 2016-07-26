@@ -6,5 +6,7 @@ pref(dom.animations-api.core.enabled,true) load 1216842-3.html
 pref(dom.animations-api.core.enabled,true) load 1216842-4.html
 pref(dom.animations-api.core.enabled,true) load 1216842-5.html
 pref(dom.animations-api.core.enabled,true) load 1216842-6.html
+pref(dom.animations-api.core.enabled,true) load 1272475-1.html
+pref(dom.animations-api.core.enabled,true) load 1272475-2.html
 pref(dom.animations-api.core.enabled,true) load 1278485-1.html
 pref(dom.animations-api.core.enabled,true) load 1277272-1.html

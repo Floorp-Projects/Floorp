@@ -32,7 +32,7 @@ GPUChild::Init()
   nsTArray<GfxPrefSetting> prefs;
   for (auto pref : gfxPrefs::all()) {
     if (pref->HasDefaultValue()) {
-      return;
+      continue;
     }
 
     GfxPrefValue value;

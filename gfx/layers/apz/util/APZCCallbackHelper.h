@@ -141,6 +141,7 @@ public:
     /* Figure out the allowed touch behaviors of each touch point in |aEvent|
      * and send that information to the provided callback. */
     static void SendSetAllowedTouchBehaviorNotification(nsIWidget* aWidget,
+                                                        nsIDocument* aDocument,
                                                         const WidgetTouchEvent& aEvent,
                                                         uint64_t aInputBlockId,
                                                         const SetAllowedTouchBehaviorCallback& aCallback);
