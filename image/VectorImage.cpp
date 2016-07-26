@@ -859,34 +859,55 @@ VectorImage::Draw(gfxContext* aContext,
   SVGDrawingParameters params(aContext, aSize, aRegion, aSamplingFilter,
                               svgContext, animTime, aFlags);
 
-  if (aFlags & FLAG_BYPASS_SURFACE_CACHE) {
-    CreateSurfaceAndShow(params);
+  // If we have an prerasterized version of this image that matches the
+  // drawing parameters, use that.
+  RefPtr<gfxDrawable> svgDrawable = LookupCachedSurface(params);
+  if (svgDrawable) {
+    Show(svgDrawable, params);
     return DrawResult::SUCCESS;
+  }
+
+  // We didn't get a hit in the surface cache, so we'll need to rerasterize.
+  CreateSurfaceAndShow(params);
+  return DrawResult::SUCCESS;
+}
+
+already_AddRefed<gfxDrawable>
+VectorImage::LookupCachedSurface(const SVGDrawingParameters& aParams)
+{
+  // If we're not allowed to use a cached surface, don't attempt a lookup.
+  if (aParams.flags & FLAG_BYPASS_SURFACE_CACHE) {
+    return nullptr;
   }
 
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(this),
-                         VectorSurfaceKey(params.size,
-                                          params.svgContext,
-                                          params.animationTime));
-
-  // Draw.
-  if (result) {
-    RefPtr<SourceSurface> surface = result.DrawableRef()->GetSurface();
-    if (surface) {
-      RefPtr<gfxDrawable> svgDrawable =
-        new gfxSurfaceDrawable(surface, result.DrawableRef()->GetSize());
-      Show(svgDrawable, params);
-      return DrawResult::SUCCESS;
-    }
-
-    // We lost our surface due to some catastrophic event.
-    RecoverFromLossOfSurfaces();
+                         VectorSurfaceKey(aParams.size,
+                                          aParams.svgContext,
+                                          aParams.animationTime));
+  if (!result) {
+    return nullptr;  // No matching surface.
   }
 
-  CreateSurfaceAndShow(params);
+  DrawableFrameRef drawableRef = result.Provider()->DrawableRef();
+  if (!drawableRef) {
+    // Something went wrong. (Probably the OS freeing our volatile buffer due to
+    // low memory.) Attempt to recover.
+    RecoverFromLossOfSurfaces();
+    return nullptr;
+  }
 
-  return DrawResult::SUCCESS;
+  RefPtr<SourceSurface> surface = drawableRef->GetSurface();
+  if (!surface) {
+    // Something went wrong. (Probably a GPU driver crash or device reset.)
+    // Attempt to recover.
+    RecoverFromLossOfSurfaces();
+    return nullptr;
+  }
+
+  RefPtr<gfxDrawable> svgDrawable =
+    new gfxSurfaceDrawable(surface, drawableRef->GetSize());
+  return svgDrawable.forget();
 }
 
 void
