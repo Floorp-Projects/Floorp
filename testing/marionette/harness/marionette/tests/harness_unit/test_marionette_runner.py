@@ -100,6 +100,7 @@ def mach_parsed_kwargs(logger):
         'log_unittest': None,
         'log_xunit': None,
         'logger_name': 'Marionette-based Tests',
+        'package_name': None,
         'prefs': {
             'browser.tabs.remote.autostart': True,
             'browser.tabs.remote.force-enable': True,
