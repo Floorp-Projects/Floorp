@@ -936,7 +936,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
     RefPtr<SourceSurface> untransformedSurf = untransformedDT->Snapshot();
     RefPtr<DrawTarget> xformDT =
-      untransformedDT->CreateSimilarDrawTarget(IntSize(xformBounds.width, xformBounds.height),
+      untransformedDT->CreateSimilarDrawTarget(IntSize::Truncate(xformBounds.width, xformBounds.height),
                                                SurfaceFormat::B8G8R8A8);
     RefPtr<SourceSurface> xformSurf;
     if(xformDT && untransformedSurf &&

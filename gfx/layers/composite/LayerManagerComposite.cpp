@@ -251,13 +251,13 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
   // a giant layer if it is a leaf.
   Matrix4x4 transform = GetAccTransformIn3DContext(aLayer);
   Matrix transform2d;
-  Maybe<nsIntPoint> integerTranslation;
+  Maybe<IntPoint> integerTranslation;
   // If aLayer has a simple transform (only an integer translation) then we
   // can easily convert aOpaqueRegion into pre-transform coordinates and include
   // that region.
   if (transform.Is2D(&transform2d)) {
     if (transform2d.IsIntegerTranslation()) {
-      integerTranslation = Some(TruncatedToInt(transform2d.GetTranslation()));
+      integerTranslation = Some(IntPoint::Truncate(transform2d.GetTranslation()));
       localOpaque = aOpaqueRegion;
       localOpaque.MoveBy(-*integerTranslation);
     }

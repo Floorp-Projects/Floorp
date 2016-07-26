@@ -403,7 +403,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       // come from width/height *attributes* in SVG). They influence the region
       // of the SVG image's internal document that is visible, in combination
       // with preserveAspectRatio and viewBox.
-      SVGImageContext context(CSSIntSize(width, height),
+      SVGImageContext context(CSSIntSize::Truncate(width, height),
                               Some(imgElem->mPreserveAspectRatio.GetAnimValue()),
                               1.0, true);
 

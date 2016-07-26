@@ -520,8 +520,8 @@ ClippedImage::OptimalImageSizeForDest(const gfxSize& aDest,
 
     // First, we select a scale that's good for ClippedImage. An integer
     // multiple of the size of the clipping region is always fine.
-    nsIntSize scale(ceil(aDest.width / mClip.width),
-                    ceil(aDest.height / mClip.height));
+    IntSize scale = IntSize::Ceil(aDest.width / mClip.width,
+                                  aDest.height / mClip.height);
 
     if (forceUniformScaling) {
       scale.width = scale.height = max(scale.height, scale.width);
@@ -537,8 +537,8 @@ ClippedImage::OptimalImageSizeForDest(const gfxSize& aDest,
     // To get our final result, we take the inner image's desired size and
     // determine how large the clipped region would be at that scale. (Again, we
     // ensure an integer multiple of the size of the clipping region.)
-    nsIntSize finalScale(ceil(double(innerDesiredSize.width) / imgWidth),
-                         ceil(double(innerDesiredSize.height) / imgHeight));
+    IntSize finalScale = IntSize::Ceil(double(innerDesiredSize.width) / imgWidth,
+                                       double(innerDesiredSize.height) / imgHeight);
     return mClip.Size() * finalScale;
   }
 

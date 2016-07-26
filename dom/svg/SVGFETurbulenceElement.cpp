@@ -147,7 +147,7 @@ SVGFETurbulenceElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   gfxPoint offset = firstPeriodInFilterSpace.TopLeft();
 
   FilterPrimitiveDescription descr(PrimitiveType::Turbulence);
-  descr.Attributes().Set(eTurbulenceOffset, IntPoint(offset.x, offset.y));
+  descr.Attributes().Set(eTurbulenceOffset, IntPoint::Truncate(offset.x, offset.y));
   descr.Attributes().Set(eTurbulenceBaseFrequency, frequencyInFilterSpace);
   descr.Attributes().Set(eTurbulenceSeed, seed);
   descr.Attributes().Set(eTurbulenceNumOctaves, octaves);

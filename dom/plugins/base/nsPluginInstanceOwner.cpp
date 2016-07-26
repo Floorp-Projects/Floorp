@@ -181,7 +181,7 @@ AttachToContainerAsSurfaceTexture(ImageContainer* container,
 
   RefPtr<Image> img = new SurfaceTextureImage(
     surfTex,
-    gfx::IntSize(rect.width, rect.height),
+    gfx::IntSize::Truncate(rect.width, rect.height),
     instance->OriginPos());
   *out_image = img;
 }
@@ -222,7 +222,7 @@ nsPluginInstanceOwner::GetImageContainer()
   // into, set y-flip flags, etc, so we do this at the beginning.
   float resolution = mPluginFrame->PresContext()->PresShell()->GetCumulativeResolution();
   ScreenSize screenSize = (r * LayoutDeviceToScreenScale(resolution)).Size();
-  mInstance->NotifySize(nsIntSize(screenSize.width, screenSize.height));
+  mInstance->NotifySize(nsIntSize::Truncate(screenSize.width, screenSize.height));
 
   container = LayerManager::CreateImageContainer();
 
@@ -1584,7 +1584,7 @@ nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInf
 
   RefPtr<Image> img = new SurfaceTextureImage(
     aVideoInfo->mSurfaceTexture,
-    gfx::IntSize(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height),
+    gfx::IntSize::Truncate(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height),
     gl::OriginPos::BottomLeft);
   container->SetCurrentImageInTransaction(img);
 

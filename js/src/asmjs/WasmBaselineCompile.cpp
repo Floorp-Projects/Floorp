@@ -5468,28 +5468,49 @@ BaseCompiler::emitGetGlobal()
 
     const GlobalDesc& global = mg_.globals[id];
 
-    switch (global.type) {
+    if (global.isConstant()) {
+        Val value = global.constantValue();
+        switch (value.type()) {
+          case ValType::I32:
+            pushI32(value.i32());
+            break;
+          case ValType::I64:
+            pushI64(value.i64());
+            break;
+          case ValType::F32:
+            pushF32(value.f32());
+            break;
+          case ValType::F64:
+            pushF64(value.f64());
+            break;
+          default:
+            MOZ_CRASH("Global constant type");
+        }
+        return true;
+    }
+
+    switch (global.type()) {
       case ValType::I32: {
         RegI32 rv = needI32();
-        loadGlobalVarI32(global.globalDataOffset, rv);
+        loadGlobalVarI32(global.offset(), rv);
         pushI32(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = needI64();
-        loadGlobalVarI64(global.globalDataOffset, rv);
+        loadGlobalVarI64(global.offset(), rv);
         pushI64(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = needF32();
-        loadGlobalVarF32(global.globalDataOffset, rv);
+        loadGlobalVarF32(global.offset(), rv);
         pushF32(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = needF64();
-        loadGlobalVarF64(global.globalDataOffset, rv);
+        loadGlobalVarF64(global.offset(), rv);
         pushF64(rv);
         break;
       }
@@ -5513,28 +5534,28 @@ BaseCompiler::emitSetGlobal()
 
     const GlobalDesc& global = mg_.globals[id];
 
-    switch (global.type) {
+    switch (global.type()) {
       case ValType::I32: {
         RegI32 rv = popI32();
-        storeGlobalVarI32(global.globalDataOffset, rv);
+        storeGlobalVarI32(global.offset(), rv);
         pushI32(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = popI64();
-        storeGlobalVarI64(global.globalDataOffset, rv);
+        storeGlobalVarI64(global.offset(), rv);
         pushI64(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = popF32();
-        storeGlobalVarF32(global.globalDataOffset, rv);
+        storeGlobalVarF32(global.offset(), rv);
         pushF32(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = popF64();
-        storeGlobalVarF64(global.globalDataOffset, rv);
+        storeGlobalVarF64(global.offset(), rv);
         pushF64(rv);
         break;
       }
@@ -6036,9 +6057,9 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitGetLocal());
           case Expr::SetLocal:
             CHECK_NEXT(emitSetLocal());
-          case Expr::LoadGlobal:
+          case Expr::GetGlobal:
             CHECK_NEXT(emitGetGlobal());
-          case Expr::StoreGlobal:
+          case Expr::SetGlobal:
             CHECK_NEXT(emitSetGlobal());
 
           // Select

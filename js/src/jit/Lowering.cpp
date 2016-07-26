@@ -4083,13 +4083,20 @@ LIRGenerator::visitHasClass(MHasClass* ins)
 void
 LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins)
 {
-    define(new(alloc()) LWasmLoadGlobalVar, ins);
+    if (ins->type() == MIRType::Int64)
+        defineInt64(new(alloc()) LWasmLoadGlobalVarI64, ins);
+    else
+        define(new(alloc()) LWasmLoadGlobalVar, ins);
 }
 
 void
 LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins)
 {
-    add(new(alloc()) LWasmStoreGlobalVar(useRegisterAtStart(ins->value())), ins);
+    MDefinition* value = ins->value();
+    if (value->type() == MIRType::Int64)
+        add(new(alloc()) LWasmStoreGlobalVarI64(useInt64RegisterAtStart(value)), ins);
+    else
+        add(new(alloc()) LWasmStoreGlobalVar(useRegisterAtStart(value)), ins);
 }
 
 void

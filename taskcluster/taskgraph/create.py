@@ -19,6 +19,9 @@ from taskgraph.util.time import (
 
 logger = logging.getLogger(__name__)
 
+# the maximum number of parallel createTask calls to make
+CONCURRENCY = 50
+
 
 def create_tasks(taskgraph, label_to_taskid):
     # TODO: use the taskGroupId of the decision task
@@ -29,7 +32,7 @@ def create_tasks(taskgraph, label_to_taskid):
 
     decision_task_id = os.environ.get('TASK_ID')
 
-    with futures.ThreadPoolExecutor(requests.adapters.DEFAULT_POOLSIZE) as e:
+    with futures.ThreadPoolExecutor(CONCURRENCY) as e:
         fs = {}
 
         # We can't submit a task until its dependencies have been submitted.

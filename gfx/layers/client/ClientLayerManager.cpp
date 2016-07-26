@@ -849,7 +849,12 @@ already_AddRefed<PersistentBufferProvider>
 ClientLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
                                                    gfx::SurfaceFormat aFormat)
 {
-  if (gfxPrefs::PersistentBufferProviderSharedEnabled()) {
+  // Don't use a shared buffer provider if compositing is considered "not cheap"
+  // because the canvas will most likely be flattened into a thebes layer instead
+  // of being sent to the compositor, in which case rendering into shared memory
+  // is wasteful.
+  if (IsCompositingCheap() &&
+      gfxPrefs::PersistentBufferProviderSharedEnabled()) {
     RefPtr<PersistentBufferProvider> provider
       = PersistentBufferProviderShared::Create(aSize, aFormat, AsShadowForwarder());
     if (provider) {
