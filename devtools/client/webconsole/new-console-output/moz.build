@@ -25,7 +25,6 @@ MOCHITEST_CHROME_MANIFESTS += [
   'test/utils/chrome.ini'
 ]
 XPCSHELL_TESTS_MANIFESTS += [
-  'test/actions/xpcshell.ini',
   'test/store/xpcshell.ini'
 ]
 
