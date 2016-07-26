@@ -47,7 +47,7 @@ ContentVerifier::Init(const nsACString& aContentSignatureHeader,
 
   rv = mVerifier->CreateContextWithoutCertChain(
     this, aContentSignatureHeader,
-    NS_LITERAL_CSTRING("remote-newtab-signer.mozilla.org"));
+    NS_LITERAL_CSTRING("remotenewtab.content-signature.mozilla.org"));
   if (NS_FAILED(rv)){
     mVerifier = nullptr;
   }

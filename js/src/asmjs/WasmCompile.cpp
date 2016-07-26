@@ -79,6 +79,12 @@ class FunctionDecoder
             return iter().notYetImplemented("i64 NYI on this platform");
         return true;
     }
+
+    bool checkHasMemory() {
+        if (!mg().usesMemory())
+            return iter().fail("can't touch memory without memory");
+        return true;
+    }
 };
 
 } // end anonymous namespace
@@ -146,6 +152,9 @@ DecodeCall(FunctionDecoder& f)
 static bool
 DecodeCallIndirect(FunctionDecoder& f)
 {
+    if (!f.mg().numTables())
+        return f.iter().fail("can't call_indirect without a table");
+
     uint32_t sigIndex;
     uint32_t arity;
     if (!f.iter().readCallIndirect(&sigIndex, &arity))
@@ -398,53 +407,71 @@ DecodeExpr(FunctionDecoder& f)
         return f.iter().readConversion(ValType::F32, ValType::F64, nullptr);
       case Expr::I32Load8S:
       case Expr::I32Load8U:
-        return f.iter().readLoad(ValType::I32, 1, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readLoad(ValType::I32, 1, nullptr);
       case Expr::I32Load16S:
       case Expr::I32Load16U:
-        return f.iter().readLoad(ValType::I32, 2, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readLoad(ValType::I32, 2, nullptr);
       case Expr::I32Load:
-        return f.iter().readLoad(ValType::I32, 4, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readLoad(ValType::I32, 4, nullptr);
       case Expr::I64Load8S:
       case Expr::I64Load8U:
         return f.checkI64Support() &&
+               f.checkHasMemory() &&
                f.iter().readLoad(ValType::I64, 1, nullptr);
       case Expr::I64Load16S:
       case Expr::I64Load16U:
         return f.checkI64Support() &&
+               f.checkHasMemory() &&
                f.iter().readLoad(ValType::I64, 2, nullptr);
       case Expr::I64Load32S:
       case Expr::I64Load32U:
         return f.checkI64Support() &&
+               f.checkHasMemory() &&
                f.iter().readLoad(ValType::I64, 4, nullptr);
       case Expr::I64Load:
         return f.checkI64Support() &&
+               f.checkHasMemory() &&
                f.iter().readLoad(ValType::I64, 8, nullptr);
       case Expr::F32Load:
-        return f.iter().readLoad(ValType::F32, 4, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readLoad(ValType::F32, 4, nullptr);
       case Expr::F64Load:
-        return f.iter().readLoad(ValType::F64, 8, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readLoad(ValType::F64, 8, nullptr);
       case Expr::I32Store8:
-        return f.iter().readStore(ValType::I32, 1, nullptr, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readStore(ValType::I32, 1, nullptr, nullptr);
       case Expr::I32Store16:
-        return f.iter().readStore(ValType::I32, 2, nullptr, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readStore(ValType::I32, 2, nullptr, nullptr);
       case Expr::I32Store:
-        return f.iter().readStore(ValType::I32, 4, nullptr, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readStore(ValType::I32, 4, nullptr, nullptr);
       case Expr::I64Store8:
         return f.checkI64Support() &&
+               f.checkHasMemory() &&
                f.iter().readStore(ValType::I64, 1, nullptr, nullptr);
       case Expr::I64Store16:
         return f.checkI64Support() &&
+               f.checkHasMemory() &&
                f.iter().readStore(ValType::I64, 2, nullptr, nullptr);
       case Expr::I64Store32:
         return f.checkI64Support() &&
+               f.checkHasMemory() &&
                f.iter().readStore(ValType::I64, 4, nullptr, nullptr);
       case Expr::I64Store:
         return f.checkI64Support() &&
+               f.checkHasMemory() &&
                f.iter().readStore(ValType::I64, 8, nullptr, nullptr);
       case Expr::F32Store:
-        return f.iter().readStore(ValType::F32, 4, nullptr, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readStore(ValType::F32, 4, nullptr, nullptr);
       case Expr::F64Store:
-        return f.iter().readStore(ValType::F64, 8, nullptr, nullptr);
+        return f.checkHasMemory() &&
+               f.iter().readStore(ValType::F64, 8, nullptr, nullptr);
       case Expr::Br:
         return f.iter().readBr(nullptr, nullptr, nullptr);
       case Expr::BrIf:

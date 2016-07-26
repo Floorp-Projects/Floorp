@@ -289,7 +289,7 @@ private:
 
     static void FinalizeDOMString(const JSStringFinalizer* fin, char16_t* chars);
 
-    XPCStringConvert();         // not implemented
+    XPCStringConvert() = delete;
 };
 
 class nsIAddonInterposition;

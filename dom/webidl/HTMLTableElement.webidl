@@ -12,6 +12,7 @@
  */
 
 interface HTMLTableElement : HTMLElement {
+           [SetterThrows]
            attribute HTMLTableCaptionElement? caption;
   HTMLElement createCaption();
   void deleteCaption();

@@ -419,6 +419,12 @@ public:
                                                     uint32_t aModifierFlags,
                                                     uint32_t aAdditionalFlags,
                                                     nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                              TouchPointerState aPointerState,
+                                              LayoutDeviceIntPoint aPoint,
+                                              double aPointerPressure,
+                                              uint32_t aPointerOrientation,
+                                              nsIObserver* aObserver) override;
 
   // Mac specific methods
 
@@ -646,6 +652,10 @@ protected:
   static uint32_t sLastInputEventCount;
 
   void ReleaseTitlebarCGContext();
+
+  // This is used by SynthesizeNativeTouchPoint to maintain state between
+  // multiple synthesized points
+  mozilla::UniquePtr<mozilla::MultiTouchInput> mSynthesizedTouchInput;
 };
 
 #endif // nsChildView_h_

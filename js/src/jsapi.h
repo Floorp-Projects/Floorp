@@ -5903,9 +5903,9 @@ struct AllFrames { };
  */
 struct MaxFrames
 {
-    unsigned maxFrames;
+    uint32_t maxFrames;
 
-    explicit MaxFrames(unsigned max)
+    explicit MaxFrames(uint32_t max)
       : maxFrames(max)
     {
         MOZ_ASSERT(max > 0);
@@ -5933,7 +5933,8 @@ struct FirstSubsumedFrame
       , principals(p)
       , ignoreSelfHosted(ignoreSelfHostedFrames)
     {
-        JS_HoldPrincipals(principals);
+        if (principals)
+            JS_HoldPrincipals(principals);
     }
 
     // No copying because we want to avoid holding and dropping principals

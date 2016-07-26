@@ -417,7 +417,8 @@ Instance::callImport_f64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
     return ToNumber(cx, rval, (double*)argv);
 }
 
-Instance::Instance(UniqueCodeSegment codeSegment,
+Instance::Instance(JSContext* cx,
+                   UniqueCodeSegment codeSegment,
                    const Metadata& metadata,
                    const ShareableBytes* maybeBytecode,
                    HandleWasmMemoryObject memory,
@@ -446,6 +447,8 @@ Instance::Instance(UniqueCodeSegment codeSegment,
 
     for (size_t i = 0; i < tables_.length(); i++)
         *addressOfTableBase(i) = tables_[i]->array();
+
+   updateStackLimit(cx);
 }
 
 bool
@@ -507,6 +510,13 @@ size_t
 Instance::memoryLength() const
 {
     return memory_->buffer().byteLength();
+}
+
+void
+Instance::updateStackLimit(JSContext* cx)
+{
+    // Capture the stack limit for cx's thread.
+    tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(StackForUntrustedScript);
 }
 
 bool
@@ -624,7 +634,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 
         // Call the per-exported-function trampoline created by GenerateEntry.
         auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeSegment_->code() + func.entryOffset());
-        if (!CALL_GENERATED_2(funcPtr, exportArgs.begin(), codeSegment_->globalData()))
+        if (!CALL_GENERATED_3(funcPtr, exportArgs.begin(), codeSegment_->globalData(), tlsData()))
             return false;
     }
 
