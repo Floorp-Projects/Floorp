@@ -101,7 +101,7 @@ window.onload = Task.async(function* () {
     for (let i = 0; i<100; i++) {
       stub[`p${i}`] = i
     }
-    const defaultOutput = `Object{p0: 0, p1: 1, p2: 2, more…}`;
+    const defaultOutput = `Object{p0: 0, p1: 1, p2: 2, 97 more…}`;
 
     const modeTests = [
       {
@@ -127,7 +127,7 @@ window.onload = Task.async(function* () {
 
   function testUninterestingProps() {
     const stub = {a:undefined, b:undefined, c:"c", d:0};
-    const defaultOutput = `Object{c: "c", d: 0, a: undefined, more…}`;
+    const defaultOutput = `Object{c: "c", d: 0, a: undefined, 1 more…}`;
 
     const modeTests = [
       {
