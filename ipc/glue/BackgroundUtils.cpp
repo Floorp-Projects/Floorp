@@ -263,9 +263,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       redirectChain,
       aLoadInfo->CorsUnsafeHeaders(),
       aLoadInfo->GetForcePreflight(),
-      aLoadInfo->GetIsPreflight(),
-      aLoadInfo->GetForceHSTSPriming(),
-      aLoadInfo->GetMixedContentWouldBlock());
+      aLoadInfo->GetIsPreflight());
 
   return NS_OK;
 }
@@ -331,10 +329,7 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           redirectChain,
                           loadInfoArgs.corsUnsafeHeaders(),
                           loadInfoArgs.forcePreflight(),
-                          loadInfoArgs.isPreflight(),
-                          loadInfoArgs.forceHSTSPriming(),
-                          loadInfoArgs.mixedContentWouldBlock()
-                          );
+                          loadInfoArgs.isPreflight());
 
    loadInfo.forget(outLoadInfo);
    return NS_OK;
