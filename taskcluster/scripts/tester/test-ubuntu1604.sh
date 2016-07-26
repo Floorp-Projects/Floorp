@@ -63,13 +63,6 @@ if ! [ -d mozharness ]; then
     fail "mozharness zip did not contain mozharness/"
 fi
 
-# start up the pulseaudio daemon.  Note that it's important this occur
-# before the Xvfb startup.
-if $NEED_PULSEAUDIO; then
-    pulseaudio --fail --daemonize --start
-    pactl load-module module-null-sink
-fi
-
 # run XVfb in the background, if necessary
 if $NEED_XVFB; then
     Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 \
@@ -118,6 +111,18 @@ if $NEED_WINDOW_MANAGER; then
     gsettings set org.gnome.desktop.screensaver lock-delay 3600
     # Disable the screen saver
     xset s off s reset
+
+    # start compiz for our window manager
+    compiz 2>&1 &
+
+    #TODO: how to determine if compiz starts correctly?
+fi
+
+# start up the pulseaudio daemon.  Note that it's important this occur
+# before the Xvfb startup for ubuntu 12.04, not for 16.04
+if $NEED_PULSEAUDIO; then
+    pulseaudio --fail --daemonize --start
+    pactl load-module module-null-sink
 fi
 
 # For telemetry purposes, the build process wants information about the

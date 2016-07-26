@@ -16,6 +16,7 @@
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
 #include "WebGLFramebuffer.h"
+#include "WebGLSampler.h"
 #include "WebGLTexelConversions.h"
 
 namespace mozilla {

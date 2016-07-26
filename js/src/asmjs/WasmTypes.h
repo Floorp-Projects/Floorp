@@ -765,7 +765,6 @@ enum class SymbolicAddress
     ATan2D,
     Runtime,
     RuntimeInterruptUint32,
-    StackLimit,
     ReportOverRecursed,
     HandleExecutionInterrupt,
     HandleTrap,
@@ -900,7 +899,27 @@ struct ExportArg
     uint64_t hi;
 };
 
-typedef int32_t (*ExportFuncPtr)(ExportArg* args, uint8_t* global);
+// TLS data for a single module instance.
+//
+// Every WebAssembly function expects to be passed a hidden TLS pointer argument
+// in WasmTlsReg. The TLS pointer argument points to a TlsData struct.
+// Compiled functions expect that the TLS pointer does not change for the
+// lifetime of the thread.
+//
+// There is a TlsData per module instance per thread, so inter-module calls need
+// to pass the TLS pointer appropriate for the callee module.
+//
+// After the TlsData struct follows the module's declared TLS variables.
+//
+struct TlsData
+{
+    // Stack limit for the current thread. This limit is checked against the
+    // stack pointer in the prologue of functions that allocate stack space. See
+    // `CodeGenerator::generateWasm`.
+    void* stackLimit;
+};
+
+typedef int32_t (*ExportFuncPtr)(ExportArg* args, uint8_t* global, TlsData* tls);
 
 // Constants:
 

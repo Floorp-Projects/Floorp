@@ -445,7 +445,7 @@ CalculatePOTSize(const IntSize& aSize, GLContext* gl)
   if (CanUploadNonPowerOfTwo(gl))
     return aSize;
 
-  return IntSize(NextPowerOfTwo(aSize.width), NextPowerOfTwo(aSize.height));
+  return IntSize(RoundUpPow2(aSize.width), RoundUpPow2(aSize.height));
 }
 
 // |aRect| is the rectangle we want to draw to. We will draw it with

@@ -207,7 +207,7 @@ FileDescriptor::PlatformHandleHelper::operator!=(std::nullptr_t) const
   return mHandle != INVALID_HANDLE;
 }
 
-FileDescriptor::PlatformHandleHelper::operator PlatformHandleType () const
+FileDescriptor::PlatformHandleHelper::operator FileDescriptor::PlatformHandleType () const
 {
   return mHandle;
 }
