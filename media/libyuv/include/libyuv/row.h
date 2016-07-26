@@ -180,7 +180,7 @@ extern "C" {
 
 // The following functions fail on gcc/clang 32 bit with fpic and framepointer.
 // caveat: clangcl uses row_win.cc which works.
-#if defined(NDEBUG) || !(defined(_DEBUG) && defined(__i386__)) || \
+#if !((defined(_DEBUG) || defined(MOZ_PROFILING)) && defined(__i386__)) || \
     !defined(__i386__) || defined(_MSC_VER)
 // TODO(fbarchard): fix build error on x86 debug
 // https://code.google.com/p/libyuv/issues/detail?id=524
@@ -209,7 +209,7 @@ extern "C" {
 #define HAS_COPYROW_AVX
 #define HAS_H422TOARGBROW_AVX2
 #define HAS_I400TOARGBROW_AVX2
-#if !(defined(_DEBUG) && defined(__i386__))
+#if !((defined(_DEBUG) || defined(MOZ_PROFILING)) && defined(__i386__))
 // TODO(fbarchard): fix build error on android_full_debug=1
 // https://code.google.com/p/libyuv/issues/detail?id=517
 #define HAS_I422ALPHATOARGBROW_AVX2
