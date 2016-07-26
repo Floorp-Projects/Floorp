@@ -29,3 +29,4 @@ task:
       machine:
         # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
         platform: linux64
+      tier: 1
