@@ -62,8 +62,7 @@ protected:
     // enum used in a few places to specify how .ref attribute should be handled
     enum RefHandlingEnum {
         eIgnoreRef,
-        eHonorRef,
-        eReplaceRef
+        eHonorRef
     };
 
     // Helper to share code between Equals methods.
@@ -76,20 +75,13 @@ protected:
     // the passed-in other for QI to our CID.
     bool EqualsInternal(nsSimpleURI* otherUri, RefHandlingEnum refHandlingMode);
 
-    // Used by StartClone (and versions of StartClone in subclasses) to
-    // handle the ref in the right way for clones.
-    void SetRefOnClone(nsSimpleURI* url, RefHandlingEnum refHandlingMode,
-                       const nsACString& newRef);
-
     // NOTE: This takes the refHandlingMode as an argument because
     // nsSimpleNestedURI's specialized version needs to know how to clone
     // its inner URI.
-    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
-                                    const nsACString& newRef);
+    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode);
 
     // Helper to share code between Clone methods.
     virtual nsresult CloneInternal(RefHandlingEnum refHandlingMode,
-                                   const nsACString &newRef,
                                    nsIURI** clone);
     
     nsCString mScheme;

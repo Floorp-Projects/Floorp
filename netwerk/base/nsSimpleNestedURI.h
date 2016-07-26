@@ -51,8 +51,7 @@ public:
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
                                     bool* result) override;
-    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
-                                    const nsACString& newRef) override;
+    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode) override;
 
     // nsISerializable overrides
     NS_IMETHOD Read(nsIObjectInputStream* aStream) override;

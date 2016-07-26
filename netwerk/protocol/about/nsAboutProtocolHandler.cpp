@@ -392,8 +392,7 @@ nsNestedAboutURI::Write(nsIObjectOutputStream* aStream)
 
 // nsSimpleURI
 /* virtual */ nsSimpleURI*
-nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
-                             const nsACString& aNewRef)
+nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode)
 {
     // Sadly, we can't make use of nsSimpleNestedURI::StartClone here.
     // However, this function is expected to exactly match that function,
@@ -401,21 +400,15 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
     NS_ENSURE_TRUE(mInnerURI, nullptr);
 
     nsCOMPtr<nsIURI> innerClone;
-    nsresult rv;
-    if (aRefHandlingMode == eHonorRef) {
-        rv = mInnerURI->Clone(getter_AddRefs(innerClone));
-    } else if (aRefHandlingMode == eReplaceRef) {
-        rv = mInnerURI->CloneWithNewRef(aNewRef, getter_AddRefs(innerClone));
-    } else {
-        rv = mInnerURI->CloneIgnoringRef(getter_AddRefs(innerClone));
-    }
+    nsresult rv = aRefHandlingMode == eHonorRef ?
+        mInnerURI->Clone(getter_AddRefs(innerClone)) :
+        mInnerURI->CloneIgnoringRef(getter_AddRefs(innerClone));
 
     if (NS_FAILED(rv)) {
         return nullptr;
     }
 
     nsNestedAboutURI* url = new nsNestedAboutURI(innerClone, mBaseURI);
-    SetRefOnClone(url, aRefHandlingMode, aNewRef);
     url->SetMutable(false);
 
     return url;
