@@ -8,6 +8,7 @@
 
 #include "mozilla/layers/APZUtils.h" // for TouchBehaviorFlags
 
+class nsIFrame;
 class nsIWidget;
 
 namespace mozilla {
@@ -31,6 +32,7 @@ public:
    * http://www.w3.org/TR/pointerevents/#the-touch-action-css-property.
    */
   static TouchBehaviorFlags GetAllowedTouchBehavior(nsIWidget* aWidget,
+                                                    nsIFrame* aRootFrame,
                                                     const LayoutDeviceIntPoint& aPoint);
 };
 
