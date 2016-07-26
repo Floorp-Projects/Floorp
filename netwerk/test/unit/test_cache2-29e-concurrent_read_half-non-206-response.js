@@ -55,15 +55,15 @@ function contentHandler(metadata, response)
 
 function run_test()
 {
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test doesn't run when the old cache back end is used since the behavior is different");
-    return;
-  }
-
   // Static check
   do_check_true(responseBody.length > 1024);
 
   do_get_profile();
+
+  if (!newCacheBackEndUsed()) {
+    do_check_true(true, "This test doesn't run when the old cache back end is used since the behavior is different");
+    return;
+  }
 
   Services.prefs.setIntPref("browser.cache.disk.max_entry_size", 1);
 

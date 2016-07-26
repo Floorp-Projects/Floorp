@@ -360,9 +360,9 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
   // Compute a transform that maps sourceRect to aDestRect.
   Matrix matrix =
     gfxUtils::TransformRectToRect(sourceRect,
-                                  gfx::IntPoint(aDestRect.x, aDestRect.y),
-                                  gfx::IntPoint(aDestRect.XMost(), aDestRect.y),
-                                  gfx::IntPoint(aDestRect.XMost(), aDestRect.YMost()));
+                                  gfx::IntPoint::Truncate(aDestRect.x, aDestRect.y),
+                                  gfx::IntPoint::Truncate(aDestRect.XMost(), aDestRect.y),
+                                  gfx::IntPoint::Truncate(aDestRect.XMost(), aDestRect.YMost()));
 
   // Only use REPEAT if aTextureCoords is outside (0, 0, 1, 1).
   gfx::Rect unitRect(0, 0, 1, 1);
@@ -626,7 +626,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 
     if (sourceMask) {
       RefPtr<DrawTarget> transformDT =
-        dest->CreateSimilarDrawTarget(IntSize(transformBounds.width, transformBounds.height),
+        dest->CreateSimilarDrawTarget(IntSize::Truncate(transformBounds.width, transformBounds.height),
                                       SurfaceFormat::B8G8R8A8);
       new3DTransform.PostTranslate(-transformBounds.x, -transformBounds.y, 0);
       if (transformDT &&

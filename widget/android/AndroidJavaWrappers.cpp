@@ -507,10 +507,10 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         // and the Points() array has points in CSS pixels, which we need
         // to convert.
         CSSToLayoutDeviceScale scale = widget->GetDefaultScale();
-        LayoutDeviceIntPoint pt(
+        auto pt = LayoutDeviceIntPoint::Truncate(
             (Points()[i].x * scale.scale) - offset.x,
             (Points()[i].y * scale.scale) - offset.y);
-        LayoutDeviceIntPoint radius(
+        auto radius = LayoutDeviceIntPoint::Truncate(
             PointRadii()[i].x * scale.scale,
             PointRadii()[i].y * scale.scale);
         RefPtr<Touch> t = new Touch(PointIndicies()[i],
@@ -625,8 +625,8 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
     const LayoutDeviceIntPoint& offset = widget->WidgetToScreenOffset();
     CSSToLayoutDeviceScale scale = widget->GetDefaultScale();
     event.mRefPoint =
-        LayoutDeviceIntPoint((Points()[0].x * scale.scale) - offset.x,
-                             (Points()[0].y * scale.scale) - offset.y);
+        LayoutDeviceIntPoint::Truncate((Points()[0].x * scale.scale) - offset.x,
+                                       (Points()[0].y * scale.scale) - offset.y);
     return event;
 }
 
