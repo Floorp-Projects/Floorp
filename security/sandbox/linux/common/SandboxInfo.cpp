@@ -282,6 +282,7 @@ SandboxInfo::SubmitTelemetry()
                         sandboxInfo.Test(SandboxInfo::kEnabledForMedia));
 }
 
+#ifdef MOZ_CRASHREPORTER
 void
 SandboxInfo::AnnotateCrashReport() const
 {
@@ -291,5 +292,6 @@ SandboxInfo::AnnotateCrashReport() const
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
 }
+#endif
 
 } // namespace mozilla

@@ -203,51 +203,6 @@ Instance::toggleProfiling(JSContext* cx)
     return true;
 }
 
-static bool
-ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
-{
-    if (!v.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
-                             "i64 JS value must be an object");
-        return false;
-    }
-
-    RootedObject obj(cx, &v.toObject());
-
-    int32_t* i32 = (int32_t*)i64;
-
-    RootedValue val(cx);
-    if (!JS_GetProperty(cx, obj, "low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32[0]))
-        return false;
-
-    if (!JS_GetProperty(cx, obj, "high", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32[1]))
-        return false;
-
-    return true;
-}
-
-static JSObject*
-CreateI64Object(JSContext* cx, int64_t i64)
-{
-    RootedObject result(cx, JS_NewPlainObject(cx));
-    if (!result)
-        return nullptr;
-
-    RootedValue val(cx, Int32Value(uint32_t(i64)));
-    if (!JS_DefineProperty(cx, result, "low", val, JSPROP_ENUMERATE))
-        return nullptr;
-
-    val = Int32Value(uint32_t(i64 >> 32));
-    if (!JS_DefineProperty(cx, result, "high", val, JSPROP_ENUMERATE))
-        return nullptr;
-
-    return result;
-}
-
 bool
 Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                      MutableHandleValue rval)
@@ -423,7 +378,8 @@ Instance::Instance(JSContext* cx,
                    const ShareableBytes* maybeBytecode,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
-                   Handle<FunctionVector> funcImports)
+                   Handle<FunctionVector> funcImports,
+                   const ValVector& globalImports)
   : codeSegment_(Move(codeSegment)),
     metadata_(&metadata),
     maybeBytecode_(maybeBytecode),
@@ -440,6 +396,40 @@ Instance::Instance(JSContext* cx,
         exit.code = codeSegment_->code() + fi.interpExitCodeOffset();
         exit.fun = funcImports[i];
         exit.baselineScript = nullptr;
+    }
+
+    uint8_t* globalData = codeSegment_->globalData();
+
+    for (size_t i = 0; i < metadata.globals.length(); i++) {
+        const GlobalDesc& global = metadata.globals[i];
+        if (global.isConstant())
+            continue;
+
+        uint8_t* globalAddr = globalData + global.offset();
+        switch (global.kind()) {
+          case GlobalKind::Import: {
+            globalImports[global.importIndex()].writePayload(globalAddr);
+            break;
+          }
+          case GlobalKind::Variable: {
+            const InitExpr& init = global.initExpr();
+            switch (init.kind()) {
+              case InitExpr::Kind::Constant: {
+                init.val().writePayload(globalAddr);
+                break;
+              }
+              case InitExpr::Kind::GetGlobal: {
+                const GlobalDesc& imported = metadata.globals[init.globalIndex()];
+                globalImports[imported.importIndex()].writePayload(globalAddr);
+                break;
+              }
+            }
+            break;
+          }
+          case GlobalKind::Constant: {
+            MOZ_CRASH("skipped at the top");
+          }
+        }
     }
 
     if (memory)

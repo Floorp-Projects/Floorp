@@ -22,7 +22,7 @@ SharedSurface_IOSurface::Create(const RefPtr<MacIOSurface>& ioSurf,
     MOZ_ASSERT(ioSurf);
     MOZ_ASSERT(gl);
 
-    gfx::IntSize size(ioSurf->GetWidth(), ioSurf->GetHeight());
+    auto size = gfx::IntSize::Truncate(ioSurf->GetWidth(), ioSurf->GetHeight());
 
     typedef SharedSurface_IOSurface ptrT;
     UniquePtr<ptrT> ret( new ptrT(ioSurf, gl, size, hasAlpha) );
@@ -214,8 +214,8 @@ SurfaceFactory_IOSurface::Create(GLContext* gl, const SurfaceCaps& caps,
                                  const RefPtr<layers::ClientIPCAllocator>& allocator,
                                  const layers::TextureFlags& flags)
 {
-    gfx::IntSize maxDims(MacIOSurface::GetMaxWidth(),
-                         MacIOSurface::GetMaxHeight());
+    auto maxDims = gfx::IntSize::Truncate(MacIOSurface::GetMaxWidth(),
+                                          MacIOSurface::GetMaxHeight());
 
     typedef SurfaceFactory_IOSurface ptrT;
     UniquePtr<ptrT> ret( new ptrT(gl, caps, allocator, flags, maxDims) );
