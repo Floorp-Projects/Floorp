@@ -14,7 +14,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
 /**
  * API
  *
- *   new Selection(walker=null, node=null, track={attributes,detached});
+ *   new Selection(walker=null)
  *   destroy()
  *   node (readonly)
  *   setNode(node, origin="unknown")
@@ -45,30 +45,23 @@ var EventEmitter = require("devtools/shared/event-emitter");
  * Events:
  *   "new-node" when the inner node changed
  *   "before-new-node" when the inner node is set to change
- *   "attribute-changed" when an attribute is changed (only if tracked)
+ *   "attribute-changed" when an attribute is changed
  *   "detached" when the node (or one of its parents) is removed from
- *   the document (only if tracked)
+ *   the document
  *   "reparented" when the node (or one of its parents) is moved under
- *   a different node (only if tracked)
+ *   a different node
  */
 
 /**
  * A Selection object. Hold a reference to a node.
  * Includes some helpers, fire some helpful events.
- *
- * @param node Inner node.
- *    Can be null. Can be (un)set in the future via the "node" property;
- * @param trackAttribute Tell if events should be fired when the attributes of
- *    the node change.
- *
  */
-function Selection(walker, node = null, track = {attributes: true, detached: true}) {
+function Selection(walker) {
   EventEmitter.decorate(this);
 
   this._onMutations = this._onMutations.bind(this);
-  this.track = track;
   this.setWalker(walker);
-  this.setNode(node);
+  this.setNode(null);
 }
 
 exports.Selection = Selection;
