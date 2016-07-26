@@ -1465,6 +1465,7 @@ AsyncCompositionManager::GetFrameUniformity(FrameUniformityData* aOutData)
 
 bool
 AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
+                                             TimeDuration aVsyncRate,
                                              TransformsToSkip aSkip)
 {
   PROFILER_LABEL("AsyncCompositionManager", "TransformShadowTree",
@@ -1529,10 +1530,12 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     // Advance APZ animations to the next expected vsync timestamp, if we can
     // get it.
     TimeStamp nextFrame = aCurrentFrame;
-    TimeDuration vsyncrate = gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().GetVsyncRate();
-    if (vsyncrate != TimeDuration::Forever()) {
-      nextFrame += vsyncrate;
+
+    MOZ_ASSERT(aVsyncRate != TimeDuration::Forever());
+    if (aVsyncRate != TimeDuration::Forever()) {
+      nextFrame += aVsyncRate;
     }
+
     wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), nextFrame);
   }
 
