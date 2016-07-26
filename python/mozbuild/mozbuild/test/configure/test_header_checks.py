@@ -60,6 +60,9 @@ class TestHeaderChecks(unittest.TestCase):
                     compiler=os.path.abspath('/usr/bin/mockcc'),
                     wrapper=[],
                 )
+            @depends('--help')
+            def extra_toolchain_flags(_):
+                return []
         ''')
 
         config = {}
@@ -149,6 +152,103 @@ class TestHeaderChecks(unittest.TestCase):
         self.assertEqual(out, textwrap.dedent('''\
             checking whether -fknown-flag works... yes
         '''))
+
+    def test_check_header(self):
+        expected_test_content = textwrap.dedent('''\
+          #include <foo.h>
+          int
+          main(void)
+          {
+
+            ;
+            return 0;
+          }
+        ''')
+
+        cmd = textwrap.dedent('''\
+            check_header('foo.h')
+        ''')
+
+        config, out, status = self.do_compile_test(cmd,
+                                                   expected_test_content=expected_test_content)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'DEFINES': {'HAVE_FOO_H': True}})
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for foo.h... yes
+        '''))
+
+    def test_check_header_include(self):
+        expected_test_content = textwrap.dedent('''\
+          #include <std.h>
+          #include <bar.h>
+          #include <foo.h>
+          int
+          main(void)
+          {
+
+            ;
+            return 0;
+          }
+        ''')
+
+        cmd = textwrap.dedent('''\
+           have_foo = check_header('foo.h', includes=['std.h', 'bar.h'])
+           set_config('HAVE_FOO_H', have_foo)
+        ''')
+
+        config, out, status = self.do_compile_test(cmd,
+                                                   expected_test_content=expected_test_content)
+
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            'HAVE_FOO_H': True,
+            'DEFINES': {
+                'HAVE_FOO_H': True,
+            }
+        })
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for foo.h... yes
+        '''))
+
+    def test_check_headers_multiple(self):
+        cmd = textwrap.dedent('''\
+            baz_bar, quux_bar = check_headers('baz/foo-bar.h', 'baz-quux/foo-bar.h')
+            set_config('HAVE_BAZ_BAR', baz_bar)
+            set_config('HAVE_QUUX_BAR', quux_bar)
+        ''')
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            'HAVE_BAZ_BAR': True,
+            'HAVE_QUUX_BAR': True,
+            'DEFINES': {
+                'HAVE_BAZ_FOO_BAR_H': True,
+                'HAVE_BAZ_QUUX_FOO_BAR_H': True,
+            }
+        })
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for baz/foo-bar.h... yes
+            checking for baz-quux/foo-bar.h... yes
+        '''))
+
+    def test_check_headers_not_found(self):
+
+        cmd = textwrap.dedent('''\
+            baz_bar, quux_bar = check_headers('baz/foo-bar.h', 'baz-quux/foo-bar.h',
+                                              flags=['-funknown-flag'])
+            set_config('HAVE_BAZ_BAR', baz_bar)
+            set_config('HAVE_QUUX_BAR', quux_bar)
+        ''')
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'DEFINES': {}})
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for baz/foo-bar.h... no
+            checking for baz-quux/foo-bar.h... no
+        '''))
+
 
 if __name__ == '__main__':
     main()

@@ -32,8 +32,6 @@ def try_compile(includes=None, body='', language='C++', flags=None, check_msg=No
           return 0;
         }
     ''' % body)
-    flags = flags or []
-    flags.append('-c')
 
     if check_msg:
         def checking_fn(fn):
@@ -42,9 +40,17 @@ def try_compile(includes=None, body='', language='C++', flags=None, check_msg=No
         def checking_fn(fn):
             return fn
 
-    @depends(cxx_compiler, c_compiler)
+    def get_flags():
+        if flags:
+            return flags[:]
+
+    @depends(cxx_compiler, c_compiler, extra_toolchain_flags)
     @checking_fn
-    def check(cxx_info, c_info):
+    def check(cxx_info, c_info, extra_flags):
+        flags = get_flags() or []
+        flags += extra_flags
+        flags.append('-c')
+
         info = {
             'C': c_info,
             'C++': cxx_info,
@@ -53,3 +59,52 @@ def try_compile(includes=None, body='', language='C++', flags=None, check_msg=No
                                    language, source, flags,
                                    onerror=lambda: None)
     return check
+
+# Checks for the presence of the given header on the target system by compiling
+# a test program including that header. The return value of the template is a
+# check function returning True if the header is present, and None if it is not.
+# The value of this check function is also used to set a variable (with set_define)
+# corresponding to the checked header. For instance, HAVE_MALLOC_H will be set in
+# defines if check_header if called with 'malloc.h' as input and malloc.h is
+# present on the target.
+# - `header` is the header, as a file name, to check for.
+# - `language` is the language selection, so that the appropriate compiler is
+#   used.
+# - `flags` are the flags to be passed to the compiler, in addition to `-c`.
+# - `includes` are additional includes, as file names, to appear before the
+#   header checked for.
+# - `when` is a depends function that if present will make performing the check
+#   conditional on the value of that function.
+@template
+def check_header(header, language='C++', flags=None, includes=None, when=None):
+    when = when or depends('--help')(lambda _: True)
+
+    if includes:
+        includes = includes[:]
+    else:
+        includes = []
+    includes.append(header)
+
+    @depends_when(try_compile(includes=includes, language=language, flags=flags,
+                              check_msg='for %s' % header), when=when)
+    def have_header(value):
+        if value is not None:
+            return True
+    header_var = 'HAVE_%s' % (header.upper()
+                                    .replace('-', '_')
+                                    .replace('/', '_')
+                                    .replace('.', '_'))
+    set_define(header_var, have_header)
+    return have_header
+
+# A convenience wrapper for check_header for checking multiple headers.
+# returns an array of the resulting checks in order corresponding to the
+# provided headers.
+# - `headers` are the headers to be checked.
+# - `kwargs` are keyword arguments passed verbatim to check_header.
+@template
+def check_headers(*headers, **kwargs):
+    checks = []
+    for header in headers:
+        checks.append(check_header(header, **kwargs))
+    return checks
