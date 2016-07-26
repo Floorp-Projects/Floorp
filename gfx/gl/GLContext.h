@@ -29,7 +29,6 @@
 #define MOZ_GL_DEBUG 1
 #endif
 
-#include "../../mfbt/Maybe.h"
 #include "../../mfbt/RefPtr.h"
 #include "../../mfbt/UniquePtr.h"
 
@@ -3302,13 +3301,6 @@ public:
     GLuint GetReadFB();
 
     GLuint GetFB();
-
-    /*
-     * Retrieves the size of the native windowing system drawable.
-     */
-    virtual Maybe<gfx::IntSize> GetTargetSize() {
-        return Maybe<gfx::IntSize>();
-    };
 
 private:
     void GetShaderPrecisionFormatNonES2(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {

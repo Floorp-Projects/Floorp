@@ -6,148 +6,75 @@ test `whoami` == 'root'
 
 apt-get update
 apt-get install -y --force-yes --no-install-recommends \
-    autotools-dev \
-    blt-dev \
-    bzip2 \
-    curl \
     ca-certificates \
-    dpkg-dev \
-    gcc-multilib \
-    g++-multilib \
+    curl \
     jq \
-    libbluetooth-dev \
-    libbz2-dev \
-    libexpat1-dev \
-    libffi-dev \
-    libffi6 \
-    libffi6-dbg \
-    libgdbm-dev \
-    libgpm2 \
-    libncursesw5-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libssl-dev \
-    libtinfo-dev \
-    make \
-    mime-support \
-    netbase \
-    net-tools \
-    python-dev \
-    python-pip \
-    python-crypto \
-    python-mox3 \
-    python-pil \
-    python-ply \
-    quilt \
-    tar \
-    tk-dev \
-    xz-utils \
-    zlib1g-dev
+    python \
+    sudo
 
 BUILD=/root/build
 mkdir $BUILD
 
 tooltool_fetch() {
     cat >manifest.tt
-    python $BUILD/tooltool.py fetch
+    python2.7 /tmp/tooltool.py fetch
     rm manifest.tt
 }
 
-curl https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py > ${BUILD}/tooltool.py
-
+# Install Mercurial from custom debs since distro packages tend to lag behind.
 cd $BUILD
-tooltool_fetch <<'EOF'
+tooltool_fetch <<EOF
 [
 {
-    "size": 12250696,
-    "digest": "67615a6defbcda062f15a09f9dd3b9441afd01a8cc3255e5bc45b925378a0ddc38d468b7701176f6cc153ec52a4f21671b433780d9bde343aa9b9c1b2ae29feb",
+    "size": 44878,
+    "digest": "7b1fc1217e0dcaeea852b0af2dc559b1aafb704fbee7e29cbec75af57bacb84910a7ec92b5c33f04ee98f23b3a57f1fa451173fe7c8a96f58faefe319dc7dde1",
     "algorithm": "sha512",
-    "filename": "Python-2.7.10.tar.xz",
-    "unpack": true
-}
-]
-EOF
-
-cd Python-2.7.10
-./configure --prefix /usr/local/lib/python2.7.10
-make -j$(nproc)
-make install
-
-PATH=/usr/local/lib/python2.7.10/bin/:$PATH
-python --version
-
-# Enough python utilities to get "peep" working
-cd $BUILD
-tooltool_fetch <<'EOF'
-[
-{
-    "size": 630700,
-    "digest": "1367f3a10c1fef2f8061e430585f1927f6bd7c416e764d65cea1f4255824d549efa77beef8ff784bbd62c307b4b1123502e7b3fd01a243c0cc5b433a841cc8b5",
-    "algorithm": "sha512",
-    "filename": "setuptools-18.1.tar.gz",
-    "unpack": true
+    "filename": "mercurial_3.8.4_amd64.deb"
 },
 {
-    "size": 1051205,
-    "digest": "e7d2e003ec60fce5a75a6a23711d7f9b155e898faebcf55f3abdd912ef513f4e0cf43daca8f9da7179a7a4efe6e4a625a532d051349818847df1364eb5b326de",
+    "size": 1818422,
+    "digest": "b476e2612e7495a1c7c5adfd84511aa7479e26cc9070289513ec705fbfc4c61806ce2dbcceca0e63f2e80669be416f3467a3cebb522dcb8a6aeb62cdd3df82f2",
     "algorithm": "sha512",
-    "filename": "pip-6.1.1.tar.gz",
-    "unpack": true
-},
-{
-    "size": 26912,
-    "digest": "9d730ed7852d4d217aaddda959cd5f871ef1b26dd6c513a3780bbb04a5a93a49d6b78e95c2274451a1311c10cc0a72755b269dc9af62640474e6e73a1abec370",
-    "algorithm": "sha512",
-    "filename": "peep-2.4.1.tar.gz",
-    "unpack": false
+    "filename": "mercurial-common_3.8.4_all.deb"
 }
 ]
 EOF
 
-cd $BUILD
-cd setuptools-18.1
-python setup.py install
-# NOTE: latest peep is not compatible with pip>=7.0
-# https://github.com/erikrose/peep/pull/94
+dpkg -i mercurial-common_3.8.4_all.deb mercurial_3.8.4_amd64.deb
 
-cd $BUILD
-cd pip-6.1.1
-python setup.py install
-
-cd $BUILD
-pip install peep-2.4.1.tar.gz
-
-# Peep (latest)
-cd $BUILD
-pip install peep
-
-# remaining Python utilities are installed with `peep` from upstream
-# repositories; peep verifies file integrity for us
-cat >requirements.txt <<'EOF'
-# sha256: 90pZQ6kAXB6Je8-H9-ivfgDAb6l3e5rWkfafn6VKh9g
-virtualenv==13.1.2
-
-# sha256: wJnELXTi1SC2HdNyzZlrD6dgXAZheDT9exPHm5qaWzA
-mercurial==3.7.3
-EOF
-peep install -r requirements.txt
-
-# Install node
+mkdir -p /usr/local/mercurial
+chown 755 /usr/local/mercurial
+cd /usr/local/mercurial
 tooltool_fetch <<'EOF'
 [
 {
-    "size": 5676610,
-    "digest": "ce27b788dfd141a5ba7674332825fc136fe2c4f49a319dd19b3a87c8fffa7a97d86cbb8535661c9a68c9122719aa969fc6a8c886458a0df9fc822eec99ed130b",
+    "size": 11849,
+    "digest": "c88d9b8afd6649bd28bbacfa654ebefec8087a01d1662004aae088d485edeb03a92df1193d1310c0369d7721f475b974fcd4a911428ec65936f7e40cf1609c49",
     "algorithm": "sha512",
-    "filename": "node-v0.10.36-linux-x64.tar.gz"
+    "filename": "robustcheckout.py"
 }
 ]
-
 EOF
-tar -C /usr/local -xz --strip-components 1 < node-*.tar.gz
-node -v  # verify
 
-npm install -g taskcluster-vcs@2.3.34
+chmod 644 /usr/local/mercurial/robustcheckout.py
+
+# Install a global hgrc file with reasonable defaults.
+mkdir -p /etc/mercurial
+cat >/etc/mercurial/hgrc <<EOF
+# By default the progress bar starts after 3s and updates every 0.1s. We
+# change this so it shows and updates every 1.0s.
+[progress]
+delay = 1.0
+refresh = 1.0
+
+[web]
+cacerts = /etc/ssl/certs/ca-certificates.crt
+
+[extensions]
+robustcheckout = /usr/local/mercurial/robustcheckout.py
+EOF
+
+chmod 644 /etc/mercurial/hgrc
 
 cd /
 rm -rf $BUILD
