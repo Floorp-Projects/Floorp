@@ -1582,7 +1582,7 @@ dnl These are all the places some variant of statfs can be hiding.
 MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
-MOZ_CHECK_HEADERS(sys/quota.h sys/sysmacros.h)
+MOZ_CHECK_HEADERS(sys/quota.h)
 MOZ_CHECK_HEADERS([linux/quota.h],,,[#include <sys/socket.h>])
 
 dnl SCTP support - needs various network include headers
