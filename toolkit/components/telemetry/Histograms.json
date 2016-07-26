@@ -88,6 +88,13 @@
     "kind": "boolean",
     "description": "Application reputation query count (both local and remote)"
   },
+  "APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT": {
+    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "boolean",
+    "bug_numbers": [1172689],
+    "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
+  },
   "AUDIOSTREAM_FIRST_OPEN_MS": {
     "expires_in_version": "50",
     "kind": "exponential",
