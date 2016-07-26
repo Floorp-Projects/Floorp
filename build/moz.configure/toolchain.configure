@@ -168,31 +168,8 @@ add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)
 
 # Compilers
 # ==============================================================
-@imports('os')
-@imports('subprocess')
-@imports(_from='mozbuild.configure.util', _import='LineIO')
-@imports(_from='tempfile', _import='mkstemp')
 def try_preprocess(compiler, language, source):
-    suffix = {
-        'C': '.c',
-        'C++': '.cpp',
-    }[language]
-
-    fd, path = mkstemp(prefix='conftest.', suffix=suffix)
-    try:
-        source = source.encode('ascii', 'replace')
-
-        log.debug('Creating `%s` with content:', path)
-        with LineIO(lambda l: log.debug('| %s', l)) as out:
-            out.write(source)
-
-        os.write(fd, source)
-        os.close(fd)
-        cmd = compiler + ['-E', path]
-        return check_cmd_output(*cmd)
-    finally:
-        os.remove(path)
-
+    return try_invoke_compiler(compiler, language, source, ['-E'])
 
 @imports(_from='mozbuild.configure.constants', _import='CompilerType')
 @imports(_from='mozbuild.configure.constants',
