@@ -6,6 +6,15 @@
 
 "use strict";
 
+let l10n;
+try {
+  const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+  const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
+  l10n = new WebConsoleUtils.L10n(STRINGS_URI);
+} catch (e) {
+  l10n = {};
+}
+
 const {
   MESSAGE_SOURCE,
   MESSAGE_TYPE,
@@ -17,9 +26,6 @@ const {
   LEVELS,
   SEVERITY_LOG,
 } = require("../constants");
-const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
-const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
-const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 const { ConsoleMessage } = require("../types");
 
 let messageId = 0;
