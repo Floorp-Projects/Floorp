@@ -2532,6 +2532,79 @@ ResolvePremultipliedAlpha(nsTArray<ColorStop>& aStops)
   }
 }
 
+static ColorStop
+InterpolateColorStop(const ColorStop& aFirst, const ColorStop& aSecond,
+                     double aPosition, const Color& aDefault)
+{
+  MOZ_ASSERT(aFirst.mPosition <= aPosition);
+  MOZ_ASSERT(aPosition <= aSecond.mPosition);
+
+  double delta = aSecond.mPosition - aFirst.mPosition;
+
+  if (delta < 1e-6) {
+    return ColorStop(aPosition, false, aDefault);
+  }
+
+  return ColorStop(aPosition, false,
+                   Unpremultiply(InterpolateColor(Premultiply(aFirst.mColor),
+                                                  Premultiply(aSecond.mColor),
+                                                  (aPosition - aFirst.mPosition) / delta)));
+}
+
+// Clamp and extend the given ColorStop array in-place to fit exactly into the
+// range [0, 1].
+static void
+ClampColorStops(nsTArray<ColorStop>& aStops)
+{
+  MOZ_ASSERT(aStops.Length() > 0);
+
+  // If all stops are outside the range, then get rid of everything and replace
+  // with a single colour.
+  if (aStops.Length() < 2 || aStops[0].mPosition > 1 ||
+      aStops.LastElement().mPosition < 0) {
+    Color c = aStops[0].mPosition > 1 ? aStops[0].mColor : aStops.LastElement().mColor;
+    aStops.Clear();
+    aStops.AppendElement(ColorStop(0, false, c));
+    return;
+  }
+
+  // Create the 0 and 1 points if they fall in the range of |aStops|, and discard
+  // all stops outside the range [0, 1].
+  // XXX: If we have stops positioned at 0 or 1, we only keep the innermost of
+  // those stops. This should be fine for the current user(s) of this function.
+  for (size_t i = aStops.Length() - 1; i > 0; i--) {
+    if (aStops[i - 1].mPosition < 1 && aStops[i].mPosition >= 1) {
+      // Add a point to position 1.
+      aStops[i] = InterpolateColorStop(aStops[i - 1], aStops[i],
+                                       /* aPosition = */ 1,
+                                       aStops[i - 1].mColor);
+      // Remove all the elements whose position is greater than 1.
+      aStops.RemoveElementsAt(i + 1, aStops.Length() - (i + 1));
+    }
+    if (aStops[i - 1].mPosition <= 0 && aStops[i].mPosition > 0) {
+      // Add a point to position 0.
+      aStops[i - 1] = InterpolateColorStop(aStops[i - 1], aStops[i],
+                                           /* aPosition = */ 0,
+                                           aStops[i].mColor);
+      // Remove all of the preceding stops -- they are all negative.
+      aStops.RemoveElementsAt(0, i - 1);
+      break;
+    }
+  }
+
+  MOZ_ASSERT(aStops[0].mPosition >= 0);
+  MOZ_ASSERT(aStops.LastElement().mPosition <= 1);
+
+  // The end points won't exist yet if they don't fall in the original range of
+  // |aStops|. Create them if needed.
+  if (aStops[0].mPosition > 0) {
+    aStops.InsertElementAt(0, ColorStop(0, false, aStops[0].mColor));
+  }
+  if (aStops.LastElement().mPosition < 1) {
+    aStops.AppendElement(ColorStop(1, false, aStops.LastElement().mColor));
+  }
+}
+
 void
 nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               nsRenderingContext& aRenderingContext,
@@ -2646,6 +2719,55 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     }
   }
 
+  // If a non-repeating linear gradient is axis-aligned and there are no gaps
+  // between tiles, we can optimise away most of the work by converting to a
+  // repeating linear gradient and filling the whole destination rect at once.
+  bool forceRepeatToCoverTiles =
+    aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR &&
+    (lineStart.x == lineEnd.x) != (lineStart.y == lineEnd.y) &&
+    aRepeatSize.width == aDest.width && aRepeatSize.height == aDest.height &&
+    !aGradient->mRepeating && !cellContainsFill;
+
+  gfxMatrix matrix;
+  if (forceRepeatToCoverTiles) {
+    // Length of the source rectangle along the gradient axis.
+    double rectLen;
+    // The position of the start of the rectangle along the gradient.
+    double offset;
+
+    // The gradient line is "backwards". Flip the line upside down to make
+    // things easier, and then rotate the matrix to turn everything back the
+    // right way up.
+    if (lineStart.x > lineEnd.x || lineStart.y > lineEnd.y) {
+      std::swap(lineStart, lineEnd);
+      matrix.Scale(-1, -1);
+    }
+
+    // Fit the gradient line exactly into the source rect.
+    if (lineStart.x != lineEnd.x) {
+      rectLen = srcSize.width;
+      offset = ((double)aSrc.x - lineStart.x) / lineLength;
+      lineStart.x = aSrc.x;
+      lineEnd.x = aSrc.x + srcSize.width;
+    } else {
+      rectLen = srcSize.height;
+      offset = ((double)aSrc.y - lineStart.y) / lineLength;
+      lineStart.y = aSrc.y;
+      lineEnd.y = aSrc.y + srcSize.height;
+    }
+
+    // Adjust gradient stop positions for the new gradient line.
+    double scale = lineLength / rectLen;
+    for (size_t i = 0; i < stops.Length(); i++) {
+      stops[i].mPosition = (stops[i].mPosition - offset) * fabs(scale);
+    }
+
+    // Clamp or extrapolate gradient stops to exactly [0, 1].
+    ClampColorStops(stops);
+
+    lineLength = rectLen;
+  }
+
   // Eliminate negative-position stops if the gradient is radial.
   double firstStop = stops[0].mPosition;
   if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR && firstStop < 0.0) {
@@ -2745,8 +2867,6 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
 
   // Create the gradient pattern.
   RefPtr<gfxPattern> gradientPattern;
-  bool forceRepeatToCoverTiles = false;
-  gfxMatrix matrix;
   gfxPoint gradientStart;
   gfxPoint gradientEnd;
   if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
@@ -2770,18 +2890,6 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
 
     gradientPattern = new gfxPattern(gradientStart.x, gradientStart.y,
                                       gradientEnd.x, gradientEnd.y);
-
-    // When the gradient line is parallel to the x axis from the left edge
-    // to the right edge of a tile, then we can repeat by just repeating the
-    // gradient.
-    if (!cellContainsFill &&
-        stopDelta != 0.0 && // if 0.0, gradientStopEnd is bogus (see above)
-        ((gradientStopStart.y == gradientStopEnd.y && gradientStopStart.x == 0 &&
-          gradientStopEnd.x == srcSize.width) ||
-          (gradientStopStart.x == gradientStopEnd.x && gradientStopStart.y == 0 &&
-          gradientStopEnd.y == srcSize.height))) {
-      forceRepeatToCoverTiles = true;
-    }
   } else {
     NS_ASSERTION(firstStop >= 0.0,
                   "Negative stops not allowed for radial gradients");
