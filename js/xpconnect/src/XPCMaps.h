@@ -310,8 +310,6 @@ public:
 
     inline uint32_t Count() { return mTable.EntryCount(); }
 
-    PLDHashTable::Iterator Iter() { return mTable.Iter(); }
-
     // ClassInfo2NativeSetMap holds pointers to *some* XPCNativeSets.
     // So we don't want to count those XPCNativeSets, because they are better
     // counted elsewhere (i.e. in XPCJSContext::mNativeSetMap, which holds
