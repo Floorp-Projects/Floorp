@@ -357,6 +357,9 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
     // too.
     mAutoRequest.emplace(mCx);
   }
+  if (aGlobal) {
+    JS::ExposeObjectToActiveJS(aGlobal);
+  }
   mAutoNullableCompartment.emplace(mCx, aGlobal);
 
   ScriptSettingsStack::Push(this);
