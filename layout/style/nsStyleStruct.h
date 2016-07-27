@@ -3441,44 +3441,39 @@ namespace mozilla {
 class nsStyleBasicShape final
 {
 public:
-  enum Type {
-    eInset,
-    eCircle,
-    eEllipse,
-    ePolygon
-  };
-
-  explicit nsStyleBasicShape(Type type)
+  explicit nsStyleBasicShape(StyleBasicShapeType type)
     : mType(type),
       mFillRule(NS_STYLE_FILL_RULE_NONZERO)
   {
     mPosition.SetInitialPercentValues(0.5f);
   }
 
-  Type GetShapeType() const { return mType; }
+  StyleBasicShapeType GetShapeType() const { return mType; }
   nsCSSKeyword GetShapeTypeName() const;
 
   int32_t GetFillRule() const { return mFillRule; }
   void SetFillRule(int32_t aFillRule)
   {
-    NS_ASSERTION(mType == ePolygon, "expected polygon");
+    MOZ_ASSERT(mType == StyleBasicShapeType::Polygon, "expected polygon");
     mFillRule = aFillRule;
   }
 
   typedef nsStyleImageLayers::Position Position;
   Position& GetPosition() {
-    NS_ASSERTION(mType == eCircle || mType == eEllipse,
-                 "expected circle or ellipse");
+    MOZ_ASSERT(mType == StyleBasicShapeType::Circle ||
+               mType == StyleBasicShapeType::Ellipse,
+               "expected circle or ellipse");
     return mPosition;
   }
   const Position& GetPosition() const {
-    NS_ASSERTION(mType == eCircle || mType == eEllipse,
-                 "expected circle or ellipse");
+    MOZ_ASSERT(mType == StyleBasicShapeType::Circle ||
+               mType == StyleBasicShapeType::Ellipse,
+               "expected circle or ellipse");
     return mPosition;
   }
 
   bool HasRadius() const {
-    NS_ASSERTION(mType == eInset, "expected inset");
+    MOZ_ASSERT(mType == StyleBasicShapeType::Inset, "expected inset");
     nsStyleCoord zero;
     zero.SetCoordValue(0);
     NS_FOR_CSS_HALF_CORNERS(corner) {
@@ -3489,11 +3484,11 @@ public:
     return false;
   }
   nsStyleCorners& GetRadius() {
-    NS_ASSERTION(mType == eInset, "expected inset");
+    MOZ_ASSERT(mType == StyleBasicShapeType::Inset, "expected inset");
     return mRadius;
   }
   const nsStyleCorners& GetRadius() const {
-    NS_ASSERTION(mType == eInset, "expected inset");
+    MOZ_ASSERT(mType == StyleBasicShapeType::Inset, "expected inset");
     return mRadius;
   }
 
@@ -3526,7 +3521,7 @@ public:
 private:
   ~nsStyleBasicShape() {}
 
-  Type mType;
+  StyleBasicShapeType mType;
   int32_t mFillRule;
 
   // mCoordinates has coordinates for polygon or radii for
