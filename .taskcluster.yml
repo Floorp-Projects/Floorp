@@ -36,7 +36,7 @@ tasks:
     task:
       created: '{{now}}'
       deadline: '{{#from_now}}1 day{{/from_now}}'
-      expires: '{{#from_now}}14 day{{/from_now}}'
+      expires: '{{#from_now}}365 day{{/from_now}}'
       metadata:
         owner: mozilla-taskcluster-maintenance@mozilla.com
         source: {{{source}}}
@@ -111,6 +111,10 @@ tasks:
           'public':
             type: 'directory'
             path: '/home/worker/artifacts'
+            expires: '{{#from_now}}364 days{{/from_now}}'
+          'public/docker_image_contexts':
+            type: 'directory'
+            path: '/home/worker/docker_image_contexts'
             expires: '{{#from_now}}7 days{{/from_now}}'
 
       extra:
