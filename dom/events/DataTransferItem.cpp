@@ -37,7 +37,7 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DataTransferItem, mData,
-                                      mPrincipal, mParent)
+                                      mPrincipal, mParent, mCachedFile)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DataTransferItem)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DataTransferItem)
 
