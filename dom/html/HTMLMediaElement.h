@@ -443,6 +443,8 @@ public:
   // when the connection between Rtsp server and client gets lost.
   virtual void ResetConnectionState() final override;
 
+  void NotifyXPCOMShutdown() final override;
+
   // Called by media decoder when the audible state changed or when input is
   // a media stream.
   virtual void SetAudibleState(bool aAudible) final override;
