@@ -1964,7 +1964,7 @@ nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
 }
 
 nsresult
-nsFrameSelection::RepaintSelection(SelectionType aSelectionType) const
+nsFrameSelection::RepaintSelection(SelectionType aSelectionType)
 {
   int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index < 0)
@@ -1972,6 +1972,14 @@ nsFrameSelection::RepaintSelection(SelectionType aSelectionType) const
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
   NS_ENSURE_STATE(mShell);
+
+// On macOS, update the selection cache to the new active selection
+// aka the current selection.
+#ifdef XP_MACOSX
+  if (aSelectionType == SelectionType::eNormal) {
+    UpdateSelectionCacheOnRepaintSelection(mDomSelections[index]);
+  }
+#endif
   return mDomSelections[index]->Repaint(mShell->GetPresContext());
 }
  
@@ -6510,6 +6518,44 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
   // call the copy code
   return nsCopySupport::HTMLCopy(aSel, doc,
                                  mCachedClipboard, false);
+}
+
+/**
+ * See Bug 1288453.
+ *
+ * Update the selection cache on repaint to handle when a pre-existing
+ * selection becomes active aka the current selection.
+ *
+ * 1. Change the current selection by click n dragging another selection.
+ *   - Make a selection on content page. Make a selection in a text editor.
+ *   - You can click n drag the content selection to make it active again.
+ * 2. Change the current selection when switching to a tab with a selection.
+ *   - Make selection in tab.
+ *   - Switching tabs will make its respective selection active.
+ *
+ * Therefore, we only update the selection cache on a repaint
+ * if the current selection being repainted is not an empty selection.
+ *
+ * If the current selection is empty. The current selection cache
+ * would be cleared by nsAutoCopyListener::NotifySelectionChanged.
+ */
+nsresult
+nsFrameSelection::UpdateSelectionCacheOnRepaintSelection(Selection* aSel)
+{
+  nsIPresShell* ps = aSel->GetPresShell();
+  if (!ps) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIDocument> aDoc = ps->GetDocument();
+
+  bool collapsed;
+  if (aDoc && aSel &&
+      NS_SUCCEEDED(aSel->GetIsCollapsed(&collapsed)) && !collapsed) {
+    return nsCopySupport::HTMLCopy(aSel, aDoc,
+                                   nsIClipboard::kSelectionCache, false);
+  }
+
+  return NS_OK;
 }
 
 // SelectionChangeListener
