@@ -931,11 +931,6 @@ public:
     static void
     MarkAllWrappedNativesAndProtos();
 
-#ifdef DEBUG
-    static void
-    ASSERT_NoInterfaceSetsAreMarked();
-#endif
-
     static void
     SweepAllWrappedNativeTearOffs();
 
@@ -1380,24 +1375,6 @@ class XPCNativeSet final
     inline bool MatchesSetUpToInterface(const XPCNativeSet* other,
                                           XPCNativeInterface* iface) const;
 
-    inline void Mark();
-
-    // NOP. This is just here to make the AutoMarkingPtr code compile.
-    inline void TraceJS(JSTracer* trc) {}
-    inline void AutoTrace(JSTracer* trc) {}
-
-  public:
-    void Unmark() {
-        mMarked = 0;
-    }
-    bool IsMarked() const {
-        return false;
-    }
-
-#ifdef DEBUG
-    inline void ASSERT_NotMarked();
-#endif
-
     void DebugDump(int16_t depth);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -1407,7 +1384,7 @@ class XPCNativeSet final
     static already_AddRefed<XPCNativeSet> NewInstanceMutate(XPCNativeSetKey* key);
 
     XPCNativeSet()
-      : mMemberCount(0), mInterfaceCount(0), mMarked(0)
+      : mMemberCount(0), mInterfaceCount(0)
     {}
     ~XPCNativeSet();
     void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
@@ -1416,8 +1393,7 @@ class XPCNativeSet final
 
   private:
     uint16_t                mMemberCount;
-    uint16_t                mInterfaceCount : 15;
-    uint16_t                mMarked : 1;
+    uint16_t                mInterfaceCount;
     // Always last - object sized for array.
     // These are strong references.
     XPCNativeInterface*     mInterfaces[1];
@@ -1650,10 +1626,6 @@ public:
     }
 
     void TraceInside(JSTracer* trc) {
-        if (trc->isMarkingTracer()) {
-            mSet->Mark();
-        }
-
         GetScope()->TraceSelf(trc);
     }
 
@@ -1669,13 +1641,8 @@ public:
     }
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
+    void Mark() const {}
     inline void AutoTrace(JSTracer* trc) {}
-
-    void Mark() const {mSet->Mark();}
-
-#ifdef DEBUG
-    void ASSERT_SetNotMarked() const {mSet->ASSERT_NotMarked();}
-#endif
 
     ~XPCWrappedNativeProto();
 
@@ -1930,14 +1897,10 @@ public:
 
     void Mark() const
     {
-        mSet->Mark();
         if (HasProto()) GetProto()->Mark();
     }
 
     inline void TraceInside(JSTracer* trc) {
-        if (trc->isMarkingTracer()) {
-            mSet->Mark();
-        }
         if (HasProto())
             GetProto()->TraceSelf(trc);
         else
@@ -1965,12 +1928,6 @@ public:
     void AutoTrace(JSTracer* trc) {
         TraceSelf(trc);
     }
-
-#ifdef DEBUG
-    void ASSERT_SetsNotMarked() const
-        {mSet->ASSERT_NotMarked();
-         if (HasProto()){GetProto()->ASSERT_SetNotMarked();}}
-#endif
 
     inline void SweepTearOffs();
 
