@@ -1339,7 +1339,7 @@ BrowserGlue.prototype = {
       }
     }
 
-    E10SAccessibilityCheck.onWindowRestored();
+    E10SAccessibilityCheck.onWindowsRestored();
   },
 
   _createExtraDefaultProfile: function () {
@@ -3038,7 +3038,7 @@ var E10SAccessibilityCheck = {
     }
   },
 
-  onWindowRestored: function() {
+  onWindowsRestored: function() {
     if (this._wantsPrompt) {
       this._wantsPrompt = false;
       this._showE10sAccessibilityWarning();
