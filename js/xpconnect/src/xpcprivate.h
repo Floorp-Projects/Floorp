@@ -2407,7 +2407,6 @@ public:
      * @param dest [out] the resulting JSObject
      * @param src the native object we're working with
      * @param iid the interface of src that we want (may be null)
-     * @param Interface the interface of src that we want
      * @param cache the wrapper cache for src (may be null, in which case src
      *              will be QI'ed to get the cache)
      * @param allowNativeWrapper if true, this method may wrap the resulting
@@ -2420,7 +2419,6 @@ public:
                                          nsIXPConnectJSObjectHolder** dest,
                                          xpcObjectHelper& aHelper,
                                          const nsID* iid,
-                                         XPCNativeInterface** Interface,
                                          bool allowNativeWrapper,
                                          nsresult* pErr);
 

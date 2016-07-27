@@ -1059,7 +1059,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                 bool ok =
                                   XPCConvert::NativeInterface2JSObject(
                                       &v, nullptr, helper, nullptr,
-                                      nullptr, false, nullptr);
+                                      false, nullptr);
                                 if (!ok) {
                                     goto pre_call_clean_up;
                                 }
