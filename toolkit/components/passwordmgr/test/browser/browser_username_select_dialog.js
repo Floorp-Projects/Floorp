@@ -39,9 +39,9 @@ function getSelectDialogDoc() {
 
 let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
-let login1 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+let login1 = new nsLoginInfo("http://example.com", "http://example.com", null,
                              "notifyu1", "notifyp1", "user", "pass");
-let login1B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+let login1B = new nsLoginInfo("http://example.com", "http://example.com", null,
                               "notifyu1B", "notifyp1B", "user", "pass");
 
 add_task(function* test_changeUPLoginOnPUpdateForm_accept() {
