@@ -24,13 +24,18 @@ function pressButton() {
 
  // Add a gamepad
 function startTests() {
-   GamepadService.addGamepad("test gamepad", // id
-                             GamepadService.standardMapping,
-                             4, // buttons
-                             2).then(function(i) {
-                               gamepad_index = i;
-                               gamepad_connected()
-                             });
+  window.addEventListener("gamepadbuttondown", function() {
+    // Wait to ensure that all frames received the button press as well.
+    SpecialPowers.executeSoon(tests[testNum++]);
+  });
+
+  GamepadService.addGamepad("test gamepad", // id
+                            GamepadService.standardMapping,
+                            4, // buttons
+                            2).then(function(i) {
+                              gamepad_index = i;
+                              gamepad_connected()
+                            });
 }
 
 var f1, f2;
@@ -38,11 +43,6 @@ function gamepad_connected() {
   f1 = document.getElementById('f1');
   pressButton();
 }
-
-window.addEventListener("gamepadbuttondown", function() {
-  // Wait to ensure that all frames received the button press as well.
-  SpecialPowers.executeSoon(tests[testNum++]);
-});
 
 var testNum = 0;
 var tests = [
