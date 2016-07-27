@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from ../performance-controller.js */
 /* import-globals-from ../performance-view.js */
+/* globals DetailsSubview */
 "use strict";
 
 /**
@@ -14,7 +15,8 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
     "invert-call-tree"
   ],
 
-  rangeChangeDebounceTime: 100, // ms
+  // Units are in milliseconds.
+  rangeChangeDebounceTime: 100,
 
   /**
    * Sets up the view with event binding.

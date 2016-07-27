@@ -5320,8 +5320,10 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     gfxRect clipRect = ctx->GetClipExtents();
     tmpDTRect = RoundedOut(ToRect(clipRect));
     RefPtr<DrawTarget> tempDT =
+      Factory::DoesBackendSupportDataDrawtarget(ctx->GetDrawTarget()->GetBackendType()) ?
       ctx->GetDrawTarget()->CreateSimilarDrawTarget(tmpDTRect.Size(),
-                                                    SurfaceFormat::B8G8R8A8);
+                                                    SurfaceFormat::B8G8R8A8) :
+      Factory::CreateDrawTarget(BackendType::SKIA, tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
     if (!tempDT || !tempDT->IsValid()) {
       gfxDevCrash(LogReason::InvalidContext) << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);
       return DrawResult::TEMPORARY_ERROR;

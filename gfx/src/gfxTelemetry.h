@@ -55,6 +55,12 @@ const char* FeatureStatusToString(FeatureStatus aStatus);
 bool IsFeatureStatusFailure(FeatureStatus aStatus);
 bool IsFeatureStatusSuccess(FeatureStatus aStatus);
 
+enum class TelemetryDeviceCode : uint32_t {
+  Content = 0,
+  Image = 1,
+  D2D1 = 2
+};
+
 } // namespace gfx
 } // namespace mozilla
 

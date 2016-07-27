@@ -110,6 +110,15 @@ BrowserAddonActor.prototype = {
     }
   },
 
+  onInstalled: function BAA_updateAddonWrapper(aAddon) {
+    if (aAddon.id != this._addon.id) {
+      return;
+    }
+
+    // Update the AddonManager's addon object on reload/update.
+    this._addon = aAddon;
+  },
+
   onDisabled: function BAA_onDisabled(aAddon) {
     if (aAddon != this._addon) {
       return;

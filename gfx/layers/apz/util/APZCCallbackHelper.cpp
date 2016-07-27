@@ -169,7 +169,7 @@ ScrollFrame(nsIContent* aContent,
   // get another repaint request when APZ confirms. In the interval while this
   // is happening we can just leave the callback transform as it was.
   bool mainThreadScrollChanged =
-    sf && sf->CurrentScrollGeneration() != aMetrics.GetScrollGeneration();
+    sf && sf->CurrentScrollGeneration() != aMetrics.GetScrollGeneration() && nsLayoutUtils::CanScrollOriginClobberApz(sf->LastScrollOrigin());
   if (aContent && !mainThreadScrollChanged) {
     CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
     aContent->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(scrollDelta),

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from performance-controller.js */
+/* globals OverviewView, window */
 "use strict";
-
 /**
  * Master view handler for the performance tool.
  */
@@ -19,32 +19,96 @@ var PerformanceView = {
   // from the main profiler view. Used in `PerformanceView.setState()`
   states: {
     "unavailable": [
-      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#unavailable-notice") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => true },
+      {
+        sel: "#performance-view",
+        opt: "selectedPanel",
+        val: () => $("#unavailable-notice")
+      },
+      {
+        sel: "#performance-view-content",
+        opt: "hidden",
+        val: () => true
+      },
     ],
     "empty": [
-      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#empty-notice") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => true },
+      {
+        sel: "#performance-view",
+        opt: "selectedPanel",
+        val: () => $("#empty-notice")
+      },
+      {
+        sel: "#performance-view-content",
+        opt: "hidden",
+        val: () => true
+      },
     ],
     "recording": [
-      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => false },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#recording-notice") },
+      {
+        sel: "#performance-view",
+        opt: "selectedPanel",
+        val: () => $("#performance-view-content")
+      },
+      {
+        sel: "#performance-view-content",
+        opt: "hidden",
+        val: () => false
+      },
+      {
+        sel: "#details-pane-container",
+        opt: "selectedPanel",
+        val: () => $("#recording-notice")
+      },
     ],
     "console-recording": [
-      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => false },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#console-recording-notice") },
+      {
+        sel: "#performance-view",
+        opt: "selectedPanel",
+        val: () => $("#performance-view-content")
+      },
+      {
+        sel: "#performance-view-content",
+        opt: "hidden",
+        val: () => false
+      },
+      {
+        sel: "#details-pane-container",
+        opt: "selectedPanel",
+        val: () => $("#console-recording-notice")
+      },
     ],
     "recorded": [
-      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => false },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#details-pane") },
+      {
+        sel: "#performance-view",
+        opt: "selectedPanel",
+        val: () => $("#performance-view-content")
+      },
+      {
+        sel: "#performance-view-content",
+        opt: "hidden",
+        val: () => false
+      },
+      {
+        sel: "#details-pane-container",
+        opt: "selectedPanel",
+        val: () => $("#details-pane")
+      },
     ],
     "loading": [
-      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => false },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#loading-notice") },
+      {
+        sel: "#performance-view",
+        opt: "selectedPanel",
+        val: () => $("#performance-view-content")
+      },
+      {
+        sel: "#performance-view-content",
+        opt: "hidden",
+        val: () => false
+      },
+      {
+        sel: "#details-pane-container",
+        opt: "selectedPanel",
+        val: () => $("#loading-notice")
+      },
     ]
   },
 
@@ -72,10 +136,12 @@ var PerformanceView = {
 
     // Bind to controller events to unlock the record button
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
-    PerformanceController.on(EVENTS.RECORDING_PROFILER_STATUS_UPDATE, this._onProfilerStatusUpdated);
+    PerformanceController.on(EVENTS.RECORDING_PROFILER_STATUS_UPDATE,
+                             this._onProfilerStatusUpdated);
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
     PerformanceController.on(EVENTS.RECORDING_ADDED, this._onRecordingStateChange);
-    PerformanceController.on(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START, this._onNewRecordingFailed);
+    PerformanceController.on(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
+                             this._onNewRecordingFailed);
 
     if (yield PerformanceController.canCurrentlyRecord()) {
       this.setState("empty");
@@ -102,10 +168,13 @@ var PerformanceView = {
     this._clearButton.removeEventListener("click", this._onClearButtonClick);
 
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
-    PerformanceController.off(EVENTS.RECORDING_PROFILER_STATUS_UPDATE, this._onProfilerStatusUpdated);
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
+    PerformanceController.off(EVENTS.RECORDING_PROFILER_STATUS_UPDATE,
+                              this._onProfilerStatusUpdated);
+    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
+                              this._onRecordingStateChange);
     PerformanceController.off(EVENTS.RECORDING_ADDED, this._onRecordingStateChange);
-    PerformanceController.off(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START, this._onNewRecordingFailed);
+    PerformanceController.off(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
+                              this._onNewRecordingFailed);
 
     yield ToolbarView.destroy();
     yield RecordingsView.destroy();
@@ -120,7 +189,7 @@ var PerformanceView = {
   setState: function (state) {
     // Make sure that the focus isn't captured on a hidden iframe. This fixes a
     // XUL bug where shortcuts stop working.
-    const iframes = window.document.querySelectorAll('iframe');
+    const iframes = window.document.querySelectorAll("iframe");
     for (let iframe of iframes) {
       iframe.blur();
     }
@@ -284,7 +353,8 @@ var PerformanceView = {
    */
   _onImportButtonClick: function (e) {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, L10N.getStr("recordingsList.importDialogTitle"), Ci.nsIFilePicker.modeOpen);
+    fp.init(window, L10N.getStr("recordingsList.importDialogTitle"),
+            Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
 

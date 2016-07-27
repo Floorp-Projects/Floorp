@@ -49,14 +49,20 @@ public:
 
   // Override CloneInternal() and EqualsInternal()
   virtual nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
+                                 const nsACString& newRef,
                                  nsIURI** aClone) override;
   virtual nsresult EqualsInternal(nsIURI* aOther,
                                   RefHandlingEnum aRefHandlingMode,
                                   bool* aResult) override;
 
   // Override StartClone to hand back a nsHostObjectURI
-  virtual mozilla::net::nsSimpleURI* StartClone(RefHandlingEnum /* unused */) override
-  { return new nsHostObjectURI(); }
+  virtual mozilla::net::nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
+                                                const nsACString& newRef) override
+  {
+    nsHostObjectURI* url = new nsHostObjectURI();
+    SetRefOnClone(url, refHandlingMode, newRef);
+    return url;
+  }
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   RefPtr<mozilla::dom::BlobImpl> mBlobImpl;

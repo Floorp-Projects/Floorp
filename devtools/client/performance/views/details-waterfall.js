@@ -3,11 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from ../performance-controller.js */
 /* import-globals-from ../performance-view.js */
-/* globals window */
+/* globals window, DetailsSubview */
 "use strict";
 
-const WATERFALL_RESIZE_EVENTS_DRAIN = 100; // ms
 const MARKER_DETAILS_WIDTH = 200;
+// Units are in milliseconds.
+const WATERFALL_RESIZE_EVENTS_DRAIN = 100;
 
 /**
  * Waterfall view containing the timeline markers, controlled by DetailsView.
@@ -25,7 +26,8 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
     "hidden-markers"
   ],
 
-  rangeChangeDebounceTime: 75, // ms
+  // Units are in milliseconds.
+  rangeChangeDebounceTime: 75,
 
   /**
    * Sets up the view with event binding.
@@ -46,7 +48,8 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
     this.detailsContainer = $("#waterfall-details");
     this.detailsSplitter = $("#waterfall-view > splitter");
 
-    this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
+    this.details = new MarkerDetails($("#waterfall-details"),
+                                     $("#waterfall-view > splitter"));
     this.details.hidden = true;
 
     this.details.on("resize", this._onResize);

@@ -190,6 +190,10 @@ class FakeCompiler(dict):
             pp.out = StringIO()
             pp.do_include(file)
             return 0, pp.out.getvalue(), ''
+        elif '-c' in flags:
+            if '-funknown-flag' in flags:
+                return 1, '', ''
+            return 0, '', ''
 
         return 1, '', ''
 

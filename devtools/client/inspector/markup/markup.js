@@ -132,7 +132,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onCopy = this._onCopy.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onMouseMove = this._onMouseMove.bind(this);
-  this._onMouseLeave = this._onMouseLeave.bind(this);
+  this._onMouseOut = this._onMouseOut.bind(this);
   this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
   this._onCollapseAttributesPrefChange =
     this._onCollapseAttributesPrefChange.bind(this);
@@ -144,7 +144,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   // Listening to various events.
   this._elt.addEventListener("click", this._onMouseClick, false);
   this._elt.addEventListener("mousemove", this._onMouseMove, false);
-  this._elt.addEventListener("mouseleave", this._onMouseLeave, false);
+  this._elt.addEventListener("mouseout", this._onMouseOut, false);
   this._elt.addEventListener("blur", this._onBlur, true);
   this.win.addEventListener("mouseup", this._onMouseUp);
   this.win.addEventListener("copy", this._onCopy);
@@ -401,7 +401,12 @@ MarkupView.prototype = {
     this._hoveredNode = nodeFront;
   },
 
-  _onMouseLeave: function () {
+  _onMouseOut: function (event) {
+    // Emulate mouseleave by skipping any relatedTarget inside the markup-view.
+    if (this._elt.contains(event.relatedTarget)) {
+      return;
+    }
+
     if (this._autoScrollAnimationFrame) {
       this.win.cancelAnimationFrame(this._autoScrollAnimationFrame);
     }
@@ -1741,7 +1746,7 @@ MarkupView.prototype = {
 
     this._elt.removeEventListener("click", this._onMouseClick, false);
     this._elt.removeEventListener("mousemove", this._onMouseMove, false);
-    this._elt.removeEventListener("mouseleave", this._onMouseLeave, false);
+    this._elt.removeEventListener("mouseout", this._onMouseOut, false);
     this._elt.removeEventListener("blur", this._onBlur, true);
     this.win.removeEventListener("mouseup", this._onMouseUp);
     this.win.removeEventListener("copy", this._onCopy);

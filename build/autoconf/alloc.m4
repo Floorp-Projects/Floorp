@@ -22,7 +22,7 @@ AC_CHECK_FUNCS(strndup posix_memalign memalign)
 
 AC_CHECK_FUNCS(malloc_usable_size)
 MALLOC_USABLE_SIZE_CONST_PTR=const
-MOZ_CHECK_HEADERS([malloc.h], [
+if test -n "$HAVE_MALLOC_H"; then
   AC_MSG_CHECKING([whether malloc_usable_size definition can use const argument])
   AC_TRY_COMPILE([#include <malloc.h>
                   #include <stddef.h>
@@ -31,7 +31,7 @@ MOZ_CHECK_HEADERS([malloc.h], [
                   AC_MSG_RESULT([yes]),
                   AC_MSG_RESULT([no])
                   MALLOC_USABLE_SIZE_CONST_PTR=)
-])
+fi
 AC_DEFINE_UNQUOTED([MALLOC_USABLE_SIZE_CONST_PTR],[$MALLOC_USABLE_SIZE_CONST_PTR])
 
 
