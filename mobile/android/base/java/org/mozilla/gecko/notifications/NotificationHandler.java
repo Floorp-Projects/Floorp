@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.notifications;
 
 import android.graphics.Bitmap;
 
@@ -12,6 +12,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
 
 import java.util.concurrent.ConcurrentHashMap;
