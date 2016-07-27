@@ -54,7 +54,8 @@ public:
                              nsIPrincipal* aLoadingPrincipal,
                              nsIApplicationCache *aApplicationCache,
                              nsIApplicationCache *aPreviousApplicationCache,
-                             uint32_t aType);
+                             uint32_t aType,
+                             uint32_t aLoadFlags);
 
     nsCOMPtr<nsIURI>              mURI;
     nsCOMPtr<nsIURI>              mReferrerURI;
@@ -63,6 +64,7 @@ public:
     nsCOMPtr<nsIApplicationCache> mPreviousApplicationCache;
     nsCString                     mCacheKey;
     uint32_t                      mItemType;
+    uint32_t                      mLoadFlags;
 
     nsresult OpenChannel(nsOfflineCacheUpdate *aUpdate);
     nsresult Cancel();
@@ -107,6 +109,7 @@ public:
     virtual ~nsOfflineManifestItem();
 
     nsCOMArray<nsIURI> &GetExplicitURIs() { return mExplicitURIs; }
+    nsCOMArray<nsIURI> &GetAnonymousURIs() { return mAnonymousURIs; }
     nsCOMArray<nsIURI> &GetFallbackURIs() { return mFallbackURIs; }
 
     nsTArray<nsCString> &GetOpportunisticNamespaces()
@@ -164,6 +167,7 @@ private:
     nsCString mReadBuf;
 
     nsCOMArray<nsIURI> mExplicitURIs;
+    nsCOMArray<nsIURI> mAnonymousURIs;
     nsCOMArray<nsIURI> mFallbackURIs;
 
     // All opportunistic caching namespaces.  Used to decide whether
@@ -233,7 +237,7 @@ protected:
 private:
     nsresult InitInternal(nsIURI *aManifestURI, nsIPrincipal* aPrincipal);
     nsresult HandleManifest(bool *aDoUpdate);
-    nsresult AddURI(nsIURI *aURI, uint32_t aItemType);
+    nsresult AddURI(nsIURI *aURI, uint32_t aItemType, uint32_t aLoadFlags = 0);
 
     nsresult ProcessNextURI();
 
