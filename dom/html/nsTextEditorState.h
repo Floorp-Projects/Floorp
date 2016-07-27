@@ -260,6 +260,7 @@ public:
 
   bool IsSelectionCached() const;
   SelectionProperties& GetSelectionProperties();
+  void SetSelectionProperties(SelectionProperties& aProps);
   void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
 
