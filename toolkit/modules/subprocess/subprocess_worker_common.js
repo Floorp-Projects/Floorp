@@ -88,6 +88,18 @@ class BaseProcess {
 }
 
 let requests = {
+  init(details) {
+    io.init(details);
+
+    return {data: {}};
+  },
+
+  shutdown() {
+    io.shutdown();
+
+    return {data: {}};
+  },
+
   close(pipeId, force = false) {
     let pipe = io.getPipe(pipeId);
 
@@ -156,6 +168,8 @@ let requests = {
 };
 
 onmessage = event => {
+  io.messageCount--;
+
   let {msg, msgId, args} = event.data;
 
   new Promise(resolve => {
@@ -194,4 +208,10 @@ onmessage = event => {
       error: {},
     });
   });
+};
+
+onclose = event => {
+  io.shutdown();
+
+  self.postMessage({msg: "close"});
 };
