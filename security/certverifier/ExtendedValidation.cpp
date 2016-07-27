@@ -1239,6 +1239,22 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "ESDm+Ez8JLC+BUCs2oMbNGA/",
     nullptr
   },
+  {
+    // CN=VeriSign Class 3 Public Primary Certification Authority - G4,OU="(c) 2007 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
+    "2.16.840.1.113733.1.7.23.6",
+    "VeriSign EV OID",
+    SEC_OID_UNKNOWN,
+    { 0x69, 0xDD, 0xD7, 0xEA, 0x90, 0xBB, 0x57, 0xC9, 0x3E, 0x13, 0x5D,
+      0xC8, 0x5E, 0xA6, 0xFC, 0xD5, 0x48, 0x0B, 0x60, 0x32, 0x39, 0xBD,
+      0xC4, 0x54, 0xFC, 0x75, 0x8B, 0x2A, 0x26, 0xCF, 0x7F, 0x79 },
+    "MIHKMQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNV"
+    "BAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOjA4BgNVBAsTMShjKSAyMDA3IFZl"
+    "cmlTaWduLCBJbmMuIC0gRm9yIGF1dGhvcml6ZWQgdXNlIG9ubHkxRTBDBgNVBAMT"
+    "PFZlcmlTaWduIENsYXNzIDMgUHVibGljIFByaW1hcnkgQ2VydGlmaWNhdGlvbiBB"
+    "dXRob3JpdHkgLSBHNA==",
+    "L4D+I4wOIg9IZxIokYessw==",
+    nullptr
+  },
 };
 
 static SECOidTag
