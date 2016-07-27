@@ -41,6 +41,8 @@ def android_version(value, min_version):
 
     return version
 
+add_old_configure_assignment('android_version', android_version)
+
 @depends('--with-android-ndk', build_project)
 def ndk(value, build_project):
     if build_project == 'mobile/android' and not value:
