@@ -378,7 +378,13 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent,
 struct SizeSpec
 {
   SizeSpec()
-    : mLeftSpecified(false)
+    : mLeft(0)
+    , mTop(0)
+    , mOuterWidth(0)
+    , mOuterHeight(0)
+    , mInnerWidth(0)
+    , mInnerHeight(0)
+    , mLeftSpecified(false)
     , mTopSpecified(false)
     , mOuterWidthSpecified(false)
     , mOuterHeightSpecified(false)
