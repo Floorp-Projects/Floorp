@@ -96,4 +96,60 @@ exports.stubConsoleMessages = new Map([
       severity: SEVERITY_LOG,
     })
   ],
+  [
+    "console.count('bar')",
+    new ConsoleMessage({
+      allowRepeating: true,
+      source: MESSAGE_SOURCE.CONSOLE_API,
+      type: MESSAGE_TYPE.LOG,
+      level: MESSAGE_LEVEL.DEBUG,
+      messageText: "bar: 1",
+      parameters: null,
+      repeat: 1,
+      repeatId: null,
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    })
+  ],
+  [
+    "new Date(0)",
+    new ConsoleMessage({
+      allowRepeating: true,
+      source: MESSAGE_SOURCE.JAVASCRIPT,
+      type: MESSAGE_TYPE.RESULT,
+      level: MESSAGE_LEVEL.LOG,
+      messageText: null,
+      parameters: {
+        "type": "object",
+        "class": "Date",
+        "actor": "server2.conn0.obj115",
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "ownPropertyLength": 0,
+        "preview": {
+          "timestamp": 0
+        }
+      },
+      repeat: 1,
+      repeatId: null,
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    })
+  ],
+  [
+    "ReferenceError",
+    new ConsoleMessage({
+      allowRepeating: true,
+      source: MESSAGE_SOURCE.JAVASCRIPT,
+      type: MESSAGE_TYPE.LOG,
+      level: MESSAGE_LEVEL.ERROR,
+      messageText: "ReferenceError: asdf is not defined",
+      parameters: null,
+      repeat: 1,
+      repeatId: null,
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    })
+  ]
 ]);
