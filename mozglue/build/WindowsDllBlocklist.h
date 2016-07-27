@@ -17,6 +17,7 @@
 MFBT_API void DllBlocklist_Initialize();
 MFBT_API void DllBlocklist_SetInXPCOMLoadOnMainThread(bool inXPCOMLoadOnMainThread);
 MFBT_API void DllBlocklist_WriteNotes(HANDLE file);
+MFBT_API bool DllBlocklist_CheckStatus();
 
 class MOZ_RAII AutoSetXPCOMLoadOnMainThread
 {
