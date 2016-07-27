@@ -1458,11 +1458,6 @@ OggTrackDemuxer::Reset()
 {
   mParent->Reset(mType);
   mQueuedSample = nullptr;
-  TimeIntervals buffered = GetBuffered();
-  if (buffered.Length()) {
-    OGG_DEBUG("Seek to start point: %f", buffered.Start(0).ToSeconds());
-    mParent->SeekInternal(mType, buffered.Start(0));
-  }
 }
 
 RefPtr<OggTrackDemuxer::SkipAccessPointPromise>
