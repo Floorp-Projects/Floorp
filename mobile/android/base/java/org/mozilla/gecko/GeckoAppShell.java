@@ -33,6 +33,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
+import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
@@ -184,6 +185,10 @@ public class GeckoAppShell
 
     // Accessed by NotificationHelper. This should be encapsulated.
     /* package */ static NotificationClient notificationClient;
+
+    public static NotificationClient getNotificationClient() {
+        return notificationClient;
+    }
 
     // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
     private static final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;

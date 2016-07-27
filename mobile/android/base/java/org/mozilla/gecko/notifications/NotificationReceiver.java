@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.notifications;
 
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.mozglue.SafeIntent;
 
 import android.content.BroadcastReceiver;
