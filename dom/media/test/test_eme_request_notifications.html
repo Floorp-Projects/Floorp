@@ -62,27 +62,21 @@ function Test(test) {
 var tests = [
   {
     keySystem: CLEARKEY_KEYSYSTEM,
-    shouldPass: false,
-    expectedStatus: 'api-disabled',
-    prefs: [["media.eme.enabled", false], ["media.eme.clearkey.enabled", true]]
+    shouldPass: true,
+    expectedStatus: 'cdm-created',
+    prefs: [["media.eme.enabled", false]]
   },
   {
-    keySystem: CLEARKEY_KEYSYSTEM,
-    shouldPass: false,
-    expectedStatus: 'cdm-disabled',
-    prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", false]]
-  },
-  {
-    keySystem: CLEARKEY_KEYSYSTEM + '.10000' , // A stupendously high min CDM version, presumably not installed.
+    keySystem: CLEARKEY_KEYSYSTEM + '.10000', // A stupendously high min CDM version, presumably not installed.
     shouldPass: false,
     expectedStatus: 'cdm-insufficient-version',
-    prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", true]]
+    prefs: [["media.eme.enabled", true]]
   },
   {
     keySystem: CLEARKEY_KEYSYSTEM,
     shouldPass: true,
     expectedStatus: 'cdm-created',
-    prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", true]]
+    prefs: [["media.eme.enabled", true]]
   },
 ];
 
@@ -99,4 +93,3 @@ SimpleTest.waitForExplicitFinish();
 </pre>
 </body>
 </html>
-
