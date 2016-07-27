@@ -267,20 +267,13 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
     if (!values.growBy(keys.length()))
         return false;
 
-    RootedAtom capabilitiesAtom(cx, Atomize(cx, "capabilities", strlen("capabilities")));
-    if (!capabilitiesAtom)
-        return false;
-    RootedId capabilitiesId(cx, AtomToId(capabilitiesAtom));
-
     // Each reaction is an internally-created object with the structure:
     // {
-    //   capabilities: {
-    //     promise: [the promise this reaction resolves],
-    //     resolve: [the `resolve` callback content code provided],
-    //     reject:  [the `reject` callback content code provided],
-    //    },
-    //    handler: [the internal handler that fulfills/rejects the promise]
-    //  }
+    //   promise: [the promise this reaction resolves],
+    //   resolve: [the `resolve` callback content code provided],
+    //   reject:  [the `reject` callback content code provided],
+    //   handler: [the internal handler that fulfills/rejects the promise]
+    // }
     //
     // In the following loop we collect the `capabilities.promise` values for
     // each reaction.
@@ -289,10 +282,7 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
         if (!GetProperty(cx, rejectReactions, rejectReactions, keys[i], val))
             return false;
         RootedObject reaction(cx, &val.toObject());
-        if (!GetProperty(cx, reaction, reaction, capabilitiesId, val))
-            return false;
-        RootedObject capabilities(cx, &val.toObject());
-        if (!GetProperty(cx, capabilities, capabilities, cx->runtime()->commonNames->promise, val))
+        if (!GetProperty(cx, reaction, reaction, cx->runtime()->commonNames->promise, val))
             return false;
     }
 

@@ -226,12 +226,11 @@ function TriggerPromiseReactions(reactions, argument) {
 
 // ES6, 25.4.2.1.
 function EnqueuePromiseReactionJob(reaction, argument) {
-    let capabilities = reaction.capabilities;
     _EnqueuePromiseReactionJob(reaction.handler,
                                argument,
-                               capabilities.resolve,
-                               capabilities.reject,
-                               capabilities.promise,
+                               reaction.resolve,
+                               reaction.reject,
+                               reaction.promise,
                                reaction.incumbentGlobal || null);
 }
 
@@ -650,12 +649,9 @@ function AddPromiseReaction(slot, dependentPromise, onResolve, onReject, handler
     }
     _DefineDataProperty(reactions, reactions.length, {
                             __proto__: PromiseReactionRecordProto,
-                            capabilities: {
-                                __proto__: PromiseCapabilityRecordProto,
-                                promise: dependentPromise,
-                                reject: onReject,
-                                resolve: onResolve
-                            },
+                            promise: dependentPromise,
+                            reject: onReject,
+                            resolve: onResolve,
                             handler: handler
                         });
 }
@@ -753,9 +749,9 @@ function Promise_then(onFulfilled, onRejected) {
  *
  * Used internally to implement DOM functionality.
  *
- * Note: the reactions pushed using this function contain a `capabilities`
- * object whose `promise` field can contain null. That field is only ever used
- * by devtools, which have to treat these reactions specially.
+ * Note: the reactions pushed using this function contain a `promise` field
+ * that can contain null. That field is only ever used by devtools, which have
+ * to treat these reactions specially.
  */
 function EnqueuePromiseReactions(promise, dependentPromise, onFulfilled, onRejected) {
     let isWrappedPromise = false;
@@ -891,7 +887,9 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
     // Step 5.
     let fulfillReaction = {
         __proto__: PromiseReactionRecordProto,
-        capabilities: resultCapability,
+        resolve: resultCapability.resolve,
+        reject: resultCapability.reject,
+        promise: resultCapability.promise,
         handler: onFulfilled,
         incumbentGlobal
     };
@@ -899,7 +897,9 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
     // Step 6.
     let rejectReaction = {
         __proto__: PromiseReactionRecordProto,
-        capabilities: resultCapability,
+        resolve: resultCapability.resolve,
+        reject: resultCapability.reject,
+        promise: resultCapability.promise,
         handler: onRejected,
         incumbentGlobal
     };
