@@ -820,37 +820,6 @@ XPCJSContext::FinalizeCallback(JSFreeOp* fop,
                 }
             }
 
-            // Do the sweeping. During a zone GC, only WrappedNativeProtos in
-            // collected zones will be marked. Therefore, some reachable
-            // NativeInterfaces will not be marked, so it is not safe to sweep
-            // them. We still need to unmark them, since the ones pointed to by
-            // WrappedNativeProtos in a zone being collected will be marked.
-            //
-            // Ideally, if NativeInterfaces from different zones were kept
-            // separate, we could sweep only the ones belonging to zones being
-            // collected. Currently, though, NativeInterfaces are shared between
-            // zones. This ought to be fixed.
-            bool doSweep = !isZoneGC;
-
-            if (doSweep) {
-                for (auto i = self->mClassInfo2NativeSetMap->Iter(); !i.Done(); i.Next()) {
-                    auto entry = static_cast<ClassInfo2NativeSetMap::Entry*>(i.Get());
-                    if (!entry->value->IsMarked())
-                        i.Remove();
-                }
-            }
-
-            for (auto i = self->mNativeSetMap->Iter(); !i.Done(); i.Next()) {
-                auto entry = static_cast<NativeSetMap::Entry*>(i.Get());
-                XPCNativeSet* set = entry->key_value;
-                if (set->IsMarked()) {
-                    set->Unmark();
-                } else if (doSweep) {
-                    XPCNativeSet::DestroyInstance(set);
-                    i.Remove();
-                }
-            }
-
 #ifdef DEBUG
             XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked();
 #endif
