@@ -714,8 +714,8 @@ addMultiTouch(MultiTouchInput& aMultiTouch,
       radiusY = coords.getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR) / 2;
     }
 
-    ScreenIntPoint point(floor(coords.getX() + 0.5),
-                         floor(coords.getY() + 0.5));
+    ScreenIntPoint point = ScreenIntPoint::Round(coords.getX(),
+                                                 coords.getY());
 
     SingleTouchData touchData(id, point, ScreenSize(radiusX, radiusY),
                               rotationAngle, force);
