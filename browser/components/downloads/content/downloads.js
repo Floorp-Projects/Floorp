@@ -1194,17 +1194,7 @@ const DownloadsViewController = {
         !(aCommand in DownloadsViewItem.prototype)) {
       return false;
     }
-    // The currently supported commands depend on whether the blocked subview is
-    // showing.  If it is, then take the following path.
-    if (DownloadsBlockedSubview.view.showingSubView) {
-      let blockedSubviewCmds = [
-        "downloadsCmd_chooseOpen",
-        "cmd_delete",
-      ];
-      return blockedSubviewCmds.indexOf(aCommand) >= 0;
-    }
-    // If the blocked subview is not showing, then determine if focus is on a
-    // control in the downloads list.
+    // Secondly, determine if focus is on a control in the downloads list.
     let element = document.commandDispatcher.focusedElement;
     while (element && element != DownloadsView.richListBox) {
       element = element.parentNode;
@@ -1614,9 +1604,6 @@ const DownloadsBlockedSubview = {
    */
   hide() {
     this.view.showMainView();
-    // The point of this is to focus the proper element in the panel now that
-    // the main view is showing again.  showPanel handles that.
-    DownloadsPanel.showPanel();
   },
 
   /**
