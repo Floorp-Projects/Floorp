@@ -93,7 +93,6 @@ private:
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
-  RefPtr<ServiceWorkerInfo> mServiceWorker;
 };
 
 } // namespace workers
