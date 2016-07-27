@@ -1169,29 +1169,46 @@ OggDemuxer::SeekInternal(TrackInfo::TrackType aType, const TimeUnit& aTarget)
     }
   }
 
-  if (aType == TrackInfo::kVideoTrack) {
-    // Demux forwards until we find the next keyframe. This is required,
-    // as although the seek should finish on a page containing a keyframe,
-    // there may be non-keyframes in the page before the keyframe.
-    // When doing fastSeek we display the first frame after the seek, so
-    // we need to advance the decode to the keyframe otherwise we'll get
-    // visual artifacts in the first frame output after the seek.
-    while (true) {
-      DemuxUntilPacketAvailable(aType, mTheoraState);
-      ogg_packet* packet = mTheoraState->PacketPeek();
-      if (packet == nullptr) {
-        OGG_DEBUG("End of Theora stream reached before keyframe found in indexed seek");
-        break;
-      }
-      if (mTheoraState->IsKeyframe(packet)) {
-        OGG_DEBUG("Theora keyframe found after seek");
-        break;
-      }
+  // Demux forwards until we find the first keyframe prior the target.
+  // there may be non-keyframes in the page before the keyframe.
+  // Additionally, we may have seeked to the first page referenced by the
+  // page index which may be quite far off the target.
+  // When doing fastSeek we display the first frame after the seek, so
+  // we need to advance the decode to the keyframe otherwise we'll get
+  // visual artifacts in the first frame output after the seek.
+  OggCodecState* state = GetTrackCodecState(aType);
+  OggPacketQueue tempPackets;
+  bool foundKeyframe = false;
+  while (true) {
+    DemuxUntilPacketAvailable(aType, state);
+    ogg_packet* packet = state->PacketPeek();
+    if (packet == nullptr) {
+      OGG_DEBUG("End of stream reached before keyframe found in indexed seek");
+      break;
+    }
+    int64_t startTstamp = state->PacketStartTime(packet);
+    if (foundKeyframe && startTstamp > adjustedTarget) {
+      break;
+    }
+    if (state->IsKeyframe(packet)) {
+      OGG_DEBUG("keyframe found after seeking at %lld", startTstamp);
+      tempPackets.Erase();
+      foundKeyframe = true;
+    }
+    if (foundKeyframe && startTstamp == adjustedTarget) {
+      break;
+    }
+    ogg_packet* releaseMe = state->PacketOut();
+    if (foundKeyframe) {
+      tempPackets.Append(releaseMe);
+    } else {
       // Discard video packets before the first keyframe.
-      ogg_packet* releaseMe = mTheoraState->PacketOut();
       OggCodecState::ReleasePacket(releaseMe);
     }
   }
+  // Re-add all packet into the codec state in order.
+  state->PushFront(Move(tempPackets));
+
   return NS_OK;
 }
 

@@ -67,6 +67,7 @@ public:
   void Append(ogg_packet* aPacket);
   ogg_packet* PopFront() { return static_cast<ogg_packet*>(nsDeque::PopFront()); }
   ogg_packet* PeekFront() { return static_cast<ogg_packet*>(nsDeque::PeekFront()); }
+  ogg_packet* Pop() { return static_cast<ogg_packet*>(nsDeque::Pop()); }
   void PushFront(ogg_packet* aPacket) { nsDeque::PushFront(aPacket); }
   void Erase() { nsDeque::Erase(); }
 };
@@ -175,6 +176,9 @@ public:
   // packets buffered in the packet queue, without consuming it.
   // The packet will have a valid granulepos.
   ogg_packet* PacketPeek();
+
+  // Moves all raw packets from aOther to the front of the current packet queue.
+  void PushFront(OggPacketQueue&& aOther);
 
   // Releases the memory used by a cloned packet. Every packet returned by
   // PacketOut() must be free'd using this function.
