@@ -143,6 +143,11 @@ public:
   // Called by media decoder when the audible state changed
   virtual void SetAudibleState(bool aAudible) = 0;
 
+  // Notified by the shutdown manager that XPCOM shutdown has begun.
+  // The decoder owner should call Shutdown() on the decoder and drop the
+  // reference to the decoder to prevent further calls into the decoder.
+  virtual void NotifyXPCOMShutdown() = 0;
+
 #ifdef MOZ_EME
   // Dispatches a "encrypted" event to the HTMLMediaElement, with the
   // provided init data. Actual dispatch may be delayed until HAVE_METADATA.

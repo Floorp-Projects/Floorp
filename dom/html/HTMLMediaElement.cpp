@@ -2606,6 +2606,12 @@ void HTMLMediaElement::SetPlayedOrSeeked(bool aValue)
 }
 
 void
+HTMLMediaElement::NotifyXPCOMShutdown()
+{
+  ShutdownDecoder();
+}
+
+void
 HTMLMediaElement::ResetConnectionState()
 {
   SetCurrentTime(0);

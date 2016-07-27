@@ -137,7 +137,12 @@ MediaShutdownManager::BlockShutdown(nsIAsyncShutdownClient*)
 
   // Iterate over the decoders and shut them down.
   for (auto iter = mDecoders.Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->Shutdown();
+    MediaDecoderOwner* owner = iter.Get()->GetKey()->GetOwner();
+    if (owner) {
+      // The owner will call MediaDecoder::Shutdown() and
+      // drop its reference to the decoder.
+      owner->NotifyXPCOMShutdown();
+    }
     // Check MediaDecoder::Shutdown doesn't call Unregister() synchronously in
     // order not to corrupt our hashtable traversal.
     MOZ_ASSERT(mDecoders.Count() == oldCount);
