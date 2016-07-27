@@ -1499,17 +1499,13 @@ public:
 class XPCNativeScriptableShared final
 {
 public:
+    NS_INLINE_DECL_REFCOUNTING(XPCNativeScriptableShared)
+
     const XPCNativeScriptableFlags& GetFlags() const { return mFlags; }
 
     const JSClass* GetJSClass() { return Jsvalify(&mJSClass); }
 
     XPCNativeScriptableShared(uint32_t aFlags, char* aName, bool aPopulate);
-
-    ~XPCNativeScriptableShared() {
-        free((void*)mJSClass.name);
-        free((void*)mJSClass.cOps);
-        MOZ_COUNT_DTOR(XPCNativeScriptableShared);
-    }
 
     char* TransferNameOwnership() {
         char* name = (char*)mJSClass.name;
@@ -1522,6 +1518,8 @@ public:
     bool IsMarked() const { return mFlags.IsMarked(); }
 
 private:
+    ~XPCNativeScriptableShared();
+
     XPCNativeScriptableFlags mFlags;
 
     // This is an unusual js::Class instance: its name and cOps members are
@@ -1541,18 +1539,19 @@ public:
     Construct(const XPCNativeScriptableCreateInfo* sci);
 
     nsIXPCScriptable*
-    GetCallback() const {return mCallback;}
+    GetCallback() const { return mCallback; }
 
     const XPCNativeScriptableFlags&
-    GetFlags() const      {return mShared->GetFlags();}
+    GetFlags() const { return mShared->GetFlags(); }
 
     const JSClass*
-    GetJSClass()          {return mShared->GetJSClass();}
+    GetJSClass() { return mShared->GetJSClass(); }
 
     void
-    SetScriptableShared(XPCNativeScriptableShared* shared) {mShared = shared;}
+    SetScriptableShared(already_AddRefed<XPCNativeScriptableShared>&& shared) { mShared = shared; }
 
-    void Mark() {
+    void Mark()
+    {
         if (mShared)
             mShared->Mark();
     }
@@ -1562,10 +1561,15 @@ public:
 
 protected:
     explicit XPCNativeScriptableInfo(nsIXPCScriptable* scriptable)
-        : mCallback(scriptable), mShared(nullptr)
-                               {MOZ_COUNT_CTOR(XPCNativeScriptableInfo);}
+        : mCallback(scriptable)
+    {
+        MOZ_COUNT_CTOR(XPCNativeScriptableInfo);
+    }
 public:
-    ~XPCNativeScriptableInfo() {MOZ_COUNT_DTOR(XPCNativeScriptableInfo);}
+    ~XPCNativeScriptableInfo()
+    {
+        MOZ_COUNT_DTOR(XPCNativeScriptableInfo);
+    }
 private:
 
     // disable copy ctor and assignment
@@ -1573,8 +1577,8 @@ private:
     XPCNativeScriptableInfo& operator= (const XPCNativeScriptableInfo& r) = delete;
 
 private:
-    nsCOMPtr<nsIXPCScriptable>  mCallback;
-    XPCNativeScriptableShared*  mShared;
+    nsCOMPtr<nsIXPCScriptable> mCallback;
+    RefPtr<XPCNativeScriptableShared> mShared;
 };
 
 /***************************************************************************/
