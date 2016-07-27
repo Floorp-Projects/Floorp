@@ -203,8 +203,10 @@ ServoRestyleManager::ProcessPendingRestyles()
       }
     }
 
-    styleSet->RestyleSubtree(root);
-    RecreateStyleContexts(root, nullptr, styleSet);
+    if (root->IsDirtyForServo() || root->HasDirtyDescendantsForServo()) {
+      styleSet->RestyleSubtree(root);
+      RecreateStyleContexts(root, nullptr, styleSet);
+    }
   }
 
   mModifiedElements.Clear();
