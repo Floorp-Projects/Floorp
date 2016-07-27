@@ -14265,14 +14265,15 @@ class CGExampleRoot(CGThing):
                 continue
             if member.isStatic():
                 builder.addInMozillaDom("GlobalObject")
-            if member.isAttr():
+            if member.isAttr() and not member.isMaplikeOrSetlikeAttr():
                 builder.forwardDeclareForType(member.type, config)
             else:
                 assert member.isMethod()
-                for sig in member.signatures():
-                    builder.forwardDeclareForType(sig[0], config)
-                    for arg in sig[1]:
-                        builder.forwardDeclareForType(arg.type, config)
+                if not member.isMaplikeOrSetlikeOrIterableMethod():
+                    for sig in member.signatures():
+                        builder.forwardDeclareForType(sig[0], config)
+                        for arg in sig[1]:
+                            builder.forwardDeclareForType(arg.type, config)
 
         self.root = CGList([builder.build(),
                             self.root], "\n")
