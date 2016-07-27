@@ -9,6 +9,7 @@
 const {
   prepareMessage
 } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
 
 const {
   MESSAGE_ADD,
@@ -18,8 +19,14 @@ const {
   FILTERS_CLEAR,
 } = require("../constants");
 
-function messageAdd(packet) {
-  let message = prepareMessage(packet);
+const defaultIdGenerator = new IdGenerator();
+
+function messageAdd(packet, idGenerator = null) {
+  if (idGenerator == null) {
+    idGenerator = defaultIdGenerator;
+  }
+  let message = prepareMessage(packet, idGenerator);
+
   return {
     type: MESSAGE_ADD,
     message

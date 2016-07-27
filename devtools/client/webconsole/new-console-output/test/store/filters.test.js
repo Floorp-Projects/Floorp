@@ -7,9 +7,7 @@ const expect = require("expect");
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const { getAllMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
-const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
-const Services = require("devtools/client/webconsole/new-console-output/test/fixtures/Services");
+const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 describe("Search", () => {
   it("matches on value grips", () => {
@@ -24,16 +22,3 @@ describe("Search", () => {
     expect(messages.size).toEqual(1);
   });
 });
-
-function setupStore(input) {
-  const store = configureStore(Services);
-  addMessages(input, store.dispatch);
-  return store;
-}
-
-function addMessages(input, dispatch) {
-  input.forEach((cmd) => {
-    dispatch(actions.messageAdd(stubConsoleMessages.get(cmd)));
-  });
-}
-
