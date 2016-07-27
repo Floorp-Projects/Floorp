@@ -57,6 +57,7 @@ namespace dom {
 class Function;
 class MessagePort;
 class MessagePortIdentifier;
+class PromiseNativeHandler;
 class StructuredCloneHolder;
 class WorkerDebuggerGlobalScope;
 class WorkerGlobalScope;
@@ -234,7 +235,7 @@ private:
   PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const Optional<Sequence<JS::Value>>& aTransferable,
                       UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
-                      const nsMainThreadPtrHandle<nsISupports>& aKeepAliveToken,
+                      PromiseNativeHandler* aHandler,
                       ErrorResult& aRv);
 
   nsresult
@@ -349,7 +350,7 @@ public:
   PostMessageToServiceWorker(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
-                             const nsMainThreadPtrHandle<nsISupports>& aKeepAliveToken,
+                             PromiseNativeHandler* aHandler,
                              ErrorResult& aRv);
 
   void
