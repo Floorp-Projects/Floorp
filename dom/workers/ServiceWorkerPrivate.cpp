@@ -104,6 +104,42 @@ ServiceWorkerPrivate::~ServiceWorkerPrivate()
   mIdleWorkerTimer->Cancel();
 }
 
+namespace {
+
+class MessageWaitUntilHandler final : public PromiseNativeHandler
+{
+ nsMainThreadPtrHandle<nsISupports> mKeepAliveToken;
+
+  ~MessageWaitUntilHandler()
+  {
+  }
+
+public:
+  explicit MessageWaitUntilHandler(const nsMainThreadPtrHandle<nsISupports>& aKeepAliveToken)
+    : mKeepAliveToken(aKeepAliveToken)
+  {
+    MOZ_ASSERT(mKeepAliveToken);
+  }
+
+  void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    mKeepAliveToken = nullptr;
+  }
+
+  void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    mKeepAliveToken = nullptr;
+  }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS0(MessageWaitUntilHandler)
+
+} // anonymous namespace
+
 nsresult
 ServiceWorkerPrivate::SendMessageEvent(JSContext* aCx,
                                        JS::Handle<JS::Value> aMessage,
@@ -119,8 +155,10 @@ ServiceWorkerPrivate::SendMessageEvent(JSContext* aCx,
   nsMainThreadPtrHandle<nsISupports> token(
     new nsMainThreadPtrHolder<nsISupports>(mKeepAliveToken));
 
+  RefPtr<PromiseNativeHandler> handler = new MessageWaitUntilHandler(token);
+
   mWorkerPrivate->PostMessageToServiceWorker(aCx, aMessage, aTransferable,
-                                             Move(aClientInfo), token,
+                                             Move(aClientInfo), handler,
                                              rv);
   return rv.StealNSResult();
 }
