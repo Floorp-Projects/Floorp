@@ -63,17 +63,16 @@ add_task(function* test() {
         });
   }
 
-  // make sure we have received a message
-  yield ContentTask.spawn(receiver.browser, channelName,
-    function* (name) {
-      yield content.window.testPromise.then(function() {});
-    }
-  );
-
   // Since sender1 sends before sender2, if the title is exactly
   // sender2's message, sender1's message must've been blocked
-  is(receiver.browser.contentDocument.title, sender2.message,
-      "should only receive messages from the same user context");
+  yield ContentTask.spawn(receiver.browser, sender2.message,
+    function* (message) {
+      yield content.window.testPromise.then(function() {
+        is(content.document.title, message,
+           "should only receive messages from the same user context");
+      });
+    }
+  );
 
   gBrowser.removeTab(sender1.tab);
   gBrowser.removeTab(sender2.tab);
