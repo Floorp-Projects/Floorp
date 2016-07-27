@@ -384,6 +384,7 @@ global.TabContext = function TabContext(getDefaults, extension) {
   this.getDefaults = getDefaults;
 
   this.tabData = new WeakMap();
+  this.lastLocation = new WeakMap();
 
   AllWindowEvents.addListener("progress", this);
   AllWindowEvents.addListener("TabSelect", this);
@@ -412,12 +413,24 @@ TabContext.prototype = {
     }
   },
 
+  onStateChange(browser, webProgress, request, stateFlags, statusCode) {
+    let flags = Ci.nsIWebProgressListener;
+
+    if (!(~stateFlags & (flags.STATE_IS_WINDOW | flags.STATE_START) ||
+          this.lastLocation.has(browser))) {
+      this.lastLocation.set(browser, request.URI);
+    }
+  },
+
   onLocationChange(browser, webProgress, request, locationURI, flags) {
     let gBrowser = browser.ownerGlobal.gBrowser;
-    if (browser === gBrowser.selectedBrowser) {
+    let lastLocation = this.lastLocation.get(browser);
+    if (browser === gBrowser.selectedBrowser &&
+        !(lastLocation && lastLocation.equalsExceptRef(browser.currentURI))) {
       let tab = gBrowser.getTabForBrowser(browser);
       this.emit("location-change", tab, true);
     }
+    this.lastLocation.set(browser, browser.currentURI);
   },
 
   shutdown() {
