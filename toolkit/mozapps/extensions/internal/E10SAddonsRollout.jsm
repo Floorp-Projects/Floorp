@@ -49,6 +49,15 @@ const ADDONS = {
   "ASP": { // Awesome Screenshot Plus
     id: "jid0-GXjLLfbCoAx0LcltEdFrEkQdQPI@jetpack", minVersion: "3.0.10",
   },
+
+  // Add-ons used for testing
+  "test1": {
+    id: "bootstrap1@tests.mozilla.org", minVersion: "1.0",
+  },
+
+  "test2": {
+    id: "bootstrap2@tests.mozilla.org", minVersion: "1.0",
+  },
 };
 
 // NOTE: Do not modify sets or policies after they have already been
@@ -76,6 +85,8 @@ const RolloutPolicy = {
 
   "1b": { addons: set1, webextensions: false },
   "2b": { addons: set2, webextensions: false },
+
+  "xpcshell-test": { addons: [ADDONS.test1, ADDONS.test2], webextensions: false },
 };
 
 Object.defineProperty(this, "isAddonPartOfE10SRollout", {
