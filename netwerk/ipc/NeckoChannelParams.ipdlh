@@ -49,8 +49,6 @@ struct LoadInfoArgs
   nsCString[]           corsUnsafeHeaders;
   bool                  forcePreflight;
   bool                  isPreflight;
-  bool                  forceHSTSPriming;
-  bool                  mixedContentWouldBlock;
 };
 
 /**
