@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1283915
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1283915</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1283915 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function isCursorAtEnd(field){
+    is(field.selectionStart, field.value.length);
+    is(field.selectionEnd, field.value.length);
+  }
+
+  function test() {
+    var tField = document.getElementById("textField");
+    tField.focus();
+
+    synthesizeKey("a", {});
+    is(tField.value, "a");
+    isCursorAtEnd(tField);
+    document.body.offsetWidth; // frame must be created after type change
+
+    synthesizeKey("b", {});
+    is(tField.value, "ab");
+    isCursorAtEnd(tField);
+
+    synthesizeKey("c", {});
+    is(tField.value, "abc");
+    isCursorAtEnd(tField);
+
+    var nField = document.getElementById("numField");
+    nField.focus();
+
+    synthesizeKey("1", {});
+    is(nField.value, "1");
+    isCursorAtEnd(nField);
+    document.body.offsetWidth;
+
+    synthesizeKey("2", {});
+    is(nField.value, "12");
+    isCursorAtEnd(nField);
+
+    synthesizeKey("3", {});
+    is(nField.value, "123");
+    isCursorAtEnd(nField);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForFocus(test);
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1283915">Mozilla Bug 1283915</a>
+<p id="display"></p>
+<input id="textField" type="text" oninput="if (this.type !='password') this.type = 'password';">
+<input id="numField" type="text" oninput="if (this.type !='number') this.type = 'number';">
+<pre id="test">
+</pre>
+</body>
+</html>
