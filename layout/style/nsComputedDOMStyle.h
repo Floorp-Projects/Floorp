@@ -646,12 +646,12 @@ private:
     const nsStyleFilter& aStyleFilter);
 
   already_AddRefed<CSSValue> CreatePrimitiveValueForClipPath(
-    const nsStyleBasicShape* aStyleBasicShape,
+    const mozilla::nsStyleBasicShape* aStyleBasicShape,
     mozilla::StyleClipShapeSizing aSizingBox);
 
   // Helper function for computing basic shape styles.
   already_AddRefed<CSSValue> CreatePrimitiveValueForBasicShape(
-    const nsStyleBasicShape* aStyleBasicShape);
+    const mozilla::nsStyleBasicShape* aStyleBasicShape);
   void BoxValuesToString(nsAString& aString,
                          const nsTArray<nsStyleCoord>& aBoxValues);
   void BasicShapeRadiiToString(nsAString& aCssText,
