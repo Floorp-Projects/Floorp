@@ -8,6 +8,7 @@ package org.mozilla.gecko.updater;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.PrefsHelper;
+import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.util.GeckoJarReader;
 
 import android.content.Context;
@@ -131,8 +132,8 @@ public class UpdateServiceHelper {
         }
     }
 
-    public static boolean isUpdaterEnabled() {
-        return AppConstants.MOZ_UPDATER && isEnabled;
+    public static boolean isUpdaterEnabled(final Context context) {
+        return AppConstants.MOZ_UPDATER && isEnabled && !ContextUtils.isInstalledFromGooglePlay(context);
     }
 
     public static void setUpdateUrl(Context context, String url) {
@@ -168,7 +169,7 @@ public class UpdateServiceHelper {
     }
 
     public static void registerForUpdates(final Context context) {
-        if (!isUpdaterEnabled()) {
+        if (!isUpdaterEnabled(context)) {
              return;
         }
 
@@ -189,7 +190,7 @@ public class UpdateServiceHelper {
     }
 
     public static void registerForUpdates(Context context, UpdateService.AutoDownloadPolicy policy, String url) {
-        if (!isUpdaterEnabled()) {
+        if (!isUpdaterEnabled(context)) {
              return;
         }
 

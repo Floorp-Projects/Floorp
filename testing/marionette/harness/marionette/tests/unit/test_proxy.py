@@ -225,7 +225,7 @@ class TestProxy(MarionetteTestCase):
             self.marionette.start_session(capabilities)
             self.fail("We should have started a session because proxy should be a dict")
         except InvalidArgumentException as e:
-            assert e.msg == "Value of 'proxy' should be an object"
+            assert e.message == "Value of 'proxy' should be an object"
 
     def test_proxy_is_passed_in_with_no_proxy_doesnt_set_it(self):
         capabilities = {"requiredCapabilities":

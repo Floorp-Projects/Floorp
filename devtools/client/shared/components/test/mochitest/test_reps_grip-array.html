@@ -106,7 +106,7 @@ window.onload = Task.async(function* () {
     // Test array = `["test string"…] //4 items`
     const testName = "testMoreThanShortMaxProps";
 
-    const defaultOutput = `Array[${Array(maxLength.short).fill("\"test string\"").join(", ")}, more…]`;
+    const defaultOutput = `Array[${Array(maxLength.short).fill("\"test string\"").join(", ")}, 1 more…]`;
 
     const modeTests = [
       {
@@ -134,8 +134,8 @@ window.onload = Task.async(function* () {
     // Test array = `["test string"…] //301 items`
     const testName = "testMoreThanLongMaxProps";
 
-    const defaultShortOutput = `Array[${Array(maxLength.short).fill("\"test string\"").join(", ")}, more…]`;
-    const defaultLongOutput = `Array[${Array(maxLength.long).fill("\"test string\"").join(", ")}, more…]`;
+    const defaultShortOutput = `Array[${Array(maxLength.short).fill("\"test string\"").join(", ")}, ${maxLength.long + 1 - maxLength.short} more…]`;
+    const defaultLongOutput = `Array[${Array(maxLength.long).fill("\"test string\"").join(", ")}, 1 more…]`;
 
     const modeTests = [
       {

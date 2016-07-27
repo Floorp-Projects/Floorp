@@ -31,14 +31,12 @@ public:
   nsTimingFunction::Type GetType() const { return mType; }
   bool HasSpline() const { return nsTimingFunction::IsSplineType(mType); }
   uint32_t GetSteps() const { return mSteps; }
-  nsTimingFunction::StepSyntax GetStepSyntax() const { return mStepSyntax; }
   bool operator==(const ComputedTimingFunction& aOther) const
   {
     return mType == aOther.mType &&
            (HasSpline() ?
             mTimingFunction == aOther.mTimingFunction :
-            (mSteps == aOther.mSteps &&
-             mStepSyntax == aOther.mStepSyntax));
+            mSteps == aOther.mSteps);
   }
   bool operator!=(const ComputedTimingFunction& aOther) const
   {
@@ -60,7 +58,6 @@ private:
   nsTimingFunction::Type mType;
   nsSMILKeySpline mTimingFunction;
   uint32_t mSteps;
-  nsTimingFunction::StepSyntax mStepSyntax;
 };
 
 } // namespace mozilla

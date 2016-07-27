@@ -7,7 +7,8 @@ def wait_for_condition_else_raise(marionette, wait_for_condition, expected, scri
     try:
         wait_for_condition(lambda m: expected in m.execute_script(script))
     except TimeoutException as e:
-        raise TimeoutException(e.msg + " got %s instead of %s" % (marionette.execute_script(script), expected))
+        raise TimeoutException("{0} got {1} instead of {2}".format(
+            e.message, marionette.execute_script(script), expected))
 
 def press_release(marionette, times, wait_for_condition, expected):
     testAction = marionette.absolute_url("testAction.html")

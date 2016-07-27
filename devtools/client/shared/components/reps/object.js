@@ -78,7 +78,7 @@ define(function (require, exports, module) {
           key: "more",
           object: objectLink({
             object: object
-          }, "more…")
+          }, (Object.keys(object).length - max) + " more…")
         }));
       } else if (props.length > 0) {
         // Remove the last comma.

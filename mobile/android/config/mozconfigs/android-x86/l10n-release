@@ -14,7 +14,6 @@ ac_add_options --enable-updater
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 
 export MOZILLA_OFFICIAL=1
-export MOZ_DISABLE_GECKOVIEW=1
 
 ac_add_options --enable-official-branding
 ac_add_options --with-branding=mobile/android/branding/beta

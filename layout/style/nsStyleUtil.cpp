@@ -593,36 +593,17 @@ nsStyleUtil::AppendSerializedFontSrc(const nsCSSValue& aValue,
 /* static */ void
 nsStyleUtil::AppendStepsTimingFunction(nsTimingFunction::Type aType,
                                        uint32_t aSteps,
-                                       nsTimingFunction::StepSyntax aSyntax,
                                        nsAString& aResult)
 {
   MOZ_ASSERT(aType == nsTimingFunction::Type::StepStart ||
              aType == nsTimingFunction::Type::StepEnd);
 
-  if (aSyntax == nsTimingFunction::StepSyntax::Keyword) {
-    if (aType == nsTimingFunction::Type::StepStart) {
-      aResult.AppendLiteral("step-start");
-    } else {
-      aResult.AppendLiteral("step-end");
-    }
-    return;
-  }
-
   aResult.AppendLiteral("steps(");
   aResult.AppendInt(aSteps);
-  switch (aSyntax) {
-    case nsTimingFunction::StepSyntax::Keyword:
-      // handled above
-      break;
-    case nsTimingFunction::StepSyntax::FunctionalWithStartKeyword:
-      aResult.AppendLiteral(", start)");
-      break;
-    case nsTimingFunction::StepSyntax::FunctionalWithEndKeyword:
-      aResult.AppendLiteral(", end)");
-      break;
-    case nsTimingFunction::StepSyntax::FunctionalWithoutKeyword:
-      aResult.Append(')');
-      break;
+  if (aType == nsTimingFunction::Type::StepStart) {
+    aResult.AppendLiteral(", start)");
+  } else {
+    aResult.AppendLiteral(")");
   }
 }
 
