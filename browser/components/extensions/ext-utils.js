@@ -75,6 +75,11 @@ class BasePopup {
     this.browserStyle = browserStyle;
     this.window = viewNode.ownerGlobal;
 
+    this.panel = this.viewNode;
+    while (this.panel.localName != "panel") {
+      this.panel = this.panel.parentNode;
+    }
+
     this.contentReady = new Promise(resolve => {
       this._resolveContentReady = resolve;
     });
@@ -93,6 +98,7 @@ class BasePopup {
       this.browser.removeEventListener("DOMWindowClose", this, true);
       this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
       this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
+      this.viewNode.style.maxHeight = "";
       this.browser.remove();
 
       this.browser = null;
@@ -104,6 +110,10 @@ class BasePopup {
   // destroyed. This must be implemented by every subclass.
   get DESTROY_EVENT() {
     throw new Error("Not implemented");
+  }
+
+  get fixedWidth() {
+    return false;
   }
 
   handleEvent(event) {
@@ -166,14 +176,15 @@ class BasePopup {
     this.browser.setAttribute("disableglobalhistory", "true");
     this.browser.setAttribute("webextension-view-type", "popup");
 
+    // We only need flex sizing for the sake of the slide-in sub-views of the
+    // main menu panel, so that the browser occupies the full width of the view,
+    // and also takes up any extra height that's available to it.
+    this.browser.setAttribute("flex", "1");
+
     // Note: When using noautohide panels, the popup manager will add width and
     // height attributes to the panel, breaking our resize code, if the browser
     // starts out smaller than 30px by 10px. This isn't an issue now, but it
     // will be if and when we popup debugging.
-
-    // This overrides the content's preferred size when displayed in a
-    // fixed-size, slide-in panel.
-    this.browser.setAttribute("flex", "1");
 
     viewNode.appendChild(this.browser);
 
@@ -217,28 +228,76 @@ class BasePopup {
       return;
     }
 
-    let width, height;
-    try {
-      let w = {}, h = {};
-      this.browser.docShell.contentViewer.getContentSize(w, h);
+    if (this.fixedWidth) {
+      // If we're in a fixed-width area (namely a slide-in subview of the main
+      // menu panel), we need to calculate the view height based on the
+      // preferred height of the content document's root scrollable element at the
+      // current width, rather than the complete preferred dimensions of the
+      // content window.
 
-      width = w.value / this.window.devicePixelRatio;
-      height = h.value / this.window.devicePixelRatio;
+      let doc = this.browser.contentDocument;
+      if (!doc || !doc.documentElement) {
+        return;
+      }
 
-      // The width calculation is imperfect, and is often a fraction of a pixel
-      // too narrow, even after taking the ceiling, which causes lines of text
-      // to wrap.
-      width += 1;
-    } catch (e) {
-      // getContentSize can throw
-      [width, height] = [400, 400];
+      let root = doc.documentElement;
+      let body = doc.body;
+      if (!body || doc.compatMode == "BackCompat") {
+        // In quirks mode, the root element is used as the scroll frame, and the
+        // body lies about its scroll geometry, and returns the values for the
+        // root instead.
+        body = root;
+      }
+
+      // Compensate for any offsets (margin, padding, ...) between the scroll
+      // area of the body and the outer height of the document.
+      let getHeight = elem => elem.getBoundingClientRect(elem).height;
+      let bodyPadding = getHeight(root) - getHeight(body);
+
+      let height = Math.ceil(body.scrollHeight + bodyPadding);
+
+      // Figure out how much extra space we have on the side of the panel
+      // opposite the arrow.
+      let side = this.panel.getAttribute("side") == "top" ? "bottom" : "top";
+      let maxHeight = this.viewHeight + this.extraHeight[side];
+
+      height = Math.min(height, maxHeight);
+      this.browser.style.height = `${height}px`;
+
+      // Set a maximum height on the <panelview> element to our preferred
+      // maximum height, so that the PanelUI resizing code can make an accurate
+      // calculation. If we don't do this, the flex sizing logic will prevent us
+      // from ever reporting a preferred size smaller than the height currently
+      // available to us in the panel.
+      height = Math.max(height, this.viewHeight);
+      this.viewNode.style.maxHeight = `${height}px`;
+    } else {
+      let width, height;
+      try {
+        let w = {}, h = {};
+        this.browser.docShell.contentViewer.getContentSize(w, h);
+
+        width = w.value / this.window.devicePixelRatio;
+        height = h.value / this.window.devicePixelRatio;
+
+        // The width calculation is imperfect, and is often a fraction of a pixel
+        // too narrow, even after taking the ceiling, which causes lines of text
+        // to wrap.
+        width += 1;
+      } catch (e) {
+        // getContentSize can throw
+        [width, height] = [400, 400];
+      }
+
+      width = Math.ceil(Math.min(width, 800));
+      height = Math.ceil(Math.min(height, 600));
+
+      this.browser.style.width = `${width}px`;
+      this.browser.style.height = `${height}px`;
     }
 
-    width = Math.ceil(Math.min(width, 800));
-    height = Math.ceil(Math.min(height, 600));
-
-    this.browser.style.width = `${width}px`;
-    this.browser.style.height = `${height}px`;
+    let event = new this.window.CustomEvent("WebExtPopupResized");
+    this.browser.dispatchEvent(event);
 
     this._resolveContentReady();
   }
@@ -283,8 +342,34 @@ global.PanelPopup = class PanelPopup extends BasePopup {
 };
 
 global.ViewPopup = class ViewPopup extends BasePopup {
+  constructor(...args) {
+    super(...args);
+
+    // Store the initial height of the view, so that we never resize menu panel
+    // sub-views smaller than the initial height of the menu.
+    this.viewHeight = this.viewNode.boxObject.height;
+
+    // Calculate the extra height available on the screen above and below the
+    // menu panel. Use that to calculate the how much the sub-view may grow.
+    let popupRect = this.panel.getBoundingClientRect();
+
+    let win = this.window;
+    let popupBottom = win.mozInnerScreenY + popupRect.bottom;
+    let popupTop = win.mozInnerScreenY + popupRect.top;
+
+    let screenBottom = win.screen.availTop + win.screen.availHeight;
+    this.extraHeight = {
+      bottom: Math.max(0, screenBottom - popupBottom),
+      top:  Math.max(0, popupTop - win.screen.availTop),
+    };
+  }
+
   get DESTROY_EVENT() {
     return "ViewHiding";
+  }
+
+  get fixedWidth() {
+    return !this.viewNode.classList.contains("cui-widget-panelview");
   }
 
   closePopup() {
