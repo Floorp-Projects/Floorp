@@ -158,9 +158,10 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
 
 NS_IMETHODIMP
 nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
-                                const nsAString& cnAndPort,
-                                const nsAString& organization,
-                                const nsAString& issuerOrg,
+                                const nsACString& hostname,
+                                int32_t port,
+                                const nsACString& organization,
+                                const nsACString& issuerOrg,
                                 nsIArray* certList,
                         /*out*/ uint32_t* selectedIndex,
                         /*out*/ bool* certificateChosen)
@@ -196,15 +197,20 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
     return rv;
   }
 
-  rv = block->SetString(0, PromiseFlatString(cnAndPort).get());
+  rv = block->SetString(0, NS_ConvertUTF8toUTF16(hostname).get());
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = block->SetString(1, PromiseFlatString(organization).get());
+  rv = block->SetString(1, NS_ConvertUTF8toUTF16(organization).get());
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = block->SetString(2, PromiseFlatString(issuerOrg).get());
+  rv = block->SetString(2, NS_ConvertUTF8toUTF16(issuerOrg).get());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = block->SetInt(0, port);
   if (NS_FAILED(rv)) {
     return rv;
   }

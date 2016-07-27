@@ -55,17 +55,20 @@ set_config('HAVE_YASM', have_yasm)
 # Until the YASM variable is not necessary in old-configure.
 add_old_configure_assignment('YASM', have_yasm)
 
+@depends('--help')
+def extra_toolchain_flags(_):
+    # This value will be overriden for android builds, where
+    # extra flags are required to do basic checks.
+    return []
 
 # Android NDK
 # ==============================================================
 
 @depends('--disable-compile-environment', build_project, gonkdir, '--help')
-def android_ndk_include(compile_env, build_project, gonkdir, _):
-    if compile_env and (gonkdir or build_project in ('mobile/android', 'js')):
-        return 'android-ndk.configure'
+def compiling_android(compile_env, build_project, gonkdir, _):
+    return compile_env and (gonkdir or build_project in ('mobile/android', 'js'))
 
-include(android_ndk_include)
-
+include_when('android-ndk.configure', when=compiling_android)
 
 # MacOS deployment target version
 # ==============================================================
@@ -168,31 +171,8 @@ add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)
 
 # Compilers
 # ==============================================================
-@imports('os')
-@imports('subprocess')
-@imports(_from='mozbuild.configure.util', _import='LineIO')
-@imports(_from='tempfile', _import='mkstemp')
 def try_preprocess(compiler, language, source):
-    suffix = {
-        'C': '.c',
-        'C++': '.cpp',
-    }[language]
-
-    fd, path = mkstemp(prefix='conftest.', suffix=suffix)
-    try:
-        source = source.encode('ascii', 'replace')
-
-        log.debug('Creating `%s` with content:', path)
-        with LineIO(lambda l: log.debug('| %s', l)) as out:
-            out.write(source)
-
-        os.write(fd, source)
-        os.close(fd)
-        cmd = compiler + ['-E', path]
-        return check_cmd_output(*cmd)
-    finally:
-        os.remove(path)
-
+    return try_invoke_compiler(compiler, language, source, ['-E'])
 
 @imports(_from='mozbuild.configure.constants', _import='CompilerType')
 @imports(_from='mozbuild.configure.constants',
@@ -764,6 +744,8 @@ host_c_compiler = compiler('C', host, other_compiler=c_compiler)
 host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_compiler=cxx_compiler,
                              other_c_compiler=c_compiler)
+
+include('compilechecks.configure')
 
 @depends(c_compiler)
 def default_debug_flags(compiler_info):

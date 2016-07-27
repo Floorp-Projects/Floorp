@@ -9,7 +9,7 @@
  * This interface is implemented by top level accessible object in hierarchy and
  * provides information about application.
  */
-[scriptable, uuid(79251626-387c-4531-89f3-680d31d6cf05)]
+[scriptable, builtinclass, uuid(79251626-387c-4531-89f3-680d31d6cf05)]
 interface nsIAccessibleApplication : nsISupports
 {
   /**

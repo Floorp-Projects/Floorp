@@ -437,7 +437,11 @@ AbstractFramePtr::setReturnValue(const Value& rval) const
         asInterpreterFrame()->setReturnValue(rval);
         return;
     }
-    asBaselineFrame()->setReturnValue(rval);
+    if (isBaselineFrame()) {
+        asBaselineFrame()->setReturnValue(rval);
+        return;
+    }
+    asRematerializedFrame()->setReturnValue(rval);
 }
 
 inline JSObject*

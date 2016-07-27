@@ -85,6 +85,39 @@ def find_program(file, paths=None):
         return None
 
 
+@imports('os')
+@imports('subprocess')
+@imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports(_from='tempfile', _import='mkstemp')
+def try_invoke_compiler(compiler, language, source, flags=None, onerror=None):
+    flags = flags or []
+
+    if not isinstance(flags, (list, tuple)):
+        die("Flags provided to try_compile must be a list of strings, "
+            "not %r", paths)
+
+    suffix = {
+        'C': '.c',
+        'C++': '.cpp',
+    }[language]
+
+    fd, path = mkstemp(prefix='conftest.', suffix=suffix)
+    try:
+        source = source.encode('ascii', 'replace')
+
+        log.debug('Creating `%s` with content:', path)
+        with LineIO(lambda l: log.debug('| %s', l)) as out:
+            out.write(source)
+
+        os.write(fd, source)
+        os.close(fd)
+        cmd = compiler + list(flags) + [path]
+        kwargs = {'onerror': onerror}
+        return check_cmd_output(*cmd, **kwargs)
+    finally:
+        os.remove(path)
+
+
 def unique_list(l):
     result = []
     for i in l:
@@ -280,3 +313,13 @@ def depends_when(*args, **kwargs):
                 return fn(*args)
         return wrapper
     return decorator
+
+# Includes a file when the given condition evaluates to a truthy value.
+@template
+def include_when(filename, when):
+    # Assume, for now, our condition already depends on --help.
+    @depends(when, '--help')
+    def conditional_include(value, _):
+        if value:
+            return filename
+    include(conditional_include)

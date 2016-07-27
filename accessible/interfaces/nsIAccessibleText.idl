@@ -13,7 +13,7 @@ interface nsIArray;
 interface nsIPersistentProperties;
 interface nsIAccessibleTextRange;
 
-[scriptable, uuid(93ad2ca1-f12b-4ab9-a793-95d9fa9d1774)]
+[scriptable, builtinclass, uuid(93ad2ca1-f12b-4ab9-a793-95d9fa9d1774)]
 interface nsIAccessibleText : nsISupports
 {
   // In parameters for character offsets:

@@ -19,10 +19,6 @@ var gEMEHandler = {
           Services.prefs.getPrefType("media.gmp-eme-adobe.enabled") &&
           !Services.prefs.getBoolPref("media.gmp-eme-adobe.enabled")) {
         Services.prefs.setBoolPref("media.gmp-eme-adobe.enabled", true);
-      } else if (keySystem == "org.w3.clearkey" &&
-                 Services.prefs.getPrefType("media.eme.clearkey.enabled") &&
-                 !Services.prefs.getBoolPref("media.eme.clearkey.enabled")) {
-        Services.prefs.setBoolPref("media.eme.clearkey.enabled", true);
       } else if (keySystem == "com.widevine.alpha" &&
                  Services.prefs.getPrefType("media.gmp-widevinecdm.enabled") &&
                  !Services.prefs.getBoolPref("media.gmp-widevinecdm.enabled")) {

@@ -268,7 +268,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
                                          nsACString& aOutMessage,
                                          nsACString& aOutCdmVersion)
 {
-  MOZ_ASSERT(MediaPrefs::EMEEnabled());
+  MOZ_ASSERT(MediaPrefs::EMEEnabled() || IsClearkeyKeySystem(aKeySystem));
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
     do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   if (NS_WARN_IF(!mps)) {
@@ -277,10 +277,6 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
   }
 
   if (aKeySystem.EqualsLiteral("org.w3.clearkey")) {
-    if (!Preferences::GetBool("media.eme.clearkey.enabled", true)) {
-      aOutMessage = NS_LITERAL_CSTRING("ClearKey was disabled");
-      return MediaKeySystemStatus::Cdm_disabled;
-    }
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 

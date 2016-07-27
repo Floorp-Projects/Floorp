@@ -34,6 +34,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 
 #ifdef XP_WIN
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/TextureDIB.h"
@@ -1039,7 +1040,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
-        gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice())) &&
+        DeviceManagerD3D11::Get()->GetContentDevice())) &&
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize)
   {
