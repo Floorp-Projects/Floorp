@@ -23,17 +23,23 @@ PageError.propTypes = {
 
 function PageError(props) {
   const { message } = props;
-  const repeat = MessageRepeat({repeat: message.repeat});
-  const icon = MessageIcon({severity: message.severity});
+  const {category, severity} = message;
 
-  // @TODO Use of "is" is a temporary hack to get the category and severity
-  // attributes to be applied. There are targeted in webconsole's CSS rules,
-  // so if we remove this hack, we have to modify the CSS rules accordingly.
+  const repeat = MessageRepeat({repeat: message.repeat});
+  const icon = MessageIcon({severity: severity});
+
+  const classes = ["message"];
+
+  if (category) {
+    classes.push(category);
+  }
+
+  if (severity) {
+    classes.push(severity);
+  }
+
   return dom.div({
-    class: "message",
-    is: "fdt-message",
-    category: message.category,
-    severity: message.severity
+    className: classes.join(" ")
   },
     icon,
     dom.span(
