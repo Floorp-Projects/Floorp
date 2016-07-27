@@ -327,6 +327,7 @@ config = {
         "xpcshell": {
             "run_filename": "remotexpcshelltests.py",
             "testsdir": "xpcshell",
+            "install": False,
             "options": [
                 "--dm_trans=adb",
                 "--xre-path=%(xre_path)s",
@@ -344,6 +345,7 @@ config = {
         "cppunittest": {
             "run_filename": "remotecppunittests.py",
             "testsdir": "cppunittest",
+            "install": False,
             "options": [
                 "--symbols-path=%(symbols_path)s",
                 "--xre-path=%(xre_path)s",
