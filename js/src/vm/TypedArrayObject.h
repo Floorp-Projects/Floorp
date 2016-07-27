@@ -424,7 +424,7 @@ class DataViewObject : public NativeObject
 
     template <typename NativeType>
     static uint8_t*
-    getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, uint32_t offset);
+    getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, double offset);
 
     template<Value ValueGetter(DataViewObject* view)>
     static bool

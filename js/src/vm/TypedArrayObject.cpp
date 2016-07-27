@@ -1740,15 +1740,18 @@ DataViewObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
 
 template <typename NativeType>
 /* static */ uint8_t*
-DataViewObject::getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, uint32_t offset)
+DataViewObject::getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, double offset)
 {
+    MOZ_ASSERT(offset >= 0);
+
     const size_t TypeSize = sizeof(NativeType);
     if (offset > UINT32_MAX - TypeSize || offset + TypeSize > obj->byteLength()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
         return nullptr;
     }
 
-    return static_cast<uint8_t*>(obj->dataPointer()) + offset;
+    MOZ_ASSERT(offset < UINT32_MAX);
+    return static_cast<uint8_t*>(obj->dataPointer()) + uint32_t(offset);
 }
 
 static inline bool
@@ -1825,33 +1828,60 @@ struct DataViewIO
     }
 };
 
+static bool
+ToIndex(JSContext* cx, HandleValue v, double* index)
+{
+    if (v.isUndefined()) {
+        *index = 0.0;
+        return true;
+    }
+
+    double integerIndex;
+    if (!ToInteger(cx, v, &integerIndex))
+        return false;
+
+    // Inlined version of ToLength.
+    // 1. Already an integer
+    // 2. Step eliminates < 0, +0 == -0 with SameValueZero
+    // 3/4. Limit to <= 2^53-1, so everything above should fail.
+    if (integerIndex < 0 || integerIndex > 9007199254740991) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+        return false;
+    }
+
+    *index = integerIndex;
+    return true;
+}
+
 template<typename NativeType>
 /* static */ bool
 DataViewObject::read(JSContext* cx, Handle<DataViewObject*> obj,
                      const CallArgs& args, NativeType* val, const char* method)
 {
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_MORE_ARGS_NEEDED, method, "0", "s");
-        return false;
-    }
+    // Steps 1-2. done by the caller
+    // Step 3. unnecessary assert
 
-    uint32_t offset;
-    if (!ToUint32(cx, args[0], &offset))
+    // Step 4.
+    double getIndex;
+    if (!ToIndex(cx, args.get(0), &getIndex))
         return false;
 
-    bool fromLittleEndian = args.length() >= 2 && ToBoolean(args[1]);
+    // Step 5.
+    bool isLittleEndian = args.length() >= 2 && ToBoolean(args[1]);
 
+    // Steps 6-7.
     if (obj->arrayBuffer().isDetached()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
 
-    uint8_t* data = DataViewObject::getDataPointer<NativeType>(cx, obj, offset);
+    // Steps 8-12.
+    uint8_t* data = DataViewObject::getDataPointer<NativeType>(cx, obj, getIndex);
     if (!data)
         return false;
 
-    DataViewIO<NativeType>::fromBuffer(val, data, needToSwapBytes(fromLittleEndian));
+    // Step 13.
+    DataViewIO<NativeType>::fromBuffer(val, data, needToSwapBytes(isLittleEndian));
     return true;
 }
 
@@ -1892,18 +1922,17 @@ template<typename NativeType>
 DataViewObject::write(JSContext* cx, Handle<DataViewObject*> obj,
                       const CallArgs& args, const char* method)
 {
-    if (args.length() < 2) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_MORE_ARGS_NEEDED, method, "1", "");
-        return false;
-    }
+    // Steps 1-2. done by the caller
+    // Step 3. unnecessary assert
 
-    uint32_t offset;
-    if (!ToUint32(cx, args[0], &offset))
+    // Step 4.
+    double getIndex;
+    if (!ToIndex(cx, args.get(0), &getIndex))
         return false;
 
+    // Step 5. Should just call ToNumber (unobservable)
     NativeType value;
-    if (!WebIDLCast(cx, args[1], &value))
+    if (!WebIDLCast(cx, args.get(1), &value))
         return false;
 
 #ifdef JS_MORE_DETERMINISTIC
@@ -1912,18 +1941,22 @@ DataViewObject::write(JSContext* cx, Handle<DataViewObject*> obj,
         value = JS::CanonicalizeNaN(value);
 #endif
 
-    bool toLittleEndian = args.length() >= 3 && ToBoolean(args[2]);
+    // Step 6.
+    bool isLittleEndian = args.length() >= 3 && ToBoolean(args[2]);
 
+    // Steps 7-8.
     if (obj->arrayBuffer().isDetached()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
 
-    uint8_t* data = DataViewObject::getDataPointer<NativeType>(cx, obj, offset);
+    // Steps 9-13.
+    uint8_t* data = DataViewObject::getDataPointer<NativeType>(cx, obj, getIndex);
     if (!data)
         return false;
 
-    DataViewIO<NativeType>::toBuffer(data, &value, needToSwapBytes(toLittleEndian));
+    // Step 14.
+    DataViewIO<NativeType>::toBuffer(data, &value, needToSwapBytes(isLittleEndian));
     return true;
 }
 
@@ -2592,20 +2625,20 @@ const Class DataViewObject::class_ = {
 const JSFunctionSpec DataViewObject::jsfuncs[] = {
     JS_FN("getInt8",    DataViewObject::fun_getInt8,      1,0),
     JS_FN("getUint8",   DataViewObject::fun_getUint8,     1,0),
-    JS_FN("getInt16",   DataViewObject::fun_getInt16,     2,0),
-    JS_FN("getUint16",  DataViewObject::fun_getUint16,    2,0),
-    JS_FN("getInt32",   DataViewObject::fun_getInt32,     2,0),
-    JS_FN("getUint32",  DataViewObject::fun_getUint32,    2,0),
-    JS_FN("getFloat32", DataViewObject::fun_getFloat32,   2,0),
-    JS_FN("getFloat64", DataViewObject::fun_getFloat64,   2,0),
+    JS_FN("getInt16",   DataViewObject::fun_getInt16,     1,0),
+    JS_FN("getUint16",  DataViewObject::fun_getUint16,    1,0),
+    JS_FN("getInt32",   DataViewObject::fun_getInt32,     1,0),
+    JS_FN("getUint32",  DataViewObject::fun_getUint32,    1,0),
+    JS_FN("getFloat32", DataViewObject::fun_getFloat32,   1,0),
+    JS_FN("getFloat64", DataViewObject::fun_getFloat64,   1,0),
     JS_FN("setInt8",    DataViewObject::fun_setInt8,      2,0),
     JS_FN("setUint8",   DataViewObject::fun_setUint8,     2,0),
-    JS_FN("setInt16",   DataViewObject::fun_setInt16,     3,0),
-    JS_FN("setUint16",  DataViewObject::fun_setUint16,    3,0),
-    JS_FN("setInt32",   DataViewObject::fun_setInt32,     3,0),
-    JS_FN("setUint32",  DataViewObject::fun_setUint32,    3,0),
-    JS_FN("setFloat32", DataViewObject::fun_setFloat32,   3,0),
-    JS_FN("setFloat64", DataViewObject::fun_setFloat64,   3,0),
+    JS_FN("setInt16",   DataViewObject::fun_setInt16,     2,0),
+    JS_FN("setUint16",  DataViewObject::fun_setUint16,    2,0),
+    JS_FN("setInt32",   DataViewObject::fun_setInt32,     2,0),
+    JS_FN("setUint32",  DataViewObject::fun_setUint32,    2,0),
+    JS_FN("setFloat32", DataViewObject::fun_setFloat32,   2,0),
+    JS_FN("setFloat64", DataViewObject::fun_setFloat64,   2,0),
     JS_FS_END
 };
 
