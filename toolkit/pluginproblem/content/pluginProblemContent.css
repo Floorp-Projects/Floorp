@@ -20,6 +20,7 @@ html|applet:not([height]), html|applet[height=""] {
   height: 200px;
 }
 
+a .mainBox,
 :-moz-type-unsupported .mainBox,
 :-moz-type-unsupported-platform .mainBox,
 :-moz-handler-clicktoplay .mainBox,
@@ -29,6 +30,7 @@ html|applet:not([height]), html|applet[height=""] {
 :-moz-handler-blocked .mainBox {
   -moz-user-focus: normal;
 }
+a .mainBox:focus,
 :-moz-type-unsupported .mainBox:focus,
 :-moz-type-unsupported-platform .mainBox:focus,
 :-moz-handler-clicktoplay .mainBox:focus,
@@ -71,6 +73,7 @@ html|applet:not([height]), html|applet[height=""] {
   direction: rtl;
 }
 
+a .hoverBox,
 :-moz-handler-clicktoplay .hoverBox,
 :-moz-handler-vulnerable-updatable .hoverBox,
 :-moz-handler-vulnerable-no-update .hoverBox {
@@ -88,6 +91,8 @@ html|applet:not([height]), html|applet[height=""] {
   display: none;
 }
 
+a .msgClickToPlay,
+a .msgTapToPlay,
 :-moz-type-unsupported .msgUnsupported,
 :-moz-type-unsupported-platform .msgUnsupportedPlatform,
 :-moz-handler-clicktoplay .msgClickToPlay,
