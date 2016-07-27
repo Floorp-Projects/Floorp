@@ -1,8 +1,9 @@
 #[macro_use]
+extern crate clap;
+#[macro_use]
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
-extern crate argparse;
 extern crate env_logger;
 extern crate hyper;
 extern crate mozprofile;
@@ -13,16 +14,14 @@ extern crate rustc_serialize;
 extern crate webdriver;
 extern crate zip;
 
+use clap::{App, Arg};
+use marionette::{MarionetteHandler, LogLevel, MarionetteSettings, extension_routes};
 use std::borrow::ToOwned;
 use std::io::Write;
 use std::net::{SocketAddr, IpAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
-
-use argparse::{ArgumentParser, IncrBy, StoreTrue, Store, StoreOption};
 use webdriver::server::start;
-
-use marionette::{MarionetteHandler, LogLevel, MarionetteSettings, extension_routes};
 
 macro_rules! try_opt {
     ($expr:expr, $err_type:expr, $err_msg:expr) => ({
@@ -35,6 +34,14 @@ macro_rules! try_opt {
 
 mod marionette;
 
+lazy_static! {
+    pub static ref VERSION: String =
+        format!("{}\n\n{}", crate_version!(), "The source is available at https://github.com/mozilla/geckodriver
+
+This program is subject to the terms of the Mozilla Public License 2.0.
+You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
+}
+
 type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 
 enum ExitCode {
@@ -42,129 +49,102 @@ enum ExitCode {
     Usage = 64,
 }
 
-struct Options {
-    binary: Option<String>,
-    webdriver_host: String,
-    webdriver_port: u16,
-    marionette_port: Option<u16>,
-    connect_existing: bool,
-    e10s: bool,
-    log_level: String,
-    verbosity: u8,
-    version: bool,
+fn app<'a, 'b>() -> App<'a, 'b> {
+    App::new("geckodriver")
+        .about("WebDriver implementation for Firefox.")
+        .version(&**VERSION)
+        .arg(Arg::with_name("webdriver_host")
+             .long("host")
+             .value_name("HOST")
+             .help("Host ip to use for WebDriver server (default: 127.0.0.1)")
+             .takes_value(true))
+        .arg(Arg::with_name("webdriver_port")
+             .short("p")
+             .long("port")
+             .value_name("PORT")
+             .help("Port to use for WebDriver server (default: 4444)")
+             .takes_value(true))
+        .arg(Arg::with_name("binary")
+             .short("b")
+             .long("binary")
+             .value_name("BINARY")
+             .help("Path to the Firefox binary, if no binary capability provided")
+             .takes_value(true))
+        .arg(Arg::with_name("marionette_port")
+             .long("marionette-port")
+             .value_name("PORT")
+             .help("Port to use to connect to gecko (default: random free port)")
+             .takes_value(true))
+        .arg(Arg::with_name("connect_existing")
+             .long("connect-existing")
+             .requires("marionette_port")
+             .help("Connect to an existing Firefox instance"))
+        .arg(Arg::with_name("no_e10s")
+             .long("--no-e10s")
+             .help("Start Firefox without multiprocess support (e10s) enabled"))
+        .arg(Arg::with_name("verbosity")
+             .short("v")
+             .multiple(true)
+             .conflicts_with("log_level")
+             .help("Set the level of verbosity. Pass once for debug level logging and twice for trace level logging"))
+        .arg(Arg::with_name("log_level")
+             .long("log")
+             .takes_value(true)
+             .value_name("LEVEL")
+             .possible_values(
+                 &["fatal", "error", "warn", "info", "config", "debug", "trace"])
+             .help("Set Gecko log level"))
 }
 
-fn parse_args() -> Options {
-    let mut opts = Options {
-        binary: None,
-        webdriver_host: "127.0.0.1".to_owned(),
-        webdriver_port: 4444u16,
-        marionette_port: None,
-        connect_existing: false,
-        e10s: false,
-        log_level: "".to_owned(),
-        verbosity: 0,
-        version: false,
-    };
-
-    {
-        let mut parser = ArgumentParser::new();
-        parser.set_description("WebDriver to Marionette proxy.");
-
-        parser.refer(&mut opts.binary)
-            .add_option(&["-b", "--binary"], StoreOption,
-                        "Path to the Firefox binary");
-        parser.refer(&mut opts.webdriver_host)
-            .add_option(&["--webdriver-host"], Store,
-                        "Host to run webdriver server on");
-        parser.refer(&mut opts.webdriver_port)
-            .add_option(&["--webdriver-port"], Store,
-                        "Port to run webdriver on");
-        parser.refer(&mut opts.marionette_port)
-            .add_option(&["--marionette-port"], StoreOption,
-                        "Port to run marionette on");
-        parser.refer(&mut opts.connect_existing)
-            .add_option(&["--connect-existing"], StoreTrue,
-                        "Connect to an existing firefox process");
-        parser.refer(&mut opts.e10s)
-            .add_option(&["--e10s"], StoreTrue,
-                        "Load Firefox with an e10s profile");
-        parser.refer(&mut opts.log_level)
-            .add_option(&["--log"], Store,
-            "Desired verbosity level of Gecko \
-            (fatal, error, warn, info, config, debug, trace)")
-            .metavar("LEVEL");
-        parser.refer(&mut opts.verbosity)
-            .add_option(&["-v"], IncrBy(1),
-            "Shorthand to increase verbosity of output \
-            to include debug messages with -v, \
-            and trace messages with -vv");
-        parser.refer(&mut opts.version)
-            .add_option(&["--version"], StoreTrue,
-            "Show version and copying information.");
-
-        parser.parse_args_or_exit();
-    }
-
-    opts
-}
-
-fn print_version() {
-    let version = option_env!("CARGO_PKG_VERSION").unwrap_or("unknown");
-
-    println!(r#"geckodriver v{}
-https://github.com/mozilla/geckodriver
-
-This program is subject to the terms of the Mozilla Public License 2.0.
-You can obtain a copy of the license at https://mozilla.org/MPL/2.0/."#,
-             version);
-}
-
-fn print_usage(reason: &str) {
-    let prog = std::env::args().next().unwrap();
-    let _ = writeln!(&mut ::std::io::stderr(), "{}: error: {}", prog, reason);
+fn print_err(reason: &str) {
+    let _ = writeln!(&mut ::std::io::stderr(), "\n{}", reason);
 }
 
 fn run() -> ProgramResult {
-    let opts = parse_args();
+    let matches = app().get_matches();
 
-    if opts.version {
-        print_version();
-        return Ok(())
-    }
-
-    let host = &opts.webdriver_host[..];
-    let port = opts.webdriver_port;
+    let host = matches.value_of("webdriver_host").unwrap_or("127.0.0.1");
+    let port = match u16::from_str(matches.value_of("webdriver_port").unwrap_or("4444")) {
+        Ok(x) => x,
+        Err(_) => return Err((ExitCode::Usage, "Invalid WebDriver port".to_owned())),
+    };
     let addr = match IpAddr::from_str(host) {
         Ok(addr) => SocketAddr::new(addr, port),
         Err(_) => return Err((ExitCode::Usage, "invalid host address".to_owned())),
     };
 
+    let binary = matches.value_of("binary").map(|x| PathBuf::from(x));
+
+    let marionette_port = match matches.value_of("marionette_port") {
+        Some(x) => match u16::from_str(x) {
+            Ok(x) => Some(x),
+            Err(_) => return Err((ExitCode::Usage, "Invalid Marionette port".to_owned())),
+        },
+        None => None
+    };
+
     // overrides defaults in Gecko
     // which are info for optimised builds
     // and debug for debug builds
-    let log_level = if opts.log_level.len() > 0 && opts.verbosity > 0 {
-        return Err((ExitCode::Usage, "conflicting logging- and verbosity arguments".to_owned()))
-    } else if opts.log_level.len() > 0 {
-        match LogLevel::from_str(&opts.log_level) {
-            Ok(level) => Some(level),
-            Err(_) => return Err((ExitCode::Usage, format!("unknown log level: {}", opts.log_level))),
-        }
-    } else {
-        match opts.verbosity {
-            0 => None,
-            1 => Some(LogLevel::Debug),
-            _ => Some(LogLevel::Trace),
-        }
-    };
+    let log_level =
+        if matches.is_present("log_level") {
+            LogLevel::from_str(matches.value_of("log_level").unwrap()).ok()
+        } else {
+            match matches.occurrences_of("v") {
+                0 => None,
+                1 => Some(LogLevel::Debug),
+                _ => Some(LogLevel::Trace),
+            }
+        };
 
     let settings = MarionetteSettings {
-        port: opts.marionette_port,
-        binary: opts.binary.map(|x| PathBuf::from(x)),
-        connect_existing: opts.connect_existing,
-        e10s: opts.e10s,
-        log_level: log_level
+        port: marionette_port,
+        binary: binary,
+        connect_existing: matches.is_present("connect_existing"),
+        e10s: !matches.is_present("no_e10s"),
+        log_level: log_level,
     };
+
     start(addr, MarionetteHandler::new(settings), extension_routes());
 
     Ok(())
@@ -176,7 +156,7 @@ fn main() {
     let exit_code = match run() {
         Ok(_) => ExitCode::Ok,
         Err((exit_code, reason)) => {
-            print_usage(&reason.to_string());
+            print_err(&reason.to_string());
             exit_code
         },
     };
