@@ -1,13 +1,42 @@
 var gEffectEasingTests = [
   {
-    desc: 'steps(start) function',
+    desc: 'step-start function',
+    easing: 'step-start',
+    easingFunction: stepStart(1),
+    serialization: 'steps(1, start)'
+  },
+  {
+    desc: 'steps(1, start) function',
+    easing: 'steps(1, start)',
+    easingFunction: stepStart(1)
+  },
+  {
+    desc: 'steps(2, start) function',
     easing: 'steps(2, start)',
     easingFunction: stepStart(2)
   },
   {
-    desc: 'steps(end) function',
+    desc: 'step-end function',
+    easing: 'step-end',
+    easingFunction: stepEnd(1),
+    serialization: 'steps(1)'
+  },
+  {
+    desc: 'steps(1) function',
+    easing: 'steps(1)',
+    easingFunction: stepEnd(1)
+  },
+  {
+    desc: 'steps(1, end) function',
+    easing: 'steps(1, end)',
+    easingFunction: stepEnd(1),
+    serialization: 'steps(1)'
+  },
+  {
+    desc: 'steps(2, end) function',
     easing: 'steps(2, end)',
-    easingFunction: stepEnd(2)
+    easingFunction: stepEnd(2),
+    serialization: 'steps(2)'
   },
   {
     desc: 'linear function',
