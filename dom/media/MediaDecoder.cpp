@@ -421,9 +421,7 @@ void
 MediaDecoder::Pause()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (IsShutdown()) {
-    return;
-  }
+  MOZ_ASSERT(!IsShutdown());
   if (mPlayState == PLAY_STATE_LOADING || IsEnded()) {
     mNextState = PLAY_STATE_PAUSED;
     return;
