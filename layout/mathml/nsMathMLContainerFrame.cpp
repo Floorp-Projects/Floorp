@@ -124,38 +124,38 @@ IsForeignChild(const nsIFrame* aFrame)
     aFrame->GetType() == nsGkAtoms::blockFrame;
 }
 
-NS_DECLARE_FRAME_PROPERTY_DELETABLE(HTMLReflowMetricsProperty,
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(HTMLReflowOutputProperty,
                                     ReflowOutput)
 
 /* static */ void
 nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*                  aFrame,
-                                                        const ReflowOutput& aReflowMetrics,
+                                                        const ReflowOutput& aReflowOutput,
                                                         const nsBoundingMetrics&   aBoundingMetrics)
 {
-  ReflowOutput *metrics = new ReflowOutput(aReflowMetrics);
-  metrics->mBoundingMetrics = aBoundingMetrics;
-  aFrame->Properties().Set(HTMLReflowMetricsProperty(), metrics);
+  ReflowOutput* reflowOutput = new ReflowOutput(aReflowOutput);
+  reflowOutput->mBoundingMetrics = aBoundingMetrics;
+  aFrame->Properties().Set(HTMLReflowOutputProperty(), reflowOutput);
 }
 
 // helper method to facilitate getting the reflow and bounding metrics
 /* static */ void
 nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
-                                                       ReflowOutput& aReflowMetrics,
+                                                       ReflowOutput& aReflowOutput,
                                                        nsBoundingMetrics&   aBoundingMetrics,
                                                        eMathMLFrameType*    aMathMLFrameType)
 {
   NS_PRECONDITION(aFrame, "null arg");
 
-  ReflowOutput* metrics =
-    aFrame->Properties().Get(HTMLReflowMetricsProperty());
+  ReflowOutput* reflowOutput =
+    aFrame->Properties().Get(HTMLReflowOutputProperty());
 
   // IMPORTANT: This function is only meant to be called in Place() methods
   // where it is assumed that SaveReflowAndBoundingMetricsFor has recorded the
   // information.
-  NS_ASSERTION(metrics, "Didn't SaveReflowAndBoundingMetricsFor frame!");
-  if (metrics) {
-    aReflowMetrics = *metrics;
-    aBoundingMetrics = metrics->mBoundingMetrics;
+  NS_ASSERTION(reflowOutput, "Didn't SaveReflowAndBoundingMetricsFor frame!");
+  if (reflowOutput) {
+    aReflowOutput = *reflowOutput;
+    aBoundingMetrics = reflowOutput->mBoundingMetrics;
   }
 
   if (aMathMLFrameType) {
@@ -177,7 +177,7 @@ nsMathMLContainerFrame::ClearSavedChildMetrics()
   nsIFrame* childFrame = mFrames.FirstChild();
   FramePropertyTable* props = PresContext()->PropertyTable();
   while (childFrame) {
-    props->Delete(childFrame, HTMLReflowMetricsProperty());
+    props->Delete(childFrame, HTMLReflowOutputProperty());
     childFrame = childFrame->GetNextSibling();
   }
 }
@@ -196,9 +196,9 @@ nsMathMLContainerFrame::GetPreferredStretchSize(DrawTarget*          aDrawTarget
   }
   else if (aOptions & STRETCH_CONSIDER_EMBELLISHMENTS) {
     // compute our up-to-date size using Place()
-    ReflowOutput metrics(GetWritingMode()); // ???
-    Place(aDrawTarget, false, metrics);
-    aPreferredStretchSize = metrics.mBoundingMetrics;
+    ReflowOutput reflowOutput(GetWritingMode());
+    Place(aDrawTarget, false, reflowOutput);
+    aPreferredStretchSize = reflowOutput.mBoundingMetrics;
   }
   else {
     // compute a size that includes embellishments iff the container stretches
@@ -1170,7 +1170,7 @@ class nsMathMLContainerFrame::RowChildFrameIterator {
 public:
   explicit RowChildFrameIterator(nsMathMLContainerFrame* aParentFrame) :
     mParentFrame(aParentFrame),
-    mSize(aParentFrame->GetWritingMode()), // ???
+    mReflowOutput(aParentFrame->GetWritingMode()),
     mX(0),
     mCarrySpace(0),
     mFromFrameType(eMathMLFrameType_UNKNOWN),
@@ -1191,7 +1191,7 @@ public:
   RowChildFrameIterator& operator++()
   {
     // add child size + italic correction
-    mX += mSize.mBoundingMetrics.width + mItalicCorrection;
+    mX += mReflowOutput.mBoundingMetrics.width + mItalicCorrection;
 
     if (!mRTL) {
       mChildFrame = mChildFrame->GetNextSibling();
@@ -1217,17 +1217,17 @@ public:
 
   nsIFrame* Frame() const { return mChildFrame; }
   nscoord X() const { return mX; }
-  const ReflowOutput& ReflowMetrics() const { return mSize; }
-  nscoord Ascent() const { return mSize.BlockStartAscent(); }
-  nscoord Descent() const { return mSize.Height() - mSize.BlockStartAscent(); }
+  const ReflowOutput& GetReflowOutput() const { return mReflowOutput; }
+  nscoord Ascent() const { return mReflowOutput.BlockStartAscent(); }
+  nscoord Descent() const { return mReflowOutput.Height() - mReflowOutput.BlockStartAscent(); }
   const nsBoundingMetrics& BoundingMetrics() const {
-    return mSize.mBoundingMetrics;
+    return mReflowOutput.mBoundingMetrics;
   }
 
 private:
   const nsMathMLContainerFrame* mParentFrame;
   nsIFrame* mChildFrame;
-  ReflowOutput mSize;
+  ReflowOutput mReflowOutput;
   nscoord mX;
 
   nscoord mItalicCorrection;
@@ -1239,10 +1239,10 @@ private:
 
   void InitMetricsForChild()
   {
-    GetReflowAndBoundingMetricsFor(mChildFrame, mSize, mSize.mBoundingMetrics,
+    GetReflowAndBoundingMetricsFor(mChildFrame, mReflowOutput, mReflowOutput.mBoundingMetrics,
                                    &mChildFrameType);
     nscoord leftCorrection, rightCorrection;
-    GetItalicCorrection(mSize.mBoundingMetrics,
+    GetItalicCorrection(mReflowOutput.mBoundingMetrics,
                         leftCorrection, rightCorrection);
     if (!mChildFrame->GetPrevSibling() &&
         mParentFrame->GetContent()->IsMathMLElement(nsGkAtoms::msqrt_)) {
@@ -1313,7 +1313,7 @@ nsMathMLContainerFrame::PositionRowChildFrames(nscoord aOffsetX,
   while (child.Frame()) {
     nscoord dx = aOffsetX + child.X();
     nscoord dy = aBaseline - child.Ascent();
-    FinishReflowChild(child.Frame(), PresContext(), child.ReflowMetrics(),
+    FinishReflowChild(child.Frame(), PresContext(), child.GetReflowOutput(),
                       nullptr, dx, dy, 0);
     ++child;
   }

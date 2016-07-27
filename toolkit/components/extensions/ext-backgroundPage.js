@@ -110,6 +110,11 @@ BackgroundPage.prototype = {
   }),
 
   shutdown() {
+    if (this.extension.addonData.instanceID) {
+      AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
+                  .then(addon => addon.setDebugGlobal(null));
+    }
+
     // Navigate away from the background page to invalidate any
     // setTimeouts or other callbacks.
     if (this.webNav) {
@@ -120,11 +125,6 @@ BackgroundPage.prototype = {
     this.windowlessBrowser.loadURI("about:blank", 0, null, null, null);
     this.windowlessBrowser.close();
     this.windowlessBrowser = null;
-
-    if (this.extension.addonData.instanceID) {
-      AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
-                  .then(addon => addon.setDebugGlobal(null));
-    }
   },
 };
 

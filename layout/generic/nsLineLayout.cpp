@@ -924,10 +924,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // going to end up moving it when we do the block-direction alignment.
 
   // Adjust spacemanager coordinate system for the frame.
-  ReflowOutput metrics(lineWM);
+  ReflowOutput reflowOutput(lineWM);
 #ifdef DEBUG
-  metrics.ISize(lineWM) = nscoord(0xdeadbeef);
-  metrics.BSize(lineWM) = nscoord(0xdeadbeef);
+  reflowOutput.ISize(lineWM) = nscoord(0xdeadbeef);
+  reflowOutput.BSize(lineWM) = nscoord(0xdeadbeef);
 #endif
   nscoord tI = pfd->mBounds.LineLeft(lineWM, ContainerSize());
   nscoord tB = pfd->mBounds.BStart(lineWM);
@@ -940,12 +940,12 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                                  &savedOptionalBreakPriority);
 
   if (!isText) {
-    aFrame->Reflow(mPresContext, metrics, *reflowInputHolder, aReflowStatus);
+    aFrame->Reflow(mPresContext, reflowOutput, *reflowInputHolder, aReflowStatus);
   } else {
     static_cast<nsTextFrame*>(aFrame)->
       ReflowText(*this, availableSpaceOnLine,
                  psd->mReflowInput->mRenderingContext->GetDrawTarget(),
-                 metrics, aReflowStatus);
+                 reflowOutput, aReflowStatus);
   }
 
   pfd->mJustificationInfo = mJustificationInfo;
@@ -1020,31 +1020,31 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   mFloatManager->Translate(-tI, -tB);
 
-  NS_ASSERTION(metrics.ISize(lineWM) >= 0, "bad inline size");
-  NS_ASSERTION(metrics.BSize(lineWM) >= 0,"bad block size");
-  if (metrics.ISize(lineWM) < 0) {
-    metrics.ISize(lineWM) = 0;
+  NS_ASSERTION(reflowOutput.ISize(lineWM) >= 0, "bad inline size");
+  NS_ASSERTION(reflowOutput.BSize(lineWM) >= 0,"bad block size");
+  if (reflowOutput.ISize(lineWM) < 0) {
+    reflowOutput.ISize(lineWM) = 0;
   }
-  if (metrics.BSize(lineWM) < 0) {
-    metrics.BSize(lineWM) = 0;
+  if (reflowOutput.BSize(lineWM) < 0) {
+    reflowOutput.BSize(lineWM) = 0;
   }
 
 #ifdef DEBUG
   // Note: break-before means ignore the reflow metrics since the
   // frame will be reflowed another time.
   if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
-    if ((CRAZY_SIZE(metrics.ISize(lineWM)) ||
-         CRAZY_SIZE(metrics.BSize(lineWM))) &&
+    if ((CRAZY_SIZE(reflowOutput.ISize(lineWM)) ||
+         CRAZY_SIZE(reflowOutput.BSize(lineWM))) &&
         !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
       printf("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(" metrics=%d,%d!\n", metrics.Width(), metrics.Height());
+      printf(" metrics=%d,%d!\n", reflowOutput.Width(), reflowOutput.Height());
     }
-    if ((metrics.Width() == nscoord(0xdeadbeef)) ||
-        (metrics.Height() == nscoord(0xdeadbeef))) {
+    if ((reflowOutput.Width() == nscoord(0xdeadbeef)) ||
+        (reflowOutput.Height() == nscoord(0xdeadbeef))) {
       printf("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(" didn't set w/h %d,%d!\n", metrics.Width(), metrics.Height());
+      printf(" didn't set w/h %d,%d!\n", reflowOutput.Width(), reflowOutput.Height());
     }
   }
 #endif
@@ -1054,10 +1054,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // descendants' bounds. Nor does it include the outline area; it's
   // just the union of the bounds of any absolute children. That is
   // added in later by nsLineLayout::ReflowInlineFrames.
-  pfd->mOverflowAreas = metrics.mOverflowAreas;
+  pfd->mOverflowAreas = reflowOutput.mOverflowAreas;
 
-  pfd->mBounds.ISize(lineWM) = metrics.ISize(lineWM);
-  pfd->mBounds.BSize(lineWM) = metrics.BSize(lineWM);
+  pfd->mBounds.ISize(lineWM) = reflowOutput.ISize(lineWM);
+  pfd->mBounds.BSize(lineWM) = reflowOutput.BSize(lineWM);
 
   // Size the frame, but |RelativePositionFrames| will size the view.
   aFrame->SetRect(lineWM, pfd->mBounds, ContainerSizeForSpan(psd));
@@ -1068,7 +1068,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                     nsDidReflowStatus::FINISHED);
 
   if (aMetrics) {
-    *aMetrics = metrics;
+    *aMetrics = reflowOutput;
   }
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
@@ -1104,7 +1104,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                  "How'd we get a floated inline frame? "
                  "The frame ctor should've dealt with this.");
     if (CanPlaceFrame(pfd, notSafeToBreak, continuingTextRun,
-                      savedOptionalBreakFrame != nullptr, metrics,
+                      savedOptionalBreakFrame != nullptr, reflowOutput,
                       aReflowStatus, &optionalBreakAfterFits)) {
       if (!isEmpty) {
         psd->mHasNonemptyContent = true;
@@ -1122,7 +1122,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // Place the frame, updating aBounds with the final size and
       // location.  Then apply the bottom+right margins (as
       // appropriate) to the frame.
-      PlaceFrame(pfd, metrics);
+      PlaceFrame(pfd, reflowOutput);
       PerSpanData* span = pfd->mSpan;
       if (span) {
         // The frame we just finished reflowing is an inline

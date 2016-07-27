@@ -300,7 +300,7 @@ protected:
   // Record metrics of a child frame for recovery through the following method
   static void
   SaveReflowAndBoundingMetricsFor(nsIFrame*                  aFrame,
-                                  const ReflowOutput& aReflowMetrics,
+                                  const ReflowOutput& aReflowOutput,
                                   const nsBoundingMetrics&   aBoundingMetrics);
 
   // helper method to facilitate getting the reflow and bounding metrics of a
@@ -312,7 +312,7 @@ protected:
   // during Reflow/Stretch() and GetPrefISize().
   static void
   GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
-                                 ReflowOutput& aReflowMetrics,
+                                 ReflowOutput& aReflowOutput,
                                  nsBoundingMetrics&   aBoundingMetrics,
                                  eMathMLFrameType*    aMathMLFrameType = nullptr);
 

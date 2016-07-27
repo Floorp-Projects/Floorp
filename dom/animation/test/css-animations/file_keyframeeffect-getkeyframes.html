@@ -171,16 +171,12 @@ const kTimingFunctionValues = [
   "ease-in",
   "ease-out",
   "ease-in-out",
-  "step-start",
   "steps(1, start)",
   "steps(2, start)",
-  "step-end",
   "steps(1)",
-  "steps(1, end)",
   "steps(2)",
-  "steps(2, end)",
   "cubic-bezier(0, 0, 1, 1)",
-  "cubic-bezier(0, 0.25, 0.75, 1)",
+  "cubic-bezier(0, 0.25, 0.75, 1)"
 ];
 
 test(function(t) {
@@ -256,7 +252,7 @@ test(function(t) {
                 "value of 'easing' on ComputedKeyframe #0");
   assert_equals(frames[1].easing, "ease-in-out",
                 "value of 'easing' on ComputedKeyframe #1");
-  assert_equals(frames[2].easing, "step-end",
+  assert_equals(frames[2].easing, "steps(1)",
                 "value of 'easing' on ComputedKeyframe #2");
 }, 'KeyframeEffectReadOnly.getKeyframes() returns frames with expected easing'
    + ' values, when the easing is specified on each keyframe');
@@ -270,9 +266,9 @@ test(function(t) {
   assert_equals(frames.length, 3, "number of frames");
   assert_equals(frames[0].easing, "linear",
                 "value of 'easing' on ComputedKeyframe #0");
-  assert_equals(frames[1].easing, "step-start",
+  assert_equals(frames[1].easing, "steps(1, start)",
                 "value of 'easing' on ComputedKeyframe #1");
-  assert_equals(frames[2].easing, "step-start",
+  assert_equals(frames[2].easing, "steps(1, start)",
                 "value of 'easing' on ComputedKeyframe #2");
 }, 'KeyframeEffectReadOnly.getKeyframes() returns frames with expected easing'
    + ' values, when the easing is specified on some keyframes');
@@ -428,7 +424,7 @@ test(function(t) {
   var expected = [
     { offset: 0, computedOffset: 0, easing: "linear",
       color: "rgb(0, 0, 0)", marginTop: "8px" },
-    { offset: 0.25, computedOffset: 0.25, easing: "step-end",
+    { offset: 0.25, computedOffset: 0.25, easing: "steps(1)",
       color: "rgb(0, 0, 255)" },
     { offset: 0.75, computedOffset: 0.75, easing: "ease-in",
       marginTop: "12px" },
@@ -474,7 +470,7 @@ test(function(t) {
   assert_equals(frames.length, 3, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "step-end",
+    { offset: 0, computedOffset: 0, easing: "steps(1)",
       color: "rgb(0, 0, 0)", fontSize: "16px" },
     { offset: 0, computedOffset: 0, easing: "linear",
       marginTop: "8px", paddingLeft: "2px" },
@@ -496,16 +492,12 @@ test(function(t) {
   div.style.animation = 'anim-no-merge-equiv-easing 100s';
   var frames = getKeyframes(div);
 
-  assert_equals(frames.length, 5, "number of frames");
+  assert_equals(frames.length, 3, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "steps(1, end)",
-      marginTop: "0px" },
-    { offset: 0, computedOffset: 0, easing: "step-end",
-      marginRight: "0px" },
     { offset: 0, computedOffset: 0, easing: "steps(1)",
-      marginBottom: "0px" },
-    { offset: 0.5, computedOffset: 0.5, easing: "step-end",
+      marginTop: "0px", marginRight: "0px", marginBottom: "0px" },
+    { offset: 0.5, computedOffset: 0.5, easing: "steps(1)",
       marginTop: "10px", marginRight: "10px", marginBottom: "10px" },
     { offset: 1, computedOffset: 1, easing: "ease",
       marginTop: "20px", marginRight: "20px", marginBottom: "20px" },
@@ -675,7 +667,6 @@ test(function(t) {
   }
 }, 'KeyframeEffectReadOnly.getKeyframes() returns expected values for ' +
    'animations with CSS variables as keyframe values in a shorthand property');
-
 done();
 </script>
 </body>

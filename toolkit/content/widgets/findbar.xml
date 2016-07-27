@@ -762,6 +762,9 @@
             this.setAttribute("noanim", true);
           this.hidden = true;
 
+          // 'focusContent()' iterates over all listeners in the chrome
+          // process, so we need to call it from here.
+          this.browser.finder.focusContent();
           this.browser.finder.onFindbarClose();
 
           this._cancelTimers();

@@ -297,7 +297,6 @@ Finder.prototype = {
   },
 
   onFindbarClose: function() {
-    this.focusContent();
     this.enableSelection();
     this.highlighter.highlight(false);
   },
