@@ -13,24 +13,26 @@ const Telemetry = require("devtools/client/shared/telemetry");
 
 exports.items = [{
   item: "command",
-  runAt: "server",
+  runAt: "client",
   name: "inspect",
   description: l10n.lookup("inspectDesc"),
   manual: l10n.lookup("inspectManual"),
   params: [
     {
       name: "selector",
-      type: "node",
+      type: "string",
       description: l10n.lookup("inspectNodeDesc"),
       manual: l10n.lookup("inspectNodeManual")
     }
   ],
-  exec: function (args, context) {
+  exec: function* (args, context) {
     let target = context.environment.target;
-    return gDevTools.showToolbox(target, "inspector").then(toolbox => {
-      toolbox.getCurrentPanel().selection.setNode(args.selector, "gcli");
-    });
-  }
+    let toolbox = yield gDevTools.showToolbox(target, "inspector");
+    let walker = toolbox.getCurrentPanel().walker;
+    let rootNode = yield walker.getRootNode();
+    let nodeFront = yield walker.querySelector(rootNode, args.selector);
+    toolbox.getCurrentPanel().selection.setNodeFront(nodeFront, "gcli");
+  },
 }, {
   item: "command",
   runAt: "client",
