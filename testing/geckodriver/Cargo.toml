@@ -7,7 +7,6 @@ repository = "https://github.com/jgraham/wires"
 license = "MPL-2.0"
 
 [dependencies]
-argparse = "0.2.1"
 env_logger = "0.3.2"
 hyper = {version = "0.9", default-features = false}
 lazy_static = "0.1"
@@ -19,3 +18,8 @@ rustc-serialize = "0.3.16"
 uuid = "0.1.18"
 webdriver = "0.12"
 zip = "0.1.16"
+
+[dependencies.clap]
+version = "2.9"
+default-features = false
+features = ["suggestions", "wrap_help"]
