@@ -149,7 +149,8 @@ protected:
     // enum used in a few places to specify how .ref attribute should be handled
     enum RefHandlingEnum {
         eIgnoreRef,
-        eHonorRef
+        eHonorRef,
+        eReplaceRef
     };
 
     // Helper to share code between Equals and EqualsExceptRef
@@ -162,10 +163,12 @@ protected:
 
     // Helper to share code between Clone methods.
     nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
+                           const nsACString& newRef,
                            nsIURI** aClone);
     // Helper method that copies member variables from the source StandardURL
     // if copyCached = true, it will also copy mFile and mHostA
     nsresult CopyMembers(nsStandardURL * source, RefHandlingEnum mode,
+                         const nsACString& newRef,
                          bool copyCached = false);
 
     // Helper for subclass implementation of GetFile().  Subclasses that map

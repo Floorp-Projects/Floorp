@@ -1,0 +1,63 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Check for headers defining standard int types.
+check_header('stdint.h')
+have_inttypes = check_header('inttypes.h')
+
+set_config('HAVE_INTTYPES_H', have_inttypes)
+
+# Checks for headers relevant to non-windows systems.
+non_msvc_compiler = depends(c_compiler)(lambda info: info.type != 'msvc')
+
+building_linux = depends(target)(lambda target: target.kernel == 'Linux')
+
+have_malloc = check_header('malloc.h')
+
+add_old_configure_assignment('HAVE_MALLOC_H', have_malloc)
+
+check_headers(
+    'sys/byteorder.h',
+    'getopt.h',
+    'unistd.h',
+    'nl_types.h',
+    'cpuid.h',
+    when=non_msvc_compiler,
+)
+
+# These are all the places some variant of statfs can be hiding.
+check_headers(
+    'sys/statvfs.h',
+    'sys/statfs.h',
+    'sys/vfs.h',
+    'sys/mount.h',
+    when=non_msvc_compiler,
+)
+
+# Quota support
+check_header('sys/quota.h',
+             when=non_msvc_compiler)
+check_header('linux/quota.h',
+             includes=['sys/socket.h'],
+             when=building_linux)
+
+# SCTP support - needs various network include headers
+check_headers(
+    'linux/if_addr.h',
+    'linux/rtnetlink.h',
+    includes=['sys/socket.h'],
+    when=building_linux,
+)
+
+check_header('sys/queue.h',
+             when=non_msvc_compiler)
+
+check_headers(
+    'sys/types.h',
+    'netinet/in.h',
+    'byteswap.h',
+    when=non_msvc_compiler,
+)

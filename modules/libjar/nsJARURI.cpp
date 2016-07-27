@@ -528,6 +528,20 @@ nsJARURI::CloneIgnoringRef(nsIURI **result)
 }
 
 NS_IMETHODIMP
+nsJARURI::CloneWithNewRef(const nsACString& newRef, nsIURI **result)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIJARURI> uri;
+    rv = CloneWithJARFileInternal(mJARFile, eReplaceRef, newRef,
+                                  getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    uri.forget(result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
 {
     nsresult rv;
@@ -784,6 +798,15 @@ nsJARURI::CloneWithJARFileInternal(nsIURI *jarFile,
                                    nsJARURI::RefHandlingEnum refHandlingMode,
                                    nsIJARURI **result)
 {
+  return CloneWithJARFileInternal(jarFile, refHandlingMode, EmptyCString(), result);
+}
+
+nsresult
+nsJARURI::CloneWithJARFileInternal(nsIURI *jarFile,
+                                   nsJARURI::RefHandlingEnum refHandlingMode,
+                                   const nsACString& newRef,
+                                   nsIJARURI **result)
+{
     if (!jarFile) {
         return NS_ERROR_INVALID_ARG;
     }
@@ -797,10 +820,13 @@ nsJARURI::CloneWithJARFileInternal(nsIURI *jarFile,
     NS_TryToSetImmutable(newJARFile);
 
     nsCOMPtr<nsIURI> newJAREntryURI;
-    rv = refHandlingMode == eHonorRef ?
-        mJAREntry->Clone(getter_AddRefs(newJAREntryURI)) :
-        mJAREntry->CloneIgnoringRef(getter_AddRefs(newJAREntryURI));
-
+    if (refHandlingMode == eHonorRef) {
+      rv = mJAREntry->Clone(getter_AddRefs(newJAREntryURI));
+    } else if (refHandlingMode == eReplaceRef) {
+      rv = mJAREntry->CloneWithNewRef(newRef, getter_AddRefs(newJAREntryURI));
+    } else {
+      rv = mJAREntry->CloneIgnoringRef(getter_AddRefs(newJAREntryURI));
+    }
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURL> newJAREntry(do_QueryInterface(newJAREntryURI));

@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(42a1e1dc-58cf-419d-bff0-ed3314c70016)]
+[scriptable, builtinclass, uuid(42a1e1dc-58cf-419d-bff0-ed3314c70016)]
 interface nsIAccessibleValue : nsISupports
 {
   readonly attribute double maximumValue;

@@ -47,8 +47,8 @@ def generate(output, idlFilename, preprocessorHeader):
         # to have properties for:
         #
         # 1) Each supported CSS property name, camelCased.
-        # 2) Each supported name that contains dashes but doesn't start with a
-        #    dash, without any changes to the name.
+        # 2) Each supported name that contains or starts with dashes,
+        #    without any changes to the name.
         # 3) cssFloat
         #
         # Note that "float" will cause a property called "float" to exist due to (1)
@@ -57,9 +57,9 @@ def generate(output, idlFilename, preprocessorHeader):
         # In practice, cssFloat is the only case in which "name" doesn't contain
         # "-" but also doesn't match "prop".  So the above generatePropLine() call
         # covered (3) and all of (1) except "float".  If we now output attributes
-        # for all the cases where "name" doesn't match "prop" and "name" doesn't
-        # start with "-", that will cover "float" and (2).
-        if prop != name and name[0] != "-":
+        # for all the cases where "name" doesn't match "prop", that will cover
+        # "float" and (2).
+        if prop != name:
             extendedAttrs.append('BinaryName="%s"' % prop)
             # Throw in a '_' before the attribute name, because some of these
             # property names collide with IDL reserved words.

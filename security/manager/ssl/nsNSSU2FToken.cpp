@@ -603,13 +603,8 @@ nsNSSU2FToken::Register(uint8_t* aApplication,
   signedDataBuf.AppendSECItem(keyHandleItem.get());
   signedDataBuf.AppendSECItem(pubKey->u.ec.publicValue);
 
-  UniqueSECItem signatureItem(::SECITEM_AllocItem(/* default arena */ nullptr,
-                                                  /* no buffer */ nullptr, 0));
-  if (!signatureItem) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SECStatus srv = SEC_SignData(signatureItem.get(), signedDataBuf.Elements(),
+  ScopedAutoSECItem signatureItem;
+  SECStatus srv = SEC_SignData(&signatureItem, signedDataBuf.Elements(),
                                signedDataBuf.Length(), attestPrivKey.get(),
                                SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE);
   if (srv != SECSuccess) {
@@ -622,7 +617,7 @@ nsNSSU2FToken::Register(uint8_t* aApplication,
   mozilla::dom::CryptoBuffer registrationBuf;
   if (!registrationBuf.SetCapacity(1 + kPublicKeyLen + 1 + keyHandleItem->len +
                                    attestCert.get()->derCert.len +
-                                   signatureItem->len, mozilla::fallible)) {
+                                   signatureItem.len, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   registrationBuf.AppendElement(0x05, mozilla::fallible);
@@ -630,7 +625,7 @@ nsNSSU2FToken::Register(uint8_t* aApplication,
   registrationBuf.AppendElement(keyHandleItem->len, mozilla::fallible);
   registrationBuf.AppendSECItem(keyHandleItem.get());
   registrationBuf.AppendSECItem(attestCert.get()->derCert);
-  registrationBuf.AppendSECItem(signatureItem.get());
+  registrationBuf.AppendSECItem(signatureItem);
   if (!registrationBuf.ToNewUnsignedBuffer(aRegistration, aRegistrationLen)) {
     return NS_ERROR_FAILURE;
   }
@@ -727,13 +722,8 @@ nsNSSU2FToken::Sign(uint8_t* aApplication, uint32_t aApplicationLen,
   signedDataBuf.AppendSECItem(counterItem);
   signedDataBuf.AppendElements(aChallenge, aChallengeLen, mozilla::fallible);
 
-  UniqueSECItem signatureItem(::SECITEM_AllocItem(/* default arena */ nullptr,
-                                                  /* no buffer */ nullptr, 0));
-  if (!signatureItem) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SECStatus srv = SEC_SignData(signatureItem.get(), signedDataBuf.Elements(),
+  ScopedAutoSECItem signatureItem;
+  SECStatus srv = SEC_SignData(&signatureItem, signedDataBuf.Elements(),
                                signedDataBuf.Length(), privKey.get(),
                                SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE);
   if (srv != SECSuccess) {
@@ -744,7 +734,7 @@ nsNSSU2FToken::Sign(uint8_t* aApplication, uint32_t aApplicationLen,
 
   // Assemble the signature data into a buffer for return
   mozilla::dom::CryptoBuffer signatureBuf;
-  if (!signatureBuf.SetCapacity(1 + counterItem.len + signatureItem->len,
+  if (!signatureBuf.SetCapacity(1 + counterItem.len + signatureItem.len,
                                 mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -753,7 +743,7 @@ nsNSSU2FToken::Sign(uint8_t* aApplication, uint32_t aApplicationLen,
   // pre-allocated space
   signatureBuf.AppendElement(0x01, mozilla::fallible);
   signatureBuf.AppendSECItem(counterItem);
-  signatureBuf.AppendSECItem(signatureItem.get());
+  signatureBuf.AppendSECItem(signatureItem);
 
   if (!signatureBuf.ToNewUnsignedBuffer(aSignature, aSignatureLen)) {
     return NS_ERROR_FAILURE;

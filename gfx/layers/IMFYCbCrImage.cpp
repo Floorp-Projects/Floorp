@@ -7,6 +7,7 @@
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/TextureClient.h"
 #include "d3d9.h"
@@ -224,8 +225,8 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
     return mTextureClient;
   }
 
-  RefPtr<ID3D11Device> device;
-  gfxWindowsPlatform::GetPlatform()->GetD3D11ImageBridgeDevice(&device);
+  RefPtr<ID3D11Device> device =
+    gfx::DeviceManagerD3D11::Get()->GetImageBridgeDevice();
 
   LayersBackend backend = aClient->GetForwarder()->GetCompositorBackendType();
   if (!device || backend != LayersBackend::LAYERS_D3D11) {

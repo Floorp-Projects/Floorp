@@ -93,20 +93,12 @@ js_option('--enable-debug',
 add_old_configure_assignment('MOZ_DEBUG',
                              depends('--enable-debug')(lambda v: bool(v)))
 
-@depends('--disable-compile-environment', '--help')
-def toolchain_include(compile_env, help):
-    if compile_env:
-        return 'build/moz.configure/toolchain.configure'
-
-include(toolchain_include)
-
-@depends('--disable-compile-environment', '--help')
-def memory_include(compile_env, help):
-    if compile_env:
-        return 'build/moz.configure/memory.configure'
-
-include(memory_include)
-
+include_when('build/moz.configure/toolchain.configure',
+             when='--enable-compile-environment')
+include_when('build/moz.configure/memory.configure',
+             when='--enable-compile-environment')
+include_when('build/moz.configure/headers.configure',
+             when='--enable-compile-environment')
 
 @depends('--help')
 @imports(_from='mozbuild.backend', _import='backends')
