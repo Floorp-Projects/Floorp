@@ -390,7 +390,7 @@ def DOMClass(descriptor):
           { ${protoChain} },
           IsBaseOf<nsISupports, ${nativeType} >::value,
           ${hooks},
-          GetParentObject<${nativeType}>::Get,
+          FindAssociatedGlobalForNative<${nativeType}>::Get,
           GetProtoObjectHandle,
           GetCCParticipant<${nativeType}>::Get()
         """,
