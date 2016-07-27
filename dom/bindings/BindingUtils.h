@@ -1653,8 +1653,9 @@ WrapNativeParent(JSContext* cx, nsIGlobalObject* const& p)
   return p ? p->GetGlobalJSObject() : JS::CurrentGlobalOrNull(cx);
 }
 
-template<typename T, bool WrapperCached=NativeHasMember<T>::GetParentObject>
-struct GetParentObject
+template<typename T,
+         bool hasAssociatedGlobal=NativeHasMember<T>::GetParentObject>
+struct FindAssociatedGlobalForNative
 {
   static JSObject* Get(JSContext* cx, JS::Handle<JSObject*> obj)
   {
@@ -1666,7 +1667,7 @@ struct GetParentObject
 };
 
 template<typename T>
-struct GetParentObject<T, false>
+struct FindAssociatedGlobalForNative<T, false>
 {
   static JSObject* Get(JSContext* cx, JS::Handle<JSObject*> obj)
   {

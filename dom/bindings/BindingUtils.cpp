@@ -2025,8 +2025,9 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
                                   js::GetGlobalForObjectCrossCompartment(aObj));
   MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(oldParent) == oldParent);
 
-  JS::Rooted<JSObject*> newParent(aCx, domClass->mGetParent(aCx, aObj));
-  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(newParent) == newParent);
+  JS::Rooted<JSObject*> newParent(aCx,
+                                  domClass->mGetAssociatedGlobal(aCx, aObj));
+  MOZ_ASSERT(JS_IsGlobalObject(newParent));
 
   JSAutoCompartment oldAc(aCx, oldParent);
 
