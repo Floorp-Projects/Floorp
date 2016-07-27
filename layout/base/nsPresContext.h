@@ -160,10 +160,11 @@ public:
   nsresult Init(nsDeviceContext* aDeviceContext);
 
   /**
-   * Set the presentation shell that this context is bound to.
+   * Set and detach presentation shell that this context is bound to.
    * A presentation context may only be bound to a single shell.
    */
-  void SetShell(nsIPresShell* aShell);
+  void AttachShell(nsIPresShell* aShell);
+  void DetachShell();
 
 
   nsPresContextType Type() const { return mType; }
