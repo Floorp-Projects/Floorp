@@ -67,7 +67,7 @@ ClearKeySession::Init(uint32_t aCreateSessionToken,
     ClearKeyUtils::ParseKeyIdsInitData(aInitData, aInitDataSize, mKeyIds, sessionType);
     if (sessionType != ClearKeyUtils::SessionTypeToString(mSessionType)) {
       const char message[] = "Session type specified in keyids init data doesn't match session type.";
-      mCallback->RejectPromise(aPromiseId, kGMPAbortError, message, strlen(message));
+      mCallback->RejectPromise(aPromiseId, kGMPInvalidAccessError, message, strlen(message));
       return;
     }
   } else if (aInitDataType == "webm" && aInitDataSize == 16) {
@@ -79,7 +79,7 @@ ClearKeySession::Init(uint32_t aCreateSessionToken,
 
   if (!mKeyIds.size()) {
     const char message[] = "Couldn't parse init data";
-    mCallback->RejectPromise(aPromiseId, kGMPAbortError, message, strlen(message));
+    mCallback->RejectPromise(aPromiseId, kGMPInvalidAccessError, message, strlen(message));
     return;
   }
 
