@@ -20,7 +20,6 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS += [
     'nsContentSecurityManager.h',
-    'nsMixedContentBlocker.h',
 ]
 
 UNIFIED_SOURCES += [
