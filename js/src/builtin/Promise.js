@@ -842,9 +842,21 @@ function UnwrappedPerformPromiseThen(fulfilledHandler, rejectedHandler, promise,
         __proto__: PromiseCapabilityRecordProto,
         promise,
         resolve(resolution) {
+            // Under some circumstances, we have an unwrapped `resolve`
+            // function here. One way this happens is if the constructor
+            // passed to `NewPromiseCapability` is from the same global as the
+            // Promise object on which `Promise_then` was called, but where
+            // `Promise_then` is from a different global, so we end up here.
+            // In that case, the `resolve` and `reject` functions aren't
+            // wrappers in the current global.
+            if (IsFunctionObject(resolve))
+                return resolve(resolution);
             return UnsafeCallWrappedFunction(resolve, undefined, resolution);
         },
         reject(reason) {
+            // See comment inside `resolve` above.
+            if (IsFunctionObject(reject))
+                return reject(reason);
             return UnsafeCallWrappedFunction(reject, undefined, reason);
         }
     };
