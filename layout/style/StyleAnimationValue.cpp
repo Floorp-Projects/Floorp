@@ -3499,7 +3499,7 @@ StyleClipBasicShapeToCSSArray(const nsStyleClipPath& aClipPath,
   MOZ_ASSERT(aResult->Count() == 2,
              "Expected array to be presized for a function and the sizing-box");
 
-  const nsStyleBasicShape* shape = aClipPath.GetBasicShape();
+  const StyleBasicShape* shape = aClipPath.GetBasicShape();
   nsCSSKeyword functionName = shape->GetShapeTypeName();
   RefPtr<nsCSSValue::Array> functionArray;
   switch (shape->GetShapeType()) {
