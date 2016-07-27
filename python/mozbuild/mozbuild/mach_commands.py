@@ -672,12 +672,12 @@ class Logs(MachCommandBase):
             path = self._get_state_filename('last_log.json')
             log_file = open(path, 'rb')
 
-        if self.log_manager.terminal:
+        if os.isatty(sys.stdout.fileno()):
             env = dict(os.environ)
             if 'LESS' not in env:
                 # Sensible default flags if none have been set in the user
                 # environment.
-                env['LESS'] = 'FRX'
+                env[b'LESS'] = b'FRX'
             less = subprocess.Popen(['less'], stdin=subprocess.PIPE, env=env)
             # Various objects already have a reference to sys.stdout, so we
             # can't just change it, we need to change the file descriptor under
