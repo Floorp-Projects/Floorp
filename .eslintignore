@@ -74,9 +74,6 @@ browser/extensions/pdfjs/**
 browser/extensions/pocket/content/panels/js/vendor/**
 browser/locales/**
 
-# Ignore all of loop since it is imported from github and checked at source.
-browser/extensions/loop/**
-
 # devtools/ exclusions
 devtools/client/canvasdebugger/**
 devtools/client/commandline/**
