@@ -248,6 +248,15 @@ add_task(function* testTabSwitchContext() {
           });
         },
         expect => {
+          browser.test.log("Change the hash. Expect same properties.");
+
+          promiseTabLoad({id: tabs[1], url: "about:blank?0#ref"}).then(() => {
+            expect(details[2]);
+          });
+
+          browser.tabs.update(tabs[1], {url: "about:blank?0#ref"});
+        },
+        expect => {
           browser.test.log("Clear the title. Expect default title.");
           browser.pageAction.setTitle({tabId: tabs[1], title: ""});
 
