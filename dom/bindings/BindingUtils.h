@@ -1603,52 +1603,54 @@ struct WrapNativeParentHelper<T, false>
   }
 };
 
-// Wrapping of our native parent.
+// Finding the associated global for an object.
 template<typename T>
 static inline JSObject*
-WrapNativeParent(JSContext* cx, T* p, nsWrapperCache* cache,
-                 bool useXBLScope = false)
+FindAssociatedGlobal(JSContext* cx, T* p, nsWrapperCache* cache,
+                     bool useXBLScope = false)
 {
   if (!p) {
     return JS::CurrentGlobalOrNull(cx);
   }
 
-  JSObject* parent = WrapNativeParentHelper<T>::Wrap(cx, p, cache);
-  if (!parent || !useXBLScope) {
-    return parent;
+  JSObject* obj = WrapNativeParentHelper<T>::Wrap(cx, p, cache);
+  if (!obj) {
+    return nullptr;
+  }
+
+  obj = js::GetGlobalForObjectCrossCompartment(obj);
+
+  if (!useXBLScope) {
+    return obj;
   }
 
   // If useXBLScope is true, it means that the canonical reflector for this
   // native object should live in the content XBL scope. Note that we never put
   // anonymous content inside an add-on scope.
-  if (xpc::IsInContentXBLScope(parent)) {
-    return parent;
+  if (xpc::IsInContentXBLScope(obj)) {
+    return obj;
   }
-  JS::Rooted<JSObject*> rootedParent(cx, parent);
-  JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScope(cx, rootedParent));
-  NS_ENSURE_TRUE(xblScope, nullptr);
-  JSAutoCompartment ac(cx, xblScope);
-  if (NS_WARN_IF(!JS_WrapObject(cx, &rootedParent))) {
-    return nullptr;
-  }
-
-  return rootedParent;
+  JS::Rooted<JSObject*> rootedObj(cx, obj);
+  JSObject* xblScope = xpc::GetXBLScope(cx, rootedObj);
+  MOZ_ASSERT_IF(xblScope, JS_IsGlobalObject(xblScope));
+  MOZ_ASSERT_IF(xblScope, !JS::ObjectIsMarkedGray(xblScope));
+  return xblScope;
 }
 
-// Wrapping of our native parent, when we don't want to explicitly pass in
-// things like the nsWrapperCache for it.
+// Finding of the associated global for an object, when we don't want to
+// explicitly pass in things like the nsWrapperCache for it.
 template<typename T>
 static inline JSObject*
-WrapNativeParent(JSContext* cx, const T& p)
+FindAssociatedGlobal(JSContext* cx, const T& p)
 {
-  return WrapNativeParent(cx, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
+  return FindAssociatedGlobal(cx, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
 }
 
 // Specialization for the case of nsIGlobalObject, since in that case
 // we can just get the JSObject* directly.
 template<>
 inline JSObject*
-WrapNativeParent(JSContext* cx, nsIGlobalObject* const& p)
+FindAssociatedGlobal(JSContext* cx, nsIGlobalObject* const& p)
 {
   return p ? p->GetGlobalJSObject() : JS::CurrentGlobalOrNull(cx);
 }
@@ -1661,8 +1663,7 @@ struct FindAssociatedGlobalForNative
   {
     MOZ_ASSERT(js::IsObjectInContextCompartment(obj, cx));
     T* native = UnwrapDOMObject<T>(obj);
-    JSObject* wrappedParent = WrapNativeParent(cx, native->GetParentObject());
-    return wrappedParent ? js::GetGlobalForObjectCrossCompartment(wrappedParent) : nullptr;
+    return FindAssociatedGlobal(cx, native->GetParentObject());
   }
 };
 
