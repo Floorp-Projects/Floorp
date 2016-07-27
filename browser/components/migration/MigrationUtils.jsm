@@ -452,6 +452,36 @@ this.MigrationUtils = Object.freeze({
       aKey, aReplacements, aReplacements.length);
   },
 
+  _getLocalePropertyForBrowser(browserId) {
+    switch (browserId) {
+      case "edge":
+        return "sourceNameEdge";
+      case "ie":
+        return "sourceNameIE";
+      case "safari":
+        return "sourceNameSafari";
+      case "canary":
+        return "sourceNameCanary";
+      case "chrome":
+        return "sourceNameChrome";
+      case "chromium":
+        return "sourceNameChromium";
+      case "firefox":
+        return "sourceNameFirefox";
+      case "360se":
+        return "sourceName360se";
+    }
+    return null;
+  },
+
+  getBrowserName(browserId) {
+    let prop = this._getLocalePropertyForBrowser(browserId);
+    if (prop) {
+      return this.getLocalizedString(prop);
+    }
+    return null;
+  },
+
   /**
    * Helper for creating a folder for imported bookmarks from a particular
    * migration source.  The folder is created at the end of the given folder.
@@ -716,8 +746,7 @@ this.MigrationUtils = Object.freeze({
     let isRefresh = migrator && skipSourcePage &&
                     migratorKey == AppConstants.MOZ_APP_NAME;
 
-    if (!isRefresh &&
-        Services.prefs.getBoolPref("browser.migration.automigrate")) {
+    if (!isRefresh && AutoMigrate.enabled) {
       try {
         AutoMigrate.migrate(aProfileStartup, aMigratorKey, aProfileToMigrate);
         return;

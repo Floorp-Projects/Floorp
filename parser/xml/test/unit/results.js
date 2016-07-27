@@ -139,7 +139,7 @@ var vectors = [
   },
   {
     "data": "1<a href=#><line xmlns=urn:schemas-microsoft-com:vml style=behavior:url(#default#vml);position:absolute href=javascript:alert(1) strokecolor=white strokeweight=1000px from=0 to=1000 /></a>",
-    "sanitized": "<html><head></head><body>1<a></a></body></html>"
+    "sanitized": "<html><head></head><body>1<a href=\"#\"></a></body></html>"
   },
   {
     "data": "<a style=\"behavior:url(#default#AnchorClick);\" folder=\"javascript:alert(1)\">XXX</a>",
@@ -479,7 +479,7 @@ var vectors = [
   },
   {
     "data": "<script>\nfunction makePopups(){\n\tfor (i=1;i<6;i++) {\n\t\twindow.open('popup.html','spam'+i,'width=50,height=50');\n\t}\n}\n</script>\n\n<body>\n<a href=\"#\" onclick=\"makePopups()\">Spam</a>",
-    "sanitized": "<html><head>\n\n</head><body>\n<a>Spam</a></body></html>"
+    "sanitized": "<html><head>\n\n</head><body>\n<a href=\"#\">Spam</a></body></html>"
   },
   {
     "data": "<html xmlns=\"http://www.w3.org/1999/xhtml\"\nxmlns:svg=\"http://www.w3.org/2000/svg\">\n<body style=\"background:gray\">\n<iframe src=\"http://example.com/\" style=\"width:800px; height:350px; border:none; mask: url(#maskForClickjacking);\"/>\n<svg:svg>\n<svg:mask id=\"maskForClickjacking\" maskUnits=\"objectBoundingBox\" maskContentUnits=\"objectBoundingBox\">\n\t<svg:rect x=\"0.0\" y=\"0.0\" width=\"0.373\" height=\"0.3\" fill=\"white\"/>\n\t<svg:circle cx=\"0.45\" cy=\"0.7\" r=\"0.075\" fill=\"white\"/>\n</svg:mask>\n</svg:svg>\n</body>\n</html>",

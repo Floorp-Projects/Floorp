@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from ../performance-controller.js */
 /* import-globals-from ../performance-view.js */
+/* globals WaterfallView, JsCallTreeView, JsFlameGraphView, MemoryCallTreeView,
+           MemoryFlameGraphView, Iterator */
 "use strict";
 
 /**
@@ -58,8 +60,10 @@ var DetailsView = {
 
     yield this.setAvailableViews();
 
-    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStoppedOrSelected);
-    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
+    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE,
+                             this._onRecordingStoppedOrSelected);
+    PerformanceController.on(EVENTS.RECORDING_SELECTED,
+                             this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this.setAvailableViews);
   }),
 
@@ -71,19 +75,22 @@ var DetailsView = {
       button.removeEventListener("command", this._onViewToggle);
     }
 
-    for (let [_, component] of Iterator(this.components)) {
+    for (let [, component] of Iterator(this.components)) {
       component.initialized && (yield component.view.destroy());
     }
 
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStoppedOrSelected);
-    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
+    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
+                              this._onRecordingStoppedOrSelected);
+    PerformanceController.off(EVENTS.RECORDING_SELECTED,
+                              this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this.setAvailableViews);
   }),
 
   /**
    * Sets the possible views based off of recording features and server actor support
    * by hiding/showing the buttons that select them and going to default view
-   * if currently selected. Called when a preference changes in `devtools.performance.ui.`.
+   * if currently selected. Called when a preference changes in
+   * `devtools.performance.ui.`.
    */
   setAvailableViews: Task.async(function* () {
     let recording = PerformanceController.getCurrentRecording();
@@ -175,11 +182,10 @@ var DetailsView = {
     // occur temporarily via bug 1156499
     if (this._isViewSupported("waterfall")) {
       return this.selectView("waterfall");
-    } else {
-      // The JS CallTree should always be supported since the profiler
-      // actor is as old as the world.
-      return this.selectView("js-calltree");
     }
+    // The JS CallTree should always be supported since the profiler
+    // actor is as old as the world.
+    return this.selectView("js-calltree");
   },
 
   /**
