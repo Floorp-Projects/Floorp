@@ -133,6 +133,9 @@ WebGLContext::InitWebGL2(FailureReason* const out_failReason)
     fnGatherMissing(gl::GLFeature::texture_swizzle);
 #endif
 
+    fnGatherMissing2(gl::GLFeature::prim_restart_fixed,
+                     gl::GLFeature::prim_restart);
+
     ////
 
     if (missingList.size()) {
@@ -161,11 +164,19 @@ WebGLContext::InitWebGL2(FailureReason* const out_failReason)
     mDefaultTransformFeedback = new WebGLTransformFeedback(this, 0);
     mBoundTransformFeedback = mDefaultTransformFeedback;
 
+    ////
+
     if (!gl->IsGLES()) {
         // Desktop OpenGL requires the following to be enabled in order to
         // support sRGB operations on framebuffers.
-        gl->MakeCurrent();
         gl->fEnable(LOCAL_GL_FRAMEBUFFER_SRGB_EXT);
+    }
+
+    if (gl->IsSupported(gl::GLFeature::prim_restart_fixed)) {
+        gl->fEnable(LOCAL_GL_PRIMITIVE_RESTART_FIXED_INDEX);
+    } else {
+        MOZ_ASSERT(gl->IsSupported(gl::GLFeature::prim_restart));
+        gl->fEnable(LOCAL_GL_PRIMITIVE_RESTART);
     }
 
     //////

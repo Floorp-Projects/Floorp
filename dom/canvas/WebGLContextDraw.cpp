@@ -258,6 +258,15 @@ WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
         return false;
     }
 
+    if (IsWebGL2() && !gl->IsSupported(gl::GLFeature::prim_restart_fixed)) {
+        MOZ_ASSERT(gl->IsSupported(gl::GLFeature::prim_restart));
+        if (mPrimRestartTypeBytes) {
+            mPrimRestartTypeBytes = 0;
+
+            gl->fPrimitiveRestartIndex(0);
+        }
+    }
+
     // If count is 0, there's nothing to do.
     if (count == 0 || primcount == 0) {
         return false;
@@ -413,6 +422,20 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
                               info);
         return false;
     }
+
+    ////
+
+    if (IsWebGL2() && !gl->IsSupported(gl::GLFeature::prim_restart_fixed)) {
+        MOZ_ASSERT(gl->IsSupported(gl::GLFeature::prim_restart));
+        if (mPrimRestartTypeBytes != bytesPerElem) {
+            mPrimRestartTypeBytes = bytesPerElem;
+
+            const uint32_t ones = UINT32_MAX >> (4 - mPrimRestartTypeBytes);
+            gl->fPrimitiveRestartIndex(ones);
+        }
+    }
+
+    ////
 
     const GLsizei first = byteOffset / bytesPerElem;
     const CheckedUint32 checked_byteCount = bytesPerElem * CheckedUint32(count);
