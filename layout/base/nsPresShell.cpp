@@ -879,7 +879,7 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
-  aPresContext->SetShell(this);
+  aPresContext->AttachShell(this);
 
   // Now we can initialize the style set. Make sure to set the member before
   // calling Init, since various subroutines need to find the style set off
@@ -1241,12 +1241,12 @@ PresShell::Destroy()
   //   (a) before mFrameArena's destructor runs so that our
   //       mAllocatedPointers becomes empty and doesn't trip the assertion
   //       in ~PresShell,
-  //   (b) before the mPresContext->SetShell(nullptr) below, so
+  //   (b) before the mPresContext->DetachShell() below, so
   //       that when we clear the ArenaRefPtrs they'll still be able to
   //       get back to this PresShell to deregister themselves (e.g. note
   //       how nsStyleContext::Arena returns the PresShell got from its
   //       rule node's nsPresContext, which would return null if we'd already
-  //       called mPresContext->SetShell(nullptr)), and
+  //       called mPresContext->DetachShell()), and
   //   (c) before the mStyleSet->BeginShutdown() call just below, so that
   //       the nsStyleContexts don't complain they're being destroyed later
   //       than the rule tree is.
@@ -1304,7 +1304,7 @@ PresShell::Destroy()
   if (mPresContext) {
     // Clear out the prescontext's property table -- since our frame tree is
     // now dead, we shouldn't be looking up any more properties in that table.
-    // We want to do this before we call SetShell() on the prescontext, so
+    // We want to do this before we call DetachShell() on the prescontext, so
     // property destructors can usefully call GetPresShell() on the
     // prescontext.
     mPresContext->PropertyTable()->DeleteAll();
@@ -1323,7 +1323,7 @@ PresShell::Destroy()
     // We hold a reference to the pres context, and it holds a weak link back
     // to us. To avoid the pres context having a dangling reference, set its
     // pres shell to nullptr
-    mPresContext->SetShell(nullptr);
+    mPresContext->DetachShell();
 
     // Clear the link handler (weak reference) as well
     mPresContext->SetLinkHandler(nullptr);
