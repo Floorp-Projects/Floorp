@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from ../performance-controller.js */
 /* import-globals-from ../performance-view.js */
-/* globals document */
+/* globals document, Iterator */
 "use strict";
 
 /**
@@ -35,16 +35,20 @@ var ToolbarView = {
 
     this._buildMarkersFilterPopup();
     this._updateHiddenMarkersPopup();
-    $("#performance-filter-menupopup").addEventListener("popupshowing", this._onFilterPopupShowing);
-    $("#performance-filter-menupopup").addEventListener("popuphiding", this._onFilterPopupHiding);
+    $("#performance-filter-menupopup").addEventListener("popupshowing",
+                                                        this._onFilterPopupShowing);
+    $("#performance-filter-menupopup").addEventListener("popuphiding",
+                                                        this._onFilterPopupHiding);
   }),
 
   /**
    * Unbinds events and cleans up view.
    */
   destroy: function () {
-    $("#performance-filter-menupopup").removeEventListener("popupshowing", this._onFilterPopupShowing);
-    $("#performance-filter-menupopup").removeEventListener("popuphiding", this._onFilterPopupHiding);
+    $("#performance-filter-menupopup").removeEventListener("popupshowing",
+                                                           this._onFilterPopupShowing);
+    $("#performance-filter-menupopup").removeEventListener("popuphiding",
+                                                           this._onFilterPopupHiding);
     this._popup = null;
 
     this.optionsView.off("pref-changed", this._onPrefChanged);
@@ -61,7 +65,8 @@ var ToolbarView = {
       menuitem.setAttribute("type", "checkbox");
       menuitem.setAttribute("align", "center");
       menuitem.setAttribute("flex", "1");
-      menuitem.setAttribute("label", MarkerBlueprintUtils.getMarkerGenericName(markerName));
+      menuitem.setAttribute("label",
+                            MarkerBlueprintUtils.getMarkerGenericName(markerName));
       menuitem.setAttribute("marker-type", markerName);
       menuitem.className = `marker-color-${markerDetails.colorName}`;
 
@@ -96,7 +101,8 @@ var ToolbarView = {
    * hiding or showing all elements with class "experimental-option".
    *
    * TODO re-enable "#option-enable-memory" permanently once stable in bug 1163350
-   * TODO re-enable "#option-show-jit-optimizations" permanently once stable in bug 1163351
+   * TODO re-enable "#option-show-jit-optimizations" permanently once stable in
+   *      bug 1163351
    *
    * @param {boolean} isEnabled
    */
@@ -128,7 +134,8 @@ var ToolbarView = {
    * Fired when a menu item in the markers filter popup is checked or unchecked.
    */
   _onHiddenMarkersChanged: function () {
-    let checkedMenuItems = $$("#performance-filter-menupopup menuitem[marker-type]:not([checked])");
+    let checkedMenuItems =
+      $$("#performance-filter-menupopup menuitem[marker-type]:not([checked])");
     let hiddenMarkers = Array.map(checkedMenuItems, e => e.getAttribute("marker-type"));
     PerformanceController.setPref("hidden-markers", hiddenMarkers);
   },

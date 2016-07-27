@@ -116,6 +116,8 @@ public:
 
   void NotifyCueUpdated(TextTrackCue *aCue);
 
+  void DispatchAsyncTrustedEvent(const nsString& aEventName);
+
 private:
   ~TextTrack();
 

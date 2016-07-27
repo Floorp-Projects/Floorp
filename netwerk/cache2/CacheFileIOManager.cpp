@@ -2340,7 +2340,7 @@ void CacheFileIOManager::GetCacheDirectory(nsIFile** result)
   *result = nullptr;
 
   RefPtr<CacheFileIOManager> ioMan = gInstance;
-  if (!ioMan) {
+  if (!ioMan || !ioMan->mCacheDirectory) {
     return;
   }
 

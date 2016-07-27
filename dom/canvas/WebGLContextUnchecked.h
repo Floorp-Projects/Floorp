@@ -39,8 +39,14 @@ public:
     void SamplerParameterf(WebGLSampler* sampler, GLenum pname, GLfloat param);
     void SamplerParameterfv(WebGLSampler* sampler, GLenum pname, const GLfloat* param);
 
-protected: // data
-    RefPtr<gl::GLContext> gl;
+protected:
+    // We've had issues in the past with nulling `gl` without actually releasing
+    // all of our resources. This construction ensures that we are aware that we
+    // should only null `gl` in DestroyResourcesAndContext.
+    RefPtr<gl::GLContext> mGL_OnlyClearInDestroyResourcesAndContext;
+public:
+    // Grab a const reference so we can see changes, but can't make changes.
+    const decltype(mGL_OnlyClearInDestroyResourcesAndContext)& gl;
 };
 
 } // namespace mozilla

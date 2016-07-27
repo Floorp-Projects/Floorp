@@ -16,7 +16,7 @@ interface nsIAccessiblePivot;
  * nsIAccessible for a given DOM node.  More documentation at:
  *   http://www.mozilla.org/projects/ui/accessibility
  */
-[scriptable, uuid(17f86615-1a3d-4021-b227-3a2ef5cbffd8)]
+[scriptable, builtinclass, uuid(17f86615-1a3d-4021-b227-3a2ef5cbffd8)]
 interface nsIAccessibleRetrieval : nsISupports
 {
   /**

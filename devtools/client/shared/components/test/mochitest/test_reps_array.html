@@ -107,7 +107,7 @@ window.onload = Task.async(function* () {
 
   function testMoreThanShortMaxProps() {
     const stub = Array(maxLength.short + 1).fill("foo");
-    const defaultShortOutput = `[${Array(maxLength.short).fill("\"foo\"").join(", ")}, more…]`;
+    const defaultShortOutput = `[${Array(maxLength.short).fill("\"foo\"").join(", ")}, 1 more…]`;
 
     const modeTests = [
       {
@@ -133,8 +133,8 @@ window.onload = Task.async(function* () {
 
   function testMoreThanLongMaxProps() {
     const stub = Array(maxLength.long + 1).fill("foo");
-    const defaultShortOutput = `[${Array(maxLength.short).fill("\"foo\"").join(", ")}, more…]`;
-    const defaultLongOutput = `[${Array(maxLength.long).fill("\"foo\"").join(", ")}, more…]`;
+    const defaultShortOutput = `[${Array(maxLength.short).fill("\"foo\"").join(", ")}, ${maxLength.long + 1 - maxLength.short} more…]`;
+    const defaultLongOutput = `[${Array(maxLength.long).fill("\"foo\"").join(", ")}, 1 more…]`;
 
     const modeTests = [
       {
@@ -194,7 +194,7 @@ window.onload = Task.async(function* () {
         p4: "s4"
       }
     ];
-    const defaultOutput = `[Object{p1: "s1", p3: "s3", p4: "s4", more…}]`;
+    const defaultOutput = `[Object{p1: "s1", p3: "s3", p4: "s4", 1 more…}]`;
 
     const modeTests = [
       {
@@ -227,7 +227,7 @@ window.onload = Task.async(function* () {
     const defaultOutput = `["a", "b", "c", "d", "e", "f", "g", "h", "i", "j",` +
                           ` "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",` +
                           ` "u", "v", "w", "x", "y", "z"]`;
-    const shortOutput = `["a", "b", "c", more…]`;
+    const shortOutput = `["a", "b", "c", 23 more…]`;
 
     const modeTests = [
       {

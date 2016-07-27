@@ -8,10 +8,20 @@ this.EXPORTED_SYMBOLS = ["AutoMigrate"];
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-const kAutoMigrateStartedPref = "browser.migrate.automigrate-started";
-const kAutoMigrateFinishedPref = "browser.migrate.automigrate-finished";
+const kAutoMigrateEnabledPref = "browser.migrate.automigrate.enabled";
+
+const kAutoMigrateStartedPref = "browser.migrate.automigrate.started";
+const kAutoMigrateFinishedPref = "browser.migrate.automigrate.finished";
+const kAutoMigrateBrowserPref = "browser.migrate.automigrate.browser";
+
+const kPasswordManagerTopic = "passwordmgr-storage-changed";
+const kPasswordManagerTopicTypes = new Set([
+  "addLogin",
+  "modifyLogin",
+]);
 
 Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -23,6 +33,35 @@ const AutoMigrate = {
     return BOOKMARKS | HISTORY | PASSWORDS;
   },
 
+  init() {
+    this.enabled = Preferences.get(kAutoMigrateEnabledPref, false);
+    if (this.enabled) {
+      this.maybeInitUndoObserver();
+    }
+  },
+
+  maybeInitUndoObserver() {
+    // Check synchronously (NB: canUndo is async) if we really need
+    // to do this:
+    if (!this.getUndoRange()) {
+      return;
+    }
+    // Now register places and password observers:
+    this.onItemAdded = this.onItemMoved = this.onItemChanged =
+      this.removeUndoOption;
+    PlacesUtils.addLazyBookmarkObserver(this, true);
+    Services.obs.addObserver(this, kPasswordManagerTopic, true);
+  },
+
+  observe(subject, topic, data) {
+    // As soon as any login gets added or modified, disable undo:
+    // (Note that this ignores logins being removed as that doesn't
+    //  impair the 'undo' functionality of the import.)
+    if (kPasswordManagerTopicTypes.has(data)) {
+      this.removeUndoOption();
+    }
+  },
+
   /**
    * Automatically pick a migrator and resources to migrate,
    * then migrate those and start up.
@@ -31,9 +70,10 @@ const AutoMigrate = {
    *         failed for some reason.
    */
   migrate(profileStartup, migratorKey, profileToMigrate) {
-    let histogram = Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_PROCESS_SUCCESS");
+    let histogram = Services.telemetry.getHistogramById(
+      "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_PROCESS_SUCCESS");
     histogram.add(0);
-    let migrator = this.pickMigrator(migratorKey);
+    let {migrator, pickedKey} = this.pickMigrator(migratorKey);
     histogram.add(5);
 
     profileToMigrate = this.pickProfile(migrator, profileToMigrate);
@@ -46,7 +86,7 @@ const AutoMigrate = {
     histogram.add(15);
 
     let sawErrors = false;
-    let migrationObserver = function(subject, topic, data) {
+    let migrationObserver = (subject, topic, data) => {
       if (topic == "Migration:ItemError") {
         sawErrors = true;
       } else if (topic == "Migration:Ended") {
@@ -58,6 +98,11 @@ const AutoMigrate = {
         Services.obs.removeObserver(migrationObserver, "Migration:ItemError");
         Services.prefs.setCharPref(kAutoMigrateStartedPref, startTime.toString());
         Services.prefs.setCharPref(kAutoMigrateFinishedPref, Date.now().toString());
+        Services.prefs.setCharPref(kAutoMigrateBrowserPref, pickedKey);
+        // Need to manually start listening to new bookmarks/logins being created,
+        // because, when we were initialized, there wasn't the possibility to
+        // 'undo' anything.
+        this.maybeInitUndoObserver();
       }
     };
 
@@ -74,7 +119,8 @@ const AutoMigrate = {
    * Pick and return a migrator to use for automatically migrating.
    *
    * @param {String} migratorKey   optional, a migrator key to prefer/pick.
-   * @returns                      the migrator to use for migrating.
+   * @returns {Object}             an object with the migrator to use for migrating, as
+   *                               well as the key we eventually ended up using to obtain it.
    */
   pickMigrator(migratorKey) {
     if (!migratorKey) {
@@ -92,7 +138,7 @@ const AutoMigrate = {
     if (!migrator) {
       throw new Error("Migrator specified or a default was found, but the migrator object is not available.");
     }
-    return migrator;
+    return {migrator, pickedKey: migratorKey};
   },
 
   /**
@@ -127,8 +173,8 @@ const AutoMigrate = {
   getUndoRange() {
     let start, finish;
     try {
-      start = parseInt(Services.prefs.getCharPref(kAutoMigrateStartedPref), 10);
-      finish = parseInt(Services.prefs.getCharPref(kAutoMigrateFinishedPref), 10);
+      start = parseInt(Preferences.get(kAutoMigrateStartedPref, "0"), 10);
+      finish = parseInt(Preferences.get(kAutoMigrateFinishedPref, "0"), 10);
     } catch (ex) {
       Cu.reportError(ex);
     }
@@ -187,9 +233,27 @@ const AutoMigrate = {
       // ignore failure.
     }
     histogram.add(25);
-    Services.prefs.clearUserPref("browser.migrate.automigrate-started");
-    Services.prefs.clearUserPref("browser.migrate.automigrate-finished");
+    this.removeUndoOption();
     histogram.add(30);
   }),
+
+  removeUndoOption() {
+    // Remove observers, and ensure that exceptions doing so don't break
+    // removing the pref.
+    try {
+      Services.obs.removeObserver(this, kPasswordManagerTopic);
+    } catch (ex) {}
+    try {
+      PlacesUtils.removeLazyBookmarkObserver(this);
+    } catch (ex) {}
+    Services.prefs.clearUserPref(kAutoMigrateStartedPref);
+    Services.prefs.clearUserPref(kAutoMigrateFinishedPref);
+    Services.prefs.clearUserPref(kAutoMigrateBrowserPref);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI(
+    [Ci.nsIObserver, Ci.nsINavBookmarkObserver, Ci.nsISupportsWeakReference]
+  ),
 };
 
+AutoMigrate.init();

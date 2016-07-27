@@ -1649,7 +1649,10 @@ struct nsGridContainerFrame::Tracks
  */
 struct nsGridContainerFrame::SharedGridData
 {
-  SharedGridData() : mCols(eLogicalAxisInline), mRows(eLogicalAxisBlock) {}
+  SharedGridData() :
+    mCols(eLogicalAxisInline),
+    mRows(eLogicalAxisBlock),
+    mGenerateComputedGridInfo(false) {}
   Tracks mCols;
   Tracks mRows;
   struct RowData {

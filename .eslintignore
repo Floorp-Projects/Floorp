@@ -87,7 +87,10 @@ devtools/client/jsonview/lib/**
 devtools/client/memory/**
 devtools/client/netmonitor/test/**
 devtools/client/netmonitor/har/test/**
-devtools/client/performance/**
+devtools/client/performance/components/**
+devtools/client/performance/legacy/**
+devtools/client/performance/modules/**
+devtools/client/performance/test/**
 devtools/client/projecteditor/**
 devtools/client/promisedebugger/**
 devtools/client/responsivedesign/**

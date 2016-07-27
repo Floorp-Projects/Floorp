@@ -740,7 +740,7 @@ TextTrackManager::TimeMarchesOn()
   for (uint32_t i = 0; i < affectedTracks.Length(); ++i) {
     TextTrack* ttrack = affectedTracks[i];
     if (ttrack) {
-      ttrack->DispatchTrustedEvent(NS_LITERAL_STRING("cuechange"));
+      ttrack->DispatchAsyncTrustedEvent(NS_LITERAL_STRING("cuechange"));
       HTMLTrackElement* trackElement = ttrack->GetTrackElement();
       if (trackElement) {
         trackElement->DispatchTrackRunnable(NS_LITERAL_STRING("cuechange"));

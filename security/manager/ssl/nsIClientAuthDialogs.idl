@@ -18,7 +18,8 @@ interface nsIClientAuthDialogs : nsISupports
    *
    * @param ctx Context that allows at least nsIClientAuthUserDecision to be
    *            queried.
-   * @param cnAndPort Common Name of the server cert and the port of the server.
+   * @param hostname Hostname of the server.
+   * @param port Port of the server.
    * @param organization Organization field of the server cert.
    * @param issuerOrg Organization field of the issuer cert of the server cert.
    * @param certList List of certificates the user can choose from.
@@ -27,9 +28,10 @@ interface nsIClientAuthDialogs : nsISupports
    * @return true if a certificate was chosen. false if the user canceled.
    */
   boolean chooseCertificate(in nsIInterfaceRequestor ctx,
-                            in AString cnAndPort,
-                            in AString organization,
-                            in AString issuerOrg,
+                            in AUTF8String hostname,
+                            in long port,
+                            in AUTF8String organization,
+                            in AUTF8String issuerOrg,
                             in nsIArray certList,
                             out unsigned long selectedIndex);
 };

@@ -1,0 +1,10 @@
+{
+  "manifest_version": 2,
+  "name": "Test Addons Actor Upgrade",
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "test-addons-actor@mozilla.org"
+    }
+  }
+}

@@ -19,7 +19,7 @@ interface mozIDOMWindowProxy;
  * the root node of a document or you can get one from
  * nsIAccessible::GetDocument().
  */
-[scriptable, uuid(5cad5f91-fcce-40e7-913e-4671701d19b4)]
+[scriptable, builtinclass, uuid(5cad5f91-fcce-40e7-913e-4671701d19b4)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**

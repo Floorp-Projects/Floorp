@@ -704,6 +704,7 @@ add_task(function*() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
+  do_check_false(addon.isWebExtension);
   do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   yield AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
