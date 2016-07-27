@@ -8565,7 +8565,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
     def definition_body(self):
-        if self.attr.maplikeOrSetlike:
+        if self.attr.isMaplikeOrSetlikeAttr():
             # If the interface is maplike/setlike, there will be one getter
             # method for the size property of the backing object. Due to having
             # to unpack the backing object from the slot, this requires its own
@@ -13923,6 +13923,16 @@ class CGExampleMethod(CGNativeMember):
                                 breakAfter=breakAfter,
                                 variadicIsSequence=True)
 
+    def declare(self, cgClass):
+        assert self.member.isMethod()
+        # We skip declaring ourselves if this is a maplike/setlike/iterable
+        # method, because those get implemented automatically by the binding
+        # machinery, so the implementor of the interface doesn't have to worry
+        # about it.
+        if self.member.isMaplikeOrSetlikeOrIterableMethod():
+            return ''
+        return CGNativeMember.declare(self, cgClass);
+
     def define(self, cgClass):
         return ''
 
@@ -13935,6 +13945,16 @@ class CGExampleGetter(CGNativeMember):
                                 (attr.type, []),
                                 descriptor.getExtendedAttributes(attr,
                                                                  getter=True))
+
+    def declare(self, cgClass):
+        assert self.member.isAttr()
+        # We skip declaring ourselves if this is a maplike/setlike attr (in
+        # practice, "size"), because those get implemented automatically by the
+        # binding machinery, so the implementor of the interface doesn't have to
+        # worry about it.
+        if self.member.isMaplikeOrSetlikeAttr():
+            return ''
+        return CGNativeMember.declare(self, cgClass);
 
     def define(self, cgClass):
         return ''
