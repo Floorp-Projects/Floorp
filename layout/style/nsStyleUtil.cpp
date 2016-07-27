@@ -593,7 +593,6 @@ nsStyleUtil::AppendSerializedFontSrc(const nsCSSValue& aValue,
 /* static */ void
 nsStyleUtil::AppendStepsTimingFunction(nsTimingFunction::Type aType,
                                        uint32_t aSteps,
-                                       nsTimingFunction::StepSyntax aSyntax,
                                        nsAString& aResult)
 {
   MOZ_ASSERT(aType == nsTimingFunction::Type::StepStart ||

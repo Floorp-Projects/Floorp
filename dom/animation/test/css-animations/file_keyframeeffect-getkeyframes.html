@@ -492,15 +492,11 @@ test(function(t) {
   div.style.animation = 'anim-no-merge-equiv-easing 100s';
   var frames = getKeyframes(div);
 
-  assert_equals(frames.length, 5, "number of frames");
+  assert_equals(frames.length, 3, "number of frames");
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "steps(1)",
-      marginTop: "0px" },
-    { offset: 0, computedOffset: 0, easing: "steps(1)",
-      marginRight: "0px" },
-    { offset: 0, computedOffset: 0, easing: "steps(1)",
-      marginBottom: "0px" },
+      marginTop: "0px", marginRight: "0px", marginBottom: "0px" },
     { offset: 0.5, computedOffset: 0.5, easing: "steps(1)",
       marginTop: "10px", marginRight: "10px", marginBottom: "10px" },
     { offset: 1, computedOffset: 1, easing: "ease",
@@ -671,7 +667,6 @@ test(function(t) {
   }
 }, 'KeyframeEffectReadOnly.getKeyframes() returns expected values for ' +
    'animations with CSS variables as keyframe values in a shorthand property');
-
 done();
 </script>
 </body>
