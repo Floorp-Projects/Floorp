@@ -8,6 +8,7 @@ EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
     'COMPtrHolder.h',
     'EnsureMTA.h',
+    'Interceptor.h',
     'InterceptorLog.h',
     'MainThreadInvoker.h',
     'MainThreadRuntime.h',
@@ -19,6 +20,7 @@ EXPORTS.mozilla.mscom += [
 ]
 
 SOURCES += [
+    'Interceptor.cpp',
     'Registration.cpp',
     'Utils.cpp',
     'WeakRef.cpp',
