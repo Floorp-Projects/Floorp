@@ -3436,6 +3436,8 @@ private:
   uint8_t          mContextFlags;     // [inherited]
 };
 
+namespace mozilla {
+
 class nsStyleBasicShape final
 {
 public:
@@ -3547,27 +3549,27 @@ struct nsStyleClipPath
     return !(*this == aOther);
   }
 
-  mozilla::StyleClipPathType GetType() const {
+  StyleClipPathType GetType() const {
     return mType;
   }
 
   FragmentOrURL* GetURL() const {
-    NS_ASSERTION(mType == mozilla::StyleClipPathType::URL, "wrong clip-path type");
+    NS_ASSERTION(mType == StyleClipPathType::URL, "wrong clip-path type");
     return mURL;
   }
   bool SetURL(const nsCSSValue* aValue);
 
   nsStyleBasicShape* GetBasicShape() const {
-    NS_ASSERTION(mType == mozilla::StyleClipPathType::Shape, "wrong clip-path type");
+    NS_ASSERTION(mType == StyleClipPathType::Shape, "wrong clip-path type");
     return mBasicShape;
   }
 
   void SetBasicShape(nsStyleBasicShape* mBasicShape,
-                     mozilla::StyleClipShapeSizing aSizingBox =
-                     mozilla::StyleClipShapeSizing::NoBox);
+                     StyleClipShapeSizing aSizingBox =
+                     StyleClipShapeSizing::NoBox);
 
-  mozilla::StyleClipShapeSizing GetSizingBox() const { return mSizingBox; }
-  void SetSizingBox(mozilla::StyleClipShapeSizing aSizingBox);
+  StyleClipShapeSizing GetSizingBox() const { return mSizingBox; }
+  void SetSizingBox(StyleClipShapeSizing aSizingBox);
 
 private:
   void ReleaseRef();
@@ -3579,9 +3581,11 @@ private:
     nsStyleBasicShape* mBasicShape;
     FragmentOrURL* mURL;
   };
-  mozilla::StyleClipPathType    mType;
-  mozilla::StyleClipShapeSizing mSizingBox;
+  StyleClipPathType    mType;
+  StyleClipShapeSizing mSizingBox;
 };
+
+} // namespace mozilla
 
 struct nsStyleFilter
 {
@@ -3678,7 +3682,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   }
 
   nsStyleImageLayers    mMask;
-  nsStyleClipPath  mClipPath;         // [reset]
+  mozilla::nsStyleClipPath mClipPath; // [reset]
   nscolor          mStopColor;        // [reset]
   nscolor          mFloodColor;       // [reset]
   nscolor          mLightingColor;    // [reset]
