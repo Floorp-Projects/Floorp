@@ -171,8 +171,8 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
 
     // ...and then ScriptableInfo. We need all this stuff now because it's going
     // to tell us the JSClass of the object we're going to create.
-    AutoMarkingNativeScriptableInfoPtr si(cx, XPCNativeScriptableInfo::Construct(&sciWrapper));
-    MOZ_ASSERT(si.get());
+    XPCNativeScriptableInfo* si = XPCNativeScriptableInfo::Construct(&sciWrapper);
+    MOZ_ASSERT(si);
 
     // Finally, we get to the JSClass.
     const JSClass* clasp = si->GetJSClass();
@@ -622,12 +622,6 @@ void
 XPCWrappedNative::UpdateScriptableInfo(XPCNativeScriptableInfo* si)
 {
     MOZ_ASSERT(mScriptableInfo, "UpdateScriptableInfo expects an existing scriptable info");
-
-    // Write barrier for incremental GC.
-    JSContext* cx = GetRuntime()->Context();
-    if (IsIncrementalBarrierNeeded(cx))
-        mScriptableInfo->Mark();
-
     mScriptableInfo = si;
 }
 
