@@ -711,6 +711,13 @@ def getTypesFromDescriptor(descriptor):
         types.extend(a.type for a in arguments)
 
     types.extend(a.type for a in members if a.isAttr())
+
+    if descriptor.interface.maplikeOrSetlikeOrIterable:
+        maplikeOrSetlikeOrIterable = descriptor.interface.maplikeOrSetlikeOrIterable
+        if maplikeOrSetlikeOrIterable.hasKeyType():
+            types.append(maplikeOrSetlikeOrIterable.keyType)
+        if maplikeOrSetlikeOrIterable.hasValueType():
+            types.append(maplikeOrSetlikeOrIterable.valueType)
     return types
 
 
