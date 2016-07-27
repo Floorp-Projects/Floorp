@@ -334,6 +334,15 @@ var LoginManagerParent = {
       schemeUpgrades: LoginHelper.schemeUpgrades,
     });
 
+    // Dedupe so the length checks below still make sense with scheme upgrades.
+    // Below here we have one login per hostPort + action + username with the
+    // matching scheme being preferred.
+    let resolveBy = [
+      "scheme",
+      "timePasswordChanged",
+    ];
+    logins = LoginHelper.dedupeLogins(logins, ["username"], resolveBy, hostname);
+
     // If we didn't find a username field, but seem to be changing a
     // password, allow the user to select from a list of applicable
     // logins to update the password for.
@@ -355,6 +364,10 @@ var LoginManagerParent = {
 
         prompter.promptToChangePassword(oldLogin, formLogin);
       } else {
+        // Note: It's possible that that we already have the correct u+p saved
+        // but since we don't have the username, we don't know if the user is
+        // changing a second account to the new password so we ask anyways.
+
         prompter.promptToChangePasswordWithUsernames(
                             logins, logins.length, formLogin);
       }
@@ -365,8 +378,8 @@ var LoginManagerParent = {
 
     var existingLogin = null;
     // Look for an existing login that matches the form login.
-    for (var i = 0; i < logins.length; i++) {
-      var same, login = logins[i];
+    for (let login of logins) {
+      let same;
 
       // If one login has a username but the other doesn't, ignore
       // the username when comparing and only match if they have the
@@ -375,14 +388,23 @@ var LoginManagerParent = {
       if (!login.username && formLogin.username) {
         var restoreMe = formLogin.username;
         formLogin.username = "";
-        same = formLogin.matches(login, false);
+        same = LoginHelper.doLoginsMatch(formLogin, login, {
+          ignorePassword: false,
+          ignoreSchemes: LoginHelper.schemeUpgrades,
+        });
         formLogin.username = restoreMe;
       } else if (!formLogin.username && login.username) {
         formLogin.username = login.username;
-        same = formLogin.matches(login, false);
+        same = LoginHelper.doLoginsMatch(formLogin, login, {
+          ignorePassword: false,
+          ignoreSchemes: LoginHelper.schemeUpgrades,
+        });
         formLogin.username = ""; // we know it's always blank.
       } else {
-        same = formLogin.matches(login, true);
+        same = LoginHelper.doLoginsMatch(formLogin, login, {
+          ignorePassword: true,
+          ignoreSchemes: LoginHelper.schemeUpgrades,
+        });
       }
 
       if (same) {

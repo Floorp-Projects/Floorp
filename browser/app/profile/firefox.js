@@ -1414,3 +1414,5 @@ pref("browser.laterrun.enabled", false);
 pref("dom.mozBrowserFramesEnabled", true);
 
 pref("extensions.pocket.enabled", true);
+
+pref("signon.schemeUpgrades", true);
