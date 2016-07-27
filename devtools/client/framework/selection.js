@@ -43,10 +43,10 @@ var EventEmitter = require("devtools/shared/event-emitter");
  *   isNotationNode()
  *
  * Events:
- *   "new-node" when the inner node changed
- *   "before-new-node" when the inner node is set to change
+ *   "new-node-front" when the inner node changed
+ *   "before-new-node-front" when the inner node is set to change
  *   "attribute-changed" when an attribute is changed
- *   "detached" when the node (or one of its parents) is removed from
+ *   "detached-front" when the node (or one of its parents) is removed from
  *   the document
  *   "reparented" when the node (or one of its parents) is moved under
  *   a different node
@@ -101,12 +101,6 @@ Selection.prototype = {
       this.emit("pseudoclass");
     }
     if (detached) {
-      let rawNode = null;
-      if (parentNode && parentNode.isLocalToBeDeprecated()) {
-        rawNode = parentNode.rawNode();
-      }
-
-      this.emit("detached", rawNode, null);
       this.emit("detached-front", parentNode);
     }
   },
@@ -140,14 +134,6 @@ Selection.prototype = {
   },
 
   // Not remote-safe
-  get window() {
-    if (this.isNode()) {
-      return this.node.ownerDocument.defaultView;
-    }
-    return null;
-  },
-
-  // Not remote-safe
   get document() {
     if (this.isNode()) {
       return this.node.ownerDocument;
@@ -171,12 +157,9 @@ Selection.prototype = {
     if (value && value.isLocalToBeDeprecated()) {
       rawValue = value.rawNode();
     }
-    this.emit("before-new-node", rawValue, reason);
     this.emit("before-new-node-front", value, reason);
-    let previousNode = this._node;
     this._node = rawValue;
     this._nodeFront = value;
-    this.emit("new-node", previousNode, this.reason);
     this.emit("new-node-front", value, this.reason);
   },
 
