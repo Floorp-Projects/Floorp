@@ -97,6 +97,19 @@ exports.stubConsoleMessages = new Map([
     })
   ],
   [
+    "console.clear()",
+    new ConsoleMessage({
+      allowRepeating: true,
+      source: MESSAGE_SOURCE.CONSOLE_API,
+      type: MESSAGE_TYPE.CLEAR,
+      level: MESSAGE_LEVEL.LOG,
+      messageText: null,
+      parameters: ["Console cleared."],
+      repeat: 1,
+      repeatId: null,
+    })
+  ],
+  [
     "console.count('bar')",
     new ConsoleMessage({
       allowRepeating: true,
