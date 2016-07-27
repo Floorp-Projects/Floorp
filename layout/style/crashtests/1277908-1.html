@@ -1,0 +1,26 @@
+<script>
+window.onload = function () {
+  var root = document.documentElement; while(root.firstChild) { root.removeChild(root.firstChild); }
+  var a = document.createElementNS("http://www.w3.org/1999/xhtml", "link");
+  a.setAttributeNS(null, "href", "mailto:");
+  root.appendChild(a);
+  var b = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  var c = document.createElementNS("http://www.w3.org/1999/xhtml", "p");
+  root.appendChild(b);
+  root.animate([{"opacity":1},
+                {"opacity":-64},
+                {"opacity":1024},
+                {"opacity":32},
+                {"opacity":3},
+                {"opacity":1024},
+                {"opacity":0.19310025712314532},
+                {"opacity":512}],
+                {"duration":1,"fill":"backwards"});
+  a.style.maskType = "alpha, luminance";
+  c.animate({}, 1);
+  root.style.position = "fixed";
+  b.getAnimations();
+  a.style.MozPerspectiveOrigin = "1rem bottom";
+  root.style.position = "static";
+};
+</script>
