@@ -28,13 +28,7 @@ const {
 } = require("../constants");
 const { ConsoleMessage } = require("../types");
 
-let messageId = 0;
-function getNextMessageId() {
-  // Return the next message id, as a string.
-  return "" + messageId++;
-}
-
-function prepareMessage(packet) {
+function prepareMessage(packet, idGenerator) {
   // This packet is already in the expected packet structure. Simply return.
   if (!packet.source) {
     packet = transformPacket(packet);
@@ -43,7 +37,7 @@ function prepareMessage(packet) {
   if (packet.allowRepeating) {
     packet = packet.set("repeatId", getRepeatId(packet));
   }
-  return packet.set("id", getNextMessageId());
+  return packet.set("id", idGenerator.getNextId());
 }
 
 /**

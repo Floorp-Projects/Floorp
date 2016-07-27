@@ -7,3 +7,6 @@ DIRS += [
     'fixtures'
 ]
 
+MOCHITEST_CHROME_MANIFESTS += [
+  'chrome/chrome.ini'
+]
