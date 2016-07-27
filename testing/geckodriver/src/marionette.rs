@@ -266,8 +266,7 @@ impl FromStr for LogLevel {
     type Err = ();
 
     fn from_str(s: &str) -> Result<LogLevel, ()> {
-        let l: &str = &s.to_lowercase();
-        match l {
+        match s {
             "fatal" => Ok(LogLevel::Fatal),
             "error" => Ok(LogLevel::Error),
             "warn" => Ok(LogLevel::Warn),
