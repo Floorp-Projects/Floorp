@@ -46,6 +46,8 @@ XPCOMUtils.defineLazyGetter(this, "PageMenuChild", function() {
 XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
   "resource:///modules/Feeds.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 // TabChildGlobal
 var global = this;
 
@@ -792,9 +794,11 @@ addMessageListener("ContextMenu:MediaCommand", (message) => {
   }
 });
 
-addMessageListener("ContextMenu:Canvas:ToDataURL", (message) => {
-  let dataURL = message.objects.target.toDataURL();
-  sendAsyncMessage("ContextMenu:Canvas:ToDataURL:Result", { dataURL });
+addMessageListener("ContextMenu:Canvas:ToBlobURL", (message) => {
+  message.objects.target.toBlob((blob) => {
+    let blobURL = URL.createObjectURL(blob);
+    sendAsyncMessage("ContextMenu:Canvas:ToBlobURL:Result", { blobURL });
+  });
 });
 
 addMessageListener("ContextMenu:ReloadFrame", (message) => {
