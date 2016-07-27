@@ -34,8 +34,7 @@ class nsISSLStatus;
 enum SecurityPropertyState {
   SecurityPropertyUnset = 0,
   SecurityPropertySet = 1,
-  SecurityPropertyKnockout = 2,
-  SecurityPropertyNegative = 3
+  SecurityPropertyKnockout = 2
 };
 
 /**
@@ -129,8 +128,7 @@ protected:
 private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
   nsresult SetHSTSState(uint32_t aType, nsIURI* aSourceURI, int64_t maxage,
-                        bool includeSubdomains, uint32_t flags,
-                        SecurityPropertyState aHSTSState);
+                        bool includeSubdomains, uint32_t flags);
   nsresult ProcessHeaderInternal(uint32_t aType, nsIURI* aSourceURI,
                                  const char* aHeader, nsISSLStatus* aSSLStatus,
                                  uint32_t aFlags, uint64_t* aMaxAge,

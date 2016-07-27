@@ -2244,8 +2244,7 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
         flags |= nsISocketProvider::NO_PERMANENT_STORAGE;
     nsCOMPtr<nsIURI> clone;
     if (NS_SUCCEEDED(sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
-                                      aURI, flags, nullptr, &isStsHost)) &&
-                                      isStsHost) {
+                                      aURI, flags, &isStsHost)) && isStsHost) {
         if (NS_SUCCEEDED(NS_GetSecureUpgradedURI(aURI,
                                                  getter_AddRefs(clone)))) {
             aURI = clone.get();

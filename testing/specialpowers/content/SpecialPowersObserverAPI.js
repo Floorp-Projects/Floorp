@@ -324,10 +324,10 @@ SpecialPowersObserverAPI.prototype = {
           case "BOOL":
             if (aMessage.json.op == "get")
               return(prefs.getBoolPref(prefName));
-            else
+            else 
               return(prefs.setBoolPref(prefName, prefValue));
           case "INT":
-            if (aMessage.json.op == "get")
+            if (aMessage.json.op == "get") 
               return(prefs.getIntPref(prefName));
             else
               return(prefs.setIntPref(prefName, prefValue));
@@ -563,7 +563,6 @@ SpecialPowersObserverAPI.prototype = {
         let sss = Cc["@mozilla.org/ssservice;1"].
                   getService(Ci.nsISiteSecurityService);
         sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, flags);
-        return undefined;
       }
 
       case "SPLoadExtension": {
