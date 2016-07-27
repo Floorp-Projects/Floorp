@@ -2183,14 +2183,16 @@ WebSocketChannel::PrimeNewOutgoingMessage()
     // Perform the sending mask. Never use a zero mask
     do {
       uint8_t *buffer;
-      nsresult rv = mRandomGenerator->GenerateRandomBytes(4, &buffer);
+      PR_STATIC_ASSERT(4 == sizeof(mask));
+      nsresult rv = mRandomGenerator->GenerateRandomBytes(sizeof(mask),
+                                                          &buffer);
       if (NS_FAILED(rv)) {
         LOG(("WebSocketChannel::PrimeNewOutgoingMessage(): "
              "GenerateRandomBytes failure %x\n", rv));
         StopSession(rv);
         return;
       }
-      mask = * reinterpret_cast<uint32_t *>(buffer);
+      memcpy(&mask, buffer, sizeof(mask));
       free(buffer);
     } while (!mask);
     NetworkEndian::writeUint32(payload - sizeof(uint32_t), mask);

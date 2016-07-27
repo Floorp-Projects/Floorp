@@ -16,7 +16,6 @@ builtin(include, build/autoconf/codeset.m4)dnl
 builtin(include, build/autoconf/altoptions.m4)dnl
 builtin(include, build/autoconf/mozprog.m4)dnl
 builtin(include, build/autoconf/mozheader.m4)dnl
-builtin(include, build/autoconf/mozcommonheader.m4)dnl
 builtin(include, build/autoconf/lto.m4)dnl
 builtin(include, build/autoconf/frameptr.m4)dnl
 builtin(include, build/autoconf/compiler-opts.m4)dnl
@@ -25,7 +24,6 @@ builtin(include, build/autoconf/arch.m4)dnl
 builtin(include, build/autoconf/android.m4)dnl
 builtin(include, build/autoconf/zlib.m4)dnl
 builtin(include, build/autoconf/linux.m4)dnl
-builtin(include, build/autoconf/winsdk.m4)dnl
 builtin(include, build/autoconf/icu.m4)dnl
 builtin(include, build/autoconf/ffi.m4)dnl
 builtin(include, build/autoconf/clang-plugin.m4)dnl

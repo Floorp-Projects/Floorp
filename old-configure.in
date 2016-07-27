@@ -73,8 +73,6 @@ DBUS_VERSION=0.60
 SQLITE_VERSION=3.13.0
 FONTCONFIG_VERSION=2.7.0
 
-MSMANIFEST_TOOL=
-
 dnl Set various checks
 dnl ========================================================
 MISSING_X=
@@ -255,26 +253,7 @@ dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
 
-# Target the Windows 8.1 SDK by default
-WINSDK_TARGETVER=603
 WINVER=502
-
-MOZ_ARG_WITH_STRING(windows-version,
-[  --with-windows-version=WINSDK_TARGETVER
-                          Windows SDK version to target. Win8.1 (603) is
-                          currently the minimum supported version.],
-  WINSDK_TARGETVER=$withval)
-
-# Currently only version 603 is allowed
-case "$WINSDK_TARGETVER" in
-603)
-    MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
-    ;;
-
-*)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER)]);
-    ;;
-esac
 
 case "$target" in
 *-mingw*)
@@ -365,26 +344,6 @@ case "$target" in
           fi
           WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd -W`
         fi
-
-        dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
-        dnl not something else like "magnetic tape manipulation utility".
-        MT=${MT-mt.exe}
-        MSMT_TOOL=`${MT} 2>&1|grep 'Microsoft (R) Manifest Tool'`
-        if test -z "$MSMT_TOOL"; then
-          AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
-        fi
-
-        changequote(,)
-        _MSMT_VER_FILTER='s|.*[^!-~]\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
-        changequote([,])
-        MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
-        if test -z "$MSMANIFEST_TOOL_VERSION"; then
-          AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
-        fi
-
-        MSMANIFEST_TOOL=1
-        unset MSMT_TOOL
-        AC_SUBST(MT)
 
         # Check linker version
         _LD_FULL_VERSION=`"${LD}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
@@ -491,25 +450,11 @@ case "$target" in
         AC_DEFINE(STRSAFE_NO_DEPRECATE)
     fi # !GNU_CC
 
-    MOZ_FIND_WINSDK_VERSION
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
     # Require OS features provided by IE 6.0 SP2 (XP SP2)
     AC_DEFINE_UNQUOTED(_WIN32_IE,0x0603)
 
-    # If the maximum version supported by this SDK is lower than the target
-    # version, error out
-    AC_MSG_CHECKING([for Windows SDK being recent enough])
-    if $PERL -e "exit(0x$MOZ_WINSDK_TARGETVER > $MOZ_WINSDK_MAXVER)"; then
-        AC_MSG_RESULT("yes")
-    else
-        AC_MSG_RESULT("no")
-        AC_MSG_ERROR([You are targeting Windows version 0x$MOZ_WINSDK_TARGETVER, but your SDK only supports up to version $MOZ_WINSDK_MAXVER. Install and use an updated SDK, or target a lower version using --with-windows-version. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
-    fi
-
-    AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
-    AC_DEFINE_UNQUOTED(MOZ_WINSDK_MAXVER,$MOZ_WINSDK_MAXVER)
-    AC_SUBST(MOZ_WINSDK_MAXVER)
     ;;
 esac
 
@@ -1576,20 +1521,6 @@ bitrig*|dragonfly*|freebsd*|openbsd*)
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
 esac
-MOZ_CHECK_COMMON_HEADERS
-
-dnl These are all the places some variant of statfs can be hiding.
-MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
-
-dnl Quota support
-MOZ_CHECK_HEADERS(sys/quota.h sys/sysmacros.h)
-MOZ_CHECK_HEADERS([linux/quota.h],,,[#include <sys/socket.h>])
-
-dnl SCTP support - needs various network include headers
-MOZ_CHECK_HEADERS([linux/if_addr.h linux/rtnetlink.h],,,[#include <sys/socket.h>])
-MOZ_CHECK_HEADERS(sys/queue.h)
-
-MOZ_CHECK_HEADERS(sys/types.h netinet/in.h byteswap.h)
 
 dnl Check for sin_len and sin6_len - used by SCTP; only appears in Mac/*BSD generally
 AC_CACHE_CHECK(for sockaddr_in.sin_len,
@@ -5866,17 +5797,6 @@ else
     PKG_CHECK_MODULES(MOZ_PIXMAN, pixman-1 >= 0.19.2)
 fi
 
-# Check for headers defining standard int types.
-if test -n "$COMPILE_ENVIRONMENT"; then
-    MOZ_CHECK_HEADERS(stdint.h inttypes.h)
-
-    if test "${ac_cv_header_inttypes_h}" = "yes"; then
-        HAVE_INTTYPES_H=1
-    fi
-fi
-
-AC_SUBST(HAVE_INTTYPES_H)
-
 if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_CFLAGS="-I${DIST}/include/cairo"
     AC_DEFINE(MOZ_TREE_CAIRO)
@@ -6187,8 +6107,6 @@ AC_SUBST(MOZ_D3DCOMPILER_XP_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
 
 AC_SUBST(MOZ_WEBSMS_BACKEND)
-AC_SUBST(MOZ_DISABLE_GECKOVIEW)
-AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
@@ -6539,7 +6457,6 @@ AC_SUBST(BIN_SUFFIX)
 AC_SUBST(IMPORT_LIB_SUFFIX)
 AC_SUBST(USE_N32)
 AC_SUBST(CC_VERSION)
-AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)

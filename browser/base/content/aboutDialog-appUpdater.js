@@ -26,6 +26,16 @@ function onUnload(aEvent) {
 
 function appUpdater()
 {
+  XPCOMUtils.defineLazyServiceGetter(this, "aus",
+                                     "@mozilla.org/updates/update-service;1",
+                                     "nsIApplicationUpdateService");
+  XPCOMUtils.defineLazyServiceGetter(this, "checker",
+                                     "@mozilla.org/updates/update-checker;1",
+                                     "nsIUpdateChecker");
+  XPCOMUtils.defineLazyServiceGetter(this, "um",
+                                     "@mozilla.org/updates/update-manager;1",
+                                     "nsIUpdateManager");
+
   this.updateDeck = document.getElementById("updateDeck");
 
   // Hide the update deck when the update window is already open and it's not
@@ -37,16 +47,6 @@ function appUpdater()
     this.updateDeck.hidden = true;
     return;
   }
-
-  XPCOMUtils.defineLazyServiceGetter(this, "aus",
-                                     "@mozilla.org/updates/update-service;1",
-                                     "nsIApplicationUpdateService");
-  XPCOMUtils.defineLazyServiceGetter(this, "checker",
-                                     "@mozilla.org/updates/update-checker;1",
-                                     "nsIUpdateChecker");
-  XPCOMUtils.defineLazyServiceGetter(this, "um",
-                                     "@mozilla.org/updates/update-manager;1",
-                                     "nsIUpdateManager");
 
   this.bundle = Services.strings.
                 createBundle("chrome://browser/locale/browser.properties");

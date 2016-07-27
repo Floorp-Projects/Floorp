@@ -148,4 +148,10 @@ KeySystemToGMPName(const nsAString& aKeySystem)
   return EmptyString();
 }
 
+bool
+IsClearkeyKeySystem(const nsAString& aKeySystem)
+{
+  return aKeySystem.EqualsLiteral("org.w3.clearkey");
+}
+
 } // namespace mozilla

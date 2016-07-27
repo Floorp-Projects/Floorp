@@ -11,6 +11,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "ReadbackManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
@@ -361,10 +362,11 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocation
                          ID3D11Device* aDevice)
 {
   RefPtr<ID3D11Device> device = aDevice;
-  if (!device &&
-      !gfxWindowsPlatform::GetPlatform()->GetD3D11DeviceForCurrentThread(&device))
-  {
-    return nullptr;
+  if (!device) {
+    device = DeviceManagerD3D11::Get()->GetDeviceForCurrentThread();
+    if (!device) {
+      return nullptr;
+    }
   }
 
   CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
@@ -657,9 +659,7 @@ DXGITextureHostD3D11::GetDevice()
     return nullptr;
   }
 
-  RefPtr<ID3D11Device> device;
-  gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device);
-  return device;
+  return DeviceManagerD3D11::Get()->GetCompositorDevice();
 }
 
 static CompositorD3D11* AssertD3D11Compositor(Compositor* aCompositor)
@@ -795,9 +795,7 @@ DXGIYCbCrTextureHostD3D11::GetDevice()
     return nullptr;
   }
 
-  RefPtr<ID3D11Device> device;
-  gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device);
-  return device;
+  return DeviceManagerD3D11::Get()->GetCompositorDevice();
 }
 
 void
@@ -1121,7 +1119,7 @@ SyncObjectD3D11::FinalizeFrame()
   HRESULT hr;
 
   if (!mD3D11Texture && mD3D11SyncedTextures.size()) {
-    ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
+    RefPtr<ID3D11Device> device = DeviceManagerD3D11::Get()->GetContentDevice();
 
     hr = device->OpenSharedResource(mHandle, __uuidof(ID3D11Texture2D), (void**)(ID3D11Texture2D**)getter_AddRefs(mD3D11Texture));
 
@@ -1164,8 +1162,7 @@ SyncObjectD3D11::FinalizeFrame()
     box.front = box.top = box.left = 0;
     box.back = box.bottom = box.right = 1;
 
-    ID3D11Device* dev = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
-
+    RefPtr<ID3D11Device> dev = DeviceManagerD3D11::Get()->GetContentDevice();
     if (!dev) {
       if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
         return;

@@ -13,7 +13,7 @@ interface nsIAccessible;
  * A cross-platform interface that supports hyperlink-specific properties and
  * methods.  Anchors, image maps, xul:labels with class="text-link" implement this interface.
  */
-[scriptable, uuid(883643d4-93a5-4f32-922c-6f06e01363c1)]
+[scriptable, builtinclass, uuid(883643d4-93a5-4f32-922c-6f06e01363c1)]
 interface nsIAccessibleHyperLink : nsISupports
 {
   /**
