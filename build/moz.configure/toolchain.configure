@@ -55,17 +55,20 @@ set_config('HAVE_YASM', have_yasm)
 # Until the YASM variable is not necessary in old-configure.
 add_old_configure_assignment('YASM', have_yasm)
 
+@depends('--help')
+def extra_toolchain_flags(_):
+    # This value will be overriden for android builds, where
+    # extra flags are required to do basic checks.
+    return []
 
 # Android NDK
 # ==============================================================
 
 @depends('--disable-compile-environment', build_project, gonkdir, '--help')
-def android_ndk_include(compile_env, build_project, gonkdir, _):
-    if compile_env and (gonkdir or build_project in ('mobile/android', 'js')):
-        return 'android-ndk.configure'
+def compiling_android(compile_env, build_project, gonkdir, _):
+    return compile_env and (gonkdir or build_project in ('mobile/android', 'js'))
 
-include(android_ndk_include)
-
+include_when('android-ndk.configure', when=compiling_android)
 
 # MacOS deployment target version
 # ==============================================================
@@ -168,31 +171,8 @@ add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)
 
 # Compilers
 # ==============================================================
-@imports('os')
-@imports('subprocess')
-@imports(_from='mozbuild.configure.util', _import='LineIO')
-@imports(_from='tempfile', _import='mkstemp')
 def try_preprocess(compiler, language, source):
-    suffix = {
-        'C': '.c',
-        'C++': '.cpp',
-    }[language]
-
-    fd, path = mkstemp(prefix='conftest.', suffix=suffix)
-    try:
-        source = source.encode('ascii', 'replace')
-
-        log.debug('Creating `%s` with content:', path)
-        with LineIO(lambda l: log.debug('| %s', l)) as out:
-            out.write(source)
-
-        os.write(fd, source)
-        os.close(fd)
-        cmd = compiler + ['-E', path]
-        return check_cmd_output(*cmd)
-    finally:
-        os.remove(path)
-
+    return try_invoke_compiler(compiler, language, source, ['-E'])
 
 @imports(_from='mozbuild.configure.constants', _import='CompilerType')
 @imports(_from='mozbuild.configure.constants',
@@ -400,6 +380,71 @@ def check_compiler(compiler, language, target):
     )
 
 
+@imports(_from='collections', _import='defaultdict')
+@imports(_from='__builtin__', _import='sorted')
+def get_vc_paths(base):
+    vc = defaultdict(lambda: defaultdict(dict))
+    subkey = r'Microsoft\VisualStudio\VC\*\*\*\Compiler'
+    for v, h, t, p in get_registry_values(base + '\\' + subkey):
+        vc[v][h][t] = p
+    if not vc:
+        return
+    version, data = sorted(vc.iteritems(), key=lambda x: Version(x[0]))[-1]
+    return data
+
+
+@depends(host)
+@imports('platform')
+def vc_compiler_path(host):
+    if host.kernel != 'WINNT':
+        return
+    vc_host = {
+        'x86': 'x86',
+        'AMD64': 'x64',
+    }.get(platform.machine())
+    if vc_host is None:
+        return
+    vc_target = {
+        'x86': 'x86',
+        'x86_64': 'x64',
+        'arm': 'arm',
+    }.get(host.cpu)
+    if vc_target is None:
+        return
+
+    base_key = r'HKEY_LOCAL_MACHINE\SOFTWARE'
+    data = get_vc_paths(base_key)
+    if not data:
+        data = get_vc_paths(base_key + r'\Wow6432Node')
+    if not data:
+        return
+
+    path = data.get(vc_host, {}).get(vc_target)
+    if not path and vc_host == 'x64':
+        vc_host = 'x86'
+        path = data.get(vc_host, {}).get(vc_target)
+    if not path:
+        return
+    path = os.path.dirname(path)
+    if vc_host != vc_target:
+        other_path = data.get(vc_host, {}).get(vc_host)
+        if other_path:
+            return (path, os.path.dirname(other_path))
+    return (path,)
+
+
+@depends(vc_compiler_path)
+@imports('os')
+def toolchain_search_path(vc_compiler_path):
+    if vc_compiler_path:
+        result = [os.environ.get('PATH')]
+        result.extend(vc_compiler_path)
+        # We're going to alter PATH for good in windows.configure, but we also
+        # need to do it for the valid_compiler() check below.
+        os.environ['PATH'] = os.pathsep.join(result)
+        return result
+
+
 @template
 def default_c_compilers(host_or_target):
     '''Template defining the set of default C compilers for the host and
@@ -541,7 +586,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # result from check_prog as CC/CXX/HOST_CC/HOST_CXX and b) have to let
     # old-configure AC_SUBST it (because it's autoconf doing it, not us)
     compiler = check_prog('_%s' % var, what=what, progs=default_compilers,
-                          input=delayed_getattr(provided_compiler, 'compiler'))
+                          input=delayed_getattr(provided_compiler, 'compiler'),
+                          paths=toolchain_search_path)
 
     @depends(compiler, provided_compiler, compiler_wrapper, host_or_target)
     @checking('whether %s can be used' % what, lambda x: bool(x))
@@ -699,6 +745,8 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_compiler=cxx_compiler,
                              other_c_compiler=c_compiler)
 
+include('compilechecks.configure')
+
 @depends(c_compiler)
 def default_debug_flags(compiler_info):
     # Debug info is ON by default.
@@ -779,4 +827,5 @@ def libcxx_inline_visibility(c_compiler, target):
 set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_inline_visibility)
 set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49', libcxx_inline_visibility)
 
+include('windows.configure')
 include('rust.configure')

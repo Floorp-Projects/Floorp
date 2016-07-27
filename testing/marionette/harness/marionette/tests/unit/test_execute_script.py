@@ -36,7 +36,7 @@ class TestExecuteSimpleTestContent(MarionetteTestCase):
                 """, filename="file.js")
             self.assertFalse(True)
         except errors.JavascriptException as e:
-            self.assertIn("throwHere is not defined", e.msg)
+            self.assertIn("throwHere is not defined", e.message)
             self.assertIn("@file.js:2", e.stacktrace)
 
 
@@ -138,7 +138,7 @@ class TestExecuteContent(MarionetteTestCase):
             # by default execute_script pass the name of the python file
             self.assertIn(
                 os.path.basename(__file__.replace(".pyc", ".py")), e.stacktrace)
-            self.assertIn("b is not defined", e.msg)
+            self.assertIn("b is not defined", e.message)
             self.assertIn("return b", e.stacktrace)
 
     def test_permission(self):

@@ -19,7 +19,6 @@ ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
                          aFunction.mFunc.mX2, aFunction.mFunc.mY2);
   } else {
     mSteps = aFunction.mSteps;
-    mStepSyntax = aFunction.mStepSyntax;
   }
 }
 
@@ -141,9 +140,6 @@ ComputedTimingFunction::Compare(const ComputedTimingFunction& aRhs) const
     if (mSteps != aRhs.mSteps) {
       return int32_t(mSteps) - int32_t(aRhs.mSteps);
     }
-    if (mStepSyntax != aRhs.mStepSyntax) {
-      return int32_t(mStepSyntax) - int32_t(aRhs.mStepSyntax);
-    }
   }
 
   return 0;
@@ -162,8 +158,7 @@ ComputedTimingFunction::AppendToString(nsAString& aResult) const
       break;
     case nsTimingFunction::Type::StepStart:
     case nsTimingFunction::Type::StepEnd:
-      nsStyleUtil::AppendStepsTimingFunction(mType, mSteps, mStepSyntax,
-                                             aResult);
+      nsStyleUtil::AppendStepsTimingFunction(mType, mSteps, aResult);
       break;
     default:
       nsStyleUtil::AppendCubicBezierKeywordTimingFunction(mType, aResult);

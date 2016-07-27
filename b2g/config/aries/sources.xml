@@ -20,7 +20,7 @@
     B2G repositories for all targets
     -->
   <project name="gaia" path="gaia" remote="b2g" revision="99c01f5646b2d8aa5ebf1968114ab2f5db5ac6a8"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="1ec02eda4b375778b3611ebb7fb186faf5f75bb0"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="99003a6e7ecee880330a3fb8b5e49fefdb762374"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="34adfb400e031f3dd3353d92413572db5e3a7376"/>

@@ -242,7 +242,6 @@
 
 
 var STATUS = "STATUS: ";
-var VERBOSE = false;
 var SECT_PREFIX = 'Section ';
 var SECT_SUFFIX = ' of test - ';
 
@@ -262,8 +261,6 @@ var msg = '';
 var GLOBAL = this + '';
 var PASSED = " PASSED! ";
 var FAILED = " FAILED! ";
-
-var DEBUG = false;
 
 var DESCRIPTION;
 var EXPECTED;
@@ -450,34 +447,16 @@ function reportCompare (expected, actual, description) {
   var output = "";
 
   if (typeof description == "undefined")
-  {
     description = '';
-  }
-  else if (VERBOSE)
-  {
-    printStatus ("Comparing '" + description + "'");
-  }
 
-  if (expected_t != actual_t)
-  {
+  if (expected_t != actual_t) {
     output += "Type mismatch, expected type " + expected_t +
       ", actual type " + actual_t + " ";
   }
-  else if (VERBOSE)
-  {
-    printStatus ("Expected type '" + expected_t + "' matched actual " +
-                 "type '" + actual_t + "'");
-  }
 
-  if (expected != actual)
-  {
+  if (expected != actual) {
     output += "Expected value '" + toPrinted(expected) +
       "', Actual value '" + toPrinted(actual) + "' ";
-  }
-  else if (VERBOSE)
-  {
-    printStatus ("Expected value '" + toPrinted(expected) +
-                 "' matched actual value '" + toPrinted(actual) + "'");
   }
 
   var testcase = new TestCase("unknown-test-name", description, expected, actual);
@@ -510,35 +489,17 @@ function reportMatch (expectedRegExp, actual, description) {
   var output = "";
 
   if (typeof description == "undefined")
-  {
     description = '';
-  }
-  else if (VERBOSE)
-  {
-    printStatus ("Comparing '" + description + "'");
-  }
 
-  if (expected_t != actual_t)
-  {
+  if (expected_t != actual_t) {
     output += "Type mismatch, expected type " + expected_t +
       ", actual type " + actual_t + " ";
   }
-  else if (VERBOSE)
-  {
-    printStatus ("Expected type '" + expected_t + "' matched actual " +
-                 "type '" + actual_t + "'");
-  }
 
   var matches = expectedRegExp.test(actual);
-  if (!matches)
-  {
+  if (!matches) {
     output += "Expected match to '" + toPrinted(expectedRegExp) +
       "', Actual value '" + toPrinted(actual) + "' ";
-  }
-  else if (VERBOSE)
-  {
-    printStatus ("Expected match to '" + toPrinted(expectedRegExp) +
-                 "' matched actual value '" + toPrinted(actual) + "'");
   }
 
   var testcase = new TestCase("unknown-test-name", description, true, matches);

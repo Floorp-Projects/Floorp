@@ -12,6 +12,7 @@
 #include "gfxWindowsPlatform.h"
 #include "nsIWidget.h"
 #include "nsIGfxInfo.h"
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/layers/ImageHost.h"
 #include "mozilla/layers/ContentHost.h"
 #include "mozilla/layers/Effects.h"
@@ -203,7 +204,8 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
 
   HRESULT hr;
 
-  if (!gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&mDevice)) {
+  mDevice = DeviceManagerD3D11::Get()->GetCompositorDevice();
+  if (!mDevice) {
     *out_failureReason = "FEATURE_FAILURE_D3D11_NO_DEVICE";
     return false;
   }
@@ -1257,7 +1259,8 @@ CompositorD3D11::EndFrame()
 
   UINT presentInterval = 0;
 
-  if (gfxWindowsPlatform::GetPlatform()->IsWARP()) {
+  bool isWARP = DeviceManagerD3D11::Get()->IsWARP();
+  if (isWARP) {
     // When we're using WARP we cannot present immediately as it causes us
     // to tear when rendering. When not using WARP it appears the DWM takes
     // care of tearing for us.
@@ -1280,8 +1283,7 @@ CompositorD3D11::EndFrame()
       nsString vendorID;
       nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
       gfxInfo->GetAdapterVendorID(vendorID);
-      allowPartialPresent = !vendorID.EqualsLiteral("0x10de") ||
-                            gfxWindowsPlatform::GetPlatform()->IsWARP();
+      allowPartialPresent = !vendorID.EqualsLiteral("0x10de") || isWARP;
     }
 
     if (SUCCEEDED(hr) && chain && allowPartialPresent) {
@@ -1505,7 +1507,7 @@ bool
 DeviceAttachmentsD3D11::InitSyncObject()
 {
   // Sync object is not supported on WARP.
-  if (gfxWindowsPlatform::GetPlatform()->IsWARP()) {
+  if (DeviceManagerD3D11::Get()->IsWARP()) {
     return true;
   }
 
@@ -1707,8 +1709,7 @@ CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
     MOZ_CRASH("GFX: Unrecoverable D3D11 error");
   }
 
-  RefPtr<ID3D11Device> device;
-  if (!gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device) || device != mDevice) {
+  if (mDevice && DeviceManagerD3D11::Get()->GetCompositorDevice() != mDevice) {
     gfxCriticalError() << "Out of sync D3D11 devices in HandleError, " << (int)mVerifyBuffersFailed;
   }
 

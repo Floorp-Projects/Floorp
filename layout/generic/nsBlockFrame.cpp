@@ -1235,7 +1235,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
         mLines.front() != mLines.back() &&
         mLines.begin().next()->IsBlock()))) {
     // Reflow the bullet
-    ReflowOutput metrics(aReflowInput);
+    ReflowOutput reflowOutput(aReflowInput);
     // XXX Use the entire line when we fix bug 25888.
     nsLayoutUtils::LinePosition position;
     WritingMode wm = aReflowInput.GetWritingMode();
@@ -1245,8 +1245,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       position.mBStart :
       reflowInput->ComputedLogicalBorderPadding().BStart(wm);
     nsIFrame* bullet = GetOutsideBullet();
-    ReflowBullet(bullet, state, metrics, lineBStart);
-    NS_ASSERTION(!BulletIsEmpty() || metrics.BSize(wm) == 0,
+    ReflowBullet(bullet, state, reflowOutput, lineBStart);
+    NS_ASSERTION(!BulletIsEmpty() || reflowOutput.BSize(wm) == 0,
                  "empty bullet took up space");
 
     if (havePosition && !BulletIsEmpty()) {
@@ -1256,9 +1256,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       // bullets that are placed next to a child block (bug 92896)
     
       // Tall bullets won't look particularly nice here...
-      LogicalRect bbox = bullet->GetLogicalRect(wm, metrics.PhysicalSize());
-      bbox.BStart(wm) = position.mBaseline - metrics.BlockStartAscent();
-      bullet->SetRect(wm, bbox, metrics.PhysicalSize());
+      LogicalRect bbox = bullet->GetLogicalRect(wm, reflowOutput.PhysicalSize());
+      bbox.BStart(wm) = position.mBaseline - reflowOutput.BlockStartAscent();
+      bullet->SetRect(wm, bbox, reflowOutput.PhysicalSize());
     }
     // Otherwise just leave the bullet where it is, up against our
     // block-start padding.

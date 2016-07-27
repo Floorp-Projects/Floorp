@@ -30,13 +30,13 @@ class MarionetteException(Exception):
             be displayed in the exception's string representation.
 
         """
-
-        self.msg = message
         self.cause = cause
         self.stacktrace = stacktrace
 
+        super(MarionetteException, self).__init__(message)
+
     def __str__(self):
-        msg = str(self.msg)
+        msg = str(self.message)
         tb = None
 
         if self.cause:
@@ -49,7 +49,7 @@ class MarionetteException(Exception):
             st = "".join(["\t%s\n" % x for x in self.stacktrace.splitlines()])
             msg += "\nstacktrace:\n%s" % st
 
-        return "".join(traceback.format_exception(self.__class__, msg, tb))
+        return "".join(traceback.format_exception(self.__class__, msg, tb)).strip()
 
 
 class ElementNotSelectableException(MarionetteException):

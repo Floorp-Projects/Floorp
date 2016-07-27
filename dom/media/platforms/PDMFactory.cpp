@@ -29,6 +29,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
 
 #include "MediaInfo.h"
@@ -87,17 +88,31 @@ PDMFactory::~PDMFactory()
 void
 PDMFactory::EnsureInit() const
 {
-  StaticMutexAutoLock mon(sMonitor);
-  if (!sInstance) {
-    sInstance = new PDMFactoryImpl();
+  {
+    StaticMutexAutoLock mon(sMonitor);
+    if (sInstance) {
+      // Quick exit if we already have an instance.
+      return;
+    }
     if (NS_IsMainThread()) {
+      // On the main thread and holding the lock -> Create instance.
+      sInstance = new PDMFactoryImpl();
       ClearOnShutdown(&sInstance);
-    } else {
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableFunction([]() { ClearOnShutdown(&sInstance); });
-      NS_DispatchToMainThread(runnable);
+      return;
     }
   }
+
+  // Not on the main thread -> Sync-dispatch creation to main thread.
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableFunction([]() {
+      StaticMutexAutoLock mon(sMonitor);
+      if (!sInstance) {
+        sInstance = new PDMFactoryImpl();
+        ClearOnShutdown(&sInstance);
+      }
+    });
+  SyncRunnable::DispatchToThread(mainThread, runnable);
 }
 
 already_AddRefed<MediaDataDecoder>

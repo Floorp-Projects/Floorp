@@ -183,7 +183,7 @@ AddCertificateFromFile(const char* basePath, const char* filename)
   if (rv != SECSuccess) {
     return rv;
   }
-  SECItem certDER;
+  ScopedAutoSECItem certDER;
   rv = CERT_DecodeCertPackage(buf, strlen(buf), DecodeCertCallback, &certDER);
   if (rv != SECSuccess) {
     PrintPRError("CERT_DecodeCertPackage failed");
@@ -192,7 +192,6 @@ AddCertificateFromFile(const char* basePath, const char* filename)
   UniqueCERTCertificate cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
                                                      &certDER, nullptr, false,
                                                      true));
-  PORT_Free(certDER.data);
   if (!cert) {
     PrintPRError("CERT_NewTempCertificate failed");
     return SECFailure;

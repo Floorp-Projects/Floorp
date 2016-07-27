@@ -1,6 +1,6 @@
 en_US-custom Hunspell Dictionary
-Generated from SCOWL Version 2016.01.19
-Thu Jan 21 14:36:27 EST 2016
+Generated from SCOWL Version 2016.06.26
+Tue Jul 26 12:40:23 EDT 2016
 
 http://wordlist.sourceforge.net
 
@@ -319,5 +319,5 @@ from the Ispell distribution they are under the Ispell copyright:
   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
-Build Date: Thu Jan 21 14:36:27 EST 2016
+Build Date: Tue Jul 26 12:40:23 EDT 2016
 With Input Command: ../mk-list -v1 --accents=both en_US 60

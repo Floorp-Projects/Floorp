@@ -692,19 +692,19 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                 LogicalSize(aChild->GetWritingMode(), aSize));
   reflowInput.SetComputedWidth(std::max(0, aSize.width - reflowInput.ComputedPhysicalBorderPadding().LeftRight()));
   reflowInput.SetComputedHeight(std::max(0, aSize.height - reflowInput.ComputedPhysicalBorderPadding().TopBottom()));
-  ReflowOutput metrics(aReflowInput);
-  metrics.Width() = aSize.width;
-  metrics.Height() = aSize.height;
+  ReflowOutput reflowOutput(aReflowInput);
+  reflowOutput.Width() = aSize.width;
+  reflowOutput.Height() = aSize.height;
   nsReflowStatus status;
 
-  ReflowChild(aChild, aPresContext, metrics, reflowInput, aOffset.x,
+  ReflowChild(aChild, aPresContext, reflowOutput, reflowInput, aOffset.x,
               aOffset.y, 0, status);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
 
   // Place and size the child
-  metrics.Width() = aSize.width;
-  metrics.Height() = aSize.height;
-  FinishReflowChild(aChild, aPresContext, metrics, nullptr, aOffset.x, aOffset.y, 0);
+  reflowOutput.Width() = aSize.width;
+  reflowOutput.Height() = aSize.height;
+  FinishReflowChild(aChild, aPresContext, reflowOutput, nullptr, aOffset.x, aOffset.y, 0);
 }
 
 static

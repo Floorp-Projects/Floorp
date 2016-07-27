@@ -47,4 +47,4 @@ class TestSwitchFrameChrome(MarionetteTestCase):
         try:
             self.marionette.execute_async_script("foo();")
         except JavascriptException as e:
-            self.assertIn("foo", e.msg)
+            self.assertIn("foo", e.message)

@@ -2020,7 +2020,7 @@ public:
    * If a difference in available size from the previous reflow causes
    * the frame's size to change, it should reflow descendants as needed.
    *
-   * @param aReflowMetrics <i>out</i> parameter where you should return the
+   * @param aReflowOutput <i>out</i> parameter where you should return the
    *          desired size and ascent/descent info. You should include any
    *          space you want for border/padding in the desired size you return.
    *
@@ -2048,7 +2048,7 @@ public:
    *          and whether the next-in-flow is dirty and needs to be reflowed
    */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aReflowMetrics,
+                      ReflowOutput&     aReflowOutput,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) = 0;
 
