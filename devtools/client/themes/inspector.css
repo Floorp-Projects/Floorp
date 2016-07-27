@@ -27,6 +27,18 @@
 
 #inspector-searchlabel {
   overflow: hidden;
+  margin-inline-end: 2px;
+}
+
+#inspector-search {
+  flex: unset;
+}
+
+/* TODO: bug 1265759: should apply to .devtools-searchinput once all searchbox
+   is converted to html*/
+#inspector-searchbox {
+  flex: 1;
+  width: 100%;
 }
 
 /* Make sure the text is vertically centered in Inspector's
