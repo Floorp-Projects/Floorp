@@ -10,10 +10,12 @@ EXPORTS.mozilla.mscom += [
     'EnsureMTA.h',
     'MainThreadRuntime.h',
     'ProxyStream.h',
+    'Registration.h',
     'Utils.h',
 ]
 
 SOURCES += [
+    'Registration.cpp',
     'Utils.cpp',
 ]
 
