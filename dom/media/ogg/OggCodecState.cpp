@@ -457,11 +457,9 @@ TheoraState::PacketDuration(ogg_packet* aPacket)
   if (!mActive || mInfo.fps_numerator == 0) {
     return -1;
   }
-  CheckedInt64 t = CheckedInt64(mInfo.fps_denominator) * USECS_PER_S;
-  if (!t.isValid()) {
-    return -1;
-  }
-  return t.value() / mInfo.fps_numerator;
+  CheckedInt64 t =
+    SaferMultDiv(mInfo.fps_denominator, USECS_PER_S, mInfo.fps_numerator);
+  return t.isValid() ? t.value() : -1;
 }
 
 int64_t
@@ -734,11 +732,8 @@ VorbisState::Time(vorbis_info* aInfo, int64_t aGranulepos)
   if (aGranulepos == -1 || aInfo->rate == 0) {
     return -1;
   }
-  CheckedInt64 t = CheckedInt64(aGranulepos) * USECS_PER_S;
-  if (!t.isValid()) {
-    t = 0;
-  }
-  return t.value() / aInfo->rate;
+  CheckedInt64 t = SaferMultDiv(aGranulepos, USECS_PER_S, aInfo->rate);
+  return t.isValid() ? t.value() : 0;
 }
 
 int64_t
@@ -1079,8 +1074,8 @@ OpusState::Time(int aPreSkip, int64_t aGranulepos)
   }
 
   // Ogg Opus always runs at a granule rate of 48 kHz.
-  CheckedInt64 t = (CheckedInt64(aGranulepos) - aPreSkip) * USECS_PER_S;
-  return t.isValid() ? t.value() / 48000 : -1;
+  CheckedInt64 t = SaferMultDiv(aGranulepos - aPreSkip, USECS_PER_S, 48000);
+  return t.isValid() ? t.value() : -1;
 }
 
 bool
@@ -1140,8 +1135,8 @@ GetOpusDeltaGP(ogg_packet* packet)
 int64_t
 OpusState::PacketDuration(ogg_packet* aPacket)
 {
-  CheckedInt64 t = CheckedInt64(GetOpusDeltaGP(aPacket)) * USECS_PER_S;
-  return t.isValid() ? t.value() / 48000 : -1;
+  CheckedInt64 t = SaferMultDiv(GetOpusDeltaGP(aPacket), USECS_PER_S, 48000);
+  return t.isValid() ? t.value() : -1;
 }
 
 bool
@@ -1361,20 +1356,20 @@ SkeletonState::DecodeIndex(ogg_packet* aPacket)
 
   // Extract the start time.
   int64_t timeRawInt = LittleEndian::readInt64(p + INDEX_FIRST_NUMER_OFFSET);
-  CheckedInt64 t = CheckedInt64(timeRawInt) * USECS_PER_S;
+  CheckedInt64 t = SaferMultDiv(timeRawInt, USECS_PER_S, timeDenom);
   if (!t.isValid()) {
     return (mActive = false);
   } else {
-    startTime = t.value() / timeDenom;
+    startTime = t.value();
   }
 
   // Extract the end time.
   timeRawInt = LittleEndian::readInt64(p + INDEX_LAST_NUMER_OFFSET);
-  t = CheckedInt64(timeRawInt) * USECS_PER_S;
+  t = SaferMultDiv(timeRawInt, USECS_PER_S, timeDenom);
   if (!t.isValid()) {
     return (mActive = false);
   } else {
-    endTime = t.value() / timeDenom;
+    endTime = t.value();
   }
 
   // Check the numKeyPoints value read, ensure we're not going to run out of
@@ -1428,11 +1423,10 @@ SkeletonState::DecodeIndex(ogg_packet* aPacket)
         time.value() < startTime) {
       return (mActive = false);
     }
-    CheckedInt64 timeUsecs = time * USECS_PER_S;
+    CheckedInt64 timeUsecs = SaferMultDiv(time.value(), USECS_PER_S, timeDenom);
     if (!timeUsecs.isValid()) {
-      return mActive = false;
+      return (mActive = false);
     }
-    timeUsecs /= timeDenom;
     keyPoints->Add(offset.value(), timeUsecs.value());
     numKeyPointsRead++;
   }
