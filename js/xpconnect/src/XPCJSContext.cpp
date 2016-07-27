@@ -804,25 +804,7 @@ XPCJSContext::FinalizeCallback(JSFreeOp* fop,
                 // Mark those AutoMarkingPtr lists!
                 if (AutoMarkingPtr* roots = Get()->mAutoRoots)
                     roots->MarkAfterJSFinalizeAll();
-
-                XPCCallContext* ccxp = XPCJSContext::Get()->GetCallContext();
-                while (ccxp) {
-                    // Deal with the strictness of callcontext that
-                    // complains if you ask for a set when
-                    // it is in a state where the set could not
-                    // possibly be valid.
-                    if (ccxp->CanGetSet()) {
-                        XPCNativeSet* set = ccxp->GetSet();
-                        if (set)
-                            set->Mark();
-                    }
-                    ccxp = ccxp->GetPrevCallContext();
-                }
             }
-
-#ifdef DEBUG
-            XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked();
-#endif
 
             // Now we are going to recycle any unused WrappedNativeTearoffs.
             // We do this by iterating all the live callcontexts
