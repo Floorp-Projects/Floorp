@@ -30,8 +30,7 @@ AnimationUtils::TimingFunctionToComputedTimingFunction(
         nsTimingFunction::Type::StepStart :
         nsTimingFunction::Type::StepEnd;
       ComputedTimingFunction result;
-      result.Init(nsTimingFunction(type, sf.steps(),
-                  nsTimingFunction::Keyword::Explicit));
+      result.Init(nsTimingFunction(type, sf.steps()));
       return Some(result);
     }
     default:

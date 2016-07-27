@@ -9,8 +9,11 @@ package org.mozilla.gecko.util;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.text.TextUtils;
 
 public class ContextUtils {
+    private static final String INSTALLER_GOOGLE_PLAY = "com.android.vending";
+
     private ContextUtils() {}
 
     /**
@@ -24,5 +27,15 @@ public class ContextUtils {
         } catch (PackageManager.NameNotFoundException e) {
             throw new AssertionError("Should not happen: Can't get package info of own package");
         }
+    }
+
+    public static boolean isInstalledFromGooglePlay(final Context context) {
+        final String installerPackageName = context.getPackageManager().getInstallerPackageName(context.getPackageName());
+
+        if (TextUtils.isEmpty(installerPackageName)) {
+            return false;
+        }
+
+        return INSTALLER_GOOGLE_PLAY.equals(installerPackageName);
     }
 }

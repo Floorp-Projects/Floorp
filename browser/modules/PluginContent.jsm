@@ -397,9 +397,9 @@ PluginContent.prototype = {
     if (eventType == "HiddenPlugin") {
       let pluginTag = event.tag.QueryInterface(Ci.nsIPluginTag);
       if (event.target.defaultView.top.document != this.content.document) {
-	return;
+        return;
       }
-      this._showClickToPlayNotification(pluginTag, true);
+      this._showClickToPlayNotification(pluginTag, false);
     }
 
     let plugin = event.target;

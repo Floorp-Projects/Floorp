@@ -33,23 +33,6 @@ function resetPassword()
   } catch (e) {
   }
 
-  var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService);
-  if (pref) {
-    pref = pref.getBranch(null);
-    try {
-      if (pref.getBoolPref("wallet.crypto")) {
-        // data in wallet is encrypted, clear it
-        var wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
-        if (wallet) {
-          wallet = wallet.getService(Components.interfaces.nsIWalletService);
-          wallet.WALLET_DeleteAll();
-        }
-      }
-    } catch (e) {
-      // wallet.crypto pref is missing
-    }
-  }
-
   var bundle = document.getElementById("pippki_bundle");
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);

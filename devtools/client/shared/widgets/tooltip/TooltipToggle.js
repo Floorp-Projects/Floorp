@@ -24,7 +24,7 @@ function TooltipToggle(tooltip) {
   this.win = tooltip.doc.defaultView;
 
   this._onMouseMove = this._onMouseMove.bind(this);
-  this._onMouseLeave = this._onMouseLeave.bind(this);
+  this._onMouseOut = this._onMouseOut.bind(this);
 
   this._onTooltipMouseOver = this._onTooltipMouseOver.bind(this);
   this._onTooltipMouseOut = this._onTooltipMouseOut.bind(this);
@@ -84,7 +84,7 @@ TooltipToggle.prototype = {
     this._interactive = interactive;
 
     baseNode.addEventListener("mousemove", this._onMouseMove);
-    baseNode.addEventListener("mouseleave", this._onMouseLeave);
+    baseNode.addEventListener("mouseout", this._onMouseOut);
 
     if (this._interactive) {
       this.tooltip.container.addEventListener("mouseover", this._onTooltipMouseOver);
@@ -105,7 +105,7 @@ TooltipToggle.prototype = {
     }
 
     this._baseNode.removeEventListener("mousemove", this._onMouseMove);
-    this._baseNode.removeEventListener("mouseleave", this._onMouseLeave);
+    this._baseNode.removeEventListener("mouseout", this._onMouseOut);
 
     if (this._interactive) {
       this.tooltip.container.removeEventListener("mouseover", this._onTooltipMouseOver);
@@ -152,7 +152,12 @@ TooltipToggle.prototype = {
     return null;
   }),
 
-  _onMouseLeave: function () {
+  _onMouseOut: function (event) {
+    // Only hide the tooltip if the mouse leaves baseNode.
+    if (event && this._baseNode && !this._baseNode.contains(event.relatedTarget)) {
+      return;
+    }
+
     this._lastHovered = null;
     this.win.clearTimeout(this.toggleTimer);
     this.toggleTimer = this.win.setTimeout(() => {

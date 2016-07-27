@@ -53,8 +53,6 @@ dnl ========================================================
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
 
-MSMANIFEST_TOOL=
-
 dnl Set various checks
 dnl ========================================================
 MISSING_X=
@@ -149,25 +147,7 @@ dnl Special win32 checks
 dnl ========================================================
 
 # Target the Windows 8.1 SDK by default
-WINSDK_TARGETVER=603
 WINVER=502
-
-MOZ_ARG_WITH_STRING(windows-version,
-[  --with-windows-version=WINSDK_TARGETVER
-                          Windows SDK version to target. Win8.1 (603) is
-                          currently the minimum supported version.],
-  WINSDK_TARGETVER=$withval)
-
-# Currently only version 603 is allowed
-case "$WINSDK_TARGETVER" in
-603)
-    MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
-    ;;
-
-*)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER)]);
-    ;;
-esac
 
 case "$target" in
 *-mingw*)
@@ -239,26 +219,6 @@ case "$target" in
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
 
-        dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
-        dnl not something else like "magnetic tape manipulation utility".
-        MT=${MT-mt.exe}
-        MSMT_TOOL=`${MT} 2>&1|grep 'Microsoft (R) Manifest Tool'`
-        if test -z "$MSMT_TOOL"; then
-          AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
-        fi
-
-        changequote(,)
-        _MSMT_VER_FILTER='s|.*[^!-~]\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
-        changequote([,])
-        MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
-        if test -z "$MSMANIFEST_TOOL_VERSION"; then
-          AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
-        fi
-
-        MSMANIFEST_TOOL=1
-        unset MSMT_TOOL
-        AC_SUBST(MT)
-
         # Check linker version
         _LD_FULL_VERSION=`"${LD}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
         _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
@@ -309,23 +269,11 @@ case "$target" in
         fi
     fi # !GNU_CC
 
-    MOZ_FIND_WINSDK_VERSION
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
     # Require OS features provided by IE 6.0 SP2 (XP SP2)
     AC_DEFINE_UNQUOTED(_WIN32_IE,0x0603)
 
-    # If the maximum version supported by this SDK is lower than the target
-    # version, error out
-    AC_MSG_CHECKING([for Windows SDK being recent enough])
-    if $PERL -e "exit(0x$MOZ_WINSDK_TARGETVER > $MOZ_WINSDK_MAXVER)"; then
-        AC_MSG_RESULT("yes")
-    else
-        AC_MSG_RESULT("no")
-        AC_MSG_ERROR([You are targeting Windows version 0x$MOZ_WINSDK_TARGETVER, but your SDK only supports up to version $MOZ_WINSDK_MAXVER. Install and use an updated SDK, or target a lower version using --with-windows-version. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
-    fi
-
-    AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
     ;;
 esac
 
@@ -1227,14 +1175,6 @@ freebsd*)
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
 esac
-MOZ_CHECK_COMMON_HEADERS
-
-dnl These are all the places some variant of statfs can be hiding.
-MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
-
-dnl Quota support
-MOZ_CHECK_HEADERS(sys/quota.h)
-MOZ_CHECK_HEADERS(linux/quota.h)
 
 MOZ_ARG_ENABLE_BOOL(dtrace,
               [  --enable-dtrace         build with dtrace support if available (default=no)],
@@ -1248,8 +1188,6 @@ if test "x$enable_dtrace" = "xyes"; then
   fi
 fi
 AC_SUBST(HAVE_DTRACE)
-
-MOZ_CHECK_HEADERS(sys/cdefs.h)
 
 MOZ_LINUX_PERF_EVENT
 
@@ -2468,7 +2406,6 @@ AC_SUBST(BIN_SUFFIX)
 AC_SUBST(IMPORT_LIB_SUFFIX)
 AC_SUBST(USE_N32)
 AC_SUBST(CC_VERSION)
-AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(MOZ_LINKER)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)

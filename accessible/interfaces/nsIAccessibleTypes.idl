@@ -9,7 +9,7 @@
  * These constants control the scrolling of an object or substring into a
  * window. Note, keep them synchronized with IA2ScrollType.
  */
-[scriptable, uuid(05cd38b1-94b3-4cdf-8371-3935a9611405)]
+[scriptable, builtinclass, uuid(05cd38b1-94b3-4cdf-8371-3935a9611405)]
 interface nsIAccessibleScrollType : nsISupports
 {
   /**
@@ -59,7 +59,7 @@ interface nsIAccessibleScrollType : nsISupports
 /**
  * These constants define which coordinate system a point is located in.
  */
-[scriptable, uuid(c9fbdf10-619e-436f-bf4b-8566686f1577)]
+[scriptable, builtinclass, uuid(c9fbdf10-619e-436f-bf4b-8566686f1577)]
 interface nsIAccessibleCoordinateType : nsISupports
 {
   /**

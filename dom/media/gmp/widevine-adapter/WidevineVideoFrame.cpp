@@ -22,6 +22,19 @@ WidevineVideoFrame::WidevineVideoFrame()
   memset(mPlaneStrides, 0, sizeof(mPlaneStrides));
 }
 
+WidevineVideoFrame::WidevineVideoFrame(WidevineVideoFrame&& aOther)
+  : mFormat(aOther.mFormat)
+  , mSize(aOther.mSize)
+  , mBuffer(aOther.mBuffer)
+  , mTimestamp(aOther.mTimestamp)
+{
+  Log("WidevineVideoFrame::WidevineVideoFrame(WidevineVideoFrame&&) this=%p, other=%p",
+      this, &aOther);
+  memcpy(mPlaneOffsets, aOther.mPlaneOffsets, sizeof(mPlaneOffsets));
+  memcpy(mPlaneStrides, aOther.mPlaneStrides, sizeof(mPlaneStrides));
+  aOther.mBuffer = nullptr;
+}
+
 WidevineVideoFrame::~WidevineVideoFrame()
 {
   if (mBuffer) {

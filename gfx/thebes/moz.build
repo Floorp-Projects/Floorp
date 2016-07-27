@@ -51,6 +51,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.gfx += [
+    'DeviceManagerD3D11.h',
     'PrintTarget.h',
     'PrintTargetThebes.h',
 ]
@@ -231,6 +232,11 @@ UNIFIED_SOURCES += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'gfxMacPlatformFontList.mm',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    UNIFIED_SOURCES += [
+        'D3D11Checks.cpp',
+        'DeviceManagerD3D11.cpp',
     ]
 
 # We prefer to use ICU for normalization functions, but currently it is only
