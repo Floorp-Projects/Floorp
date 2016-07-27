@@ -47,6 +47,36 @@ def windows_sdk_dir(value, host):
         r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots'
         r'\KitsRoot*'))
 
+# The Windows SDK 8.1 and 10 have different layouts. The former has
+# $SDK/include/$subdir, while the latter has $SDK/include/$version/$subdir.
+# The vcvars* scripts don't actually care about the version, they just take
+# the last.
+@imports('os')
+@imports('re')
+@imports(_from='__builtin__', _import='sorted')
+@imports(_from='__builtin__', _import='WindowsError')
+def get_include_dir(sdk, subdir):
+    base = os.path.join(sdk, 'include')
+    try:
+        subdirs = [d for d in os.listdir(base)
+                   if os.path.isdir(os.path.join(base, d))]
+    except WindowsError:
+        subdirs = []
+    if not subdirs:
+        return None
+    if subdir in subdirs:
+        return os.path.join(base, subdir)
+    # At this point, either we have an incomplete or invalid SDK directory,
+    # or we exclusively have version numbers in subdirs.
+    versions = sorted((Version(d) for d in subdirs), reverse=True)
+    # Version('non-number').major is 0, so if the biggest version we have is
+    # 0, we have a problem.
+    if versions[0].major == 0:
+        return None
+    path = os.path.join(base, str(versions[0]), subdir)
+    return path if os.path.isdir(path) else None
+
+
 @imports(_from='mozbuild.shellutil', _import='quote')
 def valid_windows_sdk_dir_result(value):
     if value:
@@ -63,9 +93,9 @@ def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
     for d in windows_sdk_dir:
-        um_dir = os.path.join(d, 'include', 'um')
-        shared_dir = os.path.join(d, 'include', 'shared')
-        if os.path.isdir(um_dir) and os.path.isdir(shared_dir):
+        um_dir = get_include_dir(d, 'um')
+        shared_dir = get_include_dir(d, 'shared')
+        if um_dir and shared_dir:
             check = dedent('''\
             #include <winsdkver.h>
             WINVER_MAXVER
