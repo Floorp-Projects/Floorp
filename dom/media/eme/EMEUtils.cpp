@@ -135,13 +135,13 @@ CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aB
 nsString
 KeySystemToGMPName(const nsAString& aKeySystem)
 {
-  if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+  if (aKeySystem.EqualsASCII(kEMEKeySystemPrimetime)) {
     return NS_LITERAL_STRING("gmp-eme-adobe");
   }
-  if (aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+  if (aKeySystem.EqualsASCII(kEMEKeySystemClearkey)) {
     return NS_LITERAL_STRING("gmp-clearkey");
   }
-  if (aKeySystem.EqualsLiteral("com.widevine.alpha")) {
+  if (aKeySystem.EqualsASCII(kEMEKeySystemWidevine)) {
     return NS_LITERAL_STRING("gmp-widevinecdm");
   }
   MOZ_ASSERT(false, "We should only call this for known GMPs");
@@ -151,7 +151,7 @@ KeySystemToGMPName(const nsAString& aKeySystem)
 bool
 IsClearkeyKeySystem(const nsAString& aKeySystem)
 {
-  return aKeySystem.EqualsLiteral("org.w3.clearkey");
+  return aKeySystem.EqualsASCII(kEMEKeySystemClearkey);
 }
 
 } // namespace mozilla

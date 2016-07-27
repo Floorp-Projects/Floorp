@@ -191,7 +191,7 @@ MediaKeySystemAccess::IsGMPPresentOnDisk(const nsAString& aKeySystem,
   bool isPresent = true;
 
 #if XP_WIN
-  if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+  if (aKeySystem.EqualsASCII(kEMEKeySystemPrimetime)) {
     if (!AdobePluginDLLExists(aVersion)) {
       NS_WARNING("Adobe EME plugin disappeared from disk!");
       aOutMessage = NS_LITERAL_CSTRING("Adobe DLL was expected to be on disk but was not");
@@ -276,12 +276,12 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     return MediaKeySystemStatus::Error;
   }
 
-  if (aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+  if (aKeySystem.EqualsASCII(kEMEKeySystemClearkey)) {
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 
   if (Preferences::GetBool("media.gmp-eme-adobe.visible", false)) {
-    if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+    if (aKeySystem.EqualsASCII(kEMEKeySystemPrimetime)) {
       if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
         aOutMessage = NS_LITERAL_CSTRING("Adobe EME disabled");
         return MediaKeySystemStatus::Cdm_disabled;
@@ -298,7 +298,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
   }
 
   if (Preferences::GetBool("media.gmp-widevinecdm.visible", false)) {
-    if (aKeySystem.EqualsLiteral("com.widevine.alpha")) {
+    if (aKeySystem.EqualsASCII(kEMEKeySystemWidevine)) {
 #ifdef XP_WIN
       // Win Vista and later only.
       if (!IsVistaOrLater()) {
@@ -426,7 +426,7 @@ GetSupportedKeySystems()
 
     {
       KeySystemConfig clearkey;
-      clearkey.mKeySystem = NS_LITERAL_STRING("org.w3.clearkey");
+      clearkey.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemClearkey);
       clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
       clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("keyids"));
       clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("webm"));
@@ -458,7 +458,7 @@ GetSupportedKeySystems()
     }
     {
       KeySystemConfig widevine;
-      widevine.mKeySystem = NS_LITERAL_STRING("com.widevine.alpha");
+      widevine.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemWidevine);
       widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
       widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("keyids"));
       widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("webm"));
@@ -489,7 +489,7 @@ GetSupportedKeySystems()
     }
     {
       KeySystemConfig primetime;
-      primetime.mKeySystem = NS_LITERAL_STRING("com.adobe.primetime");
+      primetime.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemPrimetime);
       primetime.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
       primetime.mPersistentState = KeySystemFeatureSupport::Required;
       primetime.mDistinctiveIdentifier = KeySystemFeatureSupport::Required;
@@ -564,7 +564,7 @@ CanDecryptAndDecode(mozIGeckoMediaPluginService* aGMPService,
     //  the Adobe GMP's unencrypted AAC decoding path being used to
     // decode content decrypted by the Widevine CDM.
     if (codec == GMP_CODEC_AAC &&
-        aKeySystem.EqualsLiteral("com.widevine.alpha") &&
+        aKeySystem.EqualsASCII(kEMEKeySystemWidevine) &&
         !WMFDecoderModule::HasAAC()) {
       if (aDiagnostics) {
         aDiagnostics->SetKeySystemIssue(
@@ -1131,7 +1131,7 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
 #if defined(XP_WIN)
   // Widevine CDM doesn't include an AAC decoder. So if WMF can't decode AAC,
   // and a codec wasn't specified, be conservative and reject the MediaKeys request.
-  if (aKeySystem.mKeySystem.EqualsLiteral("com.widevine.alpha") &&
+  if (aKeySystem.mKeySystem.EqualsASCII(kEMEKeySystemWidevine) &&
       (aCandidate.mAudioCapabilities.IsEmpty() ||
        aCandidate.mVideoCapabilities.IsEmpty()) &&
      !WMFDecoderModule::HasAAC()) {
