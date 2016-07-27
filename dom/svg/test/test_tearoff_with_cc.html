@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1288228
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1288228</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  /** Test for Bug 1288228 **/
+  /* Note: the crash in bug 1288228 doesn't happen reliably (and only happens
+   * after several reloads).  So, we reload the iframe 10 times, and then call
+   * it good if we haven't crashed.
+   */
+  const maxReloads = 10;
+  let remainingReloads = maxReloads;
+
+  /* The helper-file in the iframe will notify us after it's performed its
+   * potentially-crash-triggering tweak. At that point, we reload the iframe
+   * and wait for it to notify again (or we simply finish, if we've completed
+   * all of the reloads we planned to do).
+   */
+  window.addEventListener("message", reloadIframe, false);
+
+  function reloadIframe() {
+    if (--remainingReloads == 0) {
+      ok(true, "Didn't crash!");
+      SimpleTest.finish();
+    } else {
+      var frame = document.getElementById("testIframe");
+      frame.setAttribute("src", "");
+      frame.setAttribute("src", "tearoff_with_cc_helper.html");
+    }
+  }
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body onload="reloadIframe()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1288228">
+  Mozilla Bug 1288228
+</a>
+<p id="display">
+  <iframe id="testIframe"></iframe>
+</p>
+</body>
+</html>
