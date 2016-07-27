@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from ../performance-controller.js */
 /* import-globals-from ../performance-view.js */
+/* exported DetailsSubview */
 "use strict";
 
 /**
@@ -18,15 +19,19 @@ var DetailsSubview = {
     this._onDetailsViewSelected = this._onDetailsViewSelected.bind(this);
     this._onPrefChanged = this._onPrefChanged.bind(this);
 
-    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStoppedOrSelected);
-    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
+    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE,
+                             this._onRecordingStoppedOrSelected);
+    PerformanceController.on(EVENTS.RECORDING_SELECTED,
+                             this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.on(EVENTS.UI_OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
     DetailsView.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
 
     let self = this;
     let originalRenderFn = this.render;
-    let afterRenderFn = () => this._wasRendered = true;
+    let afterRenderFn = () => {
+      this._wasRendered = true;
+    };
 
     this.render = Task.async(function* (...args) {
       let maybeRetval = yield originalRenderFn.apply(self, args);
@@ -41,8 +46,10 @@ var DetailsSubview = {
   destroy: function () {
     clearNamedTimeout("range-change-debounce");
 
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStoppedOrSelected);
-    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
+    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
+                              this._onRecordingStoppedOrSelected);
+    PerformanceController.off(EVENTS.RECORDING_SELECTED,
+                              this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.off(EVENTS.UI_OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
     DetailsView.off(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
@@ -133,7 +140,8 @@ var DetailsSubview = {
       let debounced = () => {
         if (!this.shouldUpdateWhileMouseIsActive && OverviewView.isMouseActive) {
           // Don't render yet, while the selection is still being dragged.
-          setNamedTimeout("range-change-debounce", this.rangeChangeDebounceTime, debounced);
+          setNamedTimeout("range-change-debounce", this.rangeChangeDebounceTime,
+                          debounced);
         } else {
           this.render(interval);
         }
