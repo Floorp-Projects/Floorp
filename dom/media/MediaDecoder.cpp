@@ -1677,9 +1677,7 @@ void
 MediaDecoder::FireTimeUpdate()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (IsShutdown()) {
-    return;
-  }
+  MOZ_ASSERT(!IsShutdown());
   mOwner->FireTimeUpdate(true);
 }
 
