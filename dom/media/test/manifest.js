@@ -552,8 +552,7 @@ var gFastSeekTests = [
   // Note: the sync points are the points on both the audio and video streams
   // before the keyframes. You can't just assume that the keyframes are the sync
   // points, as the audio required for that sync point may be before the keyframe.
-  // We can only seek at the boundary of a page index. see bug 1289438.
-  { name:"bug516323.indexed.ogv", type:"video/ogg", keyframes:[0, 3.06] },
+  { name:"bug516323.indexed.ogv", type:"video/ogg", keyframes:[0, 0.46, 3.06] },
 ];
 
 function IsWindows8OrLater() {
