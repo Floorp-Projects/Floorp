@@ -1673,6 +1673,10 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
 
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
 
+  if (mStyleSet->IsServo()) {
+    mStyleSet->AsServo()->StartStyling(GetPresContext());
+  }
+
   // Get the root frame from the frame manager
   // XXXbz it would be nice to move this somewhere else... like frame manager
   // Init(), say.  But we need to make sure our views are all set up by the
