@@ -121,6 +121,7 @@ const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_E10S_BLOCK_ENABLE          = "extensions.e10sBlocksEnabling";
 const PREF_E10S_ADDON_BLOCKLIST       = "extensions.e10s.rollout.blocklist";
 const PREF_E10S_ADDON_POLICY          = "extensions.e10s.rollout.policy";
+const PREF_E10S_HAS_NONEXEMPT_ADDON   = "extensions.e10s.rollout.hasAddon";
 
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
@@ -4382,8 +4383,10 @@ this.XPIProvider = {
         locName == KEY_APP_SYSTEM_ADDONS)
       return false;
 
-    if (isAddonPartOfE10SRollout(aAddon))
+    if (isAddonPartOfE10SRollout(aAddon)) {
+      Preferences.set(PREF_E10S_HAS_NONEXEMPT_ADDON, true);
       return false;
+    }
 
     logger.debug("Add-on " + aAddon.id + " blocks e10s rollout.");
     return true;
