@@ -5920,7 +5920,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
 {
   MOZ_ASSERT(aStyleBasicShape, "Expect a valid basic shape pointer!");
 
-  nsStyleBasicShape::Type type = aStyleBasicShape->GetShapeType();
+  StyleBasicShapeType type = aStyleBasicShape->GetShapeType();
   // Shape function name and opening parenthesis.
   nsAutoString shapeFunctionString;
   AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(
@@ -5928,7 +5928,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
                      shapeFunctionString);
   shapeFunctionString.Append('(');
   switch (type) {
-    case nsStyleBasicShape::Type::ePolygon: {
+    case StyleBasicShapeType::Polygon: {
       bool hasEvenOdd = aStyleBasicShape->GetFillRule() ==
         NS_STYLE_FILL_RULE_EVENODD;
       if (hasEvenOdd) {
@@ -5950,11 +5950,11 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
       }
       break;
     }
-    case nsStyleBasicShape::Type::eCircle:
-    case nsStyleBasicShape::Type::eEllipse: {
+    case StyleBasicShapeType::Circle:
+    case StyleBasicShapeType::Ellipse: {
       const nsTArray<nsStyleCoord>& radii = aStyleBasicShape->Coordinates();
       MOZ_ASSERT(radii.Length() ==
-                 (type == nsStyleBasicShape::Type::eCircle ? 1 : 2),
+                 (type == StyleBasicShapeType::Circle ? 1 : 2),
                  "wrong number of radii");
       for (size_t i = 0; i < radii.Length(); ++i) {
         nsAutoString radius;
@@ -5975,7 +5975,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
       shapeFunctionString.Append(positionString);
       break;
     }
-    case nsStyleBasicShape::Type::eInset: {
+    case StyleBasicShapeType::Inset: {
       BoxValuesToString(shapeFunctionString, aStyleBasicShape->Coordinates());
       if (aStyleBasicShape->HasRadius()) {
         shapeFunctionString.AppendLiteral(" round ");
