@@ -2990,7 +2990,6 @@ nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
 }
 
 // Reflow the children based on the avail size and reason in aReflowInput
-// update aReflowMetrics a aStatus
 void
 nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
                              nsReflowStatus&     aStatus,
