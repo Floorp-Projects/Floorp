@@ -204,6 +204,13 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
       Output("Couldn't read application.ini");
       return 255;
     }
+#if defined(HAS_DLL_BLOCKLIST)
+    // The dll blocklist operates in the exe vs. xullib. Pass a flag to
+    // xullib so automated tests can check the result once the browser
+    // is up and running.
+    appData->flags |=
+      DllBlocklist_CheckStatus() ? NS_XRE_DLL_BLOCKLIST_ENABLED : 0;
+#endif
     // xreDirectory already has a refcount from NS_NewLocalFile
     appData->xreDirectory = xreDirectory;
     int result = XRE_main(argc, argv, appData, mainFlags);
@@ -231,6 +238,11 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
   SetStrongPtr(appData.directory, static_cast<nsIFile*>(appSubdir.get()));
   // xreDirectory already has a refcount from NS_NewLocalFile
   appData.xreDirectory = xreDirectory;
+
+#if defined(HAS_DLL_BLOCKLIST)
+  appData.flags |=
+    DllBlocklist_CheckStatus() ? NS_XRE_DLL_BLOCKLIST_ENABLED : 0;
+#endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   sandbox::BrokerServices* brokerServices =
