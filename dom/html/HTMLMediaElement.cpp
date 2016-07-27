@@ -6048,7 +6048,7 @@ HTMLMediaElement::OpenUnsupportedMediaWithExtenalAppIfNeeded()
   }
 
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(), static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("OpenMediaWithExtenalApp"),
+                                       NS_LITERAL_STRING("OpenMediaWithExternalApp"),
                                        true,
                                        true);
 }

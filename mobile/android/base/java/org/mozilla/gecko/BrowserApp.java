@@ -11,6 +11,11 @@ import android.os.Environment;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
+import android.widget.AbsoluteLayout;
+import android.widget.VideoView;
+import android.graphics.RectF;
+import android.graphics.Rect;
+
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -674,7 +679,8 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "LightweightTheme:Update",
             "Search:Keyword",
-            "Prompt:ShowTop");
+            "Prompt:ShowTop",
+            "Video:Play");
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
             "CharEncoding:Data",
@@ -1971,6 +1977,22 @@ public class BrowserApp extends GeckoApp
                     @Override
                     public void run() {
                         mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+                    }
+                });
+            } else if (event.equals("Video:Play")) {
+                final String uri = message.getString("uri");
+                final String uuid = message.getString("uuid");
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        VideoView view = new VideoView(BrowserApp.this);
+                        android.widget.MediaController mediaController = new android.widget.MediaController(BrowserApp.this);
+                        view.setMediaController(mediaController);
+                        view.setVideoURI(Uri.parse(uri));
+                        BrowserApp.this.addFullScreenPluginView(view);
+                        view.start();
+
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.CONTENT, "playhls");
                     }
                 });
             } else if (event.equals("Prompt:ShowTop")) {

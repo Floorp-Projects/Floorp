@@ -4684,6 +4684,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
+    BrowserApp.deck.addEventListener("OpenMediaWithExternalApp", this, true);
 
     InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
     InitLater(() => BrowserApp.deck.addEventListener("click", SelectHelper, true));
@@ -4707,6 +4708,21 @@ var BrowserEventHandler = {
       case 'MozMouseHittest':
         this._handleRetargetedTouchStart(aEvent);
         break;
+      case 'OpenMediaWithExternalApp': {
+        if (aEvent.target.moz_video_uuid) {
+          return;
+        }
+        let mediaSrc = aEvent.target.currentSrc || aEvent.target.src;
+        if (!aEvent.target.moz_video_uuid) {
+          aEvent.target.moz_video_uuid = uuidgen.generateUUID().toString();
+        }
+        Services.androidBridge.handleGeckoMessage({
+          type: "Video:Play",
+          uri: mediaSrc,
+          uuid: aEvent.target.moz_video_uuid
+        });
+        break;
+      }
     }
   },
 
