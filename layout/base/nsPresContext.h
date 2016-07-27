@@ -43,6 +43,7 @@
 #include "mozilla/RestyleManagerHandle.h"
 #include "prenv.h"
 #include "mozilla/StaticPresData.h"
+#include "mozilla/StyleBackendType.h"
 
 class nsAString;
 class nsIPrintSettings;
@@ -163,7 +164,7 @@ public:
    * Set and detach presentation shell that this context is bound to.
    * A presentation context may only be bound to a single shell.
    */
-  void AttachShell(nsIPresShell* aShell);
+  void AttachShell(nsIPresShell* aShell, mozilla::StyleBackendType aBackendType);
   void DetachShell();
 
 
@@ -240,7 +241,10 @@ public:
 
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 
-  mozilla::RestyleManagerHandle RestyleManager() { return mRestyleManager; }
+  mozilla::RestyleManagerHandle RestyleManager() {
+    MOZ_ASSERT(mRestyleManager);
+    return mRestyleManager;
+  }
 
   mozilla::CounterStyleManager* CounterStyleManager() {
     return mCounterStyleManager;
