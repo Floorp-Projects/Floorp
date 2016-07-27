@@ -927,6 +927,8 @@ nsOfflineCacheDevice::GetStrictFileOriginPolicy()
 uint32_t
 nsOfflineCacheDevice::CacheSize()
 {
+  NS_ENSURE_TRUE(Initialized(), 0);
+
   AutoResetStatement statement(mStatement_CacheSize);
 
   bool hasRows;
@@ -939,6 +941,8 @@ nsOfflineCacheDevice::CacheSize()
 uint32_t
 nsOfflineCacheDevice::EntryCount()
 {
+  NS_ENSURE_TRUE(Initialized(), 0);
+
   AutoResetStatement statement(mStatement_EntryCount);
 
   bool hasRows;
@@ -951,6 +955,8 @@ nsOfflineCacheDevice::EntryCount()
 nsresult
 nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   // Decompose the key into "ClientID" and "Key"
   nsAutoCString keyBuf;
   const char *cid, *key;
@@ -1034,6 +1040,8 @@ nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
 nsresult
 nsOfflineCacheDevice::UpdateEntrySize(nsCacheEntry *entry, uint32_t newSize)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   // Decompose the key into "ClientID" and "Key"
   nsAutoCString keyBuf;
   const char *cid, *key;
@@ -1064,6 +1072,8 @@ nsOfflineCacheDevice::UpdateEntrySize(nsCacheEntry *entry, uint32_t newSize)
 nsresult
 nsOfflineCacheDevice::DeleteEntry(nsCacheEntry *entry, bool deleteData)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   if (deleteData)
   {
     nsresult rv = DeleteData(entry);
@@ -1333,6 +1343,8 @@ nsOfflineCacheDevice::BuildApplicationCacheGroupID(nsIURI *aManifestURL,
 nsresult
 nsOfflineCacheDevice::InitActiveCaches()
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   MutexAutoLock lock(mLock);
 
   AutoResetStatement statement(mStatement_EnumerateGroups);
@@ -1459,6 +1471,8 @@ nsOfflineCacheDevice::GetDeviceID()
 nsCacheEntry *
 nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
 {
+  NS_ENSURE_TRUE(Initialized(), nullptr);
+
   mozilla::Telemetry::AutoTimer<mozilla::Telemetry::CACHE_OFFLINE_SEARCH_2> timer;
   LOG(("nsOfflineCacheDevice::FindEntry [key=%s]\n", fullKey->get()));
 
@@ -1568,6 +1582,8 @@ nsOfflineCacheDevice::DeactivateEntry(nsCacheEntry *entry)
 nsresult
 nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::BindEntry [key=%s]\n", entry->Key()->get()));
 
   NS_ENSURE_STATE(!entry->Data());
@@ -1869,6 +1885,8 @@ nsOfflineCacheDevice::Visit(nsICacheVisitor *visitor)
 nsresult
 nsOfflineCacheDevice::EvictEntries(const char *clientID)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::EvictEntries [cid=%s]\n",
        clientID ? clientID : ""));
 
@@ -1958,6 +1976,8 @@ nsOfflineCacheDevice::MarkEntry(const nsCString &clientID,
                                 const nsACString &key,
                                 uint32_t typeBits)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::MarkEntry [cid=%s, key=%s, typeBits=%d]\n",
        clientID.get(), PromiseFlatCString(key).get(), typeBits));
 
@@ -1980,6 +2000,8 @@ nsOfflineCacheDevice::UnmarkEntry(const nsCString &clientID,
                                   const nsACString &key,
                                   uint32_t typeBits)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::UnmarkEntry [cid=%s, key=%s, typeBits=%d]\n",
        clientID.get(), PromiseFlatCString(key).get(), typeBits));
 
@@ -2017,6 +2039,8 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
                                            const nsACString &key,
                                            nsIApplicationCacheNamespace **out)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::GetMatchingNamespace [cid=%s, key=%s]\n",
        clientID.get(), PromiseFlatCString(key).get()));
 
@@ -2092,6 +2116,8 @@ nsOfflineCacheDevice::GetTypes(const nsCString &clientID,
                                const nsACString &key,
                                uint32_t *typeBits)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::GetTypes [cid=%s, key=%s]\n",
        clientID.get(), PromiseFlatCString(key).get()));
 
@@ -2119,6 +2145,8 @@ nsOfflineCacheDevice::GatherEntries(const nsCString &clientID,
                                     uint32_t *count,
                                     char ***keys)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::GatherEntries [cid=%s, typeBits=%X]\n",
        clientID.get(), typeBits));
 
@@ -2136,6 +2164,8 @@ nsresult
 nsOfflineCacheDevice::AddNamespace(const nsCString &clientID,
                                    nsIApplicationCacheNamespace *ns)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   nsCString namespaceSpec;
   nsresult rv = ns->GetNamespaceSpec(namespaceSpec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2175,6 +2205,8 @@ nsresult
 nsOfflineCacheDevice::GetUsage(const nsACString &clientID,
                                uint32_t *usage)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::GetUsage [cid=%s]\n",
        PromiseFlatCString(clientID).get()));
 
@@ -2201,6 +2233,8 @@ nsresult
 nsOfflineCacheDevice::GetGroups(uint32_t *count,
                                  char ***keys)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::GetGroups"));
 
   return RunSimpleQuery(mStatement_EnumerateGroups, 0, count, keys);
@@ -2210,6 +2244,8 @@ nsresult
 nsOfflineCacheDevice::GetGroupsTimeOrdered(uint32_t *count,
 					   char ***keys)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   LOG(("nsOfflineCacheDevice::GetGroupsTimeOrder"));
 
   return RunSimpleQuery(mStatement_EnumerateGroupsTimeOrder, 0, count, keys);
@@ -2374,6 +2410,8 @@ nsOfflineCacheDevice::GetActiveCache(const nsACString &group,
 nsresult
 nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   nsCString *active = nullptr;
 
   AutoResetStatement statement(mStatement_DeactivateGroup);
@@ -2398,6 +2436,8 @@ nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
 nsresult
 nsOfflineCacheDevice::Evict(nsILoadContextInfo *aInfo)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   NS_ENSURE_ARG(aInfo);
 
   nsresult rv;
@@ -2502,6 +2542,8 @@ OriginMatch::OnFunctionCall(mozIStorageValueArray* aFunctionArguments, nsIVarian
 nsresult
 nsOfflineCacheDevice::Evict(mozilla::OriginAttributesPattern const &aPattern)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   nsresult rv;
 
   nsCOMPtr<mozIStorageFunction> function1(new OriginMatch(aPattern));
@@ -2608,6 +2650,8 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
                                              nsILoadContextInfo *loadContextInfo,
                                              nsIApplicationCache **out)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   NS_ENSURE_ARG(loadContextInfo);
 
   nsresult rv;
@@ -2700,6 +2744,8 @@ nsresult
 nsOfflineCacheDevice::ActivateCache(const nsCSubstring &group,
                                     const nsCSubstring &clientID)
 {
+  NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
+
   AutoResetStatement statement(mStatement_ActivateClient);
   nsresult rv = statement->BindUTF8StringByIndex(0, group);
   NS_ENSURE_SUCCESS(rv, rv);
