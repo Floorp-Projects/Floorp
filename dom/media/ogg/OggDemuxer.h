@@ -213,6 +213,7 @@ private:
   void SetupTargetOpus(OpusState* aOpusState, OggHeaders& aHeaders);
   void SetupTargetSkeleton();
   void SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials);
+  void FillTags(TrackInfo* aInfo, MetadataTags* aTags);
 
   // Compute an ogg page's checksum
   ogg_uint32_t GetPageChecksum(ogg_page* aPage);
