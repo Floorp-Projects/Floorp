@@ -179,6 +179,12 @@ ServoRestyleManager::ProcessPendingRestyles()
   }
   ServoStyleSet* styleSet = StyleSet();
 
+  if (!styleSet->StylingStarted()) {
+    // If something caused us to restyle, and we haven't started styling yet,
+    // do nothing. Everything is dirty, and we'll style it all later.
+    return;
+  }
+
   nsIDocument* doc = PresContext()->Document();
 
   Element* root = doc->GetRootElement();
@@ -197,7 +203,7 @@ ServoRestyleManager::ProcessPendingRestyles()
       }
     }
 
-    styleSet->RestyleSubtree(root, /* aForce = */ false);
+    styleSet->RestyleSubtree(root);
     RecreateStyleContexts(root, nullptr, styleSet);
   }
 

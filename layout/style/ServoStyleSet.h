@@ -55,6 +55,8 @@ public:
   void BeginUpdate();
   nsresult EndUpdate();
 
+  void StartStyling(nsPresContext* aPresContext);
+
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
                   nsStyleContext* aParentContext);
@@ -126,11 +128,10 @@ public:
 
   /**
    * Restyles a whole subtree of nodes.
-   *
-   * The aForce parameter propagates the dirty bits down the subtree, and when
-   * used aNode needs to be nsIContent.
    */
-  void RestyleSubtree(nsINode* aNode, bool aForce);
+  void RestyleSubtree(nsINode* aNode);
+
+  bool StylingStarted() const { return mStylingStarted; }
 
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
@@ -148,6 +149,7 @@ private:
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   int32_t mBatching;
+  bool mStylingStarted;
 };
 
 } // namespace mozilla
