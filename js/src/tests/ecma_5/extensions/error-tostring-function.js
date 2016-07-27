@@ -27,7 +27,7 @@ assertEq(ErrorToString(function(){}), "");
 
 var fn1 = function() {};
 fn1.message = "ohai";
-assertEq(ErrorToString(fn1), "fn1: ohai");
+assertEq(ErrorToString(fn1), "ohai");
 
 var fn2 = function blerch() {};
 fn2.message = "fnord";
@@ -35,7 +35,7 @@ assertEq(ErrorToString(fn2), "blerch: fnord");
 
 var fn3 = function() {};
 fn3.message = "";
-assertEq(ErrorToString(fn3), "fn3");
+assertEq(ErrorToString(fn3), "");
 
 /******************************************************************************/
 
