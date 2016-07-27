@@ -359,7 +359,8 @@ this.LoginManagerStorage_json.prototype = {
       }
     }
 
-    this.log("_searchLogins: returning", foundLogins.length, "logins for", matchData);
+    this.log("_searchLogins: returning", foundLogins.length, "logins for", matchData,
+             "with options", aOptions);
     return [foundLogins, foundIds];
   },
 

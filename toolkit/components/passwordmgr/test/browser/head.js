@@ -20,10 +20,10 @@ registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
  *
  * @param {String} aPageFile - test page file name which auto-submits to formsubmit.sjs
  * @param {Function} aTaskFn - task which can be run before the tab closes.
- * @param {String} [aOrigin="http://mochi.test:8888"] - origin of the server to
- *                                                      use to load `aPageFile`.
+ * @param {String} [aOrigin="http://example.com"] - origin of the server to use
+ *                                                  to load `aPageFile`.
  */
-function testSubmittingLoginForm(aPageFile, aTaskFn, aOrigin = "http://mochi.test:8888") {
+function testSubmittingLoginForm(aPageFile, aTaskFn, aOrigin = "http://example.com") {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: aOrigin + DIRECTORY_PATH + aPageFile,
