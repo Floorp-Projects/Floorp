@@ -23,6 +23,9 @@ function doTest() {
   // First, the crashtest becomes non-deterministics if we morph |form| before
   // getting to scope 3 (as explained below). This means that we can't trigger
   // the PreCreate hook for |input|, because that will call WrapNativeParent
+  // (Well... No, it won't: there is no WrapNativeParent, but there are also no
+  // more pre-create hooks, slimwrappers, parenting to the form, or any of the
+  // stuff this test is trying to test.)
   // on the form, which will end up making a cross-compartment wrapper, which
   // will morph form. But this puts us in a pickle, because appendChild returns
   // the apppended child, which will trigger the PreCreate hook in
