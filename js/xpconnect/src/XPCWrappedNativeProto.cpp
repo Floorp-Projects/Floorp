@@ -31,7 +31,7 @@ XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
     MOZ_ASSERT(mScope);
 
 #ifdef DEBUG
-    PR_ATOMIC_INCREMENT(&gDEBUG_LiveProtoCount);
+    gDEBUG_LiveProtoCount++;
 #endif
 }
 
@@ -42,7 +42,7 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
     MOZ_COUNT_DTOR(XPCWrappedNativeProto);
 
 #ifdef DEBUG
-    PR_ATOMIC_DECREMENT(&gDEBUG_LiveProtoCount);
+    gDEBUG_LiveProtoCount--;
 #endif
 
     // Note that our weak ref to mScope is not to be trusted at this point.
