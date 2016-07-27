@@ -30,7 +30,7 @@ add_task(function* () {
   for (let {key, suggestions} of TEST_DATA) {
     info("Pressing " + key + " to get " + suggestions);
 
-    let command = once(searchBox, "command");
+    let command = once(searchBox, "input");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     yield command;
 
