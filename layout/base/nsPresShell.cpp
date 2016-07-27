@@ -36,6 +36,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
+#include "mozilla/StyleBackendType.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -879,7 +880,9 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
-  aPresContext->AttachShell(this);
+  StyleBackendType backend = aStyleSet->IsServo() ? StyleBackendType::Servo
+                                                  : StyleBackendType::Gecko;
+  aPresContext->AttachShell(this, backend);
 
   // Now we can initialize the style set. Make sure to set the member before
   // calling Init, since various subroutines need to find the style set off

@@ -828,12 +828,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
     }
   }
 
-  // Initialize restyle manager after initializing the refresh driver.
-  // Since RestyleManager is also the name of a method of nsPresContext,
-  // it is necessary to prefix the class with the mozilla namespace
-  // here.
-  mRestyleManager = new mozilla::RestyleManager(this);
-
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 
   // Register callbacks so we're notified when the preferences change
@@ -903,10 +897,19 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 // Note: We don't hold a reference on the shell; it has a reference to
 // us
 void
-nsPresContext::AttachShell(nsIPresShell* aShell)
+nsPresContext::AttachShell(nsIPresShell* aShell, StyleBackendType aBackendType)
 {
   MOZ_ASSERT(!mShell);
   mShell = aShell;
+
+  if (aBackendType == StyleBackendType::Servo) {
+    mRestyleManager = new ServoRestyleManager(this);
+  } else {
+    // Since RestyleManager is also the name of a method of nsPresContext,
+    // it is necessary to prefix the class with the mozilla namespace
+    // here.
+    mRestyleManager = new mozilla::RestyleManager(this);
+  }
 
   // Since CounterStyleManager is also the name of a method of
   // nsPresContext, it is necessary to prefix the class with the mozilla
