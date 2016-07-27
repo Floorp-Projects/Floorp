@@ -675,12 +675,12 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
 nsBulletFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   WritingMode wm = GetWritingMode();
-  ReflowOutput metrics(wm);
-  DISPLAY_MIN_WIDTH(this, metrics.ISize(wm));
+  ReflowOutput reflowOutput(wm);
+  DISPLAY_MIN_WIDTH(this, reflowOutput.ISize(wm));
   LogicalMargin padding(wm);
-  GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f, &padding);
-  metrics.ISize(wm) += padding.IStartEnd(wm);
-  return metrics.ISize(wm);
+  GetDesiredSize(PresContext(), aRenderingContext, reflowOutput, 1.0f, &padding);
+  reflowOutput.ISize(wm) += padding.IStartEnd(wm);
+  return reflowOutput.ISize(wm);
 }
 
 /* virtual */ nscoord

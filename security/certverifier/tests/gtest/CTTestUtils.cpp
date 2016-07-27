@@ -125,6 +125,7 @@ CharToByte(char c)
     return c - 'A' + 10;
   }
   MOZ_RELEASE_ASSERT(false);
+  return 0;
 }
 
 static Buffer

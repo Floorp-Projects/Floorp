@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from errors import MarionetteException
+from errors import MarionetteException, TimeoutException
 from functools import wraps
 import socket
 import sys
@@ -18,16 +18,20 @@ def _find_marionette_in_args(*args, **kwargs):
     return m
 
 
-def do_crash_check(func, always=False):
-    """Decorator which checks for crashes after the function has run.
+def do_process_check(func, always=False):
+    """Decorator which checks the process after the function has run.
+
+    There is a check for crashes which always gets executed. And in the case of
+    connection issues the process will be force closed.
 
     :param always: If False, only checks for crashes if an exception
                    was raised. If True, always checks for crashes.
     """
     @wraps(func)
     def _(*args, **kwargs):
-        def check():
-            m = _find_marionette_in_args(*args, **kwargs)
+        m = _find_marionette_in_args(*args, **kwargs)
+
+        def check_for_crash():
             try:
                 m.check_for_crash()
             except:
@@ -40,11 +44,13 @@ def do_crash_check(func, always=False):
             exc, val, tb = sys.exc_info()
             if not isinstance(e, MarionetteException) or type(e) is MarionetteException:
                 if not always:
-                    check()
+                    check_for_crash()
+            if not isinstance(e, MarionetteException) or type(e) is TimeoutException:
+                m.force_shutdown()
             raise exc, val, tb
         finally:
             if always:
-                check()
+                check_for_crash(m)
     return _
 
 

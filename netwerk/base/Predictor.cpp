@@ -2432,6 +2432,16 @@ Predictor::UpdateCacheability(nsIURI *sourceURI, nsIURI *targetURI,
     return;
   }
 
+  if (!sourceURI || !targetURI) {
+    PREDICTOR_LOG(("Predictor::UpdateCacheability missing source or target uri"));
+    return;
+  }
+
+  if (!IsNullOrHttp(sourceURI) || !IsNullOrHttp(targetURI)) {
+    PREDICTOR_LOG(("Predictor::UpdateCacheability non-http(s) uri"));
+    return;
+  }
+
   RefPtr<Predictor> self = sSelf;
   if (self) {
     nsAutoCString method;

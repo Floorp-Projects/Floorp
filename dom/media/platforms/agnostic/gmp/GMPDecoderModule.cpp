@@ -13,7 +13,6 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/SyncRunnable.h"
 #include "gmp-audio-decode.h"
 #include "gmp-video-decode.h"
 #ifdef XP_WIN
@@ -169,13 +168,7 @@ GMPDecoderModule::UpdateUsableCodecs()
 void
 GMPDecoderModule::Init()
 {
-  if (!NS_IsMainThread()) {
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableFunction([]() { Init(); });
-    SyncRunnable::DispatchToThread(mainThread, runnable);
-    return;
-  }
+  MOZ_ASSERT(NS_IsMainThread());
   // GMPService::HasPluginForAPI is main thread only, so to implement
   // SupportsMimeType() we build a table of the codecs which each whitelisted
   // GMP has and update it when any GMPs are removed or added at runtime.

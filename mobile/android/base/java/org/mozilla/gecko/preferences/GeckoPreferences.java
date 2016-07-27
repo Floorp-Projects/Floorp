@@ -39,6 +39,7 @@ import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
+import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -708,7 +709,7 @@ OnSharedPreferenceChangeListener
 
                 pref.setOnPreferenceChangeListener(this);
                 if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
-                    if (!AppConstants.MOZ_UPDATER) {
+                    if (!AppConstants.MOZ_UPDATER || ContextUtils.isInstalledFromGooglePlay(this)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;

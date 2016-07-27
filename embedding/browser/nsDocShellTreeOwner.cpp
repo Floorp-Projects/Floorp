@@ -1123,6 +1123,8 @@ ChromeTooltipListener::ChromeTooltipListener(nsWebBrowser* aInBrowser,
   , mTooltipListenerInstalled(false)
   , mMouseClientX(0)
   , mMouseClientY(0)
+  , mMouseScreenX(0)
+  , mMouseScreenY(0)
   , mShowingTooltip(false)
   , mTooltipShownOnce(false)
 {

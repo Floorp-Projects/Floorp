@@ -392,33 +392,6 @@ all_resources = \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
 
-# For GeckoView, we want a zip of an Android res/ directory that
-# merges the contents of all the ANDROID_RES_DIRS.  The inner res/
-# directory must have the Android resource two-layer hierarchy.
-
-# The following helper zips files in a directory into a zip file while
-# maintaining the directory structure rooted below the directory.
-# (adding or creating said file as appropriate).  For example, if the
-# dir contains dir/subdir/file, calling with directory dir would
-# create a zip containing subdir/file.  Note: the trailing newline is
-# necessary.
-
-# $(1): zip file to add to (or create).
-# $(2): directory to zip contents of.
-define zip_directory_with_relative_paths
-cd $(2) && zip -q $(1) -r * -x $(subst *,\*,$(not_android_res_files))
-
-endef
-
-ifndef MOZ_DISABLE_GECKOVIEW
-# We delete the archive before updating so that resources removed from
-# the filesystem are removed from the archive.
-geckoview_resources.zip: $(all_resources) $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
-	$(RM) -rf $@
-	$(foreach dir,$(ANDROID_RES_DIRS),$(call zip_directory_with_relative_paths,$(CURDIR)/$@,$(dir)))
-endif
-
 # All of generated/org/mozilla/gecko/R.java, gecko.ap_, and R.txt are
 # produced by aapt; this saves aapt invocations.  The trailing
 # semi-colon defines an empty recipe; defining no recipe at all causes
@@ -548,11 +521,6 @@ gradle-omnijar:
 endif
 
 .PHONY: gradle-targets gradle-omnijar
-
-ifndef MOZ_DISABLE_GECKOVIEW
-libs:: geckoview_resources.zip
-	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
-endif
 
 # GeneratedJNIWrappers.cpp target also generates
 # GeneratedJNIWrappers.h and GeneratedJNINatives.h

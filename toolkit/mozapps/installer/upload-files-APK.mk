@@ -25,8 +25,6 @@ ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=true
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
-UPLOAD_EXTRA_FILES += geckoview_library/geckoview_library.zip
-UPLOAD_EXTRA_FILES += geckoview_library/geckoview_assets.zip
 
 # Robocop/Robotium tests, Android Background tests, and Fennec need to
 # be signed with the same key, which means release signing them all.
@@ -70,55 +68,6 @@ else
 INNER_INSTALL_BOUNCER_PACKAGE=echo 'Install bouncer is disabled - No trampolines for you'
 endif # MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER
 
-# Create geckoview_library/geckoview_{assets,library}.zip for third-party GeckoView consumers.
-ifdef NIGHTLY_BUILD
-ifndef MOZ_DISABLE_GECKOVIEW
-INNER_MAKE_GECKOVIEW_LIBRARY= \
-  $(MAKE) -C ../mobile/android/geckoview_library package
-else
-INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is disabled'
-endif
-else
-INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is only enabled on Nightly'
-endif
-
-# Create Android ARchives and metadata for download by local
-# developers using Gradle.
-ifdef MOZ_ANDROID_GECKOLIBS_AAR
-ifndef MOZ_DISABLE_GECKOVIEW
-geckoaar-revision := $(BUILDID)
-
-UPLOAD_EXTRA_FILES += \
-  geckolibs-$(geckoaar-revision).aar \
-  geckolibs-$(geckoaar-revision).aar.sha1 \
-  geckolibs-$(geckoaar-revision).pom \
-  geckolibs-$(geckoaar-revision).pom.sha1 \
-  ivy-geckolibs-$(geckoaar-revision).xml \
-  ivy-geckolibs-$(geckoaar-revision).xml.sha1 \
-  geckoview-$(geckoaar-revision).aar \
-  geckoview-$(geckoaar-revision).aar.sha1 \
-  geckoview-$(geckoaar-revision).pom \
-  geckoview-$(geckoaar-revision).pom.sha1 \
-  ivy-geckoview-$(geckoaar-revision).xml \
-  ivy-geckoview-$(geckoaar-revision).xml.sha1 \
-  $(NULL)
-
-INNER_MAKE_GECKOLIBS_AAR= \
-  $(PYTHON) -m mozbuild.action.package_geckolibs_aar \
-    --verbose \
-    --revision $(geckoaar-revision) \
-    --topsrcdir '$(topsrcdir)' \
-    --distdir '$(ABS_DIST)' \
-    --appname '$(MOZ_APP_NAME)' \
-    --purge-old \
-    '$(ABS_DIST)'
-else
-INNER_MAKE_GECKOLIBS_AAR=echo 'Android geckolibs.aar packaging requires packaging geckoview'
-endif # MOZ_DISABLE_GECKOVIEW
-else
-INNER_MAKE_GECKOLIBS_AAR=echo 'Android geckolibs.aar packaging is disabled'
-endif # MOZ_ANDROID_GECKOLIBS_AAR
-
 # Fennec's OMNIJAR_NAME can include a directory; for example, it might
 # be "assets/omni.ja". This path specifies where the omni.ja file
 # lives in the APK, but should not root the resources it contains
@@ -160,9 +109,7 @@ INNER_FENNEC_PACKAGE = \
 package_fennec = \
   $(INNER_FENNEC_PACKAGE) && \
   $(INNER_ROBOCOP_PACKAGE) && \
-  $(INNER_INSTALL_BOUNCER_PACKAGE) && \
-  $(INNER_MAKE_GECKOLIBS_AAR) && \
-  $(INNER_MAKE_GECKOVIEW_LIBRARY)
+  $(INNER_INSTALL_BOUNCER_PACKAGE)
 
 # Re-packaging only replaces Android resources and the omnijar before
 # (re-)signing.
