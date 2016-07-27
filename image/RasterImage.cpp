@@ -1679,9 +1679,9 @@ RasterImage::NotifyProgress(Progress aProgress,
   MOZ_ASSERT(NS_IsMainThread());
 
   // Ensure that we stay alive long enough to finish notifying.
-  RefPtr<RasterImage> image(this);
+  RefPtr<RasterImage> image = this;
 
-  bool wasDefaultFlags = aSurfaceFlags == DefaultSurfaceFlags();
+  const bool wasDefaultFlags = aSurfaceFlags == DefaultSurfaceFlags();
 
   if (!aInvalidRect.IsEmpty() && wasDefaultFlags) {
     // Update our image container since we're invalidating.
