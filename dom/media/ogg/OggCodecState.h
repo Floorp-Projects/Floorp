@@ -40,8 +40,10 @@
 namespace mozilla {
 
 // Deallocates a packet, used in OggPacketQueue below.
-class OggPacketDeallocator : public nsDequeFunctor {
-  virtual void* operator() (void* aPacket) {
+class OggPacketDeallocator : public nsDequeFunctor
+{
+  virtual void* operator() (void* aPacket)
+  {
     ogg_packet* p = static_cast<ogg_packet*>(aPacket);
     delete [] p->packet;
     delete p;
@@ -59,7 +61,8 @@ class OggPacketDeallocator : public nsDequeFunctor {
 // frames/samples, reducing the amount of frames/samples we must decode to
 // determine start-time at a particular offset, and gives us finer control
 // over memory usage.
-class OggPacketQueue : private nsDeque {
+class OggPacketQueue : private nsDeque
+{
 public:
   OggPacketQueue() : nsDeque(new OggPacketDeallocator()) {}
   ~OggPacketQueue() { Erase(); }
@@ -74,11 +77,13 @@ public:
 
 // Encapsulates the data required for decoding an ogg bitstream and for
 // converting granulepos to timestamps.
-class OggCodecState {
+class OggCodecState
+{
 public:
   typedef mozilla::MetadataTags MetadataTags;
   // Ogg types we know about
-  enum CodecType {
+  enum CodecType
+  {
     TYPE_VORBIS=0,
     TYPE_THEORA=1,
     TYPE_OPUS=2,
@@ -99,12 +104,14 @@ public:
   // to determine if the last header has been read.
   // This function takes ownership of the packet and is responsible for
   // releasing it or queuing it for later processing.
-  virtual bool DecodeHeader(ogg_packet* aPacket) {
+  virtual bool DecodeHeader(ogg_packet* aPacket)
+  {
     return (mDoneReadingHeaders = true);
   }
 
   // Build a hash table with tag metadata parsed from the stream.
-  virtual MetadataTags* GetTags() {
+  virtual MetadataTags* GetTags()
+  {
     return nullptr;
   }
 
@@ -118,7 +125,8 @@ public:
   virtual int64_t PacketDuration(ogg_packet* aPacket) { return -1; }
 
   // Returns the start time of the given packet, if it can be determined.
-  virtual int64_t PacketStartTime(ogg_packet* aPacket) {
+  virtual int64_t PacketStartTime(ogg_packet* aPacket)
+  {
     if (aPacket->granulepos < 0) {
       return -1;
     }
@@ -141,7 +149,8 @@ public:
 
   // Deactivates the bitstream. Only the primary video and audio bitstreams
   // should be active.
-  void Deactivate() {
+  void Deactivate()
+  {
     mActive = false;
     mDoneReadingHeaders = true;
     Reset();
@@ -250,7 +259,8 @@ protected:
                         uint32_t aLength);
 };
 
-class VorbisState : public OggCodecState {
+class VorbisState : public OggCodecState
+{
 public:
   explicit VorbisState(ogg_page* aBosPage);
   virtual ~VorbisState();
@@ -324,7 +334,8 @@ int TheoraVersion(th_info* info,
                   unsigned char min,
                   unsigned char sub);
 
-class TheoraState : public OggCodecState {
+class TheoraState : public OggCodecState
+{
 public:
   explicit TheoraState(ogg_page* aBosPage);
   virtual ~TheoraState();
@@ -364,7 +375,8 @@ private:
 
 };
 
-class OpusState : public OggCodecState {
+class OpusState : public OggCodecState
+{
 public:
   explicit OpusState(ogg_page* aBosPage);
   virtual ~OpusState();
@@ -435,17 +447,20 @@ enum EMsgHeaderType {
   eTrackDependencies
 };
 
-typedef struct {
+typedef struct
+{
   const char* mPatternToRecognize;
   EMsgHeaderType mMsgHeaderType;
 } FieldPatternType;
 
 // Stores the message information for different logical bitstream.
-typedef struct {
+typedef struct
+{
   nsClassHashtable<nsUint32HashKey, nsCString> mValuesStore;
 } MessageField;
 
-class SkeletonState : public OggCodecState {
+class SkeletonState : public OggCodecState
+{
 public:
   explicit SkeletonState(ogg_page* aBosPage);
   ~SkeletonState();
@@ -464,15 +479,16 @@ public:
 
   // Stores the offset of the page on which a keyframe starts,
   // and its presentation time.
-  class nsKeyPoint {
+  class nsKeyPoint
+  {
   public:
     nsKeyPoint()
-      : mOffset(INT64_MAX),
-        mTime(INT64_MAX) {}
+      : mOffset(INT64_MAX)
+      , mTime(INT64_MAX) {}
 
     nsKeyPoint(int64_t aOffset, int64_t aTime)
-      : mOffset(aOffset),
-        mTime(aTime) {}
+      : mOffset(aOffset)
+      ,mTime(aTime) {}
 
     // Offset from start of segment/link-in-the-chain in bytes.
     int64_t mOffset;
@@ -480,22 +496,23 @@ public:
     // Presentation time in usecs.
     int64_t mTime;
 
-    bool IsNull() {
-      return mOffset == INT64_MAX &&
-             mTime == INT64_MAX;
+    bool IsNull()
+    {
+      return mOffset == INT64_MAX && mTime == INT64_MAX;
     }
   };
 
   // Stores a keyframe's byte-offset, presentation time and the serialno
   // of the stream it belongs to.
-  class nsSeekTarget {
+  class nsSeekTarget
+  {
   public:
     nsSeekTarget() : mSerial(0) {}
     nsKeyPoint mKeyPoint;
     uint32_t mSerial;
-    bool IsNull() {
-      return mKeyPoint.IsNull() &&
-             mSerial == 0;
+    bool IsNull()
+    {
+      return mKeyPoint.IsNull() && mSerial == 0;
     }
   };
 
@@ -506,7 +523,8 @@ public:
                              nsTArray<uint32_t>& aTracks,
                              nsSeekTarget& aResult);
 
-  bool HasIndex() const {
+  bool HasIndex() const
+  {
     return mIndex.Count() > 0;
   }
 
@@ -540,29 +558,34 @@ private:
 
   // Stores the keyframe index and duration information for a particular
   // stream.
-  class nsKeyFrameIndex {
+  class nsKeyFrameIndex
+  {
   public:
 
     nsKeyFrameIndex(int64_t aStartTime, int64_t aEndTime) 
-      : mStartTime(aStartTime),
-        mEndTime(aEndTime)
+      : mStartTime(aStartTime)
+      , mEndTime(aEndTime)
     {
       MOZ_COUNT_CTOR(nsKeyFrameIndex);
     }
 
-    ~nsKeyFrameIndex() {
+    ~nsKeyFrameIndex()
+    {
       MOZ_COUNT_DTOR(nsKeyFrameIndex);
     }
 
-    void Add(int64_t aOffset, int64_t aTimeMs) {
+    void Add(int64_t aOffset, int64_t aTimeMs)
+    {
       mKeyPoints.AppendElement(nsKeyPoint(aOffset, aTimeMs));
     }
 
-    const nsKeyPoint& Get(uint32_t aIndex) const {
+    const nsKeyPoint& Get(uint32_t aIndex) const
+    {
       return mKeyPoints[aIndex];
     }
 
-    uint32_t Length() const {
+    uint32_t Length() const
+    {
       return mKeyPoints.Length();
     }
 
@@ -588,7 +611,8 @@ template <>
 class nsAutoRefTraits<ogg_packet> : public nsPointerRefTraits<ogg_packet>
 {
 public:
-  static void Release(ogg_packet* aPacket) {
+  static void Release(ogg_packet* aPacket)
+  {
     mozilla::OggCodecState::ReleasePacket(aPacket);
   }
 };
