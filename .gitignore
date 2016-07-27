@@ -11,9 +11,6 @@ ID
 *.pdb
 *.egg-info
 
-# Allow the id locale directory for loop ('ID' matches this normally)
-!browser/extensions/loop/chrome/locale/id
-
 # Vim swap files.
 .*.sw[a-z]
 
