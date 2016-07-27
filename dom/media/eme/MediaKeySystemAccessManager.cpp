@@ -112,8 +112,10 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     return;
   }
 
-  if (!MediaPrefs::EMEEnabled()) {
+  if (!MediaPrefs::EMEEnabled() && !IsClearkeyKeySystem(aKeySystem)) {
     // EME disabled by user, send notification to chrome so UI can inform user.
+    // Clearkey is allowed even when EME is disabled because we want the pref
+    // "media.eme.enabled" only taking effect on proprietary DRMs.
     MediaKeySystemAccess::NotifyObservers(mWindow,
                                           aKeySystem,
                                           MediaKeySystemStatus::Api_disabled);

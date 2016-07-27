@@ -26,16 +26,14 @@ for (var prop in gCSSProperties) {
   is(s[info.domProp], "", prop + " should not be set yet");
   s[info.domProp] = info.initial_values[0];
   isnot(s[info.domProp], "", prop + " should now be set");
-  if (prop[0] != "-") {
-    is(s[prop], s[info.domProp],
-       "Getting " + prop + " via name should work")
-    s = document.createElement("div").style;
-    is(s[info.domProp], "", prop + " should not be set here either");
-    s[prop] = info.initial_values[0];
-    isnot(s[info.prop], "", prop + " should now be set again");
-    is(s[info.domProp], s[prop],
-       "Setting " + prop + " via name should work");
-  }
+  is(s[prop], s[info.domProp],
+     "Getting " + prop + " via name should work")
+  s = document.createElement("div").style;
+  is(s[info.domProp], "", prop + " should not be set here either");
+  s[prop] = info.initial_values[0];
+  isnot(s[info.prop], "", prop + " should now be set again");
+  is(s[info.domProp], s[prop],
+     "Setting " + prop + " via name should work");
 }
 </script>
 </pre>

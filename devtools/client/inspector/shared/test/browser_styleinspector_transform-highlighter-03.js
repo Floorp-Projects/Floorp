@@ -60,7 +60,7 @@ add_task(function* () {
   yield onHighlighterShown;
   ok(HighlighterFront.isShown, "The highlighter is shown");
   let onHighlighterHidden = hs.once("highlighter-hidden");
-  hs._onMouseLeave();
+  hs._onMouseOut();
   yield onHighlighterHidden;
   ok(!HighlighterFront.isShown, "The highlighter is hidden");
 

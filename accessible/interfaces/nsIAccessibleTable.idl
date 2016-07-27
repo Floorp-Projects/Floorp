@@ -9,7 +9,7 @@
 interface nsIAccessible;
 interface nsIArray;
 
-[scriptable, uuid(cb0bf7b9-117e-40e2-9e46-189c3d43ce4a)]
+[scriptable, builtinclass, uuid(cb0bf7b9-117e-40e2-9e46-189c3d43ce4a)]
 interface nsIAccessibleTable : nsISupports
 {
   /**
@@ -221,7 +221,7 @@ interface nsIAccessibleTable : nsISupports
 };
 
 
-[scriptable, uuid(654e296d-fae6-452b-987d-746b20b9514b)]
+[scriptable, builtinclass, uuid(654e296d-fae6-452b-987d-746b20b9514b)]
 interface nsIAccessibleTableCell : nsISupports
 {
   /**

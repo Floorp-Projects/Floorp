@@ -286,8 +286,10 @@ WebGLContext::DestroyResourcesAndContext()
     mFakeBlack_2D_Array_0000 = nullptr;
     mFakeBlack_2D_Array_0001 = nullptr;
 
-    if (mFakeVertexAttrib0BufferObject)
+    if (mFakeVertexAttrib0BufferObject) {
         gl->fDeleteBuffers(1, &mFakeVertexAttrib0BufferObject);
+        mFakeVertexAttrib0BufferObject = 0;
+    }
 
     // disable all extensions except "WEBGL_lose_context". see bug #927969
     // spec: http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
@@ -307,7 +309,9 @@ WebGLContext::DestroyResourcesAndContext()
         printf_stderr("--- WebGL context destroyed: %p\n", gl.get());
     }
 
-    gl = nullptr;
+    MOZ_ASSERT(gl);
+    mGL_OnlyClearInDestroyResourcesAndContext = nullptr;
+    MOZ_ASSERT(!gl);
 }
 
 void
@@ -670,22 +674,27 @@ WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
     PopulateCapFallbackQueue(baseCaps, &fallbackCaps);
 
     MOZ_RELEASE_ASSERT(!gl, "GFX: Already have a context.");
-    gl = nullptr;
+    RefPtr<gl::GLContext> potentialGL;
     while (!fallbackCaps.empty()) {
         const gl::SurfaceCaps& caps = fallbackCaps.front();
-        gl = fnCreateGL(caps, flags, this, out_failReasons);
-        if (gl)
+        potentialGL = fnCreateGL(caps, flags, this, out_failReasons);
+        if (potentialGL)
             break;
 
         fallbackCaps.pop();
     }
-    if (!gl)
+    if (!potentialGL)
         return false;
 
     FailureReason reason;
+
+    mGL_OnlyClearInDestroyResourcesAndContext = potentialGL;
+    MOZ_RELEASE_ASSERT(gl);
     if (!InitAndValidateGL(&reason)) {
+        DestroyResourcesAndContext();
+        MOZ_RELEASE_ASSERT(!gl);
+
         // The fail reason here should be specific enough for now.
-        gl = nullptr;
         out_failReasons->push_back(reason);
         return false;
     }
@@ -992,7 +1001,8 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     if (mOptions.failIfMajorPerformanceCaveat) {
         if (gl->IsWARP()) {
-            gl = nullptr;
+            DestroyResourcesAndContext();
+            MOZ_ASSERT(!gl);
 
             failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBGL_PERF_WARP");
             const nsLiteralCString text("failIfMajorPerformanceCaveat: Driver is not"
@@ -1005,7 +1015,8 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         if (gl->GetContextType() == gl::GLContextType::WGL &&
             !gl::sWGLLib.HasDXInterop2())
         {
-            gl = nullptr;
+            DestroyResourcesAndContext();
+            MOZ_ASSERT(!gl);
 
             failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBGL_DXGL_INTEROP2");
             const nsLiteralCString text("Caveat: WGL without DXGLInterop2.");

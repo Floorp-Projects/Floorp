@@ -102,6 +102,9 @@ GetArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aBu
 nsString
 KeySystemToGMPName(const nsAString& aKeySystem);
 
+bool
+IsClearkeyKeySystem(const nsAString& aKeySystem);
+
 } // namespace mozilla
 
 #endif // EME_LOG_H_

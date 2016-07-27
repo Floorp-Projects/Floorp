@@ -11,59 +11,9 @@ MOZ_ARG_WITH_STRING(android-cxx-stl,
     android_cxx_stl=$withval,
     android_cxx_stl=libc++)
 
-define([MIN_ANDROID_VERSION], [9])
-android_version=MIN_ANDROID_VERSION
-
-MOZ_ARG_WITH_STRING(android-version,
-[  --with-android-version=VER
-                          android platform version, default] MIN_ANDROID_VERSION,
-    android_version=$withval)
-
-if test $android_version -lt MIN_ANDROID_VERSION ; then
-    AC_MSG_ERROR([--with-android-version must be at least MIN_ANDROID_VERSION.])
-fi
-
 case "$target" in
 *-android*|*-linuxandroid*)
-    AC_MSG_CHECKING([for android platform directory])
-
-    case "$target_cpu" in
-    arm)
-        target_name=arm
-        ;;
-    i?86)
-        target_name=x86
-        ;;
-    mipsel)
-        target_name=mips
-        ;;
-    esac
-
-    dnl Not all Android releases have their own platform release. We use
-    dnl the next lower platform version in these cases.
-    case $android_version in
-    11|10)
-        android_platform_version=9
-        ;;
-    20)
-        android_platform_version=19
-        ;;
-    22)
-        android_platform_version=21
-        ;;
-    *)
-        android_platform_version=$android_version
-        ;;
-    esac
-
-    android_platform="$android_ndk"/platforms/android-"$android_platform_version"/arch-"$target_name"
-
-    if test -d "$android_platform" ; then
-        AC_MSG_RESULT([$android_platform])
-    else
-        AC_MSG_ERROR([not found. Please check your NDK. With the current configuration, it should be in $android_platform])
-    fi
-
+    dnl $android_platform will be set for us by Python configure.
     CPPFLAGS="-idirafter $android_platform/usr/include $CPPFLAGS"
     CFLAGS="-fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-fno-short-enums -fno-exceptions $CXXFLAGS"

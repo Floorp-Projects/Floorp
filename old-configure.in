@@ -1521,20 +1521,6 @@ bitrig*|dragonfly*|freebsd*|openbsd*)
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
 esac
-MOZ_CHECK_COMMON_HEADERS
-
-dnl These are all the places some variant of statfs can be hiding.
-MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
-
-dnl Quota support
-MOZ_CHECK_HEADERS(sys/quota.h sys/sysmacros.h)
-MOZ_CHECK_HEADERS([linux/quota.h],,,[#include <sys/socket.h>])
-
-dnl SCTP support - needs various network include headers
-MOZ_CHECK_HEADERS([linux/if_addr.h linux/rtnetlink.h],,,[#include <sys/socket.h>])
-MOZ_CHECK_HEADERS(sys/queue.h)
-
-MOZ_CHECK_HEADERS(sys/types.h netinet/in.h byteswap.h)
 
 dnl Check for sin_len and sin6_len - used by SCTP; only appears in Mac/*BSD generally
 AC_CACHE_CHECK(for sockaddr_in.sin_len,
@@ -5810,17 +5796,6 @@ if test "$MOZ_TREE_PIXMAN"; then
 else
     PKG_CHECK_MODULES(MOZ_PIXMAN, pixman-1 >= 0.19.2)
 fi
-
-# Check for headers defining standard int types.
-if test -n "$COMPILE_ENVIRONMENT"; then
-    MOZ_CHECK_HEADERS(stdint.h inttypes.h)
-
-    if test "${ac_cv_header_inttypes_h}" = "yes"; then
-        HAVE_INTTYPES_H=1
-    fi
-fi
-
-AC_SUBST(HAVE_INTTYPES_H)
 
 if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_CFLAGS="-I${DIST}/include/cairo"
