@@ -5296,10 +5296,7 @@ nsRuleNode::ComputeTimingFunction(const nsCSSValue& aValue,
             NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START) ?
               nsTimingFunction::Type::StepStart :
               nsTimingFunction::Type::StepEnd;
-        aResult = nsTimingFunction(type, array->Item(0).GetIntValue(),
-                                   array->Item(1).GetIntValue() == -1 ?
-                                     nsTimingFunction::Keyword::Implicit :
-                                     nsTimingFunction::Keyword::Explicit);
+        aResult = nsTimingFunction(type, array->Item(0).GetIntValue());
       }
       break;
     default:

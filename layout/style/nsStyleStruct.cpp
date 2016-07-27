@@ -2779,14 +2779,12 @@ nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
   switch (aTimingFunctionType) {
     case NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START:
       mType = Type::StepStart;
-      mStepSyntax = StepSyntax::Keyword;
       mSteps = 1;
       return;
     default:
       MOZ_FALLTHROUGH_ASSERT("aTimingFunctionType must be a keyword value");
     case NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END:
       mType = Type::StepEnd;
-      mStepSyntax = StepSyntax::Keyword;
       mSteps = 1;
       return;
     case NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE:
