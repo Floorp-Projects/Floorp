@@ -158,6 +158,7 @@ class LSANLeaks(object):
     def __init__(self, logger):
         self.logger = logger
         self.inReport = False
+        self.fatalError = False
         self.foundFrames = set([])
         self.recordMoreFrames = None
         self.currStack = None
@@ -177,6 +178,8 @@ class LSANLeaks(object):
 
         self.startRegExp = re.compile(
             "==\d+==ERROR: LeakSanitizer: detected memory leaks")
+        self.fatalErrorRegExp = re.compile(
+            "==\d+==LeakSanitizer has encountered a fatal error.")
         self.stackFrameRegExp = re.compile("    #\d+ 0x[0-9a-f]+ in ([^(</]+)")
         self.sysLibStackFrameRegExp = re.compile(
             "    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)")
@@ -184,6 +187,10 @@ class LSANLeaks(object):
     def log(self, line):
         if re.match(self.startRegExp, line):
             self.inReport = True
+            return
+
+        if re.match(self.fatalErrorRegExp, line):
+            self.fatalError = True
             return
 
         if not self.inReport:
@@ -221,6 +228,10 @@ class LSANLeaks(object):
         # We'll end up with "unknown stack" if everything is ignored.
 
     def process(self):
+        if self.fatalError:
+            self.logger.warning(
+                "TEST-UNEXPECTED-FAIL | LeakSanitizer | LeakSanitizer has encountered a fatal error.")
+
         for f in self.foundFrames:
             self.logger.warning(
                 "TEST-UNEXPECTED-FAIL | LeakSanitizer | leak at " + f)
