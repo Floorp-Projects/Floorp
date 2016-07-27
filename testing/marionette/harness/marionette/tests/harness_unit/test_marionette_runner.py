@@ -77,6 +77,8 @@ def mach_parsed_kwargs(logger):
         'avd': None,
         'avd_home': None,
         'binary': u'/path/to/firefox',
+        'browsermob_port' : None,
+        'browsermob_script' : None,
         'device_serial': None,
         'e10s': True,
         'emulator': False,
