@@ -14,6 +14,35 @@ js_option('--with-android-toolchain', nargs=1,
 js_option('--with-android-gnu-compiler-version', nargs=1,
           help='GNU compiler version to use')
 
+@depends('--help')
+def min_android_version(_):
+    return '9'
+
+js_option('--with-android-version',
+          nargs=1,
+          help='android platform version',
+          default=min_android_version)
+
+@depends('--with-android-version', min_android_version)
+@imports(_from='__builtin__', _import='ValueError')
+def android_version(value, min_version):
+    if not value:
+        # Someone has passed --without-android-version.
+        die('--with-android-version cannot be disabled.')
+
+    try:
+        version = int(value[0])
+    except ValueError:
+        die('--with-android-version expects an integer value')
+
+    if version < int(min_version):
+        die('--with-android-version must be at least %s (got %s)',
+            min_version, value[0])
+
+    return version
+
+add_old_configure_assignment('android_version', android_version)
+
 @depends('--with-android-ndk', build_project)
 def ndk(value, build_project):
     if build_project == 'mobile/android' and not value:
@@ -24,6 +53,46 @@ def ndk(value, build_project):
 
 set_config('ANDROID_NDK', ndk)
 add_old_configure_assignment('android_ndk', ndk)
+
+@depends(target, android_version, ndk)
+@checking('for android platform directory')
+def android_platform(target, android_version, ndk):
+    if target.os != 'Android':
+        return
+
+    if 'mips' in target.cpu:
+        target_dir_name = 'mips'
+    else:
+        target_dir_name = target.cpu
+
+    # Not all Android releases have their own platform release. We use
+    # the next lower platform version in these cases.
+    if android_version in (11, 10):
+        platform_version = 9
+    elif android_version in (20, 22):
+        platform_version = android_version - 1
+    else:
+        platform_version = android_version
+
+    platform_dir = os.path.join(ndk,
+                                'platforms',
+                                'android-%s' % platform_version,
+                                'arch-%s' % target_dir_name)
+
+    if not os.path.isdir(platform_dir):
+        die("Android platform directory not found. With the current "
+            "configuration, it should be in %s" % platform_dir)
+
+    return platform_dir
+
+add_old_configure_assignment('android_platform', android_platform)
+
+@depends(android_platform)
+def extra_toolchain_flags(platform_dir):
+    if not platform_dir:
+        return []
+    return ['-idirafter',
+            os.path.join(platform_dir, 'usr', 'include')]
 
 @depends(target, host, ndk, '--with-android-toolchain',
          '--with-android-gnu-compiler-version')

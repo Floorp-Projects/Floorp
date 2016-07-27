@@ -47,6 +47,7 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class FeatureState;
+class DeviceManagerD3D11;
 }
 namespace layers {
 class DeviceManagerD3D9;
@@ -97,7 +98,10 @@ struct ClearTypeParameterInfo {
     int32_t     enhancedContrast;
 };
 
-class gfxWindowsPlatform : public gfxPlatform {
+class gfxWindowsPlatform : public gfxPlatform
+{
+  friend class mozilla::gfx::DeviceManagerD3D11;
+
 public:
     enum TextRenderingMode {
         TEXT_RENDERING_NO_CLEARTYPE,
@@ -206,34 +210,17 @@ public:
     IDWriteRenderingParams *GetRenderingParams(TextRenderingMode aRenderMode)
     { return mRenderingParams[aRenderMode]; }
 
-    bool GetD3D11Device(RefPtr<ID3D11Device>* aOutDevice);
-    bool GetD3D11DeviceForCurrentThread(RefPtr<ID3D11Device>* aOutDevice);
-    bool GetD3D11ImageBridgeDevice(RefPtr<ID3D11Device>* aOutDevice);
-
+public:
     void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
     already_AddRefed<mozilla::layers::DeviceManagerD3D9> GetD3D9DeviceManager();
     IDirect3DDevice9* GetD3D9Device();
     void D3D9DeviceReset();
-    ID3D11Device *GetD3D11ContentDevice();
-
-    // Create a D3D11 device to be used for DXVA decoding.
-    already_AddRefed<ID3D11Device> CreateD3D11DecoderDevice();
-    bool CreateD3D11DecoderDeviceHelper(
-      IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice,
-      HRESULT& aResOut);
 
     bool DwmCompositionEnabled();
 
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
 
     static bool IsOptimus();
-
-    bool IsWARP() const { return mIsWARP; }
-
-    // Returns whether the compositor's D3D11 device supports texture sharing.
-    bool CompositorD3D11TextureSharingWorks() const {
-      return mCompositorD3D11TextureSharingWorks;
-    }
 
     bool SupportsApzWheelInput() const override {
       return true;
@@ -244,8 +231,6 @@ public:
     // reset occurred.
     bool HandleDeviceReset();
     void UpdateBackendPrefs();
-
-    unsigned GetD3D11Version();
 
     void TestDeviceReset(DeviceResetReason aReason);
 
@@ -259,6 +244,8 @@ public:
       return true;
     }
     bool SupportsPluginDirectDXGIDrawing();
+
+    static void RecordContentDeviceFailure(mozilla::gfx::TelemetryDeviceCode aDevice);
 
 protected:
     bool AccelerateLayersByDefault() override {
@@ -291,50 +278,14 @@ private:
     void InitializeD3D11Config();
     void InitializeD2DConfig();
 
-    void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
-    bool AttemptD3D11DeviceCreationHelper(
-        IDXGIAdapter1* aAdapter,
-        RefPtr<ID3D11Device>& aOutDevice,
-        HRESULT& aResOut);
-
-    void AttemptWARPDeviceCreation();
-    bool AttemptWARPDeviceCreationHelper(
-        mozilla::ScopedGfxFeatureReporter& aReporterWARP,
-        RefPtr<ID3D11Device>& aOutDevice,
-        HRESULT& aResOut);
-
-    bool AttemptD3D11ImageBridgeDeviceCreationHelper(
-        IDXGIAdapter1* aAdapter, HRESULT& aResOut);
-    mozilla::gfx::FeatureStatus AttemptD3D11ImageBridgeDeviceCreation();
-
-    mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
-    bool AttemptD3D11ContentDeviceCreationHelper(
-        IDXGIAdapter1* aAdapter, HRESULT& aResOut);
-
-    bool CanUseWARP();
-    bool CanUseD3D11ImageBridge();
-    bool ContentAdapterIsParentAdapter(ID3D11Device* device);
-
-    void DisableD3D11AfterCrash();
-    void ResetD3D11Devices();
-
-    IDXGIAdapter1 *GetDXGIAdapter();
-    bool IsDeviceReset(HRESULT hr, DeviceResetReason* aReason);
-
     RefPtr<IDWriteFactory> mDWriteFactory;
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
 
     mozilla::Mutex mDeviceLock;
-    RefPtr<IDXGIAdapter1> mAdapter;
-    RefPtr<ID3D11Device> mD3D11Device;
-    RefPtr<ID3D11Device> mD3D11ContentDevice;
-    RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
     RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
-    mozilla::Atomic<bool> mIsWARP;
     bool mHasDeviceReset;
     bool mHasFakeDeviceReset;
-    mozilla::Atomic<bool> mCompositorD3D11TextureSharingWorks;
     mozilla::Atomic<bool> mHasD3D9DeviceReset;
     DeviceResetReason mDeviceResetReason;
 

@@ -2226,31 +2226,14 @@ ClientAuthDataRunnable::RunOnTargetThread()
         goto loser;
       }
 
-      // Get CN and O of the subject and O of the issuer
-      UniquePORTString ccn(CERT_GetCommonName(&mServerCert->subject));
-      NS_ConvertUTF8toUTF16 cn(ccn.get());
-
       int32_t port;
       mSocketInfo->GetPort(&port);
 
-      nsAutoString cn_host_port;
-      if (ccn && strcmp(ccn.get(), hostname) == 0) {
-        cn_host_port.Append(cn);
-        cn_host_port.Append(':');
-        cn_host_port.AppendInt(port);
-      } else {
-        cn_host_port.Append(cn);
-        cn_host_port.AppendLiteral(" (");
-        cn_host_port.Append(':');
-        cn_host_port.AppendInt(port);
-        cn_host_port.Append(')');
-      }
-
       UniquePORTString corg(CERT_GetOrgName(&mServerCert->subject));
-      NS_ConvertUTF8toUTF16 org(corg.get());
+      nsAutoCString org(corg.get());
 
       UniquePORTString cissuer(CERT_GetOrgName(&mServerCert->issuer));
-      NS_ConvertUTF8toUTF16 issuer(cissuer.get());
+      nsAutoCString issuer(cissuer.get());
 
       nsCOMPtr<nsIMutableArray> certArray = nsArrayBase::Create();
       if (!certArray) {
@@ -2282,7 +2265,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
 
       uint32_t selectedIndex = 0;
       bool certChosen = false;
-      rv = dialogs->ChooseCertificate(mSocketInfo, cn_host_port, org, issuer,
+      rv = dialogs->ChooseCertificate(mSocketInfo, hostname, port, org, issuer,
                                       certArray, &selectedIndex, &certChosen);
       if (NS_FAILED(rv)) {
         goto loser;

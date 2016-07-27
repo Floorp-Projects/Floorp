@@ -36,11 +36,11 @@ class TestNodeBase {
     nsRegion GetRegion();
     virtual bool IsLeaf() = 0;
   private:
-    int mExpectedTraversalRank;
-    int mActualTraversalRank;
-    int mValue;
-    nsRegion mRegion;
-    T mType;
+    MOZ_INIT_OUTSIDE_CTOR int mExpectedTraversalRank;
+    MOZ_INIT_OUTSIDE_CTOR int mActualTraversalRank;
+    MOZ_INIT_OUTSIDE_CTOR int mValue;
+    MOZ_INIT_OUTSIDE_CTOR nsRegion mRegion;
+    MOZ_INIT_OUTSIDE_CTOR T mType;
   protected:
     virtual ~TestNodeBase<T>() {};
 };

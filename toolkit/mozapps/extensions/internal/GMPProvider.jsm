@@ -601,20 +601,17 @@ var GMPProvider = {
       }
     }
 
-    var emeEnabled = Preferences.get(GMPPrefs.KEY_EME_ENABLED, false);
-    if (emeEnabled) {
-      try {
-        let greDir = Services.dirsvc.get(NS_GRE_DIR,
-                                         Ci.nsILocalFile);
-        let clearkeyPath = OS.Path.join(greDir.path,
-                                        CLEARKEY_PLUGIN_ID,
-                                        CLEARKEY_VERSION);
-        this._log.info("startup - adding clearkey CDM directory " +
-                       clearkeyPath);
-        gmpService.addPluginDirectory(clearkeyPath);
-      } catch (e) {
-        this._log.warn("startup - adding clearkey CDM failed", e);
-      }
+    try {
+      let greDir = Services.dirsvc.get(NS_GRE_DIR,
+                                       Ci.nsILocalFile);
+      let clearkeyPath = OS.Path.join(greDir.path,
+                                      CLEARKEY_PLUGIN_ID,
+                                      CLEARKEY_VERSION);
+      this._log.info("startup - adding clearkey CDM directory " +
+                     clearkeyPath);
+      gmpService.addPluginDirectory(clearkeyPath);
+    } catch (e) {
+      this._log.warn("startup - adding clearkey CDM failed", e);
     }
   },
 

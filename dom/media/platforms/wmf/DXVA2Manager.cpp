@@ -10,6 +10,7 @@
 #include "ImageContainer.h"
 #include "gfxWindowsPlatform.h"
 #include "D3D9SurfaceImage.h"
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/Telemetry.h"
@@ -632,7 +633,7 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
     return E_FAIL;
   }
 
-  mDevice = gfxWindowsPlatform::GetPlatform()->CreateD3D11DecoderDevice();
+  mDevice = gfx::DeviceManagerD3D11::Get()->CreateDecoderDevice();
   if (!mDevice) {
     aFailureReason.AssignLiteral("Failed to create D3D11 device for decoder");
     return E_FAIL;
