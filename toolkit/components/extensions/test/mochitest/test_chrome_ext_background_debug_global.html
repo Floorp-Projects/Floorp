@@ -15,6 +15,11 @@
 "use strict";
 
 Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+
+const {
+  XPIProvider,
+} = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
 
 /**
  * This test is asserting that ext-backgroundPage.js successfully sets its
@@ -39,7 +44,6 @@ let extensionData = {
 add_task(function* () {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
-  info("extension loaded");
 
   yield extension.awaitFinish("background script ran");
 
@@ -57,8 +61,102 @@ add_task(function* () {
     });
   });
 
+  let addon = yield new Promise((resolve, reject) => {
+    AddonManager.getAddonByID(extension.id, addon => addon ? resolve(addon) : reject());
+  });
+
+  ok(addon, `Got the addon wrapper for ${addon.id}`);
+
+  function waitForDebugGlobalChanges(times, initialAddonInstanceID) {
+    return new Promise((resolve) => {
+      AddonManager.addAddonListener({
+        count: 0,
+        notNullGlobalsCount: 0,
+        undefinedPrivateWrappersCount: 0,
+        lastAddonInstanceID: initialAddonInstanceID,
+        onPropertyChanged(newAddon, changedPropNames) {
+          if (newAddon.id != addon.id ||
+              !changedPropNames.includes("debugGlobal")) {
+            return;
+          }
+
+          ok(!(newAddon.setDebugGlobal) && !(newAddon.getDebugGlobal),
+             "The addon wrapper should not be a PrivateWrapper");
+
+          let activeAddon = XPIProvider.activeAddons.get(addon.id);
+
+          let addonInstanceID;
+
+          if (!activeAddon) {
+            // The addon has been disable, the preferred global should be null
+            addonInstanceID = this.lastAddonInstanceID;
+            delete this.lastAddonInstanceID;
+          } else {
+            addonInstanceID = activeAddon.instanceID;
+            this.lastAddonInstanceID = addonInstanceID;
+          }
+
+          ok(addonInstanceID, `Got the addon instanceID for ${addon.id}`);
+
+          AddonManager.getAddonByInstanceID(addonInstanceID).then((privateWrapper) => {
+            this.count += 1;
+
+            if (!privateWrapper) {
+              // The addon has been uninstalled
+              this.undefinedPrivateWrappersCount += 1;
+            } else {
+              ok((privateWrapper.getDebugGlobal), "Got the addon PrivateWrapper");
+
+              if (privateWrapper.getDebugGlobal()) {
+                this.notNullGlobalsCount += 1;
+              }
+            }
+
+            if (this.count == times) {
+              AddonManager.removeAddonListener(this);
+              resolve({
+                counters: {
+                  count: this.count,
+                  notNullGlobalsCount: this.notNullGlobalsCount,
+                  undefinedPrivateWrappersCount: this.undefinedPrivateWrappersCount,
+                },
+                lastAddonInstanceID: this.lastAddonInstanceID,
+              });
+            }
+          });
+        },
+      });
+    });
+  }
+
+  // two calls expected, one for the shutdown and one for the startup
+  // of the background page.
+  let waitForDebugGlobalChangesOnReload = waitForDebugGlobalChanges(2);
+
+  info("Addon reload...");
+  yield addon.reload();
+
+  info("Addon completed startup after reload");
+
+  let {
+    counters: reloadCounters,
+    lastAddonInstanceID,
+  } = yield waitForDebugGlobalChangesOnReload;
+
+  isDeeply(reloadCounters, {count: 2, notNullGlobalsCount: 1, undefinedPrivateWrappersCount: 0},
+           "Got the expected number of onPropertyChanged calls on reload");
+
+  // one more call expected for the shutdown.
+  let waitForDebugGlobalChangesOnShutdown = waitForDebugGlobalChanges(1, lastAddonInstanceID);
+
+  info("extension unloading...");
   yield extension.unload();
   info("extension unloaded");
+
+  let {counters: unloadCounters} = yield waitForDebugGlobalChangesOnShutdown;
+
+  isDeeply(unloadCounters, {count: 1, notNullGlobalsCount: 0, undefinedPrivateWrappersCount: 1},
+           "Got the expected number of onPropertyChanged calls on shutdown");
 });
 </script>
 
