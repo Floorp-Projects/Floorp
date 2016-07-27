@@ -1092,13 +1092,13 @@ nsCSSKeyword
 nsStyleBasicShape::GetShapeTypeName() const
 {
   switch (mType) {
-    case nsStyleBasicShape::Type::ePolygon:
+    case StyleBasicShapeType::Polygon:
       return eCSSKeyword_polygon;
-    case nsStyleBasicShape::Type::eCircle:
+    case StyleBasicShapeType::Circle:
       return eCSSKeyword_circle;
-    case nsStyleBasicShape::Type::eEllipse:
+    case StyleBasicShapeType::Ellipse:
       return eCSSKeyword_ellipse;
-    case nsStyleBasicShape::Type::eInset:
+    case StyleBasicShapeType::Inset:
       return eCSSKeyword_inset;
   }
   NS_NOTREACHED("unexpected type");
