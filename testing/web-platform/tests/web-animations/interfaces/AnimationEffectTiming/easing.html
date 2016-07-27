@@ -28,7 +28,8 @@ gEffectEasingTests.forEach(function(options) {
                               { duration: 1000 * MS_PER_SEC,
                                 fill: 'forwards' });
     anim.effect.timing.easing = options.easing;
-    assert_equals(anim.effect.timing.easing, options.serialization || options.easing);
+    assert_equals(anim.effect.timing.easing,
+                  options.serialization || options.easing);
 
     var easing = options.easingFunction;
     assert_progress(anim, 0, easing);

@@ -6327,7 +6327,6 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
     case nsTimingFunction::Type::StepEnd:
       nsStyleUtil::AppendStepsTimingFunction(aTimingFunction.mType,
                                              aTimingFunction.mSteps,
-                                             aTimingFunction.mStepSyntax,
                                              tmp);
       break;
     default:
