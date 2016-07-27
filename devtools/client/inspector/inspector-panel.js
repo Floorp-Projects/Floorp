@@ -213,7 +213,7 @@ InspectorPanel.prototype = {
       this.updateDebuggerPausedWarning = () => {
         let notificationBox = this._toolbox.getNotificationBox();
         let notification =
-            notificationBox.getNotificationWithValue("inspector-script-paused");
+          notificationBox.getNotificationWithValue("inspector-script-paused");
         if (!notification && this._toolbox.currentToolId == "inspector" &&
             this._toolbox.threadClient.paused) {
           let message = strings.GetStringFromName("debuggerPausedWarning.message");
@@ -353,9 +353,10 @@ InspectorPanel.prototype = {
    */
   setupSearchBox: function () {
     this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
+    this.searchClearButton = this.panelDoc.getElementById("inspector-searchinput-clear");
     this.searchResultsLabel = this.panelDoc.getElementById("inspector-searchlabel");
 
-    this.search = new InspectorSearch(this, this.searchBox);
+    this.search = new InspectorSearch(this, this.searchBox, this.searchClearButton);
     this.search.on("search-cleared", this._updateSearchResultsLabel);
     this.search.on("search-result", this._updateSearchResultsLabel);
 
@@ -1456,7 +1457,8 @@ InspectorPanel.prototype = {
 
   /**
    * Paste the contents of the clipboard as adjacent HTML to the selected Node.
-   * @param position The position as specified for Element.insertAdjacentHTML
+   * @param position
+   *        The position as specified for Element.insertAdjacentHTML
    *        (i.e. "beforeBegin", "afterBegin", "beforeEnd", "afterEnd").
    */
   pasteAdjacentHTML: function (position) {
@@ -1516,8 +1518,8 @@ InspectorPanel.prototype = {
   /**
    * Copy the content of a longString (via a promise resolving a
    * LongStringActor) to the clipboard
-   * @param  {Promise} longStringActorPromise promise expected to
-   *         resolve a LongStringActor instance
+   * @param  {Promise} longStringActorPromise
+   *         promise expected to resolve a LongStringActor instance
    * @return {Promise} promise resolving (with no argument) when the
    *         string is sent to the clipboard
    */
@@ -1529,8 +1531,8 @@ InspectorPanel.prototype = {
 
   /**
    * Retrieve the content of a longString (via a promise resolving a LongStringActor)
-   * @param  {Promise} longStringActorPromise promise expected to
-   *         resolve a LongStringActor instance
+   * @param  {Promise} longStringActorPromise
+   *         promise expected to resolve a LongStringActor instance
    * @return {Promise} promise resolving with the retrieved string as argument
    */
   _getLongString: function (longStringActorPromise) {

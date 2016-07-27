@@ -62,7 +62,7 @@ add_task(function* () {
     info("pressing key " + key + " to get suggestions " +
          JSON.stringify(expectedSuggestions));
 
-    let onCommand = once(searchBox, "command", true);
+    let onCommand = once(searchBox, "input", true);
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     yield onCommand;
 
