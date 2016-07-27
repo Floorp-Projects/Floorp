@@ -20,8 +20,8 @@ class TestLintRoller(TestCase):
     def __init__(self, *args, **kwargs):
         TestCase.__init__(self, *args, **kwargs)
 
-        self.filedir = os.path.join(here, 'files')
-        self.files = [os.path.join(self.filedir, f) for f in os.listdir(self.filedir)]
+        filedir = os.path.join(here, 'files')
+        self.files = [os.path.join(filedir, f) for f in os.listdir(filedir)]
         self.lintdir = os.path.join(here, 'linters')
 
         names = ('string.lint', 'regex.lint', 'external.lint')
@@ -68,11 +68,6 @@ class TestLintRoller(TestCase):
         self.lint.read(self.linters)
         result = self.lint.roll(self.files)
 
-        self.assertEqual(len(result), 0)
-
-    def test_roll_with_invalid_extension(self):
-        self.lint.read(os.path.join(self.lintdir, 'external.lint'))
-        result = self.lint.roll(os.path.join(self.filedir, 'foobar.py'))
         self.assertEqual(len(result), 0)
 
 
