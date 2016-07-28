@@ -25,14 +25,21 @@ struct RsaHashedKeyAlgorithmStorage {
   uint16_t mModulusLength;
   CryptoBuffer mPublicExponent;
 
-  void
+  bool
   ToKeyAlgorithm(JSContext* aCx, RsaHashedKeyAlgorithm& aRsa) const
   {
+    JS::Rooted<JSObject*> exponent(aCx, mPublicExponent.ToUint8Array(aCx));
+    if (!exponent) {
+      return false;
+    }
+
     aRsa.mName = mName;
     aRsa.mModulusLength = mModulusLength;
     aRsa.mHash.mName = mHash.mName;
-    aRsa.mPublicExponent.Init(mPublicExponent.ToUint8Array(aCx));
+    aRsa.mPublicExponent.Init(exponent);
     aRsa.mPublicExponent.ComputeLengthAndData();
+
+    return true;
   }
 };
 
@@ -43,14 +50,26 @@ struct DhKeyAlgorithmStorage {
   CryptoBuffer mPrime;
   CryptoBuffer mGenerator;
 
-  void
+  bool
   ToKeyAlgorithm(JSContext* aCx, DhKeyAlgorithm& aDh) const
   {
+    JS::Rooted<JSObject*> prime(aCx, mPrime.ToUint8Array(aCx));
+    if (!prime) {
+      return false;
+    }
+
+    JS::Rooted<JSObject*> generator(aCx, mGenerator.ToUint8Array(aCx));
+    if (!generator) {
+      return false;
+    }
+
     aDh.mName = mName;
-    aDh.mPrime.Init(mPrime.ToUint8Array(aCx));
+    aDh.mPrime.Init(prime);
     aDh.mPrime.ComputeLengthAndData();
-    aDh.mGenerator.Init(mGenerator.ToUint8Array(aCx));
+    aDh.mGenerator.Init(generator);
     aDh.mGenerator.ComputeLengthAndData();
+
+    return true;
   }
 };
 
