@@ -675,7 +675,7 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
     maybeEndProfile(ProfileKey::TraceGenericEntries);
 
     maybeStartProfile(ProfileKey::MarkRuntime);
-    rt->gc.markRuntime(&mover, GCRuntime::TraceRuntime, session.lock);
+    rt->gc.traceRuntime(&mover, session.lock);
     maybeEndProfile(ProfileKey::MarkRuntime);
 
     maybeStartProfile(ProfileKey::MarkDebugger);
