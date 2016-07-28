@@ -505,9 +505,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(e) {
       let win = e.target.ownerGlobal;
-      if (typeof win.OpenBrowserWindow == "function") {
-        win.OpenBrowserWindow({private: true});
-      }
+      win.OpenBrowserWindow({private: true});     
     }
   }, {
     id: "save-page-button",
@@ -516,9 +514,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target.ownerGlobal;
-      if (typeof win.saveBrowser == "function") {
-        win.saveBrowser(win.gBrowser.selectedBrowser);
-      }
+      win.saveBrowser(win.gBrowser.selectedBrowser);
     }
   }, {
     id: "find-button",
@@ -538,9 +534,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target.ownerGlobal;
-      if (typeof win.BrowserOpenFileWindow == "function") {
-        win.BrowserOpenFileWindow();
-      }
+      win.BrowserOpenFileWindow();
     }
   }, {
     id: "sidebar-button",
@@ -615,9 +609,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target.ownerGlobal;
-      if (typeof win.BrowserOpenAddonsMgr == "function") {
-        win.BrowserOpenAddonsMgr();
-      }
+      win.BrowserOpenAddonsMgr();
     }
   }, {
     id: "zoom-controls",
@@ -1186,9 +1178,7 @@ let preferencesButton = {
   defaultArea: CustomizableUI.AREA_PANEL,
   onCommand: function(aEvent) {
     let win = aEvent.target.ownerGlobal;
-    if (typeof win.openPreferences == "function") {
-      win.openPreferences();
-    }
+    win.openPreferences();
   }
 };
 if (AppConstants.platform == "win") {
@@ -1277,9 +1267,7 @@ if (AppConstants.E10S_TESTING_ONLY) {
       },
       onCommand: function(aEvent) {
         let win = aEvent.view;
-        if (win && typeof win.OpenBrowserWindow == "function") {
-          win.OpenBrowserWindow({remote: false});
-        }
+        win.OpenBrowserWindow({remote: false});
       },
     });
   }
