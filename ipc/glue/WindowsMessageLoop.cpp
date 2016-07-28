@@ -1056,71 +1056,12 @@ SuppressedNeuteringRegion::~SuppressedNeuteringRegion()
 
 bool SuppressedNeuteringRegion::sSuppressNeutering = false;
 
-#if defined(ACCESSIBILITY)
-bool
-MessageChannel::WaitForSyncNotifyWithA11yReentry()
-{
-  mMonitor->AssertCurrentThreadOwns();
-  MonitorAutoUnlock unlock(*mMonitor);
-
-  const DWORD waitStart = ::GetTickCount();
-  DWORD elapsed = 0;
-  DWORD timeout = mTimeoutMs == kNoTimeout ? INFINITE :
-                  static_cast<DWORD>(mTimeoutMs);
-  bool timedOut = false;
-
-  while (true) {
-    { // Scope for lock
-      MonitorAutoLock lock(*mMonitor);
-      if (!Connected()) {
-        break;
-      }
-    }
-    if (timeout != static_cast<DWORD>(kNoTimeout)) {
-      elapsed = ::GetTickCount() - waitStart;
-    }
-    if (elapsed >= timeout) {
-      timedOut = true;
-      break;
-    }
-    DWORD waitResult = 0;
-    ::SetLastError(ERROR_SUCCESS);
-    HRESULT hr = ::CoWaitForMultipleHandles(COWAIT_ALERTABLE,
-                                            timeout - elapsed,
-                                            1, &mEvent, &waitResult);
-    if (hr == RPC_S_CALLPENDING) {
-      timedOut = true;
-      break;
-    }
-    if (hr == S_OK) {
-      if (waitResult == 0) {
-        // mEvent is signaled
-        break;
-      }
-      if (waitResult == WAIT_IO_COMPLETION) {
-        // APC fired, keep waiting
-        continue;
-      }
-    }
-    NS_WARN_IF_FALSE(SUCCEEDED(hr), "CoWaitForMultipleHandles failed");
-  }
-
-  return WaitResponse(timedOut);
-}
-#endif
-
 bool
 MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
 {
   mMonitor->AssertCurrentThreadOwns();
 
   MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
-
-#if defined(ACCESSIBILITY)
-  if (mFlags & REQUIRE_A11Y_REENTRY) {
-    return WaitForSyncNotifyWithA11yReentry();
-  }
-#endif
 
   // Use a blocking wait if this channel does not require
   // Windows message deferral behavior.
