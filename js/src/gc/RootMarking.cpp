@@ -271,8 +271,20 @@ PropertyDescriptor::trace(JSTracer* trc)
 }
 
 void
-js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
-                               AutoLockForExclusiveAccess& lock)
+js::gc::GCRuntime::markRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+{
+    markRuntimeInner(trc, MarkRuntime, lock);
+}
+
+void
+js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+{
+    markRuntimeInner(trc, TraceRuntime, lock);
+}
+
+void
+js::gc::GCRuntime::markRuntimeInner(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
+                                    AutoLockForExclusiveAccess& lock)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
 
@@ -280,11 +292,13 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
 
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 
+    // Trace incoming CCW edges.
     if (traceOrMark == MarkRuntime) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_CCWS);
         JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
     }
 
+    // Trace C stack roots.
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTERS);
 
@@ -303,6 +317,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
         MarkPersistentRooted(rt, trc);
     }
 
+    // Trace the atoms Compartment.
     if (!rt->isBeingDestroyed() && !rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
 
@@ -314,20 +329,27 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
         }
     }
 
+    // This table is weak in major GC's.
     if (rt->isHeapMinorCollecting())
         jit::JitRuntime::MarkJitcodeGlobalTableUnconditionally(trc);
 
+    // Trace anything in the single context. Note that this is actually the
+    // same struct as the JSRuntime, but is still split for historical reasons.
     rt->contextFromMainThread()->mark(trc);
 
+    // Trace all compartment roots, but not the compartment itself; it is
+    // marked via the parent pointer if traceRoots actually traces anything.
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
         c->traceRoots(trc, traceOrMark);
 
+    // Trace JS stack roots.
     MarkInterpreterActivations(rt, trc);
-
     jit::MarkJitActivations(rt, trc);
 
+    // Trace SPS.
     rt->spsProfiler.trace(trc);
 
+    // Trace the embeddings black and gray roots.
     if (!rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_EMBEDDING);
 
