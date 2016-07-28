@@ -36,9 +36,6 @@ public:
                      Layer* aMaskLayer) override;
 
 protected:
-
-  already_AddRefed<gfx::SourceSurface> UpdateSurface();
-
   BasicLayerManager* BasicManager()
   {
     return static_cast<BasicLayerManager*>(mManager);
