@@ -37,14 +37,14 @@
         gotContextMenuEvent = false;
 
       function runTests () {
-        ok(hasRequestPointerLock, "Element should have mozRequestPointerLock.");
+        ok(hasRequestPointerLock, "Element should have requestPointerLock.");
         ok(pointerLockChangeEventFired, "pointerlockchange event should fire.");
         ok(pointerUnlocked, "Should be able to unlock pointer locked element.");
         ok(pointerLocked, "Requested element should be able to lock.");
-        ok(hasExitPointerLock, "Document should have mozExitPointerLock");
+        ok(hasExitPointerLock, "Document should have exitPointerLock");
         ok(pointerLockElement, "Document should keep track of correct pointer locked element");
-        ok(hasMovementX, "Mouse Event should have mozMovementX.");
-        ok(hasMovementY, "Mouse Event should have mozMovementY.");
+        ok(hasMovementX, "Mouse Event should have movementX.");
+        ok(hasMovementY, "Mouse Event should have movementY.");
         ok(!gotContextMenuEvent, "Shouldn't have got a contextmenu event.");
       }
 
@@ -52,20 +52,20 @@
         info("Got mousemove");
         document.removeEventListener("mousemove", mouseMoveHandler, false);
 
-        hasMovementX = "mozMovementX" in e;
-        hasMovementY = "mozMovementY" in e;
+        hasMovementX = "movementX" in e;
+        hasMovementY = "movementY" in e;
 
-        hasExitPointerLock = "mozExitPointerLock" in document;
-        document.mozExitPointerLock();
+        hasExitPointerLock = "exitPointerLock" in document;
+        document.exitPointerLock();
       }
 
-      document.addEventListener("mozpointerlockchange", function (e) {
+      document.addEventListener("pointerlockchange", function (e) {
         pointerLockChangeEventFired = true;
 
-        if (document.mozPointerLockElement) {
-          info("Got mozpointerlockchange for entering");
+        if (document.pointerLockElement) {
+          info("Got pointerlockchange for entering");
           pointerLocked = true;
-          pointerLockElement = document.mozPointerLockElement === div;
+          pointerLockElement = document.pointerLockElement === div;
  
           window.addEventListener("contextmenu",
                                   function() { gotContextMenuEvent = true; },
@@ -77,7 +77,7 @@
           document.addEventListener("mousemove", mouseMoveHandler, false);
           synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
         } else {
-          info("Got mozpointerlockchange for exiting");
+          info("Got pointerlockchange for exiting");
           pointerUnlocked = true;
           addFullscreenChangeContinuation("exit", function() {
             info("Got fullscreenchange for exiting");
@@ -93,8 +93,8 @@
         info("Requesting fullscreen on parent");
         addFullscreenChangeContinuation("enter", function() {
           info("Got fullscreenchange for entering");
-          hasRequestPointerLock = "mozRequestPointerLock" in div;
-          div.mozRequestPointerLock();
+          hasRequestPointerLock = "requestPointerLock" in div;
+          div.requestPointerLock();
         });
         div.requestFullscreen();
       }

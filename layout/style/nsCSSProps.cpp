@@ -29,9 +29,6 @@ using namespace mozilla;
 
 typedef nsCSSProps::KTableEntry KTableEntry;
 
-// MSVC before 2015 doesn't consider string literal as a constant
-// expression, thus we are not able to do this check here.
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
 // By wrapping internal-only properties in this macro, we are not
 // exposing them in the CSSOM. Since currently it is not necessary to
 // allow accessing them in that way, it is easier and cheaper to just
@@ -46,7 +43,6 @@ typedef nsCSSProps::KTableEntry KTableEntry;
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 #undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
-#endif
 
 #define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
   static_assert(!((flags_) & CSS_PROPERTY_ENABLED_IN_CHROME) || \
@@ -1046,8 +1042,8 @@ const KTableEntry nsCSSProps::kBoxShadowTypeKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBoxSizingKTable[] = {
-  { eCSSKeyword_content_box,  uint8_t(StyleBoxSizing::Content) },
-  { eCSSKeyword_border_box,   uint8_t(StyleBoxSizing::Border) },
+  { eCSSKeyword_content_box,  StyleBoxSizing::Content },
+  { eCSSKeyword_border_box,   StyleBoxSizing::Border },
   { eCSSKeyword_UNKNOWN,      -1 }
 };
 
@@ -2301,13 +2297,13 @@ const KTableEntry nsCSSProps::kFillRuleKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kClipShapeSizingKTable[] = {
-  { eCSSKeyword_content_box,   uint8_t(StyleClipShapeSizing::Content) },
-  { eCSSKeyword_padding_box,   uint8_t(StyleClipShapeSizing::Padding) },
-  { eCSSKeyword_border_box,    uint8_t(StyleClipShapeSizing::Border) },
-  { eCSSKeyword_margin_box,    uint8_t(StyleClipShapeSizing::Margin) },
-  { eCSSKeyword_fill_box,      uint8_t(StyleClipShapeSizing::Fill) },
-  { eCSSKeyword_stroke_box,    uint8_t(StyleClipShapeSizing::Stroke) },
-  { eCSSKeyword_view_box,      uint8_t(StyleClipShapeSizing::View) },
+  { eCSSKeyword_content_box,   StyleClipShapeSizing::Content },
+  { eCSSKeyword_padding_box,   StyleClipShapeSizing::Padding },
+  { eCSSKeyword_border_box,    StyleClipShapeSizing::Border },
+  { eCSSKeyword_margin_box,    StyleClipShapeSizing::Margin },
+  { eCSSKeyword_fill_box,      StyleClipShapeSizing::Fill },
+  { eCSSKeyword_stroke_box,    StyleClipShapeSizing::Stroke },
+  { eCSSKeyword_view_box,      StyleClipShapeSizing::View },
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 

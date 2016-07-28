@@ -40,7 +40,16 @@ function Finder(docShell) {
 }
 
 Finder.prototype = {
+  get iterator() {
+    if (this._iterator)
+      return this._iterator;
+    this._iterator = Cu.import("resource://gre/modules/FinderIterator.jsm", null).FinderIterator;
+    return this._iterator;
+  },
+
   destroy: function() {
+    if (this._iterator)
+      this._iterator.reset();
     if (this._highlighter) {
       this._highlighter.clear();
       this._highlighter.hide();
@@ -87,6 +96,12 @@ Finder.prototype = {
     options.rect = this._getResultRect();
     options.searchString = this._searchString;
 
+    if (!this.iterator.continueRunning({
+      linksOnly: options.linksOnly,
+      word: options.searchString
+    })) {
+      this.iterator.stop();
+    }
     this.highlighter.update(options);
 
     for (let l of this._listeners) {
@@ -150,7 +165,8 @@ Finder.prototype = {
       result: this._lastFindResult,
       findBackwards: false,
       findAgain: false,
-      drawOutline: aDrawOutline
+      drawOutline: aDrawOutline,
+      linksOnly: aLinksOnly
     });
   },
 
@@ -170,8 +186,9 @@ Finder.prototype = {
       searchString,
       result: this._lastFindResult,
       findBackwards: aFindBackwards,
-      fidnAgain: true,
-      drawOutline: aDrawOutline
+      findAgain: true,
+      drawOutline: aDrawOutline,
+      linksOnly: aLinksOnly
     });
   },
 
@@ -190,10 +207,8 @@ Finder.prototype = {
     return searchString;
   },
 
-  highlight: Task.async(function* (aHighlight, aWord) {
-    this.highlighter.maybeAbort();
-
-    let found = yield this.highlighter.highlight(aHighlight, aWord, null);
+  highlight: Task.async(function* (aHighlight, aWord, aLinksOnly) {
+    let found = yield this.highlighter.highlight(aHighlight, aWord, null, aLinksOnly);
     this.highlighter.notifyFinished(aHighlight);
     if (aHighlight) {
       let result = found ? Ci.nsITypeAheadFind.FIND_FOUND
@@ -361,179 +376,48 @@ Finder.prototype = {
 
   requestMatchesCount: function(aWord, aMatchLimit, aLinksOnly) {
     if (this._lastFindResult == Ci.nsITypeAheadFind.FIND_NOTFOUND ||
-        this.searchString == "") {
-      return this._notifyMatchesCount({
+        this.searchString == "" || !aWord) {
+      this._notifyMatchesCount({
         total: 0,
         current: 0
       });
+      return;
     }
+
     let window = this._getWindow();
-    let result = this._countMatchesInWindow(aWord, aMatchLimit, aLinksOnly, window);
-
-    // Count matches in (i)frames AFTER searching through the main window.
-    for (let frame of result._framesToCount) {
-      // We've reached our limit; no need to do more work.
-      if (result.total == -1 || result.total == aMatchLimit)
-        break;
-      this._countMatchesInWindow(aWord, aMatchLimit, aLinksOnly, frame, result);
-    }
-
-    // The `_currentFound` and `_framesToCount` properties are only used for
-    // internal bookkeeping between recursive calls.
-    delete result._currentFound;
-    delete result._framesToCount;
-
-    this._notifyMatchesCount(result);
-    return undefined;
-  },
-
-  /**
-   * Counts the number of matches for the searched word in the passed window's
-   * content.
-   * @param aWord
-   *        the word to search for.
-   * @param aMatchLimit
-   *        the maximum number of matches shown (for speed reasons).
-   * @param aLinksOnly
-   *        whether we should only search through links.
-   * @param aWindow
-   *        the window to search in. Passing undefined will search the
-   *        current content window. Optional.
-   * @param aStats
-   *        the Object that is returned by this function. It may be passed as an
-   *        argument here in the case of a recursive call.
-   * @returns an object stating the number of matches and a vector for the current match.
-   */
-  _countMatchesInWindow: function(aWord, aMatchLimit, aLinksOnly, aWindow = null, aStats = null) {
-    aWindow = aWindow || this._getWindow();
-    aStats = aStats || {
+    let result = {
       total: 0,
       current: 0,
-      _framesToCount: new Set(),
       _currentFound: false
     };
-
-    // If we already reached our max, there's no need to do more work!
-    if (aStats.total == -1 || aStats.total == aMatchLimit) {
-      aStats.total = -1;
-      return aStats;
-    }
-
-    this._collectFrames(aWindow, aStats);
-
     let foundRange = this._fastFind.getFoundRange();
 
-    for(let range of this._findIterator(aWord, aWindow)) {
-      if (!aLinksOnly || this._rangeStartsInLink(range)) {
-        ++aStats.total;
-        if (!aStats._currentFound) {
-          ++aStats.current;
-          aStats._currentFound = (foundRange &&
+    this.iterator.start({
+      finder: this,
+      limit: aMatchLimit,
+      linksOnly: aLinksOnly,
+      onRange: range => {
+        ++result.total;
+        if (!result._currentFound) {
+          ++result.current;
+          result._currentFound = (foundRange &&
             range.startContainer == foundRange.startContainer &&
             range.startOffset == foundRange.startOffset &&
             range.endContainer == foundRange.endContainer &&
             range.endOffset == foundRange.endOffset);
         }
-      }
-      if (aStats.total == aMatchLimit) {
-        aStats.total = -1;
-        break;
-      }
-    }
+      },
+      useCache: true,
+      word: aWord
+    }).then(() => {
+      // The `_currentFound` property is only used for internal bookkeeping.
+      delete result._currentFound;
 
-    return aStats;
-  },
+      if (result.total == aMatchLimit)
+        result.total = -1;
 
-  /**
-   * Basic wrapper around nsIFind that provides a generator yielding
-   * a range each time an occurence of `aWord` string is found.
-   *
-   * @param aWord
-   *        the word to search for.
-   * @param aWindow
-   *        the window to search in.
-   */
-  _findIterator: function* (aWord, aWindow) {
-    let doc = aWindow.document;
-    let body = (doc instanceof Ci.nsIDOMHTMLDocument && doc.body) ?
-               doc.body : doc.documentElement;
-
-    if (!body)
-      return;
-
-    let searchRange = doc.createRange();
-    searchRange.selectNodeContents(body);
-
-    let startPt = searchRange.cloneRange();
-    startPt.collapse(true);
-
-    let endPt = searchRange.cloneRange();
-    endPt.collapse(false);
-
-    let retRange = null;
-
-    let finder = Cc["@mozilla.org/embedcomp/rangefind;1"]
-                   .createInstance()
-                   .QueryInterface(Ci.nsIFind);
-    finder.caseSensitive = this._fastFind.caseSensitive;
-    finder.entireWord = this._fastFind.entireWord;
-
-    while ((retRange = finder.Find(aWord, searchRange, startPt, endPt))) {
-      yield retRange;
-      startPt = retRange.cloneRange();
-      startPt.collapse(false);
-    }
-  },
-
-  /**
-   * Helper method for `_countMatchesInWindow` that recursively collects all
-   * visible (i)frames inside a window.
-   *
-   * @param aWindow
-   *        the window to extract the (i)frames from.
-   * @param aStats
-   *        Object that contains a Set called '_framesToCount'
-   */
-  _collectFrames: function(aWindow, aStats) {
-    if (!aWindow.frames || !aWindow.frames.length)
-      return;
-    // Casting `aWindow.frames` to an Iterator doesn't work, so we're stuck with
-    // a plain, old for-loop.
-    for (let i = 0, l = aWindow.frames.length; i < l; ++i) {
-      let frame = aWindow.frames[i];
-      // Don't count matches in hidden frames.
-      let frameEl = frame && frame.frameElement;
-      if (!frameEl)
-        continue;
-      // Construct a range around the frame element to check its visiblity.
-      let range = aWindow.document.createRange();
-      range.setStart(frameEl, 0);
-      range.setEnd(frameEl, 0);
-      if (!this._fastFind.isRangeVisible(range, this._getDocShell(range), true))
-        continue;
-      // All good, so add it to the set to count later.
-      if (!aStats._framesToCount.has(frame))
-        aStats._framesToCount.add(frame);
-      this._collectFrames(frame, aStats);
-    }
-  },
-
-  /**
-   * Helper method to extract the docShell reference from a Window or Range object.
-   *
-   * @param aWindowOrRange
-   *        Window object to query. May also be a Range, from which the owner
-   *        window will be queried.
-   * @returns nsIDocShell
-   */
-  _getDocShell: function(aWindowOrRange) {
-    let window = aWindowOrRange;
-    // Ranges may also be passed in, so fetch its window.
-    if (aWindowOrRange instanceof Ci.nsIDOMRange)
-      window = aWindowOrRange.startContainer.ownerDocument.defaultView;
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShell);
+      this._notifyMatchesCount(result);
+    });
   },
 
   _getWindow: function () {
@@ -649,42 +533,6 @@ Finder.prototype = {
     return controller;
   },
 
-  /**
-   * Determines whether a range is inside a link.
-   * @param aRange
-   *        the range to check
-   * @returns true if the range starts in a link
-   */
-  _rangeStartsInLink: function(aRange) {
-    let isInsideLink = false;
-    let node = aRange.startContainer;
-
-    if (node.nodeType == node.ELEMENT_NODE) {
-      if (node.hasChildNodes) {
-        let childNode = node.item(aRange.startOffset);
-        if (childNode)
-          node = childNode;
-      }
-    }
-
-    const XLink_NS = "http://www.w3.org/1999/xlink";
-    const HTMLAnchorElement = (node.ownerDocument || node).defaultView.HTMLAnchorElement;
-    do {
-      if (node instanceof HTMLAnchorElement) {
-        isInsideLink = node.hasAttribute("href");
-        break;
-      } else if (typeof node.hasAttributeNS == "function" &&
-                 node.hasAttributeNS(XLink_NS, "href")) {
-        isInsideLink = (node.getAttributeNS(XLink_NS, "type") == "simple");
-        break;
-      }
-
-      node = node.parentNode;
-    } while (node);
-
-    return isInsideLink;
-  },
-
   // Start of nsIWebProgressListener implementation.
 
   onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
@@ -694,6 +542,7 @@ Finder.prototype = {
     // Avoid leaking if we change the page.
     this._previousLink = null;
     this.highlighter.onLocationChange();
+    this.iterator.reset();
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,

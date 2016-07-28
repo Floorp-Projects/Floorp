@@ -1294,45 +1294,19 @@ public:
     explicit XPCNativeSetKey(XPCNativeSet*       BaseSet  = nullptr,
                              XPCNativeInterface* Addition = nullptr,
                              uint16_t            Position = 0)
-        : mIsAKey(IS_A_KEY), mPosition(Position), mBaseSet(BaseSet),
-          mAddition(Addition) {}
+        : mBaseSet(BaseSet), mAddition(Addition), mPosition(Position) {}
     ~XPCNativeSetKey() {}
 
     XPCNativeSet*           GetBaseSet()  const {return mBaseSet;}
     XPCNativeInterface*     GetAddition() const {return mAddition;}
     uint16_t                GetPosition() const {return mPosition;}
 
-    // This is a fun little hack...
-    // We build these keys only on the stack. We use them for lookup in
-    // NativeSetMap. Becasue we don't want to pay the cost of cloning a key and
-    // sticking it into the hashtable, when the XPCNativeSet actually
-    // gets added to the table the 'key' in the table is a pointer to the
-    // set itself and not this key. Our key compare function expects to get
-    // a key and a set. When we do external lookups in the map we pass in one
-    // of these keys and our compare function gets passed a key and a set.
-    // (see compare_NativeKeyToSet in xpcmaps.cpp). This is all well and good.
-    // Except, when the table decides to resize itself. Then it tries to use
-    // our compare function with the 'keys' that are in the hashtable (which are
-    // really XPCNativeSet objects and not XPCNativeSetKey objects!
-    //
-    // So, the hack is to have the compare function assume it is getting a
-    // XPCNativeSetKey pointer and call this IsAKey method. If that fails then
-    // it realises that it really has a XPCNativeSet pointer and deals with that
-    // fact. This is safe because we know that both of these classes have no
-    // virtual methods and their first data member is a uint16_t. We are
-    // confident that XPCNativeSet->mMemberCount will never be 0xffff.
-
-    bool                    IsAKey() const {return mIsAKey == IS_A_KEY;}
-
-    enum {IS_A_KEY = 0xffff};
-
     // Allow shallow copy
 
 private:
-    uint16_t                mIsAKey;    // must be first data member
-    uint16_t                mPosition;
     XPCNativeSet*           mBaseSet;
     XPCNativeInterface*     mAddition;
+    uint16_t                mPosition;
 };
 
 /***************************************************************************/
@@ -2407,7 +2381,6 @@ public:
      * @param dest [out] the resulting JSObject
      * @param src the native object we're working with
      * @param iid the interface of src that we want (may be null)
-     * @param Interface the interface of src that we want
      * @param cache the wrapper cache for src (may be null, in which case src
      *              will be QI'ed to get the cache)
      * @param allowNativeWrapper if true, this method may wrap the resulting
@@ -2420,7 +2393,6 @@ public:
                                          nsIXPConnectJSObjectHolder** dest,
                                          xpcObjectHelper& aHelper,
                                          const nsID* iid,
-                                         XPCNativeInterface** Interface,
                                          bool allowNativeWrapper,
                                          nsresult* pErr);
 

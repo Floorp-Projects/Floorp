@@ -727,18 +727,6 @@ function test() {
     checkThrow(() => view.getFloat64(2147483648), RangeError);
     checkThrow(() => view.getFloat64(2147483649), RangeError);
 
-    // Test for wrong arguments passed to get methods
-    //
-    // See http://www.w3.org/TR/WebIDL/#es-operations and the step saying "If entry is null, throw a TypeError."
-    checkThrow(() => view.getInt8(), TypeError);
-    checkThrow(() => view.getUint8(), TypeError);
-    checkThrow(() => view.getInt16(), TypeError);
-    checkThrow(() => view.getUint16(), TypeError);
-    checkThrow(() => view.getInt32(), TypeError);
-    checkThrow(() => view.getUint32(), TypeError);
-    checkThrow(() => view.getFloat32(), TypeError);
-    checkThrow(() => view.getFloat64(), TypeError);
-
     // Test for wrong type of |this|
     checkThrow(() => view.getInt8.apply("dead", [0]), TypeError);
     checkThrow(() => view.getUint8.apply("puppies", [0]), TypeError);
@@ -1512,24 +1500,6 @@ function test() {
     checkThrow(() => view.setUint32(2147483649, 1), RangeError);
     checkThrow(() => view.setFloat32(2147483649, 1), RangeError);
     checkThrow(() => view.setFloat64(2147483649, 1), RangeError);
-
-    // Test for wrong arguments passed to set methods
-    checkThrow(() => view.setInt8(), Error);
-    checkThrow(() => view.setUint8(), Error);
-    checkThrow(() => view.setInt16(), Error);
-    checkThrow(() => view.setUint16(), Error);
-    checkThrow(() => view.setInt32(), Error);
-    checkThrow(() => view.setUint32(), Error);
-    checkThrow(() => view.setFloat32(), Error);
-    checkThrow(() => view.setFloat64(), Error);
-    checkThrow(() => view.setInt8(1), Error);
-    checkThrow(() => view.setUint8(1), Error);
-    checkThrow(() => view.setInt16(1), Error);
-    checkThrow(() => view.setUint16(1), Error);
-    checkThrow(() => view.setInt32(1), Error);
-    checkThrow(() => view.setUint32(1), Error);
-    checkThrow(() => view.setFloat32(1), Error);
-    checkThrow(() => view.setFloat64(1), Error);
 
     // testAlignment
     var intArray1 = [0, 1, 2, 3, 100, 101, 102, 103, 128, 129, 130, 131, 252, 253, 254, 255];

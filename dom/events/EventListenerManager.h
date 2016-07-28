@@ -61,11 +61,14 @@ public:
   // If mPassive is true, the listener will not be calling preventDefault on the
   // event. (If it does call preventDefault, we should ignore it).
   bool mPassive : 1;
+  // If mOnce is true, the listener will be removed from the manager before it
+  // is invoked, so that it would only be invoked once.
+  bool mOnce : 1;
 
   EventListenerFlags() :
     mListenerIsJSListener(false),
     mCapture(false), mInSystemGroup(false), mAllowUntrustedEvents(false),
-    mPassive(false)
+    mPassive(false), mOnce(false)
   {
   }
 
@@ -75,7 +78,7 @@ public:
             mInSystemGroup == aOther.mInSystemGroup &&
             mListenerIsJSListener == aOther.mListenerIsJSListener &&
             mAllowUntrustedEvents == aOther.mAllowUntrustedEvents);
-            // Don't compare mPassive
+            // Don't compare mPassive or mOnce
   }
 
   bool EqualsForRemoval(const EventListenerFlags& aOther) const
@@ -83,7 +86,7 @@ public:
     return (mCapture == aOther.mCapture &&
             mInSystemGroup == aOther.mInSystemGroup &&
             mListenerIsJSListener == aOther.mListenerIsJSListener);
-            // Don't compare mAllowUntrustedEvents or mPassive
+            // Don't compare mAllowUntrustedEvents, mPassive, or mOnce
   }
 };
 
@@ -185,13 +188,13 @@ public:
 
     enum ListenerType : uint8_t
     {
-      eNativeListener = 0,
+      eNoListener,
+      eNativeListener,
       eJSEventListener,
       eWrappedJSListener,
       eWebIDLListener,
-      eListenerTypeCount
     };
-    uint8_t mListenerType;
+    ListenerType mListenerType;
 
     bool mListenerIsHandler : 1;
     bool mHandlerIsString : 1;
@@ -208,9 +211,33 @@ public:
     }
 
     Listener()
+      : mEventMessage(eVoidEvent)
+      , mListenerType(eNoListener)
+      , mListenerIsHandler(false)
+      , mHandlerIsString(false)
+      , mAllEvents(false)
+      , mIsChrome(false)
     {
-      MOZ_ASSERT(sizeof(mListenerType) == 1);
-      MOZ_ASSERT(eListenerTypeCount < 255);
+    }
+
+    Listener(Listener&& aOther)
+      : mListener(Move(aOther.mListener))
+      , mTypeAtom(aOther.mTypeAtom.forget())
+      , mTypeString(aOther.mTypeString)
+      , mEventMessage(aOther.mEventMessage)
+      , mListenerType(aOther.mListenerType)
+      , mListenerIsHandler(aOther.mListenerIsHandler)
+      , mHandlerIsString(aOther.mHandlerIsString)
+      , mAllEvents(aOther.mAllEvents)
+      , mIsChrome(aOther.mIsChrome)
+    {
+      aOther.mTypeString.Truncate();
+      aOther.mEventMessage = eVoidEvent;
+      aOther.mListenerType = eNoListener;
+      aOther.mListenerIsHandler = false;
+      aOther.mHandlerIsString = false;
+      aOther.mAllEvents = false;
+      aOther.mIsChrome = false;
     }
 
     ~Listener()
@@ -245,30 +272,28 @@ public:
                         bool aUseCapture,
                         bool aWantsUntrusted)
   {
-    EventListenerHolder holder(aListener);
-    AddEventListener(aType, holder, aUseCapture, aWantsUntrusted);
+    AddEventListener(aType, EventListenerHolder(aListener),
+                     aUseCapture, aWantsUntrusted);
   }
   void AddEventListener(const nsAString& aType,
                         dom::EventListener* aListener,
                         const dom::AddEventListenerOptionsOrBoolean& aOptions,
                         bool aWantsUntrusted)
   {
-    EventListenerHolder holder(aListener);
-    AddEventListener(aType, holder, aOptions, aWantsUntrusted);
+    AddEventListener(aType, EventListenerHolder(aListener),
+                     aOptions, aWantsUntrusted);
   }
   void RemoveEventListener(const nsAString& aType,
                            nsIDOMEventListener* aListener,
                            bool aUseCapture)
   {
-    EventListenerHolder holder(aListener);
-    RemoveEventListener(aType, holder, aUseCapture);
+    RemoveEventListener(aType, EventListenerHolder(aListener), aUseCapture);
   }
   void RemoveEventListener(const nsAString& aType,
                            dom::EventListener* aListener,
                            const dom::EventListenerOptionsOrBoolean& aOptions)
   {
-    EventListenerHolder holder(aListener);
-    RemoveEventListener(aType, holder, aOptions);
+    RemoveEventListener(aType, EventListenerHolder(aListener), aOptions);
   }
 
   void AddListenerForAllEvents(nsIDOMEventListener* aListener,
@@ -287,20 +312,18 @@ public:
                               const nsAString& type,
                               const EventListenerFlags& aFlags)
   {
-    EventListenerHolder holder(aListener);
-    AddEventListenerByType(holder, type, aFlags);
+    AddEventListenerByType(EventListenerHolder(aListener), type, aFlags);
   }
-  void AddEventListenerByType(const EventListenerHolder& aListener,
+  void AddEventListenerByType(EventListenerHolder aListener,
                               const nsAString& type,
                               const EventListenerFlags& aFlags);
   void RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                  const nsAString& type,
                                  const EventListenerFlags& aFlags)
   {
-    EventListenerHolder holder(aListener);
-    RemoveEventListenerByType(holder, type, aFlags);
+    RemoveEventListenerByType(EventListenerHolder(aListener), type, aFlags);
   }
-  void RemoveEventListenerByType(const EventListenerHolder& aListener,
+  void RemoveEventListenerByType(EventListenerHolder aListener,
                                  const nsAString& type,
                                  const EventListenerFlags& aFlags);
 
@@ -554,34 +577,35 @@ protected:
                                                 const nsAString& aTypeString);
 
   void AddEventListener(const nsAString& aType,
-                        const EventListenerHolder& aListener,
+                        EventListenerHolder aListener,
                         const dom::AddEventListenerOptionsOrBoolean& aOptions,
                         bool aWantsUntrusted);
   void AddEventListener(const nsAString& aType,
-                        const EventListenerHolder& aListener,
+                        EventListenerHolder aListener,
                         bool aUseCapture,
                         bool aWantsUntrusted);
   void RemoveEventListener(const nsAString& aType,
-                           const EventListenerHolder& aListener,
+                           EventListenerHolder aListener,
                            const dom::EventListenerOptionsOrBoolean& aOptions);
   void RemoveEventListener(const nsAString& aType,
-                           const EventListenerHolder& aListener,
+                           EventListenerHolder aListener,
                            bool aUseCapture);
 
-  void AddEventListenerInternal(const EventListenerHolder& aListener,
+  void AddEventListenerInternal(EventListenerHolder aListener,
                                 EventMessage aEventMessage,
                                 nsIAtom* aTypeAtom,
                                 const nsAString& aTypeString,
                                 const EventListenerFlags& aFlags,
                                 bool aHandler = false,
                                 bool aAllEvents = false);
-  void RemoveEventListenerInternal(const EventListenerHolder& aListener,
+  void RemoveEventListenerInternal(EventListenerHolder aListener,
                                    EventMessage aEventMessage,
                                    nsIAtom* aUserType,
                                    const nsAString& aTypeString,
                                    const EventListenerFlags& aFlags,
                                    bool aAllEvents = false);
   void RemoveAllListeners();
+  void NotifyEventListenerRemoved(nsIAtom* aUserType);
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsIAtom* aName);
   nsPIDOMWindowInner* GetInnerWindowForTarget();

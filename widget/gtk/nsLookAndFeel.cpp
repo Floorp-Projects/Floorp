@@ -1344,12 +1344,11 @@ nsLookAndFeel::Init()
     sOddCellBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_restore(style);
 
-    GtkWidget *frame = gtk_frame_new(nullptr);
-    gtk_container_add(GTK_CONTAINER(parent), frame);
-    style = gtk_widget_get_style_context(frame);
-    GetBorderColors(style, &sFrameOuterLightBorder, &sFrameInnerDarkBorder);
-
     gtk_widget_path_free(path);
+
+    style = ClaimStyleContext(MOZ_GTK_FRAME_BORDER);
+    GetBorderColors(style, &sFrameOuterLightBorder, &sFrameInnerDarkBorder);
+    ReleaseStyleContext(style);
 
     // GtkInfoBar
     // TODO - Use WidgetCache for it?

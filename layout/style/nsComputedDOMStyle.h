@@ -404,6 +404,7 @@ private:
   already_AddRefed<CSSValue> DoGetImageRegion();
 
   /* Text Properties */
+  already_AddRefed<CSSValue> DoGetInitialLetter();
   already_AddRefed<CSSValue> DoGetLineHeight();
   already_AddRefed<CSSValue> DoGetRubyAlign();
   already_AddRefed<CSSValue> DoGetRubyPosition();
