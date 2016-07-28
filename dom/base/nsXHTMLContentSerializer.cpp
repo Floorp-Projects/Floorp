@@ -245,7 +245,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
   if (mIsCopying && kNameSpaceID_XHTML == contentNamespaceID) {
 
-    // Need to keep track of OL and LI elements in order to get ordinal number 
+    // Need to keep track of OL and LI elements in order to get ordinal number
     // for the LI.
     if (aTagName == nsGkAtoms::ol) {
       // We are copying and current node is an OL;
@@ -306,7 +306,9 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         continue;
     }
 
-    const nsAttrName* name = aContent->GetAttrNameAt(index);
+    BorrowedAttrInfo info = aContent->GetAttrInfoAt(index);
+    const nsAttrName* name = info.mName;
+
     int32_t namespaceID = name->NamespaceID();
     nsIAtom* attrName = name->LocalName();
     nsIAtom* attrPrefix = name->GetPrefix();
@@ -331,7 +333,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
       addNSAttr = ConfirmPrefix(prefixStr, uriStr, aOriginalElement, true);
     }
 
-    aContent->GetAttr(namespaceID, attrName, valueStr);
+    info.mValue->ToString(valueStr);
 
     nsDependentAtomString nameStr(attrName);
     bool isJS = false;
@@ -354,7 +356,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
       isJS = IsJavaScript(aContent, attrName, namespaceID, valueStr);
 
-      if (namespaceID == kNameSpaceID_None && 
+      if (namespaceID == kNameSpaceID_None &&
           ((attrName == nsGkAtoms::href) ||
           (attrName == nsGkAtoms::src))) {
         // Make all links absolute when converting only the selection:
@@ -560,7 +562,7 @@ nsXHTMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
 
   // compact
   if ((aAttrName == nsGkAtoms::compact) &&
-      (aElementName == nsGkAtoms::dir || 
+      (aElementName == nsGkAtoms::dir ||
        aElementName == nsGkAtoms::dl ||
        aElementName == nsGkAtoms::menu ||
        aElementName == nsGkAtoms::ol ||
@@ -678,7 +680,7 @@ nsXHTMLContentSerializer::LineBreakBeforeOpen(int32_t aNamespaceID, nsIAtom* aNa
   return mAddSpace;
 }
 
-bool 
+bool
 nsXHTMLContentSerializer::LineBreakAfterOpen(int32_t aNamespaceID, nsIAtom* aName)
 {
 
@@ -709,7 +711,7 @@ nsXHTMLContentSerializer::LineBreakAfterOpen(int32_t aNamespaceID, nsIAtom* aNam
   return false;
 }
 
-bool 
+bool
 nsXHTMLContentSerializer::LineBreakBeforeClose(int32_t aNamespaceID, nsIAtom* aName)
 {
 
@@ -731,7 +733,7 @@ nsXHTMLContentSerializer::LineBreakBeforeClose(int32_t aNamespaceID, nsIAtom* aN
   return false;
 }
 
-bool 
+bool
 nsXHTMLContentSerializer::LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aName)
 {
 
@@ -891,7 +893,7 @@ nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
     // Set value attribute.
     nsAutoString valueStr;
 
-    //As serializer needs to use this valueAttr we are creating here, 
+    //As serializer needs to use this valueAttr we are creating here,
     valueStr.AppendInt(startVal + offset);
     NS_ENSURE_TRUE(SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"),
                                  valueStr, aStr, false), false);
@@ -933,7 +935,7 @@ nsXHTMLContentSerializer::HasNoChildren(nsIContent * aContent) {
   for (nsIContent* child = aContent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-       
+
     if (!child->IsNodeOfType(nsINode::eTEXT))
       return false;
 

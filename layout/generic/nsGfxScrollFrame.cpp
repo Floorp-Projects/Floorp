@@ -215,15 +215,19 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
 
   // === Filled in by ReflowScrolledFrame ===
   nsOverflowAreas mContentsOverflowAreas;
+  MOZ_INIT_OUTSIDE_CTOR
   bool mReflowedContentsWithHScrollbar;
+  MOZ_INIT_OUTSIDE_CTOR
   bool mReflowedContentsWithVScrollbar;
 
   // === Filled in when TryLayout succeeds ===
   // The size of the inside-border area
   nsSize mInsideBorderSize;
   // Whether we decided to show the horizontal scrollbar
+  MOZ_INIT_OUTSIDE_CTOR
   bool mShowHScrollbar;
   // Whether we decided to show the vertical scrollbar
+  MOZ_INIT_OUTSIDE_CTOR
   bool mShowVScrollbar;
 
   ScrollReflowInput(nsIScrollableFrame* aFrame,

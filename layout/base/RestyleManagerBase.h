@@ -42,6 +42,8 @@ public:
 
   void Disconnect() { mPresContext = nullptr; }
 
+  static nsCString RestyleHintToString(nsRestyleHint aHint);
+
 protected:
   void ContentStateChangedInternal(Element* aElement,
                                    EventStates aStateMask,

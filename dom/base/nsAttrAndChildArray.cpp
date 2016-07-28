@@ -79,15 +79,15 @@ GetIndexFromCache(const nsAttrAndChildArray* aArray)
 
 
 /**
- * Due to a compiler bug in VisualAge C++ for AIX, we need to return the 
- * address of the first index into mBuffer here, instead of simply returning 
+ * Due to a compiler bug in VisualAge C++ for AIX, we need to return the
+ * address of the first index into mBuffer here, instead of simply returning
  * mBuffer itself.
  *
  * See Bug 231104 for more information.
  */
 #define ATTRS(_impl) \
   reinterpret_cast<InternalAttr*>(&((_impl)->mBuffer[0]))
-  
+
 
 #define NS_IMPL_EXTRA_SIZE \
   ((sizeof(Impl) - sizeof(mImpl->mBuffer)) / sizeof(void*))
@@ -114,7 +114,7 @@ nsAttrAndChildArray::GetSafeChildAt(uint32_t aPos) const
   if (aPos < ChildCount()) {
     return ChildAt(aPos);
   }
-  
+
   return nullptr;
 }
 
@@ -122,11 +122,11 @@ nsIContent * const *
 nsAttrAndChildArray::GetChildArray(uint32_t* aChildCount) const
 {
   *aChildCount = ChildCount();
-  
+
   if (!*aChildCount) {
     return nullptr;
   }
-  
+
   return reinterpret_cast<nsIContent**>(mImpl->mBuffer + AttrSlotsSize());
 }
 
@@ -184,7 +184,7 @@ nsAttrAndChildArray::InsertChildAt(nsIContent* aChild, uint32_t aPos)
   SetChildAtPos(pos, aChild, aPos, childCount);
 
   SetChildCount(childCount + 1);
-  
+
   return NS_OK;
 }
 
@@ -482,6 +482,21 @@ nsAttrAndChildArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue)
   mapped->RemoveAttrAt(aPos - nonmapped, aValue);
 
   return MakeMappedUnique(mapped);
+}
+
+BorrowedAttrInfo
+nsAttrAndChildArray::AttrInfoAt(uint32_t aPos) const
+{
+  NS_ASSERTION(aPos < AttrCount(),
+               "out-of-bounds access in nsAttrAndChildArray");
+
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    return BorrowedAttrInfo(&ATTRS(mImpl)[aPos].mName, &ATTRS(mImpl)[aPos].mValue);
+  }
+
+  return BorrowedAttrInfo(mImpl->mMappedAttrs->NameAt(aPos - nonmapped),
+                    mImpl->mMappedAttrs->AttrAt(aPos - nonmapped));
 }
 
 const nsAttrName*

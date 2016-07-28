@@ -64,29 +64,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         , childDiv = document.getElementById("childDiv")
         , iframe = document.getElementById("iframe");
 
-      function MozMovementStats() {
-        this.mozMovementX = false;
-        this.mozMovementY = false;
+      function MovementStats() {
+        this.movementX = false;
+        this.movementY = false;
       }
 
-      var firstMove = new MozMovementStats()
-        , secondMove = new MozMovementStats()
+      var firstMove = new MovementStats()
+        , secondMove = new MovementStats()
         , hoverIframe = false;
 
       function runTests () {
         ok(hoverIframe, "Pointer should be locked even when pointer " +
           "hovers over a child iframe");
-        is(firstMove.mozMovementX, secondMove.mozMovementX, "MovementX of first " +
+        is(firstMove.movementX, secondMove.movementX, "MovementX of first " +
           "move to childDiv should be equal to movementX of second move " +
           "to child div");
-        is(firstMove.mozMovementY, secondMove.mozMovementY, "MovementY of first " +
+        is(firstMove.movementY, secondMove.movementY, "MovementY of first " +
           "move to childDiv should be equal to movementY of second move " +
           "to child div");
       }
 
       var firstMoveChild = function (e) {
-        firstMove.mozMovementX = e.mozMovementX;
-        firstMove.mozMovementY = e.mozMovementY;
+        firstMove.movementX = e.movementX;
+        firstMove.movementY = e.movementY;
 
         parent.removeEventListener("mousemove", firstMoveChild);
         parent.addEventListener("mousemove", moveIframe);
@@ -95,7 +95,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       var moveIframe = function (e) {
-        hoverIframe = !!document.mozPointerLockElement;
+        hoverIframe = !!document.pointerLockElement;
 
         parent.removeEventListener("mousemove", moveIframe);
         parent.addEventListener("mousemove", secondMoveChild);
@@ -104,8 +104,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       var secondMoveChild = function (e) {
-        secondMove.mozMovementX = e.mozMovementX;
-        secondMove.mozMovementY = e.mozMovementY;
+        secondMove.movementX = e.movementX;
+        secondMove.movementY = e.movementY;
         parent.removeEventListener("mousemove", secondMoveChild);
 
         addFullscreenChangeContinuation("exit", function() {
@@ -115,8 +115,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         document.exitFullscreen();
       };
 
-      document.addEventListener("mozpointerlockchange", function () {
-        if (document.mozPointerLockElement === parent) {
+      document.addEventListener("pointerlockchange", function () {
+        if (document.pointerLockElement === parent) {
           parent.addEventListener("mousemove", firstMoveChild);
           synthesizeMouseAtCenter(childDiv, {type: "mousemove"}, window);
         }
@@ -124,7 +124,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
       function start() {
         addFullscreenChangeContinuation("enter", function() {
-          parent.mozRequestPointerLock();
+          parent.requestPointerLock();
         });
         parent.requestFullscreen();
       }

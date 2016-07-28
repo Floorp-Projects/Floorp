@@ -248,6 +248,21 @@ public:
     return true;
   }
 
+  // See nsTArray::RemoveElementsBy.
+  void RemoveElementsBy(mozilla::function<bool(const elem_type&)> aPredicate)
+  {
+    index_type i = 0;
+    mArray.RemoveElementsBy([&](const elem_type& aItem) {
+      if (aPredicate(aItem)) {
+        // This element is going to be removed.
+        AdjustIterators(i, -1);
+        return true;
+      }
+      ++i;
+      return false;
+    });
+  }
+
   // Removes all observers and collapses all iterators to the beginning of
   // the array. The result is that forward iterators will see all elements
   // in the array.

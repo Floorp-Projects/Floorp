@@ -2182,11 +2182,29 @@ JsepSessionImpl::SetupDefaultCodecs()
   h264_0->mProfileLevelId = 0x42E00D;
   mSupportedCodecs.values.push_back(h264_0);
 
+  JsepVideoCodecDescription* red = new JsepVideoCodecDescription(
+      "122", // payload type
+      "red", // codec name
+      90000  // clock rate (match other video codecs)
+      );
+  mSupportedCodecs.values.push_back(red);
+
+  JsepVideoCodecDescription* ulpfec = new JsepVideoCodecDescription(
+      "123",    // payload type
+      "ulpfec", // codec name
+      90000     // clock rate (match other video codecs)
+      );
+  mSupportedCodecs.values.push_back(ulpfec);
+
   mSupportedCodecs.values.push_back(new JsepApplicationCodecDescription(
       "5000",
       "webrtc-datachannel",
       WEBRTC_DATACHANNEL_STREAMS_DEFAULT
       ));
+
+  // Update the redundant encodings for the RED codec with the supported
+  // codecs.  Note: only uses the video codecs.
+  red->UpdateRedundantEncodings(mSupportedCodecs.values);
 }
 
 void

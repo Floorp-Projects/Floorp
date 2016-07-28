@@ -29,6 +29,8 @@ static const char* logTag = "sdp_access";
 #define SIPSDP_ATTR_ENCNAME_L16_256K  "L16"
 #define SIPSDP_ATTR_ENCNAME_ISAC      "ISAC"
 #define SIPSDP_ATTR_ENCNAME_OPUS      "opus"
+#define SIPSDP_ATTR_ENCNAME_RED       "red"
+#define SIPSDP_ATTR_ENCNAME_ULPFEC    "ulpfec"
 
 /* Function:    sdp_find_media_level
  * Description: Find and return a pointer to the specified media level,
@@ -1376,6 +1378,12 @@ rtp_ptype sdp_get_known_payload_type(sdp_t *sdp_p,
         }
         if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_VP9) == 0) {
           return (RTP_VP9);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_RED) == 0) {
+          return (RTP_RED);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_ULPFEC) == 0) {
+          return (RTP_ULPFEC);
         }
       }
     }

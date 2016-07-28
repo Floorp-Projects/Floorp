@@ -240,7 +240,7 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
 #endif
 
     if (servoStyleSet) {
-      servoStyleSet->RestyleSubtree(child, /* aForce = */ true);
+      servoStyleSet->RestyleSubtree(child);
     }
   }
 }
@@ -406,18 +406,18 @@ nsXBLBinding::GenerateAnonymousContent()
   // Always check the content element for potential attributes.
   // This shorthand hack always happens, even when we didn't
   // build anonymous content.
-  const nsAttrName* attrName;
-  for (uint32_t i = 0; (attrName = content->GetAttrNameAt(i)); ++i) {
-    int32_t namespaceID = attrName->NamespaceID();
+  BorrowedAttrInfo attrInfo;
+  for (uint32_t i = 0; (attrInfo = content->GetAttrInfoAt(i)); ++i) {
+    int32_t namespaceID = attrInfo.mName->NamespaceID();
     // Hold a strong reference here so that the atom doesn't go away during
     // UnsetAttr.
-    nsCOMPtr<nsIAtom> name = attrName->LocalName();
+    nsCOMPtr<nsIAtom> name = attrInfo.mName->LocalName();
 
     if (name != nsGkAtoms::includes) {
       if (!nsContentUtils::HasNonEmptyAttr(mBoundElement, namespaceID, name)) {
         nsAutoString value2;
-        content->GetAttr(namespaceID, name, value2);
-        mBoundElement->SetAttr(namespaceID, name, attrName->GetPrefix(),
+        attrInfo.mValue->ToString(value2);
+        mBoundElement->SetAttr(namespaceID, name, attrInfo.mName->GetPrefix(),
                                value2, false);
       }
     }
