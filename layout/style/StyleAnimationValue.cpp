@@ -3493,7 +3493,7 @@ ExtractImageLayerSizePairList(const nsStyleImageLayers& aLayer,
 }
 
 static bool
-StyleClipBasicShapeToCSSArray(const nsStyleClipPath& aClipPath,
+StyleClipBasicShapeToCSSArray(const StyleClipPath& aClipPath,
                               nsCSSValue::Array* aResult)
 {
   MOZ_ASSERT(aResult->Count() == 2,
@@ -3953,7 +3953,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty_clip_path: {
           const nsStyleSVGReset* svgReset =
             static_cast<const nsStyleSVGReset*>(styleStruct);
-          const nsStyleClipPath& clipPath = svgReset->mClipPath;
+          const StyleClipPath& clipPath = svgReset->mClipPath;
           const StyleClipPathType type = clipPath.GetType();
 
           if (type == StyleClipPathType::URL) {
