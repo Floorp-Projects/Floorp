@@ -13,6 +13,40 @@
 //       bizarre things that might break the harness.
 
 (function(global) {
+  /**********************************************************************
+   * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
+   **********************************************************************/
+
+  var ReflectApply = global.Reflect.apply;
+
+  var document = global.document;
+  var documentBody = global.document.body;
+  var documentDocumentElement = global.document.documentElement;
+  var DocumentCreateElement = global.document.createElement;
+  var HTMLDocumentPrototypeWrite = global.HTMLDocument.prototype.write;
+  var ElementInnerHTMLSetter =
+    Object.getOwnPropertyDescriptor(global.Element.prototype, "innerHTML").set;
+  var HTMLIFramePrototypeContentWindowGetter =
+    Object.getOwnPropertyDescriptor(global.HTMLIFrameElement.prototype, "contentWindow").get;
+  var HTMLIFramePrototypeRemove = global.HTMLIFrameElement.prototype.remove;
+  var NodePrototypeAppendChild = global.Node.prototype.appendChild;
+
+  /****************************
+   * GENERAL HELPER FUNCTIONS *
+   ****************************/
+
+  function AppendChild(elt, kid) {
+    ReflectApply(NodePrototypeAppendChild, elt, [kid]);
+  }
+
+  function CreateElement(name) {
+    return ReflectApply(DocumentCreateElement, document, [name]);
+  }
+
+  function SetInnerHTML(element, html) {
+    ReflectApply(ElementInnerHTMLSetter, element, [html]);
+  }
+
   /****************************
    * UTILITY FUNCTION EXPORTS *
    ****************************/
@@ -20,10 +54,12 @@
   var newGlobal = global.newGlobal;
   if (typeof newGlobal !== "function") {
     newGlobal = function newGlobal() {
-      var iframe = global.document.createElement("iframe");
-      global.document.documentElement.appendChild(iframe);
-      var win = iframe.contentWindow;
-      iframe.remove();
+      var iframe = CreateElement("iframe");
+      AppendChild(documentDocumentElement, iframe);
+      var win =
+        ReflectApply(HTMLIFramePrototypeContentWindowGetter, iframe, []);
+      ReflectApply(HTMLIFramePrototypeRemove, iframe, []);
+
       // Shim in "evaluate"
       win.evaluate = win.eval;
       return win;
@@ -37,11 +73,11 @@
   // it.
   function DocumentWrite(s) {
     try {
-      var msgDiv = global.document.createElement('div');
-      msgDiv.innerHTML = s;
-      global.document.body.appendChild(msgDiv);
+      var msgDiv = CreateElement('div');
+      SetInnerHTML(msgDiv, s);
+      AppendChild(documentBody, msgDiv);
     } catch (e) {
-      global.document.write(s + '<br>\n');
+      ReflectApply(HTMLDocumentPrototypeWrite, document, [s + "<br>\n"]);
     }
   }
   global.DocumentWrite = DocumentWrite;
