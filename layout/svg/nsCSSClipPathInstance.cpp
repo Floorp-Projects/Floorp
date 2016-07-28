@@ -68,13 +68,13 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
   nsRect r;
   // XXXkrit SVG needs to use different boxes.
   switch (mClipPathStyle.GetReferenceBox()) {
-    case StyleClipShapeSizing::Content:
+    case StyleClipPathGeometryBox::Content:
       r = mTargetFrame->GetContentRectRelativeToSelf();
       break;
-    case StyleClipShapeSizing::Padding:
+    case StyleClipPathGeometryBox::Padding:
       r = mTargetFrame->GetPaddingRectRelativeToSelf();
       break;
-    case StyleClipShapeSizing::Margin:
+    case StyleClipPathGeometryBox::Margin:
       r = mTargetFrame->GetMarginRectRelativeToSelf();
       break;
     default: // Use the border box
