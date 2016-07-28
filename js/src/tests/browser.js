@@ -87,10 +87,9 @@
     global.newGlobal = newGlobal;
   }
 
-  // This function is *only* used by this file's |print()| function!  It's only
-  // defined/exported here because |print| is defined outside this IIFE and
-  // because it needs access to unadulterated functionality as originally
-  // defined when this IIFE executed.
+  // This function is *only* used by shell.js's for-browsers |print()| function!
+  // It's only defined/exported here because it needs CreateElement and friends,
+  // only defined here, and we're not yet ready to move them to shell.js.
   function AddPrintOutput(s) {
     var msgDiv = CreateElement("div");
     SetTextContent(msgDiv, s);
@@ -182,25 +181,6 @@ function include(file) {
 function setRestoreFunction(restore) {
   jstestsRestoreFunction = restore;
 }
-
-function print() {
-  var s = 'TEST-INFO | ';
-  var a;
-  for (var i = 0; i < arguments.length; i++)
-  {
-    a = arguments[i];
-    s += String(a) + ' ';
-  }
-
-  if (typeof dump == 'function')
-  {
-    dump( s + '\n');
-  }
-
-  // AddPrintOutput doesn't require HTML special characters be escaped.
-  AddPrintOutput(s);
-}
-
 
 window.onerror = function (msg, page, line)
 {
