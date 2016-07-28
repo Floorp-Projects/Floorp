@@ -50,6 +50,14 @@ public:
   void Resume() override;
 
 protected:
+  /// Notify @aImage of @aDecoder's progress.
+  static void NotifyProgress(NotNull<RasterImage*> aImage,
+                             NotNull<Decoder*> aDecoder);
+
+  /// Notify @aImage that @aDecoder has finished.
+  static void NotifyDecodeComplete(NotNull<RasterImage*> aImage,
+                                   NotNull<Decoder*> aDecoder);
+
   virtual ~IDecodingTask() { }
 };
 
