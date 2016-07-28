@@ -42,8 +42,17 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
     """Generate a list of target tasks based on try syntax in
     parameters['message'] and, for context, the full task graph."""
     options = try_option_syntax.TryOptionSyntax(parameters['message'], full_task_graph)
-    return [t.label for t in full_task_graph.tasks.itervalues()
-            if options.task_matches(t.attributes)]
+    target_tasks_labels = [t.label for t in full_task_graph.tasks.itervalues()
+                           if options.task_matches(t.attributes)]
+
+    # If the developer wants test jobs to be rebuilt N times we add that value here
+    if int(options.trigger_tests) > 1:
+        for l in target_tasks_labels:
+            task = full_task_graph[l]
+            if 'unittest_suite' in task.attributes:
+                task.attributes['task_duplicates'] = options.trigger_tests
+
+    return target_tasks_labels
 
 
 @_target_task('all_builds_and_tests')
