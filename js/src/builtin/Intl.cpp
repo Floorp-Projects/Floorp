@@ -608,26 +608,21 @@ icuLocale(const char* locale)
     return locale;
 }
 
-// Simple RAII for ICU objects. MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE
-// unfortunately doesn't work because of namespace incompatibilities
-// (TypeSpecificDelete cannot be in icu and mozilla at the same time)
-// and because ICU declares both UNumberFormat and UDateTimePatternGenerator
-// as void*.
-template <typename T>
+// Simple RAII for ICU objects.  Unfortunately, ICU's C++ API is uniformly
+// unstable, so we can't use its smart pointers for this.
+template <typename T, void (Delete)(T*)>
 class ScopedICUObject
 {
     T* ptr_;
-    void (* deleter_)(T*);
 
   public:
-    ScopedICUObject(T* ptr, void (*deleter)(T*))
-      : ptr_(ptr),
-        deleter_(deleter)
+    explicit ScopedICUObject(T* ptr)
+      : ptr_(ptr)
     {}
 
     ~ScopedICUObject() {
         if (ptr_)
-            deleter_(ptr_);
+            Delete(ptr_);
     }
 
     // In cases where an object should be deleted on abnormal exits,
@@ -870,7 +865,7 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-    ScopedICUObject<UEnumeration> toClose(values, uenum_close);
+    ScopedICUObject<UEnumeration, uenum_close> toClose(values);
 
     uint32_t count = uenum_count(values, &status);
     if (U_FAILURE(status)) {
@@ -1512,7 +1507,7 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return nullptr;
     }
-    ScopedICUObject<UNumberFormat> toClose(nf, unum_close);
+    ScopedICUObject<UNumberFormat, unum_close> toClose(nf);
 
     if (uCurrency) {
         unum_setTextAttribute(nf, UNUM_CURRENCY_CODE, uCurrency, 3, &status);
@@ -1900,7 +1895,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-    ScopedICUObject<UEnumeration> toClose(values, uenum_close);
+    ScopedICUObject<UEnumeration, uenum_close> toClose(values);
 
     uint32_t count = uenum_count(values, &status);
     if (U_FAILURE(status)) {
@@ -1956,7 +1951,7 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-    ScopedICUObject<UDateTimePatternGenerator> toClose(gen, udatpg_close);
+    ScopedICUObject<UDateTimePatternGenerator, udatpg_close> toClose(gen);
 
     int32_t size = udatpg_getBestPattern(gen, Char16ToUChar(skeletonChars.start().get()),
                                          skeletonLen, nullptr, 0, &status);
