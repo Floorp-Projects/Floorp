@@ -34,15 +34,9 @@ struct TypeIsGCThing : mozilla::FalseType
 
 template <typename T,
           size_t MinInlineCapacity = 0,
-          class AllocPolicy = TempAllocPolicy
-// 1800 is MSVC2013.  Optimistically assume MSVC2015 (1900) is fixed.
-// If you're porting to MSVC2015 and this doesn't work, extend the
-// condition to encompass that additional version (but *do* keep the
-// version-check so we know when MSVC's fixed).
-#if !defined(_MSC_VER) || (1800 <= _MSC_VER && _MSC_VER <= 1800)
+          class AllocPolicy = TempAllocPolicy,
          // Don't use this with JS::Value!  Use JS::AutoValueVector instead.
-         , typename = typename mozilla::EnableIf<!detail::TypeIsGCThing<T>::value>::Type
-#endif
+         typename = typename mozilla::EnableIf<!detail::TypeIsGCThing<T>::value>::Type
          >
 using Vector = mozilla::Vector<T, MinInlineCapacity, AllocPolicy>;
 
