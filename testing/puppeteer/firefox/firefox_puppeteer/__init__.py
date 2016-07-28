@@ -66,7 +66,7 @@ class Puppeteer(object):
 
         :returns: Platform name
         """
-        return self.marionette.session_capabilities['platformName'].lower()
+        return self.marionette.session_capabilities['platformName']
 
     @use_class_as_property('api.prefs.Preferences')
     def prefs(self):
