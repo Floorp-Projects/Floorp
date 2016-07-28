@@ -81,7 +81,6 @@ RasterImage::RasterImage(ImageURL* aURI /* = nullptr */) :
   mFramesNotified(0),
 #endif
   mSourceBuffer(WrapNotNull(new SourceBuffer())),
-  mFrameCount(0),
   mHasSize(false),
   mTransient(false),
   mSyncLoad(false),
@@ -339,7 +338,7 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     // We don't have a copy of this frame, and there's no decoder working on
     // one. (Or we're sync decoding and the existing decoder hasn't even started
     // yet.) Trigger decoding so it'll be available next time.
-    MOZ_ASSERT(!mAnimationState || GetNumFrames() < 1,
+    MOZ_ASSERT(!mAnimationState || mAnimationState->KnownFrameCount() < 1,
                "Animated frames should be locked");
 
     Decode(requestedSize, aFlags);
@@ -759,57 +758,6 @@ RasterImage::CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
   }
 }
 
-class OnAddedFrameRunnable : public Runnable
-{
-public:
-  OnAddedFrameRunnable(RasterImage* aImage, uint32_t aNewFrameCount)
-    : mImage(aImage)
-    , mNewFrameCount(aNewFrameCount)
-  {
-    MOZ_ASSERT(aImage);
-  }
-
-  NS_IMETHOD Run()
-  {
-    mImage->OnAddedFrame(mNewFrameCount);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<RasterImage> mImage;
-  uint32_t mNewFrameCount;
-};
-
-void
-RasterImage::OnAddedFrame(uint32_t aNewFrameCount)
-{
-  if (!NS_IsMainThread()) {
-    nsCOMPtr<nsIRunnable> runnable =
-      new OnAddedFrameRunnable(this, aNewFrameCount);
-    NS_DispatchToMainThread(runnable);
-    return;
-  }
-
-  MOZ_ASSERT(aNewFrameCount <= mFrameCount + 1, "Skipped a frame?");
-
-  if (mError) {
-    return;  // We're in an error state, possibly due to OOM. Bail.
-  }
-
-  if (aNewFrameCount > mFrameCount) {
-    mFrameCount = aNewFrameCount;
-
-    if (aNewFrameCount == 2) {
-      MOZ_ASSERT(mAnimationState, "Should already have animation state");
-
-      // We may be able to start animating.
-      if (mPendingAnimation && ShouldAnimate()) {
-        StartAnimation();
-      }
-    }
-  }
-}
-
 bool
 RasterImage::SetMetadata(const ImageMetadata& aMetadata,
                          bool aFromMetadataDecode)
@@ -915,7 +863,7 @@ RasterImage::StartAnimation()
 
   // If we're not ready to animate, then set mPendingAnimation, which will cause
   // us to start animating if and when we do become ready.
-  mPendingAnimation = !mAnimationState || GetNumFrames() < 2;
+  mPendingAnimation = !mAnimationState || mAnimationState->KnownFrameCount() < 1;
   if (mPendingAnimation) {
     return NS_OK;
   }
@@ -1654,7 +1602,9 @@ RasterImage::HandleErrorWorker::Run()
 bool
 RasterImage::ShouldAnimate()
 {
-  return ImageResource::ShouldAnimate() && GetNumFrames() >= 2 &&
+  return ImageResource::ShouldAnimate() &&
+         mAnimationState &&
+         mAnimationState->KnownFrameCount() >= 1 &&
          !mAnimationFinished;
 }
 
@@ -1673,6 +1623,7 @@ RasterImage::GetFramesNotified(uint32_t* aFramesNotified)
 void
 RasterImage::NotifyProgress(Progress aProgress,
                             const IntRect& aInvalidRect /* = IntRect() */,
+                            const Maybe<uint32_t>& aFrameCount /* = Nothing() */,
                             SurfaceFlags aSurfaceFlags
                               /* = DefaultSurfaceFlags() */)
 {
@@ -1686,6 +1637,18 @@ RasterImage::NotifyProgress(Progress aProgress,
   if (!aInvalidRect.IsEmpty() && wasDefaultFlags) {
     // Update our image container since we're invalidating.
     UpdateImageContainer();
+  }
+
+  // We may have decoded new animation frames; update our animation state.
+  MOZ_ASSERT_IF(aFrameCount && *aFrameCount > 1, mAnimationState);
+  if (mAnimationState && aFrameCount) {
+    mAnimationState->UpdateKnownFrameCount(*aFrameCount);
+  }
+
+  // If we should start animating right now, do so.
+  if (mAnimationState && aFrameCount == Some(1u) &&
+      mPendingAnimation && ShouldAnimate()) {
+    StartAnimation();
   }
 
   // Tell the observers what happened.
@@ -1727,15 +1690,19 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   if (!wasMetadata && aDecoder->GetDecodeDone() && !aDecoder->WasAborted()) {
     // Flag that we've been decoded before.
     mHasBeenDecoded = true;
-    if (mAnimationState) {
-      mAnimationState->SetDoneDecoding(true);
-    }
   }
 
   // Send out any final notifications.
   NotifyProgress(aDecoder->TakeProgress(),
                  aDecoder->TakeInvalidRect(),
+                 aDecoder->TakeCompleteFrameCount(),
                  aDecoder->GetSurfaceFlags());
+
+  if (mHasBeenDecoded && mAnimationState) {
+    // We're done decoding and our AnimationState has been notified about all
+    // our frames, so let it know not to expect anymore.
+    mAnimationState->SetDoneDecoding(true);
+  }
 
   if (!wasMetadata && aDecoder->ChunkCount()) {
     Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS,
