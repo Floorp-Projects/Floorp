@@ -1678,18 +1678,15 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
     return rv;
   }
 
-  LineBreakType lineBreakType = GetLineBreakType(aEvent);
-
-  nsRect caretRect;
-
   // When the selection is collapsed and the queried offset is current caret
   // position, we should return the "real" caret rect.
   if (mSelection->IsCollapsed()) {
+    nsRect caretRect;
     nsIFrame* caretFrame = nsCaret::GetGeometry(mSelection, &caretRect);
     if (caretFrame) {
       uint32_t offset;
       rv = GetFlatTextLengthBefore(mFirstSelectedRange,
-                                   &offset, lineBreakType);
+                                   &offset, GetLineBreakType(aEvent));
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == aEvent->mInput.mOffset) {
         rv = ConvertToRootRelativeOffset(caretFrame, caretRect);
@@ -1709,52 +1706,23 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
     }
   }
 
-  // Otherwise, we should set the guessed caret rect.
-  RefPtr<nsRange> range = new nsRange(mRootContent);
-  rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset, 0,
-                                  lineBreakType, true,
-                                  &aEvent->mReply.mOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = AdjustCollapsedRangeMaybeIntoTextNode(range);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  // Otherwise, we should guess the caret rect from the character's rect.
+  WidgetQueryContentEvent queryTextRectEvent(eQueryTextRect, *aEvent);
+  WidgetQueryContentEvent::Options options(*aEvent);
+  queryTextRectEvent.InitForQueryTextRect(aEvent->mInput.mOffset, 1, options);
+  rv = OnQueryTextRect(&queryTextRectEvent);
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!queryTextRectEvent.mSucceeded)) {
+    return NS_ERROR_FAILURE;
   }
-
-  int32_t xpOffsetInFrame;
-  nsIFrame* frame;
-  rv = GetStartFrameAndOffset(range, frame, xpOffsetInFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsPoint posInFrame;
-  rv = frame->GetPointFromOffset(range->StartOffset(), &posInFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aEvent->mReply.mWritingMode = frame->GetWritingMode();
-  bool isVertical = aEvent->mReply.mWritingMode.IsVertical();
-
-  nsRect rect;
-  rect.x = posInFrame.x;
-  rect.y = posInFrame.y;
-
-  RefPtr<nsFontMetrics> fontMetrics =
-    nsLayoutUtils::GetInflatedFontMetricsForFrame(frame);
-  if (isVertical) {
-    rect.width = fontMetrics->MaxHeight();
-    rect.height = caretRect.height;
+  queryTextRectEvent.mReply.mString.Truncate();
+  aEvent->mReply = queryTextRectEvent.mReply;
+  if (aEvent->GetWritingMode().IsVertical()) {
+    aEvent->mReply.mRect.height = 1;
   } else {
-    rect.width = caretRect.width;
-    rect.height = fontMetrics->MaxHeight();
+    aEvent->mReply.mRect.width = 1;
   }
-
-  rv = ConvertToRootRelativeOffset(frame, rect);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
-      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
   // Returning empty rect may cause native IME confused, let's make sure to
   // return non-empty rect.
-  EnsureNonEmptyRect(aEvent->mReply.mRect);
   aEvent->mSucceeded = true;
   return NS_OK;
 }
