@@ -405,10 +405,10 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   // callbacks may run that introduce further lag between the main thread and
   // the compositor.
   if (aAnimation->AsCSSTransition() &&
-      aAnimation->GetEffect()) {
-    MOZ_ASSERT(aAnimation->GetEffect()->AsTransition(),
-               "CSSTransition' effect should be an ElementPropertyTransition "
-               "until we fix bug 1049975");
+      aAnimation->GetEffect() &&
+      aAnimation->GetEffect()->AsTransition()) {
+    // We update startValue from the replaced transition only if the effect is
+    // an ElementPropertyTransition.
     aAnimation->GetEffect()->AsTransition()->
       UpdateStartValueFromReplacedTransition();
   }

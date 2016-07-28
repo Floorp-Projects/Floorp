@@ -102,7 +102,7 @@ public:
   {
     // TODO: Merged with SetEffect(KeyframeEffectReadOnly*) in the next patch.
   }
-  void SetEffect(KeyframeEffectReadOnly* aEffect);
+  virtual void SetEffect(KeyframeEffectReadOnly* aEffect);
   AnimationTimeline* GetTimeline() const { return mTimeline; }
   void SetTimeline(AnimationTimeline* aTimeline);
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
