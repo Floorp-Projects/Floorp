@@ -12,7 +12,8 @@ importScripts("resource://gre/modules/subprocess/subprocess_shared.js",
               "resource://gre/modules/subprocess/subprocess_shared_win.js",
               "resource://gre/modules/subprocess/subprocess_worker_common.js");
 
-const POLL_TIMEOUT = 5000;
+const POLL_INTERVAL = 50;
+const POLL_TIMEOUT = 0;
 
 // The exit code that we send when we forcibly terminate a process.
 const TERMINATE_EXIT_CODE = 0x7f;
@@ -297,25 +298,6 @@ class OutputPipe extends Pipe {
   }
 }
 
-class Signal {
-  constructor(event) {
-    this.event = event;
-  }
-
-  cleanup() {
-    libc.CloseHandle(this.event);
-    this.event = null;
-  }
-
-  onError() {
-    io.shutdown();
-  }
-
-  onReady() {
-    io.messageCount += 1;
-  }
-}
-
 class Process extends BaseProcess {
   constructor(...args) {
     super(...args);
@@ -561,29 +543,7 @@ io = {
 
   processes: new Map(),
 
-  messageCount: 0,
-
-  running: true,
-
-  init(details) {
-    let signalEvent = ctypes.cast(ctypes.uintptr_t(details.signalEvent),
-                                  win32.HANDLE);
-    this.signal = new Signal(signalEvent);
-    this.updatePollEvents();
-
-    setTimeout(this.loop.bind(this), 0);
-  },
-
-  shutdown() {
-    if (this.running) {
-      this.running = false;
-
-      this.signal.cleanup();
-      this.signal = null;
-
-      self.close();
-    }
-  },
+  interval: null,
 
   getPipe(pipeId) {
     let pipe = this.pipes.get(pipeId);
@@ -606,8 +566,7 @@ io = {
   },
 
   updatePollEvents() {
-    let handlers = [this.signal,
-                    ...this.pipes.values(),
+    let handlers = [...this.pipes.values(),
                     ...this.processes.values()];
 
     handlers = handlers.filter(handler => handler.event);
@@ -616,24 +575,22 @@ io = {
 
     let handles = handlers.map(handler => handler.event);
     this.events = win32.HANDLE.array()(handles);
-  },
 
-  loop() {
-    this.poll();
-    if (this.running) {
-      setTimeout(this.loop.bind(this), 0);
+    if (handles.length && !this.interval) {
+      this.interval = setInterval(this.poll.bind(this), POLL_INTERVAL);
+    } else if (!handlers.length && this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
     }
   },
 
-
   poll() {
-    let timeout = this.messageCount > 0 ? 0 : POLL_TIMEOUT;
-    for (;; timeout = 0) {
+    for (;;) {
       let events = this.events;
       let handlers = this.eventHandlers;
 
       let result = libc.WaitForMultipleObjects(events.length, events,
-                                               false, timeout);
+                                               false, POLL_TIMEOUT);
 
       if (result < handlers.length) {
         try {
