@@ -3544,6 +3544,25 @@ nsComputedDOMStyle::DoGetImageRegion()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetInitialLetter()
+{
+  const nsStyleTextReset* textReset = StyleTextReset();
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  if (textReset->mInitialLetterSink == 0) {
+    val->SetIdent(eCSSKeyword_normal);
+    return val.forget();
+  } else {
+    RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
+    val->SetNumber(textReset->mInitialLetterSize);
+    valueList->AppendCSSValue(val.forget());
+    RefPtr<nsROCSSPrimitiveValue> second = new nsROCSSPrimitiveValue;
+    second->SetNumber(textReset->mInitialLetterSink);
+    valueList->AppendCSSValue(second.forget());
+    return valueList.forget();
+  }
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetLineHeight()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
