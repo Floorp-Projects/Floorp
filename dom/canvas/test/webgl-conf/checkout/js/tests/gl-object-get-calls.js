@@ -763,7 +763,7 @@ if (contextVersion > 1) {
         gl.RG32UI, gl.RGB8I, gl.RGB8UI, gl.RGB16I,
         gl.RGB16UI, gl.RGB32I, gl.RGB32UI, gl.RGBA8I,
         gl.RGBA8UI, gl.RGBA16I, gl.RGBA16UI, gl.RGBA32I,
-        gl.RGBA32UI, gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT16,
+        gl.RGBA32UI, gl.RGB, gl.RGBA, gl.DEPTH_STENCIL, gl.DEPTH_COMPONENT16,
         gl.DEPTH_COMPONENT24, gl.DEPTH_COMPONENT32F, gl.DEPTH24_STENCIL8,
         gl.DEPTH32F_STENCIL8, gl.STENCIL_INDEX8
     );
