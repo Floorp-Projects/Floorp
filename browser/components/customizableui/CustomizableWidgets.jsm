@@ -505,7 +505,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(e) {
       let win = e.target.ownerGlobal;
-      win.OpenBrowserWindow({private: true});     
+      win.OpenBrowserWindow({private: true});
     }
   }, {
     id: "save-page-button",
