@@ -267,11 +267,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::EXT_disjoint_timer_query)) {
         if (pname == LOCAL_GL_TIMESTAMP_EXT) {
             GLuint64 iv = 0;
-            if (HasTimestampBits()) {
-                gl->fGetInteger64v(pname, (GLint64*)&iv);
-            } else {
-                GenerateWarning("QUERY_COUNTER_BITS_EXT for TIMESTAMP_EXT is 0.");
-            }
+            gl->fGetInteger64v(pname, (GLint64*) &iv);
             // TODO: JS doesn't support 64-bit integers. Be lossy and
             // cast to double (53 bits)
             return JS::NumberValue(static_cast<double>(iv));
