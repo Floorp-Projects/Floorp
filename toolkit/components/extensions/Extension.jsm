@@ -76,6 +76,7 @@ var {
 } = ExtensionUtils;
 
 const LOGGER_ID_BASE = "addons.webextension.";
+const UUID_MAP_PREF = "extensions.webextensions.uuids";
 
 const COMMENT_REGEXP = new RegExp(String.raw`
     ^
@@ -455,6 +456,53 @@ let ParentAPIManager = {
 
 ParentAPIManager.init();
 
+// All moz-extension URIs use a machine-specific UUID rather than the
+// extension's own ID in the host component. This makes it more
+// difficult for web pages to detect whether a user has a given add-on
+// installed (by trying to load a moz-extension URI referring to a
+// web_accessible_resource from the extension). UUIDMap.get()
+// returns the UUID for a given add-on ID.
+let UUIDMap = {
+  _read() {
+    let pref = Preferences.get(UUID_MAP_PREF, "{}");
+    try {
+      return JSON.parse(pref);
+    } catch (e) {
+      Cu.reportError(`Error parsing ${UUID_MAP_PREF}.`);
+      return {};
+    }
+  },
+
+  _write(map) {
+    Preferences.set(UUID_MAP_PREF, JSON.stringify(map));
+  },
+
+  get(id, create = true) {
+    let map = this._read();
+
+    if (id in map) {
+      return map[id];
+    }
+
+    let uuid = null;
+    if (create) {
+      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+      uuid = uuidGenerator.generateUUID().number;
+      uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
+
+      map[id] = uuid;
+      this._write(map);
+    }
+    return uuid;
+  },
+
+  remove(id) {
+    let map = this._read();
+    delete map[id];
+    this._write(map);
+  },
+};
+
 // For extensions that have called setUninstallURL(), send an event
 // so the browser can display the URL.
 var UninstallObserver = {
@@ -689,36 +737,6 @@ GlobalManager = {
   },
 };
 
-// All moz-extension URIs use a machine-specific UUID rather than the
-// extension's own ID in the host component. This makes it more
-// difficult for web pages to detect whether a user has a given add-on
-// installed (by trying to load a moz-extension URI referring to a
-// web_accessible_resource from the extension). getExtensionUUID
-// returns the UUID for a given add-on ID.
-function getExtensionUUID(id) {
-  const PREF_NAME = "extensions.webextensions.uuids";
-
-  let pref = Preferences.get(PREF_NAME, "{}");
-  let map = {};
-  try {
-    map = JSON.parse(pref);
-  } catch (e) {
-    Cu.reportError(`Error parsing ${PREF_NAME}.`);
-  }
-
-  if (id in map) {
-    return map[id];
-  }
-
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  let uuid = uuidGenerator.generateUUID().number;
-  uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
-
-  map[id] = uuid;
-  Preferences.set(PREF_NAME, JSON.stringify(map));
-  return uuid;
-}
-
 // Represents the data contained in an extension, contained either
 // in a directory or a zip file, which may or may not be installed.
 // This class implements the functionality of the Extension class,
@@ -773,7 +791,7 @@ ExtensionData.prototype = {
       throw new Error("getURL may not be called before an `id` or `uuid` has been set");
     }
     if (!this.uuid) {
-      this.uuid = getExtensionUUID(this.id);
+      this.uuid = UUIDMap.get(this.id);
     }
     return `moz-extension://${this.uuid}/${path}`;
   },
@@ -1049,7 +1067,7 @@ ExtensionData.prototype = {
 this.Extension = function(addonData) {
   ExtensionData.call(this, addonData.resourceURI);
 
-  this.uuid = getExtensionUUID(addonData.id);
+  this.uuid = UUIDMap.get(addonData.id);
 
   if (addonData.cleanupFile) {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
