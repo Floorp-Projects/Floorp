@@ -1335,7 +1335,7 @@ TabChild::RecvLoadURL(const nsCString& aURI,
   nsresult rv =
     WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI).get(),
                              nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-                             nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_OWNER,
+                             nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL,
                              nullptr, nullptr, nullptr);
   if (NS_FAILED(rv)) {
       NS_WARNING("WebNavigation()->LoadURI failed. Eating exception, what else can I do?");
