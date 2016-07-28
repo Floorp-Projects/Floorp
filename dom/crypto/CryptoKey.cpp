@@ -204,8 +204,10 @@ CryptoKey::GetAlgorithm(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal,
       break;
     case KeyAlgorithmProxy::RSA: {
       RootedDictionary<RsaHashedKeyAlgorithm> rsa(cx);
-      mAlgorithm.mRsa.ToKeyAlgorithm(cx, rsa);
-      converted = ToJSValue(cx, rsa, &val);
+      converted = mAlgorithm.mRsa.ToKeyAlgorithm(cx, rsa);
+      if (converted) {
+        converted = ToJSValue(cx, rsa, &val);
+      }
       break;
     }
     case KeyAlgorithmProxy::EC:
@@ -213,8 +215,10 @@ CryptoKey::GetAlgorithm(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal,
       break;
     case KeyAlgorithmProxy::DH: {
       RootedDictionary<DhKeyAlgorithm> dh(cx);
-      mAlgorithm.mDh.ToKeyAlgorithm(cx, dh);
-      converted = ToJSValue(cx, dh, &val);
+      converted = mAlgorithm.mDh.ToKeyAlgorithm(cx, dh);
+      if (converted) {
+        converted = ToJSValue(cx, dh, &val);
+      }
       break;
     }
   }
