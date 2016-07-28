@@ -161,7 +161,8 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
     if (evalIndex !== -1 && evalIndex === (fileName.length - EVAL_TOKEN.length)) {
       // Match the filename
       let evalLine = line;
-      let [, _fileName, , _line] = fileName.match(/(.+)(%20line%20(\d+)%20%3E%20eval)/) || [];
+      let [, _fileName, , _line] = fileName.match(/(.+)(%20line%20(\d+)%20%3E%20eval)/)
+                                   || [];
       fileName = `${_fileName} (eval:${evalLine})`;
       line = _line;
       assert(_fileName !== undefined,
@@ -394,10 +395,17 @@ function getFrameInfo(node, options) {
     data.nodeType = node.nodeType;
 
     // Frame name (function location or some meta information)
-    data.name = data.isMetaCategory ? data.categoryData.label :
-                shouldDemangle(data.functionName) ? demangle(data.functionName) : data.functionName;
+    if (data.isMetaCategory) {
+      data.name = data.categoryData.label;
+    } else if (shouldDemangle(data.functionName)) {
+      data.name = demangle(data.functionName);
+    } else {
+      data.name = data.functionName;
+    }
 
-    data.tooltiptext = data.isMetaCategory ? data.categoryData.label : node.location || "";
+    data.tooltiptext = data.isMetaCategory ?
+      data.categoryData.label :
+      node.location || "";
 
     gFrameData.set(node, data);
   }
@@ -448,7 +456,8 @@ exports.getFrameInfo = getFrameInfo;
  */
 function findFrameByLocation(threadNode, location) {
   if (!threadNode.inverted) {
-    throw new Error("FrameUtils.findFrameByLocation only supports leaf nodes in an inverted tree.");
+    throw new Error(
+      "FrameUtils.findFrameByLocation only supports leaf nodes in an inverted tree.");
   }
 
   let calls = threadNode.calls;

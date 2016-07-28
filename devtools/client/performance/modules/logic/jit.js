@@ -45,11 +45,12 @@ const SUCCESSFUL_OUTCOMES = [
  * @struct IonType
  * IonMonkey attempts to classify each value in an optimization site by some type.
  * Based off of the observed types for a value (like a variable that could be a
- * string or an instance of an object), it determines what kind of type it should be classified
- * as. Each IonType here contains an array of all ObservedTypes under `types`,
- * the Ion type that IonMonkey decided this value should be (Int32, Object, etc.) as `mirType`,
- * and the component of this optimization type that this value refers to -- like
- * a "getter" optimization, `a[b]`, has site `a` (the "Receiver") and `b` (the "Index").
+ * string or an instance of an object), it determines what kind of type it should be
+ * classified as. Each IonType here contains an array of all ObservedTypes under `types`,
+ * the Ion type that IonMonkey decided this value should be (Int32, Object, etc.) as
+ * `mirType`, and the component of this optimization type that this value refers to --
+ * like a "getter" optimization, `a[b]`, has site `a` (the "Receiver") and `b`
+ * (the "Index").
  *
  * Generally the more ObservedTypes, the more deoptimized this OptimizationSite is.
  * There could be no ObservedTypes, in which case `typeset` is undefined.
@@ -66,10 +67,10 @@ const SUCCESSFUL_OUTCOMES = [
  * "constructor", "function", "singleton", "alloc-site" (that one is a bit more weird).
  * If the `keyedBy` type is a function or constructor, the ObservedType should have a
  * `name` property, referring to the function or constructor name from the JS source.
- * If IonMonkey can determine the origin of this type (like where the constructor is defined),
- * the ObservedType will also have `location` and `line` properties, but `location` can sometimes
- * be non-URL strings like "self-hosted" or a memory location like "102ca7880", or no location
- * at all, and maybe `line` is 0 or undefined.
+ * If IonMonkey can determine the origin of this type (like where the constructor is
+ * defined), the ObservedType will also have `location` and `line` properties, but
+ * `location` can sometimes be non-URL strings like "self-hosted" or a memory location
+ * like "102ca7880", or no location at all, and maybe `line` is 0 or undefined.
  *
  * @type {string} keyedBy
  * @type {?string} name
@@ -78,15 +79,16 @@ const SUCCESSFUL_OUTCOMES = [
  *
  *
  * @struct OptimizationAttempt
- * Each RawOptimizationSite contains an array of OptimizationAttempts. Generally, IonMonkey
- * goes through a series of strategies for each kind of optimization, starting from most-niche
- * and optimized, to the less-optimized, but more general strategies -- for example, a getter
- * opt may first try to optimize for the scenario of a getter on an `arguments` object --
- * that will fail most of the time, as most objects are not arguments objects, but it will attempt
- * several strategies in order until it finds a strategy that works, or fails. Even in the best
- * scenarios, some attempts will fail (like the arguments getter example), which is OK,
- * as long as some attempt succeeds (with the earlier attempts preferred, as those are more optimized).
- * In an OptimizationAttempt structure, we store just the `strategy` name and `outcome` name,
+ * Each RawOptimizationSite contains an array of OptimizationAttempts. Generally,
+ * IonMonkey goes through a series of strategies for each kind of optimization, starting
+ * from most-niche and optimized, to the less-optimized, but more general strategies --
+ * for example, a getter opt may first try to optimize for the scenario of a getter on an
+ * `arguments` object -- that will fail most of the time, as most objects are not
+ * arguments objects, but it will attempt several strategies in order until it finds a
+ * strategy that works, or fails. Even in the best scenarios, some attempts will fail
+ * (like the arguments getter example), which is OK, as long as some attempt succeeds
+ * (with the earlier attempts preferred, as those are more optimized). In an
+ * OptimizationAttempt structure, we store just the `strategy` name and `outcome` name,
  * both from enums in js/public/TrackedOptimizationInfo.h as TRACKED_STRATEGY_LIST and
  * TRACKED_OUTCOME_LIST, respectively. An array of successful outcome strings are above
  * in SUCCESSFUL_OUTCOMES.
@@ -97,12 +99,11 @@ const SUCCESSFUL_OUTCOMES = [
  * @type {string} outcome
  */
 
-
 /*
- * A wrapper around RawOptimizationSite to record sample count and ID (referring to the index
- * of where this is in the initially seeded optimizations data), so we don't mutate
- * the original data from the profiler. Provides methods to access the underlying optimization
- * data easily, so understanding the semantics of JIT data isn't necessary.
+ * A wrapper around RawOptimizationSite to record sample count and ID (referring to the
+ * index of where this is in the initially seeded optimizations data), so we don't mutate
+ * the original data from the profiler. Provides methods to access the underlying
+ * optimization data easily, so understanding the semantics of JIT data isn't necessary.
  *
  * @constructor
  *
@@ -159,7 +160,9 @@ const JITOptimizations = function (rawSites, stringTable) {
     let types = data.types.map((t) => {
       let typeset = maybeTypeset(t.typeset, stringTable);
       if (typeset) {
-        typeset.forEach(t => t.id = site.id);
+        typeset.forEach(ts => {
+          ts.id = site.id;
+        });
       }
 
       return {
@@ -288,7 +291,6 @@ function createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize) {
     // checking sampleTimes and on the last iteration, finalize previous bucket
     if (sampleTime >= (currentBucketStartTime + bucketSize) ||
         i >= sampleTimes.length) {
-
       let dataPoint = {};
       dataPoint.values = [];
       dataPoint.delta = currentBucketStartTime;
@@ -320,7 +322,8 @@ function createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize) {
     // If this sample observed an optimization in this frame, record it
     if (nextOptSample && nextOptSample.time === sampleTime) {
       // If no implementation defined, it was the "interpreter".
-      implEnum = IMPLEMENTATION_MAP[stringTable[nextOptSample.implementation] || "interpreter"];
+      implEnum = IMPLEMENTATION_MAP[stringTable[nextOptSample.implementation] ||
+                                    "interpreter"];
       bucket[implEnum] = (bucket[implEnum] || 0) + 1;
       nextOptSample = tierData[++tierDataIndex];
     }

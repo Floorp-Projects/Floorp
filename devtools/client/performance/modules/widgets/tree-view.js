@@ -8,7 +8,6 @@
  * received from the proviler in a tree-like structure.
  */
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
 const { L10N } = require("devtools/client/performance/modules/global");
 const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
@@ -16,12 +15,14 @@ const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
 const VIEW_OPTIMIZATIONS_TOOLTIP = L10N.getStr("table.view-optimizations.tooltiptext2");
 
-const CALL_TREE_INDENTATION = 16; // px
+// px
+const CALL_TREE_INDENTATION = 16;
 
 // Used for rendering values in cells
 const FORMATTERS = {
   TIME: (value) => L10N.getFormatStr("table.ms2", L10N.numberWithDecimals(value, 2)),
-  PERCENT: (value) => L10N.getFormatStr("table.percentage2", L10N.numberWithDecimals(value, 2)),
+  PERCENT: (value) => L10N.getFormatStr("table.percentage2",
+                                        L10N.numberWithDecimals(value, 2)),
   NUMBER: (value) => value || 0,
   BYTESIZE: (value) => L10N.getFormatStr("table.bytes", (value || 0))
 };
@@ -31,20 +32,21 @@ const FORMATTERS = {
  * `frame.getInfo()`, and a formatter function.
  */
 const CELLS = {
-  duration:       ["duration", "totalDuration", FORMATTERS.TIME],
-  percentage:     ["percentage", "totalPercentage", FORMATTERS.PERCENT],
-  selfDuration:   ["self-duration", "selfDuration", FORMATTERS.TIME],
+  duration: ["duration", "totalDuration", FORMATTERS.TIME],
+  percentage: ["percentage", "totalPercentage", FORMATTERS.PERCENT],
+  selfDuration: ["self-duration", "selfDuration", FORMATTERS.TIME],
   selfPercentage: ["self-percentage", "selfPercentage", FORMATTERS.PERCENT],
-  samples:        ["samples", "samples", FORMATTERS.NUMBER],
+  samples: ["samples", "samples", FORMATTERS.NUMBER],
 
-  selfSize:            ["self-size", "selfSize", FORMATTERS.BYTESIZE],
-  selfSizePercentage:  ["self-size-percentage", "selfSizePercentage", FORMATTERS.PERCENT],
-  selfCount:           ["self-count", "selfCount", FORMATTERS.NUMBER],
-  selfCountPercentage: ["self-count-percentage", "selfCountPercentage", FORMATTERS.PERCENT],
-  size:                ["size", "totalSize", FORMATTERS.BYTESIZE],
-  sizePercentage:      ["size-percentage", "totalSizePercentage", FORMATTERS.PERCENT],
-  count:               ["count", "totalCount", FORMATTERS.NUMBER],
-  countPercentage:     ["count-percentage", "totalCountPercentage", FORMATTERS.PERCENT],
+  selfSize: ["self-size", "selfSize", FORMATTERS.BYTESIZE],
+  selfSizePercentage: ["self-size-percentage", "selfSizePercentage", FORMATTERS.PERCENT],
+  selfCount: ["self-count", "selfCount", FORMATTERS.NUMBER],
+  selfCountPercentage: ["self-count-percentage", "selfCountPercentage",
+                        FORMATTERS.PERCENT],
+  size: ["size", "totalSize", FORMATTERS.BYTESIZE],
+  sizePercentage: ["size-percentage", "totalSizePercentage", FORMATTERS.PERCENT],
+  count: ["count", "totalCount", FORMATTERS.NUMBER],
+  countPercentage: ["count-percentage", "totalCountPercentage", FORMATTERS.PERCENT],
 };
 const CELL_TYPES = Object.keys(CELLS);
 
@@ -54,17 +56,20 @@ const DEFAULT_SORTING_PREDICATE = (frameA, frameB) => {
   let isAllocations = "totalSize" in dataA;
 
   if (isAllocations) {
-    return this.inverted && dataA.selfSize !== dataB.selfSize ?
-           (dataA.selfSize < dataB.selfSize ? 1 : -1) :
-           (dataA.totalSize < dataB.totalSize ? 1 : -1);
+    if (this.inverted && dataA.selfSize !== dataB.selfSize) {
+      return dataA.selfSize < dataB.selfSize ? 1 : -1;
+    }
+    return dataA.totalSize < dataB.totalSize ? 1 : -1;
   }
 
-  return this.inverted && dataA.selfPercentage !== dataB.selfPercentage ?
-         (dataA.selfPercentage < dataB.selfPercentage ? 1 : -1) :
-         (dataA.totalPercentage < dataB.totalPercentage ? 1 : -1);
+  if (this.inverted && dataA.selfPercentage !== dataB.selfPercentage) {
+    return dataA.selfPercentage < dataB.selfPercentage ? 1 : -1;
+  }
+  return dataA.totalPercentage < dataB.totalPercentage ? 1 : -1;
 };
 
-const DEFAULT_AUTO_EXPAND_DEPTH = 3; // depth
+// depth
+const DEFAULT_AUTO_EXPAND_DEPTH = 3;
 const DEFAULT_VISIBLE_CELLS = {
   duration: true,
   percentage: true,
@@ -83,9 +88,6 @@ const DEFAULT_VISIBLE_CELLS = {
   sizePercentage: false,
   selfSizePercentage: false,
 };
-
-const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
-const sum = vals => vals.reduce((a, b) => a + b, 0);
 
 /**
  * An item in a call tree view, which looks like this:
@@ -140,20 +142,29 @@ function CallView({
     level: level | 0 - (hidden ? 1 : 0)
   });
 
-  this.sortingPredicate = sortingPredicate != null
-    ? sortingPredicate
-    : caller ? caller.sortingPredicate
-             : DEFAULT_SORTING_PREDICATE;
+  if (sortingPredicate != null) {
+    this.sortingPredicate = sortingPredicate;
+  } else if (caller) {
+    this.sortingPredicate = caller.sortingPredicate;
+  } else {
+    this.sortingPredicate = DEFAULT_SORTING_PREDICATE;
+  }
 
-  this.autoExpandDepth = autoExpandDepth != null
-    ? autoExpandDepth
-    : caller ? caller.autoExpandDepth
-             : DEFAULT_AUTO_EXPAND_DEPTH;
+  if (autoExpandDepth != null) {
+    this.autoExpandDepth = autoExpandDepth;
+  } else if (caller) {
+    this.autoExpandDepth = caller.autoExpandDepth;
+  } else {
+    this.autoExpandDepth = DEFAULT_AUTO_EXPAND_DEPTH;
+  }
 
-  this.visibleCells = visibleCells != null
-    ? visibleCells
-    : caller ? caller.visibleCells
-             : Object.create(DEFAULT_VISIBLE_CELLS);
+  if (visibleCells != null) {
+    this.visibleCells = visibleCells;
+  } else if (caller) {
+    this.visibleCells = caller.visibleCells;
+  } else {
+    this.visibleCells = Object.create(DEFAULT_VISIBLE_CELLS);
+  }
 
   this.caller = caller;
   this.frame = frame;
@@ -179,12 +190,14 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       if (this.visibleCells[type]) {
         // Inline for speed, but pass in the formatted value via
         // cell definition, as well as the element type.
-        cells.push(this._createCell(document, CELLS[type][2](frameInfo[CELLS[type][1]]), CELLS[type][0]));
+        cells.push(this._createCell(document, CELLS[type][2](frameInfo[CELLS[type][1]]),
+                                    CELLS[type][0]));
       }
     }
 
     if (this.visibleCells.function) {
-      cells.push(this._createFunctionCell(document, arrowNode, frameInfo.name, frameInfo, this.level));
+      cells.push(this._createFunctionCell(document, arrowNode, frameInfo.name, frameInfo,
+                                          this.level));
     }
 
     let targetNode = document.createElement("hbox");
@@ -248,7 +261,8 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     cell.appendChild(arrowNode);
 
     // Render optimization hint if this frame has opt data.
-    if (this.root.showOptimizationHint && frameInfo.hasOptimizations && !frameInfo.isMetaCategory) {
+    if (this.root.showOptimizationHint && frameInfo.hasOptimizations &&
+        !frameInfo.isMetaCategory) {
       let icon = doc.createElement("description");
       icon.setAttribute("tooltiptext", VIEW_OPTIMIZATIONS_TOOLTIP);
       icon.className = "opt-icon";
@@ -340,10 +354,12 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       return this._cachedDisplayedData;
     }
 
-    return this._cachedDisplayedData = this.frame.getInfo({
+    this._cachedDisplayedData = this.frame.getInfo({
       root: this.root.frame,
       allocations: (this.visibleCells.count || this.visibleCells.selfCount)
     });
+
+    return this._cachedDisplayedData;
 
     /**
      * When inverting call tree, the costs and times are dependent on position

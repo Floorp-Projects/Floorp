@@ -7,8 +7,6 @@
  * This file contains the rendering code for the marker sidebar.
  */
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
-
 const EventEmitter = require("devtools/shared/event-emitter");
 const { MarkerDOMUtils } = require("devtools/client/performance/modules/marker-dom-utils");
 
@@ -86,7 +84,8 @@ MarkerDetails.prototype = {
    *        An options object holding:
    *          - marker: The marker to display.
    *          - frames: Array of stack frame information; see stack.js.
-   *          - allocations: Whether or not allocations were enabled for this recording. [optional]
+   *          - allocations: Whether or not allocations were enabled for this
+   *                         recording. [optional]
    */
   render: function (options) {
     let { marker, frames } = options;
@@ -96,7 +95,8 @@ MarkerDetails.prototype = {
     elements.push(MarkerDOMUtils.buildTitle(this._document, marker));
     elements.push(MarkerDOMUtils.buildDuration(this._document, marker));
     MarkerDOMUtils.buildFields(this._document, marker).forEach(f => elements.push(f));
-    MarkerDOMUtils.buildCustom(this._document, marker, options).forEach(f => elements.push(f));
+    MarkerDOMUtils.buildCustom(this._document, marker, options)
+                  .forEach(f => elements.push(f));
 
     // Build a stack element -- and use the "startStack" label if
     // we have both a startStack and endStack.
@@ -152,7 +152,8 @@ function findActionFromEvent(target, container) {
   let el = target;
   let action;
   while (el !== container) {
-    if (action = el.getAttribute("data-action")) {
+    action = el.getAttribute("data-action");
+    if (action) {
       return JSON.parse(action);
     }
     el = el.parentNode;
