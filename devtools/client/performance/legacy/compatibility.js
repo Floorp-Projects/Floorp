@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
@@ -56,7 +55,7 @@ function callFrontMethod(method) {
     // after the test ends, when tests do not wait for toolbox destruction
     // (which will destroy the actor facade, turning off the polling).
     if (!this._target || !this._target.client) {
-      return;
+      return undefined;
     }
     return this._front[method].apply(this._front, arguments);
   };
