@@ -20,7 +20,7 @@ dictionary EventListenerOptions {
 
 dictionary AddEventListenerOptions : EventListenerOptions {
   boolean passive = false;
-  // boolean once = false; Bug 1287706
+  boolean once = false;
 };
 
 [Exposed=(Window,Worker,WorkerDebugger,System)]

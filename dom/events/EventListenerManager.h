@@ -61,11 +61,14 @@ public:
   // If mPassive is true, the listener will not be calling preventDefault on the
   // event. (If it does call preventDefault, we should ignore it).
   bool mPassive : 1;
+  // If mOnce is true, the listener will be removed from the manager before it
+  // is invoked, so that it would only be invoked once.
+  bool mOnce : 1;
 
   EventListenerFlags() :
     mListenerIsJSListener(false),
     mCapture(false), mInSystemGroup(false), mAllowUntrustedEvents(false),
-    mPassive(false)
+    mPassive(false), mOnce(false)
   {
   }
 
@@ -75,7 +78,7 @@ public:
             mInSystemGroup == aOther.mInSystemGroup &&
             mListenerIsJSListener == aOther.mListenerIsJSListener &&
             mAllowUntrustedEvents == aOther.mAllowUntrustedEvents);
-            // Don't compare mPassive
+            // Don't compare mPassive or mOnce
   }
 
   bool EqualsForRemoval(const EventListenerFlags& aOther) const
@@ -83,7 +86,7 @@ public:
     return (mCapture == aOther.mCapture &&
             mInSystemGroup == aOther.mInSystemGroup &&
             mListenerIsJSListener == aOther.mListenerIsJSListener);
-            // Don't compare mAllowUntrustedEvents or mPassive
+            // Don't compare mAllowUntrustedEvents, mPassive, or mOnce
   }
 };
 
