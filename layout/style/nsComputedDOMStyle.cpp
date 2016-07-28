@@ -5997,7 +5997,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
   const StyleBasicShape* aStyleBasicShape,
-  StyleClipShapeSizing aSizingBox)
+  StyleClipPathGeometryBox aSizingBox)
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   if (aStyleBasicShape) {
@@ -6005,14 +6005,14 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
       CreatePrimitiveValueForBasicShape(aStyleBasicShape));
   }
 
-  if (aSizingBox == StyleClipShapeSizing::NoBox) {
+  if (aSizingBox == StyleClipPathGeometryBox::NoBox) {
     return valueList.forget();
   }
 
   nsAutoString boxString;
   AppendASCIItoUTF16(
     nsCSSProps::ValueToKeyword(aSizingBox,
-                               nsCSSProps::kClipShapeSizingKTable),
+                               nsCSSProps::kClipPathGeometryBoxKTable),
                                boxString);
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetString(boxString);
