@@ -183,28 +183,28 @@ IsShapeAllocKind(AllocKind kind)
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over all alloc kinds.
-inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT))
+inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT))
 AllAllocKinds()
 {
-    return mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT);
+    return mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT);
 }
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over all object alloc kinds.
-inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::OBJECT_FIRST, AllocKind::OBJECT_LIMIT))
+inline decltype(mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST, AllocKind::OBJECT_LIMIT))
 ObjectAllocKinds()
 {
-    return mozilla::MakeEnumeratedRange<int>(AllocKind::OBJECT_FIRST, AllocKind::OBJECT_LIMIT);
+    return mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST, AllocKind::OBJECT_LIMIT);
 }
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over alloc kinds from |first| to |limit|, exclusive.
-inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT))
+inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT))
 SomeAllocKinds(AllocKind first = AllocKind::FIRST, AllocKind limit = AllocKind::LIMIT)
 {
     MOZ_ASSERT(IsAllocKind(first), "|first| is not a valid AllocKind!");
     MOZ_ASSERT(IsAllocKind(limit), "|limit| is not a valid AllocKind!");
-    return mozilla::MakeEnumeratedRange<int>(first, limit);
+    return mozilla::MakeEnumeratedRange(first, limit);
 }
 
 // AllAllocKindArray<ValueType> gives an enumerated array of ValueTypes,
