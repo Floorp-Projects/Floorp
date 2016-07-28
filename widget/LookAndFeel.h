@@ -29,7 +29,7 @@ class LookAndFeel
 public:
   // When modifying this list, also modify nsXPLookAndFeel::sColorPrefs
   // in widget/xpwidgts/nsXPLookAndFeel.cpp.
-  enum ColorID {
+  enum ColorID : uint8_t {
 
     // WARNING : NO NEGATIVE VALUE IN THIS ENUMERATION
     // see patch in bug 57757 for more information

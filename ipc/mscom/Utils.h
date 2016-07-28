@@ -12,6 +12,7 @@ struct IUnknown;
 namespace mozilla {
 namespace mscom {
 
+bool IsCurrentThreadMTA();
 bool IsProxy(IUnknown* aUnknown);
 
 } // namespace mscom
