@@ -44,6 +44,7 @@ var gEnabled, gAutofillForms, gStoreWhenAutocompleteOff;
 var observer = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsIFormSubmitObserver,
+                                          Ci.nsIWebProgressListener,
                                           Ci.nsISupportsWeakReference]),
 
   // nsIFormSubmitObserver
@@ -68,6 +69,45 @@ var observer = {
     gEnabled = Services.prefs.getBoolPref("signon.rememberSignons");
     gAutofillForms = Services.prefs.getBoolPref("signon.autofillForms");
     gStoreWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
+  },
+
+  // nsIWebProgressListener
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+    // Only handle pushState/replaceState here.
+    if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) ||
+        !(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)) {
+      return;
+    }
+
+    log("onLocationChange handled:", aLocation.spec, aWebProgress.DOMWindow.document);
+
+    LoginManagerContent._onNavigation(aWebProgress.DOMWindow.document);
+  },
+
+  onStateChange(aWebProgress, aRequest, aState, aStatus) {
+    if (!(aState & Ci.nsIWebProgressListener.STATE_START)) {
+      return;
+    }
+
+    // We only care about when a page triggered a load, not the user. For example:
+    // clicking refresh/back/forward, typing a URL and hitting enter, and loading a bookmark aren't
+    // likely to be when a user wants to save a login.
+    let channel = aRequest.QueryInterface(Ci.nsIChannel);
+    let triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
+    if (triggeringPrincipal.isNullPrincipal ||
+        triggeringPrincipal.equals(Services.scriptSecurityManager.getSystemPrincipal())) {
+      return;
+    }
+
+    // Don't handle history navigation, reload, or pushState not triggered via chrome UI.
+    // e.g. history.go(-1), location.reload(), history.replaceState()
+    if (!(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_NORMAL)) {
+      log("onStateChange: loadType isn't LOAD_CMD_NORMAL:", aWebProgress.loadType);
+      return;
+    }
+
+    log("onStateChange handled:", channel);
+    LoginManagerContent._onNavigation(aWebProgress.DOMWindow.document);
   },
 };
 
@@ -279,6 +319,25 @@ var LoginManagerContent = {
                              messageData);
   },
 
+  setupProgressListener(window) {
+    if (!LoginHelper.formlessCaptureEnabled) {
+      return;
+    }
+
+    try {
+      let webProgress = window.QueryInterface(Ci.nsIInterfaceRequestor).
+                        getInterface(Ci.nsIWebNavigation).
+                        QueryInterface(Ci.nsIDocShell).
+                        QueryInterface(Ci.nsIInterfaceRequestor).
+                        getInterface(Ci.nsIWebProgress);
+      webProgress.addProgressListener(observer,
+                                      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT |
+                                      Ci.nsIWebProgress.NOTIFY_LOCATION);
+    } catch (ex) {
+      // Ignore NS_ERROR_FAILURE if the progress listener was already added
+    }
+  },
+
   onDOMFormHasPassword(event, window) {
     if (!event.isTrusted) {
       return;
@@ -294,6 +353,8 @@ var LoginManagerContent = {
     if (!event.isTrusted) {
       return;
     }
+
+    this.setupProgressListener(window);
 
     let pwField = event.target;
     if (pwField.form) {
@@ -316,7 +377,6 @@ var LoginManagerContent = {
         log("Running deferred processing of onDOMInputPasswordAdded", formLike2);
         this._deferredPasswordAddedTasksByRootElement.delete(formLike2.rootElement);
         this._fetchLoginsFromParentAndFillForm(formLike2, window);
-        this._formLikeByRootElement.delete(formLike.rootElement);
       }.bind(this), PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS);
 
       this._deferredPasswordAddedTasksByRootElement.set(formLike.rootElement, deferredTask);
@@ -348,9 +408,6 @@ var LoginManagerContent = {
    * @param {Window} window
    */
   _fetchLoginsFromParentAndFillForm(form, window) {
-    // Always record the most recently added form with a password field.
-    this.stateForDocument(form.ownerDocument).loginForm = form;
-
     this._updateLoginFormPresence(window);
 
     let messageManager = messageManagerFromWindow(window);
@@ -377,12 +434,14 @@ var LoginManagerContent = {
 
   /**
    * Retrieves a reference to the state object associated with the given
-   * document. This is initialized to an empty object.
+   * document. This is initialized to an object with default values.
    */
   stateForDocument(document) {
     let loginFormState = this.loginFormStateByDocument.get(document);
     if (!loginFormState) {
-      loginFormState = {};
+      loginFormState = {
+        loginFormRootElements: new Set(),
+      };
       this.loginFormStateByDocument.set(document, loginFormState);
     }
     return loginFormState;
@@ -394,6 +453,7 @@ var LoginManagerContent = {
    * visibility of the password fill doorhanger anchor.
    */
   _updateLoginFormPresence(topWindow) {
+    log("_updateLoginFormPresence", topWindow.location.href);
     // For the login form presence notification, we currently support only one
     // origin for each browser, so the form origin will always match the origin
     // of the top level document.
@@ -403,9 +463,9 @@ var LoginManagerContent = {
     // Returns the first known loginForm present in this window or in any
     // same-origin subframes. Returns null if no loginForm is currently present.
     let getFirstLoginForm = thisWindow => {
-      let loginForm = this.stateForDocument(thisWindow.document).loginForm;
-      if (loginForm) {
-        return loginForm;
+      let loginForms = this.stateForDocument(thisWindow.document).loginFormRootElements;
+      if (loginForms.size) {
+        return [...loginForms][0];
       }
       for (let i = 0; i < thisWindow.frames.length; i++) {
         let frame = thisWindow.frames[i];
@@ -425,7 +485,7 @@ var LoginManagerContent = {
     let hasInsecureLoginForms = (thisWindow, parentIsInsecure) => {
       let doc = thisWindow.document;
       let isInsecure = parentIsInsecure || !this.isDocumentSecure(doc);
-      let hasLoginForm = !!this.stateForDocument(doc).loginForm;
+      let hasLoginForm = this.stateForDocument(doc).loginFormRootElements.size > 0;
       return (hasLoginForm && isInsecure) ||
              Array.some(thisWindow.frames,
                         frame => hasInsecureLoginForms(frame, isInsecure));
@@ -434,6 +494,7 @@ var LoginManagerContent = {
     // Store the actual form to use on the state for the top-level document.
     let topState = this.stateForDocument(topWindow.document);
     topState.loginFormForFill = getFirstLoginForm(topWindow);
+    log("_updateLoginFormPresence: topState.loginFormForFill", topState.loginFormForFill);
 
     // Determine whether to show the anchor icon for the current tab.
     let messageManager = messageManagerFromWindow(topWindow);
@@ -739,8 +800,11 @@ var LoginManagerContent = {
     }
 
     log("Password field (new) id/name is: ", newPasswordField.id, " / ", newPasswordField.name);
-    if (oldPasswordField)
+    if (oldPasswordField) {
       log("Password field (old) id/name is: ", oldPasswordField.id, " / ", oldPasswordField.name);
+    } else {
+      log("Password field (old):", oldPasswordField);
+    }
     return [usernameField, newPasswordField, oldPasswordField];
   },
 
@@ -754,6 +818,37 @@ var LoginManagerContent = {
   },
 
   /**
+   * Trigger capture on any relevant FormLikes due to a navigation alone (not
+   * necessarily due to an actual form submission). This method is used to
+   * capture logins for cases where form submit events are not used.
+   *
+   * To avoid multiple notifications for the same FormLike, this currently
+   * avoids capturing when dealing with a real <form> which are ideally already
+   * using a submit event.
+   *
+   * @param {Document} document being navigated
+   */
+  _onNavigation(aDocument) {
+    let state = this.stateForDocument(aDocument);
+    let loginFormRootElements = state.loginFormRootElements;
+    log("_onNavigation: state:", state, "loginFormRootElements size:", loginFormRootElements.size,
+        "document:", aDocument);
+
+    for (let formRoot of state.loginFormRootElements) {
+      if (formRoot instanceof Ci.nsIDOMHTMLFormElement) {
+        // For now only perform capture upon navigation for FormLike's without
+        // a <form> to avoid capture from both an earlyformsubmit and
+        // navigation for the same "form".
+        log("Ignoring navigation for the form root to avoid multiple prompts " +
+            "since it was for a real <form>");
+        continue;
+      }
+      let formLike = this._formLikeByRootElement.get(formRoot);
+      this._onFormSubmit(formLike);
+    }
+  },
+
+  /**
    * Called by our observer when notified of a form submission.
    * [Note that this happens before any DOM onsubmit handlers are invoked.]
    * Looks for a password change in the submitted form, so we can update
@@ -762,6 +857,7 @@ var LoginManagerContent = {
    * @param {FormLike} form
    */
   _onFormSubmit(form) {
+    log("_onFormSubmit", form);
     var doc = form.ownerDocument;
     var win = doc.defaultView;
 
@@ -856,6 +952,7 @@ var LoginManagerContent = {
    */
   _fillForm(form, autofillForm, clobberUsername, clobberPassword,
                         userTriggered, foundLogins, recipes, {inputElement} = {}) {
+    log("_fillForm", form.elements);
     let ignoreAutocomplete = true;
     const AUTOFILL_RESULT = {
       FILLED: 0,
@@ -1163,6 +1260,7 @@ var LoginUtils = {
       if (allowJS && uri.scheme == "javascript")
         return "javascript:";
 
+      // Build this manually instead of using prePath to avoid including the userPass portion.
       realm = uri.scheme + "://" + uri.hostPort;
     } catch (e) {
       // bug 159484 - disallow url types that don't support a hostPort.
@@ -1313,6 +1411,12 @@ var FormLikeFactory = {
     }
 
     this._addToJSONProperty(formLike);
+
+    let state = LoginManagerContent.stateForDocument(formLike.ownerDocument);
+    state.loginFormRootElements.add(formLike.rootElement);
+    log("adding", formLike.rootElement, "to loginFormRootElements for", formLike.ownerDocument);
+
+    LoginManagerContent._formLikeByRootElement.set(formLike.rootElement, formLike);
     return formLike;
   },
 
@@ -1360,6 +1464,13 @@ var FormLikeFactory = {
       ownerDocument: doc,
       rootElement: doc.documentElement,
     };
+
+    let state = LoginManagerContent.stateForDocument(formLike.ownerDocument);
+    state.loginFormRootElements.add(formLike.rootElement);
+    log("adding", formLike.rootElement, "to loginFormRootElements for", formLike.ownerDocument);
+
+
+    LoginManagerContent._formLikeByRootElement.set(formLike.rootElement, formLike);
 
     this._addToJSONProperty(formLike);
     return formLike;
