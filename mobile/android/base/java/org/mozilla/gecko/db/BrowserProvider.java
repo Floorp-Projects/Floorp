@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.db;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,11 +28,16 @@ import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.ThreadUtils;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.OperationApplicationException;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -42,10 +48,13 @@ import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
 public class BrowserProvider extends SharedBrowserDatabaseProvider {
+    public static final String ACTION_SHRINK_MEMORY = "org.mozilla.gecko.db.intent.action.SHRINK_MEMORY";
+
     private static final String LOGTAG = "GeckoBrowserProvider";
 
     // How many records to reposition in a single query.
@@ -277,6 +286,53 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         // Combined pinned sites, top visited sites, and suggested sites
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "topsites", TOPSITES);
+    }
+
+    private static class ShrinkMemoryReceiver extends BroadcastReceiver {
+        private final WeakReference<BrowserProvider> mBrowserProviderWeakReference;
+
+        public ShrinkMemoryReceiver(final BrowserProvider browserProvider) {
+            mBrowserProviderWeakReference = new WeakReference<>(browserProvider);
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final BrowserProvider browserProvider = mBrowserProviderWeakReference.get();
+            if (browserProvider == null) {
+                return;
+            }
+            final PerProfileDatabases<BrowserDatabaseHelper> databases = browserProvider.getDatabases();
+            if (databases == null) {
+                return;
+            }
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    databases.shrinkMemory();
+                }
+            });
+        }
+    }
+
+    private final ShrinkMemoryReceiver mShrinkMemoryReceiver = new ShrinkMemoryReceiver(this);
+
+    @Override
+    public boolean onCreate() {
+        if (!super.onCreate()) {
+            return false;
+        }
+
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mShrinkMemoryReceiver,
+                new IntentFilter(ACTION_SHRINK_MEMORY));
+
+        return true;
+    }
+
+    @Override
+    public void shutdown() {
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mShrinkMemoryReceiver);
+
+        super.shutdown();
     }
 
     // Convenience accessor.
