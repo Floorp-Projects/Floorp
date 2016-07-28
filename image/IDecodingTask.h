@@ -49,9 +49,6 @@ public:
   /// DecodePool. Subclasses can override this if they need different behavior.
   void Resume() override;
 
-  /// @return a non-null weak pointer to the Decoder associated with this task.
-  virtual NotNull<Decoder*> GetDecoder() const = 0;
-
 protected:
   virtual ~IDecodingTask() { }
 };
@@ -74,8 +71,6 @@ public:
   // Full decodes are low priority compared to metadata decodes because they
   // don't block layout or page load.
   TaskPriority Priority() const override { return TaskPriority::eLow; }
-
-  NotNull<Decoder*> GetDecoder() const override { return mDecoder; }
 
 private:
   virtual ~DecodingTask();
@@ -102,8 +97,6 @@ public:
   // Full decodes are low priority compared to metadata decodes because they
   // don't block layout or page load.
   TaskPriority Priority() const override { return TaskPriority::eLow; }
-
-  NotNull<Decoder*> GetDecoder() const override { return mDecoder; }
 
 private:
   virtual ~AnimationDecodingTask() { }
@@ -133,8 +126,6 @@ public:
   // page load.
   TaskPriority Priority() const override { return TaskPriority::eHigh; }
 
-  NotNull<Decoder*> GetDecoder() const override { return mDecoder; }
-
 private:
   virtual ~MetadataDecodingTask() { }
 
@@ -162,8 +153,6 @@ public:
   // they don't; in these situations, the test re-runs them manually. So no
   // matter what, we don't want to resume by posting a task to the DecodePool.
   void Resume() override { }
-
-  NotNull<Decoder*> GetDecoder() const override { return mDecoder; }
 
 private:
   virtual ~AnonymousDecodingTask() { }
