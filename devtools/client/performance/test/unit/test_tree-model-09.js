@@ -1,11 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that when displaying only content nodes, platform nodes are generalized.
  */
-
-var { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
 
 function run_test() {
   run_next_test();
@@ -17,7 +16,8 @@ add_task(function test() {
 
   // Create a root node from a given samples array.
 
-  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 5, endTime: 25, contentOnly: true }), "(root)");
+  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 5, endTime: 25,
+                                                        contentOnly: true }), "(root)");
 
   /*
    * should have a tree like:
@@ -36,8 +36,10 @@ add_task(function test() {
 
   equal(root.calls.length, 2, "root has 2 children");
   ok(getFrameNodePath(root, url("A")), "root has content child");
-  ok(getFrameNodePath(root, "9000"), "root has platform generalized child from Chrome JS");
-  equal(getFrameNodePath(root, "9000").calls.length, 0, "platform generalized child is a leaf.");
+  ok(getFrameNodePath(root, "9000"),
+    "root has platform generalized child from Chrome JS");
+  equal(getFrameNodePath(root, "9000").calls.length, 0,
+    "platform generalized child is a leaf.");
 
   ok(getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 9000`),
      "a second leaf of the generalized Chrome JS exists.");
