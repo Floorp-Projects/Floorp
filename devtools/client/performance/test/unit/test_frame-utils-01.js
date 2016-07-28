@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that frame-utils isContent and parseLocation work as intended
@@ -52,17 +53,21 @@ add_task(function () {
     return frame.isContent;
   };
 
-
   for (let frame of CONTENT_LOCATIONS) {
-    ok(isContent.apply(null, frameify(frame)), `${frame[0]} should be considered a content frame.`);
+    ok(isContent.apply(null, frameify(frame)),
+       `${frame[0]} should be considered a content frame.`);
   }
 
   for (let frame of CHROME_LOCATIONS) {
-    ok(!isContent.apply(null, frameify(frame)), `${frame[0]} should not be considered a content frame.`);
+    ok(!isContent.apply(null, frameify(frame)),
+       `${frame[0]} should not be considered a content frame.`);
   }
 
   // functionName, fileName, host, url, line, column
-  const FIELDS = ["functionName", "fileName", "host", "url", "line", "column", "host", "port"];
+  const FIELDS = ["functionName", "fileName", "host", "url", "line", "column", "host",
+                  "port"];
+
+  /* eslint-disable max-len */
   const PARSED_CONTENT = [
     ["hello/<.world", "bar.js", "foo", "https://foo/bar.js", 123, 987, "foo", null],
     ["hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, 987, "foo", null],
@@ -79,11 +84,13 @@ add_task(function () {
     ["Native[\"arraycopy(blah)\"]", "profiler.html", "localhost:8888", "http://localhost:8888/profiler.html", 4, null, "localhost:8888", 8888],
     ["Native[\"arraycopy(blah)\"]", "profiler.html", "localhost:8888", "http://localhost:8888/profiler.html", 4, 5, "localhost:8888", 8888],
   ];
+  /* eslint-enable max-len */
 
   for (let i = 0; i < PARSED_CONTENT.length; i++) {
     let parsed = parseLocation.apply(null, CONTENT_LOCATIONS[i]);
     for (let j = 0; j < FIELDS.length; j++) {
-      equal(parsed[FIELDS[j]], PARSED_CONTENT[i][j], `${CONTENT_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
+      equal(parsed[FIELDS[j]], PARSED_CONTENT[i][j],
+            `${CONTENT_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
     }
   }
 
@@ -91,7 +98,8 @@ add_task(function () {
     ["Startup::XRE_InitChildProcess", null, null, null, 456, 123, null, null],
     ["chrome://browser/content/content.js", null, null, null, 456, 123, null, null],
     ["setTimeout_timer", "foo.js", null, "resource://gre/foo.js", 123, 434, null, null],
-    ["hello/<.world (jar:file://Users/mcurie/Dev/jetpacks.js)", null, null, null, null, null, null, null],
+    ["hello/<.world (jar:file://Users/mcurie/Dev/jetpacks.js)", null, null, null,
+     null, null, null, null],
     ["hello/<.world", "baz.js", "bar", "http://bar/baz.js", 123, 987, "bar", null],
     ["EnterJIT", null, null, null, null, null, null, null],
   ];
@@ -99,7 +107,8 @@ add_task(function () {
   for (let i = 0; i < PARSED_CHROME.length; i++) {
     let parsed = parseLocation.apply(null, CHROME_LOCATIONS[i]);
     for (let j = 0; j < FIELDS.length; j++) {
-      equal(parsed[FIELDS[j]], PARSED_CHROME[i][j], `${CHROME_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
+      equal(parsed[FIELDS[j]], PARSED_CHROME[i][j],
+            `${CHROME_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
     }
   }
 });
@@ -111,9 +120,8 @@ add_task(function () {
 function argify(val) {
   if (typeof val === "string") {
     return [val];
-  } else {
-    return [val.location, val.line, val.column];
   }
+  return [val.location, val.line, val.column];
 }
 
 /**

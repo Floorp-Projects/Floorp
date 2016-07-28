@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that when displaying only content nodes, platform nodes are generalized.
@@ -17,7 +18,8 @@ add_task(function test() {
 
   // Create a root node from a given samples array.
 
-  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 5, endTime: 30, contentOnly: true }), "(root)");
+  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 5, endTime: 30,
+                                                        contentOnly: true }), "(root)");
 
   /*
    * should have a tree like:
@@ -38,14 +40,18 @@ add_task(function test() {
   equal(root.calls.length, 2, "root has 2 children");
   ok(getFrameNodePath(root, url("A")), "root has content child");
   ok(getFrameNodePath(root, "64"), "root has platform generalized child");
-  equal(getFrameNodePath(root, "64").calls.length, 0, "platform generalized child is a leaf.");
+  equal(getFrameNodePath(root, "64").calls.length, 0,
+        "platform generalized child is a leaf.");
 
-  ok(getFrameNodePath(root, `${url("A")} > 128`), "A has platform generalized child of another type");
-  equal(getFrameNodePath(root, `${url("A")} > 128`).calls.length, 0, "second generalized type is a leaf.");
+  ok(getFrameNodePath(root, `${url("A")} > 128`),
+     "A has platform generalized child of another type");
+  equal(getFrameNodePath(root, `${url("A")} > 128`).calls.length, 0,
+        "second generalized type is a leaf.");
 
   ok(getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 64`),
      "a second leaf of the first generalized type exists deep in the tree.");
-  ok(getFrameNodePath(root, `${url("A")} > 128`), "A has platform generalized child of another type");
+  ok(getFrameNodePath(root, `${url("A")} > 128`),
+     "A has platform generalized child of another type");
 
   equal(getFrameNodePath(root, "64").category,
      getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 64`).category,

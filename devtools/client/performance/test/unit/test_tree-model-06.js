@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that when constructing FrameNodes, if optimization data is available,
@@ -13,7 +14,8 @@ function run_test() {
 
 add_task(function test() {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 0, endTime: 30 }), "(root)");
+  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 0,
+                                                        endTime: 30 }), "(root)");
 
   let A = getFrameNodePath(root, "A");
   let B = getFrameNodePath(A, "B");
