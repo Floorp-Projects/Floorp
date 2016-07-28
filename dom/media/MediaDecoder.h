@@ -542,6 +542,7 @@ protected:
 
   void SetExplicitDuration(double aValue)
   {
+    MOZ_ASSERT(!IsShutdown());
     mExplicitDuration.Set(Some(aValue));
 
     // We Invoke DurationChanged explicitly, rather than using a watcher, so
