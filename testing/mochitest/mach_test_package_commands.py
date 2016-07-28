@@ -4,16 +4,13 @@
 
 from __future__ import unicode_literals
 
-import os
 from argparse import Namespace
-from functools import partial
+import os
 
 from mach.decorators import (
     CommandProvider,
     Command,
 )
-
-parser = None
 
 
 def run_mochitest(context, **kwargs):
@@ -22,23 +19,13 @@ def run_mochitest(context, **kwargs):
     args.utilityPath = context.bin_dir
     args.extraProfileFiles.append(os.path.join(context.bin_dir, 'plugins'))
 
-    if not args.app:
-        args.app = context.find_firefox()
-
-    if args.test_paths:
-        test_root = os.path.join(context.package_root, 'mochitest', 'tests')
-        normalize = partial(context.normalize_test_path, test_root)
-        args.test_paths = map(normalize, args.test_paths)
-
     from runtests import run_test_harness
-    return run_test_harness(parser, args)
+    return run_test_harness(args)
 
 
 def setup_argument_parser():
     from mochitest_options import MochitestArgumentParser
-    global parser
-    parser = MochitestArgumentParser(app='generic')
-    return parser
+    return MochitestArgumentParser(app='generic')
 
 
 @CommandProvider
