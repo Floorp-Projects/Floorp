@@ -50,14 +50,14 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
 void
 ServoRestyleManager::PostRestyleEventForLazyConstruction()
 {
-  NS_ERROR("stylo: ServoRestyleManager::PostRestyleEventForLazyConstruction not implemented");
+  NS_WARNING("stylo: ServoRestyleManager::PostRestyleEventForLazyConstruction not implemented");
 }
 
 void
 ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {
-  NS_ERROR("stylo: ServoRestyleManager::RebuildAllStyleData not implemented");
+  NS_WARNING("stylo: ServoRestyleManager::RebuildAllStyleData not implemented");
 }
 
 void
@@ -166,7 +166,7 @@ ServoRestyleManager::NoteRestyleHint(Element* aElement, nsRestyleHint aHint)
 
   // TODO: Handle all other nsRestyleHint values.
   if (aHint & ~(eRestyle_Self | eRestyle_Subtree | eRestyle_LaterSiblings)) {
-    NS_ERROR(nsPrintfCString("stylo: Unhandled restyle hint %s",
+    NS_WARNING(nsPrintfCString("stylo: Unhandled restyle hint %s",
                              RestyleManagerBase::RestyleHintToString(aHint).get()).get());
   }
 }
@@ -226,14 +226,14 @@ void
 ServoRestyleManager::RestyleForInsertOrChange(Element* aContainer,
                                               nsIContent* aChild)
 {
-  NS_ERROR("stylo: ServoRestyleManager::RestyleForInsertOrChange not implemented");
+  NS_WARNING("stylo: ServoRestyleManager::RestyleForInsertOrChange not implemented");
 }
 
 void
 ServoRestyleManager::RestyleForAppend(Element* aContainer,
                                       nsIContent* aFirstNewContent)
 {
-  NS_ERROR("stylo: ServoRestyleManager::RestyleForAppend not implemented");
+  NS_WARNING("stylo: ServoRestyleManager::RestyleForAppend not implemented");
 }
 
 void
@@ -241,7 +241,7 @@ ServoRestyleManager::RestyleForRemove(Element* aContainer,
                                       nsIContent* aOldChild,
                                       nsIContent* aFollowingSibling)
 {
-  NS_ERROR("stylo: ServoRestyleManager::RestyleForRemove not implemented");
+  NS_WARNING("stylo: ServoRestyleManager::RestyleForRemove not implemented");
 }
 
 nsresult
@@ -299,7 +299,7 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
 nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
-  NS_ERROR("stylo: ServoRestyleManager::ReparentStyleContext not implemented");
+  NS_WARNING("stylo: ServoRestyleManager::ReparentStyleContext not implemented");
   return NS_OK;
 }
 
