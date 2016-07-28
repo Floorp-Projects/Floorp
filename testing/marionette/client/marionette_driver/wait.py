@@ -121,9 +121,9 @@ class Wait(object):
         while not until(self.clock, self.end):
             try:
                 rv = condition(self.marionette)
-            except (KeyboardInterrupt, SystemExit) as e:
-                raise e
-            except self.exceptions as e:
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except self.exceptions:
                 last_exc = sys.exc_info()
 
             if not rv:
