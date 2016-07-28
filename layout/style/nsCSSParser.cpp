@@ -1004,6 +1004,8 @@ protected:
   bool ParseGridArea();
   bool ParseGridGap();
 
+  bool ParseInitialLetter();
+
   // parsing 'align/justify-items/self' from the css-align spec
   bool ParseAlignJustifyPosition(nsCSSValue& aResult,
                                  const KTableEntry aTable[]);
@@ -1243,6 +1245,16 @@ protected:
   bool ParseNonNegativeNumber(nsCSSValue& aValue)
   {
     return ParseSingleTokenNonNegativeVariant(aValue, VARIANT_NUMBER, nullptr);
+  }
+
+  // Helpers for some common ParseSingleTokenOneOrLargerVariant calls.
+  bool ParseOneOrLargerInteger(nsCSSValue& aValue)
+  {
+    return ParseSingleTokenOneOrLargerVariant(aValue, VARIANT_INTEGER, nullptr);
+  }
+  bool ParseOneOrLargerNumber(nsCSSValue& aValue)
+  {
+    return ParseSingleTokenOneOrLargerVariant(aValue, VARIANT_NUMBER, nullptr);
   }
 
   // http://dev.w3.org/csswg/css-values/#custom-idents
@@ -9779,6 +9791,33 @@ CSSParserImpl::ParseGridGap()
   return true;
 }
 
+// normal | [<number> <integer>?]
+bool
+CSSParserImpl::ParseInitialLetter()
+{
+  nsCSSValue value;
+  // 'inherit', 'initial', 'unset', 'none', and 'normal' must be alone
+  if (!ParseSingleTokenVariant(value, VARIANT_INHERIT | VARIANT_NORMAL,
+                               nullptr)) {
+    nsCSSValue first, second;
+    if (!ParseOneOrLargerNumber(first)) {
+      return false;
+    }
+
+    if (!ParseOneOrLargerInteger(second)) {
+      AppendValue(eCSSProperty_initial_letter, first);
+      return true;
+    } else {
+      RefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(2);
+      val->Item(0) = first;
+      val->Item(1) = second;
+      value.SetArrayValue(val, eCSSUnit_Array);
+    }
+  }
+  AppendValue(eCSSProperty_initial_letter, value);
+  return true;
+}
+
 // [ $aTable && <overflow-position>? ] ?
 // $aTable is for <content-position> or <self-position>
 bool
@@ -11563,17 +11602,17 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_image_region:
     return ParseRect(eCSSProperty_image_region);
   case eCSSProperty_align_content:
+  case eCSSProperty_justify_content:
     return ParseAlignJustifyContent(aPropID);
   case eCSSProperty_align_items:
     return ParseAlignItems();
   case eCSSProperty_align_self:
-    return ParseAlignJustifySelf(aPropID);
-  case eCSSProperty_justify_content:
-    return ParseAlignJustifyContent(aPropID);
-  case eCSSProperty_justify_items:
-    return ParseJustifyItems();
   case eCSSProperty_justify_self:
     return ParseAlignJustifySelf(aPropID);
+  case eCSSProperty_initial_letter:
+    return ParseInitialLetter();
+  case eCSSProperty_justify_items:
+    return ParseJustifyItems();
   case eCSSProperty_list_style:
     return ParseListStyle();
   case eCSSProperty_margin:
