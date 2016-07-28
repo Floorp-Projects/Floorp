@@ -108,7 +108,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   NS_ENSURE_TRUE(docShell, NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsISupports> owner;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   nsCOMPtr<nsIURI> sourceURI;
   net::ReferrerPolicy referrerPolicy = net::RP_Default;
 
@@ -153,7 +153,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
       rv = doc->NodePrincipal()->GetURI(getter_AddRefs(principalURI));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      owner = doc->NodePrincipal();
+      triggeringPrincipal = doc->NodePrincipal();
       referrerPolicy = doc->GetReferrerPolicy();
 
       bool urisEqual = false;
@@ -183,7 +183,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
       // subjectPrincipal, wich is the principal of the current JS
       // compartment, or a null principal in case there is no
       // compartment yet.
-      owner = nsContentUtils::SubjectPrincipal();
+      triggeringPrincipal = nsContentUtils::SubjectPrincipal();
     }
   }
 
@@ -192,7 +192,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
   docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-  loadInfo->SetOwner(owner);
+  loadInfo->SetTriggeringPrincipal(triggeringPrincipal);
 
   if (sourceURI) {
     loadInfo->SetReferrer(sourceURI);
