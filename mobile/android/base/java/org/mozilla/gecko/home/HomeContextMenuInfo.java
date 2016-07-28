@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.database.Cursor;
@@ -44,12 +43,8 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
         return historyId > -1;
     }
 
-    public boolean hasPartnerBookmarkId() {
-        return bookmarkId <= BrowserContract.Bookmarks.FAKE_PARTNER_BOOKMARKS_START;
-    }
-
     public boolean canRemove() {
-        return hasBookmarkId() || hasHistoryId() || hasPartnerBookmarkId();
+        return hasBookmarkId() || hasHistoryId();
     }
 
     public String getDisplayTitle() {
