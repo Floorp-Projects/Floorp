@@ -11,7 +11,7 @@ class FixtureServer(object):
 
     def __init__(self, root, host="127.0.0.1", port=0):
         if not os.path.isdir(root):
-            raise Exception("Server root is not a valid path: %s" % root)
+            raise IOError("Server root is not a valid path: %s" % root)
         self.root = root
         self.host = host
         self.port = port
@@ -44,7 +44,7 @@ class FixtureServer(object):
 
     def get_url(self, path="/"):
         if not self.alive:
-            raise "Server not started"
+            raise Exception("Server not started")
         return self._server.get_url(path)
 
     @property

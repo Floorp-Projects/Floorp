@@ -31,8 +31,8 @@ class Server(object):
                 break
 
         if not os.path.isfile(path) and exec_not_on_path:
-            raise Exception("Browsermob-Proxy binary couldn't be found in path"
-                            " provided: %s" % path)
+            raise IOError("Browsermob-Proxy binary couldn't be found in path"
+                          " provided: %s" % path)
 
         self.path = path
         self.port = options.get('port', 8080)
