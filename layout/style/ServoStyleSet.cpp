@@ -10,6 +10,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIDocumentInlines.h"
+#include "nsPrintfCString.h"
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
 
@@ -190,7 +191,15 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   RefPtr<ServoComputedValues> computedValues =
     dont_AddRef(Servo_GetComputedValuesForAnonymousBox(parentStyle, aPseudoTag,
                                                        mRawSet.get()));
-  MOZ_ASSERT(computedValues);
+#ifdef DEBUG
+  if (!computedValues) {
+    nsString pseudo;
+    aPseudoTag->ToString(pseudo);
+    NS_ERROR(nsPrintfCString("stylo: could not get anon-box: %s",
+             NS_ConvertUTF16toUTF8(pseudo).get()).get());
+    MOZ_CRASH();
+  }
+#endif
 
   return NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
                             CSSPseudoElementType::AnonBox,
