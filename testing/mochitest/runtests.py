@@ -51,11 +51,10 @@ from manifestparser.filters import (
 try:
     from marionette import Marionette
     from marionette_driver.addons import Addons
-except ImportError, e:
-    # Defer ImportError until attempt to use Marionette
-    def reraise(*args, **kwargs):
-        raise(e)
-    Marionette = reraise
+
+except ImportError:
+    # Marionette not needed nor supported on android
+    Marionette = None
 
 from leaks import ShutdownLeaks, LSANLeaks
 from mochitest_options import (
@@ -2666,9 +2665,7 @@ class MochitestDesktop(MochitestBase):
         return dirlist
 
 
-def run_test_harness(parser, options):
-    parser.validate(options)
-
+def run_test_harness(options):
     logger_options = {
         key: value for key, value in vars(options).iteritems()
         if key.startswith('log') or key == 'valgrind'}
@@ -2720,7 +2717,7 @@ def cli(args=sys.argv[1:]):
         # parsing error
         sys.exit(1)
 
-    return run_test_harness(parser, options)
+    return run_test_harness(options)
 
 if __name__ == "__main__":
     sys.exit(cli())
