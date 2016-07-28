@@ -1875,16 +1875,24 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
 
     // We need the default calendar for the locale as the first result.
     UErrorCode status = U_ZERO_ERROR;
-    UCalendar* cal = ucal_open(nullptr, 0, locale.ptr(), UCAL_DEFAULT, &status);
-    const char* calendar = ucal_getType(cal, &status);
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
+    RootedString jscalendar(cx);
+    {
+        UCalendar* cal = ucal_open(nullptr, 0, locale.ptr(), UCAL_DEFAULT, &status);
+
+        // This correctly handles nullptr |cal| when opening failed.
+        ScopedICUObject<UCalendar, ucal_close> closeCalendar(cal);
+
+        const char* calendar = ucal_getType(cal, &status);
+        if (U_FAILURE(status)) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            return false;
+        }
+
+        jscalendar = JS_NewStringCopyZ(cx, bcp47CalendarName(calendar));
+        if (!jscalendar)
+            return false;
     }
-    ucal_close(cal);
-    RootedString jscalendar(cx, JS_NewStringCopyZ(cx, bcp47CalendarName(calendar)));
-    if (!jscalendar)
-        return false;
+
     RootedValue element(cx, StringValue(jscalendar));
     if (!DefineElement(cx, calendars, index++, element))
         return false;
@@ -1904,7 +1912,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
     }
 
     for (; count > 0; count--) {
-        calendar = uenum_next(values, nullptr, &status);
+        const char* calendar = uenum_next(values, nullptr, &status);
         if (U_FAILURE(status)) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
             return false;
