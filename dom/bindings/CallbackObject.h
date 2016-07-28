@@ -373,11 +373,17 @@ public:
     NS_IF_ADDREF(aCallback);
   }
 
-  explicit CallbackObjectHolder(const CallbackObjectHolder& aOther)
+  CallbackObjectHolder(CallbackObjectHolder&& aOther)
     : mPtrBits(aOther.mPtrBits)
   {
-    NS_IF_ADDREF(GetISupports());
+    aOther.mPtrBits = 0;
+    static_assert(sizeof(CallbackObjectHolder) == sizeof(void*),
+                  "This object is expected to be as small as a pointer, and it "
+                  "is currently passed by value in various places. If it is "
+                  "bloating, we may want to pass it by reference then.");
   }
+
+  CallbackObjectHolder(const CallbackObjectHolder& aOther) = delete;
 
   CallbackObjectHolder()
     : mPtrBits(0)
@@ -402,12 +408,14 @@ public:
     NS_IF_ADDREF(aCallback);
   }
 
-  void operator=(const CallbackObjectHolder& aOther)
+  void operator=(CallbackObjectHolder&& aOther)
   {
     UnlinkSelf();
     mPtrBits = aOther.mPtrBits;
-    NS_IF_ADDREF(GetISupports());
+    aOther.mPtrBits = 0;
   }
+
+  void operator=(const CallbackObjectHolder& aOther) = delete;
 
   nsISupports* GetISupports() const
   {
@@ -418,6 +426,14 @@ public:
   explicit operator bool() const
   {
     return GetISupports();
+  }
+
+  CallbackObjectHolder Clone() const
+  {
+    CallbackObjectHolder result;
+    result.mPtrBits = mPtrBits;
+    NS_IF_ADDREF(GetISupports());
+    return result;
   }
 
   // Even if HasWebIDLCallback returns true, GetWebIDLCallback() might still

@@ -237,7 +237,7 @@ EventListenerManager::GetTargetAsInnerWindow() const
 
 void
 EventListenerManager::AddEventListenerInternal(
-                        const EventListenerHolder& aListenerHolder,
+                        EventListenerHolder aListenerHolder,
                         EventMessage aEventMessage,
                         nsIAtom* aTypeAtom,
                         const nsAString& aTypeString,
@@ -278,7 +278,6 @@ EventListenerManager::AddEventListenerInternal(
 
   listener = aAllEvents ? mListeners.InsertElementAt(0) :
                           mListeners.AppendElement();
-  listener->mListener = aListenerHolder;
   listener->mEventMessage = aEventMessage;
   listener->mTypeString = aTypeString;
   listener->mTypeAtom = aTypeAtom;
@@ -301,6 +300,7 @@ EventListenerManager::AddEventListenerInternal(
   } else {
     listener->mListenerType = Listener::eNativeListener;
   }
+  listener->mListener = Move(aListenerHolder);
 
 
   if (aFlags.mInSystemGroup) {
@@ -590,7 +590,7 @@ EventListenerManager::DisableDevice(EventMessage aEventMessage)
 
 void
 EventListenerManager::RemoveEventListenerInternal(
-                        const EventListenerHolder& aListenerHolder,
+                        EventListenerHolder aListenerHolder,
                         EventMessage aEventMessage,
                         nsIAtom* aUserType,
                         const nsAString& aTypeString,
@@ -697,7 +697,7 @@ EventListenerManager::ListenerCanHandle(const Listener* aListener,
 
 void
 EventListenerManager::AddEventListenerByType(
-                        const EventListenerHolder& aListenerHolder,
+                        EventListenerHolder aListenerHolder,
                         const nsAString& aType,
                         const EventListenerFlags& aFlags)
 {
@@ -706,12 +706,13 @@ EventListenerManager::AddEventListenerByType(
     nsContentUtils::GetEventMessageAndAtomForListener(aType,
                                                       getter_AddRefs(atom)) :
     eUnidentifiedEvent;
-  AddEventListenerInternal(aListenerHolder, message, atom, aType, aFlags);
+  AddEventListenerInternal(Move(aListenerHolder),
+                           message, atom, aType, aFlags);
 }
 
 void
 EventListenerManager::RemoveEventListenerByType(
-                        const EventListenerHolder& aListenerHolder,
+                        EventListenerHolder aListenerHolder,
                         const nsAString& aType,
                         const EventListenerFlags& aFlags)
 {
@@ -720,7 +721,8 @@ EventListenerManager::RemoveEventListenerByType(
     nsContentUtils::GetEventMessageAndAtomForListener(aType,
                                                       getter_AddRefs(atom)) :
     eUnidentifiedEvent;
-  RemoveEventListenerInternal(aListenerHolder, message, atom, aType, aFlags);
+  RemoveEventListenerInternal(Move(aListenerHolder),
+                              message, atom, aType, aFlags);
 }
 
 EventListenerManager::Listener*
@@ -764,9 +766,8 @@ EventListenerManager::SetEventHandlerInternal(
     nsCOMPtr<JSEventHandler> jsEventHandler;
     NS_NewJSEventHandler(mTarget, aName,
                          aTypedHandler, getter_AddRefs(jsEventHandler));
-    EventListenerHolder listenerHolder(jsEventHandler);
-    AddEventListenerInternal(listenerHolder, eventMessage, aName, aTypeString,
-                             flags, true);
+    AddEventListenerInternal(EventListenerHolder(jsEventHandler),
+                             eventMessage, aName, aTypeString, flags, true);
 
     listener = FindEventHandler(eventMessage, aName, aTypeString);
   } else {
@@ -1092,7 +1093,8 @@ EventListenerManager::HandleEventSubType(Listener* aListener,
                                          EventTarget* aCurrentTarget)
 {
   nsresult result = NS_OK;
-  EventListenerHolder listenerHolder(aListener->mListener);  // strong ref
+  // strong ref
+  EventListenerHolder listenerHolder(aListener->mListener.Clone());
 
   // If this is a script handler and we haven't yet
   // compiled the event handler itself
@@ -1302,20 +1304,20 @@ EventListenerManager::Disconnect()
 void
 EventListenerManager::AddEventListener(
                         const nsAString& aType,
-                        const EventListenerHolder& aListenerHolder,
+                        EventListenerHolder aListenerHolder,
                         bool aUseCapture,
                         bool aWantsUntrusted)
 {
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
-  return AddEventListenerByType(aListenerHolder, aType, flags);
+  return AddEventListenerByType(Move(aListenerHolder), aType, flags);
 }
 
 void
 EventListenerManager::AddEventListener(
                         const nsAString& aType,
-                        const EventListenerHolder& aListenerHolder,
+                        EventListenerHolder aListenerHolder,
                         const dom::AddEventListenerOptionsOrBoolean& aOptions,
                         bool aWantsUntrusted)
 {
@@ -1329,24 +1331,24 @@ EventListenerManager::AddEventListener(
     flags.mPassive = options.mPassive;
   }
   flags.mAllowUntrustedEvents = aWantsUntrusted;
-  return AddEventListenerByType(aListenerHolder, aType, flags);
+  return AddEventListenerByType(Move(aListenerHolder), aType, flags);
 }
 
 void
 EventListenerManager::RemoveEventListener(
                         const nsAString& aType,
-                        const EventListenerHolder& aListenerHolder,
+                        EventListenerHolder aListenerHolder,
                         bool aUseCapture)
 {
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
-  RemoveEventListenerByType(aListenerHolder, aType, flags);
+  RemoveEventListenerByType(Move(aListenerHolder), aType, flags);
 }
 
 void
 EventListenerManager::RemoveEventListener(
                         const nsAString& aType,
-                        const EventListenerHolder& aListenerHolder,
+                        EventListenerHolder aListenerHolder,
                         const dom::EventListenerOptionsOrBoolean& aOptions)
 {
   EventListenerFlags flags;
@@ -1357,7 +1359,7 @@ EventListenerManager::RemoveEventListener(
     flags.mCapture = options.mCapture;
     flags.mInSystemGroup = options.mMozSystemGroup;
   }
-  RemoveEventListenerByType(aListenerHolder, aType, flags);
+  RemoveEventListenerByType(Move(aListenerHolder), aType, flags);
 }
 
 void
@@ -1370,9 +1372,8 @@ EventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aDOMListener,
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   flags.mInSystemGroup = aSystemEventGroup;
-  EventListenerHolder listenerHolder(aDOMListener);
-  AddEventListenerInternal(listenerHolder, eAllEvents, nullptr, EmptyString(),
-                           flags, false, true);
+  AddEventListenerInternal(EventListenerHolder(aDOMListener), eAllEvents,
+                           nullptr, EmptyString(), flags, false, true);
 }
 
 void
@@ -1384,9 +1385,8 @@ EventListenerManager::RemoveListenerForAllEvents(
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
   flags.mInSystemGroup = aSystemEventGroup;
-  EventListenerHolder listenerHolder(aDOMListener);
-  RemoveEventListenerInternal(listenerHolder, eAllEvents, nullptr,
-                              EmptyString(), flags, true);
+  RemoveEventListenerInternal(EventListenerHolder(aDOMListener), eAllEvents,
+                              nullptr, EmptyString(), flags, true);
 }
 
 bool
