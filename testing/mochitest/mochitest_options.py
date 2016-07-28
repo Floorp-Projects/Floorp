@@ -1251,3 +1251,10 @@ class MochitestArgumentParser(ArgumentParser):
         for container in self.containers:
             args = container.validate(self, args, self.context)
         return args
+
+    def parse_args(self, *args, **kwargs):
+        return self.validate(ArgumentParser.parse_args(self, *args, **kwargs))
+
+    def parse_known_args(self, *args, **kwargs):
+        args, remainder = ArgumentParser.parse_known_args(self, *args, **kwargs)
+        return (self.validate(args), remainder)
