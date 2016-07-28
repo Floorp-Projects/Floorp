@@ -579,6 +579,9 @@ ContentChild::ContentChild()
 
 ContentChild::~ContentChild()
 {
+#ifndef NS_FREE_PERMANENT_DATA
+  MOZ_CRASH("Content Child shouldn't be destroyed.");
+#endif
 }
 
 NS_INTERFACE_MAP_BEGIN(ContentChild)
