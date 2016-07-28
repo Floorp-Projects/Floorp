@@ -4742,12 +4742,6 @@ MacroAssembler::flush()
     Assembler::flush();
 }
 
-void
-MacroAssembler::comment(const char* msg)
-{
-    Assembler::comment(msg);
-}
-
 // ===============================================================
 // Stack manipulation functions.
 
