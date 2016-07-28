@@ -2413,6 +2413,9 @@ pref("layout.css.dpi", -1);
 // of a CSS "px". This is only used for windows on the screen, not for printing.
 pref("layout.css.devPixelsPerPx", "-1.0");
 
+// Is support for CSS initial-letter property enabled?
+pref("layout.css.initial-letter.enabled", false);
+
 // Is support for CSS Masking features enabled?
 pref("layout.css.masking.enabled", true);
 
