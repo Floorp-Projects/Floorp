@@ -2593,7 +2593,7 @@ DebugScopes::ensureCompartmentData(JSContext* cx)
     if (c->debugScopes)
         return c->debugScopes;
 
-    AutoInitGCManagedObject<DebugScopes> debugScopes(cx->make_unique<DebugScopes>(cx));
+    auto debugScopes = cx->make_unique<DebugScopes>(cx);
     if (!debugScopes || !debugScopes->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
