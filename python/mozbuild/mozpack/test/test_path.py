@@ -21,15 +21,17 @@ import os
 
 
 class TestPath(unittest.TestCase):
+    SEP = os.sep
+
     def test_relpath(self):
         self.assertEqual(relpath('foo', 'foo'), '')
-        self.assertEqual(relpath(os.path.join('foo', 'bar'), 'foo/bar'), '')
-        self.assertEqual(relpath(os.path.join('foo', 'bar'), 'foo'), 'bar')
-        self.assertEqual(relpath(os.path.join('foo', 'bar', 'baz'), 'foo'),
+        self.assertEqual(relpath(self.SEP.join(('foo', 'bar')), 'foo/bar'), '')
+        self.assertEqual(relpath(self.SEP.join(('foo', 'bar')), 'foo'), 'bar')
+        self.assertEqual(relpath(self.SEP.join(('foo', 'bar', 'baz')), 'foo'),
                          'bar/baz')
-        self.assertEqual(relpath(os.path.join('foo', 'bar'), 'foo/bar/baz'),
+        self.assertEqual(relpath(self.SEP.join(('foo', 'bar')), 'foo/bar/baz'),
                          '..')
-        self.assertEqual(relpath(os.path.join('foo', 'bar'), 'foo/baz'),
+        self.assertEqual(relpath(self.SEP.join(('foo', 'bar')), 'foo/baz'),
                          '../bar')
         self.assertEqual(relpath('foo/', 'foo'), '')
         self.assertEqual(relpath('foo/bar/', 'foo'), 'bar')
@@ -41,8 +43,8 @@ class TestPath(unittest.TestCase):
         self.assertEqual(join('', 'foo', '/bar'), '/bar')
 
     def test_normpath(self):
-        self.assertEqual(normpath(os.path.join('foo', 'bar', 'baz',
-                                               '..', 'qux')), 'foo/bar/qux')
+        self.assertEqual(normpath(self.SEP.join(('foo', 'bar', 'baz',
+                                                 '..', 'qux'))), 'foo/bar/qux')
 
     def test_dirname(self):
         self.assertEqual(dirname('foo/bar/baz'), 'foo/bar')
@@ -51,9 +53,9 @@ class TestPath(unittest.TestCase):
         self.assertEqual(dirname('foo/bar/'), 'foo/bar')
 
     def test_commonprefix(self):
-        self.assertEqual(commonprefix([os.path.join('foo', 'bar', 'baz'),
+        self.assertEqual(commonprefix([self.SEP.join(('foo', 'bar', 'baz')),
                                        'foo/qux', 'foo/baz/qux']), 'foo/')
-        self.assertEqual(commonprefix([os.path.join('foo', 'bar', 'baz'),
+        self.assertEqual(commonprefix([self.SEP.join(('foo', 'bar', 'baz')),
                                        'foo/qux', 'baz/qux']), '')
 
     def test_basename(self):
@@ -63,15 +65,15 @@ class TestPath(unittest.TestCase):
         self.assertEqual(basename('foo/bar/'), '')
 
     def test_split(self):
-        self.assertEqual(split(os.path.join('foo', 'bar', 'baz')),
+        self.assertEqual(split(self.SEP.join(('foo', 'bar', 'baz'))),
                          ['foo', 'bar', 'baz'])
 
     def test_splitext(self):
-        self.assertEqual(splitext(os.path.join('foo', 'bar', 'baz.qux')),
+        self.assertEqual(splitext(self.SEP.join(('foo', 'bar', 'baz.qux'))),
                          ('foo/bar/baz', '.qux'))
 
     def test_basedir(self):
-        foobarbaz = os.path.join('foo', 'bar', 'baz')
+        foobarbaz = self.SEP.join(('foo', 'bar', 'baz'))
         self.assertEqual(basedir(foobarbaz, ['foo', 'bar', 'baz']), 'foo')
         self.assertEqual(basedir(foobarbaz, ['foo', 'foo/bar', 'baz']),
                          'foo/bar')
@@ -118,6 +120,24 @@ class TestPath(unittest.TestCase):
         self.assertEqual(rebase('foo', 'foo/bar', 'bar/baz'), 'baz')
         self.assertEqual(rebase('foo', 'foo', 'bar/baz'), 'bar/baz')
         self.assertEqual(rebase('foo/bar', 'foo', 'baz'), 'bar/baz')
+
+
+if os.altsep:
+    class TestAltPath(TestPath):
+        SEP = os.altsep
+
+    class TestReverseAltPath(TestPath):
+        def setUp(self):
+            sep = os.sep
+            os.sep = os.altsep
+            os.altsep = sep
+
+        def tearDown(self):
+            self.setUp()
+
+    class TestAltReverseAltPath(TestReverseAltPath):
+        SEP = os.altsep
+
 
 if __name__ == '__main__':
     mozunit.main()
