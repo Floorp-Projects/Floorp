@@ -669,6 +669,10 @@ EventListenerManager::ListenerCanHandle(const Listener* aListener,
              aEventMessage == GetLegacyEventMessage(aEvent->mMessage),
              "aEvent and aEventMessage should agree, modulo legacyness");
 
+  // The listener has been removed, it cannot handle anything.
+  if (aListener->mListenerType == Listener::eNoListener) {
+    return false;
+  }
   // This is slightly different from EVENT_TYPE_EQUALS in that it returns
   // true even when aEvent->mMessage == eUnidentifiedEvent and
   // aListener=>mEventMessage != eUnidentifiedEvent as long as the atoms are
