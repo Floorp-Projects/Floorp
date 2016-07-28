@@ -476,6 +476,12 @@ MacroAssembler::flush()
 {
 }
 
+void
+MacroAssembler::comment(const char* msg)
+{
+    masm.comment(msg);
+}
+
 // ===============================================================
 // Stack manipulation functions.
 
