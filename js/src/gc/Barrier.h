@@ -232,7 +232,7 @@ bool
 CurrentThreadIsGCSweeping();
 
 bool
-CurrentThreadIsHandlingInitFailure();
+CurrentThreadCanSkipPostBarrier(bool inNursery);
 #endif
 
 namespace gc {
@@ -259,6 +259,8 @@ struct InternalBarrierMethods<T*>
     static void postBarrier(T** vp, T* prev, T* next) { T::writeBarrierPost(vp, prev, next); }
 
     static void readBarrier(T* v) { T::readBarrier(v); }
+
+    static bool isInsideNursery(T* v) { return IsInsideNursery(v); }
 };
 
 template <typename S> struct PreBarrierFunctor : public VoidDefaultAdaptor<S> {
@@ -303,6 +305,10 @@ struct InternalBarrierMethods<Value>
     static void readBarrier(const Value& v) {
         DispatchTyped(ReadBarrierFunctor<Value>(), v);
     }
+
+    static bool isInsideNursery(const Value& v) {
+        return v.isMarkable() && IsInsideNursery(v.toGCThing());
+    }
 };
 
 template <>
@@ -313,6 +319,8 @@ struct InternalBarrierMethods<jsid>
 
     static void preBarrier(jsid id) { DispatchTyped(PreBarrierFunctor<jsid>(), id); }
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
+
+    static bool isInsideNursery(jsid id) { return false; }
 };
 
 // Barrier classes can use Mixins to add methods to a set of barrier
@@ -432,8 +440,11 @@ class GCPtr : public WriteBarrieredBase<T>
 #ifdef DEBUG
     ~GCPtr() {
         // No prebarrier necessary as this only happens when we are sweeping or
-        // before the containing object becomes part of the GC graph.
-        MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadIsHandlingInitFailure());
+        // after we have just collected the nursery.
+        bool inNursery = InternalBarrierMethods<T>::isInsideNursery(this->value);
+        MOZ_ASSERT(CurrentThreadIsGCSweeping() ||
+                   CurrentThreadCanSkipPostBarrier(inNursery));
+        Poison(this, JS_FREED_HEAP_PTR_PATTERN, sizeof(*this));
     }
 #endif
 
