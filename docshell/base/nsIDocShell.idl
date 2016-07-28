@@ -101,7 +101,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                             in nsIDocShellLoadInfo aLoadInfo);
 
   const long INTERNAL_LOAD_FLAGS_NONE                    = 0x0;
-  const long INTERNAL_LOAD_FLAGS_INHERIT_OWNER           = 0x1;
+  const long INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL       = 0x1;
   const long INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER      = 0x2;
   const long INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x4;
 
@@ -124,44 +124,43 @@ interface nsIDocShell : nsIDocShellTreeItem
    * that its parameter list is broken out instead of being packaged inside
    * of an nsIDocShellLoadInfo object...
    *
-   * @param aURI            - The URI to load.
-   * @param aOriginalURI    - The URI to set as the originalURI on the channel
-   *                          that does the load. If null, aURI will be set as
-   *                          the originalURI.
-   * @param aLoadReplace    - If set LOAD_REPLACE flag will be set on the
-   *                          channel. aOriginalURI is null, this argument is
-   *                          ignored.
-   * @param aReferrer       - Referring URI
-   * @param aReferrerPolicy - Referrer policy
-   * @param aOwner          - Owner (security principal)
-   * @param aInheritOwner   - Flag indicating whether the owner of the current
-   *                          document should be inherited if aOwner is null.
-   * @param aStopActiveDoc  - Flag indicating whether loading the current
-   *                          document should be stopped.
-   * @param aWindowTarget   - Window target for the load.
-   * @param aTypeHint       - A hint as to the content-type of the resulting
-   *                          data.  May be null or empty if no hint.
-   * @param aFileName       - Non-null when the link should be downloaded as
-                              the given filename.
-   * @param aPostDataStream - Post data stream (if POSTing)
-   * @param aHeadersStream  - Stream containing "extra" request headers...
-   * @param aLoadFlags      - Flags to modify load behaviour. Flags are defined
-   *                          in nsIWebNavigation.
-   * @param aSHEntry        - Active Session History entry (if loading from SH)
-   * @param aSrcdoc           When INTERNAL_LOAD_FLAGS_IS_SRCDOC is set, the
-   *                          contents of this parameter will be loaded instead
-   *                          of aURI.
-   * @param aSourceDocShell - The source browsing context for the navigation.
-   * @param aBaseURI        - The base URI to be used for the load.  Set in
-   *                          srcdoc loads as it cannot otherwise be inferred
-   *                          in certain situations such as view-source.
+   * @param aURI                 - The URI to load.
+   * @param aOriginalURI         - The URI to set as the originalURI on the channel
+   *                               that does the load. If null, aURI will be set as
+   *                               the originalURI.
+   * @param aLoadReplace         - If set LOAD_REPLACE flag will be set on the
+   *                               channel. aOriginalURI is null, this argument is
+   *                               ignored.
+   * @param aReferrer            - Referring URI
+   * @param aReferrerPolicy      - Referrer policy
+   * @param aTriggeringPrincipal - Principal that initiated that load
+   * @param aFlags               - Any of the load flags defined within above.
+   * @param aStopActiveDoc       - Flag indicating whether loading the current
+   *                               document should be stopped.
+   * @param aWindowTarget        - Window target for the load.
+   * @param aTypeHint            - A hint as to the content-type of the resulting
+   *                               data.  May be null or empty if no hint.
+   * @param aFileName            - Non-null when the link should be downloaded as
+                                   the given filename.
+   * @param aPostDataStream      - Post data stream (if POSTing)
+   * @param aHeadersStream       - Stream containing "extra" request headers...
+   * @param aLoadFlags           - Flags to modify load behaviour. Flags are defined
+   *                               in nsIWebNavigation.
+   * @param aSHEntry             - Active Session History entry (if loading from SH)
+   * @param aSrcdoc                When INTERNAL_LOAD_FLAGS_IS_SRCDOC is set, the
+   *                               contents of this parameter will be loaded instead
+   *                               of aURI.
+   * @param aSourceDocShell      - The source browsing context for the navigation.
+   * @param aBaseURI             - The base URI to be used for the load.  Set in
+   *                               srcdoc loads as it cannot otherwise be inferred
+   *                               in certain situations such as view-source.
    */
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aOriginalURI,
                               in boolean aLoadReplace,
                               in nsIURI aReferrer,
                               in unsigned long aReferrerPolicy,
-                              in nsISupports aOwner,
+                              in nsIPrincipal aTriggeringPrincipal,
                               in uint32_t aFlags,
                               in wstring aWindowTarget,
                               in string aTypeHint,

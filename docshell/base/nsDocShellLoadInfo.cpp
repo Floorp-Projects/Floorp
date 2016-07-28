@@ -13,8 +13,8 @@
 
 nsDocShellLoadInfo::nsDocShellLoadInfo()
   : mLoadReplace(false)
-  , mInheritOwner(false)
-  , mOwnerIsExplicit(false)
+  , mInheritPrincipal(false)
+  , mPrincipalIsExplicit(false)
   , mSendReferrer(true)
   , mReferrerPolicy(mozilla::net::RP_Default)
   , mLoadType(nsIDocShellLoadInfo::loadNormal)
@@ -83,49 +83,46 @@ nsDocShellLoadInfo::SetLoadReplace(bool aLoadReplace)
 }
 
 NS_IMETHODIMP
-nsDocShellLoadInfo::GetOwner(nsISupports** aOwner)
+nsDocShellLoadInfo::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal)
 {
-  NS_ENSURE_ARG_POINTER(aOwner);
-
-  *aOwner = mOwner;
-  NS_IF_ADDREF(*aOwner);
+  NS_ENSURE_ARG_POINTER(aTriggeringPrincipal);
+  NS_IF_ADDREF(*aTriggeringPrincipal = mTriggeringPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellLoadInfo::SetOwner(nsISupports* aOwner)
+nsDocShellLoadInfo::SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal)
 {
-  mOwner = aOwner;
+  mTriggeringPrincipal = aTriggeringPrincipal;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellLoadInfo::GetInheritOwner(bool* aInheritOwner)
+nsDocShellLoadInfo::GetInheritPrincipal(bool* aInheritPrincipal)
 {
-  NS_ENSURE_ARG_POINTER(aInheritOwner);
-
-  *aInheritOwner = mInheritOwner;
+  NS_ENSURE_ARG_POINTER(aInheritPrincipal);
+  *aInheritPrincipal = mInheritPrincipal;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellLoadInfo::SetInheritOwner(bool aInheritOwner)
+nsDocShellLoadInfo::SetInheritPrincipal(bool aInheritPrincipal)
 {
-  mInheritOwner = aInheritOwner;
+  mInheritPrincipal = aInheritPrincipal;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellLoadInfo::GetOwnerIsExplicit(bool* aOwnerIsExplicit)
+nsDocShellLoadInfo::GetPrincipalIsExplicit(bool* aPrincipalIsExplicit)
 {
-  *aOwnerIsExplicit = mOwnerIsExplicit;
+  *aPrincipalIsExplicit = mPrincipalIsExplicit;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellLoadInfo::SetOwnerIsExplicit(bool aOwnerIsExplicit)
+nsDocShellLoadInfo::SetPrincipalIsExplicit(bool aPrincipalIsExplicit)
 {
-  mOwnerIsExplicit = aOwnerIsExplicit;
+  mPrincipalIsExplicit = aPrincipalIsExplicit;
   return NS_OK;
 }
 
