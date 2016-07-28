@@ -632,6 +632,17 @@ public:
   {
   }
 
+  WidgetQueryContentEvent(EventMessage aMessage,
+                          const WidgetQueryContentEvent& aOtherEvent)
+    : WidgetGUIEvent(aOtherEvent.IsTrusted(), aMessage,
+                     const_cast<nsIWidget*>(aOtherEvent.mWidget.get()),
+                     eQueryContentEventClass)
+    , mSucceeded(false)
+    , mUseNativeLineBreak(aOtherEvent.mUseNativeLineBreak)
+    , mWithFontRanges(false)
+  {
+  }
+
   virtual WidgetEvent* Duplicate() const override
   {
     // This event isn't an internal event of any DOM event.
