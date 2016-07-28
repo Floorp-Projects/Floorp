@@ -33,6 +33,7 @@ DevToolsModules(
     'content-globals.js',
     'content-server.jsm',
     'css-logic.js',
+    'event-parsers.js',
     'main.js',
     'primitive.js',
     'service-worker-child.js',

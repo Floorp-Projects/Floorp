@@ -1233,7 +1233,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         !adapterVendorID.LowerCaseEqualsLiteral("0xabab") &&
         !adapterVendorID.LowerCaseEqualsLiteral("0xdcdc"))
     {
-      aFailureId = "FEATURE_FAILURE_TEST";
+      aFailureId = "FEATURE_FAILURE_UNKNOWN_DEVICE_VENDOR";
       *aStatus = FEATURE_BLOCKED_DEVICE;
       return NS_OK;
     }

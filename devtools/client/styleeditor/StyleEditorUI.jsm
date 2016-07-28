@@ -957,7 +957,7 @@ StyleEditorUI.prototype = {
    */
   _launchResponsiveMode: Task.async(function* (options = {}) {
     let tab = this._target.tab;
-    let win = this._target.tab.ownerGlobal;
+    let win = this._target.tab.ownerDocument.defaultView;
 
     yield ResponsiveUIManager.runIfNeeded(win, tab);
     if (options.width && options.height) {

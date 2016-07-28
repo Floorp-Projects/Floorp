@@ -755,7 +755,7 @@ class MachCommandBase(MozbuildObject):
         # Always keep a log of the last command, but don't do that for mach
         # invokations from scripts (especially not the ones done by the build
         # system itself).
-        if (self.log_manager and self.log_manager.terminal and
+        if (os.isatty(sys.stdout.fileno()) and
                 not getattr(self, 'NO_AUTO_LOG', False)):
             self._ensure_state_subdir_exists('.')
             logfile = self._get_state_filename('last_log.json')
