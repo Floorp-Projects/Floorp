@@ -1,5 +1,16 @@
-/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set sts=2 sw=2 et tw=80: */
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
 "use strict";
 
 function backgroundScript() {
@@ -265,13 +276,13 @@ function backgroundScript() {
     return browser.bookmarks.search("Menu Item");
   }).then(results => {
     browser.test.assertEq(1, results.length, "Expected number of results returned for menu item search");
-    checkBookmark({title: "Menu Item", url: "http://menu.org/", index: 0, parentId: bookmarkGuids.menuGuid}, results[0]);
+    checkBookmark({title: "Menu Item", url: "http://menu.org/", index: 3, parentId: bookmarkGuids.menuGuid}, results[0]);
 
     // finds toolbar items
     return browser.bookmarks.search("Toolbar Item");
   }).then(results => {
     browser.test.assertEq(1, results.length, "Expected number of results returned for toolbar item search");
-    checkBookmark({title: "Toolbar Item", url: "http://toolbar.org/", index: 0, parentId: bookmarkGuids.toolbarGuid}, results[0]);
+    checkBookmark({title: "Toolbar Item", url: "http://toolbar.org/", index: 2, parentId: bookmarkGuids.toolbarGuid}, results[0]);
 
     // finds folders
     return browser.bookmarks.search("Mozilla Folder");
@@ -378,7 +389,7 @@ function backgroundScript() {
       return browser.bookmarks.move(corporationBookmark.id, {parentId: bookmarkGuids.menuGuid});
     }).then(result => {
       browser.test.assertEq(bookmarkGuids.menuGuid, result.parentId, "Bookmark has the expected parent");
-      browser.test.assertEq(childCount, result.index, "Bookmark has the expected index");
+      browser.test.assertEq(childCount + 1, result.index, "Bookmark has the expected index");
 
       return browser.bookmarks.move(corporationBookmark.id, {index: 1});
     }).then(result => {
@@ -479,3 +490,8 @@ add_task(function* test_contentscript() {
   yield extension.awaitFinish("bookmarks");
   yield extension.unload();
 });
+
+</script>
+
+</body>
+</html>
