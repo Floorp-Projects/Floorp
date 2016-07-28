@@ -4,7 +4,7 @@
 
 
 add_task(function* test_manifest_commands() {
-  let normalized = yield ExtensionTestUtils.normalizeManifest({
+  let normalized = yield normalizeManifest({
     "commands": {
       "toggle-feature": {
         "suggested_key": {"default": "Shifty+Y"},

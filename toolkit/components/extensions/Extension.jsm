@@ -56,7 +56,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
-Cu.import("resource://gre/modules/ExtensionContent.jsm");
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
@@ -327,7 +326,7 @@ class ProxyContext extends ExtensionContext {
 
 function findPathInObject(obj, path) {
   for (let elt of path) {
-    obj = obj[elt] || undefined;
+    obj = obj[elt];
   }
   return obj;
 }
