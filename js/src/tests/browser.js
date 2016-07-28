@@ -113,6 +113,24 @@
     AppendChild(printOutputContainer, msgDiv);
   }
   global.AddPrintOutput = AddPrintOutput;
+
+  /*************************************************************************
+   * HARNESS-CENTRIC EXPORTS (we should generally work to eliminate these) *
+   *************************************************************************/
+
+  // This overwrites shell.js's version that merely prints the given string.
+  function writeHeaderToLog(string) {
+    string = String(string);
+
+    // First dump to the console.
+    dump(string + "\n");
+
+    // Then output to the page.
+    var h2 = CreateElement("h2");
+    SetTextContent(h2, string);
+    AppendChild(printOutputContainer, h2);
+  }
+  global.writeHeaderToLog = writeHeaderToLog;
 })(this);
 
 
@@ -177,19 +195,6 @@ function print() {
 
   // AddPrintOutput doesn't require HTML special characters be escaped.
   AddPrintOutput(s);
-}
-
-function writeHeaderToLog( string ) {
-  string = String(string);
-
-  if (typeof dump == 'function')
-  {
-    dump( string + '\n');
-  }
-
-  string = string.replace(/[<>&]/g, htmlesc);
-
-  DocumentWrite( "<h2>" + string + "</h2>" );
 }
 
 function writeFormattedResult( expect, actual, string, passed ) {
