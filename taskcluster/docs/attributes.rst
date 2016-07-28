@@ -19,6 +19,19 @@ kind
 A task's ``kind`` attribute gives the name of the kind that generated it, e.g.,
 ``build`` or ``legacy``.
 
+task_duplicates
+===============
+
+This is used to indicate that we want multiple copies of the task created.
+This feature is used to track down intermittent job failures.
+
+If this value is set to N, the task-creation machinery will create a total of N
+copies of the task.  Only the first copy will be included in the taskgraph
+output artifacts, although all tasks will be contained in the same taskGroup.
+
+While most attributes are considered read-only, target task methods may alter
+this attribute of tasks they include in the target set.
+
 build_platform
 ==============
 
