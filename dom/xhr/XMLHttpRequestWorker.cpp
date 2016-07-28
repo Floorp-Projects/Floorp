@@ -1498,10 +1498,8 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
   mProxy->mSyncLoopTarget.swap(mSyncLoopTarget);
 
   if (mHasUploadListeners) {
-    // Send() can be called more than once before failure,
-    // so don't attach the upload listeners more than once.
-    if (!mProxy->mUploadEventListenersAttached &&
-        !mProxy->AddRemoveEventListeners(true, true)) {
+    NS_ASSERTION(!mProxy->mUploadEventListenersAttached, "Huh?!");
+    if (!mProxy->AddRemoveEventListeners(true, true)) {
       MOZ_ASSERT(false, "This should never fail!");
     }
   }
@@ -1516,10 +1514,8 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
     mProxy->mOutstandingSendCount++;
 
     if (!mHasUploadListeners) {
-      // Send() can be called more than once before failure,
-      // so don't attach the upload listeners more than once.
-      if (!mProxy->mUploadEventListenersAttached &&
-          !mProxy->AddRemoveEventListeners(true, true)) {
+      NS_ASSERTION(!mProxy->mUploadEventListenersAttached, "Huh?!");
+      if (!mProxy->AddRemoveEventListeners(true, true)) {
         MOZ_ASSERT(false, "This should never fail!");
       }
     }
