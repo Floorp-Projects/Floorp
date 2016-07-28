@@ -454,8 +454,7 @@ var ClickEventHandler = {
     let json = { button: event.button, shiftKey: event.shiftKey,
                  ctrlKey: event.ctrlKey, metaKey: event.metaKey,
                  altKey: event.altKey, href: null, title: null,
-                 bookmark: false, referrerPolicy: referrerPolicy,
-                 originAttributes: principal ? principal.originAttributes : {} };
+                 bookmark: false, referrerPolicy: referrerPolicy };
 
     if (href) {
       try {
