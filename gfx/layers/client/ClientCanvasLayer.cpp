@@ -90,9 +90,14 @@ ClientCanvasLayer::RenderLayer()
   RenderMaskLayers(this);
 
   if (!mCanvasClient) {
-    TextureFlags flags = TextureFlags::DEFAULT;
+    TextureFlags flags = TextureFlags::IMMEDIATE_UPLOAD;
     if (mOriginPos == gl::OriginPos::BottomLeft) {
       flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
+    }
+
+    if (!mGLContext) {
+      // We don't support locking for buffer surfaces currently
+      flags |= TextureFlags::IMMEDIATE_UPLOAD;
     }
 
     if (!mIsAlphaPremultiplied) {
