@@ -3576,6 +3576,8 @@ nsStyleContent::AllocateContents(uint32_t aCount)
 nsStyleTextReset::nsStyleTextReset(StyleStructContext aContext)
   : mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
   , mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL)
+  , mInitialLetterSink(0)
+  , mInitialLetterSize(0.0f)
   , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID | BORDER_COLOR_FOREGROUND)
   , mTextDecorationColor(NS_RGB(0, 0, 0))
 {
@@ -3596,7 +3598,9 @@ nsStyleTextReset::~nsStyleTextReset()
 nsChangeHint
 nsStyleTextReset::CalcDifference(const nsStyleTextReset& aNewData) const
 {
-  if (mUnicodeBidi != aNewData.mUnicodeBidi) {
+  if (mUnicodeBidi != aNewData.mUnicodeBidi ||
+      mInitialLetterSink != aNewData.mInitialLetterSink ||
+      mInitialLetterSize != aNewData.mInitialLetterSize) {
     return NS_STYLE_HINT_REFLOW;
   }
 

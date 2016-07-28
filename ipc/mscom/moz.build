@@ -6,13 +6,38 @@
 
 EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
+    'COMPtrHolder.h',
+    'EnsureMTA.h',
+    'Interceptor.h',
+    'InterceptorLog.h',
+    'MainThreadHandoff.h',
+    'MainThreadInvoker.h',
     'MainThreadRuntime.h',
+    'ProxyStream.h',
+    'Ptr.h',
+    'Registration.h',
     'Utils.h',
+    'WeakRef.h',
+]
+
+SOURCES += [
+    'Interceptor.cpp',
+    'Registration.cpp',
+    'Utils.cpp',
+    'WeakRef.cpp',
 ]
 
 UNIFIED_SOURCES += [
+    'EnsureMTA.cpp',
+    'InterceptorLog.cpp',
+    'MainThreadHandoff.cpp',
+    'MainThreadInvoker.cpp',
     'MainThreadRuntime.cpp',
-    'Utils.cpp',
+    'ProxyStream.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/xpcom/build',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

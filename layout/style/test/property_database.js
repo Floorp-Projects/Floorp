@@ -6661,6 +6661,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.image-orientation.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.initial-letter.enabled")) {
+  gCSSProperties["initial-letter"] = {
+    domProp: "initialLetter",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "normal" ],
+    other_values: [ "2", "2.5", "3.7 2", "4 3" ],
+    invalid_values: [ "-3", "3.7 -2", "25%", "16px", "1 0", "0", "0 1" ]
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
   gCSSProperties["-moz-osx-font-smoothing"] = {
     domProp: "MozOsxFontSmoothing",

@@ -447,6 +447,8 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       // TODO - create from CSS node
       return GetWidgetStyleWithClass(MOZ_GTK_TEXT_VIEW,
                                      GTK_STYLE_CLASS_VIEW);
+    case MOZ_GTK_FRAME_BORDER:
+      return CreateChildCSSNode("border", MOZ_GTK_FRAME);
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -513,6 +515,8 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_TEXT_VIEW:
       return GetWidgetStyleWithClass(MOZ_GTK_TEXT_VIEW,
                                      GTK_STYLE_CLASS_VIEW);
+    case MOZ_GTK_FRAME_BORDER:
+      return GetWidgetStyleInternal(MOZ_GTK_FRAME);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);

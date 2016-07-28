@@ -4977,6 +4977,36 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
            parentText->mUnicodeBidi,
            NS_STYLE_UNICODE_BIDI_NORMAL);
 
+  // initial-letter: normal, number, array(number, integer?), initial
+  const nsCSSValue* initialLetterValue = aRuleData->ValueForInitialLetter();
+  if (initialLetterValue->GetUnit() == eCSSUnit_Null) {
+    // We don't want to change anything in this case.
+  } else if (initialLetterValue->GetUnit() == eCSSUnit_Inherit) {
+    conditions.SetUncacheable();
+    text->mInitialLetterSink = parentText->mInitialLetterSink;
+    text->mInitialLetterSize = parentText->mInitialLetterSize;
+  } else if (initialLetterValue->GetUnit() == eCSSUnit_Initial ||
+             initialLetterValue->GetUnit() == eCSSUnit_Unset ||
+             initialLetterValue->GetUnit() == eCSSUnit_Normal) {
+    // Use invalid values in initial-letter property to mean normal. So we can
+    // determine whether it is normal by checking mInitialLetterSink == 0.
+    text->mInitialLetterSink = 0;
+    text->mInitialLetterSize = 0.0f;
+  } else if (initialLetterValue->GetUnit() == eCSSUnit_Array) {
+    const nsCSSValue& firstValue = initialLetterValue->GetArrayValue()->Item(0);
+    const nsCSSValue& secondValue = initialLetterValue->GetArrayValue()->Item(1);
+    MOZ_ASSERT(firstValue.GetUnit() == eCSSUnit_Number &&
+               secondValue.GetUnit() == eCSSUnit_Integer,
+               "unexpected value unit");
+    text->mInitialLetterSize = firstValue.GetFloatValue();
+    text->mInitialLetterSink = secondValue.GetIntValue();
+  } else if (initialLetterValue->GetUnit() == eCSSUnit_Number) {
+    text->mInitialLetterSize = initialLetterValue->GetFloatValue();
+    text->mInitialLetterSink = NSToCoordFloorClamped(text->mInitialLetterSize);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("unknown unit for initial-letter");
+  }
+
   COMPUTE_END_RESET(TextReset, text)
 }
 

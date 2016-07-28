@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<body onload="go()">
+  <svg id="outerSvg" width="50%" height="50%"
+       style="border: 1px solid black">
+  </svg>
+  <script type="application/javascript">
+    /* I'm not sure what exactly was required to trigger bug 1288228's crash,
+     * but it involved tweaking a length's specified units and cycle-collecting
+     * and reloading (in some combination).  So, we'll tweak the units and
+     * cycle-collect a few times, and message the outer page to reload us
+     * after we've made the first tweak.
+     */
+    const maxTweaks = 5;
+    let remainingTweaks = maxTweaks;
+
+    var savedBaseVal =  document.getElementById("outerSvg").width.baseVal;
+    function go() {
+      window.parent.SpecialPowers.DOMWindowUtils.cycleCollect();
+      tweak();
+    }
+
+    function tweak() {
+      console.log("tweaked");
+      savedBaseVal.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
+      savedBaseVal.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PERCENTAGE);
+      if (remainingTweaks == maxTweaks) {
+        window.parent.postMessage("ping", "*"); // only do this on first tweak
+      }
+      if (--remainingTweaks) {
+        setTimeout(tweak, 0);
+      }
+    }
+</script>
+</body>
+</html>

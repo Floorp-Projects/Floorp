@@ -2092,7 +2092,7 @@ Toolbox.prototype = {
     this._threadClient = null;
 
     // We need to grab a reference to win before this._host is destroyed.
-    let win = this.frame.ownerGlobal;
+    let win = this.frame.ownerDocument.defaultView;
 
     if (this._requisition) {
       CommandUtils.destroyRequisition(this._requisition, this.target);

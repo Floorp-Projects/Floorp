@@ -2268,6 +2268,17 @@ CSS_PROP_TEXT(
     kHyphensKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_TEXTRESET(
+    initial-letter,
+    initial_letter,
+    InitialLetter,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    "layout.css.initial-letter.enabled",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_VISIBILITY(
     image-orientation,
     image_orientation,

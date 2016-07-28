@@ -57,12 +57,16 @@ public:
   // when it has read the first frame of the video or audio.
   virtual void FirstFrameLoaded() = 0;
 
-  // Called by the video decoder object, on the main thread,
+  // Called by the decoder object, on the main thread,
   // when the resource has a network error during loading.
+  // The decoder owner should call Shutdown() on the decoder and drop the
+  // reference to the decoder to prevent further calls into the decoder.
   virtual void NetworkError() = 0;
 
-  // Called by the video decoder object, on the main thread, when the
+  // Called by the decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.
+  // The decoder owner should call Shutdown() on the decoder and drop the
+  // reference to the decoder to prevent further calls into the decoder.
   virtual void DecodeError() = 0;
 
   // Return true if media element error attribute is not null.
@@ -130,8 +134,10 @@ public:
   // ImageContainer containing the video data.
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
 
-  // Called by the media decoder object, on the main thread,
+  // Called by the decoder object, on the main thread,
   // when the connection between Rtsp server and client gets lost.
+  // The decoder owner should call Shutdown() on the decoder and drop the
+  // reference to the decoder to prevent further calls into the decoder.
   virtual void ResetConnectionState() = 0;
 
   // Called by media decoder when the audible state changed
