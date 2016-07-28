@@ -150,9 +150,10 @@ RemoteFinder.prototype = {
                                                     drawOutline: aDrawOutline });
   },
 
-  highlight: function (aHighlight, aWord) {
+  highlight: function (aHighlight, aWord, aLinksOnly) {
     this._browser.messageManager.sendAsyncMessage("Finder:Highlight",
                                                   { highlight: aHighlight,
+                                                    linksOnly: aLinksOnly,
                                                     word: aWord });
   },
 
@@ -299,7 +300,7 @@ RemoteFinderListener.prototype = {
         break;
 
       case "Finder:Highlight":
-        this._finder.highlight(data.highlight, data.word);
+        this._finder.highlight(data.highlight, data.word, data.linksOnly);
         break;
 
       case "Finder:HighlightAllChange":

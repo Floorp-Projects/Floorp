@@ -16,33 +16,6 @@ ServoRestyleManager::ServoRestyleManager(nsPresContext* aPresContext)
 {
 }
 
-/* static */ void
-ServoRestyleManager::DirtyTree(nsIContent* aContent, bool aIncludingRoot)
-{
-  if (aIncludingRoot) {
-    // XXX: This can in theory leave nodes not dirty, but in practice this is not
-    // a problem, at least for now, since right now element dirty implies
-    // descendants dirty. Remove this early return if this ever changes.
-    if (aContent->IsDirtyForServo()) {
-      return;
-    }
-
-    aContent->SetIsDirtyForServo();
-  }
-
-  FlattenedChildIterator it(aContent);
-
-  nsIContent* n = it.GetNextChild();
-  bool hadChildren = bool(n);
-  for (; n; n = it.GetNextChild()) {
-    DirtyTree(n, true);
-  }
-
-  if (hadChildren) {
-    aContent->SetHasDirtyDescendantsForServo();
-  }
-}
-
 void
 ServoRestyleManager::PostRestyleEvent(Element* aElement,
                                       nsRestyleHint aRestyleHint,
@@ -151,19 +124,34 @@ MarkParentsAsHavingDirtyDescendants(Element* aElement)
   }
 }
 
+static void
+MarkChildrenAsDirtyForServo(nsIContent* aContent)
+{
+  FlattenedChildIterator it(aContent);
+
+  nsIContent* n = it.GetNextChild();
+  bool hadChildren = bool(n);
+  for (; n; n = it.GetNextChild()) {
+    n->SetIsDirtyForServo();
+  }
+
+  if (hadChildren) {
+    aContent->SetHasDirtyDescendantsForServo();
+  }
+}
+
 void
 ServoRestyleManager::NoteRestyleHint(Element* aElement, nsRestyleHint aHint)
 {
   if (aHint & eRestyle_Self) {
     aElement->SetIsDirtyForServo();
     MarkParentsAsHavingDirtyDescendants(aElement);
-    // NB: Using Servo's style system marking the subtree as dirty is necessary
-    // so we inherit correctly the style structs.
-    aHint |= eRestyle_Subtree;
-  }
-
-  if (aHint & eRestyle_Subtree) {
-    DirtyTree(aElement, /* aIncludingRoot = */ false);
+    // NB: For Servo, at least for now, restyling and running selector-matching
+    // against the subtree is necessary as part of restyling the element, so
+    // processing eRestyle_Self will perform at least as much work as
+    // eRestyle_Subtree.
+  } else if (aHint & eRestyle_Subtree) {
+    MarkChildrenAsDirtyForServo(aElement);
     MarkParentsAsHavingDirtyDescendants(aElement);
   }
 
@@ -171,14 +159,15 @@ ServoRestyleManager::NoteRestyleHint(Element* aElement, nsRestyleHint aHint)
     for (nsINode* cur = aElement->GetNextSibling(); cur;
          cur = cur->GetNextSibling()) {
       if (cur->IsContent()) {
-        DirtyTree(cur->AsContent(), /* aIncludingRoot = */ true);
+        cur->SetIsDirtyForServo();
       }
     }
   }
 
   // TODO: Handle all other nsRestyleHint values.
   if (aHint & ~(eRestyle_Self | eRestyle_Subtree | eRestyle_LaterSiblings)) {
-    NS_ERROR("stylo: Unhandled restyle hint");
+    NS_ERROR(nsPrintfCString("stylo: Unhandled restyle hint %s",
+                             RestyleManagerBase::RestyleHintToString(aHint).get()).get());
   }
 }
 
@@ -189,6 +178,12 @@ ServoRestyleManager::ProcessPendingRestyles()
     return;
   }
   ServoStyleSet* styleSet = StyleSet();
+
+  if (!styleSet->StylingStarted()) {
+    // If something caused us to restyle, and we haven't started styling yet,
+    // do nothing. Everything is dirty, and we'll style it all later.
+    return;
+  }
 
   nsIDocument* doc = PresContext()->Document();
 
@@ -208,8 +203,10 @@ ServoRestyleManager::ProcessPendingRestyles()
       }
     }
 
-    styleSet->RestyleSubtree(root, /* aForce = */ false);
-    RecreateStyleContexts(root, nullptr, styleSet);
+    if (root->IsDirtyForServo() || root->HasDirtyDescendantsForServo()) {
+      styleSet->RestyleSubtree(root);
+      RecreateStyleContexts(root, nullptr, styleSet);
+    }
   }
 
   mModifiedElements.Clear();
@@ -310,7 +307,8 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
-  MOZ_CRASH("stylo: ServoRestyleManager::ReparentStyleContext not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::ReparentStyleContext not implemented");
+  return NS_OK;
 }
 
 ServoElementSnapshot*

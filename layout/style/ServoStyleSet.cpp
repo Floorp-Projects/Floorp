@@ -20,6 +20,7 @@ ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
   , mRawSet(Servo_InitStyleSet())
   , mBatching(0)
+  , mStylingStarted(false)
 {
 }
 
@@ -68,6 +69,16 @@ ServoStyleSet::EndUpdate()
 
   // ... do something ...
   return NS_OK;
+}
+
+void
+ServoStyleSet::StartStyling(nsPresContext* aPresContext)
+{
+  Element* root = aPresContext->Document()->GetRootElement();
+  if (root) {
+    RestyleSubtree(root);
+  }
+  mStylingStarted = true;
 }
 
 already_AddRefed<nsStyleContext>
@@ -389,12 +400,8 @@ ServoStyleSet::ComputeRestyleHint(dom::Element* aElement,
 }
 
 void
-ServoStyleSet::RestyleSubtree(nsINode* aNode, bool aForce)
+ServoStyleSet::RestyleSubtree(nsINode* aNode)
 {
-  if (aForce) {
-    MOZ_ASSERT(aNode->IsContent());
-    ServoRestyleManager::DirtyTree(aNode->AsContent());
-  }
-
+  MOZ_ASSERT(aNode->IsDirtyForServo() || aNode->HasDirtyDescendantsForServo());
   Servo_RestyleSubtree(aNode, mRawSet.get());
 }

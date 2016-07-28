@@ -54,6 +54,7 @@ class MediaStreamGraphImpl;
 
 class AudioCallbackDriver;
 class OfflineClockDriver;
+class SystemClockDriver;
 
 /**
  * A driver is responsible for the scheduling of the processing, the thread
@@ -162,6 +163,10 @@ public:
   }
 
   virtual OfflineClockDriver* AsOfflineClockDriver() {
+    return nullptr;
+  }
+
+  virtual SystemClockDriver* AsSystemClockDriver() {
     return nullptr;
   }
 
@@ -296,13 +301,20 @@ public:
   MediaTime GetIntervalForIteration() override;
   void WaitForNextIteration() override;
   void WakeUp() override;
-
+  void MarkAsFallback();
+  bool IsFallback();
+  SystemClockDriver* AsSystemClockDriver() override {
+    return this;
+  }
 
 private:
   // Those are only modified (after initialization) on the graph thread. The
   // graph thread does not run during the initialization.
   TimeStamp mInitialTimeStamp;
   TimeStamp mLastTimeStamp;
+  // This is true if this SystemClockDriver runs the graph because we could not
+  // open an audio stream.
+  bool mIsFallback;
 };
 
 /**
@@ -525,6 +537,9 @@ private:
    * True if microphone is being used by this process. This is synchronized by
    * the graph's monitor. */
   bool mMicrophoneActive;
+  /* True if this driver was created from a driver created because of a previous
+   * AudioCallbackDriver failure. */
+  bool mFromFallback;
 };
 
 class AsyncCubebTask : public Runnable

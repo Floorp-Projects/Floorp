@@ -299,17 +299,18 @@ SVGUseElement::CreateAnonymousContent()
 
     if (!svgNode)
       return nullptr;
-    
-    // copy attributes
-    const nsAttrName* name;
-    uint32_t i;
-    for (i = 0; (name = newcontent->GetAttrNameAt(i)); i++) {
-      nsAutoString value;
-      int32_t nsID = name->NamespaceID();
-      nsIAtom* lname = name->LocalName();
 
-      newcontent->GetAttr(nsID, lname, value);
-      svgNode->SetAttr(nsID, lname, name->GetPrefix(), value, false);
+    // copy attributes
+    BorrowedAttrInfo info;
+    uint32_t i;
+    for (i = 0; (info = newcontent->GetAttrInfoAt(i)); i++) {
+      nsAutoString value;
+      int32_t nsID = info.mName->NamespaceID();
+      nsIAtom* lname = info.mName->LocalName();
+
+      info.mValue->ToString(value);
+
+      svgNode->SetAttr(nsID, lname, info.mName->GetPrefix(), value, false);
     }
 
     // move the children over

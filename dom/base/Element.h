@@ -509,6 +509,7 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) override;
   virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override;
+  virtual BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const override;
   virtual uint32_t GetAttrCount() const override;
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
@@ -750,7 +751,7 @@ public:
   // aCx == nullptr is allowed only if aOptions.isNullOrUndefined()
   void RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
                          ErrorResult& aError);
-  void MozRequestPointerLock();
+  void RequestPointerLock();
   Attr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
                                           ErrorResult& aError);
@@ -938,20 +939,6 @@ public:
   // Work around silly C++ name hiding stuff
   nsIFrame* GetPrimaryFrame() const { return nsIContent::GetPrimaryFrame(); }
 
-  /**
-   * Struct that stores info on an attribute.  The name and value must
-   * either both be null or both be non-null.
-   */
-  struct nsAttrInfo {
-    nsAttrInfo(const nsAttrName* aName, const nsAttrValue* aValue) :
-      mName(aName), mValue(aValue) {}
-    nsAttrInfo(const nsAttrInfo& aOther) :
-      mName(aOther.mName), mValue(aOther.mValue) {}
-
-    const nsAttrName* mName;
-    const nsAttrValue* mValue;
-  };
-
   const nsAttrValue* GetParsedAttr(nsIAtom* aAttr) const
   {
     return mAttrsAndChildren.GetAttr(aAttr);
@@ -986,7 +973,7 @@ public:
    * is, this should only be called from methods that only care about attrs
    * that effectively live in mAttrsAndChildren.
    */
-  virtual nsAttrInfo GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const;
+  virtual BorrowedAttrInfo GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const;
 
   virtual void NodeInfoChanged()
   {
@@ -1861,7 +1848,7 @@ NS_IMETHOD MozRequestFullScreen(void) final override                          \
 }                                                                             \
 NS_IMETHOD MozRequestPointerLock(void) final override                         \
 {                                                                             \
-  Element::MozRequestPointerLock();                                           \
+  Element::RequestPointerLock();                                              \
   return NS_OK;                                                               \
 }                                                                             \
 using nsINode::QuerySelector;                                                 \

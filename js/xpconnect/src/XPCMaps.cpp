@@ -36,23 +36,13 @@ MatchIIDPtrKey(const PLDHashEntryHdr* entry, const void* key)
 static PLDHashNumber
 HashNativeKey(const void* key)
 {
-    XPCNativeSetKey* Key = (XPCNativeSetKey*) key;
+    auto Key = static_cast<const XPCNativeSetKey*>(key);
 
     PLDHashNumber h = 0;
 
-    XPCNativeSet*       Set;
-    XPCNativeInterface* Addition;
-    uint16_t            Position;
-
-    if (Key->IsAKey()) {
-        Set      = Key->GetBaseSet();
-        Addition = Key->GetAddition();
-        Position = Key->GetPosition();
-    } else {
-        Set      = (XPCNativeSet*) Key;
-        Addition = nullptr;
-        Position = 0;
-    }
+    XPCNativeSet* Set = Key->GetBaseSet();
+    XPCNativeInterface* Addition = Key->GetAddition();
+    uint16_t Position = Key->GetPosition();
 
     if (!Set) {
         MOZ_ASSERT(Addition, "bad key");
@@ -294,30 +284,7 @@ ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallo
 bool
 NativeSetMap::Entry::Match(const PLDHashEntryHdr* entry, const void* key)
 {
-    XPCNativeSetKey* Key = (XPCNativeSetKey*) key;
-
-    // See the comment in the XPCNativeSetKey declaration in xpcprivate.h.
-    if (!Key->IsAKey()) {
-        XPCNativeSet* Set1 = (XPCNativeSet*) key;
-        XPCNativeSet* Set2 = ((Entry*)entry)->key_value;
-
-        if (Set1 == Set2)
-            return true;
-
-        uint16_t count = Set1->GetInterfaceCount();
-        if (count != Set2->GetInterfaceCount())
-            return false;
-
-        XPCNativeInterface** Current1 = Set1->GetInterfaceArray();
-        XPCNativeInterface** Current2 = Set2->GetInterfaceArray();
-        for (uint16_t i = 0; i < count; i++) {
-            if (*(Current1++) != *(Current2++))
-                return false;
-        }
-
-        return true;
-    }
-
+    auto Key = static_cast<const XPCNativeSetKey*>(key);
     XPCNativeSet*       SetInTable = ((Entry*)entry)->key_value;
     XPCNativeSet*       Set        = Key->GetBaseSet();
     XPCNativeInterface* Addition   = Key->GetAddition();

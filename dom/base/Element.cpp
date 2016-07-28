@@ -1787,6 +1787,12 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
   ClearInDocument();
 
+#ifdef MOZ_STYLO
+  // Drop any servo node data, since it will generally need to be recomputed on
+  // re-insertion anyway.
+  ServoData().reset();
+#endif
+
   // Editable descendant count only counts descendants that
   // are in the uncomposed document.
   ResetEditableDescendantCount();
@@ -2205,7 +2211,7 @@ Element::MaybeCheckSameAttrVal(int32_t aNamespaceID,
   // listeners and don't plan to notify.  The check for aNotify here is an
   // optimization, the check for *aHasListeners is a correctness issue.
   if (*aHasListeners || aNotify) {
-    nsAttrInfo info(GetAttrInfo(aNamespaceID, aName));
+    BorrowedAttrInfo info(GetAttrInfo(aNamespaceID, aName));
     if (info.mValue) {
       // Check whether the old value is the same as the new one.  Note that we
       // only need to actually _get_ the old value if we have listeners or
@@ -2536,7 +2542,7 @@ Element::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
   return GetOrCreateListenerManager();
 }
 
-Element::nsAttrInfo
+BorrowedAttrInfo
 Element::GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const
 {
   NS_ASSERTION(nullptr != aName, "must have attribute name");
@@ -2544,14 +2550,22 @@ Element::GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const
                "must have a real namespace ID!");
 
   int32_t index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
-  if (index >= 0) {
-    return nsAttrInfo(mAttrsAndChildren.AttrNameAt(index),
-                      mAttrsAndChildren.AttrAt(index));
+  if (index < 0) {
+    return BorrowedAttrInfo(nullptr, nullptr);
   }
 
-  return nsAttrInfo(nullptr, nullptr);
+  return mAttrsAndChildren.AttrInfoAt(index);
 }
 
+BorrowedAttrInfo
+Element::GetAttrInfoAt(uint32_t aIndex) const
+{
+  if (aIndex >= mAttrsAndChildren.AttrCount()) {
+    return BorrowedAttrInfo(nullptr, nullptr);
+  }
+
+  return mAttrsAndChildren.AttrInfoAt(aIndex);
+}
 
 bool
 Element::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
@@ -3284,7 +3298,7 @@ Element::RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
 }
 
 void
-Element::MozRequestPointerLock()
+Element::RequestPointerLock()
 {
   OwnerDoc()->RequestPointerLock(this);
 }
