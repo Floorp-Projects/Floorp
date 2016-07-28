@@ -656,6 +656,10 @@ public:
   const CryptoSample& mCrypto;
   RefPtr<MediaByteBuffer> mExtraData;
 
+  // Used by the Vorbis decoder and Ogg demuxer.
+  // Indicates that this is the last packet of the stream.
+  bool mEOS = false;
+
   RefPtr<SharedTrackInfo> mTrackInfo;
 
   // Return a deep copy or nullptr if out of memory.
