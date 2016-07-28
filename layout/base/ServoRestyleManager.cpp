@@ -296,14 +296,6 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
   snapshot->AddAttrs(aElement);
 }
 
-void
-ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
-                                      nsIAtom* aAttribute, int32_t aModType,
-                                      const nsAttrValue* aOldValue)
-{
-  NS_ERROR("stylo: ServoRestyleManager::AttributeChanged not implemented");
-}
-
 nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
