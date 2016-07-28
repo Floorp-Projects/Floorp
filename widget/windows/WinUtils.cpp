@@ -726,28 +726,10 @@ WinUtils::GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
   return ::GetMessageW(aMsg, aWnd, aFirstMessage, aLastMessage);
 }
 
-#if defined(ACCESSIBILITY)
-static DWORD
-GetWaitFlags()
-{
-  DWORD result = MWMO_INPUTAVAILABLE;
-  if (XRE_IsContentProcess()) {
-    result |= MWMO_ALERTABLE;
-  }
-  return result;
-}
-#endif
-
 /* static */
 void
 WinUtils::WaitForMessage(DWORD aTimeoutMs)
 {
-#if defined(ACCESSIBILITY)
-  static const DWORD waitFlags = GetWaitFlags();
-#else
-  const DWORD waitFlags = MWMO_INPUTAVAILABLE;
-#endif
-
   const DWORD waitStart = ::GetTickCount();
   DWORD elapsed = 0;
   while (true) {
@@ -758,13 +740,11 @@ WinUtils::WaitForMessage(DWORD aTimeoutMs)
       break;
     }
     DWORD result = ::MsgWaitForMultipleObjectsEx(0, NULL, aTimeoutMs - elapsed,
-                                                 MOZ_QS_ALLEVENT, waitFlags);
+                                                 MOZ_QS_ALLEVENT,
+                                                 MWMO_INPUTAVAILABLE);
     NS_WARN_IF_FALSE(result != WAIT_FAILED, "Wait failed");
     if (result == WAIT_TIMEOUT) {
       break;
-    }
-    if (result == WAIT_IO_COMPLETION) {
-      continue;
     }
 
     // Sent messages (via SendMessage and friends) are processed differently
