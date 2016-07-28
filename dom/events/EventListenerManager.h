@@ -189,9 +189,8 @@ public:
       eJSEventListener,
       eWrappedJSListener,
       eWebIDLListener,
-      eListenerTypeCount
     };
-    uint8_t mListenerType;
+    ListenerType mListenerType;
 
     bool mListenerIsHandler : 1;
     bool mHandlerIsString : 1;
@@ -207,11 +206,7 @@ public:
         nullptr;
     }
 
-    Listener()
-    {
-      MOZ_ASSERT(sizeof(mListenerType) == 1);
-      MOZ_ASSERT(eListenerTypeCount < 255);
-    }
+    Listener() = default;
 
     ~Listener()
     {
