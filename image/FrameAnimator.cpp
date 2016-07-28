@@ -7,6 +7,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/NotNull.h"
 #include "imgIContainer.h"
 #include "LookupResult.h"
 #include "MainThreadUtils.h"
@@ -40,6 +41,28 @@ void
 AnimationState::SetAnimationMode(uint16_t aAnimationMode)
 {
   mAnimationMode = aAnimationMode;
+}
+
+void
+AnimationState::UpdateKnownFrameCount(uint32_t aFrameCount)
+{
+  if (aFrameCount <= mFrameCount) {
+    // Nothing to do. Since we can redecode animated images, we may see the same
+    // sequence of updates replayed again, so seeing a smaller frame count than
+    // what we already know about doesn't indicate an error.
+    return;
+  }
+
+  MOZ_ASSERT(!mDoneDecoding, "Adding new frames after decoding is finished?");
+  MOZ_ASSERT(aFrameCount <= mFrameCount + 1, "Skipped a frame?");
+
+  mFrameCount = aFrameCount;
+}
+
+Maybe<uint32_t>
+AnimationState::FrameCount() const
+{
+  return mDoneDecoding ? Some(mFrameCount) : Nothing();
 }
 
 void
@@ -128,26 +151,9 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
   uint32_t currentFrameIndex = aState.mCurrentAnimationFrameIndex;
   uint32_t nextFrameIndex = currentFrameIndex + 1;
 
-  if (mImage->GetNumFrames() == nextFrameIndex) {
-    // We can only accurately determine if we are at the end of the loop if we are
-    // done decoding, otherwise we don't know how many frames there will be.
-    if (!aState.mDoneDecoding) {
-      // We've already advanced to the last decoded frame, nothing more we can do.
-      // We're blocked by network/decoding from displaying the animation at the
-      // rate specified, so that means the frame we are displaying (the latest
-      // available) is the frame we want to be displaying at this time. So we
-      // update the current animation time. If we didn't update the current
-      // animation time then it could lag behind, which would indicate that we
-      // are behind in the animation and should try to catch up. When we are
-      // done decoding (and thus can loop around back to the start of the
-      // animation) we would then jump to a random point in the animation to
-      // try to catch up. But we were never behind in the animation.
-      aState.mCurrentAnimationFrameTime = aTime;
-      return ret;
-    }
-
-    // End of an animation loop...
-
+  // Check if we're at the end of the loop. (FrameCount() returns Nothing() if
+  // we don't know the total count yet.)
+  if (aState.FrameCount() == Some(nextFrameIndex)) {
     // If we are not looping forever, initialize the loop counter
     if (aState.mLoopRemainingCount < 0 && aState.LoopCount() >= 0) {
       aState.mLoopRemainingCount = aState.LoopCount();
@@ -172,12 +178,27 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
     }
   }
 
-  // There can be frames in the surface cache with index >= mImage->GetNumFrames()
-  // that GetRawFrame can access because the decoding thread has decoded them, but
-  // RasterImage hasn't acknowledged those frames yet. We don't want to go past
-  // what RasterImage knows about so that we stay in sync with RasterImage. The code
-  // above should obey this, the MOZ_ASSERT records this invariant.
-  MOZ_ASSERT(nextFrameIndex < mImage->GetNumFrames());
+  if (nextFrameIndex >= aState.KnownFrameCount()) {
+    // We've already advanced to the last decoded frame, nothing more we can do.
+    // We're blocked by network/decoding from displaying the animation at the
+    // rate specified, so that means the frame we are displaying (the latest
+    // available) is the frame we want to be displaying at this time. So we
+    // update the current animation time. If we didn't update the current
+    // animation time then it could lag behind, which would indicate that we are
+    // behind in the animation and should try to catch up. When we are done
+    // decoding (and thus can loop around back to the start of the animation) we
+    // would then jump to a random point in the animation to try to catch up.
+    // But we were never behind in the animation.
+    aState.mCurrentAnimationFrameTime = aTime;
+    return ret;
+  }
+
+  // There can be frames in the surface cache with index >= KnownFrameCount()
+  // which GetRawFrame() can access because an async decoder has decoded them,
+  // but which AnimationState doesn't know about yet because we haven't received
+  // the appropriate notification on the main thread. Make sure we stay in sync
+  // with AnimationState.
+  MOZ_ASSERT(nextFrameIndex < aState.KnownFrameCount());
   RawAccessFrameRef nextFrame = GetRawFrame(nextFrameIndex);
 
   // If we're done decoding, we know we've got everything we're going to get.
@@ -281,7 +302,9 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
 
   // If we have a composited version of this frame, return that.
   if (mLastCompositedFrameIndex == int32_t(aFrameNum)) {
-    return LookupResult(mCompositingFrame->DrawableRef(), MatchType::EXACT);
+    RefPtr<ISurfaceProvider> provider =
+      new SimpleSurfaceProvider(WrapNotNull(mCompositingFrame.get()));
+    return LookupResult(Move(provider), MatchType::EXACT);
   }
 
   // Otherwise return the raw frame. DoBlend is required to ensure that we only
@@ -291,7 +314,9 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
                                           aFrameNum));
-  MOZ_ASSERT(!result || !result.DrawableRef()->GetIsPaletted(),
+  MOZ_ASSERT(!result ||
+             !result.Provider()->DrawableRef() ||
+             !result.Provider()->DrawableRef()->GetIsPaletted(),
              "About to return a paletted frame");
   return result;
 }
@@ -361,8 +386,18 @@ FrameAnimator::GetRawFrame(uint32_t aFrameNum) const
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
                                           aFrameNum));
-  return result ? result.DrawableRef()->RawAccessRef()
-                : RawAccessFrameRef();
+  if (!result) {
+    return RawAccessFrameRef();
+  }
+
+  DrawableFrameRef drawableRef = result.Provider()->DrawableRef();
+  if (!drawableRef) {
+    MOZ_ASSERT_UNREACHABLE("Animated image frames should be locked and "
+                           "in-memory; how did we lose one?");
+    return RawAccessFrameRef();
+  }
+
+  return drawableRef->RawAccessRef();
 }
 
 //******************************************************************************

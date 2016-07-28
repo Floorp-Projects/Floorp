@@ -22,9 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       <script type="application/javascript">
         /*
          * Test for Bug 633602
-         * This test checks if mozMovementX and mozMovementY
+         * This test checks if movementX and movementY
          * are present in a mouse event object.
-         * It also checks the values for mozMovementXY.
+         * It also checks the values for movementXY.
          * They should be equal to the current screenXY minus
          * the last screenXY
          * This test will also test that the incremental movement is
@@ -73,9 +73,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           document.exitFullscreen();
         }
 
-        document.addEventListener("mozpointerlockchange", function (e) {
-          if (document.mozPointerLockElement === div) {
-            info("Got mozpointerlockchange for entering");
+        document.addEventListener("pointerlockchange", function (e) {
+          if (document.pointerLockElement === div) {
+            info("Got pointerlockchange for entering");
             div.addEventListener("mousemove", firstMoveListener, false);
 
             divCenterWidth = Math.round(div.getBoundingClientRect().width / 2);
@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
               type: "mousemove"
             }, window);
           } else {
-            info("Got mozpointerlockchange for exiting");
+            info("Got pointerlockchange for exiting");
           }
         }, false);
 
@@ -93,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           info("Requesting fullscreen on parent");
           addFullscreenChangeContinuation("enter", function() {
             info("Got fullscreenchange for entering");
-            div.mozRequestPointerLock();
+            div.requestPointerLock();
           });
           div.requestFullscreen();
         }

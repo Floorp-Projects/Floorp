@@ -390,7 +390,7 @@ def DOMClass(descriptor):
           { ${protoChain} },
           IsBaseOf<nsISupports, ${nativeType} >::value,
           ${hooks},
-          GetParentObject<${nativeType}>::Get,
+          FindAssociatedGlobalForNative<${nativeType}>::Get,
           GetProtoObjectHandle,
           GetCCParticipant<${nativeType}>::Get()
         """,
@@ -3582,10 +3582,12 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
 
-            JS::Rooted<JSObject*> parent(aCx, WrapNativeParent(aCx, aObject->GetParentObject()));
-            if (!parent) {
+            JS::Rooted<JSObject*> global(aCx, FindAssociatedGlobal(aCx, aObject->GetParentObject()));
+            if (!global) {
               return false;
             }
+            MOZ_ASSERT(JS_IsGlobalObject(global));
+            MOZ_ASSERT(!JS::ObjectIsMarkedGray(global));
 
             // That might have ended up wrapping us already, due to the wonders
             // of XBL.  Check for that, and bail out as needed.
@@ -3597,8 +3599,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
               return true;
             }
 
-            JSAutoCompartment ac(aCx, parent);
-            JS::Rooted<JSObject*> global(aCx, js::GetGlobalForObjectCrossCompartment(parent));
+            JSAutoCompartment ac(aCx, global);
             $*{declareProto}
 
             $*{createObject}
@@ -8565,7 +8566,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
     def definition_body(self):
-        if self.attr.maplikeOrSetlike:
+        if self.attr.isMaplikeOrSetlikeAttr():
             # If the interface is maplike/setlike, there will be one getter
             # method for the size property of the backing object. Due to having
             # to unpack the backing object from the slot, this requires its own
@@ -13088,6 +13089,16 @@ class ForwardDeclarationBuilder:
         self.decls = set()
         self.children = {}
 
+    def _ensureNonTemplateType(self, type):
+        if "<" in type:
+            # This is a templated type.  We don't really know how to
+            # forward-declare those, and trying to do it naively is not going to
+            # go well (e.g. we may have :: characters inside the type we're
+            # templated on!).  Just bail out.
+            raise TypeError("Attempt to use ForwardDeclarationBuilder on "
+                            "templated type %s.  We don't know how to do that "
+                            "yet." % type)
+
     def _listAdd(self, namespaces, name, isStruct=False):
         """
         Add a forward declaration, where |namespaces| is a list of namespaces.
@@ -13105,6 +13116,7 @@ class ForwardDeclarationBuilder:
         Add a forward declaration to the mozilla::dom:: namespace. |name| should not
         contain any other namespaces.
         """
+        self._ensureNonTemplateType(name);
         self._listAdd(["mozilla", "dom"], name, isStruct)
 
     def add(self, nativeType, isStruct=False):
@@ -13112,6 +13124,7 @@ class ForwardDeclarationBuilder:
         Add a forward declaration, where |nativeType| is a string containing
         the type and its namespaces, in the usual C++ way.
         """
+        self._ensureNonTemplateType(nativeType);
         components = nativeType.split('::')
         self._listAdd(components[:-1], components[-1], isStruct)
 
@@ -13923,6 +13936,16 @@ class CGExampleMethod(CGNativeMember):
                                 breakAfter=breakAfter,
                                 variadicIsSequence=True)
 
+    def declare(self, cgClass):
+        assert self.member.isMethod()
+        # We skip declaring ourselves if this is a maplike/setlike/iterable
+        # method, because those get implemented automatically by the binding
+        # machinery, so the implementor of the interface doesn't have to worry
+        # about it.
+        if self.member.isMaplikeOrSetlikeOrIterableMethod():
+            return ''
+        return CGNativeMember.declare(self, cgClass);
+
     def define(self, cgClass):
         return ''
 
@@ -13935,6 +13958,16 @@ class CGExampleGetter(CGNativeMember):
                                 (attr.type, []),
                                 descriptor.getExtendedAttributes(attr,
                                                                  getter=True))
+
+    def declare(self, cgClass):
+        assert self.member.isAttr()
+        # We skip declaring ourselves if this is a maplike/setlike attr (in
+        # practice, "size"), because those get implemented automatically by the
+        # binding machinery, so the implementor of the interface doesn't have to
+        # worry about it.
+        if self.member.isMaplikeOrSetlikeAttr():
+            return ''
+        return CGNativeMember.declare(self, cgClass);
 
     def define(self, cgClass):
         return ''
@@ -14245,14 +14278,15 @@ class CGExampleRoot(CGThing):
                 continue
             if member.isStatic():
                 builder.addInMozillaDom("GlobalObject")
-            if member.isAttr():
+            if member.isAttr() and not member.isMaplikeOrSetlikeAttr():
                 builder.forwardDeclareForType(member.type, config)
             else:
                 assert member.isMethod()
-                for sig in member.signatures():
-                    builder.forwardDeclareForType(sig[0], config)
-                    for arg in sig[1]:
-                        builder.forwardDeclareForType(arg.type, config)
+                if not member.isMaplikeOrSetlikeOrIterableMethod():
+                    for sig in member.signatures():
+                        builder.forwardDeclareForType(sig[0], config)
+                        for arg in sig[1]:
+                            builder.forwardDeclareForType(arg.type, config)
 
         self.root = CGList([builder.build(),
                             self.root], "\n")

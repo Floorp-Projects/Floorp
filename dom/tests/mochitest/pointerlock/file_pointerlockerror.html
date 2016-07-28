@@ -25,7 +25,7 @@
 
       SimpleTest.waitForExplicitFinish();
 
-      document.addEventListener("mozpointerlockerror", function (e) {
+      document.addEventListener("pointerlockerror", function (e) {
         ok(true, "pointerlockerror event should fire.");
         SimpleTest.finish();
       }, false);
@@ -33,7 +33,7 @@
       function start() {
         // element not in the DOM, not fullscreen, should fail to lock
         div = document.createElement("div");
-        div.mozRequestPointerLock();
+        div.requestPointerLock();
       }
     </script>
   </pre>

@@ -4262,7 +4262,7 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
   if (ServoStyleSet* styleSet = mPresShell->StyleSet()->GetAsServo()) {
     // Eagerly compute styles for the anonymous content tree.
     for (auto& info : aContent) {
-      styleSet->RestyleSubtree(info.mContent, /* aForce = */ true);
+      styleSet->RestyleSubtree(info.mContent);
     }
   }
 
@@ -10543,7 +10543,7 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
                  "ProcessChildren() codepath for this frame");
 #endif
     // Anything restyled by servo should already have the style data.
-    MOZ_ASSERT_IF(content->IsStyledByServo(), !!content->GetServoNodeData());
+    MOZ_ASSERT_IF(content->IsStyledByServo(), !!content->ServoData());
     // Gecko-styled nodes should have no pending restyle flags.
     MOZ_ASSERT_IF(!content->IsStyledByServo(),
                   !content->IsElement() ||

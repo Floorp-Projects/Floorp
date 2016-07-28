@@ -128,6 +128,12 @@ private:
 
   RefPtr<TextureClient> mBackBuffer;
   RefPtr<TextureClient> mFrontBuffer;
+  // We store this texture separately to make sure it is not written into
+  // in Update() if for some silly reason we end up alternating between
+  // UpdateFromTexture and Update.
+  // This code is begging for a cleanup. The situation described above should
+  // not be made possible.
+  RefPtr<TextureClient> mBufferProviderTexture;
 };
 
 // Used for GL canvases where we don't need to do any readback, i.e., with a

@@ -93,7 +93,7 @@ public:
    */
   bool HasProgress() const
   {
-    return mProgress != NoProgress || !mInvalidRect.IsEmpty();
+    return mProgress != NoProgress || !mInvalidRect.IsEmpty() || mFinishedNewFrame;
   }
 
   /*
@@ -185,15 +185,16 @@ public:
     return mIterator->ChunkCount();
   }
 
+  /**
+   * @return the number of complete animation frames which have been decoded so
+   * far, if it has changed since the last call to TakeCompleteFrameCount();
+   * otherwise, returns Nothing().
+   */
+  Maybe<uint32_t> TakeCompleteFrameCount();
+
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
   uint32_t GetFrameCount() { return mFrameCount; }
-
-  // The number of complete frames we have (ie, not including anything
-  // in-progress).
-  uint32_t GetCompleteFrameCount() {
-    return mInFrame ? mFrameCount - 1 : mFrameCount;
-  }
 
   // Did we discover that the image we're decoding is animated?
   bool HasAnimation() const { return mImageMetadata.HasAnimation(); }
@@ -403,6 +404,17 @@ private:
    */
   void CompleteDecode();
 
+  /// @return the number of complete frames we have. Does not include the
+  /// current frame if it's unfinished.
+  uint32_t GetCompleteFrameCount()
+  {
+    if (mFrameCount == 0) {
+      return 0;
+    }
+
+    return mInFrame ? mFrameCount - 1 : mFrameCount;
+  }
+
   RawAccessFrameRef AllocateFrameInternal(uint32_t aFrameNum,
                                           const nsIntSize& aTargetSize,
                                           const nsIntRect& aFrameRect,
@@ -440,6 +452,8 @@ private:
   bool mInitialized : 1;
   bool mMetadataDecode : 1;
   bool mInFrame : 1;
+  bool mFinishedNewFrame : 1;  // True if PostFrameStop() has been called since
+                               // the last call to TakeCompleteFrameCount().
   bool mReachedTerminalState : 1;
   bool mDecodeDone : 1;
   bool mError : 1;

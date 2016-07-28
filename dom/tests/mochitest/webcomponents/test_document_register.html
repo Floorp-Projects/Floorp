@@ -46,7 +46,6 @@ function startTest() {
   testRegisterSimple("some-elem", HTMLElement.prototype, true);
   testRegisterSimple("x-html-p", HTMLParagraphElement.prototype, true);
   testRegisterSimple("x-html-span", HTMLSpanElement.prototype, true);
-  testRegisterSimple("x-svg-proto", SVGElement.prototype, true);
 
   // Make sure the prototype on unresolved elements is HTMLElement not HTMLUnknownElement.
   var unresolved = document.getElementById("unresolved");
@@ -57,23 +56,14 @@ function startTest() {
 
   // Registering without a prototype should automatically create one inheriting from HTMLElement.
   testRegisterSimple("x-elem-no-proto", null, false);
-  var simpleElem = document.createElement("x-elem-no-proto");
-  is(simpleElem.__proto__.__proto__, HTMLElement.prototype, "Default prototype should inherit from HTMLElement");
 
   var simpleProto = Object.create(HTMLElement.prototype);
   testRegisterSimple("x-elem-simple-proto", simpleProto, false);
-  var simpleProtoElem = document.createElement("x-elem-simple-proto");
-  is(simpleProtoElem.__proto__, simpleProto, "Custom element should use registered prototype.");
-  var anotherSimpleElem = document.createElementNS("http://www.w3.org/1999/xhtml", "x-elem-simple-proto");
-  is(anotherSimpleElem.__proto__, simpleProto, "Custom element should use registered prototype.");
 
   // Test registering some invalid prototypes.
   testRegisterSimple("x-invalid-number", 42, true);
   testRegisterSimple("x-invalid-boolean", false, true);
   testRegisterSimple("x-invalid-float", 1.0, true);
-  // Can not register with a prototype that inherits from SVGElement
-  // without extending an existing element type.
-  testRegisterSimple("x-html-obj-svg", Object.create(SVGElement.prototype), true);
   // A prototype with a non-configurable "constructor" property must throw.
   var nonConfigProto = Object.create(HTMLElement.prototype,
     { constructor: { configurable: false, value: function() {} } });
@@ -96,7 +86,6 @@ function startTest() {
 
   // Test registering elements that extend from a non-existing element.
   testRegisterExtend("x-extend-span-nonexist", "nonexisting", Object.create(HTMLElement.prototype), true);
-  testRegisterExtend("x-extend-svg-nonexist", "nonexisting", Object.create(SVGElement.prototype), true);
 
   // Test registration with duplicate type.
   testRegisterSimple("x-dupe-me", Object.create(HTMLElement.prototype), false);
@@ -104,14 +93,6 @@ function startTest() {
   testRegisterSimple("X-DUPE-ME", Object.create(HTMLElement.prototype), true);
   testRegisterSimple("x-dupe-me", null, true);
   testRegisterExtend("x-dupe-me", "span", Object.create(HTMLElement.prototype), true);
-  testRegisterExtend("x-dupe-me", "shape", Object.create(SVGElement.prototype), true);
-
-  testRegisterExtend("x-svg-dupe-me", "circle", Object.create(SVGElement.prototype), false);
-  testRegisterSimple("x-svg-dupe-me", Object.create(HTMLElement.prototype), true);
-  testRegisterSimple("X-SVG-DUPE-ME", Object.create(HTMLElement.prototype), true);
-  testRegisterSimple("x-svg-dupe-me", null, true);
-  testRegisterExtend("x-svg-dupe-me", "span", Object.create(HTMLElement.prototype), true);
-  testRegisterExtend("x-svg-dupe-me", "shape", Object.create(SVGElement.prototype), true);
 
   // document.createElement with extended type.
   var extendedProto = Object.create(HTMLButtonElement.prototype);
