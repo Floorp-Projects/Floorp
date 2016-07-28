@@ -184,6 +184,31 @@ Gecko_UnsetNodeFlags(RawGeckoNode* aNode, uint32_t aFlags)
   aNode->UnsetFlags(aFlags);
 }
 
+nsChangeHint
+Gecko_CalcAndStoreStyleDifference(RawGeckoElement* aElement,
+                                  ServoComputedValues* aComputedValues)
+{
+#ifdef MOZ_STYLO
+  nsStyleContext* oldContext = aElement->GetPrimaryFrame()->StyleContext();
+
+  // Pass the safe thing, which causes us to miss a potential optimization. See
+  // bug 1289863.
+  nsChangeHint forDescendants = nsChangeHint_Hints_NotHandledForDescendants;
+
+  // Eventually, we should compute things out of these flags like
+  // ElementRestyler::RestyleSelf does and pass the result to the caller to
+  // potentially halt traversal. See bug 1289868.
+  uint32_t equalStructs, samePointerStructs;
+  nsChangeHint result =
+    oldContext->CalcStyleDifference(aComputedValues, forDescendants,
+                                    &equalStructs, &samePointerStructs);
+  return result;
+#else
+  MOZ_CRASH("stylo: Shouldn't call Gecko_CalcAndStoreStyleDifference in "
+            "non-stylo build");
+#endif
+}
+
 ServoDeclarationBlock*
 Gecko_GetServoDeclarationBlock(RawGeckoElement* aElement)
 {
@@ -213,14 +238,12 @@ DoMatch(Implementor* aElement, nsIAtom* aNS, nsIAtom* aName, MatchFn aMatch)
     return value && aMatch(value);
   }
   // No namespace means any namespace - we have to check them all. :-(
-  const nsAttrName* attrName;
-  for (uint32_t i = 0; (attrName = aElement->GetAttrNameAt(i)); ++i) {
-    if (attrName->LocalName() != aName) {
+  BorrowedAttrInfo attrInfo;
+  for (uint32_t i = 0; (attrInfo = aElement->GetAttrInfoAt(i)); ++i) {
+    if (attrInfo.mName->LocalName() != aName) {
       continue;
     }
-    const nsAttrValue* value =
-      aElement->GetParsedAttr(attrName->LocalName(), attrName->NamespaceID());
-    if (aMatch(value)) {
+    if (aMatch(attrInfo.mValue)) {
       return true;
     }
   }
@@ -448,13 +471,14 @@ SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot, ServoElementSnapshot)
 ServoNodeData*
 Gecko_GetNodeData(RawGeckoNode* aNode)
 {
-  return aNode->GetServoNodeData();
+  return aNode->ServoData().get();
 }
 
 void
 Gecko_SetNodeData(RawGeckoNode* aNode, ServoNodeData* aData)
 {
-  aNode->SetServoNodeData(aData);
+  MOZ_ASSERT(!aNode->ServoData());
+  aNode->ServoData().reset(aData);
 }
 
 nsIAtom*

@@ -36087,12 +36087,12 @@
   },
   "local_changes": {
     "deleted": [
-      "WebCryptoAPI/generateKey/failures.worker.js",
-      "web-animations/interfaces/AnimationTimeline/document-timeline.html",
+      "WebCryptoAPI/generateKey/successes.worker.js",
       "WebCryptoAPI/generateKey/test_failures.html",
-      "WebCryptoAPI/generateKey/test_successes.html",
+      "web-animations/interfaces/AnimationTimeline/document-timeline.html",
       "web-animations/interfaces/AnimationTimeline/idlharness.html",
-      "WebCryptoAPI/generateKey/successes.worker.js"
+      "WebCryptoAPI/generateKey/failures.worker.js",
+      "WebCryptoAPI/generateKey/test_successes.html"
     ],
     "deleted_reftests": {},
     "items": {
@@ -36383,6 +36383,12 @@
             "url": "/XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html"
           }
         ],
+        "dom/events/AddEventListenerOptions-once.html": [
+          {
+            "path": "dom/events/AddEventListenerOptions-once.html",
+            "url": "/dom/events/AddEventListenerOptions-once.html"
+          }
+        ],
         "editing/run/justifycenter.html": [
           {
             "path": "editing/run/justifycenter.html",
@@ -36413,6 +36419,12 @@
           {
             "path": "fetch/api/policies/referrer-origin-when-cross-origin.html",
             "url": "/fetch/api/policies/referrer-origin-when-cross-origin.html"
+          }
+        ],
+        "service-workers/service-worker/activation.https.html": [
+          {
+            "path": "service-workers/service-worker/activation.https.html",
+            "url": "/service-workers/service-worker/activation.https.html"
           }
         ],
         "service-workers/service-worker/client-navigate.https.html": [

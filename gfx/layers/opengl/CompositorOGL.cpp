@@ -117,7 +117,7 @@ CompositorOGL::CreateContext()
 #ifdef XP_WIN
   if (gfxEnv::LayersPreferEGL()) {
     printf_stderr("Trying GL layers...\n");
-    context = gl::GLContextProviderEGL::CreateForWindow(mWidget->RealWidget(), false);
+    context = gl::GLContextProviderEGL::CreateForCompositorWidget(mWidget, false);
   }
 #endif
 
@@ -134,7 +134,7 @@ CompositorOGL::CreateContext()
   }
 
   if (!context) {
-    context = gl::GLContextProvider::CreateForWindow(mWidget->RealWidget(),
+    context = gl::GLContextProvider::CreateForCompositorWidget(mWidget,
                 gfxPlatform::GetPlatform()->RequiresAcceleratedGLContextForCompositorOGL());
   }
 

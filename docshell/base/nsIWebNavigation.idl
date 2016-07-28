@@ -181,8 +181,11 @@ interface nsIWebNavigation : nsISupports
 
   /**
    * Prevent the owner principal from being inherited for this load.
+   * Note: Within Gecko we use the term principal rather than owners
+   *       but some legacy addons might still rely on the outdated term.
    */
-  const unsigned long LOAD_FLAGS_DISALLOW_INHERIT_OWNER = 0x40000;
+  const unsigned long LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL = 0x40000;
+  const unsigned long LOAD_FLAGS_DISALLOW_INHERIT_OWNER     = 0x40000;
 
   /**
    * Overwrite the returned error code with a specific result code

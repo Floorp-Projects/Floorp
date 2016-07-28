@@ -33,7 +33,7 @@ public:
 
     TreeWalker(nsINode *aRoot,
                uint32_t aWhatToShow,
-               const NodeFilterHolder &aFilter);
+               NodeFilterHolder aFilter);
 
     NS_DECL_CYCLE_COLLECTION_CLASS(TreeWalker)
 

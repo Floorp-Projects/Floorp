@@ -474,7 +474,7 @@ private:
       return rv;
     }
 
-    loadInfo->SetOwner(aPrincipal);
+    loadInfo->SetTriggeringPrincipal(aPrincipal);
     loadInfo->SetReferrer(doc->GetOriginalURI());
     loadInfo->SetReferrerPolicy(doc->GetReferrerPolicy());
     loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContentAndReplace);

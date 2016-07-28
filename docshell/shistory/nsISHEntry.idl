@@ -20,6 +20,7 @@ interface nsIDocShellTreeItem;
 interface nsISupportsArray;
 interface nsIStructuredCloneContainer;
 interface nsIBFCacheEntry;
+interface nsIPrincipal;
 
 %{C++
 #include "nsRect.h"
@@ -190,7 +191,7 @@ interface nsISHEntry : nsISupports
                            in nsIInputStream inputStream,
                            in nsILayoutHistoryState layoutHistoryState,
                            in nsISupports cacheKey, in ACString contentType,
-                           in nsISupports owner,
+                           in nsIPrincipal triggeringPrincipal,
                            in unsigned long long docshellID,
                            in boolean dynamicCreation);
 
@@ -205,11 +206,11 @@ interface nsISHEntry : nsISupports
     nsIContentViewer getAnyContentViewer(out nsISHEntry ownerEntry);
 
     /**
-     * Get the owner, if any, that was associated with the channel
+     * Get the principal, if any, that was associated with the channel
      * that the document that was loaded to create this history entry
      * came from.
      */
-    attribute nsISupports owner;
+    attribute nsIPrincipal triggeringPrincipal;
 
     /**
      * Get/set data associated with this history state via a pushState() call,
