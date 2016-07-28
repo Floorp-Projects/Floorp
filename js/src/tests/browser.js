@@ -166,14 +166,6 @@ function testPassesUnlessItThrows() {
 }
 
 /*
- * Requests to load the given JavaScript file before the file containing the
- * test case.
- */
-function include(file) {
-  outputscripttag(file, {language: "type", mimetype: "text/javascript"});
-}
-
-/*
  * Sets a restore function which restores the standard built-in ECMAScript
  * properties after a destructive test case, and which will be called after
  * the test case terminates.
