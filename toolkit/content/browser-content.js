@@ -1382,3 +1382,93 @@ addEventListener("MozApplicationManifest", function(e) {
   sendAsyncMessage("MozApplicationManifest", info);
 }, false);
 
+let AutoCompletePopup = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup]),
+
+  _connected: false,
+  init: function() {
+    // We need to wait for a content viewer to be available
+    // before we can attach our AutoCompletePopup handler,
+    // since nsFormFillController assumes one will exist
+    // when we call attachToBrowser.
+    let onDCL = () => {
+      removeEventListener("DOMContentLoaded", onDCL);
+      // Hook up the form fill autocomplete controller.
+      let controller = Cc["@mozilla.org/satchel/form-fill-controller;1"]
+                         .getService(Ci.nsIFormFillController);
+      controller.attachToBrowser(docShell,
+                                 this.QueryInterface(Ci.nsIAutoCompletePopup));
+      this._connected = true;
+    };
+    addEventListener("DOMContentLoaded", onDCL);
+
+    this._input = null;
+    this._popupOpen = false;
+
+    addMessageListener("FormAutoComplete:HandleEnter", message => {
+      this.selectedIndex = message.data.selectedIndex;
+
+      let controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
+                  getService(Components.interfaces.nsIAutoCompleteController);
+      controller.handleEnter(message.data.isPopupSelection);
+    });
+
+    addEventListener("unload", function() {
+      AutoCompletePopup.destroy();
+    });
+  },
+
+  destroy: function() {
+    if (this._connected) {
+      let controller = Cc["@mozilla.org/satchel/form-fill-controller;1"]
+                         .getService(Ci.nsIFormFillController);
+
+      controller.detachFromBrowser(docShell);
+      this._connected = false;
+    }
+  },
+
+  get input () { return this._input; },
+  get overrideValue () { return null; },
+  set selectedIndex (index) { },
+  get selectedIndex () {
+    // selectedIndex getter must be synchronous because we need the
+    // correct value when the controller is in controller::HandleEnter.
+    // We can't easily just let the parent inform us the new value every
+    // time it changes because not every action that can change the
+    // selectedIndex is trivial to catch (e.g. moving the mouse over the
+    // list).
+    return sendSyncMessage("FormAutoComplete:GetSelectedIndex", {});
+  },
+  get popupOpen () {
+    return this._popupOpen;
+  },
+
+  openAutocompletePopup: function (input, element) {
+    if (!this._popupOpen) {
+      // The search itself normally opens the popup itself, but in some cases,
+      // nsAutoCompleteController tries to use cached results so notify our
+      // popup to reuse the last results.
+      sendAsyncMessage("FormAutoComplete:MaybeOpenPopup", {});
+    }
+    this._input = input;
+    this._popupOpen = true;
+  },
+
+  closePopup: function () {
+    this._popupOpen = false;
+    sendAsyncMessage("FormAutoComplete:ClosePopup", {});
+  },
+
+  invalidate: function () {
+  },
+
+  selectBy: function(reverse, page) {
+    this._index = sendSyncMessage("FormAutoComplete:SelectBy", {
+      reverse: reverse,
+      page: page
+    });
+  }
+}
+
+AutoCompletePopup.init();
