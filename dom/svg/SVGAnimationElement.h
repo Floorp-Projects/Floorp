@@ -86,10 +86,6 @@ public:
   void EndElement(ErrorResult& rv) { EndElementAt(0.f, rv); }
   void EndElementAt(float offset, ErrorResult& rv);
 
-  // SVGTests
-  virtual bool IsInChromeDoc() const override;
-
-
  protected:
   // nsSVGElement overrides
 

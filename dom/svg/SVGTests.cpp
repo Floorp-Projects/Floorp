@@ -57,7 +57,7 @@ SVGTests::SystemLanguage()
 bool
 SVGTests::HasExtension(const nsAString& aExtension)
 {
-  return nsSVGFeatures::HasExtension(aExtension, IsInChromeDoc());
+  return nsSVGFeatures::HasExtension(aExtension);
 }
 
 bool
@@ -139,7 +139,7 @@ SVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) const
       return false;
     }
     for (uint32_t i = 0; i < mStringListAttributes[EXTENSIONS].Length(); i++) {
-      if (!nsSVGFeatures::HasExtension(mStringListAttributes[EXTENSIONS][i], IsInChromeDoc())) {
+      if (!nsSVGFeatures::HasExtension(mStringListAttributes[EXTENSIONS][i])) {
         return false;
       }
     }

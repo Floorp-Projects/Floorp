@@ -11,8 +11,6 @@ fails == dir-9.html dir-9-ref.html # Bug 787215
 == dir-10.html dir-10-ref.html
 random-if((B2G&&browserIsRemote)||Mulet) == dir-11.html dir-11-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == css-spacing-1.html css-spacing-1-ref.html
-pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1-ref.html
-pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1-ref.xhtml
 == displaystyle-1.html displaystyle-1-ref.html
 == displaystyle-2.html displaystyle-2-ref.html
 == displaystyle-3.html displaystyle-3-ref.html
