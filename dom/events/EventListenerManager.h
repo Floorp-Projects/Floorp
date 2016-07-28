@@ -185,7 +185,8 @@ public:
 
     enum ListenerType : uint8_t
     {
-      eNativeListener = 0,
+      eNoListener,
+      eNativeListener,
       eJSEventListener,
       eWrappedJSListener,
       eWebIDLListener,
@@ -206,7 +207,35 @@ public:
         nullptr;
     }
 
-    Listener() = default;
+    Listener()
+      : mEventMessage(eVoidEvent)
+      , mListenerType(eNoListener)
+      , mListenerIsHandler(false)
+      , mHandlerIsString(false)
+      , mAllEvents(false)
+      , mIsChrome(false)
+    {
+    }
+
+    Listener(Listener&& aOther)
+      : mListener(Move(aOther.mListener))
+      , mTypeAtom(aOther.mTypeAtom.forget())
+      , mTypeString(aOther.mTypeString)
+      , mEventMessage(aOther.mEventMessage)
+      , mListenerType(aOther.mListenerType)
+      , mListenerIsHandler(aOther.mListenerIsHandler)
+      , mHandlerIsString(aOther.mHandlerIsString)
+      , mAllEvents(aOther.mAllEvents)
+      , mIsChrome(aOther.mIsChrome)
+    {
+      aOther.mTypeString.Truncate();
+      aOther.mEventMessage = eVoidEvent;
+      aOther.mListenerType = eNoListener;
+      aOther.mListenerIsHandler = false;
+      aOther.mHandlerIsString = false;
+      aOther.mAllEvents = false;
+      aOther.mIsChrome = false;
+    }
 
     ~Listener()
     {
