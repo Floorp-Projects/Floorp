@@ -13439,6 +13439,10 @@ nsIDocument::UpdateStyleBackendType()
 {
   MOZ_ASSERT(mStyleBackendType == StyleBackendType(0),
              "no need to call UpdateStyleBackendType now");
+
+  // Assume Gecko by default.
+  mStyleBackendType = StyleBackendType::Gecko;
+
 #ifdef MOZ_STYLO
   // XXX For now we use a Servo-backed style set only for (X)HTML documents
   // in content docshells.  This should let us avoid implementing XUL-specific
@@ -13447,15 +13451,11 @@ nsIDocument::UpdateStyleBackendType()
   // document before we have a pres shell (i.e. before we make the decision
   // here about whether to use a Gecko- or Servo-backed style system), so
   // we avoid Servo-backed style sets for SVG documents.
-  NS_ASSERTION(mDocumentContainer, "stylo: calling UpdateStyleBackendType "
-                                   "before we have a docshell");
-  mStyleBackendType =
-    nsLayoutUtils::SupportsServoStyleBackend(this) &&
-    mDocumentContainer ?
-      StyleBackendType::Servo :
-      StyleBackendType::Gecko;
-#else
-  mStyleBackendType = StyleBackendType::Gecko;
+  if (!mDocumentContainer) {
+    NS_WARNING("stylo: No docshell yet, assuming Gecko style system");
+  } else if (nsLayoutUtils::SupportsServoStyleBackend(this)) {
+    mStyleBackendType = StyleBackendType::Servo;
+  }
 #endif
 }
 
