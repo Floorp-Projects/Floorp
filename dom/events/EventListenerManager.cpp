@@ -348,17 +348,11 @@ EventListenerManager::AddEventListenerInternal(
 #endif
 #ifdef MOZ_B2G
   } else if (aTypeAtom == nsGkAtoms::onmoztimechange) {
-    if (nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow()) {
-      window->EnableTimeChangeNotifications();
-    }
+    EnableDevice(eTimeChange);
   } else if (aTypeAtom == nsGkAtoms::onmoznetworkupload) {
-    if (nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow()) {
-      window->EnableNetworkEvent(eNetworkUpload);
-    }
+    EnableDevice(eNetworkUpload);
   } else if (aTypeAtom == nsGkAtoms::onmoznetworkdownload) {
-    if (nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow()) {
-      window->EnableNetworkEvent(eNetworkDownload);
-    }
+    EnableDevice(eNetworkDownload);
 #endif // MOZ_B2G
   } else if (aTypeAtom == nsGkAtoms::ontouchstart ||
              aTypeAtom == nsGkAtoms::ontouchend ||
@@ -486,6 +480,11 @@ EventListenerManager::IsDeviceType(EventMessage aEventMessage)
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
     case eOrientationChange:
 #endif
+#ifdef MOZ_B2G
+    case eTimeChange:
+    case eNetworkUpload:
+    case eNetworkDownload:
+#endif
       return true;
     default:
       break;
@@ -536,6 +535,15 @@ EventListenerManager::EnableDevice(EventMessage aEventMessage)
       window->EnableOrientationChangeListener();
       break;
 #endif
+#ifdef MOZ_B2G
+    case eTimeChange:
+      window->EnableTimeChangeNotifications();
+      break;
+    case eNetworkUpload:
+    case eNetworkDownload:
+      window->EnableNetworkEvent(aEventMessage);
+      break;
+#endif
     default:
       NS_WARNING("Enabling an unknown device sensor.");
       break;
@@ -582,6 +590,15 @@ EventListenerManager::DisableDevice(EventMessage aEventMessage)
       window->DisableOrientationChangeListener();
       break;
 #endif
+#ifdef MOZ_B2G
+    case eTimeChange:
+      window->DisableTimeChangeNotifications();
+      break;
+    case eNetworkUpload:
+    case eNetworkDownload:
+      window->DisableNetworkEvent(aEventMessage);
+      break;
+#endif // MOZ_B2G
     default:
       NS_WARNING("Disabling an unknown device sensor.");
       break;
@@ -606,11 +623,6 @@ EventListenerManager::RemoveEventListenerInternal(
   uint32_t count = mListeners.Length();
   uint32_t typeCount = 0;
   bool deviceType = IsDeviceType(aEventMessage);
-#ifdef MOZ_B2G
-  bool timeChangeEvent = (aEventMessage == eTimeChange);
-  bool networkEvent = (aEventMessage == eNetworkUpload ||
-                       aEventMessage == eNetworkDownload);
-#endif // MOZ_B2G
 
   for (uint32_t i = 0; i < count; ++i) {
     listener = &mListeners.ElementAt(i);
@@ -632,11 +644,7 @@ EventListenerManager::RemoveEventListenerInternal(
                                                                     aUserType);
         }
 
-        if (!deviceType
-#ifdef MOZ_B2G
-            && !timeChangeEvent && !networkEvent
-#endif // MOZ_B2G
-            ) {
+        if (!deviceType) {
           return;
         }
         --typeCount;
@@ -646,16 +654,6 @@ EventListenerManager::RemoveEventListenerInternal(
 
   if (!aAllEvents && deviceType && typeCount == 0) {
     DisableDevice(aEventMessage);
-#ifdef MOZ_B2G
-  } else if (timeChangeEvent && typeCount == 0) {
-    if (nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow()) {
-      window->DisableTimeChangeNotifications();
-    }
-  } else if (!aAllEvents && networkEvent && typeCount == 0) {
-    if (nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow()) {
-      window->DisableNetworkEvent(aEventMessage);
-    }
-#endif // MOZ_B2G
   }
 }
 
