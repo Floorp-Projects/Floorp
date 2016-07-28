@@ -303,7 +303,7 @@ public:
   void WakeUp() override;
   void MarkAsFallback();
   bool IsFallback();
-  SystemClockDriver* AsSystemClockDriver() {
+  SystemClockDriver* AsSystemClockDriver() override {
     return this;
   }
 
