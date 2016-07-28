@@ -1292,6 +1292,13 @@ ServiceWorkerManager::NotifyUnregister(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
+void
+ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWorker);
+}
+
 already_AddRefed<ServiceWorkerJobQueue>
 ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
                                           const nsACString& aScope)
