@@ -18,6 +18,7 @@
 
   var Error = global.Error;
   var Number = global.Number;
+  var String = global.String;
   var TypeError = global.TypeError;
 
   var ArrayIsArray = global.Array.isArray;
@@ -34,6 +35,8 @@
     var SpecialPowersSetGCZeal =
       global.SpecialPowers ? global.SpecialPowers.setGCZeal : undefined;
   }
+
+  var runningInShell = typeof window === "undefined";
 
   /****************************
    * GENERAL HELPER FUNCTIONS *
@@ -151,11 +154,47 @@
    * UTILITY FUNCTION EXPORTS *
    ****************************/
 
-  // Eventually this polyfill should be defined here, not in browser.js.  For
-  // now tolerate more-resilient code depending on less-resilient code.
-  assertEq(typeof global.print, "function",
-           "print function is pre-existing, either provided by the shell or " +
-           "the already-executed top-level browser.js");
+  var dump = global.dump;
+  if (typeof global.dump === "function") {
+    // A presumptively-functional |dump| exists, so no need to do anything.
+  } else {
+    // We don't have |dump|.  Try to simulate the desired effect another way.
+    if (runningInBrowser) {
+      // We can't actually print to the console: |global.print| invokes browser
+      // printing functionality here (it's overwritten just below), and
+      // |global.dump| isn't a function that'll dump to the console (presumably
+      // because the preference to enable |dump| wasn't set).  Just make it a
+      // no-op.
+      dump = function() {};
+    } else {
+      // |print| prints to stdout: make |dump| do likewise.
+      dump = global.print;
+    }
+    global.dump = dump;
+  }
+
+  var print;
+  if (runningInBrowser) {
+    // We're executing in a browser.  Using |global.print| would invoke browser
+    // printing functionality: not what tests want!  Instead, use a print
+    // function that syncs up with the test harness and console.
+    print = function print() {
+      var s = "TEST-INFO | ";
+      for (var i = 0; i < arguments.length; i++)
+        s += String(arguments[i]) + " ";
+
+      // Dump the string to the console for developers and the harness.
+      dump(s + "\n");
+
+      // AddPrintOutput doesn't require HTML special characters be escaped.
+      global.AddPrintOutput(s);
+    };
+
+    global.print = print;
+  } else {
+    // We're executing in a shell, and |global.print| is the desired function.
+    print = global.print;
+  }
 
   var quit = global.quit;
   if (typeof quit !== "function") {
@@ -749,19 +788,6 @@ function getTestCaseResult(expected, actual)
   // the Date functions in SpiderMonkey specified in terms of WeekDay
   // often don't.  This seems unimportant.
   return true;
-}
-
-if (typeof dump == 'undefined')
-{
-  if (typeof window == 'undefined' &&
-      typeof print == 'function')
-  {
-    dump = print;
-  }
-  else
-  {
-    dump = (function () {});
-  }
 }
 
 function test() {
