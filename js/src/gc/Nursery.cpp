@@ -58,23 +58,6 @@ struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTask
     virtual void run() override;
 };
 
-struct js::Nursery::SweepAction
-{
-    SweepAction(SweepThunk thunk, void* data, SweepAction* next)
-      : thunk(thunk), data(data), next(next)
-    {}
-
-    SweepThunk thunk;
-    void* data;
-    SweepAction* next;
-
-  private:
-#if JS_BITS_PER_WORD == 32
-    uint32_t padding;
-#endif
-};
-
-
 js::Nursery::Nursery(JSRuntime* rt)
   : runtime_(rt)
   , position_(0)
@@ -90,7 +73,6 @@ js::Nursery::Nursery(JSRuntime* rt)
   , enableProfiling_(false)
   , minorGcCount_(0)
   , freeMallocedBuffersTask(nullptr)
-  , sweepActions_(nullptr)
 #ifdef JS_GC_ZEAL
   , lastCanary_(nullptr)
 #endif
@@ -741,8 +723,6 @@ js::Nursery::sweep()
     }
     cellsWithUid_.clear();
 
-    runSweepActions();
-
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
     JS_POISON((void*)start(), JS_SWEPT_NURSERY_PATTERN, nurserySize());
@@ -812,35 +792,4 @@ js::Nursery::updateNumActiveChunks(int newCount)
         MarkPagesUnused((void*)decommitStart, decommitSize);
     }
 #endif // !defined(JS_GC_ZEAL)
-}
-
-void
-js::Nursery::queueSweepAction(SweepThunk thunk, void* data)
-{
-    static_assert(sizeof(SweepAction) % CellSize == 0,
-                  "SweepAction size must be a multiple of cell size");
-    MOZ_ASSERT(!runtime()->mainThread.suppressGC);
-
-    SweepAction* action = nullptr;
-    if (isEnabled() && !js::oom::ShouldFailWithOOM())
-        action = reinterpret_cast<SweepAction*>(allocate(sizeof(SweepAction)));
-
-    if (!action) {
-        runtime()->gc.evictNursery();
-        AutoSetThreadIsSweeping threadIsSweeping;
-        thunk(data);
-        return;
-    }
-
-    new (action) SweepAction(thunk, data, sweepActions_);
-    sweepActions_ = action;
-}
-
-void
-js::Nursery::runSweepActions()
-{
-    AutoSetThreadIsSweeping threadIsSweeping;
-    for (auto action = sweepActions_; action; action = action->next)
-        action->thunk(action->data);
-    sweepActions_ = nullptr;
 }
