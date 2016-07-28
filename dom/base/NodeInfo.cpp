@@ -197,8 +197,7 @@ bool
 NodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
   int32_t nsid =
-    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
-      mOwnerManager->GetDocument());
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   return mozilla::dom::NodeInfo::NamespaceEquals(nsid);
 }

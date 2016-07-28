@@ -1599,7 +1599,7 @@ nsXBLPrototypeBinding::ResolveBaseBinding()
     mBinding->LookupNamespaceURI(prefix, nameSpace);
     if (!nameSpace.IsEmpty()) {
       int32_t nameSpaceID =
-        nsContentUtils::NameSpaceManager()->GetNameSpaceID(nameSpace, doc);
+        nsContentUtils::NameSpaceManager()->GetNameSpaceID(nameSpace);
 
       nsCOMPtr<nsIAtom> tagName = NS_Atomize(display);
       // Check the white list

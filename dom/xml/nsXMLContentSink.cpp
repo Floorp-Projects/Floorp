@@ -1049,9 +1049,6 @@ nsXMLContentSink::HandleEndElement(const char16_t *aName,
   bool isTemplateElement = debugTagAtom == nsGkAtoms::_template &&
                            debugNameSpaceID == kNameSpaceID_XHTML;
   NS_ASSERTION(content->NodeInfo()->Equals(debugTagAtom, debugNameSpaceID) ||
-               (debugNameSpaceID == kNameSpaceID_MathML &&
-                content->NodeInfo()->NamespaceID() == kNameSpaceID_disabled_MathML &&
-                content->NodeInfo()->Equals(debugTagAtom)) ||
                isTemplateElement, "Wrong element being closed");
 #endif
 
