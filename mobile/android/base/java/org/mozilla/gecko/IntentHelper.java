@@ -587,18 +587,19 @@ public final class IntentHelper implements GeckoEventListener,
         @Override
         public void onActivityResult(int resultCode, Intent data) {
             JSONObject response = new JSONObject();
-
             try {
                 if (data != null) {
-                    response.put("extras", JSONUtils.bundleToJSON(data.getExtras()));
-                    response.put("uri", data.getData().toString());
+                    if (data.getExtras() != null) {
+                        response.put("extras", JSONUtils.bundleToJSON(data.getExtras()));
+                    }
+                    if (data.getData() != null) {
+                        response.put("uri", data.getData().toString());
+                    }
                 }
-
                 response.put("resultCode", resultCode);
             } catch (JSONException e) {
                 Log.w(LOGTAG, "Error building JSON response.", e);
             }
-
             EventDispatcher.sendResponse(message, response);
         }
     }
