@@ -338,22 +338,6 @@ this.MessageChannel = {
   RESPONSE_ALL: 2,
 
   /**
-   * Initializes message handlers for the given message managers if needed.
-   *
-   * @param {[nsIMessageSender]} messageManagers
-   */
-  setupMessageManagers(messageManagers) {
-    for (let mm of messageManagers) {
-      // This call initializes a FilteringMessageManager for |mm| if needed.
-      // The FilteringMessageManager must be created to make sure that senders
-      // of messages that expect a reply, such as MessageChannel:Message, do
-      // actually receive a default reply even if there are no explicit message
-      // handlers.
-      this.messageManagers.get(mm);
-    }
-  },
-
-  /**
    * Returns true if the peroperties of the `data` object match those in
    * the `filter` object. Matching is done on a strict equality basis,
    * and the behavior varies depending on the value of the `strict`
