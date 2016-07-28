@@ -75,8 +75,10 @@ ThreadNode.prototype = {
    *          - boolean contentOnly [optional]
    *          - boolean invertTree [optional]
    */
-  _buildInverted: function buildInverted(samples, stackTable, frameTable, stringTable, options) {
-    function getOrAddFrameNode(calls, isLeaf, frameKey, inflatedFrame, isMetaCategory, leafTable) {
+  _buildInverted: function buildInverted(samples, stackTable, frameTable, stringTable,
+                                         options) {
+    function getOrAddFrameNode(calls, isLeaf, frameKey, inflatedFrame, isMetaCategory,
+                               leafTable) {
       // Insert the inflated frame into the call tree at the current level.
       let frameNode;
 
@@ -114,7 +116,6 @@ ThreadNode.prototype = {
     const STACK_PREFIX_SLOT = stackTable.schema.prefix;
     const STACK_FRAME_SLOT = stackTable.schema.frame;
 
-    const InflatedFrame = FrameUtils.InflatedFrame;
     const getOrAddInflatedFrame = FrameUtils.getOrAddInflatedFrame;
 
     let samplesData = samples.data;
@@ -206,8 +207,8 @@ ThreadNode.prototype = {
         }
 
         // Inflate the frame.
-        let inflatedFrame = getOrAddInflatedFrame(inflatedFrameCache, frameIndex, frameTable,
-                                                  stringTable);
+        let inflatedFrame = getOrAddInflatedFrame(inflatedFrameCache, frameIndex,
+                                                  frameTable, stringTable);
 
         // Compute the frame key.
         mutableFrameKeyOptions.isRoot = stackIndex === null;
@@ -230,8 +231,9 @@ ThreadNode.prototype = {
                                           leafTable);
         if (isLeaf) {
           frameNode.youngestFrameSamples++;
-          frameNode._addOptimizations(inflatedFrame.optimizations, inflatedFrame.implementation,
-                                      sampleTime, stringTable);
+          frameNode._addOptimizations(inflatedFrame.optimizations,
+                                      inflatedFrame.implementation, sampleTime,
+                                      stringTable);
 
           if (byteSize) {
             frameNode.youngestFrameByteSize += byteSize;
@@ -287,53 +289,57 @@ ThreadNode.prototype = {
     let rootCalls = [];
 
     // Walk depth-first and keep the current spine (e.g., callstack).
-    while (entry = workstack.pop()) {
-      spine[entry.level] = entry;
+    do {
+      entry = workstack.pop();
+      if (entry) {
+        spine[entry.level] = entry;
 
-      let node = entry.node;
-      let calls = node.calls;
-      let callSamples = 0;
-      let callByteSize = 0;
+        let node = entry.node;
+        let calls = node.calls;
+        let callSamples = 0;
+        let callByteSize = 0;
 
-      // Continue the depth-first walk.
-      for (let i = 0; i < calls.length; i++) {
-        workstack.push({ node: calls[i], level: entry.level + 1 });
-        callSamples += calls[i].samples;
-        callByteSize += calls[i].byteSize;
-      }
+        // Continue the depth-first walk.
+        for (let i = 0; i < calls.length; i++) {
+          workstack.push({ node: calls[i], level: entry.level + 1 });
+          callSamples += calls[i].samples;
+          callByteSize += calls[i].byteSize;
+        }
 
-      // The sample delta is used to distinguish stacks.
-      //
-      // Suppose we have the following stack samples:
-      //
-      //   A -> B
-      //   A -> C
-      //   A
-      //
-      // The inverted tree is:
-      //
-      //     A
-      //    / \
-      //   B   C
-      //
-      // with A.samples = 3, B.samples = 1, C.samples = 1.
-      //
-      // A is distinguished as being its own stack because
-      // A.samples - (B.samples + C.samples) > 0.
-      //
-      // Note that bottoming out is a degenerate where callSamples = 0.
+        // The sample delta is used to distinguish stacks.
+        //
+        // Suppose we have the following stack samples:
+        //
+        //   A -> B
+        //   A -> C
+        //   A
+        //
+        // The inverted tree is:
+        //
+        //     A
+        //    / \
+        //   B   C
+        //
+        // with A.samples = 3, B.samples = 1, C.samples = 1.
+        //
+        // A is distinguished as being its own stack because
+        // A.samples - (B.samples + C.samples) > 0.
+        //
+        // Note that bottoming out is a degenerate where callSamples = 0.
 
-      let samplesDelta = node.samples - callSamples;
-      let byteSizeDelta = node.byteSize - callByteSize;
-      if (samplesDelta > 0) {
-        // Reverse the spine and add them to the uninverted call tree.
-        let uninvertedCalls = rootCalls;
-        for (let level = entry.level; level > 0; level--) {
-          let callee = spine[level];
-          uninvertedCalls = mergeOrAddFrameNode(uninvertedCalls, callee.node, samplesDelta, byteSizeDelta);
+        let samplesDelta = node.samples - callSamples;
+        let byteSizeDelta = node.byteSize - callByteSize;
+        if (samplesDelta > 0) {
+          // Reverse the spine and add them to the uninverted call tree.
+          let uninvertedCalls = rootCalls;
+          for (let level = entry.level; level > 0; level--) {
+            let callee = spine[level];
+            uninvertedCalls = mergeOrAddFrameNode(uninvertedCalls, callee.node,
+                                                  samplesDelta, byteSizeDelta);
+          }
         }
       }
-    }
+    } while (entry);
 
     // Replace the toplevel calls with rootCalls, which now contains the
     // uninverted roots.

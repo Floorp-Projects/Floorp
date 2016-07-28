@@ -8,18 +8,20 @@
  * of all the markers in the timeline data.
  */
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
 const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
 
-const HTML_NS = "http://www.w3.org/1999/xhtml";
-
-const LEVEL_INDENT = 10; // px
-const ARROW_NODE_OFFSET = -15; // px
-const WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS = 20; // px
-const WATERFALL_MARKER_SIDEBAR_WIDTH = 175; // px
-const WATERFALL_MARKER_TIMEBAR_WIDTH_MIN = 5; // px
+// px
+const LEVEL_INDENT = 10;
+// px
+const ARROW_NODE_OFFSET = -15;
+// px
+const WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS = 20;
+// px
+const WATERFALL_MARKER_SIDEBAR_WIDTH = 175;
+// px
+const WATERFALL_MARKER_TIMEBAR_WIDTH_MIN = 5;
 
 /**
  * A detailed waterfall view for the timeline data.
@@ -177,7 +179,8 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     let endTime = this.root._interval.endTime;
 
     let sidebarCell = this._buildMarkerSidebar(doc, blueprint, marker);
-    let timebarCell = this._buildMarkerTimebar(doc, blueprint, marker, startTime, endTime, arrowNode);
+    let timebarCell = this._buildMarkerTimebar(doc, blueprint, marker, startTime,
+                                               endTime, arrowNode);
 
     targetNode.appendChild(sidebarCell);
     targetNode.appendChild(timebarCell);
@@ -281,13 +284,19 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
  *         True if the marker fits inside the specified time range.
  */
 function isMarkerInRange(e, start, end) {
-  let m_start = e.start|0;
-  let m_end = e.end|0;
+  let mStart = e.start|0;
+  let mEnd = e.end|0;
 
-  return (m_start >= start && m_end <= end) || // bounds inside
-         (m_start < start && m_end > end) || // bounds outside
-         (m_start < start && m_end >= start && m_end <= end) || // overlap start
-         (m_end > end && m_start >= start && m_start <= end); // overlap end
+  return (
+    // bounds inside
+    (mStart >= start && mEnd <= end) ||
+    // bounds outside
+    (mStart < start && mEnd > end) ||
+    // overlap start
+    (mStart < start && mEnd >= start && mEnd <= end) ||
+    // overlap end
+    (mEnd > end && mStart >= start && mStart <= end)
+  );
 }
 
 exports.MarkerView = MarkerView;
