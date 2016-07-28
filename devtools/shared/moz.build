@@ -54,6 +54,7 @@ DevToolsModules(
     'dom-node-filter-constants.js',
     'event-emitter.js',
     'indentation.js',
+    'loader-plugin-raw.jsm',
     'Loader.jsm',
     'Parser.jsm',
     'path.js',
