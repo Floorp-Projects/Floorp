@@ -17,9 +17,15 @@ MediaDecoderStateMachine* OggDecoder::CreateStateMachine()
 {
   bool useFormatDecoder =
     Preferences::GetBool("media.format-reader.ogg", true);
-  RefPtr<MediaDecoderReader> reader = useFormatDecoder ?
-      static_cast<MediaDecoderReader*>(new MediaFormatReader(this, new OggDemuxer(GetResource()), GetVideoFrameContainer())) :
-      new OggReader(this);
+  RefPtr<OggDemuxer> demuxer =
+    useFormatDecoder ? new OggDemuxer(GetResource()) : nullptr;
+  RefPtr<MediaDecoderReader> reader = useFormatDecoder
+    ? static_cast<MediaDecoderReader*>(new MediaFormatReader(this, demuxer, GetVideoFrameContainer()))
+    : new OggReader(this);
+  if (useFormatDecoder) {
+    demuxer->SetChainingEvents(&reader->TimedMetadataProducer(),
+                               &reader->MediaNotSeekableProducer());
+  }
   return new MediaDecoderStateMachine(this, reader);
 }
 
