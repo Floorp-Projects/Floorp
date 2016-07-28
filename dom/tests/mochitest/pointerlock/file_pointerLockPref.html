@@ -38,19 +38,19 @@
             "if pointer-lock pref is set to FALSE");
         }
 
-        document.addEventListener("mozpointerlockchange", function (e) {
-          if (document.mozPointerLockElement === div) {
+        document.addEventListener("pointerlockchange", function (e) {
+          if (document.pointerLockElement === div) {
             prefEnabled = true;
-            document.mozExitPointerLock();
+            document.exitPointerLock();
           }
           else {
             SpecialPowers.setBoolPref("full-screen-api.pointer-lock.enabled",
                                       false );
-            div.mozRequestPointerLock();
+            div.requestPointerLock();
           }
         }, false);
 
-        document.addEventListener("mozpointerlockerror", function (e) {
+        document.addEventListener("pointerlockerror", function (e) {
           prefDisabled = true;
           addFullscreenChangeContinuation("exit", function() {
             SpecialPowers.setBoolPref("full-screen-api.pointer-lock.enabled",
@@ -65,7 +65,7 @@
           addFullscreenChangeContinuation("enter", function() {
             SpecialPowers.setBoolPref("full-screen-api.pointer-lock.enabled",
                                       true );
-            div.mozRequestPointerLock();
+            div.requestPointerLock();
           });
           div.requestFullscreen();
         }

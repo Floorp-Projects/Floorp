@@ -72,9 +72,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       }
 
       var parentMoveListener = function () {
-        isPointerLocked = !!document.mozPointerLockElement;
+        isPointerLocked = !!document.pointerLockElement;
         removeEventListeners();
-        document.mozExitPointerLock();
+        document.exitPointerLock();
       };
 
       var parentOutListener = function (e) {
@@ -131,8 +131,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         child.removeEventListener("mouseenter", childEnterListener, false);
       }
 
-      document.addEventListener("mozpointerlockchange", function (e) {
-        if (document.mozPointerLockElement === parent) {
+      document.addEventListener("pointerlockchange", function (e) {
+        if (document.pointerLockElement === parent) {
           addEventListeners();
           synthesizeMouseAtCenter(child, { type: "mousemove" }, window);
         }
@@ -149,7 +149,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         parent = document.getElementById("parent");
         child = document.getElementById("child");
         addFullscreenChangeContinuation("enter", function() {
-          parent.mozRequestPointerLock();
+          parent.requestPointerLock();
         });
         parent.requestFullscreen();
       }
