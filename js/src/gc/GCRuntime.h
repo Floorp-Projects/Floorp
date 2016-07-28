@@ -877,11 +877,6 @@ class GCRuntime
     void freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo);
     void freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo);
 
-    // Queue a thunk to run after the next minor GC.
-    void callAfterMinorGC(void (*thunk)(void* data), void* data) {
-        nursery.queueSweepAction(thunk, data);
-    }
-
     // Public here for ReleaseArenaLists and FinalizeTypedArenas.
     void releaseArena(Arena* arena, const AutoLockGC& lock);
 
@@ -1456,7 +1451,6 @@ inline bool GCRuntime::needZealousGC() { return false; }
 #endif
 
 } /* namespace gc */
-
 } /* namespace js */
 
 #endif
