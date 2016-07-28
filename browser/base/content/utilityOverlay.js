@@ -335,12 +335,12 @@ function openLinkIn(url, where, params) {
       flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
     }
 
-    // LOAD_FLAGS_DISALLOW_INHERIT_OWNER isn't supported for javascript URIs,
+    // LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL isn't supported for javascript URIs,
     // i.e. it causes them not to load at all. Callers should strip
     // "javascript:" from pasted strings to protect users from malicious URIs
     // (see stripUnsafeProtocolOnPaste).
     if (aDisallowInheritPrincipal && !(uriObj && uriObj.schemeIs("javascript"))) {
-      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
     }
 
     if (aAllowPopups) {

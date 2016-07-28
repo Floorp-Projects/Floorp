@@ -58,38 +58,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
-// Register built-in parts of the API. Other parts may be registered
-// in browser/, mobile/, or b2g/.
-ExtensionManagement.registerScript("chrome://extensions/content/ext-alarms.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-backgroundPage.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-cookies.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-downloads.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-notifications.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-i18n.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-idle.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-runtime.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-extension.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-webNavigation.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-webRequest.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js");
-ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
-
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
-
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/alarms.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/downloads.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension_types.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/i18n.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/idle.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/notifications.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/runtime.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/storage.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/test.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/events.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_navigation.json");
-ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_request.json");
+const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
+const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -139,18 +110,20 @@ var Management = {
     // extended by other schemas, so needs to be loaded first.
     let promise = Schemas.load(BASE_SCHEMA).then(() => {
       let promises = [];
-      for (let schema of ExtensionManagement.getSchemas()) {
-        promises.push(Schemas.load(schema));
+      for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
+        promises.push(Schemas.load(value));
       }
       return Promise.all(promises);
     });
 
-    for (let script of ExtensionManagement.getScripts()) {
-      let scope = {extensions: this,
-                   global: scriptScope,
-                   ExtensionContext: ExtensionContext,
-                   GlobalManager: GlobalManager};
-      Services.scriptloader.loadSubScript(script, scope, "UTF-8");
+    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
+      let scope = {
+        extensions: this,
+        global: scriptScope,
+        ExtensionContext: ExtensionContext,
+        GlobalManager: GlobalManager,
+      };
+      Services.scriptloader.loadSubScript(value, scope, "UTF-8");
 
       // Save the scope to avoid it being garbage collected.
       this.scopes.push(scope);
@@ -483,13 +456,20 @@ ParentAPIManager.init();
 
 // For extensions that have called setUninstallURL(), send an event
 // so the browser can display the URL.
-let UninstallObserver = {
+var UninstallObserver = {
   initialized: false,
 
   init: function() {
     if (!this.initialized) {
       AddonManager.addAddonListener(this);
       this.initialized = true;
+    }
+  },
+
+  uninit: function() {
+    if (this.initialized) {
+      AddonManager.removeAddonListener(this);
+      this.initialized = false;
     }
   },
 
@@ -506,11 +486,13 @@ GlobalManager = {
   // Map[extension ID -> Extension]. Determines which extension is
   // responsible for content under a particular extension ID.
   extensionMap: new Map(),
+  initialized: false,
 
   init(extension) {
     if (this.extensionMap.size == 0) {
       Services.obs.addObserver(this, "content-document-global-created", false);
       UninstallObserver.init();
+      this.initialized = true;
     }
 
     this.extensionMap.set(extension.id, extension);
@@ -519,8 +501,10 @@ GlobalManager = {
   uninit(extension) {
     this.extensionMap.delete(extension.id);
 
-    if (this.extensionMap.size == 0) {
+    if (this.extensionMap.size == 0 && this.initialized) {
       Services.obs.removeObserver(this, "content-document-global-created");
+      UninstallObserver.uninit();
+      this.initialized = false;
     }
   },
 

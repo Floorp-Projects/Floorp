@@ -491,8 +491,8 @@ GetTextNode(Selection* selection,
     // if node is null, return it to indicate there's no text
     NS_ENSURE_TRUE(node, nullptr);
     // This should be the root node, walk the tree looking for text nodes
-    NodeFilterHolder filter;
-    RefPtr<NodeIterator> iter = new NodeIterator(node, nsIDOMNodeFilter::SHOW_TEXT, filter);
+    RefPtr<NodeIterator> iter =
+      new NodeIterator(node, nsIDOMNodeFilter::SHOW_TEXT, NodeFilterHolder());
     while (!editor->IsTextNode(selNode)) {
       if (NS_FAILED(res = iter->NextNode(getter_AddRefs(selNode))) || !selNode) {
         return nullptr;

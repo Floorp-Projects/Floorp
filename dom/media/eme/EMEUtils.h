@@ -13,6 +13,10 @@
 
 namespace mozilla {
 
+static const char* const kEMEKeySystemClearkey = "org.w3.clearkey";
+static const char* const kEMEKeySystemWidevine = "com.widevine.alpha";
+static const char* const kEMEKeySystemPrimetime = "com.adobe.primetime";
+
 namespace dom {
 class ArrayBufferViewOrArrayBuffer;
 }

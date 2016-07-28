@@ -1014,7 +1014,7 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!XPCConvert::NativeInterface2JSObject(aRetval, nullptr, aHelper, aIID,
-                                            nullptr, aAllowNativeWrapper, &rv)) {
+                                            aAllowNativeWrapper, &rv)) {
     // I can't tell if NativeInterface2JSObject throws JS exceptions
     // or not.  This is a sloppy stab at the right semantics; the
     // method really ought to be fixed to behave consistently.
@@ -2025,8 +2025,9 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
                                   js::GetGlobalForObjectCrossCompartment(aObj));
   MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(oldParent) == oldParent);
 
-  JS::Rooted<JSObject*> newParent(aCx, domClass->mGetParent(aCx, aObj));
-  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(newParent) == newParent);
+  JS::Rooted<JSObject*> newParent(aCx,
+                                  domClass->mGetAssociatedGlobal(aCx, aObj));
+  MOZ_ASSERT(JS_IsGlobalObject(newParent));
 
   JSAutoCompartment oldAc(aCx, oldParent);
 

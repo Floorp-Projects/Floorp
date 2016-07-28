@@ -12,13 +12,13 @@
 #include "gmp-api/gmp-decryption.h"
 #include "gmp-api/gmp-video-codec.h"
 #include "gmp-api/gmp-platform.h"
+#include "mozilla/EMEUtils.h"
 #include "mozilla/StaticPtr.h"
 
 static const GMPPlatformAPI* sPlatform = nullptr;
 
 namespace mozilla {
 
-const char* WidevineKeySystem = "com.widevine.alpha";
 StaticRefPtr<CDMWrapper> sCDMWrapper;
 
 GMPErr GMPGetCurrentTime(GMPTimestamp* aOutTime) {
@@ -110,8 +110,8 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
 
     auto cdm = reinterpret_cast<cdm::ContentDecryptionModule*>(
       create(cdm::ContentDecryptionModule::kVersion,
-             WidevineKeySystem,
-             strlen(WidevineKeySystem),
+             kEMEKeySystemWidevine,
+             strlen(kEMEKeySystemWidevine),
              &GetCdmHost,
              decryptor));
     if (!cdm) {

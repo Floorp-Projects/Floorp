@@ -1117,23 +1117,24 @@ SessionStore.prototype = {
       }
     }
 
-    if (aEntry.owner) {
+    if (aEntry.triggeringPrincipal) {
       try {
         let binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(Ci.nsIObjectOutputStream);
         let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
         pipe.init(false, false, 0, 0xffffffff, null);
         binaryStream.setOutputStream(pipe.outputStream);
-        binaryStream.writeCompoundObject(aEntry.owner, Ci.nsISupports, true);
+        binaryStream.writeCompoundObject(aEntry.triggeringPrincipal, Ci.nsIPrincipal, true);
         binaryStream.close();
 
         // Now we want to read the data from the pipe's input end and encode it.
         let scriptableStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
         scriptableStream.setInputStream(pipe.inputStream);
-        let ownerBytes = scriptableStream.readByteArray(scriptableStream.available());
+        let triggeringPrincipalBytes = scriptableStream.readByteArray(scriptableStream.available());
         // We can stop doing base64 encoding once our serialization into JSON
         // is guaranteed to handle all chars in strings, including embedded
         // nulls.
-        entry.owner_b64 = btoa(String.fromCharCode.apply(null, ownerBytes));
+        entry.triggeringPrincipal_b64 =
+          btoa(String.fromCharCode.apply(null, triggeringPrincipalBytes));
       } catch (e) { dump(e); }
     }
 
@@ -1249,15 +1250,25 @@ SessionStore.prototype = {
       }
     }
 
+    // The field aEntry.owner_b64 got renamed to aEntry.triggeringPricipal_b64 in
+    // Bug 1286472. To remain backward compatible we still have to support that
+    // field for a few cycles before we can remove it within Bug 1289785.
     if (aEntry.owner_b64) {
-      let ownerInput = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
-      let binaryData = atob(aEntry.owner_b64);
-      ownerInput.setData(binaryData, binaryData.length);
-      let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIObjectInputStream);
-      binaryStream.setInputStream(ownerInput);
+      aEntry.triggeringPricipal_b64 = aEntry.owner_b64;
+      delete aEntry.owner_b64;
+    }
+
+    if (aEntry.triggeringPrincipal_b64) {
+      let triggeringPrincipalInput = Cc["@mozilla.org/io/string-input-stream;1"]
+                                       .createInstance(Ci.nsIStringInputStream);
+      let binaryData = atob(aEntry.triggeringPrincipal_b64);
+      triggeringPrincipalInput.setData(binaryData, binaryData.length);
+      let binaryStream = Cc["@mozilla.org/binaryinputstream;1"]
+                           .createInstance(Ci.nsIObjectInputStream);
+      binaryStream.setInputStream(triggeringPrincipalInput);
       try { // Catch possible deserialization exceptions
-        shEntry.owner = binaryStream.readObject(true);
-      } catch (ex) { dump(ex); }
+        shEntry.triggeringPrincipal = binaryStream.readObject(true);
+      } catch (ex) { Cu.reportError("SessionStore: " + ex); }
     }
 
     if (aEntry.children && shEntry instanceof Ci.nsISHContainer) {

@@ -301,13 +301,17 @@ PresentationSessionInfo::Close(nsresult aReason,
       if (!mControlChannel) {
         nsCOMPtr<nsIPresentationControlChannel> ctrlChannel;
         nsresult rv = mDevice->EstablishControlChannel(getter_AddRefs(ctrlChannel));
-        if (NS_SUCCEEDED(rv)) {
-          SetControlChannel(ctrlChannel);
+        if (NS_FAILED(rv)) {
+          Shutdown(rv);
+          return rv;
         }
+
+        SetControlChannel(ctrlChannel);
         return rv;
       }
 
-      return mControlChannel->Terminate(mSessionId);
+      ContinueTermination();
+      return NS_OK;
     }
   }
 

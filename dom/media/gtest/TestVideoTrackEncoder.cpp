@@ -250,9 +250,6 @@ TEST(VP8VideoTrackEncoder, FetchMetaData)
 }
 
 // Encode test
-// XXX(bug 1018402): Disable this test when compiled with VS2013 because it
-// crashes.
-#if !defined(_MSC_VER) || _MSC_VER < 1800
 TEST(VP8VideoTrackEncoder, FrameEncode)
 {
   // Initiate VP8 encoder
@@ -285,7 +282,6 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   EncodedFrameContainer container;
   EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
 }
-#endif // _MSC_VER
 
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)

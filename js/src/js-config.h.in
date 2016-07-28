@@ -15,12 +15,16 @@
 /* Define to 1 if SpiderMonkey is in debug mode. */
 #undef JS_DEBUG
 
+/*
+ * NB: We have a special case for rust-bindgen, which wants to be able to
+ * generate both debug and release bindings on a single objdir.
+ */
 #ifdef JS_DEBUG
-# ifndef DEBUG
+#if !defined(DEBUG) && !defined(RUST_BINDGEN)
 #  error "SpiderMonkey was configured with --enable-debug, so DEBUG must be defined when including this header"
 # endif
 #else
-# ifdef DEBUG
+# if defined(DEBUG) && !defined(RUST_BINDGEN)
 #  error "SpiderMonkey was configured with --disable-debug, so DEBUG must be not defined when including this header"
 # endif
 #endif

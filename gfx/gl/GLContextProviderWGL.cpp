@@ -17,11 +17,13 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
 namespace gl {
 
 using namespace mozilla::gfx;
+using namespace mozilla::widget;
 
 WGLLibrary sWGLLib;
 
@@ -427,6 +429,12 @@ already_AddRefed<GLContext>
 GLContextProviderWGL::CreateWrappingExisting(void*, void*)
 {
     return nullptr;
+}
+
+already_AddRefed<GLContext>
+GLContextProviderWGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
+{
+    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
