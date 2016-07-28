@@ -146,6 +146,9 @@ public:
   nsresult
   DetachDebugger();
 
+  bool
+  IsIdle() const;
+
 private:
   enum WakeUpReason {
     FetchEvent = 0,

@@ -1901,6 +1901,13 @@ ServiceWorkerPrivate::DetachDebugger()
   return NS_OK;
 }
 
+bool
+ServiceWorkerPrivate::IsIdle() const
+{
+  AssertIsOnMainThread();
+  return mTokenCount == 0 || (mTokenCount == 1 && mIdleKeepAliveToken);
+}
+
 /* static */ void
 ServiceWorkerPrivate::NoteIdleWorkerCallback(nsITimer* aTimer, void* aPrivate)
 {
@@ -1988,6 +1995,11 @@ ServiceWorkerPrivate::ReleaseToken()
   --mTokenCount;
   if (!mTokenCount) {
     TerminateWorker();
+  } else if (IsIdle()) {
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->WorkerIsIdle(mInfo);
+    }
   }
 }
 
