@@ -39,18 +39,12 @@ UNIFIED_SOURCES += [
     'ipc/MobileConnectionParent.cpp',
     'MobileCallForwardingOptions.cpp',
     'MobileCellInfo.cpp',
+    'MobileConnection.cpp',
     'MobileConnectionArray.cpp',
     'MobileConnectionCallback.cpp',
     'MobileConnectionInfo.cpp',
     'MobileNetworkInfo.cpp',
 ]
-
-SOURCES += [
-    'MobileConnection.cpp', # Non-unified due to no_pgo
-]
-
-if CONFIG['_MSC_VER'] and CONFIG['CPU_ARCH'] == 'x86_64':
-    SOURCES['MobileConnection.cpp'].no_pgo = True # VS2013 crashes, bug 1084162
 
 IPDL_SOURCES += [
     'ipc/PMobileConnection.ipdl',
