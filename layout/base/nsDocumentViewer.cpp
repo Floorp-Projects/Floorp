@@ -2347,7 +2347,8 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
       }
     }
   } else {
-    NS_ERROR("stylo: nsStyleSheetService doesn't handle ServoStyleSheets yet");
+    NS_WARNING("stylo: Not yet checking nsStyleSheetService for Servo-backed "
+               "documents. See bug 1290224");
   }
 
   // Caller will handle calling EndUpdate, per contract.
