@@ -1,5 +1,16 @@
-/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set sts=2 sw=2 et tw=80: */
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
 "use strict";
 
 function backgroundScript() {
@@ -27,23 +38,23 @@ function backgroundScript() {
 }
 
 let extensionData = {
-  background: backgroundScript,
+  background: "(" + backgroundScript.toString() + ")()",
 };
 
-add_task(function* test_localStorage() {
+add_task(function* test_contentscript() {
   let id = "test-webextension@mozilla.com";
   const RESULTS = ["item1", "item2", "deleted", "cleared", "item1"];
 
   for (let expected of RESULTS) {
     let extension = ExtensionTestUtils.loadExtension(extensionData, id);
-
-    yield extension.startup();
-
-    let actual = yield extension.awaitMessage("result");
-
+    let [, actual] = yield Promise.all([extension.startup(), extension.awaitMessage("result")]);
     yield extension.awaitFinish("localStorage");
     yield extension.unload();
 
-    equal(actual, expected, "got expected localStorage data");
+    is(actual, expected, "got expected localStorage data");
   }
 });
+</script>
+
+</body>
+</html>
