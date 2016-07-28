@@ -47,8 +47,8 @@ function runTest() {
   navigator.sendBeacon(BEACON_URL, data);
 
   // we have to make sure the channel did follow the redirect hence
-  // we have to wait for 2 seconds before we can query the result.
-  intervalID = setInterval(queryIfRedirectSucceeded, 2000);
+  // we have to wait for 4 seconds before we can query the result.
+  intervalID = setInterval(queryIfRedirectSucceeded, 4000);
 }
 
 </script>
