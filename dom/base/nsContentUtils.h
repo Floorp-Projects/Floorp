@@ -646,7 +646,7 @@ public:
 
   /**
    * Method that gets the primary presContext for the node.
-   * 
+   *
    * @param aContent The content node.
    * @return the presContext, or nullptr if the content is not in a document
    *         (if GetCurrentDoc returns nullptr)

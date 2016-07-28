@@ -22,9 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       <script type="application/javascript">
         /*
          * Test for Bug 633602
-         * Checks if mozMovementX and mozMovementY are present
+         * Checks if movementX and movementY are present
          * in the mouse event object.
-         * It also checks the values for mozMovementXY.
+         * It also checks the values for movementXY.
          * They should be equal to the current screenXY minus
          * the last screenXY
          */
@@ -35,31 +35,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         function MouseMovementStats() {
           this.screenX = false;
           this.screenY = false;
-          this.mozMovementX = false;
-          this.mozMovementY = false;
+          this.movementX = false;
+          this.movementY = false;
         }
 
         var div = document.getElementById("div")
           , divCenterWidth = 0
           , divCenterHeight = 0
-          , mozMovementX = false
-          , mozMovementY = false
+          , movementX = false
+          , movementY = false
           , firstMove = new MouseMovementStats()
           , secondMove = new MouseMovementStats();
 
         function runTests () {
-          ok(mozMovementX && mozMovementY, "mozMovementX and " +
-            "mozMovementY should exist in mouse events objects.");
-          is(secondMove.mozMovementX, secondMove.screenX - firstMove.screenX,
-           "mozMovementX should be equal to eNow.screenX-ePrevious.screenX");
-          is(secondMove.mozMovementY, secondMove.screenY - firstMove.screenY,
-           "mozMovementY should be equal to eNow.screenY-ePrevious.screenY");
+          ok(movementX && movementY, "movementX and " +
+            "movementY should exist in mouse events objects.");
+          is(secondMove.movementX, secondMove.screenX - firstMove.screenX,
+           "movementX should be equal to eNow.screenX-ePrevious.screenX");
+          is(secondMove.movementY, secondMove.screenY - firstMove.screenY,
+           "movementY should be equal to eNow.screenY-ePrevious.screenY");
         }
 
         var moveMouse = function(e) {
           info("Got mouse move");
-          mozMovementX = ("mozMovementX" in e);
-          mozMovementY = ("mozMovementY" in e);
+          movementX = ("movementX" in e);
+          movementY = ("movementY" in e);
 
           div.removeEventListener("mousemove", moveMouse, false);
           div.addEventListener("mousemove", moveMouseAgain, false);
@@ -79,8 +79,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           info("Got mouse move again");
           secondMove.screenX = e.screenX;
           secondMove.screenY = e.screenY;
-          secondMove.mozMovementX = e.mozMovementX;
-          secondMove.mozMovementY = e.mozMovementY;
+          secondMove.movementX = e.movementX;
+          secondMove.movementY = e.movementY;
 
           div.removeEventListener("mousemove", moveMouseAgain, false);
           addFullscreenChangeContinuation("exit", function() {

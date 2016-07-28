@@ -210,12 +210,7 @@ ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv)
   // but we must handle many more internal errors.  So we check for
   // cleanup on every non-successful exit.
   if (mRegistration) {
-    if (mServiceWorker) {
-      mServiceWorker->UpdateState(ServiceWorkerState::Redundant);
-      serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
-                                           mServiceWorker->CacheName());
-    }
-
+    mRegistration->ClearEvaluating();
     mRegistration->ClearInstalling();
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -224,7 +219,6 @@ ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv)
     }
   }
 
-  mServiceWorker = nullptr;
   mRegistration = nullptr;
 
   Finish(aRv);
@@ -418,16 +412,18 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
 
   // Begin step 7 of the Update algorithm to evaluate the new script.
 
-  MOZ_ASSERT(!mServiceWorker);
-  mServiceWorker = new ServiceWorkerInfo(mRegistration->mPrincipal,
-                                         mRegistration->mScope,
-                                         mScriptSpec, aNewCacheName);
+  RefPtr<ServiceWorkerInfo> sw =
+    new ServiceWorkerInfo(mRegistration->mPrincipal,
+                          mRegistration->mScope,
+                          mScriptSpec, aNewCacheName);
+
+  mRegistration->SetEvaluating(sw);
 
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
       new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(this));
   RefPtr<LifeCycleEventCallback> callback = new ContinueUpdateRunnable(handle);
 
-  ServiceWorkerPrivate* workerPrivate = mServiceWorker->WorkerPrivate();
+  ServiceWorkerPrivate* workerPrivate = sw->WorkerPrivate();
   MOZ_ASSERT(workerPrivate);
   rv = workerPrivate->CheckScriptEvaluation(callback);
 
@@ -475,9 +471,7 @@ ServiceWorkerUpdateJob::Install()
   //
   //  https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#installation-algorithm
 
-  MOZ_ASSERT(mServiceWorker);
-  mRegistration->SetInstalling(mServiceWorker);
-  mServiceWorker = nullptr;
+  mRegistration->TransitionEvaluatingToInstalling();
 
   // Step 6 of the Install algorithm resolving the job promise.
   InvokeResultCallbacks(NS_OK);

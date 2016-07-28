@@ -92,7 +92,7 @@ private:
   };
 
   /**
-   * Due to a compiler bug in VisualAge C++ for AIX, we need to return the 
+   * Due to a compiler bug in VisualAge C++ for AIX, we need to return the
    * address of the first index into mAttrs here, instead of simply
    * returning mAttrs itself.
    *

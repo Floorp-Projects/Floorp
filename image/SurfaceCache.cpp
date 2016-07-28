@@ -56,6 +56,7 @@ class SurfaceCacheImpl;
 // The single surface cache instance.
 static StaticRefPtr<SurfaceCacheImpl> sInstance;
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // SurfaceCache Implementation
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,14 +146,17 @@ public:
     MOZ_ASSERT(mImageKey, "Must have a valid image key");
   }
 
-  DrawableFrameRef DrawableRef() const
+  already_AddRefed<ISurfaceProvider> Provider() const
   {
     if (MOZ_UNLIKELY(IsPlaceholder())) {
-      MOZ_ASSERT_UNREACHABLE("Shouldn't call DrawableRef() on a placeholder");
-      return DrawableFrameRef();
+      MOZ_ASSERT_UNREACHABLE("Shouldn't call Provider() on a placeholder");
+      return nullptr;
     }
 
-    return mProvider->DrawableRef();
+    MOZ_ASSERT(mProvider);
+
+    RefPtr<ISurfaceProvider> provider = mProvider;
+    return provider.forget();
   }
 
   void SetLocked(bool aLocked)
@@ -193,17 +197,29 @@ public:
       SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
                                    aCachedSurface->IsLocked());
 
-      if (!aCachedSurface->IsPlaceholder()) {
-        DrawableFrameRef surfaceRef = aCachedSurface->DrawableRef();
-        if (surfaceRef) {
-          counter.SubframeSize() = Some(surfaceRef->GetSize());
-
-          size_t heap = 0, nonHeap = 0;
-          surfaceRef->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap);
-          counter.Values().SetDecodedHeap(heap);
-          counter.Values().SetDecodedNonHeap(nonHeap);
-        }
+      if (aCachedSurface->IsPlaceholder()) {
+        mCounters.AppendElement(counter);
+        return;
       }
+
+      RefPtr<ISurfaceProvider> provider = aCachedSurface->Provider();
+      if (!provider) {
+        MOZ_ASSERT_UNREACHABLE("Not a placeholder, but no ISurfaceProvider?");
+        mCounters.AppendElement(counter);
+        return;
+      }
+
+      DrawableFrameRef surfaceRef = provider->DrawableRef();
+      if (!surfaceRef) {
+        mCounters.AppendElement(counter);
+        return;
+      }
+
+      counter.SubframeSize() = Some(surfaceRef->GetSize());
+      size_t heap = 0, nonHeap = 0;
+      surfaceRef->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap);
+      counter.Values().SetDecodedHeap(heap);
+      counter.Values().SetDecodedNonHeap(nonHeap);
 
       mCounters.AppendElement(counter);
     }
@@ -216,7 +232,6 @@ public:
 private:
   nsExpirationState  mExpirationState;
   RefPtr<ISurfaceProvider> mProvider;
-  DrawableFrameRef   mDrawableRef;
   const Cost         mCost;
   const ImageKey     mImageKey;
   const SurfaceKey   mSurfaceKey;
@@ -588,10 +603,9 @@ public:
       return LookupResult(MatchType::PENDING);
     }
 
-    DrawableFrameRef ref = surface->DrawableRef();
-    if (!ref) {
-      // The surface was released by the operating system. Remove the cache
-      // entry as well.
+    RefPtr<ISurfaceProvider> provider = surface->Provider();
+    if (!provider) {
+      MOZ_ASSERT_UNREACHABLE("Not a placeholder, but no ISurfaceProvider?");
       Remove(surface);
       return LookupResult(MatchType::NOT_FOUND);
     }
@@ -602,7 +616,7 @@ public:
 
     MOZ_ASSERT(surface->GetSurfaceKey() == aSurfaceKey,
                "Lookup() not returning an exact match?");
-    return LookupResult(Move(ref), MatchType::EXACT);
+    return LookupResult(Move(provider), MatchType::EXACT);
   }
 
   LookupResult LookupBestMatch(const ImageKey         aImageKey,
@@ -614,30 +628,18 @@ public:
       return LookupResult(MatchType::NOT_FOUND);
     }
 
-    // Repeatedly look up the best match, trying again if the resulting surface
-    // has been freed by the operating system, until we can either lock a
-    // surface for drawing or there are no matching surfaces left.
-    // XXX(seth): This is O(N^2), but N is expected to be very small. If we
-    // encounter a performance problem here we can revisit this.
-
     RefPtr<CachedSurface> surface;
-    DrawableFrameRef ref;
     MatchType matchType = MatchType::NOT_FOUND;
-    while (true) {
-      Tie(surface, matchType) = cache->LookupBestMatch(aSurfaceKey);
+    Tie(surface, matchType) = cache->LookupBestMatch(aSurfaceKey);
+    if (!surface) {
+      return LookupResult(matchType);  // Lookup in the per-image cache missed.
+    }
 
-      if (!surface) {
-        return LookupResult(matchType);  // Lookup in the per-image cache missed.
-      }
-
-      ref = surface->DrawableRef();
-      if (ref) {
-        break;
-      }
-
-      // The surface was released by the operating system. Remove the cache
-      // entry as well.
+    RefPtr<ISurfaceProvider> provider = surface->Provider();
+    if (!provider) {
+      MOZ_ASSERT_UNREACHABLE("Not a placeholder, but no ISurfaceProvider?");
       Remove(surface);
+      return LookupResult(MatchType::NOT_FOUND);
     }
 
     MOZ_ASSERT_IF(matchType == MatchType::EXACT,
@@ -652,7 +654,7 @@ public:
       MarkUsed(surface, cache);
     }
 
-    return LookupResult(Move(ref), matchType);
+    return LookupResult(Move(provider), matchType);
   }
 
   bool CanHold(const Cost aCost) const

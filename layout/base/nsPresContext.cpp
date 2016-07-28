@@ -335,7 +335,7 @@ nsPresContext::Destroy()
 nsPresContext::~nsPresContext()
 {
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
-  SetShell(nullptr);
+  DetachShell();
 
   Destroy();
 }
@@ -828,12 +828,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
     }
   }
 
-  // Initialize restyle manager after initializing the refresh driver.
-  // Since RestyleManager is also the name of a method of nsPresContext,
-  // it is necessary to prefix the class with the mozilla namespace
-  // here.
-  mRestyleManager = new mozilla::RestyleManager(this);
-
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 
   // Register callbacks so we're notified when the preferences change
@@ -903,92 +897,110 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 // Note: We don't hold a reference on the shell; it has a reference to
 // us
 void
-nsPresContext::SetShell(nsIPresShell* aShell)
+nsPresContext::AttachShell(nsIPresShell* aShell, StyleBackendType aBackendType)
 {
+  MOZ_ASSERT(!mShell);
+  mShell = aShell;
+
+  if (aBackendType == StyleBackendType::Servo) {
+    mRestyleManager = new ServoRestyleManager(this);
+  } else {
+    // Since RestyleManager is also the name of a method of nsPresContext,
+    // it is necessary to prefix the class with the mozilla namespace
+    // here.
+    mRestyleManager = new mozilla::RestyleManager(this);
+  }
+
+  // Since CounterStyleManager is also the name of a method of
+  // nsPresContext, it is necessary to prefix the class with the mozilla
+  // namespace here.
+  mCounterStyleManager = new mozilla::CounterStyleManager(this);
+
+  nsIDocument *doc = mShell->GetDocument();
+  NS_ASSERTION(doc, "expect document here");
+  if (doc) {
+    // Have to update PresContext's mDocument before calling any other methods.
+    mDocument = doc;
+  }
+  // Initialize our state from the user preferences, now that we
+  // have a presshell, and hence a document.
+  GetUserPreferences();
+
+  if (doc) {
+    nsIURI *docURI = doc->GetDocumentURI();
+
+    if (IsDynamic() && docURI) {
+      bool isChrome = false;
+      bool isRes = false;
+      docURI->SchemeIs("chrome", &isChrome);
+      docURI->SchemeIs("resource", &isRes);
+
+      if (!isChrome && !isRes)
+        mImageAnimationMode = mImageAnimationModePref;
+      else
+        mImageAnimationMode = imgIContainer::kNormalAnimMode;
+    }
+
+    if (mLangService) {
+      doc->AddCharSetObserver(this);
+      UpdateCharSet(doc->GetDocumentCharacterSet());
+    }
+  }
+}
+
+void
+nsPresContext::DetachShell()
+{
+  // Remove ourselves as the charset observer from the shell's doc, because
+  // this shell may be going away for good.
+  nsIDocument *doc = mShell ? mShell->GetDocument() : nullptr;
+  if (doc) {
+    doc->RemoveCharSetObserver(this);
+  }
+
+  // The counter style manager's destructor needs to deallocate with the
+  // presshell arena. Disconnect it before nulling out the shell.
+  //
+  // XXXbholley: Given recent refactorings, it probably makes more sense to
+  // just null our mShell at the bottom of this function. I'm leaving it
+  // this way to preserve the old ordering, but I doubt anything would break.
   if (mCounterStyleManager) {
     mCounterStyleManager->Disconnect();
     mCounterStyleManager = nullptr;
   }
 
-  if (mShell) {
-    // Remove ourselves as the charset observer from the shell's doc, because
-    // this shell may be going away for good.
-    nsIDocument *doc = mShell->GetDocument();
-    if (doc) {
-      doc->RemoveCharSetObserver(this);
-    }
+  mShell = nullptr;
+
+  if (mEffectCompositor) {
+    mEffectCompositor->Disconnect();
+    mEffectCompositor = nullptr;
+  }
+  if (mTransitionManager) {
+    mTransitionManager->Disconnect();
+    mTransitionManager = nullptr;
+  }
+  if (mAnimationManager) {
+    mAnimationManager->Disconnect();
+    mAnimationManager = nullptr;
+  }
+  if (mRestyleManager) {
+    mRestyleManager->Disconnect();
+    mRestyleManager = nullptr;
+  }
+  if (mRefreshDriver && mRefreshDriver->PresContext() == this) {
+    mRefreshDriver->Disconnect();
+    // Can't null out the refresh driver here.
   }
 
-  mShell = aShell;
+  if (IsRoot()) {
+    nsRootPresContext* thisRoot = static_cast<nsRootPresContext*>(this);
 
-  if (mShell) {
-    // Since CounterStyleManager is also the name of a method of
-    // nsPresContext, it is necessary to prefix the class with the mozilla
-    // namespace here.
-    mCounterStyleManager = new mozilla::CounterStyleManager(this);
+    // Have to cancel our plugin geometry timer, because the
+    // callback for that depends on a non-null presshell.
+    thisRoot->CancelApplyPluginGeometryTimer();
 
-    nsIDocument *doc = mShell->GetDocument();
-    NS_ASSERTION(doc, "expect document here");
-    if (doc) {
-      // Have to update PresContext's mDocument before calling any other methods.
-      mDocument = doc;
-    }
-    // Initialize our state from the user preferences, now that we
-    // have a presshell, and hence a document.
-    GetUserPreferences();
-
-    if (doc) {
-      nsIURI *docURI = doc->GetDocumentURI();
-
-      if (IsDynamic() && docURI) {
-        bool isChrome = false;
-        bool isRes = false;
-        docURI->SchemeIs("chrome", &isChrome);
-        docURI->SchemeIs("resource", &isRes);
-
-        if (!isChrome && !isRes)
-          mImageAnimationMode = mImageAnimationModePref;
-        else
-          mImageAnimationMode = imgIContainer::kNormalAnimMode;
-      }
-
-      if (mLangService) {
-        doc->AddCharSetObserver(this);
-        UpdateCharSet(doc->GetDocumentCharacterSet());
-      }
-    }
-  } else {
-    if (mEffectCompositor) {
-      mEffectCompositor->Disconnect();
-      mEffectCompositor = nullptr;
-    }
-    if (mTransitionManager) {
-      mTransitionManager->Disconnect();
-      mTransitionManager = nullptr;
-    }
-    if (mAnimationManager) {
-      mAnimationManager->Disconnect();
-      mAnimationManager = nullptr;
-    }
-    if (mRestyleManager) {
-      mRestyleManager->Disconnect();
-      mRestyleManager = nullptr;
-    }
-    if (mRefreshDriver && mRefreshDriver->PresContext() == this) {
-      mRefreshDriver->Disconnect();
-      // Can't null out the refresh driver here.
-    }
-
-    if (IsRoot()) {
-      nsRootPresContext* thisRoot = static_cast<nsRootPresContext*>(this);
-
-      // Have to cancel our plugin geometry timer, because the
-      // callback for that depends on a non-null presshell.
-      thisRoot->CancelApplyPluginGeometryTimer();
-
-      // The did-paint timer also depends on a non-null pres shell.
-      thisRoot->CancelDidPaintTimer();
-    }
+    // The did-paint timer also depends on a non-null pres shell.
+    thisRoot->CancelDidPaintTimer();
   }
 }
 

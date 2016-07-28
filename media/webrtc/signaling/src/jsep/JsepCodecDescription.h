@@ -50,6 +50,7 @@ class JsepCodecDescription {
   virtual bool
   Matches(const std::string& fmt, const SdpMediaSection& remoteMsection) const
   {
+    // note: fmt here is remote fmt (to go with remoteMsection)
     if (mType != remoteMsection.GetMediaType()) {
       return false;
     }
@@ -214,6 +215,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
                              clock, 0, enabled),
         mTmmbrEnabled(false),
         mRembEnabled(false),
+        mFECEnabled(false),
         mPacketizationMode(0)
   {
     // Add supported rtcp-fb types
@@ -240,6 +242,16 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       mRembEnabled = true;
       mOtherFbTypes.push_back({ "", SdpRtcpFbAttributeList::kRemb, "", ""});
     }
+  }
+
+  virtual void
+  EnableFec() {
+    // Enabling FEC for video works a little differently than enabling
+    // REMB or TMMBR.  Support for FEC is indicated by the presence of
+    // particular codes (red and ulpfec) instead of using rtcpfb
+    // attributes on a given codec.  There is no rtcpfb to push for FEC
+    // as can be seen above when REMB or TMMBR are enabled.
+    mFECEnabled = true;
   }
 
   void
@@ -282,6 +294,11 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       h264Params.level_asymmetry_allowed = true;
 
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, h264Params));
+    } else if (mName == "red") {
+      SdpFmtpAttributeList::RedParameters redParams(
+          GetRedParameters(mDefaultPt, msection));
+      redParams.encodings = mRedundantEncodings;
+      msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, redParams));
     } else if (mName == "VP8" || mName == "VP9") {
       if (mDirection == sdp::kRecv) {
         // VP8 and VP9 share the same SDP parameters thus far
@@ -333,6 +350,21 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     if (params && params->codec_type == SdpRtpmapAttributeList::kH264) {
       result =
         static_cast<const SdpFmtpAttributeList::H264Parameters&>(*params);
+    }
+
+    return result;
+  }
+
+  SdpFmtpAttributeList::RedParameters
+  GetRedParameters(const std::string& pt,
+                   const SdpMediaSection& msection) const
+  {
+    SdpFmtpAttributeList::RedParameters result;
+    auto* params = msection.FindFmtp(pt);
+
+    if (params && params->codec_type == SdpRtpmapAttributeList::kRed) {
+      result =
+        static_cast<const SdpFmtpAttributeList::RedParameters&>(*params);
     }
 
     return result;
@@ -427,7 +459,10 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       } else {
         // TODO(bug 1143709): max-recv-level support
       }
-
+    } else if (mName == "red") {
+      SdpFmtpAttributeList::RedParameters redParams(
+          GetRedParameters(mDefaultPt, remoteMsection));
+      mRedundantEncodings = redParams.encodings;
     } else if (mName == "VP8" || mName == "VP9") {
       if (mDirection == sdp::kSend) {
         SdpFmtpAttributeList::VP8Parameters vp8Params(
@@ -649,6 +684,24 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     return false;
   }
 
+  virtual void
+  UpdateRedundantEncodings(std::vector<JsepCodecDescription*> codecs)
+  {
+    for (const auto codec : codecs) {
+      if (codec->mType == SdpMediaSection::kVideo &&
+          codec->mEnabled &&
+          codec->mName != "red") {
+        uint8_t pt = (uint8_t)strtoul(codec->mDefaultPt.c_str(), nullptr, 10);
+        // returns 0 if failed to convert, and since zero could
+        // be valid, check the defaultPt for 0
+        if (pt == 0 && codec->mDefaultPt != "0") {
+          continue;
+        }
+        mRedundantEncodings.push_back(pt);
+      }
+    }
+  }
+
   JSEP_CODEC_CLONE(JsepVideoCodecDescription)
 
   std::vector<std::string> mAckFbTypes;
@@ -657,6 +710,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   std::vector<SdpRtcpFbAttributeList::Feedback> mOtherFbTypes;
   bool mTmmbrEnabled;
   bool mRembEnabled;
+  bool mFECEnabled;
+  std::vector<uint8_t> mRedundantEncodings;
 
   // H264-specific stuff
   uint32_t mProfileLevelId;

@@ -590,6 +590,12 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
   }
   ClearInDocument();
 
+#ifdef MOZ_STYLO
+  // Drop any servo node data, since it will generally need to be recomputed on
+  // re-insertion anyway.
+  ServoData().reset();
+#endif
+
   if (aNullParent || !mParent->IsInShadowTree()) {
     UnsetFlags(NODE_IS_IN_SHADOW_TREE);
 
@@ -645,6 +651,12 @@ const nsAttrName*
 nsGenericDOMDataNode::GetAttrNameAt(uint32_t aIndex) const
 {
   return nullptr;
+}
+
+BorrowedAttrInfo
+nsGenericDOMDataNode::GetAttrInfoAt(uint32_t aIndex) const
+{
+  return BorrowedAttrInfo(nullptr, nullptr);
 }
 
 uint32_t
