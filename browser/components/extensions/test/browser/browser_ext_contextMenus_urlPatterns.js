@@ -15,7 +15,7 @@ add_task(function* () {
       // Test menu items using targetUrlPatterns.
       browser.contextMenus.create({
         title: "targetUrlPatterns-patternMatches-contextAll",
-        targetUrlPatterns: ["*://*/*ctxmenu-image.png"],
+        targetUrlPatterns: ["*://*/*ctxmenu-image.png", "*://*/*some-link"],
         contexts: ["all"],
       });
 
@@ -23,6 +23,12 @@ add_task(function* () {
         title: "targetUrlPatterns-patternMatches-contextImage",
         targetUrlPatterns: ["*://*/*ctxmenu-image.png"],
         contexts: ["image"],
+      });
+
+      browser.contextMenus.create({
+        title: "targetUrlPatterns-patternMatches-contextLink",
+        targetUrlPatterns: ["*://*/*some-link"],
+        contexts: ["link"],
       });
 
       browser.contextMenus.create({
@@ -35,6 +41,12 @@ add_task(function* () {
         title: "targetUrlPatterns-patternDoesNotMatch-contextImage",
         targetUrlPatterns: ["*://*/does-not-match"],
         contexts: ["image"],
+      });
+
+      browser.contextMenus.create({
+        title: "targetUrlPatterns-patternDoesNotMatch-contextLink",
+        targetUrlPatterns: ["*://*/does-not-match"],
+        contexts: ["link"],
       });
 
       // Test menu items using documentUrlPatterns.
@@ -51,6 +63,12 @@ add_task(function* () {
       });
 
       browser.contextMenus.create({
+        title: "documentUrlPatterns-patternMatches-contextLink",
+        documentUrlPatterns: ["*://*/*context.html", "*://*/does-not-match"],
+        contexts: ["link"],
+      });
+
+      browser.contextMenus.create({
         title: "documentUrlPatterns-patternDoesNotMatch-contextAll",
         documentUrlPatterns: ["*://*/does-not-match"],
         contexts: ["all"],
@@ -60,6 +78,12 @@ add_task(function* () {
         title: "documentUrlPatterns-patternDoesNotMatch-contextImage",
         documentUrlPatterns: ["*://*/does-not-match"],
         contexts: ["image"],
+      });
+
+      browser.contextMenus.create({
+        title: "documentUrlPatterns-patternDoesNotMatch-contextLink",
+        documentUrlPatterns: ["*://*/does-not-match"],
+        contexts: ["link"],
       });
 
       // Test menu items using both targetUrlPatterns and documentUrlPatterns.
@@ -141,12 +165,16 @@ add_task(function* () {
   let expected = [
     ["targetUrlPatterns-patternMatches-contextAll", true],
     ["targetUrlPatterns-patternMatches-contextImage", true],
+    ["targetUrlPatterns-patternMatches-contextLink", false],
     ["targetUrlPatterns-patternDoesNotMatch-contextAll", false],
     ["targetUrlPatterns-patternDoesNotMatch-contextImage", false],
+    ["targetUrlPatterns-patternDoesNotMatch-contextLink", false],
     ["documentUrlPatterns-patternMatches-contextAll", true],
     ["documentUrlPatterns-patternMatches-contextImage", true],
+    ["documentUrlPatterns-patternMatches-contextLink", false],
     ["documentUrlPatterns-patternDoesNotMatch-contextAll", false],
     ["documentUrlPatterns-patternDoesNotMatch-contextImage", false],
+    ["documentUrlPatterns-patternDoesNotMatch-contextLink", false],
     ["documentUrlPatterns-patternMatches-targetUrlPatterns-patternMatches-contextAll", true],
     ["documentUrlPatterns-patternDoesNotMatch-targetUrlPatterns-patternMatches-contextAll", false],
     ["documentUrlPatterns-patternMatches-targetUrlPatterns-patternDoesNotMatch-contextAll", false],
@@ -163,12 +191,16 @@ add_task(function* () {
   expected = [
     ["targetUrlPatterns-patternMatches-contextAll", false],
     ["targetUrlPatterns-patternMatches-contextImage", false],
+    ["targetUrlPatterns-patternMatches-contextLink", false],
     ["targetUrlPatterns-patternDoesNotMatch-contextAll", false],
     ["targetUrlPatterns-patternDoesNotMatch-contextImage", false],
+    ["targetUrlPatterns-patternDoesNotMatch-contextLink", false],
     ["documentUrlPatterns-patternMatches-contextAll", true],
     ["documentUrlPatterns-patternMatches-contextImage", false],
+    ["documentUrlPatterns-patternMatches-contextLink", false],
     ["documentUrlPatterns-patternDoesNotMatch-contextAll", false],
     ["documentUrlPatterns-patternDoesNotMatch-contextImage", false],
+    ["documentUrlPatterns-patternDoesNotMatch-contextLink", false],
     ["documentUrlPatterns-patternMatches-targetUrlPatterns-patternMatches-contextAll", false],
     ["documentUrlPatterns-patternDoesNotMatch-targetUrlPatterns-patternMatches-contextAll", false],
     ["documentUrlPatterns-patternMatches-targetUrlPatterns-patternDoesNotMatch-contextAll", false],
@@ -177,6 +209,42 @@ add_task(function* () {
     ["documentUrlPatterns-patternDoesNotMatch-targetUrlPatterns-patternMatches-contextImage", false],
     ["documentUrlPatterns-patternMatches-targetUrlPatterns-patternDoesNotMatch-contextImage", false],
     ["documentUrlPatterns-patternDoesNotMatch-targetUrlPatterns-patternDoesNotMatch-contextImage", false],
+  ];
+  yield confirmContextMenuItems(contextMenu, expected);
+  yield closeContextMenu();
+
+  contextMenu = yield openContextMenu("#link1");
+  expected = [
+    ["targetUrlPatterns-patternMatches-contextAll", true],
+    ["targetUrlPatterns-patternMatches-contextImage", false],
+    ["targetUrlPatterns-patternMatches-contextLink", true],
+    ["targetUrlPatterns-patternDoesNotMatch-contextAll", false],
+    ["targetUrlPatterns-patternDoesNotMatch-contextImage", false],
+    ["targetUrlPatterns-patternDoesNotMatch-contextLink", false],
+    ["documentUrlPatterns-patternMatches-contextAll", true],
+    ["documentUrlPatterns-patternMatches-contextImage", false],
+    ["documentUrlPatterns-patternMatches-contextLink", true],
+    ["documentUrlPatterns-patternDoesNotMatch-contextAll", false],
+    ["documentUrlPatterns-patternDoesNotMatch-contextImage", false],
+    ["documentUrlPatterns-patternDoesNotMatch-contextLink", false],
+  ];
+  yield confirmContextMenuItems(contextMenu, expected);
+  yield closeContextMenu();
+
+  contextMenu = yield openContextMenu("#img-wrapped-in-link");
+  expected = [
+    ["targetUrlPatterns-patternMatches-contextAll", true],
+    ["targetUrlPatterns-patternMatches-contextImage", true],
+    ["targetUrlPatterns-patternMatches-contextLink", true],
+    ["targetUrlPatterns-patternDoesNotMatch-contextAll", false],
+    ["targetUrlPatterns-patternDoesNotMatch-contextImage", false],
+    ["targetUrlPatterns-patternDoesNotMatch-contextLink", false],
+    ["documentUrlPatterns-patternMatches-contextAll", true],
+    ["documentUrlPatterns-patternMatches-contextImage", true],
+    ["documentUrlPatterns-patternMatches-contextLink", true],
+    ["documentUrlPatterns-patternDoesNotMatch-contextAll", false],
+    ["documentUrlPatterns-patternDoesNotMatch-contextImage", false],
+    ["documentUrlPatterns-patternDoesNotMatch-contextLink", false],
   ];
   yield confirmContextMenuItems(contextMenu, expected);
   yield closeContextMenu();
