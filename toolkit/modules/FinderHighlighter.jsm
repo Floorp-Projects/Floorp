@@ -14,7 +14,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Color", "resource://gre/modules/Color.jsm");
 
-const kHighlightIterationSizeMax = 100;
 const kModalHighlightRepaintFreqMs = 10;
 const kModalHighlightPref = "findbar.modalHighlight";
 const kFontPropsCSS = ["color", "font-family", "font-kerning", "font-size",
@@ -101,6 +100,13 @@ function FinderHighlighter(finder) {
 }
 
 FinderHighlighter.prototype = {
+  get iterator() {
+    if (this._iterator)
+      return this._iterator;
+    this._iterator = Cu.import("resource://gre/modules/FinderIterator.jsm", null).FinderIterator;
+    return this._iterator;
+  },
+
   get modalStyleSheet() {
     if (!this._modalStyleSheet) {
       this._modalStyleSheet = kModalStyle.replace(/(\.|#)findbar-/g,
@@ -131,59 +137,22 @@ FinderHighlighter.prototype = {
   },
 
   /**
-   * Whilst the iterator is running, it's possible to abort it. This may be useful
-   * if the word to highlight was updated in the meantime.
-   */
-  maybeAbort() {
-    this.clear();
-    if (!this._abortHighlight) {
-      return;
-    }
-    this._abortHighlight();
-  },
-
-  /**
-   * Uses the iterator in Finder.jsm to find all the words to highlight and makes
-   * sure not to block the thread whilst running.
-   *
-   * @param {String}       word    Needle to search for and highlight when found
-   * @param {nsIDOMWindow} window  Window object, whose DOM tree should be traversed
-   * @param {Function}     onFind  Callback invoked for each found occurrence
-   * @yield {Promise} that resolves once the iterator has finished
-   */
-  iterator: Task.async(function* (word, window, onFind) {
-    let count = 0;
-    for (let range of this.finder._findIterator(word, window)) {
-      onFind(range);
-      if (++count >= kHighlightIterationSizeMax) {
-        count = 0;
-        // Sleep for the rest of this cycle.
-        yield new Promise(resolve => resolve());
-      }
-    }
-  }),
-
-  /**
    * Toggle highlighting all occurrences of a word in a page. This method will
    * be called recursively for each (i)frame inside a page.
    *
-   * @param {Booolean}     highlight Whether highlighting should be turned on
-   * @param {String}       word      Needle to search for and highlight when found
-   * @param {nsIDOMWindow} window    Window object, whose DOM tree should be traversed
-   * @yield {Promise} that resolves once the operation has finished
+   * @param {Booolean} highlight Whether highlighting should be turned on
+   * @param {String}   word      Needle to search for and highlight when found
+   * @param {Boolean}  linksOnly Only consider nodes that are links for the search
+   * @yield {Promise}  that resolves once the operation has finished
    */
-  highlight: Task.async(function* (highlight, word, window) {
-    let finderWindow = this.finder._getWindow();
-    window = window || finderWindow;
-    let found = false;
-    for (let i = 0; window.frames && i < window.frames.length; i++) {
-      if (yield this.highlight(highlight, word, window.frames[i])) {
-        found = true;
-      }
-    }
-
+  highlight: Task.async(function* (highlight, word, linksOnly) {
+    let window = this.finder._getWindow();
     let controller = this.finder._getSelectionController(window);
     let doc = window.document;
+    let found = false;
+
+    this.clear();
+
     if (!controller || !doc || !doc.documentElement) {
       // Without the selection controller,
       // we are unable to (un)highlight any matches
@@ -191,13 +160,19 @@ FinderHighlighter.prototype = {
     }
 
     if (highlight) {
-      yield this.iterator(word, window, range => {
-        this.highlightRange(range, controller, finderWindow);
-        found = true;
+      yield this.iterator.start({
+        linksOnly, word,
+        finder: this.finder,
+        onRange: range => {
+          this.highlightRange(range, controller, window);
+          found = true;
+        },
+        useCache: true
       });
     } else {
       this.hide(window);
       this.clear();
+      this.iterator.reset();
 
       // Removing the highlighting always succeeds, so return true.
       found = true;
@@ -558,7 +533,6 @@ FinderHighlighter.prototype = {
         x: dims.left + scrollX
       });
     }
-    range.collapse();
 
     if (!this._modalHighlightRectsMap)
       this._modalHighlightRectsMap = new Map();

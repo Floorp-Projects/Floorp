@@ -1195,11 +1195,11 @@ public:
 
   NS_IMETHOD Run() override
   {
-    mAPZResult = mAPZC->ReceiveInputEvent(mWheelInput, &mGuid, &mInputBlockId);
-    if (mAPZResult == nsEventStatus_eConsumeNoDefault) {
+    nsEventStatus result = mAPZC->ReceiveInputEvent(mWheelInput, &mGuid, &mInputBlockId);
+    if (result == nsEventStatus_eConsumeNoDefault) {
       return NS_OK;
     }
-    RefPtr<Runnable> r = new DispatchWheelEventOnMainThread(mWheelInput, mWidget, mAPZResult, mInputBlockId, mGuid);
+    RefPtr<Runnable> r = new DispatchWheelEventOnMainThread(mWheelInput, mWidget, result, mInputBlockId, mGuid);
     mMainMessageLoop->PostTask(r.forget());
     return NS_OK;
   }
@@ -1209,7 +1209,6 @@ private:
   ScrollWheelInput mWheelInput;
   RefPtr<IAPZCTreeManager> mAPZC;
   nsBaseWidget* mWidget;
-  nsEventStatus mAPZResult;
   uint64_t mInputBlockId;
   ScrollableLayerGuid mGuid;
 };
