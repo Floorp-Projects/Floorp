@@ -616,9 +616,9 @@ class BaseMarionetteTestRunner(object):
                     with open(path) as f:
                         data.append(json.loads(f.read()))
                 except ValueError as e:
-                    raise Exception("JSON file (%s) is not properly "
-                                    "formatted: %s" % (os.path.abspath(path),
-                                                       e.message))
+                    exc, val, tb = sys.exc_info()
+                    msg = "JSON file ({0}) is not properly formatted: {1}"
+                    raise exc, msg.format(os.path.abspath(path), e.message), tb
         return data
 
     @property
@@ -733,8 +733,10 @@ class BaseMarionetteTestRunner(object):
                     connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                     connection.connect((host,int(port)))
                     connection.close()
-                except Exception, e:
-                    raise Exception("Connection attempt to %s:%s failed with error: %s" %(host,port,e))
+                except Exception as e:
+                    exc, val, tb = sys.exc_info()
+                    msg = "Connection attempt to {0}:{1} failed with error: {2}"
+                    raise exc, msg.format(host, port, e), tb
         if self.workspace:
             kwargs['workspace'] = self.workspace_path
         return kwargs
