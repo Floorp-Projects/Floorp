@@ -151,9 +151,8 @@ ServiceWorkerPrivate::SendMessageEvent(JSContext* aCx,
     return rv.StealNSResult();
   }
 
-  MOZ_ASSERT(mKeepAliveToken);
   nsMainThreadPtrHandle<nsISupports> token(
-    new nsMainThreadPtrHolder<nsISupports>(mKeepAliveToken));
+    new nsMainThreadPtrHolder<nsISupports>(CreateEventKeepAliveToken()));
 
   RefPtr<PromiseNativeHandler> handler = new MessageWaitUntilHandler(token);
 
@@ -228,9 +227,9 @@ ServiceWorkerPrivate::CheckScriptEvaluation(LifeCycleEventCallback* aCallback)
   nsresult rv = SpawnWorkerIfNeeded(LifeCycleEvent, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(mKeepAliveToken);
+  RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
   RefPtr<WorkerRunnable> r = new CheckScriptEvaluationWithCallback(mWorkerPrivate,
-                                                                   mKeepAliveToken,
+                                                                   token,
                                                                    aCallback);
   if (NS_WARN_IF(!r->Dispatch())) {
     return NS_ERROR_FAILURE;
@@ -718,11 +717,11 @@ ServiceWorkerPrivate::SendLifeCycleEvent(const nsAString& aEventType,
   nsresult rv = SpawnWorkerIfNeeded(LifeCycleEvent, aLoadFailure);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(mKeepAliveToken);
+  RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
   RefPtr<WorkerRunnable> r = new LifecycleEventWorkerRunnable(mWorkerPrivate,
-                                                                mKeepAliveToken,
-                                                                aEventType,
-                                                                aCallback);
+                                                              token,
+                                                              aEventType,
+                                                              aCallback);
   if (NS_WARN_IF(!r->Dispatch())) {
     return NS_ERROR_FAILURE;
   }
@@ -909,13 +908,13 @@ ServiceWorkerPrivate::SendPushEvent(const nsAString& aMessageId,
   nsresult rv = SpawnWorkerIfNeeded(PushEvent, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(mKeepAliveToken);
+  RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
 
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> regInfo(
     new nsMainThreadPtrHolder<ServiceWorkerRegistrationInfo>(aRegistration, false));
 
   RefPtr<WorkerRunnable> r = new SendPushEventRunnable(mWorkerPrivate,
-                                                       mKeepAliveToken,
+                                                       token,
                                                        aMessageId,
                                                        aData,
                                                        regInfo);
@@ -944,9 +943,9 @@ ServiceWorkerPrivate::SendPushSubscriptionChangeEvent()
   nsresult rv = SpawnWorkerIfNeeded(PushSubscriptionChangeEvent, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(mKeepAliveToken);
+  RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
   RefPtr<WorkerRunnable> r =
-    new SendPushSubscriptionChangeEventRunnable(mWorkerPrivate, mKeepAliveToken);
+    new SendPushSubscriptionChangeEventRunnable(mWorkerPrivate, token);
   if (NS_WARN_IF(!r->Dispatch())) {
     return NS_ERROR_FAILURE;
   }
@@ -1234,8 +1233,10 @@ ServiceWorkerPrivate::SendNotificationEvent(const nsAString& aEventName,
   nsresult rv = SpawnWorkerIfNeeded(why, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
+
   RefPtr<WorkerRunnable> r =
-    new SendNotificationEventRunnable(mWorkerPrivate, mKeepAliveToken,
+    new SendNotificationEventRunnable(mWorkerPrivate, token,
                                       aEventName, aID, aTitle, aDir, aLang,
                                       aBody, aTag, aIcon, aData, aBehavior,
                                       aScope);
@@ -1636,8 +1637,10 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> regInfo(
     new nsMainThreadPtrHolder<ServiceWorkerRegistrationInfo>(registration, false));
 
+  RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
+
   RefPtr<FetchEventRunnable> r =
-    new FetchEventRunnable(mWorkerPrivate, mKeepAliveToken, handle,
+    new FetchEventRunnable(mWorkerPrivate, token, handle,
                            mInfo->ScriptSpec(), regInfo,
                            aDocumentId, aIsReload);
   rv = r->Init();
@@ -1992,6 +1995,16 @@ ServiceWorkerPrivate::ReleaseToken()
   if (!mTokenCount) {
     TerminateWorker();
   }
+}
+
+already_AddRefed<KeepAliveToken>
+ServiceWorkerPrivate::CreateEventKeepAliveToken()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mWorkerPrivate);
+  MOZ_ASSERT(mKeepAliveToken);
+  RefPtr<KeepAliveToken> ref = new KeepAliveToken(this);
+  return ref.forget();
 }
 
 END_WORKERS_NAMESPACE
