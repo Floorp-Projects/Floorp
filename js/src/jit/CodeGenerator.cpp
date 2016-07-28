@@ -3080,11 +3080,9 @@ CodeGenerator::emitGetPropertyPolymorphic(LInstruction* ins, Register obj, Regis
         ReceiverGuard receiver = mir->receiver(i);
 
         Label next;
-        masm.comment("GuardReceiver");
         GuardReceiver(masm, receiver, obj, scratch, &next, /* checkNullExpando = */ false);
 
         if (receiver.shape) {
-            masm.comment("loadTypedOrValue");
             // If this is an unboxed expando access, GuardReceiver loaded the
             // expando object into scratch.
             Register target = receiver.group ? scratch : obj;
@@ -3101,7 +3099,6 @@ CodeGenerator::emitGetPropertyPolymorphic(LInstruction* ins, Register obj, Regis
                 masm.loadTypedOrValue(Address(scratch, offset), output);
             }
         } else {
-            masm.comment("loadUnboxedProperty");
             const UnboxedLayout::Property* property =
                 receiver.group->unboxedLayout().lookup(mir->name());
             Address propertyAddr(obj, UnboxedPlainObject::offsetOfData() + property->offset);
@@ -3395,7 +3392,6 @@ CodeGenerator::visitTypeBarrierO(LTypeBarrierO* lir)
     Label miss, ok;
 
     if (lir->mir()->type() == MIRType::ObjectOrNull) {
-        masm.comment("Object or Null");
         Label* nullTarget = lir->mir()->resultTypeSet()->mightBeMIRType(MIRType::Null) ? &ok : &miss;
         masm.branchTestPtr(Assembler::Zero, obj, obj, nullTarget);
     } else {
@@ -3403,10 +3399,8 @@ CodeGenerator::visitTypeBarrierO(LTypeBarrierO* lir)
         MOZ_ASSERT(lir->mir()->barrierKind() != BarrierKind::TypeTagOnly);
     }
 
-    if (lir->mir()->barrierKind() != BarrierKind::TypeTagOnly) {
-        masm.comment("Type tag only");
+    if (lir->mir()->barrierKind() != BarrierKind::TypeTagOnly)
         masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, &miss);
-    }
 
     bailoutFrom(&miss, lir->snapshot());
     masm.bind(&ok);
@@ -5047,7 +5041,6 @@ CodeGenerator::emitDebugForceBailing(LInstruction* lir)
     if (lir->isOsiPoint())
         return;
 
-    masm.comment("emitDebugForceBailing");
     const void* bailAfterAddr = GetJitContext()->runtime->addressOfIonBailAfter();
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
