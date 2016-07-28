@@ -1,8 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const { Cu } = require("chrome");
+"use strict";
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/jit-optimizations.properties";
@@ -10,58 +9,36 @@ const L10N = new LocalizationHelper(STRINGS_URI);
 
 const { PluralForm } = require("resource://gre/modules/PluralForm.jsm");
 const { DOM: dom, PropTypes, createClass, createFactory } = require("devtools/client/shared/vendor/react");
-const {
-  JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome
-} = require("devtools/client/performance/modules/logic/jit");
 const Frame = createFactory(require("devtools/client/shared/components/frame"));
-const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
-const JIT_SAMPLES = L10N.getStr("jit.samples");
-const JIT_TYPES = L10N.getStr("jit.types");
-const JIT_ATTEMPTS = L10N.getStr("jit.attempts");
 const PROPNAME_MAX_LENGTH = 4;
 // If TREE_ROW_HEIGHT changes, be sure to change `var(--jit-tree-row-height)`
 // in `devtools/client/themes/jit-optimizations.css`
 const TREE_ROW_HEIGHT = 14;
 
-const OPTIMIZATION_ITEM_TYPES = ["site", "attempts", "types", "attempt", "type", "observedtype"];
-const JITOptimizationsItem = module.exports = createClass({
+const OPTIMIZATION_ITEM_TYPES = ["site", "attempts", "types", "attempt", "type",
+                                 "observedtype"];
+
+/* eslint-disable no-unused-vars */
+/**
+ * TODO - Re-enable this eslint rule. The JIT tool is a work in progress, and isn't fully
+ *        integrated as of yet.
+ */
+const {
+  JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome
+} = require("devtools/client/performance/modules/logic/jit");
+const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
+const JIT_SAMPLES = L10N.getStr("jit.samples");
+const JIT_TYPES = L10N.getStr("jit.types");
+const JIT_ATTEMPTS = L10N.getStr("jit.attempts");
+/* eslint-enable no-unused-vars */
+
+const JITOptimizationsItem = createClass({
   displayName: "JITOptimizationsItem",
 
   propTypes: {
     onViewSourceInDebugger: PropTypes.func.isRequired,
     frameData: PropTypes.object.isRequired,
     type: PropTypes.oneOf(OPTIMIZATION_ITEM_TYPES).isRequired,
-  },
-
-  render() {
-    let {
-      item,
-      depth,
-      arrow,
-      focused,
-      type,
-      frameData,
-      onViewSourceInDebugger,
-    } = this.props;
-
-    let content;
-    switch (type) {
-      case "site": content = this._renderSite(this.props); break;
-      case "attempts": content = this._renderAttempts(this.props); break;
-      case "types": content = this._renderTypes(this.props); break;
-      case "attempt": content = this._renderAttempt(this.props); break;
-      case "type": content = this._renderType(this.props); break;
-      case "observedtype": content = this._renderObservedType(this.props); break;
-    }
-
-    return dom.div(
-      {
-        className: `optimization-tree-item optimization-tree-item-${type}`,
-        style: { marginLeft: depth * TREE_ROW_HEIGHT }
-      },
-      arrow,
-      content
-    );
   },
 
   _renderSite({ item: site, onViewSourceInDebugger, frameData }) {
@@ -79,7 +56,8 @@ const JITOptimizationsItem = module.exports = createClass({
       }
     }
 
-    let sampleString = PluralForm.get(site.samples, JIT_SAMPLES).replace("#1", site.samples);
+    let sampleString = PluralForm.get(site.samples, JIT_SAMPLES)
+      .replace("#1", site.samples);
     let text = dom.span(
       { className: "optimization-site-title" },
       `${lastStrategy}${propString} – (${sampleString})`
@@ -119,12 +97,14 @@ const JITOptimizationsItem = module.exports = createClass({
     return dom.span({ className: "optimization-attempt" },
       dom.span({ className: "optimization-strategy" }, strategy),
       " → ",
-      dom.span({ className: `optimization-outcome ${success ? "success" : "failure"}` }, outcome)
+      dom.span({ className: `optimization-outcome ${success ? "success" : "failure"}` },
+               outcome)
     );
   },
 
   _renderType({ item: type }) {
-    return dom.span({ className: "optimization-ion-type" }, `${type.site}:${type.mirType}`);
+    return dom.span({ className: "optimization-ion-type" },
+                    `${type.site}:${type.mirType}`);
   },
 
   _renderObservedType({ onViewSourceInDebugger, item: type }) {
@@ -145,12 +125,51 @@ const JITOptimizationsItem = module.exports = createClass({
           }
         })
       );
-    }
     // Otherwise if we just have a location, it's probably just a memory location.
-    else if (type.location) {
+    } else if (type.location) {
       children.push(`@${type.location}`);
     }
 
     return dom.span({ className: "optimization-observed-type" }, ...children);
   },
+
+  render() {
+    /* eslint-disable no-unused-vars */
+    /**
+     * TODO - Re-enable this eslint rule. The JIT tool is a work in progress, and these
+     *        undefined variables may represent intended functionality.
+     */
+    let {
+      depth,
+      arrow,
+      type,
+      // TODO - The following are currently unused.
+      item,
+      focused,
+      frameData,
+      onViewSourceInDebugger,
+    } = this.props;
+    /* eslint-enable no-unused-vars */
+
+    let content;
+    switch (type) {
+      case "site": content = this._renderSite(this.props); break;
+      case "attempts": content = this._renderAttempts(this.props); break;
+      case "types": content = this._renderTypes(this.props); break;
+      case "attempt": content = this._renderAttempt(this.props); break;
+      case "type": content = this._renderType(this.props); break;
+      case "observedtype": content = this._renderObservedType(this.props); break;
+    }
+
+    return dom.div(
+      {
+        className: `optimization-tree-item optimization-tree-item-${type}`,
+        style: { marginLeft: depth * TREE_ROW_HEIGHT }
+      },
+      arrow,
+      content
+    );
+  },
 });
+
+module.exports = JITOptimizationsItem;
