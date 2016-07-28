@@ -5453,13 +5453,6 @@ nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder)
   mHasBounds = false;
   mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
   mStoredList.SetVisibleRect(mChildrenVisibleRect);
-  // If we made this item fully visible using ShouldPrerenderTransformedContent in
-  // BuildDisplayListForStackingContext then it won't have been applied to the
-  // post-transform visible region. Do that now.
-  if (mIsFullyVisible) {
-    bool snap;
-    mVisibleRect = GetBounds(aBuilder, &snap);
-  }
 }
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
