@@ -1297,6 +1297,16 @@ ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWorker);
+
+  RefPtr<ServiceWorkerRegistrationInfo> reg =
+    GetRegistration(aWorker->GetPrincipal(), aWorker->Scope());
+  if (!reg) {
+    return;
+  }
+
+  if (reg->GetActive() == aWorker) {
+    reg->TryToActivateAsync();
+  }
 }
 
 already_AddRefed<ServiceWorkerJobQueue>
