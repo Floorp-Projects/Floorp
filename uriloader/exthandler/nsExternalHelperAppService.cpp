@@ -522,6 +522,7 @@ static const nsDefaultMimeTypeEntry defaultMimeEntries[] =
   { APPLICATION_OGG, "ogg" },
   { AUDIO_OGG, "oga" },
   { AUDIO_OGG, "opus" },
+  { APPLICATION_PDF, "pdf" },
   { VIDEO_WEBM, "webm" },
   { AUDIO_WEBM, "webm" },
 #if defined(MOZ_WMF)
