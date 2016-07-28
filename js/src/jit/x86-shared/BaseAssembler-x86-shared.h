@@ -75,11 +75,6 @@ public:
         m_formatter.oneByteOp(OP_NOP);
     }
 
-    void comment(const char* msg)
-    {
-        spew("; %s", msg);
-    }
-
     MOZ_MUST_USE JmpSrc
     twoByteNop()
     {
