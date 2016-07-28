@@ -1290,6 +1290,13 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthCancelled(nsISupports *aContext,
             // there are still some challenges to process, do so
             nsresult rv;
 
+            // Get rid of current continuationState to avoid reusing it in
+            // next challenges since it is no longer relevant.
+            if (mProxyAuth) {
+                NS_IF_RELEASE(mProxyAuthContinuationState);
+            } else {
+                NS_IF_RELEASE(mAuthContinuationState);
+            }
             nsAutoCString creds;
             rv = GetCredentials(mRemainingChallenges.get(), mProxyAuth, creds);
             if (NS_SUCCEEDED(rv)) {
