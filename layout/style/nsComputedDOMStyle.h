@@ -647,7 +647,7 @@ private:
 
   already_AddRefed<CSSValue> CreatePrimitiveValueForClipPath(
     const mozilla::StyleBasicShape* aStyleBasicShape,
-    mozilla::StyleClipShapeSizing aSizingBox);
+    mozilla::StyleClipPathGeometryBox aSizingBox);
 
   // Helper function for computing basic shape styles.
   already_AddRefed<CSSValue> CreatePrimitiveValueForBasicShape(

@@ -73,8 +73,8 @@ enum class StyleBoxShadowType : uint8_t {
   Inset,
 };
 
-// clip-path sizing
-enum class StyleClipShapeSizing : uint8_t {
+// clip-path geometry box
+enum class StyleClipPathGeometryBox : uint8_t {
   NoBox,
   Content,
   Padding,
