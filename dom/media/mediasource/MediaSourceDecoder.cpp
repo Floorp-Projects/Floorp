@@ -30,7 +30,7 @@ MediaSourceDecoder::MediaSourceDecoder(dom::HTMLMediaElement* aElement)
   , mMediaSource(nullptr)
   , mEnded(false)
 {
-  SetExplicitDuration(UnspecifiedNaN<double>());
+  mExplicitDuration.Set(Some(UnspecifiedNaN<double>()));
 }
 
 MediaDecoder*
