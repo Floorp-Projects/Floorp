@@ -36042,6 +36042,12 @@
             "url": "/fetch/api/basic/request-referrer.html"
           }
         ],
+        "service-workers/service-worker/activation.https.html": [
+          {
+            "path": "service-workers/service-worker/activation.https.html",
+            "url": "/service-workers/service-worker/activation.https.html"
+          }
+        ],
         "service-workers/service-worker/controller-on-disconnect.https.html": [
           {
             "path": "service-workers/service-worker/controller-on-disconnect.https.html",
