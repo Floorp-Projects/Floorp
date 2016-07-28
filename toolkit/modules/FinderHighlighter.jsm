@@ -13,6 +13,10 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Color", "resource://gre/modules/Color.jsm");
+XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
+  const kDebugPref = "findbar.modalHighlight.debug";
+  return Services.prefs.getPrefType(kDebugPref) && Services.prefs.getBoolPref(kDebugPref);
+});
 
 const kModalHighlightRepaintFreqMs = 10;
 const kModalHighlightPref = "findbar.modalHighlight";
@@ -50,6 +54,10 @@ const kModalStyle = `
   z-index: 2;
 }
 
+.findbar-modalHighlight-outline.findbar-debug {
+  z-index: 2147483647;
+}
+
 .findbar-modalHighlight-outline[grow] {
   transform: scaleX(1.5) scaleY(1.5)
 }
@@ -73,6 +81,12 @@ const kModalStyle = `
   z-index: 1;
 }
 
+.findbar-modalHighlight-outlineMask.findbar-debug {
+  z-index: 2147483646;
+  top: 0;
+  left: 0;
+}
+
 .findbar-modalHighlight-outlineMask[brighttext] {
   background: #fff;
 }
@@ -87,6 +101,34 @@ const kModalStyle = `
   background: #000;
 }`;
 const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+function mockAnonymousContentNode(domNode) {
+  return {
+    setTextContentForElement(id, text) {
+      (domNode.querySelector("#" + id) || domNode).textContent = text;
+    },
+    getAttributeForElement(id, attrName) {
+      let node = domNode.querySelector("#" + id) || domNode;
+      if (!node.hasAttribute(attrName))
+        return undefined;
+      return node.getAttribute(attrName);
+    },
+    setAttributeForElement(id, attrName, attrValue) {
+      (domNode.querySelector("#" + id) || domNode).setAttribute(attrName, attrValue);
+    },
+    removeAttributeForElement(id, attrName) {
+      let node = domNode.querySelector("#" + id) || domNode;
+      if (!node.hasAttribute(attrName))
+        return;
+      node.removeAttribute(attrName);
+    },
+    remove() {
+      try {
+        domNode.parentNode.removeChild(domNode);
+      } catch (ex) {}
+    }
+  };
+}
 
 /**
  * FinderHighlighter class that is used by Finder.jsm to take care of the
@@ -367,6 +409,8 @@ FinderHighlighter.prototype = {
     if (!this._modalHighlightOutline)
       return;
 
+    if (kDebug)
+      this._modalHighlightOutline.remove();
     try {
       this.finder._getWindow().document
         .removeAnonymousContent(this._modalHighlightOutline);
@@ -578,7 +622,7 @@ FinderHighlighter.prototype = {
     // Create the main (yellow) highlight outline box.
     let outlineBox = document.createElement("div");
     outlineBox.setAttribute("id", kModalOutlineId);
-    outlineBox.className = kModalOutlineId;
+    outlineBox.className = kModalOutlineId + (kDebug ? ` ${kModalIdPrefix}-findbar-debug` : "");
     let outlineBoxText = document.createElement("span");
     outlineBoxText.setAttribute("id", kModalOutlineId + "-text");
     outlineBox.appendChild(outlineBoxText);
@@ -587,7 +631,9 @@ FinderHighlighter.prototype = {
 
     this._repaintHighlightAllMask(window);
 
-    this._modalHighlightOutline = document.insertAnonymousContent(container);
+    this._modalHighlightOutline = kDebug ?
+      mockAnonymousContentNode(document.body.appendChild(container.firstChild)) :
+      document.insertAnonymousContent(container);
     return this._modalHighlightOutline;
   },
 
@@ -607,7 +653,7 @@ FinderHighlighter.prototype = {
     // Make sure the dimmed mask node takes the full width and height that's available.
     let {width, height} = this._getWindowDimensions(window);
     maskNode.setAttribute("id", kMaskId);
-    maskNode.setAttribute("class", kMaskId);
+    maskNode.setAttribute("class", kMaskId + (kDebug ? ` ${kModalIdPrefix}-findbar-debug` : ""));
     maskNode.setAttribute("style", `width: ${width}px; height: ${height}px;`);
     if (this._brightText)
       maskNode.setAttribute("brighttext", "true");
@@ -629,7 +675,9 @@ FinderHighlighter.prototype = {
     // free to alter DOM nodes inside the CanvasFrame.
     this._removeHighlightAllMask(window);
 
-    this._modalHighlightAllMask = document.insertAnonymousContent(maskNode);
+    this._modalHighlightAllMask = kDebug ?
+      mockAnonymousContentNode(document.body.appendChild(maskNode)) :
+      document.insertAnonymousContent(maskNode);
   },
 
   /**
@@ -641,6 +689,8 @@ FinderHighlighter.prototype = {
     if (this._modalHighlightAllMask) {
       // If the current window isn't the one the content was inserted into, this
       // will fail, but that's fine.
+      if (kDebug)
+        this._modalHighlightAllMask.remove();
       try {
         window.document.removeAnonymousContent(this._modalHighlightAllMask);
       } catch(ex) {}
