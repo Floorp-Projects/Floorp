@@ -39,18 +39,18 @@
 
       function runTests () {
         ok(parentDivLocked, "After requesting pointerlock on parentDiv " +
-          "document.mozPointerLockElement should be equal to " +
+          "document.pointerLockElement should be equal to " +
           " parentDiv element");
         isnot(pointerLocked, true, "Requesting fullscreen on " +
           "childDiv while parentDiv still in fullscreen should " +
           "unlock the pointer");
       }
 
-      document.addEventListener("mozpointerlockchange", function (e) {
-        if (document.mozPointerLockElement === parentDiv) {
+      document.addEventListener("pointerlockchange", function (e) {
+        if (document.pointerLockElement === parentDiv) {
           parentDivLocked = true;
           addFullscreenChangeContinuation("enter", function() {
-            pointerLocked = !!document.mozPointerLockElement;
+            pointerLocked = !!document.pointerLockElement;
             addFullscreenChangeContinuation("exit", function() {
               addFullscreenChangeContinuation("exit", function() {
                 runTests();
@@ -67,7 +67,7 @@
       function start() {
         addFullscreenChangeContinuation("enter", function() {
           parentDivFullScreen = true;
-          parentDiv.mozRequestPointerLock();
+          parentDiv.requestPointerLock();
         });
         parentDiv.requestFullscreen();
       }

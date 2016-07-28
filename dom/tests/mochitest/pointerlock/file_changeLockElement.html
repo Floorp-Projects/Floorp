@@ -57,13 +57,13 @@
 
       function firstClick(e) {
         is(e.target, block3, "Click is triggered inside block3");
-        document.addEventListener("mozpointerlockchange", lockedPointerOnBlock1);
-        block1.mozRequestPointerLock();
+        document.addEventListener("pointerlockchange", lockedPointerOnBlock1);
+        block1.requestPointerLock();
       }
 
       function lockedPointerOnBlock1() {
-        document.removeEventListener("mozpointerlockchange", lockedPointerOnBlock1);
-        is(document.mozPointerLockElement, block1, "Pointer should be locked on #block1");
+        document.removeEventListener("pointerlockchange", lockedPointerOnBlock1);
+        is(document.pointerLockElement, block1, "Pointer should be locked on #block1");
         SimpleTest.executeSoon(() => {
           tester.synthesize(secondClick);
         });
@@ -73,14 +73,14 @@
         is(e.target, block1, "Event should be redirected to block1");
         // Use 2s to ensure that we never consider this as an extension of user input.
         setTimeout(() => {
-          document.addEventListener("mozpointerlockchange", lockedPointerOnBlock2);
-          block2.mozRequestPointerLock();
+          document.addEventListener("pointerlockchange", lockedPointerOnBlock2);
+          block2.requestPointerLock();
         }, 2000);
       }
 
       function lockedPointerOnBlock2() {
-        document.removeEventListener("mozpointerlockchange", lockedPointerOnBlock2);
-        is(document.mozPointerLockElement, block2, "Pointer should be locked on #block2");
+        document.removeEventListener("pointerlockchange", lockedPointerOnBlock2);
+        is(document.pointerLockElement, block2, "Pointer should be locked on #block2");
         SimpleTest.executeSoon(() => {
           tester.synthesize(thirdClick);
         });
@@ -90,14 +90,14 @@
         is(e.target, block2, "Event should be redirected to block2");
         // Use 2s to ensure that we never consider this as an extension of user input.
         setTimeout(() => {
-          document.addEventListener("mozpointerlockchange", lockedPointerOnBlock1Again);
-          block1.mozRequestPointerLock();
+          document.addEventListener("pointerlockchange", lockedPointerOnBlock1Again);
+          block1.requestPointerLock();
         }, 2000);
       }
 
       function lockedPointerOnBlock1Again() {
-        document.removeEventListener("mozpointerlockchange", lockedPointerOnBlock1Again);
-        is(document.mozPointerLockElement, block1, "Pointer should be locked on #block1 again");
+        document.removeEventListener("pointerlockchange", lockedPointerOnBlock1Again);
+        is(document.pointerLockElement, block1, "Pointer should be locked on #block1 again");
         SimpleTest.executeSoon(() => {
           tester.synthesize(fourthClick);
         });
@@ -105,8 +105,8 @@
 
       function fourthClick(e) {
         is(e.target, block1, "Event should be redirected to block1 again");
-        document.addEventListener("mozpointerlockchange", () => SimpleTest.finish());
-        document.mozExitPointerLock();
+        document.addEventListener("pointerlockchange", () => SimpleTest.finish());
+        document.exitPointerLock();
       }
 
     </script>
