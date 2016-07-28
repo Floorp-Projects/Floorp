@@ -27,6 +27,7 @@ class ServiceWorkerRegistrationInfo final
 
   uint64_t mLastUpdateCheckTime;
 
+  RefPtr<ServiceWorkerInfo> mEvaluatingWorker;
   RefPtr<ServiceWorkerInfo> mActiveWorker;
   RefPtr<ServiceWorkerInfo> mWaitingWorker;
   RefPtr<ServiceWorkerInfo> mInstallingWorker;
@@ -122,6 +123,9 @@ public:
   CheckAndClearIfUpdateNeeded();
 
   ServiceWorkerInfo*
+  GetEvaluating() const;
+
+  ServiceWorkerInfo*
   GetInstalling() const;
 
   ServiceWorkerInfo*
@@ -130,19 +134,28 @@ public:
   ServiceWorkerInfo*
   GetActive() const;
 
+  // Set the given worker as the evaluating service worker.  The worker
+  // state is not changed.
+  void
+  SetEvaluating(ServiceWorkerInfo* aServiceWorker);
+
+  // Remove an existing evaluating worker, if present.  The worker will
+  // be transitioned to the Redundant state.
+  void
+  ClearEvaluating();
+
   // Remove an existing installing worker, if present.  The worker will
   // be transitioned to the Redundant state.
   void
   ClearInstalling();
 
-  // Set a new installing worker.  This may only be called if there is no
-  // existing installing worker.  The worker is transitioned to the Installing
-  // state.
+  // Transition the current evaluating worker to be the installing worker.  The
+  // worker's state is update to Installing.
   void
-  SetInstalling(ServiceWorkerInfo* aServiceWorker);
+  TransitionEvaluatingToInstalling();
 
   // Transition the current installing worker to be the waiting worker.  The
-  // workers state is updated to Installed.
+  // worker's state is updated to Installed.
   void
   TransitionInstallingToWaiting();
 

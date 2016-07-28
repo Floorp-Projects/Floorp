@@ -5799,14 +5799,14 @@
   },
   "VIDEO_CAN_CREATE_AAC_DECODER": {
     "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "50",
+    "expires_in_version": "58",
     "kind": "boolean",
     "description": "Whether at startup we report we can playback MP4 (AAC) audio. This is single value is recorded at every startup.",
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_CAN_CREATE_H264_DECODER": {
     "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "50",
+    "expires_in_version": "58",
     "kind": "boolean",
     "description": "Whether at startup we report we can playback MP4 (H.264) video. This is single value is recorded at every startup.",
     "releaseChannelCollection": "opt-out"
@@ -8281,36 +8281,6 @@
     "description": "HTML Media Element state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4",
     "bug_numbers": [1261955, 1261955]
   },
-  "VIDEO_ADOBE_GMP_DISAPPEARED": {
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "flag",
-    "description": "Whether or not the Adobe EME GMP was expected to be resident on disk but mysteriously isn't.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "VIDEO_ADOBE_GMP_MISSING_FILES": {
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values" : 8,
-    "description": "Adobe EME GMP files missing (0=none, or sum of: 1=library, 2=info, 4=voucher)",
-    "releaseChannelCollection": "opt-out"
-  },
-  "VIDEO_OPENH264_GMP_DISAPPEARED": {
-    "alert_emails": ["cpearce@mozilla.com", "rjesup@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "flag",
-    "description": "Whether or not the OpenH264 GMP was expected to be resident on disk but mysteriously isn't.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "VIDEO_OPENH264_GMP_MISSING_FILES": {
-    "alert_emails": ["cpearce@mozilla.com", "rjesup@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values" : 4,
-    "description": "OpenH264 GMP files missing (0=none, or sum of: 1=library, 2=info)",
-    "releaseChannelCollection": "opt-out"
-  },
   "VIDEO_VP9_BENCHMARK_FPS": {
     "alert_emails": ["ajones@mozilla.com"],
     "expires_in_version": "55",
@@ -9346,30 +9316,6 @@
     "n_buckets": 20,
     "keyed": true,
     "description": "Contiguous time spent by an add-on blocking the main loop by performing a blocking cross-process call (microseconds, keyed by add-on ID)."
-  },
-  "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON": {
-    "alert_emails": ["edwin@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values": 10,
-    "releaseChannelCollection": "opt-out",
-    "description": "Reason for Adobe CDM failing to update. (1 = GMP_INVALID; 2 = GMP_HIDDEN; 3 = GMP_DISABLED; 4 = GMP_UPDATE_DISABLED)"
-  },
-  "VIDEO_EME_ADOBE_HIDDEN_REASON": {
-    "alert_emails": ["edwin@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values": 10,
-    "releaseChannelCollection": "opt-out",
-    "description": "Reason for Adobe CDM being hidden. (1 = UNSUPPORTED; 2 = EME_DISABLED)"
-  },
-  "VIDEO_EME_ADOBE_UNSUPPORTED_REASON": {
-    "alert_emails": ["edwin@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values": 10,
-    "releaseChannelCollection": "opt-out",
-    "description": "Reason for reporting the Adobe CDM to be unsupported. (1 = NOT_WINDOWS; 2 = WINDOWS_VERSION)"
   },
   "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
     "alert_emails": ["cpearce@mozilla.com"],

@@ -367,8 +367,7 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
           // Check if SEC_FORCE_INHERIT_PRINCIPAL was dropped because of
           // sandboxing:
           if (loadInfo->GetLoadingSandboxed() &&
-              (loadInfo->GetSecurityFlags() &
-               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL_WAS_DROPPED)) {
+              loadInfo->GetForceInheritPrincipalDropped()) {
             forceInterit = true;
           }
         }

@@ -483,7 +483,7 @@ class Type extends Entry {
   // |baseType| (one of the possible getValueBaseType results) is
   // valid for this type. It returns true or false. It's used to fill
   // in optional arguments to functions before actually type checking
-  // the arguments.
+
   checkBaseType(baseType) {
     return false;
   }
@@ -1408,8 +1408,7 @@ this.Schemas = {
       checkTypeProperties();
       return new BooleanType(type);
     } else if (type.type == "function") {
-      let isAsync = Boolean(type.async);
-
+      let isAsync = !!type.async;
       let parameters = null;
       if ("parameters" in type) {
         parameters = [];

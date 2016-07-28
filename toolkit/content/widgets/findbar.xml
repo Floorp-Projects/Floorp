@@ -555,7 +555,8 @@
           if (aHighlight && !word)
             return;
 
-          this.browser.finder.highlight(aHighlight, word);
+          this.browser.finder.highlight(aHighlight, word,
+            this._findMode == this.FIND_LINKS);
 
           // Update the matches count
           this._updateMatchesCount(this.nsITypeAheadFind.FIND_FOUND);

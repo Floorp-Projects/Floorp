@@ -286,21 +286,8 @@ add_task(function* test_pluginRegistration() {
         }
       },
     };
-
-    let reportedKeys = {};
-
-    let MockTelemetry = {
-      getHistogramById: key => {
-        return {
-          add: value => {
-            reportedKeys[key] = value;
-          }
-        }
-      }
-    };
-
     GMPScope.gmpService = MockGMPService;
-    GMPScope.telemetryService = MockTelemetry;
+
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
 
     // Test that plugin registration fails if the plugin dynamic library and
@@ -312,18 +299,6 @@ add_task(function* test_pluginRegistration() {
     Assert.equal(addedPaths.indexOf(file.path), -1);
     Assert.deepEqual(removedPaths, [file.path]);
 
-    // Test that the GMPProvider tried to report via telemetry that the
-    // addon's lib files are missing.
-    if (addon.missingKey) {
-      Assert.strictEqual(reportedKeys[addon.missingKey], true);
-    }
-    if (addon.missingFilesKey) {
-      Assert.strictEqual(reportedKeys[addon.missingFilesKey],
-                         addon.missingFilesKey != "VIDEO_ADOBE_GMP_MISSING_FILES"
-                         ? (1+2) : (1+2+4));
-    }
-    reportedKeys = {};
-
     // Create dummy GMP library/info files, and test that plugin registration
     // succeeds during startup, now that we've added GMP info/lib files.
     createMockPluginFilesIfNeeded(file, addon.id);
@@ -334,12 +309,6 @@ add_task(function* test_pluginRegistration() {
     yield promiseRestartManager();
     Assert.notEqual(addedPaths.indexOf(file.path), -1);
     Assert.deepEqual(removedPaths, []);
-
-    // Test that the GMPProvider tried to report via telemetry that the
-    // addon's lib files are NOT missing.
-    if (addon.missingFilesKey) {
-      Assert.strictEqual(reportedKeys[addon.missingFilesKey], 0);
-    }
 
     // Setting the ABI to something invalid should cause plugin to be removed at startup.
     clearPaths();

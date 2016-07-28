@@ -8,6 +8,7 @@
 #define mozilla_dom_DocumentFragment_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "nsIDOMDocumentFragment.h"
 
@@ -79,7 +80,7 @@ public:
   {
     return NS_OK;
   }
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute, 
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) override
   {
     return NS_OK;
@@ -87,6 +88,10 @@ public:
   virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override
   {
     return nullptr;
+  }
+  virtual BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const override
+  {
+    return BorrowedAttrInfo(nullptr, nullptr);
   }
   virtual uint32_t GetAttrCount() const override
   {
