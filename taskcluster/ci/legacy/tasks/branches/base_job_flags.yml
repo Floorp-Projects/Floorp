@@ -11,8 +11,6 @@ flags:
     - linux64-mulet-haz  # Firefox desktop - b2g gecko linux 64 bit, rooting hazard analysis
     - macosx64_gecko # b2g desktop osx 64 bit
     - win32_gecko    # b2g desktop win 32 bit
-    - nexus-5l-eng
-    - aries-eng
     - android-api-15
     - android-api-15-gradle
     - android-api-15-frontend
