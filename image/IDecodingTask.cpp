@@ -24,8 +24,9 @@ namespace image {
 // Helpers for sending notifications to the image associated with a decoder.
 ///////////////////////////////////////////////////////////////////////////////
 
-static void
-NotifyProgress(NotNull<RasterImage*> aImage, NotNull<Decoder*> aDecoder)
+/* static */ void
+IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
+                              NotNull<Decoder*> aDecoder)
 {
   MOZ_ASSERT(aDecoder->HasProgress() && !aDecoder->IsMetadataDecode());
 
@@ -56,8 +57,9 @@ NotifyProgress(NotNull<RasterImage*> aImage, NotNull<Decoder*> aDecoder)
   }));
 }
 
-static void
-NotifyDecodeComplete(NotNull<RasterImage*> aImage, NotNull<Decoder*> aDecoder)
+/* static */ void
+IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
+                                    NotNull<Decoder*> aDecoder)
 {
   // Synchronously notify if we can.
   if (NS_IsMainThread() &&
