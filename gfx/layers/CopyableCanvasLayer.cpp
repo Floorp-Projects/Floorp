@@ -50,6 +50,8 @@ CopyableCanvasLayer::~CopyableCanvasLayer()
 void
 CopyableCanvasLayer::Initialize(const Data& aData)
 {
+  NS_ASSERTION(mSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
+
   if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     mIsAlphaPremultiplied = aData.mIsGLAlphaPremult;
@@ -70,7 +72,7 @@ CopyableCanvasLayer::Initialize(const Data& aData)
     mAsyncRenderer = aData.mRenderer;
     mOriginPos = gl::OriginPos::BottomLeft;
   } else {
-    MOZ_CRASH("GFX: CanvasLayer created without BufferProvider, DrawTarget or GLContext?");
+    MOZ_CRASH("GFX: CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
@@ -85,36 +87,40 @@ CopyableCanvasLayer::IsDataValid(const Data& aData)
 void
 CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
 {
-  MOZ_ASSERT(aDestTarget);
-  if (!aDestTarget) {
-    return;
+  AutoReturnSnapshot autoReturn;
+
+  if (mAsyncRenderer) {
+    mSurface = mAsyncRenderer->GetSurface();
+  } else if (!mGLFrontbuffer && mBufferProvider) {
+    mSurface = mBufferProvider->BorrowSnapshot();
+    if (aDestTarget) {
+      // If !aDestTarget we'll end up painting using mSurface later,
+      // so we can't return it to the provider (note that this will trigger a
+      // copy of the snapshot behind the scenes when the provider is unlocked).
+      autoReturn.mSnapshot = &mSurface;
+    }
+    // Either way we need to call ReturnSnapshot because ther may be an
+    // underlying TextureClient that has to be unlocked.
+    autoReturn.mBufferProvider = mBufferProvider;
   }
 
-  RefPtr<SourceSurface> surface;
-
-  if (!mGLContext) {
-    AutoReturnSnapshot autoReturn;
-
-    if (mAsyncRenderer) {
-      surface = mAsyncRenderer->GetSurface();
-    } else if (mBufferProvider && !mGLContext) {
-      surface = mBufferProvider->BorrowSnapshot();
-      autoReturn.mSnapshot = &surface;
-      autoReturn.mBufferProvider = mBufferProvider;
-    }
-
-    NS_ASSERTION(surface, "Must have surface to draw!");
-    if (surface) {
-      aDestTarget->CopySurface(surface,
+  if (!mGLContext && aDestTarget) {
+    NS_ASSERTION(mSurface, "Must have surface to draw!");
+    if (mSurface) {
+      aDestTarget->CopySurface(mSurface,
                                IntRect(0, 0, mBounds.width, mBounds.height),
                                IntPoint(0, 0));
+      mSurface = nullptr;
     }
 
     return;
   }
 
-  MOZ_ASSERT(!mBufferProvider);
-  MOZ_ASSERT(!mAsyncRenderer);
+  if ((!mGLFrontbuffer && mBufferProvider) || mAsyncRenderer) {
+    return;
+  }
+
+  MOZ_ASSERT(mGLContext);
 
   SharedSurface* frontbuffer = nullptr;
   if (mGLFrontbuffer) {
@@ -139,22 +145,24 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
 
   // Try to read back directly into aDestTarget's output buffer
-  uint8_t* destData;
-  IntSize destSize;
-  int32_t destStride;
-  SurfaceFormat destFormat;
-  if (aDestTarget->LockBits(&destData, &destSize, &destStride, &destFormat)) {
-    if (destSize == readSize && destFormat == format) {
-      RefPtr<DataSourceSurface> data =
-        Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
-      mGLContext->Readback(frontbuffer, data);
-      if (needsPremult) {
-        gfxUtils::PremultiplyDataSurface(data, data);
+  if (aDestTarget) {
+    uint8_t* destData;
+    IntSize destSize;
+    int32_t destStride;
+    SurfaceFormat destFormat;
+    if (aDestTarget->LockBits(&destData, &destSize, &destStride, &destFormat)) {
+      if (destSize == readSize && destFormat == format) {
+        RefPtr<DataSourceSurface> data =
+          Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
+        mGLContext->Readback(frontbuffer, data);
+        if (needsPremult) {
+          gfxUtils::PremultiplyDataSurface(data, data);
+        }
+        aDestTarget->ReleaseBits(destData);
+        return;
       }
       aDestTarget->ReleaseBits(destData);
-      return;
     }
-    aDestTarget->ReleaseBits(destData);
   }
 
   RefPtr<DataSourceSurface> resultSurf = GetTempSurface(readSize, format);
@@ -169,10 +177,17 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   if (needsPremult) {
     gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
   }
+  MOZ_ASSERT(resultSurf);
 
-  aDestTarget->CopySurface(resultSurf,
-                           IntRect(0, 0, readSize.width, readSize.height),
-                           IntPoint(0, 0));
+  if (aDestTarget) {
+    aDestTarget->CopySurface(resultSurf,
+                             IntRect(0, 0, readSize.width, readSize.height),
+                             IntPoint(0, 0));
+  } else {
+    // If !aDestSurface then we will end up painting using mSurface, so
+    // stick our surface into mSurface, so that the Paint() path is the same.
+    mSurface = resultSurf;
+  }
 }
 
 DataSourceSurface*
@@ -189,6 +204,12 @@ CopyableCanvasLayer::GetTempSurface(const IntSize& aSize,
   }
 
   return mCachedTempSurface;
+}
+
+void
+CopyableCanvasLayer::DiscardTempSurface()
+{
+  mCachedTempSurface = nullptr;
 }
 
 } // namespace layers
