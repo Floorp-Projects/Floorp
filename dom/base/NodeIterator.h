@@ -32,7 +32,7 @@ public:
 
     NodeIterator(nsINode *aRoot,
                  uint32_t aWhatToShow,
-                 const NodeFilterHolder &aFilter);
+                 NodeFilterHolder aFilter);
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
