@@ -13,7 +13,7 @@ class Keys(marionette_driver.keys.Keys):
         self.marionette_getter = marionette_getter
 
         caps = self.marionette_getter().session_capabilities
-        self.isDarwin = caps['platformName'] == 'DARWIN'
+        self.isDarwin = caps['platformName'] == 'darwin'
 
     @property
     def ACCEL(self):
