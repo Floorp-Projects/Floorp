@@ -12,6 +12,7 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
 import org.json.JSONArray;
+import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -2691,7 +2692,7 @@ public class BrowserApp extends GeckoApp
         }
 
         if (mHomeScreen == null) {
-            if (AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
+            if (ActivityStream.isEnabled(this)) {
                 final ViewStub asStub = (ViewStub) findViewById(R.id.activity_stream_stub);
                 mHomeScreen = (HomeScreen) asStub.inflate();
             } else {
