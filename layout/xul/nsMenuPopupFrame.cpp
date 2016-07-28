@@ -802,7 +802,31 @@ nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
   mTriggerContent = aTriggerContent;
-  mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
+
+  nsCOMPtr<nsIScreenManager> screenMgr =
+    do_GetService("@mozilla.org/gfx/screenmanager;1");
+  nsCOMPtr<nsIScreen> screen;
+  if (screenMgr) {
+    // aXPos and aYPos are "global desktop" coordinates in units of
+    // CSS pixels, but nsMenuPopupFrame wants CSS pixels that are
+    // directly scaled from device pixels, without being offset for
+    // the screen origin. So we need to undo the offset that was
+    // applied to the global CSS coordinate values in the mouse event.
+    screenMgr->ScreenForRect(aXPos, aYPos, 1, 1,
+                             getter_AddRefs(screen));
+    double cssToDevScale, deskToDevScale;
+    screen->GetDefaultCSSScaleFactor(&cssToDevScale);
+    screen->GetContentsScaleFactor(&deskToDevScale);
+    double scale = deskToDevScale / cssToDevScale;
+    int32_t w, h;
+    DesktopIntPoint origin;
+    screen->GetRectDisplayPix(&origin.x, &origin.y, &w, &h);
+    mScreenRect.x = aXPos + (origin.x * scale) - origin.x;
+    mScreenRect.y = aYPos + (origin.y * scale) - origin.y;
+    mScreenRect.width = mScreenRect.height = 0;
+  } else {
+    mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
+  }
   mXPos = 0;
   mYPos = 0;
   mFlip = FlipType_Default;
