@@ -191,6 +191,12 @@
    * HARNESS-CENTRIC EXPORTS (we should generally work to eliminate these) *
    *************************************************************************/
 
+  var PASSED = " PASSED! ";
+  global.PASSED = PASSED;
+
+  var FAILED = " FAILED! ";
+  global.FAILED = FAILED;
+
   /** Set up test environment. */
   function startTest() {
     if (global.BUGNUMBER)
@@ -249,6 +255,14 @@
   }
   global.currentFunc = currentFunc;
 
+  // XXX This function is *only* used in harness functions and really shouldn't
+  //     be exported.
+  var writeFormattedResult =
+    function writeFormattedResult(expect, actual, string, passed) {
+      print((passed ? PASSED : FAILED) + string + ' expected: ' + expect);
+    };
+  global.writeFormattedResult = writeFormattedResult;
+
   /*****************************************************
    * RHINO-SPECIFIC EXPORTS (are these used any more?) *
    *****************************************************/
@@ -288,8 +302,6 @@ var msg = '';
  * constant strings
  */
 var GLOBAL = this + '';
-var PASSED = " PASSED! ";
-var FAILED = " FAILED! ";
 
 var DESCRIPTION;
 var EXPECTED;
@@ -785,11 +797,6 @@ function writeTestCaseResult( expect, actual, string ) {
       !document.location.href.match(/jsreftest.html/)) {
     writeFormattedResult( expect, actual, string, passed );
   }
-  return passed;
-}
-function writeFormattedResult( expect, actual, string, passed ) {
-  var s = ( passed ? PASSED : FAILED ) + string + ' expected: ' + expect;
-  print(s);
   return passed;
 }
 
