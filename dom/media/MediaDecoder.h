@@ -239,7 +239,7 @@ public:
   bool IsEndedOrShutdown() const;
 
   // Return true if the MediaDecoderOwner's error attribute is not null.
-  // If the MediaDecoder is shutting down, OwnerHasError will return true.
+  // Must be called before Shutdown().
   bool OwnerHasError() const;
 
   already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
@@ -434,7 +434,7 @@ private:
   // Indicate whether the media is same-origin with the element.
   void UpdateSameOriginStatus(bool aSameOrigin);
 
-  MediaDecoderOwner* GetOwner() override;
+  MediaDecoderOwner* GetOwner() const override;
 
 #ifdef MOZ_EME
   typedef MozPromise<RefPtr<CDMProxy>, bool /* aIgnored */, /* IsExclusive = */ true> CDMProxyPromise;
