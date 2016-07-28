@@ -115,6 +115,19 @@ IsWebkitPrefixSupportEnabled()
   return sIsWebkitPrefixSupportEnabled;
 }
 
+static bool
+IsPrefixedPointerLockEnabled()
+{
+  static bool sIsPrefixedPointerLockEnabled;
+  static bool sIsPrefCached = false;
+  if (!sIsPrefCached) {
+    sIsPrefCached = true;
+    Preferences::AddBoolVarCache(&sIsPrefixedPointerLockEnabled,
+                                 "pointer-lock-api.prefixed.enabled");
+  }
+  return sIsPrefixedPointerLockEnabled;
+}
+
 EventListenerManagerBase::EventListenerManagerBase()
   : mNoListenerForEvent(eVoidEvent)
   , mMayHavePaintEventListener(false)
@@ -1132,19 +1145,29 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
 {
   // (If we're off-main-thread, we can't check the pref; so we just behave as
   // if it's disabled.)
-  if (mIsMainThreadELM && IsWebkitPrefixSupportEnabled()) {
-    // webkit-prefixed legacy events:
-    if (aEventMessage == eTransitionEnd) {
-      return eWebkitTransitionEnd;
+  if (mIsMainThreadELM) {
+    if (IsWebkitPrefixSupportEnabled()) {
+      // webkit-prefixed legacy events:
+      if (aEventMessage == eTransitionEnd) {
+        return eWebkitTransitionEnd;
+      }
+      if (aEventMessage == eAnimationStart) {
+        return eWebkitAnimationStart;
+      }
+      if (aEventMessage == eAnimationEnd) {
+        return eWebkitAnimationEnd;
+      }
+      if (aEventMessage == eAnimationIteration) {
+        return eWebkitAnimationIteration;
+      }
     }
-    if (aEventMessage == eAnimationStart) {
-      return eWebkitAnimationStart;
-    }
-    if (aEventMessage == eAnimationEnd) {
-      return eWebkitAnimationEnd;
-    }
-    if (aEventMessage == eAnimationIteration) {
-      return eWebkitAnimationIteration;
+    if (IsPrefixedPointerLockEnabled()) {
+      if (aEventMessage == ePointerLockChange) {
+        return eMozPointerLockChange;
+      }
+      if (aEventMessage == ePointerLockError) {
+        return eMozPointerLockError;
+      }
     }
   }
 
@@ -1153,10 +1176,6 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
       return eMozFullscreenChange;
     case eFullscreenError:
       return eMozFullscreenError;
-    case ePointerLockChange:
-      return eMozPointerLockChange;
-    case ePointerLockError:
-      return eMozPointerLockError;
     default:
       return aEventMessage;
   }
