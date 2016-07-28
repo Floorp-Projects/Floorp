@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("devtools/shared/task");
 
 const PerformanceIO = require("devtools/client/performance/modules/io");
@@ -94,7 +93,8 @@ LegacyPerformanceRecording.prototype = merge({
    * Sets results available from stopping a recording from PerformanceFront.
    * Should only be called by PerformanceFront.
    */
-  _onStopRecording: Task.async(function* ({ profilerEndTime, profile, systemClient, systemHost }) {
+  _onStopRecording: Task.async(function* ({ profilerEndTime, profile, systemClient,
+                                            systemHost }) {
     // Update the duration with the accurate profilerEndTime, so we don't have
     // samples outside of the approximate duration set in `_onStoppingRecording`.
     this._duration = profilerEndTime - this._profilerStartTime;
@@ -139,7 +139,9 @@ LegacyPerformanceRecording.prototype = merge({
       // Accumulate timeline markers into an array. Furthermore, the timestamps
       // do not have a zero epoch, so offset all of them by the start time.
       case "markers": {
-        if (!config.withMarkers) { break; }
+        if (!config.withMarkers) {
+          break;
+        }
         let [markers] = data;
         RecordingUtils.offsetMarkerTimes(markers, this._timelineStartTime);
         RecordingUtils.pushAll(this._markers, markers);
@@ -147,14 +149,18 @@ LegacyPerformanceRecording.prototype = merge({
       }
       // Accumulate stack frames into an array.
       case "frames": {
-        if (!config.withMarkers) { break; }
+        if (!config.withMarkers) {
+          break;
+        }
         let [, frames] = data;
         RecordingUtils.pushAll(this._frames, frames);
         break;
       }
       // Save the accumulated refresh driver ticks.
       case "ticks": {
-        if (!config.withTicks) { break; }
+        if (!config.withTicks) {
+          break;
+        }
         let [, timestamps] = data;
         this._ticks = timestamps;
         break;

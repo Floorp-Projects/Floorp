@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu } = require("chrome");
 const { Task } = require("devtools/shared/task");
 
 const Services = require("Services");
@@ -83,6 +82,7 @@ const LegacyPerformanceFront = Class({
     yield this._registerListeners();
 
     this._connecting.resolve();
+    return this._connecting.promise;
   }),
 
   /**
@@ -166,7 +166,8 @@ const LegacyPerformanceFront = Class({
    *        The time (in milliseconds) when the call was made, relative to when
    *        the nsIProfiler module was started.
    */
-  _onConsoleProfileStart: Task.async(function* (_, { profileLabel, currentTime: startTime }) {
+  _onConsoleProfileStart: Task.async(function* (_, { profileLabel,
+                                                     currentTime: startTime }) {
     let recordings = this._recordings;
 
     // Abort if a profile with this label already exists.
@@ -197,7 +198,7 @@ const LegacyPerformanceFront = Class({
     if (!data) {
       return;
     }
-    let { profileLabel, currentTime: endTime } = data;
+    let { profileLabel } = data;
 
     let pending = this._recordings.filter(r => r.isConsole() && r.isRecording());
     if (pending.length === 0) {
@@ -209,16 +210,16 @@ const LegacyPerformanceFront = Class({
     // a label was used in profileEnd(). If no matches, abort.
     if (profileLabel) {
       model = pending.find(e => e.getLabel() === profileLabel);
-    }
-    // If no label supplied, pop off the most recent pending console recording
-    else {
+    } else {
+      // If no label supplied, pop off the most recent pending console recording
       model = pending[pending.length - 1];
     }
 
     // If `profileEnd()` was called with a label, and there are no matching
     // sessions, abort.
     if (!model) {
-      console.error("console.profileEnd() called with label that does not match a recording.");
+      console.error(
+        "console.profileEnd() called with label that does not match a recording.");
       return;
     }
 
@@ -264,12 +265,14 @@ const LegacyPerformanceFront = Class({
    *
    * @param object options
    *        An options object to pass to the actors. Supported properties are
-   *        `withTicks`, `withMemory` and `withAllocations`, `probability`, and `maxLogLength`.
+   *        `withTicks`, `withMemory` and `withAllocations`, `probability`, and
+   *        `maxLogLength`.
    * @return object
    *         A promise that is resolved once recording has started.
    */
   startRecording: Task.async(function* (options = {}) {
-    let model = new LegacyPerformanceRecording(normalizePerformanceFeatures(options, this.traits.features));
+    let model = new LegacyPerformanceRecording(
+      normalizePerformanceFeatures(options, this.traits.features));
 
     // All actors are started asynchronously over the remote debugging protocol.
     // Get the corresponding start times from each one of them.
@@ -299,7 +302,8 @@ const LegacyPerformanceFront = Class({
    * Manually ends the recording session for the corresponding LegacyPerformanceRecording.
    *
    * @param LegacyPerformanceRecording model
-   *        The corresponding LegacyPerformanceRecording that belongs to the recording session wished to stop.
+   *        The corresponding LegacyPerformanceRecording that belongs to the recording
+   *        session wished to stop.
    * @return LegacyPerformanceRecording
    *         Returns the same model, populated with the profiling data.
    */
@@ -307,7 +311,7 @@ const LegacyPerformanceFront = Class({
     // If model isn't in the LegacyPerformanceFront internal store,
     // then do nothing.
     if (this._recordings.indexOf(model) === -1) {
-      return;
+      return undefined;
     }
 
     // Flag the recording as no longer recording, so that `model.isRecording()`
@@ -343,7 +347,6 @@ const LegacyPerformanceFront = Class({
       timelineEndTime = yield this._timeline.stop(config);
     }
 
-    let systemDeferred = promise.defer();
     let form = yield this._client.listTabs();
     let systemHost = yield getDeviceFront(this._client, form).getDescription();
     let systemClient = yield getSystemInfo();
@@ -396,10 +399,18 @@ const LegacyPerformanceFront = Class({
     if (!recording.isRecording() || !this._currentBufferStatus) {
       return null;
     }
-    let { position: currentPosition, totalSize, generation: currentGeneration } = this._currentBufferStatus;
-    let { position: origPosition, generation: origGeneration } = recording.getStartingBufferStatus();
+    let {
+      position: currentPosition,
+      totalSize,
+      generation: currentGeneration
+    } = this._currentBufferStatus;
+    let {
+      position: origPosition,
+      generation: origGeneration
+    } = recording.getStartingBufferStatus();
 
-    let normalizedCurrent = (totalSize * (currentGeneration - origGeneration)) + currentPosition;
+    let normalizedCurrent = (totalSize * (currentGeneration - origGeneration))
+                            + currentPosition;
     let percent = (normalizedCurrent - origPosition) / totalSize;
     return percent > 1 ? 1 : percent;
   },
@@ -451,16 +462,22 @@ const LegacyPerformanceFront = Class({
 });
 
 /**
- * Creates an object of configurations based off of preferences for a LegacyPerformanceRecording.
+ * Creates an object of configurations based off of preferences for a
+ * LegacyPerformanceRecording.
  */
 function getLegacyPerformanceRecordingPrefs() {
   return {
     withMarkers: true,
-    withMemory: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),
-    withTicks: Services.prefs.getBoolPref("devtools.performance.ui.enable-framerate"),
-    withAllocations: Services.prefs.getBoolPref("devtools.performance.ui.enable-allocations"),
-    allocationsSampleProbability: +Services.prefs.getCharPref("devtools.performance.memory.sample-probability"),
-    allocationsMaxLogLength: Services.prefs.getIntPref("devtools.performance.memory.max-log-length")
+    withMemory: Services.prefs.getBoolPref(
+      "devtools.performance.ui.enable-memory"),
+    withTicks: Services.prefs.getBoolPref(
+      "devtools.performance.ui.enable-framerate"),
+    withAllocations: Services.prefs.getBoolPref(
+      "devtools.performance.ui.enable-allocations"),
+    allocationsSampleProbability: +Services.prefs.getCharPref(
+      "devtools.performance.memory.sample-probability"),
+    allocationsMaxLogLength: Services.prefs.getIntPref(
+      "devtools.performance.memory.max-log-length")
   };
 }
 
