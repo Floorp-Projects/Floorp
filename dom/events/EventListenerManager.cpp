@@ -1153,6 +1153,10 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
       return eMozFullscreenChange;
     case eFullscreenError:
       return eMozFullscreenError;
+    case ePointerLockChange:
+      return eMozPointerLockChange;
+    case ePointerLockError:
+      return eMozPointerLockError;
     default:
       return aEventMessage;
   }

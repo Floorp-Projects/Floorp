@@ -323,10 +323,18 @@ EVENT(mozfullscreenerror,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockchange,
-      ePointerLockChange,
+      eMozPointerLockChange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockerror,
+      eMozPointerLockError,
+      EventNameType_HTML,
+      eBasicEventClass)
+EVENT(pointerlockchange,
+      ePointerLockChange,
+      EventNameType_HTML,
+      eBasicEventClass)
+EVENT(pointerlockerror,
       ePointerLockError,
       EventNameType_HTML,
       eBasicEventClass)
