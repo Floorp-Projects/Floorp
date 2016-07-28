@@ -320,8 +320,8 @@ class nsCookieService final : public nsICookieService
     already_AddRefed<nsIArray>    CreatePurgeList(nsICookie2* aCookie);
     void                          UpdateCookieOldestTime(DBState* aDBState, nsCookie* aCookie);
 
-    nsresult                      GetCookiesWithOriginAttributes(const mozilla::OriginAttributesPattern& aPattern, nsISimpleEnumerator **aEnumerator);
-    nsresult                      RemoveCookiesWithOriginAttributes(const mozilla::OriginAttributesPattern& aPattern);
+    nsresult                      GetCookiesWithOriginAttributes(const mozilla::OriginAttributesPattern& aPattern, const nsCString& aBaseDomain, nsISimpleEnumerator **aEnumerator);
+    nsresult                      RemoveCookiesWithOriginAttributes(const mozilla::OriginAttributesPattern& aPattern, const nsCString& aBaseDomain);
 
     /**
      * This method is a helper that allows calling nsICookieManager::Remove()
