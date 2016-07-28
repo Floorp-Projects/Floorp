@@ -63,14 +63,14 @@
 
           numberOfRuns++;
 
-          contentDocument.addEventListener("mozpointerlockchange", function () {
-            if (contentDocument.mozPointerLockElement === iframeDiv) {
+          contentDocument.addEventListener("pointerlockchange", function () {
+            if (contentDocument.pointerLockElement === iframeDiv) {
               pointerLocked++;
               contentDocument.exitFullscreen();
             }
           });
 
-          contentDocument.addEventListener("mozpointerlockerror", function () {
+          contentDocument.addEventListener("pointerlockerror", function () {
             contentDocument.exitFullscreen();
           });
 
@@ -79,8 +79,8 @@
               ok(contentDocument.fullscreenElement === iframeDiv,
                  "Fullscreen element can only be iframe div");
               // during second run iframe won't have allow-pointer-lock flag and
-              // mozRequestPointerLock will fail, mozpointerlockerror should be fired
-              iframeDiv.mozRequestPointerLock();
+              // requestPointerLock will fail, pointerlockerror should be fired
+              iframeDiv.requestPointerLock();
             } else if (numberOfRuns === 1) {
               resetIframe();
             } else if (numberOfRuns === 2) {
