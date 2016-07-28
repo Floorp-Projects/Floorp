@@ -606,6 +606,22 @@ EventListenerManager::DisableDevice(EventMessage aEventMessage)
 }
 
 void
+EventListenerManager::NotifyEventListenerRemoved(nsIAtom* aUserType)
+{
+  // If the following code is changed, other callsites of EventListenerRemoved
+  // and NotifyAboutMainThreadListenerChange should be changed too.
+  mNoListenerForEvent = eVoidEvent;
+  mNoListenerForEventAtom = nullptr;
+  if (mTarget && aUserType) {
+    mTarget->EventListenerRemoved(aUserType);
+  }
+  if (mIsMainThreadELM && mTarget) {
+    EventListenerService::NotifyAboutMainThreadListenerChange(mTarget,
+                                                              aUserType);
+  }
+}
+
+void
 EventListenerManager::RemoveEventListenerInternal(
                         EventListenerHolder aListenerHolder,
                         EventMessage aEventMessage,
@@ -634,16 +650,7 @@ EventListenerManager::RemoveEventListenerInternal(
         RefPtr<EventListenerManager> kungFuDeathGrip(this);
         mListeners.RemoveElementAt(i);
         --count;
-        mNoListenerForEvent = eVoidEvent;
-        mNoListenerForEventAtom = nullptr;
-        if (mTarget && aUserType) {
-          mTarget->EventListenerRemoved(aUserType);
-        }
-        if (mIsMainThreadELM && mTarget) {
-          EventListenerService::NotifyAboutMainThreadListenerChange(mTarget,
-                                                                    aUserType);
-        }
-
+        NotifyEventListenerRemoved(aUserType);
         if (!deviceType) {
           return;
         }
@@ -903,14 +910,7 @@ EventListenerManager::RemoveEventHandler(nsIAtom* aName,
 
   if (listener) {
     mListeners.RemoveElementAt(uint32_t(listener - &mListeners.ElementAt(0)));
-    mNoListenerForEvent = eVoidEvent;
-    mNoListenerForEventAtom = nullptr;
-    if (mTarget && aName) {
-      mTarget->EventListenerRemoved(aName);
-    }
-    if (mIsMainThreadELM && mTarget) {
-      EventListenerService::NotifyAboutMainThreadListenerChange(mTarget, aName);
-    }
+    NotifyEventListenerRemoved(aName);
   }
 }
 
