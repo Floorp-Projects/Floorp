@@ -25,6 +25,7 @@
 #include "nsIBufferedStreams.h"
 #include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
+#include "nsIDocument.h"
 #include "nsIDownloader.h"
 #include "nsIFileProtocolHandler.h"
 #include "nsIFileStreams.h"
@@ -36,6 +37,7 @@
 #include "nsILoadContext.h"
 #include "nsIMIMEHeaderParam.h"
 #include "nsIMutable.h"
+#include "nsINode.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIPrivateBrowsingChannel.h"
@@ -2412,61 +2414,84 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
 
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(aChannel, loadContext);
-  if (loadInfo && loadContext) {
-
-    uint32_t loadContextAppId = 0;
-    nsresult rv = loadContext->GetAppId(&loadContextAppId);
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    bool loadContextIsInBE = false;
-    rv = loadContext->GetIsInIsolatedMozBrowserElement(&loadContextIsInBE);
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    OriginAttributes originAttrsLoadInfo = loadInfo->GetOriginAttributes();
-    DocShellOriginAttributes originAttrsLoadContext;
-    loadContext->GetOriginAttributes(originAttrsLoadContext);
-
-    bool loadInfoUsePB = false;
-    rv = loadInfo->GetUsePrivateBrowsing(&loadInfoUsePB);
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    bool loadContextUsePB = false;
-    rv = loadContext->GetUsePrivateBrowsing(&loadContextUsePB);
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    LOG(("NS_CompareLoadInfoAndLoadContext - loadInfo: %d, %d, %d, %d; "
-         "loadContext: %d %d, %d, %d. [channel=%p]",
-         originAttrsLoadInfo.mAppId, originAttrsLoadInfo.mInIsolatedMozBrowser,
-         originAttrsLoadInfo.mUserContextId, loadInfoUsePB,
-         loadContextAppId, loadContextUsePB,
-         originAttrsLoadContext.mUserContextId, loadContextIsInBE,
-         aChannel));
-
-    MOZ_ASSERT(originAttrsLoadInfo.mAppId == loadContextAppId,
-               "AppId in the loadContext and in the loadInfo are not the "
-               "same!");
-
-    MOZ_ASSERT(originAttrsLoadInfo.mInIsolatedMozBrowser ==
-               loadContextIsInBE,
-               "The value of InIsolatedMozBrowser in the loadContext and in "
-               "the loadInfo are not the same!");
-
-    MOZ_ASSERT(originAttrsLoadInfo.mUserContextId ==
-               originAttrsLoadContext.mUserContextId,
-               "The value of mUserContextId in the loadContext and in the "
-               "loadInfo are not the same!");
-
-    MOZ_ASSERT(loadInfoUsePB == loadContextUsePB,
-               "The value of usePrivateBrowsing in the loadContext and in the loadInfo "
-               "are not the same!");
+  if (!loadInfo || !loadContext) {
+    return NS_OK;
   }
+
+  // We try to skip about:newtab and about:sync-tabs.
+  // about:newtab will use SystemPrincipal to download thumbnails through
+  // https:// and blob URLs.
+  // about:sync-tabs will fetch icons through moz-icon://.
+  bool isAboutPage = false;
+  nsINode* node = loadInfo->LoadingNode();
+  if (node) {
+    nsIDocument* doc = node->OwnerDoc();
+    if (doc) {
+      nsIURI* uri = doc->GetDocumentURI();
+      nsAutoCString spec;
+      uri->GetSpec(spec);
+      isAboutPage = spec.EqualsLiteral("about:newtab") ||
+                    spec.EqualsLiteral("about:sync-tabs");
+    }
+  }
+
+  if (isAboutPage) {
+    return NS_OK;
+  }
+
+  uint32_t loadContextAppId = 0;
+  nsresult rv = loadContext->GetAppId(&loadContextAppId);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  bool loadContextIsInBE = false;
+  rv = loadContext->GetIsInIsolatedMozBrowserElement(&loadContextIsInBE);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  OriginAttributes originAttrsLoadInfo = loadInfo->GetOriginAttributes();
+  DocShellOriginAttributes originAttrsLoadContext;
+  loadContext->GetOriginAttributes(originAttrsLoadContext);
+
+  bool loadInfoUsePB = false;
+  rv = loadInfo->GetUsePrivateBrowsing(&loadInfoUsePB);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  bool loadContextUsePB = false;
+  rv = loadContext->GetUsePrivateBrowsing(&loadContextUsePB);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  LOG(("NS_CompareLoadInfoAndLoadContext - loadInfo: %d, %d, %d, %d; "
+       "loadContext: %d %d, %d, %d. [channel=%p]",
+       originAttrsLoadInfo.mAppId, originAttrsLoadInfo.mInIsolatedMozBrowser,
+       originAttrsLoadInfo.mUserContextId, loadInfoUsePB,
+       loadContextAppId, loadContextIsInBE,
+       originAttrsLoadContext.mUserContextId, loadContextUsePB,
+       aChannel));
+
+  MOZ_ASSERT(originAttrsLoadInfo.mAppId == loadContextAppId,
+             "AppId in the loadContext and in the loadInfo are not the "
+             "same!");
+
+  MOZ_ASSERT(originAttrsLoadInfo.mInIsolatedMozBrowser ==
+             loadContextIsInBE,
+             "The value of InIsolatedMozBrowser in the loadContext and in "
+             "the loadInfo are not the same!");
+
+  MOZ_ASSERT(originAttrsLoadInfo.mUserContextId ==
+             originAttrsLoadContext.mUserContextId,
+             "The value of mUserContextId in the loadContext and in the "
+             "loadInfo are not the same!");
+
+  MOZ_ASSERT(loadInfoUsePB == loadContextUsePB,
+             "The value of usePrivateBrowsing in the loadContext and in the loadInfo "
+             "are not the same!");
+
   return NS_OK;
 }
 
