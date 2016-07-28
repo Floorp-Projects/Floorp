@@ -806,7 +806,6 @@ function test() {
       print('test(): empty testcase for gTc = ' + gTc + ' ' + e);
     }
   }
-  stopTest();
   return ( gTestcases );
 }
 
@@ -831,18 +830,6 @@ function writeHeaderToLog( string ) {
 }
 /* end of print functions */
 
-
-/*
- * When running in the shell, run the garbage collector after the
- * test has completed.
- */
-
-function stopTest() {
-  var gc;
-  if ( gc != undefined ) {
-    gc();
-  }
-}
 
 function jsTestDriverEnd()
 {
