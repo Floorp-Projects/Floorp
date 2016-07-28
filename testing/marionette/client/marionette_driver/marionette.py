@@ -543,6 +543,7 @@ class Marionette(object):
     TIMEOUT_PAGE = 'page load'
     DEFAULT_SOCKET_TIMEOUT = 360
     DEFAULT_STARTUP_TIMEOUT = 120
+    DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
 
     def __init__(self, host='localhost', port=2828, app=None, bin=None,
                  baseurl=None, timeout=None, socket_timeout=DEFAULT_SOCKET_TIMEOUT,
@@ -616,7 +617,7 @@ class Marionette(object):
         if self.session:
             try:
                 self.delete_session()
-            except (errors.MarionetteException, socket.error, IOError):
+            except (errors.MarionetteException, IOError):
                 # These exceptions get thrown if the Marionette server
                 # hit an exception/died or the connection died. We can
                 # do no further server-side cleanup in this case.
@@ -648,7 +649,7 @@ class Marionette(object):
     @do_process_check
     def raise_for_port(self, port_obtained):
         if not port_obtained:
-            raise IOError("Timed out waiting for port!")
+            raise socket.timeout("Timed out waiting for port {}!".format(self.port))
 
     @do_process_check
     def _send_message(self, name, params=None, key=None):
@@ -684,7 +685,8 @@ class Marionette(object):
             self.session = None
             self.window = None
             self.client.close()
-            raise errors.TimeoutException("Connection timed out")
+
+            raise
 
         res, err = msg.result, msg.error
         if err:
@@ -754,17 +756,19 @@ class Marionette(object):
         if self.instance:
             exc, val, tb = sys.exc_info()
 
-            returncode = self.instance.runner.returncode
+            # Give the application some time to shutdown
+            returncode = self.instance.runner.wait(timeout=self.DEFAULT_STARTUP_TIMEOUT)
             if returncode is None:
-                self.instance.runner.stop()
-                message = 'Process killed because the connection was lost'
+                self.cleanup()
+                message = ('Process killed because the connection to Marionette server is lost.'
+                           ' Check gecko.log for errors')
             else:
-                message = 'Process died with returncode "{returncode}"'
+                message = 'Process has been closed (Exit code: {returncode})'
 
             if exc:
                 message += ' (Reason: {reason})'
 
-            raise exc, message.format(returncode=returncode, reason=val), tb
+            raise IOError, message.format(returncode=returncode, reason=val), tb
 
     @staticmethod
     def convert_keys(*string):
@@ -993,8 +997,8 @@ class Marionette(object):
         : param prefs: A dictionary whose keys are preference names.
         """
         if not self.instance:
-            raise errors.MarionetteException("enforce_gecko_prefs can only be called "
-                                             "on gecko instances launched by Marionette")
+            raise errors.MarionetteException("enforce_gecko_prefs() can only be called "
+                                             "on Gecko instances launched by Marionette")
         pref_exists = True
         self.set_context(self.CONTEXT_CHROME)
         for pref, value in prefs.iteritems():
@@ -1027,13 +1031,14 @@ class Marionette(object):
             self.start_session()
             self.reset_timeouts()
 
+    @do_process_check
     def quit_in_app(self):
         """
         This will terminate the currently running instance.
         """
         if not self.instance:
-            raise errors.MarionetteException("quit_in_app can only be called "
-                                             "on gecko instances launched by Marionette")
+            raise errors.MarionetteException("quit_in_app() can only be called "
+                                             "on Gecko instances launched by Marionette")
         # Values here correspond to constants in nsIAppStartup.
         # See http://mzl.la/1X0JZsC
         restart_flags = [
@@ -1042,7 +1047,14 @@ class Marionette(object):
         ]
         self._send_message("quitApplication", {"flags": restart_flags})
         self.client.close()
-        self.raise_for_port(self.wait_for_port())
+
+        try:
+            self.raise_for_port(self.wait_for_port())
+        except socket.timeout:
+            if self.instance.runner.returncode is not None:
+                exc, val, tb = sys.exc_info()
+                self.cleanup()
+                raise exc, 'Requested restart of the application was aborted', tb
 
     def restart(self, clean=False, in_app=False):
         """
@@ -1057,11 +1069,11 @@ class Marionette(object):
                         by killing the process.
         """
         if not self.instance:
-            raise errors.MarionetteException("restart can only be called "
-                                             "on gecko instances launched by Marionette")
+            raise errors.MarionetteException("restart() can only be called "
+                                             "on Gecko instances launched by Marionette")
         if in_app:
             if clean:
-                raise ValueError
+                raise ValueError("An in_app restart cannot be triggered with the clean flag set")
             self.quit_in_app()
         else:
             self.delete_session()
@@ -1463,8 +1475,13 @@ class Marionette(object):
         :param ms: A number value specifying the timeout length in
             milliseconds (ms)
         """
-        if timeout_type not in [self.TIMEOUT_SEARCH, self.TIMEOUT_SCRIPT, self.TIMEOUT_PAGE]:
-            raise ValueError("Unknown timeout type: %s" % timeout_type)
+        timeout_types = (self.TIMEOUT_PAGE,
+                         self.TIMEOUT_SCRIPT,
+                         self.TIMEOUT_SEARCH,
+                         )
+        if timeout_type not in timeout_types:
+            raise ValueError("Unknown timeout type: {0} (should be one "
+                             "of {1})".format(timeout_type, timeout_types))
         body = {"type": timeout_type, "ms": ms}
         self._send_message("timeouts", body)
 
