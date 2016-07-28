@@ -1,6 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
+"use strict";
 /**
  * Tests that the tree model calculates correct costs/percentages for
  * allocation frame nodes.
@@ -16,6 +16,7 @@ add_task(function () {
   let allocationData = getProfileThreadFromAllocations(TEST_DATA);
   let thread = new ThreadNode(allocationData, { startTime: 0, endTime: 1000 });
 
+  /* eslint-disable max-len */
   /**
    * Values are in order according to:
    * +-------------+------------+-------------+-------------+------------------------------+
@@ -25,6 +26,7 @@ add_task(function () {
    * |     100  1% | 10      1% |     100  1% |   10     1% |   > callerFunc @ b.j:765:34  |
    * +-------------+------------+-------------+-------------+------------------------------+
    */
+   /* eslint-enable max-len */
   [
     [100, 10, 1, 33, 1000, 100, 3, 100, "x (A:1:2)", [
       [200, 20, 1, 33, 900, 90, 2, 66, "y (B:3:4)", [

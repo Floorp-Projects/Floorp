@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that the costs for recursive frames does not overcount the collapsed
@@ -12,7 +13,8 @@ function run_test() {
 
 add_task(function () {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-  let thread = new ThreadNode(gThread, { startTime: 0, endTime: 50, flattenRecursion: true });
+  let thread = new ThreadNode(gThread, { startTime: 0, endTime: 50,
+                                         flattenRecursion: true });
 
   /**
    * Samples
@@ -23,7 +25,8 @@ add_task(function () {
    * A->B->B->B
    */
 
-  [ // total, self, name
+  [
+    // total, self, name
     [ 100, 0, "(root)", [
       [ 100, 0, "A", [
         [ 100, 50, "B", [
@@ -40,8 +43,10 @@ function compareFrameInfo(root, parent) {
     let [total, self, name, children] = def;
     let node = getFrameNodePath(parent, name);
     let data = node.getInfo({ root });
-    equal(total, data.totalPercentage, `${name} has correct total percentage: ${data.totalPercentage}`);
-    equal(self, data.selfPercentage, `${name} has correct self percentage: ${data.selfPercentage}`);
+    equal(total, data.totalPercentage,
+          `${name} has correct total percentage: ${data.totalPercentage}`);
+    equal(self, data.selfPercentage,
+          `${name} has correct self percentage: ${data.selfPercentage}`);
     if (children) {
       children.forEach(compareFrameInfo(root, node));
     }

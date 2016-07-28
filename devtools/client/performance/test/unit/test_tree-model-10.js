@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that the tree model calculates correct costs/percentages for
@@ -37,7 +38,8 @@ add_task(function () {
    * |   10%   |   0    |  -> A
    */
 
-  [ // total, self, name
+  [
+    // total, self, name
     [ 50, 50, "C", [
       [ 40, 0, "B", [
         [ 30, 0, "A"]
@@ -61,8 +63,10 @@ function compareFrameInfo(root, parent) {
     let [total, self, name, children] = def;
     let node = getFrameNodePath(parent, name);
     let data = node.getInfo({ root });
-    equal(total, data.totalPercentage, `${name} has correct total percentage: ${data.totalPercentage}`);
-    equal(self, data.selfPercentage, `${name} has correct self percentage: ${data.selfPercentage}`);
+    equal(total, data.totalPercentage,
+          `${name} has correct total percentage: ${data.totalPercentage}`);
+    equal(self, data.selfPercentage,
+          `${name} has correct self percentage: ${data.selfPercentage}`);
     if (children) {
       children.forEach(compareFrameInfo(root, node));
     }

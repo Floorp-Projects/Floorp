@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Unit test for `createTierGraphDataFromFrameNode` function.
@@ -29,14 +30,19 @@ add_task(function test() {
 
   let root = new ThreadNode(gThread, { invertTree, startTime, endTime });
 
-  equal(root.samples, SAMPLE_COUNT / 2, "root has correct amount of samples");
-  equal(root.sampleTimes.length, SAMPLE_COUNT / 2, "root has correct amount of sample times");
+  equal(root.samples, SAMPLE_COUNT / 2,
+    "root has correct amount of samples");
+  equal(root.sampleTimes.length, SAMPLE_COUNT / 2,
+    "root has correct amount of sample times");
   // Add time offset since the first sample begins TIME_OFFSET after startTime
-  equal(root.sampleTimes[0], startTime + TIME_OFFSET, "root recorded first sample time in scope");
-  equal(root.sampleTimes[root.sampleTimes.length - 1], endTime, "root recorded last sample time in scope");
+  equal(root.sampleTimes[0], startTime + TIME_OFFSET,
+    "root recorded first sample time in scope");
+  equal(root.sampleTimes[root.sampleTimes.length - 1], endTime,
+    "root recorded last sample time in scope");
 
   let frame = getFrameNodePath(root, "X");
-  let data = createTierGraphDataFromFrameNode(frame, root.sampleTimes, (endTime - startTime) / RESOLUTION);
+  let data = createTierGraphDataFromFrameNode(frame, root.sampleTimes,
+    (endTime - startTime) / RESOLUTION);
 
   let TIME_PER_WINDOW = SAMPLE_COUNT / 2 / RESOLUTION * TIME_PER_SAMPLE;
 
@@ -51,7 +57,8 @@ add_task(function test() {
   data = filteredData;
 
   for (let i = 0; i < 11; i++) {
-    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i), "first window has correct x");
+    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i),
+          "first window has correct x");
     equal(data[i].values[0], 0.2, "first window has 2 frames in interpreter");
     equal(data[i].values[1], 0.2, "first window has 2 frames in baseline");
     equal(data[i].values[2], 0.2, "first window has 2 frames in ion");
@@ -59,7 +66,8 @@ add_task(function test() {
   // Start on 11, since i===10 is where the values change, and the new value (0,0,0)
   // is removed in `filteredData`
   for (let i = 11; i < 20; i++) {
-    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i), "second window has correct x");
+    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i),
+          "second window has correct x");
     equal(data[i].values[0], 0, "second window observed no optimizations");
     equal(data[i].values[1], 0, "second window observed no optimizations");
     equal(data[i].values[2], 0, "second window observed no optimizations");
@@ -67,7 +75,8 @@ add_task(function test() {
   // Start on 21, since i===20 is where the values change, and the new value (0.3,0,0)
   // is removed in `filteredData`
   for (let i = 21; i < 30; i++) {
-    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i), "third window has correct x");
+    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i),
+          "third window has correct x");
     equal(data[i].values[0], 0.3, "third window has 3 frames in interpreter");
     equal(data[i].values[1], 0, "third window has 0 frames in baseline");
     equal(data[i].values[2], 0, "third window has 0 frames in ion");
@@ -137,7 +146,8 @@ var SAMPLES = (function () {
   return samples;
 })();
 
-var gThread = RecordingUtils.deflateThread({ samples: SAMPLES, markers: [] }, gUniqueStacks);
+var gThread = RecordingUtils.deflateThread({ samples: SAMPLES, markers: [] },
+                                           gUniqueStacks);
 
 var gRawSite1 = {
   line: 12,
