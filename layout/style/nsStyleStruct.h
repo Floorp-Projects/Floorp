@@ -3531,16 +3531,16 @@ private:
   nsStyleCorners mRadius;
 };
 
-struct nsStyleClipPath
+struct StyleClipPath
 {
-  nsStyleClipPath();
-  nsStyleClipPath(const nsStyleClipPath& aSource);
-  ~nsStyleClipPath();
+  StyleClipPath();
+  StyleClipPath(const StyleClipPath& aSource);
+  ~StyleClipPath();
 
-  nsStyleClipPath& operator=(const nsStyleClipPath& aOther);
+  StyleClipPath& operator=(const StyleClipPath& aOther);
 
-  bool operator==(const nsStyleClipPath& aOther) const;
-  bool operator!=(const nsStyleClipPath& aOther) const {
+  bool operator==(const StyleClipPath& aOther) const;
+  bool operator!=(const StyleClipPath& aOther) const {
     return !(*this == aOther);
   }
 
@@ -3568,7 +3568,7 @@ struct nsStyleClipPath
 
 private:
   void ReleaseRef();
-  void CopyURL(const nsStyleClipPath& aOther);
+  void CopyURL(const StyleClipPath& aOther);
 
   void* operator new(size_t) = delete;
 
@@ -3677,7 +3677,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   }
 
   nsStyleImageLayers    mMask;
-  mozilla::nsStyleClipPath mClipPath; // [reset]
+  mozilla::StyleClipPath mClipPath;   // [reset]
   nscolor          mStopColor;        // [reset]
   nscolor          mFloodColor;       // [reset]
   nscolor          mLightingColor;    // [reset]
