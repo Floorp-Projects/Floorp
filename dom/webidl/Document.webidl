@@ -253,10 +253,19 @@ partial interface Document {
   attribute EventHandler onfullscreenerror;
 };
 
-// http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html#extensions-to-the-document-interface
+// https://w3c.github.io/pointerlock/#extensions-to-the-document-interface
+// https://w3c.github.io/pointerlock/#extensions-to-the-documentorshadowroot-mixin
 partial interface Document {
-    readonly attribute Element? mozPointerLockElement;
-    void mozExitPointerLock ();
+  readonly attribute Element? pointerLockElement;
+  [BinaryName="pointerLockElement"]
+  readonly attribute Element? mozPointerLockElement;
+  void exitPointerLock();
+  [BinaryName="exitPointerLock"]
+  void mozExitPointerLock();
+
+  // Event handlers
+  attribute EventHandler onpointerlockchange;
+  attribute EventHandler onpointerlockerror;
 };
 
 //http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html#dfn-document-register

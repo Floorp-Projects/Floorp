@@ -130,15 +130,6 @@ interface Element : Node {
 
   // Mozilla extensions
 
-  /**
-   * Requests that this element be made the pointer-locked element, as per the DOM
-   * pointer lock api.
-   *
-   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
-   */
-  [UnsafeInPrerendering]
-  void mozRequestPointerLock();
-
   // Obsolete methods.
   Attr? getAttributeNode(DOMString name);
   [Throws]
@@ -273,4 +264,12 @@ partial interface Element {
   void requestFullscreen(optional any options);
   [Throws, UnsafeInPrerendering, BinaryName="requestFullscreen"]
   void mozRequestFullScreen(optional any options);
+};
+
+// https://w3c.github.io/pointerlock/#extensions-to-the-element-interface
+partial interface Element {
+  [UnsafeInPrerendering]
+  void requestPointerLock();
+  [UnsafeInPrerendering, BinaryName="requestPointerLock"]
+  void mozRequestPointerLock();
 };

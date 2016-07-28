@@ -3298,7 +3298,7 @@ Element::RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
 }
 
 void
-Element::MozRequestPointerLock()
+Element::RequestPointerLock()
 {
   OwnerDoc()->RequestPointerLock(this);
 }
