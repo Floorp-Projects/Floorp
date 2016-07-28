@@ -205,6 +205,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'ActionModeCompat.java',
     'ActionModeCompatView.java',
     'ActivityHandlerHelper.java',
+    'activitystream/ActivityStream.java',
     'AlarmReceiver.java',
     'AndroidGamepadManager.java',
     'animation/AnimationUtils.java',

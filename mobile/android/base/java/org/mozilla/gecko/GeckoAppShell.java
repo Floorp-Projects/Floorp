@@ -892,7 +892,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    static void scheduleRestart() {
+    public static void scheduleRestart() {
         getGeckoInterface().doRestart();
     }
 

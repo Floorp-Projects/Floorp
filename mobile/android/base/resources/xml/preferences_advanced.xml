@@ -38,11 +38,6 @@
                     android:entryValues="@array/pref_char_encoding_values"
                     android:persistent="false" />
 
-    <SwitchPreference android:key="android.not_a_preference.customtabs"
-                      android:title="@string/pref_custom_tabs"
-                      android:summary="@string/pref_custom_tabs_summary"
-                      android:defaultValue="false" />
-
     <PreferenceCategory android:title="@string/pref_category_data_saver">
 
         <ListPreference android:key="browser.image_blocking"
@@ -83,6 +78,23 @@
                                                                 android:title="@string/pref_learn_more"
                                                                 android:persistent="false"
                                                                 url="https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="android.not_a_preference.category_experimental"
+        android:title="@string/pref_category_experimental">
+
+        <SwitchPreference android:key="android.not_a_preference.activitystream"
+            android:title="@string/pref_activity_stream"
+            android:summary="@string/pref_activity_stream_summary"
+            android:defaultValue="false" />
+
+
+        <SwitchPreference android:key="android.not_a_preference.customtabs"
+            android:title="@string/pref_custom_tabs"
+            android:summary="@string/pref_custom_tabs_summary"
+            android:defaultValue="false" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>
