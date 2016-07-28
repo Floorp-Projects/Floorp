@@ -181,7 +181,7 @@ var gPlayTests = [
   // Multiple audio streams.
   { name:"bug516323.ogv", type:"video/ogg", duration:4.208 },
   // oggz-chop with non-keyframe as first frame
-  { name:"bug556821.ogv", type:"video/ogg", duration:2.551 },
+  { name:"bug556821.ogv", type:"video/ogg", duration:2.936 },
 
   // Encoded with vorbis beta1, includes unusually sized codebooks
   { name:"beta-phrasebook.ogg", type:"audio/ogg", duration:4.01 },
@@ -198,9 +198,9 @@ var gPlayTests = [
   { name:"bug498855-3.ogv", type:"video/ogg", duration:0.24 },
   { name:"bug504644.ogv", type:"video/ogg", duration:1.6 },
   { name:"chain.ogv", type:"video/ogg", duration:Number.NaN },
-  { name:"bug523816.ogv", type:"video/ogg", duration:0.533 },
+  { name:"bug523816.ogv", type:"video/ogg", duration:0.766 },
   { name:"bug495129.ogv", type:"video/ogg", duration:2.41 },
-  { name:"bug498380.ogv", type:"video/ogg", duration:0.533 },
+  { name:"bug498380.ogv", type:"video/ogg", duration:0.7663 },
   { name:"bug495794.ogg", type:"audio/ogg", duration:0.3 },
   { name:"bug557094.ogv", type:"video/ogg", duration:0.24 },
   { name:"multiple-bos.ogg", type:"video/ogg", duration:0.431 },
@@ -294,16 +294,16 @@ var gSeekToNextFrameTests = [
   // Multiple audio streams.
   { name:"bug516323.ogv", type:"video/ogg", duration:4.208 },
   // oggz-chop with non-keyframe as first frame
-  { name:"bug556821.ogv", type:"video/ogg", duration:2.551 },
+  { name:"bug556821.ogv", type:"video/ogg", duration:2.936 },
   // Various weirdly formed Ogg files
   { name:"bug498855-1.ogv", type:"video/ogg", duration:0.24 },
   { name:"bug498855-2.ogv", type:"video/ogg", duration:0.24 },
   { name:"bug498855-3.ogv", type:"video/ogg", duration:0.24 },
   { name:"bug504644.ogv", type:"video/ogg", duration:1.6 },
 
-  { name:"bug523816.ogv", type:"video/ogg", duration:0.533 },
+  { name:"bug523816.ogv", type:"video/ogg", duration:0.766 },
 
-  { name:"bug498380.ogv", type:"video/ogg", duration:0.533 },
+  { name:"bug498380.ogv", type:"video/ogg", duration:0.766 },
   { name:"bug557094.ogv", type:"video/ogg", duration:0.24 },
   { name:"multiple-bos.ogg", type:"video/ogg", duration:0.431 },
   // Test playback/metadata work after a redirect
