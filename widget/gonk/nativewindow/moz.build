@@ -47,10 +47,6 @@ elif CONFIG['ANDROID_VERSION'] in ('17', '18'):
         'GonkConsumerBaseJB.h',
         'GonkNativeWindowJB.h',
     ]
-elif CONFIG['ANDROID_VERSION'] == '15':
-    EXPORTS += [
-        'GonkNativeWindowICS.h',
-    ]
 
 if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER'] or CONFIG['MOZ_WEBRTC']:
     if CONFIG['ANDROID_VERSION'] >= '21':
@@ -77,10 +73,6 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER'] or CONFIG['MOZ_WEBRTC']
             'GonkBufferQueueJB.cpp',
             'GonkConsumerBaseJB.cpp',
             'GonkNativeWindowJB.cpp',
-        ]
-    elif CONFIG['ANDROID_VERSION'] == '15':
-        SOURCES += [
-            'GonkNativeWindowICS.cpp',
         ]
 
 if CONFIG['ANDROID_VERSION'] >= '18':
