@@ -948,7 +948,7 @@ CompositorBridgeChild::GetTexturePool(LayersBackend aBackend,
                                     gfxPlatform::GetPlatform()->GetTileHeight()),
                             aFlags,
                             gfxPrefs::LayersTileInitialPoolSize(),
-                            gfxPrefs::LayersTilePoolIncrementSize(),
+                            gfxPrefs::LayersTilePoolUnusedSize(),
                             this));
 
   return mTexturePools.LastElement();
