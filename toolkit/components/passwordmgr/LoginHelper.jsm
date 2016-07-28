@@ -35,7 +35,6 @@ this.LoginHelper = {
    * Warning: these only update if a logger was created.
    */
   debug: Services.prefs.getBoolPref("signon.debug"),
-  formlessCaptureEnabled: Services.prefs.getBoolPref("signon.formlessCapture.enabled"),
   schemeUpgrades: Services.prefs.getBoolPref("signon.schemeUpgrades"),
 
   createLogger(aLogPrefix) {
@@ -54,7 +53,6 @@ this.LoginHelper = {
     // Watch for pref changes and update this.debug and the maxLogLevel for created loggers
     Services.prefs.addObserver("signon.", () => {
       this.debug = Services.prefs.getBoolPref("signon.debug");
-      this.formlessCaptureEnabled = Services.prefs.getBoolPref("signon.formlessCapture.enabled");
       this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
       logger.maxLogLevel = getMaxLogLevel();
     }, false);
