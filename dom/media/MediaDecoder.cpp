@@ -1342,9 +1342,7 @@ void
 MediaDecoder::UpdateLogicalPositionInternal(MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (IsShutdown()) {
-    return;
-  }
+  MOZ_ASSERT(!IsShutdown());
 
   double currentPosition = static_cast<double>(CurrentPosition()) / static_cast<double>(USECS_PER_S);
   bool logicalPositionChanged = mLogicalPosition != currentPosition;
