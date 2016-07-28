@@ -11,6 +11,12 @@ from marionette_driver.by import By
 
 
 class TestTimeouts(MarionetteTestCase):
+
+    def tearDown(self):
+        self.marionette.reset_timeouts()
+
+        MarionetteTestCase.tearDown(self)
+
     def test_pagetimeout_notdefinetimeout_pass(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
@@ -62,3 +68,8 @@ class TestTimeouts(MarionetteTestCase):
              var callback = arguments[arguments.length - 1];
              setTimeout(function() { callback(true); }, 500);
              """))
+
+    def test_invalid_timeout_type(self):
+        self.assertRaises(ValueError, self.marionette.timeouts, "foobar", 1000)
+        self.assertRaises(ValueError, self.marionette.timeouts, 42, 1000)
+        self.assertRaises(MarionetteException, self.marionette.timeouts, "page load", "foobar")
