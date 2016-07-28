@@ -740,8 +740,13 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   struct NodeInfo {
-    explicit NodeInfo(const nsACString& aSite) : siteToForget(aSite) {}
+    explicit NodeInfo(const nsACString& aSite,
+                      const mozilla::OriginAttributesPattern& aPattern)
+      : siteToForget(aSite)
+      , mPattern(aPattern)
+    { }
     nsCString siteToForget;
+    mozilla::OriginAttributesPattern mPattern;
     nsTArray<nsCString> expectedRemainingNodeIds;
   };
 
@@ -752,7 +757,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
       nsCString salt;
       nsresult rv = ReadSalt(aFile, salt);
       ASSERT_TRUE(NS_SUCCEEDED(rv));
-      if (!MatchOrigin(aFile, mNodeInfo->siteToForget)) {
+      if (!MatchOrigin(aFile, mNodeInfo->siteToForget, mNodeInfo->mPattern)) {
         mNodeInfo->expectedRemainingNodeIds.AppendElement(salt);
       }
     }
@@ -761,8 +766,11 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   };
 
   void TestForgetThisSite_CollectSiteInfo() {
+    mozilla::OriginAttributesPattern pattern;
+
     nsAutoPtr<NodeInfo> siteInfo(
-        new NodeInfo(NS_LITERAL_CSTRING("http://example1.com")));
+        new NodeInfo(NS_LITERAL_CSTRING("http://example1.com"),
+                     pattern));
     // Collect nodeIds that are expected to remain for later comparison.
     EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"), NodeIdCollector(siteInfo));
     // Invoke "Forget this site" on the main thread.
@@ -773,7 +781,8 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   void TestForgetThisSite_Forget(nsAutoPtr<NodeInfo> aSiteInfo) {
     RefPtr<GeckoMediaPluginServiceParent> service =
         GeckoMediaPluginServiceParent::GetSingleton();
-    service->ForgetThisSite(NS_ConvertUTF8toUTF16(aSiteInfo->siteToForget));
+    service->ForgetThisSiteNative(NS_ConvertUTF8toUTF16(aSiteInfo->siteToForget),
+                                  aSiteInfo->mPattern);
 
     nsCOMPtr<nsIThread> thread;
     service->GetThread(getter_AddRefs(thread));
@@ -797,7 +806,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
       nsresult rv = ReadSalt(aFile, salt);
       ASSERT_TRUE(NS_SUCCEEDED(rv));
       // Shouldn't match the origin if we clear correctly.
-      EXPECT_FALSE(MatchOrigin(aFile, mNodeInfo->siteToForget));
+      EXPECT_FALSE(MatchOrigin(aFile, mNodeInfo->siteToForget, mNodeInfo->mPattern));
       // Check if remaining nodeIDs are as expected.
       EXPECT_TRUE(mExpectedRemainingNodeIds.RemoveElement(salt));
     }
