@@ -2531,7 +2531,7 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
 
     // Mark roots to update them.
     {
-        markRuntime(&trc, MarkRuntime, lock);
+        markRuntime(&trc, lock);
 
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
         Debugger::markAll(&trc);
@@ -3893,7 +3893,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
         }
     }
 
-    markRuntime(gcmarker, MarkRuntime, lock);
+    markRuntime(gcmarker, lock);
 
     gcstats::AutoPhase ap2(stats, gcstats::PHASE_MARK_ROOTS);
 
@@ -4178,7 +4178,7 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoLockForExclusiveAccess& lock)
                 chunk->bitmap.clear();
         }
 
-        gc->markRuntime(gcmarker, GCRuntime::MarkRuntime, lock);
+        gc->markRuntime(gcmarker, lock);
 
         gc->incrementalState = State::Mark;
         auto unlimited = SliceBudget::unlimited();
