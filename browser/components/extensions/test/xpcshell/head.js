@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-Cu.import("resource://gre/modules/ExtensionManagement.jsm");
-
 /* exported normalizeManifest */
 
 let BASE_MANIFEST = {
@@ -28,11 +26,8 @@ let BASE_MANIFEST = {
   "version": "0",
 };
 
-ExtensionManagement.registerSchema("chrome://browser/content/schemas/commands.json");
-
 function* normalizeManifest(manifest, baseManifest = BASE_MANIFEST) {
   const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
-
   yield Management.lazyInit();
 
   let errors = [];

@@ -5,7 +5,12 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "History", () => {
+  Cu.import("resource://gre/modules/PlacesUtils.jsm");
+  return PlacesUtils.history;
+});
+
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -16,13 +21,13 @@ const {
   SingletonEventManager,
 } = ExtensionUtils;
 
-const History = PlacesUtils.history;
+let nsINavHistoryService = Ci.nsINavHistoryService;
 const TRANSITION_TO_TRANSITION_TYPES_MAP = new Map([
-  ["link", History.TRANSITION_LINK],
-  ["typed", History.TRANSITION_TYPED],
-  ["auto_bookmark", History.TRANSITION_BOOKMARK],
-  ["auto_subframe", History.TRANSITION_EMBED],
-  ["manual_subframe", History.TRANSITION_FRAMED_LINK],
+  ["link", nsINavHistoryService.TRANSITION_LINK],
+  ["typed", nsINavHistoryService.TRANSITION_TYPED],
+  ["auto_bookmark", nsINavHistoryService.TRANSITION_BOOKMARK],
+  ["auto_subframe", nsINavHistoryService.TRANSITION_EMBED],
+  ["manual_subframe", nsINavHistoryService.TRANSITION_FRAMED_LINK],
 ]);
 
 let TRANSITION_TYPE_TO_TRANSITIONS_MAP = new Map();
@@ -123,7 +128,7 @@ function getObserver() {
       },
     };
     EventEmitter.decorate(_observer);
-    PlacesUtils.history.addObserver(_observer, false);
+    History.addObserver(_observer, false);
   }
   return _observer;
 }

@@ -59,6 +59,7 @@
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseDebugging.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
@@ -664,9 +665,7 @@ class MessageEventRunnable final : public WorkerRunnable
   // This is only used for messages dispatched to a service worker.
   UniquePtr<ServiceWorkerClientInfo> mEventSource;
 
-  // This is only used to hold service workers alive while dispatching the
-  // message event.
-  nsMainThreadPtrHandle<nsISupports> mKeepAliveToken;
+  RefPtr<PromiseNativeHandler> mHandler;
 
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
@@ -679,10 +678,10 @@ public:
 
   void
   SetServiceWorkerData(UniquePtr<ServiceWorkerClientInfo>&& aSource,
-                       const nsMainThreadPtrHandle<nsISupports>& aKeepAliveToken)
+                       PromiseNativeHandler* aHandler)
   {
     mEventSource = Move(aSource);
-    mKeepAliveToken = aKeepAliveToken;
+    mHandler = aHandler;
   }
 
   bool
@@ -741,6 +740,7 @@ public:
     nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
 
     nsCOMPtr<nsIDOMEvent> domEvent;
+    RefPtr<ExtendableMessageEvent> extendableEvent;
     // For messages dispatched to service worker, use ExtendableMessageEvent
     // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#extendablemessage-event-section
     if (mEventSource) {
@@ -757,16 +757,16 @@ public:
       init.mPorts.Value().SetNull();
 
       ErrorResult rv;
-      RefPtr<ExtendableMessageEvent> event = ExtendableMessageEvent::Constructor(
+      extendableEvent = ExtendableMessageEvent::Constructor(
         aTarget, NS_LITERAL_STRING("message"), init, rv);
       if (NS_WARN_IF(rv.Failed())) {
         rv.SuppressException();
         return false;
       }
-      event->SetSource(client);
-      event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
-                                          ports));
-      domEvent = do_QueryObject(event);
+      extendableEvent->SetSource(client);
+      extendableEvent->SetPorts(new MessagePortList(static_cast<dom::Event*>(extendableEvent.get()),
+                                                    ports));
+      domEvent = do_QueryObject(extendableEvent);
     } else {
       RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
       event->InitMessageEvent(nullptr,
@@ -787,6 +787,20 @@ public:
 
     nsEventStatus dummy = nsEventStatus_eIgnore;
     aTarget->DispatchDOMEvent(nullptr, domEvent, nullptr, &dummy);
+
+    if (extendableEvent && mHandler) {
+      RefPtr<Promise> waitUntilPromise = extendableEvent->GetPromise();
+      if (!waitUntilPromise) {
+        waitUntilPromise = Promise::Resolve(parent, aCx,
+                                            JS::UndefinedHandleValue, rv);
+        MOZ_RELEASE_ASSERT(!rv.Failed());
+      }
+
+      MOZ_ASSERT(waitUntilPromise);
+
+      waitUntilPromise->AppendNativeHandler(mHandler);
+    }
+
     return true;
   }
 
@@ -2948,7 +2962,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
                                             JS::Handle<JS::Value> aMessage,
                                             const Optional<Sequence<JS::Value>>& aTransferable,
                                             UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
-                                            const nsMainThreadPtrHandle<nsISupports>& aKeepAliveToken,
+                                            PromiseNativeHandler* aHandler,
                                             ErrorResult& aRv)
 {
   AssertIsOnParentThread();
@@ -3010,7 +3024,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
     return;
   }
 
-  runnable->SetServiceWorkerData(Move(aClientInfo), aKeepAliveToken);
+  runnable->SetServiceWorkerData(Move(aClientInfo), aHandler);
 
   if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -3033,12 +3047,12 @@ WorkerPrivateParent<Derived>::PostMessageToServiceWorker(
                              JSContext* aCx, JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
-                             const nsMainThreadPtrHandle<nsISupports>& aKeepAliveToken,
+                             PromiseNativeHandler* aHandler,
                              ErrorResult& aRv)
 {
   AssertIsOnMainThread();
   PostMessageInternal(aCx, aMessage, aTransferable, Move(aClientInfo),
-                      aKeepAliveToken, aRv);
+                      aHandler, aRv);
 }
 
 template <class Derived>

@@ -142,8 +142,8 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
 
   if ((status == MediaKeySystemStatus::Cdm_not_installed ||
        status == MediaKeySystemStatus::Cdm_insufficient_version) &&
-      (keySystem.EqualsLiteral("com.adobe.primetime") ||
-       keySystem.EqualsLiteral("com.widevine.alpha"))) {
+      (keySystem.EqualsASCII(kEMEKeySystemPrimetime) ||
+       keySystem.EqualsASCII(kEMEKeySystemWidevine))) {
     // These are cases which could be resolved by downloading a new(er) CDM.
     // When we send the status to chrome, chrome's GMPProvider will attempt to
     // download or update the CDM. In AwaitInstall() we add listeners to wait

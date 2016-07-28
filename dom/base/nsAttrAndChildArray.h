@@ -14,6 +14,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/BorrowedAttrInfo.h"
 
 #include "nscore.h"
 #include "nsAttrName.h"
@@ -46,6 +47,7 @@ class nsMappedAttributeElement;
 
 class nsAttrAndChildArray
 {
+  typedef mozilla::dom::BorrowedAttrInfo BorrowedAttrInfo;
 public:
   nsAttrAndChildArray();
   ~nsAttrAndChildArray();
@@ -98,6 +100,9 @@ public:
 
   // Returns attribute name at given position, *not* out-of-bounds safe
   const nsAttrName* AttrNameAt(uint32_t aPos) const;
+
+  // Returns the attribute info at a given position, *not* out-of-bounds safe
+  BorrowedAttrInfo AttrInfoAt(uint32_t aPos) const;
 
   // Returns attribute name at given position or null if aPos is out-of-bounds
   const nsAttrName* GetSafeAttrNameAt(uint32_t aPos) const;
@@ -164,7 +169,7 @@ private:
 
   void SetChildCount(uint32_t aCount)
   {
-    mImpl->mAttrAndChildCount = 
+    mImpl->mAttrAndChildCount =
         (mImpl->mAttrAndChildCount & ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK) |
         (aCount << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS);
   }
