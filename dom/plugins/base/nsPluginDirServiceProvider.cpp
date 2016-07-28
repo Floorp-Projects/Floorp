@@ -116,7 +116,7 @@ TranslateVersionStr(const WCHAR* szVersion, verBlock *vbVersion)
     szJavaBuild[0] = '.';
   }
 
-#if (defined(_MSC_VER) && _MSC_VER < 1900) || defined(__MINGW32__)
+#if defined(__MINGW32__)
   // MSVC 2013 and earlier provided only a non-standard two-argument variant of
   // wcstok that is generally not thread-safe. For our purposes here, it works
   // fine, though.
@@ -125,6 +125,7 @@ TranslateVersionStr(const WCHAR* szVersion, verBlock *vbVersion)
     return ::std::wcstok(strToken, strDelimit);
   };
 #endif
+
   wchar_t* ctx = nullptr;
   szNum1 = wcstok(strVer,  L".", &ctx);
   szNum2 = wcstok(nullptr, L".", &ctx);
@@ -445,4 +446,3 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(uint32_t aKey, nsCOMAr
   }
   return NS_OK;
 }
-
