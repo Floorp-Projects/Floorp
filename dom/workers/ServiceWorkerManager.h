@@ -294,6 +294,9 @@ public:
   nsresult
   NotifyUnregister(nsIPrincipal* aPrincipal, const nsAString& aScope);
 
+  void
+  WorkerIsIdle(ServiceWorkerInfo* aWorker);
+
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
