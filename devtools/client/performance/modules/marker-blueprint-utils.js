@@ -74,7 +74,8 @@ exports.MarkerBlueprintUtils = {
     if (!generic) {
       let message = `Could not find marker generic name for "${markerName}".`;
       if (typeof blueprint.label === "function") {
-        message += ` The following function must return a generic name string when no marker passed: ${blueprint.label}`;
+        message += ` The following function must return a generic name string when no` +
+                   ` marker passed: ${blueprint.label}`;
       } else {
         message += ` ${markerName}.label must be defined in the marker blueprint.`;
       }
