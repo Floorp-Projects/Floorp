@@ -203,7 +203,7 @@ private:
 
   // We keep a token for |dom.serviceWorkers.idle_timeout| seconds to give the
   // worker a grace period after each event.
-  RefPtr<KeepAliveToken> mKeepAliveToken;
+  RefPtr<KeepAliveToken> mIdleKeepAliveToken;
 
   uint64_t mDebuggerCount;
 
