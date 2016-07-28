@@ -774,9 +774,8 @@ function test() {
 
 /*
  * Begin printing functions.  These functions use the shell's
- * print function.  When running tests in the browser, these
- * functions, override these functions with functions that use
- * document.write.
+ * print function.  When running tests in the browser, browser.js
+ * overrides these functions to write to the page.
  */
 
 function writeTestCaseResult( expect, actual, string ) {
