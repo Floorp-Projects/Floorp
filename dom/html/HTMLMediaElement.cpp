@@ -2614,6 +2614,9 @@ HTMLMediaElement::ResetConnectionState()
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
   ChangeDelayLoadStatus(false);
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
+  if (mDecoder) {
+    ShutdownDecoder();
+  }
 }
 
 void

@@ -6,7 +6,7 @@ $inherits:
       build_name: 'mozharness-tox'
       build_type: 'opt'
 
-docker-image: desktop-test
+docker-image: lint
 task:
   metadata:
     name: '[TC] - Mozharness Tox'
@@ -26,13 +26,14 @@ task:
       level-{{level}}-{{project}}-dotcache: '/home/worker/.cache'
 
     command:
+      - /home/worker/bin/checkout-gecko-and-run
+      - /home/worker/workspace/gecko
       - bash
       - -cx
       - >
-          tc-vcs checkout ./gecko {{base_repository}} {{head_repository}} {{head_rev}} {{head_ref}} &&
-          cd gecko/testing/mozharness &&
-          pip install tox &&
-          tox -e py27-hg3.7
+          cd /home/worker/workspace/gecko/testing/mozharness &&
+          /usr/bin/pip2 install tox &&
+          /home/worker/.local/bin/tox -e py27-hg3.7
   extra:
     extra:
         build_product: '{{build_product}}'

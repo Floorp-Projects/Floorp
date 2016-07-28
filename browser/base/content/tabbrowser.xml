@@ -3035,8 +3035,6 @@
           let wasFocused = (document.activeElement == this.mCurrentTab);
 
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
-          this.mCurrentTab._logicallySelected = false;
-          this.mCurrentTab._visuallySelected = false;
 
           // invalidate cache
           this._visibleTabs = null;
@@ -3047,11 +3045,25 @@
 
           for (let i = 0; i < this.tabs.length; i++) {
             this.tabs[i]._tPos = i;
-            this.tabs[i]._logicallySelected = false;
-            this.tabs[i]._visuallySelected = false;
+            this.tabs[i]._selected = false;
           }
-          this.mCurrentTab._logicallySelected = true;
-          this.mCurrentTab._visuallySelected = true;
+
+          // If we're in the midst of an async tab switch while calling
+          // moveTabTo, we can get into a case where _visuallySelected
+          // is set to true on two different tabs.
+          //
+          // What we want to do in moveTabTo is to remove logical selection
+          // from all tabs, and then re-add logical selection to mCurrentTab
+          // (and visual selection as well if we're not running with e10s, which
+          // setting _selected will do automatically).
+          //
+          // If we're running with e10s, then the visual selection will not
+          // be changed, which is fine, since if we weren't in the midst of a
+          // tab switch, the previously visually selected tab should still be
+          // correct, and if we are in the midst of a tab switch, then the async
+          // tab switcher will set the visually selected tab once the tab switch
+          // has completed.
+          this.mCurrentTab._selected = true;
 
           if (wasFocused)
             this.mCurrentTab.focus();
@@ -6288,26 +6300,16 @@
         </setter>
       </property>
 
-      <property name="_logicallySelected">
-        <setter>
-          <![CDATA[
-          if (val)
-            this.setAttribute("selected", "true");
-          else
-            this.removeAttribute("selected");
-
-          return val;
-          ]]>
-        </setter>
-      </property>
-
       <property name="_selected">
         <setter>
           <![CDATA[
           // in e10s we want to only pseudo-select a tab before its rendering is done, so that
           // the rest of the system knows that the tab is selected, but we don't want to update its
           // visual status to selected until after we receive confirmation that its content has painted.
-          this._logicallySelected = val;
+          if (val)
+            this.setAttribute("selected", "true");
+          else
+            this.removeAttribute("selected");
 
           // If we're non-e10s we should update the visual selection as well at the same time,
           // *or* if we're e10s and the visually selected tab isn't changing, in which case the
