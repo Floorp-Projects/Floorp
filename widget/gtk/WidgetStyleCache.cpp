@@ -304,6 +304,33 @@ CreateVPanedWidget()
 }
 
 static GtkWidget*
+CreateImageMenuItemWidget()
+{
+  GtkWidget* widget = gtk_image_menu_item_new();
+  gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)), widget);
+  gtk_widget_realize(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateCheckMenuItemWidget()
+{
+  GtkWidget* widget = gtk_check_menu_item_new();
+  gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)), widget);
+  gtk_widget_realize(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateRadioMenuItemWidget()
+{
+  GtkWidget* widget = gtk_radio_menu_item_new(nullptr);
+  gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)), widget);
+  gtk_widget_realize(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -369,6 +396,12 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateHPanedWidget();
     case MOZ_GTK_SPLITTER_VERTICAL:
       return CreateVPanedWidget();
+    case MOZ_GTK_IMAGEMENUITEM:
+      return CreateImageMenuItemWidget();
+    case MOZ_GTK_CHECKMENUITEM_CONTAINER:
+      return CreateCheckMenuItemWidget();
+    case MOZ_GTK_RADIOMENUITEM_CONTAINER:
+      return CreateRadioMenuItemWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -491,6 +524,14 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       style = CreateChildCSSNode(GTK_STYLE_CLASS_CHECK,
                                  MOZ_GTK_CHECKBUTTON_CONTAINER);
       break;
+    case MOZ_GTK_RADIOMENUITEM:
+      style = CreateChildCSSNode(GTK_STYLE_CLASS_RADIO,
+                                 MOZ_GTK_RADIOMENUITEM_CONTAINER);
+      break;
+    case MOZ_GTK_CHECKMENUITEM:
+      style = CreateChildCSSNode(GTK_STYLE_CLASS_CHECK,
+                                 MOZ_GTK_CHECKMENUITEM_CONTAINER);
+      break;
     case MOZ_GTK_PROGRESS_TROUGH:
       /* Progress bar background (trough) */
       style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH,
@@ -576,6 +617,12 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
                                      GTK_STYLE_CLASS_RADIO);
     case MOZ_GTK_CHECKBUTTON:
       return GetWidgetStyleWithClass(MOZ_GTK_CHECKBUTTON_CONTAINER,
+                                     GTK_STYLE_CLASS_CHECK);
+    case MOZ_GTK_RADIOMENUITEM:
+      return GetWidgetStyleWithClass(MOZ_GTK_RADIOMENUITEM_CONTAINER,
+                                     GTK_STYLE_CLASS_RADIO);
+    case MOZ_GTK_CHECKMENUITEM:
+      return GetWidgetStyleWithClass(MOZ_GTK_CHECKMENUITEM_CONTAINER,
                                      GTK_STYLE_CLASS_CHECK);
     case MOZ_GTK_PROGRESS_TROUGH:
       return GetWidgetStyleWithClass(MOZ_GTK_PROGRESSBAR,
