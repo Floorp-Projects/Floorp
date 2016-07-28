@@ -162,9 +162,6 @@ public:
   // Methods inherited from Image
   virtual void OnSurfaceDiscarded() override;
 
-  /* The total number of frames in this image. */
-  uint32_t GetNumFrames() const { return mFrameCount; }
-
   virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf)
     const override;
   virtual void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
@@ -178,8 +175,6 @@ public:
   // Decoder callbacks.
   //////////////////////////////////////////////////////////////////////////////
 
-  void OnAddedFrame(uint32_t aNewFrameCount);
-
   /**
    * Sends the provided progress notifications to ProgressTracker.
    *
@@ -187,12 +182,17 @@ public:
    *
    * @param aProgress    The progress notifications to send.
    * @param aInvalidRect An invalidation rect to send.
+   * @param aFrameCount  If Some(), an updated count of the number of frames of
+   *                     animation the decoder has finished decoding so far. This
+   *                     is a lower bound for the total number of animation
+   *                     frames this image has.
    * @param aFlags       The surface flags used by the decoder that generated
    *                     these notifications, or DefaultSurfaceFlags() if the
    *                     notifications don't come from a decoder.
    */
   void NotifyProgress(Progress aProgress,
-                      const nsIntRect& aInvalidRect = nsIntRect(),
+                      const gfx::IntRect& aInvalidRect = nsIntRect(),
+                      const Maybe<uint32_t>& aFrameCount = Nothing(),
                       SurfaceFlags aSurfaceFlags = DefaultSurfaceFlags());
 
   /**
@@ -383,9 +383,6 @@ private: // data
 
   // The source data for this image.
   NotNull<RefPtr<SourceBuffer>>  mSourceBuffer;
-
-  // The number of frames this image has.
-  uint32_t                   mFrameCount;
 
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
