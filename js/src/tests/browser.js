@@ -19,17 +19,34 @@
 
   var ReflectApply = global.Reflect.apply;
 
+  // BEWARE: ObjectGetOwnPropertyDescriptor is only safe to use if its result
+  //         is inspected using own-property-examining functionality.  Directly
+  //         accessing properties on a returned descriptor without first
+  //         verifying the property's existence can invoke user-modifiable
+  //         behavior.
+  var ObjectGetOwnPropertyDescriptor = global.Object.getOwnPropertyDescriptor;
+
   var document = global.document;
   var documentBody = global.document.body;
   var documentDocumentElement = global.document.documentElement;
   var DocumentCreateElement = global.document.createElement;
   var HTMLDocumentPrototypeWrite = global.HTMLDocument.prototype.write;
   var ElementInnerHTMLSetter =
-    Object.getOwnPropertyDescriptor(global.Element.prototype, "innerHTML").set;
+    ObjectGetOwnPropertyDescriptor(global.Element.prototype, "innerHTML").set;
   var HTMLIFramePrototypeContentWindowGetter =
-    Object.getOwnPropertyDescriptor(global.HTMLIFrameElement.prototype, "contentWindow").get;
+    ObjectGetOwnPropertyDescriptor(global.HTMLIFrameElement.prototype, "contentWindow").get;
   var HTMLIFramePrototypeRemove = global.HTMLIFrameElement.prototype.remove;
   var NodePrototypeAppendChild = global.Node.prototype.appendChild;
+  var NodePrototypeTextContentSetter =
+    ObjectGetOwnPropertyDescriptor(global.Node.prototype, "textContent").set;
+
+  // Cached DOM nodes used by the test harness itself.  (We assume the test
+  // doesn't misbehave in a way that actively interferes with what the test
+  // harness runner observes, e.g. navigating the page to a different location.
+  // Short of running every test in a worker -- which has its own problems --
+  // there's no way to isolate a test from the page to that extent.)
+  var printOutputContainer =
+    global.document.getElementById("jsreftest-print-output-container");
 
   /****************************
    * GENERAL HELPER FUNCTIONS *
@@ -45,6 +62,10 @@
 
   function SetInnerHTML(element, html) {
     ReflectApply(ElementInnerHTMLSetter, element, [html]);
+  }
+
+  function SetTextContent(element, text) {
+    ReflectApply(NodePrototypeTextContentSetter, element, [text]);
   }
 
   /****************************
@@ -81,6 +102,17 @@
     }
   }
   global.DocumentWrite = DocumentWrite;
+
+  // This function is *only* used by this file's |print()| function!  It's only
+  // defined/exported here because |print| is defined outside this IIFE and
+  // because it needs access to unadulterated functionality as originally
+  // defined when this IIFE executed.
+  function AddPrintOutput(s) {
+    var msgDiv = CreateElement("div");
+    SetTextContent(msgDiv, s);
+    AppendChild(printOutputContainer, msgDiv);
+  }
+  global.AddPrintOutput = AddPrintOutput;
 })(this);
 
 
@@ -143,9 +175,8 @@ function print() {
     dump( s + '\n');
   }
 
-  s = s.replace(/[<>&]/g, htmlesc);
-
-  DocumentWrite(s);
+  // AddPrintOutput doesn't require HTML special characters be escaped.
+  AddPrintOutput(s);
 }
 
 function writeHeaderToLog( string ) {
