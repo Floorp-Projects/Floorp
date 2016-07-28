@@ -19,10 +19,6 @@ EXTRA_COMPONENTS += [
     'extensions-toolkit.manifest',
 ]
 
-TESTING_JS_MODULES += [
-    'ExtensionXPCShellUtils.jsm',
-]
-
 DIRS += ['schemas']
 
 JAR_MANIFESTS += ['jar.mn']
