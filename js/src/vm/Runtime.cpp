@@ -201,9 +201,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     profilingScripts(false),
     suppressProfilerSampling(false),
     hadOutOfMemory(false),
-#ifdef DEBUG
-    handlingInitFailure(false),
-#endif
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     runningOOMTest(false),
 #endif
