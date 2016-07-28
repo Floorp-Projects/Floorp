@@ -899,9 +899,9 @@ MarkupView.prototype = {
           }
 
           let isNextSiblingText = nextSibling ?
-            nextSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE : false;
+            nextSibling.nodeType === nodeConstants.TEXT_NODE : false;
           let isPrevSiblingText = prevSibling ?
-            prevSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE : false;
+            prevSibling.nodeType === nodeConstants.TEXT_NODE : false;
 
           // If the parent had two children and the next or previous sibling
           // is a text node, then it now has only a single text node, is about
