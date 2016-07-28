@@ -1722,11 +1722,8 @@
             // Also, we do not need to take care of attaching nsIFormFillControllers
             // in the case that the browser is remote, as remote browsers take
             // care of that themselves.
-            if (browser &&
-                this.hasAttribute("autocompletepopup") &&
-                !browser.isRemoteBrowser) {
+            if (browser && this.hasAttribute("autocompletepopup")) {
               browser.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
-              browser.attachFormFill();
             }
 
             return browser;
@@ -4064,22 +4061,6 @@
             return this.mCurrentBrowser.gotoIndex(aIndex);
           ]]>
         </body>
-      </method>
-
-      <method name="attachFormFill">
-        <body><![CDATA[
-          for (let browser of this.browsers) {
-            browser.attachFormFill();
-          }
-        ]]></body>
-      </method>
-
-      <method name="detachFormFill">
-        <body><![CDATA[
-          for (let browser of this.browsers) {
-            browser.detachFormFill();
-          }
-        ]]></body>
       </method>
 
       <property name="currentURI"
