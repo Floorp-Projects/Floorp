@@ -619,6 +619,8 @@ MediaDecoder::Shutdown()
   mCDMProxyPromiseHolder.RejectIfExists(true, __func__);
 #endif
 
+  DiscardOngoingSeekIfExists();
+
   // This changes the decoder state to SHUTDOWN and does other things
   // necessary to unblock the state machine thread if it's blocked, so
   // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
