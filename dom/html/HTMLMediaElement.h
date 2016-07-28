@@ -606,6 +606,8 @@ public:
 
   void MozDumpDebugInfo();
 
+  void SetVisible(bool aVisible);
+
   already_AddRefed<DOMMediaStream> GetSrcObject() const;
   void SetSrcObject(DOMMediaStream& aValue);
   void SetSrcObject(DOMMediaStream* aValue);
