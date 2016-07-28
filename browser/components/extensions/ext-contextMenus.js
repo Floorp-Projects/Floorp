@@ -447,13 +447,15 @@ MenuItem.prototype = {
 
     let targetPattern = this.targetUrlMatchPattern;
     if (targetPattern) {
-      let isMedia = contextData.onImage || contextData.onAudio || contextData.onVideo;
-      if (!isMedia) {
-        return false;
+      let targetUrls = [];
+      if (contextData.onImage || contextData.onAudio || contextData.onVideo) {
+        // TODO: double check if srcUrl is always set when we need it
+        targetUrls.push(contextData.srcUrl);
       }
-      let srcURI = Services.io.newURI(contextData.srcUrl, null, null);
-      if (!targetPattern.matches(srcURI)) {
-        // TODO: double check if mediaURL is always set when we need it
+      if (contextData.onLink) {
+        targetUrls.push(contextData.linkUrl);
+      }
+      if (!targetUrls.some(targetUrl => targetPattern.matches(NetUtil.newURI(targetUrl)))) {
         return false;
       }
     }
