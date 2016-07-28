@@ -87,7 +87,7 @@ this.CaptivePortalWatcher = {
     // tab when we regain focus. This is so that if a different application was
     // focused, when the user (re-)focuses a browser window, we open the tab
     // immediately in that window so they can login before continuing to browse.
-    if (!win || Services.ww.activeWindow != win) {
+    if (!win || !win.document.hasFocus()) {
       this._waitingToAddTab = true;
       Services.obs.addObserver(this, "xul-window-visible", false);
       return;
@@ -110,8 +110,8 @@ this.CaptivePortalWatcher = {
     }
 
     let win = RecentWindow.getMostRecentBrowserWindow();
-    if (!win || Services.ww.activeWindow != win) {
-      // The window that got focused was not a browser window.
+    if (!win.document.hasFocus()) {
+      // The document that got focused was not in a browser window.
       return;
     }
     Services.obs.removeObserver(this, "xul-window-visible");
