@@ -184,7 +184,7 @@ private:
 
   // Fields that are associated with the current GPU process.
   GPUProcessHost* mProcess;
-  uint64_t mProcessToken;
+  MOZ_INIT_OUTSIDE_CTOR uint64_t mProcessToken;
   GPUChild* mGPUChild;
   RefPtr<VsyncBridgeChild> mVsyncBridge;
 };
