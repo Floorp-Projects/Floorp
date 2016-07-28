@@ -215,14 +215,16 @@ ServiceWorkerRegistrationInfo::TryToActivateAsync()
 }
 
 /*
- * TryToActivate should not be called directly, use TryToACtivateAsync instead.
+ * TryToActivate should not be called directly, use TryToActivateAsync instead.
  */
 void
 ServiceWorkerRegistrationInfo::TryToActivate()
 {
-  if (!IsControllingDocuments() ||
-      // Waiting worker will be removed if the registration is removed
-      (mWaitingWorker && mWaitingWorker->SkipWaitingFlag())) {
+  AssertIsOnMainThread();
+  bool controlling = IsControllingDocuments();
+  bool skipWaiting = mWaitingWorker && mWaitingWorker->SkipWaitingFlag();
+  bool idle = !mActiveWorker || mActiveWorker->WorkerPrivate()->IsIdle();
+  if (idle && (!controlling || skipWaiting)) {
     Activate();
   }
 }
