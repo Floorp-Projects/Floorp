@@ -3370,6 +3370,9 @@ var SessionStoreInternal = {
     let uri = activePageData ? activePageData.url || null : null;
     if (aLoadArguments) {
       uri = aLoadArguments.uri;
+      if (aLoadArguments.userContextId) {
+        browser.setAttribute("usercontextid", aLoadArguments.userContextId);
+      }
     }
 
     // We have to mark this tab as restoring first, otherwise
