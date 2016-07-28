@@ -586,39 +586,6 @@
         </body>
       </method>
 
-      <method name="attachFormFill">
-        <body>
-          <![CDATA[
-          if (!this.mFormFillAttached && this.hasAttribute("autocompletepopup")) {
-            // hoop up the form fill autocomplete controller
-            var controller = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].
-                               getService(Components.interfaces.nsIFormFillController);
-
-            var popup = document.getElementById(this.getAttribute("autocompletepopup"));
-            if (popup) {
-              controller.attachToBrowser(this.docShell, popup.QueryInterface(Components.interfaces.nsIAutoCompletePopup));
-              this.mFormFillAttached = true;
-            }
-          }
-          ]]>
-        </body>
-      </method>
-
-      <method name="detachFormFill">
-        <body>
-          <![CDATA[
-          if (this.mFormFillAttached) {
-            // hoop up the form fill autocomplete controller
-            var controller = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].
-                               getService(Components.interfaces.nsIFormFillController);
-            controller.detachFromBrowser(this.docShell);
-
-            this.mFormFillAttached = false;
-          }
-          ]]>
-        </body>
-      </method>
-
       <method name="findChildShell">
         <parameter name="aDocShell"/>
         <parameter name="aSoughtURI"/>
@@ -637,15 +604,6 @@
             }
             return null;
           ]]>
-        </body>
-      </method>
-
-      <method name="onPageShow">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            this.attachFormFill();
-         ]]>
         </body>
       </method>
 
@@ -928,11 +886,7 @@
           catch (e) {
           }
 
-          // Listen for first load for lazy attachment to form fill controller
-          // (But we don't want to do this for remote browsers - the test infra
-          // might fire these events when they normally wouldn't.)
           if (!this.isRemoteBrowser) {
-            this.addEventListener("pageshow", this.onPageShow, true);
             this.addEventListener("pagehide", this.onPageHide, true);
           }
 
@@ -974,8 +928,6 @@
             }
           }
 
-          this.detachFormFill();
-
           this._fastFind = null;
           this._webBrowserFind = null;
 
@@ -985,7 +937,6 @@
           this.lastURI = null;
 
           if (!this.isRemoteBrowser) {
-            this.removeEventListener("pageshow", this.onPageShow, true);
             this.removeEventListener("pagehide", this.onPageHide, true);
           }
 
@@ -1287,23 +1238,12 @@
             // attached to a BrowserDOMWindow.
           }
 
-          // Before we swap the actual docShell property we need to detach the
-          // form fill controller from those docShells.
-          if (!this.isRemoteBrowser) {
-            this.detachFormFill();
-            aOtherBrowser.detachFormFill();
-          }
-
           for (let field of fieldsToSwap) {
             this[field] = otherFieldValues[field];
             aOtherBrowser[field] = ourFieldValues[field];
           }
 
-          // Re-attach the docShells to the form fill controller.
           if (!this.isRemoteBrowser) {
-            this.attachFormFill();
-            aOtherBrowser.attachFormFill();
-
             // Null the current nsITypeAheadFind instances so that they're
             // lazily re-created on access. We need to do this because they
             // might have attached the wrong docShell.
