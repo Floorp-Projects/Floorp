@@ -291,6 +291,16 @@ public:
   // Notified by the OggReader during playback when chained ogg is detected.
   MediaEventSource<void>& OnMediaNotSeekable() { return mOnMediaNotSeekable; }
 
+  TimedMetadataEventProducer& TimedMetadataProducer()
+  {
+    return mTimedMetadataEvent;
+  }
+
+  MediaEventProducer<void>& MediaNotSeekableProducer()
+  {
+    return mOnMediaNotSeekable;
+  }
+
   bool IsSuspended() const
   {
     MOZ_ASSERT(OnTaskQueue());
