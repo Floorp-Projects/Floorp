@@ -15,7 +15,7 @@ const Ui = Immutable.Record({
 
 function ui(state = new Ui(), action) {
   switch (action.type) {
-    case constants.FILTERBAR_TOGGLE:
+    case constants.FILTER_BAR_TOGGLE:
       return state.set("configFilterBarVisible", !state.configFilterBarVisible);
   }
 

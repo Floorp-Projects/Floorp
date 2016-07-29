@@ -7,13 +7,33 @@
 "use strict";
 
 const {
-  FILTER_BAR_TOGGLE,
+  FILTER_TEXT_SET,
+  FILTER_TOGGLE,
+  FILTERS_CLEAR
 } = require("../constants");
 
-function filterBarToggle(show) {
+function filterTextSet(text) {
   return {
-    type: FILTER_BAR_TOGGLE
+    type: FILTER_TEXT_SET,
+    text
   };
 }
 
-exports.filterBarToggle = filterBarToggle;
+function filterToggle(filter) {
+  return {
+    type: FILTER_TOGGLE,
+    filter,
+  };
+}
+
+function filtersClear() {
+  return {
+    type: FILTERS_CLEAR
+  };
+}
+
+module.exports = {
+  filterTextSet,
+  filterToggle,
+  filtersClear
+};
