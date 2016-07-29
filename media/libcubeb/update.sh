@@ -25,6 +25,8 @@ cp $1/src/cubeb_resampler_internal.h src
 cp $1/src/cubeb_ring_array.h src
 cp $1/src/cubeb_sndio.c src
 cp $1/src/cubeb_utils.h src
+cp $1/src/cubeb_utils_unix.h src
+cp $1/src/cubeb_utils_win.h src
 cp $1/src/cubeb_wasapi.cpp src
 cp $1/src/cubeb_winmm.c src
 cp $1/test/common.h tests/common.h
