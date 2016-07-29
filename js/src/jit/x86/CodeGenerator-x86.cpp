@@ -1608,3 +1608,14 @@ CodeGeneratorX86::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
     if (outputType == MIRType::Float32)
         masm.convertDoubleToFloat32(output, output);
 }
+
+void
+CodeGeneratorX86::visitTestI64AndBranch(LTestI64AndBranch* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+
+    masm.testl(input.high, input.high);
+    jumpToBlock(lir->ifTrue(), Assembler::NonZero);
+    masm.testl(input.low, input.low);
+    emitBranch(Assembler::NonZero, lir->ifTrue(), lir->ifFalse());
+}
