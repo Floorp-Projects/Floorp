@@ -39,7 +39,9 @@ public:
     VP9 = 1 << 1
   };
 
-  // Return true if mimetype is a VPX codec of given types.
+  // Return true if aMimeType is a one of the strings used by our demuxers to
+  // identify VPX of the specified type. Does not parse general content type
+  // strings, i.e. white space matters.
   static bool IsVPX(const nsACString& aMimeType, uint8_t aCodecMask=VP8|VP9);
   static bool IsVP8(const nsACString& aMimeType);
   static bool IsVP9(const nsACString& aMimeType);

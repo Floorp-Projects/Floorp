@@ -46,6 +46,8 @@
 
 #include "DecoderDoctorDiagnostics.h"
 
+#include "MP4Decoder.h"
+
 
 namespace mozilla {
 
@@ -183,7 +185,7 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
   CreateDecoderParams params = aParams;
   params.mCallback = callback;
 
-  if (H264Converter::IsH264(config)) {
+  if (MP4Decoder::IsH264(config.mMimeType)) {
     RefPtr<H264Converter> h = new H264Converter(aPDM, params);
     const nsresult rv = h->GetLastError();
     if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {

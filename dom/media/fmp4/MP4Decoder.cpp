@@ -173,6 +173,14 @@ MP4Decoder::CanHandleMediaType(const nsAString& aContentType,
 
 /* static */
 bool
+MP4Decoder::IsH264(const nsACString& aMimeType)
+{
+  return aMimeType.EqualsLiteral("video/mp4") ||
+         aMimeType.EqualsLiteral("video/avc");
+}
+
+/* static */
+bool
 MP4Decoder::IsEnabled()
 {
   return Preferences::GetBool("media.mp4.enabled", true);

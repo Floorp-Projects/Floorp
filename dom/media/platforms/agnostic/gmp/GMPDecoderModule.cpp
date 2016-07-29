@@ -16,6 +16,7 @@
 #include "mozilla/StaticMutex.h"
 #include "gmp-audio-decode.h"
 #include "gmp-video-decode.h"
+#include "MP4Decoder.h"
 #include "VPXDecoder.h"
 #ifdef XP_WIN
 #include "WMFDecoderModule.h"
@@ -49,8 +50,7 @@ CreateDecoderWrapper(MediaDataDecoderCallback* aCallback)
 already_AddRefed<MediaDataDecoder>
 GMPDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
-  if (!aParams.mConfig.mMimeType.EqualsLiteral("video/avc") &&
-      !aParams.mConfig.mMimeType.EqualsLiteral("video/mp4") &&
+  if (!MP4Decoder::IsH264(aParams.mConfig.mMimeType) &&
       !VPXDecoder::IsVP8(aParams.mConfig.mMimeType) &&
       !VPXDecoder::IsVP9(aParams.mConfig.mMimeType)) {
     return nullptr;
@@ -93,9 +93,7 @@ PlatformDecoderModule::ConversionRequired
 GMPDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
   // GMPVideoCodecType::kGMPVideoCodecH264 specifies that encoded frames must be in AVCC format.
-  if (aConfig.IsVideo() &&
-      (aConfig.mMimeType.EqualsLiteral("video/avc") ||
-       aConfig.mMimeType.EqualsLiteral("video/mp4"))) {
+  if (aConfig.IsVideo() && MP4Decoder::IsH264(aConfig.mMimeType)) {
     return kNeedAVCC;
   } else {
     return kNeedNone;
@@ -203,8 +201,7 @@ GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
     }
   }
 
-  if (aMimeType.EqualsLiteral("video/avc") ||
-      aMimeType.EqualsLiteral("video/mp4")) {
+  if (MP4Decoder::IsH264(aMimeType)) {
     switch (MediaPrefs::GMPH264Preferred()) {
       case 1: rv.emplace(nsCString(kEMEKeySystemClearkey)); break;
       case 2: rv.emplace(nsCString(kEMEKeySystemPrimetime)); break;
@@ -220,18 +217,12 @@ bool
 GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
                                    const Maybe<nsCString>& aGMP)
 {
-  const bool isAAC = aMimeType.EqualsLiteral("audio/mp4a-latm");
-  const bool isH264 = aMimeType.EqualsLiteral("video/avc") ||
-                      aMimeType.EqualsLiteral("video/mp4");
-  const bool isVP8 = VPXDecoder::IsVP8(aMimeType);
-  const bool isVP9 = VPXDecoder::IsVP9(aMimeType);
-
   StaticMutexAutoLock lock(sGMPCodecsMutex);
   for (GMPCodecs& gmp : sGMPCodecs) {
-    if (((isAAC && gmp.mHasAAC) ||
-         (isH264 && gmp.mHasH264) ||
-         (isVP8 && gmp.mHasVP8) ||
-         (isVP9 && gmp.mHasVP9)) &&
+    if (((aMimeType.EqualsLiteral("audio/mp4a-latm") && gmp.mHasAAC) ||
+         (MP4Decoder::IsH264(aMimeType) && gmp.mHasH264) ||
+         (VPXDecoder::IsVP8(aMimeType) && gmp.mHasVP8) ||
+         (VPXDecoder::IsVP9(aMimeType) && gmp.mHasVP9)) &&
         (aGMP.isNothing() || aGMP.value().EqualsASCII(gmp.mKeySystem))) {
       return true;
     }
