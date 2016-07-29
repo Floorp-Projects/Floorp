@@ -273,6 +273,18 @@ public:
   }
 
   /**
+   * @return an IntRect which covers the entire area of this image at its
+   * intrinsic size, appropriate for use as a frame rect when the image itself
+   * does not specify one.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  gfx::IntRect FullFrame() const
+  {
+    return gfx::IntRect(gfx::IntPoint(), Size());
+  }
+
+  /**
    * @return the output size of this decoder. If this is different than the
    * intrinsic size, then the image will be downscaled during the decoding
    * process.
@@ -283,6 +295,22 @@ public:
   {
     return mDownscaler ? mDownscaler->TargetSize()
                        : Size();
+  }
+
+  /**
+   * @return an IntRect which covers the entire area of this image at its size
+   * after scaling - that is, at its output size.
+   *
+   * XXX(seth): This is only used for decoders which are using the old
+   * Downscaler code instead of SurfacePipe, since the old AllocateFrame() and
+   * Downscaler APIs required that the frame rect be specified in output space.
+   * We should remove this once all decoders use SurfacePipe.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  gfx::IntRect FullOutputFrame() const
+  {
+    return gfx::IntRect(gfx::IntPoint(), OutputSize());
   }
 
   virtual Telemetry::ID SpeedHistogram();
@@ -411,8 +439,7 @@ protected:
 
   /// Helper method for decoders which only have 'basic' frame allocation needs.
   nsresult AllocateBasicFrame() {
-    return AllocateFrame(0, Size(), gfx::IntRect(gfx::IntPoint(), Size()),
-                         gfx::SurfaceFormat::B8G8R8A8);
+    return AllocateFrame(0, Size(), FullFrame(), gfx::SurfaceFormat::B8G8R8A8);
   }
 
 private:

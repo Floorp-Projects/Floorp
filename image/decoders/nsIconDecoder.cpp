@@ -71,8 +71,7 @@ nsIconDecoder::ReadHeader(const char* aData)
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
   Maybe<SurfacePipe> pipe =
     SurfacePipeFactory::CreateSurfacePipe(this, 0, Size(), OutputSize(),
-                                          IntRect(IntPoint(), Size()),
-                                          SurfaceFormat::B8G8R8A8,
+                                          FullFrame(), SurfaceFormat::B8G8R8A8,
                                           SurfacePipeFlags());
   if (!pipe) {
     return Transition::TerminateFailure();

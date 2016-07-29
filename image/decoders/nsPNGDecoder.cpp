@@ -151,7 +151,7 @@ nsPNGDecoder::GetTransparencyType(SurfaceFormat aFormat,
   if (aFormat == SurfaceFormat::B8G8R8A8) {
     return TransparencyType::eAlpha;
   }
-  if (!IntRect(IntPoint(), Size()).IsEqualEdges(aFrameRect)) {
+  if (!aFrameRect.IsEqualEdges(FullFrame())) {
     MOZ_ASSERT(HasAnimation());
     return TransparencyType::eFrameRect;
   }
