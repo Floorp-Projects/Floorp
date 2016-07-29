@@ -65,6 +65,9 @@ AnimationPerformanceWarning::ToLocalizedString(
     case Type::OpacityFrameInactive:
       key = "CompositorAnimationWarningOpacityFrameInactive";
       break;
+    case Type::HasRenderingObserver:
+      key = "CompositorAnimationWarningHasRenderingObserver";
+      break;
   }
 
   nsresult rv =
