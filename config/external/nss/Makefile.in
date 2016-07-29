@@ -323,7 +323,10 @@ NSS_DIRS += $(NSS_STATIC_DIRS)
 # TODO: The following can be replaced by something simpler when bug 844884
 # is fixed.
 # Remaining nss/lib directories
-NSS_DIRS += nss/lib/freebl nss/lib/softoken nss/lib/jar nss/lib/crmf nss/lib/ckfw nss/lib/libpkix
+NSS_DIRS += nss/lib/freebl nss/lib/softoken nss/lib/jar nss/lib/crmf nss/lib/ckfw
+
+DEFAULT_GMAKE_FLAGS += NSS_DISABLE_LIBPKIX=1
+
 ifeq (WINNT,$(OS_TARGET))
 NSS_DIRS += nss/lib/zlib
 endif
