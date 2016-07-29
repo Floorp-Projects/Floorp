@@ -1472,3 +1472,23 @@ CodeGeneratorX86::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
 
     masm.movl(ToRegister(input.low()), output);
 }
+
+void
+CodeGeneratorX86::visitClzI64(LClzI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+
+    masm.clz64(input, output.low);
+    masm.xorl(output.high, output.high);
+}
+
+void
+CodeGeneratorX86::visitCtzI64(LCtzI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+
+    masm.ctz64(input, output.low);
+    masm.xorl(output.high, output.high);
+}

@@ -548,6 +548,43 @@ MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest, Regi
 // Bit counting functions
 
 void
+MacroAssembler::clz64(Register64 src, Register dest)
+{
+    Label nonzero, zero;
+
+    bsrl(src.high, dest);
+    j(Assembler::Zero, &zero);
+    orl(Imm32(32), dest);
+    jump(&nonzero);
+
+    bind(&zero);
+    bsrl(src.low, dest);
+    j(Assembler::NonZero, &nonzero);
+    movl(Imm32(0x7F), dest);
+
+    bind(&nonzero);
+    xorl(Imm32(0x3F), dest);
+}
+
+void
+MacroAssembler::ctz64(Register64 src, Register dest)
+{
+    Label done, nonzero;
+
+    bsfl(src.low, dest);
+    j(Assembler::NonZero, &done);
+    bsfl(src.high, dest);
+    j(Assembler::NonZero, &nonzero);
+    movl(Imm32(64), dest);
+    jump(&done);
+
+    bind(&nonzero);
+    orl(Imm32(32), dest);
+
+    bind(&done);
+}
+
+void
 MacroAssembler::popcnt64(Register64 src, Register64 dest, Register tmp)
 {
     // The tmp register is only needed if there is no native POPCNT.

@@ -2463,7 +2463,7 @@ class BaseCompiler
 
     void clzI64(RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        masm.clz64(srcDest.reg, srcDest.reg);
+        masm.clz64(srcDest.reg, srcDest.reg.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: clzI64");
 #endif
@@ -2471,7 +2471,7 @@ class BaseCompiler
 
     void ctzI64(RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        masm.ctz64(srcDest.reg, srcDest.reg);
+        masm.ctz64(srcDest.reg, srcDest.reg.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: ctzI64");
 #endif
