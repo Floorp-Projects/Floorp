@@ -200,6 +200,30 @@ UModI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
     return x % y;
 }
 
+static int64_t
+TruncateDoubleToInt64(double input)
+{
+    // Note: INT64_MAX is not representable in double. It is actually INT64_MAX + 1.
+    // Therefore also sending the failure value.
+    if (input >= double(INT64_MAX))
+        return 0x8000000000000000;
+    if (input < double(INT64_MIN))
+        return 0x8000000000000000;
+    return int64_t(input);
+}
+
+static uint64_t
+TruncateDoubleToUint64(double input)
+{
+    // Note: UINT64_MAX is not representable in double. It is actually UINT64_MAX + 1.
+    // Therefore also sending the failure value.
+    if (input >= double(UINT64_MAX))
+        return 0x8000000000000000;
+    if (input <= -1.0)
+        return 0x8000000000000000;
+    return uint64_t(input);
+}
+
 template <class F>
 static inline void*
 FuncCast(F* pf, ABIFunctionType type)
@@ -247,6 +271,10 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(ModI64, Args_General4);
       case SymbolicAddress::UModI64:
         return FuncCast(UModI64, Args_General4);
+      case SymbolicAddress::TruncateDoubleToUint64:
+        return FuncCast(TruncateDoubleToUint64, Args_Int64_Double);
+      case SymbolicAddress::TruncateDoubleToInt64:
+        return FuncCast(TruncateDoubleToInt64, Args_Int64_Double);
 #if defined(JS_CODEGEN_ARM)
       case SymbolicAddress::aeabi_idivmod:
         return FuncCast(__aeabi_idivmod, Args_General2);
