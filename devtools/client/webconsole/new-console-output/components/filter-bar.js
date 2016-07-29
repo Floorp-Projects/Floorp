@@ -12,10 +12,11 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
-const messagesActions = require("devtools/client/webconsole/new-console-output/actions/messages");
+const { filterTextSet, filtersClear } = require("devtools/client/webconsole/new-console-output/actions/filters");
+const { messagesClear } = require("devtools/client/webconsole/new-console-output/actions/messages");
 const uiActions = require("devtools/client/webconsole/new-console-output/actions/ui");
 const {
-  SEVERITY_FILTER
+  MESSAGE_LEVEL
 } = require("../constants");
 const FilterToggleButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-toggle-button").FilterToggleButton);
 
@@ -29,7 +30,7 @@ const FilterBar = createClass({
   },
 
   onClearOutputButtonClick: function () {
-    this.props.dispatch(messagesActions.messagesClear());
+    this.props.dispatch(messagesClear());
   },
 
   onToggleFilterConfigBarButtonClick: function () {
@@ -37,11 +38,11 @@ const FilterBar = createClass({
   },
 
   onClearFiltersButtonClick: function () {
-    this.props.dispatch(messagesActions.filtersClear());
+    this.props.dispatch(filtersClear());
   },
 
   onSearchInput: function (e) {
-    this.props.dispatch(messagesActions.messagesSearch(e.target.value));
+    this.props.dispatch(filterTextSet(e.target.value));
   },
 
   render() {
@@ -64,7 +65,7 @@ const FilterBar = createClass({
       dom.input({
         className: "devtools-plaininput",
         type: "search",
-        value: filter.searchText,
+        value: filter.text,
         placeholder: "Filter output",
         onInput: this.onSearchInput
       })
@@ -76,29 +77,25 @@ const FilterBar = createClass({
           FilterToggleButton({
             active: filter.error,
             label: "Errors",
-            filterType: SEVERITY_FILTER,
-            filterKey: "error",
+            filterKey: MESSAGE_LEVEL.ERROR,
             dispatch
           }),
           FilterToggleButton({
             active: filter.warn,
             label: "Warnings",
-            filterType: SEVERITY_FILTER,
-            filterKey: "warn",
+            filterKey: MESSAGE_LEVEL.WARN,
             dispatch
           }),
           FilterToggleButton({
             active: filter.log,
             label: "Logs",
-            filterType: SEVERITY_FILTER,
-            filterKey: "log",
+            filterKey: MESSAGE_LEVEL.LOG,
             dispatch
           }),
           FilterToggleButton({
             active: filter.info,
             label: "Info",
-            filterType: SEVERITY_FILTER,
-            filterKey: "info",
+            filterKey: MESSAGE_LEVEL.INFO,
             dispatch
           })
         )
