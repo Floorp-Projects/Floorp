@@ -418,11 +418,18 @@
 
 .stack-frame-source-name {
   flex: 1 1;
+  /* Makes the file name truncated (and ellipsis shown) on the left side */
   direction: rtl;
   text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Enforce LTR direction for the file name - fixes bug 1290056 */
+.stack-frame-source-name-inner {
+  direction: ltr;
+  unicode-bidi: embed;
 }
 
 .stack-frame-line {
