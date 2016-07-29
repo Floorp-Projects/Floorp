@@ -114,6 +114,24 @@ nsPluginArray::GetMimeTypes(nsTArray<RefPtr<nsMimeType>>& aMimeTypes)
   aMimeTypes.Sort();
 }
 
+void
+nsPluginArray::GetCTPMimeTypes(nsTArray<RefPtr<nsMimeType>>& aMimeTypes)
+{
+  aMimeTypes.Clear();
+
+  if (!AllowPlugins()) {
+    return;
+  }
+
+  EnsurePlugins();
+
+  GetPluginMimeTypes(mCTPPlugins, aMimeTypes);
+
+  // Alphabetize the enumeration order of non-hidden MIME types to reduce
+  // fingerprintable entropy based on plugins' installation file times.
+  aMimeTypes.Sort();
+}
+
 nsPluginElement*
 nsPluginArray::Item(uint32_t aIndex)
 {
@@ -236,19 +254,24 @@ nsPluginArray::NamedGetter(const nsAString& aName, bool &aFound)
   if (!aFound) {
     nsPluginElement* hiddenPlugin = FindPlugin(mCTPPlugins, aName);
     if (hiddenPlugin) {
-      HiddenPluginEventInit init;
-      init.mTag = hiddenPlugin->PluginTag();
-      nsCOMPtr<nsIDocument> doc = hiddenPlugin->GetParentObject()->GetDoc();
-      RefPtr<HiddenPluginEvent> event =
-        HiddenPluginEvent::Constructor(doc, NS_LITERAL_STRING("HiddenPlugin"), init);
-      event->SetTarget(doc);
-      event->SetTrusted(true);
-      event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-      bool dummy;
-      doc->DispatchEvent(event, &dummy);
+      NotifyHiddenPluginTouched(hiddenPlugin);
     }
   }
   return plugin;
+}
+
+void nsPluginArray::NotifyHiddenPluginTouched(nsPluginElement* aHiddenElement)
+{
+  HiddenPluginEventInit init;
+  init.mTag = aHiddenElement->PluginTag();
+  nsCOMPtr<nsIDocument> doc = aHiddenElement->GetParentObject()->GetDoc();
+  RefPtr<HiddenPluginEvent> event =
+    HiddenPluginEvent::Constructor(doc, NS_LITERAL_STRING("HiddenPlugin"), init);
+  event->SetTarget(doc);
+  event->SetTrusted(true);
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+  bool dummy;
+  doc->DispatchEvent(event, &dummy);
 }
 
 uint32_t

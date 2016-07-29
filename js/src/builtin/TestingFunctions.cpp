@@ -864,23 +864,7 @@ GCState(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    const char* state;
-    gc::State globalState = cx->runtime()->gc.state();
-    if (globalState == gc::NO_INCREMENTAL)
-        state = "none";
-    else if (globalState == gc::MARK)
-        state = "mark";
-    else if (globalState == gc::SWEEP)
-        state = "sweep";
-    else if (globalState == gc::FINALIZE)
-        state = "finalize";
-    else if (globalState == gc::COMPACT)
-        state = "compact";
-    else if (globalState == gc::DECOMMIT)
-        state = "decommit";
-    else
-        MOZ_CRASH("Unobserveable global GC state");
-
+    const char* state = StateName(cx->runtime()->gc.state());
     JSString* str = JS_NewStringCopyZ(cx, state);
     if (!str)
         return false;

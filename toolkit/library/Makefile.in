@@ -13,13 +13,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef COMPILE_ENVIRONMENT
-target:: $(FINAL_TARGET)/dependentlibs.list
-endif
-
-$(FINAL_TARGET)/dependentlibs.list: $(topsrcdir)/toolkit/library/dependentlibs.py $(SHARED_LIBRARY) $(wildcard $(if $(wildcard $(FINAL_TARGET)/dependentlibs.list),$(addprefix $(FINAL_TARGET)/,$(shell cat $(FINAL_TARGET)/dependentlibs.list))))
-	$(PYTHON) $< $(SHARED_LIBRARY) -L $(FINAL_TARGET) $(if $(TOOLCHAIN_PREFIX),$(addprefix -p ,$(TOOLCHAIN_PREFIX))) > $@
-
 .PHONY: gtestxul
 gtestxul:
 	$(MAKE) -C $(DEPTH) toolkit/library/gtest/target LINK_GTEST=1

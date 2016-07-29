@@ -46,10 +46,8 @@ public:
   {
     GetHTMLURIAttr(nsGkAtoms::src, aSrc);
   }
-  void SetSrc(const nsAString& aSrc, ErrorResult& aError)
-  {
-    SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
-  }
+
+  void SetSrc(const nsAString& aSrc, ErrorResult& aError);
 
   void GetSrclang(DOMString& aSrclang) const
   {
@@ -134,6 +132,10 @@ protected:
   RefPtr<WebVTTListener> mListener;
 
   void CreateTextTrack();
+
+private:
+  void DispatchLoadResource();
+  bool mLoadResourceDispatched;
 };
 
 } // namespace dom

@@ -156,7 +156,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
       return false;
     }
 
-    a.mParsed++;
+    a.mStats.mParsedFrames++;
 
     if (currentFrameTime >= aTimeThreshold)
       break;
@@ -200,7 +200,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
   mVideoQueue.Push(v);
   mCurrentFrame++;
-  a.mDecoded++;
+  a.mStats.mDecodedFrames++;
 
   return true;
 }

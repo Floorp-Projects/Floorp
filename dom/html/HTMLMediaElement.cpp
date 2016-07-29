@@ -3083,66 +3083,100 @@ HTMLMediaElement::ReportTelemetry()
   Telemetry::Accumulate(Telemetry::VIDEO_UNLOAD_STATE, state);
   LOG(LogLevel::Debug, ("%p VIDEO_UNLOAD_STATE = %d", this, state));
 
+  FrameStatisticsData data;
+
   if (HTMLVideoElement* vid = HTMLVideoElement::FromContentOrNull(this)) {
-    RefPtr<VideoPlaybackQuality> quality = vid->GetVideoPlaybackQuality();
-    uint32_t totalFrames = quality->TotalVideoFrames();
-    if (totalFrames) {
-      uint32_t droppedFrames = quality->DroppedVideoFrames();
-      MOZ_ASSERT(droppedFrames <= totalFrames);
-      // Dropped frames <= total frames, so 'percentage' cannot be higher than
-      // 100 and therefore can fit in a uint32_t (that Telemetry takes).
-      uint32_t percentage = 100 * droppedFrames / totalFrames;
-      LOG(LogLevel::Debug,
-          ("Reporting telemetry DROPPED_FRAMES_IN_VIDEO_PLAYBACK"));
-      Telemetry::Accumulate(Telemetry::VIDEO_DROPPED_FRAMES_PROPORTION,
-                            percentage);
+    FrameStatistics* stats = vid->GetFrameStatistics();
+    if (stats) {
+      data = stats->GetFrameStatisticsData();
+      if (data.mParsedFrames) {
+        MOZ_ASSERT(data.mDroppedFrames <= data.mParsedFrames);
+        // Dropped frames <= total frames, so 'percentage' cannot be higher than
+        // 100 and therefore can fit in a uint32_t (that Telemetry takes).
+        uint32_t percentage = 100 * data.mDroppedFrames / data.mParsedFrames;
+        LOG(LogLevel::Debug,
+            ("Reporting telemetry DROPPED_FRAMES_IN_VIDEO_PLAYBACK"));
+        Telemetry::Accumulate(Telemetry::VIDEO_DROPPED_FRAMES_PROPORTION,
+                              percentage);
+      }
     }
   }
 
-  double playTime = mPlayTime.Total();
-  double hiddenPlayTime = mHiddenPlayTime.Total();
-
-  Telemetry::Accumulate(Telemetry::VIDEO_PLAY_TIME_MS, SECONDS_TO_MS(playTime));
-  LOG(LogLevel::Debug, ("%p VIDEO_PLAY_TIME_MS = %f", this, playTime));
-
-  Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_MS, SECONDS_TO_MS(hiddenPlayTime));
-  LOG(LogLevel::Debug, ("%p VIDEO_HIDDEN_PLAY_TIME_MS = %f", this, hiddenPlayTime));
-
-  if (playTime > 0.0 &&
-      mMediaInfo.HasVideo() &&
+  if (mMediaInfo.HasVideo() &&
       mMediaInfo.mVideo.mImage.height > 0) {
-    // We have actually played some valid video -> Report hidden/total ratio.
-    uint32_t hiddenPercentage = uint32_t(hiddenPlayTime / playTime * 100.0 + 0.5);
+    // We have a valid video.
+    double playTime = mPlayTime.Total();
+    double hiddenPlayTime = mHiddenPlayTime.Total();
 
-    // Keyed by audio+video or video alone, and by a resolution range.
-    nsCString key(mMediaInfo.HasAudio() ? "AV," : "V,");
-    static const struct { int32_t mH; const char* mRes; } sResolutions[] = {
-      {  240, "0<h<=240" },
-      {  480, "240<h<=480" },
-      {  576, "480<h<=576" },
-      {  720, "576<h<=720" },
-      { 1080, "720<h<=1080" },
-      { 2160, "1080<h<=2160" }
-    };
-    const char* resolution = "h>2160";
-    int32_t height = mMediaInfo.mVideo.mImage.height;
-    for (const auto& res : sResolutions) {
-      if (height <= res.mH) {
-        resolution = res.mRes;
-        break;
+    Telemetry::Accumulate(Telemetry::VIDEO_PLAY_TIME_MS, SECONDS_TO_MS(playTime));
+    LOG(LogLevel::Debug, ("%p VIDEO_PLAY_TIME_MS = %f", this, playTime));
+
+    Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_MS, SECONDS_TO_MS(hiddenPlayTime));
+    LOG(LogLevel::Debug, ("%p VIDEO_HIDDEN_PLAY_TIME_MS = %f", this, hiddenPlayTime));
+
+    if (playTime > 0.0) {
+      // We have actually played something -> Report hidden/total ratio.
+      uint32_t hiddenPercentage = uint32_t(hiddenPlayTime / playTime * 100.0 + 0.5);
+
+      // Keyed by audio+video or video alone, and by a resolution range.
+      nsCString key(mMediaInfo.HasAudio() ? "AV," : "V,");
+      static const struct { int32_t mH; const char* mRes; } sResolutions[] = {
+        {  240, "0<h<=240" },
+        {  480, "240<h<=480" },
+        {  576, "480<h<=576" },
+        {  720, "576<h<=720" },
+        { 1080, "720<h<=1080" },
+        { 2160, "1080<h<=2160" }
+      };
+      const char* resolution = "h>2160";
+      int32_t height = mMediaInfo.mVideo.mImage.height;
+      for (const auto& res : sResolutions) {
+        if (height <= res.mH) {
+          resolution = res.mRes;
+          break;
+        }
+      }
+      key.AppendASCII(resolution);
+
+      Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE,
+                            key,
+                            hiddenPercentage);
+      // Also accumulate all percentages in an "All" key.
+      Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE,
+                            NS_LITERAL_CSTRING("All"),
+                            hiddenPercentage);
+      LOG(LogLevel::Debug, ("%p VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE = %u, keys: '%s' and 'All'",
+                            this, hiddenPercentage, key.get()));
+
+      if (data.mInterKeyframeCount != 0) {
+        uint32_t average_ms =
+          uint32_t(std::min<uint64_t>(double(data.mInterKeyframeSum_us)
+                                      / double(data.mInterKeyframeCount)
+                                      / 1000.0
+                                      + 0.5,
+                                      UINT32_MAX));
+        Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_AVERAGE_MS,
+                              key,
+                              average_ms);
+        Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_AVERAGE_MS,
+                              NS_LITERAL_CSTRING("All"),
+                              average_ms);
+        LOG(LogLevel::Debug, ("%p VIDEO_INTER_KEYFRAME_AVERAGE_MS = %u, keys: '%s' and 'All'",
+                              this, average_ms, key.get()));
+
+        uint32_t max_ms =
+          uint32_t(std::min<uint64_t>((data.mInterKeyFrameMax_us + 500) / 1000,
+                                      UINT32_MAX));
+        Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS,
+                              key,
+                              max_ms);
+        Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS,
+                              NS_LITERAL_CSTRING("All"),
+                              max_ms);
+        LOG(LogLevel::Debug, ("%p VIDEO_INTER_KEYFRAME_MAX_MS = %u, keys: '%s' and 'All'",
+                              this, max_ms, key.get()));
       }
     }
-    key.AppendASCII(resolution);
-
-    Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE,
-                          key,
-                          hiddenPercentage);
-    // Also accumulate all percentages in an "All" key.
-    Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE,
-                          NS_LITERAL_CSTRING("All"),
-                          hiddenPercentage);
-    LOG(LogLevel::Debug, ("%p VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE = %u, keys: '%s' and 'All'",
-                          this, hiddenPercentage, key.get()));
   }
 }
 

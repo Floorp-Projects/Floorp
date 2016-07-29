@@ -18,6 +18,7 @@
 #include "VideoSegment.h"
 #include "AudioSegment.h"
 #include "StreamTracks.h"
+#include "MediaEngineCameraVideoSource.h"
 #include "MediaStreamGraph.h"
 #include "MediaTrackConstraints.h"
 
@@ -33,13 +34,10 @@ class MediaEngineDefault;
  * The default implementation of the MediaEngine interface.
  */
 class MediaEngineDefaultVideoSource : public nsITimerCallback,
-                                      public MediaEngineVideoSource,
-                                      private MediaConstraintsHelper
+                                      public MediaEngineCameraVideoSource
 {
 public:
   MediaEngineDefaultVideoSource();
-
-  void Shutdown() override {};
 
   void GetName(nsAString&) const override;
   void GetUUID(nsACString&) const override;
@@ -48,12 +46,12 @@ public:
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
@@ -108,13 +106,10 @@ protected:
 class SineWaveGenerator;
 
 class MediaEngineDefaultAudioSource : public nsITimerCallback,
-                                      public MediaEngineAudioSource,
-                                      private MediaConstraintsHelper
+                                      public MediaEngineAudioSource
 {
 public:
   MediaEngineDefaultAudioSource();
-
-  void Shutdown() override {};
 
   void GetName(nsAString&) const override;
   void GetUUID(nsACString&) const override;
@@ -123,12 +118,12 @@ public:
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
@@ -197,11 +192,9 @@ protected:
 
 class MediaEngineDefault : public MediaEngine
 {
+  typedef MediaEngine Super;
 public:
-  explicit MediaEngineDefault(bool aHasFakeTracks = false)
-    : mHasFakeTracks(aHasFakeTracks)
-    , mMutex("mozilla::MediaEngineDefault")
-  {}
+  explicit MediaEngineDefault() : mMutex("mozilla::MediaEngineDefault") {}
 
   void EnumerateVideoDevices(dom::MediaSourceEnum,
                              nsTArray<RefPtr<MediaEngineVideoSource> >*) override;
@@ -214,13 +207,8 @@ public:
     mASources.Clear();
   };
 
-protected:
-  bool mHasFakeTracks;
-
 private:
-  ~MediaEngineDefault() {
-    Shutdown();
-  }
+  ~MediaEngineDefault() {}
 
   Mutex mMutex;
   // protected with mMutex:

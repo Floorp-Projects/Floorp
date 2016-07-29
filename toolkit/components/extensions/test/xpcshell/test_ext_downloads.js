@@ -1,34 +1,23 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 add_task(function* test_downloads_api_namespace_and_permissions() {
   function backgroundScript() {
-    browser.test.assertTrue(!!chrome.downloads, "`downloads` API is present.");
-    browser.test.assertTrue(!!chrome.downloads.FilenameConflictAction,
+    browser.test.assertTrue(!!browser.downloads, "`downloads` API is present.");
+    browser.test.assertTrue(!!browser.downloads.FilenameConflictAction,
                             "`downloads.FilenameConflictAction` enum is present.");
-    browser.test.assertTrue(!!chrome.downloads.InterruptReason,
+    browser.test.assertTrue(!!browser.downloads.InterruptReason,
                             "`downloads.InterruptReason` enum is present.");
-    browser.test.assertTrue(!!chrome.downloads.DangerType,
+    browser.test.assertTrue(!!browser.downloads.DangerType,
                             "`downloads.DangerType` enum is present.");
-    browser.test.assertTrue(!!chrome.downloads.State,
+    browser.test.assertTrue(!!browser.downloads.State,
                             "`downloads.State` enum is present.");
     browser.test.notifyPass("downloads tests");
   }
 
   let extensionData = {
-    background: "(" + backgroundScript.toString() + ")()",
+    background: backgroundScript,
     manifest: {
       permissions: ["downloads", "downloads.open", "downloads.shelf"],
     },
@@ -36,10 +25,8 @@ add_task(function* test_downloads_api_namespace_and_permissions() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
-  info("extension loaded");
   yield extension.awaitFinish("downloads tests");
   yield extension.unload();
-  info("extension unloaded");
 });
 
 add_task(function* test_downloads_open_permission() {
@@ -50,7 +37,7 @@ add_task(function* test_downloads_open_permission() {
   }
 
   let extensionData = {
-    background: "(" + backgroundScript.toString() + ")()",
+    background: backgroundScript,
     manifest: {
       permissions: ["downloads"],
     },
@@ -58,20 +45,19 @@ add_task(function* test_downloads_open_permission() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
-  info("extension loaded");
   yield extension.awaitFinish("downloads tests");
   yield extension.unload();
-  info("extension unloaded");
 });
 
 add_task(function* test_downloads_open() {
   function backgroundScript() {
-    browser.downloads.open(10, () => {
-      let error = chrome.runtime.lastError;
-      browser.test.assertTrue(error, "An error exists.");
-      browser.test.assertTrue(
-        error.message === "Invalid download id 10",
-        `The error is informative. (${error.message})`);
+    browser.downloads.open(10).then(() => {
+      browser.test.fail("Expected an error");
+      browser.test.notifyFail("downloads tests");
+    }, error => {
+      browser.test.assertEq(error.message, "Invalid download id 10",
+                            "The error is informative.");
+
       browser.test.notifyPass("downloads tests");
     });
 
@@ -80,7 +66,7 @@ add_task(function* test_downloads_open() {
   }
 
   let extensionData = {
-    background: "(" + backgroundScript.toString() + ")()",
+    background: backgroundScript,
     manifest: {
       permissions: ["downloads", "downloads.open"],
     },
@@ -88,13 +74,6 @@ add_task(function* test_downloads_open() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
-  info("extension loaded");
   yield extension.awaitFinish("downloads tests");
   yield extension.unload();
-  info("extension unloaded");
 });
-
-</script>
-
-</body>
-</html>

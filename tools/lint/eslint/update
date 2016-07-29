@@ -12,7 +12,7 @@ case "$choice" in
   y|Y )
     echo ""
     echo "1. Go to https://api.pub.build.mozilla.org/"
-    echo "2. Log In using your Mozilla LDAP account."
+    echo "2. Log in using your Mozilla LDAP account."
     echo "3. Click on \"Tokens.\""
     echo "4. Issue a user token with the permissions tooltool.upload.public and tooltool.download.public."
     echo ""
@@ -22,7 +22,7 @@ case "$choice" in
     ;;
   n|N )
     echo ""
-    echo "You will need to contact somebody that has these permissions... people most likely to have these permissions are members of the releng, ateam, a sheriff or mratcliffe@mozilla.com."
+    echo "You will need to contact somebody that has these permissions... people most likely to have these permissions are members of the releng, ateam, a sheriff, mratcliffe, or jryans"
     exit 1
     ;;
   * )
@@ -37,8 +37,13 @@ echo "Removing node_modules and npm_shrinkwrap.json..."
 rm -rf node_modules/
 rm npm-shrinkwrap.json
 
-echo "Installing eslint and dependencies..."
-../../../mach eslint --setup
+echo "Installing eslint and external plugins..."
+# ESLint and all _external_ plugins are listed in this directory's package.json,
+# so a regular `npm install` will install them at the specified versions.
+# The in-tree eslint-plugin-mozilla is kept out of this tooltool archive on
+# purpose so that it can be changed by any developer without requiring tooltool
+# access to make changes.
+npm install
 
 echo "Creating npm shrinkwrap..."
 npm shrinkwrap

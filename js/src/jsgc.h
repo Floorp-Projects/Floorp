@@ -43,16 +43,18 @@ namespace gc {
 
 struct FinalizePhase;
 
-enum State {
-    NO_INCREMENTAL,
-    MARK_ROOTS,
-    MARK,
-    SWEEP,
-    FINALIZE,
-    COMPACT,
-    DECOMMIT,
-
-    NUM_STATES
+#define GCSTATES(D) \
+    D(NotActive) \
+    D(MarkRoots) \
+    D(Mark) \
+    D(Sweep) \
+    D(Finalize) \
+    D(Compact) \
+    D(Decommit)
+enum class State {
+#define MAKE_STATE(name) name,
+    GCSTATES(MAKE_STATE)
+#undef MAKE_STATE
 };
 
 /*

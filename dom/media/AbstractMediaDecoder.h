@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/StateMirroring.h"
 
+#include "FrameStatistics.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "nsISupports.h"
@@ -57,8 +58,7 @@ public:
   // Increments the parsed, decoded and dropped frame counters by the passed in
   // counts.
   // Can be called on any thread.
-  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
-                                   uint32_t aDropped) = 0;
+  virtual void NotifyDecodedFrames(const FrameStatisticsData& aStats) = 0;
 
   virtual AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() { return nullptr; };
 
@@ -99,15 +99,15 @@ public:
   class AutoNotifyDecoded {
   public:
     explicit AutoNotifyDecoded(AbstractMediaDecoder* aDecoder)
-      : mParsed(0), mDecoded(0), mDropped(0), mDecoder(aDecoder) {}
+      : mDecoder(aDecoder)
+    {}
     ~AutoNotifyDecoded() {
       if (mDecoder) {
-        mDecoder->NotifyDecodedFrames(mParsed, mDecoded, mDropped);
+        mDecoder->NotifyDecodedFrames(mStats);
       }
     }
-    uint32_t mParsed;
-    uint32_t mDecoded;
-    uint32_t mDropped;
+
+    FrameStatisticsData mStats;
 
   private:
     AbstractMediaDecoder* mDecoder;
