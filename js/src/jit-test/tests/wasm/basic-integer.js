@@ -158,6 +158,13 @@ if (hasI64()) {
     testBinary64('mul', 40, 2, 80);
     testBinary64('mul', -1, 2, -2);
     testBinary64('mul', 0x123456, "0x9876543210", "0xad77d2c5f941160");
+    testBinary64('mul', 2, -1, -2);
+    testBinary64('mul', "0x80000000", -1, -2147483648);
+    testBinary64('mul', "0x7fffffff", -1, -2147483647);
+    testBinary64('mul', "0x7fffffffffffffff", -1, "0x8000000000000001");
+    testBinary64('mul', 2, 2, 4);
+    testBinary64('mul', "0x80000000", 2, "0x100000000");
+    testBinary64('mul', "0x7fffffff", 2, "0xfffffffe");
     testBinary64('div_s', -40, 2, -20);
     testBinary64('div_s', "0x1234567887654321", 2, "0x91a2b3c43b2a190");
     testBinary64('div_s', "0x1234567887654321", "0x1000000000", "0x1234567");
