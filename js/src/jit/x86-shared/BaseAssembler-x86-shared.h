@@ -1015,6 +1015,11 @@ public:
         spew("fisttp     " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_FPU6, offset, base, FPU6_OP_FISTTP);
     }
+    void fistp_m(int32_t offset, RegisterID base)
+    {
+        spew("fistp      " MEM_ob, ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_FILD, offset, base, FPU6_OP_FISTP);
+    }
     void fstp_m(int32_t offset, RegisterID base)
     {
         spew("fstp       " MEM_ob, ADDR_ob(offset, base));
@@ -1022,8 +1027,23 @@ public:
     }
     void fstp32_m(int32_t offset, RegisterID base)
     {
-        spew("fstp32       " MEM_ob, ADDR_ob(offset, base));
+        spew("fstp32     " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_FPU6_F32, offset, base, FPU6_OP_FSTP);
+    }
+    void fnstcw_m(int32_t offset, RegisterID base)
+    {
+        spew("fnstcw     " MEM_ob, ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_FPU6_F32, offset, base, FPU6_OP_FISTP);
+    }
+    void fldcw_m(int32_t offset, RegisterID base)
+    {
+        spew("fldcw      " MEM_ob, ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_FPU6_F32, offset, base, FPU6_OP_FLDCW);
+    }
+    void fnstsw_m(int32_t offset, RegisterID base)
+    {
+        spew("fnstsw     " MEM_ob, ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_FPU6, offset, base, FPU6_OP_FISTP);
     }
 
     void negl_r(RegisterID dst)

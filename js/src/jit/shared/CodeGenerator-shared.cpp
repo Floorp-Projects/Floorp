@@ -1450,7 +1450,7 @@ CodeGeneratorShared::emitTruncateDouble(FloatRegister src, Register dest, MInstr
 {
     OutOfLineCode* ool = oolTruncateDouble(src, dest, mir);
 
-    masm.branchTruncateDouble(src, dest, ool->entry());
+    masm.branchTruncateDoubleMaybeModUint32(src, dest, ool->entry());
     masm.bind(ool->rejoin());
 }
 
@@ -1460,7 +1460,7 @@ CodeGeneratorShared::emitTruncateFloat32(FloatRegister src, Register dest, MInst
     OutOfLineTruncateSlow* ool = new(alloc()) OutOfLineTruncateSlow(src, dest, true);
     addOutOfLineCode(ool, mir);
 
-    masm.branchTruncateFloat32(src, dest, ool->entry());
+    masm.branchTruncateFloat32MaybeModUint32(src, dest, ool->entry());
     masm.bind(ool->rejoin());
 }
 

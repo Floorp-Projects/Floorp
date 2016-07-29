@@ -2579,7 +2579,7 @@ class BaseCompiler
                                                                          dest));
         if (!ool)
             return false;
-        masm.branchTruncateFloat32(src.reg, dest.reg, ool->entry());
+        masm.branchTruncateFloat32ToInt32(src.reg, dest.reg, ool->entry());
         masm.bind(ool->rejoin());
         return true;
     }
@@ -2591,7 +2591,7 @@ class BaseCompiler
                                                                          dest));
         if (!ool)
             return false;
-        masm.branchTruncateDouble(src.reg, dest.reg, ool->entry());
+        masm.branchTruncateDoubleToInt32(src.reg, dest.reg, ool->entry());
         masm.bind(ool->rejoin());
         return true;
     }
