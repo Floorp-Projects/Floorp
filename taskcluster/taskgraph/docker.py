@@ -70,6 +70,13 @@ def build_image(name):
 
     Output from image building process will be printed to stdout.
     """
+    if not name:
+        raise ValueError('must provide a Docker image name')
+
+    image_dir = os.path.join(IMAGE_DIR, name)
+    if not os.path.isdir(image_dir):
+        raise Exception('image directory does not exist: %s' % image_dir)
+
     docker_bin = which.which('docker')
 
     # Verify that Docker is working.

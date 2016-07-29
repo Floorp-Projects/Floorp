@@ -30,14 +30,6 @@ build() {
   local folder_ver="$folder/VERSION"
   local could_deploy=false
 
-  if [ "$image_name" == "" ];
-  then
-    usage
-    return
-  fi
-
-  test -d "$folder" || usage_err "Unknown image: $image_name"
-
   # Assume that if an image context directory does not contain a VERSION file then
   # it is not suitable for deploying.  Default to using 'latest' as the tag and
   # warn the user at the end.
