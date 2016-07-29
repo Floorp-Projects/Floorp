@@ -47,13 +47,8 @@ public:
   bool IsGLLayer() { return !!mGLContext; }
 
 protected:
-  void UpdateTarget(gfx::DrawTarget* aDestTarget = nullptr);
-
-  RefPtr<gfx::SourceSurface> mSurface;
   RefPtr<gl::GLContext> mGLContext;
-  GLuint mCanvasFrontbufferTexID;
   RefPtr<PersistentBufferProvider> mBufferProvider;
-
   UniquePtr<gl::SharedSurface> mGLFrontbuffer;
 
   bool mIsAlphaPremultiplied;
@@ -64,8 +59,6 @@ protected:
 
   gfx::DataSourceSurface* GetTempSurface(const gfx::IntSize& aSize,
                                          const gfx::SurfaceFormat aFormat);
-
-  void DiscardTempSurface();
 };
 
 } // namespace layers
