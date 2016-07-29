@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1281418 - Change the src attribue for TrackElement.</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
+  ["media.webvtt.regions.enabled", true]]}, function() {
+
+var video = document.createElement("video");
+video.src = "seek.webm";
+video.preload = "metadata";
+var trackElement = document.createElement("track");
+trackElement.src = "basic.vtt";
+trackElement.default = true;
+
+document.getElementById("content").appendChild(video);
+video.appendChild(trackElement);
+
+video.addEventListener("loadedmetadata", function metadata() {
+  if (trackElement.readyState <= 1) {
+    return setTimeout(metadata, 0);
+  }
+  is(video.textTracks.length, 1, "Length should be 1.");
+  is(video.textTracks[0].cues.length, 6, "Cue length should be 6.");
+
+  trackElement.src = "sequential.vtt";
+  trackElement.track.mode = "showing";
+  video.play();
+});
+
+video.addEventListener("ended", function end() {
+  is(trackElement.readyState, 2, "readyState should be 2.")
+  is(video.textTracks.length, 1, "Length should be 1.");
+  is(video.textTracks[0].cues.length, 3, "Cue length should be 3.");
+  SimpleTest.finish();
+});
+
+});
+</script>
+</pre>
+</body>
+</html>
+

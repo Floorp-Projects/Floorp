@@ -9,7 +9,7 @@
 
 /* exported SubprocessImpl */
 
-/* globals BaseProcess */
+/* globals BaseProcess, PromiseWorker */
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -24,9 +24,55 @@ Cu.import("resource://gre/modules/subprocess/subprocess_common.jsm");
 Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared.js", this);
 Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared_unix.js", this);
 
+class UnixPromiseWorker extends PromiseWorker {
+  constructor(...args) {
+    super(...args);
+
+    let fds = ctypes.int.array(2)();
+    let res = libc.pipe(fds);
+    if (res == -1) {
+      throw new Error("Unable to create pipe");
+    }
+
+    this.signalFd = fds[1];
+
+    libc.fcntl(fds[0], LIBC.F_SETFL, LIBC.O_NONBLOCK);
+    libc.fcntl(fds[0], LIBC.F_SETFD, LIBC.FD_CLOEXEC);
+    libc.fcntl(fds[1], LIBC.F_SETFD, LIBC.FD_CLOEXEC);
+
+    this.call("init", [{signalFd: fds[0]}]);
+  }
+
+  closePipe() {
+    if (this.signalFd) {
+      libc.close(this.signalFd);
+      this.signalFd = null;
+    }
+  }
+
+  onClose() {
+    this.closePipe();
+    super.onClose();
+  }
+
+  signalWorker() {
+    libc.write(this.signalFd, new ArrayBuffer(1), 1);
+  }
+
+  postMessage(...args) {
+    this.signalWorker();
+    return super.postMessage(...args);
+  }
+}
+
+
 class Process extends BaseProcess {
   static get WORKER_URL() {
     return "resource://gre/modules/subprocess/subprocess_worker_unix.js";
+  }
+
+  static get WorkerClass() {
+    return UnixPromiseWorker;
   }
 }
 

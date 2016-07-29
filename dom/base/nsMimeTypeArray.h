@@ -48,6 +48,7 @@ protected:
   // mMimeTypes contains MIME types handled by plugins or by an OS
   // PreferredApplicationHandler.
   nsTArray<RefPtr<nsMimeType> > mMimeTypes;
+  nsTArray<RefPtr<nsMimeType> > mCTPMimeTypes;
 };
 
 class nsMimeType final : public nsWrapperCache

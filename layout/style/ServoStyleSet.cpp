@@ -378,7 +378,7 @@ nsRestyleHint
 ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
                                       EventStates aStateMask)
 {
-  NS_ERROR("stylo: HasStateDependentStyle not implemented");
+  NS_WARNING("stylo: HasStateDependentStyle always returns zero!");
   return nsRestyleHint(0);
 }
 
@@ -388,7 +388,7 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
                                      dom::Element* aPseudoElement,
                                      EventStates aStateMask)
 {
-  NS_ERROR("stylo: HasStateDependentStyle not implemented");
+  NS_WARNING("stylo: HasStateDependentStyle always returns zero!");
   return nsRestyleHint(0);
 }
 

@@ -199,7 +199,12 @@ function nextPopupTest(panel)
     if ("last" in popupTests[gTestId])
       document.getElementById("popupresizer").removeAttribute("flex");
 
-    panel.openPopup();
+    // Prevent event loop starvation as a result of popup events being
+    // synchronous. See bug 1131576.
+    SimpleTest.executeSoon(() => {
+      // Non-chrome shells require focus to open a popup.
+      SimpleTest.waitForFocus(() => { panel.openPopup() });
+    });
   }
 }
 

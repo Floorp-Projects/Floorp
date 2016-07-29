@@ -203,7 +203,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     /* Create the root node. */
     trc->curnode = MakeNode(trc, nullptr, JS::TraceKind(0));
 
-    incrementalState = MARK_ROOTS;
+    incrementalState = State::MarkRoots;
 
     /* Make all the roots be edges emanating from the root node. */
     markRuntime(trc, TraceRuntime, prep.session().lock);
@@ -230,7 +230,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     }
 
     verifyPreData = trc;
-    incrementalState = MARK;
+    incrementalState = State::Mark;
     marker.start();
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
@@ -244,7 +244,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     return;
 
 oom:
-    incrementalState = NO_INCREMENTAL;
+    incrementalState = State::NotActive;
     js_delete(trc);
     verifyPreData = nullptr;
 }
@@ -342,7 +342,7 @@ gc::GCRuntime::endVerifyPreBarriers()
     number++;
 
     verifyPreData = nullptr;
-    incrementalState = NO_INCREMENTAL;
+    incrementalState = State::NotActive;
 
     if (!compartmentCreated && IsIncrementalGCSafe(rt)) {
         CheckEdgeTracer cetrc(rt);

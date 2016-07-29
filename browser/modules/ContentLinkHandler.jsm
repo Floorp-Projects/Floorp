@@ -108,37 +108,9 @@ this.ContentLinkHandler = {
           }
           sizeHistogramTypes.add(sizesType);
 
-	  if (uri.scheme == 'blob') {
-            // Blob URLs don't work cross process, work around this by sending as a data uri
-            let channel = NetUtil.newChannel({
-              uri: uri,
-              contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE,
-              loadUsingSystemPrincipal: true
-            });
-            let listener = {
-              encoded: "",
-              bis: null,
-              onStartRequest: function(aRequest, aContext) {
-                this.bis = Components.classes["@mozilla.org/binaryinputstream;1"]
-                    .createInstance(Components.interfaces.nsIBinaryInputStream);
-              },
-              onStopRequest: function(aRequest, aContext, aStatusCode) {
-                let spec = "data:" + channel.contentType + ";base64," + this.encoded;
-                chromeGlobal.sendAsyncMessage(
-                  "Link:SetIcon",
-                  {url: spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
-              },
-              onDataAvailable: function(request, context, inputStream, offset, count) {
-                this.bis.setInputStream(inputStream);
-                this.encoded += btoa(this.bis.readBytes(this.bis.available()));
-              }
-            }
-            channel.asyncOpen2(listener);
-          } else {
-            chromeGlobal.sendAsyncMessage(
-              "Link:SetIcon",
-              {url: uri.spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
-          }
+          chromeGlobal.sendAsyncMessage(
+            "Link:SetIcon",
+            {url: uri.spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
           iconAdded = true;
           break;
         case "search":

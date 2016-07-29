@@ -34,9 +34,12 @@ namespace image {
 static LazyLogModule sPNGLog("PNGDecoder");
 static LazyLogModule sPNGDecoderAccountingLog("PNGDecoderAccounting");
 
-// Limit image dimensions (bug #251381, #591822, and #967656)
-#ifndef MOZ_PNG_MAX_DIMENSION
-#  define MOZ_PNG_MAX_DIMENSION 32767
+// limit image dimensions (bug #251381, #591822, #967656, and #1283961)
+#ifndef MOZ_PNG_MAX_WIDTH
+#  define MOZ_PNG_MAX_WIDTH 0x7fffffff // Unlimited
+#endif
+#ifndef MOZ_PNG_MAX_HEIGHT
+#  define MOZ_PNG_MAX_HEIGHT 0x7fffffff // Unlimited
 #endif
 
 nsPNGDecoder::AnimFrameInfo::AnimFrameInfo()
@@ -323,6 +326,7 @@ nsPNGDecoder::InitInternal()
 #endif
 
 #ifdef PNG_SET_USER_LIMITS_SUPPORTED
+  png_set_user_limits(mPNG, MOZ_PNG_MAX_WIDTH, MOZ_PNG_MAX_HEIGHT);
   if (mCMSMode != eCMSMode_Off) {
     png_set_chunk_malloc_max(mPNG, 4000000L);
   }
@@ -556,11 +560,6 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   // Always decode to 24-bit RGB or 32-bit RGBA
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
                &interlace_type, &compression_type, &filter_type);
-
-  // Are we too big?
-  if (width > MOZ_PNG_MAX_DIMENSION || height > MOZ_PNG_MAX_DIMENSION) {
-    png_longjmp(decoder->mPNG, 1);
-  }
 
   const IntRect frameRect(0, 0, width, height);
 

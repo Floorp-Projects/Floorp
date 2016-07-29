@@ -29,6 +29,7 @@ task:
           /build/tooltool.py fetch -m manifest.tt &&
           tar xvfz eslint.tar.gz &&
           rm eslint.tar.gz &&
+          ln -s ../eslint-plugin-mozilla node_modules &&
           cd ../../.. &&
           tools/lint/eslint/node_modules/.bin/eslint --quiet --plugin html --ext [.js,.jsm,.jsx,.xml,.html] -f tools/lint/eslint-formatter .
 

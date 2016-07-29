@@ -1,23 +1,13 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension test</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Downloads.jsm");
 
-const BASE = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest";
+const server = createHttpServer();
+server.registerDirectory("/data/", do_get_file("data"));
+
+const BASE = `http://localhost:${server.identity.primaryPort}/data`;
 const TXT_FILE = "file_download.txt";
 const TXT_URL = BASE + "/" + TXT_FILE;
 const TXT_LEN = 46;
@@ -91,7 +81,7 @@ add_task(function* test_search() {
   const nsIFile = Ci.nsIFile;
   let downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   downloadDir.createUnique(nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  info(`downloadDir ${downloadDir.path}`);
+  do_print(`downloadDir ${downloadDir.path}`);
 
   function downloadPath(filename) {
     let path = downloadDir.clone();
@@ -102,7 +92,7 @@ add_task(function* test_search() {
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
 
-  SimpleTest.registerCleanupFunction(() => {
+  do_register_cleanup(() => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
     downloadDir.remove(true);
@@ -110,11 +100,11 @@ add_task(function* test_search() {
   });
 
   yield clearDownloads().then(downloads => {
-    info(`removed ${downloads.length} pre-existing downloads from history`);
+    do_print(`removed ${downloads.length} pre-existing downloads from history`);
   });
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
+    background: backgroundScript,
     manifest: {
       permissions: ["downloads"],
     },
@@ -125,7 +115,7 @@ add_task(function* test_search() {
     return extension.awaitMessage("download.done").then(result => {
       let promise;
       if (result.status == "success") {
-        info(`wait for onChanged event to indicate ${result.id} is complete`);
+        do_print(`wait for onChanged event to indicate ${result.id} is complete`);
         extension.sendMessage("waitForComplete.request", result.id);
         promise = extension.awaitMessage("waitForComplete.done");
       } else {
@@ -142,30 +132,29 @@ add_task(function* test_search() {
 
   yield extension.startup();
   yield extension.awaitMessage("ready");
-  info("extension started");
 
   // Do some downloads...
   const time1 = new Date();
 
   let downloadIds = {};
   let msg = yield download({url: TXT_URL});
-  is(msg.status, "success", "download() succeeded");
+  equal(msg.status, "success", "download() succeeded");
   downloadIds.txt1 = msg.id;
 
   const TXT_FILE2 = "NewFile.txt";
   msg = yield download({url: TXT_URL, filename: TXT_FILE2});
-  is(msg.status, "success", "download() succeeded");
+  equal(msg.status, "success", "download() succeeded");
   downloadIds.txt2 = msg.id;
 
   const time2 = new Date();
 
   msg = yield download({url: HTML_URL});
-  is(msg.status, "success", "download() succeeded");
+  equal(msg.status, "success", "download() succeeded");
   downloadIds.html1 = msg.id;
 
   const HTML_FILE2 = "renamed.html";
   msg = yield download({url: HTML_URL, filename: HTML_FILE2});
-  is(msg.status, "success", "download() succeeded");
+  equal(msg.status, "success", "download() succeeded");
   downloadIds.html2 = msg.id;
 
   const time3 = new Date();
@@ -174,11 +163,11 @@ add_task(function* test_search() {
   // the corresponding DownloadItem.
   function* checkDownloadItem(id, expect) {
     let msg = yield search({id});
-    is(msg.status, "success", "search() succeeded");
-    is(msg.downloads.length, 1, "search() found exactly 1 download");
+    equal(msg.status, "success", "search() succeeded");
+    equal(msg.downloads.length, 1, "search() found exactly 1 download");
 
     Object.keys(expect).forEach(function(field) {
-      is(msg.downloads[0][field], expect[field], `DownloadItem.${field} is correct"`);
+      equal(msg.downloads[0][field], expect[field], `DownloadItem.${field} is correct"`);
     });
   }
   yield checkDownloadItem(downloadIds.txt1, {
@@ -227,19 +216,19 @@ add_task(function* test_search() {
 
   function* checkSearch(query, expected, description, exact) {
     let msg = yield search(query);
-    is(msg.status, "success", "search() succeeded");
-    is(msg.downloads.length, expected.length, `search() for ${description} found exactly ${expected.length} downloads`);
+    equal(msg.status, "success", "search() succeeded");
+    equal(msg.downloads.length, expected.length, `search() for ${description} found exactly ${expected.length} downloads`);
 
     let receivedIds = msg.downloads.map(item => item.id);
     if (exact) {
       receivedIds.forEach((id, idx) => {
-        is(id, downloadIds[expected[idx]], `search() for ${description} returned ${expected[idx]} in position ${idx}`);
+        equal(id, downloadIds[expected[idx]], `search() for ${description} returned ${expected[idx]} in position ${idx}`);
       });
     } else {
       Object.keys(downloadIds).forEach(key => {
         const id = downloadIds[key];
         const thisExpected = expected.includes(key);
-        is(receivedIds.includes(id), thisExpected,
+        equal(receivedIds.includes(id), thisExpected,
            `search() for ${description} ${thisExpected ? "includes" : "does not include"} ${key}`);
       });
     }
@@ -399,7 +388,7 @@ add_task(function* test_search() {
   // Check bad arguments.
   function* checkBadSearch(query, pattern, description) {
     let msg = yield search(query);
-    is(msg.status, "error", "search() failed");
+    equal(msg.status, "error", "search() failed");
     ok(pattern.test(msg.errmsg), `error message for ${description} was correct (${msg.errmsg}).`);
   }
 
@@ -417,8 +406,3 @@ add_task(function* test_search() {
 
   yield extension.unload();
 });
-
-</script>
-
-</body>
-</html>
