@@ -91,7 +91,7 @@ interface nsIAsyncOutputStream : nsIOutputStream
 /**
  * This is a companion interface for nsIAsyncOutputStream::asyncWait.
  */
-[scriptable, uuid(40dbcdff-9053-42c5-a57c-3ec910d0f148)]
+[function, scriptable, uuid(40dbcdff-9053-42c5-a57c-3ec910d0f148)]
 interface nsIOutputStreamCallback : nsISupports
 {
     /**

@@ -1559,6 +1559,15 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* resul
         return true;
     }
 
+    JSNative unicodeGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().unicode), &unicodeGetter))
+        return false;
+
+    if (unicodeGetter != regexp_unicode) {
+        *result = false;
+        return true;
+    }
+
     // Check if @@match, @@search, and exec are own data properties,
     // those values should be tested in selfhosted JS.
     bool has = false;

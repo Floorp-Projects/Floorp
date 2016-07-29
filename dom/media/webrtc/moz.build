@@ -33,7 +33,6 @@ if CONFIG['MOZ_WEBRTC']:
         'MediaEngineRemoteVideoSource.cpp',
         'MediaEngineTabVideoSource.cpp',
         'MediaEngineWebRTCAudio.cpp',
-        'MediaTrackConstraints.cpp',
         'RTCCertificate.cpp',
         'RTCIdentityProviderRegistrar.cpp',
     ]
@@ -66,6 +65,7 @@ XPIDL_SOURCES += [
 
 UNIFIED_SOURCES += [
     'MediaEngineDefault.cpp',
+    'MediaTrackConstraints.cpp',
     'PeerIdentity.cpp',
 ]
 

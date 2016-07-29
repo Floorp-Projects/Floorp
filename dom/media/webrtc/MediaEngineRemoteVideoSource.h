@@ -50,6 +50,7 @@ namespace mozilla {
 class MediaEngineRemoteVideoSource : public MediaEngineCameraVideoSource,
                                      public webrtc::ExternalRenderer
 {
+  typedef MediaEngineCameraVideoSource Super;
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -71,36 +72,16 @@ public:
                                dom::MediaSourceEnum aMediaSource,
                                const char* aMonitorName = "RemoteVideo.Monitor");
 
-  class AllocationHandle : public BaseAllocationHandle
-  {
-  public:
-    AllocationHandle(const dom::MediaTrackConstraints& aConstraints,
-                     const nsACString& aOrigin,
-                     const MediaEnginePrefs& aPrefs,
-                     const nsString& aDeviceId)
-    : mConstraints(aConstraints),
-      mOrigin(aOrigin),
-      mPrefs(aPrefs),
-      mDeviceId(aDeviceId) {}
-  private:
-    ~AllocationHandle() override {}
-  public:
-    NormalizedConstraints mConstraints;
-    nsCString mOrigin;
-    MediaEnginePrefs mPrefs;
-    nsString mDeviceId;
-  };
-
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
@@ -123,7 +104,7 @@ public:
   void Shutdown() override;
 
 protected:
-  ~MediaEngineRemoteVideoSource() { Shutdown(); }
+  ~MediaEngineRemoteVideoSource() { }
 
 private:
   // Initialize the needed Video engine interfaces.
@@ -132,46 +113,18 @@ private:
   void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) const override;
   void SetLastCapability(const webrtc::CaptureCapability& aCapability);
 
-  /* UpdateExisting - Centralized function to apply constraints and restart
-   * device as needed, considering all allocations and changes to one.
-   *
-   * aHandle           - New or existing handle, or null to update after removal.
-   * aNewConstraints   - Constraints to be applied to existing handle, or null.
-   * aPrefs            - As passed in (in case of changes in about:config).
-   * aDeviceId         - As passed in (origin dependent).
-   * aOutBadConstraint - Result: nonzero if failed to apply. Name of culprit.
-   */
-
   nsresult
-  UpdateExisting(AllocationHandle* aHandle,
-                 NormalizedConstraints* aNewConstraints,
-                 const MediaEnginePrefs& aPrefs,
-                 const nsString& aDeviceId,
-                 const char** aOutBadConstraint);
-
-  nsresult
-  UpdateNew(AllocationHandle* aHandle,
-            const MediaEnginePrefs& aPrefs,
-            const nsString& aDeviceId,
-            const char** aOutBadConstraint) {
-    return UpdateExisting(aHandle, nullptr, aPrefs, aDeviceId, aOutBadConstraint);
-  }
-
-  nsresult
-  UpdateRemove(const MediaEnginePrefs& aPrefs,
-               const nsString& aDeviceId,
-               const char** aOutBadConstraint) {
-    return UpdateExisting(nullptr, nullptr, aPrefs, aDeviceId, aOutBadConstraint);
-  }
+  UpdateSingleSource(const AllocationHandle* aHandle,
+                     const NormalizedConstraints& aNetConstraints,
+                     const MediaEnginePrefs& aPrefs,
+                     const nsString& aDeviceId,
+                     const char** aOutBadConstraint) override;
 
   dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)
   mozilla::camera::CaptureEngine mCapEngine;
 
-  nsTArray<RefPtr<AllocationHandle>> mRegisteredHandles;
-
   // To only restart camera when needed, we keep track previous settings.
   webrtc::CaptureCapability mLastCapability;
-  bool mInShutdown;
 };
 
 }

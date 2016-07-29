@@ -326,6 +326,7 @@ class RegExpCompartment
      * The shape of RegExp.prototype object that satisfies following:
      *   * RegExp.prototype.global getter is not modified
      *   * RegExp.prototype.sticky getter is not modified
+     *   * RegExp.prototype.unicode getter is not modified
      *   * RegExp.prototype.exec is an own data property
      *   * RegExp.prototype[@@match] is an own data property
      *   * RegExp.prototype[@@search] is an own data property

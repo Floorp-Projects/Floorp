@@ -1867,8 +1867,8 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
         aRestyleHint |= eRestyle_Subtree;
       }
     } else {
-      NS_ERROR("stylo: ServoStyleSets don't support responding to medium "
-               "changes yet");
+      NS_WARNING("stylo: ServoStyleSets don't support responding to medium "
+                 "changes yet. See bug 1290228.");
     }
   }
 
