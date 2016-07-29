@@ -44,7 +44,7 @@ cleanup() {
       cp /home/worker/.xsession-errors ~/artifacts/public/xsession-errors.log
     fi
     # When you call this script with START_VNC or TASKCLUSTER_INTERACTIVE
-    # we make sure we don't kill xvfb so you don't lose your connection
+    # we make sure we do not kill xvfb so you do not lose your connection
     xvfb_pid=`pidof Xvfb`
     if [ -n "$xvfb_pid" ] && [ $START_VNC == false ] && [ $TASKCLUSTER_INTERACTIVE == false ] ; then
         kill $xvfb_pid || true
