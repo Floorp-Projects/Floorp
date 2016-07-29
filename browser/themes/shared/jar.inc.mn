@@ -72,6 +72,7 @@
   skin/classic/browser/newtab/close.png                        (../shared/newtab/close.png)
   skin/classic/browser/newtab/controls.svg                     (../shared/newtab/controls.svg)
   skin/classic/browser/newtab/whimsycorn.png                   (../shared/newtab/whimsycorn.png)
+  skin/classic/browser/panel-icons.svg                         (../shared/panel-icons.svg)
   skin/classic/browser/preferences/in-content/favicon.ico      (../shared/incontentprefs/favicon.ico)
   skin/classic/browser/preferences/in-content/icons.svg        (../shared/incontentprefs/icons.svg)
   skin/classic/browser/preferences/in-content/search.css       (../shared/incontentprefs/search.css)

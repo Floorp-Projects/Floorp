@@ -44,7 +44,11 @@ var connect = Task.async(function*() {
     if (addonID) {
       gClient.listAddons(({addons}) => {
         let addonActor = addons.filter(addon => addon.id === addonID).pop();
-        openToolbox({ form: addonActor, chrome: true, isTabActor: false });
+        openToolbox({
+          form: addonActor,
+          chrome: true,
+          isTabActor: addonActor.isWebExtension ? true : false
+        });
       });
     } else {
       gClient.getProcess().then(aResponse => {

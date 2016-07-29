@@ -16,10 +16,6 @@
   margin: 0;
 }
 
-.tabs .tabs-menu-item {
-  float: inline-start;
-}
-
 .tabs .tabs-menu-item a {
   display: block;
   color: #A9A9A9;
@@ -50,7 +46,7 @@
 .theme-dark .tabs .tabs-navigation,
 .theme-light .tabs .tabs-navigation {
   border-bottom: 1px solid var(--theme-splitter-color);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .theme-firebug .tabs .tabs-navigation {

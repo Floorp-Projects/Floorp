@@ -374,6 +374,9 @@ AddonUtilsInternal.prototype = {
     // Verify that the source URI uses TLS. We don't allow installs from
     // insecure sources for security reasons. The Addon Manager ensures
     // that cert validation etc is performed.
+    // (We should also consider just dropping this entirely and calling
+    // XPIProvider.isInstallAllowed, but that has additional semantics we might
+    // need to think through...)
     let requireSecureURI = true;
     if (options && options.requireSecureURI !== undefined) {
       requireSecureURI = options.requireSecureURI;

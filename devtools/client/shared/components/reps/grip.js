@@ -22,7 +22,7 @@ define(function (require, exports, module) {
    * of remote JS object and is used as an input object
    * for this rep component.
    */
-  const Grip = React.createClass({
+  const GripRep = React.createClass({
     displayName: "Grip",
 
     propTypes: {
@@ -119,6 +119,7 @@ define(function (require, exports, module) {
           object: value,
           equal: ": ",
           delim: ", ",
+          defaultRep: Grip
         })));
       });
 
@@ -209,9 +210,11 @@ define(function (require, exports, module) {
     return (object.preview && object.preview.ownProperties);
   }
 
-  // Exports from this module
-  exports.Grip = {
-    rep: Grip,
+  let Grip = {
+    rep: GripRep,
     supportsObject: supportsObject
   };
+
+  // Exports from this module
+  exports.Grip = Grip;
 });

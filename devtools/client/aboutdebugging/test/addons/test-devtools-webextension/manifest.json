@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "test-devtools-webextension",
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "test-devtools-webextension@mozilla.org"
+    }
+  },
+  "background": {
+    "scripts": ["bg.js"]
+  },
+  "browser_action": {
+    "default_title": "WebExtension Popup Debugging",
+    "default_popup": "popup.html"
+  }
+}

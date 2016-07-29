@@ -65,10 +65,12 @@ class TPSTestRunner(object):
         # Allow installing extensions dropped into the profile folder
         'extensions.autoDisableScopes': 10,
         'extensions.getAddons.get.url': 'http://127.0.0.1:4567/addons/api/%IDS%.xml',
+        # Our pretend addons server doesn't support metadata...
+        'extensions.getAddons.cache.enabled': False,
+        'extensions.install.requireSecureOrigin': False,
         'extensions.update.enabled': False,
         # Don't open a dialog to show available add-on updates
         'extensions.update.notifyUser': False,
-        'services.sync.addons.ignoreRepositoryChecking': True,
         'services.sync.firstSync': 'notReady',
         'services.sync.lastversion': '1.0',
         'toolkit.startup.max_resumed_crashes': -1,
