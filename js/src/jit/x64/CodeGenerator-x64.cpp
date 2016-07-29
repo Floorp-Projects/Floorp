@@ -293,48 +293,6 @@ CodeGeneratorX64::visitBitOpI64(LBitOpI64* lir)
 }
 
 void
-CodeGeneratorX64::visitShiftI64(LShiftI64* lir)
-{
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
-
-    if (rhs->isConstant()) {
-        int32_t shift = int32_t(ToInt64(rhs) & 0x3F);
-        switch (lir->bitop()) {
-          case JSOP_LSH:
-            if (shift)
-                masm.shlq(Imm32(shift), lhs);
-            break;
-          case JSOP_RSH:
-            if (shift)
-                masm.sarq(Imm32(shift), lhs);
-            break;
-          case JSOP_URSH:
-            if (shift)
-                masm.shrq(Imm32(shift), lhs);
-            break;
-          default:
-            MOZ_CRASH("Unexpected shift op");
-        }
-    } else {
-        MOZ_ASSERT(ToRegister(rhs) == ecx);
-        switch (lir->bitop()) {
-          case JSOP_LSH:
-            masm.shlq_cl(lhs);
-            break;
-          case JSOP_RSH:
-            masm.sarq_cl(lhs);
-            break;
-          case JSOP_URSH:
-            masm.shrq_cl(lhs);
-            break;
-          default:
-            MOZ_CRASH("Unexpected shift op");
-        }
-    }
-}
-
-void
 CodeGeneratorX64::visitRotate64(LRotate64* lir)
 {
     MRotate* mir = lir->mir();

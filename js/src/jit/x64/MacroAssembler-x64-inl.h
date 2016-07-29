@@ -252,7 +252,14 @@ MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 void
 MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 {
-    shlq(imm, dest.reg);
+    lshiftPtr(imm, dest.reg);
+}
+
+void
+MacroAssembler::lshift64(Register shift, Register64 srcDest)
+{
+    MOZ_ASSERT(shift == rcx);
+    shlq_cl(srcDest.reg);
 }
 
 void
@@ -262,15 +269,35 @@ MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+{
+    rshiftPtr(imm, dest.reg);
+}
+
+void
+MacroAssembler::rshift64(Register shift, Register64 srcDest)
+{
+    MOZ_ASSERT(shift == rcx);
+    shrq_cl(srcDest.reg);
+}
+
+void
 MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
 {
     sarq(imm, dest);
 }
 
 void
-MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
 {
-    shrq(imm, dest.reg);
+    rshiftPtrArithmetic(imm, dest.reg);
+}
+
+void
+MacroAssembler::rshift64Arithmetic(Register shift, Register64 srcDest)
+{
+    MOZ_ASSERT(shift == rcx);
+    sarq_cl(srcDest.reg);
 }
 
 // ===============================================================

@@ -248,6 +248,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitBitNotI(LBitNotI* ins);
     virtual void visitBitOpI(LBitOpI* ins);
     virtual void visitShiftI(LShiftI* ins);
+    virtual void visitShiftI64(LShiftI64* ins);
     virtual void visitUrshD(LUrshD* ins);
     virtual void visitTestIAndBranch(LTestIAndBranch* test);
     virtual void visitTestDAndBranch(LTestDAndBranch* test);

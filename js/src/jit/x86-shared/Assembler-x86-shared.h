@@ -1702,6 +1702,12 @@ class AssemblerX86Shared : public AssemblerShared
     void sarl_cl(Register dest) {
         masm.sarl_CLr(dest.encoding());
     }
+    void shrdl_cl(Register src, Register dest) {
+        masm.shrdl_CLr(src.encoding(), dest.encoding());
+    }
+    void shldl_cl(Register src, Register dest) {
+        masm.shldl_CLr(src.encoding(), dest.encoding());
+    }
 
     void roll(const Imm32 imm, Register dest) {
         masm.roll_ir(imm.value, dest.encoding());
