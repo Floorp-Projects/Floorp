@@ -542,6 +542,8 @@
           }
           this._highlightAll = aHighlight;
 
+          this.browser.finder.onHighlightAllChange(aHighlight);
+
           if (!this._dispatchFindEvent("highlightallchange")) {
             return;
           }

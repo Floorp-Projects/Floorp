@@ -38,9 +38,6 @@ pref("services.sync.jpake.firstMsgMaxTries", 300); // 5 minutes
 pref("services.sync.jpake.lastMsgMaxTries", 300);  // 5 minutes
 pref("services.sync.jpake.maxTries", 10);
 
-// Allow add-ons to be synced from non-trusted sources.
-pref("services.sync.addons.ignoreRepositoryChecking", false);
-
 // If true, add-on sync ignores changes to the user-enabled flag. This
 // allows people to have the same set of add-ons installed across all
 // profiles while maintaining different enabled states.

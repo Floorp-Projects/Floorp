@@ -4,6 +4,7 @@
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://testing-common/services/common/utils.js");
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
+Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, 'SyncPingSchema', function() {
@@ -390,3 +391,12 @@ function sync_engine_and_validate_telem(engine, allowErrorPings, onError) {
     }
   });
 }
+
+// Avoid an issue where `client.name2` containing unicode characters causes
+// a number of tests to fail, due to them assuming that we do not need to utf-8
+// encode or decode data sent through the mocked server (see bug 1268912).
+Utils.getDefaultDeviceName = function() {
+  return "Test device name";
+};
+
+

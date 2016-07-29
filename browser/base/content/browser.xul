@@ -725,7 +725,7 @@
                 <image id="identity-icon"
                        consumeanchor="identity-box"
                        onclick="PageProxyClickHandler(event);"/>
-                <box id="blocked-permissions-container" align="center">
+                <box id="blocked-permissions-container" align="center" tooltiptext="">
                   <image data-permission-id="geo" class="notification-anchor-icon geo-icon blocked" role="button"
                          aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
                   <image data-permission-id="desktop-notification" class="notification-anchor-icon desktop-notification-icon blocked" role="button"
