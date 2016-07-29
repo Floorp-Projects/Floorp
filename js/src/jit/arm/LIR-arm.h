@@ -117,6 +117,66 @@ class LDivI : public LBinaryMath<1>
     }
 };
 
+class LDivOrModI64 : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES*2, 0>
+{
+  public:
+    LIR_HEADER(DivOrModI64)
+
+    static const size_t Lhs = 0;
+    static const size_t Rhs = INT64_PIECES;
+
+    LDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs)
+    {
+        setInt64Operand(Lhs, lhs);
+        setInt64Operand(Rhs, rhs);
+    }
+
+    MBinaryArithInstruction* mir() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction*>(mir_);
+    }
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
+    }
+    bool canBeNegativeOverflow() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeNegativeDividend();
+        return mir_->toDiv()->canBeNegativeOverflow();
+    }
+};
+
+class LUDivOrModI64 : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES*2, 0>
+{
+  public:
+    LIR_HEADER(UDivOrModI64)
+
+    static const size_t Lhs = 0;
+    static const size_t Rhs = INT64_PIECES;
+
+    LUDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs)
+    {
+        setInt64Operand(Lhs, lhs);
+        setInt64Operand(Rhs, rhs);
+    }
+
+    MBinaryArithInstruction* mir() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction*>(mir_);
+    }
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
+    }
+    bool canBeNegativeOverflow() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeNegativeDividend();
+        return mir_->toDiv()->canBeNegativeOverflow();
+    }
+};
+
 // LSoftDivI is a software divide for ARM cores that don't support a hardware
 // divide instruction.
 //
