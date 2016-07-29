@@ -296,7 +296,9 @@ void
 LIRGeneratorARM::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
                                     MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
 {
-    MOZ_CRASH("NYI");
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    ins->setOperand(INT64_PIECES, useRegisterOrConstant(rhs));
+    defineInt64ReuseInput(ins, mir, 0);
 }
 
 template void LIRGeneratorARM::lowerForShiftInt64(
