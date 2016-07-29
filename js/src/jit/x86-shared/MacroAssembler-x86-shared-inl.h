@@ -369,6 +369,7 @@ void
 MacroAssembler::rotateLeft(Imm32 count, Register input, Register dest)
 {
     MOZ_ASSERT(input == dest, "defineReuseInput");
+    count.value &= 0x1f;
     if (count.value)
         roll(count, input);
 }
@@ -385,6 +386,7 @@ void
 MacroAssembler::rotateRight(Imm32 count, Register input, Register dest)
 {
     MOZ_ASSERT(input == dest, "defineReuseInput");
+    count.value &= 0x1f;
     if (count.value)
         rorl(count, input);
 }

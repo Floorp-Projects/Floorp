@@ -292,6 +292,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
     virtual void visitCopySignD(LCopySignD* lir);
     virtual void visitCopySignF(LCopySignF* lir);
+    virtual void visitRotateI64(LRotateI64* lir);
 
     void visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool);
     void visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck);

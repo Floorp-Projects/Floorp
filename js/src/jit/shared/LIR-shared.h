@@ -1432,29 +1432,42 @@ class LAsmReinterpretToI64 : public LAsmReinterpretBase<INT64_PIECES, 1>
 };
 
 namespace details {
-    template<size_t Defs, size_t Ops>
-    class RotateBase : public LInstructionHelper<Defs, Ops, 0>
+    template<size_t Defs, size_t Ops, size_t Temps>
+    class RotateBase : public LInstructionHelper<Defs, Ops, Temps>
     {
-        typedef LInstructionHelper<Defs, Ops, 0> Base;
+        typedef LInstructionHelper<Defs, Ops, Temps> Base;
       public:
         MRotate* mir() {
             return Base::mir_->toRotate();
         }
-        const LAllocation* input() { return Base::getOperand(0); }
-        const LAllocation* count() { return Base::getOperand(1); }
     };
 } // details
 
-class LRotate : public details::RotateBase<1, 2>
+class LRotate : public details::RotateBase<1, 2, 0>
 {
   public:
     LIR_HEADER(Rotate);
+
+    const LAllocation* input() { return getOperand(0); }
+    LAllocation* count() { return getOperand(1); }
 };
 
-class LRotate64 : public details::RotateBase<INT64_PIECES, INT64_PIECES + 1>
+class LRotateI64 : public details::RotateBase<INT64_PIECES, INT64_PIECES + 1, 1>
 {
   public:
-    LIR_HEADER(Rotate64);
+    LIR_HEADER(RotateI64);
+
+    LRotateI64()
+    {
+        setTemp(0, LDefinition::BogusTemp());
+    }
+
+    static const size_t Input = 0;
+    static const size_t Count = INT64_PIECES;
+
+    const LInt64Allocation input() { return getInt64Operand(Input); }
+    const LDefinition* temp() { return getTemp(0); }
+    LAllocation* count() { return getOperand(Count); }
 };
 
 class LInterruptCheck : public LInstructionHelper<0, 0, 0>

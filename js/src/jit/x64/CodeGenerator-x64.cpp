@@ -263,30 +263,6 @@ CodeGeneratorX64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
 }
 
 void
-CodeGeneratorX64::visitRotate64(LRotate64* lir)
-{
-    MRotate* mir = lir->mir();
-    Register input = ToRegister(lir->input());
-    const LAllocation* count = lir->count();
-
-    if (count->isConstant()) {
-        int32_t c = int32_t(ToInt64(count) & 0x3F);
-        if (!c)
-            return;
-        if (mir->isLeftRotate())
-            masm.rolq(Imm32(c), input);
-        else
-            masm.rorq(Imm32(c), input);
-    } else {
-        MOZ_ASSERT(ToRegister(count) == ecx);
-        if (mir->isLeftRotate())
-            masm.rolq_cl(input);
-        else
-            masm.rorq_cl(input);
-    }
-}
-
-void
 CodeGeneratorX64::visitDivOrModI64(LDivOrModI64* lir)
 {
     Register lhs = ToRegister(lir->lhs());

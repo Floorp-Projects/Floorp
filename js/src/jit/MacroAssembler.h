@@ -878,10 +878,26 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // ===============================================================
     // Rotation functions
+    // Note: - on x86 and x64 the count register must be in CL.
+    //       - on x64 the temp register should be InvalidReg.
+
     inline void rotateLeft(Imm32 count, Register input, Register dest) PER_SHARED_ARCH;
     inline void rotateLeft(Register count, Register input, Register dest) PER_SHARED_ARCH;
+    inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest) DEFINED_ON(x64);
+    inline void rotateLeft64(Register count, Register64 input, Register64 dest) DEFINED_ON(x64);
+    inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest, Register temp)
+        DEFINED_ON(x86, x64);
+    inline void rotateLeft64(Register count, Register64 input, Register64 dest, Register temp)
+        DEFINED_ON(x86, x64);
+
     inline void rotateRight(Imm32 count, Register input, Register dest) PER_SHARED_ARCH;
     inline void rotateRight(Register count, Register input, Register dest) PER_SHARED_ARCH;
+    inline void rotateRight64(Imm32 count, Register64 input, Register64 dest) DEFINED_ON(x64);
+    inline void rotateRight64(Register count, Register64 input, Register64 dest) DEFINED_ON(x64);
+    inline void rotateRight64(Imm32 count, Register64 input, Register64 dest, Register temp)
+        DEFINED_ON(x86, x64);
+    inline void rotateRight64(Register count, Register64 input, Register64 dest, Register temp)
+        DEFINED_ON(x86, x64);
 
     // ===============================================================
     // Bit counting functions
