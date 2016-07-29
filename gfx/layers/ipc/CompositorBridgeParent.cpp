@@ -1604,20 +1604,36 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
       if (failureReason.IsEmpty()){
         failureReason = "SUCCESS";
       }
-      if (compositor->GetBackendType() == LayersBackend::LAYERS_OPENGL){
+
+      // should only report success here
+      if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL){
         Telemetry::Accumulate(Telemetry::OPENGL_COMPOSITING_FAILURE_ID, failureReason);
       }
 #ifdef XP_WIN
-      else if (compositor->GetBackendType() == LayersBackend::LAYERS_D3D9){
+      else if (aBackendHints[i] == LayersBackend::LAYERS_D3D9){
         Telemetry::Accumulate(Telemetry::D3D9_COMPOSITING_FAILURE_ID, failureReason);
       }
-      else if (compositor->GetBackendType() == LayersBackend::LAYERS_D3D11){
+      else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11){
         Telemetry::Accumulate(Telemetry::D3D11_COMPOSITING_FAILURE_ID, failureReason);
       }
 #endif
+
       compositor->SetCompositorID(mCompositorID);
       return compositor;
     }
+
+    // report any failure reasons here
+    if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL){
+      Telemetry::Accumulate(Telemetry::OPENGL_COMPOSITING_FAILURE_ID, failureReason);
+    }
+#ifdef XP_WIN
+    else if (aBackendHints[i] == LayersBackend::LAYERS_D3D9){
+      Telemetry::Accumulate(Telemetry::D3D9_COMPOSITING_FAILURE_ID, failureReason);
+    }
+    else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11){
+      Telemetry::Accumulate(Telemetry::D3D11_COMPOSITING_FAILURE_ID, failureReason);
+    }
+#endif
   }
 
   return nullptr;
