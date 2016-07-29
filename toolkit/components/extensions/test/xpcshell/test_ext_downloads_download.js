@@ -1,29 +1,18 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension test</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 /* global OS */
 
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Downloads.jsm");
 
-const WINDOWS = (AppConstants.platform == "win");
+const server = createHttpServer();
+server.registerDirectory("/data/", do_get_file("data"));
 
-const BASE = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest";
+const WINDOWS = AppConstants.platform == "win";
+
+const BASE = `http://localhost:${server.identity.primaryPort}/data`;
 const FILE_NAME = "file_download.txt";
 const FILE_URL = BASE + "/" + FILE_NAME;
 const FILE_NAME_UNIQUE = "file_download(1).txt";
@@ -34,14 +23,23 @@ let downloadDir;
 function setup() {
   downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   downloadDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  info(`Using download directory ${downloadDir.path}`);
+  do_print(`Using download directory ${downloadDir.path}`);
 
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, downloadDir);
 
-  SimpleTest.registerCleanupFunction(() => {
+  do_register_cleanup(() => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
+
+    let entries = downloadDir.directoryEntries;
+    while (entries.hasMoreElements()) {
+      let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+      ok(false, `Leftover file ${entry.path} in download directory`);
+      entry.remove(false);
+    }
+
+    downloadDir.remove(false);
   });
 }
 
@@ -119,19 +117,19 @@ add_task(function* test_downloads() {
 
   function testDownload(options, localFile, expectedSize, description) {
     return download(options).then(msg => {
-      is(msg.status, "success", `downloads.download() works with ${description}`);
+      equal(msg.status, "success", `downloads.download() works with ${description}`);
       return waitForDownloads();
     }).then(() => {
       let localPath = downloadDir.clone();
       localPath.append(localFile);
-      is(localPath.fileSize, expectedSize, "Downloaded file has expected size");
+      equal(localPath.fileSize, expectedSize, "Downloaded file has expected size");
       localPath.remove(false);
     });
   }
 
   yield extension.startup();
   yield extension.awaitMessage("ready");
-  info("extension started");
+  do_print("extension started");
 
   // Call download() with just the url property.
   yield testDownload({url: FILE_URL}, FILE_NAME, FILE_LEN, "just source");
@@ -160,7 +158,7 @@ add_task(function* test_downloads() {
 
   // Try to download in invalid url
   yield download({url: "this is not a valid URL"}).then(msg => {
-    is(msg.status, "error", "downloads.download() fails with invalid url");
+    equal(msg.status, "error", "downloads.download() fails with invalid url");
     ok(/not a valid URL/.test(msg.errmsg), "error message for invalid url is correct");
   });
 
@@ -169,8 +167,8 @@ add_task(function* test_downloads() {
     url: FILE_URL,
     filename: "",
   }).then(msg => {
-    is(msg.status, "error", "downloads.download() fails with empty filename");
-    is(msg.errmsg, "filename must not be empty", "error message for empty filename is correct");
+    equal(msg.status, "error", "downloads.download() fails with empty filename");
+    equal(msg.errmsg, "filename must not be empty", "error message for empty filename is correct");
   });
 
   // Try to download to an absolute path.
@@ -179,8 +177,8 @@ add_task(function* test_downloads() {
     url: FILE_URL,
     filename: absolutePath,
   }).then(msg => {
-    is(msg.status, "error", "downloads.download() fails with absolute filename");
-    is(msg.errmsg, "filename must not be an absolute path", `error message for absolute path (${absolutePath}) is correct`);
+    equal(msg.status, "error", "downloads.download() fails with absolute filename");
+    equal(msg.errmsg, "filename must not be an absolute path", `error message for absolute path (${absolutePath}) is correct`);
   });
 
   if (WINDOWS) {
@@ -188,8 +186,8 @@ add_task(function* test_downloads() {
       url: FILE_URL,
       filename: "C:\\file_download.txt",
     }).then(msg => {
-      is(msg.status, "error", "downloads.download() fails with absolute filename");
-      is(msg.errmsg, "filename must not be an absolute path", "error message for absolute path with drive letter is correct");
+      equal(msg.status, "error", "downloads.download() fails with absolute filename");
+      equal(msg.errmsg, "filename must not be an absolute path", "error message for absolute path with drive letter is correct");
     });
   }
 
@@ -198,8 +196,8 @@ add_task(function* test_downloads() {
     url: FILE_URL,
     filename: OS.Path.join("..", "file_download.txt"),
   }).then(msg => {
-    is(msg.status, "error", "downloads.download() fails with back-references");
-    is(msg.errmsg, "filename must not contain back-references (..)", "error message for back-references is correct");
+    equal(msg.status, "error", "downloads.download() fails with back-references");
+    equal(msg.errmsg, "filename must not contain back-references (..)", "error message for back-references is correct");
   });
 
   // Try to download to a long relative path containing ..
@@ -207,8 +205,8 @@ add_task(function* test_downloads() {
     url: FILE_URL,
     filename: OS.Path.join("foo", "..", "..", "file_download.txt"),
   }).then(msg => {
-    is(msg.status, "error", "downloads.download() fails with back-references");
-    is(msg.errmsg, "filename must not contain back-references (..)", "error message for back-references is correct");
+    equal(msg.status, "error", "downloads.download() fails with back-references");
+    equal(msg.errmsg, "filename must not contain back-references (..)", "error message for back-references is correct");
   });
 
   // Try to download a blob url
@@ -227,20 +225,3 @@ add_task(function* test_downloads() {
 
   yield extension.unload();
 });
-
-// check for leftover files in the download directory
-add_task(function* () {
-  let entries = downloadDir.directoryEntries;
-  while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
-    ok(false, `Leftover file ${entry.path} in download directory`);
-    entry.remove(false);
-  }
-
-  downloadDir.remove(false);
-});
-
-</script>
-
-</body>
-</html>

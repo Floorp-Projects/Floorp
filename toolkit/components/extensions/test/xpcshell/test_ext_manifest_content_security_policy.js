@@ -4,7 +4,7 @@
 
 
 add_task(function* test_manifest_csp() {
-  let normalized = yield normalizeManifest({
+  let normalized = yield ExtensionTestUtils.normalizeManifest({
     "content_security_policy": "script-src 'self'; object-src 'none'",
   });
 
@@ -15,7 +15,7 @@ add_task(function* test_manifest_csp() {
         "Should have the expected poilcy string");
 
 
-  normalized = yield normalizeManifest({
+  normalized = yield ExtensionTestUtils.normalizeManifest({
     "content_security_policy": "object-src 'none'",
   });
 
