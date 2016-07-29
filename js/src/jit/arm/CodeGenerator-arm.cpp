@@ -3368,3 +3368,23 @@ CodeGeneratorARM::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
     else
         masm.store64(ToRegister64(ins->arg()), dst);
 }
+
+void
+CodeGeneratorARM::visitAsmSelectI64(LAsmSelectI64* lir)
+{
+    Register cond = ToRegister(lir->condExpr());
+    const LInt64Allocation falseExpr = lir->falseExpr();
+
+    Register64 out = ToOutRegister64(lir);
+    MOZ_ASSERT(ToRegister64(lir->trueExpr()) == out, "true expr is reused for input");
+
+    masm.ma_cmp(cond, Imm32(0));
+    if (falseExpr.low().isRegister()) {
+        masm.ma_mov(ToRegister(falseExpr.low()), out.low, LeaveCC, Assembler::Equal);
+        masm.ma_mov(ToRegister(falseExpr.high()), out.high, LeaveCC, Assembler::Equal);
+    } else {
+        masm.ma_ldr(ToAddress(falseExpr.low()), out.low, Offset, Assembler::Equal);
+        masm.ma_ldr(ToAddress(falseExpr.high()), out.high, Offset, Assembler::Equal);
+    }
+}
+
