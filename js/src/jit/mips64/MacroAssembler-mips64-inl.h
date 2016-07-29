@@ -177,30 +177,35 @@ MacroAssembler::inc64(AbsoluteAddress dest)
 void
 MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ma_dsll(dest, dest, imm);
 }
 
 void
 MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ma_dsll(dest.reg, dest.reg, imm);
 }
 
 void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ma_dsrl(dest, dest, imm);
 }
 
 void
 MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ma_dsra(dest, dest, imm);
 }
 
 void
 MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ma_dsrl(dest.reg, dest.reg, imm);
 }
 
