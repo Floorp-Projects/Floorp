@@ -1241,17 +1241,17 @@ CodeGeneratorX64::visitNotI64(LNotI64* lir)
 void
 CodeGeneratorX64::visitClzI64(LClzI64* lir)
 {
-    Register64 input = ToRegister64(lir->input());
-    Register64 output = ToRegister64(lir->output());
-    masm.clz64(input, output);
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    masm.clz64(input, output.reg);
 }
 
 void
 CodeGeneratorX64::visitCtzI64(LCtzI64* lir)
 {
-    Register64 input = ToRegister64(lir->input());
-    Register64 output = ToRegister64(lir->output());
-    masm.ctz64(input, output);
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    masm.ctz64(input, output.reg);
 }
 
 void

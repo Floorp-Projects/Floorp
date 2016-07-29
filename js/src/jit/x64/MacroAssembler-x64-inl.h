@@ -448,26 +448,26 @@ MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest, Regi
 // Bit counting functions
 
 void
-MacroAssembler::clz64(Register64 src, Register64 dest)
+MacroAssembler::clz64(Register64 src, Register dest)
 {
     // On very recent chips (Haswell and newer) there is actually an
     // LZCNT instruction that does all of this.
 
     Label nonzero;
-    bsrq(src.reg, dest.reg);
+    bsrq(src.reg, dest);
     j(Assembler::NonZero, &nonzero);
-    movq(ImmWord(0x7F), dest.reg);
+    movq(ImmWord(0x7F), dest);
     bind(&nonzero);
-    xorq(Imm32(0x3F), dest.reg);
+    xorq(Imm32(0x3F), dest);
 }
 
 void
-MacroAssembler::ctz64(Register64 src, Register64 dest)
+MacroAssembler::ctz64(Register64 src, Register dest)
 {
     Label nonzero;
-    bsfq(src.reg, dest.reg);
+    bsfq(src.reg, dest);
     j(Assembler::NonZero, &nonzero);
-    movq(ImmWord(64), dest.reg);
+    movq(ImmWord(64), dest);
     bind(&nonzero);
 }
 
