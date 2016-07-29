@@ -184,12 +184,24 @@ Gecko_UnsetNodeFlags(RawGeckoNode* aNode, uint32_t aFlags)
   aNode->UnsetFlags(aFlags);
 }
 
-nsChangeHint
-Gecko_CalcAndStoreStyleDifference(RawGeckoElement* aElement,
-                                  ServoComputedValues* aComputedValues)
+nsStyleContext*
+Gecko_GetStyleContext(RawGeckoNode* aNode)
 {
-#ifdef MOZ_STYLO
-  nsStyleContext* oldContext = aElement->GetPrimaryFrame()->StyleContext();
+  MOZ_ASSERT(aNode->IsContent());
+  nsIFrame* primaryFrame = aNode->AsContent()->GetPrimaryFrame();
+  if (!primaryFrame) {
+    return nullptr;
+  }
+
+  return primaryFrame->StyleContext();
+}
+
+nsChangeHint
+Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
+                          ServoComputedValues* aComputedValues)
+{
+  MOZ_ASSERT(aOldStyleContext);
+  MOZ_ASSERT(aComputedValues);
 
   // Pass the safe thing, which causes us to miss a potential optimization. See
   // bug 1289863.
@@ -200,11 +212,34 @@ Gecko_CalcAndStoreStyleDifference(RawGeckoElement* aElement,
   // potentially halt traversal. See bug 1289868.
   uint32_t equalStructs, samePointerStructs;
   nsChangeHint result =
-    oldContext->CalcStyleDifference(aComputedValues, forDescendants,
-                                    &equalStructs, &samePointerStructs);
+    aOldStyleContext->CalcStyleDifference(aComputedValues,
+                                          forDescendants,
+                                          &equalStructs,
+                                          &samePointerStructs);
+
   return result;
+}
+
+void
+Gecko_StoreStyleDifference(RawGeckoNode* aNode, nsChangeHint aChangeHintToStore)
+{
+#ifdef MOZ_STYLO
+  // XXXEmilio probably storing it in the nearest content parent is a sane thing
+  // to do if this case can ever happen?
+  MOZ_ASSERT(aNode->IsContent());
+
+  nsIContent* aContent = aNode->AsContent();
+  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
+  if (!primaryFrame) {
+    // TODO: Pick the undisplayed content map from the frame-constructor, and
+    // stick it there. For now we're generating ReconstructFrame
+    // unconditionally, which is suboptimal.
+    return;
+  }
+
+  primaryFrame->StyleContext()->StoreChangeHint(aChangeHintToStore);
 #else
-  MOZ_CRASH("stylo: Shouldn't call Gecko_CalcAndStoreStyleDifference in "
+  MOZ_CRASH("stylo: Shouldn't call Gecko_StoreStyleDifference in "
             "non-stylo build");
 #endif
 }

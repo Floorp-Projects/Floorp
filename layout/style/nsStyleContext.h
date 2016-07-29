@@ -398,16 +398,14 @@ public:
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs);
 
-#ifdef MOZ_STYLO
-  /*
-   * Like the above, but does not require the new style context to exist yet.
-   * Servo uses this to compute change hints during parallel traversal.
+  /**
+   * Like the above, but allows comparing ServoComputedValues instead of needing
+   * a full-fledged style context.
    */
   nsChangeHint CalcStyleDifference(ServoComputedValues* aNewComputedValues,
                                    nsChangeHint aParentHintsNotHandledForDescendants,
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs);
-#endif
 
 private:
   template<class StyleContextLike>
@@ -415,8 +413,8 @@ private:
                                            nsChangeHint aParentHintsNotHandledForDescendants,
                                            uint32_t* aEqualStructs,
                                            uint32_t* aSamePointerStructs);
-public:
 
+public:
   /**
    * Get a color that depends on link-visitedness using this and
    * this->GetStyleIfVisited().
@@ -528,25 +526,41 @@ public:
   mozilla::NonOwningStyleContextSource StyleSource() const { return mSource.AsRaw(); }
 
 #ifdef MOZ_STYLO
+  // NOTE: It'd be great to assert here that the previous change hint is always
+  // consumed.
+  //
+  // This is not the case right now, since the changes of childs of frames that
+  // go through frame construction are not consumed.
   void StoreChangeHint(nsChangeHint aHint)
   {
-    MOZ_ASSERT(!mHasStoredChangeHint);
+    MOZ_ASSERT(!mConsumedChangeHint);
     MOZ_ASSERT(!IsShared());
     mStoredChangeHint = aHint;
 #ifdef DEBUG
-    mHasStoredChangeHint = true;
+    mConsumedChangeHint = false;
 #endif
   }
 
   nsChangeHint ConsumeStoredChangeHint()
   {
-    MOZ_ASSERT(mHasStoredChangeHint);
     nsChangeHint result = mStoredChangeHint;
     mStoredChangeHint = nsChangeHint(0);
 #ifdef DEBUG
-    mHasStoredChangeHint = false;
+    mConsumedChangeHint = true;
 #endif
     return result;
+  }
+#else
+  void StoreChangeHint(nsChangeHint aHint)
+  {
+    MOZ_CRASH("stylo: Called nsStyleContext::StoreChangeHint in a non MOZ_STYLO "
+              "build.");
+  }
+
+  nsChangeHint ConsumeStoredChangeHint()
+  {
+    MOZ_CRASH("stylo: Called nsStyleContext::ComsumeStoredChangeHint in a non "
+               "MOZ_STYLO build.");
   }
 #endif
 
@@ -765,7 +779,7 @@ private:
 #ifdef MOZ_STYLO
   nsChangeHint            mStoredChangeHint;
 #ifdef DEBUG
-  bool                    mHasStoredChangeHint;
+  bool                    mConsumedChangeHint;
 #endif
 #endif
 
