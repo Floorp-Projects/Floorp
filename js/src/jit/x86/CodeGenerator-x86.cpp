@@ -1463,3 +1463,12 @@ CodeGeneratorX86::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
         masm.cdq();
     }
 }
+
+void
+CodeGeneratorX86::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+{
+    const LInt64Allocation& input = lir->getInt64Operand(0);
+    Register output = ToRegister(lir->output());
+
+    masm.movl(ToRegister(input.low()), output);
+}
