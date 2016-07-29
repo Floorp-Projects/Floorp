@@ -73,6 +73,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitOutOfLineTruncate(OutOfLineTruncate* ool);
     void visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool);
 
+    void visitCompareI64(LCompareI64* lir);
+    void visitCompareI64AndBranch(LCompareI64AndBranch* lir);
+
   private:
     void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg,
                                    const MWasmMemoryAccess* access);
