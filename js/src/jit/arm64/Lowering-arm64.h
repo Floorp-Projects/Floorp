@@ -53,7 +53,8 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
     void lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
                           MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
     void lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs);
-    void lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>* ins,
+    template<size_t Temps>
+    void lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
                             MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
 
     void lowerForFPU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir, MDefinition* input);

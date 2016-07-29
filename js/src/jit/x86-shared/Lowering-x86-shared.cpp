@@ -80,11 +80,16 @@ LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefiniti
     defineReuseInput(ins, mir, 0);
 }
 
+template<size_t Temps>
 void
-LIRGeneratorX86Shared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>* ins,
+LIRGeneratorX86Shared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
                                           MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
 {
     ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+#if defined(JS_NUNBOX32)
+    if (mir->isRotate())
+        ins->setTemp(0, temp());
+#endif
 
     // shift operator should be constant or in register ecx
     // x86 can't shift a non-ecx register
@@ -103,6 +108,13 @@ LIRGeneratorX86Shared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64
 
     defineInt64ReuseInput(ins, mir, 0);
 }
+
+template void LIRGeneratorX86Shared::lowerForShiftInt64(
+    LInstructionHelper<INT64_PIECES, INT64_PIECES+1, 0>* ins, MDefinition* mir,
+    MDefinition* lhs, MDefinition* rhs);
+template void LIRGeneratorX86Shared::lowerForShiftInt64(
+    LInstructionHelper<INT64_PIECES, INT64_PIECES+1, 1>* ins, MDefinition* mir,
+    MDefinition* lhs, MDefinition* rhs);
 
 void
 LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,

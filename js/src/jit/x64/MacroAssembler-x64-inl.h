@@ -382,6 +382,69 @@ MacroAssembler::rshift64Arithmetic(Register shift, Register64 srcDest)
 }
 
 // ===============================================================
+// Rotation functions
+
+void
+MacroAssembler::rotateLeft64(Register count, Register64 src, Register64 dest)
+{
+    MOZ_ASSERT(src == dest, "defineReuseInput");
+    MOZ_ASSERT(count == ecx, "defineFixed(ecx)");
+
+    rolq_cl(dest.reg);
+}
+
+void
+MacroAssembler::rotateLeft64(Register count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    rotateLeft64(count, src, dest);
+}
+
+void
+MacroAssembler::rotateRight64(Register count, Register64 src, Register64 dest)
+{
+    MOZ_ASSERT(src == dest, "defineReuseInput");
+    MOZ_ASSERT(count == ecx, "defineFixed(ecx)");
+
+    rorq_cl(dest.reg);
+}
+
+void
+MacroAssembler::rotateRight64(Register count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    rotateRight64(count, src, dest);
+}
+
+void
+MacroAssembler::rotateLeft64(Imm32 count, Register64 src, Register64 dest)
+{
+    MOZ_ASSERT(src == dest, "defineReuseInput");
+    rolq(count, dest.reg);
+}
+
+void
+MacroAssembler::rotateLeft64(Imm32 count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    rotateLeft64(count, src, dest);
+}
+
+void
+MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest)
+{
+    MOZ_ASSERT(src == dest, "defineReuseInput");
+    rorq(count, dest.reg);
+}
+
+void
+MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    rotateRight64(count, src, dest);
+}
+
+// ===============================================================
 // Bit counting functions
 
 void
