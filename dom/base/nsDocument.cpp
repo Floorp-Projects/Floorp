@@ -2619,6 +2619,33 @@ nsDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
   }
 }
 
+bool
+nsDocument::IsLoopDocument(nsIChannel *aChannel)
+{
+  nsCOMPtr<nsIURI> chanURI;
+  nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(chanURI));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool isAbout = false;
+  bool isLoop = false;
+  rv = chanURI->SchemeIs("about", &isAbout);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (isAbout) {
+    nsCOMPtr<nsIURI> loopURI;
+    rv = NS_NewURI(getter_AddRefs(loopURI), "about:loopconversation");
+    NS_ENSURE_SUCCESS(rv, false);
+    rv = chanURI->EqualsExceptRef(loopURI, &isLoop);
+    NS_ENSURE_SUCCESS(rv, false);
+    if (!isLoop) {
+      rv = NS_NewURI(getter_AddRefs(loopURI), "about:looppanel");
+      NS_ENSURE_SUCCESS(rv, false);
+      rv = chanURI->EqualsExceptRef(loopURI, &isLoop);
+      NS_ENSURE_SUCCESS(rv, false);
+    }
+  }
+  return isLoop;
+}
+
 void
 nsDocument::ApplySettingsFromCSP(bool aSpeculative)
 {
@@ -2743,6 +2770,9 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   principal->GetAddonId(addonId);
   bool applyAddonCSP = !addonId.IsEmpty();
 
+  // Check if this is part of the Loop/Hello service
+  bool applyLoopCSP = IsLoopDocument(aChannel);
+
   // Check if this is a signed content to apply default CSP.
   bool applySignedContentCSP = false;
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
@@ -2754,6 +2784,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   if (!applyAppDefaultCSP &&
       !applyAppManifestCSP &&
       !applyAddonCSP &&
+      !applyLoopCSP &&
       !applySignedContentCSP &&
       cspHeaderValue.IsEmpty() &&
       cspROHeaderValue.IsEmpty()) {
@@ -2835,6 +2866,17 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     nsAdoptingString signedContentCSP =
       Preferences::GetString("security.signed_content.CSP.default");
     csp->AppendPolicy(signedContentCSP, false, false);
+  }
+
+  // ----- if the doc is part of Loop, apply the loop CSP
+  if (applyLoopCSP) {
+    nsAdoptingString loopCSP;
+    loopCSP = Preferences::GetString("loop.CSP");
+    NS_ASSERTION(loopCSP, "Missing loop.CSP preference");
+    // If the pref has been removed, we continue without setting a CSP
+    if (loopCSP) {
+      csp->AppendPolicy(loopCSP, false, false);
+    }
   }
 
   // ----- if there's a full-strength CSP header, apply it.
