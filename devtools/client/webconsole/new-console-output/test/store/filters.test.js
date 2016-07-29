@@ -5,7 +5,7 @@
 
 const expect = require("expect");
 
-const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/filters");
 const { getAllMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
@@ -16,7 +16,7 @@ describe("Search", () => {
       "console.warn('danger, will robinson!')",
       "console.log(undefined)"
     ]);
-    store.dispatch(actions.messagesSearch("danger"));
+    store.dispatch(actions.filterTextSet("danger"));
 
     let messages = getAllMessages(store.getState());
     expect(messages.size).toEqual(1);
