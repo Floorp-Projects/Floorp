@@ -57,6 +57,21 @@ ABIArgGenerator::softNext(MIRType type)
         current_ = ABIArg(Register::FromCode(intRegIndex_));
         intRegIndex_++;
         break;
+      case MIRType::Int64:
+        // Make sure to use an even register index. Increase to next even number
+        // when odd.
+        intRegIndex_ = (intRegIndex_ + 1) & ~1;
+        if (intRegIndex_ == NumIntArgRegs) {
+            // Align the stack on 8 bytes.
+            static const uint32_t align = sizeof(uint64_t) - 1;
+            stackOffset_ = (stackOffset_ + align) & ~align;
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint64_t);
+            break;
+        }
+        current_ = ABIArg(Register::FromCode(intRegIndex_), Register::FromCode(intRegIndex_ + 1));
+        intRegIndex_ += 2;
+        break;
       case MIRType::Float32:
         if (intRegIndex_ == NumIntArgRegs) {
             current_ = ABIArg(stackOffset_);
@@ -72,7 +87,7 @@ ABIArgGenerator::softNext(MIRType type)
         intRegIndex_ = (intRegIndex_ + 1) & ~1;
         if (intRegIndex_ == NumIntArgRegs) {
             // Align the stack on 8 bytes.
-            static const int align = sizeof(double) - 1;
+            static const uint32_t align = sizeof(double) - 1;
             stackOffset_ = (stackOffset_ + align) & ~align;
             current_ = ABIArg(stackOffset_);
             stackOffset_ += sizeof(double);
@@ -102,9 +117,24 @@ ABIArgGenerator::hardNext(MIRType type)
         current_ = ABIArg(Register::FromCode(intRegIndex_));
         intRegIndex_++;
         break;
+      case MIRType::Int64:
+        // Make sure to use an even register index. Increase to next even number
+        // when odd.
+        intRegIndex_ = (intRegIndex_ + 1) & ~1;
+        if (intRegIndex_ == NumIntArgRegs) {
+            // Align the stack on 8 bytes.
+            static const uint32_t align = sizeof(uint64_t) - 1;
+            stackOffset_ = (stackOffset_ + align) & ~align;
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint64_t);
+            break;
+        }
+        current_ = ABIArg(Register::FromCode(intRegIndex_), Register::FromCode(intRegIndex_ + 1));
+        intRegIndex_ += 2;
+        break;
       case MIRType::Float32:
         if (floatRegIndex_ == NumFloatArgRegs) {
-            static const int align = sizeof(double) - 1;
+            static const uint32_t align = sizeof(double) - 1;
             stackOffset_ = (stackOffset_ + align) & ~align;
             current_ = ABIArg(stackOffset_);
             stackOffset_ += sizeof(uint64_t);
@@ -119,7 +149,7 @@ ABIArgGenerator::hardNext(MIRType type)
         // registers in which a double value can be stored.
         floatRegIndex_ = (floatRegIndex_ + 1) & ~1;
         if (floatRegIndex_ == NumFloatArgRegs) {
-            static const int align = sizeof(double) - 1;
+            static const uint32_t align = sizeof(double) - 1;
             stackOffset_ = (stackOffset_ + align) & ~align;
             current_ = ABIArg(stackOffset_);
             stackOffset_ += sizeof(uint64_t);

@@ -107,6 +107,10 @@ LIRGeneratorShared::defineInt64Fixed(LInstructionHelper<INT64_PIECES, Ops, Temps
 template <size_t Ops, size_t Temps> void
 LIRGeneratorShared::defineReuseInput(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir, uint32_t operand)
 {
+    // Note: Any other operand that is not the same as this operand should be
+    // marked as not being "atStart". The regalloc cannot handle those and can
+    // overwrite the inputs!
+
     // The input should be used at the start of the instruction, to avoid moves.
     MOZ_ASSERT(lir->getOperand(operand)->toUse()->usedAtStart());
 
@@ -122,8 +126,15 @@ template <size_t Ops, size_t Temps> void
 LIRGeneratorShared::defineInt64ReuseInput(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir,
                                           MDefinition* mir, uint32_t operand)
 {
+    // Note: Any other operand that is not the same as this operand should be
+    // marked as not being "atStart". The regalloc cannot handle those and can
+    // overwrite the inputs!
+
     // The input should be used at the start of the instruction, to avoid moves.
     MOZ_ASSERT(lir->getOperand(operand)->toUse()->usedAtStart());
+#if JS_BITS_PER_WORD == 32
+    MOZ_ASSERT(lir->getOperand(operand + 1)->toUse()->usedAtStart());
+#endif
     MOZ_ASSERT(!lir->isCall());
 
     uint32_t vreg = getVirtualRegister();
