@@ -1492,3 +1492,22 @@ CodeGeneratorX86::visitCtzI64(LCtzI64* lir)
     masm.ctz64(input, output.low);
     masm.xorl(output.high, output.high);
 }
+
+void
+CodeGeneratorX86::visitNotI64(LNotI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register output = ToRegister(lir->output());
+
+    if (input.high == output) {
+        masm.orl(input.low, output);
+    } else if (input.low == output) {
+        masm.orl(input.high, output);
+    } else {
+        masm.movl(input.high, output);
+        masm.orl(input.low, output);
+    }
+
+    masm.cmpl(Imm32(0), output);
+    masm.emitSet(Assembler::Equal, output);
+}
