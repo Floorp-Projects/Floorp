@@ -76,11 +76,23 @@ WidevineDecryptor::CreateSession(uint32_t aCreateSessionToken,
                                  GMPSessionType aSessionType)
 {
   Log("Decryptor::CreateSession(token=%d, pid=%d)", aCreateSessionToken, aPromiseId);
-  MOZ_ASSERT(!strcmp(aInitDataType, "cenc"));
+  InitDataType initDataType;
+  if (!strcmp(aInitDataType, "cenc")) {
+    initDataType = kCenc;
+  } else if (!strcmp(aInitDataType, "webm")) {
+    initDataType = kWebM;
+  } else if (!strcmp(aInitDataType, "keyids")) {
+    initDataType = kKeyIds;
+  } else {
+    // Invalid init data type
+    const char* errorMsg = "Invalid init data type when creating session.";
+    OnRejectPromise(aPromiseId, kNotSupportedError, 0, errorMsg, sizeof(errorMsg));
+    return;
+  }
   mPromiseIdToNewSessionTokens[aPromiseId] = aCreateSessionToken;
   CDM()->CreateSessionAndGenerateRequest(aPromiseId,
                                          ToCDMSessionType(aSessionType),
-                                         kCenc,
+                                         initDataType,
                                          aInitData, aInitDataSize);
 }
 

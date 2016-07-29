@@ -232,5 +232,19 @@ VPXDecoder::IsVPX(const nsACString& aMimeType, uint8_t aCodecMask)
           aMimeType.EqualsLiteral("video/webm; codecs=vp9"));
 }
 
+/* static */
+bool
+VPXDecoder::IsVP8(const nsACString& aMimeType)
+{
+  return IsVPX(aMimeType, VPXDecoder::VP8);
+}
+
+/* static */
+bool
+VPXDecoder::IsVP9(const nsACString& aMimeType)
+{
+  return IsVPX(aMimeType, VPXDecoder::VP9);
+}
+
 } // namespace mozilla
 #undef LOG

@@ -20,6 +20,7 @@ WidevineVideoDecoder::WidevineVideoDecoder(GMPVideoHost* aVideoHost,
   , mCDMWrapper(Move(aCDMWrapper))
   , mExtraData(new MediaByteBuffer())
   , mSentInput(false)
+  , mCodecType(kGMPVideoCodecInvalid)
   , mReturnOutputCallDepth(0)
   , mDrainPending(false)
   , mResetInProgress(false)
@@ -62,9 +63,21 @@ WidevineVideoDecoder::InitDecode(const GMPVideoCodec& aCodecSettings,
 {
   mCallback = aCallback;
   VideoDecoderConfig config;
-  config.codec = VideoDecoderConfig::kCodecH264; // TODO: others.
-  const GMPVideoCodecH264* h264 = (const GMPVideoCodecH264*)(aCodecSpecific);
-  config.profile = ToCDMH264Profile(h264->mAVCC.mProfile);
+  mCodecType = aCodecSettings.mCodecType;
+  if (mCodecType == kGMPVideoCodecH264) {
+    config.codec = VideoDecoderConfig::kCodecH264;
+    const GMPVideoCodecH264* h264 = (const GMPVideoCodecH264*)(aCodecSpecific);
+    config.profile = ToCDMH264Profile(h264->mAVCC.mProfile);
+  } else if (mCodecType == kGMPVideoCodecVP8) {
+    config.codec = VideoDecoderConfig::kCodecVp8;
+    config.profile = VideoDecoderConfig::kProfileNotNeeded;
+  } else if (mCodecType == kGMPVideoCodecVP9) {
+    config.codec = VideoDecoderConfig::kCodecVp9;
+    config.profile = VideoDecoderConfig::kProfileNotNeeded;
+  } else {
+    mCallback->Error(GMPInvalidArgErr);
+    return;
+  }
   config.format = kYv12;
   config.coded_size = Size(aCodecSettings.mWidth, aCodecSettings.mHeight);
   mExtraData->AppendElements(aCodecSpecific + 1, aCodecSpecificLength);
@@ -100,9 +113,11 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
   RefPtr<MediaRawData> raw(new MediaRawData(aInputFrame->Buffer(), aInputFrame->Size()));
   raw->mExtraData = mExtraData;
   raw->mKeyframe = (aInputFrame->FrameType() == kGMPKeyFrame);
-  // Convert input from AVCC, which GMPAPI passes in, to AnnexB, which
-  // Chromium uses internally.
-  mp4_demuxer::AnnexB::ConvertSampleToAnnexB(raw);
+  if (mCodecType == kGMPVideoCodecH264) {
+    // Convert input from AVCC, which GMPAPI passes in, to AnnexB, which
+    // Chromium uses internally.
+    mp4_demuxer::AnnexB::ConvertSampleToAnnexB(raw);
+  }
 
   const GMPEncryptedBufferMetadata* crypto = aInputFrame->GetDecryptionData();
   nsTArray<SubsampleEntry> subsamples;
@@ -111,7 +126,7 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
   // For keyframes, ConvertSampleToAnnexB will stick the AnnexB extra data
   // at the start of the input. So we need to account for that as clear data
   // in the subsamples.
-  if (raw->mKeyframe && !subsamples.IsEmpty()) {
+  if (raw->mKeyframe && !subsamples.IsEmpty() && mCodecType == kGMPVideoCodecH264) {
     subsamples[0].clear_bytes += mAnnexB->Length();
   }
 

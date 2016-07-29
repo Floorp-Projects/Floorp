@@ -480,11 +480,10 @@ GetSupportedKeySystems()
       widevine.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
 #endif
       widevine.mMP4.SetCanDecryptAndDecode(GMP_CODEC_H264);
-      // TODO: Enable Widevine/WebM once bug 1279077 lands.
-      //widevine.mWebM.SetCanDecrypt(GMP_CODEC_VORBIS);
-      //widevine.mWebM.SetCanDecrypt(GMP_CODEC_OPUS);
-      //widevine.mWebM.SetCanDecryptAndDecode(GMP_CODEC_VP8);
-      //widevine.mWebM.SetCanDecryptAndDecode(GMP_CODEC_VP9);
+      widevine.mWebM.SetCanDecrypt(GMP_CODEC_VORBIS);
+      widevine.mWebM.SetCanDecrypt(GMP_CODEC_OPUS);
+      widevine.mWebM.SetCanDecryptAndDecode(GMP_CODEC_VP8);
+      widevine.mWebM.SetCanDecryptAndDecode(GMP_CODEC_VP9);
       sKeySystemConfigs->AppendElement(Move(widevine));
     }
     {

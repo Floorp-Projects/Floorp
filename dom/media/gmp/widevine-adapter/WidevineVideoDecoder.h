@@ -62,6 +62,7 @@ private:
   GMPVideoDecoderCallback* mCallback;
   std::map<uint64_t, uint64_t> mFrameDurations;
   bool mSentInput;
+  GMPVideoCodecType mCodecType;
   // Frames waiting on allocation
   std::deque<WidevineVideoFrame> mFrameAllocationQueue;
   // Number of calls of ReturnOutput currently in progress.
