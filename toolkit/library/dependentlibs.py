@@ -11,6 +11,7 @@ import re
 import subprocess
 import sys
 import mozpack.path as mozpath
+from collections import OrderedDict
 from mozpack.executables import (
     get_type,
     ELF,
@@ -93,19 +94,19 @@ def dependentlibs(lib, libpaths, func):
     be found in the given list of paths, followed by the library itself.'''
     assert(libpaths)
     assert(isinstance(libpaths, list))
-    deps = []
+    deps = OrderedDict()
     for dep in func(lib):
         if dep in deps or os.path.isabs(dep):
             continue
         for dir in libpaths:
             deppath = os.path.join(dir, dep)
             if os.path.exists(deppath):
-                deps.extend([d for d in dependentlibs(deppath, libpaths, func) if not d in deps])
+                deps.update(dependentlibs(deppath, libpaths, func))
                 # Black list the ICU data DLL because preloading it at startup
                 # leads to startup performance problems because of its excessive
                 # size (around 10MB).
                 if not dep.startswith("icu"):
-                    deps.append(deppath)
+                    deps[dep] = deppath
                 break
 
     return deps
@@ -123,10 +124,9 @@ def gen_list(output, lib):
         func = dependentlibs_dumpbin
 
     deps = dependentlibs(lib, libpaths, func)
-    deps.append(mozpath.join(libpaths[0], lib))
-    dependentlibs_output = [mozpath.basename(f) for f in deps]
-    output.write('\n'.join(dependentlibs_output) + '\n')
-    return set(deps)
+    deps[lib] = mozpath.join(libpaths[0], lib)
+    output.write('\n'.join(deps.keys()) + '\n')
+    return set(deps.values())
 
 def main():
     gen_list(sys.stdout, sys.argv[1])
