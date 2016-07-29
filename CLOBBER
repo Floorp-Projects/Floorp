@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1285541 - Clobber needed because this patch renames a file.
+Bug 1287827 - Clobber needed because this patch removes files.
