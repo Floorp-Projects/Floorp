@@ -215,6 +215,24 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
     subl(Operand(addr), dest);
 }
 
+void
+MacroAssembler::sub64(Register64 src, Register64 dest)
+{
+    subl(src.low, dest.low);
+    sbbl(src.high, dest.high);
+}
+
+void
+MacroAssembler::sub64(Imm64 imm, Register64 dest)
+{
+    if (imm.low().value == 0) {
+        subl(imm.hi(), dest.high);
+        return;
+    }
+    subl(imm.low(), dest.low);
+    sbbl(imm.hi(), dest.high);
+}
+
 // Note: this function clobbers eax and edx.
 void
 MacroAssembler::mul64(Imm64 imm, const Register64& dest)

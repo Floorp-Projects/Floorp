@@ -239,6 +239,24 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
 }
 
 void
+MacroAssembler::sub64(const Operand& src, Register64 dest)
+{
+    subq(src, dest.reg);
+}
+
+void
+MacroAssembler::sub64(Register64 src, Register64 dest)
+{
+    subq(src.reg, dest.reg);
+}
+
+void
+MacroAssembler::sub64(Imm64 imm, Register64 dest)
+{
+    subPtr(ImmWord(imm.value), dest.reg);
+}
+
+void
 MacroAssembler::mul64(Imm64 imm, const Register64& dest)
 {
     movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
