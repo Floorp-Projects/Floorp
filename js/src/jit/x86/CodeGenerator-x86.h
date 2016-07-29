@@ -29,7 +29,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
     void load(Scalar::Type vt, const Operand& srcAddr, const LDefinition* out);
+    void loadI64(Scalar::Type vt, const Operand& srcAddr, const Register64 out);
     void store(Scalar::Type vt, const LAllocation* value, const Operand& dstAddr);
+    void storeI64(Scalar::Type vt, const LInt64Allocation value, const Operand& dstAddr);
 
     void loadSimd(Scalar::Type type, unsigned numElems, const Operand& srcAddr, FloatRegister out);
     void emitSimdLoad(LAsmJSLoadHeap* ins);
@@ -38,6 +40,11 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void emitSimdStore(LAsmJSStoreHeap* ins);
 
     void memoryBarrier(MemoryBarrierBits barrier);
+
+    template <typename T>
+    void emitWasmLoad(T* ins);
+    template <typename T>
+    void emitWasmStore(T* ins);
 
   public:
     CodeGeneratorX86(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
@@ -61,7 +68,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitAsmJSCall(LAsmJSCall* ins);
     void visitAsmJSCallI64(LAsmJSCallI64* ins);
     void visitWasmLoad(LWasmLoad* ins);
+    void visitWasmLoadI64(LWasmLoadI64* ins);
     void visitWasmStore(LWasmStore* ins);
+    void visitWasmStoreI64(LWasmStoreI64* ins);
     void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);

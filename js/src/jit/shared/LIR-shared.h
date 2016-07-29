@@ -7806,22 +7806,53 @@ class LWasmStore : public LInstructionHelper<0, 2, 1>
 {
   public:
     LIR_HEADER(WasmStore);
+
+    static const size_t PtrIndex = 0;
+    static const size_t ValueIndex = 1;
+
     LWasmStore(const LAllocation& ptr, const LAllocation& value) {
-        setOperand(0, ptr);
-        setOperand(1, value);
+        setOperand(PtrIndex, ptr);
+        setOperand(ValueIndex, value);
         setTemp(0, LDefinition::BogusTemp());
     }
     MWasmStore* mir() const {
         return mir_->toWasmStore();
     }
     const LAllocation* ptr() {
-        return getOperand(0);
+        return getOperand(PtrIndex);
     }
     const LDefinition* ptrCopy() {
         return getTemp(0);
     }
     const LAllocation* value() {
-        return getOperand(1);
+        return getOperand(ValueIndex);
+    }
+};
+
+class LWasmStoreI64 : public LInstructionHelper<0, INT64_PIECES + 1, 1>
+{
+  public:
+    LIR_HEADER(WasmStoreI64);
+
+    static const size_t PtrIndex = 0;
+    static const size_t ValueIndex = 1;
+
+    LWasmStoreI64(const LAllocation& ptr, const LInt64Allocation& value) {
+        setOperand(PtrIndex, ptr);
+        setInt64Operand(ValueIndex, value);
+        setTemp(0, LDefinition::BogusTemp());
+    }
+    MWasmStore* mir() const {
+        return mir_->toWasmStore();
+    }
+    const LAllocation* ptr() {
+        return getOperand(PtrIndex);
+    }
+    const LDefinition* ptrCopy() {
+        return getTemp(0);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(ValueIndex);
     }
 };
 
