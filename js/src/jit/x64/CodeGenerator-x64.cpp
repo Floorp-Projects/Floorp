@@ -343,13 +343,14 @@ CodeGeneratorX64::visitAsmSelectI64(LAsmSelectI64* lir)
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
     Register cond = ToRegister(lir->condExpr());
-    Operand falseExpr = ToOperand(lir->falseExpr());
 
-    Register out = ToRegister(lir->output());
-    MOZ_ASSERT(ToRegister(lir->trueExpr()) == out, "true expr is reused for input");
+    Operand falseExpr = ToOperandOrRegister64(lir->falseExpr());
+
+    Register64 out = ToOutRegister64(lir);
+    MOZ_ASSERT(ToRegister64(lir->trueExpr()) == out, "true expr is reused for input");
 
     masm.test32(cond, cond);
-    masm.cmovzq(falseExpr, out);
+    masm.cmovzq(falseExpr, out.reg);
 }
 
 void

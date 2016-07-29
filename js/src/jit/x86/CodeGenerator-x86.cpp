@@ -1401,3 +1401,21 @@ CodeGeneratorX86::visitUDivOrModI64(LUDivOrModI64* lir)
     masm.movl(edx, output.high);
     MOZ_ASSERT(eax == output.low);
 }
+
+void
+CodeGeneratorX86::visitAsmSelectI64(LAsmSelectI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+
+    Register cond = ToRegister(lir->condExpr());
+    Register64 falseExpr = ToRegister64(lir->falseExpr());
+    Register64 out = ToOutRegister64(lir);
+
+    MOZ_ASSERT(ToRegister64(lir->trueExpr()) == out, "true expr is reused for input");
+
+    Label done;
+    masm.branchTest32(Assembler::NonZero, cond, cond, &done);
+    masm.movl(falseExpr.low, out.low);
+    masm.movl(falseExpr.high, out.high);
+    masm.bind(&done);
+}
