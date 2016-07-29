@@ -3603,11 +3603,10 @@ CacheFileIOManager::GetDoomedFile(nsIFile **_retval)
   rv = file->AppendNative(NS_LITERAL_CSTRING("dummyleaf"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  const int32_t kMaxTries = 64;
   srand(static_cast<unsigned>(PR_Now()));
   nsAutoCString leafName;
-  uint32_t iter=0;
-  while (true) {
-    iter++;
+  for (int32_t triesCount = 0; ; ++triesCount) {
     leafName.AppendInt(rand());
     rv = file->SetNativeLeafName(leafName);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3617,10 +3616,14 @@ CacheFileIOManager::GetDoomedFile(nsIFile **_retval)
       break;
     }
 
+    if (triesCount == kMaxTries) {
+      LOG(("CacheFileIOManager::GetDoomedFile() - Could not find unused file "
+           "name in %d tries.", kMaxTries));
+      return NS_ERROR_FAILURE;
+    }
+
     leafName.Truncate();
   }
-
-//  Telemetry::Accumulate(Telemetry::DISK_CACHE_GETDOOMEDFILE_ITERATIONS, iter);
 
   file.swap(*_retval);
   return NS_OK;
