@@ -66,6 +66,9 @@ public class AudioFocusAgent {
                         mAudioFocusState = LOST_FOCUS_TRANSIENT;
                         break;
                     case AudioManager.AUDIOFOCUS_GAIN:
+                        if (!mAudioFocusState.equals(LOST_FOCUS_TRANSIENT)) {
+                            return;
+                        }
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN");
                         notifyObservers("AudioFocusChanged", "gainAudioFocus");
                         notifyMediaControlService(MediaControlService.ACTION_PLAY);
