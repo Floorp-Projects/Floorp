@@ -3093,6 +3093,36 @@ CodeGeneratorARM::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* oo
 }
 
 void
+CodeGeneratorARM::visitInt64ToFloatingPointCall(LInt64ToFloatingPointCall* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    MInt64ToFloatingPoint* mir = lir->mir();
+    MIRType toType = mir->type();
+
+    // We are free to clobber all registers, since this is a call instruction.
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(input.low);
+    regs.take(input.high);
+    Register temp = regs.takeAny();
+
+    masm.setupUnalignedABICall(temp);
+    masm.passABIArg(input.high);
+    masm.passABIArg(input.low);
+    if (lir->mir()->isUnsigned())
+        masm.callWithABI(wasm::SymbolicAddress::Uint64ToFloatingPoint, MoveOp::DOUBLE);
+    else
+        masm.callWithABI(wasm::SymbolicAddress::Int64ToFloatingPoint, MoveOp::DOUBLE);
+
+    MOZ_ASSERT_IF(toType == MIRType::Double, output == ReturnDoubleReg);
+    if (toType == MIRType::Float32) {
+        MOZ_ASSERT(output == ReturnFloat32Reg);
+        masm.convertDoubleToFloat32(ReturnDoubleReg, output);
+    }
+}
+
+void
 CodeGeneratorARM::visitCopySignF(LCopySignF* ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->getOperand(0));
