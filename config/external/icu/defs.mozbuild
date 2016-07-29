@@ -24,6 +24,9 @@ DEFINES.update(
 if not CONFIG['HAVE_LANGINFO_CODESET']:
     DEFINES['U_HAVE_NL_LANGINFO_CODESET'] = 0
 
+if CONFIG['MOZ_DEBUG']:
+    DEFINES['U_DEBUG'] = 1
+
 # ICU requires RTTI
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-frtti']
