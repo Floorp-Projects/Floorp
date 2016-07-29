@@ -5,8 +5,8 @@ RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
 
 RUN mkdir /build
-# %include testing/docker/decision/tooltool.py
-ADD topsrcdir/testing/docker/decision/tooltool.py /build/tooltool.py
+# %include testing/docker/recipes/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /build/tooltool.py
 
 # %include testing/docker/recipes/install-mercurial.sh
 ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
