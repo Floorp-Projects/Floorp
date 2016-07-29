@@ -780,6 +780,82 @@ MacroAssembler::rotateLeft(Register count, Register input, Register dest)
 }
 
 void
+MacroAssembler::rotateLeft64(Imm32 count, Register64 input, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    MOZ_ASSERT(input.low != dest.high && input.high != dest.low);
+
+    int32_t amount = count.value & 0x3f;
+    if (amount > 32) {
+        rotateRight64(Imm32(64 - amount), input, dest, temp);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        if (amount == 0) {
+            ma_mov(input.low, dest.low);
+            ma_mov(input.high, dest.high);
+        } else if (amount == 32) {
+            ma_mov(input.low, scratch);
+            ma_mov(input.high, dest.low);
+            ma_mov(scratch, dest.high);
+        } else {
+            MOZ_ASSERT(0 < amount && amount < 32);
+            ma_mov(dest.high, scratch);
+            as_mov(dest.high, lsl(dest.high, amount));
+            as_orr(dest.high, dest.high, lsr(dest.low, 32 - amount));
+            as_mov(dest.low, lsl(dest.low, amount));
+            as_orr(dest.low, dest.low, lsr(scratch, 32 - amount));
+        }
+    }
+}
+
+void
+MacroAssembler::rotateLeft64(Register shift, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(shift != temp);
+    MOZ_ASSERT(src == dest);
+    MOZ_ASSERT(temp != src.low && temp != src.high);
+    MOZ_ASSERT(shift != src.low && shift != src.high);
+    MOZ_ASSERT(temp != InvalidReg);
+
+    ScratchRegisterScope shift_value(*this);
+    Label high, done;
+
+    ma_mov(src.high, temp);
+    ma_and(Imm32(0x3f), shift, shift_value);
+
+    ma_cmp(shift_value, Imm32(32));
+    ma_b(&high, GreaterThanOrEqual);
+
+    // high = high << shift | low >> 32 - shift
+    // low = low << shift | high >> 32 - shift
+    as_mov(dest.high, lsl(src.high, shift_value));
+    ma_rsb(Imm32(32), shift_value);
+    as_orr(dest.high, dest.high, lsr(src.low, shift_value));
+
+    ma_rsb(Imm32(32), shift_value);
+    as_mov(dest.low, lsl(src.low, shift_value));
+    ma_rsb(Imm32(32), shift_value);
+    as_orr(dest.low, dest.low, lsr(temp, shift_value));
+
+    ma_b(&done);
+
+    // A 32 - 64 shift is a 0 - 32 shift in the other direction.
+    bind(&high);
+    ma_rsb(Imm32(64), shift_value);
+
+    as_mov(dest.high, lsr(src.high, shift_value));
+    ma_rsb(Imm32(32), shift_value);
+    as_orr(dest.high, dest.high, lsl(src.low, shift_value));
+
+    ma_rsb(Imm32(32), shift_value);
+    as_mov(dest.low, lsr(src.low, shift_value));
+    ma_rsb(Imm32(32), shift_value);
+    as_orr(dest.low, dest.low, lsl(temp, shift_value));
+
+    bind(&done);
+}
+
+void
 MacroAssembler::rotateRight(Imm32 count, Register input, Register dest)
 {
     if (count.value)
@@ -792,6 +868,82 @@ void
 MacroAssembler::rotateRight(Register count, Register input, Register dest)
 {
     ma_ror(count, input, dest);
+}
+
+void
+MacroAssembler::rotateRight64(Imm32 count, Register64 input, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    MOZ_ASSERT(input.low != dest.high && input.high != dest.low);
+
+    int32_t amount = count.value & 0x3f;
+    if (amount > 32) {
+        rotateLeft64(Imm32(64 - amount), input, dest, temp);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        if (amount == 0) {
+            ma_mov(input.low, dest.low);
+            ma_mov(input.high, dest.high);
+        } else if (amount == 32) {
+            ma_mov(input.low, scratch);
+            ma_mov(input.high, dest.low);
+            ma_mov(scratch, dest.high);
+        } else {
+            MOZ_ASSERT(0 < amount && amount < 32);
+            ma_mov(dest.high, scratch);
+            as_mov(dest.high, lsr(dest.high, amount));
+            as_orr(dest.high, dest.high, lsl(dest.low, 32 - amount));
+            as_mov(dest.low, lsr(dest.low, amount));
+            as_orr(dest.low, dest.low, lsl(scratch, 32 - amount));
+        }
+    }
+}
+
+void
+MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(shift != temp);
+    MOZ_ASSERT(src == dest);
+    MOZ_ASSERT(temp != src.low && temp != src.high);
+    MOZ_ASSERT(shift != src.low && shift != src.high);
+    MOZ_ASSERT(temp != InvalidReg);
+
+    ScratchRegisterScope shift_value(*this);
+    Label high, done;
+
+    ma_mov(src.high, temp);
+    ma_and(Imm32(0x3f), shift, shift_value);
+
+    ma_cmp(shift_value, Imm32(32));
+    ma_b(&high, GreaterThanOrEqual);
+
+    // high = high >> shift | low << 32 - shift
+    // low = low >> shift | high << 32 - shift
+    as_mov(dest.high, lsr(src.high, shift_value));
+    ma_rsb(Imm32(32), shift_value);
+    as_orr(dest.high, dest.high, lsl(src.low, shift_value));
+
+    ma_rsb(Imm32(32), shift_value);
+    as_mov(dest.low, lsr(src.low, shift_value));
+    ma_rsb(Imm32(32), shift_value);
+    as_orr(dest.low, dest.low, lsl(temp, shift_value));
+
+    ma_b(&done);
+
+    // A 32 - 64 shift is a 0 - 32 shift in the other direction.
+    bind(&high);
+    ma_rsb(Imm32(64), shift_value);
+
+    as_mov(dest.high, lsl(src.high, shift_value));
+    ma_rsb(Imm32(32), shift_value);
+    as_orr(dest.high, dest.high, lsr(src.low, shift_value));
+
+    ma_rsb(Imm32(32), shift_value);
+    as_mov(dest.low, lsl(src.low, shift_value));
+    ma_rsb(Imm32(32), shift_value);
+    as_orr(dest.low, dest.low, lsr(temp, shift_value));
+
+    bind(&done);
 }
 
 // ===============================================================
