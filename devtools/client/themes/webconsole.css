@@ -112,10 +112,18 @@ a {
 
 .stack-trace .frame-link-source,
 .message-location .frame-link-source {
+  /* Makes the file name truncated (and ellipsis shown) on the left side */
   direction: rtl;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.stack-trace .frame-link-source-inner,
+.message-location .frame-link-source-inner {
+  /* Enforce LTR direction for the file name - fixes bug 1290056 */
+  direction: ltr;
+  unicode-bidi: embed;
 }
 
 .stack-trace .frame-link-function-display-name {
