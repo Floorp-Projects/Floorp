@@ -199,6 +199,39 @@ LIRGeneratorX86::lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* b
 }
 
 void
+LIRGeneratorX86::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
+                                  MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    ins->setInt64Operand(INT64_PIECES,
+                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    defineInt64ReuseInput(ins, mir, 0);
+}
+
+void
+LIRGeneratorX86::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    bool constantNeedTemp = true;
+    if (rhs->isConstant()) {
+        int64_t constant = rhs->toConstant()->toInt64();
+        int32_t shift = mozilla::FloorLog2(constant);
+        if (constant <= 0 || int64_t(1) << shift != constant) {
+            constantNeedTemp = constant != -1 && constant != 0 &&
+                               constant != 1 && constant != 2;
+        }
+    }
+
+    // MulI64 on x86 needs output to be in edx, eax;
+    ins->setInt64Operand(0, useInt64Fixed(lhs, Register64(edx, eax), /*useAtStart = */ true));
+    ins->setInt64Operand(INT64_PIECES,
+            lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    if (constantNeedTemp)
+        ins->setTemp(0, temp());
+    defineInt64Fixed(ins, mir, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                LAllocation(AnyRegister(eax))));
+}
+
+void
 LIRGeneratorX86::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
 {
     lowerCompareExchangeTypedArrayElement(ins, /* useI386ByteRegisters = */ true);

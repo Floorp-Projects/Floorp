@@ -1716,7 +1716,7 @@ LIRGenerator::visitMul(MMul* ins)
         MOZ_ASSERT(lhs->type() == MIRType::Int64);
         ReorderCommutative(&lhs, &rhs, ins);
         LMulI64* lir = new(alloc()) LMulI64;
-        lowerForALUInt64(lir, ins, lhs, rhs);
+        lowerForMulInt64(lir, ins, lhs, rhs);
         return;
     }
 

@@ -121,16 +121,6 @@ LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition
     defineReuseInput(ins, mir, 0);
 }
 
-void
-LIRGeneratorX86Shared::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
-                                        MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
-{
-    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-    ins->setInt64Operand(INT64_PIECES,
-                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
-    defineInt64ReuseInput(ins, mir, 0);
-}
-
 template<size_t Temps>
 void
 LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir, MDefinition* lhs, MDefinition* rhs)

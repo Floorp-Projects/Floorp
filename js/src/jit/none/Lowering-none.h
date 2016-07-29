@@ -42,6 +42,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void lowerForFPU(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
     template <typename T>
     void lowerForALUInt64(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
+    void lowerForMulInt64(LMulI64*, MMul*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
     template <typename T>
     void lowerForShiftInt64(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
     void lowerForCompIx4(LSimdBinaryCompIx4* ins, MSimdBinaryComp* mir,
