@@ -120,6 +120,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitModMaskI(LModMaskI* ins);
     virtual void visitPowHalfD(LPowHalfD* ins);
     virtual void visitShiftI(LShiftI* ins);
+    virtual void visitShiftI64(LShiftI64* ins);
     virtual void visitUrshD(LUrshD* ins);
 
     virtual void visitClzI(LClzI* ins);
