@@ -128,7 +128,7 @@ static constexpr Register JSReturnReg_Data = r2;
 static constexpr Register StackPointer = sp;
 static constexpr Register FramePointer = InvalidReg;
 static constexpr Register ReturnReg = r0;
-static constexpr Register64 ReturnReg64(InvalidReg, InvalidReg);
+static constexpr Register64 ReturnReg64(r1, r0);
 static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::d0, VFPRegister::Single };
 static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::d0, VFPRegister::Double};
 static constexpr FloatRegister ReturnSimd128Reg = InvalidFloatReg;

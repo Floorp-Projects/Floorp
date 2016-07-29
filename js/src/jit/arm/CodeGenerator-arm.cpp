@@ -40,6 +40,12 @@ CodeGeneratorARM::CodeGeneratorARM(MIRGenerator* gen, LIRGraph* graph, MacroAsse
 {
 }
 
+Register64
+CodeGeneratorARM::ToOperandOrRegister64(const LInt64Allocation input)
+{
+    return ToRegister64(input);
+}
+
 void
 CodeGeneratorARM::emitBranch(Assembler::Condition cond, MBasicBlock* mirTrue, MBasicBlock* mirFalse)
 {
