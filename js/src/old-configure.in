@@ -528,6 +528,7 @@ dnl Android libstdc++, placed here so it can use MOZ_ARCH
 dnl computed above.
 dnl ========================================================
 
+MOZ_ANDROID_CPU_ARCH
 MOZ_ANDROID_STLPORT
 
 dnl ========================================================

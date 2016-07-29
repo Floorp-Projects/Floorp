@@ -990,7 +990,7 @@ function ArrayConcat(arg1) {
             if (n + len > MAX_NUMERIC_INDEX)
                 ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
 
-            if (IsPackedArray(E)) {
+            if (IsPackedArray(A) && IsPackedArray(E)) {
                 // Step 5.c.i, 5.c.iv, and 5.c.iv.5.
                 for (k = 0; k < len; k++) {
                     // Steps 5.c.iv.1-3.
