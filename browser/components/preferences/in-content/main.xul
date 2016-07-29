@@ -105,6 +105,9 @@
                 name="browser.taskbar.previews.enable"
                 type="bool"/>
 #endif
+    <preference id="browser.ctrlTab.previews"
+                name="browser.ctrlTab.previews"
+                type="bool"/>
 </preferences>
 
 <hbox id="header-general"
@@ -268,6 +271,11 @@
 <groupbox data-category="paneGeneral"
           hidden="true" align="start">
     <caption><label>&tabsGroup.label;</label></caption>
+
+    <checkbox id="ctrlTabRecentlyUsedOrder" label="&ctrlTabRecentlyUsedOrder.label;"
+              accesskey="&ctrlTabRecentlyUsedOrder.accesskey;"
+              preference="browser.ctrlTab.previews"/>
+
     <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
               accesskey="&newWindowsAsTabs.accesskey;"
               preference="browser.link.open_newwindow"

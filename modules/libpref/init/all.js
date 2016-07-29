@@ -2149,16 +2149,13 @@ pref("services.blocklist.gfx.checked", 0);
 
 // Controls whether signing should be enforced on signature-capable blocklist
 // collections.
-pref("services.blocklist.signing.enforced", false);
+pref("services.blocklist.signing.enforced", true);
 
-// For now, let's keep settings server update out of the release builds
-#ifdef RELEASE_BUILD
-pref("services.blocklist.update_enabled", false);
-pref("security.onecrl.via.amo", true);
-#else
+// Enable blocklists via the services settings mechanism
 pref("services.blocklist.update_enabled", true);
+
+// Enable certificate blocklist updates via services settings
 pref("security.onecrl.via.amo", false);
-#endif
 
 
 // Modifier key prefs: default to Windows settings,
@@ -4572,7 +4569,6 @@ pref("gfx.apitrace.enabled",false);
 pref("gfx.content.use-native-pushlayer", true);
 #ifdef MOZ_WIDGET_GTK
 pref("gfx.xrender.enabled",false);
-pref("widget.allow-gtk-dark-theme", false);
 #endif
 #endif
 

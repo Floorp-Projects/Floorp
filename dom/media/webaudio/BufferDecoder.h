@@ -33,8 +33,7 @@ public:
 
   MediaResource* GetResource() const final override;
 
-  void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
-                           uint32_t aDropped) final override;
+  void NotifyDecodedFrames(const FrameStatisticsData& aStats) final override;
 
   VideoFrameContainer* GetVideoFrameContainer() final override;
   layers::ImageContainer* GetImageContainer() final override;

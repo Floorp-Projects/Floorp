@@ -89,16 +89,16 @@ function attachThread(toolbox) {
     });
   };
 
-  if (target.isAddon) {
-    // Attaching an addon
+  if (target.isTabActor) {
+    // Attaching a tab, a browser process, or a WebExtensions add-on.
+    target.activeTab.attachThread(threadOptions, handleResponse);
+  } else if (target.isAddon) {
+    // Attaching a legacy addon.
     target.client.attachAddon(actor, res => {
       target.client.attachThread(res.threadActor, handleResponse);
     });
-  } else if (target.isTabActor) {
-    // Attaching a normal thread
-    target.activeTab.attachThread(threadOptions, handleResponse);
-  } else {
-    // Attaching the browser debugger
+  }  else {
+    // Attaching an old browser debugger or a content process.
     target.client.attachThread(chromeDebugger, handleResponse);
   }
 

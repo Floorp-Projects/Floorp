@@ -6,7 +6,7 @@
    installAddon, uninstallAddon, waitForMutation, assertHasTarget,
    getServiceWorkerList, getTabList, openPanel, waitForInitialAddonList,
    waitForServiceWorkerRegistered, unregisterServiceWorker,
-   waitForDelayedStartupFinished */
+   waitForDelayedStartupFinished, setupTestAboutDebuggingWebExtension */
 /* import-globals-from ../../framework/test/shared-head.js */
 
 "use strict";
@@ -17,6 +17,8 @@ Services.scriptloader.loadSubScript(
   this);
 
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+const { Management } = Cu.import("resource://gre/modules/Extension.jsm", {});
+
 DevToolsUtils.testing = true;
 
 registerCleanupFunction(() => {
@@ -148,7 +150,7 @@ function getTabList(document) {
     document.querySelector("#tabs.targets");
 }
 
-function* installAddon(document, path, name, evt) {
+function* installAddon({document, path, name, isWebExtension}) {
   // Mock the file picker to select a test addon
   let MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(null);
@@ -158,14 +160,29 @@ function* installAddon(document, path, name, evt) {
   let addonList = getAddonList(document);
   let addonListMutation = waitForMutation(addonList, { childList: true });
 
-  // Wait for a message sent by the addon's bootstrap.js file
-  let onAddonInstalled = new Promise(done => {
-    Services.obs.addObserver(function listener() {
-      Services.obs.removeObserver(listener, evt);
+  let onAddonInstalled;
 
-      done();
-    }, evt, false);
-  });
+  if (isWebExtension) {
+    onAddonInstalled = new Promise(done => {
+      Management.on("startup", function listener(event, extension) {
+        if (extension.name != name) {
+          return;
+        }
+
+        Management.off("startup", listener);
+        done();
+      });
+    });
+  } else {
+    // Wait for a "test-devtools" message sent by the addon's bootstrap.js file
+    onAddonInstalled = new Promise(done => {
+      Services.obs.addObserver(function listener() {
+        Services.obs.removeObserver(listener, "test-devtools");
+
+        done();
+      }, "test-devtools", false);
+    });
+  }
   // Trigger the file picker by clicking on the button
   document.getElementById("load-addon-from-file").click();
 
@@ -180,13 +197,13 @@ function* installAddon(document, path, name, evt) {
     "The addon name appears in the list of addons: " + names);
 }
 
-function* uninstallAddon(document, addonId, addonName) {
+function* uninstallAddon({document, id, name}) {
   let addonList = getAddonList(document);
   let addonListMutation = waitForMutation(addonList, { childList: true });
 
   // Now uninstall this addon
   yield new Promise(done => {
-    AddonManager.getAddonByID(addonId, addon => {
+    AddonManager.getAddonByID(id, addon => {
       let listener = {
         onUninstalled: function (uninstalledAddon) {
           if (uninstalledAddon != addon) {
@@ -206,7 +223,7 @@ function* uninstallAddon(document, addonId, addonName) {
   yield addonListMutation;
   let names = [...addonList.querySelectorAll(".target-name")];
   names = names.map(element => element.textContent);
-  ok(!names.includes(addonName),
+  ok(!names.includes(name),
     "After uninstall, the addon name disappears from the list of addons: "
     + names);
 }
@@ -311,4 +328,42 @@ function waitForDelayedStartupFinished(win) {
       }
     }, "browser-delayed-startup-finished", false);
   });
+}
+
+/**
+ * open the about:debugging page and install an addon
+ */
+function* setupTestAboutDebuggingWebExtension(name, path) {
+  yield new Promise(resolve => {
+    let options = {"set": [
+      // Force enabling of addons debugging
+      ["devtools.chrome.enabled", true],
+      ["devtools.debugger.remote-enabled", true],
+      // Disable security prompt
+      ["devtools.debugger.prompt-connection", false],
+      // Enable Browser toolbox test script execution via env variable
+      ["devtools.browser-toolbox.allow-unsafe-script", true],
+    ]};
+    SpecialPowers.pushPrefEnv(options, resolve);
+  });
+
+  let { tab, document } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
+
+  yield installAddon({
+    document,
+    path,
+    name,
+    isWebExtension: true,
+  });
+
+  // Retrieve the DEBUG button for the addon
+  let names = [...document.querySelectorAll("#addons .target-name")];
+  let nameEl = names.filter(element => element.textContent === name)[0];
+  ok(name, "Found the addon in the list");
+  let targetElement = nameEl.parentNode.parentNode;
+  let debugBtn = targetElement.querySelector(".debug-button");
+  ok(debugBtn, "Found its debug button");
+
+  return { tab, document, debugBtn };
 }

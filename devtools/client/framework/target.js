@@ -348,8 +348,15 @@ TabTarget.prototype = {
   },
 
   get isAddon() {
+    return !!(this._form && this._form.actor && (
+      this._form.actor.match(/conn\d+\.addon\d+/) ||
+      this._form.actor.match(/conn\d+\.webExtension\d+/)
+    ));
+  },
+
+  get isWebExtension() {
     return !!(this._form && this._form.actor &&
-              this._form.actor.match(/conn\d+\.addon\d+/));
+              this._form.actor.match(/conn\d+\.webExtension\d+/));
   },
 
   get isLocalTab() {

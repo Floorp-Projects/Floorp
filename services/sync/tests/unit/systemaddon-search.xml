@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<searchresults total_results="1">
+  <addon id="5618">
+  <name>System Add-on Test</name>
+  <type id="1">Extension</type>
+  <guid>system1@tests.mozilla.org</guid>
+  <slug>addon11</slug>
+  <version>1.0</version>
+
+  <compatible_applications><application>
+      <name>Firefox</name>
+      <application_id>1</application_id>
+      <min_version>3.6</min_version>
+      <max_version>*</max_version>
+      <appID>xpcshell@tests.mozilla.org</appID>
+    </application></compatible_applications>
+  <all_compatible_os><os>ALL</os></all_compatible_os>
+
+  <install os="ALL" size="999">http://127.0.0.1:8888/system.xpi</install>
+    <created epoch="1252903662">
+      2009-09-14T04:47:42Z
+    </created>
+    <last_updated epoch="1315255329">
+      2011-09-05T20:42:09Z
+    </last_updated>
+    </addon>
+</searchresults>

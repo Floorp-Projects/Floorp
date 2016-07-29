@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaTrackConstraints.h"
+#include "mozilla/dom/MediaStreamTrackBinding.h"
 
 #include <limits>
 #include <algorithm>
@@ -144,7 +145,7 @@ NormalizedConstraintSet::BooleanRange::BooleanRange(
       mIdeal.emplace(aOther.GetAsBoolean());
     }
   } else {
-    const ConstrainBooleanParameters& r = aOther.GetAsConstrainBooleanParameters();
+    const dom::ConstrainBooleanParameters& r = aOther.GetAsConstrainBooleanParameters();
     if (r.mIdeal.WasPassed()) {
       mIdeal.emplace(r.mIdeal.Value());
     }
@@ -188,7 +189,7 @@ NormalizedConstraintSet::StringRange::StringRange(
 
 void
 NormalizedConstraintSet::StringRange::SetFrom(
-    const ConstrainDOMStringParameters& aOther)
+    const dom::ConstrainDOMStringParameters& aOther)
 {
   if (aOther.mIdeal.WasPassed()) {
     mIdeal.clear();
@@ -295,7 +296,7 @@ NormalizedConstraints::NormalizedConstraints(
 {
   // Create a list of member pointers.
   nsTArray<MemberPtrType> list;
-  NormalizedConstraints dummy(MediaTrackConstraints(), &list);
+  NormalizedConstraints dummy(dom::MediaTrackConstraints(), &list);
 
   // Do intersection of all required constraints, and average of ideals,
 

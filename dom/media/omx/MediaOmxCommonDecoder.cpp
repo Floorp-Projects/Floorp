@@ -165,6 +165,7 @@ void
 MediaOmxCommonDecoder::AudioOffloadTearDown()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IsShutdown());
   DECODER_LOG(LogLevel::Debug, ("%s", __PRETTY_FUNCTION__));
 
   // mAudioOffloadPlayer can be null here if ResumeStateMachine was called
@@ -284,6 +285,13 @@ MediaOmxCommonDecoder::CreateStateMachine()
     mReader->SetAudioChannel(GetAudioChannel());
   }
   return CreateStateMachineFromReader(mReader);
+}
+
+void
+MediaOmxCommonDecoder::Shutdown()
+{
+  mAudioOffloadPlayer = nullptr;
+  MediaDecoder::Shutdown();
 }
 
 } // namespace mozilla
