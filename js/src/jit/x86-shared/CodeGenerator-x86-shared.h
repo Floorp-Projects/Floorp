@@ -282,6 +282,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitUDivOrMod(LUDivOrMod* ins);
     virtual void visitUDivOrModConstant(LUDivOrModConstant *ins);
     virtual void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
+    virtual void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins);
     virtual void visitAsmSelect(LAsmSelect* ins);
     virtual void visitAsmReinterpret(LAsmReinterpret* lir);
     virtual void visitWasmBoundsCheck(LWasmBoundsCheck* ins);

@@ -652,7 +652,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         }
     }
     void store64(Register64 src, Address address) {
-        movq(src.reg, Operand(address));
+        storePtr(src.reg, address);
+    }
+    void store64(Imm64 imm, Address address) {
+        storePtr(ImmWord(imm.value), address);
     }
 
     void splitTag(Register src, Register dest) {

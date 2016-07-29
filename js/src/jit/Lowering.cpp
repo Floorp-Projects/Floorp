@@ -4178,7 +4178,9 @@ LIRGenerator::visitAsmJSVoidReturn(MAsmJSVoidReturn* ins)
 void
 LIRGenerator::visitAsmJSPassStackArg(MAsmJSPassStackArg* ins)
 {
-    if (IsFloatingPointType(ins->arg()->type()) || IsSimdType(ins->arg()->type())) {
+    if (ins->arg()->type() == MIRType::Int64) {
+        add(new(alloc()) LAsmJSPassStackArgI64(useInt64OrConstantAtStart(ins->arg())), ins);
+    } else if (IsFloatingPointType(ins->arg()->type()) || IsSimdType(ins->arg()->type())) {
         MOZ_ASSERT(!ins->arg()->isEmittedAtUses());
         add(new(alloc()) LAsmJSPassStackArg(useRegisterAtStart(ins->arg())), ins);
     } else {
