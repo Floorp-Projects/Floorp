@@ -426,6 +426,12 @@ XPCNativeInterface::DebugDump(int16_t depth)
 /***************************************************************************/
 // XPCNativeSetKey
 
+static PLDHashNumber
+HashPointer(const void* ptr)
+{
+    return NS_PTR_TO_UINT32(ptr) >> 2;
+}
+
 PLDHashNumber
 XPCNativeSetKey::Hash() const
 {
@@ -433,9 +439,7 @@ XPCNativeSetKey::Hash() const
 
     if (!mBaseSet) {
         MOZ_ASSERT(mAddition, "bad key");
-        // This would be an XOR like below.
-        // But "0 ^ x == x". So it does not matter.
-        h = (js::HashNumber) NS_PTR_TO_INT32(mAddition) >> 2;
+        h ^= HashPointer(mAddition);
     } else {
         XPCNativeInterface** current = mBaseSet->GetInterfaceArray();
         uint16_t count = mBaseSet->GetInterfaceCount();
@@ -443,13 +447,13 @@ XPCNativeSetKey::Hash() const
             count++;
             for (uint16_t i = 0; i < count; i++) {
                 if (i == mPosition)
-                    h ^= (js::HashNumber) NS_PTR_TO_INT32(mAddition) >> 2;
+                    h ^= HashPointer(mAddition);
                 else
-                    h ^= (js::HashNumber) NS_PTR_TO_INT32(*(current++)) >> 2;
+                    h ^= HashPointer(*(current++));
             }
         } else {
             for (uint16_t i = 0; i < count; i++)
-                h ^= (js::HashNumber) NS_PTR_TO_INT32(*(current++)) >> 2;
+                h ^= HashPointer(*(current++));
         }
     }
 
