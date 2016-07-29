@@ -20,6 +20,16 @@ let whitelist = [
   // Tracked in bug 1004428.
   {sourceName: /aboutaccounts\/(main|normalize)\.css$/i,
     isFromDevTools: false},
+  // TokBox SDK assets, see bug 1032469.
+  {sourceName: /loop\/.*sdk-content\/.*\.css$/i,
+    isFromDevTools: false},
+  // Loop standalone client CSS uses placeholder cross browser pseudo-element
+  {sourceName: /loop\/.*\.css$/i,
+   errorMessage: /Unknown pseudo-class.*placeholder/i,
+   isFromDevTools: false},
+  {sourceName: /loop\/.*shared\/css\/common.css$/i,
+   errorMessage: /Unknown property .user-select./i,
+   isFromDevTools: false},
   // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
   {sourceName: /highlighters\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
