@@ -11,7 +11,6 @@ Cu.import("resource://services-sync/util.js");
 
 loadAddonTestFunctions();
 startupManager();
-Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
 Svc.Prefs.set("engine.addons", true);
 
 Service.engineManager.register(AddonsEngine);
