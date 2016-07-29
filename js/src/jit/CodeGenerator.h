@@ -509,10 +509,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     // elements pointer.
     void branchIfNotEmptyObjectElements(Register obj, Label* target);
 
-    // Get a label for the start of block which can be used for jumping, in
-    // place of jumpToBlock.
-    Label* getJumpLabelForBranch(MBasicBlock* block);
-
     void emitStoreElementTyped(const LAllocation* value, MIRType valueType, MIRType elementType,
                                Register elements, const LAllocation* index,
                                int32_t offsetAdjustment);

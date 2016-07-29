@@ -635,18 +635,28 @@ MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, L
 }
 
 void
-MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* label)
+MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* success, Label* fail)
 {
-    Label fail;
+    bool fallthrough = false;
+    Label fallthroughLabel;
+
+    if (!fail) {
+        fail = &fallthroughLabel;
+        fallthrough = true;
+    }
 
     switch(cond) {
       case Assembler::Equal:
-        branch32(Assembler::NotEqual, lhs.low, val.low(), &fail);
-        branch32(Assembler::Equal, lhs.high, val.hi(), label);
+        branch32(Assembler::NotEqual, lhs.low, val.low(), fail);
+        branch32(Assembler::Equal, lhs.high, val.hi(), success);
+        if (!fallthrough)
+            jump(fail);
         break;
       case Assembler::NotEqual:
-        branch32(Assembler::NotEqual, lhs.low, val.low(), label);
-        branch32(Assembler::NotEqual, lhs.high, val.hi(), label);
+        branch32(Assembler::NotEqual, lhs.low, val.low(), success);
+        branch32(Assembler::NotEqual, lhs.high, val.hi(), success);
+        if (!fallthrough)
+            jump(fail);
         break;
       case Assembler::LessThan:
       case Assembler::LessThanOrEqual:
@@ -662,10 +672,12 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* label
         Assembler::Condition cond3 = Assembler::UnsignedCondition(cond);
 
         cmp32(lhs.high, val.hi());
-        j(cond1, label);
-        j(cond2, &fail);
+        j(cond1, success);
+        j(cond2, fail);
         cmp32(lhs.low, val.low());
-        j(cond3, label);
+        j(cond3, success);
+        if (!fallthrough)
+            jump(fail);
         break;
       }
       default:
@@ -673,22 +685,33 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* label
         break;
     }
 
-    bind(&fail);
+    if (fallthrough)
+        bind(fail);
 }
 
 void
-MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* label)
+MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success, Label* fail)
 {
-    Label fail;
+    bool fallthrough = false;
+    Label fallthroughLabel;
+
+    if (!fail) {
+        fail = &fallthroughLabel;
+        fallthrough = true;
+    }
 
     switch(cond) {
       case Assembler::Equal:
-        branch32(Assembler::NotEqual, lhs.low, rhs.low, &fail);
-        branch32(Assembler::Equal, lhs.high, rhs.high, label);
+        branch32(Assembler::NotEqual, lhs.low, rhs.low, fail);
+        branch32(Assembler::Equal, lhs.high, rhs.high, success);
+        if (!fallthrough)
+            jump(fail);
         break;
       case Assembler::NotEqual:
-        branch32(Assembler::NotEqual, lhs.low, rhs.low, label);
-        branch32(Assembler::NotEqual, lhs.high, rhs.high, label);
+        branch32(Assembler::NotEqual, lhs.low, rhs.low, success);
+        branch32(Assembler::NotEqual, lhs.high, rhs.high, success);
+        if (!fallthrough)
+            jump(fail);
         break;
       case Assembler::LessThan:
       case Assembler::LessThanOrEqual:
@@ -704,10 +727,12 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* 
         Assembler::Condition cond3 = Assembler::UnsignedCondition(cond);
 
         cmp32(lhs.high, rhs.high);
-        j(cond1, label);
-        j(cond2, &fail);
+        j(cond1, success);
+        j(cond2, fail);
         cmp32(lhs.low, rhs.low);
-        j(cond3, label);
+        j(cond3, success);
+        if (!fallthrough)
+            jump(fail);
         break;
       }
       default:
@@ -715,7 +740,8 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* 
         break;
     }
 
-    bind(&fail);
+    if (fallthrough)
+        bind(fail);
 }
 
 void
