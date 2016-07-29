@@ -1,0 +1,58 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[features/loop@mozilla.org] chrome.jar:
+% content loop %content/ contentaccessible=yes
+% content loop-locale-fallback %content/locale-fallback/en-US/
+% skin loop classic/1.0 %skin/linux/
+% skin loop classic/1.0 %skin/osx/ os=Darwin
+% skin loop classic/1.0 %skin/windows/ os=WINNT
+% skin loop-shared classic/1.0 %skin/shared/
+% override chrome://loop/skin/menuPanel.png       chrome://loop/skin/menuPanel-yosemite.png       os=Darwin osversion>=10.10
+% override chrome://loop/skin/menuPanel@2x.png    chrome://loop/skin/menuPanel-yosemite@2x.png    os=Darwin osversion>=10.10
+% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-yosemite.png         os=Darwin osversion>=10.10
+% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-yosemite@2x.png      os=Darwin osversion>=10.10
+# Windows 10+ uses the default toolbar.png
+% override chrome://loop/skin/menuPanel.png       chrome://loop/skin/menuPanel-aero.png           os=WINNT osversion=6
+% override chrome://loop/skin/menuPanel.png       chrome://loop/skin/menuPanel-aero.png           os=WINNT osversion=6.1
+% override chrome://loop/skin/menuPanel@2x.png    chrome://loop/skin/menuPanel-aero@2x.png        os=WINNT osversion=6
+% override chrome://loop/skin/menuPanel@2x.png    chrome://loop/skin/menuPanel-aero@2x.png        os=WINNT osversion=6.1
+% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-XP.png               os=WINNT osversion<6
+% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-aero.png             os=WINNT osversion=6
+% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-aero.png             os=WINNT osversion=6.1
+% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-win8.png            os=WINNT osversion=6.2
+% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-win8.png            os=WINNT osversion=6.3
+% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-XP@2x.png            os=WINNT osversion<6
+% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-aero@2x.png          os=WINNT osversion=6
+% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-aero@2x.png          os=WINNT osversion=6.1
+% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-win8@2x.png         os=WINNT osversion=6.2
+% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-win8@2x.png         os=WINNT osversion=6.3
+  # Due to the way Loop's L10n works, we include a fallback to en-US.
+  content/locale-fallback/en-US/          (chrome/locale/en-US/*)
+  skin/                          (chrome/skin/*)
+  content/modules/               (chrome/content/modules/*)
+# We don't package the test/ directory for panels, so do these separately.
+  content/panels/                (chrome/content/panels/*.html)
+  content/panels/css/            (chrome/content/panels/css/*)
+  content/panels/js/             (chrome/content/panels/js/*)
+  content/panels/vendor/         (chrome/content/panels/vendor/*)
+* content/preferences/prefs.js   (chrome/content/preferences/prefs.js)
+# We don't package the test/ directory for shared, so do these separately.
+  content/shared/css/            (chrome/content/shared/css/*)
+  content/shared/img/            (chrome/content/shared/img/*)
+  content/shared/js/             (chrome/content/shared/js/*)
+  content/shared/sounds/         (chrome/content/shared/sounds/*)
+  content/shared/vendor/sdk-content/  (chrome/content/shared/vendor/sdk-content/*)
+  content/shared/vendor/backbone.js   (chrome/content/shared/vendor/backbone.js)
+  content/shared/vendor/classnames.js (chrome/content/shared/vendor/classnames.js)
+  content/shared/vendor/lodash.js     (chrome/content/shared/vendor/lodash.js)
+#ifdef DEBUG
+  content/shared/vendor/react.js      (chrome/content/shared/vendor/react.js)
+  content/shared/vendor/react-dom.js  (chrome/content/shared/vendor/react-dom.js)
+#else
+  content/shared/vendor/react.js      (chrome/content/shared/vendor/react-prod.js)
+  content/shared/vendor/react-dom.js  (chrome/content/shared/vendor/react-dom-prod.js)
+#endif
+  content/shared/vendor/sdk.js        (chrome/content/shared/vendor/sdk.js)

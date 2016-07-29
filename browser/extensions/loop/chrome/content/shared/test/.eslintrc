@@ -1,0 +1,6 @@
+{
+  "extends": "../../test/.eslintrc",
+  "globals": {
+    "ReactDOMServer": false,
+  }
+}

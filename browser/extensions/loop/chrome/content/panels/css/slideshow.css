@@ -1,0 +1,97 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.slideshow {
+  -moz-user-select: none;
+  cursor: default;
+}
+
+/* slide content */
+.slide > div {
+  height: 100%;
+  width:  100%;
+}
+
+.slide-layout {
+  padding-top: 90px;
+  padding-left: 50px;
+  padding-bottom: 20px;
+  width: 590px;
+}
+
+.slide-layout > h2 {
+  font-family: sans-serif;
+  font-size: 2.5rem;
+  font-weight: 600;
+  white-space: normal;
+  color: #fff;
+  line-height: 2.8rem;
+  margin-bottom: 1.4rem;
+}
+
+.slide-layout > .slide-text {
+  font-family: sans-serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  white-space: normal;
+  color: #fff;
+  line-height: 2.8rem;
+}
+
+.slide-layout > img {
+  display: block;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  padding: 0;
+  float: right;
+  margin-top: -40px;
+}
+
+.slide1 {
+  background: #06a6e0;
+}
+
+.slide1-image {
+  background-image: url(../../shared/img/firefox-hello_tour-slide-01.svg);
+  height: 260px;
+  width: 295px;
+  background-size: 310px 310px;
+}
+
+.slide2 {
+  background: #0183b2;
+}
+
+.slide2-image {
+  background-image: url(../../shared/img/firefox-hello_tour-slide-02.svg);
+  height: 245px;
+  width: 245px;
+  background-size: 320px 320px;
+}
+
+.slide3 {
+  background: #005da5;
+}
+
+.slide3-image {
+  background-image: url(../../shared/img/firefox-hello_tour-slide-03.svg);
+  height: 260px;
+  width: 260px;
+  background-size: 310px 310px;
+}
+
+.slide4 {
+  background: #7ec24c;
+}
+
+.slide4-image {
+  background-image: url(../../shared/img/firefox-hello_tour-slide-04.svg);
+  height: 240px;
+  width: 240px;
+  background-size: 320px 320px;
+}
