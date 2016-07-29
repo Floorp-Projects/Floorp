@@ -4833,5 +4833,17 @@ CodeGeneratorX86Shared::visitRotateI64(LRotateI64* lir)
     }
 }
 
+void
+CodeGeneratorX86Shared::visitPopcntI64(LPopcntI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    Register temp = InvalidReg;
+    if (!AssemblerX86Shared::HasPOPCNT())
+        temp = ToRegister(lir->getTemp(0));
+
+    masm.popcnt64(input, output, temp);
+}
+
 } // namespace jit
 } // namespace js

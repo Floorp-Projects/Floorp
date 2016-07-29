@@ -1255,18 +1255,6 @@ CodeGeneratorX64::visitCtzI64(LCtzI64* lir)
 }
 
 void
-CodeGeneratorX64::visitPopcntI64(LPopcntI64* lir)
-{
-    Register64 input = ToRegister64(lir->input());
-    Register64 output = ToRegister64(lir->output());
-    Register64 temp = Register64(AssemblerX86Shared::HasPOPCNT()
-                                 ? InvalidReg :
-                                 ToRegister(lir->getTemp(0)));
-
-    masm.popcnt64(input, output, temp);
-}
-
-void
 CodeGeneratorX64::visitTestI64AndBranch(LTestI64AndBranch* lir)
 {
     Register input = ToRegister(lir->input());

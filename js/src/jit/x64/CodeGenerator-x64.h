@@ -57,7 +57,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitNotI64(LNotI64* lir);
     void visitClzI64(LClzI64* lir);
     void visitCtzI64(LCtzI64* lir);
-    void visitPopcntI64(LPopcntI64* lir);
     void visitTruncateDToInt32(LTruncateDToInt32* ins);
     void visitTruncateFToInt32(LTruncateFToInt32* ins);
     void visitWrapInt64ToInt32(LWrapInt64ToInt32* lir);

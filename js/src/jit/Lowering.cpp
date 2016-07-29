@@ -1459,7 +1459,7 @@ LIRGenerator::visitPopcnt(MPopcnt* ins)
         return;
     }
 
-    auto* lir = new(alloc()) LPopcntI64(useInt64RegisterAtStart(num), tempInt64());
+    auto* lir = new(alloc()) LPopcntI64(useInt64RegisterAtStart(num), temp());
     defineInt64(lir, ins);
 }
 
