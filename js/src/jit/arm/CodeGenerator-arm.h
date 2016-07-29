@@ -164,6 +164,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitMulI64(LMulI64* lir);
     virtual void visitDivOrModI64(LDivOrModI64* lir);
     virtual void visitUDivOrModI64(LUDivOrModI64* lir);
+    virtual void visitCompareI64(LCompareI64* lir);
+    virtual void visitCompareI64AndBranch(LCompareI64AndBranch* lir);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);

@@ -559,7 +559,7 @@ MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, L
 }
 
 void
-MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* label)
+MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* success, Label* fail)
 {
     MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal ||
                cond == Assembler::LessThan || cond == Assembler::LessThanOrEqual ||
@@ -568,11 +568,13 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* label
                cond == Assembler::Above || cond == Assembler::AboveOrEqual,
                "other condition codes not supported");
 
-    branchPtr(cond, lhs.reg, ImmWord(val.value), label);
+    branchPtr(cond, lhs.reg, ImmWord(val.value), success);
+    if (fail)
+        jump(fail);
 }
 
 void
-MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* label)
+MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success, Label* fail)
 {
     MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal ||
                cond == Assembler::LessThan || cond == Assembler::LessThanOrEqual ||
@@ -581,7 +583,9 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* 
                cond == Assembler::Above || cond == Assembler::AboveOrEqual,
                "other condition codes not supported");
 
-    branchPtr(cond, lhs.reg, rhs.reg, label);
+    branchPtr(cond, lhs.reg, rhs.reg, success);
+    if (fail)
+        jump(fail);
 }
 
 void
