@@ -18,7 +18,7 @@ DOCKER_ROOT = os.path.join(GECKO, 'testing', 'docker')
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 
-def docker_image(name):
+def docker_image(name, default_version=None):
     '''Determine the docker image name, including repository and tag, from an
     in-tree docker file.'''
     try:
@@ -28,8 +28,14 @@ def docker_image(name):
         with open(os.path.join(DOCKER_ROOT, 'REGISTRY')) as f:
             registry = f.read().strip()
 
-    with open(os.path.join(DOCKER_ROOT, name, 'VERSION')) as f:
-        version = f.read().strip()
+    try:
+        with open(os.path.join(DOCKER_ROOT, name, 'VERSION')) as f:
+            version = f.read().strip()
+    except IOError:
+        if not default_version:
+            raise
+
+        version = default_version
 
     return '{}/{}:{}'.format(registry, name, version)
 
