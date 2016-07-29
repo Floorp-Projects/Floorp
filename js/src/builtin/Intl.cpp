@@ -1792,8 +1792,11 @@ InitDateTimeFormatClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
     // is enabled, also add it.
     if (cx->compartment()->creationOptions().experimentalDateTimeFormatFormatToPartsEnabled()) {
         RootedValue ftp(cx);
-        if (!GlobalObject::getIntrinsicValue(cx, cx->global(),
-                                             cx->names().DateTimeFormatFormatToParts, &ftp))
+        HandlePropertyName name = cx->names().formatToParts;
+        if (!GlobalObject::getSelfHostedFunction(cx, cx->global(),
+                    cx->names().DateTimeFormatFormatToParts,
+                    name,
+                    0, &ftp))
         {
             return nullptr;
         }

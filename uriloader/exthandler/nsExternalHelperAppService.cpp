@@ -522,6 +522,7 @@ static const nsDefaultMimeTypeEntry defaultMimeEntries[] =
   { APPLICATION_OGG, "ogg" },
   { AUDIO_OGG, "oga" },
   { AUDIO_OGG, "opus" },
+  { APPLICATION_PDF, "pdf" },
   { VIDEO_WEBM, "webm" },
   { AUDIO_WEBM, "webm" },
 #if defined(MOZ_WMF)
@@ -1568,6 +1569,13 @@ nsExternalAppHandler::MaybeApplyDecodingForExtension(nsIRequest *aRequest)
 
   // Turn off content encoding conversions if needed
   bool applyConversion = true;
+
+  // First, check to see if conversion is already disabled.  If so, we
+  // have nothing to do here.
+  encChannel->GetApplyConversion(&applyConversion);
+  if (!applyConversion) {
+    return;
+  }
 
   nsCOMPtr<nsIURL> sourceURL(do_QueryInterface(mSourceUrl));
   if (sourceURL)

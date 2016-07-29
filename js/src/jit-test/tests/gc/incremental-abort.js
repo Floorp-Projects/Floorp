@@ -27,7 +27,7 @@ function testAbort(zoneCount, objectCount, sliceCount, abortState)
 
     var didAbort = false;
     startgc(sliceCount, "shrinking");
-    while (gcstate() !== "none") {
+    while (gcstate() !== "NotActive") {
         var state = gcstate();
         if (state == abortState) {
             abortgc();
@@ -38,7 +38,7 @@ function testAbort(zoneCount, objectCount, sliceCount, abortState)
         gcslice(sliceCount);
     }
 
-    assertEq(gcstate(), "none");
+    assertEq(gcstate(), "NotActive");
     if (abortState)
         assertEq(didAbort, true);
 
@@ -47,6 +47,8 @@ function testAbort(zoneCount, objectCount, sliceCount, abortState)
 
 gczeal(0);
 testAbort(10, 10000, 10000);
-testAbort(10, 10000, 10000, "mark");
-testAbort(10, 10000, 10000, "sweep");
-testAbort(10, 10000, 10000, "compact");
+testAbort(10, 10000, 10000, "Mark");
+testAbort(10, 10000, 10000, "Sweep");
+testAbort(10, 10000, 10000, "Compact");
+// Note: we do not yield automatically before Finalize or Decommit, as they yield internally.
+// Thus, we may not witness an incremental state in this phase and cannot test it explicitly.

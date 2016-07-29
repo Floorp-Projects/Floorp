@@ -579,6 +579,7 @@ function IsRegExpSplitOptimizable(rx, C) {
     // If RegExpPrototypeOptimizable succeeds, `RegExpProto.exec` is guaranteed
     // to be a data property.
     return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpInstanceOptimizable(rx, RegExpProto) &&
            RegExpProto.exec === RegExp_prototype_Exec;
 }
 
@@ -603,7 +604,8 @@ function RegExpSplit(string, limit) {
     // Steps 6-7.
     var unicodeMatching = callFunction(std_String_includes, flags, "u");
 
-    var optimizable = IsRegExpSplitOptimizable(rx, C);
+    var optimizable = IsRegExpSplitOptimizable(rx, C) &&
+                      (limit === undefined || typeof limit == "number");
     var splitter;
     if (optimizable) {
         // Steps 8-9 (skipped).

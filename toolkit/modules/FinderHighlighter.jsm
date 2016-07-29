@@ -435,6 +435,19 @@ FinderHighlighter.prototype = {
   },
 
   /**
+   * When 'Highlight All' is toggled during a session, this callback is invoked
+   * and when it's turned off, the found occurrences will be removed from the mask.
+   *
+   * @param {Boolean} highlightAll
+   */
+  onHighlightAllChange(highlightAll) {
+    if (this._modal && !highlightAll) {
+      this.clear();
+      this._scheduleRepaintOfMask(this.finder._getWindow());
+    }
+  },
+
+  /**
    * Utility; get the nsIDOMWindowUtils for a window.
    *
    * @param  {nsIDOMWindow} window Optional, defaults to the finder window.

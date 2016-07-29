@@ -47,12 +47,17 @@ class Introspection(MachCommandBase):
         build_vars = util.get_build_vars(make_dir, self)
 
         if what.endswith('.c'):
+            cc = 'CC'
             name = 'COMPILE_CFLAGS'
         else:
+            cc = 'CXX'
             name = 'COMPILE_CXXFLAGS'
 
         if name not in build_vars:
             return
 
+        # Drop the first flag since that is the pathname of the compiler.
+        flags = (shell_split(build_vars[cc]) + shell_split(build_vars[name]))[1:]
+
         print(' '.join(shell_quote(arg)
-                       for arg in util.sanitize_cflags(shell_split(build_vars[name]))))
+                       for arg in util.sanitize_cflags(flags)))

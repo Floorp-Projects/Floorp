@@ -2526,7 +2526,6 @@ exports.binarySearchFirstItem = binarySearchFirstItem;
       var event = document.createEvent('UIEvents');
       event.initUIEvent('pagechange', true, true, window, 0);
       event.pageNumber = e.pageNumber;
-      event.previousPageNumber = e.previousPageNumber;
       e.source.container.dispatchEvent(event);
     });
     eventBus.on('pagesinit', function (e) {
@@ -5474,12 +5473,12 @@ var PDFPageView = (function PDFPageViewClosure() {
         function pdfPageRenderCallback() {
           pageViewDrawCallback(null);
           if (textLayer) {
-            self.pdfPage.getTextContent({ normalizeWhitespace: true }).then(
-              function textContentResolved(textContent) {
-                textLayer.setTextContent(textContent);
-                textLayer.render(TEXT_LAYER_RENDER_DELAY);
-              }
-            );
+            self.pdfPage.getTextContent({
+              normalizeWhitespace: true,
+            }).then(function textContentResolved(textContent) {
+              textLayer.setTextContent(textContent);
+              textLayer.render(TEXT_LAYER_RENDER_DELAY);
+            });
           }
         },
         function pdfPageRenderError(error) {
@@ -6357,6 +6356,9 @@ var PDFViewer = (function pdfViewer() {
      * @param {number} val - The page number.
      */
     set currentPageNumber(val) {
+      if ((val | 0) !== val) { // Ensure that `val` is an integer.
+        throw new Error('Invalid page number.');
+      }
       if (!this.pdfDocument) {
         this._currentPageNumber = val;
         return;
@@ -6376,22 +6378,14 @@ var PDFViewer = (function pdfViewer() {
         }
         return;
       }
-      var arg;
+
       if (!(0 < val && val <= this.pagesCount)) {
-        arg = {
-          source: this,
-          pageNumber: this._currentPageNumber,
-          previousPageNumber: val
-        };
-        this.eventBus.dispatch('pagechanging', arg);
-        this.eventBus.dispatch('pagechange', arg);
         return;
       }
 
-      arg = {
+      var arg = {
         source: this,
         pageNumber: val,
-        previousPageNumber: this._currentPageNumber
       };
       this._currentPageNumber = val;
       this.eventBus.dispatch('pagechanging', arg);
@@ -6414,7 +6408,7 @@ var PDFViewer = (function pdfViewer() {
      * @param {number} val - Scale of the pages in percents.
      */
     set currentScale(val) {
-      if (isNaN(val))  {
+      if (isNaN(val)) {
         throw new Error('Invalid numeric scale');
       }
       if (!this.pdfDocument) {
@@ -6975,7 +6969,9 @@ var PDFViewer = (function pdfViewer() {
 
     getPageTextContent: function (pageIndex) {
       return this.pdfDocument.getPage(pageIndex + 1).then(function (page) {
-        return page.getTextContent({ normalizeWhitespace: true });
+        return page.getTextContent({
+          normalizeWhitespace: true,
+        });
       });
     },
 
@@ -8333,11 +8329,12 @@ function webViewerInitialized() {
   });
 
   appConfig.toolbar.pageNumber.addEventListener('change', function() {
-    // Handle the user inputting a floating point number.
     PDFViewerApplication.page = (this.value | 0);
 
-    if (this.value !== (this.value | 0).toString()) {
-      this.value = PDFViewerApplication.page;
+    // Ensure that the page number input displays the correct value, even if the
+    // value entered by the user was invalid (e.g. a floating point number).
+    if (this.value !== PDFViewerApplication.page.toString()) {
+      PDFViewerApplication._updateUIToolbar({});
     }
   });
 
@@ -8693,8 +8690,8 @@ function webViewerPageChanging(e) {
   PDFViewerApplication._updateUIToolbar({
     pageNumber: page,
   });
-  if (e.previousPageNumber !== page &&
-      PDFViewerApplication.pdfSidebar.isThumbnailViewVisible) {
+
+  if (PDFViewerApplication.pdfSidebar.isThumbnailViewVisible) {
     PDFViewerApplication.pdfThumbnailViewer.scrollThumbnailIntoView(page);
   }
 

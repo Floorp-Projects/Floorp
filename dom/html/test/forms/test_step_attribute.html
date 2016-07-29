@@ -185,7 +185,7 @@ for (var test of data) {
       input.min = '2009-02-01';
       input.step = '1.1';
       input.value = '2009-02-02';
-      checkValidity(input, false, apply, { low: "2009-02-01", high: "2009-02-12" });
+      checkValidity(input, true, apply);
 
       // Without any step attribute the date is valid
       input.removeAttribute('step');
@@ -203,21 +203,21 @@ for (var test of data) {
 
       input.step = '0.9';
       input.value = '1951-01-02';
-      checkValidity(input, false, apply, { low: "1951-01-01", high: "1951-01-10" });
-
-      input.value = '1951-01-10'
+      is(input.step, '0.9', "check that step value is unchanged");
       checkValidity(input, true, apply);
 
-      input.step = '0.5';
+      input.step = '0.4';
       input.value = '1951-01-02';
+      is(input.step, '0.4', "check that step value is unchanged");
       checkValidity(input, true, apply);
 
       input.step = '1.5';
-      input.value = '1951-01-03';
-      checkValidity(input, false, apply, { low: "1951-01-01", high: "1951-01-04" });
+      input.value = '1951-01-02';
+      is(input.step, '1.5', "check that step value is unchanged");
+      checkValidity(input, false, apply, { low: "1951-01-01", high: "1951-01-03" });
 
       input.value = '1951-01-08';
-      checkValidity(input, false, apply, { low: "1951-01-07", high: "1951-01-10" });
+      checkValidity(input, false, apply, { low: "1951-01-07", high: "1951-01-09" });
 
       input.step = '3000';
       input.min= '1968-01-01';
@@ -236,26 +236,26 @@ for (var test of data) {
       input.value = '1992-08-22';
       checkValidity(input, true, apply);
 
-      input.step = '1.1';
+      input.step = '2.1';
       input.min = '1991-01-01';
       input.value = '1991-01-01';
       checkValidity(input, true, apply);
 
       input.value = '1991-01-02';
-      checkValidity(input, false, apply, { low: "1991-01-01", high: "1991-01-12" });
+      checkValidity(input, false, apply, { low: "1991-01-01", high: "1991-01-03" });
 
-      input.value = '1991-01-12';
+      input.value = '1991-01-03';
       checkValidity(input, true, apply);
 
-      input.step = '1.1';
+      input.step = '2.1';
       input.min = '1969-12-20';
       input.value = '1969-12-20';
       checkValidity(input, true, apply);
 
       input.value = '1969-12-21';
-      checkValidity(input, false, apply, { low: "1969-12-20", high: "1969-12-31" });
+      checkValidity(input, false, apply, { low: "1969-12-20", high: "1969-12-22" });
 
-      input.value = '1969-12-31';
+      input.value = '1969-12-22';
       checkValidity(input, true, apply);
 
       break;

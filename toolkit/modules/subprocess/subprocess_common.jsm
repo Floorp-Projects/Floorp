@@ -15,6 +15,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["TextDecoder"]);
 
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
 
@@ -38,11 +40,25 @@ class PromiseWorker extends ChromeWorker {
     this.listeners = new Map();
     this.pendingResponses = new Map();
 
+    this.addListener("close", this.onClose.bind(this));
     this.addListener("failure", this.onFailure.bind(this));
     this.addListener("success", this.onSuccess.bind(this));
     this.addListener("debug", this.onDebug.bind(this));
 
     this.addEventListener("message", this.onmessage);
+
+    this.shutdown = this.shutdown.bind(this);
+    AsyncShutdown.webWorkersShutdown.addBlocker(
+      "Subprocess.jsm: Shut down IO worker",
+      this.shutdown);
+  }
+
+  onClose() {
+    AsyncShutdown.webWorkersShutdown.removeBlocker(this.shutdown);
+  }
+
+  shutdown() {
+    return this.call("shutdown", []);
   }
 
   /**
@@ -615,6 +631,10 @@ class BaseProcess {
     throw new Error("Not implemented");
   }
 
+  static get WorkerClass() {
+    return PromiseWorker;
+  }
+
   /**
    * Gets the current subprocess worker, or spawns a new one if it does not
    * currently exist.
@@ -623,7 +643,7 @@ class BaseProcess {
    */
   static getWorker() {
     if (!this._worker) {
-      this._worker = new PromiseWorker(this.WORKER_URL);
+      this._worker = new this.WorkerClass(this.WORKER_URL);
     }
     return this._worker;
   }

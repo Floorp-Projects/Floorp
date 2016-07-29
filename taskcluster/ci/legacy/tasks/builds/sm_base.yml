@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/firefox_docker_base.yml'
 task:
-  workerType: spidermonkey
+  workerType: dbg-linux64
 
   routes:
     - 'index.buildbot.branches.{{project}}.sm-plain'

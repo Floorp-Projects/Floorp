@@ -6,6 +6,8 @@
 
 "use strict";
 
+/* global XPCNativeWrapper */
+
 var { Ci, Cu } = require("chrome");
 var Services = require("Services");
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
@@ -23,6 +25,7 @@ loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true)
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
+loader.lazyRequireGetter(this, "WebExtensionActor", "devtools/server/actors/webextension", true);
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker", true);
 loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker", true);
 loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
@@ -558,34 +561,36 @@ BrowserTabList.prototype._listenForEventsIf =
  * @param aMessageNames array of strings
  *    An array of message names.
  */
-BrowserTabList.prototype._listenForMessagesIf = function (aShouldListen, aGuard, aMessageNames) {
-  if (!aShouldListen !== !this[aGuard]) {
-    let op = aShouldListen ? "addMessageListener" : "removeMessageListener";
-    for (let win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
-      for (let name of aMessageNames) {
-        win.messageManager[op](name, this);
+BrowserTabList.prototype._listenForMessagesIf =
+  function (shouldListen, guard, messageNames) {
+    if (!shouldListen !== !this[guard]) {
+      let op = shouldListen ? "addMessageListener" : "removeMessageListener";
+      for (let win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
+        for (let name of messageNames) {
+          win.messageManager[op](name, this);
+        }
       }
+      this[guard] = shouldListen;
     }
-    this[aGuard] = aShouldListen;
-  }
-};
+  };
 
 /**
  * Implement nsIMessageListener.
  */
-BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(function (message) {
-  let browser = message.target;
-  switch (message.name) {
-    case "DOMTitleChanged": {
-      let actor = this._actorByBrowser.get(browser);
-      if (actor) {
-        this._notifyListChanged();
-        this._checkListening();
+BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(
+  function (message) {
+    let browser = message.target;
+    switch (message.name) {
+      case "DOMTitleChanged": {
+        let actor = this._actorByBrowser.get(browser);
+        if (actor) {
+          this._notifyListChanged();
+          this._checkListening();
+        }
+        break;
       }
-      break;
     }
-  }
-});
+  });
 
 /**
  * Implement nsIDOMEventListener.
@@ -889,6 +894,16 @@ function TabActor(connection) {
 TabActor.prototype = {
   traits: null,
 
+  // Optional console API listener options (e.g. used by the WebExtensionActor to
+  // filter console messages by addonID), set to an empty (no options) object by default.
+  consoleAPIListenerOptions: {},
+
+  // Optional TabSources filter function (e.g. used by the WebExtensionActor to filter
+  // sources by addonID), allow all sources by default.
+  _allowSource() {
+    return true;
+  },
+
   get exited() {
     return this._exited;
   },
@@ -1059,7 +1074,7 @@ TabActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      this._sources = new TabSources(this.threadActor);
+      this._sources = new TabSources(this.threadActor, this._allowSource);
     }
     return this._sources;
   },
@@ -1364,17 +1379,28 @@ TabActor.prototype = {
                          .getInterface(Ci.nsIDOMWindowUtils)
                          .outerWindowID;
       }
+
+      // Collect the addonID from the document origin attributes.
+      let addonID = window.document.nodePrincipal.originAttributes.addonId;
+
       return {
-        id: id,
+        id,
+        parentID,
+        addonID,
         url: window.location.href,
         title: window.document.title,
-        parentID: parentID
       };
     });
   },
 
   _notifyDocShellsUpdate(docshells) {
     let windows = this._docShellsToWindows(docshells);
+
+    // Do not send the `frameUpdate` event if the windows array is empty.
+    if (windows.length == 0) {
+      return;
+    }
+
     this.conn.send({ from: this.actorID,
                      type: "frameUpdate",
                      frames: windows
@@ -2027,7 +2053,7 @@ TabActor.prototype = {
       // We are very explicitly examining the "console" property of
       // the non-Xrayed object here.
       let console = window.wrappedJSObject.console;
-      isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE
+      isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
     } catch (ex) {
       // ignore
     }
@@ -2267,7 +2293,12 @@ BrowserAddonList.prototype.getList = function () {
     for (let addon of addons) {
       let actor = this._actorByAddonId.get(addon.id);
       if (!actor) {
-        actor = new BrowserAddonActor(this._connection, addon);
+        if (addon.isWebExtension) {
+          actor = new WebExtensionActor(this._connection, addon);
+        } else {
+          actor = new BrowserAddonActor(this._connection, addon);
+        }
+
         this._actorByAddonId.set(addon.id, actor);
       }
     }
@@ -2314,12 +2345,10 @@ BrowserAddonList.prototype._adjustListener = function () {
     // As long as the callback exists, we need to listen for changes
     // so we can notify about add-on changes.
     AddonManager.addAddonListener(this);
-  } else {
+  } else if (this._actorByAddonId.size === 0) {
     // When the callback does not exist, we only need to keep listening
     // if the actor cache will need adjusting when add-ons change.
-    if (this._actorByAddonId.size === 0) {
-      AddonManager.removeAddonListener(this);
-    }
+    AddonManager.removeAddonListener(this);
   }
 };
 
