@@ -107,11 +107,15 @@ def set_vars_from_script(script, vars):
                 env[var] = "%s;%s" % (env[var], originals[var])
 
 
-def call_alternates(binaries, command_args, *args, **kwargs):
+def call_alternates(binaries, *args, **kwargs):
     last_exception = None
     for binary in binaries:
         try:
-            return subprocess.call(['sh', '-c', binary] + command_args, *args, **kwargs)
+            # Call through a shell due to Windows portability problems.
+            rc = subprocess.call(['sh', '-c', binary], *args, **kwargs)
+            if rc == 127:
+                raise OSError("command not found: %s" % binary)
+            return rc
         except OSError as e:
             # Assume the binary was not found.
             last_exception = e
@@ -140,7 +144,7 @@ if args.variant == 'nonunified':
 
 if not args.nobuild:
     autoconfs = ['autoconf-2.13', 'autoconf2.13', 'autoconf213']
-    if call_alternates(autoconfs, [], cwd=DIR.js_src) != 0:
+    if call_alternates(autoconfs, cwd=DIR.js_src) != 0:
         logging.error('autoconf failed')
         sys.exit(1)
 
