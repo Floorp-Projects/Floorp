@@ -1743,9 +1743,8 @@ TabChild::HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
 
   // Note: there is nothing to do with the modifiers here, as we are not
   // synthesizing any sort of mouse event.
-  CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
   nsCOMPtr<nsIDocument> document = GetDocument();
-  CSSRect zoomToRect = CalculateRectToZoomTo(document, point);
+  CSSRect zoomToRect = CalculateRectToZoomTo(document, aPoint);
   // The double-tap can be dispatched by any scroll frame (so |aGuid| could be
   // the guid of any scroll frame), but the zoom-to-rect operation must be
   // performed by the root content scroll frame, so query its identifiers
@@ -1762,25 +1761,35 @@ TabChild::HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
 
 void
 TabChild::HandleTap(GeckoContentController::TapType aType,
-                    const CSSPoint& aPoint, const Modifiers& aModifiers,
+                    const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
                     const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId,
                     bool aCallTakeFocusForClickFromTap)
 {
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (!presShell) {
+    return;
+  }
+  if (!presShell->GetPresContext()) {
+    return;
+  }
+  CSSToLayoutDeviceScale scale(presShell->GetPresContext()->CSSToDevPixelScale());
+  CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint / scale, aGuid);
+
   switch (aType) {
   case GeckoContentController::TapType::eSingleTap:
     if (aCallTakeFocusForClickFromTap && mRemoteFrame) {
       mRemoteFrame->SendTakeFocusForClickFromTap();
     }
     if (mGlobal && mTabChildGlobal) {
-      mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid);
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, aGuid);
     }
     break;
   case GeckoContentController::TapType::eDoubleTap:
-    HandleDoubleTap(aPoint, aModifiers, aGuid);
+    HandleDoubleTap(point, aModifiers, aGuid);
     break;
   case GeckoContentController::TapType::eLongTap:
     if (mGlobal && mTabChildGlobal) {
-      mAPZEventState->ProcessLongTap(GetPresShell(), aPoint, aModifiers, aGuid,
+      mAPZEventState->ProcessLongTap(presShell, point, scale, aModifiers, aGuid,
           aInputBlockId);
     }
     break;

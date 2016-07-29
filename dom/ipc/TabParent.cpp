@@ -1298,9 +1298,9 @@ TabParent::SendRealDragEvent(WidgetDragEvent& event, uint32_t aDragAction,
   return PBrowserParent::SendRealDragEvent(event, aDragAction, aDropEffect);
 }
 
-CSSPoint TabParent::AdjustTapToChildWidget(const CSSPoint& aPoint)
+LayoutDevicePoint TabParent::AdjustTapToChildWidget(const LayoutDevicePoint& aPoint)
 {
-  return aPoint + (LayoutDevicePoint(GetChildProcessOffset()) * GetLayoutDeviceToCSSScale());
+  return aPoint + LayoutDevicePoint(GetChildProcessOffset());
 }
 
 bool TabParent::SendMouseWheelEvent(WidgetWheelEvent& event)

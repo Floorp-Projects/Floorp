@@ -44,7 +44,7 @@ public:
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
 
   virtual void HandleTap(TapType aTapType,
-                         const CSSPoint& aPoint,
+                         const LayoutDevicePoint& aPoint,
                          Modifiers aModifiers,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId) override;
