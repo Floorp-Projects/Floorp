@@ -7674,18 +7674,6 @@ class LAsmSelectBase : public LInstructionHelper<Defs, Ops, 0>
 {
     typedef LInstructionHelper<Defs, Ops, 0> Base;
   public:
-    static const size_t TrueExprIndex = 0;
-
-    const LAllocation* trueExpr() {
-        static_assert(TrueExprIndex == 0, "trueExprIndex kept in sync");
-        return Base::getOperand(0);
-    }
-    const LAllocation* falseExpr() {
-        return Base::getOperand(1);
-    }
-    const LAllocation* condExpr() {
-        return Base::getOperand(2);
-    }
 
     MAsmSelect* mir() const {
         return Base::mir_->toAsmSelect();
@@ -7697,11 +7685,24 @@ class LAsmSelect : public LAsmSelectBase<1, 3>
   public:
     LIR_HEADER(AsmSelect);
 
+    static const size_t TrueExprIndex = 0;
+    static const size_t FalseExprIndex = 1;
+    static const size_t CondIndex = 2;
+
     LAsmSelect(const LAllocation& trueExpr, const LAllocation& falseExpr, const LAllocation& cond) {
-        static_assert(TrueExprIndex == 0, "trueExprIndex kept in sync");
-        setOperand(0, trueExpr);
-        setOperand(1, falseExpr);
-        setOperand(2, cond);
+        setOperand(TrueExprIndex, trueExpr);
+        setOperand(FalseExprIndex, falseExpr);
+        setOperand(CondIndex, cond);
+    }
+
+    const LAllocation* trueExpr() {
+        return getOperand(TrueExprIndex);
+    }
+    const LAllocation* falseExpr() {
+        return getOperand(FalseExprIndex);
+    }
+    const LAllocation* condExpr() {
+        return getOperand(CondIndex);
     }
 };
 
@@ -7710,13 +7711,26 @@ class LAsmSelectI64 : public LAsmSelectBase<INT64_PIECES, 2 * INT64_PIECES + 1>
   public:
     LIR_HEADER(AsmSelectI64);
 
+    static const size_t TrueExprIndex = 0;
+    static const size_t FalseExprIndex = INT64_PIECES;
+    static const size_t CondIndex = INT64_PIECES * 2;
+
     LAsmSelectI64(const LInt64Allocation& trueExpr, const LInt64Allocation& falseExpr,
                   const LAllocation& cond)
     {
-        static_assert(TrueExprIndex == 0, "trueExprIndex kept in sync");
-        setInt64Operand(0, trueExpr);
-        setInt64Operand(1, falseExpr);
-        setOperand(2, cond);
+        setInt64Operand(TrueExprIndex, trueExpr);
+        setInt64Operand(FalseExprIndex, falseExpr);
+        setOperand(CondIndex, cond);
+    }
+
+    const LInt64Allocation trueExpr() {
+        return getInt64Operand(TrueExprIndex);
+    }
+    const LInt64Allocation falseExpr() {
+        return getInt64Operand(FalseExprIndex);
+    }
+    const LAllocation* condExpr() {
+        return getOperand(CondIndex);
     }
 };
 
