@@ -35,10 +35,6 @@ elif CONFIG['ANDROID_VERSION'] == '17':
         'GonkDisplayJB.cpp',
         'GraphicBufferAlloc.cpp',
     ]
-elif CONFIG['ANDROID_VERSION'] == '15':
-    SOURCES += [
-        'GonkDisplayICS.cpp'
-    ]
 elif CONFIG['ANDROID_VERSION'] and CONFIG['COMPILE_ENVIRONMENT']:
     error('Unsupported platform version: %s' % (CONFIG['ANDROID_VERSION']))
 
@@ -52,18 +48,12 @@ DEFINES['XPCOM_GLUE'] = True
 
 DISABLE_STL_WRAPPING = True
 
-if CONFIG['ANDROID_VERSION'] > '15':
-    LOCAL_INCLUDES += [
-        '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
-            'frameworks/native/include/gui',
-            'frameworks/native/opengl/include',
-            'system/core/libsuspend/include',
-        ]
-    ]
-
 LOCAL_INCLUDES += [
     '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+        'frameworks/native/include/gui',
+        'frameworks/native/opengl/include',
         'hardware/libhardware/include',
         'hardware/libhardware_legacy/include',
+        'system/core/libsuspend/include',
     ]
 ]

@@ -72,6 +72,7 @@ typedef union {
  * the unit is a must before asking for the value in any particular
  * form.
  */
+ /** <div rustbindgen private accessor="unsafe"></div> */
 class nsStyleCoord {
 public:
   // Non-reference counted calc() value.  See nsStyleStruct.h for some uses
@@ -262,6 +263,7 @@ private:
  * This is commonly used to hold the widths of the borders, margins,
  * or paddings of a box.
  */
+ /** <div rustbindgen private accessor="unsafe"></div> */
 class nsStyleSides {
 public:
   nsStyleSides();
@@ -340,6 +342,7 @@ protected:
  * nsStyleCoord pairs.  This is used to hold the dimensions of the
  * corners of a box (for, e.g., border-radius and outline-radius).
  */
+ /** <div rustbindgen private accessor="unsafe"></div> */
 class nsStyleCorners {
 public:
   nsStyleCorners();

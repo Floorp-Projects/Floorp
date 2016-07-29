@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1278473
+-->
+<head>
+  <title>Test for Bug 1278473 - replace Services.focus</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+  <script type="application/javascript;version=1.8">
+  "use strict";
+  var exports = {};
+  </script>
+
+  <script type="application/javascript;version=1.8"
+	  src="resource://devtools/client/shared/shim/Services.js"></script>
+</head>
+<body>
+  <span>
+    <span id="start" testvalue="0" tabindex="0"> </span>
+    <label>
+      <input testvalue="1" type="radio">Hi</input>
+    </label>
+    <label>
+      <input type="radio" tabindex="-1">Bye</input>
+    </label>
+    <label style="display: none">
+      <input id="button3" type="radio" tabindex="-1">Invisible</input>
+    </label>
+    <input id="button4" type="radio" disabled="true">Disabled</input>
+    <span testvalue="2" tabindex="0"> </span>
+  </span>
+
+<script type="application/javascript;version=1.8">
+  "use strict";
+
+  // The test assumes these are identical, so assert it here.
+  is(Services.focus.MOVEFOCUS_BACKWARD, SpecialPowers.Services.focus.MOVEFOCUS_BACKWARD,
+     "check MOVEFOCUS_BACKWARD");
+  is(Services.focus.MOVEFOCUS_FORWARD, SpecialPowers.Services.focus.MOVEFOCUS_FORWARD,
+     "check MOVEFOCUS_FORWARD");
+
+  function moveFocus(element, type, expect) {
+    let current = document.activeElement;
+    const suffix = "(type=" + type + ", to=" + expect + ")";
+
+    // First try with the platform implementation.
+    SpecialPowers.Services.focus.moveFocus(window, element, type, 0);
+    is(document.activeElement.getAttribute("testvalue"), expect,
+       "platform moveFocus " + suffix);
+
+    // Reset the focus and try again with the shim.
+    current.focus();
+    is(document.activeElement, current, "reset " + suffix);
+
+    Services.focus.moveFocus(window, element, type, 0);
+    is(document.activeElement.getAttribute("testvalue"), expect,
+       "shim moveFocus " + suffix);
+  }
+
+  let start = document.querySelector("#start");
+  start.focus();
+  is(document.activeElement.getAttribute("testvalue"), "0", "initial focus");
+
+  moveFocus(null, Services.focus.MOVEFOCUS_FORWARD, "1");
+  moveFocus(null, Services.focus.MOVEFOCUS_FORWARD, "2");
+  let end = document.activeElement;
+  moveFocus(null, Services.focus.MOVEFOCUS_BACKWARD, "1");
+  moveFocus(null, Services.focus.MOVEFOCUS_BACKWARD, "0");
+
+  moveFocus(start, Services.focus.MOVEFOCUS_FORWARD, "1");
+  moveFocus(end, Services.focus.MOVEFOCUS_BACKWARD, "1");
+</script>
+</body>
