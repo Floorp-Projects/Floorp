@@ -142,6 +142,7 @@ CERT_NewCertList
 CERT_NewTempCertificate
 CERT_NicknameStringsFromCertList
 CERT_OCSPCacheSettings
+CERT_PKIXVerifyCert
 CERT_RemoveCertListNode
 CERT_RFC1485_EscapeAndQuote
 CERT_SaveSMimeProfile
