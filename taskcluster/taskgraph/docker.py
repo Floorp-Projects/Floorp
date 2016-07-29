@@ -15,6 +15,7 @@ import urllib2
 from taskgraph.util import docker
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
+IMAGE_DIR = os.path.join(GECKO, 'testing', 'docker')
 INDEX_URL = 'https://index.taskcluster.net/v1/task/docker.images.v1.{}.{}.hash.{}'
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
@@ -61,3 +62,14 @@ def load_image_by_task_id(task_id):
 
     print("The requested docker image is now available as", name)
     print("Try: docker run -ti --rm {} bash".format(name))
+
+
+def build_image(name):
+    """Build a Docker image of specified name.
+
+    Output from image building process will be printed to stdout.
+    """
+    args = [os.path.join(IMAGE_DIR, 'build.sh'), name]
+    res = subprocess.call(args, cwd=IMAGE_DIR)
+    if res:
+        raise Exception('error building image')
