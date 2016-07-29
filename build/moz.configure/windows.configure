@@ -355,10 +355,8 @@ def sdk_bin_path(valid_windows_sdk_dir):
     return result
 
 
-# Normally, we'd use `MT` instead of `_MT`, but for now, we want MT to only contain
-# mt.exe.
-mt = check_prog('_MT', depends_win()(lambda: ('mt.exe',)), what='mt',
-                input='MT', paths=sdk_bin_path)
+mt = check_prog('MT', depends_win()(lambda: ('mt.exe',)), input='MT',
+                paths=sdk_bin_path)
 
 
 # Check that MT is not something unexpected like "magnetic tape manipulation
@@ -378,7 +376,6 @@ def valid_mt(path):
     raise FatalCheckError('%s is not Microsoft Manifest Tool')
 
 
-set_config('MT', depends_if(valid_mt)(lambda x: os.path.basename(x)))
 set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
 
 
