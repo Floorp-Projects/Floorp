@@ -67,6 +67,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void visitRandom(MRandom* ins);
     void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
+    void visitExtendInt32ToInt64(MExtendInt32ToInt64* ins);
 };
 
 typedef LIRGeneratorX64 LIRGeneratorSpecific;

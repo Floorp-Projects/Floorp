@@ -361,3 +361,9 @@ LIRGeneratorARM64::visitCopySign(MCopySign* ins)
 {
     MOZ_CRASH("NY");
 }
+
+void
+LIRGeneratorARM64::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+{
+    MOZ_CRASH("NYI");
+}
