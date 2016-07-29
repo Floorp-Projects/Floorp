@@ -254,8 +254,6 @@ js::Nursery::allocate(size_t size)
     MOZ_ASSERT(isEnabled());
     MOZ_ASSERT(!runtime()->isHeapBusy());
     MOZ_ASSERT(position() >= currentStart_);
-    MOZ_ASSERT(position() % gc::CellSize == 0);
-    MOZ_ASSERT(size % gc::CellSize == 0);
 
 #ifdef JS_GC_ZEAL
     static const size_t CanarySize = (sizeof(Nursery::Canary) + CellSize - 1) & ~CellMask;
