@@ -29,15 +29,105 @@
 <iframe src="data:text/plain,webRequestTest_bad" width="200" height="200"></iframe>
 <iframe src="https://invalid.localhost/" width="200" height="200"></iframe>
 <a href="file_WebRequest_page3.html?trigger=a" target="webrequest_link">link</a>
-<form method="post" action="file_WebRequest_page3.html?trigger=form" target="webrequest_form"></form>
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  enctype="multipart/form-data"
+  >
+<input type="text" name="&quot;special&quot; chàrs" value="sp€cial">
+<input type="file" name="testFile">
+<input type="file" name="emptyFile">
+<input type="text" name="textInput1" value="value1">
+</form>
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  enctype="multipart/form-data"
+  >
+<input type="text" name="textInput2" value="value2">
+<input type="file" name="testFile">
+<input type="file" name="emptyFile">
+
+</form>
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  >
+<input type="text" name="textInput" value="value1">
+<input type="text" name="textInput" value="value2">
+</form>
 <script>
 "use strict";
 for (let a of document.links) {
   a.click();
 }
-for (let f of document.forms) {
-  f.submit();
-}
+
+SpecialPowers.createFiles([{name: "testFile.pdf", data: "Not really a PDF file :)", "type": "application/x-pdf"}], (files) => {
+  let testFile = files[0];
+  let blob = {
+    name: "blobAsFile",
+    content: new Blob(["A blob sent as a file"], {type: "text/csv"}),
+    fileName: "blobAsFile.csv",
+  };
+  let file = {
+    name: "testFile",
+    fileName: testFile.name,
+  };
+  let uploads = {
+    [blob.name]: blob,
+    [file.name]: file,
+  };
+
+  for (let form of document.forms) {
+    if (file.name in form.elements) {
+      SpecialPowers.wrap(form.elements[file.name]).mozSetFileArray(files);
+    }
+    let action = new URL(form.action);
+    let formData = new FormData(form);
+    let webRequestFD = {};
+
+    let updateActionURL = () => {
+      for (let name of formData.keys()) {
+        webRequestFD[name] = name in uploads ? [uploads[name].fileName] : formData.getAll(name);
+      }
+      action.searchParams.set("upload", JSON.stringify(webRequestFD));
+      action.searchParams.set("enctype", form.enctype);
+    };
+
+    updateActionURL();
+
+    form.action = action;
+    form.submit();
+
+    if (form.enctype === "multipart/form-data") {
+      let post = (data) => {
+        let xhr = new XMLHttpRequest();
+        action.searchParams.set("xhr", "1");
+        xhr.open("POST", action.href);
+        xhr.send(data);
+        action.searchParams.delete("xhr");
+      };
+
+      formData.append(blob.name, blob.content, blob.fileName);
+      formData.append("formDataField", "some value");
+      updateActionURL(true);
+      post(formData);
+
+      action.searchParams.set("upload", JSON.stringify([{file: "<file>"}]));
+      post(testFile);
+
+      let blobReader = new FileReader();
+      blobReader.readAsArrayBuffer(blob.content);
+      blobReader.onload = () => {
+        action.searchParams.set("upload", `${blobReader.result.byteLength} bytes`);
+        post(blob.content);
+      };
+      let byteLength = 16;
+      action.searchParams.set("upload", `${byteLength} bytes`);
+      post(new ArrayBuffer(byteLength));
+    }
+  }
+});
 </script>
 </body>
 </html>
