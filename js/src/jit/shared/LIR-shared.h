@@ -3561,9 +3561,9 @@ class LPopcntI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES, 1>
 {
   public:
     LIR_HEADER(PopcntI64)
-    explicit LPopcntI64(const LInt64Allocation& num, const LInt64Definition& temp) {
+    explicit LPopcntI64(const LInt64Allocation& num, const LDefinition& temp) {
         setInt64Operand(0, num);
-        setInt64Temp(0, temp);
+        setTemp(0, temp);
     }
 
     MPopcnt* mir() const {

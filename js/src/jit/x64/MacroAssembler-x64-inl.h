@@ -472,13 +472,13 @@ MacroAssembler::ctz64(Register64 src, Register64 dest)
 }
 
 void
-MacroAssembler::popcnt64(Register64 src64, Register64 dest64, Register64 tmp64)
+MacroAssembler::popcnt64(Register64 src64, Register64 dest64, Register tmp)
 {
     Register src = src64.reg;
     Register dest = dest64.reg;
-    Register tmp = tmp64.reg;
 
     if (AssemblerX86Shared::HasPOPCNT()) {
+        MOZ_ASSERT(tmp == InvalidReg);
         popcntq(src, dest);
         return;
     }
