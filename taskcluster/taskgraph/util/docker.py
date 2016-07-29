@@ -6,6 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
 import os
+import shutil
+import subprocess
+import tarfile
 import tempfile
 
 from mozpack.archive import (
@@ -120,3 +123,37 @@ def create_context_tar(topsrcdir, context_dir, out_path, prefix):
                 break
             h.update(data)
     return h.hexdigest()
+
+
+def build_from_context(docker_bin, context_path, prefix, tag=None):
+    """Build a Docker image from a context archive.
+
+    Given the path to a `docker` binary, a image build tar.gz (produced with
+    ``create_context_tar()``, a prefix in that context containing files, and
+    an optional ``tag`` for the produced image, build that Docker image.
+    """
+    d = tempfile.mkdtemp()
+    try:
+        with tarfile.open(context_path, 'r:gz') as tf:
+            tf.extractall(d)
+
+        # If we wanted to do post-processing of the Dockerfile, this is
+        # where we'd do it.
+
+        args = [
+            docker_bin,
+            'build',
+            # Use --no-cache so we always get the latest package updates.
+            '--no-cache',
+        ]
+
+        if tag:
+            args.extend(['-t', tag])
+
+        args.append('.')
+
+        res = subprocess.call(args, cwd=os.path.join(d, prefix))
+        if res:
+            raise Exception('error building image')
+    finally:
+        shutil.rmtree(d)

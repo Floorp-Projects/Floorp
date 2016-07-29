@@ -10,6 +10,7 @@ import json
 import os
 import subprocess
 import tarfile
+import tempfile
 import urllib2
 import which
 
@@ -88,18 +89,17 @@ def build_image(name):
         raise Exception('Docker server is unresponsive. Run `docker ps` and '
                         'check that Docker is running')
 
-    args = [
-        docker_bin,
-        'build',
-        # Use --no-cache so we always get the latest package updates.
-        '--no-cache',
-        '-t', tag,
-        name,
-    ]
-
-    res = subprocess.call(args, cwd=IMAGE_DIR)
-    if res:
-        raise Exception('error building image')
+    # We obtain a context archive and build from that. Going through the
+    # archive creation is important: it normalizes things like file owners
+    # and mtimes to increase the chances that image generation is
+    # deterministic.
+    fd, context_path = tempfile.mkstemp()
+    os.close(fd)
+    try:
+        docker.create_context_tar(GECKO, image_dir, context_path, name)
+        docker.build_from_context(docker_bin, context_path, name, tag)
+    finally:
+        os.unlink(context_path)
 
     print('Successfully built %s and tagged with %s' % (name, tag))
 
