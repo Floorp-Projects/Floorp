@@ -3007,3 +3007,12 @@ CodeGeneratorARM::visitCopySignD(LCopySignD* ins)
     masm.as_vxfer(lhsi, InvalidReg, lhs, Assembler::FloatToCore, Assembler::Always, 0);
     masm.ma_vxfer(lhsi, rhsi, output);
 }
+
+void
+CodeGeneratorARM::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+{
+    const LInt64Allocation& input = lir->getInt64Operand(0);
+    Register output = ToRegister(lir->output());
+
+    masm.move32(ToRegister(input.low()), output);
+}
