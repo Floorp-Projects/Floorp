@@ -351,7 +351,11 @@ if args.variant in ('tsan', 'msan'):
                 m = re.match(r'^SUMMARY: \w+Sanitizer: (?:data race|use-of-uninitialized-value) (.*)',
                              line.strip())
                 if m:
-                    sites[m.group(1)] += 1
+                    # Some reports include file:line:column, some just
+                    # file:line. Just in case it's nondeterministic, we will
+                    # canonicalize to just the line number.
+                    site = re.sub(r'^(\S+?:\d+)(:\d+)* ', r'\1 ', m.group(1))
+                    sites[site] += 1
 
     # Write a summary file and display it to stdout.
     summary_filename = os.path.join(env['MOZ_UPLOAD_DIR'], "%s_summary.txt" % args.variant)
@@ -359,6 +363,11 @@ if args.variant in ('tsan', 'msan'):
         for location, count in sites.most_common():
             print >> outfh, "%d %s" % (count, location)
     print(open(summary_filename, 'rb').read())
+
+    if 'max-errors' in variant:
+        print("Found %d errors out of %d allowed" % (len(sites), variant['max-errors']))
+        if len(sites) > variant['max-errors']:
+            results.append(1)
 
     # Gather individual results into a tarball. Note that these are
     # distinguished only by pid of the JS process running within each test, so
