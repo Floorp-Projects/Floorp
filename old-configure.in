@@ -6761,7 +6761,6 @@ export RUSTC
 export MOZILLA_CENTRAL_PATH=$_topsrcdir
 export STLPORT_CPPFLAGS
 export STLPORT_LIBS
-export JS_STANDALONE=
 unset MOZ_BUILD_APP
 export DIST
 export MOZ_LINKER
@@ -6789,6 +6788,7 @@ if ! test -e js; then
     mkdir js
 fi
 
+ac_configure_args="$ac_configure_args JS_STANDALONE="
 AC_OUTPUT_SUBDIRS(js/src,$cache_file)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
