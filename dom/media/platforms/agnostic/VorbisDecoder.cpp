@@ -167,8 +167,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
     mLastFrameTime = Some(aSample->mTime);
   }
 
-  ogg_packet pkt = InitVorbisPacket(aData, aLength, false, aSample->mEOS,
-                                    aSample->mTimecode, mPacketCount++);
+  ogg_packet pkt = InitVorbisPacket(aData, aLength, false, false, -1, mPacketCount++);
 
   if (vorbis_synthesis(&mVorbisBlock, &pkt) != 0) {
     return -1;

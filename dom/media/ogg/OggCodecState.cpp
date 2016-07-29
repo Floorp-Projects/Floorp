@@ -247,7 +247,6 @@ OggCodecState::PacketOutAsMediaRawData()
   sample->mTime = end_tstamp - duration;
   sample->mDuration = duration;
   sample->mKeyframe = IsKeyframe(packet);
-  sample->mEOS = packet->e_o_s;
 
   ReleasePacket(packet);
 
