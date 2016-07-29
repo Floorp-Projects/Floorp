@@ -199,7 +199,7 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
     // The first frame is always decoded into an RGB surface.
     pipe =
       SurfacePipeFactory::CreateSurfacePipe(this, mGIFStruct.images_decoded,
-                                            GetSize(), OutputSize(),
+                                            Size(), OutputSize(),
                                             aFrameRect, format, pipeFlags);
   } else {
     // This is an animation frame (and not the first). To minimize the memory
@@ -207,7 +207,7 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
     MOZ_ASSERT(!mDownscaler);
     pipe =
       SurfacePipeFactory::CreatePalettedSurfacePipe(this, mGIFStruct.images_decoded,
-                                                    GetSize(), aFrameRect, format,
+                                                    Size(), aFrameRect, format,
                                                     aDepth, pipeFlags);
   }
 
