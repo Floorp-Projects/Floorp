@@ -29,3 +29,4 @@ check out the :doc:`how-to section <how-tos>`.
     yaml-templates
     how-tos
     docker-images
+    caches

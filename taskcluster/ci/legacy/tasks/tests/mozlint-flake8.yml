@@ -19,11 +19,11 @@ task:
         task-reference: "<docker-image>"
     command:
       - /home/worker/bin/checkout-gecko-and-run
-      - /home/worker/workspace/gecko
+      - /home/worker/checkouts/gecko
       - bash
       - -cx
       - >
-          cd /home/worker/workspace/gecko &&
+          cd /home/worker/checkouts/gecko &&
           ./mach lint -l flake8 -f treeherder
   extra:
     locations:

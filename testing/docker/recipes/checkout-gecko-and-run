@@ -5,18 +5,20 @@
 
 set -ex
 
+DEST=$1
+CHECKOUTS=`dirname ${DEST}`
+
 # The script starts executing as root. We need to change ownership
 # of the caches because they are initially owned by root:root. There
 # may not be a cache mount/directory on some instances. So create the
 # directory if missing.
 if [ $(id -u) = 0 ]; then
-    mkdir -p /home/worker/workspace
-    chown worker:worker /home/worker/hg-shared /home/worker/workspace
+    mkdir -p ${CHECKOUTS}
+    chown worker:worker /home/worker/hg-shared ${CHECKOUTS}
 
     exec sudo -E -u worker ${0} "${@}"
 fi
 
-DEST=$1
 shift
 
 # We set the base repository to mozilla-central so tc-vcs doesn't get
