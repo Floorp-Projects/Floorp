@@ -497,6 +497,14 @@ class XrayWrapper : public Base {
 #define PermissiveXrayOpaque xpc::XrayWrapper<js::CrossCompartmentWrapper, xpc::OpaqueXrayTraits>
 #define SCSecurityXrayXPCWN xpc::XrayWrapper<js::SameCompartmentSecurityWrapper, xpc::XPCWrappedNativeXrayTraits>
 
+extern template class PermissiveXrayXPCWN;
+extern template class SecurityXrayXPCWN;
+extern template class PermissiveXrayDOM;
+extern template class SecurityXrayDOM;
+extern template class PermissiveXrayJS;
+extern template class PermissiveXrayOpaque;
+extern template class PermissiveXrayXPCWN;
+
 class SandboxProxyHandler : public js::Wrapper {
 public:
     constexpr SandboxProxyHandler() : js::Wrapper(0)
