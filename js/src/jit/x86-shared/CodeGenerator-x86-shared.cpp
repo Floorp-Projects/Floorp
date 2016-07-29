@@ -41,6 +41,20 @@ CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator* gen, LIRGraph* grap
 {
 }
 
+#ifdef JS_PUNBOX64
+Operand
+CodeGeneratorX86Shared::ToOperandOrRegister64(const LInt64Allocation input)
+{
+    return ToOperand(input.value());
+}
+#else
+Register64
+CodeGeneratorX86Shared::ToOperandOrRegister64(const LInt64Allocation input)
+{
+    return ToRegister64(input);
+}
+#endif
+
 void
 OutOfLineBailout::accept(CodeGeneratorX86Shared* codegen)
 {
@@ -275,7 +289,7 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
     Address dst(StackPointer, mir->spOffset());
     if (ins->arg()->isConstant()) {
         if (mir->input()->type() == MIRType::Int64)
-            masm.storePtr(ImmWord(ToInt64(ins->arg())), dst);
+            masm.storePtr(ImmWord(ins->arg()->toConstant()->toInt64()), dst); // tmp
         else
             masm.storePtr(ImmWord(ToInt32(ins->arg())), dst);
     } else {

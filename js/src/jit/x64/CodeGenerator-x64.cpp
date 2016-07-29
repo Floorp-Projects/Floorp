@@ -21,18 +21,6 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 
-static inline Register64
-ToRegister64(const LAllocation* a)
-{
-    return Register64(ToRegister(a));
-}
-
-static inline Register64
-ToRegister64(const LDefinition* a)
-{
-    return Register64(ToRegister(a));
-}
-
 CodeGeneratorX64::CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
   : CodeGeneratorX86Shared(gen, graph, masm)
 {
