@@ -2074,7 +2074,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_UNEXPECTED;
   }
   bool loop = IsLoop(docURI);
-  bool privileged = IsPrivileged();
+  bool privileged = loop || IsPrivileged();
   bool isHTTPS = false;
   docURI->SchemeIs("https", &isHTTPS);
   nsCString host;
@@ -2168,7 +2168,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                                     false) && !IsVistaOrLater()) ||
 #endif
             (!privileged && !HostIsHttps(*docURI)) ||
-            !HostHasPermission(*docURI)) {
+            !(loop || HostHasPermission(*docURI))) {
           RefPtr<MediaStreamError> error =
               new MediaStreamError(aWindow,
                                    NS_LITERAL_STRING("NotAllowedError"));
@@ -2212,6 +2212,16 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
           }
         }
       }
+    }
+
+    // For all but tab sharing, Loop needs to prompt as we are using the
+    // permission menu for selection of the device currently. For tab sharing,
+    // Loop has implicit permissions within Firefox, as it is built-in,
+    // and will manage the active tab and provide appropriate UI.
+    if (loop && (videoType == MediaSourceEnum::Window ||
+                 videoType == MediaSourceEnum::Application ||
+                 videoType == MediaSourceEnum::Screen)) {
+       privileged = false;
     }
   } else if (IsOn(c.mVideo)) {
     videoType = MediaSourceEnum::Camera;
