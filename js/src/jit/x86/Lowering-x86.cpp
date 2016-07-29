@@ -170,6 +170,35 @@ LIRGeneratorX86::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock*
 }
 
 void
+LIRGeneratorX86::defineInt64Phi(MPhi* phi, size_t lirIndex)
+{
+    LPhi* low = current->getPhi(lirIndex + INT64LOW_INDEX);
+    LPhi* high = current->getPhi(lirIndex + INT64HIGH_INDEX);
+
+    uint32_t lowVreg = getVirtualRegister();
+
+    phi->setVirtualRegister(lowVreg);
+
+    uint32_t highVreg = getVirtualRegister();
+    MOZ_ASSERT(lowVreg + INT64HIGH_INDEX == highVreg + INT64LOW_INDEX);
+
+    low->setDef(0, LDefinition(lowVreg, LDefinition::INT32));
+    high->setDef(0, LDefinition(highVreg, LDefinition::INT32));
+    annotate(high);
+    annotate(low);
+}
+
+void
+LIRGeneratorX86::lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex)
+{
+    MDefinition* operand = phi->getOperand(inputPosition);
+    LPhi* low = block->getPhi(lirIndex + INT64LOW_INDEX);
+    LPhi* high = block->getPhi(lirIndex + INT64HIGH_INDEX);
+    low->setOperand(inputPosition, LUse(operand->virtualRegister() + INT64LOW_INDEX, LUse::ANY));
+    high->setOperand(inputPosition, LUse(operand->virtualRegister() + INT64HIGH_INDEX, LUse::ANY));
+}
+
+void
 LIRGeneratorX86::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
 {
     lowerCompareExchangeTypedArrayElement(ins, /* useI386ByteRegisters = */ true);

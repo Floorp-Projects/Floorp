@@ -26,6 +26,9 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
     LDefinition tempByteOpRegister();
 
+    void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t) { MOZ_CRASH("NYI"); }
+    void defineInt64Phi(MPhi*, size_t) { MOZ_CRASH("NYI"); }
+
     bool needTempForPostBarrier() { return false; }
 
     void lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir, MDefinition* lhs,

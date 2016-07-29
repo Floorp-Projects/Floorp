@@ -40,6 +40,8 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
 
     void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
     void defineUntypedPhi(MPhi* phi, size_t lirIndex);
+    void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t) { MOZ_CRASH("NYI"); }
+    void defineInt64Phi(MPhi*, size_t) { MOZ_CRASH("NYI"); }
     void lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir, MDefinition* lhs,
                        MDefinition* rhs);
     void lowerUrshD(MUrsh* mir);

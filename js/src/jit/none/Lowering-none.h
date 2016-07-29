@@ -29,7 +29,9 @@ class LIRGeneratorNone : public LIRGeneratorShared
     LDefinition tempToUnbox() { MOZ_CRASH(); }
     bool needTempForPostBarrier() { MOZ_CRASH(); }
     void lowerUntypedPhiInput(MPhi*, uint32_t, LBlock*, size_t) { MOZ_CRASH(); }
+    void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t) { MOZ_CRASH(); }
     void defineUntypedPhi(MPhi*, size_t) { MOZ_CRASH(); }
+    void defineInt64Phi(MPhi*, size_t) { MOZ_CRASH(); }
     void lowerForShift(LInstructionHelper<1, 2, 0>*, MDefinition*, MDefinition*, MDefinition*) {
         MOZ_CRASH();
     }

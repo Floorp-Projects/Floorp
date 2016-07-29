@@ -122,6 +122,12 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     Operand ToOperand(const LAllocation* a);
     Operand ToOperand(const LDefinition* def);
 
+#ifdef JS_PUNBOX64
+    Operand ToOperandOrRegister64(const LInt64Allocation input);
+#else
+    Register64 ToOperandOrRegister64(const LInt64Allocation input);
+#endif
+
     MoveOperand toMoveOperand(LAllocation a) const;
 
     void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);

@@ -131,7 +131,7 @@ struct Imm64
 {
     uint64_t value;
 
-    explicit Imm64(uint64_t value) : value(value)
+    explicit Imm64(int64_t value) : value(value)
     { }
 
     Imm32 low() const {
