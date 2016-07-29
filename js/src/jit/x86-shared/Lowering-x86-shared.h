@@ -33,10 +33,6 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
                      MDefinition* rhs);
 
     template<size_t Temps>
-    void lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
-                            MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
-
-    template<size_t Temps>
     void lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir, MDefinition* lhs,
                      MDefinition* rhs);
     void lowerForCompIx4(LSimdBinaryCompIx4* ins, MSimdBinaryComp* mir,
@@ -48,7 +44,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void visitAsmJSNeg(MAsmJSNeg* ins);
     void visitWasmBoundsCheck(MWasmBoundsCheck* ins);
     void lowerWasmLoad(MWasmLoad* ins);
-    void visitAsmSelect(MAsmSelect* ins);
+    void lowerAsmSelect(MAsmSelect* ins);
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerDivI(MDiv* div);
     void lowerModI(MMod* mod);
