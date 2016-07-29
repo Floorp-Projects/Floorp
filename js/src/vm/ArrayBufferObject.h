@@ -213,9 +213,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static bool fun_slice(JSContext* cx, unsigned argc, Value* vp);
 
     static bool fun_isView(JSContext* cx, unsigned argc, Value* vp);
-#ifdef NIGHTLY_BUILD
-    static bool fun_transfer(JSContext* cx, unsigned argc, Value* vp);
-#endif
 
     static bool fun_species(JSContext* cx, unsigned argc, Value* vp);
 
@@ -252,15 +249,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     bool hasStealableContents() const {
         // Inline elements strictly adhere to the corresponding buffer.
-        if (!ownsData())
-            return false;
-
-        // Detached contents aren't transferrable because we want a detached
-        // buffer's contents to be backed by zeroed memory equal in length to
-        // the original buffer contents.  Transferring these contents would
-        // allocate new ones based on the current byteLength, which is 0 for a
-        // detached buffer -- not the original byteLength.
-        return !isDetached();
+        return ownsData();
     }
 
     // Return whether the buffer is allocated by js_malloc and should be freed
@@ -286,7 +275,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     // Detach this buffer from its original memory.  (This necessarily makes
     // views of this buffer unusable for modifying that original memory.)
-    static MOZ_MUST_USE bool
+    static void
     detach(JSContext* cx, Handle<ArrayBufferObject*> buffer, BufferContents newContents);
 
   private:
