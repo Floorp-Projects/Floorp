@@ -579,6 +579,7 @@ function IsRegExpSplitOptimizable(rx, C) {
     // If RegExpPrototypeOptimizable succeeds, `RegExpProto.exec` is guaranteed
     // to be a data property.
     return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpInstanceOptimizable(rx, RegExpProto) &&
            RegExpProto.exec === RegExp_prototype_Exec;
 }
 
