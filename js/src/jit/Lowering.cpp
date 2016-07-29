@@ -4110,8 +4110,18 @@ LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
 {
     ABIArg abi = ins->abi();
     if (abi.argInRegister()) {
+#if defined(JS_NUNBOX32)
+        if (abi.isGeneralRegPair()) {
+            defineInt64Fixed(new(alloc()) LAsmJSParameterI64, ins,
+                LInt64Allocation(LAllocation(AnyRegister(abi.gpr64().high)),
+                                 LAllocation(AnyRegister(abi.gpr64().low))));
+            return;
+        }
+#endif
         defineFixed(new(alloc()) LAsmJSParameter, ins, LAllocation(abi.reg()));
-    } else if (ins->type() == MIRType::Int64) {
+        return;
+    }
+    if (ins->type() == MIRType::Int64) {
         MOZ_ASSERT(!abi.argInRegister());
         defineInt64Fixed(new(alloc()) LAsmJSParameterI64, ins,
 #if defined(JS_NUNBOX32)
