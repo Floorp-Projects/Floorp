@@ -23,6 +23,7 @@ struct ScreenDetails {
   int32_t pixelDepth;
   int32_t colorDepth;
   double contentsScaleFactor;
+  double defaultCSSScaleFactor;
 };
 
 nested(upto inside_cpow) sync protocol PScreenManager
