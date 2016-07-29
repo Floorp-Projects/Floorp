@@ -77,6 +77,8 @@ def build_image(name):
     if not os.path.isdir(image_dir):
         raise Exception('image directory does not exist: %s' % image_dir)
 
+    tag = docker.docker_image(name, default_version='latest')
+
     docker_bin = which.which('docker')
 
     # Verify that Docker is working.
@@ -86,7 +88,15 @@ def build_image(name):
         raise Exception('Docker server is unresponsive. Run `docker ps` and '
                         'check that Docker is running')
 
-    args = [os.path.join(IMAGE_DIR, 'build.sh'), name]
+    args = [os.path.join(IMAGE_DIR, 'build.sh'), name, tag]
     res = subprocess.call(args, cwd=IMAGE_DIR)
     if res:
         raise Exception('error building image')
+
+    if tag.endswith(':latest'):
+        print('*' * 50)
+        print('WARNING: no VERSION file found in image directory.')
+        print('Image is not suitable for deploying/pushing.')
+        print('Create an image suitable for deploying/pushing by creating')
+        print('a VERSION file in the image directory.')
+        print('*' * 50)
