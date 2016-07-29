@@ -84,21 +84,4 @@ build() {
   fi
 }
 
-if ! which docker > /dev/null; then
-  echo "Docker must be installed read installation instructions at docker.com"
-  echo
-  usage
-  exit 1
-fi
-
-# TODO: In the future we should check minimum docker version it does matter.
-if ! docker version > /dev/null;
-then
-  echo "Docker server is unresponsive run 'docker ps' and check that docker is"
-  echo "running"
-  echo
-  usage
-  exit 1
-fi
-
 build $*
