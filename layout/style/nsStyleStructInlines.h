@@ -17,25 +17,18 @@
 #include "nsTextFrame.h" // for nsTextFrame::ShouldSuppressLineBreak
 
 inline void
-nsStyleImage::EnsureCachedBIData() const
-{
-  if (!mCachedBIData) {
-    const_cast<nsStyleImage*>(this)->mCachedBIData =
-      mozilla::MakeUnique<CachedBorderImageData>();
-  }
-}
-
-inline void
 nsStyleImage::SetSubImage(uint8_t aIndex, imgIContainer* aSubImage) const
 {
-  EnsureCachedBIData();
-  mCachedBIData->SetSubImage(aIndex, aSubImage);
+  const_cast<nsStyleImage*>(this)->mSubImages.ReplaceObjectAt(aSubImage, aIndex);
 }
 
 inline imgIContainer*
 nsStyleImage::GetSubImage(uint8_t aIndex) const
 {
-  return (mCachedBIData) ? mCachedBIData->GetSubImage(aIndex) : nullptr;
+  imgIContainer* subImage = nullptr;
+  if (aIndex < mSubImages.Count())
+    subImage = mSubImages[aIndex];
+  return subImage;
 }
 
 bool
