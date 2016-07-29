@@ -25,6 +25,8 @@
 #include "prsystem.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticMutex.h"
+#include "MP4Decoder.h"
+#include "VPXDecoder.h"
 
 namespace mozilla {
 
@@ -193,9 +195,7 @@ WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType,
        WMFDecoderModule::HasAAC()) {
     return true;
   }
-  if ((aMimeType.EqualsLiteral("video/avc") ||
-       aMimeType.EqualsLiteral("video/mp4")) &&
-       WMFDecoderModule::HasH264()) {
+  if (MP4Decoder::IsH264(aMimeType) && WMFDecoderModule::HasH264()) {
     return true;
   }
   if (aMimeType.EqualsLiteral("audio/mpeg") &&
@@ -203,11 +203,11 @@ WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType,
     return true;
   }
   if (MediaPrefs::PDMWMFIntelDecoderEnabled() && sDXVAEnabled) {
-    if (aMimeType.EqualsLiteral("video/webm; codecs=vp8") &&
+    if (VPXDecoder::IsVP8(aMimeType) &&
         CanCreateWMFDecoder<CLSID_WebmMfVp8Dec>()) {
       return true;
     }
-    if (aMimeType.EqualsLiteral("video/webm; codecs=vp9") &&
+    if (VPXDecoder::IsVP9(aMimeType) &&
         CanCreateWMFDecoder<CLSID_WebmMfVp9Dec>()) {
       return true;
     }
@@ -220,9 +220,7 @@ WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType,
 PlatformDecoderModule::ConversionRequired
 WMFDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
-  if (aConfig.IsVideo() &&
-      (aConfig.mMimeType.EqualsLiteral("video/avc") ||
-       aConfig.mMimeType.EqualsLiteral("video/mp4"))) {
+  if (aConfig.IsVideo() && MP4Decoder::IsH264(aConfig.mMimeType)) {
     return kNeedAnnexB;
   } else {
     return kNeedNone;
