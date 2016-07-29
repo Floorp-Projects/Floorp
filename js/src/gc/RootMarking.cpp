@@ -325,22 +325,30 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
 {
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 
-    // Trace C stack roots.
     {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTERS);
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_STACK);
 
+        // Trace active interpreter and JIT stack roots.
+        MarkInterpreterActivations(rt, trc);
+        jit::MarkJitActivations(rt, trc);
+
+        // Trace legacy C stack roots.
         AutoGCRooter::traceAll(trc);
-
-        MarkExactStackRoots(rt, trc);
-        rt->markSelfHostingGlobal(trc);
 
         for (RootRange r = rootsHash.all(); !r.empty(); r.popFront()) {
             const RootEntry& entry = r.front();
             TraceRoot(trc, entry.key(), entry.value());
         }
 
-        MarkPersistentRooted(rt, trc);
+        // Trace C stack roots.
+        MarkExactStackRoots(rt, trc);
     }
+
+    // Trace runtime global roots.
+    MarkPersistentRooted(rt, trc);
+
+    // Trace the self-hosting global compartment.
+    rt->markSelfHostingGlobal(trc);
 
     // Trace the atoms Compartment.
     if (!rt->isHeapMinorCollecting()) {
@@ -366,10 +374,6 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
     // marked via the parent pointer if traceRoots actually traces anything.
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
         c->traceRoots(trc, traceOrMark);
-
-    // Trace JS stack roots.
-    MarkInterpreterActivations(rt, trc);
-    jit::MarkJitActivations(rt, trc);
 
     // Trace SPS.
     rt->spsProfiler.trace(trc);
