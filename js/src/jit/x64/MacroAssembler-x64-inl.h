@@ -257,10 +257,37 @@ MacroAssembler::sub64(Imm64 imm, Register64 dest)
 }
 
 void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest, const Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    mul64(imm, dest);
+}
+
+void
 MacroAssembler::mul64(Imm64 imm, const Register64& dest)
 {
     movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
     imulq(ScratchReg, dest.reg);
+}
+
+void
+MacroAssembler::mul64(const Register64& src, const Register64& dest, const Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    mul64(Operand(src.reg), dest);
+}
+
+void
+MacroAssembler::mul64(const Operand& src, const Register64& dest)
+{
+    imulq(src, dest.reg);
+}
+
+void
+MacroAssembler::mul64(const Operand& src, const Register64& dest, const Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    mul64(src, dest);
 }
 
 void
@@ -286,6 +313,12 @@ MacroAssembler::inc64(AbsoluteAddress dest)
         mov(ImmPtr(dest.addr), scratch);
         addPtr(Imm32(1), Address(scratch, 0));
     }
+}
+
+void
+MacroAssembler::neg64(Register64 reg)
+{
+    negq(reg.reg);
 }
 
 // ===============================================================

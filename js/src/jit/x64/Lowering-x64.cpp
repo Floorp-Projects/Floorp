@@ -48,6 +48,26 @@ LIRGeneratorX64::tempToUnbox()
 }
 
 void
+LIRGeneratorX64::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
+                                  MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    ins->setInt64Operand(INT64_PIECES,
+                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    defineInt64ReuseInput(ins, mir, 0);
+}
+
+void
+LIRGeneratorX64::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    // X64 doesn't need a temp for 64bit multiplication.
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    ins->setInt64Operand(INT64_PIECES,
+                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    defineInt64ReuseInput(ins, mir, 0);
+}
+
+void
 LIRGeneratorX64::visitBox(MBox* box)
 {
     MDefinition* opd = box->getOperand(0);
