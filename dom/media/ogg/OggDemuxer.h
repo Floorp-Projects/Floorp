@@ -274,14 +274,18 @@ private:
   SkeletonState* mSkeletonState;
 
   // Ogg decoding state.
-  struct OggStateContext {
-    explicit OggStateContext(MediaResource* aResource) : mResource(aResource) {}
+  struct OggStateContext
+  {
+    explicit OggStateContext(MediaResource* aResource)
+    : mResource(aResource), mNeedKeyframe(true) {}
     nsAutoOggSyncState mOggState;
     MediaResourceIndex mResource;
     Maybe<media::TimeUnit> mStartTime;
+    bool mNeedKeyframe;
   };
 
-  ogg_sync_state* OggState(TrackInfo::TrackType aType);
+  OggStateContext& OggState(TrackInfo::TrackType aType);
+  ogg_sync_state* OggSyncState(TrackInfo::TrackType aType);
   MediaResourceIndex* Resource(TrackInfo::TrackType aType);
   MediaResourceIndex* CommonResource();
   OggStateContext mAudioOggState;
