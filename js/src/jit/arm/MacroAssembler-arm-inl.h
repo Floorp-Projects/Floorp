@@ -385,6 +385,43 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
 }
 
 void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest, const Register temp)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(src));                                  (1)
+    // HIGH32 = LOW(HIGH(dest) * LOW(src)) [multiply src into upper bits]   (2)
+    //        + LOW(LOW(dest) * HIGH(src)) [multiply dest into upper bits]  (3)
+    //        + HIGH(LOW(dest) * LOW(src)) [carry]                          (4)
+
+    MOZ_ASSERT(temp != dest.high && temp != dest.low);
+
+    // Compute mul64
+    ma_mul(dest.high, imm.low(), dest.high); // (2)
+    ma_mul(dest.low, imm.hi(), temp); // (3)
+    ma_add(dest.high, temp, temp);
+    ma_umull(dest.low, imm.low(), dest.high, dest.low); // (4) + (1)
+    ma_add(temp, dest.high, dest.high);
+}
+
+void
+MacroAssembler::mul64(const Register64& src, const Register64& dest, const Register temp)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(src));                                  (1)
+    // HIGH32 = LOW(HIGH(dest) * LOW(src)) [multiply src into upper bits]   (2)
+    //        + LOW(LOW(dest) * HIGH(src)) [multiply dest into upper bits]  (3)
+    //        + HIGH(LOW(dest) * LOW(src)) [carry]                          (4)
+
+    MOZ_ASSERT(dest != src);
+    MOZ_ASSERT(dest.low != src.high && dest.high != src.low);
+
+    // Compute mul64
+    ma_mul(dest.high, src.low, dest.high); // (2)
+    ma_mul(src.high, dest.low, temp); // (3)
+    ma_add(dest.high, temp, temp);
+    ma_umull(dest.low, src.low, dest.high, dest.low); // (4) + (1)
+    ma_add(temp, dest.high, dest.high);
+}
+
+void
 MacroAssembler::mulBy3(Register src, Register dest)
 {
     as_add(dest, src, lsl(src, 1));
@@ -463,6 +500,13 @@ void
 MacroAssembler::neg32(Register reg)
 {
     ma_neg(reg, reg, SetCC);
+}
+
+void
+MacroAssembler::neg64(Register64 reg)
+{
+    ma_rsb(Imm32(0), reg.low, SetCC);
+    ma_rsc(Imm32(0), reg.high);
 }
 
 void

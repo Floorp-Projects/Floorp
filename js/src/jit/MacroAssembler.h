@@ -790,9 +790,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void mul64(const Operand& src, const Register64& dest, const Register temp)
         DEFINED_ON(x64);
     inline void mul64(Imm64 imm, const Register64& dest) PER_ARCH;
-    inline void mul64(Imm64 imm, const Register64& dest, const Register temp) DEFINED_ON(x86, x64);
+    inline void mul64(Imm64 imm, const Register64& dest, const Register temp)
+        DEFINED_ON(x86, x64, arm);
     inline void mul64(const Register64& src, const Register64& dest, const Register temp)
-        DEFINED_ON(x86, x64);
+        DEFINED_ON(x86, x64, arm);
 
     inline void mulBy3(Register src, Register dest) PER_ARCH;
 
@@ -824,7 +825,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void dec32(RegisterOrInt32Constant* key);
 
     inline void neg32(Register reg) PER_SHARED_ARCH;
-    inline void neg64(Register64 reg) DEFINED_ON(x86, x64);
+    inline void neg64(Register64 reg) DEFINED_ON(x86, x64, arm);
 
     inline void negateFloat(FloatRegister reg) PER_SHARED_ARCH;
 

@@ -901,6 +901,20 @@ MacroAssemblerARM::ma_check_mul(Register src1, Imm32 imm, Register dest, Conditi
 }
 
 void
+MacroAssemblerARM::ma_umull(Register src1, Imm32 imm, Register destHigh, Register destLow)
+{
+    ScratchRegisterScope scratch(asMasm());
+    ma_mov(imm, scratch);
+    as_umull(destHigh, destLow, src1, scratch);
+}
+
+void
+MacroAssemblerARM::ma_umull(Register src1, Register src2, Register destHigh, Register destLow)
+{
+    as_umull(destHigh, destLow, src1, src2);
+}
+
+void
 MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, Register tmp,
                                int32_t shift)
 {

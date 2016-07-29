@@ -205,7 +205,23 @@ LIRGeneratorARM::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIE
 void
 LIRGeneratorARM::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs)
 {
-    MOZ_CRASH("NYI");
+    bool constantNeedTemp = true;
+    if (rhs->isConstant()) {
+        int64_t constant = rhs->toConstant()->toInt64();
+        int32_t shift = mozilla::FloorLog2(constant);
+        // See special cases in CodeGeneratorARM::visitMulI64
+        if (constant >= -1 && constant <= 2)
+            constantNeedTemp = false;
+        if (int64_t(1) << shift == constant)
+            constantNeedTemp = false;
+    }
+
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    ins->setInt64Operand(INT64_PIECES,
+                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    if (constantNeedTemp)
+        ins->setTemp(0, temp());
+    defineInt64ReuseInput(ins, mir, 0);
 }
 
 void
