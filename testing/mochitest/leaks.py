@@ -232,6 +232,10 @@ class LSANLeaks(object):
             self.logger.warning(
                 "TEST-UNEXPECTED-FAIL | LeakSanitizer | LeakSanitizer has encountered a fatal error.")
 
+        if self.foundFrames:
+            self.logger.info("TEST-INFO | LeakSanitizer | To show the addresses of leaked objects add report_objects=1 to LSAN_OPTIONS")
+            self.logger.info("TEST-INFO | LeakSanitizer | This can be done in testing/mozbase/mozrunner/mozrunner/utils.py")
+
         for f in self.foundFrames:
             self.logger.warning(
                 "TEST-UNEXPECTED-FAIL | LeakSanitizer | leak at " + f)
