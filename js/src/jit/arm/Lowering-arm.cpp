@@ -511,7 +511,15 @@ LIRGeneratorARM::lowerUrshD(MUrsh* mir)
 void
 LIRGeneratorARM::visitAsmSelect(MAsmSelect* ins)
 {
-    MOZ_ASSERT(ins->type() != MIRType::Int64);
+    if (ins->type() == MIRType::Int64) {
+        auto* lir = new(alloc()) LAsmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
+                                               useInt64(ins->falseExpr()),
+                                               useRegister(ins->condExpr())
+                                              );
+
+        defineInt64ReuseInput(lir, ins, LAsmSelectI64::TrueExprIndex);
+        return;
+    }
 
     auto* lir = new(alloc()) LAsmSelect(useRegisterAtStart(ins->trueExpr()),
                                         useRegister(ins->falseExpr()),

@@ -170,6 +170,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitBitOpI64(LBitOpI64* lir);
     virtual void visitRotateI64(LRotateI64* lir);
     virtual void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* lir);
+    virtual void visitAsmSelectI64(LAsmSelectI64* lir);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
