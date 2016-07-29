@@ -12,7 +12,7 @@ using namespace mozilla;
 TEST(NSPRLogModulesParser, Empty)
 {
   bool callbackInvoked = false;
-  auto callback = [&](const char*, mozilla::LogLevel) mutable { callbackInvoked = true; };
+  auto callback = [&](const char*, mozilla::LogLevel, int32_t) mutable { callbackInvoked = true; };
 
   mozilla::NSPRLogModulesParser(nullptr, callback);
   EXPECT_FALSE(callbackInvoked);
@@ -25,7 +25,7 @@ TEST(NSPRLogModulesParser, DefaultLevel)
 {
   bool callbackInvoked = false;
   auto callback =
-      [&](const char* aName, mozilla::LogLevel aLevel) {
+      [&](const char* aName, mozilla::LogLevel aLevel, int32_t) {
         EXPECT_STREQ("Foo", aName);
         EXPECT_EQ(mozilla::LogLevel::Error, aLevel);
         callbackInvoked = true;
@@ -57,7 +57,7 @@ TEST(NSPRLogModulesParser, LevelSpecified)
   for (size_t i = 0; i < MOZ_ARRAY_LENGTH(expected); i++) {
     bool callbackInvoked = false;
     mozilla::NSPRLogModulesParser(currTest->first,
-        [&](const char* aName, mozilla::LogLevel aLevel) {
+        [&](const char* aName, mozilla::LogLevel aLevel, int32_t) {
           EXPECT_STREQ("Foo", aName);
           EXPECT_EQ(currTest->second, aLevel);
           callbackInvoked = true;
@@ -83,7 +83,7 @@ TEST(NSPRLogModulesParser, Multiple)
 
   size_t count = 0;
   mozilla::NSPRLogModulesParser("timestamp,Foo:3, Bar,Baz:2,    Qux:5",
-      [&](const char* aName, mozilla::LogLevel aLevel) mutable {
+      [&](const char* aName, mozilla::LogLevel aLevel, int32_t) mutable {
         ASSERT_LT(count, kExpectedCount);
         EXPECT_STREQ(currTest->first, aName);
         EXPECT_EQ(currTest->second, aLevel);
@@ -92,4 +92,19 @@ TEST(NSPRLogModulesParser, Multiple)
      });
 
   EXPECT_EQ(kExpectedCount, count);
+}
+
+TEST(NSPRLogModulesParser, RawArg)
+{
+  bool callbackInvoked = false;
+  auto callback =
+    [&](const char* aName, mozilla::LogLevel aLevel, int32_t aRawValue) {
+    EXPECT_STREQ("Foo", aName);
+    EXPECT_EQ(mozilla::LogLevel::Verbose, aLevel);
+    EXPECT_EQ(1000, aRawValue);
+    callbackInvoked = true;
+  };
+
+  mozilla::NSPRLogModulesParser("Foo:1000", callback);
+  EXPECT_TRUE(callbackInvoked);
 }
