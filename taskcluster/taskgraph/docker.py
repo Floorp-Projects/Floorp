@@ -11,6 +11,7 @@ import os
 import subprocess
 import tarfile
 import urllib2
+import which
 
 from taskgraph.util import docker
 
@@ -69,6 +70,15 @@ def build_image(name):
 
     Output from image building process will be printed to stdout.
     """
+    docker_bin = which.which('docker')
+
+    # Verify that Docker is working.
+    try:
+        subprocess.check_output([docker_bin, '--version'])
+    except subprocess.CalledProcessError:
+        raise Exception('Docker server is unresponsive. Run `docker ps` and '
+                        'check that Docker is running')
+
     args = [os.path.join(IMAGE_DIR, 'build.sh'), name]
     res = subprocess.call(args, cwd=IMAGE_DIR)
     if res:
