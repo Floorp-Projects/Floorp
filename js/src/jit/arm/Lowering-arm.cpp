@@ -404,13 +404,43 @@ LIRGeneratorARM::lowerModI(MMod* mod)
 void
 LIRGeneratorARM::lowerDivI64(MDiv* div)
 {
-    MOZ_CRASH("NYI");
+    if (div->isUnsigned()) {
+        lowerUDivI64(div);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64RegisterAtStart(div->lhs()),
+                                                  useInt64RegisterAtStart(div->rhs()));
+    defineReturn(lir, div);
 }
 
 void
 LIRGeneratorARM::lowerModI64(MMod* mod)
 {
-    MOZ_CRASH("NYI");
+    if (mod->isUnsigned()) {
+        lowerUModI64(mod);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64RegisterAtStart(mod->lhs()),
+                                                  useInt64RegisterAtStart(mod->rhs()));
+    defineReturn(lir, mod);
+}
+
+void
+LIRGeneratorARM::lowerUDivI64(MDiv* div)
+{
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64RegisterAtStart(div->lhs()),
+                                                    useInt64RegisterAtStart(div->rhs()));
+    defineReturn(lir, div);
+}
+
+void
+LIRGeneratorARM::lowerUModI64(MMod* mod)
+{
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64RegisterAtStart(mod->lhs()),
+                                                    useInt64RegisterAtStart(mod->rhs()));
+    defineReturn(lir, mod);
 }
 
 void

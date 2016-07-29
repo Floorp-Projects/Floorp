@@ -82,6 +82,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void lowerModI(MMod* mod);
     void lowerDivI64(MDiv* div);
     void lowerModI64(MMod* mod);
+    void lowerUDivI64(MDiv* div);
+    void lowerUModI64(MMod* mod);
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerUDiv(MDiv* div);
     void lowerUMod(MMod* mod);

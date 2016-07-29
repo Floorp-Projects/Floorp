@@ -820,6 +820,90 @@ MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs,
 }
 
 void
+MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* label)
+{
+    Label fail;
+
+    switch(cond) {
+      case Assembler::Equal:
+        branch32(Assembler::NotEqual, lhs.low, val.low(), &fail);
+        branch32(Assembler::Equal, lhs.high, val.hi(), label);
+        break;
+      case Assembler::NotEqual:
+        branch32(Assembler::NotEqual, lhs.low, val.low(), label);
+        branch32(Assembler::NotEqual, lhs.high, val.hi(), label);
+        break;
+      case Assembler::LessThan:
+      case Assembler::LessThanOrEqual:
+      case Assembler::GreaterThan:
+      case Assembler::GreaterThanOrEqual:
+      case Assembler::Below:
+      case Assembler::BelowOrEqual:
+      case Assembler::Above:
+      case Assembler::AboveOrEqual: {
+        Assembler::Condition cond1 = Assembler::ConditionWithoutEqual(cond);
+        Assembler::Condition cond2 =
+            Assembler::ConditionWithoutEqual(Assembler::InvertCondition(cond));
+        Assembler::Condition cond3 = Assembler::UnsignedCondition(cond);
+
+        cmp32(lhs.high, val.hi());
+        ma_b(label, cond1);
+        ma_b(&fail, cond2);
+        cmp32(lhs.low, val.low());
+        ma_b(label, cond3);
+        break;
+      }
+      default:
+        MOZ_CRASH("Condition code not supported");
+        break;
+    }
+
+    bind(&fail);
+}
+
+void
+MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* label)
+{
+    Label fail;
+
+    switch(cond) {
+      case Assembler::Equal:
+        branch32(Assembler::NotEqual, lhs.low, rhs.low, &fail);
+        branch32(Assembler::Equal, lhs.high, rhs.high, label);
+        break;
+      case Assembler::NotEqual:
+        branch32(Assembler::NotEqual, lhs.low, rhs.low, label);
+        branch32(Assembler::NotEqual, lhs.high, rhs.high, label);
+        break;
+      case Assembler::LessThan:
+      case Assembler::LessThanOrEqual:
+      case Assembler::GreaterThan:
+      case Assembler::GreaterThanOrEqual:
+      case Assembler::Below:
+      case Assembler::BelowOrEqual:
+      case Assembler::Above:
+      case Assembler::AboveOrEqual: {
+        Assembler::Condition cond1 = Assembler::ConditionWithoutEqual(cond);
+        Assembler::Condition cond2 =
+            Assembler::ConditionWithoutEqual(Assembler::InvertCondition(cond));
+        Assembler::Condition cond3 = Assembler::UnsignedCondition(cond);
+
+        cmp32(lhs.high, rhs.high);
+        ma_b(label, cond1);
+        ma_b(&fail, cond2);
+        cmp32(lhs.low, rhs.low);
+        ma_b(label, cond3);
+        break;
+      }
+      default:
+        MOZ_CRASH("Condition code not supported");
+        break;
+    }
+
+    bind(&fail);
+}
+
+void
 MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
 {
     branch32(cond, lhs, rhs, label);

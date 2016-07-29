@@ -3101,3 +3101,91 @@ CodeGeneratorARM::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
     else
         masm.ma_asr(Imm32(31), output.low, output.high);
 }
+
+void
+CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
+{
+    Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
+    Register64 rhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Rhs));
+    Register64 output = ToOutRegister64(lir);
+
+    MOZ_ASSERT(output == ReturnReg64);
+
+    // All inputs are useAtStart for a call instruction. As a result we cannot
+    // ask for a non-aliasing temp. Using the following to get such a temp.
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(lhs.low);
+    regs.take(lhs.high);
+    regs.take(rhs.low);
+    regs.take(rhs.high);
+    Register temp = regs.takeAny();
+
+    Label done;
+
+    // Handle divide by zero.
+    if (lir->canBeDivideByZero())
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, wasm::JumpTarget::IntegerDivideByZero);
+
+    // Handle an integer overflow exception from INT64_MIN / -1.
+    if (lir->canBeNegativeOverflow()) {
+        Label notmin;
+        masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notmin);
+        masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notmin);
+        if (lir->mir()->isMod())
+            masm.xor64(output, output);
+        else
+            masm.jump(wasm::JumpTarget::IntegerOverflow);
+        masm.jump(&done);
+        masm.bind(&notmin);
+    }
+
+    masm.setupUnalignedABICall(temp);
+    masm.passABIArg(lhs.high);
+    masm.passABIArg(lhs.low);
+    masm.passABIArg(rhs.high);
+    masm.passABIArg(rhs.low);
+
+    MOZ_ASSERT(gen->compilingAsmJS());
+    if (lir->mir()->isMod())
+        masm.callWithABI(wasm::SymbolicAddress::ModI64);
+    else
+        masm.callWithABI(wasm::SymbolicAddress::DivI64);
+
+    MOZ_ASSERT(ReturnReg64 == output);
+
+    masm.bind(&done);
+}
+
+void
+CodeGeneratorARM::visitUDivOrModI64(LUDivOrModI64* lir)
+{
+    Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
+    Register64 rhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Rhs));
+
+    MOZ_ASSERT(ToOutRegister64(lir) == ReturnReg64);
+
+    // All inputs are useAtStart for a call instruction. As a result we cannot
+    // ask for a non-aliasing temp. Using the following to get such a temp.
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(lhs.low);
+    regs.take(lhs.high);
+    regs.take(rhs.low);
+    regs.take(rhs.high);
+    Register temp = regs.takeAny();
+
+    // Prevent divide by zero.
+    if (lir->canBeDivideByZero())
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, wasm::JumpTarget::IntegerDivideByZero);
+
+    masm.setupUnalignedABICall(temp);
+    masm.passABIArg(lhs.high);
+    masm.passABIArg(lhs.low);
+    masm.passABIArg(rhs.high);
+    masm.passABIArg(rhs.low);
+
+    MOZ_ASSERT(gen->compilingAsmJS());
+    if (lir->mir()->isMod())
+        masm.callWithABI(wasm::SymbolicAddress::UModI64);
+    else
+        masm.callWithABI(wasm::SymbolicAddress::UDivI64);
+}
