@@ -16,7 +16,7 @@ const TEST_THRESHOLD = {
 };
 
 const ADDON_ROLLOUT_POLICY = {
-  // per-channel policies go here
+  "beta"    : "2a", // Set 2 + any WebExtension
 };
 
 const PREF_COHORT_SAMPLE       = "e10s.rollout.cohortSample";
