@@ -32,8 +32,6 @@ static GtkWidget* gComboBoxEntryArrowWidget;
 static GtkWidget* gTabWidget;
 static GtkWidget* gImageMenuItemWidget;
 static GtkWidget* gCheckMenuItemWidget;
-static GtkWidget* gHPanedWidget;
-static GtkWidget* gVPanedWidget;
 
 static style_prop_t style_prop_func;
 static gboolean have_arrow_scaling;
@@ -83,26 +81,6 @@ setup_widget_prototype(GtkWidget* widget)
         gProtoLayout = GetWidget(MOZ_GTK_WINDOW_CONTAINER);
     }
     gtk_container_add(GTK_CONTAINER(gProtoLayout), widget);
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_hpaned_widget()
-{
-    if (!gHPanedWidget) {
-        gHPanedWidget = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
-        setup_widget_prototype(gHPanedWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_vpaned_widget()
-{
-    if (!gVPanedWidget) {
-        gVPanedWidget = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
-        setup_widget_prototype(gVPanedWidget);
-    }
     return MOZ_GTK_SUCCESS;
 }
 
@@ -485,15 +463,14 @@ moz_gtk_button_get_default_border(gint* border_top, gint* border_left,
 gint
 moz_gtk_splitter_get_metrics(gint orientation, gint* size)
 {
+    GtkStyleContext *style;
     if (orientation == GTK_ORIENTATION_HORIZONTAL) {
-        ensure_hpaned_widget();
-        gtk_style_context_get_style(gtk_widget_get_style_context(gHPanedWidget),
-                                    "handle_size", size, NULL);
+        style = ClaimStyleContext(MOZ_GTK_SPLITTER_HORIZONTAL);
     } else {
-        ensure_vpaned_widget();
-        gtk_style_context_get_style(gtk_widget_get_style_context(gVPanedWidget),
-                                    "handle_size", size, NULL);
+        style = ClaimStyleContext(MOZ_GTK_SPLITTER_VERTICAL);
     }
+    gtk_style_context_get_style(style, "handle_size", size, NULL);
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1020,17 +997,13 @@ static gint
 moz_gtk_hpaned_paint(cairo_t *cr, GdkRectangle* rect,
                      GtkWidgetState* state)
 {
-    GtkStyleContext* style;
-    
-    ensure_hpaned_widget();
-    style = gtk_widget_get_style_context(gHPanedWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_PANE_SEPARATOR);
-    gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
+    GtkStyleContext* style =
+        ClaimStyleContext(MOZ_GTK_SPLITTER_SEPARATOR_HORIZONTAL,
+                          GTK_TEXT_DIR_LTR,
+                          GetStateFlagsFromGtkWidgetState(state));
     gtk_render_handle(style, cr,
                       rect->x, rect->y, rect->width, rect->height);
-    gtk_style_context_restore(style);
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1038,17 +1011,13 @@ static gint
 moz_gtk_vpaned_paint(cairo_t *cr, GdkRectangle* rect,
                      GtkWidgetState* state)
 {
-    GtkStyleContext* style;
-
-    ensure_vpaned_widget();
-    style = gtk_widget_get_style_context(gVPanedWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_PANE_SEPARATOR);
-    gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
+    GtkStyleContext* style =
+        ClaimStyleContext(MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL,
+                          GTK_TEXT_DIR_LTR,
+                          GetStateFlagsFromGtkWidgetState(state));
     gtk_render_handle(style, cr,
                       rect->x, rect->y, rect->width, rect->height);                     
-    gtk_style_context_restore(style);
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -2977,8 +2946,6 @@ moz_gtk_shutdown()
     gTabWidget = NULL;
     gImageMenuItemWidget = NULL;
     gCheckMenuItemWidget = NULL;
-    gHPanedWidget = NULL;
-    gVPanedWidget = NULL;
 
     is_initialized = FALSE;
 
