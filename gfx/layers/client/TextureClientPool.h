@@ -48,6 +48,8 @@ public:
                     gfx::SurfaceFormat aFormat,
                     gfx::IntSize aSize,
                     TextureFlags aFlags,
+                    uint32_t aShrinkTimeoutMsec,
+                    uint32_t aClearTimeoutMsec,
                     uint32_t aInitialPoolSize,
                     uint32_t aPoolUnusedSize,
                     TextureForwarder* aAllocator);
@@ -114,6 +116,9 @@ private:
   /// Allocate a single TextureClient to be returned from the pool.
   void AllocateTextureClient();
 
+  /// Reset and/or initialise timers for shrinking/clearing the pool.
+  void ResetTimers();
+
   /// Backend passed to the TextureClient for buffer creation.
   LayersBackend mBackend;
 
@@ -125,6 +130,14 @@ private:
 
   /// Flags passed to the TextureClient for buffer creation.
   const TextureFlags mFlags;
+
+  /// How long to wait after a TextureClient is returned before trying
+  /// to shrink the pool to its maximum size of mPoolUnusedSize.
+  uint32_t mShrinkTimeoutMsec;
+
+  /// How long to wait after a TextureClient is returned before trying
+  /// to clear the pool.
+  uint32_t mClearTimeoutMsec;
 
   // The initial number of unused texture clients to seed the pool with
   // on construction
@@ -145,7 +158,8 @@ private:
   std::stack<RefPtr<TextureClient> > mTextureClients;
 
   std::list<RefPtr<TextureClient>> mTextureClientsDeferred;
-  RefPtr<nsITimer> mTimer;
+  RefPtr<nsITimer> mShrinkTimer;
+  RefPtr<nsITimer> mClearTimer;
   // This mSurfaceAllocator owns us, so no need to hold a ref to it
   TextureForwarder* mSurfaceAllocator;
 
