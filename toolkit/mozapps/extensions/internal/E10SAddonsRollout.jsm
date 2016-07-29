@@ -30,10 +30,6 @@ const ADDONS = {
     id: "jid1-F9UJ2thwoAm5gQ@jetpack", minVersion: "1.3.0.1",
   },
 
-  "Flashblock": { // Flashblock
-    id: "{3d7eb24f-2740-49df-8937-200b1cc08f8a}", minVersion: "1.5.20",
-  },
-
   "ABP": { // Adblock Plus
     id: "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}", minVersion: "2.7.3",
   },
@@ -70,7 +66,6 @@ const set2 = [ADDONS.Greasemonkey,
               ADDONS.DYTV,
               ADDONS.VDH,
               ADDONS.Lightbeam,
-              ADDONS.Flashblock,
               ADDONS.ABP,
               ADDONS.uBlockOrigin,
               ADDONS.Emoji,
