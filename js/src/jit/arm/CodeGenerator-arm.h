@@ -158,6 +158,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitTruncateFToInt32(LTruncateFToInt32* ins);
 
     virtual void visitWrapInt64ToInt32(LWrapInt64ToInt32* lir);
+    virtual void visitExtendInt32ToInt64(LExtendInt32ToInt64* lir);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);

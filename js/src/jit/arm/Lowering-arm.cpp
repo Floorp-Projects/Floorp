@@ -887,5 +887,12 @@ LIRGeneratorARM::visitCopySign(MCopySign* ins)
 void
 LIRGeneratorARM::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
 {
-    MOZ_CRASH("NYI");
+    auto* lir = new(alloc()) LExtendInt32ToInt64(useRegisterAtStart(ins->input()));
+    defineInt64(lir, ins);
+
+    LDefinition def(LDefinition::GENERAL, LDefinition::MUST_REUSE_INPUT);
+    def.setReusedInput(0);
+    def.setVirtualRegister(ins->virtualRegister());
+
+    lir->setDef(0, def);
 }
