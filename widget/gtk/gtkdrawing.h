@@ -204,10 +204,14 @@ typedef enum {
   MOZ_GTK_CHECKMENUITEM,
   MOZ_GTK_RADIOMENUITEM,
   MOZ_GTK_MENUSEPARATOR,
-  /* Paints a GtkVPaned separator */
+  /* GtkVPaned base class */
   MOZ_GTK_SPLITTER_HORIZONTAL,
-  /* Paints a GtkHPaned separator */
+  /* GtkHPaned base class */
   MOZ_GTK_SPLITTER_VERTICAL,
+  /* Paints a GtkVPaned separator */
+  MOZ_GTK_SPLITTER_SEPARATOR_HORIZONTAL,
+  /* Paints a GtkHPaned separator */
+  MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL,
   /* Paints the background of a window, dialog or page. */
   MOZ_GTK_WINDOW,
   /* Window container for all widgets */
