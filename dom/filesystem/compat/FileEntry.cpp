@@ -75,6 +75,16 @@ void
 FileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
   mFile->GetPath(aPath);
+  if (aPath.IsEmpty()) {
+    // We're under the root directory. webkitRelativePath
+    // (implemented as GetPath) is for cases when file is selected because its
+    // ancestor directory is selected. But that is not the case here, so need to
+    // manually prepend '/'.
+    nsAutoString name;
+    mFile->GetName(name);
+    aPath.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+    aPath.Append(name);
+  }
 }
 
 void
