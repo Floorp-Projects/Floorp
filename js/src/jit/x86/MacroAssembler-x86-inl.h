@@ -472,6 +472,79 @@ MacroAssembler::rshift64Arithmetic(Register shift, Register64 srcDest)
 }
 
 // ===============================================================
+// Rotation functions
+
+void
+MacroAssembler::rotateLeft64(Register count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(src == dest, "defineReuseInput");
+    MOZ_ASSERT(count == ecx, "defineFixed(ecx)");
+
+    Label done;
+
+    movl(dest.high, temp);
+    shldl_cl(dest.low, dest.high);
+    shldl_cl(temp, dest.low);
+
+    testl(Imm32(0x20), count);
+    j(Condition::Equal, &done);
+    xchgl(dest.high, dest.low);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::rotateRight64(Register count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(src == dest, "defineReuseInput");
+    MOZ_ASSERT(count == ecx, "defineFixed(ecx)");
+
+    Label done;
+
+    movl(dest.high, temp);
+    shrdl_cl(dest.low, dest.high);
+    shrdl_cl(temp, dest.low);
+
+    testl(Imm32(0x20), count);
+    j(Condition::Equal, &done);
+    xchgl(dest.high, dest.low);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::rotateLeft64(Imm32 count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(src == dest, "defineReuseInput");
+
+    int32_t amount = count.value & 0x3f;
+    if (amount % 0x1f != 0) {
+        movl(dest.high, temp);
+        shldl(Imm32(amount & 0x1f), dest.low, dest.high);
+        shldl(Imm32(amount & 0x1f), temp, dest.low);
+    }
+
+    if (!!(amount & 0x20))
+        xchgl(dest.high, dest.low);
+}
+
+void
+MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(src == dest, "defineReuseInput");
+
+    int32_t amount = count.value & 0x3f;
+    if ((amount & 0x1f) != 0) {
+        movl(dest.high, temp);
+        shrdl(Imm32(amount & 0x1f), dest.low, dest.high);
+        shrdl(Imm32(amount & 0x1f), temp, dest.low);
+    }
+
+    if (!!(amount & 0x20))
+        xchgl(dest.high, dest.low);
+}
+
+// ===============================================================
 // Branch functions
 
 void

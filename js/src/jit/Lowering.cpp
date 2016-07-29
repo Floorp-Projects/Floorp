@@ -1304,7 +1304,7 @@ LIRGenerator::visitRotate(MRotate* ins)
         auto* lir = new(alloc()) LRotate();
         lowerForShift(lir, ins, input, count);
     } else if (ins->type() == MIRType::Int64) {
-        auto* lir = new(alloc()) LRotate64();
+        auto* lir = new(alloc()) LRotateI64();
         lowerForShiftInt64(lir, ins, input, count);
     } else {
         MOZ_CRASH("unexpected type in visitRotate");
