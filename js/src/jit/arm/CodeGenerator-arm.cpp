@@ -2339,8 +2339,9 @@ CodeGeneratorARM::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
     }
 }
 
+template <typename T>
 void
-CodeGeneratorARM::visitWasmLoad(LWasmLoad* lir)
+CodeGeneratorARM::emitWasmLoad(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
@@ -2354,10 +2355,10 @@ CodeGeneratorARM::visitWasmLoad(LWasmLoad* lir)
     }
 
     Register ptr = ToRegister(lir->ptr());
-    AnyRegister output = ToAnyRegister(lir->output());
+    Scalar::Type type = mir->accessType();
 
     // Maybe add the offset.
-    if (offset) {
+    if (offset || type == Scalar::Int64) {
         Register ptrPlusOffset = ToRegister(lir->ptrCopy());
         masm.ma_add(Imm32(offset), ptrPlusOffset);
         ptr = ptrPlusOffset;
@@ -2365,24 +2366,53 @@ CodeGeneratorARM::visitWasmLoad(LWasmLoad* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    Scalar::Type type = mir->accessType();
-    bool isSigned = type == Scalar::Int8 || type == Scalar::Int16 || type == Scalar::Int32;
-    bool isFloat = output.isFloat();
-
+    bool isSigned = type == Scalar::Int8 || type == Scalar::Int16 || type == Scalar::Int32 ||
+                    type == Scalar::Int64;
     unsigned byteSize = mir->byteSize();
 
-    if (isFloat) {
-        MOZ_ASSERT((byteSize == 4) == output.fpu().isSingle());
-        ScratchRegisterScope scratch(masm);
-        masm.ma_add(HeapReg, ptr, scratch);
-        masm.ma_vldr(Address(scratch, 0), output.fpu());
+    if (mir->type() == MIRType::Int64) {
+        Register64 output = ToOutRegister64(lir);
+        if (type == Scalar::Int64) {
+            MOZ_ASSERT(INT64LOW_OFFSET == 0);
+            masm.ma_dataTransferN(IsLoad, 32, /* signed = */ false, HeapReg, ptr, output.low);
+            masm.ma_add(Imm32(INT64HIGH_OFFSET), ptr);
+            masm.ma_dataTransferN(IsLoad, 32, isSigned, HeapReg, ptr, output.high);
+        } else {
+            masm.ma_dataTransferN(IsLoad, byteSize * 8, isSigned, HeapReg, ptr, output.low);
+            if (isSigned)
+                masm.ma_asr(Imm32(31), output.low, output.high);
+            else
+                masm.ma_mov(Imm32(0), output.high);
+        }
     } else {
-        masm.ma_dataTransferN(IsLoad, byteSize * 8, isSigned, HeapReg, ptr, output.gpr());
+        AnyRegister output = ToAnyRegister(lir->output());
+        bool isFloat = output.isFloat();
+        if (isFloat) {
+            MOZ_ASSERT((byteSize == 4) == output.fpu().isSingle());
+            ScratchRegisterScope scratch(masm);
+            masm.ma_add(HeapReg, ptr, scratch);
+            masm.ma_vldr(Address(scratch, 0), output.fpu());
+        } else {
+            masm.ma_dataTransferN(IsLoad, byteSize * 8, isSigned, HeapReg, ptr, output.gpr());
+        }
     }
 }
 
 void
-CodeGeneratorARM::visitWasmStore(LWasmStore* lir)
+CodeGeneratorARM::visitWasmLoad(LWasmLoad* lir)
+{
+    emitWasmLoad(lir);
+}
+
+void
+CodeGeneratorARM::visitWasmLoadI64(LWasmLoadI64* lir)
+{
+    emitWasmLoad(lir);
+}
+
+template <typename T>
+void
+CodeGeneratorARM::emitWasmStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
@@ -2396,9 +2426,11 @@ CodeGeneratorARM::visitWasmStore(LWasmStore* lir)
     }
 
     Register ptr = ToRegister(lir->ptr());
+    unsigned byteSize = mir->byteSize();
+    Scalar::Type type = mir->accessType();
 
     // Maybe add the offset.
-    if (offset) {
+    if (offset || type == Scalar::Int64) {
         Register ptrPlusOffset = ToRegister(lir->ptrCopy());
         masm.ma_add(Imm32(offset), ptrPlusOffset);
         ptr = ptrPlusOffset;
@@ -2406,21 +2438,39 @@ CodeGeneratorARM::visitWasmStore(LWasmStore* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    AnyRegister value = ToAnyRegister(lir->value());
-    unsigned byteSize = mir->byteSize();
-    Scalar::Type type = mir->accessType();
+    if (type == Scalar::Int64) {
+        MOZ_ASSERT(INT64LOW_OFFSET == 0);
 
-    if (value.isFloat()) {
-        FloatRegister val = value.fpu();
-        MOZ_ASSERT((byteSize == 4) == val.isSingle());
-        ScratchRegisterScope scratch(masm);
-        masm.ma_add(HeapReg, ptr, scratch);
-        masm.ma_vstr(val, Address(scratch, 0));
+        Register64 value = ToRegister64(lir->getInt64Operand(lir->ValueIndex));
+        masm.ma_dataTransferN(IsStore, 32 /* bits */, /* signed */ false, HeapReg, ptr, value.low);
+        masm.ma_add(Imm32(INT64HIGH_OFFSET), ptr);
+        masm.ma_dataTransferN(IsStore, 32 /* bits */, /* signed */ true, HeapReg, ptr, value.high);
     } else {
-        bool isSigned = type == Scalar::Uint32 || type == Scalar::Int32; // see AsmJSStoreHeap;
-        Register val = value.gpr();
-        masm.ma_dataTransferN(IsStore, 8 * byteSize /* bits */, isSigned, HeapReg, ptr, val);
+        AnyRegister value = ToAnyRegister(lir->getOperand(lir->ValueIndex));
+        if (value.isFloat()) {
+            FloatRegister val = value.fpu();
+            MOZ_ASSERT((byteSize == 4) == val.isSingle());
+            ScratchRegisterScope scratch(masm);
+            masm.ma_add(HeapReg, ptr, scratch);
+            masm.ma_vstr(val, Address(scratch, 0));
+        } else {
+            bool isSigned = type == Scalar::Uint32 || type == Scalar::Int32; // see AsmJSStoreHeap;
+            Register val = value.gpr();
+            masm.ma_dataTransferN(IsStore, 8 * byteSize /* bits */, isSigned, HeapReg, ptr, val);
+        }
     }
+}
+
+void
+CodeGeneratorARM::visitWasmStore(LWasmStore* lir)
+{
+    emitWasmStore(lir);
+}
+
+void
+CodeGeneratorARM::visitWasmStoreI64(LWasmStoreI64* lir)
+{
+    emitWasmStore(lir);
 }
 
 void
@@ -2865,9 +2915,8 @@ void
 CodeGeneratorARM::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
 {
     const MWasmStoreGlobalVar* mir = ins->mir();
-    MIRType type = mir->value()->type();
     unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
-    MOZ_ASSERT (type == MIRType::Int64);
+    MOZ_ASSERT (mir->value()->type() == MIRType::Int64);
     Register64 input = ToRegister64(ins->value());
 
     masm.ma_dtr(IsStore, GlobalReg, Imm32(addr + INT64LOW_OFFSET), input.low);

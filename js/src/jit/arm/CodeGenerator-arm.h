@@ -96,6 +96,11 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
 
+    template <typename T>
+    void emitWasmLoad(T* ins);
+    template <typename T>
+    void emitWasmStore(T* ins);
+
   public:
     // Instruction visitors.
     virtual void visitMinMaxD(LMinMaxD* ins);
@@ -233,7 +238,9 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAsmJSCallI64(LAsmJSCallI64* ins);
     void visitWasmBoundsCheck(LWasmBoundsCheck* ins);
     void visitWasmLoad(LWasmLoad* ins);
+    void visitWasmLoadI64(LWasmLoadI64* ins);
     void visitWasmStore(LWasmStore* ins);
+    void visitWasmStoreI64(LWasmStoreI64* ins);
     void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
     void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
     void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
