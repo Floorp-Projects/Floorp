@@ -18,6 +18,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RuleProcessorCache.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 #include "nsIDocumentInlines.h"
 #include "nsRuleWalker.h"
 #include "nsStyleContext.h"
