@@ -27,11 +27,11 @@ task:
 
     command:
       - /home/worker/bin/checkout-gecko-and-run
-      - /home/worker/workspace/gecko
+      - /home/worker/checkouts/gecko
       - bash
       - -cx
       - >
-          cd /home/worker/workspace/gecko/testing/mozharness &&
+          cd /home/worker/checkouts/gecko/testing/mozharness &&
           /usr/bin/pip2 install tox &&
           /home/worker/.local/bin/tox -e py27-hg3.7
   extra:
