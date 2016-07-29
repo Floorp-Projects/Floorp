@@ -145,6 +145,11 @@ def generate_unicode_stuff(unicode_data, case_folding,
     table = [dummy]
     cache = {dummy: 0}
     index = [0] * (MAX + 1)
+    same_upper_map = {}
+    same_upper_dummy = (0, 0, 0)
+    same_upper_table = [same_upper_dummy]
+    same_upper_cache = {same_upper_dummy: 0}
+    same_upper_index = [0] * (MAX + 1)
     folding_map = {}
     rev_folding_map = {}
     folding_dummy = (0, 0, 0, 0)
@@ -172,6 +177,11 @@ def generate_unicode_stuff(unicode_data, case_folding,
 
         if uppercase:
             upper = int(uppercase, 16)
+
+            if upper not in same_upper_map:
+                same_upper_map[upper] = [code]
+            else:
+                same_upper_map[upper].append(code)
         else:
             upper = code
 
@@ -215,6 +225,36 @@ def generate_unicode_stuff(unicode_data, case_folding,
             cache[item] = i = len(table)
             table.append(item)
         index[code] = i
+
+    for code in range(0, MAX + 1):
+        entry = test_table.get(code)
+
+        if not entry:
+            continue
+
+        (upper, lower, name, alias) = entry
+
+        if upper not in same_upper_map:
+            continue
+
+        same_upper_ds = [v - code for v in same_upper_map[upper]]
+
+        assert len(same_upper_ds) <= 3
+        assert all([v > -65535 and v < 65535 for v in same_upper_ds])
+
+        same_upper = [v & 0xffff for v in same_upper_ds]
+        same_upper_0 = same_upper[0] if len(same_upper) >= 1 else 0
+        same_upper_1 = same_upper[1] if len(same_upper) >= 2 else 0
+        same_upper_2 = same_upper[2] if len(same_upper) >= 3 else 0
+
+        item = (same_upper_0, same_upper_1, same_upper_2)
+
+        i = same_upper_cache.get(item)
+        if i is None:
+            assert item not in same_upper_table
+            same_upper_cache[item] = i = len(same_upper_table)
+            same_upper_table.append(item)
+        same_upper_index[code] = i
 
     for row in read_case_folding(case_folding):
         code = row[0]
@@ -310,7 +350,7 @@ def generate_unicode_stuff(unicode_data, case_folding,
         entry = test_table.get(code)
 
         if entry:
-            upper, lower, name, alias = entry
+            (upper, lower, name, alias) = entry
             test_mapping.write('  [' + hex(upper) + ', ' + hex(lower) + '], /* ' +
                        name + (' (' + alias + ')' if alias else '') + ' */\n')
         else:
@@ -389,6 +429,11 @@ if (typeof reportCompare === "function")
     # Don't forget to update CharInfo in Unicode.cpp if you need to change this
     assert shift == 5
 
+    same_upper_index1, same_upper_index2, same_upper_shift = splitbins(same_upper_index)
+
+    # Don't forget to update CharInfo in Unicode.cpp if you need to change this
+    assert same_upper_shift == 6
+
     folding_index1, folding_index2, folding_shift = splitbins(folding_index)
 
     # Don't forget to update CharInfo in Unicode.cpp if you need to change this
@@ -402,6 +447,15 @@ if (typeof reportCompare === "function")
         idx = index2[(idx << shift) + (char & ((1 << shift) - 1))]
 
         assert test == table[idx]
+
+    # verify correctness
+    for char in same_upper_index:
+        test = same_upper_table[same_upper_index[char]]
+
+        idx = same_upper_index1[char >> same_upper_shift]
+        idx = same_upper_index2[(idx << same_upper_shift) + (char & ((1 << same_upper_shift) - 1))]
+
+        assert test == same_upper_table[idx]
 
     # verify correctness
     for char in folding_index:
@@ -495,6 +549,19 @@ if (typeof reportCompare === "function")
     dump(index1, 'index1', data_file)
     data_file.write('\n')
     dump(index2, 'index2', data_file)
+    data_file.write('\n')
+
+    data_file.write('const CodepointsWithSameUpperCaseInfo unicode::js_codepoints_with_same_upper_info[] = {\n')
+    for d in same_upper_table:
+        data_file.write('    {')
+        data_file.write(', '.join((str(e) for e in d)))
+        data_file.write('},\n')
+    data_file.write('};\n')
+    data_file.write('\n')
+
+    dump(same_upper_index1, 'codepoints_with_same_upper_index1', data_file)
+    data_file.write('\n')
+    dump(same_upper_index2, 'codepoints_with_same_upper_index2', data_file)
     data_file.write('\n')
 
     data_file.write('const FoldingInfo unicode::js_foldinfo[] = {\n')

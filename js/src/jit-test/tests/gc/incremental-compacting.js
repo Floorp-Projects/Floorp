@@ -27,11 +27,11 @@ function testCompacting(zoneCount, objectCount, sliceCount)
     }
 
     // Finish any alloc-triggered incremental GC
-    if (gcstate() !== "none")
+    if (gcstate() !== "NotActive")
         gc();
 
     startgc(sliceCount, "shrinking");
-    while (gcstate() !== "none") {
+    while (gcstate() !== "NotActive") {
         gcslice(sliceCount);
     }
 

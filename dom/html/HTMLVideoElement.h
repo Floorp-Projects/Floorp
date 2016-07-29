@@ -130,6 +130,9 @@ public:
 
   bool NotifyOwnerDocumentActivityChangedInternal() override;
 
+  // Gives access to the decoder's frame statistics, if present.
+  FrameStatistics* GetFrameStatistics();
+
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
 protected:

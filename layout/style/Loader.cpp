@@ -1294,7 +1294,7 @@ Loader::PrepareSheet(StyleSheetHandle aSheet,
 
   // XXXheycam Need to set media, title, etc. on ServoStyleSheets.
   if (aSheet->IsServo()) {
-    NS_ERROR("stylo: should set metadata on ServoStyleSheets");
+    NS_WARNING("stylo: should set metadata on ServoStyleSheets. See bug 1290209.");
     return;
   }
 
@@ -1976,7 +1976,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       }
 #endif
     } else {
-      NS_ERROR("stylo: not caching ServoStyleSheet");
+      NS_WARNING("stylo: Stylesheet caching not yet supported - see bug 1290218.");
     }
   }
 

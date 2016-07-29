@@ -6,7 +6,6 @@
 #define MediaEngineCameraVideoSource_h
 
 #include "MediaEngine.h"
-#include "MediaTrackConstraints.h"
 
 #include "nsDirectoryServiceDefs.h"
 
@@ -21,10 +20,10 @@ bool operator == (const webrtc::CaptureCapability& a,
 bool operator != (const webrtc::CaptureCapability& a,
                   const webrtc::CaptureCapability& b);
 
-class MediaEngineCameraVideoSource : public MediaEngineVideoSource,
-                                     protected MediaConstraintsHelper
+class MediaEngineCameraVideoSource : public MediaEngineVideoSource
 {
 public:
+  // Some subclasses use an index to track multiple instances.
   explicit MediaEngineCameraVideoSource(int aIndex,
                                         const char* aMonitorName = "Camera.Monitor")
     : MediaEngineVideoSource(kReleased)
@@ -33,11 +32,12 @@ public:
     , mHeight(0)
     , mInitDone(false)
     , mHasDirectListeners(false)
-    , mNrAllocations(0)
     , mCaptureIndex(aIndex)
     , mTrackID(0)
   {}
 
+  explicit MediaEngineCameraVideoSource(const char* aMonitorName = "Camera.Monitor")
+    : MediaEngineCameraVideoSource(0, aMonitorName) {}
 
   void GetName(nsAString& aName) const override;
   void GetUUID(nsACString& aUUID) const override;
@@ -114,7 +114,6 @@ protected:
 
   bool mInitDone;
   bool mHasDirectListeners;
-  int mNrAllocations; // When this becomes 0, we shut down HW
   int mCaptureIndex;
   TrackID mTrackID;
 

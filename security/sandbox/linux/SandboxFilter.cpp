@@ -674,6 +674,11 @@ public:
       return Allow();
 #endif
 
+#ifdef __NR_fadvise64_64
+    case __NR_fadvise64_64:
+      return Allow();
+#endif
+
     case __NR_fallocate:
       return Allow();
 

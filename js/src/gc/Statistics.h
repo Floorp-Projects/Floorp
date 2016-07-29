@@ -253,7 +253,7 @@ struct Statistics
                   double startTimestamp, size_t startFaults, gc::State initialState)
           : budget(budget), reason(reason),
             initialState(initialState),
-            finalState(gc::NO_INCREMENTAL),
+            finalState(gc::State::NotActive),
             resetReason(nullptr),
             start(start), startTimestamp(startTimestamp),
             startFaults(startFaults)

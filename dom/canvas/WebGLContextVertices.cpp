@@ -346,16 +346,10 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
         return JS::Int32Value(mBoundVertexArray->mAttribs[index].stride);
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
-        if (!mBoundVertexArray->mAttribs[index].enabled)
-            return JS::Int32Value(4);
-
         return JS::Int32Value(mBoundVertexArray->mAttribs[index].size);
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
-        if (!mBoundVertexArray->mAttribs[index].enabled)
-            return JS::NumberValue(uint32_t(LOCAL_GL_FLOAT));
-
-        return JS::NumberValue(uint32_t(mBoundVertexArray->mAttribs[index].type));
+        return JS::Int32Value(mBoundVertexArray->mAttribs[index].type);
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_INTEGER:
         if (IsWebGL2())
