@@ -4070,8 +4070,9 @@ MWrapInt64ToInt32::foldsTo(TempAllocator& alloc)
 {
     MDefinition* input = this->input();
     if (input->isConstant()) {
-        int64_t c = input->toConstant()->toInt64();
-        return MConstant::New(alloc, Int32Value(int32_t(c)));
+        uint64_t c = input->toConstant()->toInt64();
+        int32_t output = bottomHalf() ? int32_t(c) : int32_t(c >> 32);
+        return MConstant::New(alloc, Int32Value(output));
     }
 
     return this;

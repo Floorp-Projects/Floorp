@@ -4335,6 +4335,10 @@ class LWrapInt64ToInt32 : public LInstructionHelper<1, INT64_PIECES, 0>
     explicit LWrapInt64ToInt32(const LInt64Allocation& input) {
         setInt64Operand(Input, input);
     }
+
+    const MWrapInt64ToInt32* mir() {
+        return mir_->toWrapInt64ToInt32();
+    }
 };
 
 class LExtendInt32ToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0>
