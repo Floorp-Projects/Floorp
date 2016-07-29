@@ -437,7 +437,7 @@ XPCNativeSetKey::Hash() const
         // But "0 ^ x == x". So it does not matter.
         h = (js::HashNumber) NS_PTR_TO_INT32(mAddition) >> 2;
     } else {
-        XPCNativeInterface** Current = mBaseSet->GetInterfaceArray();
+        XPCNativeInterface** current = mBaseSet->GetInterfaceArray();
         uint16_t count = mBaseSet->GetInterfaceCount();
         if (mAddition) {
             count++;
@@ -445,11 +445,11 @@ XPCNativeSetKey::Hash() const
                 if (i == mPosition)
                     h ^= (js::HashNumber) NS_PTR_TO_INT32(mAddition) >> 2;
                 else
-                    h ^= (js::HashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
+                    h ^= (js::HashNumber) NS_PTR_TO_INT32(*(current++)) >> 2;
             }
         } else {
             for (uint16_t i = 0; i < count; i++)
-                h ^= (js::HashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
+                h ^= (js::HashNumber) NS_PTR_TO_INT32(*(current++)) >> 2;
         }
     }
 
