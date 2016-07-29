@@ -379,6 +379,16 @@ def valid_mt(path):
 set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
 
 
+# Ultimately, this will move to toolchain.configure and be turned into a
+# cross-platform check.
+option(env='LD', nargs=1, help='Path to the linker')
+
+link = check_prog('LINK', depends_win()(lambda: ('link.exe',)), input='LD',
+                  paths=vc_compiler_path)
+
+add_old_configure_assignment('LD', depends_win(link)(lambda x: x))
+
+
 # Normally, we'd just have CC, etc. set to absolute paths, but the build system
 # doesn't currently handle properly the case where the paths contain spaces.
 # Additionally, there's the issue described in toolchain.configure, in
