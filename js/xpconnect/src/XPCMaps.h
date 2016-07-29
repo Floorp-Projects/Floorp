@@ -413,6 +413,20 @@ public:
         return set;
     }
 
+    bool AddNew(const XPCNativeSetKey* key, XPCNativeSet* set)
+    {
+        XPCNativeSet* set2 = Add(key, set);
+        if (!set2) {
+            return false;
+        }
+#ifdef DEBUG
+        XPCNativeSetKey key2(set);
+        MOZ_ASSERT(key->Hash() == key2.Hash());
+        MOZ_ASSERT(set2 == set, "Should not have found an existing entry");
+#endif
+        return true;
+    }
+
     inline void Remove(XPCNativeSet* set)
     {
         MOZ_ASSERT(set, "bad param");
