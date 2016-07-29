@@ -515,6 +515,11 @@ private:
   // delta there.
   uint64_t mLastReportedNumDecodedFrames;
 
+  // Timestamp of the previous decoded keyframe, in microseconds.
+  int64_t mPreviousDecodedKeyframeTime_us;
+  // Default mLastDecodedKeyframeTime_us value, must be bigger than anything.
+  static const int64_t sNoPreviousDecodedKeyframe = INT64_MAX;
+
   layers::LayersBackend mLayersBackendType;
 
   // Metadata objects
@@ -546,18 +551,12 @@ private:
   void OnSeekFailed(TrackType aTrack, DemuxerFailureReason aFailure);
   void DoVideoSeek();
   void OnVideoSeekCompleted(media::TimeUnit aTime);
-  void OnVideoSeekFailed(DemuxerFailureReason aFailure)
-  {
-    OnSeekFailed(TrackType::kVideoTrack, aFailure);
-  }
+  void OnVideoSeekFailed(DemuxerFailureReason aFailure);
   bool mSeekScheduled;
 
   void DoAudioSeek();
   void OnAudioSeekCompleted(media::TimeUnit aTime);
-  void OnAudioSeekFailed(DemuxerFailureReason aFailure)
-  {
-    OnSeekFailed(TrackType::kAudioTrack, aFailure);
-  }
+  void OnAudioSeekFailed(DemuxerFailureReason aFailure);
   // The SeekTarget that was last given to Seek()
   SeekTarget mOriginalSeekTarget;
   // Temporary seek information while we wait for the data

@@ -50,6 +50,7 @@ static char *RCSSTRING __UNUSED__="$Id: transport_addr_reg.c,v 1.2 2008/04/28 17
 #endif
 #include <assert.h>
 #include "nr_api.h"
+#include "util.h"
 #include "transport_addr.h"
 #include "transport_addr_reg.h"
 

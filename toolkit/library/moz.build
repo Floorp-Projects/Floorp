@@ -363,5 +363,21 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'oleaut32',
     ]
 
+if CONFIG['COMPILE_ENVIRONMENT']:
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
+        full_libname = SHARED_LIBRARY_NAME
+    else:
+        full_libname = '%s%s%s' % (
+            CONFIG['DLL_PREFIX'],
+            LIBRARY_NAME,
+            CONFIG['DLL_SUFFIX']
+        )
+    GENERATED_FILES += ['dependentlibs.list']
+    GENERATED_FILES['dependentlibs.list'].script = 'dependentlibs.py:gen_list'
+    GENERATED_FILES['dependentlibs.list'].inputs = [
+        '!%s' % full_libname,
+    ]
+    FINAL_TARGET_FILES += ['!dependentlibs.list']
+
 # This needs to be last
 USE_LIBS += ['StaticXULComponentsEnd']

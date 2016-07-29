@@ -91,10 +91,6 @@
 
 /* Use smaller back button icon */
 @media (min-resolution: 2dppx) {
-  #back-button {
-    -moz-image-region: rect(0, 108px, 36px, 72px);
-  }
-
   #back-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 108px, 72px, 72px);
   }

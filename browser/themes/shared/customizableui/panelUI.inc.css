@@ -277,6 +277,10 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   border-radius: 3.5px;
 }
 
+panelview[id^=PanelUI-webext-] {
+  overflow: hidden;
+}
+
 panelview:not([mainview]) .toolbarbutton-text,
 .cui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;

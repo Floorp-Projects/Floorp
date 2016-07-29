@@ -2,8 +2,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!ENTITY ctrlTabRecentlyUsedOrder.label       "Ctrl+Tab cycles through tabs in recently used order">
+<!ENTITY ctrlTabRecentlyUsedOrder.accesskey   "T">
+
 <!ENTITY newWindowsAsTabs.label       "Open new windows in a new tab instead">
-<!ENTITY newWindowsAsTabs.accesskey   "t">
+<!ENTITY newWindowsAsTabs.accesskey   "w">
 
 <!ENTITY warnCloseMultipleTabs.label  "Warn me when closing multiple tabs">
 <!ENTITY warnCloseMultipleTabs.accesskey  "m">

@@ -155,8 +155,8 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
       // when a frame is a keyframe.
 #if 0
       if (!frame.mKeyFrame) {
-        ++a.mParsed;
-        ++a.mDropped;
+        ++a.mStats.mParsedFrames;
+        ++a.mStats.mDroppedFrames;
         continue;
       }
 #endif
@@ -244,9 +244,9 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
     if (!v) {
       return false;
     }
-    a.mParsed++;
-    a.mDecoded++;
-    NS_ASSERTION(a.mDecoded <= a.mParsed, "Expect to decode fewer frames than parsed in AndroidMedia...");
+    a.mStats.mParsedFrames++;
+    a.mStats.mDecodedFrames++;
+    NS_ASSERTION(a.mStats.mDecodedFrames <= a.mStats.mParsedFrames, "Expect to decode fewer frames than parsed in AndroidMedia...");
 
     // Since MPAPI doesn't give us the end time of frames, we keep one frame
     // buffered in AndroidMediaReader and push it into the queue as soon

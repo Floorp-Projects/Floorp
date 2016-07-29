@@ -78,28 +78,24 @@ public:
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
     aOutHandle = nullptr;
     return NS_OK;
   }
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override
+  nsresult Deallocate(AllocationHandle* aHandle) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
     MOZ_ASSERT(!aHandle);
     return NS_OK;
   }
-  void Shutdown() override
-  {
-    // Nothing to do here, everything is managed in MediaManager.cpp
-  }
   nsresult Start(SourceMediaStream* aMediaStream,
                  TrackID aId,
                  const PrincipalHandle& aPrincipalHandle) override;
   nsresult Stop(SourceMediaStream* aMediaStream, TrackID aId) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
@@ -139,7 +135,7 @@ public:
     const nsString& aDeviceId) const override;
 
 protected:
-  virtual ~MediaEngineWebRTCAudioCaptureSource() { Shutdown(); }
+  virtual ~MediaEngineWebRTCAudioCaptureSource() {}
   nsCString mUUID;
 };
 
@@ -419,53 +415,26 @@ private:
 };
 
 class MediaEngineWebRTCMicrophoneSource : public MediaEngineAudioSource,
-                                          public webrtc::VoEMediaProcess,
-                                          private MediaConstraintsHelper
+                                          public webrtc::VoEMediaProcess
 {
+  typedef MediaEngineAudioSource Super;
 public:
   MediaEngineWebRTCMicrophoneSource(nsIThread* aThread,
                                     webrtc::VoiceEngine* aVoiceEnginePtr,
                                     mozilla::AudioInput* aAudioInput,
                                     int aIndex,
                                     const char* name,
-                                    const char* uuid)
-    : MediaEngineAudioSource(kReleased)
-    , mVoiceEngine(aVoiceEnginePtr)
-    , mAudioInput(aAudioInput)
-    , mMonitor("WebRTCMic.Monitor")
-    , mThread(aThread)
-    , mCapIndex(aIndex)
-    , mChannel(-1)
-    , mNrAllocations(0)
-    , mStarted(false)
-    , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
-    , mPlayoutDelay(0)
-    , mNullTransport(nullptr)
-    , mSkipProcessing(false)
-  {
-    MOZ_ASSERT(aVoiceEnginePtr);
-    MOZ_ASSERT(aAudioInput);
-    mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
-    mDeviceUUID.Assign(uuid);
-    mListener = new mozilla::WebRTCAudioDataListener(this);
-    // We'll init lazily as needed
-  }
+                                    const char* uuid);
 
   void GetName(nsAString& aName) const override;
   void GetUUID(nsACString& aUUID) const override;
 
-  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                    const MediaEnginePrefs& aPrefs,
-                    const nsString& aDeviceId,
-                    const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
-                    const char** aOutBadConstraint) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream* aStream,
                  TrackID aID,
                  const PrincipalHandle& aPrincipalHandle) override;
   nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
@@ -515,11 +484,18 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
 protected:
-  ~MediaEngineWebRTCMicrophoneSource() {
-    Shutdown();
-  }
+  ~MediaEngineWebRTCMicrophoneSource() {}
 
 private:
+  nsresult
+  UpdateSingleSource(const AllocationHandle* aHandle,
+                     const NormalizedConstraints& aNetConstraints,
+                     const MediaEnginePrefs& aPrefs,
+                     const nsString& aDeviceId,
+                     const char** aOutBadConstraint) override;
+
+  void SetLastPrefs(const MediaEnginePrefs& aPrefs);
+
   // These allocate/configure and release the channel
   bool AllocChannel();
   void FreeChannel();
@@ -570,7 +546,6 @@ private:
   nsCOMPtr<nsIThread> mThread;
   int mCapIndex;
   int mChannel;
-  int mNrAllocations; // Per-channel - When this becomes 0, we shut down HW for the channel
   TrackID mTrackID;
   bool mStarted;
 
@@ -587,10 +562,14 @@ private:
   // because of prefs or constraints. This allows simply copying the audio into
   // the MSG, skipping resampling and the whole webrtc.org code.
   bool mSkipProcessing;
+
+  // To only update microphone when needed, we keep track of previous settings.
+  MediaEnginePrefs mLastPrefs;
 };
 
 class MediaEngineWebRTC : public MediaEngine
 {
+  typedef MediaEngine Super;
 public:
   explicit MediaEngineWebRTC(MediaEnginePrefs& aPrefs);
 
@@ -607,7 +586,6 @@ public:
                              nsTArray<RefPtr<MediaEngineAudioSource>>*) override;
 private:
   ~MediaEngineWebRTC() {
-    Shutdown();
 #if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
     AsyncLatencyLogger::Get()->Release();
 #endif

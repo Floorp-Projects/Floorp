@@ -20,6 +20,7 @@
 #include "AudioOffloadPlayer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
+#include "MediaOmxCommonDecoder.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "VideoUtils.h"
 #include "mozilla/dom/power/PowerManagerService.h"
@@ -58,8 +59,7 @@ AudioOffloadPlayer::AudioOffloadPlayer(MediaOmxCommonDecoder* aObserver) :
   mSampleRate(0),
   mStartPosUs(0),
   mPositionTimeMediaUs(-1),
-  mInputBuffer(nullptr),
-  mObserver(aObserver)
+  mInputBuffer(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -73,6 +73,17 @@ AudioOffloadPlayer::AudioOffloadPlayer(MediaOmxCommonDecoder* aObserver) :
 #endif
   mAudioSink = new AudioOutput(mSessionId,
       IPCThreadState::self()->getCallingUid());
+
+  nsCOMPtr<nsIThread> thread;
+  MOZ_ALWAYS_SUCCEEDS(NS_GetMainThread(getter_AddRefs(thread)));
+  mPositionChanged = mOnPositionChanged.Connect(
+    thread, aObserver, &MediaOmxCommonDecoder::NotifyOffloadPlayerPositionChanged);
+  mPlaybackEnded = mOnPlaybackEnded.Connect(
+    thread, aObserver, &MediaDecoder::PlaybackEnded);
+  mPlayerTearDown = mOnPlayerTearDown.Connect(
+    thread, aObserver, &MediaOmxCommonDecoder::AudioOffloadTearDown);
+  mSeekingStarted = mOnSeekingStarted.Connect(
+    thread, aObserver, &MediaDecoder::SeekingStarted);
 }
 
 AudioOffloadPlayer::~AudioOffloadPlayer()
@@ -83,6 +94,13 @@ AudioOffloadPlayer::~AudioOffloadPlayer()
 #else
   AudioSystem::releaseAudioSessionId(mSessionId);
 #endif
+
+  // Disconnect the listeners to prevent notifications from reaching
+  // the MediaOmxCommonDecoder object after shutdown.
+  mPositionChanged.Disconnect();
+  mPlaybackEnded.Disconnect();
+  mPlayerTearDown.Disconnect();
+  mSeekingStarted.Disconnect();
 }
 
 void AudioOffloadPlayer::SetSource(const sp<MediaSource> &aSource)
@@ -353,12 +371,7 @@ status_t AudioOffloadPlayer::DoSeek()
   mStartPosUs = mSeekTarget.GetTime().ToMicroseconds();
 
   if (!mSeekPromise.IsEmpty()) {
-    nsCOMPtr<nsIRunnable> nsEvent =
-      NewRunnableMethod<MediaDecoderEventVisibility>(
-        mObserver,
-        &MediaDecoder::SeekingStarted,
-        mSeekTarget.mEventVisibility);
-    NS_DispatchToCurrentThread(nsEvent);
+    mOnSeekingStarted.Notify(mSeekTarget.mEventVisibility);
   }
 
   if (mPlaying) {
@@ -425,14 +438,12 @@ void AudioOffloadPlayer::NotifyAudioEOS()
     MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
     mSeekPromise.Resolve(val, __func__);
   }
-  NS_DispatchToMainThread(NewRunnableMethod(mObserver,
-                                            &MediaDecoder::PlaybackEnded));
+  mOnPlaybackEnded.Notify();
 }
 
 void AudioOffloadPlayer::NotifyPositionChanged()
 {
-  NS_DispatchToMainThread(NewRunnableMethod(mObserver,
-                                            &MediaOmxCommonDecoder::NotifyOffloadPlayerPositionChanged));
+  mOnPositionChanged.Notify();
 }
 
 void AudioOffloadPlayer::NotifyAudioTearDown()
@@ -446,8 +457,7 @@ void AudioOffloadPlayer::NotifyAudioTearDown()
     MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
     mSeekPromise.Resolve(val, __func__);
   }
-  NS_DispatchToMainThread(NewRunnableMethod(mObserver,
-                                            &MediaOmxCommonDecoder::AudioOffloadTearDown));
+  mOnPlayerTearDown.Notify();
 }
 
 // static

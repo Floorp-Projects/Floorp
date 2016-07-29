@@ -321,6 +321,11 @@ Finder.prototype = {
       this._highlighter.onModalHighlightChange(useModalHighlight);
   },
 
+  onHighlightAllChange(highlightAll) {
+    if (this._highlighter)
+      this._highlighter.onHighlightAllChange(highlightAll);
+  },
+
   keyPress: function (aEvent) {
     let controller = this._getSelectionController(this._getWindow());
 

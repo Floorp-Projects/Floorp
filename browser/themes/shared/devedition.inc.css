@@ -228,6 +228,12 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   -moz-image-region: rect(0, 54px, 18px, 36px);
 }
 
+@media (min-resolution: 1.1dppx) {
+  #back-button {
+    -moz-image-region: rect(0, 108px, 36px, 72px);
+  }
+}
+
 .tab-background {
   visibility: hidden;
 }

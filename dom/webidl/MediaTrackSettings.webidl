@@ -13,6 +13,9 @@ dictionary MediaTrackSettings {
     double    frameRate;
     DOMString facingMode;
     DOMString deviceId;
+    boolean echoCancellation;
+    boolean mozNoiseSuppression;
+    boolean mozAutoGainControl;
 
     // Mozilla-specific extensions:
 

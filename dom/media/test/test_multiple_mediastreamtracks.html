@@ -10,8 +10,11 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 function startTest() {
-  navigator.mediaDevices.getUserMedia({audio:true, video:true, fake:true, fakeTracks:true})
-  .then(function(stream) {
+  navigator.mediaDevices.getUserMedia({audio:true, video:true, fake:true})
+  .then(function(orgStream) {
+    var a = orgStream.getAudioTracks()[0];
+    var v = orgStream.getVideoTracks()[0];
+    var stream = new MediaStream([a, a, a, a, v, v, v].map(track => track.clone()));
     var element = document.createElement("video");
 
     element.onloadedmetadata = function() {
@@ -20,8 +23,7 @@ function startTest() {
       SimpleTest.finish();
     };
 
-    mStream = stream;
-    element.srcObject = mStream;
+    element.srcObject = stream;
     element.play();
   })
   .catch(function(reason) {

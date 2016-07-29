@@ -185,7 +185,6 @@ mt = check_prog('_MT', depends_win()(lambda: ('mt.exe',)), what='mt',
 # utility".
 @depends_win(mt)
 @checking('whether MT is really Microsoft Manifest Tool', lambda x: bool(x))
-@imports('re')
 @imports('subprocess')
 def valid_mt(path):
     try:
@@ -193,21 +192,13 @@ def valid_mt(path):
         out = '\n'.join(l for l in out
                         if 'Microsoft (R) Manifest Tool' in l)
         if out:
-              m = re.search(r'(?<=[^!-~])[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+',
-                            out)
-              if not m:
-                  raise FatalCheckError(
-                      'Unknown version of the Microsoft Manifest Tool')
-              return namespace(
-                  path=path,
-                  version=Version(m.group(0)),
-              )
+              return path
     except subprocess.CalledProcessError:
         pass
     raise FatalCheckError('%s is not Microsoft Manifest Tool')
 
 
-set_config('MT', depends_if(valid_mt)(lambda x: os.path.basename(x.path)))
+set_config('MT', depends_if(valid_mt)(lambda x: os.path.basename(x)))
 set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
 
 
