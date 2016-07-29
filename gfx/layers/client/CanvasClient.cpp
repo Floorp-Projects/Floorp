@@ -137,7 +137,10 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
     RefPtr<DrawTarget> target = mBackBuffer->BorrowDrawTarget();
     if (target) {
-      aLayer->UpdateTarget(target);
+      if (!aLayer->UpdateTarget(target)) {
+        NS_WARNING("Failed to copy the canvas into a TextureClient.");
+        return;
+      }
       updated = true;
     }
   }
