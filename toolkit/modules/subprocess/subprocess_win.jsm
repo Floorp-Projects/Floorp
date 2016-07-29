@@ -9,7 +9,7 @@
 
 /* exported SubprocessImpl */
 
-/* globals BaseProcess */
+/* globals BaseProcess, PromiseWorker */
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -24,9 +24,34 @@ Cu.import("resource://gre/modules/subprocess/subprocess_common.jsm");
 Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared.js", this);
 Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared_win.js", this);
 
+class WinPromiseWorker extends PromiseWorker {
+  constructor(...args) {
+    super(...args);
+
+    this.signalEvent = libc.CreateSemaphoreW(null, 0, 32, null);
+
+    this.call("init", [{
+      signalEvent: String(ctypes.cast(this.signalEvent, ctypes.uintptr_t).value),
+    }]);
+  }
+
+  signalWorker() {
+    libc.ReleaseSemaphore(this.signalEvent, 1, null);
+  }
+
+  postMessage(...args) {
+    this.signalWorker();
+    return super.postMessage(...args);
+  }
+}
+
 class Process extends BaseProcess {
   static get WORKER_URL() {
     return "resource://gre/modules/subprocess/subprocess_worker_win.js";
+  }
+
+  static get WorkerClass() {
+    return WinPromiseWorker;
   }
 }
 
@@ -36,7 +61,6 @@ var SubprocessWin = {
   call(options) {
     return Process.create(options);
   },
-
 
   * getEnvironment() {
     let env = libc.GetEnvironmentStringsW();

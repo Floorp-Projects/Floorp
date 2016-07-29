@@ -394,6 +394,27 @@
         ]]></body>
       </method>
 
+      <!-- Call this when the height of one of your views (the main view or a
+           subview) changes and you want the heights of the multiview and panel
+           to be the same as the view's height. -->
+      <method name="setHeightToFit">
+        <body><![CDATA[
+          // Set the max-height to zero, wait until the height is actually
+          // updated, and then remove it.  If it's not removed, weird things can
+          // happen, like widgets in the panel won't respond to clicks even
+          // though they're visible.
+          let count = 5;
+          let height = getComputedStyle(this).height;
+          this.style.maxHeight = "0";
+          let interval = setInterval(() => {
+            if (height != getComputedStyle(this).height || --count == 0) {
+              clearInterval(interval);
+              this.style.removeProperty("max-height");
+            }
+          }, 0);
+        ]]></body>
+      </method>
+
       <method name="_heightOfSubview">
         <parameter name="aSubview"/>
         <parameter name="aContainerToCheck"/>

@@ -279,6 +279,76 @@ ToLowerCaseNonBMPTrail(char16_t lead, char16_t trail)
     return trail;
 }
 
+/*
+ * For a codepoint C, CodepointsWithSameUpperCaseInfo stores three offsets
+ * from C to up to three codepoints with same uppercase (no codepoint in
+ * UnicodeData.txt has more than three such codepoints).
+ *
+ * To illustrate, consider the codepoint U+0399 GREEK CAPITAL LETTER IOTA, the
+ * uppercased form of these three codepoints:
+ *
+ *   U+03B9 GREEK SMALL LETTER IOTA
+ *   U+1FBE GREEK PROSGEGRAMMENI
+ *   U+0345 COMBINING GREEK YPOGEGRAMMENI
+ *
+ * For the CodepointsWithSameUpperCaseInfo corresponding to this codepoint,
+ * delta{1,2,3} are 16-bit modular deltas from 0x0399 to each respective
+ * codepoint:
+ *   uint16_t(0x03B9 - 0x0399),
+ *   uint16_t(0x1FBE - 0x0399),
+ *   uint16_t(0x0345 - 0x0399)
+ * in an unimportant order.
+ *
+ * If there are fewer than three other codepoints, some fields are zero.
+ * Consider the codepoint U+03B9 above, the other two codepoints U+1FBE and
+ * U+0345 have same uppercase (U+0399 is not).  For the
+ * CodepointsWithSameUpperCaseInfo corresponding to this codepoint,
+ * delta{1,2,3} are:
+ *   uint16_t(0x1FBE - 0x03B9),
+ *   uint16_t(0x0345 - 0x03B9),
+ *   uint16_t(0)
+ * in an unimportant order.
+ *
+ * Because multiple codepoints map to a single CodepointsWithSameUpperCaseInfo,
+ * a CodepointsWithSameUpperCaseInfo and its delta{1,2,3} have no meaning
+ * standing alone: they have meaning only with respect to a codepoint mapping
+ * to that CodepointsWithSameUpperCaseInfo.
+ */
+class CodepointsWithSameUpperCaseInfo
+{
+  public:
+    uint16_t delta1;
+    uint16_t delta2;
+    uint16_t delta3;
+};
+
+extern const uint8_t codepoints_with_same_upper_index1[];
+extern const uint8_t codepoints_with_same_upper_index2[];
+extern const CodepointsWithSameUpperCaseInfo js_codepoints_with_same_upper_info[];
+
+class CodepointsWithSameUpperCase
+{
+    const CodepointsWithSameUpperCaseInfo& info_;
+    const char16_t code_;
+
+    static const CodepointsWithSameUpperCaseInfo& computeInfo(char16_t code) {
+        const size_t shift = 6;
+        size_t index = codepoints_with_same_upper_index1[code >> shift];
+        index = codepoints_with_same_upper_index2[(index << shift) + (code & ((1 << shift) - 1))];
+        return js_codepoints_with_same_upper_info[index];
+    }
+
+  public:
+    explicit CodepointsWithSameUpperCase(char16_t code)
+      : info_(computeInfo(code)),
+        code_(code)
+    {}
+
+    char16_t other1() const { return uint16_t(code_) + info_.delta1; }
+    char16_t other2() const { return uint16_t(code_) + info_.delta2; }
+    char16_t other3() const { return uint16_t(code_) + info_.delta3; }
+};
+
 class FoldingInfo {
   public:
     uint16_t folding;

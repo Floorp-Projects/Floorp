@@ -689,8 +689,8 @@ class GCRuntime
   public:
     // Internal public interface
     State state() const { return incrementalState; }
-    bool isHeapCompacting() const { return state() == COMPACT; }
-    bool isForegroundSweeping() const { return state() == SWEEP; }
+    bool isHeapCompacting() const { return state() == State::Compact; }
+    bool isForegroundSweeping() const { return state() == State::Sweep; }
     bool isBackgroundSweeping() { return helperState.isBackgroundSweeping(); }
     void waitBackgroundSweepEnd() { helperState.waitBackgroundSweepEnd(); }
     void waitBackgroundSweepOrAllocEnd() {
@@ -766,7 +766,7 @@ class GCRuntime
     void disallowIncrementalGC() { incrementalAllowed = false; }
 
     bool isIncrementalGCEnabled() const { return mode == JSGC_MODE_INCREMENTAL && incrementalAllowed; }
-    bool isIncrementalGCInProgress() const { return state() != NO_INCREMENTAL; }
+    bool isIncrementalGCInProgress() const { return state() != State::NotActive; }
 
     bool isGenerationalGCEnabled() const { return generationalDisabled == 0; }
     void disableGenerationalGC();

@@ -1,9 +1,10 @@
 {
+  "name": "mach-eslint",
   "dependencies": {
     "acorn": {
-      "version": "3.2.0",
+      "version": "3.3.0",
       "from": "acorn@>=3.1.0 <4.0.0",
-      "resolved": "https://registry.npmjs.org/acorn/-/acorn-3.2.0.tgz"
+      "resolved": "https://registry.npmjs.org/acorn/-/acorn-3.3.0.tgz"
     },
     "acorn-jsx": {
       "version": "3.0.1",
@@ -206,30 +207,25 @@
     },
     "escope": {
       "version": "3.6.0",
-      "from": "escope@>=3.6.0 <4.0.0",
+      "from": "escope@>=3.2.0 <4.0.0",
       "resolved": "https://registry.npmjs.org/escope/-/escope-3.6.0.tgz"
     },
     "eslint": {
       "version": "2.9.0",
       "from": "eslint@2.9.0",
-      "resolved": "https://registry.npmjs.org/eslint/-/eslint-2.9.0.tgz"
+      "resolved": "https://registry.npmjs.org/eslint/-/eslint-2.9.0.tgz",
+      "dependencies": {
+        "espree": {
+          "version": "3.1.4",
+          "from": "espree@3.1.4",
+          "resolved": "https://registry.npmjs.org/espree/-/espree-3.1.4.tgz"
+        }
+      }
     },
     "eslint-plugin-html": {
       "version": "1.4.0",
       "from": "eslint-plugin-html@1.4.0",
       "resolved": "https://registry.npmjs.org/eslint-plugin-html/-/eslint-plugin-html-1.4.0.tgz"
-    },
-    "eslint-plugin-mozilla": {
-      "version": "0.2.0",
-      "from": "eslint-plugin-mozilla",
-      "resolved": "file:eslint-plugin-mozilla",
-      "dependencies": {
-        "espree": {
-          "version": "2.2.5",
-          "from": "espree@>=2.2.4 <3.0.0",
-          "resolved": "https://registry.npmjs.org/espree/-/espree-2.2.5.tgz"
-        }
-      }
     },
     "eslint-plugin-react": {
       "version": "4.2.3",
@@ -237,14 +233,9 @@
       "resolved": "https://registry.npmjs.org/eslint-plugin-react/-/eslint-plugin-react-4.2.3.tgz"
     },
     "espree": {
-      "version": "3.1.4",
-      "from": "espree@3.1.4",
-      "resolved": "https://registry.npmjs.org/espree/-/espree-3.1.4.tgz"
-    },
-    "esprima": {
-      "version": "2.7.2",
-      "from": "esprima@>=2.6.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/esprima/-/esprima-2.7.2.tgz"
+      "version": "2.2.5",
+      "from": "espree@>=2.2.4 <3.0.0",
+      "resolved": "https://registry.npmjs.org/espree/-/espree-2.2.5.tgz"
     },
     "esrecurse": {
       "version": "4.1.0",
@@ -260,7 +251,7 @@
     },
     "estraverse": {
       "version": "4.2.0",
-      "from": "estraverse@>=4.2.0 <5.0.0",
+      "from": "estraverse@>=4.1.1 <5.0.0",
       "resolved": "https://registry.npmjs.org/estraverse/-/estraverse-4.2.0.tgz"
     },
     "esutils": {
@@ -329,9 +320,9 @@
       "resolved": "https://registry.npmjs.org/globby/-/globby-5.0.0.tgz"
     },
     "graceful-fs": {
-      "version": "4.1.4",
+      "version": "4.1.5",
       "from": "graceful-fs@>=4.1.2 <5.0.0",
-      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.4.tgz"
+      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.5.tgz"
     },
     "has-ansi": {
       "version": "2.0.0",
@@ -411,7 +402,14 @@
     "js-yaml": {
       "version": "3.6.1",
       "from": "js-yaml@>=3.5.1 <4.0.0",
-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.6.1.tgz"
+      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.6.1.tgz",
+      "dependencies": {
+        "esprima": {
+          "version": "2.7.2",
+          "from": "esprima@>=2.6.0 <3.0.0",
+          "resolved": "https://registry.npmjs.org/esprima/-/esprima-2.7.2.tgz"
+        }
+      }
     },
     "json-stable-stringify": {
       "version": "1.0.1",
@@ -434,9 +432,9 @@
       "resolved": "https://registry.npmjs.org/levn/-/levn-0.3.0.tgz"
     },
     "lodash": {
-      "version": "4.13.1",
+      "version": "4.14.0",
       "from": "lodash@>=4.0.0 <5.0.0",
-      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.13.1.tgz"
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.14.0.tgz"
     },
     "minimatch": {
       "version": "3.0.2",

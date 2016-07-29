@@ -2691,7 +2691,7 @@ nsCSSFrameConstructor::ConstructRootFrame()
     // ServoStyleSets yet.
     styleSet->AsGecko()->SetBindingManager(mDocument->BindingManager());
   } else {
-    NS_ERROR("stylo: cannot get ServoStyleSheets from XBL bindings yet");
+    NS_WARNING("stylo: cannot get ServoStyleSheets from XBL bindings yet. See bug 1290276.");
   }
 
   // --------- BUILD VIEWPORT -----------

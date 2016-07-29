@@ -7,18 +7,26 @@
   display: block;
 }
 
-.sidebar-toggle::before {
+.sidebar-toggle:-moz-locale-dir(ltr)::before,
+.sidebar-toggle.pane-collapsed:-moz-locale-dir(rtl)::before {
   background-image: var(--theme-pane-collapse-image);
 }
 
-.sidebar-toggle.pane-collapsed::before {
+.sidebar-toggle.pane-collapsed:-moz-locale-dir(ltr)::before,
+.sidebar-toggle:-moz-locale-dir(rtl)::before {
   background-image: var(--theme-pane-expand-image);
 }
 
 /* Rotate button icon 90deg if the toolbox container is
   in vertical mode (sidebar displayed under the main panel) */
 @media (max-width: 700px) {
-  .sidebar-toggle::before {
+  .sidebar-toggle:-moz-locale-dir(ltr)::before {
     transform: rotate(90deg);
+  }
+
+  /* Since RTL swaps the used images, we need to flip them
+     the other way round */
+  .sidebar-toggle:-moz-locale-dir(rtl)::before {
+    transform: rotate(-90deg);
   }
 }

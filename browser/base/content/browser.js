@@ -7288,50 +7288,39 @@ var gIdentityHandler = {
     }
   },
 
-  setPermission: function (aPermission, aState) {
-    if (aState == SitePermissions.getDefault(aPermission))
-      SitePermissions.remove(gBrowser.currentURI, aPermission);
-    else
-      SitePermissions.set(gBrowser.currentURI, aPermission, aState);
-  },
-
   _createPermissionItem: function (aPermission) {
-    let menulist = document.createElement("menulist");
-    let menupopup = document.createElement("menupopup");
-    for (let state of aPermission.availableStates) {
-      let menuitem = document.createElement("menuitem");
-      menuitem.setAttribute("value", state.id);
-      menuitem.setAttribute("label", state.label);
-      menupopup.appendChild(menuitem);
-    }
-    menulist.appendChild(menupopup);
-    menulist.setAttribute("value", aPermission.state);
-    menulist.setAttribute("oncommand", "gIdentityHandler.setPermission('" +
-                                       aPermission.id + "', this.value)");
-    menulist.setAttribute("id", "identity-popup-permission:" + aPermission.id);
-
-    let label = document.createElement("label");
-    label.setAttribute("flex", "1");
-    label.setAttribute("class", "identity-popup-permission-label");
-    label.setAttribute("control", menulist.getAttribute("id"));
-    label.textContent = aPermission.label;
+    let container = document.createElement("hbox");
+    container.setAttribute("class", "identity-popup-permission-item");
+    container.setAttribute("align", "center");
 
     let img = document.createElement("image");
     let isBlocked = (aPermission.state == SitePermissions.BLOCK) ? " blocked" : "";
     img.setAttribute("class",
       "identity-popup-permission-icon " + aPermission.id + "-icon" + isBlocked);
 
-    let container = document.createElement("hbox");
-    container.setAttribute("align", "center");
-    container.appendChild(img);
-    container.appendChild(label);
-    container.appendChild(menulist);
+    let nameLabel = document.createElement("label");
+    nameLabel.setAttribute("flex", "1");
+    nameLabel.setAttribute("class", "identity-popup-permission-label");
+    nameLabel.textContent = SitePermissions.getPermissionLabel(aPermission.id);
 
-    // The menuitem text can be long and we don't want the dropdown
-    // to expand to the width of unselected labels.
-    // Need to set this attribute after it's appended, otherwise it gets
-    // overridden with sizetopopup="pref".
-    menulist.setAttribute("sizetopopup", "none");
+    let stateLabel = document.createElement("label");
+    stateLabel.setAttribute("flex", "1");
+    stateLabel.setAttribute("class", "identity-popup-permission-state-label");
+    stateLabel.textContent = SitePermissions.getStateLabel(
+      aPermission.id, aPermission.state);
+
+    let button = document.createElement("button");
+    button.setAttribute("class", "identity-popup-permission-remove-button");
+    button.addEventListener("command", () => {
+      this._permissionList.removeChild(container);
+      this._identityPopupMultiView.setHeightToFit();
+      SitePermissions.remove(gBrowser.currentURI, aPermission.id);
+    });
+
+    container.appendChild(img);
+    container.appendChild(nameLabel);
+    container.appendChild(stateLabel);
+    container.appendChild(button);
 
     return container;
   }

@@ -37,12 +37,31 @@ function* runTests() {
   info("The breadcrumb received focus.");
 
   // This is the meat of the test.
-  let result = toolbox.once("webconsole-ready", () => {
-    ok(toolbox.splitConsole, "Split console is shown.");
-    is(dbgWin.gThreadClient.state, "paused", "Execution is still paused.");
-    Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
-  });
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, dbgWin);
-  yield result;
-  yield resumeDebuggerThenCloseAndFinish(panel);
+  let jsterm = yield getSplitConsole(toolbox);
+
+  is(dbgWin.gThreadClient.state, "paused", "Execution is still paused.");
+
+  let dbgFrameConsoleEvalResult = yield jsterm.execute("privateVar");
+
+  is(
+    dbgFrameConsoleEvalResult.querySelector(".console-string").textContent,
+    '"privateVarValue"',
+    "Got the expected split console result on paused debugger"
+  );
+
+  yield dbgWin.gThreadClient.resume();
+
+  is(dbgWin.gThreadClient.state, "attached", "Execution is resumed.");
+
+  // Get the last evaluation result adopted by the new debugger.
+  let mainTargetConsoleEvalResult = yield jsterm.execute("$_");
+
+  is(
+    mainTargetConsoleEvalResult.querySelector(".console-string").textContent,
+    '"privateVarValue"',
+    "Got the expected split console log on $_ executed on resumed debugger"
+  );
+
+  Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
+  yield closeDebuggerAndFinish(panel);
 }
