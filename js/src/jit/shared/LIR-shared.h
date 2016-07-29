@@ -3290,6 +3290,9 @@ class LShiftI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>
       : op_(op)
     { }
 
+    static const size_t Lhs = 0;
+    static const size_t Rhs = INT64_PIECES;
+
     JSOp bitop() {
         return op_;
     }
