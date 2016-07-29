@@ -344,7 +344,16 @@ add_old_configure_assignment('MOZ_FMP4', fmp4)
 
 # EME Support
 # ==============================================================
-option('--enable-eme', nargs='*', choices=('adobe','widevine',),
+# Widevine is enabled by default in desktop browser builds.
+@depends(build_project, '--help')
+def eme_default(build_project, help):
+    if build_project == 'browser':
+        return 'widevine'
+
+option('--enable-eme',
+       nargs='*',
+       choices=('adobe','widevine',),
+       default=eme_default,
        help='Enable support for Encrypted Media Extensions')
 
 @depends('--enable-eme', fmp4)
