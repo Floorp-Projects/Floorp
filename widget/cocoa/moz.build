@@ -58,7 +58,6 @@ UNIFIED_SOURCES += [
     'SwipeTracker.mm',
     'TextInputHandler.mm',
     'VibrancyManager.mm',
-    'ViewRegion.mm',
     'WidgetTraceEvent.mm',
 ]
 
