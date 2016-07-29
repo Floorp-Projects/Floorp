@@ -950,7 +950,7 @@ CodeGeneratorX86::visitTruncateDToInt32(LTruncateDToInt32* ins)
     OutOfLineTruncate* ool = new(alloc()) OutOfLineTruncate(ins);
     addOutOfLineCode(ool, ins->mir());
 
-    masm.branchTruncateDouble(input, output, ool->entry());
+    masm.branchTruncateDoubleMaybeModUint32(input, output, ool->entry());
     masm.bind(ool->rejoin());
 }
 
@@ -963,7 +963,7 @@ CodeGeneratorX86::visitTruncateFToInt32(LTruncateFToInt32* ins)
     OutOfLineTruncateFloat32* ool = new(alloc()) OutOfLineTruncateFloat32(ins);
     addOutOfLineCode(ool, ins->mir());
 
-    masm.branchTruncateFloat32(input, output, ool->entry());
+    masm.branchTruncateFloat32MaybeModUint32(input, output, ool->entry());
     masm.bind(ool->rejoin());
 }
 
@@ -977,24 +977,16 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool)
     Label fail;
 
     if (Assembler::HasSSE3()) {
+        Label failPopDouble;
         // Push double.
         masm.subl(Imm32(sizeof(double)), esp);
         masm.storeDouble(input, Operand(esp, 0));
 
-        static const uint32_t EXPONENT_MASK = 0x7ff00000;
-        static const uint32_t EXPONENT_SHIFT = FloatingPoint<double>::kExponentShift - 32;
-        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<double>::kExponentBias + 63)
-                                                 << EXPONENT_SHIFT;
-
         // Check exponent to avoid fp exceptions.
-        Label failPopDouble;
-        masm.load32(Address(esp, 4), output);
-        masm.and32(Imm32(EXPONENT_MASK), output);
-        masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(TOO_BIG_EXPONENT), &failPopDouble);
+        masm.branchDoubleNotInInt64Range(Address(esp, 0), output, &failPopDouble);
 
         // Load double, perform 64-bit truncation.
-        masm.fld(Operand(esp, 0));
-        masm.fisttp(Operand(esp, 0));
+        masm.truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), output);
 
         // Load low word, pop double and jump back.
         masm.load32(Address(esp, 0), output);
@@ -1065,25 +1057,17 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool)
     Label fail;
 
     if (Assembler::HasSSE3()) {
+        Label failPopFloat;
+
         // Push float32, but subtracts 64 bits so that the value popped by fisttp fits
         masm.subl(Imm32(sizeof(uint64_t)), esp);
         masm.storeFloat32(input, Operand(esp, 0));
 
-        static const uint32_t EXPONENT_MASK = FloatingPoint<float>::kExponentBits;
-        static const uint32_t EXPONENT_SHIFT = FloatingPoint<float>::kExponentShift;
-        // Integers are still 64 bits long, so we can still test for an exponent > 63.
-        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<float>::kExponentBias + 63)
-                                                 << EXPONENT_SHIFT;
-
         // Check exponent to avoid fp exceptions.
-        Label failPopFloat;
-        masm.movl(Operand(esp, 0), output);
-        masm.and32(Imm32(EXPONENT_MASK), output);
-        masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(TOO_BIG_EXPONENT), &failPopFloat);
+        masm.branchDoubleNotInInt64Range(Address(esp, 0), output, &failPopFloat);
 
         // Load float, perform 32-bit truncation.
-        masm.fld32(Operand(esp, 0));
-        masm.fisttp(Operand(esp, 0));
+        masm.truncateFloat32ToInt64(Address(esp, 0), Address(esp, 0), output);
 
         // Load low word, pop 64bits and jump back.
         masm.load32(Address(esp, 0), output);
@@ -1510,4 +1494,66 @@ CodeGeneratorX86::visitNotI64(LNotI64* lir)
 
     masm.cmpl(Imm32(0), output);
     masm.emitSet(Assembler::Equal, output);
+}
+
+void
+CodeGeneratorX86::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register64 output = ToOutRegister64(lir);
+
+    MWasmTruncateToInt64* mir = lir->mir();
+    Register temp = ToRegister(lir->temp1());
+    FloatRegister floatTemp = ToFloatRegister(lir->temp2());
+
+    Label fail, convert;
+
+    MOZ_ASSERT (mir->input()->type() == MIRType::Double || mir->input()->type() == MIRType::Float32);
+
+    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    masm.reserveStack(2*sizeof(int32_t));
+    masm.storeDouble(input, Operand(esp, 0));
+
+    // Make sure input fits in (u)int64
+    if (mir->input()->type() == MIRType::Float32) {
+        if (mir->isUnsigned())
+            masm.branchFloat32NotInUInt64Range(Address(esp, 0), temp, &fail);
+        else
+            masm.branchFloat32NotInInt64Range(Address(esp, 0), temp, &fail);
+    } else {
+        if (mir->isUnsigned())
+            masm.branchDoubleNotInUInt64Range(Address(esp, 0), temp, &fail);
+        else
+            masm.branchDoubleNotInInt64Range(Address(esp, 0), temp, &fail);
+    }
+    masm.jump(&convert);
+
+    // Handle failure in ool
+    masm.bind(&fail);
+    masm.freeStack(2*sizeof(int32_t));
+    masm.jump(ool->entry());
+    masm.bind(ool->rejoin());
+    masm.reserveStack(2*sizeof(int32_t));
+    masm.storeDouble(input, Operand(esp, 0));
+
+    // Convert the double/float to int64
+    masm.bind(&convert);
+    if (mir->input()->type() == MIRType::Float32) {
+        if (mir->isUnsigned())
+            masm.truncateFloat32ToUInt64(Address(esp, 0), Address(esp, 0), temp, floatTemp);
+        else
+            masm.truncateFloat32ToInt64(Address(esp, 0), Address(esp, 0), temp);
+    } else {
+        if (mir->isUnsigned())
+            masm.truncateDoubleToUInt64(Address(esp, 0), Address(esp, 0), temp, floatTemp);
+        else
+            masm.truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), temp);
+    }
+
+    // Load value into float register.
+    masm.load64(Address(esp, 0), output);
+
+    masm.freeStack(2*sizeof(int32_t));
 }

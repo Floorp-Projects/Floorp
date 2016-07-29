@@ -37,6 +37,8 @@
 #include "vm/Shape.h"
 #include "vm/UnboxedObject.h"
 
+using mozilla::FloatingPoint;
+
 // * How to read/write MacroAssembler method declarations:
 //
 // The following macros are made to avoid #ifdef around each method declarations
@@ -997,13 +999,35 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                             Label* label) PER_SHARED_ARCH;
-    inline void branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
+
+    // Truncate a double/float32 to int32 and when it doesn't fit an int32 it will jump to
+    // the failure label. This particular variant is allowed to return the value module 2**32,
+    // which isn't implemented on all architectures.
+    // E.g. the x64 variants will do this only in the int64_t range.
+    inline void branchTruncateFloat32MaybeModUint32(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branchTruncateDoubleMaybeModUint32(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    // Truncate a double/float32 to intptr and when it doesn't fit jump to the failure label.
+    inline void branchTruncateFloat32ToPtr(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(x86, x64);
+    inline void branchTruncateDoubleToPtr(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(x86, x64);
+
+    // Truncate a double/float32 to int32 and when it doesn't fit jump to the failure label.
+    inline void branchTruncateFloat32ToInt32(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branchTruncateDoubleToInt32(FloatRegister src, Register dest, Label* fail)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
     inline void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                              Label* label) PER_SHARED_ARCH;
-    inline void branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    inline void branchDoubleNotInInt64Range(Address src, Register temp, Label* fail);
+    inline void branchDoubleNotInUInt64Range(Address src, Register temp, Label* fail);
+    inline void branchFloat32NotInInt64Range(Address src, Register temp, Label* fail);
+    inline void branchFloat32NotInUInt64Range(Address src, Register temp, Label* fail);
 
     template <typename T>
     inline void branchAdd32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
@@ -1261,6 +1285,23 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T>
     void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
                            MIRType slotType) PER_ARCH;
+
+  public:
+    // ========================================================================
+    // Truncate floating point.
+
+    // Undefined behaviour when truncation is outside Int64 range.
+    // Needs a temp register if SSE3 is not present.
+    inline void truncateFloat32ToInt64(Address src, Address dest, Register temp)
+        DEFINED_ON(x86_shared);
+    inline void truncateFloat32ToUInt64(Address src, Address dest, Register temp,
+                                        FloatRegister floatTemp)
+        DEFINED_ON(x86, x64);
+    inline void truncateDoubleToInt64(Address src, Address dest, Register temp)
+        DEFINED_ON(x86_shared);
+    inline void truncateDoubleToUInt64(Address src, Address dest, Register temp,
+                                       FloatRegister floatTemp)
+        DEFINED_ON(x86, x64);
 
     //}}} check_macroassembler_style
   public:

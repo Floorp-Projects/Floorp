@@ -1157,6 +1157,77 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
     storeFloat32(scratch, destZ);
 }
 
+
+// ========================================================================
+// Truncate floating point.
+
+void
+MacroAssembler::truncateFloat32ToInt64(Address src, Address dest, Register temp)
+{
+    if (Assembler::HasSSE3()) {
+        fld32(Operand(src));
+        fisttp(Operand(dest));
+        return;
+    }
+
+    if (src.base == esp)
+        src.offset += 2 * sizeof(int32_t);
+    if (dest.base == esp)
+        dest.offset += 2 * sizeof(int32_t);
+
+    reserveStack(2*sizeof(int32_t));
+
+    // Set conversion to truncation.
+    fnstcw(Operand(esp, 0));
+    load32(Operand(esp, 0), temp);
+    andl(Imm32(~0xFF00), temp);
+    orl(Imm32(0xCFF), temp);
+    store32(temp, Address(esp, 1*sizeof(int32_t)));
+    fldcw(Operand(esp, 1*sizeof(int32_t)));
+
+    // Load double on fp stack, convert and load regular stack.
+    fld32(Operand(src));
+    fistp(Operand(dest));
+
+    // Reset the conversion flag.
+    fldcw(Operand(esp, 0));
+
+    freeStack(2*sizeof(int32_t));
+}
+void
+MacroAssembler::truncateDoubleToInt64(Address src, Address dest, Register temp)
+{
+    if (Assembler::HasSSE3()) {
+        fld(Operand(src));
+        fisttp(Operand(dest));
+        return;
+    }
+
+    if (src.base == esp)
+        src.offset += 2*sizeof(int32_t);
+    if (dest.base == esp)
+        dest.offset += 2*sizeof(int32_t);
+
+    reserveStack(2*sizeof(int32_t));
+
+    // Set conversion to truncation.
+    fnstcw(Operand(esp, 0));
+    load32(Operand(esp, 0), temp);
+    andl(Imm32(~0xFF00), temp);
+    orl(Imm32(0xCFF), temp);
+    store32(temp, Address(esp, 1*sizeof(int32_t)));
+    fldcw(Operand(esp, 1*sizeof(int32_t)));
+
+    // Load double on fp stack, convert and load regular stack.
+    fld(Operand(src));
+    fistp(Operand(dest));
+
+    // Reset the conversion flag.
+    fldcw(Operand(esp, 0));
+
+    freeStack(2*sizeof(int32_t));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

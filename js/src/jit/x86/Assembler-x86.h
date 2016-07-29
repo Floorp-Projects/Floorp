@@ -336,16 +336,6 @@ class Assembler : public AssemblerX86Shared
         return leal(src, dest);
     }
 
-    void fld32(const Operand& dest) {
-        switch (dest.kind()) {
-          case Operand::MEM_REG_DISP:
-            masm.fld32_m(dest.disp(), dest.base());
-            break;
-          default:
-            MOZ_CRASH("unexpected operand kind");
-        }
-    }
-
     void fstp32(const Operand& src) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:

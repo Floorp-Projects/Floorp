@@ -457,6 +457,22 @@ MacroAssemblerX86Shared::outOfLineWasmTruncateCheck(FloatRegister input, MIRType
             }
         }
         jump(rejoin);
+    } else {
+        if (toType == MIRType::Int64) {
+            if (fromType == MIRType::Double) {
+                asMasm().loadConstantDouble(double(-0.0), ScratchDoubleReg);
+                asMasm().branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, &fail);
+                asMasm().loadConstantDouble(double(-1.0), ScratchDoubleReg);
+                asMasm().branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, &fail);
+            } else {
+                MOZ_ASSERT(fromType == MIRType::Float32);
+                asMasm().loadConstantFloat32(double(-0.0), ScratchDoubleReg);
+                asMasm().branchFloat(Assembler::DoubleGreaterThan, input, ScratchFloat32Reg, &fail);
+                asMasm().loadConstantFloat32(double(-1.0), ScratchDoubleReg);
+                asMasm().branchFloat(Assembler::DoubleLessThanOrEqual, input, ScratchFloat32Reg, &fail);
+            }
+            jump(rejoin);
+        }
     }
 
     // Handle errors.
