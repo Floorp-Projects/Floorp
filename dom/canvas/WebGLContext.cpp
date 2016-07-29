@@ -957,7 +957,11 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     disabled |= gfxPlatform::InSafeMode();
 
     if (disabled) {
-        failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBGL_DISABLED");
+        if (gfxPlatform::InSafeMode()) {
+            failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBGL_SAFEMODE");
+        } else {
+            failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBGL_DISABLED");
+        }
         const nsLiteralCString text("WebGL is currently disabled.");
         ThrowEvent_WebGLContextCreationError(text);
         return NS_ERROR_FAILURE;
