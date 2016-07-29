@@ -2404,32 +2404,16 @@ XrayWrapper<Base, Traits>::getPropertyKeys(JSContext* cx, HandleObject wrapper, 
  * unwrap the wrapper).
  */
 
-template<>
-const PermissiveXrayXPCWN PermissiveXrayXPCWN::singleton(0);
+template<typename Base, typename Traits>
+const xpc::XrayWrapper<Base, Traits>
+xpc::XrayWrapper<Base, Traits>::singleton(0);
+
 template class PermissiveXrayXPCWN;
-
-template<>
-const SecurityXrayXPCWN SecurityXrayXPCWN::singleton(0);
 template class SecurityXrayXPCWN;
-
-template<>
-const PermissiveXrayDOM PermissiveXrayDOM::singleton(0);
 template class PermissiveXrayDOM;
-
-template<>
-const SecurityXrayDOM SecurityXrayDOM::singleton(0);
 template class SecurityXrayDOM;
-
-template<>
-const PermissiveXrayJS PermissiveXrayJS::singleton(0);
 template class PermissiveXrayJS;
-
-template<>
-const PermissiveXrayOpaque PermissiveXrayOpaque::singleton(0);
 template class PermissiveXrayOpaque;
-
-template<>
-const SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
 template class SCSecurityXrayXPCWN;
 
 } // namespace xpc
