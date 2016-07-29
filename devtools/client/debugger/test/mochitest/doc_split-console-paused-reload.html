@@ -10,10 +10,12 @@
 
   <body>
     <script type="text/javascript">
-      function runDebuggerStatement() {
-        debugger;
+      function executeFunction() {
+        let privateVar = { propKey: "privateVarValue" };
+
+        window.foobar = "foobar";
       }
-      window.foobar = 1;
+      executeFunction();
     </script>
   </body>
 

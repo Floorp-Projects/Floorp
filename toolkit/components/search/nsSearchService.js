@@ -2305,11 +2305,12 @@ Engine.prototype = {
     if (/^(?:jar:)?(?:\[app\]|\[distribution\])/.test(this._loadPath))
       return true;
 
-    // If we are in the xpcshell test case, we'll accept as a 'default' engine
-    // anything that has been registered at resource://search-plugins/ even if
-    // the file doesn't come from the application folder.
-    // If not, skip costly additional checks.
-    if (!gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR"))
+    // If we are using a non-default locale or in the xpcshell test case,
+    // we'll accept as a 'default' engine anything that has been registered at
+    // resource://search-plugins/ even if the file doesn't come from the
+    // application folder.  If not, skip costly additional checks.
+    if (!Services.prefs.prefHasUserValue(LOCALE_PREF) &&
+        !gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR"))
       return false;
 
     // Some xpcshell tests use the search service without registering
@@ -2322,8 +2323,7 @@ Engine.prototype = {
     let uri = makeURI(APP_SEARCH_PREFIX + this._shortName + ".xml");
     if (this.getAnonymizedLoadPath(null, uri) == this._loadPath) {
       // This isn't a real default engine, but it's very close.
-      LOG("_isDefault, pretending " + this._loadPath +
-          " is a default engine for testing purposes");
+      LOG("_isDefault, pretending " + this._loadPath + " is a default engine");
       return true;
     }
 
@@ -2440,6 +2440,7 @@ Engine.prototype = {
         Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).getBoolPref("reset.enabled") &&
         this.name == Services.search.currentEngine.name &&
         !this._isDefault &&
+        this.name != Services.search.originalDefaultEngine.name &&
         (!this.getAttr("loadPathHash") ||
          this.getAttr("loadPathHash") != getVerificationHash(this._loadPath)) &&
         !this._isWhiteListed) {

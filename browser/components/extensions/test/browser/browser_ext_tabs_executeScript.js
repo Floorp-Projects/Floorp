@@ -86,6 +86,36 @@ add_task(function* testExecuteScript() {
         }),
 
         browser.tabs.executeScript({
+          frameId: Number.MAX_SAFE_INTEGER,
+          code: "42",
+        }).then(result => {
+          browser.test.fail("Expected error when specifying invalid frame ID");
+        }, error => {
+          let details = {
+            frame_id: Number.MAX_SAFE_INTEGER,
+            matchesHost: ["http://mochi.test/", "http://example.com/"],
+          };
+          browser.test.assertEq(`No window matching ${JSON.stringify(details)}`,
+                                error.message, "Got expected error");
+        }),
+
+        browser.tabs.create({url: "http://example.net/", active: false}).then(tab => {
+          return browser.tabs.executeScript(tab.id, {
+            code: "42",
+          }).then(result => {
+            browser.test.fail("Expected error when trying to execute on invalid domain");
+          }, error => {
+            let details = {
+              matchesHost: ["http://mochi.test/", "http://example.com/"],
+            };
+            browser.test.assertEq(`No window matching ${JSON.stringify(details)}`,
+                                  error.message, "Got expected error");
+          }).then(() => {
+            return browser.tabs.remove(tab.id);
+          });
+        }),
+
+        browser.tabs.executeScript({
           code: "Promise.resolve(42)",
         }).then(result => {
           browser.test.assertEq(42, result, "Got expected promise resolution value as result");

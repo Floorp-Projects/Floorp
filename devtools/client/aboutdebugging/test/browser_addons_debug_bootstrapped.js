@@ -26,8 +26,11 @@ add_task(function* () {
 
   let { tab, document } = yield openAboutDebugging("addons");
   yield waitForInitialAddonList(document);
-  yield installAddon(document, "addons/unpacked/install.rdf", ADDON_NAME,
-                     "test-devtools");
+  yield installAddon({
+    document,
+    path: "addons/unpacked/install.rdf",
+    name: ADDON_NAME,
+  });
 
   // Retrieve the DEBUG button for the addon
   let names = [...document.querySelectorAll("#addons .target-name")];
@@ -75,6 +78,6 @@ add_task(function* () {
   yield onToolboxClose;
   ok(true, "Addon toolbox closed");
 
-  yield uninstallAddon(document, ADDON_ID, ADDON_NAME);
+  yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
   yield closeAboutDebugging(tab);
 });
