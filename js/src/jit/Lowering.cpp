@@ -852,10 +852,10 @@ LIRGenerator::visitTest(MTest* test)
             comp->compareType() == MCompare::Compare_UInt64)
         {
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-            LCompare64AndBranch* lir = new(alloc()) LCompare64AndBranch(comp, op,
-                                                                        useInt64Register(left),
-                                                                        useInt64OrConstant(right),
-                                                                        ifTrue, ifFalse);
+            LCompareI64AndBranch* lir = new(alloc()) LCompareI64AndBranch(comp, op,
+                                                                          useInt64Register(left),
+                                                                          useInt64OrConstant(right),
+                                                                          ifTrue, ifFalse);
             add(lir, test);
             return;
         }
@@ -1098,7 +1098,7 @@ LIRGenerator::visitCompare(MCompare* comp)
         comp->compareType() == MCompare::Compare_UInt64)
     {
         JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-        define(new(alloc()) LCompare64(op, useInt64Register(left), useInt64OrConstant(right)),
+        define(new(alloc()) LCompareI64(op, useInt64Register(left), useInt64OrConstant(right)),
                comp);
         return;
     }

@@ -910,6 +910,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
+    // The supported condition are Equal, NotEqual, LessThan(orEqual), GreaterThan(orEqual),
+    // Below(orEqual) and Above(orEqual).
+    inline void branch64(Condition cond, Register64 lhs, Imm64 val, Label* label)
+        DEFINED_ON(x86, x64);
+    inline void branch64(Condition cond, Register64 lhs, Register64 rhs, Label* label)
+        DEFINED_ON(x86, x64);
+    // Only NotEqual conditions are allowed for the branch64 variants with Address as lhs.
     inline void branch64(Condition cond, const Address& lhs, Imm64 val, Label* label) PER_ARCH;
 
     // Compare the value at |lhs| with the value at |rhs|.  The scratch

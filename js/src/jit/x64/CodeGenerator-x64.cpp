@@ -216,38 +216,47 @@ CodeGeneratorX64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 }
 
 void
-CodeGeneratorX64::visitCompare64(LCompare64* lir)
+CodeGeneratorX64::visitCompareI64(LCompareI64* lir)
 {
     MCompare* mir = lir->mir();
     MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
                mir->compareType() == MCompare::Compare_UInt64);
 
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register lhsReg = ToRegister64(lhs).reg;
+    Register output = ToRegister(lir->output());
 
-    if (rhs->isConstant())
-        masm.cmpPtr(lhs, ImmWord(ToInt64(rhs)));
-    else
-        masm.cmpPtr(lhs, ToOperand(rhs));
+    if (IsConstant(rhs)) {
+        ImmWord imm = ImmWord(ToInt64(rhs));
+        masm.cmpPtr(lhsReg, imm);
+    } else {
+        Register rhsReg = ToRegister64(rhs).reg;
+        masm.cmpPtr(lhsReg, Operand(rhsReg));
+    }
 
     bool isSigned = mir->compareType() == MCompare::Compare_Int64;
-    masm.emitSet(JSOpToCondition(lir->jsop(), isSigned), ToRegister(lir->output()));
+    masm.emitSet(JSOpToCondition(lir->jsop(), isSigned), output);
 }
 
 void
-CodeGeneratorX64::visitCompare64AndBranch(LCompare64AndBranch* lir)
+CodeGeneratorX64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
 {
     MCompare* mir = lir->cmpMir();
     MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
                mir->compareType() == MCompare::Compare_UInt64);
 
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register lhsReg = ToRegister64(lhs).reg;
 
-    if (rhs->isConstant())
-        masm.cmpPtr(lhs, ImmWord(ToInt64(rhs)));
-    else
-        masm.cmpPtr(lhs, ToOperand(rhs));
+    if (IsConstant(rhs)) {
+        ImmWord imm = ImmWord(ToInt64(rhs));
+        masm.cmpPtr(lhsReg, imm);
+    } else {
+        Register rhsReg = ToRegister64(rhs).reg;
+        masm.cmpPtr(lhsReg, Operand(rhsReg));
+    }
 
     bool isSigned = mir->compareType() == MCompare::Compare_Int64;
     emitBranch(JSOpToCondition(lir->jsop(), isSigned), lir->ifTrue(), lir->ifFalse());
