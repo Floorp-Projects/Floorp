@@ -437,11 +437,6 @@ protected:
                          gfx::SurfaceFormat aFormat,
                          uint8_t aPaletteDepth = 0);
 
-  /// Helper method for decoders which only have 'basic' frame allocation needs.
-  nsresult AllocateBasicFrame() {
-    return AllocateFrame(0, Size(), FullFrame(), gfx::SurfaceFormat::B8G8R8A8);
-  }
-
 private:
   /// Report that an error was encountered while decoding.
   void PostError();
