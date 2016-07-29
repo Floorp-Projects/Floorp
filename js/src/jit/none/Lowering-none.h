@@ -107,6 +107,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitCopySign(js::jit::MCopySign*) { MOZ_CRASH(); }
     void visitWasmTruncateToInt64(MWasmTruncateToInt64*) { MOZ_CRASH(); }
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint*) { MOZ_CRASH(); }
+    void visitExtendInt32ToInt64(MExtendInt32ToInt64* ins) { MOZ_CRASH(); }
 };
 
 typedef LIRGeneratorNone LIRGeneratorSpecific;
