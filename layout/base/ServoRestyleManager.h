@@ -36,6 +36,8 @@ class ServoRestyleManager : public RestyleManagerBase
 {
   friend class ServoStyleSet;
 public:
+  typedef RestyleManagerBase base_type;
+
   NS_INLINE_DECL_REFCOUNTING(ServoRestyleManager)
 
   explicit ServoRestyleManager(nsPresContext* aPresContext);
@@ -90,14 +92,11 @@ private:
   /**
    * Traverses a tree of content that Servo has just restyled, recreating style
    * contexts for their frames with the new style data.
-   *
-   * This is just static so ServoStyleSet can mark this class as friend, so we
-   * can access to the GetContext method without making it available to everyone
-   * else.
    */
-  static void RecreateStyleContexts(nsIContent* aContent,
-                                    nsStyleContext* aParentContext,
-                                    ServoStyleSet* aStyleSet);
+  void RecreateStyleContexts(nsIContent* aContent,
+                             nsStyleContext* aParentContext,
+                             ServoStyleSet* aStyleSet,
+                             nsStyleChangeList& aChangeList);
 
   /**
    * Marks the tree with the appropriate dirty flags for the given restyle hint.
