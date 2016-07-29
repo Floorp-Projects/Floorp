@@ -897,6 +897,10 @@ enum class SymbolicAddress
     CallImport_F64,
     CoerceInPlace_ToInt32,
     CoerceInPlace_ToNumber,
+    DivI64,
+    UDivI64,
+    ModI64,
+    UModI64,
     Limit
 };
 

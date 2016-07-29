@@ -1020,12 +1020,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
-    inline void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branchTestPtr(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
     inline void branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
     inline void branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
 
+    template <class L>
     inline void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
-                             Label* label) PER_ARCH;
+                             L label) PER_ARCH;
 
     // Branches to |label| if |reg| is false. |reg| should be a C++ bool.
     template <class L>

@@ -114,12 +114,12 @@ class LDivOrModI64 : public LBinaryMath<1>
 // This class performs a simple x86 'div', yielding either a quotient or
 // remainder depending on whether this instruction is defined to output
 // rax (quotient) or rdx (remainder).
-class LUDivOrMod64 : public LBinaryMath<1>
+class LUDivOrModI64 : public LBinaryMath<1>
 {
   public:
-    LIR_HEADER(UDivOrMod64);
+    LIR_HEADER(UDivOrModI64);
 
-    LUDivOrMod64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+    LUDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
