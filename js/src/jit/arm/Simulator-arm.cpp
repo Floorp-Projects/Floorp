@@ -3098,7 +3098,10 @@ Simulator::decodeType01(SimInstruction* instr)
                 MOZ_CRASH();
             break;
           case OpRsc:
-            MOZ_CRASH();
+            alu_out = shifter_operand - rn_val - (getCarry() == 0 ? 1 : 0);
+            set_register(rd, alu_out);
+            if (instr->hasS())
+                MOZ_CRASH();
             break;
           case OpTst:
             if (instr->hasS()) {
