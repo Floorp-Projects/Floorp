@@ -260,10 +260,11 @@ WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
 
     if (IsWebGL2() && !gl->IsSupported(gl::GLFeature::prim_restart_fixed)) {
         MOZ_ASSERT(gl->IsSupported(gl::GLFeature::prim_restart));
-        if (mPrimRestartTypeBytes) {
-            mPrimRestartTypeBytes = 0;
+        if (mPrimRestartTypeBytes != 4) {
+            mPrimRestartTypeBytes = 4;
 
-            gl->fPrimitiveRestartIndex(0);
+            // OSX has issues leaving this as 0.
+            gl->fPrimitiveRestartIndex(UINT32_MAX);
         }
     }
 
