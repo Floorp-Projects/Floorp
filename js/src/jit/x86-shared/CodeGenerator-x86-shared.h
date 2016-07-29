@@ -238,6 +238,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitSqrtF(LSqrtF* ins);
     virtual void visitPowHalfD(LPowHalfD* ins);
     virtual void visitAddI(LAddI* ins);
+    virtual void visitAddI64(LAddI64* ins);
     virtual void visitSubI(LSubI* ins);
     virtual void visitMulI(LMulI* ins);
     virtual void visitDivI(LDivI* ins);

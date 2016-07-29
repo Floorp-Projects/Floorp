@@ -171,6 +171,17 @@ MacroAssembler::add64(Imm32 imm, Register64 dest)
 }
 
 void
+MacroAssembler::add64(Imm64 imm, Register64 dest)
+{
+    if (imm.low().value == 0) {
+        addl(imm.hi(), dest.high);
+        return;
+    }
+    addl(imm.low(), dest.low);
+    adcl(imm.hi(), dest.high);
+}
+
+void
 MacroAssembler::addConstantDouble(double d, FloatRegister dest)
 {
     Double* dbl = getDouble(d);

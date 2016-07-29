@@ -23,9 +23,13 @@ class BaseAssemblerX86 : public BaseAssembler
     void adcl_ir(int32_t imm, RegisterID dst)
     {
         spew("adcl       $%d, %s", imm, GPReg32Name(dst));
-        MOZ_ASSERT(CAN_SIGN_EXTEND_8_32(imm));
-        m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_ADC);
-        m_formatter.immediate8s(imm);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_ADC);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_ADC);
+            m_formatter.immediate32(imm);
+        }
     }
 
     void adcl_im(int32_t imm, const void* addr)
