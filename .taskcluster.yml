@@ -87,7 +87,7 @@ tasks:
 
         cache:
           level-{{level}}-hg-shared: /home/worker/hg-shared
-          level-{{level}}-{{project}}-gecko-decision: /home/worker/workspace
+          level-{{level}}-gecko-decision: /home/worker/workspace
 
         features:
           taskclusterProxy: true
