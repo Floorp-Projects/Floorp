@@ -401,7 +401,7 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
     MOZ_ASSERT(mImageData, "Should have a buffer now");
 
     if (mDownscaler) {
-      nsresult rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
+      nsresult rv = mDownscaler->BeginFrame(Size(), Nothing(),
                                             mImageData,
                                             /* aHasAlpha = */ false);
       if (NS_FAILED(rv)) {

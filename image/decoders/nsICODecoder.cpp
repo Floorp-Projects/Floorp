@@ -582,7 +582,7 @@ nsICODecoder::FinishResource()
   // Make sure the actual size of the resource matches the size in the directory
   // entry. If not, we consider the image corrupt.
   if (mContainedDecoder->HasSize() &&
-      mContainedDecoder->GetSize() != GetRealSize()) {
+      mContainedDecoder->Size() != GetRealSize()) {
     return Transition::TerminateFailure();
   }
 

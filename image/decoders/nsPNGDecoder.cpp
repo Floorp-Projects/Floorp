@@ -151,7 +151,7 @@ nsPNGDecoder::GetTransparencyType(SurfaceFormat aFormat,
   if (aFormat == SurfaceFormat::B8G8R8A8) {
     return TransparencyType::eAlpha;
   }
-  if (!IntRect(IntPoint(), GetSize()).IsEqualEdges(aFrameRect)) {
+  if (!IntRect(IntPoint(), Size()).IsEqualEdges(aFrameRect)) {
     MOZ_ASSERT(HasAnimation());
     return TransparencyType::eFrameRect;
   }
@@ -213,7 +213,7 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
   }
 
   Maybe<SurfacePipe> pipe =
-    SurfacePipeFactory::CreateSurfacePipe(this, mNumFrames, GetSize(),
+    SurfacePipeFactory::CreateSurfacePipe(this, mNumFrames, Size(),
                                           OutputSize(), aFrameInfo.mFrameRect,
                                           format, pipeFlags);
 
