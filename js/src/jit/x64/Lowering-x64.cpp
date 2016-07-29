@@ -476,3 +476,9 @@ LIRGeneratorX64::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 
     define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);
 }
+
+void
+LIRGeneratorX64::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+{
+    defineInt64(new(alloc()) LExtendInt32ToInt64(useAtStart(ins->input())), ins);
+}

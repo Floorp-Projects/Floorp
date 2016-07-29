@@ -1445,3 +1445,21 @@ CodeGeneratorX86::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
     masm.Pop(output.low);
     masm.Pop(output.high);
 }
+
+void
+CodeGeneratorX86::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+{
+    Register64 output = ToOutRegister64(lir);
+    Register input = ToRegister(lir->input());
+
+    if (lir->mir()->isUnsigned()) {
+        if (output.low != input)
+            masm.movl(input, output.low);
+        masm.xorl(output.high, output.high);
+    } else {
+        MOZ_ASSERT(output.low == input);
+        MOZ_ASSERT(output.low == eax);
+        MOZ_ASSERT(output.high == edx);
+        masm.cdq();
+    }
+}

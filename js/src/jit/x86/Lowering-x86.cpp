@@ -597,3 +597,16 @@ LIRGeneratorX86::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
     MOZ_CRASH("NY");
 }
+
+void
+LIRGeneratorX86::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+{
+    if (ins->isUnsigned()) {
+        defineInt64(new(alloc()) LExtendInt32ToInt64(useRegisterAtStart(ins->input())), ins);
+    } else {
+        LExtendInt32ToInt64* lir =
+            new(alloc()) LExtendInt32ToInt64(useFixedAtStart(ins->input(), eax));
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                    LAllocation(AnyRegister(eax))));
+    }
+}
