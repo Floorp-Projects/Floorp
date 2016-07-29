@@ -914,7 +914,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void popcnt32(Register src, Register dest, Register temp) DEFINED_ON(arm, x86_shared);
 
     // temp may be invalid only if the chip has the POPCNT instruction.
-    inline void popcnt64(Register64 src, Register64 dest, Register64 temp) DEFINED_ON(x64);
+    inline void popcnt64(Register64 src, Register64 dest, Register temp) DEFINED_ON(x86, x64);
 
     // ===============================================================
     // Branch functions

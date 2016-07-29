@@ -2503,7 +2503,7 @@ class BaseCompiler
 
     void popcntI64(RegI64 srcDest, RegI64 tmp) {
 #if defined(JS_CODEGEN_X64)
-        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg);
+        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: popcntI64");
 #endif
