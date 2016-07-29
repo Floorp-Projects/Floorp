@@ -87,6 +87,16 @@ GRTAGS
 GSYMS
 GPATH
 
+# Various items for Loop
+^browser/components/loop/standalone/content/config\.js$
+^browser/extensions/loop/.*/node_modules/
+^browser/extensions/loop/.*\.module-cache
+^browser/extensions/loop/test/coverage/desktop
+^browser/extensions/loop/test/coverage/shared_standalone
+^browser/extensions/loop/test/visual-regression/diff
+^browser/extensions/loop/test/visual-regression/new
+^browser/extensions/loop/test/visual-regression/refs
+
 # Git clone directory for updating web-platform-tests
 ^testing/web-platform/sync/
 

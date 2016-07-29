@@ -6,6 +6,7 @@
 
 DIRS += [
     'e10srollout',
+    'loop',
     'pdfjs',
     'pocket',
     'webcompat',
