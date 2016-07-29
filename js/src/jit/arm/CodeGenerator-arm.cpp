@@ -3016,3 +3016,15 @@ CodeGeneratorARM::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
 
     masm.move32(ToRegister(input.low()), output);
 }
+
+void
+CodeGeneratorARM::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+{
+    Register64 output = ToOutRegister64(lir);
+    MOZ_ASSERT(ToRegister(lir->input()) == output.low);
+
+    if (lir->mir()->isUnsigned())
+        masm.ma_mov(Imm32(0), output.high);
+    else
+        masm.ma_asr(Imm32(31), output.low, output.high);
+}
