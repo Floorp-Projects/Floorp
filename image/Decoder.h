@@ -129,6 +129,10 @@ public:
    * If this decoder supports downscale-during-decode and is configured to
    * downscale, returns the target size that the output size will be decoded to.
    * Otherwise, returns Nothing().
+   *
+   * Note that virtually all callers don't care whether a decoder is configured
+   * to downscale; they just want to know what the decoder's output size is.
+   * Such callers should use OutputSize() instead.
    */
   Maybe<gfx::IntSize> GetTargetSize();
 
@@ -266,6 +270,19 @@ public:
   {
     MOZ_ASSERT(HasSize());
     return mImageMetadata.GetSize();
+  }
+
+  /**
+   * @return the output size of this decoder. If this is different than the
+   * intrinsic size, then the image will be downscaled during the decoding
+   * process.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  gfx::IntSize OutputSize() const
+  {
+    return mDownscaler ? mDownscaler->TargetSize()
+                       : GetSize();
   }
 
   virtual Telemetry::ID SpeedHistogram();

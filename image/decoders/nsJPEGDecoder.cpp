@@ -388,10 +388,9 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
                            jpeg_has_multiple_scans(&mInfo);
 
     MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-    nsIntSize targetSize = mDownscaler ? mDownscaler->TargetSize() : GetSize();
-    nsresult rv = AllocateFrame(0, targetSize,
-                                nsIntRect(nsIntPoint(), targetSize),
-                                gfx::SurfaceFormat::B8G8R8A8);
+    nsresult rv = AllocateFrame(/* aFrameNum = */ 0, OutputSize(),
+                                IntRect(IntPoint(), OutputSize()),
+                                SurfaceFormat::B8G8R8A8);
     if (NS_FAILED(rv)) {
       mState = JPEG_ERROR;
       MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
