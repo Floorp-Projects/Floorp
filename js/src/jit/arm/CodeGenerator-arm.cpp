@@ -3388,3 +3388,24 @@ CodeGeneratorARM::visitAsmSelectI64(LAsmSelectI64* lir)
     }
 }
 
+void
+CodeGeneratorARM::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    masm.ma_vxfer(input.low, input.high, output);
+}
+
+void
+CodeGeneratorARM::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);
+    FloatRegister input = ToFloatRegister(lir->getOperand(0));
+    Register64 output = ToOutRegister64(lir);
+
+    masm.ma_vxfer(input, output.low, output.high);
+}

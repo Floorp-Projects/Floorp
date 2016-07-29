@@ -171,6 +171,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitRotateI64(LRotateI64* lir);
     virtual void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* lir);
     virtual void visitAsmSelectI64(LAsmSelectI64* lir);
+    virtual void visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir);
+    virtual void visitAsmReinterpretToI64(LAsmReinterpretToI64* lir);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
