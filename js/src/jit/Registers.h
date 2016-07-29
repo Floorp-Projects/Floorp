@@ -99,6 +99,11 @@ struct Register {
     }
 };
 
+#if defined(JS_NUNBOX32)
+static const uint32_t INT64LOW_OFFSET = 0 * sizeof(int32_t);
+static const uint32_t INT64HIGH_OFFSET = 1 * sizeof(int32_t);
+#endif
+
 struct Register64
 {
 #ifdef JS_PUNBOX64

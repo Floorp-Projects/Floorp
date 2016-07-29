@@ -4632,6 +4632,9 @@ LIRGenerator::definePhis()
         if (phi->type() == MIRType::Value) {
             defineUntypedPhi(*phi, lirIndex);
             lirIndex += BOX_PIECES;
+        } else if (phi->type() == MIRType::Int64) {
+            defineInt64Phi(*phi, lirIndex);
+            lirIndex += INT64_PIECES;
         } else {
             defineTypedPhi(*phi, lirIndex);
             lirIndex += 1;
@@ -4700,6 +4703,9 @@ LIRGenerator::visitBlock(MBasicBlock* block)
             if (phi->type() == MIRType::Value) {
                 lowerUntypedPhiInput(*phi, position, successor->lir(), lirIndex);
                 lirIndex += BOX_PIECES;
+            } else if (phi->type() == MIRType::Int64) {
+                lowerInt64PhiInput(*phi, position, successor->lir(), lirIndex);
+                lirIndex += INT64_PIECES;
             } else {
                 lowerTypedPhiInput(*phi, position, successor->lir(), lirIndex);
                 lirIndex += 1;

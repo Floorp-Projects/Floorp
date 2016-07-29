@@ -120,6 +120,18 @@ LIRGeneratorX64::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock*
 {
     lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
 }
+ 
+void
+LIRGeneratorX64::defineInt64Phi(MPhi* phi, size_t lirIndex)
+{
+    defineTypedPhi(phi, lirIndex);
+}
+
+void
+LIRGeneratorX64::lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex)
+{
+    lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
+}
 
 void
 LIRGeneratorX64::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
