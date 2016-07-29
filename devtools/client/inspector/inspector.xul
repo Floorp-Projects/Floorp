@@ -97,6 +97,21 @@
       </html:div>
 
       <html:div id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel">
+        <html:div id="computedview-toolbar" class="devtools-toolbar">
+          <html:div class="devtools-searchbox">
+            <html:input id="computedview-searchbox"
+                        class="devtools-filterinput devtools-rule-searchbox"
+                        type="search"
+                        placeholder="&filterStylesPlaceholder;"/>
+            <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
+          </html:div>
+          <html:label id="browser-style-checkbox-label" for="browser-style-checkbox">
+            <html:input id="browser-style-checkbox"
+                        type="checkbox"
+                        class="includebrowserstyles"
+                        label="&browserStylesLabel;"/>&browserStylesLabel;</html:label>
+        </html:div>
+
         <html:div id="computedview-container">
           <html:div id="computedview-container-focusable" tabindex="-1">
             <html:div id="layout-wrapper" tabindex="0">
@@ -149,21 +164,6 @@
                   <html:p id="layout-dummy"></html:p>
                 </html:div>
               </html:div>
-            </html:div>
-
-            <html:div id="computedview-toolbar" class="devtools-toolbar">
-              <html:div class="devtools-searchbox">
-                <html:input id="computedview-searchbox"
-                            class="devtools-filterinput devtools-rule-searchbox"
-                            type="search"
-                            placeholder="&filterStylesPlaceholder;"/>
-                <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
-              </html:div>
-              <html:label id="browser-style-checkbox-label" for="browser-style-checkbox">
-                <html:input id="browser-style-checkbox"
-                            type="checkbox"
-                            class="includebrowserstyles"
-                            label="&browserStylesLabel;"/>&browserStylesLabel;</html:label>
             </html:div>
 
             <html:div id="propertyContainer" class="theme-separator" tabindex="0">
