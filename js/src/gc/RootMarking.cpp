@@ -279,6 +279,8 @@ js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAcc
     if (rt->isBeingDestroyed())
         return;
 
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
+    JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
     traceRuntimeCommon(trc, MarkRuntime, lock);
 }
 
@@ -292,6 +294,7 @@ js::gc::GCRuntime::traceRuntimeForMinorGC(JSTracer* trc, AutoLockForExclusiveAcc
     // the map. And we can reach its trace function despite having finished the
     // roots via the edges stored by the pre-barrier verifier when we finish
     // the verifier for the last time.
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
     traceRuntimeCommon(trc, TraceRuntime, lock);
 }
 
@@ -311,6 +314,8 @@ void
 js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
     MOZ_ASSERT(!rt->isBeingDestroyed());
+
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
     traceRuntimeCommon(trc, TraceRuntime, lock);
 }
 
@@ -318,15 +323,7 @@ void
 js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
                                       AutoLockForExclusiveAccess& lock)
 {
-    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
-
     MOZ_ASSERT(!rt->mainThread.suppressGC);
-
-    // Trace incoming CCW edges.
-    if (traceOrMark == MarkRuntime) {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_CCWS);
-        JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
-    }
 
     // Trace C stack roots.
     {
