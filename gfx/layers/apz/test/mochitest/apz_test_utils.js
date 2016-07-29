@@ -164,10 +164,14 @@ function waitForApzFlushedRepaints(aCallback) {
 //   prefs: optional, an array of arrays containing key-value prefs to set.
 //   dp_suppression: optional, a boolean on whether or not to respect displayport
 //                   suppression during the test.
+//   onload: optional, a function that will be registered as a load event listener
+//           for the child window that will hold the subtest. the function will be
+//           passed exactly one argument, which will be the child window.
 // An example of an array is:
 //   aSubtests = [
 //     { 'file': 'test_file_name.html' },
 //     { 'file': 'test_file_2.html', 'prefs': [['pref.name', true], ['other.pref', 1000]], 'dp_suppression': false }
+//     { 'file': 'file_3.html', 'onload': function(w) { w.subtestDone(); } }
 //   ];
 //
 // Each subtest should call the subtestDone() function when it is done, to
@@ -225,6 +229,9 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.SimpleTest = SimpleTest;
         w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
         w.ok = function(cond, name, diag) { return ok(cond, aFile + " | " + name, diag); };
+        if (test.onload) {
+          w.addEventListener('load', function(e) { test.onload(w); }, { once: true });
+        }
         w.location = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
         return w;
       }
@@ -366,4 +373,31 @@ function getQueryArgs() {
     }
   }
   return args;
+}
+
+// Return a function that returns a promise to create a script element with the
+// given URI and append it to the head of the document in the given window.
+// As with runContinuation(), the extra function wrapper is for convenience
+// at the call site, so that this can be chained with other promises:
+//   waitUntilApzStable().then(injectScript('foo'))
+//                       .then(injectScript('bar'));
+// If you want to do the injection right away, run the function returned by
+// this function:
+//   injectScript('foo')();
+function injectScript(aScript, aWindow = window) {
+  return function() {
+    return new Promise(function(resolve, reject) {
+      var e = aWindow.document.createElement('script');
+      e.type = 'text/javascript';
+      e.onload = function() {
+        resolve();
+      };
+      e.onerror = function() {
+        dump('Script [' + aScript + '] errored out\n');
+        reject();
+      };
+      e.src = aScript;
+      aWindow.document.getElementsByTagName('head')[0].appendChild(e);
+    });
+  };
 }
