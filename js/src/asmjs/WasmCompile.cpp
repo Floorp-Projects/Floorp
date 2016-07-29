@@ -40,16 +40,6 @@ Fail(Decoder& d, const char* str)
     return false;
 }
 
-static bool
-IsI64Implemented()
-{
-#ifdef JS_CPU_X64
-    return true;
-#else
-    return false;
-#endif
-}
-
 namespace {
 
 struct ValidatingPolicy : ExprIterPolicy
