@@ -4175,7 +4175,7 @@ nsComputedDOMStyle::DoGetBoxSizing()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(uint8_t(StylePosition()->mBoxSizing),
+    nsCSSProps::ValueToKeywordEnum(StylePosition()->mBoxSizing,
                                    nsCSSProps::kBoxSizingKTable));
   return val.forget();
 }
@@ -6010,7 +6010,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
 
   nsAutoString boxString;
   AppendASCIItoUTF16(
-    nsCSSProps::ValueToKeyword(uint8_t(aSizingBox),
+    nsCSSProps::ValueToKeyword(aSizingBox,
                                nsCSSProps::kClipShapeSizingKTable),
                                boxString);
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;

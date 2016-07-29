@@ -8,6 +8,8 @@
 #ifndef nsCSSValue_h___
 #define nsCSSValue_h___
 
+#include <type_traits>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SheetType.h"
@@ -18,6 +20,7 @@
 #include "nsCOMPtr.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSProperty.h"
+#include "nsCSSProps.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsProxyRelease.h"
@@ -725,6 +728,14 @@ private:
 
 public:
   void SetIntValue(int32_t aValue, nsCSSUnit aUnit);
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  void SetIntValue(T aValue, nsCSSUnit aUnit)
+  {
+    static_assert(mozilla::IsEnumFittingWithin<T, int32_t>::value,
+                  "aValue must be an enum that fits within mValue.mInt");
+    SetIntValue(static_cast<int32_t>(aValue), aUnit);
+  }
   void SetPercentValue(float aValue);
   void SetFloatValue(float aValue, nsCSSUnit aUnit);
   void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);

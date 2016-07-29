@@ -430,6 +430,14 @@ public:
   void SetAutoValue();
   void SetNoneValue();
   void SetIntValue(int32_t aInt, Unit aUnit);
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  void SetIntValue(T aInt, Unit aUnit)
+  {
+    static_assert(mozilla::IsEnumFittingWithin<T, int32_t>::value,
+                  "aValue must be an enum that fits within mValue.mInt");
+    SetIntValue(static_cast<int32_t>(aInt), aUnit);
+  }
   void SetCoordValue(nscoord aCoord);
   void SetPercentValue(float aPercent);
   void SetFloatValue(float aFloat);
