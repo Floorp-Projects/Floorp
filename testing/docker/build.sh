@@ -11,14 +11,9 @@ build() {
   local tag=$2
   local folder="$gecko_root/testing/docker/$image_name"
 
-  if [ -f $folder/build.sh ]; then
-    shift
-    $folder/build.sh -t $tag $* || exit 1
-  else
-    # use --no-cache so that we always get the latest updates from yum
-    # and use the latest version of system-setup.sh
-    ( cd $folder/.. && docker build --no-cache -t $tag $image_name ) || exit 1
-  fi
+  # use --no-cache so that we always get the latest updates from yum
+  # and use the latest version of system-setup.sh
+  ( cd $folder/.. && docker build --no-cache -t $tag $image_name ) || exit 1
 
   echo "Success built $image_name and tagged with $tag"
 }
