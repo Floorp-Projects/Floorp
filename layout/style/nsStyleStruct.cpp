@@ -1913,19 +1913,6 @@ nsStyleGradient::HasCalc()
 // CachedBorderImageData
 //
 void
-CachedBorderImageData::SetCachedSVGViewportSize(
-  const mozilla::Maybe<nsSize>& aSVGViewportSize)
-{
-  mCachedSVGViewportSize = aSVGViewportSize;
-}
-
-const mozilla::Maybe<nsSize>&
-CachedBorderImageData::GetCachedSVGViewportSize()
-{
-  return mCachedSVGViewportSize;
-}
-
-void
 CachedBorderImageData::PurgeCachedImages()
 {
   mSubImages.Clear();
@@ -2306,26 +2293,6 @@ nsStyleImage::operator==(const nsStyleImage& aOther) const
   }
 
   return true;
-}
-
-void
-nsStyleImage::PurgeCacheForViewportChange(
-  const mozilla::Maybe<nsSize>& aSVGViewportSize,
-  const bool aHasIntrinsicRatio) const
-{
-  EnsureCachedBIData();
-
-  // If we're redrawing with a different viewport-size than we used for our
-  // cached subimages, then we can't trust that our subimages are valid;
-  // any percent sizes/positions in our SVG doc may be different now. Purge!
-  // (We don't have to purge if the SVG document has an intrinsic ratio,
-  // though, because the actual size of elements in SVG documant's coordinate
-  // axis are fixed in this case.)
-  if (aSVGViewportSize != mCachedBIData->GetCachedSVGViewportSize() &&
-      !aHasIntrinsicRatio) {
-    mCachedBIData->PurgeCachedImages();
-    mCachedBIData->SetCachedSVGViewportSize(aSVGViewportSize);
-  }
 }
 
 // --------------------
