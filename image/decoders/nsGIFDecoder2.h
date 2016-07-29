@@ -80,13 +80,13 @@ private:
     GLOBAL_COLOR_TABLE,
     FINISHED_GLOBAL_COLOR_TABLE,
     BLOCK_HEADER,
-    BLOCK_HEADER_AFTER_YIELD,
     EXTENSION_HEADER,
     GRAPHIC_CONTROL_EXTENSION,
     APPLICATION_IDENTIFIER,
     NETSCAPE_EXTENSION_SUB_BLOCK,
     NETSCAPE_EXTENSION_DATA,
     IMAGE_DESCRIPTOR,
+    FINISH_IMAGE_DESCRIPTOR,
     LOCAL_COLOR_TABLE,
     FINISHED_LOCAL_COLOR_TABLE,
     IMAGE_DATA_BLOCK,
@@ -110,6 +110,7 @@ private:
   LexerTransition<State> ReadNetscapeExtensionSubBlock(const char* aData);
   LexerTransition<State> ReadNetscapeExtensionData(const char* aData);
   LexerTransition<State> ReadImageDescriptor(const char* aData);
+  LexerTransition<State> FinishImageDescriptor(const char* aData);
   LexerTransition<State> ReadLocalColorTable(const char* aData, size_t aLength);
   LexerTransition<State> FinishedLocalColorTable();
   LexerTransition<State> ReadImageDataBlock(const char* aData);
