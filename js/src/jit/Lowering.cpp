@@ -4201,7 +4201,12 @@ LIRGenerator::visitAsmJSCall(MAsmJSCall* ins)
             useFixed(ins->callee().dynamicPtr(), WasmTableCallPtrReg);
     }
 
-    LInstruction* lir = new(alloc()) LAsmJSCall(args, ins->numOperands());
+    LInstruction* lir;
+    if (ins->type() == MIRType::Int64)
+        lir = new(alloc()) LAsmJSCallI64(args, ins->numOperands());
+    else
+        lir = new(alloc()) LAsmJSCall(args, ins->numOperands());
+
     if (ins->type() == MIRType::None)
         add(lir, ins);
     else

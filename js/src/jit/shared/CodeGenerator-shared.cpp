@@ -1489,7 +1489,7 @@ CodeGeneratorShared::omitOverRecursedCheck() const
 }
 
 void
-CodeGeneratorShared::emitAsmJSCall(LAsmJSCall* ins)
+CodeGeneratorShared::emitAsmJSCallBase(LAsmJSCallBase* ins)
 {
     MAsmJSCall* mir = ins->mir();
 

@@ -8235,19 +8235,16 @@ class LAsmJSPassStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
     }
 };
 
-class LAsmJSCall final : public LInstruction
+class LAsmJSCallBase : public LInstruction
 {
     LAllocation* operands_;
     uint32_t numOperands_;
-    LDefinition def_;
 
   public:
-    LIR_HEADER(AsmJSCall);
 
-    LAsmJSCall(LAllocation* operands, uint32_t numOperands)
+    LAsmJSCallBase(LAllocation* operands, uint32_t numOperands)
       : operands_(operands),
-        numOperands_(numOperands),
-        def_(LDefinition::BogusTemp())
+        numOperands_(numOperands)
     {}
 
     MAsmJSCall* mir() const {
@@ -8258,26 +8255,7 @@ class LAsmJSCall final : public LInstruction
         return true;
     }
 
-    bool isCallPreserved(AnyRegister reg) const {
-        // WebAssembly functions preserve the TLS pointer register.
-        if (reg.isFloat() || reg.gpr() != WasmTlsReg)
-            return false;
-        return mir()->preservesTlsReg();
-    }
-
     // LInstruction interface
-    size_t numDefs() const {
-        return def_.isBogusTemp() ? 0 : 1;
-    }
-    LDefinition* getDef(size_t index) {
-        MOZ_ASSERT(numDefs() == 1);
-        MOZ_ASSERT(index == 0);
-        return &def_;
-    }
-    void setDef(size_t index, const LDefinition& def) {
-        MOZ_ASSERT(index == 0);
-        def_ = def;
-    }
     size_t numOperands() const {
         return numOperands_;
     }
@@ -8306,6 +8284,69 @@ class LAsmJSCall final : public LInstruction
     }
     void setSuccessor(size_t i, MBasicBlock*) {
         MOZ_CRASH("no successors");
+    }
+};
+
+class LAsmJSCall : public LAsmJSCallBase
+{
+     LDefinition def_;
+
+  public:
+    LIR_HEADER(AsmJSCall);
+
+    LAsmJSCall(LAllocation* operands, uint32_t numOperands)
+      : LAsmJSCallBase(operands, numOperands),
+        def_(LDefinition::BogusTemp())
+    {}
+
+    bool isCallPreserved(AnyRegister reg) const {
+        // WebAssembly functions preserve the TLS pointer register.
+        if (reg.isFloat() || reg.gpr() != WasmTlsReg)
+            return false;
+        return mir()->preservesTlsReg();
+    }
+
+    // LInstruction interface
+    size_t numDefs() const {
+        return def_.isBogusTemp() ? 0 : 1;
+    }
+    LDefinition* getDef(size_t index) {
+        MOZ_ASSERT(numDefs() == 1);
+        MOZ_ASSERT(index == 0);
+        return &def_;
+    }
+    void setDef(size_t index, const LDefinition& def) {
+        MOZ_ASSERT(index == 0);
+        def_ = def;
+    }
+};
+
+class LAsmJSCallI64 : public LAsmJSCallBase
+{
+    LDefinition defs_[INT64_PIECES];
+
+  public:
+    LIR_HEADER(AsmJSCallI64);
+
+    LAsmJSCallI64(LAllocation* operands, uint32_t numOperands)
+      : LAsmJSCallBase(operands, numOperands)
+    {
+        for (size_t i = 0; i < numDefs(); i++) {
+            defs_[i] = LDefinition::BogusTemp();
+        }
+    }
+
+    // LInstruction interface
+    size_t numDefs() const {
+        return INT64_PIECES;
+    }
+    LDefinition* getDef(size_t index) {
+        MOZ_ASSERT(index < numDefs());
+        return &defs_[index];
+    }
+    void setDef(size_t index, const LDefinition& def) {
+        MOZ_ASSERT(index < numDefs());
+        defs_[index] = def;
     }
 };
 
