@@ -3254,7 +3254,10 @@ CodeGeneratorARM::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
     const LInt64Allocation& input = lir->getInt64Operand(0);
     Register output = ToRegister(lir->output());
 
-    masm.move32(ToRegister(input.low()), output);
+    if (lir->mir()->bottomHalf())
+        masm.move32(ToRegister(input.low()), output);
+    else
+        masm.move32(ToRegister(input.high()), output);
 }
 
 void

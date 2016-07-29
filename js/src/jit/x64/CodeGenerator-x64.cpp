@@ -1151,7 +1151,10 @@ CodeGeneratorX64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
     const LAllocation* input = lir->getOperand(0);
     Register output = ToRegister(lir->output());
 
-    masm.movl(ToOperand(input), output);
+    if (lir->mir()->bottomHalf())
+        masm.movl(ToOperand(input), output);
+    else
+        MOZ_CRASH("Not implemented.");
 }
 
 void
