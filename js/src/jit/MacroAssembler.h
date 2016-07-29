@@ -951,10 +951,12 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // The supported condition are Equal, NotEqual, LessThan(orEqual), GreaterThan(orEqual),
     // Below(orEqual) and Above(orEqual).
-    inline void branch64(Condition cond, Register64 lhs, Imm64 val, Label* label)
-        DEFINED_ON(x86, x64, arm);
-    inline void branch64(Condition cond, Register64 lhs, Register64 rhs, Label* label)
-        DEFINED_ON(x86, x64, arm);
+    // When a fail label is not defined it will fall through to next instruction,
+    // else jump to the fail label.
+    inline void branch64(Condition cond, Register64 lhs, Imm64 val, Label* success,
+                         Label* fail = nullptr) DEFINED_ON(x86, x64, arm);
+    inline void branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success,
+                         Label* fail = nullptr) DEFINED_ON(x86, x64, arm);
     // On x86 and x64 NotEqual and Equal conditions are allowed for the branch64 variants
     // with Address as lhs. On others only the NotEqual condition.
     inline void branch64(Condition cond, const Address& lhs, Imm64 val, Label* label) PER_ARCH;

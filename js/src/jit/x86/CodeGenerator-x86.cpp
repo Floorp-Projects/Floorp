@@ -1393,79 +1393,23 @@ CodeGeneratorX86::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
     bool isSigned = mir->compareType() == MCompare::Compare_Int64;
     Assembler::Condition condition = JSOpToCondition(lir->jsop(), isSigned);
 
-    if (IsConstant(rhs)) {
-        Imm64 imm = Imm64(ToInt64(rhs));
-        switch(lir->jsop()) {
-          case JSOP_EQ:
-          case JSOP_STRICTEQ:
-            masm.cmp32(lhsRegs.high, imm.hi());
-            jumpToBlock(lir->ifFalse(), Assembler::NotEqual);
-            masm.cmp32(lhsRegs.low, imm.low());
-            emitBranch(condition, lir->ifTrue(), lir->ifFalse());
-            break;
-          case JSOP_NE:
-          case JSOP_STRICTNE:
-            masm.cmp32(lhsRegs.high, imm.hi());
-            jumpToBlock(lir->ifTrue(), Assembler::NotEqual);
-            masm.cmp32(lhsRegs.low, imm.low());
-            emitBranch(condition, lir->ifTrue(), lir->ifFalse());
-            break;
-          case JSOP_LT:
-          case JSOP_LE:
-          case JSOP_GT:
-          case JSOP_GE: {
-            Assembler::Condition cond1 = Assembler::ConditionWithoutEqual(condition);
-            Assembler::Condition cond2 = Assembler::ConditionWithoutEqual(Assembler::InvertCondition(condition));
-            Assembler::Condition cond3 = Assembler::UnsignedCondition(condition);
+    Label* trueLabel = getJumpLabelForBranch(lir->ifTrue());
+    Label* falseLabel = getJumpLabelForBranch(lir->ifFalse());
 
-            masm.cmp32(lhsRegs.high, imm.hi());
-            jumpToBlock(lir->ifTrue(), cond1);
-            jumpToBlock(lir->ifFalse(), cond2);
-            masm.cmp32(lhsRegs.low, imm.low());
-            jumpToBlock(lir->ifTrue(), cond3);
-            jumpToBlock(lir->ifFalse());
-            break;
-          }
-          default:
-            MOZ_CRASH("unexpected op");
-        }
-        return;
+    if (isNextBlock(lir->ifFalse()->lir())) {
+        falseLabel = nullptr;
+    } else if (isNextBlock(lir->ifTrue()->lir())) {
+        condition = Assembler::InvertCondition(condition);
+        trueLabel = falseLabel;
+        falseLabel = nullptr;
     }
 
-    Register64 rhsRegs = ToRegister64(rhs);
-    switch(lir->jsop()) {
-      case JSOP_EQ:
-      case JSOP_STRICTEQ:
-        masm.cmp32(lhsRegs.high, rhsRegs.high);
-        jumpToBlock(lir->ifFalse(), Assembler::NotEqual);
-        masm.cmp32(lhsRegs.low, rhsRegs.low);
-        emitBranch(condition, lir->ifTrue(), lir->ifFalse());
-        break;
-      case JSOP_NE:
-      case JSOP_STRICTNE:
-        masm.cmp32(lhsRegs.high, rhsRegs.high);
-        jumpToBlock(lir->ifTrue(), Assembler::NotEqual);
-        masm.cmp32(lhsRegs.low, rhsRegs.low);
-        emitBranch(condition, lir->ifTrue(), lir->ifFalse());
-        break;
-      case JSOP_LT:
-      case JSOP_LE:
-      case JSOP_GT:
-      case JSOP_GE: {
-        Assembler::Condition cond1 = Assembler::ConditionWithoutEqual(condition);
-        Assembler::Condition cond2 = Assembler::ConditionWithoutEqual(Assembler::InvertCondition(condition));
-        Assembler::Condition cond3 = Assembler::UnsignedCondition(condition);
-
-        masm.cmp32(lhsRegs.high, rhsRegs.high);
-        jumpToBlock(lir->ifTrue(), cond1);
-        jumpToBlock(lir->ifFalse(), cond2);
-        masm.cmp32(lhsRegs.low, rhsRegs.low);
-        jumpToBlock(lir->ifTrue(), cond3);
-        jumpToBlock(lir->ifFalse());
-        break;
-      }
-      default:
-        MOZ_CRASH("unexpected op");
+    if (IsConstant(rhs)) {
+        Imm64 imm = Imm64(ToInt64(rhs));
+        masm.branch64(condition, lhsRegs, imm, trueLabel, falseLabel);
+    } else {
+        Register64 rhsRegs = ToRegister64(rhs);
+        masm.branch64(condition, lhsRegs, rhsRegs, trueLabel, falseLabel);
     }
 }
 
