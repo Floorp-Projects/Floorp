@@ -889,18 +889,18 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest) DEFINED_ON(x64);
     inline void rotateLeft64(Register count, Register64 input, Register64 dest) DEFINED_ON(x64);
     inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64);
+        DEFINED_ON(x86, x64, arm);
     inline void rotateLeft64(Register count, Register64 input, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64);
+        DEFINED_ON(x86, x64, arm);
 
     inline void rotateRight(Imm32 count, Register input, Register dest) PER_SHARED_ARCH;
     inline void rotateRight(Register count, Register input, Register dest) PER_SHARED_ARCH;
     inline void rotateRight64(Imm32 count, Register64 input, Register64 dest) DEFINED_ON(x64);
     inline void rotateRight64(Register count, Register64 input, Register64 dest) DEFINED_ON(x64);
     inline void rotateRight64(Imm32 count, Register64 input, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64);
+        DEFINED_ON(x86, x64, arm);
     inline void rotateRight64(Register count, Register64 input, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64);
+        DEFINED_ON(x86, x64, arm);
 
     // ===============================================================
     // Bit counting functions
