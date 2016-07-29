@@ -345,6 +345,9 @@ class Assembler : public AssemblerX86Shared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void faddp() {
+        masm.faddp();
+    }
 
     void cmpl(ImmWord rhs, Register lhs) {
         masm.cmpl_ir(rhs.value, lhs.encoding());
@@ -450,6 +453,16 @@ class Assembler : public AssemblerX86Shared
             break;
           case Operand::MEM_ADDRESS32:
             masm.vpunpckldq_mr(src1.address(), src0.encoding(), dest.encoding());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+
+    void fild(const Operand& src) {
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.fild_m(src.disp(), src.base());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");

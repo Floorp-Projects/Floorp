@@ -173,6 +173,11 @@ class BaseAssemblerX86 : public BaseAssembler
         twoByteOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ, addr, src0, dst);
     }
 
+    void fild_m(int32_t offset, RegisterID base)
+    {
+        m_formatter.oneByteOp(OP_FILD, offset, base, FILD_OP_64);
+    }
+
     // Misc instructions:
 
     void pusha()
