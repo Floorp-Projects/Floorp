@@ -287,20 +287,6 @@ CodeGeneratorX64::visitRotate64(LRotate64* lir)
 }
 
 void
-CodeGeneratorX64::visitSubI64(LSubI64* lir)
-{
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
-
-    MOZ_ASSERT(ToRegister(lir->getDef(0)) == lhs);
-
-    if (rhs->isConstant())
-        masm.subPtr(ImmWord(ToInt64(rhs)), lhs);
-    else
-        masm.subq(ToOperand(rhs), lhs);
-}
-
-void
 CodeGeneratorX64::visitMulI64(LMulI64* lir)
 {
     Register lhs = ToRegister(lir->getOperand(0));

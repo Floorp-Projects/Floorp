@@ -403,6 +403,13 @@ class Assembler : public AssemblerX86Shared
         masm.adcl_rr(src.encoding(), dest.encoding());
     }
 
+    void sbbl(Imm32 imm, Register dest) {
+        masm.sbbl_ir(imm.value, dest.encoding());
+    }
+    void sbbl(Register src, Register dest) {
+        masm.sbbl_rr(src.encoding(), dest.encoding());
+    }
+
     void mull(Register multiplier) {
         masm.mull_r(multiplier.encoding());
     }

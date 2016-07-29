@@ -240,6 +240,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitAddI(LAddI* ins);
     virtual void visitAddI64(LAddI64* ins);
     virtual void visitSubI(LSubI* ins);
+    virtual void visitSubI64(LSubI64* ins);
     virtual void visitMulI(LMulI* ins);
     virtual void visitDivI(LDivI* ins);
     virtual void visitDivPowTwoI(LDivPowTwoI* ins);

@@ -50,6 +50,24 @@ class BaseAssemblerX86 : public BaseAssembler
         m_formatter.oneByteOp(OP_ADC_GvEv, src, dst);
     }
 
+    void sbbl_ir(int32_t imm, RegisterID dst)
+    {
+        spew("sbbl       $%d, %s", imm, GPReg32Name(dst));
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_SBB);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_SBB);
+            m_formatter.immediate32(imm);
+        }
+    }
+
+    void sbbl_rr(RegisterID src, RegisterID dst)
+    {
+        spew("sbbl       %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.oneByteOp(OP_SBB_GvEv, src, dst);
+    }
+
     using BaseAssembler::andl_im;
     void andl_im(int32_t imm, const void* addr)
     {
