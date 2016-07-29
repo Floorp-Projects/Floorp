@@ -53,7 +53,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitCompareI64(LCompareI64* lir);
     void visitCompareI64AndBranch(LCompareI64AndBranch* lir);
     void visitDivOrModI64(LDivOrModI64* lir);
-    void visitUDivOrMod64(LUDivOrMod64* lir);
+    void visitUDivOrModI64(LUDivOrModI64* lir);
     void visitNotI64(LNotI64* lir);
     void visitClzI64(LClzI64* lir);
     void visitCtzI64(LCtzI64* lir);

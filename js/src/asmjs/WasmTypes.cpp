@@ -162,6 +162,44 @@ CoerceInPlace_ToNumber(MutableHandleValue val)
     return true;
 }
 
+static int64_t
+DivI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
+{
+    int64_t x = ((uint64_t)x_hi << 32) + x_lo;
+    int64_t y = ((uint64_t)y_hi << 32) + y_lo;
+    MOZ_ASSERT(x != INT64_MIN || y != -1);
+    MOZ_ASSERT(y != 0);
+    return x / y;
+}
+
+static int64_t
+UDivI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
+{
+    uint64_t x = ((uint64_t)x_hi << 32) + x_lo;
+    uint64_t y = ((uint64_t)y_hi << 32) + y_lo;
+    MOZ_ASSERT(y != 0);
+    return x / y;
+}
+
+static int64_t
+ModI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
+{
+    int64_t x = ((uint64_t)x_hi << 32) + x_lo;
+    int64_t y = ((uint64_t)y_hi << 32) + y_lo;
+    MOZ_ASSERT(x != INT64_MIN || y != -1);
+    MOZ_ASSERT(y != 0);
+    return x % y;
+}
+
+static int64_t
+UModI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
+{
+    uint64_t x = ((uint64_t)x_hi << 32) + x_lo;
+    uint64_t y = ((uint64_t)y_hi << 32) + y_lo;
+    MOZ_ASSERT(y != 0);
+    return x % y;
+}
+
 template <class F>
 static inline void*
 FuncCast(F* pf, ABIFunctionType type)
@@ -201,6 +239,14 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(CoerceInPlace_ToNumber, Args_General1);
       case SymbolicAddress::ToInt32:
         return FuncCast<int32_t (double)>(JS::ToInt32, Args_Int_Double);
+      case SymbolicAddress::DivI64:
+        return FuncCast(DivI64, Args_General4);
+      case SymbolicAddress::UDivI64:
+        return FuncCast(UDivI64, Args_General4);
+      case SymbolicAddress::ModI64:
+        return FuncCast(ModI64, Args_General4);
+      case SymbolicAddress::UModI64:
+        return FuncCast(UModI64, Args_General4);
 #if defined(JS_CODEGEN_ARM)
       case SymbolicAddress::aeabi_idivmod:
         return FuncCast(__aeabi_idivmod, Args_General2);

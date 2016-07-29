@@ -12,7 +12,7 @@
 #define LIR_CPU_OPCODE_LIST(_)      \
     _(DivOrModConstantI)            \
     _(DivOrModI64)                  \
-    _(UDivOrMod64)                  \
+    _(UDivOrModI64)                 \
     _(WasmTruncateToInt64)          \
     _(Int64ToFloatingPoint)         \
     _(SimdValueInt32x4)             \
