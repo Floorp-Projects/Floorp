@@ -21,6 +21,7 @@
     _(AsmJSAtomicExchangeCallout) \
     _(AsmJSAtomicBinopCallout)  \
     _(DivOrModI64)              \
-    _(UDivOrModI64)
+    _(UDivOrModI64)             \
+    _(WasmTruncateToInt64)
 
 #endif /* jit_arm_LOpcodes_arm_h */

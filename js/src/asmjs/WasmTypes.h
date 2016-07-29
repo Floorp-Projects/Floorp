@@ -901,6 +901,8 @@ enum class SymbolicAddress
     UDivI64,
     ModI64,
     UModI64,
+    TruncateDoubleToInt64,
+    TruncateDoubleToUint64,
     Limit
 };
 

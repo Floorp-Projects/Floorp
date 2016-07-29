@@ -541,6 +541,21 @@ class LAsmJSAtomicBinopCallout : public LCallInstructionHelper<1, 2, 0>
     }
 };
 
+class LWasmTruncateToInt64 : public LCallInstructionHelper<INT64_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmTruncateToInt64);
+
+    LWasmTruncateToInt64(const LAllocation& in)
+    {
+        setOperand(0, in);
+    }
+
+    MWasmTruncateToInt64* mir() const {
+        return mir_->toWasmTruncateToInt64();
+    }
+};
+
 } // namespace jit
 } // namespace js
 

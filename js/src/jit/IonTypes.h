@@ -762,10 +762,11 @@ enum {
     ArgType_General = 0x1,
     ArgType_Double  = 0x2,
     ArgType_Float32 = 0x3,
+    ArgType_Int64 = 0x4,
 
     RetType_Shift   = 0x0,
-    ArgType_Shift   = 0x2,
-    ArgType_Mask    = 0x3
+    ArgType_Shift   = 0x3,
+    ArgType_Mask    = 0x7
 };
 
 enum ABIFunctionType
@@ -781,6 +782,9 @@ enum ABIFunctionType
     Args_General6 = Args_General5 | (ArgType_General << (ArgType_Shift * 6)),
     Args_General7 = Args_General6 | (ArgType_General << (ArgType_Shift * 7)),
     Args_General8 = Args_General7 | (ArgType_General << (ArgType_Shift * 8)),
+
+    // int64 f(double)
+    Args_Int64_Double = (ArgType_Int64 << RetType_Shift) | (ArgType_Double << ArgType_Shift),
 
     // double f()
     Args_Double_None = ArgType_Double << RetType_Shift,
