@@ -119,3 +119,6 @@ testing/talos/talos/tests/devtools/damp.manifest.develop
 
 # Ignore files created when running a reftest.
 lextab.py
+
+# tup database
+/.tup
