@@ -7889,6 +7889,11 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc,
       return false;
 
     result = JS_NewUCString(cx, dst, length);
+    if (!result) {
+      js_free(dst);
+      return false;
+    }
+
     break;
   }
   case TYPE_int16_t:
