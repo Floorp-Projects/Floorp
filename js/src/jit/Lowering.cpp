@@ -4117,6 +4117,16 @@ LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
     ABIArg abi = ins->abi();
     if (abi.argInRegister()) {
         defineFixed(new(alloc()) LAsmJSParameter, ins, LAllocation(abi.reg()));
+    } else if (ins->type() == MIRType::Int64) {
+        MOZ_ASSERT(!abi.argInRegister());
+        defineInt64Fixed(new(alloc()) LAsmJSParameterI64, ins,
+#if defined(JS_NUNBOX32)
+            LInt64Allocation(LArgument(abi.offsetFromArgBase() + INT64HIGH_OFFSET),
+                             LArgument(abi.offsetFromArgBase() + INT64LOW_OFFSET))
+#else
+            LInt64Allocation(LArgument(abi.offsetFromArgBase()))
+#endif
+        );
     } else {
         MOZ_ASSERT(IsNumberType(ins->type()) || IsSimdType(ins->type()));
         defineFixed(new(alloc()) LAsmJSParameter, ins, LArgument(abi.offsetFromArgBase()));

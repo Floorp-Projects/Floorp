@@ -398,6 +398,7 @@
     _(AsmJSLoadFuncPtr)             \
     _(AsmJSLoadFFIFunc)             \
     _(AsmJSParameter)               \
+    _(AsmJSParameterI64)            \
     _(AsmJSReturn)                  \
     _(AsmJSVoidReturn)              \
     _(AsmJSPassStackArg)            \

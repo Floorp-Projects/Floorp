@@ -8129,6 +8129,12 @@ class LAsmJSParameter : public LInstructionHelper<1, 0, 0>
     LIR_HEADER(AsmJSParameter);
 };
 
+class LAsmJSParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0>
+{
+  public:
+    LIR_HEADER(AsmJSParameterI64);
+};
+
 class LAsmJSReturn : public LInstructionHelper<0, 2, 0>
 {
   public:

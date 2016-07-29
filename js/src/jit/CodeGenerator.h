@@ -361,6 +361,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitIsObjectAndBranch(LIsObjectAndBranch* lir);
     void visitHasClass(LHasClass* lir);
     void visitAsmJSParameter(LAsmJSParameter* lir);
+    void visitAsmJSParameterI64(LAsmJSParameterI64* lir);
     void visitAsmJSReturn(LAsmJSReturn* ret);
     void visitAsmJSVoidReturn(LAsmJSVoidReturn* ret);
     void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins);
