@@ -44,8 +44,8 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
 
     void lowerDivI64(MDiv* div);
     void lowerModI64(MMod* mod);
-    void lowerUDiv64(MDiv* div);
-    void lowerUMod64(MMod* mod);
+    void lowerUDivI64(MDiv* div);
+    void lowerUModI64(MMod* mod);
 
   public:
     void visitBox(MBox* box);

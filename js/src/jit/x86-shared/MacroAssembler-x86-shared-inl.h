@@ -677,8 +677,9 @@ MacroAssembler::branchTest32(Condition cond, const Address& lhs, Imm32 rhs, Labe
     j(cond, label);
 }
 
+template <class L>
 void
-MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label)
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, L label)
 {
     testPtr(lhs, rhs);
     j(cond, label);
