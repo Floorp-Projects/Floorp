@@ -694,6 +694,9 @@ struct GLContextSymbols
     // NV_texture_barrier
     typedef void (GLAPIENTRY * PFNTEXTUREBARRIERPROC) (void);
     PFNTEXTUREBARRIERPROC fTextureBarrier;
+
+    // NV_primitive_restart
+    void (GLAPIENTRY * fPrimitiveRestartIndex) (GLuint index);
 };
 
 } // namespace gl

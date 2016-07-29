@@ -958,6 +958,8 @@ protected:
 
 // -----------------------------------------------------------------------------
 // Vertices Feature (WebGLContextVertices.cpp)
+    GLenum mPrimRestartTypeBytes;
+
 public:
     void DrawArrays(GLenum mode, GLint first, GLsizei count);
     void DrawArraysInstanced(GLenum mode, GLint first, GLsizei count,

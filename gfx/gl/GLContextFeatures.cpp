@@ -440,6 +440,25 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "prim_restart",
+        GLVersion::GL3_1,
+        GLESVersion::NONE,
+        GLContext::Extension_None,
+        {
+            GLContext::NV_primitive_restart,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "prim_restart_fixed",
+        kGLCoreVersionForES3Compat,
+        GLESVersion::ES3,
+        GLContext::ARB_ES3_compatibility,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "query_counter",
         GLVersion::GL3_3,
         GLESVersion::NONE,

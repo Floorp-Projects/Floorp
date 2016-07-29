@@ -1001,6 +1001,8 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mPixelStore_PackSkipPixels = 0;
     mPixelStore_PackAlignment = 4;
 
+    mPrimRestartTypeBytes = 0;
+
     return true;
 }
 
