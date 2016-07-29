@@ -28,9 +28,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void memoryBarrier(MemoryBarrierBits barrier);
 
     void load(Scalar::Type type, const Operand& srcAddr, AnyRegister out);
-    void loadI64(Scalar::Type type, const Operand& srcAddr, AnyRegister out);
-    void visitWasmLoadBase(const MWasmLoad* mir, const LAllocation* ptr, const LDefinition* output,
-                           bool isInt64);
+    void loadI64(Scalar::Type type, const Operand& srcAddr, Register64 out);
 
     void store(Scalar::Type type, const LAllocation* value, const Operand& dstAddr);
 
@@ -39,6 +37,11 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
     void emitSimdLoad(LAsmJSLoadHeap* ins);
     void emitSimdStore(LAsmJSStoreHeap* ins);
+
+    template <typename T>
+    void emitWasmLoad(T* ins);
+    template <typename T>
+    void emitWasmStore(T* ins);
   public:
     CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
@@ -68,6 +71,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitWasmLoad(LWasmLoad* ins);
     void visitWasmLoadI64(LWasmLoadI64* ins);
     void visitWasmStore(LWasmStore* ins);
+    void visitWasmStoreI64(LWasmStoreI64* ins);
     void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
     void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);

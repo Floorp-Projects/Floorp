@@ -55,6 +55,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     void lowerUModI64(MMod* mod);
 
   public:
+    void visitWasmLoad(MWasmLoad* ins);
     void visitBox(MBox* box);
     void visitUnbox(MUnbox* unbox);
     void visitReturn(MReturn* ret);

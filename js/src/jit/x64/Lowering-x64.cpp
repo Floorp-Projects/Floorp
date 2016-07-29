@@ -458,6 +458,21 @@ LIRGeneratorX64::lowerUModI64(MMod* mod)
 }
 
 void
+LIRGeneratorX64::visitWasmLoad(MWasmLoad* ins)
+{
+    if (ins->type() != MIRType::Int64) {
+        lowerWasmLoad(ins);
+        return;
+    }
+
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
+    defineInt64(lir, ins);
+}
+
+void
 LIRGeneratorX64::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
     MDefinition* opd = ins->input();
