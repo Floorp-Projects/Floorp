@@ -6,5 +6,6 @@
         "JITTEST_EXTRA_ARGS": "--jitflags=interp --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt",
         "JSTESTS_EXTRA_ARGS": "--jitflags=interp --exclude-file={DIR}/cgc-jstests-slow.txt",
         "MSAN_OPTIONS": "log_path={OUTDIR}/sanitize_log"
-    }
+    },
+    "max-errors": 8
 }
