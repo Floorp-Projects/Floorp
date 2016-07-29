@@ -196,10 +196,9 @@ void
 LIRGeneratorARM::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
                                   MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
 {
-    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-    ins->setInt64Operand(INT64_PIECES,
-                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
-    defineInt64ReuseInput(ins, mir, 0);
+    ins->setInt64Operand(0, useInt64Register(lhs));
+    ins->setInt64Operand(INT64_PIECES, useInt64OrConstant(rhs));
+    defineInt64(ins, mir);
 }
 
 void
@@ -216,12 +215,11 @@ LIRGeneratorARM::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDe
             constantNeedTemp = false;
     }
 
-    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-    ins->setInt64Operand(INT64_PIECES,
-                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    ins->setInt64Operand(0, useInt64Register(lhs));
+    ins->setInt64Operand(INT64_PIECES, useInt64OrConstant(rhs));
     if (constantNeedTemp)
         ins->setTemp(0, temp());
-    defineInt64ReuseInput(ins, mir, 0);
+    defineInt64(ins, mir);
 }
 
 void
@@ -298,9 +296,9 @@ LIRGeneratorARM::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECE
     if (mir->isRotate() && !rhs->isConstant())
         ins->setTemp(0, temp());
 
-    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    ins->setInt64Operand(0, useInt64Register(lhs));
     ins->setOperand(INT64_PIECES, useRegisterOrConstant(rhs));
-    defineInt64ReuseInput(ins, mir, 0);
+    defineInt64(ins, mir);
 }
 
 template void LIRGeneratorARM::lowerForShiftInt64(
@@ -511,12 +509,12 @@ void
 LIRGeneratorARM::visitAsmSelect(MAsmSelect* ins)
 {
     if (ins->type() == MIRType::Int64) {
-        auto* lir = new(alloc()) LAsmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
-                                               useInt64(ins->falseExpr()),
+        auto* lir = new(alloc()) LAsmSelectI64(useInt64Register(ins->trueExpr()),
+                                               useInt64Register(ins->falseExpr()),
                                                useRegister(ins->condExpr())
                                               );
 
-        defineInt64ReuseInput(lir, ins, LAsmSelectI64::TrueExprIndex);
+        defineInt64(lir, ins);
         return;
     }
 
