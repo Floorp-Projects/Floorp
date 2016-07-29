@@ -562,6 +562,9 @@ MediaPipeline::AttachTransport_s()
       return res;
     }
   }
+
+  transport_->Attach(this);
+
   return NS_OK;
 }
 
