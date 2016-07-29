@@ -23,16 +23,6 @@ usage_err() {
   exit 1
 }
 
-find_registry() {
-  local reg="$1/REGISTRY"
-
-  if [ -f $reg ];
-  then
-    echo $folder
-    return
-  fi
-}
-
 build() {
   local image_name=$1
   local folder="$gecko_root/testing/docker/$image_name"
