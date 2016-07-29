@@ -1010,6 +1010,12 @@ public:
         spew("fld        " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_FPU6_F32, offset, base, FPU6_OP_FLD);
     }
+    void faddp()
+    {
+        spew("addp       ");
+        m_formatter.oneByteOp(OP_FPU6_ADDP);
+        m_formatter.oneByteOp(OP_ADDP_ST0_ST1);
+    }
     void fisttp_m(int32_t offset, RegisterID base)
     {
         spew("fisttp     " MEM_ob, ADDR_ob(offset, base));
