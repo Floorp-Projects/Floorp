@@ -10,6 +10,7 @@ EXTRA_JS_MODULES.addons += [
     'AddonRepository_SQLiteMigrator.jsm',
     'AddonUpdateChecker.jsm',
     'Content.js',
+    'E10SAddonsRollout.jsm',
     'GMPProvider.jsm',
     'LightweightThemeImageOptimizer.jsm',
     'ProductAddonChecker.jsm',
