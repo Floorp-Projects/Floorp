@@ -262,6 +262,9 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
             bytes = view.DataAllowShared();
             byteCount = view.LengthAllowShared();
         }
+    } else if (isSubImage) {
+        mContext->ErrorInvalidValue("%s: `pixels` must not be null.", funcName);
+        return;
     }
 
     const bool isClientData = true;

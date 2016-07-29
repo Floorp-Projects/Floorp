@@ -1380,8 +1380,15 @@ JSStructuredCloneWriter::transferOwnership()
     }
 
     MOZ_ASSERT(point <= out.rawBuffer() + out.count());
-    MOZ_ASSERT_IF(point < out.rawBuffer() + out.count(),
-                  uint32_t(LittleEndian::readUint64(point) >> 32) < SCTAG_TRANSFER_MAP_HEADER);
+#if DEBUG
+    // Make sure there aren't any more transfer map entries after the expected
+    // number we read out.
+    if (point < out.rawBuffer() + out.count()) {
+        uint32_t tag, data;
+        SCInput::getPair(point, &tag, &data);
+        MOZ_ASSERT(tag < SCTAG_TRANSFER_MAP_HEADER || tag >= SCTAG_TRANSFER_MAP_END_OF_BUILTIN_TYPES);
+    }
+#endif
 
     return true;
 }

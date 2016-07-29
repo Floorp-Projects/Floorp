@@ -41,6 +41,9 @@ public:
   void Invalidate();
 
   void GetMimeTypes(nsTArray<RefPtr<nsMimeType>>& aMimeTypes);
+  void GetCTPMimeTypes(nsTArray<RefPtr<nsMimeType>>& aMimeTypes);
+
+  static void NotifyHiddenPluginTouched(nsPluginElement* aElement);
 
   // PluginArray WebIDL methods
 

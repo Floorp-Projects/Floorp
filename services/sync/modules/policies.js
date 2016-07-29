@@ -21,6 +21,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "Status",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
+// Get the value for an interval that's stored in preferences. To save users
+// from themselves (and us from them!) the minimum time they can specify
+// is 60s.
+function getThrottledIntervalPreference(prefName) {
+  return Math.max(Svc.Prefs.get(prefName), 60) * 1000;
+}
+
 this.SyncScheduler = function SyncScheduler(service) {
   this.service = service;
   this.init();
@@ -48,12 +55,12 @@ SyncScheduler.prototype = {
 
     let part = service.fxAccountsEnabled ? "fxa" : "sync11";
     let prefSDInterval = "scheduler." + part + ".singleDeviceInterval";
-    this.singleDeviceInterval = Svc.Prefs.get(prefSDInterval) * 1000;
+    this.singleDeviceInterval = getThrottledIntervalPreference(prefSDInterval);
 
-    this.idleInterval         = Svc.Prefs.get("scheduler.idleInterval")         * 1000;
-    this.activeInterval       = Svc.Prefs.get("scheduler.activeInterval")       * 1000;
-    this.immediateInterval    = Svc.Prefs.get("scheduler.immediateInterval")    * 1000;
-    this.eolInterval          = Svc.Prefs.get("scheduler.eolInterval")          * 1000;
+    this.idleInterval         = getThrottledIntervalPreference("scheduler.idleInterval");
+    this.activeInterval       = getThrottledIntervalPreference("scheduler.activeInterval");
+    this.immediateInterval    = getThrottledIntervalPreference("scheduler.immediateInterval");
+    this.eolInterval          = getThrottledIntervalPreference("scheduler.eolInterval");
 
     // A user is non-idle on startup by default.
     this.idle = false;

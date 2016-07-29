@@ -631,7 +631,14 @@ DocumentManager = {
                         .filter(promise => promise);
 
     if (!promises.length) {
-      return Promise.reject({message: `No matching window`});
+      let details = {};
+      for (let key of ["all_frames", "frame_id", "matches_about_blank", "matchesHost"]) {
+        if (key in options) {
+          details[key] = options[key];
+        }
+      }
+
+      return Promise.reject({message: `No window matching ${JSON.stringify(details)}`});
     }
     if (options.all_frames) {
       return Promise.all(promises);

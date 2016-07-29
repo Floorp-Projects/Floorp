@@ -2365,22 +2365,6 @@ HTMLInputElement::GetValueIfStepped(int32_t aStep,
     value += step * Decimal(aStep);
   }
 
-  // For date inputs, the value can hold a string that is not a day. We do not
-  // want to round it, as it might result in a step mismatch. Instead we want to
-  // clamp to the next valid value.
-  if (mType == NS_FORM_INPUT_DATE &&
-      NS_floorModulo(Decimal(value - GetStepBase()), GetStepScaleFactor()) != Decimal(0)) {
-    MOZ_ASSERT(GetStep() > Decimal(0));
-    Decimal validStep = EuclidLCM<Decimal>(GetStep().floor(),
-                                           GetStepScaleFactor().floor());
-    if (aStep > 0) {
-      value -= NS_floorModulo(value - GetStepBase(), validStep);
-      value += validStep;
-    } else if (aStep < 0) {
-      value -= NS_floorModulo(value - GetStepBase(), validStep);
-    }
-  }
-
   if (value < minimum) {
     value = minimum;
     deltaFromStep = NS_floorModulo(value - stepBase, step);
@@ -6903,6 +6887,11 @@ HTMLInputElement::GetStep() const
     step = GetDefaultStep();
   }
 
+  // For input type=date, we round the step value to have a rounded day.
+  if (mType == NS_FORM_INPUT_DATE) {
+    step = std::max(step.round(), Decimal(1));
+  }
+
   return step * GetStepScaleFactor();
 }
 
@@ -7505,16 +7494,6 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
 
       Decimal step = GetStep();
       MOZ_ASSERT(step != kStepAny && step > Decimal(0));
-
-      // In case this is a date and the step is not an integer, we don't want to
-      // display the dates corresponding to the truncated timestamps of valueLow
-      // and valueHigh because they might suffer from a step mismatch as well.
-      // Instead we want the timestamps to correspond to a rounded day. That is,
-      // we want a multiple of the step scale factor (1 day) as well as of step.
-      if (mType == NS_FORM_INPUT_DATE) {
-        step = EuclidLCM<Decimal>(step.floor(),
-                                  GetStepScaleFactor().floor());
-      }
 
       Decimal stepBase = GetStepBase();
 

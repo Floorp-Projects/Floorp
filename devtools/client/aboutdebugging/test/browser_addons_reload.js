@@ -109,8 +109,11 @@ class TempWebExt {
 add_task(function* reloadButtonReloadsAddon() {
   const { tab, document } = yield openAboutDebugging("addons");
   yield waitForInitialAddonList(document);
-  yield installAddon(document, "addons/unpacked/install.rdf",
-                     ADDON_NAME, ADDON_NAME);
+  yield installAddon({
+    document,
+    path: "addons/unpacked/install.rdf",
+    name: ADDON_NAME,
+  });
 
   const reloadButton = getReloadButton(document, ADDON_NAME);
   is(reloadButton.disabled, false, "Reload button should not be disabled");

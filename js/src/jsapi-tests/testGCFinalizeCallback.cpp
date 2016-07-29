@@ -103,7 +103,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS::PrepareForFullGC(cx);
     js::SliceBudget budget(js::WorkBudget(1));
     cx->gc.startDebugGC(GC_NORMAL, budget);
-    CHECK(cx->gc.state() == js::gc::MARK);
+    CHECK(cx->gc.state() == js::gc::State::Mark);
     CHECK(cx->gc.isFullGc());
 
     JS::RootedObject global4(cx, createTestGlobal());

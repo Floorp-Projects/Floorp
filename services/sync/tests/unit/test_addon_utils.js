@@ -103,8 +103,6 @@ add_test(function test_source_uri_rewrite() {
   // This tests for conformance with bug 708134 so server-side metrics aren't
   // skewed.
 
-  Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
-
   // We resort to monkeypatching because of the API design.
   let oldFunction = AddonUtils.__proto__.installAddonFromSearchResult;
 
@@ -139,6 +137,5 @@ add_test(function test_source_uri_rewrite() {
   do_check_true(installCalled);
   AddonUtils.__proto__.installAddonFromSearchResult = oldFunction;
 
-  Svc.Prefs.reset("addons.ignoreRepositoryChecking");
   server.stop(run_next_test);
 });
