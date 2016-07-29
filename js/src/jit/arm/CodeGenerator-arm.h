@@ -173,6 +173,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitAsmSelectI64(LAsmSelectI64* lir);
     virtual void visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir);
     virtual void visitAsmReinterpretToI64(LAsmReinterpretToI64* lir);
+    virtual void visitPopcntI64(LPopcntI64* ins);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
