@@ -3297,3 +3297,35 @@ CodeGeneratorARM::visitShiftI64(LShiftI64* lir)
         MOZ_CRASH("Unexpected shift op");
     }
 }
+
+void
+CodeGeneratorARM::visitBitOpI64(LBitOpI64* lir)
+{
+    const LInt64Allocation lhs = lir->getInt64Operand(LBitOpI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LBitOpI64::Rhs);
+
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+
+    switch (lir->bitop()) {
+      case JSOP_BITOR:
+        if (IsConstant(rhs))
+            masm.or64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        else
+            masm.or64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        break;
+      case JSOP_BITXOR:
+        if (IsConstant(rhs))
+            masm.xor64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        else
+            masm.xor64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        break;
+      case JSOP_BITAND:
+        if (IsConstant(rhs))
+            masm.and64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        else
+            masm.and64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        break;
+      default:
+        MOZ_CRASH("unexpected binary opcode");
+    }
+}
