@@ -214,6 +214,11 @@ module.exports = createClass({
       sourceElements.push(dom.span({ className: "frame-link-line" }, lineInfo));
     }
 
+    // Inner el is useful for achieving ellipsis on the left and correct LTR/RTL
+    // ordering. See CSS styles for frame-link-source-[inner] and bug 1290056.
+    let sourceInnerEl = dom.span({ className: "frame-link-source-inner" },
+      sourceElements);
+
     // If source is not a URL (self-hosted, eval, etc.), don't make
     // it an anchor link, as we can't link to it.
     if (isLinkable) {
@@ -226,12 +231,12 @@ module.exports = createClass({
         className: "frame-link-source",
         draggable: false,
         title: l10n.getFormatStr("frame.viewsourceindebugger", tooltip)
-      }, sourceElements);
+      }, sourceInnerEl);
     } else {
       sourceEl = dom.span({
         className: "frame-link-source",
         title: tooltip,
-      }, sourceElements);
+      }, sourceInnerEl);
     }
     elements.push(sourceEl);
 
