@@ -113,6 +113,24 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
     xorq(imm, dest);
 }
 
+void
+MacroAssembler::and64(const Operand& src, Register64 dest)
+{
+    andq(src, dest.reg);
+}
+
+void
+MacroAssembler::or64(const Operand& src, Register64 dest)
+{
+    orq(src, dest.reg);
+}
+
+void
+MacroAssembler::xor64(const Operand& src, Register64 dest)
+{
+    xorq(src, dest.reg);
+}
+
 // ===============================================================
 // Arithmetic functions
 
