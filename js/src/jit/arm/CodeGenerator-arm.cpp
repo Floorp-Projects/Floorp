@@ -3534,3 +3534,13 @@ CodeGeneratorARM::visitCtzI64(LCtzI64* lir)
     masm.move32(Imm32(0), output.high);
 }
 
+void
+CodeGeneratorARM::visitTestI64AndBranch(LTestI64AndBranch* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+
+    masm.ma_cmp(input.high, Imm32(0));
+    jumpToBlock(lir->ifTrue(), Assembler::NonZero);
+    masm.ma_cmp(input.low, Imm32(0));
+    emitBranch(Assembler::NonZero, lir->ifTrue(), lir->ifFalse());
+}
