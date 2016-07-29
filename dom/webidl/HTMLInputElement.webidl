@@ -226,7 +226,7 @@ HTMLInputElement implements MozPhonetic;
 
 // Webkit/Blink
 partial interface HTMLInputElement {
-  [Pref="dom.webkitBlink.filesystem.enabled", Cached, Constant]
+  [Pref="dom.webkitBlink.filesystem.enabled", Frozen, Cached, Pure]
   readonly attribute sequence<Entry> webkitEntries;
 
   [Pref="dom.webkitBlink.dirPicker.enabled", BinaryName="WebkitDirectoryAttr", SetterThrows]

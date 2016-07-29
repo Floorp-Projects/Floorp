@@ -991,6 +991,16 @@ BlobImplFile::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
                                           -1, -1, sFileStreamFlags);
 }
 
+bool
+BlobImplFile::IsDirectory() const
+{
+  bool isDirectory = false;
+  if (mFile) {
+    mFile->IsDirectory(&isDirectory);
+  }
+  return isDirectory;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 // EmptyBlobImpl implementation
 
