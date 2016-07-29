@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="21" height="21" viewBox="0 0 21 21">
+  <style>
+    use:not(:target) {
+      display: none;
+    }
+    use {
+      fill: #fff;
+      stroke: #fff;
+      stroke-width: 0.5;
+    }
+    use[id$="-inverted"] {
+      fill: #0095dd;
+      stroke: #0095dd;
+      stroke-width: 0.5;
+    }
+    use[id$="-disabled"] {
+      fill: rgba(255,255,255,.4);
+      stroke: rgba(255,255,255,.4);
+      stroke-width: 0.5;
+    }
+    use[id$="-blue"] {
+      fill: #0096dd;
+    }
+  </style>
+  <defs>
+    <path id="check-shape" d="M 9.39,16.5 16.28,6 14.77,4.5 9.37,12.7 6.28,9.2 4.7,10.7 z"/>
+  </defs>
+  <use id="check" xlink:href="#check-shape"/>
+  <use id="check-active" xlink:href="#check-shape"/>
+  <use id="check-disabled" xlink:href="#check-shape"/>
+  <use id="check-blue" xlink:href="#check-shape"/>
+</svg>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="129 5 252 253" width="21pc" height="253pt">
+  <rect x="129" y="5" width="252" height="252" fill="#4ba6e7"/>
+  <circle cx="255" cy="106" r="54" fill="#badbeb"/>
+  <path fill="#badbeb" d="M 159.01782 257 L 350.98218 257 C 351.46667 236.66908 342.1 216.2136 322.88218 200.69928 C 285.39187 170.43352 224.60813 170.43352 187.11782 200.69928 C 167.9 216.2136 158.53333 236.66909 159.01782 257 Z"/>
+</svg>
