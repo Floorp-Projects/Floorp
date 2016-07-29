@@ -633,13 +633,13 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
   }
 
   float opacity = frame->StyleEffects()->mOpacity;
-  if (opacity == 0.0f) {
-    return DrawResult::SUCCESS;
-  }
   if (opacity != 1.0f &&
       (nsSVGUtils::CanOptimizeOpacity(frame) ||
        aParams.callerPaintsOpacity)) {
     opacity = 1.0f;
+  }
+  if (opacity == 0.0f) {
+    return DrawResult::SUCCESS;
   }
   MOZ_ASSERT(!nsSVGUtils::CanOptimizeOpacity(frame) || !aParams.callerPaintsOpacity,
              "How can we be optimizing the opacity into the svg as well as having the caller paint it?");
