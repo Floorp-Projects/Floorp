@@ -719,6 +719,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void orPtr(Register src, Register dest) PER_ARCH;
     inline void orPtr(Imm32 imm, Register dest) PER_ARCH;
 
+    inline void and64(Register64 src, Register64 dest) DEFINED_ON(x86);
     inline void or64(Register64 src, Register64 dest) PER_ARCH;
     inline void xor64(Register64 src, Register64 dest) PER_ARCH;
 
@@ -727,6 +728,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void xorPtr(Register src, Register dest) PER_ARCH;
     inline void xorPtr(Imm32 imm, Register dest) PER_ARCH;
+
+    inline void and64(const Operand& src, Register64 dest) DEFINED_ON(x64);
+    inline void or64(const Operand& src, Register64 dest) DEFINED_ON(x64);
+    inline void xor64(const Operand& src, Register64 dest) DEFINED_ON(x64);
 
     // ===============================================================
     // Arithmetic functions
