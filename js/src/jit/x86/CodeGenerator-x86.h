@@ -89,6 +89,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitNotI64(LNotI64* lir);
     void visitWasmTruncateToInt64(LWasmTruncateToInt64* lir);
     void visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir);
+    void visitTestI64AndBranch(LTestI64AndBranch* lir);
 
   private:
     void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg,
