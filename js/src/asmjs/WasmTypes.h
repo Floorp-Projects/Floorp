@@ -903,6 +903,8 @@ enum class SymbolicAddress
     UModI64,
     TruncateDoubleToInt64,
     TruncateDoubleToUint64,
+    Uint64ToFloatingPoint,
+    Int64ToFloatingPoint,
     Limit
 };
 

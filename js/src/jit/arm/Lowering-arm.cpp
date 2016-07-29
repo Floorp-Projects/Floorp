@@ -924,7 +924,11 @@ LIRGeneratorARM::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 void
 LIRGeneratorARM::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
-    MOZ_CRASH("NY");
+    MOZ_ASSERT(ins->type() == MIRType::Double || ins->type() == MIRType::Float32);
+
+    auto lir = new(alloc()) LInt64ToFloatingPointCall();
+    lir->setInt64Operand(0, useInt64RegisterAtStart(ins->input()));
+    defineReturn(lir, ins);
 }
 
 void
