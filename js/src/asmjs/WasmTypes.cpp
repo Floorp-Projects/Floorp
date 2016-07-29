@@ -224,6 +224,20 @@ TruncateDoubleToUint64(double input)
     return uint64_t(input);
 }
 
+static double
+Int64ToFloatingPoint(int32_t x_hi, uint32_t x_lo)
+{
+    int64_t x = int64_t((uint64_t(x_hi) << 32)) + int64_t(x_lo);
+    return double(x);
+}
+
+static double
+Uint64ToFloatingPoint(int32_t x_hi, uint32_t x_lo)
+{
+    uint64_t x = (uint64_t(x_hi) << 32) + uint64_t(x_lo);
+    return double(x);
+}
+
 template <class F>
 static inline void*
 FuncCast(F* pf, ABIFunctionType type)
@@ -275,6 +289,10 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(TruncateDoubleToUint64, Args_Int64_Double);
       case SymbolicAddress::TruncateDoubleToInt64:
         return FuncCast(TruncateDoubleToInt64, Args_Int64_Double);
+      case SymbolicAddress::Uint64ToFloatingPoint:
+        return FuncCast(Uint64ToFloatingPoint, Args_Double_IntInt);
+      case SymbolicAddress::Int64ToFloatingPoint:
+        return FuncCast(Int64ToFloatingPoint, Args_Double_IntInt);
 #if defined(JS_CODEGEN_ARM)
       case SymbolicAddress::aeabi_idivmod:
         return FuncCast(__aeabi_idivmod, Args_General2);
