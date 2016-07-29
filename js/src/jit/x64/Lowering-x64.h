@@ -25,6 +25,9 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
     void defineInt64Phi(MPhi* phi, size_t lirIndex);
 
+    void lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
+                          MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+    void lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs);
 
     // Returns a box allocation. reg2 is ignored on 64-bit platforms.
     LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register, bool useAtStart = false);
