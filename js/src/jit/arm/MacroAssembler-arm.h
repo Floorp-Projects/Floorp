@@ -262,6 +262,9 @@ class MacroAssemblerARM : public Assembler
     Condition ma_check_mul(Register src1, Register src2, Register dest, Condition cond);
     Condition ma_check_mul(Register src1, Imm32 imm, Register dest, Condition cond);
 
+    void ma_umull(Register src1, Register src2, Register destHigh, Register destLow);
+    void ma_umull(Register src1, Imm32 imm, Register destHigh, Register destLow);
+
     // Fast mod, uses scratch registers, and thus needs to be in the assembler
     // implicitly assumes that we can overwrite dest at the beginning of the
     // sequence.
