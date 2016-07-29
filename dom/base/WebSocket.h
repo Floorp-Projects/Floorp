@@ -82,6 +82,13 @@ public: // WebIDL interface:
                                                  const Sequence<nsString>& aProtocols,
                                                  ErrorResult& rv);
 
+  static already_AddRefed<WebSocket> CreateServerWebSocket(const GlobalObject& aGlobal,
+                                                           const nsAString& aUrl,
+                                                           const Sequence<nsString>& aProtocols,
+                                                           nsITransportProvider* aTransportProvider,
+                                                           const nsAString& aNegotiatedExtensions,
+                                                           ErrorResult& rv);
+
   static already_AddRefed<WebSocket> ConstructorCommon(const GlobalObject& aGlobal,
                                                        const nsAString& aUrl,
                                                        const Sequence<nsString>& aProtocols,
@@ -135,7 +142,7 @@ public: // WebIDL interface:
   void Send(const ArrayBufferView& aData,
             ErrorResult& aRv);
 
-private: // constructor && distructor
+private: // constructor && destructor
   explicit WebSocket(nsPIDOMWindowInner* aOwnerWindow);
   virtual ~WebSocket();
 
