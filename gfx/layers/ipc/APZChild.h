@@ -29,7 +29,7 @@ public:
   virtual bool RecvUpdateFrame(const FrameMetrics& frame) override;
 
   virtual bool RecvHandleTap(const TapType& aType,
-                             const CSSPoint& aPoint,
+                             const LayoutDevicePoint& aPoint,
                              const Modifiers& aModifiers,
                              const ScrollableLayerGuid& aGuid,
                              const uint64_t& aInputBlockId,

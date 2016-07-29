@@ -9,7 +9,7 @@ include "mozilla/GfxMessageUtils.h";
 
 include protocol PContent;
 
-using mozilla::CSSPoint from "Units.h";
+using mozilla::LayoutDevicePoint from "Units.h";
 using CSSRect from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
@@ -95,7 +95,7 @@ child:
   // The aCallTakeFocusForClickFromTap argument is used for eSingleTap types,
   // to request that the child take focus before dispatching the mouse events
   // for the tap (otherwise the resulting focus behaviour is incorrect).
-  async HandleTap(TapType aType, CSSPoint point, Modifiers aModifiers,
+  async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
                   ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
                   bool aCallTakeFocusForClickFromTap);
   async NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);

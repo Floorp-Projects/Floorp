@@ -264,7 +264,7 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   Tap(manager, ScreenIntPoint(55, 5), TimeDuration::FromMilliseconds(100), nullptr, &inputBlockId);
   // But now we tell the APZ that really it hit layers[2], and expect the tap
   // to be delivered at the correct coordinates.
-  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, CSSPoint(55, 5), 0, apzc2->GetGuid(), _)).Times(1);
+  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(55, 5), 0, apzc2->GetGuid(), _)).Times(1);
 
   nsTArray<ScrollableLayerGuid> targets;
   targets.AppendElement(apzc2->GetGuid());

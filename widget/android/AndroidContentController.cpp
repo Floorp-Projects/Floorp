@@ -44,7 +44,7 @@ AndroidContentController::NotifyDefaultPrevented(IAPZCTreeManager* aManager,
 }
 
 void
-AndroidContentController::HandleTap(TapType aType, const CSSPoint& aPoint,
+AndroidContentController::HandleTap(TapType aType, const LayoutDevicePoint& aPoint,
                                     Modifiers aModifiers,
                                     const ScrollableLayerGuid& aGuid,
                                     uint64_t aInputBlockId)
@@ -55,14 +55,19 @@ AndroidContentController::HandleTap(TapType aType, const CSSPoint& aPoint,
     // done from either thread but we need access to the callback transform
     // so we do it from the main thread.
     if (NS_IsMainThread() && aType == TapType::eSingleTap) {
-        CSSPoint point = mozilla::layers::APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
-
         nsIContent* content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
         nsIPresShell* shell = content
             ? mozilla::layers::APZCCallbackHelper::GetRootContentDocumentPresShellForContent(content)
             : nullptr;
 
-        if (shell && shell->ScaleToResolution()) {
+        if (!shell || !shell->GetPresContext()) {
+            return;
+        }
+
+        CSSPoint point = mozilla::layers::APZCCallbackHelper::ApplyCallbackTransform(
+            aPoint / shell->GetPresContext()->CSSToDevPixelScale(), aGuid);
+
+        if (shell->ScaleToResolution()) {
             // We need to convert from the root document to the root content document,
             // by unapplying the resolution that's on the content document.
             const float resolution = shell->GetResolution();

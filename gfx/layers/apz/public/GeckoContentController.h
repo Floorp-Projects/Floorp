@@ -55,11 +55,11 @@ public:
   };
 
   /**
-   * Requests handling of a tap event. |aPoint| is in CSS pixels, relative to the
+   * Requests handling of a tap event. |aPoint| is in LD pixels, relative to the
    * current scroll offset.
    */
   virtual void HandleTap(TapType aType,
-                         const CSSPoint& aPoint,
+                         const LayoutDevicePoint& aPoint,
                          Modifiers aModifiers,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId) = 0;
