@@ -256,6 +256,13 @@ MacroAssembler::add64(Imm32 imm, Register64 dest)
 }
 
 void
+MacroAssembler::add64(Imm64 imm, Register64 dest)
+{
+    ma_add(imm.low(), dest.low, SetCC);
+    ma_adc(imm.hi(), dest.high, LeaveCC);
+}
+
+void
 MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
 {
     ma_vadd(dest, src, dest);
@@ -314,6 +321,20 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
     ScratchRegisterScope scratch(*this);
     loadPtr(addr, scratch);
     ma_sub(scratch, dest);
+}
+
+void
+MacroAssembler::sub64(Register64 src, Register64 dest)
+{
+    ma_sub(src.low, dest.low, SetCC);
+    ma_sbc(src.high, dest.high, LeaveCC);
+}
+
+void
+MacroAssembler::sub64(Imm64 imm, Register64 dest)
+{
+    ma_sub(imm.low(), dest.low, SetCC);
+    ma_sbc(imm.hi(), dest.high, LeaveCC);
 }
 
 void
