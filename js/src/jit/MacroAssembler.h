@@ -836,25 +836,27 @@ class MacroAssembler : public MacroAssemblerSpecific
     // immediate, for example, the ARM assembler requires the count
     // for 32-bit shifts to be in the range [0,31].
 
+    inline void lshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
+    inline void rshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
+    inline void rshift32Arithmetic(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
+
     inline void lshiftPtr(Imm32 imm, Register dest) PER_ARCH;
-
-    inline void lshift64(Imm32 imm, Register64 dest) PER_ARCH;
-
     inline void rshiftPtr(Imm32 imm, Register dest) PER_ARCH;
     inline void rshiftPtr(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
-
     inline void rshiftPtrArithmetic(Imm32 imm, Register dest) PER_ARCH;
 
+    inline void lshift64(Imm32 imm, Register64 dest) PER_ARCH;
     inline void rshift64(Imm32 imm, Register64 dest) PER_ARCH;
+    inline void rshift64Arithmetic(Imm32 imm, Register64 dest) DEFINED_ON(x86, x64);
 
     // On x86_shared these have the constraint that shift must be in CL.
     inline void lshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32Arithmetic(Register shift, Register srcDest) PER_SHARED_ARCH;
 
-    inline void lshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
-    inline void rshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
-    inline void rshift32Arithmetic(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
+    inline void lshift64(Register shift, Register64 srcDest) DEFINED_ON(x86, x64);
+    inline void rshift64(Register shift, Register64 srcDest) DEFINED_ON(x86, x64);
+    inline void rshift64Arithmetic(Register shift, Register64 srcDest) DEFINED_ON(x86, x64);
 
     // ===============================================================
     // Rotation functions

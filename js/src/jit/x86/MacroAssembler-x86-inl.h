@@ -261,8 +261,36 @@ MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 void
 MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 {
-    shldl(imm, dest.low, dest.high);
-    shll(imm, dest.low);
+    if ((imm.value & INT32_MAX) < 32) {
+        shldl(imm, dest.low, dest.high);
+        shll(imm, dest.low);
+        return;
+    }
+
+    mov(dest.low, dest.high);
+    shll(Imm32(imm.value & 0x1f), dest.high);
+    xorl(dest.low, dest.low);
+}
+
+void
+MacroAssembler::lshift64(Register shift, Register64 srcDest)
+{
+    MOZ_ASSERT(shift == ecx);
+    MOZ_ASSERT(srcDest.low != ecx && srcDest.high != ecx);
+
+    Label done;
+
+    shldl_cl(srcDest.low, srcDest.high);
+    shll_cl(srcDest.low);
+
+    testl(Imm32(0x20), ecx);
+    j(Condition::Equal, &done);
+
+    // 32 - 63 bit shift
+    movl(srcDest.low, srcDest.high);
+    xorl(srcDest.low, srcDest.low);
+
+    bind(&done);
 }
 
 void
@@ -272,16 +300,79 @@ MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+{
+    if ((imm.value & INT32_MAX) < 32) {
+        shrdl(imm, dest.high, dest.low);
+        shrl(imm, dest.high);
+        return;
+    }
+
+    movl(dest.high, dest.low);
+    shrl(Imm32(imm.value & 0x1f), dest.low);
+    xorl(dest.high, dest.high);
+}
+
+void
+MacroAssembler::rshift64(Register shift, Register64 srcDest)
+{
+    MOZ_ASSERT(shift == ecx);
+    MOZ_ASSERT(srcDest.low != ecx && srcDest.high != ecx);
+
+    Label done;
+
+    shrdl_cl(srcDest.high, srcDest.low);
+    shrl_cl(srcDest.high);
+
+    testl(Imm32(0x20), ecx);
+    j(Condition::Equal, &done);
+
+    // 32 - 63 bit shift
+    movl(srcDest.high, srcDest.low);
+    xorl(srcDest.high, srcDest.high);
+
+    bind(&done);
+}
+
+void
 MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
 {
     sarl(imm, dest);
 }
 
 void
-MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
 {
-    shrdl(imm, dest.high, dest.low);
-    shrl(imm, dest.high);
+    if ((imm.value & INT32_MAX) < 32) {
+        shrdl(imm, dest.high, dest.low);
+        sarl(imm, dest.high);
+        return;
+    }
+
+    movl(dest.high, dest.low);
+    sarl(Imm32(imm.value & 0x1f), dest.low);
+    sarl(Imm32(0x1f), dest.high);
+}
+
+void
+MacroAssembler::rshift64Arithmetic(Register shift, Register64 srcDest)
+{
+    MOZ_ASSERT(shift == ecx);
+    MOZ_ASSERT(srcDest.low != ecx && srcDest.high != ecx);
+
+    Label done;
+
+    shrdl_cl(srcDest.high, srcDest.low);
+    sarl_cl(srcDest.high);
+
+    testl(Imm32(0x20), ecx);
+    j(Condition::Equal, &done);
+
+    // 32 - 63 bit shift
+    movl(srcDest.high, srcDest.low);
+    sarl(Imm32(0x1f), srcDest.high);
+
+    bind(&done);
 }
 
 // ===============================================================

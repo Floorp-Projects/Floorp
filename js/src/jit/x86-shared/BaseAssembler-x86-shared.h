@@ -1464,6 +1464,18 @@ public:
         m_formatter.oneByteOp(OP_GROUP2_EvCL, dst, GROUP2_OP_SHR);
     }
 
+    void shrdl_CLr(RegisterID src, RegisterID dst)
+    {
+        spew("shrdl      %%cl, %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp(OP2_SHRD_GvEv, dst, src);
+    }
+
+    void shldl_CLr(RegisterID src, RegisterID dst)
+    {
+        spew("shldl      %%cl, %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp(OP2_SHLD_GvEv, dst, src);
+    }
+
     void shll_ir(int32_t imm, RegisterID dst)
     {
         MOZ_ASSERT(imm < 32);
