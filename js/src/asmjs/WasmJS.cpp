@@ -922,6 +922,11 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     uint32_t initial = uint32_t(initialDbl);
     MOZ_ASSERT(double(initial) == initialDbl);
 
+    if (initial > MaxTableElems) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Table", "initial");
+        return false;
+    }
+
     SharedTable table = Table::create(cx, TableKind::AnyFunction, initial);
     if (!table)
         return false;
