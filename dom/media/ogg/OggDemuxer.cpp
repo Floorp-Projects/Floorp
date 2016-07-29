@@ -30,7 +30,8 @@ extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define SEEK_LOG(type, msg)
 #endif
 
-namespace mozilla {
+namespace mozilla
+{
 
 using media::TimeUnit;
 using media::TimeInterval;
@@ -48,7 +49,8 @@ static const uint32_t OGG_SEEK_FUZZ_USECS = 500000;
 // The specification recommends 80 ms.
 static const int64_t OGG_SEEK_OPUS_PREROLL = 80 * USECS_PER_MS;
 
-class OggHeaders {
+class OggHeaders
+{
 public:
   OggHeaders() {}
   ~OggHeaders()
@@ -759,8 +761,7 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
     newVorbisState = static_cast<VorbisState*>(codecState.get());
   } else if (mOpusState && (codecState->GetType() == OggCodecState::TYPE_OPUS)) {
     newOpusState = static_cast<OpusState*>(codecState.get());
-  }
-  else {
+  } else {
     return false;
   }
 
@@ -823,8 +824,7 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
     SetChained();
     mInfo.mMediaSeekable = false;
     mDecodedAudioDuration += aLastEndTime;
-    if (mTimedMetadataEvent)
-    {
+    if (mTimedMetadataEvent) {
       mTimedMetadataEvent->Notify(
         TimedMetadata(mDecodedAudioDuration,
                       Move(tags),
@@ -1256,8 +1256,7 @@ OggDemuxer::SeekToKeyframeUsingIndex(TrackInfo::TrackType aType, int64_t aTarget
   SkeletonState::nsSeekTarget keyframe;
   if (NS_FAILED(mSkeletonState->IndexedSeekTarget(aTarget,
                                                   tracks,
-                                                  keyframe)))
-  {
+                                                  keyframe))) {
     // Could not locate a keypoint for the target in the index.
     return SEEK_INDEX_FAIL;
   }
@@ -1267,8 +1266,7 @@ OggDemuxer::SeekToKeyframeUsingIndex(TrackInfo::TrackType aType, int64_t aTarget
 
   // Seek to the keypoint returned by the index.
   if (keyframe.mKeyPoint.mOffset > Resource(aType)->GetLength() ||
-      keyframe.mKeyPoint.mOffset < 0)
-  {
+      keyframe.mKeyPoint.mOffset < 0) {
     // Index must be invalid.
     return RollbackIndexedSeek(aType, tell);
   }
@@ -1307,8 +1305,7 @@ OggDemuxer::SeekToKeyframeUsingIndex(TrackInfo::TrackType aType, int64_t aTarget
   }
   OggCodecState* codecState = mCodecStore.Get(serial);
   if (codecState && codecState->mActive &&
-      ogg_stream_pagein(&codecState->mState, &page) != 0)
-  {
+      ogg_stream_pagein(&codecState->mState, &page) != 0) {
     // Couldn't insert page into the ogg resource, or somehow the resource
     // is no longer active.
     return RollbackIndexedSeek(aType, tell);
@@ -1528,10 +1525,7 @@ OggDemuxer::GetPageChecksum(ogg_page* page)
     return 0;
   }
   const unsigned char* p = page->header + 22;
-  uint32_t c =  p[0] +
-               (p[1] << 8) +
-               (p[2] << 16) +
-               (p[3] << 24);
+  uint32_t c = p[0] + (p[1] << 8) + (p[2] << 16) + (p[3] << 24);
   return c;
 }
 
@@ -1548,11 +1542,14 @@ OggDemuxer::RangeStartTime(TrackInfo::TrackType aType, int64_t aOffset)
   return startTime;
 }
 
-struct nsDemuxerAutoOggSyncState {
-  nsDemuxerAutoOggSyncState() {
+struct nsDemuxerAutoOggSyncState
+{
+  nsDemuxerAutoOggSyncState()
+  {
     ogg_sync_init(&mState);
   }
-  ~nsDemuxerAutoOggSyncState() {
+  ~nsDemuxerAutoOggSyncState()
+  {
     ogg_sync_clear(&mState);
   }
   ogg_sync_state mState;

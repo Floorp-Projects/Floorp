@@ -61,7 +61,8 @@ private:
 
   // Seeks to the keyframe preceding the target time using available
   // keyframe indexes.
-  enum IndexedSeekResult {
+  enum IndexedSeekResult
+  {
     SEEK_OK,          // Success.
     SEEK_INDEX_FAIL,  // Failure due to no index, or invalid index.
     SEEK_FATAL_ERROR  // Error returned by a stream operation.
@@ -75,23 +76,24 @@ private:
   // and the timestamps of the start and end of that range, that is cached.
   // Used to denote the extremities of a range in which we can seek quickly
   // (because it's cached).
-  class SeekRange {
+  class SeekRange
+  {
   public:
     SeekRange()
-      : mOffsetStart(0),
-        mOffsetEnd(0),
-        mTimeStart(0),
-        mTimeEnd(0)
+      : mOffsetStart(0)
+      , mOffsetEnd(0)
+      , mTimeStart(0)
+      , mTimeEnd(0)
     {}
 
     SeekRange(int64_t aOffsetStart,
               int64_t aOffsetEnd,
               int64_t aTimeStart,
               int64_t aTimeEnd)
-      : mOffsetStart(aOffsetStart),
-        mOffsetEnd(aOffsetEnd),
-        mTimeStart(aTimeStart),
-        mTimeEnd(aTimeEnd)
+      : mOffsetStart(aOffsetStart)
+      , mOffsetEnd(aOffsetEnd)
+      , mTimeStart(aTimeStart)
+      , mTimeEnd(aTimeEnd)
     {}
 
     bool IsNull() const {
@@ -154,7 +156,8 @@ private:
   // is about 4300 bytes, so we read the file in chunks larger than that.
   static const int PAGE_STEP = 8192;
 
-  enum PageSyncResult {
+  enum PageSyncResult
+  {
     PAGE_SYNC_ERROR = 1,
     PAGE_SYNC_END_OF_RANGE= 2,
     PAGE_SYNC_OK = 3
@@ -245,7 +248,6 @@ private:
   // started playback at aOffset.
   int64_t RangeStartTime(TrackInfo::TrackType aType, int64_t aOffset);
 
-
   MediaInfo mInfo;
   nsTArray<RefPtr<OggTrackDemuxer>> mDemuxers;
 
@@ -309,7 +311,8 @@ private:
   // Booleans to indicate if we have audio and/or video data
   bool HasVideo() const;
   bool HasAudio() const;
-  bool HasSkeleton() const {
+  bool HasSkeleton() const
+  {
     return mSkeletonState != 0 && mSkeletonState->mActive;
   }
   bool HaveStartTime () const;
