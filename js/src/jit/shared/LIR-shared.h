@@ -2506,17 +2506,17 @@ class LCompare : public LInstructionHelper<1, 2, 0>
     }
 };
 
-class LCompare64 : public LInstructionHelper<1, 2 * INT64_PIECES, 0>
+class LCompareI64 : public LInstructionHelper<1, 2 * INT64_PIECES, 0>
 {
     JSOp jsop_;
 
   public:
-    LIR_HEADER(Compare64)
+    LIR_HEADER(CompareI64)
 
     static const size_t Lhs = 0;
     static const size_t Rhs = INT64_PIECES;
 
-    LCompare64(JSOp jsop, const LInt64Allocation& left, const LInt64Allocation& right)
+    LCompareI64(JSOp jsop, const LInt64Allocation& left, const LInt64Allocation& right)
       : jsop_(jsop)
     {
         setInt64Operand(Lhs, left);
@@ -2534,20 +2534,20 @@ class LCompare64 : public LInstructionHelper<1, 2 * INT64_PIECES, 0>
     }
 };
 
-class LCompare64AndBranch : public LControlInstructionHelper<2, 2 * INT64_PIECES, 0>
+class LCompareI64AndBranch : public LControlInstructionHelper<2, 2 * INT64_PIECES, 0>
 {
     MCompare* cmpMir_;
     JSOp jsop_;
 
   public:
-    LIR_HEADER(Compare64AndBranch)
+    LIR_HEADER(CompareI64AndBranch)
 
     static const size_t Lhs = 0;
     static const size_t Rhs = INT64_PIECES;
 
-    LCompare64AndBranch(MCompare* cmpMir, JSOp jsop,
-                        const LInt64Allocation& left, const LInt64Allocation& right,
-                        MBasicBlock* ifTrue, MBasicBlock* ifFalse)
+    LCompareI64AndBranch(MCompare* cmpMir, JSOp jsop,
+                         const LInt64Allocation& left, const LInt64Allocation& right,
+                         MBasicBlock* ifTrue, MBasicBlock* ifFalse)
       : cmpMir_(cmpMir), jsop_(jsop)
     {
         setInt64Operand(Lhs, left);

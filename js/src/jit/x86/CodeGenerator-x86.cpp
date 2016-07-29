@@ -1188,3 +1188,123 @@ CodeGeneratorX86::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
 
     masm.bind(ool->rejoin());
 }
+
+void
+CodeGeneratorX86::visitCompareI64(LCompareI64* lir)
+{
+    MCompare* mir = lir->mir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register64 lhsRegs = ToRegister64(lhs);
+    Register output = ToRegister(lir->output());
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    Assembler::Condition condition = JSOpToCondition(lir->jsop(), isSigned);
+    Label done;
+
+    masm.move32(Imm32(1), output);
+
+    if (IsConstant(rhs)) {
+        Imm64 imm = Imm64(ToInt64(rhs));
+        masm.branch64(condition, lhsRegs, imm, &done);
+    } else {
+        Register64 rhsRegs = ToRegister64(rhs);
+        masm.branch64(condition, lhsRegs, rhsRegs, &done);
+    }
+
+    masm.xorl(output, output);
+    masm.bind(&done);
+}
+
+void
+CodeGeneratorX86::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
+{
+    MCompare* mir = lir->cmpMir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register64 lhsRegs = ToRegister64(lhs);
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    Assembler::Condition condition = JSOpToCondition(lir->jsop(), isSigned);
+
+    if (IsConstant(rhs)) {
+        Imm64 imm = Imm64(ToInt64(rhs));
+        switch(lir->jsop()) {
+          case JSOP_EQ:
+          case JSOP_STRICTEQ:
+            masm.cmp32(lhsRegs.high, imm.hi());
+            jumpToBlock(lir->ifFalse(), Assembler::NotEqual);
+            masm.cmp32(lhsRegs.low, imm.low());
+            emitBranch(condition, lir->ifTrue(), lir->ifFalse());
+            break;
+          case JSOP_NE:
+          case JSOP_STRICTNE:
+            masm.cmp32(lhsRegs.high, imm.hi());
+            jumpToBlock(lir->ifTrue(), Assembler::NotEqual);
+            masm.cmp32(lhsRegs.low, imm.low());
+            emitBranch(condition, lir->ifTrue(), lir->ifFalse());
+            break;
+          case JSOP_LT:
+          case JSOP_LE:
+          case JSOP_GT:
+          case JSOP_GE: {
+            Assembler::Condition cond1 = Assembler::ConditionWithoutEqual(condition);
+            Assembler::Condition cond2 = Assembler::ConditionWithoutEqual(Assembler::InvertCondition(condition));
+            Assembler::Condition cond3 = Assembler::UnsignedCondition(condition);
+
+            masm.cmp32(lhsRegs.high, imm.hi());
+            jumpToBlock(lir->ifTrue(), cond1);
+            jumpToBlock(lir->ifFalse(), cond2);
+            masm.cmp32(lhsRegs.low, imm.low());
+            jumpToBlock(lir->ifTrue(), cond3);
+            jumpToBlock(lir->ifFalse());
+            break;
+          }
+          default:
+            MOZ_CRASH("unexpected op");
+        }
+        return;
+    }
+
+    Register64 rhsRegs = ToRegister64(rhs);
+    switch(lir->jsop()) {
+      case JSOP_EQ:
+      case JSOP_STRICTEQ:
+        masm.cmp32(lhsRegs.high, rhsRegs.high);
+        jumpToBlock(lir->ifFalse(), Assembler::NotEqual);
+        masm.cmp32(lhsRegs.low, rhsRegs.low);
+        emitBranch(condition, lir->ifTrue(), lir->ifFalse());
+        break;
+      case JSOP_NE:
+      case JSOP_STRICTNE:
+        masm.cmp32(lhsRegs.high, rhsRegs.high);
+        jumpToBlock(lir->ifTrue(), Assembler::NotEqual);
+        masm.cmp32(lhsRegs.low, rhsRegs.low);
+        emitBranch(condition, lir->ifTrue(), lir->ifFalse());
+        break;
+      case JSOP_LT:
+      case JSOP_LE:
+      case JSOP_GT:
+      case JSOP_GE: {
+        Assembler::Condition cond1 = Assembler::ConditionWithoutEqual(condition);
+        Assembler::Condition cond2 = Assembler::ConditionWithoutEqual(Assembler::InvertCondition(condition));
+        Assembler::Condition cond3 = Assembler::UnsignedCondition(condition);
+
+        masm.cmp32(lhsRegs.high, rhsRegs.high);
+        jumpToBlock(lir->ifTrue(), cond1);
+        jumpToBlock(lir->ifFalse(), cond2);
+        masm.cmp32(lhsRegs.low, rhsRegs.low);
+        jumpToBlock(lir->ifTrue(), cond3);
+        jumpToBlock(lir->ifFalse());
+        break;
+      }
+      default:
+        MOZ_CRASH("unexpected op");
+    }
+}
