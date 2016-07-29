@@ -400,6 +400,7 @@
     _(AsmJSParameter)               \
     _(AsmJSParameterI64)            \
     _(AsmJSReturn)                  \
+    _(AsmJSReturnI64)               \
     _(AsmJSVoidReturn)              \
     _(AsmJSPassStackArg)            \
     _(AsmJSCall)                    \
