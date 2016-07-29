@@ -459,17 +459,23 @@ struct IssuerNameCheckParams
   const char* subjectIssuerCN; // null means "empty name"
   const char* issuerSubjectCN; // null means "empty name"
   bool matches;
+  Result expectedError;
 };
 
 static const IssuerNameCheckParams ISSUER_NAME_CHECK_PARAMS[] =
 {
-  { "foo", "foo", true },
-  { "foo", "bar", false },
-  { "f", "foo", false }, // prefix
-  { "foo", "f", false }, // prefix
-  { "foo", "Foo", false }, // case sensitive
-  { "", "", true },
-  { nullptr, nullptr, true }, // XXX(bug 1115718)
+  { "foo", "foo", true, Success },
+  { "foo", "bar", false, Result::ERROR_UNKNOWN_ISSUER },
+  { "f", "foo", false, Result::ERROR_UNKNOWN_ISSUER }, // prefix
+  { "foo", "f", false, Result::ERROR_UNKNOWN_ISSUER }, // prefix
+  { "foo", "Foo", false, Result::ERROR_UNKNOWN_ISSUER }, // case sensitive
+  { "", "", true, Success },
+  { nullptr, nullptr, false, Result::ERROR_EMPTY_ISSUER_NAME }, // empty issuer
+
+  // check that certificate-related errors are deferred and superseded by
+  // ERROR_UNKNOWN_ISSUER when a chain can't be built due to name mismatches
+  { "foo", nullptr, false, Result::ERROR_UNKNOWN_ISSUER },
+  { nullptr, "foo", false, Result::ERROR_UNKNOWN_ISSUER }
 };
 
 class pkixbuild_IssuerNameCheck
@@ -497,7 +503,7 @@ TEST_P(pkixbuild_IssuerNameCheck, MatchingName)
                                               subjectCertDER.length()));
 
   IssuerNameCheckTrustDomain trustDomain(issuerCertDER, !params.matches);
-  ASSERT_EQ(params.matches ? Success : Result::ERROR_UNKNOWN_ISSUER,
+  ASSERT_EQ(params.expectedError,
             BuildCertChain(trustDomain, subjectCertDERInput, Now(),
                            EndEntityOrCA::MustBeEndEntity,
                            KeyUsage::noParticularKeyUsageRequired,
