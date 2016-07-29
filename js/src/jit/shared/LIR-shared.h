@@ -8176,6 +8176,10 @@ class LWasmStoreGlobalVarI64 : public LInstructionHelper<0, INT64_PIECES, 0>
         return mir_->toWasmStoreGlobalVar();
     }
     static const uint32_t InputIndex = 0;
+
+    const LInt64Allocation value() {
+        return getInt64Operand(InputIndex);
+    }
 };
 
 class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 0>

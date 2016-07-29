@@ -1069,7 +1069,7 @@ CodeGeneratorX86::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
     MWasmStoreGlobalVar* mir = ins->mir();
 
     MOZ_ASSERT(mir->value()->type() == MIRType::Int64);
-    Register64 input = ToRegister64(ins->getInt64Operand(LWasmStoreGlobalVarI64::InputIndex));
+    Register64 input = ToRegister64(ins->value());
 
     CodeOffset labelLow = masm.movlWithPatch(input.low, PatchedAbsoluteAddress());
     masm.append(wasm::GlobalAccess(labelLow, mir->globalDataOffset() + INT64LOW_OFFSET));
