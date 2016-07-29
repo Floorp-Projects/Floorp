@@ -282,10 +282,13 @@ HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
     if (mEventRegions.mNoActionRegion.Contains(point.x, point.y)) {
       return HitTestResult::HitLayerTouchActionNone;
     }
-    if (mEventRegions.mHorizontalPanRegion.Contains(point.x, point.y)) {
+    bool panX = mEventRegions.mHorizontalPanRegion.Contains(point.x, point.y);
+    bool panY = mEventRegions.mVerticalPanRegion.Contains(point.x, point.y);
+    if (panX && panY) {
+      return HitTestResult::HitLayerTouchActionPanXY;
+    } else if (panX) {
       return HitTestResult::HitLayerTouchActionPanX;
-    }
-    if (mEventRegions.mVerticalPanRegion.Contains(point.x, point.y)) {
+    } else if (panY) {
       return HitTestResult::HitLayerTouchActionPanY;
     }
   }
