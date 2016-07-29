@@ -470,8 +470,6 @@ nsGIFDecoder2::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
         return FinishedGlobalColorTable();
       case State::BLOCK_HEADER:
         return ReadBlockHeader(aData);
-      case State::BLOCK_HEADER_AFTER_YIELD:
-        return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
       case State::EXTENSION_HEADER:
         return ReadExtensionHeader(aData);
       case State::GRAPHIC_CONTROL_EXTENSION:
@@ -484,6 +482,8 @@ nsGIFDecoder2::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
         return ReadNetscapeExtensionData(aData);
       case State::IMAGE_DESCRIPTOR:
         return ReadImageDescriptor(aData);
+      case State::FINISH_IMAGE_DESCRIPTOR:
+        return FinishImageDescriptor(aData);
       case State::LOCAL_COLOR_TABLE:
         return ReadLocalColorTable(aData, aLength);
       case State::FINISHED_LOCAL_COLOR_TABLE:
@@ -754,29 +754,40 @@ nsGIFDecoder2::ReadNetscapeExtensionData(const char* aData)
 LexerTransition<nsGIFDecoder2::State>
 nsGIFDecoder2::ReadImageDescriptor(const char* aData)
 {
-  if (mGIFStruct.images_decoded == 1) {
-    if (!HasAnimation()) {
-      // We should've already called PostIsAnimated(); this must be a corrupt
-      // animated image with a first frame timeout of zero. Signal that we're
-      // animated now, before the first-frame decode early exit below, so that
-      // RasterImage can detect that this happened.
-      PostIsAnimated(FrameTimeout::FromRawMilliseconds(0));
-    }
-
-    if (IsFirstFrameDecode()) {
-      // We're about to get a second frame, but we only want the first. Stop
-      // decoding now.
-      FinishInternal();
-      return Transition::TerminateSuccess();
-    }
-
-    if (mDownscaler) {
-      MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode for an animated "
-                             "image?");
-      mDownscaler.reset();
-    }
+  // On the first frame, we don't need to yield, and none of the other checks
+  // below apply, so we can just jump right into FinishImageDescriptor().
+  if (mGIFStruct.images_decoded == 0) {
+    return FinishImageDescriptor(aData);
   }
 
+  if (!HasAnimation()) {
+    // We should've already called PostIsAnimated(); this must be a corrupt
+    // animated image with a first frame timeout of zero. Signal that we're
+    // animated now, before the first-frame decode early exit below, so that
+    // RasterImage can detect that this happened.
+    PostIsAnimated(FrameTimeout::FromRawMilliseconds(0));
+  }
+
+  if (IsFirstFrameDecode()) {
+    // We're about to get a second frame, but we only want the first. Stop
+    // decoding now.
+    FinishInternal();
+    return Transition::TerminateSuccess();
+  }
+
+  if (mDownscaler) {
+    MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode for an animated "
+                           "image?");
+    mDownscaler.reset();
+  }
+
+  // Yield to allow access to the previous frame before we start a new one.
+  return Transition::ToAfterYield(State::FINISH_IMAGE_DESCRIPTOR);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::FinishImageDescriptor(const char* aData)
+{
   IntRect frameRect;
 
   // Get image offsets with respect to the screen origin.
@@ -972,7 +983,7 @@ nsGIFDecoder2::ReadImageDataSubBlock(const char* aData)
   if (subBlockLength == 0) {
     // We hit the block terminator.
     EndImageFrame();
-    return Transition::ToAfterYield(State::BLOCK_HEADER_AFTER_YIELD);
+    return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
   }
 
   if (mGIFStruct.pixels_remaining == 0) {
