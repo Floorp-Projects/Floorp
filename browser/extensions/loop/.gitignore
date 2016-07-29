@@ -1,0 +1,7 @@
+.module-cache
+test/coverage/desktop
+test/coverage/shared_standalone
+test/node_modules
+test/visual-regression/diff
+test/visual-regression/new
+test/visual-regression/refs

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Loop desktop-local mocha tests</title>
+  <link rel="stylesheet" media="all" href="/test/vendor/mocha.css">
+</head>
+<body>
+  <div id="mocha">
+    <p><a href="../">Index</a></p>
+  </div>
+  <div id="messages"></div>
+  <div id="fixtures"></div>
+  <script src="/shared/vendor/lodash.js"></script>
+  <script src="/shared/test/loop_mocha_utils.js"></script>
+  <script>
+    LoopMochaUtils.trapErrors();
+  </script>
+
+  <!-- libs -->
+
+  <!-- test dependencies -->
+  <script src="/add-on/panels/vendor/l10n.js"></script>
+  <script src="/shared/vendor/react.js"></script>
+  <script src="/shared/vendor/react-dom.js"></script>
+  <script src="/shared/vendor/classnames.js"></script>
+  <script src="/shared/vendor/backbone.js"></script>
+  <script src="/add-on/panels/vendor/simpleSlideshow.js"></script>
+
+  <!-- test dependencies -->
+  <script src="/test/vendor/mocha.js"></script>
+  <script src="/test/vendor/chai.js"></script>
+  <script src="/test/vendor/chai-as-promised.js"></script>
+  <script src="/test/vendor/sinon.js"></script>
+
+  <script>
+    /*global chai,mocha */
+    chai.config.includeStack = true;
+    mocha.setup({ui: 'bdd', timeout: 10000});
+  </script>
+
+  <!-- App scripts -->
+  <script src="/add-on/shared/js/loopapi-client.js"></script>
+  <script src="/add-on/shared/js/utils.js"></script>
+  <script src="/add-on/panels/js/models.js"></script>
+  <script src="/add-on/shared/js/mixins.js"></script>
+  <script src="/add-on/shared/js/actions.js"></script>
+  <script src="/add-on/shared/js/validate.js"></script>
+  <script src="/add-on/shared/js/dispatcher.js"></script>
+  <script src="/add-on/shared/js/otSdkDriver.js"></script>
+
+  <!-- Load fake-components after loading utils to avoid chrome detection. -->
+  <script src="/add-on/panels/test/fake-components.js"></script>
+
+  <!-- Stores need to be loaded before the views that uses them -->
+  <script src="/add-on/shared/js/store.js"></script>
+  <script src="/add-on/panels/js/roomStore.js"></script>
+  <script src="/add-on/shared/js/activeRoomStore.js"></script>
+  <script src="/add-on/panels/js/conversationAppStore.js"></script>
+  <script src="/add-on/shared/js/textChatStore.js"></script>
+  <script src="/add-on/shared/js/remoteCursorStore.js"></script>
+
+  <!-- Views -->
+  <script src="/add-on/shared/js/views.js"></script>
+  <script src="/add-on/shared/js/textChatView.js"></script>
+  <script src="/add-on/panels/js/desktopViews.js"></script>
+  <script src="/add-on/panels/js/roomViews.js"></script>
+  <script src="/add-on/panels/js/feedbackViews.js"></script>
+  <script src="/add-on/panels/js/conversation.js"></script>
+  <script src="/add-on/panels/js/copy.js"></script>
+  <script src="/add-on/panels/js/panel.js"></script>
+  <script src="/add-on/panels/js/slideshow.js"></script>
+
+  <!-- Test scripts -->
+  <script src="conversationAppStore_test.js"></script>
+  <script src="conversation_test.js"></script>
+  <script src="copy_test.js"></script>
+  <script src="feedbackViews_test.js"></script>
+  <script src="panel_test.js"></script>
+  <script src="desktopViews_test.js"></script>
+  <script src="roomViews_test.js"></script>
+  <script src="l10n_test.js"></script>
+  <script src="roomStore_test.js"></script>
+  <script src="slideshow_test.js"></script>
+  <script>
+    // Stop the default init functions running to avoid conflicts in tests
+    document.removeEventListener('DOMContentLoaded', loop.panel.init);
+    document.removeEventListener('DOMContentLoaded', loop.conversation.init);
+    document.removeEventListener('DOMContentLoaded', loop.copy.init);
+    document.removeEventListener("DOMContentLoaded", loop.slideshow.init);
+
+    LoopMochaUtils.addErrorCheckingTests();
+    LoopMochaUtils.runTests();
+  </script>
+</body>
+</html>

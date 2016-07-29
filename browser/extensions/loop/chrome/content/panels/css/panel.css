@@ -1,0 +1,866 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+html {
+  font-size: 10px;
+  font-family: menu;
+}
+
+body {
+  background: none;
+}
+
+/* Beta Ribbon */
+.beta-ribbon {
+  background: url("../../shared/img/beta-ribbon.svg") no-repeat;
+  background-size: 30px;
+  width: 30px;
+  height: 30px;
+}
+
+/* Panel styles */
+
+.panel {
+  /* hide the extra margin space that the panel resizer now wants to show */
+  overflow: hidden;
+  font: menu;
+  background-color: #fbfbfb;
+  width: 330px;
+}
+
+/* Panel container */
+.panel-content {
+  width: 330px;
+  display: block;
+}
+
+.panel-content > .beta-ribbon {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+}
+
+.panel-container {
+  flex: 1;
+  display: flex;
+  flex-flow: column nowrap;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Notifications displayed over tabs */
+
+.panel .messages {
+  width: 100%;
+  margin: 0;
+}
+
+.panel .messages .alert {
+  margin: 0;
+}
+
+/* Sign-in request view */
+
+.sign-in-request {
+  text-align: center;
+  vertical-align: middle;
+  margin: 2em 0;
+}
+
+.sign-in-request > h1 {
+  font-size: 1.7em;
+  margin-bottom: .2em;
+}
+
+.sign-in-request > h2,
+.sign-in-request > a {
+  font-size: 1.2em;
+}
+
+.sign-in-request > a {
+  cursor: pointer;
+  color: #0295df;
+}
+
+.sign-in-request > a:hover:active {
+  text-decoration: underline;
+}
+
+.sign-in-request-button {
+  font-size: 1rem;
+  margin: 1rem;
+  width: 80%;
+  padding: .5rem 1rem;
+  border-radius: 3px;
+}
+
+/* Rename closing room panel */
+.rename-newRoom > img {
+  margin-left: 16px;
+  position: absolute;
+  width: 32px;
+}
+html[dir="rtl"] .rename-newRoom > img {
+  margin-left: 0;
+  margin-right: 16px;
+}
+
+.rename-container {
+  margin: 16px;
+  /* margin is img-width + 16px separation */
+  padding-left: 48px;
+}
+html[dir="rtl"] .rename-container {
+  padding-left: 0;
+  padding-right: 48px;
+}
+
+.rename-container > .rename-header {
+  color: #000;
+  font-size: 1.2em;
+  padding-top: 5px;
+}
+
+.rename-container > .rename-prompt {
+  margin-bottom: 8px;
+}
+
+.rename-container > .input-group {
+  background: #fff;
+  border: 1px solid #d1d1d1;
+  border-radius: 2px;
+  margin-left: -2px;
+  width: 100%;
+  padding: 2px 4px;
+}
+html[dir="rtl"] .rename-container > .input-group {
+  margin-left: 0;
+  margin-right: -2px;
+}
+.rename-container > .input-group.focused {
+  border: 1px solid #0078f9;
+  box-shadow: 0 0 0 3px #9eccfe;
+}
+
+.input-group > .rename-input {
+  border: 0px none;
+  font-size: 1.4rem;
+  width: 100%;
+}
+
+.rename-button {
+  background: #efefef;
+  border-top: 1px solid #d1d1d1;
+  display: block;
+  padding: 12px;
+  width: 100%;
+}
+
+
+
+/* Content area and input fields */
+
+.content-area {
+  padding: .5rem 1rem;
+}
+
+.content-area header {
+  font-weight: 700;
+}
+
+/* Need to remove when these rules when the Beta tag is removed */
+#share-link-header {
+  padding-inline-start: 20px;
+}
+
+.fte-get-started-container + .generate-url > #share-link-header {
+  /* The header shouldn't be indented if the tabs are present. */
+  padding-inline-start: 0;
+}
+
+.content-area label {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #777;
+}
+
+.content-area input {
+  display: block;
+  width: 100%;
+  outline: none;
+  border-radius: 4px;
+  margin: 10px 0;
+  border: 1px solid #c3c3c3;
+  height: 2.6rem;
+  padding: 0 6px;
+  font-size: 1.1rem;
+  color: #4a4a4a;
+  box-shadow: none;
+}
+
+.content-area input::-moz-placeholder {
+  color: #999;
+}
+
+.content-area input:not(.pristine):invalid {
+  border: 0.1rem solid #d13f1a;
+}
+
+.content-area input:focus {
+  border: 0.1rem solid #5cccee;
+}
+
+/* Rooms CSS */
+
+.room-list-loading {
+  text-align: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.room-list-loading > img {
+  width: 66px;
+}
+
+/* Rooms */
+.rooms {
+  display: block;
+  width: 100%;
+  flex-grow: 2;
+}
+
+.rooms > .fte-get-started-content {
+  padding-top: 2.4rem;
+}
+
+.rooms > h1 {
+  color: #666;
+  font-size: 1rem;
+  padding: .5rem 15px;
+  height: 3rem;
+  line-height: 3rem;
+}
+
+.new-room-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.new-room-view + h1 {
+  border-top: 1px solid #d8d8d8;
+}
+
+.new-room-view > .btn {
+  border-radius: 5px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 1.5rem;
+  padding: 1rem;
+}
+
+.new-room-view > .stop-sharing-button {
+  background-color: #d13f1a;
+  border-color: #d13f1a;
+}
+
+.new-room-view > .stop-sharing-button:hover {
+  background-color: #ef6745;
+  border-color: #ef6745;
+}
+
+.room-list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-flow: column nowrap;
+  width: 100%;
+  /* max number of rooms shown @ 28px */
+  max-height: calc(5 * 28px);
+  /* min-height because there is a browser min-height on panel */
+  min-height: 53px;
+  padding-top: 4px;
+  transition: opacity .2s ease-in-out .2s;
+}
+
+.room-list-empty {
+  display: inline-block;
+  /* min height so empty empty room list panel is same height as loading and
+  room-list panels */
+  min-height: 80px;
+}
+
+
+/* Adds blur to bottom of room-list to indicate more items in list */
+.room-list-blur {
+  /* height of room-list item */
+  height: 2.4rem;
+  /* -15px for scrollbar */
+  width: calc(100% - 15px);
+  /* At same DOM level as room-list, positioned after and moved to bottom of room-list */
+  position: absolute;
+  margin-top: -2.4rem;
+  /* starts gradient at about the 50% mark on the text, eyeballed the percentages */
+  background: linear-gradient(
+    to bottom,
+    rgba(251, 251, 251, 0) 0%,
+    rgba(251, 251, 251, 0) 38%, /* Because of padding and lineheight, start gradient at 38% */
+    rgba(251, 251, 251, 1) 65%, /* and end around 65% */
+    rgba(251, 251, 251, 1) 100%
+  );
+  pointer-events: none;
+}
+
+.room-list > .room-entry {
+  padding: .2rem 15px;
+  /* Always show the default pointer, even over the text part of the entry. */
+  cursor: default;
+}
+
+/* Adds margin to the last room-entry to make gradient fade disappear for last item */
+.room-list-add-space > .room-entry:last-child {
+  margin-bottom: 8px;
+}
+
+/* Disable interacting with the room list when creating */
+.room-list-pending-creation {
+  opacity: .5;
+  pointer-events: none;
+}
+
+.room-list > .room-entry > h2 {
+  display: inline-block;
+  vertical-align: middle;
+  /* See .room-entry-context-item for the margin/size reductions.
+   * An extra 16px to make space for the edit button. */
+  width: calc(100% - 1rem - 32px);
+
+  font-size: 1.3rem;
+  line-height: 2.4rem;
+  color: #000;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.room-list > .room-entry > input {
+  display: inline-block;
+  vertical-align: middle;
+  /* See .room-entry-context-item for the margin/size reductions. */
+  width: calc(100% - 1rem - 16px);
+  font-size: 1.3rem;
+}
+
+.room-list > .room-entry.room-active:not(.room-opened) > h2 {
+  font-weight: bold;
+}
+
+.room-list > .room-entry:not(.room-opened):hover {
+  background: #dbf7ff;
+}
+
+.room-list > .room-entry > p {
+  margin: 0;
+  padding: .2rem 0;
+}
+
+.room-list > .room-entry > p > a {
+  color: #777;
+  opacity: .5;
+  transition: opacity .1s ease-in-out 0s;
+  text-decoration: none;
+}
+
+.room-list > .room-entry > p > a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+@keyframes drop-and-fade-in {
+  0%   {opacity: 0; top: -15px;}
+  25%  {opacity: 0; top: -15px;}
+  100% {opacity: 1; top: 0;}
+}
+
+.room-list > .room-entry > h2 > button {
+  display: inline-block;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border: none;
+  margin: .1em; /* relative to _this_ line's font, not the document's */
+  margin-inline-start: .5em;
+  background-color: transparent;  /* override browser default for button tags */
+  top: -15px;
+}
+
+.room-list > .room-entry:hover > h2 > button {
+  animation: drop-and-fade-in 0.250s;
+  animation-fill-mode: forwards;
+}
+
+.room-list > .room-entry:hover > h2 > .copy-link {
+  background-image: url(../../shared/img/icons-16x16.svg#copy);
+}
+
+.room-list > .room-entry:hover > h2 > .delete-link {
+  background-image: url(../../shared/img/icons-16x16.svg#trash);
+}
+
+/* scale this up to 1.1x and then back to the original size */
+@keyframes pulse {
+  0%, 100% { transform: scale(1.0); }
+  50%      { transform: scale(1.1); }
+}
+
+.room-list > .room-entry > h2 > .copy-link.checked {
+  background: transparent url(../../shared/img/icons-16x16.svg#checkmark);
+  animation: pulse .150s;
+  animation-timing-function: ease-in-out;
+  top: 0;
+}
+
+/* Room entry context button (edit button) */
+.room-entry-context-actions {
+  display: none;
+  vertical-align: top;
+}
+
+.room-entry:hover .room-entry-context-actions {
+  display: inline-block;
+}
+
+/* Room entry edit button */
+.room-entry-context-edit-btn {
+  background-image: url("../../shared/img/icons-10x10.svg#edit-darkgrey");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 12px;
+  cursor: pointer;
+  display: inline-block;
+  height: 24px;
+  vertical-align: middle;
+  width: 16px;
+}
+
+html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
+  right: auto;
+  left: 21px;
+}
+
+.room-entry-context-actions > .dropdown-menu {
+  right: 21px;
+  bottom: auto;
+  left: auto;
+  z-index: 1;
+}
+
+/* Keep ".room-list > .room-entry > h2" in sync with these. */
+.room-entry-context-item {
+  display: inline-block;
+  margin-inline-end: 1rem;
+  vertical-align: middle;
+}
+
+.room-entry-context-item > img,
+.room-entry-context-item > a > img {
+  width: 16px;
+}
+
+.button-close {
+  background-color: transparent;
+  background-image: url(../../shared/img/icons-10x10.svg#close);
+  background-repeat: no-repeat;
+  background-size: 8px 8px;
+  border: none;
+  padding: 0;
+  height: 8px;
+  width: 8px;
+}
+
+.button-close:hover,
+.button-close:hover:active {
+  background-color: transparent;
+  border: none;
+}
+
+/* Spinner */
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+}
+
+.spinner.busy {
+  background-image: url(../../shared/img/spinner.png);
+  animation-name: spinnerRotate;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@media (min-resolution: 2dppx) {
+  .spinner.busy {
+    background-image: url(../../shared/img/spinner@2x.png);
+  }
+}
+
+/* Share tab */
+
+.generate-url-stack {
+  margin: 14px 0;
+  position: relative;
+}
+
+.generate-url-input {
+  outline: 0;
+  border: 1px solid #ccc; /* Overriding background style for a text input (see
+                             below) resets its borders to a weird beveled style;
+                             defining a default 1px border solves the issue. */
+  border-radius: 2px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 1em;
+}
+
+.generate-url-spinner {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  top: 4px;
+  left: auto;
+  right: 4px;
+}
+
+html[dir="rtl"] .generate-url-spinner {
+  left: 4px;
+  right: auto;
+}
+
+.generate-url .button {
+  background-color: #00a9dc;
+  border-color: #0096dd;
+  color: #fff;
+}
+
+.generate-url .button:hover {
+  background-color: #008acb;
+  border-color: #008acb;
+}
+
+#powered-by,
+.terms-service {
+  color: #4a4a4a;
+  font-size: 1.2rem;
+}
+
+#powered-by {
+  border-top: 1px solid #ccc;
+  padding-top: 1.5rem;
+  text-align: center;
+  margin-top: 0;
+}
+
+#powered-by-logo {
+  display: inline-block;
+  margin-left: 10px;
+  margin-right: 10px;
+  vertical-align: middle;
+  background-image: url("../../shared/img/telefonica-logo.svg");
+  width: 84px;
+  height: 23px;
+  background-repeat: no-repeat;
+}
+
+#powered-by-logo.en-GB,
+#powered-by-logo.de {
+  background-image: url("../../shared/img/02.png");
+  background-size: 21px 20px;
+  width: 21px;
+  height: 20px;
+}
+
+#powered-by-logo.pt-BR {
+  background-image: url("../../shared/img/vivo.png");
+  background-size: 53px 26px;
+  width: 53px;
+  height: 26px;
+}
+
+#powered-by-logo[class^="es-"] {
+  background-image: url("../../shared/img/movistar.png");
+  background-size: 92px 20px;
+  width: 92px;
+  height: 20px;
+}
+
+@media (min-resolution: 2dppx) {
+  #powered-by-logo.en-GB,
+  #powered-by-logo.de {
+    background-image: url("../../shared/img/02@2x.png");
+  }
+
+  #powered-by-logo.pt-BR {
+    background-image: url("../../shared/img/vivo@2x.png");
+  }
+
+  #powered-by-logo[class^="es-"] {
+    background-image: url("../../shared/img/movistar@2x.png");
+  }
+}
+
+.terms-service {
+  padding-left: 5rem;
+  padding-right: 5rem;
+  padding-bottom: 1rem;
+  text-align: center;
+}
+
+.terms-service > a {
+  color: #00a9dc;
+  text-decoration: none;
+}
+
+/* Status badges -- Available/Unavailable */
+.status {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 5px;
+  border-radius: 50%;
+}
+
+/* Sign in/up link */
+
+.signin-link {
+  flex: 1;
+  margin: 0;
+}
+
+.signin-link > a {
+  font-weight: 500;
+  text-decoration: none;
+  color: #00A9DC;
+}
+
+/* Settings (gear) menu */
+
+.button-settings {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  vertical-align: middle;
+  background: transparent url("../../shared/img/icons-10x10.svg#settings-cog");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.settings-menu .dropdown-menu {
+  /* The panel can't have dropdown menu overflowing its iframe boudaries;
+     let's anchor it from the bottom-right, while resetting the top & left values
+     set by .dropdown-menu */
+  top: auto;
+  left: auto;
+  bottom: 1.1em;
+  right: 14px;
+}
+
+.entries-divider {
+  border-left: 0;
+  border-right: 0;
+  border-bottom: solid 1px #d8d8d8;
+}
+
+html[dir="rtl"] .settings-menu .dropdown-menu {
+  /* This is specified separately rather than using margin-inline-start etc, as
+     we need to override .dropdown-menu's values which can't use the gecko
+     specific extensions. */
+  left: 14px;
+  right: auto;
+}
+
+/* Footer */
+
+.footer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-content: stretch;
+  align-items: center;
+  font-size: 1rem;
+  color: #666666;
+  padding: 10px 15px 6px 15px;
+  width: 100%;
+  height: 42px;
+}
+
+.footer > .signin-details {
+  align-items: center;
+}
+
+.footer > .user-identity {
+  flex: 1;
+  color: #000;
+  font-weight: bold;
+  margin: 0;
+  margin-inline-end: 1rem;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+/* First time use */
+
+.fte-get-started-content {
+  /* Manual vertical centering */
+  padding: 2rem 0 0;
+}
+
+.fte-title {
+  margin: 0 20px;
+}
+
+.fte-title > img {
+  width: 100%;
+}
+
+img.fte-logo {
+  height: 32px;
+  /* Setting svg img to display:block fixed svg/panel sizing issue */
+  display: block;
+}
+
+.fte-subheader, .fte-content {
+  font-size: 1.6rem;
+  text-align: center;
+  margin: 2rem auto;
+  color: #4a4a4a;
+  line-height: 2.4rem;
+}
+
+.fte-content {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #9a9a9a;
+}
+
+.fte-separator {
+  /* Constrain separator width with magic number. */
+  width: 164px;
+  border: solid #c5c5c5 1px;
+  height: 1px;
+  margin: 0 auto;
+}
+
+img.fte-hello-web-share {
+  /* Set custom SVG size to align with powered-by-wrapper element. */
+  width: 290px;
+  height: 168px;
+  /* Setting svg img to display:block fixed svg/panel sizing issue */
+  display: block;
+}
+
+.fte-get-started-content + .powered-by-wrapper {
+  width: 100%;
+  background: #ebebeb;
+}
+
+.fte-get-started-content + .powered-by-wrapper > #powered-by {
+  border: none;
+}
+
+.fte-get-started-container {
+  display: flex;
+  flex-flow: column nowrap;
+  background: #fbfbfb;
+}
+
+.fte-get-started-content-borders {
+  border-top: 1px solid #D8D8D8;
+  border-bottom: 1px solid #D8D8D8;
+}
+
+.fte-button-container {
+  border-top: 1px solid #ccc;
+  padding: 8px 8px 0;
+  background: #ebebeb;
+  display: flex;
+  flex-direction: column;
+}
+
+.fte-get-started-button {
+  border: none;
+  color: #fff;
+  background-color: #00a9dc;
+  line-height: 43px;
+  margin: 10px;
+  padding: 0;
+  border-radius: 4px;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.fte-get-started-button:hover,
+.fte-get-started-button:focus,
+.fte-get-started-button:active {
+  background-color: #5cccee;
+  color: #fff;
+}
+
+/* E10s not supported */
+
+.error-content {
+  /* Manual vertical centering */
+  flex: 1;
+  padding: 3.5rem 0 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.error-title {
+  margin: 0 15px;
+  text-align: center;
+}
+
+.error-title > img {
+  width: 72px;
+}
+
+.error-subheader {
+  text-align: center;
+  font-size: 1.6rem;
+  margin: 2.5rem 0;
+  color: #4a4a4a;
+  line-height: 2.2rem;
+}
+
+.e10s-not-supported-button {
+  border: none;
+  color: #fff;
+  background-color: #00a9dc;
+  line-height: 43px;
+  margin: 0 15px;
+  padding: 0;
+  border-radius: 4px;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.e10s-not-supported-button:hover,
+.e10s-not-supported-button:focus,
+.e10s-not-supported-button:active {
+  background-color: #5cccee;
+  color: #fff;
+}

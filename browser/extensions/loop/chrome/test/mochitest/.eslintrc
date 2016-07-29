@@ -1,0 +1,42 @@
+{
+  "globals": {
+    // General test items.
+    "add_task": false,
+    "BrowserOpenTab": false,
+    "BrowserTestUtils": true,
+    "Cc": true,
+    "Ci": true,
+    "content": true,
+    "ContentTask": false,
+    "Cr": true,
+    "Cu": true,
+    "is": false,
+    "info": false,
+    "ok": false,
+    "registerCleanupFunction": false,
+    // head.js items
+    "HAWK_TOKEN_LENGTH": true,
+    "checkLoggedOutState": false,
+    "checkFxAOAuthTokenData": false,
+    "cleanupPanel": false,
+    "loadLoopPanel": false,
+    "getLoopString": false,
+    "gMozLoopAPI": true,
+    "mockDb": true,
+    "mockPushHandler": true,
+    "promiseDeletedOAuthParams": false,
+    "promiseOAuthGetRegistration": false,
+    "promiseOAuthParamsSetup": false,
+    "promiseObserverNotified": false,
+    "promiseWaitForCondition": false,
+    "resetFxA": true,
+    // Loop specific items
+    "MozLoopServiceInternal": true,
+    "LoopRoomsInternal": true,
+    "LoopUI": false,
+    // Other items
+    "Chat": true,
+    "WebChannel": true,
+    "executeSoon": true
+  }
+}
