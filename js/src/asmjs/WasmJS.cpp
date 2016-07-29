@@ -65,7 +65,7 @@ CheckCompilerSupport(JSContext* cx)
 bool
 wasm::IsI64Implemented()
 {
-#if defined(JS_CPU_X64) || defined(JS_CODEGEN_X86)
+#if defined(JS_CPU_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
     return true;
 #else
     return false;

@@ -191,7 +191,10 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
-            MOZ_CRASH("wasm uses hardfp for function calls.");
+            if (type == MIRType::Int64)
+                masm.load64(src, iter->gpr64());
+            else
+                MOZ_CRASH("wasm uses hardfp for function calls.");
             break;
 #endif
           case ABIArg::FPU: {
@@ -362,7 +365,10 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
-            MOZ_CRASH("AsmJS uses hardfp for function calls.");
+            if (type == MIRType::Int64)
+                masm.store64(i->gpr64(), dstAddr);
+            else
+                MOZ_CRASH("AsmJS uses hardfp for function calls.");
             break;
 #endif
           case ABIArg::FPU: {
