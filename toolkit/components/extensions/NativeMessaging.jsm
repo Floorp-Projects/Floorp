@@ -215,7 +215,7 @@ this.NativeApp = class extends EventEmitter {
         this._startStderrRead();
       }).catch(err => {
         this.startupPromise = null;
-        Cu.reportError(err.message);
+        Cu.reportError(err);
         this._cleanup(err);
       });
   }
