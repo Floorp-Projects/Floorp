@@ -2969,6 +2969,45 @@ CodeGeneratorARM::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
 }
 
 void
+CodeGeneratorARM::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister inputDouble = input;
+    Register64 output = ToOutRegister64(lir);
+
+    MWasmTruncateToInt64* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    ScratchDoubleScope scratchScope(masm);
+    if (fromType == MIRType::Float32) {
+        inputDouble = ScratchDoubleReg;
+        masm.convertFloat32ToDouble(input, inputDouble);
+    }
+
+    masm.Push(input);
+
+    masm.setupUnalignedABICall(output.high);
+    masm.passABIArg(inputDouble, MoveOp::DOUBLE);
+    if (lir->mir()->isUnsigned())
+        masm.callWithABI(wasm::SymbolicAddress::TruncateDoubleToUint64);
+    else
+        masm.callWithABI(wasm::SymbolicAddress::TruncateDoubleToInt64);
+
+    masm.Pop(input);
+
+    masm.ma_cmp(output.high, Imm32(0x80000000));
+    masm.ma_cmp(output.low, Imm32(0x00000000), Assembler::Equal);
+    masm.ma_b(ool->entry(), Assembler::Equal);
+
+    masm.bind(ool->rejoin());
+
+    MOZ_ASSERT(ReturnReg64 == output);
+}
+
+void
 CodeGeneratorARM::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
 {
     MIRType fromType = ool->fromType();
@@ -2989,39 +3028,57 @@ CodeGeneratorARM::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* oo
     // Handle special values.
     Label fail;
 
+    // By default test for the following inputs and bail:
+    // signed:   ] -Inf, INTXX_MIN - 1.0 ] and [ INTXX_MAX + 1.0 : +Inf [
+    // unsigned: ] -Inf, -1.0 ] and [ UINTXX_MAX + 1.0 : +Inf [
+    // Note: we cannot always represent those exact values. As a result
+    // this changes the actual comparison a bit.
     double minValue, maxValue;
-    if (ool->isUnsigned()) {
-        minValue = -1;
-        maxValue = double(UINT32_MAX) + 1.0;
+    Assembler::DoubleCondition minCond = Assembler::DoubleLessThanOrEqual;
+    Assembler::DoubleCondition maxCond = Assembler::DoubleGreaterThanOrEqual;
+    if (ool->toType() == MIRType::Int64) {
+        if (ool->isUnsigned()) {
+            minValue = -1;
+            maxValue = double(UINT64_MAX) + 1.0;
+        } else {
+            // In the float32/double range there exists no value between
+            // INT64_MIN and INT64_MIN - 1.0. Making INT64_MIN the lower-bound.
+            minValue = double(INT64_MIN);
+            minCond = Assembler::DoubleLessThan;
+            maxValue = double(INT64_MAX) + 1.0;
+        }
     } else {
-        minValue = double(INT32_MIN) - 1.0;
-        maxValue = double(INT32_MAX) + 1.0;
+        if (ool->isUnsigned()) {
+            minValue = -1;
+            maxValue = double(UINT32_MAX) + 1.0;
+        } else {
+            if (fromType == MIRType::Float32) {
+                // In the float32 range there exists no value between
+                // INT32_MIN and INT32_MIN - 1.0. Making INT32_MIN the lower-bound.
+                minValue = double(INT32_MIN);
+                minCond = Assembler::DoubleLessThan;
+            } else {
+                minValue = double(INT32_MIN) - 1.0;
+            }
+            maxValue = double(INT32_MAX) + 1.0;
+        }
     }
 
     if (fromType == MIRType::Double) {
         scratch = scratchScope.doubleOverlay();
         masm.loadConstantDouble(minValue, scratch);
-        masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, scratch, &fail);
+        masm.branchDouble(minCond, input, scratch, &fail);
 
         masm.loadConstantDouble(maxValue, scratch);
-        masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, scratch, &fail);
+        masm.branchDouble(maxCond, input, scratch, &fail);
     } else {
         MOZ_ASSERT(fromType == MIRType::Float32);
         scratch = scratchScope.singleOverlay();
-
-        // For int32, float(minValue) rounds to INT32_MIN, we want to fail when
-        // input < float(minValue).
-        // For uint32, float(minValue) == -1, we want to fail when input <= -1.
-        auto condition = minValue == -1.0
-                         ? Assembler::DoubleLessThanOrEqual
-                         : Assembler::DoubleLessThan;
-
         masm.loadConstantFloat32(float(minValue), scratch);
-        masm.branchFloat(condition, input, scratch, &fail);
+        masm.branchFloat(minCond, input, scratch, &fail);
 
-        // maxValue is exactly represented in both cases.
         masm.loadConstantFloat32(float(maxValue), scratch);
-        masm.branchFloat(Assembler::DoubleGreaterThanOrEqual, input, scratch, &fail);
+        masm.branchFloat(maxCond, input, scratch, &fail);
     }
 
     // We had an actual correct value, get back to where we were.
