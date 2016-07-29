@@ -178,6 +178,12 @@ MacroAssembler::addPtr(const Address& src, Register dest)
 }
 
 void
+MacroAssembler::add64(const Operand& src, Register64 dest)
+{
+    addq(src, dest.reg);
+}
+
+void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
     addq(src.reg, dest.reg);
@@ -187,6 +193,12 @@ void
 MacroAssembler::add64(Imm32 imm, Register64 dest)
 {
     addq(imm, dest.reg);
+}
+
+void
+MacroAssembler::add64(Imm64 imm, Register64 dest)
+{
+    addPtr(ImmWord(imm.value), dest.reg);
 }
 
 void
