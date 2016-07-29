@@ -1016,6 +1016,20 @@ CodeGeneratorX86::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 }
 
 void
+CodeGeneratorX86::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
+{
+    MWasmLoadGlobalVar* mir = ins->mir();
+
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+    Register64 output = ToOutRegister64(ins);
+
+    CodeOffset labelLow = masm.movlWithPatch(PatchedAbsoluteAddress(), output.low);
+    masm.append(wasm::GlobalAccess(labelLow, mir->globalDataOffset() + INT64LOW_OFFSET));
+    CodeOffset labelHigh = masm.movlWithPatch(PatchedAbsoluteAddress(), output.high);
+    masm.append(wasm::GlobalAccess(labelHigh, mir->globalDataOffset() + INT64HIGH_OFFSET));
+}
+
+void
 CodeGeneratorX86::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 {
     MWasmStoreGlobalVar* mir = ins->mir();
@@ -1047,6 +1061,20 @@ CodeGeneratorX86::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
         MOZ_CRASH("unexpected type in visitWasmStoreGlobalVar");
     }
     masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
+}
+
+void
+CodeGeneratorX86::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
+{
+    MWasmStoreGlobalVar* mir = ins->mir();
+
+    MOZ_ASSERT(mir->value()->type() == MIRType::Int64);
+    Register64 input = ToRegister64(ins->getInt64Operand(LWasmStoreGlobalVarI64::InputIndex));
+
+    CodeOffset labelLow = masm.movlWithPatch(input.low, PatchedAbsoluteAddress());
+    masm.append(wasm::GlobalAccess(labelLow, mir->globalDataOffset() + INT64LOW_OFFSET));
+    CodeOffset labelHigh = masm.movlWithPatch(input.high, PatchedAbsoluteAddress());
+    masm.append(wasm::GlobalAccess(labelHigh, mir->globalDataOffset() + INT64HIGH_OFFSET));
 }
 
 namespace js {
