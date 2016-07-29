@@ -214,12 +214,24 @@ WGLLibrary::EnsureInitialized()
             }
         }
 
-        if (HasExtension(extString, "WGL_NV_DX_interop")) {
-            if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &dxInteropSymbols[0], lookupFunc)) {
-                mHasDXInterop = true;
-                mHasDXInterop2 = HasExtension(extString, "WGL_NV_DX_interop2");
-            } else {
-                NS_ERROR("WGL supports NV_DX_interop without supplying its functions.");
+        ////
+
+        mHasDXInterop = HasExtension(extString, "WGL_NV_DX_interop");
+        mHasDXInterop2 = HasExtension(extString, "WGL_NV_DX_interop2");
+
+        nsCString blocklistId;
+        if (gfxUtils::IsFeatureBlacklisted(nullptr, nsIGfxInfo::FEATURE_DX_INTEROP2,
+                                           &blocklistId) &&
+            !gfxPrefs::IgnoreDXInterop2Blacklist())
+        {
+            mHasDXInterop2 = false;
+        }
+
+        if (mHasDXInterop || mHasDXInterop2) {
+            if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &dxInteropSymbols[0],
+                                              lookupFunc))
+            {
+                NS_ERROR("WGL supports NV_DX_interop(2) without supplying its functions.");
                 fDXSetResourceShareHandle = nullptr;
                 fDXOpenDevice = nullptr;
                 fDXCloseDevice = nullptr;
@@ -228,6 +240,9 @@ WGLLibrary::EnsureInitialized()
                 fDXObjectAccess = nullptr;
                 fDXLockObjects = nullptr;
                 fDXUnlockObjects = nullptr;
+
+                mHasDXInterop = false;
+                mHasDXInterop2 = false;
             }
         }
     }
