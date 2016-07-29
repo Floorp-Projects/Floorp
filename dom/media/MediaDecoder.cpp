@@ -162,7 +162,7 @@ MediaDecoderOwner*
 MediaDecoder::ResourceCallback::GetMediaOwner() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mDecoder ? mDecoder->GetOwner() : nullptr;
+  return mDecoder ? mDecoder->mOwner : nullptr;
 }
 
 void
@@ -571,7 +571,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
                    "MediaDecoder::mMediaSeekable (Canonical)")
   , mMediaSeekableOnlyInBufferedRanges(AbstractThread::MainThread(), false,
                    "MediaDecoder::mMediaSeekableOnlyInBufferedRanges (Canonical)")
-  , mIsVisible(AbstractThread::MainThread(), !mOwner->IsHidden(),
+  , mIsVisible(AbstractThread::MainThread(), !aOwner->IsHidden(),
                "MediaDecoder::mIsVisible (Canonical)")
   , mTelemetryReported(false)
 {
@@ -667,6 +667,7 @@ MediaDecoder::Shutdown()
   CancelDormantTimer();
 
   ChangeState(PLAY_STATE_SHUTDOWN);
+  mOwner = nullptr;
 }
 
 MediaDecoder::~MediaDecoder()
@@ -1857,7 +1858,7 @@ MediaDecoder::GetOwner() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   // mOwner is valid until shutdown.
-  return !IsShutdown() ? mOwner : nullptr;
+  return mOwner;
 }
 
 void
