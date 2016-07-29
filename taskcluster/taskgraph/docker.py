@@ -88,10 +88,20 @@ def build_image(name):
         raise Exception('Docker server is unresponsive. Run `docker ps` and '
                         'check that Docker is running')
 
-    args = [os.path.join(IMAGE_DIR, 'build.sh'), name, tag]
+    args = [
+        docker_bin,
+        'build',
+        # Use --no-cache so we always get the latest package updates.
+        '--no-cache',
+        '-t', tag,
+        name,
+    ]
+
     res = subprocess.call(args, cwd=IMAGE_DIR)
     if res:
         raise Exception('error building image')
+
+    print('Successfully built %s and tagged with %s' % (name, tag))
 
     if tag.endswith(':latest'):
         print('*' * 50)
