@@ -12,19 +12,6 @@ Cu.import("resource://gre/modules/Subprocess.jsm");
 const MAX_ROUND_TRIP_TIME_MS = AppConstants.DEBUG || AppConstants.ASAN ? 36 : 18;
 
 
-let tmpDir = FileUtils.getDir("TmpD", ["NativeMessaging"]);
-tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-do_register_cleanup(() => {
-  tmpDir.remove(true);
-});
-
-function getPath(filename) {
-  return OS.Path.join(tmpDir.path, filename);
-}
-
-const ID = "native@tests.mozilla.org";
-
 const ECHO_BODY = String.raw`
   import struct
   import sys
@@ -50,83 +37,7 @@ const SCRIPTS = [
 ];
 
 add_task(function* setup() {
-  const PERMS = {unixMode: 0o755};
-
-  let pythonPath = yield Subprocess.pathSearch("python2.7").catch(err => {
-    return Subprocess.pathSearch("python");
-  });
-
-  function* writeManifest(script, scriptPath, path) {
-    let body = `#!${pythonPath} -u\n${script.script}`;
-
-    yield OS.File.writeAtomic(scriptPath, body);
-    yield OS.File.setPermissions(scriptPath, PERMS);
-
-    let manifest = {
-      name: script.name,
-      description: script.description,
-      path,
-      type: "stdio",
-      allowed_extensions: [ID],
-    };
-
-    let manifestPath = getPath(`${script.name}.json`);
-    yield OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
-
-    return manifestPath;
-  }
-
-  switch (AppConstants.platform) {
-    case "macosx":
-    case "linux":
-      let dirProvider = {
-        getFile(property) {
-          if (property == "XREUserNativeMessaging") {
-            return tmpDir.clone();
-          } else if (property == "XRESysNativeMessaging") {
-            return tmpDir.clone();
-          }
-          return null;
-        },
-      };
-
-      Services.dirsvc.registerProvider(dirProvider);
-      do_register_cleanup(() => {
-        Services.dirsvc.unregisterProvider(dirProvider);
-      });
-
-      for (let script of SCRIPTS) {
-        let path = getPath(`${script.name}.py`);
-
-        yield writeManifest(script, path, path);
-      }
-      break;
-
-    case "win":
-      const REGKEY = String.raw`Software\Mozilla\NativeMessagingHosts`;
-
-      let registry = new MockRegistry();
-      do_register_cleanup(() => {
-        registry.shutdown();
-      });
-
-      for (let script of SCRIPTS) {
-        let batPath = getPath(`${script.name}.bat`);
-        let scriptPath = getPath(`${script.name}.py`);
-
-        let batBody = `@ECHO OFF\n${pythonPath} -u ${scriptPath} %*\n`;
-        yield OS.File.writeAtomic(batPath, batBody);
-
-        let manifestPath = yield writeManifest(script, scriptPath, batPath);
-
-        registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                          `${REGKEY}\\${script.name}`, "", manifestPath);
-      }
-      break;
-
-    default:
-      ok(false, `Native messaging is not supported on ${AppConstants.platform}`);
-  }
+  yield setupHosts(SCRIPTS);
 });
 
 add_task(function* test_round_trip_perf() {
