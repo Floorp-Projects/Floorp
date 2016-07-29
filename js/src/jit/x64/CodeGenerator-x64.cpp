@@ -504,17 +504,17 @@ CodeGeneratorX64::load(Scalar::Type type, const Operand& srcAddr, AnyRegister ou
 }
 
 void
-CodeGeneratorX64::loadI64(Scalar::Type type, const Operand& srcAddr, AnyRegister out)
+CodeGeneratorX64::loadI64(Scalar::Type type, const Operand& srcAddr, Register64 out)
 {
     switch (type) {
-      case Scalar::Int8:      masm.movsbq(srcAddr, out.gpr()); break;
-      case Scalar::Uint8:     masm.movzbq(srcAddr, out.gpr()); break;
-      case Scalar::Int16:     masm.movswq(srcAddr, out.gpr()); break;
-      case Scalar::Uint16:    masm.movzwq(srcAddr, out.gpr()); break;
-      case Scalar::Int32:     masm.movslq(srcAddr, out.gpr()); break;
+      case Scalar::Int8:      masm.movsbq(srcAddr, out.reg); break;
+      case Scalar::Uint8:     masm.movzbq(srcAddr, out.reg); break;
+      case Scalar::Int16:     masm.movswq(srcAddr, out.reg); break;
+      case Scalar::Uint16:    masm.movzwq(srcAddr, out.reg); break;
+      case Scalar::Int32:     masm.movslq(srcAddr, out.reg); break;
       // Int32 to int64 moves zero-extend by default.
-      case Scalar::Uint32:    masm.movl(srcAddr, out.gpr());   break;
-      case Scalar::Int64:     masm.movq(srcAddr, out.gpr());   break;
+      case Scalar::Uint32:    masm.movl(srcAddr, out.reg);   break;
+      case Scalar::Int64:     masm.movq(srcAddr, out.reg);   break;
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Float32x4:
@@ -528,10 +528,13 @@ CodeGeneratorX64::loadI64(Scalar::Type type, const Operand& srcAddr, AnyRegister
     }
 }
 
+template <typename T>
 void
-CodeGeneratorX64::visitWasmLoadBase(const MWasmLoad* mir, const LAllocation* ptr,
-                                    const LDefinition* output, bool isInt64)
+CodeGeneratorX64::emitWasmLoad(T* ins)
 {
+    const MWasmLoad* mir = ins->mir();
+    bool isInt64 = mir->type() == MIRType::Int64;
+
     Scalar::Type accessType = mir->accessType();
     MOZ_ASSERT(!Scalar::isSimdType(accessType), "SIMD NYI");
     MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
@@ -541,21 +544,20 @@ CodeGeneratorX64::visitWasmLoadBase(const MWasmLoad* mir, const LAllocation* ptr
         return;
     }
 
+    const LAllocation* ptr = ins->ptr();
     Operand srcAddr = ptr->isBogus()
                       ? Operand(HeapReg, mir->offset())
                       : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
 
-    AnyRegister out = ToAnyRegister(output);
-
     uint32_t before = masm.size();
-    if (!isInt64)
-        load(accessType, srcAddr, out);
+    if (isInt64)
+        loadI64(accessType, srcAddr, ToOutRegister64(ins));
     else
-        loadI64(accessType, srcAddr, out);
+        load(accessType, srcAddr, ToAnyRegister(ins->output()));
     uint32_t after = masm.size();
 
     verifyLoadDisassembly(before, after, isInt64, accessType, /* numElems */ 0, srcAddr,
-                          *output->output());
+                          *ins->output()->output());
 
     masm.append(WasmMemoryAccess(before));
 }
@@ -563,17 +565,18 @@ CodeGeneratorX64::visitWasmLoadBase(const MWasmLoad* mir, const LAllocation* ptr
 void
 CodeGeneratorX64::visitWasmLoad(LWasmLoad* ins)
 {
-    visitWasmLoadBase(ins->mir(), ins->ptr(), ins->output(), /* isInt64 */ false);
+    emitWasmLoad(ins);
 }
 
 void
 CodeGeneratorX64::visitWasmLoadI64(LWasmLoadI64* ins)
 {
-    visitWasmLoadBase(ins->mir(), ins->ptr(), ins->output(), /* isInt64 */ true);
+    emitWasmLoad(ins);
 }
 
+template <typename T>
 void
-CodeGeneratorX64::visitWasmStore(LWasmStore* ins)
+CodeGeneratorX64::emitWasmStore(T* ins)
 {
     const MWasmStore* mir = ins->mir();
 
@@ -586,7 +589,7 @@ CodeGeneratorX64::visitWasmStore(LWasmStore* ins)
         return;
     }
 
-    const LAllocation* value = ins->value();
+    const LAllocation* value = ins->getOperand(ins->ValueIndex);
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
                       ? Operand(HeapReg, mir->offset())
@@ -600,6 +603,18 @@ CodeGeneratorX64::visitWasmStore(LWasmStore* ins)
                            accessType, /* numElems */ 0, dstAddr, *value);
 
     masm.append(WasmMemoryAccess(before));
+}
+
+void
+CodeGeneratorX64::visitWasmStore(LWasmStore* ins)
+{
+    emitWasmStore(ins);
+}
+
+void
+CodeGeneratorX64::visitWasmStoreI64(LWasmStoreI64* ins)
+{
+    emitWasmStore(ins);
 }
 
 void

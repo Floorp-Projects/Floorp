@@ -276,6 +276,86 @@ CodeGeneratorX86::load(Scalar::Type accessType, const Operand& srcAddr, const LD
       case Scalar::Int64:        MOZ_CRASH("should be handled in a separate function (2 regs)");
       case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
     }
+    masm.append(wasm::MemoryAccess(masm.size()));
+}
+
+void
+CodeGeneratorX86::loadI64(Scalar::Type type, const Operand& srcAddr, Register64 out)
+{
+    switch (type) {
+      case Scalar::Int8:
+        MOZ_ASSERT(out == Register64(edx, eax));
+        masm.movsblWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.cdq();
+        break;
+      case Scalar::Uint8:
+        masm.movzblWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.xorl(out.high, out.high);
+        break;
+      case Scalar::Int16:
+        MOZ_ASSERT(out == Register64(edx, eax));
+        masm.movswlWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.cdq();
+        break;
+      case Scalar::Uint16:
+        masm.movzwlWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.xorl(out.high, out.high);
+        break;
+      case Scalar::Int32:
+        MOZ_ASSERT(out == Register64(edx, eax));
+        masm.movlWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.cdq();
+        break;
+      case Scalar::Uint32:
+        masm.movlWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.xorl(out.high, out.high);
+        break;
+      case Scalar::Int64:
+        if (srcAddr.kind() == Operand::MEM_ADDRESS32) {
+            Operand low(PatchedAbsoluteAddress(uint32_t(srcAddr.address()) + INT64LOW_OFFSET));
+            Operand high(PatchedAbsoluteAddress(uint32_t(srcAddr.address()) + INT64HIGH_OFFSET));
+
+            masm.movlWithPatch(low, out.low);
+            masm.append(wasm::MemoryAccess(masm.size()));
+            masm.movlWithPatch(high, out.high);
+            masm.append(wasm::MemoryAccess(masm.size()));
+        } else {
+            MOZ_ASSERT(srcAddr.kind() == Operand::MEM_REG_DISP);
+            Address addr = srcAddr.toAddress();
+            Operand low(addr.base, addr.offset + INT64LOW_OFFSET);
+            Operand high(addr.base, addr.offset + INT64HIGH_OFFSET);
+
+            if (addr.base != out.low) {
+                masm.movlWithPatch(low, out.low);
+                masm.append(wasm::MemoryAccess(masm.size()));
+                masm.movlWithPatch(high, out.high);
+                masm.append(wasm::MemoryAccess(masm.size()));
+            } else {
+                MOZ_ASSERT(addr.base != out.high);
+                masm.movlWithPatch(high, out.high);
+                masm.append(wasm::MemoryAccess(masm.size()));
+                masm.movlWithPatch(low, out.low);
+                masm.append(wasm::MemoryAccess(masm.size()));
+            }
+        }
+        break;
+      case Scalar::Float32:
+      case Scalar::Float64:
+      case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
+      case Scalar::Int32x4:
+        MOZ_CRASH("non-int64 loads should use load()");
+      case Scalar::Uint8Clamped:
+      case Scalar::MaxTypedArrayViewType:
+        MOZ_CRASH("unexpected array type");
+    }
 }
 
 void
@@ -408,10 +488,12 @@ CodeGeneratorX86::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("should only handle SIMD types");
     }
+    masm.append(wasm::MemoryAccess(masm.size()));
 }
 
+template <typename T>
 void
-CodeGeneratorX86::visitWasmLoad(LWasmLoad* ins)
+CodeGeneratorX86::emitWasmLoad(T* ins)
 {
     const MWasmLoad* mir = ins->mir();
 
@@ -430,13 +512,27 @@ CodeGeneratorX86::visitWasmLoad(LWasmLoad* ins)
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
                       : Operand(ToRegister(ptr), mir->offset());
 
-    load(accessType, srcAddr, ins->output());
-
-    masm.append(wasm::MemoryAccess(masm.size()));
+    if (mir->type() == MIRType::Int64)
+        loadI64(accessType, srcAddr, ToOutRegister64(ins));
+    else
+        load(accessType, srcAddr, ins->output());
 }
 
 void
-CodeGeneratorX86::visitWasmStore(LWasmStore* ins)
+CodeGeneratorX86::visitWasmLoad(LWasmLoad* ins)
+{
+    emitWasmLoad(ins);
+}
+
+void
+CodeGeneratorX86::visitWasmLoadI64(LWasmLoadI64* ins)
+{
+    emitWasmLoad(ins);
+}
+
+template <typename T>
+void
+CodeGeneratorX86::emitWasmStore(T* ins)
 {
     const MWasmStore* mir = ins->mir();
 
@@ -450,15 +546,28 @@ CodeGeneratorX86::visitWasmStore(LWasmStore* ins)
         return;
     }
 
-    const LAllocation* value = ins->value();
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
                       : Operand(ToRegister(ptr), mir->offset());
 
-    store(accessType, value, dstAddr);
+    if (accessType == Scalar::Int64)
+        storeI64(accessType, ins->getInt64Operand(LWasmStoreI64::ValueIndex), dstAddr);
+    else
+        store(accessType, ins->getOperand(LWasmStore::ValueIndex), dstAddr);
+}
 
-    masm.append(wasm::MemoryAccess(masm.size()));
+
+void
+CodeGeneratorX86::visitWasmStore(LWasmStore* ins)
+{
+    emitWasmStore(ins);
+}
+
+void
+CodeGeneratorX86::visitWasmStoreI64(LWasmStoreI64* ins)
+{
+    emitWasmStore(ins);
 }
 
 void
@@ -485,19 +594,16 @@ CodeGeneratorX86::emitSimdLoad(LAsmJSLoadHeap* ins)
 
         // Load XY
         loadSimd(type, 2, srcAddr, out);
-        masm.append(wasm::MemoryAccess(masm.size()));
 
         // Load Z (W is zeroed)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
         loadSimd(type, 1, srcAddrZ, ScratchSimd128Reg);
-        masm.append(wasm::MemoryAccess(masm.size()));
 
         // Move ZW atop XY
         masm.vmovlhps(ScratchSimd128Reg, out, out);
     } else {
         loadSimd(type, numElems, srcAddr, out);
-        masm.append(wasm::MemoryAccess(masm.size()));
     }
 
     if (hasBoundsCheck)
@@ -525,7 +631,6 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     DebugOnly<bool> hasBoundsCheck = maybeEmitAsmJSLoadBoundsCheck(mir, ins, &ool);
 
     load(accessType, srcAddr, out);
-    uint32_t after = masm.size();
 
     if (ool) {
         MOZ_ASSERT(hasBoundsCheck);
@@ -534,8 +639,6 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     }
 
     memoryBarrier(mir->barrierAfter());
-
-    masm.append(wasm::MemoryAccess(after));
 }
 
 void
@@ -567,7 +670,7 @@ CodeGeneratorX86::store(Scalar::Type accessType, const LAllocation* value, const
         break;
 
       case Scalar::Int64:
-        MOZ_CRASH("should be handled in a separate function (2 registers)");
+        MOZ_CRASH("Should be handled in storeI64.");
 
       case Scalar::Float32x4:
       case Scalar::Int8x16:
@@ -577,6 +680,42 @@ CodeGeneratorX86::store(Scalar::Type accessType, const LAllocation* value, const
 
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected type");
+    }
+    masm.append(wasm::MemoryAccess(masm.size()));
+}
+
+void
+CodeGeneratorX86::storeI64(Scalar::Type accessType, const LInt64Allocation value,
+                           const Operand& dstAddr)
+{
+    Register64 input = ToRegister64(value);
+    MOZ_ASSERT(accessType == Scalar::Int64);
+    if (dstAddr.kind() == Operand::MEM_ADDRESS32) {
+        Operand low(PatchedAbsoluteAddress(uint32_t(dstAddr.address()) + INT64LOW_OFFSET));
+        Operand high(PatchedAbsoluteAddress(uint32_t(dstAddr.address()) + INT64HIGH_OFFSET));
+
+        masm.movlWithPatch(input.low, low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.movlWithPatch(input.high, high);
+        masm.append(wasm::MemoryAccess(masm.size()));
+    } else {
+        MOZ_ASSERT(dstAddr.kind() == Operand::MEM_REG_DISP);
+        Address addr = dstAddr.toAddress();
+        Operand low(addr.base, addr.offset + INT64LOW_OFFSET);
+        Operand high(addr.base, addr.offset + INT64HIGH_OFFSET);
+
+        if (addr.base != input.low) {
+            masm.movlWithPatch(input.low, low);
+            masm.append(wasm::MemoryAccess(masm.size()));
+            masm.movlWithPatch(input.high, high);
+            masm.append(wasm::MemoryAccess(masm.size()));
+        } else {
+            MOZ_ASSERT(addr.base != input.high);
+            masm.movlWithPatch(input.high, high);
+            masm.append(wasm::MemoryAccess(masm.size()));
+            masm.movlWithPatch(input.low, low);
+            masm.append(wasm::MemoryAccess(masm.size()));
+        }
     }
 }
 
@@ -655,6 +794,7 @@ CodeGeneratorX86::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("should only handle SIMD types");
     }
+    masm.append(wasm::MemoryAccess(masm.size()));
 }
 
 void
@@ -681,7 +821,6 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
 
         // Store XY
         storeSimd(type, 2, in, dstAddr);
-        masm.append(wasm::MemoryAccess(masm.size()));
 
         masm.vmovhlps(in, ScratchSimd128Reg, ScratchSimd128Reg);
 
@@ -689,10 +828,8 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
         storeSimd(type, 1, ScratchSimd128Reg, dstAddrZ);
-        masm.append(wasm::MemoryAccess(masm.size()));
     } else {
         storeSimd(type, numElems, in, dstAddr);
-        masm.append(wasm::MemoryAccess(masm.size()));
     }
 
     if (hasBoundsCheck)
@@ -722,7 +859,6 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     DebugOnly<bool> hasBoundsCheck = maybeEmitAsmJSStoreBoundsCheck(mir, ins, &rejoin);
 
     store(accessType, value, dstAddr);
-    uint32_t after = masm.size();
 
     if (rejoin) {
         MOZ_ASSERT(hasBoundsCheck);
@@ -731,8 +867,6 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     }
 
     memoryBarrier(mir->barrierAfter());
-
-    masm.append(wasm::MemoryAccess(after));
 }
 
 // Perform bounds checking on the access if necessary; if it fails,

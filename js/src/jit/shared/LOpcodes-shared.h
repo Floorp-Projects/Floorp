@@ -388,6 +388,7 @@
     _(WasmLoad)                     \
     _(WasmLoadI64)                  \
     _(WasmStore)                    \
+    _(WasmStoreI64)                 \
     _(WasmBoundsCheck)              \
     _(WasmLoadGlobalVar)            \
     _(WasmLoadGlobalVarI64)         \
