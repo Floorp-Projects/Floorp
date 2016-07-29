@@ -22,6 +22,7 @@ enum HitTestResult {
   HitLayerTouchActionNone,
   HitLayerTouchActionPanX,
   HitLayerTouchActionPanY,
+  HitLayerTouchActionPanXY,
   HitDispatchToContentRegion,
 };
 
