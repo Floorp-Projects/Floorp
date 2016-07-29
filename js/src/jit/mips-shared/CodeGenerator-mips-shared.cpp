@@ -1651,7 +1651,13 @@ CodeGeneratorMIPSShared::visitStoreTypedArrayElementStatic(LStoreTypedArrayEleme
 void
 CodeGeneratorMIPSShared::visitAsmJSCall(LAsmJSCall* ins)
 {
-    emitAsmJSCall(ins);
+    emitAsmJSCallBase(ins);
+}
+
+void
+CodeGeneratorMIPSShared::visitAsmJSCallI64(LAsmJSCallI64* ins)
+{
+    emitAsmJSCallBase(ins);
 }
 
 void

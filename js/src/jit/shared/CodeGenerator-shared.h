@@ -343,7 +343,7 @@ class CodeGeneratorShared : public LElementVisitor
     void emitTruncateDouble(FloatRegister src, Register dest, MInstruction* mir);
     void emitTruncateFloat32(FloatRegister src, Register dest, MInstruction* mir);
 
-    void emitAsmJSCall(LAsmJSCall* ins);
+    void emitAsmJSCallBase(LAsmJSCallBase* ins);
 
     void emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment);
     void emitPreBarrier(Address address);

@@ -405,6 +405,7 @@
     _(AsmJSPassStackArg)            \
     _(AsmJSPassStackArgI64)         \
     _(AsmJSCall)                    \
+    _(AsmJSCallI64)                 \
     _(AsmJSCompareExchangeHeap)     \
     _(AsmJSAtomicExchangeHeap)      \
     _(AsmJSAtomicBinopHeap)         \
