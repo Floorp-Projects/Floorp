@@ -1258,7 +1258,7 @@ jit::rol(Register r, int amt)
 }
 
 O2RegImmShift
-jit::asr (Register r, int amt)
+jit::asr(Register r, int amt)
 {
     MOZ_ASSERT(1 <= amt && amt <= 32);
     return O2RegImmShift(r, ASR, amt);
@@ -1284,7 +1284,7 @@ jit::ror(Register r, Register amt)
 }
 
 O2RegRegShift
-jit::asr (Register r, Register amt)
+jit::asr(Register r, Register amt)
 {
     return O2RegRegShift(r, ASR, amt);
 }

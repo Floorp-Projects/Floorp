@@ -1612,6 +1612,17 @@ CodeGeneratorARM::visitNotI(LNotI* ins)
 }
 
 void
+CodeGeneratorARM::visitNotI64(LNotI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register output = ToRegister(lir->output());
+
+    masm.ma_orr(input.low, input.high, output);
+    masm.ma_cmp(output, Imm32(0));
+    masm.emitSet(Assembler::Equal, output);
+}
+
+void
 CodeGeneratorARM::visitNotD(LNotD* ins)
 {
     // Since this operation is not, we want to set a bit if the double is
