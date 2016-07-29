@@ -318,6 +318,31 @@ function backgroundScript() {
     return {};
   }
 
+  function onUpload(details) {
+    let url = new URL(details.url);
+    let upload = url.searchParams.get("upload");
+    if (!upload) {
+      return;
+    }
+    let requestBody = details.requestBody;
+    browser.test.log(`onUpload ${details.url} ${JSON.stringify(details.requestBody)}`);
+    browser.test.assertTrue(!!requestBody, `Intercepted upload ${details.url} #${details.requestId} ${upload} have a requestBody`);
+    if (!requestBody) {
+      return;
+    }
+    let byteLength = parseInt(upload, 10);
+    if (byteLength) {
+      browser.test.assertTrue(!!requestBody.raw, `Binary upload ${details.url} #${details.requestId} ${upload} have a raw attribute`);
+      browser.test.assertEq(byteLength, requestBody.raw && requestBody.raw.map(r => r.bytes && r.bytes.byteLength || 0).reduce((a, b) => a + b), `Binary upload size matches`);
+      return;
+    }
+    if ("raw" in requestBody) {
+      browser.test.assertEq(upload, JSON.stringify(requestBody.raw).replace(/(\bfile: ")[^"]+/, "$1<file>"), `Upload ${details.url} #${details.requestId} matches raw data`);
+    } else {
+      browser.test.assertEq(upload, JSON.stringify(requestBody.formData), `Upload ${details.url} #${details.requestId} matches form data.`);
+    }
+  }
+
   function onBeforeSendHeaders(details) {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
     checkRequestId(details);
@@ -414,6 +439,14 @@ function backgroundScript() {
   }
 
   browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: ["<all_urls>"]}, ["blocking"]);
+  try {
+    browser.webRequest.onBeforeRequest.addListener(onUpload, {urls: ["http://*/*"]}, ["blocking", "requestBody"]);
+  } catch (e) {
+    // requestBody is disabled in release builds
+    if (!/\brequestBody\b/.test(e.message)) {
+      throw e;
+    }
+  }
   browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]);
   browser.webRequest.onSendHeaders.addListener(onSendHeaders, {urls: ["<all_urls>"]}, ["requestHeaders"]);
   browser.webRequest.onBeforeRedirect.addListener(onBeforeRedirect, {urls: ["<all_urls>"]});
