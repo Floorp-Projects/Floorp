@@ -2664,7 +2664,6 @@ CodeGeneratorARM::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
     const MAsmJSPassStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     if (ins->arg()->isConstant()) {
-        //masm.as_bkpt();
         masm.ma_storeImm(Imm32(ToInt32(ins->arg())), dst);
     } else {
         if (ins->arg()->isGeneralReg())

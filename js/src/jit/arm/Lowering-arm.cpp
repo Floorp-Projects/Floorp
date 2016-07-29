@@ -275,7 +275,6 @@ LIRGeneratorARM::defineUntypedPhi(MPhi* phi, size_t lirIndex)
 void
 LIRGeneratorARM::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex)
 {
-    // oh god, what is this code?
     MDefinition* operand = phi->getOperand(inputPosition);
     LPhi* type = block->getPhi(lirIndex + VREG_TYPE_OFFSET);
     LPhi* payload = block->getPhi(lirIndex + VREG_DATA_OFFSET);
