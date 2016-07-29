@@ -254,9 +254,15 @@ public:
   }
   SurfaceFlags GetSurfaceFlags() const { return mSurfaceFlags; }
 
+  /// @return true if we know the intrinsic size of the image we're decoding.
   bool HasSize() const { return mImageMetadata.HasSize(); }
 
-  nsIntSize GetSize() const
+  /**
+   * @return the intrinsic size of the image we're decoding.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  gfx::IntSize GetSize() const
   {
     MOZ_ASSERT(HasSize());
     return mImageMetadata.GetSize();
