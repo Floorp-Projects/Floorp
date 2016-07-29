@@ -179,8 +179,10 @@ typedef enum {
   MOZ_GTK_TABPANELS,
   /* Paints a GtkArrow for a GtkNotebook. flags is a GtkArrowType. */
   MOZ_GTK_TAB_SCROLLARROW,
-  /* Paints the background and border of a GtkTreeView */
+  /* Paints the expander and border of a GtkTreeView */
   MOZ_GTK_TREEVIEW,
+  /* Paints the border of a GtkTreeView */
+  MOZ_GTK_TREEVIEW_VIEW,
   /* Paints treeheader cells */
   MOZ_GTK_TREE_HEADER_CELL,
   /* Paints sort arrows in treeheader cells */

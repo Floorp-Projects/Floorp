@@ -229,6 +229,63 @@ CreateMenuSeparatorWidget()
   return widget;
 }
 
+static GtkWidget*
+CreateTreeViewWidget()
+{
+  GtkWidget* widget = gtk_tree_view_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateTreeHeaderCellWidget()
+{
+  /*
+   * Some GTK engines paint the first and last cell
+   * of a TreeView header with a highlight.
+   * Since we do not know where our widget will be relative
+   * to the other buttons in the TreeView header, we must
+   * paint it as a button that is between two others,
+   * thus ensuring it is neither the first or last button
+   * in the header.
+   * GTK doesn't give us a way to do this explicitly,
+   * so we must paint with a button that is between two
+   * others.
+   */
+  GtkTreeViewColumn* firstTreeViewColumn;
+  GtkTreeViewColumn* middleTreeViewColumn;
+  GtkTreeViewColumn* lastTreeViewColumn;
+
+  GtkWidget *treeView = GetWidget(MOZ_GTK_TREEVIEW);
+
+  /* Create and append our three columns */
+  firstTreeViewColumn = gtk_tree_view_column_new();
+  gtk_tree_view_column_set_title(firstTreeViewColumn, "M");
+  gtk_tree_view_append_column(GTK_TREE_VIEW(treeView),
+                              firstTreeViewColumn);
+
+  middleTreeViewColumn = gtk_tree_view_column_new();
+  gtk_tree_view_column_set_title(middleTreeViewColumn, "M");
+  gtk_tree_view_append_column(GTK_TREE_VIEW(treeView),
+                              middleTreeViewColumn);
+
+  lastTreeViewColumn = gtk_tree_view_column_new();
+  gtk_tree_view_column_set_title(lastTreeViewColumn, "M");
+  gtk_tree_view_append_column(GTK_TREE_VIEW(treeView),
+                              lastTreeViewColumn);
+
+  /* Use the middle column's header for our button */
+  return gtk_tree_view_column_get_button(middleTreeViewColumn);
+}
+
+static GtkWidget*
+CreateTreeHeaderSortArrowWidget()
+{
+  /* TODO, but it can't be NULL */
+  GtkWidget* widget = gtk_button_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
 
 static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
@@ -286,6 +343,12 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateScrolledWindowWidget();
     case MOZ_GTK_TEXT_VIEW:
       return CreateTextViewWidget();
+    case MOZ_GTK_TREEVIEW:
+      return CreateTreeViewWidget();
+    case MOZ_GTK_TREE_HEADER_CELL:
+      return CreateTreeHeaderCellWidget();
+    case MOZ_GTK_TREE_HEADER_SORTARROW:
+      return CreateTreeHeaderSortArrowWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -444,6 +507,14 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
                                      GTK_STYLE_CLASS_VIEW);
     case MOZ_GTK_FRAME_BORDER:
       return CreateChildCSSNode("border", MOZ_GTK_FRAME);
+    case MOZ_GTK_TREEVIEW_VIEW:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_TREEVIEW,
+                                     GTK_STYLE_CLASS_VIEW);
+    case MOZ_GTK_TREEVIEW_EXPANDER:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_TREEVIEW,
+                                     GTK_STYLE_CLASS_EXPANDER);
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -512,6 +583,12 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
                                      GTK_STYLE_CLASS_VIEW);
     case MOZ_GTK_FRAME_BORDER:
       return GetWidgetStyleInternal(MOZ_GTK_FRAME);
+    case MOZ_GTK_TREEVIEW_VIEW:
+      return GetWidgetStyleWithClass(MOZ_GTK_TREEVIEW,
+                                     GTK_STYLE_CLASS_VIEW);
+    case MOZ_GTK_TREEVIEW_EXPANDER:
+      return GetWidgetStyleWithClass(MOZ_GTK_TREEVIEW,
+                                     GTK_STYLE_CLASS_EXPANDER);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);
@@ -591,3 +668,4 @@ ReleaseStyleContext(GtkStyleContext* aStyleContext)
   sCurrentStyleContext = nullptr;
 #endif
 }
+
