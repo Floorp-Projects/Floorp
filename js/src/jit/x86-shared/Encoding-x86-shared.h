@@ -130,6 +130,7 @@ enum OneByteOpcodeID {
     OP_MOV_EbIb                     = 0xB0,
     OP_MOV_EAXIv                    = 0xB8,
     OP_GROUP2_EvIb                  = 0xC1,
+    OP_ADDP_ST0_ST1                 = 0xC1,
     OP_RET_Iz                       = 0xC2,
     PRE_VEX_C4                      = 0xC4,
     PRE_VEX_C5                      = 0xC5,
@@ -141,6 +142,7 @@ enum OneByteOpcodeID {
     OP_GROUP2_EvCL                  = 0xD3,
     OP_FPU6                         = 0xDD,
     OP_FPU6_F32                     = 0xD9,
+    OP_FPU6_ADDP                    = 0xDE,
     OP_FILD                         = 0xDF,
     OP_CALL_rel32                   = 0xE8,
     OP_JMP_rel32                    = 0xE9,
@@ -376,6 +378,8 @@ enum GroupOpcodeID {
     GROUP5_OP_CALLN = 2,
     GROUP5_OP_JMPN  = 4,
     GROUP5_OP_PUSH  = 6,
+
+    FILD_OP_64      = 5,
 
     FPU6_OP_FLD     = 0,
     FPU6_OP_FISTTP  = 1,

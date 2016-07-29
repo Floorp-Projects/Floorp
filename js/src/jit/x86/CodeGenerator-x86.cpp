@@ -1557,3 +1557,40 @@ CodeGeneratorX86::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 
     masm.freeStack(2*sizeof(int32_t));
 }
+
+void
+CodeGeneratorX86::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    MIRType outputType = lir->mir()->type();
+    MOZ_ASSERT(outputType == MIRType::Double || outputType == MIRType::Float32);
+
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    if (outputType == MIRType::Double)
+        masm.zeroDouble(output);
+    else
+        masm.zeroFloat32(output);
+
+    masm.Push(input.high);
+    masm.Push(input.low);
+    masm.fild(Operand(esp, 0));
+
+    if (lir->mir()->isUnsigned()) {
+        Label notNegative;
+        masm.branch32(Assembler::NotSigned, input.high, Imm32(0), &notNegative);
+        double add_constant = 18446744073709551616.0; // 2^64
+        masm.store64(Imm64(mozilla::BitwiseCast<uint64_t>(add_constant)), Address(esp, 0));
+        masm.fld(Operand(esp, 0));
+        masm.faddp();
+        masm.bind(&notNegative);
+    }
+
+    masm.fstp(Operand(esp, 0));
+    masm.vmovsd(Address(esp, 0), output);
+    masm.freeStack(2*sizeof(intptr_t));
+
+    if (outputType == MIRType::Float32)
+        masm.convertDoubleToFloat32(output, output);
+}
