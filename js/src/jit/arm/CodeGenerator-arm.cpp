@@ -982,7 +982,7 @@ CodeGeneratorARM::visitClzI(LClzI* ins)
     Register input = ToRegister(ins->input());
     Register output = ToRegister(ins->output());
 
-    masm.ma_clz(input, output);
+    masm.clz32(input, output, /* knownNotZero = */ false);
 }
 
 void
@@ -990,12 +990,8 @@ CodeGeneratorARM::visitCtzI(LCtzI* ins)
 {
     Register input = ToRegister(ins->input());
     Register output = ToRegister(ins->output());
-    ScratchRegisterScope scratch(masm);
 
-    masm.ma_rsb(input, Imm32(0), scratch, SetCC);
-    masm.ma_and(input, scratch, input);
-    masm.ma_clz(input, output);
-    masm.ma_rsb(input, Imm32(0x1f), output, LeaveCC, Assembler::NotEqual);
+    masm.ctz32(input, output, /* knownNotZero = */ false);
 }
 
 void
@@ -3418,5 +3414,25 @@ CodeGeneratorARM::visitPopcntI64(LPopcntI64* lir)
     Register temp = ToRegister(lir->getTemp(0));
 
     masm.popcnt64(input, output, temp);
+}
+
+void
+CodeGeneratorARM::visitClzI64(LClzI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+
+    masm.clz64(input, output.low);
+    masm.move32(Imm32(0), output.high);
+}
+
+void
+CodeGeneratorARM::visitCtzI64(LCtzI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+
+    masm.ctz64(input, output.low);
+    masm.move32(Imm32(0), output.high);
 }
 

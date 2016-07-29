@@ -956,9 +956,38 @@ MacroAssembler::clz32(Register src, Register dest, bool knownNotZero)
 }
 
 void
+MacroAssembler::clz64(Register64 src, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    ma_clz(src.high, scratch);
+    ma_cmp(scratch, Imm32(32));
+    ma_mov(scratch, dest, LeaveCC, NotEqual);
+    ma_clz(src.low, dest, Equal);
+    ma_add(Imm32(32), dest, LeaveCC, Equal);
+}
+
+void
 MacroAssembler::ctz32(Register src, Register dest, bool knownNotZero)
 {
     ma_ctz(src, dest);
+}
+
+void
+MacroAssembler::ctz64(Register64 src, Register dest)
+{
+    Label done, high;
+
+    ma_cmp(src.low, Imm32(0));
+    ma_b(&high, Equal);
+
+    ctz32(src.low, dest, /* knownNotZero = */ true);
+    ma_b(&done);
+
+    bind(&high);
+    ctz32(src.high, dest, /* knownNotZero = */ false);
+    ma_add(Imm32(32), dest);
+
+    bind(&done);
 }
 
 void
