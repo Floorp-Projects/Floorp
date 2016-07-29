@@ -25,6 +25,7 @@ struct AnimationPerformanceWarning
     TransformWithGeometricProperties,
     TransformFrameInactive,
     OpacityFrameInactive,
+    HasRenderingObserver,
   };
 
   explicit AnimationPerformanceWarning(Type aType)
