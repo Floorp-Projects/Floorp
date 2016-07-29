@@ -263,36 +263,6 @@ CodeGeneratorX64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
 }
 
 void
-CodeGeneratorX64::visitBitOpI64(LBitOpI64* lir)
-{
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
-
-    switch (lir->bitop()) {
-      case JSOP_BITOR:
-        if (rhs->isConstant())
-            masm.or64(Imm64(ToInt64(rhs)), Register64(lhs));
-        else
-            masm.orq(ToOperand(rhs), lhs);
-        break;
-      case JSOP_BITXOR:
-        if (rhs->isConstant())
-            masm.xor64(Imm64(ToInt64(rhs)), Register64(lhs));
-        else
-            masm.xorq(ToOperand(rhs), lhs);
-        break;
-      case JSOP_BITAND:
-        if (rhs->isConstant())
-            masm.and64(Imm64(ToInt64(rhs)), Register64(lhs));
-        else
-            masm.andq(ToOperand(rhs), lhs);
-        break;
-      default:
-        MOZ_CRASH("unexpected binary opcode");
-    }
-}
-
-void
 CodeGeneratorX64::visitRotate64(LRotate64* lir)
 {
     MRotate* mir = lir->mir();

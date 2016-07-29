@@ -48,22 +48,28 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 void
 MacroAssembler::and64(Imm64 imm, Register64 dest)
 {
-    andl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
-    andl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+    if (imm.low().value != int32_t(0xFFFFFFFF))
+        andl(imm.low(), dest.low);
+    if (imm.hi().value != int32_t(0xFFFFFFFF))
+        andl(imm.hi(), dest.high);
 }
 
 void
 MacroAssembler::or64(Imm64 imm, Register64 dest)
 {
-    orl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
-    orl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+    if (imm.low().value != 0)
+        orl(imm.low(), dest.low);
+    if (imm.hi().value != 0)
+        orl(imm.hi(), dest.high);
 }
 
 void
 MacroAssembler::xor64(Imm64 imm, Register64 dest)
 {
-    xorl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
-    xorl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+    if (imm.low().value != 0)
+        xorl(imm.low(), dest.low);
+    if (imm.hi().value != 0)
+        xorl(imm.hi(), dest.high);
 }
 
 void
@@ -76,6 +82,13 @@ void
 MacroAssembler::orPtr(Imm32 imm, Register dest)
 {
     orl(imm, dest);
+}
+
+void
+MacroAssembler::and64(Register64 src, Register64 dest)
+{
+    andl(src.low, dest.low);
+    andl(src.high, dest.high);
 }
 
 void
