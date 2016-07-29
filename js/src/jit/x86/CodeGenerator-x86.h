@@ -57,7 +57,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitTruncateFToInt32(LTruncateFToInt32* ins);
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
     void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
+    void emitAsmJSCall(LAsmJSCallBase* ins);
     void visitAsmJSCall(LAsmJSCall* ins);
+    void visitAsmJSCallI64(LAsmJSCallI64* ins);
     void visitWasmLoad(LWasmLoad* ins);
     void visitWasmStore(LWasmStore* ins);
     void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);

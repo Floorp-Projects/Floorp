@@ -202,7 +202,9 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
     void visitAsmSelect(LAsmSelect* ins);
     void visitAsmReinterpret(LAsmReinterpret* ins);
+    void emitAsmJSCall(LAsmJSCallBase* ins);
     void visitAsmJSCall(LAsmJSCall* ins);
+    void visitAsmJSCallI64(LAsmJSCallI64* ins);
     void visitWasmBoundsCheck(LWasmBoundsCheck* ins);
     void visitWasmLoad(LWasmLoad* ins);
     void visitWasmStore(LWasmStore* ins);
