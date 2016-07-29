@@ -151,7 +151,7 @@ MediaEngineGonkVideoSource::Allocate(const dom::MediaTrackConstraints& aConstrai
                                      const MediaEnginePrefs& aPrefs,
                                      const nsString& aDeviceId,
                                      const nsACString& aOrigin,
-                                     BaseAllocationHandle** aOutHandle,
+                                     AllocationHandle** aOutHandle,
                                      const char** aOutBadConstraint)
 {
   LOG((__FUNCTION__));
@@ -173,7 +173,7 @@ MediaEngineGonkVideoSource::Allocate(const dom::MediaTrackConstraints& aConstrai
 }
 
 nsresult
-MediaEngineGonkVideoSource::Deallocate(BaseAllocationHandle* aHandle)
+MediaEngineGonkVideoSource::Deallocate(AllocationHandle* aHandle)
 {
   LOG((__FUNCTION__));
   AssertIsOnOwningThread();
@@ -339,7 +339,7 @@ MediaEngineGonkVideoSource::Stop(SourceMediaStream* aSource, TrackID aID)
 }
 
 nsresult
-MediaEngineGonkVideoSource::Restart(BaseAllocationHandle* aHandle,
+MediaEngineGonkVideoSource::Restart(AllocationHandle* aHandle,
                                     const dom::MediaTrackConstraints& aConstraints,
                                     const MediaEnginePrefs& aPrefs,
                                     const nsString& aDeviceId,
