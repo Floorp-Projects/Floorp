@@ -918,7 +918,7 @@ MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegist
 }
 
 void
-MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
+MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src, Register dest, Label* fail)
 {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch64 = temps.AcquireX();
@@ -933,6 +933,12 @@ MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* f
     Cmn(scratch64, 3);
     B(fail, Assembler::Above);
     And(dest64, dest64, Operand(0xffffffff));
+}
+
+void
+MacroAssembler::branchTruncateFloat32ToInt32(FloatRegister src, Register dest, Label* fail)
+{
+    convertFloat32ToInt32(src, dest, fail);
 }
 
 void
@@ -959,7 +965,7 @@ MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegis
 }
 
 void
-MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
+MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src, Register dest, Label* fail)
 {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch64 = temps.AcquireX();
@@ -975,6 +981,12 @@ MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fa
     Cmn(scratch64, 3);
     B(fail, Assembler::Above);
     And(dest64, dest64, Operand(0xffffffff));
+}
+
+void
+MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src, Register dest, Label* fail)
+{
+    convertDoubleToInt32(src, dest, fail);
 }
 
 template <typename T>

@@ -141,6 +141,7 @@ enum OneByteOpcodeID {
     OP_GROUP2_EvCL                  = 0xD3,
     OP_FPU6                         = 0xDD,
     OP_FPU6_F32                     = 0xD9,
+    OP_FILD                         = 0xDF,
     OP_CALL_rel32                   = 0xE8,
     OP_JMP_rel32                    = 0xE9,
     OP_JMP_rel8                     = 0xEB,
@@ -379,6 +380,8 @@ enum GroupOpcodeID {
     FPU6_OP_FLD     = 0,
     FPU6_OP_FISTTP  = 1,
     FPU6_OP_FSTP    = 3,
+    FPU6_OP_FLDCW   = 5,
+    FPU6_OP_FISTP   = 7,
 
     GROUP11_MOV = 0
 };
