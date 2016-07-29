@@ -11,7 +11,6 @@
 #include "nsClassHashtable.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
-#include "ViewRegion.h"
 
 #import <Foundation/NSGeometry.h>
 
@@ -102,13 +101,20 @@ public:
    */
   static bool SystemSupportsVibrancy();
 
+  // The following are only public because otherwise ClearVibrantRegionFunc
+  // can't see them.
+  struct VibrantRegion {
+    LayoutDeviceIntRegion region;
+    nsTArray<NSView*> effectViews;
+  };
+  void ClearVibrantRegion(const VibrantRegion& aVibrantRegion) const;
+
 protected:
-  void ClearVibrantRegion(const LayoutDeviceIntRegion& aVibrantRegion) const;
-  NSView* CreateEffectView(VibrancyType aType);
+  NSView* CreateEffectView(VibrancyType aType, NSRect aRect);
 
   const nsChildView& mCoordinateConverter;
   NSView* mContainerView;
-  nsClassHashtable<nsUint32HashKey, ViewRegion> mVibrantRegions;
+  nsClassHashtable<nsUint32HashKey, VibrantRegion> mVibrantRegions;
 };
 
 } // namespace mozilla
