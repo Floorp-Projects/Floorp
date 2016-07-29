@@ -288,6 +288,22 @@ CreateTreeHeaderSortArrowWidget()
 }
 
 static GtkWidget*
+CreateHPanedWidget()
+{
+  GtkWidget* widget = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateVPanedWidget()
+{
+  GtkWidget* widget = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -349,6 +365,10 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateTreeHeaderCellWidget();
     case MOZ_GTK_TREE_HEADER_SORTARROW:
       return CreateTreeHeaderSortArrowWidget();
+    case MOZ_GTK_SPLITTER_HORIZONTAL:
+      return CreateHPanedWidget();
+    case MOZ_GTK_SPLITTER_VERTICAL:
+      return CreateVPanedWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -515,6 +535,14 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       // TODO - create from CSS node
       return GetWidgetStyleWithClass(MOZ_GTK_TREEVIEW,
                                      GTK_STYLE_CLASS_EXPANDER);
+    case MOZ_GTK_SPLITTER_SEPARATOR_HORIZONTAL:
+      style = CreateChildCSSNode("separator",
+                                 MOZ_GTK_SPLITTER_HORIZONTAL);
+      break;
+    case MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL:
+      style = CreateChildCSSNode("separator",
+                                 MOZ_GTK_SPLITTER_VERTICAL);
+      break;
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -589,6 +617,12 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_TREEVIEW_EXPANDER:
       return GetWidgetStyleWithClass(MOZ_GTK_TREEVIEW,
                                      GTK_STYLE_CLASS_EXPANDER);
+    case MOZ_GTK_SPLITTER_SEPARATOR_HORIZONTAL:
+      return GetWidgetStyleWithClass(MOZ_GTK_SPLITTER_HORIZONTAL,
+                                     GTK_STYLE_CLASS_PANE_SEPARATOR);
+    case MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL:
+      return GetWidgetStyleWithClass(MOZ_GTK_SPLITTER_VERTICAL,
+                                     GTK_STYLE_CLASS_PANE_SEPARATOR);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);
