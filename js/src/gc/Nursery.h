@@ -208,9 +208,6 @@ class Nursery
         return cellsWithUid_.put(cell);
     }
 
-    using SweepThunk = void (*)(void *data);
-    void queueSweepAction(SweepThunk thunk, void* data);
-
     size_t sizeOfHeapCommitted() const {
         return numActiveChunks_ * gc::ChunkSize;
     }
@@ -338,10 +335,6 @@ class Nursery
     using CellsWithUniqueIdSet = HashSet<gc::Cell*, PointerHasher<gc::Cell*, 3>, SystemAllocPolicy>;
     CellsWithUniqueIdSet cellsWithUid_;
 
-    struct SweepAction;
-    SweepAction* sweepActions_;
-    SweepAction* reservedSweepAction_;
-
 #ifdef JS_GC_ZEAL
     struct Canary
     {
@@ -435,8 +428,6 @@ class Nursery
      * collection.
      */
     void sweep();
-
-    void runSweepActions();
 
     /* Change the allocable space provided by the nursery. */
     void growAllocableSpace();
