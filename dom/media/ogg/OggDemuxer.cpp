@@ -30,8 +30,7 @@ extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define SEEK_LOG(type, msg)
 #endif
 
-namespace mozilla
-{
+namespace mozilla {
 
 using media::TimeUnit;
 using media::TimeInterval;
@@ -49,8 +48,7 @@ static const uint32_t OGG_SEEK_FUZZ_USECS = 500000;
 // The specification recommends 80 ms.
 static const int64_t OGG_SEEK_OPUS_PREROLL = 80 * USECS_PER_MS;
 
-class OggHeaders
-{
+class OggHeaders {
 public:
   OggHeaders() {}
   ~OggHeaders()
@@ -135,8 +133,7 @@ OggDemuxer::OggDemuxer(MediaResource* aResource)
   , mTheoraSerial(0)
   , mOpusPreSkip(0)
   , mIsChained(false)
-  , mTimedMetadataEvent(nullptr)
-  , mOnSeekableEvent(nullptr)
+  , mDecodedAudioFrames(0)
 {
   MOZ_COUNT_CTOR(OggDemuxer);
   PodZero(&mTheoraInfo);
@@ -158,15 +155,6 @@ OggDemuxer::~OggDemuxer()
     AbstractThread::MainThread()->Dispatch(task.forget());
   }
 }
-
-void
-OggDemuxer::SetChainingEvents(TimedMetadataEventProducer* aMetadataEvent,
-                              MediaEventProducer<void>* aOnSeekableEvent)
-{
-  mTimedMetadataEvent = aMetadataEvent;
-  mOnSeekableEvent = aOnSeekableEvent;
-}
-
 
 bool
 OggDemuxer::HasAudio()
@@ -192,29 +180,32 @@ const
 int64_t
 OggDemuxer::StartTime() const
 {
-  return mStartTime.refOr(0);
+  MOZ_ASSERT(HaveStartTime());
+  return mStartTime.ref();
 }
 
 bool
 OggDemuxer::HaveStartTime(TrackInfo::TrackType aType)
 {
-  return OggState(aType).mStartTime.isSome();
+  return (aType == TrackInfo::kAudioTrack ? mAudioOggState : mVideoOggState)
+           .mStartTime.isSome();
 }
 
 int64_t
 OggDemuxer::StartTime(TrackInfo::TrackType aType)
 {
-  return OggState(aType).mStartTime.refOr(TimeUnit::FromMicroseconds(0)).ToMicroseconds();
+  return (aType == TrackInfo::kAudioTrack ? mAudioOggState : mVideoOggState)
+           .mStartTime.refOr(TimeUnit::FromMicroseconds(0)).ToMicroseconds();
 }
 
 RefPtr<OggDemuxer::InitPromise>
 OggDemuxer::Init()
 {
-  int ret = ogg_sync_init(OggSyncState(TrackInfo::kAudioTrack));
+  int ret = ogg_sync_init(OggState(TrackInfo::kAudioTrack));
   if (ret != 0) {
     return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
-  ret = ogg_sync_init(OggSyncState(TrackInfo::kVideoTrack));
+  ret = ogg_sync_init(OggState(TrackInfo::kVideoTrack));
   if (ret != 0) {
     return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
@@ -314,12 +305,11 @@ nsresult
 OggDemuxer::Reset(TrackInfo::TrackType aType)
 {
   // Discard any previously buffered packets/pages.
-  ogg_sync_reset(OggSyncState(aType));
+  ogg_sync_reset(OggState(aType));
   OggCodecState* trackState = GetTrackCodecState(aType);
   if (trackState) {
     return trackState->Reset();
   }
-  OggState(aType).mNeedKeyframe = true;
   return NS_OK;
 }
 
@@ -676,8 +666,9 @@ OggDemuxer::ReadMetadata()
   if (HasAudio() || HasVideo()) {
     int64_t startTime = -1;
     FindStartTime(startTime);
+    NS_ASSERTION(startTime >= 0, "Must have a non-negative start time");
+    OGG_DEBUG("Detected stream start time %lld", startTime);
     if (startTime >= 0) {
-      OGG_DEBUG("Detected stream start time %lld", startTime);
       mStartTime.emplace(startTime);
     }
 
@@ -724,13 +715,12 @@ OggDemuxer::SetChained() {
     }
     mIsChained = true;
   }
-  if (mOnSeekableEvent) {
-    mOnSeekableEvent->Notify();
-  }
+  // @FIXME how can MediaDataDemuxer / MediaTrackDemuxer notify this has changed?
+  //mOnMediaNotSeekable.Notify();
 }
 
 bool
-OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
+OggDemuxer::ReadOggChain()
 {
   bool chained = false;
   OpusState* newOpusState = nullptr;
@@ -762,7 +752,8 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
     newVorbisState = static_cast<VorbisState*>(codecState.get());
   } else if (mOpusState && (codecState->GetType() == OggCodecState::TYPE_OPUS)) {
     newOpusState = static_cast<OpusState*>(codecState.get());
-  } else {
+  }
+  else {
     return false;
   }
 
@@ -823,13 +814,15 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
 
   if (chained) {
     SetChained();
-    mInfo.mMediaSeekable = false;
-    mDecodedAudioDuration += aLastEndTime;
-    if (mTimedMetadataEvent) {
-      mTimedMetadataEvent->Notify(
-        TimedMetadata(mDecodedAudioDuration,
+    {
+      // @FIXME notify this!
+      /*
+      auto t = mDecodedAudioFrames * USECS_PER_S / mInfo.mAudio.mRate;
+      mTimedMetadataEvent.Notify(
+        TimedMetadata(TimeUnit::FromMicroseconds(t),
                       Move(tags),
                       nsAutoPtr<MediaInfo>(new MediaInfo(mInfo))));
+      */
     }
     return true;
   }
@@ -837,25 +830,22 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
   return false;
 }
 
-OggDemuxer::OggStateContext&
+ogg_sync_state*
 OggDemuxer::OggState(TrackInfo::TrackType aType)
 {
   if (aType == TrackInfo::kVideoTrack) {
-    return mVideoOggState;
+    return &mVideoOggState.mOggState.mState;
   }
-  return mAudioOggState;
-}
-
-ogg_sync_state*
-OggDemuxer::OggSyncState(TrackInfo::TrackType aType)
-{
-  return &OggState(aType).mOggState.mState;
+  return &mAudioOggState.mOggState.mState;
 }
 
 MediaResourceIndex*
 OggDemuxer::Resource(TrackInfo::TrackType aType)
 {
-  return &OggState(aType).mResource;
+  if (aType == TrackInfo::kVideoTrack) {
+    return &mVideoOggState.mResource;
+  }
+  return &mAudioOggState.mResource;
 }
 
 MediaResourceIndex*
@@ -868,7 +858,7 @@ bool
 OggDemuxer::ReadOggPage(TrackInfo::TrackType aType, ogg_page* aPage)
 {
   int ret = 0;
-  while((ret = ogg_sync_pageseek(OggSyncState(aType), aPage)) <= 0) {
+  while((ret = ogg_sync_pageseek(OggState(aType), aPage)) <= 0) {
     if (ret < 0) {
       // Lost page sync, have to skip up to next page.
       continue;
@@ -876,7 +866,7 @@ OggDemuxer::ReadOggPage(TrackInfo::TrackType aType, ogg_page* aPage)
     // Returns a buffer that can be written too
     // with the given size. This buffer is stored
     // in the ogg synchronisation structure.
-    char* buffer = ogg_sync_buffer(OggSyncState(aType), 4096);
+    char* buffer = ogg_sync_buffer(OggState(aType), 4096);
     NS_ASSERTION(buffer, "ogg_sync_buffer failed");
 
     // Read from the resource into the buffer
@@ -890,7 +880,7 @@ OggDemuxer::ReadOggPage(TrackInfo::TrackType aType, ogg_page* aPage)
 
     // Update the synchronisation layer with the number
     // of bytes written to the buffer
-    ret = ogg_sync_wrote(OggSyncState(aType), bytesRead);
+    ret = ogg_sync_wrote(OggState(aType), bytesRead);
     NS_ENSURE_TRUE(ret == 0, false);
   }
 
@@ -938,27 +928,15 @@ OggDemuxer::GetNextPacket(TrackInfo::TrackType aType)
 {
   OggCodecState* state = GetTrackCodecState(aType);
   ogg_packet* packet = nullptr;
-  OggStateContext& context = OggState(aType);
 
-  while (true) {
+  do {
     if (packet) {
       OggCodecState::ReleasePacket(state->PacketOut());
     }
     DemuxUntilPacketAvailable(aType, state);
 
     packet = state->PacketPeek();
-    if (!packet) {
-      break;
-    }
-    if (state->IsHeader(packet)) {
-      continue;
-    }
-    if (context.mNeedKeyframe && !state->IsKeyframe(packet)) {
-      continue;
-    }
-    context.mNeedKeyframe = false;
-    break;
-  }
+  } while (packet && state->IsHeader(packet));
 
   return packet;
 }
@@ -1151,9 +1129,9 @@ OggDemuxer::SeekInternal(TrackInfo::TrackType aType, const TimeUnit& aTarget)
     adjustedTarget = std::max(startTime, target - OGG_SEEK_OPUS_PREROLL);
   }
 
-  if (!HaveStartTime(aType) || adjustedTarget == startTime) {
-    // We've seeked to the media start or we can't seek.
-    // Just seek to the offset of the first content page.
+  if (adjustedTarget == startTime) {
+    // We've seeked to the media start. Just seek to the offset of the first
+    // content page.
     res = Resource(aType)->Seek(nsISeekableStream::NS_SEEK_SET, 0);
     NS_ENSURE_SUCCESS(res,res);
 
@@ -1257,7 +1235,8 @@ OggDemuxer::SeekToKeyframeUsingIndex(TrackInfo::TrackType aType, int64_t aTarget
   SkeletonState::nsSeekTarget keyframe;
   if (NS_FAILED(mSkeletonState->IndexedSeekTarget(aTarget,
                                                   tracks,
-                                                  keyframe))) {
+                                                  keyframe)))
+  {
     // Could not locate a keypoint for the target in the index.
     return SEEK_INDEX_FAIL;
   }
@@ -1267,7 +1246,8 @@ OggDemuxer::SeekToKeyframeUsingIndex(TrackInfo::TrackType aType, int64_t aTarget
 
   // Seek to the keypoint returned by the index.
   if (keyframe.mKeyPoint.mOffset > Resource(aType)->GetLength() ||
-      keyframe.mKeyPoint.mOffset < 0) {
+      keyframe.mKeyPoint.mOffset < 0)
+  {
     // Index must be invalid.
     return RollbackIndexedSeek(aType, tell);
   }
@@ -1286,7 +1266,7 @@ OggDemuxer::SeekToKeyframeUsingIndex(TrackInfo::TrackType aType, int64_t aTarget
   ogg_page page;
   int skippedBytes = 0;
   PageSyncResult syncres = PageSync(Resource(aType),
-                                    OggSyncState(aType),
+                                    OggState(aType),
                                     false,
                                     keyframe.mKeyPoint.mOffset,
                                     Resource(aType)->GetLength(),
@@ -1306,7 +1286,8 @@ OggDemuxer::SeekToKeyframeUsingIndex(TrackInfo::TrackType aType, int64_t aTarget
   }
   OggCodecState* codecState = mCodecStore.Get(serial);
   if (codecState && codecState->mActive &&
-      ogg_stream_pagein(&codecState->mState, &page) != 0) {
+      ogg_stream_pagein(&codecState->mState, &page) != 0)
+  {
     // Couldn't insert page into the ogg resource, or somehow the resource
     // is no longer active.
     return RollbackIndexedSeek(aType, tell);
@@ -1443,7 +1424,7 @@ OggTrackDemuxer::NextSample()
   if (eos) {
     // We've encountered an end of bitstream packet; check for a chained
     // bitstream following this one.
-    mParent->ReadOggChain(TimeUnit::FromMicroseconds(data->GetEndTime()));
+    mParent->ReadOggChain();
   }
   return data;
 }
@@ -1526,7 +1507,10 @@ OggDemuxer::GetPageChecksum(ogg_page* page)
     return 0;
   }
   const unsigned char* p = page->header + 22;
-  uint32_t c = p[0] + (p[1] << 8) + (p[2] << 16) + (p[3] << 24);
+  uint32_t c =  p[0] +
+               (p[1] << 8) +
+               (p[2] << 16) +
+               (p[3] << 24);
   return c;
 }
 
@@ -1543,14 +1527,11 @@ OggDemuxer::RangeStartTime(TrackInfo::TrackType aType, int64_t aOffset)
   return startTime;
 }
 
-struct nsDemuxerAutoOggSyncState
-{
-  nsDemuxerAutoOggSyncState()
-  {
+struct nsDemuxerAutoOggSyncState {
+  nsDemuxerAutoOggSyncState() {
     ogg_sync_init(&mState);
   }
-  ~nsDemuxerAutoOggSyncState()
-  {
+  ~nsDemuxerAutoOggSyncState() {
     ogg_sync_clear(&mState);
   }
   ogg_sync_state mState;
@@ -1968,7 +1949,7 @@ OggDemuxer::SeekBisection(TrackInfo::TrackType aType,
       // granule time of the audio and video bitstreams there. We can then
       // make a bisection decision based on our location in the media.
       PageSyncResult pageSyncResult = PageSync(Resource(aType),
-                                               OggSyncState(aType),
+                                               OggState(aType),
                                                false,
                                                guess,
                                                endOffset,
