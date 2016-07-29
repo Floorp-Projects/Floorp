@@ -4,9 +4,6 @@
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
-const {Ci} = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
 const {l10n} = require("devtools/shared/inspector/css-logic");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {InplaceEditor, editableField} =
@@ -22,6 +19,7 @@ const {
   parseDeclarations,
   parseSingleValue,
 } = require("devtools/shared/css-parsing-utils");
+const Services = require("Services");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -642,7 +640,7 @@ TextPropertyEditor.prototype = {
     // Remove a property if the property value is empty and the property
     // value is not about to be focused
     if (!this.prop.value &&
-        direction !== Ci.nsIFocusManager.MOVEFOCUS_FORWARD) {
+        direction !== Services.focus.MOVEFOCUS_FORWARD) {
       this.remove(direction);
       return;
     }
@@ -741,7 +739,7 @@ TextPropertyEditor.prototype = {
     // A timeout is used here to accurately check the state, since the inplace
     // editor `done` and `destroy` events fire before the next editor
     // is focused.
-    if (!value.trim() && direction !== Ci.nsIFocusManager.MOVEFOCUS_BACKWARD) {
+    if (!value.trim() && direction !== Services.focus.MOVEFOCUS_BACKWARD) {
       setTimeout(() => {
         if (!this.editing) {
           this.remove(direction);

@@ -36,22 +36,6 @@ if CONFIG['GNU_CXX']:
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    if CONFIG['ANDROID_VERSION'] == '15':
-        LOCAL_INCLUDES += [
-             '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
-                 'dalvik/libnativehelper/include/nativehelper',
-                 'frameworks/base/include/',
-                 'frameworks/base/include/binder/',
-                 'frameworks/base/include/media/',
-                 'frameworks/base/include/media/stagefright/openmax',
-                 'frameworks/base/include/utils/',
-                 'frameworks/base/media/libstagefright/include',
-                 'frameworks/base/native/include',
-                 'hardware/libhardware/include',
-                 'system/core/include',
-             ]
-        ]
-
     EXTRA_DSO_LDOPTS += [
         '-lutils',
         '-lstagefright',
