@@ -512,7 +512,6 @@ MediaRawData::Clone() const
   s->mExtraData = mExtraData;
   s->mCryptoInternal = mCryptoInternal;
   s->mTrackInfo = mTrackInfo;
-  s->mEOS = mEOS;
   if (!s->mBuffer.Append(mBuffer.Data(), mBuffer.Length())) {
     return nullptr;
   }
