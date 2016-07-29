@@ -1378,7 +1378,7 @@ JSStructuredCloneWriter::transferOwnership()
             ArrayBufferObject::BufferContents bufContents =
                 ArrayBufferObject::stealContents(context(), arrayBuffer, hasStealableContents);
             if (!bufContents)
-                return false; // Destructor will clean up the already-transferred data.
+                return false; // already transferred data
 
             content = bufContents.data();
             tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
