@@ -848,6 +848,12 @@ public:
     return GetCurrentInnerWindow();
   }
 
+  /**
+   * Set initial keyboard indicator state for accelerators and focus rings.
+   */
+  void SetInitialKeyboardIndicators(UIStateChangeType aShowAccelerators,
+                                    UIStateChangeType aShowFocusRings);
+
   // Internal getter/setter for the frame element, this version of the
   // getter crosses chrome boundaries whereas the public scriptable
   // one doesn't for security reasons.
