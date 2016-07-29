@@ -280,6 +280,8 @@ js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAcc
         return;
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
+    if (rt->atomsCompartment(lock)->zone()->isCollecting())
+        traceRuntimeAtoms(trc, lock);
     JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
     traceRuntimeCommon(trc, MarkRuntime, lock);
 }
@@ -320,7 +322,18 @@ js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock)
     MOZ_ASSERT(!rt->isBeingDestroyed());
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
+    traceRuntimeAtoms(trc, lock);
     traceRuntimeCommon(trc, TraceRuntime, lock);
+}
+
+void
+js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+{
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
+    MarkPermanentAtoms(trc);
+    MarkAtoms(trc, lock);
+    MarkWellKnownSymbols(trc);
+    jit::JitRuntime::Mark(trc, lock);
 }
 
 void
@@ -353,18 +366,6 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
 
     // Trace the self-hosting global compartment.
     rt->markSelfHostingGlobal(trc);
-
-    // Trace the atoms Compartment.
-    if (!rt->isHeapMinorCollecting()) {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
-
-        if (traceOrMark == TraceRuntime || rt->atomsCompartment(lock)->zone()->isCollecting()) {
-            MarkPermanentAtoms(trc);
-            MarkAtoms(trc, lock);
-            MarkWellKnownSymbols(trc);
-            jit::JitRuntime::Mark(trc, lock);
-        }
-    }
 
     // Trace anything in the single context. Note that this is actually the
     // same struct as the JSRuntime, but is still split for historical reasons.
