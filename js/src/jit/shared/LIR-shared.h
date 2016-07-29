@@ -8206,6 +8206,21 @@ class LAsmJSPassStackArg : public LInstructionHelper<0, 1, 0>
     }
 };
 
+class LAsmJSPassStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(AsmJSPassStackArgI64);
+    explicit LAsmJSPassStackArgI64(const LInt64Allocation& arg) {
+        setInt64Operand(0, arg);
+    }
+    MAsmJSPassStackArg* mir() const {
+        return mirRaw()->toAsmJSPassStackArg();
+    }
+    const LInt64Allocation arg() {
+        return getInt64Operand(0);
+    }
+};
+
 class LAsmJSCall final : public LInstruction
 {
     LAllocation* operands_;

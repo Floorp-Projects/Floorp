@@ -288,33 +288,39 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
     const MAsmJSPassStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     if (ins->arg()->isConstant()) {
-        if (mir->input()->type() == MIRType::Int64)
-            masm.storePtr(ImmWord(ins->arg()->toConstant()->toInt64()), dst); // tmp
-        else
-            masm.storePtr(ImmWord(ToInt32(ins->arg())), dst);
+        masm.storePtr(ImmWord(ToInt32(ins->arg())), dst);
+    } else if (ins->arg()->isGeneralReg()) {
+        masm.storePtr(ToRegister(ins->arg()), dst);
     } else {
-        if (ins->arg()->isGeneralReg()) {
-            masm.storePtr(ToRegister(ins->arg()), dst);
-        } else {
-            switch (mir->input()->type()) {
-              case MIRType::Double:
-              case MIRType::Float32:
-                masm.storeDouble(ToFloatRegister(ins->arg()), dst);
-                return;
-              // StackPointer is SIMD-aligned and ABIArgGenerator guarantees
-              // stack offsets are SIMD-aligned.
-              case MIRType::Int32x4:
-              case MIRType::Bool32x4:
-                masm.storeAlignedSimd128Int(ToFloatRegister(ins->arg()), dst);
-                return;
-              case MIRType::Float32x4:
-                masm.storeAlignedSimd128Float(ToFloatRegister(ins->arg()), dst);
-                return;
-              default: break;
-            }
-            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected mir type in AsmJSPassStackArg");
+        switch (mir->input()->type()) {
+          case MIRType::Double:
+          case MIRType::Float32:
+            masm.storeDouble(ToFloatRegister(ins->arg()), dst);
+            return;
+          // StackPointer is SIMD-aligned and ABIArgGenerator guarantees
+          // stack offsets are SIMD-aligned.
+          case MIRType::Int32x4:
+          case MIRType::Bool32x4:
+            masm.storeAlignedSimd128Int(ToFloatRegister(ins->arg()), dst);
+            return;
+          case MIRType::Float32x4:
+            masm.storeAlignedSimd128Float(ToFloatRegister(ins->arg()), dst);
+            return;
+          default: break;
         }
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected mir type in AsmJSPassStackArg");
     }
+}
+
+void
+CodeGeneratorX86Shared::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
+{
+    const MAsmJSPassStackArg* mir = ins->mir();
+    Address dst(StackPointer, mir->spOffset());
+    if (IsConstant(ins->arg()))
+        masm.store64(Imm64(ToInt64(ins->arg())), dst);
+    else
+        masm.store64(ToRegister64(ins->arg()), dst);
 }
 
 void
