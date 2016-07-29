@@ -295,6 +295,10 @@ js::gc::GCRuntime::traceRuntimeForMinorGC(JSTracer* trc, AutoLockForExclusiveAcc
     // roots via the edges stored by the pre-barrier verifier when we finish
     // the verifier for the last time.
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
+
+    // FIXME: As per bug 1298816 comment 12, we should be able to remove this.
+    jit::JitRuntime::MarkJitcodeGlobalTableUnconditionally(trc);
+
     traceRuntimeCommon(trc, TraceRuntime, lock);
 }
 
@@ -361,10 +365,6 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
             jit::JitRuntime::Mark(trc, lock);
         }
     }
-
-    // This table is weak in major GC's.
-    if (rt->isHeapMinorCollecting())
-        jit::JitRuntime::MarkJitcodeGlobalTableUnconditionally(trc);
 
     // Trace anything in the single context. Note that this is actually the
     // same struct as the JSRuntime, but is still split for historical reasons.
