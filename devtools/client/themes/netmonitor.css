@@ -11,7 +11,7 @@
   --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
   --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
   --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
-  --timig-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
+  --timing-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
   --timing-receive-color: rgba(112, 191, 83, 0.8); /* green */
 
   --sort-ascending-image: url(chrome://devtools/skin/images/sort-arrows.svg#ascending);
