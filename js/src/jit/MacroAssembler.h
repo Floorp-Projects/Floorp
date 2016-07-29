@@ -954,7 +954,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(x86, x64);
     inline void branch64(Condition cond, Register64 lhs, Register64 rhs, Label* label)
         DEFINED_ON(x86, x64);
-    // Only NotEqual conditions are allowed for the branch64 variants with Address as lhs.
+    // On x86 and x64 NotEqual and Equal conditions are allowed for the branch64 variants
+    // with Address as lhs. On others only the NotEqual condition.
     inline void branch64(Condition cond, const Address& lhs, Imm64 val, Label* label) PER_ARCH;
 
     // Compare the value at |lhs| with the value at |rhs|.  The scratch

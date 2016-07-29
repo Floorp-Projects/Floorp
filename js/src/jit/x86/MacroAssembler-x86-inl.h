@@ -351,13 +351,15 @@ MacroAssembler::neg64(Register64 reg)
 void
 MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 32);
     shll(imm, dest);
 }
 
 void
 MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 {
-    if ((imm.value & INT32_MAX) < 32) {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
+    if (imm.value < 32) {
         shldl(imm, dest.low, dest.high);
         shll(imm, dest.low);
         return;
@@ -392,13 +394,15 @@ MacroAssembler::lshift64(Register shift, Register64 srcDest)
 void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 32);
     shrl(imm, dest);
 }
 
 void
 MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 {
-    if ((imm.value & INT32_MAX) < 32) {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
+    if (imm.value < 32) {
         shrdl(imm, dest.high, dest.low);
         shrl(imm, dest.high);
         return;
@@ -433,13 +437,15 @@ MacroAssembler::rshift64(Register shift, Register64 srcDest)
 void
 MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 32);
     sarl(imm, dest);
 }
 
 void
 MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
 {
-    if ((imm.value & INT32_MAX) < 32) {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
+    if (imm.value < 32) {
         shrdl(imm, dest.high, dest.low);
         sarl(imm, dest.high);
         return;
@@ -715,27 +721,41 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* 
 void
 MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)
 {
-    MOZ_ASSERT(cond == Assembler::NotEqual,
+    MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
                "other condition codes not supported");
 
-    branch32(cond, lhs, val.firstHalf(), label);
+    Label done;
+
+    if (cond == Assembler::Equal)
+        branch32(Assembler::NotEqual, lhs, val.firstHalf(), &done);
+    else
+        branch32(Assembler::NotEqual, lhs, val.firstHalf(), label);
     branch32(cond, Address(lhs.base, lhs.offset + sizeof(uint32_t)), val.secondHalf(), label);
+
+    bind(&done);
 }
 
 void
 MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
                          Label* label)
 {
-    MOZ_ASSERT(cond == Assembler::NotEqual,
+    MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
                "other condition codes not supported");
     MOZ_ASSERT(lhs.base != scratch);
     MOZ_ASSERT(rhs.base != scratch);
 
+    Label done;
+
     load32(rhs, scratch);
-    branch32(cond, lhs, scratch, label);
+    if (cond == Assembler::Equal)
+        branch32(Assembler::NotEqual, lhs, scratch, &done);
+    else
+        branch32(Assembler::NotEqual, lhs, scratch, label);
 
     load32(Address(rhs.base, rhs.offset + sizeof(uint32_t)), scratch);
     branch32(cond, Address(lhs.base, lhs.offset + sizeof(uint32_t)), scratch, label);
+
+    bind(&done);
 }
 
 void

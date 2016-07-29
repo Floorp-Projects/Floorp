@@ -327,12 +327,14 @@ MacroAssembler::neg64(Register64 reg)
 void
 MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     shlq(imm, dest);
 }
 
 void
 MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     lshiftPtr(imm, dest.reg);
 }
 
@@ -346,6 +348,7 @@ MacroAssembler::lshift64(Register shift, Register64 srcDest)
 void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     shrq(imm, dest);
 }
 
@@ -365,12 +368,14 @@ MacroAssembler::rshift64(Register shift, Register64 srcDest)
 void
 MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     sarq(imm, dest);
 }
 
 void
 MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     rshiftPtrArithmetic(imm, dest.reg);
 }
 
@@ -582,7 +587,7 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* 
 void
 MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)
 {
-    MOZ_ASSERT(cond == Assembler::NotEqual,
+    MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
                "other condition codes not supported");
 
     branchPtr(cond, lhs, ImmWord(val.value), label);
@@ -592,7 +597,7 @@ void
 MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
                          Label* label)
 {
-    MOZ_ASSERT(cond == Assembler::NotEqual,
+    MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
                "other condition codes not supported");
     MOZ_ASSERT(lhs.base != scratch);
     MOZ_ASSERT(rhs.base != scratch);
@@ -746,7 +751,7 @@ MacroAssembler::truncateFloat32ToUInt64(Address src, Address dest, Register temp
 
     // For unsigned conversion the case of [INT64, UINT64] needs to get handle seperately.
     loadPtr(dest, temp);
-    branch32(Assembler::Condition::NotSigned, temp, Imm32(0), &done);
+    branchPtr(Assembler::Condition::NotSigned, temp, Imm32(0), &done);
 
     // Move the value inside INT64 range.
     storeFloat32(floatTemp, dest);
@@ -774,7 +779,7 @@ MacroAssembler::truncateDoubleToUInt64(Address src, Address dest, Register temp,
 
     // For unsigned conversion the case of [INT64, UINT64] needs to get handle seperately.
     loadPtr(dest, temp);
-    branch32(Assembler::Condition::NotSigned, temp, Imm32(0), &done);
+    branchPtr(Assembler::Condition::NotSigned, temp, Imm32(0), &done);
 
     // Move the value inside INT64 range.
     storeDouble(floatTemp, dest);

@@ -96,6 +96,9 @@ if (hasI64()) {
     testConversion('f32', 'convert_s', 'i64', "0x7fffffffffffffff", 9223372036854775807.0);
     testConversion('f32', 'convert_s', 'i64', "0x8000000000000000", -9223372036854775808.0);
     testConversion('f32', 'convert_s', 'i64', "0x11db9e76a2483", 314159275180032.0);
+    testConversion('f32', 'convert_s', 'i64', "0x7fffffff", 2147483648.0); // closesth approx.
+    testConversion('f32', 'convert_s', 'i64', "0x80000000", 2147483648.0);
+    testConversion('f32', 'convert_s', 'i64', "0x80000001", 2147483648.0); // closesth approx.
 
     testConversion('f64', 'convert_s', 'i64', 1, 1.0);
     testConversion('f64', 'convert_s', 'i64', -1, -1.0);
@@ -103,6 +106,9 @@ if (hasI64()) {
     testConversion('f64', 'convert_s', 'i64', "0x7fffffffffffffff", 9223372036854775807.0);
     testConversion('f64', 'convert_s', 'i64', "0x8000000000000000", -9223372036854775808.0);
     testConversion('f64', 'convert_s', 'i64', "0x10969d374b968e", 4669201609102990);
+    testConversion('f64', 'convert_s', 'i64', "0x7fffffff", 2147483647.0);
+    testConversion('f64', 'convert_s', 'i64', "0x80000000", 2147483648.0);
+    testConversion('f64', 'convert_s', 'i64', "0x80000001", 2147483649.0);
 
     testConversion('f32', 'convert_u', 'i64', 1, 1.0);
     testConversion('f32', 'convert_u', 'i64', 0, 0.0);
