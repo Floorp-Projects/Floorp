@@ -623,7 +623,7 @@ public:
   void SetTargetAPZC(uint64_t aInputBlockId,
                     const nsTArray<ScrollableLayerGuid>& aTargets) const;
   void HandleTap(layers::GeckoContentController::TapType aType,
-                 const CSSPoint& aPoint,
+                 const LayoutDevicePoint& aPoint,
                  const Modifiers& aModifiers,
                  const mozilla::layers::ScrollableLayerGuid& aGuid,
                  const uint64_t& aInputBlockId,
