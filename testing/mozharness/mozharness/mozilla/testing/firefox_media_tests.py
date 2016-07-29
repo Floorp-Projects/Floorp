@@ -163,14 +163,15 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         harness, puppeteer, and tests from and how to set them up.
 
         """
-        extract_dirs = ['config/*',
-                        'external-media-tests/*',
-                        'marionette/*',
-                        'mozbase/*',
-                        'puppeteer/*',
-                        'tools/wptserve/*',
-                        ]
-        super(FirefoxMediaTestsBase, self).download_and_extract(extract_dirs=extract_dirs)
+        target_unzip_dirs = ['config/*',
+                             'external-media-tests/*',
+                             'marionette/*',
+                             'mozbase/*',
+                             'puppeteer/*',
+                             'tools/wptserve/*',
+                             ]
+        super(FirefoxMediaTestsBase, self).download_and_extract(
+                target_unzip_dirs=target_unzip_dirs)
 
     def query_abs_dirs(self):
         if self.abs_dirs:
