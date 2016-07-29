@@ -292,7 +292,9 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 PlatformDecoderModule::ConversionRequired
 EMEDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
-  if (aConfig.IsVideo()) {
+  if (aConfig.IsVideo() &&
+      (aConfig.mMimeType.EqualsLiteral("video/avc") ||
+       aConfig.mMimeType.EqualsLiteral("video/mp4"))) {
     return kNeedAVCC;
   } else {
     return kNeedNone;

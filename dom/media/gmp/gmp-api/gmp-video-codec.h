@@ -113,6 +113,7 @@ enum GMPVideoCodecType
   // by frame data. May be multiple NALUs per sample. Codec specific extra data
   // is the AVCC extra data (in AVCC format).
   kGMPVideoCodecH264,
+  kGMPVideoCodecVP9,
   kGMPVideoCodecInvalid // Should always be last.
 };
 

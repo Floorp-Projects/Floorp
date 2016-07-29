@@ -953,6 +953,8 @@ GMPParent::ParseChromiumManifest(nsString aJSON)
 
   GMPCapability video(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER));
   video.mAPITags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  video.mAPITags.AppendElement(NS_LITERAL_CSTRING("vp8"));
+  video.mAPITags.AppendElement(NS_LITERAL_CSTRING("vp9"));
   video.mAPITags.AppendElement(nsCString(kEMEKeySystemWidevine));
   mCapabilities.AppendElement(Move(video));
 

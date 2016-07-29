@@ -41,6 +41,8 @@ public:
 
   // Return true if mimetype is a VPX codec of given types.
   static bool IsVPX(const nsACString& aMimeType, uint8_t aCodecMask=VP8|VP9);
+  static bool IsVP8(const nsACString& aMimeType);
+  static bool IsVP9(const nsACString& aMimeType);
 
 private:
   void ProcessDecode(MediaRawData* aSample);
