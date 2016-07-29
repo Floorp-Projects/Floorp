@@ -195,7 +195,7 @@ private:
 };
 
 struct auto_lock {
-  auto_lock(owned_critical_section & lock)
+  explicit auto_lock(owned_critical_section & lock)
     : lock(lock)
   {
     lock.enter();
