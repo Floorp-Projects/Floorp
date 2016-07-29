@@ -220,9 +220,8 @@ class FunctionCompiler
         MOZ_ASSERT(loopDepth_ == 0);
         MOZ_ASSERT(blockDepth_ == 0);
 #ifdef DEBUG
-        for (ControlFlowPatchVector& patches : blockPatches_) {
+        for (ControlFlowPatchVector& patches : blockPatches_)
             MOZ_ASSERT(patches.empty());
-        }
 #endif
         MOZ_ASSERT(inDeadCode());
         MOZ_ASSERT(done(), "all bytes must be consumed");

@@ -126,9 +126,8 @@ struct Zone
         barrierTracer_(barrierTracerArg),
         needsIncrementalBarrier_(false)
     {
-        for (auto& stackRootPtr : stackRoots_) {
+        for (auto& stackRootPtr : stackRoots_)
             stackRootPtr = nullptr;
-        }
     }
 
     bool needsIncrementalBarrier() const {
