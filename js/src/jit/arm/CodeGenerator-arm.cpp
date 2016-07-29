@@ -2832,6 +2832,18 @@ CodeGeneratorARM::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 }
 
 void
+CodeGeneratorARM::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
+{
+    const MWasmLoadGlobalVar* mir = ins->mir();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+    Register64 output = ToOutRegister64(ins);
+
+    masm.ma_dtr(IsLoad, GlobalReg, Imm32(addr + INT64LOW_OFFSET), output.low);
+    masm.ma_dtr(IsLoad, GlobalReg, Imm32(addr + INT64HIGH_OFFSET), output.high);
+}
+
+void
 CodeGeneratorARM::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 {
     const MWasmStoreGlobalVar* mir = ins->mir();
@@ -2847,6 +2859,19 @@ CodeGeneratorARM::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
         MOZ_ASSERT(type == MIRType::Double);
         masm.ma_vstr(ToFloatRegister(ins->value()), Address(GlobalReg, addr));
     }
+}
+
+void
+CodeGeneratorARM::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
+{
+    const MWasmStoreGlobalVar* mir = ins->mir();
+    MIRType type = mir->value()->type();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    MOZ_ASSERT (type == MIRType::Int64);
+    Register64 input = ToRegister64(ins->value());
+
+    masm.ma_dtr(IsStore, GlobalReg, Imm32(addr + INT64LOW_OFFSET), input.low);
+    masm.ma_dtr(IsStore, GlobalReg, Imm32(addr + INT64HIGH_OFFSET), input.high);
 }
 
 void
