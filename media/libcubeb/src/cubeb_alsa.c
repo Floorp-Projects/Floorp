@@ -261,7 +261,7 @@ alsa_refill_stream(cubeb_stream * stm)
   pthread_mutex_lock(&stm->mutex);
 
   avail = snd_pcm_avail_update(stm->pcm);
-  if (avail == -EPIPE) {
+  if (avail < 0) {
     snd_pcm_recover(stm->pcm, avail, 1);
     avail = snd_pcm_avail_update(stm->pcm);
   }
@@ -280,15 +280,10 @@ alsa_refill_stream(cubeb_stream * stm)
 
   /* poll(2) claims this stream is active, so there should be some space
      available to write.  If avail is still zero here, the stream must be in
-     a funky state, so recover and try again. */
+     a funky state, bail and wait for another wakeup. */
   if (avail == 0) {
-    snd_pcm_recover(stm->pcm, -EPIPE, 1);
-    avail = snd_pcm_avail_update(stm->pcm);
-    if (avail <= 0) {
-      pthread_mutex_unlock(&stm->mutex);
-      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
-      return ERROR;
-    }
+    pthread_mutex_unlock(&stm->mutex);
+    return RUNNING;
   }
 
   p = calloc(1, snd_pcm_frames_to_bytes(stm->pcm, avail));
@@ -300,6 +295,7 @@ alsa_refill_stream(cubeb_stream * stm)
   if (got < 0) {
     pthread_mutex_unlock(&stm->mutex);
     stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
+    free(p);
     return ERROR;
   }
   if (got > 0) {
@@ -317,7 +313,7 @@ alsa_refill_stream(cubeb_stream * stm)
       }
     }
     wrote = snd_pcm_writei(stm->pcm, p, got);
-    if (wrote == -EPIPE) {
+    if (wrote < 0) {
       snd_pcm_recover(stm->pcm, wrote, 1);
       wrote = snd_pcm_writei(stm->pcm, p, got);
     }
@@ -389,6 +385,8 @@ alsa_run(cubeb * ctx)
 
     for (i = 0; i < CUBEB_STREAM_MAX; ++i) {
       stm = ctx->streams[i];
+      /* We can't use snd_pcm_poll_descriptors_revents here because of
+         https://github.com/kinetiknz/cubeb/issues/135. */
       if (stm && stm->state == RUNNING && stm->fds && any_revents(stm->fds, stm->nfds)) {
         alsa_set_stream_state(stm, PROCESSING);
         pthread_mutex_unlock(&ctx->mutex);
@@ -971,7 +969,7 @@ alsa_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate) {
 
   /* get a pcm, disabling resampling, so we get a rate the
    * hardware/dmix/pulse/etc. supports. */
-  r = snd_pcm_open(&pcm, CUBEB_ALSA_PCM_NAME, SND_PCM_STREAM_PLAYBACK | SND_PCM_NO_AUTO_RESAMPLE, 0);
+  r = snd_pcm_open(&pcm, CUBEB_ALSA_PCM_NAME, SND_PCM_STREAM_PLAYBACK, SND_PCM_NO_AUTO_RESAMPLE);
   if (r < 0) {
     return CUBEB_ERROR;
   }
