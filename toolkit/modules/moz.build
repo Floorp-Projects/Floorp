@@ -24,6 +24,7 @@ EXTRA_JS_MODULES += [
     'addons/WebRequest.jsm',
     'addons/WebRequestCommon.jsm',
     'addons/WebRequestContent.js',
+    'addons/WebRequestUpload.jsm',
     'AsyncPrefs.jsm',
     'Battery.jsm',
     'BinarySearch.jsm',
