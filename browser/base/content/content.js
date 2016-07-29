@@ -500,8 +500,7 @@ var ClickEventHandler = {
                  ctrlKey: event.ctrlKey, metaKey: event.metaKey,
                  altKey: event.altKey, href: null, title: null,
                  bookmark: false, referrerPolicy: referrerPolicy,
-                 originAttributes: principal ? principal.originAttributes : {},
-                 isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(ownerDoc.defaultView)};
+                 originAttributes: principal ? principal.originAttributes : {} };
 
     if (href) {
       try {
