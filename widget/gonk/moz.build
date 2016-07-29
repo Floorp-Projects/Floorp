@@ -50,10 +50,6 @@ if CONFIG['ANDROID_VERSION'] >= '17':
     SOURCES += [
         'hwchal/HwcHAL.cpp',
     ]
-elif CONFIG['ANDROID_VERSION'] == '15':
-    SOURCES += [
-        'hwchal/HwcICS.cpp',
-    ]
 
 SOURCES += [
     'GeckoTouchDispatcher.cpp',
@@ -89,20 +85,14 @@ LOCAL_INCLUDES += [
 
 DEFINES['HAVE_OFF64_T'] = True
 DEFINES['SK_BUILD_FOR_ANDROID_NDK'] = True
-
-if CONFIG['ANDROID_VERSION'] != '15':
-    DEFINES['HAVE_POSIX_CLOCKS'] = True
+DEFINES['HAVE_POSIX_CLOCKS'] = True
 
 if CONFIG['MOZ_OMX_DECODER']:
     DEFINES['MOZ_OMX_DECODER'] = True
 
-if CONFIG['ANDROID_VERSION'] > '15':
-    LOCAL_INCLUDES += [
-        '%' + '%s/frameworks/native/opengl/include' % CONFIG['ANDROID_SOURCE'],
-    ]
-
 LOCAL_INCLUDES += [
     '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+	'frameworks/native/opengl/include',
         'hardware/libhardware/include',
         'hardware/libhardware_legacy/include',
     ]

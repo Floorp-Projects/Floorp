@@ -300,7 +300,7 @@
               <label value="&netmonitorUI.perfNotice1;"/>
               <button id="requests-menu-perf-notice-button"
                       standalone="true"
-                      label="&netmonitorUI.perfNotice3;"
+                      tooltiptext="&netmonitorUI.perfNotice3;"
                       class="devtools-toolbarbutton"/>
               <label value="&netmonitorUI.perfNotice2;"/>
             </hbox>
