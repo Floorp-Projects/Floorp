@@ -104,7 +104,7 @@ def create_parser(mach_interface=False):
                  " Currently used for xperf only.")
     add_arg('--noShutdown', dest='shutdown', action='store_true',
             help="Record time browser takes to shutdown after testing")
-    add_arg('--setPref', action='append', default=[], dest="extraPrefs",
+    add_arg('--setpref', action='append', default=[], dest="extraPrefs",
             metavar="PREF=VALUE",
             help="defines an extra user preference")
     add_arg('--webServer', dest='webserver',
