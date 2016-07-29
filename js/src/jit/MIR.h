@@ -7738,18 +7738,28 @@ class MAsmJSInterruptCheck
     TRIVIAL_NEW_WRAPPERS
 };
 
-// Directly jumps to the unreachable trap handler.
-class MAsmThrowUnreachable
+// Directly jumps to the indicated trap, leaving Wasm code and reporting a
+// runtime error.
+
+class MWasmTrap
   : public MAryControlInstruction<0, 0>,
     public NoTypePolicy::Data
 {
+    wasm::Trap trap_;
+
+    explicit MWasmTrap(wasm::Trap trap)
+      : trap_(trap)
+    {}
+
   public:
-    INSTRUCTION_HEADER(AsmThrowUnreachable)
+    INSTRUCTION_HEADER(WasmTrap)
     TRIVIAL_NEW_WRAPPERS
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
+
+    wasm::Trap trap() const { return trap_; }
 };
 
 // Checks if a value is JS_UNINITIALIZED_LEXICAL, bailout out if so, leaving
