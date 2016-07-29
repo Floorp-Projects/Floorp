@@ -6,7 +6,7 @@
 
 "use strict";
 
-/* globals localStorage, window */
+/* globals localStorage, window, document, NodeFilter */
 
 // Some constants from nsIPrefBranch.idl.
 const PREF_INVALID = 0;
@@ -517,6 +517,63 @@ const Services = {
       return {
         add: () => {}
       };
+    },
+  },
+
+  /**
+   * An implementation of Services.focus that holds just the
+   * properties and methods needed by devtools.
+   * @see nsIFocusManager.idl for details.
+   */
+  focus: {
+    // These values match nsIFocusManager in order to make testing a
+    // bit simpler.
+    MOVEFOCUS_FORWARD: 1,
+    MOVEFOCUS_BACKWARD: 2,
+
+    get focusedElement() {
+      if (!document.hasFocus()) {
+        return null;
+      }
+      return document.activeElement;
+    },
+
+    moveFocus: function (window, startElement, type, flags) {
+      if (flags !== 0) {
+        throw new Error("shim Services.focus.moveFocus only accepts flags===0");
+      }
+      if (type !== Services.focus.MOVEFOCUS_FORWARD
+          && type !== Services.focus.MOVEFOCUS_BACKWARD) {
+        throw new Error("shim Services.focus.moveFocus only supports " +
+                        " MOVEFOCUS_FORWARD and MOVEFOCUS_BACKWARD");
+      }
+
+      if (!startElement) {
+        startElement = document.activeElement || document;
+      }
+
+      let iter = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT, {
+        acceptNode: function (node) {
+          let tabIndex = node.getAttribute("tabindex");
+          if (tabIndex === "-1") {
+            return NodeFilter.FILTER_SKIP;
+          }
+          node.focus();
+          if (document.activeElement == node) {
+            return NodeFilter.FILTER_ACCEPT;
+          }
+          return NodeFilter.FILTER_SKIP;
+        }
+      });
+
+      iter.currentNode = startElement;
+
+      // Sets the focus via side effect in the filter.
+      if (type === Services.focus.MOVEFOCUS_FORWARD) {
+        iter.nextNode();
+      } else {
+        iter.previousNode();
+      }
     },
   },
 };
