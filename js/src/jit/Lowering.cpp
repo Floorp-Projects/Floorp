@@ -4137,6 +4137,13 @@ void
 LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
 {
     MDefinition* rval = ins->getOperand(0);
+
+    if (rval->type() == MIRType::Int64) {
+        LAsmJSReturnI64* lir = new(alloc()) LAsmJSReturnI64(useInt64Fixed(rval, ReturnReg64));
+        add(lir);
+        return;
+    }
+
     LAsmJSReturn* lir = new(alloc()) LAsmJSReturn;
     if (rval->type() == MIRType::Float32)
         lir->setOperand(0, useFixed(rval, ReturnFloat32Reg));
@@ -4146,10 +4153,6 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
         lir->setOperand(0, useFixed(rval, ReturnSimd128Reg));
     else if (rval->type() == MIRType::Int32)
         lir->setOperand(0, useFixed(rval, ReturnReg));
-#if JS_BITS_PER_WORD == 64
-    else if (rval->type() == MIRType::Int64)
-        lir->setOperand(0, useFixed(rval, ReturnReg));
-#endif
     else
         MOZ_CRASH("Unexpected asm.js return type");
 

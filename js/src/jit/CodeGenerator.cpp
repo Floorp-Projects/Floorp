@@ -11228,6 +11228,14 @@ CodeGenerator::visitAsmJSReturn(LAsmJSReturn* lir)
 }
 
 void
+CodeGenerator::visitAsmJSReturnI64(LAsmJSReturnI64* lir)
+{
+    // Don't emit a jump to the return label if this is the last block.
+    if (current->mir() != *gen->graph().poBegin())
+        masm.jump(&returnLabel_);
+}
+
+void
 CodeGenerator::visitAsmJSVoidReturn(LAsmJSVoidReturn* lir)
 {
     // Don't emit a jump to the return label if this is the last block.
