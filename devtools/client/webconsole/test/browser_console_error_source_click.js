@@ -68,7 +68,7 @@ add_task(function* () {
     let locationNode = msg.querySelector(selector);
     ok(locationNode, "message location element found");
 
-    EventUtils.synthesizeMouse(locationNode, 2, 2, {}, hud.iframeWindow);
+    locationNode.click();
 
     ok(viewSourceCalled, "view source opened");
   }
