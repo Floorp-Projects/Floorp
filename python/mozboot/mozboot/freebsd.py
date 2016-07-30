@@ -41,6 +41,8 @@ class FreeBSDBootstrapper(BaseBootstrapper):
     def pkg_install(self, *packages):
         if self.which('pkg'):
             command = ['pkg', 'install']
+            if self.no_interactive:
+                command.append('-y')
         else:
             command = ['pkg_add', '-Fr']
 
