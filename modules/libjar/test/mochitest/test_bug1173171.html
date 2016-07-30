@@ -37,6 +37,9 @@ let xhr = function (method, url, responseType) {
     xhr.onload = function () {
       resolve(xhr.response);
     };
+    xhr.onerror = function() {
+      resolve(null);
+    };
     xhr.responseType = responseType;
     xhr.send();
   });
@@ -48,13 +51,8 @@ let jarURL = "jar:http://mochi.test:8888/tests/modules/libjar/test/mochitest/bug
 add_task(function* () {
   for (let shouldBlock of [false, true]) {
     yield pushPref("network.jar.block-remote-files", shouldBlock);
-    try {
-      let response = yield xhr("GET", jarURL, "document");
-      didBlock = false;
-    } catch (e) {
-      didBlock = true;
-    }
-    ok(didBlock === shouldBlock,
+    let response = yield xhr("GET", jarURL, "document");
+    ok(shouldBlock === (response === null),
        "Remote jars should be blocked if and only if the 'network.jar.block-remote-files' pref is active.");
   }
 });
