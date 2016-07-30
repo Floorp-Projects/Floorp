@@ -54,7 +54,7 @@ RemoteContentController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
 
 void
 RemoteContentController::HandleTap(TapType aTapType,
-                                   const CSSPoint& aPoint,
+                                   const LayoutDevicePoint& aPoint,
                                    Modifiers aModifiers,
                                    const ScrollableLayerGuid& aGuid,
                                    uint64_t aInputBlockId)
@@ -62,7 +62,7 @@ RemoteContentController::HandleTap(TapType aTapType,
   if (MessageLoop::current() != mUILoop) {
     // We have to send this message from the "UI thread" (main
     // thread).
-    mUILoop->PostTask(NewRunnableMethod<TapType, CSSPoint, Modifiers,
+    mUILoop->PostTask(NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
                                         ScrollableLayerGuid, uint64_t>(this,
                                           &RemoteContentController::HandleTap,
                                           aTapType, aPoint, aModifiers, aGuid,

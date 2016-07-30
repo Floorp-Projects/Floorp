@@ -11,6 +11,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#if defined(WIN32)
+#include "cubeb_utils_win.h"
+#else
+#include "cubeb_utils_unix.h"
+#endif
 
 /** Similar to memcpy, but accounts for the size of an element. */
 template<typename T>
@@ -187,6 +192,20 @@ private:
   size_t capacity_;
   /** The number of elements the array contains. */
   size_t length_;
+};
+
+struct auto_lock {
+  explicit auto_lock(owned_critical_section & lock)
+    : lock(lock)
+  {
+    lock.enter();
+  }
+  ~auto_lock()
+  {
+    lock.leave();
+  }
+private:
+  owned_critical_section & lock;
 };
 
 #endif /* CUBEB_UTILS */

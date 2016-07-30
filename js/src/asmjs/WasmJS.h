@@ -45,6 +45,10 @@ typedef UniquePtr<Instance> UniqueInstance;
 bool
 HasCompilerSupport(ExclusiveContext* cx);
 
+// Return whether WebAssembly has int64 support on this platform.
+bool
+IsI64Implemented();
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 

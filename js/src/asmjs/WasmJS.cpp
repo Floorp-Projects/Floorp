@@ -62,6 +62,16 @@ CheckCompilerSupport(JSContext* cx)
     return true;
 }
 
+bool
+wasm::IsI64Implemented()
+{
+#if defined(JS_CPU_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+    return true;
+#else
+    return false;
+#endif
+}
+
 // ============================================================================
 // (Temporary) Wasm class and static methods
 

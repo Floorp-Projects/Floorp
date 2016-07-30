@@ -44,7 +44,7 @@ static constexpr Register JSReturnReg_Data = edx;
 static constexpr Register StackPointer = esp;
 static constexpr Register FramePointer = ebp;
 static constexpr Register ReturnReg = eax;
-static constexpr Register64 ReturnReg64(InvalidReg, InvalidReg);
+static constexpr Register64 ReturnReg64(edi, eax);
 static constexpr FloatRegister ReturnFloat32Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Single);
 static constexpr FloatRegister ReturnDoubleReg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
 static constexpr FloatRegister ReturnSimd128Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Simd128);
@@ -336,16 +336,6 @@ class Assembler : public AssemblerX86Shared
         return leal(src, dest);
     }
 
-    void fld32(const Operand& dest) {
-        switch (dest.kind()) {
-          case Operand::MEM_REG_DISP:
-            masm.fld32_m(dest.disp(), dest.base());
-            break;
-          default:
-            MOZ_CRASH("unexpected operand kind");
-        }
-    }
-
     void fstp32(const Operand& src) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
@@ -354,6 +344,9 @@ class Assembler : public AssemblerX86Shared
           default:
             MOZ_CRASH("unexpected operand kind");
         }
+    }
+    void faddp() {
+        masm.faddp();
     }
 
     void cmpl(ImmWord rhs, Register lhs) {
@@ -401,6 +394,13 @@ class Assembler : public AssemblerX86Shared
     }
     void adcl(Register src, Register dest) {
         masm.adcl_rr(src.encoding(), dest.encoding());
+    }
+
+    void sbbl(Imm32 imm, Register dest) {
+        masm.sbbl_ir(imm.value, dest.encoding());
+    }
+    void sbbl(Register src, Register dest) {
+        masm.sbbl_rr(src.encoding(), dest.encoding());
     }
 
     void mull(Register multiplier) {
@@ -453,6 +453,16 @@ class Assembler : public AssemblerX86Shared
             break;
           case Operand::MEM_ADDRESS32:
             masm.vpunpckldq_mr(src1.address(), src0.encoding(), dest.encoding());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+
+    void fild(const Operand& src) {
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.fild_m(src.disp(), src.base());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");

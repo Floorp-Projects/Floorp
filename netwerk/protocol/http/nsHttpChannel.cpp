@@ -3559,7 +3559,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     // Parse string stored in a "response-head" metadata element.
     // These response headers will be merged with the orignal headers (i.e. the
     // headers stored in a "original-response-headers" metadata element).
-    rv = mCachedResponseHead->ParseCachedHead((char *) buf.get());
+    rv = mCachedResponseHead->ParseCachedHead(buf.get());
     NS_ENSURE_SUCCESS(rv, rv);
     buf.Adopt(0);
 

@@ -1337,6 +1337,8 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   RefPtr<SourceSurface> snapshot;
   Matrix transform;
   RefPtr<PersistentBufferProvider> oldBufferProvider = mBufferProvider;
+  RefPtr<DrawTarget> oldTarget = mTarget;
+
   AutoReturnSnapshot autoReturn(nullptr);
 
   if (mTarget) {
@@ -1351,14 +1353,19 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
     autoReturn.mBufferProvider = mBufferProvider;
     autoReturn.mSnapshot = &snapshot;
   }
+
   mTarget = nullptr;
   mBufferProvider = nullptr;
   mResetLayer = true;
 
   // Recreate target using the new rendering mode
   RenderingMode attemptedMode = EnsureTarget(nullptr, aRenderingMode);
-  if (!IsTargetValid())
+  if (!IsTargetValid()) {
+    if (oldBufferProvider && oldTarget) {
+      oldBufferProvider->ReturnDrawTarget(oldTarget.forget());
+    }
     return false;
+  }
 
   // We succeeded, so update mRenderingMode to reflect reality
   mRenderingMode = attemptedMode;
@@ -1373,6 +1380,10 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   }
 
   mTarget->SetTransform(transform);
+
+  if (oldBufferProvider && oldTarget) {
+    oldBufferProvider->ReturnDrawTarget(oldTarget.forget());
+  }
 
   return true;
 }

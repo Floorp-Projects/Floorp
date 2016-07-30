@@ -29,6 +29,8 @@ LIRGeneratorShared::use(MDefinition* mir, LUse policy)
     // It is illegal to call use() on an instruction with two defs.
 #if BOX_PIECES > 1
     MOZ_ASSERT(mir->type() != MIRType::Value);
+#endif
+#if INT64_PIECES > 1
     MOZ_ASSERT(mir->type() != MIRType::Int64);
 #endif
     ensureDefined(mir);
@@ -105,6 +107,10 @@ LIRGeneratorShared::defineInt64Fixed(LInstructionHelper<INT64_PIECES, Ops, Temps
 template <size_t Ops, size_t Temps> void
 LIRGeneratorShared::defineReuseInput(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir, uint32_t operand)
 {
+    // Note: Any other operand that is not the same as this operand should be
+    // marked as not being "atStart". The regalloc cannot handle those and can
+    // overwrite the inputs!
+
     // The input should be used at the start of the instruction, to avoid moves.
     MOZ_ASSERT(lir->getOperand(operand)->toUse()->usedAtStart());
 
@@ -120,8 +126,19 @@ template <size_t Ops, size_t Temps> void
 LIRGeneratorShared::defineInt64ReuseInput(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir,
                                           MDefinition* mir, uint32_t operand)
 {
+#if JS_BITS_PER_WORD == 32
+    MOZ_CRASH("Temporarily disabled due to bug 1290450.");
+#endif
+
+    // Note: Any other operand that is not the same as this operand should be
+    // marked as not being "atStart". The regalloc cannot handle those and can
+    // overwrite the inputs!
+
     // The input should be used at the start of the instruction, to avoid moves.
     MOZ_ASSERT(lir->getOperand(operand)->toUse()->usedAtStart());
+#if JS_BITS_PER_WORD == 32
+    MOZ_ASSERT(lir->getOperand(operand + 1)->toUse()->usedAtStart());
+#endif
     MOZ_ASSERT(!lir->isCall());
 
     uint32_t vreg = getVirtualRegister();
@@ -179,8 +196,8 @@ LIRGeneratorShared::defineInt64(LInstructionHelper<INT64_PIECES, Ops, Temps>* li
     uint32_t vreg = getVirtualRegister();
 
 #if JS_BITS_PER_WORD == 32
-    lir->setDef(0, LDefinition(vreg, LDefinition::GENERAL, policy));
-    lir->setDef(1, LDefinition(vreg + 1, LDefinition::GENERAL, policy));
+    lir->setDef(0, LDefinition(vreg + INT64LOW_INDEX, LDefinition::GENERAL, policy));
+    lir->setDef(1, LDefinition(vreg + INT64HIGH_INDEX, LDefinition::GENERAL, policy));
     getVirtualRegister();
 #else
     lir->setDef(0, LDefinition(vreg, LDefinition::GENERAL, policy));
@@ -234,6 +251,17 @@ LIRGeneratorShared::defineReturn(LInstruction* lir, MDefinition* mir)
         getVirtualRegister();
 #elif defined(JS_PUNBOX64)
         lir->setDef(0, LDefinition(vreg, LDefinition::BOX, LGeneralReg(JSReturnReg)));
+#endif
+        break;
+      case MIRType::Int64:
+#if defined(JS_NUNBOX32)
+        lir->setDef(INT64LOW_INDEX, LDefinition(vreg + INT64LOW_INDEX, LDefinition::GENERAL,
+                                                LGeneralReg(ReturnReg64.low)));
+        lir->setDef(INT64HIGH_INDEX, LDefinition(vreg + INT64HIGH_INDEX, LDefinition::GENERAL,
+                                                 LGeneralReg(ReturnReg64.high)));
+        getVirtualRegister();
+#elif defined(JS_PUNBOX64)
+        lir->setDef(0, LDefinition(vreg, LDefinition::GENERAL, LGeneralReg(ReturnReg)));
 #endif
         break;
       case MIRType::Float32:
@@ -750,10 +778,26 @@ LIRGeneratorShared::useInt64(MDefinition* mir, LUse::Policy policy, bool useAtSt
 
     uint32_t vreg = mir->virtualRegister();
 #if JS_BITS_PER_WORD == 32
-    return LInt64Allocation(LUse(vreg + 1, policy, useAtStart),
-                            LUse(vreg, policy, useAtStart));
+    return LInt64Allocation(LUse(vreg + INT64HIGH_INDEX, policy, useAtStart),
+                            LUse(vreg + INT64LOW_INDEX, policy, useAtStart));
 #else
     return LInt64Allocation(LUse(vreg, policy, useAtStart));
+#endif
+}
+
+LInt64Allocation
+LIRGeneratorShared::useInt64Fixed(MDefinition* mir, Register64 regs, bool useAtStart)
+{
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+
+    ensureDefined(mir);
+
+    uint32_t vreg = mir->virtualRegister();
+#if JS_BITS_PER_WORD == 32
+    return LInt64Allocation(LUse(regs.high, vreg + INT64HIGH_INDEX, useAtStart),
+                            LUse(regs.low, vreg + INT64LOW_INDEX, useAtStart));
+#else
+    return LInt64Allocation(LUse(regs.reg, vreg, useAtStart));
 #endif
 }
 

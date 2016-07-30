@@ -18,10 +18,6 @@
 #include "TestHarness.h"
 #endif
 
-#if (defined(_WIN32) || defined(__WIN32__))
-#define __func__ __FUNCTION__
-#endif
-
 #define ARRAY_LENGTH(_x) (sizeof(_x) / sizeof(_x[0]))
 #define BEGIN_TEST fprintf(stderr, "START %s\n", __func__)
 #define END_TEST fprintf(stderr, "END %s\n", __func__)

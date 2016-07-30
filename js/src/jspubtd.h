@@ -287,9 +287,8 @@ class RootLists
 
   public:
     RootLists() : autoGCRooters_(nullptr) {
-        for (auto& stackRootPtr : stackRoots_) {
+        for (auto& stackRootPtr : stackRoots_)
             stackRootPtr = nullptr;
-        }
     }
 
     ~RootLists() {

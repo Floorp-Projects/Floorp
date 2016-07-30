@@ -2286,7 +2286,9 @@ typedef int64_t (*Prototype_General8)(int32_t arg0, int32_t arg1, int32_t arg2, 
 typedef double (*Prototype_Double_None)();
 typedef double (*Prototype_Double_Double)(double arg0);
 typedef double (*Prototype_Double_Int)(int32_t arg0);
+typedef double (*Prototype_Double_IntInt)(int32_t arg0, int32_t arg1);
 typedef int32_t (*Prototype_Int_Double)(double arg0);
+typedef int64_t (*Prototype_Int64_Double)(double arg0);
 typedef int32_t (*Prototype_Int_DoubleIntInt)(double arg0, int32_t arg1, int32_t arg2);
 typedef int32_t (*Prototype_Int_IntDoubleIntInt)(int32_t arg0, double arg1, int32_t arg2,
                                                  int32_t arg3);
@@ -2429,6 +2431,16 @@ Simulator::softwareInterrupt(SimInstruction* instr)
             setCallResult(result);
             break;
           }
+          case Args_Int64_Double: {
+            double dval0, dval1;
+            int32_t ival;
+            getFpArgs(&dval0, &dval1, &ival);
+            Prototype_Int64_Double target = reinterpret_cast<Prototype_Int64_Double>(external);
+            int64_t result = target(dval0);
+            scratchVolatileRegisters(/* scratchFloat = true */);
+            setCallResult(result);
+            break;
+          }
           case Args_Double_None: {
             Prototype_Double_None target = reinterpret_cast<Prototype_Double_None>(external);
             double dresult = target();
@@ -2471,6 +2483,13 @@ Simulator::softwareInterrupt(SimInstruction* instr)
           case Args_Double_Int: {
             Prototype_Double_Int target = reinterpret_cast<Prototype_Double_Int>(external);
             double dresult = target(arg0);
+            scratchVolatileRegisters(/* scratchFloat = true */);
+            setCallResultDouble(dresult);
+            break;
+          }
+          case Args_Double_IntInt: {
+            Prototype_Double_IntInt target = reinterpret_cast<Prototype_Double_IntInt>(external);
+            double dresult = target(arg0, arg1);
             scratchVolatileRegisters(/* scratchFloat = true */);
             setCallResultDouble(dresult);
             break;
@@ -3092,8 +3111,16 @@ Simulator::decodeType01(SimInstruction* instr)
             }
             break;
           case OpSbc:
+            alu_out = rn_val - shifter_operand - (getCarry() == 0 ? 1 : 0);
+            set_register(rd, alu_out);
+            if (instr->hasS())
+                MOZ_CRASH();
+            break;
           case OpRsc:
-            MOZ_CRASH();
+            alu_out = shifter_operand - rn_val - (getCarry() == 0 ? 1 : 0);
+            set_register(rd, alu_out);
+            if (instr->hasS())
+                MOZ_CRASH();
             break;
           case OpTst:
             if (instr->hasS()) {

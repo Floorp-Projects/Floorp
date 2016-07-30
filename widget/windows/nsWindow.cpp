@@ -1657,12 +1657,6 @@ NS_METHOD nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     return NS_OK;
   }
 
-  if (mTransparencyMode == eTransparencyTransparent) {
-    if (mCompositorWidgetDelegate) {
-      mCompositorWidgetDelegate->ResizeTransparentWindow(gfx::IntSize(width, height));
-    }
-  }
-
   // Set cached value for lightweight and printing
   mBounds.width  = width;
   mBounds.height = height;
@@ -1714,12 +1708,6 @@ NS_METHOD nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, 
       Invalidate();
     }
     return NS_OK;
-  }
-
-  if (eTransparencyTransparent == mTransparencyMode) {
-    if (mCompositorWidgetDelegate) {
-      mCompositorWidgetDelegate->ResizeTransparentWindow(gfx::IntSize(width, height));
-    }
   }
 
   // Set cached value for lightweight and printing
@@ -6313,12 +6301,6 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     newWidth  = r.right - r.left;
     newHeight = r.bottom - r.top;
     nsIntRect rect(wp->x, wp->y, newWidth, newHeight);
-
-    if (eTransparencyTransparent == mTransparencyMode) {
-      if (mCompositorWidgetDelegate) {
-        mCompositorWidgetDelegate->ResizeTransparentWindow(gfx::IntSize(newWidth, newHeight));
-      }
-    }
 
     if (newWidth > mLastSize.width)
     {
