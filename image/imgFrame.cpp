@@ -172,7 +172,6 @@ imgFrame::imgFrame()
   , mPalettedImageData(nullptr)
   , mPaletteDepth(0)
   , mNonPremult(false)
-  , mSinglePixel(false)
   , mCompositingFailed(false)
 {
 }
@@ -412,52 +411,14 @@ imgFrame::Optimize()
     return NS_OK;
   }
 
-  if (mPalettedImageData || mOptSurface || mSinglePixel) {
+  if (mPalettedImageData || mOptSurface) {
     return NS_OK;
   }
 
-  // Don't do single-color opts on non-premult data.
-  // Cairo doesn't support non-premult single-colors.
+  // XXX(seth): It's currently unclear if there's any reason why we can't
+  // optimize non-premult surfaces. We should look into removing this.
   if (mNonPremult) {
     return NS_OK;
-  }
-
-  /* Figure out if the entire image is a constant color */
-
-  if (gfxPrefs::ImageSingleColorOptimizationEnabled() &&
-      mImageSurface->Stride() == mFrameRect.width * 4) {
-    uint32_t* imgData = (uint32_t*) ((uint8_t*) mVBufPtr);
-    uint32_t firstPixel = * (uint32_t*) imgData;
-    uint32_t pixelCount = mFrameRect.Area() + 1;
-
-    while (--pixelCount && *imgData++ == firstPixel)
-      ;
-
-    if (pixelCount == 0) {
-      // all pixels were the same
-      if (mFormat == SurfaceFormat::B8G8R8A8 ||
-          mFormat == SurfaceFormat::B8G8R8X8) {
-        mSinglePixel = true;
-        mSinglePixelColor.a = ((firstPixel >> 24) & 0xFF) * (1.0f / 255.0f);
-        mSinglePixelColor.r = ((firstPixel >> 16) & 0xFF) * (1.0f / 255.0f);
-        mSinglePixelColor.g = ((firstPixel >>  8) & 0xFF) * (1.0f / 255.0f);
-        mSinglePixelColor.b = ((firstPixel >>  0) & 0xFF) * (1.0f / 255.0f);
-        mSinglePixelColor.r /= mSinglePixelColor.a;
-        mSinglePixelColor.g /= mSinglePixelColor.a;
-        mSinglePixelColor.b /= mSinglePixelColor.a;
-
-        // blow away the older surfaces (if they exist), to release their memory
-        mVBuf = nullptr;
-        mVBufPtr = nullptr;
-        mImageSurface = nullptr;
-        mOptSurface = nullptr;
-
-        return NS_OK;
-      }
-    }
-
-    // if it's not RGB24/ARGB32, don't optimize, but we never hit this at the
-    // moment
   }
 
 #ifdef ANDROID
@@ -568,14 +529,13 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
 
   IntSize size(int32_t(aImageRect.Width()), int32_t(aImageRect.Height()));
   if (!aDoPadding && !aDoPartialDecode) {
-    NS_ASSERTION(!mSinglePixel, "This should already have been handled");
     return SurfaceWithFormat(new gfxSurfaceDrawable(aSurface, size), mFormat);
   }
 
   gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width,
                               mDecoded.height);
 
-  if (aDoTile || mSinglePixel) {
+  if (aDoTile) {
     // Create a temporary surface.
     // Give this surface an alpha channel because there are
     // transparent pixels in the padding or undecoded area
@@ -586,17 +546,10 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
       return SurfaceWithFormat();
     }
 
-    // Fill 'available' with whatever we've got
-    if (mSinglePixel) {
-      target->FillRect(ToRect(aRegion.Intersect(available).Rect()),
-                       ColorPattern(mSinglePixelColor),
-                       DrawOptions(1.0f, CompositionOp::OP_SOURCE));
-    } else {
-      SurfacePattern pattern(aSurface,
-                             aRegion.GetExtendMode(),
-                             Matrix::Translation(mDecoded.x, mDecoded.y));
-      target->FillRect(ToRect(aRegion.Intersect(available).Rect()), pattern);
-    }
+    SurfacePattern pattern(aSurface,
+                           aRegion.GetExtendMode(),
+                           Matrix::Translation(mDecoded.x, mDecoded.y));
+    target->FillRect(ToRect(aRegion.Intersect(available).Rect()), pattern);
 
     RefPtr<SourceSurface> newsurf = target->Snapshot();
     return SurfaceWithFormat(new gfxSurfaceDrawable(newsurf, size),
@@ -638,19 +591,8 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
   bool doPadding = padding != nsIntMargin(0,0,0,0);
   bool doPartialDecode = !AreAllPixelsWritten();
 
-  if (mSinglePixel && !doPadding && !doPartialDecode) {
-    if (mSinglePixelColor.a == 0.0) {
-      return true;
-    }
-    RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
-    dt->FillRect(ToRect(aRegion.Rect()),
-                 ColorPattern(mSinglePixelColor),
-                 DrawOptions(1.0f, aContext->CurrentOp()));
-    return true;
-  }
-
   RefPtr<SourceSurface> surf = GetSurfaceInternal();
-  if (!surf && !mSinglePixel) {
+  if (!surf) {
     return false;
   }
 
@@ -914,20 +856,6 @@ imgFrame::SetOptimizable()
   AssertImageDataLocked();
   MonitorAutoLock lock(mMonitor);
   mOptimizable = true;
-}
-
-Color
-imgFrame::SinglePixelColor() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return mSinglePixelColor;
-}
-
-bool
-imgFrame::IsSinglePixel() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return mSinglePixel;
 }
 
 already_AddRefed<SourceSurface>
