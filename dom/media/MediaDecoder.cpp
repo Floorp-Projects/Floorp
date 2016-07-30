@@ -386,11 +386,16 @@ void
 MediaDecoder::StartDormantTimer()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!IsHeuristicDormantSupported()) {
+    return;
+  }
 
-  if (!IsHeuristicDormantSupported() ||
-      mIsHeuristicDormant ||
+  if (mIsHeuristicDormant ||
+      IsShutdown() ||
       mIsVisible ||
-      (mPlayState != PLAY_STATE_PAUSED && !IsEnded())) {
+      (mPlayState != PLAY_STATE_PAUSED &&
+       !IsEnded()))
+  {
     return;
   }
 
