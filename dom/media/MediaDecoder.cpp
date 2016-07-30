@@ -292,7 +292,10 @@ void
 MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IsShutdown());
+
+  if (IsShutdown()) {
+    return;
+  }
 
   SetElementVisibility(aIsVisible);
 
