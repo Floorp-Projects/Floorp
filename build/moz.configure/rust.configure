@@ -14,36 +14,35 @@ def rust_compiler_names(value):
 rustc = check_prog('RUSTC', rust_compiler_names, allow_missing=True)
 
 @depends_if(rustc)
-@checking('rustc version')
-@imports('subprocess')
-def rustc_version(rustc):
-    try:
-        # TODO: We should run `rustc --version -v` and parse that output instead.
-        version = Version(subprocess.check_output(
-            [rustc, '--version']
-        ).splitlines()[0].split()[1])
-        return version
-    except subprocess.CalledProcessError as e:
-        die('Failed to get rustc version: %s', e.message)
+@checking('rustc version', lambda info: info.version)
+def rustc_info(rustc):
+        out = check_cmd_output(rustc, '--version', '--verbose').splitlines()
+        info = dict((s.strip() for s in line.split(':', 1)) for line in out[1:])
+        return namespace(
+            version=Version(info.get('release', '0')),
+            commit=info.get('commit-hash', 'unknown'),
+        )
 
-@depends('--enable-rust', rustc, rustc_version)
+@depends('--enable-rust', rustc, rustc_info)
 @imports(_from='textwrap', _import='dedent')
-def rust_compiler(value, rustc, rustc_version):
+def rust_compiler(value, rustc, rustc_info):
     if value:
         if not rustc:
             die(dedent('''\
             Rust compiler not found.
             To compile rust language sources, you must have 'rustc' in your path.
-            See http://www.rust-lang.org/ for more information.
+            See https//www.rust-lang.org/ for more information.
             '''))
-        if rustc_version < '1.5':
+        version = rustc_info.version
+        min_version = Version('1.5')
+        if version < min_version:
             die(dedent('''\
             Rust compiler {} is too old.
             To compile Rust language sources please install at least
-            version 1.5 of the 'rustc' toolchain and make sure it is
+            version {} of the 'rustc' toolchain and make sure it is
             first in your path.
             You can verify this by typing 'rustc --version'.
-            '''.format(rustc_version)))
+            '''.format(version, min_version)))
         return True
 
 set_config('MOZ_RUST', rust_compiler)

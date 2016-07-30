@@ -128,6 +128,8 @@ testBinary32('rotl', 40, 2, 160);
 testBinary32('rotl', 40, 34, 160);
 testBinary32('rotr', 40, 2, 10);
 testBinary32('rotr', 40, 34, 10);
+testBinary32('rotr', 40, 0, 40);
+testBinary32('rotl', 40, 0, 40);
 
 testComparison32('eq', 40, 40, 1);
 testComparison32('ne', 40, 40, 0);
@@ -158,6 +160,13 @@ if (hasI64()) {
     testBinary64('mul', 40, 2, 80);
     testBinary64('mul', -1, 2, -2);
     testBinary64('mul', 0x123456, "0x9876543210", "0xad77d2c5f941160");
+    testBinary64('mul', 2, -1, -2);
+    testBinary64('mul', "0x80000000", -1, -2147483648);
+    testBinary64('mul', "0x7fffffff", -1, -2147483647);
+    testBinary64('mul', "0x7fffffffffffffff", -1, "0x8000000000000001");
+    testBinary64('mul', 2, 2, 4);
+    testBinary64('mul', "0x80000000", 2, "0x100000000");
+    testBinary64('mul', "0x7fffffff", 2, "0xfffffffe");
     testBinary64('div_s', -40, 2, -20);
     testBinary64('div_s', "0x1234567887654321", 2, "0x91a2b3c43b2a190");
     testBinary64('div_s', "0x1234567887654321", "0x1000000000", "0x1234567");
@@ -195,6 +204,14 @@ if (hasI64()) {
     testBinary64('shr_u', "0x8ffff00ff0000000", 56, 0x8f);
     testBinary64('rotl', 40, 2, 160);
     testBinary64('rotr', 40, 2, 10);
+    testBinary64('rotr', "0x1234567812345678", 4, "0x8123456781234567");
+    testBinary64('rotl', "0x1234567812345678", 4, "0x2345678123456781");
+    testBinary64('rotl', "0x1234567812345678", 60, "0x8123456781234567");
+    testBinary64('rotr', "0x1234567812345678", 60, "0x2345678123456781");
+    testBinary64('rotr', 40, 0, 40);
+    testBinary64('rotl', 40, 0, 40);
+    testBinary64('and', 42, 0, 0);
+    testBinary64('and', "0x0000000012345678", "0xffff0000ffff0000", "0x0000000012340000");
 
     testComparison64('eq', 40, 40, 1);
     testComparison64('ne', 40, 40, 0);

@@ -890,6 +890,9 @@ ConvertToTouchBehavior(HitTestResult result)
       return AllowedTouchBehavior::HORIZONTAL_PAN;
     case HitLayerTouchActionPanY:
       return AllowedTouchBehavior::VERTICAL_PAN;
+    case HitLayerTouchActionPanXY:
+      return AllowedTouchBehavior::HORIZONTAL_PAN
+           | AllowedTouchBehavior::VERTICAL_PAN;
     case HitDispatchToContentRegion:
     default:
       return AllowedTouchBehavior::UNKNOWN;

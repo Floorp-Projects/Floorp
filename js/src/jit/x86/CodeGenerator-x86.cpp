@@ -276,6 +276,86 @@ CodeGeneratorX86::load(Scalar::Type accessType, const Operand& srcAddr, const LD
       case Scalar::Int64:        MOZ_CRASH("should be handled in a separate function (2 regs)");
       case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
     }
+    masm.append(wasm::MemoryAccess(masm.size()));
+}
+
+void
+CodeGeneratorX86::loadI64(Scalar::Type type, const Operand& srcAddr, Register64 out)
+{
+    switch (type) {
+      case Scalar::Int8:
+        MOZ_ASSERT(out == Register64(edx, eax));
+        masm.movsblWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.cdq();
+        break;
+      case Scalar::Uint8:
+        masm.movzblWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.xorl(out.high, out.high);
+        break;
+      case Scalar::Int16:
+        MOZ_ASSERT(out == Register64(edx, eax));
+        masm.movswlWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.cdq();
+        break;
+      case Scalar::Uint16:
+        masm.movzwlWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.xorl(out.high, out.high);
+        break;
+      case Scalar::Int32:
+        MOZ_ASSERT(out == Register64(edx, eax));
+        masm.movlWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.cdq();
+        break;
+      case Scalar::Uint32:
+        masm.movlWithPatch(srcAddr, out.low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.xorl(out.high, out.high);
+        break;
+      case Scalar::Int64:
+        if (srcAddr.kind() == Operand::MEM_ADDRESS32) {
+            Operand low(PatchedAbsoluteAddress(uint32_t(srcAddr.address()) + INT64LOW_OFFSET));
+            Operand high(PatchedAbsoluteAddress(uint32_t(srcAddr.address()) + INT64HIGH_OFFSET));
+
+            masm.movlWithPatch(low, out.low);
+            masm.append(wasm::MemoryAccess(masm.size()));
+            masm.movlWithPatch(high, out.high);
+            masm.append(wasm::MemoryAccess(masm.size()));
+        } else {
+            MOZ_ASSERT(srcAddr.kind() == Operand::MEM_REG_DISP);
+            Address addr = srcAddr.toAddress();
+            Operand low(addr.base, addr.offset + INT64LOW_OFFSET);
+            Operand high(addr.base, addr.offset + INT64HIGH_OFFSET);
+
+            if (addr.base != out.low) {
+                masm.movlWithPatch(low, out.low);
+                masm.append(wasm::MemoryAccess(masm.size()));
+                masm.movlWithPatch(high, out.high);
+                masm.append(wasm::MemoryAccess(masm.size()));
+            } else {
+                MOZ_ASSERT(addr.base != out.high);
+                masm.movlWithPatch(high, out.high);
+                masm.append(wasm::MemoryAccess(masm.size()));
+                masm.movlWithPatch(low, out.low);
+                masm.append(wasm::MemoryAccess(masm.size()));
+            }
+        }
+        break;
+      case Scalar::Float32:
+      case Scalar::Float64:
+      case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
+      case Scalar::Int32x4:
+        MOZ_CRASH("non-int64 loads should use load()");
+      case Scalar::Uint8Clamped:
+      case Scalar::MaxTypedArrayViewType:
+        MOZ_CRASH("unexpected array type");
+    }
 }
 
 void
@@ -315,13 +395,15 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic*
 }
 
 void
-CodeGeneratorX86::visitAsmJSCall(LAsmJSCall* ins)
+CodeGeneratorX86::emitAsmJSCall(LAsmJSCallBase* ins)
 {
     MAsmJSCall* mir = ins->mir();
 
-    emitAsmJSCall(ins);
+    emitAsmJSCallBase(ins);
 
-    if (IsFloatingPointType(mir->type()) && mir->callee().which() == MAsmJSCall::Callee::Builtin) {
+    if (IsFloatingPointType(mir->type()) &&
+        mir->callee().which() == MAsmJSCall::Callee::Builtin)
+    {
         if (mir->type() == MIRType::Float32) {
             masm.reserveStack(sizeof(float));
             Operand op(esp, 0);
@@ -337,6 +419,18 @@ CodeGeneratorX86::visitAsmJSCall(LAsmJSCall* ins)
             masm.freeStack(sizeof(double));
         }
     }
+}
+
+void
+CodeGeneratorX86::visitAsmJSCall(LAsmJSCall* ins)
+{
+    emitAsmJSCall(ins);
+}
+
+void
+CodeGeneratorX86::visitAsmJSCallI64(LAsmJSCallI64* ins)
+{
+    emitAsmJSCall(ins);
 }
 
 void
@@ -394,10 +488,12 @@ CodeGeneratorX86::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("should only handle SIMD types");
     }
+    masm.append(wasm::MemoryAccess(masm.size()));
 }
 
+template <typename T>
 void
-CodeGeneratorX86::visitWasmLoad(LWasmLoad* ins)
+CodeGeneratorX86::emitWasmLoad(T* ins)
 {
     const MWasmLoad* mir = ins->mir();
 
@@ -416,13 +512,27 @@ CodeGeneratorX86::visitWasmLoad(LWasmLoad* ins)
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
                       : Operand(ToRegister(ptr), mir->offset());
 
-    load(accessType, srcAddr, ins->output());
-
-    masm.append(wasm::MemoryAccess(masm.size()));
+    if (mir->type() == MIRType::Int64)
+        loadI64(accessType, srcAddr, ToOutRegister64(ins));
+    else
+        load(accessType, srcAddr, ins->output());
 }
 
 void
-CodeGeneratorX86::visitWasmStore(LWasmStore* ins)
+CodeGeneratorX86::visitWasmLoad(LWasmLoad* ins)
+{
+    emitWasmLoad(ins);
+}
+
+void
+CodeGeneratorX86::visitWasmLoadI64(LWasmLoadI64* ins)
+{
+    emitWasmLoad(ins);
+}
+
+template <typename T>
+void
+CodeGeneratorX86::emitWasmStore(T* ins)
 {
     const MWasmStore* mir = ins->mir();
 
@@ -436,15 +546,28 @@ CodeGeneratorX86::visitWasmStore(LWasmStore* ins)
         return;
     }
 
-    const LAllocation* value = ins->value();
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
                       : Operand(ToRegister(ptr), mir->offset());
 
-    store(accessType, value, dstAddr);
+    if (accessType == Scalar::Int64)
+        storeI64(accessType, ins->getInt64Operand(LWasmStoreI64::ValueIndex), dstAddr);
+    else
+        store(accessType, ins->getOperand(LWasmStore::ValueIndex), dstAddr);
+}
 
-    masm.append(wasm::MemoryAccess(masm.size()));
+
+void
+CodeGeneratorX86::visitWasmStore(LWasmStore* ins)
+{
+    emitWasmStore(ins);
+}
+
+void
+CodeGeneratorX86::visitWasmStoreI64(LWasmStoreI64* ins)
+{
+    emitWasmStore(ins);
 }
 
 void
@@ -471,19 +594,16 @@ CodeGeneratorX86::emitSimdLoad(LAsmJSLoadHeap* ins)
 
         // Load XY
         loadSimd(type, 2, srcAddr, out);
-        masm.append(wasm::MemoryAccess(masm.size()));
 
         // Load Z (W is zeroed)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
         loadSimd(type, 1, srcAddrZ, ScratchSimd128Reg);
-        masm.append(wasm::MemoryAccess(masm.size()));
 
         // Move ZW atop XY
         masm.vmovlhps(ScratchSimd128Reg, out, out);
     } else {
         loadSimd(type, numElems, srcAddr, out);
-        masm.append(wasm::MemoryAccess(masm.size()));
     }
 
     if (hasBoundsCheck)
@@ -511,7 +631,6 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     DebugOnly<bool> hasBoundsCheck = maybeEmitAsmJSLoadBoundsCheck(mir, ins, &ool);
 
     load(accessType, srcAddr, out);
-    uint32_t after = masm.size();
 
     if (ool) {
         MOZ_ASSERT(hasBoundsCheck);
@@ -520,8 +639,6 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     }
 
     memoryBarrier(mir->barrierAfter());
-
-    masm.append(wasm::MemoryAccess(after));
 }
 
 void
@@ -553,7 +670,7 @@ CodeGeneratorX86::store(Scalar::Type accessType, const LAllocation* value, const
         break;
 
       case Scalar::Int64:
-        MOZ_CRASH("should be handled in a separate function (2 registers)");
+        MOZ_CRASH("Should be handled in storeI64.");
 
       case Scalar::Float32x4:
       case Scalar::Int8x16:
@@ -563,6 +680,42 @@ CodeGeneratorX86::store(Scalar::Type accessType, const LAllocation* value, const
 
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected type");
+    }
+    masm.append(wasm::MemoryAccess(masm.size()));
+}
+
+void
+CodeGeneratorX86::storeI64(Scalar::Type accessType, const LInt64Allocation value,
+                           const Operand& dstAddr)
+{
+    Register64 input = ToRegister64(value);
+    MOZ_ASSERT(accessType == Scalar::Int64);
+    if (dstAddr.kind() == Operand::MEM_ADDRESS32) {
+        Operand low(PatchedAbsoluteAddress(uint32_t(dstAddr.address()) + INT64LOW_OFFSET));
+        Operand high(PatchedAbsoluteAddress(uint32_t(dstAddr.address()) + INT64HIGH_OFFSET));
+
+        masm.movlWithPatch(input.low, low);
+        masm.append(wasm::MemoryAccess(masm.size()));
+        masm.movlWithPatch(input.high, high);
+        masm.append(wasm::MemoryAccess(masm.size()));
+    } else {
+        MOZ_ASSERT(dstAddr.kind() == Operand::MEM_REG_DISP);
+        Address addr = dstAddr.toAddress();
+        Operand low(addr.base, addr.offset + INT64LOW_OFFSET);
+        Operand high(addr.base, addr.offset + INT64HIGH_OFFSET);
+
+        if (addr.base != input.low) {
+            masm.movlWithPatch(input.low, low);
+            masm.append(wasm::MemoryAccess(masm.size()));
+            masm.movlWithPatch(input.high, high);
+            masm.append(wasm::MemoryAccess(masm.size()));
+        } else {
+            MOZ_ASSERT(addr.base != input.high);
+            masm.movlWithPatch(input.high, high);
+            masm.append(wasm::MemoryAccess(masm.size()));
+            masm.movlWithPatch(input.low, low);
+            masm.append(wasm::MemoryAccess(masm.size()));
+        }
     }
 }
 
@@ -641,6 +794,7 @@ CodeGeneratorX86::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("should only handle SIMD types");
     }
+    masm.append(wasm::MemoryAccess(masm.size()));
 }
 
 void
@@ -667,7 +821,6 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
 
         // Store XY
         storeSimd(type, 2, in, dstAddr);
-        masm.append(wasm::MemoryAccess(masm.size()));
 
         masm.vmovhlps(in, ScratchSimd128Reg, ScratchSimd128Reg);
 
@@ -675,10 +828,8 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
         storeSimd(type, 1, ScratchSimd128Reg, dstAddrZ);
-        masm.append(wasm::MemoryAccess(masm.size()));
     } else {
         storeSimd(type, numElems, in, dstAddr);
-        masm.append(wasm::MemoryAccess(masm.size()));
     }
 
     if (hasBoundsCheck)
@@ -708,7 +859,6 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     DebugOnly<bool> hasBoundsCheck = maybeEmitAsmJSStoreBoundsCheck(mir, ins, &rejoin);
 
     store(accessType, value, dstAddr);
-    uint32_t after = masm.size();
 
     if (rejoin) {
         MOZ_ASSERT(hasBoundsCheck);
@@ -717,8 +867,6 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     }
 
     memoryBarrier(mir->barrierAfter());
-
-    masm.append(wasm::MemoryAccess(after));
 }
 
 // Perform bounds checking on the access if necessary; if it fails,
@@ -868,6 +1016,20 @@ CodeGeneratorX86::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 }
 
 void
+CodeGeneratorX86::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
+{
+    MWasmLoadGlobalVar* mir = ins->mir();
+
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+    Register64 output = ToOutRegister64(ins);
+
+    CodeOffset labelLow = masm.movlWithPatch(PatchedAbsoluteAddress(), output.low);
+    masm.append(wasm::GlobalAccess(labelLow, mir->globalDataOffset() + INT64LOW_OFFSET));
+    CodeOffset labelHigh = masm.movlWithPatch(PatchedAbsoluteAddress(), output.high);
+    masm.append(wasm::GlobalAccess(labelHigh, mir->globalDataOffset() + INT64HIGH_OFFSET));
+}
+
+void
 CodeGeneratorX86::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 {
     MWasmStoreGlobalVar* mir = ins->mir();
@@ -899,6 +1061,20 @@ CodeGeneratorX86::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
         MOZ_CRASH("unexpected type in visitWasmStoreGlobalVar");
     }
     masm.append(wasm::GlobalAccess(label, mir->globalDataOffset()));
+}
+
+void
+CodeGeneratorX86::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
+{
+    MWasmStoreGlobalVar* mir = ins->mir();
+
+    MOZ_ASSERT(mir->value()->type() == MIRType::Int64);
+    Register64 input = ToRegister64(ins->value());
+
+    CodeOffset labelLow = masm.movlWithPatch(input.low, PatchedAbsoluteAddress());
+    masm.append(wasm::GlobalAccess(labelLow, mir->globalDataOffset() + INT64LOW_OFFSET));
+    CodeOffset labelHigh = masm.movlWithPatch(input.high, PatchedAbsoluteAddress());
+    masm.append(wasm::GlobalAccess(labelHigh, mir->globalDataOffset() + INT64HIGH_OFFSET));
 }
 
 namespace js {
@@ -950,7 +1126,7 @@ CodeGeneratorX86::visitTruncateDToInt32(LTruncateDToInt32* ins)
     OutOfLineTruncate* ool = new(alloc()) OutOfLineTruncate(ins);
     addOutOfLineCode(ool, ins->mir());
 
-    masm.branchTruncateDouble(input, output, ool->entry());
+    masm.branchTruncateDoubleMaybeModUint32(input, output, ool->entry());
     masm.bind(ool->rejoin());
 }
 
@@ -963,7 +1139,7 @@ CodeGeneratorX86::visitTruncateFToInt32(LTruncateFToInt32* ins)
     OutOfLineTruncateFloat32* ool = new(alloc()) OutOfLineTruncateFloat32(ins);
     addOutOfLineCode(ool, ins->mir());
 
-    masm.branchTruncateFloat32(input, output, ool->entry());
+    masm.branchTruncateFloat32MaybeModUint32(input, output, ool->entry());
     masm.bind(ool->rejoin());
 }
 
@@ -977,24 +1153,16 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool)
     Label fail;
 
     if (Assembler::HasSSE3()) {
+        Label failPopDouble;
         // Push double.
         masm.subl(Imm32(sizeof(double)), esp);
         masm.storeDouble(input, Operand(esp, 0));
 
-        static const uint32_t EXPONENT_MASK = 0x7ff00000;
-        static const uint32_t EXPONENT_SHIFT = FloatingPoint<double>::kExponentShift - 32;
-        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<double>::kExponentBias + 63)
-                                                 << EXPONENT_SHIFT;
-
         // Check exponent to avoid fp exceptions.
-        Label failPopDouble;
-        masm.load32(Address(esp, 4), output);
-        masm.and32(Imm32(EXPONENT_MASK), output);
-        masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(TOO_BIG_EXPONENT), &failPopDouble);
+        masm.branchDoubleNotInInt64Range(Address(esp, 0), output, &failPopDouble);
 
         // Load double, perform 64-bit truncation.
-        masm.fld(Operand(esp, 0));
-        masm.fisttp(Operand(esp, 0));
+        masm.truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), output);
 
         // Load low word, pop double and jump back.
         masm.load32(Address(esp, 0), output);
@@ -1065,25 +1233,17 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool)
     Label fail;
 
     if (Assembler::HasSSE3()) {
+        Label failPopFloat;
+
         // Push float32, but subtracts 64 bits so that the value popped by fisttp fits
         masm.subl(Imm32(sizeof(uint64_t)), esp);
         masm.storeFloat32(input, Operand(esp, 0));
 
-        static const uint32_t EXPONENT_MASK = FloatingPoint<float>::kExponentBits;
-        static const uint32_t EXPONENT_SHIFT = FloatingPoint<float>::kExponentShift;
-        // Integers are still 64 bits long, so we can still test for an exponent > 63.
-        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<float>::kExponentBias + 63)
-                                                 << EXPONENT_SHIFT;
-
         // Check exponent to avoid fp exceptions.
-        Label failPopFloat;
-        masm.movl(Operand(esp, 0), output);
-        masm.and32(Imm32(EXPONENT_MASK), output);
-        masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(TOO_BIG_EXPONENT), &failPopFloat);
+        masm.branchDoubleNotInInt64Range(Address(esp, 0), output, &failPopFloat);
 
         // Load float, perform 32-bit truncation.
-        masm.fld32(Operand(esp, 0));
-        masm.fisttp(Operand(esp, 0));
+        masm.truncateFloat32ToInt64(Address(esp, 0), Address(esp, 0), output);
 
         // Load low word, pop 64bits and jump back.
         masm.load32(Address(esp, 0), output);
@@ -1187,4 +1347,385 @@ CodeGeneratorX86::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
     emitWasmSignedTruncateToInt32(ool, output);
 
     masm.bind(ool->rejoin());
+}
+
+void
+CodeGeneratorX86::visitCompareI64(LCompareI64* lir)
+{
+    MCompare* mir = lir->mir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register64 lhsRegs = ToRegister64(lhs);
+    Register output = ToRegister(lir->output());
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    Assembler::Condition condition = JSOpToCondition(lir->jsop(), isSigned);
+    Label done;
+
+    masm.move32(Imm32(1), output);
+
+    if (IsConstant(rhs)) {
+        Imm64 imm = Imm64(ToInt64(rhs));
+        masm.branch64(condition, lhsRegs, imm, &done);
+    } else {
+        Register64 rhsRegs = ToRegister64(rhs);
+        masm.branch64(condition, lhsRegs, rhsRegs, &done);
+    }
+
+    masm.xorl(output, output);
+    masm.bind(&done);
+}
+
+void
+CodeGeneratorX86::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
+{
+    MCompare* mir = lir->cmpMir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register64 lhsRegs = ToRegister64(lhs);
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    Assembler::Condition condition = JSOpToCondition(lir->jsop(), isSigned);
+
+    Label* trueLabel = getJumpLabelForBranch(lir->ifTrue());
+    Label* falseLabel = getJumpLabelForBranch(lir->ifFalse());
+
+    if (isNextBlock(lir->ifFalse()->lir())) {
+        falseLabel = nullptr;
+    } else if (isNextBlock(lir->ifTrue()->lir())) {
+        condition = Assembler::InvertCondition(condition);
+        trueLabel = falseLabel;
+        falseLabel = nullptr;
+    }
+
+    if (IsConstant(rhs)) {
+        Imm64 imm = Imm64(ToInt64(rhs));
+        masm.branch64(condition, lhsRegs, imm, trueLabel, falseLabel);
+    } else {
+        Register64 rhsRegs = ToRegister64(rhs);
+        masm.branch64(condition, lhsRegs, rhsRegs, trueLabel, falseLabel);
+    }
+}
+
+void
+CodeGeneratorX86::visitDivOrModI64(LDivOrModI64* lir)
+{
+    Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
+    Register64 rhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Rhs));
+    Register64 output = ToOutRegister64(lir);
+
+    MOZ_ASSERT(output == ReturnReg64);
+
+    // We are free to clobber all registers, since this is a call instruction.
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(lhs.low);
+    regs.take(lhs.high);
+    regs.take(rhs.low);
+    regs.take(rhs.high);
+    Register temp = regs.takeAny();
+
+    Label done;
+
+    // Handle divide by zero.
+    if (lir->canBeDivideByZero())
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, wasm::JumpTarget::IntegerDivideByZero);
+
+    // Handle an integer overflow exception from INT64_MIN / -1.
+    if (lir->canBeNegativeOverflow()) {
+        Label notmin;
+        masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notmin);
+        masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notmin);
+        if (lir->mir()->isMod())
+            masm.xor64(output, output);
+        else
+            masm.jump(wasm::JumpTarget::IntegerOverflow);
+        masm.jump(&done);
+        masm.bind(&notmin);
+    }
+
+    masm.setupUnalignedABICall(temp);
+    masm.passABIArg(lhs.high);
+    masm.passABIArg(lhs.low);
+    masm.passABIArg(rhs.high);
+    masm.passABIArg(rhs.low);
+
+    MOZ_ASSERT(gen->compilingAsmJS());
+    if (lir->mir()->isMod())
+        masm.callWithABI(wasm::SymbolicAddress::ModI64);
+    else
+        masm.callWithABI(wasm::SymbolicAddress::DivI64);
+
+    // output in edx:eax, move to output register.
+    masm.movl(edx, output.high);
+    MOZ_ASSERT(eax == output.low);
+
+    masm.bind(&done);
+}
+
+void
+CodeGeneratorX86::visitUDivOrModI64(LUDivOrModI64* lir)
+{
+    Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
+    Register64 rhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Rhs));
+    Register64 output = ToOutRegister64(lir);
+
+    MOZ_ASSERT(output == ReturnReg64);
+
+    // We are free to clobber all registers, since this is a call instruction.
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(lhs.low);
+    regs.take(lhs.high);
+    regs.take(rhs.low);
+    regs.take(rhs.high);
+    Register temp = regs.takeAny();
+
+    // Prevent divide by zero.
+    if (lir->canBeDivideByZero())
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, wasm::JumpTarget::IntegerDivideByZero);
+
+    masm.setupUnalignedABICall(temp);
+    masm.passABIArg(lhs.high);
+    masm.passABIArg(lhs.low);
+    masm.passABIArg(rhs.high);
+    masm.passABIArg(rhs.low);
+
+    MOZ_ASSERT(gen->compilingAsmJS());
+    if (lir->mir()->isMod())
+        masm.callWithABI(wasm::SymbolicAddress::UModI64);
+    else
+        masm.callWithABI(wasm::SymbolicAddress::UDivI64);
+
+    // output in edx:eax, move to output register.
+    masm.movl(edx, output.high);
+    MOZ_ASSERT(eax == output.low);
+}
+
+void
+CodeGeneratorX86::visitAsmSelectI64(LAsmSelectI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+
+    Register cond = ToRegister(lir->condExpr());
+    Register64 trueExpr = ToRegister64(lir->trueExpr());
+    Register64 falseExpr = ToRegister64(lir->falseExpr());
+    Register64 out = ToOutRegister64(lir);
+
+    masm.move64(trueExpr, out);
+
+    Label done;
+    masm.branchTest32(Assembler::NonZero, cond, cond, &done);
+    masm.movl(falseExpr.low, out.low);
+    masm.movl(falseExpr.high, out.high);
+    masm.bind(&done);
+}
+
+void
+CodeGeneratorX86::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+
+    masm.Push(input.high);
+    masm.Push(input.low);
+    masm.vmovq(Operand(esp, 0), ToFloatRegister(lir->output()));
+    masm.freeStack(sizeof(uint64_t));
+}
+
+void
+CodeGeneratorX86::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);
+    Register64 output = ToOutRegister64(lir);
+
+    masm.reserveStack(sizeof(uint64_t));
+    masm.vmovq(ToFloatRegister(lir->input()), Operand(esp, 0));
+    masm.Pop(output.low);
+    masm.Pop(output.high);
+}
+
+void
+CodeGeneratorX86::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+{
+    Register64 output = ToOutRegister64(lir);
+    Register input = ToRegister(lir->input());
+
+    if (lir->mir()->isUnsigned()) {
+        if (output.low != input)
+            masm.movl(input, output.low);
+        masm.xorl(output.high, output.high);
+    } else {
+        MOZ_ASSERT(output.low == input);
+        MOZ_ASSERT(output.low == eax);
+        MOZ_ASSERT(output.high == edx);
+        masm.cdq();
+    }
+}
+
+void
+CodeGeneratorX86::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+{
+    const LInt64Allocation& input = lir->getInt64Operand(0);
+    Register output = ToRegister(lir->output());
+
+    if (lir->mir()->bottomHalf())
+        masm.movl(ToRegister(input.low()), output);
+    else
+        masm.movl(ToRegister(input.high()), output);
+}
+
+void
+CodeGeneratorX86::visitClzI64(LClzI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+
+    masm.clz64(input, output.low);
+    masm.xorl(output.high, output.high);
+}
+
+void
+CodeGeneratorX86::visitCtzI64(LCtzI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+
+    masm.ctz64(input, output.low);
+    masm.xorl(output.high, output.high);
+}
+
+void
+CodeGeneratorX86::visitNotI64(LNotI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register output = ToRegister(lir->output());
+
+    if (input.high == output) {
+        masm.orl(input.low, output);
+    } else if (input.low == output) {
+        masm.orl(input.high, output);
+    } else {
+        masm.movl(input.high, output);
+        masm.orl(input.low, output);
+    }
+
+    masm.cmpl(Imm32(0), output);
+    masm.emitSet(Assembler::Equal, output);
+}
+
+void
+CodeGeneratorX86::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register64 output = ToOutRegister64(lir);
+
+    MWasmTruncateToInt64* mir = lir->mir();
+    Register temp = ToRegister(lir->temp1());
+    FloatRegister floatTemp = ToFloatRegister(lir->temp2());
+
+    Label fail, convert;
+
+    MOZ_ASSERT (mir->input()->type() == MIRType::Double || mir->input()->type() == MIRType::Float32);
+
+    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    masm.reserveStack(2*sizeof(int32_t));
+    masm.storeDouble(input, Operand(esp, 0));
+
+    // Make sure input fits in (u)int64
+    if (mir->input()->type() == MIRType::Float32) {
+        if (mir->isUnsigned())
+            masm.branchFloat32NotInUInt64Range(Address(esp, 0), temp, &fail);
+        else
+            masm.branchFloat32NotInInt64Range(Address(esp, 0), temp, &fail);
+    } else {
+        if (mir->isUnsigned())
+            masm.branchDoubleNotInUInt64Range(Address(esp, 0), temp, &fail);
+        else
+            masm.branchDoubleNotInInt64Range(Address(esp, 0), temp, &fail);
+    }
+    masm.jump(&convert);
+
+    // Handle failure in ool
+    masm.bind(&fail);
+    masm.freeStack(2*sizeof(int32_t));
+    masm.jump(ool->entry());
+    masm.bind(ool->rejoin());
+    masm.reserveStack(2*sizeof(int32_t));
+    masm.storeDouble(input, Operand(esp, 0));
+
+    // Convert the double/float to int64
+    masm.bind(&convert);
+    if (mir->input()->type() == MIRType::Float32) {
+        if (mir->isUnsigned())
+            masm.truncateFloat32ToUInt64(Address(esp, 0), Address(esp, 0), temp, floatTemp);
+        else
+            masm.truncateFloat32ToInt64(Address(esp, 0), Address(esp, 0), temp);
+    } else {
+        if (mir->isUnsigned())
+            masm.truncateDoubleToUInt64(Address(esp, 0), Address(esp, 0), temp, floatTemp);
+        else
+            masm.truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), temp);
+    }
+
+    // Load value into float register.
+    masm.load64(Address(esp, 0), output);
+
+    masm.freeStack(2*sizeof(int32_t));
+}
+
+void
+CodeGeneratorX86::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    MIRType outputType = lir->mir()->type();
+    MOZ_ASSERT(outputType == MIRType::Double || outputType == MIRType::Float32);
+
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    if (outputType == MIRType::Double)
+        masm.zeroDouble(output);
+    else
+        masm.zeroFloat32(output);
+
+    masm.Push(input.high);
+    masm.Push(input.low);
+    masm.fild(Operand(esp, 0));
+
+    if (lir->mir()->isUnsigned()) {
+        Label notNegative;
+        masm.branch32(Assembler::NotSigned, input.high, Imm32(0), &notNegative);
+        double add_constant = 18446744073709551616.0; // 2^64
+        masm.store64(Imm64(mozilla::BitwiseCast<uint64_t>(add_constant)), Address(esp, 0));
+        masm.fld(Operand(esp, 0));
+        masm.faddp();
+        masm.bind(&notNegative);
+    }
+
+    masm.fstp(Operand(esp, 0));
+    masm.vmovsd(Address(esp, 0), output);
+    masm.freeStack(2*sizeof(intptr_t));
+
+    if (outputType == MIRType::Float32)
+        masm.convertDoubleToFloat32(output, output);
+}
+
+void
+CodeGeneratorX86::visitTestI64AndBranch(LTestI64AndBranch* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+
+    masm.testl(input.high, input.high);
+    jumpToBlock(lir->ifTrue(), Assembler::NonZero);
+    masm.testl(input.low, input.low);
+    emitBranch(Assembler::NonZero, lir->ifTrue(), lir->ifFalse());
 }

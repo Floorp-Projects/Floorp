@@ -46,6 +46,8 @@ skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,5) needs-focus == focus-handling.html
 # pseudo-elements not usable from content:
 == number-pseudo-elements.html number-pseudo-elements-ref.html
 
+== number-placeholder.html number-placeholder-ref.html
+
 # check that if the anonymous text control is reframed, we reframe the whole
 # number control (the fuzzy is for the top-right and bottom-left of the border
 # bevel which gets slightly different antialiasing after invalidation):

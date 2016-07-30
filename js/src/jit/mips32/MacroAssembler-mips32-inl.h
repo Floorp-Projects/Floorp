@@ -230,12 +230,14 @@ MacroAssembler::inc64(AbsoluteAddress dest)
 void
 MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 32);
     ma_sll(dest, dest, imm);
 }
 
 void
 MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ScratchRegisterScope scratch(*this);
     as_sll(dest.high, dest.high, imm.value);
     as_srl(scratch, dest.low, 32 - imm.value);
@@ -246,18 +248,21 @@ MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 32);
     ma_srl(dest, dest, imm);
 }
 
 void
 MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 32);
     ma_sra(dest, dest, imm);
 }
 
 void
 MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 {
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ScratchRegisterScope scratch(*this);
     as_srl(dest.low, dest.low, imm.value);
     as_sll(scratch, dest.high, 32 - imm.value);
@@ -300,9 +305,10 @@ MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rh
     branchPtr(cond, lhs, rhs, label);
 }
 
+template <class L>
 void
 MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
-                             Label* label)
+                             L label)
 {
     if (cond == Assembler::Zero) {
         MOZ_ASSERT(lhs.low == rhs.low);

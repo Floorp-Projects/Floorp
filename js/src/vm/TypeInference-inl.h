@@ -276,7 +276,11 @@ TypeIdString(jsid id)
  */
 struct AutoEnterAnalysis
 {
-    /* Prevent GC activity in the middle of analysis. */
+    // For use when initializing an UnboxedLayout.  The UniquePtr's destructor
+    // must run when GC is not suppressed.
+    UniquePtr<UnboxedLayout> unboxedLayoutToCleanUp;
+
+    // Prevent GC activity in the middle of analysis.
     gc::AutoSuppressGC suppressGC;
 
     // Allow clearing inference info on OOM during incremental sweeping.

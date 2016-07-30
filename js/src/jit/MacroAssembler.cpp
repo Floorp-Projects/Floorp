@@ -781,6 +781,7 @@ MacroAssembler::nurseryAllocate(Register result, Register temp, gc::AllocKind al
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     int thingSize = int(gc::Arena::thingSize(allocKind));
     int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
+    MOZ_ASSERT(totalSize % gc::CellSize == 0);
     loadPtr(AbsoluteAddress(nursery.addressOfPosition()), result);
     computeEffectiveAddress(Address(result, totalSize), temp);
     branchPtr(Assembler::Below, AbsoluteAddress(nursery.addressOfCurrentEnd()), temp, fail);
@@ -1972,7 +1973,7 @@ MacroAssembler::convertDoubleToInt(FloatRegister src, Register output, FloatRegi
         convertDoubleToInt32(src, output, fail, behavior == IntConversion_NegativeZeroCheck);
         break;
       case IntConversion_Truncate:
-        branchTruncateDouble(src, output, truncateFail ? truncateFail : fail);
+        branchTruncateDoubleMaybeModUint32(src, output, truncateFail ? truncateFail : fail);
         break;
       case IntConversion_ClampToUint8:
         // Clamping clobbers the input register, so use a temp.
