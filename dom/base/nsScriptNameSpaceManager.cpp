@@ -18,7 +18,6 @@
 #include "nsIInterfaceInfo.h"
 #include "xptinfo.h"
 #include "nsXPIDLString.h"
-#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsHashKeys.h"
 #include "nsDOMClassInfo.h"
@@ -322,15 +321,6 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   rv = aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
                                           getter_Copies(contractId));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (type == nsGlobalNameStruct::eTypeExternalConstructor) {
-    nsPrintfCString prefName("dom.global-constructor.disable.%s",
-                             categoryEntry.get());
-    if (Preferences::GetType(prefName.get()) == nsIPrefBranch::PREF_BOOL &&
-        Preferences::GetBool(prefName.get(), false)) {
-        return NS_OK;
-    }
-  }
 
   nsCOMPtr<nsIComponentRegistrar> registrar;
   rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
