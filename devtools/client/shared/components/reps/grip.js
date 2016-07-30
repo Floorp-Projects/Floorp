@@ -11,7 +11,6 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
   // Dependencies
   const { createFactories, isGrip } = require("./rep-utils");
-  const { ObjectBox } = createFactories(require("./object-box"));
   const { Caption } = createFactories(require("./caption"));
   const { PropRep } = createFactories(require("./prop-rep"));
   // Shortcuts
@@ -172,7 +171,7 @@ define(function (require, exports, module) {
       let objectLink = this.props.objectLink || span;
       if (this.props.mode == "tiny" || !props.length) {
         return (
-          ObjectBox({className: "object"},
+          span({className: "objectBox objectBox-object"},
             this.getTitle(object),
             objectLink({
               className: "objectLeftBrace",
@@ -184,7 +183,7 @@ define(function (require, exports, module) {
       }
 
       return (
-        ObjectBox({className: "object"},
+        span({className: "objectBox objectBox-object"},
           this.getTitle(object),
           objectLink({
             className: "objectLeftBrace",

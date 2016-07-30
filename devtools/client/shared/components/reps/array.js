@@ -11,7 +11,6 @@ define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("./rep-utils");
-  const { ObjectBox } = createFactories(require("./object-box"));
   const { Caption } = createFactories(require("./caption"));
 
   // Shortcuts
@@ -135,8 +134,8 @@ define(function (require, exports, module) {
       let objectLink = this.props.objectLink || DOM.span;
 
       return (
-        ObjectBox({
-          className: "array"},
+        DOM.span({
+          className: "objectBox objectBox-array"},
           objectLink({
             className: "arrayLeftBracket",
             role: "presentation",

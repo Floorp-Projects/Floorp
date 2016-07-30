@@ -11,7 +11,6 @@ define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories, isGrip } = require("./rep-utils");
-  const { ObjectBox } = createFactories(require("./object-box"));
   const { Caption } = createFactories(require("./caption"));
 
   // Shortcuts
@@ -120,8 +119,8 @@ define(function (require, exports, module) {
       let title = this.getTitle(object);
 
       return (
-        ObjectBox({
-          className: "array"},
+        span({
+          className: "objectBox objectBox-array"},
           title,
           objectLink({
             className: "arrayLeftBracket",
