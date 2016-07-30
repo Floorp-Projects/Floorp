@@ -316,12 +316,7 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
       case SymbolicAddress::ModD:
         return FuncCast(NumberMod, Args_Double_DoubleDouble);
       case SymbolicAddress::SinD:
-#ifdef _WIN64
-        // Workaround a VS 2013 sin issue, see math_sin_uncached.
-        return FuncCast<double (double)>(js::math_sin_uncached, Args_Double_Double);
-#else
         return FuncCast<double (double)>(sin, Args_Double_Double);
-#endif
       case SymbolicAddress::CosD:
         return FuncCast<double (double)>(cos, Args_Double_Double);
       case SymbolicAddress::TanD:

@@ -59,13 +59,6 @@ BEGIN_TEST(testGCHeapPostBarriers)
     return true;
 }
 
-MOZ_NEVER_INLINE bool
-Passthrough(bool value)
-{
-    /* Work around a Win64 optimization bug in VS2010. (Bug 1033146) */
-    return value;
-}
-
 bool
 CanAccessObject(JSObject* obj)
 {
@@ -115,9 +108,9 @@ TestHeapPostBarrierUpdate()
         CHECK(heapPtr);
 
         W& wrapper = *heapPtr;
-        CHECK(Passthrough(wrapper.get() == nullptr));
+        CHECK(wrapper.get() == nullptr);
         wrapper = initialObj;
-        CHECK(Passthrough(wrapper == initialObj));
+        CHECK(wrapper == initialObj);
 
         ptr = heapPtr.release();
     }
@@ -147,9 +140,9 @@ TestHeapPostBarrierInitFailure()
         CHECK(heapPtr);
 
         W& wrapper = *heapPtr;
-        CHECK(Passthrough(wrapper.get() == nullptr));
+        CHECK(wrapper.get() == nullptr);
         wrapper = initialObj;
-        CHECK(Passthrough(wrapper == initialObj));
+        CHECK(wrapper == initialObj);
     }
 
     cx->minorGC(JS::gcreason::API);
