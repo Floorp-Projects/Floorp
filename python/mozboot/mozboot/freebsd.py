@@ -40,12 +40,9 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             self.browser_packages.append('gcc')
 
     def pkg_install(self, *packages):
-        if self.which('pkg'):
-            command = ['pkg', 'install']
-            if self.no_interactive:
-                command.append('-y')
-        else:
-            command = ['pkg_add', '-Fr']
+        command = ['pkg', 'install']
+        if self.no_interactive:
+            command.append('-y')
 
         command.extend(packages)
         self.run_as_root(command)
