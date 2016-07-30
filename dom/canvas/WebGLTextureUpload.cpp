@@ -2072,10 +2072,18 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     Intersect(srcWidth, x, width, &readX, &writeX, &rwWidth);
     Intersect(srcHeight, y, height, &readY, &writeY, &rwHeight);
 
-    GLenum error;
-    if (rwWidth == uint32_t(width) && rwHeight == uint32_t(height)) {
-        error = DoCopyTexImage2D(gl, target, level, internalFormat, x, y, width, height);
-    } else {
+    const auto& idealUnpack = dstUsage->idealUnpack;
+    const auto& driverInternalFormat = idealUnpack->internalFormat;
+
+    GLenum error = DoCopyTexImage2D(gl, target, level, driverInternalFormat, x, y, width,
+                                    height);
+    do {
+        if (rwWidth == uint32_t(width) && rwHeight == uint32_t(height))
+            break;
+
+        if (error)
+            break;
+
         // 1. Zero the texture data.
         // 2. CopyTexSubImage the subrect.
 
@@ -2096,7 +2104,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
 
         error = DoCopyTexSubImage(gl, target, level, writeX, writeY, zOffset, readX,
                                   readY, rwWidth, rwHeight);
-    }
+    } while (false);
 
     if (error == LOCAL_GL_OUT_OF_MEMORY) {
         mContext->ErrorOutOfMemory("%s: Ran out of memory during texture copy.",
