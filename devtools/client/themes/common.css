@@ -37,12 +37,15 @@
 /* Autocomplete Popup */
 
 .devtools-autocomplete-popup {
-  -moz-appearance: none !important;
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
   background-color: transparent;
   border-radius: 3px;
   overflow-x: hidden;
   max-height: 20rem;
+
+  /* Devtools autocompletes display technical english keywords and should be displayed
+     using LTR direction. */
+  direction: ltr !important;
 }
 
 /* Reset list styles. */
@@ -73,8 +76,6 @@
   background-color: transparent;
   border-radius: 4px;
   padding: 1px 0;
-  /* Force text-align even in RTL locales to ensure a correct display of the popup */
-  text-align: left;
 }
 
 .devtools-autocomplete-listbox .autocomplete-selected {
@@ -157,6 +158,22 @@
 .devtools-autocomplete-listbox.firebug-theme .autocomplete-item > span,
 .devtools-autocomplete-listbox.light-theme .autocomplete-item > span {
   color: #666;
+}
+
+/* Autocomplete list clone used for accessibility. */
+
+.devtools-autocomplete-list-aria-clone {
+  /* Cannot use display:none or visibility:hidden : screen readers ignore the element. */
+  position: fixed;
+  overflow: hidden;
+  margin: 0;
+  width: 0;
+  height: 0;
+}
+
+.devtools-autocomplete-list-aria-clone li {
+  /* Prevent screen readers from prefacing every item with 'bullet'. */
+  list-style-type: none;
 }
 
 /* links to source code, like displaying `myfile.js:45` */

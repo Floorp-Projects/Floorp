@@ -887,7 +887,7 @@ public abstract class GeckoApp
 
 
 
-    private void addFullScreenPluginView(View view) {
+    /* package */ void addFullScreenPluginView(View view) {
         if (mFullScreenPluginView != null) {
             Log.w(LOGTAG, "Already have a fullscreen plugin view");
             return;
@@ -942,7 +942,7 @@ public abstract class GeckoApp
         });
     }
 
-    private void removeFullScreenPluginView(View view) {
+    /* package */ void removeFullScreenPluginView(View view) {
         if (mFullScreenPluginView == null) {
             Log.w(LOGTAG, "Don't have a fullscreen plugin view");
             return;
@@ -2717,6 +2717,7 @@ public abstract class GeckoApp
 
         public FullScreenHolder(Context ctx) {
             super(ctx);
+            setBackgroundColor(0xff000000);
         }
 
         @Override
