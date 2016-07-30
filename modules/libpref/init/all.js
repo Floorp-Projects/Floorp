@@ -4342,9 +4342,6 @@ pref("image.http.accept", "*/*");
 // disable.
 pref("image.infer-src-animation.threshold-ms", 2000);
 
-// Should we optimize away the surfaces of single-color images?
-pref("image.single-color-optimization.enabled", true);
-
 //
 // Image memory management prefs
 //
