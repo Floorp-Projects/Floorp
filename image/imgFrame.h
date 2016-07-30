@@ -321,7 +321,6 @@ public:
   IntSize GetImageSize() const { return mImageSize; }
   IntRect GetRect() const { return mFrameRect; }
   IntSize GetSize() const { return mFrameRect.Size(); }
-  bool NeedsPadding() const { return mFrameRect.TopLeft() != IntPoint(0, 0); }
   void GetImageData(uint8_t** aData, uint32_t* length) const;
   uint8_t* GetImageData() const;
 
