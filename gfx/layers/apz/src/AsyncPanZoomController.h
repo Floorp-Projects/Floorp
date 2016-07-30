@@ -608,12 +608,12 @@ protected:
   APZCTreeManager* GetApzcTreeManager() const;
 
   /**
-   * Convert ScreenPoint relative to the screen to CSSPoint relative
+   * Convert ScreenPoint relative to the screen to LayoutDevicePoint relative
    * to the parent document. This excludes the transient compositor transform.
-   * NOTE: This must be converted to CSSPoint relative to the child
+   * NOTE: This must be converted to LayoutDevicePoint relative to the child
    * document before sending over IPC to a child process.
    */
-  bool ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* aOut);
+  bool ConvertToGecko(const ScreenIntPoint& aPoint, LayoutDevicePoint* aOut);
 
   enum AxisLockMode {
     FREE,     /* No locking at all */

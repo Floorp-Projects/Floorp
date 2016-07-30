@@ -19,6 +19,10 @@
     _(SoftUDivOrMod)            \
     _(AsmJSCompareExchangeCallout) \
     _(AsmJSAtomicExchangeCallout) \
-    _(AsmJSAtomicBinopCallout)
+    _(AsmJSAtomicBinopCallout)  \
+    _(DivOrModI64)              \
+    _(UDivOrModI64)             \
+    _(WasmTruncateToInt64)      \
+    _(Int64ToFloatingPointCall)
 
 #endif /* jit_arm_LOpcodes_arm_h */

@@ -212,8 +212,8 @@ html, body, #app, #memory-tool {
   min-width: 1.3em;
 }
 
-.theme-light .snapshot-list-item.selected .delete {
-  filter: invert(100%);
+.snapshot-list-item.selected .delete::before {
+  filter: invert(1);
 }
 
 .snapshot-list-item .delete::before {

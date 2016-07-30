@@ -65,8 +65,12 @@
   background-position: 0 0;
 }
 
-/* Invert all toggle icons but the one in the active row for light theme */
-.theme-light .side-menu-widget-item:not(.selected) .checkbox-check {
+.side-menu-widget-item:not(.selected) .checkbox-check {
+  filter: var(--icon-filter);
+}
+
+/* Make sure icon is white when the item is selected */
+.side-menu-widget-item.selected .checkbox-check {
   filter: invert(1);
 }
 

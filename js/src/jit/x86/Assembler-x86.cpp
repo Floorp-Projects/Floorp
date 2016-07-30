@@ -30,6 +30,10 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint64_t);
         break;
+      case MIRType::Int64:
+        current_ = ABIArg(stackOffset_);
+        stackOffset_ += sizeof(uint64_t);
+        break;
       case MIRType::Int8x16:
       case MIRType::Int16x8:
       case MIRType::Int32x4:

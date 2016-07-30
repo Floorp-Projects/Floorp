@@ -1010,10 +1010,21 @@ public:
         spew("fld        " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_FPU6_F32, offset, base, FPU6_OP_FLD);
     }
+    void faddp()
+    {
+        spew("addp       ");
+        m_formatter.oneByteOp(OP_FPU6_ADDP);
+        m_formatter.oneByteOp(OP_ADDP_ST0_ST1);
+    }
     void fisttp_m(int32_t offset, RegisterID base)
     {
         spew("fisttp     " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_FPU6, offset, base, FPU6_OP_FISTTP);
+    }
+    void fistp_m(int32_t offset, RegisterID base)
+    {
+        spew("fistp      " MEM_ob, ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_FILD, offset, base, FPU6_OP_FISTP);
     }
     void fstp_m(int32_t offset, RegisterID base)
     {
@@ -1022,8 +1033,23 @@ public:
     }
     void fstp32_m(int32_t offset, RegisterID base)
     {
-        spew("fstp32       " MEM_ob, ADDR_ob(offset, base));
+        spew("fstp32     " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_FPU6_F32, offset, base, FPU6_OP_FSTP);
+    }
+    void fnstcw_m(int32_t offset, RegisterID base)
+    {
+        spew("fnstcw     " MEM_ob, ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_FPU6_F32, offset, base, FPU6_OP_FISTP);
+    }
+    void fldcw_m(int32_t offset, RegisterID base)
+    {
+        spew("fldcw      " MEM_ob, ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_FPU6_F32, offset, base, FPU6_OP_FLDCW);
+    }
+    void fnstsw_m(int32_t offset, RegisterID base)
+    {
+        spew("fnstsw     " MEM_ob, ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_FPU6, offset, base, FPU6_OP_FISTP);
     }
 
     void negl_r(RegisterID dst)
@@ -1462,6 +1488,18 @@ public:
     {
         spew("shrl       %%cl, %s", GPReg32Name(dst));
         m_formatter.oneByteOp(OP_GROUP2_EvCL, dst, GROUP2_OP_SHR);
+    }
+
+    void shrdl_CLr(RegisterID src, RegisterID dst)
+    {
+        spew("shrdl      %%cl, %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp(OP2_SHRD_GvEv, dst, src);
+    }
+
+    void shldl_CLr(RegisterID src, RegisterID dst)
+    {
+        spew("shldl      %%cl, %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp(OP2_SHLD_GvEv, dst, src);
     }
 
     void shll_ir(int32_t imm, RegisterID dst)

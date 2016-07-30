@@ -41,7 +41,8 @@ public:
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
   virtual void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
   virtual void HandleTap(TapType aType,
-                         const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
+                         const mozilla::LayoutDevicePoint& aPoint,
+                         Modifiers aModifiers,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId) override;
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
