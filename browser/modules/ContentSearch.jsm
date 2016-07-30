@@ -529,8 +529,11 @@ this.ContentSearch = {
               createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
-    xhr.onloadend = () => {
+    xhr.onload = () => {
       deferred.resolve(xhr.response);
+    };
+    xhr.onerror = xhr.onabort = xhr.ontimeout = () => {
+      deferred.resolve(null);
     };
     try {
       // This throws if the URI is erroneously encoded.
