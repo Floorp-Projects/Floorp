@@ -8347,11 +8347,8 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
   nsCOMPtr<nsIPrincipal> providedPrincipal;
 
   if (aTargetOrigin.EqualsASCII("/")) {
-    providedPrincipal = GetEntryGlobal()->PrincipalOrNull();
-    if (NS_WARN_IF(!providedPrincipal))
-      return;
+    providedPrincipal = callerPrin;
   }
-
   // "*" indicates no specific origin is required.
   else if (!aTargetOrigin.EqualsASCII("*")) {
     nsCOMPtr<nsIURI> originURI;
