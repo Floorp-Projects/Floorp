@@ -33,6 +33,8 @@ function* testToggleDefaultStyles(inspector, computedView) {
 
 function* testAddTextInFilter(inspector, computedView) {
   info("setting filter text to \"color\"");
+  let doc = computedView.styleDocument;
+  let layoutWrapper = doc.querySelector("#layout-wrapper");
   let searchField = computedView.searchField;
   let onRefreshed = inspector.once("computed-view-refreshed");
   let win = computedView.styleWindow;
@@ -50,6 +52,8 @@ function* testAddTextInFilter(inspector, computedView) {
 
   synthesizeKeys("color", win);
   yield onRefreshed;
+
+  ok(layoutWrapper.hidden, "Layout view is hidden");
 
   info("check that the correct properties are visible");
 

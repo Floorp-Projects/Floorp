@@ -393,16 +393,6 @@
       -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
     }
   }
-
-  #ctrlTab-panel {
-    background: transparent;
-    -moz-appearance: -moz-win-glass;
-    border-radius: 0;
-    border: none;
-    font: normal 1.2em "Segoe UI";
-    color: black;
-    text-shadow: white -1px -1px .35em, white -1px 1px .35em, white 1px 1px .35em, white 1px -1px .35em;
-  }
 }
 
 @media (-moz-windows-glass) {

@@ -46,11 +46,6 @@
 .theme-dark .tabs .tabs-navigation,
 .theme-light .tabs .tabs-navigation {
   border-bottom: 1px solid var(--theme-splitter-color);
-  font-size: 11px;
-}
-
-.theme-firebug .tabs .tabs-navigation {
-  font-size: 11px;
 }
 
 .theme-dark .tabs .tabs-menu-item,

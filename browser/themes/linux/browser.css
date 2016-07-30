@@ -1701,17 +1701,19 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 /* Ctrl-Tab */
 
-.ctrlTab-preview {
-  -moz-appearance: toolbarbutton;
+#ctrlTab-panel {
+  padding: 10px;
+  -moz-appearance: none;
+  background-color: -moz-dialog;
+  color: -moz-dialogtext;
 }
 
 .tabPreview-canvas {
-  box-shadow: 0 0 5px ThreeDShadow;
+  box-shadow: 0 0 5px 1px ThreeDShadow;
 }
 
-.ctrlTab-preview:focus .tabPreview-canvas,
-.ctrlTab-preview:hover .tabPreview-canvas {
-  box-shadow: none;
+.ctrlTab-preview:not(#ctrlTab-showAll):focus > * > .ctrlTab-preview-inner > .tabPreview-canvas {
+  box-shadow: 0 0 5px 2px Highlight;
 }
 
 .ctrlTab-favicon[src] {
@@ -1721,11 +1723,7 @@ toolbarbutton.chevron > .toolbarbutton-icon {
   padding: 2px;
 }
 
-#ctrlTab-panel {
-  padding: 10px;
-}
-
-.ctrlTab-preview:not(#ctrlTab-showAll) .tabPreview-canvas {
+.ctrlTab-preview:not(#ctrlTab-showAll) > * > .ctrlTab-preview-inner > .tabPreview-canvas {
   margin-bottom: 2px;
 }
 
@@ -1734,6 +1732,10 @@ toolbarbutton.chevron > .toolbarbutton-icon {
   color: ButtonText;
   padding: 0 3px;
   margin-top: 10px;
+}
+
+#ctrlTab-showAll:focus {
+  box-shadow: 0 0 5px 1px Highlight;
 }
 
 /* Status panel */

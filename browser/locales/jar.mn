@@ -27,7 +27,6 @@
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
     locale/browser/lightweightThemes.properties    (%chrome/browser/lightweightThemes.properties)
-    locale/browser/loop/loop.properties            (%chrome/browser/loop/loop.properties)
     locale/browser/newTab.dtd                      (%chrome/browser/newTab.dtd)
     locale/browser/newTab.properties               (%chrome/browser/newTab.properties)
     locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
