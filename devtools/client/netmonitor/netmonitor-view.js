@@ -2399,13 +2399,17 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       sourceEl.className = "stack-frame-source-name";
       frameEl.appendChild(sourceEl);
 
-      sourceEl.textContent = sourceUrl;
-      sourceEl.title = sourceUrl;
+      let sourceInnerEl = doc.createElementNS(HTML_NS, "span");
+      sourceInnerEl.className = "stack-frame-source-name-inner";
+      sourceEl.appendChild(sourceInnerEl);
+
+      sourceInnerEl.textContent = sourceUrl;
+      sourceInnerEl.title = sourceUrl;
 
       let lineEl = doc.createElementNS(HTML_NS, "span");
       lineEl.className = "stack-frame-line";
       lineEl.textContent = `:${lineNumber}:${columnNumber}`;
-      sourceEl.appendChild(lineEl);
+      sourceInnerEl.appendChild(lineEl);
 
       frameEl.addEventListener("click", () => {
         // hide the tooltip immediately, not after delay

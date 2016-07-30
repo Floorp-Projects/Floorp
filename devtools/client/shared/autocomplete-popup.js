@@ -61,7 +61,11 @@ function AutocompletePopup(toolbox, options = {}) {
 
   this._list = this._document.createElementNS(HTML_NS, "ul");
   this._list.setAttribute("flex", "1");
-  this._list.setAttribute("seltype", "single");
+
+  // The list clone will be inserted in the same document as the anchor, and will receive
+  // a copy of the main list innerHTML to allow screen readers to access the list.
+  this._listClone = this._document.createElementNS(HTML_NS, "ul");
+  this._listClone.className = "devtools-autocomplete-list-aria-clone";
 
   if (options.listId) {
     this._list.setAttribute("id", options.listId);
@@ -122,6 +126,10 @@ AutocompletePopup.prototype = {
   openPopup: function (anchor, xOffset = 0, yOffset = 0, index) {
     this.__maxLabelLength = -1;
     this._updateSize();
+
+    // Retrieve the anchor's document active element to add accessibility metadata.
+    this._activeElement = anchor.ownerDocument.activeElement;
+
     this._tooltip.show(anchor, {
       x: xOffset,
       y: yOffset,
@@ -159,6 +167,9 @@ AutocompletePopup.prototype = {
     this._tooltip.once("hidden", () => {
       this.emit("popup-closed");
     });
+
+    this._clearActiveDescendant();
+    this._activeElement = null;
     this._tooltip.hide();
   },
 
@@ -187,6 +198,7 @@ AutocompletePopup.prototype = {
     }
 
     this._list.remove();
+    this._listClone.remove();
     this._tooltip.destroy();
     this._document = null;
     this._list = null;
@@ -322,6 +334,9 @@ AutocompletePopup.prototype = {
 
       element.classList.add("autocomplete-selected");
       this._scrollElementIntoViewIfNeeded(element);
+      this._setActiveDescendant(element.id);
+    } else {
+      this._clearActiveDescendant();
     }
     this._selectedIndex = index;
 
@@ -350,6 +365,41 @@ AutocompletePopup.prototype = {
     if (index !== -1 && this.isOpen) {
       this.selectedIndex = index;
     }
+  },
+
+  /**
+   * Update the aria-activedescendant attribute on the current active element for
+   * accessibility.
+   *
+   * @param {String} id
+   *        The id (as in DOM id) of the currently selected autocomplete suggestion
+   */
+  _setActiveDescendant: function (id) {
+    if (!this._activeElement) {
+      return;
+    }
+
+    // Make sure the list clone is in the same document as the anchor.
+    let anchorDoc = this._activeElement.ownerDocument;
+    if (!this._listClone.parentNode || this._listClone.ownerDocument !== anchorDoc) {
+      anchorDoc.documentElement.appendChild(this._listClone);
+    }
+
+    // Update the clone content to match the current list content.
+    this._listClone.innerHTML = this._list.innerHTML;
+
+    this._activeElement.setAttribute("aria-activedescendant", id);
+  },
+
+  /**
+   * Clear the aria-activedescendant attribute on the current active element.
+   */
+  _clearActiveDescendant: function () {
+    if (!this._activeElement) {
+      return;
+    }
+
+    this._activeElement.removeAttribute("aria-activedescendant");
   },
 
   /**

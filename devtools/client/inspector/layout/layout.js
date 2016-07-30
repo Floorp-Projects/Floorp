@@ -221,6 +221,10 @@ LayoutView.prototype = {
     let header = this.doc.getElementById("layout-header");
     header.addEventListener("dblclick", this.onToggleExpander);
 
+    this.onFilterComputedView = this.onFilterComputedView.bind(this);
+    this.inspector.on("computed-view-filtered",
+      this.onFilterComputedView);
+
     this.onPickerStarted = this.onPickerStarted.bind(this);
     this.onMarkupViewLeave = this.onMarkupViewLeave.bind(this);
     this.onMarkupViewNodeHover = this.onMarkupViewNodeHover.bind(this);
@@ -471,6 +475,7 @@ LayoutView.prototype = {
     this.inspector.selection.off("new-node-front", this.onNewSelection);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.inspector._target.off("will-navigate", this.onWillNavigate);
+    this.inspector.off("computed-view-filtered", this.onFilterComputedView);
 
     this.inspector = null;
     this.doc = null;
@@ -566,6 +571,16 @@ LayoutView.prototype = {
   onWillNavigate: function () {
     this._geometryEditorHighlighter.release().catch(console.error);
     this._geometryEditorHighlighter = null;
+  },
+
+  /**
+   * Event handler that responds to the computed view being filtered
+   * @param {String} reason
+   * @param {Boolean} hidden
+   *        Whether or not to hide the layout wrapper
+   */
+  onFilterComputedView: function (reason, hidden) {
+    this.wrapper.hidden = hidden;
   },
 
   /**
