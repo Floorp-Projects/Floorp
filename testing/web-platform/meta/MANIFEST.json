@@ -36393,6 +36393,12 @@
             "url": "/dom/events/AddEventListenerOptions-once.html"
           }
         ],
+        "dom/lists/DOMTokenList-iteration.html": [
+          {
+            "path": "dom/lists/DOMTokenList-iteration.html",
+            "url": "/dom/lists/DOMTokenList-iteration.html"
+          }
+        ],
         "editing/run/justifycenter.html": [
           {
             "path": "editing/run/justifycenter.html",
