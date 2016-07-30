@@ -114,12 +114,12 @@ class LDivOrModI64 : public LBinaryMath<1>
 // This class performs a simple x86 'div', yielding either a quotient or
 // remainder depending on whether this instruction is defined to output
 // rax (quotient) or rdx (remainder).
-class LUDivOrMod64 : public LBinaryMath<1>
+class LUDivOrModI64 : public LBinaryMath<1>
 {
   public:
-    LIR_HEADER(UDivOrMod64);
+    LIR_HEADER(UDivOrModI64);
 
-    LUDivOrMod64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+    LUDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
@@ -157,24 +157,6 @@ class LWasmTruncateToInt64 : public LInstructionHelper<1, 1, 1>
 
     MWasmTruncateToInt64* mir() const {
         return mir_->toWasmTruncateToInt64();
-    }
-
-    const LDefinition* temp() {
-        return getTemp(0);
-    }
-};
-
-class LInt64ToFloatingPoint : public LInstructionHelper<1, INT64_PIECES, 0>
-{
-  public:
-    LIR_HEADER(Int64ToFloatingPoint);
-
-    explicit LInt64ToFloatingPoint(const LInt64Allocation& in) {
-        setInt64Operand(0, in);
-    }
-
-    MInt64ToFloatingPoint* mir() const {
-        return mir_->toInt64ToFloatingPoint();
     }
 
     const LDefinition* temp() {

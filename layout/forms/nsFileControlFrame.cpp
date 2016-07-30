@@ -19,6 +19,8 @@
 #include "nsContentUtils.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/Directory.h"
+#include "mozilla/dom/FileList.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMFileList.h"
 #include "nsContentList.h"
@@ -194,6 +196,42 @@ nsFileControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 
+static void
+AppendBlobImplAsDirectory(nsTArray<OwningFileOrDirectory>& aArray,
+                          BlobImpl* aBlobImpl,
+                          nsIContent* aContent)
+{
+  MOZ_ASSERT(aBlobImpl);
+  MOZ_ASSERT(aBlobImpl->IsDirectory());
+
+  nsAutoString fullpath;
+  ErrorResult err;
+  aBlobImpl->GetMozFullPath(fullpath, err);
+  if (err.Failed()) {
+    err.SuppressException();
+    return;
+  }
+
+  nsCOMPtr<nsIFile> file;
+  NS_ConvertUTF16toUTF8 path(fullpath);
+  nsresult rv = NS_NewNativeLocalFile(path, true, getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsPIDOMWindowInner* inner = aContent->OwnerDoc()->GetInnerWindow();
+  if (!inner || !inner->IsCurrentInnerWindow()) {
+    return;
+  }
+
+  RefPtr<Directory> directory =
+    Directory::Create(inner, file);
+  MOZ_ASSERT(directory);
+
+  OwningFileOrDirectory* element = aArray.AppendElement();
+  element->SetAsDirectory() = directory;
+}
+
 /**
  * This is called when we receive a drop or a dragover.
  */
@@ -220,7 +258,7 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
 
-  nsIContent* content = mFrame->GetContent();
+  nsCOMPtr<nsIContent> content = mFrame->GetContent();
   bool supportsMultiple = content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
   if (!CanDropTheseFiles(dataTransfer, supportsMultiple)) {
     dataTransfer->SetDropEffect(NS_LITERAL_STRING("none"));
@@ -248,16 +286,93 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDOMFileList> fileList;
     dataTransfer->GetFiles(getter_AddRefs(fileList));
 
-    inputElement->SetFiles(fileList, true);
-    nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
-                                         NS_LITERAL_STRING("change"), true,
-                                         false);
+    RefPtr<BlobImpl> webkitDir;
+    nsresult rv =
+      GetBlobImplForWebkitDirectory(fileList, getter_AddRefs(webkitDir));
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    nsTArray<OwningFileOrDirectory> array;
+    if (webkitDir) {
+      AppendBlobImplAsDirectory(array, webkitDir, content);
+      inputElement->MozSetDndFilesAndDirectories(array);
+    } else {
+      bool blinkFileSystemEnabled =
+        Preferences::GetBool("dom.webkitBlink.filesystem.enabled", false);
+      if (blinkFileSystemEnabled) {
+        FileList* files = static_cast<FileList*>(fileList.get());
+        if (files) {
+          for (uint32_t i = 0; i < files->Length(); ++i) {
+            File* file = files->Item(i);
+            if (file) {
+              if (file->Impl() && file->Impl()->IsDirectory()) {
+                AppendBlobImplAsDirectory(array, file->Impl(), content);
+              } else {
+                OwningFileOrDirectory* element = array.AppendElement();
+                element->SetAsFile() = file;
+              }
+            }
+          }
+        }
+      }
+
+      // This is rather ugly. Pass the directories as Files using SetFiles,
+      // but then if blink filesystem API is enabled, it wants
+      // FileOrDirectory array.
+      inputElement->SetFiles(fileList, true);
+      if (blinkFileSystemEnabled) {
+        inputElement->UpdateEntries(array);
+      }
+      nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+                                           NS_LITERAL_STRING("input"), true,
+                                           false);
+      nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+                                           NS_LITERAL_STRING("change"), true,
+                                           false);
+    }
   }
 
   return NS_OK;
 }
 
-/* static */ bool
+nsresult
+nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(nsIDOMFileList* aFileList,
+                                                               BlobImpl** aBlobImpl)
+{
+  *aBlobImpl = nullptr;
+
+  HTMLInputElement* inputElement =
+    HTMLInputElement::FromContent(mFrame->GetContent());
+  bool webkitDirPicker =
+    Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
+    inputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory);
+  if (!webkitDirPicker) {
+    return NS_OK;
+  }
+
+  if (!aFileList) {
+    return NS_ERROR_FAILURE;
+  }
+
+  FileList* files = static_cast<FileList*>(aFileList);
+  // webkitdirectory doesn't care about the length of the file list but
+  // only about the first item on it.
+  uint32_t len = files->Length();
+  if (len) {
+    File* file = files->Item(0);
+    if (file) {
+      BlobImpl* impl = file->Impl();
+      if (impl && impl->IsDirectory()) {
+        RefPtr<BlobImpl> retVal = impl;
+        retVal.swap(*aBlobImpl);
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+bool
 nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTransfer)
 {
   nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDOMDataTransfer);
@@ -274,7 +389,7 @@ nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTra
   return types->Contains(NS_LITERAL_STRING("Files"));
 }
 
-/* static */ bool
+bool
 nsFileControlFrame::DnDListener::CanDropTheseFiles(nsIDOMDataTransfer* aDOMDataTransfer,
                                                    bool aSupportsMultiple)
 {
@@ -283,6 +398,14 @@ nsFileControlFrame::DnDListener::CanDropTheseFiles(nsIDOMDataTransfer* aDOMDataT
 
   nsCOMPtr<nsIDOMFileList> fileList;
   dataTransfer->GetFiles(getter_AddRefs(fileList));
+
+  RefPtr<BlobImpl> webkitDir;
+  nsresult rv =
+    GetBlobImplForWebkitDirectory(fileList, getter_AddRefs(webkitDir));
+  // Just check if either there isn't webkitdirectory attribute, or
+  // fileList has a directory which can be dropped to the element.
+  // No need to use webkitDir for anything here.
+  NS_ENSURE_SUCCESS(rv, false);
 
   uint32_t listLength = 0;
   if (fileList) {

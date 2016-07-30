@@ -32,7 +32,7 @@ WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
 
 WeakMapBase::~WeakMapBase()
 {
-    MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadIsHandlingInitFailure());
+    MOZ_ASSERT(CurrentThreadIsGCSweeping());
 }
 
 void
@@ -89,9 +89,8 @@ WeakMapBase::sweepZone(JS::Zone* zone)
     }
 
 #ifdef DEBUG
-    for (WeakMapBase* m : zone->gcWeakMapList) {
+    for (WeakMapBase* m : zone->gcWeakMapList)
         MOZ_ASSERT(m->isInList() && m->marked);
-    }
 #endif
 }
 

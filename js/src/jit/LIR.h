@@ -44,6 +44,8 @@ static const uint32_t VREG_TYPE_OFFSET = 0;
 static const uint32_t VREG_DATA_OFFSET = 1;
 static const uint32_t TYPE_INDEX = 0;
 static const uint32_t PAYLOAD_INDEX = 1;
+static const uint32_t INT64LOW_INDEX = 0;
+static const uint32_t INT64HIGH_INDEX = 1;
 #elif defined(JS_PUNBOX64)
 # define BOX_PIECES         1
 #else
@@ -616,10 +618,11 @@ class LDefinition
           case MIRType::Elements:
             return LDefinition::SLOTS;
           case MIRType::Pointer:
-#if JS_BITS_PER_WORD == 64
-          case MIRType::Int64:
-#endif
             return LDefinition::GENERAL;
+#if defined(JS_PUNBOX64)
+          case MIRType::Int64:
+            return LDefinition::GENERAL;
+#endif
           case MIRType::Int8x16:
           case MIRType::Int16x8:
           case MIRType::Int32x4:
@@ -1125,18 +1128,26 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
     }
     void setBoxOperand(size_t index, const LBoxAllocation& alloc) {
 #ifdef JS_NUNBOX32
-        operands_[index] = alloc.type();
-        operands_[index + 1] = alloc.payload();
+        operands_[index + TYPE_INDEX] = alloc.type();
+        operands_[index + PAYLOAD_INDEX] = alloc.payload();
 #else
         operands_[index] = alloc.value();
 #endif
     }
     void setInt64Operand(size_t index, const LInt64Allocation& alloc) {
 #if JS_BITS_PER_WORD == 32
-        operands_[index] = alloc.low();
-        operands_[index + 1] = alloc.high();
+        operands_[index + INT64LOW_INDEX] = alloc.low();
+        operands_[index + INT64HIGH_INDEX] = alloc.high();
 #else
         operands_[index] = alloc.value();
+#endif
+    }
+    const LInt64Allocation getInt64Operand(size_t offset) {
+#if JS_BITS_PER_WORD == 32
+        return LInt64Allocation(operands_[offset + INT64HIGH_INDEX],
+                                operands_[offset + INT64LOW_INDEX]);
+#else
+        return LInt64Allocation(operands_[offset]);
 #endif
     }
 };

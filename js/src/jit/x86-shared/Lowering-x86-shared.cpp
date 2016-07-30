@@ -81,30 +81,6 @@ LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefiniti
 }
 
 void
-LIRGeneratorX86Shared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>* ins,
-                                          MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
-{
-    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-
-    // shift operator should be constant or in register ecx
-    // x86 can't shift a non-ecx register
-    if (rhs->isConstant()) {
-        ins->setOperand(INT64_PIECES, useOrConstantAtStart(rhs));
-    } else {
-        // The operands are int64, but we only care about the lower 32 bits of
-        // the RHS. On 32-bit, the code below will load that part in ecx and
-        // will discard the upper half.
-        ensureDefined(rhs);
-        bool useAtStart = (lhs == rhs);
-        LUse use(ecx, useAtStart);
-        use.setVirtualRegister(rhs->virtualRegister());
-        ins->setOperand(INT64_PIECES, use);
-    }
-
-    defineInt64ReuseInput(ins, mir, 0);
-}
-
-void
 LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
                                    MDefinition* input)
 {
@@ -119,16 +95,6 @@ LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition
     ins->setOperand(0, useRegisterAtStart(lhs));
     ins->setOperand(1, lhs != rhs ? useOrConstant(rhs) : useOrConstantAtStart(rhs));
     defineReuseInput(ins, mir, 0);
-}
-
-void
-LIRGeneratorX86Shared::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
-                                        MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
-{
-    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-    ins->setInt64Operand(INT64_PIECES,
-                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
-    defineInt64ReuseInput(ins, mir, 0);
 }
 
 template<size_t Temps>
@@ -284,18 +250,9 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
 }
 
 void
-LIRGeneratorX86Shared::visitAsmSelect(MAsmSelect* ins)
+LIRGeneratorX86Shared::lowerAsmSelect(MAsmSelect* ins)
 {
-    if (ins->type() == MIRType::Int64) {
-        auto* lir = new(alloc()) LAsmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
-                                               useInt64(ins->falseExpr()),
-                                               useRegister(ins->condExpr())
-                                              );
-
-        defineInt64ReuseInput(lir, ins, LAsmSelectI64::TrueExprIndex);
-        return;
-    }
-
+    MOZ_ASSERT(ins->type() != MIRType::Int64);
     auto* lir = new(alloc()) LAsmSelect(useRegisterAtStart(ins->trueExpr()),
                                         use(ins->falseExpr()),
                                         useRegister(ins->condExpr())
@@ -334,16 +291,12 @@ LIRGeneratorX86Shared::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitWasmLoad(MWasmLoad* ins)
+LIRGeneratorX86Shared::lowerWasmLoad(MWasmLoad* ins)
 {
+    MOZ_ASSERT(ins->type() != MIRType::Int64);
+
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
-
-    if (ins->type() == MIRType::Int64) {
-        auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
-        defineInt64(lir, ins);
-        return;
-    }
 
     auto* lir = new(alloc()) LWasmLoad(useRegisterOrZeroAtStart(base));
     define(lir, ins);
