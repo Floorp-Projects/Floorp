@@ -1436,15 +1436,11 @@ protected:
     ////////////////////////////////////
     class FakeBlackTexture {
     public:
-        static UniquePtr<FakeBlackTexture> Create(gl::GLContext* gl,
-                                                  TexTarget target,
-                                                  FakeBlackType type);
         gl::GLContext* const mGL;
         const GLuint mGLName;
 
+        FakeBlackTexture(gl::GLContext* gl, TexTarget target, FakeBlackType type);
         ~FakeBlackTexture();
-    protected:
-        explicit FakeBlackTexture(gl::GLContext* gl);
     };
 
     UniquePtr<FakeBlackTexture> mFakeBlack_2D_0000;
@@ -1456,7 +1452,7 @@ protected:
     UniquePtr<FakeBlackTexture> mFakeBlack_2D_Array_0000;
     UniquePtr<FakeBlackTexture> mFakeBlack_2D_Array_0001;
 
-    bool BindFakeBlack(uint32_t texUnit, TexTarget target, FakeBlackType fakeBlack);
+    void BindFakeBlack(uint32_t texUnit, TexTarget target, FakeBlackType fakeBlack);
 
     ////////////////////////////////////
 
