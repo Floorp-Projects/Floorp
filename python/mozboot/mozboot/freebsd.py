@@ -17,6 +17,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'gtar',
             'mercurial',
             'pkgconf',
+            'watchman',
             'zip',
         ]
 
