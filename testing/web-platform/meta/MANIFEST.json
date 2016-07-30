@@ -12532,6 +12532,10 @@
         "url": "/XMLHttpRequest/getresponseheader-unsent-opened-state.htm"
       },
       {
+        "path": "XMLHttpRequest/headers-normalize-response.htm",
+        "url": "/XMLHttpRequest/headers-normalize-response.htm"
+      },
+      {
         "path": "XMLHttpRequest/interfaces.html",
         "url": "/XMLHttpRequest/interfaces.html"
       },
@@ -36387,6 +36391,12 @@
           {
             "path": "dom/events/AddEventListenerOptions-once.html",
             "url": "/dom/events/AddEventListenerOptions-once.html"
+          }
+        ],
+        "dom/lists/DOMTokenList-iteration.html": [
+          {
+            "path": "dom/lists/DOMTokenList-iteration.html",
+            "url": "/dom/lists/DOMTokenList-iteration.html"
           }
         ],
         "editing/run/justifycenter.html": [

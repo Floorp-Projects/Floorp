@@ -25,14 +25,14 @@ TextureClientPool::TextureClientPool(LayersBackend aLayersBackend,
                                      gfx::IntSize aSize,
                                      TextureFlags aFlags,
                                      uint32_t aInitialPoolSize,
-                                     uint32_t aPoolIncrementSize,
+                                     uint32_t aPoolUnusedSize,
                                      TextureForwarder* aAllocator)
   : mBackend(aLayersBackend)
   , mFormat(aFormat)
   , mSize(aSize)
   , mFlags(aFlags)
   , mInitialPoolSize(aInitialPoolSize)
-  , mPoolIncrementSize(aPoolIncrementSize)
+  , mPoolUnusedSize(aPoolUnusedSize)
   , mOutstandingClients(0)
   , mSurfaceAllocator(aAllocator)
   , mDestroyed(false)
@@ -91,10 +91,9 @@ TextureClientPool::GetTextureClient()
 
   // We initially allocate mInitialPoolSize for our pool. If we run
   // out of TextureClients, we allocate additional TextureClients to try and keep around
-  // mPoolIncrementSize
+  // mPoolUnusedSize
   if (!mTextureClients.size()) {
-    size_t size = mOutstandingClients ? mPoolIncrementSize : mInitialPoolSize;
-    AllocateTextureClients(size);
+    AllocateTextureClient();
   }
 
   if (!mTextureClients.size()) {
@@ -119,31 +118,30 @@ TextureClientPool::GetTextureClient()
 }
 
 void
-TextureClientPool::AllocateTextureClients(size_t aSize)
+TextureClientPool::AllocateTextureClient()
 {
-  TCP_LOG("TexturePool %p allocating %u clients, outstanding %u\n",
-      this, aSize, mOutstandingClients);
+  TCP_LOG("TexturePool %p allocating TextureClient, outstanding %u\n",
+      this, mOutstandingClients);
 
   RefPtr<TextureClient> newClient;
-  while (mTextureClients.size() < aSize) {
-    if (gfxPrefs::ForceShmemTiles()) {
-      // gfx::BackendType::NONE means use the content backend
-      newClient =
-        TextureClient::CreateForRawBufferAccess(mSurfaceAllocator,
-                                                mFormat, mSize,
-                                                gfx::BackendType::NONE,
-                                                mFlags, ALLOC_DEFAULT);
-    } else {
-      newClient =
-        TextureClient::CreateForDrawing(mSurfaceAllocator,
-                                        mFormat, mSize,
-                                        mBackend,
-                                        BackendSelector::Content,
-                                        mFlags);
-    }
-    if (newClient) {
-      mTextureClients.push(newClient);
-    }
+  if (gfxPrefs::ForceShmemTiles()) {
+    // gfx::BackendType::NONE means use the content backend
+    newClient =
+      TextureClient::CreateForRawBufferAccess(mSurfaceAllocator,
+                                              mFormat, mSize,
+                                              gfx::BackendType::NONE,
+                                              mFlags, ALLOC_DEFAULT);
+  } else {
+    newClient =
+      TextureClient::CreateForDrawing(mSurfaceAllocator,
+                                      mFormat, mSize,
+                                      mBackend,
+                                      BackendSelector::Content,
+                                      mFlags);
+  }
+
+  if (newClient) {
+    mTextureClients.push(newClient);
   }
 }
 
@@ -196,17 +194,17 @@ TextureClientPool::ShrinkToMaximumSize()
   uint32_t totalUnusedTextureClients = mTextureClients.size() + mTextureClientsDeferred.size();
 
   // If we have > mInitialPoolSize outstanding, then we want to keep around
-  // mPoolIncrementSize at a maximum. If we have fewer than mInitialPoolSize
+  // mPoolUnusedSize at a maximum. If we have fewer than mInitialPoolSize
   // outstanding, then keep around the entire initial pool size.
   uint32_t targetUnusedClients;
   if (mOutstandingClients > mInitialPoolSize) {
-    targetUnusedClients = mPoolIncrementSize;
+    targetUnusedClients = mPoolUnusedSize;
   } else {
     targetUnusedClients = mInitialPoolSize;
   }
 
-  TCP_LOG("TexturePool %p shrinking to maximum unused size %u; total outstanding %u\n",
-      this, targetUnusedClients, mOutstandingClients);
+  TCP_LOG("TexturePool %p shrinking to maximum unused size %u; current pool size %u; total outstanding %u\n",
+      this, targetUnusedClients, totalUnusedTextureClients, mOutstandingClients);
 
   while (totalUnusedTextureClients > targetUnusedClients) {
     if (mTextureClientsDeferred.size()) {
@@ -288,7 +286,7 @@ void TextureClientPool::Destroy()
   Clear();
   mDestroyed = true;
   mInitialPoolSize = 0;
-  mPoolIncrementSize = 0;
+  mPoolUnusedSize = 0;
 }
 
 } // namespace layers

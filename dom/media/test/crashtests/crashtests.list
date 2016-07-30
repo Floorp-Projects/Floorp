@@ -95,3 +95,4 @@ load oscillator-ended-2.html
 load video-replay-after-audio-end.html
 # This needs to run at the end to avoid leaking busted state into other tests.
 skip-if(B2G) load 691096-1.html # bug 852821
+load 1236639.html

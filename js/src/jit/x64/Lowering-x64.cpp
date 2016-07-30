@@ -48,6 +48,73 @@ LIRGeneratorX64::tempToUnbox()
 }
 
 void
+LIRGeneratorX64::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
+                                  MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    ins->setInt64Operand(INT64_PIECES,
+                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    defineInt64ReuseInput(ins, mir, 0);
+}
+
+void
+LIRGeneratorX64::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    // X64 doesn't need a temp for 64bit multiplication.
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    ins->setInt64Operand(INT64_PIECES,
+                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    defineInt64ReuseInput(ins, mir, 0);
+}
+
+template<size_t Temps>
+void
+LIRGeneratorX64::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
+                                    MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+
+    // shift operator should be constant or in register ecx
+    // x86 can't shift a non-ecx register
+    if (rhs->isConstant()) {
+        ins->setOperand(INT64_PIECES, useOrConstantAtStart(rhs));
+    } else {
+        // The operands are int64, but we only care about the lower 32 bits of
+        // the RHS. On 32-bit, the code below will load that part in ecx and
+        // will discard the upper half.
+        ensureDefined(rhs);
+        bool useAtStart = (lhs == rhs);
+        LUse use(ecx, useAtStart);
+        use.setVirtualRegister(rhs->virtualRegister());
+        ins->setOperand(INT64_PIECES, use);
+    }
+
+    defineInt64ReuseInput(ins, mir, 0);
+}
+
+template void LIRGeneratorX64::lowerForShiftInt64(
+    LInstructionHelper<INT64_PIECES, INT64_PIECES+1, 0>* ins, MDefinition* mir,
+    MDefinition* lhs, MDefinition* rhs);
+template void LIRGeneratorX64::lowerForShiftInt64(
+    LInstructionHelper<INT64_PIECES, INT64_PIECES+1, 1>* ins, MDefinition* mir,
+    MDefinition* lhs, MDefinition* rhs);
+
+void
+LIRGeneratorX64::visitAsmSelect(MAsmSelect* ins)
+{
+    if (ins->type() != MIRType::Int64) {
+        lowerAsmSelect(ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LAsmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
+                                           useInt64(ins->falseExpr()),
+                                           useRegister(ins->condExpr())
+                                          );
+    defineInt64ReuseInput(lir, ins, LAsmSelectI64::TrueExprIndex);
+}
+
+void
 LIRGeneratorX64::visitBox(MBox* box)
 {
     MDefinition* opd = box->getOperand(0);
@@ -117,6 +184,18 @@ LIRGeneratorX64::defineUntypedPhi(MPhi* phi, size_t lirIndex)
 
 void
 LIRGeneratorX64::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex)
+{
+    lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
+}
+ 
+void
+LIRGeneratorX64::defineInt64Phi(MPhi* phi, size_t lirIndex)
+{
+    defineTypedPhi(phi, lirIndex);
+}
+
+void
+LIRGeneratorX64::lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex)
 {
     lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
 }
@@ -385,7 +464,7 @@ void
 LIRGeneratorX64::lowerDivI64(MDiv* div)
 {
     if (div->isUnsigned()) {
-        lowerUDiv64(div);
+        lowerUDivI64(div);
         return;
     }
 
@@ -398,7 +477,7 @@ void
 LIRGeneratorX64::lowerModI64(MMod* mod)
 {
     if (mod->isUnsigned()) {
-        lowerUMod64(mod);
+        lowerUModI64(mod);
         return;
     }
 
@@ -408,21 +487,36 @@ LIRGeneratorX64::lowerModI64(MMod* mod)
 }
 
 void
-LIRGeneratorX64::lowerUDiv64(MDiv* div)
+LIRGeneratorX64::lowerUDivI64(MDiv* div)
 {
-    LUDivOrMod64* lir = new(alloc()) LUDivOrMod64(useRegister(div->lhs()),
-                                                  useRegister(div->rhs()),
-                                                  tempFixed(rdx));
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useRegister(div->lhs()),
+                                                    useRegister(div->rhs()),
+                                                    tempFixed(rdx));
     defineInt64Fixed(lir, div, LInt64Allocation(LAllocation(AnyRegister(rax))));
 }
 
 void
-LIRGeneratorX64::lowerUMod64(MMod* mod)
+LIRGeneratorX64::lowerUModI64(MMod* mod)
 {
-    LUDivOrMod64* lir = new(alloc()) LUDivOrMod64(useRegister(mod->lhs()),
-                                                  useRegister(mod->rhs()),
-                                                  tempFixed(rax));
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useRegister(mod->lhs()),
+                                                    useRegister(mod->rhs()),
+                                                    tempFixed(rax));
     defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
+}
+
+void
+LIRGeneratorX64::visitWasmLoad(MWasmLoad* ins)
+{
+    if (ins->type() != MIRType::Int64) {
+        lowerWasmLoad(ins);
+        return;
+    }
+
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
+    defineInt64(lir, ins);
 }
 
 void
@@ -443,4 +537,10 @@ LIRGeneratorX64::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
     MOZ_ASSERT(IsFloatingPointType(ins->type()));
 
     define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);
+}
+
+void
+LIRGeneratorX64::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+{
+    defineInt64(new(alloc()) LExtendInt32ToInt64(useAtStart(ins->input())), ins);
 }

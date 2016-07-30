@@ -90,14 +90,9 @@ ClientCanvasLayer::RenderLayer()
   RenderMaskLayers(this);
 
   if (!mCanvasClient) {
-    TextureFlags flags = TextureFlags::IMMEDIATE_UPLOAD;
+    TextureFlags flags = TextureFlags::DEFAULT;
     if (mOriginPos == gl::OriginPos::BottomLeft) {
       flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
-    }
-
-    if (!mGLContext) {
-      // We don't support locking for buffer surfaces currently
-      flags |= TextureFlags::IMMEDIATE_UPLOAD;
     }
 
     if (!mIsAlphaPremultiplied) {
@@ -140,6 +135,99 @@ ClientCanvasLayer::RenderLayer()
 
   ClientManager()->Hold(this);
   mCanvasClient->Updated();
+}
+
+bool
+ClientCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
+{
+  MOZ_ASSERT(aDestTarget);
+  if (!aDestTarget) {
+    return false;
+  }
+
+  RefPtr<SourceSurface> surface;
+
+  if (!mGLContext) {
+    AutoReturnSnapshot autoReturn;
+
+    if (mAsyncRenderer) {
+      surface = mAsyncRenderer->GetSurface();
+    } else if (mBufferProvider) {
+      surface = mBufferProvider->BorrowSnapshot();
+      autoReturn.mSnapshot = &surface;
+      autoReturn.mBufferProvider = mBufferProvider;
+    }
+
+    MOZ_ASSERT(surface);
+    if (!surface) {
+      return false;
+    }
+
+    aDestTarget->CopySurface(surface,
+                             IntRect(0, 0, mBounds.width, mBounds.height),
+                             IntPoint(0, 0));
+    return true;
+  }
+
+  SharedSurface* frontbuffer = nullptr;
+  if (mGLFrontbuffer) {
+    frontbuffer = mGLFrontbuffer.get();
+  } else {
+    GLScreenBuffer* screen = mGLContext->Screen();
+    const auto& front = screen->Front();
+    if (front) {
+      frontbuffer = front->Surf();
+    }
+  }
+
+  if (!frontbuffer) {
+    NS_WARNING("Null frame received.");
+    return false;
+  }
+
+  IntSize readSize(frontbuffer->mSize);
+  SurfaceFormat format = (GetContentFlags() & CONTENT_OPAQUE)
+                          ? SurfaceFormat::B8G8R8X8
+                          : SurfaceFormat::B8G8R8A8;
+  bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
+
+  // Try to read back directly into aDestTarget's output buffer
+  uint8_t* destData;
+  IntSize destSize;
+  int32_t destStride;
+  SurfaceFormat destFormat;
+  if (aDestTarget->LockBits(&destData, &destSize, &destStride, &destFormat)) {
+    if (destSize == readSize && destFormat == format) {
+      RefPtr<DataSourceSurface> data =
+        Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
+      mGLContext->Readback(frontbuffer, data);
+      if (needsPremult) {
+        gfxUtils::PremultiplyDataSurface(data, data);
+      }
+      aDestTarget->ReleaseBits(destData);
+      return true;
+    }
+    aDestTarget->ReleaseBits(destData);
+  }
+
+  RefPtr<DataSourceSurface> resultSurf = GetTempSurface(readSize, format);
+  // There will already be a warning from inside of GetTempSurface, but
+  // it doesn't hurt to complain:
+  if (NS_WARN_IF(!resultSurf)) {
+    return false;
+  }
+
+  // Readback handles Flush/MarkDirty.
+  mGLContext->Readback(frontbuffer, resultSurf);
+  if (needsPremult) {
+    gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
+  }
+
+  aDestTarget->CopySurface(resultSurf,
+                           IntRect(0, 0, readSize.width, readSize.height),
+                           IntPoint(0, 0));
+
+  return true;
 }
 
 CanvasClient::CanvasClientType

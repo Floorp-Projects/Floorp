@@ -509,9 +509,9 @@ TEST_F(APZHitTestingTester, Bug1148350) {
   MockFunction<void(std::string checkPointName)> check;
   {
     InSequence s;
-    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, CSSPoint(100, 100), 0, ApzcOf(layers[1])->GetGuid(), _)).Times(1);
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(100, 100), 0, ApzcOf(layers[1])->GetGuid(), _)).Times(1);
     EXPECT_CALL(check, Call("Tapped without transform"));
-    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, CSSPoint(100, 100), 0, ApzcOf(layers[1])->GetGuid(), _)).Times(1);
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(100, 100), 0, ApzcOf(layers[1])->GetGuid(), _)).Times(1);
     EXPECT_CALL(check, Call("Tapped with interleaved transform"));
   }
 

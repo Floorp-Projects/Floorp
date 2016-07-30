@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.notifications;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,6 +11,10 @@ import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -299,7 +303,7 @@ public final class NotificationHelper implements GeckoEventListener {
         PendingIntent deletePendingIntent = buildNotificationPendingIntent(message, CLEARED_EVENT);
         builder.setDeleteIntent(deletePendingIntent);
 
-        GeckoAppShell.notificationClient.add(id.hashCode(), builder.build());
+        GeckoAppShell.getNotificationClient().add(id.hashCode(), builder.build());
 
         boolean persistent = message.optBoolean(PERSISTENT_ATTR);
         // We add only not persistent notifications to the list since we want to purge only
@@ -340,7 +344,7 @@ public final class NotificationHelper implements GeckoEventListener {
     }
 
     private void closeNotification(String id, String handlerKey, String cookie) {
-        GeckoAppShell.notificationClient.remove(id.hashCode());
+        GeckoAppShell.getNotificationClient().remove(id.hashCode());
         sendNotificationWasClosed(id, handlerKey, cookie);
     }
 
