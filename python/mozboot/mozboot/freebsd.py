@@ -30,7 +30,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'yasm',
         ]
 
-        if self.flavor == 'dragonfly':
+        if not self.which('unzip'):
             self.packages.append('unzip')
 
         # gcc in base is too old
