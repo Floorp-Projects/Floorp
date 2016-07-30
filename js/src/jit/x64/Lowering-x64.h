@@ -22,6 +22,16 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
   protected:
     void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
     void defineUntypedPhi(MPhi* phi, size_t lirIndex);
+    void lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
+    void defineInt64Phi(MPhi* phi, size_t lirIndex);
+
+    void lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
+                          MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+    void lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs);
+    template<size_t Temps>
+    void lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
+                            MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+
 
     // Returns a box allocation. reg2 is ignored on 64-bit platforms.
     LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register, bool useAtStart = false);
@@ -38,10 +48,11 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
 
     void lowerDivI64(MDiv* div);
     void lowerModI64(MMod* mod);
-    void lowerUDiv64(MDiv* div);
-    void lowerUMod64(MMod* mod);
+    void lowerUDivI64(MDiv* div);
+    void lowerUModI64(MMod* mod);
 
   public:
+    void visitWasmLoad(MWasmLoad* ins);
     void visitBox(MBox* box);
     void visitUnbox(MUnbox* unbox);
     void visitReturn(MReturn* ret);
@@ -55,12 +66,14 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins);
     void visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins);
+    void visitAsmSelect(MAsmSelect* ins);
     void visitWasmStore(MWasmStore* ins);
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitSubstr(MSubstr* ins);
     void visitRandom(MRandom* ins);
     void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
+    void visitExtendInt32ToInt64(MExtendInt32ToInt64* ins);
 };
 
 typedef LIRGeneratorX64 LIRGeneratorSpecific;

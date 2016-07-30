@@ -1405,7 +1405,7 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
     {
         Label doneTruncate;
         Label truncateABICall;
-        masm.branchTruncateDouble(FloatReg0, scratchReg, &truncateABICall);
+        masm.branchTruncateDoubleMaybeModUint32(FloatReg0, scratchReg, &truncateABICall);
         masm.jump(&doneTruncate);
 
         masm.bind(&truncateABICall);
@@ -1558,7 +1558,7 @@ ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
 
         Label doneTruncate;
         Label truncateABICall;
-        masm.branchTruncateDouble(FloatReg0, scratchReg, &truncateABICall);
+        masm.branchTruncateDoubleMaybeModUint32(FloatReg0, scratchReg, &truncateABICall);
         masm.jump(&doneTruncate);
 
         masm.bind(&truncateABICall);

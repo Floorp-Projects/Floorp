@@ -343,7 +343,7 @@ class CodeGeneratorShared : public LElementVisitor
     void emitTruncateDouble(FloatRegister src, Register dest, MInstruction* mir);
     void emitTruncateFloat32(FloatRegister src, Register dest, MInstruction* mir);
 
-    void emitAsmJSCall(LAsmJSCall* ins);
+    void emitAsmJSCallBase(LAsmJSCallBase* ins);
 
     void emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment);
     void emitPreBarrier(Address address);
@@ -468,13 +468,17 @@ class CodeGeneratorShared : public LElementVisitor
     void addOutOfLineCode(OutOfLineCode* code, const BytecodeSite* site);
     bool generateOutOfLineCode();
 
-    Label* labelForBackedgeWithImplicitCheck(MBasicBlock* mir);
+    Label* getJumpLabelForBranch(MBasicBlock* block);
 
     // Generate a jump to the start of the specified block, adding information
     // if this is a loop backedge. Use this in place of jumping directly to
     // mir->lir()->label(), or use getJumpLabelForBranch() if a label to use
     // directly is needed.
     void jumpToBlock(MBasicBlock* mir);
+
+    // Get a label for the start of block which can be used for jumping, in
+    // place of jumpToBlock.
+    Label* labelForBackedgeWithImplicitCheck(MBasicBlock* mir);
 
 // This function is not used for MIPS. MIPS has branchToBlock.
 #if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64)

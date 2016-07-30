@@ -203,6 +203,8 @@ WebGL2Context::SamplerParameterfv(WebGLSampler* sampler, GLenum pname, const dom
 void
 WebGL2Context::GetSamplerParameter(JSContext*, WebGLSampler* sampler, GLenum pname, JS::MutableHandleValue retval)
 {
+    retval.setNull();
+
     if (IsContextLost())
         return;
 
@@ -211,8 +213,6 @@ WebGL2Context::GetSamplerParameter(JSContext*, WebGLSampler* sampler, GLenum pna
 
     if (!ValidateSamplerParameterName(pname, "getSamplerParameter"))
         return;
-
-    retval.set(JS::NullValue());
 
     switch (pname) {
     case LOCAL_GL_TEXTURE_MIN_FILTER:

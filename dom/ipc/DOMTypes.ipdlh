@@ -72,6 +72,7 @@ struct FileBlobConstructorParams
   nsString path;
   uint64_t length;
   int64_t modDate;
+  bool isDirectory;
 
   // This must be of type BlobData in a child->parent message, and will always
   // be of type void_t in a parent->child message.

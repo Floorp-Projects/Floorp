@@ -15,6 +15,23 @@
 namespace js {
 namespace jit {
 
+static inline bool
+IsConstant(const LInt64Allocation& a)
+{
+#if JS_BITS_PER_WORD == 32
+    if (a.high().isConstantValue())
+        return true;
+    if (a.high().isConstantIndex())
+        return true;
+#else
+    if (a.value().isConstantValue())
+        return true;
+    if (a.value().isConstantIndex())
+        return true;
+#endif
+    return false;
+}
+
 static inline int32_t
 ToInt32(const LAllocation* a)
 {
@@ -32,6 +49,23 @@ ToInt64(const LAllocation* a)
         return a->toConstant()->toInt64();
     if (a->isConstantIndex())
         return a->toConstantIndex()->index();
+    MOZ_CRASH("this is not a constant!");
+}
+
+static inline int64_t
+ToInt64(const LInt64Allocation& a)
+{
+#if JS_BITS_PER_WORD == 32
+    if (a.high().isConstantValue())
+        return a.high().toConstant()->toInt64();
+    if (a.high().isConstantIndex())
+        return a.high().toConstantIndex()->index();
+#else
+    if (a.value().isConstantValue())
+        return a.value().toConstant()->toInt64();
+    if (a.value().isConstantIndex())
+        return a.value().toConstantIndex()->index();
+#endif
     MOZ_CRASH("this is not a constant!");
 }
 
@@ -64,11 +98,21 @@ static inline Register64
 ToOutRegister64(LInstruction* ins)
 {
 #if JS_BITS_PER_WORD == 32
-    Register loReg = ToRegister(ins->getDef(0));
-    Register hiReg = ToRegister(ins->getDef(1));
+    Register loReg = ToRegister(ins->getDef(INT64LOW_INDEX));
+    Register hiReg = ToRegister(ins->getDef(INT64HIGH_INDEX));
     return Register64(hiReg, loReg);
 #else
     return Register64(ToRegister(ins->getDef(0)));
+#endif
+}
+
+static inline Register64
+ToRegister64(const LInt64Allocation& a)
+{
+#if JS_BITS_PER_WORD == 32
+    return Register64(ToRegister(a.high()), ToRegister(a.low()));
+#else
+    return Register64(ToRegister(a.value()));
 #endif
 }
 

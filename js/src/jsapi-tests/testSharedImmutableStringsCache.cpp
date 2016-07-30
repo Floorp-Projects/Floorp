@@ -81,9 +81,8 @@ BEGIN_TEST(testSharedImmutableStringsCache)
         threads.infallibleAppend(thread);
     }
 
-    for (auto thread : threads) {
+    for (auto thread : threads)
         CHECK(PR_JoinThread(thread) == PR_SUCCESS);
-    }
 
     return true;
 }

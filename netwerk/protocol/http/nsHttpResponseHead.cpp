@@ -270,7 +270,7 @@ nsHttpResponseHead::FlattenNetworkOriginalHeaders(nsACString &buf)
 }
 
 nsresult
-nsHttpResponseHead::ParseCachedHead(char *block)
+nsHttpResponseHead::ParseCachedHead(const char *block)
 {
     ReentrantMonitorAutoEnter monitor(mReentrantMonitor);
     LOG(("nsHttpResponseHead::ParseCachedHead [this=%p]\n", this));
@@ -282,8 +282,7 @@ nsHttpResponseHead::ParseCachedHead(char *block)
     if (!p)
         return NS_ERROR_UNEXPECTED;
 
-    *p = 0;
-    ParseStatusLine_locked(block);
+    ParseStatusLine_locked(nsDependentCSubstring(block, p - block));
 
     do {
         block = p + 2;
@@ -295,8 +294,7 @@ nsHttpResponseHead::ParseCachedHead(char *block)
         if (!p)
             return NS_ERROR_UNEXPECTED;
 
-        *p = 0;
-        ParseHeaderLine_locked(block, false);
+        ParseHeaderLine_locked(nsDependentCSubstring(block, p - block), false);
 
     } while (1);
 
@@ -318,7 +316,7 @@ nsHttpResponseHead::ParseCachedOriginalHeaders(char *block)
 
     char *p = block;
     nsHttpAtom hdr = {0};
-    char *val;
+    nsAutoCString val;
     nsresult rv;
 
     do {
@@ -332,12 +330,14 @@ nsHttpResponseHead::ParseCachedOriginalHeaders(char *block)
             return NS_ERROR_UNEXPECTED;
 
         *p = 0;
-        if (NS_FAILED(nsHttpHeaderArray::ParseHeaderLine(block, &hdr, &val))) {
+        if (NS_FAILED(nsHttpHeaderArray::ParseHeaderLine(
+            nsDependentCString(block, p - block), &hdr, &val))) {
+
             return NS_OK;
         }
 
         rv = mHeaders.SetResponseHeaderFromCache(hdr,
-                                                 nsDependentCString(val),
+                                                 val,
                                                  nsHttpHeaderArray::eVarietyResponseNetOriginal);
 
         if (NS_FAILED(rv)) {
@@ -505,40 +505,51 @@ nsHttpResponseHead::AssignDefaultStatusText()
 }
 
 void
-nsHttpResponseHead::ParseStatusLine(const char *line)
+nsHttpResponseHead::ParseStatusLine(const nsACString &line)
 {
+
     ReentrantMonitorAutoEnter monitor(mReentrantMonitor);
     ParseStatusLine_locked(line);
 }
 
 void
-nsHttpResponseHead::ParseStatusLine_locked(const char *line)
+nsHttpResponseHead::ParseStatusLine_locked(const nsACString &line)
 {
     //
     // Parse Status-Line:: HTTP-Version SP Status-Code SP Reason-Phrase CRLF
     //
 
-    // HTTP-Version
-    ParseVersion(line);
+    const char *start = line.BeginReading();
+    const char *end = line.EndReading();
+    const char *p = start;
 
-    if ((mVersion == NS_HTTP_VERSION_0_9) || !(line = PL_strchr(line, ' '))) {
+    // HTTP-Version
+    ParseVersion(start);
+
+    int32_t index = line.FindChar(' ');
+
+    if ((mVersion == NS_HTTP_VERSION_0_9) || (index == -1)) {
         mStatus = 200;
         AssignDefaultStatusText();
     }
     else {
         // Status-Code
-        mStatus = (uint16_t) atoi(++line);
+        p += index + 1;
+        mStatus = (uint16_t) atoi(p);
         if (mStatus == 0) {
             LOG(("mal-formed response status; assuming status = 200\n"));
             mStatus = 200;
         }
 
         // Reason-Phrase is whatever is remaining of the line
-        if (!(line = PL_strchr(line, ' '))) {
+        index = line.FindChar(' ', p - start);
+        if (index == -1) {
             AssignDefaultStatusText();
         }
-        else
-            mStatusText = nsDependentCString(++line);
+        else {
+            p = start + index + 1;
+            mStatusText = nsDependentCSubstring(p, end - p);
+        }
     }
 
     LOG(("Have status line [version=%u status=%u statusText=%s]\n",
@@ -546,17 +557,17 @@ nsHttpResponseHead::ParseStatusLine_locked(const char *line)
 }
 
 nsresult
-nsHttpResponseHead::ParseHeaderLine(const char *line)
+nsHttpResponseHead::ParseHeaderLine(const nsACString &line)
 {
     ReentrantMonitorAutoEnter monitor(mReentrantMonitor);
     return ParseHeaderLine_locked(line, true);
 }
 
 nsresult
-nsHttpResponseHead::ParseHeaderLine_locked(const char *line, bool originalFromNetHeaders)
+nsHttpResponseHead::ParseHeaderLine_locked(const nsACString &line, bool originalFromNetHeaders)
 {
     nsHttpAtom hdr = {0};
-    char *val;
+    nsAutoCString val;
 
     if (NS_FAILED(nsHttpHeaderArray::ParseHeaderLine(line, &hdr, &val))) {
         return NS_OK;
@@ -564,11 +575,11 @@ nsHttpResponseHead::ParseHeaderLine_locked(const char *line, bool originalFromNe
     nsresult rv;
     if (originalFromNetHeaders) {
         rv = mHeaders.SetHeaderFromNet(hdr,
-                                       nsDependentCString(val),
+                                       val,
                                        true);
     } else {
         rv = mHeaders.SetResponseHeaderFromCache(hdr,
-                                                 nsDependentCString(val),
+                                                 val,
                                                  nsHttpHeaderArray::eVarietyResponse);
     }
     if (NS_FAILED(rv)) {
@@ -582,24 +593,24 @@ nsHttpResponseHead::ParseHeaderLine_locked(const char *line, bool originalFromNe
         int64_t len;
         const char *ignored;
         // permit only a single value here.
-        if (nsHttp::ParseInt64(val, &ignored, &len)) {
+        if (nsHttp::ParseInt64(val.get(), &ignored, &len)) {
             mContentLength = len;
         }
         else {
             // If this is a negative content length then just ignore it
-            LOG(("invalid content-length! %s\n", val));
+            LOG(("invalid content-length! %s\n", val.get()));
         }
     }
     else if (hdr == nsHttp::Content_Type) {
-        LOG(("ParseContentType [type=%s]\n", val));
+        LOG(("ParseContentType [type=%s]\n", val.get()));
         bool dummy;
-        net_ParseContentType(nsDependentCString(val),
+        net_ParseContentType(val,
                              mContentType, mContentCharset, &dummy);
     }
     else if (hdr == nsHttp::Cache_Control)
-        ParseCacheControl(val);
+        ParseCacheControl(val.get());
     else if (hdr == nsHttp::Pragma)
-        ParsePragma(val);
+        ParsePragma(val.get());
     return NS_OK;
 }
 

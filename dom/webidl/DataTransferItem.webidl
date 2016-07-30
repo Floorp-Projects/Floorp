@@ -17,3 +17,8 @@ interface DataTransferItem {
 };
 
 callback FunctionStringCallback = void (DOMString data);
+
+partial interface DataTransferItem {
+  [Pref="dom.webkitBlink.filesystem.enabled", BinaryName="getAsEntry", Throws]
+  Entry? webkitGetAsEntry();
+};

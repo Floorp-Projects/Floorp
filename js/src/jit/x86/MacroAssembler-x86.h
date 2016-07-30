@@ -660,8 +660,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movw(src, Operand(address));
     }
     void store64(Register64 src, Address address) {
-        movl(src.low, Operand(address));
-        movl(src.high, Operand(Address(address.base, address.offset + 4)));
+        movl(src.low, Operand(Address(address.base, address.offset + INT64LOW_OFFSET)));
+        movl(src.high, Operand(Address(address.base, address.offset + INT64HIGH_OFFSET)));
+    }
+    void store64(Imm64 imm, Address address) {
+        movl(imm.low(), Operand(Address(address.base, address.offset + INT64LOW_OFFSET)));
+        movl(imm.hi(), Operand(Address(address.base, address.offset + INT64HIGH_OFFSET)));
     }
 
     void setStackArg(Register reg, uint32_t arg) {

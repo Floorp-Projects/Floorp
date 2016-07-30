@@ -21,18 +21,6 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 
-static inline Register64
-ToRegister64(const LAllocation* a)
-{
-    return Register64(ToRegister(a));
-}
-
-static inline Register64
-ToRegister64(const LDefinition* a)
-{
-    return Register64(ToRegister(a));
-}
-
 CodeGeneratorX64::CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
   : CodeGeneratorX86Shared(gen, graph, masm)
 {
@@ -228,204 +216,50 @@ CodeGeneratorX64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 }
 
 void
-CodeGeneratorX64::visitCompare64(LCompare64* lir)
+CodeGeneratorX64::visitCompareI64(LCompareI64* lir)
 {
     MCompare* mir = lir->mir();
     MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
                mir->compareType() == MCompare::Compare_UInt64);
 
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register lhsReg = ToRegister64(lhs).reg;
+    Register output = ToRegister(lir->output());
 
-    if (rhs->isConstant())
-        masm.cmpPtr(lhs, ImmWord(ToInt64(rhs)));
-    else
-        masm.cmpPtr(lhs, ToOperand(rhs));
+    if (IsConstant(rhs)) {
+        ImmWord imm = ImmWord(ToInt64(rhs));
+        masm.cmpPtr(lhsReg, imm);
+    } else {
+        Register rhsReg = ToRegister64(rhs).reg;
+        masm.cmpPtr(lhsReg, Operand(rhsReg));
+    }
 
     bool isSigned = mir->compareType() == MCompare::Compare_Int64;
-    masm.emitSet(JSOpToCondition(lir->jsop(), isSigned), ToRegister(lir->output()));
+    masm.emitSet(JSOpToCondition(lir->jsop(), isSigned), output);
 }
 
 void
-CodeGeneratorX64::visitCompare64AndBranch(LCompare64AndBranch* lir)
+CodeGeneratorX64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
 {
     MCompare* mir = lir->cmpMir();
     MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
                mir->compareType() == MCompare::Compare_UInt64);
 
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register lhsReg = ToRegister64(lhs).reg;
 
-    if (rhs->isConstant())
-        masm.cmpPtr(lhs, ImmWord(ToInt64(rhs)));
-    else
-        masm.cmpPtr(lhs, ToOperand(rhs));
+    if (IsConstant(rhs)) {
+        ImmWord imm = ImmWord(ToInt64(rhs));
+        masm.cmpPtr(lhsReg, imm);
+    } else {
+        Register rhsReg = ToRegister64(rhs).reg;
+        masm.cmpPtr(lhsReg, Operand(rhsReg));
+    }
 
     bool isSigned = mir->compareType() == MCompare::Compare_Int64;
     emitBranch(JSOpToCondition(lir->jsop(), isSigned), lir->ifTrue(), lir->ifFalse());
-}
-
-void
-CodeGeneratorX64::visitBitOpI64(LBitOpI64* lir)
-{
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
-
-    switch (lir->bitop()) {
-      case JSOP_BITOR:
-        if (rhs->isConstant())
-            masm.or64(Imm64(ToInt64(rhs)), Register64(lhs));
-        else
-            masm.orq(ToOperand(rhs), lhs);
-        break;
-      case JSOP_BITXOR:
-        if (rhs->isConstant())
-            masm.xor64(Imm64(ToInt64(rhs)), Register64(lhs));
-        else
-            masm.xorq(ToOperand(rhs), lhs);
-        break;
-      case JSOP_BITAND:
-        if (rhs->isConstant())
-            masm.and64(Imm64(ToInt64(rhs)), Register64(lhs));
-        else
-            masm.andq(ToOperand(rhs), lhs);
-        break;
-      default:
-        MOZ_CRASH("unexpected binary opcode");
-    }
-}
-
-void
-CodeGeneratorX64::visitShiftI64(LShiftI64* lir)
-{
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
-
-    if (rhs->isConstant()) {
-        int32_t shift = int32_t(ToInt64(rhs) & 0x3F);
-        switch (lir->bitop()) {
-          case JSOP_LSH:
-            if (shift)
-                masm.shlq(Imm32(shift), lhs);
-            break;
-          case JSOP_RSH:
-            if (shift)
-                masm.sarq(Imm32(shift), lhs);
-            break;
-          case JSOP_URSH:
-            if (shift)
-                masm.shrq(Imm32(shift), lhs);
-            break;
-          default:
-            MOZ_CRASH("Unexpected shift op");
-        }
-    } else {
-        MOZ_ASSERT(ToRegister(rhs) == ecx);
-        switch (lir->bitop()) {
-          case JSOP_LSH:
-            masm.shlq_cl(lhs);
-            break;
-          case JSOP_RSH:
-            masm.sarq_cl(lhs);
-            break;
-          case JSOP_URSH:
-            masm.shrq_cl(lhs);
-            break;
-          default:
-            MOZ_CRASH("Unexpected shift op");
-        }
-    }
-}
-
-void
-CodeGeneratorX64::visitRotate64(LRotate64* lir)
-{
-    MRotate* mir = lir->mir();
-    Register input = ToRegister(lir->input());
-    const LAllocation* count = lir->count();
-
-    if (count->isConstant()) {
-        int32_t c = int32_t(ToInt64(count) & 0x3F);
-        if (!c)
-            return;
-        if (mir->isLeftRotate())
-            masm.rolq(Imm32(c), input);
-        else
-            masm.rorq(Imm32(c), input);
-    } else {
-        MOZ_ASSERT(ToRegister(count) == ecx);
-        if (mir->isLeftRotate())
-            masm.rolq_cl(input);
-        else
-            masm.rorq_cl(input);
-    }
-}
-
-void
-CodeGeneratorX64::visitAddI64(LAddI64* lir)
-{
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
-
-    MOZ_ASSERT(ToRegister(lir->getDef(0)) == lhs);
-
-    if (rhs->isConstant())
-        masm.addPtr(ImmWord(ToInt64(rhs)), lhs);
-    else
-        masm.addq(ToOperand(rhs), lhs);
-}
-
-void
-CodeGeneratorX64::visitSubI64(LSubI64* lir)
-{
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
-
-    MOZ_ASSERT(ToRegister(lir->getDef(0)) == lhs);
-
-    if (rhs->isConstant())
-        masm.subPtr(ImmWord(ToInt64(rhs)), lhs);
-    else
-        masm.subq(ToOperand(rhs), lhs);
-}
-
-void
-CodeGeneratorX64::visitMulI64(LMulI64* lir)
-{
-    Register lhs = ToRegister(lir->getOperand(0));
-    const LAllocation* rhs = lir->getOperand(1);
-
-    MOZ_ASSERT(ToRegister(lir->getDef(0)) == lhs);
-
-    if (rhs->isConstant()) {
-        int64_t constant = ToInt64(rhs);
-        switch (constant) {
-          case -1:
-            masm.negq(lhs);
-            return;
-          case 0:
-            masm.xorl(lhs, lhs);
-            return;
-          case 1:
-            // nop
-            return;
-          case 2:
-            masm.addq(lhs, lhs);
-            return;
-          default:
-            if (constant > 0) {
-                // Use shift if constant is power of 2.
-                int32_t shift = mozilla::FloorLog2(constant);
-                if (int64_t(1) << shift == constant) {
-                    masm.shlq(Imm32(shift), lhs);
-                    return;
-                }
-            }
-            masm.mul64(Imm64(constant), Register64(lhs));
-        }
-    } else {
-        masm.imulq(ToOperand(rhs), lhs);
-    }
 }
 
 void
@@ -473,7 +307,7 @@ CodeGeneratorX64::visitDivOrModI64(LDivOrModI64* lir)
 }
 
 void
-CodeGeneratorX64::visitUDivOrMod64(LUDivOrMod64* lir)
+CodeGeneratorX64::visitUDivOrModI64(LUDivOrModI64* lir)
 {
     Register lhs = ToRegister(lir->lhs());
     Register rhs = ToRegister(lir->rhs());
@@ -509,13 +343,14 @@ CodeGeneratorX64::visitAsmSelectI64(LAsmSelectI64* lir)
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
     Register cond = ToRegister(lir->condExpr());
-    Operand falseExpr = ToOperand(lir->falseExpr());
 
-    Register out = ToRegister(lir->output());
-    MOZ_ASSERT(ToRegister(lir->trueExpr()) == out, "true expr is reused for input");
+    Operand falseExpr = ToOperandOrRegister64(lir->falseExpr());
+
+    Register64 out = ToOutRegister64(lir);
+    MOZ_ASSERT(ToRegister64(lir->trueExpr()) == out, "true expr is reused for input");
 
     masm.test32(cond, cond);
-    masm.cmovzq(falseExpr, out);
+    masm.cmovzq(falseExpr, out.reg);
 }
 
 void
@@ -561,7 +396,13 @@ CodeGeneratorX64::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
 void
 CodeGeneratorX64::visitAsmJSCall(LAsmJSCall* ins)
 {
-    emitAsmJSCall(ins);
+    emitAsmJSCallBase(ins);
+}
+
+void
+CodeGeneratorX64::visitAsmJSCallI64(LAsmJSCallI64* ins)
+{
+    emitAsmJSCallBase(ins);
 }
 
 void
@@ -663,17 +504,17 @@ CodeGeneratorX64::load(Scalar::Type type, const Operand& srcAddr, AnyRegister ou
 }
 
 void
-CodeGeneratorX64::loadI64(Scalar::Type type, const Operand& srcAddr, AnyRegister out)
+CodeGeneratorX64::loadI64(Scalar::Type type, const Operand& srcAddr, Register64 out)
 {
     switch (type) {
-      case Scalar::Int8:      masm.movsbq(srcAddr, out.gpr()); break;
-      case Scalar::Uint8:     masm.movzbq(srcAddr, out.gpr()); break;
-      case Scalar::Int16:     masm.movswq(srcAddr, out.gpr()); break;
-      case Scalar::Uint16:    masm.movzwq(srcAddr, out.gpr()); break;
-      case Scalar::Int32:     masm.movslq(srcAddr, out.gpr()); break;
+      case Scalar::Int8:      masm.movsbq(srcAddr, out.reg); break;
+      case Scalar::Uint8:     masm.movzbq(srcAddr, out.reg); break;
+      case Scalar::Int16:     masm.movswq(srcAddr, out.reg); break;
+      case Scalar::Uint16:    masm.movzwq(srcAddr, out.reg); break;
+      case Scalar::Int32:     masm.movslq(srcAddr, out.reg); break;
       // Int32 to int64 moves zero-extend by default.
-      case Scalar::Uint32:    masm.movl(srcAddr, out.gpr());   break;
-      case Scalar::Int64:     masm.movq(srcAddr, out.gpr());   break;
+      case Scalar::Uint32:    masm.movl(srcAddr, out.reg);   break;
+      case Scalar::Int64:     masm.movq(srcAddr, out.reg);   break;
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Float32x4:
@@ -687,10 +528,13 @@ CodeGeneratorX64::loadI64(Scalar::Type type, const Operand& srcAddr, AnyRegister
     }
 }
 
+template <typename T>
 void
-CodeGeneratorX64::visitWasmLoadBase(const MWasmLoad* mir, const LAllocation* ptr,
-                                    const LDefinition* output, bool isInt64)
+CodeGeneratorX64::emitWasmLoad(T* ins)
 {
+    const MWasmLoad* mir = ins->mir();
+    bool isInt64 = mir->type() == MIRType::Int64;
+
     Scalar::Type accessType = mir->accessType();
     MOZ_ASSERT(!Scalar::isSimdType(accessType), "SIMD NYI");
     MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
@@ -700,21 +544,20 @@ CodeGeneratorX64::visitWasmLoadBase(const MWasmLoad* mir, const LAllocation* ptr
         return;
     }
 
+    const LAllocation* ptr = ins->ptr();
     Operand srcAddr = ptr->isBogus()
                       ? Operand(HeapReg, mir->offset())
                       : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
 
-    AnyRegister out = ToAnyRegister(output);
-
     uint32_t before = masm.size();
-    if (!isInt64)
-        load(accessType, srcAddr, out);
+    if (isInt64)
+        loadI64(accessType, srcAddr, ToOutRegister64(ins));
     else
-        loadI64(accessType, srcAddr, out);
+        load(accessType, srcAddr, ToAnyRegister(ins->output()));
     uint32_t after = masm.size();
 
     verifyLoadDisassembly(before, after, isInt64, accessType, /* numElems */ 0, srcAddr,
-                          *output->output());
+                          *ins->output()->output());
 
     masm.append(WasmMemoryAccess(before));
 }
@@ -722,17 +565,18 @@ CodeGeneratorX64::visitWasmLoadBase(const MWasmLoad* mir, const LAllocation* ptr
 void
 CodeGeneratorX64::visitWasmLoad(LWasmLoad* ins)
 {
-    visitWasmLoadBase(ins->mir(), ins->ptr(), ins->output(), /* isInt64 */ false);
+    emitWasmLoad(ins);
 }
 
 void
 CodeGeneratorX64::visitWasmLoadI64(LWasmLoadI64* ins)
 {
-    visitWasmLoadBase(ins->mir(), ins->ptr(), ins->output(), /* isInt64 */ true);
+    emitWasmLoad(ins);
 }
 
+template <typename T>
 void
-CodeGeneratorX64::visitWasmStore(LWasmStore* ins)
+CodeGeneratorX64::emitWasmStore(T* ins)
 {
     const MWasmStore* mir = ins->mir();
 
@@ -745,7 +589,7 @@ CodeGeneratorX64::visitWasmStore(LWasmStore* ins)
         return;
     }
 
-    const LAllocation* value = ins->value();
+    const LAllocation* value = ins->getOperand(ins->ValueIndex);
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
                       ? Operand(HeapReg, mir->offset())
@@ -759,6 +603,18 @@ CodeGeneratorX64::visitWasmStore(LWasmStore* ins)
                            accessType, /* numElems */ 0, dstAddr, *value);
 
     masm.append(WasmMemoryAccess(before));
+}
+
+void
+CodeGeneratorX64::visitWasmStore(LWasmStore* ins)
+{
+    emitWasmStore(ins);
+}
+
+void
+CodeGeneratorX64::visitWasmStoreI64(LWasmStoreI64* ins)
+{
+    emitWasmStore(ins);
 }
 
 void
@@ -1295,7 +1151,10 @@ CodeGeneratorX64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
     const LAllocation* input = lir->getOperand(0);
     Register output = ToRegister(lir->output());
 
-    masm.movl(ToOperand(input), output);
+    if (lir->mir()->bottomHalf())
+        masm.movl(ToOperand(input), output);
+    else
+        MOZ_CRASH("Not implemented.");
 }
 
 void
@@ -1406,29 +1265,17 @@ CodeGeneratorX64::visitNotI64(LNotI64* lir)
 void
 CodeGeneratorX64::visitClzI64(LClzI64* lir)
 {
-    Register64 input = ToRegister64(lir->input());
-    Register64 output = ToRegister64(lir->output());
-    masm.clz64(input, output);
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    masm.clz64(input, output.reg);
 }
 
 void
 CodeGeneratorX64::visitCtzI64(LCtzI64* lir)
 {
-    Register64 input = ToRegister64(lir->input());
-    Register64 output = ToRegister64(lir->output());
-    masm.ctz64(input, output);
-}
-
-void
-CodeGeneratorX64::visitPopcntI64(LPopcntI64* lir)
-{
-    Register64 input = ToRegister64(lir->input());
-    Register64 output = ToRegister64(lir->output());
-    Register64 temp = Register64(AssemblerX86Shared::HasPOPCNT()
-                                 ? InvalidReg :
-                                 ToRegister(lir->getTemp(0)));
-
-    masm.popcnt64(input, output, temp);
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    masm.ctz64(input, output.reg);
 }
 
 void

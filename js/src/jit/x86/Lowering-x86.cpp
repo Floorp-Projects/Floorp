@@ -170,6 +170,117 @@ LIRGeneratorX86::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock*
 }
 
 void
+LIRGeneratorX86::defineInt64Phi(MPhi* phi, size_t lirIndex)
+{
+    LPhi* low = current->getPhi(lirIndex + INT64LOW_INDEX);
+    LPhi* high = current->getPhi(lirIndex + INT64HIGH_INDEX);
+
+    uint32_t lowVreg = getVirtualRegister();
+
+    phi->setVirtualRegister(lowVreg);
+
+    uint32_t highVreg = getVirtualRegister();
+    MOZ_ASSERT(lowVreg + INT64HIGH_INDEX == highVreg + INT64LOW_INDEX);
+
+    low->setDef(0, LDefinition(lowVreg, LDefinition::INT32));
+    high->setDef(0, LDefinition(highVreg, LDefinition::INT32));
+    annotate(high);
+    annotate(low);
+}
+
+void
+LIRGeneratorX86::lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex)
+{
+    MDefinition* operand = phi->getOperand(inputPosition);
+    LPhi* low = block->getPhi(lirIndex + INT64LOW_INDEX);
+    LPhi* high = block->getPhi(lirIndex + INT64HIGH_INDEX);
+    low->setOperand(inputPosition, LUse(operand->virtualRegister() + INT64LOW_INDEX, LUse::ANY));
+    high->setOperand(inputPosition, LUse(operand->virtualRegister() + INT64HIGH_INDEX, LUse::ANY));
+}
+
+void
+LIRGeneratorX86::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
+                                  MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    ins->setInt64Operand(0, useInt64Register(lhs));
+    ins->setInt64Operand(INT64_PIECES, useInt64OrConstant(rhs));
+    defineInt64(ins, mir);
+}
+
+void
+LIRGeneratorX86::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    bool constantNeedTemp = true;
+    if (rhs->isConstant()) {
+        int64_t constant = rhs->toConstant()->toInt64();
+        int32_t shift = mozilla::FloorLog2(constant);
+        // See special cases in CodeGeneratorX86Shared::visitMulI64
+        if (constant >= -1 && constant <= 2)
+            constantNeedTemp = false;
+        if (int64_t(1) << shift == constant)
+            constantNeedTemp = false;
+    }
+
+    // MulI64 on x86 needs output to be in edx, eax;
+    ins->setInt64Operand(0, useInt64Fixed(lhs, Register64(edx, eax), /*useAtStart = */ true));
+    ins->setInt64Operand(INT64_PIECES,
+            lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+    if (constantNeedTemp)
+        ins->setTemp(0, temp());
+    defineInt64Fixed(ins, mir, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                LAllocation(AnyRegister(eax))));
+}
+
+template<size_t Temps>
+void
+LIRGeneratorX86::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
+                                    MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    ins->setInt64Operand(0, useInt64Register(lhs));
+    if (mir->isRotate())
+        ins->setTemp(0, temp());
+
+    // shift operator should be constant or in register ecx
+    // x86 can't shift a non-ecx register
+    if (rhs->isConstant()) {
+        ins->setOperand(INT64_PIECES, useOrConstant(rhs));
+    } else {
+        // The operands are int64, but we only care about the lower 32 bits of
+        // the RHS. The code below will load that part in ecx and
+        // will discard the upper half.
+        ensureDefined(rhs);
+        bool useAtStart = (lhs == rhs);
+        LUse use(ecx, useAtStart);
+        use.setVirtualRegister(rhs->virtualRegister());
+        ins->setOperand(INT64_PIECES, use);
+    }
+
+    defineInt64(ins, mir);
+}
+
+template void LIRGeneratorX86::lowerForShiftInt64(
+    LInstructionHelper<INT64_PIECES, INT64_PIECES+1, 0>* ins, MDefinition* mir,
+    MDefinition* lhs, MDefinition* rhs);
+template void LIRGeneratorX86::lowerForShiftInt64(
+    LInstructionHelper<INT64_PIECES, INT64_PIECES+1, 1>* ins, MDefinition* mir,
+    MDefinition* lhs, MDefinition* rhs);
+
+void
+LIRGeneratorX86::visitAsmSelect(MAsmSelect* ins)
+{
+    if (ins->type() != MIRType::Int64) {
+        lowerAsmSelect(ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LAsmSelectI64(useInt64Register(ins->trueExpr()),
+                                           useInt64(ins->falseExpr()),
+                                           useRegister(ins->condExpr())
+                                          );
+    defineInt64(lir, ins);
+}
+
+void
 LIRGeneratorX86::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
 {
     lowerCompareExchangeTypedArrayElement(ins, /* useI386ByteRegisters = */ true);
@@ -228,8 +339,12 @@ LIRGeneratorX86::visitWasmStore(MWasmStore* ins)
         // instruction layout which affects patching.
         valueAlloc = useRegisterAtStart(ins->value());
         break;
-      case Scalar::Int64:
-        MOZ_CRASH("NYI");
+      case Scalar::Int64: {
+        LInt64Allocation valueAlloc = useInt64RegisterAtStart(ins->value());
+        auto* lir = new(alloc()) LWasmStoreI64(baseAlloc, valueAlloc);
+        add(lir, ins);
+        return;
+      }
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
@@ -458,13 +573,67 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 void
 LIRGeneratorX86::lowerDivI64(MDiv* div)
 {
-    MOZ_CRASH("NYI");
+    if (div->isUnsigned()) {
+        lowerUDivI64(div);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64RegisterAtStart(div->lhs()),
+                                                  useInt64RegisterAtStart(div->rhs()));
+    defineReturn(lir, div);
 }
 
 void
 LIRGeneratorX86::lowerModI64(MMod* mod)
 {
-    MOZ_CRASH("NYI");
+    if (mod->isUnsigned()) {
+        lowerUModI64(mod);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64RegisterAtStart(mod->lhs()),
+                                                  useInt64RegisterAtStart(mod->rhs()));
+    defineReturn(lir, mod);
+}
+
+void
+LIRGeneratorX86::lowerUDivI64(MDiv* div)
+{
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64RegisterAtStart(div->lhs()),
+                                                    useInt64RegisterAtStart(div->rhs()));
+    defineReturn(lir, div);
+}
+
+void
+LIRGeneratorX86::lowerUModI64(MMod* mod)
+{
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64RegisterAtStart(mod->lhs()),
+                                                    useInt64RegisterAtStart(mod->rhs()));
+    defineReturn(lir, mod);
+}
+
+void
+LIRGeneratorX86::visitWasmLoad(MWasmLoad* ins)
+{
+    if (ins->type() != MIRType::Int64) {
+        lowerWasmLoad(ins);
+        return;
+    }
+
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
+
+    Scalar::Type accessType = ins->accessType();
+    if (accessType == Scalar::Int8 || accessType == Scalar::Int16 || accessType == Scalar::Int32) {
+        // We use cdq to sign-extend the result and cdq demands these registers.
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                    LAllocation(AnyRegister(eax))));
+        return;
+    }
+
+    defineInt64(lir, ins);
 }
 
 void
@@ -497,11 +666,34 @@ LIRGeneratorX86::visitRandom(MRandom* ins)
 void
 LIRGeneratorX86::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
-    MOZ_CRASH("NY");
+    MDefinition* opd = ins->input();
+    MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
+
+    LDefinition temp1 = temp();
+    LDefinition temp2 = tempDouble();
+    LDefinition maybeTemp = ins->isUnsigned() ? tempDouble() : LDefinition::BogusTemp();
+    defineInt64(new(alloc()) LWasmTruncateToInt64(useRegister(opd), temp1, temp2, maybeTemp), ins);
 }
 
 void
 LIRGeneratorX86::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
-    MOZ_CRASH("NY");
+    MDefinition* opd = ins->input();
+    MOZ_ASSERT(opd->type() == MIRType::Int64);
+    MOZ_ASSERT(IsFloatingPointType(ins->type()));
+
+    define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);
+}
+
+void
+LIRGeneratorX86::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+{
+    if (ins->isUnsigned()) {
+        defineInt64(new(alloc()) LExtendInt32ToInt64(useRegisterAtStart(ins->input())), ins);
+    } else {
+        LExtendInt32ToInt64* lir =
+            new(alloc()) LExtendInt32ToInt64(useFixedAtStart(ins->input(), eax));
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                    LAllocation(AnyRegister(eax))));
+    }
 }
