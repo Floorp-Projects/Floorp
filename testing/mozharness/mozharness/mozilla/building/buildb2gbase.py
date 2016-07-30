@@ -372,7 +372,7 @@ class B2GBuildBaseScript(BuildbotMixin, MockMixin,
         dirs = self.query_abs_dirs()
         gecko_config = self.load_gecko_config()
         b2g_manifest_intree = gecko_config.get('b2g_manifest_intree')
-        b2g_repo = gecko_config.get('b2g_repo','https://git.mozilla.org/b2g/B2G.git')
+        b2g_repo = gecko_config.get('b2g_repo','https://github.com/mozilla-b2g/B2G.git')
         b2g_branch = gecko_config.get('b2g_branch','master')
 
         if gecko_config.get('config_version') >= 2:
