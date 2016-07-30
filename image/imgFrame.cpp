@@ -206,6 +206,19 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
   mImageSize = aImageSize;
   mFrameRect = aRect;
 
+  // We only allow a non-trivial frame rect (i.e., a frame rect that doesn't
+  // cover the entire image) for paletted animation frames. We never draw those
+  // frames directly; we just use FrameAnimator to composite them and produce a
+  // BGRA surface that we actually draw. We enforce this here to make sure that
+  // imgFrame::Draw(), which is responsible for drawing all other kinds of
+  // frames, never has to deal with a non-trivial frame rect.
+  if (aPaletteDepth == 0 &&
+      !mFrameRect.IsEqualEdges(IntRect(IntPoint(), mImageSize))) {
+    MOZ_ASSERT_UNREACHABLE("Creating a non-paletted imgFrame with a "
+                           "non-trivial frame rect");
+    return NS_ERROR_FAILURE;
+  }
+
   mFormat = aFormat;
   mPaletteDepth = aPaletteDepth;
   mNonPremult = aNonPremult;
