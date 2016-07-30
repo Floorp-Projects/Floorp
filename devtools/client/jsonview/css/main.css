@@ -14,20 +14,22 @@
 @import "text-panel.css";
 @import "headers-panel.css";
 
-
 /******************************************************************************/
 /* Panel Content */
 
 .panelContent {
   overflow-y: auto;
-  font-size: 11px;
-  font-family: var(--monospace-font-family);
-  padding-right: 5px;
+  width: 100%;
 }
 
 /* The tree takes the entire horizontal space within the panel content. */
 .panelContent .treeTable {
   width: 100%;
+  font-family: var(--monospace-font-family);
+}
+
+:root[platform="linux"] .treeTable {
+  font-size: 80%; /* To handle big monospace font */
 }
 
 /* Make sure there is a little space between label and value columns. */
