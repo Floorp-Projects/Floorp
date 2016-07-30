@@ -173,6 +173,52 @@ add_test(function observePushTopicDeviceDisconnected() {
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
+add_test(function observePushTopicPasswordChanged() {
+  let msg = {
+    data: {
+      json: () => ({
+        command: ON_PASSWORD_CHANGED_NOTIFICATION
+      })
+    },
+    QueryInterface: function() {
+      return this;
+    }
+  };
+
+  let pushService = new FxAccountsPushService({
+    pushService: mockPushService,
+  });
+
+  pushService._onPasswordChanged = function () {
+    run_next_test();
+  }
+
+  pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+});
+
+add_test(function observePushTopicPasswordReset() {
+  let msg = {
+    data: {
+      json: () => ({
+        command: ON_PASSWORD_RESET_NOTIFICATION
+      })
+    },
+    QueryInterface: function() {
+      return this;
+    }
+  };
+
+  let pushService = new FxAccountsPushService({
+    pushService: mockPushService
+  });
+
+  pushService._onPasswordChanged = function () {
+    run_next_test();
+  }
+
+  pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+});
+
 add_test(function observeSubscriptionChangeTopic() {
   let customAccounts = Object.assign(mockFxAccounts, {
     updateDeviceRegistration: function () {
