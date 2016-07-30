@@ -10,7 +10,7 @@
   height: 18px;
   font: message-box;
   background-color: var(--theme-body-background);
-  background-image: url("chrome://devtools/skin/images/filter.svg");
+  background-image: url("chrome://devtools/skin/images/filter.svg#filterinput");
   background-repeat: no-repeat;
   background-position: 2px center;
   border: 1px solid var(--theme-splitter-color);
