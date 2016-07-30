@@ -337,9 +337,6 @@ public:
 
   void SetOptimizable();
 
-  Color SinglePixelColor() const;
-  bool IsSinglePixel() const;
-
   already_AddRefed<SourceSurface> GetSurface();
 
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
@@ -445,10 +442,6 @@ private: // data
   // Main-thread-only mutable data.
   //////////////////////////////////////////////////////////////////////////////
 
-  // Note that the data stored in gfx::Color is *non-alpha-premultiplied*.
-  Color        mSinglePixelColor;
-
-  bool mSinglePixel;
   bool mCompositingFailed;
 };
 

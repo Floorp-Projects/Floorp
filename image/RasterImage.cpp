@@ -538,19 +538,14 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
   IntRect intFrameRect = frameRef->GetRect();
   Rect rect(intFrameRect.x, intFrameRect.y,
             intFrameRect.width, intFrameRect.height);
-  if (frameRef->IsSinglePixel()) {
-    target->FillRect(rect, ColorPattern(frameRef->SinglePixelColor()),
-                     DrawOptions(1.0f, CompositionOp::OP_SOURCE));
-  } else {
-    RefPtr<SourceSurface> srcSurf = frameRef->GetSurface();
-    if (!srcSurf) {
-      RecoverFromInvalidFrames(mSize, aFlags);
-      return nullptr;
-    }
-
-    Rect srcRect(0, 0, intFrameRect.width, intFrameRect.height);
-    target->DrawSurface(srcSurf, srcRect, rect);
+  RefPtr<SourceSurface> srcSurf = frameRef->GetSurface();
+  if (!srcSurf) {
+    RecoverFromInvalidFrames(mSize, aFlags);
+    return nullptr;
   }
+
+  Rect srcRect(0, 0, intFrameRect.width, intFrameRect.height);
+  target->DrawSurface(srcSurf, srcRect, rect);
 
   target->Flush();
   surf->Unmap();
