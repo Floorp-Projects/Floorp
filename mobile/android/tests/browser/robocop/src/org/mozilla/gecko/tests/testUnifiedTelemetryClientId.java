@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
+import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
@@ -23,48 +24,68 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
 
     private GeckoProfile profile;
     private File profileDir;
+    private File[] filesToDeleteOnReset;
 
     public void setUp() throws Exception {
         super.setUp();
         profile = getTestProfile();
         profileDir = profile.getDir(); // Assumes getDir is tested.
-
-        // In local testing, it's possible to ^C out of the harness and not have tearDown called,
-        // hence reset. We can't clear the cache because Gecko is not running yet.
-        resetTest(false);
+        filesToDeleteOnReset = new File[] {
+                getClientIdFile(),
+                getFHRClientIdFile(),
+                getFHRClientIdParentDir(),
+        };
     }
 
     public void tearDown() throws Exception {
         // Don't clear cache because who knows what state Gecko is in.
-        resetTest(false);
+        deleteClientIDFiles();
         super.tearDown();
     }
 
-    private void resetTest(final boolean resetJSCache) {
-        if (resetJSCache) {
-            resetJSCache();
+    private void deleteClientIDFiles() {
+        Log.d(LOGTAG, "deleteClientIDFiles: begin");
+
+        for (final File file : filesToDeleteOnReset) {
+            file.delete(); // can't check return value because the file may not exist before deletion.
+            fAssertFalse("Deleted file in reset does not exist", file.exists()); // sanity check.
         }
-        getClientIdFile().delete();
-        getFHRClientIdFile().delete();
-        getFHRClientIdParentDir().delete();
+
+        Log.d(LOGTAG, "deleteClientIDFiles: end");
     }
 
-    // TODO: If the intent service runs in the background, it could break this test. The service is disabled
-    // on non-official builds (e.g. this one) but that may not be the case on TBPL.
     public void testUnifiedTelemetryClientId() throws Exception {
         blockForReadyAndLoadJS(TEST_JS);
-        resetJSCache(); // Must be called after Gecko is loaded.
         fAssertTrue("Profile directory exists", profileDir.exists());
+
+        // Important note: we cannot stop Gecko from running while we run this test and
+        // Gecko is capable of creating client ID files while we run this test. However,
+        // ClientID.jsm will not touch modify the client ID files on disk if its client
+        // ID cache is filled. As such, we prevent it from touching the disk by intentionally
+        // priming the cache & deleting the files it added now, and resetting the cache at the
+        // latest possible moment before we attempt to test the client ID file.
+        //
+        // This is fragile because it relies on the ClientID cache's implementation, however,
+        // some alternatives (e.g. changing file system permissions, file locking) are worse
+        // because they can fire error handling code, which is not currently under test.
+        //
+        // First, we delete the test files - we don't want the cache prime to fail which could happen if
+        // these files are around & corrupted from a previous test/install. Then we prime the cache,
+        // and delete the files the cache priming added, so the tests are ready to add their own version
+        // of these files.
+        deleteClientIDFiles();
+        primeJsClientIdCache();
+        deleteClientIDFiles();
 
         // TODO: If these tests weren't so expensive to run in automation,
         // this should be two separate tests to avoid storing state between tests.
-        testJavaCreatesClientId();
-        resetTest(true);
-        testJsCreatesClientId();
-        resetTest(true);
-        testJavaMigratesFromHealthReport();
-        resetTest(true);
-        testJsMigratesFromHealthReport();
+        testJavaCreatesClientId(); // leaves cache filled.
+        deleteClientIDFiles();
+        testJsCreatesClientId(); // leaves cache filled.
+        deleteClientIDFiles();
+        testJavaMigratesFromHealthReport(); // leaves cache filled.
+        deleteClientIDFiles();
+        testJsMigratesFromHealthReport(); // leaves cache filled.
 
         getJS().syncCall("endTest");
     }
@@ -77,9 +98,12 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJavaCreatesClientId() throws Exception {
+        Log.d(LOGTAG, "testJavaCreatesClientId: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
 
         final String clientIdFromJava = getClientIdFromJava();
+        resetJSCache();
         final String clientIdFromJS = getClientIdFromJS();
         fAssertEquals("Client ID from Java equals ID from JS", clientIdFromJava, clientIdFromJS);
 
@@ -100,8 +124,11 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJsCreatesClientId() throws Exception {
+        Log.d(LOGTAG, "testJsCreatesClientId: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
 
+        resetJSCache();
         final String clientIdFromJS = getClientIdFromJS();
         final String clientIdFromJava = getClientIdFromJava();
         fAssertEquals("Client ID from JS equals ID from Java", clientIdFromJS, clientIdFromJava);
@@ -124,6 +151,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJavaMigratesFromHealthReport() throws Exception {
+        Log.d(LOGTAG, "testJavaMigratesFromHealthReport: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
         fAssertFalse("Health report file does not exist yet", getFHRClientIdFile().exists());
 
@@ -132,6 +161,7 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
 
         final String clientIdFromJava = getClientIdFromJava();
         fAssertEquals("Health report client ID merged by Java", expectedClientId, clientIdFromJava);
+        resetJSCache();
         final String clientIdFromJS = getClientIdFromJS();
         fAssertEquals("Merged client ID read by JS", expectedClientId, clientIdFromJS);
 
@@ -153,12 +183,15 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJsMigratesFromHealthReport() throws Exception {
+        Log.d(LOGTAG, "testJsMigratesFromHealthReport: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
         fAssertFalse("Health report file does not exist yet", getFHRClientIdFile().exists());
 
         final String expectedClientId = UUID.randomUUID().toString();
         createFHRClientIdFile(expectedClientId);
 
+        resetJSCache();
         final String clientIdFromJS = getClientIdFromJS();
         fAssertEquals("Health report client ID merged by JS", expectedClientId, clientIdFromJS);
         final String clientIdFromJava = getClientIdFromJava();
@@ -171,7 +204,6 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         fAssertEquals("Same client ID retrieved from Java", expectedClientId, clientIdFromJavaAgain);
         fAssertEquals("Same client ID retrieved from JS cache", expectedClientId, clientIdFromJSCache);
         fAssertEquals("Same client ID retrieved from JS file", expectedClientId, clientIdFromJSFileAgain);
-
     }
 
     private String getClientIdFromJava() throws IOException {
@@ -188,8 +220,19 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
     }
 
     /**
+     * Must be called after Gecko is loaded.
+     */
+    private void primeJsClientIdCache() {
+        // Not the cleanest way, but it works.
+        getClientIdFromJS();
+    }
+
+    /**
      * Resets the client ID cache in ClientID.jsm. This method *must* be called after
      * Gecko is loaded or else this method will hang.
+     *
+     * Note: we do this for very specific reasons - see the comment in the test method
+     * ({@link #testUnifiedTelemetryClientId()}) for more.
      */
     private void resetJSCache() {
         // HACK: the backing JS method is a promise with no return value. Rather than writing a method
