@@ -70,36 +70,42 @@ tasks:
           GECKO_HEAD_REPOSITORY: '{{{url}}}'
           GECKO_HEAD_REF: '{{revision}}'
           GECKO_HEAD_REV: '{{revision}}'
-          # Arguments passed into `mach taskgraph decision`
-          # TODO use mozilla-unified for the base repository once the tc-vcs
-          # tar.gz archives are created or tc-vcs isn't being used.
-          DECISION_ARGS: >
-            --pushlog-id='{{pushlog_id}}'
-            --project='{{project}}'
-            --message='{{comment}}'
-            --owner='{{owner}}'
-            --level='{{level}}'
-            --base-repository='https://hg.mozilla.org/mozilla-central'
-            --head-repository='{{{url}}}'
-            --head-ref='{{revision}}'
-            --head-rev='{{revision}}'
-            --revision-hash='{{revision_hash}}'
 
         cache:
           level-{{level}}-hg-shared: /home/worker/hg-shared
-          level-{{level}}-gecko-decision: /home/worker/workspace
+          level-{{level}}-checkouts: /home/worker/checkouts
 
         features:
           taskclusterProxy: true
 
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the version
-        image: 'taskcluster/decision:0.1.2'
+        image: 'taskcluster/decision:0.1.3'
 
         maxRunTime: 1800
 
+        # TODO use mozilla-unified for the base repository once the tc-vcs
+        # tar.gz archives are created or tc-vcs isn't being used.
         command:
-          - /home/worker/bin/run-decision
+          - /home/worker/bin/run-task
+          - '--vcs-checkout=/home/worker/checkouts/gecko'
+          - '--'
+          - bash
+          - -cx
+          - >
+              cd /home/worker/checkouts/gecko &&
+              ln -s /home/worker/artifacts artifacts &&
+              ./mach --log-no-times taskgraph decision
+              --pushlog-id='{{pushlog_id}}'
+              --project='{{project}}'
+              --message='{{comment}}'
+              --owner='{{owner}}'
+              --level='{{level}}'
+              --base-repository='https://hg.mozilla.org/mozilla-central'
+              --head-repository='{{{url}}}'
+              --head-ref='{{revision}}'
+              --head-rev='{{revision}}'
+              --revision-hash='{{revision_hash}}'
 
         artifacts:
           'public':
