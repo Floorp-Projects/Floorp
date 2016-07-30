@@ -34,8 +34,8 @@ class FreeBSDBootstrapper(BaseBootstrapper):
         if not self.which('unzip'):
             self.packages.append('unzip')
 
-        # gcc in base is too old
-        if self.flavor == 'freebsd' and self.version < 9:
+        # GCC 4.2 or Clang 3.4 in base are too old
+        if self.flavor == 'freebsd' and self.version < 11:
             self.browser_packages.append('gcc')
 
     def pkg_install(self, *packages):
