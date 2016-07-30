@@ -1862,9 +1862,8 @@ void
 MediaDecoder::ConstructMediaTracks()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IsShutdown());
 
-  if (mMediaTracksConstructed || !mInfo) {
+  if (IsShutdown() || mMediaTracksConstructed || !mInfo) {
     return;
   }
 
