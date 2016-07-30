@@ -2463,7 +2463,7 @@ class BaseCompiler
 
     void clzI64(RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        masm.clz64(srcDest.reg, srcDest.reg);
+        masm.clz64(srcDest.reg, srcDest.reg.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: clzI64");
 #endif
@@ -2471,7 +2471,7 @@ class BaseCompiler
 
     void ctzI64(RegI64 srcDest) {
 #if defined(JS_CODEGEN_X64)
-        masm.ctz64(srcDest.reg, srcDest.reg);
+        masm.ctz64(srcDest.reg, srcDest.reg.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: ctzI64");
 #endif
@@ -2503,7 +2503,7 @@ class BaseCompiler
 
     void popcntI64(RegI64 srcDest, RegI64 tmp) {
 #if defined(JS_CODEGEN_X64)
-        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg);
+        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: popcntI64");
 #endif
@@ -2579,7 +2579,7 @@ class BaseCompiler
                                                                          dest));
         if (!ool)
             return false;
-        masm.branchTruncateFloat32(src.reg, dest.reg, ool->entry());
+        masm.branchTruncateFloat32ToInt32(src.reg, dest.reg, ool->entry());
         masm.bind(ool->rejoin());
         return true;
     }
@@ -2591,7 +2591,7 @@ class BaseCompiler
                                                                          dest));
         if (!ool)
             return false;
-        masm.branchTruncateDouble(src.reg, dest.reg, ool->entry());
+        masm.branchTruncateDoubleToInt32(src.reg, dest.reg, ool->entry());
         masm.bind(ool->rejoin());
         return true;
     }
@@ -6776,7 +6776,7 @@ LiveRegisterSet BaseCompiler::VolatileReturnGPR = volatileReturnGPR();
 bool
 js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
 {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+#if defined(JS_CODEGEN_X64)
     if (!fg->usesSignalsForInterrupts())
         return false;
 

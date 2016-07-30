@@ -5194,8 +5194,11 @@ class MWrapInt64ToInt32
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    explicit MWrapInt64ToInt32(MDefinition* def)
-      : MUnaryInstruction(def)
+    bool bottomHalf_;
+
+    explicit MWrapInt64ToInt32(MDefinition* def, bool bottomHalf)
+      : MUnaryInstruction(def),
+        bottomHalf_(bottomHalf)
     {
         setResultType(MIRType::Int32);
         setMovable();
@@ -5203,16 +5206,26 @@ class MWrapInt64ToInt32
 
   public:
     INSTRUCTION_HEADER(WrapInt64ToInt32)
-    static MWrapInt64ToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
-        return new(alloc) MWrapInt64ToInt32(def);
+    static MWrapInt64ToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def,
+                                       bool bottomHalf = true)
+    {
+        return new(alloc) MWrapInt64ToInt32(def, bottomHalf);
     }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
     bool congruentTo(const MDefinition* ins) const override {
+        if (!ins->isWrapInt64ToInt32())
+            return false;
+        if (ins->toWrapInt64ToInt32()->bottomHalf() != bottomHalf())
+            return false;
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
+    }
+
+    bool bottomHalf() const {
+        return bottomHalf_;
     }
 };
 

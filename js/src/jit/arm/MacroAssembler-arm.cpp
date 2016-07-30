@@ -708,7 +708,7 @@ MacroAssemblerARM::ma_rsb(Imm32 imm, Register dest, SBit s, Condition c)
 void
 MacroAssemblerARM::ma_rsb(Register src1, Register dest, SBit s, Condition c)
 {
-    as_alu(dest, dest, O2Reg(src1), OpAdd, s, c);
+    as_alu(dest, src1, O2Reg(dest), OpRsb, s, c);
 }
 
 void
@@ -898,6 +898,20 @@ MacroAssemblerARM::ma_check_mul(Register src1, Imm32 imm, Register dest, Conditi
     }
 
     MOZ_CRASH("Condition NYI");
+}
+
+void
+MacroAssemblerARM::ma_umull(Register src1, Imm32 imm, Register destHigh, Register destLow)
+{
+    ScratchRegisterScope scratch(asMasm());
+    ma_mov(imm, scratch);
+    as_umull(destHigh, destLow, src1, scratch);
+}
+
+void
+MacroAssemblerARM::ma_umull(Register src1, Register src2, Register destHigh, Register destLow)
+{
+    as_umull(destHigh, destLow, src1, src2);
 }
 
 void

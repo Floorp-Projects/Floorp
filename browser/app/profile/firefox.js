@@ -584,7 +584,9 @@ pref("browser.xul.error_pages.enabled", true);
 pref("browser.xul.error_pages.expert_bad_cert", false);
 
 // Enable captive portal detection.
+#ifdef NIGHTLY_BUILD
 pref("network.captive-portal-service.enabled", true);
+#endif
 
 // If true, network link events will change the value of navigator.onLine
 pref("network.manage-offline-status", true);
@@ -1475,4 +1477,4 @@ pref("print.use_simplify_page", true);
 
 // Space separated list of URLS that are allowed to send objects (instead of
 // only strings) through webchannels. This list is duplicated in mobile/android/app/mobile.js
-pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://hello.firefox.com https://input.mozilla.org https://support.mozilla.org https://install.mozilla.org");
+pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://input.mozilla.org https://support.mozilla.org https://install.mozilla.org");

@@ -16,7 +16,7 @@ function mismatchError(actual, expect) {
 }
 
 function hasI64() {
-    return getBuildConfiguration().x64;
+    return wasmInt64IsSupported();
 }
 
 function jsify(wasmVal) {

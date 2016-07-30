@@ -1464,7 +1464,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
 }
 
 bool
-AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* aOut)
+AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, LayoutDevicePoint* aOut)
 {
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
     ScreenToScreenMatrix4x4 transformScreenToGecko =
@@ -1477,14 +1477,8 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* a
       return false;
     }
 
-    { // scoped lock to access mFrameMetrics
-      ReentrantMonitorAutoEnter lock(mMonitor);
-      // NOTE: This isn't *quite* LayoutDevicePoint, we just don't have a name
-      // for this coordinate space and it maps the closest to LayoutDevicePoint.
-      *aOut = LayoutDevicePoint(ViewAs<LayoutDevicePixel>(*layoutPoint,
-                  PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent))
-            / mFrameMetrics.GetDevPixelsPerCSSPixel();
-    }
+    *aOut = LayoutDevicePoint(ViewAs<LayoutDevicePixel>(*layoutPoint,
+                PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
     return true;
   }
   return false;
@@ -1988,7 +1982,7 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
   APZC_LOG("%p got a long-press in state %d\n", this, mState);
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
-    CSSPoint geckoScreenPoint;
+    LayoutDevicePoint geckoScreenPoint;
     if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
       CancelableBlockState* block = CurrentInputBlock();
       MOZ_ASSERT(block);
@@ -2017,7 +2011,7 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(TapType aType,
       const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers) {
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
-    CSSPoint geckoScreenPoint;
+    LayoutDevicePoint geckoScreenPoint;
     if (ConvertToGecko(aPoint, &geckoScreenPoint)) {
       CancelableBlockState* block = CurrentInputBlock();
       MOZ_ASSERT(block);
@@ -2041,7 +2035,7 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(TapType aType,
       // schedule the singletap message to run on the next spin of the event loop.
       // See bug 965381 for the issue this was causing.
       RefPtr<Runnable> runnable =
-        NewRunnableMethod<TapType, CSSPoint, mozilla::Modifiers,
+        NewRunnableMethod<TapType, LayoutDevicePoint, mozilla::Modifiers,
                           ScrollableLayerGuid, uint64_t>(controller,
                             &GeckoContentController::HandleTap,
                             aType, geckoScreenPoint,
@@ -2082,7 +2076,7 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
     if (mZoomConstraints.mAllowDoubleTapZoom && CurrentTouchBlock()->TouchActionAllowsDoubleTapZoom()) {
-      CSSPoint geckoScreenPoint;
+      LayoutDevicePoint geckoScreenPoint;
       if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
         controller->HandleTap(TapType::eDoubleTap, geckoScreenPoint,
             aEvent.modifiers, GetGuid(), CurrentTouchBlock()->GetBlockId());

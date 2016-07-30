@@ -89,17 +89,17 @@
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  outline: 0;
+  outline: 0 !important;
 }
 
-.property-value, .other-property-value {
+.other-property-value {
   background-image: url(images/arrow-e.png);
   background-repeat: no-repeat;
   background-size: 5px 8px;
 }
 
 @media (min-resolution: 1.1dppx) {
-  .property-value, .other-property-value {
+  .other-property-value {
     background-image: url(images/arrow-e@2x.png);
   }
 }
@@ -108,9 +108,8 @@
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background-position: 2px center;
   padding-left: 10px;
-  outline: 0;
+  outline: 0 !important;
 }
 
 .other-property-value {

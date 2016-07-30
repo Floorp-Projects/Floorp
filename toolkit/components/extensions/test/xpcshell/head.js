@@ -2,8 +2,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-/* exported createHttpServer */
+/* exported createHttpServer, promiseConsoleOutput */
 
+Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
@@ -52,3 +53,32 @@ function createHttpServer(port = -1) {
 
   return server;
 }
+
+var promiseConsoleOutput = Task.async(function* (task) {
+  const DONE = `=== console listener ${Math.random()} done ===`;
+
+  let listener;
+  let messages = [];
+  let awaitListener = new Promise(resolve => {
+    listener = msg => {
+      if (msg == DONE) {
+        resolve();
+      } else {
+        void (msg instanceof Ci.nsIConsoleMessage);
+        messages.push(msg);
+      }
+    };
+  });
+
+  Services.console.registerListener(listener);
+  try {
+    let result = yield task();
+
+    Services.console.logStringMessage(DONE);
+    yield awaitListener;
+
+    return {messages, result};
+  } finally {
+    Services.console.unregisterListener(listener);
+  }
+});

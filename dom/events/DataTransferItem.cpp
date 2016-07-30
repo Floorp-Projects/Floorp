@@ -9,6 +9,11 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/DataTransferItemBinding.h"
+#include "mozilla/dom/Directory.h"
+#include "mozilla/dom/DirectoryEntry.h"
+#include "mozilla/dom/DOMFileSystem.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/FileEntry.h"
 #include "nsIClipboard.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
@@ -266,6 +271,78 @@ DataTransferItem::GetAsFile(ErrorResult& aRv)
 
   RefPtr<File> file = mCachedFile;
   return file.forget();
+}
+
+already_AddRefed<Entry>
+DataTransferItem::GetAsEntry(ErrorResult& aRv)
+{
+  RefPtr<File> file = GetAsFile(aRv);
+  if (NS_WARN_IF(aRv.Failed()) || !file) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global;
+  RefPtr<DataTransfer> dataTransfer;
+  RefPtr<DataTransferItemList> list = GetParentObject();
+  if (!list) {
+    return nullptr;
+  }
+
+  dataTransfer = list->GetParentObject();
+  if (!dataTransfer) {
+    return nullptr;
+  }
+
+  // This is annoying, but DataTransfer may have various things as parent.
+  nsCOMPtr<EventTarget> target =
+    do_QueryInterface(dataTransfer->GetParentObject());
+  if (target) {
+    global = target->GetOwnerGlobal();
+  } else {
+    nsCOMPtr<nsIDOMEvent> event =
+      do_QueryInterface(dataTransfer->GetParentObject());
+    if (event) {
+      global = event->InternalDOMEvent()->GetParentObject();
+    }
+  }
+
+  if (!global) {
+    return nullptr;
+  }
+
+  RefPtr<DOMFileSystem> fs = DOMFileSystem::Create(global);
+  RefPtr<Entry> entry;
+  BlobImpl* impl = file->Impl();
+  MOZ_ASSERT(impl);
+
+  if (impl->IsDirectory()) {
+    nsAutoString fullpath;
+    impl->GetMozFullPathInternal(fullpath, aRv);
+    if (aRv.Failed()) {
+      aRv.SuppressException();
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIFile> directoryFile;
+    nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(fullpath),
+                                        true, getter_AddRefs(directoryFile));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    RefPtr<Directory> directory = Directory::Create(global, directoryFile);
+    entry = new DirectoryEntry(global, directory, fs);
+  } else {
+    entry = new FileEntry(global, file, fs);
+  }
+
+  Sequence<RefPtr<Entry>> entries;
+  if (!entries.AppendElement(entry, fallible)) {
+    return nullptr;
+  }
+
+  fs->CreateRoot(entries);
+  return entry.forget();
 }
 
 already_AddRefed<File>

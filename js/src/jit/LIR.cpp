@@ -89,7 +89,11 @@ LBlock::init(TempAllocator& alloc)
     size_t numLPhis = 0;
     for (MPhiIterator i(block_->phisBegin()), e(block_->phisEnd()); i != e; ++i) {
         MPhi* phi = *i;
-        numLPhis += (phi->type() == MIRType::Value) ? BOX_PIECES : 1;
+        switch (phi->type()) {
+          case MIRType::Value: numLPhis += BOX_PIECES; break;
+          case MIRType::Int64: numLPhis += INT64_PIECES; break;
+          default: numLPhis += 1; break;
+        }
     }
 
     // Allocate space for the LPhis.
@@ -105,7 +109,12 @@ LBlock::init(TempAllocator& alloc)
         MPhi* phi = *i;
         MOZ_ASSERT(phi->numOperands() == numPreds);
 
-        int numPhis = (phi->type() == MIRType::Value) ? BOX_PIECES : 1;
+        int numPhis;
+        switch (phi->type()) {
+          case MIRType::Value: numPhis = BOX_PIECES; break;
+          case MIRType::Int64: numPhis = INT64_PIECES; break;
+          default: numPhis = 1; break;
+        }
         for (int i = 0; i < numPhis; i++) {
             LAllocation* inputs = alloc.allocateArray<LAllocation>(numPreds);
             if (!inputs)
@@ -343,6 +352,7 @@ static const char * const TypeChars[] =
 {
     "g",            // GENERAL
     "i",            // INT32
+    "i64",          // INT64
     "o",            // OBJECT
     "s",            // SLOTS
     "f",            // FLOAT32

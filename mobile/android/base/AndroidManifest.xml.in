@@ -241,7 +241,7 @@
         </receiver>
 
         <receiver
-            android:name="org.mozilla.gecko.NotificationReceiver"
+            android:name="org.mozilla.gecko.notifications.NotificationReceiver"
             android:exported="false">
             <!-- Notification API V2 -->
             <intent-filter>
@@ -357,7 +357,7 @@
 
         <service
             android:exported="false"
-            android:name="org.mozilla.gecko.NotificationService">
+            android:name="org.mozilla.gecko.notifications.NotificationService">
         </service>
 
         <service

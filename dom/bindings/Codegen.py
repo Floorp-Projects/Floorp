@@ -2247,6 +2247,7 @@ class MethodDefiner(PropertyDefiner):
         # Generate the keys/values/entries aliases for value iterables.
         maplikeOrSetlikeOrIterable = descriptor.interface.maplikeOrSetlikeOrIterable
         if (not static and
+            not unforgeable and
             maplikeOrSetlikeOrIterable and
             maplikeOrSetlikeOrIterable.isIterable() and
             maplikeOrSetlikeOrIterable.isValueIterator()):
@@ -2282,7 +2283,7 @@ class MethodDefiner(PropertyDefiner):
                 "name": "forEach",
                 "methodInfo": False,
                 "selfHostedName": "ArrayForEach",
-                "length": 0,
+                "length": 1,
                 "flags": "JSPROP_ENUMERATE",
                 "condition": PropertyDefiner.getControllingCondition(m,
                                                                      descriptor)

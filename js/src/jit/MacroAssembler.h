@@ -37,6 +37,8 @@
 #include "vm/Shape.h"
 #include "vm/UnboxedObject.h"
 
+using mozilla::FloatingPoint;
+
 // * How to read/write MacroAssembler method declarations:
 //
 // The following macros are made to avoid #ifdef around each method declarations
@@ -719,6 +721,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void orPtr(Register src, Register dest) PER_ARCH;
     inline void orPtr(Imm32 imm, Register dest) PER_ARCH;
 
+    inline void and64(Register64 src, Register64 dest) DEFINED_ON(x86, arm);
     inline void or64(Register64 src, Register64 dest) PER_ARCH;
     inline void xor64(Register64 src, Register64 dest) PER_ARCH;
 
@@ -727,6 +730,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void xorPtr(Register src, Register dest) PER_ARCH;
     inline void xorPtr(Imm32 imm, Register dest) PER_ARCH;
+
+    inline void and64(const Operand& src, Register64 dest) DEFINED_ON(x64);
+    inline void or64(const Operand& src, Register64 dest) DEFINED_ON(x64);
+    inline void xor64(const Operand& src, Register64 dest) DEFINED_ON(x64);
 
     // ===============================================================
     // Arithmetic functions
@@ -748,6 +755,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void add64(Register64 src, Register64 dest) PER_ARCH;
     inline void add64(Imm32 imm, Register64 dest) PER_ARCH;
+    inline void add64(Imm64 imm, Register64 dest) DEFINED_ON(x86, x64, arm);
+    inline void add64(const Operand& src, Register64 dest) DEFINED_ON(x64);
 
     inline void addFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
@@ -764,6 +773,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void subPtr(ImmWord imm, Register dest) DEFINED_ON(x64);
     inline void subPtr(const Address& addr, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
 
+    inline void sub64(Register64 src, Register64 dest) DEFINED_ON(x86, x64, arm);
+    inline void sub64(Imm64 imm, Register64 dest) DEFINED_ON(x86, x64, arm);
+    inline void sub64(const Operand& src, Register64 dest) DEFINED_ON(x64);
+
     inline void subFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
     inline void subDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
@@ -773,7 +786,14 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void mul32(Register src1, Register src2, Register dest, Label* onOver, Label* onZero) DEFINED_ON(arm64);
 
+    inline void mul64(const Operand& src, const Register64& dest) DEFINED_ON(x64);
+    inline void mul64(const Operand& src, const Register64& dest, const Register temp)
+        DEFINED_ON(x64);
     inline void mul64(Imm64 imm, const Register64& dest) PER_ARCH;
+    inline void mul64(Imm64 imm, const Register64& dest, const Register temp)
+        DEFINED_ON(x86, x64, arm);
+    inline void mul64(const Register64& src, const Register64& dest, const Register temp)
+        DEFINED_ON(x86, x64, arm);
 
     inline void mulBy3(Register src, Register dest) PER_ARCH;
 
@@ -805,6 +825,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void dec32(RegisterOrInt32Constant* key);
 
     inline void neg32(Register reg) PER_SHARED_ARCH;
+    inline void neg64(Register64 reg) DEFINED_ON(x86, x64, arm);
 
     inline void negateFloat(FloatRegister reg) PER_SHARED_ARCH;
 
@@ -836,32 +857,50 @@ class MacroAssembler : public MacroAssemblerSpecific
     // immediate, for example, the ARM assembler requires the count
     // for 32-bit shifts to be in the range [0,31].
 
+    inline void lshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
+    inline void rshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
+    inline void rshift32Arithmetic(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
+
     inline void lshiftPtr(Imm32 imm, Register dest) PER_ARCH;
-
-    inline void lshift64(Imm32 imm, Register64 dest) PER_ARCH;
-
     inline void rshiftPtr(Imm32 imm, Register dest) PER_ARCH;
     inline void rshiftPtr(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
-
     inline void rshiftPtrArithmetic(Imm32 imm, Register dest) PER_ARCH;
 
+    inline void lshift64(Imm32 imm, Register64 dest) PER_ARCH;
     inline void rshift64(Imm32 imm, Register64 dest) PER_ARCH;
+    inline void rshift64Arithmetic(Imm32 imm, Register64 dest) DEFINED_ON(x86, x64, arm);
 
     // On x86_shared these have the constraint that shift must be in CL.
     inline void lshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32Arithmetic(Register shift, Register srcDest) PER_SHARED_ARCH;
 
-    inline void lshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
-    inline void rshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
-    inline void rshift32Arithmetic(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
+    inline void lshift64(Register shift, Register64 srcDest) DEFINED_ON(x86, x64, arm);
+    inline void rshift64(Register shift, Register64 srcDest) DEFINED_ON(x86, x64, arm);
+    inline void rshift64Arithmetic(Register shift, Register64 srcDest) DEFINED_ON(x86, x64, arm);
 
     // ===============================================================
     // Rotation functions
+    // Note: - on x86 and x64 the count register must be in CL.
+    //       - on x64 the temp register should be InvalidReg.
+
     inline void rotateLeft(Imm32 count, Register input, Register dest) PER_SHARED_ARCH;
     inline void rotateLeft(Register count, Register input, Register dest) PER_SHARED_ARCH;
+    inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest) DEFINED_ON(x64);
+    inline void rotateLeft64(Register count, Register64 input, Register64 dest) DEFINED_ON(x64);
+    inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest, Register temp)
+        DEFINED_ON(x86, x64, arm);
+    inline void rotateLeft64(Register count, Register64 input, Register64 dest, Register temp)
+        DEFINED_ON(x86, x64, arm);
+
     inline void rotateRight(Imm32 count, Register input, Register dest) PER_SHARED_ARCH;
     inline void rotateRight(Register count, Register input, Register dest) PER_SHARED_ARCH;
+    inline void rotateRight64(Imm32 count, Register64 input, Register64 dest) DEFINED_ON(x64);
+    inline void rotateRight64(Register count, Register64 input, Register64 dest) DEFINED_ON(x64);
+    inline void rotateRight64(Imm32 count, Register64 input, Register64 dest, Register temp)
+        DEFINED_ON(x86, x64, arm);
+    inline void rotateRight64(Register count, Register64 input, Register64 dest, Register temp)
+        DEFINED_ON(x86, x64, arm);
 
     // ===============================================================
     // Bit counting functions
@@ -870,15 +909,15 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void clz32(Register src, Register dest, bool knownNotZero) PER_SHARED_ARCH;
     inline void ctz32(Register src, Register dest, bool knownNotZero) PER_SHARED_ARCH;
 
-    inline void clz64(Register64 src, Register64 dest) DEFINED_ON(x64);
-    inline void ctz64(Register64 src, Register64 dest) DEFINED_ON(x64);
+    inline void clz64(Register64 src, Register dest) DEFINED_ON(x86, x64, arm);
+    inline void ctz64(Register64 src, Register dest) DEFINED_ON(x86, x64, arm);
 
     // On x86_shared, temp may be Invalid only if the chip has the POPCNT instruction.
     // On ARM, temp may never be Invalid.
     inline void popcnt32(Register src, Register dest, Register temp) DEFINED_ON(arm, x86_shared);
 
     // temp may be invalid only if the chip has the POPCNT instruction.
-    inline void popcnt64(Register64 src, Register64 dest, Register64 temp) DEFINED_ON(x64);
+    inline void popcnt64(Register64 src, Register64 dest, Register temp) DEFINED_ON(x86, x64, arm);
 
     // ===============================================================
     // Branch functions
@@ -910,6 +949,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
+    // The supported condition are Equal, NotEqual, LessThan(orEqual), GreaterThan(orEqual),
+    // Below(orEqual) and Above(orEqual).
+    // When a fail label is not defined it will fall through to next instruction,
+    // else jump to the fail label.
+    inline void branch64(Condition cond, Register64 lhs, Imm64 val, Label* success,
+                         Label* fail = nullptr) DEFINED_ON(x86, x64, arm);
+    inline void branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success,
+                         Label* fail = nullptr) DEFINED_ON(x86, x64, arm);
+    // On x86 and x64 NotEqual and Equal conditions are allowed for the branch64 variants
+    // with Address as lhs. On others only the NotEqual condition.
     inline void branch64(Condition cond, const Address& lhs, Imm64 val, Label* label) PER_ARCH;
 
     // Compare the value at |lhs| with the value at |rhs|.  The scratch
@@ -954,13 +1003,35 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                             Label* label) PER_SHARED_ARCH;
-    inline void branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
+
+    // Truncate a double/float32 to int32 and when it doesn't fit an int32 it will jump to
+    // the failure label. This particular variant is allowed to return the value module 2**32,
+    // which isn't implemented on all architectures.
+    // E.g. the x64 variants will do this only in the int64_t range.
+    inline void branchTruncateFloat32MaybeModUint32(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branchTruncateDoubleMaybeModUint32(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    // Truncate a double/float32 to intptr and when it doesn't fit jump to the failure label.
+    inline void branchTruncateFloat32ToPtr(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(x86, x64);
+    inline void branchTruncateDoubleToPtr(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(x86, x64);
+
+    // Truncate a double/float32 to int32 and when it doesn't fit jump to the failure label.
+    inline void branchTruncateFloat32ToInt32(FloatRegister src, Register dest, Label* fail)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branchTruncateDoubleToInt32(FloatRegister src, Register dest, Label* fail)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
     inline void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                              Label* label) PER_SHARED_ARCH;
-    inline void branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    inline void branchDoubleNotInInt64Range(Address src, Register temp, Label* fail);
+    inline void branchDoubleNotInUInt64Range(Address src, Register temp, Label* fail);
+    inline void branchFloat32NotInInt64Range(Address src, Register temp, Label* fail);
+    inline void branchFloat32NotInUInt64Range(Address src, Register temp, Label* fail);
 
     template <typename T>
     inline void branchAdd32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
@@ -977,12 +1048,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
-    inline void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branchTestPtr(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
     inline void branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
     inline void branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
 
+    template <class L>
     inline void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
-                             Label* label) PER_ARCH;
+                             L label) PER_ARCH;
 
     // Branches to |label| if |reg| is false. |reg| should be a C++ bool.
     template <class L>
@@ -1216,6 +1289,23 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T>
     void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
                            MIRType slotType) PER_ARCH;
+
+  public:
+    // ========================================================================
+    // Truncate floating point.
+
+    // Undefined behaviour when truncation is outside Int64 range.
+    // Needs a temp register if SSE3 is not present.
+    inline void truncateFloat32ToInt64(Address src, Address dest, Register temp)
+        DEFINED_ON(x86_shared);
+    inline void truncateFloat32ToUInt64(Address src, Address dest, Register temp,
+                                        FloatRegister floatTemp)
+        DEFINED_ON(x86, x64);
+    inline void truncateDoubleToInt64(Address src, Address dest, Register temp)
+        DEFINED_ON(x86_shared);
+    inline void truncateDoubleToUInt64(Address src, Address dest, Register temp,
+                                       FloatRegister floatTemp)
+        DEFINED_ON(x86, x64);
 
     //}}} check_macroassembler_style
   public:

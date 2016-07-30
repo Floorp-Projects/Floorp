@@ -220,9 +220,8 @@ class FunctionCompiler
         MOZ_ASSERT(loopDepth_ == 0);
         MOZ_ASSERT(blockDepth_ == 0);
 #ifdef DEBUG
-        for (ControlFlowPatchVector& patches : blockPatches_) {
+        for (ControlFlowPatchVector& patches : blockPatches_)
             MOZ_ASSERT(patches.empty());
-        }
 #endif
         MOZ_ASSERT(inDeadCode());
         MOZ_ASSERT(done(), "all bytes must be consumed");
@@ -817,12 +816,28 @@ class FunctionCompiler
             return true;
 
         ABIArg arg = args->abi_.next(ToMIRType(type));
-        if (arg.kind() != ABIArg::Stack)
+        switch (arg.kind()) {
+#ifdef JS_CODEGEN_REGISTER_PAIR
+          case ABIArg::GPR_PAIR: {
+            auto mirLow = MWrapInt64ToInt32::NewAsmJS(alloc(), argDef, /* bottomHalf = */ true);
+            curBlock_->add(mirLow);
+            auto mirHigh = MWrapInt64ToInt32::NewAsmJS(alloc(), argDef, /* bottomHalf = */ false);
+            curBlock_->add(mirHigh);
+            return args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(arg.gpr64().low), mirLow)) &&
+                   args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(arg.gpr64().high), mirHigh));
+          }
+#endif
+          case ABIArg::GPR:
+          case ABIArg::FPU:
             return args->regArgs_.append(MAsmJSCall::Arg(arg.reg(), argDef));
-
-        auto* mir = MAsmJSPassStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
-        curBlock_->add(mir);
-        return args->stackArgs_.append(mir);
+          case ABIArg::Stack: {
+            auto* mir = MAsmJSPassStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
+            curBlock_->add(mir);
+            return args->stackArgs_.append(mir);
+          }
+          default:
+            MOZ_CRASH("Unknown ABIArg kind.");
+        }
     }
 
     // Add the hidden TLS pointer argument to CallArgs, and assume that it will

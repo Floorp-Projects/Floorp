@@ -39,10 +39,10 @@ struct CreateDecoderParams {
   {}
 
   template <typename T1, typename... Ts>
-  CreateDecoderParams(const TrackInfo& aConfig, T1 a1, Ts... as)
+  CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
     : mConfig(aConfig)
   {
-    Set(a1, as...);
+    Set(mozilla::Forward<T1>(a1), mozilla::Forward<Ts>(args)...);
   }
 
   const VideoInfo& VideoConfig() const
@@ -73,13 +73,10 @@ private:
   void Set(layers::LayersBackend aLayersBackend) { mLayersBackend = aLayersBackend; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
   template <typename T1, typename T2, typename... Ts>
-  void Set(T1 a1, T2 a2, Ts... as)
+  void Set(T1&& a1, T2&& a2, Ts&&... args)
   {
-    // Parameter pack expansion trick, to call Set() on each argument.
-    using expander = int[];
-    (void)expander {
-      (Set(a1), 0), (Set(a2), 0), (Set(as), 0)...
-    };
+    Set(mozilla::Forward<T1>(a1));
+    Set(mozilla::Forward<T2>(a2), mozilla::Forward<Ts>(args)...);
   }
 };
 
