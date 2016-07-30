@@ -1892,7 +1892,10 @@ void
 MediaDecoder::RemoveMediaTracks()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IsShutdown());
+
+  if (IsShutdown()) {
+    return;
+  }
 
   HTMLMediaElement* element = mOwner->GetMediaElement();
   if (!element) {
