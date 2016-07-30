@@ -86,15 +86,12 @@
   background-color: transparent;
   background-repeat: no-repeat;
   border-radius: 10px;
-  filter: invert(1);
 }
 
 .notificationbox .messageCloseButton:hover {
-  background-color: gray;
-  filter: invert(0);
+  background-color: rgba(170, 170, 170, .2); /* --toolbar-tab-hover */
 }
 
 .notificationbox .messageCloseButton:active {
-  background-color: rgb(102, 102, 102);
-  filter: invert(0);
+  background-color: rgba(170, 170, 170, .4); /* --toolbar-tab-hover-active */
 }

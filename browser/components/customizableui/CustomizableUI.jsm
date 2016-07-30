@@ -64,7 +64,6 @@ var kVersion = 6;
  * version the button is removed in as the value.  e.g. "pocket-button": 5
  */
 var ObsoleteBuiltinButtons = {
-  "loop-button": 5,
   "pocket-button": 6
 };
 
@@ -238,7 +237,6 @@ var CustomizableUIInternal = {
       "bookmarks-menu-button",
       "downloads-button",
       "home-button",
-      "loop-button",
     ];
 
     if (AppConstants.MOZ_DEV_EDITION) {

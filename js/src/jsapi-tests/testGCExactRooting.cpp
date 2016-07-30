@@ -263,9 +263,8 @@ BEGIN_TEST(testGCRootedVector)
     }
 
     // Ensure iterator enumeration works through the rooted.
-    for (auto shape : shapes) {
+    for (auto shape : shapes)
         CHECK(shape);
-    }
 
     CHECK(receiveConstRefToShapeVector(shapes));
 
@@ -280,9 +279,8 @@ bool
 receiveConstRefToShapeVector(const JS::Rooted<GCVector<Shape*>>& rooted)
 {
     // Ensure range enumeration works through the reference.
-    for (auto shape : rooted) {
+    for (auto shape : rooted)
         CHECK(shape);
-    }
     return true;
 }
 
@@ -290,9 +288,8 @@ bool
 receiveHandleToShapeVector(JS::Handle<GCVector<Shape*>> handle)
 {
     // Ensure range enumeration works through the handle.
-    for (auto shape : handle) {
+    for (auto shape : handle)
         CHECK(shape);
-    }
     return true;
 }
 
@@ -300,9 +297,8 @@ bool
 receiveMutableHandleToShapeVector(JS::MutableHandle<GCVector<Shape*>> handle)
 {
     // Ensure range enumeration works through the handle.
-    for (auto shape : handle) {
+    for (auto shape : handle)
         CHECK(shape);
-    }
     return true;
 }
 END_TEST(testGCRootedVector)

@@ -79,73 +79,6 @@ void SafeRelease(T * ptr)
   }
 }
 
-/* This wraps a critical section to track the owner in debug mode, adapted from
-   NSPR and http://blogs.msdn.com/b/oldnewthing/archive/2013/07/12/10433554.aspx */
-class owned_critical_section
-{
-public:
-  owned_critical_section()
-#ifdef DEBUG
-    : owner(0)
-#endif
-  {
-    InitializeCriticalSection(&critical_section);
-  }
-
-  ~owned_critical_section()
-  {
-    DeleteCriticalSection(&critical_section);
-  }
-
-  void enter()
-  {
-    EnterCriticalSection(&critical_section);
-#ifdef DEBUG
-    XASSERT(owner != GetCurrentThreadId() && "recursive locking");
-    owner = GetCurrentThreadId();
-#endif
-  }
-  
-  void leave()
-  {
-#ifdef DEBUG
-    /* GetCurrentThreadId cannot return 0: it is not a the valid thread id */
-    owner = 0;
-#endif
-    LeaveCriticalSection(&critical_section);
-  }
-
-  /* This is guaranteed to have the good behaviour if it succeeds. The behaviour
-     is undefined otherwise. */
-  void assert_current_thread_owns()
-  {
-#ifdef DEBUG
-    /* This implies owner != 0, because GetCurrentThreadId cannot return 0. */
-    XASSERT(owner == GetCurrentThreadId());
-#endif
-  }
-
-private:
-  CRITICAL_SECTION critical_section;
-#ifdef DEBUG
-  DWORD owner;
-#endif
-};
-
-struct auto_lock {
-  auto_lock(owned_critical_section * lock)
-    : lock(lock)
-  {
-    lock->enter();
-  }
-  ~auto_lock()
-  {
-    lock->leave();
-  }
-private:
-  owned_critical_section * lock;
-};
-
 struct auto_com {
   auto_com() {
     result = CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -280,7 +213,7 @@ struct cubeb_stream
   /* The lock protects all members that are touched by the render thread or
      change during a device reset, including: audio_clock, audio_stream_volume,
      client, frames_written, mix_params, total_frames_written, prev_position. */
-  owned_critical_section * stream_reset_lock;
+  owned_critical_section stream_reset_lock;
   /* Maximum number of frames that can be passed down in a callback. */
   uint32_t input_buffer_frame_count;
   /* Maximum number of frames that can be requested in a callback. */
@@ -1063,7 +996,7 @@ HRESULT get_default_endpoint(IMMDevice ** device, EDataFlow direction)
 double
 current_stream_delay(cubeb_stream * stm)
 {
-  stm->stream_reset_lock->assert_current_thread_owns();
+  stm->stream_reset_lock.assert_current_thread_owns();
 
   /* If the default audio endpoint went away during playback and we weren't
      able to configure a new one, it's possible the caller may call this
@@ -1097,7 +1030,7 @@ current_stream_delay(cubeb_stream * stm)
 int
 stream_set_volume(cubeb_stream * stm, float volume)
 {
-  stm->stream_reset_lock->assert_current_thread_owns();
+  stm->stream_reset_lock.assert_current_thread_owns();
 
   if (!stm->audio_stream_volume) {
     return CUBEB_ERROR;
@@ -1451,7 +1384,7 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   WAVEFORMATEX * mix_format;
   HRESULT hr;
 
-  stm->stream_reset_lock->assert_current_thread_owns();
+  stm->stream_reset_lock.assert_current_thread_owns();
 
   if (devid) {
     std::unique_ptr<const wchar_t> id;
@@ -1552,7 +1485,7 @@ int setup_wasapi_stream(cubeb_stream * stm)
   HRESULT hr;
   int rv;
 
-  stm->stream_reset_lock->assert_current_thread_owns();
+  stm->stream_reset_lock.assert_current_thread_owns();
 
   auto_com com;
   if (!com.ok()) {
@@ -1708,7 +1641,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->latency = latency_frames;
   stm->volume = 1.0;
 
-  stm->stream_reset_lock = new owned_critical_section();
+  stm->stream_reset_lock = owned_critical_section();
 
   stm->reconfigure_event = CreateEvent(NULL, 0, 0, NULL);
   if (!stm->reconfigure_event) {
@@ -1761,7 +1694,7 @@ void close_wasapi_stream(cubeb_stream * stm)
 {
   XASSERT(stm);
 
-  stm->stream_reset_lock->assert_current_thread_owns();
+  stm->stream_reset_lock.assert_current_thread_owns();
 
   SafeRelease(stm->output_client);
   stm->output_client = NULL;
@@ -1804,8 +1737,6 @@ void wasapi_stream_destroy(cubeb_stream * stm)
     auto_lock lock(stm->stream_reset_lock);
     close_wasapi_stream(stm);
   }
-
-  delete stm->stream_reset_lock;
 
   free(stm);
 }

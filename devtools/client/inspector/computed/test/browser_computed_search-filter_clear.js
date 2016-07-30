@@ -49,6 +49,8 @@ function* testClearSearchFilter(inspector, computedView) {
   info("Clearing the search filter");
 
   let win = computedView.styleWindow;
+  let doc = computedView.styleDocument;
+  let layoutWrapper = doc.querySelector("#layout-wrapper");
   let propertyViews = computedView.propertyViews;
   let searchField = computedView.searchField;
   let searchClearButton = computedView.searchClearButton;
@@ -56,6 +58,8 @@ function* testClearSearchFilter(inspector, computedView) {
 
   EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, win);
   yield onRefreshed;
+
+  ok(!layoutWrapper.hidden, "Layout view is displayed");
 
   info("Check that the correct properties are visible");
 

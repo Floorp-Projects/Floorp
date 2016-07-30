@@ -11,6 +11,11 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "gfx2DGlue.h"
+#include "GLScreenBuffer.h"
+#include "GLContext.h"
+#include "gfxUtils.h"
+#include "mozilla/layers/PersistentBufferProvider.h"
+#include "client/TextureClientSharedSurface.h"
 
 class gfxContext;
 
@@ -20,6 +25,58 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
+already_AddRefed<SourceSurface>
+BasicCanvasLayer::UpdateSurface()
+{
+  if (mAsyncRenderer) {
+    MOZ_ASSERT(!mBufferProvider);
+    MOZ_ASSERT(!mGLContext);
+    return mAsyncRenderer->GetSurface();
+  }
+
+  if (!mGLContext) {
+    return nullptr;
+  }
+
+  SharedSurface* frontbuffer = nullptr;
+  if (mGLFrontbuffer) {
+    frontbuffer = mGLFrontbuffer.get();
+  } else {
+    GLScreenBuffer* screen = mGLContext->Screen();
+    const auto& front = screen->Front();
+    if (front) {
+      frontbuffer = front->Surf();
+    }
+  }
+
+  if (!frontbuffer) {
+    NS_WARNING("Null frame received.");
+    return nullptr;
+  }
+
+  IntSize readSize(frontbuffer->mSize);
+  SurfaceFormat format = (GetContentFlags() & CONTENT_OPAQUE)
+                          ? SurfaceFormat::B8G8R8X8
+                          : SurfaceFormat::B8G8R8A8;
+  bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
+
+  RefPtr<DataSourceSurface> resultSurf = GetTempSurface(readSize, format);
+  // There will already be a warning from inside of GetTempSurface, but
+  // it doesn't hurt to complain:
+  if (NS_WARN_IF(!resultSurf)) {
+    return nullptr;
+  }
+
+  // Readback handles Flush/MarkDirty.
+  mGLContext->Readback(frontbuffer, resultSurf);
+  if (needsPremult) {
+    gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
+  }
+  MOZ_ASSERT(resultSurf);
+
+  return resultSurf.forget();
+}
+
 void
 BasicCanvasLayer::Paint(DrawTarget* aDT,
                         const Point& aDeviceOffset,
@@ -28,15 +85,22 @@ BasicCanvasLayer::Paint(DrawTarget* aDT,
   if (IsHidden())
     return;
 
+  RefPtr<SourceSurface> surface;
   if (IsDirty()) {
     Painted();
 
     FirePreTransactionCallback();
-    UpdateTarget();
+    surface = UpdateSurface();
     FireDidTransactionCallback();
   }
 
-  if (!mSurface) {
+  bool bufferPoviderSnapshot = false;
+  if (!surface && mBufferProvider) {
+    surface = mBufferProvider->BorrowSnapshot();
+    bufferPoviderSnapshot = !!surface;
+  }
+
+  if (!surface) {
     return;
   }
 
@@ -52,12 +116,16 @@ BasicCanvasLayer::Paint(DrawTarget* aDT,
 
   FillRectWithMask(aDT, aDeviceOffset,
                    Rect(0, 0, mBounds.width, mBounds.height),
-                   mSurface, mSamplingFilter,
+                   surface, mSamplingFilter,
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                    aMaskLayer);
 
   if (needsYFlip) {
     aDT->SetTransform(oldTM);
+  }
+
+  if (bufferPoviderSnapshot) {
+    mBufferProvider->ReturnSnapshot(surface.forget());
   }
 }
 

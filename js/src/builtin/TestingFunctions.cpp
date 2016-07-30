@@ -536,6 +536,14 @@ SuppressSignalHandlers(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+WasmInt64IsSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(wasm::IsI64Implemented());
+    return true;
+}
+
+static bool
 WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3852,6 +3860,10 @@ gc::ZealModeHelpText),
 "suppressSignalHandlers(suppress)",
 "  This function allows artificially suppressing signal handler support, even if the underlying "
 "  platform supports it."),
+
+    JS_FN_HELP("wasmInt64IsSupported", WasmInt64IsSupported, 0, 0,
+"wasmInt64IsSupported()",
+"  Returns a boolean indicating whether WebAssembly has 64bit integer support on the current device."),
 
     JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
 "wasmTextToBinary(str)",

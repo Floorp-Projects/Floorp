@@ -79,6 +79,8 @@ loader.lazyGetter(this, "clipboardHelper", () => {
  * - computed-view-sourcelinks-updated
  *      Fired when the stylesheet source links have been updated (when switching
  *      to source-mapped files)
+ * - computed-view-filtered
+ *      Fired when the computed rules view is filtered
  * - rule-view-refreshed
  *      Fired when the rule view updates to a new node
  * - rule-view-sourcelinks-updated

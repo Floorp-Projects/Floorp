@@ -98,8 +98,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   mBufferProviderTexture = nullptr;
 
   AutoRemoveTexture autoRemove(this);
-  if (mBackBuffer &&
-      (mBackBuffer->IsImmutable() || mBackBuffer->GetSize() != aSize)) {
+  if (mBackBuffer && (mBackBuffer->IsReadLocked() || mBackBuffer->GetSize() != aSize)) {
     autoRemove.mTexture = mBackBuffer;
     mBackBuffer = nullptr;
   }
@@ -122,6 +121,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
       NS_WARNING("Failed to allocate the TextureClient");
       return;
     }
+    mBackBuffer->EnableReadLock();
     MOZ_ASSERT(mBackBuffer->CanExposeDrawTarget());
 
     bufferCreated = true;
@@ -137,7 +137,10 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
     RefPtr<DrawTarget> target = mBackBuffer->BorrowDrawTarget();
     if (target) {
-      aLayer->UpdateTarget(target);
+      if (!aLayer->UpdateTarget(target)) {
+        NS_WARNING("Failed to copy the canvas into a TextureClient.");
+        return;
+      }
       updated = true;
     }
   }

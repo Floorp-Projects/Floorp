@@ -96,9 +96,9 @@ public:
 
     // parse a header line, return the header atom and a pointer to the
     // header value (the substring of the header line -- do not free).
-    static nsresult ParseHeaderLine(const char *line,
+    static nsresult ParseHeaderLine(const nsACString& line,
                                     nsHttpAtom *header=nullptr,
-                                    char **value=nullptr);
+                                    nsACString* value=nullptr);
 
     void Flatten(nsACString &, bool pruneProxyHeaders, bool pruneTransients);
     void FlattenOriginalHeader(nsACString &);
