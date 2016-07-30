@@ -212,8 +212,18 @@ let Converter = Class({
     let themeVarsUrl = clientBaseUrl + "themes/variables.css";
     let commonUrl = clientBaseUrl + "themes/common.css";
 
+    let os;
+    let platform = Services.appinfo.OS;
+    if (platform.startsWith("WINNT")) {
+      os = "win";
+    } else if (platform.startsWith("Darwin")) {
+      os = "mac";
+    } else {
+      os = "linux";
+    }
+
     return "<!DOCTYPE html>\n" +
-      "<html class=\"" + themeClassName + "\">" +
+      "<html platform=\"" + os + "\" class=\"" + themeClassName + "\">" +
       "<head><title>" + this.htmlEncode(title) + "</title>" +
       "<base href=\"" + this.htmlEncode(baseUrl) + "\">" +
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +

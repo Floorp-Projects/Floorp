@@ -8,41 +8,37 @@
 
 .headersPanelBox {
   height: 100%;
-  font-family: Lucida Grande, Tahoma, sans-serif;
-  font-size: 11px;
 }
 
 .headersPanelBox .netInfoHeadersTable {
   overflow: auto;
   height: 100%;
-  line-height: 12px;
 }
 
 .headersPanelBox .netHeadersGroup {
   padding: 10px;
 }
 
+.headersPanelBox td {
+  vertical-align: bottom;
+}
+
 .headersPanelBox .netInfoHeadersGroup {
+  color: var(--theme-body-color-alt);
   margin-bottom: 10px;
-  border-bottom: 1px solid #D7D7D7;
+  border-bottom: 1px solid var(--theme-splitter-color);
   padding-top: 8px;
   padding-bottom: 4px;
-  font-family: Lucida Grande, Tahoma, sans-serif;
   font-weight: bold;
-  color: #565656;
   -moz-user-select: none;
 }
 
-.headersPanelBox .netInfoParamValue code {
-  display: block;
-  color: #18191A;
-  font-size: 11px;
+.headersPanelBox .netInfoParamValue {
   word-wrap: break-word;
 }
 
 .headersPanelBox .netInfoParamName {
   padding: 2px 10px 0 0;
-  font-family: Lucida Grande, Tahoma, sans-serif;
   font-weight: bold;
   vertical-align: top;
   text-align: right;
@@ -50,17 +46,33 @@
 }
 
 /******************************************************************************/
+/* Theme colors have been generated/copied from Network Panel's header view */
+
+/* Light Theme */
+.theme-light .netInfoParamName {
+  color: var(--theme-highlight-red);
+}
+
+.theme-light .netInfoParamValue {
+  color: var(--theme-highlight-purple);
+}
+
 /* Dark Theme */
-
-
-.theme-dark .headersPanelBox .netInfoParamName {
-  color: var(--theme-highlight-blue);
+.theme-dark .netInfoParamName {
+  color: var(--theme-highlight-purple);
 }
 
-.theme-dark .headersPanelBox .netInfoParamValue code {
-  color: var(--theme-highlight-orange);
+.theme-dark .netInfoParamValue {
+  color: var(--theme-highlight-gray);
 }
 
-.theme-dark .headersPanelBox .netInfoHeadersGroup {
-  color: var(--theme-body-color-alt);
+/* Firebug Theme */
+.theme-firebug .netInfoHeadersTable {
+  font-family: Lucida Grande, Tahoma, sans-serif;
+  font-size: 11px;
+  line-height: 12px;
+}
+
+.theme-firebug .netInfoParamValue {
+  font-family: var(--monospace-font-family);
 }
