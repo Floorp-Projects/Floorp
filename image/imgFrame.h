@@ -376,12 +376,8 @@ private: // methods
     bool IsValid() { return !!mDrawable; }
   };
 
-  SurfaceWithFormat SurfaceForDrawing(bool               aDoPadding,
-                                      bool               aDoPartialDecode,
+  SurfaceWithFormat SurfaceForDrawing(bool               aDoPartialDecode,
                                       bool               aDoTile,
-                                      gfxContext*        aContext,
-                                      const nsIntMargin& aPadding,
-                                      gfxRect&           aImageRect,
                                       ImageRegion&       aRegion,
                                       SourceSurface*     aSurface);
 
