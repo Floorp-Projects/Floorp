@@ -20,7 +20,7 @@ test $VARIANT
 
 # Figure out where the remote manifest is so we can use caches for it.
 MANIFEST=$(repository-url.py $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV b2g/config/$TARGET/sources.xml)
-tc-vcs repo-checkout $WORKSPACE/B2G https://git.mozilla.org/b2g/B2G.git $MANIFEST
+tc-vcs repo-checkout $WORKSPACE/B2G https://github.com/mozilla-b2g/B2G.git $MANIFEST
 
 # Ensure symlink has been created to gecko...
 rm -f $WORKSPACE/B2G/gecko
