@@ -5,7 +5,8 @@
 "use strict";
 
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-const { getSourceNames, parseURL, isScratchpadScheme } = require("devtools/client/shared/source-utils");
+const { getSourceNames, parseURL,
+        isScratchpadScheme, getSourceMappedFile } = require("devtools/client/shared/source-utils");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 const l10n = new LocalizationHelper("chrome://devtools/locale/components.properties");
@@ -181,15 +182,8 @@ module.exports = createClass({
     }
 
     let displaySource = showFullSourceUrl ? long : short;
-    // SourceMapped locations might not be parsed properly by parseURL.
-    // Eg: sourcemapped location could be /folder/file.coffee instead of a url
-    // and so the url parser would not parse non-url locations properly
-    // Check for "/" in displaySource. If "/" is in displaySource,
-    // take everything after last "/".
     if (isSourceMapped) {
-      displaySource = displaySource.lastIndexOf("/") < 0 ?
-        displaySource :
-        displaySource.slice(displaySource.lastIndexOf("/") + 1);
+      displaySource = getSourceMappedFile(displaySource);
     } else if (showEmptyPathAsHost && (displaySource === "" || displaySource === "/")) {
       displaySource = host;
     }
