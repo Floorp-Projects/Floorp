@@ -460,11 +460,6 @@ imgFrame::Optimize()
     // moment
   }
 
-  const bool usedSingleColorOptimizationUsefully = mSinglePixel &&
-                                                   mFrameRect.Area() > 1;
-  Telemetry::Accumulate(Telemetry::IMAGE_OPTIMIZE_TO_SINGLE_COLOR_USED,
-                        usedSingleColorOptimizationUsefully);
-
 #ifdef ANDROID
   SurfaceFormat optFormat = gfxPlatform::GetPlatform()
     ->Optimal2DFormatForContent(gfxContentType::COLOR);
