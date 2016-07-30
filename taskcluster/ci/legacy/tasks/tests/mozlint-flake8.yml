@@ -18,8 +18,9 @@ task:
       taskId:
         task-reference: "<docker-image>"
     command:
-      - /home/worker/bin/checkout-gecko-and-run
-      - /home/worker/checkouts/gecko
+      - /home/worker/bin/run-task
+      - '--vcs-checkout=/home/worker/checkouts/gecko'
+      - '--'
       - bash
       - -cx
       - >
