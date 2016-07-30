@@ -10,8 +10,9 @@
 define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
-  const { createFactories } = require("./rep-utils");
-  const { ObjectBox } = createFactories(require("./object-box"));
+
+  // Shortcuts
+  const { span } = React.DOM;
 
   /**
    * Renders null value
@@ -21,7 +22,7 @@ define(function (require, exports, module) {
 
     render: function () {
       return (
-        ObjectBox({className: "null"},
+        span({className: "objectBox objectBox-null"},
           "null"
         )
       );
