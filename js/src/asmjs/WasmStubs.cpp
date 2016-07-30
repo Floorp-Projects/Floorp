@@ -151,7 +151,6 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
     // Use a second non-argument/return register as temporary scratch.
     Register argv = ABINonArgReturnReg0;
     Register scratch = ABINonArgReturnReg1;
-    Register64 scratch64(scratch);
 
 #if defined(JS_CODEGEN_X86)
     masm.loadPtr(Address(masm.getStackPointer(), EntryFrameSize + masm.framePushed()), argv);
@@ -192,7 +191,10 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
-            MOZ_CRASH("wasm uses hardfp for function calls.");
+            if (type == MIRType::Int64)
+                masm.load64(src, iter->gpr64());
+            else
+                MOZ_CRASH("wasm uses hardfp for function calls.");
             break;
 #endif
           case ABIArg::FPU: {
@@ -228,10 +230,20 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
                 masm.load32(src, scratch);
                 masm.storePtr(scratch, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
-              case MIRType::Int64:
+              case MIRType::Int64: {
+                Register sp = masm.getStackPointer();
+#if JS_BITS_PER_WORD == 32
+                masm.load32(Address(src.base, src.offset + INT64LOW_OFFSET), scratch);
+                masm.store32(scratch, Address(sp, iter->offsetFromArgBase() + INT64LOW_OFFSET));
+                masm.load32(Address(src.base, src.offset + INT64HIGH_OFFSET), scratch);
+                masm.store32(scratch, Address(sp, iter->offsetFromArgBase() + INT64HIGH_OFFSET));
+#else
+                Register64 scratch64(scratch);
                 masm.load64(src, scratch64);
-                masm.store64(scratch64, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
+                masm.store64(scratch64, Address(sp, iter->offsetFromArgBase()));
+#endif
                 break;
+              }
               case MIRType::Double:
                 masm.loadDouble(src, ScratchDoubleReg);
                 masm.storeDouble(ScratchDoubleReg,
@@ -328,7 +340,6 @@ static void
 FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argOffset,
                   unsigned offsetToCallerStackArgs, Register scratch, ToValue toValue)
 {
-    Register64 scratch64(scratch);
     for (ABIArgValTypeIter i(args); !i.done(); i++) {
         Address dstAddr(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
 
@@ -354,7 +365,10 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
-            MOZ_CRASH("AsmJS uses hardfp for function calls.");
+            if (type == MIRType::Int64)
+                masm.store64(i->gpr64(), dstAddr);
+            else
+                MOZ_CRASH("AsmJS uses hardfp for function calls.");
             break;
 #endif
           case ABIArg::FPU: {
@@ -398,8 +412,16 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                     masm.breakpoint();
                 } else {
                     Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
+#if JS_BITS_PER_WORD == 32
+                    masm.load32(Address(src.base, src.offset + INT64LOW_OFFSET), scratch);
+                    masm.store32(scratch, Address(dstAddr.base, dstAddr.offset + INT64LOW_OFFSET));
+                    masm.load32(Address(src.base, src.offset + INT64HIGH_OFFSET), scratch);
+                    masm.store32(scratch, Address(dstAddr.base, dstAddr.offset + INT64HIGH_OFFSET));
+#else
+                    Register64 scratch64(scratch);
                     masm.load64(src, scratch64);
                     masm.store64(scratch64, dstAddr);
+#endif
                 }
             } else {
                 MOZ_ASSERT(IsFloatingPointType(type));

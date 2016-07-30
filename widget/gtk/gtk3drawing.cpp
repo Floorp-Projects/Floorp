@@ -660,17 +660,15 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
     focus_width = width + 2 * indicator_spacing;
     focus_height = height + 2 * indicator_spacing;
 
-    style = ClaimStyleContext(isradio ? MOZ_GTK_RADIOBUTTON :
-                                        MOZ_GTK_CHECKBUTTON);
-
     if (selected)
         state_flags = static_cast<GtkStateFlags>(state_flags|checkbox_check_state);
 
     if (inconsistent)
         state_flags = static_cast<GtkStateFlags>(state_flags|GTK_STATE_FLAG_INCONSISTENT);
 
-    gtk_style_context_set_state(style, state_flags);
-    gtk_style_context_set_direction(style, direction);
+    style = ClaimStyleContext(isradio ? MOZ_GTK_RADIOBUTTON :
+                                        MOZ_GTK_CHECKBUTTON,
+                              direction, state_flags);
 
     if (gtk_check_version(3, 20, 0) == nullptr) {
         gtk_render_background(style, cr, x, y, width, height);
@@ -1493,12 +1491,9 @@ moz_gtk_container_paint(cairo_t *cr, GdkRectangle* rect,
                         WidgetNodeType  widget_type,
                         GtkTextDirection direction)
 {
-    GtkStyleContext* style = ClaimStyleContext(widget_type);
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-
-    gtk_style_context_set_state(style, state_flags);
-    gtk_style_context_set_direction(style, direction);
-
+    GtkStyleContext* style = ClaimStyleContext(widget_type, direction,
+                                               state_flags);
     /* this is for drawing a prelight box */
     if (state_flags & GTK_STATE_FLAG_PRELIGHT) {
         gtk_render_background(style, cr,
@@ -1518,13 +1513,11 @@ moz_gtk_toggle_label_paint(cairo_t *cr, GdkRectangle* rect,
     if (!state->focused)
         return MOZ_GTK_SUCCESS;
 
-    GtkStyleContext *style = ClaimStyleContext(isradio ?
-                                               MOZ_GTK_RADIOBUTTON_CONTAINER :
-                                               MOZ_GTK_CHECKBUTTON_CONTAINER);
-
-    gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
-    gtk_style_context_set_direction(style, direction);
-
+    GtkStyleContext *style =
+        ClaimStyleContext(isradio ? MOZ_GTK_RADIOBUTTON_CONTAINER :
+                                    MOZ_GTK_CHECKBUTTON_CONTAINER,
+                          direction,
+                          GetStateFlagsFromGtkWidgetState(state));
     gtk_render_focus(style, cr,
                     rect->x, rect->y, rect->width, rect->height);
 

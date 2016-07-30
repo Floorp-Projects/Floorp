@@ -15,6 +15,10 @@
     _(SimdValueInt32x4)         \
     _(SimdValueFloat32x4)       \
     _(UDivOrMod)                \
-    _(UDivOrModConstant)
+    _(UDivOrModConstant)        \
+    _(UDivOrModI64)             \
+    _(DivOrModI64)              \
+    _(WasmTruncateToInt64)      \
+    _(Int64ToFloatingPoint)
 
 #endif /* jit_x86_LOpcodes_x86_h */

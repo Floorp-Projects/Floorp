@@ -2839,6 +2839,11 @@ HTMLInputElement::SetFilesOrDirectories(const nsTArray<OwningFileOrDirectory>& a
 {
   ClearGetFilesHelpers();
 
+  if (Preferences::GetBool("dom.webkitBlink.filesystem.enabled", false)) {
+    HTMLInputElementBinding::ClearCachedWebkitEntriesValue(this);
+    mEntries.Clear();
+  }
+
   mFilesOrDirectories.Clear();
   mFilesOrDirectories.AppendElements(aFilesOrDirectories);
 
@@ -2852,6 +2857,11 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
   RefPtr<FileList> files = static_cast<FileList*>(aFiles);
   mFilesOrDirectories.Clear();
   ClearGetFilesHelpers();
+
+  if (Preferences::GetBool("dom.webkitBlink.filesystem.enabled", false)) {
+    HTMLInputElementBinding::ClearCachedWebkitEntriesValue(this);
+    mEntries.Clear();
+  }
 
   if (aFiles) {
     uint32_t listLength;
@@ -2869,11 +2879,11 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
 void
 HTMLInputElement::MozSetDndFilesAndDirectories(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories)
 {
+  SetFilesOrDirectories(aFilesOrDirectories, true);
+
   if (Preferences::GetBool("dom.webkitBlink.filesystem.enabled", false)) {
     UpdateEntries(aFilesOrDirectories);
   }
-
-  SetFilesOrDirectories(aFilesOrDirectories, true);
 
   RefPtr<DispatchChangeEventCallback> dispatchChangeEventCallback =
     new DispatchChangeEventCallback(this);
@@ -8100,7 +8110,7 @@ HTMLInputElement::GetOrCreateGetFilesHelper(bool aRecursiveFlag,
 void
 HTMLInputElement::UpdateEntries(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories)
 {
-  mEntries.Clear();
+  MOZ_ASSERT(mEntries.IsEmpty());
 
   nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
   MOZ_ASSERT(global);

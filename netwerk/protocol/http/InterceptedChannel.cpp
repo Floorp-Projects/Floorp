@@ -94,7 +94,7 @@ InterceptedChannelBase::DoSynthesizeStatus(uint16_t aStatus, const nsACString& a
     statusLine.AppendLiteral(" ");
     statusLine.Append(aReason);
 
-    (*mSynthesizedResponseHead)->ParseStatusLine(statusLine.get());
+    (*mSynthesizedResponseHead)->ParseStatusLine(statusLine);
     return NS_OK;
 }
 
@@ -105,7 +105,7 @@ InterceptedChannelBase::DoSynthesizeHeader(const nsACString& aName, const nsACSt
 
     nsAutoCString header = aName + NS_LITERAL_CSTRING(": ") + aValue;
     // Overwrite any existing header.
-    nsresult rv = (*mSynthesizedResponseHead)->ParseHeaderLine(header.get());
+    nsresult rv = (*mSynthesizedResponseHead)->ParseHeaderLine(header);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
 }

@@ -101,6 +101,21 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
+  // Disable async animations if we have a rendering observer that
+  // depends on our content (svg masking, -moz-element etc) so that
+  // it gets updated correctly.
+  nsIContent* content = aFrame->GetContent();
+  while (content) {
+    if (content->HasRenderingObservers()) {
+      EffectCompositor::SetPerformanceWarning(
+        aFrame, aProperty,
+        AnimationPerformanceWarning(
+          AnimationPerformanceWarning::Type::HasRenderingObserver));
+      return false;
+    }
+    content = content->GetParent();
+  }
+
   bool foundSome = false;
   for (KeyframeEffectReadOnly* effect : *effects) {
     MOZ_ASSERT(effect && effect->GetAnimation());

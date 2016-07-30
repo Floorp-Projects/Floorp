@@ -449,11 +449,29 @@ public:
                           int32_t& aValue);
   // Return the first keyword in |aTable| that has the corresponding value |aValue|.
   // Return |eCSSKeyword_UNKNOWN| if not found.
-  static nsCSSKeyword ValueToKeywordEnum(int32_t aValue, 
+  static nsCSSKeyword ValueToKeywordEnum(int32_t aValue,
                                          const KTableEntry aTable[]);
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  static nsCSSKeyword ValueToKeywordEnum(T aValue,
+                                         const KTableEntry aTable[])
+  {
+    static_assert(mozilla::IsEnumFittingWithin<T, int16_t>::value,
+                  "aValue must be an enum that fits within KTableEntry::mValue");
+    return ValueToKeywordEnum(static_cast<int16_t>(aValue), aTable);
+  }
   // Ditto but as a string, return "" when not found.
   static const nsAFlatCString& ValueToKeyword(int32_t aValue,
                                               const KTableEntry aTable[]);
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  static const nsAFlatCString& ValueToKeyword(T aValue,
+                                              const KTableEntry aTable[])
+  {
+    static_assert(mozilla::IsEnumFittingWithin<T, int16_t>::value,
+                  "aValue must be an enum that fits within KTableEntry::mValue");
+    return ValueToKeyword(static_cast<int16_t>(aValue), aTable);
+  }
 
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
   static const KTableEntry* const kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];

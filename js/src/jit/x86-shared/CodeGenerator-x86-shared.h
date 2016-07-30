@@ -122,6 +122,12 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     Operand ToOperand(const LAllocation* a);
     Operand ToOperand(const LDefinition* def);
 
+#ifdef JS_PUNBOX64
+    Operand ToOperandOrRegister64(const LInt64Allocation input);
+#else
+    Register64 ToOperandOrRegister64(const LInt64Allocation input);
+#endif
+
     MoveOperand toMoveOperand(LAllocation a) const;
 
     void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);
@@ -228,12 +234,16 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitClzI(LClzI* ins);
     virtual void visitCtzI(LCtzI* ins);
     virtual void visitPopcntI(LPopcntI* ins);
+    virtual void visitPopcntI64(LPopcntI64* lir);
     virtual void visitSqrtD(LSqrtD* ins);
     virtual void visitSqrtF(LSqrtF* ins);
     virtual void visitPowHalfD(LPowHalfD* ins);
     virtual void visitAddI(LAddI* ins);
+    virtual void visitAddI64(LAddI64* ins);
     virtual void visitSubI(LSubI* ins);
+    virtual void visitSubI64(LSubI64* ins);
     virtual void visitMulI(LMulI* ins);
+    virtual void visitMulI64(LMulI64* ins);
     virtual void visitDivI(LDivI* ins);
     virtual void visitDivPowTwoI(LDivPowTwoI* ins);
     virtual void visitDivOrModConstantI(LDivOrModConstantI* ins);
@@ -241,7 +251,9 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitModPowTwoI(LModPowTwoI* ins);
     virtual void visitBitNotI(LBitNotI* ins);
     virtual void visitBitOpI(LBitOpI* ins);
+    virtual void visitBitOpI64(LBitOpI64* ins);
     virtual void visitShiftI(LShiftI* ins);
+    virtual void visitShiftI64(LShiftI64* ins);
     virtual void visitUrshD(LUrshD* ins);
     virtual void visitTestIAndBranch(LTestIAndBranch* test);
     virtual void visitTestDAndBranch(LTestDAndBranch* test);
@@ -271,6 +283,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitUDivOrMod(LUDivOrMod* ins);
     virtual void visitUDivOrModConstant(LUDivOrModConstant *ins);
     virtual void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
+    virtual void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins);
     virtual void visitAsmSelect(LAsmSelect* ins);
     virtual void visitAsmReinterpret(LAsmReinterpret* lir);
     virtual void visitWasmBoundsCheck(LWasmBoundsCheck* ins);
@@ -281,6 +294,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
     virtual void visitCopySignD(LCopySignD* lir);
     virtual void visitCopySignF(LCopySignF* lir);
+    virtual void visitRotateI64(LRotateI64* lir);
 
     void visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool);
     void visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck);
