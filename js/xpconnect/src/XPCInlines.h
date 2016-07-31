@@ -283,7 +283,6 @@ inline XPCNativeSetKey::XPCNativeSetKey(XPCNativeSet* baseSet,
                                         XPCNativeInterface* addition)
     : mBaseSet(baseSet)
     , mAddition(addition)
-    , mPosition(baseSet->GetInterfaceCount())
 {
     MOZ_ASSERT(mBaseSet);
     MOZ_ASSERT(mAddition);
