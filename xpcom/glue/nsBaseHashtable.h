@@ -130,7 +130,7 @@ public:
   MOZ_MUST_USE bool Put(KeyType aKey, const UserDataType& aData,
                         const fallible_t&)
   {
-    EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
+    EntryType* ent = this->PutEntry(aKey);
     if (!ent) {
       return false;
     }
