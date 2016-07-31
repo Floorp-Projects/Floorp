@@ -443,13 +443,10 @@ XPCNativeSetKey::Hash() const
         XPCNativeInterface** current = mBaseSet->GetInterfaceArray();
         uint16_t count = mBaseSet->GetInterfaceCount();
         if (mAddition) {
-            count++;
             for (uint16_t i = 0; i < count; i++) {
-                if (i == mBaseSet->GetInterfaceCount())
-                    h ^= HashPointer(mAddition);
-                else
-                    h ^= HashPointer(*(current++));
+                h ^= HashPointer(*(current++));
             }
+            h ^= HashPointer(mAddition);
         } else {
             for (uint16_t i = 0; i < count; i++)
                 h ^= HashPointer(*(current++));
@@ -767,9 +764,10 @@ XPCNativeSet::NewInstanceMutate(XPCNativeSetKey* key)
 
     XPCNativeInterface** src = otherSet->mInterfaces;
     XPCNativeInterface** dest = obj->mInterfaces;
-    for (uint16_t i = 0; i < obj->mInterfaceCount; i++) {
-        NS_ADDREF(*dest++ = (i == otherSet->mInterfaceCount) ? newInterface : *src++);
+    for (uint16_t i = 0; i < otherSet->mInterfaceCount; i++) {
+        NS_ADDREF(*dest++ = *src++);
     }
+    NS_ADDREF(*dest++ = newInterface);
 
     return obj;
 }
