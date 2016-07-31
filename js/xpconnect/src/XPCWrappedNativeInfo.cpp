@@ -474,7 +474,7 @@ XPCNativeSet::GetNewOrUsed(const nsIID* iid)
     if (!iface)
         return nullptr;
 
-    XPCNativeSetKey key(nullptr, iface, 0);
+    XPCNativeSetKey key(iface);
 
     XPCJSRuntime* rt = XPCJSRuntime::Get();
     NativeSetMap* map = rt->GetNativeSetMap();
@@ -566,7 +566,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
                 if (!map2)
                     goto out;
 
-                XPCNativeSetKey key(set, nullptr, 0);
+                XPCNativeSetKey key(set);
 
                 XPCNativeSet* set2 = map2->Add(&key, set);
                 if (!set2) {
