@@ -436,19 +436,16 @@ XPCNativeSetKey::Hash() const
 {
     PLDHashNumber h = 0;
 
-    if (!mBaseSet) {
-        MOZ_ASSERT(mAddition, "bad key");
-        h ^= HashPointer(mAddition);
-    } else {
+    if (mBaseSet) {
         XPCNativeInterface** current = mBaseSet->GetInterfaceArray();
         uint16_t count = mBaseSet->GetInterfaceCount();
         for (uint16_t i = 0; i < count; i++) {
             h ^= HashPointer(*(current++));
         }
+    }
 
-        if (mAddition) {
-            h ^= HashPointer(mAddition);
-        }
+    if (mAddition) {
+        h ^= HashPointer(mAddition);
     }
 
     return h;
