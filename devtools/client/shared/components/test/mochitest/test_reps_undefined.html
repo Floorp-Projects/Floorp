@@ -32,7 +32,6 @@ window.onload = Task.async(function* () {
     // Test rendering
     const renderedComponent = renderComponent(Undefined.rep, {});
     is(renderedComponent.className, "objectBox objectBox-undefined", "Undefined rep has expected class names");
-    is(renderedComponent.getAttribute("role"), "presentation", "Undefined rep has expected aria role");
     is(renderedComponent.textContent, "undefined", "Undefined rep has expected text content");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
