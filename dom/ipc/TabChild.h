@@ -51,6 +51,7 @@ namespace layers {
 class APZChild;
 class APZEventState;
 class AsyncDragMetrics;
+class IAPZCTreeManager;
 class ImageCompositeNotification;
 } // namespace layers
 
@@ -774,6 +775,7 @@ private:
 
   AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 
+  RefPtr<layers::IAPZCTreeManager> mApzcTreeManager;
   // APZChild clears this pointer from its destructor, so it shouldn't be a
   // dangling pointer.
   layers::APZChild* mAPZChild;

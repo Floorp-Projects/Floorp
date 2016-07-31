@@ -58,6 +58,7 @@ class Shmem;
 namespace layers {
 
 class APZCTreeManager;
+class APZCTreeManagerParent;
 class AsyncCompositionManager;
 class Compositor;
 class CompositorBridgeParent;
@@ -429,6 +430,7 @@ public:
     ~LayerTreeState();
     RefPtr<Layer> mRoot;
     RefPtr<GeckoContentController> mController;
+    APZCTreeManagerParent* mApzcTreeManagerParent;
     CompositorBridgeParent* mParent;
     LayerManagerComposite* mLayerManager;
     // Pointer to the CrossProcessCompositorBridgeParent. Used by APZCs to share
