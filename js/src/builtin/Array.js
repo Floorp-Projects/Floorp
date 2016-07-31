@@ -8,7 +8,7 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
     var O = ToObject(this);
 
     /* Steps 2-3. */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* Step 4. */
     if (len === 0)
@@ -64,7 +64,7 @@ function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
     var O = ToObject(this);
 
     /* Steps 2-3. */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* Step 4. */
     if (len === 0)
@@ -107,7 +107,7 @@ function ArrayStaticLastIndexOf(list, searchElement/*, fromIndex*/) {
         fromIndex = arguments[2];
     } else {
         var O = ToObject(list);
-        var len = TO_UINT32(O.length);
+        var len = ToLength(O.length);
         fromIndex = len - 1;
     }
     return callFunction(ArrayLastIndexOf, list, searchElement, fromIndex);
@@ -119,7 +119,7 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
     var O = ToObject(this);
 
     /* Steps 2-3. */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
@@ -160,7 +160,7 @@ function ArraySome(callbackfn/*, thisArg*/) {
     var O = ToObject(this);
 
     /* Steps 2-3. */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
@@ -201,7 +201,7 @@ function ArraySort(comparefn) {
     var O = ToObject(this);
 
     /* Step 2. */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* 22.1.3.25.1 Runtime Semantics: SortCompare( x, y ) */
     var wrappedCompareFn = comparefn;
@@ -231,7 +231,7 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
     var O = ToObject(this);
 
     /* Steps 2-3. */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
@@ -271,8 +271,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
     var O = ToObject(this);
 
     /* Step 2. */
-    /* FIXME: Array operations should use ToLength (bug 924058). */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* Step 3. */
     if (arguments.length === 0)
@@ -316,7 +315,7 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
     var O = ToObject(this);
 
     /* Step 2. */
-    var len = ToInteger(O.length);
+    var len = ToLength(O.length);
 
     /* Step 3. */
     if (arguments.length === 0)
@@ -364,7 +363,7 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
     var O = ToObject(this);
 
     /* Steps 2-3. */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
@@ -431,7 +430,7 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
     var O = ToObject(this);
 
     /* Steps 2-3. */
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
@@ -498,7 +497,7 @@ function ArrayFind(predicate/*, thisArg*/) {
     var O = ToObject(this);
 
     /* Steps 3-5. */
-    var len = ToInteger(O.length);
+    var len = ToLength(O.length);
 
     /* Step 6. */
     if (arguments.length === 0)
@@ -511,11 +510,6 @@ function ArrayFind(predicate/*, thisArg*/) {
 
     /* Steps 8-9. */
     /* Steps a (implicit), and g. */
-    /* Note: this will hang in some corner-case situations, because of IEEE-754 numbers'
-     * imprecision for large values. Example:
-     * var obj = { 18014398509481984: true, length: 18014398509481988 };
-     * Array.prototype.find.call(obj, () => true);
-     */
     for (var k = 0; k < len; k++) {
         /* Steps a-c. */
         var kValue = O[k];
@@ -534,7 +528,7 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
     var O = ToObject(this);
 
     /* Steps 3-5. */
-    var len = ToInteger(O.length);
+    var len = ToLength(O.length);
 
     /* Step 6. */
     if (arguments.length === 0)
@@ -547,11 +541,6 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
 
     /* Steps 8-9. */
     /* Steps a (implicit), and g. */
-    /* Note: this will hang in some corner-case situations, because of IEEE-754 numbers'
-     * imprecision for large values. Example:
-     * var obj = { 18014398509481984: true, length: 18014398509481988 };
-     * Array.prototype.find.call(obj, () => true);
-     */
     for (var k = 0; k < len; k++) {
         /* Steps a-f. */
         if (callContentFunction(predicate, T, O[k], k, O))
@@ -568,7 +557,7 @@ function ArrayCopyWithin(target, start, end = undefined) {
     var O = ToObject(this);
 
     /* Steps 3-5. */
-    var len = ToInteger(O.length);
+    var len = ToLength(O.length);
 
     /* Steps 6-8. */
     var relativeTarget = ToInteger(target);
@@ -631,8 +620,7 @@ function ArrayFill(value, start = 0, end = undefined) {
     var O = ToObject(this);
 
     // Steps 3-5.
-    // FIXME: Array operations should use ToLength (bug 924058).
-    var len = ToInteger(O.length);
+    var len = ToLength(O.length);
 
     // Steps 6-7.
     var relativeStart = ToInteger(start);
@@ -745,7 +733,7 @@ function ArrayIteratorNext() {
     // Step 8-9.
     var len = IsPossiblyWrappedTypedArray(a)
               ? PossiblyWrappedTypedArrayLength(a)
-              : TO_UINT32(a.length);
+              : ToLength(a.length);
 
     // Step 10.
     if (index >= len) {

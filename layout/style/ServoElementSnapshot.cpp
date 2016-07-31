@@ -6,8 +6,19 @@
 
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/dom/Element.h"
+#include "nsIContentInlines.h"
 
 namespace mozilla {
+
+ServoElementSnapshot::ServoElementSnapshot(Element* aElement)
+  : mContains(Flags(0))
+  , mState(0)
+  , mExplicitRestyleHint(nsRestyleHint(0))
+  , mExplicitChangeHint(nsChangeHint(0))
+{
+  mIsHTMLElementInHTMLDocument =
+    aElement->IsHTMLElement() && aElement->IsInHTMLDocument();
+}
 
 void
 ServoElementSnapshot::AddAttrs(Element* aElement)

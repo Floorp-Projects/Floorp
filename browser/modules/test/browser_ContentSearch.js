@@ -392,7 +392,10 @@ function arrayBufferFromDataURI(uri) {
             createInstance(Ci.nsIXMLHttpRequest);
   xhr.open("GET", uri, true);
   xhr.responseType = "arraybuffer";
-  xhr.onloadend = () => {
+  xhr.onerror = () => {
+    deferred.resolve(null);
+  };
+  xhr.onload = () => {
     deferred.resolve(xhr.response);
   };
   try {
