@@ -417,7 +417,7 @@ public:
     {
         MOZ_ASSERT(set, "bad param");
 
-        XPCNativeSetKey key(set, nullptr, 0);
+        XPCNativeSetKey key(set);
         mTable.Remove(&key);
     }
 

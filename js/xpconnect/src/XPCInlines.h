@@ -279,6 +279,20 @@ XPCNativeInterface::OffsetOfMembers()
 
 /***************************************************************************/
 
+inline XPCNativeSetKey::XPCNativeSetKey(XPCNativeSet* baseSet,
+                                        XPCNativeInterface* addition,
+                                        uint16_t position)
+    : mBaseSet(baseSet)
+    , mAddition(addition)
+    , mPosition(position)
+{
+    MOZ_ASSERT(mBaseSet);
+    MOZ_ASSERT(mAddition);
+    MOZ_ASSERT(!mBaseSet->HasInterface(mAddition));
+}
+
+/***************************************************************************/
+
 inline bool
 XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
                          uint16_t* pInterfaceIndex) const

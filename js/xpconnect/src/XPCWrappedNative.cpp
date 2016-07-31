@@ -432,7 +432,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
             iface = XPCNativeInterface::GetISupports();
 
         AutoMarkingNativeSetPtr set(cx);
-        XPCNativeSetKey key(nullptr, iface, 0);
+        XPCNativeSetKey key(iface);
         set = XPCNativeSet::GetNewOrUsed(&key);
 
         if (!set)

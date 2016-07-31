@@ -1269,14 +1269,33 @@ private:
 
 /***************************************************************************/
 // XPCNativeSetKey is used to key a XPCNativeSet in a NativeSetMap.
+// It represents a new XPCNativeSet we are considering constructing, without
+// requiring that the set actually be built.
 
 class XPCNativeSetKey final
 {
 public:
-    explicit XPCNativeSetKey(XPCNativeSet* baseSet = nullptr,
-                             XPCNativeInterface* addition = nullptr,
-                             uint16_t position = 0)
-        : mBaseSet(baseSet), mAddition(addition), mPosition(position) {}
+    // This represents an existing set |baseSet|.
+    explicit XPCNativeSetKey(XPCNativeSet* baseSet)
+        : mBaseSet(baseSet), mAddition(nullptr), mPosition(0)
+    {
+        MOZ_ASSERT(baseSet);
+    }
+
+    // This represents a new set containing only nsISupports and
+    // |addition|.
+    explicit XPCNativeSetKey(XPCNativeInterface* addition)
+        : mBaseSet(nullptr), mAddition(addition), mPosition(0)
+    {
+        MOZ_ASSERT(addition);
+    }
+
+    // This represents the existing set |baseSet| with the interface
+    // |addition| inserted at position |position|. |addition| must
+    // not already be present in |baseSet|.
+    explicit XPCNativeSetKey(XPCNativeSet* baseSet,
+                             XPCNativeInterface* addition,
+                             uint16_t position);
     ~XPCNativeSetKey() {}
 
     XPCNativeSet* GetBaseSet() const {return mBaseSet;}
