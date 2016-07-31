@@ -1640,7 +1640,7 @@ RasterImage::NotifyProgress(Progress aProgress,
   }
 
   // We may have decoded new animation frames; update our animation state.
-  MOZ_ASSERT_IF(aFrameCount && *aFrameCount > 1, mAnimationState);
+  MOZ_ASSERT_IF(aFrameCount && *aFrameCount > 1, mAnimationState || mError);
   if (mAnimationState && aFrameCount) {
     mAnimationState->UpdateKnownFrameCount(*aFrameCount);
   }
