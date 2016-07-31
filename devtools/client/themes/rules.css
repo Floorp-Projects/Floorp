@@ -5,17 +5,14 @@
 /* CSS Variables specific to this panel that aren't defined by the themes */
 .theme-light {
   --rule-highlight-background-color: #ffee99;
-  --rule-filter-icon: url(images/filter.svg);
 }
 
 .theme-dark {
   --rule-highlight-background-color: #594724;
-  --rule-filter-icon: url(images/filter.svg);
 }
 
 .theme-firebug {
   --rule-highlight-background-color: #ffee99;
-  --rule-filter-icon: url(images/filter.svg);
   --rule-property-name: darkgreen;
   --rule-property-value: darkblue;
 }
@@ -296,7 +293,7 @@
 }
 
 .ruleview-overridden-rule-filter {
-  background-image: var(--rule-filter-icon);
+  background-image: url(images/filter.svg#filterinput);
   background-size: 11px 11px;
   margin-inline-start: 5px;
   display: inline-block;
