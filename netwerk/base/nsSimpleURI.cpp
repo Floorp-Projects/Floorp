@@ -167,9 +167,17 @@ nsSimpleURI::Deserialize(const URIParams& aParams)
 NS_IMETHODIMP
 nsSimpleURI::GetSpec(nsACString &result)
 {
-    result = mScheme + NS_LITERAL_CSTRING(":") + mPath;
+    if (!result.Assign(mScheme, fallible) ||
+        !result.Append(NS_LITERAL_CSTRING(":"), fallible) ||
+        !result.Append(mPath, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     if (mIsRefValid) {
-        result += NS_LITERAL_CSTRING("#") + mRef;
+        if (!result.Append(NS_LITERAL_CSTRING("#"), fallible) ||
+            !result.Append(mRef, fallible)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     } else {
         MOZ_ASSERT(mRef.IsEmpty(), "mIsRefValid/mRef invariant broken");
     }
