@@ -280,11 +280,10 @@ XPCNativeInterface::OffsetOfMembers()
 /***************************************************************************/
 
 inline XPCNativeSetKey::XPCNativeSetKey(XPCNativeSet* baseSet,
-                                        XPCNativeInterface* addition,
-                                        uint16_t position)
+                                        XPCNativeInterface* addition)
     : mBaseSet(baseSet)
     , mAddition(addition)
-    , mPosition(position)
+    , mPosition(baseSet->GetInterfaceCount())
 {
     MOZ_ASSERT(mBaseSet);
     MOZ_ASSERT(mAddition);

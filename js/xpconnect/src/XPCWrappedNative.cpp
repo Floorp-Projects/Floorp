@@ -1018,7 +1018,7 @@ XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 
     if (!mSet->HasInterface(aInterface)) {
         AutoMarkingNativeSetPtr newSet(cx);
-        XPCNativeSetKey key(mSet, aInterface, mSet->GetInterfaceCount());
+        XPCNativeSetKey key(mSet, aInterface);
         newSet = XPCNativeSet::GetNewOrUsed(&key);
         if (!newSet)
             return false;
