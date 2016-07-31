@@ -39,10 +39,10 @@ public:
 
   /**
    * Looks up aKey in the hash table. If it doesn't exist a new object of
-   * KeyClass will be created (using its default constructor) and then
-   * returned.
+   * KeyClass will be created (using the arguments provided) and then returned.
    */
-  UserDataType LookupOrAdd(KeyType aKey);
+  template<typename... Args>
+  UserDataType LookupOrAdd(KeyType aKey, Args&&... aConstructionArgs);
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -75,12 +75,14 @@ public:
 //
 
 template<class KeyClass, class T>
+template<typename... Args>
 T*
-nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey)
+nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
+                                           Args&&... aConstructionArgs)
 {
   typename base_type::EntryType* ent = this->PutEntry(aKey);
   if (!ent->mData) {
-    ent->mData = new T();
+    ent->mData = new T(mozilla::Forward<Args>(aConstructionArgs)...);
   }
   return ent->mData;
 }

@@ -213,7 +213,7 @@ function runTest([imgFile, audioFile, docFile, xhrFile]) {
   is((yield), "inner loaded", "correct gen.next()");
   inner.contentWindow.postMessage(JSON.stringify({xhr:fileurl}), "*");
   var res = (yield);
-  is(res.didThrow, true, "load failed successfully");
+  is(res.didError, true, "load failed successfully");
 
   SimpleTest.finish();
 

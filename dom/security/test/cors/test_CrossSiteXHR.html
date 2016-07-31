@@ -760,9 +760,15 @@ function runTest() {
       is(res.responseText, "",
          "wrong responseText in test for " + test.toSource());
       if (!res.sendThrew) {
-        is(res.events.join(","),
-           "opening,rs1,sending,loadstart,rs2,rs4,error,loadend",
-           "wrong events in test for " + test.toSource());
+        if (test.username) {
+          is(res.events.join(","),
+             "opening,rs1,sending,loadstart,rs4,error,loadend",
+             "wrong events in test for " + test.toSource());
+        } else {
+          is(res.events.join(","),
+             "opening,rs1,sending,loadstart,rs2,rs4,error,loadend",
+             "wrong events in test for " + test.toSource());
+        }
       }
       is(res.progressEvents, 0,
          "wrong events in test for " + test.toSource());

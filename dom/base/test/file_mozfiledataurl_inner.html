@@ -16,6 +16,9 @@ addEventListener("message", function(e) {
     iframe.src = mess.iframe;
   else if ("xhr" in mess) {
     let xhr = new XMLHttpRequest();
+    xhr.onerror = function() {
+      sendItUp({ didError: true });
+    }
     xhr.onload = function() {
       sendItUp({ text: xhr.responseText });
     }
