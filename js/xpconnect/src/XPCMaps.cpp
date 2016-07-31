@@ -282,11 +282,10 @@ NativeSetMap::Entry::Match(const PLDHashEntryHdr* entry, const void* key)
     if (count != SetInTable->GetInterfaceCount())
         return false;
 
-    uint16_t Position = Key->GetPosition();
     XPCNativeInterface** CurrentInTable = SetInTable->GetInterfaceArray();
     XPCNativeInterface** Current = Set->GetInterfaceArray();
     for (uint16_t i = 0; i < count; i++) {
-        if (Addition && i == Position) {
+        if (Addition && i == Set->GetInterfaceCount()) {
             if (Addition != *(CurrentInTable++))
                 return false;
         } else {

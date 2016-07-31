@@ -445,7 +445,7 @@ XPCNativeSetKey::Hash() const
         if (mAddition) {
             count++;
             for (uint16_t i = 0; i < count; i++) {
-                if (i == mPosition)
+                if (i == mBaseSet->GetInterfaceCount())
                     h ^= HashPointer(mAddition);
                 else
                     h ^= HashPointer(*(current++));
@@ -748,13 +748,10 @@ XPCNativeSet::NewInstanceMutate(XPCNativeSetKey* key)
 {
     XPCNativeSet* otherSet = key->GetBaseSet();
     XPCNativeInterface* newInterface = key->GetAddition();
-    uint16_t position = key->GetPosition();
 
     MOZ_ASSERT(otherSet);
 
     if (!newInterface)
-        return nullptr;
-    if (position > otherSet->mInterfaceCount)
         return nullptr;
 
     // Use placement new to create an object with the right amount of space
@@ -771,7 +768,7 @@ XPCNativeSet::NewInstanceMutate(XPCNativeSetKey* key)
     XPCNativeInterface** src = otherSet->mInterfaces;
     XPCNativeInterface** dest = obj->mInterfaces;
     for (uint16_t i = 0; i < obj->mInterfaceCount; i++) {
-        NS_ADDREF(*dest++ = (i == position) ? newInterface : *src++);
+        NS_ADDREF(*dest++ = (i == otherSet->mInterfaceCount) ? newInterface : *src++);
     }
 
     return obj;
