@@ -46,6 +46,10 @@ const ADDONS = {
     id: "jid0-GXjLLfbCoAx0LcltEdFrEkQdQPI@jetpack", minVersion: "3.0.10",
   },
 
+  "PersonasPlus": {
+    id: "personas@christopher.beard", minVersion: "1.8.0",
+  },
+
   // Add-ons used for testing
   "test1": {
     id: "bootstrap1@tests.mozilla.org", minVersion: "1.0",
@@ -69,7 +73,8 @@ const set2 = [ADDONS.Greasemonkey,
               ADDONS.ABP,
               ADDONS.uBlockOrigin,
               ADDONS.Emoji,
-              ADDONS.ASP];
+              ADDONS.ASP,
+              ADDONS.PersonasPlus];
 
 // We use these named policies to correlate the telemetry
 // data with them, in order to understand how each set
