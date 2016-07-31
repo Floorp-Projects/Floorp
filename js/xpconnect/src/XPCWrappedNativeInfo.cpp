@@ -442,14 +442,12 @@ XPCNativeSetKey::Hash() const
     } else {
         XPCNativeInterface** current = mBaseSet->GetInterfaceArray();
         uint16_t count = mBaseSet->GetInterfaceCount();
+        for (uint16_t i = 0; i < count; i++) {
+            h ^= HashPointer(*(current++));
+        }
+
         if (mAddition) {
-            for (uint16_t i = 0; i < count; i++) {
-                h ^= HashPointer(*(current++));
-            }
             h ^= HashPointer(mAddition);
-        } else {
-            for (uint16_t i = 0; i < count; i++)
-                h ^= HashPointer(*(current++));
         }
     }
 
