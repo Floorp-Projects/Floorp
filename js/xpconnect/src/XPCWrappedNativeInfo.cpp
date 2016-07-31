@@ -613,9 +613,7 @@ XPCNativeSet::ClearCacheEntryForClassInfo(nsIClassInfo* classInfo)
 
 // static
 XPCNativeSet*
-XPCNativeSet::GetNewOrUsed(XPCNativeSet* otherSet,
-                           XPCNativeInterface* newInterface,
-                           uint16_t position)
+XPCNativeSet::GetNewOrUsed(XPCNativeSetKey* key)
 {
     AutoJSContext cx;
     AutoMarkingNativeSetPtr set(cx);
@@ -624,22 +622,20 @@ XPCNativeSet::GetNewOrUsed(XPCNativeSet* otherSet,
     if (!map)
         return nullptr;
 
-    XPCNativeSetKey key(otherSet, newInterface, position);
-
-    set = map->Find(&key);
+    set = map->Find(key);
 
     if (set)
         return set;
 
-    if (otherSet)
-        set = NewInstanceMutate(otherSet, newInterface, position);
+    if (key->GetBaseSet())
+        set = NewInstanceMutate(key);
     else
-        set = NewInstance({newInterface});
+        set = NewInstance({key->GetAddition()});
 
     if (!set)
         return nullptr;
 
-    XPCNativeSet* set2 = map->Add(&key, set);
+    XPCNativeSet* set2 = map->Add(key, set);
     if (!set2) {
         NS_ERROR("failed to add our set!");
         DestroyInstance(set);
@@ -688,7 +684,8 @@ XPCNativeSet::GetNewOrUsed(XPCNativeSet* firstSet,
         if (!currentSet->HasInterface(iface)) {
             // Create a new augmented set, inserting this interface at the end.
             uint32_t pos = currentSet->mInterfaceCount;
-            currentSet = XPCNativeSet::GetNewOrUsed(currentSet, iface, pos);
+            XPCNativeSetKey key(currentSet, iface, pos);
+            currentSet = XPCNativeSet::GetNewOrUsed(&key);
             if (!currentSet)
                 return nullptr;
         }
@@ -748,10 +745,12 @@ XPCNativeSet::NewInstance(nsTArray<RefPtr<XPCNativeInterface>>&& array)
 
 // static
 XPCNativeSet*
-XPCNativeSet::NewInstanceMutate(XPCNativeSet* otherSet,
-                                XPCNativeInterface* newInterface,
-                                uint16_t position)
+XPCNativeSet::NewInstanceMutate(XPCNativeSetKey* key)
 {
+    XPCNativeSet* otherSet = key->GetBaseSet();
+    XPCNativeInterface* newInterface = key->GetAddition();
+    uint16_t position = key->GetPosition();
+
     MOZ_ASSERT(otherSet);
 
     if (!newInterface)

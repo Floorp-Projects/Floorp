@@ -1301,9 +1301,7 @@ class XPCNativeSet final
   public:
     static XPCNativeSet* GetNewOrUsed(const nsIID* iid);
     static XPCNativeSet* GetNewOrUsed(nsIClassInfo* classInfo);
-    static XPCNativeSet* GetNewOrUsed(XPCNativeSet* otherSet,
-                                      XPCNativeInterface* newInterface,
-                                      uint16_t position);
+    static XPCNativeSet* GetNewOrUsed(XPCNativeSetKey* key);
 
     // This generates a union set.
     //
@@ -1380,9 +1378,7 @@ class XPCNativeSet final
 
   protected:
     static XPCNativeSet* NewInstance(nsTArray<RefPtr<XPCNativeInterface>>&& array);
-    static XPCNativeSet* NewInstanceMutate(XPCNativeSet*       otherSet,
-                                           XPCNativeInterface* newInterface,
-                                           uint16_t            position);
+    static XPCNativeSet* NewInstanceMutate(XPCNativeSetKey* key);
     XPCNativeSet()
       : mMemberCount(0), mInterfaceCount(0), mMarked(0)
     {
