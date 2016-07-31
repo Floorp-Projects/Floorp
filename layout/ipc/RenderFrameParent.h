@@ -24,7 +24,6 @@ namespace mozilla {
 class InputEvent;
 
 namespace layers {
-class APZCTreeManager;
 class AsyncDragMetrics;
 class TargetConfig;
 struct TextureFactoryIdentifier;
