@@ -271,14 +271,16 @@ Decoder::AllocateFrame(uint32_t aFrameNum,
     mCurrentFrame->GetImageData(&mImageData, &mImageDataLength);
     mCurrentFrame->GetPaletteData(&mColormap, &mColormapSize);
 
-    if (aFrameNum + 1 == mFrameCount) {
-      // If we're past the first frame, PostIsAnimated() should've been called.
-      MOZ_ASSERT_IF(mFrameCount > 1, HasAnimation());
+    // We should now be on |aFrameNum|. (Note that we're comparing the frame
+    // number, which is zero-based, with the frame count, which is one-based.)
+    MOZ_ASSERT(aFrameNum + 1 == mFrameCount);
 
-      // Update our state to reflect the new frame
-      MOZ_ASSERT(!mInFrame, "Starting new frame but not done with old one!");
-      mInFrame = true;
-    }
+    // If we're past the first frame, PostIsAnimated() should've been called.
+    MOZ_ASSERT_IF(mFrameCount > 1, HasAnimation());
+
+    // Update our state to reflect the new frame.
+    MOZ_ASSERT(!mInFrame, "Starting new frame but not done with old one!");
+    mInFrame = true;
   }
 
   return mCurrentFrame ? NS_OK : NS_ERROR_FAILURE;
