@@ -683,8 +683,7 @@ XPCNativeSet::GetNewOrUsed(XPCNativeSet* firstSet,
         XPCNativeInterface* iface = secondSet->mInterfaces[i];
         if (!currentSet->HasInterface(iface)) {
             // Create a new augmented set, inserting this interface at the end.
-            uint32_t pos = currentSet->mInterfaceCount;
-            XPCNativeSetKey key(currentSet, iface, pos);
+            XPCNativeSetKey key(currentSet, iface);
             currentSet = XPCNativeSet::GetNewOrUsed(&key);
             if (!currentSet)
                 return nullptr;

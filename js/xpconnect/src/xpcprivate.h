@@ -1291,11 +1291,10 @@ public:
     }
 
     // This represents the existing set |baseSet| with the interface
-    // |addition| inserted at position |position|. |addition| must
+    // |addition| inserted after existing interfaces. |addition| must
     // not already be present in |baseSet|.
     explicit XPCNativeSetKey(XPCNativeSet* baseSet,
-                             XPCNativeInterface* addition,
-                             uint16_t position);
+                             XPCNativeInterface* addition);
     ~XPCNativeSetKey() {}
 
     XPCNativeSet* GetBaseSet() const {return mBaseSet;}
