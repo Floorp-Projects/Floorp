@@ -680,8 +680,7 @@ OggDemuxer::ReadMetadata()
     }
 
     if (mInfo.mMetadataDuration.isNothing() &&
-        Resource(TrackInfo::kAudioTrack)->GetLength() >= 0 &&
-        Resource(TrackInfo::kAudioTrack)->GetResource()->IsTransportSeekable()) {
+        Resource(TrackInfo::kAudioTrack)->GetLength() >= 0) {
       // We didn't get a duration from the index or a Content-Duration header.
       // Seek to the end of file to find the end time.
       int64_t length = Resource(TrackInfo::kAudioTrack)->GetLength();
