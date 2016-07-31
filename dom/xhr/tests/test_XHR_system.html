@@ -48,17 +48,16 @@ tests.push(function test_file_uri() {
   let xhr = new XMLHttpRequest({mozSystem: true});
   is(xhr.mozSystem, true, ".mozSystem == true");
   xhr.open("GET", PROTECTED_URL);
-  let error;
-  try {
-    xhr.send();
-  } catch (ex) {
-    error = ex;
+  xhr.onload = function() {
+    ok(false, "Should not have loaded");
+    runNextTest();
   }
-  ok(!!error, "got exception");
-  is(error.name, "NS_ERROR_DOM_BAD_URI");
-  is(error.message, "Access to restricted URI denied");
-
-  runNextTest();
+  xhr.onerror = function(event) {
+    ok(true, "Got an error event: " + event);
+    is(xhr.status, 0, "HTTP status is 0");
+    runNextTest();
+  }
+  xhr.send();
 });
 
 tests.push(function test_redirect_to_file_uri() {

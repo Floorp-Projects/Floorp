@@ -46,8 +46,7 @@ enum class ServoElementSnapshotFlags : uint8_t
 {
   State = 1 << 0,
   Attributes = 1 << 1,
-  HTMLElementInHTMLDocument = 1 << 2,
-  All = State | Attributes | HTMLElementInHTMLDocument
+  All = State | Attributes
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoElementSnapshotFlags)
@@ -68,17 +67,7 @@ class ServoElementSnapshot
 public:
   typedef ServoElementSnapshotFlags Flags;
 
-  /**
-   * Empty snapshot, with no data at all.
-   */
-  ServoElementSnapshot()
-    : mContains(Flags(0))
-    , mState(0)
-    , mExplicitRestyleHint(nsRestyleHint(0))
-    , mExplicitChangeHint(nsChangeHint(0))
-    , mIsHTMLElementInHTMLDocument(false)
-  {
-  }
+  explicit ServoElementSnapshot(Element* aElement);
 
   bool HasAttrs() { return HasAny(Flags::Attributes); }
 
@@ -152,14 +141,6 @@ public:
     }
 
     return nullptr;
-  }
-
-  void SetIsHTMLElementInHTMLDocument(bool aIs)
-  {
-    MOZ_ASSERT(!HasAny(Flags::HTMLElementInHTMLDocument),
-               "Only expected to be set once!");
-    mContains |= Flags::HTMLElementInHTMLDocument;
-    mIsHTMLElementInHTMLDocument = aIs;
   }
 
   bool HasAny(Flags aFlags) { return bool(mContains & aFlags); }

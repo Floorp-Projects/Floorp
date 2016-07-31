@@ -31,16 +31,13 @@ add_task(function* test() {
   yield ContentTask.spawn(privateTab, blobURL, function(url) {
     return new Promise(resolve => {
       var xhr = new content.window.XMLHttpRequest();
+      xhr.onerror = function() { resolve("SendErrored"); }
+      xhr.onload = function() { resolve("SendLoaded"); }
       xhr.open("GET", url);
-      try {
-        xhr.send();
-        resolve("OpenSucceeded");
-      } catch(e) {
-        resolve("OpenThrew");
-      }
+      xhr.send();
     });
   }).then(status => {
-    is(status, "OpenThrew", "Using a blob URI from one user context id in another should not work");
+    is(status, "SendErrored", "Using a blob URI from one user context id in another should not work");
   });
 
   yield BrowserTestUtils.closeWindow(win);

@@ -220,6 +220,7 @@ fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) == marker-o
 == mask-transformed-child-01.svg mask-transformed-child-01-ref.svg
 # fuzzy because of the differences between clipPath and mask clipping
 fuzzy(27,28) == mask-and-clipPath.html mask-and-clipPath-ref.html
+== mask-and-clipPath-2.svg pass.svg
 pref(layout.css.masking.enabled,true) fuzzy-if(d2d||skiaContent,1,6400) == mask-type-01.svg mask-type-01-ref.svg
 pref(layout.css.masking.enabled,true) fuzzy-if(d2d||skiaContent,1,6400) == mask-type-02.svg mask-type-01-ref.svg
 pref(layout.css.masking.enabled,true) fuzzy-if(d2d||skiaContent,1,6400) == mask-type-03.svg mask-type-01-ref.svg
