@@ -11,8 +11,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { createFactories, isGrip, getFileName } = require("./rep-utils");
-  const { ObjectBox } = createFactories(require("./object-box"));
+  const { isGrip, getFileName } = require("./rep-utils");
 
   // Shortcuts
   const { span } = React.DOM;
@@ -34,7 +33,7 @@ define(function (require, exports, module) {
 
     getTitle: function (grip) {
       if (this.props.objectLink) {
-        return ObjectBox({},
+        return span({className: "objectBox"},
           this.props.objectLink({
             object: grip
           }, grip.class)
@@ -51,7 +50,7 @@ define(function (require, exports, module) {
       let grip = this.props.object;
 
       return (
-        ObjectBox({className: "object"},
+        span({className: "objectBox objectBox-object"},
           this.getTitle(grip),
           span({className: "objectPropValue"},
             this.getLocation(grip)

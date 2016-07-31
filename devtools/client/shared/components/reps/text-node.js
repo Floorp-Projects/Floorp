@@ -11,8 +11,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { createFactories, isGrip, cropMultipleLines } = require("./rep-utils");
-  const { ObjectBox } = createFactories(require("./object-box"));
+  const { isGrip, cropMultipleLines } = require("./rep-utils");
 
   // Shortcuts
   const DOM = React.DOM;
@@ -47,7 +46,7 @@ define(function (require, exports, module) {
 
       if (mode == "short" || mode == "tiny") {
         return (
-          ObjectBox({className: "textNode"},
+          DOM.span({className: "objectBox objectBox-textNode"},
             this.getTitle(grip),
             "\"" + this.getTextContent(grip) + "\""
           )
@@ -56,7 +55,7 @@ define(function (require, exports, module) {
 
       let objectLink = this.props.objectLink || DOM.span;
       return (
-        ObjectBox({className: "textNode"},
+        DOM.span({className: "objectBox objectBox-textNode"},
           this.getTitle(grip),
           objectLink({
             object: grip

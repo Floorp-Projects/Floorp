@@ -16,8 +16,6 @@ DevToolsModules(
     'grip.js',
     'null.js',
     'number.js',
-    'object-box.js',
-    'object-link.js',
     'object-with-text.js',
     'object-with-url.js',
     'object.js',
