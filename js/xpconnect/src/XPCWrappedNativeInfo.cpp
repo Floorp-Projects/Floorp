@@ -431,23 +431,19 @@ XPCNativeSetKey::Hash() const
 {
     PLDHashNumber h = 0;
 
-    XPCNativeSet* Set = GetBaseSet();
-    XPCNativeInterface* Addition = GetAddition();
-    uint16_t Position = GetPosition();
-
-    if (!Set) {
-        MOZ_ASSERT(Addition, "bad key");
+    if (!mBaseSet) {
+        MOZ_ASSERT(mAddition, "bad key");
         // This would be an XOR like below.
         // But "0 ^ x == x". So it does not matter.
-        h = (js::HashNumber) NS_PTR_TO_INT32(Addition) >> 2;
+        h = (js::HashNumber) NS_PTR_TO_INT32(mAddition) >> 2;
     } else {
-        XPCNativeInterface** Current = Set->GetInterfaceArray();
-        uint16_t count = Set->GetInterfaceCount();
-        if (Addition) {
+        XPCNativeInterface** Current = mBaseSet->GetInterfaceArray();
+        uint16_t count = mBaseSet->GetInterfaceCount();
+        if (mAddition) {
             count++;
             for (uint16_t i = 0; i < count; i++) {
-                if (i == Position)
-                    h ^= (js::HashNumber) NS_PTR_TO_INT32(Addition) >> 2;
+                if (i == mPosition)
+                    h ^= (js::HashNumber) NS_PTR_TO_INT32(mAddition) >> 2;
                 else
                     h ^= (js::HashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
             }
