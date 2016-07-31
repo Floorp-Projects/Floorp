@@ -1349,7 +1349,7 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
 
 #if defined(MOZ_ENABLE_STARTUP_NOTIFICATION)
     // TODO - Implement for non-X11 Gtk backends (Bug 726479)
-    if (mIsX11Display) {
+    if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
         GdkWindow* gdkWindow = gtk_widget_get_window(aWindow);
 
         GdkScreen* screen = gdk_window_get_screen(gdkWindow);
