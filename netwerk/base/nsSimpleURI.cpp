@@ -359,7 +359,9 @@ nsSimpleURI::SetPath(const nsACString &path)
     if (hashPos < 0) {
         mIsRefValid = false;
         mRef.Truncate(); // invariant: mRef should be empty when it's not valid
-        mPath = path;
+        if (!mPath.Assign(path, fallible)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         return NS_OK;
     }
 
