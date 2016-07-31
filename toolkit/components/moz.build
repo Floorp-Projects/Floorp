@@ -84,9 +84,6 @@ if CONFIG['BUILD_CTYPES']:
 if CONFIG['MOZ_FEEDS']:
     DIRS += ['feeds']
 
-if CONFIG['MOZ_HELP_VIEWER']:
-    DIRS += ['help']
-
 if CONFIG['MOZ_XUL']:
     DIRS += ['autocomplete', 'satchel']
 
