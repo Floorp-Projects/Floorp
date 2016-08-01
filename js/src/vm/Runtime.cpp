@@ -905,7 +905,6 @@ JSRuntime::assertCanLock(RuntimeLock which)
         MOZ_ASSERT(!HelperThreadState().isLocked());
         MOZ_FALLTHROUGH;
       case GCLock:
-        gc.assertCanLock();
         break;
       default:
         MOZ_CRASH();
