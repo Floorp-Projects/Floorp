@@ -3953,6 +3953,15 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
   DrawResult result = DrawResult::SUCCESS;
 
+  // intrinsicSize.CanComputeConcreteSize() return false means we can not
+  // read intrinsic size from aStyleBorder.mBorderImageSource.
+  // In this condition, we pass imageSize(a resolved size comes from
+  // default sizing algorithm) to renderer as the viewport size.
+  Maybe<nsSize> svgViewportSize = intrinsicSize.CanComputeConcreteSize() ?
+    Nothing() : Some(imageSize);
+  bool hasIntrinsicRatio = intrinsicSize.HasRatio();
+  renderer.PurgeCacheForViewportChange(svgViewportSize, hasIntrinsicRatio);
+
   for (int i = LEFT; i <= RIGHT; i++) {
     for (int j = TOP; j <= BOTTOM; j++) {
       uint8_t fillStyleH, fillStyleV;
@@ -4039,12 +4048,6 @@ DrawBorderImage(nsPresContext*       aPresContext,
         continue;
 
       nsIntRect intSubArea = subArea.ToOutsidePixels(nsPresContext::AppUnitsPerCSSPixel());
-      // intrinsicSize.CanComputeConcreteSize() return false means we can not
-      // read intrinsic size from aStyleBorder.mBorderImageSource.
-      // In this condition, we pass imageSize(a resolved size comes from
-      // default sizing algorithm) to renderer as the viewport size.
-      Maybe<nsSize> svgViewportSize = intrinsicSize.CanComputeConcreteSize() ?
-        Nothing() : Some(imageSize);
       result &=
         renderer.DrawBorderImageComponent(aPresContext,
                                           aRenderingContext, aDirtyRect,
@@ -4054,7 +4057,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
                                                                intSubArea.height),
                                           fillStyleH, fillStyleV,
                                           unitSize, j * (RIGHT + 1) + i,
-                                          svgViewportSize);
+                                          svgViewportSize, hasIntrinsicRatio);
     }
   }
 
@@ -5680,7 +5683,8 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                           uint8_t              aVFill,
                                           const nsSize&        aUnitSize,
                                           uint8_t              aIndex,
-                                          const Maybe<nsSize>& aSVGViewportSize)
+                                          const Maybe<nsSize>& aSVGViewportSize,
+                                          const bool           aHasIntrinsicRatio)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -5704,7 +5708,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     // For those SVG image sources which don't have fixed aspect ratio (i.e.
     // without viewport size and viewBox), we should scale the source uniformly
     // after the viewport size is decided by "Default Sizing Algorithm".
-    if (!ComputeIntrinsicSize().HasRatio()) {
+    if (!aHasIntrinsicRatio) {
       drawFlags = drawFlags | imgIContainer::FLAG_FORCE_UNIFORM_SCALING;
     }
     // Retrieve or create the subimage we'll draw.
@@ -5801,6 +5805,18 @@ nsImageRenderer::GetImage()
 
   nsCOMPtr<imgIContainer> image = mImageContainer;
   return image.forget();
+}
+
+void
+nsImageRenderer::PurgeCacheForViewportChange(
+  const Maybe<nsSize>& aSVGViewportSize, const bool aHasIntrinsicRatio)
+{
+  // Check if we should flush the cached data - only vector images need to do
+  // the check since they might not have fixed ratio.
+  if (mImageContainer &&
+      mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
+    mImage->PurgeCacheForViewportChange(aSVGViewportSize, aHasIntrinsicRatio);
+  }
 }
 
 #define MAX_BLUR_RADIUS 300
