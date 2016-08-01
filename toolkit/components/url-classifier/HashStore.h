@@ -23,7 +23,7 @@ namespace safebrowsing {
 class TableUpdate {
 public:
   explicit TableUpdate(const nsACString& aTable)
-      : mTable(aTable) {}
+      : mTable(aTable), mLocalUpdate(false) {}
   const nsCString& TableName() const { return mTable; }
 
   bool Empty() const {
@@ -60,6 +60,8 @@ public:
   MOZ_MUST_USE nsresult NewSubComplete(uint32_t aAddChunk,
                                        const Completion& aCompletion,
                                        uint32_t aSubChunk);
+  void SetLocalUpdate(void) { mLocalUpdate = true; }
+  bool IsLocalUpdate(void) { return mLocalUpdate; }
 
   ChunkSet& AddChunks() { return mAddChunks; }
   ChunkSet& SubChunks() { return mSubChunks; }
@@ -76,6 +78,8 @@ public:
 
 private:
   nsCString mTable;
+  // Update not from the remote server (no freshness)
+  bool mLocalUpdate;
 
   // The list of chunk numbers that we have for each of the type of chunks.
   ChunkSet mAddChunks;
@@ -108,12 +112,12 @@ public:
   // prefixes+chunknumbers dataset.
   nsresult AugmentAdds(const nsTArray<uint32_t>& aPrefixes);
 
-  ChunkSet& AddChunks();
-  ChunkSet& SubChunks();
+  ChunkSet& AddChunks() { return mAddChunks; }
+  ChunkSet& SubChunks() { return mSubChunks; }
   AddPrefixArray& AddPrefixes() { return mAddPrefixes; }
+  AddCompleteArray& AddCompletes() { return mAddCompletes; }
   SubPrefixArray& SubPrefixes() { return mSubPrefixes; }
-  AddCompleteArray& AddCompletes();
-  SubCompleteArray& SubCompletes();
+  SubCompleteArray& SubCompletes() { return mSubCompletes; }
 
   // =======
   // Updates
@@ -145,10 +149,9 @@ private:
   nsresult SanityCheck();
   nsresult CalculateChecksum(nsAutoCString& aChecksum, uint32_t aFileSize,
                              bool aChecksumPresent);
-  nsresult CheckChecksum(uint32_t aFileSize);
+  nsresult CheckChecksum(nsIFile* aStoreFile, uint32_t aFileSize);
   void UpdateHeader();
 
-  nsresult ReadCompletions();
   nsresult ReadChunkNumbers();
   nsresult ReadHashes();
 
@@ -159,11 +162,6 @@ private:
   nsresult WriteSubPrefixes(nsIOutputStream* aOut);
 
   nsresult ProcessSubs();
-
-  nsresult PrepareForUpdate();
-
-  bool AlreadyReadChunkNumbers();
-  bool AlreadyReadCompletions();
 
  // This is used for checking that the database is correct and for figuring out
  // the number of chunks, etc. to read from disk on restart.
@@ -204,8 +202,6 @@ private:
   // updates from the completion server and updates from the regular server.
   AddCompleteArray mAddCompletes;
   SubCompleteArray mSubCompletes;
-
-  uint32_t mFileSize;
 };
 
 } // namespace safebrowsing
