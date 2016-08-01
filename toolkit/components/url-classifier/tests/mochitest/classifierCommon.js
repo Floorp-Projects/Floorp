@@ -3,6 +3,9 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr } = Components;
 
+var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                .getService(Ci.nsIUrlClassifierDBService);
+
 function setTimeout(callback, delay) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback({ notify: callback },
@@ -11,8 +14,6 @@ function setTimeout(callback, delay) {
 }
 
 function doUpdate(update) {
-  const { classes: Cc, interfaces: Ci, results: Cr } = Components;
-
   let listener = {
     QueryInterface: function(iid)
     {
@@ -48,6 +49,16 @@ function doUpdate(update) {
   }
 }
 
+function doReload() {
+  dbService.reloadDatabase();
+
+  sendAsyncMessage("reloadSuccess");
+}
+
 addMessageListener("doUpdate", ({ testUpdate }) => {
   doUpdate(testUpdate);
+});
+
+addMessageListener("doReload", () => {
+  doReload();
 });
