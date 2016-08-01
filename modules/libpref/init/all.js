@@ -4421,11 +4421,7 @@ pref("webgl.disable-fail-if-major-performance-caveat", false);
 pref("webgl.disable-DOM-blit-uploads", false);
 pref("webgl.webgl2-compat-mode", false);
 
-#ifdef NIGHTLY_BUILD
-pref("webgl.enable-prototype-webgl2", true);
-#else
-pref("webgl.enable-prototype-webgl2", false);
-#endif
+pref("webgl.enable-webgl2", true);
 
 #ifdef RELEASE_BUILD
 // Keep this disabled on Release and Beta for now. (see bug 1171228)
