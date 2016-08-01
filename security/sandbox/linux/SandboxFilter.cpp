@@ -755,15 +755,15 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
       MOZ_CRASH("unexpected syscall number");
     }
 
+    if (strcmp(path, plugin->mPath) != 0) {
+      SANDBOX_LOG_ERROR("attempt to open file %s (flags=0%o) which is not the"
+                        " media plugin %s", path, flags, plugin->mPath);
+      return -EPERM;
+    }
     if ((flags & O_ACCMODE) != O_RDONLY) {
       SANDBOX_LOG_ERROR("non-read-only open of file %s attempted (flags=0%o)",
                         path, flags);
-      return -ENOSYS;
-    }
-    if (strcmp(path, plugin->mPath) != 0) {
-      SANDBOX_LOG_ERROR("attempt to open file %s which is not the media plugin"
-                        " %s", path, plugin->mPath);
-      return -ENOSYS;
+      return -EPERM;
     }
     int fd = plugin->mFd.exchange(-1);
     if (fd < 0) {
