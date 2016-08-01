@@ -616,10 +616,7 @@ void
 MediaDecoder::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (IsShutdown()) {
-    return;
-  }
+  MOZ_ASSERT(!IsShutdown());
 
   // Unwatch all watch targets to prevent further notifications.
   mWatchManager.Shutdown();
