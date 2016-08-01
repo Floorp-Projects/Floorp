@@ -15,12 +15,10 @@ var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
 
 function forEachWindow(f)
 {
-  let wins = Services.ww.getWindowEnumerator("navigator:browser");
+  let wins = Services.wm.getEnumerator("navigator:browser");
   while (wins.hasMoreElements()) {
     let win = wins.getNext();
-    if (win.gBrowser) {
-      f(win);
-    }
+    f(win);
   }
 }
 
