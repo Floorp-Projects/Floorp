@@ -104,8 +104,8 @@ private:
   bool mObservingRefreshDriver;
 
   /**
-   * These are protected static methods that help with the frame construction
-   * bits of the restyle managers.
+   * These are protected static methods that help with the change hint
+   * processing bits of the restyle managers.
    */
 protected:
   static nsIFrame*
@@ -118,6 +118,21 @@ protected:
   ProcessRestyledFrames(nsStyleChangeList& aChangeList,
                         nsPresContext& aPresContext,
                         OverflowChangedTracker& aOverflowChangedTracker);
+
+  /**
+   * Get the next continuation or similar ib-split sibling (assuming
+   * block/inline alternation), conditionally on it having the same style.
+   *
+   * Since this is used when deciding to copy the new style context, it
+   * takes as an argument the old style context to check if the style is
+   * the same.  When it is used in other contexts (i.e., where the next
+   * continuation would already have the new style context), the current
+   * style context should be passed.
+   */
+  static nsIFrame*
+  GetNextContinuationWithSameStyle(nsIFrame* aFrame,
+                                   nsStyleContext* aOldStyleContext,
+                                   bool* aHaveMoreContinuations = nullptr);
 };
 
 } // namespace mozilla

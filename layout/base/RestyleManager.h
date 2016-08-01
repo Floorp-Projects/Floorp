@@ -488,11 +488,6 @@ private:
   void StartRebuildAllStyleData(RestyleTracker& aRestyleTracker);
   void FinishRebuildAllStyleData();
 
-  void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
-
-  // Recursively add all the given frame and all children to the tracker.
-  void AddSubtreeToOverflowTracker(nsIFrame* aFrame);
-
   bool ShouldStartRebuildAllFor(RestyleTracker& aRestyleTracker) {
     // When we process our primary restyle tracker and we have a pending
     // rebuild-all, we need to process it.
