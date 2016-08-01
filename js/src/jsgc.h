@@ -20,7 +20,6 @@
 #include "js/SliceBudget.h"
 #include "js/Vector.h"
 #include "threading/ConditionVariable.h"
-#include "threading/Thread.h"
 #include "vm/NativeObject.h"
 
 namespace js {
@@ -863,8 +862,8 @@ class GCHelperState
     // Activity for the helper to do, protected by the GC lock.
     State state_;
 
-    // Thread which work is being performed on, if any.
-    mozilla::Maybe<Thread::Id> thread;
+    // Thread which work is being performed on, or null.
+    PRThread* thread;
 
     void startBackgroundThread(State newState, const AutoLockGC& lock,
                                const AutoLockHelperThreadState& helperLock);
@@ -888,7 +887,8 @@ class GCHelperState
     explicit GCHelperState(JSRuntime* rt)
       : rt(rt),
         done(),
-        state_(IDLE)
+        state_(IDLE),
+        thread(nullptr)
     { }
 
     void finish();
