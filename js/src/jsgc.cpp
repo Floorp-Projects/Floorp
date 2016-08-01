@@ -3317,8 +3317,8 @@ GCHelperState::work()
 
     AutoLockGC lock(rt);
 
-    MOZ_ASSERT(thread.isNothing());
-    thread = mozilla::Some(ThisThread::GetId());
+    MOZ_ASSERT(!thread);
+    thread = PR_GetCurrentThread();
 
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
 
@@ -3338,7 +3338,7 @@ GCHelperState::work()
     }
 
     setState(IDLE, lock);
-    thread.reset();
+    thread = nullptr;
 
     done.notify_all();
 }
@@ -3419,7 +3419,7 @@ GCHelperState::doSweep(AutoLockGC& lock)
 bool
 GCHelperState::onBackgroundThread()
 {
-    return thread.isSome() && *thread == ThisThread::GetId();
+    return PR_GetCurrentThread() == thread;
 }
 
 bool
