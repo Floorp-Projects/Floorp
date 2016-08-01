@@ -18,10 +18,5 @@ export MOZ_TELEMETRY_REPORTING=1
 # Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
 ac_add_options --enable-warnings-as-errors
 
-# Enable Widevine CDMs on MacOSX in Mozilla builds.
-# Enabled here on the assumption that downstream vendors will not be using
-# these build configs.
-ac_add_options --enable-eme=widevine
-
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
