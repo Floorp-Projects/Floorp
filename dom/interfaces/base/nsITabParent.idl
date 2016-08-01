@@ -55,6 +55,11 @@ interface nsITabParent : nsISupports
   readonly attribute uint64_t tabId;
 
   /**
+   * The OS level process Id of the related child process.
+   */
+  readonly attribute int32_t osPid;
+
+  /**
    * Navigate by key. If aForDocumentNavigation is true, navigate by document.
    * If aForDocumentNavigation is false, navigate by element.
    *
