@@ -70,6 +70,10 @@ public:
   // Used to register with MediaResource to receive notifications which will
   // be forwarded to MediaDecoder.
   class ResourceCallback : public MediaResourceCallback {
+    // Throttle calls to MediaDecoder::NotifyDataArrived()
+    // to be at most once per 500ms.
+    static const uint32_t sDelay = 500;
+
   public:
     // Start to receive notifications from ResourceCallback.
     void Connect(MediaDecoder* aDecoder);
@@ -92,8 +96,12 @@ public:
     void NotifySuspendedStatusChanged() override;
     void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) override;
 
+    static void TimerCallback(nsITimer* aTimer, void* aClosure);
+
     // The decoder to send notifications. Main-thread only.
     MediaDecoder* mDecoder = nullptr;
+    nsCOMPtr<nsITimer> mTimer;
+    bool mTimerArmed = false;
   };
 
   typedef MozPromise<SeekResolveValue, bool /* aIgnored */, /* IsExclusive = */ true> SeekPromise;
