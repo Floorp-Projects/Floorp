@@ -1671,6 +1671,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
         id = aID;
       }
 
+#ifdef MOZ_B2G
       // When we do the initial addition of the permissions we don't want to
       // inherit session specific permissions from other tabs or apps
       // so we ignore them and set the permission to PROMPT_ACTION if it was
@@ -1680,6 +1681,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
         aPermission = nsIPermissionManager::PROMPT_ACTION;
         aExpireType = nsIPermissionManager::EXPIRE_NEVER;
       }
+#endif // MOZ_B2G
 
       entry->GetPermissions().AppendElement(PermissionEntry(id, typeIndex, aPermission,
                                                             aExpireType, aExpireTime,
