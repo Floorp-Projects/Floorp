@@ -622,7 +622,7 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     }
 
     const Instance& instance = instanceObj->instance();
-    RootedAtom name(cx, instance.getFuncAtom(cx, funcIndex));
+    RootedAtom name(cx, instance.code().getFuncAtom(cx, funcIndex));
     if (!name)
         return false;
 
@@ -992,7 +992,7 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
     MOZ_ASSERT(instanceVector.length() == table.length());
 
     RootedWasmInstanceObject instanceObj(cx, instanceVector[index]);
-    const CodeRange* codeRange = instanceObj->instance().lookupCodeRange(table.array()[index]);
+    const CodeRange* codeRange = instanceObj->instance().code().lookupRange(table.array()[index]);
 
     // A non-function code range means the bad-indirect-call stub, so a null element.
     if (!codeRange || !codeRange->isFunction()) {
@@ -1071,7 +1071,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 
         Instance& instance = instanceObj->instance();
         const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
-        table.array()[index] = instance.codeSegment().code() + funcExport.tableEntryOffset();
+        table.array()[index] = instance.codeSegment().base() + funcExport.tableEntryOffset();
     } else {
         table.array()[index] = instanceVector[index]->instance().codeSegment().badIndirectCallCode();
     }

@@ -610,7 +610,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
 {
     MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(pc));
     MOZ_RELEASE_ASSERT(instance.metadata().assumptions.usesSignal.forOOB);
-    MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - instance.codeSegment().code()));
+    MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - instance.codeBase()));
 
     // Disassemble the instruction which caused the trap so that we can extract
     // information about it and decide what to do.
@@ -821,10 +821,10 @@ HandleFault(PEXCEPTION_POINTERS exception)
         // retrigger after the interrupt jumps back to resumePC).
         return pc == instance.codeSegment().interruptCode() &&
                instance.codeSegment().containsFunctionPC(activation->resumePC()) &&
-               instance.lookupMemoryAccess(activation->resumePC());
+               instance.code().lookupMemoryAccess(activation->resumePC());
     }
 
-    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
     if (!memoryAccess)
         return false;
 
@@ -951,7 +951,7 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
     if (!IsHeapAccessAddress(instance, faultingAddress))
         return false;
 
-    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
     if (!memoryAccess)
         return false;
 
@@ -1165,7 +1165,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     if (!IsHeapAccessAddress(instance, faultingAddress))
         return false;
 
-    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
     if (signal == Signal::SegFault && !memoryAccess)
         return false;
 
