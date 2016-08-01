@@ -5,7 +5,7 @@
 import os
 from setuptools import setup, find_packages
 
-PACKAGE_VERSION = '2.0'
+PACKAGE_VERSION = '2.1'
 
 THIS_DIR = os.path.dirname(os.path.realpath(__name__))
 
