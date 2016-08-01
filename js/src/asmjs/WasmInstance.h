@@ -60,6 +60,7 @@ class Instance
 
     // Internal helpers:
     JSContext** addressOfContextPtr() const;
+    Instance** addressOfInstancePtr() const;
     uint8_t** addressOfMemoryBase() const;
     void** addressOfTableBase(size_t tableIndex) const;
     const void** addressOfSigId(const SigIdDesc& sigId) const;
@@ -70,12 +71,13 @@ class Instance
 
     // Import call slow paths which are called directly from wasm code.
     friend void* AddressOf(SymbolicAddress, ExclusiveContext*);
+    static int32_t callImport_void(Instance*, int32_t, int32_t, uint64_t*);
+    static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
+    static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);
+    static int32_t callImport_f64(Instance*, int32_t, int32_t, uint64_t*);
+
     bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                     MutableHandleValue rval);
-    static int32_t callImport_void(int32_t importIndex, int32_t argc, uint64_t* argv);
-    static int32_t callImport_i32(int32_t importIndex, int32_t argc, uint64_t* argv);
-    static int32_t callImport_i64(int32_t importIndex, int32_t argc, uint64_t* argv);
-    static int32_t callImport_f64(int32_t importIndex, int32_t argc, uint64_t* argv);
 
   public:
     Instance(JSContext* cx,
@@ -90,6 +92,7 @@ class Instance
     bool init(JSContext* cx);
     void trace(JSTracer* trc);
 
+    JSContext* cx() const { return *addressOfContextPtr(); }
     const CodeSegment& codeSegment() const { return *codeSegment_; }
     const Metadata& metadata() const { return *metadata_; }
     const SharedTableVector& tables() const { return tables_; }

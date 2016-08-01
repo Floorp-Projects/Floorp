@@ -837,7 +837,8 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
         LAsmJSCompareExchangeCallout* lir =
             new(alloc()) LAsmJSCompareExchangeCallout(useRegisterAtStart(base),
                                                       useRegisterAtStart(ins->oldValue()),
-                                                      useRegisterAtStart(ins->newValue()));
+                                                      useRegisterAtStart(ins->newValue()),
+                                                      temp(), temp());
         defineReturn(lir, ins);
         return;
     }
@@ -862,7 +863,7 @@ LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 
     if (byteSize(ins->accessType()) < 4 && !HasLDSTREXBHD()) {
         // Call out on ARMv6.
-        defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(base, value), ins);
+        defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(base, value, temp(), temp()), ins);
         return;
     }
 
@@ -881,7 +882,8 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     if (byteSize(ins->accessType()) != 4 && !HasLDSTREXBHD()) {
         LAsmJSAtomicBinopCallout* lir =
             new(alloc()) LAsmJSAtomicBinopCallout(useRegisterAtStart(base),
-                                                  useRegisterAtStart(ins->value()));
+                                                  useRegisterAtStart(ins->value()),
+                                                  temp(), temp());
         defineReturn(lir, ins);
         return;
     }
