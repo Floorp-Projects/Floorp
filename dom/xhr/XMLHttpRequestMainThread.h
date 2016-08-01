@@ -238,100 +238,34 @@ public:
 private:
   virtual ~XMLHttpRequestMainThread();
 
-  class RequestBody
+  class RequestBodyBase
   {
   public:
-    RequestBody() : mType(eUninitialized)
-    {
-    }
-    explicit RequestBody(const ArrayBuffer* aArrayBuffer) : mType(eArrayBuffer)
-    {
-      mValue.mArrayBuffer = aArrayBuffer;
-    }
-    explicit RequestBody(const ArrayBufferView* aArrayBufferView) : mType(eArrayBufferView)
-    {
-      mValue.mArrayBufferView = aArrayBufferView;
-    }
-    explicit RequestBody(Blob& aBlob) : mType(eBlob)
-    {
-      mValue.mBlob = &aBlob;
-    }
-    explicit RequestBody(mozilla::dom::URLSearchParams& aURLSearchParams) :
-      mType(eURLSearchParams)
-    {
-      mValue.mURLSearchParams = &aURLSearchParams;
-    }
-    explicit RequestBody(nsIDocument* aDocument) : mType(eDocument)
-    {
-      mValue.mDocument = aDocument;
-    }
-    explicit RequestBody(const nsAString& aString) : mType(eDOMString)
-    {
-      mValue.mString = &aString;
-    }
-    explicit RequestBody(FormData& aFormData) : mType(eFormData)
-    {
-      mValue.mFormData = &aFormData;
-    }
-    explicit RequestBody(nsIInputStream* aStream) : mType(eInputStream)
-    {
-      mValue.mStream = aStream;
-    }
-
-    enum Type {
-      eUninitialized,
-      eArrayBuffer,
-      eArrayBufferView,
-      eBlob,
-      eDocument,
-      eDOMString,
-      eFormData,
-      eInputStream,
-      eURLSearchParams
-    };
-    union Value {
-      const ArrayBuffer* mArrayBuffer;
-      const ArrayBufferView* mArrayBufferView;
-      Blob* mBlob;
-      nsIDocument* mDocument;
-      const nsAString* mString;
-      FormData* mFormData;
-      nsIInputStream* mStream;
-      URLSearchParams* mURLSearchParams;
-    };
-
-    Type GetType() const
-    {
-      MOZ_ASSERT(mType != eUninitialized);
-      return mType;
-    }
-    Value GetValue() const
-    {
-      MOZ_ASSERT(mType != eUninitialized);
-      return mValue;
-    }
-
-  private:
-    Type mType;
-    Value mValue;
-  };
-
-  static nsresult GetRequestBody(nsIVariant* aVariant,
-                                 const Nullable<RequestBody>& aBody,
-                                 nsIInputStream** aResult,
+    virtual nsresult GetAsStream(nsIInputStream** aResult,
                                  uint64_t* aContentLength,
                                  nsACString& aContentType,
-                                 nsACString& aCharset);
+                                 nsACString& aCharset) const
+    {
+      NS_ASSERTION(false, "RequestBodyBase should not be used directly.");
+      return NS_ERROR_FAILURE;
+    }
+  };
 
-  nsresult Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody);
-  nsresult Send(const Nullable<RequestBody>& aBody)
+  template<typename Type>
+  class RequestBody final : public RequestBodyBase
   {
-    return Send(nullptr, aBody);
-  }
-  nsresult Send(const RequestBody& aBody)
-  {
-    return Send(Nullable<RequestBody>(aBody));
-  }
+    Type* mBody;
+  public:
+    explicit RequestBody(Type* aBody) : mBody(aBody)
+    {
+    }
+    nsresult GetAsStream(nsIInputStream** aResult,
+                         uint64_t* aContentLength,
+                         nsACString& aContentType,
+                         nsACString& aCharset) const override;
+  };
+
+  nsresult SendInternal(const RequestBodyBase* aBody);
 
   bool IsCrossSiteCORSRequest() const;
   bool IsDeniedCrossSiteCORSRequest();
@@ -345,39 +279,44 @@ public:
   virtual void
   Send(JSContext* /*aCx*/, ErrorResult& aRv) override
   {
-    aRv = Send(Nullable<RequestBody>());
+    aRv = SendInternal(nullptr);
   }
 
   virtual void
   Send(JSContext* /*aCx*/, const ArrayBuffer& aArrayBuffer,
        ErrorResult& aRv) override
   {
-    aRv = Send(RequestBody(&aArrayBuffer));
+    RequestBody<const ArrayBuffer> body(&aArrayBuffer);
+    aRv = SendInternal(&body);
   }
 
   virtual void
   Send(JSContext* /*aCx*/, const ArrayBufferView& aArrayBufferView,
        ErrorResult& aRv) override
   {
-    aRv = Send(RequestBody(&aArrayBufferView));
+    RequestBody<const ArrayBufferView> body(&aArrayBufferView);
+    aRv = SendInternal(&body);
   }
 
   virtual void
   Send(JSContext* /*aCx*/, Blob& aBlob, ErrorResult& aRv) override
   {
-    aRv = Send(RequestBody(aBlob));
+    RequestBody<Blob> body(&aBlob);
+    aRv = SendInternal(&body);
   }
 
   virtual void Send(JSContext* /*aCx*/, URLSearchParams& aURLSearchParams,
                     ErrorResult& aRv) override
   {
-    aRv = Send(RequestBody(aURLSearchParams));
+    RequestBody<URLSearchParams> body(&aURLSearchParams);
+    aRv = SendInternal(&body);
   }
 
   virtual void
   Send(JSContext* /*aCx*/, nsIDocument& aDoc, ErrorResult& aRv) override
   {
-    aRv = Send(RequestBody(&aDoc));
+    RequestBody<nsIDocument> body(&aDoc);
+    aRv = SendInternal(&body);
   }
 
   virtual void
@@ -385,16 +324,17 @@ public:
   {
     if (DOMStringIsNull(aString)) {
       Send(aCx, aRv);
-    }
-    else {
-      aRv = Send(RequestBody(aString));
+    } else {
+      RequestBody<const nsAString> body(&aString);
+      aRv = SendInternal(&body);
     }
   }
 
   virtual void
   Send(JSContext* /*aCx*/, FormData& aFormData, ErrorResult& aRv) override
   {
-    aRv = Send(RequestBody(aFormData));
+    RequestBody<FormData> body(&aFormData);
+    aRv = SendInternal(&body);
   }
 
   virtual void
@@ -418,7 +358,8 @@ public:
       }
       return;
     }
-    aRv = Send(RequestBody(aStream));
+    RequestBody<nsIInputStream> body(aStream);
+    aRv = SendInternal(&body);
   }
 
   void
