@@ -7,6 +7,7 @@ const { FrontClassWithSpec, Front } = require("devtools/shared/protocol");
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { Task } = require("devtools/shared/task");
 const { CSS_PROPERTIES_DB } = require("devtools/shared/css-properties-db");
+const { cssColors } = require("devtools/shared/css-color-db");
 
 /**
  * Build up a regular expression that matches a CSS variable token. This is an
@@ -44,8 +45,6 @@ const CssPropertiesFront = FrontClassWithSpec(cssPropertiesSpec, {
     this.manage(this);
   }
 });
-
-exports.CssPropertiesFront = CssPropertiesFront;
 
 /**
  * Ask questions to a CSS database. This class does not care how the database
@@ -100,10 +99,18 @@ CssProperties.prototype = {
    */
   supportsType(property, type) {
     return this.properties[property] && this.properties[property].supports.includes(type);
+  },
+
+  /**
+   * Gets the CSS values for a given property name.
+   *
+   * @param {String} property The property to use.
+   * @return {Array} An array of strings.
+   */
+  getValues(property) {
+    return this.properties[property] ? this.properties[property].values : [];
   }
 };
-
-exports.CssProperties = CssProperties;
 
 /**
  * Create a CssProperties object with a fully loaded CSS database. The
@@ -116,8 +123,8 @@ exports.CssProperties = CssProperties;
  * @param {Toolbox} The current toolbox.
  * @returns {Promise} Resolves to {cssProperties, cssPropertiesFront}.
  */
-exports.initCssProperties = Task.async(function* (toolbox) {
-  let client = toolbox.target.client;
+const initCssProperties = Task.async(function* (toolbox) {
+  const client = toolbox.target.client;
   if (cachedCssProperties.has(client)) {
     return cachedCssProperties.get(client);
   }
@@ -127,34 +134,22 @@ exports.initCssProperties = Task.async(function* (toolbox) {
   // Get the list dynamically if the cssProperties actor exists.
   if (toolbox.target.hasActor("cssProperties")) {
     front = CssPropertiesFront(client, toolbox.target.form);
-    db = yield front.getCSSDatabase();
+    const serverDB = yield front.getCSSDatabase(getClientBrowserVersion(toolbox));
 
-    // Even if the target has the cssProperties actor, the returned data may
-    // not be in the same shape or have all of the data we need. The following
-    // code normalizes this data.
-
-    // Firefox 49's getCSSDatabase() just returned the properties object, but
-    // now it returns an object with multiple types of CSS information.
-    if (!db.properties) {
-      db = { properties: db };
-    }
-
-    // Fill in any missing DB information from the static database.
-    db = Object.assign({}, CSS_PROPERTIES_DB, db);
-
-    // Add "supports" information to the css properties if it's missing.
-    if (!db.properties.color.supports) {
-      for (let name in db.properties) {
-        if (typeof CSS_PROPERTIES_DB.properties[name] === "object") {
-          db.properties[name].supports = CSS_PROPERTIES_DB.properties[name].supports;
-        }
-      }
+    // The serverDB will be blank if the browser versions match, so use the static list.
+    if (!serverDB.properties && !serverDB.margin) {
+      db = CSS_PROPERTIES_DB;
+    } else {
+      db = normalizeCssData(serverDB);
     }
   } else {
     // The target does not support this actor, so require a static list of supported
     // properties.
     db = CSS_PROPERTIES_DB;
   }
+
+  // Color values are omitted to save on space. Add them back here.
+  reattachCssColorValues(db);
 
   const cssProperties = new CssProperties(db);
   cachedCssProperties.set(client, {cssProperties, front});
@@ -167,13 +162,86 @@ exports.initCssProperties = Task.async(function* (toolbox) {
  * @param {Toolbox} The current toolbox.
  * @returns {CssProperties}
  */
-exports.getCssProperties = function (toolbox) {
+function getCssProperties(toolbox) {
   if (!cachedCssProperties.has(toolbox.target.client)) {
     throw new Error("The CSS database has not been initialized, please make " +
                     "sure initCssDatabase was called once before for this " +
                     "toolbox.");
   }
   return cachedCssProperties.get(toolbox.target.client).cssProperties;
-};
+}
 
-exports.CssPropertiesFront = CssPropertiesFront;
+/**
+ * Get the current browser version.
+ * @returns {string} The browser version.
+ */
+function getClientBrowserVersion(toolbox) {
+  if (!toolbox._host) {
+    return "0";
+  }
+  const regexResult = toolbox._host.frame.contentWindow.navigator
+                             .userAgent.match(/Firefox\/(\d+)\.\d/);
+  return Array.isArray(regexResult) ? regexResult[1] : "0";
+}
+
+/**
+ * Even if the target has the cssProperties actor, the returned data may not be in the
+ * same shape or have all of the data we need. This normalizes this data.
+ *
+ * @return {Object} The normalized CSS database.
+ */
+function normalizeCssData(db) {
+  // Firefox 49's getCSSDatabase() just returned the properties object, but
+  // now it returns an object with multiple types of CSS information.
+  if (!db.properties) {
+    db = { properties: db };
+  }
+
+  // Fill in any missing DB information from the static database.
+  db = Object.assign({}, CSS_PROPERTIES_DB, db);
+
+  // Add "supports" information to the css properties if it's missing.
+  if (!db.properties.color.supports) {
+    for (let name in db.properties) {
+      if (typeof CSS_PROPERTIES_DB.properties[name] === "object") {
+        db.properties[name].supports = CSS_PROPERTIES_DB.properties[name].supports;
+      }
+    }
+  }
+
+  // Add "values" information to the css properties if it's missing.
+  if (!db.properties.color.values) {
+    for (let name in db.properties) {
+      if (typeof CSS_PROPERTIES_DB.properties[name] === "object") {
+        db.properties[name].values = CSS_PROPERTIES_DB.properties[name].values;
+      }
+    }
+  }
+
+  return db;
+}
+
+/**
+ * Color values are omitted to save on space. Add them back here.
+ * @param {Object} The CSS database.
+ */
+function reattachCssColorValues(db) {
+  if (db.properties.color.values[0] === "COLOR") {
+    const colors = Object.keys(cssColors);
+
+    for (let name in db.properties) {
+      const property = db.properties[name];
+      if (property.values[0] === "COLOR") {
+        property.values.shift();
+        property.values = property.values.concat(colors).sort();
+      }
+    }
+  }
+}
+
+module.exports = {
+  CssPropertiesFront,
+  CssProperties,
+  getCssProperties,
+  initCssProperties
+};
