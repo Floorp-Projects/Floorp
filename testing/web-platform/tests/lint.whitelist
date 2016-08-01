@@ -26,6 +26,7 @@ INDENT TABS: webaudio/*
 INDENT TABS: webvtt/*
 INDENT TABS: XMLHttpRequest/*
 INDENT TABS: encoding/legacy*/*
+INDENT TABS: encrypted-media/polyfill/Makefile
 
 TRAILING WHITESPACE: app-uri/*
 TRAILING WHITESPACE: battery-status/*
@@ -108,6 +109,10 @@ CONSOLE:streams/resources/test-utils.js
 CONSOLE:service-workers/service-worker/resources/navigation-redirect-other-origin.html
 CONSOLE:service-workers/service-worker/navigation-redirect.https.html
 CONSOLE:service-workers/service-worker/resources/clients-get-other-origin.html
+
+# use of console in a public library - annotation-model ensures
+# it is not actually used
+CONSOLE:annotation-model/scripts/ajv.min.js
 
 # Lint doesn't know about sub.svg I guess
 PARSE-FAILED:content-security-policy/svg/including.sub.svg
