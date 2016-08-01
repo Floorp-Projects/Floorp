@@ -1168,56 +1168,6 @@ GetPrevContinuationWithSameStyle(nsIFrame* aFrame)
   return prevContinuation;
 }
 
-/**
- * Get the next continuation or similar ib-split sibling (assuming
- * block/inline alternation), conditionally on it having the same style.
- *
- * Since this is used when deciding to copy the new style context, it
- * takes as an argument the old style context to check if the style is
- * the same.  When it is used in other contexts (i.e., where the next
- * continuation would already have the new style context), the current
- * style context should be passed.
- */
-static nsIFrame*
-GetNextContinuationWithSameStyle(nsIFrame* aFrame,
-                                 nsStyleContext* aOldStyleContext,
-                                 bool* aHaveMoreContinuations = nullptr)
-{
-  // See GetPrevContinuationWithSameStyle about {ib} splits.
-
-  nsIFrame *nextContinuation = aFrame->GetNextContinuation();
-  if (!nextContinuation &&
-      (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
-    // We're the last continuation, so we have to hop back to the first
-    // before getting the frame property
-    nextContinuation = aFrame->FirstContinuation()->
-      Properties().Get(nsIFrame::IBSplitSibling());
-    if (nextContinuation) {
-      nextContinuation =
-        nextContinuation->Properties().Get(nsIFrame::IBSplitSibling());
-    }
-  }
-
-  if (!nextContinuation) {
-    return nullptr;
-  }
-
-  NS_ASSERTION(nextContinuation->GetContent() == aFrame->GetContent(),
-               "unexpected content mismatch");
-
-  nsStyleContext* nextStyle = nextContinuation->StyleContext();
-  if (nextStyle != aOldStyleContext) {
-    NS_ASSERTION(aOldStyleContext->GetPseudo() != nextStyle->GetPseudo() ||
-                 aOldStyleContext->GetParent() != nextStyle->GetParent(),
-                 "continuations should have the same style context");
-    nextContinuation = nullptr;
-    if (aHaveMoreContinuations) {
-      *aHaveMoreContinuations = true;
-    }
-  }
-  return nextContinuation;
-}
-
 nsresult
 RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
@@ -1783,7 +1733,7 @@ ElementRestyler::ConditionallyRestyleContentChildren(nsIFrame* aFrame,
   }
 
   for (nsIFrame* f = aFrame; f;
-       f = GetNextContinuationWithSameStyle(f, f->StyleContext())) {
+       f = RestyleManager::GetNextContinuationWithSameStyle(f, f->StyleContext())) {
     nsIFrame::ChildListIterator lists(f);
     for (; !lists.IsDone(); lists.Next()) {
       for (nsIFrame* child : lists.CurrentList()) {
@@ -2064,7 +2014,7 @@ ElementRestyler::MoveStyleContextsForChildren(nsStyleContext* aOldContext)
 
   DebugOnly<nsIFrame*> lastContinuation;
   for (nsIFrame* f = mFrame; f;
-       f = GetNextContinuationWithSameStyle(f, f->StyleContext())) {
+       f = RestyleManager::GetNextContinuationWithSameStyle(f, f->StyleContext())) {
     lastContinuation = f;
     if (!MoveStyleContextsForContentChildren(f, aOldContext, contextsToMove)) {
       return false;
@@ -2219,7 +2169,9 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       result = thisResult;
     }
 
-    f = GetNextContinuationWithSameStyle(f, oldContext, &haveMoreContinuations);
+    f = RestyleManager::GetNextContinuationWithSameStyle(f,
+                                                         oldContext,
+                                                         &haveMoreContinuations);
   }
 
   // Some changes to animations don't affect the computed style and yet still
@@ -3300,7 +3252,7 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
     InitializeAccessibilityNotifications(mFrame->StyleContext());
 
     for (nsIFrame* f = mFrame; f;
-         f = GetNextContinuationWithSameStyle(f, f->StyleContext())) {
+         f = RestyleManager::GetNextContinuationWithSameStyle(f, f->StyleContext())) {
       lastContinuation = f;
       RestyleContentChildren(f, aChildRestyleHint);
     }
