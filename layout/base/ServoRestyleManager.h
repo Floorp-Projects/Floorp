@@ -66,10 +66,12 @@ public:
                            int32_t aModType,
                            const nsAttrValue* aNewValue);
 
-  // XXXbholley: We should assert that the element is already snapshotted.
   void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
                         nsIAtom* aAttribute, int32_t aModType,
-                        const nsAttrValue* aOldValue) {}
+                        const nsAttrValue* aOldValue)
+  {
+    MOZ_ASSERT(SnapshotForElement(aElement)->HasAttrs());
+  }
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
   nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
