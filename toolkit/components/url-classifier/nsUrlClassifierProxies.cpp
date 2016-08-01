@@ -172,15 +172,6 @@ UrlClassifierDBServiceWorkerProxy::ResetDatabase()
 }
 
 NS_IMETHODIMP
-UrlClassifierDBServiceWorkerProxy::ReloadDatabase()
-{
-  nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mTarget,
-                      &nsIUrlClassifierDBServiceWorker::ReloadDatabase);
-  return DispatchToWorkerThread(r);
-}
-
-NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::OpenDb()
 {
   nsCOMPtr<nsIRunnable> r =

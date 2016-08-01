@@ -14,18 +14,24 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
             'platforms': ['linux', 'windows_nt', 'darwin'],
             'files': [
                 # Phishing
+                "goog-badbinurl-shavar.cache",
                 "goog-badbinurl-shavar.pset",
                 "goog-badbinurl-shavar.sbstore",
+                "goog-malware-shavar.cache",
                 "goog-malware-shavar.pset",
                 "goog-malware-shavar.sbstore",
+                "goog-phish-shavar.cache",
                 "goog-phish-shavar.pset",
                 "goog-phish-shavar.sbstore",
+                "goog-unwanted-shavar.cache",
                 "goog-unwanted-shavar.pset",
                 "goog-unwanted-shavar.sbstore",
 
                 # Tracking Protections
+                "mozstd-track-digest256.cache",
                 "mozstd-track-digest256.pset",
                 "mozstd-track-digest256.sbstore",
+                "mozstd-trackwhite-digest256.cache",
                 "mozstd-trackwhite-digest256.pset",
                 "mozstd-trackwhite-digest256.sbstore"
                 ]
@@ -33,6 +39,7 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
         {
             'platforms': ['windows_nt'],
             'files': [
+                "goog-downloadwhite-digest256.cache",
                 "goog-downloadwhite-digest256.pset",
                 "goog-downloadwhite-digest256.sbstore"
             ]
