@@ -714,7 +714,7 @@ js::Nursery::freeMallocedBuffers()
         AutoLockHelperThreadState lock;
         freeMallocedBuffersTask->joinWithLockHeld(lock);
         freeMallocedBuffersTask->transferBuffersToFree(mallocedBuffers, lock);
-        started = freeMallocedBuffersTask->startWithLockHeld(lock);
+        started = freeMallocedBuffersTask->startWithLockHeld();
     }
 
     if (!started)
