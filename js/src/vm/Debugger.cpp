@@ -6057,7 +6057,7 @@ class DebuggerScriptGetLineOffsetsMatcher
             return false;
 
         Vector<uint32_t> offsets(cx_);
-        if (!instance->instance().getLineOffsets(lineno_, offsets))
+        if (!instance->instance().code().getLineOffsets(lineno_, offsets))
             return false;
         for (uint32_t i = 0; i < offsets.length(); i++) {
             if (!NewbornArrayPush(cx_, result_, NumberValue(offsets[i])))
@@ -6706,7 +6706,7 @@ class DebuggerSourceGetTextMatcher
     }
 
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        return wasmInstance->instance().createText(cx_);
+        return wasmInstance->instance().code().createText(cx_);
     }
 };
 

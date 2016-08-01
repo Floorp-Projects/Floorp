@@ -35,7 +35,7 @@ using namespace js::wasm;
 const char wasm::InstanceExportField[] = "exports";
 
 JSObject*
-js::wasm::CreateI64Object(JSContext* cx, int64_t i64)
+wasm::CreateI64Object(JSContext* cx, int64_t i64)
 {
     RootedObject result(cx, JS_NewPlainObject(cx));
     if (!result)
@@ -53,7 +53,7 @@ js::wasm::CreateI64Object(JSContext* cx, int64_t i64)
 }
 
 bool
-js::wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
+wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
 {
     if (!v.isObject()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
@@ -413,7 +413,6 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
                   const ValVector& globalImports, HandleWasmTableObject tableObj) const
 {
     Instance& instance = instanceObj->instance();
-    const CodeSegment& codeSegment = instance.codeSegment();
     const SharedTableVector& tables = instance.tables();
 
     // Initialize tables that have a WasmTableObject first, so that this
@@ -424,7 +423,7 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
     // Initialize all remaining Tables that do not have objects.
     for (const SharedTable& table : tables) {
         if (!table->initialized())
-            table->init(codeSegment);
+            table->init(instance.code().segment());
     }
 
     // Now that all tables have been initialized, write elements.
@@ -474,13 +473,13 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
         // If profiling is already enabled in the wasm::Compartment, the new
         // instance must use the profiling entry for typed functions instead of
         // the default nonProfilingEntry.
-        bool useProfilingEntry = instance.profilingEnabled() && table.isTypedFunction();
+        bool useProfilingEntry = instance.code().profilingEnabled() && table.isTypedFunction();
 
-        uint8_t* code = codeSegment.code();
+        uint8_t* codeBase = instance.codeBase();
         for (uint32_t i = 0; i < seg.elems.length(); i++) {
-            void* callee = code + seg.elems[i];
+            void* callee = codeBase + seg.elems[i];
             if (useProfilingEntry)
-                callee = code + instance.lookupCodeRange(callee)->funcProfilingEntry();
+                callee = codeBase + instance.code().lookupRange(callee)->funcProfilingEntry();
             table.array()[offset + i] = callee;
         }
 
@@ -697,10 +696,6 @@ Module::instantiate(JSContext* cx,
     if (!instantiateMemory(cx, &memory))
         return false;
 
-    auto codeSegment = CodeSegment::create(cx, code_, linkData_, *metadata_, memory);
-    if (!codeSegment)
-        return false;
-
     SharedTableVector tables;
     if (!instantiateTable(cx, tableImport, &tables))
         return false;
@@ -716,6 +711,14 @@ Module::instantiate(JSContext* cx,
     if (cx->compartment()->isDebuggee() || !metadata_->funcNames.empty())
         maybeBytecode = bytecode_.get();
 
+    auto codeSegment = CodeSegment::create(cx, code_, linkData_, *metadata_, memory);
+    if (!codeSegment)
+        return false;
+
+    auto code = cx->make_unique<Code>(Move(codeSegment), *metadata_, maybeBytecode);
+    if (!code)
+        return false;
+
     // Create the Instance, ensuring that it is traceable via 'instanceObj'
     // before any GC can occur and invalidate the pointers stored in global
     // memory.
@@ -726,9 +729,7 @@ Module::instantiate(JSContext* cx,
             return false;
 
         auto instance = cx->make_unique<Instance>(cx,
-                                                  Move(codeSegment),
-                                                  *metadata_,
-                                                  maybeBytecode,
+                                                  Move(code),
                                                   memory,
                                                   Move(tables),
                                                   funcImports,
