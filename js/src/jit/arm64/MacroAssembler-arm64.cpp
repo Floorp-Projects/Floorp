@@ -831,6 +831,12 @@ template void
 MacroAssembler::storeUnboxedValue(ConstantOrRegister value, MIRType valueType,
                                   const BaseIndex& dest, MIRType slotType);
 
+void
+MacroAssembler::comment(const char* msg)
+{
+    Assembler::comment(msg);
+}
+
 //}}} check_macroassembler_style
 
 } // namespace jit
