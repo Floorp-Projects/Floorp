@@ -59,7 +59,7 @@ js::Thread::Id::Id()
 }
 
 bool
-js::Thread::Id::operator==(const Id& aOther)
+js::Thread::Id::operator==(const Id& aOther) const
 {
   const PlatformData& self = *platformData();
   const PlatformData& other = *aOther.platformData();
