@@ -44,7 +44,7 @@ js::Thread::Id::Id()
 }
 
 bool
-js::Thread::Id::operator==(const Id& aOther)
+js::Thread::Id::operator==(const Id& aOther) const
 {
   return platformData()->id == aOther.platformData()->id;
 }
