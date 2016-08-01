@@ -32,6 +32,7 @@
  *
  * Audio sample format enumeration and related convenience functions.
  * @{
+ *
  */
 
 /**
