@@ -16,19 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVCODEC_PROFILES_H
-#define AVCODEC_PROFILES_H
+#ifndef AVCODEC_BSF_H
+#define AVCODEC_BSF_H
 
 #include "avcodec.h"
 
-extern const AVProfile ff_aac_profiles[];
-extern const AVProfile ff_dca_profiles[];
-extern const AVProfile ff_h264_profiles[];
-extern const AVProfile ff_hevc_profiles[];
-extern const AVProfile ff_jpeg2000_profiles[];
-extern const AVProfile ff_mpeg2_video_profiles[];
-extern const AVProfile ff_mpeg4_video_profiles[];
-extern const AVProfile ff_vc1_profiles[];
-extern const AVProfile ff_vp9_profiles[];
+/**
+ * Called by the bitstream filters to get the next packet for filtering.
+ * The filter is responsible for either freeing the packet or passing it to the
+ * caller.
+ */
+int ff_bsf_get_packet(AVBSFContext *ctx, AVPacket **pkt);
 
-#endif /* AVCODEC_PROFILES_H */
+const AVClass *ff_bsf_child_class_next(const AVClass *prev);
+
+#endif /* AVCODEC_BSF_H */
