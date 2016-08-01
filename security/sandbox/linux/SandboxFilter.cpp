@@ -41,6 +41,10 @@ using namespace sandbox::bpf_dsl;
 #define MADV_DONTDUMP 16
 #endif
 
+#ifndef PR_SET_PTRACER
+#define PR_SET_PTRACER 0x59616d61
+#endif
+
 // To avoid visual confusion between "ifdef ANDROID" and "ifndef ANDROID":
 #ifndef ANDROID
 #define DESKTOP
@@ -124,7 +128,8 @@ public:
     return Switch(op)
       .CASES((PR_GET_SECCOMP, // BroadcastSetThreadSandbox, etc.
               PR_SET_NAME,    // Thread creation
-              PR_SET_DUMPABLE), // Crash reporting
+              PR_SET_DUMPABLE, // Crash reporting
+              PR_SET_PTRACER), // Debug-mode crash handling
              Allow())
       .Default(InvalidSyscall());
   }
