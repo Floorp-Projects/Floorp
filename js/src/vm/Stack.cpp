@@ -1631,10 +1631,7 @@ WasmActivation::WasmActivation(JSContext* cx, wasm::Instance& instance)
     fp_(nullptr),
     exitReason_(wasm::ExitReason::None)
 {
-    (void) entrySP_;  // squelch GCC warning
-
-    prevWasmForInstance_ = instance.activation();
-    instance.activation() = this;
+    (void) entrySP_;  // silence "unused private member" warning
 
     prevWasm_ = cx->runtime()->wasmActivationStack_;
     cx->runtime()->wasmActivationStack_ = this;
@@ -1653,11 +1650,7 @@ WasmActivation::~WasmActivation()
 
     MOZ_ASSERT(fp_ == nullptr);
 
-    MOZ_ASSERT(instance_.activation() == this);
-    instance_.activation() = prevWasmForInstance_;
-
     MOZ_ASSERT(cx_->runtime()->wasmActivationStack_ == this);
-
     cx_->runtime()->wasmActivationStack_ = prevWasm_;
 
     MOZ_ASSERT(cx_->compartment()->wasm.activationCount_ > 0);

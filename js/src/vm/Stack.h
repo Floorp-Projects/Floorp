@@ -1665,7 +1665,6 @@ class WasmActivation : public Activation
 {
     wasm::Instance& instance_;
     WasmActivation* prevWasm_;
-    WasmActivation* prevWasmForInstance_;
     void* entrySP_;
     void* resumePC_;
     uint8_t* fp_;
