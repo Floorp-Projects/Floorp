@@ -25,6 +25,7 @@ class nsAttrValue;
 class nsIAtom;
 class nsIContent;
 class nsIFrame;
+class nsStyleChangeList;
 
 namespace mozilla {
 
@@ -69,6 +70,8 @@ public:
                         const nsAttrValue* aOldValue) {}
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
+  nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
+  void FlushOverflowChangedTracker();
 
   bool HasPendingRestyles() { return !mModifiedElements.IsEmpty(); }
 

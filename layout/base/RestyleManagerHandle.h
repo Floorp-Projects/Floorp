@@ -25,6 +25,7 @@ class nsAttrValue;
 class nsIAtom;
 class nsIContent;
 class nsIFrame;
+class nsStyleChangeList;
 
 namespace mozilla {
 
@@ -137,6 +138,8 @@ public:
     inline uint64_t GetRestyleGeneration() const;
     inline uint32_t GetHoverGeneration() const;
     inline void SetObservingRefreshDriver(bool aObserving);
+    inline nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
+    inline void FlushOverflowChangedTracker();
 
   private:
     // Stores a pointer to an RestyleManager or a ServoRestyleManager.  The least
