@@ -153,8 +153,7 @@ CodeGenerator* GenerateCode(MIRGenerator* mir, LIRGraph* lir);
 CodeGenerator* CompileBackEnd(MIRGenerator* mir);
 
 void AttachFinishedCompilations(JSContext* cx);
-void FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
-                            const AutoLockHelperThreadState& lock);
+void FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder);
 void StopAllOffThreadCompilations(Zone* zone);
 void StopAllOffThreadCompilations(JSCompartment* comp);
 
