@@ -49,8 +49,8 @@ public:
     Id& operator=(const Id&) = default;
     Id& operator=(Id&&) = default;
 
-    bool operator==(const Id& aOther);
-    bool operator!=(const Id& aOther) { return !operator==(aOther); }
+    bool operator==(const Id& aOther) const;
+    bool operator!=(const Id& aOther) const { return !operator==(aOther); }
 
     inline PlatformData* platformData();
     inline const PlatformData* platformData() const;
