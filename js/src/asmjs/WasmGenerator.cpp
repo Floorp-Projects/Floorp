@@ -76,17 +76,17 @@ ModuleGenerator::~ModuleGenerator()
         if (outstanding_) {
             AutoLockHelperThreadState lock;
             while (true) {
-                IonCompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock);
+                IonCompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist();
                 MOZ_ASSERT(outstanding_ >= worklist.length());
                 outstanding_ -= worklist.length();
                 worklist.clear();
 
-                IonCompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock);
+                IonCompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList();
                 MOZ_ASSERT(outstanding_ >= finished.length());
                 outstanding_ -= finished.length();
                 finished.clear();
 
-                uint32_t numFailed = HelperThreadState().harvestFailedWasmJobs(lock);
+                uint32_t numFailed = HelperThreadState().harvestFailedWasmJobs();
                 MOZ_ASSERT(outstanding_ >= numFailed);
                 outstanding_ -= numFailed;
 
@@ -199,12 +199,12 @@ ModuleGenerator::finishOutstandingTask()
         while (true) {
             MOZ_ASSERT(outstanding_ > 0);
 
-            if (HelperThreadState().wasmFailed(lock))
+            if (HelperThreadState().wasmFailed())
                 return false;
 
-            if (!HelperThreadState().wasmFinishedList(lock).empty()) {
+            if (!HelperThreadState().wasmFinishedList().empty()) {
                 outstanding_--;
-                task = HelperThreadState().wasmFinishedList(lock).popCopy();
+                task = HelperThreadState().wasmFinishedList().popCopy();
                 break;
             }
 
@@ -790,9 +790,9 @@ ModuleGenerator::startFuncDefs()
 #ifdef DEBUG
         {
             AutoLockHelperThreadState lock;
-            MOZ_ASSERT(!HelperThreadState().wasmFailed(lock));
-            MOZ_ASSERT(HelperThreadState().wasmWorklist(lock).empty());
-            MOZ_ASSERT(HelperThreadState().wasmFinishedList(lock).empty());
+            MOZ_ASSERT(!HelperThreadState().wasmFailed());
+            MOZ_ASSERT(HelperThreadState().wasmWorklist().empty());
+            MOZ_ASSERT(HelperThreadState().wasmFinishedList().empty());
         }
 #endif
         parallel_ = true;

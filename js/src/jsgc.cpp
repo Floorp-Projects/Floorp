@@ -3277,37 +3277,46 @@ GCHelperState::finish()
 }
 
 GCHelperState::State
-GCHelperState::state(const AutoLockGC&)
+GCHelperState::state()
 {
+    MOZ_ASSERT(rt->gc.currentThreadOwnsGCLock());
     return state_;
 }
 
 void
-GCHelperState::setState(State state, const AutoLockGC&)
+GCHelperState::setState(State state)
 {
+    MOZ_ASSERT(rt->gc.currentThreadOwnsGCLock());
     state_ = state;
 }
 
 void
-GCHelperState::startBackgroundThread(State newState, const AutoLockGC& lock,
-                                     const AutoLockHelperThreadState& helperLock)
+GCHelperState::startBackgroundThread(State newState)
 {
-    MOZ_ASSERT(!thread && state(lock) == IDLE && newState != IDLE);
-    setState(newState, lock);
+    MOZ_ASSERT(!thread && state() == IDLE && newState != IDLE);
+    setState(newState);
 
     {
         AutoEnterOOMUnsafeRegion noOOM;
-        if (!HelperThreadState().gcHelperWorklist(helperLock).append(this))
+        if (!HelperThreadState().gcHelperWorklist().append(this))
             noOOM.crash("Could not add to pending GC helpers list");
     }
 
-    HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, helperLock);
+    HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER);
 }
 
 void
 GCHelperState::waitForBackgroundThread(js::AutoLockGC& lock)
 {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
+#ifdef DEBUG
+    rt->gc.lockOwner = nullptr;
+#endif
     done.wait(lock.guard());
+#ifdef DEBUG
+    rt->gc.lockOwner = PR_GetCurrentThread();
+#endif
 }
 
 void
@@ -3322,7 +3331,7 @@ GCHelperState::work()
 
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
 
-    switch (state(lock)) {
+    switch (state()) {
 
       case IDLE:
         MOZ_CRASH("GC helper triggered on idle state");
@@ -3331,13 +3340,13 @@ GCHelperState::work()
       case SWEEPING: {
         AutoTraceLog logSweeping(logger, TraceLogger_GCSweeping);
         doSweep(lock);
-        MOZ_ASSERT(state(lock) == SWEEPING);
+        MOZ_ASSERT(state() == SWEEPING);
         break;
       }
 
     }
 
-    setState(IDLE, lock);
+    setState(IDLE);
     thread = nullptr;
 
     done.notify_all();
@@ -3349,7 +3358,7 @@ GCRuntime::queueZonesForBackgroundSweep(ZoneList& zones)
     AutoLockHelperThreadState helperLock;
     AutoLockGC lock(rt);
     backgroundSweepZones.transferFrom(zones);
-    helperState.maybeStartBackgroundSweep(lock, helperLock);
+    helperState.maybeStartBackgroundSweep(lock);
 }
 
 void
@@ -3376,20 +3385,19 @@ GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo)
 }
 
 void
-GCHelperState::maybeStartBackgroundSweep(const AutoLockGC& lock,
-                                         const AutoLockHelperThreadState& helperLock)
+GCHelperState::maybeStartBackgroundSweep(const AutoLockGC& lock)
 {
     MOZ_ASSERT(CanUseExtraThreads());
 
-    if (state(lock) == IDLE)
-        startBackgroundThread(SWEEPING, lock, helperLock);
+    if (state() == IDLE)
+        startBackgroundThread(SWEEPING);
 }
 
 void
 GCHelperState::waitBackgroundSweepEnd()
 {
     AutoLockGC lock(rt);
-    while (state(lock) == SWEEPING)
+    while (state() == SWEEPING)
         waitForBackgroundThread(lock);
     if (!rt->gc.isIncrementalGCInProgress())
         rt->gc.assertBackgroundSweepingFinished();
@@ -4885,7 +4893,8 @@ SweepMiscTask::run()
 void
 GCRuntime::startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked)
 {
-    if (!task.startWithLockHeld(locked)) {
+    MOZ_ASSERT(HelperThreadState().isLocked());
+    if (!task.startWithLockHeld()) {
         AutoUnlockHelperThreadState unlock(locked);
         gcstats::AutoPhase ap(stats, phase);
         task.runFromMainThread(rt);
@@ -5599,7 +5608,7 @@ AutoTraceSession::~AutoTraceSession()
         runtime->heapState_ = prevState;
 
         // Notify any helper threads waiting for the trace session to end.
-        HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
+        HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER);
     } else {
         runtime->heapState_ = prevState;
     }
