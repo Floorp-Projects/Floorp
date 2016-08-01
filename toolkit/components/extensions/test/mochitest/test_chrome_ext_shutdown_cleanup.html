@@ -18,18 +18,13 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 
-const {
- GlobalManager,
- UninstallObserver,
-} = Cu.import("resource://gre/modules/Extension.jsm");
+const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm");
 
 /* eslint-disable mozilla/balanced-listeners */
 
 add_task(function* testShutdownCleanup() {
   is(GlobalManager.initialized, false,
      "GlobalManager start as not initialized");
-  is(UninstallObserver.initialized, false,
-     "UninstallObserver start as not initialized");
 
   let extension = ExtensionTestUtils.loadExtension({
     background: "new " + function() {
@@ -43,15 +38,11 @@ add_task(function* testShutdownCleanup() {
 
   is(GlobalManager.initialized, true,
      "GlobalManager has been initialized once an extension is started");
-  is(UninstallObserver.initialized, true,
-     "UninstallObserver has been initialized once an extension is started");
 
   yield extension.unload();
 
   is(GlobalManager.initialized, false,
      "GlobalManager has been uninitialized once all the webextensions have been stopped");
-  is(UninstallObserver.initialized, false,
-     "UninstallObserver has been uninitialized once all the webextensions have been stopped");
 });
 </script>
 
