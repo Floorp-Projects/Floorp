@@ -69,8 +69,7 @@ class GlobalHelperThreadState
     typedef Vector<GCParallelTask*, 0, SystemAllocPolicy> GCParallelTaskVector;
 
     // List of available threads, or null if the thread state has not been initialized.
-    using HelperThreadVector = Vector<HelperThread, 0, SystemAllocPolicy>;
-    UniquePtr<HelperThreadVector> threads;
+    HelperThread* threads;
 
   private:
     // The lists below are all protected by |lock|.
@@ -275,7 +274,7 @@ HelperThreadState()
 struct HelperThread
 {
     mozilla::Maybe<PerThreadData> threadData;
-    mozilla::Maybe<Thread> thread;
+    PRThread* thread;
 
     /*
      * Indicate to a thread that it should terminate itself. This is only read
