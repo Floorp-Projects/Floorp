@@ -10,7 +10,7 @@
 
 function ShouldExpose() {
   try {
-    return SpecialPowers.getBoolPref('webgl.enable-prototype-webgl2');
+    return SpecialPowers.getBoolPref('webgl.enable-webgl2');
   } catch (e) {}
 
   return false;
