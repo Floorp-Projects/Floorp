@@ -241,10 +241,8 @@ public:
   // Call on the main thread only.
   bool IsSeeking() const;
 
-  // Return true if the decoder has reached the end of playback or the decoder
-  // has shutdown.
-  // Call on the main thread only.
-  bool IsEndedOrShutdown() const;
+  // Return true if the decoder has reached the end of playback.
+  bool IsEnded() const;
 
   // Return true if the MediaDecoderOwner's error attribute is not null.
   // Must be called before Shutdown().
@@ -530,9 +528,6 @@ protected:
 
   // Cancel a timer for heuristic dormant.
   void CancelDormantTimer();
-
-  // Return true if the decoder has reached the end of playback
-  bool IsEnded() const;
 
   bool IsShutdown() const;
 
