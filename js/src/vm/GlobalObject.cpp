@@ -24,12 +24,10 @@
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
-#include "builtin/RegExp.h"
-
-#ifdef NIGHTLY_BUILD
+#ifdef SPIDERMONKEY_PROMISE
 #include "builtin/Promise.h"
 #endif
-
+#include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/SymbolObject.h"
 #include "builtin/TypedObject.h"
