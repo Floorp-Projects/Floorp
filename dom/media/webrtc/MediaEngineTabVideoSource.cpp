@@ -148,7 +148,7 @@ MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstrain
 
   mWindowId = aConstraints.mBrowserWindow.WasPassed() ?
               aConstraints.mBrowserWindow.Value() : -1;
-  aOutHandle = nullptr;
+  *aOutHandle = nullptr;
   return Restart(nullptr, aConstraints, aPrefs, aDeviceId, aOutBadConstraint);
 }
 
