@@ -496,16 +496,16 @@ class AutoLockSimulatorCache : public LockGuard<Mutex>
       : Base(sim->cacheLock_)
       , sim_(sim)
     {
-        MOZ_ASSERT(sim_->cacheLockHolder_.isNothing());
+        MOZ_ASSERT(!sim_->cacheLockHolder_);
 #ifdef DEBUG
-        sim_->cacheLockHolder_ = mozilla::Some(ThisThread::GetId());
+        sim_->cacheLockHolder_ = PR_GetCurrentThread();
 #endif
     }
 
     ~AutoLockSimulatorCache() {
-        MOZ_ASSERT(sim_->cacheLockHolder_.isSome());
+        MOZ_ASSERT(sim_->cacheLockHolder_);
 #ifdef DEBUG
-        sim_->cacheLockHolder_.reset();
+        sim_->cacheLockHolder_ = nullptr;
 #endif
     }
 
@@ -1277,6 +1277,9 @@ Simulator::Simulator()
 
     lastDebuggerInput_ = nullptr;
 
+#ifdef DEBUG
+    cacheLockHolder_ = nullptr;
+#endif
     redirection_ = nullptr;
 }
 
