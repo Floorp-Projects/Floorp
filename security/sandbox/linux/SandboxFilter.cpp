@@ -822,7 +822,7 @@ public:
         .Else(InvalidSyscall());
     }
     case __NR_brk:
-    case __NR_geteuid:
+    CASES_FOR_geteuid:
       return Allow();
     case __NR_sched_getparam:
     case __NR_sched_getscheduler:
