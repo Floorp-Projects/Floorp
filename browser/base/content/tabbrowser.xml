@@ -3224,9 +3224,10 @@
 
       <method name="duplicateTab">
         <parameter name="aTab"/><!-- can be from a different window as well -->
+        <parameter name="aRestoreTabImmediately"/><!-- can defer loading of the tab contents -->
         <body>
           <![CDATA[
-            return SessionStore.duplicateTab(window, aTab);
+            return SessionStore.duplicateTab(window, aTab, 0, aRestoreTabImmediately);
           ]]>
         </body>
       </method>
