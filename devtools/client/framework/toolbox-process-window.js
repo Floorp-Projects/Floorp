@@ -25,7 +25,8 @@ var { Task } = require("devtools/shared/task");
  */
 var Prefs = new PrefsHelper("devtools.debugger", {
   chromeDebuggingHost: ["Char", "chrome-debugging-host"],
-  chromeDebuggingPort: ["Int", "chrome-debugging-port"]
+  chromeDebuggingPort: ["Int", "chrome-debugging-port"],
+  chromeDebuggingWebSocket: ["Bool", "chrome-debugging-websocket"],
 });
 
 var gToolbox, gClient;
@@ -35,27 +36,28 @@ var connect = Task.async(function*() {
   // Initiate the connection
   let transport = yield DebuggerClient.socketConnect({
     host: Prefs.chromeDebuggingHost,
-    port: Prefs.chromeDebuggingPort
+    port: Prefs.chromeDebuggingPort,
+    webSocket: Prefs.chromeDebuggingWebSocket,
   });
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(() => {
-    let addonID = getParameterByName("addonID");
+  yield gClient.connect();
+  let addonID = getParameterByName("addonID");
 
-    if (addonID) {
-      gClient.listAddons(({addons}) => {
-        let addonActor = addons.filter(addon => addon.id === addonID).pop();
-        openToolbox({
-          form: addonActor,
-          chrome: true,
-          isTabActor: addonActor.isWebExtension ? true : false
-        });
-      });
-    } else {
-      gClient.getProcess().then(aResponse => {
-        openToolbox({ form: aResponse.form, chrome: true });
-      });
-    }
-  });
+  if (addonID) {
+    let { addons } = yield gClient.listAddons();
+    let addonActor = addons.filter(addon => addon.id === addonID).pop();
+    openToolbox({
+      form: addonActor,
+      chrome: true,
+      isTabActor: addonActor.isWebExtension ? true : false
+    });
+  } else {
+    let response = yield gClient.getProcess();
+    openToolbox({
+      form: response.form,
+      chrome: true
+    });
+  }
 });
 
 // Certain options should be toggled since we can assume chrome debugging here
@@ -77,7 +79,7 @@ window.addEventListener("load", function() {
   connect().catch(e => {
     let errorMessageContainer = document.getElementById("error-message-container");
     let errorMessage = document.getElementById("error-message");
-    errorMessage.value = e;
+    errorMessage.value = e.message || e;
     errorMessageContainer.hidden = false;
     console.error(e);
   });
