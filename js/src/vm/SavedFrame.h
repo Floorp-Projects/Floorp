@@ -193,11 +193,24 @@ struct SavedFrame::HashPolicy
     typedef MovableCellHasher<SavedFrame*>  SavedFramePtrHasher;
     typedef PointerHasher<JSPrincipals*, 3> JSPrincipalsPtrHasher;
 
+    static bool       hasHash(const Lookup& l);
+    static bool       ensureHash(const Lookup& l);
     static HashNumber hash(const Lookup& lookup);
     static bool       match(SavedFrame* existing, const Lookup& lookup);
 
     typedef ReadBarriered<SavedFrame*> Key;
     static void rekey(Key& key, const Key& newKey);
+};
+
+template <>
+struct FallibleHashMethods<SavedFrame::HashPolicy>
+{
+    template <typename Lookup> static bool hasHash(Lookup&& l) {
+        return SavedFrame::HashPolicy::hasHash(mozilla::Forward<Lookup>(l));
+    }
+    template <typename Lookup> static bool ensureHash(Lookup&& l) {
+        return SavedFrame::HashPolicy::ensureHash(mozilla::Forward<Lookup>(l));
+    }
 };
 
 // Assert that if the given object is not null, that it must be either a
