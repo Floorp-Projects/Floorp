@@ -25,9 +25,8 @@ Cu.importGlobalProperties(["TextEncoder"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/ExtensionContent.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
-                                  "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
@@ -77,9 +76,6 @@ var {
 } = ExtensionUtils;
 
 const LOGGER_ID_BASE = "addons.webextension.";
-const UUID_MAP_PREF = "extensions.webextensions.uuids";
-const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
-const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";
 
 const COMMENT_REGEXP = new RegExp(String.raw`
     ^
@@ -459,101 +455,29 @@ let ParentAPIManager = {
 
 ParentAPIManager.init();
 
-// All moz-extension URIs use a machine-specific UUID rather than the
-// extension's own ID in the host component. This makes it more
-// difficult for web pages to detect whether a user has a given add-on
-// installed (by trying to load a moz-extension URI referring to a
-// web_accessible_resource from the extension). UUIDMap.get()
-// returns the UUID for a given add-on ID.
-let UUIDMap = {
-  _read() {
-    let pref = Preferences.get(UUID_MAP_PREF, "{}");
-    try {
-      return JSON.parse(pref);
-    } catch (e) {
-      Cu.reportError(`Error parsing ${UUID_MAP_PREF}.`);
-      return {};
-    }
-  },
-
-  _write(map) {
-    Preferences.set(UUID_MAP_PREF, JSON.stringify(map));
-  },
-
-  get(id, create = true) {
-    let map = this._read();
-
-    if (id in map) {
-      return map[id];
-    }
-
-    let uuid = null;
-    if (create) {
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-      uuid = uuidGenerator.generateUUID().number;
-      uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
-
-      map[id] = uuid;
-      this._write(map);
-    }
-    return uuid;
-  },
-
-  remove(id) {
-    let map = this._read();
-    delete map[id];
-    this._write(map);
-  },
-};
-
 // For extensions that have called setUninstallURL(), send an event
 // so the browser can display the URL.
 var UninstallObserver = {
   initialized: false,
 
-  init() {
+  init: function() {
     if (!this.initialized) {
       AddonManager.addAddonListener(this);
-      XPCOMUtils.defineLazyPreferenceGetter(this, "leaveStorage", LEAVE_STORAGE_PREF, false);
-      XPCOMUtils.defineLazyPreferenceGetter(this, "leaveUuid", LEAVE_UUID_PREF, false);
       this.initialized = true;
     }
   },
 
-  onUninstalling(addon) {
-    let extension = GlobalManager.extensionMap.get(addon.id);
-    if (extension) {
-      // Let any other interested listeners respond
-      // (e.g., display the uninstall URL)
-      Management.emit("uninstall", extension);
+  uninit: function() {
+    if (this.initialized) {
+      AddonManager.removeAddonListener(this);
+      this.initialized = false;
     }
   },
 
-  onUninstalled(addon) {
-    let uuid = UUIDMap.get(addon.id, false);
-    if (!uuid) {
-      return;
-    }
-
-    if (!this.leaveStorage) {
-      // Clear browser.local.storage
-      ExtensionStorage.clear(addon.id);
-
-      // Clear any IndexedDB storage created by the extension
-      let baseURI = NetUtil.newURI(`moz-extension://${uuid}/`);
-      let principal = Services.scriptSecurityManager.createCodebasePrincipal(
-        baseURI, {addonId: addon.id}
-      );
-      Services.qms.clearStoragesForPrincipal(principal);
-
-      // Clear localStorage created by the extension
-      let attrs = JSON.stringify({addonId: addon.id});
-      Services.obs.notifyObservers(null, "clear-origin-data", attrs);
-    }
-
-    if (!this.leaveUuid) {
-      // Clear the entry in the UUID map
-      UUIDMap.remove(addon.id);
+  onUninstalling: function(addon) {
+    let extension = GlobalManager.extensionMap.get(addon.id);
+    if (extension) {
+      Management.emit("uninstall", extension);
     }
   },
 };
@@ -580,6 +504,7 @@ GlobalManager = {
 
     if (this.extensionMap.size == 0 && this.initialized) {
       Services.obs.removeObserver(this, "content-document-global-created");
+      UninstallObserver.uninit();
       this.initialized = false;
     }
   },
@@ -764,6 +689,36 @@ GlobalManager = {
   },
 };
 
+// All moz-extension URIs use a machine-specific UUID rather than the
+// extension's own ID in the host component. This makes it more
+// difficult for web pages to detect whether a user has a given add-on
+// installed (by trying to load a moz-extension URI referring to a
+// web_accessible_resource from the extension). getExtensionUUID
+// returns the UUID for a given add-on ID.
+function getExtensionUUID(id) {
+  const PREF_NAME = "extensions.webextensions.uuids";
+
+  let pref = Preferences.get(PREF_NAME, "{}");
+  let map = {};
+  try {
+    map = JSON.parse(pref);
+  } catch (e) {
+    Cu.reportError(`Error parsing ${PREF_NAME}.`);
+  }
+
+  if (id in map) {
+    return map[id];
+  }
+
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  let uuid = uuidGenerator.generateUUID().number;
+  uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
+
+  map[id] = uuid;
+  Preferences.set(PREF_NAME, JSON.stringify(map));
+  return uuid;
+}
+
 // Represents the data contained in an extension, contained either
 // in a directory or a zip file, which may or may not be installed.
 // This class implements the functionality of the Extension class,
@@ -818,7 +773,7 @@ ExtensionData.prototype = {
       throw new Error("getURL may not be called before an `id` or `uuid` has been set");
     }
     if (!this.uuid) {
-      this.uuid = UUIDMap.get(this.id);
+      this.uuid = getExtensionUUID(this.id);
     }
     return `moz-extension://${this.uuid}/${path}`;
   },
@@ -1094,7 +1049,7 @@ ExtensionData.prototype = {
 this.Extension = function(addonData) {
   ExtensionData.call(this, addonData.resourceURI);
 
-  this.uuid = UUIDMap.get(addonData.id);
+  this.uuid = getExtensionUUID(addonData.id);
 
   if (addonData.cleanupFile) {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -1317,7 +1272,7 @@ MockExtension.prototype = {
   },
 
   shutdown() {
-    this.addon.uninstall();
+    this.addon.uninstall(true);
     return this.cleanupGeneratedFile();
   },
 
