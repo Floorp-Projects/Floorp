@@ -341,8 +341,8 @@ class Val
 
     uint32_t i32() const { MOZ_ASSERT(type_ == ValType::I32); return u.i32_; }
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
-    float f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
-    double f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
+    const float& f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
+    const double& f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
 
     const I8x16& i8x16() const {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);

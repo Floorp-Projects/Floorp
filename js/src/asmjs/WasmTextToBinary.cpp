@@ -1569,7 +1569,7 @@ ParseNaNLiteral(const char16_t* cur, const char16_t* end, Float* result)
         // NaN payloads must contain at least one set bit.
         if (value == 0)
             return false;
-        *result = SpecificNaN<Float>(0, value);
+        SpecificNaN<Float>(0, value, result);
     } else {
         // Produce the spec's default NaN.
         *result = SpecificNaN<Float>(0, (Traits::kSignificandBits + 1) >> 1);

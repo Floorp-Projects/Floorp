@@ -1344,9 +1344,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void simulatorStop(const char* msg);
 
     // Evaluate srcDest = minmax<isMax>{Float32,Double}(srcDest, other).
-    // Handle NaN specially if handleNaN is true.
-    void minMaxDouble(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
-    void minMaxFloat32(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
+    // Checks for NaN if canBeNaN is true.
+    void minMaxDouble(FloatRegister srcDest, FloatRegister other, bool canBeNaN, bool isMax);
+    void minMaxFloat32(FloatRegister srcDest, FloatRegister other, bool canBeNaN, bool isMax);
 
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
 
