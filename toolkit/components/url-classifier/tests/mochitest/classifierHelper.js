@@ -115,6 +115,17 @@ classifierHelper.resetDB = function() {
   });
 };
 
+classifierHelper.reloadDatabase = function() {
+  return new Promise(function(resolve, reject) {
+    gScript.addMessageListener("reloadSuccess", function handler() {
+      gScript.removeMessageListener('reloadSuccess', handler);
+      resolve();
+    });
+
+    gScript.sendAsyncMessage("doReload");
+  });
+}
+
 classifierHelper._update = function(testUpdate, onsuccess, onerror) {
   // Queue the task if there is still an on-going update
   classifierHelper._updates.push({"data": testUpdate,
