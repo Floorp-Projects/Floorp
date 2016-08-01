@@ -168,7 +168,7 @@ MediaEngineGonkVideoSource::Allocate(const dom::MediaTrackConstraints& aConstrai
     }
   }
 
-  aOutHandle = nullptr;
+  *aOutHandle = nullptr;
   return NS_OK;
 }
 
