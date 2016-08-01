@@ -16,6 +16,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/unused.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
 #error NS_ProxyRelease implementation depends on NSPR.
@@ -148,7 +149,8 @@ NS_ReleaseOnMainThread(already_AddRefed<T> aDoomed,
     nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
 
     if (NS_FAILED(rv)) {
-      NS_WARNING("Could not get main thread! Leaking.");
+      MOZ_ASSERT_UNREACHABLE("Could not get main thread; leaking an object!");
+      mozilla::Unused << aDoomed.take();
       return;
     }
   }
