@@ -86,8 +86,6 @@ WebGLUtil = (function() {
     try {
       var prefArrArr = [
         ['webgl.force-enabled', true],
-        ['webgl.disable-angle', true],
-        ['webgl.bypass-shader-validation', true],
         ['webgl.enable-webgl2', true],
       ];
       var prefEnv = {'set': prefArrArr};
