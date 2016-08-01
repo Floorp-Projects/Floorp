@@ -455,7 +455,8 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     masm.setFramePushed(0);
 
     // Argument types for Module::callImport_*:
-    static const MIRType typeArray[] = { MIRType::Pointer,   // FuncImportExit
+    static const MIRType typeArray[] = { MIRType::Pointer,   // Instance*
+                                         MIRType::Pointer,   // funcImportIndex
                                          MIRType::Int32,     // argc
                                          MIRType::Pointer }; // argv
     MIRTypeVector invokeArgTypes;
@@ -480,14 +481,23 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     // Prepare the arguments for the call to Module::callImport_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
 
-    // argument 0: funcImportIndex
+    // argument 0: Instance*
+    if (i->kind() == ABIArg::GPR) {
+        masm.loadWasmGlobalPtr(InstancePtrGlobalDataOffset, i->gpr());
+    } else {
+        masm.loadWasmGlobalPtr(InstancePtrGlobalDataOffset, scratch);
+        masm.storePtr(scratch, Address(masm.getStackPointer(), i->offsetFromArgBase()));
+    }
+    i++;
+
+    // argument 1: funcImportIndex
     if (i->kind() == ABIArg::GPR)
         masm.mov(ImmWord(funcImportIndex), i->gpr());
     else
         masm.store32(Imm32(funcImportIndex), Address(masm.getStackPointer(), i->offsetFromArgBase()));
     i++;
 
-    // argument 1: argc
+    // argument 2: argc
     unsigned argc = sig.args().length();
     if (i->kind() == ABIArg::GPR)
         masm.mov(ImmWord(argc), i->gpr());
@@ -495,7 +505,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
         masm.store32(Imm32(argc), Address(masm.getStackPointer(), i->offsetFromArgBase()));
     i++;
 
-    // argument 2: argv
+    // argument 3: argv
     Address argv(masm.getStackPointer(), argOffset);
     if (i->kind() == ABIArg::GPR) {
         masm.computeEffectiveAddress(argv, i->gpr());
