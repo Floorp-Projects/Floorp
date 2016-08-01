@@ -22,7 +22,6 @@
 #define AVUTIL_DISPLAY_H
 
 #include <stdint.h>
-#include "common.h"
 
 /**
  * The display transformation matrix specifies an affine transformation that

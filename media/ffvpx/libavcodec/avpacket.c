@@ -110,38 +110,24 @@ int av_grow_packet(AVPacket *pkt, int grow_by)
 {
     int new_size;
     av_assert0((unsigned)pkt->size <= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE);
+    if (!pkt->size)
+        return av_new_packet(pkt, grow_by);
     if ((unsigned)grow_by >
         INT_MAX - (pkt->size + AV_INPUT_BUFFER_PADDING_SIZE))
         return -1;
 
     new_size = pkt->size + grow_by + AV_INPUT_BUFFER_PADDING_SIZE;
     if (pkt->buf) {
-        size_t data_offset;
-        uint8_t *old_data = pkt->data;
-        if (pkt->data == NULL) {
-            data_offset = 0;
-            pkt->data = pkt->buf->data;
-        } else {
-            data_offset = pkt->data - pkt->buf->data;
-            if (data_offset > INT_MAX - new_size)
-                return -1;
-        }
-
-        if (new_size + data_offset > pkt->buf->size) {
-            int ret = av_buffer_realloc(&pkt->buf, new_size + data_offset);
-            if (ret < 0) {
-                pkt->data = old_data;
-                return ret;
-            }
-            pkt->data = pkt->buf->data + data_offset;
-        }
+        int ret = av_buffer_realloc(&pkt->buf, new_size);
+        if (ret < 0)
+            return ret;
     } else {
         pkt->buf = av_buffer_alloc(new_size);
         if (!pkt->buf)
             return AVERROR(ENOMEM);
-        memcpy(pkt->buf->data, pkt->data, pkt->size);
-        pkt->data = pkt->buf->data;
+        memcpy(pkt->buf->data, pkt->data, FFMIN(pkt->size, pkt->size + grow_by));
     }
+    pkt->data  = pkt->buf->data;
     pkt->size += grow_by;
     memset(pkt->data + pkt->size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
@@ -349,24 +335,22 @@ uint8_t *av_packet_get_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
 const char *av_packet_side_data_name(enum AVPacketSideDataType type)
 {
     switch(type) {
-    case AV_PKT_DATA_PALETTE:                    return "Palette";
-    case AV_PKT_DATA_NEW_EXTRADATA:              return "New Extradata";
-    case AV_PKT_DATA_PARAM_CHANGE:               return "Param Change";
-    case AV_PKT_DATA_H263_MB_INFO:               return "H263 MB Info";
-    case AV_PKT_DATA_REPLAYGAIN:                 return "Replay Gain";
-    case AV_PKT_DATA_DISPLAYMATRIX:              return "Display Matrix";
-    case AV_PKT_DATA_STEREO3D:                   return "Stereo 3D";
-    case AV_PKT_DATA_AUDIO_SERVICE_TYPE:         return "Audio Service Type";
-    case AV_PKT_DATA_SKIP_SAMPLES:               return "Skip Samples";
-    case AV_PKT_DATA_JP_DUALMONO:                return "JP Dual Mono";
-    case AV_PKT_DATA_STRINGS_METADATA:           return "Strings Metadata";
-    case AV_PKT_DATA_SUBTITLE_POSITION:          return "Subtitle Position";
-    case AV_PKT_DATA_MATROSKA_BLOCKADDITIONAL:   return "Matroska BlockAdditional";
-    case AV_PKT_DATA_WEBVTT_IDENTIFIER:          return "WebVTT ID";
-    case AV_PKT_DATA_WEBVTT_SETTINGS:            return "WebVTT Settings";
-    case AV_PKT_DATA_METADATA_UPDATE:            return "Metadata Update";
-    case AV_PKT_DATA_MPEGTS_STREAM_ID:           return "MPEGTS Stream ID";
-    case AV_PKT_DATA_MASTERING_DISPLAY_METADATA: return "Mastering display metadata";
+    case AV_PKT_DATA_PALETTE:                   return "Palette";
+    case AV_PKT_DATA_NEW_EXTRADATA:             return "New Extradata";
+    case AV_PKT_DATA_PARAM_CHANGE:              return "Param Change";
+    case AV_PKT_DATA_H263_MB_INFO:              return "H263 MB Info";
+    case AV_PKT_DATA_REPLAYGAIN:                return "Replay Gain";
+    case AV_PKT_DATA_DISPLAYMATRIX:             return "Display Matrix";
+    case AV_PKT_DATA_STEREO3D:                  return "Stereo 3D";
+    case AV_PKT_DATA_AUDIO_SERVICE_TYPE:        return "Audio Service Type";
+    case AV_PKT_DATA_SKIP_SAMPLES:              return "Skip Samples";
+    case AV_PKT_DATA_JP_DUALMONO:               return "JP Dual Mono";
+    case AV_PKT_DATA_STRINGS_METADATA:          return "Strings Metadata";
+    case AV_PKT_DATA_SUBTITLE_POSITION:         return "Subtitle Position";
+    case AV_PKT_DATA_MATROSKA_BLOCKADDITIONAL:  return "Matroska BlockAdditional";
+    case AV_PKT_DATA_WEBVTT_IDENTIFIER:         return "WebVTT ID";
+    case AV_PKT_DATA_WEBVTT_SETTINGS:           return "WebVTT Settings";
+    case AV_PKT_DATA_METADATA_UPDATE:           return "Metadata Update";
     }
     return NULL;
 }
@@ -582,19 +566,16 @@ int av_packet_ref(AVPacket *dst, const AVPacket *src)
         if (ret < 0)
             goto fail;
         memcpy(dst->buf->data, src->data, src->size);
-
-        dst->data = dst->buf->data;
     } else {
         dst->buf = av_buffer_ref(src->buf);
         if (!dst->buf) {
             ret = AVERROR(ENOMEM);
             goto fail;
         }
-        dst->data = src->data;
     }
 
     dst->size = src->size;
-
+    dst->data = dst->buf->data;
     return 0;
 fail:
     av_packet_free_side_data(dst);
@@ -618,8 +599,6 @@ void av_packet_move_ref(AVPacket *dst, AVPacket *src)
 {
     *dst = *src;
     av_init_packet(src);
-    src->data = NULL;
-    src->size = 0;
 }
 
 void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb)

@@ -1,4 +1,5 @@
 /*
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -375,9 +376,6 @@ int av_frame_ref(AVFrame *dst, const AVFrame *src)
 {
     int i, ret = 0;
 
-    av_assert1(dst->width == 0 && dst->height == 0);
-    av_assert1(dst->channels == 0);
-
     dst->format         = src->format;
     dst->width          = src->width;
     dst->height         = src->height;
@@ -428,14 +426,6 @@ int av_frame_ref(AVFrame *dst, const AVFrame *src)
                 ret = AVERROR(ENOMEM);
                 goto fail;
             }
-        }
-    }
-
-    if (src->hw_frames_ctx) {
-        dst->hw_frames_ctx = av_buffer_ref(src->hw_frames_ctx);
-        if (!dst->hw_frames_ctx) {
-            ret = AVERROR(ENOMEM);
-            goto fail;
         }
     }
 
@@ -500,16 +490,11 @@ void av_frame_unref(AVFrame *frame)
     av_buffer_unref(&frame->qp_table_buf);
 #endif
 
-    av_buffer_unref(&frame->hw_frames_ctx);
-
     get_frame_defaults(frame);
 }
 
 void av_frame_move_ref(AVFrame *dst, AVFrame *src)
 {
-    av_assert1(dst->width == 0 && dst->height == 0);
-    av_assert1(dst->channels == 0);
-
     *dst = *src;
     if (src->extended_data == src->data)
         dst->extended_data = dst->data;
