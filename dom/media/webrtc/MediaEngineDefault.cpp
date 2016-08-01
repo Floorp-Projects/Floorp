@@ -106,7 +106,7 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
   mOpts.mHeight = c.mHeight.Get(aPrefs.mHeight ? aPrefs.mHeight :
                                 MediaEngine::DEFAULT_43_VIDEO_HEIGHT);
   mState = kAllocated;
-  aOutHandle = nullptr;
+  *aOutHandle = nullptr;
   return NS_OK;
 }
 
@@ -415,7 +415,7 @@ MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConst
   // generate sine wave (default 1KHz)
   mSineGenerator = new SineWaveGenerator(AUDIO_RATE,
                                          static_cast<uint32_t>(aPrefs.mFreq ? aPrefs.mFreq : 1000));
-  aOutHandle = nullptr;
+  *aOutHandle = nullptr;
   return NS_OK;
 }
 
