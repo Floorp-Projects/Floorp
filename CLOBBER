@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1287827 - Clobber needed because this patch removes files, second landing AND Bug 1272693 - Clobber required to rebuild NSS.
+Merge day clobber
