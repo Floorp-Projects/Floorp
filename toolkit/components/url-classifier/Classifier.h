@@ -55,19 +55,12 @@ public:
    * the updates in the array and clears it.  Wacky!
    */
   nsresult ApplyUpdates(nsTArray<TableUpdate*>* aUpdates);
-
-  /**
-   * Apply full hashes retrived from gethash to cache.
-   */
-  nsresult ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates);
-
   /**
    * Failed update. Spoil the entries so we don't block hosts
    * unnecessarily
    */
   nsresult MarkSpoiled(nsTArray<nsCString>& aTables);
   void SetLastUpdateTime(const nsACString& aTableName, uint64_t updateTime);
-  int64_t GetLastUpdateTime(const nsACString& aTableName);
   nsresult CacheCompletions(const CacheResultArray& aResults);
   uint32_t GetHashKey(void) { return mHashKey; }
   /*
@@ -91,15 +84,10 @@ private:
   nsresult RegenActiveTables();
   nsresult ScanStoreDir(nsTArray<nsCString>& aTables);
 
-  nsresult UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
-                           const nsACString& aTable);
-
-  nsresult UpdateCache(TableUpdate* aUpdates);
+  nsresult ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
+                             const nsACString& aTable);
 
   LookupCache *GetLookupCache(const nsACString& aTable);
-
-  bool CheckValidUpdate(nsTArray<TableUpdate*>* aUpdates,
-                        const nsACString& aTable);
 
   // Root dir of the Local profile.
   nsCOMPtr<nsIFile> mCacheDirectory;

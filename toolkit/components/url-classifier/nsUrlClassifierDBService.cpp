@@ -606,38 +606,6 @@ nsUrlClassifierDBServiceWorker::ResetDatabase()
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBServiceWorker::ReloadDatabase()
-{
-  nsTArray<nsCString> tables;
-  nsTArray<int64_t> lastUpdateTimes;
-  nsresult rv = mClassifier->ActiveTables(tables);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We need to make sure lastupdatetime is set after reload database
-  // Otherwise request will be skipped if it is not confirmed.
-  for (uint32_t table = 0; table < tables.Length(); table++) {
-    lastUpdateTimes.AppendElement(mClassifier->GetLastUpdateTime(tables[table]));
-  }
-
-  // This will null out mClassifier
-  rv = CloseDb();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create new mClassifier and load prefixset and completions from disk.
-  rv = OpenDb();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  for (uint32_t table = 0; table < tables.Length(); table++) {
-    int64_t time = lastUpdateTimes[table];
-    if (time) {
-      mClassifier->SetLastUpdateTime(tables[table], lastUpdateTimes[table]);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::CancelUpdate()
 {
   LOG(("nsUrlClassifierDBServiceWorker::CancelUpdate"));
@@ -730,6 +698,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
       if (NS_FAILED(rv)) {
         return rv;
       }
+      tu->SetLocalUpdate();
       updates.AppendElement(tu);
       pParse->ForgetTableUpdates();
     } else {
@@ -737,7 +706,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
     }
    }
 
-  mClassifier->ApplyFullHashes(&updates);
+  mClassifier->ApplyUpdates(&updates);
   mLastResults = *resultsPtr;
   return NS_OK;
 }
@@ -1597,14 +1566,6 @@ nsUrlClassifierDBService::ResetDatabase()
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   return mWorkerProxy->ResetDatabase();
-}
-
-NS_IMETHODIMP
-nsUrlClassifierDBService::ReloadDatabase()
-{
-  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
-
-  return mWorkerProxy->ReloadDatabase();
 }
 
 nsresult
