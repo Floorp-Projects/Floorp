@@ -10,9 +10,9 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const actions = require("devtools/client/webconsole/new-console-output/actions/filters");
 
-const FilterToggleButton = createClass({
+const FilterButton = createClass({
 
-  displayName: "FilterToggleButton",
+  displayName: "FilterButton",
 
   propTypes: {
     label: PropTypes.string.isRequired,
@@ -40,4 +40,4 @@ const FilterToggleButton = createClass({
   }
 });
 
-exports.FilterToggleButton = FilterToggleButton;
+exports.FilterButton = FilterButton;

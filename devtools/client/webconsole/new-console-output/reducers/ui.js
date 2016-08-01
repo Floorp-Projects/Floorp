@@ -9,14 +9,14 @@ const constants = require("devtools/client/webconsole/new-console-output/constan
 const Immutable = require("devtools/client/shared/vendor/immutable");
 
 const Ui = Immutable.Record({
-  configFilterBarVisible: false,
+  filterBarVisible: false,
   filteredMessageVisible: false
 });
 
 function ui(state = new Ui(), action) {
   switch (action.type) {
     case constants.FILTER_BAR_TOGGLE:
-      return state.set("configFilterBarVisible", !state.configFilterBarVisible);
+      return state.set("filterBarVisible", !state.filterBarVisible);
   }
 
   return state;

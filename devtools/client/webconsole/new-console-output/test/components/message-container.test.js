@@ -9,7 +9,6 @@ const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-outpu
 const { EvaluationResult } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
 const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
 
-const jsdom = require("mocha-jsdom");
 const expect = require("expect");
 
 const {
@@ -18,7 +17,6 @@ const {
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 describe("MessageContainer component:", () => {
-  jsdom();
   it("pipes data to children as expected", () => {
     const message = stubConsoleMessages.get("console.log('foobar', 'test')");
     const rendered = renderComponent(MessageContainer, {message});
