@@ -37,7 +37,7 @@ const FilterToggleButton = createClass({
 
     let classList = ["menu-filter-button"];
     if (active) {
-      classList.push("active");
+      classList.push("checked");
     }
 
     return dom.button({
