@@ -1030,6 +1030,7 @@ MachExceptionHandlerThread(JSRuntime* rt)
 
 MachExceptionHandler::MachExceptionHandler()
   : installed_(false),
+    thread_(),
     port_(MACH_PORT_NULL)
 {}
 
