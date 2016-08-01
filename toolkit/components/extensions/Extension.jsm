@@ -25,8 +25,9 @@ Cu.importGlobalProperties(["TextEncoder"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ExtensionContent.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
+                                  "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
@@ -77,6 +78,8 @@ var {
 
 const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
+const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
+const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";
 
 const COMMENT_REGEXP = new RegExp(String.raw`
     ^
@@ -515,24 +518,49 @@ function getExtensionUUID(id) {
 var UninstallObserver = {
   initialized: false,
 
-  init: function() {
+  init() {
     if (!this.initialized) {
       AddonManager.addAddonListener(this);
+      XPCOMUtils.defineLazyPreferenceGetter(this, "leaveStorage", LEAVE_STORAGE_PREF, false);
+      XPCOMUtils.defineLazyPreferenceGetter(this, "leaveUuid", LEAVE_UUID_PREF, false);
       this.initialized = true;
     }
   },
 
-  uninit: function() {
-    if (this.initialized) {
-      AddonManager.removeAddonListener(this);
-      this.initialized = false;
+  onUninstalling(addon) {
+    let extension = GlobalManager.extensionMap.get(addon.id);
+    if (extension) {
+      // Let any other interested listeners respond
+      // (e.g., display the uninstall URL)
+      Management.emit("uninstall", extension);
     }
   },
 
-  onUninstalling: function(addon) {
-    let extension = GlobalManager.extensionMap.get(addon.id);
-    if (extension) {
-      Management.emit("uninstall", extension);
+  onUninstalled(addon) {
+    let uuid = UUIDMap.get(addon.id, false);
+    if (!uuid) {
+      return;
+    }
+
+    if (!this.leaveStorage) {
+      // Clear browser.local.storage
+      ExtensionStorage.clear(addon.id);
+
+      // Clear any IndexedDB storage created by the extension
+      let baseURI = NetUtil.newURI(`moz-extension://${uuid}/`);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+        baseURI, {addonId: addon.id}
+      );
+      Services.qms.clearStoragesForPrincipal(principal);
+
+      // Clear localStorage created by the extension
+      let attrs = JSON.stringify({addonId: addon.id});
+      Services.obs.notifyObservers(null, "clear-origin-data", attrs);
+    }
+
+    if (!this.leaveUuid) {
+      // Clear the entry in the UUID map
+      UUIDMap.remove(addon.id);
     }
   },
 };
@@ -559,7 +587,6 @@ GlobalManager = {
 
     if (this.extensionMap.size == 0 && this.initialized) {
       Services.obs.removeObserver(this, "content-document-global-created");
-      UninstallObserver.uninit();
       this.initialized = false;
     }
   },
