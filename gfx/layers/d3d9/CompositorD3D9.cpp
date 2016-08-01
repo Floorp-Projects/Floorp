@@ -720,8 +720,6 @@ CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
 void
 CompositorD3D9::EndFrame()
 {
-  Compositor::EndFrame();
-
   if (mDeviceManager) {
     device()->EndScene();
 
@@ -735,6 +733,8 @@ CompositorD3D9::EndFrame()
       }
     }
   }
+
+  Compositor::EndFrame();
 
   mCurrentRT = nullptr;
   mDefaultRT = nullptr;
