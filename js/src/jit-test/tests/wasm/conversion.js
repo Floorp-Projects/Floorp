@@ -225,50 +225,51 @@ if (hasI64()) {
 
 // i32.trunc_s* : all values in ] -2**31 - 1; 2**31 [ are acceptable.
 // f32:
+var p = Math.pow;
 testConversion('i32', 'trunc_s', 'f32', 40.1, 40);
-testConversion('i32', 'trunc_s', 'f32', 2**31 - 128, 2**31 - 128); // last f32 value exactly representable < 2**31.
-testConversion('i32', 'trunc_s', 'f32', -2**31, -2**31); // last f32 value exactly representable > -2**31 - 1.
+testConversion('i32', 'trunc_s', 'f32', p(2, 31) - 128, p(2, 31) - 128); // last f32 value exactly representable < 2**31.
+testConversion('i32', 'trunc_s', 'f32', -p(2, 31), -p(2,31)); // last f32 value exactly representable > -2**31 - 1.
 
 testTrap('i32', 'trunc_s', 'f32', 'nan');
 testTrap('i32', 'trunc_s', 'f32', 'infinity');
 testTrap('i32', 'trunc_s', 'f32', '-infinity');
-testTrap('i32', 'trunc_s', 'f32', 2**31);
-testTrap('i32', 'trunc_s', 'f32', -(2**31) - 256);
+testTrap('i32', 'trunc_s', 'f32', p(2, 31));
+testTrap('i32', 'trunc_s', 'f32', -p(2,31) - 256);
 
 testConversion('i32', 'trunc_s', 'f64', 40.1, 40);
-testConversion('i32', 'trunc_s', 'f64', 2**31 - 0.001, 2**31 - 1); // example value near the top.
-testConversion('i32', 'trunc_s', 'f64', -2**31 - 0.999, -2**31); // example value near the bottom.
+testConversion('i32', 'trunc_s', 'f64', p(2,31) - 0.001, p(2,31) - 1); // example value near the top.
+testConversion('i32', 'trunc_s', 'f64', -p(2,31) - 0.999, -p(2,31)); // example value near the bottom.
 
 // f64:
 testTrap('i32', 'trunc_s', 'f64', 'nan');
 testTrap('i32', 'trunc_s', 'f64', 'infinity');
 testTrap('i32', 'trunc_s', 'f64', '-infinity');
-testTrap('i32', 'trunc_s', 'f64', 2**31);
-testTrap('i32', 'trunc_s', 'f64', -(2**31) - 1);
+testTrap('i32', 'trunc_s', 'f64', p(2,31));
+testTrap('i32', 'trunc_s', 'f64', -p(2,31) - 1);
 
 // i32.trunc_u* : all values in ] -1; 2**32 [ are acceptable.
 // f32:
 testConversion('i32', 'trunc_u', 'f32', 40.1, 40);
-testConversion('i32', 'trunc_u', 'f32', 2**31, (2**31)|0);
-testConversion('i32', 'trunc_u', 'f32', 2**32 - 256, (2**32 - 256)|0); // last f32 value exactly representable < 2**32.
+testConversion('i32', 'trunc_u', 'f32', p(2,31), p(2,31)|0);
+testConversion('i32', 'trunc_u', 'f32', p(2,32) - 256, (p(2,32) - 256)|0); // last f32 value exactly representable < 2**32.
 testConversion('i32', 'trunc_u', 'f32', -0.99, 0); // example value near the bottom.
 
 testTrap('i32', 'trunc_u', 'f32', 'nan');
 testTrap('i32', 'trunc_u', 'f32', 'infinity');
 testTrap('i32', 'trunc_u', 'f32', '-infinity');
 testTrap('i32', 'trunc_u', 'f32', -1);
-testTrap('i32', 'trunc_u', 'f32', 2**32);
+testTrap('i32', 'trunc_u', 'f32', p(2,32));
 
 // f64:
 testConversion('i32', 'trunc_u', 'f64', 40.1, 40);
-testConversion('i32', 'trunc_u', 'f64', 2**32 - 0.001, (2**32 - 1)|0); // example value near the top.
+testConversion('i32', 'trunc_u', 'f64', p(2,32) - 0.001, (p(2,32) - 1)|0); // example value near the top.
 testConversion('i32', 'trunc_u', 'f64', -0.99999, 0); // example value near the bottom.
 
 testTrap('i32', 'trunc_u', 'f32', 'nan');
 testTrap('i32', 'trunc_u', 'f32', 'infinity');
 testTrap('i32', 'trunc_u', 'f32', '-infinity');
 testTrap('i32', 'trunc_u', 'f32', -1);
-testTrap('i32', 'trunc_u', 'f32', 2**32);
+testTrap('i32', 'trunc_u', 'f32', p(2,32));
 
 // Other opcodes.
 testConversion('i32', 'reinterpret', 'f32', 40.1, 1109419622);
