@@ -58,12 +58,12 @@ const FilterBar = createClass({
       }),
       dom.button({
         className: "devtools-button devtools-filter-icon" + (
-          configFilterBarVisible ? " active" : ""),
+          configFilterBarVisible ? " checked" : ""),
         title: "Toggle filter bar",
         onClick: this.onToggleFilterConfigBarButtonClick
       }),
       dom.input({
-        className: "devtools-plain-input",
+        className: "devtools-plaininput",
         type: "search",
         value: filter.searchText,
         placeholder: "Filter output",

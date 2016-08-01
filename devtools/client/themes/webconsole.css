@@ -660,7 +660,6 @@ a.learn-more-link.webconsole-learn-more-link {
   display: flex;
 }
 
-.webconsole-filterbar-primary .devtools-plain-input {
+.webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
-  border-color: transparent;
 }
