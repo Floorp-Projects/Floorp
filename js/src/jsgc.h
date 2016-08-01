@@ -865,7 +865,8 @@ class GCHelperState
     // Thread which work is being performed on, or null.
     PRThread* thread;
 
-    void startBackgroundThread(State newState, const js::AutoLockGC&);
+    void startBackgroundThread(State newState, const AutoLockGC& lock,
+                               const AutoLockHelperThreadState& helperLock);
     void waitForBackgroundThread(js::AutoLockGC& lock);
 
     State state(const AutoLockGC&);
@@ -894,7 +895,8 @@ class GCHelperState
 
     void work();
 
-    void maybeStartBackgroundSweep(const AutoLockGC& lock);
+    void maybeStartBackgroundSweep(const AutoLockGC& lock,
+                                   const AutoLockHelperThreadState& helperLock);
     void startBackgroundShrink(const AutoLockGC& lock);
 
     /* Must be called without the GC lock taken. */
@@ -955,7 +957,7 @@ class GCParallelTask
 
     // If multiple tasks are to be started or joined at once, it is more
     // efficient to take the helper thread lock once and use these methods.
-    bool startWithLockHeld();
+    bool startWithLockHeld(AutoLockHelperThreadState& locked);
     void joinWithLockHeld(AutoLockHelperThreadState& locked);
 
     // Instead of dispatching to a helper, run the task on the main thread.

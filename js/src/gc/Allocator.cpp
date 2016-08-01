@@ -294,7 +294,7 @@ GCRuntime::startBackgroundAllocTaskIfIdle()
     // Join the previous invocation of the task. This will return immediately
     // if the thread has never been started.
     allocTask.joinWithLockHeld(helperLock);
-    allocTask.startWithLockHeld();
+    allocTask.startWithLockHeld(helperLock);
 }
 
 /* static */ TenuredCell*
