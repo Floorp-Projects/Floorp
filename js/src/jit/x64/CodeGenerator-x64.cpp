@@ -1185,50 +1185,19 @@ CodeGeneratorX64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 
     FloatRegister temp = mir->isUnsigned() ? ToFloatRegister(lir->temp()) : InvalidFloatReg;
 
+    Label* oolEntry = ool->entry();
+    Label* oolRejoin = ool->rejoin();
     if (inputType == MIRType::Double) {
         if (mir->isUnsigned())
-            masm.wasmTruncateDoubleToUInt64(input, output, ool->entry(), ool->rejoin(), temp);
+            masm.wasmTruncateDoubleToUInt64(input, output, oolEntry, oolRejoin, temp);
         else
-            masm.wasmTruncateDoubleToInt64(input, output, ool->entry(), ool->rejoin(), temp);
+            masm.wasmTruncateDoubleToInt64(input, output, oolEntry, oolRejoin, temp);
     } else {
         if (mir->isUnsigned())
-            masm.wasmTruncateFloat32ToUInt64(input, output, ool->entry(), ool->rejoin(), temp);
+            masm.wasmTruncateFloat32ToUInt64(input, output, oolEntry, oolRejoin, temp);
         else
-            masm.wasmTruncateFloat32ToInt64(input, output, ool->entry(), ool->rejoin(), temp);
+            masm.wasmTruncateFloat32ToInt64(input, output, oolEntry, oolRejoin, temp);
     }
-
-    masm.bind(ool->rejoin());
-}
-
-void
-CodeGeneratorX64::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
-{
-    auto input = ToFloatRegister(lir->input());
-    auto output = ToRegister(lir->output());
-
-    MWasmTruncateToInt32* mir = lir->mir();
-    MIRType fromType = mir->input()->type();
-
-    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
-    addOutOfLineCode(ool, mir);
-
-    if (mir->isUnsigned()) {
-        if (fromType == MIRType::Double)
-            masm.vcvttsd2sq(input, output);
-        else if (fromType == MIRType::Float32)
-            masm.vcvttss2sq(input, output);
-        else
-            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
-
-        // Check that the result is in the uint32_t range.
-        ScratchRegisterScope scratch(masm);
-        masm.move32(Imm32(0xffffffff), scratch);
-        masm.cmpq(scratch, output);
-        masm.j(Assembler::Above, ool->entry());
-        return;
-    }
-
-    emitWasmSignedTruncateToInt32(ool, output);
 
     masm.bind(ool->rejoin());
 }

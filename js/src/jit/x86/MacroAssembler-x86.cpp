@@ -524,4 +524,39 @@ template void
 MacroAssembler::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const BaseIndex& dest,
                                      MIRType slotType);
 
+// wasm specific methods, used in both the wasm baseline compiler and ion.
+void
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    Label done;
+    vcvttsd2si(input, output);
+    branch32(Assembler::Condition::NotSigned, output, Imm32(0), &done);
+
+    loadConstantDouble(double(int32_t(0x80000000)), ScratchDoubleReg);
+    addDouble(input, ScratchDoubleReg);
+    vcvttsd2si(ScratchDoubleReg, output);
+
+    branch32(Assembler::Condition::Signed, output, Imm32(0), oolEntry);
+    or32(Imm32(0x80000000), output);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    Label done;
+    vcvttss2si(input, output);
+    branch32(Assembler::Condition::NotSigned, output, Imm32(0), &done);
+
+    loadConstantFloat32(float(int32_t(0x80000000)), ScratchFloat32Reg);
+    addFloat32(input, ScratchFloat32Reg);
+    vcvttss2si(ScratchFloat32Reg, output);
+
+    branch32(Assembler::Condition::Signed, output, Imm32(0), oolEntry);
+    or32(Imm32(0x80000000), output);
+
+    bind(&done);
+}
+
 //}}} check_macroassembler_style
