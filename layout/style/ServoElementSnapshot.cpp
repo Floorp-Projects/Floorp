@@ -28,7 +28,7 @@ ServoElementSnapshot::AddAttrs(Element* aElement)
 {
   MOZ_ASSERT(aElement);
 
-  if (!HasAny(Flags::Attributes)) {
+  if (HasAny(Flags::Attributes)) {
     return;
   }
 
