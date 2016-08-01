@@ -1076,13 +1076,6 @@ MediaDecoder::IsSeeking() const
 }
 
 bool
-MediaDecoder::IsEndedOrShutdown() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return IsEnded() || IsShutdown();
-}
-
-bool
 MediaDecoder::OwnerHasError() const
 {
   MOZ_ASSERT(NS_IsMainThread());
