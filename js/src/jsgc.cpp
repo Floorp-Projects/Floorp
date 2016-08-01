@@ -3277,24 +3277,22 @@ GCHelperState::finish()
 }
 
 GCHelperState::State
-GCHelperState::state()
+GCHelperState::state(const AutoLockGC&)
 {
-    MOZ_ASSERT(rt->gc.currentThreadOwnsGCLock());
     return state_;
 }
 
 void
-GCHelperState::setState(State state)
+GCHelperState::setState(State state, const AutoLockGC&)
 {
-    MOZ_ASSERT(rt->gc.currentThreadOwnsGCLock());
     state_ = state;
 }
 
 void
-GCHelperState::startBackgroundThread(State newState)
+GCHelperState::startBackgroundThread(State newState, const AutoLockGC& lock)
 {
-    MOZ_ASSERT(!thread && state() == IDLE && newState != IDLE);
-    setState(newState);
+    MOZ_ASSERT(!thread && state(lock) == IDLE && newState != IDLE);
+    setState(newState, lock);
 
     {
         AutoEnterOOMUnsafeRegion noOOM;
@@ -3308,15 +3306,7 @@ GCHelperState::startBackgroundThread(State newState)
 void
 GCHelperState::waitForBackgroundThread(js::AutoLockGC& lock)
 {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-
-#ifdef DEBUG
-    rt->gc.lockOwner = nullptr;
-#endif
     done.wait(lock.guard());
-#ifdef DEBUG
-    rt->gc.lockOwner = PR_GetCurrentThread();
-#endif
 }
 
 void
@@ -3331,7 +3321,7 @@ GCHelperState::work()
 
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
 
-    switch (state()) {
+    switch (state(lock)) {
 
       case IDLE:
         MOZ_CRASH("GC helper triggered on idle state");
@@ -3340,13 +3330,13 @@ GCHelperState::work()
       case SWEEPING: {
         AutoTraceLog logSweeping(logger, TraceLogger_GCSweeping);
         doSweep(lock);
-        MOZ_ASSERT(state() == SWEEPING);
+        MOZ_ASSERT(state(lock) == SWEEPING);
         break;
       }
 
     }
 
-    setState(IDLE);
+    setState(IDLE, lock);
     thread = nullptr;
 
     done.notify_all();
@@ -3389,15 +3379,15 @@ GCHelperState::maybeStartBackgroundSweep(const AutoLockGC& lock)
 {
     MOZ_ASSERT(CanUseExtraThreads());
 
-    if (state() == IDLE)
-        startBackgroundThread(SWEEPING);
+    if (state(lock) == IDLE)
+        startBackgroundThread(SWEEPING, lock);
 }
 
 void
 GCHelperState::waitBackgroundSweepEnd()
 {
     AutoLockGC lock(rt);
-    while (state() == SWEEPING)
+    while (state(lock) == SWEEPING)
         waitForBackgroundThread(lock);
     if (!rt->gc.isIncrementalGCInProgress())
         rt->gc.assertBackgroundSweepingFinished();

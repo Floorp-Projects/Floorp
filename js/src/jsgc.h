@@ -865,11 +865,11 @@ class GCHelperState
     // Thread which work is being performed on, or null.
     PRThread* thread;
 
-    void startBackgroundThread(State newState);
+    void startBackgroundThread(State newState, const js::AutoLockGC&);
     void waitForBackgroundThread(js::AutoLockGC& lock);
 
-    State state();
-    void setState(State state);
+    State state(const AutoLockGC&);
+    void setState(State state, const AutoLockGC&);
 
     friend class js::gc::ArenaLists;
 
