@@ -56,6 +56,12 @@ AVHWAccel ff_vc1_mmal_hwaccel;
 AVHWAccel ff_vp9_d3d11va_hwaccel;
 AVHWAccel ff_vp9_dxva2_hwaccel;
 AVHWAccel ff_vp9_vaapi_hwaccel;
+AVHWAccel ff_vp9_cuvid_hwaccel;
+AVHWAccel ff_vp8_cuvid_hwaccel;
+AVHWAccel ff_vc1_cuvid_hwaccel;
+AVHWAccel ff_hevc_cuvid_hwaccel;
+AVHWAccel ff_h264_cuvid_hwaccel;
+
 AVCodec ff_a64multi_encoder;
 AVCodec ff_a64multi5_encoder;
 AVCodec ff_aasc_decoder;
@@ -666,6 +672,48 @@ AVCodec ff_xma2_decoder;
 AVCodec ff_adpcm_aica_decoder;
 AVCodec ff_adpcm_psx_decoder;
 AVCodec ff_text_encoder;
+AVCodec ff_vp9_cuvid_decoder;
+AVCodec ff_vp8_cuvid_decoder;
+AVCodec ff_vc1_cuvid_decoder;
+AVCodec ff_mjpeg_vaapi_encoder;
+AVCodec ff_hevc_vaapi_encoder;
+AVCodec ff_hevc_nvenc_encoder;
+AVCodec ff_hevc_cuvid_decoder;
+AVCodec ff_h264_videotoolbox_encoder;
+AVCodec ff_h264_vaapi_encoder;
+AVCodec ff_h264_omx_encoder;
+AVCodec ff_h264_nvenc_encoder;
+AVCodec ff_h264_cuvid_decoder;
+AVCodec ff_qdm2_at_decoder;
+AVCodec ff_qdmc_at_decoder;
+AVCodec ff_pcm_mulaw_at_decoder;
+AVCodec ff_pcm_mulaw_at_encoder;
+AVCodec ff_pcm_alaw_at_decoder;
+AVCodec ff_pcm_alaw_at_encoder;
+AVCodec ff_mp3_at_decoder;
+AVCodec ff_mp2_at_decoder;
+AVCodec ff_mp1_at_decoder;
+AVCodec ff_ilbc_at_decoder;
+AVCodec ff_ilbc_at_encoder;
+AVCodec ff_gsm_ms_at_decoder;
+AVCodec ff_eac3_at_decoder;
+AVCodec ff_amr_nb_at_decoder;
+AVCodec ff_alac_at_decoder;
+AVCodec ff_alac_at_encoder;
+AVCodec ff_adpcm_ima_qt_at_decoder;
+AVCodec ff_ac3_at_decoder;
+AVCodec ff_aac_at_decoder;
+AVCodec ff_aac_at_encoder;
+AVCodec ff_adpcm_mtaf_decoder;
+AVCodec ff_adpcm_ima_dat4_decoder;
+AVCodec ff_dst_decoder;
+AVCodec ff_ylc_decoder;
+AVCodec ff_truemotion2rt_decoder;
+AVCodec ff_sheervideo_decoder;
+AVCodec ff_magicyuv_decoder;
+AVCodec ff_m101_decoder;
+AVCodec ff_h264_mediacodec_decoder;
+
 AVCodecParser ff_aac_parser;
 AVCodecParser ff_aac_latm_parser;
 AVCodecParser ff_ac3_parser;
@@ -737,3 +785,12 @@ void ff_vp78dsp_init_ppc(VP8DSPContext *c) {}
 void ff_vp8dsp_init_arm(VP8DSPContext *c) {}
 void ff_vp8dsp_init_mips(VP8DSPContext *c) {}
 void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp) {}
+
+void av_bitstream_filter_close(AVBitStreamFilterContext *bsf) {}
+int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
+                               AVCodecContext *avctx, const char *args,
+                               uint8_t **poutbuf, int *poutbuf_size,
+                               const uint8_t *buf, int buf_size, int keyframe) { return 0; }
+AVBitStreamFilterContext *av_bitstream_filter_init(const char *name) { return NULL;}
+AVBitStreamFilter *av_bitstream_filter_next(const AVBitStreamFilter *f) { return NULL; }
+void av_register_bitstream_filter(AVBitStreamFilter *bsf) {}
