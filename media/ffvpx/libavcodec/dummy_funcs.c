@@ -737,12 +737,3 @@ void ff_vp78dsp_init_ppc(VP8DSPContext *c) {}
 void ff_vp8dsp_init_arm(VP8DSPContext *c) {}
 void ff_vp8dsp_init_mips(VP8DSPContext *c) {}
 void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp) {}
-
-void av_bitstream_filter_close(AVBitStreamFilterContext *bsf) {}
-int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
-                               AVCodecContext *avctx, const char *args,
-                               uint8_t **poutbuf, int *poutbuf_size,
-                               const uint8_t *buf, int buf_size, int keyframe) { return 0; }
-AVBitStreamFilterContext *av_bitstream_filter_init(const char *name) { return NULL;}
-AVBitStreamFilter *av_bitstream_filter_next(const AVBitStreamFilter *f) { return NULL; }
-void av_register_bitstream_filter(AVBitStreamFilter *bsf) {}

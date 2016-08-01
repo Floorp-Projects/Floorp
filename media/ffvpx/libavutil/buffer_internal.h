@@ -90,10 +90,7 @@ struct AVBufferPool {
     volatile int nb_allocated;
 
     int size;
-    void *opaque;
     AVBufferRef* (*alloc)(int size);
-    AVBufferRef* (*alloc2)(void *opaque, int size);
-    void         (*pool_free)(void *opaque);
 };
 
 #endif /* AVUTIL_BUFFER_INTERNAL_H */
