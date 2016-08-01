@@ -269,13 +269,13 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readFixedF32(float* out) {
         if (Validate)
             return d_.readFixedF32(out);
-        *out = d_.uncheckedReadFixedF32();
+        d_.uncheckedReadFixedF32(out);
         return true;
     }
     MOZ_MUST_USE bool readFixedF64(double* out) {
         if (Validate)
             return d_.readFixedF64(out);
-        *out = d_.uncheckedReadFixedF64();
+        d_.uncheckedReadFixedF64(out);
         return true;
     }
     MOZ_MUST_USE bool readFixedI8x16(I8x16* out) {
