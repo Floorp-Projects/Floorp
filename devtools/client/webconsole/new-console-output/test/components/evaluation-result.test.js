@@ -5,7 +5,6 @@
 const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
 const { EvaluationResult } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
 
-const jsdom = require("mocha-jsdom");
 const expect = require("expect");
 
 const {
@@ -13,7 +12,6 @@ const {
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 describe("EvaluationResult component:", () => {
-  jsdom();
   it("renders a grip result", () => {
     const message = stubConsoleMessages.get("new Date(0)");
     const props = {
