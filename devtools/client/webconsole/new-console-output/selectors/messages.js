@@ -23,7 +23,7 @@ function getAllMessages(state) {
 }
 
 function filterSeverity(messages, filters) {
-  return messages.filter((message) => filters[message.severity] === true);
+  return messages.filter((message) => filters[message.level] === true);
 }
 
 function search(messages, text = "") {
