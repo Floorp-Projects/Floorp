@@ -23,6 +23,8 @@
 namespace mozilla {
 namespace image {
 
+class CachedSurface;
+
 /**
  * An interface for objects which can either store a surface or dynamically
  * generate one.
@@ -40,13 +42,6 @@ public:
 
   /// @return true if DrawableRef() will return a completely decoded surface.
   virtual bool IsFinished() const = 0;
-
-  /// @return true if this ISurfaceProvider is locked. (@see SetLocked())
-  virtual bool IsLocked() const = 0;
-
-  /// If @aLocked is true, hint that this ISurfaceProvider is in use and it
-  /// should avoid releasing its resources.
-  virtual void SetLocked(bool aLocked) = 0;
 
   /// @return the number of bytes of memory this ISurfaceProvider is expected to
   /// require. Optimizations may result in lower real memory usage. Trivial
@@ -67,7 +62,19 @@ protected:
 
   virtual ~ISurfaceProvider() { }
 
+  /// @return true if this ISurfaceProvider is locked. (@see SetLocked())
+  /// Should only be called from SurfaceCache code as it relies on SurfaceCache
+  /// for synchronization.
+  virtual bool IsLocked() const = 0;
+
+  /// If @aLocked is true, hint that this ISurfaceProvider is in use and it
+  /// should avoid releasing its resources. Should only be called from
+  /// SurfaceCache code as it relies on SurfaceCache for synchronization.
+  virtual void SetLocked(bool aLocked) = 0;
+
 private:
+  friend class CachedSurface;
+
   AvailabilityState mAvailability;
 };
 
@@ -86,6 +93,14 @@ public:
 
   DrawableFrameRef DrawableRef() override { return mSurface->DrawableRef(); }
   bool IsFinished() const override { return mSurface->IsFinished(); }
+
+  size_t LogicalSizeInBytes() const override
+  {
+    gfx::IntSize size = mSurface->GetSize();
+    return size.width * size.height * mSurface->GetBytesPerPixel();
+  }
+
+protected:
   bool IsLocked() const override { return bool(mLockRef); }
 
   void SetLocked(bool aLocked) override
@@ -98,12 +113,6 @@ public:
     // any volatile buffer it owns in memory.
     mLockRef = aLocked ? mSurface->DrawableRef()
                        : DrawableFrameRef();
-  }
-
-  size_t LogicalSizeInBytes() const override
-  {
-    gfx::IntSize size = mSurface->GetSize();
-    return size.width * size.height * mSurface->GetBytesPerPixel();
   }
 
 private:
