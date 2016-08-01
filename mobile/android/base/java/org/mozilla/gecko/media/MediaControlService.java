@@ -17,6 +17,7 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.PrefsHelper;
@@ -254,6 +255,12 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         }
 
         if (!mIsMediaControlPrefOn) {
+            return;
+        }
+
+        // TODO : remove this checking when the media control is ready to ship,
+        // see bug1290836.
+        if (!AppConstants.NIGHTLY_BUILD) {
             return;
         }
 
