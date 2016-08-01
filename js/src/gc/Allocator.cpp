@@ -390,7 +390,6 @@ ArenaLists::allocateFromArena(JS::Zone* zone, AllocKind thingKind,
     if (!arena)
         return nullptr;
 
-    MOZ_ASSERT(!maybeLock->wasUnlocked());
     MOZ_ASSERT(al.isCursorAtEnd());
     al.insertBeforeCursor(arena);
 
