@@ -1653,12 +1653,7 @@ void MediaDecoder::AddSizeOfResources(ResourceSizes* aSizes) {
 void
 MediaDecoder::NotifyDataArrived() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  // Don't publish events since task queues might be shutting down.
-  if (IsShutdown()) {
-    return;
-  }
-
+  MOZ_ASSERT(!IsShutdown());
   mDataArrivedEvent.Notify();
 }
 
