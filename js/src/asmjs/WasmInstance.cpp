@@ -94,6 +94,12 @@ class SigIdSet
 
 ExclusiveData<SigIdSet> sigIdSet;
 
+JSContext**
+Instance::addressOfContextPtr() const
+{
+    return (JSContext**)(codeSegment_->globalData() + ContextPtrGlobalDataOffset);
+}
+
 uint8_t**
 Instance::addressOfMemoryBase() const
 {
@@ -119,12 +125,6 @@ Instance::funcImportToExit(const FuncImport& fi)
 {
     MOZ_ASSERT(fi.exitGlobalDataOffset() >= InitialGlobalDataBytes);
     return *(FuncImportExit*)(codeSegment_->globalData() + fi.exitGlobalDataOffset());
-}
-
-WasmActivation*&
-Instance::activation()
-{
-    return *(WasmActivation**)(codeSegment_->globalData() + ActivationGlobalDataOffset);
 }
 
 bool
@@ -394,6 +394,8 @@ Instance::Instance(JSContext* cx,
 {
     MOZ_ASSERT(funcImports.length() == metadata.funcImports.length());
     MOZ_ASSERT(tables_.length() == metadata.tables.length());
+
+    *addressOfContextPtr() = cx;
 
     for (size_t i = 0; i < metadata.funcImports.length(); i++) {
         const FuncImport& fi = metadata.funcImports[i];
