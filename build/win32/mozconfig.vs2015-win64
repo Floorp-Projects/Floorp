@@ -8,11 +8,11 @@ export WINDOWSSDKDIR="${VSWINPATH}/SDK"
 export WIN32_REDIST_DIR="${VSPATH}/VC/redist/x86/Microsoft.VC140.CRT"
 export WIN_UCRT_REDIST_DIR="${VSPATH}/SDK/Redist/ucrt/DLLs/x86"
 
-export PATH="${VSPATH}/VC/bin/amd64_x86:${VSPATH}/VC/bin/amd64:${VSPATH}/VC/bin:${VSPATH}/SDK/bin/x86:${VSPATH}/SDK/bin/x64:${VSPATH}/DIA SDK/bin:${PATH}"
+export PATH="${VSPATH}/VC/bin/amd64_x86:${VSPATH}/VC/bin/amd64:${VSPATH}/VC/bin:${VSPATH}/SDK/bin/x86:${VSPATH}/SDK/bin/x64:${VSPATH}/DIASDK/bin:${PATH}"
 export PATH="${VSPATH}/VC/redist/x86/Microsoft.VC140.CRT:${VSPATH}/VC/redist/x64/Microsoft.VC140.CRT:${VSPATH}/SDK/Redist/ucrt/DLLs/x86:${VSPATH}/SDK/Redist/ucrt/DLLs/x64:${PATH}"
 
-export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/10.0.10586.0/ucrt:${VSPATH}/SDK/Include/10.0.10586.0/shared:${VSPATH}/SDK/Include/10.0.10586.0/um:${VSPATH}/SDK/Include/10.0.10586.0/winrt:${VSPATH}/DIA SDK/include"
-export LIB="${VSPATH}/VC/lib:${VSPATH}/VC/atlmfc/lib:${VSPATH}/SDK/lib/10.0.10586.0/ucrt/x86:${VSPATH}/SDK/lib/10.0.10586.0/um/x86:${VSPATH}/DIA SDK/lib"
+export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/ucrt:${VSPATH}/SDK/Include/shared:${VSPATH}/SDK/Include/um:${VSPATH}/SDK/Include/winrt:${VSPATH}/DIASDK/include"
+export LIB="${VSPATH}/VC/lib:${VSPATH}/VC/atlmfc/lib:${VSPATH}/SDK/lib/ucrt/x86:${VSPATH}/SDK/lib/um/x86:${VSPATH}/DIASDK/lib"
 
 . $topsrcdir/build/mozconfig.vs-common
 
