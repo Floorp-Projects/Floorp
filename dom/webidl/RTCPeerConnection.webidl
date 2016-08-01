@@ -123,7 +123,6 @@ interface RTCPeerConnection : EventTarget  {
   [UnsafeInPrerendering]
   MediaStream? getStreamById (DOMString streamId);
   void addStream (MediaStream stream);
-  void removeStream (MediaStream stream);
 
   // replaces addStream; fails if already added
   // because a track can be part of multiple streams, stream parameters
