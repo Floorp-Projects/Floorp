@@ -70,7 +70,7 @@ ClearKeySession::Init(uint32_t aCreateSessionToken,
       mCallback->RejectPromise(aPromiseId, kGMPInvalidAccessError, message, strlen(message));
       return;
     }
-  } else if (aInitDataType == "webm" && aInitDataSize == 16) {
+  } else if (aInitDataType == "webm") {
     // "webm" initData format is simply the raw bytes of the keyId.
     vector<uint8_t> keyId;
     keyId.assign(aInitData, aInitData+aInitDataSize);
