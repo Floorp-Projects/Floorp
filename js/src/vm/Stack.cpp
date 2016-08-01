@@ -10,7 +10,6 @@
 
 #include "jscntxt.h"
 
-#include "asmjs/WasmInstance.h"
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
@@ -863,7 +862,7 @@ FrameIter::filename() const
       case JIT:
         return script()->filename();
       case WASM:
-        return data_.activations_->asWasm()->instance().metadata().filename.get();
+        return data_.wasmFrames_.filename();
     }
 
     MOZ_CRASH("Unexpected state");
@@ -881,7 +880,7 @@ FrameIter::displayURL() const
         return ss->hasDisplayURL() ? ss->displayURL() : nullptr;
       }
       case WASM:
-        return data_.activations_->asWasm()->instance().metadata().displayURL();
+        return data_.wasmFrames_.displayURL();
     }
     MOZ_CRASH("Unexpected state");
 }
@@ -914,7 +913,7 @@ FrameIter::mutedErrors() const
       case JIT:
         return script()->mutedErrors();
       case WASM:
-        return data_.activations_->asWasm()->instance().metadata().mutedErrors();
+        return data_.wasmFrames_.mutedErrors();
     }
     MOZ_CRASH("Unexpected state");
 }
@@ -1623,9 +1622,8 @@ jit::JitActivation::markIonRecovery(JSTracer* trc)
         it->trace(trc);
 }
 
-WasmActivation::WasmActivation(JSContext* cx, wasm::Instance& instance)
+WasmActivation::WasmActivation(JSContext* cx)
   : Activation(cx, Wasm),
-    instance_(instance),
     entrySP_(nullptr),
     resumePC_(nullptr),
     fp_(nullptr),

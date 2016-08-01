@@ -50,8 +50,8 @@ struct ProfilingOffsets;
 // function stack frame.
 class FrameIterator
 {
-    JSContext* cx_;
-    const Instance* instance_;
+    const WasmActivation* activation_;
+    const Code* code_;
     const CallSite* callsite_;
     const CodeRange* codeRange_;
     uint8_t* fp_;
@@ -64,6 +64,9 @@ class FrameIterator
     explicit FrameIterator(const WasmActivation& activation);
     void operator++();
     bool done() const;
+    const char* filename() const;
+    const char16_t* displayURL() const;
+    bool mutedErrors() const;
     JSAtom* functionDisplayAtom() const;
     unsigned lineOrBytecode() const;
 };
@@ -83,14 +86,15 @@ enum class ExitReason : uint32_t
 // module is not in profiling mode, the activation is skipped.
 class ProfilingFrameIterator
 {
-    const Instance* instance_;
+    const WasmActivation* activation_;
+    const Code* code_;
     const CodeRange* codeRange_;
     uint8_t* callerFP_;
     void* callerPC_;
     void* stackAddress_;
     ExitReason exitReason_;
 
-    void initFromFP(const WasmActivation& activation);
+    void initFromFP();
 
   public:
     ProfilingFrameIterator();

@@ -39,6 +39,7 @@ namespace wasm {
 
 class Instance
 {
+    JSCompartment* const                 compartment_;
     const UniqueCode                     code_;
     GCPtrWasmMemoryObject                memory_;
     SharedTableVector                    tables_;
@@ -81,6 +82,7 @@ class Instance
     void trace(JSTracer* trc);
 
     JSContext* cx() const { return *addressOfContextPtr(); }
+    JSCompartment* compartment() const { return compartment_; }
     Code& code() { return *code_; }
     const Code& code() const { return *code_; }
     const CodeSegment& codeSegment() const { return code_->segment(); }
