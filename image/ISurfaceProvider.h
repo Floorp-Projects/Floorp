@@ -18,6 +18,7 @@
 #include "mozilla/gfx/2D.h"
 
 #include "imgFrame.h"
+#include "SurfaceCache.h"
 
 namespace mozilla {
 namespace image {
@@ -37,11 +38,6 @@ public:
   /// @return a drawable reference to a surface.
   virtual DrawableFrameRef DrawableRef() = 0;
 
-  /// @return true if this ISurfaceProvider is acting as a placeholder, which is
-  /// to say that it doesn't have a surface and hence can't return a
-  /// non-empty DrawableFrameRef yet, but it will be able to in the future.
-  virtual bool IsPlaceholder() const = 0;
-
   /// @return true if DrawableRef() will return a completely decoded surface.
   virtual bool IsFinished() const = 0;
 
@@ -57,8 +53,22 @@ public:
   /// overhead is ignored.
   virtual size_t LogicalSizeInBytes() const = 0;
 
+  /// @return the availability state of this ISurfaceProvider, which indicates
+  /// whether DrawableRef() could successfully return a surface. Should only be
+  /// called from SurfaceCache code as it relies on SurfaceCache for
+  /// synchronization.
+  AvailabilityState& Availability() { return mAvailability; }
+  const AvailabilityState& Availability() const { return mAvailability; }
+
 protected:
+  explicit ISurfaceProvider(AvailabilityState aAvailability)
+    : mAvailability(aAvailability)
+  { }
+
   virtual ~ISurfaceProvider() { }
+
+private:
+  AvailabilityState mAvailability;
 };
 
 /**
@@ -70,11 +80,11 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SimpleSurfaceProvider, override)
 
   explicit SimpleSurfaceProvider(NotNull<imgFrame*> aSurface)
-    : mSurface(aSurface)
+    : ISurfaceProvider(AvailabilityState::StartAvailable())
+    , mSurface(aSurface)
   { }
 
   DrawableFrameRef DrawableRef() override { return mSurface->DrawableRef(); }
-  bool IsPlaceholder() const override { return false; }
   bool IsFinished() const override { return mSurface->IsFinished(); }
   bool IsLocked() const override { return bool(mLockRef); }
 
