@@ -94,10 +94,10 @@ class CodeSegment
     // function code which, in turn, simplifies reasoning about how stubs
     // enter/exit.
 
-    bool containsFunctionPC(void* pc) const {
+    bool containsFunctionPC(const void* pc) const {
         return pc >= base() && pc < (base() + functionCodeLength_);
     }
-    bool containsCodePC(void* pc) const {
+    bool containsCodePC(const void* pc) const {
         return pc >= base() && pc < (base() + codeLength_);
     }
 };
