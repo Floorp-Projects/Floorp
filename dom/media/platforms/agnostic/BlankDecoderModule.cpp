@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "H264Converter.h"
 #include "ImageContainer.h"
 #include "MediaDecoderReader.h"
 #include "MediaInfo.h"
@@ -11,9 +12,11 @@
 #include "mozilla/mozalloc.h" // for operator new, and new (fallible)
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskQueue.h"
+#include "mp4_demuxer/H264.h"
 #include "nsAutoPtr.h"
 #include "nsRect.h"
 #include "PlatformDecoderModule.h"
+#include "ReorderQueue.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 
@@ -29,6 +32,10 @@ public:
                         const CreateDecoderParams& aParams)
     : mCreator(aCreator)
     , mCallback(aParams.mCallback)
+    , mMaxRefFrames(aParams.mConfig.GetType() == TrackInfo::kVideoTrack &&
+                    H264Converter::IsH264(aParams.mConfig)
+                    ? mp4_demuxer::H264::ComputeMaxRefFrames(aParams.VideoConfig().mExtraData)
+                    : 0)
     , mType(aParams.mConfig.GetType())
   {
   }
@@ -47,19 +54,25 @@ public:
       mCreator->Create(media::TimeUnit::FromMicroseconds(aSample->mTime),
                        media::TimeUnit::FromMicroseconds(aSample->mDuration),
                        aSample->mOffset);
-    if (!data) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
-    } else {
-      mCallback->Output(data);
+
+    OutputFrame(data);
+
+    return NS_OK;
+  }
+
+  nsresult Flush() override
+  {
+    mReorderQueue.Clear();
+
+    return NS_OK;
+  }
+
+  nsresult Drain() override
+  {
+    while (!mReorderQueue.IsEmpty()) {
+      mCallback->Output(mReorderQueue.Pop().get());
     }
-    return NS_OK;
-  }
 
-  nsresult Flush() override {
-    return NS_OK;
-  }
-
-  nsresult Drain() override {
     mCallback->DrainComplete();
     return NS_OK;
   }
@@ -70,8 +83,31 @@ public:
   }
 
 private:
+  void OutputFrame(MediaData* aData)
+  {
+    if (!aData) {
+      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+      return;
+    }
+
+    // Frames come out in DTS order but we need to output them in PTS order.
+    mReorderQueue.Push(aData);
+
+    while (mReorderQueue.Length() > mMaxRefFrames) {
+      mCallback->Output(mReorderQueue.Pop().get());
+    }
+
+    if (mReorderQueue.Length() <= mMaxRefFrames) {
+      mCallback->InputExhausted();
+    }
+
+  }
+
+private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
   MediaDataDecoderCallback* mCallback;
+  const uint32_t mMaxRefFrames;
+  ReorderQueue mReorderQueue;
   TrackInfo::TrackType mType;
 };
 
@@ -233,7 +269,11 @@ public:
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override
   {
-    return kNeedNone;
+    if (aConfig.IsVideo() && H264Converter::IsH264(aConfig)) {
+      return kNeedAVCC;
+    } else {
+      return kNeedNone;
+    }
   }
 
 };
