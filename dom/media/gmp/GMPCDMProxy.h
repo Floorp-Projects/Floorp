@@ -234,8 +234,6 @@ private:
 
   GMPDecryptorProxy* mCDM;
 
-  CDMCaps mCapabilites;
-
   nsAutoPtr<GMPCDMCallbackProxy> mCallback;
 
   // Decryption jobs sent to CDM, awaiting result.
