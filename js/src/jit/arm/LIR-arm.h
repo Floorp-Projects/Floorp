@@ -472,16 +472,19 @@ class LSoftUDivOrMod : public LBinaryMath<3>
     }
 };
 
-class LAsmJSCompareExchangeCallout : public LCallInstructionHelper<1, 3, 0>
+class LAsmJSCompareExchangeCallout : public LCallInstructionHelper<1, 3, 2>
 {
   public:
     LIR_HEADER(AsmJSCompareExchangeCallout)
     LAsmJSCompareExchangeCallout(const LAllocation& ptr, const LAllocation& oldval,
-                                 const LAllocation& newval)
+                                 const LAllocation& newval, const LDefinition& temp1,
+                                 const LDefinition& temp2)
     {
         setOperand(0, ptr);
         setOperand(1, oldval);
         setOperand(2, newval);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
     const LAllocation* ptr() {
         return getOperand(0);
@@ -498,15 +501,18 @@ class LAsmJSCompareExchangeCallout : public LCallInstructionHelper<1, 3, 0>
     }
 };
 
-class LAsmJSAtomicExchangeCallout : public LCallInstructionHelper<1, 2, 0>
+class LAsmJSAtomicExchangeCallout : public LCallInstructionHelper<1, 2, 2>
 {
   public:
     LIR_HEADER(AsmJSAtomicExchangeCallout)
 
-    LAsmJSAtomicExchangeCallout(const LAllocation& ptr, const LAllocation& value)
+    LAsmJSAtomicExchangeCallout(const LAllocation& ptr, const LAllocation& value,
+                                const LDefinition& temp1, const LDefinition& temp2)
     {
         setOperand(0, ptr);
         setOperand(1, value);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
     const LAllocation* ptr() {
         return getOperand(0);
@@ -520,14 +526,17 @@ class LAsmJSAtomicExchangeCallout : public LCallInstructionHelper<1, 2, 0>
     }
 };
 
-class LAsmJSAtomicBinopCallout : public LCallInstructionHelper<1, 2, 0>
+class LAsmJSAtomicBinopCallout : public LCallInstructionHelper<1, 2, 2>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopCallout)
-    LAsmJSAtomicBinopCallout(const LAllocation& ptr, const LAllocation& value)
+    LAsmJSAtomicBinopCallout(const LAllocation& ptr, const LAllocation& value,
+                             const LDefinition& temp1, const LDefinition& temp2)
     {
         setOperand(0, ptr);
         setOperand(1, value);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
     const LAllocation* ptr() {
         return getOperand(0);

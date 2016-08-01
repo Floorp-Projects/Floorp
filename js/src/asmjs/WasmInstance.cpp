@@ -100,6 +100,12 @@ Instance::addressOfContextPtr() const
     return (JSContext**)(codeSegment_->globalData() + ContextPtrGlobalDataOffset);
 }
 
+Instance**
+Instance::addressOfInstancePtr() const
+{
+    return (Instance**)(codeSegment_->globalData() + InstancePtrGlobalDataOffset);
+}
+
 uint8_t**
 Instance::addressOfMemoryBase() const
 {
@@ -329,49 +335,41 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
 }
 
 /* static */ int32_t
-Instance::callImport_void(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
+    JSContext* cx = instance->cx();
     RootedValue rval(cx);
-    return activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval);
+    return instance->callImport(cx, funcImportIndex, argc, argv, &rval);
 }
 
 /* static */ int32_t
-Instance::callImport_i32(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
+    JSContext* cx = instance->cx();
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
+    if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ToInt32(cx, rval, (int32_t*)argv);
 }
 
 /* static */ int32_t
-Instance::callImport_i64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
+    JSContext* cx = instance->cx();
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
+    if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ReadI64Object(cx, rval, (int64_t*)argv);
 }
 
 /* static */ int32_t
-Instance::callImport_f64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
+    JSContext* cx = instance->cx();
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
+    if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ToNumber(cx, rval, (double*)argv);
@@ -396,6 +394,7 @@ Instance::Instance(JSContext* cx,
     MOZ_ASSERT(tables_.length() == metadata.tables.length());
 
     *addressOfContextPtr() = cx;
+    *addressOfInstancePtr() = this;
 
     for (size_t i = 0; i < metadata.funcImports.length(); i++) {
         const FuncImport& fi = metadata.funcImports[i];
