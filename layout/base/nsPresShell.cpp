@@ -6692,22 +6692,6 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, uint8_t aFlags)
   }
 }
 
-class AsyncCheckPointerCaptureStateCaller : public Runnable
-{
-public:
-  explicit AsyncCheckPointerCaptureStateCaller(int32_t aPointerId)
-    : mPointerId(aPointerId) {}
-
-  NS_IMETHOD Run() override
-  {
-    nsIPresShell::CheckPointerCaptureState(mPointerId);
-    return NS_OK;
-  }
-
-private:
-  int32_t mPointerId;
-};
-
 /* static */ void
 nsIPresShell::SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aContent)
 {
@@ -6739,9 +6723,6 @@ nsIPresShell::ReleasePointerCapturingContent(uint32_t aPointerId)
   if (gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) && pointerCaptureInfo) {
     // Set flag to asyncronously release capture for given pointer.
     pointerCaptureInfo->mReleaseContent = true;
-    RefPtr<AsyncCheckPointerCaptureStateCaller> asyncCaller =
-      new AsyncCheckPointerCaptureStateCaller(aPointerId);
-    NS_DispatchToCurrentThread(asyncCaller);
   }
 }
 
@@ -7244,6 +7225,7 @@ public:
   {
     if (mIsSet) {
       nsIPresShell::ReleasePointerCapturingContent(mPointerId);
+      nsIPresShell::CheckPointerCaptureState(mPointerId);
     }
   }
   void SetTarget(uint32_t aPointerId)
@@ -7975,11 +7957,9 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // Try to keep frame for following check, because
         // frame can be damaged during CheckPointerCaptureState.
         nsWeakFrame frameKeeper(frame);
-        // Before any pointer events, we should check state of pointer capture,
-        // Thus got/lostpointercapture events emulate asynchronous behavior.
-        // Handlers of got/lostpointercapture events can change capturing state,
-        // That's why we should re-check pointer capture state until stable state.
-        while(CheckPointerCaptureState(pointerEvent->pointerId));
+        // Handle pending pointer capture before any pointer events except
+        // gotpointercapture / lostpointercapture.
+        CheckPointerCaptureState(pointerEvent->pointerId);
         // Prevent application crashes, in case damaged frame.
         if (!frameKeeper.IsAlive()) {
           frame = nullptr;
