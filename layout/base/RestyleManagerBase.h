@@ -9,8 +9,11 @@
 
 #include "nsChangeHint.h"
 
+class nsStyleChangeList;
+
 namespace mozilla {
 
+class OverflowChangedTracker;
 class ServoRestyleManager;
 class RestyleManager;
 
@@ -43,6 +46,13 @@ public:
   void Disconnect() { mPresContext = nullptr; }
 
   static nsCString RestyleHintToString(nsRestyleHint aHint);
+
+#ifdef DEBUG
+  /**
+   * DEBUG ONLY method to verify integrity of style tree versus frame tree
+   */
+  static void DebugVerifyStyleTree(nsIFrame* aFrame);
+#endif
 
 protected:
   void ContentStateChangedInternal(Element* aElement,
@@ -92,6 +102,22 @@ private:
   uint32_t mHoverGeneration;
   // True if we're already waiting for a refresh notification.
   bool mObservingRefreshDriver;
+
+  /**
+   * These are protected static methods that help with the frame construction
+   * bits of the restyle managers.
+   */
+protected:
+  static nsIFrame*
+  GetNearestAncestorFrame(nsIContent* aContent);
+
+  static nsIFrame*
+  GetNextBlockInInlineSibling(FramePropertyTable* aPropTable, nsIFrame* aFrame);
+
+  static nsresult
+  ProcessRestyledFrames(nsStyleChangeList& aChangeList,
+                        nsPresContext& aPresContext,
+                        OverflowChangedTracker& aOverflowChangedTracker);
 };
 
 } // namespace mozilla

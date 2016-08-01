@@ -37,7 +37,10 @@ namespace dom {
 class RestyleManager final : public RestyleManagerBase
 {
 public:
+  typedef RestyleManagerBase base_type;
+
   friend class RestyleTracker;
+  friend class ElementRestyler;
 
   explicit RestyleManager(nsPresContext* aPresContext);
 
@@ -137,19 +140,16 @@ private:
 
 public:
 
-#ifdef DEBUG
-  /**
-   * DEBUG ONLY method to verify integrity of style tree versus frame tree
-   */
-  void DebugVerifyStyleTree(nsIFrame* aFrame);
-#endif
-
   // Note: It's the caller's responsibility to make sure to wrap a
   // ProcessRestyledFrames call in a view update batch and a script blocker.
   // This function does not call ProcessAttachedQueue() on the binding manager.
   // If the caller wants that to happen synchronously, it needs to handle that
   // itself.
-  nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray);
+  nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
+    return base_type::ProcessRestyledFrames(aChangeList,
+                                            *PresContext(),
+                                            mOverflowChangedTracker);
+  }
 
   /**
    * In order to start CSS transitions on elements that are being
@@ -492,11 +492,6 @@ private:
 
   // Recursively add all the given frame and all children to the tracker.
   void AddSubtreeToOverflowTracker(nsIFrame* aFrame);
-
-  // Returns true if this function managed to successfully move a frame, and
-  // false if it could not process the position change, and a reflow should
-  // be performed instead.
-  bool RecomputePosition(nsIFrame* aFrame);
 
   bool ShouldStartRebuildAllFor(RestyleTracker& aRestyleTracker) {
     // When we process our primary restyle tracker and we have a pending
