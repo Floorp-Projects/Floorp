@@ -7017,20 +7017,13 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
     // <ol reversed> case, or some other case with a negative increment: count
     // up the child list
     ordinal = 0;
-    for (nsIContent* kid = mContent->GetFirstChild(); kid;
-         kid = kid->GetNextSibling()) {
-      if (kid->IsHTMLElement(nsGkAtoms::li)) {
-        // FIXME: This isn't right in terms of what CSS says to do for
-        // overflow of counters (but it only matters when this node has
-        // more than numeric_limits<int32_t>::max() children).
-        ordinal -= increment;
-      }
-    }
+    nsBlockFrame* block = static_cast<nsBlockFrame*>(FirstInFlow());
+    RenumberListsInBlock(aPresContext, block, &ordinal, 0, -increment, true);
   }
 
   // Get to first-in-flow
   nsBlockFrame* block = static_cast<nsBlockFrame*>(FirstInFlow());
-  return RenumberListsInBlock(aPresContext, block, &ordinal, 0, increment);
+  return RenumberListsInBlock(aPresContext, block, &ordinal, 0, increment, false);
 }
 
 bool
@@ -7038,7 +7031,8 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
                                    nsBlockFrame* aBlockFrame,
                                    int32_t* aOrdinal,
                                    int32_t aDepth,
-                                   int32_t aIncrement)
+                                   int32_t aIncrement,
+                                   bool aForCounting)
 {
   // Examine each line in the block
   bool foundValidLine;
@@ -7055,8 +7049,9 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
     int32_t n = line->GetChildCount();
     while (--n >= 0) {
       bool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal,
-                                                   aDepth, aIncrement);
-      if (kidRenumberedABullet) {
+                                                   aDepth, aIncrement,
+                                                   aForCounting);
+      if (!aForCounting && kidRenumberedABullet) {
         line->MarkDirty();
         renumberedABullet = true;
       }
@@ -7081,7 +7076,8 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
                                nsIFrame* aKid,
                                int32_t* aOrdinal,
                                int32_t aDepth,
-                               int32_t aIncrement)
+                               int32_t aIncrement,
+                               bool aForCounting)
 {
   NS_PRECONDITION(aPresContext && aKid && aOrdinal, "null params are immoral!");
 
@@ -7121,23 +7117,31 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
     if (listItem) {
       nsBulletFrame* bullet = listItem->GetBullet();
       if (bullet) {
-        bool changed;
-        *aOrdinal = bullet->SetListItemOrdinal(*aOrdinal, &changed, aIncrement);
-        if (changed) {
-          kidRenumberedABullet = true;
+        if (!aForCounting) {
+          bool changed;
+          *aOrdinal = bullet->SetListItemOrdinal(*aOrdinal, &changed, aIncrement);
+          if (changed) {
+            kidRenumberedABullet = true;
 
-          // The ordinal changed - mark the bullet frame, and any
-          // intermediate frames between it and the block (are there
-          // ever any?), dirty.
-          // The calling code will make the necessary FrameNeedsReflow
-          // call for the list ancestor.
-          bullet->AddStateBits(NS_FRAME_IS_DIRTY);
-          nsIFrame *f = bullet;
-          do {
-            nsIFrame *parent = f->GetParent();
-            parent->ChildIsDirty(f);
-            f = parent;
-          } while (f != listItem);
+            // The ordinal changed - mark the bullet frame, and any
+            // intermediate frames between it and the block (are there
+            // ever any?), dirty.
+            // The calling code will make the necessary FrameNeedsReflow
+            // call for the list ancestor.
+            bullet->AddStateBits(NS_FRAME_IS_DIRTY);
+            nsIFrame *f = bullet;
+            do {
+              nsIFrame *parent = f->GetParent();
+              parent->ChildIsDirty(f);
+              f = parent;
+            } while (f != listItem);
+          }
+        } else {
+          // We're only counting the number of children,
+          // not restyling them. Don't take |value|
+          // into account when incrementing the ordinal
+          // or dirty the bullet.
+          *aOrdinal += aIncrement;
         }
       }
 
@@ -7145,7 +7149,8 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
       // should be numbered too; especially since the list-item is
       // itself (ASSUMED!) not to be a counter-resetter.
       bool meToo = RenumberListsInBlock(aPresContext, listItem, aOrdinal,
-                                        aDepth + 1, aIncrement);
+                                        aDepth + 1, aIncrement,
+                                        aForCounting);
       if (meToo) {
         kidRenumberedABullet = true;
       }
@@ -7164,7 +7169,8 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
       if (kidBlock) {
         kidRenumberedABullet = RenumberListsInBlock(aPresContext, kidBlock,
                                                     aOrdinal, aDepth + 1,
-                                                    aIncrement);
+                                                    aIncrement,
+                                                    aForCounting);
       }
     }
   }

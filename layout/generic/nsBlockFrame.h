@@ -787,15 +787,44 @@ protected:
   // reflow.
   bool RenumberLists(nsPresContext* aPresContext);
 
+  /**
+   * Renumber lists for a single block frame
+   * @param aOrdinal Ordinal number to start counting at.
+   *        Modifies this number for each associated list
+   *        item. Changes in the numbering due to setting
+   *        the |value| attribute are included if |aForCounting|
+   *        is false. This value is both an input and output
+   *        of this function, with the output value being the
+   *        next ordinal number to be used.
+   * @param aIncrement Amount to increase by after visiting each associated
+   *        list item, unless overridden by |value|.
+   * @param aForCounting Whether we are counting the elements or actually
+   *        restyling them. When true, this simply visits all children,
+   *        ignoring |<li value="..">| changes, effectively counting them
+   *        and storing the result in |aOrdinal|. This is useful for
+   *        |<ol reversed>|, where we need to count the number of
+   *        applicable child list elements before numbering. When false,
+   *        this will restyle all applicable descendants, and the next
+   *        ordinal value will be stored in |aOrdinal|, taking into account
+   *        any changes from |<li value="..">|.
+   * @param aDepth Current depth in frame tree from root list element.
+   */
   static bool RenumberListsInBlock(nsPresContext* aPresContext,
                                    nsBlockFrame* aBlockFrame,
                                    int32_t* aOrdinal,
                                    int32_t aDepth,
-                                   int32_t aIncrement);
+                                   int32_t aIncrement,
+                                   bool aForCounting);
 
+  /**
+   * Renumber the lists for a single frame.
+   * May recurse into RenumberListsInBlock.
+   * See RenumberListsInBlock for description of parameters.
+   */
   static bool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid,
                                int32_t* aOrdinal, int32_t aDepth,
-                               int32_t aIncrement);
+                               int32_t aIncrement,
+                               bool aForCounting);
 
   static bool FrameStartsCounterScope(nsIFrame* aFrame);
 
