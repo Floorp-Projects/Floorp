@@ -31,6 +31,7 @@ namespace jit { class MacroAssembler; class Label; }
 namespace wasm {
 
 class CallSite;
+class Code;
 class CodeRange;
 class Instance;
 class SigIdDesc;
@@ -120,13 +121,13 @@ GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOf
 // Runtime patching to enable/disable profiling
 
 void
-ToggleProfiling(const Instance& instance, const CallSite& callSite, bool enabled);
+ToggleProfiling(const Code& code, const CallSite& callSite, bool enabled);
 
 void
-ToggleProfiling(const Instance& instance, const CallThunk& callThunk, bool enabled);
+ToggleProfiling(const Code& code, const CallThunk& callThunk, bool enabled);
 
 void
-ToggleProfiling(const Instance& instance, const CodeRange& codeRange, bool enabled);
+ToggleProfiling(const Code& code, const CodeRange& codeRange, bool enabled);
 
 } // namespace wasm
 } // namespace js

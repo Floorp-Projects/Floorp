@@ -30,8 +30,6 @@ class WasmInstanceObject;
 
 namespace wasm {
 
-class GeneratedSourceMap;
-
 // Instance represents a wasm instance and provides all the support for runtime
 // execution of code in the instance. Instances share various immutable data
 // structures with the Module from which they were instantiated and other
@@ -41,17 +39,9 @@ class GeneratedSourceMap;
 
 class Instance
 {
-    const UniqueCodeSegment              codeSegment_;
-    const SharedMetadata                 metadata_;
-    const SharedBytes                    maybeBytecode_;
+    const UniqueCode                     code_;
     GCPtrWasmMemoryObject                memory_;
     SharedTableVector                    tables_;
-
-    bool                                 profilingEnabled_;
-    CacheableCharsVector                 funcLabels_;
-
-
-    UniquePtr<GeneratedSourceMap>        maybeSourceMap_;
 
     // Thread-local data for code running in this instance.
     // When threading is supported, we need a TlsData object per thread per
@@ -81,9 +71,7 @@ class Instance
 
   public:
     Instance(JSContext* cx,
-             UniqueCodeSegment codeSegment,
-             const Metadata& metadata,
-             const ShareableBytes* maybeBytecode,
+             UniqueCode code,
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
              Handle<FunctionVector> funcImports,
@@ -93,8 +81,11 @@ class Instance
     void trace(JSTracer* trc);
 
     JSContext* cx() const { return *addressOfContextPtr(); }
-    const CodeSegment& codeSegment() const { return *codeSegment_; }
-    const Metadata& metadata() const { return *metadata_; }
+    Code& code() { return *code_; }
+    const Code& code() const { return *code_; }
+    const CodeSegment& codeSegment() const { return code_->segment(); }
+    uint8_t* codeBase() const { return code_->segment().base(); }
+    const Metadata& metadata() const { return code_->metadata(); }
     const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
     size_t memoryLength() const;
@@ -104,32 +95,6 @@ class Instance
 
     MOZ_MUST_USE bool callExport(JSContext* cx, uint32_t funcIndex, CallArgs args);
 
-    // An instance has a profiling mode that is updated to match the runtime's
-    // profiling mode when calling an instance's exports when there are no other
-    // activations of the instance live on the stack. Once in profiling mode,
-    // ProfilingFrameIterator can be used to asynchronously walk the stack.
-    // Otherwise, the ProfilingFrameIterator will skip any activations of this
-    // instance.
-
-    MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
-    bool profilingEnabled() const { return profilingEnabled_; }
-    const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
-
-    // If the source binary was saved (by passing the bytecode to the
-    // constructor), this method will render the binary as text. Otherwise, a
-    // diagnostic string will be returned.
-
-    // Text format support functions:
-
-    JSString* createText(JSContext* cx);
-    bool getLineOffsets(size_t lineno, Vector<uint32_t>& offsets);
-
-    // Return the name associated with a given function index, or generate one
-    // if none was given by the module.
-
-    bool getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const;
-    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
-
     // Initially, calls to imports in wasm code call out through the generic
     // callImport method. If the imported callee gets JIT compiled and the types
     // match up, callImport will patch the code to instead call through a thunk
@@ -138,13 +103,9 @@ class Instance
 
     void deoptimizeImportExit(uint32_t funcImportIndex);
 
-    // Stack frame iterator support:
+    // See Code::ensureProfilingState comment.
 
-    const CallSite* lookupCallSite(void* returnAddress) const;
-    const CodeRange* lookupCodeRange(void* pc) const;
-#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS
-    const MemoryAccess* lookupMemoryAccess(void* pc) const;
-#endif
+    MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
 
     // Update the instance's copy of the stack limit.
     void updateStackLimit(JSContext*);
