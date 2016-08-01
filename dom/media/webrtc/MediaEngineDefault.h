@@ -18,7 +18,9 @@
 #include "VideoSegment.h"
 #include "AudioSegment.h"
 #include "StreamTracks.h"
+#ifdef MOZ_WEBRTC
 #include "MediaEngineCameraVideoSource.h"
+#endif
 #include "MediaStreamGraph.h"
 #include "MediaTrackConstraints.h"
 
@@ -34,7 +36,11 @@ class MediaEngineDefault;
  * The default implementation of the MediaEngine interface.
  */
 class MediaEngineDefaultVideoSource : public nsITimerCallback,
+#ifdef MOZ_WEBRTC
                                       public MediaEngineCameraVideoSource
+#else
+                                      public MediaEngineVideoSource
+#endif
 {
 public:
   MediaEngineDefaultVideoSource();
