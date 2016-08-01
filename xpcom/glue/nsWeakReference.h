@@ -29,14 +29,15 @@ private:
   friend class nsWeakReference;
 
   // Called (only) by an |nsWeakReference| from _its_ dtor.
-  void NoticeProxyDestruction() { mProxy = 0; }
+  // The thread safety check is made by the caller.
+  void NoticeProxyDestruction() { mProxy = nullptr; }
 
   nsWeakReference* MOZ_NON_OWNING_REF mProxy;
 
 protected:
 
   void ClearWeakReferences();
-  bool HasWeakReferences() const { return mProxy != 0; }
+  bool HasWeakReferences() const { return !!mProxy; }
 };
 
 inline
