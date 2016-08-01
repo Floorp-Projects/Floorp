@@ -29,8 +29,8 @@ let baseOp = {
 }
 
 function toSigned(width, num) {
-  let unsignedMax = Math.pow(2, accessWidth[width] * 8) - 1;
-  let signedMax = Math.pow(2, accessWidth[width] * 8 - 1) - 1;
+  let unsignedMax = 2 ** (accessWidth[width] * 8) - 1;
+  let signedMax = 2 ** (accessWidth[width] * 8 - 1) - 1;
 
   return (num <= signedMax ? num : -(unsignedMax + 1 - num));
 }

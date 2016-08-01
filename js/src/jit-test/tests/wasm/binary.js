@@ -257,7 +257,7 @@ wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection
 // Ignore errors in name section.
 var tooBigNameSection = {
     name: nameId,
-    body: [...varU32(Math.pow(2, 31))] // declare 2**31 functions.
+    body: [...varU32(2**31)] // declare 2**31 functions.
 };
 wasmEval(moduleWithSections([tooBigNameSection]));
 
