@@ -82,7 +82,7 @@ public:
                     const char** aOutBadConstraint) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
-    aOutHandle = nullptr;
+    *aOutHandle = nullptr;
     return NS_OK;
   }
   nsresult Deallocate(AllocationHandle* aHandle) override
