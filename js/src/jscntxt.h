@@ -340,6 +340,9 @@ struct JSContext : public js::ExclusiveContext,
     static size_t offsetOfActivation() {
         return offsetof(JSContext, activation_);
     }
+    static size_t offsetOfWasmActivation() {
+        return offsetof(JSContext, wasmActivationStack_);
+    }
     static size_t offsetOfProfilingActivation() {
         return offsetof(JSContext, profilingActivation_);
      }

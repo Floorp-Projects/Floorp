@@ -59,6 +59,7 @@ class Instance
     TlsData                              tlsData_;
 
     // Internal helpers:
+    JSContext** addressOfContextPtr() const;
     uint8_t** addressOfMemoryBase() const;
     void** addressOfTableBase(size_t tableIndex) const;
     const void** addressOfSigId(const SigIdDesc& sigId) const;
@@ -66,11 +67,6 @@ class Instance
 
     // Get this instance's TLS data pointer for the current thread.
     TlsData* tlsData() { return &tlsData_; }
-
-    // An instance keeps track of its innermost WasmActivation. A WasmActivation
-    // is pushed for the duration of each call of an export.
-    friend class js::WasmActivation;
-    WasmActivation*& activation();
 
     // Import call slow paths which are called directly from wasm code.
     friend void* AddressOf(SymbolicAddress, ExclusiveContext*);
