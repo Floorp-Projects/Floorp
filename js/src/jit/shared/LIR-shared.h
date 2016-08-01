@@ -864,7 +864,8 @@ class LDouble : public LInstructionHelper<1, 0, 0>
 
     explicit LDouble(double d) : d_(d)
     { }
-    double getDouble() const {
+
+    const double& getDouble() const {
         return d_;
     }
 };
@@ -880,7 +881,7 @@ class LFloat32 : public LInstructionHelper<1, 0, 0>
       : f_(f)
     { }
 
-    float getFloat() const {
+    const float& getFloat() const {
         return f_;
     }
 };
