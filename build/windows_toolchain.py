@@ -161,6 +161,9 @@ def resolve_files():
         finder = FileFinder(sdk_path, find_executables=False,
                             ignore=entry.get('ignore', []))
         for p, f in finder.find(entry['pattern']):
+            # We remove the SDK version from the path so we don't have
+            # to update other configs when we change the SDK version.
+            p = p.replace('/%s/' % SDK_RELEASE, '/')
             relpath = 'SDK/%s' % p
 
             yield relpath.encode('utf-8'), f
