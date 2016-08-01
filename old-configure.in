@@ -5344,14 +5344,7 @@ dnl ========================================================
 dnl ICU Support
 dnl ========================================================
 
-# Internationalization is not built or exposed on Fennec.
-# See Bug 1215256
-
-if test "$MOZ_BUILD_APP" = "mobile/android"; then
-    _INTL_API=no
-else
-    _INTL_API=yes
-fi
+_INTL_API=yes
 
 if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
     USE_ICU=1
