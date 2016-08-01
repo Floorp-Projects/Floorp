@@ -34,8 +34,8 @@
 #include "avcodec.h"
 #include "internal.h"
 #include "mathops.h"
-#include "get_bits.h"
 #include "put_bits.h"
+#include "vlc.h"
 
 const uint8_t ff_log2_run[41]={
  0, 0, 0, 0, 1, 1, 1, 1,
@@ -150,7 +150,7 @@ static int compare_vlcspec(const void *a, const void *b)
 /**
  * Build VLC decoding tables suitable for use with get_vlc().
  *
- * @param vlc            the context to be initted
+ * @param vlc            the context to be initialized
  *
  * @param table_nb_bits  max length of vlc codes to store directly in this table
  *                       (Longer codes are delegated to subtables.)
@@ -167,7 +167,7 @@ static int build_table(VLC *vlc, int table_nb_bits, int nb_codes,
     int table_size, table_index, index, code_prefix, symbol, subtable_bits;
     int i, j, k, n, nb, inc;
     uint32_t code;
-    volatile VLC_TYPE (* volatile table)[2]; // the double volatile is needed to prevent a internal compiler error in gcc 4.2
+    volatile VLC_TYPE (* volatile table)[2]; // the double volatile is needed to prevent an internal compiler error in gcc 4.2
 
     table_size = 1 << table_nb_bits;
     if (table_nb_bits > 30)
@@ -248,7 +248,7 @@ static int build_table(VLC *vlc, int table_nb_bits, int nb_codes,
 
 /* Build VLC decoding tables suitable for use with get_vlc().
 
-   'nb_bits' set the decoding table size (2^nb_bits) entries. The
+   'nb_bits' sets the decoding table size (2^nb_bits) entries. The
    bigger it is, the faster is the decoding. But it should not be too
    big to save memory and L1 cache. '9' is a good compromise.
 
@@ -317,7 +317,7 @@ int ff_init_vlc_sparse(VLC *vlc_arg, int nb_bits, int nb_codes,
         }                                                                   \
         GET_DATA(buf[j].code, codes, i, codes_wrap, codes_size);            \
         if (buf[j].code >= (1LL<<buf[j].bits)) {                            \
-            av_log(NULL, AV_LOG_ERROR, "Invalid code in init_vlc\n");       \
+            av_log(NULL, AV_LOG_ERROR, "Invalid code %x for %d in init_vlc\n", buf[j].code, i);\
             if (!(flags & INIT_VLC_USE_NEW_STATIC))                         \
                 av_free(buf);                                               \
             return -1;                                                      \

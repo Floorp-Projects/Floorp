@@ -17,7 +17,6 @@ SOURCES += [
     'avpacket.c',
     'avpicture.c',
     'bitstream.c',
-    'bitstream_filter.c',
     'codec_desc.c',
     'dummy_funcs.c',
     'h264pred.c',
