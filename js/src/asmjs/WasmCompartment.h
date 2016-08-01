@@ -27,6 +27,8 @@ class WasmActivation;
 
 namespace wasm {
 
+class Code;
+
 // wasm::Compartment lives in JSCompartment and contains the wasm-related
 // per-compartment state. wasm::Compartment tracks every live instance in the
 // compartment and must be notified, via registerInstance(), of any new
@@ -38,12 +40,27 @@ class Compartment
                                         MovableCellHasher<ReadBarriered<WasmInstanceObject*>>,
                                         SystemAllocPolicy>;
     using WeakInstanceObjectSet = JS::WeakCache<InstanceObjectSet>;
+    using InstanceVector = Vector<Instance*, 0, SystemAllocPolicy>;
 
-    WeakInstanceObjectSet instances_;
+    InstanceVector        instances_;
+    volatile bool         mutatingInstances_;
+    WeakInstanceObjectSet instanceObjects_;
     size_t                activationCount_;
     bool                  profilingEnabled_;
 
     friend class js::WasmActivation;
+
+    struct AutoMutateInstances {
+        Compartment &c;
+        explicit AutoMutateInstances(Compartment& c) : c(c) {
+            MOZ_ASSERT(!c.mutatingInstances_);
+            c.mutatingInstances_ = true;
+        }
+        ~AutoMutateInstances() {
+            MOZ_ASSERT(c.mutatingInstances_);
+            c.mutatingInstances_ = false;
+        }
+    };
 
   public:
     explicit Compartment(Zone* zone);
@@ -53,18 +70,36 @@ class Compartment
     // Before a WasmInstanceObject can be considered fully constructed and
     // valid, it must be registered with the Compartment. If this method fails,
     // an error has been reported and the instance object must be abandoned.
+    // After a successful registration, an Instance must call
+    // unregisterInstance() before being destroyed.
 
     bool registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj);
+    void unregisterInstance(Instance& instance);
 
-    // Return a weak set of all live instances in the compartment.
+    // Return a weak set of all live instances in the compartment. Accessing
+    // objects of the set will trigger a read-barrier which will mark the
+    // object.
 
-    const WeakInstanceObjectSet& instances() const { return instances_; }
+    const WeakInstanceObjectSet& instanceObjects() const { return instanceObjects_; }
+
+    // This methods returns the wasm::Code containing the given pc, if any
+    // exists in the compartment.
+
+    Code* lookupCode(const void* pc) const;
+
+    // Currently, there is one Code per Instance so it is also possible to
+    // lookup a Instance given a pc. However, the goal is to share one Code
+    // between multiple Instances at which point in time this method will be
+    // removed.
+
+    Instance* lookupInstanceDeprecated(const void* pc) const;
 
     // To ensure profiling is enabled (so that wasm frames are not lost in
     // profiling callstacks), ensureProfilingState must be called before calling
     // the first wasm function in a compartment.
 
     bool ensureProfilingState(JSContext* cx);
+    bool profilingEnabled() const;
 
     // about:memory reporting
 

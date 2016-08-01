@@ -28,17 +28,33 @@ using namespace js;
 using namespace wasm;
 
 Compartment::Compartment(Zone* zone)
-  : instances_(zone, InstanceObjectSet()),
+  : mutatingInstances_(false),
+    instanceObjects_(zone, InstanceObjectSet()),
     activationCount_(0),
     profilingEnabled_(false)
-{
-}
+{}
 
 Compartment::~Compartment()
 {
     MOZ_ASSERT(activationCount_ == 0);
-    MOZ_ASSERT(!instances_.initialized() || instances_.empty());
+    MOZ_ASSERT(!instanceObjects_.initialized() || instanceObjects_.empty());
+    MOZ_ASSERT(instances_.empty());
+    MOZ_ASSERT(!mutatingInstances_);
 }
+
+struct InstanceComparator
+{
+    const Instance& target;
+    explicit InstanceComparator(const Instance& target) : target(target) {}
+
+    int operator()(const Instance* instance) const {
+        if (instance == &target)
+            return 0;
+        MOZ_ASSERT(!target.codeSegment().containsCodePC(instance->codeBase()));
+        MOZ_ASSERT(!instance->codeSegment().containsCodePC(target.codeBase()));
+        return target.codeBase() < instance->codeBase() ? -1 : 1;
+    }
+};
 
 void
 Compartment::trace(JSTracer* trc)
@@ -48,27 +64,85 @@ Compartment::trace(JSTracer* trc)
     // scan the stack during GC to identify live instances, we mark all instance
     // objects live if there is any running wasm in the compartment.
     if (activationCount_)
-        instances_.get().trace(trc);
+        instanceObjects_.get().trace(trc);
 }
 
 bool
 Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj)
 {
-    if (!instanceObj->instance().ensureProfilingState(cx, profilingEnabled_))
+    Instance& instance = instanceObj->instance();
+    MOZ_ASSERT(this == &instance.compartment()->wasm);
+
+    if (!instance.ensureProfilingState(cx, profilingEnabled_))
         return false;
 
-    if (!instances_.initialized() && !instances_.init()) {
+    if (!instanceObjects_.initialized() && !instanceObjects_.init()) {
         ReportOutOfMemory(cx);
         return false;
     }
 
-    if (!instances_.putNew(instanceObj)) {
+    if (!instanceObjects_.putNew(instanceObj)) {
         ReportOutOfMemory(cx);
         return false;
+    }
+
+    size_t index;
+    if (BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
+        MOZ_CRASH("duplicate registration");
+
+    {
+        AutoMutateInstances guard(*this);
+        if (!instances_.insert(instances_.begin() + index, &instance)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
     }
 
     Debugger::onNewWasmInstance(cx, instanceObj);
     return true;
+}
+
+void
+Compartment::unregisterInstance(Instance& instance)
+{
+    size_t index;
+    if (!BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
+        return;
+
+    AutoMutateInstances guard(*this);
+    instances_.erase(instances_.begin() + index);
+}
+
+struct PCComparator
+{
+    const void* pc;
+    explicit PCComparator(const void* pc) : pc(pc) {}
+
+    int operator()(const Instance* instance) const {
+        if (instance->codeSegment().containsCodePC(pc))
+            return 0;
+        return pc < instance->codeBase() ? -1 : 1;
+    }
+};
+
+Code*
+Compartment::lookupCode(const void* pc) const
+{
+    Instance* instance = lookupInstanceDeprecated(pc);
+    return instance ? &instance->code() : nullptr;
+}
+
+Instance*
+Compartment::lookupInstanceDeprecated(const void* pc) const
+{
+    // See profilingEnabled().
+    MOZ_ASSERT(!mutatingInstances_);
+
+    size_t index;
+    if (!BinarySearchIf(instances_, 0, instances_.length(), PCComparator(pc), &index))
+        return nullptr;
+
+    return instances_[index];
 }
 
 bool
@@ -87,8 +161,8 @@ Compartment::ensureProfilingState(JSContext* cx)
     if (activationCount_ > 0)
         return true;
 
-    for (InstanceObjectSet::Range r = instances_.all(); !r.empty(); r.popFront()) {
-        if (!r.front()->instance().ensureProfilingState(cx, newProfilingEnabled))
+    for (Instance* instance : instances_) {
+        if (!instance->ensureProfilingState(cx, newProfilingEnabled))
             return false;
     }
 
@@ -96,8 +170,17 @@ Compartment::ensureProfilingState(JSContext* cx)
     return true;
 }
 
+bool
+Compartment::profilingEnabled() const
+{
+    // Profiling can asynchronously interrupt the mutation of the instances_
+    // vector which is used by lookupCode() during stack-walking. To handle
+    // this rare case, disable profiling during mutation.
+    return profilingEnabled_ && !mutatingInstances_;
+}
+
 void
 Compartment::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf, size_t* compartmentTables)
 {
-    *compartmentTables += instances_.sizeOfExcludingThis(mallocSizeOf);
+    *compartmentTables += instanceObjects_.sizeOfExcludingThis(mallocSizeOf);
 }

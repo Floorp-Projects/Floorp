@@ -1663,7 +1663,6 @@ class InterpreterFrameIterator
 // all kinds of jit code.
 class WasmActivation : public Activation
 {
-    wasm::Instance& instance_;
     WasmActivation* prevWasm_;
     void* entrySP_;
     void* resumePC_;
@@ -1671,10 +1670,9 @@ class WasmActivation : public Activation
     wasm::ExitReason exitReason_;
 
   public:
-    WasmActivation(JSContext* cx, wasm::Instance& instance);
+    explicit WasmActivation(JSContext* cx);
     ~WasmActivation();
 
-    wasm::Instance& instance() const { return instance_; }
     WasmActivation* prevWasm() const { return prevWasm_; }
 
     bool isProfiling() const {
