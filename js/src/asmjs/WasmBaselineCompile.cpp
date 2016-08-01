@@ -2601,6 +2601,7 @@ class BaseCompiler
     {
         AnyReg src;
         bool isUnsigned;
+
       public:
         OutOfLineTruncateCheckF32OrF64ToI64(AnyReg src, bool isUnsigned)
           : src(src),
@@ -2608,10 +2609,12 @@ class BaseCompiler
         {}
 
         virtual void generate(MacroAssembler& masm) {
-            bool isFloat = src.tag == AnyReg::F32;
-            FloatRegister fsrc = isFloat ? src.f32().reg : src.f64().reg;
-            masm.outOfLineWasmTruncateCheck(fsrc, isFloat ? MIRType::Float32 : MIRType::Double,
-                                            MIRType::Int64, isUnsigned, rejoin());
+            if (src.tag == AnyReg::F32)
+                masm.outOfLineWasmTruncateFloat32ToInt64(src.f32().reg, isUnsigned, rejoin());
+            else if (src.tag == AnyReg::F64)
+                masm.outOfLineWasmTruncateDoubleToInt64(src.f64().reg, isUnsigned, rejoin());
+            else
+                MOZ_CRASH("unexpected type");
         }
     };
 #endif
