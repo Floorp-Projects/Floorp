@@ -1,6 +1,6 @@
 [package]
 name = "geckodriver"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["James Graham <james@hoppipolla.co.uk>"]
 description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
 repository = "https://github.com/jgraham/wires"
