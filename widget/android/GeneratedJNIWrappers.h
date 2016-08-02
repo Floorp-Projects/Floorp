@@ -2806,7 +2806,7 @@ public:
                 int32_t> Args;
         static constexpr char name[] = "open";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Lorg/mozilla/gecko/gfx/GLController;Ljava/lang/String;II)V";
+                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Lorg/mozilla/gecko/gfx/LayerView$Compositor;Ljava/lang/String;II)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -2817,29 +2817,15 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                GeckoView::Param> Args;
+                GeckoView::Param,
+                mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "reattach";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView;)V";
+                "(Lorg/mozilla/gecko/GeckoView;Lorg/mozilla/gecko/gfx/LayerView$Compositor;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
-
-    struct GlController_t {
-        typedef Window Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "glController";
-        static constexpr char signature[] =
-                "Lorg/mozilla/gecko/gfx/GLController;";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto GlController() const -> mozilla::jni::Object::LocalRef;
 
     static const bool isMultithreaded = true;
 
@@ -3106,149 +3092,6 @@ public:
 
     static const bool isMultithreaded = false;
 
-};
-
-class GLController : public mozilla::jni::ObjectBase<GLController, jobject>
-{
-public:
-    static const char name[];
-
-    explicit GLController(const Context& ctx) : ObjectBase<GLController, jobject>(ctx) {}
-
-    struct AttachToJava_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "attachToJava";
-        static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/gfx/GeckoLayerClient;Lorg/mozilla/gecko/gfx/NativePanZoomController;)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    struct CreateCompositor_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                int32_t> Args;
-        static constexpr char name[] = "createCompositor";
-        static constexpr char signature[] =
-                "(II)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    struct Destroy_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "destroy";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto Destroy() const -> void;
-
-    struct DisposeNative_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "disposeNative";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    struct GetSurface_t {
-        typedef GLController Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "getSurface";
-        static constexpr char signature[] =
-                "()Ljava/lang/Object;";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto GetSurface() const -> mozilla::jni::Object::LocalRef;
-
-    struct OnSizeChanged_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                int32_t,
-                int32_t,
-                int32_t> Args;
-        static constexpr char name[] = "onSizeChanged";
-        static constexpr char signature[] =
-                "(IIII)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    struct PauseCompositor_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "pauseCompositor";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    struct SyncInvalidateAndScheduleComposite_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "syncInvalidateAndScheduleComposite";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    struct SyncResumeResizeCompositor_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                int32_t> Args;
-        static constexpr char name[] = "syncResumeResizeCompositor";
-        static constexpr char signature[] =
-                "(II)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static const bool isMultithreaded = true;
-
-    template<class Impl> class Natives;
 };
 
 class GeckoLayerClient : public mozilla::jni::ObjectBase<GeckoLayerClient, jobject>
@@ -3659,6 +3502,8 @@ public:
 
     explicit LayerView(const Context& ctx) : ObjectBase<LayerView, jobject>(ctx) {}
 
+    class Compositor;
+
     struct updateZoomedView_t {
         typedef LayerView Owner;
         typedef void ReturnType;
@@ -3677,6 +3522,165 @@ public:
 
     static const bool isMultithreaded = true;
 
+};
+
+class LayerView::Compositor : public mozilla::jni::ObjectBase<Compositor, jobject>
+{
+public:
+    static const char name[];
+
+    explicit Compositor(const Context& ctx) : ObjectBase<Compositor, jobject>(ctx) {}
+
+    struct New_t {
+        typedef Compositor Owner;
+        typedef Compositor::LocalRef ReturnType;
+        typedef Compositor::Param SetterType;
+        typedef mozilla::jni::Args<
+                LayerView::Param> Args;
+        static constexpr char name[] = "<init>";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/gfx/LayerView;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto New(LayerView::Param) -> Compositor::LocalRef;
+
+    struct AttachToJava_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "attachToJava";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/gfx/GeckoLayerClient;Lorg/mozilla/gecko/gfx/NativePanZoomController;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct CreateCompositor_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "createCompositor";
+        static constexpr char signature[] =
+                "(II)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct Destroy_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "destroy";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto Destroy() const -> void;
+
+    struct DisposeNative_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "disposeNative";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct GetSurface_t {
+        typedef Compositor Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getSurface";
+        static constexpr char signature[] =
+                "()Ljava/lang/Object;";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto GetSurface() const -> mozilla::jni::Object::LocalRef;
+
+    struct OnSizeChanged_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "onSizeChanged";
+        static constexpr char signature[] =
+                "(IIII)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct SyncInvalidateAndScheduleComposite_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "syncInvalidateAndScheduleComposite";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct SyncPauseCompositor_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "syncPauseCompositor";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct SyncResumeResizeCompositor_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "syncResumeResizeCompositor";
+        static constexpr char signature[] =
+                "(II)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static const bool isMultithreaded = true;
+
+    template<class Impl> class Natives;
 };
 
 class NativePanZoomController : public mozilla::jni::ObjectBase<NativePanZoomController, jobject>

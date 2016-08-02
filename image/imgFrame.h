@@ -321,7 +321,6 @@ public:
   IntSize GetImageSize() const { return mImageSize; }
   IntRect GetRect() const { return mFrameRect; }
   IntSize GetSize() const { return mFrameRect.Size(); }
-  bool NeedsPadding() const { return mFrameRect.TopLeft() != IntPoint(0, 0); }
   void GetImageData(uint8_t** aData, uint32_t* length) const;
   uint8_t* GetImageData() const;
 
@@ -336,9 +335,6 @@ public:
   void SetCompositingFailed(bool val);
 
   void SetOptimizable();
-
-  Color SinglePixelColor() const;
-  bool IsSinglePixel() const;
 
   already_AddRefed<SourceSurface> GetSurface();
 
@@ -379,12 +375,8 @@ private: // methods
     bool IsValid() { return !!mDrawable; }
   };
 
-  SurfaceWithFormat SurfaceForDrawing(bool               aDoPadding,
-                                      bool               aDoPartialDecode,
+  SurfaceWithFormat SurfaceForDrawing(bool               aDoPartialDecode,
                                       bool               aDoTile,
-                                      gfxContext*        aContext,
-                                      const nsIntMargin& aPadding,
-                                      gfxRect&           aImageRect,
                                       ImageRegion&       aRegion,
                                       SourceSurface*     aSurface);
 
@@ -445,10 +437,6 @@ private: // data
   // Main-thread-only mutable data.
   //////////////////////////////////////////////////////////////////////////////
 
-  // Note that the data stored in gfx::Color is *non-alpha-premultiplied*.
-  Color        mSinglePixelColor;
-
-  bool mSinglePixel;
   bool mCompositingFailed;
 };
 

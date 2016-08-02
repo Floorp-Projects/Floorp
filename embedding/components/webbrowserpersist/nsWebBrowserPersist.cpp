@@ -273,6 +273,7 @@ const char *kWebBrowserPersistStringBundle =
     "chrome://global/locale/nsWebBrowserPersist.properties";
 
 nsWebBrowserPersist::nsWebBrowserPersist() :
+    mCurrentDataPathIsRelative(false),
     mCurrentThingsToPersist(0),
     mFirstAndOnlyUse(true),
     mSavingDocument(false),

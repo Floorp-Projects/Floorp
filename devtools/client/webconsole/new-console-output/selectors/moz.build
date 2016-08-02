@@ -4,6 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'filters.js',
     'messages.js',
     'prefs.js',
+    'ui.js',
 )

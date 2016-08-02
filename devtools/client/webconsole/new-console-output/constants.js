@@ -8,6 +8,10 @@
 const actionTypes = {
   MESSAGE_ADD: "MESSAGE_ADD",
   MESSAGES_CLEAR: "MESSAGES_CLEAR",
+  SEVERITY_FILTER: "SEVERITY_FILTER",
+  MESSAGES_SEARCH: "MESSAGES_SEARCH",
+  FILTERS_CLEAR: "FILTERS_CLEAR",
+  FILTERBAR_TOGGLE: "FILTERBAR_TOGGLE",
 };
 
 const categories = {
@@ -92,6 +96,10 @@ const chromeRDPEnums = {
   }
 };
 
+const filterTypes = {
+  SEVERITY_FILTER: "SEVERITY_FILTER"
+};
+
 // Combine into a single constants object
 module.exports = Object.assign({}, actionTypes, categories, severities, levels,
-  chromeRDPEnums);
+  chromeRDPEnums, filterTypes);

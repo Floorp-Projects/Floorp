@@ -5,8 +5,8 @@
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <script src="driver-info.js"></script>
 <script src="webgl-util.js"></script>
-<script id="vs" type="x-shader/x-vertex">
-#version 300 es
+<script id="vs" type="x-shader/x-vertex"
+>#version 300 es
 
 in vec2 aTexCoord;
 out vec2 vTexCoord;
@@ -17,8 +17,8 @@ void main() {
   vTexCoord = aTexCoord;
 }
 </script>
-<script id="fs" type="x-shader/x-fragment">
-#version 300 es
+<script id="fs" type="x-shader/x-fragment"
+>#version 300 es
 precision mediump float;
 
 in vec2 vTexCoord;

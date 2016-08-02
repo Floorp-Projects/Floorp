@@ -3468,15 +3468,6 @@ void nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
     mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
     mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left;
   }
-  else if (!XRE_IsParentProcess())
-  {
-    // For e10s we only support async windowless plugin. This means that
-    // we're always going to allocate a full window for the plugin to draw
-    // for even if the plugin is mostly outside of the scroll port. Thus
-    // we never trim the window to the bounds of the widget.
-    mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top + mPluginWindow->height;
-    mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left + mPluginWindow->width;
-  }
   else if (inPaintState == ePluginPaintEnable)
   {
     mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top + widgetClip.height;

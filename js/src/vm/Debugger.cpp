@@ -4167,10 +4167,10 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         // TODOshu: Until such time that wasm modules are real ES6 modules,
         // unconditionally consider all wasm toplevel instance scripts.
         for (WeakGlobalObjectSet::Range r = debugger->allDebuggees(); !r.empty(); r.popFront()) {
-            auto& wasmInstances = r.front()->compartment()->wasmInstances;
-            if (!wasmInstances.initialized())
+            auto& instanceObjects = r.front()->compartment()->wasm.instanceObjects();
+            if (!instanceObjects.initialized())
                 continue;
-            for (auto i = wasmInstances.all(); !i.empty(); i.popFront())
+            for (auto i = instanceObjects.all(); !i.empty(); i.popFront())
                 consider(i.front());
         }
 
@@ -6057,7 +6057,7 @@ class DebuggerScriptGetLineOffsetsMatcher
             return false;
 
         Vector<uint32_t> offsets(cx_);
-        if (!instance->instance().getLineOffsets(lineno_, offsets))
+        if (!instance->instance().code().getLineOffsets(lineno_, offsets))
             return false;
         for (uint32_t i = 0; i < offsets.length(); i++) {
             if (!NewbornArrayPush(cx_, result_, NumberValue(offsets[i])))
@@ -6706,7 +6706,7 @@ class DebuggerSourceGetTextMatcher
     }
 
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        return wasmInstance->instance().createText(cx_);
+        return wasmInstance->instance().code().createText(cx_);
     }
 };
 

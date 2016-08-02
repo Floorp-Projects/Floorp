@@ -24,7 +24,7 @@ task:
     - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}'
   scopes:
     - 'docker-worker:cache:level-{{level}}-hg-shared'
-    - 'docker-worker:cache:level-{{level}}-workspace'
+    - 'docker-worker:cache:level-{{level}}-checkouts'
 
   payload:
     # Thirty minutes should be enough for lint checks
@@ -32,7 +32,7 @@ task:
 
     cache:
       level-{{level}}-hg-shared: '/home/worker/hg-shared'
-      level-{{level}}-workspace: '/home/worker/workspace'
+      level-{{level}}-checkouts: '/home/worker/checkouts'
 
     env:
       GECKO_BASE_REPOSITORY: '{{base_repository}}'

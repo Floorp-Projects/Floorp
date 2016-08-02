@@ -46,7 +46,6 @@ static constexpr Register HeapReg = { Registers::invalid_reg };
 static constexpr Register AsmJSIonExitRegCallee = { Registers::invalid_reg };
 static constexpr Register AsmJSIonExitRegE0 = { Registers::invalid_reg };
 static constexpr Register AsmJSIonExitRegE1 = { Registers::invalid_reg };
-static constexpr Register AsmJSIonExitRegE2 = { Registers::invalid_reg };
 
 static constexpr Register AsmJSIonExitRegReturnData = { Registers::invalid_reg };
 static constexpr Register AsmJSIonExitRegReturnType = { Registers::invalid_reg };

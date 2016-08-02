@@ -24,6 +24,12 @@ NotifyProgress(NotNull<Decoder*> aDecoder)
 {
   MOZ_ASSERT(aDecoder->HasProgress() && !aDecoder->IsMetadataDecode());
 
+  // Capture the decoder's state. If we need to notify asynchronously, it's
+  // important that we don't wait until the lambda actually runs to capture the
+  // state that we're going to notify. That would both introduce data races on
+  // the decoder's state and cause inconsistencies between the NotifyProgress()
+  // calls we make off-main-thread and the notifications that RasterImage
+  // actually receives, which would cause bugs.
   Progress progress = aDecoder->TakeProgress();
   IntRect invalidRect = aDecoder->TakeInvalidRect();
   Maybe<uint32_t> frameCount = aDecoder->TakeCompleteFrameCount();

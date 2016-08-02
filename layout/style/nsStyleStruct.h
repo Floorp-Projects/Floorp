@@ -15,6 +15,7 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CSSVariableValues.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleStructContext.h"
@@ -246,6 +247,24 @@ enum nsStyleImageType {
   eStyleImageType_Element
 };
 
+struct CachedBorderImageData
+{
+  // Caller are expected to ensure that the value of aSVGViewportSize is
+  // different from the cached one since the method won't do the check.
+  void SetCachedSVGViewportSize(const mozilla::Maybe<nsSize>& aSVGViewportSize);
+  const mozilla::Maybe<nsSize>& GetCachedSVGViewportSize();
+  void PurgeCachedImages();
+  void SetSubImage(uint8_t aIndex, imgIContainer* aSubImage);
+  imgIContainer* GetSubImage(uint8_t aIndex);
+
+private:
+  // If this is a SVG border-image, we save the size of the SVG viewport that
+  // we used when rasterizing any cached border-image subimages. (The viewport
+  // size matters for percent-valued sizes & positions in inner SVG doc).
+  mozilla::Maybe<nsSize> mCachedSVGViewportSize;
+  nsCOMArray<imgIContainer> mSubImages;
+};
+
 /**
  * Represents a paintable image of one of the following types.
  * (1) A real image loaded from an external source.
@@ -358,12 +377,17 @@ struct nsStyleImage
   // during a border-image paint operation
   inline void SetSubImage(uint8_t aIndex, imgIContainer* aSubImage) const;
   inline imgIContainer* GetSubImage(uint8_t aIndex) const;
+  void PurgeCacheForViewportChange(
+    const mozilla::Maybe<nsSize>& aSVGViewportSize,
+    const bool aHasIntrinsicRatio) const;
 
 private:
   void DoCopy(const nsStyleImage& aOther);
+  void EnsureCachedBIData() const;
 
-  // Cache for border-image painting.
-  nsCOMArray<imgIContainer> mSubImages;
+  // This variable keeps some cache data for border image and is lazily
+  // allocated since it is only used in border image case.
+  mozilla::UniquePtr<CachedBorderImageData> mCachedBIData;
 
   nsStyleImageType mType;
   union {
