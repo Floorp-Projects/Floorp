@@ -153,8 +153,7 @@ js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script, bool
     }
 
     /* Wait for in progress entries to finish up. */
-    for (size_t i = 0; i < HelperThreadState().threadCount; i++) {
-        HelperThread& helper = HelperThreadState().threads[i];
+    for (auto& helper : *HelperThreadState().threads) {
         while (helper.ionBuilder() &&
                CompiledScriptMatches(compartment, script, helper.ionBuilder()->script()))
         {
@@ -327,8 +326,8 @@ js::CancelOffThreadParses(JSRuntime* rt)
         }
         if (!pending) {
             bool inProgress = false;
-            for (size_t i = 0; i < HelperThreadState().threadCount; i++) {
-                ParseTask* task = HelperThreadState().threads[i].parseTask();
+            for (auto& thread : *HelperThreadState().threads) {
+                ParseTask* task = thread.parseTask();
                 if (task && task->runtimeMatches(rt))
                     inProgress = true;
             }
@@ -615,20 +614,30 @@ GlobalHelperThreadState::ensureInitialized()
     if (threads)
         return true;
 
-    threads = js_pod_calloc<HelperThread>(threadCount);
-    if (!threads)
+    threads = js::UniquePtr<HelperThreadVector>(js_new<HelperThreadVector>());
+    if (!threads || !threads->initCapacity(threadCount))
         return false;
 
     for (size_t i = 0; i < threadCount; i++) {
-        HelperThread& helper = threads[i];
+        threads->infallibleEmplaceBack();
+        HelperThread& helper = (*threads)[i];
+
         helper.threadData.emplace(static_cast<JSRuntime*>(nullptr));
-        helper.thread = PR_CreateThread(PR_USER_THREAD,
-                                        HelperThread::ThreadMain, &helper,
-                                        PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, HELPER_STACK_SIZE);
-        if (!helper.thread || !helper.threadData->init()) {
-            finishThreads();
-            return false;
-        }
+        if (!helper.threadData->init())
+            goto error;
+
+        helper.thread = mozilla::Some(Thread(Thread::Options().setStackSize(HELPER_STACK_SIZE)));
+        if (!helper.thread->init(HelperThread::ThreadMain, &helper))
+            goto error;
+
+        continue;
+
+    error:
+        // Ensure that we do not leave uninitialized threads in the `threads`
+        // vector.
+        threads->popBack();
+        finishThreads();
+        return false;
     }
 
     return true;
@@ -660,10 +669,9 @@ GlobalHelperThreadState::finishThreads()
         return;
 
     MOZ_ASSERT(CanUseExtraThreads());
-    for (size_t i = 0; i < threadCount; i++)
-        threads[i].destroy();
-    js_free(threads);
-    threads = nullptr;
+    for (auto& thread : *threads)
+        thread.destroy();
+    threads.reset(nullptr);
 }
 
 void
@@ -704,8 +712,8 @@ GlobalHelperThreadState::hasActiveThreads(const AutoLockHelperThreadState&)
     if (!threads)
         return false;
 
-    for (size_t i = 0; i < threadCount; i++) {
-        if (!threads[i].idle())
+    for (auto& thread : *threads) {
+        if (!thread.idle())
             return true;
     }
 
@@ -730,8 +738,8 @@ GlobalHelperThreadState::checkTaskThreadLimit(size_t maxThreads) const
         return true;
 
     size_t count = 0;
-    for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].currentTask.isSome() && threads[i].currentTask->is<T>())
+    for (auto& thread : *threads) {
+        if (thread.currentTask.isSome() && thread.currentTask->is<T>())
             count++;
         if (count >= maxThreads)
             return false;
@@ -883,11 +891,14 @@ GlobalHelperThreadState::lowestPriorityUnpausedIonCompileAtThreshold(
     // such builders permitted.
     size_t numBuilderThreads = 0;
     HelperThread* thread = nullptr;
-    for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].ionBuilder() && !threads[i].pause) {
+    for (auto& thisThread : *threads) {
+        if (thisThread.ionBuilder() && !thisThread.pause) {
             numBuilderThreads++;
-            if (!thread || IonBuilderHasHigherPriority(thread->ionBuilder(), threads[i].ionBuilder()))
-                thread = &threads[i];
+            if (!thread ||
+                IonBuilderHasHigherPriority(thread->ionBuilder(), thisThread.ionBuilder()))
+            {
+                thread = &thisThread;
+            }
         }
     }
     if (numBuilderThreads < maxUnpausedIonCompilationThreads())
@@ -901,12 +912,15 @@ GlobalHelperThreadState::highestPriorityPausedIonCompile(const AutoLockHelperThr
     // Get the highest priority IonBuilder which has started compilation but
     // which was subsequently paused.
     HelperThread* thread = nullptr;
-    for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].pause) {
+    for (auto& thisThread : *threads) {
+        if (thisThread.pause) {
             // Currently, only threads with IonBuilders can be paused.
-            MOZ_ASSERT(threads[i].ionBuilder());
-            if (!thread || IonBuilderHasHigherPriority(threads[i].ionBuilder(), thread->ionBuilder()))
-                thread = &threads[i];
+            MOZ_ASSERT(thisThread.ionBuilder());
+            if (!thread ||
+                IonBuilderHasHigherPriority(thisThread.ionBuilder(), thread->ionBuilder()))
+            {
+                thread = &thisThread;
+            }
         }
     }
     return thread;
@@ -1266,7 +1280,7 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* par
 void
 HelperThread::destroy()
 {
-    if (thread) {
+    if (thread.isSome()) {
         {
             AutoLockHelperThreadState lock;
             terminate = true;
@@ -1275,7 +1289,8 @@ HelperThread::destroy()
             HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
         }
 
-        PR_JoinThread(thread);
+        thread->join();
+        thread.reset();
     }
 
     threadData.reset();
@@ -1420,11 +1435,11 @@ HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked)
 static HelperThread*
 CurrentHelperThread()
 {
-    PRThread* prThread = PR_GetCurrentThread();
+    auto threadId = ThisThread::GetId();
     HelperThread* thread = nullptr;
-    for (size_t i = 0; i < HelperThreadState().threadCount; i++) {
-        if (prThread == HelperThreadState().threads[i].thread) {
-            thread = &HelperThreadState().threads[i];
+    for (auto& thisThread : *HelperThreadState().threads) {
+        if (thisThread.thread.isSome() && threadId == thisThread.thread->get_id()) {
+            thread = &thisThread;
             break;
         }
     }
@@ -1562,8 +1577,8 @@ GlobalHelperThreadState::compressionInProgress(SourceCompressionTask* task,
         if (compressionWorklist(lock)[i] == task)
             return true;
     }
-    for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].compressionTask() == task)
+    for (auto& thread : *threads) {
+        if (thread.compressionTask() == task)
             return true;
     }
     return false;
@@ -1604,8 +1619,8 @@ GlobalHelperThreadState::compressionTaskForSource(ScriptSource* ss,
         if (task->source() == ss)
             return task;
     }
-    for (size_t i = 0; i < threadCount; i++) {
-        SourceCompressionTask* task = threads[i].compressionTask();
+    for (auto& thread : *threads) {
+        SourceCompressionTask* task = thread.compressionTask();
         if (task && task->source() == ss)
             return task;
     }
