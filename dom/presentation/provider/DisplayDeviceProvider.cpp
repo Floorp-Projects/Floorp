@@ -25,6 +25,7 @@ static mozilla::LazyLogModule gDisplayDeviceProviderLog("DisplayDeviceProvider")
 #define DISPLAY_CHANGED_NOTIFICATION "display-changed"
 #define DEFAULT_CHROME_FEATURES_PREF "toolkit.defaultChromeFeatures"
 #define CHROME_REMOTE_URL_PREF       "b2g.multiscreen.chrome_remote_url"
+#define PREF_PRESENTATION_DISCOVERABLE_RETRY_MS "dom.presentation.discoverable.retry_ms"
 
 namespace mozilla {
 namespace dom {
@@ -195,6 +196,12 @@ DisplayDeviceProvider::Init()
 
   nsresult rv;
 
+  mServerRetryMs = Preferences::GetUint(PREF_PRESENTATION_DISCOVERABLE_RETRY_MS);
+  mServerRetryTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   MOZ_ASSERT(obs);
 
@@ -239,6 +246,8 @@ DisplayDeviceProvider::Uninit()
   // Remove device from device manager when the provider is uninit
   RemoveExternalScreen();
 
+  AbortServerRetry();
+
   mInitialized = false;
   mWrappedListener->SetListener(nullptr);
   return NS_OK;
@@ -275,6 +284,8 @@ DisplayDeviceProvider::StartTCPService()
     return rv;
   }
 
+  AbortServerRetry();
+
   // 1-UA doesn't need encryption.
   rv = mPresentationService->StartServer(/* aEncrypted = */ false,
                                          /* aPort = */ 0);
@@ -283,6 +294,15 @@ DisplayDeviceProvider::StartTCPService()
   }
 
   return NS_OK;
+}
+
+void
+DisplayDeviceProvider::AbortServerRetry()
+{
+  if (mIsServerRetrying) {
+    mIsServerRetrying = false;
+    mServerRetryTimer->Cancel();
+  }
 }
 
 nsresult
@@ -381,8 +401,8 @@ DisplayDeviceProvider::OnServerStopped(nsresult aResult)
 
   // Try restart server if it is stopped abnormally.
   if (NS_FAILED(aResult)) {
-    return NS_DispatchToMainThread(
-             NewRunnableMethod(this, &DisplayDeviceProvider::StartTCPService));
+    mIsServerRetrying = true;
+    mServerRetryTimer->Init(this, mServerRetryMs, nsITimer::TYPE_ONE_SHOT);
   }
 
   return NS_OK;
@@ -503,6 +523,16 @@ DisplayDeviceProvider::Observe(nsISupports* aSubject,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
+    }
+  } else if (!strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC)) {
+    nsCOMPtr<nsITimer> timer = do_QueryInterface(aSubject);
+    if (!timer) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (timer == mServerRetryTimer) {
+      mIsServerRetrying = false;
+      StartTCPService();
     }
   }
 

@@ -1166,6 +1166,62 @@ function serverClosed() {
   run_next_test();
 }
 
+function serverRetry() {
+  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
+
+  let isRetrying = false;
+
+  let mockSDObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {},
+    registerService: function(serviceInfo, listener) {
+      Assert.ok(isRetrying, "register service after retrying startServer");
+      provider.listener = null;
+      run_next_test();
+    },
+    resolveService: function(serviceInfo, listener) {}
+  };
+
+  let mockServerObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
+    startServer: function(encrypted, port) {
+      if (!isRetrying) {
+        isRetrying = true;
+        Services.tm.currentThread.dispatch(() => {
+          this.listener.onServerStopped(Cr.NS_ERROR_FAILURE);
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+      } else {
+        this.port = 54321;
+        Services.tm.currentThread.dispatch(() => {
+          this.listener.onServerReady(this.port, this.certFingerprint);
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+      }
+    },
+    sessionRequest: function() {},
+    close: function() {},
+    id: '',
+    version: LATEST_VERSION,
+    port: 0,
+    certFingerprint: 'mock-cert-fingerprint',
+    listener: null,
+  };
+
+  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+  let listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) {},
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+    onSessionRequest: function(device, url, presentationId, controlChannel) {}
+  };
+
+  provider.listener = listener;
+}
+
 function run_test() {
   // Need profile dir to store the key / cert
   do_get_profile();
@@ -1193,6 +1249,7 @@ function run_test() {
   add_test(updateDevice);
   add_test(diffDiscovery);
   add_test(serverClosed);
+  add_test(serverRetry);
 
   run_next_test();
 }
