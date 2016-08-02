@@ -22,7 +22,7 @@ task:
   payload:
     cache:
       level-{{level}}-{{project}}-build-mulet-haz-linux-workspace: '/home/worker/workspace'
-      tooltool-cache: '/home/worker/tools/tooltool-cache'
+      tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
       relengAPIProxy: true
@@ -30,6 +30,7 @@ task:
     env:
       MOZCONFIG: 'b2g/dev/config/mozconfigs/linux64/mulet-hazards'
       TOOLTOOL_MANIFEST: 'gecko/b2g/dev/config/tooltool-manifests/linux64/hazard.manifest'
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
 
     maxRunTime: 36000
 

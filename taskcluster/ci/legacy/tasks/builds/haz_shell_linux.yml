@@ -18,13 +18,13 @@ task:
   payload:
     cache:
       level-{{level}}-{{project}}-build-linux64-haz-workspace: '/home/worker/workspace'
-      tooltool-cache: '/home/worker/tools/tooltool-cache'
+      tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
       relengAPIProxy: true
 
     env:
-      TOOLTOOL_CACHE: '/home/worker/tools/tooltool-cache'
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
       TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/linux64/hazard.manifest'
 
     maxRunTime: 36000
