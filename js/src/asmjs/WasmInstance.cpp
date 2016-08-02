@@ -30,6 +30,9 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 using mozilla::BinarySearch;
+using mozilla::BitwiseCast;
+using mozilla::IsNaN;
+using mozilla::IsSame;
 using mozilla::Swap;
 
 class SigIdSet
@@ -396,6 +399,72 @@ Instance::memoryLength() const
     return memory_->buffer().byteLength();
 }
 
+template<typename T>
+static JSObject*
+CreateCustomNaNObject(JSContext* cx, T* addr)
+{
+    MOZ_ASSERT(IsNaN(*addr));
+
+    RootedObject obj(cx, JS_NewPlainObject(cx));
+    if (!obj)
+        return nullptr;
+
+    int32_t* i32 = (int32_t*)addr;
+    RootedValue intVal(cx, Int32Value(i32[0]));
+    if (!JS_DefineProperty(cx, obj, "nan_low", intVal, JSPROP_ENUMERATE))
+        return nullptr;
+
+    if (IsSame<double, T>::value) {
+        intVal = Int32Value(i32[1]);
+        if (!JS_DefineProperty(cx, obj, "nan_high", intVal, JSPROP_ENUMERATE))
+            return nullptr;
+    }
+
+    return obj;
+}
+
+static bool
+ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, float* ret)
+{
+    RootedObject obj(cx, &v.toObject());
+    RootedValue val(cx);
+
+    int32_t i32;
+    if (!JS_GetProperty(cx, obj, "nan_low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+
+    BitwiseCast(i32, ret);
+    return true;
+}
+
+static bool
+ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, double* ret)
+{
+    RootedObject obj(cx, &v.toObject());
+    RootedValue val(cx);
+
+    uint64_t u64;
+
+    int32_t i32;
+    if (!JS_GetProperty(cx, obj, "nan_high", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+    u64 = uint32_t(i32);
+    u64 <<= 32;
+
+    if (!JS_GetProperty(cx, obj, "nan_low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+    u64 |= uint32_t(i32);
+
+    BitwiseCast(u64, ret);
+    return true;
+}
+
 bool
 Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 {
@@ -430,10 +499,20 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
                 return false;
             break;
           case ValType::F32:
+            if (JitOptions.wasmTestMode && v.isObject()) {
+                if (!ReadCustomFloat32NaNObject(cx, v, (float*)&exportArgs[i]))
+                    return false;
+                break;
+            }
             if (!RoundFloat32(cx, v, (float*)&exportArgs[i]))
                 return false;
             break;
           case ValType::F64:
+            if (JitOptions.wasmTestMode && v.isObject()) {
+                if (!ReadCustomDoubleNaNObject(cx, v, (double*)&exportArgs[i]))
+                    return false;
+                break;
+            }
             if (!ToNumber(cx, v, (double*)&exportArgs[i]))
                 return false;
             break;
@@ -537,8 +616,21 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
             return false;
         break;
       case ExprType::F32:
-        // The entry stub has converted the F32 into a double for us.
+        if (JitOptions.wasmTestMode && IsNaN(*(float*)retAddr)) {
+            retObj = CreateCustomNaNObject(cx, (float*)retAddr);
+            if (!retObj)
+                return false;
+            break;
+        }
+        args.rval().set(NumberValue(*(float*)retAddr));
+        break;
       case ExprType::F64:
+        if (JitOptions.wasmTestMode && IsNaN(*(double*)retAddr)) {
+            retObj = CreateCustomNaNObject(cx, (double*)retAddr);
+            if (!retObj)
+                return false;
+            break;
+        }
         args.rval().set(NumberValue(*(double*)retAddr));
         break;
       case ExprType::I8x16:

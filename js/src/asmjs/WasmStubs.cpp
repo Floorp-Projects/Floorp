@@ -287,10 +287,13 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
         masm.store64(ReturnReg64, Address(argv, 0));
         break;
       case ExprType::F32:
-        masm.convertFloat32ToDouble(ReturnFloat32Reg, ReturnDoubleReg);
-        MOZ_FALLTHROUGH; // as ReturnDoubleReg now contains a Double
+        if (!JitOptions.wasmTestMode)
+            masm.canonicalizeFloat(ReturnFloat32Reg);
+        masm.storeFloat32(ReturnFloat32Reg, Address(argv, 0));
+        break;
       case ExprType::F64:
-        masm.canonicalizeDouble(ReturnDoubleReg);
+        if (!JitOptions.wasmTestMode)
+            masm.canonicalizeDouble(ReturnDoubleReg);
         masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
         break;
       case ExprType::I8x16:
