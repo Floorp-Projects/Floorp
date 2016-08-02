@@ -7,14 +7,10 @@
 #ifndef MOZILLA_MEDIASTREAMLISTENER_h_
 #define MOZILLA_MEDIASTREAMLISTENER_h_
 
-#include "StreamTracks.h"
-
 namespace mozilla {
 
-class AudioSegment;
 class MediaStream;
 class MediaStreamGraph;
-class VideoSegment;
 
 enum MediaStreamGraphEvent : uint32_t {
   EVENT_FINISHED,
