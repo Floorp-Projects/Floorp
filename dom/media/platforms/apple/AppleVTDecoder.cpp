@@ -11,9 +11,9 @@
 #include "AppleUtils.h"
 #include "AppleVTDecoder.h"
 #include "AppleVTLinker.h"
+#include "mp4_demuxer/H264.h"
 #include "MediaData.h"
 #include "mozilla/ArrayUtils.h"
-#include "mp4_demuxer/H264.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
@@ -23,6 +23,22 @@
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
+
+static uint32_t ComputeMaxRefFrames(const MediaByteBuffer* aExtraData)
+{
+  uint32_t maxRefFrames = 4;
+  // Retrieve video dimensions from H264 SPS NAL.
+  mp4_demuxer::SPSData spsdata;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata)) {
+    // max_num_ref_frames determines the size of the sliding window
+    // we need to queue that many frames in order to guarantee proper
+    // pts frames ordering. Use a minimum of 4 to ensure proper playback of
+    // non compliant videos.
+    maxRefFrames =
+      std::min(std::max(maxRefFrames, spsdata.max_num_ref_frames + 1), 16u);
+  }
+  return maxRefFrames;
+}
 
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                                TaskQueue* aTaskQueue,
@@ -36,7 +52,7 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
   , mDisplayHeight(aConfig.mDisplay.height)
   , mQueuedSamples(0)
   , mTaskQueue(aTaskQueue)
-  , mMaxRefFrames(mp4_demuxer::H264::ComputeMaxRefFrames(aConfig.mExtraData))
+  , mMaxRefFrames(ComputeMaxRefFrames(aConfig.mExtraData))
   , mImageContainer(aImageContainer)
   , mInputIncoming(0)
   , mIsShutDown(false)

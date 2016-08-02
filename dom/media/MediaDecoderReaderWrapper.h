@@ -121,8 +121,6 @@ public:
   void SetCDMProxy(CDMProxy* aProxy) { mReader->SetCDMProxy(aProxy); }
 #endif
 
-  void SetVideoBlankDecode(bool aIsBlankDecode);
-
 private:
   ~MediaDecoderReaderWrapper();
 
