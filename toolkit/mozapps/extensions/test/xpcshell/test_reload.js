@@ -81,11 +81,31 @@ add_task(function* test_reloading_a_temp_addon() {
   yield tearDownAddon(addon);
 });
 
-add_task(function* test_cannot_reload_permanent_addon() {
+add_task(function* test_can_reload_permanent_addon() {
   yield promiseRestartManager();
   const addon = yield installAddon(sampleAddon.name, sampleAddon.id);
 
-  yield Assert.rejects(addon.reload(), /Only temporary add-ons can be reloaded/);
+  let disabledCalled = false;
+  let enabledCalled = false;
+  AddonManager.addAddonListener({
+    onDisabled: (aAddon) => {
+      do_check_false(enabledCalled);
+      disabledCalled = true
+    },
+    onEnabled: (aAddon) => {
+      do_check_true(disabledCalled);
+      enabledCalled = true
+    }
+  })
+
+  yield addon.reload();
+
+  do_check_true(disabledCalled);
+  do_check_true(enabledCalled);
+
+  notEqual(addon, null);
+  equal(addon.appDisabled, false);
+  equal(addon.userDisabled, false);
 
   yield tearDownAddon(addon);
 });

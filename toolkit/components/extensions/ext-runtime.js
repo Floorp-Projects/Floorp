@@ -5,8 +5,15 @@ var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
+                                  "resource://gre/modules/ExtensionManagement.jsm");
+
 var {
   EventManager,
+  SingletonEventManager,
   ignoreEvent,
 } = ExtensionUtils;
 
@@ -28,6 +35,32 @@ extensions.registerSchemaAPI("runtime", (extension, context) => {
       onMessage: context.messenger.onMessage("runtime.onMessage"),
 
       onConnect: context.messenger.onConnect("runtime.onConnect"),
+
+      onUpdateAvailable: new SingletonEventManager(context, "runtime.onUpdateAvailable", fire => {
+        let instanceID = extension.addonData.instanceID;
+        AddonManager.addUpgradeListener(instanceID, upgrade => {
+          extension.upgrade = upgrade;
+          let details = {
+            version: upgrade.version,
+          };
+          context.runSafe(fire, details);
+        });
+        return () => {
+          AddonManager.removeUpgradeListener(instanceID);
+        };
+      }).api(),
+
+      reload: () => {
+        if (extension.upgrade) {
+          // If there is a pending update, install it now.
+          extension.upgrade.install();
+        } else {
+          // Otherwise, reload the current extension.
+          AddonManager.getAddonByID(extension.id, addon => {
+            addon.reload();
+          });
+        }
+      },
 
       connect: function(extensionId, connectInfo) {
         let name = connectInfo !== null && connectInfo.name || "";
