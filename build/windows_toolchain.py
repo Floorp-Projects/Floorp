@@ -29,23 +29,18 @@ import mozpack.path as mozpath
 VS_PATTERNS = [
     {
         'pattern': 'DIA SDK/bin/**',
-        # Various tools don't like spaces in filenames. So remove it.
-        'rewrite': [('DIA SDK/', 'DIASDK/')],
         'ignore': (
             'DIA SDK/bin/arm/**',
         ),
     },
     {
         'pattern': 'DIA SDK/idl/**',
-        'rewrite': [('DIA SDK/', 'DIASDK/')],
     },
     {
         'pattern': 'DIA SDK/include/**',
-        'rewrite': [('DIA SDK/', 'DIASDK/')],
     },
     {
         'pattern': 'DIA SDK/lib/**',
-        'rewrite': [('DIA SDK/', 'DIASDK/')],
         'ignore': (
             'DIA SDK/lib/arm/**',
         ),
@@ -160,18 +155,12 @@ def resolve_files():
         for p, f in finder.find(entry['pattern']):
             assert p.startswith(('VC/', 'DIA SDK/'))
 
-            for source, dest in entry.get('rewrite', []):
-                p = p.replace(source, dest)
-
             yield p.encode('utf-8'), f
 
     for entry in SDK_PATTERNS:
         finder = FileFinder(sdk_path, find_executables=False,
                             ignore=entry.get('ignore', []))
         for p, f in finder.find(entry['pattern']):
-            # We remove the SDK version from the path so we don't have
-            # to update other configs when we change the SDK version.
-            p = p.replace('/%s/' % SDK_RELEASE, '/')
             relpath = 'SDK/%s' % p
 
             yield relpath.encode('utf-8'), f

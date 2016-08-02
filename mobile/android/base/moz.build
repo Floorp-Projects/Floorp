@@ -369,7 +369,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'gfx/FloatSize.java',
     'gfx/FullScreenState.java',
     'gfx/GeckoLayerClient.java',
-    'gfx/GLController.java',
     'gfx/ImmutableViewportMetrics.java',
     'gfx/IntSize.java',
     'gfx/JavaPanZoomController.java',

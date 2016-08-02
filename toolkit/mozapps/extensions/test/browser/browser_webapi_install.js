@@ -65,6 +65,7 @@ function* testInstall(browser, url, steps, description) {
     ];
     let eventWaiter = null;
     let receivedEvents = [];
+    let prevEvent = null;
     events.forEach(event => {
       install.addEventListener(event, e => {
         receivedEvents.push({
@@ -87,6 +88,21 @@ function* testInstall(browser, url, steps, description) {
       return new Promise((resolve, reject) => {
         function check() {
           let received = receivedEvents.shift();
+          // Skip any repeated onDownloadProgress events.
+          while (received &&
+                 received.event == prevEvent &&
+                 prevEvent == "onDownloadProgress") {
+            received = receivedEvents.shift();
+          }
+          // Wait for more events if we skipped all there were.
+          if (!received) {
+            eventWaiter = () => {
+              eventWaiter = null;
+              check();
+            }
+            return;
+          }
+          prevEvent = received.event;
           if (received.event != event) {
             let err = new Error(`expected ${event} but got ${received.event}`);
             reject(err);
@@ -100,14 +116,7 @@ function* testInstall(browser, url, steps, description) {
           }
           resolve();
         }
-        if (receivedEvents.length > 0) {
-          check();
-        } else {
-          eventWaiter = () => {
-            eventWaiter = null;
-            check();
-          }
-        }
+        check();
       });
     }
 

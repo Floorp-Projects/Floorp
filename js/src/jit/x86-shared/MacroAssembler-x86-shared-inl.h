@@ -1175,15 +1175,15 @@ MacroAssembler::truncateFloat32ToInt64(Address src, Address dest, Register temp)
     if (dest.base == esp)
         dest.offset += 2 * sizeof(int32_t);
 
-    reserveStack(2*sizeof(int32_t));
+    reserveStack(2 * sizeof(int32_t));
 
     // Set conversion to truncation.
     fnstcw(Operand(esp, 0));
     load32(Operand(esp, 0), temp);
     andl(Imm32(~0xFF00), temp);
     orl(Imm32(0xCFF), temp);
-    store32(temp, Address(esp, 1*sizeof(int32_t)));
-    fldcw(Operand(esp, 1*sizeof(int32_t)));
+    store32(temp, Address(esp, sizeof(int32_t)));
+    fldcw(Operand(esp, sizeof(int32_t)));
 
     // Load double on fp stack, convert and load regular stack.
     fld32(Operand(src));
@@ -1192,7 +1192,7 @@ MacroAssembler::truncateFloat32ToInt64(Address src, Address dest, Register temp)
     // Reset the conversion flag.
     fldcw(Operand(esp, 0));
 
-    freeStack(2*sizeof(int32_t));
+    freeStack(2 * sizeof(int32_t));
 }
 void
 MacroAssembler::truncateDoubleToInt64(Address src, Address dest, Register temp)

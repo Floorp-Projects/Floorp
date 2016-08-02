@@ -19,6 +19,7 @@
 #ifndef wasm_code_h
 #define wasm_code_h
 
+#include "asmjs/WasmBinaryToExperimentalText.h"
 #include "asmjs/WasmTypes.h"
 
 namespace js {
@@ -31,6 +32,9 @@ struct LinkData;
 struct Metadata;
 
 // A wasm CodeSegment owns the allocated executable code for a wasm module.
+// This allocation also currently includes the global data segment, which allows
+// RIP-relative access to global data on some architectures, but this will
+// change in the future to give global data its own allocation.
 
 class CodeSegment;
 typedef UniquePtr<CodeSegment> UniqueCodeSegment;
@@ -73,7 +77,7 @@ class CodeSegment
                                     HandleWasmMemoryObject memory);
     ~CodeSegment();
 
-    uint8_t* code() const { return bytes_; }
+    uint8_t* base() const { return bytes_; }
     uint8_t* globalData() const { return bytes_ + codeLength_; }
     uint32_t codeLength() const { return codeLength_; }
     uint32_t globalDataLength() const { return globalDataLength_; }
@@ -90,11 +94,11 @@ class CodeSegment
     // function code which, in turn, simplifies reasoning about how stubs
     // enter/exit.
 
-    bool containsFunctionPC(void* pc) const {
-        return pc >= code() && pc < (code() + functionCodeLength_);
+    bool containsFunctionPC(const void* pc) const {
+        return pc >= base() && pc < (base() + functionCodeLength_);
     }
-    bool containsCodePC(void* pc) const {
-        return pc >= code() && pc < (code() + codeLength_);
+    bool containsCodePC(const void* pc) const {
+        return pc >= base() && pc < (base() + codeLength_);
     }
 };
 
@@ -511,6 +515,72 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 
 typedef RefPtr<Metadata> MutableMetadata;
 typedef RefPtr<const Metadata> SharedMetadata;
+
+// Code objects own executable code and the metadata that describes it. At the
+// moment, Code objects are owned uniquely by instances since CodeSegments are
+// not shareable. However, once this restriction is removed, a single Code
+// object will be shared between a module and all its instances.
+
+class Code
+{
+    const UniqueCodeSegment  segment_;
+    const SharedMetadata     metadata_;
+    const SharedBytes        maybeBytecode_;
+    UniqueGeneratedSourceMap maybeSourceMap_;
+    CacheableCharsVector     funcLabels_;
+    bool                     profilingEnabled_;
+
+  public:
+    Code(UniqueCodeSegment segment,
+         const Metadata& metadata,
+         const ShareableBytes* maybeBytecode);
+
+    const CodeSegment& segment() const { return *segment_; }
+    const Metadata& metadata() const { return *metadata_; }
+
+    // Frame iterator support:
+
+    const CallSite* lookupCallSite(void* returnAddress) const;
+    const CodeRange* lookupRange(void* pc) const;
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS
+    const MemoryAccess* lookupMemoryAccess(void* pc) const;
+#endif
+
+    // Return the name associated with a given function index, or generate one
+    // if none was given by the module.
+
+    bool getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const;
+    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
+
+    // If the source bytecode was saved when this Code was constructed, this
+    // method will render the binary as text. Otherwise, a diagnostic string
+    // will be returned.
+
+    JSString* createText(JSContext* cx);
+    bool getLineOffsets(size_t lineno, Vector<uint32_t>& offsets) const;
+
+    // Each Code has a profiling mode that is updated to match the runtime's
+    // profiling mode when there are no other activations of the code live on
+    // the stack. Once in profiling mode, ProfilingFrameIterator can be used to
+    // asynchronously walk the stack. Otherwise, the ProfilingFrameIterator will
+    // skip any activations of this code.
+
+    MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
+    bool profilingEnabled() const { return profilingEnabled_; }
+    const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
+
+    // about:memory reporting:
+
+    void addSizeOfMisc(MallocSizeOf mallocSizeOf,
+                       Metadata::SeenSet* seenMetadata,
+                       ShareableBytes::SeenSet* seenBytes,
+                       size_t* code,
+                       size_t* data) const;
+
+    WASM_DECLARE_SERIALIZABLE(Code);
+};
+
+typedef UniquePtr<Code> UniqueCode;
 
 } // namespace wasm
 } // namespace js

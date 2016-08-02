@@ -904,17 +904,6 @@ nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress,
 
   NS_ENSURE_ARG_POINTER(aWebProgress);
 
-  // If we have an editor here, then we got a reload after making the editor.
-  // We need to blow it away and make a new one at the end of the load.
-  nsCOMPtr<mozIDOMWindowProxy> domWindow;
-  aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  if (domWindow)
-  {
-    nsIDocShell *docShell = nsPIDOMWindowOuter::From(domWindow)->GetDocShell();
-    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-    docShell->DetachEditorFromWindow();
-  }
-
   if (aIsToBeMadeEditable)
     mEditorStatus = eEditorCreationInProgress;
 

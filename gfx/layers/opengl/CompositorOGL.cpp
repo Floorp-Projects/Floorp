@@ -1463,8 +1463,6 @@ CompositorOGL::EndFrame()
 
   MOZ_ASSERT(mCurrentRenderTarget == mWindowRenderTarget, "Rendering target not properly restored");
 
-  Compositor::EndFrame();
-
 #ifdef MOZ_DUMP_PAINTING
   if (gfxEnv::DumpCompositorTextures()) {
     LayoutDeviceIntSize size;
@@ -1489,6 +1487,7 @@ CompositorOGL::EndFrame()
     CopyToTarget(mTarget, mTargetBounds.TopLeft(), Matrix());
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     mCurrentRenderTarget = nullptr;
+    Compositor::EndFrame();
     return;
   }
 
@@ -1509,6 +1508,8 @@ CompositorOGL::EndFrame()
       mGLContext->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
     }
   }
+
+  Compositor::EndFrame();
 }
 
 void

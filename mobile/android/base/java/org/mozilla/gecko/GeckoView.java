@@ -11,7 +11,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.gfx.GLController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.EventCallback;
@@ -109,15 +108,13 @@ public class GeckoView extends LayerView
 
     @WrapForJNI
     private static final class Window extends JNIObject {
-        /* package */ final GLController glController = new GLController();
-
-        static native void open(Window instance, GeckoView view, GLController glController,
+        static native void open(Window instance, GeckoView view, Compositor compositor,
                                 String chromeURI,
                                 int width, int height);
 
         @Override protected native void disposeNative();
         native void close();
-        native void reattach(GeckoView view);
+        native void reattach(GeckoView view, Compositor compositor);
         native void loadUri(String uri, int flags);
     }
 
@@ -229,25 +226,24 @@ public class GeckoView extends LayerView
             final String chromeURI = getGeckoInterface().getDefaultChromeURI();
 
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-                Window.open(window, this, window.glController,
+                Window.open(window, this, getCompositor(),
                             chromeURI,
                             metrics.widthPixels, metrics.heightPixels);
             } else {
                 GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
-                        "open", window, GeckoView.class, this, window.glController,
+                        "open", window, GeckoView.class, this, getCompositor(),
                         String.class, chromeURI,
                         metrics.widthPixels, metrics.heightPixels);
             }
         } else {
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-                window.reattach(this);
+                window.reattach(this, getCompositor());
             } else {
                 GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                        window, "reattach", GeckoView.class, this);
+                        window, "reattach", GeckoView.class, this, getCompositor());
             }
         }
 
-        setGLController(window.glController);
         super.onAttachedToWindow();
     }
 
