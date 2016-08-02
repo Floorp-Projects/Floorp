@@ -61,7 +61,7 @@ def run_and_prefix_output(prefix, args):
 
         print_line(prefix, data)
 
-    return p.wait()
+    return p.returncode
 
 
 def vcs_checkout(args):
