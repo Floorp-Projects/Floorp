@@ -122,7 +122,7 @@ JS::CallArgs::requireAtLeast(JSContext* cx, const char* fnname, unsigned require
 {
     if (length() < required) {
         char numArgsStr[40];
-        JS_snprintf(numArgsStr, sizeof numArgsStr, "%u", required - 1);
+        snprintf(numArgsStr, sizeof(numArgsStr), "%u", required - 1);
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              fnname, numArgsStr, required == 2 ? "" : "s");
         return false;

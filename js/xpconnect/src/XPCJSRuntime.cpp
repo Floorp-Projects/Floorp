@@ -3689,8 +3689,7 @@ XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
         return false;
     }
 
-    JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
-                clasp->name, si->GetJSClass()->name);
+    snprintf(name, sizeof(name), "JS Object (%s - %s)", clasp->name, si->GetJSClass()->name);
     return true;
 }
 

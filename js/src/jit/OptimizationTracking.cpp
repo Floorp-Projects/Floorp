@@ -863,7 +863,7 @@ SpewConstructor(TypeSet::Type ty, JSFunction* constructor)
     if (constructor->displayAtom())
         PutEscapedString(buf, 512, constructor->displayAtom(), 0);
     else
-        JS_snprintf(buf, mozilla::ArrayLength(buf), "??");
+        snprintf(buf, mozilla::ArrayLength(buf), "??");
 
     const char* filename;
     size_t lineno;
@@ -1231,7 +1231,7 @@ IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::readType(const IonTrackedType
             char locationBuf[20];
             if (!name) {
                 uintptr_t addr = JS_FUNC_TO_DATA_PTR(uintptr_t, fun->native());
-                JS_snprintf(locationBuf, mozilla::ArrayLength(locationBuf), "%llx", addr);
+                snprintf(locationBuf, mozilla::ArrayLength(locationBuf), "%" PRIxPTR, addr);
             }
             op_.readType("native", name, name ? nullptr : locationBuf, Nothing());
             return;
@@ -1246,7 +1246,7 @@ IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::readType(const IonTrackedType
     }
 
     const char* className = ty.objectKey()->clasp()->name;
-    JS_snprintf(buf, bufsize, "[object %s]", className);
+    snprintf(buf, bufsize, "[object %s]", className);
 
     if (tracked.hasAllocationSite()) {
         JSScript* script = tracked.script;

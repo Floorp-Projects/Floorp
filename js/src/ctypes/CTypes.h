@@ -64,7 +64,7 @@ void
 AppendUInt(mozilla::Vector<T, N, AP>& v, unsigned n)
 {
   char array[16];
-  size_t alen = JS_snprintf(array, 16, "%u", n);
+  size_t alen = snprintf(array, sizeof(array), "%u", n);
   size_t vlen = v.length();
   if (!v.resize(vlen + alen))
     return;

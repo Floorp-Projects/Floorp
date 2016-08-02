@@ -348,7 +348,7 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
                 }
                 const char* filename = script->filename() ? script->filename() : "(none)";
                 char linenoStr[15];
-                JS_snprintf(linenoStr, sizeof(linenoStr), "%" PRIuSIZE, script->lineno());
+                snprintf(linenoStr, sizeof(linenoStr), "%" PRIuSIZE, script->lineno());
                 unsigned flags = warning ? JSREPORT_WARNING : JSREPORT_ERROR;
                 return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr,
                                                     JSMSG_DEBUGGEE_WOULD_RUN,
