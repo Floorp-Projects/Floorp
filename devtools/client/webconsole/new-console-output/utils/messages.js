@@ -58,7 +58,9 @@ function transformPacket(packet) {
           // Chrome RDP doesn't have a special type for count.
           type = MESSAGE_TYPE.LOG;
           level = MESSAGE_LEVEL.DEBUG;
-          messageText = `${message.counter.label}: ${message.counter.count}`;
+          let {counter} = message;
+          let label = counter.label ? counter.label : l10n.getStr("noCounterLabel");
+          messageText = `${label}: ${counter.count}`;
           parameters = null;
           break;
       }

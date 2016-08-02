@@ -253,9 +253,9 @@ void*
 wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
 {
     switch (imm) {
-      case SymbolicAddress::Runtime:
-        return cx->runtimeAddressForJit();
-      case SymbolicAddress::RuntimeInterruptUint32:
+      case SymbolicAddress::Context:
+        return cx->contextAddressForJit();
+      case SymbolicAddress::InterruptUint32:
         return cx->runtimeAddressOfInterruptUint32();
       case SymbolicAddress::ReportOverRecursed:
         return FuncCast(WasmReportOverRecursed, Args_General0);
@@ -264,13 +264,13 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
       case SymbolicAddress::HandleTrap:
         return FuncCast(HandleTrap, Args_General1);
       case SymbolicAddress::CallImport_Void:
-        return FuncCast(Instance::callImport_void, Args_General3);
+        return FuncCast(Instance::callImport_void, Args_General4);
       case SymbolicAddress::CallImport_I32:
-        return FuncCast(Instance::callImport_i32, Args_General3);
+        return FuncCast(Instance::callImport_i32, Args_General4);
       case SymbolicAddress::CallImport_I64:
-        return FuncCast(Instance::callImport_i64, Args_General3);
+        return FuncCast(Instance::callImport_i64, Args_General4);
       case SymbolicAddress::CallImport_F64:
-        return FuncCast(Instance::callImport_f64, Args_General3);
+        return FuncCast(Instance::callImport_f64, Args_General4);
       case SymbolicAddress::CoerceInPlace_ToInt32:
         return FuncCast(CoerceInPlace_ToInt32, Args_General1);
       case SymbolicAddress::CoerceInPlace_ToNumber:
@@ -299,19 +299,19 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
       case SymbolicAddress::aeabi_uidivmod:
         return FuncCast(__aeabi_uidivmod, Args_General2);
       case SymbolicAddress::AtomicCmpXchg:
-        return FuncCast<int32_t (int32_t, int32_t, int32_t, int32_t)>(js::atomics_cmpxchg_asm_callout, Args_General4);
+        return FuncCast(atomics_cmpxchg_asm_callout, Args_General5);
       case SymbolicAddress::AtomicXchg:
-        return FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_xchg_asm_callout, Args_General3);
+        return FuncCast(atomics_xchg_asm_callout, Args_General4);
       case SymbolicAddress::AtomicFetchAdd:
-        return FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_add_asm_callout, Args_General3);
+        return FuncCast(atomics_add_asm_callout, Args_General4);
       case SymbolicAddress::AtomicFetchSub:
-        return FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_sub_asm_callout, Args_General3);
+        return FuncCast(atomics_sub_asm_callout, Args_General4);
       case SymbolicAddress::AtomicFetchAnd:
-        return FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_and_asm_callout, Args_General3);
+        return FuncCast(atomics_and_asm_callout, Args_General4);
       case SymbolicAddress::AtomicFetchOr:
-        return FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_or_asm_callout, Args_General3);
+        return FuncCast(atomics_or_asm_callout, Args_General4);
       case SymbolicAddress::AtomicFetchXor:
-        return FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_xor_asm_callout, Args_General3);
+        return FuncCast(atomics_xor_asm_callout, Args_General4);
 #endif
       case SymbolicAddress::ModD:
         return FuncCast(NumberMod, Args_Double_DoubleDouble);

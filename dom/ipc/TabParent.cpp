@@ -2944,6 +2944,13 @@ TabParent::GetTabId(uint64_t* aId)
 }
 
 NS_IMETHODIMP
+TabParent::GetOsPid(int32_t* aId)
+{
+  *aId = Manager()->Pid();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TabParent::GetHasContentOpener(bool* aResult)
 {
   *aResult = mHasContentOpener;

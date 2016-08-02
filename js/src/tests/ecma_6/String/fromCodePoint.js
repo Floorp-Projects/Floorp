@@ -7,6 +7,7 @@ print(BUGNUMBER + ": " + summary);
 // https://github.com/mathiasbynens/String.fromCodePoint/blob/master/tests/tests.js
 
 assertEq(String.fromCodePoint.length, 1);
+assertEq(String.fromCodePoint.name, 'fromCodePoint');
 assertEq(String.propertyIsEnumerable('fromCodePoint'), false);
 
 assertEq(String.fromCodePoint(''), '\0');
@@ -44,5 +45,16 @@ while (--counter >= 0) {
         result.push(0xFFFF + 1); // two code units per symbol
 }
 String.fromCodePoint.apply(null, result); // must not throw
+
+// str_fromCodePoint_one_arg (single argument, creates an inline string)
+assertEq(String.fromCodePoint(0x31), '1');
+// str_fromCodePoint_few_args (few arguments, creates an inline string)
+// JSFatInlineString::MAX_LENGTH_TWO_BYTE / 2 = floor(11 / 2) = 5
+assertEq(String.fromCodePoint(0x31, 0x32), '12');
+assertEq(String.fromCodePoint(0x31, 0x32, 0x33), '123');
+assertEq(String.fromCodePoint(0x31, 0x32, 0x33, 0x34), '1234');
+assertEq(String.fromCodePoint(0x31, 0x32, 0x33, 0x34, 0x35), '12345');
+// str_fromCodePoint (many arguments, creates a malloc string)
+assertEq(String.fromCodePoint(0x31, 0x32, 0x33, 0x34, 0x35, 0x36), '123456');
 
 reportCompare(0, 0, "ok");

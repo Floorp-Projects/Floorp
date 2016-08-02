@@ -27,7 +27,7 @@ web-platform-tests directory to make the lint tool ignore it.
 
 For example, to make the lint tool ignore all '%s'
 errors in the %s file,
-you could add the following line to the lint.whitelist file."
+you could add the following line to the lint.whitelist file.
 
 %s:%s"""
 

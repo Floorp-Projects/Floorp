@@ -8,10 +8,14 @@ requestLongerTimeout(10);
 const PAGE_1 = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
 
-// Turn off tab animations for testing
-Services.prefs.setBoolPref("browser.tabs.animate", false);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("browser.tabs.animate");
+// Turn off tab animations for testing and use a single content process
+// for these tests since we want to test tabs within the crashing process here.
+add_task(function* test_initialize() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [
+      [ "dom.ipc.processCount", 1 ],
+      [ "browser.tabs.animate", false]
+  ] });
 });
 
 // Allow tabs to restore on demand so we can test pending states

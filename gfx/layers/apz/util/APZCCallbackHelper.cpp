@@ -499,7 +499,8 @@ APZCCallbackHelper::DispatchMouseEvent(const nsCOMPtr<nsIPresShell>& aPresShell,
   bool defaultPrevented = false;
   nsContentUtils::SendMouseEvent(aPresShell, aType, aPoint.x, aPoint.y,
       aButton, aClickCount, aModifiers, aIgnoreRootScrollFrame, 0,
-      aInputSourceArg, false, &defaultPrevented, false);
+      aInputSourceArg, false, &defaultPrevented, false,
+      /* aIsWidgetEventSynthesized = */ false);
   return defaultPrevented;
 }
 

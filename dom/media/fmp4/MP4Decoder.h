@@ -38,6 +38,11 @@ public:
   static bool CanHandleMediaType(const nsAString& aMIMEType,
                                  DecoderDoctorDiagnostics* aDiagnostics);
 
+  // Return true if aMimeType is a one of the strings used by our demuxers to
+  // identify H264. Does not parse general content type strings, i.e. white
+  // space matters.
+  static bool IsH264(const nsACString& aMimeType);
+
   // Returns true if the MP4 backend is preffed on.
   static bool IsEnabled();
 

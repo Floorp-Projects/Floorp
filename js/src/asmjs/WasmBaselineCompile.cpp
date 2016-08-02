@@ -2554,44 +2554,90 @@ class BaseCompiler
     {
         AnyReg src;
         RegI32 dest;
+        bool isAsmJS;
+        bool isUnsigned;
+
       public:
-        OutOfLineTruncateF32OrF64ToI32(AnyReg src, RegI32 dest)
+        OutOfLineTruncateF32OrF64ToI32(AnyReg src, RegI32 dest, bool isAsmJS, bool isUnsigned)
           : src(src),
-            dest(dest)
-        {}
+            dest(dest),
+            isAsmJS(isAsmJS),
+            isUnsigned(isUnsigned)
+        {
+            MOZ_ASSERT_IF(isAsmJS, !isUnsigned);
+        }
 
         virtual void generate(MacroAssembler& masm) {
-            // isWasm must be true (for now), see bug 1279876 for related issues.
-            bool isWasm = true;
             bool isFloat = src.tag == AnyReg::F32;
             FloatRegister fsrc = isFloat ? src.f32().reg : src.f64().reg;
-            saveVolatileReturnGPR(masm);
-            masm.outOfLineTruncateSlow(fsrc, dest.reg, isFloat, isWasm);
-            restoreVolatileReturnGPR(masm);
-            masm.jump(rejoin());
+            if (isAsmJS) {
+                saveVolatileReturnGPR(masm);
+                masm.outOfLineTruncateSlow(fsrc, dest.reg, isFloat, /* isAsmJS */ true);
+                restoreVolatileReturnGPR(masm);
+                masm.jump(rejoin());
+            } else {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+                if (isFloat)
+                    masm.outOfLineWasmTruncateFloat32ToInt32(fsrc, isUnsigned, rejoin());
+                else
+                    masm.outOfLineWasmTruncateDoubleToInt32(fsrc, isUnsigned, rejoin());
+#else
+                MOZ_CRASH("BaseCompiler platform hook: OutOfLineTruncateF32OrF64ToI32 wasm");
+#endif
+            }
         }
     };
 
     MOZ_MUST_USE
-    bool truncateF32ToI32(RegF32 src, RegI32 dest) {
-        OutOfLineCode* ool =
-            addOutOfLineCode(new (alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src),
-                                                                         dest));
-        if (!ool)
-            return false;
-        masm.branchTruncateFloat32ToInt32(src.reg, dest.reg, ool->entry());
+    bool truncateF32ToI32(RegF32 src, RegI32 dest, bool isUnsigned) {
+        OutOfLineCode* ool;
+        if (isCompilingAsmJS()) {
+            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, true, false);
+            ool = addOutOfLineCode(ool);
+            if (!ool)
+                return false;
+            masm.branchTruncateFloat32ToInt32(src.reg, dest.reg, ool->entry());
+        } else {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, false, isUnsigned);
+            ool = addOutOfLineCode(ool);
+            if (!ool)
+                return false;
+            if (isUnsigned)
+                masm.wasmTruncateFloat32ToUInt32(src.reg, dest.reg, ool->entry());
+            else
+                masm.wasmTruncateFloat32ToInt32(src.reg, dest.reg, ool->entry());
+#else
+            MOZ_CRASH("BaseCompiler platform hook: truncateF32ToI32 wasm");
+#endif
+        }
         masm.bind(ool->rejoin());
         return true;
     }
 
     MOZ_MUST_USE
-    bool truncateF64ToI32(RegF64 src, RegI32 dest) {
-        OutOfLineCode* ool =
-            addOutOfLineCode(new (alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src),
-                                                                         dest));
-        if (!ool)
-            return false;
-        masm.branchTruncateDoubleToInt32(src.reg, dest.reg, ool->entry());
+    bool truncateF64ToI32(RegF64 src, RegI32 dest, bool isUnsigned) {
+        OutOfLineCode* ool;
+        if (isCompilingAsmJS()) {
+            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, true, false);
+            ool = addOutOfLineCode(ool);
+            if (!ool)
+                return false;
+            masm.branchTruncateDoubleToInt32(src.reg, dest.reg, ool->entry());
+        } else {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, false, isUnsigned);
+            ool = addOutOfLineCode(ool);
+            if (!ool)
+                return false;
+            if (isUnsigned)
+                masm.wasmTruncateDoubleToUInt32(src.reg, dest.reg, ool->entry());
+            else
+                masm.wasmTruncateDoubleToInt32(src.reg, dest.reg, ool->entry());
+#else
+            MOZ_CRASH("BaseCompiler platform hook: truncateF32ToI32 wasm");
+#endif
+        }
         masm.bind(ool->rejoin());
         return true;
     }
@@ -2601,6 +2647,7 @@ class BaseCompiler
     {
         AnyReg src;
         bool isUnsigned;
+
       public:
         OutOfLineTruncateCheckF32OrF64ToI64(AnyReg src, bool isUnsigned)
           : src(src),
@@ -2608,10 +2655,12 @@ class BaseCompiler
         {}
 
         virtual void generate(MacroAssembler& masm) {
-            bool isFloat = src.tag == AnyReg::F32;
-            FloatRegister fsrc = isFloat ? src.f32().reg : src.f64().reg;
-            masm.outOfLineWasmTruncateCheck(fsrc, isFloat ? MIRType::Float32 : MIRType::Double,
-                                            MIRType::Int64, isUnsigned, rejoin());
+            if (src.tag == AnyReg::F32)
+                masm.outOfLineWasmTruncateFloat32ToInt64(src.f32().reg, isUnsigned, rejoin());
+            else if (src.tag == AnyReg::F64)
+                masm.outOfLineWasmTruncateDoubleToInt64(src.f64().reg, isUnsigned, rejoin());
+            else
+                MOZ_CRASH("unexpected type");
         }
     };
 #endif
@@ -4276,7 +4325,7 @@ BaseCompiler::emitTruncateF32ToI32()
 {
     RegF32 r0 = popF32();
     RegI32 i0 = needI32();
-    if (!truncateF32ToI32(r0, i0))
+    if (!truncateF32ToI32(r0, i0, isUnsigned))
         return false;
     freeF32(r0);
     pushI32(i0);
@@ -4309,7 +4358,7 @@ BaseCompiler::emitTruncateF64ToI32()
 {
     RegF64 r0 = popF64();
     RegI32 i0 = needI32();
-    if (!truncateF64ToI32(r0, i0))
+    if (!truncateF64ToI32(r0, i0, isUnsigned))
         return false;
     freeF64(r0);
     pushI32(i0);

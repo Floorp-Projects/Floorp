@@ -145,7 +145,7 @@ PR_GetCurrentThread()
     if (!thread) {
         thread = js_new<PRThread>(nullptr, nullptr, false);
         if (!thread)
-            MOZ_CRASH();
+            return nullptr;
         pthread_setspecific(gSelfThreadIndex, thread);
     }
     return thread;

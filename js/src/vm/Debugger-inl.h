@@ -69,12 +69,6 @@ js::Debugger::onExceptionUnwind(JSContext* cx, AbstractFramePtr frame)
 /* static */ void
 js::Debugger::onNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance)
 {
-    auto& wasmInstances = cx->compartment()->wasmInstances;
-    if (!wasmInstances.initialized() && !wasmInstances.init())
-        return;
-    if (!wasmInstances.putNew(wasmInstance))
-        return;
-
     if (cx->compartment()->isDebuggee())
         slowPathOnNewWasmInstance(cx, wasmInstance);
 }

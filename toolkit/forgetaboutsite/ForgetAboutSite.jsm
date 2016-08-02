@@ -213,8 +213,23 @@ this.ForgetAboutSite = {
         (Components.isSuccessCode(status) ? resolve : reject)(status);
       });
     }).catch(e => {
-      dump("Web Push may not be available.\n");
+      Cu.reportError("Exception thrown while clearing Push notifications: " +
+                     e.toString());
     }));
+
+    // HSTS and HPKP
+    // TODO (bug 1290529): also remove HSTS/HPKP information for subdomains.
+    // Since we can't enumerate the information in the site security service
+    // (bug 1115712), we can't implement this right now.
+    try {
+      let sss = Cc["@mozilla.org/ssservice;1"].
+                getService(Ci.nsISiteSecurityService);
+      sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, httpsURI, 0);
+      sss.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, httpsURI, 0);
+    } catch (e) {
+      Cu.reportError("Exception thrown while clearing HSTS/HPKP: " +
+                     e.toString());
+    }
 
     return Promise.all(promises);
   }

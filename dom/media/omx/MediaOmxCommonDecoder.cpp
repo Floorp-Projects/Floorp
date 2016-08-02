@@ -231,8 +231,8 @@ MediaOmxCommonDecoder::CallSeek(const SeekTarget& aTarget, dom::Promise* aPromis
     return;
   }
 
+  DiscardOngoingSeekIfExists();
   mSeekDOMPromise = aPromise;
-  mSeekRequest.DisconnectIfExists();
   mSeekRequest.Begin(mAudioOffloadPlayer->Seek(aTarget)
     ->Then(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
            &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));

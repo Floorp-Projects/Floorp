@@ -45,9 +45,12 @@ mkdir -p /etc/mercurial
 cat >/etc/mercurial/hgrc <<EOF
 # By default the progress bar starts after 3s and updates every 0.1s. We
 # change this so it shows and updates every 1.0s.
+# We also tell progress to assume a TTY is present so updates are printed
+# even if there is no known TTY.
 [progress]
 delay = 1.0
 refresh = 1.0
+assume-tty = true
 
 [web]
 cacerts = /etc/ssl/certs/ca-certificates.crt
