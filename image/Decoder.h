@@ -28,6 +28,40 @@ namespace Telemetry {
 
 namespace image {
 
+struct DecoderTelemetry final
+{
+  DecoderTelemetry(Telemetry::ID aSpeedHistogram,
+                   size_t aBytesDecoded,
+                   uint32_t aChunkCount,
+                   TimeDuration aDecodeTime)
+    : mSpeedHistogram(aSpeedHistogram)
+    , mBytesDecoded(aBytesDecoded)
+    , mChunkCount(aChunkCount)
+    , mDecodeTime(aDecodeTime)
+  { }
+
+  /// @return our decoder's speed, in KBps.
+  int32_t Speed() const
+  {
+    return mBytesDecoded / (1024 * mDecodeTime.ToSeconds());
+  }
+
+  /// @return our decoder's decode time, in microseconds.
+  int32_t DecodeTimeMicros() { return mDecodeTime.ToMicroseconds(); }
+
+  /// The per-image-format telemetry ID for recording our decoder's speed.
+  const Telemetry::ID mSpeedHistogram;
+
+  /// The number of bytes of input our decoder processed.
+  const size_t mBytesDecoded;
+
+  /// The number of chunks our decoder's input was divided into.
+  const uint32_t mChunkCount;
+
+  /// The amount of time our decoder spent inside DoDecode().
+  const TimeDuration mDecodeTime;
+};
+
 class Decoder
 {
 public:
@@ -191,22 +225,6 @@ public:
     return bool(mDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY);
   }
 
-  size_t BytesDecoded() const
-  {
-    MOZ_ASSERT(mIterator);
-    return mIterator->ByteCount();
-  }
-
-  // The amount of time we've spent inside DoDecode() so far for this decoder.
-  TimeDuration DecodeTime() const { return mDecodeTime; }
-
-  // The number of chunks this decoder's input was divided into.
-  uint32_t ChunkCount() const
-  {
-    MOZ_ASSERT(mIterator);
-    return mIterator->ChunkCount();
-  }
-
   /**
    * @return the number of complete animation frames which have been decoded so
    * far, if it has changed since the last call to TakeCompleteFrameCount();
@@ -322,6 +340,9 @@ public:
 
   /// @return the metadata we collected about this image while decoding.
   const ImageMetadata& GetImageMetadata() { return mImageMetadata; }
+
+  /// @return performance telemetry we collected while decoding.
+  DecoderTelemetry Telemetry();
 
   /**
    * @return a weak pointer to the image associated with this decoder. Illegal

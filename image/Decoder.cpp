@@ -267,6 +267,16 @@ Decoder::TakeCompleteFrameCount()
   return finishedNewFrame ? Some(GetCompleteFrameCount()) : Nothing();
 }
 
+DecoderTelemetry
+Decoder::Telemetry()
+{
+  MOZ_ASSERT(mIterator);
+  return DecoderTelemetry(SpeedHistogram(),
+                          mIterator->ByteCount(),
+                          mIterator->ChunkCount(),
+                          mDecodeTime);
+}
+
 nsresult
 Decoder::AllocateFrame(uint32_t aFrameNum,
                        const gfx::IntSize& aOutputSize,
