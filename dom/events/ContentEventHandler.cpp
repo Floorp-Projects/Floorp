@@ -420,6 +420,11 @@ static bool IsContentBR(nsIContent* aContent)
                                 eIgnoreCase);
 }
 
+static bool IsMozBR(nsIContent* aContent)
+{
+  return aContent->IsHTMLElement(nsGkAtoms::br) && !IsContentBR(aContent);
+}
+
 static void ConvertToNativeNewlines(nsAFlatString& aString)
 {
 #if defined(XP_WIN)
@@ -1450,7 +1455,7 @@ ContentEventHandler::GetNodePositionHavingFlatText(nsINode* aNode,
 }
 
 ContentEventHandler::FrameAndNodeOffset
-ContentEventHandler::GetFirstFrameHavingFlatTextInRange(nsRange* aRange)
+ContentEventHandler::GetFirstFrameInRangeForTextRect(nsRange* aRange)
 {
   NodePosition nodePosition;
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
@@ -1479,7 +1484,8 @@ ContentEventHandler::GetFirstFrameHavingFlatTextInRange(nsRange* aRange)
 
     // If the element node causes a line break before it, it's the first
     // node causing text.
-    if (ShouldBreakLineBefore(node->AsContent(), mRootContent)) {
+    if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
+        IsMozBR(node->AsContent())) {
       nodePosition.mNode = node;
       nodePosition.mOffset = 0;
     }
@@ -1496,7 +1502,7 @@ ContentEventHandler::GetFirstFrameHavingFlatTextInRange(nsRange* aRange)
 }
 
 ContentEventHandler::FrameAndNodeOffset
-ContentEventHandler::GetLastFrameHavingFlatTextInRange(nsRange* aRange)
+ContentEventHandler::GetLastFrameInRangeForTextRect(nsRange* aRange)
 {
   NodePosition nodePosition;
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
@@ -1549,7 +1555,8 @@ ContentEventHandler::GetLastFrameHavingFlatTextInRange(nsRange* aRange)
       break;
     }
 
-    if (ShouldBreakLineBefore(node->AsContent(), mRootContent)) {
+    if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
+        IsMozBR(node->AsContent())) {
       nodePosition.mNode = node;
       nodePosition.mOffset = 0;
       break;
@@ -1598,8 +1605,10 @@ ContentEventHandler::FrameRelativeRect
 ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame)
 {
   // Note that this method should be called only with an element's frame whose
-  // open tag causes a line break.
-  MOZ_ASSERT(ShouldBreakLineBefore(aFrame->GetContent(), mRootContent));
+  // open tag causes a line break or moz-<br> for computing empty last line's
+  // rect.
+  MOZ_ASSERT(ShouldBreakLineBefore(aFrame->GetContent(), mRootContent) ||
+             IsMozBR(aFrame->GetContent()));
 
   nsIFrame* frameForFontMetrics = aFrame;
 
@@ -1703,9 +1712,9 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
     }
 
     // Get the first frame which causes some text after the offset.
-    FrameAndNodeOffset firstFrame = GetFirstFrameHavingFlatTextInRange(range);
+    FrameAndNodeOffset firstFrame = GetFirstFrameInRangeForTextRect(range);
 
-    // If GetFirstFrameHavingFlatTextInRange() does not return valid frame,
+    // If GetFirstFrameInRangeForTextRect() does not return valid frame,
     // that means that there is no remaining content which causes text.
     // So, in such case, we must have reached the end of the contents.
     if (!firstFrame.IsValid()) {
@@ -1731,7 +1740,8 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
     AutoTArray<nsRect, 16> charRects;
 
-    if (ShouldBreakLineBefore(firstContent, mRootContent)) {
+    if (ShouldBreakLineBefore(firstContent, mRootContent) ||
+        IsMozBR(firstContent)) {
       nsRect brRect;
       // If the frame is <br> frame, we can always trust
       // GetLineBreakerRectBefore().  Otherwise, "after" the last character
@@ -1772,7 +1782,7 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
           return NS_ERROR_UNEXPECTED;
         }
         FrameAndNodeOffset frameForPrevious =
-          GetFirstFrameHavingFlatTextInRange(range);
+          GetFirstFrameInRangeForTextRect(range);
         startsBetweenLineBreaker = frameForPrevious.mFrame == firstFrame.mFrame;
       }
     } else {
@@ -1932,9 +1942,9 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   iter->Init(range);
 
   // Get the first frame which causes some text after the offset.
-  FrameAndNodeOffset firstFrame = GetFirstFrameHavingFlatTextInRange(range);
+  FrameAndNodeOffset firstFrame = GetFirstFrameInRangeForTextRect(range);
 
-  // If GetFirstFrameHavingFlatTextInRange() does not return valid frame,
+  // If GetFirstFrameInRangeForTextRect() does not return valid frame,
   // that means that there is no remaining content which causes text.
   // So, in such case, we must have reached the end of the contents.
   if (!firstFrame.IsValid()) {
@@ -1985,7 +1995,7 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   EnsureNonEmptyRect(rect);
 
   // Get the last frame which causes some text in the range.
-  FrameAndNodeOffset lastFrame = GetLastFrameHavingFlatTextInRange(range);
+  FrameAndNodeOffset lastFrame = GetLastFrameInRangeForTextRect(range);
   if (NS_WARN_IF(!lastFrame.IsValid())) {
     return NS_ERROR_FAILURE;
   }
@@ -2080,6 +2090,7 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
       rect.UnionRect(rect, frameRect);
     }
   }
+
   aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
   // Returning empty rect may cause native IME confused, let's make sure to
