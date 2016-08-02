@@ -131,6 +131,39 @@ PresentationIPCService::TerminateSession(const nsAString& aSessionId,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresentationIPCService::ReconnectSession(const nsAString& aUrl,
+                                         const nsAString& aSessionId,
+                                         uint8_t aRole,
+                                         nsIPresentationServiceCallback* aCallback)
+{
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+
+  if (aRole != nsIPresentationService::ROLE_CONTROLLER) {
+    MOZ_ASSERT(false, "Only controller can call ReconnectSession.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return SendRequest(aCallback, ReconnectSessionRequest(nsString(aUrl),
+                                                        nsString(aSessionId),
+                                                        aRole));
+}
+
+NS_IMETHODIMP
+PresentationIPCService::BuildTransport(const nsAString& aSessionId,
+                                       uint8_t aRole)
+{
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+
+  if (aRole != nsIPresentationService::ROLE_CONTROLLER) {
+    MOZ_ASSERT(false, "Only controller can call ReconnectSession.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return SendRequest(nullptr, BuildTransportRequest(nsString(aSessionId),
+                                                    aRole));
+}
+
 nsresult
 PresentationIPCService::SendRequest(nsIPresentationServiceCallback* aCallback,
                                     const PresentationIPCRequest& aRequest)
@@ -175,6 +208,13 @@ PresentationIPCService::RegisterSessionListener(const nsAString& aSessionId,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
+
+  nsCOMPtr<nsIPresentationSessionListener> listener;
+  if (mSessionListeners.Get(aSessionId, getter_AddRefs(listener))) {
+    NS_WARN_IF(NS_FAILED(listener->NotifyReplaced()));
+    mSessionListeners.Put(aSessionId, aListener);
+    return NS_OK;
+  }
 
   mSessionListeners.Put(aSessionId, aListener);
   if (sPresentationChild) {
@@ -243,6 +283,13 @@ PresentationIPCService::GetWindowIdBySessionId(const nsAString& aSessionId,
                                                uint64_t* aWindowId)
 {
   return GetWindowIdBySessionIdInternal(aSessionId, aWindowId);
+}
+
+NS_IMETHODIMP
+PresentationIPCService::UpdateWindowIdBySessionId(const nsAString& aSessionId,
+                                                  const uint64_t aWindowId)
+{
+  return UpdateWindowIdBySessionIdInternal(aSessionId, aWindowId);
 }
 
 nsresult
