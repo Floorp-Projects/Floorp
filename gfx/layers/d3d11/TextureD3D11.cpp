@@ -651,34 +651,11 @@ D3D11TextureData::BorrowDrawTarget()
 bool
 D3D11TextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
-  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
-
-  if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface (D3D11).";
-    return false;
-  }
-
-  DataSourceSurface::MappedSurface sourceMap;
-  if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
-    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface (D3D11).";
-    return false;
-  }
-
-  RefPtr<ID3D11Device> device;
-  mTexture->GetDevice(getter_AddRefs(device));
-  RefPtr<ID3D11DeviceContext> ctx;
-  device->GetImmediateContext(getter_AddRefs(ctx));
-
-  D3D11_BOX box;
-  box.front = 0;
-  box.back = 1;
-  box.top = box.left = 0;
-  box.right = aSurface->GetSize().width;
-  box.bottom = aSurface->GetSize().height;
-  ctx->UpdateSubresource(mTexture, 0, &box, sourceMap.mData, sourceMap.mStride, 0);
-  srcSurf->Unmap();
-
-  return true;
+  // Supporting texture updates after creation requires an ID3D11DeviceContext and those
+  // aren't threadsafe. We'd need to either lock, or have a device for whatever thread
+  // this runs on and we're trying to avoid extra devices (bug 1284672).
+  MOZ_ASSERT(false, "UpdateFromSurface not supported for D3D11! Use CreateFromSurface instead");
+  return false;
 }
 
 DXGITextureHostD3D11::DXGITextureHostD3D11(TextureFlags aFlags,
