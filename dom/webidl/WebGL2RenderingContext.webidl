@@ -10,27 +10,21 @@
 typedef long long GLint64; // Should this be int64?
 typedef unsigned long long GLuint64;
 
-[Pref="webgl.enable-webgl2"]
 interface WebGLQuery {
 };
 
-[Pref="webgl.enable-webgl2"]
 interface WebGLSampler {
 };
 
-[Pref="webgl.enable-webgl2"]
 interface WebGLSync {
 };
 
-[Pref="webgl.enable-webgl2"]
 interface WebGLTransformFeedback {
 };
 
-[Pref="webgl.enable-webgl2"]
 interface WebGLVertexArrayObject {
 };
 
-[Pref="webgl.enable-webgl2"]
 interface WebGL2RenderingContext : WebGLRenderingContext
 {
     const GLenum READ_BUFFER                                   = 0x0C02;
