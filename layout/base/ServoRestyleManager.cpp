@@ -366,11 +366,4 @@ ServoRestyleManager::SnapshotForElement(Element* aElement)
   return mModifiedElements.LookupOrAdd(aElement, aElement);
 }
 
-nsresult
-ServoRestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
-{
-  return base_type::ProcessRestyledFrames(aChangeList, *PresContext(),
-                                          mOverflowChangedTracker);
-}
-
 } // namespace mozilla

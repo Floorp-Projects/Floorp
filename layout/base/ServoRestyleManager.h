@@ -74,7 +74,6 @@ public:
   }
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
-  nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
 
   bool HasPendingRestyles() { return !mModifiedElements.IsEmpty(); }
 
