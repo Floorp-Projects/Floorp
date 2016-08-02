@@ -1642,6 +1642,7 @@ DOMXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper, Handl
                     // It's gone?
                     return xpc::Throw(cx, NS_ERROR_FAILURE);
                 }
+                ExposeObjectToActiveJS(obj);
                 desc.value().setObject(*obj);
                 FillPropertyDescriptor(desc, wrapper, true);
                 return JS_WrapPropertyDescriptor(cx, desc);
@@ -1974,6 +1975,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
             JSObject* childObj = cwin->FastGetGlobalJSObject();
             if (MOZ_UNLIKELY(!childObj))
                 return xpc::Throw(cx, NS_ERROR_FAILURE);
+            ExposeObjectToActiveJS(childObj);
             FillPropertyDescriptor(desc, wrapper, ObjectValue(*childObj),
                                    /* readOnly = */ true);
             return JS_WrapPropertyDescriptor(cx, desc);
