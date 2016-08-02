@@ -67,7 +67,6 @@ public:
    *                        the principal of the sheet passed to the
    *                        constructor.
    * @param aLineNumber the line number of the first line of the sheet.
-   * @param aParsingMode  see SheetParsingMode in css/Loader.h
    * @param aReusableSheets style sheets that can be reused by an @import.
    *                        This can be nullptr.
    */
@@ -76,7 +75,6 @@ public:
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
                       uint32_t         aLineNumber,
-                      mozilla::css::SheetParsingMode aParsingMode,
                       mozilla::css::LoaderReusableStyleSheets* aReusableSheets =
                         nullptr);
 

@@ -13,10 +13,10 @@
 
 namespace mozilla {
 
-StyleSheet::StyleSheet(StyleBackendType aType)
+StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode)
   : mDocument(nullptr)
   , mOwningNode(nullptr)
-  , mParsingMode(css::eUserSheetFeatures)
+  , mParsingMode(aParsingMode)
   , mType(aType)
   , mDisabled(false)
 {
