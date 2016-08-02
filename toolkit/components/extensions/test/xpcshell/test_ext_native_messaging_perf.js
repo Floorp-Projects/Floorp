@@ -10,6 +10,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 Cu.import("resource://gre/modules/Subprocess.jsm");
 
 const MAX_ROUND_TRIP_TIME_MS = AppConstants.DEBUG || AppConstants.ASAN ? 36 : 18;
+const MAX_RETRIES = 5;
 
 
 const ECHO_BODY = String.raw`
@@ -43,61 +44,68 @@ add_task(function* setup() {
 add_task(function* test_round_trip_perf() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      let port = browser.runtime.connectNative("echo");
+      browser.test.onMessage.addListener(msg => {
+        if (msg != "run-tests") {
+          return;
+        }
 
-      function next() {
-        port.postMessage({
-          "Lorem": {
-            "ipsum": {
-              "dolor": [
-                "sit amet",
-                "consectetur adipiscing elit",
-                "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-              ],
-              "Ut enim": [
-                "ad minim veniam",
-                "quis nostrud exercitation ullamco",
-                "laboris nisi ut aliquip ex ea commodo consequat.",
-              ],
-              "Duis": [
-                "aute irure dolor in reprehenderit in",
-                "voluptate velit esse cillum dolore eu",
-                "fugiat nulla pariatur.",
-              ],
-              "Excepteur": [
-                "sint occaecat cupidatat non proident",
-                "sunt in culpa qui officia deserunt",
-                "mollit anim id est laborum.",
-              ],
+        let port = browser.runtime.connectNative("echo");
+
+        function next() {
+          port.postMessage({
+            "Lorem": {
+              "ipsum": {
+                "dolor": [
+                  "sit amet",
+                  "consectetur adipiscing elit",
+                  "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                ],
+                "Ut enim": [
+                  "ad minim veniam",
+                  "quis nostrud exercitation ullamco",
+                  "laboris nisi ut aliquip ex ea commodo consequat.",
+                ],
+                "Duis": [
+                  "aute irure dolor in reprehenderit in",
+                  "voluptate velit esse cillum dolore eu",
+                  "fugiat nulla pariatur.",
+                ],
+                "Excepteur": [
+                  "sint occaecat cupidatat non proident",
+                  "sunt in culpa qui officia deserunt",
+                  "mollit anim id est laborum.",
+                ],
+              },
             },
-          },
+          });
+        }
+
+        const COUNT = 1000;
+        let now;
+        function finish() {
+          let roundTripTime = (Date.now() - now) / COUNT;
+
+          port.disconnect();
+          browser.test.sendMessage("result", roundTripTime);
+        }
+
+        let count = 0;
+        port.onMessage.addListener(msg => {
+          if (count == 0) {
+            // Skip the first round, since it includes the time it takes
+            // the app to start up.
+            now = Date.now();
+          }
+
+          if (count++ <= COUNT) {
+            next();
+          } else {
+            finish();
+          }
         });
-      }
 
-      const COUNT = 1000;
-      let now;
-      function finish() {
-        let roundTripTime = (Date.now() - now) / COUNT;
-
-        browser.test.sendMessage("result", roundTripTime);
-      }
-
-      let count = 0;
-      port.onMessage.addListener(msg => {
-        if (count == 0) {
-          // Skip the first round, since it includes the time it takes
-          // the app to start up.
-          now = Date.now();
-        }
-
-        if (count++ <= COUNT) {
-          next();
-        } else {
-          finish();
-        }
+        next();
       });
-
-      next();
     },
     manifest: {
       permissions: ["nativeMessaging"],
@@ -106,9 +114,14 @@ add_task(function* test_round_trip_perf() {
 
   yield extension.startup();
 
-  let roundTripTime = yield extension.awaitMessage("result");
-  ok(roundTripTime <= MAX_ROUND_TRIP_TIME_MS,
-     `Expected round trip time (${roundTripTime}ms) to be less than ${MAX_ROUND_TRIP_TIME_MS}ms`);
+  let roundTripTime = Infinity;
+  for (let i = 0; i < MAX_RETRIES && roundTripTime > MAX_ROUND_TRIP_TIME_MS; i++) {
+    extension.sendMessage("run-tests");
+    roundTripTime = yield extension.awaitMessage("result");
+  }
 
   yield extension.unload();
+
+  ok(roundTripTime <= MAX_ROUND_TRIP_TIME_MS,
+     `Expected round trip time (${roundTripTime}ms) to be less than ${MAX_ROUND_TRIP_TIME_MS}ms`);
 });
