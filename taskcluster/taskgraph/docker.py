@@ -10,11 +10,14 @@ import json
 import os
 import subprocess
 import tarfile
+import tempfile
 import urllib2
+import which
 
 from taskgraph.util import docker
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
+IMAGE_DIR = os.path.join(GECKO, 'testing', 'docker')
 INDEX_URL = 'https://index.taskcluster.net/v1/task/docker.images.v1.{}.{}.hash.{}'
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
@@ -61,3 +64,49 @@ def load_image_by_task_id(task_id):
 
     print("The requested docker image is now available as", name)
     print("Try: docker run -ti --rm {} bash".format(name))
+
+
+def build_image(name):
+    """Build a Docker image of specified name.
+
+    Output from image building process will be printed to stdout.
+    """
+    if not name:
+        raise ValueError('must provide a Docker image name')
+
+    image_dir = os.path.join(IMAGE_DIR, name)
+    if not os.path.isdir(image_dir):
+        raise Exception('image directory does not exist: %s' % image_dir)
+
+    tag = docker.docker_image(name, default_version='latest')
+
+    docker_bin = which.which('docker')
+
+    # Verify that Docker is working.
+    try:
+        subprocess.check_output([docker_bin, '--version'])
+    except subprocess.CalledProcessError:
+        raise Exception('Docker server is unresponsive. Run `docker ps` and '
+                        'check that Docker is running')
+
+    # We obtain a context archive and build from that. Going through the
+    # archive creation is important: it normalizes things like file owners
+    # and mtimes to increase the chances that image generation is
+    # deterministic.
+    fd, context_path = tempfile.mkstemp()
+    os.close(fd)
+    try:
+        docker.create_context_tar(GECKO, image_dir, context_path, name)
+        docker.build_from_context(docker_bin, context_path, name, tag)
+    finally:
+        os.unlink(context_path)
+
+    print('Successfully built %s and tagged with %s' % (name, tag))
+
+    if tag.endswith(':latest'):
+        print('*' * 50)
+        print('WARNING: no VERSION file found in image directory.')
+        print('Image is not suitable for deploying/pushing.')
+        print('Create an image suitable for deploying/pushing by creating')
+        print('a VERSION file in the image directory.')
+        print('*' * 50)

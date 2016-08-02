@@ -34,39 +34,9 @@ MatchIIDPtrKey(const PLDHashEntryHdr* entry, const void* key)
 }
 
 static PLDHashNumber
-HashNativeKey(const void* key)
+HashNativeKey(const void* data)
 {
-    auto Key = static_cast<const XPCNativeSetKey*>(key);
-
-    PLDHashNumber h = 0;
-
-    XPCNativeSet* Set = Key->GetBaseSet();
-    XPCNativeInterface* Addition = Key->GetAddition();
-    uint16_t Position = Key->GetPosition();
-
-    if (!Set) {
-        MOZ_ASSERT(Addition, "bad key");
-        // This would be an XOR like below.
-        // But "0 ^ x == x". So it does not matter.
-        h = (js::HashNumber) NS_PTR_TO_INT32(Addition) >> 2;
-    } else {
-        XPCNativeInterface** Current = Set->GetInterfaceArray();
-        uint16_t count = Set->GetInterfaceCount();
-        if (Addition) {
-            count++;
-            for (uint16_t i = 0; i < count; i++) {
-                if (i == Position)
-                    h ^= (js::HashNumber) NS_PTR_TO_INT32(Addition) >> 2;
-                else
-                    h ^= (js::HashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
-            }
-        } else {
-            for (uint16_t i = 0; i < count; i++)
-                h ^= (js::HashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
-        }
-    }
-
-    return h;
+    return static_cast<const XPCNativeSetKey*>(data)->Hash();
 }
 
 /***************************************************************************/

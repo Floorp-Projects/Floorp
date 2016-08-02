@@ -44,8 +44,16 @@ function testConsoleCount() {
 
     const expected = `bar: ${i + 1}`;
     is(messageBody.textContent, expected,
-      "console.count has the expected text content: ${expected}");
+      `console.count has the expected text content: "${expected}"`);
   }
+
+  const packet = yield getPacket("console.count()", "consoleAPICall")
+  const message = prepareMessage(packet);
+  const rendered = renderComponent(ConsoleApiCall, {message: message});
+  const messageBody = getMessageBody(rendered);
+  const expected = "<no label>: 1";
+  is(messageBody.textContent, expected,
+    `console.count without label has the expected text content: "${expected}"`);
 }
 
 function getMessageBody(renderedComponent) {

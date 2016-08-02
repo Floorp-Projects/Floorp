@@ -248,6 +248,7 @@
 
 .devtools-button[checked]:empty::before,
 .devtools-button[open]:empty::before,
+.devtools-button.checked::before,
 .devtools-toolbarbutton:not([label])[checked=true] > image,
 .devtools-toolbarbutton:not([label])[open=true] > image {
   filter: var(--checked-icon-filter);
@@ -306,6 +307,10 @@
 
 .devtools-button.devtools-clear-icon::before {
   background-image: var(--clear-icon-url);
+}
+
+.devtools-button.devtools-filter-icon::before {
+  background-image: var(--filter-image);
 }
 
 .devtools-toolbarbutton.devtools-clear-icon {
@@ -382,6 +387,15 @@
 .devtools-searchinput .textbox-input::-moz-placeholder,
 .devtools-filterinput .textbox-input::-moz-placeholder {
   font-style: normal;
+}
+
+.devtools-plaininput {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.theme-dark .devtools-plaininput {
+  color: var(--theme-highlight-gray);
 }
 
 /* Searchbox is a div container element for a search input element */
@@ -648,4 +662,32 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/*
+ * Filter buttons
+ * @TODO : Fix when https://bugzilla.mozilla.org/show_bug.cgi?id=1255116 lands
+ */
+.menu-filter-button {
+  -moz-appearance: none;
+  background: rgba(128,128,128,0.1);
+  border: none;
+  border-radius: 2px;
+  min-width: 0;
+  padding: 0 5px;
+  margin: 2px;
+  color: var(--theme-body-color);
+}
+
+.menu-filter-button:hover {
+  background: rgba(128,128,128,0.2);
+}
+
+.menu-filter-button:hover:active {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+.menu-filter-button:not(:active).checked {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
 }

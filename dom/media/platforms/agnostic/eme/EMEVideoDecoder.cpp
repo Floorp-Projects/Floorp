@@ -8,6 +8,7 @@
 #include "GMPVideoEncodedFrameImpl.h"
 #include "mozilla/CDMProxy.h"
 #include "MediaData.h"
+#include "MP4Decoder.h"
 #include "VPXDecoder.h"
 
 namespace mozilla {
@@ -37,8 +38,7 @@ void
 EMEVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
   VideoInfo config = GetConfig();
-  if (config.mMimeType.EqualsLiteral("video/avc") ||
-      config.mMimeType.EqualsLiteral("video/mp4")) {
+  if (MP4Decoder::IsH264(config.mMimeType)) {
     aTags.AppendElement(NS_LITERAL_CSTRING("h264"));
   } else if (VPXDecoder::IsVP8(config.mMimeType)) {
     aTags.AppendElement(NS_LITERAL_CSTRING("vp8"));

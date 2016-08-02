@@ -151,7 +151,11 @@ def remove_caches_from_task(task):
     """
     whitelist = [
         re.compile("^level-[123]-.*-tc-vcs(-public-sources)?$"),
-        re.compile("^level-[123]-hg-shared"),
+        re.compile("^level-[123]-hg-shared$"),
+        # The assumption here is that `hg robustcheckout --purge` is used and
+        # the checkout will start from a clean slate on job execution. This
+        # means there should be no contamination from previous tasks.
+        re.compile("^level-[123]-checkouts$"),
         re.compile("^tooltool-cache$"),
     ]
     try:

@@ -42,21 +42,27 @@ MediaKeyStatusMap::GetParentObject() const
   return mParent;
 }
 
-MediaKeyStatus
-MediaKeyStatusMap::Get(const ArrayBufferViewOrArrayBuffer& aKey) const
+void
+MediaKeyStatusMap::Get(JSContext* aCx,
+                       const ArrayBufferViewOrArrayBuffer& aKey,
+                       JS::MutableHandle<JS::Value> aOutValue,
+                       ErrorResult& aOutRv) const
 {
   ArrayData keyId = GetArrayBufferViewOrArrayBufferData(aKey);
   if (!keyId.IsValid()) {
-    return MediaKeyStatus::Internal_error;
+    aOutValue.setUndefined();
+    return;
   }
-
   for (const KeyStatus& status : mStatuses) {
     if (keyId == status.mKeyId) {
-      return status.mStatus;
+      bool ok = ToJSValue(aCx, status.mStatus, aOutValue);
+      if (!ok) {
+        aOutRv.NoteJSContextException(aCx);
+      }
+      return;
     }
   }
-
-  return MediaKeyStatus::Internal_error;
+  aOutValue.setUndefined();
 }
 
 bool

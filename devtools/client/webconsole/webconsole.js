@@ -553,6 +553,9 @@ WebConsoleFrame.prototype = {
       // in JSTerm is still necessary.
       this.newConsoleOutput = new this.window.NewConsoleOutput(this.experimentalOutputNode, this.jsterm);
       console.log("Created newConsoleOutput", this.newConsoleOutput);
+
+      let filterToolbar = doc.querySelector(".hud-console-filter-toolbar");
+      filterToolbar.hidden = true;
     }
 
     this.resize();
@@ -583,6 +586,13 @@ WebConsoleFrame.prototype = {
       // Do not focus if a link was clicked
       if (event.target.nodeName.toLowerCase() === "a" ||
           event.target.parentNode.nodeName.toLowerCase() === "a") {
+        return;
+      }
+
+      // Do not focus if a search input was clicked on the new frontend
+      if (this.NEW_CONSOLE_OUTPUT_ENABLED &&
+          event.target.nodeName.toLowerCase() === "input" &&
+          event.target.getAttribute("type").toLowerCase() === "search") {
         return;
       }
 
