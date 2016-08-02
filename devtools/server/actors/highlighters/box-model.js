@@ -692,6 +692,7 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let bounds = this._getOuterBounds();
     let winHeight = this.win.innerHeight * getCurrentZoom(this.win);
     let winWidth = this.win.innerWidth * getCurrentZoom(this.win);
+    let winScrollY = this.win.scrollY;
 
     // Ensure that containerBottom and containerTop are at least zero to avoid
     // showing tooltips outside the viewport.
@@ -704,8 +705,14 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     if (containerTop < NODE_INFOBAR_HEIGHT) {
       // No. Can we move the bar under the node?
       if (containerBottom + NODE_INFOBAR_HEIGHT > winHeight) {
-        // No. Let's move it inside.
-        top = containerTop;
+        // No. Let's move it inside. Can we show it at the top of the element?
+        if (containerTop < winScrollY) {
+          // No. Window is scrolled past the top of the element.
+          top = 0;
+        } else {
+          // Yes. Show it at the top of the element
+          top = containerTop;
+        }
         container.setAttribute("position", "overlap");
       } else {
         // Yes. Let's move it under the node.
