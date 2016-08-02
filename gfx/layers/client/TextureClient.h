@@ -357,6 +357,14 @@ public:
                    TextureFlags aTextureFlags,
                    TextureAllocationFlags flags = ALLOC_DEFAULT);
 
+  static already_AddRefed<TextureClient>
+  CreateFromSurface(TextureForwarder* aAllocator,
+                    gfx::SourceSurface* aSurface,
+                    LayersBackend aLayersBackend,
+                    BackendSelector aSelector,
+                    TextureFlags aTextureFlags,
+                    TextureAllocationFlags aAllocFlags);
+
   // Creates and allocates a TextureClient supporting the YCbCr format.
   static already_AddRefed<TextureClient>
   CreateForYCbCr(ClientIPCAllocator* aAllocator,
