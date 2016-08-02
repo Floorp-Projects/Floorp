@@ -279,14 +279,16 @@ void
 ServoRestyleManager::RestyleForInsertOrChange(Element* aContainer,
                                               nsIContent* aChild)
 {
-  NS_WARNING("stylo: ServoRestyleManager::RestyleForInsertOrChange not implemented");
+  // XXX Emilio we can do way better.
+  PostRestyleEvent(aContainer, eRestyle_Subtree, nsChangeHint(0));
 }
 
 void
 ServoRestyleManager::RestyleForAppend(Element* aContainer,
                                       nsIContent* aFirstNewContent)
 {
-  NS_WARNING("stylo: ServoRestyleManager::RestyleForAppend not implemented");
+  // XXX Emilio we can do way better.
+  PostRestyleEvent(aContainer, eRestyle_Subtree, nsChangeHint(0));
 }
 
 void
