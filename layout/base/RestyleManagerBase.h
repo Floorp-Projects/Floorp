@@ -64,6 +64,13 @@ public:
     mOverflowChangedTracker.RemoveFrame(aFrame);
   }
 
+  // Note: It's the caller's responsibility to make sure to wrap a
+  // ProcessRestyledFrames call in a view update batch and a script blocker.
+  // This function does not call ProcessAttachedQueue() on the binding manager.
+  // If the caller wants that to happen synchronously, it needs to handle that
+  // itself.
+  nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
+
 protected:
   void ContentStateChangedInternal(Element* aElement,
                                    EventStates aStateMask,
@@ -125,11 +132,6 @@ protected:
 
   static nsIFrame*
   GetNextBlockInInlineSibling(FramePropertyTable* aPropTable, nsIFrame* aFrame);
-
-  static nsresult
-  ProcessRestyledFrames(nsStyleChangeList& aChangeList,
-                        nsPresContext& aPresContext,
-                        OverflowChangedTracker& aOverflowChangedTracker);
 
   /**
    * Get the next continuation or similar ib-split sibling (assuming

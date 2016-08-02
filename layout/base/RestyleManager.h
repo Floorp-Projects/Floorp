@@ -136,17 +136,6 @@ private:
 
 public:
 
-  // Note: It's the caller's responsibility to make sure to wrap a
-  // ProcessRestyledFrames call in a view update batch and a script blocker.
-  // This function does not call ProcessAttachedQueue() on the binding manager.
-  // If the caller wants that to happen synchronously, it needs to handle that
-  // itself.
-  nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
-    return base_type::ProcessRestyledFrames(aChangeList,
-                                            *PresContext(),
-                                            mOverflowChangedTracker);
-  }
-
   /**
    * In order to start CSS transitions on elements that are being
    * reframed, we need to stash their style contexts somewhere during

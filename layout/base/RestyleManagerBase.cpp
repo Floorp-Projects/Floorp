@@ -755,7 +755,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
   }
 }
 
-/* static */ void
+static void
 SyncViewsAndInvalidateDescendants(nsIFrame* aFrame, nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
@@ -795,7 +795,7 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame, nsChangeHint aChange)
   }
 }
 
-void
+static void
 ApplyRenderingChangeToTree(nsIPresShell* aPresShell,
                            nsIFrame* aFrame,
                            nsChangeHint aChange)
@@ -955,10 +955,8 @@ RestyleManagerBase::GetNextContinuationWithSameStyle(
   return nextContinuation;
 }
 
-/* static */ nsresult
-RestyleManagerBase::ProcessRestyledFrames(
-  nsStyleChangeList& aChangeList, nsPresContext& aPresContext,
-  OverflowChangedTracker& aOverflowChangedTracker)
+nsresult
+RestyleManagerBase::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
@@ -969,8 +967,9 @@ RestyleManagerBase::ProcessRestyledFrames(
   PROFILER_LABEL("RestyleManager", "ProcessRestyledFrames",
                  js::ProfileEntry::Category::CSS);
 
-  FramePropertyTable* propTable = aPresContext.PropertyTable();
-  nsCSSFrameConstructor* frameConstructor = aPresContext.FrameConstructor();
+  nsPresContext* presContext = PresContext();
+  FramePropertyTable* propTable = presContext->PropertyTable();
+  nsCSSFrameConstructor* frameConstructor = presContext->FrameConstructor();
 
   // Make sure to not rebuild quote or counter lists while we're
   // processing restyles
@@ -1132,7 +1131,7 @@ RestyleManagerBase::ProcessRestyledFrames(
       if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView |
                   nsChangeHint_UpdateOpacityLayer | nsChangeHint_UpdateTransformLayer |
                   nsChangeHint_ChildrenOnlyTransform | nsChangeHint_SchedulePaint)) {
-        ApplyRenderingChangeToTree(aPresContext.PresShell(), frame, hint);
+        ApplyRenderingChangeToTree(presContext->PresShell(), frame, hint);
       }
       if ((hint & nsChangeHint_RecomputePosition) && !didReflowThisFrame) {
         ActiveLayerTracker::NotifyOffsetRestyle(frame);
@@ -1152,7 +1151,7 @@ RestyleManagerBase::ProcessRestyledFrames(
         if (hint & nsChangeHint_UpdateSubtreeOverflow) {
           for (nsIFrame* cont = frame; cont; cont =
                  nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-            AddSubtreeToOverflowTracker(cont, aOverflowChangedTracker);
+            AddSubtreeToOverflowTracker(cont, mOverflowChangedTracker);
           }
           // The work we just did in AddSubtreeToOverflowTracker
           // subsumes some of the other hints:
@@ -1176,7 +1175,7 @@ RestyleManagerBase::ProcessRestyledFrames(
             // updating overflows since that will happen when it's reflowed.
             if (!(childFrame->GetStateBits() &
                   (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
-              aOverflowChangedTracker.AddFrame(childFrame,
+              mOverflowChangedTracker.AddFrame(childFrame,
                                         OverflowChangedTracker::CHILDREN_CHANGED);
             }
             NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(childFrame),
@@ -1204,7 +1203,7 @@ RestyleManagerBase::ProcessRestyledFrames(
             }
             for (nsIFrame* cont = frame; cont; cont =
                    nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-              aOverflowChangedTracker.AddFrame(cont, changeKind);
+              mOverflowChangedTracker.AddFrame(cont, changeKind);
             }
           }
           // UpdateParentOverflow hints need to be processed in addition
@@ -1216,14 +1215,14 @@ RestyleManagerBase::ProcessRestyledFrames(
                        "shouldn't get style hints for the root frame");
             for (nsIFrame* cont = frame; cont; cont =
                    nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-              aOverflowChangedTracker.AddFrame(cont->GetParent(),
+              mOverflowChangedTracker.AddFrame(cont->GetParent(),
                                    OverflowChangedTracker::CHILDREN_CHANGED);
             }
           }
         }
       }
       if ((hint & nsChangeHint_UpdateCursor) && !didUpdateCursor) {
-        aPresContext.PresShell()->SynthesizeMouseMove(false);
+        presContext->PresShell()->SynthesizeMouseMove(false);
         didUpdateCursor = true;
       }
     }
