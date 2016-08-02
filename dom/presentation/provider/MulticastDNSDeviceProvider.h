@@ -151,6 +151,7 @@ private:
   virtual ~MulticastDNSDeviceProvider();
   nsresult StartServer();
   nsresult StopServer();
+  void AbortServerRetry();
   nsresult RegisterMDNSService();
   nsresult UnregisterMDNSService(nsresult aReason);
   nsresult StopDiscovery(nsresult aReason);
@@ -209,6 +210,9 @@ private:
 
   bool mDiscoverable = false;
   bool mDiscoverableEncrypted = false;
+  bool mIsServerRetrying = false;
+  uint32_t mServerRetryMs;
+  nsCOMPtr<nsITimer> mServerRetryTimer;
 
   nsCString mServiceName;
   nsCString mRegisteredName;

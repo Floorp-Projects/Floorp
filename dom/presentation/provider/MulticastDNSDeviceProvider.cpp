@@ -24,6 +24,7 @@
 #define PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS "dom.presentation.discovery.timeout_ms"
 #define PREF_PRESENTATION_DISCOVERABLE "dom.presentation.discoverable"
 #define PREF_PRESENTATION_DISCOVERABLE_ENCRYPTED "dom.presentation.discoverable.encrypted"
+#define PREF_PRESENTATION_DISCOVERABLE_RETRY_MS "dom.presentation.discoverable.retry_ms"
 #define PREF_PRESENTATION_DEVICE_NAME "dom.presentation.device.name"
 
 #define SERVICE_TYPE "_presentation-ctrl._tcp"
@@ -145,12 +146,17 @@ MulticastDNSDeviceProvider::Init()
     return rv;
   }
 
+  mServerRetryTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   Preferences::AddStrongObservers(this, kObservedPrefs);
 
   mDiscoveryEnabled = Preferences::GetBool(PREF_PRESENTATION_DISCOVERY);
   mDiscoveryTimeoutMs = Preferences::GetUint(PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS);
   mDiscoverable = Preferences::GetBool(PREF_PRESENTATION_DISCOVERABLE);
   mDiscoverableEncrypted = Preferences::GetBool(PREF_PRESENTATION_DISCOVERABLE_ENCRYPTED);
+  mServerRetryMs = Preferences::GetUint(PREF_PRESENTATION_DISCOVERABLE_RETRY_MS);
   mServiceName = Preferences::GetCString(PREF_PRESENTATION_DEVICE_NAME);
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -231,6 +237,8 @@ MulticastDNSDeviceProvider::StartServer()
     return rv;
   }
 
+  AbortServerRetry();
+
   if (NS_WARN_IF(NS_FAILED(rv = mPresentationService->StartServer(mDiscoverableEncrypted, 0)))) {
     return rv;
   }
@@ -246,12 +254,23 @@ MulticastDNSDeviceProvider::StopServer()
 
   UnregisterMDNSService(NS_OK);
 
+  AbortServerRetry();
+
   if (mPresentationService) {
     mPresentationService->SetListener(nullptr);
     mPresentationService->Close();
   }
 
   return NS_OK;
+}
+
+void
+MulticastDNSDeviceProvider::AbortServerRetry()
+{
+  if (mIsServerRetrying) {
+    mIsServerRetrying = false;
+    mServerRetryTimer->Cancel();
+  }
 }
 
 nsresult
@@ -945,8 +964,8 @@ MulticastDNSDeviceProvider::OnServerStopped(nsresult aResult)
 
   // Try restart server if it is stopped abnormally.
   if (NS_FAILED(aResult) && mDiscoverable) {
-    return NS_DispatchToMainThread(
-             NewRunnableMethod(this, &MulticastDNSDeviceProvider::StartServer));
+    mIsServerRetrying = true;
+    mServerRetryTimer->Init(this, mServerRetryMs, nsITimer::TYPE_ONE_SHOT);
   }
 
   return NS_OK;
@@ -1079,7 +1098,17 @@ MulticastDNSDeviceProvider::Observe(nsISupports* aSubject,
       }
     }
   } else if (!strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC)) {
-    StopDiscovery(NS_OK);
+    nsCOMPtr<nsITimer> timer = do_QueryInterface(aSubject);
+    if (!timer) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (timer == mDiscoveryTimer) {
+      StopDiscovery(NS_OK);
+    } else if (timer == mServerRetryTimer) {
+      mIsServerRetrying = false;
+      StartServer();
+    }
   }
 
   return NS_OK;
