@@ -32,7 +32,8 @@ add_task(function* () {
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
   let exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
-  yield PerformanceController.exportRecording("", PerformanceController.getCurrentRecording(), file);
+  yield PerformanceController.exportRecording("",
+    PerformanceController.getCurrentRecording(), file);
   yield exported;
 
   ok(logs[EXPORTED], `A telemetry entry for ${EXPORTED} exists after exporting.`);

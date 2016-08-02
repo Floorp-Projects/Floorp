@@ -3,7 +3,8 @@
 "use strict";
 
 /**
- * Tests that the memory flamegraphs views get rerendered when toggling `invert-flame-graph`.
+ * Tests that the memory flamegraphs views get rerendered when toggling
+ * `invert-flame-graph`.
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");

@@ -6,7 +6,7 @@
  */
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
-const { PMM_consoleMethod, PMM_loadFrameScripts, PMM_clearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
+const { pmmConsoleMethod, pmmLoadFrameScripts, pmmClearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const MARKER_NAME = "TimeStamp";
 
 add_task(function* () {
@@ -20,9 +20,9 @@ add_task(function* () {
   yield front.connect();
   let rec = yield front.startRecording({ withMarkers: true });
 
-  PMM_loadFrameScripts(gBrowser);
-  PMM_consoleMethod("timeStamp");
-  PMM_consoleMethod("timeStamp", "myLabel");
+  pmmLoadFrameScripts(gBrowser);
+  pmmConsoleMethod("timeStamp");
+  pmmConsoleMethod("timeStamp", "myLabel");
 
   let markers = yield waitForMarkerType(front, MARKER_NAME, markers => markers.length >= 2);
 
@@ -36,7 +36,7 @@ add_task(function* () {
   is(markers[0].causeName, void 0, "Unlabeled timestamps have an empty causeName");
   is(markers[1].causeName, "myLabel", "Labeled timestamps have correct causeName");
 
-  PMM_clearFrameScripts();
+  pmmClearFrameScripts();
 
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();

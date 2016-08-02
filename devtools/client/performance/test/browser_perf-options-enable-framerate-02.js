@@ -18,7 +18,7 @@ add_task(function* () {
     win: window
   });
 
-  let { $, PerformanceController } = panel.panelWin;
+  let { PerformanceController } = panel.panelWin;
 
   // Test starting without framerate, and stopping with it.
   Services.prefs.setBoolPref(UI_ENABLE_FRAMERATE_PREF, false);

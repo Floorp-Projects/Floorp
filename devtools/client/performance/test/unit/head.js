@@ -22,7 +22,7 @@ function getFrameNodePath(root, path) {
     if (!foundNode) {
       break;
     }
-    calls = node.calls;
+    calls = foundNode.calls;
   }
   return foundNode;
 }

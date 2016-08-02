@@ -1,6 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
+/* eslint-disable */
 /**
  * Tests if the waterfall remembers the selection when rerendering.
  */
@@ -73,3 +73,4 @@ function* spawnTest() {
   yield teardown(panel);
   finish();
 }
+/* eslint-enable */

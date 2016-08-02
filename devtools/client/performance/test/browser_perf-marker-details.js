@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
+"use strict";
+/* eslint-disable */
 /**
  * Tests if the Marker Details view renders all properties expected
  * for each marker.
@@ -142,3 +143,4 @@ function shouldHaveLabel($, name, value, marker) {
   let $value = $name.parentNode.querySelector(".marker-details-labelvalue");
   is($value.getAttribute("value"), value, `${marker.name} has correct label for ${name}:${value}`);
 }
+/* eslint-enable */

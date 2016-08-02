@@ -11,7 +11,7 @@
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
+const { waitForRecordingStartedEvents } = require("devtools/client/performance/test/helpers/actions");
 const { idleWait } = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(function* () {
@@ -51,7 +51,8 @@ add_task(function* () {
   yield console.profileEnd();
   yield idleWait(1000);
 
-  ok(true, "Stopping an in-progress console profile after clearing recordings does not throw.");
+  ok(true,
+    "Stopping an in-progress console profile after clearing recordings does not throw.");
 
   yield PerformanceController.clearRecordings();
   recordings = PerformanceController.getRecordings();

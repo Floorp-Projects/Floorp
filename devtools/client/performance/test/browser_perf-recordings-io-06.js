@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
+"use strict";
+/* eslint-disable */
 /**
  * Tests if the performance tool can import profiler data when Profiler is v2
  * and requires deflating, and has an extra thread that's a string. Not sure
@@ -138,3 +139,4 @@ function asyncCopy(data, file) {
 
   return deferred.promise;
 }
+/* eslint-enable */

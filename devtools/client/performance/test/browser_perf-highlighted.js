@@ -23,8 +23,8 @@ add_task(function* () {
   yield console.profile("rust");
   yield waitUntil(() => tab.hasAttribute("highlighted"));
 
-  ok(tab.hasAttribute("highlighted"),
-    "Performance tab is highlighted during recording from console.profile when unloaded.");
+  ok(tab.hasAttribute("highlighted"), "Performance tab is highlighted during recording " +
+    "from console.profile when unloaded.");
 
   yield console.profileEnd("rust");
   yield waitUntil(() => !tab.hasAttribute("highlighted"));

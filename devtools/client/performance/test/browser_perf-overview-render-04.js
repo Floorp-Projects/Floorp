@@ -49,20 +49,24 @@ add_task(function* () {
 
   yield startRecording(panel, { skipWaitingForOverview: true });
 
-  is(isVisible($("#overview-pane")), false, "Overview graphs hidden again when starting new recording.");
+  is(isVisible($("#overview-pane")), false,
+     "Overview graphs hidden again when starting new recording.");
   is(updated, 1, "Overview graphs have not been updated again.");
 
   RecordingsView.selectedIndex = 0;
-  is(isVisible($("#overview-pane")), true, "Overview graphs no longer hidden when switching back to complete recording.");
+  is(isVisible($("#overview-pane")), true,
+     "Overview graphs no longer hidden when switching back to complete recording.");
   is(updated, 1, "Overview graphs have not been updated again.");
 
   RecordingsView.selectedIndex = 1;
-  is(isVisible($("#overview-pane")), false, "Overview graphs hidden again when going back to inprogress recording.");
+  is(isVisible($("#overview-pane")), false,
+     "Overview graphs hidden again when going back to inprogress recording.");
   is(updated, 1, "Overview graphs have not been updated again.");
 
   yield stopRecording(panel);
 
-  is(isVisible($("#overview-pane")), true, "overview graphs no longer hidden when recording finishes");
+  is(isVisible($("#overview-pane")), true,
+     "overview graphs no longer hidden when recording finishes");
   is(updated, 2, "Overview graphs rendered again upon completion.");
 
   yield teardownToolboxAndRemoveTab(panel);

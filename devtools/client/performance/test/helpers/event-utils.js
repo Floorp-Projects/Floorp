@@ -58,13 +58,15 @@ exports.times = function (target, eventName, receiveCount, options = {}) {
             (!(options.expectedArgs[index] instanceof RegExp) &&
              options.expectedArgs[index] != args[index])
           ) {
-            dump(`Ignoring event '${eventName}' with unexpected argument at index ${index}: ${args[index]}\n`);
+            dump(`Ignoring event '${eventName}' with unexpected argument at index ` +
+                 `${index}: ${args[index]}\n`);
             return;
           }
         }
       }
       if (--receiveCount > 0) {
-        dump(`Event: '${eventName}' on ${target} needs to be fired ${receiveCount} more time(s).\n`);
+        dump(`Event: '${eventName}' on ${target} needs to be fired ${receiveCount} ` +
+             `more time(s).\n`);
       } else if (!receiveCount) {
         dump(`Event: '${eventName}' on ${target} received.\n`);
         target[remove](eventName, onEvent, options.useCapture);
@@ -95,11 +97,13 @@ exports.observeTimes = function (notificationName, receiveCount, options = {}) {
 
     Services.obs.addObserver(function onObserve(subject, topic, data) {
       if ("expectedSubject" in options && options.expectedSubject != subject) {
-        dump(`Ignoring notification '${notificationName}' with unexpected subject: ${subject}\n`);
+        dump(`Ignoring notification '${notificationName}' with unexpected subject: ` +
+             `${subject}\n`);
         return;
       }
       if (--receiveCount > 0) {
-        dump(`Notification: '${notificationName}' needs to be fired ${receiveCount} more time(s).\n`);
+        dump(`Notification: '${notificationName}' needs to be fired ${receiveCount} ` +
+             `more time(s).\n`);
       } else if (!receiveCount) {
         dump(`Notification: '${notificationName}' received.\n`);
         Services.obs.removeObserver(onObserve, topic);

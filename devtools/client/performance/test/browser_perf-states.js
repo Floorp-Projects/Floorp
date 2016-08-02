@@ -29,7 +29,7 @@ add_task(function* () {
   ok(!(OverviewView.graphs.get("framerate")),
     "The framerate graph should not have been created yet.");
 
-  ok(!DetailsView.components["waterfall"].initialized,
+  ok(!DetailsView.components.waterfall.initialized,
     "The waterfall detail view should not have been created yet.");
   ok(!DetailsView.components["js-calltree"].initialized,
     "The js-calltree detail view should not have been created yet.");

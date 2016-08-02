@@ -86,15 +86,15 @@ add_task(function* () {
   is(RecordingsView.selectedItem.attachment, recordings[0],
     "The first console recording should still be selected.");
 
-  is(recordings[0].isRecording(), true,
-    "The not most recent recording should not stop when calling console.profileEnd with no args.");
-  is(recordings[1].isRecording(), true,
-    "The not most recent recording should not stop when calling console.profileEnd with no args.");
-  is(recordings[2].isRecording(), false,
-    "Only the most recent recording should stop when calling console.profileEnd with no args.");
+  is(recordings[0].isRecording(), true, "The not most recent recording should not stop " +
+    "when calling console.profileEnd with no args.");
+  is(recordings[1].isRecording(), true, "The not most recent recording should not stop " +
+    "when calling console.profileEnd with no args.");
+  is(recordings[2].isRecording(), false, "Only the most recent recording should stop " +
+    "when calling console.profileEnd with no args.");
 
   info("Trying to `profileEnd` a non-existent console recording.");
-  /* yield */ console.profileEnd("fxos");
+  console.profileEnd("fxos");
   yield idleWait(1000);
 
   recordings = PerformanceController.getRecordings();
@@ -154,10 +154,11 @@ add_task(function* () {
     "All recordings should now be ended. (3)");
 
   info("Trying to `profileEnd` with no pending recordings.");
-  /* yield */ console.profileEnd();
+  console.profileEnd();
   yield idleWait(1000);
 
-  ok(true, "Calling console.profileEnd() with no argument and no pending recordings does not throw.");
+  ok(true, "Calling console.profileEnd() with no argument and no pending recordings " +
+    "does not throw.");
 
   yield teardownToolboxAndRemoveTab(panel);
 });

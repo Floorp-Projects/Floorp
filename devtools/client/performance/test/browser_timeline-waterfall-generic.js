@@ -68,7 +68,8 @@ add_task(function* () {
 
   let detailsView = WaterfallView.details;
   let markersRoot = WaterfallView._markersRoot;
-  markersRoot.recalculateBounds(); // Make sure the bounds are up to date.
+  // Make sure the bounds are up to date.
+  markersRoot.recalculateBounds();
 
   let parentWidthBefore = $("#waterfall-view").getBoundingClientRect().width;
   let sidebarWidthBefore = $(".waterfall-sidebar").getBoundingClientRect().width;
@@ -78,8 +79,9 @@ add_task(function* () {
     "The details view in the waterfall view is hidden by default.");
   is(detailsWidthBefore, 0,
     "The details view width should be 0 when hidden.");
-  is(markersRoot._waterfallWidth, parentWidthBefore - sidebarWidthBefore - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
-    "The waterfall width is correct (1).");
+  is(markersRoot._waterfallWidth,
+     parentWidthBefore - sidebarWidthBefore - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
+     "The waterfall width is correct (1).");
 
   let receivedFocusEvent = once(markersRoot, "focus");
   let waterfallRerendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
@@ -99,8 +101,10 @@ add_task(function* () {
     "The sidebar view's width should not have changed.");
   isnot(detailsWidthAfter, 0,
     "The details view width should not be 0 when visible.");
-  is(markersRoot._waterfallWidth, parentWidthAfter - sidebarWidthAfter - detailsWidthAfter - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
-    "The waterfall width is correct (2).");
+  is(markersRoot._waterfallWidth,
+     parentWidthAfter - sidebarWidthAfter - detailsWidthAfter
+                      - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
+     "The waterfall width is correct (2).");
 
   yield teardownToolboxAndRemoveTab(panel);
 });

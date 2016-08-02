@@ -9,14 +9,13 @@
 
 const { appendAndWaitForPaint } = require("devtools/client/performance/test/helpers/dom-utils");
 const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/helpers/synth-utils");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(function* () {
   let { MyCustomTreeItem } = synthesizeCustomTreeClass();
 
   let container = document.createElement("vbox");
-  container.style.height = '100%';
-  container.style.overflow = 'scroll';
+  container.style.height = "100%";
+  container.style.overflow = "scroll";
   yield appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   let myDataSrc = {
