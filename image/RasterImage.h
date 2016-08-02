@@ -135,6 +135,7 @@ class Image;
 namespace image {
 
 class Decoder;
+struct DecoderTelemetry;
 class ImageMetadata;
 class SourceBuffer;
 
@@ -203,6 +204,7 @@ public:
    */
   void FinalizeDecoder(Decoder* aDecoder,
                        const ImageMetadata& aMetadata,
+                       const DecoderTelemetry& aTelemetry,
                        Progress aProgress,
                        const gfx::IntRect& aInvalidRect,
                        const Maybe<uint32_t>& aFrameCount,
