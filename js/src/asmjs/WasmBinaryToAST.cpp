@@ -119,7 +119,7 @@ AstDecodeFail(AstDecodeContext& c, const char* str)
 {
     uint32_t offset = c.d.currentOffset();
     char offsetStr[sizeof "4294967295"];
-    JS_snprintf(offsetStr, sizeof offsetStr, "%" PRIu32, offset);
+    snprintf(offsetStr, sizeof offsetStr, "%" PRIu32, offset);
     JS_ReportErrorNumber(c.cx, GetErrorMessage, nullptr, JSMSG_WASM_DECODE_FAIL, offsetStr, str);
     return false;
 }

@@ -347,9 +347,9 @@ SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
             js_free(cstr);
             return nullptr;
         }
-        ret = JS_snprintf(cstr, len + 1, "%s (%s:%" PRIu64 ")", atomStr.get(), filename, lineno);
+        ret = snprintf(cstr, len + 1, "%s (%s:%" PRIu64 ")", atomStr.get(), filename, lineno);
     } else {
-        ret = JS_snprintf(cstr, len + 1, "%s:%" PRIu64, filename, lineno);
+        ret = snprintf(cstr, len + 1, "%s:%" PRIu64, filename, lineno);
     }
 
     MOZ_ASSERT(ret == len, "Computed length should match actual length!");

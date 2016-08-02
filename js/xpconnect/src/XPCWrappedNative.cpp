@@ -51,10 +51,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(XPCWrappedNative)
         char name[72];
         XPCNativeScriptableInfo* si = tmp->GetScriptableInfo();
         if (si)
-            JS_snprintf(name, sizeof(name), "XPCWrappedNative (%s)",
-                        si->GetJSClass()->name);
+            snprintf(name, sizeof(name), "XPCWrappedNative (%s)", si->GetJSClass()->name);
         else
-            JS_snprintf(name, sizeof(name), "XPCWrappedNative");
+            snprintf(name, sizeof(name), "XPCWrappedNative");
 
         cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
     } else {

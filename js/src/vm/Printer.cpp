@@ -208,7 +208,7 @@ Sprinter::vprintf(const char* fmt, va_list ap)
     do {
         va_list aq;
         va_copy(aq, ap);
-        int i = JS_vsnprintf(base + offset, size - offset, fmt, aq);
+        int i = vsnprintf(base + offset, size - offset, fmt, aq);
         va_end(aq);
         if (i > -1 && (size_t) i < size - offset) {
             offset += i;

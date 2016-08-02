@@ -361,7 +361,7 @@ CheckChar16InCharRange(char16_t c)
         /* U+0080/U+0100 - U+FFFF data lost. */
         static const size_t MSG_BUF_SIZE = 64;
         char msg[MSG_BUF_SIZE];
-        JS_snprintf(msg, MSG_BUF_SIZE, "char16_t out of char range; high bits of data lost: 0x%x", c);
+        snprintf(msg, MSG_BUF_SIZE, "char16_t out of char range; high bits of data lost: 0x%x", int(c));
         NS_WARNING(msg);
         return false;
     }
