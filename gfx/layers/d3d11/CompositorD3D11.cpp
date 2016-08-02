@@ -1238,15 +1238,15 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 void
 CompositorD3D11::EndFrame()
 {
-  Compositor::EndFrame();
-
   if (!mDefaultRT) {
+    Compositor::EndFrame();
     return;
   }
 
   LayoutDeviceIntSize oldSize = mSize;
   EnsureSize();
   if (mSize.width <= 0 || mSize.height <= 0) {
+    Compositor::EndFrame();
     return;
   }
 
@@ -1333,6 +1333,8 @@ CompositorD3D11::EndFrame()
   }
   // Store the query for this frame so we can flush it next time.
   mQuery = query;
+
+  Compositor::EndFrame();
 
   mCurrentRT = nullptr;
 }

@@ -27,8 +27,7 @@ const ConsoleOutput = createClass({
   displayName: "ConsoleOutput",
 
   componentWillUpdate() {
-    // @TODO Move this to a parent component.
-    let node = ReactDOM.findDOMNode(this).parentNode.parentNode.parentNode;
+    let node = ReactDOM.findDOMNode(this);
     if (node.lastChild) {
       this.shouldScrollBottom = isScrolledToBottom(node.lastChild, node);
     }
@@ -36,7 +35,7 @@ const ConsoleOutput = createClass({
 
   componentDidUpdate() {
     if (this.shouldScrollBottom) {
-      let node = ReactDOM.findDOMNode(this).parentNode.parentNode.parentNode;
+      let node = ReactDOM.findDOMNode(this);
       node.scrollTop = node.scrollHeight;
     }
   },
@@ -48,7 +47,7 @@ const ConsoleOutput = createClass({
       );
     });
     return (
-      dom.div({}, messageNodes)
+      dom.div({className: "webconsole-output"}, messageNodes)
     );
   }
 });

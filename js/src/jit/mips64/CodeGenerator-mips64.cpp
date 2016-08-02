@@ -338,17 +338,17 @@ CodeGeneratorMIPS64::visitAsmSelectI64(LAsmSelectI64* lir)
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
     Register cond = ToRegister(lir->condExpr());
-    const LAllocation* falseExpr = lir->falseExpr();
+    const LInt64Allocation falseExpr = lir->falseExpr();
 
-    Register out = ToRegister(lir->output());
-    MOZ_ASSERT(ToRegister(lir->trueExpr()) == out, "true expr is reused for input");
+    Register64 out = ToOutRegister64(lir);
+    MOZ_ASSERT(ToRegister64(lir->trueExpr()) == out, "true expr is reused for input");
 
-    if (falseExpr->isRegister()) {
-        masm.as_movz(out, ToRegister(falseExpr), cond);
+    if (falseExpr.value().isRegister()) {
+        masm.as_movz(out.reg, ToRegister(falseExpr.value()), cond);
     } else {
         Label done;
         masm.ma_b(cond, cond, &done, Assembler::NonZero, ShortJump);
-        masm.loadPtr(ToAddress(falseExpr), out);
+        masm.loadPtr(ToAddress(falseExpr.value()), out.reg);
         masm.bind(&done);
     }
 }

@@ -106,7 +106,6 @@ static constexpr Register PreBarrierReg = edx;
 static constexpr Register AsmJSIonExitRegCallee = ecx;
 static constexpr Register AsmJSIonExitRegE0 = edi;
 static constexpr Register AsmJSIonExitRegE1 = eax;
-static constexpr Register AsmJSIonExitRegE2 = ebx;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 static constexpr Register AsmJSIonExitRegReturnData = edx;

@@ -610,7 +610,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
 {
     MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(pc));
     MOZ_RELEASE_ASSERT(instance.metadata().assumptions.usesSignal.forOOB);
-    MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - instance.codeSegment().code()));
+    MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - instance.codeBase()));
 
     // Disassemble the instruction which caused the trap so that we can extract
     // information about it and decide what to do.
@@ -800,16 +800,18 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!activation)
         return false;
 
-    const Instance& instance = activation->instance();
+    const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+    if (!instance)
+        return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(record->ExceptionInformation[1]);
 
     // This check isn't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(instance, faultingAddress))
+    if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
-    if (!instance.codeSegment().containsFunctionPC(pc)) {
+    if (!instance->codeSegment().containsFunctionPC(pc)) {
         // On Windows, it is possible for InterruptRunningCode to execute
         // between a faulting heap access and the handling of the fault due
         // to InterruptRunningCode's use of SuspendThread. When this happens,
@@ -819,16 +821,16 @@ HandleFault(PEXCEPTION_POINTERS exception)
         // always the logically-faulting pc). Fortunately, we can detect this
         // case and silence the exception ourselves (the exception will
         // retrigger after the interrupt jumps back to resumePC).
-        return pc == instance.codeSegment().interruptCode() &&
-               instance.codeSegment().containsFunctionPC(activation->resumePC()) &&
-               instance.lookupMemoryAccess(activation->resumePC());
+        return pc == instance->codeSegment().interruptCode() &&
+               instance->codeSegment().containsFunctionPC(activation->resumePC()) &&
+               instance->code().lookupMemoryAccess(activation->resumePC());
     }
 
-    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    const MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, instance);
+    *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, *instance);
     return true;
 }
 
@@ -940,22 +942,22 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
     if (!activation)
         return false;
 
-    const Instance& instance = activation->instance();
-    if (!instance.codeSegment().containsFunctionPC(pc))
+    const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+    if (!instance || !instance->codeSegment().containsFunctionPC(pc))
         return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(request.body.code[1]);
 
     // This check isn't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(instance, faultingAddress))
+    if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
-    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    const MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(&context, pc, faultingAddress, memoryAccess, instance);
+    *ppc = EmulateHeapAccess(&context, pc, faultingAddress, memoryAccess, *instance);
 
     // Update the thread state with the new pc and register values.
     kret = thread_set_state(rtThread, float_state, (thread_state_t)&context.float_, float_state_count);
@@ -1028,6 +1030,7 @@ MachExceptionHandlerThread(JSRuntime* rt)
 
 MachExceptionHandler::MachExceptionHandler()
   : installed_(false),
+    thread_(),
     port_(MACH_PORT_NULL)
 {}
 
@@ -1154,22 +1157,22 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     if (!activation)
         return false;
 
-    const Instance& instance = activation->instance();
-    if (!instance.codeSegment().containsFunctionPC(pc))
+    const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+    if (!instance || !instance->codeSegment().containsFunctionPC(pc))
         return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(info->si_addr);
 
     // This check isn't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(instance, faultingAddress))
+    if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
-    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    const MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (signal == Signal::SegFault && !memoryAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, instance);
+    *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, *instance);
 
     return true;
 }
@@ -1223,26 +1226,33 @@ RedirectIonBackedgesToInterruptCheck(JSRuntime* rt)
     }
 }
 
+// The return value indicates whether the PC was changed, not whether there was
+// a failure.
 static bool
 RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
 {
     RedirectIonBackedgesToInterruptCheck(rt);
 
     if (WasmActivation* activation = rt->wasmActivationStack()) {
-        const Instance& instance = activation->instance();
-
 #ifdef JS_SIMULATOR
-        if (instance.codeSegment().containsFunctionPC(rt->simulator()->get_pc_as<void*>()))
-            rt->simulator()->set_resume_pc(instance.codeSegment().interruptCode());
-#endif
+        (void)ContextToPC;  // silence static 'unused' errors
 
+        void* pc = rt->simulator()->get_pc_as<void*>();
+
+        const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+        if (instance && instance->codeSegment().containsFunctionPC(pc))
+            rt->simulator()->set_resume_pc(instance->codeSegment().interruptCode());
+#else
         uint8_t** ppc = ContextToPC(context);
         uint8_t* pc = *ppc;
-        if (instance.codeSegment().containsFunctionPC(pc)) {
+
+        const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+        if (instance && instance->codeSegment().containsFunctionPC(pc)) {
             activation->setResumePC(pc);
-            *ppc = instance.codeSegment().interruptCode();
+            *ppc = instance->codeSegment().interruptCode();
             return true;
         }
+#endif
     }
 
     return false;
@@ -1463,5 +1473,5 @@ js::wasm::IsPCInWasmCode(void *pc)
     if (!activation)
         return false;
 
-    return activation->instance().codeSegment().containsFunctionPC(pc);
+    return !!activation->compartment()->wasm.lookupInstanceDeprecated(pc);
 }

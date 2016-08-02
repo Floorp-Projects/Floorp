@@ -1422,9 +1422,6 @@ class MOZ_RAII AutoLockGC
     explicit AutoLockGC(JSRuntime* rt
                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : runtime_(rt)
-#ifdef DEBUG
-      , wasUnlocked_(false)
-#endif
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         lock();
@@ -1437,38 +1434,20 @@ class MOZ_RAII AutoLockGC
     void lock() {
         MOZ_ASSERT(lockGuard_.isNothing());
         lockGuard_.emplace(runtime_->gc.lock);
-#ifdef DEBUG
-        runtime_->gc.lockOwner = PR_GetCurrentThread();
-#endif
     }
 
     void unlock() {
         MOZ_ASSERT(lockGuard_.isSome());
-#ifdef DEBUG
-        runtime_->gc.lockOwner = nullptr;
-#endif
         lockGuard_.reset();
-#ifdef DEBUG
-        wasUnlocked_ = true;
-#endif
     }
 
     js::LockGuard<js::Mutex>& guard() {
         return lockGuard_.ref();
     }
 
-#ifdef DEBUG
-    bool wasUnlocked() {
-        return wasUnlocked_;
-    }
-#endif
-
   private:
     JSRuntime* runtime_;
     mozilla::Maybe<js::LockGuard<js::Mutex>> lockGuard_;
-#ifdef DEBUG
-    bool wasUnlocked_;
-#endif
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     AutoLockGC(const AutoLockGC&) = delete;

@@ -156,8 +156,7 @@ GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
 void
 GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
-  if (mConfig.mMimeType.EqualsLiteral("video/avc") ||
-      mConfig.mMimeType.EqualsLiteral("video/mp4")) {
+  if (MP4Decoder::IsH264(mConfig.mMimeType)) {
     aTags.AppendElement(NS_LITERAL_CSTRING("h264"));
     const Maybe<nsCString> gmp(
       GMPDecoderModule::PreferredGMP(NS_LITERAL_CSTRING("video/avc")));
@@ -249,8 +248,7 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
 
   codec.mGMPApiVersion = kGMPVersion33;
   nsTArray<uint8_t> codecSpecific;
-  if (mConfig.mMimeType.EqualsLiteral("video/avc") ||
-      mConfig.mMimeType.EqualsLiteral("video/mp4")) {
+  if (MP4Decoder::IsH264(mConfig.mMimeType)) {
     codec.mCodecType = kGMPVideoCodecH264;
     codecSpecific.AppendElement(0); // mPacketizationMode.
     codecSpecific.AppendElements(mConfig.mExtraData->Elements(),

@@ -5,16 +5,16 @@ RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
 
 RUN mkdir /build
-# %include testing/docker/decision/tooltool.py
-ADD topsrcdir/testing/docker/decision/tooltool.py /build/tooltool.py
+# %include testing/docker/recipes/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /build/tooltool.py
 
 # %include testing/docker/recipes/install-mercurial.sh
 ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
 ADD system-setup.sh /tmp/system-setup.sh
 RUN bash /tmp/system-setup.sh
 
-# %include testing/docker/recipes/checkout-gecko-and-run
-ADD topsrcdir/testing/docker/recipes/checkout-gecko-and-run /home/worker/bin/checkout-gecko-and-run
+# %include testing/docker/recipes/run-task
+ADD topsrcdir/testing/docker/recipes/run-task /home/worker/bin/run-task
 RUN chown -R worker:worker /home/worker/bin && chmod 755 /home/worker/bin/*
 
 # Set variable normally configured at login, by the shells parent process, these

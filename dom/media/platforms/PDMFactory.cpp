@@ -46,6 +46,8 @@
 
 #include "DecoderDoctorDiagnostics.h"
 
+#include "MP4Decoder.h"
+
 
 namespace mozilla {
 
@@ -79,6 +81,7 @@ PDMFactory::PDMFactory()
 {
   EnsureInit();
   CreatePDMs();
+  CreateBlankPDM();
 }
 
 PDMFactory::~PDMFactory()
@@ -118,6 +121,11 @@ PDMFactory::EnsureInit() const
 already_AddRefed<MediaDataDecoder>
 PDMFactory::CreateDecoder(const CreateDecoderParams& aParams)
 {
+  if (aParams.mUseBlankDecoder) {
+    MOZ_ASSERT(mBlankPDM);
+    return CreateDecoderWithPDM(mBlankPDM, aParams);
+  }
+
   const TrackInfo& config = aParams.mConfig;
   bool isEncrypted = mEMEPDM && config.mCrypto.mValid;
 
@@ -183,7 +191,7 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
   CreateDecoderParams params = aParams;
   params.mCallback = callback;
 
-  if (H264Converter::IsH264(config)) {
+  if (MP4Decoder::IsH264(config.mMimeType)) {
     RefPtr<H264Converter> h = new H264Converter(aPDM, params);
     const nsresult rv = h->GetLastError();
     if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {
@@ -283,6 +291,13 @@ PDMFactory::CreatePDMs()
   } else {
     mGMPPDMFailedToStartup = false;
   }
+}
+
+void
+PDMFactory::CreateBlankPDM()
+{
+  mBlankPDM = CreateBlankDecoderModule();
+  MOZ_ASSERT(mBlankPDM && NS_SUCCEEDED(mBlankPDM->Startup()));
 }
 
 bool

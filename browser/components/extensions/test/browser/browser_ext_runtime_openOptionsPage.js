@@ -4,7 +4,7 @@
 
 function* loadExtension(options) {
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: true,
+    useAddonManager: "temporary",
 
     manifest: Object.assign({
       "permissions": ["tabs"],

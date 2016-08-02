@@ -14,7 +14,9 @@
 #include "jsfriendapi.h"
 #include "jstypes.h"
 
+#include "js/GCAPI.h"
 #include "js/Value.h"
+#include "vm/String.h"
 
 namespace js {
 namespace jit {
@@ -745,6 +747,15 @@ ScalarTypeToLength(Scalar::Type type)
         break;
     }
     MOZ_CRASH("unexpected SIMD kind");
+}
+
+static inline const char*
+PropertyNameToExtraName(PropertyName* name)
+{
+    JS::AutoCheckCannotGC nogc;
+    if (!name->hasLatin1Chars())
+        return nullptr;
+    return reinterpret_cast<const char *>(name->latin1Chars(nogc));
 }
 
 #ifdef DEBUG
