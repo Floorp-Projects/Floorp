@@ -312,9 +312,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aPressure touch input pressure: 0.0 -> 1.0
    * @param aInputSourceArg input source, see nsIDOMMouseEvent for values,
    *        defaults to mouse input.
-   * @param aIsSynthesized controls nsIDOMEvent.isSynthesized value
-   *                       that helps identifying test related events,
-   *                       defaults to true
+   * @param aIsDOMEventSynthesized controls nsIDOMEvent.isSynthesized value
+   *                               that helps identifying test related events,
+   *                               defaults to true
+   * @param aIsWidgetEventSynthesized controls WidgetMouseEvent.mReason value
+   *                                  defaults to false (WidgetMouseEvent::eReal)
    *
    * returns true if the page called prevent default on this event
    */
@@ -328,7 +330,8 @@ interface nsIDOMWindowUtils : nsISupports {
                          [optional] in boolean aIgnoreRootScrollFrame,
                          [optional] in float aPressure,
                          [optional] in unsigned short aInputSourceArg,
-                         [optional] in boolean aIsSynthesized);
+                         [optional] in boolean aIsDOMEventSynthesized,
+                         [optional] in boolean aIsWidgetEventSynthesized);
 
 
   /** Synthesize a pointer event. The event types supported are:
@@ -447,7 +450,8 @@ interface nsIDOMWindowUtils : nsISupports {
                               [optional] in boolean aIgnoreRootScrollFrame,
                               [optional] in float aPressure,
                               [optional] in unsigned short aInputSourceArg,
-                              [optional] in boolean aIsSynthesized);
+                              [optional] in boolean aIsDOMEventSynthesized,
+                              [optional] in boolean aIsWidgetEventSynthesized);
 
   /** The same as sendPointerEvent but ensures that the event
    *  is dispatched to this DOM window or one of its children.

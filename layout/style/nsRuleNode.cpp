@@ -14,6 +14,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Function.h"
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
@@ -97,19 +98,26 @@ nsConditionalResetStyleData::GetConditionalStyleData(nsStyleStructID aSID,
   return nullptr;
 }
 
-#define NS_SET_IMAGE_REQUEST(method_, context_, request_)                     \
-  if ((context_)->PresContext()->IsDynamic()) {                               \
-    method_(request_);                                                        \
-  } else {                                                                    \
-    RefPtr<imgRequestProxy> req = nsContentUtils::GetStaticRequest(request_); \
-    method_(req);                                                             \
+// Creates an imgRequestProxy based on the specified value in
+// aValue and calls aCallback with it.  If the nsPresContext
+// is static (e.g. for printing), then a static request (i.e.
+// showing the first frame, without animation) will be created.
+// (The expectation is then that aCallback will set the resulting
+// imgRequestProxy in a style struct somewhere.)
+static void
+SetImageRequest(function<void(imgRequestProxy*)> aCallback,
+                nsPresContext* aPresContext,
+                const nsCSSValue& aValue)
+{
+  nsIDocument* doc = aPresContext->Document();
+  imgRequestProxy* req = aValue.GetImageValue(doc);
+  if (aPresContext->IsDynamic()) {
+    aCallback(req);
+  } else {
+    RefPtr<imgRequestProxy> staticReq = nsContentUtils::GetStaticRequest(req);
+    aCallback(staticReq);
   }
-
-#define NS_SET_IMAGE_REQUEST_WITH_DOC(method_, context_, requestgetter_)      \
-  {                                                                           \
-    nsIDocument* doc = (context_)->PresContext()->Document();                 \
-    NS_SET_IMAGE_REQUEST(method_, context_, requestgetter_(doc))              \
-  }
+}
 
 /* Helper function to convert a CSS <position> specified value into its
  * computed-style form. */
@@ -1196,9 +1204,9 @@ static void SetStyleImageToImageRect(nsStyleContext* aStyleContext,
 
   // <uri>
   if (arr->Item(1).GetUnit() == eCSSUnit_Image) {
-    NS_SET_IMAGE_REQUEST_WITH_DOC(aResult.SetImageData,
-                                  aStyleContext,
-                                  arr->Item(1).GetImageValue)
+    SetImageRequest([&](imgRequestProxy* req) {
+      aResult.SetImageData(req);
+    }, aStyleContext->PresContext(), arr->Item(1));
   } else {
     NS_WARNING("nsCSSValue::Image::Image() failed?");
   }
@@ -1232,9 +1240,9 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
 
   switch (aValue.GetUnit()) {
     case eCSSUnit_Image:
-      NS_SET_IMAGE_REQUEST_WITH_DOC(aResult.SetImageData,
-                                    aStyleContext,
-                                    aValue.GetImageValue)
+      SetImageRequest([&](imgRequestProxy* req) {
+        aResult.SetImageData(req);
+      }, aStyleContext->PresContext(), aValue);
       break;
     case eCSSUnit_Function:
       if (aValue.EqualsFunction(eCSSKeyword__moz_image_rect)) {
@@ -7952,9 +7960,9 @@ nsRuleNode::ComputeListData(void* aStartStruct,
   // list-style-image: url, none, inherit
   const nsCSSValue* imageValue = aRuleData->ValueForListStyleImage();
   if (eCSSUnit_Image == imageValue->GetUnit()) {
-    NS_SET_IMAGE_REQUEST_WITH_DOC(list->SetListStyleImage,
-                                  aContext,
-                                  imageValue->GetImageValue)
+    SetImageRequest([&](imgRequestProxy* req) {
+      list->SetListStyleImage(req);
+    }, mPresContext, *imageValue);
   }
   else if (eCSSUnit_None == imageValue->GetUnit() ||
            eCSSUnit_Initial == imageValue->GetUnit()) {
@@ -7963,9 +7971,7 @@ nsRuleNode::ComputeListData(void* aStartStruct,
   else if (eCSSUnit_Inherit == imageValue->GetUnit() ||
            eCSSUnit_Unset == imageValue->GetUnit()) {
     conditions.SetUncacheable();
-    NS_SET_IMAGE_REQUEST(list->SetListStyleImage,
-                         aContext,
-                         parentList->GetListStyleImage())
+    list->SetListStyleImage(parentList->GetListStyleImage());
   }
 
   // list-style-position: enum, inherit, initial
@@ -8877,9 +8883,9 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
           }
           data.mType = type;
           if (type == eStyleContentType_Image) {
-            NS_SET_IMAGE_REQUEST_WITH_DOC(data.SetImage,
-                                          aContext,
-                                          value.GetImageValue);
+            SetImageRequest([&](imgRequestProxy* req) {
+              data.SetImage(req);
+            }, mPresContext, value);
           }
           else if (type <= eStyleContentType_Attr) {
             value.GetStringValue(buffer);

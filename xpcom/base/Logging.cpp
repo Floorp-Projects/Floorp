@@ -13,6 +13,8 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Snprintf.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsClassHashtable.h"
 #include "nsDebug.h"
 #include "NSPRLogModulesParser.h"
@@ -29,6 +31,11 @@
 // NB: Initial amount determined by auditing the codebase for the total amount
 //     of unique module names and padding up to the next power of 2.
 const uint32_t kInitialModuleCount = 256;
+// When rotate option is added to the modules list, this is the hardcoded
+// number of files we create and rotate.  When there is rotate:40,
+// we will keep four files per process, each limited to 10MB.  Sum is 40MB,
+// the given limit.
+const uint32_t kRotateFilesNumber = 4;
 
 namespace mozilla {
 
@@ -65,7 +72,7 @@ int log_pid()
 #endif
 }
 
-}
+} // detail
 
 LogLevel
 ToLogLevel(int32_t aLevel)
@@ -95,23 +102,63 @@ ToLogStr(LogLevel aLevel) {
   }
 }
 
+namespace detail {
+
+/**
+ * A helper class providing reference counting for FILE*.
+ * It encapsulates the following:
+ *  - the FILE handle
+ *  - the order number it was created for when rotating (actual path)
+ *  - number of active references
+ */
+class LogFile
+{
+  FILE* mFile;
+  uint32_t mFileNum;
+
+public:
+  LogFile(FILE* aFile, uint32_t aFileNum)
+    : mFile(aFile)
+    , mFileNum(aFileNum)
+    , mNextToRelease(nullptr)
+  {
+  }
+
+  ~LogFile()
+  {
+    fclose(mFile);
+    delete mNextToRelease;
+  }
+
+  FILE* File() const { return mFile; }
+  uint32_t Num() const { return mFileNum; }
+
+  LogFile* mNextToRelease;
+};
+
+} // detail
+
 class LogModuleManager
 {
 public:
   LogModuleManager()
     : mModulesLock("logmodules")
     , mModules(kInitialModuleCount)
+    , mPrintEntryCount(0)
     , mOutFile(nullptr)
+    , mToReleaseFile(nullptr)
+    , mOutFileNum(0)
     , mMainThread(PR_GetCurrentThread())
     , mAddTimestamp(false)
     , mIsSync(false)
+    , mRotate(0)
   {
   }
 
   ~LogModuleManager()
   {
-    // NB: mModules owns all of the log modules, they will get destroyed by
-    //     its destructor.
+    detail::LogFile* logFile = mOutFile.exchange(nullptr);
+    delete logFile;
   }
 
   /**
@@ -122,6 +169,7 @@ public:
     bool shouldAppend = false;
     bool addTimestamp = false;
     bool isSync = false;
+    int32_t rotate = 0;
     const char* modules = PR_GetEnv("MOZ_LOG");
     if (!modules || !modules[0]) {
       modules = PR_GetEnv("MOZ_LOG_MODULES");
@@ -139,21 +187,29 @@ public:
     }
 
     NSPRLogModulesParser(modules,
-        [&shouldAppend, &addTimestamp, &isSync]
-            (const char* aName, LogLevel aLevel) mutable {
+        [&shouldAppend, &addTimestamp, &isSync, &rotate]
+            (const char* aName, LogLevel aLevel, int32_t aValue) mutable {
           if (strcmp(aName, "append") == 0) {
             shouldAppend = true;
           } else if (strcmp(aName, "timestamp") == 0) {
             addTimestamp = true;
           } else if (strcmp(aName, "sync") == 0) {
             isSync = true;
+          } else if (strcmp(aName, "rotate") == 0) {
+            rotate = (aValue << 20) / kRotateFilesNumber;
           } else {
             LogModule::Get(aName)->SetLevel(aLevel);
           }
     });
 
-    mAddTimestamp = addTimestamp;
+    // Rotate implies timestamp to make the files readable
+    mAddTimestamp = addTimestamp || rotate > 0;
     mIsSync = isSync;
+    mRotate = rotate;
+
+    if (rotate > 0 && shouldAppend) {
+      NS_WARNING("MOZ_LOG: when you rotate the log, you cannot use append!");
+    }
 
     const char* logFile = PR_GetEnv("MOZ_LOG_FILE");
     if (!logFile || !logFile[0]) {
@@ -173,8 +229,49 @@ public:
         logFile = buf;
       }
 
-      mOutFile = fopen(logFile, shouldAppend ? "a" : "w");
+      mOutFilePath.reset(strdup(logFile));
+
+      if (mRotate > 0) {
+        // Delete all the previously captured files, including non-rotated
+        // log files, so that users don't complain our logs eat space even
+        // after the rotate option has been added and don't happen to send
+        // us old large logs along with the rotated files.
+        remove(mOutFilePath.get());
+        for (uint32_t i = 0; i < kRotateFilesNumber; ++i) {
+          RemoveFile(i);
+        }
+      }
+
+      mOutFile = OpenFile(shouldAppend, mOutFileNum);
     }
+  }
+
+  detail::LogFile* OpenFile(bool aShouldAppend, uint32_t aFileNum)
+  {
+    FILE* file;
+
+    if (mRotate > 0) {
+      char buf[2048];
+      snprintf_literal(buf, "%s.%d", mOutFilePath.get(), aFileNum);
+
+      // rotate doesn't support append.
+      file = fopen(buf, "w");
+    } else {
+      file = fopen(mOutFilePath.get(), aShouldAppend ? "a" : "w");
+    }
+
+    if (!file) {
+      return nullptr;
+    }
+
+    return new detail::LogFile(file, aFileNum);
+  }
+
+  void RemoveFile(uint32_t aFileNum)
+  {
+    char buf[2048];
+    snprintf_literal(buf, "%s.%d", mOutFilePath.get(), aFileNum);
+    remove(buf);
   }
 
   LogModule* CreateOrGetModule(const char* aName)
@@ -215,7 +312,16 @@ public:
       newline = "\n";
     }
 
-    FILE* out = mOutFile ? mOutFile : stderr;
+    FILE* out = stderr;
+
+    // In case we use rotate, this ensures the FILE is kept alive during
+    // its use.  Increased before we load mOutFile.
+    ++mPrintEntryCount;
+
+    detail::LogFile* outFile = mOutFile;
+    if (outFile) {
+      out = outFile->File();
+    }
 
     // This differs from the NSPR format in that we do not output the
     // opaque system specific thread pointer (ie pthread_t) cast
@@ -259,15 +365,72 @@ public:
     if (buffToWrite != buff) {
       PR_smprintf_free(buffToWrite);
     }
+
+    if (mRotate > 0 && outFile) {
+      int32_t fileSize = ftell(out);
+      if (fileSize > mRotate) {
+        uint32_t fileNum = outFile->Num();
+
+        uint32_t nextFileNum = fileNum + 1;
+        if (nextFileNum >= kRotateFilesNumber) {
+          nextFileNum = 0;
+        }
+
+        // And here is the trick.  The current out-file remembers its order
+        // number.  When no other thread shifted the global file number yet,
+        // we are the thread to open the next file.
+        if (mOutFileNum.compareExchange(fileNum, nextFileNum)) {
+          // We can work with mToReleaseFile because we are sure the
+          // mPrintEntryCount can't drop to zero now - the condition
+          // to actually delete what's stored in that member.
+          // And also, no other thread can enter this piece of code
+          // because mOutFile is still holding the current file with
+          // the non-shifted number.  The compareExchange() above is
+          // a no-op for other threads.
+          outFile->mNextToRelease = mToReleaseFile;
+          mToReleaseFile = outFile;
+
+          mOutFile = OpenFile(false, nextFileNum);
+        }
+      }
+    }
+
+    if (--mPrintEntryCount == 0 && mToReleaseFile) {
+      // We were the last Print() entered, if there is a file to release
+      // do it now.  exchange() is atomic and makes sure we release the file
+      // only once on one thread.
+      detail::LogFile* release = mToReleaseFile.exchange(nullptr);
+      delete release;
+    }
   }
 
 private:
   OffTheBooksMutex mModulesLock;
   nsClassHashtable<nsCharPtrHashKey, LogModule> mModules;
-  ScopedCloseFile mOutFile;
+
+  // Print() entry counter, actually reflects concurrent use of the current
+  // output file.  ReleaseAcquire ensures that manipulation with mOutFile
+  // and mToReleaseFile is synchronized by manipulation with this value.
+  Atomic<uint32_t, ReleaseAcquire> mPrintEntryCount;
+  // File to write to.  ReleaseAcquire because we need to sync mToReleaseFile
+  // with this.
+  Atomic<detail::LogFile*, ReleaseAcquire> mOutFile;
+  // File to be released when reference counter drops to zero.  This member
+  // is assigned mOutFile when the current file has reached the limit.
+  // It can be Relaxed, since it's synchronized with mPrintEntryCount
+  // manipulation and we do atomic exchange() on it.
+  Atomic<detail::LogFile*, Relaxed> mToReleaseFile;
+  // The next file number.  This is mostly only for synchronization sake.
+  // Can have relaxed ordering, since we only do compareExchange on it which
+  // is atomic regardless ordering.
+  Atomic<uint32_t, Relaxed> mOutFileNum;
+  // Just keeps the actual file path for further use.
+  UniqueFreePtr<char[]> mOutFilePath;
+
   PRThread *mMainThread;
   bool mAddTimestamp;
   bool mIsSync;
+  int32_t mRotate;
 };
 
 StaticAutoPtr<LogModuleManager> sLogModuleManager;

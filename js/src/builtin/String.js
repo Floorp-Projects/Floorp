@@ -594,45 +594,6 @@ function String_localeCompare(that) {
     return intl_CompareStrings(collator, S, That);
 }
 
-// ES6 draft rev27 (2014/08/24) 21.1.2.2 String.fromCodePoint(...codePoints)
-function String_static_fromCodePoint(codePoints) {
-    // Step 1. is not relevant
-    // Step 2.
-    var length = arguments.length;
-
-    // Step 3.
-    var elements = new List();
-
-    // Step 4-5., 5g.
-    for (var nextIndex = 0; nextIndex < length; nextIndex++) {
-        // Step 5a.
-        var next = arguments[nextIndex];
-        // Step 5b-c.
-        var nextCP = ToNumber(next);
-
-        // Step 5d.
-        if (nextCP !== ToInteger(nextCP) || Number_isNaN(nextCP))
-            ThrowRangeError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
-
-        // Step 5e.
-        if (nextCP < 0 || nextCP > 0x10FFFF)
-            ThrowRangeError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
-
-        // Step 5f.
-        // Inlined UTF-16 Encoding
-        if (nextCP <= 0xFFFF) {
-            callFunction(std_Array_push, elements, nextCP);
-            continue;
-        }
-
-        callFunction(std_Array_push, elements, (((nextCP - 0x10000) / 0x400) | 0) + 0xD800);
-        callFunction(std_Array_push, elements, (nextCP - 0x10000) % 0x400 + 0xDC00);
-    }
-
-    // Step 6.
-    return callFunction(std_Function_apply, std_String_fromCharCode, null, elements);
-}
-
 /* ES6 Draft May 22, 2014 21.1.2.4 */
 function String_static_raw(callSite, ...substitutions) {
     // Step 1 (implicit).

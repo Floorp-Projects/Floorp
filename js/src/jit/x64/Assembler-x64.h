@@ -158,7 +158,6 @@ static constexpr Register WasmTlsReg = r14;
 static constexpr Register AsmJSIonExitRegCallee = r10;
 static constexpr Register AsmJSIonExitRegE0 = rax;
 static constexpr Register AsmJSIonExitRegE1 = rdi;
-static constexpr Register AsmJSIonExitRegE2 = rbx;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 static constexpr Register AsmJSIonExitRegReturnData = ecx;

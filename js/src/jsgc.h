@@ -20,6 +20,7 @@
 #include "js/SliceBudget.h"
 #include "js/Vector.h"
 #include "threading/ConditionVariable.h"
+#include "threading/Thread.h"
 #include "vm/NativeObject.h"
 
 namespace js {
@@ -862,14 +863,15 @@ class GCHelperState
     // Activity for the helper to do, protected by the GC lock.
     State state_;
 
-    // Thread which work is being performed on, or null.
-    PRThread* thread;
+    // Thread which work is being performed on, if any.
+    mozilla::Maybe<Thread::Id> thread;
 
-    void startBackgroundThread(State newState);
+    void startBackgroundThread(State newState, const AutoLockGC& lock,
+                               const AutoLockHelperThreadState& helperLock);
     void waitForBackgroundThread(js::AutoLockGC& lock);
 
-    State state();
-    void setState(State state);
+    State state(const AutoLockGC&);
+    void setState(State state, const AutoLockGC&);
 
     friend class js::gc::ArenaLists;
 
@@ -886,15 +888,15 @@ class GCHelperState
     explicit GCHelperState(JSRuntime* rt)
       : rt(rt),
         done(),
-        state_(IDLE),
-        thread(nullptr)
+        state_(IDLE)
     { }
 
     void finish();
 
     void work();
 
-    void maybeStartBackgroundSweep(const AutoLockGC& lock);
+    void maybeStartBackgroundSweep(const AutoLockGC& lock,
+                                   const AutoLockHelperThreadState& helperLock);
     void startBackgroundShrink(const AutoLockGC& lock);
 
     /* Must be called without the GC lock taken. */
@@ -955,7 +957,7 @@ class GCParallelTask
 
     // If multiple tasks are to be started or joined at once, it is more
     // efficient to take the helper thread lock once and use these methods.
-    bool startWithLockHeld();
+    bool startWithLockHeld(AutoLockHelperThreadState& locked);
     void joinWithLockHeld(AutoLockHelperThreadState& locked);
 
     // Instead of dispatching to a helper, run the task on the main thread.
