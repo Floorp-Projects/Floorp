@@ -142,6 +142,9 @@ var CanvasActor = exports.CanvasActor = protocol.ActorClassWithSpec(canvasSpec, 
    */
   setup: function ({ reload }) {
     if (this._initialized) {
+      if (reload) {
+        this.tabActor.window.location.reload();
+      }
       return;
     }
     this._initialized = true;
