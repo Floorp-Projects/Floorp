@@ -87,3 +87,28 @@ var call = evalText(`(module
 assertEq(call(0), 0);
 assertEq(call(1), 1);
 assertErrorMessage(() => call(2), Error, /bad wasm indirect call/);
+
+var call = evalText(`(module
+    (type $A (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $B (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $C (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $D (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $E (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $F (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $G (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (table $a $b $c $d $e $f $g)
+    (func $a (type $A) (get_local 7))
+    (func $b (type $B) (get_local 8))
+    (func $c (type $C) (get_local 9))
+    (func $d (type $D) (get_local 10))
+    (func $e (type $E) (get_local 11))
+    (func $f (type $F) (get_local 12))
+    (func $g (type $G) (get_local 13))
+    (func $call (param i32) (result i32)
+        (call_indirect $A (get_local 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 42)))
+    (export "call" $call)
+)`).exports.call;
+assertEq(call(0), 42);
+for (var i = 1; i < 7; i++)
+    assertErrorMessage(() => call(i), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(7), Error, /out-of-range/);
