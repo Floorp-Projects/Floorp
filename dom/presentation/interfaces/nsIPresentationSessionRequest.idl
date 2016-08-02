@@ -9,6 +9,7 @@ interface nsIPresentationControlChannel;
 
 %{C++
 #define PRESENTATION_SESSION_REQUEST_TOPIC "presentation-session-request"
+#define PRESENTATION_RECONNECT_REQUEST_TOPIC "presentation-reconnect-request"
 %}
 
 /*

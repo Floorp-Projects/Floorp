@@ -6,6 +6,7 @@
 
 #include "PresentationRequest.h"
 
+#include "ControllerConnectionCollection.h"
 #include "mozilla/dom/PresentationRequestBinding.h"
 #include "mozilla/dom/PresentationConnectionAvailableEvent.h"
 #include "mozilla/dom/Promise.h"
@@ -150,6 +151,118 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
   }
 
   return promise.forget();
+}
+
+already_AddRefed<Promise>
+PresentationRequest::Reconnect(const nsAString& aPresentationId,
+                               ErrorResult& aRv)
+{
+  // TODO: Before starting to reconnect, we have to run the prohibits
+  // mixed security contexts algorithm first. This will be implemented
+  // in bug 1254488.
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  if (doc->GetSandboxFlags() & SANDBOXED_PRESENTATION) {
+    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return promise.forget();
+  }
+
+  nsString presentationId = nsString(aPresentationId);
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod<nsString, RefPtr<Promise>>(
+      this,
+      &PresentationRequest::FindOrCreatePresentationConnection,
+      presentationId,
+      promise);
+
+  if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(r)))) {
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
+  return promise.forget();
+}
+
+void
+PresentationRequest::FindOrCreatePresentationConnection(
+  const nsAString& aPresentationId,
+  Promise* aPromise)
+{
+  MOZ_ASSERT(aPromise);
+
+  if (NS_WARN_IF(!GetOwner())) {
+    aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return;
+  }
+
+  RefPtr<PresentationConnection> connection =
+    ControllerConnectionCollection::GetSingleton()->FindConnection(
+      GetOwner()->WindowID(),
+      aPresentationId,
+      nsIPresentationService::ROLE_CONTROLLER);
+
+  if (connection) {
+    nsAutoString url;
+    connection->GetUrl(url);
+    if (url.Equals(mUrl)) {
+      switch (connection->State()) {
+        case PresentationConnectionState::Closed:
+          // We found the matched connection.
+          break;
+        case PresentationConnectionState::Connecting:
+        case PresentationConnectionState::Connected:
+          aPromise->MaybeResolve(connection);
+          return;
+        case PresentationConnectionState::Terminated:
+          // A terminated connection cannot be reused.
+          connection = nullptr;
+          break;
+        default:
+          MOZ_CRASH("Unknown presentation session state.");
+          return;
+      }
+    } else {
+      connection = nullptr;
+    }
+  }
+
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if(NS_WARN_IF(!service)) {
+    aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return;
+  }
+
+  nsCOMPtr<nsIPresentationServiceCallback> callback =
+    new PresentationReconnectCallback(this,
+                                      mUrl,
+                                      aPresentationId,
+                                      aPromise,
+                                      connection);
+
+  nsresult rv =
+    service->ReconnectSession(mUrl,
+                              aPresentationId,
+                              nsIPresentationService::ROLE_CONTROLLER,
+                              callback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+  }
 }
 
 already_AddRefed<Promise>
