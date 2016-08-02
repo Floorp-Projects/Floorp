@@ -46,6 +46,7 @@ def set_treeherder_machine_platform(config, tests):
     translation = {
         'android-api-15/debug': 'android-4-3-armv7-api15/debug',
         'android-api-15/opt': 'android-4-3-armv7-api15/opt',
+        'android-x86/opt': 'android-4-2-x86/opt',
     }
     for test in tests:
         build_platform = test['build-platform']
