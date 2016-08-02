@@ -124,8 +124,6 @@ apt-get install -y --force-yes ${apt_packages[@]}
 
 dpkg-reconfigure locales
 
-# set up tooltool (temporarily)
-curl https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py > /setup/tooltool.py
 tooltool_fetch() {
     cat >manifest.tt
     python /setup/tooltool.py fetch
