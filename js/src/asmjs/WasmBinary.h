@@ -64,6 +64,7 @@ enum class ValType
 
 enum class TypeConstructor
 {
+    AnyFunc                              = 0x20,
     Function                             = 0x40
 };
 

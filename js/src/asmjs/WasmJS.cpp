@@ -900,18 +900,40 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+    RootedObject obj(cx, &args[0].toObject());
+    RootedId id(cx);
+    RootedValue val(cx);
+
+    JSAtom* elementAtom = Atomize(cx, "element", strlen("element"));
+    if (!elementAtom)
+        return false;
+    id = AtomToId(elementAtom);
+    if (!GetProperty(cx, obj, obj, id, &val))
+        return false;
+
+    if (!val.isString()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
+        return false;
+    }
+
+    JSLinearString* str = val.toString()->ensureLinear(cx);
+    if (!str)
+        return false;
+
+    if (!StringEqualsAscii(str, "anyfunc")) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
+        return false;
+    }
+
     JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
     if (!initialAtom)
         return false;
-
-    RootedObject obj(cx, &args[0].toObject());
-    RootedId id(cx, AtomToId(initialAtom));
-    RootedValue initialVal(cx);
-    if (!GetProperty(cx, obj, obj, id, &initialVal))
+    id = AtomToId(initialAtom);
+    if (!GetProperty(cx, obj, obj, id, &val))
         return false;
 
     double initialDbl;
-    if (!ToInteger(cx, initialVal, &initialDbl))
+    if (!ToInteger(cx, val, &initialDbl))
         return false;
 
     if (initialDbl < 0 || initialDbl > INT32_MAX) {

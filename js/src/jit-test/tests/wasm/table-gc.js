@@ -108,7 +108,7 @@ assertEq(finalizeCount(), 3);
 // Before initialization, a table is not bound to any instance.
 resetFinalizeCount();
 var i = evalText(`(module (func $f0 (result i32) (i32.const 0)) (export "f0" $f0))`);
-var t = new Table({initial:4});
+var t = new Table({initial:4, element:"anyfunc"});
 i.edge = makeFinalizeObserver();
 t.edge = makeFinalizeObserver();
 gc();
@@ -125,7 +125,7 @@ assertEq(finalizeCount(), 2);
 resetFinalizeCount();
 var i = evalText(`(module (func $f (result i32) (i32.const 42)) (export "f" $f))`);
 var f = i.exports.f;
-var t = new Table({initial:1});
+var t = new Table({initial:1, element:"anyfunc"});
 i.edge = makeFinalizeObserver();
 f.edge = makeFinalizeObserver();
 t.edge = makeFinalizeObserver();
