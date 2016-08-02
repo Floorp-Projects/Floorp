@@ -85,18 +85,6 @@ class SigIdSet
 
 ExclusiveData<SigIdSet> sigIdSet;
 
-JSContext**
-Instance::addressOfContextPtr() const
-{
-    return (JSContext**)(codeSegment().globalData() + ContextPtrGlobalDataOffset);
-}
-
-uint8_t**
-Instance::addressOfMemoryBase() const
-{
-    return (uint8_t**)(codeSegment().globalData() + HeapGlobalDataOffset);
-}
-
 void**
 Instance::addressOfTableBase(size_t tableIndex) const
 {
@@ -293,9 +281,10 @@ Instance::Instance(JSContext* cx,
     MOZ_ASSERT(funcImports.length() == metadata().funcImports.length());
     MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
-    *addressOfContextPtr() = cx;
-
+    tlsData_.cx = cx;
     tlsData_.instance = this;
+    tlsData_.globalData = code_->segment().globalData();
+    tlsData_.memoryBase = memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
     tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(StackForUntrustedScript);
 
     for (size_t i = 0; i < metadata().funcImports.length(); i++) {
@@ -339,9 +328,6 @@ Instance::Instance(JSContext* cx,
           }
         }
     }
-
-    if (memory)
-        *addressOfMemoryBase() = memory->buffer().dataPointerEither().unwrap();
 
     for (size_t i = 0; i < tables_.length(); i++)
         *addressOfTableBase(i) = tables_[i]->array();
@@ -400,7 +386,7 @@ SharedMem<uint8_t*>
 Instance::memoryBase() const
 {
     MOZ_ASSERT(metadata().usesMemory());
-    MOZ_ASSERT(*addressOfMemoryBase() == memory_->buffer().dataPointerEither());
+    MOZ_ASSERT(tlsData_.memoryBase == memory_->buffer().dataPointerEither());
     return memory_->buffer().dataPointerEither();
 }
 
@@ -519,7 +505,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 
         // Call the per-exported-function trampoline created by GenerateEntry.
         auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBase() + func.entryOffset());
-        if (!CALL_GENERATED_3(funcPtr, exportArgs.begin(), codeSegment().globalData(), tlsData()))
+        if (!CALL_GENERATED_2(funcPtr, exportArgs.begin(), &tlsData_))
             return false;
     }
 
