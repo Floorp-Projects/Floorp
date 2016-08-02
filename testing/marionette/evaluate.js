@@ -112,7 +112,10 @@ evaluate.sandbox = function(sb, script, args = [], opts = {}) {
       sb[CALLBACK] = sb[COMPLETE];
       sb[ARGUMENTS] = Cu.cloneInto(args, sb, {wrapReflectors: true});
 
-      script = `${ARGUMENTS}.push(${CALLBACK});` +
+      // callback function made private
+      // so that introspection is possible
+      // on the arguments object
+      script = `${ARGUMENTS}.push(rv => ${CALLBACK}(rv));` +
           `(function() { ${script} }).apply(null, ${ARGUMENTS})`;
 
       // marionetteScriptFinished is not WebDriver conformant,
