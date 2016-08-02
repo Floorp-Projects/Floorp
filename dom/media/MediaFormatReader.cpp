@@ -418,8 +418,7 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
         decoder.mInfo ? *decoder.mInfo->GetAsAudioInfo() : mInfo.mAudio,
         decoder.mTaskQueue,
         decoder.mCallback.get(),
-        mCrashHelper,
-        decoder.mIsBlankDecode
+        mCrashHelper
       });
       break;
     }
@@ -433,8 +432,7 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
         decoder.mCallback.get(),
         mLayersBackendType,
         GetImageContainer(),
-        mCrashHelper,
-        decoder.mIsBlankDecode
+        mCrashHelper
       });
       break;
     }
@@ -2056,34 +2054,6 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               mVideo.mWaitingForData, mVideo.mLastStreamSourceID);
   }
   aString += NS_ConvertUTF8toUTF16(result);
-}
-
-void
-MediaFormatReader::SetVideoBlankDecode(bool aIsBlankDecode)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return SetBlankDecode(TrackType::kVideoTrack, aIsBlankDecode);
-}
-
-void
-MediaFormatReader::SetBlankDecode(TrackType aTrack, bool aIsBlankDecode)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  auto& decoder = GetDecoderData(aTrack);
-
-  LOG("%s, decoder.mIsBlankDecode = %d => aIsBlankDecode = %d",
-      TrackTypeToStr(aTrack), decoder.mIsBlankDecode, aIsBlankDecode);
-
-  if (decoder.mIsBlankDecode == aIsBlankDecode) {
-    return;
-  }
-
-  decoder.mIsBlankDecode = aIsBlankDecode;
-  decoder.Flush();
-  decoder.ShutdownDecoder();
-  NotifyDecodingRequested(TrackInfo::kVideoTrack); // Calls ScheduleUpdate().
-
-  return;
 }
 
 } // namespace mozilla

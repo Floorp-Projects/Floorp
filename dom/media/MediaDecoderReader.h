@@ -317,11 +317,6 @@ public:
     return &mIsSuspended;
   }
 
-  // Switch the video decoder to BlankDecoderModule. It might takes effective
-  // since a few samples later depends on how much demuxed samples are already
-  // queued in the original video decoder.
-  virtual void SetVideoBlankDecode(bool aIsBlankDecode) {}
-
 protected:
   virtual ~MediaDecoderReader();
 
