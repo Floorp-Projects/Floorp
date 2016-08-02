@@ -113,8 +113,10 @@ class CSSStyleSheet final : public nsIDOMCSSStyleSheet,
 {
 public:
   typedef net::ReferrerPolicy ReferrerPolicy;
-  CSSStyleSheet(CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy);
-  CSSStyleSheet(CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy,
+  CSSStyleSheet(css::SheetParsingMode aParsingMode,
+                CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy);
+  CSSStyleSheet(css::SheetParsingMode aParsingMode,
+                CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy,
                 const dom::SRIMetadata& aIntegrity);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
