@@ -11,7 +11,7 @@ body {
   background-color: var(--theme-body-background);
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 *:focus {
