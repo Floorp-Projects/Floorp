@@ -15,32 +15,6 @@
 
 namespace mozilla {
 
-class CaptureTask::MediaStreamEventListener : public MediaStreamTrackListener
-{
-public:
-  MediaStreamEventListener(CaptureTask* aCaptureTask)
-    : mCaptureTask(aCaptureTask) {};
-
-  // MediaStreamListener methods.
-  void NotifyEnded() override
-  {
-    if(!mCaptureTask->mImageGrabbedOrTrackEnd) {
-      mCaptureTask->PostTrackEndEvent();
-    }
-  }
-
-private:
-  CaptureTask* mCaptureTask;
-};
-
-CaptureTask::CaptureTask(dom::ImageCapture* aImageCapture)
-  : mImageCapture(aImageCapture)
-  , mEventListener(new MediaStreamEventListener(this))
-  , mImageGrabbedOrTrackEnd(false)
-  , mPrincipalChanged(false)
-{
-}
-
 nsresult
 CaptureTask::TaskComplete(already_AddRefed<dom::Blob> aBlob, nsresult aRv)
 {
@@ -81,8 +55,7 @@ CaptureTask::AttachTrack()
 
   dom::VideoStreamTrack* track = mImageCapture->GetVideoStreamTrack();
   track->AddPrincipalChangeObserver(this);
-  track->AddListener(mEventListener.get());
-  track->AddDirectListener(this);
+  track->AddListener(this);
 }
 
 void
@@ -92,8 +65,7 @@ CaptureTask::DetachTrack()
 
   dom::VideoStreamTrack* track = mImageCapture->GetVideoStreamTrack();
   track->RemovePrincipalChangeObserver(this);
-  track->RemoveListener(mEventListener.get());
-  track->RemoveDirectListener(this);
+  track->RemoveListener(this);
 }
 
 void
@@ -104,11 +76,15 @@ CaptureTask::PrincipalChanged(dom::MediaStreamTrack* aMediaStreamTrack)
 }
 
 void
-CaptureTask::SetCurrentFrames(const VideoSegment& aSegment)
+CaptureTask::NotifyQueuedChanges(MediaStreamGraph* aGraph,
+                                 StreamTime aTrackOffset,
+                                 const MediaSegment& aQueuedMedia)
 {
   if (mImageGrabbedOrTrackEnd) {
     return;
   }
+
+  MOZ_ASSERT(aQueuedMedia.GetType() == MediaSegment::VIDEO);
 
   // Callback for encoding complete, it calls on main thread.
   class EncodeComplete : public dom::EncodeCompleteCallback
@@ -128,13 +104,11 @@ CaptureTask::SetCurrentFrames(const VideoSegment& aSegment)
     RefPtr<CaptureTask> mTask;
   };
 
-  VideoSegment::ConstChunkIterator iter(aSegment);
-
-
-
+  VideoSegment* video =
+    const_cast<VideoSegment*> (static_cast<const VideoSegment*>(&aQueuedMedia));
+  VideoSegment::ChunkIterator iter(*video);
   while (!iter.IsEnded()) {
     VideoChunk chunk = *iter;
-
     // Extract the first valid video frame.
     VideoFrame frame;
     if (!chunk.IsNull()) {
@@ -164,6 +138,14 @@ CaptureTask::SetCurrentFrames(const VideoSegment& aSegment)
       return;
     }
     iter.Next();
+  }
+}
+
+void
+CaptureTask::NotifyEnded()
+{
+  if(!mImageGrabbedOrTrackEnd) {
+    PostTrackEndEvent();
   }
 }
 
