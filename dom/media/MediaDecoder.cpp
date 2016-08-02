@@ -14,7 +14,6 @@
 #include "MediaDecoderStateMachine.h"
 #include "ImageContainer.h"
 #include "MediaResource.h"
-#include "VideoFrameContainer.h"
 #include "nsError.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
