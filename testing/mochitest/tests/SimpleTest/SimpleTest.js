@@ -938,10 +938,16 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
         SimpleTest.waitForClipboard_polls = 0;
     }
 
+    var lastValue;
     function wait(validatorFn, successFn, failureFn, flavor) {
+        if (SimpleTest.waitForClipboard_polls == 0) {
+          lastValue = undefined;
+        }
+
         if (++SimpleTest.waitForClipboard_polls > maxPolls) {
             // Log the failure.
             SimpleTest.ok(aExpectFailure, "Timed out while polling clipboard for pasted data");
+            dump("Got this value: " + lastValue);
             reset();
             failureFn();
             return;
@@ -958,6 +964,7 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
             reset();
             successFn();
         } else {
+            lastValue = data;
             SimpleTest._originalSetTimeout.apply(window, [function() { return wait(validatorFn, successFn, failureFn, flavor); }, 100]);
         }
     }
