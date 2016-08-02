@@ -41,7 +41,7 @@ payload:
 
   # Note: This task is built server side without the context or tooling that
   # exist in tree so we must hard code the version
-  image: 'taskcluster/decision:0.1.3'
+  image: 'taskcluster/decision:0.1.4'
 
   # Virtually no network or other potentially risky operations happen as part
   # of the task timeout aside from the initial clone. We intentionally have
