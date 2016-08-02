@@ -144,20 +144,22 @@ class Simulator
     void set_d_register_from_double(int dreg, const double& dbl) {
         setVFPRegister<double, 2>(dreg, dbl);
     }
-    double get_double_from_d_register(int dreg) {
-        return getFromVFPRegister<double, 2>(dreg);
+    void get_double_from_d_register(int dreg, double* out) {
+        getFromVFPRegister<double, 2>(dreg, out);
     }
     void set_s_register_from_float(int sreg, const float flt) {
         setVFPRegister<float, 1>(sreg, flt);
     }
-    float get_float_from_s_register(int sreg) {
-        return getFromVFPRegister<float, 1>(sreg);
+    void get_float_from_s_register(int sreg, float* out) {
+        getFromVFPRegister<float, 1>(sreg, out);
     }
     void set_s_register_from_sinteger(int sreg, const int sint) {
         setVFPRegister<int, 1>(sreg, sint);
     }
     int get_sinteger_from_s_register(int sreg) {
-        return getFromVFPRegister<int, 1>(sreg);
+        int ret;
+        getFromVFPRegister<int, 1>(sreg, &ret);
+        return ret;
     }
 
     // Special case of set_register and get_register to access the raw PC value.
@@ -238,7 +240,8 @@ class Simulator
     // Support for VFP.
     void compute_FPSCR_Flags(double val1, double val2);
     void copy_FPSCR_to_APSR();
-    inline double canonicalizeNaN(double value);
+    inline void canonicalizeNaN(double* value);
+    inline void canonicalizeNaN(float* value);
 
     // Helper functions to decode common "addressing" modes
     int32_t getShiftRm(SimInstruction* instr, bool* carry_out);
@@ -341,7 +344,7 @@ class Simulator
     void scratchVolatileRegisters(bool scratchFloat = true);
 
     template<class ReturnType, int register_size>
-    ReturnType getFromVFPRegister(int reg_index);
+    void getFromVFPRegister(int reg_index, ReturnType* out);
 
     template<class InputType, int register_size>
     void setVFPRegister(int reg_index, const InputType& value);
