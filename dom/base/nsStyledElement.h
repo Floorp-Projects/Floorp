@@ -25,12 +25,12 @@ class Declaration;
 
 typedef mozilla::dom::Element nsStyledElementBase;
 
-class nsStyledElementNotElementCSSInlineStyle : public nsStyledElementBase
+class nsStyledElement : public nsStyledElementBase
 {
 
 protected:
 
-  inline explicit nsStyledElementNotElementCSSInlineStyle(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  inline explicit nsStyledElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsStyledElementBase(aNodeInfo)
   {}
 
@@ -68,13 +68,6 @@ protected:
    * document.
    */
   nsresult  ReparseStyleAttribute(bool aForceInDataDoc);
-};
-
-class nsStyledElement : public nsStyledElementNotElementCSSInlineStyle {
-protected:
-  inline explicit nsStyledElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsStyledElementNotElementCSSInlineStyle(aNodeInfo)
-  {}
 };
 
 #endif // __NS_STYLEDELEMENT_H_

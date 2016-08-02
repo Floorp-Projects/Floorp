@@ -68,7 +68,7 @@ class Matrix;
 class gfxMatrix;
 struct nsSVGEnumMapping;
 
-typedef nsStyledElementNotElementCSSInlineStyle nsSVGElementBase;
+typedef nsStyledElement nsSVGElementBase;
 
 class nsSVGElement : public nsSVGElementBase    // nsIContent
                    , public nsIDOMSVGElement
