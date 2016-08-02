@@ -26,6 +26,7 @@ extern "C" {
 #define AV_CODEC_ID_MP3 CODEC_ID_MP3
 #define AV_CODEC_ID_VP8 CODEC_ID_VP8
 #define AV_CODEC_ID_NONE CODEC_ID_NONE
+#define AV_CODEC_ID_FLAC CODEC_ID_FLAC
 typedef CodecID AVCodecID;
 #endif
 
