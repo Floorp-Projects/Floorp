@@ -25,26 +25,17 @@ public class PanningPerfAPI {
     private static List<Long> mFrameTimes;
     private static long mFrameStartTime;
 
-    private static boolean mRecordingCheckerboard;
-    private static List<Float> mCheckerboardAmounts;
-    private static long mCheckerboardStartTime;
-
     private static void initialiseRecordingArrays() {
         if (mFrameTimes == null) {
             mFrameTimes = new ArrayList<Long>(EXPECTED_FRAME_COUNT);
         } else {
             mFrameTimes.clear();
         }
-        if (mCheckerboardAmounts == null) {
-            mCheckerboardAmounts = new ArrayList<Float>(EXPECTED_FRAME_COUNT);
-        } else {
-            mCheckerboardAmounts.clear();
-        }
     }
 
     @RobocopTarget
     public static void startFrameTimeRecording() {
-        if (mRecordingFrames || mRecordingCheckerboard) {
+        if (mRecordingFrames) {
             Log.e(LOGTAG, "Error: startFrameTimeRecording() called while already recording!");
             return;
         }
@@ -70,58 +61,13 @@ public class PanningPerfAPI {
         }
     }
 
-    public static boolean isRecordingCheckerboard() {
-        return mRecordingCheckerboard;
-    }
-
     @RobocopTarget
     public static void startCheckerboardRecording() {
-        if (mRecordingCheckerboard || mRecordingFrames) {
-            Log.e(LOGTAG, "Error: startCheckerboardRecording() called while already recording!");
-            return;
-        }
-        mRecordingCheckerboard = true;
-        initialiseRecordingArrays();
-        mCheckerboardStartTime = SystemClock.uptimeMillis();
+        throw new UnsupportedOperationException();
     }
 
     @RobocopTarget
     public static List<Float> stopCheckerboardRecording() {
-        if (!mRecordingCheckerboard) {
-            Log.e(LOGTAG, "Error: stopCheckerboardRecording() called when not recording!");
-            return null;
-        }
-        mRecordingCheckerboard = false;
-
-        // We take the number of values in mCheckerboardAmounts here, as there's
-        // the possibility that this function is called while recordCheckerboard
-        // is still executing. As values are added to this list last, we use
-        // this number as the canonical number of recordings.
-        int values = mCheckerboardAmounts.size();
-        if (values == 0) {
-            Log.w(LOGTAG, "stopCheckerboardRecording() found no checkerboard amounts!");
-            return mCheckerboardAmounts;
-        }
-
-        // The score will be the sum of all the values in mCheckerboardAmounts,
-        // so weight the checkerboard values by time so that frame-rate and
-        // run-length don't affect score.
-        long lastTime = 0;
-        float totalTime = mFrameTimes.get(values - 1);
-        for (int i = 0; i < values; i++) {
-            long elapsedTime = mFrameTimes.get(i) - lastTime;
-            mCheckerboardAmounts.set(i, mCheckerboardAmounts.get(i) * elapsedTime / totalTime);
-            lastTime += elapsedTime;
-        }
-
-        return mCheckerboardAmounts;
-    }
-
-    public static void recordCheckerboard(float amount) {
-        // this will be called often, so try to make it as quick as possible
-        if (mRecordingCheckerboard) {
-            mFrameTimes.add(SystemClock.uptimeMillis() - mCheckerboardStartTime);
-            mCheckerboardAmounts.add(amount);
-        }
+        throw new UnsupportedOperationException();
     }
 }
