@@ -60,6 +60,9 @@ PostMessageEvent::Run()
   MOZ_ASSERT(!mSource || mSource->IsOuterWindow(),
              "should have been passed an outer window!");
 
+  // Note: We don't init this AutoJSAPI with targetWindow, because we do not
+  // want exceptions during message deserialization to trigger error events on
+  // targetWindow.
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
