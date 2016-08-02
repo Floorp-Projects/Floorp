@@ -45,7 +45,7 @@ MAX_IGNORE_ERROR_COUNT:                5,
 
 // Backoff intervals
 MINIMUM_BACKOFF_INTERVAL:              15 * 60 * 1000,      // 15 minutes
-MAXIMUM_BACKOFF_INTERVAL:              8 * 60 * 60 * 1000,  // 8 hours 
+MAXIMUM_BACKOFF_INTERVAL:              8 * 60 * 60 * 1000,  // 8 hours
 
 // HMAC event handling timeout.
 // 10 minutes: a compromise between the multi-desktop sync interval
@@ -100,6 +100,9 @@ MAX_UPLOAD_RECORDS:                    100,
 MAX_UPLOAD_BYTES:                      1024 * 1023, // just under 1MB
 MAX_HISTORY_UPLOAD:                    5000,
 MAX_HISTORY_DOWNLOAD:                  5000,
+
+// TTL of the message sent to another device when sending a tab
+NOTIFY_TAB_SENT_TTL_SECS:              1 * 3600, // 1 hour
 
 // Top-level statuses:
 STATUS_OK:                             "success.status_ok",

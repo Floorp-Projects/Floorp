@@ -48,7 +48,8 @@ Utils.deferGetSet(ClientsRec,
                   "cleartext",
                   ["name", "type", "commands",
                    "version", "protocols",
-                   "formfactor", "os", "appPackage", "application", "device"]);
+                   "formfactor", "os", "appPackage", "application", "device",
+                   "fxaDeviceId"]);
 
 
 this.ClientEngine = function ClientEngine(service) {
@@ -176,6 +177,13 @@ ClientEngine.prototype = {
     return client ? client.name : "";
   },
 
+  getClientFxaDeviceId(id) {
+    if (this._store._remoteClients[id]) {
+      return this._store._remoteClients[id].fxaDeviceId;
+    }
+    return null;
+  },
+
   isMobile: function isMobile(id) {
     if (this._store._remoteClients[id])
       return this._store._remoteClients[id].type == DEVICE_TYPE_MOBILE;
@@ -235,6 +243,31 @@ ClientEngine.prototype = {
   _uploadOutgoing() {
     this._clearedCommands = null;
     SyncEngine.prototype._uploadOutgoing.call(this);
+  },
+
+  _onRecordsWritten(succeeded, failed) {
+    // Notify other devices that their own client collection changed
+    const idsToNotify = succeeded.reduce((acc, id) => {
+      if (id == this.localID) {
+        return acc;
+      }
+      const fxaDeviceId = this.getClientFxaDeviceId(id);
+      return fxaDeviceId ? acc.concat(fxaDeviceId) : acc;
+    }, []);
+    if (idsToNotify.length > 0) {
+      this._notifyCollectionChanged(idsToNotify);
+    }
+  },
+
+  _notifyCollectionChanged(ids) {
+    const message = {
+      version: 1,
+      command: "sync:collection_changed",
+      data: {
+        collections: ["clients"]
+      }
+    };
+    fxAccounts.notifyDevices(ids, message, NOTIFY_TAB_SENT_TTL_SECS);
   },
 
   _syncFinish() {
