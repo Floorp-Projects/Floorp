@@ -774,15 +774,17 @@ collator_finalize(FreeOp* fop, JSObject* obj)
 }
 
 static JSObject*
-InitCollatorClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global)
+CreateCollatorPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global)
 {
     RootedFunction ctor(cx, global->createConstructor(cx, &Collator, cx->names().Collator, 0));
     if (!ctor)
         return nullptr;
 
-    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateCollatorPrototype(cx));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &CollatorClass));
     if (!proto)
         return nullptr;
+    proto->setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
+
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
@@ -822,18 +824,7 @@ InitCollatorClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global
     if (!DefineProperty(cx, Intl, cx->names().Collator, ctorValue, nullptr, nullptr, 0))
         return nullptr;
 
-    return ctor;
-}
-
-bool
-GlobalObject::initCollatorProto(JSContext* cx, Handle<GlobalObject*> global)
-{
-    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &CollatorClass));
-    if (!proto)
-        return false;
-    proto->setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
-    global->setReservedSlot(COLLATOR_PROTO, ObjectValue(*proto));
-    return true;
+    return proto;
 }
 
 bool
@@ -1273,16 +1264,18 @@ numberFormat_finalize(FreeOp* fop, JSObject* obj)
 }
 
 static JSObject*
-InitNumberFormatClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global)
+CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global)
 {
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, &NumberFormat, cx->names().NumberFormat, 0);
     if (!ctor)
         return nullptr;
 
-    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateNumberFormatPrototype(cx));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &NumberFormatClass));
     if (!proto)
         return nullptr;
+    proto->setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
+
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
@@ -1328,18 +1321,7 @@ InitNumberFormatClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> gl
     if (!DefineProperty(cx, Intl, cx->names().NumberFormat, ctorValue, nullptr, nullptr, 0))
         return nullptr;
 
-    return ctor;
-}
-
-bool
-GlobalObject::initNumberFormatProto(JSContext* cx, Handle<GlobalObject*> global)
-{
-    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &NumberFormatClass));
-    if (!proto)
-        return false;
-    proto->setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
-    global->setReservedSlot(NUMBER_FORMAT_PROTO, ObjectValue(*proto));
-    return true;
+    return proto;
 }
 
 bool
@@ -1746,16 +1728,18 @@ dateTimeFormat_finalize(FreeOp* fop, JSObject* obj)
 }
 
 static JSObject*
-InitDateTimeFormatClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global)
+CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global)
 {
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, &DateTimeFormat, cx->names().DateTimeFormat, 0);
     if (!ctor)
         return nullptr;
 
-    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateDateTimeFormatPrototype(cx));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &DateTimeFormatClass));
     if (!proto)
         return nullptr;
+    proto->setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
+
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
@@ -1816,18 +1800,7 @@ InitDateTimeFormatClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
     if (!DefineProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue, nullptr, nullptr, 0))
         return nullptr;
 
-    return ctor;
-}
-
-bool
-GlobalObject::initDateTimeFormatProto(JSContext* cx, Handle<GlobalObject*> global)
-{
-    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &DateTimeFormatClass));
-    if (!proto)
-        return false;
-    proto->setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
-    global->setReservedSlot(DATE_TIME_FORMAT_PROTO, ObjectValue(*proto));
-    return true;
+    return proto;
 }
 
 bool
@@ -2392,51 +2365,71 @@ static const JSFunctionSpec intl_static_methods[] = {
  * Initializes the Intl Object and its standard built-in properties.
  * Spec: ECMAScript Internationalization API Specification, 8.0, 8.1
  */
-JSObject*
-js::InitIntlClass(JSContext* cx, HandleObject obj)
-{
-    MOZ_ASSERT(obj->is<GlobalObject>());
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-
-    // The constructors above need to be able to determine whether they've been
-    // called with this being "the standard built-in Intl object". The global
-    // object reserves slots to track standard built-in objects, but doesn't
-    // normally keep references to non-constructors. This makes sure there is one.
-    RootedObject Intl(cx, global->getOrCreateIntlObject(cx));
-    if (!Intl)
-        return nullptr;
-
-    RootedValue IntlValue(cx, ObjectValue(*Intl));
-    if (!DefineProperty(cx, global, cx->names().Intl, IntlValue, nullptr, nullptr,
-                        JSPROP_RESOLVING))
-    {
-        return nullptr;
-    }
-
-    if (!JS_DefineFunctions(cx, Intl, intl_static_methods))
-        return nullptr;
-
-    if (!InitCollatorClass(cx, Intl, global))
-        return nullptr;
-    if (!InitNumberFormatClass(cx, Intl, global))
-        return nullptr;
-    if (!InitDateTimeFormatClass(cx, Intl, global))
-        return nullptr;
-
-    global->setConstructor(JSProto_Intl, ObjectValue(*Intl));
-
-    return Intl;
-}
-
 bool
 GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global)
 {
-    RootedObject Intl(cx);
     RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
-    Intl = NewObjectWithGivenProto(cx, &IntlClass, proto, SingletonObject);
-    if (!Intl)
+    if (!proto)
         return false;
 
-    global->setConstructor(JSProto_Intl, ObjectValue(*Intl));
+    // The |Intl| object is just a plain object with some "static" function
+    // properties and some constructor properties.
+    RootedObject intl(cx, NewObjectWithGivenProto(cx, &IntlClass, proto, SingletonObject));
+    if (!intl)
+        return false;
+
+    // Add the static functions.
+    if (!JS_DefineFunctions(cx, intl, intl_static_methods))
+        return false;
+
+    // Add the constructor properties, computing and returning the relevant
+    // prototype objects needed below.
+    RootedObject collatorProto(cx, CreateCollatorPrototype(cx, intl, global));
+    if (!collatorProto)
+        return false;
+    RootedObject dateTimeFormatProto(cx, CreateDateTimeFormatPrototype(cx, intl, global));
+    if (!dateTimeFormatProto)
+        return false;
+    RootedObject numberFormatProto(cx, CreateNumberFormatPrototype(cx, intl, global));
+    if (!numberFormatProto)
+        return false;
+
+    // The |Intl| object is fully set up now, so define the global property.
+    RootedValue intlValue(cx, ObjectValue(*intl));
+    if (!DefineProperty(cx, global, cx->names().Intl, intlValue, nullptr, nullptr,
+                        JSPROP_RESOLVING))
+    {
+        return false;
+    }
+
+    // Now that the |Intl| object is successfully added, we can OOM-safely fill
+    // in all relevant reserved global slots.
+
+    // Cache the various prototypes, for use in creating instances of these
+    // objects with the proper [[Prototype]] as "the original value of
+    // |Intl.Collator.prototype|" and similar.  For builtin classes like
+    // |String.prototype| we have |JSProto_*| that enables
+    // |getPrototype(JSProto_*)|, but that has global-object-property-related
+    // baggage we don't need or want, so we use one-off reserved slots.
+    global->setReservedSlot(COLLATOR_PROTO, ObjectValue(*collatorProto));
+    global->setReservedSlot(DATE_TIME_FORMAT_PROTO, ObjectValue(*dateTimeFormatProto));
+    global->setReservedSlot(NUMBER_FORMAT_PROTO, ObjectValue(*numberFormatProto));
+
+    // Also cache |Intl| to implement spec language that conditions behavior
+    // based on values being equal to "the standard built-in |Intl| object".
+    // Use |setConstructor| to correspond with |JSProto_Intl|.
+    //
+    // XXX We should possibly do a one-off reserved slot like above.
+    global->setConstructor(JSProto_Intl, ObjectValue(*intl));
     return true;
+}
+
+JSObject*
+js::InitIntlClass(JSContext* cx, HandleObject obj)
+{
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    if (!GlobalObject::initIntlObject(cx, global))
+        return nullptr;
+
+    return &global->getConstructor(JSProto_Intl).toObject();
 }
