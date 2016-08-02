@@ -402,8 +402,8 @@ public:
 
     inline XPCNativeSet* Add(const XPCNativeSetKey* key, XPCNativeSet* set)
     {
-        NS_PRECONDITION(key,"bad param");
-        NS_PRECONDITION(set,"bad param");
+        MOZ_ASSERT(key, "bad param");
+        MOZ_ASSERT(set, "bad param");
         auto entry = static_cast<Entry*>(mTable.Add(key, mozilla::fallible));
         if (!entry)
             return nullptr;
@@ -413,15 +413,9 @@ public:
         return set;
     }
 
-    inline XPCNativeSet* Add(XPCNativeSet* set)
-    {
-        XPCNativeSetKey key(set, nullptr, 0);
-        return Add(&key, set);
-    }
-
     inline void Remove(XPCNativeSet* set)
     {
-        NS_PRECONDITION(set,"bad param");
+        MOZ_ASSERT(set, "bad param");
 
         XPCNativeSetKey key(set, nullptr, 0);
         mTable.Remove(&key);

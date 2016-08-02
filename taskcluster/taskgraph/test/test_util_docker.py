@@ -31,9 +31,11 @@ class TestDocker(unittest.TestCase):
             with open(os.path.join(tmpdir, 'docker', 'my-image', 'a-file'), "w") as f:
                 f.write("data\n")
             self.assertEqual(
-                docker.generate_context_hash(docker.GECKO, 'docker/my-image', 'my-image'),
-                '872d76a656f47ea17c043023ecc9ae6a222ba6d2a8df67b75498bba382e4fb07'
-                )
+                docker.generate_context_hash(docker.GECKO,
+                                             os.path.join(docker.GECKO, 'docker/my-image'),
+                                             'my-image'),
+                'f13cde7fef96593671a41f81f9f0871c929a7dcba41d5a2dde1e8e1576b2bca0'
+            )
         finally:
             docker.GECKO = old_GECKO
             shutil.rmtree(tmpdir)

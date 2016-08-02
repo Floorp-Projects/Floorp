@@ -19,7 +19,7 @@ test $TARGET
 
 MANIFEST=${MANIFEST:="$WORKSPACE/gecko/b2g/config/$TARGET/sources.xml"}
 
-tc-vcs repo-checkout $WORKSPACE/B2G https://git.mozilla.org/b2g/B2G.git $MANIFEST
+tc-vcs repo-checkout $WORKSPACE/B2G https://github.com/mozilla-b2g/B2G $MANIFEST
 
 # Ensure symlink has been created to gecko...
 rm -f $WORKSPACE/B2G/gecko

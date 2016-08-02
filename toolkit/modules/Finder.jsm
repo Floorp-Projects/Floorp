@@ -134,10 +134,12 @@ Finder.prototype = {
 
   set caseSensitive(aSensitive) {
     this._fastFind.caseSensitive = aSensitive;
+    this.iterator.reset();
   },
 
   set entireWord(aEntireWord) {
     this._fastFind.entireWord = aEntireWord;
+    this.iterator.reset();
   },
 
   get highlighter() {

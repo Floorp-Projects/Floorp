@@ -30,7 +30,7 @@ add_task(function* test_tab_options_privileges() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: true,
+    useAddonManager: "temporary",
 
     manifest: {
       "permissions": ["tabs"],

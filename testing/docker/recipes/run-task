@@ -1,0 +1,168 @@
+#!/usr/bin/python2.7 -u
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+"""Run a task after performing common actions.
+
+This script is meant to be the "driver" for TaskCluster based tasks.
+It receives some common arguments to control the run-time environment.
+
+It performs actions as requested from the arguments. Then it executes
+the requested process and prints its output, prefixing it with the
+current time to improve log usefulness.
+"""
+
+from __future__ import absolute_import, print_function, unicode_literals
+
+import argparse
+import datetime
+import errno
+import grp
+import os
+import pwd
+import subprocess
+import sys
+
+
+def print_line(prefix, m):
+    now = datetime.datetime.utcnow()
+    print('[%s %sZ] %s' % (prefix, now.isoformat(), m), end='')
+
+
+def run_and_prefix_output(prefix, args):
+    """Runs a process and prefixes its output with the time.
+
+    Returns the process exit code.
+    """
+    print_line(prefix, 'executing %s\n' % args)
+
+    # Note: TaskCluster's stdin is a TTY. This attribute is lost
+    # when we pass sys.stdin to the invoked process. If we cared
+    # to preserve stdin as a TTY, we could make this work. But until
+    # someone needs it, don't bother.
+    p = subprocess.Popen(args,
+                         # Disable buffering because we want to receive output
+                         # as it is generated so timestamps in logs are
+                         # accurate.
+                         bufsize=0,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         stdin=sys.stdin.fileno(),
+                         cwd='/',
+                         # So \r in progress bars are rendered as multiple
+                         # lines, preserving progress indicators.
+                         universal_newlines=True)
+
+    while True:
+        data = p.stdout.readline()
+        if data == '':
+            break
+
+        print_line(prefix, data)
+
+    return p.returncode
+
+
+def vcs_checkout(args):
+    # TODO get VCS parameters from arguments.
+    base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
+
+    # We set the base repository to mozilla-central so tc-vcs doesn't get
+    # confused. Switch to mozilla-unified because robustcheckout works best
+    # with it.
+    if base_repo == 'https://hg.mozilla.org/mozilla-central':
+        base_repo = b'https://hg.mozilla.org/mozilla-unified'
+
+    res = run_and_prefix_output(b'vcs', [
+        b'/usr/bin/hg', b'robustcheckout',
+        b'--sharebase', b'/home/worker/hg-shared',
+        b'--purge',
+        b'--upstream', base_repo,
+        b'--revision', os.environ['GECKO_HEAD_REV'],
+        os.environ['GECKO_HEAD_REPOSITORY'], args.vcs_checkout
+    ])
+
+    if res:
+        sys.exit(res)
+
+
+def main(args):
+    print_line('setup', 'run-task started\n')
+
+    if os.getuid() != 0:
+        print('assertion failed: not running as root')
+        return 1
+
+    # Arguments up to '--' are ours. After are for the main task
+    # to be executed.
+    try:
+        i = args.index('--')
+        our_args = args[0:i]
+        task_args = args[i + 1:]
+    except ValueError:
+        our_args = args
+        task_args = []
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--user', default='worker', help='user to run as')
+    parser.add_argument('--group', default='worker', help='group to run as')
+    parser.add_argument('--vcs-checkout',
+                        help='Directory where Gecko checkout should be created')
+
+    args = parser.parse_args(our_args)
+
+    try:
+        user = pwd.getpwnam(args.user)
+    except KeyError:
+        print('could not find user %s; specify --user to a known user' %
+              args.user)
+        return 1
+    try:
+        group = grp.getgrnam(args.group)
+    except KeyError:
+        print('could not find group %s; specify --group to a known group' %
+              args.group)
+        return 1
+
+    uid = user.pw_uid
+    gid = group.gr_gid
+
+    # Find all groups to which this user is a member.
+    gids = [g.gr_gid for g in grp.getgrall() if args.group in g.gr_mem]
+
+    checkout = args.vcs_checkout
+    if checkout:
+        # Ensure the directory for the source checkout exists.
+        try:
+            os.makedirs(os.path.dirname(checkout))
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        # And that it is owned by the appropriate user/group.
+        os.chown('/home/worker/hg-shared', uid, gid)
+        os.chown(os.path.dirname(checkout), uid, gid)
+
+    # Drop permissions to requested user.
+    # This code is modeled after what `sudo` was observed to do in a Docker
+    # container. We do not bother calling setrlimit() because containers have
+    # their own limits.
+    print_line('setup', 'running as %s:%s\n' % (args.user, args.group))
+    os.setgroups(gids)
+    os.umask(022)
+    os.setresgid(gid, gid, gid)
+    os.setresuid(uid, uid, uid)
+
+    if checkout:
+        vcs_checkout(args)
+
+    return run_and_prefix_output('task', task_args)
+
+
+if __name__ == '__main__':
+    # Unbuffer stdio.
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+
+    sys.exit(main(sys.argv[1:]))

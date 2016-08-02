@@ -13,6 +13,7 @@
 #include "GonkOmxPlatformLayer.h"
 #endif
 
+#include "VPXDecoder.h"
 
 #ifdef LOG
 #undef LOG
@@ -278,7 +279,7 @@ OmxPlatformLayer::CompressionFormat()
     return OMX_VIDEO_CodingMPEG4;
   } else if (mInfo->mMimeType.EqualsLiteral("video/3gpp")) {
     return OMX_VIDEO_CodingH263;
-  } else if (mInfo->mMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+  } else if (VPXDecoder::IsVP8(mInfo->mMimeType)) {
     return static_cast<OMX_VIDEO_CODINGTYPE>(OMX_VIDEO_CodingVP8);
   } else {
     MOZ_ASSERT_UNREACHABLE("Unsupported compression format");

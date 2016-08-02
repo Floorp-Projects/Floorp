@@ -1291,22 +1291,24 @@ private:
 class XPCNativeSetKey final
 {
 public:
-    explicit XPCNativeSetKey(XPCNativeSet*       BaseSet  = nullptr,
-                             XPCNativeInterface* Addition = nullptr,
-                             uint16_t            Position = 0)
-        : mBaseSet(BaseSet), mAddition(Addition), mPosition(Position) {}
+    explicit XPCNativeSetKey(XPCNativeSet* baseSet = nullptr,
+                             XPCNativeInterface* addition = nullptr,
+                             uint16_t position = 0)
+        : mBaseSet(baseSet), mAddition(addition), mPosition(position) {}
     ~XPCNativeSetKey() {}
 
-    XPCNativeSet*           GetBaseSet()  const {return mBaseSet;}
-    XPCNativeInterface*     GetAddition() const {return mAddition;}
-    uint16_t                GetPosition() const {return mPosition;}
+    XPCNativeSet* GetBaseSet() const {return mBaseSet;}
+    XPCNativeInterface* GetAddition() const {return mAddition;}
+    uint16_t GetPosition() const {return mPosition;}
+
+    PLDHashNumber Hash() const;
 
     // Allow shallow copy
 
 private:
-    XPCNativeSet*           mBaseSet;
-    XPCNativeInterface*     mAddition;
-    uint16_t                mPosition;
+    XPCNativeSet* mBaseSet;
+    XPCNativeInterface* mAddition;
+    uint16_t mPosition;
 };
 
 /***************************************************************************/
