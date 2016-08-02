@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "H264Converter.h"
 #include "ImageContainer.h"
 #include "MediaDecoderReader.h"
 #include "MediaInfo.h"
@@ -12,11 +11,9 @@
 #include "mozilla/mozalloc.h" // for operator new, and new (fallible)
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskQueue.h"
-#include "mp4_demuxer/H264.h"
 #include "nsAutoPtr.h"
 #include "nsRect.h"
 #include "PlatformDecoderModule.h"
-#include "ReorderQueue.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 
@@ -32,10 +29,6 @@ public:
                         const CreateDecoderParams& aParams)
     : mCreator(aCreator)
     , mCallback(aParams.mCallback)
-    , mMaxRefFrames(aParams.mConfig.GetType() == TrackInfo::kVideoTrack &&
-                    H264Converter::IsH264(aParams.mConfig)
-                    ? mp4_demuxer::H264::ComputeMaxRefFrames(aParams.VideoConfig().mExtraData)
-                    : 0)
     , mType(aParams.mConfig.GetType())
   {
   }
@@ -54,25 +47,19 @@ public:
       mCreator->Create(media::TimeUnit::FromMicroseconds(aSample->mTime),
                        media::TimeUnit::FromMicroseconds(aSample->mDuration),
                        aSample->mOffset);
-
-    OutputFrame(data);
-
-    return NS_OK;
-  }
-
-  nsresult Flush() override
-  {
-    mReorderQueue.Clear();
-
-    return NS_OK;
-  }
-
-  nsresult Drain() override
-  {
-    while (!mReorderQueue.IsEmpty()) {
-      mCallback->Output(mReorderQueue.Pop().get());
+    if (!data) {
+    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    } else {
+      mCallback->Output(data);
     }
+    return NS_OK;
+  }
 
+  nsresult Flush() override {
+    return NS_OK;
+  }
+
+  nsresult Drain() override {
     mCallback->DrainComplete();
     return NS_OK;
   }
@@ -83,31 +70,8 @@ public:
   }
 
 private:
-  void OutputFrame(MediaData* aData)
-  {
-    if (!aData) {
-      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
-      return;
-    }
-
-    // Frames come out in DTS order but we need to output them in PTS order.
-    mReorderQueue.Push(aData);
-
-    while (mReorderQueue.Length() > mMaxRefFrames) {
-      mCallback->Output(mReorderQueue.Pop().get());
-    }
-
-    if (mReorderQueue.Length() <= mMaxRefFrames) {
-      mCallback->InputExhausted();
-    }
-
-  }
-
-private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
   MediaDataDecoderCallback* mCallback;
-  const uint32_t mMaxRefFrames;
-  ReorderQueue mReorderQueue;
   TrackInfo::TrackType mType;
 };
 
@@ -129,10 +93,10 @@ public:
   {
     // Create a fake YUV buffer in a 420 format. That is, an 8bpp Y plane,
     // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
-    // 2x2 subsampled.
-    const int sizeY = mFrameWidth * mFrameHeight;
-    const int sizeCbCr = ((mFrameWidth + 1) / 2) * ((mFrameHeight + 1) / 2);
-    auto frame = MakeUnique<uint8_t[]>(sizeY + sizeCbCr);
+    // 2x2 subsampled. Have the data pointers of each frame point to the
+    // first plane, they'll always be zero'd memory anyway.
+    auto frame = MakeUnique<uint8_t[]>(mFrameWidth * mFrameHeight);
+    memset(frame.get(), 0, mFrameWidth * mFrameHeight);
     VideoData::YCbCrBuffer buffer;
 
     // Y plane.
@@ -144,7 +108,7 @@ public:
     buffer.mPlanes[0].mSkip = 0;
 
     // Cb plane.
-    buffer.mPlanes[1].mData = frame.get() + sizeY;
+    buffer.mPlanes[1].mData = frame.get();
     buffer.mPlanes[1].mStride = mFrameWidth / 2;
     buffer.mPlanes[1].mHeight = mFrameHeight / 2;
     buffer.mPlanes[1].mWidth = mFrameWidth / 2;
@@ -152,16 +116,12 @@ public:
     buffer.mPlanes[1].mSkip = 0;
 
     // Cr plane.
-    buffer.mPlanes[2].mData = frame.get() + sizeY;
+    buffer.mPlanes[2].mData = frame.get();
     buffer.mPlanes[2].mStride = mFrameWidth / 2;
     buffer.mPlanes[2].mHeight = mFrameHeight / 2;
     buffer.mPlanes[2].mWidth = mFrameWidth / 2;
     buffer.mPlanes[2].mOffset = 0;
     buffer.mPlanes[2].mSkip = 0;
-
-    // Set to color white.
-    memset(buffer.mPlanes[0].mData, 255, sizeY);
-    memset(buffer.mPlanes[1].mData, 128, sizeCbCr);
 
     return VideoData::Create(mInfo,
                              mImageContainer,
@@ -174,7 +134,6 @@ public:
                              aDTS.ToMicroseconds(),
                              mPicture);
   }
-
 private:
   VideoInfo mInfo;
   gfx::IntRect mPicture;
@@ -182,6 +141,7 @@ private:
   uint32_t mFrameHeight;
   RefPtr<layers::ImageContainer> mImageContainer;
 };
+
 
 class BlankAudioDataCreator {
 public:
@@ -269,11 +229,7 @@ public:
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override
   {
-    if (aConfig.IsVideo() && H264Converter::IsH264(aConfig)) {
-      return kNeedAVCC;
-    } else {
-      return kNeedNone;
-    }
+    return kNeedNone;
   }
 
 };
