@@ -32,8 +32,6 @@ public:
 
   void EmptyTracks() override;
 
-  VideoTrack* GetSelectedTrack();
-
   // WebIDL
   int32_t SelectedIndex() const
   {
