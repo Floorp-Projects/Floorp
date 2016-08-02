@@ -1566,8 +1566,6 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aDecoder);
-  MOZ_ASSERT(aDecoder->HasError() || !aDecoder->InFrame(),
-             "Finalizing a decoder in the middle of a frame");
 
   bool wasMetadata = aDecoder->IsMetadataDecode();
   bool done = aDecoder->GetDecodeDone();
