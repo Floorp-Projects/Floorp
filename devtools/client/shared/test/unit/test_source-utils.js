@@ -152,6 +152,22 @@ add_task(function* () {
                    "example.com");
 });
 
+// Test for source mapped file name
+add_task(function* () {
+  const { getSourceMappedFile } = sourceUtils;
+  const source = "baz.js";
+  const output = getSourceMappedFile(source);
+  equal(output, "baz.js", "correctly formats file name");
+  // Test for OSX file path
+  const source1 = "/foo/bar/baz.js";
+  const output1 = getSourceMappedFile(source1);
+  equal(output1, "baz.js", "correctly formats Linux file path");
+  // Test for Windows file path
+  const source2 = "Z:\\foo\\bar\\baz.js";
+  const output2 = getSourceMappedFile(source2);
+  equal(output2, "baz.js", "correctly formats Windows file path");
+});
+
 function testAbbreviation(source, short, long, host) {
   let results = sourceUtils.getSourceNames(source);
   equal(results.short, short, `${source} has correct "short" name`);
