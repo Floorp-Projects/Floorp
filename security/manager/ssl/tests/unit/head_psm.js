@@ -563,6 +563,10 @@ function getFailingHttpServer(serverPort, serverIdentities) {
 // expectedCertNames is an array of nicks of the certs to be responsed
 // expectedBasePaths is an optional array that is used to indicate
 //   what is the expected base path of the OCSP request.
+// expectedMethods is an optional array of methods ("GET" or "POST") indicating
+//   by which HTTP method the server is expected to be queried.
+// expectedResponseTypes is an optional array of OCSP response types to use (see
+//   GenerateOCSPResponse.cpp).
 function startOCSPResponder(serverPort, identity, nssDBLocation,
                             expectedCertNames, expectedBasePaths,
                             expectedMethods, expectedResponseTypes) {
