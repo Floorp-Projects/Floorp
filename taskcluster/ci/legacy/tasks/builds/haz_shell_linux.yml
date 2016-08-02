@@ -48,6 +48,7 @@ task:
       groupSymbol: SM-tc
       groupName: SpiderMonkey, submitted by taskcluster
       symbol: H
+      tier: 1
       collection:
         debug: true
     # Rather then enforcing particular conventions we require that all build
