@@ -631,7 +631,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         NewObjectKind newKind = GenericObject;
 
-        void* buf = nullptr;
+        ScopedJSFreePtr<void> buf;
         if (!fitsInline) {
             buf = allocateTypedArrayElementsBuffer(cx, len);
             if (!buf)
@@ -643,7 +643,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         TypedArrayObject* obj = &tmp->as<TypedArrayObject>();
-        initTypedArraySlots(obj, len, buf, allocKind);
+        initTypedArraySlots(obj, len, buf.forget(), allocKind);
 
         return obj;
     }
