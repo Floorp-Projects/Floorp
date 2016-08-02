@@ -474,6 +474,12 @@ LegacyTCPControlChannel.prototype = {
     }
   },
 
+  reconnect: function() {
+    // Legacy protocol doesn't support extra reconnect protocol.
+    // Trigger error handling for browser to shutdown all the resource locally.
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
   classID: Components.ID("{4027ce3d-06e3-4d06-a235-df329cb0d411}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel,
                                          Ci.nsIStreamListener]),
