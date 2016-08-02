@@ -350,6 +350,7 @@ MSG_DEF(JSMSG_WASM_BAD_MOD_ARG,        0, JSEXN_TYPEERR,     "first argument mus
 MSG_DEF(JSMSG_WASM_BAD_DESC_ARG,       1, JSEXN_TYPEERR,     "first argument must be a {0} descriptor")
 MSG_DEF(JSMSG_WASM_BAD_IMP_SIZE,       1, JSEXN_TYPEERR,     "imported {0} with incompatible size")
 MSG_DEF(JSMSG_WASM_BAD_SIZE,           2, JSEXN_TYPEERR,     "bad {0} {1} size")
+MSG_DEF(JSMSG_WASM_BAD_ELEMENT,        0, JSEXN_TYPEERR,     "\"element\" property of table descriptor must be \"anyfunc\"")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_ARG,     0, JSEXN_TYPEERR,     "second argument, if present, must be an object")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_FIELD,   1, JSEXN_TYPEERR,     "import object field is not {0}")
 MSG_DEF(JSMSG_WASM_BAD_SET_VALUE,      0, JSEXN_TYPEERR,     "second argument must be null or an exported WebAssembly Function object")
