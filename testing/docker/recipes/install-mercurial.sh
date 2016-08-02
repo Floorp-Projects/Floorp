@@ -7,25 +7,45 @@
 
 set -e
 
-# ASSERTION: We are running Ubuntu 16.04.
+# Detect OS.
+if [ -f /etc/lsb-release ]; then
+    . /etc/lsb-release
+
+    if [ "${DISTRIB_ID}" = "Ubuntu" -a "${DISTRIB_RELEASE}" = "16.04" ]; then
+        HG_DEB=1
+        HG_DIGEST=7b1fc1217e0dcaeea852b0af2dc559b1aafb704fbee7e29cbec75af57bacb84910a7ec92b5c33f04ee98f23b3a57f1fa451173fe7c8a96f58faefe319dc7dde1
+        HG_SIZE=44878
+        HG_FILENAME=mercurial_3.8.4_amd64.deb
+
+        HG_COMMON_DIGEST=b476e2612e7495a1c7c5adfd84511aa7479e26cc9070289513ec705fbfc4c61806ce2dbcceca0e63f2e80669be416f3467a3cebb522dcb8a6aeb62cdd3df82f2
+        HG_COMMON_SIZE=1818422
+        HG_COMMON_FILENAME=mercurial-common_3.8.4_all.deb
+    fi
+fi
+
+if [ -n "${HG_DEB}" ]; then
 tooltool_fetch <<EOF
 [
 {
-    "size": 44878,
-    "digest": "7b1fc1217e0dcaeea852b0af2dc559b1aafb704fbee7e29cbec75af57bacb84910a7ec92b5c33f04ee98f23b3a57f1fa451173fe7c8a96f58faefe319dc7dde1",
+    "size": ${HG_SIZE},
+    "digest": "${HG_DIGEST}",
     "algorithm": "sha512",
-    "filename": "mercurial_3.8.4_amd64.deb"
+    "filename": "${HG_FILENAME}"
 },
 {
-    "size": 1818422,
-    "digest": "b476e2612e7495a1c7c5adfd84511aa7479e26cc9070289513ec705fbfc4c61806ce2dbcceca0e63f2e80669be416f3467a3cebb522dcb8a6aeb62cdd3df82f2",
+    "size": ${HG_COMMON_SIZE},
+    "digest": "${HG_COMMON_DIGEST}",
     "algorithm": "sha512",
-    "filename": "mercurial-common_3.8.4_all.deb"
+    "filename": "${HG_COMMON_FILENAME}"
 }
 ]
 EOF
 
-dpkg -i mercurial-common_3.8.4_all.deb mercurial_3.8.4_amd64.deb
+    dpkg -i ${HG_COMMON_FILENAME} ${HG_FILENAME}
+else
+    echo "Do not know how to install Mercurial on this OS"
+    exit 1
+fi
 
 mkdir -p /usr/local/mercurial
 cd /usr/local/mercurial
