@@ -117,7 +117,7 @@ def skip_unless_protocol(predicate):
             level = self.marionette.client.protocol
             if not predicate(level):
                 raise SkipTest('skipping because protocol level is %s' % level)
-            return self
+            return test_item(self)
         return skip_wrapper
     return decorator
 
