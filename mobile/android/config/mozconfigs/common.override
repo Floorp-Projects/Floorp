@@ -3,6 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This file is included at the bottom of all native android mozconfigs
+#
+# Disable enforcing that add-ons are signed by the trusted root
+MOZ_REQUIRE_SIGNING=0
 
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"
