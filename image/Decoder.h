@@ -30,7 +30,7 @@ namespace image {
 
 struct DecoderTelemetry final
 {
-  DecoderTelemetry(Telemetry::ID aSpeedHistogram,
+  DecoderTelemetry(Maybe<Telemetry::ID> aSpeedHistogram,
                    size_t aBytesDecoded,
                    uint32_t aChunkCount,
                    TimeDuration aDecodeTime)
@@ -49,8 +49,9 @@ struct DecoderTelemetry final
   /// @return our decoder's decode time, in microseconds.
   int32_t DecodeTimeMicros() { return mDecodeTime.ToMicroseconds(); }
 
-  /// The per-image-format telemetry ID for recording our decoder's speed.
-  const Telemetry::ID mSpeedHistogram;
+  /// The per-image-format telemetry ID for recording our decoder's speed, or
+  /// Nothing() if we don't record speed telemetry for this kind of decoder.
+  const Maybe<Telemetry::ID> mSpeedHistogram;
 
   /// The number of bytes of input our decoder processed.
   const size_t mBytesDecoded;
@@ -336,13 +337,11 @@ public:
     return gfx::IntRect(gfx::IntPoint(), OutputSize());
   }
 
-  virtual Telemetry::ID SpeedHistogram();
-
   /// @return the metadata we collected about this image while decoding.
   const ImageMetadata& GetImageMetadata() { return mImageMetadata; }
 
   /// @return performance telemetry we collected while decoding.
-  DecoderTelemetry Telemetry();
+  DecoderTelemetry Telemetry() const;
 
   /**
    * @return a weak pointer to the image associated with this decoder. Illegal
@@ -386,6 +385,14 @@ protected:
   virtual nsresult BeforeFinishInternal();
   virtual nsresult FinishInternal();
   virtual nsresult FinishWithErrorInternal();
+
+  /**
+   * @return the per-image-format telemetry ID for recording this decoder's
+   * speed, or Nothing() if we don't record speed telemetry for this kind of
+   * decoder.
+   */
+  virtual Maybe<Telemetry::ID> SpeedHistogram() const { return Nothing(); }
+
 
   /*
    * Progress notifications.
