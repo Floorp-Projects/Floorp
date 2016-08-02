@@ -6180,6 +6180,10 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
       // Promise::PerformMicroTaskCheckpoint.
       AutoEntryScript aes(global, reason, false);
       if (!info->mTimeoutCallable.isUndefined()) {
+        JS::ExposeValueToActiveJS(info->mTimeoutCallable);
+        for (uint32_t i = 0; i < info->mExtraArgVals.Length(); ++i) {
+          JS::ExposeValueToActiveJS(info->mExtraArgVals[i]);
+        }
         JS::Rooted<JS::Value> rval(aCx);
         JS::HandleValueArray args =
           JS::HandleValueArray::fromMarkedLocation(info->mExtraArgVals.Length(),
