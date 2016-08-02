@@ -129,7 +129,7 @@ function test_inputGetFiles() {
 var tests = [
   function() { setup_tests(next); },
 
-  function() { create_fileList('ProfD') },
+  function() { create_fileList('tree') },
   function() { test_basic(directory, next); },
   function() { test_getFilesAndDirectories(directory, true, next); },
   function() { test_getFiles(directory, false, next); },
