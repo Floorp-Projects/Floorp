@@ -17,7 +17,7 @@ import android.animation.ObjectAnimator;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.util.Experiments;
+import org.mozilla.gecko.Experiments;
 
 /**
  * A container for the pager and the entire first run experience.
