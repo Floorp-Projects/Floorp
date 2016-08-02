@@ -96,6 +96,8 @@ class GeneratedSourceMap
     void setTotalLines(uint32_t val) { totalLines_ = val; }
 };
 
+typedef UniquePtr<GeneratedSourceMap> UniqueGeneratedSourceMap;
+
 // Translate the given binary representation of a wasm module into the module's textual
 // representation.
 

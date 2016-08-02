@@ -294,7 +294,7 @@ GCRuntime::startBackgroundAllocTaskIfIdle()
     // Join the previous invocation of the task. This will return immediately
     // if the thread has never been started.
     allocTask.joinWithLockHeld(helperLock);
-    allocTask.startWithLockHeld();
+    allocTask.startWithLockHeld(helperLock);
 }
 
 /* static */ TenuredCell*
@@ -390,7 +390,6 @@ ArenaLists::allocateFromArena(JS::Zone* zone, AllocKind thingKind,
     if (!arena)
         return nullptr;
 
-    MOZ_ASSERT(!maybeLock->wasUnlocked());
     MOZ_ASSERT(al.isCursorAtEnd());
     al.insertBeforeCursor(arena);
 

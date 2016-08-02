@@ -25,7 +25,6 @@ case "$target" in
     if test -z "$CXX"; then CXX=cl; fi
     if test -z "$CPP"; then CPP="$CC -E -nologo"; fi
     if test -z "$CXXCPP"; then CXXCPP="$CXX -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
-    if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then
         case "${target_cpu}" in
         i*86)

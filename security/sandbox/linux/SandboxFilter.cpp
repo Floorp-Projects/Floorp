@@ -700,6 +700,11 @@ public:
 #endif
       return Allow();
 
+#ifdef MOZ_JPROF
+    case __NR_setitimer:
+      return Allow();
+#endif // MOZ_JPROF
+
     default:
       return SandboxPolicyCommon::EvaluateSyscall(sysno);
     }

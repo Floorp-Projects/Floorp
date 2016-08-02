@@ -110,6 +110,8 @@ enum class GLFeature {
     occlusion_query_boolean,
     occlusion_query2,
     packed_depth_stencil,
+    prim_restart,
+    prim_restart_fixed,
     query_counter,
     query_objects,
     query_time_elapsed,
@@ -477,6 +479,7 @@ public:
         NV_geometry_program4,
         NV_half_float,
         NV_instanced_arrays,
+        NV_primitive_restart,
         NV_texture_barrier,
         NV_transform_feedback,
         NV_transform_feedback2,
@@ -3168,6 +3171,16 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fResolveMultisampleFramebufferAPPLE);
         mSymbols.fResolveMultisampleFramebufferAPPLE();
+        AFTER_GL_CALL;
+    }
+
+// -----------------------------------------------------------------------------
+// prim_restart
+
+    void fPrimitiveRestartIndex(GLuint index) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fPrimitiveRestartIndex);
+        mSymbols.fPrimitiveRestartIndex(index);
         AFTER_GL_CALL;
     }
 

@@ -587,6 +587,23 @@
         ]]></body>
       </method>
 
+      <method name="_setHighlightTimeout">
+        <body><![CDATA[
+          if (this._highlightTimeout)
+            clearTimeout(this._highlightTimeout);
+
+          let word = this._findField.value;
+          // Bug 429723. Don't attempt to highlight ""
+          if (!this._highlightAll || !word)
+            return;
+
+          this._highlightTimeout = setTimeout(() => {
+            this.browser.finder.highlight(true, word,
+              this._findMode == this.FIND_LINKS);
+          }, 500);
+        ]]></body>
+      </method>
+
       <!--
         - Updates the case-sensitivity mode of the findbar and its UI.
         - @param [optional] aString
@@ -681,8 +698,7 @@
           // Just set the pref; our observer will change the find bar behavior.
           prefsvc.setBoolPref("findbar.entireword", aEntireWord);
 
-          if (this.getElement("highlight").checked)
-            this._setHighlightTimeout();
+          this._setHighlightTimeout();
         ]]></body>
       </method>
 
@@ -1026,8 +1042,7 @@
             }
 
             this._enableFindButtons(val);
-            if (this.getElement("highlight").checked)
-              this._setHighlightTimeout();
+            this._setHighlightTimeout();
 
             this._updateCaseSensitivity(val);
             this._updateEntireWord();
@@ -1067,18 +1082,6 @@
           this.setAttribute("flash",
                             (this._flashFindBarCount % 2 == 0) ?
                             "false" : "true");
-        ]]></body>
-      </method>
-
-      <method name="_setHighlightTimeout">
-        <body><![CDATA[
-          if (this._highlightTimeout)
-            clearTimeout(this._highlightTimeout);
-          this._highlightTimeout =
-            setTimeout(function(aSelf) {
-                         aSelf.toggleHighlight(false);
-                         aSelf.toggleHighlight(true);
-                       }, 500, this);
         ]]></body>
       </method>
 

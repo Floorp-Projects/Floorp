@@ -346,41 +346,41 @@ const JNINativeMethod ThumbnailHelper::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
-class GLController::Natives : public mozilla::jni::NativeImpl<GLController, Impl>
+class LayerView::Compositor::Natives : public mozilla::jni::NativeImpl<Compositor, Impl>
 {
 public:
     static const JNINativeMethod methods[7];
 };
 
 template<class Impl>
-const JNINativeMethod GLController::Natives<Impl>::methods[] = {
+const JNINativeMethod LayerView::Compositor::Natives<Impl>::methods[] = {
 
-    mozilla::jni::MakeNativeMethod<GLController::AttachToJava_t>(
-            mozilla::jni::NativeStub<GLController::AttachToJava_t, Impl>
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::AttachToJava_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::AttachToJava_t, Impl>
             ::template Wrap<&Impl::AttachToJava>),
 
-    mozilla::jni::MakeNativeMethod<GLController::CreateCompositor_t>(
-            mozilla::jni::NativeStub<GLController::CreateCompositor_t, Impl>
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::CreateCompositor_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::CreateCompositor_t, Impl>
             ::template Wrap<&Impl::CreateCompositor>),
 
-    mozilla::jni::MakeNativeMethod<GLController::DisposeNative_t>(
-            mozilla::jni::NativeStub<GLController::DisposeNative_t, Impl>
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::DisposeNative_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::DisposeNative_t, Impl>
             ::template Wrap<&Impl::DisposeNative>),
 
-    mozilla::jni::MakeNativeMethod<GLController::OnSizeChanged_t>(
-            mozilla::jni::NativeStub<GLController::OnSizeChanged_t, Impl>
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::OnSizeChanged_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::OnSizeChanged_t, Impl>
             ::template Wrap<&Impl::OnSizeChanged>),
 
-    mozilla::jni::MakeNativeMethod<GLController::PauseCompositor_t>(
-            mozilla::jni::NativeStub<GLController::PauseCompositor_t, Impl>
-            ::template Wrap<&Impl::PauseCompositor>),
-
-    mozilla::jni::MakeNativeMethod<GLController::SyncInvalidateAndScheduleComposite_t>(
-            mozilla::jni::NativeStub<GLController::SyncInvalidateAndScheduleComposite_t, Impl>
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::SyncInvalidateAndScheduleComposite_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::SyncInvalidateAndScheduleComposite_t, Impl>
             ::template Wrap<&Impl::SyncInvalidateAndScheduleComposite>),
 
-    mozilla::jni::MakeNativeMethod<GLController::SyncResumeResizeCompositor_t>(
-            mozilla::jni::NativeStub<GLController::SyncResumeResizeCompositor_t, Impl>
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::SyncPauseCompositor_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::SyncPauseCompositor_t, Impl>
+            ::template Wrap<&Impl::SyncPauseCompositor>),
+
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::SyncResumeResizeCompositor_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::SyncResumeResizeCompositor_t, Impl>
             ::template Wrap<&Impl::SyncResumeResizeCompositor>)
 };
 

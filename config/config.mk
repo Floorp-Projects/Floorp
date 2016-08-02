@@ -358,6 +358,18 @@ ifdef MACOSX_DEPLOYMENT_TARGET
 export MACOSX_DEPLOYMENT_TARGET
 endif # MACOSX_DEPLOYMENT_TARGET
 
+# Export to propagate to cl and submake for third-party code.
+# Eventually, we'll want to just use -I.
+ifdef INCLUDE
+export INCLUDE
+endif
+
+# Export to propagate to link.exe and submake for third-party code.
+# Eventually, we'll want to just use -LIBPATH.
+ifdef LIB
+export LIB
+endif
+
 ifdef MOZ_USING_CCACHE
 ifdef CLANG_CXX
 export CCACHE_CPP2=1

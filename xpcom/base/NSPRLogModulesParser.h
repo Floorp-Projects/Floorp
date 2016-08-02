@@ -17,6 +17,6 @@ namespace mozilla {
  * @param aCallback The callback to invoke for each log module config entry.
  */
 void NSPRLogModulesParser(const char* aLogModules,
-                          function<void(const char*, LogLevel)> aCallback);
+                          function<void(const char*, LogLevel, int32_t)> aCallback);
 
 } // namespace mozilla

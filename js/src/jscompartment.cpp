@@ -73,7 +73,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     objectMetadataTable(nullptr),
     innerViews(zone, InnerViewTable()),
     lazyArrayBuffers(nullptr),
-    wasmInstances(zone, WasmInstanceObjectSet()),
+    wasm(zone),
     nonSyntacticLexicalScopes_(nullptr),
     gcIncomingGrayPointers(nullptr),
     debugModeBits(0),
@@ -674,6 +674,8 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
 
     if (nonSyntacticLexicalScopes_)
         nonSyntacticLexicalScopes_->trace(trc);
+
+    wasm.trace(trc);
 }
 
 void
@@ -901,14 +903,13 @@ JSCompartment::clearTables()
     MOZ_ASSERT(!debugScopes);
     MOZ_ASSERT(enumerators->next() == enumerators);
     MOZ_ASSERT(regExps.empty());
+    MOZ_ASSERT(!wasm.instanceObjects().initialized() || wasm.instanceObjects().empty());
 
     objectGroups.clearTables();
     if (baseShapes.initialized())
         baseShapes.clear();
     if (initialShapes.initialized())
         initialShapes.clear();
-    if (wasmInstances.initialized())
-        wasmInstances.clear();
     if (savedStacks_.initialized())
         savedStacks_.clear();
 }
@@ -1177,9 +1178,9 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     objectGroups.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
                                         tiArrayTypeTables, tiObjectTypeTables,
                                         compartmentTables);
+    wasm.addSizeOfExcludingThis(mallocSizeOf, compartmentTables);
     *compartmentTables += baseShapes.sizeOfExcludingThis(mallocSizeOf)
-                        + initialShapes.sizeOfExcludingThis(mallocSizeOf)
-                        + wasmInstances.sizeOfExcludingThis(mallocSizeOf);
+                        + initialShapes.sizeOfExcludingThis(mallocSizeOf);
     *innerViewsArg += innerViews.sizeOfExcludingThis(mallocSizeOf);
     if (lazyArrayBuffers)
         *lazyArrayBuffersArg += lazyArrayBuffers->sizeOfIncludingThis(mallocSizeOf);

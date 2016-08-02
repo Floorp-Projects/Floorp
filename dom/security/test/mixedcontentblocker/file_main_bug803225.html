@@ -106,7 +106,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   testContent.appendChild(newscript);
 
   // Test 7: mailto protocol
-  SpecialPowers.loadChromeScript(function launchHandler() {
+  let mm = SpecialPowers.loadChromeScript(function launchHandler() {
     var { classes: Cc, interfaces: Ci } = Components;
     var ioService = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService);
@@ -116,25 +116,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     webHandler.name = "Web Handler";
     webHandler.uriTemplate = "http://example.com/tests/dom/security/test/mixedcontentblocker/file_bug803225_test_mailto.html?s=%";
 
+    Components.utils.import("resource://gre/modules/Services.jsm");
+    Services.ppmm.addMessageListener("Test:content-ready", function contentReadyListener() {
+      Services.ppmm.removeMessageListener("Test:content-ready", contentReadyListener);
+      sendAsyncMessage("Test:content-ready-forward");
+    })
+    Services.ppmm.loadProcessScript("data:,new " + function () {
+      var os = Components.classes["@mozilla.org/observer-service;1"]
+        .getService(Components.interfaces.nsIObserverService);
+      var observer = {
+        observe: function(subject, topic, data) {
+          if (topic == "content-document-global-created" && data == "http://example.com") {
+             sendAsyncMessage("Test:content-ready");
+             os.removeObserver(observer, "content-document-global-created");
+          }
+        }
+      };
+      os.addObserver(observer, "content-document-global-created", false);
+    }, false);
+
     var uri = ioService.newURI("mailto:foo@bar.com", null, null);
     webHandler.launchWithURI(uri);
   });
 
   var mailto = false;
 
-  // listen for a messages from a new window
-  var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"].
-     getService(SpecialPowers.Components.interfaces.nsIObserverService);
-  var observer = {
-    observe: function(subject, topic, data) {
-      if(topic == "content-document-global-created" && data =="http://example.com") {
-         parent.postMessage({"test": "mailto", "msg": "resource with mailto protocol loaded"}, "http://mochi.test:8888");
-         os.removeObserver(observer, "content-document-global-created");
-         mailto = true;
-      }
-    }
-  }
-  os.addObserver(observer, "content-document-global-created", false);
+  mm.addMessageListener("Test:content-ready-forward", function contentReadyListener() {
+    mm.removeMessageListener("Test:content-ready-forward", contentReadyListener);
+    mailto = true;
+    parent.postMessage({"test": "mailto", "msg": "resource with mailto protocol loaded"}, "http://mochi.test:8888");
+  });
 
   function mailtoProtocolStatus() {
     if(!mailto) {

@@ -29,6 +29,10 @@ this.FinderIterator = {
   // Expose `kIterationSizeMax` to the outside world for unit tests to use.
   get kIterationSizeMax() { return kIterationSizeMax },
 
+  get params() {
+    return Object.assign({}, this._currentParams || this._previousParams);
+  },
+
   /**
    * Start iterating the active Finder docShell, using the options below. When
    * it already started at the request of another consumer, we first yield the

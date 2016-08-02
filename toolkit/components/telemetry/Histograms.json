@@ -1,3 +1,4 @@
+
 {
   "A11Y_INSTANTIATED_FLAG": {
     "expires_in_version": "never",
@@ -554,6 +555,15 @@
     "n_buckets": 100,
     "description": "Time spent running JS minor GC (us)"
   },
+  "GC_NURSERY_BYTES": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 16777216,
+    "n_buckets": 16,
+    "bug_numbers": [1259347],
+    "description": "Size of the GC nursery (bytes)"
+  },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "expires_in_version": "default",
     "kind": "exponential",
@@ -1012,13 +1022,6 @@
     "high": 50000000,
     "n_buckets": 50,
     "description": "PNG image decode speed (Kbytes/sec)"
-  },
-  "IMAGE_OPTIMIZE_TO_SINGLE_COLOR_USED": {
-    "expires_in_version": "54",
-    "kind": "boolean",
-    "description": "Records true each time a decoded image is optimized to a single color.",
-    "alert_emails": ["seth@mozilla.com"],
-    "bug_numbers": [1281680]
   },
   "IMAGE_OPTIMIZE_TO_565_USED": {
     "expires_in_version": "54",

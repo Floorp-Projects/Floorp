@@ -107,9 +107,6 @@ class MacroAssemblerX86Shared : public Assembler
     void minMaxDouble(FloatRegister srcDest, FloatRegister second, bool handleNaN, bool isMax);
     void minMaxFloat32(FloatRegister srcDest, FloatRegister second, bool handleNaN, bool isMax);
 
-    void outOfLineWasmTruncateCheck(FloatRegister input, MIRType fromType, MIRType toType,
-                                    bool isUnsigned, Label* rejoin);
-
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
             vucomisd(lhs, rhs);
