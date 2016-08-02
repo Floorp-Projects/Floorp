@@ -1,0 +1,11 @@
+{
+  "addons": {
+    "test_delay_update_ignore_webext@tests.mozilla.org": {
+      "updates": [
+        { "version": "2.0",
+          "update_link": "http://localhost:%PORT%/addons/test_delay_update_ignore_webextension_v2.xpi"
+        }
+      ]
+    }
+  }
+}
