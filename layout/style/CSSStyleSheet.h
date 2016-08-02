@@ -16,7 +16,6 @@
 #include "mozilla/StyleSheetInfo.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/CSSStyleSheetBinding.h"
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -320,8 +319,6 @@ public:
   // WillDirty and then make no change and skip the DidDirty call.
   void WillDirty();
   void DidDirty();
-
-  mozilla::dom::CSSStyleSheetParsingMode ParsingMode();
 
 private:
   CSSStyleSheet(const CSSStyleSheet& aCopy,
