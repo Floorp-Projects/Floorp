@@ -16,6 +16,7 @@ import sys
 import copy
 import shutil
 import glob
+import imp
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
@@ -632,6 +633,13 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                                      config=self.config,
                                                      error_list=error_list,
                                                      log_obj=self.log_obj)
+
+                if suite_category == "reftest":
+                    ref_formatter = imp.load_source(
+                        "ReftestFormatter",
+                        os.path.abspath(
+                            os.path.join(dirs["abs_reftest_dir"], "output.py")))
+                    parser.formatter = ref_formatter.ReftestFormatter()
 
                 if self.query_minidump_stackwalk():
                     env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
