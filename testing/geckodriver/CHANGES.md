@@ -2,13 +2,15 @@
 
 All notable changes to this program is documented in this file.
 
-## Unreleased
+## 0.10.0 (2016-08-02)
 
 ### Changed
 - Disable autofilling of forms by default by @mythsunwind
+_ Replace argparse with clap for arguments parsing.
 
 ### Fixed
 - Attempt to deploy a single file from Travis when making a release
+- grammar fix in readme
 
 
 ## 0.9.0 (2016-06-30)
