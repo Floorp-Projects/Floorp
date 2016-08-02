@@ -121,7 +121,6 @@ static const int32_t AsmJSGlobalRegBias = 32768;
 static constexpr Register AsmJSIonExitRegCallee = t0;
 static constexpr Register AsmJSIonExitRegE0 = a0;
 static constexpr Register AsmJSIonExitRegE1 = a1;
-static constexpr Register AsmJSIonExitRegE2 = a2;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 // None of these may be the second scratch register (t8).

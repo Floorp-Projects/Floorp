@@ -11462,10 +11462,7 @@ void
 CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir)
 {
     Label rejoin;
-    masm.branch32(Assembler::Equal,
-                  wasm::SymbolicAddress::RuntimeInterruptUint32,
-                  Imm32(0),
-                  &rejoin);
+    masm.branch32(Assembler::Equal, wasm::SymbolicAddress::InterruptUint32, Imm32(0), &rejoin);
 
     MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % ABIStackAlignment == 0);
     masm.call(wasm::SymbolicAddress::HandleExecutionInterrupt);

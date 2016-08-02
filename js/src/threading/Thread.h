@@ -15,6 +15,8 @@
 
 #include <stdint.h>
 
+#include "js/Utility.h"
+
 #ifdef XP_WIN
 # define THREAD_RETURN_TYPE unsigned int
 # define THREAD_CALL_API __stdcall
@@ -47,8 +49,8 @@ public:
     Id& operator=(const Id&) = default;
     Id& operator=(Id&&) = default;
 
-    bool operator==(const Id& aOther);
-    bool operator!=(const Id& aOther) { return !operator==(aOther); }
+    bool operator==(const Id& aOther) const;
+    bool operator!=(const Id& aOther) const { return !operator==(aOther); }
 
     inline PlatformData* platformData();
     inline const PlatformData* platformData() const;
@@ -69,7 +71,17 @@ public:
   // Create a Thread in an initially unjoinable state. A thread of execution can
   // be created for this Thread by calling |init|. Some of the thread's
   // properties may be controlled by passing options to this constructor.
-  explicit Thread(const Options& options = Options()) : id_(Id()), options_(options) {}
+  template <typename O = Options,
+            // SFINAE to make sure we don't try and treat functors for the other
+            // constructor as an Options and vice versa.
+            typename NonConstO = typename mozilla::RemoveConst<O>::Type,
+            typename DerefO = typename mozilla::RemoveReference<NonConstO>::Type,
+            typename = typename mozilla::EnableIf<mozilla::IsSame<DerefO, Options>::value,
+                                                  void*>::Type>
+  explicit Thread(O&& options = Options())
+    : id_(Id())
+    , options_(mozilla::Forward<O>(options))
+  { }
 
   // Start a thread of execution at functor |f| with parameters |args|. Note
   // that the arguments must be either POD or rvalue references (mozilla::Move).
@@ -89,9 +101,11 @@ public:
   MOZ_MUST_USE bool init(F&& f, Args&&... args) {
     MOZ_RELEASE_ASSERT(!joinable());
     using Trampoline = detail::ThreadTrampoline<F, Args...>;
-    auto trampoline = new Trampoline(mozilla::Forward<F>(f),
-                                     mozilla::Forward<Args>(args)...);
-    MOZ_RELEASE_ASSERT(trampoline);
+    AutoEnterOOMUnsafeRegion oom;
+    auto trampoline = js_new<Trampoline>(mozilla::Forward<F>(f),
+                                         mozilla::Forward<Args>(args)...);
+    if (!trampoline)
+      oom.crash("js::Thread::init");
     return create(Trampoline::Start, trampoline);
   }
 
@@ -197,7 +211,7 @@ public:
   static THREAD_RETURN_TYPE THREAD_CALL_API Start(void* aPack) {
     auto* pack = static_cast<ThreadTrampoline<F, Args...>*>(aPack);
     pack->callMain(typename mozilla::IndexSequenceFor<Args...>::Type());
-    delete pack;
+    js_delete(pack);
     return 0;
   }
 

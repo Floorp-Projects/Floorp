@@ -18,18 +18,9 @@
 
 #include "asmjs/WasmInstance.h"
 
-#include "mozilla/BinarySearch.h"
-
-#include "jsprf.h"
-
-#include "asmjs/WasmBinaryToExperimentalText.h"
-#include "asmjs/WasmJS.h"
 #include "asmjs/WasmModule.h"
-#include "builtin/SIMD.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitCommon.h"
-#include "jit/JitCompartment.h"
-#include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
 
@@ -94,120 +85,50 @@ class SigIdSet
 
 ExclusiveData<SigIdSet> sigIdSet;
 
+JSContext**
+Instance::addressOfContextPtr() const
+{
+    return (JSContext**)(codeSegment().globalData() + ContextPtrGlobalDataOffset);
+}
+
+Instance**
+Instance::addressOfInstancePtr() const
+{
+    return (Instance**)(codeSegment().globalData() + InstancePtrGlobalDataOffset);
+}
+
 uint8_t**
 Instance::addressOfMemoryBase() const
 {
-    return (uint8_t**)(codeSegment_->globalData() + HeapGlobalDataOffset);
+    return (uint8_t**)(codeSegment().globalData() + HeapGlobalDataOffset);
 }
 
 void**
 Instance::addressOfTableBase(size_t tableIndex) const
 {
-    MOZ_ASSERT(metadata_->tables[tableIndex].globalDataOffset >= InitialGlobalDataBytes);
-    return (void**)(codeSegment_->globalData() + metadata_->tables[tableIndex].globalDataOffset);
+    MOZ_ASSERT(metadata().tables[tableIndex].globalDataOffset >= InitialGlobalDataBytes);
+    return (void**)(codeSegment().globalData() + metadata().tables[tableIndex].globalDataOffset);
 }
 
 const void**
 Instance::addressOfSigId(const SigIdDesc& sigId) const
 {
     MOZ_ASSERT(sigId.globalDataOffset() >= InitialGlobalDataBytes);
-    return (const void**)(codeSegment_->globalData() + sigId.globalDataOffset());
+    return (const void**)(codeSegment().globalData() + sigId.globalDataOffset());
 }
 
 FuncImportExit&
 Instance::funcImportToExit(const FuncImport& fi)
 {
     MOZ_ASSERT(fi.exitGlobalDataOffset() >= InitialGlobalDataBytes);
-    return *(FuncImportExit*)(codeSegment_->globalData() + fi.exitGlobalDataOffset());
-}
-
-WasmActivation*&
-Instance::activation()
-{
-    return *(WasmActivation**)(codeSegment_->globalData() + ActivationGlobalDataOffset);
-}
-
-bool
-Instance::toggleProfiling(JSContext* cx)
-{
-    profilingEnabled_ = !profilingEnabled_;
-
-    {
-        AutoWritableJitCode awjc(cx->runtime(), codeSegment_->code(), codeSegment_->codeLength());
-        AutoFlushICache afc("Instance::toggleProfiling");
-        AutoFlushICache::setRange(uintptr_t(codeSegment_->code()), codeSegment_->codeLength());
-
-        for (const CallSite& callSite : metadata_->callSites)
-            ToggleProfiling(*this, callSite, profilingEnabled_);
-        for (const CallThunk& callThunk : metadata_->callThunks)
-            ToggleProfiling(*this, callThunk, profilingEnabled_);
-        for (const CodeRange& codeRange : metadata_->codeRanges)
-            ToggleProfiling(*this, codeRange, profilingEnabled_);
-    }
-
-    // When enabled, generate profiling labels for every name in funcNames_
-    // that is the name of some Function CodeRange. This involves malloc() so
-    // do it now since, once we start sampling, we'll be in a signal-handing
-    // context where we cannot malloc.
-    if (profilingEnabled_) {
-        for (const CodeRange& codeRange : metadata_->codeRanges) {
-            if (!codeRange.isFunction())
-                continue;
-
-            TwoByteName name(cx);
-            if (!getFuncName(cx, codeRange.funcIndex(), &name))
-                return false;
-            if (!name.append('\0'))
-                return false;
-
-            UniqueChars label(JS_smprintf("%hs (%s:%u)",
-                                          name.begin(),
-                                          metadata_->filename.get(),
-                                          codeRange.funcLineOrBytecode()));
-            if (!label) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-
-            if (codeRange.funcIndex() >= funcLabels_.length()) {
-                if (!funcLabels_.resize(codeRange.funcIndex() + 1))
-                    return false;
-            }
-            funcLabels_[codeRange.funcIndex()] = Move(label);
-        }
-    } else {
-        funcLabels_.clear();
-    }
-
-    // Typed-function tables' elements point directly to either the profiling or
-    // non-profiling prologue and must therefore be updated when the profiling
-    // mode is toggled.
-
-    for (const SharedTable& table : tables_) {
-        if (!table->isTypedFunction())
-            continue;
-
-        void** array = table->array();
-        uint32_t length = table->length();
-        for (size_t i = 0; i < length; i++) {
-            const CodeRange* codeRange = lookupCodeRange(array[i]);
-            void* from = codeSegment_->code() + codeRange->funcNonProfilingEntry();
-            void* to = codeSegment_->code() + codeRange->funcProfilingEntry();
-            if (!profilingEnabled_)
-                Swap(from, to);
-            MOZ_ASSERT(array[i] == from);
-            array[i] = to;
-        }
-    }
-
-    return true;
+    return *(FuncImportExit*)(codeSegment().globalData() + fi.exitGlobalDataOffset());
 }
 
 bool
 Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                      MutableHandleValue rval)
 {
-    const FuncImport& fi = metadata_->funcImports[funcImportIndex];
+    const FuncImport& fi = metadata().funcImports[funcImportIndex];
 
     InvokeArgs args(cx);
     if (!args.init(argc))
@@ -260,7 +181,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
         return true;
 
     // The exit may already have become optimized.
-    void* jitExitCode = codeSegment_->code() + fi.jitExitCodeOffset();
+    void* jitExitCode = codeBase() + fi.jitExitCodeOffset();
     if (exit.code == jitExitCode)
         return true;
 
@@ -324,84 +245,75 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
 }
 
 /* static */ int32_t
-Instance::callImport_void(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
+    JSContext* cx = instance->cx();
     RootedValue rval(cx);
-    return activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval);
+    return instance->callImport(cx, funcImportIndex, argc, argv, &rval);
 }
 
 /* static */ int32_t
-Instance::callImport_i32(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
+    JSContext* cx = instance->cx();
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
+    if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ToInt32(cx, rval, (int32_t*)argv);
 }
 
 /* static */ int32_t
-Instance::callImport_i64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
+    JSContext* cx = instance->cx();
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
+    if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ReadI64Object(cx, rval, (int64_t*)argv);
 }
 
 /* static */ int32_t
-Instance::callImport_f64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
+    JSContext* cx = instance->cx();
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
+    if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ToNumber(cx, rval, (double*)argv);
 }
 
 Instance::Instance(JSContext* cx,
-                   UniqueCodeSegment codeSegment,
-                   const Metadata& metadata,
-                   const ShareableBytes* maybeBytecode,
+                   UniqueCode code,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
                    Handle<FunctionVector> funcImports,
                    const ValVector& globalImports)
-  : codeSegment_(Move(codeSegment)),
-    metadata_(&metadata),
-    maybeBytecode_(maybeBytecode),
+  : compartment_(cx->compartment()),
+    code_(Move(code)),
     memory_(memory),
-    tables_(Move(tables)),
-    profilingEnabled_(false)
+    tables_(Move(tables))
 {
-    MOZ_ASSERT(funcImports.length() == metadata.funcImports.length());
-    MOZ_ASSERT(tables_.length() == metadata.tables.length());
+    MOZ_ASSERT(funcImports.length() == metadata().funcImports.length());
+    MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
-    for (size_t i = 0; i < metadata.funcImports.length(); i++) {
-        const FuncImport& fi = metadata.funcImports[i];
+    *addressOfContextPtr() = cx;
+    *addressOfInstancePtr() = this;
+
+    for (size_t i = 0; i < metadata().funcImports.length(); i++) {
+        const FuncImport& fi = metadata().funcImports[i];
         FuncImportExit& exit = funcImportToExit(fi);
-        exit.code = codeSegment_->code() + fi.interpExitCodeOffset();
+        exit.code = codeBase() + fi.interpExitCodeOffset();
         exit.fun = funcImports[i];
         exit.baselineScript = nullptr;
     }
 
-    uint8_t* globalData = codeSegment_->globalData();
+    uint8_t* globalData = code_->segment().globalData();
 
-    for (size_t i = 0; i < metadata.globals.length(); i++) {
-        const GlobalDesc& global = metadata.globals[i];
+    for (size_t i = 0; i < metadata().globals.length(); i++) {
+        const GlobalDesc& global = metadata().globals[i];
         if (global.isConstant())
             continue;
 
@@ -419,7 +331,7 @@ Instance::Instance(JSContext* cx,
                 break;
               }
               case InitExpr::Kind::GetGlobal: {
-                const GlobalDesc& imported = metadata.globals[init.globalIndex()];
+                const GlobalDesc& imported = metadata().globals[init.globalIndex()];
                 globalImports[imported.importIndex()].writePayload(globalAddr);
                 break;
               }
@@ -444,13 +356,13 @@ Instance::Instance(JSContext* cx,
 bool
 Instance::init(JSContext* cx)
 {
-    if (!metadata_->sigIds.empty()) {
+    if (!metadata().sigIds.empty()) {
         ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
 
         if (!lockedSigIdSet->ensureInitialized(cx))
             return false;
 
-        for (const SigWithId& sig : metadata_->sigIds) {
+        for (const SigWithId& sig : metadata().sigIds) {
             const void* sigId;
             if (!lockedSigIdSet->allocateSigId(cx, sig, &sigId))
                 return false;
@@ -464,16 +376,18 @@ Instance::init(JSContext* cx)
 
 Instance::~Instance()
 {
-    for (unsigned i = 0; i < metadata_->funcImports.length(); i++) {
-        FuncImportExit& exit = funcImportToExit(metadata_->funcImports[i]);
+    compartment_->wasm.unregisterInstance(*this);
+
+    for (unsigned i = 0; i < metadata().funcImports.length(); i++) {
+        FuncImportExit& exit = funcImportToExit(metadata().funcImports[i]);
         if (exit.baselineScript)
             exit.baselineScript->removeDependentWasmImport(*this, i);
     }
 
-    if (!metadata_->sigIds.empty()) {
+    if (!metadata().sigIds.empty()) {
         ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
 
-        for (const SigWithId& sig : metadata_->sigIds) {
+        for (const SigWithId& sig : metadata().sigIds) {
             if (const void* sigId = *addressOfSigId(sig.id))
                 lockedSigIdSet->deallocateSigId(sig, sigId);
         }
@@ -483,7 +397,7 @@ Instance::~Instance()
 void
 Instance::trace(JSTracer* trc)
 {
-    for (const FuncImport& fi : metadata_->funcImports)
+    for (const FuncImport& fi : metadata().funcImports)
         TraceNullableEdge(trc, &funcImportToExit(fi).fun, "wasm function import");
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }
@@ -491,7 +405,7 @@ Instance::trace(JSTracer* trc)
 SharedMem<uint8_t*>
 Instance::memoryBase() const
 {
-    MOZ_ASSERT(metadata_->usesMemory());
+    MOZ_ASSERT(metadata().usesMemory());
     MOZ_ASSERT(*addressOfMemoryBase() == memory_->buffer().dataPointerEither());
     return memory_->buffer().dataPointerEither();
 }
@@ -512,16 +426,10 @@ Instance::updateStackLimit(JSContext* cx)
 bool
 Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 {
-    const FuncExport& func = metadata_->lookupFuncExport(funcIndex);
+    if (!cx->compartment()->wasm.ensureProfilingState(cx))
+        return false;
 
-    // Enable/disable profiling in the Module to match the current global
-    // profiling state. Don't do this if the Module is already active on the
-    // stack since this would leave the Module in a state where profiling is
-    // enabled but the stack isn't unwindable.
-    if (profilingEnabled() != cx->runtime()->spsProfiler.enabled() && !activation()) {
-        if (!toggleProfiling(cx))
-            return false;
-    }
+    const FuncExport& func = metadata().lookupFuncExport(funcIndex);
 
     // The calling convention for an external call into wasm is to pass an
     // array of 16-byte values where each value contains either a coerced int32
@@ -619,12 +527,12 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         // the optimized wasm-to-Ion FFI call path (which we want to be very
         // fast) can avoid doing so. The JitActivation is marked as inactive so
         // stack iteration will skip over it.
-        WasmActivation activation(cx, *this);
+        WasmActivation activation(cx);
         JitActivation jitActivation(cx, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
-        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeSegment_->code() + func.entryOffset());
-        if (!CALL_GENERATED_3(funcPtr, exportArgs.begin(), codeSegment_->globalData(), tlsData()))
+        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBase() + func.entryOffset());
+        if (!CALL_GENERATED_3(funcPtr, exportArgs.begin(), codeSegment().globalData(), tlsData()))
             return false;
     }
 
@@ -705,188 +613,52 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
     return true;
 }
 
-const char experimentalWarning[] =
-    "Temporary\n"
-    ".--.      .--.   ____       .-'''-. ,---.    ,---.\n"
-    "|  |_     |  | .'  __ `.   / _     \\|    \\  /    |\n"
-    "| _( )_   |  |/   '  \\  \\ (`' )/`--'|  ,  \\/  ,  |\n"
-    "|(_ o _)  |  ||___|  /  |(_ o _).   |  |\\_   /|  |\n"
-    "| (_,_) \\ |  |   _.-`   | (_,_). '. |  _( )_/ |  |\n"
-    "|  |/    \\|  |.'   _    |.---.  \\  :| (_ o _) |  |\n"
-    "|  '  /\\  `  ||  _( )_  |\\    `-'  ||  (_,_)  |  |\n"
-    "|    /  \\    |\\ (_ o _) / \\       / |  |      |  |\n"
-    "`---'    `---` '.(_,_).'   `-...-'  '--'      '--'\n"
-    "text support (Work In Progress):\n\n";
-
-const size_t experimentalWarningLinesCount = 12;
-
-const char enabledMessage[] =
-    "Restart with developer tools open to view WebAssembly source";
-
-JSString*
-Instance::createText(JSContext* cx)
-{
-    StringBuffer buffer(cx);
-    if (maybeBytecode_) {
-        const Bytes& bytes = maybeBytecode_->bytes;
-        if (!buffer.append(experimentalWarning))
-            return nullptr;
-        maybeSourceMap_.reset(cx->runtime()->new_<GeneratedSourceMap>(cx));
-        if (!maybeSourceMap_)
-            return nullptr;
-        if (!BinaryToExperimentalText(cx, bytes.begin(), bytes.length(), buffer,
-                                      ExperimentalTextFormatting(), maybeSourceMap_.get()))
-            return nullptr;
-#if DEBUG
-        // Checking source map invariant: expression and function locations must be sorted
-        // by line number.
-        uint32_t lastLineno = 0;
-        for (size_t i = 0; i < maybeSourceMap_->exprlocs().length(); i++) {
-            MOZ_ASSERT(lastLineno <= maybeSourceMap_->exprlocs()[i].lineno);
-            lastLineno = maybeSourceMap_->exprlocs()[i].lineno;
-        }
-        lastLineno = 0;
-        for (size_t i = 0; i < maybeSourceMap_->functionlocs().length(); i++) {
-            MOZ_ASSERT(lastLineno <= maybeSourceMap_->functionlocs()[i].startLineno &&
-                maybeSourceMap_->functionlocs()[i].startLineno <=
-                  maybeSourceMap_->functionlocs()[i].endLineno);
-            lastLineno = maybeSourceMap_->functionlocs()[i].endLineno + 1;
-        }
-#endif
-    } else {
-        if (!buffer.append(enabledMessage))
-            return nullptr;
-    }
-    return buffer.finishString();
-}
-
-struct GeneratedSourceMapLinenoComparator
-{
-    int operator()(const ExprLoc& loc) const {
-        return lineno == loc.lineno ? 0 : lineno < loc.lineno ? -1 : 1;
-    }
-    explicit GeneratedSourceMapLinenoComparator(uint32_t lineno_) : lineno(lineno_) {}
-    const uint32_t lineno;
-};
-
-bool
-Instance::getLineOffsets(size_t lineno, Vector<uint32_t>& offsets)
-{
-    // TODO Ensure text was generated?
-    if (!maybeSourceMap_)
-        return false;
-
-    if (lineno < experimentalWarningLinesCount)
-        return true;
-    lineno -= experimentalWarningLinesCount;
-
-    ExprLocVector& exprlocs = maybeSourceMap_->exprlocs();
-
-    // Binary search for the expression with the specified line number and
-    // rewind to the first expression, if more than one expression on the same line.
-    size_t match;
-    if (!BinarySearchIf(exprlocs, 0, exprlocs.length(),
-                        GeneratedSourceMapLinenoComparator(lineno), &match))
-        return true;
-    while (match > 0 && exprlocs[match - 1].lineno == lineno)
-        match--;
-    // Returning all expression offsets that were printed on the specified line.
-    for (size_t i = match; i < exprlocs.length() && exprlocs[i].lineno == lineno; i++) {
-        if (!offsets.append(exprlocs[i].offset))
-            return false;
-    }
-    return true;
-}
-
-bool
-Instance::getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const
-{
-    const Bytes* maybeBytecode = maybeBytecode_ ? &maybeBytecode_.get()->bytes : nullptr;
-    return metadata_->getFuncName(cx, maybeBytecode, funcIndex, name);
-}
-
-JSAtom*
-Instance::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
-{
-    TwoByteName name(cx);
-    if (!getFuncName(cx, funcIndex, &name))
-        return nullptr;
-
-    return AtomizeChars(cx, name.begin(), name.length());
-}
-
 void
 Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
-    const FuncImport& fi = metadata_->funcImports[funcImportIndex];
+    const FuncImport& fi = metadata().funcImports[funcImportIndex];
     FuncImportExit& exit = funcImportToExit(fi);
-    exit.code = codeSegment_->code() + fi.interpExitCodeOffset();
+    exit.code = codeBase() + fi.interpExitCodeOffset();
     exit.baselineScript = nullptr;
 }
 
-struct CallSiteRetAddrOffset
+bool
+Instance::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
 {
-    const CallSiteVector& callSites;
-    explicit CallSiteRetAddrOffset(const CallSiteVector& callSites) : callSites(callSites) {}
-    uint32_t operator[](size_t index) const {
-        return callSites[index].returnAddressOffset();
+    if (code_->profilingEnabled() == newProfilingEnabled)
+        return true;
+
+    if (!code_->ensureProfilingState(cx, newProfilingEnabled))
+        return false;
+
+    // Typed-function tables' elements point directly to either the profiling or
+    // non-profiling prologue and must therefore be updated when the profiling
+    // mode is toggled.
+
+    for (const SharedTable& table : tables_) {
+        if (!table->isTypedFunction() || !table->initialized())
+            continue;
+
+        // This logic will have to be somewhat generalized if wasm can create
+        // typed function tables since a single table can contain elements from
+        // multiple instances.
+        MOZ_ASSERT(metadata().kind == ModuleKind::AsmJS);
+
+        void** array = table->array();
+        uint32_t length = table->length();
+        for (size_t i = 0; i < length; i++) {
+            const CodeRange* codeRange = code_->lookupRange(array[i]);
+            void* from = codeBase() + codeRange->funcNonProfilingEntry();
+            void* to = codeBase() + codeRange->funcProfilingEntry();
+            if (!newProfilingEnabled)
+                Swap(from, to);
+            MOZ_ASSERT(array[i] == from);
+            array[i] = to;
+        }
     }
-};
 
-const CallSite*
-Instance::lookupCallSite(void* returnAddress) const
-{
-    uint32_t target = ((uint8_t*)returnAddress) - codeSegment_->code();
-    size_t lowerBound = 0;
-    size_t upperBound = metadata_->callSites.length();
-
-    size_t match;
-    if (!BinarySearch(CallSiteRetAddrOffset(metadata_->callSites), lowerBound, upperBound, target, &match))
-        return nullptr;
-
-    return &metadata_->callSites[match];
+    return true;
 }
-
-const CodeRange*
-Instance::lookupCodeRange(void* pc) const
-{
-    CodeRange::PC target((uint8_t*)pc - codeSegment_->code());
-    size_t lowerBound = 0;
-    size_t upperBound = metadata_->codeRanges.length();
-
-    size_t match;
-    if (!BinarySearch(metadata_->codeRanges, lowerBound, upperBound, target, &match))
-        return nullptr;
-
-    return &metadata_->codeRanges[match];
-}
-
-#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS
-struct MemoryAccessOffset
-{
-    const MemoryAccessVector& accesses;
-    explicit MemoryAccessOffset(const MemoryAccessVector& accesses) : accesses(accesses) {}
-    uintptr_t operator[](size_t index) const {
-        return accesses[index].insnOffset();
-    }
-};
-
-const MemoryAccess*
-Instance::lookupMemoryAccess(void* pc) const
-{
-    MOZ_ASSERT(codeSegment_->containsFunctionPC(pc));
-
-    uint32_t target = ((uint8_t*)pc) - codeSegment_->code();
-    size_t lowerBound = 0;
-    size_t upperBound = metadata_->memoryAccesses.length();
-
-    size_t match;
-    if (!BinarySearch(MemoryAccessOffset(metadata_->memoryAccesses), lowerBound, upperBound, target, &match))
-        return nullptr;
-
-    return &metadata_->memoryAccesses[match];
-}
-#endif // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
 
 void
 Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
@@ -896,14 +668,10 @@ Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                         size_t* code,
                         size_t* data) const
 {
-    *code += codeSegment_->codeLength();
-    *data += mallocSizeOf(this) +
-             codeSegment_->globalDataLength() +
-             metadata_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata);
+    *data += mallocSizeOf(this);
+
+    code_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, code, data);
 
     for (const SharedTable& table : tables_)
          *data += table->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenTables);
-
-    if (maybeBytecode_)
-        *data += maybeBytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }

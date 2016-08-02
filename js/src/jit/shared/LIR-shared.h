@@ -6511,6 +6511,9 @@ class LGetPropertyPolymorphicV : public LInstructionHelper<BOX_PIECES, 1, 0>
     const MGetPropertyPolymorphic* mir() const {
         return mir_->toGetPropertyPolymorphic();
     }
+    virtual const char* extraName() const {
+        return PropertyNameToExtraName(mir()->name());
+    }
 };
 
 // Emit code to load a typed value from an object's slots if its shape matches
@@ -6532,6 +6535,9 @@ class LGetPropertyPolymorphicT : public LInstructionHelper<1, 1, 1>
     }
     const MGetPropertyPolymorphic* mir() const {
         return mir_->toGetPropertyPolymorphic();
+    }
+    virtual const char* extraName() const {
+        return PropertyNameToExtraName(mir()->name());
     }
 };
 

@@ -4342,9 +4342,6 @@ pref("image.http.accept", "*/*");
 // disable.
 pref("image.infer-src-animation.threshold-ms", 2000);
 
-// Should we optimize away the surfaces of single-color images?
-pref("image.single-color-optimization.enabled", true);
-
 //
 // Image memory management prefs
 //
@@ -4421,11 +4418,7 @@ pref("webgl.disable-fail-if-major-performance-caveat", false);
 pref("webgl.disable-DOM-blit-uploads", false);
 pref("webgl.webgl2-compat-mode", false);
 
-#ifdef NIGHTLY_BUILD
-pref("webgl.enable-prototype-webgl2", true);
-#else
-pref("webgl.enable-prototype-webgl2", false);
-#endif
+pref("webgl.enable-webgl2", true);
 
 #ifdef RELEASE_BUILD
 // Keep this disabled on Release and Beta for now. (see bug 1171228)

@@ -246,7 +246,7 @@ public:
     // Create and attach a window.
     static void Open(const jni::Class::LocalRef& aCls,
                      GeckoView::Window::Param aWindow,
-                     GeckoView::Param aView, jni::Object::Param aGLController,
+                     GeckoView::Param aView, jni::Object::Param aCompositor,
                      jni::String::Param aChromeURI,
                      int32_t aWidth, int32_t aHeight);
 
@@ -254,7 +254,7 @@ public:
     void Close();
 
     // Reattach this nsWindow to a new GeckoView.
-    void Reattach(GeckoView::Param aView);
+    void Reattach(GeckoView::Param aView, jni::Object::Param aCompositor);
 
     void LoadUri(jni::String::Param aUri, int32_t aFlags);
 
@@ -874,34 +874,34 @@ public:
 };
 
 /**
- * GLController has some unique requirements for its native calls, so make it
+ * Compositor has some unique requirements for its native calls, so make it
  * separate from GeckoViewSupport.
  */
-class nsWindow::GLControllerSupport final
-    : public GLController::Natives<GLControllerSupport>
-    , public SupportsWeakPtr<GLControllerSupport>
+class nsWindow::LayerViewSupport final
+    : public LayerView::Compositor::Natives<LayerViewSupport>
+    , public SupportsWeakPtr<LayerViewSupport>
     , public UsesGeckoThreadProxy
 {
     nsWindow& window;
-    GLController::GlobalRef mGLController;
+    LayerView::Compositor::GlobalRef mCompositor;
     GeckoLayerClient::GlobalRef mLayerClient;
     Atomic<bool, ReleaseAcquire> mCompositorPaused;
     mozilla::jni::GlobalRef<mozilla::jni::Object> mSurface;
 
     // In order to use Event::HasSameTypeAs in PostTo(), we cannot make
-    // GLControllerEvent a template because each template instantiation is
-    // a different type. So implement GLControllerEvent as a ProxyEvent.
-    class GLControllerEvent final : public nsAppShell::ProxyEvent
+    // LayerViewEvent a template because each template instantiation is
+    // a different type. So implement LayerViewEvent as a ProxyEvent.
+    class LayerViewEvent final : public nsAppShell::ProxyEvent
     {
         using Event = nsAppShell::Event;
 
     public:
         static UniquePtr<Event> MakeEvent(UniquePtr<Event>&& event)
         {
-            return MakeUnique<GLControllerEvent>(mozilla::Move(event));
+            return MakeUnique<LayerViewEvent>(mozilla::Move(event));
         }
 
-        GLControllerEvent(UniquePtr<Event>&& event)
+        LayerViewEvent(UniquePtr<Event>&& event)
             : nsAppShell::ProxyEvent(mozilla::Move(event))
         {}
 
@@ -922,46 +922,43 @@ class nsWindow::GLControllerSupport final
     };
 
 public:
-    typedef GLController::Natives<GLControllerSupport> Base;
+    typedef LayerView::Compositor::Natives<LayerViewSupport> Base;
 
-    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLControllerSupport);
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(LayerViewSupport);
 
     template<class Functor>
     static void OnNativeCall(Functor&& aCall)
     {
-        if (aCall.IsTarget(&GLControllerSupport::CreateCompositor)) {
+        if (aCall.IsTarget(&LayerViewSupport::CreateCompositor)) {
 
-            // These calls are blocking.
+            // This call is blocking.
             nsAppShell::SyncRunEvent(WindowEvent<Functor>(
-                    mozilla::Move(aCall)), &GLControllerEvent::MakeEvent);
+                    mozilla::Move(aCall)), &LayerViewEvent::MakeEvent);
             return;
 
-        } else if (aCall.IsTarget(&GLControllerSupport::PauseCompositor)) {
-            aCall.SetTarget(&GLControllerSupport::SyncPauseCompositor);
-            (Functor(aCall))();
-            return;
         } else if (aCall.IsTarget(
-                &GLControllerSupport::SyncResumeResizeCompositor)) {
+                &LayerViewSupport::SyncResumeResizeCompositor)) {
             // This call is synchronous. Perform the original call using a copy
             // of the lambda. Then redirect the original lambda to
             // OnResumedCompositor, to be run on the Gecko thread. We use
             // Functor instead of our own lambda so that Functor can handle
             // object lifetimes for us.
             (Functor(aCall))();
-            aCall.SetTarget(&GLControllerSupport::OnResumedCompositor);
+            aCall.SetTarget(&LayerViewSupport::OnResumedCompositor);
             nsAppShell::PostEvent(
-                    mozilla::MakeUnique<GLControllerEvent>(
+                    mozilla::MakeUnique<LayerViewEvent>(
                     mozilla::MakeUnique<WindowEvent<Functor>>(
                     mozilla::Move(aCall))));
             return;
 
         } else if (aCall.IsTarget(
-                &GLControllerSupport::SyncInvalidateAndScheduleComposite)) {
+                &LayerViewSupport::SyncInvalidateAndScheduleComposite) ||
+                aCall.IsTarget(&LayerViewSupport::SyncPauseCompositor)) {
             // This call is synchronous.
             return aCall();
         }
 
-        // GLControllerEvent (i.e. prioritized event) applies to
+        // LayerViewEvent (i.e. prioritized event) applies to
         // CreateCompositor, PauseCompositor, and OnResumedCompositor. For all
         // other events, use regular WindowEvent.
         nsAppShell::PostEvent(
@@ -969,21 +966,21 @@ public:
                 mozilla::Move(aCall)));
     }
 
-    GLControllerSupport(nsWindow* aWindow,
-                        const GLController::LocalRef& aInstance)
+    LayerViewSupport(nsWindow* aWindow,
+                     const LayerView::Compositor::LocalRef& aInstance)
         : window(*aWindow)
-        , mGLController(aInstance)
+        , mCompositor(aInstance)
         , mCompositorPaused(true)
     {
         Base::AttachNative(aInstance, this);
     }
 
-    ~GLControllerSupport()
+    ~LayerViewSupport()
     {
         if (window.mNPZCSupport) {
             window.mNPZCSupport->DetachFromWindow();
         }
-        mGLController->Destroy();
+        mCompositor->Destroy();
     }
 
     const GeckoLayerClient::Ref& GetLayerClient() const
@@ -998,7 +995,7 @@ public:
 
     void* GetSurface()
     {
-        mSurface = mGLController->GetSurface();
+        mSurface = mCompositor->GetSurface();
         return mSurface.Get();
     }
 
@@ -1018,7 +1015,7 @@ private:
     }
 
     /**
-     * GLController methods
+     * Compositor methods
      */
 public:
     using Base::DisposeNative;
@@ -1073,18 +1070,6 @@ public:
         OnResumedCompositor(aWidth, aHeight);
     }
 
-    void PauseCompositor()
-    {
-        // The compositor gets paused when the app is about to go into the
-        // background. While the compositor is paused, we need to ensure that
-        // no layer tree updates (from draw events) occur, since the compositor
-        // cannot make a GL context current in order to process updates.
-        if (window.mCompositorBridgeChild) {
-            window.mCompositorBridgeChild->SendPause();
-        }
-        mCompositorPaused = true;
-    }
-
     void SyncPauseCompositor()
     {
         if (RefPtr<CompositorBridgeParent> bridge = window.GetCompositorBridgeParent()) {
@@ -1120,6 +1105,7 @@ public:
     }
 };
 
+
 nsWindow::GeckoViewSupport::~GeckoViewSupport()
 {
     // Disassociate our GeckoEditable instance with our native object.
@@ -1133,7 +1119,7 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
 nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  GeckoView::Window::Param aWindow,
                                  GeckoView::Param aView,
-                                 jni::Object::Param aGLController,
+                                 jni::Object::Param aCompositor,
                                  jni::String::Param aChromeURI,
                                  int32_t aWidth, int32_t aHeight)
 {
@@ -1189,10 +1175,10 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 
     window->mGeckoViewSupport->mDOMWindow = pdomWindow;
 
-    // Attach the GLController to the new window.
-    window->mGLControllerSupport = mozilla::MakeUnique<GLControllerSupport>(
-            window, GLController::LocalRef(
-            aCls.Env(), GLController::Ref::From(aGLController)));
+    // Attach the Compositor to the new window.
+    window->mLayerViewSupport = mozilla::MakeUnique<LayerViewSupport>(
+            window, LayerView::Compositor::LocalRef(
+            aCls.Env(), LayerView::Compositor::Ref::From(aCompositor)));
 
     gGeckoViewWindow = window;
 
@@ -1219,10 +1205,14 @@ nsWindow::GeckoViewSupport::Close()
 }
 
 void
-nsWindow::GeckoViewSupport::Reattach(GeckoView::Param aView)
+nsWindow::GeckoViewSupport::Reattach(GeckoView::Param aView, jni::Object::Param aCompositor)
 {
     // Associate our previous GeckoEditable with the new GeckoView.
     mEditable->OnViewChange(aView);
+
+    window.mLayerViewSupport = mozilla::MakeUnique<LayerViewSupport>(
+            &window, LayerView::Compositor::LocalRef(jni::GetGeckoThreadEnv(),
+            LayerView::Compositor::Ref::From(aCompositor)));
 }
 
 void
@@ -1264,7 +1254,7 @@ nsWindow::InitNatives()
 {
     nsWindow::GeckoViewSupport::Base::Init();
     nsWindow::GeckoViewSupport::EditableBase::Init();
-    nsWindow::GLControllerSupport::Init();
+    nsWindow::LayerViewSupport::Init();
     nsWindow::NPZCSupport::Init();
 }
 
@@ -1990,10 +1980,10 @@ nsWindow::GetNativeData(uint32_t aDataType)
         }
 
         case NS_JAVA_SURFACE:
-            if (!mGLControllerSupport) {
+            if (!mLayerViewSupport) {
                 return nullptr;
             }
-            return mGLControllerSupport->GetSurface();
+            return mLayerViewSupport->GetSurface();
     }
 
     return nullptr;
@@ -3518,8 +3508,8 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
         return NS_ERROR_UNEXPECTED;
     }
 
-    MOZ_ASSERT(mGLControllerSupport);
-    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
+    MOZ_ASSERT(mLayerViewSupport);
+    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
     client->SynthesizeNativeTouchPoint(aPointerId, eventType,
         aPoint.x, aPoint.y, aPointerPressure, aPointerOrientation);
 
@@ -3534,8 +3524,8 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
 {
     mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
 
-    MOZ_ASSERT(mGLControllerSupport);
-    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
+    MOZ_ASSERT(mLayerViewSupport);
+    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
     client->SynthesizeNativeMouseEvent(aNativeMessage, aPoint.x, aPoint.y);
 
     return NS_OK;
@@ -3547,8 +3537,8 @@ nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
 {
     mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
 
-    MOZ_ASSERT(mGLControllerSupport);
-    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
+    MOZ_ASSERT(mLayerViewSupport);
+    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
     client->SynthesizeNativeMouseEvent(sdk::MotionEvent::ACTION_HOVER_MOVE, aPoint.x, aPoint.y);
 
     return NS_OK;
@@ -3561,8 +3551,8 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
     if (Destroyed()) {
         return;
     }
-    MOZ_ASSERT(mGLControllerSupport);
-    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
+    MOZ_ASSERT(mLayerViewSupport);
+    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
 
     LayerRenderer::Frame::LocalRef frame = client->CreateFrame();
     mLayerRendererFrame = frame;
@@ -3606,8 +3596,8 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
     GLint scissorRect[4];
     gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
 
-    MOZ_ASSERT(mGLControllerSupport);
-    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
+    MOZ_ASSERT(mLayerViewSupport);
+    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
 
     client->ActivateProgram();
     mLayerRendererFrame->DrawForeground();
@@ -3622,8 +3612,8 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
 void
 nsWindow::InvalidateAndScheduleComposite()
 {
-    if (gGeckoViewWindow && gGeckoViewWindow->mGLControllerSupport) {
-        gGeckoViewWindow->mGLControllerSupport->
+    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
+        gGeckoViewWindow->mLayerViewSupport->
                 SyncInvalidateAndScheduleComposite();
     }
 }
@@ -3631,8 +3621,8 @@ nsWindow::InvalidateAndScheduleComposite()
 bool
 nsWindow::IsCompositionPaused()
 {
-    if (gGeckoViewWindow && gGeckoViewWindow->mGLControllerSupport) {
-        return gGeckoViewWindow->mGLControllerSupport->CompositorPaused();
+    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
+        return gGeckoViewWindow->mLayerViewSupport->CompositorPaused();
     }
     return false;
 }
@@ -3640,16 +3630,16 @@ nsWindow::IsCompositionPaused()
 void
 nsWindow::SchedulePauseComposition()
 {
-    if (gGeckoViewWindow && gGeckoViewWindow->mGLControllerSupport) {
-        return gGeckoViewWindow->mGLControllerSupport->SyncPauseCompositor();
+    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
+        return gGeckoViewWindow->mLayerViewSupport->SyncPauseCompositor();
     }
 }
 
 void
 nsWindow::ScheduleResumeComposition()
 {
-    if (gGeckoViewWindow && gGeckoViewWindow->mGLControllerSupport) {
-        return gGeckoViewWindow->mGLControllerSupport->SyncResumeCompositor();
+    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
+        return gGeckoViewWindow->mLayerViewSupport->SyncResumeCompositor();
     }
 }
 
@@ -3684,7 +3674,7 @@ nsWindow::WidgetPaintsBackground()
 bool
 nsWindow::NeedsPaint()
 {
-    if (!mGLControllerSupport || mGLControllerSupport->CompositorPaused() ||
+    if (!mLayerViewSupport || mLayerViewSupport->CompositorPaused() ||
             // FindTopLevel() != nsWindow::TopWindow() ||
             !GetLayerManager(nullptr)) {
         return false;
