@@ -108,26 +108,12 @@ MediaKeyStatusMap::Size() const
   return mStatuses.Length();
 }
 
-static MediaKeyStatus
-ToMediaKeyStatus(GMPMediaKeyStatus aStatus) {
-  switch (aStatus) {
-    case kGMPUsable: return MediaKeyStatus::Usable;
-    case kGMPExpired: return MediaKeyStatus::Expired;
-    case kGMPOutputDownscaled: return MediaKeyStatus::Output_downscaled;
-    case kGMPOutputRestricted: return MediaKeyStatus::Output_restricted;
-    case kGMPInternalError: return MediaKeyStatus::Internal_error;
-    case kGMPReleased: return MediaKeyStatus::Released;
-    case kGMPStatusPending: return MediaKeyStatus::Status_pending;
-    default: return MediaKeyStatus::Internal_error;
-  }
-}
-
 void
 MediaKeyStatusMap::Update(const nsTArray<CDMCaps::KeyStatus>& aKeys)
 {
   mStatuses.Clear();
   for (const auto& key : aKeys) {
-    mStatuses.InsertElementSorted(KeyStatus(key.mId, ToMediaKeyStatus(key.mStatus)));
+    mStatuses.InsertElementSorted(KeyStatus(key.mId, key.mStatus));
   }
 }
 
