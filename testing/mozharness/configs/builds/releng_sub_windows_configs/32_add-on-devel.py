@@ -23,7 +23,7 @@ config = {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'MOZ_AUTOMATION': '1',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'MOZ_OBJDIR': 'obj-add-on-devel',
+        'MOZ_OBJDIR': 'obj-firefox',
         'PATH': 'C:/mozilla-build/nsis-3.0b1;C:/mozilla-build/python27;'
                 'C:/mozilla-build/buildbotve/scripts;'
                 '%s' % (os.environ.get('path')),
