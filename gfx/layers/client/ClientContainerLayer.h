@@ -58,9 +58,6 @@ public:
 
     for (uint32_t i = 0; i < children.Length(); i++) {
       Layer* child = children.ElementAt(i);
-      if (!child->IsVisible()) {
-        continue;
-      }
 
       ToClientLayer(child)->RenderLayerWithReadback(&readback);
 
