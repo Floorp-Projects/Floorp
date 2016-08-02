@@ -2503,8 +2503,6 @@ WorkerPrivateParent<Derived>::DispatchControlRunnable(
     MutexAutoLock lock(mMutex);
 
     if (self->mStatus == Dead) {
-      NS_WARNING("A control runnable was posted to a worker that is already "
-                 "shutting down!");
       return NS_ERROR_UNEXPECTED;
     }
 
