@@ -737,7 +737,7 @@ ProgramProfileOGL::BuildMixBlender(const ShaderConfigOGL& aConfig, std::ostrings
   fs << "    return color;" << endl;
   fs << "  }" << endl;
   fs << "  if (color.a == 0.0) {" << endl;
-  fs << "    return backdrop;" << endl;
+  fs << "    return vec4(0.0, 0.0, 0.0, 0.0);" << endl;
   fs << "  }" << endl;
 
   // The spec assumes there is no premultiplied alpha. The backdrop is always
