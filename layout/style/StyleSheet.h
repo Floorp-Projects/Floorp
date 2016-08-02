@@ -43,6 +43,7 @@ public:
     mParsingMode = aParsingMode;
   }
 
+  css::SheetParsingMode ParsingMode() { return mParsingMode; }
   mozilla::dom::CSSStyleSheetParsingMode ParsingModeDOM();
 
   nsINode* GetOwnerNode() const { return mOwningNode; }
