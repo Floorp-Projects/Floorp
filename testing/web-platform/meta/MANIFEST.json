@@ -37598,6 +37598,14 @@
             "url": "/html/semantics/grouping-content/the-ol-element/reversed-1d.html"
           }
         ]
+      },
+      "testharness": {
+        "html/semantics/forms/the-form-element/form-submission-sandbox.html": [
+          {
+            "path": "html/semantics/forms/the-form-element/form-submission-sandbox.html",
+            "url": "/html/semantics/forms/the-form-element/form-submission-sandbox.html"
+          }
+        ]
       }
     },
     "reftest_nodes": {
