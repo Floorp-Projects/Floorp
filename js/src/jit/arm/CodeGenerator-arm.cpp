@@ -2557,12 +2557,13 @@ CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout*
     Register ptr = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldval());
     Register newval = ToRegister(ins->newval());
+    Register tls = ToRegister(ins->tls());
     Register instance = ToRegister(ins->getTemp(0));
     Register viewType = ToRegister(ins->getTemp(1));
 
     MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
-    masm.loadWasmGlobalPtr(wasm::InstancePtrGlobalDataOffset, instance);
+    masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
     masm.ma_mov(Imm32(mir->accessType()), viewType);
 
     masm.setupAlignedABICall();
@@ -2600,12 +2601,13 @@ CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* i
     const MAsmJSAtomicExchangeHeap* mir = ins->mir();
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
+    Register tls = ToRegister(ins->tls());
     Register instance = ToRegister(ins->getTemp(0));
     Register viewType = ToRegister(ins->getTemp(1));
 
     MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
-    masm.loadWasmGlobalPtr(wasm::InstancePtrGlobalDataOffset, instance);
+    masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
     masm.ma_mov(Imm32(mir->accessType()), viewType);
 
     masm.setupAlignedABICall();
@@ -2680,10 +2682,11 @@ CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
     const MAsmJSAtomicBinopHeap* mir = ins->mir();
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
+    Register tls = ToRegister(ins->tls());
     Register instance = ToRegister(ins->getTemp(0));
     Register viewType = ToRegister(ins->getTemp(1));
 
-    masm.loadWasmGlobalPtr(wasm::InstancePtrGlobalDataOffset, instance);
+    masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
     masm.move32(Imm32(mir->accessType()), viewType);
 
     masm.setupAlignedABICall();

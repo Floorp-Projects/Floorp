@@ -13223,13 +13223,13 @@ class MAsmJSStoreHeap
 };
 
 class MAsmJSCompareExchangeHeap
-  : public MTernaryInstruction,
+  : public MQuaternaryInstruction,
     public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
     MAsmJSCompareExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
-                              MDefinition* oldv, MDefinition* newv)
-        : MTernaryInstruction(base, oldv, newv),
+                              MDefinition* oldv, MDefinition* newv, MDefinition* tls)
+        : MQuaternaryInstruction(base, oldv, newv, tls),
           MWasmMemoryAccess(access)
     {
         setGuard();             // Not removable
@@ -13243,6 +13243,7 @@ class MAsmJSCompareExchangeHeap
     MDefinition* base() const { return getOperand(0); }
     MDefinition* oldValue() const { return getOperand(1); }
     MDefinition* newValue() const { return getOperand(2); }
+    MDefinition* tls() const { return getOperand(3); }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::AsmJSHeap);
@@ -13250,13 +13251,13 @@ class MAsmJSCompareExchangeHeap
 };
 
 class MAsmJSAtomicExchangeHeap
-  : public MBinaryInstruction,
+  : public MTernaryInstruction,
     public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
     MAsmJSAtomicExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
-                             MDefinition* value)
-        : MBinaryInstruction(base, value),
+                             MDefinition* value, MDefinition* tls)
+        : MTernaryInstruction(base, value, tls),
           MWasmMemoryAccess(access)
     {
         setGuard();             // Not removable
@@ -13269,6 +13270,7 @@ class MAsmJSAtomicExchangeHeap
 
     MDefinition* base() const { return getOperand(0); }
     MDefinition* value() const { return getOperand(1); }
+    MDefinition* tls() const { return getOperand(2); }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::AsmJSHeap);
@@ -13276,15 +13278,15 @@ class MAsmJSAtomicExchangeHeap
 };
 
 class MAsmJSAtomicBinopHeap
-  : public MBinaryInstruction,
+  : public MTernaryInstruction,
     public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
     AtomicOp op_;
 
     MAsmJSAtomicBinopHeap(AtomicOp op, MDefinition* base, const MWasmMemoryAccess& access,
-                          MDefinition* v)
-        : MBinaryInstruction(base, v),
+                          MDefinition* v, MDefinition* tls)
+        : MTernaryInstruction(base, v, tls),
           MWasmMemoryAccess(access),
           op_(op)
     {
@@ -13299,6 +13301,7 @@ class MAsmJSAtomicBinopHeap
     AtomicOp operation() const { return op_; }
     MDefinition* base() const { return getOperand(0); }
     MDefinition* value() const { return getOperand(1); }
+    MDefinition* tls() const { return getOperand(2); }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::AsmJSHeap);
@@ -13539,6 +13542,11 @@ class MAsmJSCall final
         }
     };
 
+    enum PreservesTlsReg {
+        False = false,
+        True = true
+    };
+
   private:
     wasm::CallSiteDesc desc_;
     Callee callee_;
@@ -13547,11 +13555,11 @@ class MAsmJSCall final
     bool preservesTlsReg_;
 
     MAsmJSCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement,
-               bool preservesTlsReg)
+               PreservesTlsReg preservesTlsReg)
       : desc_(desc)
       , callee_(callee)
       , spIncrement_(spIncrement)
-      , preservesTlsReg_(preservesTlsReg)
+      , preservesTlsReg_(bool(preservesTlsReg))
     { }
 
   public:
@@ -13566,7 +13574,7 @@ class MAsmJSCall final
 
     static MAsmJSCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
                            const Args& args, MIRType resultType, size_t spIncrement,
-                           bool preservesTlsReg);
+                           PreservesTlsReg preservesTlsReg);
 
     size_t numArgs() const {
         return argRegs_.length();

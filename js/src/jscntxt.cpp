@@ -1038,6 +1038,16 @@ ExclusiveContext::stackLimitAddressForJitCode(StackKind kind)
 #endif
 }
 
+uintptr_t
+ExclusiveContext::stackLimitForJitCode(StackKind kind)
+{
+#ifdef JS_SIMULATOR
+    return runtime_->simulator()->stackLimit();
+#else
+    return stackLimit(kind);
+#endif
+}
+
 JSVersion
 JSContext::findVersion() const
 {

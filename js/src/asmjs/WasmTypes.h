@@ -1044,6 +1044,9 @@ struct ExportArg
 //
 struct TlsData
 {
+    // Pointer to the Instance that contains this TLS data.
+    Instance* instance;
+
     // Stack limit for the current thread. This limit is checked against the
     // stack pointer in the prologue of functions that allocate stack space. See
     // `CodeGenerator::generateWasm`.
@@ -1064,8 +1067,7 @@ static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 #endif
 
 static const unsigned ContextPtrGlobalDataOffset  = 0;
-static const unsigned InstancePtrGlobalDataOffset = ContextPtrGlobalDataOffset + sizeof(void*);
-static const unsigned HeapGlobalDataOffset        = InstancePtrGlobalDataOffset + sizeof(void*);
+static const unsigned HeapGlobalDataOffset        = ContextPtrGlobalDataOffset + sizeof(void*);
 static const unsigned NaN64GlobalDataOffset       = HeapGlobalDataOffset + sizeof(void*);
 static const unsigned NaN32GlobalDataOffset       = NaN64GlobalDataOffset + sizeof(double);
 static const unsigned InitialGlobalDataBytes      = NaN32GlobalDataOffset + sizeof(float);

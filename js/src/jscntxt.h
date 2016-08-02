@@ -217,6 +217,7 @@ class ExclusiveContext : public ContextFriendFields,
     void* stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
     void* stackLimitAddressForJitCode(StackKind kind);
     uintptr_t stackLimit(StackKind kind) { return runtime_->mainThread.nativeStackLimit[kind]; }
+    uintptr_t stackLimitForJitCode(StackKind kind);
     size_t gcSystemPageSize() { return gc::SystemPageSize(); }
     bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
     bool jitSupportsUnalignedAccesses() const { return runtime_->jitSupportsUnalignedAccesses; }
