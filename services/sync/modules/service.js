@@ -359,6 +359,7 @@ Sync11Service.prototype = {
     }
 
     Svc.Obs.add("weave:service:setup-complete", this);
+    Svc.Obs.add("sync:collection_changed", this); // Pulled from FxAccountsCommon
     Svc.Prefs.observe("engine.", this);
 
     this.scheduler = new SyncScheduler(this);
@@ -485,6 +486,13 @@ Sync11Service.prototype = {
 
   observe: function observe(subject, topic, data) {
     switch (topic) {
+      // Ideally this observer should be in the SyncScheduler, but it would require
+      // some work to know about the sync specific engines. We should move this there once it does.
+      case "sync:collection_changed":
+        if (data.includes("clients")) {
+          this.sync([]); // [] = clients collection only
+        }
+        break;
       case "weave:service:setup-complete":
         let status = this._checkSetup();
         if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED)
