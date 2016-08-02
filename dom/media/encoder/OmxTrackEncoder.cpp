@@ -26,8 +26,8 @@ namespace mozilla {
 #define ENCODER_CONFIG_FRAME_RATE 30 // fps
 #define GET_ENCODED_VIDEO_FRAME_TIMEOUT 100000 // microseconds
 
-OmxVideoTrackEncoder::OmxVideoTrackEncoder(TrackRate aTrackRate)
-  : VideoTrackEncoder(aTrackRate)
+OmxVideoTrackEncoder::OmxVideoTrackEncoder()
+  : VideoTrackEncoder()
 {}
 
 OmxVideoTrackEncoder::~OmxVideoTrackEncoder()
@@ -35,10 +35,11 @@ OmxVideoTrackEncoder::~OmxVideoTrackEncoder()
 
 nsresult
 OmxVideoTrackEncoder::Init(int aWidth, int aHeight, int aDisplayWidth,
-                           int aDisplayHeight)
+                           int aDisplayHeight, TrackRate aTrackRate)
 {
   mFrameWidth = aWidth;
   mFrameHeight = aHeight;
+  mTrackRate = aTrackRate;
   mDisplayWidth = aDisplayWidth;
   mDisplayHeight = aDisplayHeight;
 
