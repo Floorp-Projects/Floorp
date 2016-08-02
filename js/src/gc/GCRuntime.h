@@ -701,32 +701,14 @@ class GCRuntime
     void requestMinorGC(JS::gcreason::Reason reason);
 
 #ifdef DEBUG
-
     bool onBackgroundThread() { return helperState.onBackgroundThread(); }
-
-    bool currentThreadOwnsGCLock() {
-        return lockOwner == PR_GetCurrentThread();
-    }
-
 #endif // DEBUG
-
-    void assertCanLock() {
-        MOZ_ASSERT(!currentThreadOwnsGCLock());
-    }
 
     void lockGC() {
         lock.lock();
-#ifdef DEBUG
-        MOZ_ASSERT(!lockOwner);
-        lockOwner = PR_GetCurrentThread();
-#endif
     }
 
     void unlockGC() {
-#ifdef DEBUG
-        MOZ_ASSERT(lockOwner == PR_GetCurrentThread());
-        lockOwner = nullptr;
-#endif
         lock.unlock();
     }
 
@@ -1375,9 +1357,6 @@ class GCRuntime
     /* Synchronize GC heap access between main thread and GCHelperState. */
     friend class js::AutoLockGC;
     js::Mutex lock;
-#ifdef DEBUG
-    mozilla::Atomic<PRThread*> lockOwner;
-#endif
 
     BackgroundAllocTask allocTask;
     BackgroundDecommitTask decommitTask;

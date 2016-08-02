@@ -332,16 +332,23 @@ class H264
 {
 public:
   static bool DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData, SPSData& aDest);
+
   /* Extract RAW BYTE SEQUENCE PAYLOAD from NAL content.
      Returns nullptr if invalid content.
      This is compliant to ITU H.264 7.3.1 Syntax in tabular form NAL unit syntax
    */
   static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(const mozilla::MediaByteBuffer* aNAL);
+
   /* Decode SPS NAL RBSP and fill SPSData structure */
   static bool DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest);
+
   // Ensure that SPS data makes sense, Return true if SPS data was, and false
   // otherwise. If false, then content will be adjusted accordingly.
   static bool EnsureSPSIsSane(SPSData& aSPS);
+
+  // If the given aExtraData is valid, return the aExtraData.max_num_ref_frames
+  // clamped to be in the range of [4, 16]; otherwise return 4.
+  static uint32_t ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData);
 
 private:
   static void vui_parameters(BitReader& aBr, SPSData& aDest);

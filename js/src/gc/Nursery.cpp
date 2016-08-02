@@ -664,6 +664,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, reason);
     if (totalTime > 1000)
         rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, reason);
+    rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, nurserySize());
 
     rt->gc.stats.endNurseryCollection(reason);
     TraceMinorGCEnd();
@@ -713,7 +714,7 @@ js::Nursery::freeMallocedBuffers()
         AutoLockHelperThreadState lock;
         freeMallocedBuffersTask->joinWithLockHeld(lock);
         freeMallocedBuffersTask->transferBuffersToFree(mallocedBuffers, lock);
-        started = freeMallocedBuffersTask->startWithLockHeld();
+        started = freeMallocedBuffersTask->startWithLockHeld(lock);
     }
 
     if (!started)

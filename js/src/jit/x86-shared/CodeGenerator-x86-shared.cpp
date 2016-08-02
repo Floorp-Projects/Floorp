@@ -505,6 +505,41 @@ CodeGeneratorX86Shared::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+
+    MWasmTruncateToInt32* mir = lir->mir();
+    MIRType inputType = mir->input()->type();
+
+    MOZ_ASSERT(inputType == MIRType::Double || inputType == MIRType::Float32);
+
+    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    Label* oolEntry = ool->entry();
+    if (mir->isUnsigned()) {
+        if (inputType == MIRType::Double)
+            masm.wasmTruncateDoubleToUInt32(input, output, oolEntry);
+        else if (inputType == MIRType::Float32)
+            masm.wasmTruncateFloat32ToUInt32(input, output, oolEntry);
+        else
+            MOZ_CRASH("unexpected type");
+        return;
+    }
+
+    if (inputType == MIRType::Double)
+        masm.wasmTruncateDoubleToInt32(input, output, oolEntry);
+    else if (inputType == MIRType::Float32)
+        masm.wasmTruncateFloat32ToInt32(input, output, oolEntry);
+    else
+        MOZ_CRASH("unexpected type");
+
+    masm.bind(ool->rejoin());
+}
+
+void
 CodeGeneratorX86Shared::maybeEmitWasmBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr,
                                                        bool redundant)
 {
@@ -4707,26 +4742,26 @@ CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateChe
     FloatRegister input = ool->input();
     MIRType fromType = ool->fromType();
     MIRType toType = ool->toType();
+    Label* oolRejoin = ool->rejoin();
+    bool isUnsigned = ool->isUnsigned();
 
-    masm.outOfLineWasmTruncateCheck(input, fromType, toType, ool->isUnsigned(), ool->rejoin());
-}
-
-void
-CodeGeneratorX86Shared::emitWasmSignedTruncateToInt32(OutOfLineWasmTruncateCheck* ool,
-                                                      Register output)
-{
-    FloatRegister input = ool->input();
-    MIRType fromType = ool->fromType();
-
-    if (fromType == MIRType::Double)
-        masm.vcvttsd2si(input, output);
-    else if (fromType == MIRType::Float32)
-        masm.vcvttss2si(input, output);
-    else
-        MOZ_CRASH("unexpected type in emitWasmSignedTruncateToInt32");
-
-    masm.cmp32(output, Imm32(1));
-    masm.j(Assembler::Overflow, ool->entry());
+    if (fromType == MIRType::Float32) {
+        if (toType == MIRType::Int32)
+            masm.outOfLineWasmTruncateFloat32ToInt32(input, isUnsigned, oolRejoin);
+        else if (toType == MIRType::Int64)
+            masm.outOfLineWasmTruncateFloat32ToInt64(input, isUnsigned, oolRejoin);
+        else
+            MOZ_CRASH("unexpected type");
+    } else if (fromType == MIRType::Double) {
+        if (toType == MIRType::Int32)
+            masm.outOfLineWasmTruncateDoubleToInt32(input, isUnsigned, oolRejoin);
+        else if (toType == MIRType::Int64)
+            masm.outOfLineWasmTruncateDoubleToInt64(input, isUnsigned, oolRejoin);
+        else
+            MOZ_CRASH("unexpected type");
+    } else {
+        MOZ_CRASH("unexpected type");
+    }
 }
 
 void

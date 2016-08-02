@@ -481,84 +481,6 @@ RasterImage::GetFirstFrameDelay()
   return mAnimationState->FirstFrameTimeout().AsEncodedValueDeprecated();
 }
 
-already_AddRefed<SourceSurface>
-RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
-{
-  if (aWhichFrame > FRAME_MAX_VALUE) {
-    return nullptr;
-  }
-
-  if (mError) {
-    return nullptr;
-  }
-
-  // Get the frame. If it's not there, it's probably the caller's fault for
-  // not waiting for the data to be loaded from the network or not passing
-  // FLAG_SYNC_DECODE
-  DrawableFrameRef frameRef =
-    LookupFrame(GetRequestedFrameIndex(aWhichFrame), mSize, aFlags);
-  if (!frameRef) {
-    // The OS threw this frame away and we couldn't redecode it right now.
-    return nullptr;
-  }
-
-  // Create a 32-bit surface at the decoded size of the image. If
-  // FLAG_SYNC_DECODE was not passed, we may have substituted a downscaled
-  // version of the image we already had available, so this is not necessarily
-  // the intrinsic size of the image. We'll take the frame rect of the image
-  // into account when we draw, implicitly adding padding so that the caller
-  // doesn't need to worry about frame rects.
-  // XXX(seth): In bug 1247520 we'll remove support for frame rects, rendering
-  // this additional padding unnecessary.
-  RefPtr<DataSourceSurface> surf =
-    Factory::CreateDataSourceSurface(frameRef->GetImageSize(),
-                                     SurfaceFormat::B8G8R8A8,
-                                     /* aZero = */ true);
-  if (NS_WARN_IF(!surf)) {
-    return nullptr;
-  }
-
-  DataSourceSurface::MappedSurface mapping;
-  if (!surf->Map(DataSourceSurface::MapType::WRITE, &mapping)) {
-    gfxCriticalError() << "RasterImage::CopyFrame failed to map surface";
-    return nullptr;
-  }
-
-  RefPtr<DrawTarget> target =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                     mapping.mData,
-                                     frameRef->GetImageSize(),
-                                     mapping.mStride,
-                                     SurfaceFormat::B8G8R8A8);
-  if (!target) {
-    gfxWarning() << "RasterImage::CopyFrame failed in CreateDrawTargetForData";
-    return nullptr;
-  }
-
-  IntRect intFrameRect = frameRef->GetRect();
-  Rect rect(intFrameRect.x, intFrameRect.y,
-            intFrameRect.width, intFrameRect.height);
-  if (frameRef->IsSinglePixel()) {
-    target->FillRect(rect, ColorPattern(frameRef->SinglePixelColor()),
-                     DrawOptions(1.0f, CompositionOp::OP_SOURCE));
-  } else {
-    RefPtr<SourceSurface> srcSurf = frameRef->GetSurface();
-    if (!srcSurf) {
-      RecoverFromInvalidFrames(mSize, aFlags);
-      return nullptr;
-    }
-
-    Rect srcRect(0, 0, intFrameRect.width, intFrameRect.height);
-    target->DrawSurface(srcSurf, srcRect, rect);
-  }
-
-  target->Flush();
-  surf->Unmap();
-
-  return surf.forget();
-}
-
-//******************************************************************************
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 RasterImage::GetFrame(uint32_t aWhichFrame,
                       uint32_t aFlags)
@@ -603,21 +525,7 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
     return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
-  // If this frame covers the entire image, we can just reuse its existing
-  // surface.
-  RefPtr<SourceSurface> frameSurf;
-  if (!frameRef->NeedsPadding() &&
-      frameRef->GetSize() == frameRef->GetImageSize()) {
-    frameSurf = frameRef->GetSurface();
-  }
-
-  // The image doesn't have a usable surface because it's been optimized away or
-  // because it's a partial update frame from an animation. Create one. (In this
-  // case we fall back to returning a surface at our intrinsic size, even if a
-  // different size was originally specified.)
-  if (!frameSurf) {
-    frameSurf = CopyFrame(aWhichFrame, aFlags);
-  }
+  RefPtr<SourceSurface> frameSurf = frameRef->GetSurface();
 
   if (!frameRef->IsFinished()) {
     return MakePair(DrawResult::INCOMPLETE, Move(frameSurf));
@@ -1640,7 +1548,7 @@ RasterImage::NotifyProgress(Progress aProgress,
   }
 
   // We may have decoded new animation frames; update our animation state.
-  MOZ_ASSERT_IF(aFrameCount && *aFrameCount > 1, mAnimationState);
+  MOZ_ASSERT_IF(aFrameCount && *aFrameCount > 1, mAnimationState || mError);
   if (mAnimationState && aFrameCount) {
     mAnimationState->UpdateKnownFrameCount(*aFrameCount);
   }

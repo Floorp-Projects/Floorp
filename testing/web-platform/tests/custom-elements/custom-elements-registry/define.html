@@ -164,6 +164,7 @@
   test(() => {
     class C {
       static get observedAttributes() { throw_rethrown_error(); }
+      attributeChangedCallback() {}
     }
     assert_rethrown(() => {
       customElements.define('test-define-observedattributes-rethrow', C);

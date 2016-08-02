@@ -16,6 +16,7 @@
 #include "mozilla/unused.h"
 
 #include <ctype.h>
+#include <limits>
 #include <string.h>
 
 #include "jsapi.h"
@@ -2723,14 +2724,9 @@ js::str_fromCharCode(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-bool
-js::str_fromCharCode_one_arg(JSContext* cx, HandleValue code, MutableHandleValue rval)
+static inline bool
+CodeUnitToString(JSContext* cx, uint16_t ucode, MutableHandleValue rval)
 {
-    uint16_t ucode;
-
-    if (!ToUint16(cx, code, &ucode))
-        return false;
-
     if (StaticStrings::hasUnit(ucode)) {
         rval.setString(cx->staticStrings().getUnit(ucode));
         return true;
@@ -2745,10 +2741,178 @@ js::str_fromCharCode_one_arg(JSContext* cx, HandleValue code, MutableHandleValue
     return true;
 }
 
+bool
+js::str_fromCharCode_one_arg(JSContext* cx, HandleValue code, MutableHandleValue rval)
+{
+    uint16_t ucode;
+
+    if (!ToUint16(cx, code, &ucode))
+        return false;
+
+    return CodeUnitToString(cx, ucode, rval);
+}
+
+static inline bool
+IsSupplementary(uint32_t codePoint)
+{
+    return codePoint > 0xFFFF;
+}
+
+static inline char16_t
+LeadSurrogate(uint32_t codePoint)
+{
+    return char16_t((codePoint >> 10) + 0xD7C0);
+}
+
+static inline char16_t
+TrailSurrogate(uint32_t codePoint)
+{
+    return char16_t((codePoint & 0x3FF) | 0xDC00);
+}
+
+static inline void
+UTF16Encode(uint32_t codePoint, char16_t* elements, unsigned* index)
+{
+    if (!IsSupplementary(codePoint)) {
+        elements[(*index)++] = char16_t(codePoint);
+    } else {
+        elements[(*index)++] = LeadSurrogate(codePoint);
+        elements[(*index)++] = TrailSurrogate(codePoint);
+    }
+}
+
+static MOZ_ALWAYS_INLINE bool
+ToCodePoint(JSContext* cx, HandleValue code, uint32_t* codePoint)
+{
+    // String.fromCodePoint, Steps 5.a-b.
+    double nextCP;
+    if (!ToNumber(cx, code, &nextCP))
+        return false;
+
+    // String.fromCodePoint, Steps 5.c-d.
+    if (JS::ToInteger(nextCP) != nextCP || nextCP < 0 || nextCP > 0x10FFFF) {
+        ToCStringBuf cbuf;
+        if (char* numStr = NumberToCString(cx, &cbuf, nextCP))
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_A_CODEPOINT, numStr);
+        return false;
+    }
+
+    *codePoint = uint32_t(nextCP);
+    return true;
+}
+
+static bool
+str_fromCodePoint_one_arg(JSContext* cx, HandleValue code, MutableHandleValue rval)
+{
+    // Steps 1-4 (omitted).
+
+    // Steps 5.a-d.
+    uint32_t codePoint;
+    if (!ToCodePoint(cx, code, &codePoint))
+        return false;
+
+    // Steps 5.e, 6.
+    if (!IsSupplementary(codePoint))
+        return CodeUnitToString(cx, uint16_t(codePoint), rval);
+
+    char16_t chars[] = { LeadSurrogate(codePoint), TrailSurrogate(codePoint) };
+    JSString* str = NewStringCopyNDontDeflate<CanGC>(cx, chars, 2);
+    if (!str)
+        return false;
+
+    rval.setString(str);
+    return true;
+}
+
+static bool
+str_fromCodePoint_few_args(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(args.length() <= JSFatInlineString::MAX_LENGTH_TWO_BYTE / 2);
+
+    // Steps 1-2 (omitted).
+
+    // Step 3.
+    char16_t elements[JSFatInlineString::MAX_LENGTH_TWO_BYTE];
+
+    // Steps 4-5.
+    unsigned length = 0;
+    for (unsigned nextIndex = 0; nextIndex < args.length(); nextIndex++) {
+        // Steps 5.a-d.
+        uint32_t codePoint;
+        if (!ToCodePoint(cx, args[nextIndex], &codePoint))
+            return false;
+
+        // Step 5.e.
+        UTF16Encode(codePoint, elements, &length);
+    }
+
+    // Step 6.
+    JSString* str = NewStringCopyN<CanGC>(cx, elements, length);
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
+}
+
+// ES2017 draft rev 40edb3a95a475c1b251141ac681b8793129d9a6d
+// 21.1.2.2 String.fromCodePoint(...codePoints)
+static bool
+str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Optimize the single code-point case.
+    if (args.length() == 1)
+        return str_fromCodePoint_one_arg(cx, args[0], args.rval());
+
+    // Optimize the case where the result will definitely fit in an inline
+    // string (thin or fat) and so we don't need to malloc the chars. (We could
+    // cover some cases where |args.length()| goes up to
+    // JSFatInlineString::MAX_LENGTH_LATIN1 / 2 if we also checked if the chars
+    // are all Latin1, but it doesn't seem worth the effort.)
+    if (args.length() <= JSFatInlineString::MAX_LENGTH_TWO_BYTE / 2)
+        return str_fromCodePoint_few_args(cx, args);
+
+    // Steps 1-2 (omitted).
+
+    // Step 3.
+    static_assert(ARGS_LENGTH_MAX < std::numeric_limits<size_t>::max() / 2,
+                  "|args.length() * 2 + 1| does not overflow");
+    char16_t* elements = cx->pod_malloc<char16_t>(args.length() * 2 + 1);
+    if (!elements)
+        return false;
+
+    // Steps 4-5.
+    unsigned length = 0;
+    for (unsigned nextIndex = 0; nextIndex < args.length(); nextIndex++) {
+        // Steps 5.a-d.
+        uint32_t codePoint;
+        if (!ToCodePoint(cx, args[nextIndex], &codePoint)) {
+            js_free(elements);
+            return false;
+        }
+
+        // Step 5.e.
+        UTF16Encode(codePoint, elements, &length);
+    }
+    elements[length] = 0;
+
+    // Step 6.
+    JSString* str = NewString<CanGC>(cx, elements, length);
+    if (!str) {
+        js_free(elements);
+        return false;
+    }
+
+    args.rval().setString(str);
+    return true;
+}
+
 static const JSFunctionSpec string_static_methods[] = {
     JS_INLINABLE_FN("fromCharCode", js::str_fromCharCode, 1, 0, StringFromCharCode),
 
-    JS_SELF_HOSTED_FN("fromCodePoint",   "String_static_fromCodePoint", 1,0),
+    JS_FN("fromCodePoint",               str_fromCodePoint,             1,0),
     JS_SELF_HOSTED_FN("raw",             "String_static_raw",           2,JSFUN_HAS_REST),
     JS_SELF_HOSTED_FN("substring",       "String_static_substring",     3,0),
     JS_SELF_HOSTED_FN("substr",          "String_static_substr",        3,0),

@@ -1307,6 +1307,19 @@ class MacroAssembler : public MacroAssemblerSpecific
                                        FloatRegister floatTemp)
         DEFINED_ON(x86, x64);
 
+  public:
+    // wasm specific methods, used in both the wasm baseline compiler and ion.
+    void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64);
+    void wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared);
+    void outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
+
+    void wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64);
+    void wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared);
+    void outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
+
+    void outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
+    void outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
+
     //}}} check_macroassembler_style
   public:
 
@@ -1358,7 +1371,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfActivation()), dest);
     }
     void loadWasmActivation(Register dest) {
-        loadWasmGlobalPtr(wasm::ActivationGlobalDataOffset, dest);
+        loadWasmGlobalPtr(wasm::ContextPtrGlobalDataOffset, dest);
+        loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
     }
 
     template<typename T>

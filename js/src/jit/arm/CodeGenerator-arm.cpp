@@ -2554,22 +2554,23 @@ void
 CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout* ins)
 {
     const MAsmJSCompareExchangeHeap* mir = ins->mir();
-    Scalar::Type viewType = mir->accessType();
     Register ptr = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldval());
     Register newval = ToRegister(ins->newval());
+    Register instance = ToRegister(ins->getTemp(0));
+    Register viewType = ToRegister(ins->getTemp(1));
 
     MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
+    masm.loadWasmGlobalPtr(wasm::InstancePtrGlobalDataOffset, instance);
+    masm.ma_mov(Imm32(mir->accessType()), viewType);
+
     masm.setupAlignedABICall();
-    {
-        ScratchRegisterScope scratch(masm);
-        masm.ma_mov(Imm32(viewType), scratch);
-        masm.passABIArg(scratch);
-        masm.passABIArg(ptr);
-        masm.passABIArg(oldval);
-        masm.passABIArg(newval);
-    }
+    masm.passABIArg(instance);
+    masm.passABIArg(viewType);
+    masm.passABIArg(ptr);
+    masm.passABIArg(oldval);
+    masm.passABIArg(newval);
     masm.callWithABI(wasm::SymbolicAddress::AtomicCmpXchg);
 }
 
@@ -2597,21 +2598,21 @@ void
 CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* ins)
 {
     const MAsmJSAtomicExchangeHeap* mir = ins->mir();
-    Scalar::Type viewType = mir->accessType();
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
+    Register instance = ToRegister(ins->getTemp(0));
+    Register viewType = ToRegister(ins->getTemp(1));
 
     MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
+    masm.loadWasmGlobalPtr(wasm::InstancePtrGlobalDataOffset, instance);
+    masm.ma_mov(Imm32(mir->accessType()), viewType);
+
     masm.setupAlignedABICall();
-    {
-        ScratchRegisterScope scratch(masm);
-        masm.ma_mov(Imm32(viewType), scratch);
-        masm.passABIArg(scratch);
-    }
+    masm.passABIArg(instance);
+    masm.passABIArg(viewType);
     masm.passABIArg(ptr);
     masm.passABIArg(value);
-
     masm.callWithABI(wasm::SymbolicAddress::AtomicXchg);
 }
 
@@ -2677,16 +2678,17 @@ void
 CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
 {
     const MAsmJSAtomicBinopHeap* mir = ins->mir();
-    Scalar::Type viewType = mir->accessType();
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
+    Register instance = ToRegister(ins->getTemp(0));
+    Register viewType = ToRegister(ins->getTemp(1));
+
+    masm.loadWasmGlobalPtr(wasm::InstancePtrGlobalDataOffset, instance);
+    masm.move32(Imm32(mir->accessType()), viewType);
 
     masm.setupAlignedABICall();
-    {
-        ScratchRegisterScope scratch(masm);
-        masm.move32(Imm32(viewType), scratch);
-        masm.passABIArg(scratch);
-    }
+    masm.passABIArg(instance);
+    masm.passABIArg(viewType);
     masm.passABIArg(ptr);
     masm.passABIArg(value);
 

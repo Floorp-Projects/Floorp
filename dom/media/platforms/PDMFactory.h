@@ -47,6 +47,7 @@ public:
 private:
   virtual ~PDMFactory();
   void CreatePDMs();
+  void CreateBlankPDM();
   // Startup the provided PDM and add it to our list if successful.
   bool StartupPDM(PlatformDecoderModule* aPDM);
   // Returns the first PDM in our list supporting the mimetype.
@@ -60,6 +61,7 @@ private:
 
   nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
   RefPtr<PlatformDecoderModule> mEMEPDM;
+  RefPtr<PlatformDecoderModule> mBlankPDM;
 
   bool mWMFFailedToLoad = false;
   bool mFFmpegFailedToLoad = false;
