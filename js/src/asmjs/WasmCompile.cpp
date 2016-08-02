@@ -727,6 +727,13 @@ DecodeResizableMemory(Decoder& d, ModuleGeneratorData* init)
 static bool
 DecodeResizableTable(Decoder& d, ModuleGeneratorData* init)
 {
+    uint32_t elementType;
+    if (!d.readVarU32(&elementType))
+        return Fail(d, "expected table element type");
+
+    if (elementType != uint32_t(TypeConstructor::AnyFunc))
+        return Fail(d, "expected 'anyfunc' element type");
+
     Resizable resizable;
     if (!DecodeResizable(d, &resizable))
         return false;
