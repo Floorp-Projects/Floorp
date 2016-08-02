@@ -14,7 +14,6 @@ namespace mozilla {
 class AudioSegment;
 class MediaStream;
 class MediaStreamGraph;
-class MediaStreamVideoSink;
 class VideoSegment;
 
 enum MediaStreamGraphEvent : uint32_t {
@@ -246,9 +245,6 @@ public:
    * STREAM_NOT_SUPPORTED
    *    While looking for the data source of this track, we found a MediaStream
    *    that is not a SourceMediaStream or a TrackUnionStream.
-   * ALREADY_EXIST
-   *    This DirectMediaStreamTrackListener already exists in the
-   *    SourceMediaStream.
    * SUCCESS
    *    Installation was successful and this listener will start receiving
    *    NotifyRealtimeData on the next AppendToTrack().
@@ -257,13 +253,10 @@ public:
     TRACK_NOT_FOUND_AT_SOURCE,
     TRACK_TYPE_NOT_SUPPORTED,
     STREAM_NOT_SUPPORTED,
-    ALREADY_EXISTS,
     SUCCESS
   };
   virtual void NotifyDirectListenerInstalled(InstallationResult aResult) {}
   virtual void NotifyDirectListenerUninstalled() {}
-
-  virtual MediaStreamVideoSink* AsMediaStreamVideoSink() { return nullptr; }
 
 protected:
   virtual ~DirectMediaStreamTrackListener() {}
