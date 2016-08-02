@@ -1,11 +1,17 @@
 if (this.document === undefined) {
   importScripts("/resources/testharness.js");
   importScripts("../resources/utils.js");
-  importScripts("../resources/get-host-info.sub.js");
 }
 
-function cors(desc, origin) {
-  var url = origin + dirname(location.pathname);
+function cors(desc, scheme, subdomain, port) {
+  if (!port)
+    port = location.port;
+  if (subdomain)
+    subdomain = subdomain + ".";
+  else
+    subdomain = "";
+
+  var url = scheme + "://" + subdomain + "{{host}}" + ":" + port + dirname(location.pathname);
   var urlParameters = "?pipe=header(Access-Control-Allow-Origin,*)";
 
   promise_test(function(test) {
@@ -30,12 +36,10 @@ function cors(desc, origin) {
   }, desc + " [cors mode]");
 }
 
-var host_info = get_host_info();
-
-cors("Same domain different port", host_info.HTTP_ORIGIN_WITH_DIFFERENT_PORT);
-cors("Same domain different protocol different port", host_info.HTTPS_ORIGIN);
-cors("Cross domain basic usage", host_info.HTTP_REMOTE_ORIGIN);
-cors("Cross domain different port", host_info.HTTP_REMOTE_ORIGIN_WITH_DIFFERENT_PORT);
-cors("Cross domain different protocol", host_info.HTTPS_REMOTE_ORIGIN);
+cors("Cross domain basic usage", "http", "www1");
+cors("Same domain different port", "http", undefined, "{{ports[http][1]}}");
+cors("Cross domain different port", "http", "www1", "{{ports[http][1]}}");
+cors("Cross domain different protocol", "https", "www1", "{{ports[https][0]}}");
+cors("Same domain different protocol different port", "https", undefined, "{{ports[https][0]}}");
 
 done();
