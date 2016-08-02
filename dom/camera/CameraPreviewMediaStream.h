@@ -43,16 +43,16 @@ class CameraPreviewMediaStream : public ProcessedMediaStream
 public:
   CameraPreviewMediaStream();
 
-  void AddAudioOutput(void* aKey) override;
-  void SetAudioOutputVolume(void* aKey, float aVolume) override;
-  void RemoveAudioOutput(void* aKey) override;
-  void AddVideoOutput(MediaStreamVideoSink* aSink, TrackID aID) override;
-  void RemoveVideoOutput(MediaStreamVideoSink* aSink, TrackID aID) override;
-  void Suspend() override {}
-  void Resume() override {}
-  void AddListener(MediaStreamListener* aListener) override;
-  void RemoveListener(MediaStreamListener* aListener) override;
-  void Destroy() override;
+  virtual void AddAudioOutput(void* aKey) override;
+  virtual void SetAudioOutputVolume(void* aKey, float aVolume) override;
+  virtual void RemoveAudioOutput(void* aKey) override;
+  virtual void AddVideoOutput(MediaStreamVideoSink* aSink) override;
+  virtual void RemoveVideoOutput(MediaStreamVideoSink* aSink) override;
+  virtual void Suspend() override {}
+  virtual void Resume() override {}
+  virtual void AddListener(MediaStreamListener* aListener) override;
+  virtual void RemoveListener(MediaStreamListener* aListener) override;
+  virtual void Destroy() override;
   void OnPreviewStateChange(bool aActive);
 
   void Invalidate();
