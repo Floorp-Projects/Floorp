@@ -951,8 +951,7 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr* aSheet,
   if (sheet->IsGecko()) {
     sheet->AsGecko()->ReparseSheet(sheetText);
   } else {
-    sheet->AsServo()->ParseSheet(sheetText, uri, uri, nullptr, 0,
-                                 SheetParsingMode::eAuthorSheetFeatures);
+    sheet->AsServo()->ParseSheet(sheetText, uri, uri, nullptr, 0, sheet->AsServo()->ParsingMode());
   }
 
 #undef NS_GET_R_G_B
