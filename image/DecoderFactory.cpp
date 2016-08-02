@@ -187,7 +187,7 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
     return nullptr;
   }
 
-  RefPtr<IDecodingTask> task = new DecodingTask(WrapNotNull(decoder));
+  RefPtr<IDecodingTask> task = new AnimationDecodingTask(WrapNotNull(decoder));
   return task.forget();
 }
 
