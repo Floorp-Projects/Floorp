@@ -28,7 +28,8 @@ add_task(function* () {
   let recordingStarted = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
     expectedArgs: { "1": "recording-started" }
   });
-  let backendStartReady = once(PerformanceController, EVENTS.BACKEND_READY_AFTER_RECORDING_START);
+  let backendStartReady = once(PerformanceController,
+                               EVENTS.BACKEND_READY_AFTER_RECORDING_START);
   let uiStateRecording = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
     expectedArgs: { "1": "recording" }
   });
@@ -55,7 +56,8 @@ add_task(function* () {
   let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
     expectedArgs: { "1": "recording-stopped" }
   });
-  let backendStopReady = once(PerformanceController, EVENTS.BACKEND_READY_AFTER_RECORDING_STOP);
+  let backendStopReady = once(PerformanceController,
+                               EVENTS.BACKEND_READY_AFTER_RECORDING_STOP);
   let uiStateRecorded = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
     expectedArgs: { "1": "recorded" }
   });

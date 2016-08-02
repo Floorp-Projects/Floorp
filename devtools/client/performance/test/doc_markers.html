@@ -10,14 +10,17 @@
 
   <body>
     <script type="text/javascript">
-      var x = 1;
+      "use strict";
       function test() {
-        var i = 10;
+        let i = 10;
         // generate sync styles and reflows
         while (--i) {
-            var h = document.body.clientHeight;
-            document.body.style.height = (200 + i) + "px";
-            document.body.style.borderTop = i + "px solid red"; // paint
+          /* eslint-disable no-unused-vars */
+          let h = document.body.clientHeight;
+          /* eslint-enable no-unused-vars */
+          document.body.style.height = (200 + i) + "px";
+          // paint
+          document.body.style.borderTop = i + "px solid red";
         }
         console.time("!!!");
         test2();

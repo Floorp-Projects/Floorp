@@ -10,10 +10,11 @@
 
   <body>
     <script type="text/javascript">
-    window.test = function () {
-      document.body.innerHTML = "<h1>LOL</h1>";
-    };
-    setInterval(window.test, 100);
+      "use strict";
+      window.test = function () {
+        document.body.innerHTML = "<h1>LOL</h1>";
+      };
+      setInterval(window.test, 100);
     </script>
   </body>
 

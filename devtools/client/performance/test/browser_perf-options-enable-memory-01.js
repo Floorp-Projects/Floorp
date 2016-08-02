@@ -29,8 +29,8 @@ add_task(function* () {
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, false,
     "PerformanceFront started without memory recording.");
-  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations, false,
-    "PerformanceFront started without allocations recording.");
+  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations,
+    false, "PerformanceFront started without allocations recording.");
   ok(!isVisible($("#memory-overview")),
     "The memory graph is hidden when memory disabled.");
 
@@ -39,18 +39,18 @@ add_task(function* () {
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, false,
     "PerformanceFront still marked without memory recording.");
-  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations, false,
-    "PerformanceFront still marked without allocations recording.");
-  ok(!isVisible($("#memory-overview")),
-    "memory graph is still hidden after enabling if recording did not start recording memory");
+  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations,
+    false, "PerformanceFront still marked without allocations recording.");
+  ok(!isVisible($("#memory-overview")), "memory graph is still hidden after enabling " +
+                                        "if recording did not start recording memory");
 
   yield startRecording(panel);
   yield stopRecording(panel);
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, true,
     "PerformanceFront started with memory recording.");
-  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations, false,
-    "PerformanceFront did not record with allocations.");
+  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations,
+    false, "PerformanceFront did not record with allocations.");
   ok(isVisible($("#memory-overview")),
     "The memory graph is not hidden when memory enabled before recording.");
 

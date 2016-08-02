@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
+"use strict";
+/* eslint-disable */
 /**
  * Tests if the performance tool is able to save and load recordings.
  */
@@ -90,3 +91,4 @@ var test = Task.async(function* () {
   yield teardown(panel);
   finish();
 });
+/* eslint-enable */

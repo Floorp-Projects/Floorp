@@ -9,7 +9,7 @@
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { PROFILER_BUFFER_SIZE_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { PMM_loadFrameScripts, PMM_stopProfiler, PMM_clearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
+const { pmmLoadFrameScripts, pmmStopProfiler, pmmClearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
@@ -17,8 +17,8 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 
 add_task(function* () {
   // Make sure the profiler module is stopped so we can set a new buffer limit.
-  PMM_loadFrameScripts(gBrowser);
-  yield PMM_stopProfiler();
+  pmmLoadFrameScripts(gBrowser);
+  yield pmmStopProfiler();
 
   // Keep the profiler's buffer small, to get to 100% really quickly.
   Services.prefs.setIntPref(PROFILER_BUFFER_SIZE_PREF, 10000);
@@ -41,13 +41,16 @@ add_task(function* () {
   yield startRecording(panel);
 
   yield waitUntil(function* () {
-    [, gPercent] = yield once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED, { spreadArgs: true });
+    [, gPercent] = yield once(PerformanceView,
+                              EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
+                              { spreadArgs: true });
     return gPercent == 100;
   });
 
   ok(true, "Buffer percentage increased in display.");
 
-  let bufferUsage = PerformanceController.getBufferUsageForRecording(PerformanceController.getCurrentRecording());
+  let bufferUsage = PerformanceController.getBufferUsageForRecording(
+    PerformanceController.getCurrentRecording());
   ok(bufferUsage, 1, "Buffer is full for this recording.");
   ok(DETAILS_CONTAINER.getAttribute("buffer-status"), "full",
     "Container has [buffer-status=full].");
@@ -59,5 +62,5 @@ add_task(function* () {
 
   yield teardownToolboxAndRemoveTab(panel);
 
-  PMM_clearFrameScripts();
+  pmmClearFrameScripts();
 });

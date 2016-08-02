@@ -4,6 +4,7 @@
 
 const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
+/* exported loader, either, click, dblclick, mousedown, rightMousedown, key */
 // All tests are asynchronous.
 waitForExplicitFinish();
 
@@ -57,11 +58,12 @@ const key = (id, win = window) => {
   DevToolsUtils.testing = true;
 
   // Make sure all the prefs are reverted to their defaults once tests finish.
-  let stopObservingPrefs = PrefUtils.whenUnknownPrefChanged("devtools.performance", pref => {
-    ok(false, `Unknown pref changed: ${pref}. Please add it to test/helpers/prefs.js ` +
-      "to make sure it's reverted to its default value when the tests finishes, " +
-      "and avoid interfering with future tests.\n");
-  });
+  let stopObservingPrefs = PrefUtils.whenUnknownPrefChanged("devtools.performance",
+    pref => {
+      ok(false, `Unknown pref changed: ${pref}. Please add it to test/helpers/prefs.js ` +
+        "to make sure it's reverted to its default value when the tests finishes, " +
+        "and avoid interfering with future tests.\n");
+    });
 
   // By default, enable memory flame graphs for tests for now.
   // TODO: remove when we have flame charts via bug 1148663.
@@ -78,7 +80,8 @@ const key = (id, win = window) => {
     // avoid at least some leaks on OSX. Theoretically the module should never
     // be active at this point. We shouldn't have to do this, but rather
     // find and fix the leak in the module itself. Bug 1257439.
-    let nsIProfilerModule = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
+    let nsIProfilerModule = Cc["@mozilla.org/tools/profiler;1"]
+      .getService(Ci.nsIProfiler);
     nsIProfilerModule.StopProfiler();
 
     // Forces GC, CC and shrinking GC to get rid of disconnected docshells

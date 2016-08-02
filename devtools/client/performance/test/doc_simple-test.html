@@ -10,11 +10,13 @@
 
   <body>
     <script type="text/javascript">
-      var x = 1;
+      "use strict";
+      let x = 1;
       function test() {
         document.body.style.borderTop = x + "px solid red";
-        x = 1^x;
-        document.body.innerHeight; // flush pending reflows
+        x = 1 ^ x;
+        // flush pending reflows
+        document.body.innerHeight;
       }
 
       // Prevent this script from being garbage collected.

@@ -23,7 +23,8 @@ add_task(function () {
   treeRoot.attachTo(container);
 
   let $$fun = i => container.querySelectorAll(".call-tree-cell[type=function]")[i];
-  let $$nam = i => container.querySelectorAll(".call-tree-cell[type=function] > .call-tree-name")[i];
+  let $$nam = i => container.querySelectorAll(
+    ".call-tree-cell[type=function] > .call-tree-name")[i];
   let $$dur = i => container.querySelectorAll(".call-tree-cell[type=duration]")[i];
 
   is(container.childNodes.length, 7,

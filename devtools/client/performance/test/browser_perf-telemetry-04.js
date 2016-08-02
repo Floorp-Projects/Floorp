@@ -40,9 +40,11 @@ add_task(function* () {
   yield stopped;
 
   is(logs[DURATION].length, 1, `There is one entry for ${DURATION}.`);
-  ok(logs[DURATION].every(d => typeof d === "number"), `Every ${DURATION} entry is a number.`);
+  ok(logs[DURATION].every(d => typeof d === "number"),
+     `Every ${DURATION} entry is a number.`);
   is(logs[CONSOLE_COUNT].length, 1, `There is one entry for ${CONSOLE_COUNT}.`);
-  is(logs[FEATURES].length, 4, `There is one recording worth of entries for ${FEATURES}.`);
+  is(logs[FEATURES].length, 4,
+     `There is one recording worth of entries for ${FEATURES}.`);
 
   yield teardownToolboxAndRemoveTab(panel);
 });

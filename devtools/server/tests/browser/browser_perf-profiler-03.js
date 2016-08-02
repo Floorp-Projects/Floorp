@@ -9,17 +9,17 @@
  */
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
-const { PMM_isProfilerActive, PMM_startProfiler, PMM_stopProfiler, PMM_loadFrameScripts, PMM_clearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
+const { pmmIsProfilerActive, pmmStartProfiler, pmmStopProfiler, pmmLoadFrameScripts, pmmClearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 
 add_task(function* () {
   // Ensure the profiler is already running when the test starts.
-  PMM_loadFrameScripts(gBrowser);
+  pmmLoadFrameScripts(gBrowser);
   let entries = 1000000;
   let interval = 1;
   let features = ["js"];
-  yield PMM_startProfiler({ entries, interval, features });
+  yield pmmStartProfiler({ entries, interval, features });
 
-  ok((yield PMM_isProfilerActive()),
+  ok((yield pmmIsProfilerActive()),
     "The built-in profiler module should still be active.");
 
   yield addTab(MAIN_DOMAIN + "doc_perf.html");
@@ -39,15 +39,15 @@ add_task(function* () {
 
   yield secondFront.destroy();
   yield closeDebuggerClient(client2);
-  ok((yield PMM_isProfilerActive()),
+  ok((yield pmmIsProfilerActive()),
     "The built-in profiler module should still be active.");
 
   yield firstFront.destroy();
   yield closeDebuggerClient(client);
-  ok(!(yield PMM_isProfilerActive()),
+  ok(!(yield pmmIsProfilerActive()),
     "The built-in profiler module should have been automatically stopped.");
 
-  PMM_clearFrameScripts();
+  pmmClearFrameScripts();
 
   gBrowser.removeCurrentTab();
   gBrowser.removeCurrentTab();

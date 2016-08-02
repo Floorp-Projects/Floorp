@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable */
 
 /**
  * Tests markers filtering mechanism.
@@ -115,3 +116,4 @@ function waitForOverviewAndCommand(overview, item) {
   let menuitemCommandDispatched = once(item, "command");
   return Promise.all([overviewRendered, menuitemCommandDispatched]);
 }
+/* eslint-enable */

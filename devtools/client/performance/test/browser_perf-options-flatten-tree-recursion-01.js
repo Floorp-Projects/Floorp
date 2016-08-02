@@ -18,7 +18,13 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, PerformanceController, DetailsView, JsFlameGraphView, FlameGraphUtils } = panel.panelWin;
+  let {
+    EVENTS,
+    PerformanceController,
+    DetailsView,
+    JsFlameGraphView,
+    FlameGraphUtils
+  } = panel.panelWin;
 
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
 

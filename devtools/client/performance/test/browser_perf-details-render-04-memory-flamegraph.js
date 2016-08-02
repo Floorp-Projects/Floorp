@@ -38,7 +38,8 @@ add_task(function* () {
     expectedViewEvent: "UI_MEMORY_FLAMEGRAPH_RENDERED"
   });
 
-  ok(true, "MemoryFlameGraphView rendered again after recording completed a second time.");
+  ok(true,
+    "MemoryFlameGraphView rendered again after recording completed a second time.");
 
   yield teardownToolboxAndRemoveTab(panel);
 });

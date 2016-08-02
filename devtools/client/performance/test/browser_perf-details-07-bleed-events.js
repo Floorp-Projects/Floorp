@@ -17,7 +17,7 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, DetailsView, WaterfallView, JsCallTreeView } = panel.panelWin;
+  let { EVENTS, DetailsView, JsCallTreeView } = panel.panelWin;
 
   yield startRecording(panel);
   yield stopRecording(panel);

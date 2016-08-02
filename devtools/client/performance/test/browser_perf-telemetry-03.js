@@ -18,7 +18,13 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, PerformanceController, DetailsView, JsCallTreeView, JsFlameGraphView } = panel.panelWin;
+  let {
+    EVENTS,
+    PerformanceController,
+    DetailsView,
+    JsCallTreeView,
+    JsFlameGraphView
+  } = panel.panelWin;
 
   let telemetry = PerformanceController._telemetry;
   let logs = telemetry.getLogs();
@@ -41,7 +47,10 @@ add_task(function* () {
 
   // Check views after destruction to ensure `js-flamegraph` gets called
   // with a time during destruction.
-  ok(logs[VIEWS].find(r => r[0] === "waterfall" && typeof r[1] === "number"), `${VIEWS} for waterfall view and time.`);
-  ok(logs[VIEWS].find(r => r[0] === "js-calltree" && typeof r[1] === "number"), `${VIEWS} for js-calltree view and time.`);
-  ok(logs[VIEWS].find(r => r[0] === "js-flamegraph" && typeof r[1] === "number"), `${VIEWS} for js-flamegraph view and time.`);
+  ok(logs[VIEWS].find(r => r[0] === "waterfall" && typeof r[1] === "number"),
+     `${VIEWS} for waterfall view and time.`);
+  ok(logs[VIEWS].find(r => r[0] === "js-calltree" && typeof r[1] === "number"),
+     `${VIEWS} for js-calltree view and time.`);
+  ok(logs[VIEWS].find(r => r[0] === "js-flamegraph" && typeof r[1] === "number"),
+     `${VIEWS} for js-flamegraph view and time.`);
 });
