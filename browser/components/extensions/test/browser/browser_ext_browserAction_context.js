@@ -87,10 +87,12 @@ function* runTests(options) {
     background: `(${background})(${options.getTests})`,
   });
 
-
-  let browserActionId = makeWidgetId(extension.id) + "-browser-action";
-
+  let browserActionId;
   function checkDetails(details) {
+    if (!browserActionId) {
+      browserActionId = `${makeWidgetId(extension.id)}-browser-action`;
+    }
+
     let button = document.getElementById(browserActionId);
 
     ok(button, "button exists");
