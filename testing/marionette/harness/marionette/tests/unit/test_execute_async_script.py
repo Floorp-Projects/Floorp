@@ -111,6 +111,19 @@ marionetteScriptFinished(4);
             "marionetteScriptFinished(global.barfoo);", new_sandbox=False),
                          [42, 23])
 
+    # Functions defined in higher privilege scopes, such as the privileged
+    # content frame script listener.js runs in, cannot be accessed from
+    # content.  This tests that it is possible to introspect the objects on
+    # `arguments` without getting permission defined errors.  This is made
+    # possible because the last argument is always the callback/complete
+    # function.
+    #
+    # See bug 1290966.
+    def test_introspection_of_arguments(self):
+        self.marionette.execute_async_script(
+            "arguments[0].cheese; __webDriverCallback();",
+            script_args=[], sandbox=None)
+
 
 class TestExecuteAsyncChrome(TestExecuteAsyncContent):
     def setUp(self):
