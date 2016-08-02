@@ -59,6 +59,11 @@ def Libxul(name):
     if CONFIG['MOZ_NEEDS_LIBATOMIC']:
         OS_LIBS += ['atomic']
 
+    # This option should go away in bug 1290972, but we need to wait until
+    # Rust 1.12 has been released.
+    if CONFIG['MOZ_RUST'] and CONFIG['OS_ARCH'] == 'Darwin':
+        LDFLAGS += ['-Wl,-no_compact_unwind']
+
 Libxul('xul')
 
 SDK_LIBRARY = True
