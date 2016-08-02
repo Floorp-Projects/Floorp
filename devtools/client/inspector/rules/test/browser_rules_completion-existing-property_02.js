@@ -98,6 +98,10 @@ function* testCompletion([key, modifiers, completion, open, selected, change],
   let onPopupEvent = editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
 
   EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
+
+  // Flush the throttle for the preview text.
+  view.throttle.flush();
+
   yield onDone;
   yield onPopupEvent;
 

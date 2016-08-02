@@ -43,6 +43,8 @@ function* editAndCheck(view) {
 
   info("Waiting for the throttled previewValue to apply the " +
     "changes to document");
+
+  view.throttle.flush();
   yield onPropertyChange;
 
   info("Waiting for ruleview-refreshed after previewValue was applied.");
