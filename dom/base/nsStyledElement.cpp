@@ -29,10 +29,10 @@ using namespace mozilla::dom;
 // nsIContent methods
 
 bool
-nsStyledElementNotElementCSSInlineStyle::ParseAttribute(int32_t aNamespaceID,
-                                                        nsIAtom* aAttribute,
-                                                        const nsAString& aValue,
-                                                        nsAttrValue& aResult)
+nsStyledElement::ParseAttribute(int32_t aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::style && aNamespaceID == kNameSpaceID_None) {
     SetMayHaveStyle();
@@ -45,9 +45,9 @@ nsStyledElementNotElementCSSInlineStyle::ParseAttribute(int32_t aNamespaceID,
 }
 
 nsresult
-nsStyledElementNotElementCSSInlineStyle::SetInlineStyleDeclaration(css::Declaration* aDeclaration,
-                                                                   const nsAString* aSerialized,
-                                                                   bool aNotify)
+nsStyledElement::SetInlineStyleDeclaration(css::Declaration* aDeclaration,
+                                           const nsAString* aSerialized,
+                                           bool aNotify)
 {
   SetMayHaveStyle();
   bool modification = false;
@@ -90,7 +90,7 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleDeclaration(css::Declarat
 }
 
 css::Declaration*
-nsStyledElementNotElementCSSInlineStyle::GetInlineStyleDeclaration()
+nsStyledElement::GetInlineStyleDeclaration()
 {
   if (!MayHaveStyle()) {
     return nullptr;
@@ -108,7 +108,7 @@ nsStyledElementNotElementCSSInlineStyle::GetInlineStyleDeclaration()
 // Others and helpers
 
 nsICSSDeclaration*
-nsStyledElementNotElementCSSInlineStyle::Style()
+nsStyledElement::Style()
 {
   Element::nsDOMSlots *slots = DOMSlots();
 
@@ -124,7 +124,7 @@ nsStyledElementNotElementCSSInlineStyle::Style()
 }
 
 nsresult
-nsStyledElementNotElementCSSInlineStyle::ReparseStyleAttribute(bool aForceInDataDoc)
+nsStyledElement::ReparseStyleAttribute(bool aForceInDataDoc)
 {
   if (!MayHaveStyle()) {
     return NS_OK;
@@ -151,9 +151,9 @@ nsStyledElementNotElementCSSInlineStyle::ReparseStyleAttribute(bool aForceInData
 }
 
 void
-nsStyledElementNotElementCSSInlineStyle::ParseStyleAttribute(const nsAString& aValue,
-                                                             nsAttrValue& aResult,
-                                                             bool aForceInDataDoc)
+nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
+                                     nsAttrValue& aResult,
+                                     bool aForceInDataDoc)
 {
   nsIDocument* doc = OwnerDoc();
   bool isNativeAnon = IsInNativeAnonymousSubtree();
