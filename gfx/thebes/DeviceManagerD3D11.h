@@ -48,9 +48,7 @@ public:
   }
 
   RefPtr<ID3D11Device> GetCompositorDevice();
-  RefPtr<ID3D11Device> GetImageBridgeDevice();
   RefPtr<ID3D11Device> GetContentDevice();
-  RefPtr<ID3D11Device> GetDeviceForCurrentThread();
   RefPtr<ID3D11Device> CreateDecoderDevice();
 
   unsigned GetD3D11Version() const;
@@ -67,8 +65,6 @@ public:
 private:
   IDXGIAdapter1 *GetDXGIAdapter();
 
-  bool CanUseD3D11ImageBridge();
-
   void DisableD3D11AfterCrash();
 
   void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
@@ -82,10 +78,6 @@ private:
       mozilla::ScopedGfxFeatureReporter& aReporterWARP,
       RefPtr<ID3D11Device>& aOutDevice,
       HRESULT& aResOut);
-
-  bool AttemptD3D11ImageBridgeDeviceCreationHelper(
-      IDXGIAdapter1* aAdapter, HRESULT& aResOut);
-  mozilla::gfx::FeatureStatus AttemptD3D11ImageBridgeDeviceCreation();
 
   mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
   bool AttemptD3D11ContentDeviceCreationHelper(
@@ -106,7 +98,6 @@ private:
   RefPtr<IDXGIAdapter1> mAdapter;
   RefPtr<ID3D11Device> mCompositorDevice;
   RefPtr<ID3D11Device> mContentDevice;
-  RefPtr<ID3D11Device> mImageBridgeDevice;
   mozilla::Atomic<bool> mIsWARP;
   mozilla::Atomic<bool> mTextureSharingWorks;
 };
