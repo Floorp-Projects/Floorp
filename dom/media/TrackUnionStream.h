@@ -30,8 +30,6 @@ public:
   MediaStream* GetInputStreamFor(TrackID aTrackID) override;
   TrackID GetInputTrackIDFor(TrackID aTrackID) override;
 
-  friend class MediaStreamGraphImpl;
-
 protected:
   // Only non-ended tracks are allowed to persist in this map.
   struct TrackMapEntry {
