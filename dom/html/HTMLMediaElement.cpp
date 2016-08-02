@@ -797,17 +797,6 @@ HTMLMediaElement::MozDumpDebugInfo()
   }
 }
 
-void
-HTMLMediaElement::SetVisible(bool aVisible)
-{
-  if (!mDecoder) {
-    return;
-  }
-
-  mDecoder->NotifyOwnerActivityChanged(aVisible);
-
-}
-
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::GetSrcObject() const
 {

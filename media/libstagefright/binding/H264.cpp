@@ -531,21 +531,4 @@ H264::EnsureSPSIsSane(SPSData& aSPS)
   return valid;
 }
 
-/* static */ uint32_t
-H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData)
-{
-  uint32_t maxRefFrames = 4;
-  // Retrieve video dimensions from H264 SPS NAL.
-  SPSData spsdata;
-  if (DecodeSPSFromExtraData(aExtraData, spsdata)) {
-    // max_num_ref_frames determines the size of the sliding window
-    // we need to queue that many frames in order to guarantee proper
-    // pts frames ordering. Use a minimum of 4 to ensure proper playback of
-    // non compliant videos.
-    maxRefFrames =
-      std::min(std::max(maxRefFrames, spsdata.max_num_ref_frames + 1), 16u);
-  }
-  return maxRefFrames;
-}
-
 } // namespace mp4_demuxer
