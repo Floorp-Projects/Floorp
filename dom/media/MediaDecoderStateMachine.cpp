@@ -1362,7 +1362,6 @@ void MediaDecoderStateMachine::VisibilityChanged()
 
   if (mVideoDecodeSuspended) {
     mVideoDecodeSuspended = false;
-    mReader->SetVideoBlankDecode(false);
 
     if (mIsReaderSuspended) {
       return;
@@ -2641,7 +2640,7 @@ bool MediaDecoderStateMachine::IsStateMachineScheduled() const
 bool MediaDecoderStateMachine::IsVideoDecodeSuspended() const
 {
   MOZ_ASSERT(OnTaskQueue());
-  return mIsReaderSuspended;
+  return mVideoDecodeSuspended || mIsReaderSuspended;
 }
 
 void
@@ -2933,7 +2932,6 @@ MediaDecoderStateMachine::OnSuspendTimerResolved()
   DECODER_LOG("OnSuspendTimerResolved");
   mVideoDecodeSuspendTimer.CompleteRequest();
   mVideoDecodeSuspended = true;
-  mReader->SetVideoBlankDecode(true);
 }
 
 void
