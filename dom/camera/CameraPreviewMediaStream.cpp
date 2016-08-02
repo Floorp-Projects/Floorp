@@ -60,18 +60,18 @@ CameraPreviewMediaStream::RemoveAudioOutput(void* aKey)
 }
 
 void
-CameraPreviewMediaStream::AddVideoOutput(MediaStreamVideoSink* aSink, TrackID aID)
+CameraPreviewMediaStream::AddVideoOutput(MediaStreamVideoSink* aSink)
 {
   MutexAutoLock lock(mMutex);
   RefPtr<MediaStreamVideoSink> sink = aSink;
-  AddVideoOutputImpl(sink.forget(), aID);
+  AddVideoOutputImpl(sink.forget());
 }
 
 void
-CameraPreviewMediaStream::RemoveVideoOutput(MediaStreamVideoSink* aSink, TrackID aID)
+CameraPreviewMediaStream::RemoveVideoOutput(MediaStreamVideoSink* aSink)
 {
   MutexAutoLock lock(mMutex);
-  RemoveVideoOutputImpl(aSink, aID);
+  RemoveVideoOutputImpl(aSink);
 }
 
 void
@@ -126,8 +126,8 @@ CameraPreviewMediaStream::Invalidate()
 {
   MutexAutoLock lock(mMutex);
   --mInvalidatePending;
-  for (const TrackBound<MediaStreamVideoSink>& sink : mVideoOutputs) {
-    VideoFrameContainer* output = sink.mListener->AsVideoFrameContainer();
+  for (MediaStreamVideoSink* sink : mVideoOutputs) {
+    VideoFrameContainer* output = sink->AsVideoFrameContainer();
     if (!output) {
       continue;
     }
@@ -168,8 +168,8 @@ CameraPreviewMediaStream::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Im
     mDiscardedFrames = 0;
 
     TimeStamp now = TimeStamp::Now();
-    for (const TrackBound<MediaStreamVideoSink>& sink : mVideoOutputs) {
-      VideoFrameContainer* output = sink.mListener->AsVideoFrameContainer();
+    for (MediaStreamVideoSink* sink : mVideoOutputs) {
+      VideoFrameContainer* output = sink->AsVideoFrameContainer();
       if (!output) {
         continue;
       }
@@ -187,8 +187,8 @@ CameraPreviewMediaStream::ClearCurrentFrame()
 {
   MutexAutoLock lock(mMutex);
 
-  for (const TrackBound<MediaStreamVideoSink>& sink : mVideoOutputs) {
-    VideoFrameContainer* output = sink.mListener->AsVideoFrameContainer();
+  for (MediaStreamVideoSink* sink : mVideoOutputs) {
+    VideoFrameContainer* output = sink->AsVideoFrameContainer();
     if (!output) {
       continue;
     }
