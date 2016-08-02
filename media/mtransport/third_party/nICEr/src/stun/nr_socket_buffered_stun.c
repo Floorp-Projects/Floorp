@@ -66,6 +66,8 @@ typedef struct nr_socket_buffered_stun_ {
   size_t buffer_size;
   size_t bytes_needed;
   size_t bytes_read;
+  NR_async_cb readable_cb;
+  void *readable_cb_arg;
 
   /* Write state */
   nr_p_buf_ctx *p_bufs;
@@ -103,6 +105,15 @@ static nr_socket_vtbl nr_socket_buffered_stun_vtbl={
   nr_socket_buffered_stun_listen,
   nr_socket_buffered_stun_accept
 };
+
+void nr_socket_buffered_stun_set_readable_cb(nr_socket *sock,
+  NR_async_cb readable_cb, void *readable_cb_arg)
+{
+  nr_socket_buffered_stun *buf_sock = (nr_socket_buffered_stun *)sock->obj;
+
+  buf_sock->readable_cb = readable_cb;
+  buf_sock->readable_cb_arg = readable_cb_arg;
+}
 
 int nr_socket_buffered_set_connected_to(nr_socket *sock, nr_transport_addr *remote_addr)
 {
@@ -405,13 +416,34 @@ static int nr_socket_buffered_stun_accept(void *obj, nr_transport_addr *addrp, n
 static void nr_socket_buffered_stun_connected_cb(NR_SOCKET s, int how, void *arg)
 {
   nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)arg;
+  int r, _status;
 
   assert(!sock->connected);
 
   sock->connected = 1;
+
+  // once connected arm for read
+  if (sock->readable_cb) {
+    NR_SOCKET fd;
+
+    /* don't use |s| directly here because the NAT emulator depends on handing
+       you its implementation here. */
+    if ((r=nr_socket_getfd(sock->inner, &fd)))
+      ABORT(r);
+
+    NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_READ, sock->readable_cb, sock->readable_cb_arg);
+  }
+
   if (sock->pending) {
     r_log(LOG_GENERIC, LOG_INFO, "Invoking writable_cb on connected (%u)", (uint32_t) sock->pending);
     nr_socket_buffered_stun_writable_cb(s, how, arg);
+  }
+
+  _status=0;
+abort:
+  if (_status) {
+    r_log(LOG_GENERIC, LOG_ERR, "Failure in nr_socket_buffered_stun_connected_cb: %d", _status);
+
   }
 }
 
