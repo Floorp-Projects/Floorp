@@ -4991,15 +4991,6 @@ if test -f "${srcdir}/${MOZ_BUILD_APP}/configure.in" ; then
   rm -f $tmpscript
 fi
 
-dnl We need to wrap dlopen and related functions on Android because we use
-dnl our own linker.
-dnl This configuration will only work on Android SDK 11 and above: Bug 1220184.
-if test "$OS_TARGET" = Android; then
-    if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_NUWA_PROCESS"; then
-        MOZ_GLUE_WRAP_LDFLAGS="${MOZ_GLUE_WRAP_LDFLAGS} -Wl,--wrap=pthread_create,--wrap=epoll_wait,--wrap=poll,--wrap=pthread_cond_timedwait,--wrap=pthread_cond_wait,--wrap=epoll_create,--wrap=epoll_ctl,--wrap=close,--wrap=pthread_key_create,--wrap=pthread_key_delete,--wrap=socketpair,--wrap=pthread_self,--wrap=pthread_mutex_lock,--wrap=pthread_mutex_trylock,--wrap=pthread_join,--wrap=pipe,--wrap=pipe2"
-    fi
-fi
-
 AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
 export MOZ_GLUE_WRAP_LDFLAGS
 
@@ -6305,20 +6296,6 @@ AC_SUBST_LIST(MOZ_BZ2_CFLAGS)
 AC_SUBST_LIST(MOZ_BZ2_LIBS)
 AC_SUBST_LIST(MOZ_PNG_CFLAGS)
 AC_SUBST_LIST(MOZ_PNG_LIBS)
-
-if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_NUWA_PROCESS"; then
-    export MOZ_NUWA_PROCESS
-    AC_DEFINE(MOZ_NUWA_PROCESS)
-fi
-AC_SUBST(MOZ_NUWA_PROCESS)
-if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_B2G_LOADER"; then
-    if test -z "$MOZ_NUWA_PROCESS"; then
-       AC_MSG_ERROR([B2G loader works with Nuwa]);
-    fi
-    export MOZ_B2G_LOADER
-    AC_DEFINE(MOZ_B2G_LOADER)
-fi
-AC_SUBST(MOZ_B2G_LOADER)
 
 AC_SUBST(MOZ_SYSTEM_NSPR)
 

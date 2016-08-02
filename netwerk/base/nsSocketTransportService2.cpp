@@ -783,19 +783,9 @@ nsSocketTransportService::MarkTheLastElementOfPendingQueue()
     mServingPendingQueue = false;
 }
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 NS_IMETHODIMP
 nsSocketTransportService::Run()
 {
-#ifdef MOZ_NUWA_PROCESS
-    if (IsNuwaProcess()) {
-        NuwaMarkCurrentThread(nullptr, nullptr);
-    }
-#endif
-
     SOCKET_LOG(("STS thread init %d sockets\n", gMaxCount));
 
     psm::InitializeSSLServerCertVerificationThreads();

@@ -14,9 +14,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadHangStats.h"
 #include "mozilla/ThreadLocal.h"
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
 
 #include "prinrval.h"
 #include "prthread.h"
@@ -58,12 +55,6 @@ private:
   static void MonitorThread(void* aData)
   {
     PR_SetCurrentThreadName("BgHangManager");
-
-#ifdef MOZ_NUWA_PROCESS
-    if (IsNuwaProcess()) {
-      NuwaMarkCurrentThread(nullptr, nullptr);
-    }
-#endif
 
     /* We do not hold a reference to BackgroundHangManager here
        because the monitor thread only exists as long as the

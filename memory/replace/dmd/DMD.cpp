@@ -259,11 +259,6 @@ void
 DMDFuncs::StatusMsg(const char* aFmt, va_list aAp)
 {
 #ifdef ANDROID
-#ifdef MOZ_B2G_LOADER
-  // Don't call __android_log_vprint() during initialization, or the magic file
-  // descriptors will be occupied by android logcat.
-  if (gIsDMDInitialized)
-#endif
     __android_log_vprint(ANDROID_LOG_INFO, "DMD", aFmt, aAp);
 #else
   // The +64 is easily enough for the "DMD[<pid>] " prefix and the NUL.

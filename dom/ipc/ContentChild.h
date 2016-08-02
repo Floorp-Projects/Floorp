@@ -689,9 +689,6 @@ private:
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
 
-void
-InitOnContentProcessCreated();
-
 uint64_t
 NextWindowID();
 
