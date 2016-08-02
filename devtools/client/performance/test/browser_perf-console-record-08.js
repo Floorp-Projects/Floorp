@@ -87,19 +87,22 @@ add_task(function* () {
   RecordingsView.selectedIndex = 3;
   yield recordingSelected;
   testRecordings(PerformanceController, [C + R, R, C + R, C + S]);
-  ok(!OverviewView.isRendering(), "Stop rendering overview when a completed recording is selected.");
+  ok(!OverviewView.isRendering(),
+    "Stop rendering overview when a completed recording is selected.");
 
   info("Stop manual recording...");
   yield stopRecording(panel);
   testRecordings(PerformanceController, [C + R, S, C + R, C]);
-  ok(!OverviewView.isRendering(), "Stop rendering overview when a completed recording is selected.");
+  ok(!OverviewView.isRendering(),
+    "Stop rendering overview when a completed recording is selected.");
 
   info("Select first recording...");
   recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   RecordingsView.selectedIndex = 0;
   yield recordingSelected;
   testRecordings(PerformanceController, [C + R + S, 0, C + R, C]);
-  ok(OverviewView.isRendering(), "Should be rendering overview a recording in progress is selected.");
+  ok(OverviewView.isRendering(),
+    "Should be rendering overview a recording in progress is selected.");
 
   // Ensure overview is still rendering.
   yield times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
@@ -120,7 +123,8 @@ add_task(function* () {
   yield console.profileEnd();
   yield stopped;
   testRecordings(PerformanceController, [C + R + S, 0, C, C]);
-  ok(OverviewView.isRendering(), "Should be rendering overview a recording in progress is selected.");
+  ok(OverviewView.isRendering(),
+    "Should be rendering overview a recording in progress is selected.");
 
   // Ensure overview is still rendering.
   yield times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
@@ -130,7 +134,8 @@ add_task(function* () {
   info("Start one more manual recording...");
   yield startRecording(panel);
   testRecordings(PerformanceController, [C + R, 0, C, C, R + S]);
-  ok(OverviewView.isRendering(), "Should be rendering overview a recording in progress is selected.");
+  ok(OverviewView.isRendering(),
+    "Should be rendering overview a recording in progress is selected.");
 
   // Ensure overview is still rendering.
   yield times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
@@ -140,7 +145,8 @@ add_task(function* () {
   info("Stop manual recording...");
   yield stopRecording(panel);
   testRecordings(PerformanceController, [C + R, 0, C, C, S]);
-  ok(!OverviewView.isRendering(), "Stop rendering overview when a completed recording is selected.");
+  ok(!OverviewView.isRendering(),
+  "Stop rendering overview when a completed recording is selected.");
 
   info("Ending console.profileEnd()...");
   stopped = waitForRecordingStoppedEvents(panel, {
@@ -156,14 +162,18 @@ add_task(function* () {
   yield console.profileEnd();
   yield stopped;
   testRecordings(PerformanceController, [C, 0, C, C, S]);
-  ok(!OverviewView.isRendering(), "Stop rendering overview when a completed recording is selected.");
+  ok(!OverviewView.isRendering(),
+    "Stop rendering overview when a completed recording is selected.");
 
   yield teardownToolboxAndRemoveTab(panel);
 });
 
-const C = 1; // is console
-const R = 2; // is recording
-const S = 4; // is selected
+// is console
+const C = 1;
+// is recording
+const R = 2;
+// is selected
+const S = 4;
 
 function testRecordings(controller, expected) {
   let recordings = controller.getRecordings();

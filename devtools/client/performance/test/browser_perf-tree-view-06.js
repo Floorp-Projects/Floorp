@@ -28,7 +28,9 @@ add_task(function* () {
   let D = B.getChild();
 
   let linkEvent = null;
-  let handler = (_, e) => linkEvent = e;
+  let handler = (_, e) => {
+    linkEvent = e;
+  };
 
   treeRoot.on("link", handler);
 

@@ -41,7 +41,8 @@ add_task(function* () {
   enabled = true;
   PerformanceController._setMultiprocessAttributes();
   ok($("#performance-view").getAttribute("e10s"), "",
-    "When e10s is enabled, but not supported, this probably means we no longer have E10S_TESTING_ONLY, and we have no e10s attribute.");
+    "When e10s is enabled, but not supported, this probably means we no longer have " +
+    "E10S_TESTING_ONLY, and we have no e10s attribute.");
 
   supported = true;
   enabled = true;

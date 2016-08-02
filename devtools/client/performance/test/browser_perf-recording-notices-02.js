@@ -18,7 +18,13 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, $, PerformanceController, PerformanceView, RecordingsView } = panel.panelWin;
+  let {
+    EVENTS,
+    $,
+    PerformanceController,
+    PerformanceView,
+    RecordingsView
+  } = panel.panelWin;
 
   let MAIN_CONTAINER = $("#performance-view");
   let CONTENT = $("#performance-view-content");
@@ -39,7 +45,8 @@ add_task(function* () {
   RecordingsView.selectedIndex = 0;
   yield selected;
 
-  is(PerformanceView.getState(), "recorded", "Correct state during recording but selecting a completed recording.");
+  is(PerformanceView.getState(), "recorded",
+     "Correct state during recording but selecting a completed recording.");
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
   is(DETAILS_CONTAINER.selectedPanel, DETAILS, "Showing recorded panel.");
 
@@ -47,7 +54,8 @@ add_task(function* () {
   RecordingsView.selectedIndex = 1;
   yield selected;
 
-  is(PerformanceView.getState(), "recording", "Correct state when switching back to recording in progress.");
+  is(PerformanceView.getState(), "recording",
+     "Correct state when switching back to recording in progress.");
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
   is(DETAILS_CONTAINER.selectedPanel, RECORDING, "Showing recording panel.");
 

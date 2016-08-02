@@ -51,7 +51,7 @@ add_task(function* () {
   let receivedFocusEvent = once(treeRoot, "focus");
   mousedown(treeRoot.target.querySelector(".arrow"));
 
-  let [_, eventItem] = yield receivedExpandEvent;
+  let [, eventItem] = yield receivedExpandEvent;
   is(eventItem, treeRoot,
     "The 'expand' event target is correct (1).");
 
@@ -102,7 +102,7 @@ add_task(function* () {
   receivedFocusEvent = once(treeRoot, "focus", { spreadArgs: true });
   mousedown(fooItem.target);
 
-  [_, eventItem] = yield receivedFocusEvent;
+  [, eventItem] = yield receivedFocusEvent;
   is(eventItem, fooItem,
     "The 'focus' event target is correct (2).");
   is(document.commandDispatcher.focusedElement, fooItem.target,
@@ -114,7 +114,7 @@ add_task(function* () {
   receivedFocusEvent = once(treeRoot, "focus");
   dblclick(barItem.target);
 
-  [_, eventItem] = yield receivedExpandEvent;
+  [, eventItem] = yield receivedExpandEvent;
   is(eventItem, barItem,
     "The 'expand' event target is correct (3).");
 

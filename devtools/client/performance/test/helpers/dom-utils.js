@@ -26,4 +26,5 @@ exports.appendAndWaitForPaint = function (parent, element) {
     return onMozAfterPaint;
   }
   parent.appendChild(element);
+  return null;
 };

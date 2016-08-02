@@ -3,7 +3,8 @@
 "use strict";
 
 /**
- * Tests that the memory flamegraphs get rerendered when toggling `flatten-tree-recursion`.
+ * Tests that the memory flamegraphs get rerendered when toggling
+ * `flatten-tree-recursion`.
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
@@ -18,7 +19,14 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, PerformanceController, DetailsView, MemoryFlameGraphView, RecordingUtils, FlameGraphUtils } = panel.panelWin;
+  let {
+    EVENTS,
+    PerformanceController,
+    DetailsView,
+    MemoryFlameGraphView,
+    RecordingUtils,
+    FlameGraphUtils
+  } = panel.panelWin;
 
   // Enable memory to test
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);

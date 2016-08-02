@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
+"use strict";
+/* eslint-disable */
 /**
  * Tests if the markers and memory overviews render with the correct
  * theme on load, and rerenders when changed.
@@ -74,3 +75,4 @@ function* spawnTest() {
   yield teardown(panel);
   finish();
 }
+/* eslint-enable */

@@ -38,12 +38,16 @@ add_task(function* () {
   yield stopRecording(panel);
 
   is(logs[DURATION].length, 2, `There are two entries for ${DURATION}.`);
-  ok(logs[DURATION].every(d => typeof d === "number"), `Every ${DURATION} entry is a number.`);
+  ok(logs[DURATION].every(d => typeof d === "number"),
+     `Every ${DURATION} entry is a number.`);
   is(logs[COUNT].length, 2, `There are two entries for ${COUNT}.`);
   is(logs[CONSOLE_COUNT], void 0, `There are no entries for ${CONSOLE_COUNT}.`);
-  is(logs[FEATURES].length, 8, `There are two recordings worth of entries for ${FEATURES}.`);
-  ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === true), "One feature entry for memory enabled.");
-  ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === false), "One feature entry for memory disabled.");
+  is(logs[FEATURES].length, 8,
+     `There are two recordings worth of entries for ${FEATURES}.`);
+  ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === true),
+     "One feature entry for memory enabled.");
+  ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === false),
+    "One feature entry for memory disabled.");
 
   yield teardownToolboxAndRemoveTab(panel);
 });

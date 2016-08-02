@@ -17,7 +17,14 @@ add_task(function* () {
     win: window
   });
 
-  let { EVENTS, OverviewView, DetailsView, WaterfallView, JsCallTreeView, JsFlameGraphView } = panel.panelWin;
+  let {
+    EVENTS,
+    OverviewView,
+    DetailsView,
+    WaterfallView,
+    JsCallTreeView,
+    JsFlameGraphView
+  } = panel.panelWin;
 
   let updatedWaterfall = 0;
   let updatedCallTree = 0;

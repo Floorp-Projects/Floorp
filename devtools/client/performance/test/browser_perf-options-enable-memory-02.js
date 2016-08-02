@@ -18,7 +18,7 @@ add_task(function* () {
     win: window
   });
 
-  let { $, PerformanceController } = panel.panelWin;
+  let { PerformanceController } = panel.panelWin;
 
   // Test starting without memory, and stopping with it.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, false);
@@ -29,7 +29,8 @@ add_task(function* () {
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, false,
     "The recording finished without tracking memory.");
-  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations, false,
+  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations,
+    false,
     "The recording finished without tracking allocations.");
 
   // Test starting with memory, and stopping without it.
@@ -40,7 +41,8 @@ add_task(function* () {
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, true,
     "The recording finished with tracking memory.");
-  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations, false,
+  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations,
+    false,
     "The recording still is not recording allocations.");
 
   yield teardownToolboxAndRemoveTab(panel);
