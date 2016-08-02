@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="NavigationUtils.js"></script>        
+</head>
+<body>
+
+<iframe name="framea" id="framea" src="file_triggeringprincipal_iframe_iframe_window_open_frame_a.html"></iframe>
+<iframe name="frameb" id="frameb"></iframe>
+
+<script type="text/javascript">
+
+/* We load an iframe (Frame A) which then gets navigated by another iframe (Frame B)
+ * by calling window.open("http://", "Frame A") later in the test. We then verify the
+ * TriggeringPrincipal and LoadingPrincipal of the navigated iframe (Frame A).
+ *
+ * +---------------------------------------+
+ * |   Parent                              | 
+ * |                                       |   
+ * |  +----------------------------+       |
+ * |  | Frame A                    |       | 
+ * |  |                            |       |
+ * |  |                            |       |
+ * |  +----------------------------+       |
+ * |                                       |   
+ * |  +----------------------------+       |
+ * |  | Frame B                    |       | 
+ * |  |                            |       |
+ * |  | win.open("http://", "A")   |       |
+ * |  +----------------------------+       |
+ * |                                       |
+ * +---------------------------------------+
+ *
+ * Sequence of the test:
+ *   [1] load Frame A
+ *   [2] load Frame B which navigates A
+ *   [3] load navigated Frame A and check triggeringPrincipal and loadingPrincipal
+ */
+
+const TRIGGERING_PRINCIPAL_URI =
+  "http://mochi.test:8888/tests/docshell/test/navigation/file_triggeringprincipal_iframe_iframe_window_open_frame_b.html";
+
+const LOADING_PRINCIPAL_URI =
+  "http://mochi.test:8888/tests/docshell/test/navigation/test_triggeringprincipal_iframe_iframe_window_open.html";
+
+var frameA = document.getElementById("framea");
+
+function checkResults() {
+  frameA.removeEventListener('load', checkResults, false);
+
+  var channel = SpecialPowers.wrap(frameA.contentDocument).docShell.currentDocumentChannel;
+  var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
+  var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+
+  is(triggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
+    "TriggeringPrincipal for targeted window.open() should be the iframe triggering the load");
+
+  is(frameA.contentDocument.referrer, TRIGGERING_PRINCIPAL_URI,
+    "Referrer for targeted window.open() should be the principal of the iframe triggering the load");
+
+  is(loadingPrincipal, LOADING_PRINCIPAL_URI,
+    "LoadingPrincipal for targeted window.open() should be the containing document");
+ 
+  SimpleTest.finish();
+}
+
+function performNavigation() {
+  frameA.removeEventListener('load', performNavigation, false);
+  frameA.addEventListener('load', checkResults, false);
+
+  // load Frame B which then navigates Frame A
+  var frameB = document.getElementById("frameb");
+  frameB.src = "file_triggeringprincipal_iframe_iframe_window_open_frame_b.html";
+}
+
+// start the test
+SimpleTest.waitForExplicitFinish();
+
+frameA.addEventListener('load', performNavigation, false);
+
+</script>
+</pre>
+</body>
+</html>
