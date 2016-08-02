@@ -8,6 +8,7 @@
 #define mozilla_StyleSheet_h
 
 #include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/dom/CSSStyleSheetBinding.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetInfo.h"
@@ -41,6 +42,8 @@ public:
   {
     mParsingMode = aParsingMode;
   }
+
+  mozilla::dom::CSSStyleSheetParsingMode ParsingModeDOM();
 
   nsINode* GetOwnerNode() const { return mOwningNode; }
 

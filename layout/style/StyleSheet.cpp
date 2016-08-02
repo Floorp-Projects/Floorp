@@ -33,6 +33,22 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
 {
 }
 
+mozilla::dom::CSSStyleSheetParsingMode
+StyleSheet::ParsingModeDOM()
+{
+#define CHECK(X, Y) \
+  static_assert(static_cast<int>(X) == static_cast<int>(Y),             \
+                "mozilla::dom::CSSStyleSheetParsingMode and mozilla::css::SheetParsingMode should have identical values");
+
+  CHECK(mozilla::dom::CSSStyleSheetParsingMode::Agent, css::eAgentSheetFeatures);
+  CHECK(mozilla::dom::CSSStyleSheetParsingMode::User, css::eUserSheetFeatures);
+  CHECK(mozilla::dom::CSSStyleSheetParsingMode::Author, css::eAuthorSheetFeatures);
+
+#undef CHECK
+
+  return static_cast<mozilla::dom::CSSStyleSheetParsingMode>(mParsingMode);
+}
+
 bool
 StyleSheet::IsComplete() const
 {
