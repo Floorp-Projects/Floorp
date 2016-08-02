@@ -39,6 +39,15 @@ def all_git_paths(repo_root):
     for item in output.split("\n"):
         yield item
 
+def all_filesystem_paths(repo_root):
+    for dirpath, dirnames, filenames in os.walk(repo_root):
+        for filename in filenames:
+            yield os.path.relpath(os.path.join(dirpath, filename), repo_root)
+
+def all_paths(repo_root, ignore_local):
+    fn = all_git_paths if ignore_local else all_filesystem_paths
+    for item in fn(repo_root):
+        yield item
 
 def check_path_length(repo_root, path):
     if len(path) + 1 > 150:
@@ -305,12 +314,14 @@ def parse_args():
                         help="List of paths to lint")
     parser.add_argument("--json", action="store_true",
                         help="Output machine-readable JSON format")
+    parser.add_argument("--ignore-local", action="store_true",
+                        help="Ignore locally added files in the working directory (requires git).")
     return parser.parse_args()
 
 def main():
     repo_root = localpaths.repo_root
     args = parse_args()
-    paths = args.paths if args.paths else all_git_paths(repo_root)
+    paths = args.paths if args.paths else all_paths(repo_root, args.ignore_local)
     return lint(repo_root, paths, args.json)
 
 def lint(repo_root, paths, output_json):
