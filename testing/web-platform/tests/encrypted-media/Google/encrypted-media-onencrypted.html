@@ -4,8 +4,8 @@
     <head>
         <title>onencrypted</title>
         <script src="encrypted-media-utils.js"></script>
-        <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <script src="../../resources/testharness.js"></script>
+        <script src="../../resources/testharnessreport.js"></script>
     </head>
     <body>
         <video id="testVideo" controls></video>
@@ -19,7 +19,6 @@
             async_test(function(test)
             {
                 var video = document.getElementById('testVideo');
-                var content = 'webm/test-encrypted.webm';
 
                 var onEncrypted = function(event)
                 {
@@ -34,7 +33,7 @@
                 };
 
                 waitForEventAndRunStep('encrypted', video, onEncrypted, test);
-                video.src = content;
+                video.src = '../content/test-encrypted.webm';
             }, 'encrypted fired on encrypted media file.');
         </script>
     </body>
