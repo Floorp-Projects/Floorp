@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<script>
+  var events = [];
+
+  onload = function trySubmit() {
+    document.querySelector("input").click();
+    parent.postMessage({ source: location.search,
+                         events }, "*");
+  }
+</script>
+<form onsubmit="events.push('submit'); return false">
+  <input type="submit">
+  <input required oninvalid="events.push('invalid'); return false">
+</form>

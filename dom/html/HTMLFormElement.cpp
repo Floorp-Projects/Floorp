@@ -1932,14 +1932,6 @@ HTMLFormElement::CheckValidFormSubmission()
   NS_ASSERTION(!HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate),
                "We shouldn't be there if novalidate is set!");
 
-  // Don't do validation for a form submit done by a sandboxed document that
-  // doesn't have 'allow-forms', the submit will have been blocked and the
-  // HTML5 spec says we shouldn't validate in this case.
-  nsIDocument* doc = GetComposedDoc();
-  if (doc && (doc->GetSandboxFlags() & SANDBOXED_FORMS)) {
-    return true;
-  }
-
   // When .submit() is called aEvent = nullptr so we can rely on that to know if
   // we have to check the validity of the form.
   nsCOMPtr<nsIObserverService> service =
@@ -2025,6 +2017,41 @@ One should be implemented!");
   }
 
   return true;
+}
+
+bool
+HTMLFormElement::SubmissionCanProceed(Element* aSubmitter)
+{
+#ifdef DEBUG
+  if (aSubmitter) {
+    nsCOMPtr<nsIFormControl> fc = do_QueryInterface(aSubmitter);
+    MOZ_ASSERT(fc);
+
+    uint32_t type = fc->GetType();
+    MOZ_ASSERT(type == NS_FORM_INPUT_SUBMIT ||
+               type == NS_FORM_INPUT_IMAGE ||
+               type == NS_FORM_BUTTON_SUBMIT,
+               "aSubmitter is not a submit control?");
+  }
+#endif
+
+  // Modified step 2 of
+  // https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit --
+  // we're not checking whether the node document is disconnected yet...
+  if (OwnerDoc()->GetSandboxFlags() & SANDBOXED_FORMS) {
+    return false;
+  }
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
+    return true;
+  }
+
+  if (aSubmitter &&
+      aSubmitter->HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate)) {
+    return true;
+  }
+
+  return CheckValidFormSubmission();
 }
 
 void
