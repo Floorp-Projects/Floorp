@@ -207,6 +207,20 @@ CompositableClient::CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
                                          aAllocFlags);
 }
 
+already_AddRefed<TextureClient>
+CompositableClient::CreateTextureClientFromSurface(gfx::SourceSurface* aSurface,
+                                                   BackendSelector aSelector,
+                                                   TextureFlags aTextureFlags,
+                                                   TextureAllocationFlags aAllocFlags)
+{
+  return TextureClient::CreateFromSurface(GetForwarder()->AsTextureForwarder(),
+                                          aSurface,
+                                          GetForwarder()->GetCompositorBackendType(),
+                                          aSelector,
+                                          aTextureFlags | mTextureFlags,
+                                          aAllocFlags);
+}
+
 bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
