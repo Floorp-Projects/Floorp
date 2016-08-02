@@ -482,10 +482,11 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     ABIArgMIRTypeIter i(invokeArgTypes);
 
     // argument 0: Instance*
+    Address instancePtr(WasmTlsReg, offsetof(TlsData, instance));
     if (i->kind() == ABIArg::GPR) {
-        masm.loadWasmGlobalPtr(InstancePtrGlobalDataOffset, i->gpr());
+        masm.loadPtr(instancePtr, i->gpr());
     } else {
-        masm.loadWasmGlobalPtr(InstancePtrGlobalDataOffset, scratch);
+        masm.loadPtr(instancePtr, scratch);
         masm.storePtr(scratch, Address(masm.getStackPointer(), i->offsetFromArgBase()));
     }
     i++;
