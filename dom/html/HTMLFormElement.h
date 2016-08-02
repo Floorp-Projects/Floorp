@@ -278,6 +278,15 @@ public:
   bool CheckValidFormSubmission();
 
   /**
+   * Check whether submission can proceed for this form.  This basically
+   * implements steps 1-4 (more or less) of
+   * <https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit>.
+   * aSubmitter, if not null, is the "submitter" from that algorithm.  Therefore
+   * it must be a valid submit control.
+   */
+  bool SubmissionCanProceed(Element* aSubmitter);
+
+  /**
    * Walk over the form elements and call SubmitNamesValues() on them to get
    * their data pumped into the FormSubmitter.
    *
