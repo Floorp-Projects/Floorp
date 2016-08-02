@@ -8234,7 +8234,7 @@ class LAsmJSReturn : public LInstructionHelper<0, 2, 0>
     LIR_HEADER(AsmJSReturn);
 };
 
-class LAsmJSReturnI64 : public LInstructionHelper<0, INT64_PIECES, 0>
+class LAsmJSReturnI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0>
 {
   public:
     LIR_HEADER(AsmJSReturnI64)

@@ -4144,6 +4144,11 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
 
     if (rval->type() == MIRType::Int64) {
         LAsmJSReturnI64* lir = new(alloc()) LAsmJSReturnI64(useInt64Fixed(rval, ReturnReg64));
+
+        // Preserve the TLS pointer we were passed in `WasmTlsReg`.
+        MDefinition* tlsPtr = ins->getOperand(1);
+        lir->setOperand(INT64_PIECES, useFixed(tlsPtr, WasmTlsReg));
+
         add(lir);
         return;
     }
