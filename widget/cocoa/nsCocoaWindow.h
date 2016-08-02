@@ -41,9 +41,6 @@ typedef struct _nsCocoaWindowList {
   NSColor* mActiveTitlebarColor;
   NSColor* mInactiveTitlebarColor;
 
-  // Shadow
-  BOOL mScheduledShadowInvalidation;
-
   // Invalidation disabling
   BOOL mDisabledNeedsDisplay;
 
@@ -69,8 +66,6 @@ typedef struct _nsCocoaWindowList {
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
 - (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive;
 
-- (void)deferredInvalidateShadow;
-- (void)invalidateShadow;
 - (float)getDPI;
 
 - (void)mouseEntered:(NSEvent*)aEvent;
