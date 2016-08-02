@@ -5,12 +5,11 @@
 #ifndef DOM_CAMERA_CAMERAPREVIEWMEDIASTREAM_H
 #define DOM_CAMERA_CAMERAPREVIEWMEDIASTREAM_H
 
+#include "VideoFrameContainer.h"
 #include "MediaStreamGraph.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
-
-class MediaStreamVideoSink;
 
 class FakeMediaStreamGraph : public MediaStreamGraph
 {
@@ -46,8 +45,8 @@ public:
   virtual void AddAudioOutput(void* aKey) override;
   virtual void SetAudioOutputVolume(void* aKey, float aVolume) override;
   virtual void RemoveAudioOutput(void* aKey) override;
-  virtual void AddVideoOutput(MediaStreamVideoSink* aSink) override;
-  virtual void RemoveVideoOutput(MediaStreamVideoSink* aSink) override;
+  virtual void AddVideoOutput(VideoFrameContainer* aContainer) override;
+  virtual void RemoveVideoOutput(VideoFrameContainer* aContainer) override;
   virtual void Suspend() override {}
   virtual void Resume() override {}
   virtual void AddListener(MediaStreamListener* aListener) override;

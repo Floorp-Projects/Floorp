@@ -14,7 +14,6 @@
 #include "ImageContainer.h"
 #include "AbstractMediaDecoder.h"
 #include "gfx2DGlue.h"
-#include "VideoFrameContainer.h"
 
 namespace mozilla {
 
