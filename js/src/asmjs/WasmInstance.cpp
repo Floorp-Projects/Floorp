@@ -91,12 +91,6 @@ Instance::addressOfContextPtr() const
     return (JSContext**)(codeSegment().globalData() + ContextPtrGlobalDataOffset);
 }
 
-Instance**
-Instance::addressOfInstancePtr() const
-{
-    return (Instance**)(codeSegment().globalData() + InstancePtrGlobalDataOffset);
-}
-
 uint8_t**
 Instance::addressOfMemoryBase() const
 {
@@ -300,7 +294,9 @@ Instance::Instance(JSContext* cx,
     MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
     *addressOfContextPtr() = cx;
-    *addressOfInstancePtr() = this;
+
+    tlsData_.instance = this;
+    tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(StackForUntrustedScript);
 
     for (size_t i = 0; i < metadata().funcImports.length(); i++) {
         const FuncImport& fi = metadata().funcImports[i];
@@ -349,8 +345,6 @@ Instance::Instance(JSContext* cx,
 
     for (size_t i = 0; i < tables_.length(); i++)
         *addressOfTableBase(i) = tables_[i]->array();
-
-   updateStackLimit(cx);
 }
 
 bool
@@ -414,13 +408,6 @@ size_t
 Instance::memoryLength() const
 {
     return memory_->buffer().byteLength();
-}
-
-void
-Instance::updateStackLimit(JSContext* cx)
-{
-    // Capture the stack limit for cx's thread.
-    tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(StackForUntrustedScript);
 }
 
 bool

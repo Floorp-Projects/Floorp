@@ -672,7 +672,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, access, oldv, newv);
+        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, access, oldv, newv, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
@@ -683,7 +683,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, access, value);
+        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, access, value, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
@@ -695,7 +695,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, access, v);
+        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, access, v, tlsPointer_);
         curBlock_->add(binop);
         return binop;
     }
@@ -789,7 +789,6 @@ class FunctionCompiler
         MAsmJSCall::Args regArgs_;
         Vector<MAsmJSPassStackArg*, 0, SystemAllocPolicy> stackArgs_;
         bool childClobbers_;
-        bool preservesTlsReg_;
 
         friend class FunctionCompiler;
 
@@ -798,8 +797,7 @@ class FunctionCompiler
           : lineOrBytecode_(lineOrBytecode),
             maxChildStackBytes_(0),
             spIncrement_(0),
-            childClobbers_(false),
-            preservesTlsReg_(false)
+            childClobbers_(false)
         { }
     };
 
@@ -840,16 +838,6 @@ class FunctionCompiler
         }
     }
 
-    // Add the hidden TLS pointer argument to CallArgs, and assume that it will
-    // be preserved by the call.
-    bool passTlsPointer(CallArgs* args)
-    {
-        if (inDeadCode())
-            return true;
-        args->preservesTlsReg_ = true;
-        return args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_));
-    }
-
     void propagateMaxStackArgBytes(uint32_t stackBytes)
     {
         if (callStack_.empty()) {
@@ -865,13 +853,20 @@ class FunctionCompiler
             outer->childClobbers_ = true;
     }
 
-    void finishCallArgs(CallArgs* args)
+    enum class PassTls { False = false, True = true };
+
+    bool finishCallArgs(CallArgs* args, PassTls passTls)
     {
         MOZ_ALWAYS_TRUE(callStack_.popCopy() == args);
 
         if (inDeadCode()) {
             propagateMaxStackArgBytes(args->maxChildStackBytes_);
-            return;
+            return true;
+        }
+
+        if (passTls == PassTls::True) {
+            if (!args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_)))
+                return false;
         }
 
         uint32_t stackBytes = args->abi_.stackBytesConsumedSoFar();
@@ -887,15 +882,14 @@ class FunctionCompiler
         }
 
         propagateMaxStackArgBytes(stackBytes);
+        return true;
     }
 
   private:
-    bool callPrivate(MAsmJSCall::Callee callee, const CallArgs& args, ExprType ret, MDefinition** def)
+    bool callPrivate(MAsmJSCall::Callee callee, MAsmJSCall::PreservesTlsReg preservesTlsReg,
+                     const CallArgs& args, ExprType ret, MDefinition** def)
     {
-        if (inDeadCode()) {
-            *def = nullptr;
-            return true;
-        }
+        MOZ_ASSERT(!inDeadCode());
 
         CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);
         switch (callee.which()) {
@@ -906,7 +900,7 @@ class FunctionCompiler
 
         MAsmJSCall* ins =
           MAsmJSCall::New(alloc(), CallSiteDesc(args.lineOrBytecode_, kind), callee, args.regArgs_,
-                          ToMIRType(ret), args.spIncrement_, args.preservesTlsReg_);
+                          ToMIRType(ret), args.spIncrement_, preservesTlsReg);
         if (!ins)
             return false;
 
@@ -918,7 +912,13 @@ class FunctionCompiler
   public:
     bool internalCall(const Sig& sig, uint32_t funcIndex, const CallArgs& args, MDefinition** def)
     {
-        return callPrivate(MAsmJSCall::Callee(funcIndex), args, sig.ret(), def);
+        if (inDeadCode()) {
+            *def = nullptr;
+            return true;
+        }
+
+        return callPrivate(MAsmJSCall::Callee(funcIndex), MAsmJSCall::PreservesTlsReg::True, args,
+                           sig.ret(), def);
     }
 
     bool funcPtrCall(uint32_t sigIndex, uint32_t length, uint32_t globalDataOffset,
@@ -946,7 +946,8 @@ class FunctionCompiler
             callee = MAsmJSCall::Callee(ptrFun, mg_.sigs[sigIndex].id);
         }
 
-        return callPrivate(callee, args, mg_.sigs[sigIndex].ret(), def);
+        return callPrivate(callee, MAsmJSCall::PreservesTlsReg::True, args,
+                           mg_.sigs[sigIndex].ret(), def);
     }
 
     bool ffiCall(unsigned globalDataOffset, const CallArgs& args, ExprType ret, MDefinition** def)
@@ -959,12 +960,14 @@ class FunctionCompiler
         MAsmJSLoadFFIFunc* ptrFun = MAsmJSLoadFFIFunc::New(alloc(), globalDataOffset);
         curBlock_->add(ptrFun);
 
-        return callPrivate(MAsmJSCall::Callee(ptrFun), args, ret, def);
+        return callPrivate(MAsmJSCall::Callee(ptrFun), MAsmJSCall::PreservesTlsReg::False,
+                           args, ret, def);
     }
 
     bool builtinCall(SymbolicAddress builtin, const CallArgs& args, ValType type, MDefinition** def)
     {
-        return callPrivate(MAsmJSCall::Callee(builtin), args, ToExprType(type), def);
+        return callPrivate(MAsmJSCall::Callee(builtin), MAsmJSCall::PreservesTlsReg::False,
+                           args, ToExprType(type), def);
     }
 
     /*********************************************** Control flow generation */
@@ -1696,16 +1699,8 @@ EmitReturn(FunctionCompiler& f)
     return true;
 }
 
-// Is a callee within the same module instance?
-enum class IntraModule
-{
-    False,
-    True
-};
-
 static bool
-EmitCallArgs(FunctionCompiler& f, const Sig& sig, IntraModule intraModule,
-             FunctionCompiler::CallArgs* args)
+EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::CallArgs* args)
 {
     if (!f.startCallArgs(args))
         return false;
@@ -1724,13 +1719,7 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, IntraModule intraModule,
     if (!f.iter().readCallArgsEnd(numArgs))
         return false;
 
-    // Calls within the module pass the module's TLS pointer.
-    // Calls to other modules go through stubs that set up their TLS pointers.
-    if (intraModule == IntraModule::True)
-        f.passTlsPointer(args);
-
-    f.finishCallArgs(args);
-    return true;
+    return f.finishCallArgs(args, FunctionCompiler::PassTls::True);
 }
 
 static bool
@@ -1746,7 +1735,7 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = *f.mg().funcSigs[calleeIndex];
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, IntraModule::True, &args))
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
@@ -1776,7 +1765,7 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = f.mg().sigs[sigIndex];
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, IntraModule::True, &args))
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     MDefinition* callee;
@@ -1815,7 +1804,7 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = *funcImport.sig;
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, IntraModule::False, &args))
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
@@ -2230,7 +2219,8 @@ EmitUnaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddre
     if (!f.passArg(input, operandType, &args))
         return false;
 
-    f.finishCallArgs(&args);
+    if (!f.finishCallArgs(&args, FunctionCompiler::PassTls::False))
+        return false;
 
     MDefinition* def;
     if (!f.builtinCall(callee, args, operandType, &def))
@@ -2261,7 +2251,8 @@ EmitBinaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddr
     if (!f.passArg(rhs, operandType, &args))
         return false;
 
-    f.finishCallArgs(&args);
+    if (!f.finishCallArgs(&args, FunctionCompiler::PassTls::False))
+        return false;
 
     MDefinition* def;
     if (!f.builtinCall(callee, args, operandType, &def))

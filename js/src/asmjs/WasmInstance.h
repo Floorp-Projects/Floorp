@@ -109,9 +109,6 @@ class Instance
 
     MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
 
-    // Update the instance's copy of the stack limit.
-    void updateStackLimit(JSContext*);
-
     // about:memory reporting:
 
     void addSizeOfMisc(MallocSizeOf mallocSizeOf,
