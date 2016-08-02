@@ -342,7 +342,6 @@ public:
   // Separate classes to allow ref counting
   class PipelineListener;
   class VideoFrameFeeder;
-  class PipelineVideoSink;
 
  protected:
   ~MediaPipelineTransmit();
@@ -353,7 +352,6 @@ public:
   RefPtr<VideoFrameFeeder> feeder_;
   RefPtr<VideoFrameConverter> converter_;
 #endif
-  RefPtr<PipelineVideoSink> video_sink_;
   dom::MediaStreamTrack* domtrack_;
 };
 
