@@ -8,7 +8,7 @@
 
 #include "js/Vector.h"
 #include "jsapi-tests/tests.h"
-
+#include "threading/Thread.h"
 #include "vm/SharedImmutableStringsCache.h"
 
 const int NUM_THREADS = 256;
@@ -34,10 +34,8 @@ struct CacheAndIndex
 };
 
 static void
-getString(void* data)
+getString(CacheAndIndex* cacheAndIndex)
 {
-    auto cacheAndIndex = reinterpret_cast<CacheAndIndex*>(data);
-
     for (int i = 0; i < NUM_ITERATIONS; i++) {
         auto str = STRINGS[cacheAndIndex->index % NUM_STRINGS];
 
@@ -64,25 +62,17 @@ BEGIN_TEST(testSharedImmutableStringsCache)
     CHECK(maybeCache.isSome());
     auto& cache = *maybeCache;
 
-    js::Vector<PRThread*> threads(cx);
+    js::Vector<js::Thread> threads(cx);
     CHECK(threads.reserve(NUM_THREADS));
 
     for (auto i : mozilla::MakeRange(NUM_THREADS)) {
         auto cacheAndIndex = js_new<CacheAndIndex>(&cache, i);
         CHECK(cacheAndIndex);
-        auto thread = PR_CreateThread(PR_USER_THREAD,
-                                      getString,
-                                      (void *) cacheAndIndex,
-                                      PR_PRIORITY_NORMAL,
-                                      PR_LOCAL_THREAD,
-                                      PR_JOINABLE_THREAD,
-                                      0);
-        CHECK(thread);
-        threads.infallibleAppend(thread);
+        threads.infallibleEmplaceBack(getString, cacheAndIndex);
     }
 
-    for (auto thread : threads)
-        CHECK(PR_JoinThread(thread) == PR_SUCCESS);
+    for (auto& thread : threads)
+        thread.join();
 
     return true;
 }
