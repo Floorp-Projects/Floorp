@@ -539,6 +539,7 @@ MSG_DEF(JSMSG_AMBIGUOUS_IMPORT,          1, JSEXN_SYNTAXERR, "ambiguous import '
 MSG_DEF(JSMSG_MISSING_NAMESPACE_EXPORT,  0, JSEXN_SYNTAXERR, "export not found for namespace")
 MSG_DEF(JSMSG_MISSING_EXPORT,            1, JSEXN_SYNTAXERR, "local binding for export '{0}' not found")
 MSG_DEF(JSMSG_MODULE_INSTANTIATE_FAILED, 0, JSEXN_INTERNALERR, "attempt to re-instantiate module after failure")
+MSG_DEF(JSMSG_BAD_MODULE_STATE,          0, JSEXN_INTERNALERR, "module record in unexpected state")
 
 // Promise
 MSG_DEF(JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF,       0, JSEXN_TYPEERR, "A promise cannot be resolved with itself.")
