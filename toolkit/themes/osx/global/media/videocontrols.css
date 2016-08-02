@@ -390,7 +390,7 @@ html|table {
     background-image: url(chrome://global/skin/media/noAudio@2x.png);
     background-size: 33px 28px;
   }
-  .closeCaptionButton {
+  .closedCaptionButton {
     background-image: url(chrome://global/skin/media/closeCaptionButton@2x.png);
     background-size: 28px 28px;
   }
