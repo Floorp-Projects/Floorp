@@ -33,12 +33,10 @@ class RemoteContentController : public GeckoContentController
   using GeckoContentController::APZStateChange;
 
 public:
-  explicit RemoteContentController(uint64_t aLayersId,
-                                   dom::TabParent* aBrowserParent);
+  explicit RemoteContentController(uint64_t aLayersId);
 
   virtual ~RemoteContentController();
 
-  // Needs to be called on the main thread.
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
 
   virtual void HandleTap(TapType aTapType,
@@ -49,6 +47,10 @@ public:
 
   virtual void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
 
+  virtual bool IsRepaintThread() override;
+
+  virtual void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
+
   virtual bool GetTouchSensitiveRegion(CSSRect* aOutRegion) override;
 
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
@@ -58,7 +60,6 @@ public:
   virtual void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
                                          const nsString& aEvent) override;
 
-  // Needs to be called on the main thread.
   virtual void NotifyFlushComplete() override;
 
   virtual bool RecvUpdateHitRegion(const nsRegion& aRegion) override;
@@ -68,15 +69,9 @@ public:
   virtual void Destroy() override;
 
 private:
-  bool CanSend()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    return !!mBrowserParent;
-  }
-
-  MessageLoop* mUILoop;
+  MessageLoop* mCompositorThread;
   uint64_t mLayersId;
-  RefPtr<dom::TabParent> mBrowserParent;
+  bool mCanSend;
 
   // Mutex protecting members below accessed from multiple threads.
   mozilla::Mutex mMutex;
