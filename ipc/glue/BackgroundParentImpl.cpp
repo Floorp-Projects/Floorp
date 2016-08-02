@@ -22,7 +22,6 @@
 #include "mozilla/dom/GamepadEventChannelParent.h"
 #include "mozilla/dom/GamepadTestChannelParent.h"
 #endif
-#include "mozilla/dom/NuwaParent.h"
 #include "mozilla/dom/PBlobParent.h"
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
@@ -66,9 +65,7 @@ using mozilla::dom::cache::PCacheStreamControlParent;
 using mozilla::dom::FileSystemBase;
 using mozilla::dom::FileSystemRequestParent;
 using mozilla::dom::MessagePortParent;
-using mozilla::dom::NuwaParent;
 using mozilla::dom::PMessagePortParent;
-using mozilla::dom::PNuwaParent;
 using mozilla::dom::UDPSocketParent;
 
 namespace {
@@ -295,24 +292,6 @@ BackgroundParentImpl::DeallocPFileDescriptorSetParent(
 
   delete static_cast<FileDescriptorSetParent*>(aActor);
   return true;
-}
-
-PNuwaParent*
-BackgroundParentImpl::AllocPNuwaParent()
-{
-  return mozilla::dom::NuwaParent::Alloc();
-}
-
-bool
-BackgroundParentImpl::RecvPNuwaConstructor(PNuwaParent* aActor)
-{
-  return mozilla::dom::NuwaParent::ActorConstructed(aActor);
-}
-
-bool
-BackgroundParentImpl::DeallocPNuwaParent(PNuwaParent *aActor)
-{
-  return mozilla::dom::NuwaParent::Dealloc(aActor);
 }
 
 PSendStreamParent*

@@ -434,40 +434,6 @@ nsOutputStreamTransport::IsNonBlocking(bool *result)
     return NS_OK;
 }
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-
-class STSThreadPoolListener final : public nsIThreadPoolListener
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSITHREADPOOLLISTENER
-
-    STSThreadPoolListener() {}
-
-protected:
-    ~STSThreadPoolListener() {}
-};
-
-NS_IMPL_ISUPPORTS(STSThreadPoolListener, nsIThreadPoolListener)
-
-NS_IMETHODIMP
-STSThreadPoolListener::OnThreadCreated()
-{
-    if (IsNuwaProcess()) {
-        NuwaMarkCurrentThread(nullptr, nullptr);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-STSThreadPoolListener::OnThreadShuttingDown()
-{
-    return NS_OK;
-}
-
-#endif	// MOZ_NUWA_PROCESS
-
 //-----------------------------------------------------------------------------
 // nsStreamTransportService
 //-----------------------------------------------------------------------------
@@ -488,11 +454,6 @@ nsStreamTransportService::Init()
     mPool->SetThreadLimit(25);
     mPool->SetIdleThreadLimit(1);
     mPool->SetIdleThreadTimeout(PR_SecondsToInterval(30));
-#ifdef MOZ_NUWA_PROCESS
-    if (IsNuwaProcess()) {
-	mPool->SetListener(new STSThreadPoolListener());
-    }
-#endif
 
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();

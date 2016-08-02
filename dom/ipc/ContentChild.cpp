@@ -166,11 +166,6 @@
 #include "nsIAccessibilityService.h"
 #endif
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-#include "NuwaChild.h"
-
 #ifndef MOZ_SIMPLEPUSH
 #include "mozilla/dom/PushNotifier.h"
 #endif
@@ -516,57 +511,6 @@ NS_IMPL_ISUPPORTS(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
 
 ContentChild* ContentChild::sSingleton;
 
-// Performs initialization that is not fork-safe, i.e. that must be done after
-// forking from the Nuwa process.
-void
-InitOnContentProcessCreated()
-{
-#ifdef MOZ_NUWA_PROCESS
-  // Wait until we are forked from Nuwa
-  if (IsNuwaProcess()) {
-    return;
-  }
-
-  nsCOMPtr<nsIPermissionManager> permManager = services::GetPermissionManager();
-  MOZ_ASSERT(permManager, "Unable to get permission manager");
-  nsresult rv = permManager->RefreshPermission();
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(false, "Failed updating permission in child process");
-  }
-#endif
-
-  // This will register cross-process observer.
-  mozilla::dom::time::InitializeDateCacheCleaner();
-}
-
-#ifdef MOZ_NUWA_PROCESS
-static void
-ResetTransports(void* aUnused)
-{
-  ContentChild* child = ContentChild::GetSingleton();
-  mozilla::ipc::Transport* transport = child->GetTransport();
-  int fd = transport->GetFileDescriptor();
-  transport->ResetFileDescriptor(fd);
-
-  nsTArray<IToplevelProtocol*> actors;
-  child->GetOpenedActors(actors);
-  for (size_t i = 0; i < actors.Length(); i++) {
-    IToplevelProtocol* toplevel = actors[i];
-    transport = toplevel->GetTransport();
-    fd = transport->GetFileDescriptor();
-    transport->ResetFileDescriptor(fd);
-  }
-}
-#endif
-
-#if defined(MOZ_TASK_TRACER) && defined(MOZ_NUWA_PROCESS)
-static void
-ReinitTaskTracer(void* /*aUnused*/)
-{
-  mozilla::tasktracer::InitTaskTracer(mozilla::tasktracer::FORKED_AFTER_NUWA);
-}
-#endif
-
 ContentChild::ContentChild()
  : mID(uint64_t(-1))
  , mCanOverrideProcessName(true)
@@ -642,11 +586,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
 
   // If communications with the parent have broken down, take the process
   // down so it's not hanging around.
-  bool abortOnError = true;
-#ifdef MOZ_NUWA_PROCESS
-  abortOnError &= !IsNuwaProcess();
-#endif
-  GetIPCChannel()->SetAbortOnError(abortOnError);
+  GetIPCChannel()->SetAbortOnError(true);
 
 #ifdef MOZ_X11
   // Send the parent our X socket to act as a proxy reference for our X
@@ -663,17 +603,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
   SendGetProcessAttributes(&mID, &mIsForApp, &mIsForBrowser);
   InitProcessAttributes();
 
-#if defined(MOZ_TASK_TRACER) && defined (MOZ_NUWA_PROCESS)
-  if (IsNuwaProcess()) {
-    NuwaAddConstructor(ReinitTaskTracer, nullptr);
-  }
-#endif
-
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    NuwaAddConstructor(ResetTransports, nullptr);
-  }
-#endif
 #ifdef NS_PRINTING
   // Force the creation of the nsPrintingProxy so that it's IPC counterpart,
   // PrintingParent, is always available for printing initiated from the parent.
@@ -687,12 +616,6 @@ void
 ContentChild::InitProcessAttributes()
 {
 #ifdef MOZ_WIDGET_GONK
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    SetProcessName(NS_LITERAL_STRING("(Nuwa)"), false);
-    return;
-  }
-#endif
   if (mIsForApp && !mIsForBrowser) {
     SetProcessName(NS_LITERAL_STRING("(Preallocated app)"), false);
   } else {
@@ -1037,7 +960,8 @@ ContentChild::InitXPCOM()
     global->SetInitialProcessData(data);
   }
 
-  InitOnContentProcessCreated();
+  // This will register cross-process observer.
+  mozilla::dom::time::InitializeDateCacheCleaner();
 }
 
 PMemoryReportRequestChild*
@@ -2282,14 +2206,6 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
   }
   mIsAlive = false;
 
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    // The Nuwa cannot go through the full XPCOM shutdown path or deadlock
-    // will result.
-    ProcessChild::QuickExit();
-  }
-#endif
-
   XRE_ShutdownChildProcess();
 #endif // NS_FREE_PERMANENT_DATA
 }
@@ -2528,9 +2444,6 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
 bool
 ContentChild::RecvFlushMemory(const nsString& reason)
 {
-#ifdef MOZ_NUWA_PROCESS
-  MOZ_ASSERT(!IsNuwaProcess() || !IsNuwaReady());
-#endif
   nsCOMPtr<nsIObserverService> os =
     mozilla::services::GetObserverService();
   if (os) {
@@ -2575,31 +2488,6 @@ ContentChild::RecvCycleCollect()
   return true;
 }
 
-#ifdef MOZ_NUWA_PROCESS
-static void
-OnFinishNuwaPreparation()
-{
-  // We want to ensure that the PBackground actor gets cloned in the Nuwa
-  // process before we freeze. Also, we have to do this to avoid deadlock.
-  // Protocols that are "opened" (e.g. PBackground, PCompositorBridge) block
-  // the main thread to wait for the IPC thread during the open operation.
-  // NuwaSpawnWait() blocks the IPC thread to wait for the main thread when
-  // the Nuwa process is forked. Unless we ensure that the two cannot happen
-  // at the same time then we risk deadlock. Spinning the event loop here
-  // guarantees the ordering is safe for PBackground.
-  while (!BackgroundChild::GetForCurrentThread()) {
-    if (NS_WARN_IF(!NS_ProcessNextEvent())) {
-      return;
-    }
-  }
-
-  // This will create the actor.
-  Unused << mozilla::dom::NuwaChild::GetSingleton();
-
-  MakeNuwaProcess();
-}
-#endif
-
 static void
 PreloadSlowThings()
 {
@@ -2643,13 +2531,6 @@ ContentChild::RecvAppInit()
   if (mIsForApp || mIsForBrowser) {
     PreloadSlowThings();
   }
-
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    ContentChild::GetSingleton()->RecvGarbageCollect();
-    MessageLoop::current()->PostTask(NewRunnableFunction(OnFinishNuwaPreparation));
-  }
-#endif
 
   return true;
 }
@@ -2796,9 +2677,6 @@ ContentChild::RecvNotifyProcessPriorityChanged(
 bool
 ContentChild::RecvMinimizeMemoryUsage()
 {
-#ifdef MOZ_NUWA_PROCESS
-  MOZ_ASSERT(!IsNuwaProcess() || !IsNuwaReady());
-#endif
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
   NS_ENSURE_TRUE(mgr, true);
