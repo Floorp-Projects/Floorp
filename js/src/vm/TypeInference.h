@@ -1310,9 +1310,6 @@ inline void InferSpew(SpewChannel which, const char* fmt, ...) {}
 
 #endif
 
-/* Print a warning, dump state and abort the program. */
-MOZ_NORETURN MOZ_COLD void TypeFailure(JSContext* cx, const char* fmt, ...);
-
 // Prints type information for a context if spew is enabled or force is set.
 void
 PrintTypes(JSContext* cx, JSCompartment* comp, bool force);

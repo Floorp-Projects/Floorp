@@ -610,7 +610,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
         *messagep = cx->pod_malloc<char>(nbytes);
         if (!*messagep)
             goto error;
-        JS_snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
+        snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
     }
     return true;
 
@@ -786,7 +786,7 @@ js::ReportMissingArg(JSContext* cx, HandleValue v, unsigned arg)
     char argbuf[11];
     UniqueChars bytes;
 
-    JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
+    snprintf(argbuf, sizeof argbuf, "%u", arg);
     if (IsFunctionObject(v)) {
         RootedAtom name(cx, v.toObject().as<JSFunction>().name());
         bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, name);
@@ -1110,7 +1110,7 @@ void
 AutoEnterOOMUnsafeRegion::crash(const char* reason)
 {
     char msgbuf[1024];
-    JS_snprintf(msgbuf, sizeof(msgbuf), "[unhandlable oom] %s", reason);
+    snprintf(msgbuf, sizeof(msgbuf), "[unhandlable oom] %s", reason);
     MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
     MOZ_CRASH();
 }

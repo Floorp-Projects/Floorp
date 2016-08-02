@@ -2312,7 +2312,7 @@ FormatIntroducedFilename(ExclusiveContext* cx, const char* filename, unsigned li
     // and wants us to use a special free function.)
     char linenoBuf[15];
     size_t filenameLen = strlen(filename);
-    size_t linenoLen = JS_snprintf(linenoBuf, 15, "%u", lineno);
+    size_t linenoLen = snprintf(linenoBuf, sizeof(linenoBuf), "%u", lineno);
     size_t introducerLen = strlen(introducer);
     size_t len = filenameLen                    +
                  6 /* == strlen(" line ") */    +
@@ -2325,8 +2325,8 @@ FormatIntroducedFilename(ExclusiveContext* cx, const char* filename, unsigned li
         ReportOutOfMemory(cx);
         return nullptr;
     }
-    mozilla::DebugOnly<size_t> checkLen = JS_snprintf(formatted, len, "%s line %s > %s",
-                                                      filename, linenoBuf, introducer);
+    mozilla::DebugOnly<size_t> checkLen = snprintf(formatted, len, "%s line %s > %s",
+                                                   filename, linenoBuf, introducer);
     MOZ_ASSERT(checkLen == len - 1);
 
     return formatted;

@@ -842,8 +842,8 @@ js::Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     JSOp op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
         char numBuf1[12], numBuf2[12];
-        JS_snprintf(numBuf1, sizeof numBuf1, "%d", op);
-        JS_snprintf(numBuf2, sizeof numBuf2, "%d", JSOP_LIMIT);
+        snprintf(numBuf1, sizeof numBuf1, "%d", op);
+        snprintf(numBuf2, sizeof numBuf2, "%d", JSOP_LIMIT);
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_BYTECODE_TOO_BIG, numBuf1, numBuf2);
         return 0;
@@ -1016,7 +1016,7 @@ js::Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
       default: {
         char numBuf[12];
-        JS_snprintf(numBuf, sizeof numBuf, "%x", cs->format);
+        snprintf(numBuf, sizeof numBuf, "%x", cs->format);
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_UNKNOWN_FORMAT, numBuf);
         return 0;

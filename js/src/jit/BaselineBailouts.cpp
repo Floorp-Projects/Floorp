@@ -1152,13 +1152,13 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 ReportOutOfMemory(cx);
                 return false;
             }
-            JS_snprintf(buf, len, "%s %s %s on line %u of %s:%" PRIuSIZE,
-                                  BailoutKindString(bailoutKind),
-                                  resumeAfter ? "after" : "at",
-                                  CodeName[op],
-                                  PCToLineNumber(script, pc),
-                                  filename,
-                                  script->lineno());
+            snprintf(buf, len, "%s %s %s on line %u of %s:%" PRIuSIZE,
+                     BailoutKindString(bailoutKind),
+                     resumeAfter ? "after" : "at",
+                     CodeName[op],
+                     PCToLineNumber(script, pc),
+                     filename,
+                     script->lineno());
             cx->runtime()->spsProfiler.markEvent(buf);
             js_free(buf);
         }

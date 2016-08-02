@@ -55,7 +55,7 @@ class NameResolver
     /* Append a number to buf. */
     bool appendNumber(double n) {
         char number[30];
-        int digits = JS_snprintf(number, sizeof(number), "%g", n);
+        int digits = snprintf(number, sizeof(number), "%g", n);
         return buf->append(number, digits);
     }
 
