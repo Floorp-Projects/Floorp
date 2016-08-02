@@ -62,9 +62,10 @@ add_task(function* test_unresponsive_native_app() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["nativeMessaging"],
     },
-  }, ID);
+  });
 
   yield extension.startup();
   yield extension.awaitMessage("ready");
