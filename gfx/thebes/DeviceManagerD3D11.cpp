@@ -67,17 +67,6 @@ IsWARPStable()
   return true;
 }
 
-bool
-DeviceManagerD3D11::CanUseD3D11ImageBridge()
-{
-  if (XRE_IsContentProcess()) {
-    if (!gfxPlatform::GetPlatform()->GetParentDevicePrefs().useD3D11ImageBridge()) {
-      return false;
-    }
-  }
-  return !mIsWARP;
-}
-
 void
 DeviceManagerD3D11::CreateDevices()
 {
@@ -143,13 +132,6 @@ DeviceManagerD3D11::CreateDevices()
     mIsWARP = gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR);
     mTextureSharingWorks =
       gfxPlatform::GetPlatform()->GetParentDevicePrefs().d3d11TextureSharingWorks();
-  }
-
-  if (CanUseD3D11ImageBridge()) {
-    if (AttemptD3D11ImageBridgeDeviceCreation() == FeatureStatus::CrashedInHandler) {
-      DisableD3D11AfterCrash();
-      return;
-    }
   }
 
   if (AttemptD3D11ContentDeviceCreation() == FeatureStatus::CrashedInHandler) {
@@ -435,51 +417,6 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
 }
 
 bool
-DeviceManagerD3D11::AttemptD3D11ImageBridgeDeviceCreationHelper(
-  IDXGIAdapter1* aAdapter,
-  HRESULT& aResOut)
-{
-  MOZ_SEH_TRY {
-    aResOut =
-      sD3D11CreateDeviceFn(GetDXGIAdapter(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                           D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-                           mFeatureLevels.Elements(), mFeatureLevels.Length(),
-                           D3D11_SDK_VERSION, getter_AddRefs(mImageBridgeDevice), nullptr, nullptr);
-  } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-    return false;
-  }
-  return true;
-}
-
-FeatureStatus
-DeviceManagerD3D11::AttemptD3D11ImageBridgeDeviceCreation()
-{
-  HRESULT hr;
-  if (!AttemptD3D11ImageBridgeDeviceCreationHelper(GetDXGIAdapter(), hr)) {
-    gfxCriticalNote << "Recovered from crash while creating a D3D11 image bridge device";
-    gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Image);
-    return FeatureStatus::CrashedInHandler;
-  }
-
-  if (FAILED(hr) || !mImageBridgeDevice) {
-    gfxCriticalNote << "Failed to create a content image bridge device: " << hexa(hr);
-    gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Image);
-    return FeatureStatus::Failed;
-  }
-
-  mImageBridgeDevice->SetExceptionMode(0);
-  if (!D3D11Checks::DoesAlphaTextureSharingWork(mImageBridgeDevice)) {
-    mImageBridgeDevice = nullptr;
-    return FeatureStatus::Failed;
-  }
-
-  if (XRE_IsContentProcess()) {
-    ContentAdapterIsParentAdapter(mImageBridgeDevice);
-  }
-  return FeatureStatus::Available;
-}
-
-bool
 DeviceManagerD3D11::CreateD3D11DecoderDeviceHelper(
   IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice, HRESULT& aResOut)
 {
@@ -534,7 +471,6 @@ DeviceManagerD3D11::ResetDevices()
 
   mCompositorDevice = nullptr;
   mContentDevice = nullptr;
-  mImageBridgeDevice = nullptr;
   Factory::SetDirect3D11Device(nullptr);
 }
 
@@ -604,7 +540,6 @@ DeviceManagerD3D11::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
   // Note: this can be called off the main thread, so we need to use
   // our threadsafe getters.
   if (DidDeviceReset(GetCompositorDevice(), aOutReason) ||
-      DidDeviceReset(GetImageBridgeDevice(), aOutReason) ||
       DidDeviceReset(GetContentDevice(), aOutReason))
   {
     return true;
@@ -630,26 +565,10 @@ DeviceManagerD3D11::GetCompositorDevice()
 }
 
 RefPtr<ID3D11Device>
-DeviceManagerD3D11::GetImageBridgeDevice()
-{
-  MutexAutoLock lock(mDeviceLock);
-  return mImageBridgeDevice;
-}
-
-RefPtr<ID3D11Device>
 DeviceManagerD3D11::GetContentDevice()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return mContentDevice;
-}
-
-RefPtr<ID3D11Device>
-DeviceManagerD3D11::GetDeviceForCurrentThread()
-{
-  if (NS_IsMainThread()) {
-    return GetContentDevice();
-  }
-  return GetCompositorDevice();
 }
 
 unsigned
