@@ -92,6 +92,8 @@ DecodingTask::DecodingTask(NotNull<Decoder*> aDecoder)
 {
   MOZ_ASSERT(!mDecoder->IsMetadataDecode(),
              "Use MetadataDecodingTask for metadata decodes");
+  MOZ_ASSERT(mDecoder->IsFirstFrameDecode(),
+             "Use AnimationDecodingTask for animation decodes");
 }
 
 void
@@ -126,6 +128,56 @@ DecodingTask::Run()
 
 bool
 DecodingTask::ShouldPreferSyncRun() const
+{
+  return mDecoder->ShouldSyncDecode(gfxPrefs::ImageMemDecodeBytesAtATime());
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// AnimationDecodingTask implementation.
+///////////////////////////////////////////////////////////////////////////////
+
+AnimationDecodingTask::AnimationDecodingTask(NotNull<Decoder*> aDecoder)
+  : mDecoder(aDecoder)
+{
+  MOZ_ASSERT(!mDecoder->IsMetadataDecode(),
+             "Use MetadataDecodingTask for metadata decodes");
+  MOZ_ASSERT(!mDecoder->IsFirstFrameDecode(),
+             "Use DecodingTask for single-frame image decodes");
+}
+
+void
+AnimationDecodingTask::Run()
+{
+  while (true) {
+    LexerResult result = mDecoder->Decode(WrapNotNull(this));
+
+    if (result.is<TerminalState>()) {
+      NotifyDecodeComplete(mDecoder);
+      return;  // We're done.
+    }
+
+    MOZ_ASSERT(result.is<Yield>());
+
+    // Notify for the progress we've made so far.
+    if (mDecoder->HasProgress()) {
+      NotifyProgress(mDecoder);
+    }
+
+    if (result == LexerResult(Yield::NEED_MORE_DATA)) {
+      // We can't make any more progress right now. The decoder itself will
+      // ensure that we get reenqueued when more data is available; just return
+      // for now.
+      return;
+    }
+
+    // Right now we don't do anything special for other kinds of yields, so just
+    // keep working.
+  }
+}
+
+bool
+AnimationDecodingTask::ShouldPreferSyncRun() const
 {
   return mDecoder->ShouldSyncDecode(gfxPrefs::ImageMemDecodeBytesAtATime());
 }
