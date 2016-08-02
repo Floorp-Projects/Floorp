@@ -71,10 +71,28 @@ function testDefaultRequest() {
   });
 }
 
+function testReconnectRequest() {
+  return new Promise(function(aResolve, aReject) {
+    var request = new PresentationRequest("http://example.com");
+
+    request.reconnect("dummyId").then(
+      function(aConnection) {
+        ok(false, "Unexpected success, should get a security error.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "SecurityError", "Should get a security error.");
+        aResolve();
+      }
+    );
+  });
+}
+
 function runTest() {
   testGetAvailability()
   .then(testStartRequest)
   .then(testDefaultRequest)
+  .then(testReconnectRequest)
   .then(finish);
 }
 
