@@ -24,6 +24,7 @@ TestPresentationControlChannel.prototype = {
   disconnect: function() {},
   launch: function() {},
   terminate: function() {},
+  reconnect: function() {},
   set listener(listener) {},
   get listener() {},
 };
@@ -161,6 +162,25 @@ function terminateRequest() {
                              testControlChannel, testIsFromReceiver);
 }
 
+function reconnectRequest() {
+  let testUrl = 'http://www.example.org/';
+  let testPresentationId = 'test-presentation-id';
+  let testControlChannel = new TestPresentationControlChannel();
+  Services.obs.addObserver(function observer(subject, topic, data) {
+    Services.obs.removeObserver(observer, topic);
+
+    let request = subject.QueryInterface(Ci.nsIPresentationSessionRequest);
+
+    Assert.equal(request.device.id, testDevice.id, 'expected device');
+    Assert.equal(request.url, testUrl, 'expected requesting URL');
+    Assert.equal(request.presentationId, testPresentationId, 'expected presentation Id');
+
+    run_next_test();
+  }, 'presentation-reconnect-request', false);
+  manager.QueryInterface(Ci.nsIPresentationDeviceListener)
+         .onReconnectRequest(testDevice, testUrl, testPresentationId, testControlChannel);
+}
+
 function removeDevice() {
   Services.obs.addObserver(function observer(subject, topic, data) {
     Services.obs.removeObserver(observer, topic);
@@ -199,6 +219,7 @@ add_test(addDevice);
 add_test(updateDevice);
 add_test(sessionRequest);
 add_test(terminateRequest);
+add_test(reconnectRequest);
 add_test(removeDevice);
 add_test(removeProvider);
 

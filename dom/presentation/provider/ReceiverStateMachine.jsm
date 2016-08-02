@@ -68,6 +68,14 @@ var handlers = [
       case CommandType.ICE_CANDIDATE:
         stateMachine._notifyChannelDescriptor(command);
         break;
+      case CommandType.RECONNECT:
+        stateMachine._notifyReconnect(command.presentationId,
+                                      command.url);
+        stateMachine._sendCommand({
+          type: CommandType.RECONNECT_ACK,
+          presentationId: command.presentationId
+        });
+        break;
       default:
         debug("unexpected command: " + JSON.stringify(command));
         // ignore unexpected command
@@ -111,6 +119,10 @@ ReceiverStateMachine.prototype = {
         presentationId: presentationId,
       });
     }
+  },
+
+  reconnect: function _reconnect() {
+    debug("receiver shouldn't trigger reconnect");
   },
 
   sendOffer: function _sendOffer() {
@@ -197,6 +209,10 @@ ReceiverStateMachine.prototype = {
 
   _notifyTerminate: function _notifyTerminate(presentationId) {
     this._channel.notifyTerminate(presentationId);
+  },
+
+  _notifyReconnect: function _notifyReconnect(presentationId, url) {
+    this._channel.notifyReconnect(presentationId, url);
   },
 
   _notifyChannelDescriptor: function _notifyChannelDescriptor(command) {
