@@ -839,6 +839,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     inline void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure);
 
+    void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
+        CodeOffset label = movlWithPatch(PatchedAbsoluteAddress(), dest);
+        append(wasm::GlobalAccess(label, globalDataOffset));
+    }
+    void loadWasmPinnedRegsFromTls() {
+        // x86 doesn't have any pinned registers.
+    }
+
   public:
     // Used from within an Exit frame to handle a pending exception.
     void handleFailureWithHandlerTail(void* handler);
