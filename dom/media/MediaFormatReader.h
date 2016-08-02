@@ -101,8 +101,6 @@ public:
   // Used for debugging purposes.
   void GetMozDebugReaderData(nsAString& aString);
 
-  void SetVideoBlankDecode(bool aIsBlankDecode) override;
-
 private:
 
   bool HasVideo() { return mVideo.mTrackDemuxer; }
@@ -255,7 +253,6 @@ private:
       , mSizeOfQueue(0)
       , mIsHardwareAccelerated(false)
       , mLastStreamSourceID(UINT32_MAX)
-      , mIsBlankDecode(false)
     {}
 
     MediaFormatReader* mOwner;
@@ -430,9 +427,6 @@ private:
     Maybe<media::TimeUnit> mLastTimeRangesEnd;
     RefPtr<SharedTrackInfo> mInfo;
     Maybe<media::TimeUnit> mFirstDemuxedSampleTime;
-    // Use BlankDecoderModule or not.
-    bool mIsBlankDecode;
-
   };
 
   class DecoderDataWithPromise : public DecoderData {
@@ -577,8 +571,6 @@ private:
   RefPtr<CDMProxy> mCDMProxy;
 #endif
   RefPtr<GMPCrashHelper> mCrashHelper;
-
-  void SetBlankDecode(TrackType aTrack, bool aIsBlankDecode);
 };
 
 } // namespace mozilla
