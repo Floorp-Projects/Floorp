@@ -167,6 +167,11 @@ RestyleManagerHandle::Ptr::SetObservingRefreshDriver(bool aObserving)
   FORWARD(SetObservingRefreshDriver, (aObserving));
 }
 
+void
+RestyleManagerHandle::Ptr::NotifyDestroyingFrame(nsIFrame* aFrame)
+{
+  FORWARD(NotifyDestroyingFrame, (aFrame));
+}
 
 } // namespace mozilla
 

@@ -106,12 +106,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
 }
 
 void
-RestyleManager::NotifyDestroyingFrame(nsIFrame* aFrame)
-{
-  mOverflowChangedTracker.RemoveFrame(aFrame);
-}
-
-void
 RestyleManager::RestyleElement(Element*               aElement,
                                nsIFrame*              aPrimaryFrame,
                                nsChangeHint           aMinHint,
