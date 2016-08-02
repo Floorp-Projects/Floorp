@@ -85,6 +85,7 @@ android {
             manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
 
             java {
+                srcDir "${topsrcdir}/mobile/android/geckoview/src/main/java"
                 srcDir "${topsrcdir}/mobile/android/base/java"
                 srcDir "${topsrcdir}/mobile/android/search/java"
                 srcDir "${topsrcdir}/mobile/android/javaaddons/java"
