@@ -363,8 +363,17 @@ function findPathInObject(obj, path) {
   }, []);
 
   for (let elt of path) {
-    obj = obj[elt] || undefined;
+    // If we get a null object before reaching the requested path
+    // (e.g. the API object is returned only on particular kind of contexts instead
+    // of based on WebExtensions permissions, like it happens for the devtools APIs),
+    // stop searching and return undefined.
+    if (!obj || !(elt in obj)) {
+      return undefined;
+    }
+
+    obj = obj[elt];
   }
+
   return obj;
 }
 
