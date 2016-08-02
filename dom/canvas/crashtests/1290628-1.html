@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body id='test_body'>
+<canvas id='i0'></canvas>
+<script>
+var c=document.getElementById('i0').getContext('2d');
+c.shadowOffsetX=73;
+c.scale(5,55);
+c.setLineDash([48,81,88,41,32767,8]);
+c.shadowColor='hsl(1.0,1%,1%)';
+c.miterLimit=Number.MIN_VALUE;
+c.strokeRect(0,58,8589934591,0);
+</script>
