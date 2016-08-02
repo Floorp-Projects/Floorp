@@ -187,14 +187,14 @@ function GetModuleEnvironment(module)
 {
     assert(IsModule(module), "Non-module passed to GetModuleEnvironment");
 
-    let env = UnsafeGetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT);
-    assert(env === undefined || env === null || IsModuleEnvironment(env),
-          "Module environment slot contains unexpected value");
-
     // Check for a previous failed attempt to instantiate this module. This can
     // only happen due to a bug in the module loader.
-    if (env === null)
+    if (module.state == MODULE_STATE_FAILED)
         ThrowInternalError(JSMSG_MODULE_INSTANTIATE_FAILED);
+
+    let env = UnsafeGetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT);
+    assert(env === undefined || IsModuleEnvironment(env),
+           "Module environment slot contains unexpected value");
 
     return env;
 }
@@ -204,7 +204,8 @@ function RecordInstantationFailure(module)
     // Set the module's environment slot to 'null' to indicate a failed module
     // instantiation.
     assert(IsModule(module), "Non-module passed to RecordInstantationFailure");
-    UnsafeSetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT, null);
+    SetModuleState(module, MODULE_STATE_FAILED);
+    UnsafeSetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT, undefined);
 }
 
 // 15.2.1.16.4 ModuleDeclarationInstantiation()
@@ -282,11 +283,11 @@ function ModuleEvaluation()
     let module = this;
 
     // Step 4
-    if (module.evaluated)
+    if (module.state == MODULE_STATE_EVALUATED)
         return undefined;
 
     // Step 5
-    SetModuleEvaluated(this);
+    SetModuleState(this, MODULE_STATE_EVALUATED);
 
     // Step 6
     let requestedModules = module.requestedModules;
