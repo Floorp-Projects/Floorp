@@ -17,3 +17,6 @@ android-4.3-arm7-api-15/debug:
 android-4.3-arm7-api-15/opt:
     build-platform: android-api-15/opt
     test-set: opt-tests
+android-4.2-x86/opt:
+    build-platform: android-x86/opt
+    test-set: x86-tests
