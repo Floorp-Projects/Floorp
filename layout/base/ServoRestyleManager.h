@@ -75,7 +75,6 @@ public:
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
   nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
-  void FlushOverflowChangedTracker();
 
   bool HasPendingRestyles() { return !mModifiedElements.IsEmpty(); }
 
