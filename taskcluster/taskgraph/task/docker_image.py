@@ -73,9 +73,8 @@ class DockerImageTask(base.Task):
             image_artifact_path = \
                 "public/docker_image_contexts/{}/context.tar.gz".format(image_name)
             if os.environ.get('TASK_ID'):
-                # We put image context tar balls in a different artifacts folder
-                # on the Gecko decision task in order to have longer expiration
-                # dates for smaller artifacts.
+                # We put image context tar balls in a different artifacts folder on the
+                # Gecko decision task in order to have longer expiration dates for smaller artifacts
                 destination = os.path.join(
                     os.environ['HOME'],
                     "docker_image_contexts/{}/context.tar.gz".format(image_name))
