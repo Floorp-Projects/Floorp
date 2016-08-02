@@ -23,7 +23,6 @@
 #include "AudioNodeStream.h"
 #include "AudioNodeExternalInputStream.h"
 #include "MediaStreamListener.h"
-#include "MediaStreamVideoSink.h"
 #include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include <algorithm>
@@ -2288,8 +2287,6 @@ MediaStream::AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink,
    TrackBound<MediaStreamVideoSink>* l = mVideoOutputs.AppendElement();
    l->mListener = sink;
    l->mTrackID = aID;
-
-   AddDirectTrackListenerImpl(sink.forget(), aID);
 }
 
 void
@@ -2310,8 +2307,6 @@ MediaStream::RemoveVideoOutputImpl(MediaStreamVideoSink* aSink,
       mVideoOutputs.RemoveElementAt(i);
     }
   }
-
-  RemoveDirectTrackListenerImpl(aSink, aID);
 }
 
 void
@@ -2974,15 +2969,6 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
       isVideo = data->mData->GetType() == MediaSegment::VIDEO;
     }
     if (found && (isAudio || isVideo)) {
-      for (auto entry : mDirectTrackListeners) {
-        if (entry.mListener == listener &&
-            (entry.mTrackID == TRACK_ANY || entry.mTrackID == aTrackID)) {
-          listener->NotifyDirectListenerInstalled(
-            DirectMediaStreamTrackListener::InstallationResult::ALREADY_EXISTS);
-          return;
-        }
-      }
-
       TrackBound<DirectMediaStreamTrackListener>* sourceListener =
         mDirectTrackListeners.AppendElement();
       sourceListener->mListener = listener;

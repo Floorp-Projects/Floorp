@@ -33,8 +33,6 @@ public:
   virtual VideoFrameContainer* AsVideoFrameContainer() { return nullptr; }
   virtual void Invalidate() {}
 
-  virtual MediaStreamVideoSink* AsMediaStreamVideoSink() override { return this; }
-
 protected:
   virtual ~MediaStreamVideoSink() {};
 };
