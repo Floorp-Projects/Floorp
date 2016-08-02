@@ -220,10 +220,10 @@ public:
   }
 
   virtual void
-  SetRequestHeader(const nsACString& aHeader, const nsACString& aValue,
+  SetRequestHeader(const nsACString& aName, const nsACString& aValue,
                    ErrorResult& aRv) override
   {
-    aRv = SetRequestHeader(aHeader, aValue);
+    aRv = SetRequestHeader(aName, aValue);
   }
 
   virtual uint32_t
@@ -620,7 +620,6 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIDocument> mResponseXML;
-  nsTArray<nsCString> mCORSUnsafeHeaders;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 
@@ -791,12 +790,13 @@ protected:
 
   struct RequestHeader
   {
-    nsCString header;
+    nsCString name;
     nsCString value;
   };
-  nsTArray<RequestHeader> mModifiedRequestHeaders;
+  nsTArray<RequestHeader> mAuthorRequestHeaders;
 
-  nsTHashtable<nsCStringHashKey> mAlreadySetHeaders;
+  void GetAuthorRequestHeaderValue(const char* aName, nsACString& outValue);
+  void SetAuthorRequestHeadersOnChannel(nsCOMPtr<nsIHttpChannel> aChannel);
 
   // Helper object to manage our XPCOM scriptability bits
   nsXMLHttpRequestXPCOMifier* mXPCOMifier;
