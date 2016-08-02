@@ -2026,69 +2026,14 @@ ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin)
   mDestination = GetScrollPosition();
 }
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-struct PluginSearchCtx {
-  nsIFrame* outer;
-  bool value;
-};
-static void
-HasPluginFramesCallback(nsISupports* aSupports, void* aCtx)
-{
-  // Stop searching once we've found a plugin.
-  PluginSearchCtx* pCtx = static_cast<PluginSearchCtx*>(aCtx);
-  if (pCtx->value) {
-    return;
-  }
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aSupports);
-  if (content) {
-    nsIFrame* frame = content->GetPrimaryFrame();
-    if (frame) {
-      nsPluginFrame* plugin = do_QueryFrame(frame);
-      if (plugin) {
-        // Check to be sure this plugin is contained within a subframe of
-        // the nsGfxScrollFrame that initiated this callback.
-        if (nsLayoutUtils::IsAncestorFrameCrossDoc(pCtx->outer, plugin, nullptr)) {
-          pCtx->value = true;
-        }
-      }
-    }
-  }
-}
-
-static bool
-HasPluginSubframesCallback(nsIDocument* aDocument, void* aCtx)
-{
-  aDocument->EnumerateActivityObservers(HasPluginFramesCallback, aCtx);
-
-  // Stop the enumeration if we've found a plugin.
-  return !static_cast<PluginSearchCtx*>(aCtx)->value;
-}
-#endif
-
 bool
 ScrollFrameHelper::HasPluginFrames()
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   if (XRE_IsContentProcess()) {
     nsPresContext* presContext = mOuter->PresContext();
-
-    // Don't search if we don't have any plugins registered.
     nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-    if (rootPresContext &&
-        !rootPresContext->NeedToComputePluginGeometryUpdates()) {
-      return false;
-    }
-
-    PluginSearchCtx ctx = { mOuter, false };
-    presContext->Document()->EnumerateActivityObservers(HasPluginFramesCallback,
-                                                        (void*)&ctx);
-    if (ctx.value) {
-      return true;
-    }
-    presContext->Document()->EnumerateSubDocuments(HasPluginSubframesCallback,
-                                                   (void*)&ctx);
-    if (ctx.value) {
+    if (!rootPresContext || rootPresContext->NeedToComputePluginGeometryUpdates()) {
       return true;
     }
   }
@@ -2765,15 +2710,6 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
       if (!apzDisabled && !HasPluginFrames()) {
         if (LastScrollOrigin() == nsGkAtoms::apz) {
           schedulePaint = false;
-
-          // If we have any windowed plugins at all then schedule an empty
-          // transaction because the parent will be waiting for an update.
-          if (!gfxPrefs::HidePluginsForScroll()) {
-            nsRootPresContext* root = presContext->GetRootPresContext();
-            if (root && root->NeedToComputePluginGeometryUpdates()) {
-              mOuter->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
-            }
-          }          
           PAINT_SKIP_LOG("Skipping due to APZ scroll\n");
         } else if (mScrollableByAPZ) {
           nsIWidget* widget = presContext->GetNearestWidget();
