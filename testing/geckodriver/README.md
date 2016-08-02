@@ -23,7 +23,7 @@ or complete compatibility with [Selenium](http://www.seleniumhq.org/).
 
 You can track the [implementation status](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status)
 of the latest Firefox Nightly on MDN.
-We also keep track known
+We also keep track of known
 [Marionette](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette),
 [Selenium](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aselenium),
 and [specification](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec)
