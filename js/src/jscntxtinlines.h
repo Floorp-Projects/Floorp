@@ -68,7 +68,6 @@ class CompartmentChecker
     }
 
     void check(JSObject* obj) {
-        MOZ_ASSERT_IF(obj, IsInsideNursery(obj) || !obj->asTenured().isMarked(gc::GRAY));
         if (obj)
             check(obj->compartment());
     }
@@ -84,7 +83,6 @@ class CompartmentChecker
     }
 
     void check(JSString* str) {
-        MOZ_ASSERT(!str->isMarked(gc::GRAY));
         if (!str->isAtom())
             checkZone(str->zone());
     }
@@ -119,7 +117,6 @@ class CompartmentChecker
     void check(jsid id) {}
 
     void check(JSScript* script) {
-        MOZ_ASSERT_IF(script, !script->isMarked(gc::GRAY));
         if (script)
             check(script->compartment());
     }
