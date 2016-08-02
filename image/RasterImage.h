@@ -28,6 +28,7 @@
 #include "DecodePool.h"
 #include "DecoderFactory.h"
 #include "FrameAnimator.h"
+#include "ImageMetadata.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
@@ -200,7 +201,8 @@ public:
    *
    * Main-thread only.
    */
-  void FinalizeDecoder(Decoder* aDecoder);
+  void FinalizeDecoder(Decoder* aDecoder,
+                       const ImageMetadata& aMetadata);
 
   // Helper method for FinalizeDecoder.
   void ReportDecoderError(Decoder* aDecoder);

@@ -320,7 +320,8 @@ public:
 
   virtual Telemetry::ID SpeedHistogram();
 
-  ImageMetadata& GetImageMetadata() { return mImageMetadata; }
+  /// @return the metadata we collected about this image while decoding.
+  const ImageMetadata& GetImageMetadata() { return mImageMetadata; }
 
   /**
    * @return a weak pointer to the image associated with this decoder. Illegal

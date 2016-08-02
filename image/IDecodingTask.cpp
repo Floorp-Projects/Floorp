@@ -63,10 +63,13 @@ IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
   MOZ_ASSERT(aDecoder->HasError() || !aDecoder->InFrame(),
              "Decode complete in the middle of a frame?");
 
+  // Capture the decoder's state.
+  ImageMetadata metadata = aDecoder->GetImageMetadata();
+
   // Synchronously notify if we can.
   if (NS_IsMainThread() &&
       !(aDecoder->GetDecoderFlags() & DecoderFlags::ASYNC_NOTIFY)) {
-    aImage->FinalizeDecoder(aDecoder);
+    aImage->FinalizeDecoder(aDecoder, metadata);
     return;
   }
 
@@ -74,7 +77,7 @@ IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
   NotNull<RefPtr<RasterImage>> image = aImage;
   NotNull<RefPtr<Decoder>> decoder = aDecoder;
   NS_DispatchToMainThread(NS_NewRunnableFunction([=]() -> void {
-    image->FinalizeDecoder(decoder.get());
+    image->FinalizeDecoder(decoder.get(), metadata);
   }));
 }
 
