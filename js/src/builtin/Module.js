@@ -2,6 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+function CallModuleResolveHook(module, specifier, expectedMinimumState)
+{
+    let requestedModule = HostResolveImportedModule(module, specifier);
+    if (requestedModule.state < expectedMinimumState)
+        ThrowInternalError(JSMSG_BAD_MODULE_STATE);
+
+    return requestedModule;
+}
+
 // 15.2.1.16.2 GetExportedNames(exportStarSet)
 function ModuleGetExportedNames(exportStarSet = [])
 {
@@ -42,7 +51,8 @@ function ModuleGetExportedNames(exportStarSet = [])
     let starExportEntries = module.starExportEntries;
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
-        let requestedModule = HostResolveImportedModule(module, e.moduleRequest);
+        let requestedModule = CallModuleResolveHook(module, e.moduleRequest,
+                                                    MODULE_STATE_INSTANTIATED);
         let starNames = callFunction(requestedModule.getExportedNames, requestedModule,
                                      exportStarSet);
         for (let j = 0; j < starNames.length; j++) {
@@ -89,7 +99,8 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
     for (let i = 0; i < indirectExportEntries.length; i++) {
         let e = indirectExportEntries[i];
         if (exportName === e.exportName) {
-            let importedModule = HostResolveImportedModule(module, e.moduleRequest);
+            let importedModule = CallModuleResolveHook(module, e.moduleRequest,
+                                                       MODULE_STATE_INSTANTIATED);
             let indirectResolution = callFunction(importedModule.resolveExport, importedModule,
                                                   e.importName, resolveSet, exportStarSet);
             if (indirectResolution !== null)
@@ -117,7 +128,8 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
     let starExportEntries = module.starExportEntries;
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
-        let importedModule = HostResolveImportedModule(module, e.moduleRequest);
+        let importedModule = CallModuleResolveHook(module, e.moduleRequest,
+                                                   MODULE_STATE_INSTANTIATED);
         let resolution = callFunction(importedModule.resolveExport, importedModule,
                                       exportName, resolveSet, exportStarSet);
         if (resolution === "ambiguous")
@@ -225,12 +237,14 @@ function ModuleDeclarationInstantiation()
     CreateModuleEnvironment(module);
     let env = GetModuleEnvironment(module);
 
+    SetModuleState(this, MODULE_STATE_INSTANTIATED);
+
     try {
         // Step 8
         let requestedModules = module.requestedModules;
         for (let i = 0; i < requestedModules.length; i++) {
             let required = requestedModules[i];
-            let requiredModule = HostResolveImportedModule(module, required);
+            let requiredModule = CallModuleResolveHook(module, required, MODULE_STATE_PARSED);
             callFunction(requiredModule.declarationInstantiation, requiredModule);
         }
 
@@ -249,7 +263,8 @@ function ModuleDeclarationInstantiation()
         let importEntries = module.importEntries;
         for (let i = 0; i < importEntries.length; i++) {
             let imp = importEntries[i];
-            let importedModule = HostResolveImportedModule(module, imp.moduleRequest);
+            let importedModule = CallModuleResolveHook(module, imp.moduleRequest,
+                                                       MODULE_STATE_INSTANTIATED);
             if (imp.importName === "*") {
                 let namespace = GetModuleNamespace(importedModule);
                 CreateNamespaceBinding(env, imp.localName, namespace);
@@ -282,6 +297,9 @@ function ModuleEvaluation()
     // Step 1
     let module = this;
 
+    if (module.state < MODULE_STATE_INSTANTIATED)
+        ThrowInternalError(JSMSG_BAD_MODULE_STATE);
+
     // Step 4
     if (module.state == MODULE_STATE_EVALUATED)
         return undefined;
@@ -293,7 +311,7 @@ function ModuleEvaluation()
     let requestedModules = module.requestedModules;
     for (let i = 0; i < requestedModules.length; i++) {
         let required = requestedModules[i];
-        let requiredModule = HostResolveImportedModule(module, required);
+        let requiredModule = CallModuleResolveHook(module, required, MODULE_STATE_INSTANTIATED);
         callFunction(requiredModule.evaluation, requiredModule);
     }
 
