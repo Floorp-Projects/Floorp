@@ -35,9 +35,6 @@ DEFINES['MOZ_JEMALLOC_IMPL'] = True
 if CONFIG['OS_TARGET'] == 'Linux':
     NO_PGO = True
 
-if CONFIG['MOZ_NUWA_PROCESS']:
-    DEFINES['pthread_mutex_lock'] = '__real_pthread_mutex_lock';
-
 LOCAL_INCLUDES += [
     '/memory/build',
 ]

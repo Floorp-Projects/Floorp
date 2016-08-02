@@ -54,14 +54,6 @@ if not CONFIG['JS_STANDALONE']:
             'version',
         ]
 
-    if CONFIG['MOZ_NUWA_PROCESS']:
-        EXPORTS.ipc += [
-            'Nuwa.h',
-        ]
-        SOURCES += [
-            'Nuwa.cpp',
-        ]
-
     EXPORTS.mozilla += [
         'arm.h',
         'mips.h',
