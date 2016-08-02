@@ -68,16 +68,10 @@ private:
   void DisableD3D11AfterCrash();
 
   void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
-  bool AttemptD3D11DeviceCreationHelperInner(
+  bool AttemptD3D11DeviceCreationHelper(
       IDXGIAdapter1* aAdapter,
-      bool aAttemptVideoSupport,
       RefPtr<ID3D11Device>& aOutDevice,
       HRESULT& aResOut);
-  bool AttemptD3D11DeviceCreationHelper(
-      mozilla::gfx::FeatureState& aD3d11,
-      IDXGIAdapter1* aAdapter,
-      bool aAttemptVideoSupport,
-      RefPtr<ID3D11Device>& aOutDevice);
 
   void AttemptWARPDeviceCreation();
   bool AttemptWARPDeviceCreationHelper(
@@ -104,10 +98,8 @@ private:
   RefPtr<IDXGIAdapter1> mAdapter;
   RefPtr<ID3D11Device> mCompositorDevice;
   RefPtr<ID3D11Device> mContentDevice;
-  RefPtr<ID3D11Device> mDecoderDevice;
   mozilla::Atomic<bool> mIsWARP;
   mozilla::Atomic<bool> mTextureSharingWorks;
-  bool mCompositorDeviceSupportsVideo;
 };
 
 } // namespace gfx
