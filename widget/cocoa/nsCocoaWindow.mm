@@ -3000,7 +3000,6 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   mState = nil;
   mActiveTitlebarColor = nil;
   mInactiveTitlebarColor = nil;
-  mScheduledShadowInvalidation = NO;
   mDisabledNeedsDisplay = NO;
   mDPI = GetDPI(self);
   mTrackingArea = nil;
@@ -3148,21 +3147,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive
 {
   return aActive ? mActiveTitlebarColor : mInactiveTitlebarColor;
-}
-
-- (void)deferredInvalidateShadow
-{
-  if (mScheduledShadowInvalidation || [self isOpaque] || ![self hasShadow])
-    return;
-
-  [self performSelector:@selector(invalidateShadow) withObject:nil afterDelay:0];
-  mScheduledShadowInvalidation = YES;
-}
-
-- (void)invalidateShadow
-{
-  [super invalidateShadow];
-  mScheduledShadowInvalidation = NO;
 }
 
 - (float)getDPI
