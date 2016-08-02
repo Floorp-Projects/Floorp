@@ -58,6 +58,10 @@ public:
   Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
          TextureAllocationFlags aAllocFlags,
          ID3D11Device* aDevice = nullptr);
+  static DXGITextureData*
+  Create(gfx::SourceSurface* aSurface,
+         TextureAllocationFlags aAllocFlags,
+         ID3D11Device* aDevice = nullptr);
 
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
@@ -91,6 +95,12 @@ protected:
                    bool aIsForOutOfBandContent);
 
   virtual void GetDXGIResource(IDXGIResource** aOutResource) override;
+
+  static DXGITextureData*
+  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+         gfx::SourceSurface* aSurface,
+         TextureAllocationFlags aAllocFlags,
+         ID3D11Device* aDevice = nullptr);
 
   RefPtr<ID3D11Texture2D> mTexture;
 };
