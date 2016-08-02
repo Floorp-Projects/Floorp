@@ -363,6 +363,17 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
         return true;
     AutoDisableProxyCheck adpc(cx->runtime());
 
+    // The gray bit handling here is a bit complicated.  The basic problem is
+    // that generally the return value of wrap() escapes (and the input is an
+    // object that _has_ "escaped") and in those cases the input must not be
+    // gray and the return value must not be gray.  However, when `existingArg`
+    // is non-null we're doing an internal wrapper remapping operation, and both
+    // `obj` and `existingArg` might be gray, quite purposefully.
+    //
+    // This means that when `existingArg` is not null, we can't assert anything
+    // useful about anything being non-gray.
+    MOZ_ASSERT_IF(!existingArg, !ObjectIsMarkedGray(obj));
+
     // Wrappers should really be parented to the wrapped parent of the wrapped
     // object, but in that case a wrapped global object would have a nullptr
     // parent without being a proper global object (JSCLASS_IS_GLOBAL). Instead,
@@ -373,10 +384,9 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
     MOZ_ASSERT(global);
     MOZ_ASSERT(objGlobal);
 
-    const JSWrapObjectCallbacks* cb = cx->runtime()->wrapObjectCallbacks;
-
     if (obj->compartment() == this) {
         obj.set(ToWindowProxyIfWindow(obj));
+        MOZ_ASSERT_IF(!existingArg, !ObjectIsMarkedGray(obj));
         return true;
     }
 
@@ -391,6 +401,12 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
     RootedObject objectPassedToWrap(cx, obj);
     obj.set(UncheckedUnwrap(obj, /* stopAtWindowProxy = */ true));
 
+    // We crossed a compartment boundary, so obj may be gray.  We really don't
+    // want to return gray things from here if !existingArg, so make sure it's
+    // not.
+    if (!existingArg)
+        ExposeObjectToActiveJS(obj);
+
     if (obj->compartment() == this) {
         MOZ_ASSERT(!IsWindow(obj));
         return true;
@@ -404,8 +420,11 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
         if (!GetBuiltinConstructor(cx, JSProto_StopIteration, &stopIteration))
             return false;
         obj.set(stopIteration);
+        MOZ_ASSERT_IF(!existingArg, !ObjectIsMarkedGray(obj));
         return true;
     }
+
+    const JSWrapObjectCallbacks* cb = cx->runtime()->wrapObjectCallbacks;
 
     // Invoke the prewrap callback. We're a bit worried about infinite
     // recursion here, so we do a check - see bug 809295.
@@ -414,6 +433,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
         obj.set(cb->preWrap(cx, global, obj, objectPassedToWrap));
         if (!obj)
             return false;
+        MOZ_ASSERT_IF(!existingArg, !ObjectIsMarkedGray(obj));
     }
     MOZ_ASSERT(!IsWindow(obj));
 
@@ -425,6 +445,9 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(CrossCompartmentKey(key))) {
         obj.set(&p->value().get().toObject());
         MOZ_ASSERT(obj->is<CrossCompartmentWrapperObject>());
+        // crossCompartmentWrappers has a read barrier, so obj is not gray now,
+        // even if existing is non-null.
+        MOZ_ASSERT(!ObjectIsMarkedGray(obj));
         return true;
     }
 
@@ -443,6 +466,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
     RootedObject wrapper(cx, cb->wrap(cx, existing, obj));
     if (!wrapper)
         return false;
+    MOZ_ASSERT_IF(!existingArg, !ObjectIsMarkedGray(wrapper));
 
     // We maintain the invariant that the key in the cross-compartment wrapper
     // map is always directly wrapped by the value.
