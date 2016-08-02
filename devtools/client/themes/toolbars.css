@@ -30,7 +30,7 @@
   --filter-image: url(images/filter.svg);
   --tool-options-image: url(images/tool-options.svg);
   --icon-filter: invert(1);
-  --checked-icon-filter: url(images/filters.svg#checked-icon-state);
+  --checked-icon-filter: url(images/filters.svg#dark-theme-checked-icon-state);
   --toolbar-button-border-color: rgba(0, 0, 0, .4);
 }
 

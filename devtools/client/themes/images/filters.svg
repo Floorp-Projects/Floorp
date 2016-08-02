@@ -10,6 +10,13 @@
               0 0 0 0 0.79
               0 0 0 1 0"/>
   </filter>
+  <filter id="dark-theme-checked-icon-state">
+    <feColorMatrix in="SourceGraphic" type="matrix"
+      values="0 0 0 0 0
+              0 0 0 0 1
+              0 0 0 0 0.212
+              0 0 0 1 0"/>
+  </filter>
 
   <!-- Web Audio Gradients -->
   <linearGradient id="bypass-light" x1="6%" y1="8%" x2="12%" y2="12%" spreadMethod="repeat">
