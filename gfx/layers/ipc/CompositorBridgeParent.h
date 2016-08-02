@@ -482,8 +482,6 @@ public:
    */
   static void PostInsertVsyncProfilerMarker(mozilla::TimeStamp aVsyncTimestamp);
 
-  float ComputeRenderIntegrity();
-
   widget::CompositorWidget* GetWidget() { return mWidget; }
 
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
