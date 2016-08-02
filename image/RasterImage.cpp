@@ -1564,6 +1564,7 @@ RasterImage::NotifyProgress(Progress aProgress,
 void
 RasterImage::FinalizeDecoder(Decoder* aDecoder,
                              const ImageMetadata& aMetadata,
+                             const DecoderTelemetry& aTelemetry,
                              Progress aProgress,
                              const IntRect& aInvalidRect,
                              const Maybe<uint32_t>& aFrameCount,
@@ -1608,24 +1609,21 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder,
     mAnimationState->SetDoneDecoding(true);
   }
 
-  if (!wasMetadata && aDecoder->ChunkCount()) {
-    Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS,
-                          aDecoder->ChunkCount());
+  if (!wasMetadata && aTelemetry.mChunkCount) {
+    Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, aTelemetry.mChunkCount);
   }
 
   if (done) {
     // Do some telemetry if this isn't a metadata decode.
     if (!wasMetadata) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME,
-                            int32_t(aDecoder->DecodeTime().ToMicroseconds()));
+                            int32_t(aTelemetry.mDecodeTime.ToMicroseconds()));
 
       // We record the speed for only some decoders. The rest have
       // SpeedHistogram return HistogramCount.
-      Telemetry::ID id = aDecoder->SpeedHistogram();
+      Telemetry::ID id = aTelemetry.mSpeedHistogram;
       if (id < Telemetry::HistogramCount) {
-        int32_t KBps = int32_t(aDecoder->BytesDecoded() /
-                               (1024 * aDecoder->DecodeTime().ToSeconds()));
-        Telemetry::Accumulate(id, KBps);
+        Telemetry::Accumulate(id, aTelemetry.Speed());
       }
     }
 
