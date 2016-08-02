@@ -204,7 +204,8 @@ elif platform.system() == 'Windows':
     if word_bits == 64:
         os.environ['USE_64BIT'] = '1'
     set_vars_from_script(posixpath.join(PDIR.scripts, 'winbuildenv.sh'),
-                         ['PATH', 'INCLUDE', 'LIB', 'LIBPATH', 'CC', 'CXX'])
+                         ['PATH', 'INCLUDE', 'LIB', 'LIBPATH', 'CC', 'CXX',
+                          'WINDOWSSDKDIR'])
 
 # Compiler flags, based on word length
 if word_bits == 32:

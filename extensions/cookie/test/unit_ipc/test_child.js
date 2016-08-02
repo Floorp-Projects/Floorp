@@ -31,7 +31,7 @@ function run_test() {
           case "TESTING:Stage2A":
             // Permissions created after the child is present
             do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://mozilla.org"), "cookie1"), pm.ALLOW_ACTION);
-            do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://mozilla.com"), "cookie2"), pm.PROMPT_ACTION);
+            do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://mozilla.com"), "cookie2"), pm.DENY_ACTION);
             do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://mozilla.net"), "cookie3"), pm.ALLOW_ACTION);
             do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://firefox.org"), "cookie1"), pm.ALLOW_ACTION);
             do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://firefox.com"), "cookie2"), pm.DENY_ACTION);
@@ -50,7 +50,7 @@ function run_test() {
     // Permissions created before the child is present
     var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
     do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://mozilla.org"), "cookie1"), pm.ALLOW_ACTION);
-    do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://mozilla.com"), "cookie2"), pm.PROMPT_ACTION);
+    do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://mozilla.com"), "cookie2"), pm.DENY_ACTION);
     do_check_eq(pm.testPermissionFromPrincipal(getPrincipalForURI("http://mozilla.net"), "cookie3"), pm.ALLOW_ACTION);
 
     mM.sendAsyncMessage("TESTING:Stage2");

@@ -413,7 +413,6 @@ private:
   DECL_GFX_PREF(Once, "image.mem.surfacecache.size_factor",    ImageMemSurfaceCacheSizeFactor, uint32_t, 64);
   DECL_GFX_PREF(Live, "image.mozsamplesize.enabled",           ImageMozSampleSizeEnabled, bool, false);
   DECL_GFX_PREF(Once, "image.multithreaded_decoding.limit",    ImageMTDecodingLimit, int32_t, -1);
-  DECL_GFX_PREF(Live, "image.single-color-optimization.enabled", ImageSingleColorOptimizationEnabled, bool, true);
 
   DECL_GFX_PREF(Once, "layers.acceleration.disabled",          LayersAccelerationDisabledDoNotUseDirectly, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps",          LayersDrawFPS, bool, false);
@@ -553,7 +552,7 @@ private:
 
   DECL_GFX_PREF(Live, "webgl.enable-draft-extensions",         WebGLDraftExtensionsEnabled, bool, false);
   DECL_GFX_PREF(Live, "webgl.enable-privileged-extensions",    WebGLPrivilegedExtensionsEnabled, bool, false);
-  DECL_GFX_PREF(Once, "webgl.enable-prototype-webgl2",         WebGL2Enabled, bool, false);
+  DECL_GFX_PREF(Live, "webgl.enable-webgl2",                   WebGL2Enabled, bool, true);
   DECL_GFX_PREF(Live, "webgl.force-enabled",                   WebGLForceEnabled, bool, false);
   DECL_GFX_PREF(Once, "webgl.force-layers-readback",           WebGLForceLayersReadback, bool, false);
   DECL_GFX_PREF(Live, "webgl.lose-context-on-memory-pressure", WebGLLoseContextOnMemoryPressure, bool, false);

@@ -18,8 +18,10 @@ import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.ZoomConstraints;
 
 import android.content.Context;
@@ -51,7 +53,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private GeckoLayerClient mLayerClient;
     private PanZoomController mPanZoomController;
     private DynamicToolbarAnimator mToolbarAnimator;
-    private GLController mGLController;
     private LayerRenderer mRenderer;
     /* Must be a PAINT_xxx constant */
     private int mPaintState;
@@ -70,6 +71,65 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     /* This should only be modified on the Java UI thread. */
     private final Overscroll mOverscroll;
+
+
+    private boolean mServerSurfaceValid;
+    private int mWidth, mHeight;
+
+    /* This is written by the compositor thread (while the UI thread
+     * is blocked on it) and read by the UI thread. */
+    private volatile boolean mCompositorCreated;
+
+
+    @WrapForJNI(allowMultithread = true)
+    protected class Compositor extends JNIObject {
+        public Compositor() {
+        }
+
+        @Override protected native void disposeNative();
+
+        // Gecko thread sets its Java instances; does not block UI thread.
+        /* package */ native void attachToJava(GeckoLayerClient layerClient,
+                                               NativePanZoomController npzc);
+
+        /* package */ native void onSizeChanged(int windowWidth, int windowHeight,
+                                                int screenWidth, int screenHeight);
+
+        // Gecko thread creates compositor; blocks UI thread.
+        /* package */ native void createCompositor(int width, int height);
+
+        // Gecko thread pauses compositor; blocks UI thread.
+        /* package */ native void syncPauseCompositor();
+
+        // UI thread resumes compositor and notifies Gecko thread; does not block UI thread.
+        /* package */ native void syncResumeResizeCompositor(int width, int height);
+
+        /* package */ native void syncInvalidateAndScheduleComposite();
+
+        private synchronized Object getSurface() {
+            if (LayerView.this.mServerSurfaceValid) {
+                return LayerView.this.getSurface();
+            }
+            return null;
+        }
+
+        private void destroy() {
+            // The nsWindow has been closed. First mark our compositor as destroyed.
+            LayerView.this.mCompositorCreated = false;
+
+            // Then clear out any pending calls on the UI thread by disposing on the UI thread.
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    disposeNative();
+                }
+            });
+        }
+    }
+
+
+    Compositor mCompositor;
+
 
     /* Flags used to determine when to show the painted surface. */
     public static final int PAINT_START = 0;
@@ -112,6 +172,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             mOverscroll = null;
         }
         Tabs.registerOnTabsChangedListener(this);
+
+        mCompositor = new Compositor();
     }
 
     public LayerView(Context context) {
@@ -194,11 +256,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (mRenderer != null) {
             mRenderer.destroy();
         }
-        if (mGLController != null) {
-            if (mGLController.mView == this) {
-                mGLController.mView = null;
-            }
-            mGLController = null;
+        if (mCompositor != null) {
+            mCompositor = null;
         }
         Tabs.unregisterOnTabsChangedListener(this);
     }
@@ -331,6 +390,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             SurfaceHolder holder = mSurfaceView.getHolder();
             holder.addCallback(new SurfaceListener());
         }
+
+        attachCompositor();
     }
 
     // Don't expose GeckoLayerClient to things outside this package; only expose it as an Object
@@ -447,25 +508,80 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         return mListener;
     }
 
-    public void setGLController(final GLController glController) {
-        mGLController = glController;
-        glController.mView = this;
-
+    private void attachCompositor() {
         final NativePanZoomController npzc = AppConstants.MOZ_ANDROID_APZ ?
                 (NativePanZoomController) mPanZoomController : null;
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            glController.attachToJava(mLayerClient, npzc);
+            mCompositor.attachToJava(mLayerClient, npzc);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    glController, "attachToJava",
+                    mCompositor, "attachToJava",
                     GeckoLayerClient.class, mLayerClient,
                     NativePanZoomController.class, npzc);
         }
     }
 
-    public GLController getGLController() {
-        return mGLController;
+    protected Compositor getCompositor() {
+        return mCompositor;
+    }
+
+    void serverSurfaceChanged(int newWidth, int newHeight) {
+        ThreadUtils.assertOnUiThread();
+
+        synchronized (this) {
+            mWidth = newWidth;
+            mHeight = newHeight;
+            mServerSurfaceValid = true;
+        }
+
+        updateCompositor();
+    }
+
+    void updateCompositor() {
+        ThreadUtils.assertOnUiThread();
+
+        if (mCompositorCreated) {
+            // If the compositor has already been created, just resume it instead. We don't need
+            // to block here because if the surface is destroyed before the compositor grabs it,
+            // we can handle that gracefully (i.e. the compositor will remain paused).
+            resumeCompositor(mWidth, mHeight);
+            return;
+        }
+
+        // Only try to create the compositor if we have a valid surface and gecko is up. When these
+        // two conditions are satisfied, we can be relatively sure that the compositor creation will
+        // happen without needing to block anywhere. Do it with a synchronous Gecko event so that the
+        // Android doesn't have a chance to destroy our surface in between.
+        if (mServerSurfaceValid && getLayerClient().isGeckoReady()) {
+            mCompositor.createCompositor(mWidth, mHeight);
+            compositorCreated();
+        }
+    }
+
+    void compositorCreated() {
+        // This is invoked on the compositor thread, while the java UI thread
+        // is blocked on the gecko sync event in updateCompositor() above
+        mCompositorCreated = true;
+    }
+
+    void resumeCompositor(int width, int height) {
+        // Asking Gecko to resume the compositor takes too long (see
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=735230#c23), so we
+        // resume the compositor directly. We still need to inform Gecko about
+        // the compositor resuming, so that Gecko knows that it can now draw.
+        // It is important to not notify Gecko until after the compositor has
+        // been resumed, otherwise Gecko may send updates that get dropped.
+        if (mServerSurfaceValid && mCompositorCreated) {
+            mCompositor.syncResumeResizeCompositor(width, height);
+            requestRender();
+        }
+    }
+
+    /* package */ void invalidateAndScheduleComposite() {
+        if (mCompositorCreated) {
+            mCompositor.syncInvalidateAndScheduleComposite();
+        }
     }
 
     /* When using a SurfaceView (mSurfaceView != null), resizing happens in two
@@ -487,7 +603,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
      * TextureView instead of a SurfaceView, the first phase is skipped.
      */
     private void onSizeChanged(int width, int height) {
-        if (!mGLController.isServerSurfaceValid() || mSurfaceView == null) {
+        if (!mServerSurfaceValid || mSurfaceView == null) {
             surfaceChanged(width, height);
             return;
         }
@@ -502,7 +618,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     }
 
     private void surfaceChanged(int width, int height) {
-        mGLController.serverSurfaceChanged(width, height);
+        serverSurfaceChanged(width, height);
 
         if (mListener != null) {
             mListener.surfaceChanged(width, height);
@@ -513,8 +629,32 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         }
     }
 
+    void notifySizeChanged(int windowWidth, int windowHeight, int screenWidth, int screenHeight) {
+        mCompositor.onSizeChanged(windowWidth, windowHeight, screenWidth, screenHeight);
+    }
+
+    void serverSurfaceDestroyed() {
+        ThreadUtils.assertOnUiThread();
+
+        // We need to coordinate with Gecko when pausing composition, to ensure
+        // that Gecko never executes a draw event while the compositor is paused.
+        // This is sent synchronously to make sure that we don't attempt to use
+        // any outstanding Surfaces after we call this (such as from a
+        // serverSurfaceDestroyed notification), and to make sure that any in-flight
+        // Gecko draw events have been processed.  When this returns, composition is
+        // definitely paused -- it'll synchronize with the Gecko event loop, which
+        // in turn will synchronize with the compositor thread.
+        if (mCompositorCreated) {
+            mCompositor.syncPauseCompositor();
+        }
+
+        synchronized (this) {
+            mServerSurfaceValid = false;
+        }
+    }
+
     private void onDestroyed() {
-        mGLController.serverSurfaceDestroyed();
+        serverSurfaceDestroyed();
     }
 
     public Object getNativeWindow() {
@@ -608,7 +748,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         @Override
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
-            if (changed && mParent.mGLController.isServerSurfaceValid()) {
+            if (changed && mParent.mServerSurfaceValid) {
                 mParent.surfaceChanged(right - left, bottom - top);
             }
         }

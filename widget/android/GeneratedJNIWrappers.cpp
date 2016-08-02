@@ -1144,14 +1144,6 @@ constexpr char GeckoView::Window::Open_t::signature[];
 constexpr char GeckoView::Window::Reattach_t::name[];
 constexpr char GeckoView::Window::Reattach_t::signature[];
 
-constexpr char GeckoView::Window::GlController_t::name[];
-constexpr char GeckoView::Window::GlController_t::signature[];
-
-auto GeckoView::Window::GlController() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Field<GlController_t>::Get(Window::mCtx, nullptr);
-}
-
 const char PrefsHelper::name[] =
         "org/mozilla/gecko/PrefsHelper";
 
@@ -1234,46 +1226,6 @@ auto DisplayPortMetrics::Resolution() const -> float
 {
     return mozilla::jni::Field<Resolution_t>::Get(DisplayPortMetrics::mCtx, nullptr);
 }
-
-const char GLController::name[] =
-        "org/mozilla/gecko/gfx/GLController";
-
-constexpr char GLController::AttachToJava_t::name[];
-constexpr char GLController::AttachToJava_t::signature[];
-
-constexpr char GLController::CreateCompositor_t::name[];
-constexpr char GLController::CreateCompositor_t::signature[];
-
-constexpr char GLController::Destroy_t::name[];
-constexpr char GLController::Destroy_t::signature[];
-
-auto GLController::Destroy() const -> void
-{
-    return mozilla::jni::Method<Destroy_t>::Call(GLController::mCtx, nullptr);
-}
-
-constexpr char GLController::DisposeNative_t::name[];
-constexpr char GLController::DisposeNative_t::signature[];
-
-constexpr char GLController::GetSurface_t::name[];
-constexpr char GLController::GetSurface_t::signature[];
-
-auto GLController::GetSurface() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetSurface_t>::Call(GLController::mCtx, nullptr);
-}
-
-constexpr char GLController::OnSizeChanged_t::name[];
-constexpr char GLController::OnSizeChanged_t::signature[];
-
-constexpr char GLController::PauseCompositor_t::name[];
-constexpr char GLController::PauseCompositor_t::signature[];
-
-constexpr char GLController::SyncInvalidateAndScheduleComposite_t::name[];
-constexpr char GLController::SyncInvalidateAndScheduleComposite_t::signature[];
-
-constexpr char GLController::SyncResumeResizeCompositor_t::name[];
-constexpr char GLController::SyncResumeResizeCompositor_t::signature[];
 
 const char GeckoLayerClient::name[] =
         "org/mozilla/gecko/gfx/GeckoLayerClient";
@@ -1449,6 +1401,54 @@ auto LayerView::updateZoomedView(mozilla::jni::ByteBuffer::Param a0) -> void
 {
     return mozilla::jni::Method<updateZoomedView_t>::Call(LayerView::Context(), nullptr, a0);
 }
+
+const char LayerView::Compositor::name[] =
+        "org/mozilla/gecko/gfx/LayerView$Compositor";
+
+constexpr char LayerView::Compositor::New_t::name[];
+constexpr char LayerView::Compositor::New_t::signature[];
+
+auto LayerView::Compositor::New(LayerView::Param a0) -> Compositor::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(Compositor::Context(), nullptr, a0);
+}
+
+constexpr char LayerView::Compositor::AttachToJava_t::name[];
+constexpr char LayerView::Compositor::AttachToJava_t::signature[];
+
+constexpr char LayerView::Compositor::CreateCompositor_t::name[];
+constexpr char LayerView::Compositor::CreateCompositor_t::signature[];
+
+constexpr char LayerView::Compositor::Destroy_t::name[];
+constexpr char LayerView::Compositor::Destroy_t::signature[];
+
+auto LayerView::Compositor::Destroy() const -> void
+{
+    return mozilla::jni::Method<Destroy_t>::Call(Compositor::mCtx, nullptr);
+}
+
+constexpr char LayerView::Compositor::DisposeNative_t::name[];
+constexpr char LayerView::Compositor::DisposeNative_t::signature[];
+
+constexpr char LayerView::Compositor::GetSurface_t::name[];
+constexpr char LayerView::Compositor::GetSurface_t::signature[];
+
+auto LayerView::Compositor::GetSurface() const -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<GetSurface_t>::Call(Compositor::mCtx, nullptr);
+}
+
+constexpr char LayerView::Compositor::OnSizeChanged_t::name[];
+constexpr char LayerView::Compositor::OnSizeChanged_t::signature[];
+
+constexpr char LayerView::Compositor::SyncInvalidateAndScheduleComposite_t::name[];
+constexpr char LayerView::Compositor::SyncInvalidateAndScheduleComposite_t::signature[];
+
+constexpr char LayerView::Compositor::SyncPauseCompositor_t::name[];
+constexpr char LayerView::Compositor::SyncPauseCompositor_t::signature[];
+
+constexpr char LayerView::Compositor::SyncResumeResizeCompositor_t::name[];
+constexpr char LayerView::Compositor::SyncResumeResizeCompositor_t::signature[];
 
 const char NativePanZoomController::name[] =
         "org/mozilla/gecko/gfx/NativePanZoomController";

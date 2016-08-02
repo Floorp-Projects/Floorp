@@ -886,8 +886,8 @@ enum class SymbolicAddress
     LogD,
     PowD,
     ATan2D,
-    Runtime,
-    RuntimeInterruptUint32,
+    Context,
+    InterruptUint32,
     ReportOverRecursed,
     HandleExecutionInterrupt,
     HandleTrap,
@@ -1063,24 +1063,25 @@ static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
 static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 #endif
 
-static const unsigned ActivationGlobalDataOffset = 0;
-static const unsigned HeapGlobalDataOffset       = ActivationGlobalDataOffset + sizeof(void*);
-static const unsigned NaN64GlobalDataOffset      = HeapGlobalDataOffset + sizeof(void*);
-static const unsigned NaN32GlobalDataOffset      = NaN64GlobalDataOffset + sizeof(double);
-static const unsigned InitialGlobalDataBytes     = NaN32GlobalDataOffset + sizeof(float);
+static const unsigned ContextPtrGlobalDataOffset  = 0;
+static const unsigned InstancePtrGlobalDataOffset = ContextPtrGlobalDataOffset + sizeof(void*);
+static const unsigned HeapGlobalDataOffset        = InstancePtrGlobalDataOffset + sizeof(void*);
+static const unsigned NaN64GlobalDataOffset       = HeapGlobalDataOffset + sizeof(void*);
+static const unsigned NaN32GlobalDataOffset       = NaN64GlobalDataOffset + sizeof(double);
+static const unsigned InitialGlobalDataBytes      = NaN32GlobalDataOffset + sizeof(float);
 
-static const unsigned MaxSigs                    =        4 * 1024;
-static const unsigned MaxFuncs                   =      512 * 1024;
-static const unsigned MaxGlobals                 =        4 * 1024;
-static const unsigned MaxLocals                  =       64 * 1024;
-static const unsigned MaxImports                 =       64 * 1024;
-static const unsigned MaxExports                 =       64 * 1024;
-static const unsigned MaxTables                  =        4 * 1024;
-static const unsigned MaxTableElems              =      128 * 1024;
-static const unsigned MaxDataSegments            =       64 * 1024;
-static const unsigned MaxElemSegments            =       64 * 1024;
-static const unsigned MaxArgsPerFunc             =        4 * 1024;
-static const unsigned MaxBrTableElems            = 4 * 1024 * 1024;
+static const unsigned MaxSigs                     =        4 * 1024;
+static const unsigned MaxFuncs                    =      512 * 1024;
+static const unsigned MaxGlobals                  =        4 * 1024;
+static const unsigned MaxLocals                   =       64 * 1024;
+static const unsigned MaxImports                  =       64 * 1024;
+static const unsigned MaxExports                  =       64 * 1024;
+static const unsigned MaxTables                   =        4 * 1024;
+static const unsigned MaxTableElems               =     1024 * 1024;
+static const unsigned MaxDataSegments             =       64 * 1024;
+static const unsigned MaxElemSegments             =       64 * 1024;
+static const unsigned MaxArgsPerFunc              =        4 * 1024;
+static const unsigned MaxBrTableElems             = 4 * 1024 * 1024;
 
 } // namespace wasm
 } // namespace js
