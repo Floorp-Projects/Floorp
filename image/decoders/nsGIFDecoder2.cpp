@@ -1073,10 +1073,10 @@ nsGIFDecoder2::SkipSubBlocks(const char* aData)
                                   nextSubBlockLength);
 }
 
-Telemetry::ID
-nsGIFDecoder2::SpeedHistogram()
+Maybe<Telemetry::ID>
+nsGIFDecoder2::SpeedHistogram() const
 {
-  return Telemetry::IMAGE_DECODE_SPEED_GIF;
+  return Some(Telemetry::IMAGE_DECODE_SPEED_GIF);
 }
 
 } // namespace image

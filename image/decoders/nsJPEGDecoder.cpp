@@ -123,10 +123,10 @@ nsJPEGDecoder::~nsJPEGDecoder()
           this));
 }
 
-Telemetry::ID
-nsJPEGDecoder::SpeedHistogram()
+Maybe<Telemetry::ID>
+nsJPEGDecoder::SpeedHistogram() const
 {
-  return Telemetry::IMAGE_DECODE_SPEED_JPEG;
+  return Some(Telemetry::IMAGE_DECODE_SPEED_JPEG);
 }
 
 nsresult

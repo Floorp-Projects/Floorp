@@ -268,7 +268,7 @@ Decoder::TakeCompleteFrameCount()
 }
 
 DecoderTelemetry
-Decoder::Telemetry()
+Decoder::Telemetry() const
 {
   MOZ_ASSERT(mIterator);
   return DecoderTelemetry(SpeedHistogram(),
@@ -541,13 +541,6 @@ Decoder::PostError()
   if (mInFrame && mCurrentFrame) {
     mCurrentFrame->Abort();
   }
-}
-
-Telemetry::ID
-Decoder::SpeedHistogram()
-{
-  // Use HistogramCount as an invalid Histogram ID.
-  return Telemetry::HistogramCount;
 }
 
 } // namespace image
