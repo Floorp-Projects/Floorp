@@ -30,6 +30,8 @@
 #include "nsPrintfCString.h"
 #include "MediaTelemetryConstants.h"
 #include "GMPUtils.h" // For SplitAt. TODO: Move SplitAt to a central place.
+#include "MP4Decoder.h"
+#include "VPXDecoder.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -95,12 +97,11 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   MOZ_COUNT_CTOR(WMFVideoMFTManager);
 
   // Need additional checks/params to check vp8/vp9
-  if (aConfig.mMimeType.EqualsLiteral("video/mp4") ||
-      aConfig.mMimeType.EqualsLiteral("video/avc")) {
+  if (MP4Decoder::IsH264(aConfig.mMimeType)) {
     mStreamType = H264;
-  } else if (aConfig.mMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+  } else if (VPXDecoder::IsVP8(aConfig.mMimeType)) {
     mStreamType = VP8;
-  } else if (aConfig.mMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
+  } else if (VPXDecoder::IsVP9(aConfig.mMimeType)) {
     mStreamType = VP9;
   } else {
     mStreamType = Unknown;

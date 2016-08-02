@@ -18,12 +18,13 @@ task:
       taskId:
         task-reference: "<docker-image>"
     command:
-      - /home/worker/bin/checkout-gecko-and-run
-      - /home/worker/workspace/gecko
+      - /home/worker/bin/run-task
+      - '--vcs-checkout=/home/worker/checkouts/gecko'
+      - '--'
       - bash
       - -cx
       - >
-          cd /home/worker/workspace/gecko &&
+          cd /home/worker/checkouts/gecko &&
           ./mach taskgraph python-tests
   extra:
     locations:
