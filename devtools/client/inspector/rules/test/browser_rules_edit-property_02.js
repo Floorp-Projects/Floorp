@@ -69,6 +69,7 @@ function* testEditProperty(inspector, ruleView) {
   for (let ch of "red;") {
     let onPreviewDone = ruleView.once("ruleview-changed");
     EventUtils.sendChar(ch, ruleView.styleWindow);
+    ruleView.throttle.flush();
     yield onPreviewDone;
     is(prop.editor.warning.hidden, true,
       "warning triangle is hidden or shown as appropriate");

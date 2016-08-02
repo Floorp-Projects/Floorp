@@ -52,10 +52,10 @@ function* modifyRuleViewWidth(value, ruleView, inspector) {
   info("Pressing return and waiting for the field to blur and for the " +
     "markup-view to show the mutation");
   let onBlur = once(editor.input, "blur", true);
-  let onMutation = inspector.once("markupmutation");
+  let onStyleChanged = waitForStyleModification(inspector);
   EventUtils.sendKey("return");
   yield onBlur;
-  yield onMutation;
+  yield onStyleChanged;
 
   info("Escaping out of the new property field that has been created after " +
     "the value was edited");

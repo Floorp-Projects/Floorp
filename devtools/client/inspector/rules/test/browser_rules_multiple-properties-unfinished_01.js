@@ -19,9 +19,7 @@ add_task(function* () {
 function* testCreateNewMultiUnfinished(inspector, view) {
   let ruleEditor = getRuleViewRuleEditor(view, 0);
   let onMutation = inspector.once("markupmutation");
-  // There are 2 rule-view updates: one for the preview and one for
-  // the final commit.
-  let onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
+  let onRuleViewChanged = view.once("ruleview-changed");
   yield createNewRuleViewProperty(ruleEditor,
     "color:blue;background : orange   ; text-align:center; border-color: ");
   yield onMutation;
