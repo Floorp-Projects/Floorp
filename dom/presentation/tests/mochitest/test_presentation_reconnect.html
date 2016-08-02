@@ -10,18 +10,40 @@
   <script type="application/javascript" src="PresentationSessionFrameScript.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1148307">Test for B2G Presentation API at sender side</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1197690">Test for Presentation API at sender side</a>
+<iframe id="iframe" src="file_presentation_reconnect.html"></iframe>
 <script type="application/javascript;version=1.8">
 
 'use strict';
 
+var iframe = document.getElementById("iframe");
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
 var frameScript = SpecialPowers.isMainProcess() ? gScript : contentScript;
 var request;
 var connection;
+var commandHandler = {};
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
+    addEventListener("message", function listener(event) {
+      var message = event.data;
+      if (/^OK /.exec(message)) {
+        ok(true, message.replace(/^OK /, ""));
+      } else if (/^KO /.exec(message)) {
+        ok(false, message.replace(/^KO /, ""));
+      } else if (/^INFO /.exec(message)) {
+        info(message.replace(/^INFO /, ""));
+      } else if (/^COMMAND /.exec(message)) {
+        var command = JSON.parse(message.replace(/^COMMAND /, ""));
+        if (command.name in commandHandler) {
+          commandHandler[command.name](command);
+        }
+      } else if (/^DONE$/.exec(message)) {
+        window.removeEventListener('message', listener);
+        SimpleTest.finish();
+      }
+    }, false);
+
     request = new PresentationRequest("http://example.com");
 
     request.getAvailability().then(
@@ -46,50 +68,41 @@ function testSetup() {
 function testStartConnection() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
       info("Device prompt is triggered.");
       gScript.sendAsyncMessage('trigger-device-prompt-select');
     });
 
     gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
       info("A control channel is established.");
       gScript.sendAsyncMessage('trigger-control-channel-open');
     });
 
     gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
       info("The control channel is opened.");
     });
 
     gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
       info("The control channel is closed. " + aReason);
     });
 
     frameScript.addMessageListener('check-navigator', function checknavigatorHandler(aSuccess) {
-      frameScript.removeMessageListener('check-navigator', checknavigatorHandler);
       ok(aSuccess, "buildDataChannel get correct window object");
     });
 
     gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
       ok(aIsValid, "A valid offer is sent out.");
       gScript.sendAsyncMessage('trigger-incoming-answer');
     });
 
     gScript.addMessageListener('answer-received', function answerReceivedHandler() {
-      gScript.removeMessageListener('answer-received', answerReceivedHandler);
       info("An answer is received.");
     });
 
     frameScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
-      frameScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
       info("Data transport channel is initialized.");
     });
 
     frameScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
-      frameScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
       info("Data notification is enabled for data transport channel.");
     });
 
@@ -129,34 +142,6 @@ function testStartConnection() {
   });
 }
 
-function testSend() {
-  return new Promise(function(aResolve, aReject) {
-    const outgoingMessage = "test outgoing message";
-
-    frameScript.addMessageListener('message-sent', function messageSentHandler(aMessage) {
-      frameScript.removeMessageListener('message-sent', messageSentHandler);
-      is(aMessage, outgoingMessage, "The message is sent out.");
-      aResolve();
-    });
-
-    connection.send(outgoingMessage);
-  });
-}
-
-function testIncomingMessage() {
-  return new Promise(function(aResolve, aReject) {
-    const incomingMessage = "test incoming message";
-
-    connection.addEventListener('message', function messageHandler(aEvent) {
-      connection.removeEventListener('message', messageHandler);
-      is(aEvent.data, incomingMessage, "An incoming message should be received.");
-      aResolve();
-    });
-
-    frameScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
-  });
-}
-
 function testCloseConnection() {
   return new Promise(function(aResolve, aReject) {
     frameScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
@@ -174,34 +159,150 @@ function testCloseConnection() {
   });
 }
 
+function testReconnectAConnectedConnection() {
+  return new Promise(function(aResolve, aReject) {
+    info('--- testReconnectAConnectedConnection ---');
+    ok(connection.state, "connected", "Make sure the state is connected.");
+
+    request.reconnect(connection.id).then(
+      function(aConnection) {
+        ok(aConnection, "Connection should be available.");
+        is(aConnection.id, connection.id, "Connection ID should be the same.");
+        is(aConnection.state, "connected", "The state should be connected.");
+        is(aConnection, connection, "The connection should be the same.");
+
+        aResolve();
+      },
+      function(aError) {
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
+      }
+    );
+  });
+}
+
+function testReconnectInvalidID() {
+  return new Promise(function(aResolve, aReject) {
+    info('--- testReconnectInvalidID ---');
+
+    request.reconnect("dummyID").then(
+      function(aConnection) {
+        ok(false, "Unexpected success.");
+        teardown();
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "NotFoundError", "Should get NotFoundError.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testReconnectInvalidURL() {
+  return new Promise(function(aResolve, aReject) {
+    info('--- testReconnectInvalidURL ---');
+
+    var request1 = new PresentationRequest("http://invalidURL");
+    request1.reconnect(connection.id).then(
+      function(aConnection) {
+        ok(false, "Unexpected success.");
+        teardown();
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "NotFoundError", "Should get NotFoundError.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testReconnectIframeConnectedConnection() {
+  info('--- testReconnectIframeConnectedConnection ---');
+  gScript.sendAsyncMessage('save-control-channel-listener');
+  return Promise.all([
+    new Promise(function(aResolve, aReject) {
+      commandHandler["connection-connected"] = function(command) {
+      gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
+        gScript.removeMessageListener('start-reconnect', startReconnectHandler);
+        gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+      });
+
+      var request1 = new PresentationRequest("http://example1.com");
+        request1.reconnect(command.id).then(
+          function(aConnection) {
+            is(aConnection.state, "connecting", "The state should be connecting.");
+            aConnection.onclose = function() {
+              delete commandHandler["connection-connected"];
+              gScript.sendAsyncMessage('restore-control-channel-listener');
+              aResolve();
+            };
+            aConnection.close();
+          },
+          function(aError) {
+            ok(false, "Error occurred when establishing a connection: " + aError);
+            teardown();
+            aReject();
+          }
+        );
+      };
+      iframe.contentWindow.postMessage("startConnection", "*");
+    }),
+    new Promise(function(aResolve, aReject) {
+      commandHandler["notify-connection-closed"] = function(command) {
+        delete commandHandler["notify-connection-closed"];
+        aResolve();
+      };
+    }),
+  ]);
+}
+
+function testReconnectIframeClosedConnection() {
+  return new Promise(function(aResolve, aReject) {
+    info('--- testReconnectIframeClosedConnection ---');
+    gScript.sendAsyncMessage('save-control-channel-listener');
+    commandHandler["connection-closed"] = function(command) {
+      gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
+        gScript.removeMessageListener('start-reconnect', startReconnectHandler);
+        gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+      });
+
+      var request1 = new PresentationRequest("http://example1.com");
+      request1.reconnect(command.id).then(
+        function(aConnection) {
+          aConnection.onconnect = function() {
+            aConnection.onconnect = null;
+            is(aConnection.state, "connected", "The connection should be connected.");
+            aConnection.onclose = function() {
+              aConnection.onclose = null;
+              ok(true, "The connection is closed.");
+              delete commandHandler["connection-closed"];
+              aResolve();
+            };
+            aConnection.close();
+            gScript.sendAsyncMessage('restore-control-channel-listener');
+          };
+        },
+        function(aError) {
+          ok(false, "Error occurred when establishing a connection: " + aError);
+          teardown();
+          aReject();
+        }
+      );
+    };
+    iframe.contentWindow.postMessage("closeConnection", "*");
+  });
+}
+
 function testReconnect() {
   return new Promise(function(aResolve, aReject) {
     info('--- testReconnect ---');
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablished() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablished);
-      gScript.sendAsyncMessage("trigger-control-channel-open");
-    });
-
     gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
       gScript.removeMessageListener('start-reconnect', startReconnectHandler);
-      is(url, "http://example.com", "URLs should be the same.")
+      is(url, "http://example.com", "URLs should be the same.");
       gScript.sendAsyncMessage('trigger-reconnected-acked', url);
-    });
-
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
-      ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-incoming-answer');
-    });
-
-    gScript.addMessageListener('answer-received', function answerReceivedHandler() {
-      gScript.removeMessageListener('answer-received', answerReceivedHandler);
-      info("An answer is received.");
-    });
-
-    frameScript.addMessageListener('check-navigator', function checknavigatorHandler(aSuccess) {
-      frameScript.removeMessageListener('check-navigator', checknavigatorHandler);
-      ok(aSuccess, "buildDataChannel get correct window object");
     });
 
     request.reconnect(connection.id).then(
@@ -214,7 +315,15 @@ function testReconnect() {
         aConnection.onconnect = function() {
           aConnection.onconnect = null;
           is(aConnection.state, "connected", "Connection should be connected.");
-          aResolve();
+
+          const incomingMessage = "test incoming message";
+          aConnection.addEventListener('message', function messageHandler(aEvent) {
+            aConnection.removeEventListener('message', messageHandler);
+            is(aEvent.data, incomingMessage, "An incoming message should be received.");
+            aResolve();
+          });
+
+          frameScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
         };
       },
       function(aError) {
@@ -242,8 +351,11 @@ function runTests() {
 
   testSetup().
   then(testStartConnection).
-  then(testSend).
-  then(testIncomingMessage).
+  then(testReconnectInvalidID).
+  then(testReconnectInvalidURL).
+  then(testReconnectAConnectedConnection).
+  then(testReconnectIframeConnectedConnection).
+  then(testReconnectIframeClosedConnection).
   then(testCloseConnection).
   then(testReconnect).
   then(testCloseConnection).
@@ -254,6 +366,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
   {type: 'presentation', allow: true, context: document},
+  {type: "presentation", allow: true, context: iframe.contentDocument},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
                                       ["dom.presentation.session_transport.data_channel.enable", true]]},
