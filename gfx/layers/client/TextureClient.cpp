@@ -1117,8 +1117,6 @@ TextureClient::CreateFromSurface(TextureForwarder* aAllocator,
 {
   aAllocator = aAllocator->AsTextureForwarder();
 
-  gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(aLayersBackend, aSelector);
-
   // also test the validity of aAllocator
   MOZ_ASSERT(aAllocator && aAllocator->IPCOpen());
   if (!aAllocator || !aAllocator->IPCOpen()) {
@@ -1133,6 +1131,8 @@ TextureClient::CreateFromSurface(TextureForwarder* aAllocator,
 
   TextureData* data = nullptr;
 #if defined(XP_WIN)
+  gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(aLayersBackend, aSelector);
+
   int32_t maxTextureSize = aAllocator->GetMaxTextureSize();
 
   if (aLayersBackend == LayersBackend::LAYERS_D3D11 &&
