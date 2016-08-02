@@ -3289,18 +3289,19 @@ GCHelperState::setState(State state, const AutoLockGC&)
 }
 
 void
-GCHelperState::startBackgroundThread(State newState, const AutoLockGC& lock)
+GCHelperState::startBackgroundThread(State newState, const AutoLockGC& lock,
+                                     const AutoLockHelperThreadState& helperLock)
 {
     MOZ_ASSERT(!thread && state(lock) == IDLE && newState != IDLE);
     setState(newState, lock);
 
     {
         AutoEnterOOMUnsafeRegion noOOM;
-        if (!HelperThreadState().gcHelperWorklist().append(this))
+        if (!HelperThreadState().gcHelperWorklist(helperLock).append(this))
             noOOM.crash("Could not add to pending GC helpers list");
     }
 
-    HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER);
+    HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, helperLock);
 }
 
 void
@@ -3348,7 +3349,7 @@ GCRuntime::queueZonesForBackgroundSweep(ZoneList& zones)
     AutoLockHelperThreadState helperLock;
     AutoLockGC lock(rt);
     backgroundSweepZones.transferFrom(zones);
-    helperState.maybeStartBackgroundSweep(lock);
+    helperState.maybeStartBackgroundSweep(lock, helperLock);
 }
 
 void
@@ -3375,12 +3376,13 @@ GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo)
 }
 
 void
-GCHelperState::maybeStartBackgroundSweep(const AutoLockGC& lock)
+GCHelperState::maybeStartBackgroundSweep(const AutoLockGC& lock,
+                                         const AutoLockHelperThreadState& helperLock)
 {
     MOZ_ASSERT(CanUseExtraThreads());
 
     if (state(lock) == IDLE)
-        startBackgroundThread(SWEEPING, lock);
+        startBackgroundThread(SWEEPING, lock, helperLock);
 }
 
 void
@@ -4883,8 +4885,7 @@ SweepMiscTask::run()
 void
 GCRuntime::startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked)
 {
-    MOZ_ASSERT(HelperThreadState().isLocked());
-    if (!task.startWithLockHeld()) {
+    if (!task.startWithLockHeld(locked)) {
         AutoUnlockHelperThreadState unlock(locked);
         gcstats::AutoPhase ap(stats, phase);
         task.runFromMainThread(rt);
@@ -5598,7 +5599,7 @@ AutoTraceSession::~AutoTraceSession()
         runtime->heapState_ = prevState;
 
         // Notify any helper threads waiting for the trace session to end.
-        HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER);
+        HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
     } else {
         runtime->heapState_ = prevState;
     }
