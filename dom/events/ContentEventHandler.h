@@ -341,13 +341,15 @@ protected:
   };
   // Get first frame after the start of the given range for computing text rect.
   // This returns invalid FrameAndNodeOffset if there is no content which
-  // causes text in the range.  mOffsetInNode is start offset in the frame.
-  FrameAndNodeOffset GetFirstFrameHavingFlatTextInRange(nsRange* aRange);
+  // should affect to computing text rect in the range.  mOffsetInNode is start
+  // offset in the frame.
+  FrameAndNodeOffset GetFirstFrameInRangeForTextRect(nsRange* aRange);
 
   // Get last frame before the end of the given range for computing text rect.
   // This returns invalid FrameAndNodeOffset if there is no content which
-  // causes text in the range.  mOffsetInNode is end offset in the frame.
-  FrameAndNodeOffset GetLastFrameHavingFlatTextInRange(nsRange* aRange);
+  // should affect to computing text rect in the range.  mOffsetInNode is end
+  // offset in the frame.
+  FrameAndNodeOffset GetLastFrameInRangeForTextRect(nsRange* aRange);
 
   struct MOZ_STACK_CLASS FrameRelativeRect final
   {
