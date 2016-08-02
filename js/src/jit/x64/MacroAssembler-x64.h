@@ -883,6 +883,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void wasmTruncateFloat32ToUInt64(FloatRegister input, Register output, Label* oolEntry,
                                      Label* oolRejoin, FloatRegister tempDouble);
 
+    void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
+        CodeOffset label = loadRipRelativeInt64(dest);
+        append(wasm::GlobalAccess(label, globalDataOffset));
+    }
+    void loadWasmPinnedRegsFromTls() {
+        loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
+    }
+
   public:
     Condition testInt32Truthy(bool truthy, const ValueOperand& operand) {
         test32(operand.valueReg(), operand.valueReg());

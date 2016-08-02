@@ -1044,8 +1044,17 @@ struct ExportArg
 //
 struct TlsData
 {
+    // Pointer to the JSContext that contains this TLS data.
+    JSContext* cx;
+
     // Pointer to the Instance that contains this TLS data.
     Instance* instance;
+
+    // Pointer to the global data for this Instance.
+    uint8_t* globalData;
+
+    // Pointer to the base of the default memory (or null if there is none).
+    uint8_t* memoryBase;
 
     // Stack limit for the current thread. This limit is checked against the
     // stack pointer in the prologue of functions that allocate stack space. See
@@ -1053,7 +1062,7 @@ struct TlsData
     void* stackLimit;
 };
 
-typedef int32_t (*ExportFuncPtr)(ExportArg* args, uint8_t* global, TlsData* tls);
+typedef int32_t (*ExportFuncPtr)(ExportArg* args, TlsData* tls);
 
 // Constants:
 
@@ -1066,9 +1075,7 @@ static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
 static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 #endif
 
-static const unsigned ContextPtrGlobalDataOffset  = 0;
-static const unsigned HeapGlobalDataOffset        = ContextPtrGlobalDataOffset + sizeof(void*);
-static const unsigned NaN64GlobalDataOffset       = HeapGlobalDataOffset + sizeof(void*);
+static const unsigned NaN64GlobalDataOffset       = 0;
 static const unsigned NaN32GlobalDataOffset       = NaN64GlobalDataOffset + sizeof(double);
 static const unsigned InitialGlobalDataBytes      = NaN32GlobalDataOffset + sizeof(float);
 
