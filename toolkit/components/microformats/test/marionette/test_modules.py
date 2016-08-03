@@ -11,7 +11,7 @@ class TestModulesUnits(BaseTestFrontendUnits):
 
     def setUp(self):
         super(TestModulesUnits, self).setUp()
-        self.set_server_prefix("../module-tests/")
+        self.set_server_prefix("/test/module-tests/")
 
     def test_units(self):
         self.check_page("index.html")
