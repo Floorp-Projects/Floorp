@@ -1072,8 +1072,11 @@ nsPrintEngine::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify)
                                                      getter_AddRefs(mPrt->mPrintProgressParams), 
                                                      &aDoNotify);
       if (NS_SUCCEEDED(rv)) {
-        if (printProgressListener && mPrt->mPrintProgressParams) {
+        if (printProgressListener) {
           mPrt->mPrintProgressListeners.AppendObject(printProgressListener);
+        }
+
+        if (mPrt->mPrintProgressParams) {
           SetDocAndURLIntoProgress(mPrt->mPrintObject, mPrt->mPrintProgressParams);
         }
       }
