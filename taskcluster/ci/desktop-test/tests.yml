@@ -53,6 +53,7 @@ firefox-ui-functional-local:
     treeherder-symbol: tc-Fxfn-l(en-US)
     max-run-time: 5400
     tier: 1
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: mozharness/scripts/firefox_ui_tests/functional.py
         config:
@@ -67,6 +68,7 @@ firefox-ui-functional-remote:
     treeherder-symbol: tc-Fxfn-r(en-US)
     max-run-time: 5400
     tier: 2
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: mozharness/scripts/firefox_ui_tests/functional.py
         config:

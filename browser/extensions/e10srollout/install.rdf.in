@@ -13,6 +13,7 @@
     <em:version>1.0</em:version>
     <em:type>2</em:type>
     <em:bootstrap>true</em:bootstrap>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
 
     <!-- Target Application this theme can install into,
         with minimum and maximum supported versions. -->
