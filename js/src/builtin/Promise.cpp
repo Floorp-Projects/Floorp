@@ -114,17 +114,12 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         // Step 4.
         promise->setFixedSlot(PROMISE_STATE_SLOT, Int32Value(PROMISE_STATE_PENDING));
 
-        // Step 5.
+        // Steps 5-6.
+        // We only have a single list of reaction records.
         RootedArrayObject reactions(cx, NewDenseEmptyArray(cx));
         if (!reactions)
             return nullptr;
-        promise->setFixedSlot(PROMISE_FULFILL_REACTIONS_SLOT, ObjectValue(*reactions));
-
-        // Step 6.
-        reactions = NewDenseEmptyArray(cx);
-        if (!reactions)
-            return nullptr;
-        promise->setFixedSlot(PROMISE_REJECT_REACTIONS_SLOT, ObjectValue(*reactions));
+        promise->setFixedSlot(PROMISE_REACTIONS_SLOT, ObjectValue(*reactions));
 
         // Step 7.
         promise->setFixedSlot(PROMISE_IS_HANDLED_SLOT,
@@ -237,28 +232,21 @@ PromiseObject::getID()
  * `Promise.all(iterable)` or `Promise.race(iterable)`, with this promise
  * being a member of the passed-in `iterable`.
  *
- *
- * For the then() case, we have both resolve and reject callbacks that know
- * what the next promise is.
- *
- * For the race() case, likewise.
- *
- * For the all() case, our reject callback knows what the next promise is, but
- * our resolve callback doesn't.
- *
- * So we walk over our _reject_ callbacks and ask each of them what promise
- * its dependent promise is.
+ * Per spec, we should have separate lists of reaction records for the
+ * fulfill and reject cases. As an optimization, we have only one of those,
+ * containing the required data for both cases. So we just walk that list
+ * and extract the dependent promises from all reaction records.
  */
 bool
 PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> values)
 {
-    RootedValue rejectReactionsVal(cx, getReservedSlot(PROMISE_REJECT_REACTIONS_SLOT));
-    RootedObject rejectReactions(cx, rejectReactionsVal.toObjectOrNull());
-    if (!rejectReactions)
+    RootedValue reactionsVal(cx, getReservedSlot(PROMISE_REACTIONS_SLOT));
+    RootedObject reactions(cx, reactionsVal.toObjectOrNull());
+    if (!reactions)
         return true;
 
     AutoIdVector keys(cx);
-    if (!GetPropertyKeys(cx, rejectReactions, JSITER_OWNONLY, &keys))
+    if (!GetPropertyKeys(cx, reactions, JSITER_OWNONLY, &keys))
         return false;
 
     if (keys.length() == 0)
@@ -279,7 +267,7 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
     // each reaction.
     for (size_t i = 0; i < keys.length(); i++) {
         MutableHandleValue val = values[i];
-        if (!GetProperty(cx, rejectReactions, rejectReactions, keys[i], val))
+        if (!GetProperty(cx, reactions, reactions, keys[i], val))
             return false;
         RootedObject reaction(cx, &val.toObject());
         if (!GetProperty(cx, reaction, reaction, cx->runtime()->commonNames->promise, val))
