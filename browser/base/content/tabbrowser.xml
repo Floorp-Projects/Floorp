@@ -3891,9 +3891,8 @@
             tinfo: function(tab) {
               if (tab) {
                 return tab._tPos + "(" + tab.linkedBrowser.currentURI.spec + ")";
-              } else {
-                return "null";
               }
+              return "null";
             },
 
             log: function(s) {

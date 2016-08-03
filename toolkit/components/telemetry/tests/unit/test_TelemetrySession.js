@@ -92,10 +92,9 @@ function sendPing() {
   if (PingServer.started) {
     TelemetrySend.setServer("http://localhost:" + PingServer.port);
     return TelemetrySession.testPing();
-  } else {
-    TelemetrySend.setServer("http://doesnotexist");
-    return TelemetrySession.testPing();
   }
+  TelemetrySend.setServer("http://doesnotexist");
+  return TelemetrySession.testPing();
 }
 
 function fakeGenerateUUID(sessionFunc, subsessionFunc) {

@@ -120,9 +120,8 @@ function makeLock(kind) {
         });
       }
     };
-  } else {
-    throw new TypeError("Unknown kind " + kind);
   }
+  throw new TypeError("Unknown kind " + kind);
 }
 makeLock.counter = 0;
 makeLock.xpcomMap = new Map(); // Note: Not a WeakMap as we wish to handle non-gc-able keys (e.g. strings)

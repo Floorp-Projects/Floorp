@@ -359,11 +359,10 @@ class Process extends BaseProcess {
         let handles = win32.createPipe(secAttr, win32.FILE_FLAG_OVERLAPPED);
         our_pipes.push(new InputPipe(this, handles[0]));
         return handles[1];
-      } else {
-        let handles = win32.createPipe(secAttr, 0, win32.FILE_FLAG_OVERLAPPED);
-        our_pipes.push(new OutputPipe(this, handles[1]));
-        return handles[0];
       }
+      let handles = win32.createPipe(secAttr, 0, win32.FILE_FLAG_OVERLAPPED);
+      our_pipes.push(new OutputPipe(this, handles[1]));
+      return handles[0];
     };
 
     their_pipes[0] = pipe(false);

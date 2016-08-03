@@ -98,11 +98,10 @@ function _onInputKeyPress (event, callback) {
       event.stopPropagation();
       event.preventDefault();
       return;
-    } else {
-      // Leave the action key press to get reported to the DOM as a return
-      // keypress.
-      return;
     }
+    // Leave the action key press to get reported to the DOM as a return
+    // keypress.
+    return;
   }
 
   // If it is not using the modifiers it should, return.

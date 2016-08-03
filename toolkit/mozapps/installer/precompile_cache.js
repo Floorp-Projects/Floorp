@@ -63,9 +63,8 @@ function get_modules_under(uri) {
     return dir_entries(file.file, "components", ".js")
            .concat(dir_entries(file.file, "modules", ".js"))
            .concat(dir_entries(file.file, "modules", ".jsm"));
-  } else {
-    throw "Expected a nsIJARURI or nsIFileURL";
   }
+  throw new Error("Expected a nsIJARURI or nsIFileURL");
 }
 
 function load_modules_under(spec, uri) {

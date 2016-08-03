@@ -776,18 +776,16 @@ ComponentsUtilsInterposition.methods.Sandbox =
         array[i] = principals[i];
       }
       return SandboxParent.makeContentSandbox(addon, chromeGlobal, array, ...rest);
-    } else {
-      return Components.utils.Sandbox(principals, ...rest);
     }
+    return Components.utils.Sandbox(principals, ...rest);
   };
 
 ComponentsUtilsInterposition.methods.evalInSandbox =
   function(addon, target, code, sandbox, ...rest) {
     if (sandbox && Cu.isCrossProcessWrapper(sandbox)) {
       return SandboxParent.evalInSandbox(code, sandbox, ...rest);
-    } else {
-      return Components.utils.evalInSandbox(code, sandbox, ...rest);
     }
+    return Components.utils.evalInSandbox(code, sandbox, ...rest);
   };
 
 // This interposition handles cases where an add-on tries to import a
