@@ -93,19 +93,19 @@ def dependentlibs(lib, libpaths, func):
     be found in the given list of paths, followed by the library itself.'''
     assert(libpaths)
     assert(isinstance(libpaths, list))
-    deps = {}
+    deps = []
     for dep in func(lib):
         if dep in deps or os.path.isabs(dep):
             continue
         for dir in libpaths:
             deppath = os.path.join(dir, dep)
             if os.path.exists(deppath):
-                deps.update(dependentlibs(deppath, libpaths, func))
+                deps.extend([d for d in dependentlibs(deppath, libpaths, func) if not d in deps])
                 # Black list the ICU data DLL because preloading it at startup
                 # leads to startup performance problems because of its excessive
                 # size (around 10MB).
                 if not dep.startswith("icu"):
-                    deps[dep] = deppath
+                    deps.append(deppath)
                 break
 
     return deps
@@ -123,9 +123,10 @@ def gen_list(output, lib):
         func = dependentlibs_dumpbin
 
     deps = dependentlibs(lib, libpaths, func)
-    deps[lib] = mozpath.join(libpaths[0], lib)
-    output.write('\n'.join(deps.keys()) + '\n')
-    return set(deps.values())
+    deps.append(mozpath.join(libpaths[0], lib))
+    dependentlibs_output = [mozpath.basename(f) for f in deps]
+    output.write('\n'.join(dependentlibs_output) + '\n')
+    return set(deps)
 
 def main():
     gen_list(sys.stdout, sys.argv[1])
