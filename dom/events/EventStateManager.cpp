@@ -3834,10 +3834,10 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
     newPointerEvent =
       new WidgetPointerEvent(aMouseEvent->IsTrusted(), aMessage,
                              aMouseEvent->mWidget);
-    newPointerEvent->isPrimary = sourcePointer->isPrimary;
+    newPointerEvent->mIsPrimary = sourcePointer->mIsPrimary;
     newPointerEvent->pointerId = sourcePointer->pointerId;
-    newPointerEvent->width = sourcePointer->width;
-    newPointerEvent->height = sourcePointer->height;
+    newPointerEvent->mWidth = sourcePointer->mWidth;
+    newPointerEvent->mHeight = sourcePointer->mHeight;
     newPointerEvent->inputSource = sourcePointer->inputSource;
     newPointerEvent->relatedTarget =
       nsIPresShell::GetPointerCapturingContent(sourcePointer->pointerId)

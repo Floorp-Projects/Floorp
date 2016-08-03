@@ -173,7 +173,7 @@ class GeckoInstance(object):
     def restart(self, prefs=None, clean=True):
         self.close(restart=True)
 
-        if clean:
+        if clean and self.profile:
             self.profile.cleanup()
             self.profile = None
 
@@ -221,11 +221,9 @@ class FennecInstance(GeckoInstance):
                 self.runner.device.connect()
             self.runner.start()
         except Exception as e:
-            message = 'Error possibly due to runner or device args.'
-            e.args += (message,)
-            if hasattr(e, 'strerror') and e.strerror:
-                e.strerror = ', '.join([e.strerror, message])
-            raise e
+            exc, val, tb = sys.exc_info()
+            message = 'Error possibly due to runner or device args: {}'
+            raise exc, message.format(e.message), tb
         # gecko_log comes from logcat when running with device/emulator
         logcat_args = {
             'filterspec': 'Gecko',
