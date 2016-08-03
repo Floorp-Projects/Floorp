@@ -179,7 +179,6 @@ public:
     static void InvalidateAndScheduleComposite();
     static void SchedulePauseComposition();
     static void ScheduleResumeComposition();
-    static float ComputeRenderIntegrity();
 
     virtual bool WidgetPaintsBackground() override;
 

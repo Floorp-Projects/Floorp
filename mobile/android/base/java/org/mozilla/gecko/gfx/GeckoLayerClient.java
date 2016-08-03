@@ -936,7 +936,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             if (mLayerRenderer == null) {
                 return null;
             }
-            mLayerRenderer.checkMonitoringEnabled();
             mLayerRenderer.createDefaultProgram();
             mLayerRendererInitialized = true;
         }

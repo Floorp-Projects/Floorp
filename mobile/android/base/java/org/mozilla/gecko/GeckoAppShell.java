@@ -261,8 +261,6 @@ public class GeckoAppShell
 
     public static native void invalidateAndScheduleComposite();
 
-    public static native float computeRenderIntegrity();
-
     public static native void addPresentationSurface(Surface surface);
     public static native void removePresentationSurface(Surface surface);
 
