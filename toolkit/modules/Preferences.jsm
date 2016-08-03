@@ -101,7 +101,7 @@ Preferences._get = function(prefName, defaultValue, valueType) {
  */
 Preferences.set = function(prefName, prefValue) {
   if (isObject(prefName)) {
-    for (let [name, value] in Iterator(prefName))
+    for (let [name, value] of Object.entries(prefName))
       this.set(name, value);
     return;
   }

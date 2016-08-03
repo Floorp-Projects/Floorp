@@ -300,7 +300,7 @@ add_task(function* tagsAreNot_history() {
   };
 
   do_print("Add visits and tag the URIs");
-  for (let [pURI, tags] in Iterator(urisAndTags)) {
+  for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
     yield PlacesTestUtils.addVisits(nsiuri);
     if (tags)
@@ -335,7 +335,7 @@ add_task(function* tagsAreNot_history() {
                    "http://example.com/3"]);
 
   // Clean up.
-  for (let [pURI, tags] in Iterator(urisAndTags)) {
+  for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
     if (tags)
       PlacesUtils.tagging.untagURI(nsiuri, tags);
@@ -352,7 +352,7 @@ add_task(function* tagsAreNot_bookmarks() {
   };
 
   do_print("Add bookmarks and tag the URIs");
-  for (let [pURI, tags] in Iterator(urisAndTags)) {
+  for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
     yield addBookmark(nsiuri);
     if (tags)
@@ -392,7 +392,7 @@ add_task(function* tagsAreNot_bookmarks() {
                    "http://example.com/3"]);
 
   // Clean up.
-  for (let [pURI, tags] in Iterator(urisAndTags)) {
+  for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
     if (tags)
       PlacesUtils.tagging.untagURI(nsiuri, tags);
@@ -472,7 +472,7 @@ add_task(function* ORed_queries() {
   }
 
   do_print("Add visits and tag the URIs");
-  for (let [pURI, tags] in Iterator(urisAndTags)) {
+  for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
     yield PlacesTestUtils.addVisits(nsiuri);
     if (tags)
@@ -519,7 +519,7 @@ add_task(function* ORed_queries() {
   queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 
   // Clean up.
-  for (let [pURI, tags] in Iterator(urisAndTags)) {
+  for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
     if (tags)
       PlacesUtils.tagging.untagURI(nsiuri, tags);
