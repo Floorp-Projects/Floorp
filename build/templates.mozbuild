@@ -64,14 +64,6 @@ def Library(name):
 
 
 @template
-def RustLibrary(name):
-    '''Template for Rust libraries.'''
-    Library(name)
-
-    IS_RUST_LIBRARY = True
-
-
-@template
 def SharedLibrary(name):
     '''Template for shared libraries.'''
     Library(name)

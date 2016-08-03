@@ -1,9 +1,0 @@
-[package]
-name = "deep-crate"
-version = "0.1.0"
-authors = [
-  "Nobody <nobody@mozilla.org>",
-]
-
-[dependencies]
-shallow-crate = { path = "../../shallow" }

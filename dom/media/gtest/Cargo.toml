@@ -1,7 +1,0 @@
-[package]
-name = "mp4parse-gtest"
-version = "0.1.0"
-authors = ["nobody@mozilla.org"]
-
-[lib]
-path = "hello.rs"
