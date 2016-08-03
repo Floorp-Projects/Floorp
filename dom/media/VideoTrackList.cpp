@@ -65,15 +65,6 @@ VideoTrackList::EmptyTracks()
   MediaTrackList::EmptyTracks();
 }
 
-VideoTrack* VideoTrackList::GetSelectedTrack()
-{
-  if (mSelectedIndex < 0 || static_cast<size_t>(mSelectedIndex) >= mTracks.Length()) {
-    return nullptr;
-  }
-
-  return operator[](mSelectedIndex);
-}
-
 VideoTrack*
 VideoTrackList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
