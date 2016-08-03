@@ -34,6 +34,7 @@ this.SelectContentHelper = function (aElement, aGlobal) {
   this.element = aElement;
   this.initialSelection = aElement[aElement.selectedIndex] || null;
   this.global = aGlobal;
+  this.closedWithEnter = false;
   this.init();
   this.showDropDown();
   this._updateTimer = new DeferredTask(this._update.bind(this), 0);
@@ -110,6 +111,7 @@ this.SelectContentHelper.prototype = {
     switch (message.name) {
       case "Forms:SelectDropDownItem":
         this.element.selectedIndex = message.data.value;
+        this.closedWithEnter = message.data.closedWithEnter;
         break;
 
       case "Forms:DismissedDropDown":
@@ -126,21 +128,23 @@ this.SelectContentHelper.prototype = {
           });
           this.element.dispatchEvent(changeEvent);
 
-          // Going for mostly-Blink parity here, which (at least on Windows)
-          // fires a mouseup and click event after each selection -
-          // even by keyboard. We're firing a mousedown too, since that
-          // seems to make more sense. Unfortunately, the spec on form
-          // control behaviours for these events is really not clear.
-          const MOUSE_EVENTS = ["mousedown", "mouseup", "click"];
-          for (let eventName of MOUSE_EVENTS) {
-            let mouseEvent = new win.MouseEvent(eventName, {
-              view: win,
-              bubbles: true,
-              cancelable: true,
-            });
-            selectedOption.dispatchEvent(mouseEvent);
-            if (eventName == "mouseup") {
-              DOMUtils.removeContentState(this.element, kStateActive);
+          if (!this.closedWithEnter) {
+            // Going for mostly-Blink parity here, which (at least on Windows)
+            // fires a mouseup and click event after each selection -
+            // even by keyboard. We're firing a mousedown too, since that
+            // seems to make more sense. Unfortunately, the spec on form
+            // control behaviours for these events is really not clear.
+            const MOUSE_EVENTS = ["mousedown", "mouseup", "click"];
+            for (let eventName of MOUSE_EVENTS) {
+              let mouseEvent = new win.MouseEvent(eventName, {
+                view: win,
+                bubbles: true,
+                cancelable: true,
+              });
+              selectedOption.dispatchEvent(mouseEvent);
+              if (eventName == "mouseup") {
+                DOMUtils.removeContentState(this.element, kStateActive);
+              }
             }
           }
         }
