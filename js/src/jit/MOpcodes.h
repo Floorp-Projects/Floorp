@@ -281,7 +281,6 @@ namespace jit {
     _(WasmLoadGlobalVar)                                                    \
     _(WasmStoreGlobalVar)                                                   \
     _(AsmJSLoadFuncPtr)                                                     \
-    _(AsmJSLoadFFIFunc)                                                     \
     _(AsmJSReturn)                                                          \
     _(AsmJSParameter)                                                       \
     _(AsmJSVoidReturn)                                                      \

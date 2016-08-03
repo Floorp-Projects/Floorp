@@ -11245,12 +11245,6 @@ CodeGenerator::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
 }
 
 void
-CodeGenerator::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
-{
-    masm.loadWasmGlobalPtr(ins->mir()->globalDataOffset(), ToRegister(ins->output()));
-}
-
-void
 CodeGenerator::emitAssertRangeI(const Range* r, Register input)
 {
     // Check the lower bound.
