@@ -11,7 +11,7 @@ class TestInterfaceUnits(BaseTestFrontendUnits):
 
     def setUp(self):
         super(TestInterfaceUnits, self).setUp()
-        self.set_server_prefix("../interface-tests/")
+        self.set_server_prefix("/test/interface-tests/")
 
     def test_units(self):
         self.check_page("index.html")
