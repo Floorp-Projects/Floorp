@@ -336,7 +336,7 @@ class Process extends BaseProcess {
    */
   kill() {
     this.killed = true;
-    libc.TerminateProcess(this.handle, TERMINATE_EXIT_CODE);
+    libc.TerminateJobObject(this.jobHandle, TERMINATE_EXIT_CODE);
   }
 
   /**
@@ -447,7 +447,9 @@ class Process extends BaseProcess {
 
     let handles = this.initPipes(options);
 
-    let processFlags = win32.CREATE_NO_WINDOW
+    let processFlags = win32.CREATE_BREAKAWAY_FROM_JOB
+                     | win32.CREATE_NO_WINDOW
+                     | win32.CREATE_SUSPENDED
                      | win32.CREATE_UNICODE_ENVIRONMENT;
 
     let startupInfoEx = new win32.STARTUPINFOEXW();
@@ -475,6 +477,7 @@ class Process extends BaseProcess {
 
     let procInfo = new win32.PROCESS_INFORMATION();
 
+    let errorMessage = "Failed to create process";
     let ok = libc.CreateProcessW(
       command, args.join(" "),
       null, /* Security attributes */
@@ -492,17 +495,24 @@ class Process extends BaseProcess {
       libc.DeleteProcThreadAttributeList(threadAttrs);
     }
 
+    if (ok) {
+      this.jobHandle = win32.Handle(libc.CreateJobObjectW(null, null));
+      ok = libc.AssignProcessToJobObject(this.jobHandle, procInfo.hProcess);
+      errorMessage = `Failed to attach process to job object: 0x${(ctypes.winLastError || 0).toString(16)}`;
+    }
+
     if (!ok) {
       for (let pipe of this.pipes) {
         pipe.close();
       }
-      throw new Error("Failed to create process");
+      throw new Error(errorMessage);
     }
-
-    libc.CloseHandle(procInfo.hThread);
 
     this.handle = win32.Handle(procInfo.hProcess);
     this.pid = procInfo.dwProcessId;
+
+    libc.ResumeThread(procInfo.hThread);
+    libc.CloseHandle(procInfo.hThread);
   }
 
   /**
@@ -541,6 +551,10 @@ class Process extends BaseProcess {
 
       this.handle.dispose();
       this.handle = null;
+
+      libc.TerminateJobObject(this.jobHandle, TERMINATE_EXIT_CODE);
+      this.jobHandle.dispose();
+      this.jobHandle = null;
 
       for (let pipe of this.pipes) {
         pipe.maybeClose();
