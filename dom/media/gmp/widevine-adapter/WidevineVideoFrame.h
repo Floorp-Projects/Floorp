@@ -15,6 +15,7 @@ namespace mozilla {
 class WidevineVideoFrame : public cdm::VideoFrame {
 public:
   WidevineVideoFrame();
+  WidevineVideoFrame(WidevineVideoFrame&& other);
   ~WidevineVideoFrame();
 
   void SetFormat(cdm::VideoFormat aFormat) override;
