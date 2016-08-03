@@ -178,7 +178,9 @@ def valid_ucrt_sdk_dir_result(value):
 
 @depends_win(windows_sdk_dir, 'WINDOWSSDKDIR')
 @checking('for Universal CRT SDK', valid_ucrt_sdk_dir_result)
+@imports('os')
 @imports(_from='__builtin__', _import='sorted')
+@imports(_import='mozpack.path', _as='mozpath')
 def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
@@ -196,6 +198,31 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
                 sdks[d] = Version(version), sdk
                 continue
         if d == windows_sdk_dir_env:
+            # When WINDOWSSDKDIR is set in the environment and we can't find the
+            # Universal CRT SDK, chances are this is a start-shell-msvc*.bat
+            # setup, where INCLUDE and LIB already contain the UCRT paths.
+            ucrt_includes = [
+                p for p in os.environ.get('INCLUDE', '').split(os.pathsep)
+                if os.path.basename(p).lower() == 'ucrt'
+            ]
+            ucrt_libs = [
+                p for p in os.environ.get('LIB', '').split(os.pathsep)
+                if os.path.basename(os.path.dirname(p)).lower() == 'ucrt'
+            ]
+            if ucrt_includes and ucrt_libs:
+                # Pick the first of each, since they are the ones that the
+                # compiler would look first. Assume they contain the SDK files.
+                include = os.path.dirname(ucrt_includes[0])
+                lib = os.path.dirname(os.path.dirname(ucrt_libs[0]))
+                path = os.path.dirname(os.path.dirname(include))
+                version = os.path.basename(include)
+                if version != 'include' and mozpath.basedir(lib, [path]):
+                    sdks[d] = Version(version), namespace(
+                        path=path,
+                        include=include,
+                        lib=lib,
+                    )
+                    continue
             raise FatalCheckError(
                 'The SDK in WINDOWSSDKDIR (%s) does not contain the Universal '
                 'CRT.' % windows_sdk_dir_env)

@@ -1033,12 +1033,6 @@ RTCPeerConnection.prototype = {
     stream.getTracks().forEach(track => this.addTrack(track, stream));
   },
 
-  removeStream: function(stream) {
-     // Bug 844295: Not implementing this functionality.
-     throw new this._win.DOMException("removeStream not yet implemented",
-                                      "NotSupportedError");
-  },
-
   getStreamById: function(id) {
     throw new this._win.DOMException("getStreamById not yet implemented",
                                      "NotSupportedError");

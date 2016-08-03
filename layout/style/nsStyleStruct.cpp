@@ -66,6 +66,13 @@ EqualURIs(mozilla::css::URLValue *aURI1, mozilla::css::URLValue *aURI2)
          (aURI1 && aURI2 && aURI1->URIEquals(*aURI2));
 }
 
+static
+bool EqualURIs(const FragmentOrURL* aURI1, const FragmentOrURL* aURI2)
+{
+  return aURI1 == aURI2 ||    // handle null==null, and optimize
+         (aURI1 && aURI2 && *aURI1 == *aURI2);
+}
+
 static bool
 EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
 {
@@ -914,9 +921,8 @@ nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (!EqualURIs(mMarkerEnd, aNewData.mMarkerEnd) ||
-      !EqualURIs(mMarkerMid, aNewData.mMarkerMid) ||
-      !EqualURIs(mMarkerStart, aNewData.mMarkerStart)) {
+  if (mMarkerEnd != aNewData.mMarkerEnd || mMarkerMid != aNewData.mMarkerMid ||
+      mMarkerStart != aNewData.mMarkerStart) {
     // Markers currently contribute to nsSVGPathGeometryFrame::mRect,
     // so we need a reflow as well as a repaint. No intrinsic sizes need
     // to change, so nsChangeHint_NeedReflow is sufficient.
@@ -1004,6 +1010,103 @@ nsStyleBasicShape::GetShapeTypeName() const
 }
 
 // --------------------
+// FragmentOrURL
+//
+
+void
+FragmentOrURL::SetValue(const nsCSSValue* aValue)
+{
+  mozilla::css::URLValue *urlVal = aValue->GetURLStructValue();
+  MOZ_ASSERT_IF(urlVal->GetLocalURLFlag(), urlVal->GetURI());
+  mIsLocalRef = urlVal->GetLocalURLFlag();
+
+  mURL = urlVal->GetURI();
+
+#ifdef DEBUG
+  if (mIsLocalRef) {
+    bool hasRef = false;
+    mURL->GetHasRef(&hasRef);
+    MOZ_ASSERT(hasRef);
+  }
+#endif
+}
+
+void
+FragmentOrURL::SetNull()
+{
+  mURL = nullptr;
+  mIsLocalRef = false;
+}
+
+FragmentOrURL&
+FragmentOrURL::operator=(const FragmentOrURL& aOther)
+{
+  mIsLocalRef = aOther.mIsLocalRef;
+  mURL = aOther.mURL;
+
+  return *this;
+}
+
+bool
+FragmentOrURL::operator==(const FragmentOrURL& aOther) const
+{
+  if (aOther.mIsLocalRef != mIsLocalRef) {
+    return false;
+  }
+
+  return EqualURIs(aOther.mURL, mURL);
+}
+
+bool
+FragmentOrURL::EqualsExceptRef(nsIURI* aURI) const
+{
+  bool ret = false;
+  mURL->EqualsExceptRef(aURI, &ret);
+  return ret;
+}
+
+void
+FragmentOrURL::GetSourceString(nsString &aRef) const
+{
+  MOZ_ASSERT(mURL);
+
+  nsCString cref;
+  if (mIsLocalRef) {
+    mURL->GetRef(cref);
+    cref.Insert('#', 0);
+  } else {
+    mURL->GetSpec(cref);
+  }
+
+  aRef = NS_ConvertUTF8toUTF16(cref);
+}
+
+already_AddRefed<nsIURI>
+FragmentOrURL::Resolve(nsIURI* aURI) const
+{
+  nsCOMPtr<nsIURI> result;
+
+  if (mIsLocalRef) {
+    nsCString ref;
+    mURL->GetRef(ref);
+
+    aURI->Clone(getter_AddRefs(result));
+    result->SetRef(ref);
+  } else {
+    result = mURL;
+  }
+
+  return result.forget();
+}
+
+already_AddRefed<nsIURI>
+FragmentOrURL::Resolve(nsIContent* aContent) const
+{
+  nsCOMPtr<nsIURI> url = aContent->GetBaseURI();
+  return Resolve(url);
+}
+
+// --------------------
 // nsStyleClipPath
 //
 nsStyleClipPath::nsStyleClipPath()
@@ -1019,7 +1122,7 @@ nsStyleClipPath::nsStyleClipPath(const nsStyleClipPath& aSource)
   , mSizingBox(StyleClipShapeSizing::NoBox)
 {
   if (aSource.mType == StyleClipPathType::URL) {
-    SetURL(aSource.mURL);
+    CopyURL(aSource);
   } else if (aSource.mType == StyleClipPathType::Shape) {
     SetBasicShape(aSource.mBasicShape, aSource.mSizingBox);
   } else if (aSource.mType == StyleClipPathType::Box) {
@@ -1040,7 +1143,7 @@ nsStyleClipPath::operator=(const nsStyleClipPath& aOther)
   }
 
   if (aOther.mType == StyleClipPathType::URL) {
-    SetURL(aOther.mURL);
+    CopyURL(aOther);
   } else if (aOther.mType == StyleClipPathType::Shape) {
     SetBasicShape(aOther.mBasicShape, aOther.mSizingBox);
   } else if (aOther.mType == StyleClipPathType::Box) {
@@ -1080,7 +1183,7 @@ nsStyleClipPath::ReleaseRef()
     mBasicShape->Release();
   } else if (mType == StyleClipPathType::URL) {
     NS_ASSERTION(mURL, "expected pointer");
-    mURL->Release();
+    delete mURL;
   }
   // mBasicShap, mURL, etc. are all pointers in a union of pointers. Nulling
   // one of them nulls all of them:
@@ -1088,13 +1191,27 @@ nsStyleClipPath::ReleaseRef()
 }
 
 void
-nsStyleClipPath::SetURL(nsIURI* aURL)
+nsStyleClipPath::CopyURL(const nsStyleClipPath& aOther)
 {
-  NS_ASSERTION(aURL, "expected pointer");
   ReleaseRef();
-  mURL = aURL;
-  mURL->AddRef();
+
+  mURL = new FragmentOrURL(*aOther.mURL);
   mType = StyleClipPathType::URL;
+}
+
+bool
+nsStyleClipPath::SetURL(const nsCSSValue* aValue)
+{
+  if (!aValue->GetURLValue()) {
+    return false;
+  }
+
+  ReleaseRef();
+
+  mURL = new FragmentOrURL();
+  mURL->SetValue(aValue);
+  mType = StyleClipPathType::URL;
+  return true;
 }
 
 void
@@ -1133,7 +1250,7 @@ nsStyleFilter::nsStyleFilter(const nsStyleFilter& aSource)
 {
   MOZ_COUNT_CTOR(nsStyleFilter);
   if (aSource.mType == NS_STYLE_FILTER_URL) {
-    SetURL(aSource.mURL);
+    CopyURL(aSource);
   } else if (aSource.mType == NS_STYLE_FILTER_DROP_SHADOW) {
     SetDropShadow(aSource.mDropShadow);
   } else if (aSource.mType != NS_STYLE_FILTER_NONE) {
@@ -1155,7 +1272,7 @@ nsStyleFilter::operator=(const nsStyleFilter& aOther)
   }
 
   if (aOther.mType == NS_STYLE_FILTER_URL) {
-    SetURL(aOther.mURL);
+    CopyURL(aOther);
   } else if (aOther.mType == NS_STYLE_FILTER_DROP_SHADOW) {
     SetDropShadow(aOther.mDropShadow);
   } else if (aOther.mType != NS_STYLE_FILTER_NONE) {
@@ -1194,9 +1311,17 @@ nsStyleFilter::ReleaseRef()
     mDropShadow->Release();
   } else if (mType == NS_STYLE_FILTER_URL) {
     NS_ASSERTION(mURL, "expected pointer");
-    mURL->Release();
+    delete mURL;
   }
   mURL = nullptr;
+}
+
+void
+nsStyleFilter::CopyURL(const nsStyleFilter& aOther)
+{
+  ReleaseRef();
+  mURL = new FragmentOrURL(*aOther.mURL);
+  mType = NS_STYLE_FILTER_URL;
 }
 
 void
@@ -1208,14 +1333,20 @@ nsStyleFilter::SetFilterParameter(const nsStyleCoord& aFilterParameter,
   mType = aType;
 }
 
-void
-nsStyleFilter::SetURL(nsIURI* aURL)
+bool
+nsStyleFilter::SetURL(const nsCSSValue* aValue)
 {
-  NS_ASSERTION(aURL, "expected pointer");
+  if (!aValue->GetURLValue()) {
+    return false;
+  }
+
   ReleaseRef();
-  mURL = aURL;
-  mURL->AddRef();
+
+  mURL = new FragmentOrURL();
+  mURL->SetValue(aValue);
+
   mType = NS_STYLE_FILTER_URL;
+  return true;
 }
 
 void
@@ -1330,8 +1461,7 @@ nsStyleSVGPaint::nsStyleSVGPaint(const nsStyleSVGPaint& aSource)
 
   mFallbackColor = aSource.mFallbackColor;
   if (mType == eStyleSVGPaintType_Server) {
-    mPaint.mPaintServer = aSource.mPaint.mPaintServer;
-    NS_IF_ADDREF(mPaint.mPaintServer);
+    mPaint.mPaintServer = new FragmentOrURL(*aSource.mPaint.mPaintServer);
   } else {
     mPaint.mColor = aSource.mPaint.mColor;
   }
@@ -1352,7 +1482,7 @@ void
 nsStyleSVGPaint::SetType(nsStyleSVGPaintType aType)
 {
   if (mType == eStyleSVGPaintType_Server) {
-    NS_IF_RELEASE(mPaint.mPaintServer);
+    delete mPaint.mPaintServer;
     mPaint.mPaintServer = nullptr;
   } else {
     mPaint.mColor = NS_RGB(0, 0, 0);
@@ -1371,8 +1501,7 @@ nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther)
 
   mFallbackColor = aOther.mFallbackColor;
   if (mType == eStyleSVGPaintType_Server) {
-    mPaint.mPaintServer = aOther.mPaint.mPaintServer;
-    NS_IF_ADDREF(mPaint.mPaintServer);
+    mPaint.mPaintServer = new FragmentOrURL(*aOther.mPaint.mPaintServer);
   } else {
     mPaint.mColor = aOther.mPaint.mColor;
   }

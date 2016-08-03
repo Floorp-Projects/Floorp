@@ -231,8 +231,6 @@ const char*
 nsHttp::GetProtocolVersion(uint32_t pv)
 {
     switch (pv) {
-    case SPDY_VERSION_31:
-        return "spdy/3.1";
     case HTTP_VERSION_2:
     case NS_HTTP_VERSION_2_0:
         return "h2";

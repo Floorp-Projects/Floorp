@@ -108,6 +108,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               "gURLBar.select(); goDoCommand('cmd_paste'); gURLBar.handleCommand();");
           cxmenu.insertBefore(pasteAndGo, insertLocation.nextSibling);
         }
+
+        this._enableOrDisableOneOffSearches();
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -197,7 +199,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this.popup.selectedIndex = -1;
               break;
           }
-
+          if (this.popup.popupOpen &&
+              !this.popup.disableKeyNavigation &&
+              this.popup.handleKeyPress(aEvent)) {
+            return true;
+          }
           return this.handleKeyPress(aEvent);
         ]]></body>
       </method>
@@ -331,135 +337,224 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
+      <!--
+        This is ultimately called by the autocomplete controller as the result
+        of handleEnter when the Return key is pressed in the textbox.  Since
+        onPopupClick also calls handleEnter, this is also called as a result in
+        that case.
+
+        @param event
+               The event that triggered the command.
+        @param openUILinkWhere
+               Optional.  The "where" to pass to openUILinkIn.  This method
+               computes the appropriate "where" given the event, but you can
+               use this to override it.
+        @param openUILinkParams
+               Optional.  The parameters to pass to openUILinkIn.  As with
+               "where", this method computes the appropriate parameters, but
+               any parameters you supply here will override those.
+      -->
       <method name="handleCommand">
-        <parameter name="aTriggeringEvent"/>
+        <parameter name="event"/>
+        <parameter name="openUILinkWhere"/>
+        <parameter name="openUILinkParams"/>
         <body><![CDATA[
-          if (aTriggeringEvent instanceof MouseEvent && aTriggeringEvent.button == 2)
-            return; // Do nothing for right clicks
-
-          var url = this.value;
-          var mayInheritPrincipal = false;
-          var postData = null;
-
-          let action = this._parseActionUrl(this._value);
-          let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
-
-          let matchLastLocationChange = true;
-          if (action) {
-            if (action.type == "switchtab") {
-              url = action.params.url;
-              if (this.hasAttribute("actiontype")) {
-                this.handleRevert();
-                let prevTab = gBrowser.selectedTab;
-                if (switchToTabHavingURI(url) && isTabEmpty(prevTab)) {
-                  gBrowser.removeTab(prevTab);
-                }
-                return;
-              }
-            } else if (action.type == "remotetab") {
-              url = action.params.url;
-            } else if (action.type == "keyword") {
-              url = action.params.url;
-            } else if (action.type == "searchengine") {
-              [url, postData] = this._parseAndRecordSearchEngineAction(action);
-            } else if (action.type == "visiturl") {
-              url = action.params.url;
-            }
-            continueOperation.call(this);
-          }
-          else {
-            this._canonizeURL(aTriggeringEvent, response => {
-              [url, postData, mayInheritPrincipal] = response;
-              if (url) {
-                matchLastLocationChange = (lastLocationChange ==
-                                           gBrowser.selectedBrowser.lastLocationChange);
-                continueOperation.call(this);
-              }
-            });
+          let isMouseEvent = event instanceof MouseEvent;
+          if (isMouseEvent && event.button == 2) {
+            // Do nothing for right clicks.
+            return;
           }
 
-          function continueOperation()
-          {
-            this.value = url;
-            gBrowser.userTypedValue = url;
-            if (gInitialPages.includes(url)) {
-              gBrowser.selectedBrowser.initialPageLoadedFromURLBar = url;
-            }
-            try {
-              addToUrlbarHistory(url);
-            } catch (ex) {
-              // Things may go wrong when adding url to session history,
-              // but don't let that interfere with the loading of the url.
-              Cu.reportError(ex);
-            }
+          // Do the command of the selected one-off if it's not an engine.
+          let selectedOneOff =
+            this.popup.oneOffSearchButtons.visuallySelectedButton;
+          if (selectedOneOff && !selectedOneOff.engine) {
+            selectedOneOff.doCommand();
+            return;
+          }
 
-            let loadCurrent = () => {
-              try {
-                openUILinkIn(url, "current", {
-                  allowThirdPartyFixup: true,
-                  indicateErrorPageLoad: true,
-                  disallowInheritPrincipal: !mayInheritPrincipal,
-                  allowPinnedTabHostChange: true,
-                  postData: postData,
-                  allowPopups: url.startsWith("javascript:"),
-                });
-              } catch (ex) {
-                // This load can throw an exception in certain cases, which means
-                // we'll want to replace the URL with the loaded URL:
-                if (ex.result != Cr.NS_ERROR_LOAD_SHOWED_ERRORPAGE) {
-                  this.handleRevert();
-                }
-              }
-
-              // Ensure the start of the URL is visible for UX reasons:
-              this.selectionStart = this.selectionEnd = 0;
-            };
-
-            // Focus the content area before triggering loads, since if the load
-            // occurs in a new tab, we want focus to be restored to the content
-            // area when the current tab is re-selected.
-            gBrowser.selectedBrowser.focus();
-
-            let isMouseEvent = aTriggeringEvent instanceof MouseEvent;
-
-            // If the current tab is empty, ignore Alt+Enter (just reuse this tab)
-            let altEnter = !isMouseEvent && aTriggeringEvent &&
-              aTriggeringEvent.altKey && !isTabEmpty(gBrowser.selectedTab);
-
-            if (isMouseEvent || altEnter) {
-              // Use the standard UI link behaviors for clicks or Alt+Enter
-              let where = "tab";
-              if (isMouseEvent)
-                where = whereToOpenLink(aTriggeringEvent, false, false);
-
-              if (where == "current") {
-                if (matchLastLocationChange) {
-                  loadCurrent();
-                }
-              } else {
-                this.handleRevert();
-                let params = { allowThirdPartyFixup: true,
-                               postData: postData,
-                               initiatingDoc: document };
-                openUILinkIn(url, where, params);
-              }
+          let where = openUILinkWhere;
+          if (!where) {
+            if (isMouseEvent) {
+              where = whereToOpenLink(event, false, false);
             } else {
-              if (matchLastLocationChange) {
-                loadCurrent();
-              }
+              // If the current tab is empty, ignore Alt+Enter (reuse this tab)
+              let altEnter = !isMouseEvent &&
+                             event &&
+                             event.altKey &&
+                             !isTabEmpty(gBrowser.selectedTab);
+              where = altEnter ? "tab" : "current";
             }
+          }
+
+          let url = this.value;
+          let mayInheritPrincipal = false;
+          let postData = null;
+          let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
+          let matchLastLocationChange = true;
+
+          let action = this._parseActionUrl(url);
+          if (action) {
+            switch (action.type) {
+              case "visiturl":
+              case "keyword":
+              case "remotetab":
+                url = action.params.url;
+                break;
+              case "switchtab":
+                url = action.params.url;
+                if (this.hasAttribute("actiontype")) {
+                  this.handleRevert();
+                  let prevTab = gBrowser.selectedTab;
+                  if (switchToTabHavingURI(url) && isTabEmpty(prevTab)) {
+                    gBrowser.removeTab(prevTab);
+                  }
+                  return;
+                }
+                break;
+              case "searchengine":
+                if (selectedOneOff && selectedOneOff.engine) {
+                  // Replace the engine with the selected one-off engine.
+                  action.params.engineName = engine.name;
+                }
+                [url, postData] = this._recordSearchEngineLoad(
+                  action.params.engineName,
+                  action.params.searchSuggestion || action.params.searchQuery,
+                  event,
+                  where,
+                  openUILinkParams
+                );
+                break;
+            }
+            this._loadURL(url, postData, where, openUILinkParams,
+                          matchLastLocationChange, mayInheritPrincipal);
+            return;
+          }
+
+          // If there's a selected one-off button and the input value is a
+          // search query (or "keyword" in URI-fixup terminology), then load a
+          // search using the one-off's engine.
+          if (selectedOneOff && selectedOneOff.engine) {
+            // `url` (which is this.value) may be an autofilled string.  Search
+            // only with the portion that the user typed, if any, by preferring
+            // the autocomplete controller's searchString.
+            let value = this._searchStringOnHandleEnter ||
+                        this.mController.searchString ||
+                        url;
+            let fixup;
+            try {
+              fixup = Services.uriFixup.getFixupURIInfo(
+                value,
+                Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
+              );
+            } catch (ex) {}
+            if (fixup && fixup.keywordProviderName) {
+              [url, postData] =
+                this._recordSearchEngineLoad(selectedOneOff.engine, value,
+                                             event, where, openUILinkParams);
+              this._loadURL(url, postData, where, openUILinkParams,
+                            matchLastLocationChange, mayInheritPrincipal);
+              return;
+            }
+          }
+
+          this._canonizeURL(event, response => {
+            [url, postData, mayInheritPrincipal] = response;
+            if (url) {
+              matchLastLocationChange =
+                lastLocationChange ==
+                gBrowser.selectedBrowser.lastLocationChange;
+              this._loadURL(url, postData, where, openUILinkParams,
+                            matchLastLocationChange, mayInheritPrincipal);
+            }
+          });
+        ]]></body>
+      </method>
+
+      <method name="_loadURL">
+        <parameter name="url"/>
+        <parameter name="postData"/>
+        <parameter name="openUILinkWhere"/>
+        <parameter name="openUILinkParams"/>
+        <parameter name="matchLastLocationChange"/>
+        <parameter name="mayInheritPrincipal"/>
+        <body><![CDATA[
+          this.value = url;
+          gBrowser.userTypedValue = url;
+          if (gInitialPages.includes(url)) {
+            gBrowser.selectedBrowser.initialPageLoadedFromURLBar = url;
+          }
+          try {
+            addToUrlbarHistory(url);
+          } catch (ex) {
+            // Things may go wrong when adding url to session history,
+            // but don't let that interfere with the loading of the url.
+            Cu.reportError(ex);
+          }
+
+          let params = {
+            postData: postData,
+            allowThirdPartyFixup: true,
+          };
+          if (openUILinkWhere == "current") {
+            params.indicateErrorPageLoad = true;
+            params.allowPinnedTabHostChange = true;
+            params.disallowInheritPrincipal = !mayInheritPrincipal;
+            params.allowPopups = url.startsWith("javascript:");
+          } else {
+            params.initiatingDoc = document;
+          }
+
+          if (openUILinkParams) {
+            for (let key in openUILinkParams) {
+              params[key] = openUILinkParams[key];
+            }
+          }
+
+          // Focus the content area before triggering loads, since if the load
+          // occurs in a new tab, we want focus to be restored to the content
+          // area when the current tab is re-selected.
+          gBrowser.selectedBrowser.focus();
+
+          if (openUILinkWhere == "current" && !matchLastLocationChange) {
+            return;
+          }
+
+          if (openUILinkWhere != "current") {
+            this.handleRevert();
+          }
+
+          try {
+            openUILinkIn(url, openUILinkWhere, params);
+          } catch (ex) {
+            // This load can throw an exception in certain cases, which means
+            // we'll want to replace the URL with the loaded URL:
+            if (ex.result != Cr.NS_ERROR_LOAD_SHOWED_ERRORPAGE) {
+              this.handleRevert();
+            }
+          }
+
+          if (openUILinkWhere == "current") {
+            // Ensure the start of the URL is visible for usability reasons.
+            this.selectionStart = this.selectionEnd = 0;
           }
         ]]></body>
       </method>
 
-      <method name="_parseAndRecordSearchEngineAction">
-        <parameter name="action"/>
+      <method name="_recordSearchEngineLoad">
+        <parameter name="engineOrEngineName"/>
+        <parameter name="query"/>
+        <parameter name="event"/>
+        <parameter name="openUILinkWhere"/>
+        <parameter name="openUILinkParams"/>
         <body><![CDATA[
           let engine =
-            Services.search.getEngineByName(action.params.engineName);
+            typeof(engineOrEngineName) == "string" ?
+              Services.search.getEngineByName(engineOrEngineName) :
+              engineOrEngineName;
           BrowserSearch.recordSearchInTelemetry(engine, "urlbar");
-          let query = action.params.searchSuggestion ||
-                      action.params.searchQuery;
+          this.popup.oneOffSearchButtons
+              .maybeRecordTelemetry(event, openUILinkWhere, openUILinkParams);
           let submission = engine.getSubmission(query, null, "keyword");
           return [submission.uri.spec, submission.postData];
         ]]></body>
@@ -728,8 +823,18 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "trimURLs":
                 this._mayTrimURLs = this._prefs.getBoolPref(aData);
                 break;
+              case "oneOffSearches":
+                this._enableOrDisableOneOffSearches();
+                break;
             }
           }
+        ]]></body>
+      </method>
+
+      <method name="_enableOrDisableOneOffSearches">
+        <body><![CDATA[
+          let enable = this._prefs.getBoolPref("oneOffSearches");
+          this.popup.enableOneOffSearches(enable);
         ]]></body>
       </method>
 
@@ -903,6 +1008,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </method>
 
       <method name="handleEnter">
+        <parameter name="event"/>
         <body><![CDATA[
           // We need to ensure we're using a selected autocomplete result.
           // A result should automatically be selected by default,
@@ -919,7 +1025,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // ensure that it corresponds to the current input.
 
           if (this.popup.selectedIndex != 0 || this.gotResultForCurrentQuery) {
-            return this.mController.handleEnter(false);
+            // Store the current search string so it can be used in
+            // handleCommand, which will be called as a result of
+            // mController.handleEnter().  handleEnter will reset it.
+            this._searchStringOnHandleEnter = this.mController.searchString;
+            let rv = this.mController.handleEnter(false, event);
+            delete this._searchStringOnHandleEnter;
+            return rv;
           }
 
           this.handleEnterWhenGotResult = true;
@@ -1100,7 +1212,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Check for unmodified left-click, and use default behavior
           if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
               !aEvent.altKey && !aEvent.metaKey) {
-            controller.handleEnter(true);
+            controller.handleEnter(true, aEvent);
             return;
           }
 
@@ -1137,6 +1249,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
   <binding id="urlbar-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
 
+    <resources>
+      <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
+      <stylesheet src="chrome://browser/skin/searchbar.css"/>
+    </resources>
+
     <content ignorekeys="true" level="top" consumeoutsideclicks="never"
              aria-owns="richlistbox">
       <xul:hbox anonid="search-suggestions-notification"
@@ -1171,6 +1288,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                        flex="1"/>
       <xul:hbox anonid="footer">
         <children/>
+        <xul:vbox anonid="one-off-search-buttons"
+                  class="search-one-offs"
+                  compact="true"
+                  flex="1"/>
       </xul:hbox>
     </content>
 
@@ -1192,6 +1313,31 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="footer" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "footer");
       </field>
+
+      <field name="oneOffSearchButtons" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "one-off-search-buttons");
+      </field>
+
+      <field name="_oneOffSearchesEnabled">false</field>
+
+      <method name="enableOneOffSearches">
+        <parameter name="enable"/>
+        <body><![CDATA[
+          this._oneOffSearchesEnabled = enable;
+          if (enable) {
+            this.oneOffSearchButtons.style.display = "-moz-box";
+            this.oneOffSearchButtons.popup = this;
+            this.oneOffSearchButtons.textbox = this.input;
+            this.oneOffSearchButtons.telemetryOrigin = "urlbar";
+          } else {
+            this.oneOffSearchButtons.style.display = "none";
+            this.oneOffSearchButtons.popup = null;
+            this.oneOffSearchButtons.textbox = null;
+            this.oneOffSearchButtons.telemetryOrigin = null;
+          }
+        ]]></body>
+      </method>
 
       <method name="openSearchSuggestionsNotificationLearnMoreURL">
         <body><![CDATA[
@@ -1491,61 +1637,67 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </body>
       </method>
 
-      <method name="onPopupClick">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-          // Ignore right-clicks
-          if (aEvent.button == 2)
-            return;
-
-          var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
-
-          // Check for unmodified left-click, and use default behavior
-          if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
-              !aEvent.altKey && !aEvent.metaKey) {
-            controller.handleEnter(true);
-            return;
-          }
-
-          // Check for middle-click or modified clicks on the URL bar
-          if (gURLBar && this.mInput == gURLBar) {
-            var url = controller.getValueAt(this.selectedIndex);
-            var options = {};
-
-            // close the autocomplete popup and revert the entered address
-            this.closePopup();
-            controller.handleEscape();
-
-            // Check if this is meant to be an action
-            let action = this.mInput._parseActionUrl(url);
-            if (action) {
-              // TODO (bug 1054816): Centralise the implementation of actions
-              // into a JS module.
-              switch (action.type) {
-                case "switchtab": // Fall through.
-                case "keyword": // Fall through.
-                case "visiturl": {
-                  url = action.params.url;
-                  break;
-                }
-                case "searchengine": {
-                  [url, options.postData] =
-                    this.input._parseAndRecordSearchEngineAction(action);
-                  break;
-                }
-                default: {
-                  return;
-                }
+      <method name="_visuallySelectedOneOffChanged">
+        <body><![CDATA[
+          // Update all searchengine result items to use the newly selected
+          // engine.
+          for (let item of this.richlistbox.childNodes) {
+            if (item.collapsed) {
+              break;
+            }
+            let url = item.getAttribute("url");
+            if (url) {
+              let action = item._parseActionUrl(url);
+              if (action && action.type == "searchengine") {
+                item._adjustAcItem();
               }
             }
-
-            // respect the usual clicking subtleties
-            openUILink(url, aEvent, options);
           }
-        ]]>
-        </body>
+        ]]></body>
       </method>
+
+      <!-- This handles keypress changes to the selection among the one-off
+           search buttons and between the one-offs and the listbox.  It returns
+           true if the keypress was consumed and false if not. -->
+      <method name="handleKeyPress">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          this.oneOffSearchButtons.handleKeyPress(aEvent, this._matchCount,
+                                                  !this._isFirstResultHeuristic,
+                                                  gBrowser.userTypedValue);
+          return aEvent.defaultPrevented;
+        ]]></body>
+      </method>
+
+      <!-- This is called when a one-off is clicked and when "search in new tab"
+           is selected from a one-off context menu. -->
+      <method name="handleOneOffSearch">
+        <parameter name="event"/>
+        <parameter name="engine"/>
+        <parameter name="where"/>
+        <parameter name="params"/>
+        <body><![CDATA[
+          this.input.handleCommand(event, where, params);
+        ]]></body>
+      </method>
+
+      <!-- Result listitems call this to determine which search engine they
+           should show in their labels and include in their url attributes. -->
+      <property name="overrideSearchEngineName" readonly="true">
+        <getter><![CDATA[
+          // When building the popup, autocomplete reuses an item at index i if
+          // that item's url attribute matches the controller's value at index
+          // i, but only if overrideSearchEngineName matches the engine in the
+          // url attribute.  To absolutely avoid reusing items that shouldn't be
+          // reused, always return a non-null name here by falling back to the
+          // current engine.
+          let engine =
+            (this.oneOffSearchButtons.visuallySelectedButton &&
+             this.oneOffSearchButtons.visuallySelectedButton.engine) ||
+             Services.search.currentEngine;
+          return engine ? engine.name : null;
+        ]]></getter>
+      </property>
 
       <method name="createResultLabel">
         <parameter name="item"/>
@@ -1615,6 +1767,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
     </implementation>
     <handlers>
+
+      <handler event="OneOffsVisuallySelectedButtonChanged"><![CDATA[
+        this._visuallySelectedOneOffChanged();
+      ]]></handler>
 
       <handler event="mousedown"><![CDATA[
         // Required to make the xul:label.text-link elements in the search

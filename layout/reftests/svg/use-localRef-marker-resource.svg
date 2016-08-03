@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <marker id="circleMarker" markerWidth="8" markerHeight="8" refX="5" refY="5">
+      <circle cx="5" cy="5" r="2" style="stroke: none; fill:lime;"/>
+    </marker>
+  </defs>
+  <path id="markerA1" d="M20,20 L70,20 L120,20" style="stroke: blue; stroke-width: 2px; marker-start: url(#circleMarker);"/>
+  <path id="markerA2" d="M20,40 L70,40 L120,40" style="stroke: blue; stroke-width: 2px;"/>
+  <path id="markerA3" d="M20,60 L70,60 L120,60" style="stroke: blue; stroke-width: 2px;"/>
+
+  <path id="markerB1" d="M20,80 L70,80 L120,80" style="stroke: blue; stroke-width: 2px; marker-mid: url(#circleMarker);"/>
+  <path id="markerB2" d="M20,100 L70,100 L120,100" style="stroke: blue; stroke-width: 2px;"/>
+  <path id="markerB3" d="M20,120 L70,120 L120,120" style="stroke: blue; stroke-width: 2px;"/>
+
+  <path id="markerC1" d="M20,140 L70,140 L120,140" style="stroke: blue; stroke-width: 2px; marker-end: url(#circleMarker);"/>
+  <path id="markerC2" d="M20,160 L70,160 L120,160" style="stroke: blue; stroke-width: 2px;"/>
+  <path id="markerC3" d="M20,180 L70,180 L120,180" style="stroke: blue; stroke-width: 2px;;"/>
+</svg>

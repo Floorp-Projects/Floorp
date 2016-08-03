@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIAutoCompleteInput;
+interface nsIDOMEvent;
 
 [scriptable, uuid(ff9f8465-204a-47a6-b3c9-0628b3856684)]
 interface nsIAutoCompleteController : nsISupports
@@ -63,9 +64,16 @@ interface nsIAutoCompleteController : nsISupports
    * fill this value into the input field before continuing. If false, just
    * use the current value of the input field.
    *
+   * @param aIsPopupSelection
+   *        Pass true if the selection was made from the popup.
+   * @param aEvent
+   *        The event that triggered the enter, like a key event if the user
+   *        pressed the Return key or a click event if the user clicked a popup
+   *        item.
    * @return True if the controller wishes to prevent event propagation and default event
    */
-  boolean handleEnter(in boolean aIsPopupSelection);
+  boolean handleEnter(in boolean aIsPopupSelection,
+                      [optional] in nsIDOMEvent aEvent);
 
   /*
    * Notify the controller that the user wishes to revert autocomplete

@@ -72,7 +72,7 @@ PageIconProtocolHandler.prototype = {
       // we got all the favicon data.
       let pipe = Cc["@mozilla.org/pipe;1"]
                    .createInstance(Ci.nsIPipe);
-      pipe.init(true, true, 0, Ci.nsIFaviconService.MAX_FAVICON_SIZE);
+      pipe.init(true, true, 0, Ci.nsIFaviconService.MAX_FAVICON_BUFFER_SIZE);
 
       // Create our channel.
       let channel = Cc['@mozilla.org/network/input-stream-channel;1']

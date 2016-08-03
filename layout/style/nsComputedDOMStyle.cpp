@@ -5562,10 +5562,12 @@ nsComputedDOMStyle::GetSVGPaintFor(bool aFill)
     }
     case eStyleSVGPaintType_Server:
     {
+      // Bug 1288812 - we should only serialize fragment for local-ref URL.
       RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
       RefPtr<nsROCSSPrimitiveValue> fallback = new nsROCSSPrimitiveValue;
-
-      val->SetURI(paint->mPaint.mPaintServer);
+      nsCOMPtr<nsIURI> paintServerURI =
+        paint->mPaint.mPaintServer->GetSourceURL();
+      val->SetURI(paintServerURI);
       SetToRGBAColor(fallback, paint->mFallbackColor);
 
       valueList->AppendCSSValue(val.forget());
@@ -5603,11 +5605,11 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerEnd()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  // Bug 1288812 - we should only serialize fragment for local-ref URL.
+  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerEnd.GetSourceURL();
 
-  const nsStyleSVG* svg = StyleSVG();
-
-  if (svg->mMarkerEnd)
-    val->SetURI(svg->mMarkerEnd);
+  if (markerURI)
+    val->SetURI(markerURI);
   else
     val->SetIdent(eCSSKeyword_none);
 
@@ -5618,11 +5620,11 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerMid()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  // Bug 1288812 - we should only serialize fragment for local-ref URL.
+  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerMid.GetSourceURL();
 
-  const nsStyleSVG* svg = StyleSVG();
-
-  if (svg->mMarkerMid)
-    val->SetURI(svg->mMarkerMid);
+  if (markerURI)
+    val->SetURI(markerURI);
   else
     val->SetIdent(eCSSKeyword_none);
 
@@ -5633,11 +5635,11 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerStart()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  // Bug 1288812 - we should only serialize fragment for local-ref URL.
+  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerStart.GetSourceURL();
 
-  const nsStyleSVG* svg = StyleSVG();
-
-  if (svg->mMarkerStart)
-    val->SetURI(svg->mMarkerStart);
+  if (markerURI)
+    val->SetURI(markerURI);
   else
     val->SetIdent(eCSSKeyword_none);
 
@@ -6032,8 +6034,10 @@ nsComputedDOMStyle::DoGetClipPath()
       return CreatePrimitiveValueForClipPath(nullptr,
                                              svg->mClipPath.GetSizingBox());
     case StyleClipPathType::URL: {
+      // Bug 1288812 - we should only serialize fragment for local-ref URL.
+      nsCOMPtr<nsIURI> pathURI = svg->mClipPath.GetURL()->GetSourceURL();
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetURI(svg->mClipPath.GetURL());
+      val->SetURI(pathURI);
       return val.forget();
     }
     case StyleClipPathType::None_: {
@@ -6064,7 +6068,9 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
   // Handle url().
   if (aStyleFilter.GetType() == NS_STYLE_FILTER_URL) {
-    value->SetURI(aStyleFilter.GetURL());
+    // Bug 1288812 - we should only serialize fragment for local-ref URL.
+    nsCOMPtr<nsIURI> filterURI = aStyleFilter.GetURL()->GetSourceURL();
+    value->SetURI(filterURI);
     return value.forget();
   }
 

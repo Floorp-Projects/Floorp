@@ -727,6 +727,7 @@ Servo_DropNodeData(ServoNodeData* data)
 RawServoStyleSheet*
 Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length,
                               mozilla::css::SheetParsingMode mode,
+                              const uint8_t* base_bytes, uint32_t base_length,
                               ThreadSafeURIHolder* base,
                               ThreadSafeURIHolder* referrer,
                               ThreadSafePrincipalHolder* principal)

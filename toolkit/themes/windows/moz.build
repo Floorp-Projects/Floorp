@@ -6,5 +6,3 @@
 
 DIRS += ['global', 'mozapps']
 
-if CONFIG['MOZ_HELP_VIEWER']:
-    DIRS += ['help']
