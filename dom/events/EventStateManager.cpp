@@ -3834,7 +3834,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
     newPointerEvent =
       new WidgetPointerEvent(aMouseEvent->IsTrusted(), aMessage,
                              aMouseEvent->mWidget);
-    newPointerEvent->isPrimary = sourcePointer->isPrimary;
+    newPointerEvent->mIsPrimary = sourcePointer->mIsPrimary;
     newPointerEvent->pointerId = sourcePointer->pointerId;
     newPointerEvent->mWidth = sourcePointer->mWidth;
     newPointerEvent->mHeight = sourcePointer->mHeight;
