@@ -112,25 +112,6 @@ function matchRequest(channel, filters) {
     }
   }
 
-  // The following check is necessary because beacon channels don't come
-  // associated with a load group. Bug 1160837 will hopefully introduce a
-  // platform fix that will render the following code entirely useless.
-  if (channel.loadInfo &&
-      channel.loadInfo.externalContentPolicyType ==
-      Ci.nsIContentPolicy.TYPE_BEACON) {
-    let nonE10sMatch = filters.window &&
-        channel.loadInfo.loadingDocument === filters.window.document;
-    const loadingPrincipal = channel.loadInfo.loadingPrincipal;
-    let e10sMatch = filters.topFrame &&
-        filters.topFrame.contentPrincipal &&
-        filters.topFrame.contentPrincipal.equals(loadingPrincipal) &&
-        filters.topFrame.contentPrincipal.URI.spec == channel.referrer.spec;
-    let b2gMatch = filters.appId && loadingPrincipal.appId === filters.appId;
-    if (nonE10sMatch || e10sMatch || b2gMatch) {
-      return true;
-    }
-  }
-
   return false;
 }
 
