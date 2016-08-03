@@ -29,7 +29,6 @@ using namespace wasm;
 
 Compartment::Compartment(Zone* zone)
   : mutatingInstances_(false),
-    instanceObjects_(zone, InstanceObjectSet()),
     activationCount_(0),
     profilingEnabled_(false)
 {}
@@ -37,7 +36,6 @@ Compartment::Compartment(Zone* zone)
 Compartment::~Compartment()
 {
     MOZ_ASSERT(activationCount_ == 0);
-    MOZ_ASSERT(!instanceObjects_.initialized() || instanceObjects_.empty());
     MOZ_ASSERT(instances_.empty());
     MOZ_ASSERT(!mutatingInstances_);
 }
@@ -63,8 +61,10 @@ Compartment::trace(JSTracer* trc)
     // unreachable while executing on the stack. Since wasm does not otherwise
     // scan the stack during GC to identify live instances, we mark all instance
     // objects live if there is any running wasm in the compartment.
-    if (activationCount_)
-        instanceObjects_.get().trace(trc);
+    if (activationCount_) {
+        for (Instance* i : instances_)
+            i->trace(trc);
+    }
 }
 
 bool
@@ -75,16 +75,6 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
 
     if (!instance.ensureProfilingState(cx, profilingEnabled_))
         return false;
-
-    if (!instanceObjects_.initialized() && !instanceObjects_.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    if (!instanceObjects_.putNew(instanceObj)) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
 
     size_t index;
     if (BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
@@ -182,5 +172,5 @@ Compartment::profilingEnabled() const
 void
 Compartment::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf, size_t* compartmentTables)
 {
-    *compartmentTables += instanceObjects_.sizeOfExcludingThis(mallocSizeOf);
+    *compartmentTables += instances_.sizeOfExcludingThis(mallocSizeOf);
 }
