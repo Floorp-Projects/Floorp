@@ -34,6 +34,33 @@ const INFO_BODY = String.raw`
   sys.exit(0)
 `;
 
+const WONTDIE_BODY = String.raw`
+  import signal
+  import struct
+  import sys
+  import time
+
+  signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+  def spin():
+      while True:
+          try:
+              signal.pause()
+          except AttributeError:
+              time.sleep(5)
+
+  while True:
+      rawlen = sys.stdin.read(4)
+      if len(rawlen) == 0:
+          spin()
+
+      msglen = struct.unpack('@I', rawlen)[0]
+      msg = sys.stdin.read(msglen)
+
+      sys.stdout.write(struct.pack('@I', msglen))
+      sys.stdout.write(msg)
+`;
+
 const STDERR_LINES = ["hello stderr", "this should be a separate line"];
 let STDERR_MSG = STDERR_LINES.join("\\n");
 
@@ -52,6 +79,11 @@ const SCRIPTS = [
     name: "info",
     description: "a native app that gives some info about how it was started",
     script: INFO_BODY.replace(/^ {2}/gm, ""),
+  },
+  {
+    name: "wontdie",
+    description: "a native app that does not exit when stdin closes or on SIGTERM",
+    script: WONTDIE_BODY.replace(/^ {2}/gm, ""),
   },
   {
     name: "stderr",
@@ -429,6 +461,44 @@ add_task(function* test_child_process() {
   let exitPromise = waitForSubprocessExit();
   yield extension.unload();
   yield exitPromise;
+});
+
+// Test that an unresponsive native application still gets killed eventually
+add_task(function* test_unresponsive_native_app() {
+  // XXX expose GRACEFUL_SHUTDOWN_TIME as a pref and reduce it
+  // just for this test?
+
+  function background() {
+    let port = browser.runtime.connectNative("wontdie");
+
+    const MSG = "echo me";
+    // bounce a message to make sure the process actually starts
+    port.onMessage.addListener(msg => {
+      browser.test.assertEq(msg, MSG, "Received echoed message");
+      browser.test.sendMessage("ready");
+    });
+    port.postMessage(MSG);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, ID);
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  let procCount = yield getSubprocessCount();
+  equal(procCount, 1, "subprocess is running");
+
+  let exitPromise = waitForSubprocessExit();
+  yield extension.unload();
+  yield exitPromise;
+
+  procCount = yield getSubprocessCount();
+  equal(procCount, 0, "subprocess was succesfully killed");
 });
 
 add_task(function* test_stderr() {
