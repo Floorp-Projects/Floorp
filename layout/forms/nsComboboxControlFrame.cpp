@@ -236,6 +236,7 @@ nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
   , mDroppedDown(false)
   , mInRedisplayText(false)
   , mDelayedShowDropDown(false)
+  , mIsOpenInParentProcess(false)
 {
   REFLOW_COUNTER_INIT()
 }
