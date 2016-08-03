@@ -123,6 +123,12 @@ Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(JNIEnv*, jcl
     nsWindow::InvalidateAndScheduleComposite();
 }
 
+NS_EXPORT float JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity(JNIEnv*, jclass)
+{
+    return nsWindow::ComputeRenderIntegrity();
+}
+
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface(JNIEnv* jenv, jclass, jobject surface)
 {
