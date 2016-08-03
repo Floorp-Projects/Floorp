@@ -933,6 +933,13 @@ Servo_Initialize()
             "non-MOZ_STYLO build");
 }
 
+void
+Servo_Shutdown()
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_Shutdown in a "
+            "non-MOZ_STYLO build");
+}
+
 // Restyle hints.
 nsRestyleHint
 Servo_ComputeRestyleHint(RawGeckoElement* element,
