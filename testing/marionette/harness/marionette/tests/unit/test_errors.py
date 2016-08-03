@@ -38,7 +38,6 @@ class TestErrors(marionette_test.MarionetteTestCase):
         self.assertIn(message, r)
         self.assertIn(", caused by %r" % cause[0], r)
         self.assertIn("\nstacktrace:\n\tfirst\n\tsecond", r)
-        self.assertIn("MarionetteException:", r)
 
     def test_cause_string(self):
         exc = errors.MarionetteException(cause="foo")
