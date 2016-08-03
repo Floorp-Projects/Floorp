@@ -9,6 +9,7 @@
 // Keep others in (case-insensitive) order:
 #include "nsDisplayList.h"
 #include "nsIDocument.h"
+#include "nsIDOMHTMLIFrameElement.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsRenderingContext.h"
@@ -906,8 +907,11 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
     if (window) {
       nsCOMPtr<nsIDOMElement> frameElement = window->GetFrameElement();
       nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(frameElement);
-      if (olc) {
-        // Our document is inside an HTML 'object', 'embed' or 'applet' element
+      nsCOMPtr<nsIDOMHTMLIFrameElement> iframeElement =
+        do_QueryInterface(frameElement);
+      if (olc || iframeElement) {
+        // Our document is inside an HTML 'object', 'embed', 'applet'
+        // or 'iframe' element
         if (aEmbeddingFrame) {
           nsCOMPtr<nsIContent> element = do_QueryInterface(frameElement);
           *aEmbeddingFrame = element->GetPrimaryFrame();
