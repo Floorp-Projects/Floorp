@@ -6839,14 +6839,16 @@ PresShell::UpdateActivePointerState(WidgetGUIEvent* aEvent)
     // In this case we have to know information about available mouse pointers
     if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
       gActivePointersIds->Put(mouseEvent->pointerId,
-                              new PointerInfo(false, mouseEvent->inputSource, true));
+                              new PointerInfo(false, mouseEvent->inputSource,
+                                              true));
     }
     break;
   case ePointerDown:
     // In this case we switch pointer to active state
     if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
       gActivePointersIds->Put(pointerEvent->pointerId,
-                              new PointerInfo(true, pointerEvent->inputSource, pointerEvent->isPrimary));
+                              new PointerInfo(true, pointerEvent->inputSource,
+                                              pointerEvent->mIsPrimary));
     }
     break;
   case ePointerUp:
@@ -6854,14 +6856,17 @@ PresShell::UpdateActivePointerState(WidgetGUIEvent* aEvent)
     if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
       if(pointerEvent->inputSource != nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
         gActivePointersIds->Put(pointerEvent->pointerId,
-                                new PointerInfo(false, pointerEvent->inputSource, pointerEvent->isPrimary));
+                                new PointerInfo(false,
+                                                pointerEvent->inputSource,
+                                                pointerEvent->mIsPrimary));
       } else {
         gActivePointersIds->Remove(pointerEvent->pointerId);
       }
     }
     break;
   case eMouseExitFromWidget:
-    // In this case we have to remove information about disappeared mouse pointers
+    // In this case we have to remove information about disappeared mouse
+    // pointers
     if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
       gActivePointersIds->Remove(mouseEvent->pointerId);
     }
@@ -7205,12 +7210,12 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
 
       WidgetPointerEvent event(touchEvent->IsTrusted(), pointerMessage,
                                touchEvent->mWidget);
-      event.isPrimary = i == 0;
+      event.mIsPrimary = i == 0;
       event.pointerId = touch->Identifier();
       event.mRefPoint = touch->mRefPoint;
       event.mModifiers = touchEvent->mModifiers;
-      event.width = touch->RadiusX();
-      event.height = touch->RadiusY();
+      event.mWidth = touch->RadiusX();
+      event.mHeight = touch->RadiusY();
       event.tiltX = touch->tiltX;
       event.tiltY = touch->tiltY;
       event.mTime = touchEvent->mTime;
