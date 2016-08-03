@@ -239,7 +239,7 @@ public:
   bool IsEndedOrShutdown() const;
 
   // Return true if the MediaDecoderOwner's error attribute is not null.
-  // If the MediaDecoder is shutting down, OwnerHasError will return true.
+  // Must be called before Shutdown().
   bool OwnerHasError() const;
 
   already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
@@ -416,6 +416,7 @@ private:
   void UpdateLogicalPosition()
   {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(!IsShutdown());
     // Per spec, offical position remains stable during pause and seek.
     if (mPlayState == PLAY_STATE_PAUSED || IsSeeking()) {
       return;
@@ -433,7 +434,7 @@ private:
   // Indicate whether the media is same-origin with the element.
   void UpdateSameOriginStatus(bool aSameOrigin);
 
-  MediaDecoderOwner* GetOwner() override;
+  MediaDecoderOwner* GetOwner() const override;
 
 #ifdef MOZ_EME
   typedef MozPromise<RefPtr<CDMProxy>, bool /* aIgnored */, /* IsExclusive = */ true> CDMProxyPromise;
@@ -541,6 +542,7 @@ protected:
 
   void SetExplicitDuration(double aValue)
   {
+    MOZ_ASSERT(!IsShutdown());
     mExplicitDuration.Set(Some(aValue));
 
     // We Invoke DurationChanged explicitly, rather than using a watcher, so

@@ -30,6 +30,9 @@ class Message(object):
     def __eq__(self, other):
         return self.id == other.id
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class Command(Message):
     TYPE = 0
@@ -130,7 +133,7 @@ class TcpTransport(object):
         self.protocol = 1
         self.application_type = None
         self.last_id = 0
-        self.expected_responses = []
+        self.expected_response = None
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(self.socket_timeout)
@@ -185,13 +188,16 @@ class TcpTransport(object):
                         msg = self._unmarshal(remaining)
                         self.last_id = msg.id
 
-                        if isinstance(msg, Response) and self.protocol >= 3:
-                            if msg not in self.expected_responses:
-                                raise Exception("Received unexpected response: %s" % msg)
-                            else:
-                                self.expected_responses.remove(msg)
+                        if self.protocol >= 3:
+                            self.last_id = msg.id
+
+                            # keep reading incoming responses until
+                            # we receive the user's expected response
+                            if isinstance(msg, Response) and msg != self.expected_response:
+                                return self.receive(unmarshal)
 
                         return msg
+
                     else:
                         return remaining
 
@@ -232,7 +238,8 @@ class TcpTransport(object):
 
         if isinstance(obj, Message):
             data = obj.to_msg()
-            self.expected_responses.append(obj)
+            if isinstance(obj, Command):
+                self.expected_response = obj
         else:
             data = json.dumps(obj)
         payload = "%s:%s" % (len(data), data)
