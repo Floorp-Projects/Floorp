@@ -852,8 +852,8 @@ nsMenuPopupFrame::ShowPopup(bool aIsContextMenu)
     mPopupState = ePopupOpening;
     mIsOpenChanged = true;
 
-    // Clear mouse capture when a context menu is opened.
-    if (aIsContextMenu) {
+    // Clear mouse capture when a popup is opened.
+    if (mPopupType == ePopupTypeMenu) {
       nsIPresShell::SetCapturingContent(nullptr, 0);
     }
 

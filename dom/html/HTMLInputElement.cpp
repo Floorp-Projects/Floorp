@@ -3301,8 +3301,7 @@ HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
   } else if (!mForm->ImplicitSubmissionIsDisabled() &&
-             (mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
-              mForm->CheckValidFormSubmission())) {
+             mForm->SubmissionCanProceed(nullptr)) {
     // TODO: removing this code and have the submit event sent by the form,
     // bug 592124.
     // If there's only one text control, just submit the form
@@ -4569,11 +4568,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
             // TODO: removing this code and have the submit event sent by the
             // form, see bug 592124.
             if (presShell && (event.mMessage != eFormSubmit ||
-                              mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
-                              // We know the element is a submit control, if this check is moved,
-                              // make sure formnovalidate is used only if it's a submit control.
-                              HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate) ||
-                              mForm->CheckValidFormSubmission())) {
+                              mForm->SubmissionCanProceed(this))) {
               // Hold a strong ref while dispatching
               RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
               presShell->HandleDOMEventWithTarget(mForm, &event, &status);

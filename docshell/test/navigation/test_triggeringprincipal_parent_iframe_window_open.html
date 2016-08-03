@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="NavigationUtils.js"></script>        
+</head>
+<body>
+
+<iframe name="testframe" id="testframe" src="file_triggeringprincipal_iframe_iframe_window_open_base.html"></iframe>
+
+<script type="text/javascript">
+
+/* We load an iframe which then gets navigated by the iframe's parent by calling
+ *  window.open("http://", iframe) later in the test. We then verify the
+ * TriggeringPrincipal and LoadingPrincipal of the navigated iframe.
+ *
+ * +------------------------------------------+
+ * |                                          | 
+ * |  +------------------+                    |
+ * |  | testframe        |                    | 
+ * |  +------------------+                    |
+ * |                                          | 
+ * | window.open("http://", "testframe");     |
+ * |                                          | 
+ * +------------------------------------------+
+ */
+
+const TRIGGERING_PRINCIPAL_URI =
+  "http://mochi.test:8888/tests/docshell/test/navigation/test_triggeringprincipal_parent_iframe_window_open.html";
+
+const LOADING_PRINCIPAL_URI = TRIGGERING_PRINCIPAL_URI;
+
+var testframe = document.getElementById("testframe");
+
+function checkResults() {
+  testframe.removeEventListener('load', checkResults, false);
+
+  var channel = SpecialPowers.wrap(testframe.contentDocument).docShell.currentDocumentChannel;
+  var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
+  var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+
+  is(triggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
+    "TriggeringPrincipal for targeted window.open() should be the principal of the document");
+
+  is(testframe.contentDocument.referrer, TRIGGERING_PRINCIPAL_URI,
+    "Referrer for targeted window.open() should be the principal of the document");
+
+  is(loadingPrincipal, LOADING_PRINCIPAL_URI,
+    "LoadingPrincipal for targeted window.open() should be the <iframe>.ownerDocument");
+ 
+  SimpleTest.finish();
+}
+
+function performNavigation() {
+  testframe.removeEventListener('load', performNavigation, false);
+  testframe.addEventListener('load', checkResults, false);
+  win = window.open("file_triggeringprincipal_parent_iframe_window_open_nav.html", "testframe");
+}
+
+// start the test
+SimpleTest.waitForExplicitFinish();
+
+testframe.addEventListener('load', performNavigation, false);
+
+</script>
+</pre>
+</body>
+</html>

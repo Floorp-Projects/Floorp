@@ -1003,9 +1003,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
         loadPtr(Address(GlobalReg, globalDataOffset - AsmJSGlobalRegBias), dest);
     }
-    void loadAsmJSHeapRegisterFromGlobalData() {
-        MOZ_ASSERT(Imm16::IsInSignedRange(wasm::HeapGlobalDataOffset - AsmJSGlobalRegBias));
-        loadWasmGlobalPtr(wasm::HeapGlobalDataOffset, HeapReg);
+    void loadWasmPinnedRegsFromTls() {
+        loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
+        loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, globalData)), GlobalReg);
+        ma_addu(GlobalReg, Imm32(AsmJSGlobalRegBias));
     }
 
     // Instrumentation for entering and leaving the profiler.

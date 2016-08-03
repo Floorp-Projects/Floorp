@@ -453,7 +453,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
   // here when the first frame is complete.
   if (!ShouldSendPartialInvalidations() && mFrameCount == 1) {
     mInvalidRect.UnionRect(mInvalidRect,
-                           gfx::IntRect(gfx::IntPoint(0, 0), GetSize()));
+                           IntRect(IntPoint(), Size()));
   }
 }
 

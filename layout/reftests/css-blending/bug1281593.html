@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Transform and Blend Mode</title>
+    <style>
+      body {
+        background: cornflowerblue;
+      }
+      .box-blend-mode {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 1em;
+        background-color: hsla(0,0%,0%,.25);
+        mix-blend-mode: multiply;
+      }
+      .box-blend-mode-inner {
+        width: 48px;
+        height: 48px;
+        background-image: url("../backgrounds/transparent-32x32.png");
+        background-position: center center;
+        background-repeat: no-repeat;
+        mix-blend-mode: multiply;
+      }
+
+      .box-blend-mode-inner.transformed {
+        transform: rotate(45deg);
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="box-blend-mode">
+      <div class="box-blend-mode-inner"></div>
+    </div>
+    <div class="box-blend-mode">
+      <div class="box-blend-mode-inner transformed"></div>
+    </div>
+  </body>
+</html>

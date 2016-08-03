@@ -19,4 +19,5 @@ skip-if(B2G||Mulet) random-if(d2d) == feImage-zoom-01a.svg          feImage-zoom
 skip-if(B2G||Mulet) random-if(d2d) == feImage-zoom-01b.svg          feImage-zoom-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == foreignObject-zoom-01.svg                    pass.svg # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == zoom-invalidation-01.svg                     pass.svg # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == replaced-element-zoom-01.html                pass.svg # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(winWidget,12,7) == zoomed-svg-with-viewBox-01.svg   zoomed-svg-with-viewBox-01-ref.svg

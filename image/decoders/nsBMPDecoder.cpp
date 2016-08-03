@@ -674,10 +674,8 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
   }
 
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-  IntSize targetSize = mDownscaler ? mDownscaler->TargetSize() : GetSize();
-  nsresult rv = AllocateFrame(/* aFrameNum = */ 0, targetSize,
-                              IntRect(IntPoint(), targetSize),
-                              SurfaceFormat::B8G8R8A8);
+  nsresult rv = AllocateFrame(/* aFrameNum = */ 0, OutputSize(),
+                              FullOutputFrame(), SurfaceFormat::B8G8R8A8);
   if (NS_FAILED(rv)) {
     return Transition::TerminateFailure();
   }
@@ -687,7 +685,7 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
     // BMPs store their rows in reverse order, so the downscaler needs to
     // reverse them again when writing its output. Unless the height is
     // negative!
-    rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
+    rv = mDownscaler->BeginFrame(Size(), Nothing(),
                                  mImageData, mMayHaveTransparency,
                                  /* aFlipVertically = */ mH.mHeight >= 0);
     if (NS_FAILED(rv)) {

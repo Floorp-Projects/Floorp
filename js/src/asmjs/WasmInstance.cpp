@@ -30,6 +30,9 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 using mozilla::BinarySearch;
+using mozilla::BitwiseCast;
+using mozilla::IsNaN;
+using mozilla::IsSame;
 using mozilla::Swap;
 
 class SigIdSet
@@ -84,24 +87,6 @@ class SigIdSet
 };
 
 ExclusiveData<SigIdSet> sigIdSet;
-
-JSContext**
-Instance::addressOfContextPtr() const
-{
-    return (JSContext**)(codeSegment().globalData() + ContextPtrGlobalDataOffset);
-}
-
-Instance**
-Instance::addressOfInstancePtr() const
-{
-    return (Instance**)(codeSegment().globalData() + InstancePtrGlobalDataOffset);
-}
-
-uint8_t**
-Instance::addressOfMemoryBase() const
-{
-    return (uint8_t**)(codeSegment().globalData() + HeapGlobalDataOffset);
-}
 
 void**
 Instance::addressOfTableBase(size_t tableIndex) const
@@ -299,8 +284,11 @@ Instance::Instance(JSContext* cx,
     MOZ_ASSERT(funcImports.length() == metadata().funcImports.length());
     MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
-    *addressOfContextPtr() = cx;
-    *addressOfInstancePtr() = this;
+    tlsData_.cx = cx;
+    tlsData_.instance = this;
+    tlsData_.globalData = code_->segment().globalData();
+    tlsData_.memoryBase = memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
+    tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(StackForUntrustedScript);
 
     for (size_t i = 0; i < metadata().funcImports.length(); i++) {
         const FuncImport& fi = metadata().funcImports[i];
@@ -344,13 +332,8 @@ Instance::Instance(JSContext* cx,
         }
     }
 
-    if (memory)
-        *addressOfMemoryBase() = memory->buffer().dataPointerEither().unwrap();
-
     for (size_t i = 0; i < tables_.length(); i++)
         *addressOfTableBase(i) = tables_[i]->array();
-
-   updateStackLimit(cx);
 }
 
 bool
@@ -406,7 +389,7 @@ SharedMem<uint8_t*>
 Instance::memoryBase() const
 {
     MOZ_ASSERT(metadata().usesMemory());
-    MOZ_ASSERT(*addressOfMemoryBase() == memory_->buffer().dataPointerEither());
+    MOZ_ASSERT(tlsData_.memoryBase == memory_->buffer().dataPointerEither());
     return memory_->buffer().dataPointerEither();
 }
 
@@ -416,11 +399,70 @@ Instance::memoryLength() const
     return memory_->buffer().byteLength();
 }
 
-void
-Instance::updateStackLimit(JSContext* cx)
+template<typename T>
+static JSObject*
+CreateCustomNaNObject(JSContext* cx, T* addr)
 {
-    // Capture the stack limit for cx's thread.
-    tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(StackForUntrustedScript);
+    MOZ_ASSERT(IsNaN(*addr));
+
+    RootedObject obj(cx, JS_NewPlainObject(cx));
+    if (!obj)
+        return nullptr;
+
+    int32_t* i32 = (int32_t*)addr;
+    RootedValue intVal(cx, Int32Value(i32[0]));
+    if (!JS_DefineProperty(cx, obj, "nan_low", intVal, JSPROP_ENUMERATE))
+        return nullptr;
+
+    if (IsSame<double, T>::value) {
+        intVal = Int32Value(i32[1]);
+        if (!JS_DefineProperty(cx, obj, "nan_high", intVal, JSPROP_ENUMERATE))
+            return nullptr;
+    }
+
+    return obj;
+}
+
+static bool
+ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, float* ret)
+{
+    RootedObject obj(cx, &v.toObject());
+    RootedValue val(cx);
+
+    int32_t i32;
+    if (!JS_GetProperty(cx, obj, "nan_low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+
+    BitwiseCast(i32, ret);
+    return true;
+}
+
+static bool
+ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, double* ret)
+{
+    RootedObject obj(cx, &v.toObject());
+    RootedValue val(cx);
+
+    uint64_t u64;
+
+    int32_t i32;
+    if (!JS_GetProperty(cx, obj, "nan_high", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+    u64 = uint32_t(i32);
+    u64 <<= 32;
+
+    if (!JS_GetProperty(cx, obj, "nan_low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+    u64 |= uint32_t(i32);
+
+    BitwiseCast(u64, ret);
+    return true;
 }
 
 bool
@@ -457,10 +499,20 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
                 return false;
             break;
           case ValType::F32:
+            if (JitOptions.wasmTestMode && v.isObject()) {
+                if (!ReadCustomFloat32NaNObject(cx, v, (float*)&exportArgs[i]))
+                    return false;
+                break;
+            }
             if (!RoundFloat32(cx, v, (float*)&exportArgs[i]))
                 return false;
             break;
           case ValType::F64:
+            if (JitOptions.wasmTestMode && v.isObject()) {
+                if (!ReadCustomDoubleNaNObject(cx, v, (double*)&exportArgs[i]))
+                    return false;
+                break;
+            }
             if (!ToNumber(cx, v, (double*)&exportArgs[i]))
                 return false;
             break;
@@ -532,7 +584,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 
         // Call the per-exported-function trampoline created by GenerateEntry.
         auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBase() + func.entryOffset());
-        if (!CALL_GENERATED_3(funcPtr, exportArgs.begin(), codeSegment().globalData(), tlsData()))
+        if (!CALL_GENERATED_2(funcPtr, exportArgs.begin(), &tlsData_))
             return false;
     }
 
@@ -564,8 +616,21 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
             return false;
         break;
       case ExprType::F32:
-        // The entry stub has converted the F32 into a double for us.
+        if (JitOptions.wasmTestMode && IsNaN(*(float*)retAddr)) {
+            retObj = CreateCustomNaNObject(cx, (float*)retAddr);
+            if (!retObj)
+                return false;
+            break;
+        }
+        args.rval().set(NumberValue(*(float*)retAddr));
+        break;
       case ExprType::F64:
+        if (JitOptions.wasmTestMode && IsNaN(*(double*)retAddr)) {
+            retObj = CreateCustomNaNObject(cx, (double*)retAddr);
+            if (!retObj)
+                return false;
+            break;
+        }
         args.rval().set(NumberValue(*(double*)retAddr));
         break;
       case ExprType::I8x16:
