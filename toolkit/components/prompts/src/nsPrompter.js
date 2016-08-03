@@ -123,8 +123,7 @@ var PromptUtilsTemp = {
     getLocalizedString : function (key, formatArgs) {
         if (formatArgs)
             return this.strBundle.formatStringFromName(key, formatArgs, formatArgs.length);
-        else
-            return this.strBundle.GetStringFromName(key);
+        return this.strBundle.GetStringFromName(key);
     },
 
     confirmExHelper : function (flags, button0, button1, button2) {
@@ -570,24 +569,21 @@ ModalPrompter.prototype = {
         // also, the nsIPrompt flavor has 5 args instead of 6.
         if (typeof arguments[2] == "object")
             return this.nsIPrompt_prompt.apply(this, arguments);
-        else
-            return this.nsIAuthPrompt_prompt.apply(this, arguments);
+        return this.nsIAuthPrompt_prompt.apply(this, arguments);
     },
 
     promptUsernameAndPassword : function() {
         // Both have 6 args, so use types.
         if (typeof arguments[2] == "object")
             return this.nsIPrompt_promptUsernameAndPassword.apply(this, arguments);
-        else
-            return this.nsIAuthPrompt_promptUsernameAndPassword.apply(this, arguments);
+        return this.nsIAuthPrompt_promptUsernameAndPassword.apply(this, arguments);
     },
 
     promptPassword : function() {
         // Both have 5 args, so use types.
         if (typeof arguments[2] == "object")
             return this.nsIPrompt_promptPassword.apply(this, arguments);
-        else
-            return this.nsIAuthPrompt_promptPassword.apply(this, arguments);
+        return this.nsIAuthPrompt_promptPassword.apply(this, arguments);
     },
 
 

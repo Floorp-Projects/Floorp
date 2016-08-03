@@ -1607,8 +1607,7 @@ FeedProcessor.prototype = {
       return prefix + ":";
     if (uri.toLowerCase().indexOf("http://backend.userland.com") == 0)
       return "";
-    else
-      return null;
+    return null;
   },
 
   _mapAttributes: function FP__mapAttributes(bag, attributes) {
@@ -1697,10 +1696,8 @@ FeedProcessor.prototype = {
         // the rest of the function deals with entry- and feed-level stuff
         return;
       }
-      else {
-        container = container.queryElementAt(container.length - 1,
-                                             Ci.nsIWritablePropertyBag2);
-      }
+      container = container.queryElementAt(container.length - 1,
+                                           Ci.nsIWritablePropertyBag2);
     }
 
     // Make the buffer our new property

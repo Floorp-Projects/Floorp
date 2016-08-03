@@ -68,7 +68,7 @@
     "no-labels": 2,
 
     // If an if block ends with a return no need for an else block
-    // "no-else-return": 2,
+    "no-else-return": 2,
 
     // No empty statements
     // "no-empty": 2,

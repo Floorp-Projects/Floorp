@@ -281,9 +281,8 @@ function getMainWindowWithPreferencesPane() {
   let mainWindow = getMainWindow();
   if (mainWindow && "openAdvancedPreferences" in mainWindow) {
     return mainWindow;
-  } else {
-    return null;
   }
+  return null;
 }
 
 /**
@@ -758,9 +757,8 @@ var gViewController = {
   get displayedView() {
     if (this.viewPort.selectedPanel == this.headeredViews) {
       return this.headeredViewsDeck.selectedPanel;
-    } else {
-      return this.viewPort.selectedPanel;
     }
+    return this.viewPort.selectedPanel;
   },
 
   set displayedView(view) {
@@ -1645,8 +1643,7 @@ function sortElements(aElements, aSortBy, aAscending) {
       if (addonType && (addonType.flags & AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE) &&
           addon.userDisabled == AddonManager.STATE_ASK_TO_ACTIVATE)
         return "askToActivate";
-      else
-        return "enabled";
+      return "enabled";
     }
 
     return addon[aKey];

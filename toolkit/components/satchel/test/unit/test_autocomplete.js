@@ -20,10 +20,10 @@ function padLeft(number, length) {
 }
 
 function getFormExpiryDays() {
-    if (prefs.prefHasUserValue("browser.formfill.expire_days"))
+    if (prefs.prefHasUserValue("browser.formfill.expire_days")) {
         return prefs.getIntPref("browser.formfill.expire_days");
-    else
-        return DEFAULT_EXPIRE_DAYS;
+    }
+    return DEFAULT_EXPIRE_DAYS;
 }
 
 function run_test() {
