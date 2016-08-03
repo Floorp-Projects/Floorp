@@ -459,20 +459,103 @@ js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* re
     return true;
 }
 
-static void
-FreeMessageArgs(const char16_t** messageArgs, ErrorArgumentsType argumentsType)
+class MOZ_RAII AutoMessageArgs
 {
-    if (!messageArgs)
-        return;
+    const char16_t** args_;
+    size_t totalLength_;
+    /* only {0} thru {9} supported */
+    mozilla::Array<size_t, JS::MaxNumErrorArguments> lengths_;
+    uint16_t count_;
+    bool passed_ : 1;
+    bool allocatedElements_ : 1;
 
-    /* free the arguments only if we allocated them */
-    if (argumentsType == ArgumentsAreASCII) {
-        uint16_t i = 0;
-        while (messageArgs[i])
-            js_free((void*)messageArgs[i++]);
+  public:
+    AutoMessageArgs()
+      : args_(nullptr), totalLength_(0), count_(0),
+        passed_(false), allocatedElements_(false)
+    {}
+
+    ~AutoMessageArgs()
+    {
+        if (passed_)
+            return;
+
+        if (!args_)
+            return;
+
+        /* free the arguments only if we allocated them */
+        if (allocatedElements_) {
+            uint16_t i = 0;
+            while (args_[i])
+                js_free((void*)args_[i++]);
+        }
+        js_free(args_);
     }
-    js_free(messageArgs);
-}
+
+    const char16_t* args(size_t i) const {
+        MOZ_ASSERT(i < count_);
+        return args_[i];
+    }
+
+    size_t totalLength() const {
+        return totalLength_;
+    }
+
+    size_t lengths(size_t i) const {
+        MOZ_ASSERT(i < count_);
+        return lengths_[i];
+    }
+
+    uint16_t count() const {
+        return count_;
+    }
+
+    bool passed() const {
+        return passed_;
+    }
+
+    /*
+     * Gather the arguments into an array, and accumulate their sizes. We
+     * allocate 1 more than necessary and null it out to act as the sentinel
+     * value when we free the pointers later.
+     */
+    bool init(ExclusiveContext* cx, const char16_t** argsArg, uint16_t countArg,
+              ErrorArgumentsType typeArg, va_list ap) {
+        MOZ_ASSERT(!args_);
+        MOZ_ASSERT(countArg > 0);
+
+        args_ = argsArg;
+        count_ = countArg;
+        passed_ = !!args_;
+        if (passed_) {
+            MOZ_ASSERT(!args_[count_]);
+        } else {
+            args_ = cx->pod_malloc<const char16_t*>(count_ + 1);
+            if (!args_)
+                return false;
+            args_[count_] = nullptr;
+        }
+        for (uint16_t i = 0; i < count_; i++) {
+            if (passed_) {
+                lengths_[i] = js_strlen(args_[i]);
+            } else if (typeArg == ArgumentsAreASCII) {
+                char* charArg = va_arg(ap, char*);
+                size_t charArgLength = strlen(charArg);
+                args_[i] = InflateString(cx, charArg, &charArgLength);
+                if (!args_[i])
+                    return false;
+                allocatedElements_ = true;
+                MOZ_ASSERT(charArgLength == js_strlen(args_[i]));
+                lengths_[i] = charArgLength;
+            } else {
+                args_[i] = va_arg(ap, char16_t*);
+                lengths_[i] = js_strlen(args_[i]);
+            }
+            totalLength_ += lengths_[i];
+        }
+        return true;
+    }
+};
 
 /*
  * The arguments from ap need to be packaged up into an array and stored
@@ -493,8 +576,6 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                            JSErrorReport* reportp, va_list ap)
 {
     const JSErrorFormatString* efs;
-    uint16_t argCount;
-    bool messageArgsPassed = !!messageArgs;
 
     *messagep = nullptr;
 
@@ -509,60 +590,33 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
     if (efs) {
         reportp->exnType = efs->exnType;
 
-        size_t totalArgsLength = 0;
-        size_t argLengths[JS::MaxNumErrorArguments]; /* only {0} thru {9} supported */
-        argCount = efs->argCount;
+        uint16_t argCount = efs->argCount;
         MOZ_RELEASE_ASSERT(argCount <= JS::MaxNumErrorArguments);
         if (argCount > 0) {
             /*
-             * Gather the arguments into an array, and accumulate
-             * their sizes. We allocate 1 more than necessary and
-             * null it out to act as the caboose when we free the
-             * pointers later.
+             * Parse the error format, substituting the argument X
+             * for {X} in the format.
              */
-            if (messageArgsPassed) {
-                MOZ_ASSERT(!messageArgs[argCount]);
-            } else {
-                messageArgs = cx->pod_malloc<const char16_t*>(argCount + 1);
-                if (!messageArgs)
-                    return false;
-                messageArgs[argCount] = nullptr;
-            }
-            for (uint16_t i = 0; i < argCount; i++) {
-                if (messageArgsPassed) {
-                    /* Do nothing. */
-                } else if (argumentsType == ArgumentsAreASCII) {
-                    char* charArg = va_arg(ap, char*);
-                    size_t charArgLength = strlen(charArg);
-                    messageArgs[i] = InflateString(cx, charArg, &charArgLength);
-                    if (!messageArgs[i])
-                        goto error;
-                } else {
-                    messageArgs[i] = va_arg(ap, char16_t*);
-                }
-                argLengths[i] = js_strlen(messageArgs[i]);
-                totalArgsLength += argLengths[i];
-            }
-        }
-        /*
-         * Parse the error format, substituting the argument X
-         * for {X} in the format.
-         */
-        if (argCount > 0) {
             if (efs->format) {
                 char16_t* buffer;
                 char16_t* fmt;
                 char16_t* out;
+#ifdef DEBUG
                 int expandedArgs = 0;
+#endif
                 size_t expandedLength;
                 size_t len = strlen(efs->format);
+
+                AutoMessageArgs args;
+                if (!args.init(cx, messageArgs, argCount, argumentsType, ap))
+                    return false;
 
                 buffer = fmt = InflateString(cx, efs->format, &len);
                 if (!buffer)
                     goto error;
                 expandedLength = len
-                                 - (3 * argCount)       /* exclude the {n} */
-                                 + totalArgsLength;
+                                 - (3 * args.count()) /* exclude the {n} */
+                                 + args.totalLength();
 
                 /*
                 * Note - the above calculation assumes that each argument
@@ -577,17 +631,19 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                     if (*fmt == '{') {
                         if (isdigit(fmt[1])) {
                             int d = JS7_UNDEC(fmt[1]);
-                            MOZ_RELEASE_ASSERT(d < argCount);
-                            js_strncpy(out, messageArgs[d], argLengths[d]);
-                            out += argLengths[d];
+                            MOZ_RELEASE_ASSERT(d < args.count());
+                            js_strncpy(out, args.args(d), args.lengths(d));
+                            out += args.lengths(d);
                             fmt += 3;
+#ifdef DEBUG
                             expandedArgs++;
+#endif
                             continue;
                         }
                     }
                     *out++ = *fmt++;
                 }
-                MOZ_ASSERT(expandedArgs == argCount);
+                MOZ_ASSERT(expandedArgs == args.count());
                 *out = 0;
                 js_free(buffer);
                 size_t msgLen = PointerRangeSize(static_cast<const char16_t*>(reportp->ucmessage),
@@ -599,7 +655,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
             }
         } else {
             /* Non-null messageArgs should have at least one non-null arg. */
-            MOZ_ASSERT(!messageArgsPassed);
+            MOZ_ASSERT(!messageArgs);
             /*
              * Zero arguments: the format string (if it exists) is the
              * entire message.
@@ -626,13 +682,9 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
             goto error;
         snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
     }
-    if (!messageArgsPassed)
-        FreeMessageArgs(messageArgs, argumentsType);
     return true;
 
 error:
-    if (!messageArgsPassed)
-        FreeMessageArgs(messageArgs, argumentsType);
     if (reportp->ucmessage) {
         js_free((void*)reportp->ucmessage);
         reportp->ucmessage = nullptr;
