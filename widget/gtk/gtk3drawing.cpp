@@ -1187,9 +1187,9 @@ moz_gtk_treeview_expander_paint(cairo_t *cr, GdkRectangle* rect,
      * in gtk_render_expander()
      */
     if (expander_state == GTK_EXPANDER_EXPANDED)
-        state_flags = static_cast<GtkStateFlags>(state_flags|GTK_STATE_FLAG_ACTIVE);
+        state_flags = static_cast<GtkStateFlags>(state_flags|checkbox_check_state);
     else
-        state_flags = static_cast<GtkStateFlags>(state_flags&~(GTK_STATE_FLAG_ACTIVE));
+        state_flags = static_cast<GtkStateFlags>(state_flags&~(checkbox_check_state));
 
     GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_TREEVIEW_EXPANDER,
                                                direction, state_flags);
