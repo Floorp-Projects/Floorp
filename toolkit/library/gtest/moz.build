@@ -11,8 +11,3 @@ FINAL_TARGET = 'dist/bin/gtest'
 USE_LIBS += [
     'static:xul',
 ]
-
-if CONFIG['MOZ_RUST']:
-    USE_LIBS += [
-        'gkrust-gtest',
-    ]

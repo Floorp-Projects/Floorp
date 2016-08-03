@@ -30,7 +30,6 @@ from mozbuild.frontend.data import (
     JARManifest,
     LocalInclude,
     Program,
-    RustLibrary,
     SdkFiles,
     SharedLibrary,
     SimpleProgram,
@@ -991,131 +990,6 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('final-target-pp-files-non-srcdir')
         with self.assertRaisesRegexp(SandboxValidationError,
              'Only source directory paths allowed in FINAL_TARGET_PP_FILES:'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_dependency_version_only(self):
-        '''Test that including a crate with a version-only dependency fails.'''
-        reader = self.reader('crate-dependency-version-only')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Dependency.*of crate.*does not list a path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_dependency_with_dict(self):
-        '''Test that including a crate with a dict-using version-only dependency fails.'''
-        reader = self.reader('crate-dependency-with-dict')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Dependency.*of crate.*does not list a path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_dependency_absolute_path(self):
-        '''Test that including a crate with an absolute-path dependency fails.'''
-        reader = self.reader('crate-dependency-absolute-path')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Dependency.*of crate.*has a non-relative path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_dependency_nonexistent_path(self):
-        '''Test that including a crate with a non-existent dependency fails.'''
-        reader = self.reader('crate-dependency-nonexistent-path')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Dependency.*of crate.*refers to a non-existent path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_build_dependency_version_only(self):
-        '''Test that including a crate with a version-only dependency fails.'''
-        reader = self.reader('crate-build-dependency-version-only')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Build dependency.*of crate.*does not list a path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_build_dependency_with_dict(self):
-        '''Test that including a crate with a dict-using version-only dependency fails.'''
-        reader = self.reader('crate-build-dependency-with-dict')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Build dependency.*of crate.*does not list a path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_build_dependency_absolute_path(self):
-        '''Test that including a crate with an absolute-path dependency fails.'''
-        reader = self.reader('crate-build-dependency-absolute-path')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Build dependency.*of crate.*has a non-relative path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_build_dependency_nonexistent_path(self):
-        '''Test that including a crate with a non-existent dependency fails.'''
-        reader = self.reader('crate-build-dependency-nonexistent-path')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Build dependency.*of crate.*refers to a non-existent path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_dependency_recursive(self):
-        reader = self.reader('crate-dependency-recursive')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Dependency.*of crate.*does not list a path'):
-            self.read_topsrcdir(reader)
-
-    def test_crate_build_dependency_recursive(self):
-        reader = self.reader('crate-build-dependency-recursive')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Build dependency.*of crate.*does not list a path'):
-            self.read_topsrcdir(reader)
-
-    def test_rust_library_no_cargo_toml(self):
-        '''Test that defining a RustLibrary without a Cargo.toml fails.'''
-        reader = self.reader('rust-library-no-cargo-toml')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'No Cargo.toml file found'):
-            self.read_topsrcdir(reader)
-
-    def test_rust_library_name_mismatch(self):
-        '''Test that defining a RustLibrary that doesn't match Cargo.toml fails.'''
-        reader = self.reader('rust-library-name-mismatch')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'library.*does not match Cargo.toml-defined package'):
-            self.read_topsrcdir(reader)
-
-    def test_rust_library_no_lib_section(self):
-        '''Test that a RustLibrary Cargo.toml with no [lib] section fails.'''
-        reader = self.reader('rust-library-no-lib-section')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Cargo.toml for.* has no \\[lib\\] section'):
-            self.read_topsrcdir(reader)
-
-    def test_rust_library_invalid_crate_type(self):
-        '''Test that a RustLibrary Cargo.toml has a permitted crate-type.'''
-        reader = self.reader('rust-library-invalid-crate-type')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'crate-type.* is not permitted'):
-            self.read_topsrcdir(reader)
-
-    def test_rust_library_dash_folding(self):
-        '''Test that on-disk names of RustLibrary objects convert dashes to underscores.'''
-        reader = self.reader('rust-library-dash-folding',
-                             extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
-        objs = self.read_topsrcdir(reader)
-
-        self.assertEqual(len(objs), 1)
-        lib = objs[0]
-        self.assertIsInstance(lib, RustLibrary)
-        self.assertRegexpMatches(lib.lib_name, "random_crate")
-        self.assertRegexpMatches(lib.import_name, "random_crate")
-        self.assertRegexpMatches(lib.basename, "random-crate")
-
-    def test_crate_dependency_path_resolution(self):
-        '''Test recursive dependencies resolve with the correct paths.'''
-        reader = self.reader('crate-dependency-path-resolution',
-                             extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
-        objs = self.read_topsrcdir(reader)
-
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], RustLibrary)
-
-    def test_duplicate_crate_names(self):
-        '''Test that crates are not duplicated in the tree.'''
-        reader = self.reader('duplicated-crate-names')
-        with self.assertRaisesRegexp(SandboxValidationError,
-             'Crate.*found at multiple paths'):
             self.read_topsrcdir(reader)
 
     def test_android_res_dirs(self):

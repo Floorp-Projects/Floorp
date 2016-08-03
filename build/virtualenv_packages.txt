@@ -36,4 +36,3 @@ futures.pth:python/futures
 ecc.pth:python/PyECC
 xpcshell.pth:testing/xpcshell
 pyyaml.pth:python/pyyaml/lib
-pytoml.pth:python/pytoml
