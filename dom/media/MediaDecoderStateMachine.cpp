@@ -1410,8 +1410,6 @@ void MediaDecoderStateMachine::InitiateDecodeRecoverySeek(TrackSet aTracks)
                                    mReader.get(), mCurrentSeek.mTarget,
                                    mInfo, Duration(), GetMediaTime());
 
-  mOnSeekingStart.Notify(MediaDecoderEventVisibility::Suppressed);
-
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) {
     Reset(aTracks);
@@ -1631,7 +1629,9 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   // clamped value.
   UpdatePlaybackPositionInternal(mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
 
-  mOnSeekingStart.Notify(aSeekJob.mTarget.mEventVisibility);
+  if (aSeekJob.mTarget.mEventVisibility == MediaDecoderEventVisibility::Observable) {
+    mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
+  }
 
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) { Reset(); }

@@ -637,7 +637,6 @@ MediaDecoder::Shutdown()
     mMetadataLoadedListener.Disconnect();
     mFirstFrameLoadedListener.Disconnect();
     mOnPlaybackEvent.Disconnect();
-    mOnSeekingStart.Disconnect();
     mOnMediaNotSeekable.Disconnect();
 
     mDecoderStateMachine->BeginShutdown()
@@ -688,6 +687,9 @@ MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
       break;
     case MediaEventType::PlaybackEnded:
       PlaybackEnded();
+      break;
+    case MediaEventType::SeekStarted:
+      SeekingStarted();
       break;
     case MediaEventType::DecodeError:
       DecodeError();
@@ -771,8 +773,6 @@ MediaDecoder::SetStateMachineParameters()
 
   mOnPlaybackEvent = mDecoderStateMachine->OnPlaybackEvent().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::OnPlaybackEvent);
-  mOnSeekingStart = mDecoderStateMachine->OnSeekingStart().Connect(
-    AbstractThread::MainThread(), this, &MediaDecoder::SeekingStarted);
   mOnMediaNotSeekable = mDecoderStateMachine->OnMediaNotSeekable().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::OnMediaNotSeekable);
 }
@@ -1313,13 +1313,11 @@ MediaDecoder::OnSeekRejected()
 }
 
 void
-MediaDecoder::SeekingStarted(MediaDecoderEventVisibility aEventVisibility)
+MediaDecoder::SeekingStarted()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
-  if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-    mOwner->SeekStarted();
-  }
+  mOwner->SeekStarted();
 }
 
 void
