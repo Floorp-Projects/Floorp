@@ -3294,8 +3294,10 @@ CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(lhs.low);
     regs.take(lhs.high);
-    regs.take(rhs.low);
-    regs.take(rhs.high);
+    if (lhs != rhs) {
+        regs.take(rhs.low);
+        regs.take(rhs.high);
+    }
     Register temp = regs.takeAny();
 
     Label done;
@@ -3347,8 +3349,10 @@ CodeGeneratorARM::visitUDivOrModI64(LUDivOrModI64* lir)
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(lhs.low);
     regs.take(lhs.high);
-    regs.take(rhs.low);
-    regs.take(rhs.high);
+    if (lhs != rhs) {
+        regs.take(rhs.low);
+        regs.take(rhs.high);
+    }
     Register temp = regs.takeAny();
 
     // Prevent divide by zero.
