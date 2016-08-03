@@ -31,15 +31,18 @@ add_task(function*() {
   EventUtils.synthesizeKey("VK_BACK_SPACE", {});
   yield promiseSearchComplete();
 
-  let editedValue = gURLBar.value;
+  let editedValue = gURLBar.textValue;
   is(list.selectedIndex, initialIndex, "The initial index is selected again.");
   isnot(editedValue, nextValue, "The URL has changed.");
+
+  let docLoad = waitForDocLoadAndStopIt("http://" + editedValue);
 
   info("Press return to load edited URL.");
   EventUtils.synthesizeKey("VK_RETURN", {});
   yield Promise.all([
     promisePopupHidden(gURLBar.popup),
-    waitForDocLoadAndStopIt("http://" + editedValue)]);
+    docLoad,
+  ]);
 
   gBrowser.removeTab(gBrowser.selectedTab);
 });
