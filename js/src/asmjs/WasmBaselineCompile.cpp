@@ -3839,15 +3839,6 @@ BaseCompiler::emitMinF32()
 {
     RegF32 r0, r1;
     pop2xF32(&r0, &r1);
-    if (!isCompilingAsmJS()) {
-        // Convert signaling NaN to quiet NaNs.
-        // TODO / OPTIMIZE: Don't do this if one of the operands is known to
-        // be a constant.
-        ScratchF32 zero(*this);
-        masm.loadConstantFloat32(0.f, zero);
-        masm.subFloat32(zero, r0.reg);
-        masm.subFloat32(zero, r1.reg);
-    }
     masm.minFloat32(r1.reg, r0.reg, HandleNaNSpecially(true));
     freeF32(r1);
     pushF32(r0);
@@ -3858,14 +3849,6 @@ BaseCompiler::emitMaxF32()
 {
     RegF32 r0, r1;
     pop2xF32(&r0, &r1);
-    if (!isCompilingAsmJS()) {
-        // Convert signaling NaN to quiet NaNs.
-        // TODO / OPTIMIZE: see comment in emitMinF32.
-        ScratchF32 zero(*this);
-        masm.loadConstantFloat32(0.f, zero);
-        masm.subFloat32(zero, r0.reg);
-        masm.subFloat32(zero, r1.reg);
-    }
     masm.maxFloat32(r1.reg, r0.reg, HandleNaNSpecially(true));
     freeF32(r1);
     pushF32(r0);
@@ -3876,14 +3859,6 @@ BaseCompiler::emitMinF64()
 {
     RegF64 r0, r1;
     pop2xF64(&r0, &r1);
-    if (!isCompilingAsmJS()) {
-        // Convert signaling NaN to quiet NaNs.
-        // TODO / OPTIMIZE: see comment in emitMinF32.
-        ScratchF64 zero(*this);
-        masm.loadConstantDouble(0, zero);
-        masm.subDouble(zero, r0.reg);
-        masm.subDouble(zero, r1.reg);
-    }
     masm.minDouble(r1.reg, r0.reg, HandleNaNSpecially(true));
     freeF64(r1);
     pushF64(r0);
@@ -3894,14 +3869,6 @@ BaseCompiler::emitMaxF64()
 {
     RegF64 r0, r1;
     pop2xF64(&r0, &r1);
-    if (!isCompilingAsmJS()) {
-        // Convert signaling NaN to quiet NaNs.
-        // TODO / OPTIMIZE: see comment in emitMinF32.
-        ScratchF64 zero(*this);
-        masm.loadConstantDouble(0, zero);
-        masm.subDouble(zero, r0.reg);
-        masm.subDouble(zero, r1.reg);
-    }
     masm.maxDouble(r1.reg, r0.reg, HandleNaNSpecially(true));
     freeF64(r1);
     pushF64(r0);
