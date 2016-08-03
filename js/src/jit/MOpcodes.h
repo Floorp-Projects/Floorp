@@ -286,7 +286,7 @@ namespace jit {
     _(AsmJSParameter)                                                       \
     _(AsmJSVoidReturn)                                                      \
     _(AsmJSPassStackArg)                                                    \
-    _(AsmJSCall)                                                            \
+    _(WasmCall)                                                             \
     _(AsmSelect)                                                            \
     _(AsmReinterpret)                                                       \
     _(Rotate)                                                               \

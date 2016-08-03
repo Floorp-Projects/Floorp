@@ -395,14 +395,14 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic*
 }
 
 void
-CodeGeneratorX86::emitAsmJSCall(LAsmJSCallBase* ins)
+CodeGeneratorX86::emitWasmCall(LWasmCallBase* ins)
 {
-    MAsmJSCall* mir = ins->mir();
+    MWasmCall* mir = ins->mir();
 
-    emitAsmJSCallBase(ins);
+    emitWasmCallBase(ins);
 
     if (IsFloatingPointType(mir->type()) &&
-        mir->callee().which() == MAsmJSCall::Callee::Builtin)
+        mir->callee().which() == MWasmCall::Callee::Builtin)
     {
         if (mir->type() == MIRType::Float32) {
             masm.reserveStack(sizeof(float));
@@ -422,15 +422,15 @@ CodeGeneratorX86::emitAsmJSCall(LAsmJSCallBase* ins)
 }
 
 void
-CodeGeneratorX86::visitAsmJSCall(LAsmJSCall* ins)
+CodeGeneratorX86::visitWasmCall(LWasmCall* ins)
 {
-    emitAsmJSCall(ins);
+    emitWasmCall(ins);
 }
 
 void
-CodeGeneratorX86::visitAsmJSCallI64(LAsmJSCallI64* ins)
+CodeGeneratorX86::visitWasmCallI64(LWasmCallI64* ins)
 {
-    emitAsmJSCall(ins);
+    emitWasmCall(ins);
 }
 
 void

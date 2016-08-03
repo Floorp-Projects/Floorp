@@ -2184,12 +2184,12 @@ CodeGeneratorARM::visitAsmReinterpret(LAsmReinterpret* lir)
 }
 
 void
-CodeGeneratorARM::emitAsmJSCall(LAsmJSCallBase* ins)
+CodeGeneratorARM::emitWasmCall(LWasmCallBase* ins)
 {
-    MAsmJSCall* mir = ins->mir();
+    MWasmCall* mir = ins->mir();
 
-    if (UseHardFpABI() || mir->callee().which() != MAsmJSCall::Callee::Builtin) {
-        emitAsmJSCallBase(ins);
+    if (UseHardFpABI() || mir->callee().which() != MWasmCall::Callee::Builtin) {
+        emitWasmCallBase(ins);
         return;
     }
 
@@ -2213,7 +2213,7 @@ CodeGeneratorARM::emitAsmJSCall(LAsmJSCallBase* ins)
         }
     }
 
-    emitAsmJSCallBase(ins);
+    emitWasmCallBase(ins);
 
     switch (mir->type()) {
       case MIRType::Double:
@@ -2228,15 +2228,15 @@ CodeGeneratorARM::emitAsmJSCall(LAsmJSCallBase* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmJSCall(LAsmJSCall* ins)
+CodeGeneratorARM::visitWasmCall(LWasmCall* ins)
 {
-    emitAsmJSCall(ins);
+    emitWasmCall(ins);
 }
 
 void
-CodeGeneratorARM::visitAsmJSCallI64(LAsmJSCallI64* ins)
+CodeGeneratorARM::visitWasmCallI64(LWasmCallI64* ins)
 {
-    emitAsmJSCall(ins);
+    emitWasmCall(ins);
 }
 
 void
