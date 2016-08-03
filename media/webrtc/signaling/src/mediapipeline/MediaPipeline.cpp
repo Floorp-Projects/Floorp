@@ -25,9 +25,7 @@
 #include "DOMMediaStream.h"
 #include "MediaStreamTrack.h"
 #include "MediaStreamListener.h"
-#include "MediaStreamVideoSink.h"
 #include "VideoUtils.h"
-#include "VideoStreamTrack.h"
 #ifdef WEBRTC_GONK
 #include "GrallocImages.h"
 #include "mozilla/layers/GrallocTextureClient.h"
@@ -1260,34 +1258,6 @@ protected:
 };
 #endif
 
-class MediaPipelineTransmit::PipelineVideoSink :
-  public MediaStreamVideoSink
-{
-public:
-  explicit PipelineVideoSink(const RefPtr<MediaSessionConduit>& conduit,
-                             MediaPipelineTransmit::PipelineListener* listener)
-    : conduit_(conduit)
-    , pipelineListener_(listener)
-  {
-  }
-
-  virtual void SetCurrentFrames(const VideoSegment& aSegment) override;
-  virtual void ClearFrames() override {}
-
-private:
-  ~PipelineVideoSink() {
-    // release conduit on mainthread.  Must use forget()!
-    nsresult rv = NS_DispatchToMainThread(new
-      ConduitDeleteEvent(conduit_.forget()));
-    MOZ_ASSERT(!NS_FAILED(rv),"Could not dispatch conduit shutdown to main");
-    if (NS_FAILED(rv)) {
-      MOZ_CRASH();
-    }
-  }
-  RefPtr<MediaSessionConduit> conduit_;
-  MediaPipelineTransmit::PipelineListener* pipelineListener_;
-};
-
 MediaPipelineTransmit::MediaPipelineTransmit(
     const std::string& pc,
     nsCOMPtr<nsIEventTarget> main_thread,
@@ -1302,7 +1272,6 @@ MediaPipelineTransmit::MediaPipelineTransmit(
   MediaPipeline(pc, TRANSMIT, main_thread, sts_thread, track_id, level,
                 conduit, rtp_transport, rtcp_transport, filter),
   listener_(new PipelineListener(conduit)),
-  video_sink_(new PipelineVideoSink(conduit, listener_)),
   domtrack_(domtrack)
 {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
@@ -1356,10 +1325,6 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
   domtrack_->AddDirectListener(listener_);
   domtrack_->AddListener(listener_);
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  domtrack_->AddDirectListener(video_sink_);
-#endif
-
 #ifndef MOZILLA_INTERNAL_API
   // this enables the unit tests that can't fiddle with principals and the like
   listener_->SetEnabled(true);
@@ -1408,7 +1373,6 @@ MediaPipelineTransmit::DetachMedia()
   if (domtrack_) {
     domtrack_->RemoveDirectListener(listener_);
     domtrack_->RemoveListener(listener_);
-    domtrack_->RemoveDirectListener(video_sink_);
     domtrack_ = nullptr;
   }
   // Let the listener be destroyed with the pipeline (or later).
@@ -1679,6 +1643,17 @@ NewData(MediaStreamGraph* graph,
                         rate, *iter);
       iter.Next();
     }
+  } else if (media.GetType() == MediaSegment::VIDEO) {
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+    VideoSegment* video = const_cast<VideoSegment *>(
+        static_cast<const VideoSegment *>(&media));
+
+    VideoSegment::ChunkIterator iter(*video);
+    while(!iter.IsEnded()) {
+      converter_->QueueVideoChunk(*iter, !enabled_);
+      iter.Next();
+    }
+#endif
   } else {
     // Ignore
   }
@@ -1750,32 +1725,6 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
                             samplesPerPacket,
                             rate, 0);
   }
-}
-
-void MediaPipelineTransmit::PipelineVideoSink::
-SetCurrentFrames(const VideoSegment& aSegment)
-{
-  MOZ_ASSERT(pipelineListener_);
-
-  if (!pipelineListener_->active_) {
-    MOZ_MTLOG(ML_DEBUG, "Discarding packets because transport not ready");
-    return;
-  }
-
-  if (conduit_->type() != MediaSessionConduit::VIDEO) {
-    // Ignore data of wrong kind in case we have a muxed stream
-    return;
-  }
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    VideoSegment* video = const_cast<VideoSegment *>(&aSegment);
-
-    VideoSegment::ChunkIterator iter(*video);
-    while(!iter.IsEnded()) {
-      pipelineListener_->converter_->QueueVideoChunk(*iter, !pipelineListener_->enabled_);
-      iter.Next();
-    }
-#endif
 }
 
 class TrackAddedCallback {
