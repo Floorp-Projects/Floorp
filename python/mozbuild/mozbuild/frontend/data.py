@@ -448,9 +448,10 @@ class Library(BaseLibrary):
 class RustRlibLibrary(Library):
     """Context derived container object for a Rust rlib"""
 
-    def __init__(self, context, basename, crate_name, rlib_filename, link_into):
+    def __init__(self, context, basename, crate_name, srcdir, rlib_filename, link_into):
         Library.__init__(self, context, basename)
         self.crate_name = crate_name
+        self.srcdir = srcdir
         self.rlib_filename = rlib_filename
         self.link_into = link_into
 
