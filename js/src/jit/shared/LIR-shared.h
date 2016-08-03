@@ -8297,38 +8297,44 @@ class LAsmJSCallBase : public LInstruction
         return mir_->toAsmJSCall();
     }
 
-    bool isCall() const {
+    bool isCall() const override {
         return true;
+    }
+    bool isCallPreserved(AnyRegister reg) const override {
+        // WebAssembly functions preserve the TLS pointer register.
+        if (reg.isFloat() || reg.gpr() != WasmTlsReg)
+            return false;
+        return mir()->preservesTlsReg();
     }
 
     // LInstruction interface
-    size_t numOperands() const {
+    size_t numOperands() const override {
         return numOperands_;
     }
-    LAllocation* getOperand(size_t index) {
+    LAllocation* getOperand(size_t index) override {
         MOZ_ASSERT(index < numOperands_);
         return &operands_[index];
     }
-    void setOperand(size_t index, const LAllocation& a) {
+    void setOperand(size_t index, const LAllocation& a) override {
         MOZ_ASSERT(index < numOperands_);
         operands_[index] = a;
     }
-    size_t numTemps() const {
+    size_t numTemps() const override {
         return 0;
     }
-    LDefinition* getTemp(size_t index) {
+    LDefinition* getTemp(size_t index) override {
         MOZ_CRASH("no temps");
     }
-    void setTemp(size_t index, const LDefinition& a) {
+    void setTemp(size_t index, const LDefinition& a) override {
         MOZ_CRASH("no temps");
     }
-    size_t numSuccessors() const {
+    size_t numSuccessors() const override {
         return 0;
     }
-    MBasicBlock* getSuccessor(size_t i) const {
+    MBasicBlock* getSuccessor(size_t i) const override {
         MOZ_CRASH("no successors");
     }
-    void setSuccessor(size_t i, MBasicBlock*) {
+    void setSuccessor(size_t i, MBasicBlock*) override {
         MOZ_CRASH("no successors");
     }
 };
@@ -8344,13 +8350,6 @@ class LAsmJSCall : public LAsmJSCallBase
       : LAsmJSCallBase(operands, numOperands),
         def_(LDefinition::BogusTemp())
     {}
-
-    bool isCallPreserved(AnyRegister reg) const {
-        // WebAssembly functions preserve the TLS pointer register.
-        if (reg.isFloat() || reg.gpr() != WasmTlsReg)
-            return false;
-        return mir()->preservesTlsReg();
-    }
 
     // LInstruction interface
     size_t numDefs() const {
