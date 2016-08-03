@@ -1885,6 +1885,28 @@ HTMLSelectElement::UpdateSelectedOptions()
   }
 }
 
+bool
+HTMLSelectElement::OpenInParentProcess()
+{
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
+  nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
+  if (comboFrame) {
+    return comboFrame->IsOpenInParentProcess();
+  }
+
+  return false;
+}
+
+void
+HTMLSelectElement::SetOpenInParentProcess(bool aVal)
+{
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
+  nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
+  if (comboFrame) {
+    comboFrame->SetOpenInParentProcess(aVal);
+  }
+}
+
 JSObject*
 HTMLSelectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
