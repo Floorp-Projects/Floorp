@@ -163,6 +163,17 @@ public:
   virtual int32_t UpdateRecentIndex(int32_t aIndex) override;
   virtual void OnContentReset() override;
 
+
+  bool IsOpenInParentProcess() override
+  {
+    return mIsOpenInParentProcess;
+  }
+
+  void SetOpenInParentProcess(bool aVal) override
+  {
+    mIsOpenInParentProcess = aVal;
+  }
+
   // nsISelectControlFrame
   NS_IMETHOD AddOption(int32_t index) override;
   NS_IMETHOD RemoveOption(int32_t index) override;
@@ -302,6 +313,8 @@ protected:
   bool                  mInRedisplayText;
   // Acting on ShowDropDown(true) is delayed until we're focused.
   bool                  mDelayedShowDropDown;
+
+  bool                  mIsOpenInParentProcess;
 
   // static class data member for Bug 32920
   // only one control can be focused at a time
