@@ -294,20 +294,20 @@ add_task(function* test_event_order() {
       // <select> (in that order) when it has changed.
       let expected = [
         {
-          type: "input",
-          cancelable: false,
-        },
-        {
-          type: "change",
-          cancelable: false,
-        },
-        {
           type: "mousedown",
           cancelable: true,
         },
         {
           type: "mouseup",
           cancelable: true,
+        },
+        {
+          type: "input",
+          cancelable: false,
+        },
+        {
+          type: "change",
+          cancelable: false,
         },
         {
           type: "click",
