@@ -1777,13 +1777,14 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 }
 
 static bool
-FireShowDropDownEvent(nsIContent* aContent)
+FireShowDropDownEvent(nsIContent* aContent, bool show)
 {
   if (XRE_IsContentProcess() &&
       Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) {
     nsContentUtils::DispatchChromeEvent(aContent->OwnerDoc(), aContent,
-                                        NS_LITERAL_STRING("mozshowdropdown"), true,
-                                        false);
+                                        show ? NS_LITERAL_STRING("mozshowdropdown") :
+                                               NS_LITERAL_STRING("mozhidedropdown"),
+                                        true, false);
     return true;
   }
 
@@ -1848,7 +1849,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         }
       }
 
-      if (FireShowDropDownEvent(mContent)) {
+      if (FireShowDropDownEvent(mContent, !mComboboxFrame->IsDroppedDownOrHasParentPopup())) {
         return NS_OK;
       }
 
@@ -2091,7 +2092,7 @@ nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
   if (IsInDropDownMode() && !nsComboboxControlFrame::ToolkitHasNativePopup()) {
     aKeyEvent->PreventDefault();
     if (!mComboboxFrame->IsDroppedDown()) {
-      if (!FireShowDropDownEvent(mContent)) {
+      if (!FireShowDropDownEvent(mContent, true)) {
         mComboboxFrame->ShowDropDown(true);
       }
     } else {
