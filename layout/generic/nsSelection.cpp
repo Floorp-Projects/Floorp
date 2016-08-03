@@ -84,6 +84,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
+#include "nsFocusManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1976,7 +1977,10 @@ nsFrameSelection::RepaintSelection(SelectionType aSelectionType)
 // On macOS, update the selection cache to the new active selection
 // aka the current selection.
 #ifdef XP_MACOSX
-  if (aSelectionType == SelectionType::eNormal) {
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  // Check an active window exists otherwise there cannot be a current selection
+  // and that it's a normal selection.
+  if (fm->GetActiveWindow() && aSelectionType == SelectionType::eNormal) {
     UpdateSelectionCacheOnRepaintSelection(mDomSelections[index]);
   }
 #endif
@@ -6492,6 +6496,15 @@ NS_IMETHODIMP
 nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
                                            nsISelection *aSel, int16_t aReason)
 {
+  if (mCachedClipboard == nsIClipboard::kSelectionCache) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    // If no active window, do nothing because a current selection changed
+    // cannot occur unless it is in the active window.
+    if (!fm->GetActiveWindow()) {
+      return NS_OK;
+    }
+  }
+
   if (!(aReason & nsISelectionListener::MOUSEUP_REASON   || 
         aReason & nsISelectionListener::SELECTALL_REASON ||
         aReason & nsISelectionListener::KEYPRESS_REASON))
