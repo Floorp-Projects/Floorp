@@ -3643,6 +3643,18 @@ nsWindow::ScheduleResumeComposition()
     }
 }
 
+float
+nsWindow::ComputeRenderIntegrity()
+{
+    if (gGeckoViewWindow) {
+        if (RefPtr<CompositorBridgeParent> bridge = gGeckoViewWindow->GetCompositorBridgeParent()) {
+            return bridge->ComputeRenderIntegrity();
+        }
+    }
+
+    return 1.f;
+}
+
 bool
 nsWindow::WidgetPaintsBackground()
 {

@@ -43,6 +43,7 @@ import javax.microedition.khronos.egl.EGLConfig;
  */
 public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "GeckoLayerRenderer";
+    private static final String PROFTAG = "GeckoLayerRendererProf";
 
     /*
      * The amount of time a frame is allowed to take to render before we declare it a dropped
@@ -76,6 +77,12 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     // Dropped frames display
     private final int[] mFrameTimings;
     private int mCurrentFrame, mFrameTimingsSum, mDroppedFrames;
+
+    // Render profiling output
+    private int mFramesRendered;
+    private float mCompleteFramesRendered;
+    private boolean mProfileRender;
+    private long mProfileOutputTime;
 
     private IntBuffer mPixelBuffer;
 
@@ -197,6 +204,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     }
 
     void onSurfaceCreated(EGLConfig config) {
+        checkMonitoringEnabled();
         createDefaultProgram();
         activateDefaultProgram();
     }
@@ -300,6 +308,12 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
     }
 
+    private void printCheckerboardStats() {
+        Log.d(PROFTAG, "Frames rendered over last 1000ms: " + mCompleteFramesRendered + "/" + mFramesRendered);
+        mFramesRendered = 0;
+        mCompleteFramesRendered = 0;
+    }
+
     /** Used by robocop for testing purposes. Not for production use! */
     IntBuffer getPixels() {
         IntBuffer pixelBuffer = IntBuffer.allocate(mView.getWidth() * mView.getHeight());
@@ -358,6 +372,10 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         mCurrentFrame = (mCurrentFrame + 1) % mFrameTimings.length;
 
         int averageTime = mFrameTimingsSum / mFrameTimings.length;
+    }
+
+    void checkMonitoringEnabled() {
+        mProfileRender = Log.isLoggable(PROFTAG, Log.DEBUG);
     }
 
     /*
@@ -534,6 +552,27 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 /* Draw the horizontal scrollbar. */
                 if (mPageRect.width() > mFrameMetrics.getWidth())
                     mHorizScrollLayer.draw(mPageContext);
+            }
+
+            /* Measure how much of the screen is checkerboarding */
+            Layer rootLayer = mView.getLayerClient().getRoot();
+            if ((rootLayer != null) &&
+                (mProfileRender || PanningPerfAPI.isRecordingCheckerboard())) {
+                // Calculate the incompletely rendered area of the page
+                float checkerboard =  1.0f - GeckoAppShell.computeRenderIntegrity();
+
+                PanningPerfAPI.recordCheckerboard(checkerboard);
+                if (checkerboard < 0.0f || checkerboard > 1.0f) {
+                    Log.e(LOGTAG, "Checkerboard value out of bounds: " + checkerboard);
+                }
+
+                mCompleteFramesRendered += 1.0f - checkerboard;
+                mFramesRendered ++;
+
+                if (mFrameStartTime - mProfileOutputTime > NANOS_PER_SECOND) {
+                    mProfileOutputTime = mFrameStartTime;
+                    printCheckerboardStats();
+                }
             }
 
             runRenderTasks(mTasks, true, mFrameStartTime);
