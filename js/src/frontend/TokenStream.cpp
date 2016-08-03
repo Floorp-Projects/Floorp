@@ -593,13 +593,6 @@ CompileError::~CompileError()
     js_free(message);
     message = nullptr;
 
-    if (report.messageArgs) {
-        unsigned i = 0;
-        while (report.messageArgs[i])
-            js_free((void*)report.messageArgs[i++]);
-        js_free(report.messageArgs);
-    }
-
     PodZero(&report);
 }
 
@@ -648,7 +641,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
     }
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber, &err.message,
-                                ArgumentsAreASCII, &err.report, args))
+                                nullptr, ArgumentsAreASCII, &err.report, args))
     {
         return false;
     }

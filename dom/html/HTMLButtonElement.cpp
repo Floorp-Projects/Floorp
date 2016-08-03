@@ -381,11 +381,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         // Using presShell to dispatch the event. It makes sure that
         // event is not handled if the window is being destroyed.
         if (presShell && (event.mMessage != eFormSubmit ||
-                          mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
-                          // We know the element is a submit control, if this check is moved,
-                          // make sure formnovalidate is used only if it's a submit control.
-                          HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate) ||
-                          mForm->CheckValidFormSubmission())) {
+                          mForm->SubmissionCanProceed(this))) {
           // TODO: removing this code and have the submit event sent by the form
           // see bug 592124.
           // Hold a strong ref while dispatching

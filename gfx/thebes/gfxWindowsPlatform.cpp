@@ -2058,7 +2058,6 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
   DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
 
   aOut->useD3D11() = true;
-  aOut->useD3D11ImageBridge() = !!dm->GetImageBridgeDevice();
   aOut->d3d11TextureSharingWorks() = dm->TextureSharingWorks();
   aOut->useD3D11WARP() = dm->IsWARP();
   aOut->useD2D1() = gfxConfig::IsEnabled(Feature::DIRECT2D);

@@ -829,14 +829,6 @@ class Assembler : public AssemblerX86Shared
         return CodeOffset(masm.leaq_rip(dest.encoding()).offset());
     }
 
-    void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-        CodeOffset label = loadRipRelativeInt64(dest);
-        append(wasm::GlobalAccess(label, globalDataOffset));
-    }
-    void loadAsmJSHeapRegisterFromGlobalData() {
-        loadWasmGlobalPtr(wasm::HeapGlobalDataOffset, HeapReg);
-    }
-
     void cmpq(Register rhs, Register lhs) {
         masm.cmpq_rr(rhs.encoding(), lhs.encoding());
     }

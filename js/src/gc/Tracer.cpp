@@ -96,10 +96,10 @@ JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
         return;
     }
     if (contextIndex_ != InvalidIndex) {
-        JS_snprintf(buffer, bufferSize, "%s[%lu]", contextName_, contextIndex_);
+        snprintf(buffer, bufferSize, "%s[%" PRIuSIZE "]", contextName_, contextIndex_);
         return;
     }
-    JS_snprintf(buffer, bufferSize, "%s", contextName_);
+    snprintf(buffer, bufferSize, "%s", contextName_);
 }
 
 
@@ -375,9 +375,9 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
                     PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
                 }
             } else if (obj->getClass()->flags & JSCLASS_HAS_PRIVATE) {
-                JS_snprintf(buf, bufsize, " %p", obj->as<NativeObject>().getPrivate());
+                snprintf(buf, bufsize, " %p", obj->as<NativeObject>().getPrivate());
             } else {
-                JS_snprintf(buf, bufsize, " <no private>");
+                snprintf(buf, bufsize, " <no private>");
             }
             break;
           }
@@ -385,7 +385,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
           case JS::TraceKind::Script:
           {
             JSScript* script = static_cast<JSScript*>(thing);
-            JS_snprintf(buf, bufsize, " %s:%" PRIuSIZE, script->filename(), script->lineno());
+            snprintf(buf, bufsize, " %s:%" PRIuSIZE, script->filename(), script->lineno());
             break;
           }
 
@@ -399,7 +399,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
                 bool willFit = str->length() + strlen("<length > ") +
                                CountDecimalDigits(str->length()) < bufsize;
 
-                n = JS_snprintf(buf, bufsize, "<length %" PRIuSIZE "%s> ",
+                n = snprintf(buf, bufsize, "<length %" PRIuSIZE "%s> ",
                                 str->length(),
                                 willFit ? "" : " (truncated)");
                 buf += n;
@@ -407,7 +407,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
 
                 PutEscapedString(buf, bufsize, &str->asLinear(), 0);
             } else {
-                JS_snprintf(buf, bufsize, "<rope: length %" PRIuSIZE ">", str->length());
+                snprintf(buf, bufsize, "<rope: length %" PRIuSIZE ">", str->length());
             }
             break;
           }
@@ -421,10 +421,10 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
                     bufsize--;
                     PutEscapedString(buf, bufsize, &desc->asLinear(), 0);
                 } else {
-                    JS_snprintf(buf, bufsize, "<nonlinear desc>");
+                    snprintf(buf, bufsize, "<nonlinear desc>");
                 }
             } else {
-                JS_snprintf(buf, bufsize, "<null>");
+                snprintf(buf, bufsize, "<null>");
             }
             break;
           }

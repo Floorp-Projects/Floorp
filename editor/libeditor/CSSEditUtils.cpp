@@ -25,7 +25,6 @@
 #include "nsIContent.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
@@ -39,6 +38,7 @@
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsStringIterator.h"
+#include "nsStyledElement.h"
 #include "nsSubstringTuple.h"
 #include "nsUnicharUtils.h"
 
@@ -1347,13 +1347,14 @@ CSSEditUtils::GetInlineStyles(nsISupports* aElement,
 {
   NS_ENSURE_TRUE(aElement && aLength, NS_ERROR_NULL_POINTER);
   *aLength = 0;
-  nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(aElement);
+  nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
 
-  nsresult res = inlineStyles->GetStyle(aCssDecl);
-  NS_ENSURE_SUCCESS(res, NS_ERROR_NULL_POINTER);
-  MOZ_ASSERT(*aCssDecl);
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
+    do_QueryInterface(inlineStyles->Style());
+  MOZ_ASSERT(cssDecl);
 
+  cssDecl.forget(aCssDecl);
   (*aCssDecl)->GetLength(aLength);
   return NS_OK;
 }

@@ -18,6 +18,9 @@
 // buffer, avoiding the need for the user to pass it in explicitly.
 #ifdef __cplusplus
 template <size_t N>
+#if defined(__GNUC__)
+  __attribute__((format(printf, 2, 3)))
+#endif
 int snprintf_literal(char (&buffer)[N], const char* format, ...)
 {
   va_list args;

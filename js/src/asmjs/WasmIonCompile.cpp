@@ -273,6 +273,25 @@ class FunctionCompiler
         return constant;
     }
 
+    MDefinition* constant(float f)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant* constant = MConstant::NewRawFloat32(alloc(), f);
+        curBlock_->add(constant);
+        return constant;
+    }
+
+    MDefinition* constant(double d)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant* constant = MConstant::NewRawDouble(alloc(), d);
+        curBlock_->add(constant);
+        return constant;
+    }
+
+    // Specialized for MToFloat32
     template <class T>
     MDefinition* unary(MDefinition* op)
     {
@@ -309,6 +328,22 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
         T* ins = T::NewAsmJS(alloc(), lhs, rhs, type);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    bool mustPreserveNaN(MIRType type)
+    {
+        return IsFloatingPointType(type) && mg().kind == ModuleKind::Wasm;
+    }
+
+    MDefinition* sub(MDefinition* lhs, MDefinition* rhs, MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        // wasm can't fold x - 0.0 because of NaN with custom payloads.
+        MSub* ins = MSub::NewAsmJS(alloc(), lhs, rhs, type, mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
     }
@@ -482,7 +517,15 @@ class FunctionCompiler
     MDefinition* minMax(MDefinition* lhs, MDefinition* rhs, MIRType type, bool isMax) {
         if (inDeadCode())
             return nullptr;
-        MMinMax* ins = MMinMax::New(alloc(), lhs, rhs, type, isMax);
+
+        if (mustPreserveNaN(type)) {
+            // Convert signaling NaN to quiet NaNs.
+            MDefinition* zero = constant(DoubleValue(0.0), type);
+            lhs = sub(lhs, zero, type);
+            rhs = sub(rhs, zero, type);
+        }
+
+        MMinMax* ins = MMinMax::NewWasm(alloc(), lhs, rhs, type, isMax);
         curBlock_->add(ins);
         return ins;
     }
@@ -491,7 +534,9 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MMul* ins = MMul::New(alloc(), lhs, rhs, type, mode);
+
+        // wasm can't fold x * 1.0 because of NaN with custom payloads.
+        auto* ins = MMul::NewWasm(alloc(), lhs, rhs, type, mode, mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
     }
@@ -501,7 +546,8 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MDiv* ins = MDiv::NewAsmJS(alloc(), lhs, rhs, type, unsignd, trapOnError);
+        auto* ins = MDiv::NewAsmJS(alloc(), lhs, rhs, type, unsignd, trapOnError,
+                                   mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
     }
@@ -672,7 +718,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, access, oldv, newv);
+        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, access, oldv, newv, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
@@ -683,7 +729,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, access, value);
+        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, access, value, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
@@ -695,7 +741,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, access, v);
+        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, access, v, tlsPointer_);
         curBlock_->add(binop);
         return binop;
     }
@@ -789,7 +835,6 @@ class FunctionCompiler
         MAsmJSCall::Args regArgs_;
         Vector<MAsmJSPassStackArg*, 0, SystemAllocPolicy> stackArgs_;
         bool childClobbers_;
-        bool preservesTlsReg_;
 
         friend class FunctionCompiler;
 
@@ -798,8 +843,7 @@ class FunctionCompiler
           : lineOrBytecode_(lineOrBytecode),
             maxChildStackBytes_(0),
             spIncrement_(0),
-            childClobbers_(false),
-            preservesTlsReg_(false)
+            childClobbers_(false)
         { }
     };
 
@@ -840,16 +884,6 @@ class FunctionCompiler
         }
     }
 
-    // Add the hidden TLS pointer argument to CallArgs, and assume that it will
-    // be preserved by the call.
-    bool passTlsPointer(CallArgs* args)
-    {
-        if (inDeadCode())
-            return true;
-        args->preservesTlsReg_ = true;
-        return args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_));
-    }
-
     void propagateMaxStackArgBytes(uint32_t stackBytes)
     {
         if (callStack_.empty()) {
@@ -865,13 +899,20 @@ class FunctionCompiler
             outer->childClobbers_ = true;
     }
 
-    void finishCallArgs(CallArgs* args)
+    enum class PassTls { False = false, True = true };
+
+    bool finishCallArgs(CallArgs* args, PassTls passTls)
     {
         MOZ_ALWAYS_TRUE(callStack_.popCopy() == args);
 
         if (inDeadCode()) {
             propagateMaxStackArgBytes(args->maxChildStackBytes_);
-            return;
+            return true;
+        }
+
+        if (passTls == PassTls::True) {
+            if (!args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_)))
+                return false;
         }
 
         uint32_t stackBytes = args->abi_.stackBytesConsumedSoFar();
@@ -887,15 +928,14 @@ class FunctionCompiler
         }
 
         propagateMaxStackArgBytes(stackBytes);
+        return true;
     }
 
   private:
-    bool callPrivate(MAsmJSCall::Callee callee, const CallArgs& args, ExprType ret, MDefinition** def)
+    bool callPrivate(MAsmJSCall::Callee callee, MAsmJSCall::PreservesTlsReg preservesTlsReg,
+                     const CallArgs& args, ExprType ret, MDefinition** def)
     {
-        if (inDeadCode()) {
-            *def = nullptr;
-            return true;
-        }
+        MOZ_ASSERT(!inDeadCode());
 
         CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);
         switch (callee.which()) {
@@ -906,7 +946,7 @@ class FunctionCompiler
 
         MAsmJSCall* ins =
           MAsmJSCall::New(alloc(), CallSiteDesc(args.lineOrBytecode_, kind), callee, args.regArgs_,
-                          ToMIRType(ret), args.spIncrement_, args.preservesTlsReg_);
+                          ToMIRType(ret), args.spIncrement_, preservesTlsReg);
         if (!ins)
             return false;
 
@@ -918,7 +958,13 @@ class FunctionCompiler
   public:
     bool internalCall(const Sig& sig, uint32_t funcIndex, const CallArgs& args, MDefinition** def)
     {
-        return callPrivate(MAsmJSCall::Callee(funcIndex), args, sig.ret(), def);
+        if (inDeadCode()) {
+            *def = nullptr;
+            return true;
+        }
+
+        return callPrivate(MAsmJSCall::Callee(funcIndex), MAsmJSCall::PreservesTlsReg::True, args,
+                           sig.ret(), def);
     }
 
     bool funcPtrCall(uint32_t sigIndex, uint32_t length, uint32_t globalDataOffset,
@@ -946,7 +992,8 @@ class FunctionCompiler
             callee = MAsmJSCall::Callee(ptrFun, mg_.sigs[sigIndex].id);
         }
 
-        return callPrivate(callee, args, mg_.sigs[sigIndex].ret(), def);
+        return callPrivate(callee, MAsmJSCall::PreservesTlsReg::True, args,
+                           mg_.sigs[sigIndex].ret(), def);
     }
 
     bool ffiCall(unsigned globalDataOffset, const CallArgs& args, ExprType ret, MDefinition** def)
@@ -959,12 +1006,14 @@ class FunctionCompiler
         MAsmJSLoadFFIFunc* ptrFun = MAsmJSLoadFFIFunc::New(alloc(), globalDataOffset);
         curBlock_->add(ptrFun);
 
-        return callPrivate(MAsmJSCall::Callee(ptrFun), args, ret, def);
+        return callPrivate(MAsmJSCall::Callee(ptrFun), MAsmJSCall::PreservesTlsReg::False,
+                           args, ret, def);
     }
 
     bool builtinCall(SymbolicAddress builtin, const CallArgs& args, ValType type, MDefinition** def)
     {
-        return callPrivate(MAsmJSCall::Callee(builtin), args, ToExprType(type), def);
+        return callPrivate(MAsmJSCall::Callee(builtin), MAsmJSCall::PreservesTlsReg::False,
+                           args, ToExprType(type), def);
     }
 
     /*********************************************** Control flow generation */
@@ -1504,6 +1553,16 @@ class FunctionCompiler
     }
 };
 
+template <>
+MDefinition* FunctionCompiler::unary<MToFloat32>(MDefinition* op)
+{
+    if (inDeadCode())
+        return nullptr;
+    auto* ins = MToFloat32::NewAsmJS(alloc(), op, mustPreserveNaN(op->type()));
+    curBlock_->add(ins);
+    return ins;
+}
+
 } // end anonymous namespace
 
 static bool
@@ -1696,16 +1755,8 @@ EmitReturn(FunctionCompiler& f)
     return true;
 }
 
-// Is a callee within the same module instance?
-enum class IntraModule
-{
-    False,
-    True
-};
-
 static bool
-EmitCallArgs(FunctionCompiler& f, const Sig& sig, IntraModule intraModule,
-             FunctionCompiler::CallArgs* args)
+EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::CallArgs* args)
 {
     if (!f.startCallArgs(args))
         return false;
@@ -1724,13 +1775,7 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, IntraModule intraModule,
     if (!f.iter().readCallArgsEnd(numArgs))
         return false;
 
-    // Calls within the module pass the module's TLS pointer.
-    // Calls to other modules go through stubs that set up their TLS pointers.
-    if (intraModule == IntraModule::True)
-        f.passTlsPointer(args);
-
-    f.finishCallArgs(args);
-    return true;
+    return f.finishCallArgs(args, FunctionCompiler::PassTls::True);
 }
 
 static bool
@@ -1746,7 +1791,7 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = *f.mg().funcSigs[calleeIndex];
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, IntraModule::True, &args))
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
@@ -1776,7 +1821,7 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = f.mg().sigs[sigIndex];
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, IntraModule::True, &args))
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     MDefinition* callee;
@@ -1815,7 +1860,7 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = *funcImport.sig;
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, IntraModule::False, &args))
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
@@ -1878,7 +1923,7 @@ EmitGetGlobal(FunctionCompiler& f)
         result = f.constant(Int32Value(value.i32()), mirType);
         break;
       case ValType::I64:
-        result = f.constant(value.i64());
+        result = f.constant(int64_t(value.i64()));
         break;
       case ValType::F32:
         result = f.constant(Float32Value(value.f32()), mirType);
@@ -2025,16 +2070,27 @@ EmitReinterpret(FunctionCompiler& f, ValType resultType, ValType operandType, MI
     return true;
 }
 
-template <typename MIRClass>
 static bool
-EmitBinary(FunctionCompiler& f, ValType type, MIRType mirType)
+EmitAdd(FunctionCompiler& f, ValType type, MIRType mirType)
 {
     MDefinition* lhs;
     MDefinition* rhs;
     if (!f.iter().readBinary(type, &lhs, &rhs))
         return false;
 
-    f.iter().setResult(f.binary<MIRClass>(lhs, rhs, mirType));
+    f.iter().setResult(f.binary<MAdd>(lhs, rhs, mirType));
+    return true;
+}
+
+static bool
+EmitSub(FunctionCompiler& f, ValType type, MIRType mirType)
+{
+    MDefinition* lhs;
+    MDefinition* rhs;
+    if (!f.iter().readBinary(type, &lhs, &rhs))
+        return false;
+
+    f.iter().setResult(f.sub(lhs, rhs, mirType));
     return true;
 }
 
@@ -2230,7 +2286,8 @@ EmitUnaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddre
     if (!f.passArg(input, operandType, &args))
         return false;
 
-    f.finishCallArgs(&args);
+    if (!f.finishCallArgs(&args, FunctionCompiler::PassTls::False))
+        return false;
 
     MDefinition* def;
     if (!f.builtinCall(callee, args, operandType, &def))
@@ -2261,7 +2318,8 @@ EmitBinaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddr
     if (!f.passArg(rhs, operandType, &args))
         return false;
 
-    f.finishCallArgs(&args);
+    if (!f.finishCallArgs(&args, FunctionCompiler::PassTls::False))
+        return false;
 
     MDefinition* def;
     if (!f.builtinCall(callee, args, operandType, &def))
@@ -2903,9 +2961,9 @@ EmitExpr(FunctionCompiler& f)
         return true;
       }
       case Expr::I32Add:
-        return EmitBinary<MAdd>(f, ValType::I32, MIRType::Int32);
+        return EmitAdd(f, ValType::I32, MIRType::Int32);
       case Expr::I32Sub:
-        return EmitBinary<MSub>(f, ValType::I32, MIRType::Int32);
+        return EmitSub(f, ValType::I32, MIRType::Int32);
       case Expr::I32Mul:
         return EmitMul(f, ValType::I32, MIRType::Int32);
       case Expr::I32DivS:
@@ -2983,9 +3041,9 @@ EmitExpr(FunctionCompiler& f)
         return true;
       }
       case Expr::I64Add:
-        return EmitBinary<MAdd>(f, ValType::I64, MIRType::Int64);
+        return EmitAdd(f, ValType::I64, MIRType::Int64);
       case Expr::I64Sub:
-        return EmitBinary<MSub>(f, ValType::I64, MIRType::Int64);
+        return EmitSub(f, ValType::I64, MIRType::Int64);
       case Expr::I64Mul:
         return EmitMul(f, ValType::I64, MIRType::Int64);
       case Expr::I64DivS:
@@ -3057,13 +3115,13 @@ EmitExpr(FunctionCompiler& f)
         if (!f.iter().readF32Const(&f32))
             return false;
 
-        f.iter().setResult(f.constant(Float32Value(f32), MIRType::Float32));
+        f.iter().setResult(f.constant(f32));
         return true;
       }
       case Expr::F32Add:
-        return EmitBinary<MAdd>(f, ValType::F32, MIRType::Float32);
+        return EmitAdd(f, ValType::F32, MIRType::Float32);
       case Expr::F32Sub:
-        return EmitBinary<MSub>(f, ValType::F32, MIRType::Float32);
+        return EmitSub(f, ValType::F32, MIRType::Float32);
       case Expr::F32Mul:
         return EmitMul(f, ValType::F32, MIRType::Float32);
       case Expr::F32Div:
@@ -3113,13 +3171,13 @@ EmitExpr(FunctionCompiler& f)
         if (!f.iter().readF64Const(&f64))
             return false;
 
-        f.iter().setResult(f.constant(DoubleValue(f64), MIRType::Double));
+        f.iter().setResult(f.constant(f64));
         return true;
       }
       case Expr::F64Add:
-        return EmitBinary<MAdd>(f, ValType::F64, MIRType::Double);
+        return EmitAdd(f, ValType::F64, MIRType::Double);
       case Expr::F64Sub:
-        return EmitBinary<MSub>(f, ValType::F64, MIRType::Double);
+        return EmitSub(f, ValType::F64, MIRType::Double);
       case Expr::F64Mul:
         return EmitMul(f, ValType::F64, MIRType::Double);
       case Expr::F64Div:

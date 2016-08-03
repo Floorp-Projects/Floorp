@@ -177,7 +177,7 @@ js_dtostr(DtoaState* state, char* buffer, size_t bufferSize, JSDToStrMode mode, 
                 numBegin[0] = numBegin[1];
                 numBegin[1] = '.';
             }
-            JS_snprintf(numEnd, bufferSize - (numEnd - buffer), "e%+d", decPt-1);
+            snprintf(numEnd, bufferSize - (numEnd - buffer), "e%+d", decPt-1);
         } else if (decPt != nDigits) {
             /* Some kind of a fraction in fixed notation */
             MOZ_ASSERT(decPt <= nDigits);

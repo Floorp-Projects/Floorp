@@ -79,6 +79,10 @@ def resolve_keyed_by(config, tests):
     for test in tests:
         for field in fields:
             test[field] = get_keyed_by(item=test, field=field, item_name=test['test-name'])
+        test['mozharness']['config'] = get_keyed_by(item=test,
+                                                    field='mozharness',
+                                                    subfield='config',
+                                                    item_name=test['test-name'])
         yield test
 
 
