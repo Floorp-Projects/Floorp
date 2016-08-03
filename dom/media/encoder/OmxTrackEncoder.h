@@ -27,7 +27,7 @@ namespace mozilla {
 class OmxVideoTrackEncoder: public VideoTrackEncoder
 {
 public:
-  explicit OmxVideoTrackEncoder(TrackRate aTrackRate);
+  OmxVideoTrackEncoder();
   ~OmxVideoTrackEncoder();
 
   already_AddRefed<TrackMetadataBase> GetMetadata() override;
@@ -36,7 +36,8 @@ public:
 
 protected:
   nsresult Init(int aWidth, int aHeight,
-                int aDisplayWidth, int aDisplayHeight) override;
+                int aDisplayWidth, int aDisplayHeight,
+                TrackRate aTrackRate) override;
 
 private:
   nsAutoPtr<android::OMXVideoEncoder> mEncoder;
