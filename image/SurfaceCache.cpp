@@ -1077,7 +1077,7 @@ SurfaceCache::SurfaceAvailable(NotNull<ISurfaceProvider*> aProvider,
 }
 
 /* static */ void
-SurfaceCache::LockImage(Image* aImageKey)
+SurfaceCache::LockImage(const ImageKey aImageKey)
 {
   if (sInstance) {
     MutexAutoLock lock(sInstance->GetMutex());
@@ -1086,7 +1086,7 @@ SurfaceCache::LockImage(Image* aImageKey)
 }
 
 /* static */ void
-SurfaceCache::UnlockImage(Image* aImageKey)
+SurfaceCache::UnlockImage(const ImageKey aImageKey)
 {
   if (sInstance) {
     MutexAutoLock lock(sInstance->GetMutex());
@@ -1104,7 +1104,7 @@ SurfaceCache::UnlockEntries(const ImageKey aImageKey)
 }
 
 /* static */ void
-SurfaceCache::RemoveImage(Image* aImageKey)
+SurfaceCache::RemoveImage(const ImageKey aImageKey)
 {
   if (sInstance) {
     MutexAutoLock lock(sInstance->GetMutex());
