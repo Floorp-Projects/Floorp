@@ -54,7 +54,8 @@
       <vbox flex="1" id="markup-box">
       </vbox>
       <html:div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
-        <html:div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"/>
+        <html:div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"
+                  role="group" aria-label="&inspectorBreadcrumbsGroup;" tabindex="0" />
       </html:div>
     </vbox>
     <splitter class="devtools-side-splitter"/>
