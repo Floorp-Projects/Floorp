@@ -4,6 +4,7 @@
 
 from time import clock, sleep
 
+from marionette import Marionette
 from marionette_driver import By, expected, Wait
 
 from external_media_tests.utils import verbose_until
@@ -69,7 +70,7 @@ class VideoPuppeteer(object):
         self._start_time = 0
         self._start_wall_time = 0
         wait = Wait(self.marionette, timeout=self.timeout)
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             self.marionette.navigate(self.test_url)
             self.marionette.execute_script("""
                 log('URL: {0}');""".format(self.test_url))
@@ -178,7 +179,7 @@ class VideoPuppeteer(object):
         :return: The url of the actual video file, as opposed to the url
             of the page with the video element.
         """
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             return self.video.get_attribute('src')
 
     @property
@@ -238,12 +239,12 @@ class VideoPuppeteer(object):
 
     def execute_video_script(self, script):
         """
-        Execute JS script in 'content' context with access to video element.
+        Execute JS script in content context with access  to video element.
 
         :param script: script to be executed
         :return: value returned by script
         """
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             return self.marionette.execute_script(script,
                                                   script_args=[self.video])
 
