@@ -241,6 +241,16 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
             l->NotifyQueuedTrackChanges(this, data->mID,
                                         offset, static_cast<TrackEventCommand>(data->mCommands), *data->mData);
           }
+        } else {
+          // Fixme: This part will be removed in the bug 1201363. It will be
+          // removed in changeset "Do not copy video segment to StreamTracks in
+          // TrackUnionStream."
+
+          // Dealing with video and not TRACK_CREATE and TRACK_END case.
+          for (MediaStreamListener* l : aStream->mListeners) {
+            l->NotifyQueuedTrackChanges(this, data->mID,
+                                        offset, static_cast<TrackEventCommand>(data->mCommands), *data->mData);
+          }
         }
       }
 
