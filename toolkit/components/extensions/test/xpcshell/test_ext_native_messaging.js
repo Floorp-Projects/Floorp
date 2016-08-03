@@ -1,264 +1,99 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension test</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-/* globals OS */
-
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-let {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
-
-if (AppConstants.platform == "win") {
-  Cu.import("resource://testing-common/MockRegistry.jsm");
-}
-
-var promiseConsoleOutput = Task.async(function* (task) {
-  const DONE = "=== extension test console listener done ===";
-
-  let listener;
-  let messages = [];
-  let awaitListener = new Promise(resolve => {
-    listener = msg => {
-      if (msg == DONE) {
-        resolve();
-      } else if (msg instanceof Ci.nsIConsoleMessage) {
-        messages.push(msg.message);
-      }
-    };
-  });
-
-  Services.console.registerListener(listener);
-  try {
-    let result = yield task();
-
-    Services.console.logStringMessage(DONE);
-    yield awaitListener;
-
-    return {messages, result};
-  } finally {
-    Services.console.unregisterListener(listener);
-  }
-});
+/* globals chrome */
 
 const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
 const PREF_MAX_WRITE = "webextensions.native-messaging.max-output-message-bytes";
 
-function getSubprocessCount() {
-  return SubprocessImpl.Process.getWorker().call("getProcesses", [])
-                       .then(result => result.size);
-}
-function waitForSubprocessExit() {
-  return SubprocessImpl.Process.getWorker().call("waitForNoProcesses", []);
-}
-
-let dir = FileUtils.getDir("TmpD", ["NativeMessaging"]);
-dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-info(`Using local directory ${dir.path}\n`);
-
-function getPath(filename) {
-  return OS.Path.join(dir.path, filename);
-}
-
-// Set up a couple of native applications and their manifests for
-// test to use.
-const ID = "native@tests.mozilla.org";
-
 const ECHO_BODY = String.raw`
-import struct
-import sys
+  import struct
+  import sys
 
-while True:
-    rawlen = sys.stdin.read(4)
-    if len(rawlen) == 0:
-        sys.exit(0)
-    msglen = struct.unpack('@I', rawlen)[0]
-    msg = sys.stdin.read(msglen)
+  while True:
+      rawlen = sys.stdin.read(4)
+      if len(rawlen) == 0:
+          sys.exit(0)
+      msglen = struct.unpack('@I', rawlen)[0]
+      msg = sys.stdin.read(msglen)
 
-    sys.stdout.write(struct.pack('@I', msglen))
-    sys.stdout.write(msg)
+      sys.stdout.write(struct.pack('@I', msglen))
+      sys.stdout.write(msg)
 `;
 
 const INFO_BODY = String.raw`
-import json
-import os
-import struct
-import sys
+  import json
+  import os
+  import struct
+  import sys
 
-msg = json.dumps({"args": sys.argv, "cwd": os.getcwd()})
-sys.stdout.write(struct.pack('@I', len(msg)))
-sys.stdout.write(msg)
-sys.exit(0)
+  msg = json.dumps({"args": sys.argv, "cwd": os.getcwd()})
+  sys.stdout.write(struct.pack('@I', len(msg)))
+  sys.stdout.write(msg)
+  sys.exit(0)
 `;
 
 const WONTDIE_BODY = String.raw`
-import signal
-import struct
-import sys
-import time
+  import signal
+  import struct
+  import sys
+  import time
 
-signal.signal(signal.SIGTERM, signal.SIG_IGN)
+  signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
-def spin():
-    while True:
-        try:
-            signal.pause()
-        except AttributeError:
-            time.sleep(5)
+  def spin():
+      while True:
+          try:
+              signal.pause()
+          except AttributeError:
+              time.sleep(5)
 
-while True:
-    rawlen = sys.stdin.read(4)
-    if len(rawlen) == 0:
-        spin()
+  while True:
+      rawlen = sys.stdin.read(4)
+      if len(rawlen) == 0:
+          spin()
 
-    msglen = struct.unpack('@I', rawlen)[0]
-    msg = sys.stdin.read(msglen)
+      msglen = struct.unpack('@I', rawlen)[0]
+      msg = sys.stdin.read(msglen)
 
-    sys.stdout.write(struct.pack('@I', msglen))
-    sys.stdout.write(msg)
+      sys.stdout.write(struct.pack('@I', msglen))
+      sys.stdout.write(msg)
 `;
 
 const STDERR_LINES = ["hello stderr", "this should be a separate line"];
 let STDERR_MSG = STDERR_LINES.join("\\n");
 
-// Python apparently line-buffers stderr even with the -u arg on
-// Windows.  Dealing with that is more hassle than its worth but
-// on other platforms, we want to keep testing partial lines.
-if (AppConstants.platform == "win") {
-  STDERR_MSG += "\\n";
-}
-
 const STDERR_BODY = String.raw`
-import sys
-sys.stderr.write("${STDERR_MSG}")
+  import sys
+  sys.stderr.write("${STDERR_MSG}")
 `;
 
 const SCRIPTS = [
   {
     name: "echo",
     description: "a native app that echoes back messages it receives",
-    script: ECHO_BODY,
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
   },
   {
     name: "info",
     description: "a native app that gives some info about how it was started",
-    script: INFO_BODY,
+    script: INFO_BODY.replace(/^ {2}/gm, ""),
   },
   {
     name: "wontdie",
     description: "a native app that does not exit when stdin closes or on SIGTERM",
-    script: WONTDIE_BODY,
+    script: WONTDIE_BODY.replace(/^ {2}/gm, ""),
   },
   {
     name: "stderr",
     description: "a native app that writes to stderr and then exits",
-    script: STDERR_BODY,
+    script: STDERR_BODY.replace(/^ {2}/gm, ""),
   },
 ];
 
 add_task(function* setup() {
-  const PERMS = {unixMode: 0o755};
-  let pythonPath = yield Subprocess.pathSearch("python2.7").catch(err => {
-    if (err.errorCode != Subprocess.ERROR_BAD_EXECUTABLE) {
-      throw err;
-    }
-    return Subprocess.pathSearch("python");
-  });
-
-  switch (AppConstants.platform) {
-    case "macosx":
-    case "linux":
-      let dirProvider = {
-        getFile(property) {
-          if (property == "XREUserNativeMessaging") {
-            return dir.clone();
-          }
-          return null;
-        },
-      };
-
-      Services.dirsvc.registerProvider(dirProvider);
-      SimpleTest.registerCleanupFunction(() => {
-        Services.dirsvc.unregisterProvider(dirProvider);
-        dir.remove(true);
-      });
-
-      for (let script of SCRIPTS) {
-        let path = getPath(`${script.name}.py`);
-        let body = `#!${pythonPath} -u\n${script.script}`;
-        yield OS.File.writeAtomic(path, body);
-        yield OS.File.setPermissions(path, PERMS);
-
-        let manifest = {
-          name: script.name,
-          description: script.description,
-          path,
-          type: "stdio",
-          allowed_extensions: [ID],
-        };
-
-        yield OS.File.writeAtomic(getPath(`${script.name}.json`), JSON.stringify(manifest));
-      }
-      break;
-
-    case "win":
-      const REGKEY = "Software\\Mozilla\\NativeMessagingHosts";
-      let registry = new MockRegistry();
-      SimpleTest.registerCleanupFunction(() => {
-        registry.shutdown();
-      });
-
-      for (let script of SCRIPTS) {
-        let pyPath = getPath(`${script.name}.py`);
-        yield OS.File.writeAtomic(pyPath, script.script);
-
-        let batPath = getPath(`${script.name}.bat`);
-        let batBody = `@ECHO OFF\n${pythonPath} -u ${pyPath} %*\n`;
-        yield OS.File.writeAtomic(batPath, batBody);
-        yield OS.File.setPermissions(pyPath, PERMS);
-
-        let manifest = {
-          name: script.name,
-          description: script.description,
-          path: batPath,
-          type: "stdio",
-          allowed_extensions: [ID],
-        };
-        let manifestPath = getPath(`${script.name}.json`);
-        yield OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
-
-        registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                          `${REGKEY}\\${script.name}`, "", manifestPath);
-
-        // Create a version of the manifest with a relative path
-        let relativeName = `relative.${script.name}`;
-        manifest.name = relativeName;
-        manifest.path = `${script.name}.bat`;
-
-        manifestPath = getPath(`${relativeName}.json`);
-        yield OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
-
-        registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                          `${REGKEY}\\${relativeName}`, "", manifestPath);
-      }
-      break;
-
-    default:
-      ok(false, `Native messaging is not supported on ${AppConstants.platform}`);
-  }
+  yield setupHosts(SCRIPTS);
 });
 
 // Test the basic operation of native messaging with a simple
@@ -283,7 +118,7 @@ add_task(function* test_happy_path() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["nativeMessaging"],
     },
@@ -327,11 +162,11 @@ add_task(function* test_happy_path() {
     extension.sendMessage("send", test.data);
     let response = yield extension.awaitMessage("message");
     let expected = test.expected || test.data;
-    isDeeply(response, expected, `Echoed a message of type ${test.what}`);
+    deepEqual(response, expected, `Echoed a message of type ${test.what}`);
   }
 
   let procCount = yield getSubprocessCount();
-  is(procCount, 1, "subprocess is still running");
+  equal(procCount, 1, "subprocess is still running");
   let exitPromise = waitForSubprocessExit();
   yield extension.unload();
   yield exitPromise;
@@ -351,7 +186,7 @@ if (AppConstants.platform == "win") {
     }
 
     let extension = ExtensionTestUtils.loadExtension({
-      background: `(${background})()`,
+      background,
       manifest: {
         permissions: ["nativeMessaging"],
       },
@@ -361,7 +196,7 @@ if (AppConstants.platform == "win") {
     yield extension.awaitMessage("done");
 
     let procCount = yield getSubprocessCount();
-    is(procCount, 1, "subprocess is still running");
+    equal(procCount, 1, "subprocess is still running");
     let exitPromise = waitForSubprocessExit();
     yield extension.unload();
     yield exitPromise;
@@ -390,7 +225,7 @@ add_task(function* test_sendNativeMessage() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["nativeMessaging"],
     },
@@ -437,7 +272,7 @@ add_task(function* test_disconnect() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["nativeMessaging"],
     },
@@ -448,23 +283,23 @@ add_task(function* test_disconnect() {
 
   extension.sendMessage("send", "test");
   let response = yield extension.awaitMessage("message");
-  is(response, "test", "Echoed a string");
+  equal(response, "test", "Echoed a string");
 
   let procCount = yield getSubprocessCount();
-  is(procCount, 1, "subprocess is running");
+  equal(procCount, 1, "subprocess is running");
 
   extension.sendMessage("disconnect");
   response = yield extension.awaitMessage("disconnect-result");
-  is(response.success, true, "disconnect succeeded");
+  equal(response.success, true, "disconnect succeeded");
 
-  info("waiting for subprocess to exit");
+  do_print("waiting for subprocess to exit");
   yield waitForSubprocessExit();
   procCount = yield getSubprocessCount();
-  is(procCount, 0, "subprocess is no longer running");
+  equal(procCount, 0, "subprocess is no longer running");
 
   extension.sendMessage("disconnect");
   response = yield extension.awaitMessage("disconnect-result");
-  is(response.success, false, "second call to disconnect failed");
+  equal(response.success, false, "second call to disconnect failed");
   ok(/already disconnected/.test(response.errmsg), "disconnect error message is reasonable");
 
   yield extension.unload();
@@ -476,7 +311,7 @@ add_task(function* test_write_limit() {
   function clearPref() {
     Services.prefs.clearUserPref(PREF_MAX_WRITE);
   }
-  SimpleTest.registerCleanupFunction(clearPref);
+  do_register_cleanup(clearPref);
 
   function background() {
     const PAYLOAD = "0123456789A";
@@ -490,7 +325,7 @@ add_task(function* test_write_limit() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["nativeMessaging"],
     },
@@ -499,7 +334,7 @@ add_task(function* test_write_limit() {
   yield extension.startup();
 
   let errmsg = yield extension.awaitMessage("result");
-  isnot(errmsg, null, "native postMessage() failed for overly large message");
+  notEqual(errmsg, null, "native postMessage() failed for overly large message");
 
   yield extension.unload();
   yield waitForSubprocessExit();
@@ -513,7 +348,7 @@ add_task(function* test_read_limit() {
   function clearPref() {
     Services.prefs.clearUserPref(PREF_MAX_READ);
   }
-  SimpleTest.registerCleanupFunction(clearPref);
+  do_register_cleanup(clearPref);
 
   function background() {
     const PAYLOAD = "0123456789A";
@@ -528,7 +363,7 @@ add_task(function* test_read_limit() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["nativeMessaging"],
     },
@@ -537,7 +372,7 @@ add_task(function* test_read_limit() {
   yield extension.startup();
 
   let result = yield extension.awaitMessage("result");
-  is(result, "disconnected", "native port disconnected on receiving large message");
+  equal(result, "disconnected", "native port disconnected on receiving large message");
 
   yield extension.unload();
   yield waitForSubprocessExit();
@@ -557,7 +392,7 @@ add_task(function* test_ext_permission() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {},
   });
 
@@ -581,7 +416,7 @@ add_task(function* test_app_permission() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["nativeMessaging"],
     },
@@ -590,12 +425,12 @@ add_task(function* test_app_permission() {
   yield extension.startup();
 
   let result = yield extension.awaitMessage("result");
-  is(result, "disconnected", "connectNative() failed without native app permission");
+  equal(result, "disconnected", "connectNative() failed without native app permission");
 
   yield extension.unload();
 
   let procCount = yield getSubprocessCount();
-  is(procCount, 0, "No child process was started");
+  equal(procCount, 0, "No child process was started");
 });
 
 // Test that the command-line arguments and working directory for the
@@ -609,7 +444,7 @@ add_task(function* test_child_process() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["nativeMessaging"],
     },
@@ -618,9 +453,10 @@ add_task(function* test_child_process() {
   yield extension.startup();
 
   let msg = yield extension.awaitMessage("result");
-  is(msg.args.length, 2, "Received one command line argument");
-  is(msg.args[1], getPath("info.json"), "Command line argument is the path to the native host manifest");
-  is(msg.cwd, dir.path, "Working directory is the directory containing the native appliation");
+  equal(msg.args.length, 2, "Received one command line argument");
+  equal(msg.args[1], getPath("info.json"), "Command line argument is the path to the native host manifest");
+  equal(msg.cwd.replace(/^\/private\//, "/"), tmpDir.path,
+        "Working directory is the directory containing the native appliation");
 
   let exitPromise = waitForSubprocessExit();
   yield extension.unload();
@@ -645,7 +481,7 @@ add_task(function* test_unresponsive_native_app() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["nativeMessaging"],
     },
@@ -655,14 +491,14 @@ add_task(function* test_unresponsive_native_app() {
   yield extension.awaitMessage("ready");
 
   let procCount = yield getSubprocessCount();
-  is(procCount, 1, "subprocess is running");
+  equal(procCount, 1, "subprocess is running");
 
   let exitPromise = waitForSubprocessExit();
   yield extension.unload();
   yield exitPromise;
 
   procCount = yield getSubprocessCount();
-  is(procCount, 0, "subprocess was succesfully killed");
+  equal(procCount, 0, "subprocess was succesfully killed");
 });
 
 add_task(function* test_stderr() {
@@ -675,7 +511,7 @@ add_task(function* test_stderr() {
 
   let {messages} = yield promiseConsoleOutput(function* () {
     let extension = ExtensionTestUtils.loadExtension({
-      background: `(${background})()`,
+      background,
       manifest: {
         permissions: ["nativeMessaging"],
       },
@@ -684,17 +520,12 @@ add_task(function* test_stderr() {
     yield extension.startup();
     yield extension.awaitMessage("finished");
     yield extension.unload();
+
+    yield waitForSubprocessExit();
   });
 
-  let lines = STDERR_LINES.map(line => messages.findIndex(msg => msg.includes(line)));
-  isnot(lines[0], -1, "Saw first line of stderr output on the console");
-  isnot(lines[1], -1, "Saw second line of stderr output on the console");
-  isnot(lines[0], lines[1], "Stderr output lines are separated in the console");
-
-  yield waitForSubprocessExit();
+  let lines = STDERR_LINES.map(line => messages.findIndex(msg => msg.message.includes(line)));
+  notEqual(lines[0], -1, "Saw first line of stderr output on the console");
+  notEqual(lines[1], -1, "Saw second line of stderr output on the console");
+  notEqual(lines[0], lines[1], "Stderr output lines are separated in the console");
 });
-
-</script>
-
-</body>
-</html>
