@@ -588,6 +588,9 @@ ContentChild::Init(MessageLoop* aIOLoop,
   // If communications with the parent have broken down, take the process
   // down so it's not hanging around.
   GetIPCChannel()->SetAbortOnError(true);
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+  GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_A11Y_REENTRY);
+#endif
 
 #ifdef MOZ_X11
   // Send the parent our X socket to act as a proxy reference for our X
