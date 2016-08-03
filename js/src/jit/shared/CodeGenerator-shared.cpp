@@ -96,7 +96,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
             frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_,
                                                 AsmJSStackAlignment);
         } else if (gen->performsCall()) {
-            // An MAsmJSCall does not align the stack pointer at calls sites but
+            // An MWasmCall does not align the stack pointer at calls sites but
             // instead relies on the a priori stack adjustment. This must be the
             // last adjustment of frameDepth_.
             frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_,
@@ -1489,9 +1489,9 @@ CodeGeneratorShared::omitOverRecursedCheck() const
 }
 
 void
-CodeGeneratorShared::emitAsmJSCallBase(LAsmJSCallBase* ins)
+CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
 {
-    MAsmJSCall* mir = ins->mir();
+    MWasmCall* mir = ins->mir();
 
     if (mir->spIncrement())
         masm.freeStack(mir->spIncrement());
@@ -1508,13 +1508,13 @@ CodeGeneratorShared::emitAsmJSCallBase(LAsmJSCallBase* ins)
     masm.bind(&ok);
 #endif
 
-    MAsmJSCall::Callee callee = mir->callee();
+    MWasmCall::Callee callee = mir->callee();
     switch (callee.which()) {
-      case MAsmJSCall::Callee::Internal: {
+      case MWasmCall::Callee::Internal: {
         masm.call(mir->desc(), callee.internal());
         break;
       }
-      case MAsmJSCall::Callee::Dynamic: {
+      case MWasmCall::Callee::Dynamic: {
         wasm::SigIdDesc sigId = callee.dynamicSigId();
         switch (sigId.kind()) {
           case wasm::SigIdDesc::Kind::Global:
@@ -1530,7 +1530,7 @@ CodeGeneratorShared::emitAsmJSCallBase(LAsmJSCallBase* ins)
         masm.call(mir->desc(), WasmTableCallPtrReg);
         break;
       }
-      case MAsmJSCall::Callee::Builtin: {
+      case MWasmCall::Callee::Builtin: {
         masm.call(callee.builtin());
         break;
       }

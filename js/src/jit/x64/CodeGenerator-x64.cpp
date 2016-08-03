@@ -394,15 +394,15 @@ CodeGeneratorX64::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
 }
 
 void
-CodeGeneratorX64::visitAsmJSCall(LAsmJSCall* ins)
+CodeGeneratorX64::visitWasmCall(LWasmCall* ins)
 {
-    emitAsmJSCallBase(ins);
+    emitWasmCallBase(ins);
 }
 
 void
-CodeGeneratorX64::visitAsmJSCallI64(LAsmJSCallI64* ins)
+CodeGeneratorX64::visitWasmCallI64(LWasmCallI64* ins)
 {
-    emitAsmJSCallBase(ins);
+    emitWasmCallBase(ins);
 }
 
 void

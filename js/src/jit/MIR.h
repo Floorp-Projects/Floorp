@@ -13530,7 +13530,7 @@ class MAsmJSPassStackArg
     }
 };
 
-class MAsmJSCall final
+class MWasmCall final
   : public MVariadicInstruction,
     public NoTypePolicy::Data
 {
@@ -13596,7 +13596,7 @@ class MAsmJSCall final
     size_t spIncrement_;
     bool preservesTlsReg_;
 
-    MAsmJSCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement,
+    MWasmCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement,
                PreservesTlsReg preservesTlsReg)
       : desc_(desc)
       , callee_(callee)
@@ -13605,7 +13605,7 @@ class MAsmJSCall final
     { }
 
   public:
-    INSTRUCTION_HEADER(AsmJSCall)
+    INSTRUCTION_HEADER(WasmCall)
 
     struct Arg {
         AnyRegister reg;
@@ -13614,9 +13614,9 @@ class MAsmJSCall final
     };
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
-    static MAsmJSCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-                           const Args& args, MIRType resultType, size_t spIncrement,
-                           PreservesTlsReg preservesTlsReg);
+    static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
+                          const Args& args, MIRType resultType, size_t spIncrement,
+                          PreservesTlsReg preservesTlsReg);
 
     size_t numArgs() const {
         return argRegs_.length();
