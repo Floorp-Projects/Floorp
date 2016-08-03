@@ -1123,25 +1123,23 @@ class CallEntry extends Entry {
       // When this option is set, it's up to the implementation to
       // parse arguments.
       return args;
-    } else {
-      let success = check(0, 0);
-      if (!success) {
-        this.throwError(context, "Incorrect argument types");
-      }
+    }
+    let success = check(0, 0);
+    if (!success) {
+      this.throwError(context, "Incorrect argument types");
     }
 
     // Now we normalize (and fully type check) all non-omitted arguments.
     fixedArgs = fixedArgs.map((arg, parameterIndex) => {
       if (arg === null) {
         return null;
-      } else {
-        let parameter = this.parameters[parameterIndex];
-        let r = parameter.type.normalize(arg, context);
-        if (r.error) {
-          this.throwError(context, `Type error for parameter ${parameter.name} (${r.error})`);
-        }
-        return r.value;
       }
+      let parameter = this.parameters[parameterIndex];
+      let r = parameter.type.normalize(arg, context);
+      if (r.error) {
+        this.throwError(context, `Type error for parameter ${parameter.name} (${r.error})`);
+      }
+      return r.value;
     });
 
     return fixedArgs;
@@ -1317,9 +1315,8 @@ this.Schemas = {
         enumeration = enumeration.map(e => {
           if (typeof(e) == "object") {
             return e.name;
-          } else {
-            return e;
           }
+          return e;
         });
       }
 
@@ -1441,9 +1438,8 @@ this.Schemas = {
       // Need to see what minimum and maximum are supposed to do here.
       checkTypeProperties("minimum", "maximum");
       return new AnyType(type);
-    } else {
-      throw new Error(`Unexpected type ${type.type}`);
     }
+    throw new Error(`Unexpected type ${type.type}`);
   },
 
   parseFunction(path, fun) {
@@ -1592,7 +1588,7 @@ this.Schemas = {
     };
 
     if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
-      return readJSON(url).then(json => {
+      let result = readJSON(url).then(json => {
         this.schemaJSON.set(url, json);
 
         let data = Services.ppmm.initialProcessData;
@@ -1602,15 +1598,15 @@ this.Schemas = {
 
         loadFromJSON(json);
       });
-    } else {
-      if (this.loadedUrls.has(url)) {
-        return;
-      }
-      this.loadedUrls.add(url);
-
-      let schema = this.schemaJSON.get(url);
-      loadFromJSON(schema);
+      return result;
     }
+    if (this.loadedUrls.has(url)) {
+      return;
+    }
+    this.loadedUrls.add(url);
+
+    let schema = this.schemaJSON.get(url);
+    loadFromJSON(schema);
   },
 
   inject(dest, wrapperFuncs) {

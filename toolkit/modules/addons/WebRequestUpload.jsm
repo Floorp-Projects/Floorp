@@ -193,29 +193,27 @@ function parseFormData(stream, channel, lenient = false) {
     if (multiplexStream) {
       touchedStreams.add(multiplexStream);
       return parseMultiPart(chunk);
+    }
+    let contentType;
+    if (/^Content-Type:/i.test(chunk)) {
+      contentType = chunk.replace(/^Content-Type:\s*/i, "");
+      chunk = chunk.slice(chunk.indexOf("\r\n\r\n") + 4);
     } else {
-      let contentType;
-      if (/^Content-Type:/i.test(chunk)) {
-        contentType = chunk.replace(/^Content-Type:\s*/i, "");
-        chunk = chunk.slice(chunk.indexOf("\r\n\r\n") + 4);
-      } else {
-        try {
-          contentType = channel.getRequestHeader("Content-Type");
-        } catch (e) {
-          Cu.reportError(e);
-          return null;
-        }
+      try {
+        contentType = channel.getRequestHeader("Content-Type");
+      } catch (e) {
+        Cu.reportError(e);
+        return null;
       }
+    }
 
-      let match = contentType.match(/^(?:multipart\/form-data;\s*boundary=(\S*)|application\/x-www-form-urlencoded\s)/i);
-      if (match) {
-        let boundary = match[1];
-        if (boundary) {
-          return parseMultiPart(chunk, boundary);
-        } else {
-          return parseUrlEncoded(chunk);
-        }
+    let match = contentType.match(/^(?:multipart\/form-data;\s*boundary=(\S*)|application\/x-www-form-urlencoded\s)/i);
+    if (match) {
+      let boundary = match[1];
+      if (boundary) {
+        return parseMultiPart(chunk, boundary);
       }
+      return parseUrlEncoded(chunk);
     }
   } finally {
     for (let stream of touchedStreams) {

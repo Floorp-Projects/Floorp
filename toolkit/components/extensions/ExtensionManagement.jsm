@@ -47,11 +47,11 @@ var Frames = {
   getId(windowId) {
     if (this.isTopWindowId(windowId)) {
       return 0;
-    } else if (windowId == 0) {
-      return -1;
-    } else {
-      return windowId;
     }
+    if (windowId == 0) {
+      return -1;
+    }
+    return windowId;
   },
 
   // Convert an outer window ID for a parent window to a frame

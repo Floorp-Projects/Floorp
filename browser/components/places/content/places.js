@@ -1034,9 +1034,8 @@ var ViewMenu = {
         popup.removeChild(startElement.nextSibling);
       return endElement;
     }
-    else {
-      while(popup.hasChildNodes())
-        popup.removeChild(popup.firstChild);
+    while (popup.hasChildNodes()) {
+      popup.removeChild(popup.firstChild);
     }
     return null;
   },

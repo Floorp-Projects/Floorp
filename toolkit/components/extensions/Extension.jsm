@@ -1266,9 +1266,8 @@ MockExtension.prototype = {
           install.install();
         });
       });
-    } else {
-      throw Error("installType must be one of: temporary, permanent");
     }
+    throw new Error("installType must be one of: temporary, permanent");
   },
 
   shutdown() {

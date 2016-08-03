@@ -312,9 +312,8 @@ this.DownloadCombinedList.prototype = {
   {
     if (aDownload.source.isPrivate) {
       return this._privateList.add(aDownload);
-    } else {
-      return this._publicList.add(aDownload);
     }
+    return this._publicList.add(aDownload);
   },
 
   /**
@@ -337,9 +336,8 @@ this.DownloadCombinedList.prototype = {
   {
     if (aDownload.source.isPrivate) {
       return this._privateList.remove(aDownload);
-    } else {
-      return this._publicList.remove(aDownload);
     }
+    return this._publicList.remove(aDownload);
   },
 
   //////////////////////////////////////////////////////////////////////////////

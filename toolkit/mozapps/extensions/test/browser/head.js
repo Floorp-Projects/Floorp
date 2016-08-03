@@ -261,12 +261,10 @@ var get_tooltip_info = Task.async(function*(addon) {
       version: undefined
     };
   }
-  else {
-    return {
-      name: tiptext.substring(0, expectedName.length),
-      version: tiptext.substring(expectedName.length + 1)
-    };
-  }
+  return {
+    name: tiptext.substring(0, expectedName.length),
+    version: tiptext.substring(expectedName.length + 1)
+  };
 });
 
 function get_addon_file_url(aFilename) {
