@@ -115,11 +115,7 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         promise->setFixedSlot(PROMISE_STATE_SLOT, Int32Value(PROMISE_STATE_PENDING));
 
         // Steps 5-6.
-        // We only have a single list of reaction records.
-        RootedArrayObject reactions(cx, NewDenseEmptyArray(cx));
-        if (!reactions)
-            return nullptr;
-        promise->setFixedSlot(PROMISE_REACTIONS_SLOT, ObjectValue(*reactions));
+        // Omitted, we allocate our single list of reaction records lazily.
 
         // Step 7.
         promise->setFixedSlot(PROMISE_IS_HANDLED_SLOT,

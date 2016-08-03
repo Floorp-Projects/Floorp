@@ -147,7 +147,7 @@ function ResolvePromise(promise, valueOrReason, state) {
     // instead of getting the right list of reactions, we determine the
     // resolution type to retrieve the right information from the
     // reaction records.
-    var reactions = UnsafeGetObjectFromReservedSlot(promise, PROMISE_REACTIONS_SLOT);
+    var reactions = UnsafeGetReservedSlot(promise, PROMISE_REACTIONS_SLOT);
     let jobType = state === PROMISE_STATE_FULFILLED
                   ? PROMISE_JOB_TYPE_FULFILL
                   : PROMISE_JOB_TYPE_REJECT;
@@ -171,7 +171,8 @@ function ResolvePromise(promise, valueOrReason, state) {
 
     // Step 7 of FulfillPromise.
     // Step 8 of RejectPromise.
-    return TriggerPromiseReactions(reactions, jobType, valueOrReason);
+    if (reactions)
+        TriggerPromiseReactions(reactions, jobType, valueOrReason);
 }
 
 // Used to verify that an object is a PromiseCapability record.
@@ -647,10 +648,11 @@ function AddDependentPromise(dependentPromise) {
 
     let reactions = UnsafeGetReservedSlot(this, PROMISE_REACTIONS_SLOT);
 
-    // The reactions slot might've been reset because the Promise was resolved.
+    // The reactions list might not have been allocated yet or been reset
+    // because the Promise was resolved.
     if (!reactions) {
-        assert(GetPromiseState(this) !== PROMISE_STATE_PENDING,
-               "Pending promises must have reactions lists.");
+        if (GetPromiseState(this) === PROMISE_STATE_PENDING)
+            UnsafeSetReservedSlot(promise, PROMISE_REACTIONS_SLOT, [reaction]);
         return;
     }
     _DefineDataProperty(reactions, reactions.length, reaction);
@@ -900,8 +902,11 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
     if (state === PROMISE_STATE_PENDING) {
         // Steps 7.a,b.
         // We only have a single list for fulfill and reject reactions.
-        let reactions = UnsafeGetObjectFromReservedSlot(promise, PROMISE_REACTIONS_SLOT);
-        _DefineDataProperty(reactions, reactions.length, reaction);
+        let reactions = UnsafeGetReservedSlot(promise, PROMISE_REACTIONS_SLOT);
+        if (!reactions)
+            UnsafeSetReservedSlot(promise, PROMISE_REACTIONS_SLOT, [reaction]);
+        else
+            _DefineDataProperty(reactions, reactions.length, reaction);
     }
 
     // Step 8.
