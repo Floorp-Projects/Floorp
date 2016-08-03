@@ -72,31 +72,31 @@ function runTest()
   /* Tests the consistency with farthestViewportElement
      (code is from test_viewport.html) */
   // root.farthestViewportElement == null (but actually == root)
-  is((function(){try{return root.getScreenCTM().e}catch(e){return e}})(), 11, "root.getScreenCTM().e");
-  is((function(){try{return root.getScreenCTM().f}catch(e){return e}})(), 22, "root.getScreenCTM().f");
+  is((function(){try{return root.getScreenCTM().e}catch(e){return e}})(), 91.5, "root.getScreenCTM().e");
+  is((function(){try{return root.getScreenCTM().f}catch(e){return e}})(), 33, "root.getScreenCTM().f");
   // inner.farthestViewportElement == root
-  is((function(){try{return inner.getScreenCTM().e}catch(e){return e}})(), 15, "inner.getScreenCTM().e");
-  is((function(){try{return inner.getScreenCTM().f}catch(e){return e}})(), 28, "inner.getScreenCTM().f");
+  is((function(){try{return inner.getScreenCTM().e}catch(e){return e}})(), 97.5, "inner.getScreenCTM().e");
+  is((function(){try{return inner.getScreenCTM().f}catch(e){return e}})(), 42, "inner.getScreenCTM().f");
   // g1.farthestViewportElement == root
-  is((function(){try{return g1.getScreenCTM().e}catch(e){return e}})(), 45, "g1.getScreenCTM().e");
-  is((function(){try{return g1.getScreenCTM().f}catch(e){return e}})(), 68, "g1.getScreenCTM().f");
+  is((function(){try{return g1.getScreenCTM().e}catch(e){return e}})(), 142.5, "g1.getScreenCTM().e");
+  is((function(){try{return g1.getScreenCTM().f}catch(e){return e}})(), 102, "g1.getScreenCTM().f");
   // outer.farthestViewportElement == null (but actually == root)
-  is((function(){try{return outer.getScreenCTM().e}catch(e){return e}})(), 46, "outer.getScreenCTM().e");
-  is((function(){try{return outer.getScreenCTM().f}catch(e){return e}})(), 69, "outer.getScreenCTM().f");
+  is((function(){try{return outer.getScreenCTM().e}catch(e){return e}})(), 144, "outer.getScreenCTM().e");
+  is((function(){try{return outer.getScreenCTM().f}catch(e){return e}})(), 103.5, "outer.getScreenCTM().f");
   // outer.farthestViewportElement == null (but actually == root)
   is((function(){try{return outer2.getScreenCTM().e}catch(e){return e}})(), -19, "outer2.getScreenCTM().e");
   is((function(){try{return outer2.getScreenCTM().f}catch(e){return e}})(), -8, "outer2.getScreenCTM().f");
   // g2.farthestViewportElement == outer (but actually == root)
-  is((function(){try{return g2.getScreenCTM().e}catch(e){return e}})(), 646, "g2.getScreenCTM().e");
-  is((function(){try{return g2.getScreenCTM().f}catch(e){return e}})(), 769, "g2.getScreenCTM().f");
+  is((function(){try{return g2.getScreenCTM().e}catch(e){return e}})(), 1044, "g2.getScreenCTM().e");
+  is((function(){try{return g2.getScreenCTM().f}catch(e){return e}})(), 1153.5, "g2.getScreenCTM().f");
   // g3.farthestViewportElement == null (but actually == null)
   is((function(){try{return g3.getScreenCTM()}catch(e){return e}})(), null, "g3.getScreenCTM()");
   // symbolRect.farthestViewportElement == root
-  is((function(){try{return symbolRect.getScreenCTM().e}catch(e){return e}})(), 85, "symbolRect.getScreenCTM().e");
-  is((function(){try{return symbolRect.getScreenCTM().f}catch(e){return e}})(), 108, "symbolRect.getScreenCTM().f");
+  is((function(){try{return symbolRect.getScreenCTM().e}catch(e){return e}})(), 202.5, "symbolRect.getScreenCTM().e");
+  is((function(){try{return symbolRect.getScreenCTM().f}catch(e){return e}})(), 162, "symbolRect.getScreenCTM().f");
   // fO.farthestViewportElement == root
-  is((function(){try{return fO.getScreenCTM().e}catch(e){return e}})(), 16, "symbolRect.getScreenCTM().e");
-  is((function(){try{return fO.getScreenCTM().f}catch(e){return e}})(), 29, "symbolRect.getScreenCTM().f");
+  is((function(){try{return fO.getScreenCTM().e}catch(e){return e}})(), 99, "symbolRect.getScreenCTM().e");
+  is((function(){try{return fO.getScreenCTM().f}catch(e){return e}})(), 43.5, "symbolRect.getScreenCTM().f");
   // g5.farthestViewportElement == root
   is((function(){try{return g5.getScreenCTM()}catch(e){return e}})(), null, "g5.getScreenCTM()");
 
