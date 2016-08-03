@@ -1562,21 +1562,19 @@ RasterImage::NotifyProgress(Progress aProgress,
 }
 
 void
-RasterImage::FinalizeDecoder(Decoder* aDecoder,
-                             const DecoderFinalStatus& aStatus,
-                             const ImageMetadata& aMetadata,
-                             const DecoderTelemetry& aTelemetry,
-                             Progress aProgress,
-                             const IntRect& aInvalidRect,
-                             const Maybe<uint32_t>& aFrameCount,
-                             SurfaceFlags aSurfaceFlags)
+RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
+                                  const ImageMetadata& aMetadata,
+                                  const DecoderTelemetry& aTelemetry,
+                                  Progress aProgress,
+                                  const IntRect& aInvalidRect,
+                                  const Maybe<uint32_t>& aFrameCount,
+                                  SurfaceFlags aSurfaceFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aDecoder);
 
   // If the decoder detected an error, log it to the error console.
   if (aStatus.mShouldReportError && !aStatus.mWasAborted) {
-    ReportDecoderError(aDecoder);
+    ReportDecoderError();
   }
 
   // Record all the metadata the decoder gathered about this image.
@@ -1645,7 +1643,7 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder,
 }
 
 void
-RasterImage::ReportDecoderError(Decoder* aDecoder)
+RasterImage::ReportDecoderError()
 {
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
