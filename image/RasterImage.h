@@ -135,6 +135,7 @@ class Image;
 namespace image {
 
 class Decoder;
+struct DecoderFinalStatus;
 struct DecoderTelemetry;
 class ImageMetadata;
 class SourceBuffer;
@@ -203,6 +204,7 @@ public:
    * Main-thread only.
    */
   void FinalizeDecoder(Decoder* aDecoder,
+                       const DecoderFinalStatus& aStatus,
                        const ImageMetadata& aMetadata,
                        const DecoderTelemetry& aTelemetry,
                        Progress aProgress,
