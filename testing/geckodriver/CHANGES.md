@@ -5,12 +5,13 @@ All notable changes to this program is documented in this file.
 ## 0.10.0 (2016-08-02)
 
 ### Changed
+- Use multi-process Firefox (e10s) by default, added flag `--no-e10s` to disable it and removed `--e10s` flag
 - Disable autofilling of forms by default by @mythsunwind
-_ Replace argparse with clap for arguments parsing.
+- Replace _argparse_ with _clap_ for arguments parsing
 
 ### Fixed
 - Attempt to deploy a single file from Travis when making a release
-- grammar fix in readme
+- Grammar fix in README
 
 
 ## 0.9.0 (2016-06-30)
