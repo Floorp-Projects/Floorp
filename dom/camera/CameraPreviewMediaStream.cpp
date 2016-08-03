@@ -6,7 +6,6 @@
 #include "CameraPreviewMediaStream.h"
 #include "CameraCommon.h"
 #include "MediaStreamListener.h"
-#include "VideoFrameContainer.h"
 
 /**
  * Maximum number of outstanding invalidates before we start to drop frames;
@@ -60,18 +59,18 @@ CameraPreviewMediaStream::RemoveAudioOutput(void* aKey)
 }
 
 void
-CameraPreviewMediaStream::AddVideoOutput(MediaStreamVideoSink* aSink)
+CameraPreviewMediaStream::AddVideoOutput(VideoFrameContainer* aContainer)
 {
   MutexAutoLock lock(mMutex);
-  RefPtr<MediaStreamVideoSink> sink = aSink;
-  AddVideoOutputImpl(sink.forget());
+  RefPtr<VideoFrameContainer> container = aContainer;
+  AddVideoOutputImpl(container.forget());
 }
 
 void
-CameraPreviewMediaStream::RemoveVideoOutput(MediaStreamVideoSink* aSink)
+CameraPreviewMediaStream::RemoveVideoOutput(VideoFrameContainer* aContainer)
 {
   MutexAutoLock lock(mMutex);
-  RemoveVideoOutputImpl(aSink);
+  RemoveVideoOutputImpl(aContainer);
 }
 
 void
@@ -126,11 +125,8 @@ CameraPreviewMediaStream::Invalidate()
 {
   MutexAutoLock lock(mMutex);
   --mInvalidatePending;
-  for (MediaStreamVideoSink* sink : mVideoOutputs) {
-    VideoFrameContainer* output = sink->AsVideoFrameContainer();
-    if (!output) {
-      continue;
-    }
+  for (nsTArray<RefPtr<VideoFrameContainer> >::size_type i = 0; i < mVideoOutputs.Length(); ++i) {
+    VideoFrameContainer* output = mVideoOutputs[i];
     output->Invalidate();
   }
 }
@@ -168,11 +164,8 @@ CameraPreviewMediaStream::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Im
     mDiscardedFrames = 0;
 
     TimeStamp now = TimeStamp::Now();
-    for (MediaStreamVideoSink* sink : mVideoOutputs) {
-      VideoFrameContainer* output = sink->AsVideoFrameContainer();
-      if (!output) {
-        continue;
-      }
+    for (nsTArray<RefPtr<VideoFrameContainer> >::size_type i = 0; i < mVideoOutputs.Length(); ++i) {
+      VideoFrameContainer* output = mVideoOutputs[i];
       output->SetCurrentFrame(aIntrinsicSize, aImage, now);
     }
 
@@ -187,11 +180,8 @@ CameraPreviewMediaStream::ClearCurrentFrame()
 {
   MutexAutoLock lock(mMutex);
 
-  for (MediaStreamVideoSink* sink : mVideoOutputs) {
-    VideoFrameContainer* output = sink->AsVideoFrameContainer();
-    if (!output) {
-      continue;
-    }
+  for (nsTArray<RefPtr<VideoFrameContainer> >::size_type i = 0; i < mVideoOutputs.Length(); ++i) {
+    VideoFrameContainer* output = mVideoOutputs[i];
     output->ClearCurrentFrame();
     NS_DispatchToMainThread(NewRunnableMethod(output, &VideoFrameContainer::Invalidate));
   }
