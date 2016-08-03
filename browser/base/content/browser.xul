@@ -152,14 +152,7 @@
            noautofocus="true"
            hidden="true"
            flip="none"
-           level="parent">
-#ifdef NIGHTLY_BUILD
-      <hbox id="urlbar-search-footer" flex="1" align="stretch" pack="end">
-        <button id="urlbar-search-settings" label="&changeSearchSettings.button;"
-                oncommand="BrowserUITelemetry.countSearchSettingsEvent('urlbar'); openPreferences('paneSearch')"/>
-      </hbox>
-#endif
-    </panel>
+           level="parent"/>
 
     <!-- for select dropdowns. The menupopup is what shows the list of options,
          and the popuponly menulist makes things like the menuactive attributes
