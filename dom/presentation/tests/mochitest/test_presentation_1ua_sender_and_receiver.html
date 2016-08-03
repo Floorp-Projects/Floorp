@@ -108,7 +108,7 @@ function setup() {
 function testCreateRequest() {
   return new Promise(function(aResolve, aReject) {
     info('Sender: --- testCreateRequest ---');
-    request = new PresentationRequest(receiverUrl);
+    request = new PresentationRequest("file_presentation_1ua_receiver.html");
     request.getAvailability().then((aAvailability) => {
       aAvailability.onchange = function() {
         aAvailability.onchange = null;
@@ -132,6 +132,7 @@ function testStartConnection() {
       ok(connection, "Sender: Connection should be available.");
       ok(connection.id, "Sender: Connection ID should be set.");
       is(connection.state, "connecting", "The initial state should be connecting.");
+      is(connection.url, receiverUrl, "request URL should be expanded to absolute URL");
       connection.onconnect = function() {
         connection.onconnect = null;
         is(connection.state, "connected", "Connection should be connected.");
