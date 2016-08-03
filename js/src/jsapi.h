@@ -5201,6 +5201,8 @@ class JSErrorReport
 #define JSREPORT_EXCEPTION  0x2     /* exception was thrown */
 #define JSREPORT_STRICT     0x4     /* error or warning due to strict option */
 
+#define JSREPORT_USER_1     0x8     /* user-defined flag */
+
 /*
  * If JSREPORT_EXCEPTION is set, then a JavaScript-catchable exception
  * has been thrown for this runtime error, and the host should ignore it.
