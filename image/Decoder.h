@@ -28,6 +28,39 @@ namespace Telemetry {
 
 namespace image {
 
+struct DecoderFinalStatus final
+{
+  DecoderFinalStatus(bool aWasMetadataDecode,
+                     bool aFinished,
+                     bool aWasAborted,
+                     bool aHadError,
+                     bool aShouldReportError)
+    : mWasMetadataDecode(aWasMetadataDecode)
+    , mFinished(aFinished)
+    , mWasAborted(aWasAborted)
+    , mHadError(aHadError)
+    , mShouldReportError(aShouldReportError)
+  { }
+
+  /// True if this was a metadata decode.
+  const bool mWasMetadataDecode : 1;
+
+  /// True if this decoder finished, whether successfully or due to failure.
+  const bool mFinished : 1;
+
+  /// True if this decoder was asynchronously aborted. This normally happens
+  /// when a decoder fails to insert a surface into the surface cache, indicating
+  /// that another decoding beat it to the punch.
+  const bool mWasAborted : 1;
+
+  /// True if this decoder encountered an error.
+  const bool mHadError : 1;
+
+  /// True if this decoder encountered the kind of error that should be reported
+  /// to the console.
+  const bool mShouldReportError : 1;
+};
+
 struct DecoderTelemetry final
 {
   DecoderTelemetry(Maybe<Telemetry::ID> aSpeedHistogram,
@@ -336,6 +369,10 @@ public:
   {
     return gfx::IntRect(gfx::IntPoint(), OutputSize());
   }
+
+  /// @return final status information about this decoder. Should be called
+  /// after we decide we're not going to run the decoder anymore.
+  DecoderFinalStatus FinalStatus() const;
 
   /// @return the metadata we collected about this image while decoding.
   const ImageMetadata& GetImageMetadata() { return mImageMetadata; }
