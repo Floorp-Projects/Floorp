@@ -616,9 +616,9 @@ class BaseMarionetteTestRunner(object):
                     with open(path) as f:
                         data.append(json.loads(f.read()))
                 except ValueError as e:
-                    raise Exception("JSON file (%s) is not properly "
-                                    "formatted: %s" % (os.path.abspath(path),
-                                                       e.message))
+                    exc, val, tb = sys.exc_info()
+                    msg = "JSON file ({0}) is not properly formatted: {1}"
+                    raise exc, msg.format(os.path.abspath(path), e.message), tb
         return data
 
     @property
@@ -669,11 +669,7 @@ class BaseMarionetteTestRunner(object):
         """
         self._bin = path
         self.tests = []
-        if hasattr(self, 'marionette') and self.marionette:
-            self.marionette.cleanup()
-            if self.marionette.instance:
-                self.marionette.instance = None
-        self.marionette = None
+        self.cleanup()
 
     def reset_test_stats(self):
         self.passed = 0
@@ -737,8 +733,10 @@ class BaseMarionetteTestRunner(object):
                     connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                     connection.connect((host,int(port)))
                     connection.close()
-                except Exception, e:
-                    raise Exception("Connection attempt to %s:%s failed with error: %s" %(host,port,e))
+                except Exception as e:
+                    exc, val, tb = sys.exc_info()
+                    msg = "Connection attempt to {0}:{1} failed with error: {2}"
+                    raise exc, msg.format(host, port, e), tb
         if self.workspace:
             kwargs['workspace'] = self.workspace_path
         return kwargs
@@ -896,15 +894,16 @@ setReq.onerror = function() {
             # we want to display current test results.
             # so we keep the exception to raise it later.
             interrupted = sys.exc_info()
+        except:
+            # For any other exception we return immediately and have to
+            # cleanup running processes
+            self.cleanup()
+            raise
+
         try:
             self._print_summary(tests)
             self.record_crash()
             self.elapsedtime = time.time() - start_time
-
-            if self.marionette.instance:
-                self.marionette.instance.close()
-                self.marionette.instance = None
-            self.marionette.cleanup()
 
             for run_tests in self.mixin_run_tests:
                 run_tests(tests)
@@ -918,6 +917,8 @@ setReq.onerror = function() {
             if not interrupted:
                 raise
         finally:
+            self.cleanup()
+
             # reraise previous interruption now
             if interrupted:
                 raise interrupted[0], interrupted[1], interrupted[2]
@@ -1090,10 +1091,16 @@ setReq.onerror = function() {
         self.run_test_set(self.tests)
 
     def cleanup(self):
-        if self.httpd:
+        if hasattr(self, 'httpd') and self.httpd:
             self.httpd.stop()
+            self.httpd = None
 
-        if self.marionette:
+        if hasattr(self, 'marionette') and self.marionette:
+            if self.marionette.instance:
+                self.marionette.instance.close()
+                self.marionette.instance = None
+
             self.marionette.cleanup()
+            self.marionette = None
 
     __del__ = cleanup

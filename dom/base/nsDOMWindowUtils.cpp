@@ -764,11 +764,12 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
   event.pressure = aPressure;
   event.inputSource = aInputSourceArg;
   event.pointerId = aPointerId;
-  event.width = aWidth;
-  event.height = aHeight;
+  event.mWidth = aWidth;
+  event.mHeight = aHeight;
   event.tiltX = aTiltX;
   event.tiltY = aTiltY;
-  event.isPrimary = (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == aInputSourceArg) ? true : aIsPrimary;
+  event.mIsPrimary =
+    (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == aInputSourceArg) ? true : aIsPrimary;
   event.mClickCount = aClickCount;
   event.mTime = PR_IntervalNow();
   event.mFlags.mIsSynthesizedForTests = aOptionalArgCount >= 10 ? aIsSynthesized : true;
