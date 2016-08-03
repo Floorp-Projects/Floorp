@@ -273,8 +273,13 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
         mSynthesizedTouchInput = MakeUnique<MultiTouchInput>();
     }
 
+    // We should probably use a real timestamp here, but this is B2G and
+    // so this probably never even exercised any more.
+    uint32_t time = 0;
+    TimeStamp timestamp = TimeStamp::FromSystemTime(time);
+
     MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
-        mSynthesizedTouchInput.get(), aPointerId, aPointerState,
+        mSynthesizedTouchInput.get(), time, timeStamp, aPointerId, aPointerState,
         aPoint, aPointerPressure, aPointerOrientation);
 
     // Can't use NewRunnableMethod here because that will pass a const-ref
