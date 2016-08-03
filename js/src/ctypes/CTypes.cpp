@@ -9,6 +9,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/Snprintf.h"
 #include "mozilla/Vector.h"
 
 #include <limits>
@@ -95,7 +96,7 @@ GetDeflatedUTF8StringLength(JSContext* maybecx, const CharT* chars,
     if (maybecx) {
         js::gc::AutoSuppressGC suppress(maybecx);
         char buffer[10];
-        snprintf(buffer, sizeof(buffer), "0x%x", c);
+        snprintf_literal(buffer, "0x%x", c);
         JS_ReportErrorFlagsAndNumber(maybecx, JSREPORT_ERROR, GetErrorMessage,
                                      nullptr, JSMSG_BAD_SURROGATE_CHAR, buffer);
     }
@@ -1121,7 +1122,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
       MOZ_ASSERT(!funObj);
 
       char indexStr[16];
-      snprintf(indexStr, sizeof(indexStr), "%u", arrIndex);
+      snprintf_literal(indexStr, "%u", arrIndex);
 
       AutoString arrSource;
       JSAutoByteString arrBytes;
@@ -1178,7 +1179,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     MOZ_ASSERT(funObj);
 
     char indexStr[16];
-    snprintf(indexStr, sizeof(indexStr), "%u", argIndex + 1);
+    snprintf_literal(indexStr, "%u", argIndex + 1);
 
     AutoString funSource;
     JSAutoByteString funBytes;
@@ -1261,7 +1262,7 @@ ArgumentConvError(JSContext* cx, HandleValue actual, const char* funStr,
     return false;
 
   char indexStr[16];
-  snprintf(indexStr, sizeof(indexStr), "%u", argIndex + 1);
+  snprintf_literal(indexStr, "%u", argIndex + 1);
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_CONV_ERROR_ARG, valStr, indexStr, funStr);
@@ -1290,9 +1291,9 @@ ArrayLengthMismatch(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
     return false;
 
   char expectedLengthStr[16];
-  snprintf(expectedLengthStr, sizeof(expectedLengthStr), "%u", expectedLength);
+  snprintf_literal(expectedLengthStr, "%u", expectedLength);
   char actualLengthStr[16];
-  snprintf(actualLengthStr, sizeof(actualLengthStr), "%u", actualLength);
+  snprintf_literal(actualLengthStr, "%u", actualLength);
 
   AutoString arrSource;
   JSAutoByteString arrBytes;
@@ -1320,9 +1321,9 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
     return false;
 
   char expectedLengthStr[16];
-  snprintf(expectedLengthStr, sizeof(expectedLengthStr), "%u", expectedLength);
+  snprintf_literal(expectedLengthStr, "%u", expectedLength);
   char actualLengthStr[16];
-  snprintf(actualLengthStr, sizeof(actualLengthStr), "%u", actualLength);
+  snprintf_literal(actualLengthStr, "%u", actualLength);
 
   AutoString arrSource;
   JSAutoByteString arrBytes;
@@ -1427,9 +1428,9 @@ FieldCountMismatch(JSContext* cx,
     return false;
 
   char expectedCountStr[16];
-  snprintf(expectedCountStr, sizeof(expectedCountStr), "%u", expectedCount);
+  snprintf_literal(expectedCountStr, "%u", expectedCount);
   char actualCountStr[16];
-  snprintf(actualCountStr, sizeof(actualCountStr), "%u", actualCount);
+  snprintf_literal(actualCountStr, "%u", actualCount);
 
   JSAutoByteString posBytes;
   const char* posStr;
@@ -1460,7 +1461,7 @@ FieldDescriptorCountError(JSContext* cx, Value val, size_t length)
     return false;
 
   char lengthStr[16];
-  snprintf(lengthStr, sizeof(lengthStr), "%" PRIuSIZE, length);
+  snprintf_literal(lengthStr, "%" PRIuSIZE, length);
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_FIELD_DESC_COUNT, valStr, lengthStr);
@@ -1595,9 +1596,9 @@ FunctionArgumentLengthMismatch(JSContext* cx,
     return false;
 
   char expectedCountStr[16];
-  snprintf(expectedCountStr, sizeof(expectedCountStr), "%u", expectedCount);
+  snprintf_literal(expectedCountStr, "%u", expectedCount);
   char actualCountStr[16];
-  snprintf(actualCountStr, sizeof(actualCountStr), "%u", actualCount);
+  snprintf_literal(actualCountStr, "%u", actualCount);
 
   const char* variadicStr = isVariadic ? " or more": "";
 
@@ -1618,7 +1619,7 @@ FunctionArgumentTypeError(JSContext* cx,
     return false;
 
   char indexStr[16];
-  snprintf(indexStr, sizeof(indexStr), "%u", index + 1);
+  snprintf_literal(indexStr, "%u", index + 1);
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_ARG_TYPE_ERROR, indexStr, reason, valStr);
@@ -1724,10 +1725,10 @@ static bool
 InvalidIndexRangeError(JSContext* cx, size_t index, size_t length)
 {
   char indexStr[16];
-  snprintf(indexStr, sizeof(indexStr), "%" PRIuSIZE, index);
+  snprintf_literal(indexStr, "%" PRIuSIZE, index);
 
   char lengthStr[16];
-  snprintf(lengthStr, sizeof(lengthStr), "%" PRIuSIZE, length);
+  snprintf_literal(lengthStr,"%" PRIuSIZE, length);
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_INVALID_RANGE, indexStr, lengthStr);
@@ -1884,8 +1885,8 @@ SizeMismatchCastError(JSContext* cx,
 
   char sourceSizeStr[16];
   char targetSizeStr[16];
-  snprintf(sourceSizeStr, sizeof(sourceSizeStr), "%" PRIuSIZE, sourceSize);
-  snprintf(targetSizeStr, sizeof(targetSizeStr), "%" PRIuSIZE, targetSize);
+  snprintf_literal(sourceSizeStr, "%" PRIuSIZE, sourceSize);
+  snprintf_literal(targetSizeStr, "%" PRIuSIZE, targetSize);
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_SIZE_MISMATCH_CAST,
@@ -1917,7 +1918,7 @@ VariadicArgumentTypeError(JSContext* cx, uint32_t index, HandleValue actual)
     return false;
 
   char indexStr[16];
-  snprintf(indexStr, sizeof(indexStr), "%u", index + 1);
+  snprintf_literal(indexStr, "%u", index + 1);
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_VARG_TYPE_ERROR, indexStr, valStr);
@@ -6306,7 +6307,7 @@ StructType::ConstructData(JSContext* cx,
   size_t count = fields->count();
   if (count >= 2) {
     char fieldLengthStr[32];
-    snprintf(fieldLengthStr, sizeof(fieldLengthStr), "0, 1, or %" PRIuSIZE, count);
+    snprintf_literal(fieldLengthStr, "0, 1, or %" PRIuSIZE, count);
     return ArgumentLengthError(cx, "StructType constructor", fieldLengthStr,
                                "s");
   }
