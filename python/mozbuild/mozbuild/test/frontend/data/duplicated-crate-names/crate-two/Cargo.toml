@@ -1,0 +1,9 @@
+[package]
+name = "crate-two"
+version = "0.1.0"
+authors = [
+  "Nobody <nobody@mozilla.org>",
+]
+
+[dependencies]
+duplicate = { path = "duplicate" }
