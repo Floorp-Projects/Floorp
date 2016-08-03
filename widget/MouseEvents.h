@@ -668,7 +668,7 @@ class WidgetPointerEvent : public WidgetMouseEvent
   WidgetPointerEvent()
     : mWidth(0)
     , mHeight(0)
-    , isPrimary(true)
+    , mIsPrimary(true)
   {
   }
 
@@ -679,7 +679,7 @@ public:
     : WidgetMouseEvent(aIsTrusted, aMsg, w, ePointerEventClass, eReal)
     , mWidth(0)
     , mHeight(0)
-    , isPrimary(true)
+    , mIsPrimary(true)
   {
   }
 
@@ -687,7 +687,7 @@ public:
     : WidgetMouseEvent(aEvent)
     , mWidth(0)
     , mHeight(0)
-    , isPrimary(true)
+    , mIsPrimary(true)
   {
     mClass = ePointerEventClass;
   }
@@ -706,7 +706,7 @@ public:
 
   uint32_t mWidth;
   uint32_t mHeight;
-  bool isPrimary;
+  bool mIsPrimary;
 
   // XXX Not tested by test_assign_event_data.html
   void AssignPointerEventData(const WidgetPointerEvent& aEvent,
@@ -716,7 +716,7 @@ public:
 
     mWidth = aEvent.mWidth;
     mHeight = aEvent.mHeight;
-    isPrimary = aEvent.isPrimary;
+    mIsPrimary = aEvent.mIsPrimary;
   }
 };
 
