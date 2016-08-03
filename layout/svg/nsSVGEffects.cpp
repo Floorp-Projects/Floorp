@@ -18,6 +18,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsIReflowCallback.h"
 #include "nsCycleCollectionParticipant.h"
+#include "SVGUseElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -291,14 +292,21 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterChainObserver)
 NS_INTERFACE_MAP_END
 
 nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
-                                                   nsIContent* aFilteredElement)
+                                                   nsIContent* aFilteredElement,
+                                                   nsIFrame* aFilteredFrame)
 {
   for (uint32_t i = 0; i < aFilters.Length(); i++) {
     if (aFilters[i].GetType() != NS_STYLE_FILTER_URL)
       continue;
 
+    // aFilteredFrame can be null if this filter belongs to a
+    // CanvasRenderingContext2D.
+    nsCOMPtr<nsIURI> filterURL = aFilteredFrame
+      ? nsSVGEffects::GetFilterURI(aFilteredFrame, i)
+      : aFilters[i].GetURL()->Resolve(aFilteredElement);
+
     RefPtr<nsSVGFilterReference> reference =
-      new nsSVGFilterReference(aFilters[i].GetURL(), aFilteredElement, this);
+      new nsSVGFilterReference(filterURL, aFilteredElement, this);
     mReferences.AppendElement(reference);
   }
 }
@@ -572,8 +580,9 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
   result.mFilter = GetOrCreateFilterProperty(aFrame);
 
   if (style->mClipPath.GetType() == StyleClipPathType::URL) {
+    nsCOMPtr<nsIURI> pathURI = nsSVGEffects::GetClipPathURI(aFrame);
     result.mClipPath =
-      GetPaintingProperty(style->mClipPath.GetURL(), aFrame, ClipPathProperty());
+      GetPaintingProperty(pathURI, aFrame, ClipPathProperty());
   } else {
     result.mClipPath = nullptr;
   }
@@ -586,10 +595,12 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 }
 
 nsSVGPaintServerFrame *
-nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame, const nsStyleSVGPaint *aPaint,
+nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame,
+                             nsStyleSVGPaint nsStyleSVG::* aPaint,
                              PaintingPropertyDescriptor aType)
 {
-  if (aPaint->mType != eStyleSVGPaintType_Server)
+  const nsStyleSVG* svgStyle = aTargetFrame->StyleSVG();
+  if ((svgStyle->*aPaint).mType != eStyleSVGPaintType_Server)
     return nullptr;
 
   // If we're looking at a frame within SVG text, then we need to look up
@@ -604,8 +615,10 @@ nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame, const nsStyleSVGPaint *aPai
       frame = grandparent;
     }
   }
+
+  nsCOMPtr<nsIURI> paintServerURL = nsSVGEffects::GetPaintURI(frame, aPaint);
   nsSVGPaintingProperty *property =
-    nsSVGEffects::GetPaintingProperty(aPaint->mPaint.mPaintServer, frame, aType);
+    nsSVGEffects::GetPaintingProperty(paintServerURL, frame, aType);
   if (!property)
     return nullptr;
   nsIFrame *result = property->GetReferencedFrame();
@@ -694,10 +707,13 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
   if (aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
       static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
-    const nsStyleSVG *style = aFrame->StyleSVG();
-    GetMarkerProperty(style->mMarkerStart, aFrame, MarkerBeginProperty());
-    GetMarkerProperty(style->mMarkerMid, aFrame, MarkerMiddleProperty());
-    GetMarkerProperty(style->mMarkerEnd, aFrame, MarkerEndProperty());
+    nsCOMPtr<nsIURI> markerURL =
+      nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
+    GetMarkerProperty(markerURL, aFrame, MarkerBeginProperty());
+    markerURL = nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
+    GetMarkerProperty(markerURL, aFrame, MarkerMiddleProperty());
+    markerURL = nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
+    GetMarkerProperty(markerURL, aFrame, MarkerEndProperty());
   }
 }
 
@@ -868,4 +884,81 @@ nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame *aFrame, uint32_t aFla
   if (content && content->IsElement()) {
     InvalidateDirectRenderingObservers(content->AsElement(), aFlags);
   }
+}
+
+static already_AddRefed<nsIURI>
+ResolveFragmentOrURL(nsIFrame* aFrame, const FragmentOrURL* aFragmentOrURL)
+{
+  MOZ_ASSERT(aFrame);
+
+  if (!aFragmentOrURL) {
+    return nullptr;
+  }
+
+  // Non-local-reference URL.
+  if (!aFragmentOrURL->IsLocalRef()) {
+    nsCOMPtr<nsIURI> result = aFragmentOrURL->GetSourceURL();
+    return result.forget();
+  }
+
+  nsIContent* content = aFrame->GetContent();
+  nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+
+  if (content->IsInAnonymousSubtree()) {
+    // content is in a shadow tree.
+    // Depending on where this url comes from, choose either the baseURI of the
+    // original document of content or the root document of the shadow tree
+    // to resolve URI.
+    if (!aFragmentOrURL->EqualsExceptRef(baseURI))
+      baseURI = content->OwnerDoc()->GetBaseURI();
+  }
+
+  return aFragmentOrURL->Resolve(baseURI);
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetMarkerURI(nsIFrame* aFrame,
+                           FragmentOrURL nsStyleSVG::* aMarker)
+{
+  return ResolveFragmentOrURL(aFrame, &(aFrame->StyleSVG()->*aMarker));
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetClipPathURI(nsIFrame* aFrame)
+{
+  const nsStyleSVGReset* svgResetStyle = aFrame->StyleSVGReset();
+  MOZ_ASSERT(svgResetStyle->mClipPath.GetType() == StyleClipPathType::URL);
+
+  FragmentOrURL* url = svgResetStyle->mClipPath.GetURL();
+  return ResolveFragmentOrURL(aFrame, url);
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetFilterURI(nsIFrame* aFrame, uint32_t aIndex)
+{
+  const nsStyleEffects* effects = aFrame->StyleEffects();
+  MOZ_ASSERT(effects->mFilters.Length() > aIndex);
+  MOZ_ASSERT(effects->mFilters[aIndex].GetType() == NS_STYLE_FILTER_URL);
+
+  return ResolveFragmentOrURL(aFrame, effects->mFilters[aIndex].GetURL());
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter)
+{
+  MOZ_ASSERT(aFrame->StyleEffects()->mFilters.Length());
+  MOZ_ASSERT(aFilter.GetType() == NS_STYLE_FILTER_URL);
+
+  return ResolveFragmentOrURL(aFrame, aFilter.GetURL());
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetPaintURI(nsIFrame* aFrame,
+                          nsStyleSVGPaint nsStyleSVG::* aPaint)
+{
+  const nsStyleSVG* svgStyle = aFrame->StyleSVG();
+  MOZ_ASSERT((svgStyle->*aPaint).mType ==
+             nsStyleSVGPaintType::eStyleSVGPaintType_Server);
+
+  return ResolveFragmentOrURL(aFrame, (svgStyle->*aPaint).mPaint.mPaintServer);
 }

@@ -255,7 +255,8 @@ class nsSVGFilterChainObserver : public nsISupports
 {
 public:
   nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
-                           nsIContent* aFilteredElement);
+                           nsIContent* aFilteredElement,
+                           nsIFrame* aFiltedFrame = nullptr);
 
   bool ReferencesValidResources();
   bool IsInObserverLists() const;
@@ -287,7 +288,8 @@ class nsSVGFilterProperty : public nsSVGFilterChainObserver
 public:
   nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
                       nsIFrame *aFilteredFrame)
-    : nsSVGFilterChainObserver(aFilters, aFilteredFrame->GetContent())
+    : nsSVGFilterChainObserver(aFilters, aFilteredFrame->GetContent(),
+                               aFilteredFrame)
     , mFrameReference(aFilteredFrame)
   {}
 
@@ -463,7 +465,7 @@ public:
    * Get the paint server for a aTargetFrame.
    */
   static nsSVGPaintServerFrame *GetPaintServer(nsIFrame *aTargetFrame,
-                                               const nsStyleSVGPaint *aPaint,
+                                               nsStyleSVGPaint nsStyleSVG::* aPaint,
                                                PaintingPropertyDescriptor aProperty);
 
   struct EffectProperties {
@@ -592,6 +594,36 @@ public:
   static nsSVGPaintingProperty *
   GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
                             URIObserverHashtablePropertyDescriptor aProp);
+
+  /**
+   * A helper function to resolve marker's URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetMarkerURI(nsIFrame* aFrame, FragmentOrURL nsStyleSVG::* aMarker);
+
+  /**
+   * A helper function to resolve clip-path URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetClipPathURI(nsIFrame* aFrame);
+
+  /**
+   * A helper function to resolve filter URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetFilterURI(nsIFrame* aFrame, uint32_t aIndex);
+
+  /**
+   * A helper function to resolve filter URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter);
+
+  /**
+   * A helper function to resolve paint-server URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetPaintURI(nsIFrame* aFrame, nsStyleSVGPaint nsStyleSVG::* aPaint);
 };
 
 #endif /*NSSVGEFFECTS_H_*/

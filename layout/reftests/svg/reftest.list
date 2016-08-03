@@ -433,3 +433,11 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-re
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
+
+# test case for Fragment URLs
+# https://drafts.csswg.org/css-values/#local-urls
+== use-localRef-marker-01.svg use-localRef-marker-01-ref.svg
+== use-localRef-clipPath-01.svg use-localRef-clipPath-01-ref.svg
+== use-localRef-filter-01.svg use-localRef-filter-01-ref.svg
+== use-localRef-fill-01.svg use-localRef-fill-01-ref.svg
+== use-localRef-stroke-01.svg use-localRef-stroke-01-ref.svg

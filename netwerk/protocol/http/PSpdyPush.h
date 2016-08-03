@@ -34,7 +34,6 @@ class nsCString;
 namespace mozilla {
 namespace net {
 
-class SpdyPushedStream31;
 class Http2PushedStream;
 
 // One cache per load group
@@ -44,17 +43,6 @@ public:
   // The cache holds only weak pointers - no references
   SpdyPushCache();
   virtual ~SpdyPushCache();
-
-// for spdy/3.1
-public:
-  bool               RegisterPushedStreamSpdy31(nsCString key,
-                                                SpdyPushedStream31 *stream);
-  SpdyPushedStream31 *RemovePushedStreamSpdy31(nsCString key);
-private:
-  nsDataHashtable<nsCStringHashKey, SpdyPushedStream31 *> mHashSpdy31;
-
-// for http/2
-public:
   bool               RegisterPushedStreamHttp2(nsCString key,
                                                Http2PushedStream *stream);
   Http2PushedStream *RemovePushedStreamHttp2(nsCString key);

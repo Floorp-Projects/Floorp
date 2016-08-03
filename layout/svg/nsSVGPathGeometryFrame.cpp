@@ -714,15 +714,20 @@ nsSVGPathGeometryFrame::GetMarkerProperties(nsSVGPathGeometryFrame *aFrame)
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
   MarkerProperties result;
-  const nsStyleSVG *style = aFrame->StyleSVG();
+  nsCOMPtr<nsIURI> markerURL =
+    nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
   result.mMarkerStart =
-    nsSVGEffects::GetMarkerProperty(style->mMarkerStart, aFrame,
+    nsSVGEffects::GetMarkerProperty(markerURL, aFrame,
                                     nsSVGEffects::MarkerBeginProperty());
+
+  markerURL = nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
   result.mMarkerMid =
-    nsSVGEffects::GetMarkerProperty(style->mMarkerMid, aFrame,
+    nsSVGEffects::GetMarkerProperty(markerURL, aFrame,
                                     nsSVGEffects::MarkerMiddleProperty());
+
+  markerURL = nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
   result.mMarkerEnd =
-    nsSVGEffects::GetMarkerProperty(style->mMarkerEnd, aFrame,
+    nsSVGEffects::GetMarkerProperty(markerURL, aFrame,
                                     nsSVGEffects::MarkerEndProperty());
   return result;
 }
