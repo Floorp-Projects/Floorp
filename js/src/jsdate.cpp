@@ -19,6 +19,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Snprintf.h"
 
 #include <ctype.h>
 #include <math.h>
@@ -2467,7 +2468,7 @@ date_toGMTString_impl(JSContext* cx, const CallArgs& args)
 
     char buf[100];
     if (!IsFinite(utctime))
-        snprintf(buf, sizeof buf, js_NaN_date_str);
+        snprintf_literal(buf, js_NaN_date_str);
     else
         print_gmt_string(buf, sizeof buf, utctime);
 
@@ -2592,7 +2593,7 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
     PRMJTime split;
 
     if (!IsFinite(date)) {
-        snprintf(buf, sizeof buf, js_NaN_date_str);
+        snprintf_literal(buf, js_NaN_date_str);
     } else {
         MOZ_ASSERT(NumbersAreIdentical(TimeClip(date).toDouble(), date));
 
@@ -2653,38 +2654,35 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
              * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
              */
             /* Tue Oct 31 2000 09:41:40 GMT-0800 (PST) */
-            snprintf(buf, sizeof buf,
-                     "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d%s%s",
-                     days[int(WeekDay(local))],
-                     months[int(MonthFromTime(local))],
-                     int(DateFromTime(local)),
-                     int(YearFromTime(local)),
-                     int(HourFromTime(local)),
-                     int(MinFromTime(local)),
-                     int(SecFromTime(local)),
-                     offset,
-                     usetz ? " " : "",
-                     usetz ? tzbuf : "");
+            snprintf_literal(buf, "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d%s%s",
+                             days[int(WeekDay(local))],
+                             months[int(MonthFromTime(local))],
+                             int(DateFromTime(local)),
+                             int(YearFromTime(local)),
+                             int(HourFromTime(local)),
+                             int(MinFromTime(local)),
+                             int(SecFromTime(local)),
+                             offset,
+                             usetz ? " " : "",
+                             usetz ? tzbuf : "");
             break;
           case FORMATSPEC_DATE:
             /* Tue Oct 31 2000 */
-            snprintf(buf, sizeof buf,
-                     "%s %s %.2d %.4d",
-                     days[int(WeekDay(local))],
-                     months[int(MonthFromTime(local))],
-                     int(DateFromTime(local)),
-                     int(YearFromTime(local)));
+            snprintf_literal(buf, "%s %s %.2d %.4d",
+                             days[int(WeekDay(local))],
+                             months[int(MonthFromTime(local))],
+                             int(DateFromTime(local)),
+                             int(YearFromTime(local)));
             break;
           case FORMATSPEC_TIME:
             /* 09:41:40 GMT-0800 (PST) */
-            snprintf(buf, sizeof buf,
-                     "%.2d:%.2d:%.2d GMT%+.4d%s%s",
-                     int(HourFromTime(local)),
-                     int(MinFromTime(local)),
-                     int(SecFromTime(local)),
-                     offset,
-                     usetz ? " " : "",
-                     usetz ? tzbuf : "");
+            snprintf_literal(buf, "%.2d:%.2d:%.2d GMT%+.4d%s%s",
+                             int(HourFromTime(local)),
+                             int(MinFromTime(local)),
+                             int(SecFromTime(local)),
+                             offset,
+                             usetz ? " " : "",
+                             usetz ? tzbuf : "");
             break;
         }
     }
@@ -2703,7 +2701,7 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
 
     char buf[100];
     if (!IsFinite(utctime)) {
-        snprintf(buf, sizeof buf, js_NaN_date_str);
+        snprintf_literal(buf, js_NaN_date_str);
     } else {
         int result_len;
         double local = LocalTime(utctime);
