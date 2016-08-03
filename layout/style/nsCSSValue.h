@@ -121,6 +121,8 @@ struct URLValueData
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  bool GetLocalURLFlag() const { return mLocalURLFlag; }
+
 private:
   // If mURIResolved is false, mURI stores the base URI.
   // If mURIResolved is true, mURI stores the URI we resolve to; this may be
@@ -132,6 +134,9 @@ public:
   PtrHandle<nsIPrincipal> mOriginPrincipal;
 private:
   mutable bool mURIResolved;
+  // mLocalURLFlag is set when url starts with a U+0023 number
+  // sign(#) character.
+  bool mLocalURLFlag;
 
   URLValueData(const URLValueData& aOther) = delete;
   URLValueData& operator=(const URLValueData& aOther) = delete;

@@ -1000,7 +1000,6 @@ function addCertOverride(host, port, bits) {
 
 var prefs;
 var spdypref;
-var spdy3pref;
 var spdypush;
 var http2pref;
 var tlspref;
@@ -1013,7 +1012,6 @@ var speculativeLimit;
 function resetPrefs() {
   prefs.setIntPref("network.http.speculative-parallel-limit", speculativeLimit);
   prefs.setBoolPref("network.http.spdy.enabled", spdypref);
-  prefs.setBoolPref("network.http.spdy.enabled.v3-1", spdy3pref);
   prefs.setBoolPref("network.http.spdy.allow-push", spdypush);
   prefs.setBoolPref("network.http.spdy.enabled.http2", http2pref);
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", tlspref);
@@ -1040,7 +1038,6 @@ function run_test() {
 
   // Enable all versions of spdy to see that we auto negotiate http/2
   spdypref = prefs.getBoolPref("network.http.spdy.enabled");
-  spdy3pref = prefs.getBoolPref("network.http.spdy.enabled.v3-1");
   spdypush = prefs.getBoolPref("network.http.spdy.allow-push");
   http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2");
   tlspref = prefs.getBoolPref("network.http.spdy.enforce-tls-profile");

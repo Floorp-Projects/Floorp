@@ -18,6 +18,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SVGContextPaint.h"
 #include "nsCSSClipPathInstance.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
@@ -38,7 +39,6 @@
 #include "nsSVGEffects.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGForeignObjectFrame.h"
-#include "gfxSVGGlyphs.h"
 #include "nsSVGInnerSVGFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGLength2.h"
@@ -1300,6 +1300,19 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
   return color;
 }
 
+/* static */ SVGContextPaint*
+nsSVGUtils::GetContextPaint(nsIContent* aContent)
+{
+  nsIDocument* ownerDoc = aContent->OwnerDoc();
+
+  if (!ownerDoc->IsBeingUsedAsImage()) {
+    return nullptr;
+  }
+
+  return static_cast<SVGContextPaint*>(
+           ownerDoc->GetProperty(nsGkAtoms::svgContextPaint));
+}
+
 /**
  * Stores in |aTargetPaint| information on how to reconstruct the current
  * fill or stroke pattern. Will also set the paint opacity to transparent if
@@ -1315,14 +1328,14 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
                       const gfxMatrix& aContextMatrix,
                       nsIFrame* aFrame,
                       float& aOpacity,
-                      gfxTextContextPaint* aOuterContextPaint,
+                      SVGContextPaint* aOuterContextPaint,
                       SVGTextContextPaint::Paint& aTargetPaint,
                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                       nsSVGEffects::PaintingPropertyDescriptor aProperty)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   nsSVGPaintServerFrame *ps =
-    nsSVGEffects::GetPaintServer(aFrame, &(style->*aFillOrStroke), aProperty);
+    nsSVGEffects::GetPaintServer(aFrame, aFillOrStroke, aProperty);
 
   if (ps) {
     RefPtr<gfxPattern> pattern =
@@ -1361,7 +1374,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
 nsSVGUtils::SetupContextPaint(const DrawTarget* aDrawTarget,
                               const gfxMatrix& aContextMatrix,
                               nsIFrame* aFrame,
-                              gfxTextContextPaint* aOuterContextPaint,
+                              SVGContextPaint* aOuterContextPaint,
                               SVGTextContextPaint* aThisContextPaint)
 {
   DrawMode toDraw = DrawMode(0);
@@ -1411,7 +1424,7 @@ nsSVGUtils::SetupContextPaint(const DrawTarget* aDrawTarget,
 nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
                                gfxContext* aContext,
                                GeneralPattern* aOutPattern,
-                               gfxTextContextPaint* aContextPaint)
+                               SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mFill.mType == eStyleSVGPaintType_None) {
@@ -1433,7 +1446,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
   const DrawTarget* dt = aContext->GetDrawTarget();
 
   nsSVGPaintServerFrame *ps =
-    nsSVGEffects::GetPaintServer(aFrame, &style->mFill,
+    nsSVGEffects::GetPaintServer(aFrame, &nsStyleSVG::mFill,
                                  nsSVGEffects::FillProperty());
   if (ps) {
     RefPtr<gfxPattern> pattern =
@@ -1479,7 +1492,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
 nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
                                  gfxContext* aContext,
                                  GeneralPattern* aOutPattern,
-                                 gfxTextContextPaint* aContextPaint)
+                                 SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mStroke.mType == eStyleSVGPaintType_None) {
@@ -1501,7 +1514,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
   const DrawTarget* dt = aContext->GetDrawTarget();
 
   nsSVGPaintServerFrame *ps =
-    nsSVGEffects::GetPaintServer(aFrame, &style->mStroke,
+    nsSVGEffects::GetPaintServer(aFrame, &nsStyleSVG::mStroke,
                                  nsSVGEffects::StrokeProperty());
   if (ps) {
     RefPtr<gfxPattern> pattern =
@@ -1546,7 +1559,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
 /* static */ float
 nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                        const float& aOpacity,
-                       gfxTextContextPaint *aContextPaint)
+                       SVGContextPaint *aContextPaint)
 {
   float opacity = 1.0f;
   switch (aOpacityType) {
@@ -1574,14 +1587,14 @@ nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
 }
 
 bool
-nsSVGUtils::HasStroke(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
+nsSVGUtils::HasStroke(nsIFrame* aFrame, SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   return style->HasStroke() && GetStrokeWidth(aFrame, aContextPaint) > 0;
 }
 
 float
-nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
+nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   if (aContextPaint && style->StrokeWidthFromObject()) {
@@ -1602,7 +1615,7 @@ static bool
 GetStrokeDashData(nsIFrame* aFrame,
                   nsTArray<gfxFloat>& aDashes,
                   gfxFloat* aDashOffset,
-                  gfxTextContextPaint *aContextPaint)
+                  SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   nsIContent *content = aFrame->GetContent();
@@ -1662,7 +1675,7 @@ GetStrokeDashData(nsIFrame* aFrame,
 void
 nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
                                      gfxContext *aContext,
-                                     gfxTextContextPaint *aContextPaint)
+                                     SVGContextPaint* aContextPaint)
 {
   float width = GetStrokeWidth(aFrame, aContextPaint);
   if (width <= 0)
@@ -1771,16 +1784,13 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
 }
 
 bool
-nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
-                          gfxTextContextPaint* aContextPaint)
+nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext)
 {
   nsIFrame* frame = aElement->GetPrimaryFrame();
   nsISVGChildFrame* svgFrame = do_QueryFrame(frame);
   if (!svgFrame) {
     return false;
   }
-  aContext->GetDrawTarget()->AddUserData(&gfxTextContextPaint::sUserDataKey,
-                                         aContextPaint, nullptr);
   gfxMatrix m;
   if (frame->GetContent()->IsSVGElement()) {
     // PaintSVG() expects the passed transform to be the transform to its own

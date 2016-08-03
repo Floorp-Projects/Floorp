@@ -108,8 +108,6 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
     masm.push(lr);
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     masm.push(ra);
-#elif defined(JS_CODEGEN_X86)
-    static const unsigned EntryFrameSize = sizeof(void*);
 #endif
 
     // Save all caller non-volatile registers before we clobber them here and in
@@ -118,53 +116,42 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
     masm.PushRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == FramePushedAfterSave);
 
-    // ARM and MIPS/MIPS64 have a globally-pinned GlobalReg (x64 uses RIP-relative
-    // addressing, x86 uses immediates in effective addresses). For the
-    // AsmJSGlobalRegBias addition, see Assembler-(mips,arm).h.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    masm.movePtr(IntArgReg1, GlobalReg);
-    masm.addPtr(Imm32(AsmJSGlobalRegBias), GlobalReg);
-#endif
-
-    // ARM, MIPS/MIPS64 and x64 have a globally-pinned HeapReg (x86 uses immediates in
-    // effective addresses). Loading the heap register depends on the global
-    // register already having been loaded.
-    if (usesHeap)
-        masm.loadAsmJSHeapRegisterFromGlobalData();
-
-    // Put the per-thread, per-module TLS pointer into WasmTlsReg.
-    // This is the third argument in the ExportFuncPtr prototype.
-#if defined(JS_CODEGEN_X86)
-    masm.loadPtr(
-      Address(masm.getStackPointer(), EntryFrameSize + masm.framePushed() + 2 * sizeof(void*)),
-      WasmTlsReg);
-#else
-    masm.movePtr(IntArgReg2, WasmTlsReg);
-#endif
-    // Make sure the TLS pointer is not clobbered by the following code.
-    MOZ_ASSERT(WasmTlsReg != ABINonArgReg0, "TLS pointer can't be scratch reg");
-    MOZ_ASSERT(WasmTlsReg != ABINonArgReg1, "TLS pointer can't be scratch reg");
-
-    // Put the 'argv' argument into a non-argument/return register so that we
-    // can use 'argv' while we fill in the arguments for the asm.js callee.
-    // Also, save 'argv' on the stack so that we can recover it after the call.
-    // Use a second non-argument/return register as temporary scratch.
+    // Put the 'argv' argument into a non-argument/return/TLS register so that
+    // we can use 'argv' while we fill in the arguments for the asm.js callee.
     Register argv = ABINonArgReturnReg0;
     Register scratch = ABINonArgReturnReg1;
 
-#if defined(JS_CODEGEN_X86)
-    masm.loadPtr(Address(masm.getStackPointer(), EntryFrameSize + masm.framePushed()), argv);
-#else
-    masm.movePtr(IntArgReg0, argv);
-#endif
+    // Read the arguments of wasm::ExportFuncPtr according to the native ABI.
+    // The entry stub's frame is only 1 word, not the usual 2 for AsmJSFrame.
+    const unsigned argBase = sizeof(void*) + masm.framePushed();
+    ABIArgGenerator abi;
+    ABIArg arg;
+
+    // arg 1: ExportArg*
+    arg = abi.next(MIRType::Pointer);
+    if (arg.kind() == ABIArg::GPR)
+        masm.movePtr(arg.gpr(), argv);
+    else
+        masm.loadPtr(Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()), argv);
+
+    // Arg 2: TlsData*
+    arg = abi.next(MIRType::Pointer);
+    if (arg.kind() == ABIArg::GPR)
+        masm.movePtr(arg.gpr(), WasmTlsReg);
+    else
+        masm.loadPtr(Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()), WasmTlsReg);
+
+    // Setup pinned registers that are assumed throughout wasm code.
+    masm.loadWasmPinnedRegsFromTls();
+
+    // Save 'argv' on the stack so that we can recover it after the call. Use
+    // a second non-argument/return register as temporary scratch.
     masm.Push(argv);
 
-    // Save the stack pointer to the saved non-volatile registers. We will use
-    // this on two paths: normal return and exceptional return. Since
-    // loadWasmActivation uses GlobalReg, we must do this after loading
-    // GlobalReg.
+    // Save the stack pointer in the WasmActivation right before dynamically
+    // aligning the stack so that it may be recovered on return or throw.
     MOZ_ASSERT(masm.framePushed() == FramePushedForEntrySP);
-    masm.loadWasmActivation(scratch);
+    masm.loadWasmActivationFromTls(scratch);
     masm.storeStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
 
     // Dynamically align the stack since ABIStackAlignment is not necessarily
@@ -281,7 +268,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
     masm.call(CallSiteDesc(CallSiteDesc::Relative), fe.funcIndex());
 
     // Recover the stack pointer value before dynamic alignment.
-    masm.loadWasmActivation(scratch);
+    masm.loadWasmActivationFromTls(scratch);
     masm.loadStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
     masm.setFramePushed(FramePushedForEntrySP);
 
@@ -300,10 +287,13 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
         masm.store64(ReturnReg64, Address(argv, 0));
         break;
       case ExprType::F32:
-        masm.convertFloat32ToDouble(ReturnFloat32Reg, ReturnDoubleReg);
-        MOZ_FALLTHROUGH; // as ReturnDoubleReg now contains a Double
+        if (!JitOptions.wasmTestMode)
+            masm.canonicalizeFloat(ReturnFloat32Reg);
+        masm.storeFloat32(ReturnFloat32Reg, Address(argv, 0));
+        break;
       case ExprType::F64:
-        masm.canonicalizeDouble(ReturnDoubleReg);
+        if (!JitOptions.wasmTestMode)
+            masm.canonicalizeDouble(ReturnDoubleReg);
         masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
         break;
       case ExprType::I8x16:
@@ -482,10 +472,11 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     ABIArgMIRTypeIter i(invokeArgTypes);
 
     // argument 0: Instance*
+    Address instancePtr(WasmTlsReg, offsetof(TlsData, instance));
     if (i->kind() == ABIArg::GPR) {
-        masm.loadWasmGlobalPtr(InstancePtrGlobalDataOffset, i->gpr());
+        masm.loadPtr(instancePtr, i->gpr());
     } else {
-        masm.loadWasmGlobalPtr(InstancePtrGlobalDataOffset, scratch);
+        masm.loadPtr(instancePtr, scratch);
         masm.storePtr(scratch, Address(masm.getStackPointer(), i->offsetFromArgBase()));
     }
     i++;
@@ -557,17 +548,26 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
         MOZ_CRASH("Limit");
     }
 
+    // The native ABI preserves the TLS, heap and global registers since they
+    // are non-volatile.
+    MOZ_ASSERT(NonVolatileRegs.has(WasmTlsReg));
+#if defined(JS_CODEGEN_X64) || \
+    defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    MOZ_ASSERT(NonVolatileRegs.has(HeapReg));
+#endif
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    MOZ_ASSERT(NonVolatileRegs.has(GlobalReg));
+#endif
+
     GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, &offsets);
 
     offsets.end = masm.currentOffset();
     return offsets;
 }
 
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-static const unsigned MaybeSavedGlobalReg = sizeof(void*);
-#else
-static const unsigned MaybeSavedGlobalReg = 0;
-#endif
+static const unsigned SavedTlsReg = sizeof(void*);
 
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into a compatible JIT function,
@@ -588,7 +588,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
     static_assert(AsmJSStackAlignment >= JitStackAlignment, "subsumes");
     unsigned sizeOfRetAddr = sizeof(void*);
     unsigned jitFrameBytes = 3 * sizeof(void*) + (1 + sig.args().length()) * sizeof(Value);
-    unsigned totalJitFrameBytes = sizeOfRetAddr + jitFrameBytes + MaybeSavedGlobalReg;
+    unsigned totalJitFrameBytes = sizeOfRetAddr + jitFrameBytes + SavedTlsReg;
     unsigned jitFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalJitFrameBytes) -
                               sizeOfRetAddr;
 
@@ -643,15 +643,11 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
     argOffset += sig.args().length() * sizeof(Value);
     MOZ_ASSERT(argOffset == jitFrameBytes);
 
-    // 6. Jit code will clobber all registers, even non-volatiles. GlobalReg and
-    //    HeapReg are removed from the general register set for asm.js code, so
-    //    these will not have been saved by the caller like all other registers,
-    //    so they must be explicitly preserved. Only save GlobalReg since
-    //    HeapReg can be reloaded (from global data) after the call.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    static_assert(MaybeSavedGlobalReg == sizeof(void*), "stack frame accounting");
-    masm.storePtr(GlobalReg, Address(masm.getStackPointer(), jitFrameBytes));
-#endif
+    // 6. Jit code will clobber all registers, even non-volatiles. WasmTlsReg
+    //    must be kept live for the benefit of the epilogue, so push it on the
+    //    stack so that it can be restored before the epilogue.
+    static_assert(SavedTlsReg == sizeof(void*), "stack frame accounting");
+    masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), jitFrameBytes));
 
     {
         // Enable Activation.
@@ -711,12 +707,6 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
         masm.store8(Imm32(0), Address(act, JitActivation::offsetOfActiveUint8()));
     }
 
-    // Reload the global register since JIT code can clobber any register.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    static_assert(MaybeSavedGlobalReg == sizeof(void*), "stack frame accounting");
-    masm.loadPtr(Address(masm.getStackPointer(), jitFrameBytes), GlobalReg);
-#endif
-
     // As explained above, the frame was aligned for the JIT ABI such that
     //   (sp + sizeof(void*)) % JitStackAlignment == 0
     // But now we possibly want to call one of several different C++ functions,
@@ -763,10 +753,12 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
     Label done;
     masm.bind(&done);
 
-    // Ion code does not respect system callee-saved register conventions so
-    // reload the heap register.
-    if (usesHeap)
-        masm.loadAsmJSHeapRegisterFromGlobalData();
+    // Ion code does not respect the system ABI's callee-saved register
+    // conventions so reload any assumed-non-volatile registers. Note that the
+    // reserveStack(sizeOfRetAddr) above means that the stack pointer is at a
+    // different offset than when WasmTlsReg was stored.
+    masm.loadPtr(Address(masm.getStackPointer(), jitFrameBytes + sizeOfRetAddr), WasmTlsReg);
+    masm.loadWasmPinnedRegsFromTls();
 
     GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, &offsets);
 
@@ -848,7 +840,7 @@ GenerateStackOverflow(MacroAssembler& masm)
     // the non-profiling case (there is no return path from this point) and, in
     // the profiling case, it is already correct.
     Register activation = ABINonArgReturnReg0;
-    masm.loadWasmActivation(activation);
+    masm.loadWasmActivationFromTls(activation);
     masm.storePtr(masm.getStackPointer(), Address(activation, WasmActivation::offsetOfFP()));
 
     // Prepare the stack for calling C++.
@@ -918,7 +910,7 @@ GenerateThrow(MacroAssembler& masm)
     // maintain the invariant that fp is either null or pointing to a valid
     // frame.
     Register scratch = ABINonArgReturnReg0;
-    masm.loadWasmActivation(scratch);
+    masm.loadWasmActivationFromSymbolicAddress(scratch);
     masm.storePtr(ImmWord(0), Address(scratch, WasmActivation::offsetOfFP()));
 
     masm.setFramePushed(FramePushedForEntrySP);
@@ -989,7 +981,7 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     Register scratch = ABINonArgReturnReg0;
 
     // Store resumePC into the reserved space.
-    masm.loadWasmActivation(scratch);
+    masm.loadWasmActivationFromSymbolicAddress(scratch);
     masm.loadPtr(Address(scratch, WasmActivation::offsetOfResumePC()), scratch);
     masm.storePtr(scratch, Address(masm.getStackPointer(), masm.framePushed() + sizeof(void*)));
 
@@ -1027,7 +1019,7 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
 
     // Store resumePC into the reserved space.
-    masm.loadWasmActivation(IntArgReg0);
+    masm.loadWasmActivationFromSymbolicAddress(IntArgReg0);
     masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(s0, masm.framePushed()));
 
@@ -1071,7 +1063,7 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.ma_and(Imm32(~7), sp, sp);
 
     // Store resumePC into the return PC stack slot.
-    masm.loadWasmActivation(IntArgReg0);
+    masm.loadWasmActivationFromSymbolicAddress(IntArgReg0);
     masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(r6, 14 * sizeof(uint32_t*)));
 

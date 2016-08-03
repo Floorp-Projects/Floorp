@@ -45,7 +45,8 @@ DeviceManagerD3D11::Shutdown()
 DeviceManagerD3D11::DeviceManagerD3D11()
  : mDeviceLock("gfxWindowsPlatform.mDeviceLock"),
    mIsWARP(false),
-   mTextureSharingWorks(false)
+   mTextureSharingWorks(false),
+   mCompositorDeviceSupportsVideo(false)
 {
   // Set up the D3D11 feature levels we can ask for.
   if (IsWin8OrLater()) {
@@ -65,17 +66,6 @@ IsWARPStable()
     return false;
   }
   return true;
-}
-
-bool
-DeviceManagerD3D11::CanUseD3D11ImageBridge()
-{
-  if (XRE_IsContentProcess()) {
-    if (!gfxPlatform::GetPlatform()->GetParentDevicePrefs().useD3D11ImageBridge()) {
-      return false;
-    }
-  }
-  return !mIsWARP;
 }
 
 void
@@ -143,13 +133,6 @@ DeviceManagerD3D11::CreateDevices()
     mIsWARP = gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR);
     mTextureSharingWorks =
       gfxPlatform::GetPlatform()->GetParentDevicePrefs().d3d11TextureSharingWorks();
-  }
-
-  if (CanUseD3D11ImageBridge()) {
-    if (AttemptD3D11ImageBridgeDeviceCreation() == FeatureStatus::CrashedInHandler) {
-      DisableD3D11AfterCrash();
-      return;
-    }
   }
 
   if (AttemptD3D11ContentDeviceCreation() == FeatureStatus::CrashedInHandler) {
@@ -229,21 +212,60 @@ DeviceManagerD3D11::GetDXGIAdapter()
 }
 
 bool
-DeviceManagerD3D11::AttemptD3D11DeviceCreationHelper(
-  IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aOutDevice, HRESULT& aResOut)
+DeviceManagerD3D11::AttemptD3D11DeviceCreationHelperInner(
+  IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice, HRESULT& aResOut)
 {
+  // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
+  // to prevent bug 1092260. IE 11 also uses this flag.
+  UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
+  if (aAttemptVideoSupport) {
+    flags |= D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
+  }
+
   MOZ_SEH_TRY {
     aResOut =
       sD3D11CreateDeviceFn(
-        aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-        // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
-        // to prevent bug 1092260. IE 11 also uses this flag.
-        D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+        aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr, flags,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
         D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
   }
+  return true;
+}
+
+bool
+DeviceManagerD3D11::AttemptD3D11DeviceCreationHelper(
+  FeatureState& aD3d11, IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice)
+{
+  HRESULT hr;
+  RefPtr<ID3D11Device> device;
+  if (!AttemptD3D11DeviceCreationHelperInner(aAdapter, aAttemptVideoSupport, device, hr)) {
+    if (!aAttemptVideoSupport) {
+      gfxCriticalError() << "Crash during D3D11 device creation";
+      aD3d11.SetFailed(FeatureStatus::CrashedInHandler, "Crashed trying to acquire a D3D11 device",
+                       NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DEVICE1"));
+    }
+    return false;
+  }
+
+  if (FAILED(hr) || !device) {
+    if (!aAttemptVideoSupport) {
+      gfxCriticalError() << "D3D11 device creation failed: " << hexa(hr);
+      aD3d11.SetFailed(FeatureStatus::Failed, "Failed to acquire a D3D11 device",
+                       NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DEVICE2"));
+    }
+    return false;
+  }
+  if (!D3D11Checks::DoesDeviceWork()) {
+    if (!aAttemptVideoSupport) {
+      aD3d11.SetFailed(FeatureStatus::Broken, "Direct3D11 device was determined to be broken",
+                       NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_BROKEN"));
+    }
+    return false;
+  }
+
+  aOutDevice = device;
   return true;
 }
 
@@ -257,25 +279,15 @@ DeviceManagerD3D11::AttemptD3D11DeviceCreation(FeatureState& d3d11)
     return;
   }
 
-  HRESULT hr;
   RefPtr<ID3D11Device> device;
-  if (!AttemptD3D11DeviceCreationHelper(adapter, device, hr)) {
-    gfxCriticalError() << "Crash during D3D11 device creation";
-    d3d11.SetFailed(FeatureStatus::CrashedInHandler, "Crashed trying to acquire a D3D11 device",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DEVICE1"));
-    return;
-  }
-
-  if (FAILED(hr) || !device) {
-    gfxCriticalError() << "D3D11 device creation failed: " << hexa(hr);
-    d3d11.SetFailed(FeatureStatus::Failed, "Failed to acquire a D3D11 device",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DEVICE2"));
-    return;
-  }
-  if (!D3D11Checks::DoesDeviceWork()) {
-    d3d11.SetFailed(FeatureStatus::Broken, "Direct3D11 device was determined to be broken",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_BROKEN"));
-    return;
+  if (!AttemptD3D11DeviceCreationHelper(d3d11, adapter, true, device)) {
+    // Try again without video support and record that it failed.
+    mCompositorDeviceSupportsVideo = false;
+    if (!AttemptD3D11DeviceCreationHelper(d3d11, adapter, false, device)) {
+      return;
+    }
+  } else {
+    mCompositorDeviceSupportsVideo = true;
   }
 
   {
@@ -368,7 +380,7 @@ DeviceManagerD3D11::AttemptWARPDeviceCreation()
 
 bool
 DeviceManagerD3D11::AttemptD3D11ContentDeviceCreationHelper(
-  IDXGIAdapter1* aAdapter, HRESULT& aResOut)
+  IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aOutDevice, HRESULT& aResOut)
 {
   MOZ_SEH_TRY {
     aResOut =
@@ -376,7 +388,7 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreationHelper(
         aAdapter, mIsWARP ? D3D_DRIVER_TYPE_WARP : D3D_DRIVER_TYPE_UNKNOWN,
         nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(mContentDevice), nullptr, nullptr);
+        D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
 
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
@@ -396,16 +408,22 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
   }
 
   HRESULT hr;
-  if (!AttemptD3D11ContentDeviceCreationHelper(adapter, hr)) {
+  RefPtr<ID3D11Device> device;
+  if (!AttemptD3D11ContentDeviceCreationHelper(adapter, device, hr)) {
     gfxCriticalNote << "Recovered from crash while creating a D3D11 content device";
     gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Content);
     return FeatureStatus::CrashedInHandler;
   }
 
-  if (FAILED(hr) || !mContentDevice) {
+  if (FAILED(hr) || !device) {
     gfxCriticalNote << "Failed to create a D3D11 content device: " << hexa(hr);
     gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Content);
     return FeatureStatus::Failed;
+  }
+
+  {
+    MutexAutoLock lock(mDeviceLock);
+    mContentDevice = device;
   }
 
   // InitializeD2D() will abort early if the compositor device did not support
@@ -416,7 +434,10 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
   // If it fails, we won't use Direct2D.
   if (XRE_IsContentProcess()) {
     if (!D3D11Checks::DoesTextureSharingWork(mContentDevice)) {
-      mContentDevice = nullptr;
+      {
+        MutexAutoLock lock(mDeviceLock);
+        mContentDevice = nullptr;
+      }
       return FeatureStatus::Failed;
     }
 
@@ -435,51 +456,6 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
 }
 
 bool
-DeviceManagerD3D11::AttemptD3D11ImageBridgeDeviceCreationHelper(
-  IDXGIAdapter1* aAdapter,
-  HRESULT& aResOut)
-{
-  MOZ_SEH_TRY {
-    aResOut =
-      sD3D11CreateDeviceFn(GetDXGIAdapter(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                           D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-                           mFeatureLevels.Elements(), mFeatureLevels.Length(),
-                           D3D11_SDK_VERSION, getter_AddRefs(mImageBridgeDevice), nullptr, nullptr);
-  } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-    return false;
-  }
-  return true;
-}
-
-FeatureStatus
-DeviceManagerD3D11::AttemptD3D11ImageBridgeDeviceCreation()
-{
-  HRESULT hr;
-  if (!AttemptD3D11ImageBridgeDeviceCreationHelper(GetDXGIAdapter(), hr)) {
-    gfxCriticalNote << "Recovered from crash while creating a D3D11 image bridge device";
-    gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Image);
-    return FeatureStatus::CrashedInHandler;
-  }
-
-  if (FAILED(hr) || !mImageBridgeDevice) {
-    gfxCriticalNote << "Failed to create a content image bridge device: " << hexa(hr);
-    gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Image);
-    return FeatureStatus::Failed;
-  }
-
-  mImageBridgeDevice->SetExceptionMode(0);
-  if (!D3D11Checks::DoesAlphaTextureSharingWork(mImageBridgeDevice)) {
-    mImageBridgeDevice = nullptr;
-    return FeatureStatus::Failed;
-  }
-
-  if (XRE_IsContentProcess()) {
-    ContentAdapterIsParentAdapter(mImageBridgeDevice);
-  }
-  return FeatureStatus::Available;
-}
-
-bool
 DeviceManagerD3D11::CreateD3D11DecoderDeviceHelper(
   IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice, HRESULT& aResOut)
 {
@@ -487,7 +463,7 @@ DeviceManagerD3D11::CreateD3D11DecoderDeviceHelper(
     aResOut =
       sD3D11CreateDeviceFn(
         aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-        D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
+        D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS | D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
         D3D11_SDK_VERSION, getter_AddRefs(aDevice), nullptr, nullptr);
 
@@ -500,6 +476,21 @@ DeviceManagerD3D11::CreateD3D11DecoderDeviceHelper(
 RefPtr<ID3D11Device>
 DeviceManagerD3D11::CreateDecoderDevice()
 {
+  if (mCompositorDevice && mCompositorDeviceSupportsVideo && !mDecoderDevice) {
+    mDecoderDevice = mCompositorDevice;
+
+    RefPtr<ID3D10Multithread> multi;
+    mDecoderDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+    if (multi) {
+      multi->SetMultithreadProtected(TRUE);
+    }
+  }
+
+  if (mDecoderDevice) {
+    RefPtr<ID3D11Device> dev = mDecoderDevice;
+    return dev.forget();
+  }
+
    if (!sD3D11CreateDeviceFn) {
     // We should just be on Windows Vista or XP in this case.
     return nullptr;
@@ -524,6 +515,8 @@ DeviceManagerD3D11::CreateDecoderDevice()
   device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
 
   multi->SetMultithreadProtected(TRUE);
+
+  mDecoderDevice = device;
   return device;
 }
 
@@ -534,7 +527,6 @@ DeviceManagerD3D11::ResetDevices()
 
   mCompositorDevice = nullptr;
   mContentDevice = nullptr;
-  mImageBridgeDevice = nullptr;
   Factory::SetDirect3D11Device(nullptr);
 }
 
@@ -604,7 +596,6 @@ DeviceManagerD3D11::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
   // Note: this can be called off the main thread, so we need to use
   // our threadsafe getters.
   if (DidDeviceReset(GetCompositorDevice(), aOutReason) ||
-      DidDeviceReset(GetImageBridgeDevice(), aOutReason) ||
       DidDeviceReset(GetContentDevice(), aOutReason))
   {
     return true;
@@ -630,26 +621,10 @@ DeviceManagerD3D11::GetCompositorDevice()
 }
 
 RefPtr<ID3D11Device>
-DeviceManagerD3D11::GetImageBridgeDevice()
-{
-  MutexAutoLock lock(mDeviceLock);
-  return mImageBridgeDevice;
-}
-
-RefPtr<ID3D11Device>
 DeviceManagerD3D11::GetContentDevice()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mDeviceLock);
   return mContentDevice;
-}
-
-RefPtr<ID3D11Device>
-DeviceManagerD3D11::GetDeviceForCurrentThread()
-{
-  if (NS_IsMainThread()) {
-    return GetContentDevice();
-  }
-  return GetCompositorDevice();
 }
 
 unsigned
