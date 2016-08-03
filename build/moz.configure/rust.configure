@@ -29,6 +29,20 @@ def rustc_info(rustc):
             commit=info.get('commit-hash', 'unknown'),
         )
 
+@depends_if(cargo)
+@checking('cargo support for --frozen')
+@imports('subprocess')
+def cargo_supports_frozen(cargo):
+    try:
+        lines = subprocess.check_output(
+            [cargo, 'help', 'build']
+        ).splitlines()
+        return any('    --frozen' in l for l in lines)
+    except subprocess.CalledProcessError as e:
+        die('Failed to call cargo: %s', e.message)
+
+set_config('MOZ_CARGO_SUPPORTS_FROZEN', cargo_supports_frozen)
+
 @depends('--enable-rust', rustc, rustc_info)
 @imports(_from='textwrap', _import='dedent')
 def rust_compiler(value, rustc, rustc_info):
@@ -105,10 +119,7 @@ def rust_target(rust_compiler, rustc, target, cross_compiling):
         }.get((target.cpu, os_or_kernel), None)
 
         if rustc_target is None:
-            if cross_compiling:
-                die("Don't know how to translate {} for rustc".format(target.alias))
-            # Fall back to implicit (native) target when not cross-compiling
-            return None
+            die("Don't know how to translate {} for rustc".format(target.alias))
 
         # Check to see whether our rustc has a reasonably functional stdlib
         # for our chosen target.
@@ -141,7 +152,7 @@ def rust_target(rust_compiler, rustc, target, cross_compiling):
             os.remove(in_path)
             os.remove(out_path)
         # This target is usable.
-        return target_arg
+        return rustc_target
 
 set_config('RUST_TARGET', rust_target)
 

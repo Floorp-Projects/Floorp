@@ -1,0 +1,11 @@
+[root]
+name = "gkrust-gtest"
+version = "0.1.0"
+dependencies = [
+ "mp4parse-gtest 0.1.0",
+]
+
+[[package]]
+name = "mp4parse-gtest"
+version = "0.1.0"
+
