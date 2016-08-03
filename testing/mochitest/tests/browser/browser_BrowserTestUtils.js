@@ -45,10 +45,5 @@ add_task(function* () {
   is(details, "div,40,84", "synthesizeMouseAtCenter mouseup with complex selector");
   ok(!cancelled, "synthesizeMouseAtCenter mouseup with complex selector cancelled");
 
-  let one = browser.contentDocument.getElementById("one");
-  yield BrowserTestUtils.synthesizeMouseAtCenter(one, {}, browser);
-  details = yield getLastEventDetails(browser);
-  is(details, "button,31,34", "synthesizeMouseAtCenter with wrapper");
-
   gBrowser.removeTab(tab);
 });
