@@ -276,13 +276,15 @@ if (hasI64()) {
     testUnary('i64', 'popcnt', -1, 64);
     testUnary('i64', 'popcnt', 0, 0);
 
+    testI64Eqz(40, 0);
+    testI64Eqz(0, 1);
+
     // Test MTest's GVN branch inversion.
     var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (i64.eqz (i64.trunc_s/f32 (get_local 0))) (i32.const 0) (i32.const 1))) (export "" 0))`);
     assertEq(testTrunc(0), 0);
     assertEq(testTrunc(13.37), 1);
 
-    testI64Eqz(40, 0);
-    testI64Eqz(0, 1);
+    assertEqI64(wasmEvalText(`(module (func (result i64) (local i64) (set_local 0 (i64.rem_s (i64.const 1) (i64.const 0xf))) (i64.rem_s (get_local 0) (get_local 0))) (export "" 0))`)(), 0);
 
     setJitCompilerOption('wasm.test-mode', 0);
 } else {
