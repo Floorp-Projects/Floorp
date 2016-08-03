@@ -321,7 +321,7 @@ OptimizeIconSize(IconData& aIcon,
   // image or a multiresolution .ico file), don't try to store more data than
   // needed.
   nsAutoCString newData, newMimeType;
-  if (aIcon.data.Length() > MAX_ICON_FILESIZE(aFaviconSvc->GetOptimizedIconDimension())) {
+  if (aIcon.data.Length() > MAX_FAVICON_FILESIZE) {
     nsresult rv = aFaviconSvc->OptimizeFaviconImage(TO_INTBUFFER(aIcon.data),
                                                     aIcon.data.Length(),
                                                     aIcon.mimeType,
@@ -613,7 +613,7 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
 
   // If over the maximum size allowed, don't save data to the database to
   // avoid bloating it.
-  if (mIcon.data.Length() > nsIFaviconService::MAX_FAVICON_SIZE) {
+  if (mIcon.data.Length() > nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
     return NS_OK;
   }
 

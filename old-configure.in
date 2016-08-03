@@ -2485,7 +2485,6 @@ MOZ_PERMISSIONS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
-MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -4670,14 +4669,6 @@ fi
 AC_SUBST(MOZ_SYSTEM_SQLITE)
 
 dnl ========================================================
-dnl = Enable help viewer (off by default)
-dnl ========================================================
-if test -n "$MOZ_HELP_VIEWER"; then
-     dnl Do this if defined in confvars.sh
-     AC_DEFINE(MOZ_HELP_VIEWER)
-fi
-
-dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(safe-browsing,
@@ -6026,7 +6017,6 @@ AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
-AC_SUBST(MOZ_HELP_VIEWER)
 
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)

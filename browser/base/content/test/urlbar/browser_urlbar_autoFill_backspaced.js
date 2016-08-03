@@ -7,13 +7,13 @@ function* test_autocomplete(data) {
   info(desc);
 
   yield promiseAutocompleteResultPopup(typed);
-  is(gURLBar.value, autofilled, "autofilled value is as expected");
+  is(gURLBar.textValue, autofilled, "autofilled value is as expected");
   if (onAutoFill)
     onAutoFill()
 
   keys.forEach(key => EventUtils.synthesizeKey(key, {}));
 
-  is(gURLBar.value, modified, "backspaced value is as expected");
+  is(gURLBar.textValue, modified, "backspaced value is as expected");
 
   yield promiseSearchComplete();
 
