@@ -100,7 +100,7 @@ class VCSMixin(object):
             kwargs = deepcopy(kwargs_orig)
             kwargs.update(repo_dict)
             if tag_override:
-                kwargs['revision'] = tag_override
+                kwargs['branch'] = tag_override
             dest = self.query_dest(kwargs)
             revision_dict[dest] = {'repo': kwargs['repo']}
             revision_dict[dest]['revision'] = self.vcs_checkout(**kwargs)
