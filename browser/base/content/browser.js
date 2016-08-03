@@ -10,61 +10,142 @@ var Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ContextualIdentityService.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
-Cu.import("resource:///modules/RecentWindow.jsm");
+
+// lazy module getters
+[
+  ["AboutHome", "resource:///modules/AboutHome.jsm"],
+  ["AddonWatcher", "resource://gre/modules/AddonWatcher.jsm"],
+  ["AppConstants", "resource://gre/modules/AppConstants.jsm"],
+  ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
+  ["BrowserUtils", "resource://gre/modules/BrowserUtils.jsm"],
+  ["CastingApps", "resource:///modules/CastingApps.jsm"],
+  ["CharsetMenu", "resource://gre/modules/CharsetMenu.jsm"],
+  ["Color", "resource://gre/modules/Color.jsm"],
+  ["ContentSearch", "resource:///modules/ContentSearch.jsm"],
+  ["Deprecated", "resource://gre/modules/Deprecated.jsm"],
+  ["E10SUtils", "resource:///modules/E10SUtils.jsm"],
+  ["FormValidationHandler", "resource:///modules/FormValidationHandler.jsm"],
+  ["GMPInstallManager", "resource://gre/modules/GMPInstallManager.jsm"],
+  ["LightweightThemeManager", "resource://gre/modules/LightweightThemeManager.jsm"],
+  ["Log", "resource://gre/modules/Log.jsm"],
+  ["LoginManagerParent", "resource://gre/modules/LoginManagerParent.jsm"],
+  ["NewTabUtils", "resource://gre/modules/NewTabUtils.jsm"],
+  ["PageThumbs", "resource://gre/modules/PageThumbs.jsm"],
+  ["PluralForm", "resource://gre/modules/PluralForm.jsm"],
+  ["Preferences", "resource://gre/modules/Preferences.jsm"],
+  ["PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm"],
+  ["ProcessHangMonitor", "resource:///modules/ProcessHangMonitor.jsm"],
+  ["PromiseUtils", "resource://gre/modules/PromiseUtils.jsm"],
+  ["ReaderMode", "resource://gre/modules/ReaderMode.jsm"],
+  ["ReaderParent", "resource:///modules/ReaderParent.jsm"],
+  ["RecentWindow", "resource:///modules/RecentWindow.jsm"],
+  ["SessionStore", "resource:///modules/sessionstore/SessionStore.jsm"],
+  ["ShortcutUtils", "resource://gre/modules/ShortcutUtils.jsm"],
+  ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
+  ["SitePermissions", "resource:///modules/SitePermissions.jsm"],
+  ["Social", "resource:///modules/Social.jsm"],
+  ["TabCrashHandler", "resource:///modules/ContentCrashHandlers.jsm"],
+  ["Task", "resource://gre/modules/Task.jsm"],
+  ["TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm"],
+  ["Translation", "resource:///modules/translation/Translation.jsm"],
+  ["UITour", "resource:///modules/UITour.jsm"],
+  ["UpdateUtils", "resource://gre/modules/UpdateUtils.jsm"],
+  ["Weave", "resource://services-sync/main.js"],
+  ["fxAccounts", "resource://gre/modules/FxAccounts.jsm"],
+  ["gDevTools", "resource://devtools/client/framework/gDevTools.jsm"],
+  ["gDevToolsBrowser", "resource://devtools/client/framework/gDevTools.jsm"],
+  ["gWebRTCUI", "resource:///modules/webrtcUI.jsm", "webrtcUI"],
+].forEach(([name, resource]) => XPCOMUtils.defineLazyModuleGetter(this, name, resource));
+
+if (AppConstants.MOZ_SAFE_BROWSING) {
+  XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
+    "resource://gre/modules/SafeBrowsing.jsm");
+}
+
+if (AppConstants.MOZ_CRASHREPORTER) {
+  XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
+    "resource:///modules/ContentCrashHandlers.jsm");
+}
+
+// lazy service getters
+[
+  ["Favicons", "@mozilla.org/browser/favicon-service;1", "mozIAsyncFavicons"],
+  ["WindowsUIUtils", "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
+  ["gAboutNewTabService", "@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService"],
+  ["gDNSService", "@mozilla.org/network/dns-service;1", "nsIDNSService"],
+].forEach(([name, cc, ci]) => XPCOMUtils.defineLazyServiceGetter(this, name, cc, ci));
+
+if (AppConstants.MOZ_CRASHREPORTER) {
+  XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
+                                     "@mozilla.org/xre/app-info;1",
+                                     "nsICrashReporter");
+}
 
 
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
-                                  "resource://gre/modules/Deprecated.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
-                                  "resource:///modules/BrowserUITelemetry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
-                                  "resource:///modules/E10SUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
-                                  "resource://gre/modules/BrowserUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
-                                  "resource://gre/modules/CharsetMenu.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
-                                  "resource://gre/modules/ShortcutUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
-                                  "resource://gre/modules/GMPInstallManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
-                                  "resource://gre/modules/NewTabUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
-                                  "resource:///modules/ContentSearch.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
-                                  "resource:///modules/AboutHome.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Log",
-                                  "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
-                                  "resource://gre/modules/UpdateUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Color",
-                                  "resource://gre/modules/Color.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
-                                   "@mozilla.org/browser/favicon-service;1",
-                                   "mozIAsyncFavicons");
-XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
-                                   "@mozilla.org/network/dns-service;1",
-                                   "nsIDNSService");
-XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
-                                   "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
-XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
-                                  "resource://gre/modules/LightweightThemeManager.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "gAboutNewTabService",
-                                   "@mozilla.org/browser/aboutnewtab-service;1",
-                                   "nsIAboutNewTabService");
+XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
+  let tmp = {};
+  Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", tmp);
+  return tmp.BrowserToolboxProcess;
+});
+
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/browser.properties');
 });
-XPCOMUtils.defineLazyModuleGetter(this, "AddonWatcher",
-                                  "resource://gre/modules/AddonWatcher.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gCustomizeMode", function() {
+  let scope = {};
+  Cu.import("resource:///modules/CustomizeMode.jsm", scope);
+  return new scope.CustomizeMode(window);
+});
+
+XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
+  // Only show resizers on Windows 2000 and XP
+  return AppConstants.isPlatformAndVersionAtMost("win", "5.9");
+});
+
+XPCOMUtils.defineLazyGetter(this, "gPrefService", function() {
+  return Services.prefs;
+});
+
+XPCOMUtils.defineLazyGetter(this, "PageMenuParent", function() {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
+  return new tmp.PageMenuParent();
+});
+
+XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
+  try {
+    return new tmp.PopupNotifications(gBrowser,
+                                      document.getElementById("notification-popup"),
+                                      document.getElementById("notification-popup-box"));
+  } catch (ex) {
+    Cu.reportError(ex);
+    return null;
+  }
+});
+
+XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
+  if (AppConstants.platform != "win")
+    return null;
+
+  const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
+  if (WINTASKBAR_CONTRACTID in Cc &&
+      Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
+    let AeroPeek = Cu.import("resource:///modules/WindowsPreviewPerTab.jsm", {}).AeroPeek;
+    return {
+      onOpenWindow: function () {
+        AeroPeek.onOpenWindow(window);
+      },
+      onCloseWindow: function () {
+        AeroPeek.onCloseWindow(window);
+      }
+    };
+  }
+  return null;
+});
+
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
@@ -117,10 +198,6 @@ this.__defineGetter__("gFindBarInitialized", function() {
   return window.gBrowser.isFindBarInitialized();
 });
 
-XPCOMUtils.defineLazyGetter(this, "gPrefService", function() {
-  return Services.prefs;
-});
-
 this.__defineGetter__("AddonManager", function() {
   let tmp = {};
   Cu.import("resource://gre/modules/AddonManager.jsm", tmp);
@@ -131,100 +208,6 @@ this.__defineSetter__("AddonManager", function (val) {
   return this.AddonManager = val;
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-  "resource://gre/modules/PluralForm.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
-  "resource://gre/modules/TelemetryStopwatch.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "gCustomizeMode", function() {
-  let scope = {};
-  Cu.import("resource:///modules/CustomizeMode.jsm", scope);
-  return new scope.CustomizeMode(window);
-});
-
-XPCOMUtils.defineLazyModuleGetter(this, "Weave",
-  "resource://services-sync/main.js");
-
-XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
-  let tmp = {};
-  Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
-  try {
-    return new tmp.PopupNotifications(gBrowser,
-                                      document.getElementById("notification-popup"),
-                                      document.getElementById("notification-popup-box"));
-  } catch (ex) {
-    Cu.reportError(ex);
-    return null;
-  }
-});
-
-XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
-  let tmp = {};
-  Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", tmp);
-  return tmp.BrowserToolboxProcess;
-});
-
-XPCOMUtils.defineLazyModuleGetter(this, "Social",
-  "resource:///modules/Social.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "ProcessHangMonitor",
-  "resource:///modules/ProcessHangMonitor.jsm");
-
-if (AppConstants.MOZ_SAFE_BROWSING) {
-  XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
-    "resource://gre/modules/SafeBrowsing.jsm");
-}
-
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Translation",
-  "resource:///modules/translation/Translation.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
-  "resource:///modules/SitePermissions.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "gWebRTCUI",
-  "resource:///modules/webrtcUI.jsm", "webrtcUI");
-
-XPCOMUtils.defineLazyModuleGetter(this, "TabCrashHandler",
-  "resource:///modules/ContentCrashHandlers.jsm");
-
-if (AppConstants.MOZ_CRASHREPORTER) {
-  XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
-    "resource:///modules/ContentCrashHandlers.jsm");
-}
-
-XPCOMUtils.defineLazyModuleGetter(this, "FormValidationHandler",
-  "resource:///modules/FormValidationHandler.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "UITour",
-  "resource:///modules/UITour.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "CastingApps",
-  "resource:///modules/CastingApps.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
-  "resource://gre/modules/SimpleServiceDiscovery.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
-  "resource://gre/modules/ReaderMode.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
-  "resource:///modules/ReaderParent.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
-  "resource://gre/modules/LoginManagerParent.jsm");
 
 var gInitialPages = [
   "about:blank",
@@ -234,38 +217,6 @@ var gInitialPages = [
   "about:welcomeback",
   "about:sessionrestore"
 ];
-
-XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
-  if (AppConstants.platform != "win")
-    return null;
-
-  const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
-  if (WINTASKBAR_CONTRACTID in Cc &&
-      Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
-    let AeroPeek = Cu.import("resource:///modules/WindowsPreviewPerTab.jsm", {}).AeroPeek;
-    return {
-      onOpenWindow: function () {
-        AeroPeek.onOpenWindow(window);
-      },
-      onCloseWindow: function () {
-        AeroPeek.onCloseWindow(window);
-      }
-    };
-  }
-  return null;
-});
-
-if (AppConstants.MOZ_CRASHREPORTER) {
-  XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
-                                     "@mozilla.org/xre/app-info;1",
-                                     "nsICrashReporter");
-}
-
-XPCOMUtils.defineLazyGetter(this, "PageMenuParent", function() {
-  let tmp = {};
-  Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
-  return new tmp.PageMenuParent();
-});
 
 function* browserWindows() {
   let windows = Services.wm.getEnumerator("navigator:browser");
@@ -7669,12 +7620,6 @@ var TabContextMenu = {
   }
 };
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource://devtools/client/framework/gDevTools.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "gDevToolsBrowser",
-                                  "resource://devtools/client/framework/gDevTools.jsm");
-
 Object.defineProperty(this, "HUDService", {
   get: function HUDService_getter() {
     let devtools = Cu.import("resource://devtools/shared/Loader.jsm", {}).devtools;
@@ -7763,11 +7708,6 @@ XPCOMUtils.defineLazyGetter(ResponsiveUI, "ResponsiveUIManager", function() {
   let tmp = {};
   Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", tmp);
   return tmp.ResponsiveUIManager;
-});
-
-XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
-  // Only show resizers on Windows 2000 and XP
-  return AppConstants.isPlatformAndVersionAtMost("win", "5.9");
 });
 
 var MousePosTracker = {
