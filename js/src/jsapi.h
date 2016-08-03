@@ -5168,7 +5168,7 @@ class JSErrorReport
       : linebuf_(nullptr), linebufLength_(0), tokenOffset_(0),
         filename(nullptr), lineno(0), column(0), isMuted(false),
         flags(0), errorNumber(0), ucmessage(nullptr),
-        messageArgs(nullptr), exnType(0)
+        exnType(0)
     {}
 
     const char*     filename;      /* source file name, URL, etc., or null */
@@ -5178,7 +5178,6 @@ class JSErrorReport
     unsigned        flags;          /* error/warning, etc. */
     unsigned        errorNumber;    /* the error number, e.g. see js.msg */
     const char16_t* ucmessage;     /* the (default) error message */
-    const char16_t** messageArgs;  /* arguments for the error message */
     int16_t         exnType;        /* One of the JSExnType constants */
 
     const char16_t* linebuf() const {
