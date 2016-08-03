@@ -120,7 +120,10 @@ test_description_schema = Schema({
         Required('script'): basestring,
 
         # the config files required for the task
-        Required('config'): [basestring],
+        Required('config'): Any(
+            [basestring],
+            {'by-test-platform': {basestring: [basestring]}},
+        ),
 
         # any additional actions to pass to the mozharness command
         Optional('actions'): [basestring],

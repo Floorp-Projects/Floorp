@@ -190,6 +190,10 @@ EVENT(dragenter,
       eDragEnter,
       EventNameType_HTMLXUL,
       eDragEventClass)
+EVENT(dragexit,
+      eDragExit,
+      EventNameType_HTMLXUL,
+      eDragEventClass)
 EVENT(dragleave,
       eDragLeave,
       EventNameType_HTMLXUL,
@@ -778,10 +782,6 @@ NON_IDL_EVENT(commandupdate,
               eXULCommandUpdate,
               EventNameType_XUL,
               eBasicEventClass)
-NON_IDL_EVENT(dragexit,
-              eDragExit,
-              EventNameType_XUL,
-              eDragEventClass)
 NON_IDL_EVENT(overflow,
               eScrollPortOverflow,
               EventNameType_XUL,

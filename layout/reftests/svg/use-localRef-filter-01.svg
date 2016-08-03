@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase for filter linked to local-ref URL</title>
+  <defs>
+    <filter id="blurFilter1" x="-10" y="-10" width="100" height="100">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0" />
+    </filter>
+    <filter id="blurFilter2" x="-10" y="-10" width="100" height="100">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
+    </filter>
+    <filter id="blurFilter3" x="-10" y="-10" width="100" height="100">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
+    </filter>
+  </defs>
+  <style>
+    #f3 {
+      filter: url(#blurFilter3);
+    }
+  </style>
+  <use xlink:href="use-localRef-filter-resource.svg#f1"/>
+  <use xlink:href="use-localRef-filter-resource.svg#f2" filter="url(#blurFilter2)"/>
+  <use xlink:href="use-localRef-filter-resource.svg#f3"/>
+</svg>

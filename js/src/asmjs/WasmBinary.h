@@ -64,6 +64,7 @@ enum class ValType
 
 enum class TypeConstructor
 {
+    AnyFunc                              = 0x20,
     Function                             = 0x40
 };
 
@@ -618,6 +619,13 @@ class Decoder
         return ret;
     }
 
+    template <class T>
+    void uncheckedRead(T* ret) {
+        MOZ_ASSERT(bytesRemain() >= sizeof(T));
+        memcpy(ret, cur_, sizeof(T));
+        cur_ += sizeof(T);
+    }
+
     template <typename UInt>
     MOZ_MUST_USE bool readVarU(UInt* out) {
         const unsigned numBits = sizeof(UInt) * CHAR_BIT;
@@ -855,11 +863,11 @@ class Decoder
     uint32_t uncheckedReadFixedU32() {
         return uncheckedRead<uint32_t>();
     }
-    float uncheckedReadFixedF32() {
-        return uncheckedRead<float>();
+    void uncheckedReadFixedF32(float* ret) {
+        return uncheckedRead<float>(ret);
     }
-    double uncheckedReadFixedF64() {
-        return uncheckedRead<double>();
+    void uncheckedReadFixedF64(double* ret) {
+        return uncheckedRead<double>(ret);
     }
     template <typename UInt>
     UInt uncheckedReadVarU() {

@@ -226,7 +226,7 @@ static void
 ReportInvalidCharacter(JSContext* cx, uint32_t offset)
 {
     char buffer[10];
-    JS_snprintf(buffer, 10, "%u", offset);
+    snprintf(buffer, 10, "%u", offset);
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                  JSMSG_MALFORMED_UTF8_CHAR, buffer);
 }
@@ -241,7 +241,7 @@ static void
 ReportTooBigCharacter(JSContext* cx, uint32_t v)
 {
     char buffer[10];
-    JS_snprintf(buffer, 10, "0x%x", v + 0x10000);
+    snprintf(buffer, 10, "0x%x", v + 0x10000);
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                  JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
 }

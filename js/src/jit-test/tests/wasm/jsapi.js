@@ -171,11 +171,14 @@ assertEq(Table.length, 1);
 assertEq(Table.name, "Table");
 assertErrorMessage(() => Table(), TypeError, /constructor without new is forbidden/);
 assertErrorMessage(() => new Table(1), TypeError, "first argument must be a table descriptor");
-assertErrorMessage(() => new Table({initial:{valueOf() { throw new Error("here")}}}), Error, "here");
-assertErrorMessage(() => new Table({initial:-1}), TypeError, /bad Table initial size/);
-assertErrorMessage(() => new Table({initial:Math.pow(2,32)}), TypeError, /bad Table initial size/);
-assertEq(new Table({initial:1}) instanceof Table, true);
-assertEq(new Table({initial:1.5}) instanceof Table, true);
+assertErrorMessage(() => new Table({initial:1, element:1}), TypeError, /must be "anyfunc"/);
+assertErrorMessage(() => new Table({initial:1, element:"any"}), TypeError, /must be "anyfunc"/);
+assertErrorMessage(() => new Table({initial:1, element:{valueOf() { return "anyfunc" }}}), TypeError, /must be "anyfunc"/);
+assertErrorMessage(() => new Table({initial:{valueOf() { throw new Error("here")}}, element:"anyfunc"}), Error, "here");
+assertErrorMessage(() => new Table({initial:-1, element:"anyfunc"}), TypeError, /bad Table initial size/);
+assertErrorMessage(() => new Table({initial:Math.pow(2,32), element:"anyfunc"}), TypeError, /bad Table initial size/);
+assertEq(new Table({initial:1, element:"anyfunc"}) instanceof Table, true);
+assertEq(new Table({initial:1.5, element:"anyfunc"}) instanceof Table, true);
 
 // 'WebAssembly.Table.prototype' property
 const tableProtoDesc = Object.getOwnPropertyDescriptor(Table, 'prototype');
@@ -191,7 +194,7 @@ assertEq(String(tableProto), "[object Object]");
 assertEq(Object.getPrototypeOf(tableProto), Object.prototype);
 
 // 'WebAssembly.Table' instance objects
-const tbl1 = new Table({initial:2});
+const tbl1 = new Table({initial:2, element:"anyfunc"});
 assertEq(typeof tbl1, "object");
 assertEq(String(tbl1), "[object WebAssembly.Table]");
 assertEq(Object.getPrototypeOf(tbl1), tableProto);

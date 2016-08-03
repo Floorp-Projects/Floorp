@@ -341,8 +341,8 @@ class Val
 
     uint32_t i32() const { MOZ_ASSERT(type_ == ValType::I32); return u.i32_; }
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
-    float f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
-    double f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
+    const float& f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
+    const double& f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
 
     const I8x16& i8x16() const {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
@@ -1044,13 +1044,25 @@ struct ExportArg
 //
 struct TlsData
 {
+    // Pointer to the JSContext that contains this TLS data.
+    JSContext* cx;
+
+    // Pointer to the Instance that contains this TLS data.
+    Instance* instance;
+
+    // Pointer to the global data for this Instance.
+    uint8_t* globalData;
+
+    // Pointer to the base of the default memory (or null if there is none).
+    uint8_t* memoryBase;
+
     // Stack limit for the current thread. This limit is checked against the
     // stack pointer in the prologue of functions that allocate stack space. See
     // `CodeGenerator::generateWasm`.
     void* stackLimit;
 };
 
-typedef int32_t (*ExportFuncPtr)(ExportArg* args, uint8_t* global, TlsData* tls);
+typedef int32_t (*ExportFuncPtr)(ExportArg* args, TlsData* tls);
 
 // Constants:
 
@@ -1063,10 +1075,7 @@ static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
 static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 #endif
 
-static const unsigned ContextPtrGlobalDataOffset  = 0;
-static const unsigned InstancePtrGlobalDataOffset = ContextPtrGlobalDataOffset + sizeof(void*);
-static const unsigned HeapGlobalDataOffset        = InstancePtrGlobalDataOffset + sizeof(void*);
-static const unsigned NaN64GlobalDataOffset       = HeapGlobalDataOffset + sizeof(void*);
+static const unsigned NaN64GlobalDataOffset       = 0;
 static const unsigned NaN32GlobalDataOffset       = NaN64GlobalDataOffset + sizeof(double);
 static const unsigned InitialGlobalDataBytes      = NaN32GlobalDataOffset + sizeof(float);
 

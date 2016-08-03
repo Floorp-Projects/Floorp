@@ -4751,8 +4751,8 @@ CodeGenerator::maybeCreateScriptCounts()
                 JSScript* innerScript = block->info().script();
                 description = (char*) js_calloc(200);
                 if (description) {
-                    JS_snprintf(description, 200, "%s:%" PRIuSIZE,
-                                innerScript->filename(), innerScript->lineno());
+                    snprintf(description, 200, "%s:%" PRIuSIZE,
+                             innerScript->filename(), innerScript->lineno());
                 }
             }
         }
