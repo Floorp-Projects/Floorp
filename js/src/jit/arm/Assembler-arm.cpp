@@ -1495,7 +1495,7 @@ Assembler::spewBranch(Instruction* i, Label* target /* may be nullptr */)
     char labelBuf[128];
     labelBuf[0] = 0;
     if (!target)
-        JS_snprintf(labelBuf, sizeof(labelBuf), "  -> (link-time target)");
+        snprintf(labelBuf, sizeof(labelBuf), "  -> (link-time target)");
     if (InstBranchImm::IsTHIS(*i)) {
         InstBranchImm* bimm = InstBranchImm::AsTHIS(*i);
         BOffImm destOff;
@@ -1514,8 +1514,8 @@ Assembler::spewBranch(Instruction* i, Label* target /* may be nullptr */)
                 ;
             buffer[i] = 0;
             if (target) {
-                JS_snprintf(labelBuf, sizeof(labelBuf), "  -> %d%s", spewResolve(target),
-                            !target->bound() ? "f" : "");
+                snprintf(labelBuf, sizeof(labelBuf), "  -> %d%s", spewResolve(target),
+                         !target->bound() ? "f" : "");
                 target = nullptr;
             }
         }

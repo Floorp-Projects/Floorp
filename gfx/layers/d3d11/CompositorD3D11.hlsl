@@ -389,7 +389,7 @@ float4 BlendShader(const VS_BLEND_OUTPUT aVertex) : SV_Target
     return source;
   }
   if (source.a == 0.0) {
-    return backdrop;
+    return float4(0, 0, 0, 0);
   }
 
   // The spec assumes there is no premultiplied alpha. The backdrop is always

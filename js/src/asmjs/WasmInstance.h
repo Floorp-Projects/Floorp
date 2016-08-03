@@ -50,15 +50,9 @@ class Instance
     TlsData                              tlsData_;
 
     // Internal helpers:
-    JSContext** addressOfContextPtr() const;
-    Instance** addressOfInstancePtr() const;
-    uint8_t** addressOfMemoryBase() const;
     void** addressOfTableBase(size_t tableIndex) const;
     const void** addressOfSigId(const SigIdDesc& sigId) const;
     FuncImportExit& funcImportToExit(const FuncImport& fi);
-
-    // Get this instance's TLS data pointer for the current thread.
-    TlsData* tlsData() { return &tlsData_; }
 
     // Import call slow paths which are called directly from wasm code.
     friend void* AddressOf(SymbolicAddress, ExclusiveContext*);
@@ -81,7 +75,7 @@ class Instance
     bool init(JSContext* cx);
     void trace(JSTracer* trc);
 
-    JSContext* cx() const { return *addressOfContextPtr(); }
+    JSContext* cx() const { return tlsData_.cx; }
     JSCompartment* compartment() const { return compartment_; }
     Code& code() { return *code_; }
     const Code& code() const { return *code_; }
@@ -108,9 +102,6 @@ class Instance
     // See Code::ensureProfilingState comment.
 
     MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
-
-    // Update the instance's copy of the stack limit.
-    void updateStackLimit(JSContext*);
 
     // about:memory reporting:
 

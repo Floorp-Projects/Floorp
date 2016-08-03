@@ -570,9 +570,9 @@ LCovRuntime::fillWithFilename(char *name, size_t length)
     static mozilla::Atomic<size_t> globalRuntimeId(0);
     size_t rid = globalRuntimeId++;
 
-    size_t len = JS_snprintf(name, length, "%s/%" PRId64 "-%" PRIuSIZE "-%" PRIuSIZE ".info",
-                             outDir, timestamp, pid_, rid);
-    if (length <= len) {
+    int len = snprintf(name, length, "%s/%" PRId64 "-%" PRIuSIZE "-%" PRIuSIZE ".info",
+                       outDir, timestamp, pid_, rid);
+    if (length != size_t(len)) {
         fprintf(stderr, "Warning: LCovRuntime::init: Cannot serialize file name.");
         return false;
     }

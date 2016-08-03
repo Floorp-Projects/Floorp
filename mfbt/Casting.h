@@ -17,16 +17,29 @@
 namespace mozilla {
 
 /**
- * Return a value of type |To|, containing the underlying bit pattern of
+ * Sets the outparam value of type |To| with the same underlying bit pattern of
  * |aFrom|.
  *
  * |To| and |From| must be types of the same size; be careful of cross-platform
  * size differences, or this might fail to compile on some but not all
  * platforms.
+ *
+ * There is also a variant that returns the value directly.  In most cases, the
+ * two variants should be identical.  However, in the specific case of x86
+ * chips, the behavior differs: returning floating-point values directly is done
+ * through the x87 stack, and x87 loads and stores turn signaling NaNs into
+ * quiet NaNs... silently.  Returning floating-point values via outparam,
+ * however, is done entirely within the SSE registers when SSE2 floating-point
+ * is enabled in the compiler, which has semantics-preserving behavior you would
+ * expect.
+ *
+ * If preserving the distinction between signaling NaNs and quiet NaNs is
+ * important to you, you should use the outparam version.  In all other cases,
+ * you should use the direct return version.
  */
 template<typename To, typename From>
-inline To
-BitwiseCast(const From aFrom)
+inline void
+BitwiseCast(const From aFrom, To* aResult)
 {
   static_assert(sizeof(From) == sizeof(To),
                 "To and From must have the same size");
@@ -36,7 +49,16 @@ BitwiseCast(const From aFrom)
     To mTo;
   } u;
   u.mFrom = aFrom;
-  return u.mTo;
+  *aResult = u.mTo;
+}
+
+template<typename To, typename From>
+inline To
+BitwiseCast(const From aFrom)
+{
+  To temp;
+  BitwiseCast<To, From>(aFrom, &temp);
+  return temp;
 }
 
 namespace detail {

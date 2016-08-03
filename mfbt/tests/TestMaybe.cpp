@@ -736,6 +736,31 @@ TestComparisonOperators()
   return true;
 }
 
+// Check that Maybe<> can wrap a superclass that happens to also be a concrete
+// class (i.e. that the compiler doesn't warn when we invoke the superclass's
+// destructor explicitly in |reset()|.
+class MySuperClass {
+  virtual void VirtualMethod() { /* do nothing */ }
+};
+
+class MyDerivedClass : public MySuperClass {
+  void VirtualMethod() override { /* do nothing */ }
+};
+
+static bool
+TestVirtualFunction() {
+  Maybe<MySuperClass> super;
+  super.emplace();
+  super.reset();
+
+  Maybe<MyDerivedClass> derived;
+  derived.emplace();
+  derived.reset();
+
+  // If this compiles successfully, we've passed.
+  return true;
+}
+
 int
 main()
 {
@@ -746,6 +771,7 @@ main()
   RUN_TEST(TestMap);
   RUN_TEST(TestToMaybe);
   RUN_TEST(TestComparisonOperators);
+  RUN_TEST(TestVirtualFunction);
 
   return 0;
 }

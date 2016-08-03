@@ -131,13 +131,52 @@ public:
   }
 
 private:
-  // Since we cannot use const char*, use a function that returns it.
-  template <UpdatePolicy Update, class T, T Default(void), const char* Prefname(void)>
-  class PrefTemplate : public Pref
+  // We split out a base class to reduce the number of virtual function
+  // instantiations that we do, which saves code size.
+  template<class T>
+  class TypedPref : public Pref
   {
   public:
+    explicit TypedPref(T aValue)
+      : mValue(aValue)
+    {}
+
+    void GetCachedValue(GfxPrefValue* aOutValue) const override {
+      CopyPrefValue(&mValue, aOutValue);
+    }
+    void SetCachedValue(const GfxPrefValue& aOutValue) override {
+      // This is only used in non-XPCOM processes.
+      MOZ_ASSERT(!IsPrefsServiceAvailable());
+
+      T newValue;
+      CopyPrefValue(&aOutValue, &newValue);
+
+      if (mValue != newValue) {
+        mValue = newValue;
+        FireChangeCallback();
+      }
+    }
+
+  protected:
+    T GetLiveValue(const char* aPrefName) const {
+      if (IsPrefsServiceAvailable()) {
+        return PrefGet(aPrefName, mValue);
+      }
+      return mValue;
+    }
+
+  public:
+    T mValue;
+  };
+
+  // Since we cannot use const char*, use a function that returns it.
+  template <UpdatePolicy Update, class T, T Default(void), const char* Prefname(void)>
+  class PrefTemplate final : public TypedPref<T>
+  {
+    typedef TypedPref<T> BaseClass;
+  public:
     PrefTemplate()
-    : mValue(Default())
+      : BaseClass(Default())
     {
       // If not using the Preferences service, values are synced over IPC, so
       // there's no need to register us as a Preferences observer.
@@ -162,10 +201,10 @@ private:
         case UpdatePolicy::Skip:
           break;
         case UpdatePolicy::Once:
-          mValue = PrefGet(aPreference, mValue);
+          this->mValue = PrefGet(aPreference, this->mValue);
           break;
         case UpdatePolicy::Live:
-          PrefAddVarCache(&mValue, aPreference, mValue);
+          PrefAddVarCache(&this->mValue, aPreference, this->mValue);
           break;
         default:
           MOZ_CRASH("Incomplete switch");
@@ -180,7 +219,7 @@ private:
         case UpdatePolicy::Live:
           break;
         case UpdatePolicy::Once:
-          mValue = PrefGet(aPref, mValue);
+          this->mValue = PrefGet(aPref, this->mValue);
           break;
         default:
           MOZ_CRASH("Incomplete switch");
@@ -193,30 +232,11 @@ private:
     // *before* our cached value is updated, so we expose a method to grab the
     // true live value.
     T GetLiveValue() const {
-      if (IsPrefsServiceAvailable()) {
-        return PrefGet(Prefname(), mValue);
-      }
-      return mValue;
+      return BaseClass::GetLiveValue(Prefname());
     }
     bool HasDefaultValue() const override {
-      return mValue == Default();
+      return this->mValue == Default();
     }
-    void GetCachedValue(GfxPrefValue* aOutValue) const override {
-      CopyPrefValue(&mValue, aOutValue);
-    }
-    void SetCachedValue(const GfxPrefValue& aOutValue) override {
-      // This is only used in non-XPCOM processes.
-      MOZ_ASSERT(!IsPrefsServiceAvailable());
-
-      T newValue;
-      CopyPrefValue(&aOutValue, &newValue);
-
-      if (mValue != newValue) {
-        mValue = newValue;
-        FireChangeCallback();
-      }
-    }
-    T mValue;
   };
 
   // This is where DECL_GFX_PREF for each of the preferences should go.

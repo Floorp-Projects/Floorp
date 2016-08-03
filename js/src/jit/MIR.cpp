@@ -189,17 +189,20 @@ EvaluateExactReciprocal(TempAllocator& alloc, MDiv* ins)
         return nullptr;
 
     Value ret;
-    ret.setDouble(1.0 / (double) num);
+    ret.setDouble(1.0 / double(num));
+
     MConstant* foldedRhs;
     if (ins->type() == MIRType::Float32)
         foldedRhs = MConstant::NewFloat32(alloc, ret.toDouble());
     else
         foldedRhs = MConstant::New(alloc, ret);
+
     MOZ_ASSERT(foldedRhs->type() == ins->type());
     ins->block()->insertBefore(ins, foldedRhs);
 
     MMul* mul = MMul::New(alloc, left, foldedRhs, ins->type());
     mul->setCommutative();
+    mul->setMustPreserveNaN(ins->mustPreserveNaN());
     return mul;
 }
 
@@ -732,10 +735,28 @@ MConstant::New(TempAllocator& alloc, const Value& v, CompilerConstraintList* con
 }
 
 MConstant*
+MConstant::New(TempAllocator::Fallible alloc, const Value& v, CompilerConstraintList* constraints)
+{
+    return new(alloc) MConstant(v, constraints);
+}
+
+MConstant*
 MConstant::NewFloat32(TempAllocator& alloc, double d)
 {
     MOZ_ASSERT(IsNaN(d) || d == double(float(d)));
     return new(alloc) MConstant(float(d));
+}
+
+MConstant*
+MConstant::NewRawFloat32(TempAllocator& alloc, float f)
+{
+    return new(alloc) MConstant(f);
+}
+
+MConstant*
+MConstant::NewRawDouble(TempAllocator& alloc, double d)
+{
+    return new(alloc) MConstant(d);
 }
 
 MConstant*
@@ -880,6 +901,13 @@ MConstant::MConstant(float f)
 {
     setResultType(MIRType::Float32);
     payload_.f = f;
+    setMovable();
+}
+
+MConstant::MConstant(double d)
+{
+    setResultType(MIRType::Double);
+    payload_.d = d;
     setMovable();
 }
 
@@ -2982,6 +3010,9 @@ MBinaryArithInstruction::foldsTo(TempAllocator& alloc)
         return folded;
     }
 
+    if (mustPreserveNaN_)
+        return this;
+
     // 0 + -0 = 0. So we can't remove addition
     if (isAdd() && specialization_ != MIRType::Int32)
         return this;
@@ -3103,6 +3134,7 @@ MMinMax::foldsTo(TempAllocator& alloc)
 
         double lnum = lhs()->toConstant()->numberToDouble();
         double rnum = rhs()->toConstant()->numberToDouble();
+
         double result;
         if (isMax())
             result = js::math_max_impl(lnum, rnum);
@@ -4120,8 +4152,12 @@ MToFloat32::foldsTo(TempAllocator& alloc)
         return input;
 
     // If x is a Float32, Float32(Double(x)) == x
-    if (input->isToDouble() && input->toToDouble()->input()->type() == MIRType::Float32)
+    if (!mustPreserveNaN_ &&
+        input->isToDouble() &&
+        input->toToDouble()->input()->type() == MIRType::Float32)
+    {
         return input->toToDouble()->input();
+    }
 
     if (input->isConstant() && input->toConstant()->isTypeRepresentableAsDouble())
         return MConstant::NewFloat32(alloc, float(input->toConstant()->numberToDouble()));
@@ -5362,7 +5398,7 @@ MAsmJSUnsignedToFloat32::foldsTo(TempAllocator& alloc)
 MAsmJSCall*
 MAsmJSCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
                 const Args& args, MIRType resultType, size_t spIncrement,
-                bool preservesTlsReg)
+                PreservesTlsReg preservesTlsReg)
 {
     MAsmJSCall* call = new(alloc) MAsmJSCall(desc, callee, spIncrement, preservesTlsReg);
     call->setResultType(resultType);

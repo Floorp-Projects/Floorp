@@ -236,17 +236,27 @@ xpcshell:
     description: "xpcshell test run"
     suite: xpcshell
     treeherder-symbol: tc-X()
-    chunks: 3
+    chunks:
+        by-test-platform:
+            default: 3
+            android-4.2-x86/opt: 4
     instance-size: xlarge
-    max-run-time: 7200
+    max-run-time:
+        by-test-platform:
+            default: 7200
+            android-4.2-x86/opt: 3600
     loopback-video: true
     e10s: false
     mozharness:
         script: mozharness/scripts/android_emulator_unittest.py
         no-read-buildbot-config: true
-        config:
-            - mozharness/configs/android/androidarm_4_3.py
-            - mozharness/configs/remove_executables.py
-            - mozharness/configs/android/androidarm_4_3-tc.py
         extra-options:
             - --test-suite=xpcshell
+        config:
+            by-test-platform:
+                default:
+                    - mozharness/configs/android/androidarm_4_3.py
+                    - mozharness/configs/remove_executables.py
+                    - mozharness/configs/android/androidarm_4_3-tc.py
+                android-4.2-x86/opt:
+                    - mozharness/configs/android/androidx86-tc.py
