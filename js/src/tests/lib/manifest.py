@@ -91,6 +91,10 @@ class XULInfoTester:
         if ans is None:
             cmd = [
                 self.js_bin,
+                # run in safe configuration, since it is hard to debug
+                # crashes when running code here. In particular, msan will
+                # error out if the jit is active.
+                '--no-baseline',
                 '-e', self.js_prologue,
                 '-e', 'print(!!({}))'.format(cond)
             ]

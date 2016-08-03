@@ -269,13 +269,13 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readFixedF32(float* out) {
         if (Validate)
             return d_.readFixedF32(out);
-        *out = d_.uncheckedReadFixedF32();
+        d_.uncheckedReadFixedF32(out);
         return true;
     }
     MOZ_MUST_USE bool readFixedF64(double* out) {
         if (Validate)
             return d_.readFixedF64(out);
-        *out = d_.uncheckedReadFixedF64();
+        d_.uncheckedReadFixedF64(out);
         return true;
     }
     MOZ_MUST_USE bool readFixedI8x16(I8x16* out) {
@@ -1273,17 +1273,9 @@ ExprIter<Policy>::readF32Const(float* f32)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::F32);
 
-    float validateF32;
-    if (!readFixedF32(Output ? f32 : &validateF32))
-        return false;
-
-    if (Validate && mozilla::IsNaN(Output ? *f32 : validateF32)) {
-        const float jsNaN = (float)JS::GenericNaN();
-        if (memcmp(Output ? f32 : &validateF32, &jsNaN, sizeof(*f32)) != 0)
-            return notYetImplemented("NaN literals with custom payloads");
-    }
-
-    return push(ExprType::F32);
+    float unused;
+    return readFixedF32(Output ? f32 : &unused) &&
+           push(ExprType::F32);
 }
 
 template <typename Policy>
@@ -1292,17 +1284,9 @@ ExprIter<Policy>::readF64Const(double* f64)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::F64);
 
-    double validateF64;
-    if (!readFixedF64(Output ? f64 : &validateF64))
-       return false;
-
-    if (Validate && mozilla::IsNaN(Output ? *f64 : validateF64)) {
-        const double jsNaN = JS::GenericNaN();
-        if (memcmp(Output ? f64 : &validateF64, &jsNaN, sizeof(*f64)) != 0)
-            return notYetImplemented("NaN literals with custom payloads");
-    }
-
-    return push(ExprType::F64);
+    double unused;
+    return readFixedF64(Output ? f64 : &unused) &&
+           push(ExprType::F64);
 }
 
 template <typename Policy>

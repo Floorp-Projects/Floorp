@@ -71,7 +71,7 @@ def validate_schema(schema, obj, msg_prefix):
         raise Exception('\n'.join(msg))
 
 
-def get_keyed_by(item, field, item_name):
+def get_keyed_by(item, field, item_name, subfield=None):
     """
     For values which can either accept a literal value, or be keyed by some
     other attribute of the item, perform that lookup.  For example, this supports
@@ -82,10 +82,21 @@ def get_keyed_by(item, field, item_name):
                 default: 12
 
     The `item_name` parameter is used to generate useful error messages.
+    The `subfield` parameter, if specified, allows access to a second level
+    of the item dictionary: item[field][subfield]. For example, this supports
+
+        mozharness:
+            config:
+                by-item-platform:
+                    default: ...
     """
     value = item[field]
     if not isinstance(value, dict):
         return value
+    if subfield:
+        value = item[field][subfield]
+        if not isinstance(value, dict):
+            return value
 
     assert len(value) == 1, "Invalid attribute {} in {}".format(field, item_name)
     keyed_by = value.keys()[0]

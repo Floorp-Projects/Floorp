@@ -415,12 +415,42 @@ GetCPUID()
 #endif
 }
 
+size_t
+Sig::serializedSize() const
+{
+    return sizeof(ret_) +
+           SerializedPodVectorSize(args_);
+}
+
+uint8_t*
+Sig::serialize(uint8_t* cursor) const
+{
+    cursor = WriteScalar<ExprType>(cursor, ret_);
+    cursor = SerializePodVector(cursor, args_);
+    return cursor;
+}
+
+const uint8_t*
+Sig::deserialize(const uint8_t* cursor)
+{
+    (cursor = ReadScalar<ExprType>(cursor, &ret_)) &&
+    (cursor = DeserializePodVector(cursor, &args_));
+    return cursor;
+}
+
+size_t
+Sig::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return args_.sizeOfExcludingThis(mallocSizeOf);
+}
+
 typedef uint32_t ImmediateType;  // for 32/64 consistency
-static const unsigned sImmediateBits = sizeof(ImmediateType) * 8 - 1;  // -1 for ImmediateBit
+static const unsigned sTotalBits = sizeof(ImmediateType) * 8;
+static const unsigned sTagBits = 1;
 static const unsigned sReturnBit = 1;
 static const unsigned sLengthBits = 4;
 static const unsigned sTypeBits = 2;
-static const unsigned sMaxTypes = (sImmediateBits - sReturnBit - sLengthBits) / sTypeBits;
+static const unsigned sMaxTypes = (sTotalBits - sTagBits - sReturnBit - sLengthBits) / sTypeBits;
 
 static bool
 IsImmediateType(ValType vt)
@@ -477,40 +507,11 @@ TypeToBits(ValType type)
     return uint32_t(type) - 1;
 }
 
-size_t
-Sig::serializedSize() const
-{
-    return sizeof(ret_) +
-           SerializedPodVectorSize(args_);
-}
-
-uint8_t*
-Sig::serialize(uint8_t* cursor) const
-{
-    cursor = WriteScalar<ExprType>(cursor, ret_);
-    cursor = SerializePodVector(cursor, args_);
-    return cursor;
-}
-
-const uint8_t*
-Sig::deserialize(const uint8_t* cursor)
-{
-    (cursor = ReadScalar<ExprType>(cursor, &ret_)) &&
-    (cursor = DeserializePodVector(cursor, &args_));
-    return cursor;
-}
-
-size_t
-Sig::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return args_.sizeOfExcludingThis(mallocSizeOf);
-}
-
 /* static */ SigIdDesc
 SigIdDesc::immediate(const Sig& sig)
 {
     ImmediateType immediate = ImmediateBit;
-    uint32_t shift = 1;
+    uint32_t shift = sTagBits;
 
     if (sig.ret() != ExprType::Void) {
         immediate |= (1 << shift);
@@ -530,7 +531,7 @@ SigIdDesc::immediate(const Sig& sig)
         shift += sTypeBits;
     }
 
-    MOZ_ASSERT(shift <= sImmediateBits);
+    MOZ_ASSERT(shift <= sTotalBits);
     return SigIdDesc(Kind::Immediate, immediate);
 }
 

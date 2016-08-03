@@ -330,7 +330,7 @@ JitcodeGlobalEntry::createScriptString(JSContext* cx, JSScript* script, size_t* 
     size_t linenoLength = 0;
     char linenoStr[15];
     if (hasName || (script->functionNonDelazifying() || script->isForEval())) {
-        linenoLength = JS_snprintf(linenoStr, 15, "%" PRIuSIZE, script->lineno());
+        linenoLength = snprintf(linenoStr, sizeof(linenoStr), "%" PRIuSIZE, script->lineno());
         hasLineno = true;
     }
 

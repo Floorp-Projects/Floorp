@@ -1569,7 +1569,7 @@ ParseNaNLiteral(const char16_t* cur, const char16_t* end, Float* result)
         // NaN payloads must contain at least one set bit.
         if (value == 0)
             return false;
-        *result = SpecificNaN<Float>(0, value);
+        SpecificNaN<Float>(0, value, result);
     } else {
         // Produce the spec's default NaN.
         *result = SpecificNaN<Float>(0, (Traits::kSignificandBits + 1) >> 1);
@@ -3718,6 +3718,15 @@ EncodeResizable(Encoder& e, const AstResizable& resizable)
 }
 
 static bool
+EncodeResizableTable(Encoder& e, const AstResizable& resizable)
+{
+    if (!e.writeVarU32(uint32_t(TypeConstructor::AnyFunc)))
+        return false;
+
+    return EncodeResizable(e, resizable);
+}
+
+static bool
 EncodeImport(Encoder& e, bool newFormat, AstImport& imp)
 {
     if (!newFormat) {
@@ -3755,6 +3764,9 @@ EncodeImport(Encoder& e, bool newFormat, AstImport& imp)
             return false;
         break;
       case DefinitionKind::Table:
+        if (!EncodeResizableTable(e, imp.resizable()))
+            return false;
+        break;
       case DefinitionKind::Memory:
         if (!EncodeResizable(e, imp.resizable()))
             return false;
@@ -3936,7 +3948,7 @@ EncodeTableSection(Encoder& e, bool newFormat, AstModule& module)
     const AstResizable& table = module.table();
 
     if (newFormat) {
-        if (!EncodeResizable(e, table))
+        if (!EncodeResizableTable(e, table))
             return false;
     } else {
         if (module.elemSegments().length() != 1)

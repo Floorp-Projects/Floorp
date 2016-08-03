@@ -1459,7 +1459,9 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
     for (uint32_t i = 0; i < initLength; i++) {
         Value str = GetAnyBoxedOrUnboxedDenseElement(templateObject, i);
         MOZ_ASSERT(str.toString()->isAtom());
-        MConstant* value = MConstant::New(alloc(), str, constraints());
+        MConstant* value = MConstant::New(alloc().fallible(), str, constraints());
+        if (!value)
+            return InliningStatus_Error;
         if (!TypeSetIncludes(key.maybeTypes(), value->type(), value->resultTypeSet()))
             return InliningStatus_NotInlined;
 

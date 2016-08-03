@@ -358,12 +358,14 @@ DXGITextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocationF
 }
 
 DXGITextureData*
-D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocationFlags aFlags,
-                         ID3D11Device* aDevice)
+D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aSurface,
+                         TextureAllocationFlags aFlags, ID3D11Device* aDevice)
 {
+  // Just grab any device. We never use the immediate context, so the devices are fine
+  // to use from any thread.
   RefPtr<ID3D11Device> device = aDevice;
   if (!device) {
-    device = DeviceManagerD3D11::Get()->GetDeviceForCurrentThread();
+    device = DeviceManagerD3D11::Get()->GetContentDevice();
     if (!device) {
       return nullptr;
     }
@@ -381,12 +383,50 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocation
     }
   }
 
+  D3D11_SUBRESOURCE_DATA uploadData;
+  D3D11_SUBRESOURCE_DATA* uploadDataPtr = nullptr;
+  RefPtr<DataSourceSurface> srcSurf;
+  if (aSurface) {
+    srcSurf = aSurface->GetDataSurface();
+
+    if (!srcSurf) {
+      gfxCriticalError() << "Failed to GetDataSurface in D3D11TextureData::Create";
+      return nullptr;
+    }
+
+    DataSourceSurface::MappedSurface sourceMap;
+    if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
+      gfxCriticalError() << "Failed to map source surface for D3D11TextureData::Create";
+      return nullptr;
+    }
+
+    uploadData.pSysMem = sourceMap.mData;
+    uploadData.SysMemPitch = sourceMap.mStride;
+    uploadData.SysMemSlicePitch = 0; // unused
+
+    uploadDataPtr = &uploadData;
+  }
+
   RefPtr<ID3D11Texture2D> texture11;
-  HRESULT hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(texture11));
+  HRESULT hr = device->CreateTexture2D(&newDesc, uploadDataPtr, getter_AddRefs(texture11));
+  if (srcSurf) {
+    srcSurf->Unmap();
+  }
   if (FAILED(hr)) {
     gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize)))
       << "[D3D11] 2 CreateTexture2D failure " << aSize << " Code: " << gfx::hexa(hr);
     return nullptr;
+  }
+
+  // If we created the texture with a keyed mutex, then we expect all operations
+  // on it to be synchronized using it. If we did an initial upload using aSurface
+  // then bizarely this isn't covered, so we insert a manual lock/unlock pair
+  // to force this.
+  if (aSurface && newDesc.MiscFlags == D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX) {
+    if (!LockD3DTexture(texture11.get())) {
+      return nullptr;
+    }
+    UnlockD3DTexture(texture11.get());
   }
   texture11->SetPrivateDataInterface(sD3D11TextureUsage,
                                      new TextureMemoryMeasurer(newDesc.Width * newDesc.Height * 4));
@@ -394,6 +434,26 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocation
                               aFlags & ALLOC_CLEAR_BUFFER,
                               aFlags & ALLOC_CLEAR_BUFFER_WHITE,
                               aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT);
+}
+
+DXGITextureData*
+D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
+                         TextureAllocationFlags aFlags, ID3D11Device* aDevice)
+{
+  return D3D11TextureData::Create(aSize, aFormat, nullptr, aFlags, aDevice);
+}
+
+DXGITextureData*
+D3D11TextureData::Create(SourceSurface* aSurface,
+                         TextureAllocationFlags aFlags, ID3D11Device* aDevice)
+{
+  if (aSurface->GetFormat() == SurfaceFormat::A8) {
+    // Currently we don't support A8 surfaces. Fallback.
+    return nullptr;
+  }
+
+  return D3D11TextureData::Create(aSurface->GetSize(), aSurface->GetFormat(),
+                                  aSurface, aFlags, aDevice);
 }
 
 void
@@ -591,34 +651,11 @@ D3D11TextureData::BorrowDrawTarget()
 bool
 D3D11TextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
-  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
-
-  if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface (D3D11).";
-    return false;
-  }
-
-  DataSourceSurface::MappedSurface sourceMap;
-  if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
-    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface (D3D11).";
-    return false;
-  }
-
-  RefPtr<ID3D11Device> device;
-  mTexture->GetDevice(getter_AddRefs(device));
-  RefPtr<ID3D11DeviceContext> ctx;
-  device->GetImmediateContext(getter_AddRefs(ctx));
-
-  D3D11_BOX box;
-  box.front = 0;
-  box.back = 1;
-  box.top = box.left = 0;
-  box.right = aSurface->GetSize().width;
-  box.bottom = aSurface->GetSize().height;
-  ctx->UpdateSubresource(mTexture, 0, &box, sourceMap.mData, sourceMap.mStride, 0);
-  srcSurf->Unmap();
-
-  return true;
+  // Supporting texture updates after creation requires an ID3D11DeviceContext and those
+  // aren't threadsafe. We'd need to either lock, or have a device for whatever thread
+  // this runs on and we're trying to avoid extra devices (bug 1284672).
+  MOZ_ASSERT(false, "UpdateFromSurface not supported for D3D11! Use CreateFromSurface instead");
+  return false;
 }
 
 DXGITextureHostD3D11::DXGITextureHostD3D11(TextureFlags aFlags,

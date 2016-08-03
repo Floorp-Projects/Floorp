@@ -82,4 +82,10 @@ fi
 AC_SUBST(MOZ_NO_WLZDEFS)
 AC_SUBST(MOZ_CFLAGS_NSS)
 
+dnl ========================================================
+dnl = Test for whether the compiler is compatible with the
+dnl = given sanitize options.
+dnl ========================================================
+AC_TRY_LINK(,,,AC_MSG_ERROR([compiler is incompatible with sanitize options]))
+
 ])

@@ -934,14 +934,6 @@ class Assembler : public AssemblerX86Shared
         return CodeOffset(masm.currentOffset());
     }
 
-    void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-        CodeOffset label = movlWithPatch(PatchedAbsoluteAddress(), dest);
-        append(wasm::GlobalAccess(label, globalDataOffset));
-    }
-    void loadAsmJSHeapRegisterFromGlobalData() {
-        // x86 doesn't have a pinned heap register.
-    }
-
     static bool canUseInSingleByteInstruction(Register reg) {
         return X86Encoding::HasSubregL(reg.encoding());
     }

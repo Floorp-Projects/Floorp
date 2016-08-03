@@ -374,7 +374,7 @@ public:
   void reset()
   {
     if (isSome()) {
-      ref().~T();
+      ref().T::~T();
       mIsSome = false;
     }
   }

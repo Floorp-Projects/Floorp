@@ -122,17 +122,16 @@ public:
   {
     MutexAutoLock lock(mMutex);
 
-    if (aReader->IsSuspended()) {
-      // Removing suspended readers has no immediate side-effects.
-      DebugOnly<bool> result = mSuspended.RemoveElement(aReader);
-      MOZ_ASSERT(result, "Suspended reader must be in mSuspended");
-    } else {
+    // Remove the reader from the queue. Note that the reader's IsSuspended
+    // state is updated on the task queue, so we cannot depend on it here to
+    // determine the factual suspension state.
+    DebugOnly<bool> suspended = mSuspended.RemoveElement(aReader);
+    bool active = mActive.RemoveElement(aReader);
+
+    MOZ_ASSERT(suspended || active, "Reader must be in the queue");
+
+    if (active && !mSuspended.IsEmpty()) {
       // For each removed active reader, we resume a suspended one.
-      DebugOnly<bool> result = mActive.RemoveElement(aReader);
-      MOZ_ASSERT(result, "Non-suspended reader must be in mActive");
-      if (mSuspended.IsEmpty()) {
-        return;
-      }
       MediaDecoderReader* resumeReader = mSuspended.LastElement();
       mActive.AppendElement(resumeReader);
       mSuspended.RemoveElementAt(mSuspended.Length() - 1);
