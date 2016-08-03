@@ -735,6 +735,12 @@ MConstant::New(TempAllocator& alloc, const Value& v, CompilerConstraintList* con
 }
 
 MConstant*
+MConstant::New(TempAllocator::Fallible alloc, const Value& v, CompilerConstraintList* constraints)
+{
+    return new(alloc) MConstant(v, constraints);
+}
+
+MConstant*
 MConstant::NewFloat32(TempAllocator& alloc, double d)
 {
     MOZ_ASSERT(IsNaN(d) || d == double(float(d)));
