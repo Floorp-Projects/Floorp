@@ -150,6 +150,7 @@ devtools/shared/tests/**
 devtools/shared/touch/**
 devtools/shared/transport/**
 !devtools/shared/transport/transport.js
+!devtools/shared/transport/websocket-transport.js
 devtools/shared/webconsole/test/**
 devtools/shared/worker/**
 !devtools/shared/worker/worker.js
