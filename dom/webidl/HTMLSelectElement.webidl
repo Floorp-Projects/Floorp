@@ -58,3 +58,8 @@ interface HTMLSelectElement : HTMLElement {
   // https://www.w3.org/Bugs/Public/show_bug.cgi?id=20720
   void remove();
 };
+
+partial interface HTMLSelectElement {
+  [ChromeOnly]
+  attribute boolean openInParentProcess;
+};

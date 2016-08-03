@@ -64,6 +64,7 @@ this.SelectContentHelper.prototype = {
   },
 
   uninit: function() {
+    this.element.openInParentProcess = false;
     this.global.removeMessageListener("Forms:SelectDropDownItem", this);
     this.global.removeMessageListener("Forms:DismissedDropDown", this);
     this.global.removeMessageListener("Forms:MouseOver", this);
@@ -79,6 +80,7 @@ this.SelectContentHelper.prototype = {
   },
 
   showDropDown: function() {
+    this.element.openInParentProcess = true;
     let rect = this._getBoundingContentRect();
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
       rect: rect,
