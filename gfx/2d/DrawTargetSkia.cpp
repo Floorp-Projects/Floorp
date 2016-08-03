@@ -31,6 +31,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
+#include "BorrowedContext.h"
 #include <ApplicationServices/ApplicationServices.h>
 #include "mozilla/Vector.h"
 #include "ScaledFontMac.h"
@@ -921,7 +922,8 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
   }
 
   if (!mColorSpace) {
-    mColorSpace = CGColorSpaceCreateDeviceRGB();
+    mColorSpace = (format == SurfaceFormat::A8) ?
+                  CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
   }
 
   if (mCG) {
@@ -932,13 +934,17 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
   mCanvasData = aSurfaceData;
   mCGSize = size;
 
+  uint32_t bitmapInfo = (format == SurfaceFormat::A8) ?
+                        kCGImageAlphaOnly :
+                        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+
   mCG = CGBitmapContextCreateWithData(mCanvasData,
                                       mCGSize.width,
                                       mCGSize.height,
                                       8, /* bits per component */
                                       stride,
                                       mColorSpace,
-                                      kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst,
+                                      bitmapInfo,
                                       NULL, /* Callback when released */
                                       NULL);
   if (!mCG) {
@@ -962,6 +968,22 @@ DrawTargetSkia::ReturnCGContext(CGContextRef aCGContext)
   MOZ_ASSERT(aCGContext == mCG);
   ReleaseBits(mCanvasData);
   CGContextRestoreGState(aCGContext);
+}
+
+CGContextRef
+BorrowedCGContext::BorrowCGContextFromDrawTarget(DrawTarget *aDT)
+{
+  MOZ_ASSERT(aDT->GetBackendType() == BackendType::SKIA);
+  DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
+  return skiaDT->BorrowCGContext(DrawOptions());
+}
+
+void
+BorrowedCGContext::ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg)
+{
+  MOZ_ASSERT(aDT->GetBackendType() == BackendType::SKIA);
+  DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
+  skiaDT->ReturnCGContext(cg);
 }
 
 static void
