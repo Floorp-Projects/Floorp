@@ -208,6 +208,7 @@ static const nsAttrValue::EnumTable* kInputDefaultInputmode = &kInputInputmodeTa
 const Decimal HTMLInputElement::kStepScaleFactorDate = Decimal(86400000);
 const Decimal HTMLInputElement::kStepScaleFactorNumberRange = Decimal(1);
 const Decimal HTMLInputElement::kStepScaleFactorTime = Decimal(1000);
+const Decimal HTMLInputElement::kStepScaleFactorMonth = Decimal(1);
 const Decimal HTMLInputElement::kDefaultStepBase = Decimal(0);
 const Decimal HTMLInputElement::kDefaultStep = Decimal(1);
 const Decimal HTMLInputElement::kDefaultStepTime = Decimal(60);
@@ -2284,6 +2285,7 @@ HTMLInputElement::GetStepBase() const
   MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER ||
              mType == NS_FORM_INPUT_DATE ||
              mType == NS_FORM_INPUT_TIME ||
+             mType == NS_FORM_INPUT_MONTH ||
              mType == NS_FORM_INPUT_RANGE,
              "Check that kDefaultStepBase is correct for this new type");
 
@@ -6893,7 +6895,7 @@ HTMLInputElement::GetStep() const
   }
 
   // For input type=date, we round the step value to have a rounded day.
-  if (mType == NS_FORM_INPUT_DATE) {
+  if (mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_MONTH) {
     step = std::max(step.round(), Decimal(1));
   }
 
@@ -7970,6 +7972,8 @@ HTMLInputElement::GetStepScaleFactor() const
       return kStepScaleFactorNumberRange;
     case NS_FORM_INPUT_TIME:
       return kStepScaleFactorTime;
+    case NS_FORM_INPUT_MONTH:
+      return kStepScaleFactorMonth;
     default:
       MOZ_ASSERT(false, "Unrecognized input type");
       return Decimal::nan();
@@ -7983,6 +7987,7 @@ HTMLInputElement::GetDefaultStep() const
 
   switch (mType) {
     case NS_FORM_INPUT_DATE:
+    case NS_FORM_INPUT_MONTH:
     case NS_FORM_INPUT_NUMBER:
     case NS_FORM_INPUT_RANGE:
       return kDefaultStep;

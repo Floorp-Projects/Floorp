@@ -29,8 +29,7 @@ var data = [
   { type: 'password', apply: false },
   { type: 'datetime', apply: true, todo: true },
   { type: 'date', apply: true },
-  // TODO: temporary set to false until bug 888324 is fixed.
-  { type: 'month', apply: false },
+  { type: 'month', apply: true },
   { type: 'week', apply: true, todo: true },
   { type: 'time', apply: true },
   { type: 'datetime-local', apply: true, todo: true },
@@ -722,7 +721,122 @@ for (var test of data) {
 
       break;
     case 'month':
-      // TODO: this is temporary until bug 888324 is fixed.
+      // When step is invalid, every date is valid
+      input.step = 0;
+      input.value = '2016-07';
+      checkValidity(input, true, apply);
+
+      input.step = 'foo';
+      input.value = '1970-01';
+      checkValidity(input, true, apply);
+
+      input.step = '-1';
+      input.value = '1970-01';
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('step');
+      input.value = '1500-01';
+      checkValidity(input, true, apply);
+
+      input.step = 'any';
+      input.value = '1966-12';
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.value = '2013-02';
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid month, there is a step base.
+      input.min = '2000-01';
+      input.step = '2';
+      input.value = '2000-03';
+      checkValidity(input, true, apply);
+
+      input.value = '2000-02';
+      checkValidity(input, false, apply, { low: "2000-01", high: "2000-03" });
+
+      input.min = '2012-12';
+      input.value = '2013-01';
+      checkValidity(input, false, apply, { low: "2012-12", high: "2013-02" });
+
+      input.min = '2010-10';
+      input.value = '2010-11';
+      checkValidity(input, false, apply, { low: "2010-10", high: "2010-12" });
+
+      input.min = '2010-01';
+      input.step = '1.1';
+      input.value = '2010-02';
+      checkValidity(input, true, apply);
+
+      input.min = '2010-05';
+      input.step = '1.9';
+      input.value = '2010-06';
+      checkValidity(input, false, apply, { low: "2010-05", high: "2010-07" });
+
+      // Without any step attribute the date is valid
+      input.removeAttribute('step');
+      checkValidity(input, true, apply);
+
+      input.min = '1950-01';
+      input.step = '13';
+      input.value = '1951-01';
+      checkValidity(input, false, apply, { low: "1950-01", high: "1951-02" });
+
+      input.min = '1951-01';
+      input.step = '12';
+      input.value = '1952-01';
+      checkValidity(input, true, apply);
+
+      input.step = '0.9';
+      input.value = '1951-02';
+      checkValidity(input, true, apply);
+
+      input.step = '1.5';
+      input.value = '1951-04';
+      checkValidity(input, false, apply, { low: "1951-03", high: "1951-05" });
+
+      input.value = '1951-08';
+      checkValidity(input, false, apply, { low: "1951-07", high: "1951-09" });
+
+      input.step = '300';
+      input.min= '1968-01';
+      input.value = '1968-05';
+      checkValidity(input, false, apply, { low: "1968-01", high: "1993-01" });
+
+      input.value = '1971-01';
+      checkValidity(input, false, apply, { low: "1968-01", high: "1993-01" });
+
+      input.value = '1994-01';
+      checkValidity(input, false, apply, { low: "1993-01", high: "2018-01" });
+
+      input.value = '2018-01';
+      checkValidity(input, true, apply);
+
+      input.value = '2043-01';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1991-01';
+      input.value = '1991-01';
+      checkValidity(input, true, apply);
+
+      input.value = '1991-02';
+      checkValidity(input, false, apply, { low: "1991-01", high: "1991-03" });
+
+      input.value = '1991-03';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1969-12';
+      input.value = '1969-12';
+      checkValidity(input, true, apply);
+
+      input.value = '1970-01';
+      checkValidity(input, false, apply, { low: "1969-12", high: "1970-02" });
+
+      input.value = '1970-02';
+      checkValidity(input, true, apply);
+
       break;
     default:
       ok(false, "Implement the tests for <input type='" + test.type + " >");
