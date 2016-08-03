@@ -137,12 +137,6 @@ public:
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
-
-  bool IsEmpty() const
-  {
-    return mChunks.IsEmpty();
-  }
-
 };
 
 } // namespace mozilla

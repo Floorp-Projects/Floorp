@@ -14,23 +14,17 @@
 using namespace mozilla::layers;
 
 namespace mozilla {
-PRLogModuleInfo* gVideoFrameContainerLog;
-#define CONTAINER_LOG(type, msg) MOZ_LOG(gVideoFrameContainerLog, type, msg)
 
 VideoFrameContainer::VideoFrameContainer(dom::HTMLMediaElement* aElement,
                                          already_AddRefed<ImageContainer> aContainer)
   : mElement(aElement),
     mImageContainer(aContainer), mMutex("nsVideoFrameContainer"),
-    mBlackImage(nullptr),
     mFrameID(0),
     mIntrinsicSizeChanged(false), mImageSizeChanged(false),
     mPendingPrincipalHandle(PRINCIPAL_HANDLE_NONE), mFrameIDForPendingPrincipalHandle(0)
 {
   NS_ASSERTION(aElement, "aElement must not be null");
   NS_ASSERTION(mImageContainer, "aContainer must not be null");
-  if (!gVideoFrameContainerLog) {
-    gVideoFrameContainerLog = PR_NewLogModule("VideoFrameContainer");
-  }
 }
 
 VideoFrameContainer::~VideoFrameContainer()
@@ -51,126 +45,6 @@ void VideoFrameContainer::UpdatePrincipalHandleForFrameID(const PrincipalHandle&
   }
   mPendingPrincipalHandle = aPrincipalHandle;
   mFrameIDForPendingPrincipalHandle = aFrameID;
-}
-
-static void
-SetImageToBlackPixel(PlanarYCbCrImage* aImage)
-{
-  uint8_t blackPixel[] = { 0x10, 0x80, 0x80 };
-
-  PlanarYCbCrData data;
-  data.mYChannel = blackPixel;
-  data.mCbChannel = blackPixel + 1;
-  data.mCrChannel = blackPixel + 2;
-  data.mYStride = data.mCbCrStride = 1;
-  data.mPicSize = data.mYSize = data.mCbCrSize = gfx::IntSize(1, 1);
-  aImage->CopyData(data);
-}
-
-class VideoFrameContainerInvalidateRunnable : public Runnable {
-public:
-  explicit VideoFrameContainerInvalidateRunnable(VideoFrameContainer* aVideoFrameContainer)
-    : mVideoFrameContainer(aVideoFrameContainer)
-  {}
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mVideoFrameContainer->Invalidate();
-
-    return NS_OK;
-  }
-private:
-  RefPtr<VideoFrameContainer> mVideoFrameContainer;
-};
-
-void VideoFrameContainer::SetCurrentFrames(const VideoSegment& aSegment)
-{
-  if (aSegment.IsEmpty()) {
-    return;
-  }
-
-  MutexAutoLock lock(mMutex);
-
-  // Collect any new frames produced in this iteration.
-  AutoTArray<ImageContainer::NonOwningImage,4> newImages;
-  PrincipalHandle lastPrincipalHandle = PRINCIPAL_HANDLE_NONE;
-
-  VideoSegment::ConstChunkIterator iter(aSegment);
-  while (!iter.IsEnded()) {
-    VideoChunk chunk = *iter;
-
-    const VideoFrame* frame = &chunk.mFrame;
-    if (*frame == mLastPlayedVideoFrame) {
-      iter.Next();
-      continue;
-    }
-
-    Image* image = frame->GetImage();
-    CONTAINER_LOG(LogLevel::Verbose,
-                  ("VideoFrameContainer %p writing video frame %p (%d x %d)",
-                  this, image, frame->GetIntrinsicSize().width,
-                  frame->GetIntrinsicSize().height));
-
-    if (frame->GetForceBlack()) {
-      if (!mBlackImage) {
-        mBlackImage = GetImageContainer()->CreatePlanarYCbCrImage();
-        if (mBlackImage) {
-          // Sets the image to a single black pixel, which will be scaled to
-          // fill the rendered size.
-          SetImageToBlackPixel(mBlackImage->AsPlanarYCbCrImage());
-        }
-      }
-      if (mBlackImage) {
-        image = mBlackImage;
-      }
-    }
-    // Don't append null image to the newImages.
-    if (!image) {
-      iter.Next();
-      continue;
-    }
-    newImages.AppendElement(ImageContainer::NonOwningImage(image, chunk.mTimeStamp));
-
-    lastPrincipalHandle = chunk.GetPrincipalHandle();
-
-    mLastPlayedVideoFrame = *frame;
-    iter.Next();
-  }
-
-  // Don't update if there are no changes.
-  if (newImages.IsEmpty()) {
-    return;
-  }
-
-  AutoTArray<ImageContainer::NonOwningImage,4> images;
-
-  bool principalHandleChanged =
-     lastPrincipalHandle != PRINCIPAL_HANDLE_NONE &&
-     lastPrincipalHandle != GetLastPrincipalHandle();
-
-  // Add the frames from this iteration.
-  for (auto& image : newImages) {
-    image.mFrameID = NewFrameID();
-    images.AppendElement(image);
-  }
-
-  if (principalHandleChanged) {
-    UpdatePrincipalHandleForFrameID(lastPrincipalHandle,
-                                    newImages.LastElement().mFrameID);
-  }
-
-  SetCurrentFramesLocked(mLastPlayedVideoFrame.GetIntrinsicSize(), images);
-  nsCOMPtr<nsIRunnable> event =
-    new VideoFrameContainerInvalidateRunnable(this);
-  NS_DispatchToMainThread(event.forget());
-
-  images.ClearAndRetainStorage();
-}
-
-void VideoFrameContainer::ClearFrames()
-{
-  ClearFutureFrames();
 }
 
 void VideoFrameContainer::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize,
