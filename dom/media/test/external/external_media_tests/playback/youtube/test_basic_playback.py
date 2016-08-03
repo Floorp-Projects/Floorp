@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from marionette import Marionette
 from marionette_driver import Wait
 from marionette_driver.errors import TimeoutException
 
@@ -14,7 +15,7 @@ from external_media_tests.media_utils.youtube_puppeteer import (YouTubePuppeteer
 
 class TestBasicYouTubePlayback(MediaTestCase):
     def test_mse_is_enabled_by_default(self):
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             youtube = YouTubePuppeteer(self.marionette, self.video_urls[0],
                                        timeout=60)
             wait = Wait(youtube,
@@ -28,7 +29,7 @@ class TestBasicYouTubePlayback(MediaTestCase):
                 raise self.failureException(e)
 
     def test_video_playing_in_one_tab(self):
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for url in self.video_urls:
                 self.logger.info(url)
                 youtube = YouTubePuppeteer(self.marionette, url)
@@ -65,7 +66,7 @@ class TestBasicYouTubePlayback(MediaTestCase):
                     raise self.failureException(e)
 
     def test_playback_starts(self):
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for url in self.video_urls:
                 try:
                     YouTubePuppeteer(self.marionette, url, timeout=60)
