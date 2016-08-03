@@ -279,7 +279,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     TimeStamp timestamp = TimeStamp::FromSystemTime(time);
 
     MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
-        mSynthesizedTouchInput.get(), time, timeStamp, aPointerId, aPointerState,
+        mSynthesizedTouchInput.get(), time, timestamp, aPointerId, aPointerState,
         aPoint, aPointerPressure, aPointerOrientation);
 
     // Can't use NewRunnableMethod here because that will pass a const-ref
