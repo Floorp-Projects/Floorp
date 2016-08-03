@@ -459,6 +459,21 @@ js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* re
     return true;
 }
 
+static void
+FreeMessageArgs(const char16_t** messageArgs, ErrorArgumentsType argumentsType)
+{
+    if (!messageArgs)
+        return;
+
+    /* free the arguments only if we allocated them */
+    if (argumentsType == ArgumentsAreASCII) {
+        uint16_t i = 0;
+        while (messageArgs[i])
+            js_free((void*)messageArgs[i++]);
+    }
+    js_free(messageArgs);
+}
+
 /*
  * The arguments from ap need to be packaged up into an array and stored
  * into the report struct.
@@ -473,12 +488,13 @@ js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* re
 bool
 js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                            void* userRef, const unsigned errorNumber,
-                           char** messagep, ErrorArgumentsType argumentsType,
+                           char** messagep, const char16_t** messageArgs,
+                           ErrorArgumentsType argumentsType,
                            JSErrorReport* reportp, va_list ap)
 {
     const JSErrorFormatString* efs;
     uint16_t argCount;
-    bool messageArgsPassed = !!reportp->messageArgs;
+    bool messageArgsPassed = !!messageArgs;
 
     *messagep = nullptr;
 
@@ -505,13 +521,12 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
              * pointers later.
              */
             if (messageArgsPassed) {
-                MOZ_ASSERT(!reportp->messageArgs[argCount]);
+                MOZ_ASSERT(!messageArgs[argCount]);
             } else {
-                reportp->messageArgs = cx->pod_malloc<const char16_t*>(argCount + 1);
-                if (!reportp->messageArgs)
+                messageArgs = cx->pod_malloc<const char16_t*>(argCount + 1);
+                if (!messageArgs)
                     return false;
-                /* nullptr-terminate for easy copying. */
-                reportp->messageArgs[argCount] = nullptr;
+                messageArgs[argCount] = nullptr;
             }
             for (uint16_t i = 0; i < argCount; i++) {
                 if (messageArgsPassed) {
@@ -519,13 +534,13 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 } else if (argumentsType == ArgumentsAreASCII) {
                     char* charArg = va_arg(ap, char*);
                     size_t charArgLength = strlen(charArg);
-                    reportp->messageArgs[i] = InflateString(cx, charArg, &charArgLength);
-                    if (!reportp->messageArgs[i])
+                    messageArgs[i] = InflateString(cx, charArg, &charArgLength);
+                    if (!messageArgs[i])
                         goto error;
                 } else {
-                    reportp->messageArgs[i] = va_arg(ap, char16_t*);
+                    messageArgs[i] = va_arg(ap, char16_t*);
                 }
-                argLengths[i] = js_strlen(reportp->messageArgs[i]);
+                argLengths[i] = js_strlen(messageArgs[i]);
                 totalArgsLength += argLengths[i];
             }
         }
@@ -563,8 +578,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                         if (isdigit(fmt[1])) {
                             int d = JS7_UNDEC(fmt[1]);
                             MOZ_RELEASE_ASSERT(d < argCount);
-                            js_strncpy(out, reportp->messageArgs[d],
-                                       argLengths[d]);
+                            js_strncpy(out, messageArgs[d], argLengths[d]);
                             out += argLengths[d];
                             fmt += 3;
                             expandedArgs++;
@@ -585,7 +599,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
             }
         } else {
             /* Non-null messageArgs should have at least one non-null arg. */
-            MOZ_ASSERT(!reportp->messageArgs);
+            MOZ_ASSERT(!messageArgsPassed);
             /*
              * Zero arguments: the format string (if it exists) is the
              * entire message.
@@ -612,19 +626,13 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
             goto error;
         snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
     }
+    if (!messageArgsPassed)
+        FreeMessageArgs(messageArgs, argumentsType);
     return true;
 
 error:
-    if (!messageArgsPassed && reportp->messageArgs) {
-        /* free the arguments only if we allocated them */
-        if (argumentsType == ArgumentsAreASCII) {
-            uint16_t i = 0;
-            while (reportp->messageArgs[i])
-                js_free((void*)reportp->messageArgs[i++]);
-        }
-        js_free((void*)reportp->messageArgs);
-        reportp->messageArgs = nullptr;
-    }
+    if (!messageArgsPassed)
+        FreeMessageArgs(messageArgs, argumentsType);
     if (reportp->ucmessage) {
         js_free((void*)reportp->ucmessage);
         reportp->ucmessage = nullptr;
@@ -654,25 +662,13 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
     PopulateReportBlame(cx, &report);
 
     if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
-                                &message, argumentsType, &report, ap)) {
+                                &message, nullptr, argumentsType, &report, ap)) {
         return false;
     }
 
     ReportError(cx, message, &report, callback, userRef);
 
     js_free(message);
-    if (report.messageArgs) {
-        /*
-         * ExpandErrorArgumentsVA owns its messageArgs only if it had to
-         * inflate the arguments (from regular |char*|s).
-         */
-        if (argumentsType == ArgumentsAreASCII) {
-            int i = 0;
-            while (report.messageArgs[i])
-                js_free((void*)report.messageArgs[i++]);
-        }
-        js_free((void*)report.messageArgs);
-    }
     js_free((void*)report.ucmessage);
 
     return warning;
@@ -681,13 +677,14 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
 static bool
 ExpandErrorArguments(ExclusiveContext* cx, JSErrorCallback callback,
                      void* userRef, const unsigned errorNumber,
-                     char** messagep, ErrorArgumentsType argumentsType,
+                     char** messagep, const char16_t** messageArgs,
+                     ErrorArgumentsType argumentsType,
                      JSErrorReport* reportp, ...)
 {
     va_list ap;
     va_start(ap, reportp);
     bool expanded = js::ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
-                                               messagep, argumentsType, reportp, ap);
+                                               messagep, messageArgs, argumentsType, reportp, ap);
     va_end(ap);
     return expanded;
 }
@@ -705,11 +702,11 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
     report.flags = flags;
     report.errorNumber = errorNumber;
     PopulateReportBlame(cx, &report);
-    report.messageArgs = args;
 
     char* message;
     if (!ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                              &message, ArgumentsAreUnicode, &report)) {
+                              &message, args, ArgumentsAreUnicode, &report))
+    {
         return false;
     }
 
