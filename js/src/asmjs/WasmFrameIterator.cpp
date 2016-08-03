@@ -213,15 +213,15 @@ FrameIterator::lineOrBytecode() const
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 20;
-static const unsigned StoredFP = 27;
+static const unsigned PushedFP = 16;
+static const unsigned StoredFP = 23;
 #elif defined(JS_CODEGEN_X86)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 14;
-static const unsigned StoredFP = 17;
+static const unsigned PushedFP = 11;
+static const unsigned StoredFP = 14;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedFP = 20;
@@ -284,7 +284,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
         PushRetAddr(masm);
         MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - offsets->begin);
 
-        masm.loadWasmActivation(scratch);
+        masm.loadWasmActivationFromTls(scratch);
         masm.push(Address(scratch, WasmActivation::offsetOfFP()));
         MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - offsets->begin);
 
@@ -313,7 +313,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason
     if (framePushed)
         masm.addToStackPtr(Imm32(framePushed));
 
-    masm.loadWasmActivation(scratch);
+    masm.loadWasmActivationFromTls(scratch);
 
     if (reason != ExitReason::None) {
         masm.store32(Imm32(int32_t(ExitReason::None)),

@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/SVGContextPaint.h"
 
 #include "mozilla/Logging.h"
 
@@ -2070,7 +2071,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         aRunParams.context->SetMatrix(mat);
     }
 
-    UniquePtr<gfxTextContextPaint> contextPaint;
+    UniquePtr<SVGContextPaint> contextPaint;
     if (fontParams.haveSVGGlyphs && !fontParams.contextPaint) {
         // If no pattern is specified for fill, use the current pattern
         NS_ASSERTION((int(aRunParams.drawMode) & int(DrawMode::GLYPH_STROKE)) == 0,
@@ -2176,7 +2177,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
 bool
 gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
-                        uint32_t aGlyphId, gfxTextContextPaint *aContextPaint) const
+                        uint32_t aGlyphId, SVGContextPaint* aContextPaint) const
 {
     if (!GetFontEntry()->HasSVGGlyph(aGlyphId)) {
         return false;
@@ -2202,7 +2203,7 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
 
 bool
 gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
-                        uint32_t aGlyphId, gfxTextContextPaint *aContextPaint,
+                        uint32_t aGlyphId, SVGContextPaint* aContextPaint,
                         gfxTextRunDrawCallbacks *aCallbacks,
                         bool& aEmittedGlyphs) const
 {

@@ -34,10 +34,13 @@ class gfxFontFamily;
 class gfxUserFontData;
 class gfxSVGGlyphs;
 class gfxMathTable;
-class gfxTextContextPaint;
 class FontInfoData;
 struct FontListSizes;
 class nsIAtom;
+
+namespace mozilla {
+class SVGContextPaint;
+};
 
 class gfxCharacterMap : public gfxSparseBitSet {
 public:
@@ -185,7 +188,7 @@ public:
     bool GetSVGGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphId,
                             gfxRect *aResult);
     bool RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId,
-                        gfxTextContextPaint *aContextPaint);
+                        mozilla::SVGContextPaint* aContextPaint);
     // Call this when glyph geometry or rendering has changed
     // (e.g. animated SVG glyphs)
     void NotifyGlyphsChanged();

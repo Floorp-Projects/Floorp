@@ -398,7 +398,7 @@ var BrowserApp = {
       });
     }, false);
 
-    window.addEventListener("fullscreenchange", function(e) {
+    window.addEventListener("fullscreenchange", (e) => {
       // This event gets fired on the document and its entire ancestor chain
       // of documents. When enabling fullscreen, it is fired on the top-level
       // document first and goes down; when disabling the order is reversed
@@ -410,8 +410,14 @@ var BrowserApp = {
         rootElement: doc.fullscreenElement == doc.documentElement
       });
 
-      if (doc.fullscreenElement)
+      if (doc.fullscreenElement) {
         showFullScreenWarning();
+      } else if (this.fullscreenTransitionTab) {
+        // Tab selection has changed during a fullscreen transition, handle it now.
+        let tab = this.fullscreenTransitionTab;
+        this.fullscreenTransitionTab = null;
+        this._handleTabSelected(tab);
+      }
     }, false);
 
     // When a restricted key is pressed in DOM full-screen mode, we should display
@@ -1280,7 +1286,13 @@ var BrowserApp = {
     if (aTab == this.selectedTab)
       return;
 
-    this.selectedBrowser.contentDocument.exitFullscreen();
+    let doc = this.selectedBrowser.contentDocument;
+    if (doc.fullscreenElement) {
+      // We'll finish the tab selection once the fullscreen transition has ended,
+      // remember the new tab for this.
+      this.fullscreenTransitionTab = aTab;
+      doc.exitFullscreen();
+    }
 
     let message = {
       type: "Tab:Select",
@@ -1342,6 +1354,11 @@ var BrowserApp = {
   // This method updates the state in BrowserApp after a tab has been selected
   // in the Java UI.
   _handleTabSelected: function _handleTabSelected(aTab) {
+    if (this.fullscreenTransitionTab) {
+      // Defer updating to "fullscreenchange" if tab selection happened during
+      // a fullscreen transition.
+      return;
+    }
     this.selectedTab = aTab;
 
     let evt = document.createEvent("UIEvents");

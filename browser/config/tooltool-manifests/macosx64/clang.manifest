@@ -13,5 +13,13 @@
 "algorithm": "sha512",
 "filename": "sccache.tar.bz2",
 "unpack": true
+},
+{
+"version": "cctools port from commit hash db1f8d906cb28, ld only",
+"size": 634496,
+"digest": "037f31fcf29e7bb7fada0d2bdd5e95c7d4cb2692f2a5c98ed6f6a7561b9d81622d015f0d12b291d3667719655f1369e8ce8a0a4a4773aa0ee4753e04a8821173",
+"algorithm": "sha512",
+"filename": "cctools.tar.bz2",
+"unpack": true
 }
 ]

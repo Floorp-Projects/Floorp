@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Check whether the right events are fired (or not fired, as the case may
+  be) during form submission attempts in sandboxed iframes.</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+  var t1 = async_test("When form submission is disallowed we should get no events");
+  var t2 = async_test("When form submission is allowed we should get an invalid event");
+  window.onmessage = function(e) {
+    var data = e.data;
+    if (data.source == "?forms-disallowed") {
+      t1.step(function() {
+        assert_array_equals(data.events, []);
+        t1.done();
+      });
+    } else if (data.source == "?forms-allowed") {
+      t2.step(function() {
+        assert_array_equals(data.events, ["invalid"]);
+        t2.done();
+      });
+    } else {
+      test(function() { assert_true(false, `Unknown message ${data.source}`); });
+    }
+  }
+</script>
+<iframe src="support/form-submission-sandbox-iframe.html?forms-disallowed"
+        sandbox="allow-scripts">
+</iframe>
+<iframe src="support/form-submission-sandbox-iframe.html?forms-allowed"
+        sandbox="allow-scripts allow-forms">
+</iframe>

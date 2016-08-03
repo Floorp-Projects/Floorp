@@ -10,11 +10,11 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
-#include "gfxSVGGlyphs.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGContextPaint.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
@@ -809,9 +809,7 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
     }
   }
 
-  gfxTextContextPaint *contextPaint =
-    (gfxTextContextPaint*)drawTarget->
-      GetUserData(&gfxTextContextPaint::sUserDataKey);
+  SVGContextPaint* contextPaint = nsSVGUtils::GetContextPaint(mContent);
 
   if (aRenderComponents & eRenderFill) {
     GeneralPattern fillPattern;
@@ -879,8 +877,7 @@ void
 nsSVGPathGeometryFrame::PaintMarkers(gfxContext& aContext,
                                      const gfxMatrix& aTransform)
 {
-  gfxTextContextPaint *contextPaint =
-    (gfxTextContextPaint*)aContext.GetDrawTarget()->GetUserData(&gfxTextContextPaint::sUserDataKey);
+  SVGContextPaint* contextPaint = nsSVGUtils::GetContextPaint(mContent);
 
   if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);

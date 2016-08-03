@@ -1718,7 +1718,7 @@ nsAttrValue::LoadImage(nsIDocument* aDocument)
 
 bool
 nsAttrValue::ParseStyleAttribute(const nsAString& aString,
-                                 nsStyledElementNotElementCSSInlineStyle* aElement)
+                                 nsStyledElement* aElement)
 {
   nsIDocument* ownerDoc = aElement->OwnerDoc();
   nsHTMLCSSStyleSheet* sheet = ownerDoc->GetInlineStyleSheet();

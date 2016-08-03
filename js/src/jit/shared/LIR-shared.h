@@ -864,7 +864,8 @@ class LDouble : public LInstructionHelper<1, 0, 0>
 
     explicit LDouble(double d) : d_(d)
     { }
-    double getDouble() const {
+
+    const double& getDouble() const {
         return d_;
     }
 };
@@ -880,7 +881,7 @@ class LFloat32 : public LInstructionHelper<1, 0, 0>
       : f_(f)
     { }
 
-    float getFloat() const {
+    const float& getFloat() const {
         return f_;
     }
 };
@@ -8234,7 +8235,7 @@ class LAsmJSReturn : public LInstructionHelper<0, 2, 0>
     LIR_HEADER(AsmJSReturn);
 };
 
-class LAsmJSReturnI64 : public LInstructionHelper<0, INT64_PIECES, 0>
+class LAsmJSReturnI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0>
 {
   public:
     LIR_HEADER(AsmJSReturnI64)

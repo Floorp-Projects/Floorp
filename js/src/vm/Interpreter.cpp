@@ -4034,7 +4034,7 @@ END_CASE(JSOP_IS_CONSTRUCTING)
 DEFAULT()
 {
     char numBuf[12];
-    JS_snprintf(numBuf, sizeof numBuf, "%d", *REGS.pc);
+    snprintf(numBuf, sizeof numBuf, "%d", *REGS.pc);
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                          JSMSG_BAD_BYTECODE, numBuf);
     goto error;

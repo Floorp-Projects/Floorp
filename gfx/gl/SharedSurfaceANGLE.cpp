@@ -178,6 +178,7 @@ public:
       : mIsLocked(false)
       , mTexture(texture)
     {
+        MOZ_ASSERT(NS_IsMainThread(), "Must be on the main thread to use d3d11 immediate context");
         MOZ_ASSERT(mTexture);
         MOZ_ASSERT(succeeded);
         *succeeded = false;
@@ -197,7 +198,7 @@ public:
         }
 
         RefPtr<ID3D11Device> device =
-          gfx::DeviceManagerD3D11::Get()->GetDeviceForCurrentThread();
+          gfx::DeviceManagerD3D11::Get()->GetContentDevice();
         if (!device) {
             return;
         }
@@ -254,7 +255,7 @@ SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(gfx::DataSourceSurface* o
     MOZ_ASSERT(out_surface);
 
     RefPtr<ID3D11Device> device =
-      gfx::DeviceManagerD3D11::Get()->GetDeviceForCurrentThread();
+      gfx::DeviceManagerD3D11::Get()->GetContentDevice();
     if (!device) {
         return false;
     }

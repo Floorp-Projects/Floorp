@@ -217,6 +217,7 @@ class ExclusiveContext : public ContextFriendFields,
     void* stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
     void* stackLimitAddressForJitCode(StackKind kind);
     uintptr_t stackLimit(StackKind kind) { return runtime_->mainThread.nativeStackLimit[kind]; }
+    uintptr_t stackLimitForJitCode(StackKind kind);
     size_t gcSystemPageSize() { return gc::SystemPageSize(); }
     bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
     bool jitSupportsUnalignedAccesses() const { return runtime_->jitSupportsUnalignedAccesses; }
@@ -577,7 +578,8 @@ ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback callback
 extern bool
 ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                        void* userRef, const unsigned errorNumber,
-                       char** message, ErrorArgumentsType argumentsType,
+                       char** message, const char16_t** messageArgs,
+                       ErrorArgumentsType argumentsType,
                        JSErrorReport* reportp, va_list ap);
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
