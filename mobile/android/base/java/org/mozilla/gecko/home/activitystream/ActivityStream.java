@@ -21,6 +21,8 @@ public class ActivityStream extends FrameLayout implements HomeScreen {
 
     public ActivityStream(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        inflate(context, R.layout.as_content, this);
     }
 
     @Override
