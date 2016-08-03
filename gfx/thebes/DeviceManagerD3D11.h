@@ -48,9 +48,7 @@ public:
   }
 
   RefPtr<ID3D11Device> GetCompositorDevice();
-  RefPtr<ID3D11Device> GetImageBridgeDevice();
   RefPtr<ID3D11Device> GetContentDevice();
-  RefPtr<ID3D11Device> GetDeviceForCurrentThread();
   RefPtr<ID3D11Device> CreateDecoderDevice();
 
   unsigned GetD3D11Version() const;
@@ -67,15 +65,19 @@ public:
 private:
   IDXGIAdapter1 *GetDXGIAdapter();
 
-  bool CanUseD3D11ImageBridge();
-
   void DisableD3D11AfterCrash();
 
   void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
-  bool AttemptD3D11DeviceCreationHelper(
+  bool AttemptD3D11DeviceCreationHelperInner(
       IDXGIAdapter1* aAdapter,
+      bool aAttemptVideoSupport,
       RefPtr<ID3D11Device>& aOutDevice,
       HRESULT& aResOut);
+  bool AttemptD3D11DeviceCreationHelper(
+      mozilla::gfx::FeatureState& aD3d11,
+      IDXGIAdapter1* aAdapter,
+      bool aAttemptVideoSupport,
+      RefPtr<ID3D11Device>& aOutDevice);
 
   void AttemptWARPDeviceCreation();
   bool AttemptWARPDeviceCreationHelper(
@@ -83,13 +85,11 @@ private:
       RefPtr<ID3D11Device>& aOutDevice,
       HRESULT& aResOut);
 
-  bool AttemptD3D11ImageBridgeDeviceCreationHelper(
-      IDXGIAdapter1* aAdapter, HRESULT& aResOut);
-  mozilla::gfx::FeatureStatus AttemptD3D11ImageBridgeDeviceCreation();
-
   mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
   bool AttemptD3D11ContentDeviceCreationHelper(
-      IDXGIAdapter1* aAdapter, HRESULT& aResOut);
+      IDXGIAdapter1* aAdapter,
+      RefPtr<ID3D11Device>& aOutDevice,
+      HRESULT& aResOut);
 
   // Create a D3D11 device to be used for DXVA decoding.
   bool CreateD3D11DecoderDeviceHelper(
@@ -106,9 +106,10 @@ private:
   RefPtr<IDXGIAdapter1> mAdapter;
   RefPtr<ID3D11Device> mCompositorDevice;
   RefPtr<ID3D11Device> mContentDevice;
-  RefPtr<ID3D11Device> mImageBridgeDevice;
+  RefPtr<ID3D11Device> mDecoderDevice;
   mozilla::Atomic<bool> mIsWARP;
   mozilla::Atomic<bool> mTextureSharingWorks;
+  bool mCompositorDeviceSupportsVideo;
 };
 
 } // namespace gfx

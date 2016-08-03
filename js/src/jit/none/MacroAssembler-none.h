@@ -406,8 +406,9 @@ class MacroAssemblerNone : public Assembler
     void buildFakeExitFrame(Register, uint32_t*) { MOZ_CRASH(); }
     bool buildOOLFakeExitFrame(void*) { MOZ_CRASH(); }
     void loadWasmGlobalPtr(uint32_t, Register) { MOZ_CRASH(); }
-    void loadWasmActivation(Register) { MOZ_CRASH(); }
-    void loadAsmJSHeapRegisterFromGlobalData() { MOZ_CRASH(); }
+    void loadWasmActivationFromTls(Register) { MOZ_CRASH(); }
+    void loadWasmActivationFromSymbolicAddress(Register) { MOZ_CRASH(); }
+    void loadWasmPinnedRegsFromTls() { MOZ_CRASH(); }
 
     void setPrinter(Sprinter*) { MOZ_CRASH(); }
     Operand ToPayload(Operand base) { MOZ_CRASH(); }

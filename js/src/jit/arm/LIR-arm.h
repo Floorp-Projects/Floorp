@@ -472,17 +472,18 @@ class LSoftUDivOrMod : public LBinaryMath<3>
     }
 };
 
-class LAsmJSCompareExchangeCallout : public LCallInstructionHelper<1, 3, 2>
+class LAsmJSCompareExchangeCallout : public LCallInstructionHelper<1, 4, 2>
 {
   public:
     LIR_HEADER(AsmJSCompareExchangeCallout)
     LAsmJSCompareExchangeCallout(const LAllocation& ptr, const LAllocation& oldval,
-                                 const LAllocation& newval, const LDefinition& temp1,
-                                 const LDefinition& temp2)
+                                 const LAllocation& newval, const LAllocation& tls,
+                                 const LDefinition& temp1, const LDefinition& temp2)
     {
         setOperand(0, ptr);
         setOperand(1, oldval);
         setOperand(2, newval);
+        setOperand(3, tls);
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
@@ -495,22 +496,27 @@ class LAsmJSCompareExchangeCallout : public LCallInstructionHelper<1, 3, 2>
     const LAllocation* newval() {
         return getOperand(2);
     }
+    const LAllocation* tls() {
+        return getOperand(3);
+    }
 
     const MAsmJSCompareExchangeHeap* mir() const {
         return mir_->toAsmJSCompareExchangeHeap();
     }
 };
 
-class LAsmJSAtomicExchangeCallout : public LCallInstructionHelper<1, 2, 2>
+class LAsmJSAtomicExchangeCallout : public LCallInstructionHelper<1, 3, 2>
 {
   public:
     LIR_HEADER(AsmJSAtomicExchangeCallout)
 
     LAsmJSAtomicExchangeCallout(const LAllocation& ptr, const LAllocation& value,
-                                const LDefinition& temp1, const LDefinition& temp2)
+                                const LAllocation& tls, const LDefinition& temp1,
+                                const LDefinition& temp2)
     {
         setOperand(0, ptr);
         setOperand(1, value);
+        setOperand(2, tls);
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
@@ -519,6 +525,9 @@ class LAsmJSAtomicExchangeCallout : public LCallInstructionHelper<1, 2, 2>
     }
     const LAllocation* value() {
         return getOperand(1);
+    }
+    const LAllocation* tls() {
+        return getOperand(2);
     }
 
     const MAsmJSAtomicExchangeHeap* mir() const {
@@ -526,15 +535,17 @@ class LAsmJSAtomicExchangeCallout : public LCallInstructionHelper<1, 2, 2>
     }
 };
 
-class LAsmJSAtomicBinopCallout : public LCallInstructionHelper<1, 2, 2>
+class LAsmJSAtomicBinopCallout : public LCallInstructionHelper<1, 3, 2>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopCallout)
     LAsmJSAtomicBinopCallout(const LAllocation& ptr, const LAllocation& value,
-                             const LDefinition& temp1, const LDefinition& temp2)
+                             const LAllocation& tls, const LDefinition& temp1,
+                             const LDefinition& temp2)
     {
         setOperand(0, ptr);
         setOperand(1, value);
+        setOperand(2, tls);
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
@@ -543,6 +554,9 @@ class LAsmJSAtomicBinopCallout : public LCallInstructionHelper<1, 2, 2>
     }
     const LAllocation* value() {
         return getOperand(1);
+    }
+    const LAllocation* tls() {
+        return getOperand(2);
     }
 
     const MAsmJSAtomicBinopHeap* mir() const {

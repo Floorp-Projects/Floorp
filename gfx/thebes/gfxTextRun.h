@@ -29,10 +29,13 @@ class gfxContext;
 class gfxFontGroup;
 class gfxUserFontEntry;
 class gfxUserFontSet;
-class gfxTextContextPaint;
 class nsIAtom;
 class nsILanguageAtomService;
 class gfxMissingFontRecorder;
+
+namespace mozilla {
+class SVGContextPaint;
+};
 
 /**
  * Callback for Draw() to use when drawing text with mode
@@ -244,7 +247,7 @@ public:
         PropertyProvider* provider = nullptr;
         // If non-null, the advance width of the substring is set.
         gfxFloat* advanceWidth = nullptr;
-        gfxTextContextPaint* contextPaint = nullptr;
+        mozilla::SVGContextPaint* contextPaint = nullptr;
         gfxTextRunDrawCallbacks* callbacks = nullptr;
         explicit DrawParams(gfxContext* aContext) : context(aContext) {}
     };

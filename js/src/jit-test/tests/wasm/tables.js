@@ -29,7 +29,7 @@ assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globa
 assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (i32.const 1) $f0 $f0) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:0}}), TypeError, /must be.*ordered/);
 assertErrorMessage(() => evalText(`(module (table (resizable 10)) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`, {globals:{a:1}}), TypeError, /must be.*disjoint/);
 
-var tbl = new Table({initial:50});
+var tbl = new Table({initial:50, element:"anyfunc"});
 assertErrorMessage(() => evalText(`(module
     (import "globals" "table" (table 10 100))
     (import "globals" "a" (global i32 immutable))
@@ -64,7 +64,7 @@ assertEq(call(5), 2);
 assertErrorMessage(() => call(6), Error, /bad wasm indirect call/);
 assertErrorMessage(() => call(10), Error, /out-of-range/);
 
-var tbl = new Table({initial:3});
+var tbl = new Table({initial:3, element:"anyfunc"});
 var call = evalText(`(module (import "a" "b" (table 2)) (export "tbl" table) (elem (i32.const 0) $f0 $f1) ${callee(0)} ${callee(1)} ${caller})`, {a:{b:tbl}}).exports.call;
 assertEq(call(0), 0);
 assertEq(call(1), 1);
@@ -87,3 +87,28 @@ var call = evalText(`(module
 assertEq(call(0), 0);
 assertEq(call(1), 1);
 assertErrorMessage(() => call(2), Error, /bad wasm indirect call/);
+
+var call = evalText(`(module
+    (type $A (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $B (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $C (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $D (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $E (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $F (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (type $G (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
+    (table $a $b $c $d $e $f $g)
+    (func $a (type $A) (get_local 7))
+    (func $b (type $B) (get_local 8))
+    (func $c (type $C) (get_local 9))
+    (func $d (type $D) (get_local 10))
+    (func $e (type $E) (get_local 11))
+    (func $f (type $F) (get_local 12))
+    (func $g (type $G) (get_local 13))
+    (func $call (param i32) (result i32)
+        (call_indirect $A (get_local 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 42)))
+    (export "call" $call)
+)`).exports.call;
+assertEq(call(0), 42);
+for (var i = 1; i < 7; i++)
+    assertErrorMessage(() => call(i), Error, /bad wasm indirect call/);
+assertErrorMessage(() => call(7), Error, /out-of-range/);

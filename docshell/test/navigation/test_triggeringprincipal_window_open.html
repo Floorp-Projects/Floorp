@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="NavigationUtils.js"></script>        
+</head>
+<body>
+
+<script type="text/javascript">
+
+/* We call window.open() using different URIs and make sure the triggeringPrincipal
+ * loadingPrincipal are correct.
+ * Test1: window.open(http:)
+ * Test2: window.open(data:)
+ * Test3: window.open(javascript:)
+ */
+
+const TRIGGERING_PRINCIPAL_URI =
+  "http://mochi.test:8888/tests/docshell/test/navigation/test_triggeringprincipal_window_open.html";
+
+SimpleTest.waitForExplicitFinish();
+
+const NUM_TESTS = 3;
+var test_counter = 0;
+
+function checkFinish() {
+  test_counter++;
+  if (test_counter === NUM_TESTS) {
+    SimpleTest.finish();
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Test 1: window.open(http:)
+var httpWin = window.open("file_triggeringprincipal_window_open.html", "_blank", "width=10,height=10");
+httpWin.onload = function() {
+  var httpChannel = SpecialPowers.wrap(httpWin.document).docShell.currentDocumentChannel;
+  var httpTriggeringPrincipal = httpChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
+  var httpLoadingPrincipal = httpChannel.loadInfo.loadingPrincipal;
+
+  is(httpTriggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
+     "TriggeringPrincipal for window.open(http:) should be the principal of the document");
+
+  is(httpWin.document.referrer, TRIGGERING_PRINCIPAL_URI,
+     "Referrer for window.open(http:) should be the principal of the document");
+
+  is(httpLoadingPrincipal, null,
+     "LoadingPrincipal for window.open(http:) should be null");
+
+  httpWin.close();
+  checkFinish();
+}
+
+// ----------------------------------------------------------------------------
+// Test 2: window.open(data:)
+var dataWin = window.open("data:text/html,<html><body>data</body></html>", "_blank", "width=10,height=10");
+dataWin.onload = function() {
+  var dataChannel = SpecialPowers.wrap(dataWin.document).docShell.currentDocumentChannel;
+  var dataTriggeringPrincipal = dataChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
+  var dataLoadingPrincipal = dataChannel.loadInfo.loadingPrincipal;
+
+  is(dataTriggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
+     "TriggeringPrincipal for window.open(data:) should be the principal of the document");
+
+  is(dataWin.document.referrer, "",
+     "Referrer for window.open(data:) should be empty");
+
+  is(dataLoadingPrincipal, null,
+     "LoadingPrincipal for window.open(data:) should be null");
+
+  dataWin.close();
+  checkFinish();
+}
+
+// ----------------------------------------------------------------------------
+// Test 3: window.open(javascript:)
+var jsWin = window.open("javascript:'<html><body>js</body></html>';", "_blank", "width=10,height=10");
+jsWin.onload = function() {
+  var jsChannel = SpecialPowers.wrap(jsWin.document).docShell.currentDocumentChannel;
+  var jsTriggeringPrincipal = jsChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
+  var jsLoadingPrincipal = jsChannel.loadInfo.loadingPrincipal;
+
+  is(jsTriggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
+     "TriggeringPrincipal for window.open(javascript:) should be the principal of the document");
+
+  is(jsWin.document.referrer, "",
+     "Referrer for window.open(javascript:) should be empty");
+
+  is(jsLoadingPrincipal, null,
+     "LoadingPrincipal for window.open(javascript:) should be null");
+
+  jsWin.close();
+  checkFinish();
+}
+
+</script>
+</pre>
+</body>
+</html>

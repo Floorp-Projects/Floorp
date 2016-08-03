@@ -363,7 +363,7 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
     if (!str)
         return nullptr;
 
-    DebugOnly<size_t> ret = JS_snprintf(str, len + 1, "%s", text);
+    DebugOnly<size_t> ret = snprintf(str, len + 1, "%s", text);
     MOZ_ASSERT(ret == len);
     MOZ_ASSERT(strlen(str) == len);
 
@@ -431,7 +431,7 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
         return nullptr;
 
     DebugOnly<size_t> ret =
-        JS_snprintf(str, len + 1, "script %s:%" PRIuSIZE ":%" PRIuSIZE, filename, lineno, colno);
+        snprintf(str, len + 1, "script %s:%" PRIuSIZE ":%" PRIuSIZE, filename, lineno, colno);
     MOZ_ASSERT(ret == len);
     MOZ_ASSERT(strlen(str) == len);
 

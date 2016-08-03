@@ -1199,7 +1199,7 @@ ProcessUserNotice(SECItem* derNotice, nsAString& text,
       unsigned long number;
       char buffer[60];
       if (SEC_ASN1DecodeInteger(*itemList, &number) == SECSuccess) {
-        snprintf_literal(buffer, "#%d", number);
+        snprintf_literal(buffer, "#%lu", number);
         if (itemList != notice->noticeReference.noticeNumbers)
           text.AppendLiteral(", ");
         AppendASCIItoUTF16(buffer, text);
@@ -1488,7 +1488,7 @@ ProcessMSCAVersion(SECItem  *extData,
 
   /* Apparently, the encoding is <minor><major>, with 16 bits each */
   char buf[50];
-  if (snprintf_literal(buf, "%d.%d", version & 0xFFFF, version >> 16) <= 0) {
+  if (snprintf_literal(buf, "%lu.%lu", version & 0xFFFF, version >> 16) <= 0) {
     return NS_ERROR_FAILURE;
   }
 

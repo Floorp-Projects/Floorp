@@ -136,3 +136,24 @@ function promiseTabLoadEvent(tab, url)
   // timeout promise as well, causing the all promise to resolve.
   return Promise.all([deferred.promise, loaded]);
 }
+
+// Get an array of the one-off buttons.
+function getOneOffs() {
+  let oneOffs = [];
+  let searchPopup = document.getElementById("PopupSearchAutoComplete");
+  let oneOffsContainer =
+    document.getAnonymousElementByAttribute(searchPopup, "anonid",
+                                            "search-one-off-buttons");
+  let oneOff =
+    document.getAnonymousElementByAttribute(oneOffsContainer, "anonid",
+                                            "search-panel-one-offs");
+  for (oneOff = oneOff.firstChild; oneOff; oneOff = oneOff.nextSibling) {
+    if (oneOff.nodeType == Node.ELEMENT_NODE) {
+      if (oneOff.classList.contains("dummy") ||
+          oneOff.classList.contains("search-setting-button-compact"))
+        break;
+      oneOffs.push(oneOff);
+    }
+  }
+  return oneOffs;
+}
