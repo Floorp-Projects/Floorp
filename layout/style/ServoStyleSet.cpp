@@ -263,7 +263,23 @@ nsresult
 ServoStyleSet::ReplaceSheets(SheetType aType,
                              const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets)
 {
-  MOZ_CRASH("stylo: not implemented");
+  // Gecko uses a two-dimensional array keyed by sheet type, whereas Servo
+  // stores a flattened list. This makes ReplaceSheets a pretty clunky thing
+  // to express. If the need ever arises, we can easily make this more efficent,
+  // probably by aligning the representations better between engines.
+
+  for (ServoStyleSheet* sheet : mSheets[aType]) {
+    Servo_RemoveStyleSheet(sheet->RawSheet(), mRawSet.get());
+  }
+
+  mSheets[aType].Clear();
+  mSheets[aType].AppendElements(aNewSheets);
+
+  for (ServoStyleSheet* sheet : mSheets[aType]) {
+    Servo_AppendStyleSheet(sheet->RawSheet(), mRawSet.get());
+  }
+
+  return NS_OK;
 }
 
 nsresult
