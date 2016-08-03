@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
-import errno
 import json
 import socket
 import time
@@ -119,7 +118,6 @@ class TcpTransport(object):
     Supported protocol levels are 1 and above.
     """
     max_packet_length = 4096
-    connection_lost_msg = "Connection to Marionette server is lost. Check gecko.log for errors."
 
     def __init__(self, addr, port, socket_timeout=360.0):
         """If `socket_timeout` is `0` or `0.0`, non-blocking socket mode
@@ -176,7 +174,7 @@ class TcpTransport(object):
                 pass
             else:
                 if not chunk:
-                    raise IOError(self.connection_lost_msg)
+                    raise socket.error("No data received over socket")
 
             sep = data.find(":")
             if sep > -1:
@@ -203,7 +201,7 @@ class TcpTransport(object):
 
                 bytes_to_recv = int(length) - len(remaining)
 
-        raise socket.timeout("connection timed out after %ds" % self.socket_timeout)
+        raise socket.timeout("Connection timed out after %ds" % self.socket_timeout)
 
     def connect(self):
         """Connect to the server and process the hello message we expect
@@ -246,19 +244,12 @@ class TcpTransport(object):
 
         totalsent = 0
         while totalsent < len(payload):
-            try:
-                sent = self.sock.send(payload[totalsent:])
-                if sent == 0:
-                    raise IOError("socket error after sending %d of %d bytes" %
-                                  (totalsent, len(payload)))
-                else:
-                    totalsent += sent
-
-            except IOError as e:
-                if e.errno == errno.EPIPE:
-                    raise IOError("%s: %s" % (str(e), self.connection_lost_msg))
-                else:
-                    raise e
+            sent = self.sock.send(payload[totalsent:])
+            if sent == 0:
+                raise IOError("Socket error after sending %d of %d bytes" %
+                              (totalsent, len(payload)))
+            else:
+                totalsent += sent
 
     def respond(self, obj):
         """Send a response to a command.  This can be an arbitrary JSON
