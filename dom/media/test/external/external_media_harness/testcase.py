@@ -6,7 +6,7 @@ import re
 import os
 import time
 
-from marionette import BrowserMobProxyTestCaseMixin, MarionetteTestCase
+from marionette import BrowserMobProxyTestCaseMixin, MarionetteTestCase, Marionette
 from marionette_driver import Wait
 from marionette_driver.errors import TimeoutException
 from marionette.marionette_test import SkipTest
@@ -43,7 +43,7 @@ class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
         path = os.path.join(screenshot_dir, filename)
         if not os.path.exists(screenshot_dir):
             os.makedirs(screenshot_dir)
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             img_data = self.marionette.screenshot()
         with open(path, 'wb') as f:
             f.write(img_data.decode('base64'))
@@ -53,7 +53,7 @@ class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
         """
         Log the debugging information that Firefox provides for video elements.
         """
-        with self.marionette.using_context('chrome'):
+        with self.marionette.using_context(Marionette.CONTEXT_CHROME):
             debug_lines = self.marionette.execute_script(VP._debug_script)
             if debug_lines:
                 self.marionette.log('\n'.join(debug_lines))
@@ -65,7 +65,7 @@ class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
 
         :param video: VideoPuppeteer instance to play.
         """
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             self.logger.info(video.test_url)
             try:
                 verbose_until(Wait(video, interval=video.interval,
@@ -82,7 +82,7 @@ class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
 
         :param video: VideoPuppeteer instance to play.
         """
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             self.logger.info(video.test_url)
             try:
                 verbose_until(Wait(video, timeout=video.timeout),
@@ -128,7 +128,7 @@ class NetworkBandwidthTestCase(MediaTestCase):
         Run each of the videos in the video list. Raises if something goes
         wrong in playback.
         """
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for url in self.video_urls:
                 video = VP(self.marionette, url, stall_wait_time=60,
                            set_duration=60, timeout=timeout)
@@ -152,7 +152,7 @@ class VideoPlaybackTestsMixin(object):
         Test to make sure that playback of the video element starts for each
         video.
         """
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for url in self.video_urls:
                 try:
                     video = VP(self.marionette, url, timeout=60)
@@ -172,7 +172,7 @@ class VideoPlaybackTestsMixin(object):
         """
         Test to make sure that playback of 60 seconds works for each video.
         """
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for url in self.video_urls:
                 video = VP(self.marionette, url,
                            stall_wait_time=10,
@@ -246,7 +246,7 @@ class EMESetupMixin(object):
         assert(self.check_eme_prefs())
 
     def set_eme_prefs(self):
-        with self.marionette.using_context('chrome'):
+        with self.marionette.using_context(Marionette.CONTEXT_CHROME):
             # https://bugzilla.mozilla.org/show_bug.cgi?id=1187471#c28
             # 2015-09-28 cpearce says this is no longer necessary, but in case
             # we are working with older firefoxes...
@@ -254,12 +254,12 @@ class EMESetupMixin(object):
 
     def reset_GMP_version(self):
         if EMESetupMixin.version_needs_reset:
-            with self.marionette.using_context('chrome'):
+            with self.marionette.using_context(Marionette.CONTEXT_CHROME):
                 if self.prefs.get_pref('media.gmp-eme-adobe.version'):
                     self.prefs.reset_pref('media.gmp-eme-adobe.version')
                 if self.prefs.get_pref('media.gmp-widevinecdm.version'):
                     self.prefs.reset_pref('media.gmp-widevinecdm.version')
-            with self.marionette.using_context('content'):
+            with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
                 adobe_result = self.marionette.execute_async_script(
                     reset_adobe_gmp_script,
                     script_timeout=60000)
@@ -277,7 +277,7 @@ class EMESetupMixin(object):
             EMESetupMixin.version_needs_reset = False
 
     def check_and_log_boolean_pref(self, pref_name, expected_value):
-        with self.marionette.using_context('chrome'):
+        with self.marionette.using_context(Marionette.CONTEXT_CHROME):
             pref_value = self.prefs.get_pref(pref_name)
 
             if pref_value is None:
@@ -293,7 +293,7 @@ class EMESetupMixin(object):
         return True
 
     def check_and_log_integer_pref(self, pref_name, minimum_value=0):
-        with self.marionette.using_context('chrome'):
+        with self.marionette.using_context(Marionette.CONTEXT_CHROME):
             pref_value = self.prefs.get_pref(pref_name)
 
             if pref_value is None:
@@ -319,7 +319,7 @@ class EMESetupMixin(object):
         unhandled exception of type ValueError when the conversion to int
         fails.
         """
-        with self.marionette.using_context('chrome'):
+        with self.marionette.using_context(Marionette.CONTEXT_CHROME):
             pref_value = self.prefs.get_pref(pref_name)
 
             if pref_value is None:
@@ -340,7 +340,7 @@ class EMESetupMixin(object):
             return pref_ints >= minumum_ints
 
     def check_eme_prefs(self):
-        with self.marionette.using_context('chrome'):
+        with self.marionette.using_context(Marionette.CONTEXT_CHROME):
             return all([
                 self.check_and_log_boolean_pref(
                     'media.mediasource.enabled', True),
