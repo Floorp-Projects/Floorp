@@ -166,6 +166,7 @@ class MediaPipeline : public sigslot::has_slots<> {
         : pipeline_(pipeline),
           sts_thread_(pipeline->sts_thread_) {}
 
+    void Attach(MediaPipeline *pipeline) { pipeline_ = pipeline; }
     void Detach() { pipeline_ = nullptr; }
     MediaPipeline *pipeline() const { return pipeline_; }
 

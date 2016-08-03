@@ -49,7 +49,10 @@ class MarionetteException(Exception):
             st = "".join(["\t%s\n" % x for x in self.stacktrace.splitlines()])
             msg += "\nstacktrace:\n%s" % st
 
-        return "".join(traceback.format_exception(self.__class__, msg, tb)).strip()
+        if tb:
+            msg += ': ' + "".join(traceback.format_tb(tb))
+
+        return msg
 
 
 class ElementNotSelectableException(MarionetteException):
