@@ -145,7 +145,7 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
   // with the root of an anonymous subtree.
   ServoComputedValues* parent =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
-  RefPtr<ServoComputedValues> computedValues = Servo_InheritComputedValues(parent);
+  RefPtr<ServoComputedValues> computedValues = dont_AddRef(Servo_InheritComputedValues(parent));
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext,
@@ -167,9 +167,9 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValuesForPseudoElement(
+    dont_AddRef(Servo_GetComputedValuesForPseudoElement(
       aParentContext->StyleSource().AsServoComputedValues(),
-      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ false);
+      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ false));
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType);
@@ -362,9 +362,9 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValuesForPseudoElement(
+    dont_AddRef(Servo_GetComputedValuesForPseudoElement(
       aParentContext->StyleSource().AsServoComputedValues(),
-      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ true);
+      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ true));
 
   if (!computedValues) {
     return nullptr;
