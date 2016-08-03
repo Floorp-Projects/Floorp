@@ -3641,13 +3641,6 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
     if (container) {
       stream->AddVideoOutput(container);
     }
-    VideoTrack* videoTrack = VideoTracks()->GetSelectedTrack();
-    if (videoTrack) {
-      VideoStreamTrack* videoStreamTrack = videoTrack->GetVideoStreamTrack();
-      if (videoStreamTrack && container) {
-        videoStreamTrack->AddVideoOutput(container);
-      }
-    }
   } else {
     if (stream) {
       mSrcStreamPausedCurrentTime = CurrentTime();
@@ -3658,13 +3651,6 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
       VideoFrameContainer* container = GetVideoFrameContainer();
       if (container) {
         stream->RemoveVideoOutput(container);
-      }
-      VideoTrack* videoTrack = VideoTracks()->GetSelectedTrack();
-      if (videoTrack) {
-        VideoStreamTrack* videoStreamTrack = videoTrack->GetVideoStreamTrack();
-        if (videoStreamTrack && container) {
-          videoStreamTrack->RemoveVideoOutput(container);
-        }
       }
     }
     // If stream is null, then DOMMediaStream::Destroy must have been
