@@ -87,9 +87,7 @@ define(function (require, exports, module) {
             td({className: "netInfoParamName"},
               span({title: header.name}, header.name)
             ),
-            td({className: "netInfoParamValue"},
-              code({}, header.value)
-            )
+            td({className: "netInfoParamValue"}, header.value)
           )
         );
       });

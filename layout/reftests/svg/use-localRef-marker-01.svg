@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase for marker linked to local-ref URL</title>
+  <defs>
+    <marker id="circleMarker" markerWidth="8" markerHeight="8" refX="5" refY="5">
+      <circle cx="5" cy="5" r="2" style="stroke: none; fill:blue;"/>
+    </marker>
+  </defs>
+  <style>
+    #markerA3 {
+      marker-start: url(#circleMarker);
+    }
+    #markerB3 {
+      marker-mid: url(#circleMarker);
+    }
+    #markerC3 {
+      marker-end: url(#circleMarker);
+    }
+  </style>
+  <use xlink:href="use-localRef-marker-resource.svg#markerA1"/>
+  <use xlink:href="use-localRef-marker-resource.svg#markerA2" style="marker-start: url(#circleMarker);"/>
+  <use xlink:href="use-localRef-marker-resource.svg#markerA3"/>
+
+  <use xlink:href="use-localRef-marker-resource.svg#markerB1"/>
+  <use xlink:href="use-localRef-marker-resource.svg#markerB2" style="marker-mid: url(#circleMarker);"/>
+  <use xlink:href="use-localRef-marker-resource.svg#markerB3"/>
+
+  <use xlink:href="use-localRef-marker-resource.svg#markerC1"/>
+  <use xlink:href="use-localRef-marker-resource.svg#markerC2" style="marker-end: url(#circleMarker);"/>
+  <use xlink:href="use-localRef-marker-resource.svg#markerC3"/>
+</svg>

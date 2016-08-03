@@ -1065,7 +1065,8 @@ bool
 MediaDecoder::OwnerHasError() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return IsShutdown() || mOwner->HasError();
+  MOZ_ASSERT(!IsShutdown());
+  return mOwner->HasError();
 }
 
 class MediaElementGMPCrashHelper : public GMPCrashHelper
@@ -1114,10 +1115,9 @@ void
 MediaDecoder::PlaybackEnded()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IsShutdown());
 
-  if (IsShutdown() ||
-      mLogicallySeeking ||
-      mPlayState == PLAY_STATE_LOADING) {
+  if (mLogicallySeeking || mPlayState == PLAY_STATE_LOADING) {
     return;
   }
 
@@ -1267,10 +1267,8 @@ void
 MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IsShutdown());
   mSeekRequest.Complete();
-
-  if (IsShutdown())
-    return;
 
   bool fireEnded = false;
   {
@@ -1309,9 +1307,7 @@ void
 MediaDecoder::SeekingStarted(MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (IsShutdown())
-    return;
-
+  MOZ_ASSERT(!IsShutdown());
   if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
     mOwner->SeekStarted();
   }
@@ -1345,9 +1341,7 @@ void
 MediaDecoder::UpdateLogicalPositionInternal(MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (IsShutdown()) {
-    return;
-  }
+  MOZ_ASSERT(!IsShutdown());
 
   double currentPosition = static_cast<double>(CurrentPosition()) / static_cast<double>(USECS_PER_S);
   bool logicalPositionChanged = mLogicalPosition != currentPosition;
@@ -1369,10 +1363,7 @@ void
 MediaDecoder::DurationChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (IsShutdown()) {
-    return;
-  }
+  MOZ_ASSERT(!IsShutdown());
 
   double oldDuration = mDuration;
   if (IsInfinite()) {
@@ -1842,7 +1833,7 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 MediaDecoderOwner*
-MediaDecoder::GetOwner()
+MediaDecoder::GetOwner() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   // mOwner is valid until shutdown.

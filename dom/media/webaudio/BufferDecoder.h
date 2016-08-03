@@ -38,7 +38,7 @@ public:
   VideoFrameContainer* GetVideoFrameContainer() final override;
   layers::ImageContainer* GetImageContainer() final override;
 
-  MediaDecoderOwner* GetOwner() final override;
+  MediaDecoderOwner* GetOwner() const final override;
 
   already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
 

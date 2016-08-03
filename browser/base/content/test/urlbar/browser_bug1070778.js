@@ -43,7 +43,7 @@ add_task(function*() {
   EventUtils.synthesizeKey("b", {});
   yield promiseSearchComplete();
 
-  is(gURLBar.value, "keyword ab", "urlbar should have expected input");
+  is(gURLBar.textValue, "keyword ab", "urlbar should have expected input");
 
   let result = gURLBar.popup.richlistbox.firstChild;
   isnot(result, null, "Should have first item");

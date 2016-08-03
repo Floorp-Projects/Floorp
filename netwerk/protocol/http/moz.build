@@ -85,10 +85,6 @@ UNIFIED_SOURCES += [
     'NullHttpTransaction.cpp',
     'PackagedAppService.cpp',
     'PackagedAppVerifier.cpp',
-    'SpdyPush31.cpp',
-    'SpdySession31.cpp',
-    'SpdyStream31.cpp',
-    'SpdyZlibReporter.cpp',
     'TunnelUtils.cpp',
 ]
 

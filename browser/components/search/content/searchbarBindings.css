@@ -7,3 +7,12 @@
 .searchbar-textbox {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-textbox");
 }
+
+.search-one-offs {
+  -moz-binding: url("chrome://browser/content/search/search.xml#search-one-offs");
+}
+
+.search-setting-button[compact=true],
+.search-setting-button-compact:not([compact=true]) {
+  display: none;
+}
