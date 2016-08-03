@@ -6,6 +6,7 @@ from time import sleep
 import re
 from json import loads
 
+from marionette import Marionette
 from marionette_driver import By, expected, Wait
 from marionette_driver.errors import TimeoutException, NoSuchElementException
 from video_puppeteer import VideoPuppeteer, VideoException
@@ -39,7 +40,7 @@ class YouTubePuppeteer(VideoPuppeteer):
                              video_selector='#movie_player video',
                              **kwargs)
         wait = Wait(self.marionette, timeout=30)
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             verbose_until(wait, self,
                           expected.element_present(By.ID, 'movie_player'))
             self.player = self.marionette.find_element(By.ID, 'movie_player')
@@ -115,14 +116,14 @@ class YouTubePuppeteer(VideoPuppeteer):
 
     def execute_yt_script(self, script):
         """
-        Execute JS script in 'content' context with access to video element and
+        Execute JS script in content context with access to video element and
         YouTube #movie_player element.
 
         :param script: script to be executed.
 
         :return: value returned by script
         """
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             return self.marionette.execute_script(script,
                                                   script_args=[self.video,
                                                                self.player])
@@ -257,7 +258,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         state = self.get_ad_displaystate()
         ad_format = False
         if state:
-            with self.marionette.using_context('content'):
+            with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
                 ad_format = self.marionette.execute_script("""
                     return arguments[0].adFormat;""",
                     script_args=[state])
@@ -272,7 +273,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         state = self.get_ad_displaystate()
         skippable = False
         if state:
-            with self.marionette.using_context('content'):
+            with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
                 skippable = self.marionette.execute_script("""
                     return arguments[0].skippable;""",
                     script_args=[state])
@@ -352,7 +353,7 @@ class YouTubePuppeteer(VideoPuppeteer):
             selector = '#movie_player .videoAdUiSkipContainer'
             wait = Wait(self.marionette, timeout=30)
             try:
-                with self.marionette.using_context('content'):
+                with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
                     wait.until(expected.element_displayed(By.CSS_SELECTOR,
                                                           selector))
                     ad_button = self.marionette.find_element(By.CSS_SELECTOR,
@@ -380,7 +381,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         selector = '#movie_player .videoAdUiAttribution'
         wait = Wait(self.marionette, timeout=5)
         try:
-            with self.marionette.using_context('content'):
+            with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
                 wait.until(expected.element_present(By.CSS_SELECTOR,
                                                     selector))
                 countdown = self.marionette.find_element(By.CSS_SELECTOR,
@@ -436,7 +437,7 @@ class YouTubePuppeteer(VideoPuppeteer):
             return mn.execute_script(script, script_args=[el])
 
         try:
-            with mn.using_context('content'):
+            with mn.using_context(Marionette.CONTEXT_CONTENT):
                 # the width, height of the element are 0, so it's not visible
                 wait.until(expected.element_present(By.ID, element_id))
                 checkbox = mn.find_element(By.ID, element_id)
