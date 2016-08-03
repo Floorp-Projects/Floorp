@@ -21,6 +21,9 @@ public:
    */
   virtual bool IsDroppedDown() = 0;
 
+  virtual bool IsOpenInParentProcess() = 0;
+  virtual void SetOpenInParentProcess(bool aVal) = 0;
+
   /**
    * Shows or hides the drop down
    */
