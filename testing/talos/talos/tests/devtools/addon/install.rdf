@@ -3,7 +3,7 @@
 <!-- Required Items -->
 <em:id>bug1150215@mozilla.org</em:id>
 <em:name>DAMP - Devtools At Maximum Performance</em:name>
-<em:version>0.0.1</em:version>
+<em:version>0.0.2</em:version>
 
 <em:targetApplication>
     <Description>
