@@ -240,25 +240,28 @@ Narrator.prototype = {
   },
 
   skipPrevious: function() {
-    let tw = this._treeWalker;
-    tw.previousNode();
-    if (this._timeIntoParagraph < PREV_THRESHOLD) {
-      tw.previousNode();
-    }
-    this._win.speechSynthesis.cancel();
+    this._goBackParagraphs(this._timeIntoParagraph < PREV_THRESHOLD ? 2 : 1);
   },
 
   setRate: function(rate) {
     this._speechOptions.rate = rate;
     /* repeat current paragraph */
-    this._treeWalker.previousNode();
-    this._win.speechSynthesis.cancel();
+    this._goBackParagraphs(1);
   },
 
   setVoice: function(voice) {
     this._speechOptions.voice = this._getVoice(voice);
     /* repeat current paragraph */
-    this._treeWalker.previousNode();
+    this._goBackParagraphs(1);
+  },
+
+  _goBackParagraphs: function(count) {
+    let tw = this._treeWalker;
+    for (let i = 0; i < count; i++) {
+      if (!tw.previousNode()) {
+        tw.currentNode = tw.root;
+      }
+    }
     this._win.speechSynthesis.cancel();
   }
 };
