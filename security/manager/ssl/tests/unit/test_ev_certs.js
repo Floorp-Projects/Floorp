@@ -34,14 +34,13 @@ function load_ca(ca_name) {
 const SERVER_PORT = 8888;
 
 function failingOCSPResponder() {
-  return getFailingHttpServer(SERVER_PORT,
-                              ["www.example.com", "crl.example.com"]);
+  return getFailingHttpServer(SERVER_PORT, ["www.example.com"]);
 }
 
 function start_ocsp_responder(expectedCertNames) {
   let expectedPaths = expectedCertNames.slice();
-  return startOCSPResponder(SERVER_PORT, "www.example.com", ["crl.example.com"],
-                            "test_ev_certs", expectedCertNames, expectedPaths);
+  return startOCSPResponder(SERVER_PORT, "www.example.com", "test_ev_certs",
+                            expectedCertNames, expectedPaths);
 }
 
 function check_cert_err(cert_name, expected_error) {
@@ -64,8 +63,7 @@ function run_test() {
   load_ca("non-evroot-ca");
 
   // setup and start ocsp responder
-  Services.prefs.setCharPref("network.dns.localDomains",
-                             'www.example.com, crl.example.com');
+  Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
   add_test(function () {
@@ -263,7 +261,7 @@ function run_test() {
   // Bug 991815 old but valid intermediates are OK
   add_test(function () {
     clearOCSPCache();
-    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com", [],
+    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com",
                           "test_ev_certs",
                           gEVExpected ? ["int-ev-valid", "ev-valid"]
                                       : ["ev-valid"],
@@ -284,7 +282,7 @@ function run_test() {
     let debugCertNickArray = ["int-ev-valid", "ev-valid", "ev-valid"];
     let debugResponseArray = ["good", "longvalidityalmostold",
                               "longvalidityalmostold"];
-    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com", [],
+    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com",
                           "test_ev_certs",
                           gEVExpected ? debugCertNickArray : ["ev-valid"],
                           [], [],
@@ -301,7 +299,7 @@ function run_test() {
     let debugCertNickArray = ["int-ev-valid", "ev-valid", "ev-valid"];
     let debugResponseArray = ["good", "ancientstillvalid",
                               "ancientstillvalid"];
-    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com", [],
+    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com",
                           "test_ev_certs",
                           gEVExpected ? debugCertNickArray : ["ev-valid"],
                           [], [],
