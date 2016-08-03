@@ -19,13 +19,6 @@ function containsFocus(aDoc, aElm) {
   return false;
 }
 
-function testFocus(aDoc, aToolbar, aElm) {
-  let id = aElm.id;
-  is(aToolbar.getAttribute("aria-activedescendant"), id,
-    `Active descendant is set to a new control: ${id}`);
-  is(aDoc.activeElement.id, id, "New control is focused");
-}
-
 add_task(function* () {
   info("Create a test tab and open the toolbox");
   let toolbox = yield openNewTabAndToolbox(TEST_URL, "webconsole");
@@ -51,7 +44,7 @@ add_task(function* () {
 
   // Move through the toolbar forward using the right arrow key.
   for (let i = 0; i < toolbarControls.length; ++i) {
-    testFocus(doc, toolbar, toolbarControls[i]);
+    is(doc.activeElement.id, toolbarControls[i].id, "New control is focused");
     if (i < toolbarControls.length - 1) {
       EventUtils.synthesizeKey("VK_RIGHT", {});
     }
@@ -67,7 +60,7 @@ add_task(function* () {
 
   // Move through the toolbar backward using the left arrow key.
   for (let i = toolbarControls.length - 1; i >= 0; --i) {
-    testFocus(doc, toolbar, toolbarControls[i]);
+    is(doc.activeElement.id, toolbarControls[i].id, "New control is focused");
     if (i > 0) { EventUtils.synthesizeKey("VK_LEFT", {}); }
   }
 
@@ -75,7 +68,7 @@ add_task(function* () {
   let expectedFocusedControl = toolbarControls[2];
   EventUtils.synthesizeKey("VK_RIGHT", {});
   EventUtils.synthesizeKey("VK_RIGHT", {});
-  testFocus(doc, toolbar, expectedFocusedControl);
+  is(doc.activeElement.id, expectedFocusedControl.id, "New control is focused");
 
   // Move the focus away from toolbar to a next focusable element.
   EventUtils.synthesizeKey("VK_TAB", {});
@@ -84,5 +77,5 @@ add_task(function* () {
   // Move the focus back to the toolbar, ensure we land on the last active
   // descendant control.
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
-  testFocus(doc, toolbar, expectedFocusedControl);
+  is(doc.activeElement.id, expectedFocusedControl.id, "New control is focused");
 });
