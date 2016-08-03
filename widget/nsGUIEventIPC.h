@@ -291,7 +291,7 @@ struct ParamTraits<mozilla::WidgetPointerEvent>
     WriteParam(aMsg, aParam.mHeight);
     WriteParam(aMsg, aParam.tiltX);
     WriteParam(aMsg, aParam.tiltY);
-    WriteParam(aMsg, aParam.isPrimary);
+    WriteParam(aMsg, aParam.mIsPrimary);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -303,7 +303,7 @@ struct ParamTraits<mozilla::WidgetPointerEvent>
       ReadParam(aMsg, aIter, &aResult->mHeight) &&
       ReadParam(aMsg, aIter, &aResult->tiltX) &&
       ReadParam(aMsg, aIter, &aResult->tiltY) &&
-      ReadParam(aMsg, aIter, &aResult->isPrimary);
+      ReadParam(aMsg, aIter, &aResult->mIsPrimary);
     return rv;
   }
 };

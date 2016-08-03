@@ -93,7 +93,7 @@ PointerEvent::Constructor(EventTarget* aOwner,
   widgetEvent->tiltX = aParam.mTiltX;
   widgetEvent->tiltY = aParam.mTiltY;
   widgetEvent->inputSource = ConvertStringToPointerType(aParam.mPointerType);
-  widgetEvent->isPrimary = aParam.mIsPrimary;
+  widgetEvent->mIsPrimary = aParam.mIsPrimary;
   widgetEvent->buttons = aParam.mButtons;
 
   e->SetTrusted(trusted);
@@ -156,7 +156,7 @@ PointerEvent::TiltY()
 bool
 PointerEvent::IsPrimary()
 {
-  return mEvent->AsPointerEvent()->isPrimary;
+  return mEvent->AsPointerEvent()->mIsPrimary;
 }
 
 } // namespace dom
