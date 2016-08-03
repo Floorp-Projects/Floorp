@@ -1738,7 +1738,7 @@
         <parameter name="textboxUserValue"/>
         <body><![CDATA[
           if (!this.popup) {
-            return;
+            return false;
           }
 
           let stopEvent = false;
