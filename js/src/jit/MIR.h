@@ -1495,6 +1495,8 @@ class MConstant : public MNullaryInstruction
     INSTRUCTION_HEADER(Constant)
     static MConstant* New(TempAllocator& alloc, const Value& v,
                           CompilerConstraintList* constraints = nullptr);
+    static MConstant* New(TempAllocator::Fallible alloc, const Value& v,
+                          CompilerConstraintList* constraints = nullptr);
     static MConstant* NewFloat32(TempAllocator& alloc, double d);
     static MConstant* NewRawFloat32(TempAllocator& alloc, float d);
     static MConstant* NewRawDouble(TempAllocator& alloc, double d);
