@@ -25,7 +25,7 @@ function getFailingOCSPResponder() {
 }
 
 function getOCSPResponder(expectedCertNames) {
-  return startOCSPResponder(SERVER_PORT, "www.example.com", [], "test_ev_certs",
+  return startOCSPResponder(SERVER_PORT, "www.example.com", "test_ev_certs",
                             expectedCertNames, []);
 }
 
