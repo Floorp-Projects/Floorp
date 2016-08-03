@@ -931,6 +931,7 @@ parent:
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCDataTransfer aDataTransfer,
                        bool aIsPrivateData,
+                       Principal aRequestingPrincipal,
                        int32_t aWhichClipboard);
 
     // Given a list of supported types, returns the clipboard data for the

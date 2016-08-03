@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test tabs accessibility.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tabs component accessibility test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } = React.addons.TestUtils;
+    const InspectorTabPanel = React.createFactory(browserRequire("devtools/client/inspector/components/inspector-tab-panel"));
+    const Tabbar = React.createFactory(browserRequire("devtools/client/shared/components/tabs/tabbar"));
+    const tabbar = Tabbar();
+    const tabbarReact = ReactDOM.render(tabbar, window.document.body);
+    const tabbarEl = ReactDOM.findDOMNode(tabbarReact);
+
+    // Setup for InspectorTabPanel
+    const tabpanels = document.createElement("div");
+    tabpanels.id = "tabpanels";
+    document.body.appendChild(tabpanels);
+
+    yield addTabWithPanel(0);
+    yield addTabWithPanel(1);
+
+    const tabAnchors = tabbarEl.querySelectorAll("li.tabs-menu-item a");
+
+    is(tabAnchors[0].parentElement.getAttribute("role"), "presentation", "li role is set correctly");
+    is(tabAnchors[0].getAttribute("role"), "tab", "Anchor role is set correctly");
+    is(tabAnchors[0].getAttribute("aria-selected"), "true", "Anchor aria-selected is set correctly by default");
+    is(tabAnchors[0].getAttribute("aria-controls"), "panel-0", "Anchor aria-controls is set correctly");
+    is(tabAnchors[1].parentElement.getAttribute("role"), "presentation", "li role is set correctly");
+    is(tabAnchors[1].getAttribute("role"), "tab", "Anchor role is set correctly");
+    is(tabAnchors[1].getAttribute("aria-selected"), "false", "Anchor aria-selected is set correctly by default");
+    is(tabAnchors[1].getAttribute("aria-controls"), "panel-1", "Anchor aria-controls is set correctly");
+
+    yield setState(tabbarReact, Object.assign({}, tabbarReact.state, {
+      activeTab: 1
+    }));
+
+    is(tabAnchors[0].getAttribute("aria-selected"), "false", "Anchor aria-selected is reset correctly");
+    is(tabAnchors[1].getAttribute("aria-selected"), "true", "Anchor aria-selected is reset correctly");
+
+    function addTabWithPanel(tabId) {
+      // Setup for InspectorTabPanel
+      let panel = document.createElement("div");
+      panel.id = `sidebar-panel-${tabId}`;
+      document.body.appendChild(panel);
+
+      return setState(tabbarReact, Object.assign({}, tabbarReact.state, {
+        tabs: tabbarReact.state.tabs.concat({id: `${tabId}`, title: `tab-${tabId}`, panel: InspectorTabPanel}),
+      }));
+    }
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

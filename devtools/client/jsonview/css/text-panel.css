@@ -11,19 +11,16 @@
 }
 
 .textPanelBox .data {
-  font-size: 11px;
-  font-family: monospace;
   overflow: auto;
   height: 100%;
 }
 
 .textPanelBox pre {
   margin: 0;
+  font-family: var(--monospace-font-family);
+  color: var(--theme-content-color1);
 }
 
-/******************************************************************************/
-/* Dark Theme */
-
-.theme-dark .textPanelBox {
-  color: var(--theme-content-color1);
+:root[platform="linux"] .textPanelBox .data {
+  font-size: 80%; /* To handle big monospace font */
 }
