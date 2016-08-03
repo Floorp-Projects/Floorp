@@ -5,7 +5,15 @@
 // ES6, 25.4.1.2.
 // This object is used to verify that an object is a PromiseReaction record.
 var PromiseReactionRecordProto = {__proto__: null};
+function PromiseReactionRecord(promise, resolve, reject, handler, incumbentGlobal) {
+    this.promise = promise;
+    this.resolve = resolve;
+    this.reject = reject;
+    this.handler = handler;
+    this.incumbentGlobal = incumbentGlobal;
+}
 
+MakeConstructible(PromiseReactionRecord, PromiseReactionRecordProto);
 
 // ES6, 25.4.1.3.
 function CreateResolvingFunctions(promise) {
@@ -647,13 +655,8 @@ function AddPromiseReaction(slot, dependentPromise, onResolve, onReject, handler
                "Pending promises must have reactions lists.");
         return;
     }
-    _DefineDataProperty(reactions, reactions.length, {
-                            __proto__: PromiseReactionRecordProto,
-                            promise: dependentPromise,
-                            reject: onReject,
-                            resolve: onResolve,
-                            handler: handler
-                        });
+    let reaction = new PromiseReactionRecord(promise, reject, resolve, handler, null);
+    _DefineDataProperty(reactions, reactions.length, reaction);
 }
 
 // ES6, 25.4.4.4.
@@ -885,24 +888,18 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
 
     let incumbentGlobal = _GetObjectFromIncumbentGlobal();
     // Step 5.
-    let fulfillReaction = {
-        __proto__: PromiseReactionRecordProto,
-        resolve: resultCapability.resolve,
-        reject: resultCapability.reject,
-        promise: resultCapability.promise,
-        handler: onFulfilled,
-        incumbentGlobal
-    };
+    let fulfillReaction = new PromiseReactionRecord(resultCapability.promise,
+                                                    resultCapability.resolve,
+                                                    resultCapability.reject,
+                                                    onFulfilled,
+                                                    incumbentGlobal);
 
     // Step 6.
-    let rejectReaction = {
-        __proto__: PromiseReactionRecordProto,
-        resolve: resultCapability.resolve,
-        reject: resultCapability.reject,
-        promise: resultCapability.promise,
-        handler: onRejected,
-        incumbentGlobal
-    };
+    let rejectReaction = new PromiseReactionRecord(resultCapability.promise,
+                                                   resultCapability.resolve,
+                                                   resultCapability.reject,
+                                                   onRejected,
+                                                   incumbentGlobal);
 
     // Step 7.
     let state = GetPromiseState(promise);
