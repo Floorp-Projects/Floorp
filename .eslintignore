@@ -128,6 +128,7 @@ devtools/shared/*.js
 !devtools/shared/css-lexer.js
 !devtools/shared/defer.js
 !devtools/shared/event-emitter.js
+!devtools/shared/loader-plugin-raw.jsm
 !devtools/shared/task.js
 devtools/shared/*.jsm
 !devtools/shared/Loader.jsm
