@@ -687,7 +687,7 @@ HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
   if (aEvent) {
     InternalFormEvent* formEvent = aEvent->AsFormEvent();
     if (formEvent) {
-      nsIContent* originator = formEvent->originator;
+      nsIContent* originator = formEvent->mOriginator;
       if (originator) {
         if (!originator->IsHTMLElement()) {
           return NS_ERROR_UNEXPECTED;
