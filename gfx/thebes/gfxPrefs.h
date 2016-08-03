@@ -137,7 +137,7 @@ private:
   class TypedPref : public Pref
   {
   public:
-    TypedPref(T aValue)
+    explicit TypedPref(T aValue)
       : mValue(aValue)
     {}
 
