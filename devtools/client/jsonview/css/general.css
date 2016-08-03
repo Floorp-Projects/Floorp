@@ -7,10 +7,11 @@
 /* General */
 
 body {
-  background-color: white;
+  color: var(--theme-body-color);
+  background-color: var(--theme-body-background);
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 *:focus {
@@ -24,6 +25,7 @@ body {
 pre {
   background-color: white;
   border: none;
+  font-family: var(--monospace-font-family);
 }
 
 #json,

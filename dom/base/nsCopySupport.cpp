@@ -19,6 +19,7 @@
 #include "nsIDOMRange.h"
 #include "nsRange.h"
 #include "imgIContainer.h"
+#include "imgIRequest.h"
 #include "nsIPresShell.h"
 #include "nsFocusManager.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -47,6 +48,16 @@
 #include "nsContentUtils.h"
 #include "nsContentCID.h"
 
+#ifdef XP_WIN
+#include "nsCExternalHandlerService.h"
+#include "nsEscape.h"
+#include "nsIMimeInfo.h"
+#include "nsIMIMEService.h"
+#include "nsIURL.h"
+#include "nsReadableUtils.h"
+#include "nsXULAppAPI.h"
+#endif
+
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/EventDispatcher.h"
@@ -71,6 +82,13 @@ static nsresult AppendString(nsITransferable *aTransferable,
 // copy HTML node data
 static nsresult AppendDOMNode(nsITransferable *aTransferable,
                               nsINode* aDOMNode);
+
+#ifdef XP_WIN
+// copy image as file promise onto the transferable
+static nsresult AppendImagePromise(nsITransferable* aTransferable,
+                                   imgIRequest* aImgRequest,
+                                   nsIImageLoadingContent* aImageElement);
+#endif
 
 // Helper used for HTMLCopy and GetTransferableForSelection since both routines
 // share common code.
@@ -439,10 +457,17 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
   }
 
   if (aCopyFlags & nsIContentViewerEdit::COPY_IMAGE_DATA) {
-    // get the image data from the element
+    // get the image data and its request from the element
+    nsCOMPtr<imgIRequest> imgRequest;
     nsCOMPtr<imgIContainer> image =
-      nsContentUtils::GetImageFromContent(aImageElement);
+      nsContentUtils::GetImageFromContent(aImageElement,
+                                          getter_AddRefs(imgRequest));
     NS_ENSURE_TRUE(image, NS_ERROR_FAILURE);
+
+#ifdef XP_WIN
+    rv = AppendImagePromise(trans, imgRequest, aImageElement);
+    NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
     nsCOMPtr<nsISupportsInterfacePointer>
       imgPtr(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv));
@@ -544,6 +569,91 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
   // add a special flavor, even if we don't have html context data
   return AppendString(aTransferable, context, kHTMLContext);
 }
+
+#ifdef XP_WIN
+static nsresult AppendImagePromise(nsITransferable* aTransferable,
+                                   imgIRequest* aImgRequest,
+                                   nsIImageLoadingContent* aImageElement)
+{
+  nsresult rv;
+
+  NS_ENSURE_TRUE(aImgRequest, NS_OK);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aImageElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Fix the file extension in the URL if necessary
+  nsCOMPtr<nsIMIMEService> mimeService =
+    do_GetService(NS_MIMESERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mimeService, NS_OK);
+
+  nsCOMPtr<nsIURI> imgUri;
+  rv = aImgRequest->GetCurrentURI(getter_AddRefs(imgUri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURL> imgUrl = do_QueryInterface(imgUri);
+  NS_ENSURE_TRUE(imgUrl, NS_OK);
+
+  nsAutoCString extension;
+  rv = imgUrl->GetFileExtension(extension);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString mimeType;
+  rv = aImgRequest->GetMimeType(getter_Copies(mimeType));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIMIMEInfo> mimeInfo;
+  mimeService->GetFromTypeAndExtension(mimeType, EmptyCString(),
+                                       getter_AddRefs(mimeInfo));
+  NS_ENSURE_TRUE(mimeInfo, NS_OK);
+
+  nsAutoCString spec;
+  rv = imgUrl->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // pass out the image source string
+  nsString imageSourceString;
+  CopyUTF8toUTF16(spec, imageSourceString);
+
+  bool validExtension;
+  if (extension.IsEmpty() ||
+      NS_FAILED(mimeInfo->ExtensionExists(extension,
+                                          &validExtension)) ||
+      !validExtension) {
+    // Fix the file extension in the URL
+    rv = imgUrl->Clone(getter_AddRefs(imgUri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    imgUrl = do_QueryInterface(imgUri);
+
+    nsAutoCString primaryExtension;
+    mimeInfo->GetPrimaryExtension(primaryExtension);
+
+    imgUrl->SetFileExtension(primaryExtension);
+  }
+
+  nsAutoCString fileName;
+  imgUrl->GetFileName(fileName);
+
+  NS_UnescapeURL(fileName);
+
+  // make the filename safe for the filesystem
+  fileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
+
+  nsString imageDestFileName;
+  CopyUTF8toUTF16(fileName, imageDestFileName);
+
+  rv = AppendString(aTransferable, imageSourceString, kFilePromiseURLMime);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AppendString(aTransferable, imageDestFileName, kFilePromiseDestFilename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aTransferable->SetRequestingPrincipal(node->NodePrincipal());
+
+  // add the dataless file promise flavor
+  return aTransferable->AddDataFlavor(kFilePromiseMime);
+}
+#endif // XP_WIN
 
 nsIContent*
 nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument, nsISelection** aSelection)

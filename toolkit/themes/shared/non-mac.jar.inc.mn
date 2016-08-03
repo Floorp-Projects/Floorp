@@ -129,12 +129,6 @@
   skin/classic/global/tree/sort-asc-classic.png            (../../windows/global/tree/sort-asc-classic.png)
   skin/classic/global/tree/sort-dsc-classic.png            (../../windows/global/tree/sort-dsc-classic.png)
 
-  skin/classic/help/Toolbar.png                            (../../windows/help/Toolbar.png)
-  skin/classic/help/Toolbar-rtl.png                        (../../windows/help/Toolbar-rtl.png)
-  skin/classic/help/helpFileLayout.css                     (../../windows/help/helpFileLayout.css)
-  skin/classic/help/Weblink.png                            (../../windows/help/Weblink.png)
-  skin/classic/help/Weblink-rtl.png                        (../../windows/help/Weblink-rtl.png)
-
   skin/classic/mozapps/downloads/downloadButtons.png         (../../windows/mozapps/downloads/downloadButtons.png)
   skin/classic/mozapps/downloads/unknownContentType.css      (../../windows/mozapps/downloads/unknownContentType.css)
   skin/classic/mozapps/extensions/about.css                  (../../windows/mozapps/extensions/about.css)
