@@ -26,15 +26,19 @@ class TestDocker(unittest.TestCase):
         docker.GECKO = tmpdir
         try:
             os.makedirs(os.path.join(tmpdir, 'docker', 'my-image'))
-            with open(os.path.join(tmpdir, 'docker', 'my-image', 'Dockerfile'), "w") as f:
+            p = os.path.join(tmpdir, 'docker', 'my-image', 'Dockerfile')
+            with open(p, 'w') as f:
                 f.write("FROM node\nADD a-file\n")
-            with open(os.path.join(tmpdir, 'docker', 'my-image', 'a-file'), "w") as f:
+            os.chmod(p, MODE_STANDARD)
+            p = os.path.join(tmpdir, 'docker', 'my-image', 'a-file')
+            with open(p, 'w') as f:
                 f.write("data\n")
+            os.chmod(p, MODE_STANDARD)
             self.assertEqual(
                 docker.generate_context_hash(docker.GECKO,
                                              os.path.join(docker.GECKO, 'docker/my-image'),
                                              'my-image'),
-                'f13cde7fef96593671a41f81f9f0871c929a7dcba41d5a2dde1e8e1576b2bca0'
+                'e61e675ce05e8c11424437db3f1004079374c1a5fe6ad6800346cebe137b0797'
             )
         finally:
             docker.GECKO = old_GECKO

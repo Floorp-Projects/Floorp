@@ -62,7 +62,7 @@ BufferDecoder::GetImageContainer()
 }
 
 MediaDecoderOwner*
-BufferDecoder::GetOwner()
+BufferDecoder::GetOwner() const
 {
   // unknown
   return nullptr;

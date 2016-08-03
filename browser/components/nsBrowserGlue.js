@@ -1135,7 +1135,7 @@ BrowserGlue.prototype = {
 
     this._checkForOldBuildUpdates();
 
-    if ("release" != AppConstants.MOZ_UPDATE_CHANNEL) {
+    if (!AppConstants.RELEASE_BUILD) {
       this.checkForPendingCrashReports();
     }
 

@@ -43,7 +43,7 @@ export TINDERBOX_OUTPUT=1
 export MOZ_SIMPLE_PACKAGE_NAME=target
 
 # Do not try to upload symbols (see https://bugzilla.mozilla.org/show_bug.cgi?id=1164615)
-MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
+export MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
 
 # Ensure that in tree libraries can be found
 export LIBRARY_PATH=$LIBRARY_PATH:$WORKSPACE/src/obj-firefox:$WORKSPACE/src/gcc/lib64

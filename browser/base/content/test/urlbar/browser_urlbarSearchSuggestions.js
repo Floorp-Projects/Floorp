@@ -25,7 +25,10 @@ add_task(function* clickSuggestion() {
   gBrowser.selectedTab = gBrowser.addTab();
   gURLBar.focus();
   yield promiseAutocompleteResultPopup("foo");
-  let [idx, suggestion] = yield promiseFirstSuggestion();
+  let [idx, suggestion, engineName] = yield promiseFirstSuggestion();
+  Assert.equal(engineName,
+               "browser_searchSuggestionEngine%20searchSuggestionEngine.xml",
+               "Expected suggestion engine");
   let item = gURLBar.popup.richlistbox.getItemAtIndex(idx);
   let loadPromise = promiseTabLoaded(gBrowser.selectedTab);
   item.click();
@@ -47,7 +50,7 @@ function getFirstSuggestion() {
       let [, type, paramStr] = mozActionMatch;
       let params = JSON.parse(paramStr);
       if (type == "searchengine" && "searchSuggestion" in params) {
-        return [i, params.searchSuggestion];
+        return [i, params.searchSuggestion, params.engineName];
       }
     }
   }
@@ -56,10 +59,10 @@ function getFirstSuggestion() {
 
 function promiseFirstSuggestion() {
   return new Promise(resolve => {
-    let pair;
+    let tuple;
     waitForCondition(() => {
-      pair = getFirstSuggestion();
-      return pair[0] >= 0;
-    }, () => resolve(pair));
+      tuple = getFirstSuggestion();
+      return tuple[0] >= 0;
+    }, () => resolve(tuple));
   });
 }

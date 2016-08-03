@@ -407,7 +407,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     // need to handle HTTP CONNECT tunnels if this is the first time if
     // we are tunneling through a proxy
     nsresult rv = NS_OK;
-    if (mConnInfo->UsingConnect() && !mCompletedProxyConnect) {
+    if (mTransaction->ConnectionInfo()->UsingConnect() && !mCompletedProxyConnect) {
         rv = SetupProxyConnect();
         if (NS_FAILED(rv))
             goto failed_activation;

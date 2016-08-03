@@ -18,7 +18,7 @@
   color: var(--theme-content-color1);
   width: 200px;
   margin-top: 0;
-  position: fixed;
-  right: 1px;
+  margin-right: 1px;
+  float: right;
   padding-left: 20px;
 }

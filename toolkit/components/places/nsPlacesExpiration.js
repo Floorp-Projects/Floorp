@@ -75,7 +75,7 @@ const DATABASE_TO_MEMORY_PERC = 4;
 const DATABASE_TO_DISK_PERC = 2;
 // Maximum size of the optimal database.  High-end hardware has plenty of
 // memory and disk space, but performances don't grow linearly.
-const DATABASE_MAX_SIZE = 62914560; // 60MiB
+const DATABASE_MAX_SIZE = 73400320; // 70MiB
 // If the physical memory size is bogus, fallback to this.
 const MEMSIZE_FALLBACK_BYTES = 268435456; // 256 MiB
 // If the disk available space is bogus, fallback to this.

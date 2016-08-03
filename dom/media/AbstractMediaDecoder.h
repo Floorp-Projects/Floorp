@@ -86,7 +86,7 @@ public:
 
   // Returns the owner of this decoder or null when the decoder is shutting
   // down. The owner should only be used on the main thread.
-  virtual MediaDecoderOwner* GetOwner() = 0;
+  virtual MediaDecoderOwner* GetOwner() const = 0;
 
   // Set by Reader if the current audio track can be offloaded
   virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio) {}

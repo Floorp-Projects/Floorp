@@ -23,6 +23,12 @@ add_task(function* prepare() {
     gURLBar.blur();
     Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
   });
+  // Move the mouse away from the urlbar one-offs so that a one-off engine is
+  // not inadvertently selected.
+  yield new Promise(resolve => {
+    EventUtils.synthesizeNativeMouseMove(window.document.documentElement, 0, 0,
+                                         resolve);
+  });
 });
 
 add_task(function* heuristicResult() {

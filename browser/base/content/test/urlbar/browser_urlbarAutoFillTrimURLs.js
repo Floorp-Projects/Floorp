@@ -44,8 +44,8 @@ function continue_test() {
 
     EventUtils.synthesizeKey(aTyped.substr(-1), {});
     waitForSearchComplete(function () {
-      info(`Got value: ${gURLBar.value}`);
-      is(gURLBar.value, aExpected, "Autofilled value is as expected");
+      info(`Got value: ${gURLBar.textValue}`);
+      is(gURLBar.textValue, aExpected, "Autofilled value is as expected");
       aCallback();
     });
   }

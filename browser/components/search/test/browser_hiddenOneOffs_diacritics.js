@@ -14,21 +14,6 @@ const diacritic_engine = "Foo \u2661";
 var Preferences =
   Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 
-// Get an array of the one-off buttons.
-function getOneOffs() {
-  let oneOffs = [];
-  let oneOff =
-    document.getAnonymousElementByAttribute(searchPopup, "anonid",
-                                            "search-panel-one-offs");
-  for (oneOff = oneOff.firstChild; oneOff; oneOff = oneOff.nextSibling) {
-    if (oneOff.classList.contains("dummy"))
-      break;
-    oneOffs.push(oneOff);
-  }
-
-  return oneOffs;
-}
-
 add_task(function* init() {
   let currentEngine = Services.search.currentEngine;
   yield promiseNewEngine("testEngine_diacritics.xml", {setAsCurrent: false});

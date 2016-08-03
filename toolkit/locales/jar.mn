@@ -138,13 +138,6 @@
   locale/@AB_CD@/passwordmgr/passwordManager.dtd    (%chrome/passwordmgr/passwordManager.dtd)
 % locale autoconfig @AB_CD@ %locale/@AB_CD@/autoconfig/
   locale/@AB_CD@/autoconfig/autoconfig.properties   (%chrome/autoconfig/autoconfig.properties)
-#ifdef MOZ_HELP_VIEWER
-% locale help @AB_CD@ %locale/@AB_CD@/help/
-  locale/@AB_CD@/help/help.properties                     (%chrome/mozapps/help/help.properties)
-  locale/@AB_CD@/help/help.dtd                            (%chrome/mozapps/help/help.dtd)
-  locale/@AB_CD@/help/help-toc.rdf                        (%chrome/mozapps/help/help-toc.rdf)
-  locale/@AB_CD@/help/welcome.xhtml                       (%chrome/mozapps/help/welcome.xhtml)
-#endif
 % locale places @AB_CD@ %locale/@AB_CD@/places/
   locale/@AB_CD@/places/places.properties                 (%chrome/places/places.properties)
   locale/@AB_CD@/global/search/search.properties          (%chrome/search/search.properties)
