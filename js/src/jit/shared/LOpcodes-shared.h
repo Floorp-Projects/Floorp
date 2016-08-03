@@ -397,7 +397,6 @@
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSLoadFuncPtr)             \
-    _(AsmJSLoadFFIFunc)             \
     _(AsmJSParameter)               \
     _(AsmJSParameterI64)            \
     _(AsmJSReturn)                  \

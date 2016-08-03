@@ -940,6 +940,7 @@ class FunctionCompiler
         CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);
         switch (callee.which()) {
           case MWasmCall::Callee::Internal: kind = CallSiteDesc::Relative; break;
+          case MWasmCall::Callee::Import:   kind = CallSiteDesc::Register; break;
           case MWasmCall::Callee::Dynamic:  kind = CallSiteDesc::Register; break;
           case MWasmCall::Callee::Builtin:  kind = CallSiteDesc::Register; break;
         }
@@ -963,8 +964,8 @@ class FunctionCompiler
             return true;
         }
 
-        return callPrivate(MWasmCall::Callee(funcIndex), MWasmCall::PreservesTlsReg::True, args,
-                           sig.ret(), def);
+        auto callee = MWasmCall::Callee::internal(funcIndex);
+        return callPrivate(callee, MWasmCall::PreservesTlsReg::True, args, sig.ret(), def);
     }
 
     bool funcPtrCall(uint32_t sigIndex, uint32_t length, uint32_t globalDataOffset,
@@ -1003,11 +1004,8 @@ class FunctionCompiler
             return true;
         }
 
-        MAsmJSLoadFFIFunc* ptrFun = MAsmJSLoadFFIFunc::New(alloc(), globalDataOffset);
-        curBlock_->add(ptrFun);
-
-        return callPrivate(MWasmCall::Callee(ptrFun), MWasmCall::PreservesTlsReg::False,
-                           args, ret, def);
+        auto callee = MWasmCall::Callee::import(globalDataOffset);
+        return callPrivate(callee, MWasmCall::PreservesTlsReg::False, args, ret, def);
     }
 
     bool builtinCall(SymbolicAddress builtin, const CallArgs& args, ValType type, MDefinition** def)

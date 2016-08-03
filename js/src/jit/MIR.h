@@ -13442,26 +13442,6 @@ class MAsmJSLoadFuncPtr
     bool congruentTo(const MDefinition* ins) const override;
 };
 
-class MAsmJSLoadFFIFunc : public MNullaryInstruction
-{
-    explicit MAsmJSLoadFFIFunc(unsigned globalDataOffset)
-      : globalDataOffset_(globalDataOffset)
-    {
-        setResultType(MIRType::Pointer);
-    }
-
-    unsigned globalDataOffset_;
-
-  public:
-    INSTRUCTION_HEADER(AsmJSLoadFFIFunc)
-    TRIVIAL_NEW_WRAPPERS
-
-    unsigned globalDataOffset() const { return globalDataOffset_; }
-
-    HashNumber valueHash() const override;
-    bool congruentTo(const MDefinition* ins) const override;
-};
-
 class MAsmJSParameter : public MNullaryInstruction
 {
     ABIArg abi_;
@@ -13537,12 +13517,13 @@ class MWasmCall final
   public:
     class Callee {
       public:
-        enum Which { Internal, Dynamic, Builtin };
+        enum Which { Internal, Import, Dynamic, Builtin };
       private:
         Which which_;
         union U {
             U() {}
-            uint32_t internal_;
+            uint32_t internalFuncIndex_;
+            uint32_t importGlobalDataOffset_;
             struct {
                 MDefinition* callee_;
                 wasm::SigIdDesc sigId_;
@@ -13551,8 +13532,17 @@ class MWasmCall final
         } u;
       public:
         Callee() {}
-        explicit Callee(uint32_t callee) : which_(Internal) {
-            u.internal_ = callee;
+        static Callee internal(uint32_t callee) {
+            Callee c;
+            c.which_ = Internal;
+            c.u.internalFuncIndex_ = callee;
+            return c;
+        }
+        static Callee import(uint32_t globalDataOffset) {
+            Callee c;
+            c.which_ = Import;
+            c.u.importGlobalDataOffset_ = globalDataOffset;
+            return c;
         }
         explicit Callee(MDefinition* callee, wasm::SigIdDesc sigId = wasm::SigIdDesc())
           : which_(Dynamic)
@@ -13566,9 +13556,13 @@ class MWasmCall final
         Which which() const {
             return which_;
         }
-        uint32_t internal() const {
+        uint32_t internalFuncIndex() const {
             MOZ_ASSERT(which_ == Internal);
-            return u.internal_;
+            return u.internalFuncIndex_;
+        }
+        uint32_t importGlobalDataOffset() const {
+            MOZ_ASSERT(which_ == Import);
+            return u.importGlobalDataOffset_;
         }
         MDefinition* dynamicPtr() const {
             MOZ_ASSERT(which_ == Dynamic);
