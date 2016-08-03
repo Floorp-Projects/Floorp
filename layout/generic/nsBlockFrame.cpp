@@ -59,6 +59,8 @@
 
 #include "nsBidiPresUtils.h"
 
+#include <inttypes.h>
+
 static const int MIN_LINES_NEEDING_CURSOR = 20;
 
 static const char16_t kDiscCharacter = 0x2022;
@@ -1446,7 +1448,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     ListTag(stdout);
     char buf[400];
     snprintf_literal(buf,
-                     ": %lld elapsed (%lld per line) (%d lines; %d new lines)",
+                     ": %" PRId64 " elapsed (%" PRId64 " per line) (%d lines; %d new lines)",
                      delta, perLineDelta, numLines, ectc - ctc);
     printf("%s\n", buf);
   }
@@ -6624,7 +6626,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     ListTag(stdout);
     char buf[400];
     snprintf_literal(buf,
-                     ": %lld elapsed (%lld per line) lines=%d drawn=%d skip=%d",
+                     ": %" PRId64 " elapsed (%" PRId64 " per line) lines=%d drawn=%d skip=%d",
                      delta, deltaPerLine,
                      numLines, drawnLines, numLines - drawnLines);
     printf("%s\n", buf);
