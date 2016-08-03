@@ -38,7 +38,6 @@ cp _upstream/byteorder/src/new.rs mp4parse/src/byteorder/new.rs
 echo "Applying patches..."
 patch -p4 < byteorder-mod.patch
 patch -p4 < mp4parse-mod.patch
-patch -p4 < mp4parse-cargo.patch
 
 echo "Cleaning up..."
 rm -rf _upstream
