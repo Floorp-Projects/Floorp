@@ -267,6 +267,16 @@ Decoder::TakeCompleteFrameCount()
   return finishedNewFrame ? Some(GetCompleteFrameCount()) : Nothing();
 }
 
+DecoderFinalStatus
+Decoder::FinalStatus() const
+{
+  return DecoderFinalStatus(IsMetadataDecode(),
+                            GetDecodeDone(),
+                            WasAborted(),
+                            HasError(),
+                            ShouldReportError());
+}
+
 DecoderTelemetry
 Decoder::Telemetry() const
 {
