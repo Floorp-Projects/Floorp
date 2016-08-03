@@ -4100,12 +4100,6 @@ LIRGenerator::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
 }
 
 void
-LIRGenerator::visitAsmJSLoadFFIFunc(MAsmJSLoadFFIFunc* ins)
-{
-    define(new(alloc()) LAsmJSLoadFFIFunc, ins);
-}
-
-void
 LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
 {
     ABIArg abi = ins->abi();
@@ -4216,11 +4210,17 @@ LIRGenerator::visitWasmCall(MWasmCall* ins)
             useFixed(ins->callee().dynamicPtr(), WasmTableCallPtrReg);
     }
 
+    LDefinition maybeTemp;
+    if (ins->callee().which() == MWasmCall::Callee::Import)
+        maybeTemp = tempFixed(CallTempReg0);
+    else
+        maybeTemp = LDefinition::BogusTemp();
+
     LInstruction* lir;
     if (ins->type() == MIRType::Int64)
-        lir = new(alloc()) LWasmCallI64(args, ins->numOperands());
+        lir = new(alloc()) LWasmCallI64(args, ins->numOperands(), maybeTemp);
     else
-        lir = new(alloc()) LWasmCall(args, ins->numOperands());
+        lir = new(alloc()) LWasmCall(args, ins->numOperands(), maybeTemp);
 
     if (ins->type() == MIRType::None)
         add(lir, ins);

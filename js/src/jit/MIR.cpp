@@ -5002,24 +5002,6 @@ MAsmJSLoadFuncPtr::congruentTo(const MDefinition* ins) const
     return false;
 }
 
-HashNumber
-MAsmJSLoadFFIFunc::valueHash() const
-{
-    HashNumber hash = MDefinition::valueHash();
-    hash = addU32ToHash(hash, globalDataOffset_);
-    return hash;
-}
-
-bool
-MAsmJSLoadFFIFunc::congruentTo(const MDefinition* ins) const
-{
-    if (ins->isAsmJSLoadFFIFunc()) {
-        const MAsmJSLoadFFIFunc* load = ins->toAsmJSLoadFFIFunc();
-        return globalDataOffset_ == load->globalDataOffset_;
-    }
-    return false;
-}
-
 MDefinition::AliasType
 MLoadSlot::mightAlias(const MDefinition* def) const
 {

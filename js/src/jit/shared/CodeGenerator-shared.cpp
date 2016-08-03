@@ -1511,7 +1511,13 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
     MWasmCall::Callee callee = mir->callee();
     switch (callee.which()) {
       case MWasmCall::Callee::Internal: {
-        masm.call(mir->desc(), callee.internal());
+        masm.call(mir->desc(), callee.internalFuncIndex());
+        break;
+      }
+      case MWasmCall::Callee::Import: {
+        Register temp = ToRegister(ins->getTemp(0));
+        masm.loadWasmGlobalPtr(callee.importGlobalDataOffset(), temp);
+        masm.call(mir->desc(), temp);
         break;
       }
       case MWasmCall::Callee::Dynamic: {

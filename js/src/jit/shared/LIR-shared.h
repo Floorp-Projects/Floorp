@@ -8208,15 +8208,6 @@ class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LAsmJSLoadFFIFunc : public LInstructionHelper<1, 0, 0>
-{
-  public:
-    LIR_HEADER(AsmJSLoadFFIFunc);
-    MAsmJSLoadFFIFunc* mir() const {
-        return mir_->toAsmJSLoadFFIFunc();
-    }
-};
-
 class LAsmJSParameter : public LInstructionHelper<1, 0, 0>
 {
   public:
@@ -8285,12 +8276,14 @@ class LWasmCallBase : public LInstruction
 {
     LAllocation* operands_;
     uint32_t numOperands_;
+    LDefinition maybeTemp_;
 
   public:
 
-    LWasmCallBase(LAllocation* operands, uint32_t numOperands)
+    LWasmCallBase(LAllocation* operands, uint32_t numOperands, LDefinition maybeTemp)
       : operands_(operands),
-        numOperands_(numOperands)
+        numOperands_(numOperands),
+        maybeTemp_(maybeTemp)
     {}
 
     MWasmCall* mir() const {
@@ -8320,13 +8313,15 @@ class LWasmCallBase : public LInstruction
         operands_[index] = a;
     }
     size_t numTemps() const override {
-        return 0;
+        return maybeTemp_.isBogusTemp() ? 0 : 1;
     }
     LDefinition* getTemp(size_t index) override {
-        MOZ_CRASH("no temps");
+        MOZ_ASSERT(!maybeTemp_.isBogusTemp());
+        return &maybeTemp_;
     }
     void setTemp(size_t index, const LDefinition& a) override {
-        MOZ_CRASH("no temps");
+        MOZ_ASSERT(!maybeTemp_.isBogusTemp());
+        maybeTemp_ = a;
     }
     size_t numSuccessors() const override {
         return 0;
@@ -8346,8 +8341,8 @@ class LWasmCall : public LWasmCallBase
   public:
     LIR_HEADER(WasmCall);
 
-    LWasmCall(LAllocation* operands, uint32_t numOperands)
-      : LWasmCallBase(operands, numOperands),
+    LWasmCall(LAllocation* operands, uint32_t numOperands, LDefinition maybeTemp)
+      : LWasmCallBase(operands, numOperands, maybeTemp),
         def_(LDefinition::BogusTemp())
     {}
 
@@ -8373,12 +8368,11 @@ class LWasmCallI64 : public LWasmCallBase
   public:
     LIR_HEADER(WasmCallI64);
 
-    LWasmCallI64(LAllocation* operands, uint32_t numOperands)
-      : LWasmCallBase(operands, numOperands)
+    LWasmCallI64(LAllocation* operands, uint32_t numOperands, LDefinition maybeTemp)
+      : LWasmCallBase(operands, numOperands, maybeTemp)
     {
-        for (size_t i = 0; i < numDefs(); i++) {
+        for (size_t i = 0; i < numDefs(); i++)
             defs_[i] = LDefinition::BogusTemp();
-        }
     }
 
     // LInstruction interface
