@@ -11,7 +11,13 @@ def rust_compiler_names(value):
     if value:
         return ['rustc']
 
+@depends('--enable-rust')
+def cargo_binary_names(value):
+    if value:
+        return ['cargo']
+
 rustc = check_prog('RUSTC', rust_compiler_names, allow_missing=True)
+cargo = check_prog('CARGO', cargo_binary_names, allow_missing=True)
 
 @depends_if(rustc)
 @checking('rustc version', lambda info: info.version)
