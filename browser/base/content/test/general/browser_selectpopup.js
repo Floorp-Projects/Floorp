@@ -416,3 +416,32 @@ add_task(function* test_large_popup() {
 
   yield BrowserTestUtils.removeTab(tab);
 });
+
+// This test checks that a mousemove event is fired correctly at the menu and
+// not at the browser, ensuring that any mouse capture has been cleared.
+add_task(function* test_mousemove_correcttarget() {
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let selectPopup = document.getElementById("ContentSelectDropdown").menupopup;
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  yield new Promise(resolve => {
+    window.addEventListener("mousemove", function checkForMouseMove(event) {
+      window.removeEventListener("mousemove", checkForMouseMove, true);
+      is(event.target.localName.indexOf("menu"), 0, "mouse over menu");
+      resolve();
+    }, true);
+
+    EventUtils.synthesizeMouseAtCenter(selectPopup.firstChild, { type: "mousemove" });
+  });
+
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mouseup" }, gBrowser.selectedBrowser);
+
+  yield hideSelectPopup(selectPopup);
+
+  yield BrowserTestUtils.removeTab(tab);
+});
