@@ -5395,12 +5395,12 @@ MAsmJSUnsignedToFloat32::foldsTo(TempAllocator& alloc)
     return this;
 }
 
-MAsmJSCall*
-MAsmJSCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-                const Args& args, MIRType resultType, size_t spIncrement,
-                PreservesTlsReg preservesTlsReg)
+MWasmCall*
+MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
+               const Args& args, MIRType resultType, size_t spIncrement,
+               PreservesTlsReg preservesTlsReg)
 {
-    MAsmJSCall* call = new(alloc) MAsmJSCall(desc, callee, spIncrement, preservesTlsReg);
+    MWasmCall* call = new(alloc) MWasmCall(desc, callee, spIncrement, preservesTlsReg);
     call->setResultType(resultType);
 
     if (!call->argRegs_.init(alloc, args.length()))

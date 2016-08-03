@@ -832,7 +832,7 @@ class FunctionCompiler
         ABIArgGenerator abi_;
         uint32_t maxChildStackBytes_;
         uint32_t spIncrement_;
-        MAsmJSCall::Args regArgs_;
+        MWasmCall::Args regArgs_;
         Vector<MAsmJSPassStackArg*, 0, SystemAllocPolicy> stackArgs_;
         bool childClobbers_;
 
@@ -867,13 +867,13 @@ class FunctionCompiler
             curBlock_->add(mirLow);
             auto mirHigh = MWrapInt64ToInt32::NewAsmJS(alloc(), argDef, /* bottomHalf = */ false);
             curBlock_->add(mirHigh);
-            return args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(arg.gpr64().low), mirLow)) &&
-                   args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(arg.gpr64().high), mirHigh));
+            return args->regArgs_.append(MWasmCall::Arg(AnyRegister(arg.gpr64().low), mirLow)) &&
+                   args->regArgs_.append(MWasmCall::Arg(AnyRegister(arg.gpr64().high), mirHigh));
           }
 #endif
           case ABIArg::GPR:
           case ABIArg::FPU:
-            return args->regArgs_.append(MAsmJSCall::Arg(arg.reg(), argDef));
+            return args->regArgs_.append(MWasmCall::Arg(arg.reg(), argDef));
           case ABIArg::Stack: {
             auto* mir = MAsmJSPassStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
             curBlock_->add(mir);
@@ -911,7 +911,7 @@ class FunctionCompiler
         }
 
         if (passTls == PassTls::True) {
-            if (!args->regArgs_.append(MAsmJSCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_)))
+            if (!args->regArgs_.append(MWasmCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_)))
                 return false;
         }
 
@@ -932,20 +932,20 @@ class FunctionCompiler
     }
 
   private:
-    bool callPrivate(MAsmJSCall::Callee callee, MAsmJSCall::PreservesTlsReg preservesTlsReg,
+    bool callPrivate(MWasmCall::Callee callee, MWasmCall::PreservesTlsReg preservesTlsReg,
                      const CallArgs& args, ExprType ret, MDefinition** def)
     {
         MOZ_ASSERT(!inDeadCode());
 
         CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);
         switch (callee.which()) {
-          case MAsmJSCall::Callee::Internal: kind = CallSiteDesc::Relative; break;
-          case MAsmJSCall::Callee::Dynamic:  kind = CallSiteDesc::Register; break;
-          case MAsmJSCall::Callee::Builtin:  kind = CallSiteDesc::Register; break;
+          case MWasmCall::Callee::Internal: kind = CallSiteDesc::Relative; break;
+          case MWasmCall::Callee::Dynamic:  kind = CallSiteDesc::Register; break;
+          case MWasmCall::Callee::Builtin:  kind = CallSiteDesc::Register; break;
         }
 
-        MAsmJSCall* ins =
-          MAsmJSCall::New(alloc(), CallSiteDesc(args.lineOrBytecode_, kind), callee, args.regArgs_,
+        MWasmCall* ins =
+          MWasmCall::New(alloc(), CallSiteDesc(args.lineOrBytecode_, kind), callee, args.regArgs_,
                           ToMIRType(ret), args.spIncrement_, preservesTlsReg);
         if (!ins)
             return false;
@@ -963,7 +963,7 @@ class FunctionCompiler
             return true;
         }
 
-        return callPrivate(MAsmJSCall::Callee(funcIndex), MAsmJSCall::PreservesTlsReg::True, args,
+        return callPrivate(MWasmCall::Callee(funcIndex), MWasmCall::PreservesTlsReg::True, args,
                            sig.ret(), def);
     }
 
@@ -975,7 +975,7 @@ class FunctionCompiler
             return true;
         }
 
-        MAsmJSCall::Callee callee;
+        MWasmCall::Callee callee;
         if (mg().isAsmJS()) {
             MOZ_ASSERT(IsPowerOfTwo(length));
             MConstant* mask = MConstant::New(alloc(), Int32Value(length - 1));
@@ -984,15 +984,15 @@ class FunctionCompiler
             curBlock_->add(maskedIndex);
             MInstruction* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), maskedIndex, globalDataOffset);
             curBlock_->add(ptrFun);
-            callee = MAsmJSCall::Callee(ptrFun);
+            callee = MWasmCall::Callee(ptrFun);
             MOZ_ASSERT(mg_.sigs[sigIndex].id.kind() == SigIdDesc::Kind::None);
         } else {
             MInstruction* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), index, length, globalDataOffset);
             curBlock_->add(ptrFun);
-            callee = MAsmJSCall::Callee(ptrFun, mg_.sigs[sigIndex].id);
+            callee = MWasmCall::Callee(ptrFun, mg_.sigs[sigIndex].id);
         }
 
-        return callPrivate(callee, MAsmJSCall::PreservesTlsReg::True, args,
+        return callPrivate(callee, MWasmCall::PreservesTlsReg::True, args,
                            mg_.sigs[sigIndex].ret(), def);
     }
 
@@ -1006,7 +1006,7 @@ class FunctionCompiler
         MAsmJSLoadFFIFunc* ptrFun = MAsmJSLoadFFIFunc::New(alloc(), globalDataOffset);
         curBlock_->add(ptrFun);
 
-        return callPrivate(MAsmJSCall::Callee(ptrFun), MAsmJSCall::PreservesTlsReg::False,
+        return callPrivate(MWasmCall::Callee(ptrFun), MWasmCall::PreservesTlsReg::False,
                            args, ret, def);
     }
 
@@ -1017,7 +1017,7 @@ class FunctionCompiler
             return true;
         }
 
-        return callPrivate(MAsmJSCall::Callee(builtin), MAsmJSCall::PreservesTlsReg::False,
+        return callPrivate(MWasmCall::Callee(builtin), MWasmCall::PreservesTlsReg::False,
                            args, ToExprType(type), def);
     }
 

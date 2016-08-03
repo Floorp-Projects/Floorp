@@ -8281,20 +8281,20 @@ class LAsmJSPassStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
     }
 };
 
-class LAsmJSCallBase : public LInstruction
+class LWasmCallBase : public LInstruction
 {
     LAllocation* operands_;
     uint32_t numOperands_;
 
   public:
 
-    LAsmJSCallBase(LAllocation* operands, uint32_t numOperands)
+    LWasmCallBase(LAllocation* operands, uint32_t numOperands)
       : operands_(operands),
         numOperands_(numOperands)
     {}
 
-    MAsmJSCall* mir() const {
-        return mir_->toAsmJSCall();
+    MWasmCall* mir() const {
+        return mir_->toWasmCall();
     }
 
     bool isCall() const override {
@@ -8339,15 +8339,15 @@ class LAsmJSCallBase : public LInstruction
     }
 };
 
-class LAsmJSCall : public LAsmJSCallBase
+class LWasmCall : public LWasmCallBase
 {
      LDefinition def_;
 
   public:
-    LIR_HEADER(AsmJSCall);
+    LIR_HEADER(WasmCall);
 
-    LAsmJSCall(LAllocation* operands, uint32_t numOperands)
-      : LAsmJSCallBase(operands, numOperands),
+    LWasmCall(LAllocation* operands, uint32_t numOperands)
+      : LWasmCallBase(operands, numOperands),
         def_(LDefinition::BogusTemp())
     {}
 
@@ -8366,15 +8366,15 @@ class LAsmJSCall : public LAsmJSCallBase
     }
 };
 
-class LAsmJSCallI64 : public LAsmJSCallBase
+class LWasmCallI64 : public LWasmCallBase
 {
     LDefinition defs_[INT64_PIECES];
 
   public:
-    LIR_HEADER(AsmJSCallI64);
+    LIR_HEADER(WasmCallI64);
 
-    LAsmJSCallI64(LAllocation* operands, uint32_t numOperands)
-      : LAsmJSCallBase(operands, numOperands)
+    LWasmCallI64(LAllocation* operands, uint32_t numOperands)
+      : LWasmCallBase(operands, numOperands)
     {
         for (size_t i = 0; i < numDefs(); i++) {
             defs_[i] = LDefinition::BogusTemp();
