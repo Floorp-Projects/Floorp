@@ -765,7 +765,7 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
   event.inputSource = aInputSourceArg;
   event.pointerId = aPointerId;
   event.mWidth = aWidth;
-  event.height = aHeight;
+  event.mHeight = aHeight;
   event.tiltX = aTiltX;
   event.tiltY = aTiltY;
   event.isPrimary = (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == aInputSourceArg) ? true : aIsPrimary;
