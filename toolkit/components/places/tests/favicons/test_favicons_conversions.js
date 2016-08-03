@@ -69,33 +69,35 @@ function run_test() {
 
 add_test(function test_storing_a_normal_16x16_icon() {
   // 16x16 png, 286 bytes.
+  // optimized: no
   checkFaviconDataConversion("favicon-normal16.png", "image/png", 286,
                              false, false, run_next_test);
 });
 
 add_test(function test_storing_a_normal_32x32_icon() {
   // 32x32 png, 344 bytes.
+  // optimized: no
   checkFaviconDataConversion("favicon-normal32.png", "image/png", 344,
                              false, false, run_next_test);
 });
 
-add_test(function test_storing_an_oversize_16x16_icon() {
+add_test(function test_storing_a_big_16x16_icon() {
   //  in: 16x16 ico, 1406 bytes.
-  // out: 16x16 png
+  // optimized: no
   checkFaviconDataConversion("favicon-big16.ico", "image/x-icon", 1406,
-                             true, false, run_next_test);
+                             false, false, run_next_test);
 });
 
 add_test(function test_storing_an_oversize_4x4_icon() {
   //  in: 4x4 jpg, 4751 bytes.
-  // out: 16x16 png
+  // optimized: yes
   checkFaviconDataConversion("favicon-big4.jpg", "image/jpeg", 4751,
                              true, false, run_next_test);
 });
 
 add_test(function test_storing_an_oversize_32x32_icon() {
   //  in: 32x32 jpg, 3494 bytes.
-  // out: 16x16 png
+  // optimized: yes
   checkFaviconDataConversion("favicon-big32.jpg", "image/jpeg", 3494,
                              true, true, run_next_test);
 });
@@ -104,28 +106,28 @@ add_test(function test_storing_an_oversize_48x48_icon() {
   //  in: 48x48 ico, 56646 bytes.
   // (howstuffworks.com icon, contains 13 icons with sizes from 16x16 to
   // 48x48 in varying depths)
-  // out: 16x16 png
+  // optimized: yes
   checkFaviconDataConversion("favicon-big48.ico", "image/x-icon", 56646,
                              true, false, run_next_test);
 });
 
 add_test(function test_storing_an_oversize_64x64_icon() {
   //  in: 64x64 png, 10698 bytes.
-  // out: 16x16 png
+  // optimized: yes
   checkFaviconDataConversion("favicon-big64.png", "image/png", 10698,
                              true, false, run_next_test);
 });
 
 add_test(function test_scaling_an_oversize_160x3_icon() {
   //  in: 160x3 jpg, 5095 bytes.
-  // out: 16x16 png
+  // optimized: yes
   checkFaviconDataConversion("favicon-scale160x3.jpg", "image/jpeg", 5095,
                              true, false, run_next_test);
 });
 
 add_test(function test_scaling_an_oversize_3x160_icon() {
   //  in: 3x160 jpg, 5059 bytes.
-  // out: 16x16 png
+  // optimized: yes
   checkFaviconDataConversion("favicon-scale3x160.jpg", "image/jpeg", 5059,
                              true, false, run_next_test);
 });
