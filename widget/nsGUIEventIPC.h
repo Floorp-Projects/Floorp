@@ -287,7 +287,7 @@ struct ParamTraits<mozilla::WidgetPointerEvent>
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEvent>(aParam));
     WriteParam(aMsg, aParam.pointerId);
-    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.mWidth);
     WriteParam(aMsg, aParam.height);
     WriteParam(aMsg, aParam.tiltX);
     WriteParam(aMsg, aParam.tiltY);
@@ -299,7 +299,7 @@ struct ParamTraits<mozilla::WidgetPointerEvent>
     bool rv =
       ReadParam(aMsg, aIter, static_cast<mozilla::WidgetMouseEvent*>(aResult)) &&
       ReadParam(aMsg, aIter, &aResult->pointerId) &&
-      ReadParam(aMsg, aIter, &aResult->width) &&
+      ReadParam(aMsg, aIter, &aResult->mWidth) &&
       ReadParam(aMsg, aIter, &aResult->height) &&
       ReadParam(aMsg, aIter, &aResult->tiltX) &&
       ReadParam(aMsg, aIter, &aResult->tiltY) &&
