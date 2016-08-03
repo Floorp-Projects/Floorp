@@ -27,6 +27,7 @@ window.onload = Task.async(function* () {
     yield testMultiline();
     yield testMultilineOpen();
     yield testMultilineLimit();
+    yield testOmitQuotes();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -48,10 +49,18 @@ window.onload = Task.async(function* () {
     is(renderedComponent.textContent, "\"aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n\"", "String rep has expected text content for multiline string when open");
   }
 
+  function testOmitQuotes(){
+     const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testOmitQuotes"), omitQuotes: true });
+     is(renderedComponent.textContent, "abc","String rep has expected to omit quotes");
+  }
+
   function getGripStub(name) {
     switch (name) {
       case "testMultiline":
-        return "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n";
+      	 return "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n";
+	 break;
+      case "testOmitQuotes":
+	 return "abc";
     }
   }
 });
