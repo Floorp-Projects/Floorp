@@ -317,6 +317,7 @@ private:
 
   uint32_t          mSendingChunkSize;        /* the transmission chunk size */
   uint32_t          mNextStreamID;            /* 24 bits */
+  uint32_t          mLastPushedID;
   uint32_t          mConcurrentHighWater;     /* max parallelism on session */
   uint32_t          mPushAllowance;           /* rwin for unmatched pushes */
 
