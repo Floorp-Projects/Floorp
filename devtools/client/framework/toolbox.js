@@ -151,6 +151,8 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._onPerformanceFrontEvent = this._onPerformanceFrontEvent.bind(this);
   this._onBottomHostWillChange = this._onBottomHostWillChange.bind(this);
   this._toggleMinimizeMode = this._toggleMinimizeMode.bind(this);
+  this._onTabbarFocus = this._onTabbarFocus.bind(this);
+  this._onTabbarArrowKeypress = this._onTabbarArrowKeypress.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -431,7 +433,11 @@ Toolbox.prototype = {
       if (!this._hostOptions || this._hostOptions.zoom === true) {
         ZoomKeys.register(this.win);
       }
-      this._setToolbarKeyboardNavigation();
+
+      this.tabbar = this.doc.querySelector(".devtools-tabbar");
+      this.tabbar.addEventListener("focus", this._onTabbarFocus, true);
+      this.tabbar.addEventListener("click", this._onTabbarFocus, true);
+      this.tabbar.addEventListener("keypress", this._onTabbarArrowKeypress);
 
       this.webconsolePanel = this.doc.querySelector("#toolbox-panel-webconsole");
       this.webconsolePanel.height = Services.prefs.getIntPref(SPLITCONSOLE_HEIGHT_PREF);
@@ -756,6 +762,9 @@ Toolbox.prototype = {
       let minimizeBtn = this.doc.createElementNS(HTML_NS, "button");
       minimizeBtn.id = "toolbox-dock-bottom-minimize";
       minimizeBtn.className = "devtools-button";
+      /* Bug 1177463 - The minimize button is currently hidden until we agree on
+         the UI for it, and until bug 1173849 is fixed too. */
+      minimizeBtn.setAttribute("hidden", "true");
 
       minimizeBtn.addEventListener("click", this._toggleMinimizeMode);
       dockBox.appendChild(minimizeBtn);
@@ -843,9 +852,8 @@ Toolbox.prototype = {
 
     // Calculate the height to which the host should be minimized so the
     // tabbar is still visible.
-    let toolbarHeight = this.doc.querySelector(".devtools-tabbar")
-                                .getBoxQuads({box: "content"})[0]
-                                .bounds.height;
+    let toolbarHeight = this.tabbar.getBoxQuads({box: "content"})[0].bounds
+                                                                    .height;
     this._host.toggleMinimizeMode(toolbarHeight);
   },
 
@@ -859,69 +867,67 @@ Toolbox.prototype = {
   },
 
   /**
-   * Sets up keyboard navigation with and within the dev tools toolbar.
+   * Get all dev tools tab bar focusable elements. These are visible elements
+   * such as buttons or elements with tabindex.
    */
-  _setToolbarKeyboardNavigation() {
-    let toolbar = this.doc.querySelector(".devtools-tabbar");
-    // Set and track aria-activedescendant to indicate which control is
-    // currently focused within the toolbar (for accessibility purposes).
-    toolbar.addEventListener("focus", event => {
-      let { target, rangeParent } = event;
-      let control, controlID = toolbar.getAttribute("aria-activedescendant");
+  get tabbarFocusableElms() {
+    return [...this.tabbar.querySelectorAll(
+      "[tabindex]:not([hidden]), button:not([hidden])")];
+  },
 
-      if (controlID) {
-        control = this.doc.getElementById(controlID);
-      }
-      if (rangeParent || !control) {
-        // If range parent is present, the focused is moved within the toolbar,
-        // simply updating aria-activedescendant. Or if aria-activedescendant is
-        // not available, set it to target.
-        toolbar.setAttribute("aria-activedescendant", target.id);
-      } else {
-        // When range parent is not present, we focused into the toolbar, move
-        // focus to current aria-activedescendant.
-        event.preventDefault();
-        control.focus();
-      }
-    }, true);
+  /**
+   * Reset tabindex attributes across all focusable elements inside the tabbar.
+   * Only have one element with tabindex=0 at a time to make sure that tabbing
+   * results in navigating away from the tabbar container.
+   * @param  {FocusEvent} event
+   */
+  _onTabbarFocus: function (event) {
+    this.tabbarFocusableElms.forEach(elm =>
+      elm.setAttribute("tabindex", event.target === elm ? "0" : "-1"));
+  },
 
-    toolbar.addEventListener("keypress", event => {
-      let { key, target } = event;
-      let win = this.win;
-      let elm, type;
-      if (key === "Tab") {
-        // Tabbing when toolbar or its contents are focused should move focus to
-        // next/previous focusable element relative to toolbar itself.
-        if (event.shiftKey) {
-          elm = toolbar;
-          type = Services.focus.MOVEFOCUS_BACKWARD;
-        } else {
-          // To move focus to next element following the toolbar, relative
-          // element needs to be the last element in its subtree.
-          let last = toolbar.lastChild;
-          while (last && last.lastChild) {
-            last = last.lastChild;
-          }
-          elm = last;
-          type = Services.focus.MOVEFOCUS_FORWARD;
-        }
-      } else if (key === "ArrowLeft") {
-        // Using left arrow key inside toolbar should move focus to previous
-        // toolbar control.
-        elm = target;
-        type = Services.focus.MOVEFOCUS_BACKWARD;
-      } else if (key === "ArrowRight") {
-        // Using right arrow key inside toolbar should move focus to next
-        // toolbar control.
-        elm = target;
-        type = Services.focus.MOVEFOCUS_FORWARD;
-      } else {
-        // Ignore all other keys.
+  /**
+   * On left/right arrow press, attempt to move the focus inside the tabbar to
+   * the previous/next focusable element.
+   * @param  {KeyboardEvent} event
+   */
+  _onTabbarArrowKeypress: function (event) {
+    let { key, target } = event;
+    let focusableElms = this.tabbarFocusableElms;
+    let curIndex = focusableElms.indexOf(target);
+
+    if (curIndex === -1) {
+      console.warn(target + " is not found among Developer Tools tab bar " +
+        "focusable elements. It needs to either be a button or have " +
+        "tabindex. If it is intended to be hidden, 'hidden' attribute must " +
+        "be used.");
+      return;
+    }
+
+    let newTarget;
+
+    if (key === "ArrowLeft") {
+      // Do nothing if already at the beginning.
+      if (curIndex === 0) {
         return;
       }
-      event.preventDefault();
-      Services.focus.moveFocus(win, elm, type, 0);
-    });
+      newTarget = focusableElms[curIndex - 1];
+    } else if (key === "ArrowRight") {
+      // Do nothing if already at the end.
+      if (curIndex === focusableElms.length - 1) {
+        return;
+      }
+      newTarget = focusableElms[curIndex + 1];
+    } else {
+      return;
+    }
+
+    focusableElms.forEach(elm =>
+      elm.setAttribute("tabindex", newTarget === elm ? "0" : "-1"));
+    newTarget.focus();
+
+    event.preventDefault();
+    event.stopPropagation();
   },
 
   /**
@@ -1099,6 +1105,7 @@ Toolbox.prototype = {
     radio.className = "devtools-tab";
     radio.id = "toolbox-tab-" + id;
     radio.setAttribute("toolid", id);
+    radio.setAttribute("tabindex", "0");
     radio.setAttribute("ordinal", toolDefinition.ordinal);
     radio.setAttribute("tooltiptext", toolDefinition.tooltip);
     if (toolDefinition.invertIconForLightTheme) {
@@ -2049,6 +2056,9 @@ Toolbox.prototype = {
     this.closeButton.removeEventListener("click", this.destroy, true);
     this.textboxContextMenuPopup.removeEventListener("popupshowing",
       this._updateTextboxMenuItems, true);
+    this.tabbar.removeEventListener("focus", this._onTabbarFocus, true);
+    this.tabbar.removeEventListener("click", this._onTabbarFocus, true);
+    this.tabbar.removeEventListener("keypress", this._onTabbarArrowKeypress);
 
     let outstanding = [];
     for (let [id, panel] of this._toolPanels) {
