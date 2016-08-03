@@ -86,8 +86,10 @@ class MachCommands(MachCommandBase):
                      help='Filename extensions to lint, default: "[.js,.jsm,.jsx,.xml,.html]".')
     @CommandArgument('-b', '--binary', default=None,
                      help='Path to eslint binary.')
+    @CommandArgument('--fix', default=False, action='store_true',
+                     help='Request that eslint automatically fix errors, where possible.')
     @CommandArgument('args', nargs=argparse.REMAINDER)  # Passed through to eslint.
-    def eslint(self, setup, ext=None, binary=None, args=None):
+    def eslint(self, setup, ext=None, binary=None, fix=False, args=None):
         '''Run eslint.'''
 
         module_path = self.get_eslint_module_path()
@@ -147,6 +149,10 @@ class MachCommands(MachCommandBase):
                     '--plugin', 'html',
                     '--ext', ext,  # This keeps ext as a single argument.
                     ] + args
+
+        # eslint requires that --fix be set before the --ext argument.
+        if fix:
+            cmd_args.insert(1, '--fix')
 
         success = self.run_process(
             cmd_args,
