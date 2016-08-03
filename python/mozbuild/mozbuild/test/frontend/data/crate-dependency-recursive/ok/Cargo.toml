@@ -1,0 +1,9 @@
+[package]
+name = "ok"
+version = "0.1.0"
+authors = [
+  "Nobody <nobody@mozilla.org>",
+]
+
+[dependencies]
+bogus = { version = "0.1.0" }
