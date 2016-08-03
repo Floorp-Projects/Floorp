@@ -151,7 +151,7 @@ nsPNGDecoder::GetTransparencyType(SurfaceFormat aFormat,
   if (aFormat == SurfaceFormat::B8G8R8A8) {
     return TransparencyType::eAlpha;
   }
-  if (!IntRect(IntPoint(), GetSize()).IsEqualEdges(aFrameRect)) {
+  if (!aFrameRect.IsEqualEdges(FullFrame())) {
     MOZ_ASSERT(HasAnimation());
     return TransparencyType::eFrameRect;
   }
@@ -201,9 +201,6 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
   MOZ_ASSERT_IF(mDownscaler, !GetImageMetadata().HasAnimation());
   MOZ_ASSERT_IF(mDownscaler, transparency != TransparencyType::eFrameRect);
 
-  IntSize targetSize = mDownscaler ? mDownscaler->TargetSize()
-                                   : GetSize();
-
   // If this image is interlaced, we can display better quality intermediate
   // results to the user by post processing them with ADAM7InterpolatingFilter.
   SurfacePipeFlags pipeFlags = aFrameInfo.mIsInterlaced
@@ -216,8 +213,8 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
   }
 
   Maybe<SurfacePipe> pipe =
-    SurfacePipeFactory::CreateSurfacePipe(this, mNumFrames, GetSize(),
-                                          targetSize, aFrameInfo.mFrameRect,
+    SurfacePipeFactory::CreateSurfacePipe(this, mNumFrames, Size(),
+                                          OutputSize(), aFrameInfo.mFrameRect,
                                           format, pipeFlags);
 
   if (!pipe) {

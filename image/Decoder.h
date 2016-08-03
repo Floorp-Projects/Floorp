@@ -129,6 +129,10 @@ public:
    * If this decoder supports downscale-during-decode and is configured to
    * downscale, returns the target size that the output size will be decoded to.
    * Otherwise, returns Nothing().
+   *
+   * Note that virtually all callers don't care whether a decoder is configured
+   * to downscale; they just want to know what the decoder's output size is.
+   * Such callers should use OutputSize() instead.
    */
   Maybe<gfx::IntSize> GetTargetSize();
 
@@ -254,12 +258,59 @@ public:
   }
   SurfaceFlags GetSurfaceFlags() const { return mSurfaceFlags; }
 
+  /// @return true if we know the intrinsic size of the image we're decoding.
   bool HasSize() const { return mImageMetadata.HasSize(); }
 
-  nsIntSize GetSize() const
+  /**
+   * @return the intrinsic size of the image we're decoding.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  gfx::IntSize Size() const
   {
     MOZ_ASSERT(HasSize());
     return mImageMetadata.GetSize();
+  }
+
+  /**
+   * @return an IntRect which covers the entire area of this image at its
+   * intrinsic size, appropriate for use as a frame rect when the image itself
+   * does not specify one.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  gfx::IntRect FullFrame() const
+  {
+    return gfx::IntRect(gfx::IntPoint(), Size());
+  }
+
+  /**
+   * @return the output size of this decoder. If this is different than the
+   * intrinsic size, then the image will be downscaled during the decoding
+   * process.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  gfx::IntSize OutputSize() const
+  {
+    return mDownscaler ? mDownscaler->TargetSize()
+                       : Size();
+  }
+
+  /**
+   * @return an IntRect which covers the entire area of this image at its size
+   * after scaling - that is, at its output size.
+   *
+   * XXX(seth): This is only used for decoders which are using the old
+   * Downscaler code instead of SurfacePipe, since the old AllocateFrame() and
+   * Downscaler APIs required that the frame rect be specified in output space.
+   * We should remove this once all decoders use SurfacePipe.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  gfx::IntRect FullOutputFrame() const
+  {
+    return gfx::IntRect(gfx::IntPoint(), OutputSize());
   }
 
   virtual Telemetry::ID SpeedHistogram();
@@ -385,13 +436,6 @@ protected:
                          const nsIntRect& aFrameRect,
                          gfx::SurfaceFormat aFormat,
                          uint8_t aPaletteDepth = 0);
-
-  /// Helper method for decoders which only have 'basic' frame allocation needs.
-  nsresult AllocateBasicFrame() {
-    nsIntSize size = GetSize();
-    return AllocateFrame(0, size, nsIntRect(nsIntPoint(), size),
-                         gfx::SurfaceFormat::B8G8R8A8);
-  }
 
 private:
   /// Report that an error was encountered while decoding.

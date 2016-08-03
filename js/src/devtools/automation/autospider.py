@@ -107,11 +107,15 @@ def set_vars_from_script(script, vars):
                 env[var] = "%s;%s" % (env[var], originals[var])
 
 
-def call_alternates(binaries, command_args, *args, **kwargs):
+def call_alternates(binaries, *args, **kwargs):
     last_exception = None
     for binary in binaries:
         try:
-            return subprocess.call(['sh', '-c', binary] + command_args, *args, **kwargs)
+            # Call through a shell due to Windows portability problems.
+            rc = subprocess.call(['sh', '-c', binary], *args, **kwargs)
+            if rc == 127:
+                raise OSError("command not found: %s" % binary)
+            return rc
         except OSError as e:
             # Assume the binary was not found.
             last_exception = e
@@ -140,7 +144,7 @@ if args.variant == 'nonunified':
 
 if not args.nobuild:
     autoconfs = ['autoconf-2.13', 'autoconf2.13', 'autoconf213']
-    if call_alternates(autoconfs, [], cwd=DIR.js_src) != 0:
+    if call_alternates(autoconfs, cwd=DIR.js_src) != 0:
         logging.error('autoconf failed')
         sys.exit(1)
 
@@ -335,6 +339,12 @@ if 'jsapitests' in test_suites:
 if 'jstests' in test_suites:
     results.append(run_test_command([MAKE, 'check-jstests']))
 
+# FIXME bug 1291449: This would be unnecessary if we could run msan with -mllvm
+# -msan-keep-going, but in clang 3.8 it causes a hang during compilation.
+if variant.get('ignore-test-failures'):
+    print("Ignoring test results %s" % (results,))
+    results = [0]
+
 if args.variant in ('tsan', 'msan'):
     files = filter(lambda f: f.startswith("sanitize_log."), os.listdir(OUTDIR))
     fullfiles = [os.path.join(OUTDIR, f) for f in files]
@@ -347,7 +357,11 @@ if args.variant in ('tsan', 'msan'):
                 m = re.match(r'^SUMMARY: \w+Sanitizer: (?:data race|use-of-uninitialized-value) (.*)',
                              line.strip())
                 if m:
-                    sites[m.group(1)] += 1
+                    # Some reports include file:line:column, some just
+                    # file:line. Just in case it's nondeterministic, we will
+                    # canonicalize to just the line number.
+                    site = re.sub(r'^(\S+?:\d+)(:\d+)* ', r'\1 ', m.group(1))
+                    sites[site] += 1
 
     # Write a summary file and display it to stdout.
     summary_filename = os.path.join(env['MOZ_UPLOAD_DIR'], "%s_summary.txt" % args.variant)
@@ -355,6 +369,11 @@ if args.variant in ('tsan', 'msan'):
         for location, count in sites.most_common():
             print >> outfh, "%d %s" % (count, location)
     print(open(summary_filename, 'rb').read())
+
+    if 'max-errors' in variant:
+        print("Found %d errors out of %d allowed" % (len(sites), variant['max-errors']))
+        if len(sites) > variant['max-errors']:
+            results.append(1)
 
     # Gather individual results into a tarball. Note that these are
     # distinguished only by pid of the JS process running within each test, so

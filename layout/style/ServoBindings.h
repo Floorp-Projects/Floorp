@@ -216,6 +216,7 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 RawServoStyleSheet* Servo_StylesheetFromUTF8Bytes(
     const uint8_t* bytes, uint32_t length,
     mozilla::css::SheetParsingMode parsing_mode,
+    const uint8_t* base_bytes, uint32_t base_length,
     ThreadSafeURIHolder* base,
     ThreadSafeURIHolder* referrer,
     ThreadSafePrincipalHolder* principal);

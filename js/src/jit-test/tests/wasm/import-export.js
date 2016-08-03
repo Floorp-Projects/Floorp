@@ -10,10 +10,10 @@ const mem1Page = new Memory({initial:1});
 const mem2Page = new Memory({initial:2});
 const mem3Page = new Memory({initial:3});
 const mem4Page = new Memory({initial:4});
-const tab1Elem = new Table({initial:1});
-const tab2Elem = new Table({initial:2});
-const tab3Elem = new Table({initial:3});
-const tab4Elem = new Table({initial:4});
+const tab1Elem = new Table({initial:1, element:"anyfunc"});
+const tab2Elem = new Table({initial:2, element:"anyfunc"});
+const tab3Elem = new Table({initial:3, element:"anyfunc"});
+const tab4Elem = new Table({initial:4, element:"anyfunc"});
 
 // Explicitly opt into the new binary format for imports and exports until it
 // is used by default everywhere.
@@ -259,7 +259,7 @@ assertEq(mem, e.foo);
 assertEq(mem, e.bar);
 
 var code = textToBinary('(module (import "a" "b" (table 1 1)) (export "foo" table) (export "bar" table))');
-var tbl = new Table({initial:1});
+var tbl = new Table({initial:1, element:"anyfunc"});
 var e = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(tbl, e.foo);
 assertEq(tbl, e.bar);
@@ -317,7 +317,7 @@ var m = new Module(textToBinary(`
         (func $three (result i32) (i32.const 3))
         (func $four (result i32) (i32.const 4)))
 `));
-var tbl = new Table({initial:10});
+var tbl = new Table({initial:10, element:"anyfunc"});
 new Instance(m, {a:{b:tbl}});
 assertEq(tbl.get(0)(), 1);
 assertEq(tbl.get(1)(), 2);

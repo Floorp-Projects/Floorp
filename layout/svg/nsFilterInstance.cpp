@@ -213,7 +213,7 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   mTargetBounds.UnionRect(mTargetBBoxInFilterSpace, targetBounds);
 
   // Build the filter graph.
-  rv = BuildPrimitives(aFilterChain);
+  rv = BuildPrimitives(aFilterChain, aTargetFrame);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -273,13 +273,14 @@ nsFilterInstance::FilterSpaceToUserSpace(const gfxRect& aFilterSpaceRect) const
 }
 
 nsresult
-nsFilterInstance::BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain)
+nsFilterInstance::BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain,
+                                  nsIFrame* aTargetFrame)
 {
   NS_ASSERTION(!mPrimitiveDescriptions.Length(),
                "expected to start building primitives from scratch");
 
   for (uint32_t i = 0; i < aFilterChain.Length(); i++) {
-    nsresult rv = BuildPrimitivesForFilter(aFilterChain[i]);
+    nsresult rv = BuildPrimitivesForFilter(aFilterChain[i], aTargetFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -291,7 +292,8 @@ nsFilterInstance::BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain)
 }
 
 nsresult
-nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
+nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter,
+                                           nsIFrame* aTargetFrame)
 {
   NS_ASSERTION(mUserSpaceToFilterSpaceScale.width > 0.0f &&
                mFilterSpaceToUserSpaceScale.height > 0.0f,
@@ -299,7 +301,8 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
 
   if (aFilter.GetType() == NS_STYLE_FILTER_URL) {
     // Build primitives for an SVG filter.
-    nsSVGFilterInstance svgFilterInstance(aFilter, mTargetContent,
+    nsSVGFilterInstance svgFilterInstance(aFilter, aTargetFrame,
+                                          mTargetContent,
                                           mMetrics, mTargetBBox,
                                           mUserSpaceToFilterSpaceScale,
                                           mFilterSpaceToUserSpaceScale);

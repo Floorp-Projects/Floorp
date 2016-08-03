@@ -921,6 +921,13 @@ GfxInfo::GetGfxDriverInfo()
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_EQUAL, V(8,783,2,2000), "FEATURE_FAILURE_BUG_1118695");
 
+    // Bug 1198815
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE(OperatingSystem::Windows,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
+      GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+      DRIVER_BETWEEN_INCLUSIVE, V(15,200,0,0), V(15,200,1062,1004),
+      "FEATURE_FAILURE_BUG_1198815", "15.200.0.0-15.200.1062.1004");
+
     /*
      * Bug 783517 - crashes in AMD driver on Windows 8
      */

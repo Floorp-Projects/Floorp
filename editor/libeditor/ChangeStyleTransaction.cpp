@@ -11,11 +11,11 @@
 #include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc.
 #include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc.
 #include "nsGkAtoms.h"                  // for nsGkAtoms, etc.
-#include "nsIDOMCSSStyleDeclaration.h"  // for nsIDOMCSSStyleDeclaration
-#include "nsIDOMElementCSSInlineStyle.h" // for nsIDOMElementCSSInlineStyle
+#include "nsICSSDeclaration.h"          // for nsICSSDeclaration.
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING, etc.
 #include "nsReadableUtils.h"            // for ToNewUnicode
 #include "nsString.h"                   // for nsAutoString, nsString, etc.
+#include "nsStyledElement.h"            // for nsStyledElement.
 #include "nsUnicharUtils.h"             // for nsCaseInsensitiveStringComparator
 
 namespace mozilla {
@@ -138,15 +138,11 @@ ChangeStyleTransaction::ChangeStyleTransaction(Element& aElement,
 NS_IMETHODIMP
 ChangeStyleTransaction::DoTransaction()
 {
-  nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles =
-    do_QueryInterface(mElement);
+  nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(mElement);
   NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  nsresult result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
-  NS_ENSURE_SUCCESS(result, result);
-  NS_ENSURE_TRUE(cssDecl, NS_ERROR_NULL_POINTER);
-
+  nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
+ 
   nsAutoString propertyNameString;
   mProperty->ToString(propertyNameString);
 
@@ -154,7 +150,7 @@ ChangeStyleTransaction::DoTransaction()
                                            nsGkAtoms::style);
 
   nsAutoString values;
-  result = cssDecl->GetPropertyValue(propertyNameString, values);
+  nsresult result = cssDecl->GetPropertyValue(propertyNameString, values);
   NS_ENSURE_SUCCESS(result, result);
   mUndoValue.Assign(values);
 
@@ -176,8 +172,7 @@ ChangeStyleTransaction::DoTransaction()
         NS_ENSURE_SUCCESS(result, result);
       } else {
         nsAutoString priority;
-        result = cssDecl->GetPropertyPriority(propertyNameString, priority);
-        NS_ENSURE_SUCCESS(result, result);
+        cssDecl->GetPropertyPriority(propertyNameString, priority);
         result = cssDecl->SetProperty(propertyNameString, values,
                                       priority);
         NS_ENSURE_SUCCESS(result, result);
@@ -188,8 +183,7 @@ ChangeStyleTransaction::DoTransaction()
     }
   } else {
     nsAutoString priority;
-    result = cssDecl->GetPropertyPriority(propertyNameString, priority);
-    NS_ENSURE_SUCCESS(result, result);
+    cssDecl->GetPropertyPriority(propertyNameString, priority);
     if (multiple) {
       // Let's add the value we have to add to the others
 
@@ -229,13 +223,9 @@ ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
     nsAutoString propertyNameString;
     mProperty->ToString(propertyNameString);
 
-    nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles =
-      do_QueryInterface(mElement);
+    nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(mElement);
     NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
-    nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-    result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
-    NS_ENSURE_SUCCESS(result, result);
-    NS_ENSURE_TRUE(cssDecl, NS_ERROR_NULL_POINTER);
+    nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
 
     if (aValue.IsEmpty()) {
       // An empty value means we have to remove the property
@@ -244,8 +234,7 @@ ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
     } else {
       // Let's recreate the declaration as it was
       nsAutoString priority;
-      result = cssDecl->GetPropertyPriority(propertyNameString, priority);
-      NS_ENSURE_SUCCESS(result, result);
+      cssDecl->GetPropertyPriority(propertyNameString, priority);
       result = cssDecl->SetProperty(propertyNameString, aValue, priority);
     }
   } else {

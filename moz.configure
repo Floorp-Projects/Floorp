@@ -228,6 +228,36 @@ system_hunspell = pkg_check_modules('MOZ_HUNSPELL', 'hunspell',
 
 set_config('MOZ_SYSTEM_HUNSPELL', system_hunspell)
 
+
+@depends(target)
+def makensis_progs(target):
+    if target.kernel == 'WINNT':
+        return ('makensis-3.0b3.exe', 'makensis-3.0b1.exe', 'makensis.exe', 'makensis')
+
+nsis = check_prog('MAKENSISU', makensis_progs)
+
+# Make sure the version of makensis is up to date.
+@depends_if(nsis)
+@checking('for NSIS version')
+@imports('re')
+def nsis_version(nsis):
+    nsis_min_version = '3.0b1'
+    out = check_cmd_output(nsis, '-version',
+                           onerror=lambda: die('Failed to get nsis version.'))
+    m = re.search(r'(?<=v)[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?', out)
+
+    if not m:
+        raise FatalCheckError('Unknown version of makensis')
+    ver = Version(m.group(0))
+
+    if ver < nsis_min_version:
+        raise FatalCheckError('To build the installer you must have NSIS'
+                              ' version %s or greater in your path'
+                              % nsis_min_version)
+
+    return ver
+
+
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
 # Please do not add anything after the include of old.configure.
