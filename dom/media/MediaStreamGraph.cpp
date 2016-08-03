@@ -27,7 +27,6 @@
 #include "mozilla/media/MediaUtils.h"
 #include <algorithm>
 #include "GeckoProfiler.h"
-#include "VideoFrameContainer.h"
 #include "mozilla/unused.h"
 #include "mozilla/media/MediaUtils.h"
 #ifdef MOZ_WEBRTC
@@ -1021,15 +1020,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 
     if (frame->GetForceBlack()) {
       if (!blackImage) {
-        // Fixme: PlayVideo will be replaced in latter changeset
-        // "Call MediaStreamVideoSink::setCurrentFrames in SourceMediaStream::AppendToTrack."
-        // of this bug.
-        // This is a temp workaround to pass the build and test.
-        if (!aStream->mVideoOutputs[0]->AsVideoFrameContainer()) {
-          return;
-        }
-        blackImage = aStream->mVideoOutputs[0]->AsVideoFrameContainer()->
-          GetImageContainer()->CreatePlanarYCbCrImage();
+        blackImage = aStream->mVideoOutputs[0]->GetImageContainer()->CreatePlanarYCbCrImage();
         if (blackImage) {
           // Sets the image to a single black pixel, which will be scaled to
           // fill the rendered size.
@@ -1053,11 +1044,8 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   AutoTArray<ImageContainer::NonOwningImage,4> images;
   bool haveMultipleImages = false;
 
-  for (MediaStreamVideoSink* sink : aStream->mVideoOutputs) {
-    VideoFrameContainer* output = sink->AsVideoFrameContainer();
-    if (!output) {
-      continue;
-    }
+  for (uint32_t i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
+    VideoFrameContainer* output = aStream->mVideoOutputs[i];
 
     bool principalHandleChanged =
       lastPrincipalHandle != PRINCIPAL_HANDLE_NONE &&
@@ -2271,55 +2259,55 @@ MediaStream::RemoveAudioOutput(void* aKey)
 }
 
 void
-MediaStream::AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink)
+MediaStream::AddVideoOutputImpl(already_AddRefed<VideoFrameContainer> aContainer)
 {
-  RefPtr<MediaStreamVideoSink> sink = aSink;
-  STREAM_LOG(LogLevel::Info, ("MediaStream %p Adding MediaStreamVideoSink %p as output",
-                              this, sink.get()));
-  *mVideoOutputs.AppendElement() = sink.forget();
+  RefPtr<VideoFrameContainer> container = aContainer;
+  STREAM_LOG(LogLevel::Info, ("MediaStream %p Adding VideoFrameContainer %p as output",
+                              this, container.get()));
+  *mVideoOutputs.AppendElement() = container.forget();
 }
 
 void
-MediaStream::RemoveVideoOutputImpl(MediaStreamVideoSink* aSink)
+MediaStream::RemoveVideoOutputImpl(VideoFrameContainer* aContainer)
 {
-  STREAM_LOG(LogLevel::Info, ("MediaStream %p Removing MediaStreamVideoSink %p as output",
-                              this, aSink));
+  STREAM_LOG(LogLevel::Info, ("MediaStream %p Removing VideoFrameContainer %p as output",
+                              this, aContainer));
   // Ensure that any frames currently queued for playback by the compositor
   // are removed.
-  aSink->ClearFrames();
-  mVideoOutputs.RemoveElement(aSink);
+  aContainer->ClearFutureFrames();
+  mVideoOutputs.RemoveElement(aContainer);
 }
 
 void
-MediaStream::AddVideoOutput(MediaStreamVideoSink* aSink)
+MediaStream::AddVideoOutput(VideoFrameContainer* aContainer)
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream, MediaStreamVideoSink* aSink) :
-      ControlMessage(aStream), mSink(aSink) {}
+    Message(MediaStream* aStream, VideoFrameContainer* aContainer) :
+      ControlMessage(aStream), mContainer(aContainer) {}
     void Run() override
     {
-      mStream->AddVideoOutputImpl(mSink.forget());
+      mStream->AddVideoOutputImpl(mContainer.forget());
     }
-    RefPtr<MediaStreamVideoSink> mSink;
+    RefPtr<VideoFrameContainer> mContainer;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aContainer));
 }
 
 void
-MediaStream::RemoveVideoOutput(MediaStreamVideoSink* aSink)
+MediaStream::RemoveVideoOutput(VideoFrameContainer* aContainer)
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream, MediaStreamVideoSink* aSink) :
-      ControlMessage(aStream), mSink(aSink) {}
+    Message(MediaStream* aStream, VideoFrameContainer* aContainer) :
+      ControlMessage(aStream), mContainer(aContainer) {}
     void Run() override
     {
-      mStream->RemoveVideoOutputImpl(mSink);
+      mStream->RemoveVideoOutputImpl(mContainer);
     }
-    RefPtr<MediaStreamVideoSink> mSink;
+    RefPtr<VideoFrameContainer> mContainer;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aContainer));
 }
 
 void
