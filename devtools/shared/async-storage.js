@@ -42,7 +42,6 @@
 
 "use strict";
 
-const {indexedDB} = require("sdk/indexed-db");
 const Promise = require("promise");
 
 const DBNAME = "devtools-async-storage";
