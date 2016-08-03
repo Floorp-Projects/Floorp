@@ -109,8 +109,7 @@ public:
                    StreamTime aDuration,
                    const IntSize& aIntrinsicSize,
                    const PrincipalHandle& aPrincipalHandle,
-                   bool aForceBlack = false,
-                   TimeStamp aTimeStamp = TimeStamp::Now());
+                   bool aForceBlack = false);
   const VideoFrame* GetLastFrame(StreamTime* aStart = nullptr)
   {
     VideoChunk* c = GetLastChunk();

@@ -48,14 +48,11 @@ public:
                        const TimeStamp& aTargetTime);
   // Returns the last principalHandle we notified mElement about.
   PrincipalHandle GetLastPrincipalHandle();
-  PrincipalHandle GetLastPrincipalHandleLocked();
   // We will notify mElement that aPrincipalHandle has been applied when all
   // FrameIDs prior to aFrameID have been flushed out.
   // aFrameID is ignored if aPrincipalHandle already is our pending principalHandle.
   void UpdatePrincipalHandleForFrameID(const PrincipalHandle& aPrincipalHandle,
                                        const ImageContainer::FrameID& aFrameID);
-  void UpdatePrincipalHandleForFrameIDLocked(const PrincipalHandle& aPrincipalHandle,
-                                             const ImageContainer::FrameID& aFrameID);
   void SetCurrentFrames(const gfx::IntSize& aIntrinsicSize,
                         const nsTArray<ImageContainer::NonOwningImage>& aImages);
   void ClearCurrentFrame(const gfx::IntSize& aIntrinsicSize)
