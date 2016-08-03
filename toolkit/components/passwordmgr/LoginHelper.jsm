@@ -147,7 +147,7 @@ this.LoginHelper = {
     let propertyBag = Cc["@mozilla.org/hash-property-bag;1"]
                       .createInstance(Ci.nsIWritablePropertyBag);
     if (aProperties) {
-      for (let [name, value] of Iterator(aProperties)) {
+      for (let [name, value] of Object.entries(aProperties)) {
         propertyBag.setProperty(name, value);
       }
     }
