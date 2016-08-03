@@ -666,7 +666,7 @@ class WidgetPointerEvent : public WidgetMouseEvent
   friend class mozilla::dom::PBrowserChild;
 
   WidgetPointerEvent()
-    : width(0)
+    : mWidth(0)
     , height(0)
     , isPrimary(true)
   {
@@ -677,7 +677,7 @@ public:
 
   WidgetPointerEvent(bool aIsTrusted, EventMessage aMsg, nsIWidget* w)
     : WidgetMouseEvent(aIsTrusted, aMsg, w, ePointerEventClass, eReal)
-    , width(0)
+    , mWidth(0)
     , height(0)
     , isPrimary(true)
   {
@@ -685,7 +685,7 @@ public:
 
   explicit WidgetPointerEvent(const WidgetMouseEvent& aEvent)
     : WidgetMouseEvent(aEvent)
-    , width(0)
+    , mWidth(0)
     , height(0)
     , isPrimary(true)
   {
@@ -704,7 +704,7 @@ public:
     return result;
   }
 
-  uint32_t width;
+  uint32_t mWidth;
   uint32_t height;
   bool isPrimary;
 
@@ -714,7 +714,7 @@ public:
   {
     AssignMouseEventData(aEvent, aCopyTargets);
 
-    width = aEvent.width;
+    mWidth = aEvent.mWidth;
     height = aEvent.height;
     isPrimary = aEvent.isPrimary;
   }
