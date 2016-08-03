@@ -122,6 +122,7 @@ devtools/server/actors/**
 devtools/server/performance/**
 devtools/server/tests/**
 devtools/shared/*.js
+!devtools/shared/async-storage.js
 !devtools/shared/async-utils.js
 !devtools/shared/css-lexer.js
 !devtools/shared/defer.js
