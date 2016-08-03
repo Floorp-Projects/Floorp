@@ -170,7 +170,11 @@ GMPWrapper.prototype = {
   get version() { return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_VERSION, null,
                                       this._plugin.id); },
 
-  get isActive() { return !this.appDisabled && !this.userDisabled; },
+  get isActive() {
+    return !this.appDisabled &&
+           !this.userDisabled &&
+           !GMPUtils.isPluginHidden(this._plugin.id);
+  },
   get appDisabled() {
     if (this._plugin.isEME && !GMPPrefs.get(GMPPrefs.KEY_EME_ENABLED, true)) {
       // If "media.eme.enabled" is false, all EME plugins are disabled.
