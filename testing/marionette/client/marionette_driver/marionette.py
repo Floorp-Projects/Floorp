@@ -1071,7 +1071,7 @@ class Marionette(object):
         self.start_session(session_id=self.session_id)
         self.reset_timeouts()
 
-        if in_app:
+        if in_app and self.session.get('processId'):
             # In some cases Firefox restarts itself by spawning into a new process group.
             # As long as mozprocess cannot track that behavior (bug 1284864) we assist by
             # informing about the new process id.
