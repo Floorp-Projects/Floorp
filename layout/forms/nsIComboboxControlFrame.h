@@ -21,6 +21,11 @@ public:
    */
   virtual bool IsDroppedDown() = 0;
 
+  virtual bool IsOpenInParentProcess() = 0;
+  virtual void SetOpenInParentProcess(bool aVal) = 0;
+
+  bool IsDroppedDownOrHasParentPopup() { return IsDroppedDown() || IsOpenInParentProcess(); }
+
   /**
    * Shows or hides the drop down
    */
