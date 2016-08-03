@@ -87,7 +87,7 @@ PointerEvent::Constructor(EventTarget* aOwner,
 
   WidgetPointerEvent* widgetEvent = e->mEvent->AsPointerEvent();
   widgetEvent->pointerId = aParam.mPointerId;
-  widgetEvent->width = aParam.mWidth;
+  widgetEvent->mWidth = aParam.mWidth;
   widgetEvent->height = aParam.mHeight;
   widgetEvent->pressure = aParam.mPressure;
   widgetEvent->tiltX = aParam.mTiltX;
@@ -126,7 +126,7 @@ PointerEvent::PointerId()
 int32_t
 PointerEvent::Width()
 {
-  return mEvent->AsPointerEvent()->width;
+  return mEvent->AsPointerEvent()->mWidth;
 }
 
 int32_t
