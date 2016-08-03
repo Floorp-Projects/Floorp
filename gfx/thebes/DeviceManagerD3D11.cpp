@@ -350,7 +350,7 @@ DeviceManagerD3D11::AttemptWARPDeviceCreation()
 
 bool
 DeviceManagerD3D11::AttemptD3D11ContentDeviceCreationHelper(
-  IDXGIAdapter1* aAdapter, HRESULT& aResOut)
+  IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aOutDevice, HRESULT& aResOut)
 {
   MOZ_SEH_TRY {
     aResOut =
@@ -358,7 +358,7 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreationHelper(
         aAdapter, mIsWARP ? D3D_DRIVER_TYPE_WARP : D3D_DRIVER_TYPE_UNKNOWN,
         nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(mContentDevice), nullptr, nullptr);
+        D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
 
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
@@ -378,16 +378,22 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
   }
 
   HRESULT hr;
-  if (!AttemptD3D11ContentDeviceCreationHelper(adapter, hr)) {
+  RefPtr<ID3D11Device> device;
+  if (!AttemptD3D11ContentDeviceCreationHelper(adapter, device, hr)) {
     gfxCriticalNote << "Recovered from crash while creating a D3D11 content device";
     gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Content);
     return FeatureStatus::CrashedInHandler;
   }
 
-  if (FAILED(hr) || !mContentDevice) {
+  if (FAILED(hr) || !device) {
     gfxCriticalNote << "Failed to create a D3D11 content device: " << hexa(hr);
     gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Content);
     return FeatureStatus::Failed;
+  }
+
+  {
+    MutexAutoLock lock(mDeviceLock);
+    mContentDevice = device;
   }
 
   // InitializeD2D() will abort early if the compositor device did not support
@@ -398,7 +404,10 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
   // If it fails, we won't use Direct2D.
   if (XRE_IsContentProcess()) {
     if (!D3D11Checks::DoesTextureSharingWork(mContentDevice)) {
-      mContentDevice = nullptr;
+      {
+        MutexAutoLock lock(mDeviceLock);
+        mContentDevice = nullptr;
+      }
       return FeatureStatus::Failed;
     }
 
@@ -567,7 +576,7 @@ DeviceManagerD3D11::GetCompositorDevice()
 RefPtr<ID3D11Device>
 DeviceManagerD3D11::GetContentDevice()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mDeviceLock);
   return mContentDevice;
 }
 
