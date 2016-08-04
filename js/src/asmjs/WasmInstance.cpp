@@ -102,11 +102,11 @@ Instance::addressOfSigId(const SigIdDesc& sigId) const
     return (const void**)(codeSegment().globalData() + sigId.globalDataOffset());
 }
 
-FuncImportExit&
-Instance::funcImportToExit(const FuncImport& fi)
+FuncImportTls&
+Instance::funcImportTls(const FuncImport& fi)
 {
-    MOZ_ASSERT(fi.exitGlobalDataOffset() >= InitialGlobalDataBytes);
-    return *(FuncImportExit*)(codeSegment().globalData() + fi.exitGlobalDataOffset());
+    MOZ_ASSERT(fi.tlsDataOffset() >= InitialGlobalDataBytes);
+    return *(FuncImportTls*)(codeSegment().globalData() + fi.tlsDataOffset());
 }
 
 bool
@@ -153,8 +153,8 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
         }
     }
 
-    FuncImportExit& exit = funcImportToExit(fi);
-    RootedValue fval(cx, ObjectValue(*exit.fun));
+    FuncImportTls& import = funcImportTls(fi);
+    RootedValue fval(cx, ObjectValue(*import.fun));
     RootedValue thisv(cx, UndefinedValue());
     if (!Call(cx, fval, thisv, args, rval))
         return false;
@@ -165,16 +165,16 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     if (hasI64Arg || fi.sig().ret() == ExprType::I64)
         return true;
 
-    // The exit may already have become optimized.
+    // The import may already have become optimized.
     void* jitExitCode = codeBase() + fi.jitExitCodeOffset();
-    if (exit.code == jitExitCode)
+    if (import.code == jitExitCode)
         return true;
 
     // Test if the function is JIT compiled.
-    if (!exit.fun->hasScript())
+    if (!import.fun->hasScript())
         return true;
 
-    JSScript* script = exit.fun->nonLazyScript();
+    JSScript* script = import.fun->nonLazyScript();
     if (!script->hasBaselineScript()) {
         MOZ_ASSERT(!script->hasIonScript());
         return true;
@@ -187,20 +187,20 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
         return true;
 
     // Currently we can't rectify arguments. Therefore disable if argc is too low.
-    if (exit.fun->nargs() > fi.sig().args().length())
+    if (import.fun->nargs() > fi.sig().args().length())
         return true;
 
     // Ensure the argument types are included in the argument TypeSets stored in
-    // the TypeScript. This is necessary for Ion, because the import exit will
-    // use the skip-arg-checks entry point.
+    // the TypeScript. This is necessary for Ion, because the import will use
+    // the skip-arg-checks entry point.
     //
     // Note that the TypeScript is never discarded while the script has a
     // BaselineScript, so if those checks hold now they must hold at least until
-    // the BaselineScript is discarded and when that happens the import exit is
+    // the BaselineScript is discarded and when that happens the import is
     // patched back.
     if (!TypeScript::ThisTypes(script)->hasType(TypeSet::UndefinedType()))
         return true;
-    for (uint32_t i = 0; i < exit.fun->nargs(); i++) {
+    for (uint32_t i = 0; i < import.fun->nargs(); i++) {
         TypeSet::Type type = TypeSet::UnknownType();
         switch (fi.sig().args()[i]) {
           case ValType::I32:   type = TypeSet::Int32Type(); break;
@@ -224,8 +224,8 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     if (!script->baselineScript()->addDependentWasmImport(cx, *this, funcImportIndex))
         return false;
 
-    exit.code = jitExitCode;
-    exit.baselineScript = script->baselineScript();
+    import.code = jitExitCode;
+    import.baselineScript = script->baselineScript();
     return true;
 }
 
@@ -294,10 +294,10 @@ Instance::Instance(JSContext* cx,
 
     for (size_t i = 0; i < metadata().funcImports.length(); i++) {
         const FuncImport& fi = metadata().funcImports[i];
-        FuncImportExit& exit = funcImportToExit(fi);
-        exit.code = codeBase() + fi.interpExitCodeOffset();
-        exit.fun = funcImports[i];
-        exit.baselineScript = nullptr;
+        FuncImportTls& import = funcImportTls(fi);
+        import.code = codeBase() + fi.interpExitCodeOffset();
+        import.fun = funcImports[i];
+        import.baselineScript = nullptr;
     }
 
     uint8_t* globalData = code_->segment().globalData();
@@ -364,9 +364,9 @@ Instance::~Instance()
     compartment_->wasm.unregisterInstance(*this);
 
     for (unsigned i = 0; i < metadata().funcImports.length(); i++) {
-        FuncImportExit& exit = funcImportToExit(metadata().funcImports[i]);
-        if (exit.baselineScript)
-            exit.baselineScript->removeDependentWasmImport(*this, i);
+        FuncImportTls& import = funcImportTls(metadata().funcImports[i]);
+        if (import.baselineScript)
+            import.baselineScript->removeDependentWasmImport(*this, i);
     }
 
     if (!metadata().sigIds.empty()) {
@@ -390,7 +390,7 @@ Instance::trace(JSTracer* trc)
     TraceEdge(trc, &object_, "wasm object");
 
     for (const FuncImport& fi : metadata().funcImports)
-        TraceNullableEdge(trc, &funcImportToExit(fi).fun, "wasm function import");
+        TraceNullableEdge(trc, &funcImportTls(fi).fun, "wasm function import");
 
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }
@@ -692,9 +692,9 @@ void
 Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
     const FuncImport& fi = metadata().funcImports[funcImportIndex];
-    FuncImportExit& exit = funcImportToExit(fi);
-    exit.code = codeBase() + fi.interpExitCodeOffset();
-    exit.baselineScript = nullptr;
+    FuncImportTls& import = funcImportTls(fi);
+    import.code = codeBase() + fi.interpExitCodeOffset();
+    import.baselineScript = nullptr;
 }
 
 bool
