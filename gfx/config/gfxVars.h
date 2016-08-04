@@ -23,6 +23,7 @@ class gfxVarReceiver;
 // Generator for graphics vars.
 #define GFX_VARS_LIST(_)                                                \
   /* C++ Name,                  Data Type,        Default Value */      \
+  _(TileSize,                   IntSize,          IntSize(-1, -1))      \
   /* Add new entries above this line. */
 
 // Some graphics settings are computed on the UI process and must be
