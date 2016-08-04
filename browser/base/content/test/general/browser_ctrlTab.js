@@ -41,22 +41,10 @@ add_task(function* () {
   checkTabs(3);
   yield ctrlTabTest([2, 1, 0], 7, 1);
 
-  { // test for bug 1292049
-    let tabToClose = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:buildconfig");
-    checkTabs(4);
-    selectTabs([0, 1, 2, 3]);
-
-    yield BrowserTestUtils.removeTab(tabToClose);
-    checkTabs(3);
-    undoCloseTab();
-    checkTabs(4);
-    is(gBrowser.tabContainer.selectedIndex, 3, "tab is selected after closing and restoring it");
-
-    yield ctrlTabTest([], 1, 2);
-  }
+  gBrowser.addTab();
+  checkTabs(4);
 
   { // test for bug 445369
-    checkTabs(4);
     selectTabs([1, 2, 0]);
 
     let selectedTab = gBrowser.selectedTab;
@@ -139,7 +127,12 @@ add_task(function* () {
   }
 
   function checkTabs(aTabs) {
-    is(gBrowser.tabs.length, aTabs, "number of open tabs should be " + aTabs);
+    var tabs = gBrowser.tabs.length;
+    if (tabs != aTabs) {
+      while (gBrowser.tabs.length > 1)
+        gBrowser.removeCurrentTab();
+      throw "expected " + aTabs + " open tabs, got " + tabs;
+    }
   }
 
   function selectTabs(tabs) {
