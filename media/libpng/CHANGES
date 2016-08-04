@@ -5596,6 +5596,85 @@ Version 1.6.23rc02 [June 4, 2016]
 Version 1.6.23 [June 9, 2016]
   Fixed bad link to RFC2083 in png.5 (Nikola Forro).
 
+Version 1.6.24beta01 [June 11, 2016]
+  Avoid potential overflow of the PNG_IMAGE_SIZE macro.  This macro
+    is not used within libpng, but is used in some of the examples.
+
+Version 1.6.24beta02 [June 23, 2016]
+  Correct filter heuristic overflow handling. This was broken when the
+    write filter code was moved out-of-line; if there is a single filter and
+    the heuristic sum overflows the calculation of the filtered line is not
+    completed.  In versions prior to 1.6 the code was duplicated in-line
+    and the check not performed, so the filter operation completed; however,
+    in the multi-filter case where the sum is performed the 'none' filter would
+    be selected if all the sums overflowed, even if it wasn't in the filter
+    list.  The fix to the first problem is simply to provide PNG_SIZE_MAX as
+    the current lmins sum value; this means the sum can never exceed it and
+    overflows silently.  A reasonable compiler that does choose to inline
+    the code will simply eliminate the sum check.
+  The fix to the second problem is to use high precision arithmetic (this is
+    implemented in 1.7), however a simple safe fix here is to chose the lowest
+    numbered filter in the list from png_set_filter (this only works if the
+    first problem is also fixed) (John Bowler).
+  Use a more efficient absolute value calculation on SSE2 (Matthieu Darbois).
+  Fixed the case where PNG_IMAGE_BUFFER_SIZE can overflow in the application
+    as a result of the application using an increased 'row_stride'; previously
+    png_image_finish_read only checked for overflow on the base calculation of
+    components.  (I.e. it checked for overflow of a 32-bit number on the total
+    number of pixel components in the output format, not the possibly padded row
+    length and not the number of bytes, which for linear formats is twice the
+    number of components.)
+  MSVC does not like '-(unsigned)', so replaced it with 0U-(unsigned)
+  MSVC does not like (uInt) = -(unsigned) (i.e. as an initializer), unless
+    the conversion is explicitly invoked by a cast.
+  Put the SKIP definition in the correct place. It needs to come after the
+    png.h include (see all the other .c files in contrib/libtests) because it
+    depends on PNG_LIBPNG_VER.
+  Removed the three compile warning options from the individual project
+    files into the zlib.props globals.  It increases the warning level from 4
+    to All and adds a list of the warnings that need to be turned off.  This is
+    semi-documentary; the intent is to tell libpng users which warnings have
+    been examined and judged non-fixable at present.  The warning about
+    structure padding is fixable, but it would be a signficant change (moving
+    structure members around).
+
+Version 1.6.24beta03 [July 4, 2016]
+  Optimized absolute value calculation in filter selection, similar to
+    code in the PAETH decoder in pngrutil.c. Build with PNG_USE_ABS to
+    use this.
+  Added pngcp to the build together with a pngcp.dfa configuration test.
+  Added high resolution timing to pngcp.
+  Added "Common linking failures" section to INSTALL.
+  Relocated misplaced #endif in png.c sRGB profile checking.
+  Fixed two Coverity issues in pngcp.c.
+
+Version 1.6.24beta04 [July 8, 2016]
+  Avoid filter-selection heuristic sum calculations in cases where only one
+    filter is a candidate for selection. This trades off code size (added
+    private png_setup_*_row_only() functions) for speed.
+
+Version 1.6.24beta05 [July 13, 2016]
+  Fixed some indentation to comply with our coding style.
+  Added contrib/tools/reindent.
+
+Version 1.6.24beta06 [July 18, 2016]
+  Fixed more indentation to comply with our coding style.
+  Eliminated unnecessary tests of boolean png_isaligned() vs 0.
+
+Version 1.6.24rc01 [July 25, 2016]
+  No changes.
+
+Version 1.6.24rc02 [August 1, 2016]
+  Conditionally compile SSE2 headers in contrib/intel/intel_sse.patch
+  Conditionally compile png_decompress_chunk().
+
+Version 1.6.24rc03 [August 2, 2016]
+  Conditionally compile ARM_NEON headers in pngpriv.h
+  Updated contrib/intel/intel_sse.patch
+
+Version 1.6.24[August 4, 2016]
+  No changes.
+
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
 https://lists.sourceforge.net/lists/listinfo/png-mng-implement
