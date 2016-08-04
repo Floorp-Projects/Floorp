@@ -216,7 +216,11 @@ Narrator.prototype = {
       let tw = this._treeWalker;
       if (!this._isParagraphInView(tw.currentNode)) {
         tw.currentNode = tw.root;
-        while (tw.nextNode() && !this._isParagraphInView(tw.currentNode)) {}
+        while (tw.nextNode()) {
+          if (this._isParagraphInView(tw.currentNode)) {
+            break;
+          }
+        }
         // _speakInner will advance to the next node for us, so we need
         // to have it one paragraph back from the first visible one.
         tw.previousNode();

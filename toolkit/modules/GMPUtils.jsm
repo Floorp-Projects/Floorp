@@ -68,8 +68,6 @@ this.GMPUtils = {
       return true;
     }
     if (aPlugin.id == EME_ADOBE_ID) {
-      if (Services.appinfo.OS != "WINNT") {
-      }
       // Windows Vista and later only supported by Adobe EME.
       return AppConstants.isPlatformAndVersionAtLeast("win", "6");
     } else if (aPlugin.id == WIDEVINE_ID) {
