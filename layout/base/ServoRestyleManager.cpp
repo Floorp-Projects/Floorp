@@ -38,19 +38,13 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     snapshot->AddExplicitChangeHint(aMinChangeHint);
   }
 
-  nsIPresShell* presShell = PresContext()->PresShell();
-  if (!ObservingRefreshDriver()) {
-    SetObservingRefreshDriver(
-      PresContext()->RefreshDriver()->AddStyleFlushObserver(presShell));
-  }
-
-  presShell->GetDocument()->SetNeedStyleFlush();
+  PostRestyleEventInternal(false);
 }
 
 void
 ServoRestyleManager::PostRestyleEventForLazyConstruction()
 {
-  NS_WARNING("stylo: ServoRestyleManager::PostRestyleEventForLazyConstruction not implemented");
+  PostRestyleEventInternal(true);
 }
 
 void
@@ -243,6 +237,7 @@ ServoRestyleManager::ProcessPendingRestyles()
     }
 
     if (root->IsDirtyForServo() || root->HasDirtyDescendantsForServo()) {
+      mInStyleRefresh = true;
       styleSet->RestyleSubtree(root);
 
       // First do any queued-up frame creation. (see bugs 827239 and 997506).
@@ -256,9 +251,10 @@ ServoRestyleManager::ProcessPendingRestyles()
       PresContext()->FrameConstructor()->CreateNeededFrames();
 
       nsStyleChangeList changeList;
-
       RecreateStyleContexts(root, nullptr, styleSet, changeList);
       ProcessRestyledFrames(changeList);
+
+      mInStyleRefresh = false;
     }
   }
 

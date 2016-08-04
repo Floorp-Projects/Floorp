@@ -121,7 +121,12 @@ private:
   bool mObservingRefreshDriver;
 
 protected:
+  // True if we're in the middle of a nsRefreshDriver refresh
+  bool mInStyleRefresh;
+
   OverflowChangedTracker mOverflowChangedTracker;
+
+  void PostRestyleEventInternal(bool aForLazyConstruction);
 
   /**
    * These are protected static methods that help with the change hint
