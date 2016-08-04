@@ -58,8 +58,8 @@ nsSecretDecoderRing::~nsSecretDecoderRing()
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::Encrypt(unsigned char* data, int32_t dataLen,
-                             unsigned char** result, int32_t* _retval)
+nsSecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
+                             unsigned char** result, uint32_t* _retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -105,8 +105,8 @@ nsSecretDecoderRing::Encrypt(unsigned char* data, int32_t dataLen,
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::Decrypt(unsigned char* data, int32_t dataLen,
-                             unsigned char** result, int32_t* _retval)
+nsSecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
+                             unsigned char** result, uint32_t* _retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -150,7 +150,7 @@ nsSecretDecoderRing::EncryptString(const char* text, char** _retval)
 {
   nsresult rv = NS_OK;
   unsigned char *encrypted = 0;
-  int32_t eLen;
+  uint32_t eLen = 0;
 
   if (!text || !_retval) {
     rv = NS_ERROR_INVALID_POINTER;
@@ -174,9 +174,9 @@ nsSecretDecoderRing::DecryptString(const char* crypt, char** _retval)
   nsresult rv = NS_OK;
   char *r = 0;
   unsigned char *decoded = 0;
-  int32_t decodedLen;
+  uint32_t decodedLen = 0;
   unsigned char *decrypted = 0;
-  int32_t decryptedLen;
+  uint32_t decryptedLen = 0;
 
   if (!crypt || !_retval) {
     rv = NS_ERROR_INVALID_POINTER;
@@ -298,19 +298,15 @@ nsSecretDecoderRing::SetWindow(nsISupports*)
 // Support routines
 
 nsresult
-nsSecretDecoderRing::encode(const unsigned char* data, int32_t dataLen,
+nsSecretDecoderRing::encode(const unsigned char* data, uint32_t dataLen,
                             char** _retval)
 {
-  if (dataLen < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  return Base64Encode(BitwiseCast<const char*>(data),
-                      AssertedCast<uint32_t>(dataLen), _retval);
+  return Base64Encode(BitwiseCast<const char*>(data), dataLen, _retval);
 }
 
 nsresult
 nsSecretDecoderRing::decode(const char* data, unsigned char** result,
-                            int32_t* _retval)
+                            uint32_t* _retval)
 {
   uint32_t dataLen = strlen(data);
   char* binary = nullptr;
@@ -319,10 +315,7 @@ nsSecretDecoderRing::decode(const char* data, unsigned char** result,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (binaryLen > INT32_MAX) {
-    return NS_ERROR_FAILURE;
-  }
   *result = BitwiseCast<unsigned char*>(binary);
-  *_retval = AssertedCast<int32_t>(binaryLen);
+  *_retval = binaryLen;
   return NS_OK;
 }
