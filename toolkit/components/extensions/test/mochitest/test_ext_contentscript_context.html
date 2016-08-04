@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script contexts</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+/* eslint-disable mozilla/balanced-listeners */
+
+add_task(function* test_contentscript_context() {
+  function contentScript() {
+    browser.test.sendMessage("content-script-ready");
+
+    window.addEventListener("pagehide", () => {
+      browser.test.sendMessage("content-script-hide");
+    }, true);
+    window.addEventListener("pageshow", () => {
+      browser.test.sendMessage("content-script-show");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        "matches": ["http://example.com/"],
+        "js": ["content_script.js"],
+      }],
+    },
+
+    files: {
+      "content_script.js": `(${contentScript})()`,
+    },
+  });
+
+  yield extension.startup();
+
+  let win = window.open("http://example.com/");
+  yield extension.awaitMessage("content-script-ready");
+  yield extension.awaitMessage("content-script-show");
+
+  // Get the content script context and check that it points to the correct window.
+
+  let {DocumentManager} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionContent.jsm", {});
+  let context = DocumentManager.getContentScriptContext(extension.id, win);
+  ok(context != null, "Got content script context");
+
+  is(SpecialPowers.unwrap(context.contentWindow), win, "Context's contentWindow property is correct");
+
+  // Navigate so that the content page is hidden in the bfcache.
+
+  win.location = "http://example.org/";
+  yield extension.awaitMessage("content-script-hide");
+
+  is(context.contentWindow, null, "Context's contentWindow property is null");
+
+  // Navigate back so the content page is resurrected from the bfcache.
+
+  SpecialPowers.wrap(win).history.back();
+  yield extension.awaitMessage("content-script-show");
+
+  is(SpecialPowers.unwrap(context.contentWindow), win, "Context's contentWindow property is correct");
+
+
+  win.close();
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

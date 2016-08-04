@@ -101,6 +101,12 @@ function runSafe(context, f, ...args) {
   return runSafeWithoutClone(f, ...args);
 }
 
+function getInnerWindowID(window) {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindowUtils)
+    .currentInnerWindowID;
+}
+
 // Return true if the given value is an instance of the given
 // native type.
 function instanceOf(value, type) {
@@ -165,6 +171,49 @@ class BaseContext {
     this.extensionId = extensionId;
     this.jsonSandbox = null;
     this.active = true;
+
+    this.docShell = null;
+    this.contentWindow = null;
+    this.innerWindowID = 0;
+  }
+
+  setContentWindow(contentWindow) {
+    let {document} = contentWindow;
+    let docShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDocShell);
+
+    this.innerWindowID = getInnerWindowID(contentWindow);
+
+    let onPageShow = event => {
+      if (!event || event.target === document) {
+        this.docShell = docShell;
+        this.contentWindow = contentWindow;
+        this.active = true;
+      }
+    };
+    let onPageHide = event => {
+      if (!event || event.target === document) {
+        // Put this off until the next tick.
+        Promise.resolve().then(() => {
+          this.docShell = null;
+          this.contentWindow = null;
+          this.active = false;
+        });
+      }
+    };
+
+    onPageShow();
+    contentWindow.addEventListener("pagehide", onPageHide, true);
+    contentWindow.addEventListener("pageshow", onPageShow, true);
+    this.callOnClose({
+      close: () => {
+        onPageHide();
+        if (this.active) {
+          contentWindow.removeEventListener("pagehide", onPageHide, true);
+          contentWindow.removeEventListener("pageshow", onPageShow, true);
+        }
+      },
+    });
   }
 
   get cloneScope() {
@@ -1526,6 +1575,7 @@ this.ExtensionUtils = {
   extend,
   flushJarCache,
   getConsole,
+  getInnerWindowID,
   ignoreEvent,
   injectAPI,
   instanceOf,
