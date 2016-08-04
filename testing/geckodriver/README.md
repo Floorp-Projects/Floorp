@@ -36,6 +36,9 @@ the more bug fixes and features.
 
 ## Firefox capabilities
 
+**Note**: The names of these capabilities will change in a future release to better match
+the precedent set by ChromeDriver.
+
 geckodriver supports a couple of non-standard capabilities
 to customise and configure a Firefox session:
 
