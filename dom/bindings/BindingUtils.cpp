@@ -829,12 +829,16 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
                                const js::Class* protoClass,
                                const NativeProperties* properties,
                                const NativeProperties* chromeOnlyProperties,
-                               const char* const* unscopableNames)
+                               const char* const* unscopableNames,
+                               bool isGlobal)
 {
   JS::Rooted<JSObject*> ourProto(cx,
     JS_NewObjectWithUniqueType(cx, Jsvalify(protoClass), parentProto));
   if (!ourProto ||
-      !DefineProperties(cx, ourProto, properties, chromeOnlyProperties)) {
+      // We don't try to define properties on the global's prototype; those
+      // properties go on the global itself.
+      (!isGlobal &&
+       !DefineProperties(cx, ourProto, properties, chromeOnlyProperties))) {
     return nullptr;
   }
 
@@ -916,7 +920,8 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        const NativeProperties* properties,
                        const NativeProperties* chromeOnlyProperties,
                        const char* name, bool defineOnGlobal,
-                       const char* const* unscopableNames)
+                       const char* const* unscopableNames,
+                       bool isGlobal)
 {
   MOZ_ASSERT(protoClass || constructorClass || constructor,
              "Need at least one class or a constructor!");
@@ -952,7 +957,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
     proto =
       CreateInterfacePrototypeObject(cx, global, protoProto, protoClass,
                                      properties, chromeOnlyProperties,
-                                     unscopableNames);
+                                     unscopableNames, isGlobal);
     if (!proto) {
       return;
     }
