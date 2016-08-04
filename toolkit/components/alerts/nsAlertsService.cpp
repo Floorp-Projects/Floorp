@@ -11,17 +11,11 @@
 
 #include "nsAlertsService.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#else
-
 #include "nsXPCOM.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMWindow.h"
 #include "nsPromiseFlatString.h"
 #include "nsToolkitCompsCID.h"
-
-#endif // !MOZ_WIDGET_ANDROID
 
 #ifdef MOZ_PLACES
 #include "mozIAsyncFavicons.h"
@@ -85,8 +79,6 @@ NS_IMPL_ISUPPORTS(IconCallback, nsIFaviconDataCallback)
 
 #endif // MOZ_PLACES
 
-#ifndef MOZ_WIDGET_ANDROID
-
 nsresult
 ShowWithIconBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
                     nsIObserver* aAlertListener)
@@ -125,20 +117,24 @@ ShowWithIconBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
 
 nsresult
 ShowWithBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
-                nsIObserver* aAlertListener)
+                nsIObserver* aAlertListener, const nsAString& aPersistentData)
 {
+  if (!aPersistentData.IsEmpty()) {
+    return aBackend->ShowPersistentNotification(
+        aPersistentData, aAlert, aAlertListener);
+  }
+
   if (Preferences::GetBool("alerts.showFavicons")) {
     nsresult rv = ShowWithIconBackend(aBackend, aAlert, aAlertListener);
     if (NS_SUCCEEDED(rv)) {
       return rv;
     }
   }
+
   // If favicons are disabled, or the backend doesn't support them, show the
   // alert without one.
   return aBackend->ShowAlert(aAlert, aAlertListener);
 }
-
-#endif // MOZ_WIDGET_ANDROID
 
 } // anonymous namespace
 
@@ -147,9 +143,7 @@ NS_IMPL_ISUPPORTS(nsAlertsService, nsIAlertsService, nsIAlertsDoNotDisturb)
 nsAlertsService::nsAlertsService() :
   mBackend(nullptr)
 {
-#ifndef MOZ_WIDGET_ANDROID
   mBackend = do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID);
-#endif // MOZ_WIDGET_ANDROID
 }
 
 nsAlertsService::~nsAlertsService()
@@ -231,40 +225,9 @@ NS_IMETHODIMP nsAlertsService::ShowPersistentNotification(const nsAString & aPer
     return NS_OK;
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-  nsAutoString imageUrl;
-  rv = aAlert->GetImageURL(imageUrl);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString title;
-  rv = aAlert->GetTitle(title);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString text;
-  rv = aAlert->GetText(text);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString name;
-  rv = aAlert->GetName(name);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  rv = aAlert->GetPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!aPersistentData.IsEmpty()) {
-    mozilla::AndroidBridge::Bridge()->ShowPersistentAlertNotification
-        (aPersistentData, imageUrl, title, text, cookie, name, principal);
-  } else {
-    mozilla::AndroidBridge::Bridge()->ShowAlertNotification
-        (imageUrl, title, text, cookie, aAlertListener, name, principal);
-  }
-
-  return NS_OK;
-#else
   // Check if there is an optional service that handles system-level notifications
   if (mBackend) {
-    rv = ShowWithBackend(mBackend, aAlert, aAlertListener);
+    rv = ShowWithBackend(mBackend, aAlert, aAlertListener, aPersistentData);
     if (NS_SUCCEEDED(rv)) {
       return rv;
     }
@@ -283,8 +246,7 @@ NS_IMETHODIMP nsAlertsService::ShowPersistentNotification(const nsAString & aPer
   // Use XUL notifications as a fallback if above methods have failed.
   nsCOMPtr<nsIAlertsService> xulBackend(nsXULAlerts::GetInstance());
   NS_ENSURE_TRUE(xulBackend, NS_ERROR_FAILURE);
-  return ShowWithBackend(xulBackend, aAlert, aAlertListener);
-#endif // !MOZ_WIDGET_ANDROID
+  return ShowWithBackend(xulBackend, aAlert, aAlertListener, aPersistentData);
 }
 
 NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
@@ -295,11 +257,6 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
     cpc->SendCloseAlert(nsAutoString(aAlertName), IPC::Principal(aPrincipal));
     return NS_OK;
   }
-
-#ifdef MOZ_WIDGET_ANDROID
-  java::GeckoAppShell::CloseNotification(aAlertName);
-  return NS_OK;
-#else
 
   nsresult rv;
   // Try the system notification service.
@@ -316,7 +273,6 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
     rv = xulBackend->CloseAlert(aAlertName, aPrincipal);
   }
   return rv;
-#endif // !MOZ_WIDGET_ANDROID
 }
 
 
