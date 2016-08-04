@@ -346,6 +346,21 @@ const JNINativeMethod ThumbnailHelper::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class ZoomedView::Natives : public mozilla::jni::NativeImpl<ZoomedView, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod ZoomedView::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<ZoomedView::RequestZoomedViewData_t>(
+            mozilla::jni::NativeStub<ZoomedView::RequestZoomedViewData_t, Impl>
+            ::template Wrap<&Impl::RequestZoomedViewData>)
+};
+
+template<class Impl>
 class LayerView::Compositor::Natives : public mozilla::jni::NativeImpl<Compositor, Impl>
 {
 public:
