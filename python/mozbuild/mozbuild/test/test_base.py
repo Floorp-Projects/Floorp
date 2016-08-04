@@ -12,6 +12,7 @@ import sys
 import tempfile
 import unittest
 
+from cStringIO import StringIO
 from mozfile.mozfile import NamedTemporaryFile
 
 from mozunit import main
@@ -272,8 +273,26 @@ class TestMozbuildObject(unittest.TestCase):
 
             os.chdir(topobjdir)
 
-            with self.assertRaises(ObjdirMismatchException):
-                MozbuildObject.from_environment(detect_virtualenv_mozinfo=False)
+            class MockMachContext(object):
+                pass
+
+            context = MockMachContext()
+            context.cwd = topobjdir
+            context.topdir = topsrcdir
+            context.settings = None
+            context.log_manager = None
+            context.detect_virtualenv_mozinfo=False
+
+            stdout = sys.stdout
+            sys.stdout = StringIO()
+            try:
+                with self.assertRaises(SystemExit):
+                    MachCommandBase(context)
+
+                self.assertTrue(sys.stdout.getvalue().startswith(
+                    'Ambiguous object directory detected.'))
+            finally:
+                sys.stdout = stdout
 
         finally:
             os.chdir(self._old_cwd)
