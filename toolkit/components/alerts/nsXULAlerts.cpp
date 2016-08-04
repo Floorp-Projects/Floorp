@@ -63,17 +63,15 @@ NS_IMPL_ISUPPORTS(nsXULAlerts, nsIAlertsService, nsIAlertsDoNotDisturb, nsIAlert
 /* static */ already_AddRefed<nsXULAlerts>
 nsXULAlerts::GetInstance()
 {
-#ifdef MOZ_WIDGET_ANDROID
   // Gecko on Android does not fully support XUL windows.
-  return nullptr;
-#else
+#ifndef MOZ_WIDGET_ANDROID
   if (!gXULAlerts) {
     gXULAlerts = new nsXULAlerts();
     ClearOnShutdown(&gXULAlerts);
   }
+#endif // MOZ_WIDGET_ANDROID
   RefPtr<nsXULAlerts> instance = gXULAlerts.get();
   return instance.forget();
-#endif // MOZ_WIDGET_ANDROID
 }
 
 NS_IMETHODIMP
