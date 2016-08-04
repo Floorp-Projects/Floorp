@@ -1128,8 +1128,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         l.type = handler.type;
         let listener = handler.listenerObject;
         let listenerDO = this.globalDebugObject.makeDebuggeeValue(listener);
-        // If the listener is not callable, assume it is an event handler object.
-        if (!listenerDO.callable) {
+        // If the listener is an object with a 'handleEvent' method, use that.
+        if (listenerDO.class == "Object" || listenerDO.class == "XULElement") {
           // For some events we don't have permission to access the
           // 'handleEvent' property when running in content scope.
           if (!listenerDO.unwrap()) {
