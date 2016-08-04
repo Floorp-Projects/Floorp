@@ -69,7 +69,6 @@ public class GeckoEvent {
         NATIVE_GESTURE_EVENT(31),
         CALL_OBSERVER(33),
         REMOVE_OBSERVER(34),
-        LOW_MEMORY(35),
         TELEMETRY_HISTOGRAM_ADD(37),
         TELEMETRY_UI_SESSION_START(42),
         TELEMETRY_UI_SESSION_STOP(43),
@@ -355,12 +354,6 @@ public class GeckoEvent {
     public static GeckoEvent createRemoveObserverEvent(String observerKey) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.REMOVE_OBSERVER);
         event.mCharacters = observerKey;
-        return event;
-    }
-
-    public static GeckoEvent createLowMemoryEvent(int level) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOW_MEMORY);
-        event.mMetaState = level;
         return event;
     }
 

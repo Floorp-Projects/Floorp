@@ -587,7 +587,6 @@ public:
         NATIVE_GESTURE_EVENT = 31,
         CALL_OBSERVER = 33,
         REMOVE_OBSERVER = 34,
-        LOW_MEMORY = 35,
         TELEMETRY_HISTOGRAM_ADD = 37,
         ADD_OBSERVER = 38,
         TELEMETRY_UI_SESSION_START = 42,
@@ -598,15 +597,6 @@ public:
         LONG_PRESS = 47,
         ZOOMEDVIEW = 48,
         dummy_java_enum_list_end
-    };
-
-    enum {
-        // Memory pressure levels. Keep these in sync with those in MemoryMonitor.java.
-        MEMORY_PRESSURE_NONE = 0,
-        MEMORY_PRESSURE_CLEANUP = 1,
-        MEMORY_PRESSURE_LOW = 2,
-        MEMORY_PRESSURE_MEDIUM = 3,
-        MEMORY_PRESSURE_HIGH = 4
     };
 
     enum {
