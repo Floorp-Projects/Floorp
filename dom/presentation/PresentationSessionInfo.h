@@ -230,6 +230,7 @@ public:
   nsresult Init(nsIPresentationControlChannel* aControlChannel) override;
 
   nsresult NotifyResponderReady();
+  nsresult NotifyResponderFailure();
 
   NS_IMETHODIMP OnSessionTransport(nsIPresentationSessionTransport* transport) override;
 

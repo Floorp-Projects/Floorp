@@ -1215,6 +1215,17 @@ PresentationPresentingInfo::NotifyResponderReady()
   return NS_OK;
 }
 
+nsresult
+PresentationPresentingInfo::NotifyResponderFailure()
+{
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+
+  return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
+}
+
 // nsIPresentationControlChannelListener
 NS_IMETHODIMP
 PresentationPresentingInfo::OnOffer(nsIPresentationChannelDescription* aDescription)
