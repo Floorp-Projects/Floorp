@@ -25,8 +25,7 @@ function run_test() {
     }
   ];
 
-  Cu.import("resource://gre/modules/SocialService.jsm");
-  Cu.import("resource://gre/modules/MozSocialAPI.jsm");
+  Cu.import("resource:///modules/SocialService.jsm");
 
   let runner = new AsyncRunner();
   let next = runner.next.bind(runner);
@@ -45,7 +44,6 @@ function* testAddProviders(manifests, next) {
   do_check_false(SocialService.enabled);
   let provider = yield SocialService.addProvider(manifests[0], next);
   do_check_true(SocialService.enabled);
-  do_check_true(MozSocialAPI._enabled);
   do_check_false(provider.enabled);
   provider = yield SocialService.addProvider(manifests[1], next);
   do_check_false(provider.enabled);
