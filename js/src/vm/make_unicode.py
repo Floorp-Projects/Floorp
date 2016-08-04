@@ -427,7 +427,7 @@ if (typeof reportCompare === "function")
     index1, index2, shift = splitbins(index)
 
     # Don't forget to update CharInfo in Unicode.cpp if you need to change this
-    assert shift == 5
+    assert shift == 6
 
     same_upper_index1, same_upper_index2, same_upper_shift = splitbins(same_upper_index)
 
@@ -527,13 +527,16 @@ if (typeof reportCompare === "function")
     data_file.write('\n')
 
     def dump(data, name, file):
-        file.write('const uint8_t unicode::' + name + '[] = {\n')
+        size = 'uint8_t'
+        if name == 'index1' or name == 'index2':
+            size = 'uint16_t'
+        file.write('const ' + size + ' unicode::' + name + '[] = {\n')
 
         line = pad = ' ' * 4
         lines = []
         for entry in data:
-            assert entry < 256
             s = str(entry)
+            assert len(s) <= 3
             s = s.rjust(3)
 
             if len(line + s) + 5 > 99:

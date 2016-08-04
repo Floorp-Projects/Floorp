@@ -28,7 +28,6 @@ var headers = [
   "coNtEnt-LEngth",
   "CoOKIe",
   "cOOkiE2",
-  "cOntEnt-tRAnsFer-enCoDiNg",
   "DATE",
   "dNT",
   "exPeCt",
@@ -54,6 +53,7 @@ function  startTest() {
   request.open("GET", window.location.href);
   for (i = 0; i < headers.length; i++)
     request.setRequestHeader(headers[i], "test" + i);
+  request.send(); // headers aren't set on the channel until send()
 
   // Read out headers
   var channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
@@ -73,6 +73,7 @@ function  startTest() {
   request.open("GET", window.location.href);
   for (i = 0; i < headers.length; i++)
     request.setRequestHeader(headers[i], "test" + i);
+  request.send(); // headers aren't set on the channel until send()
 
   // Read out headers
   var channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);

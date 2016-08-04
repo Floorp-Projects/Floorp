@@ -873,62 +873,12 @@ MulticastDNSDeviceProvider::OnPortChange(uint16_t aPort)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-MulticastDNSDeviceProvider::OnSessionRequest(nsITCPDeviceInfo* aDeviceInfo,
-                                             const nsAString& aUrl,
-                                             const nsAString& aPresentationId,
-                                             nsIPresentationControlChannel* aControlChannel)
+// Create a new device if we were unable to find one with the address.
+already_AddRefed<MulticastDNSDeviceProvider::Device>
+MulticastDNSDeviceProvider::GetOrCreateDevice(nsITCPDeviceInfo* aDeviceInfo)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsAutoCString address;
   Unused << aDeviceInfo->GetAddress(address);
-
-  LOG_I("OnSessionRequest: %s", address.get());
-
-  RefPtr<Device> device;
-  uint32_t index;
-  if (FindDeviceByAddress(address, index)) {
-    device = mDevices[index];
-  } else {
-    // create a one-time device object for non-discoverable controller
-    // this device will not be listed in available device list and cannot
-    // be used for requesting session.
-    nsAutoCString id;
-    Unused << aDeviceInfo->GetId(id);
-    uint16_t port;
-    Unused << aDeviceInfo->GetPort(&port);
-
-    device = new Device(id,
-                        /* aName = */ id,
-                        /* aType = */ EmptyCString(),
-                        address,
-                        port,
-                        DeviceState::eActive,
-                        /* aProvider = */ nullptr);
-  }
-
-  nsCOMPtr<nsIPresentationDeviceListener> listener;
-  if (NS_SUCCEEDED(GetListener(getter_AddRefs(listener))) && listener) {
-    Unused << listener->OnSessionRequest(device, aUrl, aPresentationId,
-                                         aControlChannel);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MulticastDNSDeviceProvider::OnTerminateRequest(nsITCPDeviceInfo* aDeviceInfo,
-                                               const nsAString& aPresentationId,
-                                               nsIPresentationControlChannel* aControlChannel,
-                                               bool aIsFromReceiver)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsAutoCString address;
-  Unused << aDeviceInfo->GetAddress(address);
-
-  LOG_I("OnTerminateRequest: %s", address.get());
 
   RefPtr<Device> device;
   uint32_t index;
@@ -952,10 +902,73 @@ MulticastDNSDeviceProvider::OnTerminateRequest(nsITCPDeviceInfo* aDeviceInfo,
                         /* aProvider = */ nullptr);
   }
 
+  return device.forget();
+}
+
+NS_IMETHODIMP
+MulticastDNSDeviceProvider::OnSessionRequest(nsITCPDeviceInfo* aDeviceInfo,
+                                             const nsAString& aUrl,
+                                             const nsAString& aPresentationId,
+                                             nsIPresentationControlChannel* aControlChannel)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsAutoCString address;
+  Unused << aDeviceInfo->GetAddress(address);
+
+  LOG_I("OnSessionRequest: %s", address.get());
+
+  RefPtr<Device> device = GetOrCreateDevice(aDeviceInfo);
+  nsCOMPtr<nsIPresentationDeviceListener> listener;
+  if (NS_SUCCEEDED(GetListener(getter_AddRefs(listener))) && listener) {
+    Unused << listener->OnSessionRequest(device, aUrl, aPresentationId,
+                                         aControlChannel);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MulticastDNSDeviceProvider::OnTerminateRequest(nsITCPDeviceInfo* aDeviceInfo,
+                                               const nsAString& aPresentationId,
+                                               nsIPresentationControlChannel* aControlChannel,
+                                               bool aIsFromReceiver)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsAutoCString address;
+  Unused << aDeviceInfo->GetAddress(address);
+
+  LOG_I("OnTerminateRequest: %s", address.get());
+
+  RefPtr<Device> device = GetOrCreateDevice(aDeviceInfo);
   nsCOMPtr<nsIPresentationDeviceListener> listener;
   if (NS_SUCCEEDED(GetListener(getter_AddRefs(listener))) && listener) {
     Unused << listener->OnTerminateRequest(device, aPresentationId,
                                            aControlChannel, aIsFromReceiver);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MulticastDNSDeviceProvider::OnReconnectRequest(nsITCPDeviceInfo* aDeviceInfo,
+                                               const nsAString& aUrl,
+                                               const nsAString& aPresentationId,
+                                               nsIPresentationControlChannel* aControlChannel)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsAutoCString address;
+  Unused << aDeviceInfo->GetAddress(address);
+
+  LOG_I("OnReconnectRequest: %s", address.get());
+
+  RefPtr<Device> device = GetOrCreateDevice(aDeviceInfo);
+  nsCOMPtr<nsIPresentationDeviceListener> listener;
+  if (NS_SUCCEEDED(GetListener(getter_AddRefs(listener))) && listener) {
+    Unused << listener->OnReconnectRequest(device, aUrl, aPresentationId,
+                                           aControlChannel);
   }
 
   return NS_OK;

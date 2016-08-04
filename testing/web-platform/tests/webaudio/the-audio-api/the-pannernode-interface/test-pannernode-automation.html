@@ -19,7 +19,6 @@ promise_test(function(t) {
     var left = buffer.getChannelData(0);
     var right = buffer.getChannelData(1);
     for (var i = 0; i < 2048; ++i) {
-      console.log(left[i], right[i]);
       if (i < 1024) {
         assert_true(Math.abs(left[i]) >= Math.abs(right[i]), "index " + i + " should be on the left");
       } else {

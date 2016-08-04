@@ -14,9 +14,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracerImpl.h"
 using namespace mozilla::tasktracer;

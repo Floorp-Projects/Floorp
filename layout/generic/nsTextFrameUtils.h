@@ -50,7 +50,10 @@ public:
     // NS_FRAME_IS_IN_SINGLE_CHAR_MI flag is set.  This occurs if the textframe
     // belongs to a MathML <mi> element whose embedded text consists of a
     // single character.
-    TEXT_IS_SINGLE_CHAR_MI   = 0x8000000
+    TEXT_IS_SINGLE_CHAR_MI   = 0x8000000,
+
+    // This is set if the text run might be observing for glyph changes.
+    TEXT_MIGHT_HAVE_GLYPH_CHANGES = 0x10000000,
 
     // The following are defined by gfxTextRunWordCache rather than here,
     // so that it also has access to the _INCOMING flag

@@ -912,10 +912,8 @@ var gDownloadingPage = {
         gUpdates.wiz.goTo("errors");
         return;
       }
-      else {
-        // Add this UI as a listener for active downloads
-        aus.addDownloadListener(this);
-      }
+      // Add this UI as a listener for active downloads
+      aus.addDownloadListener(this);
 
       if (activeUpdate)
         this._setUIState(!aus.isDownloading);

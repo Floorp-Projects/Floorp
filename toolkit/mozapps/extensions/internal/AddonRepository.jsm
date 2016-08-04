@@ -1668,9 +1668,8 @@ var AddonDatabase = {
 
     if (aSkipFlush) {
       return Promise.resolve();
-    } else {
-      return this.Writer.flush();
     }
+    return this.Writer.flush();
   },
 
   /**

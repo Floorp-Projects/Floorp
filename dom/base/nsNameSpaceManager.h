@@ -10,6 +10,8 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIAtom.h"
+#include "nsIDocument.h"
+#include "nsIObserver.h"
 #include "nsTArray.h"
 
 #include "mozilla/StaticPtr.h"
@@ -30,34 +32,42 @@ class nsAString;
  *
  */
 
-class nsNameSpaceManager final
+class nsNameSpaceManager final : public nsIObserver
 {
 public:
-  ~nsNameSpaceManager() {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+  virtual nsresult RegisterNameSpace(const nsAString& aURI,
+                                     int32_t& aNameSpaceID);
 
-  nsresult RegisterNameSpace(const nsAString& aURI, int32_t& aNameSpaceID);
-
-  nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
+  virtual nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
 
   nsIAtom* NameSpaceURIAtom(int32_t aNameSpaceID) {
     MOZ_ASSERT(aNameSpaceID > 0 && (int64_t) aNameSpaceID <= (int64_t) mURIArray.Length());
     return mURIArray.ElementAt(aNameSpaceID - 1); // id is index + 1
   }
 
-  int32_t GetNameSpaceID(const nsAString& aURI);
-  int32_t GetNameSpaceID(nsIAtom* aURI);
+  int32_t GetNameSpaceID(const nsAString& aURI,
+                         bool aInChromeDoc);
+  int32_t GetNameSpaceID(nsIAtom* aURI,
+                         bool aInChromeDoc);
 
   bool HasElementCreator(int32_t aNameSpaceID);
 
   static nsNameSpaceManager* GetInstance();
+  bool mMathMLDisabled;
+
 private:
   bool Init();
   nsresult AddNameSpace(already_AddRefed<nsIAtom> aURI, const int32_t aNameSpaceID);
+  nsresult AddDisabledNameSpace(already_AddRefed<nsIAtom> aURI, const int32_t aNameSpaceID);
+  ~nsNameSpaceManager() {};
 
   nsDataHashtable<nsISupportsHashKey, int32_t> mURIToIDTable;
+  nsDataHashtable<nsISupportsHashKey, int32_t> mDisabledURIToIDTable;
   nsTArray<nsCOMPtr<nsIAtom>> mURIArray;
 
-  static mozilla::StaticAutoPtr<nsNameSpaceManager> sInstance;
+  static mozilla::StaticRefPtr<nsNameSpaceManager> sInstance;
 };
  
 #endif // nsNameSpaceManager_h___

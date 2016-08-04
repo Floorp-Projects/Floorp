@@ -17,7 +17,6 @@ include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
 include protocol PMessagePort;
 include protocol PCameras;
-include protocol PNuwa;
 include protocol PQuota;
 include protocol PSendStream;
 include protocol PServiceWorkerManager;
@@ -61,7 +60,6 @@ sync protocol PBackground
   manages PGamepadTestChannel;
   manages PMessagePort;
   manages PCameras;
-  manages PNuwa;
   manages PQuota;
   manages PSendStream;
   manages PServiceWorkerManager;
@@ -93,8 +91,6 @@ parent:
   async PCacheStorage(Namespace aNamespace, PrincipalInfo aPrincipalInfo);
 
   async PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
-
-  async PNuwa();
 
   async PSendStream();
 

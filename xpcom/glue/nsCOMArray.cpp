@@ -198,7 +198,7 @@ nsCOMArray_base::InsertElementsAt(uint32_t aIndex,
   }
 }
 
-bool
+void
 nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, int32_t aIndex)
 {
   mArray.EnsureLengthAtLeast(aIndex + 1);
@@ -206,8 +206,6 @@ nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, int32_t aIndex)
   // Make sure to addref first, in case aObject == oldObject
   NS_IF_ADDREF(mArray[aIndex] = aObject);
   NS_IF_RELEASE(oldObject);
-  // XXX make this return void
-  return true;
 }
 
 bool

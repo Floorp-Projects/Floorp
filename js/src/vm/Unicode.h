@@ -103,15 +103,15 @@ class CharacterInfo {
     }
 };
 
-extern const uint8_t index1[];
-extern const uint8_t index2[];
+extern const uint16_t index1[];
+extern const uint16_t index2[];
 extern const CharacterInfo js_charinfo[];
 
 inline const CharacterInfo&
 CharInfo(char16_t code)
 {
-    const size_t shift = 5;
-    size_t index = index1[code >> shift];
+    const size_t shift = 6;
+    uint16_t index = index1[code >> shift];
     index = index2[(index << shift) + (code & ((1 << shift) - 1))];
 
     return js_charinfo[index];

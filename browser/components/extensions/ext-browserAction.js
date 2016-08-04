@@ -224,9 +224,8 @@ BrowserAction.prototype = {
   getProperty(tab, prop) {
     if (tab == null) {
       return this.defaults[prop];
-    } else {
-      return this.tabContext.get(tab)[prop];
     }
+    return this.tabContext.get(tab)[prop];
   },
 
   shutdown() {

@@ -320,16 +320,6 @@ add_task(function* test_event_order() {
 
     let expectedClick = [
       {
-        type: "input",
-        cancelable: false,
-        targetIsOption: false,
-      },
-      {
-        type: "change",
-        cancelable: false,
-        targetIsOption: false,
-      },
-      {
         type: "mousedown",
         cancelable: true,
         targetIsOption: true,
@@ -338,6 +328,16 @@ add_task(function* test_event_order() {
         type: "mouseup",
         cancelable: true,
         targetIsOption: true,
+      },
+      {
+        type: "input",
+        cancelable: false,
+        targetIsOption: false,
+      },
+      {
+        type: "change",
+        cancelable: false,
+        targetIsOption: false,
       },
       {
         type: "click",

@@ -8,6 +8,7 @@
 #define mozilla_dom_PresentationConnection_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/PresentationConnectionBinding.h"
 #include "mozilla/dom/PresentationConnectionClosedEventBinding.h"
 #include "nsIPresentationListener.h"
@@ -22,6 +23,7 @@ class PresentationConnectionList;
 class PresentationConnection final : public DOMEventTargetHelper
                                    , public nsIPresentationSessionListener
                                    , public nsIRequest
+                                   , public SupportsWeakPtr<PresentationConnection>
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -29,10 +31,12 @@ public:
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONSESSIONLISTENER
   NS_DECL_NSIREQUEST
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PresentationConnection)
 
   static already_AddRefed<PresentationConnection>
   Create(nsPIDOMWindowInner* aWindow,
          const nsAString& aId,
+         const nsAString& aUrl,
          const uint8_t aRole,
          PresentationConnectionList* aList = nullptr);
 
@@ -44,6 +48,8 @@ public:
   // WebIDL (public APIs)
   void GetId(nsAString& aId) const;
 
+  void GetUrl(nsAString& aUrl) const;
+
   PresentationConnectionState State() const;
 
   void Send(const nsAString& aData,
@@ -53,6 +59,9 @@ public:
 
   void Terminate(ErrorResult& aRv);
 
+  bool
+  Equals(uint64_t aWindowId, const nsAString& aId);
+
   IMPL_EVENT_HANDLER(connect);
   IMPL_EVENT_HANDLER(close);
   IMPL_EVENT_HANDLER(terminate);
@@ -61,6 +70,7 @@ public:
 private:
   PresentationConnection(nsPIDOMWindowInner* aWindow,
                          const nsAString& aId,
+                         const nsAString& aUrl,
                          const uint8_t aRole,
                          PresentationConnectionList* aList);
 
@@ -84,6 +94,7 @@ private:
   nsresult RemoveFromLoadGroup();
 
   nsString mId;
+  nsString mUrl;
   uint8_t mRole;
   PresentationConnectionState mState;
   RefPtr<PresentationConnectionList> mOwningConnectionList;

@@ -927,7 +927,6 @@ JSCompartment::clearTables()
     MOZ_ASSERT(!debugScopes);
     MOZ_ASSERT(enumerators->next() == enumerators);
     MOZ_ASSERT(regExps.empty());
-    MOZ_ASSERT(!wasm.instanceObjects().initialized() || wasm.instanceObjects().empty());
 
     objectGroups.clearTables();
     if (baseShapes.initialized())

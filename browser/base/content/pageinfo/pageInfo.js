@@ -188,10 +188,9 @@ gImageView.getCellText = function(row, column) {
   if (column.index == COL_IMAGE_SIZE) {
     if (value == -1) {
       return gStrings.unknown;
-    } else {
-      var kbSize = Number(Math.round(value / 1024 * 100) / 100);
-      return gBundle.getFormattedString("mediaFileSize", [kbSize]);
     }
+    var kbSize = Number(Math.round(value / 1024 * 100) / 100);
+    return gBundle.getFormattedString("mediaFileSize", [kbSize]);
   }
   return value || "";
 };

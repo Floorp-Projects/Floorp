@@ -61,6 +61,7 @@
 #include "nsPrincipal.h"
 #include "nsIPromptFactory.h"
 #include "nsIURI.h"
+#include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIXULWindow.h"
@@ -107,6 +108,8 @@ using namespace mozilla::services;
 using namespace mozilla::widget;
 using namespace mozilla::jsipc;
 using namespace mozilla::gfx;
+
+using mozilla::Unused;
 
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.

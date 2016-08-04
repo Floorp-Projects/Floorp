@@ -1611,11 +1611,7 @@ nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
     CountersDirty();
   }
 
-  // stylo: ServoRestyleManager does not need to be notified of frames being
-  // destroyed.
-  if (mozilla::RestyleManager* geckoRM = RestyleManager()->GetAsGecko()) {
-    geckoRM->NotifyDestroyingFrame(aFrame);
-  }
+  RestyleManager()->NotifyDestroyingFrame(aFrame);
 
   nsFrameManager::NotifyDestroyingFrame(aFrame);
 }

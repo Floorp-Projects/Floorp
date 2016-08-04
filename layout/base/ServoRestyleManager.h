@@ -25,6 +25,7 @@ class nsAttrValue;
 class nsIAtom;
 class nsIContent;
 class nsIFrame;
+class nsStyleChangeList;
 
 namespace mozilla {
 
@@ -35,6 +36,8 @@ class ServoRestyleManager : public RestyleManagerBase
 {
   friend class ServoStyleSet;
 public:
+  typedef RestyleManagerBase base_type;
+
   NS_INLINE_DECL_REFCOUNTING(ServoRestyleManager)
 
   explicit ServoRestyleManager(nsPresContext* aPresContext);
@@ -63,10 +66,12 @@ public:
                            int32_t aModType,
                            const nsAttrValue* aNewValue);
 
-  // XXXbholley: We should assert that the element is already snapshotted.
   void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
                         nsIAtom* aAttribute, int32_t aModType,
-                        const nsAttrValue* aOldValue) {}
+                        const nsAttrValue* aOldValue)
+  {
+    MOZ_ASSERT(SnapshotForElement(aElement)->HasAttrs());
+  }
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
@@ -87,14 +92,11 @@ private:
   /**
    * Traverses a tree of content that Servo has just restyled, recreating style
    * contexts for their frames with the new style data.
-   *
-   * This is just static so ServoStyleSet can mark this class as friend, so we
-   * can access to the GetContext method without making it available to everyone
-   * else.
    */
-  static void RecreateStyleContexts(nsIContent* aContent,
-                                    nsStyleContext* aParentContext,
-                                    ServoStyleSet* aStyleSet);
+  void RecreateStyleContexts(nsIContent* aContent,
+                             nsStyleContext* aParentContext,
+                             ServoStyleSet* aStyleSet,
+                             nsStyleChangeList& aChangeList);
 
   /**
    * Marks the tree with the appropriate dirty flags for the given restyle hint.

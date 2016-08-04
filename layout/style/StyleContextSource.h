@@ -95,16 +95,31 @@ private:
 struct OwningStyleContextSource
 {
   explicit OwningStyleContextSource(already_AddRefed<nsRuleNode> aRuleNode)
-    : mRaw(aRuleNode.take()) { MOZ_ASSERT(!mRaw.IsNull()); };
+    : mRaw(aRuleNode.take())
+  {
+    MOZ_COUNT_CTOR(OwningStyleContextSource);
+    MOZ_ASSERT(!mRaw.IsNull());
+  };
+
   explicit OwningStyleContextSource(already_AddRefed<ServoComputedValues> aComputedValues)
-    : mRaw(aComputedValues.take()) { MOZ_ASSERT(!mRaw.IsNull()); }
+    : mRaw(aComputedValues.take())
+  {
+    MOZ_COUNT_CTOR(OwningStyleContextSource);
+    MOZ_ASSERT(!mRaw.IsNull());
+  }
+
   OwningStyleContextSource(OwningStyleContextSource&& aOther)
-    : mRaw(aOther.mRaw) { aOther.mRaw = nullptr; }
+    : mRaw(aOther.mRaw)
+  {
+    MOZ_COUNT_CTOR(OwningStyleContextSource);
+    aOther.mRaw = nullptr;
+  }
 
   OwningStyleContextSource& operator=(OwningStyleContextSource&) = delete;
   OwningStyleContextSource(OwningStyleContextSource&) = delete;
 
   ~OwningStyleContextSource() {
+    MOZ_COUNT_DTOR(OwningStyleContextSource);
     if (mRaw.IsNull()) {
       // We must have invoked the move constructor.
     } else if (IsGeckoRuleNode()) {

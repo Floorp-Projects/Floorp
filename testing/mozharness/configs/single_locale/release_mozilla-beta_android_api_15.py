@@ -91,5 +91,7 @@ config = {
         ('/builds/relengapi.tok', '/builds/relengapi.tok'),
         ('/tools/tooltool.py', '/builds/tooltool.py'),
         ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
+        ('/builds/mozilla-fennec-geoloc-api.key', '/builds/mozilla-fennec-geoloc-api.key'),
+        ('/builds/adjust-sdk-beta.token', '/builds/adjust-sdk-beta.token'),
     ],
 }

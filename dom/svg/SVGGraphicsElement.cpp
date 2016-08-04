@@ -31,5 +31,11 @@ SVGGraphicsElement::~SVGGraphicsElement()
 {
 }
 
+bool
+SVGGraphicsElement::IsInChromeDoc() const
+{
+  return nsContentUtils::IsChromeDoc(OwnerDoc());
+}
+
 } // namespace dom
 } // namespace mozilla

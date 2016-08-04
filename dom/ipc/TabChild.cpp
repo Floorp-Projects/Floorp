@@ -24,9 +24,6 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/URIUtils.h"
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -456,41 +453,6 @@ PreloadSlowThingsPostFork(void* aUnused)
 
 }
 
-#ifdef MOZ_NUWA_PROCESS
-class MessageChannelAutoBlock MOZ_STACK_CLASS
-{
-public:
-    MessageChannelAutoBlock()
-    {
-        SetMessageChannelBlocked(true);
-    }
-
-    ~MessageChannelAutoBlock()
-    {
-        SetMessageChannelBlocked(false);
-    }
-
-private:
-    void SetMessageChannelBlocked(bool aBlock)
-    {
-        if (!IsNuwaProcess()) {
-            return;
-        }
-
-        mozilla::dom::ContentChild* content =
-            mozilla::dom::ContentChild::GetSingleton();
-        if (aBlock) {
-            content->GetIPCChannel()->Block();
-        } else {
-            content->GetIPCChannel()->Unblock();
-        }
-
-        // Other IPC channels do not perform the checks through Block() and
-        // Unblock().
-    }
-};
-#endif
-
 static bool sPreloaded = false;
 
 /*static*/ void
@@ -513,12 +475,6 @@ TabChild::PreloadSlowThings()
         return;
     }
 
-#ifdef MOZ_NUWA_PROCESS
-    // Temporarily block the IPC channels to the chrome process when we are
-    // preloading.
-    MessageChannelAutoBlock autoblock;
-#endif
-
     // Just load and compile these scripts, but don't run them.
     tab->TryCacheLoadAndCompileScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
     // Load, compile, and run these scripts.
@@ -529,15 +485,7 @@ TabChild::PreloadSlowThings()
     sPreallocatedTab = tab;
     ClearOnShutdown(&sPreallocatedTab);
 
-#ifdef MOZ_NUWA_PROCESS
-    if (IsNuwaProcess()) {
-        NuwaAddFinalConstructor(PreloadSlowThingsPostFork, nullptr);
-    } else {
-        PreloadSlowThingsPostFork(nullptr);
-    }
-#else
     PreloadSlowThingsPostFork(nullptr);
-#endif
 }
 
 /*static*/ already_AddRefed<TabChild>

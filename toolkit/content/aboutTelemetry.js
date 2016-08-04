@@ -158,9 +158,8 @@ function getMainWindowWithPreferencesPane() {
   let mainWindow = getMainWindow();
   if (mainWindow && "openAdvancedPreferences" in mainWindow) {
     return mainWindow;
-  } else {
-    return null;
   }
+  return null;
 }
 
 /**
