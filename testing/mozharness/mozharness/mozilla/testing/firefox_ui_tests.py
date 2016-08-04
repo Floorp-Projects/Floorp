@@ -170,6 +170,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         abs_tests_install_dir = os.path.join(abs_dirs['abs_work_dir'], 'tests')
 
         dirs = {
+            'abs_blob_upload_dir': os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir'),
             'abs_reports_dir': os.path.join(abs_dirs['base_work_dir'], 'reports'),
             'abs_test_install_dir': abs_tests_install_dir,
             'abs_fxui_dir': os.path.join(abs_tests_install_dir, 'firefox-ui'),

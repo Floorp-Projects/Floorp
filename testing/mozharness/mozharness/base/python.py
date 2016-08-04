@@ -529,6 +529,8 @@ class ResourceMonitoringMixin(object):
             # Upload a JSON file containing the raw resource data.
             try:
                 upload_dir = self.query_abs_dirs()['abs_blob_upload_dir']
+                if not os.path.exists(upload_dir):
+                    os.makedirs(upload_dir)
                 with open(os.path.join(upload_dir, 'resource-usage.json'), 'wb') as fh:
                     json.dump(self._resource_monitor.as_dict(), fh,
                               sort_keys=True, indent=4)
