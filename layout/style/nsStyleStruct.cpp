@@ -1110,21 +1110,21 @@ StyleBasicShape::GetShapeTypeName() const
 //
 StyleClipPath::StyleClipPath()
   : mURL(nullptr)
-  , mType(StyleClipPathType::None_)
+  , mType(StyleShapeSourceType::None_)
   , mSizingBox(StyleClipShapeSizing::NoBox)
 {
 }
 
 StyleClipPath::StyleClipPath(const StyleClipPath& aSource)
   : mURL(nullptr)
-  , mType(StyleClipPathType::None_)
+  , mType(StyleShapeSourceType::None_)
   , mSizingBox(StyleClipShapeSizing::NoBox)
 {
-  if (aSource.mType == StyleClipPathType::URL) {
+  if (aSource.mType == StyleShapeSourceType::URL) {
     CopyURL(aSource);
-  } else if (aSource.mType == StyleClipPathType::Shape) {
+  } else if (aSource.mType == StyleShapeSourceType::Shape) {
     SetBasicShape(aSource.mBasicShape, aSource.mSizingBox);
-  } else if (aSource.mType == StyleClipPathType::Box) {
+  } else if (aSource.mType == StyleShapeSourceType::Box) {
     SetSizingBox(aSource.mSizingBox);
   }
 }
@@ -1141,16 +1141,16 @@ StyleClipPath::operator=(const StyleClipPath& aOther)
     return *this;
   }
 
-  if (aOther.mType == StyleClipPathType::URL) {
+  if (aOther.mType == StyleShapeSourceType::URL) {
     CopyURL(aOther);
-  } else if (aOther.mType == StyleClipPathType::Shape) {
+  } else if (aOther.mType == StyleShapeSourceType::Shape) {
     SetBasicShape(aOther.mBasicShape, aOther.mSizingBox);
-  } else if (aOther.mType == StyleClipPathType::Box) {
+  } else if (aOther.mType == StyleShapeSourceType::Box) {
     SetSizingBox(aOther.mSizingBox);
   } else {
     ReleaseRef();
     mSizingBox = StyleClipShapeSizing::NoBox;
-    mType = StyleClipPathType::None_;
+    mType = StyleShapeSourceType::None_;
   }
   return *this;
 }
@@ -1162,12 +1162,12 @@ StyleClipPath::operator==(const StyleClipPath& aOther) const
     return false;
   }
 
-  if (mType == StyleClipPathType::URL) {
+  if (mType == StyleShapeSourceType::URL) {
     return EqualURIs(mURL, aOther.mURL);
-  } else if (mType == StyleClipPathType::Shape) {
+  } else if (mType == StyleShapeSourceType::Shape) {
     return *mBasicShape == *aOther.mBasicShape &&
            mSizingBox == aOther.mSizingBox;
-  } else if (mType == StyleClipPathType::Box) {
+  } else if (mType == StyleShapeSourceType::Box) {
     return mSizingBox == aOther.mSizingBox;
   }
 
@@ -1177,10 +1177,10 @@ StyleClipPath::operator==(const StyleClipPath& aOther) const
 void
 StyleClipPath::ReleaseRef()
 {
-  if (mType == StyleClipPathType::Shape) {
+  if (mType == StyleShapeSourceType::Shape) {
     NS_ASSERTION(mBasicShape, "expected pointer");
     mBasicShape->Release();
-  } else if (mType == StyleClipPathType::URL) {
+  } else if (mType == StyleShapeSourceType::URL) {
     NS_ASSERTION(mURL, "expected pointer");
     delete mURL;
   }
@@ -1195,7 +1195,7 @@ StyleClipPath::CopyURL(const StyleClipPath& aOther)
   ReleaseRef();
 
   mURL = new FragmentOrURL(*aOther.mURL);
-  mType = StyleClipPathType::URL;
+  mType = StyleShapeSourceType::URL;
 }
 
 bool
@@ -1209,7 +1209,7 @@ StyleClipPath::SetURL(const nsCSSValue* aValue)
 
   mURL = new FragmentOrURL();
   mURL->SetValue(aValue);
-  mType = StyleClipPathType::URL;
+  mType = StyleShapeSourceType::URL;
   return true;
 }
 
@@ -1222,7 +1222,7 @@ StyleClipPath::SetBasicShape(StyleBasicShape* aBasicShape,
   mBasicShape = aBasicShape;
   mBasicShape->AddRef();
   mSizingBox = aSizingBox;
-  mType = StyleClipPathType::Shape;
+  mType = StyleShapeSourceType::Shape;
 }
 
 void
@@ -1230,7 +1230,7 @@ StyleClipPath::SetSizingBox(StyleClipShapeSizing aSizingBox)
 {
   ReleaseRef();
   mSizingBox = aSizingBox;
-  mType = StyleClipPathType::Box;
+  mType = StyleShapeSourceType::Box;
 }
 
 // --------------------

@@ -3954,9 +3954,9 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           const nsStyleSVGReset* svgReset =
             static_cast<const nsStyleSVGReset*>(styleStruct);
           const StyleClipPath& clipPath = svgReset->mClipPath;
-          const StyleClipPathType type = clipPath.GetType();
+          const StyleShapeSourceType type = clipPath.GetType();
 
-          if (type == StyleClipPathType::URL) {
+          if (type == StyleShapeSourceType::URL) {
             nsIDocument* doc = aStyleContext->PresContext()->Document();
             RefPtr<mozilla::css::URLValue> url =
               FragmentOrURLToURLValue(clipPath.GetURL(), doc);
@@ -3964,10 +3964,10 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             auto result = MakeUnique<nsCSSValue>();
             result->SetURLValue(url);
             aComputedValue.SetAndAdoptCSSValueValue(result.release(), eUnit_URL);
-          } else if (type == StyleClipPathType::Box) {
+          } else if (type == StyleShapeSourceType::Box) {
             aComputedValue.SetIntValue(clipPath.GetSizingBox(),
                                        eUnit_Enumerated);
-          } else if (type == StyleClipPathType::Shape) {
+          } else if (type == StyleShapeSourceType::Shape) {
             RefPtr<nsCSSValue::Array> result = nsCSSValue::Array::Create(2);
             if (!StyleClipBasicShapeToCSSArray(clipPath, result)) {
               return false;
@@ -3975,7 +3975,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             aComputedValue.SetCSSValueArrayValue(result, eUnit_Shape);
 
           } else {
-            MOZ_ASSERT(type == StyleClipPathType::None_, "unknown type");
+            MOZ_ASSERT(type == StyleShapeSourceType::None_, "unknown type");
             aComputedValue.SetNoneValue();
           }
           break;
