@@ -34,11 +34,36 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "vm/MallocProvider.h"
 
 namespace js {
 
 class PropertyName;
 namespace jit { struct BaselineScript; }
+
+// This is a widespread header, so lets keep out the core wasm impl types.
+
+class WasmMemoryObject;
+typedef GCPtr<WasmMemoryObject*> GCPtrWasmMemoryObject;
+typedef Rooted<WasmMemoryObject*> RootedWasmMemoryObject;
+typedef Handle<WasmMemoryObject*> HandleWasmMemoryObject;
+typedef MutableHandle<WasmMemoryObject*> MutableHandleWasmMemoryObject;
+
+class WasmModuleObject;
+typedef Rooted<WasmModuleObject*> RootedWasmModuleObject;
+typedef Handle<WasmModuleObject*> HandleWasmModuleObject;
+typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModuleObject;
+
+class WasmInstanceObject;
+typedef GCVector<WasmInstanceObject*> WasmInstanceObjectVector;
+typedef Rooted<WasmInstanceObject*> RootedWasmInstanceObject;
+typedef Handle<WasmInstanceObject*> HandleWasmInstanceObject;
+typedef MutableHandle<WasmInstanceObject*> MutableHandleWasmInstanceObject;
+
+class WasmTableObject;
+typedef Rooted<WasmTableObject*> RootedWasmTableObject;
+typedef Handle<WasmTableObject*> HandleWasmTableObject;
+typedef MutableHandle<WasmTableObject*> MutableHandleWasmTableObject;
 
 namespace wasm {
 
@@ -55,6 +80,11 @@ using mozilla::RefCounted;
 using mozilla::Some;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
+
+class Memory;
+class Module;
+class Instance;
+class Table;
 
 // To call Vector::podResizeToFit, a type must specialize mozilla::IsPod
 // which is pretty verbose to do within js::wasm, so factor that process out
