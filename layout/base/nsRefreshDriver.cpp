@@ -69,10 +69,6 @@
 #include "nsAnimationManager.h"
 #include "nsIDOMEvent.h"
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::widget;
 using namespace mozilla::ipc;
@@ -865,15 +861,6 @@ CreateVsyncRefreshTimer()
     return;
   }
 
-#ifdef MOZ_NUWA_PROCESS
-  // NUWA process will just use software timer. Use NuwaAddFinalConstructor()
-  // to register a callback to create the vsync-base refresh timer after a
-  // process is created.
-  if (IsNuwaProcess()) {
-    NuwaAddFinalConstructor(&CreateContentVsyncRefreshTimer, nullptr);
-    return;
-  }
-#endif
   // If this process is not created by NUWA, just create the vsync timer here.
   CreateContentVsyncRefreshTimer(nullptr);
 }

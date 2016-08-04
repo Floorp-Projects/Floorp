@@ -12,6 +12,11 @@ const TEST_URI = "<div>Test Element</div>";
 add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
+
+  // Turn off throttling, which can cause intermittents. Throttling is used by
+  // the TextPropertyEditor.
+  view.throttle = () => {};
+
   yield selectNode("div", inspector);
 
   let ruleEditor = getRuleViewRuleEditor(view, 0);

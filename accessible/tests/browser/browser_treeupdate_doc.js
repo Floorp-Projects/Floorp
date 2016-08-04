@@ -230,11 +230,20 @@ addAccessibleTask(`
   };
   testAccessibleTree(iframe, tree);
 
+  reorderEventPromise = waitForEvent(EVENT_REORDER, iframe);
   yield ContentTask.spawn(browser, {}, () => {
-    let docNode = content.document.getElementById('iframe').contentDocument;
+    let docEl =
+      content.document.getElementById('iframe').contentDocument.documentElement;
     // Remove aftermath of this test before next test starts.
-    docNode.documentElement.removeChild(content.window.inputNode);
+    docEl.removeChild(docEl.firstChild);
   });
+  // Make sure reorder event was fired and that the input was removed.
+  yield reorderEventPromise;
+  tree = {
+    role: ROLE_DOCUMENT,
+    children: [ ]
+  };
+  testAccessibleTree(iframe, tree);
 
   /* ================= Insert body to iframe document ======================= */
   reorderEventPromise = waitForEvent(EVENT_REORDER, id);

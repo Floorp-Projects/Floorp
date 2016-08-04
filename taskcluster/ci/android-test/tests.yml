@@ -33,7 +33,7 @@ crashtest:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10
-            android-4.3-arm7-api-15/opt: 4
+            default: 4
     loopback-video: true
     e10s: false
     mozharness:
@@ -54,7 +54,7 @@ jsreftest:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 20
-            android-4.3-arm7-api-15/opt: 6
+            default: 6
     loopback-video: true
     max-run-time: 7200
     e10s: false
@@ -79,7 +79,7 @@ mochitest:
     max-run-time:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10800
-            android-4.3-arm7-api-15/opt: 3600
+            default: 3600
     mozharness:
         script: mozharness/scripts/android_emulator_unittest.py
         no-read-buildbot-config: true
@@ -98,7 +98,7 @@ mochitest-chrome:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 2
-            android-4.3-arm7-api-15/opt: 1
+            default: 1
     loopback-video: true
     e10s: false
     max-run-time: 5400
@@ -156,7 +156,7 @@ mochitest-media:
     max-run-time:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 5400
-            android-4.3-arm7-api-15/opt: 3600
+            default: 3600
     mozharness:
         script: mozharness/scripts/android_emulator_unittest.py
         no-read-buildbot-config: true
@@ -178,6 +178,7 @@ mochitest-webgl:
     instance-size:
         by-test-platform:
             android-4.3-arm7-api-15/opt: default
+            android-4.3-arm7-api-15-gradle/opt: default
             android-4.3-arm7-api-15/debug: xlarge
     mozharness:
         script: mozharness/scripts/android_emulator_unittest.py
@@ -196,7 +197,7 @@ reftest:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 48
-            android-4.3-arm7-api-15/opt: 16
+            default: 16
     instance-size: xlarge
     max-run-time: 10800
     loopback-video: true
@@ -220,6 +221,7 @@ robocop:
         by-test-platform:
             # android-4.3-arm7-api-15/debug -- not run
             android-4.3-arm7-api-15/opt: 4
+            android-4.3-arm7-api-15-gradle/opt: 4
     loopback-video: true
     e10s: false
     mozharness:

@@ -3561,6 +3561,7 @@ Tab.prototype = {
 
     this.browser.addEventListener("DOMContentLoaded", this, true);
     this.browser.addEventListener("DOMFormHasPassword", this, true);
+    this.browser.addEventListener("DOMInputPasswordAdded", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMLinkChanged", this, true);
     this.browser.addEventListener("DOMMetaAdded", this, false);
@@ -3674,6 +3675,7 @@ Tab.prototype = {
 
     this.browser.removeEventListener("DOMContentLoaded", this, true);
     this.browser.removeEventListener("DOMFormHasPassword", this, true);
+    this.browser.removeEventListener("DOMInputPasswordAdded", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMLinkChanged", this, true);
     this.browser.removeEventListener("DOMMetaAdded", this, false);
@@ -4141,6 +4143,11 @@ Tab.prototype = {
           Messaging.sendRequest({ type: "Doorhanger:Logins", data: selectObj });
         }
         break;
+      }
+
+      case "DOMInputPasswordAdded": {
+        LoginManagerContent.onDOMInputPasswordAdded(aEvent,
+                                                    this.browser.contentWindow);
       }
 
       case "DOMMetaAdded":

@@ -25,8 +25,12 @@ window.onload = function() {
     })
   }
 
+  function toSortedString(array) {
+    return JSON.stringify(array.sort());
+  }
+
   const runCssPropertiesTests = Task.async(function* (url, useActor) {
-    info("Opening two tabs.");
+    info(`Opening two tabs ${useActor ? "with" : "without"} CssPropertiesActor support.`);
 
     let attachmentA = yield promiseAttachUrl(url);
     let attachmentB = yield promiseAttachUrl(url);
@@ -73,6 +77,20 @@ window.onload = function() {
       "A CSS variable unicode properly evaluates.");
     ok(!cssProperties.isKnown("--foo bar"),
       "A CSS variable with spaces fails");
+
+    is(toSortedString(cssProperties.getValues('margin')),
+       toSortedString(["-moz-calc","auto","calc","inherit","initial","unset"]),
+       "Can get values for the CSS margin.");
+    is(cssProperties.getValues('foobar').length, 0,
+      "Unknown values return an empty array.");
+
+    const bgColorValues = cssProperties.getValues('background-color');
+    ok(bgColorValues.includes("blanchedalmond"),
+      "A property with color values includes blanchedalmond.");
+    ok(bgColorValues.includes("papayawhip"),
+      "A property with color values includes papayawhip.");
+    ok(bgColorValues.includes("rgb"),
+      "A property with color values includes non-colors.");
   });
 
   addAsyncTest(function* setup() {

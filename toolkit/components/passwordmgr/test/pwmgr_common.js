@@ -360,6 +360,7 @@ if (this.addMessageListener) {
   ok = is = () => {}; // eslint-disable-line no-native-reassign
 
   Cu.import("resource://gre/modules/LoginHelper.jsm");
+  Cu.import("resource://gre/modules/LoginManagerParent.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/Task.jsm");
 
@@ -372,19 +373,22 @@ if (this.addMessageListener) {
   Services.obs.addObserver(onStorageChanged, "passwordmgr-storage-changed", false);
 
   addMessageListener("setupParent", ({selfFilling = false} = {selfFilling: false}) => {
+    // Force LoginManagerParent to init for the tests since it's normally delayed
+    // by apps such as on Android.
+    LoginManagerParent.init();
+
     commonInit(selfFilling);
     sendAsyncMessage("doneSetup");
   });
 
   addMessageListener("loadRecipes", Task.async(function* loadRecipes(recipes) {
-    var { LoginManagerParent } = Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
+
     var recipeParent = yield LoginManagerParent.recipeParentPromise;
     yield recipeParent.load(recipes);
     sendAsyncMessage("loadedRecipes", recipes);
   }));
 
   addMessageListener("resetRecipes", Task.async(function* resetRecipes() {
-    let { LoginManagerParent } = Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
     let recipeParent = yield LoginManagerParent.recipeParentPromise;
     yield recipeParent.reset();
     sendAsyncMessage("recipesReset");

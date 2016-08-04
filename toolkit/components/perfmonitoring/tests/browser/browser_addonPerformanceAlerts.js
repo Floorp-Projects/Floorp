@@ -41,10 +41,9 @@ add_task(function* test_install_addon_then_watch_it() {
       if (alert) {
         info(`AddonListener: I found an alert for ${addon.addonId}`);
         return alert.details.highestJank;
-      } else {
-        info(`AddonListener: I didn't find any alert for ${addon.addonId}`);
-        return null;
       }
+      info(`AddonListener: I didn't find any alert for ${addon.addonId}`);
+      return null;
     });
 
     // Waiting a little – listeners are buffered.

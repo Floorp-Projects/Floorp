@@ -203,10 +203,8 @@ var PKT_SAVED_OVERLAY = function (options)
                     }
                     return null;
                 }
-                else {
-                    myself.hideTagsError();
-                    return {name:myself.sanitizeText(text.toLowerCase())};
-                }
+                myself.hideTagsError();
+                return {name:myself.sanitizeText(text.toLowerCase())};
             },
             onReady: function() {
                 $('.token-input-dropdown').addClass('token-input-dropdown-tag');
@@ -434,12 +432,9 @@ var PKT_SAVED_OVERLAY = function (options)
         {
             return '';
         }
-        else
-        {
-            return String(s).replace(/[&<>"']/g, function (str) {
-                return sanitizeMap[str];
-            });
-        }
+        return String(s).replace(/[&<>"']/g, function (str) {
+            return sanitizeMap[str];
+        });
     };
     this.showStateFinalMsg = function(msg) {
         this.wrapper.find('.pkt_ext_tag_detail').one('webkitTransitionEnd transitionend msTransitionEnd oTransitionEnd',function(e)

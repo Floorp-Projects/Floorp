@@ -664,9 +664,8 @@ var TelemetryStorageImpl = {
       if (data.timestampCreated > creationDate.getTime()) {
         this._log.error("saveArchivedPing - trying to overwrite newer ping with the same id");
         return Promise.reject(new Error("trying to overwrite newer ping with the same id"));
-      } else {
-        this._log.warn("saveArchivedPing - overwriting older ping with the same id");
       }
+      this._log.warn("saveArchivedPing - overwriting older ping with the same id");
     }
 
     // Get the archived ping path and append the lz4 suffix to it (so we have 'jsonlz4').

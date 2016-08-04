@@ -121,9 +121,8 @@ function isDeletionPing(aPing) {
 function savePing(aPing) {
   if (isDeletionPing(aPing)) {
     return TelemetryStorage.saveDeletionPing(aPing);
-  } else {
-    return TelemetryStorage.savePendingPing(aPing);
   }
+  return TelemetryStorage.savePendingPing(aPing);
 }
 
 /**
@@ -845,9 +844,8 @@ var TelemetrySendImpl = {
         return TelemetryStorage.removeDeletionPing();
       }
       return TelemetryStorage.removePendingPing(id);
-    } else {
-      return Promise.resolve();
     }
+    return Promise.resolve();
   },
 
   _getSubmissionPath: function(ping) {

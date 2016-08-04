@@ -31,7 +31,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   for (let el of nameElems) {
     dumpn(`Found ${el.textContent.trim()}`);
-    is(el.style.marginLeft, "0px",
+    is(el.style.marginInlineStart, "0px",
        "None of the elements should be an indented/expanded child");
   }
 });

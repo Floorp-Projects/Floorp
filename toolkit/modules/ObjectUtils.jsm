@@ -70,14 +70,16 @@ function _deepEqual(a, b) {
     return true;
   // 7.2 If the b value is a Date object, the a value is
   // equivalent if it is also a Date object that refers to the same time.
-  } else if (instanceOf(a, "Date") && instanceOf(b, "Date")) {
+  }
+  if (instanceOf(a, "Date") && instanceOf(b, "Date")) {
     if (isNaN(a.getTime()) && isNaN(b.getTime()))
       return true;
     return a.getTime() === b.getTime();
   // 7.3 If the b value is a RegExp object, the a value is
   // equivalent if it is also a RegExp object with the same source and
   // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-  } else if (instanceOf(a, "RegExp") && instanceOf(b, "RegExp")) {
+  }
+  if (instanceOf(a, "RegExp") && instanceOf(b, "RegExp")) {
     return a.source === b.source &&
            a.global === b.global &&
            a.multiline === b.multiline &&
@@ -85,17 +87,17 @@ function _deepEqual(a, b) {
            a.ignoreCase === b.ignoreCase;
   // 7.4 Other pairs that do not both pass typeof value == "object",
   // equivalence is determined by ==.
-  } else if (typeof a != "object" && typeof b != "object") {
+  }
+  if (typeof a != "object" && typeof b != "object") {
     return a == b;
+  }
   // 7.5 For all other Object pairs, including Array objects, equivalence is
   // determined by having the same number of owned properties (as verified
   // with Object.prototype.hasOwnProperty.call), the same set of keys
   // (although not necessarily the same order), equivalent values for every
   // corresponding key, and an identical 'prototype' property. Note: this
   // accounts for both named and indexed properties on Arrays.
-  } else {
-    return objEquiv(a, b);
-  }
+  return objEquiv(a, b);
 }
 
 function instanceOf(object, type) {

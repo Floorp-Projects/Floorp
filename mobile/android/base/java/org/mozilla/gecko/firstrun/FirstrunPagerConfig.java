@@ -12,7 +12,7 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.util.Experiments;
+import org.mozilla.gecko.Experiments;
 
 import java.util.LinkedList;
 import java.util.List;

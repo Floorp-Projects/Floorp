@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_ContentParent_h
 #define mozilla_dom_ContentParent_h
 
-#include "mozilla/dom/NuwaParent.h"
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -101,17 +100,6 @@ class ContentParent final : public PContentParent
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
-#ifdef MOZ_NUWA_PROCESS
-  static int32_t NuwaPid()
-  {
-    return sNuwaPid;
-  }
-
-  static bool IsNuwaReady()
-  {
-    return sNuwaReady;
-  }
-#endif
 
   virtual bool IsContentParent() const override { return true; }
 
@@ -150,8 +138,6 @@ public:
    * Create a subprocess suitable for use as a preallocated app process.
    */
   static already_AddRefed<ContentParent> PreallocateAppProcess();
-
-  static already_AddRefed<ContentParent> RunNuwaProcess();
 
   /**
    * Get or create a content process for the given TabContext.  aFrameElement
@@ -367,20 +353,6 @@ public:
     return mIsForBrowser;
   }
 
-#ifdef MOZ_NUWA_PROCESS
-  bool IsNuwaProcess() const;
-#endif
-
-  // A shorthand for checking if the Nuwa process is ready.
-  bool IsReadyNuwaProcess() const
-  {
-#ifdef MOZ_NUWA_PROCESS
-    return IsNuwaProcess() && IsNuwaReady();
-#else
-    return false;
-#endif
-  }
-
   GeckoChildProcessHost* Process() const
   {
     return mSubprocess;
@@ -547,8 +519,6 @@ public:
 
   virtual bool HandleWindowsMessages(const Message& aMsg) const override;
 
-  void SetNuwaParent(NuwaParent* aNuwaParent) { mNuwaParent = aNuwaParent; }
-
   void ForkNewProcess(bool aBlocking);
 
   virtual bool RecvCreateWindow(PBrowserParent* aThisTabParent,
@@ -596,8 +566,6 @@ protected:
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  void OnNuwaForkTimeout();
-
   bool ShouldContinueFromReplyTimeout() override;
 
 private:
@@ -644,15 +612,7 @@ private:
   ContentParent(mozIApplication* aApp,
                 ContentParent* aOpener,
                 bool aIsForBrowser,
-                bool aIsForPreallocated,
-                bool aIsNuwaProcess = false);
-
-#ifdef MOZ_NUWA_PROCESS
-  ContentParent(ContentParent* aTemplate,
-                const nsAString& aAppManifestURL,
-                base::ProcessHandle aPid,
-                InfallibleTArray<ProtocolFdMapping>&& aFds);
-#endif
+                bool aIsForPreallocated);
 
   // The common initialization for the constructors.
   void InitializeMembers();
@@ -1061,11 +1021,6 @@ private:
 
   virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable) override;
 
-  // Callbacks from NuwaParent.
-  void OnNuwaReady();
-  void OnNewProcessCreated(uint32_t aPid,
-                           UniquePtr<nsTArray<ProtocolFdMapping>>&& aFds);
-
   virtual bool RecvCreateFakeVolume(const nsString& aFsName,
                                     const nsString& aMountPoint) override;
 
@@ -1229,7 +1184,6 @@ private:
 
   bool mSendPermissionUpdates;
   bool mIsForBrowser;
-  bool mIsNuwaProcess;
 
   // These variables track whether we've called Close() and KillHard() on our
   // channel.
@@ -1240,9 +1194,6 @@ private:
   bool mIPCOpen;
 
   friend class CrashReporterParent;
-
-  // Allows NuwaParent to access OnNuwaReady() and OnNewProcessCreated().
-  friend class NuwaParent;
 
   RefPtr<nsConsoleService>  mConsoleService;
   nsConsoleService* GetConsoleService();
@@ -1255,16 +1206,7 @@ private:
   ScopedClose mChildXSocketFdDup;
 #endif
 
-#ifdef MOZ_NUWA_PROCESS
-  static int32_t sNuwaPid;
-  static bool sNuwaReady;
-#endif
-
   PProcessHangMonitorParent* mHangMonitorActor;
-
-  // NuwaParent and ContentParent hold strong references to each other. The
-  // cycle will be broken when either actor is destroyed.
-  RefPtr<NuwaParent> mNuwaParent;
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
   RefPtr<mozilla::ProfileGatherer> mGatherer;

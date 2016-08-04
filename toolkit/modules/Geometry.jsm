@@ -66,8 +66,7 @@ Point.prototype = {
     return function(arg1, arg2) {
       if (arg2 === undefined)
         return f.call(this, arg1.x, arg1.y);
-      else
-        return f.call(this, arg1, arg2);
+      return f.call(this, arg1, arg2);
     };
   }
 
