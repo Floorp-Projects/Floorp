@@ -5,10 +5,8 @@
 // the "exported" symbols
 var SocialUI,
     SocialFlyout,
-    SocialMarks,
     SocialShare,
     SocialSidebar,
-    SocialStatus,
     SocialActivationListener;
 
 (function() {
@@ -32,18 +30,6 @@ XPCOMUtils.defineLazyGetter(this, "sizeSocialPanelToContent", function() {
   let tmp = {};
   Cu.import("resource:///modules/Social.jsm", tmp);
   return tmp.sizeSocialPanelToContent;
-});
-
-XPCOMUtils.defineLazyGetter(this, "CreateSocialStatusWidget", function() {
-  let tmp = {};
-  Cu.import("resource:///modules/Social.jsm", tmp);
-  return tmp.CreateSocialStatusWidget;
-});
-
-XPCOMUtils.defineLazyGetter(this, "CreateSocialMarkWidget", function() {
-  let tmp = {};
-  Cu.import("resource:///modules/Social.jsm", tmp);
-  return tmp.CreateSocialMarkWidget;
 });
 
 XPCOMUtils.defineLazyGetter(this, "hookWindowCloseForPanelClose", function() {
@@ -127,16 +113,11 @@ SocialUI = {
   observe: function SocialUI_observe(subject, topic, data) {
     switch (topic) {
       case "social:provider-enabled":
-        SocialMarks.populateToolbarPalette();
-        SocialStatus.populateToolbarPalette();
         break;
       case "social:provider-disabled":
-        SocialMarks.removeProvider(data);
-        SocialStatus.removeProvider(data);
         SocialSidebar.disableProvider(data);
         break;
       case "social:provider-reload":
-        SocialStatus.reloadProvider(data);
         // if the reloaded provider is our current provider, fall through
         // to social:providers-changed so the ui will be reset
         if (!SocialSidebar.provider || SocialSidebar.provider.origin != data)
@@ -154,7 +135,6 @@ SocialUI = {
         break;
       // Provider-specific notifications
       case "social:ambient-notification-changed":
-        SocialStatus.updateButton(data);
         break;
       case "nsPref:changed":
         if (data == "social.toast-notifications.enabled") {
@@ -168,8 +148,6 @@ SocialUI = {
     SocialSidebar.clearProviderMenus();
     SocialSidebar.update();
     SocialShare.populateProviderMenu();
-    SocialStatus.populateToolbarPalette();
-    SocialMarks.populateToolbarPalette();
   },
 
   showLearnMore: function() {
@@ -219,7 +197,7 @@ SocialUI = {
     return Social.providers.length > 0;
   },
 
-  canShareOrMarkPage: function(aURI) {
+  canSharePage: function(aURI) {
     return (aURI && (aURI.schemeIs('http') || aURI.schemeIs('https')));
   },
 
@@ -228,7 +206,7 @@ SocialUI = {
       return;
     // customization mode gets buttons out of sync with command updating, fix
     // the disabled state
-    let canShare = this.canShareOrMarkPage(gBrowser.currentURI);
+    let canShare = this.canSharePage(gBrowser.currentURI);
     let shareButton = SocialShare.shareButton;
     if (shareButton) {
       if (canShare) {
@@ -237,24 +215,12 @@ SocialUI = {
         shareButton.setAttribute("disabled", "true")
       }
     }
-    // update the disabled state of the button based on the command
-    for (let node of SocialMarks.nodes) {
-      if (canShare) {
-        node.removeAttribute("disabled")
-      } else {
-        node.setAttribute("disabled", "true")
-      }
-    }
   },
 
   // called on tab/urlbar/location changes and after customization. Update
   // anything that is tab specific.
   updateState: function() {
-    goSetCommandEnabled("Social:PageShareOrMark", this.canShareOrMarkPage(gBrowser.currentURI));
-    if (!SocialUI.enabled)
-      return;
-    // larger update that may change button icons
-    SocialMarks.update();
+    goSetCommandEnabled("Social:PageShareable", this.canSharePage(gBrowser.currentURI));
   }
 }
 
@@ -646,7 +612,7 @@ SocialShare = {
     let pageData = graphData ? graphData : this.currentShare;
     let sharedURI = pageData ? Services.io.newURI(pageData.url, null, null) :
                                 gBrowser.currentURI;
-    if (!SocialUI.canShareOrMarkPage(sharedURI))
+    if (!SocialUI.canSharePage(sharedURI))
       return;
 
     // the point of this action type is that we can use existing share
@@ -1096,318 +1062,5 @@ SocialSidebar = {
     providerMenuSep.hidden = !providerMenuSep.nextSibling;
   }
 }
-
-// this helper class is used by removable/customizable buttons to handle
-// widget creation/destruction
-
-// When a provider is installed we show all their UI so the user will see the
-// functionality of what they installed. The user can later customize the UI,
-// moving buttons around or off the toolbar.
-//
-// On startup, we create the button widgets of any enabled provider.
-// CustomizableUI handles placement and persistence of placement.
-function ToolbarHelper(type, createButtonFn, listener) {
-  this._createButton = createButtonFn;
-  this._type = type;
-
-  if (listener) {
-    CustomizableUI.addListener(listener);
-    // remove this listener on window close
-    window.addEventListener("unload", () => {
-      CustomizableUI.removeListener(listener);
-    });
-  }
-}
-
-ToolbarHelper.prototype = {
-  idFromOrigin: function(origin) {
-    // this id needs to pass the checks in CustomizableUI, so remove characters
-    // that wont pass.
-    return this._type + "-" + Services.io.newURI(origin, null, null).hostPort.replace(/[\.:]/g,'-');
-  },
-
-  // should be called on disable of a provider
-  removeProviderButton: function(origin) {
-    CustomizableUI.destroyWidget(this.idFromOrigin(origin));
-  },
-
-  clearPalette: function() {
-    for (let p of Social.providers) {
-      this.removeProviderButton(p.origin);
-    }
-  },
-
-  // should be called on enable of a provider
-  populatePalette: function() {
-    if (!Social.enabled) {
-      this.clearPalette();
-      return;
-    }
-
-    // create any buttons that do not exist yet if they have been persisted
-    // as a part of the UI (otherwise they belong in the palette).
-    for (let provider of Social.providers) {
-      let id = this.idFromOrigin(provider.origin);
-      this._createButton(id, provider);
-    }
-  }
-}
-
-var SocialStatusWidgetListener = {
-  _getNodeOrigin: function(aWidgetId) {
-    // we rely on the button id being the same as the widget.
-    let node = document.getElementById(aWidgetId);
-    if (!node)
-      return null
-    if (!node.classList.contains("social-status-button"))
-      return null
-    return node.getAttribute("origin");
-  },
-  onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-    let origin = this._getNodeOrigin(aWidgetId);
-    if (origin)
-      SocialStatus.updateButton(origin);
-  },
-  onWidgetRemoved: function(aWidgetId, aPrevArea) {
-    let origin = this._getNodeOrigin(aWidgetId);
-    if (!origin)
-      return;
-    // When a widget is demoted to the palette ('removed'), it's visual
-    // style should change.
-    SocialStatus.updateButton(origin);
-    SocialStatus._removeFrame(origin);
-  }
-}
-
-SocialStatus = {
-  populateToolbarPalette: function() {
-    this._toolbarHelper.populatePalette();
-
-    for (let provider of Social.providers)
-      this.updateButton(provider.origin);
-  },
-
-  removeProvider: function(origin) {
-    this._removeFrame(origin);
-    this._toolbarHelper.removeProviderButton(origin);
-  },
-
-  reloadProvider: function(origin) {
-    let button = document.getElementById(this._toolbarHelper.idFromOrigin(origin));
-    if (button && button.getAttribute("open") == "true")
-      document.getElementById("social-notification-panel").hidePopup();
-    this._removeFrame(origin);
-  },
-
-  _removeFrame: function(origin) {
-    let notificationFrameId = "social-status-" + origin;
-    let frame = document.getElementById(notificationFrameId);
-    if (frame) {
-      frame.parentNode.removeChild(frame);
-    }
-  },
-
-  get _toolbarHelper() {
-    delete this._toolbarHelper;
-    this._toolbarHelper = new ToolbarHelper("social-status-button",
-                                            CreateSocialStatusWidget,
-                                            SocialStatusWidgetListener);
-    return this._toolbarHelper;
-  },
-
-  updateButton: function(origin) {
-    let id = this._toolbarHelper.idFromOrigin(origin);
-    let widget = CustomizableUI.getWidget(id);
-    if (!widget)
-      return;
-    let button = widget.forWindow(window).node;
-    if (button) {
-      // we only grab the first notification, ignore all others
-      let provider = Social._getProviderFromOrigin(origin);
-      let icons = provider.ambientNotificationIcons;
-      let iconNames = Object.keys(icons);
-      let notif = icons[iconNames[0]];
-
-      // The image and tooltip need to be updated for
-      // ambient notification changes.
-      let iconURL = provider.icon32URL || provider.iconURL;
-      let tooltiptext;
-      if (!notif || !widget.areaType) {
-        button.style.listStyleImage = "url(" + iconURL + ")";
-        button.setAttribute("badge", "");
-        button.setAttribute("aria-label", "");
-        button.setAttribute("tooltiptext", provider.name);
-        return;
-      }
-      button.style.listStyleImage = "url(" + (notif.iconURL || iconURL) + ")";
-      button.setAttribute("tooltiptext", notif.label || provider.name);
-
-      let badge = notif.counter || "";
-      button.setAttribute("badge", badge);
-      let ariaLabel = notif.label;
-      // if there is a badge value, we must use a localizable string to insert it.
-      if (badge)
-        ariaLabel = gNavigatorBundle.getFormattedString("social.aria.toolbarButtonBadgeText",
-                                                        [ariaLabel, badge]);
-      button.setAttribute("aria-label", ariaLabel);
-    }
-  },
-
-  _onclose: function(frame) {
-    frame.removeEventListener("close", this._onclose, true);
-    frame.removeEventListener("click", this._onclick, true);
-  },
-
-  _onclick: function() {
-    Services.telemetry.getHistogramById("SOCIAL_PANEL_CLICKS").add(1);
-  },
-
-  showPopup: function(aToolbarButton) {
-    // attach our notification panel if necessary
-    let origin = aToolbarButton.getAttribute("origin");
-    let provider = Social._getProviderFromOrigin(origin);
-
-    PanelFrame.showPopup(window, aToolbarButton, "social", origin,
-                         provider.statusURL, provider.getPageSize("status"),
-                         (frame) => {
-                          frame.addEventListener("close", () => { SocialStatus._onclose(frame) }, true);
-                          frame.addEventListener("click", this._onclick, true);
-                        });
-    Services.telemetry.getHistogramById("SOCIAL_TOOLBAR_BUTTONS").add(1);
-  }
-};
-
-
-var SocialMarksWidgetListener = {
-  onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-    let node = document.getElementById(aWidgetId);
-    if (!node || !node.classList.contains("social-mark-button"))
-      return;
-    node._receiveMessage = node.receiveMessage.bind(node);
-    messageManager.addMessageListener("Social:ErrorPageNotify", node._receiveMessage);
-  },
-  onWidgetBeforeDOMChange: function(aNode, aNextNode, aContainer, isRemoval) {
-    if (!isRemoval || !aNode || !aNode.classList.contains("social-mark-button"))
-      return;
-    messageManager.removeMessageListener("Social:ErrorPageNotify", aNode._receiveMessage);
-    delete aNode._receiveMessage;
-  }
-}
-
-/**
- * SocialMarks
- *
- * Handles updates to toolbox and signals all buttons to update when necessary.
- */
-SocialMarks = {
-  get nodes() {
-    for (let p of Social.providers.filter(p => p.markURL)) {
-      let widgetId = SocialMarks._toolbarHelper.idFromOrigin(p.origin);
-      let widget = CustomizableUI.getWidget(widgetId);
-      if (!widget)
-        continue;
-      let node = widget.forWindow(window).node;
-      if (node)
-        yield node;
-    }
-  },
-  update: function() {
-    // querySelectorAll does not work on the menu panel, so we have to do this
-    // the hard way.
-    for (let node of this.nodes) {
-      // xbl binding is not complete on startup when buttons are not in toolbar,
-      // verify update is available
-      if (node.update) {
-        node.update();
-      }
-    }
-  },
-
-  getProviders: function() {
-    // only rely on providers that the user has placed in the UI somewhere. This
-    // also means that populateToolbarPalette must be called prior to using this
-    // method, otherwise you get a big fat zero. For our use case with context
-    // menu's, this is ok.
-    return Social.providers.filter(p => p.markURL &&
-                                        document.getElementById(this._toolbarHelper.idFromOrigin(p.origin)));
-  },
-
-  populateContextMenu: function() {
-    // only show a selection if enabled and there is more than one
-    let providers = this.getProviders();
-
-    // remove all previous entries by class
-    let menus = [...document.getElementsByClassName("context-socialmarks")];
-    for (let m of menus) {
-      m.parentNode.removeChild(m);
-    }
-
-    let contextMenus = [
-      {
-        type: "link",
-        id: "context-marklinkMenu",
-        label: "social.marklinkMenu.label"
-      },
-      {
-        type: "page",
-        id: "context-markpageMenu",
-        label: "social.markpageMenu.label"
-      }
-    ];
-    for (let cfg of contextMenus) {
-      this._populateContextPopup(cfg, providers);
-    }
-    this.update();
-  },
-
-  MENU_LIMIT: 3, // adjustable for testing
-  _populateContextPopup: function(menuInfo, providers) {
-    let menu = document.getElementById(menuInfo.id);
-    let popup = menu.firstChild;
-    for (let provider of providers) {
-      // We show up to MENU_LIMIT providers as single menuitems's at the top
-      // level of the context menu, if we have more than that, dump them *all*
-      // into the menu popup.
-      let mi = document.createElement("menuitem");
-      mi.setAttribute("oncommand", "gContextMenu.markLink(this.getAttribute('origin'));");
-      mi.setAttribute("origin", provider.origin);
-      mi.setAttribute("image", provider.iconURL);
-      if (providers.length <= this.MENU_LIMIT) {
-        // an extra class to make enable/disable easy
-        mi.setAttribute("class", "menuitem-iconic context-socialmarks context-mark"+menuInfo.type);
-        let menuLabel = gNavigatorBundle.getFormattedString(menuInfo.label, [provider.name]);
-        mi.setAttribute("label", menuLabel);
-        menu.parentNode.insertBefore(mi, menu);
-      } else {
-        mi.setAttribute("class", "menuitem-iconic context-socialmarks");
-        mi.setAttribute("label", provider.name);
-        popup.appendChild(mi);
-      }
-    }
-  },
-
-  populateToolbarPalette: function() {
-    this._toolbarHelper.populatePalette();
-    this.populateContextMenu();
-  },
-
-  removeProvider: function(origin) {
-    this._toolbarHelper.removeProviderButton(origin);
-  },
-
-  get _toolbarHelper() {
-    delete this._toolbarHelper;
-    this._toolbarHelper = new ToolbarHelper("social-mark-button",
-                                            CreateSocialMarkWidget,
-                                            SocialMarksWidgetListener);
-    return this._toolbarHelper;
-  },
-
-  markLink: function(aOrigin, aUrl, aTarget) {
-    // find the button for this provider, and open it
-    let id = this._toolbarHelper.idFromOrigin(aOrigin);
-    document.getElementById(id).markLink(aUrl, aTarget);
-  }
-};
 
 })();
