@@ -130,9 +130,8 @@ this.TestingCrashManager.prototype = {
         return this.EVENT_FILE_ERROR_MALFORMED;
       } else if (payload == "success") {
         return this.EVENT_FILE_SUCCESS;
-      } else {
-        return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
       }
+      return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
     }
 
     return CrashManager.prototype._handleEventFilePayload.call(this,

@@ -27,10 +27,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Telemetry.h"
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
 #endif
@@ -451,19 +447,6 @@ nsNotifyAddrListener::Observe(nsISupports *subject,
     return NS_OK;
 }
 
-#ifdef MOZ_NUWA_PROCESS
-class NuwaMarkLinkMonitorThreadRunner : public Runnable
-{
-    NS_IMETHODIMP Run() override
-    {
-        if (IsNuwaProcess()) {
-            NuwaMarkCurrentThread(nullptr, nullptr);
-        }
-        return NS_OK;
-    }
-};
-#endif
-
 nsresult
 nsNotifyAddrListener::Init(void)
 {
@@ -485,11 +468,6 @@ nsNotifyAddrListener::Init(void)
 
     rv = NS_NewNamedThread("Link Monitor", getter_AddRefs(mThread), this);
     NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef MOZ_NUWA_PROCESS
-    nsCOMPtr<nsIRunnable> runner = new NuwaMarkLinkMonitorThreadRunner();
-    mThread->Dispatch(runner, NS_DISPATCH_NORMAL);
-#endif
 
     return NS_OK;
 }

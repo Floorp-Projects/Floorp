@@ -10,6 +10,7 @@
 #include "mozIApplication.h"
 #include "nsCOMPtr.h"
 #include "mozilla/BasePrincipal.h"
+#include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 
 namespace mozilla {

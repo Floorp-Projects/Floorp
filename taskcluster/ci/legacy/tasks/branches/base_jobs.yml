@@ -279,6 +279,15 @@ tasks:
         - 'python/mozlint/**'
         - 'tools/lint/**'
         - 'testing/docker/lint/**'
+  wptlint-gecko:
+    task: tasks/tests/mozlint-wpt.yml
+    root: true
+    when:
+      file_patterns:
+        - 'testing/web-platform/tests/**'
+        - 'python/mozlint/**'
+        - 'tools/lint/**'
+        - 'testing/docker/lint/**'
   taskgraph-tests:
     task: tasks/tests/taskgraph-tests.yml
     root: true

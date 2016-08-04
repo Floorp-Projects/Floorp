@@ -42,10 +42,6 @@ class ChildThread : public IPC::Channel::Listener,
   virtual void OnMessageReceived(IPC::Message&& msg);
   virtual void OnChannelError();
 
-#ifdef MOZ_NUWA_PROCESS
-  static void MarkThread();
-#endif
-
   // The message loop used to run tasks on the thread that started this thread.
   MessageLoop* owner_loop_;
 

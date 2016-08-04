@@ -176,14 +176,17 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
             continue;
         }
 
-        if (lastBranch.isInitialized())
+        if (lastBranch.isInitialized()) {
+            comment("emit GC pointer checks");
             lastBranch.emit(*this);
+        }
 
         JSObject* object = types->getSingletonNoBarrier(i);
         lastBranch = BranchGCPtr(Equal, obj, ImmGCPtr(object), &matched);
     }
 
     if (hasObjectGroups) {
+        comment("has object groups");
         // We are possibly going to overwrite the obj register. So already
         // emit the branch, since branch depends on previous value of obj
         // register and there is definitely a branch following. So no need

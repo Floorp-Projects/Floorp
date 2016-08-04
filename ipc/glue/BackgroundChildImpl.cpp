@@ -29,7 +29,6 @@
 #include "mozilla/dom/GamepadTestChannelChild.h"
 #endif
 #include "mozilla/dom/MessagePortChild.h"
-#include "mozilla/dom/NuwaChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
 #include "mozilla/ipc/PSendStreamChild.h"
 #include "mozilla/layout/VsyncChild.h"
@@ -75,7 +74,6 @@ using mozilla::dom::asmjscache::PAsmJSCacheEntryChild;
 using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStorageChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
-using mozilla::dom::PNuwaChild;
 
 // -----------------------------------------------------------------------------
 // BackgroundChildImpl::ThreadLocal
@@ -406,21 +404,6 @@ BackgroundChildImpl::DeallocPMessagePortChild(PMessagePortChild* aActor)
   RefPtr<dom::MessagePortChild> child =
     dont_AddRef(static_cast<dom::MessagePortChild*>(aActor));
   MOZ_ASSERT(child);
-  return true;
-}
-
-PNuwaChild*
-BackgroundChildImpl::AllocPNuwaChild()
-{
-  return new mozilla::dom::NuwaChild();
-}
-
-bool
-BackgroundChildImpl::DeallocPNuwaChild(PNuwaChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-
-  delete aActor;
   return true;
 }
 

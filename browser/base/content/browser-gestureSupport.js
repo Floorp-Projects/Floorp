@@ -987,25 +987,22 @@ var gHistorySwipeAnimation = {
 
     let canvas = null;
 
-    try {
-      let browser = gBrowser.selectedBrowser;
-      let r = browser.getBoundingClientRect();
-      canvas = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                        "canvas");
-      canvas.mozOpaque = true;
-      let scale = window.devicePixelRatio;
-      canvas.width = r.width * scale;
-      canvas.height = r.height * scale;
-      let ctx = canvas.getContext("2d");
-      let zoom = browser.markupDocumentViewer.fullZoom * scale;
-      ctx.scale(zoom, zoom);
-      ctx.drawWindow(browser.contentWindow,
-                     0, 0, canvas.width / zoom, canvas.height / zoom, "white",
-                     ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
-                     ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
-                     ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
-    } finally {
-    }
+    let browser = gBrowser.selectedBrowser;
+    let r = browser.getBoundingClientRect();
+    canvas = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                      "canvas");
+    canvas.mozOpaque = true;
+    let scale = window.devicePixelRatio;
+    canvas.width = r.width * scale;
+    canvas.height = r.height * scale;
+    let ctx = canvas.getContext("2d");
+    let zoom = browser.markupDocumentViewer.fullZoom * scale;
+    ctx.scale(zoom, zoom);
+    ctx.drawWindow(browser.contentWindow,
+                   0, 0, canvas.width / zoom, canvas.height / zoom, "white",
+                   ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
+                   ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
+                   ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
 
     TelemetryStopwatch.start("FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE");
     try {

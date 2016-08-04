@@ -186,6 +186,10 @@ public:
 
   nsresult Init(nsIPresentationControlChannel* aControlChannel) override;
 
+  nsresult Reconnect(nsIPresentationServiceCallback* aCallback);
+
+  nsresult BuildTransport();
+
 private:
   ~PresentationControllingInfo()
   {
@@ -198,9 +202,8 @@ private:
 
   nsresult OnGetAddress(const nsACString& aAddress);
 
-  nsresult BuildTransport();
-
   nsCOMPtr<nsIServerSocket> mServerSocket;
+  nsCOMPtr<nsIPresentationServiceCallback> mReconnectCallback;
 };
 
 // Session info with presenting browsing context (receiver side) behaviors.

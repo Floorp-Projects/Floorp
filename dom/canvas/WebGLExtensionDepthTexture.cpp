@@ -20,6 +20,7 @@ WebGLExtensionDepthTexture::WebGLExtensionDepthTexture(WebGLContext* webgl)
                               GLenum unpackType)
     {
         auto usage = fua->EditUsage(effFormat);
+        usage->isFilterable = true;
         usage->SetRenderable();
 
         const webgl::PackingInfo pi = {unpackFormat, unpackType};

@@ -50,7 +50,6 @@ class Shape;
 class SharedArrayBufferObject;
 class StructTypeDescr;
 class UnownedBaseShape;
-class WasmInstanceObject;
 class WasmMemoryObject;
 namespace jit {
 class JitCode;

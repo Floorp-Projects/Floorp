@@ -15,6 +15,7 @@
 #include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/MemoryChecking.h"
 
@@ -195,10 +196,6 @@
 #include "base/command_line.h"
 #include "GTestRunner.h"
 
-#ifdef MOZ_B2G_LOADER
-#include "ProcessUtils.h"
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 #include "GeneratedJNIWrappers.h"
 #endif
@@ -206,6 +203,7 @@
 #if defined(MOZ_SANDBOX)
 #if defined(XP_LINUX) && !defined(ANDROID)
 #include "mozilla/SandboxInfo.h"
+#include "mozilla/widget/LSBUtils.h"
 #elif defined(XP_WIN)
 #include "SandboxBroker.h"
 #endif
@@ -3488,7 +3486,21 @@ static void PR_CALLBACK AnnotateSystemManufacturer_ThreadStart(void*)
 
   CoUninitialize();
 }
-#endif
+#endif // XP_WIN
+
+#if defined(XP_LINUX) && !defined(ANDROID)
+
+static void
+AnnotateLSBRelease(void*)
+{
+  nsCString dist, desc, release, codename;
+  if (widget::lsb::GetLSBRelease(dist, desc, release, codename)) {
+    CrashReporter::AppendAppNotesToCrashReport(desc);
+  }
+}
+
+#endif // defined(XP_LINUX) && !defined(ANDROID)
+
 #endif
 
 namespace mozilla {
@@ -3954,10 +3966,6 @@ XREMain::XRE_mainRun()
   nsresult rv = NS_OK;
   NS_ASSERTION(mScopedXPCOM, "Scoped xpcom not initialized.");
 
-#ifdef MOZ_B2G_LOADER
-  mozilla::ipc::ProcLoaderClientGeckoInit();
-#endif
-
 #ifdef NS_FUNCTION_TIMER
   // initialize some common services, so we don't pay the cost for these at odd times later on;
   // SetWindowCreator -> ChromeRegistry -> IOService -> SocketTransportService -> (nspr wspm init), Prefs
@@ -4006,6 +4014,11 @@ XREMain::XRE_mainRun()
 #ifdef XP_WIN
   PR_CreateThread(PR_USER_THREAD, AnnotateSystemManufacturer_ThreadStart, 0,
                   PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+#endif
+
+#if defined(XP_LINUX) && !defined(ANDROID)
+  PR_CreateThread(PR_USER_THREAD, AnnotateLSBRelease, 0, PR_PRIORITY_LOW,
+                  PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
 #endif
 
 #endif
@@ -4178,6 +4191,15 @@ XREMain::XRE_mainRun()
   if (!mShuttingDown) {
     rv = appStartup->CreateHiddenWindow();
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+#ifdef MOZ_STYLO
+    // We initialize Servo here so that the hidden DOM window is available,
+    // since initializing Servo calls style struct constructors, and the
+    // HackilyFindDeviceContext stuff we have right now depends on the hidden
+    // DOM window. When we fix that, this should move back to
+    // nsLayoutStatics.cpp
+    Servo_Initialize();
+#endif
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK)
     nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();

@@ -245,9 +245,8 @@ function downloadQuery(query) {
   function normalizeDownloadTime(arg, before) {
     if (arg == null) {
       return before ? Number.MAX_VALUE : 0;
-    } else {
-      return normalizeTime(arg).getTime();
     }
+    return normalizeTime(arg).getTime();
   }
 
   const startedBefore = normalizeDownloadTime(query.startedBefore, true);
@@ -279,9 +278,8 @@ function downloadQuery(query) {
     value = value.toLowerCase();
     if (re.test(value)) {
       return input => (value == input);
-    } else {
-      return input => false;
     }
+    return input => false;
   }
 
   const matchFilename = makeMatch(query.filenameRegex, query.filename, "filename");
@@ -570,9 +568,8 @@ extensions.registerSchemaAPI("downloads", (extension, context) => {
           let download = DownloadMap.fromId(downloadId).download;
           if (download.succeeded) {
             return download.launch();
-          } else {
-            return Promise.reject({message: "Download has not completed."});
           }
+          return Promise.reject({message: "Download has not completed."});
         }).catch((error) => {
           return Promise.reject({message: error.message});
         });

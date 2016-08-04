@@ -846,15 +846,14 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr* aSheet,
                                               nsPresContext* aPresContext)
 {
   if (mBackendType == StyleBackendType::Gecko) {
-    *aSheet = new CSSStyleSheet(CORS_NONE, mozilla::net::RP_Default);
+    *aSheet = new CSSStyleSheet(eAgentSheetFeatures, CORS_NONE,
+                                mozilla::net::RP_Default);
   } else {
-    *aSheet = new ServoStyleSheet(CORS_NONE, mozilla::net::RP_Default,
-                                  dom::SRIMetadata());
+    *aSheet = new ServoStyleSheet(eAgentSheetFeatures, CORS_NONE,
+                                  mozilla::net::RP_Default, dom::SRIMetadata());
   }
 
   StyleSheetHandle sheet = *aSheet;
-
-  sheet->SetParsingMode(eAgentSheetFeatures);
 
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);
@@ -951,8 +950,7 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr* aSheet,
   if (sheet->IsGecko()) {
     sheet->AsGecko()->ReparseSheet(sheetText);
   } else {
-    sheet->AsServo()->ParseSheet(sheetText, uri, uri, nullptr, 0,
-                                 SheetParsingMode::eAuthorSheetFeatures);
+    sheet->AsServo()->ParseSheet(sheetText, uri, uri, nullptr, 0);
   }
 
 #undef NS_GET_R_G_B

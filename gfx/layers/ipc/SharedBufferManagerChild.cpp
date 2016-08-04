@@ -14,10 +14,6 @@
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitor, etc
 #include "nsThreadUtils.h"              // fo NS_IsMainThread
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, "SBMChild", ## args)
 #endif
@@ -103,14 +99,6 @@ ConnectSharedBufferManagerInChildProcess(mozilla::ipc::Transport* aTransport,
                                                                      XRE_GetIOMessageLoop(),
                                                                      ipc::ChildSide);
 
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    SharedBufferManagerChild::sSharedBufferManagerChildThread
-      ->message_loop()->PostTask(NewRunnableFunction(NuwaMarkCurrentThread,
-                                                     (void (*)(void *))nullptr,
-                                                     (void *)nullptr));
-  }
-#endif
 }
 
 PSharedBufferManagerChild*

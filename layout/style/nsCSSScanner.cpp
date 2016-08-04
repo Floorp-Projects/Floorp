@@ -930,9 +930,12 @@ nsCSSScanner::ScanNumber(nsCSSToken& aToken)
   // Do all the math in double precision so it's truncated only once.
   double value = sign * (intPart + fracPart);
   if (gotE) {
-    // Explicitly cast expSign*exponent to double to avoid issues with
-    // overloaded pow() on Windows.
-    value *= pow(10.0, double(expSign * exponent));
+    // Avoid multiplication of 0 by Infinity.
+    if (value != 0.0) {
+      // Explicitly cast expSign*exponent to double to avoid issues with
+      // overloaded pow() on Windows.
+      value *= pow(10.0, double(expSign * exponent));
+    }
   } else if (!gotDot) {
     // Clamp values outside of integer range.
     if (sign > 0) {
@@ -958,6 +961,7 @@ nsCSSScanner::ScanNumber(nsCSSToken& aToken)
       aToken.mIntegerValid = false;
     }
   }
+  MOZ_ASSERT(!IsNaN(value), "The value should not be NaN");
   aToken.mNumber = value;
   aToken.mType = type;
   return true;

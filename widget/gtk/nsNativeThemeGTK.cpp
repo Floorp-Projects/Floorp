@@ -856,11 +856,18 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   cairo_matrix_t mat;
   GfxMatrixToCairoMatrix(transform, mat);
 
+  nsIntSize clipSize((aDrawSize.width + aScaleFactor - 1) / aScaleFactor,
+                     (aDrawSize.height + aScaleFactor - 1) / aScaleFactor);
+
 #ifndef MOZ_TREE_CAIRO
   // Directly use the Cairo draw target to render the widget if using system Cairo everywhere.
   BorrowedCairoContext borrowCairo(aDrawTarget);
   if (borrowCairo.mCairo) {
     cairo_set_matrix(borrowCairo.mCairo, &mat);
+
+    cairo_new_path(borrowCairo.mCairo);
+    cairo_rectangle(borrowCairo.mCairo, 0, 0, clipSize.width, clipSize.height);
+    cairo_clip(borrowCairo.mCairo);
 
     moz_gtk_widget_paint(aGTKWidgetType, borrowCairo.mCairo, &aGDKRect, &aState, aFlags, aDirection);
 
@@ -902,6 +909,10 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
 
           cairo_set_matrix(cr, &mat);
 
+          cairo_new_path(cr);
+          cairo_rectangle(cr, 0, 0, clipSize.width, clipSize.height);
+          cairo_clip(cr);
+
           moz_gtk_widget_paint(aGTKWidgetType, cr, &aGDKRect, &aState, aFlags, aDirection);
 
           cairo_destroy(cr);
@@ -935,6 +946,10 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
         aContext->ExportClip(*clipper);
 
         cairo_set_matrix(cr, &mat);
+
+        cairo_new_path(cr);
+        cairo_rectangle(cr, 0, 0, clipSize.width, clipSize.height);
+        cairo_clip(cr);
 
         moz_gtk_widget_paint(aGTKWidgetType, cr, &aGDKRect, &aState, aFlags, aDirection);
 

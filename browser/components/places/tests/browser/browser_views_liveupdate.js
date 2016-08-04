@@ -266,11 +266,10 @@ var bookmarksObserver = {
           return cellText == PlacesUIUtils.getBestTitle(tree.view.nodeForTreeIndex(aElementOrTreeIndex), true);
         return cellText == aNewValue;
       }
-      else {
-        if (!aNewValue && aElementOrTreeIndex.localName != "toolbarbutton")
-          return aElementOrTreeIndex.getAttribute("label") == PlacesUIUtils.getBestTitle(aElementOrTreeIndex._placesNode);
-        return aElementOrTreeIndex.getAttribute("label") == aNewValue;
+      if (!aNewValue && aElementOrTreeIndex.localName != "toolbarbutton") {
+        return aElementOrTreeIndex.getAttribute("label") == PlacesUIUtils.getBestTitle(aElementOrTreeIndex._placesNode);
       }
+      return aElementOrTreeIndex.getAttribute("label") == aNewValue;
     };
 
     for (var i = 0; i < views.length; i++) {

@@ -132,10 +132,9 @@ var Microformats; // jshint ignore:line
 
             if(node){
                 return this.getParentTreeWalk(node, options);
-            }else{
-                this.errors.push(this.noContentErr);
-                return this.formatError();
             }
+            this.errors.push(this.noContentErr);
+            return this.formatError();
         },
 
 
@@ -159,34 +158,32 @@ var Microformats; // jshint ignore:line
             // if we do not have any context create error
             if(!this.rootNode || !this.document){
                 return {'errors': [this.noContentErr]};
-            }else{
-
-                items = this.findRootNodes( this.rootNode, true );
-                i = items.length;
-                while(i--) {
-                    classItems = modules.domUtils.getAttributeList(items[i], 'class');
-                    x = classItems.length;
-                    while(x--) {
-                        // find v2 names
-                        if(modules.utils.startWith( classItems[x], 'h-' )){
-                            this.appendCount(classItems[x], 1, out);
-                        }
-                        // find v1 names
-                        for(var key in modules.maps) {
-                            // dont double count if v1 and v2 roots are present
-                            if(modules.maps[key].root === classItems[x] && classItems.indexOf(key) === -1) {
-                                this.appendCount(key, 1, out);
-                            }
+            }
+            items = this.findRootNodes( this.rootNode, true );
+            i = items.length;
+            while(i--) {
+                classItems = modules.domUtils.getAttributeList(items[i], 'class');
+                x = classItems.length;
+                while(x--) {
+                    // find v2 names
+                    if(modules.utils.startWith( classItems[x], 'h-' )){
+                        this.appendCount(classItems[x], 1, out);
+                    }
+                    // find v1 names
+                    for(var key in modules.maps) {
+                        // dont double count if v1 and v2 roots are present
+                        if(modules.maps[key].root === classItems[x] && classItems.indexOf(key) === -1) {
+                            this.appendCount(key, 1, out);
                         }
                     }
                 }
-                var relCount = this.countRels( this.rootNode );
-                if(relCount > 0){
-                    out.rels = relCount;
-                }
-
-                return out;
             }
+            var relCount = this.countRels( this.rootNode );
+            if(relCount > 0){
+                out.rels = relCount;
+            }
+
+            return out;
         },
 
 
@@ -218,9 +215,8 @@ var Microformats; // jshint ignore:line
                     }
                 }
                 return false;
-            }else{
-                return (classes.root.length > 0);
             }
+            return (classes.root.length > 0);
         },
 
 
@@ -252,9 +248,8 @@ var Microformats; // jshint ignore:line
                     }
                 }
                 return false;
-            }else{
-                return (items.length > 0);
             }
+            return (items.length > 0);
         },
 
 
@@ -287,21 +282,18 @@ var Microformats; // jshint ignore:line
             if (recursive === undefined) {
                 if (node.parentNode && node.nodeName !== 'HTML'){
                     return this.getParentTreeWalk(node.parentNode, options, true);
-                }else{
-                    return this.formatEmpty();
                 }
+                return this.formatEmpty();
             }
             if (node !== null && node !== undefined && node.parentNode) {
                 if (this.isMicroformat( node, options )) {
                     // if we have a match return microformat
                     options.node = node;
                     return this.get( options );
-                }else{
-                    return this.getParentTreeWalk(node.parentNode, options, true);
                 }
-            }else{
-                return this.formatEmpty();
+                return this.getParentTreeWalk(node.parentNode, options, true);
             }
+            return this.formatEmpty();
         },
 
 
@@ -473,9 +465,8 @@ var Microformats; // jshint ignore:line
                     }
                 }
                 return false;
-            } else {
-                return true;
             }
+            return true;
         },
 
 
@@ -965,16 +956,14 @@ var Microformats; // jshint ignore:line
                         uf.times.push([className, modules.dates.parseAmPmTime(out, this.options.dateFormat)]);
                     }
                     return modules.dates.parseAmPmTime(out, this.options.dateFormat);
-                } else {
-                    // returns a date - microformat profile
-                    if(uf) {
-                        uf.dates.push([className, new modules.ISODate(out).toString( this.options.dateFormat )]);
-                    }
-                    return new modules.ISODate(out).toString( this.options.dateFormat );
                 }
-            } else {
-                return '';
+                // returns a date - microformat profile
+                if(uf) {
+                    uf.dates.push([className, new modules.ISODate(out).toString( this.options.dateFormat )]);
+                }
+                return new modules.ISODate(out).toString( this.options.dateFormat );
             }
+            return '';
         },
 
 
@@ -1009,10 +998,9 @@ var Microformats; // jshint ignore:line
             var rootids = [];
             if(!modules.domUtils.hasAttribute(node,'rootids')){
                 return false;
-            } else {
-                rootids = modules.domUtils.getAttributeList(node, 'rootids');
-                return (rootids.indexOf('id' + id + '-' + propertyName) > -1);
             }
+            rootids = modules.domUtils.getAttributeList(node, 'rootids');
+            return (rootids.indexOf('id' + id + '-' + propertyName) > -1);
         },
 
 
@@ -1068,9 +1056,8 @@ var Microformats; // jshint ignore:line
                     return modules.dates.concatFragments(out,this.options.dateFormat).toString(this.options.dateFormat);
                 }
                 return undefined;
-            } else {
-                return null;
             }
+            return null;
         },
 
 
@@ -1110,9 +1097,8 @@ var Microformats; // jshint ignore:line
             var classes = this.getUfClassNames(node);
             if(classes.root && classes.root.length > 0){
                 return true;
-            }else{
-                return false;
             }
+            return false;
         },
 
 
@@ -1312,9 +1298,8 @@ var Microformats; // jshint ignore:line
         isAllowedPropertyVersion: function(typeVersion, propertyVersion){
             if(this.options.overlappingVersions === true){
                 return true;
-            }else{
-                return (typeVersion === propertyVersion);
             }
+            return (typeVersion === propertyVersion);
         },
 
 
@@ -2280,9 +2265,8 @@ var Microformats; // jshint ignore:line
         trim: function( text ) {
             if(text && this.isString(text)){
                 return (text.trim())? text.trim() : text.replace(/^\s+|\s+$/g, '');
-            }else{
-                return '';
             }
+            return '';
         },
 
 
@@ -2297,9 +2281,8 @@ var Microformats; // jshint ignore:line
         replaceCharAt: function( text, index, character ) {
             if(text && text.length > index){
                return text.substr(0, index) + character + text.substr(index+character.length);
-            }else{
-                return text;
             }
+            return text;
         },
 
 
@@ -2757,9 +2740,8 @@ var Microformats; // jshint ignore:line
             }
             if(onlyOfType === true){
                 return (countOfType === 1)? out : null;
-            }else{
-                return (countAll === 1)? out : null;
             }
+            return (countAll === 1)? out : null;
         },
 
 
@@ -2802,9 +2784,8 @@ var Microformats; // jshint ignore:line
         removeChild: function(childNode){
             if (childNode.parentNode) {
                 return childNode.parentNode.removeChild(childNode);
-            }else{
-                return null;
             }
+            return null;
         },
 
 
@@ -2830,9 +2811,8 @@ var Microformats; // jshint ignore:line
         getElementText: function( node ){
             if(node && node.data){
                 return node.data;
-            }else{
-                return '';
             }
+            return '';
         },
 
 
@@ -3678,12 +3658,11 @@ var Microformats; // jshint ignore:line
                 isodate.tS = isotime.tS;
                 isodate.tD = isotime.tD;
                 return isodate;
-            } else {
-                if(isodate.hasFullDate()){
-                    return isodate;
-                }
-                return new modules.ISODate();
             }
+            if(isodate.hasFullDate()){
+                return isodate;
+            }
+            return new modules.ISODate();
         },
 
 
@@ -3703,8 +3682,8 @@ var Microformats; // jshint ignore:line
             // if the fragment already contains a full date just return it once
             if(arr[0].toUpperCase().match('T')) {
                 return new modules.ISODate(arr[0], format);
-            }else{
-                for(i = 0; i < arr.length; i++) {
+            }
+            for(i = 0; i < arr.length; i++) {
                 value = arr[i];
 
                 // date pattern
@@ -3737,8 +3716,6 @@ var Microformats; // jshint ignore:line
 
             }
             return out;
-
-            }
         },
 
 
@@ -3796,12 +3773,10 @@ var Microformats; // jshint ignore:line
                 out = this.walkTreeForText( node );
                 if(out !== undefined){
                     return this.normalise( doc, out );
-                }else{
-                    return '';
                 }
-            }else{
-               return this.formatText( doc, modules.domUtils.textContent(node), this.textFormat );
+                return '';
             }
+            return this.formatText( doc, modules.domUtils.textContent(node), this.textFormat );
         },
 
 
@@ -3839,9 +3814,8 @@ var Microformats; // jshint ignore:line
 
               //return entities.decode( out, 2 );
               return modules.domUtils.decodeEntities( doc, out );
-           }else{
-              return '';
            }
+           return '';
         },
 
 

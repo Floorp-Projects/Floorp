@@ -133,10 +133,10 @@ var popupTests = [
   events: function() {
     // On Windows, disabled items are included when navigating, but on
     // other platforms, disabled items are skipped over
-    if (navigator.platform.indexOf("Win") == 0)
+    if (navigator.platform.indexOf("Win") == 0) {
       return [ "DOMMenuItemInactive item1", "DOMMenuItemActive item2" ];
-    else
-      return [ "DOMMenuItemInactive item1", "DOMMenuItemActive amenu" ];
+    }
+    return [ "DOMMenuItemInactive item1", "DOMMenuItemActive amenu" ];
   },
   test: function() {
     document.getElementById("item2").disabled = true;
@@ -147,12 +147,12 @@ var popupTests = [
   // check cursor up when a disabled item exists in the menu
   testname: "cursor up disabled",
   events: function() {
-    if (navigator.platform.indexOf("Win") == 0)
+    if (navigator.platform.indexOf("Win") == 0) {
       return [ "DOMMenuItemInactive item2", "DOMMenuItemActive amenu",
                "DOMMenuItemInactive amenu", "DOMMenuItemActive item2",
                "DOMMenuItemInactive item2", "DOMMenuItemActive item1" ];
-    else
-      return [ "DOMMenuItemInactive amenu", "DOMMenuItemActive item1" ];
+    }
+    return [ "DOMMenuItemInactive amenu", "DOMMenuItemActive item1" ];
   },
   test: function() {
     if (navigator.platform.indexOf("Win") == 0)
@@ -601,12 +601,12 @@ var popupTests = [
   // platforms
   testname: "menuitem with non accelerator disabled",
   events: function() {
-    if (navigator.platform.indexOf("Win") == 0)
+    if (navigator.platform.indexOf("Win") == 0) {
       return [ "DOMMenuItemInactive submenu", "DOMMenuItemActive other",
                "DOMMenuItemInactive other", "DOMMenuItemActive item1" ];
-    else
-      return [ "DOMMenuItemInactive submenu", "DOMMenuItemActive last",
-               "DOMMenuItemInactive last", "DOMMenuItemActive item1" ];
+    }
+    return [ "DOMMenuItemInactive submenu", "DOMMenuItemActive last",
+             "DOMMenuItemInactive last", "DOMMenuItemActive item1" ];
   },
   test: function() { synthesizeKey("O", { }); synthesizeKey("F", { }); },
   result: function(testname) {

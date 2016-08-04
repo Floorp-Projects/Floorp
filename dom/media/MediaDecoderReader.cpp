@@ -25,13 +25,15 @@ namespace mozilla {
 //#define SEEK_LOGGING
 
 extern LazyLogModule gMediaDecoderLog;
-#define DECODER_LOG(x, ...) \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("Decoder=%p " x, mDecoder, ##__VA_ARGS__))
 
-// Same workaround as MediaDecoderStateMachine.cpp.
-#define DECODER_WARN_HELPER(a, b) NS_WARNING b
-#define DECODER_WARN(x, ...) \
-  DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoder, ##__VA_ARGS__).get()))
+// avoid redefined macro in unified build
+#undef FMT
+#undef DECODER_LOG
+#undef DECODER_WARN
+
+#define FMT(x, ...) "Decoder=%p " x, mDecoder, ##__VA_ARGS__
+#define DECODER_LOG(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(__VA_ARGS__)))
+#define DECODER_WARN(...) NS_WARNING(nsPrintfCString(FMT(__VA_ARGS__)).get())
 
 class VideoQueueMemoryFunctor : public nsDequeFunctor {
 public:
@@ -536,7 +538,3 @@ MediaDecoderReader::Shutdown()
 }
 
 } // namespace mozilla
-
-#undef DECODER_LOG
-#undef DECODER_WARN
-#undef DECODER_WARN_HELPER

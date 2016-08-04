@@ -135,8 +135,6 @@ public:
   IDBCursorDirection
   GetDirection() const;
 
-  bool IsContinueCalled() const { return mContinueCalled; }
-
   void
   GetKey(JSContext* aCx,
          JS::MutableHandle<JS::Value> aResult,
@@ -154,6 +152,12 @@ public:
 
   void
   Continue(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
+
+  void
+  ContinuePrimaryKey(JSContext* aCx,
+                     JS::Handle<JS::Value> aKey,
+                     JS::Handle<JS::Value> aPrimaryKey,
+                     ErrorResult& aRv);
 
   void
   Advance(uint32_t aCount, ErrorResult& aRv);
