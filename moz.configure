@@ -194,6 +194,25 @@ def perl_version_check(min_version):
 perl_version_check('5.006')
 
 
+# GNU make detection
+# ==============================================================
+option(env='MAKE', nargs=1, help='Path to GNU make')
+
+@depends('MAKE', host)
+def possible_makes(make, host):
+    candidates = []
+    if host.kernel == 'WINNT':
+        candidates.append('mingw32-make')
+    if make:
+        candidates.append(make[0])
+    if host.kernel == 'WINNT':
+        candidates.extend(('make', 'gmake'))
+    else:
+        candidates.extend(('gmake', 'make'))
+    return candidates
+
+check_prog('GMAKE', possible_makes)
+
 # Miscellaneous programs
 # ==============================================================
 check_prog('DOXYGEN', ('doxygen',), allow_missing=True)
