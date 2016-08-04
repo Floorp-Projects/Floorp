@@ -671,63 +671,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    case AndroidGeckoEvent::TELEMETRY_UI_SESSION_STOP: {
-        if (!nsAppShell::Get()->mBrowserApp)
-            break;
-        if (curEvent->Characters().Length() == 0)
-            break;
-
-        nsCOMPtr<nsIUITelemetryObserver> obs;
-        nsAppShell::Get()->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
-        if (!obs)
-            break;
-
-        obs->StopSession(
-                curEvent->Characters().get(),
-                curEvent->CharactersExtra().get(),
-                curEvent->Time()
-                );
-        break;
-    }
-
-    case AndroidGeckoEvent::TELEMETRY_UI_SESSION_START: {
-        if (!nsAppShell::Get()->mBrowserApp)
-            break;
-        if (curEvent->Characters().Length() == 0)
-            break;
-
-        nsCOMPtr<nsIUITelemetryObserver> obs;
-        nsAppShell::Get()->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
-        if (!obs)
-            break;
-
-        obs->StartSession(
-                curEvent->Characters().get(),
-                curEvent->Time()
-                );
-        break;
-    }
-
-    case AndroidGeckoEvent::TELEMETRY_UI_EVENT: {
-        if (!nsAppShell::Get()->mBrowserApp)
-            break;
-        if (curEvent->Data().Length() == 0)
-            break;
-
-        nsCOMPtr<nsIUITelemetryObserver> obs;
-        nsAppShell::Get()->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
-        if (!obs)
-            break;
-
-        obs->AddEvent(
-                curEvent->Data().get(),
-                curEvent->Characters().get(),
-                curEvent->Time(),
-                curEvent->CharactersExtra().get()
-                );
-        break;
-    }
-
     case AndroidGeckoEvent::CALL_OBSERVER:
     {
         nsCOMPtr<nsIObserver> observer;
@@ -749,18 +692,6 @@ nsAppShell::LegacyGeckoEvent::Run()
 
     case AndroidGeckoEvent::ADD_OBSERVER:
         nsAppShell::Get()->AddObserver(curEvent->Characters(), curEvent->Observer());
-        break;
-
-    case AndroidGeckoEvent::TELEMETRY_HISTOGRAM_ADD:
-        // If the extras field is not empty then this is a keyed histogram.
-        if (!curEvent->CharactersExtra().IsVoid()) {
-            Telemetry::Accumulate(NS_ConvertUTF16toUTF8(curEvent->Characters()).get(),
-                                  NS_ConvertUTF16toUTF8(curEvent->CharactersExtra()),
-                                  curEvent->Count());
-        } else {
-            Telemetry::Accumulate(NS_ConvertUTF16toUTF8(curEvent->Characters()).get(),
-                                  curEvent->Count());
-        }
         break;
 
     case AndroidGeckoEvent::GAMEPAD_ADDREMOVE: {
