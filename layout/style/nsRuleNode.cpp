@@ -9767,7 +9767,7 @@ SetStyleClipPathToCSSValue(StyleClipPath* aStyleClipPath,
   if (basicShape) {
     aStyleClipPath->SetBasicShape(basicShape, sizingBox);
   } else {
-    aStyleClipPath->SetSizingBox(sizingBox);
+    aStyleClipPath->SetReferenceBox(sizingBox);
   }
 }
 

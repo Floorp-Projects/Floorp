@@ -67,7 +67,7 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
 {
   nsRect r;
   // XXXkrit SVG needs to use different boxes.
-  switch (mClipPathStyle.GetSizingBox()) {
+  switch (mClipPathStyle.GetReferenceBox()) {
     case StyleClipShapeSizing::Content:
       r = mTargetFrame->GetContentRectRelativeToSelf();
       break;
