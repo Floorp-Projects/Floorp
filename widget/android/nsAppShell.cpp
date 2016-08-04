@@ -656,10 +656,6 @@ nsAppShell::LegacyGeckoEvent::Run()
     EVLOG("nsAppShell: event %p %d", (void*)curEvent.get(), curEvent->Type());
 
     switch (curEvent->Type()) {
-    case AndroidGeckoEvent::NATIVE_POKE:
-        nsAppShell::Get()->NativeEventCallback();
-        break;
-
     case AndroidGeckoEvent::ZOOMEDVIEW: {
         if (!nsAppShell::Get()->mBrowserApp)
             break;

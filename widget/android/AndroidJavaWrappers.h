@@ -416,12 +416,6 @@ private:
 public:
     static void InitGeckoEventClass(JNIEnv *jEnv);
 
-    static AndroidGeckoEvent* MakeNativePoke() {
-        AndroidGeckoEvent *event = new AndroidGeckoEvent();
-        event->Init(NATIVE_POKE);
-        return event;
-    }
-
     static AndroidGeckoEvent* MakeFromJavaObject(JNIEnv *jenv, jobject jobj) {
         AndroidGeckoEvent *event = new AndroidGeckoEvent();
         event->Init(jenv, jobj);
@@ -586,7 +580,6 @@ protected:
 
 public:
     enum {
-        NATIVE_POKE = 0,
         MOTION_EVENT = 2,
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
