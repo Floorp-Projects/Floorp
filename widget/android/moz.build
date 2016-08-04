@@ -24,6 +24,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'AndroidAlerts.cpp',
     'AndroidBridge.cpp',
     'AndroidContentController.cpp',
     'AndroidDirectTexture.cpp',

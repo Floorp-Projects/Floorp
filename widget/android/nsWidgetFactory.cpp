@@ -27,6 +27,9 @@
 #include "nsXULAppAPI.h"
 #include "nsAndroidProtocolHandler.h"
 
+#include "nsToolkitCompsCID.h"
+#include "AndroidAlerts.h"
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerAndroid)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceAndroid, nsIdleServiceAndroid::GetInstance)
@@ -45,6 +48,7 @@ namespace mozilla {
 namespace widget {
 // This constructor should really be shared with all platforms.
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(AndroidAlerts)
 }
 }
 
@@ -63,6 +67,7 @@ NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 NS_DEFINE_NAMED_CID(NS_ANDROIDBRIDGE_CID);
 NS_DEFINE_NAMED_CID(NS_ANDROIDPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_SYSTEMALERTSSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
@@ -80,6 +85,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_GFXINFO_CID, false, nullptr, mozilla::widget::GfxInfoConstructor },
   { &kNS_ANDROIDBRIDGE_CID, false, nullptr, nsAndroidBridgeConstructor },
   { &kNS_ANDROIDPROTOCOLHANDLER_CID, false, nullptr, nsAndroidProtocolHandlerConstructor },
+  { &kNS_SYSTEMALERTSSERVICE_CID, false, nullptr, mozilla::widget::AndroidAlertsConstructor },
   { nullptr }
 };
 
@@ -99,6 +105,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
   { "@mozilla.org/android/bridge;1", &kNS_ANDROIDBRIDGE_CID },
   { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "android", &kNS_ANDROIDPROTOCOLHANDLER_CID },
+  { NS_SYSTEMALERTSERVICE_CONTRACTID, &kNS_SYSTEMALERTSSERVICE_CID },
   { nullptr }
 };
 
