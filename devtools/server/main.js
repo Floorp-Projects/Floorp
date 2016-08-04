@@ -1083,7 +1083,7 @@ var DebuggerServer = {
       actor = msg.json.actor;
 
       let { NetworkMonitorManager } = require("devtools/shared/webconsole/network-monitor");
-      netMonitor = new NetworkMonitorManager(frame, actor.actor);
+      netMonitor = new NetworkMonitorManager(mm, actor.actor);
 
       deferred.resolve(actor);
     }).bind(this);
