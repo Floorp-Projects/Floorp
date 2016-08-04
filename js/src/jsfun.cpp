@@ -702,7 +702,7 @@ js::fun_symbolHasInstance(JSContext* cx, unsigned argc, Value* vp)
  * ES6 (4-25-16) 7.3.19 OrdinaryHasInstance
  */
 bool
-js::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, MutableHandleValue v, bool* bp)
+JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, MutableHandleValue v, bool* bp)
 {
     RootedObject obj(cx, objArg);
 
