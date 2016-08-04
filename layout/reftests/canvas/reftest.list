@@ -73,11 +73,8 @@ fails-if(!(Android)&&(OSX==1006||(azureQuartz&&OSX>=1007))||azureSkiaGL||azureSk
 
 == zero-dimensions.html zero-dimensions-ref.html
 
-== evenodd-fill-sanity.html data:text/html,<body>Pass
 != evenodd-fill-1.html nonzero-fill-1.html
 == evenodd-fill-1.html evenodd-fill-ref.html
-random-if(azureSkiaGL) == evenodd-fill-2.html evenodd-fill-ref.html
-== evenodd-fill-3.html nonzero-fill-2.html
 
 == dash-sanity.html data:text/html,<body>Pass
 fuzzy-if(azureSkia||skiaContent,9,470) random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
