@@ -331,6 +331,37 @@ const JNINativeMethod PrefsHelper::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class Telemetry::Natives : public mozilla::jni::NativeImpl<Telemetry, Impl>
+{
+public:
+    static const JNINativeMethod methods[5];
+};
+
+template<class Impl>
+const JNINativeMethod Telemetry::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<Telemetry::AddHistogram_t>(
+            mozilla::jni::NativeStub<Telemetry::AddHistogram_t, Impl>
+            ::template Wrap<&Impl::AddHistogram>),
+
+    mozilla::jni::MakeNativeMethod<Telemetry::AddKeyedHistogram_t>(
+            mozilla::jni::NativeStub<Telemetry::AddKeyedHistogram_t, Impl>
+            ::template Wrap<&Impl::AddKeyedHistogram>),
+
+    mozilla::jni::MakeNativeMethod<Telemetry::AddUIEvent_t>(
+            mozilla::jni::NativeStub<Telemetry::AddUIEvent_t, Impl>
+            ::template Wrap<&Impl::AddUIEvent>),
+
+    mozilla::jni::MakeNativeMethod<Telemetry::StartUISession_t>(
+            mozilla::jni::NativeStub<Telemetry::StartUISession_t, Impl>
+            ::template Wrap<&Impl::StartUISession>),
+
+    mozilla::jni::MakeNativeMethod<Telemetry::StopUISession_t>(
+            mozilla::jni::NativeStub<Telemetry::StopUISession_t, Impl>
+            ::template Wrap<&Impl::StopUISession>)
+};
+
+template<class Impl>
 class ThumbnailHelper::Natives : public mozilla::jni::NativeImpl<ThumbnailHelper, Impl>
 {
 public:
