@@ -179,8 +179,6 @@ public class GeckoAppShell
         return CRASH_HANDLER;
     }
 
-    private static final Map<String, String> ALERT_COOKIES = new ConcurrentHashMap<String, String>();
-
     private static volatile boolean locationHighAccuracyEnabled;
 
     // Accessed by NotificationHelper. This should be encapsulated.
@@ -1029,6 +1027,9 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
+    private static native void notifyAlertListener(String name, String topic);
+
+    @WrapForJNI
     public static void showAlertNotification(String imageUrl, String alertTitle, String alertText,
                                              String alertCookie, String alertName, String host,
                                              String persistentData) {
@@ -1042,8 +1043,7 @@ public class GeckoAppShell
                     notificationID, "persistent-notification-close", persistentData);
 
         } else {
-            ALERT_COOKIES.put(alertName, alertCookie);
-            callObserver(alertName, "alertshow", alertCookie);
+            notifyAlertListener(alertName, "alertshow");
 
             // The intent to launch when the user clicks the expanded notification
             final Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CALLBACK);
@@ -1072,13 +1072,7 @@ public class GeckoAppShell
 
     @WrapForJNI
     public static void closeNotification(String alertName) {
-        final String alertCookie = ALERT_COOKIES.get(alertName);
-        if (alertCookie != null) {
-            callObserver(alertName, "alertfinished", alertCookie);
-            ALERT_COOKIES.remove(alertName);
-        }
-
-        removeObserver(alertName);
+        notifyAlertListener(alertName, "alertfinished");
 
         final int notificationID = alertName.hashCode();
         notificationClient.remove(notificationID);
@@ -1088,7 +1082,7 @@ public class GeckoAppShell
         final int notificationID = alertName.hashCode();
 
         if (GeckoApp.ACTION_ALERT_CALLBACK.equals(action)) {
-            callObserver(alertName, "alertclickcallback", alertCookie);
+            notifyAlertListener(alertName, "alertclickcallback");
 
             if (notificationClient.isOngoing(notificationID)) {
                 // When clicked, keep the notification if it displays progress
