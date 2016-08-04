@@ -152,3 +152,35 @@ Error);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", "", ">", "1,>", ">", ""]);
     disableSPSProfiling();
 })();
+
+(function() {
+    var m1 = new Module(textToBinary(`(module
+        (func $foo (result i32) (i32.const 42))
+        (export "foo" $foo)
+    )`));
+    var m2 = new Module(textToBinary(`(module
+        (import $foo "a" "foo" (result i32))
+        (func $bar (result i32) (call_import $foo))
+        (export "bar" $bar)
+    )`));
+
+    // Instantiate while not active:
+    var e1 = new Instance(m1).exports;
+    var e2 = new Instance(m2, {a:e1}).exports;
+    enableSPSProfiling();
+    enableSingleStepProfiling();
+    assertEq(e2.bar(), 42);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", "0,0,>", "0,>", ">", ""]);
+    disableSPSProfiling();
+    assertEq(e2.bar(), 42);
+
+    // Instantiate while active:
+    enableSPSProfiling();
+    var e3 = new Instance(m1).exports;
+    var e4 = new Instance(m2, {a:e3}).exports;
+    enableSingleStepProfiling();
+    assertEq(e4.bar(), 42);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", "0,0,>", "0,>", ">", ""]);
+    disableSPSProfiling();
+    assertEq(e4.bar(), 42);
+})();

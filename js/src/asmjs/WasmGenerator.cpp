@@ -393,8 +393,9 @@ ModuleGenerator::finishFuncExports()
         if (!sig.clone(funcSig(funcIndex)))
             return false;
 
-        uint32_t tableEntry = funcCodeRange(funcIndex).funcTableEntry();
-        metadata_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex, tableEntry);
+        metadata_->funcExports.infallibleEmplaceBack(Move(sig),
+                                                     funcIndex,
+                                                     funcIndexToCodeRange_[funcIndex]);
     }
 
     return true;
