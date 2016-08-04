@@ -242,7 +242,7 @@ function promiseFindFinished(searchText, highlightOn) {
  */
 function promiseFocus() {
   return new Promise((resolve) => {
-    waitForFocus(function(){
+    waitForFocus(function() {
       resolve();
     }, content);
   });

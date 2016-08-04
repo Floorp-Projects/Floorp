@@ -214,7 +214,7 @@ var processInfo = {
     return null;
   },
   getCounters_Windows: function() {
-    if (!this._initialized){
+    if (!this._initialized) {
       Cu.import("resource://gre/modules/ctypes.jsm");
       this._IO_COUNTERS = new ctypes.StructType("IO_COUNTERS", [
         {'readOps': ctypes.unsigned_long_long},

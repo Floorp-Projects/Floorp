@@ -95,7 +95,7 @@ this.TestRunner = {
     yield BrowserTestUtils.loadURI(selectedBrowser, HOME_PAGE);
     yield BrowserTestUtils.browserLoaded(selectedBrowser);
 
-    for (let i = 0; i < this.combos.length; i++){
+    for (let i = 0; i < this.combos.length; i++) {
       this.currentComboIndex = i;
       yield this._performCombo(this.combos.item(this.currentComboIndex));
     }

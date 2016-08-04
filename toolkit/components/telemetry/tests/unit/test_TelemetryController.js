@@ -427,7 +427,7 @@ add_task(function* test_changePingAfterSubmission() {
                "The payload must not be changed after being submitted.");
 });
 
-add_task(function* test_telemetryEnabledUnexpectedValue(){
+add_task(function* test_telemetryEnabledUnexpectedValue() {
   // Remove the default value for toolkit.telemetry.enabled from the default prefs.
   // Otherwise, we wouldn't be able to set the pref to a string.
   let defaultPrefBranch = Services.prefs.getDefaultBranch(null);
@@ -456,7 +456,7 @@ add_task(function* test_telemetryEnabledUnexpectedValue(){
                "False must disable Telemetry recording.");
 });
 
-add_task(function* test_telemetryCleanFHRDatabase(){
+add_task(function* test_telemetryCleanFHRDatabase() {
   const FHR_DBNAME_PREF = "datareporting.healthreport.dbName";
   const CUSTOM_DB_NAME = "unlikely.to.be.used.sqlite";
   const DEFAULT_DB_NAME = "healthreport.sqlite";
@@ -504,7 +504,7 @@ add_task(function* test_telemetryCleanFHRDatabase(){
   }
 });
 
-add_task(function* stopServer(){
+add_task(function* stopServer() {
   yield PingServer.stop();
   do_test_finished();
 });

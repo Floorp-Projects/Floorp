@@ -159,7 +159,7 @@ function validateTimestamp(eventName, timestamp) {
   ok(Number.isFinite(timestamp), "Timestamp must be a number.");
 }
 
-add_task(function* test_setup(){
+add_task(function* test_setup() {
   yield setup_UITourTest();
   requestLongerTimeout(2);
   registerCleanupFunction(() => {

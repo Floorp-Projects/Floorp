@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function modHistoryTypes(val){
+function modHistoryTypes(val) {
   switch(val % 8) {
     case 0:
     case 1:
