@@ -142,7 +142,7 @@ ShowWithBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
 
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS(nsAlertsService, nsIAlertsService, nsIAlertsDoNotDisturb, nsIAlertsProgressListener)
+NS_IMPL_ISUPPORTS(nsAlertsService, nsIAlertsService, nsIAlertsDoNotDisturb)
 
 nsAlertsService::nsAlertsService() :
   mBackend(nullptr)
@@ -346,30 +346,6 @@ NS_IMETHODIMP nsAlertsService::SetManualDoNotDisturb(bool aDoNotDisturb)
   }
   return rv;
 #endif
-}
-
-NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
-                                          int64_t aProgress,
-                                          int64_t aProgressMax,
-                                          const nsAString & aAlertText)
-{
-#ifdef MOZ_WIDGET_ANDROID
-  java::GeckoAppShell::AlertsProgressListener_OnProgress(
-      aAlertName, aProgress, aProgressMax, aAlertText);
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif // !MOZ_WIDGET_ANDROID
-}
-
-NS_IMETHODIMP nsAlertsService::OnCancel(const nsAString & aAlertName)
-{
-#ifdef MOZ_WIDGET_ANDROID
-  java::GeckoAppShell::CloseNotification(aAlertName);
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif // !MOZ_WIDGET_ANDROID
 }
 
 already_AddRefed<nsIAlertsDoNotDisturb>

@@ -222,36 +222,6 @@ interface nsIAlertsDoNotDisturb : nsISupports
   attribute bool manualDoNotDisturb;
 };
 
-[scriptable, uuid(df1bd4b0-3a8c-40e6-806a-203f38b0bd9f)]
-interface nsIAlertsProgressListener : nsISupports
-{
-  /**
-   * Called to notify the alert service that progress has occurred for the
-   * given notification previously displayed with showAlertNotification().
-   *
-   * @param aName        The name of the notification displaying the
-   *                     progress. On Android the name is hashed and used
-   *                     as a notification ID.
-   * @param aProgress    Numeric value in the range 0 to progressMax
-   *                     indicating the current progress.
-   * @param aProgressMax Numeric value indicating the maximum progress.
-   * @param aText        The contents of the alert. If not provided,
-   *                     the percentage will be displayed.
-   */
-  void onProgress(in AString aName,
-                  in long long aProgress,
-                  in long long aProgressMax,
-                  [optional] in AString aText);
-
-  /**
-   * Called to cancel and hide the given notification previously displayed
-   * with showAlertNotification().
-   *
-   * @param aName        The name of the notification.
-   */
-  void onCancel(in AString aName);
-};
-
 [scriptable, uuid(fc6d7f0a-0cf6-4268-8c71-ab640842b9b1)]
 interface nsIAlertsIconData : nsISupports
 {
