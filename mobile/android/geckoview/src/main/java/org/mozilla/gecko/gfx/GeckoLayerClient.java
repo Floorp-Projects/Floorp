@@ -331,29 +331,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         });
     }
 
-    private void adjustViewport(DisplayPortMetrics displayPort) {
-        // TODO: APZ For fennec might need margins information to deal with
-        // the dynamic toolbar.
-        if (AppConstants.MOZ_ANDROID_APZ)
-            return;
-
-        ImmutableViewportMetrics metrics = getViewportMetrics();
-        ImmutableViewportMetrics clampedMetrics = metrics.clamp();
-
-        if (displayPort == null) {
-            displayPort = DisplayPortCalculator.calculate(metrics, mPanZoomController.getVelocityVector());
-        }
-
-        mDisplayPort = displayPort;
-        mGeckoViewport = clampedMetrics;
-
-        if (mRecordDrawTimes) {
-            mDrawTimingQueue.add(displayPort);
-        }
-
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(clampedMetrics, displayPort));
-    }
-
     /** Aborts any pan/zoom animation that is currently in progress. */
     private void abortPanZoomAnimation() {
         if (mPanZoomController != null) {
@@ -640,9 +617,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             float ourZoom = getViewportMetrics().zoomFactor;
             setPageRect(RectUtils.scale(cssPageRect, ourZoom), cssPageRect);
             // Here the page size of the document has changed, but the document being displayed
-            // is still the same. Therefore, we don't need to send anything to browser.js; any
-            // changes we need to make to the display port will get sent the next time we call
-            // adjustViewport().
+            // is still the same. Therefore, we don't need to send anything to browser.js;
         }
     }
 
@@ -965,9 +940,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private void geometryChanged(DisplayPortMetrics displayPort) {
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary(false, null);
-        if (getRedrawHint()) {
-            adjustViewport(displayPort);
-        }
     }
 
     /** Implementation of LayerView.Listener */
@@ -1027,7 +999,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             // accordingly. This way we should have the content pre-rendered by the
             // time the animation is done.
             DisplayPortMetrics displayPort = DisplayPortCalculator.calculate(metrics, null);
-            adjustViewport(displayPort);
         }
     }
 
@@ -1150,7 +1121,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
         PointF origin = viewportMetrics.getOrigin();
         float zoom = viewportMetrics.zoomFactor;
-        ImmutableViewportMetrics geckoViewport = (AppConstants.MOZ_ANDROID_APZ ? mViewportMetrics : mGeckoViewport);
+        ImmutableViewportMetrics geckoViewport = mViewportMetrics;
         PointF geckoOrigin = geckoViewport.getOrigin();
         float geckoZoom = geckoViewport.zoomFactor;
 
@@ -1175,7 +1146,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
         PointF origin = viewportMetrics.getOrigin();
         float zoom = viewportMetrics.zoomFactor;
-        ImmutableViewportMetrics geckoViewport = (AppConstants.MOZ_ANDROID_APZ ? mViewportMetrics : mGeckoViewport);
+        ImmutableViewportMetrics geckoViewport = mViewportMetrics;
         PointF geckoOrigin = geckoViewport.getOrigin();
         float geckoZoom = geckoViewport.zoomFactor;
 

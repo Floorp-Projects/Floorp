@@ -1545,11 +1545,10 @@ bool nsPluginInstanceOwner::AddPluginView(const LayoutDeviceRect& aRect /* = Lay
     mJavaView = (void*)jni::GetGeckoThreadEnv()->NewGlobalRef((jobject)mJavaView);
   }
 
-  if (AndroidBridge::Bridge())
-    AndroidBridge::Bridge()->AddPluginView((jobject)mJavaView, aRect, mFullScreen);
-
-  if (mFullScreen)
+  if (mFullScreen) {
+    java::GeckoAppShell::AddFullScreenPluginView(jni::Object::Ref::From(jobject(mJavaView)));
     sFullScreenInstance = this;
+  }
 
   return true;
 }
@@ -1559,8 +1558,9 @@ void nsPluginInstanceOwner::RemovePluginView()
   if (!mInstance || !mJavaView)
     return;
 
-  java::GeckoAppShell::RemovePluginView(
-      jni::Object::Ref::From(jobject(mJavaView)), mFullScreen);
+  if (mFullScreen) {
+    java::GeckoAppShell::RemoveFullScreenPluginView(jni::Object::Ref::From(jobject(mJavaView)));
+  }
   jni::GetGeckoThreadEnv()->DeleteGlobalRef((jobject)mJavaView);
   mJavaView = nullptr;
 

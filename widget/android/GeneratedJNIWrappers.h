@@ -298,20 +298,15 @@ public:
 
     explicit GeckoAppShell(const Context& ctx) : ObjectBase<GeckoAppShell>(ctx) {}
 
-    struct AddPluginView_t {
+    struct AddFullScreenPluginView_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
-                float,
-                float,
-                float,
-                float,
-                bool> Args;
-        static constexpr char name[] = "addPluginView";
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "addFullScreenPluginView";
         static constexpr char signature[] =
-                "(Landroid/view/View;FFFFZ)V";
+                "(Landroid/view/View;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -321,7 +316,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto AddPluginView(mozilla::jni::Object::Param, float, float, float, float, bool) -> void;
+    static auto AddFullScreenPluginView(mozilla::jni::Object::Param) -> void;
 
     struct CancelVibrate_t {
         typedef GeckoAppShell Owner;
@@ -1749,16 +1744,15 @@ public:
 
     static auto RegisterSurfaceTextureFrameListener(mozilla::jni::Object::Param, int32_t) -> void;
 
-    struct RemovePluginView_t {
+    struct RemoveFullScreenPluginView_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
-                bool> Args;
-        static constexpr char name[] = "removePluginView";
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "removeFullScreenPluginView";
         static constexpr char signature[] =
-                "(Landroid/view/View;Z)V";
+                "(Landroid/view/View;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -1768,7 +1762,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto RemovePluginView(mozilla::jni::Object::Param, bool) -> void;
+    static auto RemoveFullScreenPluginView(mozilla::jni::Object::Param) -> void;
 
     struct RequestUiThreadCallback_t {
         typedef GeckoAppShell Owner;
