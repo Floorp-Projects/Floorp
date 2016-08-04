@@ -602,10 +602,6 @@ class Descriptor(DescriptorProvider):
     def hasNonOrdinaryGetPrototypeOf(self):
         return self.interface.getExtendedAttribute("NonOrdinaryGetPrototypeOf")
 
-    def needsConstructHookHolder(self):
-        assert self.interface.hasInterfaceObject()
-        return False
-
     def needsHeaderInclude(self):
         """
         An interface doesn't need a header file if it is not concrete, not

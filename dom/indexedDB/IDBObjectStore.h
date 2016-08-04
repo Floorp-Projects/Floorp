@@ -203,7 +203,24 @@ public:
   }
 
   already_AddRefed<IDBRequest>
-  Get(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
+  Get(JSContext* aCx,
+      JS::Handle<JS::Value> aKey,
+      ErrorResult& aRv)
+  {
+    AssertIsOnOwningThread();
+
+    return GetInternal(/* aKeyOnly */ false, aCx, aKey, aRv);
+  }
+
+  already_AddRefed<IDBRequest>
+  GetKey(JSContext* aCx,
+         JS::Handle<JS::Value> aKey,
+         ErrorResult& aRv)
+  {
+    AssertIsOnOwningThread();
+
+    return GetInternal(/* aKeyOnly */ true, aCx, aKey, aRv);
+  }
 
   already_AddRefed<IDBRequest>
   Clear(JSContext* aCx, ErrorResult& aRv);
@@ -332,6 +349,12 @@ private:
                  JS::Handle<JS::Value> aKey,
                  bool aFromCursor,
                  ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  GetInternal(bool aKeyOnly,
+              JSContext* aCx,
+              JS::Handle<JS::Value> aKey,
+              ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
   GetAllInternal(bool aKeysOnly,

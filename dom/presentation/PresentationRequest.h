@@ -36,6 +36,9 @@ public:
   already_AddRefed<Promise> StartWithDevice(const nsAString& aDeviceId,
                                             ErrorResult& aRv);
 
+  already_AddRefed<Promise> Reconnect(const nsAString& aPresentationId,
+                                      ErrorResult& aRv);
+
   already_AddRefed<Promise> GetAvailability(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(connectionavailable);
@@ -49,6 +52,9 @@ private:
   ~PresentationRequest();
 
   bool Init();
+
+  void FindOrCreatePresentationConnection(const nsAString& aPresentationId,
+                                          Promise* aPromise);
 
   nsString mUrl;
   RefPtr<PresentationAvailability> mAvailability;

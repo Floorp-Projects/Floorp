@@ -42,12 +42,27 @@ struct TerminateSessionRequest
   uint8_t role;
 };
 
+struct ReconnectSessionRequest
+{
+  nsString url;
+  nsString sessionId;
+  uint8_t role;
+};
+
+struct BuildTransportRequest
+{
+  nsString sessionId;
+  uint8_t role;
+};
+
 union PresentationIPCRequest
 {
   StartSessionRequest;
   SendSessionMessageRequest;
   CloseSessionRequest;
   TerminateSessionRequest;
+  ReconnectSessionRequest;
+  BuildTransportRequest;
 };
 
 sync protocol PPresentation

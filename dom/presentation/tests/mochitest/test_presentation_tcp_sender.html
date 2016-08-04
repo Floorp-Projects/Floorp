@@ -168,6 +168,63 @@ function testCloseConnection() {
   });
 }
 
+function testReconnect() {
+  return new Promise(function(aResolve, aReject) {
+    info('--- testReconnect ---');
+    gScript.addMessageListener('control-channel-established', function controlChannelEstablished() {
+      gScript.removeMessageListener('control-channel-established', controlChannelEstablished);
+      gScript.sendAsyncMessage("trigger-control-channel-open");
+    });
+
+    gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
+      gScript.removeMessageListener('start-reconnect', startReconnectHandler);
+      is(url, "http://example.com", "URLs should be the same.")
+      gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+    });
+
+    gScript.addMessageListener('offer-sent', function offerSentHandler() {
+      gScript.removeMessageListener('offer-sent', offerSentHandler);
+      gScript.sendAsyncMessage('trigger-incoming-transport');
+    });
+
+    gScript.addMessageListener('answer-received', function answerReceivedHandler() {
+      gScript.removeMessageListener('answer-received', answerReceivedHandler);
+      info("An answer is received.");
+    });
+
+    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+      info("Data transport channel is initialized.");
+      gScript.sendAsyncMessage('trigger-incoming-answer');
+    });
+
+    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
+      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
+      info("Data notification is enabled for data transport channel.");
+    });
+
+    request.reconnect(connection.id).then(
+      function(aConnection) {
+        ok(aConnection, "Connection should be available.");
+        ok(aConnection.id, "Connection ID should be set.");
+        is(aConnection.state, "connecting", "The initial state should be connecting.");
+        is(aConnection, connection, "The reconnected connection should be the same.");
+
+        aConnection.onconnect = function() {
+          aConnection.onconnect = null;
+          is(aConnection.state, "connected", "Connection should be connected.");
+          aResolve();
+        };
+      },
+      function(aError) {
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
+      }
+    );
+  });
+}
+
 function teardown() {
   gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
     gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
@@ -185,6 +242,8 @@ function runTests() {
   then(testStartConnection).
   then(testSend).
   then(testIncomingMessage).
+  then(testCloseConnection).
+  then(testReconnect).
   then(testCloseConnection).
   then(teardown);
 }

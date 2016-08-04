@@ -6,6 +6,7 @@
 
 #include "PresentationConnection.h"
 
+#include "ControllerConnectionCollection.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/MessageEvent.h"
@@ -43,10 +44,12 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
                                                const nsAString& aId,
+                                               const nsAString& aUrl,
                                                const uint8_t aRole,
                                                PresentationConnectionList* aList)
   : DOMEventTargetHelper(aWindow)
   , mId(aId)
+  , mUrl(aUrl)
   , mState(PresentationConnectionState::Connecting)
   , mOwningConnectionList(aList)
 {
@@ -62,14 +65,24 @@ PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
 /* static */ already_AddRefed<PresentationConnection>
 PresentationConnection::Create(nsPIDOMWindowInner* aWindow,
                                const nsAString& aId,
+                               const nsAString& aUrl,
                                const uint8_t aRole,
                                PresentationConnectionList* aList)
 {
   MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
              aRole == nsIPresentationService::ROLE_RECEIVER);
   RefPtr<PresentationConnection> connection =
-    new PresentationConnection(aWindow, aId, aRole, aList);
-  return NS_WARN_IF(!connection->Init()) ? nullptr : connection.forget();
+    new PresentationConnection(aWindow, aId, aUrl, aRole, aList);
+  if (NS_WARN_IF(!connection->Init())) {
+    return nullptr;
+  }
+
+  if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
+    ControllerConnectionCollection::GetSingleton()->AddConnection(connection,
+                                                                  aRole);
+  }
+
+  return connection.forget();
 }
 
 bool
@@ -112,6 +125,11 @@ PresentationConnection::Shutdown()
 
   rv = RemoveFromLoadGroup();
   NS_WARN_IF(NS_FAILED(rv));
+
+  if (mRole == nsIPresentationService::ROLE_CONTROLLER) {
+    ControllerConnectionCollection::GetSingleton()->RemoveConnection(this,
+                                                                     mRole);
+  }
 }
 
 /* virtual */ void
@@ -132,6 +150,12 @@ void
 PresentationConnection::GetId(nsAString& aId) const
 {
   aId = mId;
+}
+
+void
+PresentationConnection::GetUrl(nsAString& aUrl) const
+{
+  aUrl = mUrl;
 }
 
 PresentationConnectionState
@@ -203,6 +227,15 @@ PresentationConnection::Terminate(ErrorResult& aRv)
   NS_WARN_IF(NS_FAILED(service->TerminateSession(mId, mRole)));
 }
 
+bool
+PresentationConnection::Equals(uint64_t aWindowId,
+                               const nsAString& aId)
+{
+  return GetOwner() &&
+         aWindowId == GetOwner()->WindowID() &&
+         mId.Equals(aId);
+}
+
 NS_IMETHODIMP
 PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
                                           uint16_t aState,
@@ -252,6 +285,8 @@ nsresult
 PresentationConnection::ProcessStateChanged(nsresult aReason)
 {
   switch (mState) {
+    case PresentationConnectionState::Connecting:
+      return NS_OK;
     case PresentationConnectionState::Connected: {
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
         new AsyncEventDispatcher(this, NS_LITERAL_STRING("connect"), false);
@@ -331,6 +366,14 @@ PresentationConnection::NotifyMessage(const nsAString& aSessionId,
   }
 
   return DispatchMessageEvent(jsData);
+}
+
+NS_IMETHODIMP
+PresentationConnection::NotifyReplaced()
+{
+  return NotifyStateChange(mId,
+                           nsIPresentationSessionListener::STATE_CLOSED,
+                           NS_OK);
 }
 
 nsresult

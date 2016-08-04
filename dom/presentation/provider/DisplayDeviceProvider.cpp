@@ -436,6 +436,37 @@ DisplayDeviceProvider::OnTerminateRequest(nsITCPDeviceInfo* aDeviceInfo,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DisplayDeviceProvider::OnReconnectRequest(nsITCPDeviceInfo* aDeviceInfo,
+                                          const nsAString& aUrl,
+                                          const nsAString& aPresentationId,
+                                          nsIPresentationControlChannel* aControlChannel)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aDeviceInfo);
+  MOZ_ASSERT(aControlChannel);
+
+  nsresult rv;
+
+  nsCOMPtr<nsIPresentationDeviceListener> listener;
+  rv = GetListener(getter_AddRefs(listener));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(!listener);
+
+  rv = listener->OnReconnectRequest(mDevice,
+                                    aUrl,
+                                    aPresentationId,
+                                    aControlChannel);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 // nsIObserver
 NS_IMETHODIMP
 DisplayDeviceProvider::Observe(nsISupports* aSubject,

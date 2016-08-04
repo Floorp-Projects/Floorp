@@ -211,8 +211,8 @@
 
   /** Peeks at the top of the call stack. */
   function currentFunc() {
-    assertEq(callStack.length > 0, true,
-             "must be a current function to examine");
+    if (callStack.length == 0)
+      return "top level script";
 
     return callStack[callStack.length - 1];
   }

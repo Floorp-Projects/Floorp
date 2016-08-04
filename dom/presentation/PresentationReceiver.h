@@ -54,6 +54,7 @@ private:
   uint64_t mWindowId;
 
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
+  nsString mUrl;
   RefPtr<Promise> mGetConnectionListPromise;
   RefPtr<PresentationConnectionList> mConnectionList;
 };

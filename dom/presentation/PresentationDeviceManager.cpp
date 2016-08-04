@@ -262,6 +262,27 @@ PresentationDeviceManager::OnTerminateRequest(nsIPresentationDevice* aDevice,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresentationDeviceManager::OnReconnectRequest(nsIPresentationDevice* aDevice,
+                                              const nsAString& aUrl,
+                                              const nsAString& aPresentationId,
+                                              nsIPresentationControlChannel* aControlChannel)
+{
+  NS_ENSURE_ARG(aDevice);
+  NS_ENSURE_ARG(aControlChannel);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
+
+  RefPtr<PresentationSessionRequest> request =
+    new PresentationSessionRequest(aDevice, aUrl, aPresentationId, aControlChannel);
+  obs->NotifyObservers(request,
+                       PRESENTATION_RECONNECT_REQUEST_TOPIC,
+                       nullptr);
+
+  return NS_OK;
+}
+
 // nsIObserver
 NS_IMETHODIMP
 PresentationDeviceManager::Observe(nsISupports *aSubject,

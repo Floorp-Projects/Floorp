@@ -223,6 +223,10 @@ PresentationService::Init()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
+  rv = obs->AddObserver(this, PRESENTATION_RECONNECT_REQUEST_TOPIC, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
 
   nsCOMPtr<nsIPresentationDeviceManager> deviceManager =
     do_GetService(PRESENTATION_DEVICE_MANAGER_CONTRACTID);
@@ -258,6 +262,13 @@ PresentationService::Observe(nsISupports* aSubject,
     }
 
     return HandleTerminateRequest(request);
+  } else if (!strcmp(aTopic, PRESENTATION_RECONNECT_REQUEST_TOPIC)) {
+    nsCOMPtr<nsIPresentationSessionRequest> request(do_QueryInterface(aSubject));
+    if (NS_WARN_IF(!request)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    return HandleReconnectRequest(request);
   } else if (!strcmp(aTopic, "profile-after-change")) {
     // It's expected since we add and entry to |kLayoutCategories| in
     // |nsLayoutModule.cpp| to launch this service earlier.
@@ -285,6 +296,7 @@ PresentationService::HandleShutdown()
     obs->RemoveObserver(this, PRESENTATION_DEVICE_CHANGE_TOPIC);
     obs->RemoveObserver(this, PRESENTATION_SESSION_REQUEST_TOPIC);
     obs->RemoveObserver(this, PRESENTATION_TERMINATE_REQUEST_TOPIC);
+    obs->RemoveObserver(this, PRESENTATION_RECONNECT_REQUEST_TOPIC);
   }
 }
 
@@ -366,12 +378,18 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   // Create or reuse session info.
   RefPtr<PresentationSessionInfo> info =
     GetSessionInfo(sessionId, nsIPresentationService::ROLE_RECEIVER);
-  if (NS_WARN_IF(info)) {
-    // TODO Bug 1195605. Update here after session join/resume becomes supported.
-    ctrlChannel->Disconnect(NS_ERROR_DOM_OPERATION_ERR);
-    return NS_ERROR_DOM_ABORT_ERR;
+
+  // This is the case for reconnecting a session.
+  // Update the control channel and device of the session info.
+  // Call |NotifyResponderReady| to indicate the receiver page is already there.
+  if (info) {
+    info->SetControlChannel(ctrlChannel);
+    info->SetDevice(device);
+    return static_cast<PresentationPresentingInfo*>(
+      info.get())->NotifyResponderReady();
   }
 
+  // This is the case for a new session.
   info = new PresentationPresentingInfo(url, sessionId, device);
   rv = info->Init(ctrlChannel);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -450,6 +468,53 @@ PresentationService::HandleTerminateRequest(nsIPresentationTerminateRequest* aRe
   }
 
   return info->OnTerminate(ctrlChannel);
+}
+
+nsresult
+PresentationService::HandleReconnectRequest(nsIPresentationSessionRequest* aRequest)
+{
+  nsCOMPtr<nsIPresentationControlChannel> ctrlChannel;
+  nsresult rv = aRequest->GetControlChannel(getter_AddRefs(ctrlChannel));
+  if (NS_WARN_IF(NS_FAILED(rv) || !ctrlChannel)) {
+    return rv;
+  }
+
+  nsAutoString sessionId;
+  rv = aRequest->GetPresentationId(sessionId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ctrlChannel->Disconnect(rv);
+    return rv;
+  }
+
+  uint64_t windowId;
+  rv = GetWindowIdBySessionIdInternal(sessionId, &windowId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ctrlChannel->Disconnect(rv);
+    return rv;
+  }
+
+  RefPtr<PresentationSessionInfo> info =
+    GetSessionInfo(sessionId, nsIPresentationService::ROLE_RECEIVER);
+  if (NS_WARN_IF(!info)) {
+    // Cannot reconnect non-existed session
+    ctrlChannel->Disconnect(NS_ERROR_DOM_OPERATION_ERR);
+    return NS_ERROR_DOM_ABORT_ERR;
+  }
+
+  nsAutoString url;
+  rv = aRequest->GetUrl(url);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ctrlChannel->Disconnect(rv);
+    return rv;
+  }
+
+  // Make sure the url is the same as the previous one.
+  if (NS_WARN_IF(!info->GetUrl().Equals(url))) {
+    ctrlChannel->Disconnect(rv);
+    return rv;
+  }
+
+  return HandleSessionRequest(aRequest);
 }
 
 void
@@ -640,6 +705,57 @@ PresentationService::TerminateSession(const nsAString& aSessionId,
   }
 
   return info->Close(NS_OK, nsIPresentationSessionListener::STATE_TERMINATED);
+}
+
+NS_IMETHODIMP
+PresentationService::ReconnectSession(const nsAString& aUrl,
+                                      const nsAString& aSessionId,
+                                      uint8_t aRole,
+                                      nsIPresentationServiceCallback* aCallback)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+  MOZ_ASSERT(aCallback);
+
+  if (aRole != nsIPresentationService::ROLE_CONTROLLER) {
+    MOZ_ASSERT(false, "Only controller can call ReconnectSession.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (NS_WARN_IF(!aCallback)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
+  if (NS_WARN_IF(!info)) {
+    return aCallback->NotifyError(NS_ERROR_DOM_NOT_FOUND_ERR);
+  }
+
+  if (NS_WARN_IF(!info->GetUrl().Equals(aUrl))) {
+    return aCallback->NotifyError(NS_ERROR_DOM_NOT_FOUND_ERR);
+  }
+
+  return static_cast<PresentationControllingInfo*>(info.get())->Reconnect(aCallback);
+}
+
+NS_IMETHODIMP
+PresentationService::BuildTransport(const nsAString& aSessionId,
+                                    uint8_t aRole)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+
+  if (aRole != nsIPresentationService::ROLE_CONTROLLER) {
+    MOZ_ASSERT(false, "Only controller can call BuildTransport.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return static_cast<PresentationControllingInfo*>(info.get())->BuildTransport();
 }
 
 NS_IMETHODIMP
@@ -846,6 +962,13 @@ PresentationService::GetWindowIdBySessionId(const nsAString& aSessionId,
                                             uint64_t* aWindowId)
 {
   return GetWindowIdBySessionIdInternal(aSessionId, aWindowId);
+}
+
+NS_IMETHODIMP
+PresentationService::UpdateWindowIdBySessionId(const nsAString& aSessionId,
+                                               const uint64_t aWindowId)
+{
+  return UpdateWindowIdBySessionIdInternal(aSessionId, aWindowId);
 }
 
 bool

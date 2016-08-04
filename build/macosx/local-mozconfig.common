@@ -16,16 +16,18 @@ if [ -d "$topsrcdir/clang" ]; then
     export CXX=$topsrcdir/clang/bin/clang++
     export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
     export DSYMUTIL=$topsrcdir/clang/bin/llvm-dsymutil
+    # Use an updated linker.
+    ldflags="-B$topsrcdir/cctools/bin"
 elif [ -d "$topsrcdir/../clang" ]; then
     # comm-central based build
     export CC=$topsrcdir/../clang/bin/clang
     export CXX=$topsrcdir/../clang/bin/clang++
     export LLVMCONFIG=$topsrcdir/../clang/bin/llvm-config
     export DSYMUTIL=$topsrcdir/../clang/bin/llvm-dsymutil
+    # Use an updated linker.
+    ldflags="-B$topsrcdir/../cctools/bin"
 fi
 
-# Use an updated linker.
-ldflags="-B$topsrcdir/cctools/bin"
 # Ensure the updated linker doesn't generate things our older build tools
 # don't understand.
 ldflags="$ldflags -Wl,-no_data_in_code_info"
