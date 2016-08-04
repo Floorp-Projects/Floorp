@@ -473,7 +473,6 @@ public:
     int Flags() { return mFlags; }
     int Count() { return mCount; }
     int PointerIndex() { return mPointerIndex; }
-    RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
     int Width() { return mWidth; }
     int Height() { return mHeight; }
     int ID() { return mID; }
@@ -508,7 +507,6 @@ protected:
     double mX, mY, mZ, mW;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra, mData;
-    RefPtr<RefCountedJavaObject> mByteBuffer;
     int mWidth, mHeight;
     int mID;
     int mGamepadButton;
@@ -567,8 +565,6 @@ protected:
     static jfieldID jCountField;
     static jfieldID jPointerIndexField;
 
-    static jfieldID jByteBufferField;
-
     static jfieldID jWidthField;
     static jfieldID jHeightField;
 
@@ -595,7 +591,6 @@ public:
         GAMEPAD_ADDREMOVE = 45,
         GAMEPAD_DATA = 46,
         LONG_PRESS = 47,
-        ZOOMEDVIEW = 48,
         dummy_java_enum_list_end
     };
 
