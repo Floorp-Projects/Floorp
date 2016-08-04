@@ -69,10 +69,6 @@ public class GeckoEvent {
         NATIVE_GESTURE_EVENT(31),
         CALL_OBSERVER(33),
         REMOVE_OBSERVER(34),
-        TELEMETRY_HISTOGRAM_ADD(37),
-        TELEMETRY_UI_SESSION_START(42),
-        TELEMETRY_UI_SESSION_STOP(43),
-        TELEMETRY_UI_EVENT(44),
         GAMEPAD_ADDREMOVE(45),
         GAMEPAD_DATA(46),
         LONG_PRESS(47);
@@ -340,50 +336,6 @@ public class GeckoEvent {
     public static GeckoEvent createRemoveObserverEvent(String observerKey) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.REMOVE_OBSERVER);
         event.mCharacters = observerKey;
-        return event;
-    }
-
-    public static GeckoEvent createTelemetryHistogramAddEvent(String histogram,
-                                                              int value) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.TELEMETRY_HISTOGRAM_ADD);
-        event.mCharacters = histogram;
-        // Set the extras with null so that it cannot be mistaken with a keyed histogram.
-        event.mCharactersExtra = null;
-        event.mCount = value;
-        return event;
-    }
-
-    public static GeckoEvent createTelemetryKeyedHistogramAddEvent(String histogram,
-                                                                   String key,
-                                                                   int value) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.TELEMETRY_HISTOGRAM_ADD);
-        event.mCharacters = histogram;
-        event.mCharactersExtra = key;
-        event.mCount = value;
-        return event;
-    }
-
-    public static GeckoEvent createTelemetryUISessionStartEvent(String session, long timestamp) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.TELEMETRY_UI_SESSION_START);
-        event.mCharacters = session;
-        event.mTime = timestamp;
-        return event;
-    }
-
-    public static GeckoEvent createTelemetryUISessionStopEvent(String session, String reason, long timestamp) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.TELEMETRY_UI_SESSION_STOP);
-        event.mCharacters = session;
-        event.mCharactersExtra = reason;
-        event.mTime = timestamp;
-        return event;
-    }
-
-    public static GeckoEvent createTelemetryUIEvent(String action, String method, long timestamp, String extras) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.TELEMETRY_UI_EVENT);
-        event.mData = action;
-        event.mCharacters = method;
-        event.mCharactersExtra = extras;
-        event.mTime = timestamp;
         return event;
     }
 

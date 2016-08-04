@@ -320,34 +320,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case TELEMETRY_HISTOGRAM_ADD: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            mCount = jenv->GetIntField(jobj, jCountField);
-            break;
-        }
-
-        case TELEMETRY_UI_SESSION_START: {
-            ReadCharactersField(jenv);
-            mTime = jenv->GetLongField(jobj, jTimeField);
-            break;
-        }
-
-        case TELEMETRY_UI_SESSION_STOP: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            mTime = jenv->GetLongField(jobj, jTimeField);
-            break;
-        }
-
-        case TELEMETRY_UI_EVENT: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            ReadDataField(jenv);
-            mTime = jenv->GetLongField(jobj, jTimeField);
-            break;
-        }
-
         case GAMEPAD_ADDREMOVE: {
             mID = jenv->GetIntField(jobj, jIDField);
             break;
