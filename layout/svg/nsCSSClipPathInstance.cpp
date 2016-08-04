@@ -23,11 +23,11 @@ nsCSSClipPathInstance::ApplyBasicShapeClip(gfxContext& aContext,
                                            nsIFrame* aFrame)
 {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
-  StyleClipPathType type = clipPathStyle.GetType();
-  MOZ_ASSERT(type != StyleClipPathType::None_, "unexpected none value");
+  StyleShapeSourceType type = clipPathStyle.GetType();
+  MOZ_ASSERT(type != StyleShapeSourceType::None_, "unexpected none value");
   // In the future nsCSSClipPathInstance may handle <clipPath> references as
   // well. For the time being return early.
-  if (type == StyleClipPathType::URL) {
+  if (type == StyleShapeSourceType::URL) {
     return;
   }
 
@@ -44,11 +44,11 @@ nsCSSClipPathInstance::HitTestBasicShapeClip(nsIFrame* aFrame,
                                              const gfxPoint& aPoint)
 {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
-  StyleClipPathType type = clipPathStyle.GetType();
-  MOZ_ASSERT(type != StyleClipPathType::None_, "unexpected none value");
+  StyleShapeSourceType type = clipPathStyle.GetType();
+  MOZ_ASSERT(type != StyleShapeSourceType::None_, "unexpected none value");
   // In the future nsCSSClipPathInstance may handle <clipPath> references as
   // well. For the time being return early.
-  if (type == StyleClipPathType::URL) {
+  if (type == StyleShapeSourceType::URL) {
     return false;
   }
 
@@ -81,7 +81,7 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
       r = mTargetFrame->GetRectRelativeToSelf();
   }
 
-  if (mClipPathStyle.GetType() != StyleClipPathType::Shape) {
+  if (mClipPathStyle.GetType() != StyleShapeSourceType::Shape) {
     // TODO Clip to border-radius/reference box if no shape
     // was specified.
     RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
