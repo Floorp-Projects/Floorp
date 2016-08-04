@@ -119,7 +119,7 @@ add_task(function* test_install_from_file() {
     new WindowOpenListener(INSTALL_URI, function(aWindow) {
       try {
         test_confirmation(aWindow, filePaths.map(aPath => aPath.spec));
-      } catch(e) {
+      } catch (e) {
         reject(e);
       }
     }, resolve);

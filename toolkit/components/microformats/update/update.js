@@ -44,24 +44,24 @@ var repo = 'glennjones/microformat-shiv',
 
 
 getLastBuildState( repo, function( err, buildState) {
-	if(buildState) {
+	if (buildState) {
 		console.log('last build state:', buildState);
 
-		if(buildState === 'passed') {
+		if (buildState === 'passed') {
 
 			console.log('downloading git repo', repo);
 			getLastCommitDate( repo, function( err, date) {
-				if(date) {
+				if (date) {
 					console.log( 'last commit:', new Date(date).toString() );
 				}
 			});
 			updateFromRepo();
 
-		}else{
+		} else {
 			console.log('not updating because of build state is failing please contact Glenn Jones glennjones@gmail.com');
 		}
 
-	}else{
+	} else {
 		console.log('could not get build state from travis-ci:', err);
 	}
 });
@@ -75,7 +75,7 @@ function updateFromRepo() {
 	download(repo, tempDir, function(err, data) {
 
 		// the err and data from download-github-repo give false negatives
-		if( fs.existsSync( tempDir ) ) {
+		if ( fs.existsSync( tempDir ) ) {
 
 			var version = getRepoVersion();
 			removeCurrentFiles( pathList, deployDirResolved );
@@ -88,7 +88,7 @@ function updateFromRepo() {
 
 			console.log('microformat-shiv is now uptodate to v' + version);
 
-		}else{
+		} else {
 			console.log('error getting repo', err);
 		}
 
@@ -132,9 +132,9 @@ function addNewFiles( pathList, deployDirResolved ) {
  */
 function getRepoVersion() {
 	var pack = fs.readFileSync(path.resolve(tempDir,'package.json'), {encoding: 'utf8'});
-	if(pack) {
+	if (pack) {
 		pack = JSON.parse(pack)
-		if(pack && pack.version) {
+		if (pack && pack.version) {
 			return pack.version;
 		}
 	}
@@ -161,11 +161,11 @@ function getLastCommitDate( repo, callback ) {
 	  if (!error && response.statusCode == 200) {
 		var date = null,
 			json = JSON.parse(body);
-			if(json && json.length && json[0].commit && json[0].commit.author ) {
+			if (json && json.length && json[0].commit && json[0].commit.author ) {
 				date = json[0].commit.author.date;
 			}
 	    callback(null, date);
-	  }else{
+	  } else {
 		  console.log(error, response, body);
 		  callback('fail to get last commit date', null);
 	  }
@@ -193,11 +193,11 @@ function getLastBuildState( repo, callback ) {
 	  if (!error && response.statusCode == 200) {
 		var buildState = null,
 			json = JSON.parse(body);
-			if(json && json.repo &&  json.repo.last_build_state ) {
+			if (json && json.repo &&  json.repo.last_build_state ) {
 				buildState = json.repo.last_build_state;
 			}
 	    callback(null, buildState);
-	  }else{
+	  } else {
 		  console.log(error, response, body);
 		  callback('fail to get last build state', null);
 	  }
@@ -212,7 +212,7 @@ function getLastBuildState( repo, callback ) {
  * @param  {String} content
  */
 function addExportedSymbol( path ) {
-	if(path === '/microformat-shiv.js') {
+	if (path === '/microformat-shiv.js') {
 		fs.appendFileSync(deployDirResolved + '/microformat-shiv.js', '\r\n' + exportedSymbol + '\r\n');
 		console.log('appended exported symbol to microformat-shiv.js');
 	}
@@ -227,11 +227,11 @@ function addExportedSymbol( path ) {
  */
 function replaceInFile( path, findStr, replaceStr ) {
 	readFile(deployDirResolved + path, function(err, fileStr) {
-		if(fileStr) {
+		if (fileStr) {
 			fileStr = fileStr.replace(findStr, replaceStr)
 			writeFile(deployDirResolved + path, fileStr);
 			console.log('replaced ' + findStr + ' with ' + replaceStr + ' in ' + path);
-		}else{
+		} else {
 			console.log('error replaced strings in ' + path);
 		}
 	})
@@ -246,7 +246,7 @@ function replaceInFile( path, findStr, replaceStr ) {
  */
 function writeFile(path, content) {
 	fs.writeFile(path, content, 'utf8', function(err) {
-		if(err) {
+		if (err) {
 			console.log(err);
 		} else {
 			console.log('The file: ' + path + ' was saved');

@@ -215,7 +215,7 @@ InstallTrigger.prototype = {
                                        secman.DISALLOW_INHERIT_PRINCIPAL);
       return true;
     }
-    catch(e) {
+    catch (e) {
       return false;
     }
   },

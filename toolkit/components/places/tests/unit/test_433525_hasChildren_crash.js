@@ -16,7 +16,7 @@ add_task(function* test_execute()
                   getService(Ci.nsINavHistoryService);
     var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
-  } catch(ex) {
+  } catch (ex) {
     do_throw("Unable to initialize Places services");
   }
 

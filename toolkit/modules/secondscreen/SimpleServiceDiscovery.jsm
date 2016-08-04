@@ -63,7 +63,7 @@ var SimpleServiceDiscovery = {
     // Cleanup the URL to make it consistent across devices
     try {
       aURL = Services.io.newURI(aURL, null, null).spec;
-    } catch(e) {}
+    } catch (e) {}
     return aURL;
   },
 

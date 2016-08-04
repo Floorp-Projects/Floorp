@@ -358,7 +358,7 @@ function getMessageManagerForWindow(aContentWindow) {
   try {
     // If e10s is disabled, this throws NS_NOINTERFACE for closed tabs.
     return ir.getInterface(Ci.nsIContentFrameMessageManager);
-  } catch(e) {
+  } catch (e) {
     if (e.result == Cr.NS_NOINTERFACE) {
       return null;
     }

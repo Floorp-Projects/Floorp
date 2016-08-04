@@ -268,7 +268,7 @@ var FeedHandler = {
       let ss = Cc["@mozilla.org/browser/shell-service;1"]
                  .getService(Ci.nsIShellService);
       ss.openApplicationWithURI(clientApp, aSpec);
-    } catch(e) {
+    } catch (e) {
       // If we couldn't use the shell service, fallback to using a
       // nsIProcess instance
       let p = Cc["@mozilla.org/process/util;1"]
@@ -311,7 +311,7 @@ var FeedHandler = {
           defaultClientApp = Cc["@mozilla.org/browser/shell-service;1"]
                                .getService(Ci.nsIShellService)
                                .defaultFeedReader;
-        } catch(ex) {
+        } catch (ex) {
           // Just do nothing, then we don't bother populating
         }
 

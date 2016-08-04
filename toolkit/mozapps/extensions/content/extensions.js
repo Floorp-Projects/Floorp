@@ -545,7 +545,7 @@ var gEventManager = {
         continue;
       try {
         listener[aEvent].apply(listener, aParams);
-      } catch(e) {
+      } catch (e) {
         // this shouldn't be fatal
         Cu.reportError(e);
       }
@@ -564,7 +564,7 @@ var gEventManager = {
         continue;
       try {
         listener[aEvent].apply(listener, aParams);
-      } catch(e) {
+      } catch (e) {
         // this shouldn't be fatal
         Cu.reportError(e);
       }
@@ -664,7 +664,7 @@ var gViewController = {
       if ("shutdown" in view) {
         try {
           view.shutdown();
-        } catch(e) {
+        } catch (e) {
           // this shouldn't be fatal
           Cu.reportError(e);
         }
@@ -2442,7 +2442,7 @@ var gSearchView = {
     var maxRemoteResults = 0;
     try {
       maxRemoteResults = Services.prefs.getIntPref(PREF_MAXRESULTS);
-    } catch(e) {}
+    } catch (e) {}
 
     if (maxRemoteResults <= 0) {
       finishSearch(0);
@@ -3436,7 +3436,7 @@ var gDetailView = {
         };
         xhr.send();
       }
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
       if (aCallback)
         aCallback();

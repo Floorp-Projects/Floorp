@@ -249,7 +249,7 @@ function getServicePack() {
 
     if (0 === GetVersionEx(winVer.address())) {
       // Using "throw" instead of "do_throw" (see NOTE above)
-      throw("Failure in GetVersionEx (returned 0)");
+      throw ("Failure in GetVersionEx (returned 0)");
     }
 
     return winVer.wServicePackMajor + "." + winVer.wServicePackMinor;
@@ -294,7 +294,7 @@ function getProcArchitecture() {
     sysInfo.wProcessorArchitecture = 0xffff;
 
     GetNativeSystemInfo(sysInfo.address());
-    switch(sysInfo.wProcessorArchitecture) {
+    switch (sysInfo.wProcessorArchitecture) {
       case 9:
         return "x64";
       case 6:
@@ -303,7 +303,7 @@ function getProcArchitecture() {
         return "x86";
       default:
         // Using "throw" instead of "do_throw" (see NOTE above)
-        throw("Unknown architecture returned from GetNativeSystemInfo: " + sysInfo.wProcessorArchitecture);
+        throw ("Unknown architecture returned from GetNativeSystemInfo: " + sysInfo.wProcessorArchitecture);
     }
   } finally {
     kernel32.close();

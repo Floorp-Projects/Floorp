@@ -76,7 +76,7 @@ this.BrowserUtils = {
       try {
         principalStr = " from " + aPrincipal.URI.spec;
       }
-      catch(e2) { }
+      catch (e2) { }
 
       throw "Load of " + aURL + principalStr + " denied.";
     }
@@ -166,7 +166,7 @@ this.BrowserUtils = {
     try {
       linkHost = linkURI.host;
       docHost = linkNode.ownerDocument.documentURIObject.host;
-    } catch(e) {
+    } catch (e) {
       // nsIURI.host can throw for non-nsStandardURL nsIURIs.
       // If we fail to get either host, just return originalTarget.
       return originalTarget;

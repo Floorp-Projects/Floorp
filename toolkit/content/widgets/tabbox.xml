@@ -495,7 +495,7 @@
                   el = el.parentNode;
                 }
                 aNewTab.focus();
-              } catch(e) {
+              } catch (e) {
               }
             }
           }

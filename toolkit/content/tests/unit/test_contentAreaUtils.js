@@ -26,7 +26,7 @@ function test_urlSecurityCheck() {
     urlSecurityCheck(makeURI(HTTP_URI), nullPrincipal,
                      DISALLOW_INHERIT_PRINCIPAL);
   }
-  catch(ex) {
+  catch (ex) {
     do_throw("urlSecurityCheck should not throw when linking to a http uri with a null principal");
   }
 
@@ -35,7 +35,7 @@ function test_urlSecurityCheck() {
     urlSecurityCheck(HTTP_URI, nullPrincipal,
                      DISALLOW_INHERIT_PRINCIPAL);
   }
-  catch(ex) {
+  catch (ex) {
     do_throw("urlSecurityCheck failed to handle the http URI as a string (uri spec)");
   }
 
@@ -44,7 +44,7 @@ function test_urlSecurityCheck() {
     urlSecurityCheck(CHROME_URI, nullPrincipal,
                      DISALLOW_INHERIT_PRINCIPAL);
   }
-  catch(ex) {
+  catch (ex) {
     shouldThrow = false;
   }
   if (shouldThrow)

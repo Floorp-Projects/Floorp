@@ -23,7 +23,7 @@
             try {
               enabled = this.mPrefs.getBoolPref("general.autoScroll");
             }
-            catch(ex) {
+            catch (ex) {
             }
 
             return enabled;
@@ -908,7 +908,7 @@
               if (!this.hasAttribute("disableglobalhistory") && !this.isRemoteBrowser) {
                 try {
                   this.docShell.useGlobalHistory = true;
-                } catch(ex) {
+                } catch (ex) {
                   // This can occur if the Places database is locked
                   Components.utils.reportError("Error enabling browser global history: " + ex);
                 }
@@ -1154,7 +1154,7 @@
         <body>
         <![CDATA[
           if (this._scrolling) {
-            switch(aEvent.type) {
+            switch (aEvent.type) {
               case "mousemove": {
                 var x = aEvent.screenX - this._startX;
                 var y = aEvent.screenY - this._startY;
@@ -1278,7 +1278,7 @@
           try {
             this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
                 .swapFrameLoaders(aOtherBrowser);
-          } catch(ex) {
+          } catch (ex) {
             // This may not be implemented for browser elements that are not
             // attached to a BrowserDOMWindow.
           }

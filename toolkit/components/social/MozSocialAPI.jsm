@@ -64,7 +64,7 @@ function injectController(doc, topic, data) {
     try {
       allowTabs = containingBrowser.contentWindow == window &&
                   Services.prefs.getBoolPref("social.debug.injectIntoTabs");
-    } catch(e) {}
+    } catch (e) {}
 
     let origin = containingBrowser.getAttribute("origin");
     if (!allowTabs && !origin) {
@@ -80,7 +80,7 @@ function injectController(doc, topic, data) {
         attachToWindow(provider, window);
       }
     });
-  } catch(e) {
+  } catch (e) {
     Cu.reportError("MozSocialAPI injectController: unable to attachToWindow for " + doc.location + ": " + e);
   }
 }

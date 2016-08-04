@@ -49,7 +49,7 @@ function get_list_view_warning_node() {
 }
 
 function get_detail_view_warning_node(aManagerWindow) {
-  if(aManagerWindow)
+  if (aManagerWindow)
     return aManagerWindow.document.getElementById("detail-warning");
   return undefined;
 }

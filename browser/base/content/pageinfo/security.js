@@ -232,7 +232,7 @@ function securityOnLoad(uri, windowInfo) {
           realmHasPasswords(uri) ? yesStr : noStr);
 
   var visitCount = previousVisitCount(info.hostName);
-  if(visitCount > 1) {
+  if (visitCount > 1) {
     setText("security-privacy-history-value",
             pageInfoBundle.getFormattedString("securityNVisits", [visitCount.toLocaleString()]));
   }

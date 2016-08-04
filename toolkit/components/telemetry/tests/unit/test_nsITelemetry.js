@@ -60,7 +60,7 @@ function check_histogram(histogram_type, name, min, max, bucket_count) {
   var h = Telemetry.newHistogram(name, "never", histogram_type, min, max, bucket_count);
   var r = h.snapshot().ranges;
   var sum = 0;
-  for(let i=0;i<r.length;i++) {
+  for (let i=0;i<r.length;i++) {
     var v = r[i];
     sum += v;
     h.add(v);
@@ -147,7 +147,7 @@ add_task(function* test_boolean_histogram() {
   // boolean histograms ignore numeric parameters
   do_check_eq(uneval(r), uneval([0, 1, 2]))
   var sum = 0
-  for(var i=0;i<r.length;i++) {
+  for (var i=0;i<r.length;i++) {
     var v = r[i];
     sum += v;
     h.add(v);

@@ -294,7 +294,7 @@ PreferenceBranch.prototype = {
         this._prefs.setIntPref(aName, aValue);
         break;
       default:
-        throw("Unknown preference value specified.");
+        throw ("Unknown preference value specified.");
     }
   },
 

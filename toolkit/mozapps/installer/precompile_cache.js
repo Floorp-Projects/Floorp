@@ -73,7 +73,7 @@ function load_modules_under(spec, uri) {
     try {
       dump(spec + entry + "\n");
       Cu.import(spec + entry, null);
-    } catch(e) {}
+    } catch (e) {}
   }
 }
 

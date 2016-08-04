@@ -361,7 +361,7 @@ var PrintUtils = {
       let ppMsgName = msgName + "_PP";
       try {
         msg = this.bundle.GetStringFromName(ppMsgName);
-      } catch(e) {
+      } catch (e) {
         // We allow localizers to not have the print preview error string,
         // and just fall back to the printing error string.
       }

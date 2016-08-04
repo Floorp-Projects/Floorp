@@ -469,7 +469,7 @@ function* test_push_cleared()
   try {
     ps = Cc["@mozilla.org/push/Service;1"].
            getService(Ci.nsIPushService);
-  } catch(e) {
+  } catch (e) {
     // No push service, skip test.
     return;
   }

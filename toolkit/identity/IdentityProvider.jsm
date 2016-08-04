@@ -102,7 +102,7 @@ IdentityProviderService.prototype = {
   },
 
   get certDuration() {
-    switch(this.securityLevel) {
+    switch (this.securityLevel) {
       default:
         return 3600;
     }

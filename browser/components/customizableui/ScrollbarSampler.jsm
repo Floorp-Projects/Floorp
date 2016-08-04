@@ -49,7 +49,7 @@ this.ScrollbarSampler = {
         let sbWidth = {};
         try {
           utils.getScrollbarSize(true, sbWidth, {});
-        } catch(e) {
+        } catch (e) {
           Cu.reportError("Could not sample scrollbar size: " + e + " -- " +
                          e.stack);
           sbWidth.value = 0;

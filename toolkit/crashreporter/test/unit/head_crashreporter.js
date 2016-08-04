@@ -72,7 +72,7 @@ function do_crash(setup, callback, canReturnZero)
   try {
       process.run(true, args, args.length);
   }
-  catch(ex) {} // on Windows we exit with a -1 status when crashing.
+  catch (ex) {} // on Windows we exit with a -1 status when crashing.
   finally {
     env.set("CRASHES_EVENTS_DIR", "");
   }

@@ -25,7 +25,7 @@ add_task(function* () {
   if (db.exists()) {
     try {
       db.remove(false);
-    } catch(e) {
+    } catch (e) {
       do_print("Unable to remove dummy places.sqlite");
     }
   }

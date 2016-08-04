@@ -22,7 +22,7 @@ try {
               getService(Ci.nsINavBookmarksService);
   var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
-} catch(ex) {
+} catch (ex) {
   do_throw("Could not get services\n");
 }
 
@@ -59,10 +59,10 @@ function* task_initializeBucket(bucket) {
   var weight = 0, cutoff = 0, bonus = 0;
   try {
     weight = prefs.getIntPref(prefPrefix + weightName);
-  } catch(ex) {}
+  } catch (ex) {}
   try {
     cutoff = prefs.getIntPref(prefPrefix + cutoffName);
-  } catch(ex) {}
+  } catch (ex) {}
 
   if (cutoff < 1)
     return;

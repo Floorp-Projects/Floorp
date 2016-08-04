@@ -580,7 +580,7 @@ this.LoginHelper = {
         // Bug 1187190: Password changes should be propagated depending on timestamps.
         // this an old login or a just an update, so make sure not to add it
         foundMatchingLogin = true;
-        if(login.password != existingLogin.password &
+        if (login.password != existingLogin.password &
            login.timePasswordChanged > existingLogin.timePasswordChanged) {
           // if a login with the same username and different password already exists and it's older
           // than the current one, that login needs to be updated using the current one details

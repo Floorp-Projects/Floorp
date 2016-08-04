@@ -866,7 +866,7 @@ WidgetStack.prototype = {
 
     if (vr.bottom > pb.bottom)
       panY = pb.bottom - vr.bottom;
-    else if(vr.top < pb.top)
+    else if (vr.top < pb.top)
       panY = pb.top - vr.top;
 
     this.panBy(panX, panY, true);

@@ -42,7 +42,7 @@ function readTestData(testFile) {
 
     } while (hasmore);
 
-  } catch(e) {
+  } catch (e) {
     Assert.ok(false, "FAILED! Error reading testFile case in file " + testFile.leafName  + " ---- " + e);
   } finally {
     istream.close();
@@ -74,7 +74,7 @@ function isIID(a, iid) {
   try {
     a.QueryInterface(iid);
     return true;
-  } catch(e) { }
+  } catch (e) { }
 
   return false;
 }

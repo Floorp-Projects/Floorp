@@ -162,7 +162,7 @@ add_test(function test_container()
       true
     );
     PlacesUtils.transactionManager.doTransaction(txn);
-    } catch(ex) {
+    } catch (ex) {
       do_throw(ex);
     }
   }, "random-anno");
@@ -220,7 +220,7 @@ add_test(function test_separator()
       true
     );
     PlacesUtils.transactionManager.doTransaction(txn);
-    } catch(ex) {
+    } catch (ex) {
       do_throw(ex);
     }
   }, "random-anno");
@@ -280,7 +280,7 @@ add_test(function test_bookmark()
       true
     );
     PlacesUtils.transactionManager.doTransaction(txn);
-    } catch(ex) {
+    } catch (ex) {
       do_throw(ex);
     }
   }, "random-anno");
@@ -330,7 +330,7 @@ add_test(function test_visit()
       true
     );
     PlacesUtils.transactionManager.doTransaction(txn);
-    } catch(ex) {
+    } catch (ex) {
       do_throw(ex);
     }
   });

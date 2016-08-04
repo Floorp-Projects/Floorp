@@ -736,7 +736,7 @@ BrowserGlue.prototype = {
       let currentUIVersion = 0;
       try {
         currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
-      } catch(ex) {}
+      } catch (ex) {}
       if (currentUIVersion < 35) {
         this._maybeMigrateTabGroups();
       }
@@ -1107,7 +1107,7 @@ BrowserGlue.prototype = {
     let disableResetPrompt = false;
     try {
       disableResetPrompt = Services.prefs.getBoolPref("browser.disableResetPrompt");
-    } catch(e) {}
+    } catch (e) {}
 
     if (!disableResetPrompt && lastUse &&
         Date.now() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS) {
@@ -1653,7 +1653,7 @@ BrowserGlue.prototype = {
         Services.prefs.getBoolPref("browser.places.importBookmarksHTML");
       if (importBookmarksHTML)
         importBookmarks = true;
-    } catch(ex) {}
+    } catch (ex) {}
 
     // Support legacy bookmarks.html format for apps that depend on that format.
     let autoExportHTML = false;
@@ -1680,7 +1680,7 @@ BrowserGlue.prototype = {
           yield this._backupBookmarks();
           importBookmarks = true;
         }
-      } catch(ex) {}
+      } catch (ex) {}
 
       // This may be reused later, check for "=== undefined" to see if it has
       // been populated already.
@@ -1728,7 +1728,7 @@ BrowserGlue.prototype = {
         let smartBookmarksVersion = 0;
         try {
           smartBookmarksVersion = Services.prefs.getIntPref("browser.places.smartBookmarksVersion");
-        } catch(ex) {}
+        } catch (ex) {}
         if (!autoExportHTML && smartBookmarksVersion != -1)
           Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
 
@@ -2149,12 +2149,12 @@ BrowserGlue.prototype = {
       try {
         lightweightThemeSelected = Services.prefs.prefHasUserValue("lightweightThemes.selectedThemeID");
         selectedThemeID = Services.prefs.getCharPref("lightweightThemes.selectedThemeID");
-      } catch(e) {}
+      } catch (e) {}
 
       let defaultThemeSelected = false;
       try {
          defaultThemeSelected = Services.prefs.getCharPref("general.skins.selectedSkin") == "classic/1.0";
-      } catch(e) {}
+      } catch (e) {}
 
       // If we are on the devedition channel, the devedition theme is on by
       // default.  But we need to handle the case where they didn't want it
@@ -2294,7 +2294,7 @@ BrowserGlue.prototype = {
     let smartBookmarksCurrentVersion = 0;
     try {
       smartBookmarksCurrentVersion = Services.prefs.getIntPref(SMART_BOOKMARKS_PREF);
-    } catch(ex) {}
+    } catch (ex) {}
 
     // If version is current, or smart bookmarks are disabled, bail out.
     if (smartBookmarksCurrentVersion == -1 ||
@@ -2399,7 +2399,7 @@ BrowserGlue.prototype = {
                                                index: menuIndex });
         }
       }
-    } catch(ex) {
+    } catch (ex) {
       Cu.reportError(ex);
     } finally {
       Services.prefs.setIntPref(SMART_BOOKMARKS_PREF, SMART_BOOKMARKS_VERSION);

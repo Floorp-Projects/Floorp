@@ -281,7 +281,7 @@ this.SearchSuggestionController.prototype = {
 
     try {
       serverResults = JSON.parse(this._request.responseText);
-    } catch(ex) {
+    } catch (ex) {
       deferredResponse.resolve("Failed to parse suggestion JSON: " + ex);
       return;
     }

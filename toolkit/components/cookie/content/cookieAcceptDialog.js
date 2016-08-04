@@ -194,7 +194,7 @@ function GetExpiresString(secondsUntilExpires) {
                                            date.getFullYear(), date.getMonth()+1,
                                            date.getDate(), date.getHours(),
                                            date.getMinutes(), date.getSeconds());
-    } catch(ex) {
+    } catch (ex) {
       // do nothing
     }
     return expiry;

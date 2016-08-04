@@ -52,7 +52,7 @@ try {
                                                            ctypes.default_abi,
                                                            ctypes.void_t);
 }
-catch(ex) {}
+catch (ex) {}
 
 CrashTestUtils.dumpHasStream = lib.declare("DumpHasStream",
                                            ctypes.default_abi,

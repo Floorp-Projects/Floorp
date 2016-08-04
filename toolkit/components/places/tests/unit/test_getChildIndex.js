@@ -46,7 +46,7 @@ function run_test() {
   try {
     root.getChildIndex(unfiledNode);
     do_throw("Searching for an invalid node should have thrown.");
-  } catch(ex) {
+  } catch (ex) {
     print("We correctly got an exception.");
   }
 

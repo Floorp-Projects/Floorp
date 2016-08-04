@@ -132,7 +132,7 @@ tests.push(make_promise_test(
     source.resolve(RESULT);
 
     // Install remaining observers
-    for(;i < SIZE; ++i) {
+    for (;i < SIZE; ++i) {
       install_observer(i);
     }
 
@@ -260,7 +260,7 @@ tests.push(make_promise_test(
     observed.resolve(RESULT);
 
     // Install remaining observers
-    for(;i < SIZE; ++i) {
+    for (;i < SIZE; ++i) {
       install_observer(i);
     }
 
@@ -925,7 +925,7 @@ tests.push(
 
     function event_loop() {
       let thr = Services.tm.mainThread;
-      while(!shouldExitNestedEventLoop) {
+      while (!shouldExitNestedEventLoop) {
         thr.processNextEvent(true);
       }
     }

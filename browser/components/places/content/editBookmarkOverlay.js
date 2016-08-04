@@ -601,7 +601,7 @@ var gEditItemOverlay = {
     try {
       newURI = PlacesUIUtils.createFixedURI(this._locationField.value);
     }
-    catch(ex) {
+    catch (ex) {
       // TODO: Bug 1089141 - Provide some feedback about the invalid url.
       return;
     }

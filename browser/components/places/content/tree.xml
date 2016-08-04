@@ -47,7 +47,7 @@
           try {
             return this.treeBoxObject.view.wrappedJSObject || null;
           }
-          catch(e) {
+          catch (e) {
             return null;
           }
         ]]></getter>
