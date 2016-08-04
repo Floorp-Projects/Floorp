@@ -35,6 +35,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -2272,6 +2273,13 @@ bool
 ContentChild::RecvPreferenceUpdate(const PrefSetting& aPref)
 {
   Preferences::SetPreference(aPref);
+  return true;
+}
+
+bool
+ContentChild::RecvVarUpdate(const GfxVarUpdate& aVar)
+{
+  gfx::gfxVars::ApplyUpdate(aVar);
   return true;
 }
 
