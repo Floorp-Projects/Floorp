@@ -37,6 +37,14 @@ public:
     return mShutdownBit;
   }
 
+  // Returns true if aMIMEType is a type that we think we can render with the
+  // a platform decoder backend. If aCodecs is non emtpy, it is filled
+  // with a comma-delimited list of codecs to check support for.
+  static bool CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
+                                 const nsAString& aCodecs);
+
+  static bool IsEnabled();
+
 protected:
   void ShutdownBitChanged() override
   {
