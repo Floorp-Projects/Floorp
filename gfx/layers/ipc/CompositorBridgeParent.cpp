@@ -1577,7 +1577,7 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
                                      mUseExternalSurfaceSize);
     } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
 #ifdef MOZ_WIDGET_GTK
-      if (gfxPlatformGtk::GetPlatform()->UseXRender()) {
+      if (gfxVars::UseXRender()) {
         compositor = new X11BasicCompositor(this, mWidget);
       } else
 #endif
