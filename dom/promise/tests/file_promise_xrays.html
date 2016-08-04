@@ -14,8 +14,10 @@
         propNames = Object.getOwnPropertyNames(obj);
         propNames = propNames.concat(Object.getOwnPropertySymbols(obj));
         for (var propName of propNames) {
-          if (propName == "prototype" && obj == Promise) {
-            // It's not configurable
+          if ((propName == "prototype" ||
+               propName == Symbol.hasInstance) &&
+              obj == Promise) {
+            // They're not configurable.
             continue;
           }
           Object.defineProperty(obj, propName,
