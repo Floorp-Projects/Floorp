@@ -60,7 +60,7 @@ def checking(what, callback=None):
                     log.info('no')
                 else:
                     log.info(display_ret)
-                if error is not None:
+                if error:
                     die(error)
             return ret
         return wrapped
