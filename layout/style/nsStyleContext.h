@@ -533,7 +533,6 @@ public:
   // go through frame construction are not consumed.
   void StoreChangeHint(nsChangeHint aHint)
   {
-    MOZ_ASSERT(!mConsumedChangeHint);
     MOZ_ASSERT(!IsShared());
     mStoredChangeHint = aHint;
 #ifdef DEBUG
@@ -543,6 +542,7 @@ public:
 
   nsChangeHint ConsumeStoredChangeHint()
   {
+    MOZ_ASSERT(!mConsumedChangeHint, "Re-consuming the same change hint!");
     nsChangeHint result = mStoredChangeHint;
     mStoredChangeHint = nsChangeHint(0);
 #ifdef DEBUG
