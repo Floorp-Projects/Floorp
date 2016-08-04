@@ -1013,81 +1013,90 @@ public class GeckoAppShell
         }
     }
 
-    private static PendingIntent makePersistentNotificationIntent(
-            int aNotificationID, String aType, String aPersistentData) {
-        Uri.Builder b = new Uri.Builder();
-        Uri u = b.scheme("notification-event").path(Integer.toString(aNotificationID))
-                .appendQueryParameter("type", aType)
+    private static PendingIntent makePersistentNotificationIntent(int notificationID, String type,
+                                                                  String persistentData) {
+        final Uri.Builder b = new Uri.Builder();
+        final Uri u = b.scheme("notification-event")
+                .path(Integer.toString(notificationID))
+                .appendQueryParameter("type", type)
                 .build();
-        Intent intent = GeckoService.getIntentToCreateServices(
-                getApplicationContext(), aType, aPersistentData);
+        final Intent intent = GeckoService.getIntentToCreateServices(
+                getApplicationContext(), type, persistentData);
         intent.setData(u);
-        return PendingIntent.getService(
-                getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
 
-    @WrapForJNI(stubName = "ShowPersistentAlertNotificationWrapper")
-    public static void showPersistentAlertNotification(
-            String aPersistentData,
-            String aImageUrl, String aAlertTitle, String aAlertText,
-            String aAlertCookie, String aAlertName, String aHost) {
-        int notificationID = aAlertName.hashCode();
-        PendingIntent clickIntent = makePersistentNotificationIntent(notificationID, "persistent-notification-click", aPersistentData);
-        PendingIntent closeIntent = makePersistentNotificationIntent(notificationID, "persistent-notification-close", aPersistentData);
-        notificationClient.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, clickIntent, closeIntent);
-    }
-
-    @WrapForJNI(stubName = "ShowAlertNotificationWrapper")
-    public static void showAlertNotification(String aImageUrl, String aAlertTitle, String aAlertText, String aAlertCookie, String aAlertName, String aHost) {
-        // The intent to launch when the user clicks the expanded notification
-        Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CALLBACK);
-        notificationIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        int notificationID = aAlertName.hashCode();
-
-        // Put the strings into the intent as an URI "alert:?name=<alertName>&app=<appName>&cookie=<cookie>"
-        Uri.Builder b = new Uri.Builder();
-        Uri dataUri = b.scheme("alert").path(Integer.toString(notificationID))
-                                       .appendQueryParameter("name", aAlertName)
-                                       .appendQueryParameter("cookie", aAlertCookie)
-                                       .build();
-        notificationIntent.setData(dataUri);
-        PendingIntent contentIntent = PendingIntent.getActivity(
-                getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        ALERT_COOKIES.put(aAlertName, aAlertCookie);
-        callObserver(aAlertName, "alertshow", aAlertCookie);
-
-        notificationClient.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, contentIntent, null);
+        return PendingIntent.getService(getApplicationContext(), 0, intent,
+                                        PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     @WrapForJNI
-    public static void closeNotification(String aAlertName) {
-        String alertCookie = ALERT_COOKIES.get(aAlertName);
-        if (alertCookie != null) {
-            callObserver(aAlertName, "alertfinished", alertCookie);
-            ALERT_COOKIES.remove(aAlertName);
+    public static void showAlertNotification(String imageUrl, String alertTitle, String alertText,
+                                             String alertCookie, String alertName, String host,
+                                             String persistentData) {
+        final int notificationID = alertName.hashCode();
+        final PendingIntent clickIntent, closeIntent;
+
+        if (persistentData != null) {
+            clickIntent = makePersistentNotificationIntent(
+                    notificationID, "persistent-notification-click", persistentData);
+            closeIntent = makePersistentNotificationIntent(
+                    notificationID, "persistent-notification-close", persistentData);
+
+        } else {
+            ALERT_COOKIES.put(alertName, alertCookie);
+            callObserver(alertName, "alertshow", alertCookie);
+
+            // The intent to launch when the user clicks the expanded notification
+            final Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CALLBACK);
+            notificationIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                                            AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            // Put the strings into the intent as an URI
+            // "alert:?name=<alertName>&app=<appName>&cookie=<cookie>"
+            final Uri.Builder b = new Uri.Builder();
+            final Uri dataUri = b.scheme("alert")
+                    .path(Integer.toString(notificationID))
+                    .appendQueryParameter("name", alertName)
+                    .appendQueryParameter("cookie", alertCookie)
+                    .build();
+            notificationIntent.setData(dataUri);
+
+            clickIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent,
+                                                    PendingIntent.FLAG_UPDATE_CURRENT);
+            closeIntent = null;
         }
 
-        removeObserver(aAlertName);
+        notificationClient.add(notificationID, imageUrl, host, alertTitle,
+                               alertText, clickIntent, closeIntent);
+    }
 
-        int notificationID = aAlertName.hashCode();
+    @WrapForJNI
+    public static void closeNotification(String alertName) {
+        final String alertCookie = ALERT_COOKIES.get(alertName);
+        if (alertCookie != null) {
+            callObserver(alertName, "alertfinished", alertCookie);
+            ALERT_COOKIES.remove(alertName);
+        }
+
+        removeObserver(alertName);
+
+        final int notificationID = alertName.hashCode();
         notificationClient.remove(notificationID);
     }
 
-    public static void handleNotification(String aAction, String aAlertName, String aAlertCookie) {
-        int notificationID = aAlertName.hashCode();
+    public static void handleNotification(String action, String alertName, String alertCookie) {
+        final int notificationID = alertName.hashCode();
 
-        if (GeckoApp.ACTION_ALERT_CALLBACK.equals(aAction)) {
-            callObserver(aAlertName, "alertclickcallback", aAlertCookie);
+        if (GeckoApp.ACTION_ALERT_CALLBACK.equals(action)) {
+            callObserver(alertName, "alertclickcallback", alertCookie);
 
             if (notificationClient.isOngoing(notificationID)) {
                 // When clicked, keep the notification if it displays progress
                 return;
             }
         }
-        closeNotification(aAlertName);
+
+        closeNotification(alertName);
     }
 
     @WrapForJNI(stubName = "GetDpiWrapper")

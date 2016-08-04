@@ -443,43 +443,6 @@ AndroidBridge::GetClipboardText(nsAString& aText)
     return !!text;
 }
 
-void
-AndroidBridge::ShowPersistentAlertNotification(const nsAString& aPersistentData,
-                                               const nsAString& aImageUrl,
-                                               const nsAString& aAlertTitle,
-                                               const nsAString& aAlertText,
-                                               const nsAString& aAlertCookie,
-                                               const nsAString& aAlertName,
-                                               nsIPrincipal* aPrincipal)
-{
-    nsAutoString host;
-    nsAlertsUtils::GetSourceHostPort(aPrincipal, host);
-
-    GeckoAppShell::ShowPersistentAlertNotificationWrapper
-        (aPersistentData, aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName, host);
-}
-
-void
-AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
-                                     const nsAString& aAlertTitle,
-                                     const nsAString& aAlertText,
-                                     const nsAString& aAlertCookie,
-                                     nsIObserver *aAlertListener,
-                                     const nsAString& aAlertName,
-                                     nsIPrincipal* aPrincipal)
-{
-    if (aAlertListener) {
-        // This will remove any observers already registered for this id
-        nsAppShell::PostEvent(AndroidGeckoEvent::MakeAddObserver(aAlertName, aAlertListener));
-    }
-
-    nsAutoString host;
-    nsAlertsUtils::GetSourceHostPort(aPrincipal, host);
-
-    GeckoAppShell::ShowAlertNotificationWrapper
-           (aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName, host);
-}
-
 int
 AndroidBridge::GetDPI()
 {
