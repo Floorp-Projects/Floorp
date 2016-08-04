@@ -25,6 +25,7 @@ class gfxVarReceiver;
   /* C++ Name,                  Data Type,        Default Value */      \
   _(ContentBackend,             BackendType,      BackendType::NONE)    \
   _(TileSize,                   IntSize,          IntSize(-1, -1))      \
+  _(UseXRender,                 bool,             false)                \
   /* Add new entries above this line. */
 
 // Some graphics settings are computed on the UI process and must be
