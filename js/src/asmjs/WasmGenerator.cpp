@@ -428,7 +428,7 @@ ModuleGenerator::finishCodegen()
         if (!entries.resize(numFuncExports))
             return false;
         for (uint32_t i = 0; i < numFuncExports; i++)
-            entries[i] = GenerateEntry(masm, metadata_->funcExports[i], usesMemory());
+            entries[i] = GenerateEntry(masm, metadata_->funcExports[i]);
 
         if (!interpExits.resize(numFuncImports()))
             return false;
@@ -436,7 +436,7 @@ ModuleGenerator::finishCodegen()
             return false;
         for (uint32_t i = 0; i < numFuncImports(); i++) {
             interpExits[i] = GenerateInterpExit(masm, metadata_->funcImports[i], i);
-            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i], usesMemory());
+            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i]);
         }
 
         for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))

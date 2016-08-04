@@ -96,7 +96,7 @@ static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void
 // function has an ABI derived from its specific signature, so this function
 // must map from the ABI of ExportFuncPtr to the export's signature's ABI.
 Offsets
-wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
+wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
 {
     masm.haltingAlign(CodeAlignment);
 
@@ -573,7 +573,7 @@ static const unsigned SavedTlsReg = sizeof(void*);
 // signature of the import and calls into a compatible JIT function,
 // having boxed all the ABI arguments into the JIT stack frame layout.
 ProfilingOffsets
-wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
+wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi)
 {
     const Sig& sig = fi.sig();
 
@@ -606,25 +606,14 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
     Register callee = ABINonArgReturnReg0;   // live until call
     Register scratch = ABINonArgReturnReg1;  // repeatedly clobbered
 
-    // 2.1. Get ExitDatum
-    uint32_t globalDataOffset = fi.exitGlobalDataOffset();
-#if defined(JS_CODEGEN_X64)
-    masm.append(GlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
-#elif defined(JS_CODEGEN_X86)
-    masm.append(GlobalAccess(masm.movlWithPatch(Imm32(0), callee), globalDataOffset));
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    masm.computeEffectiveAddress(Address(GlobalReg, globalDataOffset - AsmJSGlobalRegBias), callee);
-#endif
+    // 2.1. Get callee
+    masm.loadWasmGlobalPtr(fi.exitGlobalDataOffset() + offsetof(FuncImportExit, fun), callee);
 
-    // 2.2. Get callee
-    masm.loadPtr(Address(callee, offsetof(FuncImportExit, fun)), callee);
-
-    // 2.3. Save callee
+    // 2.2. Save callee
     masm.storePtr(callee, Address(masm.getStackPointer(), argOffset));
     argOffset += sizeof(size_t);
 
-    // 2.4. Load callee executable entry point
+    // 2.3. Load callee executable entry point
     masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
     masm.loadBaselineOrIonNoArgCheck(callee, callee, nullptr);
 
