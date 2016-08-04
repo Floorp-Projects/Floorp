@@ -587,7 +587,7 @@ function checkSystemSection(data) {
   catch (e) {}
 }
 
-function checkActiveAddon(data){
+function checkActiveAddon(data) {
   let signedState = mozinfo.addon_signing ? "number" : "undefined";
   // system add-ons have an undefined signState
   if (data.isSystem)

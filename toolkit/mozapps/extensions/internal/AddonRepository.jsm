@@ -1740,7 +1740,7 @@ var AddonDatabase = {
    * @return: Promise{Map}
    *          Resolves when the add-ons are retrieved from the database
    */
-  retrieveStoredData: function(){
+  retrieveStoredData: function() {
     return this.openConnection().then(db => db.addons);
   },
 

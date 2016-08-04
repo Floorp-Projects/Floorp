@@ -591,7 +591,7 @@ PKT_SAVED.prototype = {
 
 $(function()
 {
-    if(!window.thePKT_SAVED){
+    if(!window.thePKT_SAVED) {
         var thePKT_SAVED = new PKT_SAVED();
         window.thePKT_SAVED = thePKT_SAVED;
         thePKT_SAVED.init();

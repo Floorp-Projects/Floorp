@@ -7205,12 +7205,12 @@ AddonWrapper.prototype = {
       }
     }
 
-    if(this.isActive && addon.iconURL){
+    if(this.isActive && addon.iconURL) {
       icons[32] = addon.iconURL;
       icons[48] = addon.iconURL;
     }
 
-    if(this.isActive && addon.icon64URL){
+    if(this.isActive && addon.icon64URL) {
       icons[64] = addon.icon64URL;
     }
 

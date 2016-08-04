@@ -876,7 +876,7 @@ Blocklist.prototype = {
     LOG("Blocklist::_preloadBlocklist: no XML File found");
   }),
 
-  _preloadBlocklistFile: Task.async(function*(path){
+  _preloadBlocklistFile: Task.async(function*(path) {
     if (this._addonEntries) {
       // The file has been already loaded.
       return;

@@ -389,7 +389,7 @@ add_task(function* reorder_notification() {
     },
   ];
   let sorted = [];
-  for (let bm of bookmarks){
+  for (let bm of bookmarks) {
     sorted.push(yield PlacesUtils.bookmarks.insert(bm));
   }
 

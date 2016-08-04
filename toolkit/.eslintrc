@@ -167,7 +167,7 @@
     // "semi": [2, "always"],
 
     // Require space before blocks
-    // "space-before-blocks": 2,
+    "space-before-blocks": 2,
 
     // Never use spaces before function parentheses
     // "space-before-function-paren": [2, { "anonymous": "always", "named": "never" }],

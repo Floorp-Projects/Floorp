@@ -15,7 +15,7 @@ add_task(function* () {
   yield BrowserTestUtils.withNewTab({gBrowser, url}, testPromiseMessageAPI)
 });
 
-function* testPromiseMessageAPI(aBrowser){
+function* testPromiseMessageAPI(aBrowser) {
   // Reusing an existing message.
   const msgKey = "DOM:WebManifest:hasManifestLink";
   const mm = aBrowser.messageManager;

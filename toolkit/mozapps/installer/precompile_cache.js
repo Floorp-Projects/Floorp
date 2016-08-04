@@ -58,7 +58,7 @@ function get_modules_under(uri) {
                   .concat(jar_entries(jarReader, "modules/*.jsm"));
     jarReader.close();
     return entries;
-  } else if (uri instanceof Ci.nsIFileURL){
+  } else if (uri instanceof Ci.nsIFileURL) {
     let file = uri.QueryInterface(Ci.nsIFileURL);
     return dir_entries(file.file, "components", ".js")
            .concat(dir_entries(file.file, "modules", ".js"))

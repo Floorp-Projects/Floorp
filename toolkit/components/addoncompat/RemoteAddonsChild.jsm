@@ -544,7 +544,7 @@ var RemoteAddonsChild = {
   init: function(global) {
 
     if (!this._ready) {
-      if (!Services.cpmm.initialProcessData.remoteAddonsParentInitted){
+      if (!Services.cpmm.initialProcessData.remoteAddonsParentInitted) {
         return null;
       }
 
