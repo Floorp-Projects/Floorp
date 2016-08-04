@@ -2959,6 +2959,97 @@ public:
     template<class Impl> class Natives;
 };
 
+class Telemetry : public mozilla::jni::ObjectBase<Telemetry, jobject>
+{
+public:
+    static const char name[];
+
+    explicit Telemetry(const Context& ctx) : ObjectBase<Telemetry, jobject>(ctx) {}
+
+    struct AddHistogram_t {
+        typedef Telemetry Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                int32_t> Args;
+        static constexpr char name[] = "nativeAddHistogram";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;I)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct AddKeyedHistogram_t {
+        typedef Telemetry Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param,
+                int32_t> Args;
+        static constexpr char name[] = "nativeAddKeyedHistogram";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;I)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct AddUIEvent_t {
+        typedef Telemetry Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param,
+                int64_t,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "nativeAddUiEvent";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct StartUISession_t {
+        typedef Telemetry Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                int64_t> Args;
+        static constexpr char name[] = "nativeStartUiSession";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;J)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct StopUISession_t {
+        typedef Telemetry Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param,
+                int64_t> Args;
+        static constexpr char name[] = "nativeStopUiSession";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;J)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static const bool isMultithreaded = false;
+
+    template<class Impl> class Natives;
+};
+
 class ThumbnailHelper : public mozilla::jni::ObjectBase<ThumbnailHelper, jobject>
 {
 public:
