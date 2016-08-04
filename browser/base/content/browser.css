@@ -888,10 +888,6 @@ html|*#gcli-output-frame,
   transition: none;
 }
 
-toolbarbutton[type="socialmark"] {
-  -moz-binding: url("chrome://browser/content/socialmarks.xml#toolbarbutton-marks");
-}
-
 panelview > .social-panel-frame {
   width: auto;
   height: auto;
