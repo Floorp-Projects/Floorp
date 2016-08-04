@@ -52,6 +52,29 @@ const JNINativeMethod AlarmReceiver::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class AndroidGamepadManager::Natives : public mozilla::jni::NativeImpl<AndroidGamepadManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[3];
+};
+
+template<class Impl>
+const JNINativeMethod AndroidGamepadManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<AndroidGamepadManager::OnAxisChange_t>(
+            mozilla::jni::NativeStub<AndroidGamepadManager::OnAxisChange_t, Impl>
+            ::template Wrap<&Impl::OnAxisChange>),
+
+    mozilla::jni::MakeNativeMethod<AndroidGamepadManager::OnButtonChange_t>(
+            mozilla::jni::NativeStub<AndroidGamepadManager::OnButtonChange_t, Impl>
+            ::template Wrap<&Impl::OnButtonChange>),
+
+    mozilla::jni::MakeNativeMethod<AndroidGamepadManager::OnGamepadChange_t>(
+            mozilla::jni::NativeStub<AndroidGamepadManager::OnGamepadChange_t, Impl>
+            ::template Wrap<&Impl::OnGamepadChange>)
+};
+
+template<class Impl>
 class GeckoAppShell::Natives : public mozilla::jni::NativeImpl<GeckoAppShell, Impl>
 {
 public:

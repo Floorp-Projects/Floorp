@@ -89,6 +89,113 @@ public:
     template<class Impl> class Natives;
 };
 
+class AndroidGamepadManager : public mozilla::jni::ObjectBase<AndroidGamepadManager, jobject>
+{
+public:
+    static const char name[];
+
+    explicit AndroidGamepadManager(const Context& ctx) : ObjectBase<AndroidGamepadManager, jobject>(ctx) {}
+
+    struct OnAxisChange_t {
+        typedef AndroidGamepadManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                mozilla::jni::BooleanArray::Param,
+                mozilla::jni::FloatArray::Param> Args;
+        static constexpr char name[] = "onAxisChange";
+        static constexpr char signature[] =
+                "(I[Z[F)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct OnButtonChange_t {
+        typedef AndroidGamepadManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                bool,
+                float> Args;
+        static constexpr char name[] = "onButtonChange";
+        static constexpr char signature[] =
+                "(IIZF)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct OnGamepadAdded_t {
+        typedef AndroidGamepadManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "onGamepadAdded";
+        static constexpr char signature[] =
+                "(II)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto OnGamepadAdded(int32_t, int32_t) -> void;
+
+    struct OnGamepadChange_t {
+        typedef AndroidGamepadManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                bool> Args;
+        static constexpr char name[] = "onGamepadChange";
+        static constexpr char signature[] =
+                "(IZ)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct Start_t {
+        typedef AndroidGamepadManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "start";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto Start() -> void;
+
+    struct Stop_t {
+        typedef AndroidGamepadManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "stop";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto Stop() -> void;
+
+    static const bool isMultithreaded = true;
+
+    template<class Impl> class Natives;
+};
+
 class DownloadsIntegration : public mozilla::jni::ObjectBase<DownloadsIntegration, jobject>
 {
 public:
@@ -517,23 +624,6 @@ public:
     };
 
     static auto EnableSensor(int32_t) -> void;
-
-    struct GamepadAdded_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                int32_t> Args;
-        static constexpr char name[] = "gamepadAdded";
-        static constexpr char signature[] =
-                "(II)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto GamepadAdded(int32_t, int32_t) -> void;
 
     struct GetApplicationContext_t {
         typedef GeckoAppShell Owner;
@@ -1513,36 +1603,6 @@ public:
     };
 
     static auto ShowPersistentAlertNotificationWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
-
-    struct StartMonitoringGamepad_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "startMonitoringGamepad";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto StartMonitoringGamepad() -> void;
-
-    struct StopMonitoringGamepad_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "stopMonitoringGamepad";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto StopMonitoringGamepad() -> void;
 
     struct SyncNotifyObservers_t {
         typedef GeckoAppShell Owner;
