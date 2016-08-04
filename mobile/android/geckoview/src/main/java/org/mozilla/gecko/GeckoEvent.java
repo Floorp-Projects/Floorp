@@ -69,8 +69,6 @@ public class GeckoEvent {
         NATIVE_GESTURE_EVENT(31),
         CALL_OBSERVER(33),
         REMOVE_OBSERVER(34),
-        GAMEPAD_ADDREMOVE(45),
-        GAMEPAD_DATA(46),
         LONG_PRESS(47);
 
         public final int value;
@@ -84,12 +82,6 @@ public class GeckoEvent {
     public static final int ACTION_MAGNIFY = 12;
     public static final int ACTION_MAGNIFY_END = 13;
 
-    public static final int ACTION_GAMEPAD_ADDED = 1;
-    public static final int ACTION_GAMEPAD_REMOVED = 2;
-
-    public static final int ACTION_GAMEPAD_BUTTON = 1;
-    public static final int ACTION_GAMEPAD_AXES = 2;
-
     private final int mType;
     private int mAction;
     private long mTime;
@@ -100,76 +92,16 @@ public class GeckoEvent {
     private float[] mPressures;
     private int[] mToolTypes;
     private Point[] mPointRadii;
-    private Rect mRect;
     private double mX;
-    private double mY;
-    private double mZ;
-    private double mW;
 
     private int mMetaState;
-    private int mFlags;
     private int mCount;
     private String mCharacters;
     private String mCharactersExtra;
     private String mData;
 
-    private int mWidth;
-    private int mHeight;
-
-    private int mID;
-    private int mGamepadButton;
-    private boolean mGamepadButtonPressed;
-    private float mGamepadButtonValue;
-    private float[] mGamepadValues;
-
     private GeckoEvent(NativeGeckoEvent event) {
         mType = event.value;
-    }
-
-    /**
-     * This method is a replacement for the the KeyEvent.isGamepadButton method to be
-     * compatible with Build.VERSION.SDK_INT < 12. This is an implementation of the
-     * same method isGamepadButton available after SDK 12.
-     * @param keyCode int with the key code (Android key constant from KeyEvent).
-     * @return True if the keycode is a gamepad button, such as {@link #KEYCODE_BUTTON_A}.
-     */
-    private static boolean isGamepadButton(int keyCode) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_BUTTON_A:
-            case KeyEvent.KEYCODE_BUTTON_B:
-            case KeyEvent.KEYCODE_BUTTON_C:
-            case KeyEvent.KEYCODE_BUTTON_X:
-            case KeyEvent.KEYCODE_BUTTON_Y:
-            case KeyEvent.KEYCODE_BUTTON_Z:
-            case KeyEvent.KEYCODE_BUTTON_L1:
-            case KeyEvent.KEYCODE_BUTTON_R1:
-            case KeyEvent.KEYCODE_BUTTON_L2:
-            case KeyEvent.KEYCODE_BUTTON_R2:
-            case KeyEvent.KEYCODE_BUTTON_THUMBL:
-            case KeyEvent.KEYCODE_BUTTON_THUMBR:
-            case KeyEvent.KEYCODE_BUTTON_START:
-            case KeyEvent.KEYCODE_BUTTON_SELECT:
-            case KeyEvent.KEYCODE_BUTTON_MODE:
-            case KeyEvent.KEYCODE_BUTTON_1:
-            case KeyEvent.KEYCODE_BUTTON_2:
-            case KeyEvent.KEYCODE_BUTTON_3:
-            case KeyEvent.KEYCODE_BUTTON_4:
-            case KeyEvent.KEYCODE_BUTTON_5:
-            case KeyEvent.KEYCODE_BUTTON_6:
-            case KeyEvent.KEYCODE_BUTTON_7:
-            case KeyEvent.KEYCODE_BUTTON_8:
-            case KeyEvent.KEYCODE_BUTTON_9:
-            case KeyEvent.KEYCODE_BUTTON_10:
-            case KeyEvent.KEYCODE_BUTTON_11:
-            case KeyEvent.KEYCODE_BUTTON_12:
-            case KeyEvent.KEYCODE_BUTTON_13:
-            case KeyEvent.KEYCODE_BUTTON_14:
-            case KeyEvent.KEYCODE_BUTTON_15:
-            case KeyEvent.KEYCODE_BUTTON_16:
-                return true;
-            default:
-                return false;
-        }
     }
 
     public static GeckoEvent createNativeGestureEvent(int action, PointF pt, double size) {
@@ -336,47 +268,6 @@ public class GeckoEvent {
     public static GeckoEvent createRemoveObserverEvent(String observerKey) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.REMOVE_OBSERVER);
         event.mCharacters = observerKey;
-        return event;
-    }
-
-    public static GeckoEvent createGamepadAddRemoveEvent(int id, boolean added) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.GAMEPAD_ADDREMOVE);
-        event.mID = id;
-        event.mAction = added ? ACTION_GAMEPAD_ADDED : ACTION_GAMEPAD_REMOVED;
-        return event;
-    }
-
-    private static int boolArrayToBitfield(boolean[] array) {
-        int bits = 0;
-        for (int i = 0; i < array.length; i++) {
-            if (array[i]) {
-                bits |= 1 << i;
-            }
-        }
-        return bits;
-    }
-
-    public static GeckoEvent createGamepadButtonEvent(int id,
-                                                      int which,
-                                                      boolean pressed,
-                                                      float value) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.GAMEPAD_DATA);
-        event.mID = id;
-        event.mAction = ACTION_GAMEPAD_BUTTON;
-        event.mGamepadButton = which;
-        event.mGamepadButtonPressed = pressed;
-        event.mGamepadButtonValue = value;
-        return event;
-    }
-
-    public static GeckoEvent createGamepadAxisEvent(int id, boolean[] valid,
-                                                    float[] values) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.GAMEPAD_DATA);
-        event.mID = id;
-        event.mAction = ACTION_GAMEPAD_AXES;
-        event.mFlags = boolArrayToBitfield(valid);
-        event.mCount = values.length;
-        event.mGamepadValues = values;
         return event;
     }
 }
