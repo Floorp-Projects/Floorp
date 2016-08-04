@@ -18,14 +18,47 @@
 # - `check_msg` is the message to be printed to accompany compiling the test
 #   program.
 @template
+@imports('textwrap')
 def try_compile(includes=None, body='', language='C++', flags=None, check_msg=None):
-    compiler = {
-        'C': c_compiler,
-        'C++': cxx_compiler,
-    }[language]
+    includes = includes or []
+    source_lines = ['#include <%s>' % f for f in includes]
+    source = '\n'.join(source_lines) + '\n'
+    source += textwrap.dedent('''\
+        int
+        main(void)
+        {
+        %s
+          ;
+          return 0;
+        }
+    ''' % body)
 
-    return compiler.try_compile(includes, body, flags, check_msg)
+    if check_msg:
+        def checking_fn(fn):
+            return checking(check_msg, callback=lambda r: r is not None)(fn)
+    else:
+        def checking_fn(fn):
+            return fn
 
+    def get_flags():
+        if flags:
+            return flags[:]
+
+    @depends(cxx_compiler, c_compiler, extra_toolchain_flags)
+    @checking_fn
+    def check(cxx_info, c_info, extra_flags):
+        flags = get_flags() or []
+        flags += extra_flags
+        flags.append('-c')
+
+        info = {
+            'C': c_info,
+            'C++': cxx_info,
+        }[language]
+        return try_invoke_compiler(info.wrapper + [info.compiler] + info.flags,
+                                   language, source, flags,
+                                   onerror=lambda: None)
+    return check
 
 # Checks for the presence of the given header on the target system by compiling
 # a test program including that header. The return value of the template is a
