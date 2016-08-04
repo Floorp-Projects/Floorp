@@ -3442,6 +3442,8 @@ JSObject::dump(FILE* fp) const
             (void*) globalObj, globalObj->getClass()->name);
     const Class* clasp = obj->getClass();
     fprintf(fp, "class %p %s\n", (const void*)clasp, clasp->name);
+    const ObjectGroup* group = obj->group();
+    fprintf(fp, "group %p\n", (const void*)group);
 
     fprintf(fp, "flags:");
     if (obj->isDelegate()) fprintf(fp, " delegate");
