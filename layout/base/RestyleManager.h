@@ -384,9 +384,6 @@ public:
   static nsCString ChangeHintToString(nsChangeHint aHint);
 #endif
 
-private:
-  void PostRestyleEventInternal(bool aForLazyConstruction);
-
 public:
   /**
    * Asynchronously clear style data from the root frame downwards and ensure
@@ -490,8 +487,6 @@ private:
   bool mDoRebuildAllStyleData : 1;
   // True if we're currently in the process of reconstructing the rule tree.
   bool mInRebuildAllStyleData : 1;
-  // True if we're in the middle of a nsRefreshDriver refresh
-  bool mInStyleRefresh : 1;
   // Whether rule matching should skip styles associated with animation
   bool mSkipAnimationRules : 1;
   bool mHavePendingNonAnimationRestyles : 1;

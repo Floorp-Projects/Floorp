@@ -86,7 +86,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   : RestyleManagerBase(aPresContext)
   , mDoRebuildAllStyleData(false)
   , mInRebuildAllStyleData(false)
-  , mInStyleRefresh(false)
   , mSkipAnimationRules(false)
   , mHavePendingNonAnimationRestyles(false)
   , mRebuildAllExtraHint(nsChangeHint(0))
@@ -948,25 +947,6 @@ RestyleManager::PostRestyleEvent(Element* aElement,
   }
 
   PostRestyleEventInternal(false);
-}
-
-void
-RestyleManager::PostRestyleEventInternal(bool aForLazyConstruction)
-{
-  // Make sure we're not in a style refresh; if we are, we still have
-  // a call to ProcessPendingRestyles coming and there's no need to
-  // add ourselves as a refresh observer until then.
-  bool inRefresh = !aForLazyConstruction && mInStyleRefresh;
-  nsIPresShell* presShell = PresContext()->PresShell();
-  if (!ObservingRefreshDriver() && !inRefresh) {
-    SetObservingRefreshDriver(PresContext()->RefreshDriver()->
-        AddStyleFlushObserver(presShell));
-  }
-
-  // Unconditionally flag our document as needing a flush.  The other
-  // option here would be a dedicated boolean to track whether we need
-  // to do so (set here and unset in ProcessPendingRestyles).
-  presShell->GetDocument()->SetNeedStyleFlush();
 }
 
 void
