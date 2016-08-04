@@ -697,6 +697,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             flags=flags,
             type=info.type,
             version=info.version,
+            language=language,
         )
 
     @depends(valid_compiler)
