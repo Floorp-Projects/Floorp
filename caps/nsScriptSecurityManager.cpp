@@ -8,7 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "xpcprivate.h"
+#include "xpcpublic.h"
 #include "XPCWrapper.h"
 #include "nsIAppsService.h"
 #include "nsIInputStreamChannel.h"
@@ -31,7 +31,6 @@
 #include "nsDocShell.h"
 #include "nsError.h"
 #include "nsDOMCID.h"
-#include "nsIXPConnect.h"
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
 #include "nsNetUtil.h"
@@ -41,7 +40,6 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIZipReader.h"
-#include "nsIXPConnect.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
