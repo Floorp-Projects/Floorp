@@ -25,7 +25,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.delegates.TabsTrayVisibilityAwareDelegate;
-import org.mozilla.gecko.util.Experiments;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.lang.ref.WeakReference;

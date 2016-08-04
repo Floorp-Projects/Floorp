@@ -20,6 +20,12 @@ builds:
     types:
       opt:
         task: tasks/builds/android_x86.yml
+  android-api-15-gradle:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_15_gradle.yml
   linux64-mulet:
     platforms:
       - Mulet Linux
@@ -270,6 +276,15 @@ tasks:
       file_patterns:
         - '**/*.py'
         - '**/.flake8'
+        - 'python/mozlint/**'
+        - 'tools/lint/**'
+        - 'testing/docker/lint/**'
+  wptlint-gecko:
+    task: tasks/tests/mozlint-wpt.yml
+    root: true
+    when:
+      file_patterns:
+        - 'testing/web-platform/tests/**'
         - 'python/mozlint/**'
         - 'tools/lint/**'
         - 'testing/docker/lint/**'

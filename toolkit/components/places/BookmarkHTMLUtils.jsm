@@ -884,9 +884,8 @@ BookmarkImporter.prototype = {
   _convertImportedDateToInternalDate: function convertImportedDateToInternalDate(aDate) {
     if (aDate && !isNaN(aDate)) {
       return parseInt(aDate) * 1000000; // in bookmarks.html this value is in seconds, not microseconds
-    } else {
-      return Date.now();
     }
+    return Date.now();
   },
 
   runBatched: function runBatched(aDoc) {

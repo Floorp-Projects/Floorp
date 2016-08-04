@@ -205,9 +205,8 @@ this.PlacesBackups = {
           let filePath = aEntry.path;
           if (this.getDateForFile(filePath) > new Date()) {
             return OS.File.remove(filePath);
-          } else {
-            this._backupFiles.push(filePath);
           }
+          this._backupFiles.push(filePath);
         }
 
         return undefined;

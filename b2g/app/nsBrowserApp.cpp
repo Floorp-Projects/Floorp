@@ -163,22 +163,9 @@ static int do_main(int argc, char* argv[])
   return XRE_main(argc, argv, &sAppData, 0);
 }
 
-#ifdef MOZ_B2G_LOADER
-/*
- * The main() in B2GLoader.cpp is the new main function instead of the
- * main() here if it is enabled.  So, rename it to b2g_man().
- */
-#define main b2g_main
-#define _CONST const
-#else
-#define _CONST
-#endif
-
-int main(int argc, _CONST char* argv[])
+int main(int argc, char* argv[])
 {
-#ifndef MOZ_B2G_LOADER
   char exePath[MAXPATHLEN];
-#endif
 
 #ifdef MOZ_WIDGET_GONK
   // This creates a ThreadPool for binder ipc. A ThreadPool is necessary to
@@ -189,7 +176,6 @@ int main(int argc, _CONST char* argv[])
 #endif
 
   nsresult rv;
-#ifndef MOZ_B2G_LOADER
   rv = mozilla::BinaryPath::Get(argv[0], exePath);
   if (NS_FAILED(rv)) {
     Output("Couldn't calculate the application directory.\n");
@@ -201,7 +187,6 @@ int main(int argc, _CONST char* argv[])
     return 255;
 
   strcpy(++lastSlash, XPCOM_DLL);
-#endif // MOZ_B2G_LOADER
 
 #if defined(XP_UNIX)
   // If the b2g app is launched from adb shell, then the shell will wind
@@ -216,9 +201,6 @@ int main(int argc, _CONST char* argv[])
   DllBlocklist_Initialize();
 #endif
 
-  // B2G loader has already initialized Gecko so we can't initialize
-  // it again here.
-#ifndef MOZ_B2G_LOADER
   // We do this because of data in bug 771745
   XPCOMGlueEnablePreload();
 
@@ -229,7 +211,6 @@ int main(int argc, _CONST char* argv[])
   }
   // Reset exePath so that it is the directory name and not the xpcom dll name
   *lastSlash = 0;
-#endif // MOZ_B2G_LOADER
 
   rv = XPCOMGlueLoadXULFunctions(kXULFuncs);
   if (NS_FAILED(rv)) {

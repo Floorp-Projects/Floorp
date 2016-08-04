@@ -564,10 +564,6 @@ bool ImageBridgeChild::IsCreated()
   return GetSingleton() != nullptr;
 }
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 static void ReleaseImageClientNow(ImageClient* aClient,
                                   PImageContainerChild* aChild)
 {

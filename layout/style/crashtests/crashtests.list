@@ -153,3 +153,7 @@ pref(layout.css.background-clip-text.enabled,true) load 1275026.html
 load 1278463-1.html
 pref(dom.animations-api.core.enabled,true) load 1277908-1.html
 load 1277908-2.html
+pref(dom.animations-api.core.enabled,true) load 1290994-1.html
+pref(dom.animations-api.core.enabled,true) load 1290994-2.html
+pref(dom.animations-api.core.enabled,true) load 1290994-3.html
+load 1290994-4.html

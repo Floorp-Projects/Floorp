@@ -832,10 +832,10 @@ function performCommand(aCmd, aItem)
     gPerformAllCallback = undefined;
 
     return;
-  } else {
-    while (elm.nodeName != "richlistitem" ||
-           elm.getAttribute("type") != "download")
-      elm = elm.parentNode;
+  }
+  while (elm.nodeName != "richlistitem" ||
+         elm.getAttribute("type") != "download") {
+    elm = elm.parentNode;
   }
 
   gDownloadViewController.doCommand(aCmd, elm);
@@ -1289,12 +1289,11 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
     const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
                     QueryInterface(Ci.nsIFileURL);
     return fileUrl.file.clone().QueryInterface(Ci.nsILocalFile);
-  } else {
-    // if it's a pathname, create the nsILocalFile directly
-    var f = new nsLocalFile(aPathOrUrl);
-
-    return f;
   }
+  // if it's a pathname, create the nsILocalFile directly
+  var f = new nsLocalFile(aPathOrUrl);
+
+  return f;
 }
 
 /**

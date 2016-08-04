@@ -41,9 +41,8 @@ add_task(function* test_phase_simple_async() {
                function() {
                  if (success) {
                    return longRunningAsyncTask(resolution, outParam);
-                 } else {
-                   throw resolution;
                  }
+                 throw resolution;
                },
                ...state
             );

@@ -84,9 +84,16 @@ way.
 The transforms in ``taskcluster/taskgraph/transforms/make_task.py`` implement
 this common functionality.  They expect a "task description", and produce a
 task definition.  The schema for a task description is defined at the top of
-``make_task.py``, with copious comments.  The result is a dictionary with keys
-``label``, ``attributes``, ``task``, and ``dependencies``, with the latter
-having the same format as the input dependencies.
+``make_task.py``, with copious comments.  The parts of the task description
+that are specific to a worker implementation are isolated in a ``worker``
+object which has an ``implementation`` property naming the worker
+implementation.  Thus the transforms that produce a task description must be
+aware of the worker implementation to be used, but need not be aware of the
+details of its payload format.
+
+The result is a dictionary with keys ``label``, ``attributes``, ``task``, and
+``dependencies``, with the latter having the same format as the input
+dependencies.
 
 These transforms assign names to treeherder groups using an internal list of
 group names.  Feel free to add additional groups to this list as necessary.
