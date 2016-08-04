@@ -7198,6 +7198,8 @@ var gIdentityHandler = {
     if (event.target == this._identityPopup) {
       window.addEventListener("focus", this, true);
     }
+    this._identityPopupMultiView._mainView.style.height =
+      this._identityPopup.getBoundingClientRect().height + "px";
   },
 
   onPopupHidden(event) {
