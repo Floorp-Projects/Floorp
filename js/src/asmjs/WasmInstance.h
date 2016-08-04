@@ -83,6 +83,7 @@ class Instance
     const CodeSegment& codeSegment() const { return code_->segment(); }
     uint8_t* codeBase() const { return code_->segment().base(); }
     const Metadata& metadata() const { return code_->metadata(); }
+    bool isAsmJS() const { return metadata().isAsmJS(); }
     const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
     size_t memoryLength() const;

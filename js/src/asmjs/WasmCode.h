@@ -129,18 +129,20 @@ class FuncExport
     Sig sig_;
     struct CacheablePod {
         uint32_t funcIndex_;
+        uint32_t codeRangeIndex_;
         uint32_t entryOffset_;
-        uint32_t tableEntryOffset_;
     } pod;
 
   public:
     FuncExport() = default;
-    explicit FuncExport(Sig&& sig, uint32_t funcIndex, uint32_t tableEntryOffset)
+    explicit FuncExport(Sig&& sig,
+                        uint32_t funcIndex,
+                        uint32_t codeRangeIndex)
       : sig_(Move(sig))
     {
         pod.funcIndex_ = funcIndex;
+        pod.codeRangeIndex_ = codeRangeIndex;
         pod.entryOffset_ = UINT32_MAX;
-        pod.tableEntryOffset_ = tableEntryOffset;
     }
     void initEntryOffset(uint32_t entryOffset) {
         MOZ_ASSERT(pod.entryOffset_ == UINT32_MAX);
@@ -153,12 +155,12 @@ class FuncExport
     uint32_t funcIndex() const {
         return pod.funcIndex_;
     }
+    uint32_t codeRangeIndex() const {
+        return pod.codeRangeIndex_;
+    }
     uint32_t entryOffset() const {
         MOZ_ASSERT(pod.entryOffset_ != UINT32_MAX);
         return pod.entryOffset_;
-    }
-    uint32_t tableEntryOffset() const {
-        return pod.tableEntryOffset_;
     }
 
     WASM_DECLARE_SERIALIZABLE(FuncExport)

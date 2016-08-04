@@ -1101,10 +1101,11 @@ struct FuncImportTls
     // for bidirectional registration purposes.
     jit::BaselineScript* baselineScript;
 
-    // A GC pointer which keeps the callee alive and may also be used in the JIT
-    // thunk to initialize the callee's JIT frame.
-    GCPtrFunction fun;
-    static_assert(sizeof(GCPtrFunction) == sizeof(void*), "for JIT access");
+    // A GC pointer which keeps the callee alive. For imported wasm functions,
+    // this points to the wasm function's WasmInstanceObject. For all other
+    // imported functions, 'obj' points to the JSFunction.
+    GCPtrObject obj;
+    static_assert(sizeof(GCPtrObject) == sizeof(void*), "for JIT access");
 };
 
 // Constants:
