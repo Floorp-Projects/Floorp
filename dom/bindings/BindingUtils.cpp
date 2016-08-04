@@ -712,7 +712,6 @@ static JSObject*
 CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       JS::Handle<JSObject*> constructorProto,
                       const js::Class* constructorClass,
-                      const JSNativeHolder* constructorNative,
                       unsigned ctorNargs, const NamedConstructor* namedConstructors,
                       JS::Handle<JSObject*> proto,
                       const NativeProperties* properties,
@@ -720,37 +719,29 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       const char* name, bool defineOnGlobal)
 {
   JS::Rooted<JSObject*> constructor(cx);
-  if (constructorClass) {
-    MOZ_ASSERT(constructorProto);
-    constructor = JS_NewObjectWithGivenProto(cx, Jsvalify(constructorClass),
-                                             constructorProto);
-  } else {
-    MOZ_ASSERT(constructorNative);
-    MOZ_ASSERT(constructorProto == JS_GetFunctionPrototype(cx, global));
-    constructor = CreateConstructor(cx, global, name, constructorNative,
-                                    ctorNargs);
-  }
+  MOZ_ASSERT(constructorProto);
+  MOZ_ASSERT(constructorClass);
+  constructor = JS_NewObjectWithGivenProto(cx, Jsvalify(constructorClass),
+                                           constructorProto);
   if (!constructor) {
     return nullptr;
   }
 
-  if (constructorClass) {
-    if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
-                           JSPROP_READONLY)) {
-      return nullptr;
-    }
+  if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
+                         JSPROP_READONLY)) {
+    return nullptr;
+  }
 
-    // Might as well intern, since we're going to need an atomized
-    // version of name anyway when we stick our constructor on the
-    // global.
-    JS::Rooted<JSString*> nameStr(cx, JS_AtomizeAndPinString(cx, name));
-    if (!nameStr) {
-      return nullptr;
-    }
+  // Might as well intern, since we're going to need an atomized
+  // version of name anyway when we stick our constructor on the
+  // global.
+  JS::Rooted<JSString*> nameStr(cx, JS_AtomizeAndPinString(cx, name));
+  if (!nameStr) {
+    return nullptr;
+  }
 
-    if (!JS_DefineProperty(cx, constructor, "name", nameStr, JSPROP_READONLY)) {
-      return nullptr;
-    }
+  if (!JS_DefineProperty(cx, constructor, "name", nameStr, JSPROP_READONLY)) {
+    return nullptr;
   }
 
   if (properties) {
@@ -914,7 +905,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
                        const js::Class* protoClass, JS::Heap<JSObject*>* protoCache,
                        JS::Handle<JSObject*> constructorProto,
-                       const js::Class* constructorClass, const JSNativeHolder* constructor,
+                       const js::Class* constructorClass,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
                        JS::Heap<JSObject*>* constructorCache,
                        const NativeProperties* properties,
@@ -923,8 +914,8 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        const char* const* unscopableNames,
                        bool isGlobal)
 {
-  MOZ_ASSERT(protoClass || constructorClass || constructor,
-             "Need at least one class or a constructor!");
+  MOZ_ASSERT(protoClass || constructorClass,
+             "Need at least one class!");
   MOZ_ASSERT(!((properties &&
                 (properties->HasMethods() || properties->HasAttributes())) ||
                (chromeOnlyProperties &&
@@ -937,18 +928,17 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                (chromeOnlyProperties &&
                 (chromeOnlyProperties->HasStaticMethods() ||
                  chromeOnlyProperties->HasStaticAttributes()))) ||
-             constructorClass || constructor,
-             "Static methods but no constructorClass or constructor!");
-  MOZ_ASSERT(bool(name) == bool(constructorClass || constructor),
+             constructorClass,
+             "Static methods but no constructorClass!");
+  MOZ_ASSERT(bool(name) == bool(constructorClass),
              "Must have name precisely when we have an interface object");
-  MOZ_ASSERT(!constructorClass || !constructor);
   MOZ_ASSERT(!protoClass == !protoCache,
              "If, and only if, there is an interface prototype object we need "
              "to cache it");
-  MOZ_ASSERT(!(constructorClass || constructor) == !constructorCache,
+  MOZ_ASSERT(bool(constructorClass) == bool(constructorCache),
              "If, and only if, there is an interface object we need to cache "
              "it");
-  MOZ_ASSERT(constructorProto || (!constructorClass && !constructor),
+  MOZ_ASSERT(constructorProto || !constructorClass,
              "Must have a constructor proto if we plan to create a constructor "
              "object");
 
@@ -969,11 +959,11 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
   }
 
   JSObject* interface;
-  if (constructorClass || constructor) {
+  if (constructorClass) {
     interface = CreateInterfaceObject(cx, global, constructorProto,
-                                      constructorClass, constructor,
-                                      ctorNargs, namedConstructors, proto,
-                                      properties, chromeOnlyProperties, name,
+                                      constructorClass, ctorNargs,
+                                      namedConstructors, proto, properties,
+                                      chromeOnlyProperties, name,
                                       defineOnGlobal);
     if (!interface) {
       if (protoCache) {
