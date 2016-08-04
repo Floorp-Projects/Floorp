@@ -1012,6 +1012,11 @@ class FunctionCompiler
 
     bool builtinCall(SymbolicAddress builtin, const CallArgs& args, ValType type, MDefinition** def)
     {
+        if (inDeadCode()) {
+            *def = nullptr;
+            return true;
+        }
+
         return callPrivate(MAsmJSCall::Callee(builtin), MAsmJSCall::PreservesTlsReg::False,
                            args, ToExprType(type), def);
     }

@@ -9,7 +9,16 @@
   "local_changes": {
     "deleted": [],
     "deleted_reftests": {},
-    "items": {},
+    "items": {
+      "testharness": {
+        "html/syntax/parsing/math-parse01.html": [
+          {
+            "path": "html/syntax/parsing/math-parse01.html",
+            "url": "/html/syntax/parsing/math-parse01.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {},

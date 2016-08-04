@@ -104,15 +104,15 @@ skip-if(Android||B2G||Mulet) needs-focus == 462758-grabbers-resizers.html 462758
 == 388980-1.html 388980-1-ref.html
 needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1-ref.html
 skip-if(B2G||Mulet) fails-if(Android) needs-focus != spellcheck-superscript-2.html spellcheck-superscript-2-ref.html # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(skiaContent,1,3400) needs-focus pref(layout.accessiblecaret.enabled,false) == 824080-1.html 824080-1-ref.html
-needs-focus pref(layout.accessiblecaret.enabled,false) == 824080-2.html 824080-2-ref.html
-needs-focus pref(layout.accessiblecaret.enabled,false) == 824080-3.html 824080-3-ref.html
+fuzzy-if(skiaContent,1,3400) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-1.html 824080-1-ref.html
+needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-2.html 824080-2-ref.html
+needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-3.html 824080-3-ref.html
 needs-focus != 824080-2.html 824080-3.html
-fuzzy-if(skiaContent,1,3200) needs-focus pref(layout.accessiblecaret.enabled,false) == 824080-4.html 824080-4-ref.html
-fuzzy-if(skiaContent,2,1800) needs-focus pref(layout.accessiblecaret.enabled,false) == 824080-5.html 824080-5-ref.html
+fuzzy-if(skiaContent,1,3200) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-4.html 824080-4-ref.html
+fuzzy-if(skiaContent,2,1800) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-5.html 824080-5-ref.html
 needs-focus != 824080-4.html 824080-5.html
 needs-focus == 824080-6.html 824080-6-ref.html
-needs-focus pref(layout.accessiblecaret.enabled,false) == 824080-7.html 824080-7-ref.html
+needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-7.html 824080-7-ref.html
 needs-focus != 824080-6.html 824080-7.html
 # Bug 674927: copy spellcheck-textarea tests to contenteditable
 == spellcheck-contenteditable-attr.html spellcheck-contenteditable-nofocus-ref.html

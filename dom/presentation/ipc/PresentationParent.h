@@ -113,6 +113,10 @@ private:
 
   nsresult DoRequest(const TerminateSessionRequest& aRequest);
 
+  nsresult DoRequest(const ReconnectSessionRequest& aRequest);
+
+  nsresult DoRequest(const BuildTransportRequest& aRequest);
+
   bool mActorDestroyed = false;
   bool mNeedRegisterBuilder = false;
   nsString mSessionId;

@@ -128,7 +128,25 @@ nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   AutoObserverNotifier notifier(aObserver, "touchpoint");
 
   if (!InitTouchInjection()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // If we don't have touch injection from the OS, we can just fake it and
+    // synthesize the events from here.
+    MOZ_ASSERT(NS_IsMainThread());
+    if (aPointerState == TOUCH_HOVER) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (!mSynthesizedTouchInput) {
+      mSynthesizedTouchInput = MakeUnique<MultiTouchInput>();
+    }
+
+    WidgetEventTime time = CurrentMessageWidgetEventTime();
+    LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
+    MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
+        mSynthesizedTouchInput.get(), time.mTime, time.mTimeStamp,
+        aPointerId, aPointerState, pointInWindow, aPointerPressure,
+        aPointerOrientation);
+    DispatchTouchInput(inputToDispatch);
+    return NS_OK;
   }
 
   bool hover = aPointerState & TOUCH_HOVER;

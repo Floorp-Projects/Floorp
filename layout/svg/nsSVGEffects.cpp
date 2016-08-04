@@ -134,29 +134,29 @@ nsSVGRenderingObserver::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-nsSVGRenderingObserver::ContentAppended(nsIDocument *aDocument,
-                                        nsIContent *aContainer,
-                                        nsIContent *aFirstNewContent,
+nsSVGRenderingObserver::ContentAppended(nsIDocument* aDocument,
+                                        nsIContent* aContainer,
+                                        nsIContent* aFirstNewContent,
                                         int32_t /* unused */)
 {
   DoUpdate();
 }
 
 void
-nsSVGRenderingObserver::ContentInserted(nsIDocument *aDocument,
-                                        nsIContent *aContainer,
-                                        nsIContent *aChild,
+nsSVGRenderingObserver::ContentInserted(nsIDocument* aDocument,
+                                        nsIContent* aContainer,
+                                        nsIContent* aChild,
                                         int32_t /* unused */)
 {
   DoUpdate();
 }
 
 void
-nsSVGRenderingObserver::ContentRemoved(nsIDocument *aDocument,
-                                       nsIContent *aContainer,
-                                       nsIContent *aChild,
+nsSVGRenderingObserver::ContentRemoved(nsIDocument* aDocument,
+                                       nsIContent* aContainer,
+                                       nsIContent* aChild,
                                        int32_t aIndexInContainer,
-                                       nsIContent *aPreviousSibling)
+                                       nsIContent* aPreviousSibling)
 {
   DoUpdate();
 }
@@ -474,7 +474,7 @@ nsSVGPaintingProperty::DoUpdate()
 }
 
 static nsSVGFilterProperty*
-GetOrCreateFilterProperty(nsIFrame *aFrame)
+GetOrCreateFilterProperty(nsIFrame* aFrame)
 {
   const nsStyleEffects* effects = aFrame->StyleEffects();
   if (!effects->HasFilters())
@@ -491,7 +491,7 @@ GetOrCreateFilterProperty(nsIFrame *aFrame)
 }
 
 static nsSVGMaskProperty*
-GetOrCreateMaskProperty(nsIFrame *aFrame)
+GetOrCreateMaskProperty(nsIFrame* aFrame)
 {
   FrameProperties props = aFrame->Properties();
   nsSVGMaskProperty *prop = props.Get(nsSVGEffects::MaskProperty());
@@ -506,7 +506,7 @@ GetOrCreateMaskProperty(nsIFrame *aFrame)
 
 template<class T>
 static T*
-GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
+GetEffectProperty(nsIURI* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<T>* aProperty)
 {
   if (!aURI)
@@ -522,8 +522,8 @@ GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
   return prop;
 }
 
-nsSVGMarkerProperty *
-nsSVGEffects::GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
+nsSVGMarkerProperty*
+nsSVGEffects::GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<nsSVGMarkerProperty>* aProperty)
 {
   MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
@@ -532,22 +532,22 @@ nsSVGEffects::GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
-nsSVGTextPathProperty *
-nsSVGEffects::GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame,
+nsSVGTextPathProperty*
+nsSVGEffects::GetTextPathProperty(nsIURI* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<nsSVGTextPathProperty>* aProperty)
 {
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
-nsSVGPaintingProperty *
-nsSVGEffects::GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
+nsSVGPaintingProperty*
+nsSVGEffects::GetPaintingProperty(nsIURI* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>* aProperty)
 {
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
-nsSVGPaintingProperty *
-nsSVGEffects::GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
+nsSVGPaintingProperty*
+nsSVGEffects::GetPaintingPropertyForURI(nsIURI* aURI, nsIFrame* aFrame,
   URIObserverHashtablePropertyDescriptor aProperty)
 {
   if (!aURI)
@@ -570,7 +570,7 @@ nsSVGEffects::GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
 }
 
 nsSVGEffects::EffectProperties
-nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
+nsSVGEffects::GetEffectProperties(nsIFrame* aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
@@ -595,7 +595,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 }
 
 nsSVGPaintServerFrame *
-nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame,
+nsSVGEffects::GetPaintServer(nsIFrame* aTargetFrame,
                              nsStyleSVGPaint nsStyleSVG::* aPaint,
                              PaintingPropertyDescriptor aType)
 {
@@ -635,7 +635,7 @@ nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame,
 }
 
 nsSVGClipPathFrame *
-nsSVGEffects::EffectProperties::GetClipPathFrame(bool *aOK)
+nsSVGEffects::EffectProperties::GetClipPathFrame(bool* aOK)
 {
   if (!mClipPath)
     return nullptr;
@@ -648,7 +648,7 @@ nsSVGEffects::EffectProperties::GetClipPathFrame(bool *aOK)
 }
 
 nsSVGMaskFrame *
-nsSVGEffects::EffectProperties::GetFirstMaskFrame(bool *aOK)
+nsSVGEffects::EffectProperties::GetFirstMaskFrame(bool* aOK)
 {
   if (!mMask) {
     return nullptr;
@@ -684,7 +684,7 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
 }
 
 void
-nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
+nsSVGEffects::UpdateEffects(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame->GetContent()->IsElement(),
                "aFrame's content should be an element");
@@ -717,8 +717,8 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
   }
 }
 
-nsSVGFilterProperty *
-nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
+nsSVGFilterProperty*
+nsSVGEffects::GetFilterProperty(nsIFrame* aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
@@ -785,7 +785,8 @@ nsSVGRenderingObserverList::RemoveAll()
 }
 
 void
-nsSVGEffects::AddRenderingObserver(Element *aElement, nsSVGRenderingObserver *aObserver)
+nsSVGEffects::AddRenderingObserver(Element* aElement,
+                                   nsSVGRenderingObserver* aObserver)
 {
   nsSVGRenderingObserverList *observerList = GetObserverList(aElement);
   if (!observerList) {
@@ -800,7 +801,8 @@ nsSVGEffects::AddRenderingObserver(Element *aElement, nsSVGRenderingObserver *aO
 }
 
 void
-nsSVGEffects::RemoveRenderingObserver(Element *aElement, nsSVGRenderingObserver *aObserver)
+nsSVGEffects::RemoveRenderingObserver(Element* aElement,
+                                      nsSVGRenderingObserver* aObserver)
 {
   nsSVGRenderingObserverList *observerList = GetObserverList(aElement);
   if (observerList) {
@@ -814,7 +816,7 @@ nsSVGEffects::RemoveRenderingObserver(Element *aElement, nsSVGRenderingObserver 
 }
 
 void
-nsSVGEffects::RemoveAllRenderingObservers(Element *aElement)
+nsSVGEffects::RemoveAllRenderingObservers(Element* aElement)
 {
   nsSVGRenderingObserverList *observerList = GetObserverList(aElement);
   if (observerList) {
@@ -824,7 +826,7 @@ nsSVGEffects::RemoveAllRenderingObservers(Element *aElement)
 }
 
 void
-nsSVGEffects::InvalidateRenderingObservers(nsIFrame *aFrame)
+nsSVGEffects::InvalidateRenderingObservers(nsIFrame* aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame must be first continuation");
 
@@ -857,7 +859,7 @@ nsSVGEffects::InvalidateRenderingObservers(nsIFrame *aFrame)
 }
 
 void
-nsSVGEffects::InvalidateDirectRenderingObservers(Element *aElement, uint32_t aFlags /* = 0 */)
+nsSVGEffects::InvalidateDirectRenderingObservers(Element* aElement, uint32_t aFlags /* = 0 */)
 {
   nsIFrame* frame = aElement->GetPrimaryFrame();
   if (frame) {
@@ -878,7 +880,7 @@ nsSVGEffects::InvalidateDirectRenderingObservers(Element *aElement, uint32_t aFl
 }
 
 void
-nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame *aFrame, uint32_t aFlags /* = 0 */)
+nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame* aFrame, uint32_t aFlags /* = 0 */)
 {
   nsIContent* content = aFrame->GetContent();
   if (content && content->IsElement()) {

@@ -1451,4 +1451,10 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
+void
+MacroAssembler::comment(const char* msg)
+{
+    Assembler::comment(msg);
+}
+
 //}}} check_macroassembler_style

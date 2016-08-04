@@ -9,11 +9,14 @@ interface nsIPresentationControlChannel;
 
 %{C++
 #define PRESENTATION_SESSION_REQUEST_TOPIC "presentation-session-request"
+#define PRESENTATION_RECONNECT_REQUEST_TOPIC "presentation-reconnect-request"
 %}
 
 /*
- * The event of a device requesting for a presentation session. User can
- * monitor the session request on every device by observing "presentation-sesion-request".
+ * The event of a device requesting for starting or reconnecting
+ * a presentation session. User can monitor the session request
+ * on every device by observing "presentation-sesion-request" for a
+ * new session and "presentation-reconnect-request" for reconnecting.
  */
 [scriptable, uuid(d808a084-d0f8-455a-a8df-5879e05a755b)]
 interface nsIPresentationSessionRequest: nsISupports

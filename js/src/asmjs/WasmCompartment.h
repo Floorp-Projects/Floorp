@@ -28,6 +28,7 @@ class WasmActivation;
 namespace wasm {
 
 class Code;
+typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 
 // wasm::Compartment lives in JSCompartment and contains the wasm-related
 // per-compartment state. wasm::Compartment tracks every live instance in the
@@ -36,17 +37,10 @@ class Code;
 
 class Compartment
 {
-    using InstanceObjectSet = GCHashSet<ReadBarriered<WasmInstanceObject*>,
-                                        MovableCellHasher<ReadBarriered<WasmInstanceObject*>>,
-                                        SystemAllocPolicy>;
-    using WeakInstanceObjectSet = JS::WeakCache<InstanceObjectSet>;
-    using InstanceVector = Vector<Instance*, 0, SystemAllocPolicy>;
-
-    InstanceVector        instances_;
-    volatile bool         mutatingInstances_;
-    WeakInstanceObjectSet instanceObjects_;
-    size_t                activationCount_;
-    bool                  profilingEnabled_;
+    InstanceVector instances_;
+    volatile bool  mutatingInstances_;
+    size_t         activationCount_;
+    bool           profilingEnabled_;
 
     friend class js::WasmActivation;
 
@@ -76,11 +70,12 @@ class Compartment
     bool registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj);
     void unregisterInstance(Instance& instance);
 
-    // Return a weak set of all live instances in the compartment. Accessing
-    // objects of the set will trigger a read-barrier which will mark the
-    // object.
+    // Return a vector of all live instances in the compartment. The lifetime of
+    // these Instances is determined by their owning WasmInstanceObject.
+    // Note that accessing instances()[i]->object() triggers a read barrier
+    // since instances() is effectively a weak list.
 
-    const WeakInstanceObjectSet& instanceObjects() const { return instanceObjects_; }
+    const InstanceVector& instances() const { return instances_; }
 
     // This methods returns the wasm::Code containing the given pc, if any
     // exists in the compartment.

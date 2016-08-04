@@ -564,7 +564,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   decoder->PostSize(frameRect.width, frameRect.height);
   if (decoder->HasError()) {
     // Setting the size led to an error.
-    png_longjmp(decoder->mPNG, 1);
+    png_error(decoder->mPNG, "Sizing error");
   }
 
   if (color_type == PNG_COLOR_TYPE_PALETTE) {
@@ -666,7 +666,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   } else if (channels == 2 || channels == 4) {
     decoder->format = gfx::SurfaceFormat::B8G8R8A8;
   } else {
-    png_longjmp(decoder->mPNG, 1); // invalid number of channels
+    png_error(decoder->mPNG, "Invalid number of channels");
   }
 
 #ifdef PNG_APNG_SUPPORTED
@@ -678,7 +678,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     if (decoder->mDownscaler && !decoder->IsFirstFrameDecode()) {
       MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode "
                              "for an animated image?");
-      png_longjmp(decoder->mPNG, 1);  // Abort the decode.
+      png_error(decoder->mPNG, "Invalid downscale attempt"); // Abort decode.
     }
   }
 #endif
@@ -712,7 +712,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
                                                   frameRect,
                                                   isInterlaced });
     if (NS_FAILED(rv)) {
-      png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
+      png_error(decoder->mPNG, "CreateFrame failed");
     }
     MOZ_ASSERT(decoder->mImageData, "Should have a buffer now");
 #ifdef PNG_APNG_SUPPORTED
@@ -724,7 +724,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mCMSLine =
       static_cast<uint8_t*>(malloc(bpp[channels] * frameRect.width));
     if (!decoder->mCMSLine) {
-      png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
+      png_error(decoder->mPNG, "malloc of mCMSLine failed");
     }
   }
 
@@ -734,7 +734,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
       decoder->interlacebuf = static_cast<uint8_t*>(malloc(bufferSize));
     }
     if (!decoder->interlacebuf) {
-      png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
+      png_error(decoder->mPNG, "malloc of interlacebuf failed");
     }
   }
 }
@@ -904,7 +904,7 @@ nsPNGDecoder::WriteRow(uint8_t* aRow)
       break;
 
     default:
-      png_longjmp(mPNG, 1);  // Abort the decode.
+      png_error(mPNG, "Invalid SurfaceFormat");
   }
 
   MOZ_ASSERT(WriteState(result) != WriteState::FAILURE);

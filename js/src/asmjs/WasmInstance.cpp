@@ -271,12 +271,14 @@ Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t ar
 }
 
 Instance::Instance(JSContext* cx,
+                   Handle<WasmInstanceObject*> object,
                    UniqueCode code,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
                    Handle<FunctionVector> funcImports,
                    const ValVector& globalImports)
   : compartment_(cx->compartment()),
+    object_(object),
     code_(Move(code)),
     memory_(memory),
     tables_(Move(tables))
@@ -380,8 +382,16 @@ Instance::~Instance()
 void
 Instance::trace(JSTracer* trc)
 {
+    // Ordinarily, an Instance is only marked via WasmInstanceObject's trace
+    // hook and so this TraceEdge() call is only useful to update the pointer on
+    // moving GC. However, if wasm is active in a wasm::Compartment during GC,
+    // all Instances are marked directly via Instance::trace() making this a
+    // necessary strong edge.
+    TraceEdge(trc, &object_, "wasm object");
+
     for (const FuncImport& fi : metadata().funcImports)
         TraceNullableEdge(trc, &funcImportToExit(fi).fun, "wasm function import");
+
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }
 

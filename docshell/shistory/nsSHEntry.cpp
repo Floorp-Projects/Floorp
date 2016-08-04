@@ -715,11 +715,7 @@ nsSHEntry::AddChild(nsISHEntry* aChild, int32_t aOffset)
       }
     }
 
-    if (!mChildren.ReplaceObjectAt(aChild, aOffset)) {
-      NS_WARNING("Adding a child failed!");
-      aChild->SetParent(nullptr);
-      return NS_ERROR_FAILURE;
-    }
+    mChildren.ReplaceObjectAt(aChild, aOffset);
   }
 
   return NS_OK;
@@ -737,7 +733,8 @@ nsSHEntry::RemoveChild(nsISHEntry* aChild)
   } else {
     int32_t index = mChildren.IndexOfObject(aChild);
     if (index >= 0) {
-      childRemoved = mChildren.ReplaceObjectAt(nullptr, index);
+      mChildren.ReplaceObjectAt(nullptr, index);
+      childRemoved = true;
     }
   }
   if (childRemoved) {
@@ -780,9 +777,8 @@ nsSHEntry::ReplaceChild(nsISHEntry* aNewEntry)
     if (mChildren[i] && NS_SUCCEEDED(mChildren[i]->GetDocshellID(&otherID)) &&
         docshellID == otherID) {
       mChildren[i]->SetParent(nullptr);
-      if (mChildren.ReplaceObjectAt(aNewEntry, i)) {
-        return aNewEntry->SetParent(this);
-      }
+      mChildren.ReplaceObjectAt(aNewEntry, i);
+      return aNewEntry->SetParent(this);
     }
   }
   return NS_ERROR_FAILURE;

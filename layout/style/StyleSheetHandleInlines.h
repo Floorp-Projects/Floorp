@@ -84,12 +84,6 @@ StyleSheetHandle::Ptr::IsApplicable() const
   FORWARD(IsApplicable, ());
 }
 
-void
-StyleSheetHandle::Ptr::SetParsingMode(css::SheetParsingMode aMode)
-{
-  FORWARD(SetParsingMode, (aMode));
-}
-
 bool
 StyleSheetHandle::Ptr::HasRules() const
 {

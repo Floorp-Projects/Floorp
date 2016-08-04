@@ -25,6 +25,7 @@ var receiverUrl = SimpleTest.getTestFileURL('file_presentation_1ua_receiver.html
 var request;
 var connection;
 var receiverIframe;
+var presentationId;
 
 function postMessageToIframe(aType) {
   receiverIframe.src = receiverUrl + "#" +
@@ -134,6 +135,7 @@ function testStartConnection() {
       connection.onconnect = function() {
         connection.onconnect = null;
         is(connection.state, "connected", "Connection should be connected.");
+        presentationId = connection.id;
         aResolve();
       };
     }).catch((aError) => {
@@ -178,16 +180,18 @@ function testIncomingMessage() {
 
 function testCloseConnection() {
   info('Sender: --- testCloseConnection ---');
+  // Test terminate immediate after close.
+  function controlChannelEstablishedHandler()
+  {
+    gScript.removeMessageListener('control-channel-established',
+                                  controlChannelEstablishedHandler);
+    ok(false, "terminate after close should do nothing");
+  }
   gScript.addMessageListener('ready-to-close', function onReadyToClose() {
     gScript.removeMessageListener('ready-to-close', onReadyToClose);
     connection.close();
 
-    // Test terminate immediate after close.
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-      gScript.removeMessageListener('control-channel-established',
-                                    controlChannelEstablishedHandler);
-      ok(false, "terminate after close should do nothing");
-    });
+    gScript.addMessageListener('control-channel-established', controlChannelEstablishedHandler);
     connection.terminate();
   });
 
@@ -196,12 +200,16 @@ function testCloseConnection() {
       connection.onclose = function() {
         connection.onclose = null;
         is(connection.state, 'closed', 'Sender: Connection should be closed.');
+        gScript.removeMessageListener('control-channel-established',
+                                      controlChannelEstablishedHandler);
         aResolve();
       };
     }),
     new Promise(function(aResolve, aReject) {
       gScript.addMessageListener('receiver-closed', function onReceiverClosed() {
         gScript.removeMessageListener('receiver-closed', onReceiverClosed);
+        gScript.removeMessageListener('control-channel-established',
+                                      controlChannelEstablishedHandler);
         aResolve();
       });
     }),
@@ -228,6 +236,54 @@ function testTerminateAfterClose() {
   ]);
 }
 
+function testReconnect() {
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testReconnect ---');
+    gScript.addMessageListener('control-channel-established', function controlChannelEstablished() {
+      gScript.removeMessageListener('control-channel-established', controlChannelEstablished);
+      gScript.sendAsyncMessage("trigger-control-channel-open");
+    });
+
+    gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
+      debug('Got message: start-reconnect');
+      gScript.removeMessageListener('start-reconnect', startReconnectHandler);
+      is(url, receiverUrl, "URLs should be the same.")
+      gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+    });
+
+    gScript.addMessageListener('offer-sent', function offerSentHandler() {
+      debug('Got message: offer-sent');
+      gScript.removeMessageListener('offer-sent', offerSentHandler);
+      gScript.sendAsyncMessage('trigger-on-offer');
+    });
+
+    gScript.addMessageListener('answer-sent', function answerSentHandler() {
+      debug('Got message: answer-sent');
+      gScript.removeMessageListener('answer-sent', answerSentHandler);
+      gScript.sendAsyncMessage('trigger-on-answer');
+    });
+
+    gScript.addMessageListener('ready-to-reconnect', function onReadyToReconnect() {
+      gScript.removeMessageListener('ready-to-reconnect', onReadyToReconnect);
+      request.reconnect(presentationId).then((aConnection) => {
+        connection = aConnection;
+        ok(connection, "Sender: Connection should be available.");
+        is(connection.id, presentationId, "The presentationId should be the same.");
+        is(connection.state, "connecting", "The initial state should be connecting.");
+        connection.onconnect = function() {
+          connection.onconnect = null;
+          is(connection.state, "connected", "Connection should be connected.");
+          aResolve();
+        };
+      }).catch((aError) => {
+        ok(false, "Sender: Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
+      });
+    });
+  });
+}
+
 function teardown() {
   gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
     debug('Got message: teardown-complete');
@@ -244,6 +300,8 @@ function runTests() {
          .then(testStartConnection)
          .then(testSendMessage)
          .then(testIncomingMessage)
+         .then(testCloseConnection)
+         .then(testReconnect)
          .then(testCloseConnection)
          .then(testTerminateAfterClose)
          .then(teardown);
