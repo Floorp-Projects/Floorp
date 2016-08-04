@@ -386,10 +386,6 @@ TimerThread::Shutdown()
   return NS_OK;
 }
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 namespace {
 
 struct MicrosecondsToInterval
@@ -412,12 +408,6 @@ NS_IMETHODIMP
 TimerThread::Run()
 {
   PR_SetCurrentThreadName("Timer");
-
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    NuwaMarkCurrentThread(nullptr, nullptr);
-  }
-#endif
 
   MonitorAutoLock lock(mMonitor);
 
@@ -446,11 +436,7 @@ TimerThread::Run()
     bool forceRunThisTimer = forceRunNextTimer;
     forceRunNextTimer = false;
 
-    if (mSleeping
-#ifdef MOZ_NUWA_PROCESS
-        || IsNuwaProcess() // Don't fire timers or deadlock will result.
-#endif
-        ) {
+    if (mSleeping) {
       // Sleep for 0.1 seconds while not firing timers.
       uint32_t milliseconds = 100;
       if (ChaosMode::isActive(ChaosFeature::TimerScheduling)) {

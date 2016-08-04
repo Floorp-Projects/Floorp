@@ -593,8 +593,7 @@ FormAutoCompleteResult.prototype = {
     get defaultIndex() {
         if (this.entries.length == 0)
             return -1;
-        else
-            return 0;
+        return 0;
     },
     get searchResult() {
         if (this.entries.length == 0)

@@ -273,14 +273,12 @@ var CustomizableUIInternal = {
           if (AppConstants.MENUBAR_CAN_AUTOHIDE) {
             if (AppConstants.platform == "linux") {
               return true;
-            } else {
-              // This is duplicated logic from /browser/base/jar.mn
-              // for win6BrowserOverlay.xul.
-              return AppConstants.isPlatformAndVersionAtLeast("win", 6);
             }
-          } else {
-            return false;
+            // This is duplicated logic from /browser/base/jar.mn
+            // for win6BrowserOverlay.xul.
+            return AppConstants.isPlatformAndVersionAtLeast("win", 6);
           }
+          return false;
         }
       }, true);
     }

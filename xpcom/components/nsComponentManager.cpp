@@ -107,36 +107,6 @@ NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
 #define UID_STRING_LENGTH 39
 
-#ifdef MOZ_B2G_LOADER
-typedef nsDataHashtable<nsCStringHashKey, bool> XPTIInfosBookType;
-static XPTIInfosBookType* sXPTIInfosBook = nullptr;
-
-static XPTIInfosBookType*
-GetXPTIInfosBook()
-{
-  if (!sXPTIInfosBook) {
-    sXPTIInfosBook = new XPTIInfosBookType;
-  }
-  return sXPTIInfosBook;
-}
-
-static bool
-IsRegisteredXPTIInfo(FileLocation& aFile)
-{
-  nsAutoCString uri;
-  aFile.GetURIString(uri);
-  return GetXPTIInfosBook()->Get(uri);
-}
-
-static void
-MarkRegisteredXPTIInfo(FileLocation& aFile)
-{
-  nsAutoCString uri;
-  aFile.GetURIString(uri);
-  GetXPTIInfosBook()->Put(uri, true);
-}
-#endif /* MOZ_B2G_LOADER */
-
 nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID,
                                      void** aInstancePtr) const
@@ -682,12 +652,6 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& aCx,
 static void
 DoRegisterXPT(FileLocation& aFile)
 {
-#ifdef MOZ_B2G_LOADER
-  if (IsRegisteredXPTIInfo(aFile)) {
-    return;
-  }
-#endif
-
   uint32_t len;
   FileLocation::Data data;
   UniquePtr<char[]> buf;
@@ -701,9 +665,6 @@ DoRegisterXPT(FileLocation& aFile)
   }
   if (NS_SUCCEEDED(rv)) {
     XPTInterfaceInfoManager::GetSingleton()->RegisterBuffer(buf.get(), len);
-#ifdef MOZ_B2G_LOADER
-    MarkRegisteredXPTIInfo(aFile);
-#endif
   } else {
     nsCString uri;
     aFile.GetURIString(uri);
@@ -911,10 +872,6 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 
   delete sStaticModules;
   delete sModuleLocations;
-#ifdef MOZ_B2G_LOADER
-  delete sXPTIInfosBook;
-  sXPTIInfosBook = nullptr;
-#endif
 
   // Unload libraries
   mNativeModuleLoader.UnloadLibraries();
@@ -2071,52 +2028,6 @@ nsComponentManagerImpl::GetManifestLocations(nsIArray** aLocations)
   locations.forget(aLocations);
   return NS_OK;
 }
-
-#ifdef MOZ_B2G_LOADER
-
-/* static */
-void
-nsComponentManagerImpl::XPTOnlyManifestManifest(
-    XPTOnlyManifestProcessingContext&  aCx, int aLineNo, char* const* aArgv)
-{
-  char* file = aArgv[0];
-  FileLocation f(aCx.mFile, file);
-
-  DoRegisterManifest(NS_APP_LOCATION, f, false, true);
-}
-
-/* static */
-void
-nsComponentManagerImpl::XPTOnlyManifestXPT(
-    XPTOnlyManifestProcessingContext& aCx, int aLineNo, char* const* aArgv)
-{
-  FileLocation f(aCx.mFile, aArgv[0]);
-  DoRegisterXPT(f);
-}
-
-/**
- * To load XPT Interface Information before the component manager is ready.
- *
- * With this function, B2G loader could XPT interface info. as earier
- * as possible to gain benefit of shared memory model of the kernel.
- */
-/* static */ void
-nsComponentManagerImpl::PreloadXPT(nsIFile* aFile)
-{
-  MOZ_ASSERT(!nsComponentManagerImpl::gComponentManager);
-  FileLocation location(aFile, "chrome.manifest");
-
-  DoRegisterManifest(NS_APP_LOCATION, location,
-                     false, true /* aXPTOnly */);
-}
-
-void
-PreloadXPT(nsIFile* aOmnijarFile)
-{
-  nsComponentManagerImpl::PreloadXPT(aOmnijarFile);
-}
-
-#endif /* MOZ_B2G_LOADER */
 
 EXPORT_XPCOM_API(nsresult)
 XRE_AddManifestLocation(NSLocationType aType, nsIFile* aLocation)

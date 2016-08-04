@@ -59,6 +59,7 @@ const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants")
 /* eslint-disable mozilla/reject-some-requires */
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 /* eslint-enable mozilla/reject-some-requires */
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
 loader.lazyGetter(this, "AutocompletePopup", () => {
@@ -2927,7 +2928,8 @@ function TextEditor(container, node, templateId) {
           });
         });
       });
-    }
+    },
+    cssProperties: getCssProperties(this.markup._inspector.toolbox)
   });
 
   this.update();
@@ -2981,6 +2983,7 @@ function ElementEditor(container, node) {
   this.markup = this.container.markup;
   this.template = this.markup.template.bind(this.markup);
   this.doc = this.markup.doc;
+  this._cssProperties = getCssProperties(this.markup._inspector.toolbox);
 
   this.attrElements = new Map();
   this.animationTimers = {};
@@ -3006,6 +3009,7 @@ function ElementEditor(container, node) {
       trigger: "dblclick",
       stopOnReturn: true,
       done: this.onTagEdit.bind(this),
+      cssProperties: this._cssProperties
     });
   }
 
@@ -3029,7 +3033,8 @@ function ElementEditor(container, node) {
       }, function () {
         undoMods.apply();
       });
-    }
+    },
+    cssProperties: this._cssProperties
   });
 
   let displayName = this.node.displayName;
@@ -3267,7 +3272,8 @@ ElementEditor.prototype = {
         }, () => {
           undoMods.apply();
         });
-      }
+      },
+      cssProperties: this._cssProperties
     });
 
     // Figure out where we should place the attribute.

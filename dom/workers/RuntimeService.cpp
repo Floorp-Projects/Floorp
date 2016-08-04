@@ -59,10 +59,6 @@
 #include "OSFileConstants.h"
 #include "xpcpublic.h"
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 #include "Principal.h"
 #include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
@@ -2493,13 +2489,6 @@ NS_IMETHODIMP
 WorkerThreadPrimaryRunnable::Run()
 {
   using mozilla::ipc::BackgroundChild;
-
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    NuwaMarkCurrentThread(nullptr, nullptr);
-    NuwaFreezeCurrentThread();
-  }
-#endif
 
   char stackBaseGuess;
 

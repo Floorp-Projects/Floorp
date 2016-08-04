@@ -16,7 +16,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
-import org.mozilla.gecko.util.Experiments;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.IOUtils;
 
 import java.io.BufferedInputStream;

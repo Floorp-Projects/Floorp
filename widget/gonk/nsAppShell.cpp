@@ -63,10 +63,6 @@
 #include "libui/InputReader.h"
 #include "libui/InputDispatcher.h"
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 #include "mozilla/Preferences.h"
 #include "GeckoProfiler.h"
 
@@ -908,11 +904,6 @@ nsAppShell::Init()
         obsServ->AddObserver(this, "browser-ui-startup-complete", false);
         obsServ->AddObserver(this, "network-connection-state-changed", false);
     }
-
-#ifdef MOZ_NUWA_PROCESS
-    // Make sure main thread was woken up after Nuwa fork.
-    NuwaAddConstructor((void (*)(void *))&NotifyEvent, nullptr);
-#endif
 
     // Delay initializing input devices until the screen has been
     // initialized (and we know the resolution).

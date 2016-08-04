@@ -24,12 +24,6 @@
 #include "prenv.h"
 #include "prmem.h"
 
-#ifdef MOZ_B2G_LOADER
-#include "ProcessUtils.h"
-
-using namespace mozilla::ipc;
-#endif	// MOZ_B2G_LOADER
-
 #ifdef MOZ_WIDGET_GONK
 /*
  * AID_APP is the first application UID used by Android. We're using
@@ -160,71 +154,12 @@ bool LaunchApp(const std::vector<std::string>& argv,
                    wait, process_handle);
 }
 
-#ifdef MOZ_B2G_LOADER
-/**
- * Launch an app using B2g Loader.
- */
-static bool
-LaunchAppProcLoader(const std::vector<std::string>& argv,
-                    const file_handle_mapping_vector& fds_to_remap,
-                    const environment_map& env_vars_to_set,
-                    ChildPrivileges privs,
-                    ProcessHandle* process_handle) {
-  size_t i;
-  mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
-  for (i = 0; i < argv.size(); i++) {
-    argv_cstr[i] = const_cast<char*>(argv[i].c_str());
-  }
-  argv_cstr[argv.size()] = nullptr;
-
-  mozilla::UniquePtr<char*[]> env_cstr(new char*[env_vars_to_set.size() + 1]);
-  i = 0;
-  for (environment_map::const_iterator it = env_vars_to_set.begin();
-       it != env_vars_to_set.end(); ++it) {
-    env_cstr[i++] = strdup((it->first + "=" + it->second).c_str());
-  }
-  env_cstr[env_vars_to_set.size()] = nullptr;
-
-  bool ok = ProcLoaderLoad((const char **)argv_cstr.get(),
-                           (const char **)env_cstr.get(),
-                           fds_to_remap, privs,
-                           process_handle);
-  MOZ_ASSERT(ok, "ProcLoaderLoad() failed");
-
-  for (size_t i = 0; i < env_vars_to_set.size(); i++) {
-    free(env_cstr[i]);
-  }
-
-  return ok;
-}
-
-static bool
-IsLaunchingNuwa(const std::vector<std::string>& argv) {
-  std::vector<std::string>::const_iterator it;
-  for (it = argv.begin(); it != argv.end(); ++it) {
-    if (*it == std::string("-nuwa")) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif // MOZ_B2G_LOADER
-
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                const environment_map& env_vars_to_set,
                ChildPrivileges privs,
                bool wait, ProcessHandle* process_handle,
                ProcessArchitecture arch) {
-#ifdef MOZ_B2G_LOADER
-  static bool beforeFirstNuwaLaunch = true;
-  if (!wait && beforeFirstNuwaLaunch && IsLaunchingNuwa(argv)) {
-    beforeFirstNuwaLaunch = false;
-    return LaunchAppProcLoader(argv, fds_to_remap, env_vars_to_set,
-                               privs, process_handle);
-  }
-#endif // MOZ_B2G_LOADER
-
   mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
   // Illegal to allocate memory after fork and before execvp
   InjectiveMultimap fd_shuffle1, fd_shuffle2;

@@ -97,10 +97,8 @@ var snapshotFormatters = {
       $("crashes-noConfig").classList.remove("no-copy");
       return;
     }
-    else {
-      $("crashes-allReports").style.display = "block";
-      $("crashes-allReports").classList.remove("no-copy");
-    }
+    $("crashes-allReports").style.display = "block";
+    $("crashes-allReports").classList.remove("no-copy");
 
     if (data.pending > 0) {
       $("crashes-allReportsWithPending").textContent =

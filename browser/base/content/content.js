@@ -843,10 +843,10 @@ addMessageListener("ContextMenu:SearchFieldBookmarkData", (message) => {
   let formData = [];
 
   function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded) {
-    if (aIsFormUrlEncoded)
+    if (aIsFormUrlEncoded) {
       return escape(aName + "=" + aValue);
-    else
-      return escape(aName) + "=" + escape(aValue);
+    }
+    return escape(aName) + "=" + escape(aValue);
   }
 
   for (let el of node.form.elements) {

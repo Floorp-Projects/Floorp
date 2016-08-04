@@ -127,6 +127,27 @@ task_description_schema = Schema({
         # the maximum time to run, in seconds
         'max-run-time': int,
     }, {
+        'implementation': 'generic-worker',
+
+        # command is a list of commands to run, sequentially
+        'command': [basestring],
+
+        # artifacts to extract from the task image after completion; note that artifacts
+        # for the generic worker cannot have names
+        'artifacts': [{
+            # type of artifact -- simple file, or recursive directory
+            'type': Any('file', 'directory'),
+
+            # task image path from which to read artifact
+            'path': basestring,
+        }],
+
+        # environment variables
+        'env': {basestring: taskref_or_string},
+
+        # the maximum time to run, in seconds
+        'max-run-time': int,
+    }, {
         'implementation': 'buildbot-bridge',
 
         # see https://github.com/mozilla/buildbot-bridge/blob/master/bbb/schemas/payload.yml
@@ -239,6 +260,27 @@ def build_docker_worker_payload(config, task, task_def):
         payload['features'] = features
     if capabilities:
         payload['capabilities'] = capabilities
+
+
+@payload_builder('generic-worker')
+def build_generic_worker_payload(config, task, task_def):
+    worker = task['worker']
+
+    artifacts = []
+
+    for artifact in worker['artifacts']:
+        artifacts.append({
+            'path': artifact['path'],
+            'type': artifact['type'],
+            'expires': task_def['expires'],  # always expire with the task
+        })
+
+    task_def['payload'] = {
+        'command': worker['command'],
+        'artifacts': artifacts,
+        'env': worker['env'],
+        'maxRunTime': worker['max-run-time'],
+    }
 
 
 transforms = TransformSequence()

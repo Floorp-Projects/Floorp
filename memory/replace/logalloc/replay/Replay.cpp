@@ -307,18 +307,6 @@ pthread_atfork(void (*aPrepare)(void), void (*aParent)(void),
 }
 #endif
 
-#ifdef MOZ_NUWA_PROCESS
-#include <pthread.h>
-
-/* NUWA builds have jemalloc built with
- * -Dpthread_mutex_lock=__real_pthread_mutex_lock */
-int
-__real_pthread_mutex_lock(pthread_mutex_t* aMutex)
-{
-  return pthread_mutex_lock(aMutex);
-}
-#endif
-
 MOZ_END_EXTERN_C
 
 size_t parseNumber(Buffer aBuf)

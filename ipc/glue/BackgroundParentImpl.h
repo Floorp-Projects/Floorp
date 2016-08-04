@@ -101,15 +101,6 @@ protected:
   virtual bool
   DeallocPBroadcastChannelParent(PBroadcastChannelParent* aActor) override;
 
-  virtual PNuwaParent*
-  AllocPNuwaParent() override;
-
-  virtual bool
-  RecvPNuwaConstructor(PNuwaParent* aActor) override;
-
-  virtual bool
-  DeallocPNuwaParent(PNuwaParent* aActor) override;
-
   virtual PSendStreamParent*
   AllocPSendStreamParent() override;
 

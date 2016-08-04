@@ -70,9 +70,7 @@ function fmt(aStr, aMaxLen, aMinLen, aOptions) {
       let end = aStr.substring((aStr.length - (aMaxLen / 2)) + 1);
       return start + "_" + end;
     }
-    else {
-      return aStr.substring(0, aMaxLen - 1) + "_";
-    }
+    return aStr.substring(0, aMaxLen - 1) + "_";
   }
   if (aStr.length < aMinLen) {
     let padding = Array(aMinLen - aStr.length + 1).join(" ");

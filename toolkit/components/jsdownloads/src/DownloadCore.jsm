@@ -1006,10 +1006,9 @@ this.Download.prototype = {
       // cancellation to be completed before resolving the promise it returns.
       this.cancel();
       return this.removePartialData();
-    } else {
-      // Just cancel the download, in case it is currently in progress.
-      return this.cancel();
     }
+    // Just cancel the download, in case it is currently in progress.
+    return this.cancel();
   },
 
   /**

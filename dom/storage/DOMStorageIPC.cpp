@@ -615,16 +615,9 @@ DOMStorageDBParent::Observe(const char* aTopic,
                             const nsACString& aOriginScope)
 {
   if (mIPCOpen) {
-#ifdef MOZ_NUWA_PROCESS
-    if (!(static_cast<ContentParent*>(Manager())->IsNuwaProcess() &&
-          ContentParent::IsNuwaReady())) {
-#endif
       mozilla::Unused << SendObserve(nsDependentCString(aTopic),
                                      nsString(aOriginAttributesPattern),
                                      nsCString(aOriginScope));
-#ifdef MOZ_NUWA_PROCESS
-    }
-#endif
   }
 
   return NS_OK;

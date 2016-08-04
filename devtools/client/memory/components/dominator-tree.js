@@ -45,7 +45,7 @@ const DominatorTreeSubtreeFetching = createFactory(createClass({
       dom.span({ className: "heap-tree-item-field heap-tree-item-bytes" }),
       dom.span({
         className: "heap-tree-item-field heap-tree-item-name devtools-throbber",
-        style: { marginLeft: depth * TREE_ROW_HEIGHT }
+        style: { marginInlineStart: depth * TREE_ROW_HEIGHT }
       })
     );
   }
@@ -87,7 +87,7 @@ const DominatorTreeSiblingLink = createFactory(createClass({
       dom.span(
         {
           className: "heap-tree-item-field heap-tree-item-name",
-          style: { marginLeft: depth * TREE_ROW_HEIGHT }
+          style: { marginInlineStart: depth * TREE_ROW_HEIGHT }
         },
         dom.a(
           {

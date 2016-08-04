@@ -96,20 +96,18 @@ var security = {
       }
 
       return retval;
-    } else {
-      return {
-        hostName : hostName,
-        cAName : "",
-        encryptionAlgorithm : "",
-        encryptionStrength : 0,
-        version: "",
-        isBroken : isBroken,
-        isMixed : isMixed,
-        isEV : isEV,
-        cert : null
-
-      };
     }
+    return {
+      hostName : hostName,
+      cAName : "",
+      encryptionAlgorithm : "",
+      encryptionStrength : 0,
+      version: "",
+      isBroken : isBroken,
+      isMixed : isMixed,
+      isEV : isEV,
+      cert : null
+    };
   },
 
   // Find the secureBrowserUI object (if present)
@@ -178,9 +176,7 @@ function securityOnLoad(uri, windowInfo) {
     document.getElementById("securityTab").hidden = true;
     return;
   }
-  else {
-    document.getElementById("securityTab").hidden = false;
-  }
+  document.getElementById("securityTab").hidden = false;
 
   const pageInfoBundle = document.getElementById("pageinfobundle");
 

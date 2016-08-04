@@ -994,10 +994,9 @@ function shouldUseService() {
 
         if (0 !== GetVersionEx(winVer.address())) {
           return winVer.wServicePackMajor >= 3;
-        } else {
-          Cu.reportError("Unknown failure in GetVersionEX (returned 0)");
-          return false;
         }
+        Cu.reportError("Unknown failure in GetVersionEX (returned 0)");
+        return false;
       } catch (e) {
         Cu.reportError("Error getting service pack information. Exception: " + e);
         return false;

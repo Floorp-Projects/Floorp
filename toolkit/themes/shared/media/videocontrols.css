@@ -159,11 +159,20 @@
 .durationLabel {
   margin-left: -22px; /* 1/2 of scrubber thumb width, for overhang. */
   padding-left: 8px; /* don't bump into the scrubber bar */
-  padding-top: 0; /* center vertically with scrubber bar */
   color: rgba(255,255,255,.75);
+  font: message-box;
   font-size: 11px;
-  font-family: Arial, sans-serif;
 }
+
+%ifdef XP_MACOSX
+.durationLabel {
+  padding-top: 2px; /* center vertically with scrubber bar */
+}
+%else
+.durationLabel {
+  padding-top: 0; /* center vertically with scrubber bar */
+}
+%endif
 
 .positionLabel {
   display: none;
@@ -221,7 +230,6 @@
   margin-top: -10px;
   margin-bottom: 10px;
 }
-
 /* .scale-thumb is an element inside the <scale> implementation. */
 .scrubber .scale-thumb,
 .volumeControl .scale-thumb {
@@ -244,11 +252,21 @@
 
 .timeLabel {
   color: rgba(255,255,255,.75);
+  font: message-box;
   font-size: 10px;
-  font-family: Arial, sans-serif;
   text-shadow: rgba(0,0,0,.3) 0 1px;
-  padding-top: 5px;
+  padding-top: 7px;
 }
+
+%ifdef XP_MACOSX
+.timeLabel {
+  padding-top: 7px; /* center vertically with scrubber bar */
+}
+%else
+.timeLabel {
+  padding-top: 5px; /* center vertically with scrubber bar */
+}
+%endif
 
 .statusOverlay {
   -moz-box-align: center;
@@ -366,4 +384,55 @@ html|table {
     1px 1px 0 #000;
   padding: 0 10px;
   text-align: center;
+}
+
+@media (min-resolution: 2dppx) {
+  .playButton {
+    background-image: url(chrome://global/skin/media/pauseButton@2x.png);
+    background-size: 28px 28px;
+  }
+  .playButton[paused] {
+    background-image: url(chrome://global/skin/media/playButton@2x.png);
+    background-size: 28px 28px;
+  }
+  .volumeBackground {
+    background-image: url(chrome://global/skin/media/volume-empty@2x.png);
+    background-size: 32px 16px;
+  }
+  .volumeForeground {
+    background-image: url(chrome://global/skin/media/volume-full@2x.png);
+    background-size: 32px 16px;
+  }
+  .muteButton {
+    background-image: url(chrome://global/skin/media/muteButton@2x.png);
+    background-size: 33px 28px;
+  }
+  .muteButton[muted] {
+    background-image: url(chrome://global/skin/media/unmuteButton@2x.png);
+    background-size: 33px 28px;
+  }
+  .muteButton[noAudio] {
+    background-image: url(chrome://global/skin/media/noAudio@2x.png);
+    background-size: 33px 28px;
+  }
+  .closeCaptionButton {
+    background-image: url(chrome://global/skin/media/closeCaptionButton@2x.png);
+    background-size: 28px 28px;
+  }
+  .fullscreenButton {
+    background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton@2x.png"), 0, 32, 32, 0);
+    background-size: 16px 16px;
+  }
+  .fullscreenButton[fullscreened] {
+    background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton@2x.png"), 0, 64, 32, 32);
+    background-size: 16px 16px;
+  }
+  .timeThumb {
+    background-image: url(chrome://global/skin/media/scrubberThumb@2x.png);
+    background-size: 33px 28px;
+  }
+  .timeThumb[showhours="true"] {
+    background-image: url(chrome://global/skin/media/scrubberThumbWide@2x.png);
+    background-size: 45px 28px;
+  }
 }

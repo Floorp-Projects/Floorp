@@ -38,11 +38,13 @@ add_task(function* test_simple() {
         browser.test.fail(`${cx}.${fetch.name} fail listener`);
       }
 
+      /* eslint-disable no-else-return */
       if (shouldFail) {
         return fetch("http://example.org/example.txt").then(failListener, passListener);
       } else {
         return fetch("http://example.com/example.txt").then(passListener, failListener);
       }
+      /* eslint-enable no-else-return */
     }
 
     return run(true, xhr(XMLHttpRequest))

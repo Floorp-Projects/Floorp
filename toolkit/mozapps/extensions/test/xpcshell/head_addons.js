@@ -346,10 +346,8 @@ let getIDForManifest = Task.async(function*(manifestURI) {
                              true);
     return rdfID.QueryInterface(AM_Ci.nsIRDFLiteral).Value;
   }
-  else {
-    let manifest = JSON.parse(data);
-    return manifest.applications.gecko.id;
-  }
+  let manifest = JSON.parse(data);
+  return manifest.applications.gecko.id;
 });
 
 let gUseRealCertChecks = false;
@@ -548,9 +546,7 @@ function do_get_addon_root_uri(aProfileDir, aId) {
     path.leafName += ".xpi";
     return "jar:" + Services.io.newFileURI(path).spec + "!/";
   }
-  else {
-    return Services.io.newFileURI(path).spec;
-  }
+  return Services.io.newFileURI(path).spec;
 }
 
 function do_get_expected_addon_name(aId) {
@@ -1144,22 +1140,20 @@ function writeWebManifestForExtension(aData, aDir, aId = undefined) {
 
     return dir;
   }
-  else {
-    let file = aDir.clone();
-    file.append(aId + ".xpi");
+  let file = aDir.clone();
+  file.append(aId + ".xpi");
 
-    let stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
-                 createInstance(AM_Ci.nsIStringInputStream);
-    stream.setData(JSON.stringify(aData), -1);
-    let zipW = AM_Cc["@mozilla.org/zipwriter;1"].
-               createInstance(AM_Ci.nsIZipWriter);
-    zipW.open(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
-    zipW.addEntryStream("manifest.json", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
-                        stream, false);
-    zipW.close();
+  let stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
+               createInstance(AM_Ci.nsIStringInputStream);
+  stream.setData(JSON.stringify(aData), -1);
+  let zipW = AM_Cc["@mozilla.org/zipwriter;1"].
+             createInstance(AM_Ci.nsIZipWriter);
+  zipW.open(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
+  zipW.addEntryStream("manifest.json", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
+                      stream, false);
+  zipW.close();
 
-    return file;
-  }
+  return file;
 }
 
 /**
@@ -1339,12 +1333,10 @@ function manuallyInstall(aXPIFile, aInstallLocation, aID) {
 
     return dir;
   }
-  else {
-    let target = aInstallLocation.clone();
-    target.append(aID + ".xpi");
-    aXPIFile.copyTo(target.parent, target.leafName);
-    return target;
-  }
+  let target = aInstallLocation.clone();
+  target.append(aID + ".xpi");
+  aXPIFile.copyTo(target.parent, target.leafName);
+  return target;
 }
 
 /**

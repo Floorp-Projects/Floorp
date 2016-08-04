@@ -531,11 +531,11 @@ DocumentManager = {
     let readyState = contentWindow.document.readyState;
     if (readyState == "complete") {
       return "document_idle";
-    } else if (readyState == "interactive") {
-      return "document_end";
-    } else {
-      return "document_start";
     }
+    if (readyState == "interactive") {
+      return "document_end";
+    }
+    return "document_start";
   },
 
   observe: function(subject, topic, data) {

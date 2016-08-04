@@ -508,18 +508,6 @@ XRE_API(void,
 XRE_API(void,
         XRE_StopLateWriteChecks, (void))
 
-#ifdef MOZ_B2G_LOADER
-XRE_API(int,
-        XRE_ProcLoaderServiceRun, (pid_t, int, int argc, const char* argv[],
-                                   mozilla::Vector<int>& aReservedFds));
-XRE_API(void,
-        XRE_ProcLoaderClientInit, (pid_t, int,
-                                   mozilla::Vector<int>& aReservedFds));
-XRE_API(void,
-        XRE_ProcLoaderPreload, (const char* aProgramDir,
-                                const nsXREAppData* aAppData));
-#endif // MOZ_B2G_LOADER
-
 XRE_API(void,
         XRE_EnableSameExecutableForContentProc, ())
 

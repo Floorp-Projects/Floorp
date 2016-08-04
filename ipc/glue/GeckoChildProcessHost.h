@@ -212,28 +212,6 @@ private:
   static bool sRunSelfAsContentProc;
 };
 
-#ifdef MOZ_NUWA_PROCESS
-class GeckoExistingProcessHost final : public GeckoChildProcessHost
-{
-public:
-  GeckoExistingProcessHost(GeckoProcessType aProcessType,
-                           base::ProcessHandle aProcess,
-                           const FileDescriptor& aFileDescriptor,
-                           ChildPrivileges aPrivileges=base::PRIVILEGES_DEFAULT);
-
-  ~GeckoExistingProcessHost();
-
-  virtual bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
-          base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture()) override;
-
-  virtual void InitializeChannel() override;
-
-private:
-  base::ProcessHandle mExistingProcessHandle;
-  mozilla::ipc::FileDescriptor mExistingFileDescriptor;
-};
-#endif /* MOZ_NUWA_PROCESS */
-
 } /* namespace ipc */
 } /* namespace mozilla */
 

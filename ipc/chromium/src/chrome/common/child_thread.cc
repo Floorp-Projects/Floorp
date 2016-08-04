@@ -23,17 +23,8 @@ ChildThread::ChildThread(Thread::Options options)
 ChildThread::~ChildThread() {
 }
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 bool ChildThread::Run() {
   bool r = StartWithOptions(options_);
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-      message_loop()->PostTask(NewRunnableFunction(&ChildThread::MarkThread));
-  }
-#endif
   return r;
 }
 
@@ -41,15 +32,6 @@ void ChildThread::OnChannelError() {
   RefPtr<mozilla::Runnable> task = new MessageLoop::QuitTask();
   owner_loop_->PostTask(task.forget());
 }
-
-#ifdef MOZ_NUWA_PROCESS
-void ChildThread::MarkThread() {
-    NuwaMarkCurrentThread(nullptr, nullptr);
-    if (!NuwaCheckpointCurrentThread()) {
-        NS_RUNTIMEABORT("Should not be here!");
-    }
-}
-#endif
 
 void ChildThread::OnMessageReceived(IPC::Message&& msg) {
 }

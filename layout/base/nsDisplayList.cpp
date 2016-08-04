@@ -109,7 +109,7 @@ SpammyLayoutWarningsEnabled()
 #endif
 
 void*
-AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder)
+AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder) CPP_THROW_NEW
 {
   return aBuilder->Allocate(aSize);
 }

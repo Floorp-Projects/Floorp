@@ -16,24 +16,15 @@ extern LazyLogModule gMediaDecoderLog;
 extern LazyLogModule gMediaSampleLog;
 
 // avoid redefined macro in unified build
-#undef LOG
+#undef FMT
 #undef DECODER_LOG
-#undef VERBOSE_LOG
+#undef SAMPLE_LOG
+#undef DECODER_WARN
 
-#define LOG(m, l, x, ...) \
-  MOZ_LOG(m, l, ("[AccurateSeekTask] Decoder=%p " x, mDecoderID, ##__VA_ARGS__))
-#define DECODER_LOG(x, ...) \
-  LOG(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
-#define VERBOSE_LOG(x, ...) \
-  LOG(gMediaDecoderLog, LogLevel::Verbose, x, ##__VA_ARGS__)
-#define SAMPLE_LOG(x, ...) \
-  LOG(gMediaSampleLog, LogLevel::Debug, x, ##__VA_ARGS__)
-
-// Somehow MSVC doesn't correctly delete the comma before ##__VA_ARGS__
-// when __VA_ARGS__ expands to nothing. This is a workaround for it.
-#define DECODER_WARN_HELPER(a, b) NS_WARNING b
-#define DECODER_WARN(x, ...) \
-  DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoderID, ##__VA_ARGS__).get()))
+#define FMT(x, ...) "[AccurateSeekTask] Decoder=%p " x, mDecoderID, ##__VA_ARGS__
+#define DECODER_LOG(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(__VA_ARGS__)))
+#define SAMPLE_LOG(...)  MOZ_LOG(gMediaSampleLog,  LogLevel::Debug,   (FMT(__VA_ARGS__)))
+#define DECODER_WARN(...) NS_WARNING(nsPrintfCString(FMT(__VA_ARGS__)).get())
 
 AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
                                    AbstractThread* aThread,
