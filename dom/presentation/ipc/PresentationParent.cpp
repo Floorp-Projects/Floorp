@@ -280,12 +280,15 @@ PresentationParent::NotifySessionConnect(uint64_t aWindowId,
 
 bool
 PresentationParent::RecvNotifyReceiverReady(const nsString& aSessionId,
-                                            const uint64_t& aWindowId)
+                                            const uint64_t& aWindowId,
+                                            const bool& aIsLoading)
 {
   MOZ_ASSERT(mService);
 
   RegisterTransportBuilder(aSessionId, nsIPresentationService::ROLE_RECEIVER);
-  NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId, aWindowId)));
+  NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId,
+                                                     aWindowId,
+                                                     aIsLoading)));
   return true;
 }
 

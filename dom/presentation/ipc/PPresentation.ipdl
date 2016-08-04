@@ -95,7 +95,7 @@ parent:
 
   async PPresentationRequest(PresentationIPCRequest aRequest);
 
-  async NotifyReceiverReady(nsString aSessionId, uint64_t aWindowId);
+  async NotifyReceiverReady(nsString aSessionId, uint64_t aWindowId, bool aIsLoading);
   async NotifyTransportClosed(nsString aSessionId, uint8_t aRole, nsresult aReason);
 };
 
