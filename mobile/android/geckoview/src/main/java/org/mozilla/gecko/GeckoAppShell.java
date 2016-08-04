@@ -1063,12 +1063,6 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    public static void alertsProgressListener_OnProgress(String aAlertName, long aProgress, long aProgressMax, String aAlertText) {
-        int notificationID = aAlertName.hashCode();
-        notificationClient.update(notificationID, aProgress, aProgressMax, aAlertText);
-    }
-
-    @WrapForJNI
     public static void closeNotification(String aAlertName) {
         String alertCookie = ALERT_COOKIES.get(aAlertName);
         if (alertCookie != null) {
