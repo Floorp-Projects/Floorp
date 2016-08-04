@@ -79,7 +79,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   // Xrender support on Linux, as ContentHostDoubleBuffered is not
   // suited for direct uploads to the server.
   if (!gfxPlatformGtk::GetPlatform()->UseImageOffscreenSurfaces() ||
-      !gfxPlatformGtk::GetPlatform()->UseXRender())
+      !gfxVars::UseXRender())
 #endif
   {
     useDoubleBuffering = (LayerManagerComposite::SupportsDirectTexturing() &&

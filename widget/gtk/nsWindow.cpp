@@ -7046,7 +7046,7 @@ nsWindow::CreateWindowSurface()
   // 3. XPutImage
 
 #ifdef MOZ_WIDGET_GTK
-  if (gfxPlatformGtk::GetPlatform()->UseXRender()) {
+  if (gfxVars::UseXRender()) {
     LOGDRAW(("Drawing to nsWindow %p using XRender\n", (void*)this));
     return MakeUnique<WindowSurfaceXRender>(mXDisplay, mXWindow, mXVisual, mXDepth);
   }
