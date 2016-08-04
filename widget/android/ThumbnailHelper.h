@@ -28,9 +28,36 @@ namespace mozilla {
 
 class ThumbnailHelper final
     : public java::ThumbnailHelper::Natives<ThumbnailHelper>
-    , public jni::UsesNativeCallProxy
+    , public java::ZoomedView::Natives<ThumbnailHelper>
+    , public UsesGeckoThreadProxy
 {
     ThumbnailHelper() = delete;
+
+    static already_AddRefed<mozIDOMWindowProxy>
+    GetWindowForTab(int32_t aTabId)
+    {
+        nsAppShell* const appShell = nsAppShell::Get();
+        if (!appShell) {
+            return nullptr;
+        }
+
+        nsCOMPtr<nsIAndroidBrowserApp> browserApp = appShell->GetBrowserApp();
+        if (!browserApp) {
+            return nullptr;
+        }
+
+        nsCOMPtr<mozIDOMWindowProxy> window;
+        nsCOMPtr<nsIBrowserTab> tab;
+
+        if (NS_FAILED(browserApp->GetBrowserTab(aTabId, getter_AddRefs(tab))) ||
+                !tab ||
+                NS_FAILED(tab->GetWindow(getter_AddRefs(window))) ||
+                !window) {
+            return nullptr;
+        }
+
+        return window.forget();
+    }
 
     // Decides if we should store thumbnails for a given docshell based on the
     // presence of a Cache-Control: no-store header and the
@@ -96,34 +123,12 @@ class ThumbnailHelper final
 
     // Return a non-null nsIDocShell to indicate success.
     static already_AddRefed<nsIDocShell>
-    GetThumbnailAndDocShell(mozIDOMWindowProxy* window,
+    GetThumbnailAndDocShell(mozIDOMWindowProxy* aWindow,
                             jni::ByteBuffer::Param aData,
-                            int32_t aThumbWidth, int32_t aThumbHeight)
+                            int32_t aThumbWidth, int32_t aThumbHeight,
+                            const CSSRect& aPageRect, float aZoomFactor)
     {
-        // take a screenshot, as wide as possible, proportional to the destination size
-        nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-        nsCOMPtr<nsIDOMClientRect> rect;
-        float pageLeft = 0.0f, pageTop = 0.0f, pageWidth = 0.0f, pageHeight = 0.0f;
-
-        if (!utils ||
-                NS_FAILED(utils->GetRootBounds(getter_AddRefs(rect))) ||
-                !rect ||
-                NS_FAILED(rect->GetLeft(&pageLeft)) ||
-                NS_FAILED(rect->GetTop(&pageTop)) ||
-                NS_FAILED(rect->GetWidth(&pageWidth)) ||
-                NS_FAILED(rect->GetHeight(&pageHeight)) ||
-                int32_t(pageWidth) == 0 || int32_t(pageHeight) == 0) {
-            return nullptr;
-        }
-
-        const float aspectRatio = float(aThumbWidth) / float(aThumbHeight);
-        if (pageWidth / aspectRatio < pageHeight) {
-            pageHeight = pageWidth / aspectRatio;
-        } else {
-            pageWidth = pageHeight * aspectRatio;
-        }
-
-        nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(window);
+        nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(aWindow);
         nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
         RefPtr<nsPresContext> presContext;
 
@@ -161,17 +166,15 @@ class ThumbnailHelper final
         RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
         MOZ_ASSERT(context); // checked the draw target above
 
-        const float scale = 1.0f;
-
         context->SetMatrix(context->CurrentMatrix().Scale(
-                scale * float(aThumbWidth) / pageWidth,
-                scale * float(aThumbHeight) / pageHeight));
+                aZoomFactor * float(aThumbWidth) / aPageRect.width,
+                aZoomFactor * float(aThumbHeight) / aPageRect.height));
 
         const nsRect drawRect(
-                nsPresContext::CSSPixelsToAppUnits(pageLeft / scale),
-                nsPresContext::CSSPixelsToAppUnits(pageTop / scale),
-                nsPresContext::CSSPixelsToAppUnits(pageWidth / scale),
-                nsPresContext::CSSPixelsToAppUnits(pageHeight / scale));
+                nsPresContext::CSSPixelsToAppUnits(aPageRect.x),
+                nsPresContext::CSSPixelsToAppUnits(aPageRect.y),
+                nsPresContext::CSSPixelsToAppUnits(aPageRect.width),
+                nsPresContext::CSSPixelsToAppUnits(aPageRect.height));
         const uint32_t renderDocFlags =
                 nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
                 nsIPresShell::RENDER_DOCUMENT_RELATIVE;
@@ -190,9 +193,20 @@ class ThumbnailHelper final
     }
 
 public:
+    static void Init()
+    {
+        java::ThumbnailHelper::Natives<ThumbnailHelper>::Init();
+        java::ZoomedView::Natives<ThumbnailHelper>::Init();
+    }
+
     template<class Functor>
     static void OnNativeCall(Functor&& aCall)
     {
+        if (!aCall.IsTarget(&RequestThumbnail)) {
+            UsesGeckoThreadProxy::OnNativeCall(Move(aCall));
+            return;
+        }
+
         class IdleEvent : public nsAppShell::LambdaEvent<Functor>
         {
             using Base = nsAppShell::LambdaEvent<Functor>;
@@ -217,34 +231,80 @@ public:
     RequestThumbnail(jni::ByteBuffer::Param aData, int32_t aTabId,
                      int32_t aWidth, int32_t aHeight)
     {
-        nsAppShell* const appShell = nsAppShell::Get();
-        if (!appShell || !aData) {
-            return;
-        }
-
-        nsCOMPtr<nsIAndroidBrowserApp> browserApp = appShell->GetBrowserApp();
-        if (!browserApp) {
-            return;
-        }
-
-        nsCOMPtr<mozIDOMWindowProxy> window;
-        nsCOMPtr<nsIBrowserTab> tab;
-
-        if (NS_FAILED(browserApp->GetBrowserTab(aTabId, getter_AddRefs(tab))) ||
-                !tab ||
-                NS_FAILED(tab->GetWindow(getter_AddRefs(window))) ||
-                !window) {
+        nsCOMPtr<mozIDOMWindowProxy> window = GetWindowForTab(aTabId);
+        if (!window || !aData) {
             java::ThumbnailHelper::SendThumbnail(
                     aData, aTabId, /* success */ false, /* store */ false);
             return;
         }
 
+        // take a screenshot, as wide as possible, proportional to the destination size
+        nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
+        nsCOMPtr<nsIDOMClientRect> rect;
+        float pageLeft = 0.0f, pageTop = 0.0f, pageWidth = 0.0f, pageHeight = 0.0f;
+
+        if (!utils ||
+                NS_FAILED(utils->GetRootBounds(getter_AddRefs(rect))) ||
+                !rect ||
+                NS_FAILED(rect->GetLeft(&pageLeft)) ||
+                NS_FAILED(rect->GetTop(&pageTop)) ||
+                NS_FAILED(rect->GetWidth(&pageWidth)) ||
+                NS_FAILED(rect->GetHeight(&pageHeight)) ||
+                int32_t(pageWidth) == 0 || int32_t(pageHeight) == 0) {
+            java::ThumbnailHelper::SendThumbnail(
+                    aData, aTabId, /* success */ false, /* store */ false);
+            return;
+        }
+
+        const float aspectRatio = float(aWidth) / float(aHeight);
+        if (pageWidth / aspectRatio < pageHeight) {
+            pageHeight = pageWidth / aspectRatio;
+        } else {
+            pageWidth = pageHeight * aspectRatio;
+        }
+
         nsCOMPtr<nsIDocShell> docShell = GetThumbnailAndDocShell(
-                window, aData, aWidth, aHeight);
+                window, aData, aWidth, aHeight,
+                CSSRect(pageLeft, pageTop, pageWidth, pageHeight),
+                /* aZoomFactor */ 1.0f);
         const bool success = !!docShell;
         const bool store = success ? ShouldStoreThumbnail(docShell) : false;
 
         java::ThumbnailHelper::SendThumbnail(aData, aTabId, success, store);
+    }
+
+    static void
+    RequestZoomedViewData(jni::ByteBuffer::Param aData, int32_t aTabId,
+                          int32_t aX, int32_t aY,
+                          int32_t aWidth, int32_t aHeight, float aScale)
+    {
+        nsCOMPtr<mozIDOMWindowProxy> window = GetWindowForTab(aTabId);
+        if (!window || !aData) {
+            return;
+        }
+
+        nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(window);
+        nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
+        RefPtr<nsPresContext> presContext;
+
+        if (!docShell || NS_FAILED(docShell->GetPresContext(
+                getter_AddRefs(presContext))) || !presContext) {
+            return;
+        }
+
+        nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+        LayoutDeviceRect rect = LayoutDeviceRect(aX, aY, aWidth, aHeight);
+        const float resolution = presShell->GetCumulativeResolution();
+        rect.Scale(1.0f / LayoutDeviceToLayerScale(resolution).scale);
+
+        docShell = GetThumbnailAndDocShell(
+                window, aData, aWidth, aHeight, CSSRect::FromAppUnits(
+                rect.ToAppUnits(rect, presContext->AppUnitsPerDevPixel())),
+                aScale);
+
+        if (docShell) {
+            java::LayerView::UpdateZoomedView(aData);
+        }
     }
 };
 
