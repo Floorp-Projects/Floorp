@@ -1089,8 +1089,20 @@ typedef int32_t (*ExportFuncPtr)(ExportArg* args, TlsData* tls);
 
 struct FuncImportTls
 {
+    // The code to call at an import site: a wasm callee, a thunk into C++, or a
+    // thunk into JIT code.
     void* code;
+
+    // The callee's TlsData pointer, which must be loaded to WasmTlsReg (along
+    // with any pinned registers) before calling 'code'.
+    TlsData* tls;
+
+    // If 'code' points into a JIT code thunk, the BaselineScript of the callee,
+    // for bidirectional registration purposes.
     jit::BaselineScript* baselineScript;
+
+    // A GC pointer which keeps the callee alive and may also be used in the JIT
+    // thunk to initialize the callee's JIT frame.
     GCPtrFunction fun;
     static_assert(sizeof(GCPtrFunction) == sizeof(void*), "for JIT access");
 };
