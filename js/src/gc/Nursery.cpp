@@ -74,6 +74,14 @@ struct js::Nursery::SweepAction
 #endif
 };
 
+#ifdef JS_GC_ZEAL
+struct js::Nursery::Canary
+{
+    uintptr_t magicValue;
+    Canary* next;
+};
+#endif
+
 js::Nursery::Nursery(JSRuntime* rt)
   : runtime_(rt)
   , position_(0)
