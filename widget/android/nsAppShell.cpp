@@ -706,7 +706,7 @@ nsAppShell::LegacyGeckoEvent::Run()
                                                dom::GamepadMappingType::Standard,
                                                dom::kStandardGamepadButtons,
                                                dom::kStandardGamepadAxes);
-              java::GeckoAppShell::GamepadAdded(curEvent->ID(), svc_id);
+              java::AndroidGamepadManager::OnGamepadAdded(curEvent->ID(), svc_id);
             } else if (curEvent->Action() == AndroidGeckoEvent::ACTION_GAMEPAD_REMOVED) {
               service->RemoveGamepad(curEvent->ID());
             }

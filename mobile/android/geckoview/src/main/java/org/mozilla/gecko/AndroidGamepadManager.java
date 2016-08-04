@@ -137,7 +137,17 @@ public class AndroidGamepadManager {
     private AndroidGamepadManager() {
     }
 
-    public static void startup() {
+    @WrapForJNI(allowMultithread = true)
+    private static void start() {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                doStart();
+            }
+        });
+    }
+
+    /* package */ static void doStart() {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             scanForGamepads();
@@ -146,7 +156,17 @@ public class AndroidGamepadManager {
         }
     }
 
-    public static void shutdown() {
+    @WrapForJNI(allowMultithread = true)
+    private static void stop() {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                doStop();
+            }
+        });
+    }
+
+    /* package */ static void doStop() {
         ThreadUtils.assertOnUiThread();
         if (sStarted) {
             removeDeviceListener();
@@ -156,7 +176,17 @@ public class AndroidGamepadManager {
         }
     }
 
-    public static void gamepadAdded(int deviceId, int serviceId) {
+    @WrapForJNI
+    private static void onGamepadAdded(final int device_id, final int service_id) {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                handleGamepadAdded(device_id, service_id);
+            }
+        });
+    }
+
+    /* package */ static void handleGamepadAdded(int deviceId, int serviceId) {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             return;
