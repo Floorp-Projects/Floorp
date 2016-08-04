@@ -26,6 +26,7 @@ https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsISpeculativeConnect.h"
+#include "mozilla/BasePrincipal.h"
 
 namespace mozilla { namespace net {
 
@@ -53,7 +54,7 @@ public:
                             const nsCString &originHost, int32_t originPort,
                             const nsACString &username, bool privateBrowsing,
                             nsIInterfaceRequestor *callbacks, nsProxyInfo *proxyInfo,
-                            uint32_t caps);
+                            uint32_t caps, const NeckoOriginAttributes &originAttributes);
 
   const nsCString &AlternateHost() const { return mAlternateHost; }
   const nsCString &OriginHost() const { return mOriginHost; }
@@ -69,7 +70,8 @@ public:
   bool RouteEquals(AltSvcMapping *map);
   bool HTTPS() { return mHttps; }
 
-  void GetConnectionInfo(nsHttpConnectionInfo **outCI, nsProxyInfo *pi);
+  void GetConnectionInfo(nsHttpConnectionInfo **outCI, nsProxyInfo *pi,
+                         const NeckoOriginAttributes &originAttributes);
   int32_t TTL();
 
 private:
@@ -120,7 +122,8 @@ class AltSvcCache
 {
 public:
   void UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
-                               nsIInterfaceRequestor *, uint32_t caps); // main thread
+                               nsIInterfaceRequestor *, uint32_t caps,
+                               const NeckoOriginAttributes &originAttributes); // main thread
   AltSvcMapping *GetAltServiceMapping(const nsACString &scheme,
                                       const nsACString &host,
                                       int32_t port, bool pb);
