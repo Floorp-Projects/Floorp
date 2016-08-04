@@ -19,30 +19,6 @@
 %endif
 }
 
-/* These values are chosen to keep the Loop detached chat window from
- * getting too small.  When it's too small, three bad things happen:
- *
- * - It looks terrible
- * - It's not really usable
- * - It's possible for the user to be transmitting video that's cropped by the
- *   the edge of the window, so that they're not aware of it, which is a
- *   privacy problem
- *
- * Note that if the chat window grows more users than Loop who want this
- * ability, we'll need to generalize.  A partial patch for this is in
- * bug 1112264.
- */
-
-#chat-window {
- /*
-  * In some ideal world, we'd have a simple way to express "block resizing
-  * along any dimension beyond the point at which an overflow event would
-  * occur".  But none of -moz-{fit,max,min}-content do what we want here. So..
-  */
-  min-width: 260px;
-  min-height: 315px;
-}
-
 #main-window[customize-entered] {
   min-width: -moz-fit-content;
 }
@@ -926,77 +902,6 @@ notification[value="translation"] {
   -moz-binding: url("chrome://browser/content/translation-infobar.xml#translationbar");
 }
 
-/* Social */
-/* Note the chatbox 'width' values are duplicated in socialchat.xml */
-chatbox {
-  -moz-binding: url("chrome://browser/content/socialchat.xml#chatbox");
-  transition: height 150ms ease-out, width 150ms ease-out;
-  height: 290px;
-  width: 300px; /* CHAT_WIDTH_OPEN in socialchat.xml */
-}
-
-chatbox[customSize] {
-  width: 350px; /* CHAT_WIDTH_OPEN_ALT in socialchat.xml */
-}
-
-#chat-window[customSize] {
-  min-width: 350px;
-}
-
-chatbox[customSize="loopChatEnabled"] {
-  /* 430px as defined per UX */
-  height: 430px;
-}
-
-#chat-window[customSize="loopChatEnabled"] {
-  /* 325px + 30px top bar height. */
-  min-height: calc(325px + 30px);
-}
-
-chatbox[customSize="loopChatMessageAppended"] {
-  /* 430px as defined per UX */
-  height: 430px;
-}
-
-chatbox[customSize="loopChatDisabledMessageAppended"] {
-  /* 388px as defined per UX */
-  height: 388px;
-}
-
-#chat-window[customSize="loopChatMessageAppended"] {
-  /* 445px + 30px top bar height. */
-  min-height: calc(400px + 30px);
-}
-
-chatbox[minimized="true"] {
-  width: 160px;
-  height: 20px; /* CHAT_WIDTH_MINIMIZED in socialchat.xml */
-}
-
-chatbar {
-  -moz-binding: url("chrome://browser/content/socialchat.xml#chatbar");
-  height: 0;
-  max-height: 0;
-}
-
-.chatbar-innerbox {
-  margin: -285px 0 0;
-}
-
-chatbar[customSize] > .chatbar-innerbox {
-  /* 450px to make room for the maximum custom-size chatbox; currently 'loopChatMessageAppended'. */
-  margin-top: -450px;
-}
-
-/* Apply crisp rendering for favicons at exactly 2dppx resolution */
-@media (resolution: 2dppx) {
-  #social-sidebar-favico,
-  .social-status-button,
-  .chat-status-icon {
-    image-rendering: -moz-crisp-edges;
-  }
-}
-
 /** See bug 872317 for why the following rule is necessary. */
 
 #downloads-button {
@@ -1026,18 +931,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
                                                    #downloads-indicator-progress-area
 {
   visibility: hidden;
-}
-
-/* hide chat chrome when chat is fullscreen */
-#chat-window[sizemode="fullscreen"] chatbox > .chat-titlebar {
-  display: none;
-}
-
-/* hide chatbar and sidebar if browser tab is fullscreen */
-#main-window[inFullscreen][inDOMFullscreen] chatbar,
-#main-window[inFullscreen][inDOMFullscreen] #social-sidebar-box,
-#main-window[inFullscreen][inDOMFullscreen] #social-sidebar-splitter {
-  display: none;
 }
 
 /* Combobox dropdown renderer */
