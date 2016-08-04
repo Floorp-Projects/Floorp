@@ -764,6 +764,11 @@ DocAccessible::AttributeChanged(nsIDocument* aDocument,
     accessible = this;
   }
 
+  if (!accessible->IsBoundToParent()) {
+    MOZ_ASSERT_UNREACHABLE("DOM attribute change on accessible detached from tree");
+    return;
+  }
+
   // Fire accessible events iff there's an accessible, otherwise we consider
   // the accessible state wasn't changed, i.e. its state is initial state.
   AttributeChangedImpl(accessible, aNameSpaceID, aAttribute);
