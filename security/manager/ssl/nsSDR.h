@@ -54,8 +54,8 @@ private:
    * encode - encodes binary into BASE64 string.
    * decode - decode BASE64 string into binary.
    */
-  nsresult encode(const unsigned char *data, int32_t dataLen, char **_retval);
-  nsresult decode(const char *data, unsigned char **result, int32_t * _retval);
+  nsresult encode(const unsigned char *data, uint32_t dataLen, char **_retval);
+  nsresult decode(const char *data, unsigned char **result, uint32_t * _retval);
 };
 
 #endif /* _NSSDR_H_ */
