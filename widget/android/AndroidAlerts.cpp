@@ -75,18 +75,15 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
     nsAutoString host;
     nsAlertsUtils::GetSourceHostPort(principal, host);
 
-    if (!aPersistentData.IsEmpty()) {
-        java::GeckoAppShell::ShowPersistentAlertNotificationWrapper(
-                aPersistentData, imageUrl, title, text, cookie, name, host);
-    } else {
-        if (aAlertListener) {
-            // This will remove any observers already registered for this id
-            nsAppShell::PostEvent(AndroidGeckoEvent::MakeAddObserver(name, aAlertListener));
-        }
-
-        java::GeckoAppShell::ShowAlertNotificationWrapper(
-               imageUrl, title, text, cookie, name, host);
+    if (aPersistentData.IsEmpty() && aAlertListener) {
+        // This will remove any observers already registered for this id
+        nsAppShell::PostEvent(AndroidGeckoEvent::MakeAddObserver(name, aAlertListener));
     }
+
+    java::GeckoAppShell::ShowAlertNotification(
+            imageUrl, title, text, cookie, name, host,
+            !aPersistentData.IsEmpty() ? jni::StringParam(aPersistentData)
+                                       : jni::StringParam(nullptr));
     return NS_OK;
 }
 
