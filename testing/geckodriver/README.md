@@ -34,6 +34,29 @@ although the more recent the Firefox version,
 the more bug fixes and features.
 **Firefox 47 is explicitly not supported.**
 
+## Firefox capabilities
+
+geckodriver supports a couple of non-standard capabilities
+to customise and configure a Firefox session:
+
+<dl>
+ <dt><code>firefox_binary</code>
+ <dd>Set to full path of the Firefox binary,
+  e.g. <i>/usr/bin/firefox</i> or <i>/Applications/Firefox.app/Contents/MacOS/firefox</i>,
+  to select which custom browser binary to use.
+  If left undefined geckodriver will attempt
+  to deduce the default location of Firefox
+  on the current system.
+
+ <dt><code>firefox_profile</code>
+ <dd>For each session, geckodriver creates a new temporary profile by default.
+  To set custom preferences or use an add-on/extension,
+  you may want to provide a custom profile.
+  A profile can be sent across the wire protocol
+  by setting this capability to its path
+  on the local filesystem.
+</dl>
+
 ## Building
 
 geckodriver is written in [Rust](https://www.rust-lang.org/)
