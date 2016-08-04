@@ -340,15 +340,9 @@ class Nursery
 
     struct SweepAction;
     SweepAction* sweepActions_;
-    SweepAction* reservedSweepAction_;
 
 #ifdef JS_GC_ZEAL
-    struct Canary
-    {
-        uintptr_t magicValue;
-        Canary* next;
-    };
-
+    struct Canary;
     Canary* lastCanary_;
 #endif
 
