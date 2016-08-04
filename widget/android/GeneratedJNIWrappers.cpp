@@ -94,14 +94,6 @@ auto GeckoAppShell::AddPluginViewWrapper(mozilla::jni::Object::Param a0, float a
     return mozilla::jni::Method<AddPluginViewWrapper_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5);
 }
 
-constexpr char GeckoAppShell::AlertsProgressListener_OnProgress_t::name[];
-constexpr char GeckoAppShell::AlertsProgressListener_OnProgress_t::signature[];
-
-auto GeckoAppShell::AlertsProgressListener_OnProgress(mozilla::jni::String::Param a0, int64_t a1, int64_t a2, mozilla::jni::String::Param a3) -> void
-{
-    return mozilla::jni::Method<AlertsProgressListener_OnProgress_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3);
-}
-
 constexpr char GeckoAppShell::CancelVibrate_t::name[];
 constexpr char GeckoAppShell::CancelVibrate_t::signature[];
 
@@ -593,6 +585,9 @@ auto GeckoAppShell::NetworkLinkType() -> int32_t
     return mozilla::jni::Method<NetworkLinkType_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
+constexpr char GeckoAppShell::NotifyAlertListener_t::name[];
+constexpr char GeckoAppShell::NotifyAlertListener_t::signature[];
+
 constexpr char GeckoAppShell::NotifyDefaultPrevented_t::name[];
 constexpr char GeckoAppShell::NotifyDefaultPrevented_t::signature[];
 
@@ -714,20 +709,12 @@ auto GeckoAppShell::SetURITitle(mozilla::jni::String::Param a0, mozilla::jni::St
     return mozilla::jni::Method<SetURITitle_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
 
-constexpr char GeckoAppShell::ShowAlertNotificationWrapper_t::name[];
-constexpr char GeckoAppShell::ShowAlertNotificationWrapper_t::signature[];
+constexpr char GeckoAppShell::ShowAlertNotification_t::name[];
+constexpr char GeckoAppShell::ShowAlertNotification_t::signature[];
 
-auto GeckoAppShell::ShowAlertNotificationWrapper(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3, mozilla::jni::String::Param a4, mozilla::jni::String::Param a5) -> void
+auto GeckoAppShell::ShowAlertNotification(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3, mozilla::jni::String::Param a4, mozilla::jni::String::Param a5, mozilla::jni::String::Param a6) -> void
 {
-    return mozilla::jni::Method<ShowAlertNotificationWrapper_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5);
-}
-
-constexpr char GeckoAppShell::ShowPersistentAlertNotificationWrapper_t::name[];
-constexpr char GeckoAppShell::ShowPersistentAlertNotificationWrapper_t::signature[];
-
-auto GeckoAppShell::ShowPersistentAlertNotificationWrapper(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3, mozilla::jni::String::Param a4, mozilla::jni::String::Param a5, mozilla::jni::String::Param a6) -> void
-{
-    return mozilla::jni::Method<ShowPersistentAlertNotificationWrapper_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5, a6);
+    return mozilla::jni::Method<ShowAlertNotification_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5, a6);
 }
 
 constexpr char GeckoAppShell::SyncNotifyObservers_t::name[];

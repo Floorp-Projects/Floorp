@@ -267,25 +267,6 @@ public:
 
     static auto AddPluginViewWrapper(mozilla::jni::Object::Param, float, float, float, float, bool) -> void;
 
-    struct AlertsProgressListener_OnProgress_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param,
-                int64_t,
-                int64_t,
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "alertsProgressListener_OnProgress";
-        static constexpr char signature[] =
-                "(Ljava/lang/String;JJLjava/lang/String;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto AlertsProgressListener_OnProgress(mozilla::jni::String::Param, int64_t, int64_t, mozilla::jni::String::Param) -> void;
-
     struct CancelVibrate_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -1272,6 +1253,21 @@ public:
 
     static auto NetworkLinkType() -> int32_t;
 
+    struct NotifyAlertListener_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "notifyAlertListener";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct NotifyDefaultPrevented_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -1561,11 +1557,12 @@ public:
 
     static auto SetURITitle(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
-    struct ShowAlertNotificationWrapper_t {
+    struct ShowAlertNotification_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
                 mozilla::jni::String::Param,
                 mozilla::jni::String::Param,
                 mozilla::jni::String::Param,
@@ -1574,35 +1571,13 @@ public:
                 mozilla::jni::String::Param> Args;
         static constexpr char name[] = "showAlertNotification";
         static constexpr char signature[] =
-                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto ShowAlertNotificationWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
-
-    struct ShowPersistentAlertNotificationWrapper_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param,
-                mozilla::jni::String::Param,
-                mozilla::jni::String::Param,
-                mozilla::jni::String::Param,
-                mozilla::jni::String::Param,
-                mozilla::jni::String::Param,
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "showPersistentAlertNotification";
-        static constexpr char signature[] =
                 "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto ShowPersistentAlertNotificationWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
+    static auto ShowAlertNotification(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
     struct SyncNotifyObservers_t {
         typedef GeckoAppShell Owner;
