@@ -28,7 +28,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
-import org.mozilla.gecko.util.Experiments;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**

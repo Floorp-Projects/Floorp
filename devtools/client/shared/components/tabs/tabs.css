@@ -74,33 +74,38 @@
   padding: 3px 15px;
 }
 
-.theme-dark .tabs .tabs-menu-item:hover,
-.theme-light .tabs .tabs-menu-item:hover {
+.theme-dark .tabs .tabs-menu-item:hover:not(.is-active),
+.theme-light .tabs .tabs-menu-item:hover:not(.is-active) {
   background-color: var(--toolbar-tab-hover);
 }
 
+.theme-dark .tabs .tabs-menu-item:hover:active:not(.is-active),
+.theme-light .tabs .tabs-menu-item:hover:active:not(.is-active) {
+  background-color: var(--toolbar-tab-hover-active);
+}
+
 .theme-dark .tabs .tabs-menu-item.is-active,
-.theme-dark .tabs .tabs-menu-item.is-active:hover,
-.theme-light .tabs .tabs-menu-item.is-active,
-.theme-light .tabs .tabs-menu-item.is-active:hover {
+.theme-light .tabs .tabs-menu-item.is-active {
   background-color: var(--theme-selection-background);
 }
 
 .theme-dark .tabs .tabs-menu-item.is-active a,
-.theme-dark .tabs .tabs-menu-item.is-active:hover a,
-.theme-light .tabs .tabs-menu-item.is-active a,
-.theme-light .tabs .tabs-menu-item.is-active:hover a {
+.theme-light .tabs .tabs-menu-item.is-active a {
   color: var(--theme-selection-color);
 }
 
 /* Dark Theme */
 
 .theme-dark .tabs .tabs-menu-item a {
+  color: var(--theme-body-color-alt);
+}
+
+.theme-dark .tabs .tabs-menu-item:hover:not(.is-active) a {
   color: #CED3D9;
 }
 
-.theme-dark .tabs .tabs-menu-item:active:hover {
-  background-color: hsla(206, 37%, 4%, .4); /* --toolbar-tab-hover-active */
+.theme-dark .tabs .tabs-menu-item:hover:active a {
+  color: var(--theme-selection-color);
 }
 
 /* Firebug Theme */
@@ -134,18 +139,21 @@
   border-radius: 4px 4px 0 0;
 }
 
-.theme-firebug .tabs .tabs-menu-item:hover a {
+.theme-firebug .tabs .tabs-menu-item:hover:not(.is-active) a {
   border: 1px solid #C8C8C8;
   border-bottom: 1px solid transparent;
   background-color: transparent;
 }
 
-.theme-firebug .tabs .tabs-menu-item.is-active a,
-.theme-firebug .tabs .tabs-menu-item.is-active:hover a {
+.theme-firebug .tabs .tabs-menu-item.is-active a {
   background-color: rgb(247, 251, 254);
   border: 1px solid rgb(170, 188, 207);
   border-bottom-color: transparent;
   color: var(--theme-body-color);
+}
+
+.theme-firebug .tabs .tabs-menu-item:hover:active a {
+  background-color: var(--toolbar-tab-hover-active);
 }
 
 .theme-firebug .tabs .tabs-menu-item.is-active:hover:active a {
