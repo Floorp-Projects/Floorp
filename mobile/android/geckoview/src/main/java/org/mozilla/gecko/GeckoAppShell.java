@@ -861,36 +861,6 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    public static void startMonitoringGamepad() {
-        ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    AndroidGamepadManager.startup();
-                }
-            });
-    }
-
-    @WrapForJNI
-    public static void stopMonitoringGamepad() {
-        ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    AndroidGamepadManager.shutdown();
-                }
-            });
-    }
-
-    @WrapForJNI
-    public static void gamepadAdded(final int device_id, final int service_id) {
-        ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    AndroidGamepadManager.gamepadAdded(device_id, service_id);
-                }
-            });
-    }
-
-    @WrapForJNI
     public static void moveTaskToBack() {
         if (getGeckoInterface() != null)
             getGeckoInterface().getActivity().moveTaskToBack(true);
