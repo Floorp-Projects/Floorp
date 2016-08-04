@@ -54,6 +54,7 @@
 #include "ADTSDemuxer.h"
 
 #include "nsPluginHost.h"
+#include "MediaPrefs.h"
 
 namespace mozilla
 {
@@ -91,36 +92,17 @@ IsRawType(const nsACString& aType)
 }
 #endif
 
-// See http://www.rfc-editor.org/rfc/rfc5334.txt for the definitions
-// of Ogg media types and codec types
-static const char* const gOggTypes[4] = {
-  "video/ogg",
-  "audio/ogg",
-  "application/ogg",
-  nullptr
-};
-
-static char const *const gOggCodecs[3] = {
-  "vorbis",
-  "theora",
-  nullptr
-};
-
-static char const *const gOggCodecsWithOpus[4] = {
-  "vorbis",
-  "opus",
-  "theora",
-  nullptr
-};
+static bool
+IsOggSupportedType(const nsACString& aType,
+                    const nsAString& aCodecs = EmptyString())
+{
+  return OggDecoder::CanHandleMediaType(aType, aCodecs);
+}
 
 static bool
-IsOggType(const nsACString& aType)
+IsOggTypeAndEnabled(const nsACString& aType)
 {
-  if (!MediaDecoder::IsOggEnabled()) {
-    return false;
-  }
-
-  return CodecListContains(gOggTypes, aType);
+  return IsOggSupportedType(aType);
 }
 
 // See http://www.rfc-editor.org/rfc/rfc2361.txt for the definitions
@@ -378,8 +360,14 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
     codecList = gRawCodecs;
   }
 #endif
-  if (IsOggType(nsDependentCString(aMIMEType))) {
-    codecList = MediaDecoder::IsOpusEnabled() ? gOggCodecsWithOpus : gOggCodecs;
+  if (IsOggTypeAndEnabled(nsDependentCString(aMIMEType))) {
+    if (IsOggSupportedType(nsDependentCString(aMIMEType), aRequestedCodecs)) {
+      return CANPLAY_YES;
+    } else {
+      // We can only reach this position if a particular codec was requested,
+      // ogg is supported and working: the codec must be invalid.
+      return CANPLAY_NO;
+    }
   }
   if (IsWaveType(nsDependentCString(aMIMEType))) {
     codecList = gWaveCodecs;
@@ -485,7 +473,7 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     return CANPLAY_MAYBE;
   }
 #endif
-  if (IsOggType(nsDependentCString(aMIMEType))) {
+  if (IsOggTypeAndEnabled(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
   if (IsWaveType(nsDependentCString(aMIMEType))) {
@@ -554,7 +542,7 @@ InstantiateDecoder(const nsACString& aType,
     return decoder.forget();
   }
 #endif
-  if (IsOggType(aType)) {
+  if (IsOggSupportedType(aType)) {
     decoder = new OggDecoder(aOwner);
     return decoder.forget();
   }
@@ -651,8 +639,8 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new RawReader(aDecoder);
   } else
 #endif
-  if (IsOggType(aType)) {
-    decoderReader = Preferences::GetBool("media.format-reader.ogg", true) ?
+  if (IsOggSupportedType(aType)) {
+    decoderReader = MediaPrefs::OggFormatReader() ?
       static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()))) :
       new OggReader(aDecoder);
   } else
@@ -696,7 +684,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
   }
 
   return
-    IsOggType(aType) ||
+    IsOggSupportedType(aType) ||
 #ifdef MOZ_OMX_DECODER
     // We support the formats in gB2GOnlyTypes only inside WebApps on firefoxOS
     // but not in general web content. Ensure we dont create a VideoDocument
