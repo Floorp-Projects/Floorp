@@ -199,6 +199,7 @@ function LayoutView(inspector, document) {
   this.sizeLabel = this.doc.querySelector(".layout-size > span");
   this.sizeHeadingLabel = this.doc.getElementById("layout-element-size");
   this._geometryEditorHighlighter = null;
+  this._cssProperties = getCssProperties(inspector.toolbox);
 
   this.init();
 }
@@ -419,7 +420,8 @@ LayoutView.prototype = {
             session.destroy();
           }, e => console.error(e));
         }
-      }
+      },
+      cssProperties: this._cssProperties
     }, event);
   },
 

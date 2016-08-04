@@ -4,12 +4,19 @@
 /* global helpers, btoa, whenDelayedStartupFinished, OpenBrowserWindow */
 
 // Test that screenshot command works properly
+
+"use strict";
+
 const TEST_URI = "http://example.com/browser/devtools/client/commandline/" +
                  "test/browser_cmd_screenshot.html";
 
 var FileUtils = (Cu.import("resource://gre/modules/FileUtils.jsm", {})).FileUtils;
 
 function test() {
+  // This test gets bombarded by a cascade of GCs and often takes 50s so lets be
+  // safe and give the test 90s to run.
+  requestLongerTimeout(3);
+
   return Task.spawn(spawnTest).then(finish, helpers.handleError);
 }
 
@@ -37,7 +44,7 @@ function* addTabWithToolbarRunTests(win) {
     {
       setup: "screenshot",
       check: {
-        input:  "screenshot",
+        input: "screenshot",
         markup: "VVVVVVVVVV",
         status: "VALID",
         args: {
@@ -47,7 +54,7 @@ function* addTabWithToolbarRunTests(win) {
     {
       setup: "screenshot abc.png",
       check: {
-        input:  "screenshot abc.png",
+        input: "screenshot abc.png",
         markup: "VVVVVVVVVVVVVVVVVV",
         status: "VALID",
         args: {
@@ -58,7 +65,7 @@ function* addTabWithToolbarRunTests(win) {
     {
       setup: "screenshot --fullpage",
       check: {
-        input:  "screenshot --fullpage",
+        input: "screenshot --fullpage",
         markup: "VVVVVVVVVVVVVVVVVVVVV",
         status: "VALID",
         args: {
@@ -69,7 +76,7 @@ function* addTabWithToolbarRunTests(win) {
     {
       setup: "screenshot abc --delay 5",
       check: {
-        input:  "screenshot abc --delay 5",
+        input: "screenshot abc --delay 5",
         markup: "VVVVVVVVVVVVVVVVVVVVVVVV",
         status: "VALID",
         args: {
@@ -81,7 +88,7 @@ function* addTabWithToolbarRunTests(win) {
     {
       setup: "screenshot --selector img#testImage",
       check: {
-        input:  "screenshot --selector img#testImage",
+        input: "screenshot --selector img#testImage",
         markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
         status: "VALID",
       },
@@ -128,10 +135,12 @@ function* addTabWithToolbarRunTests(win) {
         output: new RegExp("^Copied to clipboard.$"),
       },
       post: Task.async(function* () {
-        let imgSize = yield getImageSizeFromClipboard();
-        yield ContentTask.spawn(browser, imgSize, function* (imgSize) {
-          Assert.equal(imgSize.width, content.innerWidth, "Image width matches window size");
-          Assert.equal(imgSize.height, content.innerHeight, "Image height matches window size");
+        let imgSize1 = yield getImageSizeFromClipboard();
+        yield ContentTask.spawn(browser, imgSize1, function* (imgSize) {
+          Assert.equal(imgSize.width, content.innerWidth,
+                       "Image width matches window size");
+          Assert.equal(imgSize.height, content.innerHeight,
+                       "Image height matches window size");
         });
       })
     },
@@ -147,8 +156,8 @@ function* addTabWithToolbarRunTests(win) {
         output: new RegExp("^Copied to clipboard.$"),
       },
       post: Task.async(function* () {
-        let imgSize = yield getImageSizeFromClipboard();
-        yield ContentTask.spawn(browser, imgSize, function* (imgSize) {
+        let imgSize1 = yield getImageSizeFromClipboard();
+        yield ContentTask.spawn(browser, imgSize1, function* (imgSize) {
           Assert.equal(imgSize.width,
             content.innerWidth + content.scrollMaxX - content.scrollMinX,
             "Image width matches page size");
@@ -169,8 +178,8 @@ function* addTabWithToolbarRunTests(win) {
         output: new RegExp("^Copied to clipboard.$"),
       },
       post: Task.async(function* () {
-        let imgSize = yield getImageSizeFromClipboard();
-        yield ContentTask.spawn(browser, imgSize, function* (imgSize) {
+        let imgSize1 = yield getImageSizeFromClipboard();
+        yield ContentTask.spawn(browser, imgSize1, function* (imgSize) {
           let img = content.document.querySelector("img#testImage");
           Assert.equal(imgSize.width, img.clientWidth,
              "Image width matches element size");
@@ -217,10 +226,10 @@ function* addTabWithToolbarRunTests(win) {
         output: new RegExp("^Copied to clipboard.$"),
       },
       post: Task.async(function* () {
-        let imgSize = yield getImageSizeFromClipboard();
-        imgSize.scrollbarWidth = scrollbarSize.width;
-        imgSize.scrollbarHeight = scrollbarSize.height;
-        yield ContentTask.spawn(browser, imgSize, function* (imgSize) {
+        let imgSize1 = yield getImageSizeFromClipboard();
+        imgSize1.scrollbarWidth = scrollbarSize.width;
+        imgSize1.scrollbarHeight = scrollbarSize.height;
+        yield ContentTask.spawn(browser, imgSize1, function* (imgSize) {
           Assert.equal(imgSize.width, content.innerWidth - imgSize.scrollbarWidth,
              "Image width matches window size minus scrollbar size");
           Assert.equal(imgSize.height, content.innerHeight - imgSize.scrollbarHeight,
@@ -240,15 +249,17 @@ function* addTabWithToolbarRunTests(win) {
         output: new RegExp("^Copied to clipboard.$"),
       },
       post: Task.async(function* () {
-        let imgSize = yield getImageSizeFromClipboard();
-        imgSize.scrollbarWidth = scrollbarSize.width;
-        imgSize.scrollbarHeight = scrollbarSize.height;
-        yield ContentTask.spawn(browser, imgSize, function* (imgSize) {
+        let imgSize1 = yield getImageSizeFromClipboard();
+        imgSize1.scrollbarWidth = scrollbarSize.width;
+        imgSize1.scrollbarHeight = scrollbarSize.height;
+        yield ContentTask.spawn(browser, imgSize1, function* (imgSize) {
           Assert.equal(imgSize.width,
-            (content.innerWidth + content.scrollMaxX - content.scrollMinX) - imgSize.scrollbarWidth,
+            (content.innerWidth + content.scrollMaxX -
+             content.scrollMinX) - imgSize.scrollbarWidth,
             "Image width matches page size minus scrollbar size");
           Assert.equal(imgSize.height,
-            (content.innerHeight + content.scrollMaxY - content.scrollMinY) - imgSize.scrollbarHeight,
+            (content.innerHeight + content.scrollMaxY -
+             content.scrollMinY) - imgSize.scrollbarHeight,
             "Image height matches page size minus scrollbar size");
         });
       })
@@ -264,8 +275,8 @@ function* addTabWithToolbarRunTests(win) {
         output: new RegExp("^Copied to clipboard.$"),
       },
       post: Task.async(function* () {
-        let imgSize = yield getImageSizeFromClipboard();
-        yield ContentTask.spawn(browser, imgSize, function* (imgSize) {
+        let imgSize1 = yield getImageSizeFromClipboard();
+        yield ContentTask.spawn(browser, imgSize1, function* (imgSize) {
           let img = content.document.querySelector("img#testImage");
           Assert.equal(imgSize.width, img.clientWidth,
              "Image width matches element size");

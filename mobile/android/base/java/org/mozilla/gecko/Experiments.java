@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.util;
+package org.mozilla.gecko;
 
 import android.content.Context;
 
@@ -11,7 +11,6 @@ import android.text.TextUtils;
 
 import com.keepsafe.switchboard.Preferences;
 import com.keepsafe.switchboard.SwitchBoard;
-import org.mozilla.gecko.GeckoSharedPrefs;
 
 import java.util.LinkedList;
 import java.util.List;

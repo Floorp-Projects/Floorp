@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1265798 - Replace inIDOMUtils.cssPropertyIsShorthand
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test CSS Properties Actor</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+window.onload = function() {
+  const { initCssProperties, getCssProperties } =
+    require("devtools/shared/fronts/css-properties");
+
+  const { CSS_PROPERTIES_DB } = require("devtools/shared/css-properties-db");
+
+  function promiseAttachUrl (url) {
+    return new Promise((resolve, reject) => {
+      attachURL(url, function(err, client, tab, doc) {
+        if (err) {
+          return reject(err);
+        }
+        resolve({client, tab, doc});
+      });
+    })
+  }
+
+  addAsyncTest(function* setup() {
+    let url = document.getElementById("cssProperties").href;
+
+    let attachmentA = yield promiseAttachUrl(url);
+    let attachmentB = yield promiseAttachUrl(url);
+    let attachmentC = yield promiseAttachUrl(url);
+
+    const toolboxMatchingVersions = {
+      target: {
+        hasActor: () => true,
+        client: attachmentA.client,
+        form: attachmentA.tab,
+      },
+      _host: { frame: { contentWindow: window } }
+    };
+    const toolboxUnknownVersions = {
+      target: {
+        hasActor: () => true,
+        client: attachmentB.client,
+        form: attachmentB.tab
+      }
+      // Don't add a host here.
+    };
+    const toolboxDifferentVersions = {
+      target: {
+        hasActor: () => true,
+        client: attachmentB.client,
+        form: attachmentB.tab
+      },
+      _host: { frame: { contentWindow: { navigator: { userAgent:
+               "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:49.0) Gecko/20100101 " +
+               "Firefox/30.0" }}}}
+    };
+
+    // Modify a property on the static database, to differentiate between a generated
+    // and static CSS properties database.
+    CSS_PROPERTIES_DB.properties.color.isStatic = true;
+
+    yield initCssProperties(toolboxMatchingVersions);
+    yield initCssProperties(toolboxUnknownVersions);
+    yield initCssProperties(toolboxDifferentVersions);
+
+    const cssPropertiesMatching = getCssProperties(toolboxMatchingVersions);
+    const cssPropertiesUnknown = getCssProperties(toolboxUnknownVersions);
+    const cssPropertiesDifferent = getCssProperties(toolboxDifferentVersions);
+
+    is(cssPropertiesMatching.properties.color.isStatic, true,
+       "The static CSS database is used when the client and platform versions match.");
+    is(cssPropertiesUnknown.properties.color.isStatic, true,
+       "The static CSS database is used when the client is not a known Firefox.");
+    isnot(cssPropertiesDifferent.properties.color.isStatic, undefined,
+       "The generated CSS database is used when the client and platform versions do " +
+       "not match, but the client is a Firefox.");
+
+    delete CSS_PROPERTIES_DB.properties.color.isStatic;
+
+    runNextTest();
+  });
+
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1265798">Mozilla Bug 1265798</a>
+  <a id="cssProperties" target="_blank" href="inspector_css-properties.html">Test Document</a>
+</body>
+</html>
