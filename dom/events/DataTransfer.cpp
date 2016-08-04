@@ -312,11 +312,10 @@ DataTransfer::GetTypes(ErrorResult& aRv) const
   RefPtr<DOMStringList> types = new DOMStringList();
 
   const nsTArray<RefPtr<DataTransferItem>>* items = mItems->MozItemsAt(0);
-  if (!items || items->IsEmpty()) {
+  if (NS_WARN_IF(!items)) {
     return types.forget();
   }
 
-  bool addFile = false;
   for (uint32_t i = 0; i < items->Length(); i++) {
     DataTransferItem* item = items->ElementAt(i);
     MOZ_ASSERT(item);
@@ -325,20 +324,20 @@ DataTransfer::GetTypes(ErrorResult& aRv) const
       continue;
     }
 
-    nsAutoString type;
-    item->GetType(type);
-    if (NS_WARN_IF(!types->Add(type))) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    if (!addFile) {
-      addFile = item->Kind() == DataTransferItem::KIND_FILE;
+    if (item->Kind() == DataTransferItem::KIND_STRING) {
+      // If the entry has kind KIND_STRING, we want to add it to the list.
+      nsAutoString type;
+      item->GetType(type);
+      if (NS_WARN_IF(!types->Add(type))) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+      }
     }
   }
 
-  // If we have any files, we need to also add the "Files" type!
-  if (addFile && NS_WARN_IF(!types->Add(NS_LITERAL_STRING("Files")))) {
+  // If we have any files, add the "Files" string to the list
+  if (mItems->Files()->Length() > 0 &&
+      NS_WARN_IF(!types->Add(NS_LITERAL_STRING("Files")))) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
