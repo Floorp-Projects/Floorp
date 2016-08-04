@@ -3007,6 +3007,38 @@ public:
     template<class Impl> class Natives;
 };
 
+class ZoomedView : public mozilla::jni::ObjectBase<ZoomedView, jobject>
+{
+public:
+    static const char name[];
+
+    explicit ZoomedView(const Context& ctx) : ObjectBase<ZoomedView, jobject>(ctx) {}
+
+    struct RequestZoomedViewData_t {
+        typedef ZoomedView Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::ByteBuffer::Param,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                float> Args;
+        static constexpr char name[] = "requestZoomedViewData";
+        static constexpr char signature[] =
+                "(Ljava/nio/ByteBuffer;IIIIIF)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static const bool isMultithreaded = false;
+
+    template<class Impl> class Natives;
+};
+
 class Distribution : public mozilla::jni::ObjectBase<Distribution, jobject>
 {
 public:
@@ -3504,7 +3536,7 @@ public:
 
     class Compositor;
 
-    struct updateZoomedView_t {
+    struct UpdateZoomedView_t {
         typedef LayerView Owner;
         typedef void ReturnType;
         typedef void SetterType;
@@ -3518,7 +3550,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto updateZoomedView(mozilla::jni::ByteBuffer::Param) -> void;
+    static auto UpdateZoomedView(mozilla::jni::ByteBuffer::Param) -> void;
 
     static const bool isMultithreaded = true;
 
