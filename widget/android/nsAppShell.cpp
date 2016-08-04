@@ -62,6 +62,7 @@
 #include "GeckoNetworkManager.h"
 #include "GeckoScreenOrientation.h"
 #include "PrefsHelper.h"
+#include "Telemetry.h"
 #include "ThumbnailHelper.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
@@ -352,6 +353,7 @@ nsAppShell::nsAppShell()
         mozilla::GeckoNetworkManager::Init();
         mozilla::GeckoScreenOrientation::Init();
         mozilla::PrefsHelper::Init();
+        mozilla::widget::Telemetry::Init();
         mozilla::ThumbnailHelper::Init();
         nsWindow::InitNatives();
 
