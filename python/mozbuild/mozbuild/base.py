@@ -179,8 +179,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         if '@CONFIG_GUESS@' in topobjdir:
             topobjdir = topobjdir.replace('@CONFIG_GUESS@',
-                MozbuildObject.resolve_config_guess(self.mozconfig,
-                                                    self.topsrcdir))
+                self.resolve_config_guess())
 
         if not os.path.isabs(topobjdir):
             topobjdir = os.path.abspath(os.path.join(self.topsrcdir, topobjdir))
@@ -353,9 +352,8 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return path
 
-    @staticmethod
-    def resolve_config_guess(mozconfig, topsrcdir):
-        make_extra = mozconfig['make_extra'] or []
+    def resolve_config_guess(self):
+        make_extra = self.mozconfig['make_extra'] or []
         make_extra = dict(m.split('=', 1) for m in make_extra)
 
         config_guess = make_extra.get('CONFIG_GUESS', None)
@@ -368,17 +366,17 @@ class MozbuildObject(ProcessExecutionMixin):
         if _config_guess_output:
             return _config_guess_output[0]
 
-        p = os.path.join(topsrcdir, 'build', 'autoconf', 'config.guess')
+        p = os.path.join(self.topsrcdir, 'build', 'autoconf', 'config.guess')
 
         # This is a little kludgy. We need access to the normalize_command
         # function. However, that's a method of a mach mixin, so we need a
         # class instance. Ideally the function should be accessible as a
         # standalone function.
-        o = MozbuildObject(topsrcdir, None, None, None)
+        o = MozbuildObject(self.topsrcdir, None, None, None)
         args = o._normalize_command([p], True)
 
         _config_guess_output.append(
-                subprocess.check_output(args, cwd=topsrcdir).strip())
+                subprocess.check_output(args, cwd=self.topsrcdir).strip())
         return _config_guess_output[0]
 
     def notify(self, msg):
