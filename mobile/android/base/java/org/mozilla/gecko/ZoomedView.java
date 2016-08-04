@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
@@ -778,6 +779,11 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         return ((System.nanoTime() - lastStartTimeReRender) < MINIMUM_DELAY_BETWEEN_TWO_RENDER_CALLS_NS);
     }
 
+    @WrapForJNI
+    private static native void requestZoomedViewData(ByteBuffer buffer, int tabId,
+                                                     int xPos, int yPos, int width,
+                                                     int height, float scale);
+
     @Override
     public void requestZoomedViewRender() {
         if (stopUpdateView) {
@@ -825,9 +831,8 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         final int xPos = (int)origin.x + lastPosition.x;
         final int yPos = (int)origin.y + lastPosition.y;
 
-        GeckoEvent e = GeckoEvent.createZoomedViewEvent(tabId, xPos, yPos, viewWidth,
-                viewHeight, zoomFactor * metrics.zoomFactor, buffer);
-        GeckoAppShell.sendEventToGecko(e);
+        requestZoomedViewData(buffer, tabId, xPos, yPos, viewWidth, viewHeight,
+                              zoomFactor * metrics.zoomFactor);
     }
 
 }
