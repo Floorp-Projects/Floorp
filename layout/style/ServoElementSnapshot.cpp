@@ -7,6 +7,7 @@
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/dom/Element.h"
 #include "nsIContentInlines.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 
@@ -18,6 +19,8 @@ ServoElementSnapshot::ServoElementSnapshot(Element* aElement)
 {
   mIsHTMLElementInHTMLDocument =
     aElement->IsHTMLElement() && aElement->IsInHTMLDocument();
+  mIsInChromeDocument =
+    nsContentUtils::IsChromeDoc(aElement->OwnerDoc());
 }
 
 void
@@ -25,7 +28,7 @@ ServoElementSnapshot::AddAttrs(Element* aElement)
 {
   MOZ_ASSERT(aElement);
 
-  if (!HasAny(Flags::Attributes)) {
+  if (HasAny(Flags::Attributes)) {
     return;
   }
 

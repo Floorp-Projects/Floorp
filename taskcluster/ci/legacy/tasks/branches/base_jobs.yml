@@ -20,6 +20,12 @@ builds:
     types:
       opt:
         task: tasks/builds/android_x86.yml
+  android-api-15-gradle:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_15_gradle.yml
   linux64-mulet:
     platforms:
       - Mulet Linux

@@ -1782,6 +1782,12 @@ class Assembler : public AssemblerShared
         return;
     }
 
+    void comment(const char* msg) {
+#ifdef JS_DISASM_ARM
+        spew("; %s", msg);
+#endif
+    }
+
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
     void executableCopy(uint8_t* buffer);

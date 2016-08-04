@@ -3824,6 +3824,30 @@ STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsRect, nsRect_Simple, width);
 STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsRect, nsRect_Simple, height);
 
 /**
+ * <div rustbindgen="true" replaces="nsSize">
+ */
+struct nsSize_Simple {
+  nscoord width, height;
+};
+
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsSize, nsSize_Simple);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, width);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, height);
+
+/**
+ * <div rustbindgen="true" replaces="UniquePtr">
+ *
+ * TODO(Emilio): This is a workaround and we should be able to get rid of this
+ * one.
+ */
+template<typename T, typename Deleter = mozilla::DefaultDelete<T>>
+struct UniquePtr_Simple {
+  T* mPtr;
+};
+
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(mozilla::UniquePtr<int>, UniquePtr_Simple<int>);
+
+/**
  * <div rustbindgen replaces="nsTArray"></div>
  */
 template<typename T>

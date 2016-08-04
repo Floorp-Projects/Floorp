@@ -1884,16 +1884,6 @@ CompositorBridgeParent::GetAPZCTreeManager(uint64_t aLayersId)
   return apzctm.forget();
 }
 
-float
-CompositorBridgeParent::ComputeRenderIntegrity()
-{
-  if (mLayerManager) {
-    return mLayerManager->ComputeRenderIntegrity();
-  }
-
-  return 1.0f;
-}
-
 static void
 InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 {

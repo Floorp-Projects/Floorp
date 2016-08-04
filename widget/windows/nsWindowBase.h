@@ -129,6 +129,10 @@ protected:
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
 
+  // This is used by SynthesizeNativeTouchPoint to maintain state between
+  // multiple synthesized points, in the case where we can't call InjectTouch
+  // directly.
+  mozilla::UniquePtr<mozilla::MultiTouchInput> mSynthesizedTouchInput;
 protected:
   InputContext mInputContext;
 };

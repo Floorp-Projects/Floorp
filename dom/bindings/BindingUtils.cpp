@@ -712,7 +712,6 @@ static JSObject*
 CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       JS::Handle<JSObject*> constructorProto,
                       const js::Class* constructorClass,
-                      const JSNativeHolder* constructorNative,
                       unsigned ctorNargs, const NamedConstructor* namedConstructors,
                       JS::Handle<JSObject*> proto,
                       const NativeProperties* properties,
@@ -720,35 +719,38 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       const char* name, bool defineOnGlobal)
 {
   JS::Rooted<JSObject*> constructor(cx);
-  if (constructorClass) {
-    MOZ_ASSERT(constructorProto);
-    constructor = JS_NewObjectWithGivenProto(cx, Jsvalify(constructorClass),
-                                             constructorProto);
-  } else {
-    MOZ_ASSERT(constructorNative);
-    MOZ_ASSERT(constructorProto == JS_GetFunctionPrototype(cx, global));
-    constructor = CreateConstructor(cx, global, name, constructorNative,
-                                    ctorNargs);
-  }
+  MOZ_ASSERT(constructorProto);
+  MOZ_ASSERT(constructorClass);
+  constructor = JS_NewObjectWithGivenProto(cx, Jsvalify(constructorClass),
+                                           constructorProto);
   if (!constructor) {
     return nullptr;
   }
 
-  if (constructorClass) {
-    if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
-                           JSPROP_READONLY)) {
-      return nullptr;
-    }
+  if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
+                         JSPROP_READONLY)) {
+    return nullptr;
+  }
 
-    // Might as well intern, since we're going to need an atomized
-    // version of name anyway when we stick our constructor on the
-    // global.
-    JS::Rooted<JSString*> nameStr(cx, JS_AtomizeAndPinString(cx, name));
-    if (!nameStr) {
-      return nullptr;
-    }
+  // Might as well intern, since we're going to need an atomized
+  // version of name anyway when we stick our constructor on the
+  // global.
+  JS::Rooted<JSString*> nameStr(cx, JS_AtomizeAndPinString(cx, name));
+  if (!nameStr) {
+    return nullptr;
+  }
 
-    if (!JS_DefineProperty(cx, constructor, "name", nameStr, JSPROP_READONLY)) {
+  if (!JS_DefineProperty(cx, constructor, "name", nameStr, JSPROP_READONLY)) {
+    return nullptr;
+  }
+
+  if (DOMIfaceAndProtoJSClass::FromJSClass(constructorClass)->wantsInterfaceHasInstance) {
+    JS::Rooted<jsid> hasInstanceId(cx,
+      SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::hasInstance)));
+    if (!JS_DefineFunctionById(cx, constructor, hasInstanceId,
+                               InterfaceHasInstance, 1,
+                               // Flags match those of Function[Symbol.hasInstance]
+                               JSPROP_READONLY | JSPROP_PERMANENT)) {
       return nullptr;
     }
   }
@@ -829,12 +831,16 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
                                const js::Class* protoClass,
                                const NativeProperties* properties,
                                const NativeProperties* chromeOnlyProperties,
-                               const char* const* unscopableNames)
+                               const char* const* unscopableNames,
+                               bool isGlobal)
 {
   JS::Rooted<JSObject*> ourProto(cx,
     JS_NewObjectWithUniqueType(cx, Jsvalify(protoClass), parentProto));
   if (!ourProto ||
-      !DefineProperties(cx, ourProto, properties, chromeOnlyProperties)) {
+      // We don't try to define properties on the global's prototype; those
+      // properties go on the global itself.
+      (!isGlobal &&
+       !DefineProperties(cx, ourProto, properties, chromeOnlyProperties))) {
     return nullptr;
   }
 
@@ -910,16 +916,17 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
                        const js::Class* protoClass, JS::Heap<JSObject*>* protoCache,
                        JS::Handle<JSObject*> constructorProto,
-                       const js::Class* constructorClass, const JSNativeHolder* constructor,
+                       const js::Class* constructorClass,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
                        JS::Heap<JSObject*>* constructorCache,
                        const NativeProperties* properties,
                        const NativeProperties* chromeOnlyProperties,
                        const char* name, bool defineOnGlobal,
-                       const char* const* unscopableNames)
+                       const char* const* unscopableNames,
+                       bool isGlobal)
 {
-  MOZ_ASSERT(protoClass || constructorClass || constructor,
-             "Need at least one class or a constructor!");
+  MOZ_ASSERT(protoClass || constructorClass,
+             "Need at least one class!");
   MOZ_ASSERT(!((properties &&
                 (properties->HasMethods() || properties->HasAttributes())) ||
                (chromeOnlyProperties &&
@@ -932,18 +939,17 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                (chromeOnlyProperties &&
                 (chromeOnlyProperties->HasStaticMethods() ||
                  chromeOnlyProperties->HasStaticAttributes()))) ||
-             constructorClass || constructor,
-             "Static methods but no constructorClass or constructor!");
-  MOZ_ASSERT(bool(name) == bool(constructorClass || constructor),
+             constructorClass,
+             "Static methods but no constructorClass!");
+  MOZ_ASSERT(bool(name) == bool(constructorClass),
              "Must have name precisely when we have an interface object");
-  MOZ_ASSERT(!constructorClass || !constructor);
   MOZ_ASSERT(!protoClass == !protoCache,
              "If, and only if, there is an interface prototype object we need "
              "to cache it");
-  MOZ_ASSERT(!(constructorClass || constructor) == !constructorCache,
+  MOZ_ASSERT(bool(constructorClass) == bool(constructorCache),
              "If, and only if, there is an interface object we need to cache "
              "it");
-  MOZ_ASSERT(constructorProto || (!constructorClass && !constructor),
+  MOZ_ASSERT(constructorProto || !constructorClass,
              "Must have a constructor proto if we plan to create a constructor "
              "object");
 
@@ -952,7 +958,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
     proto =
       CreateInterfacePrototypeObject(cx, global, protoProto, protoClass,
                                      properties, chromeOnlyProperties,
-                                     unscopableNames);
+                                     unscopableNames, isGlobal);
     if (!proto) {
       return;
     }
@@ -964,11 +970,11 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
   }
 
   JSObject* interface;
-  if (constructorClass || constructor) {
+  if (constructorClass) {
     interface = CreateInterfaceObject(cx, global, constructorProto,
-                                      constructorClass, constructor,
-                                      ctorNargs, namedConstructors, proto,
-                                      properties, chromeOnlyProperties, name,
+                                      constructorClass, ctorNargs,
+                                      namedConstructors, proto, properties,
+                                      chromeOnlyProperties, name,
                                       defineOnGlobal);
     if (!interface) {
       if (protoCache) {
@@ -1237,7 +1243,15 @@ static JSObject*
 XrayCreateFunction(JSContext* cx, JS::Handle<JSObject*> wrapper,
                    JSNativeWrapper native, unsigned nargs, JS::Handle<jsid> id)
 {
-  JSFunction* fun = js::NewFunctionByIdWithReserved(cx, native.op, nargs, 0, id);
+  JSFunction* fun;
+  if (JSID_IS_STRING(id)) {
+    fun = js::NewFunctionByIdWithReserved(cx, native.op, nargs, 0, id);
+  } else {
+    // Can't pass this id (probably a symbol) to NewFunctionByIdWithReserved;
+    // just use an empty name for lack of anything better.
+    fun = js::NewFunctionWithReserved(cx, native.op, nargs, 0, nullptr);
+  }
+
   if (!fun) {
     return nullptr;
   }
@@ -1656,6 +1670,26 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                            JSPROP_PERMANENT | JSPROP_READONLY,
                                            desc, cacheOnHolder);
     }
+
+    if (id == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::hasInstance)) &&
+        DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj))->
+          wantsInterfaceHasInstance) {
+      cacheOnHolder = true;
+      JSNativeWrapper interfaceHasInstanceWrapper = { InterfaceHasInstance,
+                                                      nullptr };
+      JSObject* funObj = XrayCreateFunction(cx, wrapper,
+                                            interfaceHasInstanceWrapper, 1, id);
+      if (!funObj) {
+        return false;
+      }
+
+      desc.value().setObject(*funObj);
+      desc.setAttributes(JSPROP_READONLY | JSPROP_PERMANENT);
+      desc.object().set(wrapper);
+      desc.setSetter(nullptr);
+      desc.setGetter(nullptr);
+      return true;
+    }
   } else {
     MOZ_ASSERT(IsInterfacePrototype(type));
 
@@ -1880,7 +1914,7 @@ const js::ClassOps sBoringInterfaceObjectClassClassOps = {
     nullptr,               /* mayResolve */
     nullptr,               /* finalize */
     ThrowingConstructor,   /* call */
-    InterfaceHasInstance,  /* hasInstance */
+    nullptr,               /* hasInstance */
     ThrowingConstructor,   /* construct */
     nullptr,               /* trace */
 };
@@ -2220,24 +2254,69 @@ GlobalObject::GetAsSupports() const
   return nullptr;
 }
 
-bool
-InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
-                     JS::Handle<JSObject*> instance,
-                     bool* bp)
+static bool
+CallOrdinaryHasInstance(JSContext* cx, JS::CallArgs& args)
 {
-  const DOMIfaceAndProtoJSClass* clasp =
-    DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj));
+    JS::Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    bool isInstance;
+    if (!JS::OrdinaryHasInstance(cx, thisObj, args.get(0), &isInstance)) {
+      return false;
+    }
+    args.rval().setBoolean(isInstance);
+    return true;
+}
 
+bool
+InterfaceHasInstance(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  // If the thing we were passed is not an object, return false like
+  // OrdinaryHasInstance does.
+  if (!args.get(0).isObject()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  // If "this" is not an object, likewise return false (again, like
+  // OrdinaryHasInstance).
+  if (!args.thisv().isObject()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  // If "this" doesn't have a DOMIfaceAndProtoJSClass, it's not a DOM
+  // constructor, so just fall back to OrdinaryHasInstance.  But note that we
+  // should CheckedUnwrap here, because otherwise we won't get the right
+  // answers.
+  JS::Rooted<JSObject*> thisObj(cx, js::CheckedUnwrap(&args.thisv().toObject()));
+  if (!thisObj) {
+    // Just fall back on the normal thing, in case it still happens to work.
+    return CallOrdinaryHasInstance(cx, args);
+  }
+
+  const js::Class* thisClass = js::GetObjectClass(thisObj);
+
+  if (!IsDOMIfaceAndProtoClass(thisClass)) {
+    return CallOrdinaryHasInstance(cx, args);
+  }
+
+  const DOMIfaceAndProtoJSClass* clasp =
+    DOMIfaceAndProtoJSClass::FromJSClass(thisClass);
+
+  // If "this" isn't a DOM constructor or is a constructor for an interface
+  // without a prototype, just fall back to OrdinaryHasInstance.
+  if (clasp->mType != eInterface ||
+      clasp->mPrototypeID == prototypes::id::_ID_Count) {
+    return CallOrdinaryHasInstance(cx, args);
+  }
+
+  JS::Rooted<JSObject*> instance(cx, &args[0].toObject());
   const DOMJSClass* domClass =
     GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
 
-  MOZ_ASSERT(!domClass || clasp->mPrototypeID != prototypes::id::_ID_Count,
-             "Why do we have a hasInstance hook if we don't have a prototype "
-             "ID?");
-
   if (domClass &&
       domClass->mInterfaceChain[clasp->mDepth] == clasp->mPrototypeID) {
-    *bp = true;
+    args.rval().setBoolean(true);
     return true;
   }
 
@@ -2247,49 +2326,11 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
                               clasp->mDepth, &boolp)) {
       return false;
     }
-    *bp = boolp;
+    args.rval().setBoolean(boolp);
     return true;
   }
 
-  JS::Rooted<JS::Value> protov(cx);
-  DebugOnly<bool> ok = JS_GetProperty(cx, obj, "prototype", &protov);
-  MOZ_ASSERT(ok, "Someone messed with our prototype property?");
-
-  JS::Rooted<JSObject*> interfacePrototype(cx, &protov.toObject());
-  MOZ_ASSERT(IsDOMIfaceAndProtoClass(js::GetObjectClass(interfacePrototype)),
-             "Someone messed with our prototype property?");
-
-  JS::Rooted<JSObject*> proto(cx);
-  if (!JS_GetPrototype(cx, instance, &proto)) {
-    return false;
-  }
-
-  while (proto) {
-    if (proto == interfacePrototype) {
-      *bp = true;
-      return true;
-    }
-
-    if (!JS_GetPrototype(cx, proto, &proto)) {
-      return false;
-    }
-  }
-
-  *bp = false;
-  return true;
-}
-
-bool
-InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JS::Value> vp,
-                     bool* bp)
-{
-  if (!vp.isObject()) {
-    *bp = false;
-    return true;
-  }
-
-  JS::Rooted<JSObject*> instanceObject(cx, &vp.toObject());
-  return InterfaceHasInstance(cx, obj, instanceObject, bp);
+  return CallOrdinaryHasInstance(cx, args);
 }
 
 bool

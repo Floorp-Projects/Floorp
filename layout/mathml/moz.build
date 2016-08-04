@@ -12,6 +12,9 @@ if CONFIG['ENABLE_TESTS']:
         'imptests/mochitest.ini',
         'tests/mochitest.ini',
 ]
+    MOCHITEST_CHROME_MANIFESTS += [
+        'tests/chrome.ini',
+]
 
 UNIFIED_SOURCES += [
     'nsMathMLChar.cpp',

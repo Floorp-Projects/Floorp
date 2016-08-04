@@ -280,6 +280,9 @@ pref("print.shrink-to-fit.scale-limit-percent", 20);
 // Whether we should display simplify page checkbox on print preview UI
 pref("print.use_simplify_page", false);
 
+// Disable support for MathML
+pref("mathml.disabled",    false);
+
 // Enable scale transform for stretchy MathML operators. See bug 414277.
 pref("mathml.scale_stretchy_operators.enabled", true);
 
@@ -5162,6 +5165,16 @@ pref("snav.enabled", false);
 
 // New implementation to unify touch-caret and selection-carets.
 pref("layout.accessiblecaret.enabled", false);
+
+// On Nightly, enable the accessible caret on platforms/devices
+// that we detect have touch support. Note that this pref is an
+// additional way to enable the accessible carets, rather than
+// overriding the layout.accessiblecaret.enabled pref.
+#ifdef NIGHTLY_BUILD
+pref("layout.accessiblecaret.enabled_on_touch", true);
+#else
+pref("layout.accessiblecaret.enabled_on_touch", false);
+#endif
 
 // CSS attributes of the AccessibleCaret in CSS pixels.
 pref("layout.accessiblecaret.width", "34.0");

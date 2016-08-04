@@ -33,6 +33,11 @@ interface nsIPresentationSessionListener : nsISupports
    */
   void notifyMessage(in DOMString sessionId,
                      in ACString data);
+
+  /*
+   * Called when this listener is replaced by another one.
+   */
+  void notifyReplaced();
 };
 
 [scriptable, uuid(27f101d7-9ed1-429e-b4f8-43b00e8e111c)]

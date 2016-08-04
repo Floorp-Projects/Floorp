@@ -143,6 +143,11 @@ public:
     return nullptr;
   }
 
+  bool IsInChromeDocument()
+  {
+    return mIsInChromeDocument;
+  }
+
   bool HasAny(Flags aFlags) { return bool(mContains & aFlags); }
 
 private:
@@ -156,6 +161,7 @@ private:
   nsRestyleHint mExplicitRestyleHint;
   nsChangeHint mExplicitChangeHint;
   bool mIsHTMLElementInHTMLDocument;
+  bool mIsInChromeDocument;
 };
 
 } // namespace mozilla

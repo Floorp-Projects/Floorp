@@ -169,8 +169,8 @@ nsArrayBase::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak
   } else {
     elementRef = aElement;
   }
-  bool result = mArray.ReplaceObjectAt(elementRef, aIndex);
-  return result ? NS_OK : NS_ERROR_FAILURE;
+  mArray.ReplaceObjectAt(elementRef, aIndex);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

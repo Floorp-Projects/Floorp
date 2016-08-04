@@ -237,7 +237,7 @@ function MergeSort(array, len, comparefn) {
     // typed array specific sorting method it makes sense to divert to it
     // when possible.
     if (IsPossiblyWrappedTypedArray(array)) {
-        return TypedArraySort.call(array, comparefn);
+        return callFunction(TypedArraySort, array, comparefn);
     }
 
     for (var i = 0; i < len; i++) {

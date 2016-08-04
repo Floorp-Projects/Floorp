@@ -120,6 +120,7 @@ function isKeyIn(key, ...keys) {
  *    {Boolean} preserveTextStyles: If true, do not copy text-related styles
  *              from `element` to the new input.
  *      defaults to false
+ *    {Object} cssProperties: An instance of CSSProperties.
  */
 function editableField(options) {
   return editableItem(options, function (element, event) {
@@ -219,7 +220,7 @@ function InplaceEditor(options, event) {
   let doc = this.elt.ownerDocument;
   this.doc = doc;
   this.elt.inplaceEditor = this;
-
+  this.cssProperties = options.cssProperties;
   this.change = options.change;
   this.done = options.done;
   this.destroy = options.destroy;
@@ -1477,7 +1478,7 @@ InplaceEditor.prototype = {
    * @return {Array} array of CSS property values (Strings)
    */
   _getCSSValuesForPropertyName: function (propertyName) {
-    return domUtils.getCSSValuesForProperty(propertyName);
+    return this.cssProperties.getValues(propertyName);
   },
 };
 

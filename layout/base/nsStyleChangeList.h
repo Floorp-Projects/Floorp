@@ -40,7 +40,7 @@ public:
   }
 
   /**
-   * Fills in pointers without reference counting.  
+   * Fills in pointers without reference counting.
    */
   nsresult ChangeAt(int32_t aIndex, nsIFrame*& aFrame, nsIContent*& aContent,
                     nsChangeHint& aHint) const;

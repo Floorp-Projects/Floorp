@@ -8829,6 +8829,11 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                 return handler.newSetThis(thisName, nextMember);
             }
 
+            if (options().selfHostingMode && handler.isPropertyAccess(lhs)) {
+                report(ParseError, false, null(), JSMSG_SELFHOSTED_METHOD_CALL);
+                return null();
+            }
+
             nextMember = tt == TOK_LP ? handler.newCall() : handler.newTaggedTemplate();
             if (!nextMember)
                 return null();
