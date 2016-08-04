@@ -125,9 +125,11 @@ devtools/server/actors/**
 devtools/server/performance/**
 devtools/server/tests/**
 devtools/shared/*.js
+!devtools/shared/async-utils.js
 !devtools/shared/css-lexer.js
 !devtools/shared/defer.js
 !devtools/shared/event-emitter.js
+!devtools/shared/indentation.js
 !devtools/shared/loader-plugin-raw.jsm
 !devtools/shared/task.js
 devtools/shared/*.jsm
