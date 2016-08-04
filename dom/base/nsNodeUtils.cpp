@@ -570,7 +570,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
         JSAutoCompartment ac(cx, wrapper);
         rv = ReparentWrapper(cx, wrapper);
         if (NS_FAILED(rv)) {
-          aNode->mNodeInfo.swap(nodeInfo);
+          aNode->mNodeInfo.swap(newNodeInfo);
 
           return rv;
         }
