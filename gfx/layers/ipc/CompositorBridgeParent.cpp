@@ -821,14 +821,6 @@ CompositorBridgeParent::RecvForcePresent()
 }
 
 bool
-CompositorBridgeParent::RecvGetTileSize(int32_t* aWidth, int32_t* aHeight)
-{
-  *aWidth = gfxPlatform::GetPlatform()->GetTileWidth();
-  *aHeight = gfxPlatform::GetPlatform()->GetTileHeight();
-  return true;
-}
-
-bool
 CompositorBridgeParent::RecvNotifyRegionInvalidated(const nsIntRegion& aRegion)
 {
   if (mLayerManager) {
@@ -2042,13 +2034,6 @@ public:
   }
 
   virtual bool RecvAllPluginsCaptured() override { return true; }
-
-  virtual bool RecvGetTileSize(int32_t* aWidth, int32_t* aHeight) override
-  {
-    *aWidth = gfxPlatform::GetPlatform()->GetTileWidth();
-    *aHeight = gfxPlatform::GetPlatform()->GetTileHeight();
-    return true;
-  }
 
   virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override
   {
