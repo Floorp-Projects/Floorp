@@ -970,6 +970,16 @@
 #undef MODULE
 
   /* ======================================================================= */
+  /* 41: NS_ERROR_MODULE_DOM_MEDIA */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_DOM_MEDIA
+  /* HTMLMediaElement API errors from https://html.spec.whatwg.org/multipage/embedded-content.html#media-elements */
+  ERROR(NS_ERROR_DOM_MEDIA_ABORT_ERR,           FAILURE(1)),
+  ERROR(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR,     FAILURE(2)),
+  ERROR(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,   FAILURE(3)),
+#undef MODULE
+
+  /* ======================================================================= */
   /* 51: NS_ERROR_MODULE_GENERAL */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_GENERAL
