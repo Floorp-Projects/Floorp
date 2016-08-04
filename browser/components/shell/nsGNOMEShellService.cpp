@@ -27,7 +27,7 @@
 #include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #if defined(MOZ_WIDGET_GTK)
 #include "nsIImageToPixbuf.h"
 #endif
@@ -516,7 +516,7 @@ ColorToCString(uint32_t aColor, nsCString& aResult)
   uint16_t green = COLOR_8_TO_16_BIT((aColor >> 8) & 0xff);
   uint16_t blue = COLOR_8_TO_16_BIT(aColor & 0xff);
 
-  PR_snprintf(buf, 14, "#%04x%04x%04x", red, green, blue);
+  snprintf(buf, 14, "#%04x%04x%04x", red, green, blue);
 }
 
 NS_IMETHODIMP
