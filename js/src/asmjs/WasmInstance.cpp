@@ -296,8 +296,9 @@ Instance::Instance(JSContext* cx,
         const FuncImport& fi = metadata().funcImports[i];
         FuncImportTls& import = funcImportTls(fi);
         import.code = codeBase() + fi.interpExitCodeOffset();
-        import.fun = funcImports[i];
+        import.tls = &tlsData_;
         import.baselineScript = nullptr;
+        import.fun = funcImports[i];
     }
 
     uint8_t* globalData = code_->segment().globalData();
