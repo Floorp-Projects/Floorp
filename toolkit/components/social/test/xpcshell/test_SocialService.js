@@ -16,16 +16,17 @@ function run_test() {
     { // normal provider
       name: "provider 1",
       origin: "https://example1.com",
-      shareURL: "https://example1.com/share/",
+      sidebarURL: "https://example1.com/sidebar/",
     },
     { // provider without workerURL
       name: "provider 2",
       origin: "https://example2.com",
-      shareURL: "https://example2.com/share/",
+      sidebarURL: "https://example2.com/sidebar/",
     }
   ];
 
-  Cu.import("resource:///modules/SocialService.jsm");
+  Cu.import("resource://gre/modules/SocialService.jsm");
+  Cu.import("resource://gre/modules/MozSocialAPI.jsm");
 
   let runner = new AsyncRunner();
   let next = runner.next.bind(runner);
@@ -44,6 +45,7 @@ function* testAddProviders(manifests, next) {
   do_check_false(SocialService.enabled);
   let provider = yield SocialService.addProvider(manifests[0], next);
   do_check_true(SocialService.enabled);
+  do_check_true(MozSocialAPI._enabled);
   do_check_false(provider.enabled);
   provider = yield SocialService.addProvider(manifests[1], next);
   do_check_false(provider.enabled);
@@ -150,7 +152,7 @@ function* testOrderedProviders(manifests, next) {
   let startDate = Date.now() * 1000;
   for (let i = 0; i < 10; i++) {
     visits.push({
-      uri: Services.io.newURI(providers[1].shareURL + i, null, null),
+      uri: Services.io.newURI(providers[1].sidebarURL + i, null, null),
       visitDate: startDate + i
     });
   }

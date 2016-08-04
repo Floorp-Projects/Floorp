@@ -4,7 +4,8 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Social", "OpenGraphBuilder",
+this.EXPORTED_SYMBOLS = ["Social", "CreateSocialStatusWidget",
+                         "CreateSocialMarkWidget", "OpenGraphBuilder",
                          "DynamicResizeWatcher", "sizeSocialPanelToContent"];
 
 const Ci = Components.interfaces;
@@ -22,7 +23,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
-  "resource:///modules/SocialService.jsm");
+  "resource://gre/modules/SocialService.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
   "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -30,6 +31,46 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
+
+function promiseSetAnnotation(aURI, providerList) {
+  let deferred = Promise.defer();
+
+  // Delaying to catch issues with asynchronous behavior while waiting
+  // to implement asynchronous annotations in bug 699844.
+  Services.tm.mainThread.dispatch(function() {
+    try {
+      if (providerList && providerList.length > 0) {
+        PlacesUtils.annotations.setPageAnnotation(
+          aURI, "social/mark", JSON.stringify(providerList), 0,
+          PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+      } else {
+        PlacesUtils.annotations.removePageAnnotation(aURI, "social/mark");
+      }
+    } catch(e) {
+      Cu.reportError("SocialAnnotation failed: " + e);
+    }
+    deferred.resolve();
+  }, Ci.nsIThread.DISPATCH_NORMAL);
+
+  return deferred.promise;
+}
+
+function promiseGetAnnotation(aURI) {
+  let deferred = Promise.defer();
+
+  // Delaying to catch issues with asynchronous behavior while waiting
+  // to implement asynchronous annotations in bug 699844.
+  Services.tm.mainThread.dispatch(function() {
+    let val = null;
+    try {
+      val = PlacesUtils.annotations.getPageAnnotation(aURI, "social/mark");
+    } catch (ex) { }
+
+    deferred.resolve(val);
+  }, Ci.nsIThread.DISPATCH_NORMAL);
+
+  return deferred.promise;
+}
 
 this.Social = {
   initialized: false,
@@ -108,6 +149,11 @@ this.Social = {
     return !this._disabledForSafeMode && this.providers.length > 0;
   },
 
+  toggleNotifications: function SocialNotifications_toggle() {
+    let prefValue = Services.prefs.getBoolPref("social.toast-notifications.enabled");
+    Services.prefs.setBoolPref("social.toast-notifications.enabled", !prefValue);
+  },
+
   _getProviderFromOrigin: function (origin) {
     for (let p of this.providers) {
       if (p.origin == origin) {
@@ -134,8 +180,138 @@ this.Social = {
     // It's OK if the provider has already been activated - we still get called
     // back with it.
     SocialService.enableProvider(origin, callback);
+  },
+
+  // Page Marking functionality
+  isURIMarked: function(origin, aURI, aCallback) {
+    promiseGetAnnotation(aURI).then(function(val) {
+      if (val) {
+        let providerList = JSON.parse(val);
+        val = providerList.indexOf(origin) >= 0;
+      }
+      aCallback(!!val);
+    }).then(null, Cu.reportError);
+  },
+
+  markURI: function(origin, aURI, aCallback) {
+    // update or set our annotation
+    promiseGetAnnotation(aURI).then(function(val) {
+
+      let providerList = val ? JSON.parse(val) : [];
+      let marked = providerList.indexOf(origin) >= 0;
+      if (marked)
+        return;
+      providerList.push(origin);
+      // we allow marking links in a page that may not have been visited yet.
+      // make sure there is a history entry for the uri, then annotate it.
+      let place = {
+        uri: aURI,
+        visits: [{
+          visitDate: Date.now() + 1000,
+          transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+        }]
+      };
+      PlacesUtils.asyncHistory.updatePlaces(place, {
+        handleError: () => Cu.reportError("couldn't update history for socialmark annotation"),
+        handleResult: function () {},
+        handleCompletion: function () {
+          promiseSetAnnotation(aURI, providerList).then(function() {
+            if (aCallback)
+              schedule(function() { aCallback(true); } );
+          }).then(null, Cu.reportError);
+        }
+      });
+    }).then(null, Cu.reportError);
+  },
+
+  unmarkURI: function(origin, aURI, aCallback) {
+    // this should not be called if this.provider or the port is null
+    // set our annotation
+    promiseGetAnnotation(aURI).then(function(val) {
+      let providerList = val ? JSON.parse(val) : [];
+      let marked = providerList.indexOf(origin) >= 0;
+      if (marked) {
+        // remove the annotation
+        providerList.splice(providerList.indexOf(origin), 1);
+        promiseSetAnnotation(aURI, providerList).then(function() {
+          if (aCallback)
+            schedule(function() { aCallback(false); } );
+        }).then(null, Cu.reportError);
+      }
+    }).then(null, Cu.reportError);
   }
 };
+
+function schedule(callback) {
+  Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+}
+
+function CreateSocialStatusWidget(aId, aProvider) {
+  if (!aProvider.statusURL)
+    return;
+  let widget = CustomizableUI.getWidget(aId);
+  // The widget is only null if we've created then destroyed the widget.
+  // Once we've actually called createWidget the provider will be set to
+  // PROVIDER_API.
+  if (widget && widget.provider == CustomizableUI.PROVIDER_API)
+    return;
+
+  CustomizableUI.createWidget({
+    id: aId,
+    type: "custom",
+    removable: true,
+    defaultArea: CustomizableUI.AREA_NAVBAR,
+    onBuild: function(aDocument) {
+      let node = aDocument.createElement("toolbarbutton");
+      node.id = this.id;
+      node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional social-status-button badged-button");
+      node.style.listStyleImage = "url(" + (aProvider.icon32URL || aProvider.iconURL) + ")";
+      node.setAttribute("origin", aProvider.origin);
+      node.setAttribute("label", aProvider.name);
+      node.setAttribute("tooltiptext", aProvider.name);
+      node.setAttribute("oncommand", "SocialStatus.showPopup(this);");
+      node.setAttribute("constrain-size", "true");
+
+      return node;
+    }
+  });
+}
+
+function CreateSocialMarkWidget(aId, aProvider) {
+  if (!aProvider.markURL)
+    return;
+  let widget = CustomizableUI.getWidget(aId);
+  // The widget is only null if we've created then destroyed the widget.
+  // Once we've actually called createWidget the provider will be set to
+  // PROVIDER_API.
+  if (widget && widget.provider == CustomizableUI.PROVIDER_API)
+    return;
+
+  CustomizableUI.createWidget({
+    id: aId,
+    type: "custom",
+    removable: true,
+    defaultArea: CustomizableUI.AREA_NAVBAR,
+    onBuild: function(aDocument) {
+      let node = aDocument.createElement("toolbarbutton");
+      node.id = this.id;
+      node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional social-mark-button");
+      node.setAttribute("type", "socialmark");
+      node.setAttribute("constrain-size", "true");
+      node.style.listStyleImage = "url(" + (aProvider.unmarkedIcon || aProvider.icon32URL || aProvider.iconURL) + ")";
+      node.setAttribute("origin", aProvider.origin);
+
+      let window = aDocument.defaultView;
+      let menuLabel = window.gNavigatorBundle.getFormattedString("social.markpageMenu.label", [aProvider.name]);
+      node.setAttribute("label", menuLabel);
+      node.setAttribute("tooltiptext", menuLabel);
+      node.setAttribute("observes", "Social:PageShareOrMark");
+
+      return node;
+    }
+  });
+}
+
 
 function sizeSocialPanelToContent(panel, iframe, requestedSize) {
   let doc = iframe.contentDocument;

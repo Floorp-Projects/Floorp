@@ -10,7 +10,7 @@
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: Assert is null");
 
 
-var SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 var tabsToRemove = [];
 
@@ -73,6 +73,7 @@ function activateIFrameProvider(domain, callback) {
 function waitForProviderLoad(origin) {
   return Promise.all([
     ensureFrameLoaded(gBrowser, origin + "/browser/browser/base/content/test/social/social_postActivation.html"),
+    ensureFrameLoaded(SocialSidebar.browser)
   ]);
 }
 
@@ -112,7 +113,6 @@ function clickAddonRemoveButton(tab, aCallback) {
 }
 
 function activateOneProvider(manifest, finishActivation, aCallback) {
-  info("activating provider "+manifest.name);
   let panel = document.getElementById("servicesInstall-notification");
   BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown").then(() => {
     ok(!panel.hidden, "servicesInstall-notification panel opened");
@@ -128,6 +128,8 @@ function activateOneProvider(manifest, finishActivation, aCallback) {
       executeSoon(aCallback);
     } else {
       waitForProviderLoad(manifest.origin).then(() => {
+        is(SocialSidebar.provider.origin, manifest.origin, "new provider is active");
+        ok(SocialSidebar.opened, "sidebar is open");
         checkSocialUI();
         executeSoon(aCallback);
       });
@@ -145,19 +147,19 @@ var gProviders = [
   {
     name: "provider 1",
     origin: "https://example.com",
-    shareURL: "https://example.com/browser/browser/base/content/test/social/social_share.html?provider1",
+    sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html?provider1",
     iconURL: "chrome://branding/content/icon48.png"
   },
   {
     name: "provider 2",
     origin: "https://test1.example.com",
-    shareURL: "https://test1.example.com/browser/browser/base/content/test/social/social_share.html?provider2",
+    sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar_empty.html?provider2",
     iconURL: "chrome://branding/content/icon64.png"
   },
   {
     name: "provider 3",
     origin: "https://test2.example.com",
-    shareURL: "https://test2.example.com/browser/browser/base/content/test/social/social_share.html?provider2",
+    sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar_empty.html?provider2",
     iconURL: "chrome://branding/content/about-logo.png"
   }
 ];
@@ -189,6 +191,7 @@ var tests = {
   testIFrameActivation: function(next) {
     activateIFrameProvider(gTestDomains[0], function() {
       is(SocialUI.enabled, false, "SocialUI is not enabled");
+      ok(!SocialSidebar.provider, "provider is not installed");
       let panel = document.getElementById("servicesInstall-notification");
       ok(panel.hidden, "activation panel still hidden");
       checkSocialUI();
@@ -200,6 +203,7 @@ var tests = {
     // first up we add a manifest entry for a single provider.
     activateOneProvider(gProviders[0], false, function() {
       // we deactivated leaving no providers left, so Social is disabled.
+      ok(!SocialSidebar.provider, "should be no provider left after disabling");
       checkSocialUI();
       next();
     });
@@ -217,6 +221,7 @@ var tests = {
         // activate the last provider.
         activateOneProvider(gProviders[2], false, function() {
           // we deactivated - the first provider should be enabled.
+          is(SocialSidebar.provider.origin, Social.providers[1].origin, "original provider should have been reactivated");
           checkSocialUI();
           next();
         });

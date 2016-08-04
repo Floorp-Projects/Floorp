@@ -107,7 +107,10 @@
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
     <command id="Social:SharePage" oncommand="SocialShare.sharePage();"/>
+    <command id="Social:ToggleSidebar" oncommand="SocialSidebar.toggleSidebar();" hidden="true"/>
+    <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();" hidden="true"/>
     <command id="Social:Addons" oncommand="BrowserOpenAddonsMgr('addons://list/service');"/>
+    <command id="Chat:Focus" oncommand="Cu.import('resource:///modules/Chat.jsm', {}).Chat.focus(window);"/>
   </commandset>
 
   <commandset id="placesCommands">
@@ -118,7 +121,7 @@
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
-    <broadcaster id="Social:PageShareable" disabled="true"/>
+    <broadcaster id="Social:PageShareOrMark" disabled="true"/>
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
                  oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
@@ -178,6 +181,7 @@
                  sidebarurl="chrome://browser/content/syncedtabs/sidebar.xhtml"
                  oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
     <broadcaster id="workOfflineMenuitemState"/>
+    <broadcaster id="socialSidebarBroadcaster" hidden="true"/>
 
     <broadcaster id="devtoolsMenuBroadcaster_PageSource"
                  label="&pageSourceCmd.label;"
@@ -311,6 +315,17 @@
 # overridden for other purposes there.
     <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
+
+    <!--<key id="markPage" key="&markPageCmd.commandkey;" command="Social:TogglePageMark" modifiers="accel,shift"/>-->
+    <key id="focusChatBar" key="&social.chatBar.commandkey;" command="Chat:Focus"
+#ifdef XP_MACOSX
+# Sadly the devtools uses shift-accel-c on non-mac and alt-accel-c everywhere else
+# So we just use the other
+         modifiers="accel,shift"
+#else
+         modifiers="accel,alt"
+#endif
+    />
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 

@@ -99,6 +99,7 @@
   skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
   skin/classic/browser/search-arrow-go.svg                     (../shared/search/search-arrow-go.svg)
   skin/classic/browser/gear.svg                                (../shared/search/gear.svg)
+  skin/classic/browser/social/chat-icons.svg                   (../shared/social/chat-icons.svg)
   skin/classic/browser/social/gear_default.png                 (../shared/social/gear_default.png)
   skin/classic/browser/social/gear_clicked.png                 (../shared/social/gear_clicked.png)
   skin/classic/browser/tabbrowser/connecting.png               (../shared/tabbrowser/connecting.png)

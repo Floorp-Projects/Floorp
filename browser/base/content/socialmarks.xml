@@ -1,0 +1,366 @@
+<?xml version="1.0"?>
+
+<bindings id="socialMarkBindings"
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+  <binding id="toolbarbutton-marks" display="xul:button"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <xul:panel anonid="panel" hidden="true" type="arrow" class="social-panel"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
+      <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,wrap"/>
+      <xul:label class="toolbarbutton-multiline-text" flex="1"
+                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
+    </content>
+    <implementation implements="nsIDOMEventListener, nsIObserver">
+      <constructor>
+        // if we overflow, we have to reset the button. unfortunately we cannot
+        // use a widget listener because we need to do this *after* the node is
+        // moved, and the event happens before the node is moved.
+        this.update();
+      </constructor>
+      <property name="_anchor">
+        <getter>
+          let widgetGroup = CustomizableUI.getWidget(this.getAttribute("id"));
+          return widgetGroup.forWindow(window).anchor;
+        </getter>
+      </property>
+      <property name="_useDynamicResizer">
+        <getter>
+          let provider = Social._getProviderFromOrigin(this.getAttribute("origin"));
+          return !provider.getPageSize("marks");
+        </getter>
+      </property>
+
+      <property name="panel">
+        <getter>
+          return document.getAnonymousElementByAttribute(this, "anonid", "panel");
+        </getter>
+      </property>
+
+      <property name="content">
+        <getter><![CDATA[
+          if (this._frame)
+            return this._frame;
+          let provider = Social._getProviderFromOrigin(this.getAttribute("origin"));
+          let size = provider.getPageSize("marks");
+          let {width, height} = size ? size : {width: 330, height: 100};
+
+          let iframe = this._frame = document.createElement("iframe");
+          iframe.setAttribute("type", "content");
+          iframe.setAttribute("class", "social-panel-frame");
+          iframe.setAttribute("flex", "1");
+          iframe.setAttribute("message", "true");
+          iframe.setAttribute("messagemanagergroup", "social");
+          iframe.setAttribute("tooltip", "aHTMLTooltip");
+          iframe.setAttribute("context", "contentAreaContextMenu");
+          iframe.setAttribute("origin", provider.origin);
+          iframe.setAttribute("style", "width: " + width + "px; height: " + height + "px;");
+          this.panel.appendChild(iframe);
+
+          this._frame.addEventListener("DOMLinkAdded", this);
+          return this._frame;
+        ]]></getter>
+      </property>
+
+      <property name="messageManager">
+        <getter>
+          return this.content.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;
+        </getter>
+      </property>
+
+      <property name="contentWindow">
+        <getter>
+          return this.content.contentWindow;
+        </getter>
+      </property>
+
+      <property name="contentDocument">
+        <getter>
+          return this.content.contentDocument;
+        </getter>
+      </property>
+
+      <property name="provider">
+        <getter>
+          return Social._getProviderFromOrigin(this.getAttribute("origin"));
+        </getter>
+      </property>
+
+      <property name="isMarked">
+        <setter><![CDATA[
+          this._isMarked = val;
+          let provider = this.provider;
+          // we cannot size the image when we apply it via listStyleImage, so
+          // use the toolbar image
+          let widgetGroup = CustomizableUI.getWidget(this.getAttribute("id"));
+          val = val && !!widgetGroup.areaType;
+          let icon = val ? provider.markedIcon : provider.unmarkedIcon;
+          let iconURL = icon || provider.icon32URL || provider.iconURL;
+          this.setAttribute("image", iconURL);
+        ]]></setter>
+        <getter>
+          return this._isMarked;
+        </getter>
+      </property>
+
+      <method name="update">
+        <body><![CDATA[
+        // update the button for use with the current tab
+        let provider = this.provider;
+        if (this._dynamicResizer) {
+          this._dynamicResizer.stop();
+          this._dynamicResizer = null;
+        }
+        this.content.setAttribute("src", "about:blank");
+        // called during onhidden, make sure the docshell is updated
+        if (this._frame.docShell)
+          this._frame.docShell.createAboutBlankContentViewer(null);
+
+        // disabled attr is set by Social:PageShareOrMark command
+        if (this.hasAttribute("disabled")) {
+          this.isMarked = false;
+        } else {
+          Social.isURIMarked(provider.origin, gBrowser.currentURI, (isMarked) => {
+            this.isMarked = isMarked;
+          });
+        }
+
+        this.content.setAttribute("origin", provider.origin);
+
+        let panel = this.panel;
+        // if customization is currently happening, we may not have a panel
+        // that we can hide
+        if (panel.hidePopup) {
+          panel.hidePopup();
+        }
+        this.pageData = null;
+        ]]></body>
+      </method>
+
+      <method name="receiveMessage">
+        <parameter name="message"/>
+        <body><![CDATA[
+        if (message.name != "Social:ErrorPageNotify" || message.target != this.content)
+          return;
+        this.openPanel();
+        ]]></body>
+      </method>
+
+      <method name="loadPanel">
+        <parameter name="pageData"/>
+        <parameter name="target"/>
+        <body><![CDATA[
+        let provider = this.provider;
+        let panel = this.panel;
+        panel.hidden = false;
+
+        // reparent the iframe if we've been customized to a new location
+        if (this.content.parentNode != panel)
+          panel.appendChild(this.content);
+
+        let URLTemplate = provider.markURL;
+        let _dataFn;
+        if (!pageData) {
+          messageManager.addMessageListener("PageMetadata:PageDataResult", _dataFn = (msg) => {
+            messageManager.removeMessageListener("PageMetadata:PageDataResult", _dataFn);
+            this.loadPanel(msg.json, target);
+          });
+          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData", null, { target });
+          return;
+        }
+        // if this is a share of a selected item, get any microformats
+        if (!pageData.microformats && target) {
+          messageManager.addMessageListener("PageMetadata:MicroformatsResult", _dataFn = (msg) => {
+            messageManager.removeMessageListener("PageMetadata:MicroformatsResult", _dataFn);
+            pageData.microformats = msg.data;
+            this.loadPanel(pageData, target);
+          });
+          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicroformats", null, { target });
+          return;
+        }
+        this.pageData = pageData;
+
+        let endpoint = OpenGraphBuilder.generateEndpointURL(URLTemplate, this.pageData);
+        // setup listeners
+        let DOMContentLoaded = (event) => {
+          this._loading = false;
+          this.messageManager.removeMessageListener("DOMContentLoaded", DOMContentLoaded);
+          // add our resizer after the dom is ready
+          if (this._useDynamicResizer) {
+            let DynamicResizeWatcher = Cu.import("resource:///modules/Social.jsm", {}).DynamicResizeWatcher;
+            this._dynamicResizer = new DynamicResizeWatcher();
+            this._dynamicResizer.start(this.panel, this.content);
+          } else if (this._dynamicResizer) {
+            this._dynamicResizer.stop();
+            this._dynamicResizer = null;
+          }
+
+          let contentWindow = this.contentWindow;
+          let markUpdate = function(event) {
+            // update the annotation based on this event, then update the
+            // icon as well
+            this.isMarked = JSON.parse(event.detail).marked;
+            if (this.isMarked) {
+              Social.markURI(provider.origin, gBrowser.currentURI);
+            } else {
+              Social.unmarkURI(provider.origin, gBrowser.currentURI, () => {
+                this.update();
+              });
+            }
+          }.bind(this);
+          let unload = () => {
+            contentWindow.removeEventListener("unload", unload);
+            contentWindow.removeEventListener("socialMarkUpdate", markUpdate);
+          }
+          contentWindow.addEventListener("socialMarkUpdate", markUpdate);
+          contentWindow.addEventListener("unload", unload);
+
+          // send the opengraph data
+          this.messageManager.sendAsyncMessage("Social:OpenGraphData", pageData);
+        }
+        this.messageManager.addMessageListener("DOMContentLoaded", DOMContentLoaded);
+        this._loading = true;
+        this.content.setAttribute("src", endpoint);
+        ]]></body>
+      </method>
+
+      <method name="openPanel">
+        <parameter name="aResetOnClose"/>
+        <body><![CDATA[
+        let panel = this.panel;
+        let anchor = document.getAnonymousElementByAttribute(this._anchor, "class", "toolbarbutton-icon");
+        // Bug 849216 - open the popup in a setTimeout so we avoid the auto-rollup
+        // handling from preventing it being opened in some cases.
+        setTimeout(() => {
+          panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
+        }, 0);
+        Services.telemetry.getHistogramById("SOCIAL_TOOLBAR_BUTTONS").add(2);
+        ]]></body>
+       </method>
+
+      <method name="markCurrentPage">
+        <parameter name="aOpenPanel"/>
+        <body><![CDATA[
+        // we always set the src on click if it has not been set for this tab,
+        // but we only want to open the panel if it was previously annotated.
+        let openPanel = this.isMarked || aOpenPanel;
+        let src = this.content.getAttribute("src");
+        if (!src || src == "about:blank") {
+          this.loadPanel();
+        }
+        if (openPanel)
+          this.openPanel();
+        ]]></body>
+      </method>
+
+      <method name="markLink">
+        <parameter name="aUrl"/>
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+        if (!aUrl) {
+          this.markCurrentPage(true);
+          return;
+        }
+        // initiated form an external source, such as gContextMenu, where
+        // pageData is passed into us. In this case, we always load the iframe
+        // and show it since the url may not be the browser tab, but an image,
+        // link, etc. inside the page. We also "update" the iframe to the
+        // previous url when it is closed.
+        this.content.setAttribute("src", "about:blank");
+        this.loadPanel({ url: aUrl }, aTarget);
+        this.openPanel(true);
+        ]]></body>
+      </method>
+
+      <method name="dispatchPanelEvent">
+        <parameter name="name"/>
+        <body><![CDATA[
+        let evt = this.contentDocument.createEvent("CustomEvent");
+        evt.initCustomEvent(name, true, true, {});
+        this.contentDocument.documentElement.dispatchEvent(evt);
+        ]]></body>
+      </method>
+
+      <method name="onShown">
+        <body><![CDATA[
+        // because the panel may be preloaded, we need to size the panel when
+        // showing as well as after load
+        if (!this._useDynamicResizer) {
+          return;
+        }
+        let sizeSocialPanelToContent = Cu.import("resource:///modules/Social.jsm", {}).sizeSocialPanelToContent;
+        if (!this._loading && this.contentDocument &&
+            this.contentDocument.readyState == "complete") {
+          sizeSocialPanelToContent(this.panel, this.content);
+        } else {
+          let panelBrowserOnload = (message) => {
+            if (message.target != this.content)
+              return;
+            this.messageManager.removeMessageListener("PageVisibility:Show", panelBrowserOnload, true);
+            sizeSocialPanelToContent(this.panel, this.content);
+          };
+          this.messageManager.addMessageListener("PageVisibility:Show", panelBrowserOnload);
+        }
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+        if (aEvent.eventPhase != aEvent.BUBBLING_PHASE)
+          return;
+        switch(aEvent.type) {
+          case "DOMLinkAdded": {
+            // much of this logic is from DOMLinkHandler in browser.js, this sets
+            // the presence icon for a chat user, we simply use favicon style
+            // updating
+            let link = aEvent.originalTarget;
+            let rel = link.rel && link.rel.toLowerCase();
+            if (!link || !link.ownerDocument || !rel || !link.href)
+              return;
+            if (link.rel.indexOf("icon") < 0)
+              return;
+
+            let ContentLinkHandler = Cu.import("resource:///modules/ContentLinkHandler.jsm", {}).ContentLinkHandler;
+            let uri = ContentLinkHandler.getLinkIconURI(link);
+            if (!uri)
+              return;
+
+            // we cannot size the image when we apply it via listStyleImage, so
+            // use the toolbar image
+            this.setAttribute("image", uri.spec);
+            }
+            break;
+          case "click":
+            Services.telemetry.getHistogramById("SOCIAL_PANEL_CLICKS").add(2);
+            break;
+        }
+        ]]></body>
+      </method>
+
+    </implementation>
+    <handlers>
+      <handler event="popupshowing"><![CDATA[
+        this._anchor.setAttribute("open", "true");
+        this.content.addEventListener("click", this);
+      ]]></handler>
+      <handler event="popupshown"><![CDATA[
+        this.onShown();
+      ]]></handler>
+      <handler event="popuphidden"><![CDATA[
+        this._anchor.removeAttribute("open");
+        this.update();
+        this.content.removeEventListener("click", this);
+      ]]></handler>
+      <handler event="command"><![CDATA[
+        this.markCurrentPage();
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>
