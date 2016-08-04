@@ -694,13 +694,12 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
       }
     }
 
-#if defined(XP_WIN) || defined(ANDROID)
+#if defined(XP_WIN) || defined(ANDROID) || defined(MOZ_X11)
     uint64_t driverVersion;
     ParseDriverVersion(adapterDriverVersionString, &driverVersion);
 #endif
 
-    if (!info[i].mAdapterVendor.Equals(GfxDriverInfo::GetDeviceVendor(VendorAll), nsCaseInsensitiveStringComparator()) &&
-        !info[i].mAdapterVendor.Equals(adapterVendorID, nsCaseInsensitiveStringComparator())) {
+    if (!DoesVendorMatch(info[i].mAdapterVendor, adapterVendorID)) {
       continue;
     }
 
@@ -733,7 +732,7 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
         continue;
     }
 
-#if defined(XP_WIN) || defined(ANDROID)
+#if defined(XP_WIN) || defined(ANDROID) || defined(MOZ_X11)
     switch (info[i].mComparisonOp) {
     case DRIVER_LESS_THAN:
       match = driverVersion < info[i].mDriverVersion;
@@ -838,6 +837,14 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
 #endif
 
   return status;
+}
+
+bool
+GfxInfoBase::DoesVendorMatch(const nsAString& aBlocklistVendor,
+                             const nsAString& aAdapterVendor)
+{
+  return aBlocklistVendor.Equals(aAdapterVendor, nsCaseInsensitiveStringComparator()) ||
+         aBlocklistVendor.Equals(GfxDriverInfo::GetDeviceVendor(VendorAll), nsCaseInsensitiveStringComparator());
 }
 
 nsresult
