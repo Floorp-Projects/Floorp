@@ -14,7 +14,6 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsIObserver.h"
 #include "nsIAndroidBridge.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/dom/Touch.h"
@@ -422,14 +421,6 @@ public:
         return event;
     }
 
-    static AndroidGeckoEvent* MakeAddObserver(const nsAString &key, nsIObserver *observer) {
-        AndroidGeckoEvent *event = new AndroidGeckoEvent();
-        event->Init(ADD_OBSERVER);
-        event->mCharacters.Assign(key);
-        event->mObserver = observer;
-        return event;
-    }
-
     static AndroidGeckoEvent* MakeApzInputEvent(const MultiTouchInput& aInput, const mozilla::layers::ScrollableLayerGuid& aGuid, uint64_t aInputBlockId, nsEventStatus aEventStatus) {
         AndroidGeckoEvent* event = new AndroidGeckoEvent();
         event->Init(APZ_INPUT_EVENT);
@@ -459,7 +450,6 @@ public:
     double X() { return mX; }
     nsString& Characters() { return mCharacters; }
     nsString& CharactersExtra() { return mCharactersExtra; }
-    nsString& Data() { return mData; }
     int MetaState() { return mMetaState; }
     Modifiers DOMModifiers() const;
     bool IsAltPressed() const { return (mMetaState & AMETA_ALT_MASK) != 0; }
@@ -473,7 +463,6 @@ public:
     WidgetTouchEvent MakeTouchEvent(nsIWidget* widget);
     MultiTouchInput MakeMultiTouchInput(nsIWidget* widget);
     WidgetMouseEvent MakeMouseEvent(nsIWidget* widget);
-    nsIObserver *Observer() { return mObserver; }
     mozilla::layers::ScrollableLayerGuid ApzGuid();
     uint64_t ApzInputBlockId();
     nsEventStatus ApzEventStatus();
@@ -492,8 +481,7 @@ protected:
     int mCount;
     double mX;
     int mPointerIndex;
-    nsString mCharacters, mCharactersExtra, mData;
-    nsCOMPtr<nsIObserver> mObserver;
+    nsString mCharacters, mCharactersExtra;
     MultiTouchInput mApzInput;
     mozilla::layers::ScrollableLayerGuid mApzGuid;
     uint64_t mApzInputBlockId;
@@ -516,7 +504,6 @@ protected:
                          jfieldID field);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);
-    void ReadDataField(JNIEnv *jenv);
     void ReadStringFromJString(nsString &aString, JNIEnv *jenv, jstring s);
 
     static jclass jGeckoEventClass;
@@ -533,7 +520,6 @@ protected:
 
     static jfieldID jCharactersField;
     static jfieldID jCharactersExtraField;
-    static jfieldID jDataField;
     static jfieldID jMetaStateField;
     static jfieldID jCountField;
     static jfieldID jPointerIndexField;
@@ -545,9 +531,6 @@ public:
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         VIEWPORT = 20,
         NATIVE_GESTURE_EVENT = 31,
-        CALL_OBSERVER = 33,
-        REMOVE_OBSERVER = 34,
-        ADD_OBSERVER = 38,
         LONG_PRESS = 47,
         dummy_java_enum_list_end
     };

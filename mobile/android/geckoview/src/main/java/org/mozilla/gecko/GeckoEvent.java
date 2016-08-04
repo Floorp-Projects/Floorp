@@ -67,8 +67,6 @@ public class GeckoEvent {
         MOTION_EVENT(2),
         VIEWPORT(20),
         NATIVE_GESTURE_EVENT(31),
-        CALL_OBSERVER(33),
-        REMOVE_OBSERVER(34),
         LONG_PRESS(47);
 
         public final int value;
@@ -98,7 +96,6 @@ public class GeckoEvent {
     private int mCount;
     private String mCharacters;
     private String mCharactersExtra;
-    private String mData;
 
     private GeckoEvent(NativeGeckoEvent event) {
         mType = event.value;
@@ -254,20 +251,6 @@ public class GeckoEvent {
           .append(", \"displayPort\" :").append(displayPort.toJSON())
           .append('}');
         event.mCharactersExtra = sb.toString();
-        return event;
-    }
-
-    public static GeckoEvent createCallObserverEvent(String observerKey, String topic, String data) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.CALL_OBSERVER);
-        event.mCharacters = observerKey;
-        event.mCharactersExtra = topic;
-        event.mData = data;
-        return event;
-    }
-
-    public static GeckoEvent createRemoveObserverEvent(String observerKey) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.REMOVE_OBSERVER);
-        event.mCharacters = observerKey;
         return event;
     }
 }

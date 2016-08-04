@@ -29,7 +29,6 @@ jfieldID AndroidGeckoEvent::jXField = 0;
 
 jfieldID AndroidGeckoEvent::jCharactersField = 0;
 jfieldID AndroidGeckoEvent::jCharactersExtraField = 0;
-jfieldID AndroidGeckoEvent::jDataField = 0;
 jfieldID AndroidGeckoEvent::jMetaStateField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
 jfieldID AndroidGeckoEvent::jPointerIndexField = 0;
@@ -84,7 +83,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
 
     jCharactersField = geckoEvent.getField("mCharacters", "Ljava/lang/String;");
     jCharactersExtraField = geckoEvent.getField("mCharactersExtra", "Ljava/lang/String;");
-    jDataField = geckoEvent.getField("mData", "Ljava/lang/String;");
     jMetaStateField = geckoEvent.getField("mMetaState", "I");
     jCountField = geckoEvent.getField("mCount", "I");
     jPointerIndexField = geckoEvent.getField("mPointerIndex", "I");
@@ -212,13 +210,6 @@ AndroidGeckoEvent::ReadCharactersExtraField(JNIEnv *jenv)
 }
 
 void
-AndroidGeckoEvent::ReadDataField(JNIEnv *jenv)
-{
-    jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jDataField);
-    ReadStringFromJString(mData, jenv, s);
-}
-
-void
 AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 {
     NS_ASSERTION(!wrapped_obj, "Init called on non-null wrapped_obj!");
@@ -260,18 +251,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         case VIEWPORT: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);
-            break;
-        }
-
-        case CALL_OBSERVER: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            ReadDataField(jenv);
-            break;
-        }
-
-        case REMOVE_OBSERVER: {
-            ReadCharactersField(jenv);
             break;
         }
 
