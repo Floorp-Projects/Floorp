@@ -233,6 +233,10 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertTrue(
             send("return typeof window.wrappedJSObject == 'undefined'"))
 
+    def test_no_callback(self):
+        self.assertTrue(self.marionette.execute_script(
+            "return typeof arguments[0] == 'undefined'"))
+
 
 class TestExecuteChrome(TestExecuteContent):
     def setUp(self):
