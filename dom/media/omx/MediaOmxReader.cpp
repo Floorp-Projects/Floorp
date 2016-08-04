@@ -409,25 +409,25 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
       b.mPlanes[2].mOffset = frame.Cr.mOffset;
       b.mPlanes[2].mSkip = frame.Cr.mSkip;
 
-      v = VideoData::Create(mInfo.mVideo,
-                            mDecoder->GetImageContainer(),
-                            pos,
-                            frame.mTimeUs,
-                            1, // We don't know the duration.
-                            b,
-                            frame.mKeyFrame,
-                            -1,
-                            picture);
+      v = VideoData::CreateAndCopyData(mInfo.mVideo,
+                                       mDecoder->GetImageContainer(),
+                                       pos,
+                                       frame.mTimeUs,
+                                       1, // We don't know the duration.
+                                       b,
+                                       frame.mKeyFrame,
+                                       -1,
+                                       picture);
     } else {
-      v = VideoData::Create(mInfo.mVideo,
-                            mDecoder->GetImageContainer(),
-                            pos,
-                            frame.mTimeUs,
-                            1, // We don't know the duration.
-                            frame.mGraphicBuffer,
-                            frame.mKeyFrame,
-                            -1,
-                            picture);
+      v = VideoData::CreateAndCopyData(mInfo.mVideo,
+                                       mDecoder->GetImageContainer(),
+                                       pos,
+                                       frame.mTimeUs,
+                                       1, // We don't know the duration.
+                                       frame.mGraphicBuffer,
+                                       frame.mKeyFrame,
+                                       -1,
+                                       picture);
     }
 
     if (!v) {
