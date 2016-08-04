@@ -18,6 +18,8 @@
 
 #include "asmjs/WasmTable.h"
 
+#include "jscntxt.h"
+
 using namespace js;
 using namespace js::wasm;
 
