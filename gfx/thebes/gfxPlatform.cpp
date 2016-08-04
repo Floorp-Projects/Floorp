@@ -8,6 +8,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Telemetry.h"
@@ -593,6 +594,7 @@ gfxPlatform::Init()
     // Initialize the preferences by creating the singleton.
     gfxPrefs::GetSingleton();
     MediaPrefs::GetSingleton();
+    gfxVars::Initialize();
 
     gfxConfig::Init();
 
@@ -872,6 +874,7 @@ gfxPlatform::Shutdown()
 
     delete gGfxPlatformPrefsLock;
 
+    gfxVars::Shutdown();
     gfxPrefs::DestroySingleton();
     gfxFont::DestroySingletons();
 

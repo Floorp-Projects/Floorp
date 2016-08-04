@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace gfx {
@@ -20,6 +21,17 @@ struct DeviceInitData
   bool d3d11TextureSharingWorks;
   bool useD2D1;
   DxgiAdapterDesc adapter;
+};
+
+union GfxVarValue
+{
+  null_t;
+};
+
+struct GfxVarUpdate
+{
+  size_t index;
+  GfxVarValue value;
 };
 
 } // namespace gfx
