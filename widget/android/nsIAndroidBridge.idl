@@ -15,13 +15,13 @@ interface nsIBrowserTab : nsISupports {
 [scriptable, uuid(08426a73-e70b-4680-9282-630932e2b2bb)]
 interface nsIUITelemetryObserver : nsISupports {
   void startSession(in wstring name,
-                    in unsigned long timestamp);
+                    in long long timestamp);
   void stopSession(in wstring name,
                    in wstring reason,
-                   in unsigned long timestamp);
+                   in long long timestamp);
   void addEvent(in wstring action,
                 in wstring method,
-                in unsigned long timestamp,
+                in long long timestamp,
                 in wstring extras);
 };
 
