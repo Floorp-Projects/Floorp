@@ -4,6 +4,7 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+const DEFAULT_PREFS = Services.prefs.getDefaultBranch("social.manifest.");
 
 function run_test() {
   // Test must run at startup for migration to occur, so we can only test
@@ -15,25 +16,23 @@ function run_test() {
   let manifest = { // normal provider
     name: "provider 1",
     origin: "https://example1.com",
+    builtin: true // as of fx22 this should be true for default prefs
   };
 
-  MANIFEST_PREFS.setCharPref(manifest.origin, JSON.stringify(manifest));
+  DEFAULT_PREFS.setCharPref(manifest.origin, JSON.stringify(manifest));
 
   // Set both providers active and flag the first one as "current"
   let activeVal = Cc["@mozilla.org/supports-string;1"].
              createInstance(Ci.nsISupportsString);
   let active = {};
   active[manifest.origin] = 1;
+  // bad.origin tests that a missing manifest does not break migration, bug 859715
+  active["bad.origin"] = 1;
   activeVal.data = JSON.stringify(active);
   Services.prefs.setComplexValue("social.activeProviders",
                                  Ci.nsISupportsString, activeVal);
 
-  // social.enabled pref is the key focus of this test. We set the user pref,
-  // and then migration should a) remove the provider from activeProviders and
-  // b) unset social.enabled
-  Services.prefs.setBoolPref("social.enabled", false);
-
-  Cu.import("resource:///modules/SocialService.jsm");
+  Cu.import("resource://gre/modules/SocialService.jsm");
 
   let runner = new AsyncRunner();
   let next = runner.next.bind(runner);
@@ -44,18 +43,25 @@ function run_test() {
 function* testMigration(manifest, next) {
   // look at social.activeProviders, we should have migrated into that, and
   // we should be set as a user level pref after migration
-  do_check_true(Services.prefs.prefHasUserValue("social.enabled"));
-  do_check_true(MANIFEST_PREFS.prefHasUserValue(manifest.origin));
+  do_check_false(MANIFEST_PREFS.prefHasUserValue(manifest.origin));
   // we need to access the providers for everything to initialize
   yield SocialService.getProviderList(next);
-  do_check_false(SocialService.enabled);
-  do_check_false(Services.prefs.prefHasUserValue("social.enabled"));
+  do_check_true(SocialService.enabled);
   do_check_true(Services.prefs.prefHasUserValue("social.activeProviders"));
 
   let activeProviders;
   let pref = Services.prefs.getComplexValue("social.activeProviders",
-                                            Ci.nsISupportsString).data;
+                                            Ci.nsISupportsString);
   activeProviders = JSON.parse(pref);
-  do_check_true(activeProviders[manifest.origin] == undefined);
+  do_check_true(activeProviders[manifest.origin]);
   do_check_true(MANIFEST_PREFS.prefHasUserValue(manifest.origin));
+  do_check_true(JSON.parse(DEFAULT_PREFS.getCharPref(manifest.origin)).builtin);
+
+  let userPref = JSON.parse(MANIFEST_PREFS.getCharPref(manifest.origin));
+  do_check_true(parseInt(userPref.updateDate) > 0);
+  // migrated providers wont have an installDate
+  do_check_true(userPref.installDate === 0);
+
+  // bug 859715, this should have been removed during migration
+  do_check_false(!!activeProviders["bad.origin"]);
 }

@@ -16,6 +16,8 @@ const ADDON_TYPE_SERVICE     = "service";
 const ID_SUFFIX              = "@services.mozilla.org";
 const STRING_TYPE_NAME       = "type.%ID%.name";
 
+XPCOMUtils.defineLazyModuleGetter(this, "MozSocialAPI", "resource://gre/modules/MozSocialAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "closeAllChatWindows", "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "etld",
@@ -139,6 +141,7 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
     try {
       if (ActiveProviders.has(manifest.origin)) {
         // enable the api when a provider is enabled
+        MozSocialAPI.enabled = true;
         let provider = new SocialProvider(manifest);
         providers[provider.origin] = provider;
       }
@@ -401,6 +404,7 @@ this.SocialService = {
       throw new Error("SocialService.addProvider: provider with this origin already exists");
 
     // enable the api when a provider is enabled
+    MozSocialAPI.enabled = true;
     let provider = new SocialProvider(manifest);
     SocialServiceInternal.providers[provider.origin] = provider;
     ActiveProviders.add(provider.origin);
@@ -430,6 +434,8 @@ this.SocialService = {
     ActiveProviders.delete(provider.origin);
 
     delete SocialServiceInternal.providers[origin];
+    // disable the api if we have no enabled providers
+    MozSocialAPI.enabled = SocialServiceInternal.enabled;
 
     if (addon) {
       // we have to do this now so the addon manager ui will update an uninstall
@@ -497,7 +503,7 @@ this.SocialService = {
   },
 
   _manifestFromData: function(type, data, installOrigin) {
-    let featureURLs = ['shareURL'];
+    let featureURLs = ['sidebarURL', 'shareURL', 'statusURL', 'markURL'];
     let resolveURLs = featureURLs.concat(['postActivationURL']);
 
     if (type == 'directory' || type == 'internal') {
@@ -698,7 +704,12 @@ function SocialProvider(input) {
   this.iconURL = input.iconURL;
   this.icon32URL = input.icon32URL;
   this.icon64URL = input.icon64URL;
+  this.sidebarURL = input.sidebarURL;
   this.shareURL = input.shareURL;
+  this.statusURL = input.statusURL;
+  this.markURL = input.markURL;
+  this.markedIcon = input.markedIcon;
+  this.unmarkedIcon = input.unmarkedIcon;
   this.postActivationURL = input.postActivationURL;
   this.origin = input.origin;
   let originUri = Services.io.newURI(input.origin, null, null);
@@ -753,11 +764,29 @@ SocialProvider.prototype = {
     return undefined;
   },
 
+  // Map of objects describing the provider's notification icons, whose
+  // properties include:
+  //   name, iconURL, counter, contentPanel
+  // See https://developer.mozilla.org/en-US/docs/Social_API
+  ambientNotificationIcons: null,
+
+  // Called by the workerAPI to add/update a notification icon.
+  setAmbientNotification: function(notification) {
+    if (!this.ambientNotificationIcons[notification.name] &&
+        Object.keys(this.ambientNotificationIcons).length >= 3) {
+      throw new Error("ambient notification limit reached");
+    }
+    this.ambientNotificationIcons[notification.name] = notification;
+
+    Services.obs.notifyObservers(null, "social:ambient-notification-changed", this.origin);
+  },
+
   // Internal helper methods
   _activate: function _activate() {
   },
 
   _terminate: function _terminate() {
+    closeAllChatWindows(this);
     this.errorState = null;
   },
 

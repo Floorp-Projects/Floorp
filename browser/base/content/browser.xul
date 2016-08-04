@@ -271,6 +271,23 @@
       <hbox id="share-container" flex="1"/>
     </panel>
 
+    <panel id="social-notification-panel"
+           class="social-panel"
+           type="arrow"
+           hidden="true"
+           noautofocus="true"/>
+    <panel id="social-flyout-panel"
+           class="social-panel"
+           onpopupshown="SocialFlyout.onShown()"
+           onpopuphidden="SocialFlyout.onHidden()"
+           side="right"
+           type="arrow"
+           hidden="true"
+           flip="slide"
+           rolluponmousewheel="true"
+           noautofocus="true"
+           position="topcenter topright"/>
+
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
@@ -1064,6 +1081,56 @@
                     contentcontextmenu="contentAreaContextMenu"
                     autocompletepopup="PopupAutoComplete"
                     selectmenulist="ContentSelectDropdown"/>
+        <chatbar id="pinnedchats" layer="true" mousethrough="always" hidden="true"/>
+      </vbox>
+      <splitter id="social-sidebar-splitter"
+                class="chromeclass-extrachrome sidebar-splitter"
+                observes="socialSidebarBroadcaster"/>
+      <vbox id="social-sidebar-box"
+            class="chromeclass-extrachrome"
+            observes="socialSidebarBroadcaster"
+            persist="width">
+
+        <sidebarheader id="social-sidebar-header" class="sidebar-header" align="center">
+          <image id="social-sidebar-favico"/>
+          <label id="social-sidebar-title" class="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
+          <toolbarbutton id="social-sidebar-button"
+                         class="toolbarbutton-1"
+                         type="menu">
+            <menupopup id="social-statusarea-popup" position="after_end">
+              <menuitem class="social-toggle-sidebar-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleSidebar"
+                        label="&social.toggleSidebar.label;"
+                        accesskey="&social.toggleSidebar.accesskey;"/>
+              <menuitem class="social-toggle-notifications-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleNotifications"
+                        label="&social.toggleNotifications.label;"
+                        accesskey="&social.toggleNotifications.accesskey;"/>
+              <menuseparator/>
+              <menuseparator class="social-provider-menu" hidden="true"/>
+              <menuitem class="social-addons-menuitem" command="Social:Addons"
+                        label="&social.addons.label;"/>
+              <menuitem label="&social.learnMore.label;"
+                        accesskey="&social.learnMore.accesskey;"
+                        oncommand="SocialUI.showLearnMore();"/>
+            </menupopup>
+          </toolbarbutton>
+        </sidebarheader>
+
+        <browser id="social-sidebar-browser"
+                 type="content"
+                 context="contentAreaContextMenu"
+                 message="true"
+                 messagemanagergroup="social"
+                 disableglobalhistory="true"
+                 tooltip="aHTMLTooltip"
+                 popupnotificationanchor="social-sidebar-favico"
+                 flex="1"
+                 style="min-width: 14em; width: 18em; max-width: 36em;"/>
       </vbox>
       <vbox id="browser-border-end" hidden="true" layer="true"/>
     </hbox>

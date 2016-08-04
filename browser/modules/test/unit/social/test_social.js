@@ -19,7 +19,7 @@ function testStartupEnabled() {
 }
 
 function testDisableAfterStartup() {
-  let SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
+  let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
   SocialService.disableProvider(Social.providers[0].origin, function() {
     do_wait_observer("social:providers-changed", function() {
       do_check_eq(Social.enabled, false, "Social is disabled");

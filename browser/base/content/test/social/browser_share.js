@@ -1,5 +1,5 @@
 
-var SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 var baseURL = "https://example.com/browser/browser/base/content/test/social/";
 

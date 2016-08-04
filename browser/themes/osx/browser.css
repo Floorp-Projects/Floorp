@@ -1992,6 +1992,7 @@ html|span.ac-emphasize-text-url {
 
 #share-container {
   min-width: 756px;
+  background-color: white;
   background-repeat: no-repeat;
   background-position: center center;
 }
@@ -2006,7 +2007,9 @@ html|span.ac-emphasize-text-url {
   opacity: 0;
 }
 
-#manage-share-providers {
+#manage-share-providers,
+#social-sidebar-button:hover,
+#social-sidebar-button:hover:active {
   -moz-image-region: rect(18px, 468px, 36px, 450px);
 }
 
@@ -2033,6 +2036,12 @@ html|span.ac-emphasize-text-url {
   width: 16px;
   min-height: 16px;
   max-height: 16px;
+}
+
+/* social recommending panel */
+
+#social-mark-button {
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 /* BOOKMARKING PANEL */
@@ -2955,6 +2964,10 @@ menuitem:hover > hbox > .alltabs-endimage[soundplaying] {
               0 0 3px 2px -moz-mac-focusring;
 }
 
+#social-notification-icon > .toolbarbutton-icon {
+  height: 16px;
+}
+
 /* Translation */
 
 %include ../shared/translation/infobar.inc.css
@@ -3210,8 +3223,29 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   border-radius: 1px;
 }
 
-/* Share */
-%include ../shared/social/social.inc.css
+/* === end of social toolbar button === */
+
+/* === social toolbar provider menu  === */
+
+.social-statusarea-user {
+  list-style-image:url("chrome://global/skin/icons/information-32.png");
+}
+
+.social-statusarea-user-portrait {
+  width: 32px;
+  height: 32px;
+  margin: 4px;
+  margin-inline-start: 0;
+}
+
+.social-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+/* fixup rounded corners for osx panels */
+.social-panel > .social-panel-frame {
+  border-radius: inherit;
+}
 
 #social-share-panel {
   min-height: 100px;
@@ -3236,6 +3270,10 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
 }
+
+/* === end of social toolbar provider menu === */
+
+%include ../shared/social/chat.inc.css
 
 /* Customization mode */
 
