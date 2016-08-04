@@ -1189,6 +1189,12 @@ auto ThumbnailHelper::SendThumbnail(mozilla::jni::ByteBuffer::Param a0, int32_t 
 constexpr char ThumbnailHelper::RequestThumbnail_t::name[];
 constexpr char ThumbnailHelper::RequestThumbnail_t::signature[];
 
+const char ZoomedView::name[] =
+        "org/mozilla/gecko/ZoomedView";
+
+constexpr char ZoomedView::RequestZoomedViewData_t::name[];
+constexpr char ZoomedView::RequestZoomedViewData_t::signature[];
+
 const char Distribution::name[] =
         "org/mozilla/gecko/distribution/Distribution";
 
@@ -1394,12 +1400,12 @@ auto LayerRenderer::Frame::EndDrawing() const -> void
 const char LayerView::name[] =
         "org/mozilla/gecko/gfx/LayerView";
 
-constexpr char LayerView::updateZoomedView_t::name[];
-constexpr char LayerView::updateZoomedView_t::signature[];
+constexpr char LayerView::UpdateZoomedView_t::name[];
+constexpr char LayerView::UpdateZoomedView_t::signature[];
 
-auto LayerView::updateZoomedView(mozilla::jni::ByteBuffer::Param a0) -> void
+auto LayerView::UpdateZoomedView(mozilla::jni::ByteBuffer::Param a0) -> void
 {
-    return mozilla::jni::Method<updateZoomedView_t>::Call(LayerView::Context(), nullptr, a0);
+    return mozilla::jni::Method<UpdateZoomedView_t>::Call(LayerView::Context(), nullptr, a0);
 }
 
 const char LayerView::Compositor::name[] =
