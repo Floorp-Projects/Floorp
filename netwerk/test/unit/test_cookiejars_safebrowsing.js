@@ -115,7 +115,7 @@ add_test(function test_safebrowsing_update() {
   }
 
   streamUpdater.downloadUpdates("test-phish-simple,test-malware-simple", "",
-    URL + safebrowsingUpdatePath, onSuccess, onUpdateError, onDownloadError);
+    true, URL + safebrowsingUpdatePath, onSuccess, onUpdateError, onDownloadError);
 });
 
 add_test(function test_non_safebrowsing_cookie() {

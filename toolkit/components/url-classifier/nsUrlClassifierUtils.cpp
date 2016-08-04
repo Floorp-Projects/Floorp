@@ -211,6 +211,9 @@ static const struct {
   { "googpub-phish-proto", SOCIAL_ENGINEERING_PUBLIC}, // 2
   { "goog-unwanted-proto", UNWANTED_SOFTWARE},         // 3
   { "goog-phish-proto", SOCIAL_ENGINEERING},           // 5
+
+  // For testing purpose.
+  { "test-phish-proto",    SOCIAL_ENGINEERING_PUBLIC}, // 2
 };
 
 NS_IMETHODIMP
