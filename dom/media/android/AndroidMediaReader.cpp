@@ -186,7 +186,6 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
       }
 
       v = VideoData::CreateFromImage(mInfo.mVideo,
-                                     mDecoder->GetImageContainer(),
                                      pos,
                                      frame.mTimeUs,
                                      1, // We don't know the duration yet.
@@ -231,15 +230,15 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
       }
 
       // This is the approximate byte position in the stream.
-      v = VideoData::Create(mInfo.mVideo,
-                            mDecoder->GetImageContainer(),
-                            pos,
-                            frame.mTimeUs,
-                            1, // We don't know the duration yet.
-                            b,
-                            frame.mKeyFrame,
-                            -1,
-                            picture);
+      v = VideoData::CreateAndCopyData(mInfo.mVideo,
+                                       mDecoder->GetImageContainer(),
+                                       pos,
+                                       frame.mTimeUs,
+                                       1, // We don't know the duration yet.
+                                       b,
+                                       frame.mKeyFrame,
+                                       -1,
+                                       picture);
     }
 
     if (!v) {
