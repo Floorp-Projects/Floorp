@@ -5,12 +5,80 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GeneratedJNIWrappers.h"
+#include "GeneratedJNINatives.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
 
+class AndroidGamepadManager final
+  : public java::AndroidGamepadManager::Natives<AndroidGamepadManager>
+  , public jni::UsesNativeCallProxy
+{
+  AndroidGamepadManager() = delete;
+
+public:
+  template<class Functor>
+  static void OnNativeCall(Functor&& aCall)
+  {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(Move(aCall)));
+  }
+
+  static void
+  OnGamepadChange(int32_t aID, bool aAdded)
+  {
+    RefPtr<GamepadPlatformService> service =
+        GamepadPlatformService::GetParentService();
+    if (!service) {
+      return;
+    }
+
+    if (aAdded) {
+      const int svc_id = service->AddGamepad(
+          "android", GamepadMappingType::Standard,
+          kStandardGamepadButtons, kStandardGamepadAxes);
+      java::AndroidGamepadManager::OnGamepadAdded(aID, svc_id);
+
+    } else {
+      service->RemoveGamepad(aID);
+    }
+  }
+
+  static void
+  OnButtonChange(int32_t aID, int32_t aButton, bool aPressed, float aValue)
+  {
+    RefPtr<GamepadPlatformService> service =
+        GamepadPlatformService::GetParentService();
+    if (!service) {
+      return;
+    }
+
+    service->NewButtonEvent(aID, aButton, aPressed, aValue);
+  }
+
+  static void
+  OnAxisChange(int32_t aID, jni::BooleanArray::Param aValid,
+               jni::FloatArray::Param aValues)
+  {
+    RefPtr<GamepadPlatformService> service =
+        GamepadPlatformService::GetParentService();
+    if (!service) {
+      return;
+    }
+
+    const auto& valid = aValid->GetElements();
+    const auto& values = aValues->GetElements();
+    MOZ_ASSERT(valid.Length() == values.Length());
+
+    for (size_t i = 0; i < values.Length(); i++) {
+      service->NewAxisMoveEvent(aID, i, values[i]);
+    }
+  }
+};
+
 void StartGamepadMonitoring()
 {
+  AndroidGamepadManager::Init();
   java::AndroidGamepadManager::Start();
 }
 
