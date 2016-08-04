@@ -3264,7 +3264,7 @@ var SessionStoreInternal = {
     }
 
     if (tabData.lastAccessed) {
-      tab.lastAccessed = tabData.lastAccessed;
+      tab.updateLastAccessed(tabData.lastAccessed);
     }
 
     if ("attributes" in tabData) {
