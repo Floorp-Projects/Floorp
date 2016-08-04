@@ -2445,10 +2445,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     aBuilder->ExitSVGEffectsContents();
     resultList.AppendToTop(&hoistedScrollInfoItemsStorage);
   }
-  /* Else, if the list is non-empty and there is CSS group opacity without SVG
+
+  /* If the list is non-empty and there is CSS group opacity without SVG
    * effects, wrap it up in an opacity item.
    */
-  else if (useOpacity && !resultList.IsEmpty()) {
+  if (useOpacity && !resultList.IsEmpty()) {
     // Don't clip nsDisplayOpacity items. We clip their descendants instead.
     // The clip we would set on an element with opacity would clip
     // all descendant content, but some should not be clipped.
