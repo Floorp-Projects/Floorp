@@ -8,8 +8,6 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
@@ -41,7 +39,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 /**
  * The layer renderer implements the rendering logic for a layer view.
  */
-public class LayerRenderer implements Tabs.OnTabsChangedListener {
+public class LayerRenderer {
     private static final String LOGTAG = "GeckoLayerRenderer";
 
     /*
@@ -59,9 +57,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private static final int MAX_SCROLL_SPEED_TO_REQUEST_ZOOM_RENDER = 5;
 
     private final LayerView mView;
-    private final ScrollbarLayer mHorizScrollLayer;
-    private final ScrollbarLayer mVertScrollLayer;
-    private final FadeRunnable mFadeRunnable;
     private ByteBuffer mCoordByteBuffer;
     private FloatBuffer mCoordBuffer;
     private RenderContext mLastPageContext;
@@ -70,8 +65,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
     private long mLastFrameTime;
     private final CopyOnWriteArrayList<RenderTask> mTasks;
-
-    private final CopyOnWriteArrayList<Layer> mExtraLayers = new CopyOnWriteArrayList<Layer>();
 
     // Dropped frames display
     private final int[] mFrameTimings;
@@ -146,21 +139,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         mTasks = new CopyOnWriteArrayList<RenderTask>();
         mLastFrameTime = System.nanoTime();
 
-        if (!AppConstants.MOZ_ANDROID_APZ) {
-            mVertScrollLayer = new ScrollbarLayer(this, scrollbarImage, size, true);
-            mHorizScrollLayer = new ScrollbarLayer(this, diagonalFlip(scrollbarImage), new IntSize(size.height, size.width), false);
-            mFadeRunnable = new FadeRunnable();
-        } else {
-            // final variables need to be initialized in the constructor
-            mVertScrollLayer = null;
-            mHorizScrollLayer = null;
-            mFadeRunnable = null;
-        }
-
         mFrameTimings = new int[60];
         mCurrentFrame = mFrameTimingsSum = mDroppedFrames = 0;
 
-        Tabs.registerOnTabsChangedListener(this);
         mZoomedViewListeners = new ArrayList<LayerView.ZoomedViewListener>();
     }
 
@@ -188,11 +169,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             mCoordByteBuffer = null;
             mCoordBuffer = null;
         }
-        if (!AppConstants.MOZ_ANDROID_APZ) {
-            mHorizScrollLayer.destroy();
-            mVertScrollLayer.destroy();
-        }
-        Tabs.unregisterOnTabsChangedListener(this);
         mZoomedViewListeners.clear();
     }
 
@@ -281,22 +257,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             if (!stillRunning) {
                 tasks.remove(task);
             }
-        }
-    }
-
-    public void addLayer(Layer layer) {
-        synchronized (mExtraLayers) {
-            if (mExtraLayers.contains(layer)) {
-                mExtraLayers.remove(layer);
-            }
-
-            mExtraLayers.add(layer);
-        }
-    }
-
-    public void removeLayer(Layer layer) {
-        synchronized (mExtraLayers) {
-            mExtraLayers.remove(layer);
         }
     }
 
@@ -445,9 +405,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         public void beginDrawing() {
             mFrameStartTime = System.nanoTime();
 
-            TextureReaper.get().reap();
-            TextureGenerator.get().fill();
-
             mUpdated = true;
 
             Layer rootLayer = mView.getLayerClient().getRoot();
@@ -455,36 +412,10 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             // Run through pre-render tasks
             runRenderTasks(mTasks, false, mFrameStartTime);
 
-            if (!AppConstants.MOZ_ANDROID_APZ) {
-                boolean hideScrollbars = (mView.getFullScreenState() == FullScreenState.NON_ROOT_ELEMENT);
-                if (!mPageContext.fuzzyEquals(mLastPageContext) && !hideScrollbars) {
-                    // The viewport or page changed, so show the scrollbars again
-                    // as per UX decision. Don't do this if we're disabling scrolling due to
-                    // full-screen mode though.
-                    mVertScrollLayer.unfade();
-                    mHorizScrollLayer.unfade();
-                    mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
-                } else if (mFadeRunnable.timeToFade()) {
-                    final long currentMillis = SystemClock.elapsedRealtime();
-                    final boolean stillFading = mVertScrollLayer.fade(mFadeRunnable.mRunAt, currentMillis) |
-                            mHorizScrollLayer.fade(mFadeRunnable.mRunAt, currentMillis);
-                    if (stillFading) {
-                        mFadeRunnable.scheduleNextFadeFrame();
-                    }
-                }
-                mLastPageContext = mPageContext;
-                mUpdated &= mVertScrollLayer.update(mPageContext);  // called on compositor thread
-                mUpdated &= mHorizScrollLayer.update(mPageContext); // called on compositor thread
-            }
-
             /* Update layers. */
             if (rootLayer != null) {
                 // Called on compositor thread.
                 mUpdated &= rootLayer.update(mPageContext);
-            }
-
-            for (Layer layer : mExtraLayers) {
-                mUpdated &= layer.update(mPageContext); // called on compositor thread
             }
         }
 
@@ -519,25 +450,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             // Any GL state which is changed here must be restored in
             // restoreState(...)
 
-            /* Draw any extra layers that were added (likely plugins) */
-            if (mExtraLayers.size() > 0) {
-                for (Layer layer : mExtraLayers) {
-                    layer.draw(mPageContext);
-                }
-            }
-
-            if (!AppConstants.MOZ_ANDROID_APZ) {
-                /* Draw the vertical scrollbar. */
-                if (mPageRect.height() > mFrameMetrics.getHeight())
-                    mVertScrollLayer.draw(mPageContext);
-
-                /* Draw the horizontal scrollbar. */
-                if (mPageRect.width() > mFrameMetrics.getWidth())
-                    mHorizScrollLayer.draw(mPageContext);
-            }
-
             runRenderTasks(mTasks, true, mFrameStartTime);
-
         }
 
         private void maybeRequestZoomedViewRender(RenderContext context) {
@@ -612,20 +525,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 mView.setPaintState(LayerView.PAINT_AFTER_FIRST);
             }
             mLastFrameTime = mFrameStartTime;
-        }
-    }
-
-    @Override
-    public void onTabChanged(final Tab tab, Tabs.TabEvents msg, String data) {
-        // Sets the background of the newly selected tab. This background color
-        // gets cleared in endDrawing(). This function runs on the UI thread,
-        // but other code that touches the paint state is run on the compositor
-        // thread, so this may need to be changed if any problems appear.
-        if (msg == Tabs.TabEvents.SELECTED) {
-            if (mView != null) {
-                mView.setSurfaceBackgroundColor(tab.getBackgroundColor());
-                mView.setPaintState(LayerView.PAINT_START);
-            }
         }
     }
 

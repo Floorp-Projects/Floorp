@@ -1547,18 +1547,15 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void addPluginView(View view,
-                                     float x, float y,
-                                     float w, float h,
-                                     boolean isFullScreen) {
+    public static void addFullScreenPluginView(View view) {
         if (getGeckoInterface() != null)
-             getGeckoInterface().addPluginView(view, new RectF(x, y, x + w, y + h), isFullScreen);
+             getGeckoInterface().addPluginView(view);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void removePluginView(View view, boolean isFullScreen) {
+    public static void removeFullScreenPluginView(View view) {
         if (getGeckoInterface() != null)
-            getGeckoInterface().removePluginView(view, isFullScreen);
+            getGeckoInterface().removePluginView(view);
     }
 
     /**
@@ -1827,8 +1824,8 @@ public class GeckoAppShell
         public String getDefaultUAString();
         public void doRestart();
         public void setFullScreen(boolean fullscreen);
-        public void addPluginView(View view, final RectF rect, final boolean isFullScreen);
-        public void removePluginView(final View view, final boolean isFullScreen);
+        public void addPluginView(View view);
+        public void removePluginView(final View view);
         public void enableCameraView();
         public void disableCameraView();
         public void addAppStateListener(AppStateListener listener);

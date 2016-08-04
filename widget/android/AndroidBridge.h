@@ -246,8 +246,6 @@ public:
                           bool aLayersUpdated, int32_t aPaintSyncId,
                           ScreenMargin& aFixedLayerMargins);
 
-    void AddPluginView(jobject view, const LayoutDeviceRect& rect, bool isFullScreen);
-
     // These methods don't use a ScreenOrientation because it's an
     // enum and that would require including the header which requires
     // include IPC headers which requires including basictypes.h which

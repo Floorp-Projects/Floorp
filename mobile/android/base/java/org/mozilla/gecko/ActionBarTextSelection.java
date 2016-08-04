@@ -171,7 +171,6 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
                         LayerView layerView = GeckoAppShell.getLayerView();
                         if (layerView != null) {
                             layerView.addDrawListener(mDrawListener);
-                            layerView.addLayer(ActionBarTextSelection.this);
                             layerView.getDynamicToolbarAnimator().addTranslationListener(ActionBarTextSelection.this);
                         }
 
@@ -186,7 +185,6 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
                         LayerView layerView = GeckoAppShell.getLayerView();
                         if (layerView != null) {
                             layerView.removeDrawListener(mDrawListener);
-                            layerView.removeLayer(ActionBarTextSelection.this);
                             layerView.getDynamicToolbarAnimator().removeTranslationListener(ActionBarTextSelection.this);
                         }
 

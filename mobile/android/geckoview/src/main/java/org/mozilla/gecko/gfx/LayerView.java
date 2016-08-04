@@ -293,7 +293,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             }
             return true;
         }
-        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
+        if (!mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -315,14 +315,12 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
         event.offsetLocation(0, -mSurfaceTranslation);
 
-        if (AppConstants.MOZ_ANDROID_APZ) {
-            if (!mLayerClient.isGeckoReady()) {
-                // If gecko isn't loaded yet, don't try sending events to the
-                // native code because it's just going to crash
-                return true;
-            } else if (mPanZoomController != null && mPanZoomController.onMotionEvent(event)) {
-                return true;
-            }
+        if (!mLayerClient.isGeckoReady()) {
+            // If gecko isn't loaded yet, don't try sending events to the
+            // native code because it's just going to crash
+            return true;
+        } else if (mPanZoomController != null && mPanZoomController.onMotionEvent(event)) {
+            return true;
         }
 
         return sendEventToGecko(event);
@@ -335,7 +333,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (AndroidGamepadManager.handleMotionEvent(event)) {
             return true;
         }
-        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
+        if (!mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -452,7 +450,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
+        if (!mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -467,14 +465,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (mListener != null) {
             mListener.renderRequested();
         }
-    }
-
-    public void addLayer(Layer layer) {
-        mRenderer.addLayer(layer);
-    }
-
-    public void removeLayer(Layer layer) {
-        mRenderer.removeLayer(layer);
     }
 
     public void postRenderTask(RenderTask task) {
@@ -517,8 +507,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     }
 
     private void attachCompositor() {
-        final NativePanZoomController npzc = AppConstants.MOZ_ANDROID_APZ ?
-                (NativePanZoomController) mPanZoomController : null;
+        final NativePanZoomController npzc = (NativePanZoomController) mPanZoomController;
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             mCompositor.attachToJava(mLayerClient, npzc);
