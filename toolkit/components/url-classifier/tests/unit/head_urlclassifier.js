@@ -200,7 +200,7 @@ function doStreamUpdate(updateText, success, failure, downloadFailure) {
     downloadFailure = failure;
   }
 
-  streamUpdater.downloadUpdates(allTables, "",
+  streamUpdater.downloadUpdates(allTables, "", true,
                                 dataUpdate, success, failure, downloadFailure);
 }
 

@@ -297,6 +297,7 @@ function waitForUpdates() {
   streamUpdater.downloadUpdates(
     "goog-downloadwhite-digest256",
     "goog-downloadwhite-digest256;\n",
+    true,
     "http://localhost:4444/downloads",
     updateSuccess, handleError, handleError);
   return deferred.promise;
