@@ -568,11 +568,21 @@ protected:
    */
   mozilla::MultiTouchInput
   UpdateSynthesizedTouchState(mozilla::MultiTouchInput* aState,
+                              uint32_t aTime,
+                              mozilla::TimeStamp aTimeStamp,
                               uint32_t aPointerId,
                               TouchPointerState aPointerState,
                               LayoutDeviceIntPoint aPoint,
                               double aPointerPressure,
                               uint32_t aPointerOrientation);
+
+  /**
+   * Dispatch the given MultiTouchInput through APZ to Gecko (if APZ is enabled)
+   * or directly to gecko (if APZ is not enabled). This function must only
+   * be called from the main thread, and if APZ is enabled, that must also be
+   * the APZ controller thread.
+   */
+  void DispatchTouchInput(mozilla::MultiTouchInput& aInput);
 
 #if defined(XP_WIN)
   void UpdateScrollCapture() override;

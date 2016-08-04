@@ -709,7 +709,6 @@ struct BytecodeEmitter
     MOZ_MUST_USE bool emitOptimizeSpread(ParseNode* arg0, JumpList* jmp, bool* emitted);
 
     MOZ_MUST_USE bool emitCallOrNew(ParseNode* pn);
-    MOZ_MUST_USE bool emitDebugOnlyCheckSelfHosted();
     MOZ_MUST_USE bool emitSelfHostedCallFunction(ParseNode* pn);
     MOZ_MUST_USE bool emitSelfHostedResumeGenerator(ParseNode* pn);
     MOZ_MUST_USE bool emitSelfHostedForceInterpreter(ParseNode* pn);

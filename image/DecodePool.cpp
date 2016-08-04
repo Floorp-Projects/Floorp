@@ -17,10 +17,6 @@
 #include "nsXPCOMCIDInternal.h"
 #include "prsystem.h"
 
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
-
 #include "gfxPrefs.h"
 
 #include "Decoder.h"
@@ -69,12 +65,6 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
 
     mThreadNaming.SetThreadPoolName(NS_LITERAL_CSTRING("ImgDecoder"));
-
-#ifdef MOZ_NUWA_PROCESS
-    if (IsNuwaProcess()) {
-      NuwaMarkCurrentThread(static_cast<void(*)(void*)>(nullptr), nullptr);
-    }
-#endif // MOZ_NUWA_PROCESS
   }
 
   /// Shut down the provided decode pool thread.
@@ -270,15 +260,6 @@ DecodePool::DecodePool()
   nsresult rv = NS_NewNamedThread("ImageIO", getter_AddRefs(mIOThread));
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv) && mIOThread,
                      "Should successfully create image I/O thread");
-
-#ifdef MOZ_NUWA_PROCESS
-  rv = mIOThread->Dispatch(NS_NewRunnableFunction([]() -> void {
-    NuwaMarkCurrentThread(static_cast<void(*)(void*)>(nullptr), nullptr);
-  }), NS_DISPATCH_NORMAL);
-
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
-                     "Should register decode IO thread with Nuwa process");
-#endif
 
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   if (obsSvc) {

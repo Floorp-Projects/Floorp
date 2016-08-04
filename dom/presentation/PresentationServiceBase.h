@@ -37,6 +37,8 @@ protected:
   nsresult GetWindowIdBySessionIdInternal(const nsAString& aSessionId, uint64_t* aWindowId);
   void AddRespondingSessionId(uint64_t aWindowId, const nsAString& aSessionId);
   void RemoveRespondingSessionId(const nsAString& aSessionId);
+  nsresult UpdateWindowIdBySessionIdInternal(const nsAString& aSessionId,
+                                             const uint64_t aWindowId);
 
   // Store the responding listener based on the window ID of the (in-process or
   // OOP) receiver page.

@@ -68,6 +68,7 @@ private:
   nsresult HandleDeviceChange();
   nsresult HandleSessionRequest(nsIPresentationSessionRequest* aRequest);
   nsresult HandleTerminateRequest(nsIPresentationTerminateRequest* aRequest);
+  nsresult HandleReconnectRequest(nsIPresentationSessionRequest* aRequest);
   void NotifyAvailableChange(bool aIsAvailable);
   bool IsAppInstalled(nsIURI* aUri);
 

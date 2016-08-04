@@ -9,11 +9,18 @@
 
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsContentUtils.h"
 
 inline bool
 nsIContent::IsInHTMLDocument() const
 {
   return OwnerDoc()->IsHTMLDocument();
+}
+
+inline bool
+nsIContent::IsInChromeDocument()
+{
+  return nsContentUtils::IsChromeDoc(OwnerDoc());
 }
 
 #endif // nsIContentInlines_h

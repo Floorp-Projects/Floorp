@@ -48,12 +48,9 @@ var PKT_SIGNUP_OVERLAY = function (options)
         {
             return '';
         }
-        else
-        {
-            return String(s).replace(/[&<>"']/g, function (str) {
-                return sanitizeMap[str];
-            });
-        }
+        return String(s).replace(/[&<>"']/g, function (str) {
+            return sanitizeMap[str];
+        });
     };
     this.getTranslations = function()
     {

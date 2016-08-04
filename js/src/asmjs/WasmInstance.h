@@ -26,7 +26,6 @@
 namespace js {
 
 class WasmActivation;
-class WasmInstanceObject;
 
 namespace wasm {
 
@@ -40,6 +39,7 @@ namespace wasm {
 class Instance
 {
     JSCompartment* const                 compartment_;
+    ReadBarrieredWasmInstanceObject      object_;
     const UniqueCode                     code_;
     GCPtrWasmMemoryObject                memory_;
     SharedTableVector                    tables_;
@@ -66,6 +66,7 @@ class Instance
 
   public:
     Instance(JSContext* cx,
+             Handle<WasmInstanceObject*> object,
              UniqueCode code,
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
@@ -85,6 +86,12 @@ class Instance
     const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
     size_t memoryLength() const;
+
+    // This method returns a pointer to the GC object that owns this Instance.
+    // Instances may be reached via weak edges (e.g., Compartment::instances_)
+    // so this perform a read-barrier on the returned object.
+
+    WasmInstanceObject* object() const { return object_; }
 
     // Execute the given export given the JS call arguments, storing the return
     // value in args.rval.

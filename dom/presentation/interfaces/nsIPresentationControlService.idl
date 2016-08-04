@@ -57,6 +57,18 @@ interface nsIPresentationControlServerListener: nsISupports
                           in DOMString aPresentationId,
                           in nsIPresentationControlChannel aControlChannel,
                           in boolean aIsFromReceiver);
+
+  /**
+   * Callback while the remote host is requesting to reconnect a presentation session.
+   * @param aDeviceInfo The device information related to the remote host.
+   * @param aUrl The URL requested to open by remote device.
+   * @param aPresentationId The Id for representing this session.
+   * @param aControlChannel The control channel for this session.
+   */
+  void onReconnectRequest(in nsITCPDeviceInfo aDeviceInfo,
+                          in DOMString url,
+                          in DOMString aPresentationId,
+                          in nsIPresentationControlChannel aControlChannel);
 };
 
 /**

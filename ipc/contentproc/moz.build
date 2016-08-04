@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 Library('plugin-container')
-if CONFIG['MOZ_B2G_LOADER']:
-    FINAL_LIBRARY = 'xul'
 
 SOURCES += [
     'plugin-container.cpp',

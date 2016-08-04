@@ -5,8 +5,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DCPresentationChannelDescription.h"
+#include "nsComponentManagerUtils.h"
+#include "nsGlobalWindow.h"
 #include "PresentationBuilderChild.h"
 #include "PresentationIPCService.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {

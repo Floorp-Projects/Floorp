@@ -218,9 +218,8 @@ MethodOp.prototype.makeCacheEntry = function(item, cache)
 
     if (fallback) {
       return fallback.value(...args);
-    } else {
-      return obj[method](...args);
     }
+    return obj[method](...args);
   };
 
   let desc = { configurable: false, enumerable: true, writable: false, value: methodImpl };
@@ -412,9 +411,8 @@ var Prefetcher = {
             cpowIndexes.set(elt, index);
           }
           return {cpow: cpowIndexes.get(elt)};
-        } else {
-          return elt;
         }
+        return elt;
       });
 
       prefetched.push(item);

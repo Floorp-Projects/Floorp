@@ -793,17 +793,15 @@
              event.preventDefault();
              return;
            }
-           else {
-             var parentIndex = this.view.getParentIndex(this.currentIndex);
-             if (parentIndex >= 0) {
-               if (cellSelType && !this.view.isSelectable(parentIndex, currentColumn)) {
-                 return;
-               }
-               this.view.selection.select(parentIndex);
-               this.treeBoxObject.ensureRowIsVisible(parentIndex);
-               event.preventDefault();
+           var parentIndex = this.view.getParentIndex(this.currentIndex);
+           if (parentIndex >= 0) {
+             if (cellSelType && !this.view.isSelectable(parentIndex, currentColumn)) {
                return;
              }
+             this.view.selection.select(parentIndex);
+             this.treeBoxObject.ensureRowIsVisible(parentIndex);
+             event.preventDefault();
+             return;
            }
          }
 
@@ -841,25 +839,23 @@
               event.preventDefault();
               return;
             }
-            else {
-              var c = row + 1;
-              var view = this.view;
-              if (c < view.rowCount &&
-                  view.getParentIndex(c) == row) {
-                // If already opened, select the first child.
-                // The getParentIndex test above ensures that the children
-                // are already populated and ready.
-                if (cellSelType && !this.view.isSelectable(c , currentColumn)) {
-                  let col = this._getNextColumn(c, false);
-                  if (col) {
-                    this.view.selection.currentColumn = col;
-                  }
+            var c = row + 1;
+            var view = this.view;
+            if (c < view.rowCount &&
+                view.getParentIndex(c) == row) {
+              // If already opened, select the first child.
+              // The getParentIndex test above ensures that the children
+              // are already populated and ready.
+              if (cellSelType && !this.view.isSelectable(c , currentColumn)) {
+                let col = this._getNextColumn(c, false);
+                if (col) {
+                  this.view.selection.currentColumn = col;
                 }
-                this.view.selection.timedSelect(c, this._selectDelay);
-                this.treeBoxObject.ensureRowIsVisible(c);
-                event.preventDefault();
-                return;
               }
+              this.view.selection.timedSelect(c, this._selectDelay);
+              this.treeBoxObject.ensureRowIsVisible(c);
+              event.preventDefault();
+              return;
             }
           }
 
@@ -1272,11 +1268,10 @@
             if (Math.abs(aEvent.clientX - col.mStartDragX) < 5 &&
                 Math.abs(aEvent.clientY - col.mStartDragY) < 5) {
               return;
-            } else {
-              col.mDragGesturing = false;
-              col.setAttribute("dragging", "true");
-              window.addEventListener("click", col._onDragMouseClick, true);
             }
+            col.mDragGesturing = false;
+            col.setAttribute("dragging", "true");
+            window.addEventListener("click", col._onDragMouseClick, true);
           }
 
           var pos = {};
