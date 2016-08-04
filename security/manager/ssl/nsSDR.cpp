@@ -9,6 +9,7 @@
 #include "plbase64.h"
 
 #include "mozilla/Base64.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Services.h"
 #include "nsMemory.h"
 #include "nsString.h"
@@ -200,7 +201,7 @@ nsSecretDecoderRing::DecryptString(const char* crypt, char** _retval)
 
 loser:
   if (decrypted) PORT_Free(decrypted);
-  if (decoded) PR_DELETE(decoded);
+  if (decoded) free(decoded);
 
   return rv;
 }
@@ -311,23 +312,17 @@ nsresult
 nsSecretDecoderRing::decode(const char* data, unsigned char** result,
                             int32_t* _retval)
 {
-  uint32_t len = strlen(data);
-  int adjust = 0;
-
-  /* Compute length adjustment */
-  if (data[len-1] == '=') {
-    adjust++;
-    if (data[len - 2] == '=') {
-      adjust++;
-    }
+  uint32_t dataLen = strlen(data);
+  char* binary = nullptr;
+  uint32_t binaryLen = 0;
+  nsresult rv = Base64Decode(data, dataLen, &binary, &binaryLen);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-
-  *result = (unsigned char *)PL_Base64Decode(data, len, nullptr);
-  if (!*result) {
-    return NS_ERROR_ILLEGAL_VALUE;
+  if (binaryLen > INT32_MAX) {
+    return NS_ERROR_FAILURE;
   }
-
-  *_retval = (len*3)/4 - adjust;
-
+  *result = BitwiseCast<unsigned char*>(binary);
+  *_retval = AssertedCast<int32_t>(binaryLen);
   return NS_OK;
 }
