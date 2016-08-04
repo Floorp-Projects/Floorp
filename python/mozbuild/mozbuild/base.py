@@ -172,26 +172,26 @@ class MozbuildObject(ProcessExecutionMixin):
         return cls(topsrcdir, None, None, topobjdir=topobjdir,
                    mozconfig=mozconfig)
 
-    @staticmethod
-    def resolve_mozconfig_topobjdir(topsrcdir, mozconfig, default=None):
-        topobjdir = mozconfig['topobjdir'] or default
+    def resolve_mozconfig_topobjdir(self, default=None):
+        topobjdir = self.mozconfig['topobjdir'] or default
         if not topobjdir:
             return None
 
         if '@CONFIG_GUESS@' in topobjdir:
             topobjdir = topobjdir.replace('@CONFIG_GUESS@',
-                MozbuildObject.resolve_config_guess(mozconfig, topsrcdir))
+                MozbuildObject.resolve_config_guess(self.mozconfig,
+                                                    self.topsrcdir))
 
         if not os.path.isabs(topobjdir):
-            topobjdir = os.path.abspath(os.path.join(topsrcdir, topobjdir))
+            topobjdir = os.path.abspath(os.path.join(self.topsrcdir, topobjdir))
 
         return mozpath.normsep(os.path.normpath(topobjdir))
 
     @property
     def topobjdir(self):
         if self._topobjdir is None:
-            self._topobjdir = MozbuildObject.resolve_mozconfig_topobjdir(
-                self.topsrcdir, self.mozconfig, default='obj-@CONFIG_GUESS@')
+            self._topobjdir = self.resolve_mozconfig_topobjdir(
+                default='obj-@CONFIG_GUESS@')
 
         return self._topobjdir
 
@@ -671,8 +671,7 @@ class MachCommandBase(MozbuildObject):
                 # are inside an objdir you probably want to perform actions on
                 # that objdir, not another one. This prevents accidental usage
                 # of the wrong objdir when the current objdir is ambiguous.
-                config_topobjdir = MozbuildObject.resolve_mozconfig_topobjdir(
-                    topsrcdir, dummy.mozconfig)
+                config_topobjdir = dummy.resolve_mozconfig_topobjdir()
                 if config_topobjdir and not samepath(topobjdir,
                                                      config_topobjdir):
                     raise ObjdirMismatchException(topobjdir, config_topobjdir)
