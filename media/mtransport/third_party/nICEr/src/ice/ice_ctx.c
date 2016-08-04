@@ -514,6 +514,16 @@ static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
     RFREE(ctx);
   }
 
+void nr_ice_ctx_add_flags(nr_ice_ctx *ctx, UINT4 flags)
+  {
+    ctx->flags |= flags;
+  }
+
+void nr_ice_ctx_remove_flags(nr_ice_ctx *ctx, UINT4 flags)
+  {
+    ctx->flags &= ~flags;
+  }
+
 int nr_ice_ctx_destroy(nr_ice_ctx **ctxp)
   {
     if(!ctxp || !*ctxp)

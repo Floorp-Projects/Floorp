@@ -510,19 +510,16 @@ NrIceCtx::GetNewPwd()
 }
 
 bool
-NrIceCtx::Initialize(bool hide_non_default)
+NrIceCtx::Initialize()
 {
   std::string ufrag = GetNewUfrag();
   std::string pwd = GetNewPwd();
 
-  return Initialize(hide_non_default,
-                    ufrag,
-                    pwd);
+  return Initialize(ufrag, pwd);
 }
 
 bool
-NrIceCtx::Initialize(bool hide_non_default,
-                     const std::string& ufrag,
+NrIceCtx::Initialize(const std::string& ufrag,
                      const std::string& pwd)
 {
   MOZ_ASSERT(!ufrag.empty());
@@ -550,9 +547,6 @@ NrIceCtx::Initialize(bool hide_non_default,
     case ICE_POLICY_ALL:
       break;
   }
-
-  if (hide_non_default)
-    flags |= NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS;
 
   r = nr_ice_ctx_create_with_credentials(const_cast<char *>(name_.c_str()),
                                          flags,
@@ -841,12 +835,19 @@ abort:
   return NS_OK;
 }
 
-nsresult NrIceCtx::StartGathering() {
+nsresult NrIceCtx::StartGathering(bool default_route_only) {
   ASSERT_ON_THREAD(sts_target_);
   if (policy_ == ICE_POLICY_NONE) {
     return NS_OK;
   }
   SetGatheringState(ICE_CTX_GATHER_STARTED);
+
+  if (default_route_only) {
+    nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS);
+  } else {
+    nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS);
+  }
+
   // This might start gathering for the first time, or again after
   // renegotiation, or might do nothing at all if gathering has already
   // finished.
