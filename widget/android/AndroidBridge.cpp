@@ -1738,7 +1738,7 @@ AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedVie
         gfxUtils::ConvertBGRAtoRGBA(data, stride * zoomedViewRect.height);
     }
 
-    LayerView::updateZoomedView(buffer);
+    LayerView::UpdateZoomedView(buffer);
 
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
