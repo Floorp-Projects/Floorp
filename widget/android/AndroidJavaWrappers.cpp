@@ -330,11 +330,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case LOW_MEMORY: {
-            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-            break;
-        }
-
         case TELEMETRY_HISTOGRAM_ADD: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);
