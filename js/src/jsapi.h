@@ -2098,7 +2098,7 @@ namespace JS {
 // you're looking for the equivalent of "instanceof", you want JS_HasInstance,
 // not this function.
 extern JS_PUBLIC_API(bool)
-OrdinaryHasInstance(JSContext* cx, HandleObject objArg, MutableHandleValue v, bool* bp);
+OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v, bool* bp);
 
 } // namespace JS
 
