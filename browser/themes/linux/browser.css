@@ -1364,6 +1364,7 @@ html|span.ac-emphasize-text-url {
 }
 
 /* social share panel */
+%include ../shared/social/social.inc.css
 
 .social-share-frame {
   border-top: 1px solid #f8f8f8;
@@ -1410,12 +1411,6 @@ html|span.ac-emphasize-text-url {
   width: 16px;
   min-height: 16px;
   max-height: 16px;
-}
-
-/* social recommending panel */
-
-#social-mark-button {
-  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 /* bookmarks menu-button */
@@ -1811,30 +1806,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   border-radius: 1px;
   margin-inline-end: 2px;
 }
-
-/* social toolbar provider menu */
-#social-statusarea-popup {
-  margin-top: 0;
-  margin-left: -12px;
-  margin-right: -12px;
-}
-
-.social-statusarea-user {
-  list-style-image:url("chrome://global/skin/icons/information-32.png");
-}
-
-.social-statusarea-user-portrait {
-  width: 32px;
-  height: 32px;
-  border-radius: 2px;
-  margin: 10px;
-}
-
-.social-panel > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-}
-
-%include ../shared/social/chat.inc.css
 
 /* Customization mode */
 
