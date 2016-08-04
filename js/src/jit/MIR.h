@@ -13523,7 +13523,10 @@ class MWasmCall final
         union U {
             U() {}
             uint32_t internalFuncIndex_;
-            uint32_t importGlobalDataOffset_;
+            struct {
+                uint32_t globalDataOffset_;
+                uint32_t tlsStackOffset_;
+            } import;
             struct {
                 MDefinition* callee_;
                 wasm::SigIdDesc sigId_;
@@ -13538,10 +13541,11 @@ class MWasmCall final
             c.u.internalFuncIndex_ = callee;
             return c;
         }
-        static Callee import(uint32_t globalDataOffset) {
+        static Callee import(uint32_t globalDataOffset, uint32_t tlsStackOffset) {
             Callee c;
             c.which_ = Import;
-            c.u.importGlobalDataOffset_ = globalDataOffset;
+            c.u.import.globalDataOffset_ = globalDataOffset;
+            c.u.import.tlsStackOffset_ = tlsStackOffset;
             return c;
         }
         explicit Callee(MDefinition* callee, wasm::SigIdDesc sigId = wasm::SigIdDesc())
@@ -13562,7 +13566,11 @@ class MWasmCall final
         }
         uint32_t importGlobalDataOffset() const {
             MOZ_ASSERT(which_ == Import);
-            return u.importGlobalDataOffset_;
+            return u.import.globalDataOffset_;
+        }
+        uint32_t importTlsStackOffset() const {
+            MOZ_ASSERT(which_ == Import);
+            return u.import.tlsStackOffset_;
         }
         MDefinition* dynamicPtr() const {
             MOZ_ASSERT(which_ == Dynamic);

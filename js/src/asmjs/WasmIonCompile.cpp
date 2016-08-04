@@ -56,6 +56,7 @@ class FunctionCompiler;
 // and these are tracked in a stack by FunctionCompiler.
 
 enum class PassTls { False = false, True = true };
+enum class InterModule { False = false, True = true };
 
 class CallCompileState
 {
@@ -74,6 +75,11 @@ class CallCompileState
     // much to bump the stack pointer before making the call. See
     // FunctionCompiler::startCall() comment below.
     uint32_t spIncrement_;
+
+    // Set by FunctionCompiler::finishCall(), tells a potentially-inter-module
+    // call the offset of the reserved space in which it can save the caller's
+    // WasmTlsReg.
+    uint32_t tlsStackOffset_;
 
     // Accumulates the register arguments while compiling arguments.
     MWasmCall::Args regArgs_;
@@ -97,6 +103,7 @@ class CallCompileState
       : lineOrBytecode_(lineOrBytecode),
         maxChildStackBytes_(0),
         spIncrement_(0),
+        tlsStackOffset_(UINT32_MAX),
         childClobbers_(false)
     { }
 };
@@ -924,7 +931,7 @@ class FunctionCompiler
             outer->childClobbers_ = true;
     }
 
-    bool finishCall(CallCompileState* call, PassTls passTls)
+    bool finishCall(CallCompileState* call, PassTls passTls, InterModule interModule)
     {
         MOZ_ALWAYS_TRUE(callStack_.popCopy() == call);
 
@@ -939,6 +946,15 @@ class FunctionCompiler
         }
 
         uint32_t stackBytes = call->abi_.stackBytesConsumedSoFar();
+
+        // If this is a potentially-inter-module call, allocate an extra word of
+        // stack space to save/restore the caller's WasmTlsReg during the call.
+        // Record the stack offset before including spIncrement since MWasmCall
+        // will use this offset after having bumped the stack pointer.
+        if (interModule == InterModule::True) {
+            call->tlsStackOffset_ = stackBytes;
+            stackBytes += sizeof(void*);
+        }
 
         if (call->childClobbers_) {
             call->spIncrement_ = AlignBytes(call->maxChildStackBytes_, AsmJSStackAlignment);
@@ -1021,15 +1037,17 @@ class FunctionCompiler
                            mg_.sigs[sigIndex].ret(), def);
     }
 
-    bool ffiCall(unsigned globalDataOffset, const CallCompileState& call, ExprType ret,
-                 MDefinition** def)
+    bool callImport(unsigned globalDataOffset, const CallCompileState& call, ExprType ret,
+                    MDefinition** def)
     {
         if (inDeadCode()) {
             *def = nullptr;
             return true;
         }
 
-        auto callee = MWasmCall::Callee::import(globalDataOffset);
+        MOZ_ASSERT(call.tlsStackOffset_ != UINT32_MAX);
+
+        auto callee = MWasmCall::Callee::import(globalDataOffset, call.tlsStackOffset_);
         return callPrivate(callee, MWasmCall::PreservesTlsReg::False, call, ret, def);
     }
 
@@ -1785,7 +1803,7 @@ EmitReturn(FunctionCompiler& f)
 }
 
 static bool
-EmitCallArgs(FunctionCompiler& f, const Sig& sig, CallCompileState* call)
+EmitCallArgs(FunctionCompiler& f, const Sig& sig, InterModule interModule, CallCompileState* call)
 {
     if (!f.startCall(call))
         return false;
@@ -1804,7 +1822,7 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, CallCompileState* call)
     if (!f.iter().readCallArgsEnd(numArgs))
         return false;
 
-    return f.finishCall(call, PassTls::True);
+    return f.finishCall(call, PassTls::True, interModule);
 }
 
 static bool
@@ -1820,7 +1838,7 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = *f.mg().funcSigs[calleeIndex];
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &call))
+    if (!EmitCallArgs(f, sig, InterModule::False, &call))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
@@ -1850,7 +1868,7 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = f.mg().sigs[sigIndex];
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &call))
+    if (!EmitCallArgs(f, sig, InterModule::False, &call))
         return false;
 
     MDefinition* callee;
@@ -1889,14 +1907,14 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
     const Sig& sig = *funcImport.sig;
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &call))
+    if (!EmitCallArgs(f, sig, InterModule::True, &call))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
 
     MDefinition* def;
-    if (!f.ffiCall(funcImport.globalDataOffset, call, sig.ret(), &def))
+    if (!f.callImport(funcImport.globalDataOffset, call, sig.ret(), &def))
         return false;
 
     if (IsVoid(sig.ret()))
@@ -2315,7 +2333,7 @@ EmitUnaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddre
     if (!f.passArg(input, operandType, &call))
         return false;
 
-    if (!f.finishCall(&call, PassTls::False))
+    if (!f.finishCall(&call, PassTls::False, InterModule::False))
         return false;
 
     MDefinition* def;
@@ -2347,7 +2365,7 @@ EmitBinaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddr
     if (!f.passArg(rhs, operandType, &call))
         return false;
 
-    if (!f.finishCall(&call, PassTls::False))
+    if (!f.finishCall(&call, PassTls::False, InterModule::False))
         return false;
 
     MDefinition* def;
