@@ -1406,17 +1406,6 @@ NS_IMETHODIMP nsAndroidBridge::SetBrowserApp(nsIAndroidBrowserApp *aBrowserApp)
     return NS_OK;
 }
 
-void
-AndroidBridge::AddPluginView(jobject view, const LayoutDeviceRect& rect, bool isFullScreen) {
-    nsWindow* win = nsWindow::TopWindow();
-    if (!win)
-        return;
-
-    CSSRect cssRect = rect / win->GetDefaultScale();
-    GeckoAppShell::AddPluginView(Object::Ref::From(view), cssRect.x, cssRect.y,
-                                 cssRect.width, cssRect.height, isFullScreen);
-}
-
 extern "C"
 __attribute__ ((visibility("default")))
 jobject JNICALL
