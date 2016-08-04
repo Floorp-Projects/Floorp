@@ -130,7 +130,7 @@ const DominatorTreeItem = module.exports = createClass({
       dom.span(
         {
           className: "heap-tree-item-field heap-tree-item-name",
-          style: { marginLeft: depth * TREE_ROW_HEIGHT }
+          style: { marginInlineStart: depth * TREE_ROW_HEIGHT }
         },
         arrow,
         label,

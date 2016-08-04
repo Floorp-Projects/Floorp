@@ -36,6 +36,9 @@ interface IDBCursor {
     void       continue (optional any key);
 
     [Throws]
+    void       continuePrimaryKey(any key, any primaryKey);
+
+    [Throws]
     IDBRequest delete ();
 };
 

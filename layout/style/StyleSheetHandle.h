@@ -110,7 +110,6 @@ public:
     inline nsIURI* GetBaseURI() const;
     inline void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
     inline bool IsApplicable() const;
-    inline void SetParsingMode(css::SheetParsingMode aMode);
     inline bool HasRules() const;
     inline nsIDocument* GetOwningDocument() const;
     inline void SetOwningDocument(nsIDocument* aDocument);

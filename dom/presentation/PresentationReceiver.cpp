@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/PresentationReceiverBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "nsContentUtils.h"
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -56,7 +57,11 @@ PresentationReceiver::Init()
   }
   mWindowId = mOwner->WindowID();
 
-  return true;
+  nsCOMPtr<nsIDocShell> docShell = mOwner->GetDocShell();
+  MOZ_ASSERT(docShell);
+
+  nsContentUtils::GetPresentationURL(docShell, mUrl);
+  return !mUrl.IsEmpty();
 }
 
 void PresentationReceiver::Shutdown()
@@ -96,7 +101,7 @@ PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
   }
 
   RefPtr<PresentationConnection> connection =
-    PresentationConnection::Create(mOwner, aSessionId,
+    PresentationConnection::Create(mOwner, aSessionId, mUrl,
                                    nsIPresentationService::ROLE_RECEIVER,
                                    mConnectionList);
   if (NS_WARN_IF(!connection)) {

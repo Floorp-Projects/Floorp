@@ -1258,6 +1258,11 @@ class AssemblerMIPSShared : public AssemblerShared
     void flushBuffer() {
     }
 
+    void comment(const char* msg) {
+        // This is not implemented because setPrinter() is not implemented.
+        // TODO spew("; %s", msg);
+    }
+
     static uint32_t NopSize() { return 4; }
 
     static void PatchWrite_Imm32(CodeLocationLabel label, Imm32 imm);

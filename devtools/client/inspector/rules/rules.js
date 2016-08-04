@@ -25,7 +25,7 @@ const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/u
 const {ElementStyle} = require("devtools/client/inspector/rules/models/element-style");
 const {Rule} = require("devtools/client/inspector/rules/models/rule");
 const {RuleEditor} = require("devtools/client/inspector/rules/views/rule-editor");
-const {createChild, promiseWarn} = require("devtools/client/inspector/shared/utils");
+const {createChild, promiseWarn, throttle} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
@@ -162,6 +162,9 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.styleWindow = this.styleDocument.defaultView;
   this.store = store || {};
   this.pageStyle = pageStyle;
+
+  // Allow tests to override throttling behavior, as this can cause intermittents.
+  this.throttle = throttle;
 
   this.cssProperties = getCssProperties(inspector.toolbox);
 

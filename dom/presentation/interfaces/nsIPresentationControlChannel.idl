@@ -64,6 +64,11 @@ interface nsIPresentationControlChannelListener: nsISupports
    * @param reason The reason of channel close, NS_OK represents normal close.
    */
   void notifyDisconnected(in nsresult reason);
+
+  /*
+   * The callback for notifying the reconnect command is acknowledged.
+   */
+  void notifyReconnected();
 };
 
 /*
@@ -122,4 +127,13 @@ interface nsIPresentationControlChannel: nsISupports
    * @param reason The reason of disconnecting channel; NS_OK represents normal.
    */
   void disconnect(in nsresult reason);
+
+  /*
+   * Reconnect a presentation on remote endpoint.
+   * Note that only controller is allowed to reconnect a session.
+   * @param presentationId The Id for representing this session.
+   * @param url The URL requested to open by remote device.
+   * @throws NS_ERROR_FAILURE on failure
+   */
+  void reconnect(in DOMString presentationId, in DOMString url);
 };

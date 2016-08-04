@@ -22,7 +22,7 @@ import org.mozilla.gecko.search.SearchEngine;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryPing;
 import org.mozilla.gecko.util.DateUtil;
-import org.mozilla.gecko.util.Experiments;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.text.DateFormat;

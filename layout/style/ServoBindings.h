@@ -187,8 +187,16 @@ void Gecko_SetNodeFlags(RawGeckoNode* node, uint32_t flags);
 void Gecko_UnsetNodeFlags(RawGeckoNode* node, uint32_t flags);
 
 // Incremental restyle.
-nsChangeHint Gecko_CalcAndStoreStyleDifference(RawGeckoElement* element,
-                                               ServoComputedValues* newstyle);
+// TODO: We would avoid a few ffi calls if we decide to make an API like the
+// former CalcAndStoreStyleDifference, but that would effectively mean breaking
+// some safety guarantees in the servo side.
+//
+// Also, we might want a ComputedValues to ComputedValues API for animations?
+// Not if we do them in Gecko...
+nsStyleContext* Gecko_GetStyleContext(RawGeckoNode* node);
+nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
+                                       ServoComputedValues* newstyle);
+void Gecko_StoreStyleDifference(RawGeckoNode* node, nsChangeHint change);
 
 // `array` must be an nsTArray
 // If changing this signature, please update the
@@ -262,6 +270,9 @@ void Servo_ReleaseComputedValues(ServoComputedValues*);
 
 // Initialize Servo components. Should be called exactly once at startup.
 void Servo_Initialize();
+
+// Shut down Servo components. Should be called exactly once at shutdown.
+void Servo_Shutdown();
 
 // Restyle the given document or subtree.
 void Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set);

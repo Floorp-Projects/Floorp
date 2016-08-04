@@ -729,6 +729,7 @@ Module::instantiate(JSContext* cx,
             return false;
 
         auto instance = cx->make_unique<Instance>(cx,
+                                                  instanceObj,
                                                   Move(code),
                                                   memory,
                                                   Move(tables),

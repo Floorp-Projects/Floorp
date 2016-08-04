@@ -12,8 +12,7 @@ const {
   createChild,
   appendText,
   advanceValidate,
-  blurOnMultipleProperties,
-  throttle
+  blurOnMultipleProperties
 } = require("devtools/client/inspector/shared/utils");
 const {
   parseDeclarations,
@@ -76,7 +75,7 @@ function TextPropertyEditor(ruleEditor, property) {
   this._onSwatchCommit = this._onSwatchCommit.bind(this);
   this._onSwatchPreview = this._onSwatchPreview.bind(this);
   this._onSwatchRevert = this._onSwatchRevert.bind(this);
-  this._onValidate = throttle(this._previewValue, 10, this);
+  this._onValidate = this.ruleView.throttle(this._previewValue, 10, this);
   this.update = this.update.bind(this);
   this.updatePropertyState = this.updatePropertyState.bind(this);
 
@@ -219,7 +218,8 @@ TextPropertyEditor.prototype = {
         destroy: this.updatePropertyState,
         advanceChars: ":",
         contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
-        popup: this.popup
+        popup: this.popup,
+        cssProperties: this.cssProperties
       });
 
       // Auto blur name field on multiple CSS rules get pasted in.
@@ -288,7 +288,8 @@ TextPropertyEditor.prototype = {
         property: this.prop,
         popup: this.popup,
         multiline: true,
-        maxWidth: () => this.container.getBoundingClientRect().width
+        maxWidth: () => this.container.getBoundingClientRect().width,
+        cssProperties: this.cssProperties
       });
     }
   },
