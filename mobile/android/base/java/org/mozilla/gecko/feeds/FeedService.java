@@ -27,7 +27,7 @@ import org.mozilla.gecko.feeds.action.SetupAlarmsAction;
 import org.mozilla.gecko.feeds.action.SubscribeToFeedAction;
 import org.mozilla.gecko.feeds.action.WithdrawSubscriptionsAction;
 import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.util.Experiments;
+import org.mozilla.gecko.Experiments;
 
 /**
  * Background service for subscribing to and checking website feeds to notify the user about updates.
