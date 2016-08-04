@@ -121,7 +121,7 @@
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
-    <broadcaster id="Social:PageShareOrMark" disabled="true"/>
+    <broadcaster id="Social:PageShareable" disabled="true"/>
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
                  oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
@@ -316,7 +316,6 @@
     <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
 
-    <!--<key id="markPage" key="&markPageCmd.commandkey;" command="Social:TogglePageMark" modifiers="accel,shift"/>-->
     <key id="focusChatBar" key="&social.chatBar.commandkey;" command="Chat:Focus"
 #ifdef XP_MACOSX
 # Sadly the devtools uses shift-accel-c on non-mac and alt-accel-c everywhere else

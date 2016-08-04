@@ -350,28 +350,6 @@ nsContextMenu.prototype = {
     this.showItem("context-bidi-page-direction-toggle",
                   !this.onTextInput && top.gBidiUI);
 
-    // SocialMarks. Marks does not work with text selections, only links. If
-    // there is more than MENU_LIMIT providers, we show a submenu for them,
-    // otherwise we have a menuitem per provider (added in SocialMarks class).
-    let markProviders = SocialMarks.getProviders();
-    let enablePageMarks = markProviders.length > 0 && !(this.onLink || this.onImage
-                            || this.onVideo || this.onAudio);
-    this.showItem("context-markpageMenu", enablePageMarks && markProviders.length > SocialMarks.MENU_LIMIT);
-    let enablePageMarkItems = enablePageMarks && markProviders.length <= SocialMarks.MENU_LIMIT;
-    let linkmenus = document.getElementsByClassName("context-markpage");
-    for (let m of linkmenus) {
-      m.hidden = !enablePageMarkItems;
-    }
-
-    let enableLinkMarks = markProviders.length > 0 &&
-                            ((this.onLink && !this.onMailtoLink) || this.onPlainTextLink);
-    this.showItem("context-marklinkMenu", enableLinkMarks && markProviders.length > SocialMarks.MENU_LIMIT);
-    let enableLinkMarkItems = enableLinkMarks && markProviders.length <= SocialMarks.MENU_LIMIT;
-    linkmenus = document.getElementsByClassName("context-marklink");
-    for (let m of linkmenus) {
-      m.hidden = !enableLinkMarkItems;
-    }
-
     // SocialShare
     let shareButton = SocialShare.shareButton;
     let shareEnabled = shareButton && !shareButton.disabled && !this.onSocial;
@@ -1732,10 +1710,6 @@ nsContextMenu.prototype = {
     mm.sendAsyncMessage("ContextMenu:BookmarkFrame", null, { target: this.target });
   },
 
-  markLink: function CM_markLink(origin) {
-    // send link to social, if it is the page url linkURI will be null
-    SocialMarks.markLink(origin, this.linkURI ? this.linkURI.spec : null, this.target);
-  },
   shareLink: function CM_shareLink() {
     SocialShare.sharePage(null, { url: this.linkURI.spec }, this.target);
   },
