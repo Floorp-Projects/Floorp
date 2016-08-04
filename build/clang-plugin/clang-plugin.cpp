@@ -1080,9 +1080,7 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
           .bind("node"),
       &explicitOperatorBoolChecker);
 
-  astMatcher.addMatcher(
-      cxxRecordDecl(allOf(decl().bind("decl"), hasRefCntMember())),
-      &noDuplicateRefCntMemberChecker);
+  astMatcher.addMatcher(cxxRecordDecl().bind("decl"), &noDuplicateRefCntMemberChecker);
 
   astMatcher.addMatcher(
       classTemplateSpecializationDecl(
@@ -1438,31 +1436,62 @@ void DiagnosticsMatcher::ExplicitOperatorBoolChecker::run(
 void DiagnosticsMatcher::NoDuplicateRefCntMemberChecker::run(
     const MatchFinder::MatchResult &Result) {
   DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned warningID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "Refcounted record %0 has multiple mRefCnt members");
-  unsigned note1ID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "Superclass %0 also has an mRefCnt member");
-  unsigned note2ID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note,
-      "Consider using the _INHERITED macros for AddRef and Release here");
+  const CXXRecordDecl *D = Result.Nodes.getNodeAs<CXXRecordDecl>("decl");
+  const FieldDecl *refCntMember = getClassRefCntMember(D);
+  const FieldDecl *foundRefCntBase = nullptr;
 
-  const CXXRecordDecl *decl = Result.Nodes.getNodeAs<CXXRecordDecl>("decl");
-  const FieldDecl *refCntMember = getClassRefCntMember(decl);
-  assert(refCntMember &&
-         "The matcher checked to make sure we have a refCntMember");
+  if (!D->hasDefinition())
+    return;
+  D = D->getDefinition();
+
+  // If we don't have an mRefCnt member, and we have less than 2 superclasses,
+  // we don't have to run this loop, as neither case will ever apply.
+  if (!refCntMember && D->getNumBases() < 2) {
+    return;
+  }
 
   // Check every superclass for whether it has a base with a refcnt member, and
   // warn for those which do
-  for (CXXRecordDecl::base_class_const_iterator base = decl->bases_begin(),
-                                                e = decl->bases_end();
-       base != e; ++base) {
-    const FieldDecl *baseRefCntMember = getBaseRefCntMember(base->getType());
+  for (auto &base : D->bases()) {
+    // Determine if this base class has an mRefCnt member
+    const FieldDecl *baseRefCntMember = getBaseRefCntMember(base.getType());
+
     if (baseRefCntMember) {
-      Diag.Report(decl->getLocStart(), warningID) << decl;
-      Diag.Report(baseRefCntMember->getLocStart(), note1ID)
+      if (refCntMember) {
+        // We have an mRefCnt, and superclass has an mRefCnt
+        unsigned error = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Error,
+            "Refcounted record %0 has multiple mRefCnt members");
+        unsigned note1 = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Note, "Superclass %0 also has an mRefCnt member");
+        unsigned note2 = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Note,
+            "Consider using the _INHERITED macros for AddRef and Release here");
+
+        Diag.Report(D->getLocStart(), error) << D;
+        Diag.Report(baseRefCntMember->getLocStart(), note1)
           << baseRefCntMember->getParent();
-      Diag.Report(refCntMember->getLocStart(), note2ID);
+        Diag.Report(refCntMember->getLocStart(), note2);
+      }
+
+      if (foundRefCntBase) {
+        unsigned error = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Error,
+            "Refcounted record %0 has multiple superclasses with mRefCnt members");
+        unsigned note = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Note,
+            "Superclass %0 has an mRefCnt member");
+
+        // superclass has mRefCnt, and another superclass also has an mRefCnt
+        Diag.Report(D->getLocStart(), error) << D;
+        Diag.Report(baseRefCntMember->getLocStart(), note)
+          << baseRefCntMember->getParent();
+        Diag.Report(foundRefCntBase->getLocStart(), note)
+          << foundRefCntBase->getParent();
+      }
+
+      // Record that we've found a base with a mRefCnt member
+      foundRefCntBase = baseRefCntMember;
     }
   }
 }
