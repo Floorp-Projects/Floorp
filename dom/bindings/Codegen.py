@@ -1716,24 +1716,6 @@ class CGConstructNavigatorObject(CGAbstractMethod):
             """) + genConstructorBody(self.descriptor)
 
 
-class CGClassConstructHookHolder(CGGeneric):
-    def __init__(self, descriptor):
-        if descriptor.interface.ctor():
-            constructHook = CONSTRUCT_HOOK_NAME
-        else:
-            constructHook = "ThrowingConstructor"
-        CGGeneric.__init__(self, fill(
-            """
-            static const JSNativeHolder ${CONSTRUCT_HOOK_NAME}_holder = {
-              ${constructHook},
-              ${hooks}
-            };
-            """,
-            CONSTRUCT_HOOK_NAME=CONSTRUCT_HOOK_NAME,
-            constructHook=constructHook,
-            hooks=NativePropertyHooks(descriptor)))
-
-
 def NamedConstructorName(m):
     return '_' + m.identifier.name
 
@@ -2792,11 +2774,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             prefCache = None
 
-        if (needInterfaceObject and
-            self.descriptor.needsConstructHookHolder()):
-            constructHookHolder = "&" + CONSTRUCT_HOOK_NAME + "_holder"
-        else:
-            constructHookHolder = "nullptr"
         if self.descriptor.interface.ctor():
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
@@ -2846,7 +2823,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             JS::Heap<JSObject*>* interfaceCache = ${interfaceCache};
             dom::CreateInterfaceObjects(aCx, aGlobal, ${parentProto},
                                         ${protoClass}, protoCache,
-                                        ${constructorProto}, ${interfaceClass}, ${constructHookHolder}, ${constructArgs}, ${namedConstructors},
+                                        ${constructorProto}, ${interfaceClass}, ${constructArgs}, ${namedConstructors},
                                         interfaceCache,
                                         ${properties},
                                         ${chromeProperties},
@@ -2859,7 +2836,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             protoCache=protoCache,
             constructorProto=constructorProto,
             interfaceClass=interfaceClass,
-            constructHookHolder=constructHookHolder,
             constructArgs=constructArgs,
             namedConstructors=namedConstructors,
             interfaceCache=interfaceCache,
@@ -12000,8 +11976,6 @@ class CGDescriptor(CGThing):
                                                descriptor.interface.ctor()))
             cgThings.append(CGClassHasInstanceHook(descriptor))
             cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
-            if descriptor.needsConstructHookHolder():
-                cgThings.append(CGClassConstructHookHolder(descriptor))
             cgThings.append(CGNamedConstructors(descriptor))
 
         cgThings.append(CGLegacyCallHook(descriptor))
