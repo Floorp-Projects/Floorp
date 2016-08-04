@@ -104,6 +104,7 @@ EXPORTS.mozilla += [
     'ArenaRefPtr.h',
     'ArenaRefPtrInlines.h',
     'GeometryUtils.h',
+    'OverflowChangedTracker.h',
     'PaintTracker.h',
     'RestyleLogging.h',
     'RestyleManager.h',

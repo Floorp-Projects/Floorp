@@ -60,6 +60,9 @@ var handlers = [
       case CommandType.ICE_CANDIDATE:
         stateMachine._notifyChannelDescriptor(command);
         break;
+      case CommandType.RECONNECT_ACK:
+        stateMachine._notifyReconnect(command.presentationId);
+        break;
       default:
         debug("unexpected command: " + JSON.stringify(command));
         // ignore unexpected command.
@@ -107,6 +110,16 @@ ControllerStateMachine.prototype = {
       this._sendCommand({
         type: CommandType.TERMINATE_ACK,
         presentationId: presentationId,
+      });
+    }
+  },
+
+  reconnect: function _reconnect(presentationId, url) {
+    if (this.state === State.CONNECTED) {
+      this._sendCommand({
+        type: CommandType.RECONNECT,
+        presentationId: presentationId,
+        url: url,
       });
     }
   },
@@ -198,6 +211,10 @@ ControllerStateMachine.prototype = {
 
   _notifyTerminate: function _notifyTerminate(presentationId) {
     this._channel.notifyTerminate(presentationId);
+  },
+
+  _notifyReconnect: function _notifyReconnect(presentationId) {
+    this._channel.notifyReconnect(presentationId);
   },
 
   _notifyChannelDescriptor: function _notifyChannelDescriptor(command) {

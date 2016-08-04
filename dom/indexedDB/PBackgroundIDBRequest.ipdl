@@ -36,6 +36,11 @@ struct ObjectStoreGetResponse
   SerializedStructuredCloneReadInfo cloneInfo;
 };
 
+struct ObjectStoreGetKeyResponse
+{
+  Key key;
+};
+
 struct ObjectStoreGetAllResponse
 {
   SerializedStructuredCloneReadInfo[] cloneInfos;
@@ -86,6 +91,7 @@ union RequestResponse
 {
   nsresult;
   ObjectStoreGetResponse;
+  ObjectStoreGetKeyResponse;
   ObjectStoreAddResponse;
   ObjectStorePutResponse;
   ObjectStoreDeleteResponse;

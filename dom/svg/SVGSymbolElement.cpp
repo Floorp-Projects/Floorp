@@ -81,6 +81,16 @@ SVGSymbolElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 //----------------------------------------------------------------------
+// SVGTests methods
+
+bool
+SVGSymbolElement::IsInChromeDoc() const
+{
+  return nsContentUtils::IsChromeDoc(OwnerDoc());
+}
+
+
+//----------------------------------------------------------------------
 // nsSVGElement methods
 
 nsSVGViewBox *

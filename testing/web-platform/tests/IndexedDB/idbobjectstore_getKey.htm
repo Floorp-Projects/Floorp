@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>IDBObjectStore.getKey()</title>
+<link rel="author" title="Mozilla" href="https://www.mozilla.org">
+<link rel="help" href="http://w3c.github.io/IndexedDB/#dom-idbobjectstore-getkey">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="support.js"></script>
+
+<script>
+indexeddb_test(
+    function(t, db, txn) {
+        var os = db.createObjectStore("store");
+
+        for(var i = 3; i < 6; i++) {
+            os.add("data" + i, i);
+        }
+    },
+    function(t, db) {
+        var os = db.transaction("store").objectStore("store");
+        var req1 = os.getKey(IDBKeyRange.lowerBound(6));
+
+        req1.onerror = t.unreached_func('getKey request should succeed');
+        req1.onsuccess = t.step_func(function(e) {
+            assert_equals(e.target.result, undefined, "Record should not exist - lowerBound(6)");
+        });
+
+        var req2 = os.getKey(IDBKeyRange.upperBound(2));
+
+        req2.onerror = t.unreached_func('getKey request should succeed');
+        req2.onsuccess = t.step_func(function(e) {
+            assert_equals(e.target.result, undefined, "Record should not exist - upperBound(2)");
+            t.done();
+        });
+    },
+    "Attempt to retrieve a record that doesn't exist"
+);
+
+indexeddb_test(
+    function(t, db, txn) {
+        var os = db.createObjectStore("store");
+
+        for(var i = 3; i < 6; i++) {
+            os.add("data" + i, i);
+        }
+    },
+    function(t, db) {
+        var os = db.transaction("store").objectStore("store");
+        var req = os.getKey(IDBKeyRange.bound(0, 10));
+
+        req.onerror = t.unreached_func('getKey request should succeed');
+        req.onsuccess = t.step_func(function(e) {
+            assert_equals(e.target.result, 3, "getKey(0-10)");
+            t.done();
+        });
+    },
+    "Returns the first key in the range"
+);
+</script>
+
+<div id="log"></div>

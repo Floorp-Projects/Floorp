@@ -1,0 +1,102 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test allow-presentation sandboxing flag</title>
+<script type="application/javascript;version=1.8">
+
+"use strict";
+
+function is(a, b, msg) {
+  window.parent.postMessage((a === b ? "OK " : "KO ") + msg, "*");
+}
+
+function ok(a, msg) {
+  window.parent.postMessage((a ? "OK " : "KO ") + msg, "*");
+}
+
+function info(msg) {
+  window.parent.postMessage("INFO " + msg, "*");
+}
+
+function command(msg) {
+  window.parent.postMessage("COMMAND " + JSON.stringify(msg), "*");
+}
+
+function finish() {
+  window.parent.postMessage("DONE", "*");
+}
+
+var request;
+var connection;
+
+function testStartRequest() {
+  return new Promise(function(aResolve, aReject) {
+    ok(navigator.presentation, "navigator.presentation should be available.");
+    request = new PresentationRequest("http://example1.com");
+
+    request.start().then(
+      function(aConnection) {
+        connection = aConnection;
+        ok(connection, "Connection should be available.");
+        ok(connection.id, "Connection ID should be set.");
+        is(connection.state, "connecting", "The initial state should be connecting.");
+
+        connection.onclose = function() {
+          connection.onclose = null;
+          command({ name: "notify-connection-closed", id: connection.id });
+        };
+        connection.onconnect = function() {
+          connection.onconnect = null;
+          is(connection.state, "connected", "Connection should be connected.");
+          aResolve();
+        };
+      },
+      function(aError) {
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
+      }
+    );
+  });
+}
+
+function testCloseConnection() {
+  return new Promise(function(aResolve, aReject) {
+    if (connection.state === "closed") {
+      aResolve();
+      return;
+    }
+    connection.onclose = function() {
+      connection.onclose = null;
+      is(connection.state, "closed", "The connection should be closed.");
+      aResolve();
+    };
+
+    connection.close();
+  });
+}
+
+window.addEventListener("message", function onMessage(evt) {
+  if (evt.data === "startConnection") {
+    testStartRequest().then(
+      function () {
+        command({ name: "connection-connected", id: connection.id });
+      }
+    );
+  }
+  else if (evt.data === "closeConnection") {
+    testCloseConnection().then(
+      function () {
+        command({ name: "connection-closed", id: connection.id });
+      }
+    );
+  }
+}, false);
+
+</script>
+</head>
+<body>
+</body>
+</html>

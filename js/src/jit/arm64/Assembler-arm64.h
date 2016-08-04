@@ -277,6 +277,11 @@ class Assembler : public vixl::Assembler
         armbuffer_.flushPool();
     }
 
+    void comment(const char* msg) {
+        // This is not implemented because setPrinter() is not implemented.
+        // TODO spew("; %s", msg);
+    }
+
     int actualIndex(int curOffset) {
         ARMBuffer::PoolEntry pe(curOffset);
         return armbuffer_.poolEntryOffset(pe);

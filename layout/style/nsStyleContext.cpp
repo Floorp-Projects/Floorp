@@ -85,14 +85,16 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
 #ifdef MOZ_STYLO
   , mStoredChangeHint(nsChangeHint(0))
 #ifdef DEBUG
-  , mHasStoredChangeHint(false)
+  , mConsumedChangeHint(false)
 #endif
 #endif
 #ifdef DEBUG
   , mFrameRefCnt(0)
   , mComputingStruct(nsStyleStructID_None)
 #endif
-{}
+{
+  MOZ_COUNT_CTOR(nsStyleContext);
+}
 
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
@@ -175,6 +177,7 @@ nsStyleContext::FinishConstruction(bool aSkipParentDisplayBasedStyleFixup)
 
 nsStyleContext::~nsStyleContext()
 {
+  MOZ_COUNT_DTOR(nsStyleContext);
   NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
 
 #ifdef DEBUG
@@ -397,10 +400,6 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
                                    NonOwningStyleContextSource aSourceIfVisited,
                                    bool aRelevantLinkVisited)
 {
-#ifdef MOZ_STYLO
-  MOZ_ASSERT(!mHasStoredChangeHint);
-#endif
-
   uint32_t threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 
@@ -1234,8 +1233,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
                                      aEqualStructs, aSamePointerStructs);
 }
 
-#ifdef MOZ_STYLO
-
 class MOZ_STACK_CLASS FakeStyleContext
 {
 public:
@@ -1273,7 +1270,6 @@ nsStyleContext::CalcStyleDifference(ServoComputedValues* aNewComputedValues,
   return CalcStyleDifferenceInternal(&newContext, aParentHintsNotHandledForDescendants,
                                      aEqualStructs, aSamePointerStructs);
 }
-#endif
 
 #ifdef DEBUG
 void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)

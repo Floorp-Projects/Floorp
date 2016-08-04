@@ -57,6 +57,7 @@
 #include "gfxUtils.h"
 #include "gfxGradientCache.h"
 #include "nsInlineFrame.h"
+#include "nsRubyTextContainerFrame.h"
 #include <algorithm>
 
 using namespace mozilla;

@@ -67,7 +67,7 @@ protected:
   void InsertElementsAt(uint32_t aIndex, const nsCOMArray_base& aElements);
   void InsertElementsAt(uint32_t aIndex, nsISupports* const* aElements,
                         uint32_t aCount);
-  bool ReplaceObjectAt(nsISupports* aObject, int32_t aIndex);
+  void ReplaceObjectAt(nsISupports* aObject, int32_t aIndex);
   void ReplaceElementAt(uint32_t aIndex, nsISupports* aElement)
   {
     nsISupports* oldElement = mArray[aIndex];
@@ -326,9 +326,9 @@ public:
 
   // replaces an existing element. Warning: if the array grows,
   // the newly created entries will all be null
-  bool ReplaceObjectAt(T* aObject, int32_t aIndex)
+  void ReplaceObjectAt(T* aObject, int32_t aIndex)
   {
-    return nsCOMArray_base::ReplaceObjectAt(aObject, aIndex);
+    nsCOMArray_base::ReplaceObjectAt(aObject, aIndex);
   }
   // nsTArray-compatible version
   void ReplaceElementAt(uint32_t aIndex, T* aElement)

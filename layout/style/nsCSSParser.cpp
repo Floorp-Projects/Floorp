@@ -152,7 +152,6 @@ public:
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
                       uint32_t         aLineNumber,
-                      css::SheetParsingMode aParsingMode,
                       css::LoaderReusableStyleSheets* aReusableSheets);
 
   already_AddRefed<css::Declaration>
@@ -1655,7 +1654,6 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
                           nsIURI*          aBaseURI,
                           nsIPrincipal*    aSheetPrincipal,
                           uint32_t         aLineNumber,
-                          css::SheetParsingMode aParsingMode,
                           css::LoaderReusableStyleSheets* aReusableSheets)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
@@ -1701,7 +1699,7 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
     mSection = eCSSSection_Charset; // sheet is empty, any rules are fair
   }
 
-  mParsingMode = aParsingMode;
+  mParsingMode = mSheet->ParsingMode();
   mIsChrome = dom::IsChromeURI(aSheetURI);
   mReusableSheets = aReusableSheets;
 
@@ -1729,8 +1727,6 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   mParsingMode = css::eAuthorSheetFeatures;
   mIsChrome = false;
   mReusableSheets = nullptr;
-
-  mSheet->SetParsingMode(aParsingMode);
 
   return NS_OK;
 }
@@ -17591,12 +17587,11 @@ nsCSSParser::ParseSheet(const nsAString& aInput,
                         nsIURI*          aBaseURI,
                         nsIPrincipal*    aSheetPrincipal,
                         uint32_t         aLineNumber,
-                        css::SheetParsingMode aParsingMode,
                         css::LoaderReusableStyleSheets* aReusableSheets)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseSheet(aInput, aSheetURI, aBaseURI, aSheetPrincipal, aLineNumber,
-               aParsingMode, aReusableSheets);
+               aReusableSheets);
 }
 
 already_AddRefed<css::Declaration>
