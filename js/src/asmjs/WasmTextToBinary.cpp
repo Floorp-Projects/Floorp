@@ -3211,12 +3211,13 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     }
 
     size_t numImports = module->imports().length();
+    size_t lastFuncImportIndex = 0;
     size_t lastGlobalIndex = 0;
     for (size_t i = 0; i < numImports; i++) {
         AstImport* imp = module->imports()[i];
         switch (imp->kind()) {
           case DefinitionKind::Function:
-            if (!r.registerImportName(imp->name(), i))
+            if (!r.registerImportName(imp->name(), lastFuncImportIndex++))
                 return r.fail("duplicate import");
             if (!r.resolveSignature(imp->funcSig()))
                 return false;

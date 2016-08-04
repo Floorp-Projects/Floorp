@@ -607,7 +607,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi)
     Register scratch = ABINonArgReturnReg1;  // repeatedly clobbered
 
     // 2.1. Get callee
-    masm.loadWasmGlobalPtr(fi.tlsDataOffset() + offsetof(FuncImportTls, fun), callee);
+    masm.loadWasmGlobalPtr(fi.tlsDataOffset() + offsetof(FuncImportTls, obj), callee);
 
     // 2.2. Save callee
     masm.storePtr(callee, Address(masm.getStackPointer(), argOffset));
