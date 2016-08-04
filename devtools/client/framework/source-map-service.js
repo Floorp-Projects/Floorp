@@ -19,6 +19,7 @@ const { LocationStore, serialize, deserialize } = require("./location-store");
 function SourceMapService(target) {
   this._target = target;
   this._locationStore = new LocationStore();
+  this._isInitialResolve = true;
 
   EventEmitter.decorate(this);
 
@@ -40,6 +41,7 @@ function SourceMapService(target) {
  * Clears the store containing the cached resolved locations and promises
  */
 SourceMapService.prototype.reset = function () {
+  this._isInitialResolve = true;
   this._locationStore.clear();
 };
 
@@ -49,6 +51,7 @@ SourceMapService.prototype.destroy = function () {
   this._target.off("navigate", this.reset);
   this._target.off("will-navigate", this.reset);
   this._target.off("close", this.destroy);
+  this._isInitialResolve = null;
   this._target = this._locationStore = null;
 };
 
@@ -60,7 +63,10 @@ SourceMapService.prototype.destroy = function () {
 SourceMapService.prototype.subscribe = function (location, callback) {
   this.on(serialize(location), callback);
   this._locationStore.set(location);
-  this._resolveAndUpdate(location);
+  if (this._isInitialResolve) {
+    this._resolveAndUpdate(location);
+    this._isInitialResolve = false;
+  }
 };
 
 /**
@@ -70,12 +76,7 @@ SourceMapService.prototype.subscribe = function (location, callback) {
  */
 SourceMapService.prototype.unsubscribe = function (location, callback) {
   this.off(serialize(location), callback);
-  // Check to see if the store exists before attempting to clear a location
-  // Sometimes unsubscribe happens during the destruction cascades and this
-  // condition is to protect against that. Could be looked into in the future.
-  if (this._locationStore) {
-    this._locationStore.clearByURL(location.url);
-  }
+  this._locationStore.clearByURL(location.url);
 };
 
 /**
@@ -86,10 +87,16 @@ SourceMapService.prototype.unsubscribe = function (location, callback) {
  */
 SourceMapService.prototype._resolveAndUpdate = function (location) {
   this._resolveLocation(location).then(resolvedLocation => {
-    // We try to source map the first console log to initiate the source-updated
-    // event from target. The isSameLocation check is to make sure we don't update
-    // the frame, if the location is not source-mapped.
-    if (resolvedLocation && !isSameLocation(location, resolvedLocation)) {
+    // We try to source map the first console log to initiate the source-updated event from
+    // target. The isSameLocation check is to make sure we don't update the frame, if the
+    // location is not source-mapped.
+    if (resolvedLocation) {
+      if (this._isInitialResolve) {
+        if (!isSameLocation(location, resolvedLocation)) {
+          this.emit(serialize(location), location, resolvedLocation);
+          return;
+        }
+      }
       this.emit(serialize(location), location, resolvedLocation);
     }
   });
@@ -175,6 +182,7 @@ function resolveLocation(target, location) {
     if (newLocation.error) {
       return null;
     }
+
     return newLocation;
   });
 }
@@ -189,4 +197,4 @@ function isSameLocation(location, resolvedLocation) {
   return location.url === resolvedLocation.url &&
     location.line === resolvedLocation.line &&
     location.column === resolvedLocation.column;
-}
+};
