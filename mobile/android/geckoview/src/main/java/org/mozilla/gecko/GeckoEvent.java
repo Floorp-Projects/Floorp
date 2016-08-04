@@ -65,7 +65,6 @@ public class GeckoEvent {
     @JNITarget
     public enum NativeGeckoEvent {
         MOTION_EVENT(2),
-        NOOP(15),
         VIEWPORT(20),
         NATIVE_GESTURE_EVENT(31),
         CALL_OBSERVER(33),
@@ -133,10 +132,6 @@ public class GeckoEvent {
 
     private GeckoEvent(NativeGeckoEvent event) {
         mType = event.value;
-    }
-
-    public static GeckoEvent createNoOpEvent() {
-        return GeckoEvent.get(NativeGeckoEvent.NOOP);
     }
 
     /**
