@@ -143,7 +143,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
         for (FuncImportGenDesc& funcImport : shared_->funcImports) {
             MOZ_ASSERT(!funcImport.globalDataOffset);
             funcImport.globalDataOffset = linkData_.globalDataLength;
-            linkData_.globalDataLength += sizeof(FuncImportExit);
+            linkData_.globalDataLength += sizeof(FuncImportTls);
             if (!addFuncImport(*funcImport.sig, funcImport.globalDataOffset))
                 return false;
         }
@@ -704,7 +704,7 @@ ModuleGenerator::initImport(uint32_t funcImportIndex, uint32_t sigIndex)
     MOZ_ASSERT(isAsmJS());
 
     uint32_t globalDataOffset;
-    if (!allocateGlobalBytes(sizeof(FuncImportExit), sizeof(void*), &globalDataOffset))
+    if (!allocateGlobalBytes(sizeof(FuncImportTls), sizeof(void*), &globalDataOffset))
         return false;
 
     MOZ_ASSERT(funcImportIndex == metadata_->funcImports.length());

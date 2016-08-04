@@ -52,7 +52,7 @@ class Instance
     // Internal helpers:
     void** addressOfTableBase(size_t tableIndex) const;
     const void** addressOfSigId(const SigIdDesc& sigId) const;
-    FuncImportExit& funcImportToExit(const FuncImport& fi);
+    FuncImportTls& funcImportTls(const FuncImport& fi);
 
     // Import call slow paths which are called directly from wasm code.
     friend void* AddressOf(SymbolicAddress, ExclusiveContext*);

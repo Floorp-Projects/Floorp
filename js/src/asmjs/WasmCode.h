@@ -176,20 +176,20 @@ class FuncImport
 {
     Sig sig_;
     struct CacheablePod {
-        uint32_t exitGlobalDataOffset_;
+        uint32_t tlsDataOffset_;
         uint32_t interpExitCodeOffset_;
         uint32_t jitExitCodeOffset_;
     } pod;
 
   public:
     FuncImport() {
-      memset(&pod, 0, sizeof(CacheablePod));
+        memset(&pod, 0, sizeof(CacheablePod));
     }
 
-    FuncImport(Sig&& sig, uint32_t exitGlobalDataOffset)
+    FuncImport(Sig&& sig, uint32_t tlsDataOffset)
       : sig_(Move(sig))
     {
-        pod.exitGlobalDataOffset_ = exitGlobalDataOffset;
+        pod.tlsDataOffset_ = tlsDataOffset;
         pod.interpExitCodeOffset_ = 0;
         pod.jitExitCodeOffset_ = 0;
     }
@@ -206,8 +206,8 @@ class FuncImport
     const Sig& sig() const {
         return sig_;
     }
-    uint32_t exitGlobalDataOffset() const {
-        return pod.exitGlobalDataOffset_;
+    uint32_t tlsDataOffset() const {
+        return pod.tlsDataOffset_;
     }
     uint32_t interpExitCodeOffset() const {
         return pod.interpExitCodeOffset_;
