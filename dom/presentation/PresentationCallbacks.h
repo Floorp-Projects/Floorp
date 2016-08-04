@@ -76,7 +76,7 @@ public:
 private:
   ~PresentationResponderLoadingCallback();
 
-  nsresult NotifyReceiverReady();
+  nsresult NotifyReceiverReady(bool aIsLoading);
 
   nsString mSessionId;
   nsCOMPtr<nsIWebProgress> mProgress;
