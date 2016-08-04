@@ -5502,8 +5502,12 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
         }
     }
 
-    if (args.length() == 1 && args[0].isInt32() && args[0].toInt32() >= 0) {
-        uint32_t len = args[0].toInt32();
+    if (args.length() == 1) {
+        size_t len = 0;
+
+        if (args[0].isInt32() && args[0].toInt32() >= 0)
+            len = args[0].toInt32();
+
         if (TypedArrayObject::GetTemplateObjectForNative(cx, native, len, res))
             return !!res;
     }
