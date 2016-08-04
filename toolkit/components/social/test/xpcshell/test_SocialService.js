@@ -16,12 +16,12 @@ function run_test() {
     { // normal provider
       name: "provider 1",
       origin: "https://example1.com",
-      sidebarURL: "https://example1.com/sidebar/",
+      shareURL: "https://example1.com/share/",
     },
     { // provider without workerURL
       name: "provider 2",
       origin: "https://example2.com",
-      sidebarURL: "https://example2.com/sidebar/",
+      shareURL: "https://example2.com/share/",
     }
   ];
 
@@ -152,7 +152,7 @@ function* testOrderedProviders(manifests, next) {
   let startDate = Date.now() * 1000;
   for (let i = 0; i < 10; i++) {
     visits.push({
-      uri: Services.io.newURI(providers[1].sidebarURL + i, null, null),
+      uri: Services.io.newURI(providers[1].shareURL + i, null, null),
       visitDate: startDate + i
     });
   }

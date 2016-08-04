@@ -12,13 +12,13 @@ var blocklistURL = "http://example.com/browser/browser/base/content/test/social/
 var manifest = { // normal provider
   name: "provider ok",
   origin: "https://example.com",
-  sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
+  shareURL: "https://example.com/browser/browser/base/content/test/social/social_share.html",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 var manifest_bad = { // normal provider
   name: "provider blocked",
   origin: "https://test1.example.com",
-  sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html",
+  shareURL: "https://test1.example.com/browser/browser/base/content/test/social/social_share.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png"
 };
 

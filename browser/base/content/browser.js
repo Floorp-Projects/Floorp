@@ -2294,9 +2294,6 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
           !E10SUtils.canLoadURIInProcess(args.URL, contentProcess)
       }
 
-      // In the case of sidebars and chat windows, gBrowser is defined but null,
-      // because no #content element exists.  For these cases, we need to find
-      // the most recent browser window.
       // In the case of popups, we need to find a non-popup browser window.
       if (!tabBrowser || !window.toolbar.visible) {
         // This returns only non-popup browser windows by default.

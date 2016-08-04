@@ -101,7 +101,6 @@ browser.jar:
 #endif
         content/browser/browser-thumbnails.js         (content/browser-thumbnails.js)
         content/browser/browser-trackingprotection.js (content/browser-trackingprotection.js)
-*       content/browser/chatWindow.xul                (content/chatWindow.xul)
         content/browser/tab-content.js                (content/tab-content.js)
         content/browser/content.js                    (content/content.js)
         content/browser/social-content.js             (content/social-content.js)
@@ -189,7 +188,6 @@ browser.jar:
 #ifdef XP_WIN
         content/browser/win6BrowserOverlay.xul        (content/win6BrowserOverlay.xul)
 #endif
-        content/browser/socialchat.xml                (content/socialchat.xml)
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)
 % override chrome://global/content/license.html chrome://browser/content/license.html
