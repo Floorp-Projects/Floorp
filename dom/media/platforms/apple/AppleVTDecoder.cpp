@@ -366,16 +366,15 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
 
     // Copy the image data into our own format.
     data =
-      VideoData::Create(info,
-                        mImageContainer,
-                        nullptr,
-                        aFrameRef.byte_offset,
-                        aFrameRef.composition_timestamp.ToMicroseconds(),
-                        aFrameRef.duration.ToMicroseconds(),
-                        buffer,
-                        aFrameRef.is_sync_point,
-                        aFrameRef.decode_timestamp.ToMicroseconds(),
-                        visible);
+      VideoData::CreateAndCopyData(info,
+                                   mImageContainer,
+                                   aFrameRef.byte_offset,
+                                   aFrameRef.composition_timestamp.ToMicroseconds(),
+                                   aFrameRef.duration.ToMicroseconds(),
+                                   buffer,
+                                   aFrameRef.is_sync_point,
+                                   aFrameRef.decode_timestamp.ToMicroseconds(),
+                                   visible);
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {
@@ -389,7 +388,6 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
 
     data =
       VideoData::CreateFromImage(info,
-                                 mImageContainer,
                                  aFrameRef.byte_offset,
                                  aFrameRef.composition_timestamp.ToMicroseconds(),
                                  aFrameRef.duration.ToMicroseconds(),

@@ -163,16 +163,15 @@ public:
     memset(buffer.mPlanes[0].mData, 255, sizeY);
     memset(buffer.mPlanes[1].mData, 128, sizeCbCr);
 
-    return VideoData::Create(mInfo,
-                             mImageContainer,
-                             nullptr,
-                             aOffsetInStream,
-                             aDTS.ToMicroseconds(),
-                             aDuration.ToMicroseconds(),
-                             buffer,
-                             true,
-                             aDTS.ToMicroseconds(),
-                             mPicture);
+    return VideoData::CreateAndCopyData(mInfo,
+                                        mImageContainer,
+                                        aOffsetInStream,
+                                        aDTS.ToMicroseconds(),
+                                        aDuration.ToMicroseconds(),
+                                        buffer,
+                                        true,
+                                        aDTS.ToMicroseconds(),
+                                        mPicture);
   }
 
 private:
