@@ -53,6 +53,7 @@
 #include "mozilla/Logging.h"
 #endif
 
+#include "AndroidAlerts.h"
 #include "ANRReporter.h"
 #include "GeckoNetworkManager.h"
 #include "GeckoScreenOrientation.h"
@@ -321,6 +322,17 @@ public:
             history->NotifyVisited(visitedURI);
         }
 #endif
+    }
+
+    static void NotifyAlertListener(jni::String::Param aName,
+                                    jni::String::Param aTopic)
+    {
+        if (!aName || !aTopic) {
+            return;
+        }
+
+        AndroidAlerts::NotifyListener(
+                aName->ToString(), aTopic->ToCString().get());
     }
 };
 
