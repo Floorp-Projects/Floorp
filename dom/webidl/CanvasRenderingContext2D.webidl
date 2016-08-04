@@ -153,8 +153,6 @@ interface CanvasRenderingContext2D {
   [Throws]
   attribute object mozCurrentTransformInverse;
 
-  attribute DOMString mozFillRule; /* "evenodd", "nonzero" (default) */
-
   [Throws]
   attribute any mozDash; /* default |null| */
 
