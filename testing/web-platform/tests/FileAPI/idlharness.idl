@@ -79,13 +79,3 @@ partial interface URL {
   static void revokeObjectURL(DOMString url);
 
 };
-
-[Constructor, Exposed=Worker]
-interface FileReaderSync {
-
-  // Synchronously return strings
-
-  ArrayBuffer readAsArrayBuffer(Blob blob);
-  DOMString readAsText(Blob blob, optional DOMString label);
-  DOMString readAsDataURL(Blob blob);
-};
