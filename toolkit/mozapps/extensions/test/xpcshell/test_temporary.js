@@ -625,7 +625,7 @@ add_task(function*() {
 });
 
 // Installing a temporary add-on over a non-restartless add-on should fail.
-add_task(function*(){
+add_task(function*() {
   yield promiseInstallAllFiles([do_get_addon("test_install1")], true);
 
   let non_restartless_ID = "addon1@tests.mozilla.org";

@@ -2706,7 +2706,7 @@ function run_variadic_tests(library) {
 
   do_check_throws(function() {
     // No variadic closure callbacks allowed.
-    sum_va_type(function(){});
+    sum_va_type(function() {});
   }, Error);
 
   let count_true_va = library.declare("test_sum_va_cdecl", ctypes.default_abi, ctypes.uint8_t,

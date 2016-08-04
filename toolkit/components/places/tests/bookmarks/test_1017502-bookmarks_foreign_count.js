@@ -73,7 +73,7 @@ add_task(function* maintenance_foreign_count_test() {
                                                 AND url = :t_url `);
   stmt.params.t_url = T_URI.spec;
   stmt.executeAsync({
-    handleCompletion: function(){
+    handleCompletion: function() {
       deferred.resolve();
     }
   });
@@ -92,7 +92,7 @@ add_task(function* maintenance_foreign_count_test() {
   Assert.equal((yield getForeignCountForURL(conn, T_URI)), 0);
 });
 
-add_task(function* add_remove_tags_test(){
+add_task(function* add_remove_tags_test() {
   let conn = yield PlacesUtils.promiseDBConnection();
 
   yield PlacesTestUtils.addVisits(T_URI);

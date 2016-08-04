@@ -70,7 +70,7 @@ function iterateDir(dir, recurse, callback) {
   }
 }
 
-function isIID(a, iid){
+function isIID(a, iid) {
   try {
     a.QueryInterface(iid);
     return true;

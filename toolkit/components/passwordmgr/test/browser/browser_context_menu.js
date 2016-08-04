@@ -258,7 +258,7 @@ function* openPasswordContextMenu(browser, passwordInput, assertCallback = null)
 /**
  * Verify that only the expected form fields are filled.
  */
-function* assertContextMenuFill(form, usernameField, passwordField, unchangedFields, loginIndex){
+function* assertContextMenuFill(form, usernameField, passwordField, unchangedFields, loginIndex) {
   let popupMenu = document.getElementById("fill-login-popup");
 
   // Store the value of fields that should remain unchanged.
