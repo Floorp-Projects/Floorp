@@ -6787,7 +6787,6 @@ var gIdentityHandler = {
 
     if (this._identityPopup.state == "open") {
       this.updateSitePermissions();
-      this._identityPopupMultiView.setHeightToFit();
     }
   },
 
@@ -7306,7 +7305,6 @@ var gIdentityHandler = {
     button.setAttribute("class", "identity-popup-permission-remove-button");
     button.addEventListener("command", () => {
       this._permissionList.removeChild(container);
-      this._identityPopupMultiView.setHeightToFit();
       if (aPermission.inUse &&
           ["camera", "microphone", "screen"].includes(aPermission.id)) {
         let windowId = this._sharingState.windowId;

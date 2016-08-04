@@ -16,7 +16,7 @@
 
   <panelmultiview id="identity-popup-multiView"
                   mainViewId="identity-popup-mainView">
-    <panelview id="identity-popup-mainView" flex="1">
+    <panelview id="identity-popup-mainView">
 
       <!-- Security Section -->
       <hbox id="identity-popup-security" class="identity-popup-section">
