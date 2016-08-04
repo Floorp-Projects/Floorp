@@ -1994,22 +1994,26 @@ nsChildView::PrepareWindowEffects()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  MutexAutoLock lock(mEffectsLock);
-  mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
-  mHasRoundedBottomCorners = [(ChildView*)mView hasRoundedBottomCorners];
-  CGFloat cornerRadius = [(ChildView*)mView cornerRadius];
-  mDevPixelCornerRadius = cornerRadius * BackingScaleFactor();
-  mIsCoveringTitlebar = [(ChildView*)mView isCoveringTitlebar];
-  NSInteger styleMask = [[mView window] styleMask];
-  bool isFullscreen = (styleMask & NSFullScreenWindowMask) || !(styleMask & NSTitledWindowMask);
+  bool isFullscreen;
+  {
+    MutexAutoLock lock(mEffectsLock);
+    mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
+    mHasRoundedBottomCorners = [(ChildView*)mView hasRoundedBottomCorners];
+    CGFloat cornerRadius = [(ChildView*)mView cornerRadius];
+    mDevPixelCornerRadius = cornerRadius * BackingScaleFactor();
+    mIsCoveringTitlebar = [(ChildView*)mView isCoveringTitlebar];
+    NSInteger styleMask = [[mView window] styleMask];
+    isFullscreen = (styleMask & NSFullScreenWindowMask) || !(styleMask & NSTitledWindowMask);
+    if (mIsCoveringTitlebar) {
+      mTitlebarRect = RectContainingTitlebarControls();
+      UpdateTitlebarCGContext();
+    }
+  }
+
   // If we've just transitioned into or out of full screen then update the opacity on our GLContext.
   if (isFullscreen != mIsFullscreen) {
     mIsFullscreen = isFullscreen;
     [(ChildView*)mView setFullscreen:isFullscreen];
-  }
-  if (mIsCoveringTitlebar) {
-    mTitlebarRect = RectContainingTitlebarControls();
-    UpdateTitlebarCGContext();
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
