@@ -677,29 +677,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    case AndroidGeckoEvent::CALL_OBSERVER:
-    {
-        nsCOMPtr<nsIObserver> observer;
-        nsAppShell::Get()->mObserversHash.Get(curEvent->Characters(), getter_AddRefs(observer));
-
-        if (observer) {
-            observer->Observe(nullptr, NS_ConvertUTF16toUTF8(curEvent->CharactersExtra()).get(),
-                              curEvent->Data().get());
-        } else {
-            ALOG("Call_Observer event: Observer was not found!");
-        }
-
-        break;
-    }
-
-    case AndroidGeckoEvent::REMOVE_OBSERVER:
-        nsAppShell::Get()->mObserversHash.Remove(curEvent->Characters());
-        break;
-
-    case AndroidGeckoEvent::ADD_OBSERVER:
-        nsAppShell::Get()->AddObserver(curEvent->Characters(), curEvent->Observer());
-        break;
-
     case AndroidGeckoEvent::NOOP:
         break;
 
