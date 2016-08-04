@@ -222,10 +222,8 @@ class NrIceCtx {
   static std::string GetNewUfrag();
   static std::string GetNewPwd();
 
-  bool Initialize(bool hide_non_default);
-  bool Initialize(bool hide_non_default,
-                  const std::string& ufrag,
-                  const std::string& pwd);
+  bool Initialize();
+  bool Initialize(const std::string& ufrag, const std::string& pwd);
 
   int SetNat(const RefPtr<TestNat>& aNat);
 
@@ -309,7 +307,7 @@ class NrIceCtx {
   nsresult SetProxyServer(const NrIceProxyServer& proxy_server);
 
   // Start ICE gathering
-  nsresult StartGathering();
+  nsresult StartGathering(bool default_route_only);
 
   // Start checking
   nsresult StartChecks();

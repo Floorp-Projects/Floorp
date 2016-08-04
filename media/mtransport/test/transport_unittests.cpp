@@ -640,7 +640,10 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // Start gathering
     test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, ice_ctx_->ctx(), &NrIceCtx::StartGathering),
+        WrapRunnableRet(&res,
+                        ice_ctx_->ctx(),
+                        &NrIceCtx::StartGathering,
+                        false),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
@@ -1208,7 +1211,7 @@ TEST_F(TransportTest, TestTransferIceMaxSize) {
    * of 9216 bytes, which then results in the DTLS layer discarding the packet.
    * Therefore we leave some headroom (according to
    * https://bugzilla.mozilla.org/show_bug.cgi?id=1214269#c29 256 bytes should
-   * be save choice) here for the DTLS bytes to make it safely into the 
+   * be save choice) here for the DTLS bytes to make it safely into the
    * receiving buffer in nICEr. */
   TransferTest(1, 8960);
 }
