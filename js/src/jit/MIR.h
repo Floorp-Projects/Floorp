@@ -13586,24 +13586,16 @@ class MWasmCall final
         }
     };
 
-    enum PreservesTlsReg {
-        False = false,
-        True = true
-    };
-
   private:
     wasm::CallSiteDesc desc_;
     Callee callee_;
     FixedList<AnyRegister> argRegs_;
     size_t spIncrement_;
-    bool preservesTlsReg_;
 
-    MWasmCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement,
-               PreservesTlsReg preservesTlsReg)
-      : desc_(desc)
-      , callee_(callee)
-      , spIncrement_(spIncrement)
-      , preservesTlsReg_(bool(preservesTlsReg))
+    MWasmCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement)
+      : desc_(desc),
+        callee_(callee),
+        spIncrement_(spIncrement)
     { }
 
   public:
@@ -13617,8 +13609,7 @@ class MWasmCall final
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
     static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-                          const Args& args, MIRType resultType, size_t spIncrement,
-                          PreservesTlsReg preservesTlsReg);
+                          const Args& args, MIRType resultType, size_t spIncrement);
 
     size_t numArgs() const {
         return argRegs_.length();
@@ -13640,11 +13631,6 @@ class MWasmCall final
     }
     size_t spIncrement() const {
         return spIncrement_;
-    }
-
-    // Does this call preserve the value of the TLS pointer register?
-    bool preservesTlsReg() const {
-        return preservesTlsReg_;
     }
 
     bool possiblyCalls() const override {
