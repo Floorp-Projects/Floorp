@@ -8294,10 +8294,11 @@ class LWasmCallBase : public LInstruction
         return true;
     }
     bool isCallPreserved(AnyRegister reg) const override {
-        // WebAssembly functions preserve the TLS pointer register.
-        if (reg.isFloat() || reg.gpr() != WasmTlsReg)
-            return false;
-        return mir()->preservesTlsReg();
+        // All MWasmCalls preserve the TLS register:
+        //  - internal/indirect calls do by the internal wasm ABI
+        //  - import calls do by explicitly saving/restoring at the callsite
+        //  - builtin calls do because the TLS reg is non-volatile
+        return !reg.isFloat() && reg.gpr() == WasmTlsReg;
     }
 
     // LInstruction interface
