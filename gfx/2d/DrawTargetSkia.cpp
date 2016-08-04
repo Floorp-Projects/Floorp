@@ -273,7 +273,7 @@ DrawTargetSkia::LockBits(uint8_t** aData, IntSize* aSize,
   *aData = reinterpret_cast<uint8_t*>(pixels);
   *aSize = IntSize(info.width(), info.height());
   *aStride = int32_t(rowBytes);
-  *aFormat = SkiaColorTypeToGfxFormat(info.colorType());
+  *aFormat = SkiaColorTypeToGfxFormat(info.colorType(), info.alphaType());
   if (aOrigin) {
     *aOrigin = IntPoint(origin.x(), origin.y());
   }
