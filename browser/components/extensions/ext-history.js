@@ -6,15 +6,12 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "History", () => {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils.history;
-});
-
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 
 const {
   normalizeTime,
@@ -128,7 +125,7 @@ function getObserver() {
       },
     };
     EventEmitter.decorate(_observer);
-    History.addObserver(_observer, false);
+    PlacesUtils.history.addObserver(_observer, false);
   }
   return _observer;
 }
@@ -157,14 +154,14 @@ extensions.registerSchemaAPI("history", (extension, context) => {
           ],
         };
         try {
-          return History.insert(pageInfo).then(() => undefined);
+          return PlacesUtils.history.insert(pageInfo).then(() => undefined);
         } catch (error) {
           return Promise.reject({message: error.message});
         }
       },
 
       deleteAll: function() {
-        return History.clear();
+        return PlacesUtils.history.clear();
       },
 
       deleteRange: function(filter) {
@@ -173,13 +170,13 @@ extensions.registerSchemaAPI("history", (extension, context) => {
           endDate: normalizeTime(filter.endTime),
         };
         // History.removeVisitsByFilter returns a boolean, but our API should return nothing
-        return History.removeVisitsByFilter(newFilter).then(() => undefined);
+        return PlacesUtils.history.removeVisitsByFilter(newFilter).then(() => undefined);
       },
 
       deleteUrl: function(details) {
         let url = details.url;
         // History.remove returns a boolean, but our API should return nothing
-        return History.remove(url).then(() => undefined);
+        return PlacesUtils.history.remove(url).then(() => undefined);
       },
 
       search: function(query) {
@@ -193,15 +190,15 @@ extensions.registerSchemaAPI("history", (extension, context) => {
           return Promise.reject({message: "The startTime cannot be after the endTime"});
         }
 
-        let options = History.getNewQueryOptions();
+        let options = PlacesUtils.history.getNewQueryOptions();
         options.sortingMode = options.SORT_BY_DATE_DESCENDING;
         options.maxResults = query.maxResults || 100;
 
-        let historyQuery = History.getNewQuery();
+        let historyQuery = PlacesUtils.history.getNewQuery();
         historyQuery.searchTerms = query.text;
         historyQuery.beginTime = beginTime;
         historyQuery.endTime = endTime;
-        let queryResult = History.executeQuery(historyQuery, options).root;
+        let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
         let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToHistoryItem);
         return Promise.resolve(results);
       },
@@ -212,13 +209,13 @@ extensions.registerSchemaAPI("history", (extension, context) => {
           return Promise.reject({message: "A URL must be provided for getVisits"});
         }
 
-        let options = History.getNewQueryOptions();
+        let options = PlacesUtils.history.getNewQueryOptions();
         options.sortingMode = options.SORT_BY_DATE_DESCENDING;
         options.resultType = options.RESULTS_AS_VISIT;
 
-        let historyQuery = History.getNewQuery();
+        let historyQuery = PlacesUtils.history.getNewQuery();
         historyQuery.uri = NetUtil.newURI(url);
-        let queryResult = History.executeQuery(historyQuery, options).root;
+        let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
         let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToVisitItem);
         return Promise.resolve(results);
       },
