@@ -171,6 +171,8 @@ add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)
 
 # Compilers
 # ==============================================================
+include('compilers-util.configure')
+
 def try_preprocess(compiler, language, source):
     return try_invoke_compiler(compiler, language, source, ['-E'])
 
@@ -533,7 +535,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         'C++': lambda: default_cxx_compilers(c_compiler),
     }[language]()
 
-    what='the %s %s compiler' % (host_or_target_str, language),
+    what='the %s %s compiler' % (host_or_target_str, language)
 
     option(env=var, nargs=1, help='Path to %s' % what)
 
@@ -735,6 +737,26 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             '%s_TYPE' % var, delayed_getattr(valid_compiler, 'type'))
         add_old_configure_assignment(
             '%s_VERSION' % var, delayed_getattr(valid_compiler, 'version'))
+
+    valid_compiler = compiler_class(valid_compiler)
+
+    kwargs = {
+        'C': {
+            'includes': ['stdio.h'],
+            'body': 'printf("Hello World\\n");',
+        },
+        'C++': {
+            'includes': ['new'],
+            'body': 'unsigned *test = new unsigned(42);',
+        },
+    }[language]
+
+    def compiler_error():
+        raise FatalCheckError('Failed compiling a simple %s source with %s'
+                              % (language, what))
+
+    valid_compiler.try_compile(check_msg='%s works' % what,
+                               onerror=compiler_error, **kwargs)
 
     return valid_compiler
 

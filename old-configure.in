@@ -265,17 +265,6 @@ case "$target" in
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
-        AC_LANG_SAVE
-        AC_LANG_C
-        AC_TRY_COMPILE([#include <stdio.h>],
-            [ printf("Hello World\n"); ],,
-            AC_MSG_ERROR([\$(CC) test failed.  You must have MS VC++ in your path to build.]) )
-
-        AC_LANG_CPLUSPLUS
-        AC_TRY_COMPILE([#include <new.h>],
-            [ unsigned *test = new unsigned(42); ],,
-            AC_MSG_ERROR([\$(CXX) test failed.  You must have MS VC++ in your path to build.]) )
-        AC_LANG_RESTORE
 
         changequote(,)
         _MSVC_VER_FILTER='s|.*[^!-~]([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
