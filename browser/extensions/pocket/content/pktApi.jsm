@@ -299,7 +299,7 @@ var pktApi = (function() {
 
         // Serialize and Fire off the request
         var str = [];
-        for(var p in data) {
+        for (var p in data) {
             if (data.hasOwnProperty(p)) {
                 str.push(encodeURIComponent(p) + "=" + encodeURIComponent(data[p]));
             }

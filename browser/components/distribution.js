@@ -25,7 +25,7 @@ this.DistributionCustomizer = function DistributionCustomizer() {
   let loadFromProfile = false;
   try {
     loadFromProfile = Services.prefs.getBoolPref("distribution.testing.loadFromProfile");
-  } catch(ex) {}
+  } catch (ex) {}
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   try {
@@ -37,7 +37,7 @@ this.DistributionCustomizer = function DistributionCustomizer() {
     iniFile.append("distribution.ini");
     if (iniFile.exists())
       this._iniFile = iniFile;
-  } catch(ex) {}
+  } catch (ex) {}
 }
 
 DistributionCustomizer.prototype = {
@@ -222,7 +222,7 @@ DistributionCustomizer.prototype = {
               this._makeURI(item.link), faviconURI, false,
               PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
               Services.scriptSecurityManager.getSystemPrincipal());
-          } catch(e) {
+          } catch (e) {
             Cu.reportError(e);
           }
         }
@@ -231,7 +231,7 @@ DistributionCustomizer.prototype = {
           try {
             yield PlacesUtils.keywords.insert({ keyword: item.keyword,
                                                 url: item.link });
-          } catch(e) {
+          } catch (e) {
             Cu.reportError(e);
           }
         }
@@ -459,13 +459,13 @@ DistributionCustomizer.prototype = {
         if (showPersonalToolbar) {
           xulStore.setValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed", "false");
         }
-      } catch(e) {}
+      } catch (e) {}
       try {
         var showMenubar = Services.prefs.getBoolPref("browser.showMenubar");
         if (showMenubar) {
           xulStore.setValue(BROWSER_DOCURL, "toolbar-menubar", "collapsed", "false");
         }
-      } catch(e) {}
+      } catch (e) {}
     }
 
     let prefDefaultsApplied = this._prefDefaultsApplied || !this._ini;

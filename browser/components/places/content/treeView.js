@@ -1111,7 +1111,7 @@ PlacesTreeView.prototype = {
     try {
       return this._getRowForNode(aNode, true);
     }
-    catch(ex) { }
+    catch (ex) { }
 
     return Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE;
   },

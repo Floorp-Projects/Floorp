@@ -19,7 +19,7 @@ function test() {
     if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled) {
       requestLongerTimeout(2);
     }
-  } catch(e) {}
+  } catch (e) {}
   waitForExplicitFinish();
 
   gProvider = new MockProvider();

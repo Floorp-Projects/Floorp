@@ -15,6 +15,6 @@ this.OfflineAppCacheHelper = {
     var appCacheStorage = cacheService.appCacheStorage(LoadContextInfo.default, null);
     try {
       appCacheStorage.asyncEvictStorage(null);
-    } catch(er) {}
+    } catch (er) {}
   }
 };

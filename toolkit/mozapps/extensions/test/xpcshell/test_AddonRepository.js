@@ -403,7 +403,7 @@ function run_test() {
       try {
         aInstall.install();
       }
-      catch(e) {
+      catch (e) {
         do_print("Failed to install add-on " + aInstall.sourceURI.spec);
         do_report_unexpected_exception(e);
       }

@@ -24,7 +24,7 @@ function setup_crash() {
   terminator.observe(null, "profile-before-change", null);
 
   dump("Waiting (actively) for the crash\n");
-  while(true) {
+  while (true) {
     Services.tm.currentThread.processNextEvent(true);
   }
 }

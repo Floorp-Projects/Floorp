@@ -235,9 +235,9 @@ function selectOnOK()
     // try to normalize - if this fails we will ignore the error
     // because we will notice the
     // error later and show a fitting error alert.
-    try{
+    try {
       file.normalize();
-    } catch(e) {
+    } catch (e) {
       //promptService.alert(window, "Problem", "normalize failed, continuing");
     }
 
@@ -263,7 +263,7 @@ function selectOnOK()
       isFile = file.isFile();
     }
 
-    switch(filePickerMode) {
+    switch (filePickerMode) {
     case nsIFilePicker.modeOpen:
     case nsIFilePicker.modeOpenMultiple:
       if (isFile) {
@@ -491,7 +491,7 @@ function setOKAction(file) {
   }
   else {
     document.documentElement.setAttribute("ondialogaccept", "return selectOnOK();");
-    switch(filePickerMode) {
+    switch (filePickerMode) {
     case nsIFilePicker.modeGetFolder:
       buttonLabel = gFilePickerBundle.getString("selectFolderButtonLabel");
       break;
@@ -621,7 +621,7 @@ function populateAncestorList(directory) {
 function goUp() {
   try {
     var parent = sfile.parent;
-  } catch(ex) { dump("can't get parent directory\n"); }
+  } catch (ex) { dump("can't get parent directory\n"); }
 
   if (parent) {
     gotoDirectory(parent);
@@ -704,7 +704,7 @@ function gotoDirectory(directory) {
     populateAncestorList(directory);
     treeView.setDirectory(directory);
     document.getElementById("errorShower").selectedIndex = 0;
-  } catch(ex) {
+  } catch (ex) {
     document.getElementById("errorShower").selectedIndex = 1;
   }
 
@@ -791,7 +791,7 @@ function processPathEntry(path, fileArray)
 
   try {
     file = sfile.clone().QueryInterface(nsILocalFile);
-  } catch(e) {
+  } catch (e) {
     dump("Couldn't clone\n"+e);
     return false;
   }
@@ -815,7 +815,7 @@ function processPathEntry(path, fileArray)
            (filePath.substr(0,3) == "../") ||
            (filePath == "..")) {
     /* appendRelativePath doesn't allow .. */
-    try{
+    try {
       file.initWithPath(file.path + "/" + filePath);
     } catch (e) {
       dump("Couldn't init path\n"+e);

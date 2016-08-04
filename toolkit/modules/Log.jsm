@@ -102,7 +102,7 @@ this.Log = {
         aObject.QueryInterface(Ci[i]);
         interfaces.push(i);
       }
-      catch(ex) {}
+      catch (ex) {}
     }
 
     return interfaces;
@@ -121,7 +121,7 @@ this.Log = {
           continue;
         properties.push(p + " = " + aObject[p]);
       }
-      catch(ex) {
+      catch (ex) {
         properties.push(p + " = " + ex);
       }
     }
@@ -834,7 +834,7 @@ StorageStreamAppender.prototype = {
     }
     try {
       this.outputStream.writeString(formatted + "\n");
-    } catch(ex) {
+    } catch (ex) {
       if (ex.result == Cr.NS_BASE_STREAM_CLOSED) {
         // The underlying output stream is closed, so let's open a new one
         // and try again.

@@ -7,14 +7,14 @@
 // Get bookmark service
 try {
   var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-} catch(ex) {
+} catch (ex) {
   do_throw("Could not get nav-bookmarks-service\n");
 }
 
 // Get annotation service
 try {
   var annosvc= Cc["@mozilla.org/browser/annotation-service;1"].getService(Ci.nsIAnnotationService);
-} catch(ex) {
+} catch (ex) {
   do_throw("Could not get annotation service\n");
 }
 
@@ -66,7 +66,7 @@ add_task(function* test_execute()
   // create new string annotation
   try {
     annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, 0);
-  } catch(ex) {
+  } catch (ex) {
     do_throw("unable to add page-annotation");
   }
   do_check_eq(annoObserver.PAGE_lastSet_URI, testURI.spec);
@@ -87,7 +87,7 @@ add_task(function* test_execute()
     var lastModified2 = bmsvc.getItemLastModified(testItemId);
     // verify that setting the annotation updates the last modified time
     do_check_true(lastModified2 > lastModified);
-  } catch(ex) {
+  } catch (ex) {
     do_throw("unable to add item annotation");
   }
   do_check_eq(annoObserver.ITEM_lastSet_Id, testItemId);
@@ -97,7 +97,7 @@ add_task(function* test_execute()
     var annoVal = annosvc.getItemAnnotation(testItemId, testAnnoName);
     // verify the anno value
     do_check_true(testAnnoVal === annoVal);
-  } catch(ex) {
+  } catch (ex) {
     do_throw("unable to get item annotation");
   }
 
@@ -126,11 +126,11 @@ add_task(function* test_execute()
   try {
     annosvc.getPageAnnotation(testURI, "blah");
     do_throw("fetching page-annotation that doesn't exist, should've thrown");
-  } catch(ex) {}
+  } catch (ex) {}
   try {
     annosvc.getItemAnnotation(testURI, "blah");
     do_throw("fetching item-annotation that doesn't exist, should've thrown");
-  } catch(ex) {}
+  } catch (ex) {}
 
   // get annotation info
   var flags = {}, exp = {}, storageType = {};
@@ -293,7 +293,7 @@ add_task(function* test_execute()
       annosvc.setItemAnnotation(id, "foo", "bar", 0, 0);
       do_throw("setItemAnnotation* should throw for invalid item id: " + id)
     }
-    catch(ex) { }
+    catch (ex) { }
   }
 
   // setting an annotation with EXPIRE_HISTORY for an item should throw
@@ -302,7 +302,7 @@ add_task(function* test_execute()
     annosvc.setItemAnnotation(itemId, "foo", "bar", 0, annosvc.EXPIRE_WITH_HISTORY);
     do_throw("setting an item annotation with EXPIRE_HISTORY should throw");
   }
-  catch(ex) {
+  catch (ex) {
   }
 
   annosvc.removeObserver(annoObserver);

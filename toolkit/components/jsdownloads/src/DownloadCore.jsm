@@ -1758,7 +1758,7 @@ this.DownloadSaver.prototype = {
       gDownloadHistory.addDownload(sourceUri, referrerUri, startPRTime,
                                    targetUri);
     }
-    catch(ex) {
+    catch (ex) {
       if (!(ex instanceof Components.Exception) ||
           ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
         throw ex;

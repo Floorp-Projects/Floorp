@@ -439,7 +439,7 @@ FinderHighlighter.prototype = {
     try {
       this.finder._getWindow().document
         .removeAnonymousContent(this._modalHighlightOutline);
-    } catch(ex) {}
+    } catch (ex) {}
 
     this._modalHighlightOutline = null;
   },
@@ -756,7 +756,7 @@ FinderHighlighter.prototype = {
         this._modalHighlightAllMask.remove();
       try {
         window.document.removeAnonymousContent(this._modalHighlightAllMask);
-      } catch(ex) {}
+      } catch (ex) {}
       this._modalHighlightAllMask = null;
     }
   },

@@ -53,7 +53,7 @@ function make_fake_appdir() {
   // and undefine the old value
   try {
     dirSvc.undefine("UAppData");
-  } catch(ex) {} // it's ok if this fails, the value might not be cached yet
+  } catch (ex) {} // it's ok if this fails, the value might not be cached yet
   return appD.clone();
 }
 
@@ -65,7 +65,7 @@ function cleanup_fake_appdir() {
   // undefine our value so future calls get the real value
   try {
     dirSvc.undefine("UAppData");
-  } catch(ex) {
+  } catch (ex) {
     dump("cleanup_fake_appdir: dirSvc.undefine failed: " + ex.message +"\n");
   }
 }

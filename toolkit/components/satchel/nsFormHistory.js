@@ -408,7 +408,7 @@ FormHistory.prototype = {
 
 
     observe : function observe(subject, topic, data) {
-        switch(topic) {
+        switch (topic) {
         case "nsPref:changed":
             this.updatePrefs();
             break;

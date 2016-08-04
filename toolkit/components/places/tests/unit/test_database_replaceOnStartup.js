@@ -37,7 +37,7 @@ function run_test() {
   try {
     db.executeSimpleSQL("DELETE * FROM test");
     do_throw("The new database should not have our unique content");
-  } catch(ex) {}
+  } catch (ex) {}
   db.close();
 
   dbFile = gProfD.clone();

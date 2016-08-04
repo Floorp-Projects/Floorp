@@ -91,7 +91,7 @@ add_task(function* test_getSystemDownloadsDirectory_exists_or_creates()
                        gStringBundle.GetStringFromName("downloadsFolder"));
     try {
       yield OS.File.removeEmptyDir(targetPath);
-    } catch(e) {}
+    } catch (e) {}
     downloadDir = yield DownloadIntegration.getSystemDownloadsDirectory();
     do_check_eq(downloadDir, targetPath);
     do_check_true(yield OS.File.exists(downloadDir));

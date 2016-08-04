@@ -44,7 +44,7 @@
     // "key-spacing": [2, { "beforeColon": false, "afterColon": true, "mode": "minimum" }],
 
     // Require spaces before and after keywords
-    // "keyword-spacing": 2,
+    "keyword-spacing": 2,
 
     // Unix linebreaks
     "linebreak-style": [2, "unix"],

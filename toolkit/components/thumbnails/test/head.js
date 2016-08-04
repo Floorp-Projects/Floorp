@@ -281,7 +281,7 @@ function bgAddPageThumbObserver(url) {
   return new Promise((resolve, reject) => {
     function observe(subject, topic, data) { // jshint ignore:line
       if (data === url) {
-        switch(topic) {
+        switch (topic) {
           case "page-thumbnail:create":
             resolve();
             break;

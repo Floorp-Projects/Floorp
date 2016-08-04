@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function modHistoryTypes(val) {
-  switch(val % 8) {
+  switch (val % 8) {
     case 0:
     case 1:
       return TRANSITION_LINK;
@@ -98,7 +98,7 @@ add_task(function test_execute()
   root.containerOpen = true;
   let cc = root.childCount;
   dump("----> cc is: " + cc + "\n");
-  for(let i = 0; i < root.childCount; ++i) {
+  for (let i = 0; i < root.childCount; ++i) {
     let resultNode = root.getChild(i);
     let accesstime = Date(resultNode.time / 1000);
     dump("----> result: " + resultNode.uri + "   Date: " + accesstime.toLocaleString() + "\n");

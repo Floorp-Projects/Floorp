@@ -93,7 +93,7 @@ let Timers = {
     key = key === null ? NULL_KEY : key;
     obj = obj || NULL_OBJECT;
 
-    if(!this.has(histogram, obj, key)) {
+    if (!this.has(histogram, obj, key)) {
       return false;
     }
     let objectMap = this._timers.get(histogram);

@@ -228,7 +228,7 @@ var DirectoryLinksProvider = {
           enhanced = false;
         }
       }
-      catch(ex) {}
+      catch (ex) {}
       Services.prefs.setBoolPref(PREF_NEWTAB_ENHANCED, enhanced);
     }
   },
@@ -609,7 +609,7 @@ var DirectoryLinksProvider = {
       // URIs without base domains will be allowed
       base = Services.eTLD.getBaseDomain(uri);
     }
-    catch(ex) {}
+    catch (ex) {}
     // Require a scheme match and the base only if desired
     return allowed.has(scheme) && (!checkBase || ALLOWED_URL_BASE.has(base));
   },

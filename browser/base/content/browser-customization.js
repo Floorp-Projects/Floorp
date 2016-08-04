@@ -10,7 +10,7 @@
  */
 var CustomizationHandler = {
   handleEvent: function(aEvent) {
-    switch(aEvent.type) {
+    switch (aEvent.type) {
       case "customizationstarting":
         this._customizationStarting();
         break;

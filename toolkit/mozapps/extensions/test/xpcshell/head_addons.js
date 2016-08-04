@@ -1982,7 +1982,7 @@ function do_exception_wrap(func) {
     try {
       func.apply(null, arguments);
     }
-    catch(e) {
+    catch (e) {
       do_report_unexpected_exception(e);
     }
   };
@@ -2026,7 +2026,7 @@ function loadFile(aFile) {
 function loadJSON(aFile) {
   let data = loadFile(aFile);
   do_print("Loaded JSON file " + aFile.path);
-  return(JSON.parse(data));
+  return (JSON.parse(data));
 }
 
 /**

@@ -20,7 +20,7 @@ var nsPreferences = {
         {
           this.mPrefService.setBoolPref(aPrefName, aPrefValue);
         }
-      catch(e)
+      catch (e)
         {
         }
     },
@@ -31,7 +31,7 @@ var nsPreferences = {
         {
           return this.mPrefService.getBoolPref(aPrefName);
         }
-      catch(e)
+      catch (e)
         {
           return aDefVal != undefined ? aDefVal : null;
         }
@@ -48,7 +48,7 @@ var nsPreferences = {
           this.mPrefService.setComplexValue(aPrefName,
                                             Components.interfaces.nsISupportsString, str);
         }
-      catch(e)
+      catch (e)
         {
         }
     },
@@ -60,7 +60,7 @@ var nsPreferences = {
           return this.mPrefService.getComplexValue(aPrefName,
                                                    Components.interfaces.nsISupportsString).data;
         }
-      catch(e)
+      catch (e)
         {
           return aDefVal != undefined ? aDefVal : null;
         }
@@ -73,7 +73,7 @@ var nsPreferences = {
         {
           this.mPrefService.setIntPref(aPrefName, aPrefValue);
         }
-      catch(e)
+      catch (e)
         {
         }
     },
@@ -84,7 +84,7 @@ var nsPreferences = {
         {
           return this.mPrefService.getIntPref(aPrefName);
         }
-      catch(e)
+      catch (e)
         {
           return aDefVal != undefined ? aDefVal : null;
         }
@@ -98,7 +98,7 @@ var nsPreferences = {
           return this.mPrefService.getComplexValue(aPrefName,
                                                    Components.interfaces.nsIPrefLocalizedString).data;
         }
-      catch(e)
+      catch (e)
         {
           return aDefVal != undefined ? aDefVal : null;
         }

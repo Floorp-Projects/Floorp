@@ -50,7 +50,7 @@ function init() {
   try {
     ps = Cc["@mozilla.org/push/Service;1"]
            .getService(Ci.nsIPushService);
-  } catch(e) {
+  } catch (e) {
     dump("Could not acquire PushService\n");
   }
 

@@ -97,7 +97,7 @@ function* openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
     "Firefox Sync preference page opened with `menupanel` entrypoint");
   ok(!isPanelUIOpen(), "The panel closed");
 
-  if(isPanelUIOpen()) {
+  if (isPanelUIOpen()) {
     let panelHidePromise = promisePanelHidden(window);
     PanelUI.hide();
     yield panelHidePromise;

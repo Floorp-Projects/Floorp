@@ -64,7 +64,7 @@ this.BookmarkJSONUtils = Object.freeze({
         yield importer.importFromURL(aSpec);
 
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS);
-      } catch(ex) {
+      } catch (ex) {
         Cu.reportError("Failed to restore bookmarks from " + aSpec + ": " + ex);
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
       }
@@ -107,7 +107,7 @@ this.BookmarkJSONUtils = Object.freeze({
           yield importer.importFromURL(OS.Path.toFileURI(aFilePath));
         }
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS);
-      } catch(ex) {
+      } catch (ex) {
         Cu.reportError("Failed to restore bookmarks from " + aFilePath + ": " + ex);
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
         throw ex;
