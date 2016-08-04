@@ -67,7 +67,8 @@ OggDecoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   }
   for (const nsString& codec : codecs) {
     if ((IsOpusEnabled() && codec.EqualsLiteral("opus")) ||
-        codec.EqualsLiteral("vorbis")) {
+        codec.EqualsLiteral("vorbis") ||
+        (MediaPrefs::FlacInOgg() && codec.EqualsLiteral("flac"))) {
       continue;
     }
     // Note: Only accept Theora in a video content type, not in an audio
@@ -80,7 +81,5 @@ OggDecoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   }
   return true;
 }
-
-
 
 } // namespace mozilla
