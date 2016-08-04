@@ -170,6 +170,9 @@ class Nursery
     /* Free an object buffer. */
     void freeBuffer(void* buffer);
 
+    /* The maximum number of bytes allowed to reside in nursery buffers. */
+    static const size_t MaxNurseryBufferSize = 1024;
+
     typedef Vector<ObjectGroup*, 0, SystemAllocPolicy> ObjectGroupList;
 
     /*
@@ -345,9 +348,6 @@ class Nursery
     struct Canary;
     Canary* lastCanary_;
 #endif
-
-    /* The maximum number of bytes allowed to reside in nursery buffers. */
-    static const size_t MaxNurseryBufferSize = 1024;
 
     /* The amount of space in the mapped nursery available to allocations. */
     static const size_t NurseryChunkUsableSize = gc::ChunkSize - sizeof(gc::ChunkTrailer);
