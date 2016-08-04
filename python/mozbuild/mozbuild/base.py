@@ -159,32 +159,7 @@ class MozbuildObject(ProcessExecutionMixin):
             raise BuildEnvironmentNotFoundException(
                 'Could not find Mozilla source tree or build environment.')
 
-        # Now we try to load the config for this environment. If mozconfig is
-        # None, read_mozconfig() will attempt to find one in the existing
-        # environment. If no mozconfig is present, the config will not have
-        # much defined.
-        loader = MozconfigLoader(topsrcdir)
-        current_project = os.environ.get('MOZ_CURRENT_PROJECT')
-        config = loader.read_mozconfig(mozconfig, moz_build_app=current_project)
-
-        config_topobjdir = MozbuildObject.resolve_mozconfig_topobjdir(
-            topsrcdir, config)
-
-        # If we're inside a objdir and the found mozconfig resolves to
-        # another objdir, we abort. The reasoning here is that if you are
-        # inside an objdir you probably want to perform actions on that objdir,
-        # not another one. This prevents accidental usage of the wrong objdir
-        # when the current objdir is ambiguous.
-        if topobjdir and config_topobjdir:
-            if current_project:
-                config_topobjdir = os.path.join(config_topobjdir, current_project)
-
-            _config_topobjdir = config_topobjdir
-            if not samepath(topobjdir, _config_topobjdir):
-                raise ObjdirMismatchException(topobjdir, _config_topobjdir)
-
         topsrcdir = mozpath.normsep(topsrcdir)
-        topobjdir = topobjdir or config_topobjdir
         if topobjdir:
             topobjdir = mozpath.normsep(os.path.normpath(topobjdir))
 
@@ -193,8 +168,8 @@ class MozbuildObject(ProcessExecutionMixin):
                     'to be the same as your source directory (%s). This build '
                     'configuration is not supported.' % topsrcdir)
 
-        # If we can't resolve topobjdir, oh well. The constructor will figure
-        # it out via config.guess.
+        # If we can't resolve topobjdir, oh well. We'll figure out when we need
+        # one.
         return cls(topsrcdir, None, None, topobjdir=topobjdir,
                    mozconfig=mozconfig)
 
@@ -237,7 +212,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         This a dict as returned by MozconfigLoader.read_mozconfig()
         """
-        if self._mozconfig is MozconfigLoader.AUTODETECT:
+        if not isinstance(self._mozconfig, dict):
             loader = MozconfigLoader(self.topsrcdir)
             self._mozconfig = loader.read_mozconfig(path=self._mozconfig,
                 moz_build_app=os.environ.get('MOZ_CURRENT_PROJECT'))
@@ -699,6 +674,17 @@ class MachCommandBase(MozbuildObject):
                 detect_virtualenv_mozinfo=detect_virtualenv_mozinfo)
             topsrcdir = dummy.topsrcdir
             topobjdir = dummy._topobjdir
+            if topobjdir:
+                # If we're inside a objdir and the found mozconfig resolves to
+                # another objdir, we abort. The reasoning here is that if you
+                # are inside an objdir you probably want to perform actions on
+                # that objdir, not another one. This prevents accidental usage
+                # of the wrong objdir when the current objdir is ambiguous.
+                config_topobjdir = MozbuildObject.resolve_mozconfig_topobjdir(
+                    topsrcdir, dummy.mozconfig)
+                if config_topobjdir and not samepath(topobjdir,
+                                                     config_topobjdir):
+                    raise ObjdirMismatchException(topobjdir, config_topobjdir)
         except BuildEnvironmentNotFoundException:
             pass
         except ObjdirMismatchException as e:
