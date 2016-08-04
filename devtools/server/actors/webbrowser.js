@@ -869,9 +869,8 @@ function TabActor(connection) {
   });
 
   // Flag eventually overloaded by sub classes in order to watch new docshells
-  // Used on b2g to catch activity frames and in chrome to list all frames
-  this.listenForNewDocShells =
-    Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+  // Used by the ChromeActor to list all frames in the Browser Toolbox
+  this.listenForNewDocShells = false;
 
   this.traits = {
     reconfigure: true,
@@ -938,9 +937,13 @@ TabActor.prototype = {
    * Getter for the nsIMessageManager associated to the tab.
    */
   get messageManager() {
-    return this.docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIContentFrameMessageManager);
+    try {
+      return this.docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIContentFrameMessageManager);
+    } catch (e) {
+      return null;
+    }
   },
 
   /**
@@ -968,6 +971,15 @@ TabActor.prototype = {
       return this.docShell
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindow);
+    }
+    return null;
+  },
+
+  get outerWindowID() {
+    if (this.window) {
+      return this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindowUtils)
+                        .outerWindowID;
     }
     return null;
   },
@@ -1104,10 +1116,7 @@ TabActor.prototype = {
     if (this.docShell && !this.docShell.isBeingDestroyed()) {
       response.title = this.title;
       response.url = this.url;
-      let windowUtils = this.window
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
-      response.outerWindowID = windowUtils.outerWindowID;
+      response.outerWindowID = this.outerWindowID;
     }
 
     // Always use the same ActorPool, so existing actor instances
@@ -1401,10 +1410,11 @@ TabActor.prototype = {
       return;
     }
 
-    this.conn.send({ from: this.actorID,
-                     type: "frameUpdate",
-                     frames: windows
-                   });
+    this.conn.send({
+      from: this.actorID,
+      type: "frameUpdate",
+      frames: windows
+    });
   },
 
   _updateChildDocShells() {
@@ -1417,13 +1427,14 @@ TabActor.prototype = {
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils)
                         .outerWindowID;
-    this.conn.send({ from: this.actorID,
-                     type: "frameUpdate",
-                     frames: [{
-                       id: id,
-                       destroy: true
-                     }]
-                   });
+    this.conn.send({
+      from: this.actorID,
+      type: "frameUpdate",
+      frames: [{
+        id,
+        destroy: true
+      }]
+    });
 
     // Stop watching this docshell (the unwatch() method will check if we
     // started watching it before).
@@ -1462,10 +1473,11 @@ TabActor.prototype = {
   },
 
   _notifyDocShellDestroyAll() {
-    this.conn.send({ from: this.actorID,
-                     type: "frameUpdate",
-                     destroyAll: true
-                   });
+    this.conn.send({
+      from: this.actorID,
+      type: "frameUpdate",
+      destroyAll: true
+    });
   },
 
   /**
@@ -1872,13 +1884,11 @@ TabActor.prototype = {
       configurable: true
     });
     events.emit(this, "changed-toplevel-document");
-    let id = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils)
-                   .outerWindowID;
-    this.conn.send({ from: this.actorID,
-                     type: "frameUpdate",
-                     selected: id
-                   });
+    this.conn.send({
+      from: this.actorID,
+      type: "frameUpdate",
+      selected: this.outerWindowID
+    });
   },
 
   /**

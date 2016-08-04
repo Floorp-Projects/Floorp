@@ -50,7 +50,7 @@ const RESPONSE_BODY_LIMIT = 1048576;
  */
 function matchRequest(channel, filters) {
   // Log everything if no filter is specified
-  if (!filters.topFrame && !filters.window && !filters.appId) {
+  if (!filters.outerWindowID && !filters.window && !filters.appId) {
     return true;
   }
 
@@ -81,27 +81,11 @@ function matchRequest(channel, filters) {
     }
   }
 
-  if (filters.topFrame) {
+  if (filters.outerWindowID) {
     let topFrame = NetworkHelper.getTopFrameForRequest(channel);
-    while (topFrame) {
-      // In the normal case, a topFrame filter should match the request's topFrame if it
-      // will match at all.
-      if (topFrame === filters.topFrame) {
-        return true;
-      }
-      // As a stop gap approach for RDM, where `filters.topFrame` will be the
-      // <xul:browser> frame for an entire tab and the request's `topFrame` is the
-      // <iframe mozbrower> that triggered the request, we try to climb up parent frames
-      // above the request's `topFrame` to see if they might also match the filter.
-      // In bug 1240912, we want to rework this, since we don't really want to be passing
-      // a frame down to the network monitor.
-      if (!topFrame.ownerGlobal) {
-        break;
-      }
-      topFrame = topFrame.ownerGlobal
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .containerElement;
+    if (topFrame && topFrame.outerWindowID &&
+        topFrame.outerWindowID == filters.outerWindowID) {
+      return true;
     }
   }
 
@@ -697,7 +681,7 @@ NetworkResponseListener.prototype = {
  *        - window (nsIDOMWindow): filter network requests by the associated
  *          window object.
  *        - appId (number): filter requests by the appId.
- *        - topFrame (nsIDOMElement): filter requests by their topFrameElement.
+ *        - outerWindowID (number): filter requests by their top frame's outerWindowID.
  *        Filters are optional. If any of these filters match the request is
  *        logged (OR is applied). If no filter is provided then all requests are
  *        logged.
@@ -1407,6 +1391,8 @@ NetworkMonitor.prototype = {
  * @constructor
  * @param number appId
  *        The web appId of the child process.
+ * @param number outerWindowID
+ *        The outerWindowID of the TabActor's main window.
  * @param nsIMessageManager messageManager
  *        The nsIMessageManager to use to communicate with the parent process.
  * @param string connID
@@ -1414,8 +1400,9 @@ NetworkMonitor.prototype = {
  * @param object owner
  *        The WebConsoleActor that is listening for the network requests.
  */
-function NetworkMonitorChild(appId, messageManager, connID, owner) {
+function NetworkMonitorChild(appId, outerWindowID, messageManager, connID, owner) {
   this.appId = appId;
+  this.outerWindowID = outerWindowID;
   this.connID = connID;
   this.owner = owner;
   this._messageManager = messageManager;
@@ -1455,6 +1442,7 @@ NetworkMonitorChild.prototype = {
                           this._onUpdateEvent);
     mm.sendAsyncMessage("debug:netmonitor:" + this.connID, {
       appId: this.appId,
+      outerWindowID: this.outerWindowID,
       action: "start",
     });
   },
@@ -1594,7 +1582,6 @@ function NetworkMonitorManager(frame, id) {
   // or else fallback to asking the frameLoader itself.
   let mm = frame.messageManager || frame.frameLoader.messageManager;
   this.messageManager = mm;
-  this.frame = frame;
   this.onNetMonitorMessage = this.onNetMonitorMessage.bind(this);
   this.onNetworkEvent = this.onNetworkEvent.bind(this);
 
@@ -1604,7 +1591,6 @@ exports.NetworkMonitorManager = NetworkMonitorManager;
 
 NetworkMonitorManager.prototype = {
   netMonitor: null,
-  frame: null,
   messageManager: null,
 
   /**
@@ -1620,10 +1606,10 @@ NetworkMonitorManager.prototype = {
     switch (action) {
       case "start":
         if (!this.netMonitor) {
-          let {appId} = msg.json;
+          let {appId, outerWindowID} = msg.json;
           this.netMonitor = new NetworkMonitor({
-            topFrame: this.frame,
-            appId: appId,
+            outerWindowID,
+            appId,
           }, this);
           this.netMonitor.init();
         }
@@ -1667,11 +1653,10 @@ NetworkMonitorManager.prototype = {
 
   destroy: function () {
     if (this.messageManager) {
-      this.messageManager.removeMessageListener("debug:netmonitor:" + this.id,
-                                                this.onNetMonitorMessage);
+      let mm = this.messageManager;
+      mm.removeMessageListener("debug:netmonitor:" + this.id, this.onNetMonitorMessage);
     }
     this.messageManager = null;
-    this.filters = null;
 
     if (this.netMonitor) {
       this.netMonitor.destroy();
