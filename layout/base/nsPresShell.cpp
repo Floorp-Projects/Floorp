@@ -92,6 +92,7 @@
 #include "PLDHashTable.h"
 #include "mozilla/dom/BeforeAfterKeyboardEventBinding.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/PointerEventBinding.h"
 #include "nsIObserverService.h"
 #include "nsDocShell.h"        // for reflow observation
@@ -734,17 +735,29 @@ static bool sSynthMouseMove = true;
 static uint32_t sNextPresShellId;
 static bool sPointerEventEnabled = true;
 static bool sAccessibleCaretEnabled = false;
+static bool sAccessibleCaretOnTouch = false;
 static bool sBeforeAfterKeyboardEventEnabled = false;
 
 /* static */ bool
-PresShell::AccessibleCaretEnabled()
+PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell)
 {
   static bool initialized = false;
   if (!initialized) {
     Preferences::AddBoolVarCache(&sAccessibleCaretEnabled, "layout.accessiblecaret.enabled");
+    Preferences::AddBoolVarCache(&sAccessibleCaretOnTouch, "layout.accessiblecaret.enabled_on_touch");
     initialized = true;
   }
-  return sAccessibleCaretEnabled;
+  // If the pref forces it on, then enable it.
+  if (sAccessibleCaretEnabled) {
+    return true;
+  }
+  // If the touch pref is on, and touch events are enabled (this depends
+  // on the specific device running), then enable it.
+  if (sAccessibleCaretOnTouch && dom::TouchEvent::PrefEnabled(aDocShell)) {
+    return true;
+  }
+  // Otherwise, disabled.
+  return false;
 }
 
 /* static */ bool
@@ -898,7 +911,7 @@ PresShell::Init(nsIDocument* aDocument,
   // Add the preference style sheet.
   UpdatePreferenceStyles();
 
-  if (AccessibleCaretEnabled()) {
+  if (AccessibleCaretEnabled(mDocument->GetDocShell())) {
     // Need to happen before nsFrameSelection has been set up.
     mAccessibleCaretEventHub = new AccessibleCaretEventHub(this);
   }
@@ -2899,12 +2912,8 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   // Mark ourselves as not safe to flush while we're doing frame construction.
   ++mChangeNestCount;
   RestyleManagerHandle restyleManager = mPresContext->RestyleManager();
-  if (restyleManager->IsServo()) {
-    MOZ_CRASH("stylo: PresShell::RecreateFramesFor not implemented for Servo-"
-              "backed style system");
-  }
-  nsresult rv = restyleManager->AsGecko()->ProcessRestyledFrames(changeList);
-  restyleManager->AsGecko()->FlushOverflowChangedTracker();
+  nsresult rv = restyleManager->ProcessRestyledFrames(changeList);
+  restyleManager->FlushOverflowChangedTracker();
   --mChangeNestCount;
 
   return rv;
@@ -4546,7 +4555,8 @@ PresShell::RecordStyleSheetChange(StyleSheetHandle aStyleSheet)
       return;
     }
   } else {
-    NS_ERROR("stylo: ServoStyleSheets don't support <style scoped>");
+    NS_WARNING("stylo: ServoStyleSheets don't support <style scoped>");
+    return;
   }
 
   mStylesHaveChanged = true;
@@ -7608,7 +7618,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
   RecordMouseLocation(aEvent);
 
-  if (AccessibleCaretEnabled()) {
+  if (AccessibleCaretEnabled(mDocument->GetDocShell())) {
     // We have to target the focus window because regardless of where the
     // touch goes, we want to access the copy paste manager.
     nsCOMPtr<nsPIDOMWindowOuter> window = GetFocusedDOMWindowInOurWindow();

@@ -1208,28 +1208,11 @@ nsresult nsChildView::SynthesizeNativeTouchPoint(uint32_t aPointerId,
 
   LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
   MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
-      mSynthesizedTouchInput.get(), aPointerId, aPointerState,
-      pointInWindow, aPointerPressure, aPointerOrientation);
-
-  if (mAPZC) {
-    uint64_t inputBlockId = 0;
-    ScrollableLayerGuid guid;
-
-    nsEventStatus result = mAPZC->ReceiveInputEvent(inputToDispatch, &guid, &inputBlockId);
-    if (result == nsEventStatus_eConsumeNoDefault) {
-      return NS_OK;
-    }
-
-    WidgetTouchEvent event = inputToDispatch.ToWidgetTouchEvent(this);
-    ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
-  } else {
-    WidgetTouchEvent event = inputToDispatch.ToWidgetTouchEvent(this);
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-  }
-
-  return NS_OK;;
+      mSynthesizedTouchInput.get(), PR_IntervalNow(), TimeStamp::Now(),
+      aPointerId, aPointerState, pointInWindow, aPointerPressure,
+      aPointerOrientation);
+  DispatchTouchInput(inputToDispatch);
+  return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

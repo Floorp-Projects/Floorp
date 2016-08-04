@@ -1258,7 +1258,8 @@ Element::GetAttributeNS(const nsAString& aNamespaceURI,
                         nsAString& aReturn)
 {
   int32_t nsid =
-    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
+                                                       nsContentUtils::IsChromeDoc(OwnerDoc()));
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attribute.
@@ -1300,7 +1301,8 @@ Element::RemoveAttributeNS(const nsAString& aNamespaceURI,
 {
   nsCOMPtr<nsIAtom> name = NS_Atomize(aLocalName);
   int32_t nsid =
-    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
+                                                       nsContentUtils::IsChromeDoc(OwnerDoc()));
 
   if (nsid == kNameSpaceID_Unknown) {
     // If the namespace ID is unknown, it means there can't possibly be an
@@ -1377,7 +1379,8 @@ Element::HasAttributeNS(const nsAString& aNamespaceURI,
                         const nsAString& aLocalName) const
 {
   int32_t nsid =
-    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
+                                                       nsContentUtils::IsChromeDoc(OwnerDoc()));
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attr...

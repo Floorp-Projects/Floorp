@@ -193,6 +193,21 @@ PresentationControlService.prototype = {
     this.releaseControlChannel(aControlChannel);
   },
 
+  onSessionReconnect: function(aDeviceInfo, aUrl, aPresentationId, aControlChannel) {
+    DEBUG && log("TCPPresentationServer - onSessionReconnect: " +
+                 aDeviceInfo.address + ":" + aDeviceInfo.port); // jshint ignore:line
+    if (!this.listener) {
+      this.releaseControlChannel(aControlChannel);
+      return;
+    }
+
+    this.listener.onReconnectRequest(aDeviceInfo,
+                                     aUrl,
+                                     aPresentationId,
+                                     aControlChannel);
+    this.releaseControlChannel(aControlChannel);
+  },
+
   // nsIServerSocketListener (Triggered by nsIServerSocket.init)
   onSocketAccepted: function(aServerSocket, aClientSocket) {
     DEBUG && log("PresentationControlService - onSocketAccepted: " +
@@ -393,6 +408,7 @@ TCPControlChannel.prototype = {
   _pendingAnswer: null,
   _pendingClose: null,
   _pendingCloseReason: null,
+  _pendingReconnect: false,
 
   sendOffer: function(aOffer) {
     this._stateMachine.sendOffer(discriptionAsJson(aOffer));
@@ -555,6 +571,12 @@ TCPControlChannel.prototype = {
       this._notifyDisconnected(this._pendingCloseReason);
       this._pendingClose = null;
     }
+
+    if (this._pendingReconnect) {
+      DEBUG && log("TCPControlChannel - notify pending reconnected"); // jshint ignore:line
+      this._notifyReconnected();
+      this._pendingReconnect = false;
+    }
   },
 
   /**
@@ -624,6 +646,17 @@ TCPControlChannel.prototype = {
     this._listener.notifyDisconnected(aReason);
   },
 
+  _notifyReconnected: function() {
+    if (!this._listener) {
+      this._pendingReconnect = true;
+      return;
+    }
+
+    DEBUG && log("TCPControlChannel - notify reconnected with role: " +
+                 this._direction); // jshint ignore:line
+    this._listener.notifyReconnected();
+  },
+
   _closeTransport: function() {
     if (this._connected) {
       this._transport.setEventSink(null, null);
@@ -647,6 +680,16 @@ TCPControlChannel.prototype = {
 
       this._connected = false;
     }
+  },
+
+  reconnect: function(aPresentationId, aUrl) {
+    DEBUG && log("TCPControlChannel - reconnect with role: " +
+                 this._direction); // jshint ignore:line
+    if (this._direction != "sender") {
+      return Cr.NS_ERROR_FAILURE;
+    }
+
+    this._stateMachine.reconnect(aPresentationId, aUrl);
   },
 
   // callback from state machine
@@ -684,9 +727,9 @@ TCPControlChannel.prototype = {
     if (!this._terminatingId) {
       this._terminatingId = presentationId;
       this._presentationService.onSessionTerminate(this._deviceInfo,
-                                                  presentationId,
-                                                  this,
-                                                  this._direction === "sender");
+                                                   presentationId,
+                                                   this,
+                                                   this._direction === "sender");
       return;
     }
 
@@ -698,6 +741,20 @@ TCPControlChannel.prototype = {
     }
 
     delete this._terminatingId;
+  },
+
+  notifyReconnect: function(presentationId, url) {
+    switch (this._direction) {
+      case "receiver":
+        this._presentationService.onSessionReconnect(this._deviceInfo,
+                                                     url,
+                                                     presentationId,
+                                                     this);
+        break;
+      case "sender":
+        this._notifyReconnected();
+        break;
+    }
   },
 
   notifyOffer: function(offer) {

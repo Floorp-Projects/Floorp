@@ -392,6 +392,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Flushes the assembly buffer, on platforms that need it.
     void flush() PER_SHARED_ARCH;
 
+    // Add a comment that is visible in the pretty printed assembly code.
+    void comment(const char* msg) PER_SHARED_ARCH;
+
     // ===============================================================
     // Frame manipulation functions.
 

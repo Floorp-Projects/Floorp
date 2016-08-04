@@ -154,7 +154,7 @@ function testSentRequest(aData, aOrigData) {
   is(aData.url, aOrigData.url + "&" + ADD_QUERY, "correct url in sent request");
 
   let hasHeader = aData.requestHeaders.headers.some((header) => {
-    return (header.name + ": " + header.value) == ADD_HEADER;
+    return (header.name.toLowerCase() + ": " + header.value) == ADD_HEADER.toLowerCase();
   });
   ok(hasHeader, "new header added to sent request");
 

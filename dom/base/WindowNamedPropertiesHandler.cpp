@@ -281,6 +281,7 @@ static const DOMIfaceAndProtoJSClass WindowNamedPropertiesClass = {
   PROXY_CLASS_DEF("WindowProperties",
                   JSCLASS_IS_DOMIFACEANDPROTOJSCLASS),
   eNamedPropertiesObject,
+  false,
   prototypes::id::_ID_Count,
   0,
   sWindowNamedPropertiesNativePropertyHooks,

@@ -8185,23 +8185,24 @@ private:
   GetResponse(RequestResponse& aResponse) override;
 };
 
-class ObjectStoreGetAllKeysRequestOp final
+class ObjectStoreGetKeyRequestOp final
   : public NormalTransactionOp
 {
   friend class TransactionBase;
 
-  const ObjectStoreGetAllKeysParams mParams;
+  const uint32_t mObjectStoreId;
+  const OptionalKeyRange mOptionalKeyRange;
+  const uint32_t mLimit;
+  const bool mGetAll;
   FallibleTArray<Key> mResponse;
 
 private:
   // Only created by TransactionBase.
-  ObjectStoreGetAllKeysRequestOp(TransactionBase* aTransaction,
-                                 const ObjectStoreGetAllKeysParams& aParams)
-    : NormalTransactionOp(aTransaction)
-    , mParams(aParams)
-  { }
+  ObjectStoreGetKeyRequestOp(TransactionBase* aTransaction,
+                             const RequestParams& aParams,
+                             bool aGetAll);
 
-  ~ObjectStoreGetAllKeysRequestOp()
+  ~ObjectStoreGetKeyRequestOp()
   { }
 
   virtual nsresult
@@ -8426,6 +8427,7 @@ private:
 
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
+  nsCString mContinuePrimaryKeyQuery;
   nsCString mLocale;
 
   Key mKey;
@@ -8483,7 +8485,7 @@ private:
   RecvDeleteMe() override;
 
   virtual bool
-  RecvContinue(const CursorRequestParams& aParams, const Key& key) override;
+  RecvContinue(const CursorRequestParams& aParams) override;
 
   bool
   IsLocaleAware() const {
@@ -8578,16 +8580,13 @@ class Cursor::ContinueOp final
   friend class Cursor;
 
   const CursorRequestParams mParams;
-  const Key mKey;
 
 private:
   // Only created by Cursor.
   ContinueOp(Cursor* aCursor,
-             const CursorRequestParams& aParams,
-             const Key& aKey)
+             const CursorRequestParams& aParams)
     : CursorOpBase(aCursor)
     , mParams(aParams)
-    , mKey(aKey)
   {
     MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
   }
@@ -14531,6 +14530,22 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
       break;
     }
 
+    case RequestParams::TObjectStoreGetKeyParams: {
+      const ObjectStoreGetKeyParams& params =
+        aParams.get_ObjectStoreGetKeyParams();
+      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+        GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      break;
+    }
+
     case RequestParams::TObjectStoreGetAllParams: {
       const ObjectStoreGetAllParams& params =
         aParams.get_ObjectStoreGetAllParams();
@@ -14993,10 +15008,14 @@ TransactionBase::AllocRequest(const RequestParams& aParams, bool aTrustParams)
         new ObjectStoreGetRequestOp(this, aParams, /* aGetAll */ true);
       break;
 
+    case RequestParams::TObjectStoreGetKeyParams:
+      actor =
+        new ObjectStoreGetKeyRequestOp(this, aParams, /* aGetAll */ false);
+      break;
+
     case RequestParams::TObjectStoreGetAllKeysParams:
       actor =
-        new ObjectStoreGetAllKeysRequestOp(this,
-                                     aParams.get_ObjectStoreGetAllKeysParams());
+        new ObjectStoreGetKeyRequestOp(this, aParams, /* aGetAll */ true);
       break;
 
     case RequestParams::TObjectStoreDeleteParams:
@@ -16164,6 +16183,34 @@ Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const
       break;
     }
 
+    case CursorRequestParams::TContinuePrimaryKeyParams: {
+      const Key& key = aParams.get_ContinuePrimaryKeyParams().key();
+      const Key& primaryKey = aParams.get_ContinuePrimaryKeyParams().primaryKey();
+      MOZ_ASSERT(!key.IsUnset());
+      MOZ_ASSERT(!primaryKey.IsUnset());
+      switch (mDirection) {
+        case IDBCursor::NEXT:
+          if (NS_WARN_IF(key < sortKey ||
+                         (key == sortKey && primaryKey <= mObjectKey))) {
+            ASSERT_UNLESS_FUZZING();
+            return false;
+          }
+          break;
+
+        case IDBCursor::PREV:
+          if (NS_WARN_IF(key > sortKey ||
+                         (key == sortKey && primaryKey >= mObjectKey))) {
+            ASSERT_UNLESS_FUZZING();
+            return false;
+          }
+          break;
+
+        default:
+          MOZ_CRASH("Should never get here!");
+      }
+      break;
+    }
+
     case CursorRequestParams::TAdvanceParams:
       if (NS_WARN_IF(!aParams.get_AdvanceParams().count())) {
         ASSERT_UNLESS_FUZZING();
@@ -16324,7 +16371,7 @@ Cursor::RecvDeleteMe()
 }
 
 bool
-Cursor::RecvContinue(const CursorRequestParams& aParams, const Key& aKey)
+Cursor::RecvContinue(const CursorRequestParams& aParams)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
@@ -16358,7 +16405,7 @@ Cursor::RecvContinue(const CursorRequestParams& aParams, const Key& aKey)
     return false;
   }
 
-  RefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams, aKey);
+  RefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams);
   if (NS_WARN_IF(!continueOp->Init(mTransaction))) {
     continueOp->Cleanup();
     return false;
@@ -25866,31 +25913,54 @@ ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse)
   }
 }
 
+ObjectStoreGetKeyRequestOp::ObjectStoreGetKeyRequestOp(
+                                                  TransactionBase* aTransaction,
+                                                  const RequestParams& aParams,
+                                                  bool aGetAll)
+  : NormalTransactionOp(aTransaction)
+  , mObjectStoreId(aGetAll ?
+                     aParams.get_ObjectStoreGetAllKeysParams().objectStoreId() :
+                     aParams.get_ObjectStoreGetKeyParams().objectStoreId())
+  , mOptionalKeyRange(aGetAll ?
+                        aParams.get_ObjectStoreGetAllKeysParams()
+                               .optionalKeyRange() :
+                        OptionalKeyRange(aParams.get_ObjectStoreGetKeyParams()
+                                                .keyRange()))
+  , mLimit(aGetAll ? aParams.get_ObjectStoreGetAllKeysParams().limit() : 1)
+  , mGetAll(aGetAll)
+{
+  MOZ_ASSERT(aParams.type() == RequestParams::TObjectStoreGetKeyParams ||
+             aParams.type() == RequestParams::TObjectStoreGetAllKeysParams);
+  MOZ_ASSERT(mObjectStoreId);
+  MOZ_ASSERT_IF(!aGetAll,
+                mOptionalKeyRange.type() ==
+                  OptionalKeyRange::TSerializedKeyRange);
+}
+
 nsresult
-ObjectStoreGetAllKeysRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
+ObjectStoreGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
 
   PROFILER_LABEL("IndexedDB",
-                 "ObjectStoreGetAllKeysRequestOp::DoDatabaseWork",
+                 "ObjectStoreGetKeyRequestOp::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
 
   const bool hasKeyRange =
-    mParams.optionalKeyRange().type() == OptionalKeyRange::TSerializedKeyRange;
+      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(
-      mParams.optionalKeyRange().get_SerializedKeyRange(),
-      NS_LITERAL_CSTRING("key"),
-      keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
+                                NS_LITERAL_CSTRING("key"),
+                                keyRangeClause);
   }
 
   nsAutoCString limitClause;
-  if (uint32_t limit = mParams.limit()) {
+  if (mLimit) {
     limitClause.AssignLiteral(" LIMIT ");
-    limitClause.AppendInt(limit);
+    limitClause.AppendInt(mLimit);
   }
 
   nsCString query =
@@ -25907,16 +25977,14 @@ ObjectStoreGetAllKeysRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
-                             mParams.objectStoreId());
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(
-      mParams.optionalKeyRange().get_SerializedKeyRange(),
-      stmt);
+    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
+                                 stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25939,18 +26007,32 @@ ObjectStoreGetAllKeysRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
+  MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
+
   return NS_OK;
 }
 
 void
-ObjectStoreGetAllKeysRequestOp::GetResponse(RequestResponse& aResponse)
+ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse)
 {
-  aResponse = ObjectStoreGetAllKeysResponse();
+  MOZ_ASSERT_IF(mLimit, mResponse.Length() <= mLimit);
+
+  if (mGetAll) {
+    aResponse = ObjectStoreGetAllKeysResponse();
+
+    if (!mResponse.IsEmpty()) {
+      nsTArray<Key>& response =
+        aResponse.get_ObjectStoreGetAllKeysResponse().keys();
+      mResponse.SwapElements(response);
+    }
+
+    return;
+  }
+
+  aResponse = ObjectStoreGetKeyResponse();
 
   if (!mResponse.IsEmpty()) {
-    nsTArray<Key>& response =
-      aResponse.get_ObjectStoreGetAllKeysResponse().keys();
-    mResponse.SwapElements(response);
+    aResponse.get_ObjectStoreGetKeyResponse().key() = Move(mResponse[0]);
   }
 }
 
@@ -27338,6 +27420,13 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
         NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
         directionClause +
         openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+        queryStart +
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key "
+                            "AND index_table.object_data_key >= :object_key "
+                          ) +
+        directionClause +
+        openLimit;
       break;
     }
 
@@ -27381,6 +27470,13 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
       mCursor->mContinueToQuery =
         queryStart +
         NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
+        directionClause +
+        openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+        queryStart +
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key "
+                            "AND index_table.object_data_key <= :object_key "
+                          ) +
         directionClause +
         openLimit;
       break;
@@ -27560,6 +27656,13 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
         NS_LITERAL_CSTRING(" AND sort_column >= :current_key ") +
         directionClause +
         openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+        queryStart +
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key "
+                            "AND object_data_key >= :object_key "
+                          ) +
+        directionClause +
+        openLimit;
       break;
     }
 
@@ -27605,6 +27708,13 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
         NS_LITERAL_CSTRING(" AND sort_column <= :current_key ") +
         directionClause +
         openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+        queryStart +
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key "
+                            "AND object_data_key <= :object_key "
+                          ) +
+        directionClause +
+        openLimit;
       break;
     }
 
@@ -27645,6 +27755,7 @@ OpenOp::DoDatabaseWork(DatabaseConnection* aConnection)
   MOZ_ASSERT(mCursor);
   MOZ_ASSERT(mCursor->mContinueQuery.IsEmpty());
   MOZ_ASSERT(mCursor->mContinueToQuery.IsEmpty());
+  MOZ_ASSERT(mCursor->mContinuePrimaryKeyQuery.IsEmpty());
   MOZ_ASSERT(mCursor->mKey.IsUnset());
   MOZ_ASSERT(mCursor->mRangeKey.IsUnset());
 
@@ -27727,6 +27838,10 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
     mCursor->mType == OpenCursorParams::TIndexOpenCursorParams ||
     mCursor->mType == OpenCursorParams::TIndexOpenKeyCursorParams;
 
+  MOZ_ASSERT_IF(isIndex &&
+                (mCursor->mDirection == IDBCursor::NEXT ||
+                 mCursor->mDirection == IDBCursor::PREV),
+                !mCursor->mContinuePrimaryKeyQuery.IsEmpty());
   MOZ_ASSERT_IF(isIndex, mCursor->mIndexId);
   MOZ_ASSERT_IF(isIndex, !mCursor->mObjectKey.IsUnset());
 
@@ -27744,21 +27859,35 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
   bool hasContinueKey = false;
+  bool hasContinuePrimaryKey = false;
   uint32_t advanceCount = 1;
+  Key& currentKey = mCursor->IsLocaleAware() ? mCursor->mSortKey : mCursor->mKey;
 
-  if (mParams.type() == CursorRequestParams::TContinueParams) {
-    // Always go to the next result.
-    if (mParams.get_ContinueParams().key().IsUnset()) {
-      hasContinueKey = false;
-    } else {
+  switch (mParams.type()) {
+    case CursorRequestParams::TContinueParams:
+      if (!mParams.get_ContinueParams().key().IsUnset()) {
+        hasContinueKey = true;
+        currentKey = mParams.get_ContinueParams().key();
+      }
+      break;
+    case CursorRequestParams::TContinuePrimaryKeyParams:
+      MOZ_ASSERT(!mParams.get_ContinuePrimaryKeyParams().key().IsUnset());
+      MOZ_ASSERT(!mParams.get_ContinuePrimaryKeyParams().primaryKey().IsUnset());
+      MOZ_ASSERT(mCursor->mDirection == IDBCursor::NEXT ||
+                 mCursor->mDirection == IDBCursor::PREV);
       hasContinueKey = true;
-    }
-  } else {
-    advanceCount = mParams.get_AdvanceParams().count();
-    hasContinueKey = false;
+      hasContinuePrimaryKey = true;
+      currentKey = mParams.get_ContinuePrimaryKeyParams().key();
+      break;
+    case CursorRequestParams::TAdvanceParams:
+      advanceCount = mParams.get_AdvanceParams().count();
+      break;
+    default:
+      MOZ_CRASH("Should never get here!");
   }
 
   const nsCString& continueQuery =
+    hasContinuePrimaryKey ? mCursor->mContinuePrimaryKeyQuery :
     hasContinueKey ? mCursor->mContinueToQuery : mCursor->mContinueQuery;
 
   MOZ_ASSERT(advanceCount > 0);
@@ -27770,15 +27899,6 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
   NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
   NS_NAMED_LITERAL_CSTRING(objectKeyName, "object_key");
-
-  const bool localeAware = mCursor->IsLocaleAware();
-
-  Key& currentKey = mCursor->mKey;
-  if (hasContinueKey) {
-    currentKey = mParams.get_ContinueParams().key();
-  } else if (localeAware) {
-    currentKey = mCursor->mSortKey;
-  }
 
   const bool usingRangeKey = !mCursor->mRangeKey.IsUnset();
 
@@ -27821,6 +27941,16 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
     }
   }
 
+  // Bind object key if primaryKey is specified.
+  if (hasContinuePrimaryKey) {
+    rv = mParams.get_ContinuePrimaryKeyParams().primaryKey()
+      .BindToStatement(stmt, objectKeyName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+
   bool hasResult;
   for (uint32_t index = 0; index < advanceCount; index++) {
     rv = stmt->ExecuteStep(&hasResult);
@@ -27841,23 +27971,6 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
   rv = PopulateResponseFromStatement(stmt, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  uint32_t extraCount = 1;
-  for (uint32_t i = 0; i < extraCount; i++) {
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!hasResult) {
-      break;
-    }
-
-    rv = PopulateResponseFromStatement(stmt, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
   }
 
   return NS_OK;

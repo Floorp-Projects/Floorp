@@ -300,6 +300,7 @@ MSG_DEF(JSMSG_REDECLARED_PARAM,        1, JSEXN_SYNTAXERR, "redeclaration of for
 MSG_DEF(JSMSG_RESERVED_ID,             1, JSEXN_SYNTAXERR, "{0} is a reserved identifier")
 MSG_DEF(JSMSG_REST_WITH_DEFAULT,       0, JSEXN_SYNTAXERR, "rest parameter may not have a default")
 MSG_DEF(JSMSG_SELFHOSTED_TOP_LEVEL_LEXICAL, 1, JSEXN_SYNTAXERR, "self-hosted code cannot contain top-level {0} declarations")
+MSG_DEF(JSMSG_SELFHOSTED_METHOD_CALL,  0, JSEXN_SYNTAXERR, "self-hosted code may not contain direct method calls. Use callFunction() or callContentFunction()")
 MSG_DEF(JSMSG_SELFHOSTED_UNBOUND_NAME, 0, JSEXN_TYPEERR, "self-hosted code may not contain unbound name lookups")
 MSG_DEF(JSMSG_SEMI_AFTER_FOR_COND,     0, JSEXN_SYNTAXERR, "missing ; after for-loop condition")
 MSG_DEF(JSMSG_SEMI_AFTER_FOR_INIT,     0, JSEXN_SYNTAXERR, "missing ; after for-loop initializer")

@@ -3322,7 +3322,7 @@ SVGTextFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     // child to be reflowed when it is next painted, and (b) not cause the
     // <text> to be repainted anyway since the user of the <mask> would not
     // know it needs to be repainted.
-    ScheduleReflowSVGNonDisplayText();
+    ScheduleReflowSVGNonDisplayText(nsIPresShell::eStyleChange);
   }
 }
 
@@ -3356,7 +3356,7 @@ SVGTextFrame::ReflowSVGNonDisplayText()
 }
 
 void
-SVGTextFrame::ScheduleReflowSVGNonDisplayText()
+SVGTextFrame::ScheduleReflowSVGNonDisplayText(nsIPresShell::IntrinsicDirty aReason)
 {
   MOZ_ASSERT(!nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
              "do not call ScheduleReflowSVGNonDisplayText when the outer SVG "
@@ -3394,8 +3394,7 @@ SVGTextFrame::ScheduleReflowSVGNonDisplayText()
 
   MOZ_ASSERT(f, "should have found an ancestor frame to reflow");
 
-  PresContext()->PresShell()->FrameNeedsReflow(
-    f, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+  PresContext()->PresShell()->FrameNeedsReflow(f, aReason, NS_FRAME_IS_DIRTY);
 }
 
 NS_IMPL_ISUPPORTS(SVGTextFrame::MutationObserver, nsIMutationObserver)
@@ -5296,7 +5295,7 @@ void
 SVGTextFrame::ScheduleReflowSVG()
 {
   if (mState & NS_FRAME_IS_NONDISPLAY) {
-    ScheduleReflowSVGNonDisplayText();
+    ScheduleReflowSVGNonDisplayText(nsIPresShell::eStyleChange);
   } else {
     nsSVGUtils::ScheduleReflowSVG(this);
   }

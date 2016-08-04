@@ -1213,6 +1213,30 @@ private:
   ScrollableLayerGuid mGuid;
 };
 
+void
+nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mAPZC) {
+    MOZ_ASSERT(APZThreadUtils::IsControllerThread());
+    uint64_t inputBlockId = 0;
+    ScrollableLayerGuid guid;
+
+    nsEventStatus result = mAPZC->ReceiveInputEvent(aInput, &guid, &inputBlockId);
+    if (result == nsEventStatus_eConsumeNoDefault) {
+      return;
+    }
+
+    WidgetTouchEvent event = aInput.ToWidgetTouchEvent(this);
+    ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
+  } else {
+    WidgetTouchEvent event = aInput.ToWidgetTouchEvent(this);
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+  }
+}
+
 nsEventStatus
 nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
 {
@@ -2073,6 +2097,8 @@ nsIWidget::ClearNativeTouchSequence(nsIObserver* aObserver)
 
 MultiTouchInput
 nsBaseWidget::UpdateSynthesizedTouchState(MultiTouchInput* aState,
+                                          uint32_t aTime,
+                                          mozilla::TimeStamp aTimeStamp,
                                           uint32_t aPointerId,
                                           TouchPointerState aPointerState,
                                           LayoutDeviceIntPoint aPoint,
@@ -2089,6 +2115,8 @@ nsBaseWidget::UpdateSynthesizedTouchState(MultiTouchInput* aState,
   // touch(es). We use |inputToDispatch| for this purpose.
   MultiTouchInput inputToDispatch;
   inputToDispatch.mInputType = MULTITOUCH_INPUT;
+  inputToDispatch.mTime = aTime;
+  inputToDispatch.mTimeStamp = aTimeStamp;
 
   int32_t index = aState->IndexOfTouch((int32_t)aPointerId);
   if (aPointerState == TOUCH_CONTACT) {

@@ -386,9 +386,14 @@ struct DOMIfaceAndProtoJSClass
 
   // Either eInterface, eInterfacePrototype, eGlobalInterfacePrototype or
   // eNamedPropertiesObject.
-  DOMObjectType mType;
+  DOMObjectType mType; // uint8_t
 
-  const prototypes::ID mPrototypeID;
+  // Boolean indicating whether this object wants a @@hasInstance property
+  // pointing to InterfaceHasInstance defined on it.  Only ever true for the
+  // eInterface case.
+  bool wantsInterfaceHasInstance;
+
+  const prototypes::ID mPrototypeID; // uint16_t
   const uint32_t mDepth;
 
   const NativePropertyHooks* mNativeHooks;

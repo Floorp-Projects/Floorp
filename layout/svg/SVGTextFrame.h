@@ -399,11 +399,13 @@ public:
    * nsSVGDisplayContainerFrame::ReflowSVG will call ReflowSVGNonDisplayText on
    * it.
    *
-   * The only case where we have to do this is in response to a style change on
-   * a non-display <text>. It is done in response to glyphs changes on
-   * non-display <text> (i.e., animated SVG-in-OpenType glyphs).
+   * We have to do this in two cases: in response to a style change on a
+   * non-display <text>, where aReason will be eStyleChange (the common case),
+   * and also in response to glyphs changes on non-display <text> (i.e.,
+   * animated SVG-in-OpenType glyphs), in which case aReason will be eResize,
+   * since layout doesn't need to be recomputed.
    */
-  void ScheduleReflowSVGNonDisplayText();
+  void ScheduleReflowSVGNonDisplayText(nsIPresShell::IntrinsicDirty aReason);
 
   /**
    * Updates the mFontSizeScaleFactor value by looking at the range of

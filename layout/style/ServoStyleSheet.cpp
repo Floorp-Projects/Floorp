@@ -9,10 +9,11 @@
 
 namespace mozilla {
 
-ServoStyleSheet::ServoStyleSheet(CORSMode aCORSMode,
+ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
+                                 CORSMode aCORSMode,
                                  net::ReferrerPolicy aReferrerPolicy,
                                  const dom::SRIMetadata& aIntegrity)
-  : StyleSheet(StyleBackendType::Servo)
+  : StyleSheet(StyleBackendType::Servo, aParsingMode)
   , StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
 }
@@ -72,8 +73,7 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
                             nsIURI* aSheetURI,
                             nsIURI* aBaseURI,
                             nsIPrincipal* aSheetPrincipal,
-                            uint32_t aLineNumber,
-                            css::SheetParsingMode aParsingMode)
+                            uint32_t aLineNumber)
 {
   DropSheet();
 
@@ -88,7 +88,7 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
   NS_ConvertUTF16toUTF8 input(aInput);
   mSheet = already_AddRefed<RawServoStyleSheet>(Servo_StylesheetFromUTF8Bytes(
       reinterpret_cast<const uint8_t*>(input.get()), input.Length(),
-      aParsingMode,
+      mParsingMode,
       reinterpret_cast<const uint8_t*>(baseString.get()), baseString.Length(),
       base, referrer, principal));
 }
