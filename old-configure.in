@@ -567,33 +567,6 @@ tools are selected during the Xcode/Developer Tools installation.])
   fi
 fi
 
-fi # COMPILE_ENVIRONMENT
-
-if test -n "$MAKE"; then
-  if test `echo $MAKE | grep -c make.py` != 1; then
-     NOT_PYMAKE=$MAKE
-  fi
-fi
-
-case "$host_os" in
-mingw*)
-    MOZ_PATH_PROGS(GMAKE, $GMAKE mingw32-make $NOT_PYMAKE make gmake, :)
-    ;;
-*)
-    MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE gmake make, :)
-    ;;
-esac
-if test "$GMAKE" = ":"; then
-   AC_MSG_ERROR([GNU make not found])
-fi
-AC_SUBST(GMAKE)
-
-if test -z "$MAKE"; then
-  MAKE=$GMAKE
-fi
-
-if test "$COMPILE_ENVIRONMENT"; then
-
 AC_PATH_XTRA
 
 XCFLAGS="$X_CFLAGS"
