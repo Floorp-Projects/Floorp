@@ -166,6 +166,8 @@
 
 /* CONTENT */
 
+.identity-popup-permission-label,
+.identity-popup-permission-state-label,
 #identity-popup-security-content > description,
 #identity-popup-security-descriptions > description,
 #identity-popup-securityView-header > description,
@@ -384,6 +386,7 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-permission-state-label {
+  margin-inline-end: 5px;
   text-align: end;
   opacity: 0.6;
 }
