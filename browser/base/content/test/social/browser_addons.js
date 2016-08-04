@@ -1,5 +1,5 @@
 var AddonManager = Cu.import("resource://gre/modules/AddonManager.jsm", {}).AddonManager;
-var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
 
 var manifest = {
   name: "provider 1",
