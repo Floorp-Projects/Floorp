@@ -1175,6 +1175,24 @@ auto PrefsHelper::OnPrefChange(mozilla::jni::String::Param a0, int32_t a1, bool 
     return mozilla::jni::Method<OnPrefChange_t>::Call(PrefsHelper::Context(), nullptr, a0, a1, a2, a3, a4);
 }
 
+const char Telemetry::name[] =
+        "org/mozilla/gecko/Telemetry";
+
+constexpr char Telemetry::AddHistogram_t::name[];
+constexpr char Telemetry::AddHistogram_t::signature[];
+
+constexpr char Telemetry::AddKeyedHistogram_t::name[];
+constexpr char Telemetry::AddKeyedHistogram_t::signature[];
+
+constexpr char Telemetry::AddUIEvent_t::name[];
+constexpr char Telemetry::AddUIEvent_t::signature[];
+
+constexpr char Telemetry::StartUISession_t::name[];
+constexpr char Telemetry::StartUISession_t::signature[];
+
+constexpr char Telemetry::StopUISession_t::name[];
+constexpr char Telemetry::StopUISession_t::signature[];
+
 const char ThumbnailHelper::name[] =
         "org/mozilla/gecko/ThumbnailHelper";
 
