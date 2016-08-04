@@ -125,6 +125,12 @@ interface GlobalEventHandlers {
            attribute EventHandler onmozpointerlockchange;
            [Pref="pointer-lock-api.prefixed.enabled"]
            attribute EventHandler onmozpointerlockerror;
+
+           // CSS-Animation and CSS-Transition handlers.
+           attribute EventHandler onanimationend;
+           attribute EventHandler onanimationiteration;
+           attribute EventHandler onanimationstart;
+           attribute EventHandler ontransitionend;
 };
 
 [NoInterfaceObject]
