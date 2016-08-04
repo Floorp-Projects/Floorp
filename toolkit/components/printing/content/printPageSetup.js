@@ -69,7 +69,7 @@ function isListOfPrinterFeaturesAvailable()
 
   try {
     has_printerfeatures = gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures");
-  } catch(ex) {
+  } catch (ex) {
   }
 
   return has_printerfeatures;
@@ -266,7 +266,7 @@ function loadDialog()
         gPrintService = gPrintService.QueryInterface(Components.interfaces.nsIPrintSettingsService);
       }
     }
-  } catch(ex) {
+  } catch (ex) {
     dump("loadDialog: ex="+ex+"\n");
   }
 

@@ -1812,7 +1812,7 @@ this.UITour = {
         let distribution = "default";
         try {
           distribution = Services.prefs.getDefaultBranch("distribution.").getCharPref("id");
-        } catch(e) {}
+        } catch (e) {}
         appinfo["distribution"] = distribution;
 
         let isDefaultBrowser = null;

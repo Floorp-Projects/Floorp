@@ -310,7 +310,7 @@ function readJSONFile(aFile) {
   try {
     stream.init(aFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
     return parseJsonFromStream(stream, stream.available());
-  } catch(ex) {
+  } catch (ex) {
     dumpn("readJSONFile: Error reading JSON file: " + ex);
   } finally {
     stream.close();

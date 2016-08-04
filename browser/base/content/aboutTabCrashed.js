@@ -60,7 +60,7 @@ var AboutTabCrashed = {
   },
 
   receiveMessage(message) {
-    switch(message.name) {
+    switch (message.name) {
       case "UpdateCount": {
         this.showRestoreAll(message.data.count > 1);
         break;
@@ -110,7 +110,7 @@ var AboutTabCrashed = {
   },
 
   onClick(event) {
-    switch(event.target.id) {
+    switch (event.target.id) {
       case "closeTab": {
         this.sendMessage("closeTab");
         break;
@@ -134,7 +134,7 @@ var AboutTabCrashed = {
   },
 
   onInput(event) {
-    switch(event.target.id) {
+    switch (event.target.id) {
       case "email": {
         document.getElementById("emailMe").checked = !!event.target.value;
         break;

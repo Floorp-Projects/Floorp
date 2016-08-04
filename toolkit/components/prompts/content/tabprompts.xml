@@ -188,7 +188,7 @@
                     window.removeEventListener("resize", this, false);
                     window.removeEventListener("unload", this, false);
                     this.linkedTab.removeEventListener("TabClose", this, false);
-                } catch(e) { }
+                } catch (e) { }
                 this.isLive = false;
                 // invoke callback
                 this.onCloseCallback();

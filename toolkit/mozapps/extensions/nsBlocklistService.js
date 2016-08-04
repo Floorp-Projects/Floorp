@@ -866,7 +866,7 @@ Blocklist.prototype = {
     }
 
     var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
-    try{
+    try {
       yield this._preloadBlocklistFile(appFile.path);
       return;
     } catch (e) {

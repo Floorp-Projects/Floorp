@@ -245,7 +245,7 @@ FormAutoComplete.prototype = {
                 let entry = entries[i];
                 // Remove results that do not contain the token
                 // XXX bug 394604 -- .toLowerCase can be wrong for some intl chars
-                if(searchTokens.some(tok => entry.textLowerCase.indexOf(tok) < 0))
+                if (searchTokens.some(tok => entry.textLowerCase.indexOf(tok) < 0))
                     continue;
                 this._calculateScore(entry, searchString, searchTokens);
                 this.log("Reusing autocomplete entry '" + entry.text +

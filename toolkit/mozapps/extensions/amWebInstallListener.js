@@ -209,7 +209,7 @@ Installer.prototype = {
     var failed = [];
 
     for (let install of this.downloads) {
-      switch(install.state) {
+      switch (install.state) {
       case AddonManager.STATE_DOWNLOADED:
       case AddonManager.STATE_INSTALLING:
         // Exit early if any add-ons haven't started installing yet or are

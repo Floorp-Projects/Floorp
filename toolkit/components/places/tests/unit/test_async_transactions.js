@@ -123,7 +123,7 @@ function sanityCheckTransactionHistory() {
     try {
       f();
       do_throw("PT.entry should throw for invalid input");
-    } catch(ex) {}
+    } catch (ex) {}
   };
   check_entry_throws( () => PT.entry(-1) );
   check_entry_throws( () => PT.entry({}) );
@@ -333,7 +333,7 @@ add_task(function* test_recycled_transactions() {
       yield aTransaction.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
     }
-    catch(ex) { }
+    catch (ex) { }
     ensureUndoState(txns, undoPosition);
   }
 
@@ -356,7 +356,7 @@ add_task(function* test_recycled_transactions() {
       yield txn_a.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
     }
-    catch(ex) { }
+    catch (ex) { }
     ensureUndoState();
     yield txn_b.transact();
   });

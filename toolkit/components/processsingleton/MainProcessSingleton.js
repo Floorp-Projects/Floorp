@@ -44,7 +44,7 @@ MainProcessSingleton.prototype = {
       if (iconURL && isWeb.indexOf(iconURL.scheme) < 0)
         throw "Unsupported search icon URL: " + iconURL;
     }
-    catch(ex) {
+    catch (ex) {
       Cu.reportError("Invalid argument passed to window.external.AddSearchProvider: " + ex);
 
       var searchBundle = Services.strings.createBundle("chrome://global/locale/search/search.properties");

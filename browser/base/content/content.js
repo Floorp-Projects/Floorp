@@ -182,12 +182,12 @@ var showContentContextMenu = function (event) {
         imageCache.findEntryProperties(event.target.currentURI, doc);
       try {
         contentType = props.get("type", Ci.nsISupportsCString).data;
-      } catch(e) {}
+      } catch (e) {}
       try {
         contentDisposition =
           props.get("content-disposition", Ci.nsISupportsCString).data;
-      } catch(e) {}
-    } catch(e) {}
+      } catch (e) {}
+    } catch (e) {}
   }
 
   let selectionInfo = BrowserUtils.getSelectionDetails(content);
@@ -693,7 +693,7 @@ var PageMetadataMessenger = {
     addMessageListener("PageMetadata:GetMicroformats", this);
   },
   receiveMessage(message) {
-    switch(message.name) {
+    switch (message.name) {
       case "PageMetadata:GetPageData": {
         let target = message.objects.target;
         let result = PageMetadata.getData(content.document, target);
@@ -730,7 +730,7 @@ addEventListener("ActivateSocialFeature", function (aEvent) {
   if (data) {
     try {
       data = JSON.parse(data);
-    } catch(e) {
+    } catch (e) {
       Cu.reportError("Social Service manifest parse error: " + e);
       return;
     }
@@ -1461,7 +1461,7 @@ let OfflineApps = {
         // all pages can use offline capabilities, no need to ask the user
         return;
       }
-    } catch(e) {
+    } catch (e) {
       // this pref isn't set by default, ignore failures
     }
     let docId = ++this._docId;

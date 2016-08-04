@@ -58,7 +58,7 @@ function handleDialog(doc, testNum) {
   var password = passfield.getAttribute("value");
   var dialog    = doc.getElementById("commonDialog");
 
-  switch(testNum) {
+  switch (testNum) {
     case 1:
         is(username, "xhruser1", "Checking provided username");
         is(password, "xhrpass1", "Checking provided password");
@@ -129,7 +129,7 @@ function xhrLoad(xmlDoc) {
   var authok = xmlDoc.getElementById("ok").textContent;
 
 
-  switch(testNum) {
+  switch (testNum) {
     case 1:
         is(username, "xhruser1", "Checking provided username");
         is(password, "xhrpass1", "Checking provided password");
@@ -151,7 +151,7 @@ function xhrLoad(xmlDoc) {
 }
 
 function doTest() {
-  switch(++testNum) {
+  switch (++testNum) {
     case 1:
         startCallbackTimer();
         makeRequest("authenticate.sjs?user=xhruser1&pass=xhrpass1&realm=xhr");

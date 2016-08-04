@@ -31,7 +31,7 @@ try {
       Services.obs.notifyObservers(null, "message-manager-flush-caches", null);
     });
   }
-} catch(e) {
+} catch (e) {
   Cu.reportError(e);
 }
 

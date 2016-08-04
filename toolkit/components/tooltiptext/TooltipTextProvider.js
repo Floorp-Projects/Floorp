@@ -86,7 +86,7 @@ TooltipTextProvider.prototype = {
             titleText += "\n" + andXMoreStr;
           }
         }
-      } catch(e) {}
+      } catch (e) {}
     }
 
     // Check texts against null so that title="" can be used to undefine a

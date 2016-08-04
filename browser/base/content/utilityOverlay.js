@@ -66,7 +66,7 @@ function getBoolPref(prefname, def)
   try {
     return Services.prefs.getBoolPref(prefname);
   }
-  catch(er) {
+  catch (er) {
     return def;
   }
 }

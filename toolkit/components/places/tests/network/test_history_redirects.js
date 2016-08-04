@@ -94,7 +94,7 @@ function continue_test() {
       visit_type: Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY },
   ];
   try {
-    while(stmt.executeStep()) {
+    while (stmt.executeStep()) {
       let comparator = EXPECTED.shift();
       do_print("Checking that '" + comparator.url +
                "' was entered into the DB correctly");

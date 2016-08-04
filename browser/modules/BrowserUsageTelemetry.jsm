@@ -125,7 +125,7 @@ let BrowserUsageTelemetry = {
   },
 
   observe(subject, topic, data) {
-    switch(topic) {
+    switch (topic) {
       case WINDOWS_RESTORED_TOPIC:
         this._setupAfterRestore();
         break;
@@ -139,7 +139,7 @@ let BrowserUsageTelemetry = {
   },
 
   handleEvent(event) {
-    switch(event.type) {
+    switch (event.type) {
       case "TabOpen":
         this._onTabOpen();
         break;

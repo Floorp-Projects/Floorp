@@ -239,7 +239,7 @@ var processInfo = {
       }
     }
     let io = new this._IO_COUNTERS();
-    if(!this._GetProcessIoCounters(this._GetCurrentProcess(), io.address()))
+    if (!this._GetProcessIoCounters(this._GetCurrentProcess(), io.address()))
       return null;
     return [parseInt(io.readBytes), parseInt(io.writeBytes)];
   }
@@ -397,7 +397,7 @@ var TelemetryScheduler = {
    */
   observe: function(aSubject, aTopic, aData) {
     this._log.trace("observe - aTopic: " + aTopic);
-    switch(aTopic) {
+    switch (aTopic) {
       case "idle":
         // If the user is idle, increase the tick interval.
         this._isUserIdle = true;

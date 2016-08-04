@@ -269,7 +269,7 @@ GMPInstallManager.prototype = {
       }
       return {status:  "succeeded",
               results: installResults};
-    } catch(e) {
+    } catch (e) {
       log.error("Could not check for addons", e);
       throw e;
     }
@@ -396,7 +396,7 @@ GMPExtractor.prototype = {
                     createInstance(Ci.nsILocalFile);
       destDir.initWithPath(this.installToDirPath);
       // Make sure the destination exists
-      if(!destDir.exists()) {
+      if (!destDir.exists()) {
         destDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
       }
 

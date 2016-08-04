@@ -829,7 +829,7 @@ this.PlacesDBUtils = {
       let limitURIs = Services.prefs.getIntPref(
         "places.history.expiration.transient_current_max_pages");
       tasks.log("History can store a maximum of " + limitURIs + " unique pages");
-    } catch(ex) {}
+    } catch (ex) {}
 
     let stmt = DBConn.createStatement(
       "SELECT name FROM sqlite_master WHERE type = :type");
@@ -1004,7 +1004,7 @@ this.PlacesDBUtils = {
             },
             handleCompletion: function () {}
           });
-        } finally{
+        } finally {
           stmt.finalize();
         }
       });

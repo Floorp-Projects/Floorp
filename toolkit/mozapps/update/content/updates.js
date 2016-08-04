@@ -918,7 +918,7 @@ var gDownloadingPage = {
       if (activeUpdate)
         this._setUIState(!aus.isDownloading);
     }
-    catch(e) {
+    catch (e) {
       LOG("gDownloadingPage", "onPageShow - error: " + e);
     }
 

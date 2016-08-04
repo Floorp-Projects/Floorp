@@ -21,7 +21,7 @@ nsSidebar.prototype = {
                       .getInterface(Ci.nsIDocShell)
                       .QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIContentFrameMessageManager);
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
     }
   },

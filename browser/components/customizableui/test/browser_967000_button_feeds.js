@@ -42,7 +42,7 @@ add_task(function*() {
   is(gBrowser.currentURI.spec, TEST_FEED, "Subscribe page opened");
   ok(!isPanelUIOpen(), "Panel is closed");
 
-  if(isPanelUIOpen()) {
+  if (isPanelUIOpen()) {
     panelHidePromise = promisePanelHidden(window);
     PanelUI.hide();
     yield panelHidePromise;

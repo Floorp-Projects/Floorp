@@ -549,7 +549,7 @@ this.CrashSubmit = {
             return null;
           }
         );
-      } catch(ex) {
+      } catch (ex) {
         Cu.reportError(ex);
       } finally {
         iterator.close();

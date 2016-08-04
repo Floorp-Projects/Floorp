@@ -787,7 +787,7 @@ LivemarkLoadListener.prototype = {
                   .checkLoadURIWithPrincipal(feedPrincipal, uri,
                                              Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
         }
-        catch(ex) {
+        catch (ex) {
           continue;
         }
 

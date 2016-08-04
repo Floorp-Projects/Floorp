@@ -49,7 +49,7 @@
             if (popupBox)
               popupBox.openPopup(aAnchorElement, aPosition, aX, aY,
                                  aIsContextMenu, aAttributesOverride, aTriggerEvent);
-          } catch(e) {}
+          } catch (e) {}
         ]]>
         </body>
       </method>
@@ -65,7 +65,7 @@
             var popupBox = this.popupBoxObject;
             if (popupBox)
               popupBox.openPopupAtScreen(aX, aY, aIsContextMenu, aTriggerEvent);
-          } catch(e) {}
+          } catch (e) {}
         ]]>
         </body>
       </method>
@@ -86,7 +86,7 @@
             if (popupBox)
               popupBox.openPopupAtScreenRect(aPosition, aX, aY, aWidth, aHeight,
                                              aIsContextMenu, aAttributesOverride, aTriggerEvent);
-          } catch(e) {}
+          } catch (e) {}
         ]]>
         </body>
       </method>
@@ -104,10 +104,10 @@
           var menuBox = null;
           try {
             popupBox = this.popupBoxObject;
-          } catch(e) {}
+          } catch (e) {}
           try {
             menuBox = this.parentNode.boxObject;
-          } catch(e) {}
+          } catch (e) {}
           if (menuBox instanceof MenuBoxObject)
             menuBox.openMenu(true);
           else if (popupBox)
@@ -124,10 +124,10 @@
           var menuBox = null;
           try {
             popupBox = this.popupBoxObject;
-          } catch(e) {}
+          } catch (e) {}
           try {
             menuBox = this.parentNode.boxObject;
-          } catch(e) {}
+          } catch (e) {}
           if (menuBox instanceof MenuBoxObject)
             menuBox.openMenu(false);
           else if (popupBox instanceof PopupBoxObject)
@@ -325,7 +325,7 @@
           try {
             if (document.commandDispatcher.focusedWindow != window)
               return; // Focus has already been set to a window outside of this panel
-          } catch(ex) {}
+          } catch (ex) {}
           while (currentFocus) {
             if (currentFocus == this) {
               // Focus was set on an element inside this panel,
@@ -334,7 +334,7 @@
                 let fm = Components.classes["@mozilla.org/focus-manager;1"]
                                    .getService(Components.interfaces.nsIFocusManager);
                 fm.setFocus(prevFocus, fm.FLAG_NOSCROLL);
-              } catch(e) {
+              } catch (e) {
                 prevFocus.focus();
               }
               return;

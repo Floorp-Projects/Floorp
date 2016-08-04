@@ -34,7 +34,7 @@ function initWizard()
     gProfileDisplay = document.getElementById("profileDisplay").firstChild;
     setDisplayToDefaultFolder();
   }
-  catch(e) {
+  catch (e) {
     window.close();
     throw (e);
   }

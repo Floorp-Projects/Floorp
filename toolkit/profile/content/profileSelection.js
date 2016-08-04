@@ -51,14 +51,14 @@ function startup()
           }, 0, listitem);
         }
       }
-      catch(e) { }
+      catch (e) { }
     }
 
     var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
     autoSelectLastProfile.checked = gProfileService.startWithLastProfile;
     profilesElement.focus();
   }
-  catch(e) {
+  catch (e) {
     window.close();
     throw (e);
   }
@@ -132,7 +132,7 @@ function updateStartupPrefs()
 // handle key event on listboxes
 function onProfilesKey(aEvent)
 {
-  switch( aEvent.keyCode )
+  switch ( aEvent.keyCode )
   {
   case KeyEvent.DOM_VK_BACK_SPACE:
     if (AppConstants.platform != "macosx")
@@ -148,7 +148,7 @@ function onProfilesKey(aEvent)
 
 function onProfilesDblClick(aEvent)
 {
-  if(aEvent.target.localName == "listitem")
+  if (aEvent.target.localName == "listitem")
     document.documentElement.acceptDialog();
 }
 

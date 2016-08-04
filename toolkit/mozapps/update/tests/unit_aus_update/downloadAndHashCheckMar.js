@@ -46,7 +46,7 @@ function callHandleEvent(aXHR) {
     let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
     aXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
-  } catch(e) {
+  } catch (e) {
   }
   let e = { target: aXHR };
   aXHR.onload(e);
