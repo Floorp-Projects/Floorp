@@ -256,12 +256,15 @@ ExtensionContext = class extends BaseContext {
   constructor(extension, params) {
     super(extension.id);
 
-    let {type, contentWindow, uri} = params;
+    let {type, uri} = params;
     this.extension = extension;
     this.type = type;
-    this.contentWindow = contentWindow || null;
     this.uri = uri || extension.baseURI;
     this.incognito = params.incognito || false;
+
+    if (params.contentWindow) {
+      this.setContentWindow(params.contentWindow);
+    }
 
     // This is the MessageSender property passed to extension.
     // It can be augmented by the "page-open" hook.
@@ -282,11 +285,6 @@ ExtensionContext = class extends BaseContext {
     if (this.externallyVisible) {
       this.extension.views.add(this);
     }
-  }
-
-  get docShell() {
-    return this.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDocShell);
   }
 
   get cloneScope() {
