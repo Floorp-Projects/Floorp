@@ -745,7 +745,7 @@ js::InstanceOfOperator(JSContext* cx, HandleObject obj, MutableHandleValue v, bo
     }
 
     /* Step 5. */
-    return js::OrdinaryHasInstance(cx, obj, v, bp);
+    return OrdinaryHasInstance(cx, obj, v, bp);
 }
 
 bool
