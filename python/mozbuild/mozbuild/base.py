@@ -90,7 +90,6 @@ class MozbuildObject(ProcessExecutionMixin):
         self._make = None
         self._topobjdir = mozpath.normsep(topobjdir) if topobjdir else topobjdir
         self._mozconfig = mozconfig
-        self._config_guess_output = None
         self._config_environment = None
         self._virtualenv_manager = None
 
@@ -442,14 +441,6 @@ class MozbuildObject(ProcessExecutionMixin):
         except Exception as e:
             self.log(logging.WARNING, 'notifier-failed', {'error':
                 e.message}, 'Notification center failed: {error}')
-
-    @property
-    def _config_guess(self):
-        if self._config_guess_output is None:
-            self._config_guess_output = MozbuildObject.resolve_config_guess(
-                self.mozconfig, self.topsrcdir)
-
-        return self._config_guess_output
 
     def _ensure_objdir_exists(self):
         if os.path.isdir(self.statedir):
