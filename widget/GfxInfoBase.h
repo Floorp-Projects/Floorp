@@ -106,6 +106,10 @@ protected:
   virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo() = 0;
 
   virtual void DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> obj);
+
+  virtual bool DoesVendorMatch(const nsAString& aBlocklistVendor,
+                               const nsAString& aAdapterVendor);
+
   bool InitFeatureObject(
     JSContext* aCx,
     JS::Handle<JSObject*> aContainer,
