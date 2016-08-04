@@ -60,8 +60,7 @@ class TestMozbuildObject(unittest.TestCase):
 
             self.assertIsNotNone(base.topobjdir)
             self.assertEqual(len(base.topobjdir.split()), 1)
-            config_guess = MozbuildObject.resolve_config_guess(base.mozconfig,
-                                                               base.topsrcdir)
+            config_guess = base.resolve_config_guess()
             self.assertTrue(base.topobjdir.endswith(config_guess))
             self.assertTrue(os.path.isabs(base.topobjdir))
             self.assertTrue(base.topobjdir.startswith(base.topsrcdir))
