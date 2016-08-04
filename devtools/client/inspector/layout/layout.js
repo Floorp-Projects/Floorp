@@ -17,7 +17,9 @@ const {LocalizationHelper} = require("devtools/client/shared/l10n");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const STRINGS_URI = "chrome://devtools/locale/shared.properties";
+const STRINGS_INSPECTOR = "chrome://devtools-shared/locale/styleinspector.properties";
 const SHARED_L10N = new LocalizationHelper(STRINGS_URI);
+const INSPECTOR_L10N = new LocalizationHelper(STRINGS_INSPECTOR);
 const NUMERIC = /^-?[\d\.]+$/;
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
@@ -734,8 +736,14 @@ LayoutView.prototype = {
       title += "\n" + sourceRule.selectors.join(", ");
     }
     if (sourceRule && sourceRule.parentStyleSheet) {
-      title += "\n" + sourceRule.parentStyleSheet.href + ":" + sourceRule.line;
+      if (sourceRule.parentStyleSheet.href) {
+        title += "\n" + sourceRule.parentStyleSheet.href + ":" + sourceRule.line;
+      } else {
+        title += "\n" + INSPECTOR_L10N.getStr("rule.sourceInline") +
+          ":" + sourceRule.line;
+      }
     }
+
     el.setAttribute("title", title);
   },
 
