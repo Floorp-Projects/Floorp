@@ -64,7 +64,6 @@ public class GeckoEvent {
     // AndroidGeckoEvent in widget/android/AndroidJavaWrappers.h
     @JNITarget
     public enum NativeGeckoEvent {
-        NATIVE_POKE(0),
         MOTION_EVENT(2),
         NOOP(15),
         VIEWPORT(20),
