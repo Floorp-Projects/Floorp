@@ -1571,16 +1571,13 @@ NetworkEventActorProxy.prototype = {
  * process to start/stop the network monitor.
  *
  * @constructor
- * @param nsIDOMElement frame
- *        The browser frame to work with (mozbrowser).
+ * @param nsIMessageManager mm
+ *        The message manager for the browser we're filtering on.
  * @param string id
  *        Instance identifier to use for messages.
  */
-function NetworkMonitorManager(frame, id) {
+function NetworkMonitorManager(mm, id) {
   this.id = id;
-  // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
-  // or else fallback to asking the frameLoader itself.
-  let mm = frame.messageManager || frame.frameLoader.messageManager;
   this.messageManager = mm;
   this.onNetMonitorMessage = this.onNetMonitorMessage.bind(this);
   this.onNetworkEvent = this.onNetworkEvent.bind(this);
