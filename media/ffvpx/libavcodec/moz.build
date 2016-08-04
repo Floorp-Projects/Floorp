@@ -13,7 +13,6 @@ SharedLibrary('mozavcodec')
 SOURCES += [
     'allcodecs.c',
     'audioconvert.c',
-    'avdct.c',
     'avpacket.c',
     'avpicture.c',
     'bitstream.c',
