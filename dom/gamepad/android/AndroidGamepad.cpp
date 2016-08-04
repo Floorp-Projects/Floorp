@@ -11,12 +11,12 @@ namespace dom {
 
 void StartGamepadMonitoring()
 {
-  java::GeckoAppShell::StartMonitoringGamepad();
+  java::AndroidGamepadManager::Start();
 }
 
 void StopGamepadMonitoring()
 {
-  java::GeckoAppShell::StopMonitoringGamepad();
+  java::AndroidGamepadManager::Stop();
 }
 
 } // namespace dom
