@@ -160,7 +160,7 @@ nsSecretDecoderRing::EncryptString(const char* text, char** _retval)
   rv = Encrypt((unsigned char *)text, strlen(text), &encrypted, &eLen);
   if (rv != NS_OK) { goto loser; }
 
-  rv = encode(encrypted, eLen, _retval);
+  rv = Base64Encode(BitwiseCast<const char*>(encrypted), eLen, _retval);
 
 loser:
   if (encrypted) PORT_Free(encrypted);
@@ -183,8 +183,9 @@ nsSecretDecoderRing::DecryptString(const char* crypt, char** _retval)
     goto loser;
   }
 
-  rv = decode(crypt, &decoded, &decodedLen);
-  if (rv != NS_OK) goto loser;
+  rv = Base64Decode(crypt, strlen(crypt), BitwiseCast<char**>(&decoded),
+                    &decodedLen);
+  if (NS_FAILED(rv)) goto loser;
 
   rv = Decrypt(decoded, decodedLen, &decrypted, &decryptedLen);
   if (rv != NS_OK) goto loser;
@@ -295,27 +296,3 @@ nsSecretDecoderRing::SetWindow(nsISupports*)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// Support routines
-
-nsresult
-nsSecretDecoderRing::encode(const unsigned char* data, uint32_t dataLen,
-                            char** _retval)
-{
-  return Base64Encode(BitwiseCast<const char*>(data), dataLen, _retval);
-}
-
-nsresult
-nsSecretDecoderRing::decode(const char* data, unsigned char** result,
-                            uint32_t* _retval)
-{
-  uint32_t dataLen = strlen(data);
-  char* binary = nullptr;
-  uint32_t binaryLen = 0;
-  nsresult rv = Base64Decode(data, dataLen, &binary, &binaryLen);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  *result = BitwiseCast<unsigned char*>(binary);
-  *_retval = binaryLen;
-  return NS_OK;
-}
