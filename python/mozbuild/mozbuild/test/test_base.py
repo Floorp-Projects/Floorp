@@ -60,7 +60,9 @@ class TestMozbuildObject(unittest.TestCase):
 
             self.assertIsNotNone(base.topobjdir)
             self.assertEqual(len(base.topobjdir.split()), 1)
-            self.assertTrue(base.topobjdir.endswith(base._config_guess))
+            config_guess = MozbuildObject.resolve_config_guess(base.mozconfig,
+                                                               base.topsrcdir)
+            self.assertTrue(base.topobjdir.endswith(config_guess))
             self.assertTrue(os.path.isabs(base.topobjdir))
             self.assertTrue(base.topobjdir.startswith(base.topsrcdir))
 
@@ -297,15 +299,6 @@ class TestMozbuildObject(unittest.TestCase):
         finally:
             os.chdir(self._old_cwd)
             shutil.rmtree(d)
-
-    def test_config_guess(self):
-        # It's difficult to test for exact values from the output of
-        # config.guess because they vary depending on platform.
-        base = self.get_base()
-        result = base._config_guess
-
-        self.assertIsNotNone(result)
-        self.assertGreater(len(result), 0)
 
     def test_config_environment(self):
         base = self.get_base(topobjdir=topobjdir)
