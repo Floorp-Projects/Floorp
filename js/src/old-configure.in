@@ -981,10 +981,6 @@ case "$target" in
 
     case "$target" in
     i*86-*)
-        if test "$HAVE_64BIT_BUILD"; then
-            AC_MSG_ERROR([You are targeting i386 but using the 64-bit compiler.])
-        fi
-
         if test -n "$GNU_CC"; then
             CFLAGS="$CFLAGS -mstackrealign -fno-keep-inline-dllexport"
             CXXFLAGS="$CXXFLAGS -mstackrealign -fno-keep-inline-dllexport"
