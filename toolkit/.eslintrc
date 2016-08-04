@@ -71,7 +71,7 @@
     "no-else-return": 2,
 
     // No empty statements
-    // "no-empty": 2,
+    "no-empty": [2, "allowEmptyCatch": true],
 
     // No empty character classes in regex
     "no-empty-character-class": 2,
