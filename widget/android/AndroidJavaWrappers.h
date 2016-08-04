@@ -457,10 +457,6 @@ public:
     const nsTArray<float>& Orientations() { return mOrientations; }
     const nsTArray<nsIntPoint>& PointRadii() { return mPointRadii; }
     double X() { return mX; }
-    double Y() { return mY; }
-    double Z() { return mZ; }
-    double W() { return mW; }
-    const nsIntRect& Rect() { return mRect; }
     nsString& Characters() { return mCharacters; }
     nsString& CharactersExtra() { return mCharactersExtra; }
     nsString& Data() { return mData; }
@@ -470,22 +466,13 @@ public:
     bool IsShiftPressed() const { return (mMetaState & AMETA_SHIFT_MASK) != 0; }
     bool IsCtrlPressed() const { return (mMetaState & AMETA_CTRL_MASK) != 0; }
     bool IsMetaPressed() const { return (mMetaState & AMETA_META_MASK) != 0; }
-    int Flags() { return mFlags; }
     int Count() { return mCount; }
     int PointerIndex() { return mPointerIndex; }
-    int Width() { return mWidth; }
-    int Height() { return mHeight; }
-    int ID() { return mID; }
-    int GamepadButton() { return mGamepadButton; }
-    bool GamepadButtonPressed() { return mGamepadButtonPressed; }
-    float GamepadButtonValue() { return mGamepadButtonValue; }
-    const nsTArray<float>& GamepadValues() { return mGamepadValues; }
     int RequestId() { return mCount; } // for convenience
     bool CanCoalesceWith(AndroidGeckoEvent* ae);
     WidgetTouchEvent MakeTouchEvent(nsIWidget* widget);
     MultiTouchInput MakeMultiTouchInput(nsIWidget* widget);
     WidgetMouseEvent MakeMouseEvent(nsIWidget* widget);
-    void UnionRect(nsIntRect const& aRect);
     nsIObserver *Observer() { return mObserver; }
     mozilla::layers::ScrollableLayerGuid ApzGuid();
     uint64_t ApzInputBlockId();
@@ -501,18 +488,11 @@ protected:
     nsTArray<float> mOrientations;
     nsTArray<float> mPressures;
     nsTArray<int> mToolTypes;
-    nsIntRect mRect;
-    int mFlags, mMetaState;
+    int mMetaState;
     int mCount;
-    double mX, mY, mZ, mW;
+    double mX;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra, mData;
-    int mWidth, mHeight;
-    int mID;
-    int mGamepadButton;
-    bool mGamepadButtonPressed;
-    float mGamepadButtonValue;
-    nsTArray<float> mGamepadValues;
     nsCOMPtr<nsIObserver> mObserver;
     MultiTouchInput mApzInput;
     mozilla::layers::ScrollableLayerGuid mApzGuid;
@@ -534,7 +514,6 @@ protected:
     void ReadStringArray(nsTArray<nsString> &aStrings,
                          JNIEnv *jenv,
                          jfieldID field);
-    void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);
     void ReadDataField(JNIEnv *jenv);
@@ -551,28 +530,13 @@ protected:
     static jfieldID jToolTypes;
     static jfieldID jPointRadii;
     static jfieldID jXField;
-    static jfieldID jYField;
-    static jfieldID jZField;
-    static jfieldID jWField;
-    static jfieldID jDistanceField;
-    static jfieldID jRectField;
 
     static jfieldID jCharactersField;
     static jfieldID jCharactersExtraField;
     static jfieldID jDataField;
     static jfieldID jMetaStateField;
-    static jfieldID jFlagsField;
     static jfieldID jCountField;
     static jfieldID jPointerIndexField;
-
-    static jfieldID jWidthField;
-    static jfieldID jHeightField;
-
-    static jfieldID jIDField;
-    static jfieldID jGamepadButtonField;
-    static jfieldID jGamepadButtonPressedField;
-    static jfieldID jGamepadButtonValueField;
-    static jfieldID jGamepadValuesField;
 
 public:
     enum {
@@ -584,20 +548,8 @@ public:
         CALL_OBSERVER = 33,
         REMOVE_OBSERVER = 34,
         ADD_OBSERVER = 38,
-        GAMEPAD_ADDREMOVE = 45,
-        GAMEPAD_DATA = 46,
         LONG_PRESS = 47,
         dummy_java_enum_list_end
-    };
-
-    enum {
-        ACTION_GAMEPAD_ADDED = 1,
-        ACTION_GAMEPAD_REMOVED = 2
-    };
-
-    enum {
-        ACTION_GAMEPAD_BUTTON = 1,
-        ACTION_GAMEPAD_AXES = 2
     };
 };
 
