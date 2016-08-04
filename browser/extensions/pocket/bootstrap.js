@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
-                                  "resource://gre/modules/SocialService.jsm");
+                                  "resource:///modules/SocialService.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
