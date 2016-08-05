@@ -1535,8 +1535,9 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
         masm.loadWasmPinnedRegsFromTls();
         break;
       }
-      case MWasmCall::Callee::Dynamic: {
-        wasm::SigIdDesc sigId = callee.dynamicSigId();
+      case MWasmCall::Callee::WasmTable: {
+        // Write the sig-id into the ABI sig-id register.
+        wasm::SigIdDesc sigId = callee.wasmTableSigId();
         switch (sigId.kind()) {
           case wasm::SigIdDesc::Kind::Global:
             masm.loadWasmGlobalPtr(sigId.globalDataOffset(), WasmTableCallSigReg);
@@ -1547,8 +1548,20 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
           case wasm::SigIdDesc::Kind::None:
             break;
         }
-        MOZ_ASSERT(WasmTableCallPtrReg == ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
-        masm.call(mir->desc(), WasmTableCallPtrReg);
+
+        // The index is passed in WasmTableCallIndexReg. WebAssembly throws if the index is
+        // out-of-bounds.
+        masm.branch32(Assembler::Condition::AboveOrEqual,
+                      WasmTableCallIndexReg, Imm32(callee.wasmTableLength()),
+                      wasm::JumpTarget::OutOfBounds);
+
+        MOZ_FALLTHROUGH;
+      }
+      case MWasmCall::Callee::AsmJSTable: {
+        masm.loadWasmGlobalPtr(callee.tableGlobalDataOffset(), WasmTableCallScratchReg);
+        masm.loadPtr(BaseIndex(WasmTableCallScratchReg, WasmTableCallIndexReg, ScalePointer),
+                     WasmTableCallScratchReg);
+        masm.call(mir->desc(), WasmTableCallScratchReg);
         break;
       }
       case MWasmCall::Callee::Builtin: {

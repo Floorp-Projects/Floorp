@@ -2097,7 +2097,7 @@ class BaseCompiler
     void funcPtrCall(const SigWithId& sig, uint32_t length, uint32_t globalDataOffset,
                      Stk& indexVal, const FunctionCall& call)
     {
-        Register ptrReg = WasmTableCallPtrReg;
+        Register ptrReg = WasmTableCallIndexReg;
 
         loadI32(ptrReg, indexVal);
 
@@ -2120,11 +2120,8 @@ class BaseCompiler
             break;
         }
 
-        {
-            ScratchI32 scratch(*this);
-            masm.loadWasmGlobalPtr(globalDataOffset, scratch);
-            masm.loadPtr(BaseIndex(scratch, ptrReg, ScalePointer, 0), ptrReg);
-        }
+        masm.loadWasmGlobalPtr(globalDataOffset, WasmTableCallScratchReg);
+        masm.loadPtr(BaseIndex(WasmTableCallScratchReg, ptrReg, ScalePointer, 0), ptrReg);
 
         callDynamic(ptrReg, call);
     }
@@ -6749,11 +6746,6 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
     MOZ_ASSERT(!isAvailable(f.asDouble()));
     freeFPU(f);
     MOZ_ASSERT(isAvailable(f.asDouble()));
-#endif
-
-#if defined(JS_CODEGEN_X86)
-    MOZ_ASSERT(ScratchRegX86 != WasmTableCallPtrReg);
-    MOZ_ASSERT(ScratchRegX86 != WasmTableCallSigReg);
 #endif
 
     labelPool_.setAllocator(alloc_);
