@@ -118,8 +118,10 @@ DecoderFactory::CreateDecoder(DecoderType aType,
     return nullptr;
   }
 
+  // Create an anonymous decoder. Interaction with the SurfaceCache and the
+  // owning RasterImage will be mediated by DecodingTask.
   RefPtr<Decoder> decoder =
-    GetDecoder(aType, aImage, bool(aDecoderFlags & DecoderFlags::IS_REDECODE));
+    GetDecoder(aType, nullptr, bool(aDecoderFlags & DecoderFlags::IS_REDECODE));
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
@@ -144,7 +146,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
     return nullptr;
   }
 
-  RefPtr<IDecodingTask> task = new DecodingTask(WrapNotNull(decoder));
+  RefPtr<IDecodingTask> task = new DecodingTask(aImage, WrapNotNull(decoder));
   return task.forget();
 }
 

@@ -154,6 +154,20 @@ Decoder::Decode(IResumable* aOnResume /* = nullptr */)
                                 : TerminalState::SUCCESS);
 }
 
+LexerResult
+Decoder::TerminateFailure()
+{
+  PostError();
+
+  // Perform final cleanup if need be.
+  if (!mReachedTerminalState) {
+    mReachedTerminalState = true;
+    CompleteDecode();
+  }
+
+  return LexerResult(TerminalState::FAILURE);
+}
+
 bool
 Decoder::ShouldSyncDecode(size_t aByteLimit)
 {
