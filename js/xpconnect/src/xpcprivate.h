@@ -929,9 +929,6 @@ public:
     SuspectAllWrappers(XPCJSContext* cx, nsCycleCollectionNoteRootCallback& cb);
 
     static void
-    MarkAllWrappedNativesAndProtos();
-
-    static void
     SweepAllWrappedNativeTearOffs();
 
     static void
@@ -1895,10 +1892,7 @@ public:
                                          nsresult* pError = nullptr);
     XPCWrappedNativeTearOff* FindTearOff(const nsIID& iid);
 
-    void Mark() const
-    {
-        if (HasProto()) GetProto()->Mark();
-    }
+    void Mark() const {}
 
     inline void TraceInside(JSTracer* trc) {
         if (HasProto())
