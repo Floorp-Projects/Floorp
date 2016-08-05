@@ -583,39 +583,12 @@ TimerThread::AddTimer(nsTimerImpl* aTimer)
 }
 
 nsresult
-TimerThread::TimerDelayChanged(nsTimerImpl* aTimer)
-{
-  MonitorAutoLock lock(mMonitor);
-
-  // Our caller has a strong ref to aTimer, so it can't go away here under
-  // ReleaseTimerInternal.
-  RemoveTimerInternal(aTimer);
-
-  int32_t i = AddTimerInternal(aTimer);
-  if (i < 0) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Awaken the timer thread.
-  if (mWaiting && i == 0) {
-    mNotified = true;
-    mMonitor.Notify();
-  }
-
-  return NS_OK;
-}
-
-nsresult
 TimerThread::RemoveTimer(nsTimerImpl* aTimer)
 {
   MonitorAutoLock lock(mMonitor);
 
   // Remove the timer from our array.  Tell callers that aTimer was not found
-  // by returning NS_ERROR_NOT_AVAILABLE.  Unlike the TimerDelayChanged case
-  // immediately above, our caller may be passing a (now-)weak ref in via the
-  // aTimer param, specifically when nsTimerImpl::Release loses a race with
-  // TimerThread::Run, must wait for the mMonitor auto-lock here, and during the
-  // wait Run drops the only remaining ref to aTimer via RemoveTimerInternal.
+  // by returning NS_ERROR_NOT_AVAILABLE.
 
   if (!RemoveTimerInternal(aTimer)) {
     return NS_ERROR_NOT_AVAILABLE;

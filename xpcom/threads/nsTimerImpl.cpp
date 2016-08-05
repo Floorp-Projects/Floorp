@@ -355,10 +355,15 @@ nsTimerImpl::SetDelay(uint32_t aDelay)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  bool reAdd = false;
+  if (gThread) {
+    reAdd = NS_SUCCEEDED(gThread->RemoveTimer(this));
+  }
+
   SetDelayInternal(aDelay);
 
-  if (!mFiring && gThread) {
-    gThread->TimerDelayChanged(this);
+  if (reAdd) {
+    gThread->AddTimer(this);
   }
 
   return NS_OK;
