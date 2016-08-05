@@ -84,16 +84,16 @@ public class AnnotationProcessor {
         }
 
         implementationFile.append(
-                "} /* java */\n" +
+                "} /* widget */\n" +
                 "} /* mozilla */\n");
 
         headerFile.append(
-                "} /* java */\n" +
+                "} /* widget */\n" +
                 "} /* mozilla */\n" +
                 "#endif // " + getHeaderGuardName(HEADER_FILE) + "\n");
 
         nativesFile.append(
-                "} /* java */\n" +
+                "} /* widget */\n" +
                 "} /* mozilla */\n" +
                 "#endif // " + getHeaderGuardName(NATIVES_FILE) + "\n");
 
