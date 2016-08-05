@@ -398,7 +398,8 @@ class ContentComparer:
             skips.sort(key=lambda s: s.span[0])
         trailing = (['\n'] +
                     [ref_entities[ref_map[key]].all for key in missing] +
-                    [ref_entities[ref_map[skip.key]].all for skip in skips])
+                    [ref_entities[ref_map[skip.key]].all for skip in skips
+                     if not isinstance(skip, parser.Junk)])
         if skips:
             # we need to skip a few errornous blocks in the input, copy by hand
             f = codecs.open(outfile, 'wb', p.encoding)
@@ -503,6 +504,8 @@ class ContentComparer:
                     params = (junk.val,) + junk.span
                     self.notify('error', l10n,
                                 'Unparsed content "%s" at %d-%d' % params)
+                    if self.merge_stage is not None:
+                        skips.append(junk)
                 elif self.notify('obsoleteEntity', l10n,
                                  item_or_pair) != 'ignore':
                     obsolete += 1

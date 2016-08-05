@@ -40,7 +40,7 @@ class ParserTestMixin():
         self.parser.readContents(content)
         entities = [entity for entity in self.parser]
         for entity, ref in izip_longest(entities, refs):
-            self.assertTrue(entity, 'excess reference entitiy')
+            self.assertTrue(entity, 'excess reference entity')
             self.assertTrue(ref, 'excess parsed entity')
             self.assertEqual(entity.val, ref[1])
             if ref[0].startswith('_junk'):
