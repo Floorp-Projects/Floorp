@@ -20,6 +20,7 @@
 
 #include "gfxPrefs.h"
 #include "libyuv.h"
+#include "scale_yuv_argb.h"
 // Header for low level row functions.
 #include "yuv_row.h"
 #include "mozilla/SSE.h"
@@ -34,9 +35,9 @@ const int kFractionMax = 1 << kFractionBits;
 const int kFractionMask = ((1 << kFractionBits) - 1);
 
 YUVType TypeFromSize(int ywidth,
-                              int yheight,
-                              int cbcrwidth,
-                              int cbcrheight)
+                     int yheight,
+                     int cbcrwidth,
+                     int cbcrheight)
 {
   if (ywidth == cbcrwidth && yheight == cbcrheight) {
     return YV24;
@@ -46,6 +47,19 @@ YUVType TypeFromSize(int ywidth,
   }
   else {
     return YV12;
+  }
+}
+
+libyuv::FourCC FourCCFromYUVType(YUVType aYUVType)
+{
+  if (aYUVType == YV24) {
+    return libyuv::FOURCC_I444;
+  } else if (aYUVType == YV16) {
+    return libyuv::FOURCC_I422;
+  } else if (aYUVType == YV12) {
+    return libyuv::FOURCC_I420;
+  } else {
+    return libyuv::FOURCC_ANY;
   }
 }
 
@@ -243,8 +257,51 @@ void ScaleYCbCrToRGB32(const uint8* y_buf,
                        int uv_pitch,
                        int rgb_pitch,
                        YUVType yuv_type,
-                       Rotate view_rotate,
                        ScaleFilter filter) {
+
+  bool use_deprecated = gfxPrefs::YCbCrAccurateConversion() ||
+                        (supports_mmx() && supports_sse() && !supports_sse3());
+  if (use_deprecated) {
+    ScaleYCbCrToRGB32_deprecated(y_buf, u_buf, v_buf,
+                                 rgb_buf,
+                                 source_width, source_height,
+                                 width, height,
+                                 y_pitch, uv_pitch,
+                                 rgb_pitch,
+                                 yuv_type,
+                                 ROTATE_0,
+                                 filter);
+    return;
+  }
+
+  DebugOnly<int> err =
+    libyuv::YUVToARGBScale(y_buf, y_pitch,
+                           u_buf, uv_pitch,
+                           v_buf, uv_pitch,
+                           FourCCFromYUVType(yuv_type),
+                           source_width, source_height,
+                           rgb_buf, rgb_pitch,
+                           width, height,
+                           libyuv::kFilterBilinear);
+  MOZ_ASSERT(!err);
+  return;
+}
+
+// Scale a frame of YUV to 32 bit ARGB.
+void ScaleYCbCrToRGB32_deprecated(const uint8* y_buf,
+                                  const uint8* u_buf,
+                                  const uint8* v_buf,
+                                  uint8* rgb_buf,
+                                  int source_width,
+                                  int source_height,
+                                  int width,
+                                  int height,
+                                  int y_pitch,
+                                  int uv_pitch,
+                                  int rgb_pitch,
+                                  YUVType yuv_type,
+                                  Rotate view_rotate,
+                                  ScaleFilter filter) {
   bool has_mmx = supports_mmx();
 
   // 4096 allows 3 buffers to fit in 12k.

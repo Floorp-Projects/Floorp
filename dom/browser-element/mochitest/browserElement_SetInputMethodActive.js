@@ -119,7 +119,7 @@ function setPermissions() {
 
     input.onblur = function() {
       // "Expected" lost of focus since the test is finished.
-      if (input.value === '#0#1hello') {
+      if (input.value === 'hello#0#1') {
         return;
       }
 
@@ -228,7 +228,7 @@ function next(msg) {
 
         case 'input':
           if (gFrameMsgCounts.input === 1) {
-            is(value, '#0hello',
+            is(value, 'hello#0',
               'Failed to get correct input from the first iframe.');
           } else {
             ok(false, 'Unexpected multiple messages from input.')
@@ -283,7 +283,7 @@ function next(msg) {
 
         case 'input':
           if (gFrameMsgCounts.input === 2) {
-            is(value, '#0#1hello',
+            is(value, 'hello#0#1',
                'Failed to get correct input from the second iframe.');
           } else {
             ok(false, 'Unexpected multiple messages from input.')
