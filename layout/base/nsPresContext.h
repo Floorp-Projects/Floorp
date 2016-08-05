@@ -1106,20 +1106,6 @@ public:
     mHasWarnedAboutTooLargeDashedOrDottedRadius = true;
   }
 
-  static bool StyloEnabled()
-  {
-    // Stylo (the Servo backend for Gecko's style system) is generally enabled
-    // or disabled at compile-time. However, we provide the additional capability
-    // to disable it dynamically in stylo-enabled builds via an environmental
-    // variable.
-#ifdef MOZ_STYLO
-    static bool disabled = PR_GetEnv("MOZ_DISABLE_STYLO");
-    return !disabled;
-#else
-    return false;
-#endif
-  }
-
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   void ThemeChangedInternal();
