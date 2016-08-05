@@ -1247,9 +1247,6 @@ class Event extends CallEntry {
 this.Schemas = {
   initialized: false,
 
-  // Set of URLs that we have loaded via the load() method.
-  loadedUrls: new Set(),
-
   // Maps a schema URL to the JSON contained in that schema file. This
   // is useful for sending the JSON across processes.
   schemaJSON: new Map(),
@@ -1545,50 +1542,77 @@ this.Schemas = {
       }
       Services.cpmm.addMessageListener("Schema:Add", this);
     }
+
+    this.flushSchemas();
   },
 
   receiveMessage(msg) {
     switch (msg.name) {
       case "Schema:Add":
         this.schemaJSON.set(msg.data.url, msg.data.schema);
+        this.flushSchemas();
+        break;
+
+      case "Schema:Delete":
+        this.schemaJSON.delete(msg.data.url);
+        this.flushSchemas();
         break;
     }
   },
 
-  load(url) {
-    let loadFromJSON = json => {
-      for (let namespace of json) {
-        let name = namespace.namespace;
+  flushSchemas() {
+    XPCOMUtils.defineLazyGetter(this, "namespaces",
+                                () => this.parseSchemas());
+  },
 
-        let types = namespace.types || [];
-        for (let type of types) {
-          this.loadType(name, type);
-        }
+  parseSchemas() {
+    Object.defineProperty(this, "namespaces", {
+      enumerable: true,
+      configurable: true,
+      value: new Map(),
+    });
 
-        let properties = namespace.properties || {};
-        for (let propertyName of Object.keys(properties)) {
-          this.loadProperty(name, propertyName, properties[propertyName]);
-        }
+    for (let json of this.schemaJSON.values()) {
+      this.parseSchema(json);
+    }
 
-        let functions = namespace.functions || [];
-        for (let fun of functions) {
-          this.loadFunction(name, fun);
-        }
+    return this.namespaces;
+  },
 
-        let events = namespace.events || [];
-        for (let event of events) {
-          this.loadEvent(name, event);
-        }
+  parseSchema(json) {
+    for (let namespace of json) {
+      let name = namespace.namespace;
 
-        if (namespace.permissions) {
-          let ns = this.namespaces.get(name);
-          ns.permissions = namespace.permissions;
-        }
+      let types = namespace.types || [];
+      for (let type of types) {
+        this.loadType(name, type);
       }
-    };
 
+      let properties = namespace.properties || {};
+      for (let propertyName of Object.keys(properties)) {
+        this.loadProperty(name, propertyName, properties[propertyName]);
+      }
+
+      let functions = namespace.functions || [];
+      for (let fun of functions) {
+        this.loadFunction(name, fun);
+      }
+
+      let events = namespace.events || [];
+      for (let event of events) {
+        this.loadEvent(name, event);
+      }
+
+      if (namespace.permissions) {
+        let ns = this.namespaces.get(name);
+        ns.permissions = namespace.permissions;
+      }
+    }
+  },
+
+  load(url) {
     if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
-      let result = readJSON(url).then(json => {
+      return readJSON(url).then(json => {
         this.schemaJSON.set(url, json);
 
         let data = Services.ppmm.initialProcessData;
@@ -1596,17 +1620,20 @@ this.Schemas = {
 
         Services.ppmm.broadcastAsyncMessage("Schema:Add", {url, schema: json});
 
-        loadFromJSON(json);
+        this.flushSchemas();
       });
-      return result;
     }
-    if (this.loadedUrls.has(url)) {
-      return;
-    }
-    this.loadedUrls.add(url);
+  },
 
-    let schema = this.schemaJSON.get(url);
-    loadFromJSON(schema);
+  unload(url) {
+    this.schemaJSON.delete(url);
+
+    let data = Services.ppmm.initialProcessData;
+    data["Extension:Schemas"] = this.schemaJSON;
+
+    Services.ppmm.broadcastAsyncMessage("Schema:Delete", {url});
+
+    this.flushSchemas();
   },
 
   inject(dest, wrapperFuncs) {

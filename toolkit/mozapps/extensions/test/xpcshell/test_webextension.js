@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+
 const ID = "webextension1@tests.mozilla.org";
 
 const PREF_SELECTED_LOCALE = "general.useragent.locale";
@@ -292,6 +294,58 @@ add_task(function* test_options_ui() {
 
   ok(OPTIONS_RE.test(addon.optionsURL),
      "Addon should have a moz-extension: options URL for /options.html");
+
+  addon.uninstall();
+});
+
+// Test that experiments permissions add the appropriate dependencies.
+add_task(function* test_experiments_dependencies() {
+  if (AppConstants.RELEASE_BUILD)
+    // Experiments are not enabled on release builds.
+    return;
+
+  let addonFile = createTempWebExtensionFile({
+    id: "meh@experiment",
+    manifest: {
+      "permissions": ["experiments.meh"],
+    },
+  });
+
+  yield promiseInstallAllFiles([addonFile]);
+
+  let addon = yield new Promise(resolve => AddonManager.getAddonByID("meh@experiment", resolve));
+
+  deepEqual(addon.dependencies, ["meh@experiments.addons.mozilla.org"],
+            "Addon should have the expected dependencies");
+
+  equal(addon.appDisabled, true, "Add-on should be app disabled due to missing dependencies");
+
+  addon.uninstall();
+});
+
+// Test that experiments API extensions install correctly.
+add_task(function* test_experiments_api() {
+  if (AppConstants.RELEASE_BUILD)
+    // Experiments are not enabled on release builds.
+    return;
+
+  const ID = "meh@experiments.addons.mozilla.org";
+
+  let addonFile = createTempXPIFile({
+    id: ID,
+    type: 256,
+    version: "0.1",
+    name: "Meh API",
+  });
+
+  yield promiseInstallAllFiles([addonFile]);
+
+  let addons = yield new Promise(resolve => AddonManager.getAddonsByTypes(["apiextension"], resolve));
+  let addon = addons.pop();
+  equal(addon.id, ID, "Add-on should be installed as an API extension");
+
+  addons = yield new Promise(resolve => AddonManager.getAddonsByTypes(["extension"], resolve));
+  equal(addons.pop().id, ID, "Add-on type should be aliased to extension");
 
   addon.uninstall();
 });

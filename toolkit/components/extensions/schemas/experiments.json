@@ -1,0 +1,16 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [
+          {
+            "type": "string",
+            "pattern": "^experiments(\\.\\w+)+$"
+          }
+        ]
+      }
+    ]
+  }
+]
