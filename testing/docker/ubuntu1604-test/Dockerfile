@@ -4,6 +4,9 @@ MAINTAINER    Joel Maher <joel.maher@gmail.com>
 RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
 
+# %include testing/docker/recipes/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
+
 # install non-build specific dependencies in a single layer
 ADD           system-setup.sh   /tmp/system-setup.sh
 RUN           bash /tmp/system-setup.sh
