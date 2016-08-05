@@ -85,9 +85,9 @@ public class VisitsHelperTest {
             for (int i = 0; i < recentVisits.size(); i++) {
                 JSONObject v = (JSONObject) recentVisits.get(i);
                 Long date = (Long) v.get("date");
-                Integer type = (Integer) v.get("type");
+                Long type = (Long) v.get("type");
                 Assert.assertEquals(Long.valueOf(baseDate - i * 100), date);
-                Assert.assertEquals(Integer.valueOf(1), type);
+                Assert.assertEquals(Long.valueOf(1), type);
             }
         } finally {
             provider.shutdown();
