@@ -1141,6 +1141,10 @@ class CalleeDesc
         MOZ_ASSERT(which_ == WasmTable);
         return u.table.desc_.initial;
     }
+    bool wasmTableIsExternal() const {
+        MOZ_ASSERT(which_ == WasmTable);
+        return u.table.desc_.external;
+    }
     SigIdDesc wasmTableSigId() const {
         MOZ_ASSERT(which_ == WasmTable);
         return u.table.sigId_;
@@ -1218,6 +1222,24 @@ struct FuncImportTls
     // imported functions, 'obj' points to the JSFunction.
     GCPtrObject obj;
     static_assert(sizeof(GCPtrObject) == sizeof(void*), "for JIT access");
+};
+
+// When a table can be shared between instances (it is "external"), the internal
+// representation is an array of ExternalTableElem instead of just an array of
+// code pointers.
+
+struct ExternalTableElem
+{
+    // The code to call when calling this element. The table ABI is the system
+    // ABI with the additional ABI requirements that:
+    //  - WasmTlsReg and any pinned registers have been loaded appropriately
+    //  - if this is a heterogeneous table that requires a signature check,
+    //    WasmTableCallSigReg holds the signature id.
+    void* code;
+
+    // The pointer to the callee's instance's TlsData. This must be loaded into
+    // WasmTlsReg before calling 'code'.
+    TlsData* tls;
 };
 
 // Constants:

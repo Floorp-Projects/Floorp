@@ -20,6 +20,8 @@
 
 #include "jscntxt.h"
 
+#include "asmjs/WasmInstance.h"
+
 using namespace js;
 using namespace js::wasm;
 
@@ -30,27 +32,97 @@ Table::create(JSContext* cx, const TableDesc& desc)
     if (!table)
         return nullptr;
 
-    table->array_.reset(cx->pod_calloc<void*>(desc.initial));
-    if (!table->array_)
+    // The raw element type of a Table depends on whether it is external: an
+    // external table can contain functions from multiple instances and thus
+    // must store an additional instance pointer in each element.
+    void* array;
+    if (desc.external)
+        array = cx->pod_calloc<ExternalTableElem>(desc.initial);
+    else
+        array = cx->pod_calloc<void*>(desc.initial);
+    if (!array)
         return nullptr;
 
+    table->array_.reset((uint8_t*)array);
     table->kind_ = desc.kind;
     table->length_ = desc.initial;
     table->initialized_ = false;
+    table->external_ = desc.external;
     return table;
 }
 
 void
-Table::init(const CodeSegment& codeSegment)
+Table::init(Instance& instance)
 {
     MOZ_ASSERT(!initialized());
+    initialized_ = true;
 
-    for (uint32_t i = 0; i < length_; i++) {
-        MOZ_ASSERT(!array_.get()[i]);
-        array_.get()[i] = codeSegment.badIndirectCallCode();
+    void* code = instance.codeSegment().badIndirectCallCode();
+    if (external_) {
+        ExternalTableElem* array = externalArray();
+        TlsData* tls = &instance.tlsData();
+        for (uint32_t i = 0; i < length_; i++) {
+            array[i].code = code;
+            array[i].tls = tls;
+        }
+    } else {
+        void** array = internalArray();
+        for (uint32_t i = 0; i < length_; i++)
+            array[i] = code;
+    }
+}
+
+void
+Table::trace(JSTracer* trc)
+{
+    if (!initialized_ || !external_)
+        return;
+
+    ExternalTableElem* array = externalArray();
+    for (uint32_t i = 0; i < length_; i++)
+        array[i].tls->instance->trace(trc);
+}
+
+void**
+Table::internalArray() const
+{
+    MOZ_ASSERT(initialized_);
+    MOZ_ASSERT(!external_);
+    return (void**)array_.get();
+}
+
+ExternalTableElem*
+Table::externalArray() const
+{
+    MOZ_ASSERT(initialized_);
+    MOZ_ASSERT(external_);
+    return (ExternalTableElem*)array_.get();
+}
+
+bool
+Table::set(JSContext* cx, uint32_t index, void* code, Instance& instance)
+{
+    if (external_) {
+        ExternalTableElem& elem = externalArray()[index];
+        if (elem.tls->instance != &instance) {
+            JS_ReportError(cx, "cross-module Table import NYI");
+            return false;
+        }
+
+        elem.code = code;
+    } else {
+        internalArray()[index] = code;
     }
 
-    initialized_ = true;
+    return true;
+}
+
+void
+Table::setNull(uint32_t index)
+{
+    // Only external tables can set elements to null after initialization.
+    ExternalTableElem& elem = externalArray()[index];
+    elem.code = elem.tls->instance->codeSegment().badIndirectCallCode();
 }
 
 size_t

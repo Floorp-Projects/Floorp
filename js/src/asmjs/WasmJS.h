@@ -180,7 +180,6 @@ class WasmMemoryObject : public NativeObject
 class WasmTableObject : public NativeObject
 {
     static const unsigned TABLE_SLOT = 0;
-    static const unsigned INSTANCE_VECTOR_SLOT = 1;
     static const ClassOps classOps_;
     bool isNewborn() const;
     static void finalize(FreeOp* fop, JSObject* obj);
@@ -192,29 +191,18 @@ class WasmTableObject : public NativeObject
     static bool setImpl(JSContext* cx, const CallArgs& args);
     static bool set(JSContext* cx, unsigned argc, Value* vp);
 
-    // InstanceVector has the same length as the Table and assigns, to each
-    // element, the instance of the exported function stored in that element.
-    using InstanceVector = GCVector<HeapPtr<WasmInstanceObject*>, 0, SystemAllocPolicy>;
-    InstanceVector& instanceVector() const;
-
   public:
-    static const unsigned RESERVED_SLOTS = 2;
+    static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
     static bool construct(JSContext*, unsigned, Value*);
 
+    // Note that, after creation, a WasmTableObject's table() is not initialized
+    // and must be initialized before use.
+
     static WasmTableObject* create(JSContext* cx, uint32_t length);
-    bool initialized() const;
-    bool init(JSContext* cx, HandleWasmInstanceObject instanceObj);
-
-    // As a global invariant, any time an element of tableObj->table() is
-    // updated to a new exported function, table->setInstance() must be called
-    // to update the instance of that new exported function in the instance
-    // vector.
-
     wasm::Table& table() const;
-    bool setInstance(JSContext* cx, uint32_t index, HandleWasmInstanceObject instanceObj);
 };
 
 } // namespace js
