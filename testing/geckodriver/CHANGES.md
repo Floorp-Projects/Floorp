@@ -2,6 +2,11 @@
 
 All notable changes to this program is documented in this file.
 
+## Unreleased
+
+### Changed
+- Removed `--no-e10s` flag, and geckodriver will from now rely on the Firefox default multiprocessing settings (override using preferences)
+
 ## 0.10.0 (2016-08-02)
 
 ### Changed
