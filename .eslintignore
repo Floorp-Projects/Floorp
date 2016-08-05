@@ -142,6 +142,7 @@ devtools/shared/heapsnapshot/**
 devtools/shared/layout/**
 devtools/shared/locales/**
 devtools/shared/performance/**
+!devtools/shared/platform/**
 devtools/shared/qrcode/**
 devtools/shared/security/**
 devtools/shared/shims/**
