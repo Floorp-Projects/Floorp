@@ -165,7 +165,6 @@ ResolvePromise(JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueO
 
     // Also null out the resolve/reject functions so they can be GC'd.
     promise->setFixedSlot(PROMISE_RESOLVE_FUNCTION_SLOT, UndefinedValue());
-    promise->setFixedSlot(PROMISE_REJECT_FUNCTION_SLOT, UndefinedValue());
 
     // Now that everything else is done, do the things the debugger needs.
     // Step 7 of RejectPromise implemented in onSettled.
@@ -476,17 +475,11 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     if (wrappedProto) {
         AutoCompartment ac(cx, promise);
         RootedValue wrappedResolveVal(cx, resolveVal);
-        RootedValue wrappedRejectVal(cx, rejectVal);
-        if (!cx->compartment()->wrap(cx, &wrappedResolveVal) ||
-            !cx->compartment()->wrap(cx, &wrappedRejectVal))
-        {
+        if (!cx->compartment()->wrap(cx, &wrappedResolveVal))
             return nullptr;
-        }
         promise->setFixedSlot(PROMISE_RESOLVE_FUNCTION_SLOT, wrappedResolveVal);
-        promise->setFixedSlot(PROMISE_REJECT_FUNCTION_SLOT, wrappedRejectVal);
     } else {
         promise->setFixedSlot(PROMISE_RESOLVE_FUNCTION_SLOT, resolveVal);
-        promise->setFixedSlot(PROMISE_REJECT_FUNCTION_SLOT, rejectVal);
     }
 
     // Step 9.
@@ -694,6 +687,7 @@ PromiseObject::resolve(JSContext* cx, HandleValue resolutionValue)
         return true;
 
     RootedValue funVal(cx, this->getReservedSlot(PROMISE_RESOLVE_FUNCTION_SLOT));
+    // TODO: ensure that this holds for xray'd promises. (It probably doesn't)
     MOZ_ASSERT(funVal.toObject().is<JSFunction>());
 
     FixedInvokeArgs<1> args(cx);
@@ -710,7 +704,9 @@ PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
     if (this->getFixedSlot(PROMISE_STATE_SLOT).toInt32() != unsigned(JS::PromiseState::Pending))
         return true;
 
-    RootedValue funVal(cx, this->getReservedSlot(PROMISE_REJECT_FUNCTION_SLOT));
+    RootedValue resolveVal(cx, this->getReservedSlot(PROMISE_RESOLVE_FUNCTION_SLOT));
+    RootedFunction resolve(cx, &resolveVal.toObject().as<JSFunction>());
+    RootedValue funVal(cx, resolve->getExtendedSlot(ResolutionFunctionSlot_OtherFunction));
     MOZ_ASSERT(funVal.toObject().is<JSFunction>());
 
     FixedInvokeArgs<1> args(cx);
