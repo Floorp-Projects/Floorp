@@ -1684,7 +1684,7 @@ public:
   InsertIterator(Accessible* aContext,
                  const nsTArray<nsCOMPtr<nsIContent> >* aNodes) :
     mChild(nullptr), mChildBefore(nullptr), mWalker(aContext),
-    mStopNode(nullptr), mNodes(aNodes), mNodesIdx(0)
+    mNodes(aNodes), mNodesIdx(0)
   {
     MOZ_ASSERT(aContext, "No context");
     MOZ_ASSERT(aNodes, "No nodes to search for accessible elements");
@@ -1712,7 +1712,6 @@ private:
   Accessible* mChild;
   Accessible* mChildBefore;
   TreeWalker mWalker;
-  nsIContent* mStopNode;
 
   const nsTArray<nsCOMPtr<nsIContent> >* mNodes;
   uint32_t mNodesIdx;
@@ -1722,7 +1721,7 @@ bool
 InsertIterator::Next()
 {
   if (mNodesIdx > 0) {
-    Accessible* nextChild = mWalker.Next(mStopNode);
+    Accessible* nextChild = mWalker.Next();
     if (nextChild) {
       mChildBefore = mChild;
       mChild = nextChild;
@@ -1764,20 +1763,21 @@ InsertIterator::Next()
 
     // If inserted nodes are siblings then just move the walker next.
     if (prevNode && prevNode->GetNextSibling() == node) {
-      mStopNode = node;
-      Accessible* nextChild = mWalker.Next(mStopNode);
+      Accessible* nextChild = mWalker.Scope(node);
       if (nextChild) {
         mChildBefore = mChild;
         mChild = nextChild;
         return true;
       }
     }
-    else if (mWalker.Seek(node)) {
-      mStopNode = node;
-      mChildBefore = mWalker.Prev();
-      mChild = mWalker.Next(mStopNode);
-      if (mChild) {
-        return true;
+    else {
+      TreeWalker finder(container);
+      if (finder.Seek(node)) {
+        mChild = mWalker.Scope(node);
+        if (mChild) {
+          mChildBefore = finder.Prev();
+          return true;
+        }
       }
     }
   }
