@@ -6,21 +6,18 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsFooter,
-#downloadsPanel-blockedSubview-openButton {
+#downloadsSummary {
   background-color: hsla(210,4%,10%,.04);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
   transition-duration: 150ms;
   transition-property: background-color;
 }
 
-#downloadsFooter:hover,
-#downloadsPanel-blockedSubview-openButton:hover {
+#downloadsSummary:hover {
   background-color: hsla(210,4%,10%,.05);
 }
 
-#downloadsFooter:hover:active,
-#downloadsPanel-blockedSubview-openButton:hover:active {
+#downloadsSummary:hover:active {
   background-color: hsla(210,4%,10%,.1);
   box-shadow: 0 2px 0 0 hsla(210,4%,10%,.1) inset;
 }
@@ -28,36 +25,20 @@
 @media (-moz-os-version: windows-xp),
        (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
-  #downloadsHistory,
-  #downloadsPanel-blockedSubview-buttons > button {
-    color: -moz-nativehyperlinktext;
-  }
-
   @media (-moz-windows-default-theme) {
-    #downloadsFooter,
-    #downloadsPanel-multiView .panel-subviews {
-      border-bottom-left-radius: 3px;
-      border-bottom-right-radius: 3px;
-      transition-duration: 0s;
-    }
-
-    #downloadsFooter,
-    #downloadsFooter:hover,
-    #downloadsFooter:hover:active,
-    #downloadsPanel-blockedSubview-openButton,
-    #downloadsPanel-blockedSubview-openButton:hover,
-    #downloadsPanel-blockedSubview-openButton:hover:active {
+    #downloadsSummary,
+    #downloadsSummary:hover,
+    #downloadsSummary:hover:active {
       background-color: #f1f5fb;
       box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+      transition-duration: 0s;
+      cursor: pointer;
     }
 
     @media (-moz-os-version: windows-xp) {
-      #downloadsFooter,
-      #downloadsFooter:hover,
-      #downloadsFooter:hover:active,
-      #downloadsPanel-blockedSubview-openButton,
-      #downloadsPanel-blockedSubview-openButton:hover,
-      #downloadsPanel-blockedSubview-openButton:hover:active {
+      #downloadsSummary,
+      #downloadsSummary:hover,
+      #downloadsSummary:hover:active {
         background-color: hsla(216,45%,88%,.98);
       }
     }
@@ -65,7 +46,7 @@
 }
 
 @keyfocus@ #downloadsSummary:focus,
-@keyfocus@ #downloadsHistory:focus {
+@keyfocus@ .downloadsPanelFooterButton:focus {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
 }
@@ -74,8 +55,7 @@
   outline-offset: -5px;
 }
 
-#downloadsHistory > .button-box,
-#downloadsPanel-blockedSubview-buttons > button > .button-box {
+.downloadsPanelFooterButton > .button-box {
   /* Hide the border so we don't display an inner focus ring. */
   border: none;
 }
