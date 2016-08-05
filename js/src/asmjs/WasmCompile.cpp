@@ -741,7 +741,8 @@ DecodeResizableTable(Decoder& d, ModuleGeneratorData* init)
     if (!init->tables.empty())
         return Fail(d, "already have default table");
 
-    TableDesc table(TableKind::AnyFunction);
+    TableDesc table;
+    table.kind = TableKind::AnyFunction;
     table.initial = resizable.initial;
     table.maximum = resizable.maximum ? *resizable.maximum : UINT32_MAX;
     return init->tables.append(table);
@@ -911,7 +912,8 @@ DecodeTableSection(Decoder& d, bool newFormat, ModuleGeneratorData* init, Uint32
         if (!DecodeResizableTable(d, init))
             return false;
     } else {
-        TableDesc table(TableKind::AnyFunction);
+        TableDesc table;
+        table.kind = TableKind::AnyFunction;
         table.maximum = UINT32_MAX;
 
         if (!d.readVarU32(&table.initial))

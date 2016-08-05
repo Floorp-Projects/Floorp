@@ -36,7 +36,7 @@ class Table : public ShareableBase<Table>
     bool initialized_;
 
   public:
-    static RefPtr<Table> create(JSContext* cx, TableKind kind, uint32_t length);
+    static RefPtr<Table> create(JSContext* cx, const TableDesc& desc);
 
     // These accessors may be used before initialization.
 
