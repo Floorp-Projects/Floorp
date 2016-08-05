@@ -79,7 +79,8 @@ class TlsAgent : public PollTarget {
 
 
   void StartConnect(PRFileDesc *model = nullptr);
-  void CheckKEAType(SSLKEAType type) const;
+  void CheckKEA(SSLKEAType type) const;
+  void CheckKEA(SSLKEAType type, size_t kea_size) const;
   void CheckAuthType(SSLAuthType type) const;
 
   void DisableAllCiphers();
