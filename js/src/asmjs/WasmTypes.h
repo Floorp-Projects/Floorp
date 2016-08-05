@@ -1078,7 +1078,6 @@ class CalleeDesc
         uint32_t internalFuncIndex_;
         struct {
             uint32_t globalDataOffset_;
-            uint32_t tlsStackOffset_;
         } import;
         struct {
             TableDesc desc_;
@@ -1095,11 +1094,10 @@ class CalleeDesc
         c.u.internalFuncIndex_ = callee;
         return c;
     }
-    static CalleeDesc import(uint32_t globalDataOffset, uint32_t tlsStackOffset) {
+    static CalleeDesc import(uint32_t globalDataOffset) {
         CalleeDesc c;
         c.which_ = Import;
         c.u.import.globalDataOffset_ = globalDataOffset;
-        c.u.import.tlsStackOffset_ = tlsStackOffset;
         return c;
     }
     static CalleeDesc wasmTable(const TableDesc& desc, SigIdDesc sigId) {
@@ -1131,10 +1129,6 @@ class CalleeDesc
     uint32_t importGlobalDataOffset() const {
         MOZ_ASSERT(which_ == Import);
         return u.import.globalDataOffset_;
-    }
-    uint32_t importTlsStackOffset() const {
-        MOZ_ASSERT(which_ == Import);
-        return u.import.tlsStackOffset_;
     }
     bool isTable() const {
         return which_ == WasmTable || which_ == AsmJSTable;

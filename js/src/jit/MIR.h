@@ -13521,12 +13521,15 @@ class MWasmCall final
     wasm::CallSiteDesc desc_;
     wasm::CalleeDesc callee_;
     FixedList<AnyRegister> argRegs_;
-    size_t spIncrement_;
+    uint32_t spIncrement_;
+    uint32_t tlsStackOffset_;
 
-    MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee, size_t spIncrement)
+    MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee, uint32_t spIncrement,
+              uint32_t tlsStackOffset)
       : desc_(desc),
         callee_(callee),
-        spIncrement_(spIncrement)
+        spIncrement_(spIncrement),
+        tlsStackOffset_(tlsStackOffset)
     { }
 
   public:
@@ -13539,9 +13542,12 @@ class MWasmCall final
     };
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
+    static const uint32_t DontSaveTls = UINT32_MAX;
+
     static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                           const wasm::CalleeDesc& callee, const Args& args, MIRType resultType,
-                          size_t spIncrement, MDefinition* tableIndex = nullptr);
+                          uint32_t spIncrement, uint32_t tlsStackOffset,
+                          MDefinition* tableIndex = nullptr);
 
     size_t numArgs() const {
         return argRegs_.length();
@@ -13556,8 +13562,15 @@ class MWasmCall final
     const wasm::CalleeDesc &callee() const {
         return callee_;
     }
-    size_t spIncrement() const {
+    uint32_t spIncrement() const {
         return spIncrement_;
+    }
+    bool saveTls() const {
+        return tlsStackOffset_ != DontSaveTls;
+    }
+    uint32_t tlsStackOffset() const {
+        MOZ_ASSERT(saveTls());
+        return tlsStackOffset_;
     }
 
     bool possiblyCalls() const override {
