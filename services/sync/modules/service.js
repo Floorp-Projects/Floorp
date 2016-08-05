@@ -1508,6 +1508,7 @@ Sync11Service.prototype = {
    */
   wipeServer: function wipeServer(collections) {
     let response;
+    let histogram = Services.telemetry.getHistogramById("WEAVE_WIPE_SERVER_SUCCEEDED");
     if (!collections) {
       // Strip the trailing slash.
       let res = this.resource(this.storageURL.slice(0, -1));
@@ -1516,13 +1517,16 @@ Sync11Service.prototype = {
         response = res.delete();
       } catch (ex) {
         this._log.debug("Failed to wipe server", ex);
+        histogram.add(false);
         throw ex;
       }
       if (response.status != 200 && response.status != 404) {
         this._log.debug("Aborting wipeServer. Server responded with " +
                         response.status + " response for " + this.storageURL);
+        histogram.add(false);
         throw response;
       }
+      histogram.add(true);
       return response.headers["x-weave-timestamp"];
     }
 
@@ -1533,12 +1537,14 @@ Sync11Service.prototype = {
         response = this.resource(url).delete();
       } catch (ex) {
         this._log.debug("Failed to wipe '" + name + "' collection", ex);
+        histogram.add(false);
         throw ex;
       }
 
       if (response.status != 200 && response.status != 404) {
         this._log.debug("Aborting wipeServer. Server responded with " +
                         response.status + " response for " + url);
+        histogram.add(false);
         throw response;
       }
 
@@ -1546,7 +1552,7 @@ Sync11Service.prototype = {
         timestamp = response.headers["x-weave-timestamp"];
       }
     }
-
+    histogram.add(true);
     return timestamp;
   },
 
