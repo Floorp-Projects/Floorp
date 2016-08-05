@@ -87,44 +87,40 @@ this.interaction = {};
  *     Use WebDriver specification compatible interactability definition.
  */
 interaction.clickElement = function(el, strict = false, specCompat = false) {
-  let win = getWindow(el);
-
-  let visible = false;
-  if (specCompat) {
-    visible = element.isInteractable(el);
-    if (!visible) {
-      el.scrollIntoView(false);
-    }
-    visible = element.isInteractable(el);
-  } else {
-    visible = element.isVisible(el);
-  }
-
-  if (!visible) {
-    throw new ElementNotVisibleError("Element is not visible");
-  }
-
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el, true).then(acc => {
-    a11y.checkVisible(acc, el, visible);
+    let win = getWindow(el);
 
-    if (atom.isElementEnabled(el)) {
-      a11y.checkEnabled(acc, el, true);
-      a11y.checkActionable(acc, el);
-
-      if (element.isXULElement(el)) {
-        el.click();
-      } else {
-        let rects = el.getClientRects();
-        event.synthesizeMouseAtPoint(
-            rects[0].left + rects[0].width / 2,
-            rects[0].top + rects[0].height / 2,
-            {} /* opts */,
-            win);
+    let visible = false;
+    if (specCompat) {
+      visible = element.isInteractable(el);
+      if (!visible) {
+        el.scrollIntoView(false);
       }
-
+      visible = element.isInteractable(el);
     } else {
+      visible = element.isVisible(el);
+    }
+
+    if (!visible) {
+      throw new ElementNotVisibleError("Element is not visible");
+    }
+    a11y.checkVisible(acc, el, visible);
+    if (!atom.isElementEnabled(el)) {
       throw new InvalidElementStateError("Element is not enabled");
+    }
+    a11y.checkEnabled(acc, el, true);
+    a11y.checkActionable(acc, el);
+
+    if (element.isXULElement(el)) {
+      el.click();
+    } else {
+      let rects = el.getClientRects();
+      let coords = {
+        x: rects[0].left + rects[0].width / 2.0,
+        y: rects[0].top + rects[0].height / 2.0,
+      };
+      event.synthesizeMouseAtPoint(coords.x, coords.y, {} /* opts */, win);
     }
   });
 };
