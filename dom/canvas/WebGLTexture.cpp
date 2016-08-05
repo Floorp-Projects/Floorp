@@ -591,13 +591,14 @@ WebGLTexture::InitializeImageData(const char* funcName, TexImageTarget target,
     MOZ_ASSERT(imageInfo.IsDefined());
     MOZ_ASSERT(!imageInfo.IsDataInitialized());
 
+    const bool respecifyTexture = false;
     const auto& usage = imageInfo.mFormat;
     const auto& width = imageInfo.mWidth;
     const auto& height = imageInfo.mHeight;
     const auto& depth = imageInfo.mDepth;
 
-    if (!ZeroTextureData(mContext, funcName, mGLName, target, level, usage, 0, 0, 0,
-                         width, height, depth))
+    if (!ZeroTextureData(mContext, funcName, respecifyTexture, mGLName, target, level,
+                         usage, 0, 0, 0, width, height, depth))
     {
         return false;
     }
