@@ -9,6 +9,8 @@
 /* globals document, window */
 "use strict";
 
+const {setTooltipVariableContent} = require("devtools/client/shared/widgets/tooltip/VariableContentHelper");
+
 /**
  * Functions handling the variables bubble UI.
  */
@@ -198,7 +200,7 @@ VariableBubbleView.prototype = {
         }
       }]);
     } else {
-      this._tooltip.setVariableContent(objectActor, {
+      setTooltipVariableContent(this._tooltip, objectActor, {
         searchPlaceholder: L10N.getStr("emptyPropertiesFilterText"),
         searchEnabled: Prefs.variablesSearchboxVisible,
         eval: (variable, value) => {
