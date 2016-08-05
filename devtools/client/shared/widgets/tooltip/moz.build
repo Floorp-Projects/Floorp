@@ -9,4 +9,5 @@ DevToolsModules(
     'EventTooltipHelper.js',
     'ImageTooltipHelper.js',
     'TooltipToggle.js',
+    'VariableContentHelper.js',
 )
