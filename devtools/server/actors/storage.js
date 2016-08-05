@@ -645,11 +645,11 @@ StorageActors.createActor({
     this.removeAllCookies =
       callParentProcess.bind(null, "removeAllCookies");
 
-    addMessageListener("storage:storage-cookie-request-child",
+    addMessageListener("debug:storage-cookie-request-child",
                        cookieHelpers.handleParentRequest);
 
     function callParentProcess(methodName, ...args) {
-      let reply = sendSyncMessage("storage:storage-cookie-request-parent", {
+      let reply = sendSyncMessage("debug:storage-cookie-request-parent", {
         method: methodName,
         args: args
       });
@@ -928,7 +928,7 @@ exports.setupParentProcessForCookies = function ({mm, prefix}) {
     callChildProcess.bind(null, "onCookieChanged");
 
   // listen for director-script requests from the child process
-  mm.addMessageListener("storage:storage-cookie-request-parent",
+  mm.addMessageListener("debug:storage-cookie-request-parent",
                         cookieHelpers.handleChildRequest);
 
   DebuggerServer.once("disconnected-from-child:" + prefix,
@@ -952,7 +952,7 @@ exports.setupParentProcessForCookies = function ({mm, prefix}) {
 
     // unregister for director-script requests handlers from the parent process
     // (if any)
-    mm.removeMessageListener("storage:storage-cookie-request-parent",
+    mm.removeMessageListener("debug:storage-cookie-request-parent",
                              cookieHelpers.handleChildRequest);
   }
 
@@ -962,7 +962,7 @@ exports.setupParentProcessForCookies = function ({mm, prefix}) {
     }
 
     try {
-      mm.sendAsyncMessage("storage:storage-cookie-request-child", {
+      mm.sendAsyncMessage("debug:storage-cookie-request-child", {
         method: methodName,
         args: args
       });
@@ -1636,7 +1636,7 @@ StorageActors.createActor({
     this.removeDBRecord = callParentProcessAsync.bind(null, "removeDBRecord");
     this.clearDBStore = callParentProcessAsync.bind(null, "clearDBStore");
 
-    addMessageListener("storage:storage-indexedDB-request-child", msg => {
+    addMessageListener("debug:storage-indexedDB-request-child", msg => {
       switch (msg.json.method) {
         case "backToChild": {
           let [func, rv] = msg.json.args;
@@ -1660,7 +1660,7 @@ StorageActors.createActor({
 
       unresolvedPromises.set(methodName, deferred);
 
-      sendAsyncMessage("storage:storage-indexedDB-request-parent", {
+      sendAsyncMessage("debug:storage-indexedDB-request-parent", {
         method: methodName,
         args: args
       });
@@ -1704,7 +1704,7 @@ var indexedDBHelpers = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
 
-    mm.broadcastAsyncMessage("storage:storage-indexedDB-request-child", {
+    mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
       method: "backToChild",
       args: args
     });
@@ -1714,7 +1714,7 @@ var indexedDBHelpers = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
 
-    mm.broadcastAsyncMessage("storage:storage-indexedDB-request-child", {
+    mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
       method: "onItemUpdated",
       args: [ action, host, path ]
     });
@@ -2143,7 +2143,7 @@ var indexedDBHelpers = {
 
 exports.setupParentProcessForIndexedDB = function ({mm, prefix}) {
   // listen for director-script requests from the child process
-  mm.addMessageListener("storage:storage-indexedDB-request-parent",
+  mm.addMessageListener("debug:storage-indexedDB-request-parent",
                         indexedDBHelpers.handleChildRequest);
 
   DebuggerServer.once("disconnected-from-child:" + prefix,
@@ -2161,7 +2161,7 @@ exports.setupParentProcessForIndexedDB = function ({mm, prefix}) {
 
     // unregister for director-script requests handlers from the parent process
     // (if any)
-    mm.removeMessageListener("storage:storage-indexedDB-request-parent",
+    mm.removeMessageListener("debug:storage-indexedDB-request-parent",
                              indexedDBHelpers.handleChildRequest);
   }
 };
