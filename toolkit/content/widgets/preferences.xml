@@ -635,10 +635,7 @@
             var acceptButton = docElt.getButton("accept");
             acceptButton.hidden = true;
             var cancelButton  = docElt.getButton("cancel");
-
-            let { AppConstants } =
-                Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-            if (AppConstants.platform == "macosx") {
+            if (/Mac/.test(navigator.platform)) {
               // no buttons on Mac except Help
               cancelButton.hidden = true;
               // Move Help button to the end
@@ -820,9 +817,7 @@
         <parameter name="aPaneElement"/>
         <body>
         <![CDATA[
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-          if (AppConstants.platform == "macosx") {
+          if (/Mac/.test(navigator.platform)) {
             var paneTitle = aPaneElement.label;
             if (paneTitle != "")
               document.title = paneTitle;
@@ -896,11 +891,9 @@
       <property name="_shouldAnimate">
         <getter>
         <![CDATA[
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
-          var animate = AppConstants.platform == "macosx";
+          var animate = /Mac/.test(navigator.platform);
           try {
             animate = psvc.getBoolPref("browser.preferences.animateFadeIn");
           }

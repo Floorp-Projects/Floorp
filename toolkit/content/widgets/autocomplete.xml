@@ -446,12 +446,10 @@
 
           var cancel = false;
 
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
           // Catch any keys that could potentially move the caret. Ctrl can be
           // used in combination with these keys on Windows and Linux; and Alt
           // can be used on OS X, so make sure the unused one isn't used.
-          let metaKey = AppConstants.platform == "macosx" ? aEvent.ctrlKey : aEvent.altKey;
+          let metaKey = /Mac/.test(navigator.platform) ? aEvent.ctrlKey : aEvent.altKey;
           if (!this.disableKeyNavigation && !metaKey) {
             switch (aEvent.keyCode) {
               case KeyEvent.DOM_VK_LEFT:
@@ -489,7 +487,7 @@
               cancel = this.mController.handleEscape();
               break;
             case KeyEvent.DOM_VK_RETURN:
-              if (AppConstants.platform == "macosx") {
+              if (/Mac/.test(navigator.platform)) {
                 // Prevent the default action, since it will beep on Mac
                 if (aEvent.metaKey)
                   aEvent.preventDefault();
@@ -503,13 +501,13 @@
               cancel = this.handleEnter(aEvent);
               break;
             case KeyEvent.DOM_VK_DELETE:
-              if (AppConstants.platform == "macosx" && !aEvent.shiftKey) {
+              if (/Mac/.test(navigator.platform) && !aEvent.shiftKey) {
                 break;
               }
               cancel = this.handleDelete();
               break;
             case KeyEvent.DOM_VK_BACK_SPACE:
-              if (AppConstants.platform == "macosx" && aEvent.shiftKey) {
+              if (/Mac/.test(navigator.platform) && aEvent.shiftKey) {
                 cancel = this.handleDelete();
               }
               break;
@@ -519,7 +517,7 @@
                 this.toggleHistoryPopup();
               break;
             case KeyEvent.DOM_VK_F4:
-              if (AppConstants.platform != "macosx") {
+              if (!/Mac/.test(navigator.platform)) {
                 this.toggleHistoryPopup();
               }
               break;
