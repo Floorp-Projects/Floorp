@@ -400,9 +400,6 @@ AudioStream::Start()
 {
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState == INITIALIZED);
-  // Callback might start before the return of the invoke
-  // change state to avoid any assert break.
-  mState = STARTED;
   auto r = InvokeCubeb(cubeb_stream_start);
   mState = r == CUBEB_OK ? STARTED : ERRORED;
   LOG("started, state %s", mState == STARTED ? "STARTED" : "ERRORED");
@@ -596,7 +593,13 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   auto writer = AudioBufferWriter(
     reinterpret_cast<AudioDataValue*>(aBuffer), mOutChannels, aFrames);
 
-  MOZ_ASSERT(mState != INITIALIZED);
+  // FIXME: cubeb_pulse sometimes calls us before cubeb_stream_start() is called.
+  // We don't want to consume audio data until Start() is called by the client.
+  if (mState == INITIALIZED) {
+    NS_WARNING("data callback fires before cubeb_stream_start() is called");
+    mAudioClock.UpdateFrameHistory(0, aFrames);
+    return writer.WriteZeros(aFrames);
+  }
 
   // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
   // Bug 996162
