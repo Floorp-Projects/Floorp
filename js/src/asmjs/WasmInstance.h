@@ -64,6 +64,10 @@ class Instance
     bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                     MutableHandleValue rval);
 
+    // Only WasmInstanceObject can call the private trace function.
+    friend class js::WasmInstanceObject;
+    void tracePrivate(JSTracer* trc);
+
   public:
     Instance(JSContext* cx,
              HandleWasmInstanceObject object,
