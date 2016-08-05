@@ -503,13 +503,6 @@ SpecialPowersAPI.prototype = {
         listeners.push({ name: name, listener: listener });
       },
 
-      promiseOneMessage: name => new Promise(resolve => {
-        chromeScript.addMessageListener(name, function listener(message) {
-          chromeScript.removeMessageListener(name, listener);
-          resolve(message);
-        });
-      }),
-
       removeMessageListener: (name, listener) => {
         listeners = listeners.filter(
           o => (o.name != name || o.listener != listener)
