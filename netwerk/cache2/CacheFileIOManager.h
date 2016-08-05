@@ -68,6 +68,7 @@ public:
 
   // Returns false when this handle has been doomed based on the pinning state update.
   bool SetPinned(bool aPinned);
+  void SetInvalid() { mInvalid = true; }
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -90,8 +91,9 @@ private:
   bool const           mPriority;
   bool const           mSpecialFile;
 
+  mozilla::Atomic<bool, Relaxed> mInvalid;
+
   // These bit flags are all accessed only on the IO thread
-  bool                 mInvalid : 1;
   bool                 mFileExists : 1; // This means that the file should exists,
                                         // but it can be still deleted by OS/user
                                         // and then a subsequent OpenNSPRFileDesc()
