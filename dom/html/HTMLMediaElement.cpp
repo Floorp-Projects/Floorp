@@ -5546,7 +5546,7 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
       mWaitingForKey = NOT_WAITING_FOR_KEY;
-      DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
+      NotifyAboutPlaying();
     }
   }
 
