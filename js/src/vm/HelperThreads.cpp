@@ -1300,7 +1300,7 @@ HelperThread::destroy()
 void
 HelperThread::ThreadMain(void* arg)
 {
-    PR_SetCurrentThreadName("JS Helper");
+    ThisThread::SetName("JS Helper");
 
     //See bug 1104658.
     //Set the FPU control word to be the same as the main thread's, or math
