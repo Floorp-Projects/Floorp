@@ -515,7 +515,7 @@ WasmInstanceObject::finalize(FreeOp* fop, JSObject* obj)
 WasmInstanceObject::trace(JSTracer* trc, JSObject* obj)
 {
     if (!obj->as<WasmInstanceObject>().isNewborn())
-        obj->as<WasmInstanceObject>().instance().trace(trc);
+        obj->as<WasmInstanceObject>().instance().tracePrivate(trc);
 }
 
 /* static */ WasmInstanceObject*
