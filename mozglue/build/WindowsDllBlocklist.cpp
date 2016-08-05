@@ -220,6 +220,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "rlls.dll", ALL_VERSIONS },
   { "rlls64.dll", ALL_VERSIONS },
 
+  // Websense is crashing us on 48 & 49, bug 1291738
+  { "qipcap.dll", MAKE_VERSION(7, 6, 818, 1) },
+
   { nullptr, 0 }
 };
 
