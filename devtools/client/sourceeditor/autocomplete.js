@@ -71,17 +71,17 @@ function initializeAutoCompletion(ctx, options = {}) {
     let updateArgHintsCallback = cm.tern.updateArgHints.bind(cm.tern, cm);
     cm.on("cursorActivity", updateArgHintsCallback);
 
-    keyMap[autocompleteKey] = cm => {
-      cm.tern.getHint(cm, data => {
+    keyMap[autocompleteKey] = cmArg => {
+      cmArg.tern.getHint(cmArg, data => {
         CodeMirror.on(data, "shown", () => ed.emit("before-suggest"));
         CodeMirror.on(data, "close", () => ed.emit("after-suggest"));
         CodeMirror.on(data, "select", () => ed.emit("suggestion-entered"));
-        CodeMirror.showHint(cm, (cm, cb) => cb(data), { async: true });
+        CodeMirror.showHint(cmArg, (cmIgnore, cb) => cb(data), { async: true });
       });
     };
 
-    keyMap[Editor.keyFor("showInformation2", { noaccel: true })] = cm => {
-      cm.tern.showType(cm, null, () => {
+    keyMap[Editor.keyFor("showInformation2", { noaccel: true })] = cmArg => {
+      cmArg.tern.showType(cmArg, null, () => {
         ed.emit("show-information");
       });
     };
