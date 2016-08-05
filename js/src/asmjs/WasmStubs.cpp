@@ -993,8 +993,8 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.popFlags();              // after this, nothing that sets conditions
     masm.ret();                   // pop resumePC into PC
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    // Reserve space to store resumePC.
-    masm.subFromStackPtr(Imm32(sizeof(intptr_t)));
+    // Reserve space to store resumePC and HeapReg.
+    masm.subFromStackPtr(Imm32(2 * sizeof(intptr_t)));
     // set to zero so we can use masm.framePushed() below.
     masm.setFramePushed(0);
     static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too.");
@@ -1010,6 +1010,8 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.loadWasmActivationFromSymbolicAddress(IntArgReg0);
     masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(s0, masm.framePushed()));
+    // Store HeapReg into the reserved space.
+    masm.storePtr(HeapReg, Address(s0, masm.framePushed() + sizeof(intptr_t)));
 
 # ifdef USES_O32_ABI
     // MIPS ABI requires rewserving stack for registes $a0 to $a3.
@@ -1031,9 +1033,11 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
 
     // Pop resumePC into PC. Clobber HeapReg to make the jump and restore it
     // during jump delay slot.
-    masm.pop(HeapReg);
+    masm.loadPtr(Address(StackPointer, 0), HeapReg);
+    // Reclaim the reserve space.
+    masm.addToStackPtr(Imm32(2 * sizeof(intptr_t)));
     masm.as_jr(HeapReg);
-    masm.loadAsmJSHeapRegisterFromGlobalData();
+    masm.loadPtr(Address(StackPointer, -sizeof(intptr_t)), HeapReg);
 #elif defined(JS_CODEGEN_ARM)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
 
