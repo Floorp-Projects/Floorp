@@ -190,7 +190,8 @@ ServoRestyleManager::NoteRestyleHint(Element* aElement, nsRestyleHint aHint)
   }
 
   if (aHint & eRestyle_LaterSiblings) {
-    for (nsINode* cur = aElement->GetNextSibling(); cur;
+    MarkParentsAsHavingDirtyDescendants(aElement);
+    for (nsIContent* cur = aElement->GetNextSibling(); cur;
          cur = cur->GetNextSibling()) {
       cur->SetIsDirtyForServo();
     }
