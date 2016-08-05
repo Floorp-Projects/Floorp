@@ -123,7 +123,7 @@ function run_test() {
     try {
       prefs.getIntPref("gfx.blacklist.direct2d");
       exists = true;
-    } catch(e) {}
+    } catch (e) {}
 
     do_check_false(exists);
 

@@ -266,13 +266,13 @@ AboutProtocolChannel.prototype = {
       run: () => {
         try {
           listener.onStartRequest(this, context);
-        } catch(e) {}
+        } catch (e) {}
         try {
           listener.onDataAvailable(this, context, stream, 0, stream.available());
-        } catch(e) {}
+        } catch (e) {}
         try {
           listener.onStopRequest(this, context, Cr.NS_OK);
-        } catch(e) {}
+        } catch (e) {}
       }
     };
     Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
@@ -535,7 +535,7 @@ var RemoteAddonsChild = {
     for (let shim of shims) {
       try {
         shim.init();
-      } catch(e) {
+      } catch (e) {
         Cu.reportError(e);
       }
     }
@@ -544,7 +544,7 @@ var RemoteAddonsChild = {
   init: function(global) {
 
     if (!this._ready) {
-      if (!Services.cpmm.initialProcessData.remoteAddonsParentInitted){
+      if (!Services.cpmm.initialProcessData.remoteAddonsParentInitted) {
         return null;
       }
 
@@ -565,7 +565,7 @@ var RemoteAddonsChild = {
     for (let shim of perTabShims) {
       try {
         shim.uninit();
-      } catch(e) {
+      } catch (e) {
         Cu.reportError(e);
       }
     }

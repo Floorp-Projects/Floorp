@@ -64,7 +64,7 @@ add_task(function* test() {
       try {
         xhr.send();
         resolve("SendSucceeded");
-      } catch(e) {
+      } catch (e) {
         resolve("SendThrew");
       }
     });

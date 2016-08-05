@@ -1378,7 +1378,7 @@ function validateBookmarkObject(input, behavior={}) {
     if (VALIDATORS.hasOwnProperty(prop)) {
       try {
         normalizedInput[prop] = VALIDATORS[prop](input[prop], input);
-      } catch(ex) {
+      } catch (ex) {
         throw new Error(`Invalid value for property '${prop}': ${input[prop]}`);
       }
     }

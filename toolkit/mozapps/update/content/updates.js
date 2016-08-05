@@ -469,8 +469,8 @@ var gUpdates = {
     if (billboardTestURL) {
       var updatesFoundBillboardPage = document.getElementById("updatesfoundbillboard");
       updatesFoundBillboardPage.setAttribute("next", "dummy");
-      gUpdatesFoundBillboardPage.onExtra1 = function(){ gUpdates.wiz.cancel(); };
-      gUpdatesFoundBillboardPage.onExtra2 = function(){ gUpdates.wiz.cancel(); };
+      gUpdatesFoundBillboardPage.onExtra1 = function() { gUpdates.wiz.cancel(); };
+      gUpdatesFoundBillboardPage.onExtra2 = function() { gUpdates.wiz.cancel(); };
       this.onWizardNext = function() { gUpdates.wiz.cancel(); };
       this.update = { billboardURL        : billboardTestURL,
                       brandName           : this.brandName,
@@ -918,7 +918,7 @@ var gDownloadingPage = {
       if (activeUpdate)
         this._setUIState(!aus.isDownloading);
     }
-    catch(e) {
+    catch (e) {
       LOG("gDownloadingPage", "onPageShow - error: " + e);
     }
 
@@ -1324,7 +1324,7 @@ var gErrorExtraPage = {
       secHistogram.add(CoI.nsISecurityUITelemetry.WARNING_INSECURE_UPDATE);
     }
     else {
-      if (gUpdates.update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE){
+      if (gUpdates.update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE) {
         document.getElementById("errorCertCheckNoUpdateLabel").hidden = false;
         secHistogram.add(CoI.nsISecurityUITelemetry.WARNING_NO_SECURE_UPDATE);
       }

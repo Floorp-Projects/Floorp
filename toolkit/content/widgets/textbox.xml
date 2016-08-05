@@ -102,7 +102,7 @@
             this.editor.transactionManager.clear();
             return true;
           }
-          catch(e) {}
+          catch (e) {}
           return false;
         ]]></body>
       </method>
@@ -585,7 +585,7 @@
             try {
               Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm", this);
               this.InlineSpellCheckerUI = new this.InlineSpellChecker(textbox.editor);
-            } catch(ex) { }
+            } catch (ex) { }
           }
 
           return this.InlineSpellCheckerUI;

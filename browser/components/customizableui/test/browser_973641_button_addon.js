@@ -56,7 +56,7 @@ add_task(function* asyncCleanup() {
 
 function resetTabs() {
   //close all opened tabs
-  while(gBrowser.tabs.length > 1) {
+  while (gBrowser.tabs.length > 1) {
     gBrowser.removeTab(gBrowser.selectedTab);
   }
 

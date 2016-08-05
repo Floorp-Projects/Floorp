@@ -156,11 +156,11 @@ ContentPrefService.prototype = {
       this.__stmtDeleteSettingIfUnused.finalize();
       this.__stmtDeleteSettingIfUnused = null;
     }
-    if(this.__stmtSelectPrefs) {
+    if (this.__stmtSelectPrefs) {
       this.__stmtSelectPrefs.finalize();
       this.__stmtSelectPrefs = null;
     }
-    if(this.__stmtDeleteGroupIfUnused) {
+    if (this.__stmtDeleteGroupIfUnused) {
       this.__stmtDeleteGroupIfUnused.finalize();
       this.__stmtDeleteGroupIfUnused = null;
     }
@@ -228,7 +228,7 @@ ContentPrefService.prototype = {
       if (this._privModeStorage.has(group, aName)) {
         let value = this._privModeStorage.get(group, aName);
         if (aCallback) {
-          this._scheduleCallback(function(){aCallback.onResult(value);});
+          this._scheduleCallback(function() {aCallback.onResult(value);});
           return undefined;
         }
         return value;
@@ -359,7 +359,7 @@ ContentPrefService.prototype = {
       `);
       this._dbConnection.commitTransaction();
     }
-    catch(ex) {
+    catch (ex) {
       this._dbConnection.rollbackTransaction();
       throw ex;
     }
@@ -531,7 +531,7 @@ ContentPrefService.prototype = {
       try {
         observer.onContentPrefRemoved(aGroup, aName, aIsPrivate);
       }
-      catch(ex) {
+      catch (ex) {
         Cu.reportError(ex);
       }
     }
@@ -545,7 +545,7 @@ ContentPrefService.prototype = {
       try {
         observer.onContentPrefSet(aGroup, aName, aValue, aIsPrivate);
       }
-      catch(ex) {
+      catch (ex) {
         Cu.reportError(ex);
       }
     }
@@ -597,7 +597,7 @@ ContentPrefService.prototype = {
     if (this._cache.has(aGroup, aSetting)) {
       value = this._cache.get(aGroup, aSetting);
       if (aCallback) {
-        this._scheduleCallback(function(){aCallback.onResult(value);});
+        this._scheduleCallback(function() {aCallback.onResult(value);});
         return undefined;
       }
       return value;
@@ -647,7 +647,7 @@ ContentPrefService.prototype = {
     if (this._cache.has(null, aName)) {
       value = this._cache.get(null, aName);
       if (aCallback) {
-        this._scheduleCallback(function(){aCallback.onResult(value);});
+        this._scheduleCallback(function() {aCallback.onResult(value);});
         return undefined;
       }
       return value;
@@ -1038,7 +1038,7 @@ ContentPrefService.prototype = {
     try {
       var statement = this._dbConnection.createStatement(aSQLString);
     }
-    catch(ex) {
+    catch (ex) {
       Cu.reportError("error creating statement " + aSQLString + ": " +
                      this._dbConnection.lastError + " - " +
                      this._dbConnection.lastErrorString);
@@ -1088,7 +1088,7 @@ ContentPrefService.prototype = {
         try {
           this._dbMigrate(dbConnection, version, this._dbVersion);
         }
-        catch(ex) {
+        catch (ex) {
           Cu.reportError("error migrating DB: " + ex + "; backing up and recreating");
           dbConnection = this._dbBackUpAndRecreate(dbService, dbFile, dbConnection);
         }
@@ -1120,7 +1120,7 @@ ContentPrefService.prototype = {
       this._dbCreateSchema(dbConnection);
       dbConnection.schemaVersion = this._dbVersion;
     }
-    catch(ex) {
+    catch (ex) {
       // If we failed to create the database (perhaps because the disk ran out
       // of space), then remove the database file so we don't leave it in some
       // half-created state from which we won't know how to recover.
@@ -1161,7 +1161,7 @@ ContentPrefService.prototype = {
     // Close the database, ignoring the "already closed" exception, if any.
     // It'll be open if we're here because of a migration failure but closed
     // if we're here because of database corruption.
-    try { aDBConnection.close() } catch(ex) {}
+    try { aDBConnection.close() } catch (ex) {}
 
     aDBFile.remove(false);
 
@@ -1194,7 +1194,7 @@ ContentPrefService.prototype = {
         for (let i = aOldVersion; i < aNewVersion; i++) {
           let migrationName = "_dbMigrate" + i + "To" + (i + 1);
           if (typeof this[migrationName] != 'function') {
-            throw("no migrator function from version " + aOldVersion + " to version " + aNewVersion);
+            throw ("no migrator function from version " + aOldVersion + " to version " + aNewVersion);
           }
           this[migrationName](aDBConnection);
         }
@@ -1281,9 +1281,9 @@ HostnameGrouper.prototype = {
 
       group = aURI.host;
       if (!group)
-        throw("can't derive group from host; no host in URI");
+        throw ("can't derive group from host; no host in URI");
     }
-    catch(ex) {
+    catch (ex) {
       // If we don't have a host, then use the entire URI (minus the query,
       // reference, and hash, if possible) as the group.  This means that URIs
       // like about:mozilla and about:blank will be considered separate groups,
@@ -1300,7 +1300,7 @@ HostnameGrouper.prototype = {
         var url = aURI.QueryInterface(Ci.nsIURL);
         group = aURI.prePath + url.filePath;
       }
-      catch(ex) {
+      catch (ex) {
         group = aURI.spec;
       }
     }

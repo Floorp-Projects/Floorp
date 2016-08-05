@@ -12,7 +12,7 @@ try {
               getService(Ci.nsINavBookmarksService);
   var annoSvc = Cc["@mozilla.org/browser/annotation-service;1"]
                   .getService(Ci.nsIAnnotationService);
-} catch(ex) {
+} catch (ex) {
   do_throw("Could not get services\n");
 }
 
@@ -98,7 +98,7 @@ function add_bookmarks() {
 function check_bookmarks(aFolderId) {
   // check that we still have valid bookmarks
   var bookmarks = bmSvc.getBookmarkIdsForURI(bookmarkedURI);
-  for(var i = 0; i < bookmarks.length; i++) {
+  for (var i = 0; i < bookmarks.length; i++) {
     do_check_eq(bmSvc.getItemTitle(bookmarks[i]), validItemName);
     do_check_true(annoSvc.itemHasAnnotation(bookmarks[i],validAnnoName));
   }

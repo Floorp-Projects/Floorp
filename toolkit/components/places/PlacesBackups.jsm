@@ -112,7 +112,7 @@ this.PlacesBackups = {
     if (!bookmarksBackupDir.exists()) {
       bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0700", 8));
       if (!bookmarksBackupDir.exists())
-        throw("Unable to create bookmarks backup folder");
+        throw ("Unable to create bookmarks backup folder");
     }
     delete this._folder;
     return this._folder = bookmarksBackupDir;
@@ -273,7 +273,7 @@ this.PlacesBackups = {
                                                        : OS.Path.basename(aBackupFile);
     let matches = filename.match(filenamesRegex);
     if (!matches)
-      throw("Invalid backup file name: " + filename);
+      throw ("Invalid backup file name: " + filename);
     return new Date(matches[1].replace(/-/g, "/"));
   },
 

@@ -281,7 +281,7 @@ add_task(function*() {
 });
 
 // Check that the rollout policy sets work as expected
-add_task(function*(){
+add_task(function*() {
   gAppInfo.browserTabsRemoteAutostart = true;
   Services.prefs.setBoolPref("extensions.e10sBlocksEnabling", true);
   Services.prefs.setCharPref("extensions.e10s.rollout.policy", "xpcshell-test");

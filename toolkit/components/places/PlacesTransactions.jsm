@@ -327,7 +327,7 @@ var PlacesTransactions = {
           try {
             yield txn.transact();
           }
-          catch(ex) {
+          catch (ex) {
             console.error(ex);
           }
         }
@@ -567,7 +567,7 @@ var TransactionsManager = {
         try {
           yield TransactionsHistory.getRawTransaction(txnProxy).undo();
         }
-        catch(ex) {
+        catch (ex) {
           // If one transaction is broken, it's not safe to work with any other
           // undo entry.  Report the error and clear the undo history.
           console.error(ex,
@@ -600,7 +600,7 @@ var TransactionsManager = {
           else
             yield transaction.execute();
         }
-        catch(ex) {
+        catch (ex) {
           // If one transaction is broken, it's not safe to work with any other
           // redo entry. Report the error and clear the undo history.
           console.error(ex,
@@ -642,7 +642,7 @@ var TransactionsManager = {
       if (win)
         win.updateCommands("undo");
     }
-    catch(ex) { console.error(ex, "Couldn't update undo commands"); }
+    catch (ex) { console.error(ex, "Couldn't update undo commands"); }
   }
 };
 
@@ -753,7 +753,7 @@ function (aNames, aValidationFunction, aDefaultValue) {
         try {
           return aValidationFunction(aValue);
         }
-        catch(ex) {
+        catch (ex) {
           throw new Error(`Invalid value for input property ${propName}`);
         }
       },
@@ -1428,7 +1428,7 @@ PT.Remove.prototype = {
       try {
         return PlacesUtils.promiseBookmarksTree(guid);
       }
-      catch(ex) {
+      catch (ex) {
         throw new Error("Failed to get info for the specified item (guid: " +
                         guid + "). Ex: " + ex);
       }
@@ -1587,7 +1587,7 @@ PT.Copy.prototype = {
     try {
       creationInfo = yield PlacesUtils.promiseBookmarksTree(aGuid);
     }
-    catch(ex) {
+    catch (ex) {
       throw new Error("Failed to get info for the specified item (guid: " +
                       aGuid + "). Ex: " + ex);
     }

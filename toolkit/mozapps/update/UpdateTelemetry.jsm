@@ -249,7 +249,7 @@ this.AUSTLMY = {
       let id = "UPDATE_STATE_CODE_" + aSuffix;
       // enumerated type histogram
       Services.telemetry.getHistogramById(id).add(aCode);
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
     }
   },
@@ -274,7 +274,7 @@ this.AUSTLMY = {
       let id = "UPDATE_STATUS_ERROR_CODE_" + aSuffix;
       // enumerated type histogram
       Services.telemetry.getHistogramById(id).add(aCode);
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
     }
   },
@@ -301,7 +301,7 @@ this.AUSTLMY = {
             let id = "UPDATE_INVALID_LASTUPDATETIME_" + aSuffix;
             // count type histogram
             Services.telemetry.getHistogramById(id).add();
-          } catch(e) {
+          } catch (e) {
             Cu.reportError(e);
           }
         } else {
@@ -311,7 +311,7 @@ this.AUSTLMY = {
             let id = "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_" + aSuffix;
             // exponential type histogram
             Services.telemetry.getHistogramById(id).add(intervalDays);
-          } catch(e) {
+          } catch (e) {
             Cu.reportError(e);
           }
         }
@@ -379,7 +379,7 @@ this.AUSTLMY = {
       let id = "UPDATE_SERVICE_INSTALLED_" + aSuffix;
       // boolean type histogram
       Services.telemetry.getHistogramById(id).add(aInstalled);
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
     }
 
@@ -393,7 +393,7 @@ this.AUSTLMY = {
       // Was the service at some point installed, but is now uninstalled?
       attempted = wrk.readIntValue("Attempted");
       wrk.close();
-    } catch(e) {
+    } catch (e) {
       // Since this will throw if the registry key doesn't exist (e.g. the
       // service has never been installed) don't report an error.
     }
@@ -404,7 +404,7 @@ this.AUSTLMY = {
         // count type histogram
         Services.telemetry.getHistogramById(id).add();
       }
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
     }
   },
@@ -435,7 +435,7 @@ this.AUSTLMY = {
         // count type histogram
         Services.telemetry.getHistogramById(aID).add();
       }
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
     }
   },
@@ -466,7 +466,7 @@ this.AUSTLMY = {
         // enumerated or exponential type histogram
         Services.telemetry.getHistogramById(aID).add(val);
       }
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
     }
   },
@@ -495,7 +495,7 @@ this.AUSTLMY = {
         // count type histogram
         Services.telemetry.getHistogramById(aID).add();
       }
-    } catch(e) {
+    } catch (e) {
       Cu.reportError(e);
     }
   }

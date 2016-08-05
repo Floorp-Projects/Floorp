@@ -25,9 +25,14 @@ add_task(function* () {
 
   const expectedMessage = prepareMessage(packet);
 
-  let messages = getAllMessages(getState());
-  deepEqual(messages.toArray(), [expectedMessage],
-    "MESSAGE_ADD action adds a message");
+  const messages = getAllMessages(getState());
+  equal(messages.size, 1, "We added exactly one message.")
+
+  const message = messages.first();
+  notEqual(message.id, expectedMessage.id, "ID should be unique.");
+  // Remove ID for deepEqual comparison.
+  deepEqual(message.remove('id'), expectedMessage.remove('id'),
+      "MESSAGE_ADD action adds a message");
 });
 
 /**
@@ -82,7 +87,7 @@ add_task(function*() {
   dispatch(actions.messageAdd(clearPacket));
 
   messages = getAllMessages(getState());
-  deepEqual(messages.first(), prepareMessage(clearPacket),
+  deepEqual(messages.first().remove('id'), prepareMessage(clearPacket).remove('id'),
     "console.clear clears existing messages and add a new one");
 });
 

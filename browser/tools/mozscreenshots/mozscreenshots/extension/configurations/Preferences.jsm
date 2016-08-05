@@ -42,7 +42,7 @@ this.Preferences = {
 
   configurations: {
     "panePrivacy-DNTDialog": {
-      applyConfig: Task.async(function*(){
+      applyConfig: Task.async(function*() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         yield prefHelper("panePrivacy", null);
 

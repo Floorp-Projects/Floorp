@@ -137,7 +137,7 @@ var dialog = {
         }
         elm.setAttribute("description", uri.prePath);
       }
-      else if (app instanceof Ci.nsIDBusHandlerApp){
+      else if (app instanceof Ci.nsIDBusHandlerApp) {
 	  elm.setAttribute("description", app.method);
       }
       else

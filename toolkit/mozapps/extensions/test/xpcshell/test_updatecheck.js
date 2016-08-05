@@ -99,7 +99,7 @@ add_task(function* () {
                                      updateKey, "test_updatecheck.json");
 
     throw "Expected the update check to fail";
-  } catch(e) {}
+  } catch (e) {}
 
   for (let [file, key] of [["test_updatecheck.rdf", updateKey],
                            ["test_updatecheck.json", null]]) {

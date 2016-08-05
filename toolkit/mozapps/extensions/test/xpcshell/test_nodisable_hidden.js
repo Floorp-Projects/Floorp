@@ -90,7 +90,7 @@ add_task(function*() {
   try {
     addon.userDisabled = true;
     do_throw("Expected addon.userDisabled on a hidden add-on to throw!");
-  } catch(e) {
+  } catch (e) {
     do_check_eq(e.message, `Cannot disable hidden add-on ${SYSTEM_ID}`);
   }
 

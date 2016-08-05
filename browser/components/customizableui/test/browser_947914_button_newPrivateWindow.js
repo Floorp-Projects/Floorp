@@ -39,7 +39,7 @@ add_task(function*() {
     yield promiseWindowClosed(privateWindow);
     info("The new private window was closed");
   }
-  catch(e) {
+  catch (e) {
     ok(false, "The new private browser window was not properly handled");
   }
   finally {

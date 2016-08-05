@@ -105,7 +105,7 @@ Events.prototype = {
   dispatch: function evts_dispatch(aEvent, aEventItem) {
     var eventItem = new EventItem(aEvent, aEventItem);
 
-    this._listeners.forEach(function(key){
+    this._listeners.forEach(function(key) {
       if (key.event == aEvent) {
         key.listener.handleEvent ?
           key.listener.handleEvent(eventItem) :
@@ -294,7 +294,7 @@ PreferenceBranch.prototype = {
         this._prefs.setIntPref(aName, aValue);
         break;
       default:
-        throw("Unknown preference value specified.");
+        throw ("Unknown preference value specified.");
     }
   },
 

@@ -240,7 +240,7 @@ add_task(function* test_addLivemark_bogusParentId_fails() {
       , feedURI: FEED_URI
       });
     do_throw("Adding a livemark with a bogus parent should fail");
-  } catch(ex) {}
+  } catch (ex) {}
 });
 
 add_task(function* test_addLivemark_bogusParentGuid_fails() {
@@ -251,7 +251,7 @@ add_task(function* test_addLivemark_bogusParentGuid_fails() {
       , feedURI: FEED_URI
       });
     do_throw("Adding a livemark with a bogus parent should fail");
-  } catch(ex) {}
+  } catch (ex) {}
 })
 
 add_task(function* test_addLivemark_intoLivemark_fails() {
@@ -268,7 +268,7 @@ add_task(function* test_addLivemark_intoLivemark_fails() {
       , feedURI: FEED_URI
       });
     do_throw("Adding a livemark into a livemark should fail");
-  } catch(ex) {
+  } catch (ex) {
     do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
@@ -330,7 +330,7 @@ add_task(function* test_removeLivemark_nonExistent_fails() {
     yield PlacesUtils.livemarks.removeLivemark({ id: 1337 });
     do_throw("Removing a non-existent livemark should fail");
   }
-  catch(ex) {
+  catch (ex) {
   }
 });
 

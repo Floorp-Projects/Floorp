@@ -65,7 +65,7 @@ this.getRandomId = function getRandomId() {
  * copy source object into target, excluding private properties
  * (those whose names begin with an underscore)
  */
-this.objectCopy = function objectCopy(source, target){
+this.objectCopy = function objectCopy(source, target) {
   let desc;
   Object.getOwnPropertyNames(source).forEach(function(name) {
     if (name[0] !== '_') {

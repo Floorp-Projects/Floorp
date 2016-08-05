@@ -11,6 +11,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -128,6 +129,13 @@ public class AndroidGamepadManager {
         }
     }
 
+    @WrapForJNI
+    private static native void onGamepadChange(int id, boolean added);
+    @WrapForJNI
+    private static native void onButtonChange(int id, int button, boolean pressed, float value);
+    @WrapForJNI
+    private static native void onAxisChange(int id, boolean[] valid, float[] values);
+
     private static boolean sStarted;
     private static final SparseArray<Gamepad> sGamepads = new SparseArray<>();
     private static final SparseArray<List<KeyEvent>> sPendingGamepads = new SparseArray<>();
@@ -137,7 +145,17 @@ public class AndroidGamepadManager {
     private AndroidGamepadManager() {
     }
 
-    public static void startup() {
+    @WrapForJNI(allowMultithread = true)
+    private static void start() {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                doStart();
+            }
+        });
+    }
+
+    /* package */ static void doStart() {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             scanForGamepads();
@@ -146,7 +164,17 @@ public class AndroidGamepadManager {
         }
     }
 
-    public static void shutdown() {
+    @WrapForJNI(allowMultithread = true)
+    private static void stop() {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                doStop();
+            }
+        });
+    }
+
+    /* package */ static void doStop() {
         ThreadUtils.assertOnUiThread();
         if (sStarted) {
             removeDeviceListener();
@@ -156,7 +184,17 @@ public class AndroidGamepadManager {
         }
     }
 
-    public static void gamepadAdded(int deviceId, int serviceId) {
+    @WrapForJNI
+    private static void onGamepadAdded(final int device_id, final int service_id) {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                handleGamepadAdded(device_id, service_id);
+            }
+        });
+    }
+
+    /* package */ static void handleGamepadAdded(int deviceId, int serviceId) {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             return;
@@ -189,7 +227,7 @@ public class AndroidGamepadManager {
                                     int which) {
         if (pressed != gamepad.dpad[which]) {
             gamepad.dpad[which] = pressed;
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createGamepadButtonEvent(gamepad.id, FIRST_DPAD_BUTTON + which, pressed, Math.abs(value)));
+            onButtonChange(gamepad.id, FIRST_DPAD_BUTTON + which, pressed, Math.abs(value));
         }
     }
 
@@ -221,7 +259,7 @@ public class AndroidGamepadManager {
         }
         if (anyValidAxes) {
             // Send an axismove event.
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createGamepadAxisEvent(gamepad.id, valid, axes));
+            onAxisChange(gamepad.id, valid, axes);
         }
 
         // Map triggers to buttons.
@@ -233,7 +271,7 @@ public class AndroidGamepadManager {
                 if (value != gamepad.triggers[i]) {
                     gamepad.triggers[i] = value;
                     boolean pressed = value > TRIGGER_PRESSED_THRESHOLD;
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createGamepadButtonEvent(gamepad.id, trigger.button, pressed, value));
+                    onButtonChange(gamepad.id, trigger.button, pressed, value);
                 }
             }
         }
@@ -292,7 +330,7 @@ public class AndroidGamepadManager {
 
         Gamepad gamepad = sGamepads.get(deviceId);
         boolean pressed = ev.getAction() == KeyEvent.ACTION_DOWN;
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createGamepadButtonEvent(gamepad.id, key, pressed, pressed ? 1.0f : 0.0f));
+        onButtonChange(gamepad.id, key, pressed, pressed ? 1.0f : 0.0f);
         return true;
     }
 
@@ -314,18 +352,13 @@ public class AndroidGamepadManager {
     }
 
     private static void addGamepad(InputDevice device) {
-        //TODO: when we're using a newer SDK version, use these.
-        //if (Build.VERSION.SDK_INT >= 12) {
-        //int vid = device.getVendorId();
-        //int pid = device.getProductId();
-        //}
         sPendingGamepads.put(device.getId(), new ArrayList<KeyEvent>());
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createGamepadAddRemoveEvent(device.getId(), true));
+        onGamepadChange(device.getId(), true);
     }
 
     private static void removeGamepad(int deviceId) {
         Gamepad gamepad = sGamepads.get(deviceId);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createGamepadAddRemoveEvent(gamepad.id, false));
+        onGamepadChange(gamepad.id, false);
         sGamepads.remove(deviceId);
     }
 

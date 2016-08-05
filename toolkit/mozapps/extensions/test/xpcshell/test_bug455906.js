@@ -211,7 +211,7 @@ function check_plugin_state(plugin) {
   return plugin.disabled + "," + plugin.blocklisted;
 }
 
-function create_blocklistURL(blockID){
+function create_blocklistURL(blockID) {
   let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ITEM_URL);
   url = url.replace(/%blockID%/g, blockID);
   return url;

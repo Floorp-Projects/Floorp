@@ -51,6 +51,9 @@ typedef enum {
   ICE_TCP_FRAMING
 } nr_framing_type;
 
+void nr_socket_buffered_stun_set_readable_cb(nr_socket *sock,
+  NR_async_cb readable_cb, void *readable_cb_arg);
+
 int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending,
   nr_framing_type framing_type, nr_socket **sockp);
 
