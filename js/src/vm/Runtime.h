@@ -1046,6 +1046,7 @@ struct JSRuntime : public JS::shadow::Runtime,
   public:
     bool initializeAtoms(JSContext* cx);
     void finishAtoms();
+    bool atomsAreFinished() const { return !atoms_; }
 
     void sweepAtoms();
 
