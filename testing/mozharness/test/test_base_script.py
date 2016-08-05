@@ -2,8 +2,6 @@ import gc
 import mock
 import os
 import re
-import shutil
-import tempfile
 import types
 import unittest
 PYWIN32 = False
@@ -21,9 +19,6 @@ from mozharness.base.log import DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL, IG
 import mozharness.base.script as script
 from mozharness.base.config import parse_config_file
 
-
-here = os.path.dirname(os.path.abspath(__file__))
-
 test_string = '''foo
 bar
 baz'''
@@ -36,12 +31,10 @@ class CleanupObj(script.ScriptMixin, log.LogMixin):
         self.config = {'log_level': ERROR}
 
 
-def cleanup(files=None):
-    files = files or []
-    files.extend(('test_logs', 'test_dir', 'tmpfile_stdout', 'tmpfile_stderr'))
+def cleanup():
     gc.collect()
     c = CleanupObj()
-    for f in files:
+    for f in ('test_logs', 'test_dir', 'tmpfile_stdout', 'tmpfile_stderr'):
         c.rmtree(f)
 
 
@@ -63,13 +56,12 @@ class TestScript(unittest.TestCase):
     def setUp(self):
         cleanup()
         self.s = None
-        self.tmpdir = tempfile.mkdtemp(suffix='.mozharness')
 
     def tearDown(self):
         # Close the logfile handles, or windows can't remove the logs
         if hasattr(self, 's') and isinstance(self.s, object):
             del(self.s)
-        cleanup([self.tmpdir])
+        cleanup()
 
     # test _dump_config_hierarchy() when --dump-config-hierarchy is passed
     def test_dump_config_hierarchy_valid_files_len(self):
@@ -258,38 +250,6 @@ class TestScript(unittest.TestCase):
         error_logsize = os.path.getsize("test_logs/test_error.log")
         self.assertTrue(error_logsize > 0,
                         msg="error list not working properly")
-
-    def test_unpack(self):
-        self.s = get_debug_script_obj()
-
-        archives_path = os.path.join(here, 'helper_files', 'archives')
-
-        # Test basic decompression
-        for archive in ('archive.tar', 'archive.tar.bz2', 'archive.tar.gz', 'archive.zip'):
-            self.s.unpack(os.path.join(archives_path, archive), self.tmpdir)
-            self.assertIn('script.sh', os.listdir(os.path.join(self.tmpdir, 'bin')))
-            self.assertIn('lorem.txt', os.listdir(self.tmpdir))
-            shutil.rmtree(self.tmpdir)
-
-        # Test permissions for extracted entries from zip archive
-        self.s.unpack(os.path.join(archives_path, 'archive.zip'), self.tmpdir)
-        file_stats = os.stat(os.path.join(self.tmpdir, 'bin', 'script.sh'))
-        orig_fstats = os.stat(os.path.join(archives_path, 'reference', 'bin', 'script.sh'))
-        self.assertEqual(file_stats.st_mode, orig_fstats.st_mode)
-        shutil.rmtree(self.tmpdir)
-
-        # Test extract specific dirs only
-        self.s.unpack(os.path.join(archives_path, 'archive.zip'), self.tmpdir,
-                      extract_dirs=['bin/*'])
-        self.assertIn('bin', os.listdir(self.tmpdir))
-        self.assertNotIn('lorem.txt', os.listdir(self.tmpdir))
-        shutil.rmtree(self.tmpdir)
-
-        # Test for invalid filenames (Windows only)
-        if PYWIN32:
-            with self.assertRaises(IOError):
-                self.s.unpack(os.path.join(archives_path, 'archive_invalid_filename.zip'),
-                              self.tmpdir)
 
 
 # TestHelperFunctions {{{1
