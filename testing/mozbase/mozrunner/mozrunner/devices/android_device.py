@@ -246,10 +246,11 @@ def run_firefox_for_android(build_obj, params):
         return 1
     return 0
 
-def grant_runtime_permissions(build_obj, app):
+def grant_runtime_permissions(build_obj):
     """
        Grant required runtime permissions to the specified app (typically org.mozilla.fennec_$USER).
     """
+    app = build_obj.substs['ANDROID_PACKAGE_NAME']
     adb_path = _find_sdk_exe(build_obj.substs, 'adb', False)
     if not adb_path:
         adb_path = 'adb'
