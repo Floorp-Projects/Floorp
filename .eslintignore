@@ -114,6 +114,7 @@ devtools/server/*.jsm
 !devtools/server/child.js
 !devtools/server/css-logic.js
 !devtools/server/main.js
+!devtools/server/websocket-server.js
 devtools/server/actors/**
 !devtools/server/actors/inspector.js
 !devtools/server/actors/highlighters/eye-dropper.js
