@@ -4,6 +4,8 @@
     <script>
       var textarea = document.querySelector("textarea");
       function start() {
+        textarea.selectionStart = 0;
+        textarea.selectionEnd = 0;
         textarea.focus();
       }
       function done() {

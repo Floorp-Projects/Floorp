@@ -248,6 +248,17 @@ LIRGenerator::visitNewTypedArray(MNewTypedArray* ins)
 }
 
 void
+LIRGenerator::visitNewTypedArrayDynamicLength(MNewTypedArrayDynamicLength* ins)
+{
+    MDefinition* length = ins->length();
+    MOZ_ASSERT(length->type() == MIRType::Int32);
+
+    LNewTypedArrayDynamicLength* lir = new(alloc()) LNewTypedArrayDynamicLength(useRegister(length), temp());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitNewObject(MNewObject* ins)
 {
     LNewObject* lir = new(alloc()) LNewObject(temp());

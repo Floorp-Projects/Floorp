@@ -2475,6 +2475,15 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
                                                     httpChannel, mozilla::net::RP_Default);
     }
 
+    // If the user hasn't overridden the Accept header, set it to */* as per spec
+    nsAutoCString acceptHeader;
+    GetAuthorRequestHeaderValue("accept", acceptHeader);
+    if (acceptHeader.IsVoid()) {
+      httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                    NS_LITERAL_CSTRING("*/*"),
+                                    false);
+    }
+
     // Some extensions override the http protocol handler and provide their own
     // implementation. The channels returned from that implementation doesn't
     // seem to always implement the nsIUploadChannel2 interface, presumably
@@ -3514,10 +3523,10 @@ XMLHttpRequestMainThread::ShouldBlockAuthPrompt()
   // Verify that it's ok to prompt for credentials here, per spec
   // http://xhr.spec.whatwg.org/#the-send%28%29-method
 
-  for (RequestHeader& requestHeader : mAuthorRequestHeaders) {
-    if (requestHeader.name.EqualsLiteral("authorization")) {
-      return true;
-    }
+  nsAutoCString contentType;
+  GetAuthorRequestHeaderValue("authorization", contentType);
+  if (!contentType.IsVoid()) {
+    return true;
   }
 
   nsCOMPtr<nsIURI> uri;

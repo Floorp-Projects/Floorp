@@ -11,7 +11,16 @@
      }
      </style>
   </head>
-  <body onload="document.getElementById('i').focus();">
+  <body onload="focusInput();">
+    <script>
+      function focusInput() {
+        var inp = document.getElementById('i');
+        inp.selectionStart = 0;
+        inp.selectionEnd = 0;
+        inp.focus();
+      }
+    </script>
+
     <a target="_blank" href="https://bugzil.la/1082486">Mozilla Bug 1082486</a>
 
     <!-- The caret will not be seen when the input is focused. -->
