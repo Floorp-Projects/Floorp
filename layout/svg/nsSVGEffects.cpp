@@ -395,9 +395,9 @@ nsSVGMaskProperty::nsSVGMaskProperty(nsIFrame* aFrame)
   const nsStyleSVGReset *svgReset = aFrame->StyleSVGReset();
 
   for (uint32_t i = 0; i < svgReset->mMask.mImageCount; i++) {
-    nsSVGPaintingProperty* prop =
-      new nsSVGPaintingProperty(svgReset->mMask.mLayers[i].mSourceURI, aFrame,
-                                false);
+    nsCOMPtr<nsIURI> maskUri = nsSVGEffects::GetMaskURI(aFrame, i);
+    nsSVGPaintingProperty* prop = new nsSVGPaintingProperty(maskUri, aFrame,
+                                                            false);
     mProperties.AppendElement(prop);
   }
 }
@@ -963,4 +963,14 @@ nsSVGEffects::GetPaintURI(nsIFrame* aFrame,
              nsStyleSVGPaintType::eStyleSVGPaintType_Server);
 
   return ResolveFragmentOrURL(aFrame, (svgStyle->*aPaint).mPaint.mPaintServer);
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetMaskURI(nsIFrame* aFrame, uint32_t aIndex)
+{
+  const nsStyleSVGReset* svgReset = aFrame->StyleSVGReset();
+  MOZ_ASSERT(svgReset->mMask.mLayers.Length() > aIndex);
+
+  return ResolveFragmentOrURL(aFrame,
+                              &svgReset->mMask.mLayers[aIndex].mSourceURI);
 }

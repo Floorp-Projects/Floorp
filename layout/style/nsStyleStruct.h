@@ -685,7 +685,7 @@ struct nsStyleImageLayers {
   friend struct Layer;
   struct Layer {
     nsStyleImage  mImage;         // [reset]
-    nsCOMPtr<nsIURI> mSourceURI;  // [reset]
+    FragmentOrURL mSourceURI;     // [reset]
                                   // mask-only property
                                   // This property is used for mask layer only.
                                   // For a background layer, it should always

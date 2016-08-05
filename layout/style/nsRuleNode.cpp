@@ -6657,18 +6657,18 @@ struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
 };
 
 template <>
-struct BackgroundItemComputer<nsCSSValueList, nsCOMPtr<nsIURI> >
+struct BackgroundItemComputer<nsCSSValueList, FragmentOrURL>
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
                            const nsCSSValueList* aSpecifiedValue,
-                           nsCOMPtr<nsIURI>& aComputedValue,
+                           FragmentOrURL& aComputedValue,
                            RuleNodeCacheConditions& aConditions)
   {
     if (eCSSUnit_Image == aSpecifiedValue->mValue.GetUnit() ||
         eCSSUnit_URL == aSpecifiedValue->mValue.GetUnit()) {
-      aComputedValue = aSpecifiedValue->mValue.GetURLValue();
+      aComputedValue.SetValue(&aSpecifiedValue->mValue);
     } else if (eCSSUnit_Null != aSpecifiedValue->mValue.GetUnit()) {
-      aComputedValue = nullptr;
+      aComputedValue.SetNull();
     }
   }
 };
@@ -10082,11 +10082,11 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
   // mask: none | <url>
   const nsCSSValue* maskValue = aRuleData->ValueForMask();
   if (eCSSUnit_URL == maskValue->GetUnit()) {
-    svgReset->mMask.mLayers[0].mSourceURI = maskValue->GetURLValue();
+    svgReset->mMask.mLayers[0].mSourceURI.SetValue(maskValue);
   } else if (eCSSUnit_None == maskValue->GetUnit() ||
              eCSSUnit_Initial == maskValue->GetUnit() ||
              eCSSUnit_Unset == maskValue->GetUnit()) {
-    svgReset->mMask.mLayers[0].mSourceURI = nullptr;
+    svgReset->mMask.mLayers[0].mSourceURI.SetNull();
   } else if (eCSSUnit_Inherit == maskValue->GetUnit()) {
     conditions.SetUncacheable();
     svgReset->mMask.mLayers[0].mSourceURI =
