@@ -315,7 +315,7 @@ public:
    * @return a weak pointer to the image associated with this decoder. Illegal
    * to call if this decoder is not associated with an image.
    */
-  RasterImage* GetImage() const { MOZ_ASSERT(mImage); return mImage.get(); }
+  NotNull<RasterImage*> GetImage() const { return WrapNotNull(mImage.get()); }
 
   /**
    * @return a possibly-null weak pointer to the image associated with this
