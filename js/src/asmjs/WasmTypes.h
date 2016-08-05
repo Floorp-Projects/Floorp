@@ -81,6 +81,7 @@ using mozilla::Some;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
+class Code;
 class Memory;
 class Module;
 class Instance;
