@@ -17,7 +17,7 @@ const {
   LEVELS,
   SEVERITY_LOG,
 } = require("../constants");
-const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 const { ConsoleMessage } = require("../types");

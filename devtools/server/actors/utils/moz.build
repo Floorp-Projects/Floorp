@@ -12,5 +12,7 @@ DevToolsModules(
     'map-uri-to-addon-id.js',
     'stack.js',
     'TabSources.js',
-    'walker-search.js'
+    'walker-search.js',
+    'webconsole-utils.js',
+    'webconsole-worker-utils.js',
 )

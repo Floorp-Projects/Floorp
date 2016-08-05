@@ -15,7 +15,7 @@ var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
-var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 var {Task} = require("devtools/shared/task");
 
 var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
@@ -24,7 +24,7 @@ var {DebuggerServer} = require("devtools/server/main");
 var {DebuggerClient, ObjectClient} = require("devtools/shared/client/main");
 
 var {ConsoleServiceListener, ConsoleAPIListener} =
-  require("devtools/shared/webconsole/utils");
+  require("devtools/server/actors/utils/webconsole-utils");
 
 function initCommon()
 {

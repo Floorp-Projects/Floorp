@@ -18,7 +18,7 @@ SimpleTest.waitForExplicitFinish();
 let gState;
 let tests;
 
-let {WebConsoleCommands} = require("devtools/shared/webconsole/utils");
+let {WebConsoleCommands} = require("devtools/server/actors/utils/webconsole-utils");
 
 function evaluateJS(input) {
   return new Promise((resolve) => gState.client.evaluateJS(input, resolve));

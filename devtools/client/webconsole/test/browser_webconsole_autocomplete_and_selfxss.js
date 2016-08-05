@@ -10,7 +10,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>test for bug 642615";
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
                                    "nsIClipboardHelper");
-var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 
 add_task(function* () {
   yield loadTab(TEST_URI);
