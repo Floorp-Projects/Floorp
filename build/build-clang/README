@@ -34,6 +34,7 @@ build-clang.py accepts a JSON config format with the following fields:
 * clang_repo: SVN path to the Clang repo.
 * compiler_repo: SVN path to the compiler-rt repo.
 * libcxx_repo: SVN path to the libcxx repo.
+* libcxxabi_repo: SVN path to the libcxxabi repo.
 * python_path: Path to the Python 2.7 installation on the machine building clang.
 * gcc_dir: Path to the gcc toolchain installation, only required on Linux.
 * cc: Path to the bootsraping C Compiler.
