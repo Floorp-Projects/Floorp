@@ -443,43 +443,6 @@ AndroidBridge::GetClipboardText(nsAString& aText)
     return !!text;
 }
 
-void
-AndroidBridge::ShowPersistentAlertNotification(const nsAString& aPersistentData,
-                                               const nsAString& aImageUrl,
-                                               const nsAString& aAlertTitle,
-                                               const nsAString& aAlertText,
-                                               const nsAString& aAlertCookie,
-                                               const nsAString& aAlertName,
-                                               nsIPrincipal* aPrincipal)
-{
-    nsAutoString host;
-    nsAlertsUtils::GetSourceHostPort(aPrincipal, host);
-
-    GeckoAppShell::ShowPersistentAlertNotificationWrapper
-        (aPersistentData, aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName, host);
-}
-
-void
-AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
-                                     const nsAString& aAlertTitle,
-                                     const nsAString& aAlertText,
-                                     const nsAString& aAlertCookie,
-                                     nsIObserver *aAlertListener,
-                                     const nsAString& aAlertName,
-                                     nsIPrincipal* aPrincipal)
-{
-    if (aAlertListener) {
-        // This will remove any observers already registered for this id
-        nsAppShell::PostEvent(AndroidGeckoEvent::MakeAddObserver(aAlertName, aAlertListener));
-    }
-
-    nsAutoString host;
-    nsAlertsUtils::GetSourceHostPort(aPrincipal, host);
-
-    GeckoAppShell::ShowAlertNotificationWrapper
-           (aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName, host);
-}
-
 int
 AndroidBridge::GetDPI()
 {
@@ -1658,90 +1621,6 @@ AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
 
     aResult = jstrSampleName->ToCString();
     return true;
-}
-
-static float
-GetScaleFactor(nsPresContext* aPresContext) {
-    nsIPresShell* presShell = aPresContext->PresShell();
-    LayoutDeviceToLayerScale cumulativeResolution(presShell->GetCumulativeResolution());
-    return cumulativeResolution.scale;
-}
-
-nsresult
-AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedViewRect, ByteBuffer::Param buffer,
-                                  float zoomFactor) {
-    nsresult rv;
-
-    if (!buffer)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr <nsIDOMWindowUtils> utils = do_GetInterface(window);
-    if (!utils)
-        return NS_ERROR_FAILURE;
-
-    JNIEnv* const env = jni::GetGeckoThreadEnv();
-
-    AutoLocalJNIFrame jniFrame(env, 0);
-
-    if (!window) {
-        return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(window);
-    RefPtr<nsPresContext> presContext;
-    nsIDocShell* docshell = win->GetDocShell();
-
-    if (docshell) {
-        docshell->GetPresContext(getter_AddRefs(presContext));
-    }
-
-    if (!presContext) {
-        return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr <nsIPresShell> presShell = presContext->PresShell();
-
-    float scaleFactor = GetScaleFactor(presContext) ;
-
-    nscolor bgColor = NS_RGB(255, 255, 255);
-    uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING | nsIPresShell::RENDER_DOCUMENT_RELATIVE);
-    nsRect r(presContext->DevPixelsToAppUnits(zoomedViewRect.x / scaleFactor),
-             presContext->DevPixelsToAppUnits(zoomedViewRect.y / scaleFactor ),
-             presContext->DevPixelsToAppUnits(zoomedViewRect.width / scaleFactor ),
-             presContext->DevPixelsToAppUnits(zoomedViewRect.height / scaleFactor ));
-
-    bool is24bit = (GetScreenDepth() == 24);
-    SurfaceFormat format = is24bit ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::R5G6B5_UINT16;
-    gfxImageFormat iFormat = gfx::SurfaceFormatToImageFormat(format);
-    uint32_t stride = gfxASurface::FormatStrideForWidth(iFormat, zoomedViewRect.width);
-
-    uint8_t* data = static_cast<uint8_t*>(buffer->Address());
-    if (!data) {
-        return NS_ERROR_FAILURE;
-    }
-
-    MOZ_ASSERT (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO),
-              "Need BackendType::CAIRO support");
-    RefPtr < DrawTarget > dt = Factory::CreateDrawTargetForData(
-        BackendType::CAIRO, data, IntSize(zoomedViewRect.width, zoomedViewRect.height), stride,
-        format);
-    if (!dt || !dt->IsValid()) {
-        ALOG_BRIDGE("Error creating DrawTarget");
-        return NS_ERROR_FAILURE;
-    }
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-    MOZ_ASSERT(context); // already checked the draw target above
-    context->SetMatrix(context->CurrentMatrix().Scale(zoomFactor, zoomFactor));
-
-    rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
-
-    if (is24bit) {
-        gfxUtils::ConvertBGRAtoRGBA(data, stride * zoomedViewRect.height);
-    }
-
-    LayerView::updateZoomedView(buffer);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
 }
 
 void

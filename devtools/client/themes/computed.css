@@ -64,7 +64,7 @@
 }
 
 .property-view {
-  padding: 2px 0 2px 17px;
+  padding: 2px 17px;
   display: flex;
   flex-wrap: wrap;
 }
@@ -133,7 +133,11 @@
 /* From skin */
 .expander {
   visibility: hidden;
-  margin-left: -12px !important;
+  margin-inline-start: -12px !important;
+}
+
+.expander:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 .expandable {
