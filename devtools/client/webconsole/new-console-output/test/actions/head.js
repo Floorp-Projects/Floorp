@@ -7,9 +7,10 @@ var { utils: Cu } = Components;
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-DevToolsUtils.testing = true;
-DevToolsUtils.dumpn.wantLogging = true;
-DevToolsUtils.dumpv.wantVerbose = false;
+var flags = require("devtools/shared/flags");
+flags.testing = true;
+flags.wantLogging = true;
+flags.wantVerbose = false;
 
 // @TODO consolidate once we have a shared head. See #16
 const testPackets = new Map();

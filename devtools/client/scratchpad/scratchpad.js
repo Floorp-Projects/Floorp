@@ -50,6 +50,7 @@ const TargetFactory = require("devtools/client/framework/target").TargetFactory;
 const EventEmitter = require("devtools/shared/event-emitter");
 const {DevToolsWorker} = require("devtools/shared/worker/worker");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 const promise = require("promise");
 const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
@@ -671,7 +672,7 @@ var Scratchpad = {
       this._prettyPrintWorker = new DevToolsWorker(
         "resource://devtools/server/actors/pretty-print-worker.js",
         { name: "pretty-print",
-          verbose: DevToolsUtils.dumpn.wantLogging }
+          verbose: flags.wantLogging }
       );
     }
     return this._prettyPrintWorker;

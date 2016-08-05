@@ -12,8 +12,8 @@ add_task(function* () {
   // TODO: This test tries to verify the normal behavior of the netmonitor and
   // therefore needs to avoid the explicit check for tests. Bug 1167188 will
   // allow us to remove this workaround.
-  let isTesting = DevToolsUtils.testing;
-  DevToolsUtils.testing = false;
+  let isTesting = flags.testing;
+  flags.testing = false;
 
   let tab = yield addTab(URL_ROOT + "doc_viewsource.html");
   let target = TargetFactory.forTab(tab);
@@ -29,5 +29,5 @@ add_task(function* () {
   yield gDevTools.closeToolbox(target);
   tab = target = toolbox = panel = null;
   gBrowser.removeCurrentTab();
-  DevToolsUtils.testing = isTesting;
+  flags.testing = isTesting;
 });

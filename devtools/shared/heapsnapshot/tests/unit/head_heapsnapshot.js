@@ -17,6 +17,7 @@ const { addDebuggerToGlobal } =
 const { Task } = require("devtools/shared/task");
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 const HeapAnalysesClient =
   require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 const Services = require("Services");
@@ -33,7 +34,7 @@ if (Services.appInfo &&
     Services.appInfo.processType == Services.appInfo.PROCESS_TYPE_DEFAULT) {
   Services.prefs.setBoolPref("devtools.debugger.log", true);
 }
-DevToolsUtils.dumpn.wantLogging = true;
+flags.wantLogging = true;
 
 const SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"]
   .createInstance(Ci.nsIPrincipal);

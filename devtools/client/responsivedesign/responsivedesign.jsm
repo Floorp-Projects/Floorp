@@ -14,6 +14,7 @@ var {TouchEventSimulator} = require("devtools/shared/touch/simulator");
 var {Task} = require("devtools/shared/task");
 var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var flags = require("devtools/shared/flags");
 var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
 var {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
@@ -225,7 +226,7 @@ ResponsiveUI.prototype = {
     this.mm.sendAsyncMessage("ResponsiveMode:Start", {
       requiresFloatingScrollbars,
       // Tests expect events on resize to yield on various size changes
-      notifyOnResize: DevToolsUtils.testing,
+      notifyOnResize: flags.testing,
     });
     yield started;
 
@@ -347,7 +348,7 @@ ResponsiveUI.prototype = {
 
     // Wait for resize message before stopping in the child when testing,
     // but only if we should expect to still get a message.
-    if (DevToolsUtils.testing && this.tab.linkedBrowser.messageManager) {
+    if (flags.testing && this.tab.linkedBrowser.messageManager) {
       yield this.waitForMessage("ResponsiveMode:OnContentResize");
     }
 

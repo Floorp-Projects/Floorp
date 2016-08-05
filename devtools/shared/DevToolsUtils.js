@@ -10,6 +10,7 @@ var { Ci, Cu, Cc, components } = require("chrome");
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
+var flags = require("./flags");
 
 loader.lazyRequireGetter(this, "FileUtils",
                          "resource://gre/modules/FileUtils.jsm", true);
@@ -30,7 +31,7 @@ exports.executeSoon = function executeSoon(aFn) {
     let executor;
     // Only enable async stack reporting when DEBUG_JS_MODULES is set
     // (customized local builds) to avoid a performance penalty.
-    if (AppConstants.DEBUG_JS_MODULES || exports.testing) {
+    if (AppConstants.DEBUG_JS_MODULES || flags.testing) {
       let stack = components.stack;
       executor = () => {
         Cu.callFunctionWithAsyncStack(aFn, stack, "DevToolsUtils.executeSoon");
@@ -234,27 +235,19 @@ exports.isSafeJSObject = function isSafeJSObject(aObj) {
 };
 
 exports.dumpn = function dumpn(str) {
-  if (exports.dumpn.wantLogging) {
+  if (flags.wantLogging) {
     dump("DBG-SERVER: " + str + "\n");
   }
 };
-
-// We want wantLogging to be writable. The exports object is frozen by the
-// loader, so define it on dumpn instead.
-exports.dumpn.wantLogging = false;
 
 /**
  * A verbose logger for low-level tracing.
  */
 exports.dumpv = function (msg) {
-  if (exports.dumpv.wantVerbose) {
+  if (flags.wantVerbose) {
     exports.dumpn(msg);
   }
 };
-
-// We want wantLogging to be writable. The exports object is frozen by the
-// loader, so define it on dumpn instead.
-exports.dumpv.wantVerbose = false;
 
 /**
  * Defines a getter on a specified object that will be created upon first use.
@@ -318,7 +311,7 @@ function reallyAssert(condition, message) {
  * Assertions are enabled when any of the following are true:
  *   - This is a DEBUG_JS_MODULES build
  *   - This is a DEBUG build
- *   - DevToolsUtils.testing is set to true
+ *   - flags.testing is set to true
  *
  * If assertions are enabled, then `condition` is checked and if false-y, the
  * assertion failure is logged and then an error is thrown.
@@ -326,7 +319,7 @@ function reallyAssert(condition, message) {
  * If assertions are not enabled, then this function is a no-op.
  */
 Object.defineProperty(exports, "assert", {
-  get: () => (AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES || this.testing)
+  get: () => (AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES || flags.testing)
     ? reallyAssert
     : exports.noop,
 });
@@ -576,93 +569,6 @@ if (!this.isWorker) {
 }
 
 /**
- * Returns a promise that is resolved or rejected when all promises have settled
- * (resolved or rejected).
- *
- * This differs from Promise.all, which will reject immediately after the first
- * rejection, instead of waiting for the remaining promises to settle.
- *
- * @param values
- *        Iterable of promises that may be pending, resolved, or rejected. When
- *        when all promises have settled (resolved or rejected), the returned
- *        promise will be resolved or rejected as well.
- *
- * @return A new promise that is fulfilled when all values have settled
- *         (resolved or rejected). Its resolution value will be an array of all
- *         resolved values in the given order, or undefined if values is an
- *         empty array. The reject reason will be forwarded from the first
- *         promise in the list of given promises to be rejected.
- */
-exports.settleAll = values => {
-  if (values === null || typeof (values[Symbol.iterator]) != "function") {
-    throw new Error("settleAll() expects an iterable.");
-  }
-
-  let deferred = defer();
-
-  values = Array.isArray(values) ? values : [...values];
-  let countdown = values.length;
-  let resolutionValues = new Array(countdown);
-  let rejectionValue;
-  let rejectionOccurred = false;
-
-  if (!countdown) {
-    deferred.resolve(resolutionValues);
-    return deferred.promise;
-  }
-
-  function checkForCompletion() {
-    if (--countdown > 0) {
-      return;
-    }
-    if (!rejectionOccurred) {
-      deferred.resolve(resolutionValues);
-    } else {
-      deferred.reject(rejectionValue);
-    }
-  }
-
-  for (let i = 0; i < values.length; i++) {
-    let index = i;
-    let value = values[i];
-    let resolver = result => {
-      resolutionValues[index] = result;
-      checkForCompletion();
-    };
-    let rejecter = error => {
-      if (!rejectionOccurred) {
-        rejectionValue = error;
-        rejectionOccurred = true;
-      }
-      checkForCompletion();
-    };
-
-    if (value && typeof (value.then) == "function") {
-      value.then(resolver, rejecter);
-    } else {
-      // Given value is not a promise, forward it as a resolution value.
-      resolver(value);
-    }
-  }
-
-  return deferred.promise;
-};
-
-/**
- * When the testing flag is set, various behaviors may be altered from
- * production mode, typically to enable easier testing or enhanced debugging.
- */
-var testing = false;
-Object.defineProperty(exports, "testing", {
-  get: function () {
-    return testing;
-  },
-  set: function (state) {
-    testing = state;
-  }
-});
-
-/**
  * Open the file at the given path for reading.
  *
  * @param {String} filePath
@@ -685,3 +591,29 @@ exports.openFileStream = function (filePath) {
     );
   });
 };
+
+/*
+ * All of the flags have been moved to a different module. Make sure
+ * nobody is accessing them anymore, and don't write new code using
+ * them. We can remove this code after a while.
+ */
+function errorOnFlag(exports, name) {
+  Object.defineProperty(exports, name, {
+    get: () => {
+      const msg = `Cannot get the flag ${name}. ` +
+            `Use the "devtools/shared/flags" module instead`;
+      console.error(msg);
+      throw new Error(msg);
+    },
+    set: () => {
+      const msg = `Cannot set the flag ${name}. ` +
+            `Use the "devtools/shared/flags" module instead`;
+      console.error(msg);
+      throw new Error(msg);
+    }
+  });
+}
+
+errorOnFlag(exports, "testing");
+errorOnFlag(exports, "wantLogging");
+errorOnFlag(exports, "wantVerbose");
