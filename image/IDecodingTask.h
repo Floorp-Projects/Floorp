@@ -14,12 +14,14 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 
+#include "imgFrame.h"
 #include "SourceBuffer.h"
 
 namespace mozilla {
 namespace image {
 
 class Decoder;
+class RasterImage;
 
 /// A priority hint that DecodePool can use when scheduling an IDecodingTask.
 enum class TaskPriority : uint8_t
@@ -63,7 +65,8 @@ class DecodingTask final : public IDecodingTask
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodingTask, override)
 
-  explicit DecodingTask(NotNull<Decoder*> aDecoder);
+  DecodingTask(NotNull<RasterImage*> aImage,
+               NotNull<Decoder*> aDecoder);
 
   void Run() override;
   bool ShouldPreferSyncRun() const override;
@@ -75,9 +78,11 @@ public:
   NotNull<Decoder*> GetDecoder() const override { return mDecoder; }
 
 private:
-  virtual ~DecodingTask() { }
+  virtual ~DecodingTask();
 
+  NotNull<RefPtr<RasterImage>> mImage;
   NotNull<RefPtr<Decoder>> mDecoder;
+  RefPtr<imgFrame> mSurface;
 };
 
 

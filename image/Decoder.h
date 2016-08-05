@@ -58,6 +58,17 @@ public:
   LexerResult Decode(IResumable* aOnResume = nullptr);
 
   /**
+   * Terminate this decoder in a failure state, just as if the decoder
+   * implementation had returned TerminalState::FAILURE from DoDecode().
+   *
+   * XXX(seth): This method should be removed ASAP; it exists only because
+   * RasterImage::FinalizeDecoder() requires an actual Decoder object as an
+   * argument, so we can't simply tell RasterImage a decode failed except via an
+   * intervening decoder. We'll fix this in bug 1291071.
+   */
+  LexerResult TerminateFailure();
+
+  /**
    * Given a maximum number of bytes we're willing to decode, @aByteLimit,
    * returns true if we should attempt to run this decoder synchronously.
    */
@@ -237,6 +248,14 @@ public:
    * happens.
    */
   bool WasAborted() const { return mDecodeAborted; }
+
+  /**
+   * Mark this decoder as aborted.
+   *
+   * XXX(seth): This is a temporary method which just exists to allow this patch
+   * series to be split into smaller patches. It'll be removed in a later patch.
+   */
+  void Abort() { mDecodeAborted = true; }
 
   enum DecodeStyle {
       PROGRESSIVE, // produce intermediate frames representing the partial
