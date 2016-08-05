@@ -543,3 +543,12 @@ endif
 
 libs:: classes.dex
 	$(INSTALL) classes.dex $(FINAL_TARGET)
+
+# Generate Java binder interfaces from AIDL files.
+aidl_src_path := $(srcdir)/aidl
+aidl_target_path := generated
+media_pkg := org/mozilla/gecko/media
+
+$(aidl_target_path)/$(media_pkg)/%.java:$(aidl_src_path)/$(media_pkg)/%.aidl
+	@echo "Processing AIDL: $< => $@"
+	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(aidl_src_path) -o$(aidl_target_path) $<
