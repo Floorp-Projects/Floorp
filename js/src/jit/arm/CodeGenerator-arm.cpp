@@ -2188,7 +2188,7 @@ CodeGeneratorARM::emitWasmCall(LWasmCallBase* ins)
 {
     MWasmCall* mir = ins->mir();
 
-    if (UseHardFpABI() || mir->callee().which() != MWasmCall::Callee::Builtin) {
+    if (UseHardFpABI() || mir->callee().which() != wasm::CalleeDesc::Builtin) {
         emitWasmCallBase(ins);
         return;
     }

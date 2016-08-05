@@ -1040,6 +1040,123 @@ enum ModuleKind
     AsmJS
 };
 
+// TableDesc describes a table as well as the offset of the table's base pointer
+// in global memory. Currently, wasm only has "any function" and asm.js only
+// "typed function".
+
+enum class TableKind
+{
+    AnyFunction,
+    TypedFunction
+};
+
+struct TableDesc
+{
+    TableKind kind;
+    bool external;
+    uint32_t globalDataOffset;
+    uint32_t initial;
+    uint32_t maximum;
+
+    TableDesc() { PodZero(this); }
+};
+
+WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)
+
+// CalleeDesc describes how to compile one of the variety of asm.js/wasm calls.
+// This is hoisted into WasmTypes.h for sharing between Ion and Baseline.
+
+class CalleeDesc
+{
+  public:
+    enum Which { Internal, Import, WasmTable, AsmJSTable, Builtin };
+
+  private:
+    Which which_;
+    union U {
+        U() {}
+        uint32_t internalFuncIndex_;
+        struct {
+            uint32_t globalDataOffset_;
+            uint32_t tlsStackOffset_;
+        } import;
+        struct {
+            TableDesc desc_;
+            SigIdDesc sigId_;
+        } table;
+        SymbolicAddress builtin_;
+    } u;
+
+  public:
+    CalleeDesc() {}
+    static CalleeDesc internal(uint32_t callee) {
+        CalleeDesc c;
+        c.which_ = Internal;
+        c.u.internalFuncIndex_ = callee;
+        return c;
+    }
+    static CalleeDesc import(uint32_t globalDataOffset, uint32_t tlsStackOffset) {
+        CalleeDesc c;
+        c.which_ = Import;
+        c.u.import.globalDataOffset_ = globalDataOffset;
+        c.u.import.tlsStackOffset_ = tlsStackOffset;
+        return c;
+    }
+    static CalleeDesc wasmTable(const TableDesc& desc, SigIdDesc sigId) {
+        CalleeDesc c;
+        c.which_ = WasmTable;
+        c.u.table.desc_ = desc;
+        c.u.table.sigId_ = sigId;
+        return c;
+    }
+    static CalleeDesc asmJSTable(const TableDesc& desc) {
+        CalleeDesc c;
+        c.which_ = AsmJSTable;
+        c.u.table.desc_ = desc;
+        return c;
+    }
+    static CalleeDesc builtin(SymbolicAddress callee) {
+        CalleeDesc c;
+        c.which_ = Builtin;
+        c.u.builtin_ = callee;
+        return c;
+    }
+    Which which() const {
+        return which_;
+    }
+    uint32_t internalFuncIndex() const {
+        MOZ_ASSERT(which_ == Internal);
+        return u.internalFuncIndex_;
+    }
+    uint32_t importGlobalDataOffset() const {
+        MOZ_ASSERT(which_ == Import);
+        return u.import.globalDataOffset_;
+    }
+    uint32_t importTlsStackOffset() const {
+        MOZ_ASSERT(which_ == Import);
+        return u.import.tlsStackOffset_;
+    }
+    bool isTable() const {
+        return which_ == WasmTable || which_ == AsmJSTable;
+    }
+    uint32_t tableGlobalDataOffset() const {
+        MOZ_ASSERT(isTable());
+        return u.table.desc_.globalDataOffset;
+    }
+    uint32_t wasmTableLength() const {
+        MOZ_ASSERT(which_ == WasmTable);
+        return u.table.desc_.initial;
+    }
+    SigIdDesc wasmTableSigId() const {
+        MOZ_ASSERT(which_ == WasmTable);
+        return u.table.sigId_;
+    }
+    SymbolicAddress builtin() const {
+        MOZ_ASSERT(which_ == Builtin);
+        return u.builtin_;
+    }
+};
+
 // ExportArg holds the unboxed operands to the wasm entry trampoline which can
 // be called through an ExportFuncPtr.
 
