@@ -1026,15 +1026,15 @@ var DebuggerServer = {
 
     let actor, childTransport;
     let prefix = connection.allocID("child");
-    let netMonitor = null;
+    // Compute the same prefix that's used by DebuggerServerConnection
+    let connPrefix = prefix + "/";
 
     // provides hook to actor modules that need to exchange messages
     // between e10s parent and child processes
     let onSetupInParent = function (msg) {
       // We may have multiple connectToChild instance running for the same tab
-      // and need to filter the messages. Also the DebuggerServerConnection's
-      // prefix has an additional '/' and the end, so use `includes`.
-      if (!msg.json.prefix.includes(prefix)) {
+      // and need to filter the messages.
+      if (msg.json.prefix != connPrefix) {
         return false;
       }
 
@@ -1049,7 +1049,7 @@ var DebuggerServer = {
           return false;
         }
 
-        m[setupParent]({ mm, prefix });
+        m[setupParent]({ mm, prefix: connPrefix });
 
         return true;
       } catch (e) {
@@ -1081,10 +1081,6 @@ var DebuggerServer = {
       dumpn("establishing forwarding for app with prefix " + prefix);
 
       actor = msg.json.actor;
-
-      let { NetworkMonitorManager } = require("devtools/shared/webconsole/network-monitor");
-      netMonitor = new NetworkMonitorManager(mm, actor.actor);
-
       deferred.resolve(actor);
     }).bind(this);
 
@@ -1108,7 +1104,8 @@ var DebuggerServer = {
     let destroy = DevToolsUtils.makeInfallible(function () {
       // provides hook to actor modules that need to exchange messages
       // between e10s parent and child processes
-      DebuggerServer.emit("disconnected-from-child:" + prefix, { mm, prefix });
+      DebuggerServer.emit("disconnected-from-child:" + connPrefix,
+                          { mm, prefix: connPrefix });
 
       if (childTransport) {
         // If we have a child transport, the actor has already
@@ -1137,11 +1134,6 @@ var DebuggerServer = {
         // So ensure telling the client that the related actor is detached.
         connection.send({ from: actor.actor, type: "tabDetached" });
         actor = null;
-      }
-
-      if (netMonitor) {
-        netMonitor.destroy();
-        netMonitor = null;
       }
 
       if (onDestroy) {
