@@ -181,6 +181,15 @@ Tools.jsdebugger = {
   }
 };
 
+if (Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
+  const NewDebuggerPanel = require("devtools/client/debugger/new/panel").DebuggerPanel;
+
+  Tools.jsdebugger.url = "chrome://devtools/content/debugger/new/index.html";
+  Tools.jsdebugger.build = function (iframeWindow, toolbox) {
+    return new NewDebuggerPanel(iframeWindow, toolbox);
+  };
+}
+
 Tools.styleEditor = {
   id: "styleeditor",
   key: l10n("open.commandkey", styleEditorStrings),
