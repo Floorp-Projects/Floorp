@@ -16,13 +16,23 @@ new Promise((res, rej)=>rej('rejection'))
   .then(val=>results.push('then after catch with val: ' + val),
         val=>{throw new Error("mustn't be called")});
 
+new Promise((res, rej)=> {res('result');  rej('rejection'); })
+  .catch(val=>{throw new Error("mustn't be called");})
+  .then(val=>results.push('then after resolve+reject with val: ' + val),
+        val=>{throw new Error("mustn't be called")});
+
+new Promise((res, rej)=> { rej('rejection'); res('result'); })
+  .catch(val=>{results.push('catch after reject+resolve with val: ' + val);})
+
 drainJobQueue();
 
-assertEq(results.length, 4);
+assertEq(results.length, 6);
 assertEq(results[0], 'then result');
 assertEq(results[1], 'catch rejection');
-assertEq(results[2], 'chained then with val: first then rval');
-assertEq(results[3], 'then after catch with val: 2');
+assertEq(results[2], 'catch after reject+resolve with val: rejection');
+assertEq(results[3], 'chained then with val: first then rval');
+assertEq(results[4], 'then after catch with val: 2');
+assertEq(results[5], 'then after resolve+reject with val: result');
 
 function callback() {}
 

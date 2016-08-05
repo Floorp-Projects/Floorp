@@ -17,168 +17,14 @@ function PromiseReactionRecord(promise, resolve, reject, fulfillHandler, rejectH
 
 MakeConstructible(PromiseReactionRecord, PromiseReactionRecordProto);
 
-// ES6, 25.4.1.3.
-function CreateResolvingFunctions(promise) {
-    // The callbacks created here can deal with Promises wrapped in cross-
-    // compartment wrappers. That's required because in some circumstances,
-    // they're created in a higher-privileged compartment from the Promise,
-    // so they can be invoked seamlessly by code in that compartment.
-    //
-    // See the comment in PromiseConstructor (in builtin/Promise.cpp) for more
-    // details.
-    let unwrap = false;
-    if (!IsPromise(promise)) {
-        assert(IsWrappedPromise(promise),
-               "CreateResolvingFunctions expects arg0 to be a - maybe wrapped - promise");
-        unwrap = true;
-    }
-
-    // Step 1.
-    let alreadyResolved = false;
-
-    // Steps 2-4.
-    // ES6, 25.4.1.3.2. Inlined here so we can use an upvar instead of a slot to
-    // store promise and alreadyResolved, and share the latter with reject below.
-    function resolve(resolution) {
-        // Steps 1-3 (implicit).
-
-        // Step 4.
-        if (alreadyResolved)
-            return undefined;
-
-        // Step 5.
-        alreadyResolved = true;
-
-        // Step 6.
-        // We know |promise| is an object, so using strict equality instead of
-        // SameValue is fine.
-        if (resolution === promise) {
-            // Step 6.a.
-            let selfResolutionError = GetTypeError(JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF);
-
-            // Step 6.b.
-            if (unwrap) {
-                return RejectUnwrappedPromise(promise, selfResolutionError);
-            }
-            return RejectPromise(promise, selfResolutionError);
-        }
-
-        // Step 7.
-        if (!IsObject(resolution)) {
-            if (unwrap) {
-                return callFunction(CallPromiseMethodIfWrapped, promise, resolution,
-                                    "FulfillUnwrappedPromise");
-            }
-            return FulfillPromise(promise, resolution);
-        }
-
-        // Steps 8-9.
-        let then;
-        try {
-            then = resolution.then;
-        } catch (e) {
-            if (unwrap) {
-                return RejectUnwrappedPromise(promise, e);
-            }
-            return RejectPromise(promise, e);
-        }
-
-        // Step 10 (implicit).
-
-        // Step 11.
-        if (!IsCallable(then)) {
-            if (unwrap) {
-                return callFunction(CallPromiseMethodIfWrapped, promise, resolution,
-                                    "FulfillUnwrappedPromise");
-            }
-            return FulfillPromise(promise, resolution);
-        }
-
-        // Step 12.
-        _EnqueuePromiseResolveThenableJob(promise, resolution, then);
-
-        // Step 13.
-        return undefined;
-    }
-
-    // Steps 5-7.
-    // ES6, 25.4.1.3.2.
-    function reject(reason) {
-        // Steps 1-3 (implicit).
-
-        // Step 4.
-        if (alreadyResolved)
-            return undefined;
-
-        // Step 5.
-        alreadyResolved = true;
-
-        // Step 6.
-        if (unwrap) {
-            return RejectUnwrappedPromise(promise, reason);
-        }
-        return RejectPromise(promise, reason);
-    }
-
-    // Return an array instead of an object with resolve/reject properties
-    // to make value extraction from C++ easier.
-    return [resolve, reject];
-}
-
-// ES6, 25.4.1.4.
-function FulfillPromise(promise, value) {
-    return ResolvePromise(promise, value, PROMISE_STATE_FULFILLED);
-}
-function FulfillUnwrappedPromise(value) {
-    return ResolvePromise(this, value, PROMISE_STATE_FULFILLED);
-}
-
-// Commoned-out implementation of 25.4.1.4. and 25.4.1.7.
-// ES2016 February 12 draft.
-function ResolvePromise(promise, valueOrReason, state) {
-    // Step 1.
-    assert(GetPromiseState(promise) === PROMISE_STATE_PENDING,
-           "Can't resolve non-pending promise");
-    assert(state >= PROMISE_STATE_FULFILLED && state <= PROMISE_STATE_REJECTED,
-           `Invalid Promise resolution state <${state}>`);
-
-    // Step 2.
-    // We only have one list of reactions for both resolution types. So
-    // instead of getting the right list of reactions, we determine the
-    // resolution type to retrieve the right information from the
-    // reaction records.
-    var reactions = UnsafeGetReservedSlot(promise, PROMISE_REACTIONS_SLOT);
-    let jobType = state === PROMISE_STATE_FULFILLED
-                  ? PROMISE_JOB_TYPE_FULFILL
-                  : PROMISE_JOB_TYPE_REJECT;
-
-    // Step 3.
-    UnsafeSetReservedSlot(promise, PROMISE_RESULT_SLOT, valueOrReason);
-
-    // Steps 4-5.
-    UnsafeSetReservedSlot(promise, PROMISE_REACTIONS_SLOT, null);
-
-    // Step 6.
-    UnsafeSetReservedSlot(promise, PROMISE_STATE_SLOT, state);
-
-    // Also null out the resolve/reject functions so they can be GC'd.
-    UnsafeSetReservedSlot(promise, PROMISE_RESOLVE_FUNCTION_SLOT, null);
-    UnsafeSetReservedSlot(promise, PROMISE_REJECT_FUNCTION_SLOT, null);
-
-    // Now that everything else is done, do the things the debugger needs.
-    // Step 7 of RejectPromise implemented in the debugger intrinsic.
-    _dbg_onPromiseSettled(promise);
-
-    // Step 7 of FulfillPromise.
-    // Step 8 of RejectPromise.
-    if (reactions)
-        TriggerPromiseReactions(reactions, jobType, valueOrReason);
-}
-
 // Used to verify that an object is a PromiseCapability record.
 var PromiseCapabilityRecordProto = {__proto__: null};
 
-// ES6, 25.4.1.5.
+// ES2016, 25.4.1.3, implemented in Promise.cpp.
+
+// ES2016, 25.4.1.4, implemented in Promise.cpp.
+
+// ES2016, 25.4.1.5.
 // Creates PromiseCapability records, see 25.4.1.1.
 function NewPromiseCapability(C) {
     // Steps 1-2.
@@ -222,22 +68,13 @@ function NewPromiseCapability(C) {
     };
 }
 
-// ES6, 25.4.1.6. is implemented as an intrinsic in SelfHosting.cpp.
+// ES2016, 25.4.1.6, implemented in SelfHosting.cpp.
 
-// ES2016, February 12 draft, 25.4.1.7.
-function RejectPromise(promise, reason) {
-    return ResolvePromise(promise, reason, PROMISE_STATE_REJECTED);
-}
+// ES2016, 25.4.1.7, implemented in Promise.cpp.
 
-// ES6, 25.4.1.8.
-function TriggerPromiseReactions(reactions, jobType, argument) {
-    // Step 1.
-    for (var i = 0, len = reactions.length; i < len; i++)
-        EnqueuePromiseReactionJob(reactions[i], jobType, argument);
-    // Step 2 (implicit).
-}
+// ES2016, 25.4.1.8, implemented in Promise.cpp.
 
-// ES2016, February 12 draft 25.4.1.9, implemented in SelfHosting.cpp.
+// ES2016, 25.4.1.9, implemented in SelfHosting.cpp.
 
 // ES6, 25.4.2.1.
 function EnqueuePromiseReactionJob(reaction, jobType, argument) {
@@ -257,7 +94,7 @@ function EnqueuePromiseReactionJob(reaction, jobType, argument) {
 
 // ES6, 25.4.3.1. (Implemented in C++).
 
-// ES7 2016-01-21 draft, 25.4.4.1.
+// ES2016, 25.4.4.1.
 function Promise_static_all(iterable) {
     // Step 1.
     let C = this;
@@ -477,7 +314,7 @@ function CreatePromiseAllResolveElementFunction(index, values, promiseCapability
     };
 }
 
-// ES7, 2016-01-21 draft, 25.4.4.3.
+// ES2016, 25.4.4.3.
 function Promise_static_race(iterable) {
     // Step 1.
     let C = this;
@@ -515,7 +352,7 @@ function Promise_static_race(iterable) {
     }
 }
 
-// ES7, 2016-01-21 draft, 25.4.4.3.1.
+// ES2016, 25.4.4.3.1.
 function PerformPromiseRace(iteratorRecord, resultCapability, C) {
     assert(IsConstructor(C), "PerformPromiseRace called with non-constructor");
     assert(IsPromiseCapability(resultCapability), "Invalid promise capability record");
@@ -700,7 +537,7 @@ function Promise_static_resolve(x) {
     return promiseCapability.promise;
 }
 
-//ES6, 25.4.4.6.
+// ES6, 25.4.4.6.
 function Promise_static_get_species() {
     // Step 1.
     return this;
@@ -869,7 +706,7 @@ function UnwrappedPerformPromiseThen(fulfilledHandler, rejectedHandler, promise,
                               resultCapability);
 }
 
-// ES2016, March 1, 2016 draft, 25.4.5.3.1.
+// ES2016, 25.4.5.3.1.
 function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
     // Step 1.
     assert(IsPromise(promise), "Can't call PerformPromiseThen on non-Promise objects");
