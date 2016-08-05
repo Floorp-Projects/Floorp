@@ -82,9 +82,6 @@ avcodec_chroma_pos_to_enum
 avcodec_close
 avcodec_configuration
 avcodec_copy_context
-avcodec_dct_alloc
-avcodec_dct_get_class
-avcodec_dct_init
 avcodec_decode_audio4
 avcodec_decode_subtitle2
 avcodec_decode_video2

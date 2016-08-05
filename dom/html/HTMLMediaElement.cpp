@@ -1212,7 +1212,7 @@ void HTMLMediaElement::SelectResource()
       mMediaSource = mSrcMediaSource;
       UpdatePreloadAction();
       if (mPreloadAction == HTMLMediaElement::PRELOAD_NONE &&
-          !IsMediaStreamURI(mLoadingSrc)) {
+          !IsMediaStreamURI(mLoadingSrc) && !mMediaSource) {
         // preload:none media, suspend the load here before we make any
         // network requests.
         SuspendLoad();
@@ -1367,7 +1367,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
                  "Network state should be loading");
 
     if (mPreloadAction == HTMLMediaElement::PRELOAD_NONE &&
-        !IsMediaStreamURI(mLoadingSrc)) {
+        !IsMediaStreamURI(mLoadingSrc) && !mMediaSource) {
       // preload:none media, suspend the load here before we make any
       // network requests.
       SuspendLoad();

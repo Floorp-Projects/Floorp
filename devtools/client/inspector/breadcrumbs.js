@@ -22,10 +22,8 @@ const MAX_LABEL_LENGTH = 40;
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const SCROLL_REPEAT_MS = 100;
 
-loader.lazyRequireGetter(this, "EventEmitter",
-                         "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "KeyShortcuts",
-                         "devtools/client/shared/key-shortcuts", true);
+const EventEmitter = require("devtools/shared/event-emitter");
+const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
 /**
  * Component to replicate functionality of XUL arrowscrollbox

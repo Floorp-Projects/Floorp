@@ -146,6 +146,7 @@ MediaDecoder::ResourceCallback::Connect(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mDecoder = aDecoder;
+  mTimer = do_CreateInstance("@mozilla.org/timer;1");
 }
 
 void
@@ -153,6 +154,8 @@ MediaDecoder::ResourceCallback::Disconnect()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mDecoder = nullptr;
+  mTimer->Cancel();
+  mTimer = nullptr;
 }
 
 MediaDecoderOwner*
@@ -217,13 +220,30 @@ MediaDecoder::ResourceCallback::NotifyDecodeError()
   AbstractThread::MainThread()->Dispatch(r.forget());
 }
 
+/* static */ void
+MediaDecoder::ResourceCallback::TimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ResourceCallback* thiz = static_cast<ResourceCallback*>(aClosure);
+  MOZ_ASSERT(thiz->mDecoder);
+  thiz->mDecoder->NotifyDataArrived();
+  thiz->mTimerArmed = false;
+}
+
 void
 MediaDecoder::ResourceCallback::NotifyDataArrived()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    mDecoder->NotifyDataArrived();
+  if (!mDecoder || mTimerArmed) {
+    return;
   }
+  // In situations where these notifications come from stochastic network
+  // activity, we can save significant computation by throttling the
+  // calls to MediaDecoder::NotifyDataArrived() which will update the buffer
+  // ranges of the reader.
+  mTimerArmed = true;
+  mTimer->InitWithFuncCallback(
+    TimerCallback, this, sDelay, nsITimer::TYPE_ONE_SHOT);
 }
 
 void
