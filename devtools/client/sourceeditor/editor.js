@@ -6,10 +6,6 @@
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
-const {Cc, Ci} = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
-
 const {
   EXPAND_TAB,
   TAB_SIZE,
@@ -113,8 +109,6 @@ const CM_MAPPING = [
   "getScrollInfo",
   "getViewport"
 ];
-
-const { cssProperties, cssValues, cssColors } = getCSSKeywords();
 
 const editors = new WeakMap();
 
@@ -240,6 +234,11 @@ function Editor(config) {
     this.config.externalScripts = [];
   }
 
+  // Ensure that autocompletion has cssProperties if it's passed in via the options.
+  if (this.config.cssProperties) {
+    this.config.autocompleteOpts.cssProperties = this.config.cssProperties;
+  }
+
   events.decorate(this);
 }
 
@@ -288,21 +287,35 @@ Editor.prototype = {
           Services.scriptloader.loadSubScript(url, win, "utf8");
         }
       });
-      // Replace the propertyKeywords, colorKeywords and valueKeywords
-      // properties of the CSS MIME type with the values provided by Gecko.
-      let cssSpec = win.CodeMirror.resolveMode("text/css");
-      cssSpec.propertyKeywords = cssProperties;
-      cssSpec.colorKeywords = cssColors;
-      cssSpec.valueKeywords = cssValues;
-      win.CodeMirror.defineMIME("text/css", cssSpec);
+      if (this.config.cssProperties) {
+        // Replace the propertyKeywords, colorKeywords and valueKeywords
+        // properties of the CSS MIME type with the values provided by the CSS properties
+        // database.
 
-      let scssSpec = win.CodeMirror.resolveMode("text/x-scss");
-      scssSpec.propertyKeywords = cssProperties;
-      scssSpec.colorKeywords = cssColors;
-      scssSpec.valueKeywords = cssValues;
-      win.CodeMirror.defineMIME("text/x-scss", scssSpec);
+        const {
+          propertyKeywords,
+          colorKeywords,
+          valueKeywords
+        } = getCSSKeywords(this.config.cssProperties);
 
-      win.CodeMirror.commands.save = () => this.emit("saveRequested");
+        let cssSpec = win.CodeMirror.resolveMode("text/css");
+        cssSpec.propertyKeywords = propertyKeywords;
+        cssSpec.colorKeywords = colorKeywords;
+        cssSpec.valueKeywords = valueKeywords;
+        win.CodeMirror.defineMIME("text/css", cssSpec);
+
+        let scssSpec = win.CodeMirror.resolveMode("text/x-scss");
+        scssSpec.propertyKeywords = propertyKeywords;
+        scssSpec.colorKeywords = colorKeywords;
+        scssSpec.valueKeywords = valueKeywords;
+        win.CodeMirror.defineMIME("text/x-scss", scssSpec);
+
+        win.CodeMirror.commands.save = () => this.emit("saveRequested");
+      } else if (this.config.mode === Editor.modes.css) {
+        console.warn("The CSS properties are defaulting to the those provided by " +
+                     "CodeMirror as no CSS database was provided for CSS values " +
+                     "specific to the target platform.");
+      }
 
       // Create a CodeMirror instance add support for context menus,
       // overwrite the default controller (otherwise items in the top and
@@ -517,6 +530,12 @@ Editor.prototype = {
    * See Editor.modes for the list of all supported modes.
    */
   setMode: function (value) {
+    if (value === Editor.modes.css && !this.config.cssProperties) {
+      console.warn("Switching to CSS mode in the editor, but no CSS properties " +
+                   "database was provided to CodeMirror. CodeMirror will default" +
+                   "to its built-in values, and not use the values specific to the " +
+                   "target platform.");
+    }
     this.setOption("mode", value);
 
     // If autocomplete was set up and the mode is changing, then
@@ -1279,12 +1298,14 @@ Editor.keyFor = function (cmd, opts = { noaccel: false }) {
   return opts.noaccel ? key : Editor.accel(key);
 };
 
-// Since Gecko already provide complete and up to date list of CSS property
-// names, values and color names, we compute them so that they can replace
-// the ones used in CodeMirror while initiating an editor object. This is done
-// here instead of the file codemirror/css.js so as to leave that file untouched
-// and easily upgradable.
-function getCSSKeywords() {
+/**
+ * We compute the CSS property names, values, and color names to be used with
+ * CodeMirror to more closely reflect what is supported by the target platform.
+ * The database is used to replace the values used in CodeMirror while initiating
+ * an editor object. This is done here instead of the file codemirror/css.js so
+ * as to leave that file untouched and easily upgradable.
+ */
+function getCSSKeywords(cssProperties) {
   function keySet(array) {
     let keys = {};
     for (let i = 0; i < array.length; ++i) {
@@ -1293,26 +1314,26 @@ function getCSSKeywords() {
     return keys;
   }
 
-  let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
-                   .getService(Ci.inIDOMUtils);
-  let properties = domUtils.getCSSPropertyNames(domUtils.INCLUDE_ALIASES);
-  let colors = {};
-  let values = {};
-  properties.forEach(property => {
+  let propertyKeywords = cssProperties.getNames();
+  let colorKeywords = {};
+  let valueKeywords = {};
+
+  propertyKeywords.forEach(property => {
     if (property.includes("color")) {
-      domUtils.getCSSValuesForProperty(property).forEach(value => {
-        colors[value] = true;
+      cssProperties.getValues(property).forEach(value => {
+        colorKeywords[value] = true;
       });
     } else {
-      domUtils.getCSSValuesForProperty(property).forEach(value => {
-        values[value] = true;
+      cssProperties.getValues(property).forEach(value => {
+        valueKeywords[value] = true;
       });
     }
   });
+
   return {
-    cssProperties: keySet(properties),
-    cssValues: values,
-    cssColors: colors
+    propertyKeywords: keySet(propertyKeywords),
+    colorKeywords: colorKeywords,
+    valueKeywords: valueKeywords
   };
 }
 
