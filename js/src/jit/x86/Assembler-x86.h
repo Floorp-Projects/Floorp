@@ -87,7 +87,8 @@ class ABIArgGenerator
 };
 
 static constexpr Register ABINonArgReg0 = eax;
-static constexpr Register ABINonArgReg1 = ecx;
+static constexpr Register ABINonArgReg1 = ebx;
+static constexpr Register ABINonArgReg2 = ecx;
 
 // Note: these three registers are all guaranteed to be different
 static constexpr Register ABINonArgReturnReg0 = ecx;
@@ -96,8 +97,9 @@ static constexpr Register ABINonVolatileReg = ebx;
 
 // Registers used for asm.js/wasm table calls. These registers must be disjoint
 // from the ABI argument registers and from each other.
-static constexpr Register WasmTableCallPtrReg = ABINonArgReg0;
+static constexpr Register WasmTableCallScratchReg = ABINonArgReg0;
 static constexpr Register WasmTableCallSigReg = ABINonArgReg1;
+static constexpr Register WasmTableCallIndexReg = ABINonArgReg2;
 
 static constexpr Register OsrFrameReg = edx;
 static constexpr Register PreBarrierReg = edx;
