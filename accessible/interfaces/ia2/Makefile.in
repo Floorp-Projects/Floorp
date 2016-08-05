@@ -4,7 +4,9 @@
 
 IA2DIR        = $(topsrcdir)/other-licenses/ia2
 
-GARBAGE       += $(MIDL_GENERATED_FILES)
+GARBAGE       += $(MIDL_GENERATED_FILES) \
+                 $(MIDL_UNUSED_GENERATED_FILES) \
+                 $(NULL)
 
 # Please keep this list in sync with the moz.build file until the rest of this
 # Makefile is ported over.
@@ -39,7 +41,11 @@ MIDL_ENUMS = \
   IA2CommonTypes.idl \
   $(NULL)
 
-CSRCS	= \
+MIDL_LIBRARIES = \
+  IA2Typelib.idl \
+  $(NULL)
+
+CSRCS = \
   dlldata.c \
   $(MIDL_INTERFACES:%.idl=%_p.c) \
   $(MIDL_INTERFACES:%.idl=%_i.c) \
@@ -51,6 +57,15 @@ MIDL_GENERATED_FILES = \
   $(MIDL_INTERFACES:%.idl=%_i.c) \
   $(MIDL_INTERFACES:%.idl=%.h) \
   $(MIDL_ENUMS:%.idl=%.h) \
+  $(NULL)
+
+# We want to generate a .tlb from MIDL_LIBRARIES, but midl also generates
+# a bunch of .h and .c files that we're not interested in.
+MIDL_UNUSED_GENERATED_FILES = \
+  $(MIDL_LIBRARIES:%.idl=%_p.c) \
+  $(MIDL_LIBRARIES:%.idl=%_i.c) \
+  $(MIDL_LIBRARIES:%.idl=%.h) \
+  $(MIDL_LIBRARIES:%.idl=%.c) \
   $(NULL)
 
 EMBED_MANIFEST_AT = 2
@@ -68,7 +83,7 @@ missing:=$(strip $(foreach onefile,$(strip $(subst dlldata.c,,$(MIDL_GENERATED_F
 
 missing_base:=$(sort $(basename $(subst _p.c,,$(subst _i.c,,$(missing)))))
 
-$(MIDL_GENERATED_FILES) : midl_done
+$(MIDL_GENERATED_FILES) : midl_done typelib_done
 
 ifneq ("$(missing)","")
 midl_done : FORCE
@@ -80,6 +95,14 @@ midl_done : $(addprefix $(IA2DIR)/,$(MIDL_INTERFACES) $(MIDL_ENUMS))
 	done
 	touch $@
 
-# This marshall dll is also registered in the installer
+# The intent of this rule is to generate the .tlb file that is referenced in the
+# .rc file for IA2Marshal.dll
+typelib_done : $(MIDL_LIBRARIES)
+	for idl in $?; do \
+		$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -D _MIDL_DECLARE_WIREM_HANDLE -dlldata `basename $$idl .idl`.c -Oicf $$idl; \
+	done
+	touch $@
+
+# This marshall dll is NOT registered in the installer (agreed to by IA2 participants)
 register::
 	regsvr32 -s $(DIST)/bin/$(SHARED_LIBRARY)

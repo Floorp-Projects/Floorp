@@ -13,6 +13,8 @@
 #include "nsCOMPtr.h"
 #include "ImageContainer.h"
 #include "MediaSegment.h"
+#include "MediaStreamVideoSink.h"
+#include "VideoSegment.h"
 
 namespace mozilla {
 
@@ -29,34 +31,38 @@ class HTMLMediaElement;
  * element itself ... well, maybe we could, but it could be risky and/or
  * confusing.
  */
-class VideoFrameContainer {
-  ~VideoFrameContainer();
+class VideoFrameContainer : public MediaStreamVideoSink {
+  virtual ~VideoFrameContainer();
 
 public:
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameContainer)
-
   VideoFrameContainer(dom::HTMLMediaElement* aElement,
                       already_AddRefed<ImageContainer> aContainer);
 
   // Call on any thread
+  virtual void SetCurrentFrames(const VideoSegment& aSegment) override;
+  virtual void ClearFrames() override;
+  void SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Image* aImage,
+                       const TimeStamp& aTargetTime);
   // Returns the last principalHandle we notified mElement about.
   PrincipalHandle GetLastPrincipalHandle();
+  PrincipalHandle GetLastPrincipalHandleLocked();
   // We will notify mElement that aPrincipalHandle has been applied when all
   // FrameIDs prior to aFrameID have been flushed out.
   // aFrameID is ignored if aPrincipalHandle already is our pending principalHandle.
   void UpdatePrincipalHandleForFrameID(const PrincipalHandle& aPrincipalHandle,
                                        const ImageContainer::FrameID& aFrameID);
-  void SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Image* aImage,
-                       const TimeStamp& aTargetTime);
+  void UpdatePrincipalHandleForFrameIDLocked(const PrincipalHandle& aPrincipalHandle,
+                                             const ImageContainer::FrameID& aFrameID);
   void SetCurrentFrames(const gfx::IntSize& aIntrinsicSize,
                         const nsTArray<ImageContainer::NonOwningImage>& aImages);
   void ClearCurrentFrame(const gfx::IntSize& aIntrinsicSize)
   {
     SetCurrentFrames(aIntrinsicSize, nsTArray<ImageContainer::NonOwningImage>());
   }
+  VideoFrameContainer* AsVideoFrameContainer() override { return this; }
 
   void ClearCurrentFrame();
   // Make the current frame the only frame in the container, i.e. discard
@@ -80,7 +86,7 @@ public:
     INVALIDATE_DEFAULT,
     INVALIDATE_FORCE
   };
-  void Invalidate() { InvalidateWithFlags(INVALIDATE_DEFAULT); }
+  void Invalidate() override { InvalidateWithFlags(INVALIDATE_DEFAULT); }
   void InvalidateWithFlags(uint32_t aFlags);
   ImageContainer* GetImageContainer();
   void ForgetElement() { mElement = nullptr; }
@@ -98,6 +104,9 @@ protected:
 
   // mMutex protects all the fields below.
   Mutex mMutex;
+  // Once the frame is forced to black, we initialize mBlackImage for following
+  // frames.
+  RefPtr<Image> mBlackImage;
   // The intrinsic size is the ideal size which we should render the
   // ImageContainer's current Image at.
   // This can differ from the Image's actual size when the media resource
@@ -107,6 +116,9 @@ protected:
   // We maintain our own mFrameID which is auto-incremented at every
   // SetCurrentFrame() or NewFrameID() call.
   ImageContainer::FrameID mFrameID;
+  // We record the last played video frame to avoid playing the frame again
+  // with a different frame id.
+  VideoFrame mLastPlayedVideoFrame;
   // True when the intrinsic size has been changed by SetCurrentFrame() since
   // the last call to Invalidate().
   // The next call to Invalidate() will recalculate

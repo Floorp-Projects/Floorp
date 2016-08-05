@@ -73,7 +73,7 @@ function clearInterval() {
   try {
     Services.prefs.clearUserPref("places.history.expiration.interval_seconds");
   }
-  catch(ex) {}
+  catch (ex) {}
 }
 
 
@@ -87,7 +87,7 @@ function clearMaxPages() {
   try {
     Services.prefs.clearUserPref("places.history.expiration.max_pages");
   }
-  catch(ex) {}
+  catch (ex) {}
 }
 
 
@@ -101,7 +101,7 @@ function clearHistoryEnabled() {
   try {
     Services.prefs.clearUserPref("places.history.enabled");
   }
-  catch(ex) {}
+  catch (ex) {}
 }
 
 /**

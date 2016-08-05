@@ -115,7 +115,7 @@
                 tbName = " (" + tbName + ")";
               else
                 tbName = "";
-              throw("toolbar ID " + this.id + tbName + ": toolboxid attribute '" + toolboxId + "' points to a toolbox that doesn't exist");
+              throw new Error(`toolbar ID ${this.id}${tbName}: toolboxid attribute '${toolboxId}' points to a toolbox that doesn't exist`);
             }
 
             if (toolbox.externalToolbars.indexOf(this) == -1)

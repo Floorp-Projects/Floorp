@@ -536,7 +536,7 @@ this.CrashManager.prototype = Object.freeze({
           if ('TelemetryEnvironment' in reportMeta) {
             try {
               crashEnvironment = JSON.parse(reportMeta.TelemetryEnvironment);
-            } catch(e) {
+            } catch (e) {
               Cu.reportError(e);
             }
             delete reportMeta.TelemetryEnvironment;

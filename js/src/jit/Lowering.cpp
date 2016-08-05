@@ -4100,12 +4100,6 @@ LIRGenerator::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
 }
 
 void
-LIRGenerator::visitAsmJSLoadFFIFunc(MAsmJSLoadFFIFunc* ins)
-{
-    define(new(alloc()) LAsmJSLoadFFIFunc, ins);
-}
-
-void
 LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
 {
     ABIArg abi = ins->abi();
@@ -4198,29 +4192,35 @@ LIRGenerator::visitAsmJSPassStackArg(MAsmJSPassStackArg* ins)
 }
 
 void
-LIRGenerator::visitAsmJSCall(MAsmJSCall* ins)
+LIRGenerator::visitWasmCall(MWasmCall* ins)
 {
     gen->setPerformsCall();
 
     LAllocation* args = gen->allocate<LAllocation>(ins->numOperands());
     if (!args) {
-        gen->abort("Couldn't allocate for MAsmJSCall");
+        gen->abort("Couldn't allocate for MWasmCall");
         return;
     }
 
     for (unsigned i = 0; i < ins->numArgs(); i++)
         args[i] = useFixed(ins->getOperand(i), ins->registerForArg(i));
 
-    if (ins->callee().which() == MAsmJSCall::Callee::Dynamic) {
+    if (ins->callee().which() == MWasmCall::Callee::Dynamic) {
         args[ins->dynamicCalleeOperandIndex()] =
             useFixed(ins->callee().dynamicPtr(), WasmTableCallPtrReg);
     }
 
+    LDefinition maybeTemp;
+    if (ins->callee().which() == MWasmCall::Callee::Import)
+        maybeTemp = tempFixed(CallTempReg0);
+    else
+        maybeTemp = LDefinition::BogusTemp();
+
     LInstruction* lir;
     if (ins->type() == MIRType::Int64)
-        lir = new(alloc()) LAsmJSCallI64(args, ins->numOperands());
+        lir = new(alloc()) LWasmCallI64(args, ins->numOperands(), maybeTemp);
     else
-        lir = new(alloc()) LAsmJSCall(args, ins->numOperands());
+        lir = new(alloc()) LWasmCall(args, ins->numOperands(), maybeTemp);
 
     if (ins->type() == MIRType::None)
         add(lir, ins);

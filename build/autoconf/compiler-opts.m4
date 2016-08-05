@@ -21,8 +21,6 @@ dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
 *-mingw*)
-    if test -z "$CC"; then CC=cl; fi
-    if test -z "$CXX"; then CXX=cl; fi
     if test -z "$CPP"; then CPP="$CC -E -nologo"; fi
     if test -z "$CXXCPP"; then CXXCPP="$CXX -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
     if test -z "$AS"; then
@@ -40,23 +38,6 @@ case "$target" in
     # need override this flag since we don't use $(LDFLAGS) for this.
     if test -z "$HOST_LDFLAGS" ; then
         HOST_LDFLAGS=" "
-    fi
-    ;;
-*-darwin*)
-    # GCC on darwin is based on gcc 4.2 and we don't support it anymore.
-    if test -z "$CC"; then
-        MOZ_PATH_PROGS(CC, clang)
-    fi
-    if test -z "$CXX"; then
-        MOZ_PATH_PROGS(CXX, clang++)
-    fi
-    IS_GCC=$($CC -v 2>&1 | grep gcc)
-    if test -n "$IS_GCC"
-    then
-      echo gcc is known to be broken on OS X, please use clang.
-      echo see http://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions/Mac_OS_X_Prerequisites
-      echo for more information.
-      exit 1
     fi
     ;;
 esac

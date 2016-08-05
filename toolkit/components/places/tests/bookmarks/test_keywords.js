@@ -9,7 +9,7 @@ function check_keyword(aURI, aKeyword) {
   for (let bm of PlacesUtils.getBookmarksForURI(aURI)) {
     let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(bm);
     if (keyword && !aKeyword) {
-      throw(`${aURI.spec} should not have a keyword`);
+      throw (`${aURI.spec} should not have a keyword`);
     } else if (aKeyword && keyword == aKeyword) {
       Assert.equal(keyword, aKeyword);
     }

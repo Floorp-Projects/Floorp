@@ -35,7 +35,6 @@ public:
   // Creates an Image for the video frame stored in aVideoSample.
   virtual HRESULT CopyToImage(IMFSample* aVideoSample,
                               const nsIntRect& aRegion,
-                              layers::ImageContainer* aContainer,
                               layers::Image** aOutImage) = 0;
 
   virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight) { return S_OK; }

@@ -86,7 +86,7 @@ function checkOldStore() {
   checkValue(aboutURI, "lockCol", "ordinal", "3");
 }
 
-add_task(function* testImport(){
+add_task(function* testImport() {
   let src = "localstore.rdf";
   let dst = OS.Path.join(OS.Constants.Path.profileDir, src);
 

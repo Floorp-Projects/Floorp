@@ -198,6 +198,7 @@ class Module : public RefCounted<Module>
     const SharedMetadata    metadata_;
     const SharedBytes       bytecode_;
 
+    bool instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const;
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
     bool instantiateTable(JSContext* cx, HandleWasmTableObject tableImport,
                           SharedTableVector* tables) const;

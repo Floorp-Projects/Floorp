@@ -8,11 +8,11 @@
 #define builtin_SIMD_h
 
 #include "jsapi.h"
-#include "jsobj.h"
+#include "NamespaceImports.h"
 
-#include "builtin/TypedObject.h"
+#include "builtin/TypedObjectConstants.h"
+#include "jit/IonTypes.h"
 #include "js/Conversions.h"
-#include "vm/GlobalObject.h"
 
 /*
  * JS SIMD functions.
@@ -943,15 +943,6 @@ enum class SimdOperation {
     Fn_fromFloat64x2Bits,
 
     Last = Fn_fromFloat64x2Bits
-};
-
-class SimdObject : public JSObject
-{
-  public:
-    static const Class class_;
-    static MOZ_MUST_USE bool toString(JSContext* cx, unsigned int argc, Value* vp);
-    static MOZ_MUST_USE bool resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId,
-                                     bool* resolved);
 };
 
 // These classes implement the concept containing the following constraints:

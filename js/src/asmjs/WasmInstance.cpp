@@ -102,11 +102,11 @@ Instance::addressOfSigId(const SigIdDesc& sigId) const
     return (const void**)(codeSegment().globalData() + sigId.globalDataOffset());
 }
 
-FuncImportExit&
-Instance::funcImportToExit(const FuncImport& fi)
+FuncImportTls&
+Instance::funcImportTls(const FuncImport& fi)
 {
-    MOZ_ASSERT(fi.exitGlobalDataOffset() >= InitialGlobalDataBytes);
-    return *(FuncImportExit*)(codeSegment().globalData() + fi.exitGlobalDataOffset());
+    MOZ_ASSERT(fi.tlsDataOffset() >= InitialGlobalDataBytes);
+    return *(FuncImportTls*)(codeSegment().globalData() + fi.tlsDataOffset());
 }
 
 bool
@@ -153,8 +153,9 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
         }
     }
 
-    FuncImportExit& exit = funcImportToExit(fi);
-    RootedValue fval(cx, ObjectValue(*exit.fun));
+    FuncImportTls& import = funcImportTls(fi);
+    RootedFunction importFun(cx, &import.obj->as<JSFunction>());
+    RootedValue fval(cx, ObjectValue(*import.obj));
     RootedValue thisv(cx, UndefinedValue());
     if (!Call(cx, fval, thisv, args, rval))
         return false;
@@ -165,16 +166,16 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     if (hasI64Arg || fi.sig().ret() == ExprType::I64)
         return true;
 
-    // The exit may already have become optimized.
+    // The import may already have become optimized.
     void* jitExitCode = codeBase() + fi.jitExitCodeOffset();
-    if (exit.code == jitExitCode)
+    if (import.code == jitExitCode)
         return true;
 
     // Test if the function is JIT compiled.
-    if (!exit.fun->hasScript())
+    if (!importFun->hasScript())
         return true;
 
-    JSScript* script = exit.fun->nonLazyScript();
+    JSScript* script = importFun->nonLazyScript();
     if (!script->hasBaselineScript()) {
         MOZ_ASSERT(!script->hasIonScript());
         return true;
@@ -187,20 +188,20 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
         return true;
 
     // Currently we can't rectify arguments. Therefore disable if argc is too low.
-    if (exit.fun->nargs() > fi.sig().args().length())
+    if (importFun->nargs() > fi.sig().args().length())
         return true;
 
     // Ensure the argument types are included in the argument TypeSets stored in
-    // the TypeScript. This is necessary for Ion, because the import exit will
-    // use the skip-arg-checks entry point.
+    // the TypeScript. This is necessary for Ion, because the import will use
+    // the skip-arg-checks entry point.
     //
     // Note that the TypeScript is never discarded while the script has a
     // BaselineScript, so if those checks hold now they must hold at least until
-    // the BaselineScript is discarded and when that happens the import exit is
+    // the BaselineScript is discarded and when that happens the import is
     // patched back.
     if (!TypeScript::ThisTypes(script)->hasType(TypeSet::UndefinedType()))
         return true;
-    for (uint32_t i = 0; i < exit.fun->nargs(); i++) {
+    for (uint32_t i = 0; i < importFun->nargs(); i++) {
         TypeSet::Type type = TypeSet::UnknownType();
         switch (fi.sig().args()[i]) {
           case ValType::I32:   type = TypeSet::Int32Type(); break;
@@ -224,8 +225,8 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     if (!script->baselineScript()->addDependentWasmImport(cx, *this, funcImportIndex))
         return false;
 
-    exit.code = jitExitCode;
-    exit.baselineScript = script->baselineScript();
+    import.code = jitExitCode;
+    import.baselineScript = script->baselineScript();
     return true;
 }
 
@@ -293,11 +294,25 @@ Instance::Instance(JSContext* cx,
     tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(StackForUntrustedScript);
 
     for (size_t i = 0; i < metadata().funcImports.length(); i++) {
+        HandleFunction f = funcImports[i];
         const FuncImport& fi = metadata().funcImports[i];
-        FuncImportExit& exit = funcImportToExit(fi);
-        exit.code = codeBase() + fi.interpExitCodeOffset();
-        exit.fun = funcImports[i];
-        exit.baselineScript = nullptr;
+        FuncImportTls& import = funcImportTls(fi);
+        if (IsExportedFunction(f) && !isAsmJS() && !ExportedFunctionToInstance(f).isAsmJS()) {
+            Instance& calleeInstance = ExportedFunctionToInstance(f);
+            const Metadata& calleeMetadata = calleeInstance.metadata();
+            uint32_t funcIndex = ExportedFunctionToIndex(f);
+            const FuncExport& funcExport = calleeMetadata.lookupFuncExport(funcIndex);
+            const CodeRange& codeRange = calleeMetadata.codeRanges[funcExport.codeRangeIndex()];
+            import.tls = &calleeInstance.tlsData_;
+            import.code = calleeInstance.codeSegment().base() + codeRange.funcNonProfilingEntry();
+            import.baselineScript = nullptr;
+            import.obj = ExportedFunctionToInstanceObject(f);
+        } else {
+            import.tls = &tlsData_;
+            import.code = codeBase() + fi.interpExitCodeOffset();
+            import.baselineScript = nullptr;
+            import.obj = f;
+        }
     }
 
     uint8_t* globalData = code_->segment().globalData();
@@ -364,9 +379,9 @@ Instance::~Instance()
     compartment_->wasm.unregisterInstance(*this);
 
     for (unsigned i = 0; i < metadata().funcImports.length(); i++) {
-        FuncImportExit& exit = funcImportToExit(metadata().funcImports[i]);
-        if (exit.baselineScript)
-            exit.baselineScript->removeDependentWasmImport(*this, i);
+        FuncImportTls& import = funcImportTls(metadata().funcImports[i]);
+        if (import.baselineScript)
+            import.baselineScript->removeDependentWasmImport(*this, i);
     }
 
     if (!metadata().sigIds.empty()) {
@@ -390,7 +405,7 @@ Instance::trace(JSTracer* trc)
     TraceEdge(trc, &object_, "wasm object");
 
     for (const FuncImport& fi : metadata().funcImports)
-        TraceNullableEdge(trc, &funcImportToExit(fi).fun, "wasm function import");
+        TraceNullableEdge(trc, &funcImportTls(fi).obj, "wasm import");
 
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }
@@ -692,9 +707,23 @@ void
 Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
     const FuncImport& fi = metadata().funcImports[funcImportIndex];
-    FuncImportExit& exit = funcImportToExit(fi);
-    exit.code = codeBase() + fi.interpExitCodeOffset();
-    exit.baselineScript = nullptr;
+    FuncImportTls& import = funcImportTls(fi);
+    import.code = codeBase() + fi.interpExitCodeOffset();
+    import.baselineScript = nullptr;
+}
+
+static void
+UpdateEntry(const Code& code, bool profilingEnabled, void** entry)
+{
+    const CodeRange& codeRange = *code.lookupRange(*entry);
+    void* from = code.segment().base() + codeRange.funcNonProfilingEntry();
+    void* to = code.segment().base() + codeRange.funcProfilingEntry();
+
+    if (!profilingEnabled)
+        Swap(from, to);
+
+    MOZ_ASSERT(*entry == from);
+    *entry = to;
 }
 
 bool
@@ -706,30 +735,31 @@ Instance::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
     if (!code_->ensureProfilingState(cx, newProfilingEnabled))
         return false;
 
-    // Typed-function tables' elements point directly to either the profiling or
-    // non-profiling prologue and must therefore be updated when the profiling
-    // mode is toggled.
+    // Imported wasm functions and typed function tables point directly to
+    // either the profiling or non-profiling prologue and must therefore be
+    // updated when the profiling mode is toggled.
+
+    for (const FuncImport& fi : metadata().funcImports) {
+        FuncImportTls& import = funcImportTls(fi);
+        if (import.obj && import.obj->is<WasmInstanceObject>()) {
+            Code& code = import.obj->as<WasmInstanceObject>().instance().code();
+            UpdateEntry(code, newProfilingEnabled, &import.code);
+        }
+    }
 
     for (const SharedTable& table : tables_) {
         if (!table->isTypedFunction() || !table->initialized())
             continue;
 
-        // This logic will have to be somewhat generalized if wasm can create
-        // typed function tables since a single table can contain elements from
-        // multiple instances.
+        // This logic will have to be generalized to match the import logic
+        // above if wasm can create typed function tables since a single table
+        // can contain elements from multiple instances.
         MOZ_ASSERT(metadata().kind == ModuleKind::AsmJS);
 
         void** array = table->array();
         uint32_t length = table->length();
-        for (size_t i = 0; i < length; i++) {
-            const CodeRange* codeRange = code_->lookupRange(array[i]);
-            void* from = codeBase() + codeRange->funcNonProfilingEntry();
-            void* to = codeBase() + codeRange->funcProfilingEntry();
-            if (!newProfilingEnabled)
-                Swap(from, to);
-            MOZ_ASSERT(array[i] == from);
-            array[i] = to;
-        }
+        for (size_t i = 0; i < length; i++)
+            UpdateEntry(*code_, newProfilingEnabled, &array[i]);
     }
 
     return true;

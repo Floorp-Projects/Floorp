@@ -134,7 +134,7 @@ function* checkHistoryItems() {
  * @returns false if the accessCount has not changed
  *          true if the accessCount has changed
  */
-function isBookmarkAltered(){
+function isBookmarkAltered() {
   let options = PlacesUtils.history.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 1; // should only expect a new bookmark

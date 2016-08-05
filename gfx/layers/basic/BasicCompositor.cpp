@@ -10,6 +10,7 @@
 #include "nsIWidget.h"
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/ssse3-scaler.h"
@@ -184,8 +185,7 @@ BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, widget::Compos
 {
   MOZ_COUNT_CTOR(BasicCompositor);
 
-  mMaxTextureSize =
-    Factory::GetMaxSurfaceSize(gfxPlatform::GetPlatform()->GetContentBackendFor(LayersBackend::LAYERS_BASIC));
+  mMaxTextureSize = Factory::GetMaxSurfaceSize(gfxVars::ContentBackend());
 }
 
 BasicCompositor::~BasicCompositor()

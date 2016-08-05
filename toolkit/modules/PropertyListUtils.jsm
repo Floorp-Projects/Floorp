@@ -117,7 +117,7 @@ this.PropertyListUtils = Object.freeze({
         fileReader.addEventListener("loadend", onLoadEnd, false);
         fileReader.readAsArrayBuffer(file);
       }
-      catch(ex) {
+      catch (ex) {
         aCallback(null);
         throw ex;
       }
@@ -142,7 +142,7 @@ this.PropertyListUtils = Object.freeze({
                                           "application/xml");
       return new XMLPropertyListReader(doc).root;
     }
-    catch(ex) {
+    catch (ex) {
       throw new Error("aBuffer cannot be parsed as a DOM document: " + ex);
     }
     return null;
@@ -247,7 +247,7 @@ function BinaryPropertyListReader(aBuffer) {
     this._readTrailerInfo();
     this._readObjectsOffsets();
   }
-  catch(ex) {
+  catch (ex) {
     throw new Error("Could not read aBuffer as a binary property list");
   }
   this._objects = [];

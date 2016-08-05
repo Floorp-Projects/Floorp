@@ -96,7 +96,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
             frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_,
                                                 AsmJSStackAlignment);
         } else if (gen->performsCall()) {
-            // An MAsmJSCall does not align the stack pointer at calls sites but
+            // An MWasmCall does not align the stack pointer at calls sites but
             // instead relies on the a priori stack adjustment. This must be the
             // last adjustment of frameDepth_.
             frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_,
@@ -1489,9 +1489,9 @@ CodeGeneratorShared::omitOverRecursedCheck() const
 }
 
 void
-CodeGeneratorShared::emitAsmJSCallBase(LAsmJSCallBase* ins)
+CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
 {
-    MAsmJSCall* mir = ins->mir();
+    MWasmCall* mir = ins->mir();
 
     if (mir->spIncrement())
         masm.freeStack(mir->spIncrement());
@@ -1508,13 +1508,34 @@ CodeGeneratorShared::emitAsmJSCallBase(LAsmJSCallBase* ins)
     masm.bind(&ok);
 #endif
 
-    MAsmJSCall::Callee callee = mir->callee();
+    MWasmCall::Callee callee = mir->callee();
     switch (callee.which()) {
-      case MAsmJSCall::Callee::Internal: {
-        masm.call(mir->desc(), callee.internal());
+      case MWasmCall::Callee::Internal: {
+        masm.call(mir->desc(), callee.internalFuncIndex());
         break;
       }
-      case MAsmJSCall::Callee::Dynamic: {
+      case MWasmCall::Callee::Import: {
+        Register temp = ToRegister(ins->getTemp(0));
+
+        // Load the callee, before the caller's registers are clobbered.
+        uint32_t globalDataOffset = callee.importGlobalDataOffset();;
+        masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code), temp);
+
+        // Save the caller's TLS register in a reserved stack slot (below the
+        // call's stack arguments) for retrieval after the call.
+        masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), callee.importTlsStackOffset()));
+
+        // Switch to the callee's TLS and pinned registers and make the call.
+        masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, tls), WasmTlsReg);
+        masm.loadWasmPinnedRegsFromTls();
+        masm.call(mir->desc(), temp);
+
+        // After return, restore the caller's TLS and pinned registers.
+        masm.loadPtr(Address(masm.getStackPointer(), callee.importTlsStackOffset()), WasmTlsReg);
+        masm.loadWasmPinnedRegsFromTls();
+        break;
+      }
+      case MWasmCall::Callee::Dynamic: {
         wasm::SigIdDesc sigId = callee.dynamicSigId();
         switch (sigId.kind()) {
           case wasm::SigIdDesc::Kind::Global:
@@ -1530,7 +1551,7 @@ CodeGeneratorShared::emitAsmJSCallBase(LAsmJSCallBase* ins)
         masm.call(mir->desc(), WasmTableCallPtrReg);
         break;
       }
-      case MAsmJSCall::Callee::Builtin: {
+      case MWasmCall::Callee::Builtin: {
         masm.call(callee.builtin());
         break;
       }

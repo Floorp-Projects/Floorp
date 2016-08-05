@@ -67,7 +67,7 @@ this.CaptivePortalWatcher = {
   },
 
   observe(subject, topic, data) {
-    switch(topic) {
+    switch (topic) {
       case "captive-portal-login":
         this._addCaptivePortalTab();
         break;

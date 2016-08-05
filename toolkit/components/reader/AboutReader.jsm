@@ -712,8 +712,8 @@ AboutReader.prototype = {
     }
   },
 
-  _maybeSetTextDirection: function Read_maybeSetTextDirection(article){
-    if(!article.dir)
+  _maybeSetTextDirection: function Read_maybeSetTextDirection(article) {
+    if (!article.dir)
       return;
 
     //Set "dir" attribute on content

@@ -25,7 +25,7 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
-#include "xpcprivate.h"
+#include "xpcpublic.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsProxyRelease.h"
@@ -1099,7 +1099,7 @@ Console::ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
     return;
   }
 
-  nsXPConnect*  xpc = nsXPConnect::XPConnect();
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
   nsCOMPtr<nsISupports> wrapper;
   const nsIID& iid = NS_GET_IID(nsISupports);
 

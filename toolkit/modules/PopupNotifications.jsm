@@ -1151,7 +1151,7 @@ PopupNotifications.prototype = {
 
     try {
       notification.mainAction.callback.call();
-    } catch(error) {
+    } catch (error) {
       Cu.reportError(error);
     }
 
@@ -1175,7 +1175,7 @@ PopupNotifications.prototype = {
 
     try {
       target.action.callback.call();
-    } catch(error) {
+    } catch (error) {
       Cu.reportError(error);
     }
 

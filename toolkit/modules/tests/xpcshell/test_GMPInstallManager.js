@@ -494,7 +494,7 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
     zipFile.remove(false);
     httpServer.stop(function() {});
     installManager.uninit();
-  } catch(ex) {
+  } catch (ex) {
     zipFile.remove(false);
     if (!wantInstallReject) {
       do_throw("install update should not reject " + ex.message);
