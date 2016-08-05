@@ -509,6 +509,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'media/AudioFocusAgent.java',
     'media/Codec.java',
     'media/CodecManager.java',
+    'media/CodecProxy.java',
     'media/FormatParam.java',
     'media/JellyBeanAsyncCodec.java',
     'media/MediaControlService.java',
