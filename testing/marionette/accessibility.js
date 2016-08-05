@@ -266,7 +266,7 @@ accessibility.Checks = class {
    *     If |element|'s visibility state does not correspond to
    *     |accessible|'s.
    */
-  checkVisible(accessible, element, visible) {
+  assertVisible(accessible, element, visible) {
     if (!accessible) {
       return;
     }
@@ -298,7 +298,7 @@ accessibility.Checks = class {
    * @throws ElementNotAccessibleError
    *     If |element|'s enabled state does not match |accessible|'s.
    */
-  checkEnabled(accessible, element, enabled) {
+  assertEnabled(accessible, element, enabled) {
     if (!accessible) {
       return;
     }
@@ -333,7 +333,7 @@ accessibility.Checks = class {
    * @throws ElementNotAccessibleError
    *     If it is impossible to activate |element| with |accessible|.
    */
-  checkActionable(accessible, element) {
+  assertActionable(accessible, element) {
     if (!accessible) {
       return;
     }
@@ -368,7 +368,7 @@ accessibility.Checks = class {
    *     If |element|'s selected state does not correspond to
    *     |accessible|'s.
    */
-  checkSelected(accessible, element, selected) {
+  assertSelected(accessible, element, selected) {
     if (!accessible) {
       return;
     }
