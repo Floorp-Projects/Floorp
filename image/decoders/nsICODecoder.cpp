@@ -221,9 +221,13 @@ nsICODecoder::ReadDirEntry(const char* aData)
   e.mBytesInRes  = LittleEndian::readUint32(aData + 8);
   e.mImageOffset = LittleEndian::readUint32(aData + 12);
 
+  // If an explicit output size was specified, we'll try to select the resource
+  // that matches it best below.
+  const Maybe<IntSize> desiredSize = ExplicitOutputSize();
+
   // Determine if this is the biggest resource we've seen so far. We always use
-  // the biggest resource for the intrinsic size, and if we're not downscaling,
-  // we select it as the best resource as well.
+  // the biggest resource for the intrinsic size, and if we don't have a
+  // specific desired size, we select it as the best resource as well.
   IntSize entrySize(GetRealWidth(e), GetRealHeight(e));
   if (e.mBitCount >= mBiggestResourceColorDepth &&
       entrySize.width * entrySize.height >=
@@ -232,22 +236,22 @@ nsICODecoder::ReadDirEntry(const char* aData)
     mBiggestResourceColorDepth = e.mBitCount;
     mBiggestResourceHotSpot = IntSize(e.mXHotspot, e.mYHotspot);
 
-    if (!mDownscaler) {
+    if (!desiredSize) {
       mDirEntry = e;
     }
   }
 
-  if (mDownscaler) {
+  if (desiredSize) {
     // Calculate the delta between this resource's size and the desired size, so
     // we can see if it is better than our current-best option.  In the case of
     // several equally-good resources, we use the last one. "Better" in this
     // case is determined by |delta|, a measure of the difference in size
-    // between the entry we've found and the downscaler's target size. We will
-    // choose the smallest resource that is >= the target size (i.e. we assume
-    // it's better to downscale a larger icon than to upscale a smaller one).
-    IntSize desiredSize = mDownscaler->TargetSize();
-    int32_t delta = std::min(entrySize.width - desiredSize.width,
-                             entrySize.height - desiredSize.height);
+    // between the entry we've found and the desired size. We will choose the
+    // smallest resource that is greater than or equal to the desired size (i.e.
+    // we assume it's better to downscale a larger icon than to upscale a
+    // smaller one).
+    int32_t delta = std::min(entrySize.width - desiredSize->width,
+                             entrySize.height - desiredSize->height);
     if (e.mBitCount >= mBestResourceColorDepth &&
         ((mBestResourceDelta < 0 && delta >= mBestResourceDelta) ||
          (delta >= 0 && delta <= mBestResourceDelta))) {
@@ -278,9 +282,11 @@ nsICODecoder::ReadDirEntry(const char* aData)
       return Transition::TerminateSuccess();
     }
 
-    // If the resource we selected matches the downscaler's target size
-    // perfectly, we don't need to do any downscaling.
-    if (mDownscaler && GetRealSize() == mDownscaler->TargetSize()) {
+    // If the resource we selected matches the output size perfectly, we don't
+    // need to do any downscaling.
+    if (GetRealSize() == OutputSize()) {
+      MOZ_ASSERT_IF(desiredSize, GetRealSize() == *desiredSize);
+      MOZ_ASSERT_IF(!desiredSize, GetRealSize() == Size());
       mDownscaler.reset();
     }
 
