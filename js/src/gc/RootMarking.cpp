@@ -223,7 +223,8 @@ AutoGCRooter::trace(JSTracer* trc)
 /* static */ void
 AutoGCRooter::traceAll(JSTracer* trc)
 {
-    traceAllInContext(trc->runtime()->contextFromMainThread(), trc);
+    for (AutoGCRooter* gcr = trc->runtime()->contextFromMainThread()->roots.autoGCRooters_; gcr; gcr = gcr->down)
+        gcr->trace(trc);
 }
 
 /* static */ void
@@ -389,13 +390,50 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
     }
 }
 
+#ifdef DEBUG
+class AssertNoRootsTracer : public JS::CallbackTracer
+{
+    void onChild(const JS::GCCellPtr& thing) override {
+        MOZ_CRASH("There should not be any roots after finishRoots");
+    }
+
+  public:
+    AssertNoRootsTracer(JSRuntime* rt, WeakMapTraceKind weakTraceKind)
+      : JS::CallbackTracer(rt, weakTraceKind)
+    {}
+};
+#endif // DEBUG
+
 void
 js::gc::GCRuntime::finishRoots()
 {
+    rt->finishAtoms();
+
     if (rootsHash.initialized())
         rootsHash.clear();
 
-    rt->mainThread.roots.finishPersistentRoots();
+    rt->contextFromMainThread()->roots.finishPersistentRoots();
+
+    rt->finishSelfHosting();
+
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+        c->finishRoots();
+
+#ifdef DEBUG
+    // The nsWrapperCache may not be empty before our shutdown GC, so we have
+    // to skip that table when verifying that we are fully unrooted.
+    auto prior = grayRootTracer;
+    grayRootTracer = Callback<JSTraceDataOp>(nullptr, nullptr);
+
+    AssertNoRootsTracer trc(rt, TraceWeakMapKeysValues);
+    AutoPrepareForTracing prep(rt->contextFromMainThread(), WithAtoms);
+    gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_TRACE_HEAP);
+    traceRuntime(&trc, prep.session().lock);
+
+    // Restore the wrapper tracing so that we leak instead of leaving dangling
+    // pointers.
+    grayRootTracer = prior;
+#endif // DEBUG
 }
 
 // Append traced things to a buffer on the zone for use later in the GC.
