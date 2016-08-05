@@ -99,6 +99,8 @@ include_when('build/moz.configure/memory.configure',
              when='--enable-compile-environment')
 include_when('build/moz.configure/headers.configure',
              when='--enable-compile-environment')
+include_when('build/moz.configure/warnings.configure',
+             when='--enable-compile-environment')
 
 @depends('--help')
 @imports(_from='mozbuild.backend', _import='backends')
