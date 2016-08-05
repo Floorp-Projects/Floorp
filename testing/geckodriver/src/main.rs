@@ -79,9 +79,6 @@ fn app<'a, 'b>() -> App<'a, 'b> {
              .long("connect-existing")
              .requires("marionette_port")
              .help("Connect to an existing Firefox instance"))
-        .arg(Arg::with_name("no_e10s")
-             .long("--no-e10s")
-             .help("Start Firefox without multiprocess support (e10s) enabled"))
         .arg(Arg::with_name("verbosity")
              .short("v")
              .multiple(true)
@@ -141,7 +138,6 @@ fn run() -> ProgramResult {
         port: marionette_port,
         binary: binary,
         connect_existing: matches.is_present("connect_existing"),
-        e10s: !matches.is_present("no_e10s"),
         log_level: log_level,
     };
 
@@ -203,7 +199,6 @@ mod tests {
             port: None,
             binary: None,
             connect_existing: false,
-            e10s: false,
             log_level: None,
         };
         let handler = MarionetteHandler::new(settings);
