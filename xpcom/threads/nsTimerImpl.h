@@ -48,11 +48,7 @@ public:
   static nsresult Startup();
   static void Shutdown();
 
-  friend class TimerThread;
-  friend class nsTimerEvent;
-  friend struct TimerAdditionComparator;
-
-  void SetDelayInternal(uint32_t aDelay);
+  void SetDelayInternal(uint32_t aDelay, TimeStamp aBase = TimeStamp::Now());
 
   void Fire();
 

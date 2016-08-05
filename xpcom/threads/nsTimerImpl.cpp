@@ -407,8 +407,6 @@ nsTimerImpl::GetCallback(nsITimerCallback** aCallback)
 {
   if (mCallbackType == CallbackType::Interface) {
     NS_IF_ADDREF(*aCallback = mCallback.i);
-  } else if (mTimerCallbackWhileFiring) {
-    NS_ADDREF(*aCallback = mTimerCallbackWhileFiring);
   } else {
     *aCallback = nullptr;
   }
@@ -476,83 +474,54 @@ nsTimerImpl::Fire()
     mStart2 = TimeStamp();
   }
 
-  TimeStamp timeout = mTimeout;
-  if (IsRepeatingPrecisely()) {
-    // Precise repeating timers advance mTimeout by mDelay without fail before
-    // calling Fire().
-    timeout -= TimeDuration::FromMilliseconds(mDelay);
-  }
-
-  if (mCallbackType == CallbackType::Interface) {
-    mTimerCallbackWhileFiring = mCallback.i;
-  }
-  mFiring = true;
-
-  // Handle callbacks that re-init the timer, but avoid leaking.
-  // See bug 330128.
-  CallbackUnion callback = mCallback;
-  CallbackType callbackType = mCallbackType;
-  if (callbackType == CallbackType::Interface) {
-    NS_ADDREF(callback.i);
-  } else if (callbackType == CallbackType::Observer) {
-    NS_ADDREF(callback.o);
-  }
-  ReleaseCallback();
-
   if (MOZ_LOG_TEST(GetTimerFiringsLog(), LogLevel::Debug)) {
-    LogFiring(callbackType, callback);
+    LogFiring(mCallbackType, mCallback);
   }
 
-  switch (callbackType) {
+  int32_t oldGeneration = mGeneration;
+
+  switch (mCallbackType) {
     case CallbackType::Function:
-      callback.c(mITimer, mClosure);
+      mCallback.c(mITimer, mClosure);
       break;
     case CallbackType::Interface:
-      callback.i->Notify(mITimer);
+      {
+        nsCOMPtr<nsITimerCallback> keepalive(mCallback.i);
+        keepalive->Notify(mITimer);
+      }
       break;
     case CallbackType::Observer:
-      callback.o->Observe(mITimer,
-                          NS_TIMER_CALLBACK_TOPIC,
-                          nullptr);
+      {
+        nsCOMPtr<nsIObserver> keepalive(mCallback.o);
+        keepalive->Observe(mITimer,
+                           NS_TIMER_CALLBACK_TOPIC,
+                           nullptr);
+      }
       break;
     default:
       ;
   }
 
-  // If the callback didn't re-init the timer, and it's not a one-shot timer,
-  // restore the callback state.
-  if (mCallbackType == CallbackType::Unknown &&
-      mType != nsITimer::TYPE_ONE_SHOT && !mCanceled) {
-    mCallback = callback;
-    mCallbackType = callbackType;
-  } else {
-    // The timer was a one-shot, or the callback was reinitialized.
-    if (callbackType == CallbackType::Interface) {
-      NS_RELEASE(callback.i);
-    } else if (callbackType == CallbackType::Observer) {
-      NS_RELEASE(callback.o);
+  if (oldGeneration == mGeneration && mCallbackType != CallbackType::Unknown) {
+    // Timer has not been re-init or canceled; clear out one-shot timers, and
+    // re-schedule repeating timers.
+    if (IsRepeating()) {
+      if (mType == nsITimer::TYPE_REPEATING_SLACK) {
+        SetDelayInternal(mDelay);
+      } else {
+        SetDelayInternal(mDelay, mTimeout);
+      }
+      if (gThread) {
+        gThread->AddTimer(this);
+      }
+    } else {
+      ReleaseCallback();
     }
   }
-
-  mFiring = false;
-  mTimerCallbackWhileFiring = nullptr;
 
   MOZ_LOG(GetTimerLog(), LogLevel::Debug,
          ("[this=%p] Took %fms to fire timer callback\n",
           this, (TimeStamp::Now() - now).ToMilliseconds()));
-
-  // Reschedule repeating timers, but make sure that we aren't armed already
-  // (which can happen if the callback reinitialized the timer).
-  if (IsRepeating() && !mArmed) {
-    if (mType == nsITimer::TYPE_REPEATING_SLACK) {
-      SetDelayInternal(mDelay);  // force mTimeout to be recomputed.  For
-    }
-    // REPEATING_PRECISE_CAN_SKIP timers this has
-    // already happened.
-    if (gThread) {
-      gThread->AddTimer(this);
-    }
-  }
 }
 
 #if defined(HAVE_DLADDR) && defined(HAVE___CXA_DEMANGLE)
@@ -671,22 +640,21 @@ nsTimerImpl::LogFiring(CallbackType aCallbackType, CallbackUnion aCallback)
 }
 
 void
-nsTimerImpl::SetDelayInternal(uint32_t aDelay)
+nsTimerImpl::SetDelayInternal(uint32_t aDelay, TimeStamp aBase)
 {
   TimeDuration delayInterval = TimeDuration::FromMilliseconds(aDelay);
 
   mDelay = aDelay;
 
-  TimeStamp now = TimeStamp::Now();
-  mTimeout = now;
+  mTimeout = aBase;
 
   mTimeout += delayInterval;
 
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
     if (mStart.IsNull()) {
-      mStart = now;
+      mStart = aBase;
     } else {
-      mStart2 = now;
+      mStart2 = aBase;
     }
   }
 }

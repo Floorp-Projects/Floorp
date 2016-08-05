@@ -685,12 +685,6 @@ TimerThread::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef)
     event->mInitTime = TimeStamp::Now();
   }
 
-  // If this is a repeating precise timer, we need to calculate the time for
-  // the next timer to fire before we make the callback. But don't re-arm.
-  if (timer->IsRepeatingPrecisely()) {
-    timer->SetDelayInternal(timer->mDelay);
-  }
-
 #ifdef MOZ_TASK_TRACER
   // During the dispatch of TimerEvent, we overwrite the current TraceInfo
   // partially with the info saved in timer earlier, and restore it back by
