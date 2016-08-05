@@ -58,8 +58,8 @@ event.Modifiers = {
  *
  * @param {nsIDOMMouseEvent} mouseEvent
  *     Event to send.
- * @param {(Element|string)} target
- *     Target of event.  Can either be an Element or the ID of an element.
+ * @param {(DOMElement|string)} target
+ *     Target of event.  Can either be an element or the ID of an element.
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  *
@@ -67,12 +67,18 @@ event.Modifiers = {
  *     If the event is unsupported.
  */
 event.sendMouseEvent = function(mouseEvent, target, window = undefined) {
-  if (event.MouseEvents.hasOwnProperty(mouseEvent.type)) {
+  if (!event.MouseEvents.hasOwnProperty(mouseEvent.type)) {
     throw new TypeError("Unsupported event type: " + mouseEvent.type);
   }
 
-  if (!(target instanceof Element)) {
+  if (!target.nodeType && typeof target != "string") {
+    throw new TypeError("Target can only be a DOM element or a string: " + target);
+  }
+
+  if (!target.nodeType) {
     target = window.document.getElementById(target);
+  } else {
+    window = window || target.ownerDocument.defaultView;
   }
 
   let ev = window.document.createEvent("MouseEvent");
