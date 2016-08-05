@@ -54,13 +54,12 @@ function handleEvent(event) {
   event.target.receivedEventType = event.type;
 }
 
-function checkReceivedEvents(eventType, elements, evalFunc) {
-  if (!evalFunc) { evalFunc = is; }
+function checkReceivedEvents(eventType, elements) {
   elements.forEach(element => {
-    evalFunc(element.receivedEventType, eventType,
-             `Expected to receive '${eventType}', got
-              '${element.receivedEventType}', for event handler registered
-              using ${element.handlerType}`);
+    is(element.receivedEventType, eventType,
+       `Expected to receive '${eventType}', got
+        '${element.receivedEventType}', for event handler registered
+        using ${element.handlerType}`);
     element.receivedEventType = undefined;
   });
 }
@@ -116,13 +115,13 @@ targets.forEach(div => {
 });
 
 advance_clock(0);
-checkReceivedEvents("webkitAnimationStart", targets, todo_is);
+checkReceivedEvents("webkitAnimationStart", targets);
 
 advance_clock(100);
-checkReceivedEvents("webkitAnimationIteration", targets, todo_is);
+checkReceivedEvents("webkitAnimationIteration", targets);
 
 advance_clock(200);
-checkReceivedEvents("webkitAnimationEnd", targets, todo_is);
+checkReceivedEvents("webkitAnimationEnd", targets);
 
 targets.forEach(div => { div.remove(); });
 
@@ -138,7 +137,7 @@ targets.forEach(div => {
 });
 
 advance_clock(100);
-checkReceivedEvents("webkitTransitionEnd", targets, todo_is);
+checkReceivedEvents("webkitTransitionEnd", targets);
 
 targets.forEach(div => { div.remove(); });
 
