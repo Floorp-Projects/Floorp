@@ -88,8 +88,6 @@ function WebConsoleActor(aConnection, aParentActor)
   };
 }
 
-WebConsoleActor.l10n = new WebConsoleUtils.L10n("chrome://global/locale/console.properties");
-
 WebConsoleActor.prototype =
 {
   /**
