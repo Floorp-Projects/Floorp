@@ -388,7 +388,7 @@ class ArrayBufferViewObject : public JSObject
   public:
     static ArrayBufferObjectMaybeShared* bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*> obj);
 
-    void notifyBufferDetached(void* newData);
+    void notifyBufferDetached(JSContext* cx, void* newData);
 
 #ifdef DEBUG
     bool isSharedMemory();

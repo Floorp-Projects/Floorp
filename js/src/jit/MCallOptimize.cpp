@@ -2304,9 +2304,6 @@ IonBuilder::inlineTypedArray(CallInfo& callInfo, Native native)
     if (arg->type() != MIRType::Int32)
         return InliningStatus_NotInlined;
 
-    if (!arg->maybeConstantValue())
-        return InliningStatus_NotInlined;
-
     JSObject* templateObject = inspector->getTemplateObjectForNative(pc, native);
 
     if (!templateObject) {
@@ -2322,22 +2319,30 @@ IonBuilder::inlineTypedArray(CallInfo& callInfo, Native native)
     if (templateObject->isSingleton())
         return InliningStatus_NotInlined;
 
-    // Negative lengths must throw a RangeError.  (We don't track that this
-    // might have previously thrown, when determining whether to inline, so we
-    // have to deal with this error case when inlining.)
-    int32_t providedLen = arg->maybeConstantValue()->toInt32();
-    if (providedLen < 0)
-        return InliningStatus_NotInlined;
+    MInstruction* ins = nullptr;
 
-    uint32_t len = AssertedCast<uint32_t>(providedLen);
+    if (!arg->isConstant()) {
+        callInfo.setImplicitlyUsedUnchecked();
+        ins = MNewTypedArrayDynamicLength::New(alloc(), constraints(), templateObject,
+                                               templateObject->group()->initialHeap(constraints()),
+                                               arg);
+    } else {
+        // Negative lengths must throw a RangeError.  (We don't track that this
+        // might have previously thrown, when determining whether to inline, so we
+        // have to deal with this error case when inlining.)
+        int32_t providedLen = arg->maybeConstantValue()->toInt32();
+        if (providedLen < 0)
+            return InliningStatus_NotInlined;
 
-    if (obj->length() != len)
-        return InliningStatus_NotInlined;
+        uint32_t len = AssertedCast<uint32_t>(providedLen);
 
-    callInfo.setImplicitlyUsedUnchecked();
+        if (obj->length() != len)
+            return InliningStatus_NotInlined;
 
-    MInstruction* ins = MNewTypedArray::New(alloc(), constraints(), obj,
-                                            obj->group()->initialHeap(constraints()));
+        callInfo.setImplicitlyUsedUnchecked();
+        ins = MNewTypedArray::New(alloc(), constraints(), obj,
+                                  obj->group()->initialHeap(constraints()));
+    }
 
     current->add(ins);
     current->push(ins);

@@ -632,7 +632,7 @@ add_task(function* test_form6_changeUsername() {
   // Trigger the 'blur' event on uname
   pword.focus();
   yield spinEventLoop();
-  checkACForm("sXingleuser5", "singlepass5");
+  checkACForm("singleuser5X", "singlepass5");
 
   setupScript.sendSyncMessage("removeLogin", "login5");
 });
