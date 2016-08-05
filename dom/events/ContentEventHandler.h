@@ -342,6 +342,40 @@ protected:
   // Get first frame in the given range for computing text rect.
   FrameAndNodeOffset GetFirstFrameHavingFlatTextInRange(nsRange* aRange);
 
+  struct MOZ_STACK_CLASS FrameRelativeRect final
+  {
+    // mRect is relative to the mBaseFrame's position.
+    nsRect mRect;
+    nsIFrame* mBaseFrame;
+
+    FrameRelativeRect()
+      : mBaseFrame(nullptr)
+    {
+    }
+
+    explicit FrameRelativeRect(nsIFrame* aBaseFrame)
+      : mBaseFrame(aBaseFrame)
+    {
+    }
+
+    FrameRelativeRect(const nsRect& aRect, nsIFrame* aBaseFrame)
+      : mRect(aRect)
+      , mBaseFrame(aBaseFrame)
+    {
+    }
+
+    bool IsValid() const { return mBaseFrame != nullptr; }
+
+    // Returns an nsRect relative to aBaseFrame instead of mBaseFrame.
+    nsRect RectRelativeTo(nsIFrame* aBaseFrame) const;
+  };
+
+  // Returns a rect for line breaker before the node of aFrame (If aFrame is
+  // a <br> frame or a block level frame, it causes a line break at its
+  // element's open tag, see also ShouldBreakLineBefore()).  Note that this
+  // doesn't check if aFrame should cause line break in non-debug build.
+  FrameRelativeRect GetLineBreakerRectBefore(nsIFrame* aFrame);
+
   // Make aRect non-empty.  If width and/or height is 0, these methods set them
   // to 1.  Note that it doesn't set nsRect's width nor height to one device
   // pixel because using nsRect::ToOutsidePixels() makes actual width or height
