@@ -33,6 +33,7 @@
 #include "nsIObserver.h"
 #include "nsIStreamListener.h"
 #include "nsISupportsImpl.h"
+#include "nsISupportsPrimitives.h"
 #include "nsMappedAttributes.h"
 #include "nsNetUtil.h"
 #include "nsRuleData.h"
@@ -73,15 +74,72 @@ static constexpr nsAttrValue::EnumTable kKindTable[] = {
 // at all is specified, it's treated as "subtitles" in GetKind
 static constexpr const nsAttrValue::EnumTable* kKindTableInvalidValueDefault = &kKindTable[4];
 
+class WindowDestroyObserver final : public nsIObserver
+{
+  NS_DECL_ISUPPORTS
+
+public:
+  explicit WindowDestroyObserver(HTMLTrackElement* aElement, uint64_t aWinID)
+    : mTrackElement(aElement)
+    , mInnerID(aWinID)
+  {
+    RegisterWindowDestroyObserver();
+  }
+  void RegisterWindowDestroyObserver()
+  {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->AddObserver(this, "inner-window-destroyed", false);
+    }
+  }
+  void UnRegisterWindowDestroyObserver()
+  {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, "inner-window-destroyed");
+    }
+    mTrackElement = nullptr;
+  }
+  NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (strcmp(aTopic, "inner-window-destroyed") == 0) {
+      nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
+      NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
+      uint64_t innerID;
+      nsresult rv = wrapper->GetData(&innerID);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (innerID == mInnerID) {
+        if (mTrackElement) {
+          mTrackElement->NotifyShutdown();
+        }
+        UnRegisterWindowDestroyObserver();
+      }
+    }
+    return NS_OK;
+  }
+
+private:
+  ~WindowDestroyObserver() {};
+  HTMLTrackElement* mTrackElement;
+  uint64_t mInnerID;
+};
+NS_IMPL_ISUPPORTS(WindowDestroyObserver, nsIObserver);
+
 /** HTMLTrackElement */
 HTMLTrackElement::HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
   , mLoadResourceDispatched(false)
+  , mWindowDestroyObserver(nullptr)
 {
 }
 
 HTMLTrackElement::~HTMLTrackElement()
 {
+  if (mWindowDestroyObserver) {
+    mWindowDestroyObserver->UnRegisterWindowDestroyObserver();
+  }
+  NotifyShutdown();
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLTrackElement)
@@ -263,6 +321,10 @@ HTMLTrackElement::LoadResource()
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
   mChannel = channel;
+  nsISupports* parentObject = OwnerDoc()->GetParentObject();
+  NS_ENSURE_TRUE_VOID(parentObject);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
+  mWindowDestroyObserver = new WindowDestroyObserver(this, window->WindowID());
 }
 
 nsresult
@@ -369,6 +431,16 @@ void
 HTMLTrackElement::DropChannel()
 {
   mChannel = nullptr;
+}
+
+void
+HTMLTrackElement::NotifyShutdown()
+{
+  if (mChannel) {
+    mChannel->Cancel(NS_BINDING_ABORTED);
+  }
+  mChannel = nullptr;
+  mListener = nullptr;
 }
 
 } // namespace dom
