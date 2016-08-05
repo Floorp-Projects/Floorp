@@ -271,24 +271,40 @@ PropertyDescriptor::trace(JSTracer* trc)
 }
 
 void
-js::gc::GCRuntime::markRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
-    markRuntimeInner(trc, MarkRuntime, lock);
+    traceRuntimeCommon(trc, MarkRuntime, lock);
+}
+
+void
+js::gc::GCRuntime::traceRuntimeForMinorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+{
+    traceRuntimeCommon(trc, TraceRuntime, lock);
+}
+
+void
+js::TraceRuntime(JSTracer* trc)
+{
+    MOZ_ASSERT(!trc->isMarkingTracer());
+
+    JSRuntime* rt = trc->runtime();
+    rt->gc.evictNursery();
+    AutoPrepareForTracing prep(rt->contextFromMainThread(), WithAtoms);
+    gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_TRACE_HEAP);
+    rt->gc.traceRuntime(trc, prep.session().lock);
 }
 
 void
 js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
-    markRuntimeInner(trc, TraceRuntime, lock);
+    traceRuntimeCommon(trc, TraceRuntime, lock);
 }
 
 void
-js::gc::GCRuntime::markRuntimeInner(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
-                                    AutoLockForExclusiveAccess& lock)
+js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
+                                      AutoLockForExclusiveAccess& lock)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
-
-    MOZ_ASSERT(traceOrMark == TraceRuntime || traceOrMark == MarkRuntime);
 
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 
@@ -371,6 +387,15 @@ js::gc::GCRuntime::markRuntimeInner(JSTracer* trc, TraceOrMarkRuntime traceOrMar
                 (*op)(trc, grayRootTracer.data);
         }
     }
+}
+
+void
+js::gc::GCRuntime::finishRoots()
+{
+    if (rootsHash.initialized())
+        rootsHash.clear();
+
+    rt->mainThread.roots.finishPersistentRoots();
 }
 
 // Append traced things to a buffer on the zone for use later in the GC.
