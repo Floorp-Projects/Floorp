@@ -341,6 +341,13 @@ protected:
   };
   // Get first frame in the given range for computing text rect.
   FrameAndNodeOffset GetFirstFrameHavingFlatTextInRange(nsRange* aRange);
+
+  // Make aRect non-empty.  If width and/or height is 0, these methods set them
+  // to 1.  Note that it doesn't set nsRect's width nor height to one device
+  // pixel because using nsRect::ToOutsidePixels() makes actual width or height
+  // to 2 pixels because x and y may not be aligned to device pixels.
+  void EnsureNonEmptyRect(nsRect& aRect) const;
+  void EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const;
 };
 
 } // namespace mozilla
