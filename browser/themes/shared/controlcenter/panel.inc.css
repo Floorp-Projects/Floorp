@@ -395,6 +395,7 @@ description#identity-popup-content-verifier,
   border-radius: 50%;
   min-width: 0;
   padding: 2px;
+  background-color: transparent;
 }
 
 .identity-popup-permission-remove-button > .button-box {
