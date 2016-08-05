@@ -18,11 +18,6 @@ const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {Task} = require("devtools/shared/task");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
-loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
-loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
-loader.lazyRequireGetter(this, "clearNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
-loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
-
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const ESCAPE_KEYCODE = KeyCodes.DOM_VK_ESCAPE;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
