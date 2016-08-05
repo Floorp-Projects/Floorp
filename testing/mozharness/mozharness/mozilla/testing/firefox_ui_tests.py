@@ -153,14 +153,14 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         harness, puppeteer, and tests from and how to set them up.
 
         """
-        extract_dirs = ['config/*',
-                        'firefox-ui/*',
-                        'marionette/*',
-                        'mozbase/*',
-                        'puppeteer/*',
-                        'tools/wptserve/*',
-                        ]
-        super(FirefoxUITests, self).download_and_extract(extract_dirs=extract_dirs)
+        target_unzip_dirs = ['config/*',
+                             'firefox-ui/*',
+                             'marionette/*',
+                             'mozbase/*',
+                             'puppeteer/*',
+                             'tools/wptserve/*',
+                             ]
+        super(FirefoxUITests, self).download_and_extract(target_unzip_dirs=target_unzip_dirs)
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -298,6 +298,53 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             binary_path=self.binary_path,
             env=self.query_env(),
         )
+
+    def download_unzip(self, url, parent_dir, target_unzip_dirs=None, halt_on_failure=True):
+        """Overwritten method from BaseScript until bug 1258539 is fixed.
+
+        The downloaded file will always be saved to the working directory and is not getting
+        deleted after extracting.
+
+        Args:
+            url (str): URL where the file to be downloaded is located.
+            parent_dir (str): directory where the downloaded file will
+                              be extracted to.
+            target_unzip_dirs (list, optional): directories inside the zip file to extract.
+                                                Defaults to `None`.
+            halt_on_failure (bool, optional): whether or not to redefine the
+                                              log level as `FATAL` on errors. Defaults to True.
+
+        """
+        import fnmatch
+        import itertools
+        import functools
+        import zipfile
+
+        def _filter_entries(namelist):
+            """Filter entries of the archive based on the specified list of extract_dirs."""
+            filter_partial = functools.partial(fnmatch.filter, namelist)
+            for entry in itertools.chain(*map(filter_partial, target_unzip_dirs or ['*'])):
+                yield entry
+
+        dirs = self.query_abs_dirs()
+        zip = self.download_file(url, parent_dir=dirs['abs_work_dir'],
+                                 error_level=FATAL)
+
+        try:
+            self.info('Using ZipFile to extract {0} to {1}'.format(zip, parent_dir))
+            with zipfile.ZipFile(zip) as bundle:
+                for entry in _filter_entries(bundle.namelist()):
+                    bundle.extract(entry, path=parent_dir)
+
+                    # ZipFile doesn't preserve permissions: http://bugs.python.org/issue15795
+                    fname = os.path.realpath(os.path.join(parent_dir, entry))
+                    mode = bundle.getinfo(entry).external_attr >> 16 & 0x1FF
+                    # Only set permissions if attributes are available.
+                    if mode:
+                        os.chmod(fname, mode)
+        except zipfile.BadZipfile as e:
+            self.log('{0} ({1})'.format(e.message, zip),
+                     level=FATAL, exit_code=2)
 
 
 class FirefoxUIFunctionalTests(FirefoxUITests):
