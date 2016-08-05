@@ -95,6 +95,7 @@ interaction.clickElement = function(el, strict = false, specCompat = false) {
     if (!visible) {
       el.scrollIntoView(false);
     }
+    visible = element.isInteractable(el);
   } else {
     visible = element.isVisible(el);
   }
