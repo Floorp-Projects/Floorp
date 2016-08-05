@@ -162,21 +162,21 @@ event.sendKey = function(key, window = undefined) {
 
 // TODO(ato): Unexpose this when action.Chain#emitMouseEvent
 // no longer emits its own events
-event.parseModifiers_ = function(event) {
+event.parseModifiers_ = function(modifiers) {
   let mval = 0;
-  if (event.shiftKey) {
+  if (modifiers.shiftKey) {
     mval |= Ci.nsIDOMNSEvent.SHIFT_MASK;
   }
-  if (event.ctrlKey) {
+  if (modifiers.ctrlKey) {
     mval |= Ci.nsIDOMNSEvent.CONTROL_MASK;
   }
-  if (event.altKey) {
+  if (modifiers.altKey) {
     mval |= Ci.nsIDOMNSEvent.ALT_MASK;
   }
-  if (event.metaKey) {
+  if (modifiers.metaKey) {
     mval |= Ci.nsIDOMNSEvent.META_MASK;
   }
-  if (event.accelKey) {
+  if (modifiers.accelKey) {
     if (navigator.platform.indexOf("Mac") >= 0) {
       mval |= Ci.nsIDOMNSEvent.META_MASK;
     } else {
