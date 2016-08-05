@@ -244,13 +244,13 @@ event.synthesizeMouseAtPoint = function(
 
   let domutils = getDOMWindowUtils(window);
 
-  let button = event.button || 0;
-  let clickCount = event.clickCount || 1;
-  let modifiers = event.parseModifiers_(event);
+  let button = opts.button || 0;
+  let clickCount = opts.clickCount || 1;
+  let modifiers = event.parseModifiers_(opts);
 
-  if (("type" in event) && event.type) {
+  if (("type" in event) && opts.type) {
     domutils.sendMouseEvent(
-        event.type, left, top, button, clickCount, modifiers);
+        opts.type, left, top, button, clickCount, modifiers);
   } else {
     domutils.sendMouseEvent(
         "mousedown", left, top, button, clickCount, modifiers);
