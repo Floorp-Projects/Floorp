@@ -20,6 +20,18 @@ config = {
         ("browser/confvars.sh",
          "MAR_CHANNEL_ID=firefox-mozilla-release",
          "MAR_CHANNEL_ID=firefox-mozilla-esr"),
+        ("build/mozconfig.common",
+          "# Enable checking that add-ons are signed by the trusted root",
+          "# Disable checking that add-ons are signed by the trusted root")
+        ("build/mozconfig.common",
+          "MOZ_ADDON_SIGNING=${MOZ_ADDON_SIGNING-1}",
+          "MOZ_ADDON_SIGNING=${MOZ_ADDON_SIGNING-0}"),
+        ("build/mozconfig.common",
+           "# Enable enforcing that add-ons are signed by the trusted root",
+           "# Disable enforcing that add-ons are signed by the trusted root")
+        ("build/mozconfig.common",
+          "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}",
+          "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}"),
     ],
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     # "hg_share_base": None,

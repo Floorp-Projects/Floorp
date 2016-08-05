@@ -724,6 +724,16 @@ class InlineOpaqueTypedObject : public InlineTypedObject
     static const Class class_;
 };
 
+// Class for the global SIMD object.
+class SimdObject : public JSObject
+{
+  public:
+    static const Class class_;
+    static MOZ_MUST_USE bool toString(JSContext* cx, unsigned int argc, Value* vp);
+    static MOZ_MUST_USE bool resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId,
+                                     bool* resolved);
+};
+
 /*
  * Usage: NewOpaqueTypedObject(typeObj)
  *

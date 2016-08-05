@@ -247,8 +247,6 @@ public:
     return true;
   }
 
-  virtual bool RecvGetTileSize(int32_t* aWidth, int32_t* aHeight) override;
-
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override;
   virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override;
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override;

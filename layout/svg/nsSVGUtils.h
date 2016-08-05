@@ -47,7 +47,7 @@ struct nsRect;
 
 namespace mozilla {
 class SVGContextPaint;
-struct SVGTextContextPaint;
+struct SVGContextPaintImpl;
 namespace dom {
 class Element;
 class UserSpaceMetrics;
@@ -185,7 +185,7 @@ public:
   typedef mozilla::gfx::GeneralPattern GeneralPattern;
   typedef mozilla::gfx::Size Size;
   typedef mozilla::SVGContextPaint SVGContextPaint;
-  typedef mozilla::SVGTextContextPaint SVGTextContextPaint;
+  typedef mozilla::SVGContextPaintImpl SVGContextPaintImpl;
   typedef mozilla::image::DrawResult DrawResult;
 
   static void Init();
@@ -497,15 +497,6 @@ public:
 
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
-
-  static SVGContextPaint* GetContextPaint(nsIContent* aContent);
-
-  static DrawMode
-  SetupContextPaint(const DrawTarget* aDrawTarget,
-                    const gfxMatrix& aContextMatrix,
-                    nsIFrame* aFrame,
-                    SVGContextPaint* aOuterContextPaint,
-                    SVGTextContextPaint* aThisContextPaint);
 
   static void
   MakeFillPatternFor(nsIFrame *aFrame,

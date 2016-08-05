@@ -858,8 +858,10 @@ PresentationControllingInfo::NotifyDisconnected(nsresult aReason)
 
   if (NS_WARN_IF(NS_FAILED(aReason) || !mIsResponderReady)) {
     // The presentation session instance may already exist.
-    // Change the state to TERMINATED since it never succeeds.
-    SetStateWithReason(nsIPresentationSessionListener::STATE_TERMINATED, aReason);
+    // Change the state to CLOSED if it is not terminated.
+    if (nsIPresentationSessionListener::STATE_TERMINATED != mState) {
+      SetStateWithReason(nsIPresentationSessionListener::STATE_CLOSED, aReason);
+    }
 
     // Reply error for an abnormal close.
     return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
@@ -1211,6 +1213,17 @@ PresentationPresentingInfo::NotifyResponderReady()
   }
 
   return NS_OK;
+}
+
+nsresult
+PresentationPresentingInfo::NotifyResponderFailure()
+{
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+
+  return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
 }
 
 // nsIPresentationControlChannelListener

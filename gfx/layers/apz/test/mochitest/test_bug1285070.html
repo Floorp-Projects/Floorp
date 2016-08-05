@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1285070
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1285070</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  var subtests = [
+    {'file': 'helper_bug1285070.html', 'prefs': [["dom.w3c_pointer_events.enabled", true]]}
+  ];
+
+  if (isApzEnabled()) {
+    SimpleTest.waitForExplicitFinish();
+    window.onload = function() {
+      runSubtestsSeriallyInFreshWindows(subtests)
+      .then(SimpleTest.finish);
+    };
+  }
+
+  </script>
+</head>
+<body>
+</body>
+</html>

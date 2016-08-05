@@ -889,7 +889,8 @@ PresentationService::GetExistentSessionIdAtLaunch(uint64_t aWindowId,
 
 NS_IMETHODIMP
 PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
-                                         uint64_t aWindowId)
+                                         uint64_t aWindowId,
+                                         bool aIsLoading)
 {
   RefPtr<PresentationSessionInfo> info =
     GetSessionInfo(aSessionId, nsIPresentationService::ROLE_RECEIVER);
@@ -898,6 +899,10 @@ PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
   }
 
   AddRespondingSessionId(aWindowId, aSessionId);
+
+  if (!aIsLoading) {
+    return static_cast<PresentationPresentingInfo*>(info.get())->NotifyResponderFailure();
+  }
 
   nsCOMPtr<nsIPresentationRespondingListener> listener;
   if (mRespondingListeners.Get(aWindowId, getter_AddRefs(listener))) {

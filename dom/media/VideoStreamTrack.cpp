@@ -5,6 +5,9 @@
 
 #include "VideoStreamTrack.h"
 
+#include "MediaStreamVideoSink.h"
+#include "MediaStreamGraph.h"
+
 #include "mozilla/dom/VideoStreamTrackBinding.h"
 
 namespace mozilla {
@@ -14,6 +17,18 @@ JSObject*
 VideoStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return VideoStreamTrackBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+VideoStreamTrack::AddVideoOutput(MediaStreamVideoSink* aSink)
+{
+  GetOwnedStream()->AddVideoOutput(aSink, mTrackID);
+}
+
+void
+VideoStreamTrack::RemoveVideoOutput(MediaStreamVideoSink* aSink)
+{
+  GetOwnedStream()->RemoveVideoOutput(aSink, mTrackID);
 }
 
 } // namespace dom

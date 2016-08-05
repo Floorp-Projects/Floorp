@@ -51,6 +51,7 @@
 #include "ThirdPartyUtil.h"
 #include "nsStructuredCloneContainer.h"
 #include "gfxPlatform.h"
+#include "mozilla/gfx/gfxVars.h"
 
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
@@ -1373,6 +1374,7 @@ LayoutModuleDtor()
   // these modules are shut down after all the layout cleanup runs.
   mozilla::image::ShutdownModule();
   gfxPlatform::Shutdown();
+  gfx::gfxVars::Shutdown();
 
   nsScriptSecurityManager::Shutdown();
   xpcModuleDtor();

@@ -100,9 +100,11 @@ VideoSegment::AppendFrame(already_AddRefed<Image>&& aImage,
                           StreamTime aDuration,
                           const IntSize& aIntrinsicSize,
                           const PrincipalHandle& aPrincipalHandle,
-                          bool aForceBlack)
+                          bool aForceBlack,
+                          TimeStamp aTimeStamp)
 {
   VideoChunk* chunk = AppendChunk(aDuration);
+  chunk->mTimeStamp = aTimeStamp;
   VideoFrame frame(aImage, aIntrinsicSize);
   frame.SetForceBlack(aForceBlack);
   frame.SetPrincipalHandle(aPrincipalHandle);

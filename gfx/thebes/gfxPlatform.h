@@ -116,6 +116,8 @@ GetBackendName(mozilla::gfx::BackendType aBackend)
         return "direct2d 1.1";
       case mozilla::gfx::BackendType::NONE:
         return "none";
+      case mozilla::gfx::BackendType::BACKEND_LAST:
+        return "invalid";
   }
   MOZ_CRASH("Incomplete switch");
 }
@@ -313,10 +315,6 @@ public:
     virtual nsresult GetFontList(nsIAtom *aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts);
-
-    int GetTileWidth();
-    int GetTileHeight();
-    void SetTileSize(int aWidth, int aHeight);
 
     /**
      * Rebuilds the any cached system font lists
@@ -805,9 +803,6 @@ private:
     mozilla::gfx::BackendType mContentBackend;
     // Bitmask of backend types we can use to render content
     uint32_t mContentBackendBitmask;
-
-    int mTileWidth;
-    int mTileHeight;
 
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     mozilla::widget::GfxInfoCollector<gfxPlatform> mApzSupportCollector;

@@ -29,6 +29,7 @@ namespace image {
 class Image;
 class ISurfaceProvider;
 class LookupResult;
+class SurfaceCacheImpl;
 struct SurfaceMemoryCounter;
 
 /*
@@ -117,6 +118,36 @@ VectorSurfaceKey(const gfx::IntSize& aSize,
   // *does* affect how a VectorImage renders, we'll have to change this.
   return SurfaceKey(aSize, aSVGContext, aAnimationTime, DefaultSurfaceFlags());
 }
+
+
+/**
+ * AvailabilityState is used to track whether an ISurfaceProvider has a surface
+ * available or is just a placeholder.
+ *
+ * To ensure that availability changes are atomic (and especially that internal
+ * SurfaceCache code doesn't have to deal with asynchronous availability
+ * changes), an ISurfaceProvider which starts as a placeholder can only reveal
+ * the fact that it now has a surface available via a call to
+ * SurfaceCache::SurfaceAvailable().
+ */
+class AvailabilityState
+{
+public:
+  static AvailabilityState StartAvailable() { return AvailabilityState(true); }
+  static AvailabilityState StartAsPlaceholder() { return AvailabilityState(false); }
+
+  bool IsAvailable() const { return mIsAvailable; }
+  bool IsPlaceholder() const { return !mIsAvailable; }
+
+private:
+  friend class SurfaceCacheImpl;
+
+  explicit AvailabilityState(bool aIsAvailable) : mIsAvailable(aIsAvailable) { }
+
+  void SetAvailable() { mIsAvailable = true; }
+
+  bool mIsAvailable;
+};
 
 enum class InsertOutcome : uint8_t {
   SUCCESS,                 // Success (but see Insert documentation).
@@ -282,6 +313,37 @@ struct SurfaceCache
    */
   static InsertOutcome InsertPlaceholder(const ImageKey    aImageKey,
                                          const SurfaceKey& aSurfaceKey);
+
+  /**
+   * Mark the cache entry @aProvider as having an available surface. This turns
+   * a placeholder cache entry into a normal cache entry. The cache entry
+   * becomes locked if the associated image is locked; otherwise, it starts in
+   * the unlocked state.
+   *
+   * If the cache entry containing @aProvider has already been evicted from the
+   * surface cache, this function has no effect.
+   *
+   * It's illegal to call this function if @aProvider is not a placeholder; by
+   * definition, non-placeholder ISurfaceProviders should have a surface
+   * available already.
+   *
+   * XXX(seth): We're currently in a transitional state where two notions of
+   * placeholder exist: the old one (placeholders are an "empty" cache entry
+   * inserted via InsertPlaceholder(), which then gets replaced by inserting a
+   * real cache entry with the same keys via Insert()) and the new one (where
+   * the same cache entry, inserted via Insert(), starts in a placeholder state
+   * and then transitions to being a normal cache entry via this function). The
+   * old mechanism will be removed in bug 1292392.
+   *
+   * @param aProvider       The cache entry that now has a surface available.
+   * @param aImageKey       Key data identifying which image the cache entry
+   *                        belongs to.
+   * @param aSurfaceKey     Key data which uniquely identifies the requested
+   *                        cache entry.
+   */
+  static void SurfaceAvailable(NotNull<ISurfaceProvider*> aProvider,
+                               const ImageKey    aImageKey,
+                               const SurfaceKey& aSurfaceKey);
 
   /**
    * Checks if a surface of a given size could possibly be stored in the cache.
