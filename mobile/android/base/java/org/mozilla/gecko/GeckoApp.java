@@ -1284,9 +1284,7 @@ public abstract class GeckoApp
 
         if (Versions.preMarshmallow) {
             mTextSelection = new ActionBarTextSelection(
-                    (TextSelectionHandle) findViewById(R.id.anchor_handle),
-                    (TextSelectionHandle) findViewById(R.id.caret_handle),
-                    (TextSelectionHandle) findViewById(R.id.focus_handle));
+                    (TextSelectionHandle) findViewById(R.id.anchor_handle));
         } else {
             mTextSelection = new FloatingToolbarTextSelection(this, mLayerView);
         }

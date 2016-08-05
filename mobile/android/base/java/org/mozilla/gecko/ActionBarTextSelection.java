@@ -6,18 +6,12 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.BitmapUtils.BitmapLoader;
-import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.text.TextSelection;
-import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.ActionModeCompat.Callback;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 
@@ -34,24 +28,16 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.util.Log;
-import android.view.View;
 
-class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventListener, LayerView.DynamicToolbarListener {
+class ActionBarTextSelection implements TextSelection, GeckoEventListener {
     private static final String LOGTAG = "GeckoTextSelection";
     private static final int SHUTDOWN_DELAY_MS = 250;
 
     private final TextSelectionHandle anchorHandle;
-    private final TextSelectionHandle caretHandle;
-    private final TextSelectionHandle focusHandle;
 
-    private final DrawListener mDrawListener;
     private boolean mDraggingHandles;
 
     private String selectionID; // Unique ID provided for each selection action.
-    private float mViewLeft;
-    private float mViewTop;
-    private float mViewZoom;
-    private boolean mForceReposition;
 
     private String mCurrentItems;
 
@@ -73,38 +59,21 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
     };
     private ActionModeTimerTask mActionModeTimerTask;
 
-    ActionBarTextSelection(TextSelectionHandle anchorHandle,
-                           TextSelectionHandle caretHandle,
-                           TextSelectionHandle focusHandle) {
+    ActionBarTextSelection(TextSelectionHandle anchorHandle) {
         this.anchorHandle = anchorHandle;
-        this.caretHandle = caretHandle;
-        this.focusHandle = focusHandle;
-
-        mDrawListener = new DrawListener() {
-            @Override
-            public void drawFinished() {
-                if (!mDraggingHandles) {
-                    GeckoAppShell.notifyObservers("TextSelection:LayerReflow", "");
-                }
-            }
-        };
     }
 
     @Override
     public void create() {
         // Only register listeners if we have valid start/middle/end handles
-        if (anchorHandle == null || caretHandle == null || focusHandle == null) {
+        if (anchorHandle == null) {
             Log.e(LOGTAG, "Failed to initialize text selection because at least one handle is null");
         } else {
             EventDispatcher.getInstance().registerGeckoThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",
-                "TextSelection:ShowHandles",
-                "TextSelection:HideHandles",
-                "TextSelection:PositionHandles",
-                "TextSelection:Update",
-                "TextSelection:DraggingHandle");
+                "TextSelection:Update");
         }
     }
 
@@ -120,94 +89,19 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
             "TextSelection:ActionbarInit",
             "TextSelection:ActionbarStatus",
             "TextSelection:ActionbarUninit",
-            "TextSelection:ShowHandles",
-            "TextSelection:HideHandles",
-            "TextSelection:PositionHandles",
-            "TextSelection:Update",
-            "TextSelection:DraggingHandle");
-    }
-
-    private TextSelectionHandle getHandle(String name) {
-        switch (TextSelectionHandle.HandleType.valueOf(name)) {
-            case ANCHOR:
-                return anchorHandle;
-            case CARET:
-                return caretHandle;
-            case FOCUS:
-                return focusHandle;
-
-            default:
-                throw new IllegalArgumentException("TextSelectionHandle is invalid type.");
-        }
+            "TextSelection:Update");
     }
 
     @Override
     public void handleMessage(final String event, final JSONObject message) {
-        if ("TextSelection:DraggingHandle".equals(event)) {
-            mDraggingHandles = message.optBoolean("dragging", false);
-            return;
-        }
-
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (event.equals("TextSelection:ShowHandles")) {
-                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW,
-                            TelemetryContract.Method.CONTENT, "text_selection");
-
-                        selectionID = message.getString("selectionID");
-                        final JSONArray handles = message.getJSONArray("handles");
-                        for (int i = 0; i < handles.length(); i++) {
-                            String handle = handles.getString(i);
-                            getHandle(handle).setVisibility(View.VISIBLE);
-                        }
-
-                        mViewLeft = 0.0f;
-                        mViewTop = 0.0f;
-                        mViewZoom = 0.0f;
-
-                        // Create text selection layer and add draw-listener for positioning on reflows
-                        LayerView layerView = GeckoAppShell.getLayerView();
-                        if (layerView != null) {
-                            layerView.addDrawListener(mDrawListener);
-                            layerView.getDynamicToolbarAnimator().addTranslationListener(ActionBarTextSelection.this);
-                        }
-
-                        if (handles.length() > 1)
-                            GeckoAppShell.performHapticFeedback(true);
-                    } else if (event.equals("TextSelection:Update")) {
+                    if (event.equals("TextSelection:Update")) {
                         if (mActionModeTimerTask != null)
                             mActionModeTimerTask.cancel();
                         showActionMode(message.getJSONArray("actions"));
-                    } else if (event.equals("TextSelection:HideHandles")) {
-                        // Remove draw-listener and text selection layer
-                        LayerView layerView = GeckoAppShell.getLayerView();
-                        if (layerView != null) {
-                            layerView.removeDrawListener(mDrawListener);
-                            layerView.getDynamicToolbarAnimator().removeTranslationListener(ActionBarTextSelection.this);
-                        }
-
-                        mActionModeTimerTask = new ActionModeTimerTask();
-                        mActionModeTimer.schedule(mActionModeTimerTask, SHUTDOWN_DELAY_MS);
-
-                        anchorHandle.setVisibility(View.GONE);
-                        caretHandle.setVisibility(View.GONE);
-                        focusHandle.setVisibility(View.GONE);
-
-                    } else if (event.equals("TextSelection:PositionHandles")) {
-                        final JSONArray positions = message.getJSONArray("positions");
-                        for (int i = 0; i < positions.length(); i++) {
-                            JSONObject position = positions.getJSONObject(i);
-                            final int left = position.getInt("left");
-                            final int top = position.getInt("top");
-                            final boolean rtl = position.getBoolean("rtl");
-
-                            TextSelectionHandle handle = getHandle(position.getString("handle"));
-                            handle.setVisibility(position.getBoolean("hidden") ? View.GONE : View.VISIBLE);
-                            handle.positionFromGecko(left, top, rtl);
-                        }
-
                     } else if (event.equals("TextSelection:ActionbarInit")) {
                         // Init / Open the action bar. Note the current selectionID,
                         // cancel any pending actionBar close.
@@ -272,51 +166,6 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
             presenter.endActionModeCompat();
         }
         mCurrentItems = null;
-    }
-
-    @Override
-    public void draw(final RenderContext context) {
-        // cache the relevant values from the context and bail out if they are the same. we do this
-        // because this draw function gets called a lot (once per compositor frame) and we want to
-        // avoid doing a lot of extra work in cases where it's not needed.
-        final float viewLeft = context.viewport.left;
-        final float viewTop = context.viewport.top;
-        final float viewZoom = context.zoomFactor;
-
-        if (!mForceReposition
-            && FloatUtils.fuzzyEquals(mViewLeft, viewLeft)
-            && FloatUtils.fuzzyEquals(mViewTop, viewTop)
-            && FloatUtils.fuzzyEquals(mViewZoom, viewZoom)) {
-            return;
-        }
-        mForceReposition = false;
-        mViewLeft = viewLeft;
-        mViewTop = viewTop;
-        mViewZoom = viewZoom;
-
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                anchorHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);
-                caretHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);
-                focusHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);
-            }
-        });
-    }
-
-    @Override
-    public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation) {
-        mForceReposition = true;
-    }
-
-    @Override
-    public void onPanZoomStopped() {
-        // no-op
-    }
-
-    @Override
-    public void onMetricsChanged(ImmutableViewportMetrics viewport) {
-        mForceReposition = true;
     }
 
     private class TextSelectionActionModeCallback implements Callback {
