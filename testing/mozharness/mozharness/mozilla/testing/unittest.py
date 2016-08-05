@@ -235,7 +235,7 @@ class EmulatorMixin(object):
         dirs = self.query_abs_dirs()
         self.mkdir_p(dirs['abs_emulator_dir'])
         if self.config.get('emulator_url'):
-            self.download_unpack(self.config['emulator_url'], dirs['abs_emulator_dir'])
+            self.download_unzip(self.config['emulator_url'], dirs['abs_emulator_dir'])
         elif self.config.get('emulator_manifest'):
             manifest_path = self.create_tooltool_manifest(self.config['emulator_manifest'])
             do_unzip = True

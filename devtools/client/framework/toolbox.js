@@ -1414,9 +1414,14 @@ Toolbox.prototype = {
    * @param  {string} id
    *         The id of tool to focus
    */
-  focusTool: function (id) {
+  focusTool: function (id, state = true) {
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
-    iframe.focus();
+
+    if (state) {
+      iframe.focus();
+    } else {
+      iframe.blur();
+    }
   },
 
   /**
@@ -1805,16 +1810,17 @@ Toolbox.prototype = {
 
     this.emit("host-will-change", hostType);
 
+    // If we call swapFrameLoaders() when a tool if focused it leaves the
+    // browser in a state where it thinks that the tool is focused but in
+    // reality the content area is focused. Blurring the tool before calling
+    // swapFrameLoaders() works around this issue.
+    this.focusTool(this.currentToolId, false);
+
     let newHost = this._createHost(hostType);
     return newHost.create().then(iframe => {
       // change toolbox document's parent to the new host
       iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
       iframe.swapFrameLoaders(this.frame);
-
-      // See bug 1022726, most probably because of swapFrameLoaders we need to
-      // first focus the window here, and then once again further below to make
-      // sure focus actually happens.
-      this.win.focus();
 
       this._host.off("window-closed", this.destroy);
       this.destroyHost();
@@ -1830,9 +1836,8 @@ Toolbox.prototype = {
       this._buildDockButtons();
       this._addKeysToWindow();
 
-      // Focus the contentWindow to make sure keyboard shortcuts work straight
-      // away.
-      this.win.focus();
+      // Focus the tool to make sure keyboard shortcuts work straight away.
+      this.focusTool(this.currentToolId, true);
 
       this.emit("host-changed");
     });

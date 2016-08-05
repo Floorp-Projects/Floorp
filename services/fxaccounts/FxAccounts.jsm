@@ -43,24 +43,26 @@ var publicProperties = [
   "getAssertion",
   "getDeviceId",
   "getKeys",
-  "getSignedInUser",
   "getOAuthToken",
+  "getSignedInUser",
   "getSignedInUserProfile",
+  "handleDeviceDisconnection",
   "invalidateCertificate",
   "loadAndPoll",
   "localtimeOffsetMsec",
   "now",
-  "promiseAccountsForceSigninURI",
   "promiseAccountsChangeProfileURI",
+  "promiseAccountsForceSigninURI",
   "promiseAccountsManageURI",
   "removeCachedOAuthToken",
   "resendVerificationEmail",
+  "resetCredentials",
+  "sessionStatus",
   "setSignedInUser",
   "signOut",
-  "updateUserAccountData",
   "updateDeviceRegistration",
-  "handleDeviceDisconnection",
-  "whenVerified"
+  "updateUserAccountData",
+  "whenVerified",
 ];
 
 // An AccountState object holds all state related to one specific account.
@@ -794,6 +796,22 @@ FxAccountsInternal.prototype = {
   },
 
   /**
+   * Check the status of the current session using cached credentials.
+   *
+   * @return Promise
+   *        Resolves with a boolean indicating if the session is still valid
+   */
+  sessionStatus() {
+    return this.getSignedInUser().then(data => {
+      if (!data.sessionToken) {
+        return Promise.reject(new Error(
+          "sessionStatus called without a session token"));
+      }
+      return this.fxAccountsClient.sessionStatus(data.sessionToken);
+    });
+  },
+
+  /**
    * Fetch encryption keys for the signed-in-user from the FxA API server.
    *
    * Not for user consumption.  Exists to cause the keys to be fetch.
@@ -1506,6 +1524,28 @@ FxAccountsInternal.prototype = {
     });
   },
 
+  /**
+   * Delete all the cached persisted credentials we store for FxA.
+   *
+   * @return Promise resolves when the user data has been persisted
+  */
+  resetCredentials() {
+    // Delete all fields except those required for the user to
+    // reauthenticate.
+    let updateData = {};
+    let clearField = field => {
+      if (!FXA_PWDMGR_REAUTH_WHITELIST.has(field)) {
+        updateData[field] = null;
+      }
+    }
+    FXA_PWDMGR_PLAINTEXT_FIELDS.forEach(clearField);
+    FXA_PWDMGR_SECURE_FIELDS.forEach(clearField);
+    FXA_PWDMGR_MEMORY_FIELDS.forEach(clearField);
+
+    let currentState = this.currentAccountState;
+    return currentState.updateUserAccountData(updateData);
+  },
+
   // If you change what we send to the FxA servers during device registration,
   // you'll have to bump the DEVICE_REGISTRATION_VERSION number to force older
   // devices to re-register when Firefox updates
@@ -1651,22 +1691,8 @@ FxAccountsInternal.prototype = {
         log.info("token invalidated because the account no longer exists");
         return this.signOut(true);
       }
-
-      // Delete all fields except those required for the user to
-      // reauthenticate.
       log.info("clearing credentials to handle invalid token error");
-      let updateData = {};
-      let clearField = field => {
-        if (!FXA_PWDMGR_REAUTH_WHITELIST.has(field)) {
-          updateData[field] = null;
-        }
-      }
-      FXA_PWDMGR_PLAINTEXT_FIELDS.forEach(clearField);
-      FXA_PWDMGR_SECURE_FIELDS.forEach(clearField);
-      FXA_PWDMGR_MEMORY_FIELDS.forEach(clearField);
-
-      let currentState = this.currentAccountState;
-      return currentState.updateUserAccountData(updateData);
+      return this.resetCredentials();
     }).then(() => Promise.reject(err));
   },
 };

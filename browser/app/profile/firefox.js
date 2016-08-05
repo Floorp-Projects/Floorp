@@ -1350,7 +1350,16 @@ pref("media.gmp-eme-adobe.enabled", true);
 
 #ifdef MOZ_WIDEVINE_EME
 pref("media.gmp-widevinecdm.visible", true);
+// On Linux Widevine is visible but disabled by default. This is because
+// enabling Widevine downloads a proprietary binary, which users on an open
+// source operating system didn't opt into. The first time a site using EME
+// is encountered, the user will be prompted to enable EME, whereupon the
+// EME plugin binary will be downloaded if permission is granted.
+#ifdef XP_LINUX
+pref("media.gmp-widevinecdm.enabled", false);
+#else
 pref("media.gmp-widevinecdm.enabled", true);
+#endif
 #endif
 
 // Play with different values of the decay time and get telemetry,

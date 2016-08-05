@@ -5,6 +5,7 @@
 
 DIRS += [
     'content',
+    'new'
 ]
 
 DevToolsModules(

@@ -401,6 +401,17 @@ You can set this by:
         if message:
             self.fatal(message + "Can't run download-and-extract... exiting")
 
+        if self.config.get("developer_mode") and self._is_darwin():
+            # Bug 1066700 only affects Mac users that try to run mozharness locally
+            version = self._query_binary_version(
+                    regex=re.compile("UnZip\ (\d+\.\d+)\ .*", re.MULTILINE),
+                    cmd=[self.query_exe('unzip'), '-v']
+            )
+            if not version >= 6:
+                self.fatal("We require a more recent version of unzip to unpack our tests.zip files.\n"
+                        "You are currently using version %s. Please update to at least 6.0.\n"
+                        "You can visit http://www.info-zip.org/UnZip.html" % version)
+
     def _read_packages_manifest(self):
         dirs = self.query_abs_dirs()
         source = self.download_file(self.test_packages_url,
@@ -418,7 +429,7 @@ You can set this by:
                   pprint.pformat(package_requirements))
         return package_requirements
 
-    def _download_test_packages(self, suite_categories, extract_dirs):
+    def _download_test_packages(self, suite_categories, target_unzip_dirs):
         # Some platforms define more suite categories/names than others.
         # This is a difference in the convention of the configs more than
         # to how these tests are run, so we pave over these differences here.
@@ -454,21 +465,21 @@ You can set this by:
                       (target_packages, category))
             for file_name in target_packages:
                 target_dir = test_install_dir
-                unpack_dirs = extract_dirs
+                unzip_dirs = target_unzip_dirs
                 if "jsshell-" in file_name or file_name == "target.jsshell.zip":
                     self.info("Special-casing the jsshell zip file")
-                    unpack_dirs = None
+                    unzip_dirs = None
                     target_dir = dirs['abs_test_bin_dir']
                 url = self.query_build_dir_url(file_name)
-                self.download_unpack(url, target_dir,
-                                     extract_dirs=unpack_dirs)
+                self.download_unzip(url, target_dir,
+                                     target_unzip_dirs=unzip_dirs)
 
-    def _download_test_zip(self, extract_dirs=None):
+    def _download_test_zip(self, target_unzip_dirs=None):
         dirs = self.query_abs_dirs()
         test_install_dir = dirs.get('abs_test_install_dir',
                                     os.path.join(dirs['abs_work_dir'], 'tests'))
-        self.download_unpack(self.test_url, test_install_dir,
-                             extract_dirs=extract_dirs)
+        self.download_unzip(self.test_url, test_install_dir,
+                             target_unzip_dirs=target_unzip_dirs)
 
     def structured_output(self, suite_category):
         """Defines whether structured logging is in use in this configuration. This
@@ -515,9 +526,9 @@ You can set this by:
 
         self.set_buildbot_property("symbols_url", self.symbols_url,
                                    write_to_file=True)
-        self.download_unpack(self.symbols_url, self.symbols_path)
+        self.download_unzip(self.symbols_url, self.symbols_path)
 
-    def download_and_extract(self, extract_dirs=None, suite_categories=None):
+    def download_and_extract(self, target_unzip_dirs=None, suite_categories=None):
         """
         download and extract test zip / download installer
         """
@@ -540,7 +551,7 @@ You can set this by:
                            ' package data at "%s" will be ignored.' %
                            (self.config.get('test_url'), self.test_packages_url))
 
-            self._download_test_zip(extract_dirs)
+            self._download_test_zip(target_unzip_dirs)
         else:
             if not self.test_packages_url:
                 # The caller intends to download harness specific packages, but doesn't know
@@ -550,7 +561,7 @@ You can set this by:
                 self.test_packages_url = self.query_prefixed_build_dir_url('.test_packages.json')
 
             suite_categories = suite_categories or ['common']
-            self._download_test_packages(suite_categories, extract_dirs)
+            self._download_test_packages(suite_categories, target_unzip_dirs)
 
         self._download_installer()
         if self.config.get('download_symbols'):
