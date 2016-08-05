@@ -541,7 +541,7 @@ var PageStyleHandler = {
             currentStyleSheet.ownerNode.nodeName.toLowerCase() != "style") {
           URI = Services.io.newURI(currentStyleSheet.href, null, null);
         }
-      } catch(e) {
+      } catch (e) {
         if (e.result != Cr.NS_ERROR_MALFORMED_URI) {
           throw e;
         }
@@ -652,7 +652,7 @@ var DOMFullscreenHandler = {
 
   receiveMessage: function(aMessage) {
     let windowUtils = this._windowUtils;
-    switch(aMessage.name) {
+    switch (aMessage.name) {
       case "DOMFullscreen:Entered": {
         this._lastTransactionId = windowUtils.lastTransactionId;
         if (!windowUtils.handleFullscreenRequests() &&

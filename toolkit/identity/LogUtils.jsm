@@ -27,7 +27,7 @@ IdentityLogger.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
 
   observe: function observe(aSubject, aTopic, aData) {
-    switch(aTopic) {
+    switch (aTopic) {
       case "nsPref:changed":
         this._debug = Services.prefs.getBoolPref(PREF_DEBUG);
         break;
@@ -58,7 +58,7 @@ IdentityLogger.prototype = {
       } else {
         try {
           strings.push(JSON.stringify(arg, null, 2));
-        } catch(err) {
+        } catch (err) {
           strings.push("<<something>>");
         }
       }

@@ -27,7 +27,7 @@ function Transaction(aDatabase) {
     this._db.beginTransaction();
     this._hasTransaction = true;
   }
-  catch(e) { /* om nom nom exceptions */ }
+  catch (e) { /* om nom nom exceptions */ }
 }
 
 Transaction.prototype = {
@@ -583,7 +583,7 @@ LoginManagerStorage_mozStorage.prototype = {
                      timeDeleted: Date.now() };
       let stmt = this._dbCreateStatement(query, params);
       stmt.execute();
-    } catch(ex) {
+    } catch (ex) {
       throw ex;
     } finally {
       if (stmt)

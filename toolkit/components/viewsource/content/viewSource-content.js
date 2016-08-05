@@ -126,7 +126,7 @@ var ViewSourceContent = {
     }
     let data = msg.data;
     let objects = msg.objects;
-    switch(msg.name) {
+    switch (msg.name) {
       case "ViewSource:LoadSource":
         this.viewSource(data.URL, data.outerWindowID, data.lineNumber,
                         data.shouldWrap);
@@ -161,7 +161,7 @@ var ViewSourceContent = {
     if (!this.isViewSource) {
       return;
     }
-    switch(event.type) {
+    switch (event.type) {
       case "pagehide":
         this.onPageHide(event);
         break;
@@ -230,7 +230,7 @@ var ViewSourceContent = {
         let otherWebNav = requestor.getInterface(Ci.nsIWebNavigation);
         pageDescriptor = otherWebNav.QueryInterface(Ci.nsIWebPageDescriptor)
                                     .currentDescriptor;
-      } catch(e) {
+      } catch (e) {
         // We couldn't get the page descriptor, so we'll probably end up re-retrieving
         // this document off of the network.
       }
@@ -318,7 +318,7 @@ var ViewSourceContent = {
       let pageLoader = docShell.QueryInterface(Ci.nsIWebPageDescriptor);
       pageLoader.loadPage(pageDescriptor,
                           Ci.nsIWebPageDescriptor.DISPLAY_AS_SOURCE);
-    } catch(e) {
+    } catch (e) {
       // We were not able to load the source from the network cache.
       this.loadSourceFromURL(viewSrcURL);
       return;
@@ -716,7 +716,7 @@ var ViewSourceContent = {
     try {
       pageLoader.loadPage(pageLoader.currentDescriptor,
                           Ci.nsIWebPageDescriptor.DISPLAY_NORMAL);
-    } catch(e) {
+    } catch (e) {
       let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
       webNav.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
     }
@@ -816,7 +816,7 @@ var ViewSourceContent = {
       // get the find service which stores the global find state
       findService = Cc["@mozilla.org/find/find_service;1"]
                     .getService(Ci.nsIFindService);
-    } catch(e) { }
+    } catch (e) { }
     if (!findService)
       return;
 
@@ -878,7 +878,7 @@ var ViewSourceContent = {
                                  Ci.nsISelectionController.SELECTION_ANCHOR_REGION,
                                  true);
     }
-    catch(e) { }
+    catch (e) { }
 
     // restore the current find state
     findService.matchCase     = matchCase;

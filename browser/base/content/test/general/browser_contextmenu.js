@@ -882,7 +882,7 @@ add_task(function* test_plaintext_sendpagetodevice() {
                     "context-viewinfo",     true
                    ];
   yield test_contextmenu("#test-text", plainTextItems, {
-      onContextMenuShown() {
+      *onContextMenuShown() {
         yield openMenuItemSubmenu("context-sendpagetodevice");
       }
     });
@@ -918,7 +918,7 @@ add_task(function* test_link_sendlinktodevice() {
        "*All Devices", true], null,
     ],
     {
-      onContextMenuShown() {
+      *onContextMenuShown() {
         yield openMenuItemSubmenu("context-sendlinktodevice");
       }
     });

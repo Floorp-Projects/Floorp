@@ -674,7 +674,7 @@ var TelemetrySendImpl = {
   },
 
   observe: function(subject, topic, data) {
-    switch(topic) {
+    switch (topic) {
     case TOPIC_IDLE_DAILY:
       SendScheduler.triggerSendingPings(true);
       break;

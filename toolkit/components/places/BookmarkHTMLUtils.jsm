@@ -147,7 +147,7 @@ this.BookmarkHTMLUtils = Object.freeze({
         yield importer.importFromURL(aSpec);
 
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aInitialImport);
-      } catch(ex) {
+      } catch (ex) {
         Cu.reportError("Failed to import bookmarks from " + aSpec + ": " + ex);
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aInitialImport);
         throw ex;
@@ -186,7 +186,7 @@ this.BookmarkHTMLUtils = Object.freeze({
         yield importer.importFromURL(OS.Path.toFileURI(aFilePath));
 
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aInitialImport);
-      } catch(ex) {
+      } catch (ex) {
         Cu.reportError("Failed to import bookmarks from " + aFilePath + ": " + ex);
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aInitialImport);
         throw ex;
@@ -371,14 +371,14 @@ BookmarkImporter.prototype = {
     if (frame.previousDateAdded > 0) {
       try {
         PlacesUtils.bookmarks.setItemDateAdded(containerId, frame.previousDateAdded);
-      } catch(e) {
+      } catch (e) {
       }
       frame.previousDateAdded = 0;
     }
     if (frame.previousLastModifiedDate > 0) {
       try {
         PlacesUtils.bookmarks.setItemLastModified(containerId, frame.previousLastModifiedDate);
-      } catch(e) {
+      } catch (e) {
       }
       // don't clear last-modified, in case there's a description
     }
@@ -402,7 +402,7 @@ BookmarkImporter.prototype = {
       frame.previousId =
         PlacesUtils.bookmarks.insertSeparator(frame.containerId,
                                               PlacesUtils.bookmarks.DEFAULT_INDEX);
-    } catch(e) {}
+    } catch (e) {}
   },
 
   /**
@@ -531,7 +531,7 @@ BookmarkImporter.prototype = {
       // feed since href is optional for them.
       try {
         frame.previousLink = NetUtil.newURI(href);
-      } catch(e) {
+      } catch (e) {
         if (!frame.previousFeed) {
           frame.previousLink = null;
           return;
@@ -565,7 +565,7 @@ BookmarkImporter.prototype = {
                                              frame.previousLink,
                                              PlacesUtils.bookmarks.DEFAULT_INDEX,
                                              "");
-    } catch(e) {
+    } catch (e) {
       return;
     }
 
@@ -574,7 +574,7 @@ BookmarkImporter.prototype = {
       try {
         PlacesUtils.bookmarks.setItemDateAdded(frame.previousId,
           this._convertImportedDateToInternalDate(dateAdded));
-      } catch(e) {
+      } catch (e) {
       }
     }
 
@@ -583,7 +583,7 @@ BookmarkImporter.prototype = {
       try {
         let tagsArray = tags.split(",");
         PlacesUtils.tagging.tagURI(frame.previousLink, tagsArray);
-      } catch(e) {
+      } catch (e) {
       }
     }
 
@@ -592,12 +592,12 @@ BookmarkImporter.prototype = {
       let iconUriObject;
       try {
         iconUriObject = NetUtil.newURI(iconUri);
-      } catch(e) {
+      } catch (e) {
       }
       if (icon || iconUriObject) {
         try {
           this._setFaviconForURI(frame.previousLink, iconUriObject, icon);
-        } catch(e) {
+        } catch (e) {
         }
       }
     }
@@ -618,7 +618,7 @@ BookmarkImporter.prototype = {
                                                   1,
                                                   0,
                                                   PlacesUtils.annotations.EXPIRE_NEVER);
-      } catch(e) {
+      } catch (e) {
       }
     }
 
@@ -687,7 +687,7 @@ BookmarkImporter.prototype = {
         PlacesUtils.bookmarks.setItemTitle(frame.previousId,
                                            frame.previousText);
       }
-    } catch(e) {
+    } catch (e) {
     }
 
 
@@ -696,7 +696,7 @@ BookmarkImporter.prototype = {
       try {
         PlacesUtils.bookmarks.setItemLastModified(frame.previousId,
                                                   frame.previousLastModifiedDate);
-      } catch(e) {
+      } catch (e) {
       }
       // Note: don't clear previousLastModifiedDate, because if this item has a
       // description, we'll need to set it again.
@@ -710,7 +710,7 @@ BookmarkImporter.prototype = {
     if (aElt.namespaceURI != "http://www.w3.org/1999/xhtml") {
       return;
     }
-    switch(aElt.localName) {
+    switch (aElt.localName) {
       case "h1":
         this._handleHead1Begin(aElt);
         break;
@@ -760,7 +760,7 @@ BookmarkImporter.prototype = {
                                                       0,
                                                       PlacesUtils.annotations.EXPIRE_NEVER);
           }
-        } catch(e) {
+        } catch (e) {
         }
         frame.previousText = "";
 
@@ -792,7 +792,7 @@ BookmarkImporter.prototype = {
     if (aElt.namespaceURI != "http://www.w3.org/1999/xhtml") {
       return;
     }
-    switch(aElt.localName) {
+    switch (aElt.localName) {
       case "dl":
       case "ul":
       case "menu":
@@ -943,7 +943,7 @@ BookmarkImporter.prototype = {
         try {
           this._walkTreeForImport(xhr.responseXML);
           resolve();
-        } catch(e) {
+        } catch (e) {
           reject(e);
         }
       };

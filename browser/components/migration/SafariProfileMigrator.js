@@ -171,7 +171,7 @@ Bookmarks.prototype = {
           yield PlacesUtils.bookmarks.insert({
             parentGuid, url: entry.get("URLString"), title
           });
-        } catch(ex) {
+        } catch (ex) {
           Cu.reportError("Invalid Safari bookmark: " + ex);
         }
       }
@@ -222,7 +222,7 @@ History.prototype = {
                             visits: [{ transitionType: transType,
                                        visitDate: visitDate }] });
             }
-            catch(ex) {
+            catch (ex) {
               // Safari's History file may contain malformed URIs which
               // will be ignored.
               Cu.reportError(ex)
@@ -246,7 +246,7 @@ History.prototype = {
           aCallback(false);
         }
       }
-      catch(ex) {
+      catch (ex) {
         Cu.reportError(ex);
         aCallback(false);
       }
@@ -285,7 +285,7 @@ MainPreferencesPropertyList.prototype = {
           try {
             callback(aDict);
           }
-          catch(ex) {
+          catch (ex) {
             Cu.reportError(ex);
           }
         }
@@ -480,13 +480,13 @@ Preferences.prototype = {
     try {
       localeLangGroup = bundle.GetStringFromName(locale);
     }
-    catch(ex) {
+    catch (ex) {
       let hyphenAt = locale.indexOf("-");
       if (hyphenAt != -1) {
         try {
           localeLangGroup = bundle.GetStringFromName(locale.substr(0, hyphenAt));
         }
-        catch(ex2) { }
+        catch (ex2) { }
       }
     }
     return localeLangGroup;

@@ -78,7 +78,7 @@ IDService.prototype = {
     // try to prevent abort/crash during shutdown of mochitest-browser2...
     try {
       Services.obs.removeObserver(this, "quit-application-granted");
-    } catch(e) {}
+    } catch (e) {}
   },
 
   /**

@@ -137,7 +137,10 @@ enum class BackendType : int8_t {
   CAIRO,
   SKIA,
   RECORDING,
-  DIRECT2D1_1
+  DIRECT2D1_1,
+
+  // Add new entries above this line.
+  BACKEND_LAST
 };
 
 enum class FontType : int8_t {

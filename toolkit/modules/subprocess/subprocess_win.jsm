@@ -15,6 +15,7 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 var EXPORTED_SYMBOLS = ["SubprocessImpl"];
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -31,6 +32,7 @@ class WinPromiseWorker extends PromiseWorker {
     this.signalEvent = libc.CreateSemaphoreW(null, 0, 32, null);
 
     this.call("init", [{
+      breakAwayFromJob: !AppConstants.isPlatformAndVersionAtLeast("win", "6.2"),
       signalEvent: String(ctypes.cast(this.signalEvent, ctypes.uintptr_t).value),
     }]);
   }

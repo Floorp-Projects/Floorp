@@ -18,6 +18,12 @@ OS_LIBS += [
     'oleaut32',
 ]
 
+GENERATED_FILES += [
+    'IA2Typelib.tlb',
+]
+
+RCINCLUDE = 'IA2Marshal.rc'
+
 # The Windows MIDL code generator creates things like:
 #
 #   #endif !_MIDL_USE_GUIDDEF_

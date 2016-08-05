@@ -409,6 +409,7 @@ public:
                                          const uint32_t& aMemoryAvailable) override;
 
   virtual bool RecvPreferenceUpdate(const PrefSetting& aPref) override;
+  virtual bool RecvVarUpdate(const GfxVarUpdate& pref) override;
 
   virtual bool RecvDataStoragePut(const nsString& aFilename,
                                   const DataStorageItem& aItem) override;

@@ -12,7 +12,7 @@ function run_test() {
   try {
     foo(0);
   }
-  catch(ex) {
+  catch (ex) {
     trace = Log.stackTrace(ex);
   }
   print(`Got trace: ${trace}`);

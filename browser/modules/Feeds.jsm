@@ -94,7 +94,7 @@ this.Feeds = {
                                       Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
         return type || "application/rss+xml";
       }
-      catch(ex) {
+      catch (ex) {
       }
     }
 

@@ -824,7 +824,7 @@ nsPlacesExpiration.prototype = {
       // We want to silently fail since getIntPref throws if it does not exist,
       // and use a default to fallback to.
       this._urisLimit = this._prefBranch.getIntPref(PREF_MAX_URIS);
-    } catch(ex) { /* User limit not set */ }
+    } catch (ex) { /* User limit not set */ }
 
     if (this._urisLimit < 0) {
       // Some testing code expects a pref change to be synchronous, so

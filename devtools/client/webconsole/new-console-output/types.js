@@ -27,4 +27,5 @@ exports.ConsoleMessage = Immutable.Record({
   repeatId: null,
   category: "output",
   severity: "log",
+  id: null,
 });

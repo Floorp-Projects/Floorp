@@ -829,7 +829,7 @@ ContentCacheInParent::GetUnionTextRects(
     return false;
   }
 
-  if ((aRoundToExistingOffset && mTextRectArray.IsValid()) ||
+  if ((aRoundToExistingOffset && mTextRectArray.HasRects()) ||
       mTextRectArray.IsOverlappingWith(aOffset, aLength)) {
     aUnionTextRect =
       mTextRectArray.GetUnionRectAsFarAsPossible(aOffset, aLength,
@@ -1172,6 +1172,8 @@ ContentCache::TextRectArray::GetUnionRectAsFarAsPossible(
                                uint32_t aLength,
                                bool aRoundToExistingOffset) const
 {
+  MOZ_ASSERT(HasRects());
+
   LayoutDeviceIntRect rect;
   if (!aRoundToExistingOffset && !IsOverlappingWith(aOffset, aLength)) {
     return rect;

@@ -98,7 +98,7 @@ const BackgroundPageThumbs = {
     // atomically test whether the file exists before writing it.
     let exists = yield PageThumbsStorage.fileExistsForURL(url);
     if (exists) {
-      if(options.onDone){
+      if (options.onDone) {
         options.onDone(url);
       }
       return url;
@@ -106,7 +106,7 @@ const BackgroundPageThumbs = {
     let thumbPromise = new Promise((resolve, reject) => {
       function observe(subject, topic, data) { // jshint ignore:line
         if (data === url) {
-          switch(topic) {
+          switch (topic) {
             case "page-thumbnail:create":
               resolve();
               break;
@@ -121,7 +121,7 @@ const BackgroundPageThumbs = {
       Services.obs.addObserver(observe, "page-thumbnail:create", false);
       Services.obs.addObserver(observe, "page-thumbnail:error", false);
     });
-    try{
+    try {
       this.capture(url, options);
       yield thumbPromise;
     } catch (err) {

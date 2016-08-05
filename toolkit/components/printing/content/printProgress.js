@@ -266,7 +266,7 @@ function onUnload()
      printProgress = null;
    }
 
-   catch( exception ) {}
+   catch ( exception ) {}
   }
 }
 
@@ -278,7 +278,7 @@ function onCancel ()
    {
      printProgress.processCanceledByUser = true;
    }
-   catch( exception ) {return true;}
+   catch ( exception ) {return true;}
 
   // don't Close up dialog by returning false, the backend will close the dialog when everything will be aborted.
   return false;

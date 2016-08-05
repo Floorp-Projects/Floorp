@@ -236,7 +236,7 @@
           var result = {value:value};
           var confirmed = promptService.prompt(window, renameTitle, promptStr, result, null, {value:value});
           if (!confirmed || (!result.value) || (result.value == "") || result.value == value) {
-            return(-1);
+            return -1;
           }
           return result.value;
         ]]>

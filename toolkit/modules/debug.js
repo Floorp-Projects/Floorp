@@ -45,7 +45,7 @@ this.NS_ASSERT = function NS_ASSERT(condition, message) {
       case "default":
         releaseBuild = false;
     }
-  } catch(ex) {}
+  } catch (ex) {}
 
   var caller = arguments.callee.caller;
   var assertionText = "ASSERT: " + message + "\n";

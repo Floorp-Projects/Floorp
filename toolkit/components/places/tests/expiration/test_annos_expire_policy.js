@@ -45,7 +45,7 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
                       "WHERE item_id = :id " +
                       "ORDER BY dateAdded DESC LIMIT 1)";
   }
-  else if (aIdentifier instanceof Ci.nsIURI){
+  else if (aIdentifier instanceof Ci.nsIURI) {
     // Page annotation.
     as.setPageAnnotation(aIdentifier, aName, aValue, 0, aExpirePolicy);
     // Update dateAdded for the last added annotation.

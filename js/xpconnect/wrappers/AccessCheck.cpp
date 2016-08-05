@@ -19,6 +19,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsJSUtils.h"
+#include "xpcprivate.h"
 
 using namespace mozilla;
 using namespace JS;

@@ -449,7 +449,7 @@ function delayedDefaultCallback() {
   if (gTest.buttonClick) {
     debugDump("clicking " + gTest.buttonClick + " button");
     if (gTest.extraDelayedFinishFunction) {
-      throw("Tests cannot have a buttonClick and an extraDelayedFinishFunction property");
+      throw ("Tests cannot have a buttonClick and an extraDelayedFinishFunction property");
     }
     gDocElem.getButton(gTest.buttonClick).click();
   } else if (gTest.extraDelayedFinishFunction) {
@@ -1033,7 +1033,7 @@ function resetPrefs() {
   try {
     Services.prefs.deleteBranch(PREFBRANCH_APP_UPDATE_NEVER);
   }
-  catch(e) {
+  catch (e) {
   }
 }
 

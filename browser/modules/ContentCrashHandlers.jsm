@@ -82,7 +82,7 @@ this.TabCrashHandler = {
     let gBrowser = browser.ownerGlobal.gBrowser;
     let tab = gBrowser.getTabForBrowser(browser);
 
-    switch(message.name) {
+    switch (message.name) {
       case "Load": {
         this.onAboutTabCrashedLoad(message);
         break;
@@ -345,7 +345,7 @@ this.PluginCrashReporter = {
   },
 
   observe(subject, topic, data) {
-    switch(topic) {
+    switch (topic) {
       case "plugin-crashed": {
         let propertyBag = subject;
         if (!(propertyBag instanceof Ci.nsIPropertyBag2) ||
