@@ -54,7 +54,7 @@ pref("browser.viewport.desktopWidth", 980);
 // the value is divided by 1000 and clamped to hard-coded min/max scale values.
 pref("browser.viewport.defaultZoom", -1);
 
-#ifdef MOZ_ANDROID_APZ
+#ifdef MOZ_WIDGET_ANDROID
 // Show/Hide scrollbars when active/inactive
 pref("ui.showHideScrollbars", 1);
 pref("ui.useOverlayScrollbars", 1);
@@ -560,10 +560,6 @@ pref("ui.dragThresholdY", 25);
 
 pref("layers.acceleration.disabled", false);
 pref("layers.async-video.enabled", true);
-
-#ifndef MOZ_ANDROID_APZ
-pref("layers.async-pan-zoom.enabled", false);
-#endif
 
 pref("apz.content_response_timeout", 600);
 pref("apz.allow_immediate_handoff", false);

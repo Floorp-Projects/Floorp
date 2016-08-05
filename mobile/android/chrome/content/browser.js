@@ -1523,58 +1523,46 @@ var BrowserApp = {
     if (formHelperMode == kFormHelperModeDisabled)
       return;
 
-    if (!AppConstants.MOZ_ANDROID_APZ) {
-      let focused = this.getFocusedInput(aBrowser);
-      if (focused) {
-        let shouldZoom = Services.prefs.getBoolPref("formhelper.autozoom");
-        if (formHelperMode == kFormHelperModeDynamic && this.isTablet)
-          shouldZoom = false;
-        // ZoomHelper.zoomToElement will handle not sending any message if this input is already mostly filling the screen
-        ZoomHelper.zoomToElement(focused, -1, false,
-            aAllowZoom && shouldZoom && !ViewportHandler.isViewportSpecified(aBrowser.contentWindow));
-      }
-    } else {
-      let dwu = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      if (!dwu) {
-        return;
-      }
-
-      let apzFlushDone = function() {
-        Services.obs.removeObserver(apzFlushDone, "apz-repaints-flushed", false);
-        dwu.zoomToFocusedInput();
-      };
-
-      let paintDone = function() {
-        window.removeEventListener("MozAfterPaint", paintDone, false);
-        if (dwu.flushApzRepaints()) {
-          Services.obs.addObserver(apzFlushDone, "apz-repaints-flushed", false);
-        } else {
-          apzFlushDone();
-        }
-      };
-
-      let gotResizeWindow = false;
-      let resizeWindow = function(e) {
-        gotResizeWindow = true;
-        aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
-        if (dwu.isMozAfterPaintPending) {
-          window.addEventListener("MozAfterPaint", paintDone, false);
-        } else {
-          paintDone();
-        }
-      }
-
-      aBrowser.contentWindow.addEventListener("resize", resizeWindow, false);
-
-      // The "resize" event sometimes fails to fire, so set a timer to catch that case
-      // and unregister the event listener. See Bug 1253469
-      setTimeout(function(e) {
-        if (!gotResizeWindow) {
-          aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
-          dwu.zoomToFocusedInput();
-        }
-      }, 500);
+    let dwu = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    if (!dwu) {
+      return;
     }
+
+    let apzFlushDone = function() {
+      Services.obs.removeObserver(apzFlushDone, "apz-repaints-flushed", false);
+      dwu.zoomToFocusedInput();
+    };
+
+    let paintDone = function() {
+      window.removeEventListener("MozAfterPaint", paintDone, false);
+      if (dwu.flushApzRepaints()) {
+        Services.obs.addObserver(apzFlushDone, "apz-repaints-flushed", false);
+      } else {
+        apzFlushDone();
+      }
+    };
+
+    let gotResizeWindow = false;
+    let resizeWindow = function(e) {
+      gotResizeWindow = true;
+      aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
+      if (dwu.isMozAfterPaintPending) {
+        window.addEventListener("MozAfterPaint", paintDone, false);
+      } else {
+        paintDone();
+      }
+    }
+
+    aBrowser.contentWindow.addEventListener("resize", resizeWindow, false);
+
+    // The "resize" event sometimes fails to fire, so set a timer to catch that case
+    // and unregister the event listener. See Bug 1253469
+    setTimeout(function(e) {
+    if (!gotResizeWindow) {
+        aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
+        dwu.zoomToFocusedInput();
+      }
+    }, 500);
   },
 
   getUALocalePref: function () {
@@ -3801,43 +3789,11 @@ Tab.prototype = {
   },
 
   setViewport: function(aViewport) {
-    if (AppConstants.MOZ_ANDROID_APZ) {
-      // This should already be getting short-circuited out in GeckoLayerClient,
-      // but this is an extra safety precaution
-      return;
-    }
-
-    // Transform coordinates based on zoom
-    let x = aViewport.x / aViewport.zoom;
-    let y = aViewport.y / aViewport.zoom;
-
-    this.setScrollClampingSize(aViewport.zoom);
-
-    let win = this.browser.contentWindow;
-    win.scrollTo(x, y);
-    this.saveSessionZoom(aViewport.zoom);
-
-    this.userScrollPos.x = win.scrollX;
-    this.userScrollPos.y = win.scrollY;
-    this.setResolution(aViewport.zoom, false);
-
-    if (aViewport.displayPort)
-      this.setDisplayPort(aViewport.displayPort);
+    return;
   },
 
   setResolution: function(aZoom, aForce) {
-    if (AppConstants.MOZ_ANDROID_APZ) {
-      return;
-    }
-    // Set zoom level
-    if (aForce || !fuzzyEquals(aZoom, this._zoom)) {
-      this._zoom = aZoom;
-      if (BrowserApp.selectedTab == this) {
-        let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        this._drawZoom = aZoom;
-        cwu.setResolutionAndScaleTo(aZoom / window.devicePixelRatio);
-      }
-    }
+    return;
   },
 
   getViewport: function() {
@@ -3902,13 +3858,7 @@ Tab.prototype = {
   },
 
   sendViewportUpdate: function(aPageSizeUpdate) {
-    if (AppConstants.MOZ_ANDROID_APZ) {
-      return;
-    }
-    let viewport = this.getViewport();
-    let displayPort = Services.androidBridge.getDisplayPort(aPageSizeUpdate, BrowserApp.isBrowserContentDocumentDisplayed(), this.id, viewport);
-    if (displayPort != null)
-      this.setDisplayPort(displayPort);
+    return;
   },
 
   // These constants are used to prioritize high quality metadata over low quality data, so that
@@ -4696,15 +4646,7 @@ var BrowserEventHandler = {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
     Services.obs.addObserver(this, "Gesture:ClickInZoomedView", false);
 
-    if (!AppConstants.MOZ_ANDROID_APZ) {
-      Services.obs.addObserver(this, "Gesture:CancelTouch", false);
-      Services.obs.addObserver(this, "Gesture:DoubleTap", false);
-      Services.obs.addObserver(this, "Gesture:Scroll", false);
-      Services.obs.addObserver(this, "dom-touch-listener-added", false);
-      BrowserApp.deck.addEventListener("touchstart", this, true);
-    } else {
-      BrowserApp.deck.addEventListener("touchend", this, true);
-    }
+    BrowserApp.deck.addEventListener("touchend", this, true);
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
@@ -4928,21 +4870,8 @@ var BrowserEventHandler = {
           if (this._clickInZoomedView != true) {
             this._closeZoomedView();
           }
-          if (!AppConstants.MOZ_ANDROID_APZ) {
-            // The _highlightElement was chosen after fluffing the touch events
-            // that led to this SingleTap, so by fluffing the mouse events, they
-            // should find the same target since we fluff them again below.
-            this._sendMouseEvent("mousemove", x, y);
-            this._sendMouseEvent("mousedown", x, y);
-            this._sendMouseEvent("mouseup",   x, y);
-          }
         }
         this._clickInZoomedView = false;
-        if (!AppConstants.MOZ_ANDROID_APZ) {
-          // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
-          BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
-        }
-
         this._cancelTapHighlight();
         break;
       }
@@ -5016,24 +4945,12 @@ var BrowserEventHandler = {
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
-    if (!AppConstants.MOZ_ANDROID_APZ) {
-      DOMUtils.setContentState(aElement, kStateActive);
-    }
     this._highlightElement = aElement;
   },
 
   _cancelTapHighlight: function _cancelTapHighlight() {
     if (!this._highlightElement)
       return;
-
-    if (!AppConstants.MOZ_ANDROID_APZ) {
-      // If the active element is in a sub-frame, we need to make that frame's document
-      // active to remove the element's active state.
-      if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
-        DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
-
-      DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
-    }
 
     this._highlightElement = null;
   },
@@ -5987,10 +5904,6 @@ var ViewportHandler = {
       let scrollChange = JSON.parse(aData);
       let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       windowUtils.setNextPaintSyncId(scrollChange.id);
-      if (!AppConstants.MOZ_ANDROID_APZ) {
-        let win = BrowserApp.selectedTab.browser.contentWindow;
-        win.scrollBy(scrollChange.x, scrollChange.y);
-      }
     }
   },
 

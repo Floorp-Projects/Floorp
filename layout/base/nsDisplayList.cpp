@@ -1846,9 +1846,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     // The only case we don't want to do this is in non-APZ fennec, where
     // we want the root xul document to get a null scroll id so that the root
     // content document gets the first non-null scroll id.
-#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
     content = document->GetDocumentElement();
-#endif
   }
 
 

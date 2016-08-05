@@ -3578,13 +3578,6 @@ ScrollFrameHelper::ComputeScrollMetadata(Layer* aLayer,
 
   bool isRootContent = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
   bool thisScrollFrameUsesAsyncScrolling = nsLayoutUtils::UsesAsyncScrolling(mOuter);
-#if defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_ANDROID_APZ)
-  // Android without apzc (aka the java pan zoom code) only uses async scrolling
-  // for the root scroll frame of the root content document.
-  if (!isRootContent) {
-    thisScrollFrameUsesAsyncScrolling = false;
-  }
-#endif
   if (!thisScrollFrameUsesAsyncScrolling) {
     if (parentLayerClip) {
       // If APZ is not enabled, we still need the displayport to be clipped
