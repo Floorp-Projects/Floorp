@@ -78,7 +78,7 @@ public class VisitsHelper {
 
             while (!cursor.isAfterLast()) {
                 insertTupleIntoVisitsUnchecked(visits,
-                        cursor.getInt(visitTypeCol),
+                        cursor.getLong(visitTypeCol),
                         cursor.getLong(dateVisitedCol)
                 );
                 cursor.moveToNext();
@@ -114,7 +114,7 @@ public class VisitsHelper {
     }
 
     @SuppressWarnings("unchecked")
-    private static void insertTupleIntoVisitsUnchecked(JSONArray visits, Integer type, Long date) {
+    private static void insertTupleIntoVisitsUnchecked(@NonNull final JSONArray visits, @NonNull Long type, @NonNull Long date) {
         final JSONObject visit = new JSONObject();
         visit.put(SYNC_TYPE_KEY, type);
         visit.put(SYNC_DATE_KEY, date);
