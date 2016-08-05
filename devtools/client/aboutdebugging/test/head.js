@@ -19,10 +19,9 @@ Services.scriptloader.loadSubScript(
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 const { Management } = Cu.import("resource://gre/modules/Extension.jsm", {});
 
-DevToolsUtils.testing = true;
-
+flags.testing = true;
 registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
 });
 
 function* openAboutDebugging(page, win) {

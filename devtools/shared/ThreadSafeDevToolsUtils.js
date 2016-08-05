@@ -261,3 +261,74 @@ exports.isSet = function (thing) {
 exports.flatten = function (lists) {
   return Array.prototype.concat.apply([], lists);
 };
+
+/**
+ * Returns a promise that is resolved or rejected when all promises have settled
+ * (resolved or rejected).
+ *
+ * This differs from Promise.all, which will reject immediately after the first
+ * rejection, instead of waiting for the remaining promises to settle.
+ *
+ * @param values
+ *        Iterable of promises that may be pending, resolved, or rejected. When
+ *        when all promises have settled (resolved or rejected), the returned
+ *        promise will be resolved or rejected as well.
+ *
+ * @return A new promise that is fulfilled when all values have settled
+ *         (resolved or rejected). Its resolution value will be an array of all
+ *         resolved values in the given order, or undefined if values is an
+ *         empty array. The reject reason will be forwarded from the first
+ *         promise in the list of given promises to be rejected.
+ */
+exports.settleAll = values => {
+  if (values === null || typeof (values[Symbol.iterator]) != "function") {
+    throw new Error("settleAll() expects an iterable.");
+  }
+
+  return new Promise((resolve, reject) => {
+    values = Array.isArray(values) ? values : [...values];
+    let countdown = values.length;
+    let resolutionValues = new Array(countdown);
+    let rejectionValue;
+    let rejectionOccurred = false;
+
+    if (!countdown) {
+      resolve(resolutionValues);
+      return deferred.promise;
+    }
+
+    function checkForCompletion() {
+      if (--countdown > 0) {
+        return;
+      }
+      if (!rejectionOccurred) {
+        resolve(resolutionValues);
+      } else {
+        reject(rejectionValue);
+      }
+    }
+
+    for (let i = 0; i < values.length; i++) {
+      let index = i;
+      let value = values[i];
+      let resolver = result => {
+        resolutionValues[index] = result;
+        checkForCompletion();
+      };
+      let rejecter = error => {
+        if (!rejectionOccurred) {
+          rejectionValue = error;
+          rejectionOccurred = true;
+        }
+        checkForCompletion();
+      };
+
+      if (value && typeof (value.then) == "function") {
+        value.then(resolver, rejecter);
+      } else {
+        // Given value is not a promise, forward it as a resolution value.
+        resolver(value);
+      }
+    }
+  });
+};

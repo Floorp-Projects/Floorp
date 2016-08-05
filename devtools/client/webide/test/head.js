@@ -14,7 +14,8 @@ const { Task } = require("devtools/shared/task");
 const { AppProjects } = require("devtools/client/webide/modules/app-projects");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
-DevToolsUtils.testing = true;
+const flags = require("devtools/shared/flags");
+flags.testing = true;
 
 var TEST_BASE;
 if (window.location === "chrome://browser/content/browser.xul") {
@@ -36,7 +37,7 @@ Services.prefs.setCharPref("devtools.devices.url", TEST_BASE + "browser_devices.
 var registerCleanupFunction = registerCleanupFunction ||
                               SimpleTest.registerCleanupFunction;
 registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
   Services.prefs.clearUserPref("devtools.webide.enabled");
   Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
   Services.prefs.clearUserPref("devtools.webide.autoinstallADBHelper");

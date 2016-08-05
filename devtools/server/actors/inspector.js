@@ -134,6 +134,8 @@ var HELPER_SHEET = `
   }
 `;
 
+const flags = require("devtools/shared/flags");
+
 loader.lazyRequireGetter(this, "DevToolsUtils",
                          "devtools/shared/DevToolsUtils");
 
@@ -3002,7 +3004,7 @@ function allAnonymousContentTreeWalkerFilter(node) {
  *
  * @param {HTMLImageElement} image - The image element.
  * @param {Number} timeout - Maximum amount of time the image is allowed to load
- * before the waiting is aborted. Ignored if DevToolsUtils.testing is set.
+ * before the waiting is aborted. Ignored if flags.testing is set.
  *
  * @return {Promise} that is fulfilled once the image has loaded. If the image
  * fails to load or the load takes too long, the promise is rejected.
@@ -3029,7 +3031,7 @@ function ensureImageLoaded(image, timeout) {
   // Don't timeout when testing. This is never settled.
   let onAbort = new Promise(() => {});
 
-  if (!DevToolsUtils.testing) {
+  if (!flags.testing) {
     // Tests are not running. Reject the promise after given timeout.
     onAbort = DevToolsUtils.waitForTime(timeout).then(() => {
       return promise.reject("Image '" + image.src + "' took too long to load.");

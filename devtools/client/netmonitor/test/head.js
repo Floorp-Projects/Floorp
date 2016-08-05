@@ -12,6 +12,7 @@ var Services = require("Services");
 var promise = require("promise");
 var NetworkHelper = require("devtools/shared/webconsole/network-helper");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var flags = require("devtools/shared/flags");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
@@ -60,9 +61,9 @@ const TEST_IMAGE_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAA
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
 });
 
 // All tests are asynchronous.
