@@ -1,4 +1,4 @@
-FROM          ubuntu
+FROM          ubuntu:16.04
 MAINTAINER    Joel Maher <joel.maher@gmail.com>
 
 RUN useradd -d /home/worker -s /bin/bash -m worker
