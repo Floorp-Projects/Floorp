@@ -224,10 +224,14 @@ const TYPES = {
   experiment: 128,
 };
 
+if (!AppConstants.RELEASE_BUILD)
+  TYPES.apiextension = 256;
+
 // Some add-on types that we track internally are presented as other types
 // externally
 const TYPE_ALIASES = {
   "webextension": "extension",
+  "apiextension": "extension",
 };
 
 const CHROME_TYPES = new Set([
@@ -241,12 +245,14 @@ const RESTARTLESS_TYPES = new Set([
   "dictionary",
   "experiment",
   "locale",
+  "apiextension",
 ]);
 
 const SIGNED_TYPES = new Set([
   "webextension",
   "extension",
   "experiment",
+  "apiextension",
 ]);
 
 // This is a random number array that can be used as "salt" when generating
@@ -949,6 +955,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.optionsURL = null;
   addon.optionsType = null;
   addon.aboutURL = null;
+  addon.dependencies = Object.freeze(Array.from(extension.dependencies));
 
   if (manifest.options_ui) {
     addon.optionsURL = extension.getURL(manifest.options_ui.page);
@@ -4711,6 +4718,8 @@ this.XPIProvider = {
       uri = "resource://gre/modules/addons/SpellCheckDictionaryBootstrap.js"
     else if (aType == "webextension")
       uri = "resource://gre/modules/addons/WebExtensionBootstrap.js"
+    else if (aType == "apiextension")
+      uri = "resource://gre/modules/addons/APIExtensionBootstrap.js"
 
     activeAddon.bootstrapScope =
       new Cu.Sandbox(principal, { sandboxName: uri,

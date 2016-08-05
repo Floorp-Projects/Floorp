@@ -8,6 +8,7 @@ toolkit.jar:
     content/extensions/schemas/cookies.json
     content/extensions/schemas/downloads.json
     content/extensions/schemas/events.json
+    content/extensions/schemas/experiments.json
     content/extensions/schemas/extension.json
     content/extensions/schemas/extension_types.json
     content/extensions/schemas/i18n.json

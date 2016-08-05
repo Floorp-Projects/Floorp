@@ -26,6 +26,14 @@ Cu.importGlobalProperties(["TextEncoder"]);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionAPIs",
+                                  "resource://gre/modules/ExtensionAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
@@ -34,10 +42,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
+                                  "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
@@ -48,12 +56,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
-                                  "resource://gre/modules/MessageChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "require", () => {
   let obj = {};
@@ -67,6 +69,12 @@ Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
+
+let schemaURLs = new Set();
+
+if (!AppConstants.RELEASE_BUILD) {
+  schemaURLs.add("chrome://extensions/content/schemas/experiments.json");
+}
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -115,8 +123,11 @@ var Management = {
     // extended by other schemas, so needs to be loaded first.
     let promise = Schemas.load(BASE_SCHEMA).then(() => {
       let promises = [];
-      for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
-        promises.push(Schemas.load(value));
+      for (let [/* name */, url] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
+        promises.push(Schemas.load(url));
+      }
+      for (let url of schemaURLs) {
+        promises.push(Schemas.load(url));
       }
       return Promise.all(promises);
     });
@@ -194,6 +205,10 @@ var Management = {
 
       api = api.api(extension, context);
       copy(obj, api);
+    }
+
+    for (let api of extension.apis) {
+      copy(obj, api.getAPI(context));
     }
 
     return obj;
@@ -741,6 +756,10 @@ this.ExtensionData = class {
     this.localeData = null;
     this._promiseLocales = null;
 
+    this.apiNames = new Set();
+    this.dependencies = new Set();
+    this.permissions = new Set();
+
     this.errors = [];
   }
 
@@ -921,6 +940,25 @@ this.ExtensionData = class {
         }
       } catch (e) {
         // Errors are handled by the type checks above.
+      }
+
+      let permissions = this.manifest.permissions || [];
+
+      let whitelist = [];
+      for (let perm of permissions) {
+        this.permissions.add(perm);
+
+        let match = /^(\w+)(?:\.(\w+)(?:\.\w+)*)?$/.exec(perm);
+        if (!match) {
+          whitelist.push(perm);
+        } else if (match[1] == "experiments" && match[2]) {
+          this.apiNames.add(match[2]);
+        }
+      }
+      this.whiteListedHosts = new MatchPattern(whitelist);
+
+      for (let api of this.apiNames) {
+        this.dependencies.add(`${api}@experiments.addons.mozilla.org`);
       }
 
       return this.manifest;
@@ -1173,7 +1211,7 @@ this.Extension = class extends ExtensionData {
 
     this.uninstallURL = null;
 
-    this.permissions = new Set();
+    this.apis = [];
     this.whiteListedHosts = null;
     this.webAccessibleResources = null;
 
@@ -1249,10 +1287,14 @@ this.Extension = class extends ExtensionData {
 
     provide(files, ["manifest.json"], manifest);
 
+    return this.generateZipFile(files);
+  }
+
+  static generateZipFile(files, baseName = "generated-extension.xpi") {
     let ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
     let zipW = new ZipWriter();
 
-    let file = FileUtils.getFile("TmpD", ["generated-extension.xpi"]);
+    let file = FileUtils.getFile("TmpD", [baseName]);
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
     const MODE_WRONLY = 0x02;
@@ -1277,7 +1319,7 @@ this.Extension = class extends ExtensionData {
       let script = files[filename];
       if (typeof(script) == "function") {
         script = "(" + script.toString() + ")()";
-      } else if (instanceOf(script, "Object")) {
+      } else if (instanceOf(script, "Object") || instanceOf(script, "Array")) {
         script = JSON.stringify(script);
       }
 
@@ -1355,6 +1397,25 @@ this.Extension = class extends ExtensionData {
     return common == this.baseURI.spec;
   }
 
+  readManifest() {
+    return super.readManifest().then(manifest => {
+      if (AppConstants.RELEASE_BUILD) {
+        return manifest;
+      }
+
+      // Load Experiments APIs that this extension depends on.
+      return Promise.all(
+        Array.from(this.apiNames, api => ExtensionAPIs.load(api))
+      ).then(apis => {
+        for (let API of apis) {
+          this.apis.push(new API(this));
+        }
+
+        return manifest;
+      });
+    });
+  }
+
   // Representation of the extension to send to content
   // processes. This should include anything the content process might
   // need.
@@ -1388,17 +1449,6 @@ this.Extension = class extends ExtensionData {
   }
 
   runManifest(manifest) {
-    let permissions = manifest.permissions || [];
-
-    let whitelist = [];
-    for (let perm of permissions) {
-      this.permissions.add(perm);
-      if (!/^\w+(\.\w+)*$/.test(perm)) {
-        whitelist.push(perm);
-      }
-    }
-    this.whiteListedHosts = new MatchPattern(whitelist);
-
     // Strip leading slashes from web_accessible_resources.
     let strippedWebAccessibleResources = [];
     if (manifest.web_accessible_resources) {
@@ -1542,6 +1592,10 @@ this.Extension = class extends ExtensionData {
 
     for (let obj of this.onShutdown) {
       obj.close();
+    }
+
+    for (let api of this.apis) {
+      api.destroy();
     }
 
     Management.emit("shutdown", this);
