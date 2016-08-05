@@ -974,22 +974,40 @@ EVENT(animationiteration,
       eAnimationEventClass)
 
 // Webkit-prefixed versions of Transition & Animation events, for web compat:
-NON_IDL_EVENT(webkitTransitionEnd,
-              eWebkitTransitionEnd,
-              EventNameType_None,
-              eTransitionEventClass)
-NON_IDL_EVENT(webkitAnimationEnd,
-              eWebkitAnimationEnd,
-              EventNameType_None,
-              eAnimationEventClass)
-NON_IDL_EVENT(webkitAnimationIteration,
-              eWebkitAnimationIteration,
-              EventNameType_None,
-              eAnimationEventClass)
-NON_IDL_EVENT(webkitAnimationStart,
-              eWebkitAnimationStart,
-              EventNameType_None,
-              eAnimationEventClass)
+EVENT(webkitAnimationEnd,
+      eWebkitAnimationEnd,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitAnimationIteration,
+      eWebkitAnimationIteration,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitAnimationStart,
+      eWebkitAnimationStart,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitTransitionEnd,
+      eWebkitTransitionEnd,
+      EventNameType_All,
+      eTransitionEventClass)
+#ifndef MESSAGE_TO_EVENT
+EVENT(webkitanimationend,
+      eWebkitAnimationEnd,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitanimationiteration,
+      eWebkitAnimationIteration,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitanimationstart,
+      eWebkitAnimationStart,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkittransitionend,
+      eWebkitTransitionEnd,
+      EventNameType_All,
+      eTransitionEventClass)
+#endif
 
 NON_IDL_EVENT(audioprocess,
               eAudioProcess,
