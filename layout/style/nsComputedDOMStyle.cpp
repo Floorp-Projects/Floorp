@@ -2148,7 +2148,7 @@ nsComputedDOMStyle::DoGetImageLayerImage(const nsStyleImageLayers& aLayers)
     if (aLayers.mLayers[i].mSourceURI.IsLocalRef()) {
       // This is how we represent a 'mask-image' reference for a local URI,
       // such as 'mask-image:url(#mymask)' or 'mask:url(#mymask)'
-      val->SetURI(aLayers.mLayers[i].mSourceURI.GetSourceURL());
+      SetValueToFragmentOrURL(&aLayers.mLayers[i].mSourceURI, val);
     } else {
       SetValueToStyleImage(image, val);
     }
@@ -2385,6 +2385,28 @@ nsComputedDOMStyle::SetValueToPosition(
   RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
   SetValueToPositionCoord(aPosition.mYPosition, valY);
   aValueList->AppendCSSValue(valY.forget());
+}
+
+
+void
+nsComputedDOMStyle::SetValueToFragmentOrURL(
+    const FragmentOrURL* aFragmentOrURL,
+    nsROCSSPrimitiveValue* aValue)
+{
+  if (aFragmentOrURL->IsLocalRef()) {
+    nsString fragment;
+    aFragmentOrURL->GetSourceString(fragment);
+    fragment.Insert(u"url(\"", 0);
+    fragment.Append(u"\")");
+    aValue->SetString(fragment);
+  } else {
+    nsCOMPtr<nsIURI> url = aFragmentOrURL->GetSourceURL();
+    if (url) {
+      aValue->SetURI(url);
+    } else {
+      aValue->SetIdent(eCSSKeyword_none);
+    }
+  }
 }
 
 already_AddRefed<CSSValue>
@@ -5560,12 +5582,9 @@ nsComputedDOMStyle::GetSVGPaintFor(bool aFill)
     }
     case eStyleSVGPaintType_Server:
     {
-      // Bug 1288812 - we should only serialize fragment for local-ref URL.
       RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
       RefPtr<nsROCSSPrimitiveValue> fallback = new nsROCSSPrimitiveValue;
-      nsCOMPtr<nsIURI> paintServerURI =
-        paint->mPaint.mPaintServer->GetSourceURL();
-      val->SetURI(paintServerURI);
+      SetValueToFragmentOrURL(paint->mPaint.mPaintServer, val);
       SetToRGBAColor(fallback, paint->mFallbackColor);
 
       valueList->AppendCSSValue(val.forget());
@@ -5603,13 +5622,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerEnd()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  // Bug 1288812 - we should only serialize fragment for local-ref URL.
-  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerEnd.GetSourceURL();
-
-  if (markerURI)
-    val->SetURI(markerURI);
-  else
-    val->SetIdent(eCSSKeyword_none);
+  SetValueToFragmentOrURL(&StyleSVG()->mMarkerEnd, val);
 
   return val.forget();
 }
@@ -5618,13 +5631,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerMid()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  // Bug 1288812 - we should only serialize fragment for local-ref URL.
-  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerMid.GetSourceURL();
-
-  if (markerURI)
-    val->SetURI(markerURI);
-  else
-    val->SetIdent(eCSSKeyword_none);
+  SetValueToFragmentOrURL(&StyleSVG()->mMarkerMid, val);
 
   return val.forget();
 }
@@ -5633,13 +5640,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerStart()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  // Bug 1288812 - we should only serialize fragment for local-ref URL.
-  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerStart.GetSourceURL();
-
-  if (markerURI)
-    val->SetURI(markerURI);
-  else
-    val->SetIdent(eCSSKeyword_none);
+  SetValueToFragmentOrURL(&StyleSVG()->mMarkerStart, val);
 
   return val.forget();
 }
@@ -6032,10 +6033,8 @@ nsComputedDOMStyle::DoGetClipPath()
       return CreatePrimitiveValueForClipPath(nullptr,
                                              svg->mClipPath.GetSizingBox());
     case StyleClipPathType::URL: {
-      // Bug 1288812 - we should only serialize fragment for local-ref URL.
-      nsCOMPtr<nsIURI> pathURI = svg->mClipPath.GetURL()->GetSourceURL();
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetURI(pathURI);
+      SetValueToFragmentOrURL(svg->mClipPath.GetURL(), val);
       return val.forget();
     }
     case StyleClipPathType::None_: {
@@ -6066,9 +6065,8 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
   // Handle url().
   if (aStyleFilter.GetType() == NS_STYLE_FILTER_URL) {
-    // Bug 1288812 - we should only serialize fragment for local-ref URL.
-    nsCOMPtr<nsIURI> filterURI = aStyleFilter.GetURL()->GetSourceURL();
-    value->SetURI(filterURI);
+    MOZ_ASSERT(aStyleFilter.GetURL()->GetSourceURL());
+    SetValueToFragmentOrURL(aStyleFilter.GetURL(), value);
     return value.forget();
   }
 
@@ -6146,7 +6144,7 @@ nsComputedDOMStyle::DoGetMask()
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   if (firstLayer.mSourceURI.GetSourceURL()) {
-    val->SetURI(firstLayer.mSourceURI.GetSourceURL());
+    SetValueToFragmentOrURL(&firstLayer.mSourceURI, val);
   } else {
     val->SetIdent(eCSSKeyword_none);
   }
