@@ -11,6 +11,8 @@ const PANE_APPEARANCE_DELAY = 50;
 const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 const WIDGET_FOCUSABLE_NODES = new Set(["vbox", "hbox"]);
 
+var namedTimeoutsStore = new Map();
+
 /**
  * Inheritance helpers from the addon SDK's core/heritage.
  * Remove these when all devtools are loadered.
@@ -107,8 +109,6 @@ const clearConditionalTimeout = function clearConditionalTimeout(id) {
   clearNamedTimeout(id);
 };
 exports.clearConditionalTimeout = clearConditionalTimeout;
-
-loader.lazyGetter(this, "namedTimeoutsStore", () => new Map());
 
 /**
  * Helpers for creating and messaging between UI components.
