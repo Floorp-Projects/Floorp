@@ -17,7 +17,6 @@ public:
   already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const CreateDecoderParams& aParams) override;
 
-
   AndroidDecoderModule() {}
   virtual ~AndroidDecoderModule() {}
 

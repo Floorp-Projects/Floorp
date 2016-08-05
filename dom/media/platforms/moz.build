@@ -85,6 +85,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
         'android/AndroidDecoderModule.cpp',
         'android/MediaCodecDataDecoder.cpp',
+        'android/RemoteDataDecoder.cpp',
     ]
 
 FINAL_LIBRARY = 'xul'
