@@ -200,7 +200,7 @@ class Module : public RefCounted<Module>
 
     bool instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const;
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
-    bool instantiateTable(JSContext* cx, HandleWasmTableObject tableImport,
+    bool instantiateTable(JSContext* cx, MutableHandleWasmTableObject table,
                           SharedTableVector* tables) const;
     bool initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
                    const ValVector& globalImports, HandleWasmTableObject tableObj) const;
