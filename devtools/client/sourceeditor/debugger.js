@@ -130,7 +130,7 @@ function hasBreakpoint(ctx, line) {
  * emit a breakpointAdded event.
  */
 function addBreakpoint(ctx, line, cond) {
-  function _addBreakpoint(ctx, line, cond) {
+  function _addBreakpoint() {
     let { ed, cm } = ctx;
     let meta = dbginfo.get(ed);
     let info = cm.lineInfo(line);
@@ -166,9 +166,9 @@ function addBreakpoint(ctx, line, cond) {
   // If lineInfo() returns null, wait a tick to give the editor a chance to
   // initialize properly.
   if (ctx.cm.lineInfo(line) === null) {
-    DevToolsUtils.executeSoon(() => _addBreakpoint(ctx, line, cond));
+    DevToolsUtils.executeSoon(() => _addBreakpoint());
   } else {
-    _addBreakpoint(ctx, line, cond);
+    _addBreakpoint();
   }
   return deferred.promise;
 }
@@ -221,10 +221,7 @@ function removeBreakpoint(ctx, line) {
 }
 
 function moveBreakpoint(ctx, fromLine, toLine) {
-  let { ed, cm } = ctx;
-
-  let fromTop = cm.cursorCoords({ line: fromLine }).top;
-  let toTop = cm.cursorCoords({ line: toLine }).top;
+  let { ed } = ctx;
 
   ed.removeBreakpoint(fromLine);
   ed.addBreakpoint(toLine);
@@ -245,7 +242,7 @@ function setBreakpointCondition(ctx, line) {
 }
 
 function removeBreakpointCondition(ctx, line) {
-  let { ed, cm } = ctx;
+  let { ed } = ctx;
 
   ed.removeLineClass(line, "conditional");
 }
@@ -334,4 +331,6 @@ function findPrev(ctx, query) {
   setBreakpointCondition, removeBreakpointCondition, getBreakpoints, removeBreakpoints,
   setDebugLocation, getDebugLocation, clearDebugLocation, find, findNext,
   findPrev
-].forEach(func => module.exports[func.name] = func);
+].forEach(func => {
+  module.exports[func.name] = func;
+});

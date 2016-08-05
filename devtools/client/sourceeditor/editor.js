@@ -6,7 +6,9 @@
 
 "use strict";
 
-const { Cu, Cc, Ci } = require("chrome");
+/* eslint-disable mozilla/reject-some-requires */
+const {Cc, Ci} = require("chrome");
+/* eslint-enable mozilla/reject-some-requires */
 
 const {
   EXPAND_TAB,
@@ -85,7 +87,8 @@ const CM_IFRAME =
   "    <style>" +
   "      html, body { height: 100%; }" +
   "      body { margin: 0; overflow: hidden; }" +
-  "      .CodeMirror { width: 100%; height: 100% !important; line-height: 1.25 !important;}" +
+  "      .CodeMirror { width: 100%; height: 100% !important; " +
+  "line-height: 1.25 !important;}" +
   "    </style>" +
   CM_STYLES.map(style => "<link rel='stylesheet' href='" + style + "'>").join("\n") +
   "  </head>" +
@@ -417,13 +420,13 @@ Editor.prototype = {
       });
       cm.on("cursorActivity", () => this.emit("cursorActivity"));
 
-      cm.on("gutterClick", (cm, line, gutter, ev) => {
+      cm.on("gutterClick", (cmArg, line, gutter, ev) => {
         let head = { line: line, ch: 0 };
         let tail = { line: line, ch: this.getText(line).length };
 
         // Shift-click on a gutter selects the whole line.
         if (ev.shiftKey) {
-          cm.setSelection(head, tail);
+          cmArg.setSelection(head, tail);
           return;
         }
 
@@ -822,7 +825,7 @@ Editor.prototype = {
    * You don't need to worry about removing these event listeners.
    * They're automatically orphaned when clearing markers.
    */
-  setMarkerListeners: function (line, gutterName, markerClass, events, data) {
+  setMarkerListeners: function (line, gutterName, markerClass, eventsArg, data) {
     if (!this.hasMarker(line, gutterName, markerClass)) {
       return;
     }
@@ -830,8 +833,8 @@ Editor.prototype = {
     let cm = editors.get(this);
     let marker = cm.lineInfo(line).gutterMarkers[gutterName];
 
-    for (let name in events) {
-      let listener = events[name].bind(this, line, marker, data);
+    for (let name in eventsArg) {
+      let listener = eventsArg[name].bind(this, line, marker, data);
       marker.addEventListener(name, listener);
     }
   },
@@ -1001,8 +1004,8 @@ Editor.prototype = {
       // Handle LINE:COLUMN as well as LINE
       let match = line.toString().match(RE_JUMP_TO_LINE);
       if (match) {
-        let [, line, column ] = match;
-        this.setCursor({line: line - 1, ch: column ? column - 1 : 0 });
+        let [, matchLine, column ] = match;
+        this.setCursor({line: matchLine - 1, ch: column ? column - 1 : 0 });
       }
     });
   },
@@ -1292,24 +1295,24 @@ function getCSSKeywords() {
 
   let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
                    .getService(Ci.inIDOMUtils);
-  let cssProperties = domUtils.getCSSPropertyNames(domUtils.INCLUDE_ALIASES);
-  let cssColors = {};
-  let cssValues = {};
-  cssProperties.forEach(property => {
+  let properties = domUtils.getCSSPropertyNames(domUtils.INCLUDE_ALIASES);
+  let colors = {};
+  let values = {};
+  properties.forEach(property => {
     if (property.includes("color")) {
       domUtils.getCSSValuesForProperty(property).forEach(value => {
-        cssColors[value] = true;
+        colors[value] = true;
       });
     } else {
       domUtils.getCSSValuesForProperty(property).forEach(value => {
-        cssValues[value] = true;
+        values[value] = true;
       });
     }
   });
   return {
-    cssProperties: keySet(cssProperties),
-    cssValues: cssValues,
-    cssColors: cssColors
+    cssProperties: keySet(properties),
+    cssValues: values,
+    cssColors: colors
   };
 }
 

@@ -97,7 +97,7 @@ devtools/client/shared/redux/middleware/test/**
 devtools/client/shared/test/**
 !devtools/client/shared/test/test-actor-registry.js
 devtools/client/shared/widgets/*.jsm
-devtools/client/sourceeditor/**
+devtools/client/sourceeditor/test/*.js
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/**
 !devtools/client/webconsole/panel.js
