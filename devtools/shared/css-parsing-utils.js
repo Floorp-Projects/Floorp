@@ -14,7 +14,6 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "CSS", "CSS");
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css-lexer");
 const {Task} = require("devtools/shared/task");
