@@ -24,18 +24,18 @@ using namespace js;
 using namespace js::wasm;
 
 /* static */ SharedTable
-Table::create(JSContext* cx, TableKind kind, uint32_t length)
+Table::create(JSContext* cx, const TableDesc& desc)
 {
     SharedTable table = cx->new_<Table>();
     if (!table)
         return nullptr;
 
-    table->array_.reset(cx->pod_calloc<void*>(length));
+    table->array_.reset(cx->pod_calloc<void*>(desc.initial));
     if (!table->array_)
         return nullptr;
 
-    table->kind_ = kind;
-    table->length_ = length;
+    table->kind_ = desc.kind;
+    table->length_ = desc.initial;
     table->initialized_ = false;
     return table;
 }

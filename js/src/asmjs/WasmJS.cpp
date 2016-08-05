@@ -836,11 +836,19 @@ const Class WasmTableObject::class_ =
     &WasmTableObject::classOps_
 };
 
+bool
+WasmTableObject::isNewborn() const
+{
+    MOZ_ASSERT(is<WasmTableObject>());
+    return getReservedSlot(TABLE_SLOT).isUndefined();
+}
+
 /* static */ void
 WasmTableObject::finalize(FreeOp* fop, JSObject* obj)
 {
     WasmTableObject& tableObj = obj->as<WasmTableObject>();
-    tableObj.table().Release();
+    if (!tableObj.isNewborn())
+        tableObj.table().Release();
     if (tableObj.initialized())
         fop->delete_(&tableObj.instanceVector());
 }
@@ -854,18 +862,30 @@ WasmTableObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ WasmTableObject*
-WasmTableObject::create(JSContext* cx, Table& table)
+WasmTableObject::create(JSContext* cx, uint32_t length)
 {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
 
     AutoSetNewObjectMetadata metadata(cx);
-    auto* obj = NewObjectWithGivenProto<WasmTableObject>(cx, proto);
+    RootedWasmTableObject obj(cx, NewObjectWithGivenProto<WasmTableObject>(cx, proto));
     if (!obj)
         return nullptr;
 
-    table.AddRef();
-    obj->initReservedSlot(TABLE_SLOT, PrivateValue(&table));
+    MOZ_ASSERT(obj->isNewborn());
 
+    TableDesc desc;
+    desc.kind = TableKind::AnyFunction;
+    desc.external = true;
+    desc.initial = length;
+    desc.maximum = length;
+
+    SharedTable table = Table::create(cx, desc);
+    if (!table)
+        return nullptr;
+
+    obj->initReservedSlot(TABLE_SLOT, PrivateValue(table.forget().take()));
+
+    MOZ_ASSERT(!obj->isNewborn());
     MOZ_ASSERT(!obj->initialized());
     return obj;
 }
@@ -965,15 +985,11 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    SharedTable table = Table::create(cx, TableKind::AnyFunction, initial);
+    RootedWasmTableObject table(cx, WasmTableObject::create(cx, initial));
     if (!table)
         return false;
 
-    RootedWasmTableObject tableObj(cx, WasmTableObject::create(cx, *table));
-    if (!tableObj)
-        return false;
-
-    args.rval().setObject(*tableObj);
+    args.rval().setObject(*table);
     return true;
 }
 

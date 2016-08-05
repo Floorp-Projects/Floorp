@@ -52,7 +52,6 @@ ModuleGenerator::ModuleGenerator(ImportVector&& imports)
     masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
     lastPatchedCallsite_(0),
     startOfUnpatchedBranches_(0),
-    externalTable_(false),
     parallel_(false),
     outstanding_(0),
     activeFunc_(nullptr),
@@ -60,13 +59,6 @@ ModuleGenerator::ModuleGenerator(ImportVector&& imports)
     finishedFuncDefs_(false)
 {
     MOZ_ASSERT(IsCompilingAsmJS());
-
-    for (const Import& import : imports_) {
-        if (import.kind == DefinitionKind::Table) {
-            externalTable_ = true;
-            break;
-        }
-    }
 }
 
 ModuleGenerator::~ModuleGenerator()
@@ -146,6 +138,14 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
             linkData_.globalDataLength += sizeof(FuncImportTls);
             if (!addFuncImport(*funcImport.sig, funcImport.globalDataOffset))
                 return false;
+        }
+
+        for (const Import& import : imports_) {
+            if (import.kind == DefinitionKind::Table) {
+                MOZ_ASSERT(shared_->tables.length() == 1);
+                shared_->tables[0].external = true;
+                break;
+            }
         }
 
         for (TableDesc& table : shared_->tables) {
@@ -743,7 +743,8 @@ bool
 ModuleGenerator::addTableExport(UniqueChars fieldName)
 {
     MOZ_ASSERT(elemSegments_.empty());
-    externalTable_ = true;
+    MOZ_ASSERT(shared_->tables.length() == 1);
+    shared_->tables[0].external = true;
     return exports_.emplaceBack(Move(fieldName), DefinitionKind::Table);
 }
 
@@ -897,7 +898,9 @@ ModuleGenerator::finishFuncDefs()
 bool
 ModuleGenerator::addElemSegment(ElemSegment&& seg)
 {
-    if (externalTable_) {
+    MOZ_ASSERT(shared_->tables.length() == 1);
+
+    if (shared_->tables[0].external) {
         for (uint32_t funcIndex : seg.elems) {
             if (!exportedFuncs_.put(funcIndex))
                 return false;

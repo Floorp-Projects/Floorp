@@ -237,12 +237,12 @@ enum class TableKind
 struct TableDesc
 {
     TableKind kind;
+    bool external;
     uint32_t globalDataOffset;
     uint32_t initial;
     uint32_t maximum;
 
     TableDesc() { PodZero(this); }
-    explicit TableDesc(TableKind kind) : kind(kind), globalDataOffset(0), initial(0), maximum(0) {}
 };
 
 WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)

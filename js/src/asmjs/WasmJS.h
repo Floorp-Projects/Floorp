@@ -182,6 +182,7 @@ class WasmTableObject : public NativeObject
     static const unsigned TABLE_SLOT = 0;
     static const unsigned INSTANCE_VECTOR_SLOT = 1;
     static const ClassOps classOps_;
+    bool isNewborn() const;
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
     static bool lengthGetterImpl(JSContext* cx, const CallArgs& args);
@@ -203,7 +204,7 @@ class WasmTableObject : public NativeObject
     static const JSFunctionSpec methods[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmTableObject* create(JSContext* cx, wasm::Table& table);
+    static WasmTableObject* create(JSContext* cx, uint32_t length);
     bool initialized() const;
     bool init(JSContext* cx, HandleWasmInstanceObject instanceObj);
 
