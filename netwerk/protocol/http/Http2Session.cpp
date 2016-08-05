@@ -69,6 +69,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mSegmentReader(nullptr)
   , mSegmentWriter(nullptr)
   , mNextStreamID(3) // 1 is reserved for Updgrade handshakes
+  , mLastPushedID(0)
   , mConcurrentHighWater(0)
   , mDownstreamState(BUFFERING_OPENING_SETTINGS)
   , mInputFrameBufferSize(kDefaultBufferSize)
@@ -1552,6 +1553,12 @@ Http2Session::RecvPushPromise(Http2Session *self)
     promisedID = NetworkEndian::readUint32(
         self->mInputFrameBuffer.get() + kFrameHeaderBytes + paddingControlBytes);
     promisedID &= 0x7fffffff;
+    if (promisedID <= self->mLastPushedID) {
+      LOG3(("Http2Session::RecvPushPromise %p ID too low %u expected > %u.\n",
+            self, promisedID, self->mLastPushedID));
+      RETURN_SESSION_ERROR(self, PROTOCOL_ERROR);
+    }
+    self->mLastPushedID = promisedID;
   }
 
   uint32_t associatedID = self->mInputFrameID;

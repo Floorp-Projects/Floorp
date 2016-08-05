@@ -51,8 +51,8 @@ function test(ctor) {
 
   ok("selectionDirection" in elem, "elem should have the selectionDirection property");
 
-  is(elem.selectionStart, 0, "Default value");
-  is(elem.selectionEnd, 0, "Default value");
+  is(elem.selectionStart, elem.value.length, "Default value");
+  is(elem.selectionEnd, elem.value.length, "Default value");
   is(elem.selectionDirection, "forward", "Default value");
 
   var content = document.getElementById("content");
@@ -70,8 +70,8 @@ function test(ctor) {
 
   elem.value = "foobar";
 
-  is(elem.selectionStart, 0, "Default value");
-  is(elem.selectionEnd, 0, "Default value");
+  is(elem.selectionStart, elem.value.length, "Default value");
+  is(elem.selectionEnd, elem.value.length, "Default value");
   is(elem.selectionDirection, "forward", "Default value");
 
   elem.setSelectionRange(1, 3);

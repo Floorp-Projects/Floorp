@@ -20,7 +20,7 @@ var connection;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
-    request = new PresentationRequest("http://example.com");
+    request = new PresentationRequest("http://example.com/");
 
     request.getAvailability().then(
       function(aAvailability) {
@@ -178,7 +178,7 @@ function testReconnect() {
 
     gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
       gScript.removeMessageListener('start-reconnect', startReconnectHandler);
-      is(url, "http://example.com", "URLs should be the same.")
+      is(url, "http://example.com/", "URLs should be the same.")
       gScript.sendAsyncMessage('trigger-reconnected-acked', url);
     });
 

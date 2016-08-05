@@ -33,10 +33,10 @@ indexeddb_test(
         setup_test_store(db);
     },
     function(t, db) {
-	    var cursor_rq = db.transaction("test")
-	                      .objectStore("test")
-	                      .index("idx")
-	                      .openCursor();
+        var cursor_rq = db.transaction("test")
+                          .objectStore("test")
+                          .index("idx")
+                          .openCursor();
 
         var expectedResults = [ { iKey: "A", pKey: 1 },
                                 { iKey: "A", pKey: 2 },
@@ -44,10 +44,10 @@ indexeddb_test(
                                 { iKey: "B", pKey: 6 },
                                 { iKey: "C", pKey: 8 },
                                 { iKey: "D", pKey: 10 } ];
-	    var results = [];
+        var results = [];
 
-	    cursor_rq.onerror = t.unreached_func('openCursor should succeed');
-	    cursor_rq.onsuccess = t.step_func(function(e) {
+        cursor_rq.onerror = t.unreached_func('openCursor should succeed');
+        cursor_rq.onsuccess = t.step_func(function(e) {
             var cursor = e.target.result;
             if (!cursor) {
                 assert_equals(JSON.stringify(results),

@@ -12,8 +12,11 @@
 #include "mozilla/dom/Promise.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDocument.h"
 #include "nsIPresentationService.h"
+#include "nsIURI.h"
 #include "nsIUUIDGenerator.h"
+#include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
 #include "PresentationAvailability.h"
@@ -30,6 +33,31 @@ NS_IMPL_RELEASE_INHERITED(PresentationRequest, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PresentationRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+
+static nsresult
+GetAbsoluteURL(const nsAString& aUrl,
+               nsIURI* aBaseUri,
+               nsIDocument* aDocument,
+               nsAString& aAbsoluteUrl)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                          aUrl,
+                          aDocument ? aDocument->GetDocumentCharacterSet().get()
+                                    : nullptr,
+                          aBaseUri);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoCString spec;
+  uri->GetSpec(spec);
+
+  aAbsoluteUrl = NS_ConvertUTF8toUTF16(spec);
+
+  return NS_OK;
+}
 
 /* static */ already_AddRefed<PresentationRequest>
 PresentationRequest::Constructor(const GlobalObject& aGlobal,
@@ -48,7 +76,18 @@ PresentationRequest::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<PresentationRequest> request = new PresentationRequest(window, aUrl);
+  // Resolve relative URL to absolute URL
+  nsCOMPtr<nsIURI> baseUri = window->GetDocBaseURI();
+
+  nsAutoString absoluteUrl;
+  nsresult rv = GetAbsoluteURL(aUrl, baseUri, window->GetExtantDoc(), absoluteUrl);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  RefPtr<PresentationRequest> request =
+    new PresentationRequest(window, absoluteUrl);
   return NS_WARN_IF(!request->Init()) ? nullptr : request.forget();
 }
 
