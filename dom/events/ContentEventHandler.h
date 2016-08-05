@@ -304,6 +304,43 @@ protected:
   nsresult QueryTextRectByRange(nsRange* aRange,
                                 LayoutDeviceIntRect& aRect,
                                 WritingMode& aWritingMode);
+
+  // Returns a node and position in the node for computing text rect.
+  NodePosition GetNodePositionHavingFlatText(const NodePosition& aNodePosition);
+  NodePosition GetNodePositionHavingFlatText(nsINode* aNode,
+                                             int32_t aNodeOffset);
+
+  struct MOZ_STACK_CLASS FrameAndNodeOffset final
+  {
+    // mFrame is safe since this can live in only stack class and
+    // ContentEventHandler doesn't modify layout after
+    // ContentEventHandler::Init() flushes pending layout.  In other words,
+    // this struct shouldn't be used before calling
+    // ContentEventHandler::Init().
+    nsIFrame* mFrame;
+    // Start offset in the node of mFrame
+    int32_t mStartOffsetInNode;
+
+    FrameAndNodeOffset()
+      : mFrame(nullptr)
+      , mStartOffsetInNode(-1)
+    {
+    }
+
+    FrameAndNodeOffset(nsIFrame* aFrame, int32_t aStartOffsetInNode)
+      : mFrame(aFrame)
+      , mStartOffsetInNode(aStartOffsetInNode)
+    {
+    }
+
+    nsIFrame* operator->() { return mFrame; }
+    const nsIFrame* operator->() const { return mFrame; }
+    operator nsIFrame*() { return mFrame; }
+    operator const nsIFrame*() const { return mFrame; }
+    bool IsValid() const { return mFrame && mStartOffsetInNode >= 0; }
+  };
+  // Get first frame in the given range for computing text rect.
+  FrameAndNodeOffset GetFirstFrameHavingFlatTextInRange(nsRange* aRange);
 };
 
 } // namespace mozilla
