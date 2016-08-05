@@ -7,7 +7,8 @@ skip-if(!asyncPan) == bg-fixed-child-clip-1.html bg-fixed-child-clip-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-2.html bg-fixed-child-clip-ref.html
 fuzzy(1,246) fuzzy-if(skiaContent,2,160) fuzzy-if(browserIsRemote&&d2d,53,185) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
 skip-if(!asyncPan) == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
-skip-if(!asyncPan) == bg-fixed-child-no-culling.html bg-fixed-child-no-culling-ref.html
+skip-if(!asyncPan) == bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1-ref.html
+skip-if(!asyncPan) == bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2-ref.html
 fuzzy-if(B2G,2,5366) fuzzy-if(Android,2,4000) fuzzy-if(browserIsRemote&&cocoaWidget,2,179524) fuzzy-if(browserIsRemote&&winWidget,1,74590) skip-if(!asyncPan) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
 skip-if(!asyncPan) == element-1.html element-1-ref.html
 pref(layers.force-active,true) skip-if(!asyncPan) == iframe-1.html iframe-1-ref.html
