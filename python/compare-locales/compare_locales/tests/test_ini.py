@@ -51,7 +51,7 @@ TitleText=Some Title
 ''', (('TitleText', 'Some Title'),))
         self.assert_('MPL' in self.parser.header)
 
-    def testMPL2_Junk(self):
+    def testMPL2_JunkBeforeCategory(self):
         self._test(mpl2 + '''\
 Junk
 [Strings]
@@ -60,6 +60,56 @@ TitleText=Some Title
 Junk
 [Strings]'''), ('TitleText', 'Some Title')))
         self.assert_('MPL' not in self.parser.header)
+
+    def test_TrailingComment(self):
+        self._test(mpl2 + '''
+[Strings]
+TitleText=Some Title
+;Stray trailing comment
+''', (('TitleText', 'Some Title'),))
+        self.assert_('MPL' in self.parser.header)
+
+    def test_SpacedTrailingComments(self):
+        self._test(mpl2 + '''
+[Strings]
+TitleText=Some Title
+
+;Stray trailing comment
+;Second stray comment
+
+''', (('TitleText', 'Some Title'),))
+        self.assert_('MPL' in self.parser.header)
+
+    def test_TrailingCommentsAndJunk(self):
+        self._test(mpl2 + '''
+[Strings]
+TitleText=Some Title
+
+;Stray trailing comment
+Junk
+;Second stray comment
+
+''', (('TitleText', 'Some Title'), ('_junk_\\d+_231-284$', '''\
+
+;Stray trailing comment
+Junk
+;Second stray comment
+
+''')))
+        self.assert_('MPL' in self.parser.header)
+
+    def test_JunkInbetweenEntries(self):
+        self._test(mpl2 + '''
+[Strings]
+TitleText=Some Title
+
+Junk
+
+Good=other string
+''', (('TitleText', 'Some Title'), ('_junk_\\d+_231-236$', '''\
+
+Junk'''), ('Good', 'other string')))
+        self.assert_('MPL' in self.parser.header)
 
 if __name__ == '__main__':
     unittest.main()

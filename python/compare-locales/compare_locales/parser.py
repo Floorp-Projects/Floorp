@@ -173,7 +173,7 @@ class Parser:
             offset = m.end()
             entity = self.createEntity(contents, m)
             return (entity, offset)
-        # first check if footer has a non-empy match,
+        # first check if footer has a non-empty match,
         # 'cause then we don't find junk
         m = self.reFooter.match(contents, offset)
         if m and m.end() > offset:
@@ -375,7 +375,7 @@ class IniParser(Parser):
     def __init__(self):
         self.reHeader = re.compile('^((?:\s*|[;#].*)\n)*\[.+?\]\n', re.M)
         self.reKey = re.compile('(\s*)((?:[;#].*\n\s*)*)((.+?)=(.*))(\n?)')
-        self.reFooter = re.compile('\s*')
+        self.reFooter = re.compile('\s*([;#].*\s*)*$')
         Parser.__init__(self)
 
 
