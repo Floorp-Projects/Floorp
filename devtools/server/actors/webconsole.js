@@ -616,7 +616,7 @@ WebConsoleActor.prototype =
               // most requests than happen in parent
               this.networkMonitor =
                 new NetworkMonitorChild(appId, this.parentActor.outerWindowID,
-                                        messageManager, this.parentActor.actorID, this);
+                                        messageManager, this.conn, this);
               this.networkMonitor.init();
               // Spawn also one in the child to listen to service workers
               this.networkMonitorChild = new NetworkMonitor({ window }, this);
