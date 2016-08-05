@@ -834,11 +834,11 @@ class Artifacts(object):
             self._git, 'rev-list', '--topo-order',
             '--max-count={num}'.format(num=NUM_REVISIONS_TO_QUERY),
             'HEAD',
-        ])
+        ], cwd=self._topsrcdir)
 
         hg_hash_list = subprocess.check_output([
             self._git, 'cinnabar', 'git2hg'
-        ] + rev_list.splitlines())
+        ] + rev_list.splitlines(), cwd=self._topsrcdir)
 
         zeroes = "0" * 40
 
@@ -1002,12 +1002,12 @@ class Artifacts(object):
     def install_from_revset(self, revset, distdir):
         if self._hg:
             revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
-                                                '-r', revset]).strip()
+                                                '-r', revset], cwd=self._topsrcdir).strip()
             if len(revision.split('\n')) != 1:
                 raise ValueError('hg revision specification must resolve to exactly one commit')
         else:
-            revision = subprocess.check_output([self._git, 'rev-parse', revset]).strip()
-            revision = subprocess.check_output([self._git, 'cinnabar', 'git2hg', revision]).strip()
+            revision = subprocess.check_output([self._git, 'rev-parse', revset], cwd=self._topsrcdir).strip()
+            revision = subprocess.check_output([self._git, 'cinnabar', 'git2hg', revision], cwd=self._topsrcdir).strip()
             if len(revision.split('\n')) != 1:
                 raise ValueError('hg revision specification must resolve to exactly one commit')
             if revision == "0" * 40:
