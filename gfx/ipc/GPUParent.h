@@ -24,11 +24,13 @@ public:
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
 
-  bool RecvInit(nsTArray<GfxPrefSetting>&& prefs) override;
+  bool RecvInit(nsTArray<GfxPrefSetting>&& prefs,
+                nsTArray<GfxVarUpdate>&& vars) override;
   bool RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint) override;
   bool RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
   bool RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
   bool RecvUpdatePref(const GfxPrefSetting& pref) override;
+  bool RecvUpdateVar(const GfxVarUpdate& pref) override;
   bool RecvNewWidgetCompositor(
     Endpoint<PCompositorBridgeParent>&& aEndpoint,
     const CSSToLayoutDeviceScale& aScale,

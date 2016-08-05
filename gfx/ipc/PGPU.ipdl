@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include GraphicsMessages;
 include protocol PCompositorBridge;
 include protocol PImageBridge;
 include protocol PVRManager;
@@ -31,14 +32,15 @@ sync protocol PGPU
 {
 parent:
   // Sent by the UI process to initiate core settings.
-  async Init(GfxPrefSetting[] prefs);
+  async Init(GfxPrefSetting[] prefs, GfxVarUpdate[] vars);
 
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
 
-  // Called to update a gfx preference.
+  // Called to update a gfx preference or variable.
   async UpdatePref(GfxPrefSetting pref);
+  async UpdateVar(GfxVarUpdate var);
 
   // Create a new top-level compositor.
   async NewWidgetCompositor(Endpoint<PCompositorBridgeParent> endpoint,

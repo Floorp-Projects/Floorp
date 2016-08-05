@@ -1,7 +1,7 @@
 [{
-"size": 130237433,
-"digest": "5bec3c0ddf6cea46317f261be8cdbda42cc66c9fc27bbbe0389daea9881ca3bf5a94477a9af54277363eefda452242644ce75b330b78898fbe41506fc6c88b7b",
+"size": 130236026,
+"digest": "2f98a293895134c02c137c052bec5d9e5e2aab5051b218278b9c6f849aaf82a0a91e2302ec6d7c98e6cc27133c58436b4b2431c35c8eb7c4db03584fc7c18bd2",
 "algorithm": "sha512",
-"filename": "AVDs-armv7a-android-4.3.1_r1-build-2016-05-12.tar.gz",
+"filename": "AVDs-armv7a-android-4.3.1_r1-build-2016-08-02.tar.gz",
 "unpack": true
 }]

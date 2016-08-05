@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test pointer events are dispatched once for touch tap</title>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript">
+    function test() {
+      let pointerEventsList = ["pointerover", "pointerenter", "pointerdown",
+                               "pointerup", "pointerleave", "pointerout"];
+      let pointerEventsCount = {};
+
+      pointerEventsList.forEach((eventName) => {
+        pointerEventsCount[eventName] = 0;
+        document.getElementById('div1').addEventListener(eventName, (event) => {
+          dump("Received event " + event.type + "\n");
+          ++pointerEventsCount[event.type];
+        }, false);
+      });
+
+      document.addEventListener("click", (event) => {
+        is(event.target, document.getElementById('div1'), "Clicked on div (at " + event.clientX + "," + event.clientY + ")");
+        for (var key in pointerEventsCount) {
+          is(pointerEventsCount[key], 1, "Event " + key + " should be generated once");
+        }
+        subtestDone();
+      }, false);
+
+      synthesizeNativeTap(document.getElementById('div1'), 100, 100, () => {
+        dump("Finished synthesizing tap, waiting for div to be clicked...\n");
+      });
+    }
+
+    waitUntilApzStable().then(test);
+
+  </script>
+</head>
+<body>
+  <div id="div1" style="width: 200px; height: 200px; background: black"></div>
+</body>
+</html>

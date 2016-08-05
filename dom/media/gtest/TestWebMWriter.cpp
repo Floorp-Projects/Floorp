@@ -28,11 +28,13 @@ public:
 class WebMVP8TrackEncoder: public VP8TrackEncoder
 {
 public:
+  explicit WebMVP8TrackEncoder(TrackRate aTrackRate = 90000)
+    : VP8TrackEncoder(aTrackRate) {}
+
   bool TestVP8Creation(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
-                       int32_t aDisplayHeight, TrackRate aTrackRate)
+                       int32_t aDisplayHeight)
   {
-    if (NS_SUCCEEDED(Init(aWidth, aHeight, aDisplayWidth, aDisplayHeight,
-                          aTrackRate))) {
+    if (NS_SUCCEEDED(Init(aWidth, aHeight, aDisplayWidth, aDisplayHeight))) {
       return true;
     }
     return false;
@@ -60,7 +62,7 @@ public:
                       int32_t aDisplayHeight,TrackRate aTrackRate) {
     WebMVP8TrackEncoder vp8Encoder;
     EXPECT_TRUE(vp8Encoder.TestVP8Creation(aWidth, aHeight, aDisplayWidth,
-                                           aDisplayHeight, aTrackRate));
+                                           aDisplayHeight));
     RefPtr<TrackMetadataBase> vp8Meta = vp8Encoder.GetMetadata();
     SetMetadata(vp8Meta);
   }

@@ -8,6 +8,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Telemetry.h"
@@ -483,9 +484,7 @@ MemoryPressureObserver::Observe(nsISupports *aSubject,
 }
 
 gfxPlatform::gfxPlatform()
-  : mTileWidth(-1)
-  , mTileHeight(-1)
-  , mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
+  : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
   , mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo)
   , mTilesInfoCollector(this, &gfxPlatform::GetTilesSupportInfo)
   , mCompositorBackend(layers::LayersBackend::LAYERS_NONE)
@@ -593,6 +592,7 @@ gfxPlatform::Init()
     // Initialize the preferences by creating the singleton.
     gfxPrefs::GetSingleton();
     MediaPrefs::GetSingleton();
+    gfxVars::Initialize();
 
     gfxConfig::Init();
 
@@ -872,6 +872,7 @@ gfxPlatform::Shutdown()
 
     delete gGfxPlatformPrefsLock;
 
+    gfxVars::Shutdown();
     gfxPrefs::DestroySingleton();
     gfxFont::DestroySingletons();
 
@@ -1158,32 +1159,6 @@ gfxPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
                                                 aFont->GetAdjustedSize());
 }
 
-int
-gfxPlatform::GetTileWidth()
-{
-  MOZ_ASSERT(mTileWidth != -1);
-  return mTileWidth;
-}
-
-int
-gfxPlatform::GetTileHeight()
-{
-  MOZ_ASSERT(mTileHeight != -1);
-  return mTileHeight;
-}
-
-void
-gfxPlatform::SetTileSize(int aWidth, int aHeight)
-{
-  // Don't allow changing the tile size after we've set it.
-  // Right now the code assumes that the tile size doesn't change.
-  MOZ_ASSERT((mTileWidth == -1 && mTileHeight == -1) ||
-    (mTileWidth == aWidth && mTileHeight == aHeight));
-
-  mTileWidth = aWidth;
-  mTileHeight = aHeight;
-}
-
 void
 gfxPlatform::ComputeTileSize()
 {
@@ -1218,7 +1193,12 @@ gfxPlatform::ComputeTileSize()
 #endif
   }
 
-  SetTileSize(w, h);
+  // Don't allow changing the tile size after we've set it.
+  // Right now the code assumes that the tile size doesn't change.
+  MOZ_ASSERT(gfxVars::TileSize().width == -1 &&
+             gfxVars::TileSize().height == -1);
+
+  gfxVars::SetTileSize(IntSize(w, h));
 }
 
 void
@@ -1651,6 +1631,10 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
         // backends so we need to add the default if we are using it and
         // overriding the prefs.
         mContentBackendBitmask |= BackendTypeBit(aContentDefault);
+    }
+
+    if (XRE_IsParentProcess()) {
+        gfxVars::SetContentBackend(mContentBackend);
     }
 }
 
@@ -2095,7 +2079,6 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
 static mozilla::Atomic<bool> sLayersSupportsHardwareVideoDecoding(false);
 static bool sLayersHardwareVideoDecodingFailed = false;
 static bool sBufferRotationCheckPref = true;
-static bool sPrefBrowserTabsRemoteAutostart = false;
 
 static mozilla::Atomic<bool> sLayersAccelerationPrefsInitialized(false);
 
@@ -2115,7 +2098,10 @@ gfxPlatform::InitAcceleration()
   MOZ_ASSERT(NS_IsMainThread(), "can only initialize prefs on the main thread");
 
   gfxPrefs::GetSingleton();
-  sPrefBrowserTabsRemoteAutostart = BrowserTabsRemoteAutostart();
+
+  if (XRE_IsParentProcess()) {
+    gfxVars::SetBrowserTabsRemoteAutostart(BrowserTabsRemoteAutostart());
+  }
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   nsCString discardFailureId;
@@ -2257,7 +2243,7 @@ gfxPlatform::UsesOffMainThreadCompositing()
   if (firstTime) {
     MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
     result =
-      sPrefBrowserTabsRemoteAutostart ||
+      gfxVars::BrowserTabsRemoteAutostart() ||
       !gfxPrefs::LayersOffMainThreadCompositionForceDisabled();
 #if defined(MOZ_WIDGET_GTK)
     // Linux users who chose OpenGL are being grandfathered in to OMTC
@@ -2344,8 +2330,9 @@ gfxPlatform::GetTilesSupportInfo(mozilla::widget::InfoObject& aObj)
     return;
   }
 
-  aObj.DefineProperty("TileHeight", mTileHeight);
-  aObj.DefineProperty("TileWidth", mTileWidth);
+  IntSize tileSize = gfxVars::TileSize();
+  aObj.DefineProperty("TileHeight", tileSize.height);
+  aObj.DefineProperty("TileWidth", tileSize.width);
 }
 
 /*static*/ bool

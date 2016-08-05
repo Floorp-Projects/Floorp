@@ -397,7 +397,6 @@
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSLoadFuncPtr)             \
-    _(AsmJSLoadFFIFunc)             \
     _(AsmJSParameter)               \
     _(AsmJSParameterI64)            \
     _(AsmJSReturn)                  \
@@ -405,8 +404,8 @@
     _(AsmJSVoidReturn)              \
     _(AsmJSPassStackArg)            \
     _(AsmJSPassStackArgI64)         \
-    _(AsmJSCall)                    \
-    _(AsmJSCallI64)                 \
+    _(WasmCall)                     \
+    _(WasmCallI64)                  \
     _(AsmJSCompareExchangeHeap)     \
     _(AsmJSAtomicExchangeHeap)      \
     _(AsmJSAtomicBinopHeap)         \

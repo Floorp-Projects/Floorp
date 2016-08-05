@@ -9,6 +9,7 @@
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -42,6 +43,7 @@ GPUParent::Init(base::ProcessId aParentPid,
 
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
+  gfxVars::Initialize();
   CompositorThreadHolder::Start();
   VRManager::ManagerInit();
   gfxPlatform::InitNullMetadata();
@@ -49,12 +51,16 @@ GPUParent::Init(base::ProcessId aParentPid,
 }
 
 bool
-GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs)
+GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
+                    nsTArray<GfxVarUpdate>&& vars)
 {
   const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
   for (auto& setting : prefs) {
     gfxPrefs::Pref* pref = globalPrefs[setting.index()];
     pref->SetCachedValue(setting.value());
+  }
+  for (const auto& var : vars) {
+    gfxVars::ApplyUpdate(var);
   }
   return true;
 }
@@ -85,6 +91,13 @@ GPUParent::RecvUpdatePref(const GfxPrefSetting& setting)
 {
   gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
   pref->SetCachedValue(setting.value());
+  return true;
+}
+
+bool
+GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate)
+{
+  gfxVars::ApplyUpdate(aUpdate);
   return true;
 }
 
