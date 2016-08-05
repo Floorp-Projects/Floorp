@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+window.onload = function() {
+  const { Constructor: CC, utils: Cu } = Components;
+  const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const { Task } = require("devtools/shared/task");
+  const WebSocketServer = require("devtools/server/websocket-server");
+
+  const ServerSocket = CC("@mozilla.org/network/server-socket;1",
+    "nsIServerSocket", "init");
+
+  add_task(function* () {
+    // Create a TCP server on auto-assigned port
+    let server = new ServerSocket(-1, true, -1);
+    ok(server, `Launched WebSocket server on port ${server.port}`);
+    server.asyncListen({
+      onSocketAccepted: Task.async(function* (socket, transport) {
+        info("Accepted incoming connection");
+        let input = transport.openInputStream(0, 0, 0);
+        let output = transport.openOutputStream(0, 0, 0);
+
+        // Perform the WebSocket handshake
+        let webSocket = yield WebSocketServer.accept(transport, input, output);
+
+        // Echo the received message back to the sender
+        webSocket.onmessage = ({ data }) => {
+          info("Server received message, echoing back");
+          webSocket.send(data);
+        };
+      }),
+
+      onStopListening(socket, status) {
+        info(`Server stopped listening with status: ${status}`);
+      }
+    });
+
+    SimpleTest.registerCleanupFunction(() => {
+      server.close();
+    });
+
+    // Create client connection
+    let client = yield new Promise((resolve, reject) => {
+      let socket = new WebSocket(`ws://localhost:${server.port}`);
+      socket.onopen = () => resolve(socket);
+      socket.onerror = reject;
+    });
+    ok(client, `Created WebSocket connection to port ${server.port}`);
+
+    // Create a promise that resolves when the WebSocket closes
+    let closed = new Promise(resolve => {
+      client.onclose = resolve;
+    });
+
+    // Send a message
+    let message = "hello there";
+    client.send(message);
+    info("Sent a message to server");
+    // Check that it was echoed
+    let echoedMessage = yield new Promise((resolve, reject) => {
+      client.onmessage = ({ data }) => resolve(data);
+      client.onerror = reject;
+    });
+
+    is(echoedMessage, message, "Echoed message matches");
+
+    // Close the connection
+    client.close();
+    yield closed;
+  });
+}
+</script>
+</body>
+</html>
