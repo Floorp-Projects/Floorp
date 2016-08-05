@@ -177,13 +177,15 @@ var focusEditableField = Task.async(function* (ruleView, editable, xOffset = 1,
  * setting the value of the corresponding css property in the rule-view.
  * Use this function to close the tooltip and make sure the test waits for the
  * ruleview-changed event.
- * @param {Tooltip} tooltip
+ * @param {SwatchBasedEditorTooltip} editorTooltip
  * @param {CSSRuleView} view
  */
-function* hideTooltipAndWaitForRuleViewChanged(tooltip, view) {
+function* hideTooltipAndWaitForRuleViewChanged(editorTooltip, view) {
   let onModified = view.once("ruleview-changed");
-  tooltip.hide();
+  let onHidden = editorTooltip.tooltip.once("hidden");
+  editorTooltip.hide();
   yield onModified;
+  yield onHidden;
 }
 
 /**
