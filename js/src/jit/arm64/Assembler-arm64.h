@@ -88,11 +88,6 @@ static constexpr Register GlobalReg =  { Registers::x20 };
 static constexpr Register HeapReg = { Registers::x21 };
 static constexpr Register HeapLenReg = { Registers::x22 };
 
-// TLS pointer argument register for WebAssembly functions. This must not alias
-// any other register used for passing function arguments or return values.
-// Preserved by WebAssembly functions.
-static constexpr Register WasmTlsReg = { Registers::x17 };
-
 // Define unsized Registers.
 #define DEFINE_UNSIZED_REGISTERS(N)  \
 static constexpr Register r##N = { Registers::x##N };
@@ -472,8 +467,13 @@ static constexpr Register ABINonArgReg2 = r10;
 static constexpr Register ABINonArgReturnReg0 = r8;
 static constexpr Register ABINonArgReturnReg1 = r9;
 
+// TLS pointer argument register for WebAssembly functions. This must not alias
+// any other register used for passing function arguments or return values.
+// Preserved by WebAssembly functions.
+static constexpr Register WasmTlsReg = { Registers::x17 };
+
 // Registers used for asm.js/wasm table calls. These registers must be disjoint
-// from the ABI argument registers and from each other.
+// from the ABI argument registers, WasmTlsReg and each other.
 static constexpr Register WasmTableCallScratchReg = ABINonArgReg0;
 static constexpr Register WasmTableCallSigReg = ABINonArgReg1;
 static constexpr Register WasmTableCallIndexReg = ABINonArgReg2;

@@ -4213,17 +4213,11 @@ LIRGenerator::visitWasmCall(MWasmCall* ins)
     if (ins->callee().isTable())
         args[ins->numArgs()] = useFixed(ins->getOperand(ins->numArgs()), WasmTableCallIndexReg);
 
-    LDefinition maybeTemp;
-    if (ins->callee().which() == MWasmCall::Callee::Import)
-        maybeTemp = tempFixed(CallTempReg0);
-    else
-        maybeTemp = LDefinition::BogusTemp();
-
     LInstruction* lir;
     if (ins->type() == MIRType::Int64)
-        lir = new(alloc()) LWasmCallI64(args, ins->numOperands(), maybeTemp);
+        lir = new(alloc()) LWasmCallI64(args, ins->numOperands());
     else
-        lir = new(alloc()) LWasmCall(args, ins->numOperands(), maybeTemp);
+        lir = new(alloc()) LWasmCall(args, ins->numOperands());
 
     if (ins->type() == MIRType::None)
         add(lir, ins);
