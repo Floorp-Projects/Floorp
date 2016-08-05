@@ -714,6 +714,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
         break;
     }
 
+    if (!generateTLEnterVM(cx, masm, f))
+        return nullptr;
+
     masm.setupUnalignedABICall(regs.getAny());
     masm.passABIArg(cxreg);
 
@@ -746,6 +749,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
         masm.passABIArg(outReg);
 
     masm.callWithABI(f.wrapped);
+
+    if (!generateTLExitVM(cx, masm, f))
+        return nullptr;
 
     // Test for failure.
     switch (f.failType()) {

@@ -7595,6 +7595,46 @@ JitRuntime::generateLazyLinkStub(JSContext* cx)
     return code;
 }
 
+bool
+JitRuntime::generateTLEventVM(JSContext* cx, MacroAssembler& masm, const VMFunction& f,
+                              bool enter)
+{
+#ifdef JS_TRACE_LOGGING
+    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+
+    bool vmEventEnabled = TraceLogTextIdEnabled(TraceLogger_VM);
+    bool vmSpecificEventEnabled = TraceLogTextIdEnabled(TraceLogger_VMSpecific);
+
+    if (vmEventEnabled || vmSpecificEventEnabled) {
+        AllocatableRegisterSet regs(RegisterSet::Volatile());
+        Register loggerReg = regs.takeAnyGeneral();
+        masm.Push(loggerReg);
+        masm.movePtr(ImmPtr(logger), loggerReg);
+
+        if (vmEventEnabled) {
+            if (enter)
+                masm.tracelogStartId(loggerReg, TraceLogger_VM, /* force = */ true);
+            else
+                masm.tracelogStopId(loggerReg, TraceLogger_VM, /* force = */ true);
+        }
+        if (vmSpecificEventEnabled) {
+            TraceLoggerEvent event(logger, f.name());
+            if (!event.hasPayload())
+                return false;
+
+            if (enter)
+                masm.tracelogStartId(loggerReg, event.payload()->textId(), /* force = */ true);
+            else
+                masm.tracelogStopId(loggerReg, event.payload()->textId(), /* force = */ true);
+        }
+
+        masm.Pop(loggerReg);
+    }
+#endif
+
+    return true;
+}
+
 typedef bool (*CharCodeAtFn)(JSContext*, HandleString, int32_t, uint32_t*);
 static const VMFunction CharCodeAtInfo =
     FunctionInfo<CharCodeAtFn>(jit::CharCodeAt, "CharCodeAt");
