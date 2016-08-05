@@ -3338,6 +3338,50 @@ class MNewTypedArray : public MNullaryInstruction
     }
 };
 
+class MNewTypedArrayDynamicLength
+  : public MUnaryInstruction,
+    public IntPolicy<0>::Data
+{
+    CompilerObject templateObject_;
+    gc::InitialHeap initialHeap_;
+
+    MNewTypedArrayDynamicLength(CompilerConstraintList* constraints, JSObject* templateObject,
+                           gc::InitialHeap initialHeap, MDefinition* length)
+      : MUnaryInstruction(length),
+        templateObject_(templateObject),
+        initialHeap_(initialHeap)
+    {
+        setGuard(); // Need to throw if length is negative.
+        setResultType(MIRType::Object);
+        if (!templateObject->isSingleton())
+            setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewTypedArrayDynamicLength)
+
+    static MNewTypedArrayDynamicLength* New(TempAllocator& alloc, CompilerConstraintList* constraints,
+                                            JSObject* templateObject, gc::InitialHeap initialHeap,
+                                            MDefinition* length)
+    {
+        return new(alloc) MNewTypedArrayDynamicLength(constraints, templateObject, initialHeap, length);
+    }
+
+    MDefinition* length() const {
+        return getOperand(0);
+    }
+    JSObject* templateObject() const {
+        return templateObject_;
+    }
+    gc::InitialHeap initialHeap() const {
+        return initialHeap_;
+    }
+
+    virtual AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 class MNewObject
   : public MUnaryInstruction,
     public NoTypePolicy::Data

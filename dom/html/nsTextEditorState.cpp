@@ -103,11 +103,13 @@ public:
       // SetSelectionRange leads to Selection::AddRange which flushes Layout -
       // need to block script to avoid nested PrepareEditor calls (bug 642800).
       nsAutoScriptBlocker scriptBlocker;
-       nsTextEditorState::SelectionProperties& properties =
-         mTextEditorState->GetSelectionProperties();
-       mFrame->SetSelectionRange(properties.mStart,
-                                 properties.mEnd,
-                                 properties.mDirection);
+      nsTextEditorState::SelectionProperties& properties =
+        mTextEditorState->GetSelectionProperties();
+      if (properties.IsDirty()) {
+        mFrame->SetSelectionRange(properties.GetStart(),
+                                  properties.GetEnd(),
+                                  properties.GetDirection());
+      }
       if (!mTextEditorState->mSelectionRestoreEagerInit) {
         mTextEditorState->HideSelectionIfBlurred();
       }
@@ -1609,6 +1611,9 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // side effect for unbinding from a text control frame, we need to call
   // GetSelectionRange before calling DestroyEditor, and only if
   // mEditorInitialized indicates that we actually have an editor available.
+  int32_t start = 0, end = 0;
+  nsITextControlFrame::SelectionDirection direction =
+    nsITextControlFrame::eForward;
   if (mEditorInitialized) {
     HTMLInputElement* number = GetParentNumberControl(aFrame);
     if (number) {
@@ -1616,13 +1621,16 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
       // parent control, because this text editor state will be destroyed
       // together with the native anonymous text control.
       SelectionProperties props;
-      mBoundFrame->GetSelectionRange(&props.mStart, &props.mEnd,
-                                     &props.mDirection);
+      mBoundFrame->GetSelectionRange(&start, &end, &direction);
+      props.SetStart(start);
+      props.SetEnd(end);
+      props.SetDirection(direction);
       number->SetSelectionProperties(props);
     } else {
-      mBoundFrame->GetSelectionRange(&mSelectionProperties.mStart,
-                                     &mSelectionProperties.mEnd,
-                                     &mSelectionProperties.mDirection);
+      mBoundFrame->GetSelectionRange(&start, &end, &direction);
+      mSelectionProperties.SetStart(start);
+      mSelectionProperties.SetEnd(end);
+      mSelectionProperties.SetDirection(direction);
       mSelectionCached = true;
     }
   }

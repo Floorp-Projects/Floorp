@@ -5657,8 +5657,8 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, ErrorResult& aRv)
   if (aRv.Failed()) {
     nsTextEditorState* state = GetEditorState();
     if (state && state->IsSelectionCached()) {
-      start = state->GetSelectionProperties().mStart;
-      end = state->GetSelectionProperties().mEnd;
+      start = state->GetSelectionProperties().GetStart();
+      end = state->GetSelectionProperties().GetEnd();
       aRv = NS_OK;
     }
   }
@@ -5700,8 +5700,8 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
     if (aRv.Failed()) {
       nsTextEditorState* state = GetEditorState();
       if (state && state->IsSelectionCached()) {
-        aSelectionStart = state->GetSelectionProperties().mStart;
-        aSelectionEnd = state->GetSelectionProperties().mEnd;
+        aSelectionStart = state->GetSelectionProperties().GetStart();
+        aSelectionEnd = state->GetSelectionProperties().GetEnd();
         aRv = NS_OK;
       }
     }
@@ -5770,7 +5770,7 @@ HTMLInputElement::GetSelectionStart(ErrorResult& aRv)
     nsTextEditorState* state = GetEditorState();
     if (state && state->IsSelectionCached()) {
       aRv = NS_OK;
-      return state->GetSelectionProperties().mStart;
+      return state->GetSelectionProperties().GetStart();
     }
   }
 
@@ -5792,7 +5792,7 @@ HTMLInputElement::SetSelectionStart(int32_t aSelectionStart, ErrorResult& aRv)
 {
   nsTextEditorState* state = GetEditorState();
   if (state && state->IsSelectionCached()) {
-    state->GetSelectionProperties().mStart = aSelectionStart;
+    state->GetSelectionProperties().SetStart(aSelectionStart);
     return;
   }
 
@@ -5834,7 +5834,7 @@ HTMLInputElement::GetSelectionEnd(ErrorResult& aRv)
     nsTextEditorState* state = GetEditorState();
     if (state && state->IsSelectionCached()) {
       aRv = NS_OK;
-      return state->GetSelectionProperties().mEnd;
+      return state->GetSelectionProperties().GetEnd();
     }
   }
 
@@ -5856,7 +5856,7 @@ HTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd, ErrorResult& aRv)
 {
   nsTextEditorState* state = GetEditorState();
   if (state && state->IsSelectionCached()) {
-    state->GetSelectionProperties().mEnd = aSelectionEnd;
+    state->GetSelectionProperties().SetEnd(aSelectionEnd);
     return;
   }
 
@@ -5940,7 +5940,7 @@ HTMLInputElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aRv)
   if (NS_FAILED(rv)) {
     nsTextEditorState* state = GetEditorState();
     if (state && state->IsSelectionCached()) {
-      DirectionToName(state->GetSelectionProperties().mDirection, aDirection);
+      DirectionToName(state->GetSelectionProperties().GetDirection(), aDirection);
       return;
     }
   }
@@ -5969,7 +5969,7 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult
     } else if (aDirection.EqualsLiteral("backward")) {
       dir = nsITextControlFrame::eBackward;
     }
-    state->GetSelectionProperties().mDirection = dir;
+    state->GetSelectionProperties().SetDirection(dir);
     return;
   }
 

@@ -672,7 +672,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, reason);
     if (totalTime > 1000)
         rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, reason);
-    rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, nurserySize());
+    rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, sizeOfHeapCommitted());
 
     rt->gc.stats.endNurseryCollection(reason);
     TraceMinorGCEnd();

@@ -38,6 +38,8 @@ addLoadEvent(function() {
   var area = document.getElementById("area");
 
   is(area.scrollTop, 0, "The textarea should not be scrolled initially");
+  area.selectionStart = 0;
+  area.selectionEnd = 0;
   area.focus();
   setTimeout(function() {
     is(area.scrollTop, 0, "The textarea's insertion point should not be scrolled into view");

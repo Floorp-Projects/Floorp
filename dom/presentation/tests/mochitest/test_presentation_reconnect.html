@@ -44,7 +44,7 @@ function testSetup() {
       }
     }, false);
 
-    request = new PresentationRequest("http://example.com");
+    request = new PresentationRequest("http://example.com/");
 
     request.getAvailability().then(
       function(aAvailability) {
@@ -301,7 +301,7 @@ function testReconnect() {
     info('--- testReconnect ---');
     gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
       gScript.removeMessageListener('start-reconnect', startReconnectHandler);
-      is(url, "http://example.com", "URLs should be the same.");
+      is(url, "http://example.com/", "URLs should be the same.");
       gScript.sendAsyncMessage('trigger-reconnected-acked', url);
     });
 
