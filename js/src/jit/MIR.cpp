@@ -5358,7 +5358,7 @@ MAsmJSUnsignedToFloat32::foldsTo(TempAllocator& alloc)
 }
 
 MWasmCall*
-MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
+MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
                const Args& args, MIRType resultType, size_t spIncrement,
                MDefinition* tableIndex)
 {

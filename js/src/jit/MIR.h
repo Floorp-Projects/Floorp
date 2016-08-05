@@ -13518,101 +13518,12 @@ class MWasmCall final
   : public MVariadicInstruction,
     public NoTypePolicy::Data
 {
-  public:
-    class Callee {
-      public:
-        enum Which { Internal, Import, WasmTable, AsmJSTable, Builtin };
-      private:
-        Which which_;
-        union U {
-            U() {}
-            uint32_t internalFuncIndex_;
-            struct {
-                uint32_t globalDataOffset_;
-                uint32_t tlsStackOffset_;
-            } import;
-            struct {
-                uint32_t globalDataOffset_;
-                uint32_t length_;
-                wasm::SigIdDesc sigId_;
-            } table;
-            wasm::SymbolicAddress builtin_;
-        } u;
-      public:
-        Callee() {}
-        static Callee internal(uint32_t callee) {
-            Callee c;
-            c.which_ = Internal;
-            c.u.internalFuncIndex_ = callee;
-            return c;
-        }
-        static Callee import(uint32_t globalDataOffset, uint32_t tlsStackOffset) {
-            Callee c;
-            c.which_ = Import;
-            c.u.import.globalDataOffset_ = globalDataOffset;
-            c.u.import.tlsStackOffset_ = tlsStackOffset;
-            return c;
-        }
-        static Callee wasmTable(uint32_t globalDataOffset, uint32_t length, wasm::SigIdDesc sigId) {
-            Callee c;
-            c.which_ = WasmTable;
-            c.u.table.globalDataOffset_ = globalDataOffset;
-            c.u.table.length_ = length;
-            c.u.table.sigId_ = sigId;
-            return c;
-        }
-        static Callee asmJSTable(uint32_t globalDataOffset) {
-            Callee c;
-            c.which_ = AsmJSTable;
-            c.u.table.globalDataOffset_ = globalDataOffset;
-            return c;
-        }
-        explicit Callee(wasm::SymbolicAddress callee) : which_(Builtin) {
-            u.builtin_ = callee;
-        }
-        Which which() const {
-            return which_;
-        }
-        uint32_t internalFuncIndex() const {
-            MOZ_ASSERT(which_ == Internal);
-            return u.internalFuncIndex_;
-        }
-        uint32_t importGlobalDataOffset() const {
-            MOZ_ASSERT(which_ == Import);
-            return u.import.globalDataOffset_;
-        }
-        uint32_t importTlsStackOffset() const {
-            MOZ_ASSERT(which_ == Import);
-            return u.import.tlsStackOffset_;
-        }
-        bool isTable() const {
-            return which_ == WasmTable || which_ == AsmJSTable;
-        }
-        uint32_t tableGlobalDataOffset() const {
-            MOZ_ASSERT(isTable());
-            return u.table.globalDataOffset_;
-        }
-        uint32_t wasmTableLength() const {
-            MOZ_ASSERT(which_ == WasmTable);
-            return u.table.length_;
-        }
-        wasm::SigIdDesc wasmTableSigId() const {
-            MOZ_ASSERT(which_ == WasmTable);
-            return u.table.sigId_;
-        }
-        wasm::SymbolicAddress builtin() const {
-            MOZ_ASSERT(which_ == Builtin);
-            return u.builtin_;
-        }
-    };
-
-  private:
     wasm::CallSiteDesc desc_;
-    Callee callee_;
+    wasm::CalleeDesc callee_;
     FixedList<AnyRegister> argRegs_;
     size_t spIncrement_;
 
-    MWasmCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement)
+    MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee, size_t spIncrement)
       : desc_(desc),
         callee_(callee),
         spIncrement_(spIncrement)
@@ -13628,9 +13539,9 @@ class MWasmCall final
     };
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
-    static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-                          const Args& args, MIRType resultType, size_t spIncrement,
-                          MDefinition* tableIndex = nullptr);
+    static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
+                          const wasm::CalleeDesc& callee, const Args& args, MIRType resultType,
+                          size_t spIncrement, MDefinition* tableIndex = nullptr);
 
     size_t numArgs() const {
         return argRegs_.length();
@@ -13642,7 +13553,7 @@ class MWasmCall final
     const wasm::CallSiteDesc& desc() const {
         return desc_;
     }
-    Callee callee() const {
+    const wasm::CalleeDesc &callee() const {
         return callee_;
     }
     size_t spIncrement() const {
