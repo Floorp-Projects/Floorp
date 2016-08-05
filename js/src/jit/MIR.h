@@ -13904,9 +13904,10 @@ BarrierKind PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                                          CompilerConstraintList* constraints,
                                          MDefinition* obj, PropertyName* name,
                                          TemporaryTypeSet* observed);
-BarrierKind PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
-                                                    MDefinition* obj, PropertyName* name,
-                                                    TemporaryTypeSet* observed);
+ResultWithOOM<BarrierKind>
+PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
+                                        MDefinition* obj, PropertyName* name,
+                                        TemporaryTypeSet* observed);
 bool PropertyReadIsIdempotent(CompilerConstraintList* constraints,
                               MDefinition* obj, PropertyName* name);
 void AddObjectsForPropertyRead(MDefinition* obj, PropertyName* name,
