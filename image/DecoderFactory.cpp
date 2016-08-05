@@ -109,7 +109,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
                               NotNull<RasterImage*> aImage,
                               NotNull<SourceBuffer*> aSourceBuffer,
                               const IntSize& aIntrinsicSize,
-                              const Maybe<IntSize>& aTargetSize,
+                              const IntSize& aOutputSize,
                               DecoderFlags aDecoderFlags,
                               SurfaceFlags aSurfaceFlags,
                               int aSampleSize)
@@ -125,15 +125,10 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   // Initialize the decoder.
   decoder->SetMetadataDecode(false);
   decoder->SetIterator(aSourceBuffer->Iterator());
+  decoder->SetOutputSize(aOutputSize);
   decoder->SetDecoderFlags(aDecoderFlags | DecoderFlags::FIRST_FRAME_ONLY);
   decoder->SetSurfaceFlags(aSurfaceFlags);
   decoder->SetSampleSize(aSampleSize);
-
-  // Set a target size for downscale-during-decode if applicable.
-  if (aTargetSize) {
-    DebugOnly<nsresult> rv = decoder->SetTargetSize(*aTargetSize);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
-  }
 
   if (NS_FAILED(decoder->Init())) {
     return nullptr;
@@ -141,9 +136,8 @@ DecoderFactory::CreateDecoder(DecoderType aType,
 
   // Add a placeholder to the SurfaceCache so we won't trigger any more decoders
   // with the same parameters.
-  IntSize surfaceSize = aTargetSize.valueOr(aIntrinsicSize);
   SurfaceKey surfaceKey =
-    RasterSurfaceKey(surfaceSize, aSurfaceFlags, /* aFrameNum = */ 0);
+    RasterSurfaceKey(aOutputSize, aSurfaceFlags, /* aFrameNum = */ 0);
   InsertOutcome outcome =
     SurfaceCache::InsertPlaceholder(ImageKey(aImage.get()), surfaceKey);
   if (outcome != InsertOutcome::SUCCESS) {
@@ -254,15 +248,9 @@ DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
   // Initialize the decoder, copying settings from @aICODecoder.
   decoder->SetMetadataDecode(aICODecoder->IsMetadataDecode());
   decoder->SetIterator(aSourceBuffer->Iterator());
+  decoder->SetOutputSize(aICODecoder->OutputSize());
   decoder->SetDecoderFlags(aICODecoder->GetDecoderFlags());
   decoder->SetSurfaceFlags(aICODecoder->GetSurfaceFlags());
-
-  // Set a target size for downscale-during-decode if applicable.
-  const Maybe<IntSize> targetSize = aICODecoder->GetTargetSize();
-  if (targetSize) {
-    DebugOnly<nsresult> rv = decoder->SetTargetSize(*targetSize);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
-  }
 
   if (NS_FAILED(decoder->Init())) {
     return nullptr;
@@ -274,7 +262,7 @@ DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
 /* static */ already_AddRefed<Decoder>
 DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
                                        NotNull<SourceBuffer*> aSourceBuffer,
-                                       const Maybe<IntSize>& aTargetSize,
+                                       const Maybe<IntSize>& aOutputSize,
                                        SurfaceFlags aSurfaceFlags)
 {
   if (aType == DecoderType::UNKNOWN) {
@@ -303,10 +291,9 @@ DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
   decoder->SetDecoderFlags(decoderFlags);
   decoder->SetSurfaceFlags(aSurfaceFlags);
 
-  // Set a target size for downscale-during-decode if applicable.
-  if (aTargetSize) {
-    DebugOnly<nsresult> rv = decoder->SetTargetSize(*aTargetSize);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
+  // Set an output size for downscale-during-decode if requested.
+  if (aOutputSize) {
+    decoder->SetOutputSize(*aOutputSize);
   }
 
   if (NS_FAILED(decoder->Init())) {
