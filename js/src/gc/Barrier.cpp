@@ -23,8 +23,22 @@ namespace js {
 
 #ifdef DEBUG
 
+static bool
+IsMarkedBlack(NativeObject* obj)
+{
+    // Note: we assume conservatively that Nursery things will be live.
+    if (!obj->isTenured())
+        return true;
+
+    gc::TenuredCell& tenured = obj->asTenured();
+    if (tenured.isMarked(gc::BLACK) || tenured.arena()->allocatedDuringIncremental)
+        return true;
+
+    return false;
+}
+
 bool
-HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot)
+HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot) const
 {
     return kind == Slot
          ? &owner->getSlotRef(slot) == this
@@ -33,11 +47,14 @@ HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot)
 
 bool
 HeapSlot::preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t slot,
-                                              Value target) const
+                                          const Value& target) const
 {
-    return kind == Slot
-         ? obj->getSlotAddressUnchecked(slot)->get() == target
-         : static_cast<HeapSlot*>(obj->getDenseElements() + slot)->get() == target;
+    bool isCorrectSlot = kind == Slot
+                         ? obj->getSlotAddressUnchecked(slot)->get() == target
+                         : static_cast<HeapSlot*>(obj->getDenseElements() + slot)->get() == target;
+    bool isBlackToGray = target.isMarkable() &&
+                         IsMarkedBlack(obj) && JS::GCThingIsMarkedGray(JS::GCCellPtr(target));
+    return isCorrectSlot && !isBlackToGray;
 }
 
 bool
