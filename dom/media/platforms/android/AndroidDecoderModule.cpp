@@ -6,10 +6,12 @@
 #include "AndroidBridge.h"
 
 #include "MediaCodecDataDecoder.h"
+#include "RemoteDataDecoder.h"
 
 #include "MediaInfo.h"
 #include "VPXDecoder.h"
 
+#include "MediaPrefs.h"
 #include "nsPromiseFlatString.h"
 #include "nsIGfxInfo.h"
 
@@ -102,11 +104,15 @@ AndroidDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
       config.mDisplay.height,
       &format), nullptr);
 
-  RefPtr<MediaDataDecoder> decoder =
-    MediaCodecDataDecoder::CreateVideoDecoder(config,
-                                              format,
-                                              aParams.mCallback,
-                                              aParams.mImageContainer);
+  RefPtr<MediaDataDecoder> decoder = MediaPrefs::PDMAndroidRemoteCodecEnabled() ?
+      RemoteDataDecoder::CreateVideoDecoder(config,
+                                            format,
+                                            aParams.mCallback,
+                                            aParams.mImageContainer) :
+      MediaCodecDataDecoder::CreateVideoDecoder(config,
+                                                format,
+                                                aParams.mCallback,
+                                                aParams.mImageContainer);
 
   return decoder.forget();
 }
@@ -128,8 +134,9 @@ AndroidDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
       config.mChannels,
       &format), nullptr);
 
-  RefPtr<MediaDataDecoder> decoder =
-    MediaCodecDataDecoder::CreateAudioDecoder(config, format, aParams.mCallback);
+  RefPtr<MediaDataDecoder> decoder = MediaPrefs::PDMAndroidRemoteCodecEnabled() ?
+      RemoteDataDecoder::CreateAudioDecoder(config, format, aParams.mCallback) :
+      MediaCodecDataDecoder::CreateAudioDecoder(config, format, aParams.mCallback);
 
   return decoder.forget();
 }
