@@ -1508,13 +1508,13 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
     masm.bind(&ok);
 #endif
 
-    MWasmCall::Callee callee = mir->callee();
+    wasm::CalleeDesc callee = mir->callee();
     switch (callee.which()) {
-      case MWasmCall::Callee::Internal: {
+      case wasm::CalleeDesc::Internal: {
         masm.call(mir->desc(), callee.internalFuncIndex());
         break;
       }
-      case MWasmCall::Callee::Import: {
+      case wasm::CalleeDesc::Import: {
         // Load the callee, before the caller's registers are clobbered.
         uint32_t globalDataOffset = callee.importGlobalDataOffset();;
         masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code), ABINonArgReg0);
@@ -1533,7 +1533,7 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
         masm.loadWasmPinnedRegsFromTls();
         break;
       }
-      case MWasmCall::Callee::WasmTable: {
+      case wasm::CalleeDesc::WasmTable: {
         // Write the sig-id into the ABI sig-id register.
         wasm::SigIdDesc sigId = callee.wasmTableSigId();
         switch (sigId.kind()) {
@@ -1555,14 +1555,14 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
 
         MOZ_FALLTHROUGH;
       }
-      case MWasmCall::Callee::AsmJSTable: {
+      case wasm::CalleeDesc::AsmJSTable: {
         masm.loadWasmGlobalPtr(callee.tableGlobalDataOffset(), WasmTableCallScratchReg);
         masm.loadPtr(BaseIndex(WasmTableCallScratchReg, WasmTableCallIndexReg, ScalePointer),
                      WasmTableCallScratchReg);
         masm.call(mir->desc(), WasmTableCallScratchReg);
         break;
       }
-      case MWasmCall::Callee::Builtin: {
+      case wasm::CalleeDesc::Builtin: {
         masm.call(callee.builtin());
         break;
       }
