@@ -4235,17 +4235,19 @@ def getHandleDefault(defaultValue):
 
 def handleDefaultStringValue(defaultValue, method):
     """
-    Returns a string which ends up calling 'method' with a (char16_t*, length)
+    Returns a string which ends up calling 'method' with a (char_t*, length)
     pair that sets this string default value.  This string is suitable for
     passing as the second argument of handleDefault; in particular it does not
     end with a ';'
     """
-    assert defaultValue.type.isDOMString()
-    return ("static const char16_t data[] = { %s };\n"
-            "%s(data, ArrayLength(data) - 1)" %
-            (", ".join(["'" + char + "'" for char in
-                        defaultValue.value] + ["0"]),
-             method))
+    assert defaultValue.type.isDOMString() or defaultValue.type.isByteString()
+    return ("static const %(char_t)s data[] = { %(data)s };\n"
+            "%(method)s(data, ArrayLength(data) - 1)") % {
+                'char_t': "char" if defaultValue.type.isByteString() else "char16_t",
+                'method': method,
+                'data': ", ".join(["'" + char + "'" for char in
+                                   defaultValue.value] + ["0"])
+            }
 
 
 # If this function is modified, modify CGNativeMember.getArg and
@@ -5462,8 +5464,14 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             nullable=nullable,
             exceptionCode=exceptionCode)
 
-        # ByteString arguments cannot have a default value.
-        assert defaultValue is None
+        if defaultValue is not None:
+            if isinstance(defaultValue, IDLNullValue):
+                assert(type.nullable())
+                defaultCode = "${declName}.SetIsVoid(true)"
+            else:
+                defaultCode = handleDefaultStringValue(defaultValue,
+                                                       "${declName}.Rebind")
+            conversionCode = handleDefault(conversionCode, defaultCode + ";\n")
 
         return JSToNativeConversionInfo(
             conversionCode,
@@ -9604,9 +9612,14 @@ class CGUnionStruct(CGThing):
                 if self.ownsMembers:
                     methods.append(vars["setter"])
                     # Provide a SetStringData() method to support string defaults.
-                    # Exclude ByteString here because it does not support defaults
-                    # and only supports narrow nsCString.
-                    if t.isString() and not t.isByteString():
+                    if t.isByteString():
+                        methods.append(
+                            ClassMethod("SetStringData", "void",
+                                        [Argument("const nsCString::char_type*", "aData"),
+                                         Argument("nsCString::size_type", "aLength")],
+                                        inline=True, bodyInHeader=True,
+                                        body="RawSetAs%s().Assign(aData, aLength);\n" % t.name))
+                    elif t.isString():
                         methods.append(
                             ClassMethod("SetStringData", "void",
                                         [Argument("const nsString::char_type*", "aData"),
@@ -9867,9 +9880,14 @@ class CGUnionConversionStruct(CGThing):
                                            body=body,
                                            visibility="private"))
                 # Provide a SetStringData() method to support string defaults.
-                # Exclude ByteString here because it does not support defaults
-                # and only supports narrow nsCString.
-                if t.isString() and not t.isByteString():
+                if t.isByteString():
+                    methods.append(
+                        ClassMethod("SetStringData", "void",
+                                    [Argument("const nsDependentCString::char_type*", "aData"),
+                                     Argument("nsDependentCString::size_type", "aLength")],
+                                    inline=True, bodyInHeader=True,
+                                    body="RawSetAs%s().Rebind(aData, aLength);\n" % t.name))
+                elif t.isString():
                     methods.append(
                         ClassMethod("SetStringData", "void",
                                     [Argument("const nsDependentString::char_type*", "aData"),
