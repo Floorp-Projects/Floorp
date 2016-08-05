@@ -35,10 +35,6 @@ const { getRootBindingParent } = require("devtools/shared/layout/utils");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {l10n, isContentStylesheet, shortSource, FILTER, STATUS} = require("devtools/shared/inspector/css-logic");
 
-// This should be ok because none of the functions that use this should be used
-// on the worker thread, where Cu is not available.
-loader.lazyRequireGetter(this, "CSS", "CSS");
-
 loader.lazyRequireGetter(this, "CSSLexer", "devtools/shared/css-lexer");
 
 /**

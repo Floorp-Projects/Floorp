@@ -25,8 +25,6 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-const CSS = require("CSS");
-
 const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
 const {ComputedViewTool} = require("devtools/client/inspector/computed/computed");
 const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
