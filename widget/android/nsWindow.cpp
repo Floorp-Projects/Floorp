@@ -1033,14 +1033,12 @@ public:
             }
         }
 
-#ifdef MOZ_ANDROID_APZ
         MOZ_ASSERT(aNPZC);
         auto npzc = NativePanZoomController::LocalRef(
                 jni::GetGeckoThreadEnv(),
                 NativePanZoomController::Ref::From(aNPZC));
         NPZCSupport::AttachNative(
                 npzc, mozilla::MakeUnique<NPZCSupport>(&window, npzc));
-#endif
 
         layerClient->OnGeckoReady();
     }
@@ -3686,30 +3684,7 @@ nsWindow::UpdateZoomConstraints(const uint32_t& aPresShellId,
                                 const FrameMetrics::ViewID& aViewId,
                                 const mozilla::Maybe<ZoomConstraints>& aConstraints)
 {
-#ifdef MOZ_ANDROID_APZ
     nsBaseWidget::UpdateZoomConstraints(aPresShellId, aViewId, aConstraints);
-#else
-    if (!aConstraints) {
-        // This is intended to "clear" previously stored constraints but in our
-        // case we don't need to bother since they'll get GC'd from browser.js
-        return;
-    }
-    nsIContent* content = nsLayoutUtils::FindContentFor(aViewId);
-    nsIDocument* doc = content ? content->GetComposedDoc() : nullptr;
-    if (!doc) {
-        return;
-    }
-    nsCOMPtr<nsIObserverService> obsServ = mozilla::services::GetObserverService();
-    nsPrintfCString json("{ \"allowZoom\": %s,"
-                         "  \"allowDoubleTapZoom\": %s,"
-                         "  \"minZoom\": %f,"
-                         "  \"maxZoom\": %f }",
-        aConstraints->mAllowZoom ? "true" : "false",
-        aConstraints->mAllowDoubleTapZoom ? "true" : "false",
-        aConstraints->mMinZoom.scale, aConstraints->mMaxZoom.scale);
-    obsServ->NotifyObservers(doc, "zoom-constraints-updated",
-        NS_ConvertASCIItoUTF16(json.get()).get());
-#endif
 }
 
 CompositorBridgeParent*
