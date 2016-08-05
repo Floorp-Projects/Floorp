@@ -68,6 +68,7 @@
 
 .closedCaptionButton {
   background-image: url(chrome://global/skin/media/closeCaptionButton.png);
+  background-position: 4px;
 }
 
 .closedCaptionButton[enabled] {
@@ -142,9 +143,9 @@
   background-color: rgba(0,0,0,.55);
 }
 
-.controlBar[fullscreen-unavailable] > .volumeStack {
+.controlBar[fullscreen-unavailable] {
   /* This value is duplicated in the videocontrols.xml adjustControlSize function. */
-  margin-inline-end: 8px;
+  padding-inline-end: 8px;
 }
 
 .volumeControl .scale-thumb {
@@ -415,8 +416,9 @@ html|table {
     background-image: url(chrome://global/skin/media/noAudio@2x.png);
     background-size: 33px 28px;
   }
-  .closeCaptionButton {
+  .closedCaptionButton {
     background-image: url(chrome://global/skin/media/closeCaptionButton@2x.png);
+    background-position: 4px;
     background-size: 28px 28px;
   }
   .fullscreenButton {
