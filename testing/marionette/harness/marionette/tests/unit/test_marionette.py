@@ -5,18 +5,31 @@
 import itertools
 
 from marionette_driver import errors
-from marionette.marionette_test import MarionetteTestCase as TC
+from marionette.marionette_test import MarionetteTestCase
 
 
-class TestProtocol1Errors(TC):
+class TestMarionetteProperties(MarionetteTestCase):
+
+    def test_correct_test_name(self):
+        """Test that the correct test name gets set."""
+        expected_test_name = '{module}.py {cls}.{func}'.format(
+            module=__name__,
+            cls=self.__class__.__name__,
+            func=self.test_correct_test_name.__name__,
+        )
+
+        self.assertEqual(self.marionette.test_name, expected_test_name)
+
+
+class TestProtocol1Errors(MarionetteTestCase):
     def setUp(self):
-        TC.setUp(self)
+        MarionetteTestCase.setUp(self)
         self.op = self.marionette.protocol
         self.marionette.protocol = 1
 
     def tearDown(self):
         self.marionette.protocol = self.op
-        TC.tearDown(self)
+        MarionetteTestCase.tearDown(self)
 
     def test_malformed_packet(self):
         for t in [{}, {"error": None}]:
@@ -42,15 +55,15 @@ class TestProtocol1Errors(TC):
             self.marionette._handle_error({"error": {"status": "barbera"}})
 
 
-class TestProtocol2Errors(TC):
+class TestProtocol2Errors(MarionetteTestCase):
     def setUp(self):
-        TC.setUp(self)
+        MarionetteTestCase.setUp(self)
         self.op = self.marionette.protocol
         self.marionette.protocol = 2
 
     def tearDown(self):
         self.marionette.protocol = self.op
-        TC.tearDown(self)
+        MarionetteTestCase.tearDown(self)
 
     def test_malformed_packet(self):
         req = ["error", "message", "stacktrace"]
