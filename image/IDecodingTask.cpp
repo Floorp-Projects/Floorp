@@ -6,7 +6,6 @@
 #include "IDecodingTask.h"
 
 #include "gfxPrefs.h"
-#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 #include "Decoder.h"
@@ -85,96 +84,6 @@ void
 IDecodingTask::Resume()
 {
   DecodePool::Singleton()->AsyncRun(this);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// DecodingTask implementation.
-///////////////////////////////////////////////////////////////////////////////
-
-DecodingTask::DecodingTask(NotNull<RasterImage*> aImage,
-                           NotNull<Decoder*> aDecoder)
-  : mImage(aImage)
-  , mDecoder(aDecoder)
-{
-  MOZ_ASSERT(!mDecoder->IsMetadataDecode(),
-             "Use MetadataDecodingTask for metadata decodes");
-  MOZ_ASSERT(mDecoder->IsFirstFrameDecode(),
-             "Use AnimationDecodingTask for animation decodes");
-}
-
-DecodingTask::~DecodingTask()
-{
-  // RasterImage objects need to be destroyed on the main thread.
-  RefPtr<RasterImage> image = mImage;
-  NS_ReleaseOnMainThread(image.forget());
-}
-
-void
-DecodingTask::Run()
-{
-  LexerResult result = mDecoder->Decode(WrapNotNull(this));
-
-  // If the decoder hadn't produced a surface up to this point, see if a surface
-  // is now available.
-  if (!mSurface) {
-    mSurface = mDecoder->GetCurrentFrameRef().get();
-
-    if (mSurface) {
-      // There's a new surface available; insert it into the SurfaceCache.
-      NotNull<RefPtr<ISurfaceProvider>> provider =
-        WrapNotNull(new SimpleSurfaceProvider(WrapNotNull(mSurface.get())));
-      InsertOutcome outcome =
-        SurfaceCache::Insert(provider, ImageKey(mImage.get()),
-                             RasterSurfaceKey(mDecoder->OutputSize(),
-                                              mDecoder->GetSurfaceFlags(),
-                                              /* aFrameNum = */ 0));
-
-      if (outcome == InsertOutcome::FAILURE) {
-        // We couldn't insert the surface, almost certainly due to low memory. We
-        // treat this as a permanent error to help the system recover; otherwise,
-        // we might just end up attempting to decode this image again immediately.
-        result = mDecoder->TerminateFailure();
-      } else if (outcome == InsertOutcome::FAILURE_ALREADY_PRESENT) {
-        // Another decoder beat us to decoding this frame. We abort this decoder
-        // rather than treat this as a real error.
-        mDecoder->Abort();
-        result = mDecoder->TerminateFailure();
-      }
-    }
-  }
-
-  MOZ_ASSERT(mSurface.get() == mDecoder->GetCurrentFrameRef().get(),
-             "DecodingTask and Decoder have different surfaces?");
-
-  if (result.is<TerminalState>()) {
-    NotifyDecodeComplete(mImage, mDecoder);
-    return;  // We're done.
-  }
-
-  MOZ_ASSERT(result.is<Yield>());
-
-  // Notify for the progress we've made so far.
-  if (mDecoder->HasProgress()) {
-    NotifyProgress(mImage, mDecoder);
-  }
-
-  if (result == LexerResult(Yield::NEED_MORE_DATA)) {
-    // We can't make any more progress right now. The decoder itself will ensure
-    // that we get reenqueued when more data is available; just return for now.
-    return;
-  }
-
-  // Other kinds of yields shouldn't happen during single-frame image decodes.
-  MOZ_ASSERT_UNREACHABLE("Unexpected yield during single-frame image decode");
-  mDecoder->TerminateFailure();
-  NotifyDecodeComplete(mImage, mDecoder);
-}
-
-bool
-DecodingTask::ShouldPreferSyncRun() const
-{
-  return mDecoder->ShouldSyncDecode(gfxPrefs::ImageMemDecodeBytesAtATime());
 }
 
 
