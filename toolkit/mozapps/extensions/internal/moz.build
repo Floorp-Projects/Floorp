@@ -9,6 +9,7 @@ EXTRA_JS_MODULES.addons += [
     'AddonRepository.jsm',
     'AddonRepository_SQLiteMigrator.jsm',
     'AddonUpdateChecker.jsm',
+    'APIExtensionBootstrap.js',
     'Content.js',
     'E10SAddonsRollout.jsm',
     'GMPProvider.jsm',
