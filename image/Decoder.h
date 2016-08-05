@@ -113,28 +113,35 @@ public:
   bool IsMetadataDecode() const { return mMetadataDecode; }
 
   /**
-   * If this decoder supports downscale-during-decode, sets the target size that
-   * this image should be decoded to.
+   * Sets the output size of this decoder. If this is smaller than the intrinsic
+   * size of the image, we'll downscale it while decoding. For memory usage
+   * reasons, upscaling is forbidden and will trigger assertions in debug
+   * builds.
    *
-   * If the provided size is unacceptable, an error is returned.
+   * Not calling SetOutputSize() means that we should just decode at the
+   * intrinsic size, whatever it is.
    *
-   * Returning NS_OK from this method is a promise that the decoder will decode
-   * the image to the requested target size unless it encounters an error.
+   * If SetOutputSize() was called, ExplicitOutputSize() can be used to
+   * determine the value that was passed to it.
    *
    * This must be called before Init() is called.
    */
-  nsresult SetTargetSize(const gfx::IntSize& aSize);
+  void SetOutputSize(const gfx::IntSize& aSize);
 
   /**
-   * If this decoder supports downscale-during-decode and is configured to
-   * downscale, returns the target size that the output size will be decoded to.
-   * Otherwise, returns Nothing().
+   * @return the output size of this decoder. If this is smaller than the
+   * intrinsic size, then the image will be downscaled during the decoding
+   * process.
    *
-   * Note that virtually all callers don't care whether a decoder is configured
-   * to downscale; they just want to know what the decoder's output size is.
-   * Such callers should use OutputSize() instead.
+   * Illegal to call if HasSize() returns false.
    */
-  Maybe<gfx::IntSize> GetTargetSize();
+  gfx::IntSize OutputSize() const { MOZ_ASSERT(HasSize()); return *mOutputSize; }
+
+  /**
+   * @return either the size passed to SetOutputSize() or Nothing(), indicating
+   * that SetOutputSize() was not explicitly called.
+   */
+  Maybe<gfx::IntSize> ExplicitOutputSize() const;
 
   /**
    * Set the requested sample size for this decoder. Used to implement the
@@ -285,19 +292,6 @@ public:
   }
 
   /**
-   * @return the output size of this decoder. If this is different than the
-   * intrinsic size, then the image will be downscaled during the decoding
-   * process.
-   *
-   * Illegal to call if HasSize() returns false.
-   */
-  gfx::IntSize OutputSize() const
-  {
-    return mDownscaler ? mDownscaler->TargetSize()
-                       : Size();
-  }
-
-  /**
    * @return an IntRect which covers the entire area of this image at its size
    * after scaling - that is, at its output size.
    *
@@ -405,13 +399,13 @@ protected:
    *
    * @param aRect The invalidation rect in the coordinate system of the unscaled
    *              image (that is, the image at its intrinsic size).
-   * @param aRectAtTargetSize If not Nothing(), the invalidation rect in the
+   * @param aRectAtOutputSize If not Nothing(), the invalidation rect in the
    *                          coordinate system of the scaled image (that is,
-   *                          the image at our target decoding size). This must
+   *                          the image at our output size). This must
    *                          be supplied if we're downscaling during decode.
    */
-  void PostInvalidation(const nsIntRect& aRect,
-                        const Maybe<nsIntRect>& aRectAtTargetSize = Nothing());
+  void PostInvalidation(const gfx::IntRect& aRect,
+                        const Maybe<gfx::IntRect>& aRectAtOutputSize = Nothing());
 
   // Called by the decoders when they have successfully decoded the image. This
   // may occur as the result of the decoder getting to the appropriate point in
@@ -432,8 +426,8 @@ protected:
    * If a non-paletted frame is desired, pass 0 for aPaletteDepth.
    */
   nsresult AllocateFrame(uint32_t aFrameNum,
-                         const nsIntSize& aTargetSize,
-                         const nsIntRect& aFrameRect,
+                         const gfx::IntSize& aOutputSize,
+                         const gfx::IntRect& aFrameRect,
                          gfx::SurfaceFormat aFormat,
                          uint8_t aPaletteDepth = 0);
 
@@ -460,8 +454,8 @@ private:
   }
 
   RawAccessFrameRef AllocateFrameInternal(uint32_t aFrameNum,
-                                          const nsIntSize& aTargetSize,
-                                          const nsIntRect& aFrameRect,
+                                          const gfx::IntSize& aOutputSize,
+                                          const gfx::IntRect& aFrameRect,
                                           gfx::SurfaceFormat aFormat,
                                           uint8_t aPaletteDepth,
                                           imgFrame* aPreviousFrame);
@@ -479,7 +473,8 @@ private:
   Maybe<SourceBufferIterator> mIterator;
   RawAccessFrameRef mCurrentFrame;
   ImageMetadata mImageMetadata;
-  nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
+  gfx::IntRect mInvalidRect; // Tracks an invalidation region in the current frame.
+  Maybe<gfx::IntSize> mOutputSize;  // The size of our output surface.
   Progress mProgress;
 
   uint32_t mFrameCount; // Number of frames, including anything in-progress
@@ -495,6 +490,7 @@ private:
 
   bool mInitialized : 1;
   bool mMetadataDecode : 1;
+  bool mHaveExplicitOutputSize : 1;
   bool mInFrame : 1;
   bool mFinishedNewFrame : 1;  // True if PostFrameStop() has been called since
                                // the last call to TakeCompleteFrameCount().
