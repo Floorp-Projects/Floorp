@@ -61,7 +61,6 @@ const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 /* eslint-enable mozilla/reject-some-requires */
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
-const CSS = require("CSS");
 const {AutocompletePopup} = require("devtools/client/shared/autocomplete-popup");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",

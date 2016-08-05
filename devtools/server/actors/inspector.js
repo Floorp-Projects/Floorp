@@ -76,8 +76,6 @@ const {
 const {getLayoutChangesObserver, releaseLayoutChangesObserver} = require("devtools/server/actors/layout");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 
-loader.lazyRequireGetter(this, "CSS", "CSS");
-
 const {EventParsers} = require("devtools/server/event-parsers");
 const {nodeSpec, nodeListSpec, walkerSpec, inspectorSpec} = require("devtools/shared/specs/inspector");
 
