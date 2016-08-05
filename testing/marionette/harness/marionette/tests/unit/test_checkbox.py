@@ -6,7 +6,7 @@ from marionette import MarionetteTestCase
 from marionette_driver.by import By
 
 
-class TestSelected(MarionetteTestCase):
+class TestCheckbox(MarionetteTestCase):
     def test_selected(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
