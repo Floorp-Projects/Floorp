@@ -1462,7 +1462,7 @@
                 _controlBarHeight : 0,
                 _overlayPlayButtonHeight : 64,
                 _overlayPlayButtonWidth : 64,
-                _volumeStackMarginEnd : 8,
+                _controlBarPaddingEnd: 8,
                 adjustControlSize : function adjustControlSize() {
                     let doc = this.video.ownerDocument;
 
@@ -1480,7 +1480,7 @@
                     let isFullscreenUnavailable = this.controlBar.hasAttribute("fullscreen-unavailable");
                     if (isFullscreenUnavailable) {
                         // When the fullscreen button is hidden we add margin-end to the volume stack.
-                        minWidthAllControls -= this._fullscreenButtonWidth - this._volumeStackMarginEnd;
+                        minWidthAllControls -= this._fullscreenButtonWidth - this._controlBarPaddingEnd;
                     }
 
                     let minHeightForControlBar = this._controlBarHeight;
