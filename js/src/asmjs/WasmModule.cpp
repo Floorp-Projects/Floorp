@@ -467,9 +467,7 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
             void* code = codeBase + seg.elems[i];
             if (useProfilingEntry)
                 code = codeBase + instance.code().lookupRange(code)->funcProfilingEntry();
-
-            if (!table.set(cx, offset + i, code, instance))
-                return false;
+            table.set(offset + i, code, instance);
         }
 
         prevEnd = offset + seg.elems.length();

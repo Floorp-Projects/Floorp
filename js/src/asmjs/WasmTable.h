@@ -58,7 +58,7 @@ class Table : public ShareableBase<Table>
 
     void** internalArray() const;
     ExternalTableElem* externalArray() const;
-    bool set(JSContext* cx, uint32_t index, void* code, Instance& instance);
+    void set(uint32_t index, void* code, Instance& instance);
     void setNull(uint32_t index);
 
     // about:memory reporting:

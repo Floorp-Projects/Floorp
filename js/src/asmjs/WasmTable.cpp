@@ -99,22 +99,16 @@ Table::externalArray() const
     return (ExternalTableElem*)array_.get();
 }
 
-bool
-Table::set(JSContext* cx, uint32_t index, void* code, Instance& instance)
+void
+Table::set(uint32_t index, void* code, Instance& instance)
 {
     if (external_) {
         ExternalTableElem& elem = externalArray()[index];
-        if (elem.tls->instance != &instance) {
-            JS_ReportError(cx, "cross-module Table import NYI");
-            return false;
-        }
-
         elem.code = code;
+        elem.tls = &instance.tlsData();
     } else {
         internalArray()[index] = code;
     }
-
-    return true;
 }
 
 void
