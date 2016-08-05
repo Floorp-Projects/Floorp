@@ -1006,6 +1006,8 @@ class FunctionCompiler
             MOZ_ASSERT(sig.id.kind() == SigIdDesc::Kind::None);
             const TableDesc& table = mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]];
             MOZ_ASSERT(IsPowerOfTwo(table.initial));
+            MOZ_ASSERT(!table.external);
+            MOZ_ASSERT(call.tlsStackOffset_ == MWasmCall::DontSaveTls);
 
             MConstant* mask = MConstant::New(alloc(), Int32Value(table.initial - 1));
             curBlock_->add(mask);
@@ -1018,13 +1020,14 @@ class FunctionCompiler
             MOZ_ASSERT(sig.id.kind() != SigIdDesc::Kind::None);
             MOZ_ASSERT(mg_.tables.length() == 1);
             const TableDesc& table = mg_.tables[0];
+            MOZ_ASSERT(table.external == (call.tlsStackOffset_ != MWasmCall::DontSaveTls));
 
             callee = CalleeDesc::wasmTable(table, sig.id);
         }
 
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(sig.ret()),
-                                   call.spIncrement_, MWasmCall::DontSaveTls, index);
+                                   call.spIncrement_, call.tlsStackOffset_, index);
         if (!ins)
             return false;
 
@@ -1879,8 +1882,10 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
 
     const Sig& sig = f.mg().sigs[sigIndex];
 
+    InterModule interModule = InterModule(!f.mg().isAsmJS() && f.mg().tables[0].external);
+
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, InterModule::False, &call))
+    if (!EmitCallArgs(f, sig, interModule, &call))
         return false;
 
     MDefinition* callee;

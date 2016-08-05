@@ -2792,11 +2792,16 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
         static_assert(sizeof(wasm::ExternalTableElem) == 8 || sizeof(wasm::ExternalTableElem) == 16,
                       "elements of external tables are two words");
         if (sizeof(wasm::ExternalTableElem) == 8) {
-            loadPtr(BaseIndex(scratch, index, TimesEight), scratch);
+            computeEffectiveAddress(BaseIndex(scratch, index, TimesEight), scratch);
         } else {
             lshift32(Imm32(4), index);
-            loadPtr(BaseIndex(scratch, index, TimesOne), scratch);
+            addPtr(index, scratch);
         }
+
+        loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, tls)), WasmTlsReg);
+        loadWasmPinnedRegsFromTls();
+
+        loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, code)), scratch);
     } else {
         loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
     }
