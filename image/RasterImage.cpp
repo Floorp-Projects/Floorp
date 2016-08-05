@@ -1134,8 +1134,6 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
   // expire.
   SurfaceCache::UnlockEntries(ImageKey(this));
 
-  Maybe<IntSize> targetSize = mSize != aSize ? Some(aSize) : Nothing();
-
   // Determine which flags we need to decode this image with.
   DecoderFlags decoderFlags = DefaultDecoderFlags();
   if (aFlags & FLAG_ASYNC_NOTIFY) {
@@ -1163,7 +1161,7 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
                                                   decoderFlags, surfaceFlags);
   } else {
     task = DecoderFactory::CreateDecoder(mDecoderType, WrapNotNull(this),
-                                         mSourceBuffer, mSize, targetSize,
+                                         mSourceBuffer, mSize, aSize,
                                          decoderFlags, surfaceFlags,
                                          mRequestedSampleSize);
   }
