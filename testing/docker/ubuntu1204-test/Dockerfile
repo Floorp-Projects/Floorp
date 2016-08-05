@@ -14,6 +14,9 @@ ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /tmp/install-mercurial
 ADD           system-setup.sh   /tmp/system-setup.sh
 RUN           bash /tmp/system-setup.sh
 
+# %include testing/docker/recipes/run-task
+ADD topsrcdir/testing/docker/recipes/run-task /home/worker/bin/run-task
+
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
 ENV           HOME          /home/worker
