@@ -34,11 +34,36 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "vm/MallocProvider.h"
 
 namespace js {
 
 class PropertyName;
 namespace jit { struct BaselineScript; }
+
+// This is a widespread header, so lets keep out the core wasm impl types.
+
+class WasmMemoryObject;
+typedef GCPtr<WasmMemoryObject*> GCPtrWasmMemoryObject;
+typedef Rooted<WasmMemoryObject*> RootedWasmMemoryObject;
+typedef Handle<WasmMemoryObject*> HandleWasmMemoryObject;
+typedef MutableHandle<WasmMemoryObject*> MutableHandleWasmMemoryObject;
+
+class WasmModuleObject;
+typedef Rooted<WasmModuleObject*> RootedWasmModuleObject;
+typedef Handle<WasmModuleObject*> HandleWasmModuleObject;
+typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModuleObject;
+
+class WasmInstanceObject;
+typedef GCVector<WasmInstanceObject*> WasmInstanceObjectVector;
+typedef Rooted<WasmInstanceObject*> RootedWasmInstanceObject;
+typedef Handle<WasmInstanceObject*> HandleWasmInstanceObject;
+typedef MutableHandle<WasmInstanceObject*> MutableHandleWasmInstanceObject;
+
+class WasmTableObject;
+typedef Rooted<WasmTableObject*> RootedWasmTableObject;
+typedef Handle<WasmTableObject*> HandleWasmTableObject;
+typedef MutableHandle<WasmTableObject*> MutableHandleWasmTableObject;
 
 namespace wasm {
 
@@ -55,6 +80,11 @@ using mozilla::RefCounted;
 using mozilla::Some;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
+
+class Memory;
+class Module;
+class Instance;
+class Table;
 
 // To call Vector::podResizeToFit, a type must specialize mozilla::IsPod
 // which is pretty verbose to do within js::wasm, so factor that process out
@@ -1009,18 +1039,6 @@ enum ModuleKind
     AsmJS
 };
 
-// FuncImportExit describes the region of wasm global memory allocated for a
-// function import. This is accessed directly from JIT code and mutated by
-// Instance as exits become optimized and deoptimized.
-
-struct FuncImportExit
-{
-    void* code;
-    jit::BaselineScript* baselineScript;
-    GCPtrFunction fun;
-    static_assert(sizeof(GCPtrFunction) == sizeof(void*), "for JIT access");
-};
-
 // ExportArg holds the unboxed operands to the wasm entry trampoline which can
 // be called through an ExportFuncPtr.
 
@@ -1041,7 +1059,7 @@ struct ExportArg
 // to pass the TLS pointer appropriate for the callee module.
 //
 // After the TlsData struct follows the module's declared TLS variables.
-//
+
 struct TlsData
 {
     // Pointer to the JSContext that contains this TLS data.
@@ -1063,6 +1081,32 @@ struct TlsData
 };
 
 typedef int32_t (*ExportFuncPtr)(ExportArg* args, TlsData* tls);
+
+// FuncImportTls describes the region of wasm global memory allocated in the
+// instance's thread-local storage for a function import. This is accessed
+// directly from JIT code and mutated by Instance as exits become optimized and
+// deoptimized.
+
+struct FuncImportTls
+{
+    // The code to call at an import site: a wasm callee, a thunk into C++, or a
+    // thunk into JIT code.
+    void* code;
+
+    // The callee's TlsData pointer, which must be loaded to WasmTlsReg (along
+    // with any pinned registers) before calling 'code'.
+    TlsData* tls;
+
+    // If 'code' points into a JIT code thunk, the BaselineScript of the callee,
+    // for bidirectional registration purposes.
+    jit::BaselineScript* baselineScript;
+
+    // A GC pointer which keeps the callee alive. For imported wasm functions,
+    // this points to the wasm function's WasmInstanceObject. For all other
+    // imported functions, 'obj' points to the JSFunction.
+    GCPtrObject obj;
+    static_assert(sizeof(GCPtrObject) == sizeof(void*), "for JIT access");
+};
 
 // Constants:
 

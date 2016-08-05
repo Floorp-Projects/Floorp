@@ -168,16 +168,17 @@ TheoraDecoder::DoDecode(MediaRawData* aSample)
 
     VideoInfo info;
     info.mDisplay = mInfo.mDisplay;
-    RefPtr<VideoData> v = VideoData::Create(info,
-                                            mImageContainer,
-                                            aSample->mOffset,
-                                            aSample->mTime,
-                                            aSample->mDuration,
-                                            b,
-                                            aSample->mKeyframe,
-                                            aSample->mTimecode,
-                                            mInfo.ScaledImageRect(mTheoraInfo.frame_width,
-                                                                  mTheoraInfo.frame_height));
+    RefPtr<VideoData> v =
+      VideoData::CreateAndCopyData(info,
+                                   mImageContainer,
+                                   aSample->mOffset,
+                                   aSample->mTime,
+                                   aSample->mDuration,
+                                   b,
+                                   aSample->mKeyframe,
+                                   aSample->mTimecode,
+                                   mInfo.ScaledImageRect(mTheoraInfo.frame_width,
+                                                         mTheoraInfo.frame_height));
     if (!v) {
       LOG("Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
           mTheoraInfo.frame_width, mTheoraInfo.frame_height, mInfo.mDisplay.width, mInfo.mDisplay.height,

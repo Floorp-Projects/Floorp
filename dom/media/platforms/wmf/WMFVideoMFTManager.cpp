@@ -711,15 +711,16 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
 
   if (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
       mLayersBackend != LayersBackend::LAYERS_D3D11) {
-    RefPtr<VideoData> v = VideoData::Create(mVideoInfo,
-                                            mImageContainer,
-                                            aStreamOffset,
-                                            pts.ToMicroseconds(),
-                                            duration.ToMicroseconds(),
-                                            b,
-                                            false,
-                                            -1,
-                                            pictureRegion);
+    RefPtr<VideoData> v =
+      VideoData::CreateAndCopyData(mVideoInfo,
+                                   mImageContainer,
+                                   aStreamOffset,
+                                   pts.ToMicroseconds(),
+                                   duration.ToMicroseconds(),
+                                   b,
+                                   false,
+                                   -1,
+                                   pictureRegion);
     if (twoDBuffer) {
       twoDBuffer->Unlock2D();
     } else {
@@ -740,7 +741,6 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
 
   RefPtr<VideoData> v =
     VideoData::CreateFromImage(mVideoInfo,
-                               mImageContainer,
                                aStreamOffset,
                                pts.ToMicroseconds(),
                                duration.ToMicroseconds(),
@@ -771,7 +771,6 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   RefPtr<Image> image;
   hr = mDXVA2Manager->CopyToImage(aSample,
                                   pictureRegion,
-                                  mImageContainer,
                                   getter_AddRefs(image));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   NS_ENSURE_TRUE(image, E_FAIL);
@@ -781,7 +780,6 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   media::TimeUnit duration = GetSampleDuration(aSample);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
   RefPtr<VideoData> v = VideoData::CreateFromImage(mVideoInfo,
-                                                   mImageContainer,
                                                    aStreamOffset,
                                                    pts.ToMicroseconds(),
                                                    duration.ToMicroseconds(),

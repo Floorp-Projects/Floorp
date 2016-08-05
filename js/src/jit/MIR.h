@@ -13442,26 +13442,6 @@ class MAsmJSLoadFuncPtr
     bool congruentTo(const MDefinition* ins) const override;
 };
 
-class MAsmJSLoadFFIFunc : public MNullaryInstruction
-{
-    explicit MAsmJSLoadFFIFunc(unsigned globalDataOffset)
-      : globalDataOffset_(globalDataOffset)
-    {
-        setResultType(MIRType::Pointer);
-    }
-
-    unsigned globalDataOffset_;
-
-  public:
-    INSTRUCTION_HEADER(AsmJSLoadFFIFunc)
-    TRIVIAL_NEW_WRAPPERS
-
-    unsigned globalDataOffset() const { return globalDataOffset_; }
-
-    HashNumber valueHash() const override;
-    bool congruentTo(const MDefinition* ins) const override;
-};
-
 class MAsmJSParameter : public MNullaryInstruction
 {
     ABIArg abi_;
@@ -13530,19 +13510,23 @@ class MAsmJSPassStackArg
     }
 };
 
-class MAsmJSCall final
+class MWasmCall final
   : public MVariadicInstruction,
     public NoTypePolicy::Data
 {
   public:
     class Callee {
       public:
-        enum Which { Internal, Dynamic, Builtin };
+        enum Which { Internal, Import, Dynamic, Builtin };
       private:
         Which which_;
         union U {
             U() {}
-            uint32_t internal_;
+            uint32_t internalFuncIndex_;
+            struct {
+                uint32_t globalDataOffset_;
+                uint32_t tlsStackOffset_;
+            } import;
             struct {
                 MDefinition* callee_;
                 wasm::SigIdDesc sigId_;
@@ -13551,8 +13535,18 @@ class MAsmJSCall final
         } u;
       public:
         Callee() {}
-        explicit Callee(uint32_t callee) : which_(Internal) {
-            u.internal_ = callee;
+        static Callee internal(uint32_t callee) {
+            Callee c;
+            c.which_ = Internal;
+            c.u.internalFuncIndex_ = callee;
+            return c;
+        }
+        static Callee import(uint32_t globalDataOffset, uint32_t tlsStackOffset) {
+            Callee c;
+            c.which_ = Import;
+            c.u.import.globalDataOffset_ = globalDataOffset;
+            c.u.import.tlsStackOffset_ = tlsStackOffset;
+            return c;
         }
         explicit Callee(MDefinition* callee, wasm::SigIdDesc sigId = wasm::SigIdDesc())
           : which_(Dynamic)
@@ -13566,9 +13560,17 @@ class MAsmJSCall final
         Which which() const {
             return which_;
         }
-        uint32_t internal() const {
+        uint32_t internalFuncIndex() const {
             MOZ_ASSERT(which_ == Internal);
-            return u.internal_;
+            return u.internalFuncIndex_;
+        }
+        uint32_t importGlobalDataOffset() const {
+            MOZ_ASSERT(which_ == Import);
+            return u.import.globalDataOffset_;
+        }
+        uint32_t importTlsStackOffset() const {
+            MOZ_ASSERT(which_ == Import);
+            return u.import.tlsStackOffset_;
         }
         MDefinition* dynamicPtr() const {
             MOZ_ASSERT(which_ == Dynamic);
@@ -13584,28 +13586,20 @@ class MAsmJSCall final
         }
     };
 
-    enum PreservesTlsReg {
-        False = false,
-        True = true
-    };
-
   private:
     wasm::CallSiteDesc desc_;
     Callee callee_;
     FixedList<AnyRegister> argRegs_;
     size_t spIncrement_;
-    bool preservesTlsReg_;
 
-    MAsmJSCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement,
-               PreservesTlsReg preservesTlsReg)
-      : desc_(desc)
-      , callee_(callee)
-      , spIncrement_(spIncrement)
-      , preservesTlsReg_(bool(preservesTlsReg))
+    MWasmCall(const wasm::CallSiteDesc& desc, Callee callee, size_t spIncrement)
+      : desc_(desc),
+        callee_(callee),
+        spIncrement_(spIncrement)
     { }
 
   public:
-    INSTRUCTION_HEADER(AsmJSCall)
+    INSTRUCTION_HEADER(WasmCall)
 
     struct Arg {
         AnyRegister reg;
@@ -13614,9 +13608,8 @@ class MAsmJSCall final
     };
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
-    static MAsmJSCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-                           const Args& args, MIRType resultType, size_t spIncrement,
-                           PreservesTlsReg preservesTlsReg);
+    static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
+                          const Args& args, MIRType resultType, size_t spIncrement);
 
     size_t numArgs() const {
         return argRegs_.length();
@@ -13638,11 +13631,6 @@ class MAsmJSCall final
     }
     size_t spIncrement() const {
         return spIncrement_;
-    }
-
-    // Does this call preserve the value of the TLS pointer register?
-    bool preservesTlsReg() const {
-        return preservesTlsReg_;
     }
 
     bool possiblyCalls() const override {

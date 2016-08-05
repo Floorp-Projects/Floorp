@@ -11,7 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "builtin/SIMD.h"
+#include "builtin/TypedObject.h"
 #include "jit/CompileInfo.h"
 #include "jit/ICStubSpace.h"
 #include "jit/IonCode.h"

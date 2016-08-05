@@ -1023,11 +1023,7 @@ protected:
   /**
    * Returns if the step attribute apply for the current type.
    */
-  bool DoesStepApply() const
-  {
-    // TODO: this is temporary until bug 888324 is fixed.
-    return DoesMinMaxApply() && mType != NS_FORM_INPUT_MONTH;
-  }
+  bool DoesStepApply() const { return DoesMinMaxApply(); }
 
   /**
    * Returns if stepDown and stepUp methods apply for the current type.
@@ -1428,6 +1424,7 @@ protected:
   static const Decimal kStepScaleFactorDate;
   static const Decimal kStepScaleFactorNumberRange;
   static const Decimal kStepScaleFactorTime;
+  static const Decimal kStepScaleFactorMonth;
 
   // Default step base value when a type do not have specific one.
   static const Decimal kDefaultStepBase;

@@ -638,15 +638,15 @@ CodeGeneratorARM64::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementSta
 }
 
 void
-CodeGeneratorARM64::visitAsmJSCall(LAsmJSCall* ins)
+CodeGeneratorARM64::visitWasmCall(LWasmCall* ins)
 {
-    MOZ_CRASH("vistAsmJSCall");
+    MOZ_CRASH("vistWasmCall");
 }
 
 void
-CodeGeneratorARM64::visitAsmJSCallI64(LAsmJSCallI64* ins)
+CodeGeneratorARM64::visitWasmCallI64(LWasmCallI64* ins)
 {
-    MOZ_CRASH("vistAsmJSCallI64");
+    MOZ_CRASH("vistWasmCallI64");
 }
 
 void

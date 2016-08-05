@@ -8,8 +8,9 @@
 "unpack": true
 },
 {
-"size": 93295855,
-"digest": "2b8fd0c1ba337a7035090c420305a7892e663ce6781569b100b36fa21cc26146e67f44a34c7715f0004f48bbe46c232bbbf2928c9d0595243d2584530770b504",
+"version": "rust 1.10 repack",
+"size": 150726627,
+"digest": "a30476113212895a837b2c4c18eb34d767c7192c3e327fba84c0138eaf7e671e84d5294e75370af3fe7e527a61e0938cd6cce20fba0aec94537070eb0094e27e",
 "algorithm": "sha512",
 "filename": "rustc.tar.bz2",
 "unpack": true

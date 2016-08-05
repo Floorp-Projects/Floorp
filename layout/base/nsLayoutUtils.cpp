@@ -13,6 +13,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/PAPZ.h"
 #include "mozilla/Likely.h"
@@ -1024,8 +1025,8 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
     // Don't align to tiles if they are too large, because we could expand
     // the displayport by a lot which can take more paint time. It's a tradeoff
     // though because if we don't align to tiles we have more waste on upload.
-    alignment = ScreenSize(std::min(256, gfxPlatform::GetPlatform()->GetTileWidth()),
-                           std::min(256, gfxPlatform::GetPlatform()->GetTileHeight()));
+    IntSize tileSize = gfxVars::TileSize();
+    alignment = ScreenSize(std::min(256, tileSize.width), std::min(256, tileSize.height));
   } else {
     // If we're not drawing with tiles then we need to be careful about not
     // hitting the max texture size and we only need 1 draw call per layer

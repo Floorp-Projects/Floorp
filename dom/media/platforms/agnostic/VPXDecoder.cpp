@@ -160,16 +160,17 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
       return -1;
     }
 
-    RefPtr<VideoData> v = VideoData::Create(mInfo,
-                                            mImageContainer,
-                                            aSample->mOffset,
-                                            aSample->mTime,
-                                            aSample->mDuration,
-                                            b,
-                                            aSample->mKeyframe,
-                                            aSample->mTimecode,
-                                            mInfo.ScaledImageRect(img->d_w,
-                                                                  img->d_h));
+    RefPtr<VideoData> v =
+      VideoData::CreateAndCopyData(mInfo,
+                                   mImageContainer,
+                                   aSample->mOffset,
+                                   aSample->mTime,
+                                   aSample->mDuration,
+                                   b,
+                                   aSample->mKeyframe,
+                                   aSample->mTimecode,
+                                   mInfo.ScaledImageRect(img->d_w,
+                                                         img->d_h));
 
     if (!v) {
       LOG("Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",

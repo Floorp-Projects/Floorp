@@ -10,6 +10,7 @@
 #include "MediaStreamGraph.h"
 #include "MediaStreamListener.h"
 #include "PrincipalChangeObserver.h"
+#include "MediaStreamVideoSink.h"
 
 namespace mozilla {
 
@@ -29,16 +30,15 @@ class MediaStreamTrack;
  * CaptureTask holds a reference of ImageCapture to ensure ImageCapture won't be
  * released during the period of the capturing process described above.
  */
-class CaptureTask : public MediaStreamTrackListener,
+class CaptureTask : public MediaStreamVideoSink,
                     public dom::PrincipalChangeObserver<dom::MediaStreamTrack>
 {
 public:
-  // MediaStreamTrackListener methods.
-  void NotifyQueuedChanges(MediaStreamGraph* aGraph,
-                           StreamTime aTrackOffset,
-                           const MediaSegment& aQueuedMedia) override;
+  class MediaStreamEventListener;
 
-  void NotifyEnded() override;
+  // MediaStreamVideoSink methods.
+  void SetCurrentFrames(const VideoSegment& aSegment) override;
+  void ClearFrames() override {}
 
   // PrincipalChangeObserver<MediaStreamTrack> method.
   void PrincipalChanged(dom::MediaStreamTrack* aMediaStreamTrack) override;
@@ -61,10 +61,7 @@ public:
   void DetachTrack();
 
   // CaptureTask should be created on main thread.
-  explicit CaptureTask(dom::ImageCapture* aImageCapture)
-    : mImageCapture(aImageCapture)
-    , mImageGrabbedOrTrackEnd(false)
-    , mPrincipalChanged(false) {}
+  explicit CaptureTask(dom::ImageCapture* aImageCapture);
 
 protected:
   virtual ~CaptureTask() {}
@@ -77,6 +74,8 @@ protected:
   // change in this class unless it clears this reference after a blob or error
   // event to script.
   RefPtr<dom::ImageCapture> mImageCapture;
+
+  RefPtr<MediaStreamEventListener> mEventListener;
 
   // True when an image is retrieved from MediaStreamGraph or MediaStreamGraph
   // sends a track finish, end, or removed event.

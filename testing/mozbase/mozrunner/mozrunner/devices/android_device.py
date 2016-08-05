@@ -364,8 +364,8 @@ class AndroidEmulator(object):
         if not os.path.exists(avd):
             if os.path.exists(ini_file):
                 os.remove(ini_file)
-            url = '%s/%s' % (TRY_URL, self.avd_info.tooltool_manifest)
-            _download_file(url, 'releng.manifest', EMULATOR_HOME_DIR)
+            path = self.avd_info.tooltool_manifest
+            _get_tooltool_manifest(self.substs, path, EMULATOR_HOME_DIR, 'releng.manifest')
             _tooltool_fetch()
             self._update_avd_paths()
 

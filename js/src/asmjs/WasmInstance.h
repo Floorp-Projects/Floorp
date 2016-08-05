@@ -52,7 +52,7 @@ class Instance
     // Internal helpers:
     void** addressOfTableBase(size_t tableIndex) const;
     const void** addressOfSigId(const SigIdDesc& sigId) const;
-    FuncImportExit& funcImportToExit(const FuncImport& fi);
+    FuncImportTls& funcImportTls(const FuncImport& fi);
 
     // Import call slow paths which are called directly from wasm code.
     friend void* AddressOf(SymbolicAddress, ExclusiveContext*);
@@ -66,7 +66,7 @@ class Instance
 
   public:
     Instance(JSContext* cx,
-             Handle<WasmInstanceObject*> object,
+             HandleWasmInstanceObject object,
              UniqueCode code,
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
@@ -83,6 +83,7 @@ class Instance
     const CodeSegment& codeSegment() const { return code_->segment(); }
     uint8_t* codeBase() const { return code_->segment().base(); }
     const Metadata& metadata() const { return code_->metadata(); }
+    bool isAsmJS() const { return metadata().isAsmJS(); }
     const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
     size_t memoryLength() const;

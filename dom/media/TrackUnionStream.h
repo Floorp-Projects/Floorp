@@ -19,6 +19,9 @@ class TrackUnionStream : public ProcessedMediaStream {
 public:
   explicit TrackUnionStream();
 
+  virtual TrackUnionStream* AsTrackUnionStream() override { return this; }
+  friend class DOMMediaStream;
+
   void RemoveInput(MediaInputPort* aPort) override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
@@ -26,6 +29,8 @@ public:
 
   MediaStream* GetInputStreamFor(TrackID aTrackID) override;
   TrackID GetInputTrackIDFor(TrackID aTrackID) override;
+
+  friend class MediaStreamGraphImpl;
 
 protected:
   // Only non-ended tracks are allowed to persist in this map.
