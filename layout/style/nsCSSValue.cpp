@@ -941,13 +941,23 @@ nsCSSValue::AppendCircleOrEllipseToString(nsCSSKeyword aFunctionId,
 
   bool hasRadii = array->Item(1).GetUnit() != eCSSUnit_Null;
 
-  AppendPositionCoordinateToString(array->Item(1), aProperty,
+  // closest-side is the default, so we don't need to
+  // output it if all values are closest-side.
+  if (array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
+      array->Item(1).GetIntValue() == NS_RADIUS_CLOSEST_SIDE &&
+      (aFunctionId == eCSSKeyword_circle ||
+       (array->Item(2).GetUnit() == eCSSUnit_Enumerated &&
+        array->Item(2).GetIntValue() == NS_RADIUS_CLOSEST_SIDE))) {
+    hasRadii = false;
+  } else {
+    AppendPositionCoordinateToString(array->Item(1), aProperty,
                                      aResult, aSerialization);
 
-  if (hasRadii && aFunctionId == eCSSKeyword_ellipse) {
-    aResult.Append(' ');
-    AppendPositionCoordinateToString(array->Item(2), aProperty,
-                                     aResult, aSerialization);
+    if (hasRadii && aFunctionId == eCSSKeyword_ellipse) {
+      aResult.Append(' ');
+      AppendPositionCoordinateToString(array->Item(2), aProperty,
+                                       aResult, aSerialization);
+    }
   }
 
   // Any position specified?
