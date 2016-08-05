@@ -202,7 +202,6 @@ define(function (require, exports, module) {
               key: index,
               className: classes},
               DOM.a({
-                href: "#",
                 tabIndex: this.state.tabActive === index ? 0 : -1,
                 onClick: this.onClickTab.bind(this, index)},
                 title
