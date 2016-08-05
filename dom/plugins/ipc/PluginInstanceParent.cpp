@@ -954,8 +954,9 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
                    updatedRect.bottom - updatedRect.top);
         surface->MarkDirty(ur);
 
+        bool isPlugin = true;
         RefPtr<gfx::SourceSurface> sourceSurface =
-            gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
+            gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface, isPlugin);
         RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surface->GetSize(), sourceSurface);
 
         AutoTArray<ImageContainer::NonOwningImage,1> imageList;
