@@ -999,7 +999,7 @@ var gSyncSetup = {
     if (string) {
       try {
         str = this._stringBundle.GetStringFromName(string);
-      } catch(e) {}
+      } catch (e) {}
 
       if (!str)
         str = Weave.Utils.getErrorString(string);

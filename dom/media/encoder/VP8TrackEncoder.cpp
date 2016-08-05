@@ -28,8 +28,8 @@ LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-VP8TrackEncoder::VP8TrackEncoder()
-  : VideoTrackEncoder()
+VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate)
+  : VideoTrackEncoder(aTrackRate)
   , mEncodedFrameDuration(0)
   , mEncodedTimestamp(0)
   , mRemainingTicks(0)
@@ -53,16 +53,14 @@ VP8TrackEncoder::~VP8TrackEncoder()
 
 nsresult
 VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
-                      int32_t aDisplayHeight,TrackRate aTrackRate)
+                      int32_t aDisplayHeight)
 {
-  if (aWidth < 1 || aHeight < 1 || aDisplayWidth < 1 || aDisplayHeight < 1
-      || aTrackRate <= 0) {
+  if (aWidth < 1 || aHeight < 1 || aDisplayWidth < 1 || aDisplayHeight < 1) {
     return NS_ERROR_FAILURE;
   }
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  mTrackRate = aTrackRate;
   mEncodedFrameRate = DEFAULT_ENCODE_FRAMERATE;
   mEncodedFrameDuration = mTrackRate / mEncodedFrameRate;
   mFrameWidth = aWidth;

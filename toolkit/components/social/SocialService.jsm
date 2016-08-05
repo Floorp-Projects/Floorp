@@ -176,7 +176,7 @@ var ActiveProviders = {
       let pref = Services.prefs.getComplexValue("social.activeProviders",
                                                 Ci.nsISupportsString);
       this._providers = JSON.parse(pref);
-    } catch(ex) {}
+    } catch (ex) {}
     return this._providers;
   },
 
@@ -217,7 +217,7 @@ function migrateSettings() {
   let activeProviders, enabled;
   try {
     activeProviders = Services.prefs.getCharPref("social.activeProviders");
-  } catch(e) {
+  } catch (e) {
     // not set, we'll check if we need to migrate older prefs
   }
   if (Services.prefs.prefHasUserValue("social.enabled")) {
@@ -233,7 +233,7 @@ function migrateSettings() {
       try {
         prefname = getPrefnameFromOrigin(origin);
         manifest = JSON.parse(Services.prefs.getComplexValue(prefname, Ci.nsISupportsString).data);
-      } catch(e) {
+      } catch (e) {
         // Our preference is missing or bad, remove from ActiveProviders and
         // continue. This is primarily an error-case and should only be
         // reached by either messing with preferences or hitting the one or
@@ -248,7 +248,7 @@ function migrateSettings() {
         defaultManifest = Services.prefs.getDefaultBranch(null)
                         .getComplexValue(prefname, Ci.nsISupportsString).data;
         defaultManifest = JSON.parse(defaultManifest);
-      } catch(e) {
+      } catch (e) {
         // not a built-in, continue
       }
       if (defaultManifest) {
@@ -290,7 +290,7 @@ function migrateSettings() {
   let active;
   try {
     active = Services.prefs.getBoolPref("social.active");
-  } catch(e) {}
+  } catch (e) {}
   if (!active)
     return;
 
@@ -303,7 +303,7 @@ function migrateSettings() {
       let manifest;
       try {
         manifest = JSON.parse(manifestPrefs.getComplexValue(pref, Ci.nsISupportsString).data);
-      } catch(e) {
+      } catch (e) {
         // bad or missing preference, we wont update this one.
         continue;
       }
@@ -341,7 +341,7 @@ function initService() {
 
   try {
     migrateSettings();
-  } catch(e) {
+  } catch (e) {
     // no matter what, if migration fails we do not want to render social
     // unusable. Worst case scenario is that, when upgrading Firefox, previously
     // enabled providers are not migrated.
@@ -538,7 +538,7 @@ this.SocialService = {
             return null;
           }
           data[url] = resolved.spec;
-        } catch(e) {
+        } catch (e) {
           Cu.reportError("SocialService.manifestFromData unable to resolve '" + url + "' for " + principal.origin);
           return null;
         }
@@ -608,7 +608,7 @@ this.SocialService = {
               this._notifyProviderListeners("provider-installed", aManifest.origin);
               installCallback(aManifest);
           });
-        } catch(e) {
+        } catch (e) {
           Cu.reportError("Activation failed: " + e);
           installCallback(null);
         }
@@ -720,7 +720,7 @@ function SocialProvider(input) {
 
   try {
     this.domain = etld.getBaseDomainFromHost(originUri.host);
-  } catch(e) {
+  } catch (e) {
     this.domain = originUri.host;
   }
 }
@@ -896,7 +896,7 @@ var SocialAddonProvider = {
             SocialService.disableProvider(manifest.origin);
           }
         }
-      } catch(e) {
+      } catch (e) {
         Cu.reportError(e);
       }
     }

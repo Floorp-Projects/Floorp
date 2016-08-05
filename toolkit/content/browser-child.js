@@ -374,7 +374,7 @@ var ControllerCommands = {
   },
 
   receiveMessage: function(message) {
-    switch(message.name) {
+    switch (message.name) {
       case "ControllerCommands:Do":
         if (docShell.isCommandEnabled(message.data))
           docShell.doCommand(message.data);

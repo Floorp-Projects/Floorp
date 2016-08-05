@@ -5002,24 +5002,6 @@ MAsmJSLoadFuncPtr::congruentTo(const MDefinition* ins) const
     return false;
 }
 
-HashNumber
-MAsmJSLoadFFIFunc::valueHash() const
-{
-    HashNumber hash = MDefinition::valueHash();
-    hash = addU32ToHash(hash, globalDataOffset_);
-    return hash;
-}
-
-bool
-MAsmJSLoadFFIFunc::congruentTo(const MDefinition* ins) const
-{
-    if (ins->isAsmJSLoadFFIFunc()) {
-        const MAsmJSLoadFFIFunc* load = ins->toAsmJSLoadFFIFunc();
-        return globalDataOffset_ == load->globalDataOffset_;
-    }
-    return false;
-}
-
 MDefinition::AliasType
 MLoadSlot::mightAlias(const MDefinition* def) const
 {
@@ -5395,12 +5377,11 @@ MAsmJSUnsignedToFloat32::foldsTo(TempAllocator& alloc)
     return this;
 }
 
-MAsmJSCall*
-MAsmJSCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-                const Args& args, MIRType resultType, size_t spIncrement,
-                PreservesTlsReg preservesTlsReg)
+MWasmCall*
+MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
+               const Args& args, MIRType resultType, size_t spIncrement)
 {
-    MAsmJSCall* call = new(alloc) MAsmJSCall(desc, callee, spIncrement, preservesTlsReg);
+    MWasmCall* call = new(alloc) MWasmCall(desc, callee, spIncrement);
     call->setResultType(resultType);
 
     if (!call->argRegs_.init(alloc, args.length()))

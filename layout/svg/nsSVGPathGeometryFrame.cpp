@@ -809,7 +809,7 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
     }
   }
 
-  SVGContextPaint* contextPaint = nsSVGUtils::GetContextPaint(mContent);
+  SVGContextPaint* contextPaint = SVGContextPaint::GetContextPaint(mContent);
 
   if (aRenderComponents & eRenderFill) {
     GeneralPattern fillPattern;
@@ -877,7 +877,7 @@ void
 nsSVGPathGeometryFrame::PaintMarkers(gfxContext& aContext,
                                      const gfxMatrix& aTransform)
 {
-  SVGContextPaint* contextPaint = nsSVGUtils::GetContextPaint(mContent);
+  SVGContextPaint* contextPaint = SVGContextPaint::GetContextPaint(mContent);
 
   if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);

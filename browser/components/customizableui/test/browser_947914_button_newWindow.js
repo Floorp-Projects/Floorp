@@ -38,7 +38,7 @@ add_task(function*() {
     yield promiseWindowClosed(newWindow);
     info("The new window was closed");
   }
-  catch(e) {
+  catch (e) {
     ok(false, "The new browser window was not properly handled");
   }
   finally {

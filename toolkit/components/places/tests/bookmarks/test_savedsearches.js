@@ -56,7 +56,7 @@ add_test(function test_savedsearches_bookmarks() {
     }
     rootNode.containerOpen = false;
   }
-  catch(ex) {
+  catch (ex) {
     do_throw("expandQueries=0 query error: " + ex);
   }
 
@@ -113,7 +113,7 @@ add_test(function test_savedsearches_bookmarks() {
     }
     rootNode.containerOpen = false;
   }
-  catch(ex) {
+  catch (ex) {
     do_throw("expandQueries=1 bookmarks query: " + ex);
   }
 
@@ -198,12 +198,12 @@ add_task(function* test_savedsearches_history() {
     try {
       tmpFolderNode = root.getChild(1);
       do_throw("query was not removed");
-    } catch(ex) {}
+    } catch (ex) {}
 
     tmpFolderNode.containerOpen = false;
     rootNode.containerOpen = false;
   }
-  catch(ex) {
+  catch (ex) {
     do_throw("expandQueries=1 bookmarks query: " + ex);
   }
 });

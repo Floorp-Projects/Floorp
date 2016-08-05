@@ -33,7 +33,7 @@ var AutoCompleteE10SView = {
   setTree: function(treeBox)         { this.treeBox = treeBox; },
   getCellText: function(idx, column) { return this.treeData[idx] },
   isContainer: function(idx)         { return false; },
-  getCellValue: function(idx, column){ return false },
+  getCellValue: function(idx, column) { return false },
   isContainerOpen: function(idx)     { return false; },
   isContainerEmpty: function(idx)    { return false; },
   isSeparator: function(idx)         { return false; },
@@ -64,7 +64,7 @@ var AutoCompleteE10SView = {
     AutoCompleteE10S.handleEnter(aIsPopupSelection);
   },
 
-  stopSearch: function(){},
+  stopSearch: function() {},
 
   // Internal JS-only API
   clearResults: function() {

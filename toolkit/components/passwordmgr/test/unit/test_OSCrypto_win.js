@@ -71,7 +71,7 @@ add_task(function test_decryptData_encryptData()
 
   let arr1 = crypto.arrayToString(value)
   let arr2 = crypto.stringToArray(crypto.decryptData(crypto.encryptData(arr1, url), url));
-  for(let i = 0; i < arr1.length; i++) {
+  for (let i = 0; i < arr1.length; i++) {
     do_check_eq(arr2[i], value[i]);
   }
 });

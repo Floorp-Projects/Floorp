@@ -84,7 +84,7 @@ function getPrinterDescription(printerName)
   try {
     /* This may not work with non-ASCII test (see bug 235763 comment #16) */
     s = gPrefs.getCharPref("print.printer_" + printerName + ".printer_description")
-  } catch(e) {
+  } catch (e) {
   }
 
   return s;
@@ -148,7 +148,7 @@ function getPrinters()
         Components.classes["@mozilla.org/gfx/printerenumerator;1"]
                   .getService(Components.interfaces.nsIPrinterEnumerator)
                   .printerNameList;
-  } catch(e) { printerEnumerator = null; }
+  } catch (e) { printerEnumerator = null; }
 
   selectElement.appendPrinterNames(printerEnumerator);
   selectElement.listElement.value = printService.defaultPrinterName;
@@ -188,7 +188,7 @@ function displayPropertiesDialog()
       printingPromptService.showPrinterProperties(null, dialog.printerList.value, gPrintSettings);
       dialog.numCopiesInput.value = gPrintSettings.numCopies;
     }
-  } catch(e) {
+  } catch (e) {
     dump("problems getting printingPromptService\n");
   }
 }
@@ -228,7 +228,7 @@ function loadDialog()
         printService = printService.QueryInterface(Components.interfaces.nsIPrintSettingsService);
       }
     }
-  } catch(e) {}
+  } catch (e) {}
 
   // Note: getPrinters sets up the PrintToFile control
   getPrinters();
@@ -416,7 +416,7 @@ function chooseFile()
       gPrintSettings.toFileName = fp.file.path;
       return true;
     }
-  } catch(ex) {
+  } catch (ex) {
     dump(ex);
   }
 

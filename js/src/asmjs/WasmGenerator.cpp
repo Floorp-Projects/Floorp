@@ -143,7 +143,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
         for (FuncImportGenDesc& funcImport : shared_->funcImports) {
             MOZ_ASSERT(!funcImport.globalDataOffset);
             funcImport.globalDataOffset = linkData_.globalDataLength;
-            linkData_.globalDataLength += sizeof(FuncImportExit);
+            linkData_.globalDataLength += sizeof(FuncImportTls);
             if (!addFuncImport(*funcImport.sig, funcImport.globalDataOffset))
                 return false;
         }
@@ -393,8 +393,9 @@ ModuleGenerator::finishFuncExports()
         if (!sig.clone(funcSig(funcIndex)))
             return false;
 
-        uint32_t tableEntry = funcCodeRange(funcIndex).funcTableEntry();
-        metadata_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex, tableEntry);
+        metadata_->funcExports.infallibleEmplaceBack(Move(sig),
+                                                     funcIndex,
+                                                     funcIndexToCodeRange_[funcIndex]);
     }
 
     return true;
@@ -428,7 +429,7 @@ ModuleGenerator::finishCodegen()
         if (!entries.resize(numFuncExports))
             return false;
         for (uint32_t i = 0; i < numFuncExports; i++)
-            entries[i] = GenerateEntry(masm, metadata_->funcExports[i], usesMemory());
+            entries[i] = GenerateEntry(masm, metadata_->funcExports[i]);
 
         if (!interpExits.resize(numFuncImports()))
             return false;
@@ -436,7 +437,7 @@ ModuleGenerator::finishCodegen()
             return false;
         for (uint32_t i = 0; i < numFuncImports(); i++) {
             interpExits[i] = GenerateInterpExit(masm, metadata_->funcImports[i], i);
-            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i], usesMemory());
+            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i]);
         }
 
         for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))
@@ -704,7 +705,7 @@ ModuleGenerator::initImport(uint32_t funcImportIndex, uint32_t sigIndex)
     MOZ_ASSERT(isAsmJS());
 
     uint32_t globalDataOffset;
-    if (!allocateGlobalBytes(sizeof(FuncImportExit), sizeof(void*), &globalDataOffset))
+    if (!allocateGlobalBytes(sizeof(FuncImportTls), sizeof(void*), &globalDataOffset))
         return false;
 
     MOZ_ASSERT(funcImportIndex == metadata_->funcImports.length());

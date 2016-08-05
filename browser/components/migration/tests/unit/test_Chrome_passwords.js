@@ -94,7 +94,7 @@ function promiseSetPassword(login) {
       },
 
       handleCompletion(aReason) {
-        if (aReason === Ci.mozIStorageStatementCallback.REASON_FINISHED){
+        if (aReason === Ci.mozIStorageStatementCallback.REASON_FINISHED) {
           resolve();
         } else {
           reject("Query has failed: " + aReason);

@@ -174,7 +174,7 @@ function LoginObserver(captivePortalDetector) {
      * Check if login activity is finished according to HTTP burst.
      */
     notify : function notify() {
-      switch(state) {
+      switch (state) {
         case LOGIN_OBSERVER_STATE_BURST:
           // Wait while network stays idle for a short period
           state = LOGIN_OBSERVER_STATE_VERIFY_NEEDED;
@@ -213,7 +213,7 @@ function CaptivePortalDetector() {
       Services.prefs.getCharPref('captivedetect.canonicalURL');
     this._canonicalSiteExpectedContent =
       Services.prefs.getCharPref('captivedetect.canonicalContent');
-  } catch(e) {
+  } catch (e) {
     debug('canonicalURL or canonicalContent not set.')
   }
 

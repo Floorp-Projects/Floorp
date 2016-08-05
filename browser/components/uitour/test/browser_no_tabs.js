@@ -50,7 +50,7 @@ function destroyHiddenBrowser(aFrame, aBrowser) {
  * Test that UITour works when called when no tabs are available (e.g., when using windowless
  * browsers).
  */
-add_task(function* test_windowless_UITour(){
+add_task(function* test_windowless_UITour() {
   // Get the URL for the test page.
   let pageURL = getRootDirectory(gTestPath) + "uitour.html";
 

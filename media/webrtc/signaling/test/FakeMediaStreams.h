@@ -23,6 +23,7 @@
 #include "AudioSegment.h"
 #include "MediaSegment.h"
 #include "StreamTracks.h"
+#include "VideoSegment.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
 #include "nsISupportsImpl.h"
@@ -145,6 +146,27 @@ public:
   };
   virtual void NotifyDirectListenerInstalled(InstallationResult aResult) = 0;
   virtual void NotifyDirectListenerUninstalled() = 0;
+};
+
+class Fake_MediaStreamVideoSink : public Fake_DirectMediaStreamTrackListener{
+public:
+  Fake_MediaStreamVideoSink() {}
+
+  void NotifyQueuedChanges(mozilla::MediaStreamGraph* aGraph,
+                           mozilla::StreamTime aTrackOffset,
+                           const mozilla::MediaSegment& aQueuedMedia) override {}
+
+  void NotifyRealtimeTrackData(mozilla::MediaStreamGraph* aGraph,
+                               mozilla::StreamTime aTrackOffset,
+                               const mozilla::MediaSegment& aMedia) override {}
+  void NotifyDirectListenerInstalled(InstallationResult aResult) override {}
+  void NotifyDirectListenerUninstalled() override {}
+
+  virtual void SetCurrentFrames(const mozilla::VideoSegment& aSegment) {};
+  virtual void ClearFrames() {};
+
+protected:
+  virtual ~Fake_MediaStreamVideoSink() {}
 };
 
 // Note: only one listener supported
@@ -619,6 +641,7 @@ typedef Fake_MediaStreamTrackListener MediaStreamTrackListener;
 typedef Fake_DirectMediaStreamTrackListener DirectMediaStreamTrackListener;
 typedef Fake_DOMMediaStream DOMMediaStream;
 typedef Fake_DOMMediaStream DOMLocalMediaStream;
+typedef Fake_MediaStreamVideoSink MediaStreamVideoSink;
 
 namespace dom {
 typedef Fake_MediaStreamTrack MediaStreamTrack;

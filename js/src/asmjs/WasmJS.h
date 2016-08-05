@@ -19,24 +19,15 @@
 #ifndef wasm_js_h
 #define wasm_js_h
 
+#include "asmjs/WasmTypes.h"
 #include "gc/Policy.h"
-#include "js/UniquePtr.h"
 #include "vm/NativeObject.h"
 
 namespace js {
 
 class TypedArrayObject;
-class WasmInstanceObject;
 
 namespace wasm {
-
-// This is a widespread header, so keep out core wasm impl definitions.
-
-class Module;
-class Instance;
-class Table;
-
-typedef UniquePtr<Instance> UniqueInstance;
 
 // Return whether WebAssembly can be compiled on this platform.
 // This must be checked and must be true to call any of the top-level wasm
@@ -54,7 +45,7 @@ IsI64Implemented();
 
 MOZ_MUST_USE bool
 Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
-     MutableHandle<WasmInstanceObject*> instanceObj);
+     MutableHandleWasmInstanceObject instanceObj);
 
 // The field name of the export object on the instance object.
 
@@ -117,10 +108,6 @@ class WasmModuleObject : public NativeObject
     wasm::Module& module() const;
 };
 
-typedef Rooted<WasmModuleObject*> RootedWasmModuleObject;
-typedef Handle<WasmModuleObject*> HandleWasmModuleObject;
-typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModuleObject;
-
 // The class of WebAssembly.Instance. Each WasmInstanceObject owns a
 // wasm::Instance. These objects are used both as content-facing JS objects and
 // as internal implementation details of asm.js.
@@ -152,19 +139,14 @@ class WasmInstanceObject : public NativeObject
     static bool construct(JSContext*, unsigned, Value*);
 
     static WasmInstanceObject* create(JSContext* cx, HandleObject proto);
-    void init(wasm::UniqueInstance instance);
+    void init(UniquePtr<wasm::Instance> instance);
     wasm::Instance& instance() const;
 
     static bool getExportedFunction(JSContext* cx,
-                                    Handle<WasmInstanceObject*> instanceObj,
+                                    HandleWasmInstanceObject instanceObj,
                                     uint32_t funcIndex,
                                     MutableHandleFunction fun);
 };
-
-typedef GCVector<WasmInstanceObject*> WasmInstanceObjectVector;
-typedef Rooted<WasmInstanceObject*> RootedWasmInstanceObject;
-typedef Handle<WasmInstanceObject*> HandleWasmInstanceObject;
-typedef MutableHandle<WasmInstanceObject*> MutableHandleWasmInstanceObject;
 
 // The class of WebAssembly.Memory. A WasmMemoryObject references an ArrayBuffer
 // or SharedArrayBuffer object which owns the actual memory.
@@ -185,11 +167,6 @@ class WasmMemoryObject : public NativeObject
                                     HandleObject proto);
     ArrayBufferObjectMaybeShared& buffer() const;
 };
-
-typedef GCPtr<WasmMemoryObject*> GCPtrWasmMemoryObject;
-typedef Rooted<WasmMemoryObject*> RootedWasmMemoryObject;
-typedef Handle<WasmMemoryObject*> HandleWasmMemoryObject;
-typedef MutableHandle<WasmMemoryObject*> MutableHandleWasmMemoryObject;
 
 // The class of WebAssembly.Table. A WasmTableObject holds a refcount on a
 // wasm::Table, allowing a Table to be shared between multiple Instances
@@ -233,10 +210,6 @@ class WasmTableObject : public NativeObject
     wasm::Table& table() const;
     bool setInstance(JSContext* cx, uint32_t index, HandleWasmInstanceObject instanceObj);
 };
-
-typedef Rooted<WasmTableObject*> RootedWasmTableObject;
-typedef Handle<WasmTableObject*> HandleWasmTableObject;
-typedef MutableHandle<WasmTableObject*> MutableHandleWasmTableObject;
 
 } // namespace js
 

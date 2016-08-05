@@ -309,15 +309,15 @@ GonkBufferData::GetPlatformMediaData()
   }
 
   VideoInfo info(*mGonkPlatformLayer->GetTrackInfo()->GetAsVideoInfo());
-  RefPtr<VideoData> data = VideoData::Create(info,
-                                             mGonkPlatformLayer->GetImageContainer(),
-                                             0,
-                                             mBuffer->nTimeStamp,
-                                             1,
-                                             mTextureClientRecycleHandler->GetTextureClient(),
-                                             false,
-                                             0,
-                                             info.ImageRect());
+  RefPtr<VideoData> data =
+    VideoData::CreateAndCopyIntoTextureClient(info,
+                                              0,
+                                              mBuffer->nTimeStamp,
+                                              1,
+                                              mTextureClientRecycleHandler->GetTextureClient(),
+                                              false,
+                                              0,
+                                              info.ImageRect());
   LOG("%p, disp width %d, height %d, pic width %d, height %d, time %ld",
       this, info.mDisplay.width, info.mDisplay.height,
       info.mImage.width, info.mImage.height, mBuffer->nTimeStamp);

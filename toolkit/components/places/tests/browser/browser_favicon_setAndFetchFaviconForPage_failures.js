@@ -47,7 +47,7 @@ function test() {
         }
       },
       handleError: function final_handleError(aError) {
-        throw("Unexpected error (" + aError.result + "): " + aError.message);
+        throw ("Unexpected error (" + aError.result + "): " + aError.message);
       },
       handleCompletion: function final_handleCompletion(aReason) {
         //begin testing
@@ -65,7 +65,7 @@ function test() {
       aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(null, favIcon16URI,
         true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
         Services.scriptSecurityManager.getSystemPrincipal());
-      throw("Exception expected because aPageURI is null.");
+      throw ("Exception expected because aPageURI is null.");
     } catch (ex) {
       // We expected an exception.
       ok(true, "Exception expected because aPageURI is null");
@@ -82,7 +82,7 @@ function test() {
         NetUtil.newURI("http://example.com/null_faviconURI"), null,
         true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
         null, Services.scriptSecurityManager.getSystemPrincipal());
-      throw("Exception expected because aFaviconURI is null.");
+      throw ("Exception expected because aFaviconURI is null.");
     } catch (ex) {
       // We expected an exception.
       ok(true, "Exception expected because aFaviconURI is null.");
@@ -199,7 +199,7 @@ function test() {
             }
           },
           handleError: function final_handleError(aError) {
-            throw("Unexpected error (" + aError.result + "): " + aError.message);
+            throw ("Unexpected error (" + aError.result + "): " + aError.message);
           },
           handleCompletion: function final_handleCompletion(aReason) {
             is(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason,

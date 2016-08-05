@@ -49,7 +49,7 @@ var LoginManagerContextMenu = {
 
         let username = login.username;
         // If login is empty or duplicated we want to append a modification date to it.
-        if (!username || duplicateUsernames.has(username)){
+        if (!username || duplicateUsernames.has(username)) {
           if (!username) {
             username = this._getLocalizedString("noUsername");
           }

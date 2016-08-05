@@ -1110,7 +1110,7 @@ PlacesController.prototype = {
       xferable.getTransferData(PlacesUtils.TYPE_X_MOZ_PLACE_ACTION, action, {});
       [action, actionOwner] =
         action.value.QueryInterface(Ci.nsISupportsString).data.split(",");
-    } catch(ex) {
+    } catch (ex) {
       // Paste from external sources don't have any associated action, just
       // fallback to a copy action.
       return "copy";
@@ -1288,7 +1288,7 @@ PlacesController.prototype = {
       data = data.value.QueryInterface(Ci.nsISupportsString).data;
       type = type.value;
       items = PlacesUtils.unwrapNodes(data, type);
-    } catch(ex) {
+    } catch (ex) {
       // No supported data exists or nodes unwrap failed, just bail out.
       return;
     }
@@ -1610,7 +1610,7 @@ var PlacesControllerDragHelper = {
                       type: PlacesUtils.TYPE_X_MOZ_URL};
       }
       else
-        throw("bogus data was passed as a tab")
+        throw new Error("bogus data was passed as a tab");
 
       let index = insertionPoint.index;
 

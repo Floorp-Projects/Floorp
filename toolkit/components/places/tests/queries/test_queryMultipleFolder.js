@@ -19,7 +19,7 @@ add_task(function* test_queryMultipleFolders() {
     });
     folderIds.push(yield PlacesUtils.promiseItemId(folder.guid));
 
-    for(let j = 0; j < 7; ++j) {
+    for (let j = 0; j < 7; ++j) {
       let bm = yield PlacesUtils.bookmarks.insert({
         parentGuid: (yield PlacesUtils.promiseItemGuid(folderIds[i])),
         url: `http://Bookmark${i}_${j}.com`,

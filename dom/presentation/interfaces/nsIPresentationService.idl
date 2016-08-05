@@ -174,14 +174,14 @@ interface nsIPresentationService : nsISupports
   /*
    * Notify the receiver page is ready for presentation use.
    *
-   * @param sessionId: An ID to identify presentation session.
-   * @param windowId: The inner window ID associated with the presentation
-   *                  session. (0 implies no window ID since no actual window
-   *                  uses 0 as its ID. Generally it's the case the window is
-   *                  located in different process from this service)
+   * @param sessionId An ID to identify presentation session.
+   * @param windowId  The inner window ID associated with the presentation
+   *                  session.
+   * @param isLoading true if receiver page is loading successfully.
    */
   void notifyReceiverReady(in DOMString sessionId,
-                           [optional] in unsigned long long windowId);
+                           in unsigned long long windowId,
+                           in boolean isLoading);
 
   /*
    * Notify the transport is closed

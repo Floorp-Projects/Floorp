@@ -15,11 +15,11 @@ function RejectsStartup() {
 
 var rejectsTreeView = {
   rowCount : 0,
-  setTree : function(tree){},
+  setTree : function(tree) {},
   getImageSrc : function(row, column) {},
   getProgressMode : function(row, column) {},
   getCellValue : function(row, column) {},
-  getCellText : function(row, column){
+  getCellText : function(row, column) {
     var rv="";
     if (column.id=="rejectCol") {
       rv = rejects[row].host;
@@ -30,8 +30,8 @@ var rejectsTreeView = {
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
   cycleHeader : function(column) {},
-  getRowProperties : function(row){ return ""; },
-  getColumnProperties : function(column){ return ""; },
+  getRowProperties : function(row) { return ""; },
+  getColumnProperties : function(column) { return ""; },
   getCellProperties : function(row, column) {
     if (column.element.getAttribute("id") == "rejectCol")
       return "ltr";

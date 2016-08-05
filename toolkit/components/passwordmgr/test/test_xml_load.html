@@ -50,7 +50,7 @@ function handleDialog(doc, testNum) {
   var password = passfield.getAttribute("value");
   var dialog    = doc.getElementById("commonDialog");
 
-  switch(testNum) {
+  switch (testNum) {
     case 1:
         is(username, "xmluser1", "Checking provided username");
         is(password, "xmlpass1", "Checking provided password");
@@ -119,7 +119,7 @@ function xmlLoad(responseDoc) {
   var password = responseDoc.getElementById("pass").textContent;
   var authok = responseDoc.getElementById("ok").textContent;
 
-  switch(testNum) {
+  switch (testNum) {
     case 1:
         is(username, "xmluser1", "Checking provided username");
         is(password, "xmlpass1", "Checking provided password");
@@ -141,7 +141,7 @@ function xmlLoad(responseDoc) {
 }
 
 function doTest() {
-  switch(++testNum) {
+  switch (++testNum) {
     case 1:
         startCallbackTimer();
         makeRequest("authenticate.sjs?user=xmluser1&pass=xmlpass1&realm=xml");

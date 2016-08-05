@@ -803,21 +803,36 @@ WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
 
     switch (pname) {
     case LOCAL_GL_TEXTURE_MIN_FILTER:
+        return JS::NumberValue(uint32_t(mMinFilter.get()));
+
     case LOCAL_GL_TEXTURE_MAG_FILTER:
+        return JS::NumberValue(uint32_t(mMagFilter.get()));
+
     case LOCAL_GL_TEXTURE_WRAP_S:
+        return JS::NumberValue(uint32_t(mWrapS.get()));
+
     case LOCAL_GL_TEXTURE_WRAP_T:
+        return JS::NumberValue(uint32_t(mWrapT.get()));
+
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
-    case LOCAL_GL_TEXTURE_COMPARE_FUNC:
+        return JS::NumberValue(mBaseMipmapLevel);
+
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
-    case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
+        return JS::NumberValue(uint32_t(mTexCompareMode));
+
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
+        return JS::NumberValue(mMaxMipmapLevel);
+
+    case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
+        return JS::BooleanValue(mImmutable);
+
+    case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
+        return JS::NumberValue(uint32_t(mImmutableLevelCount));
+
+    case LOCAL_GL_TEXTURE_COMPARE_FUNC:
     case LOCAL_GL_TEXTURE_WRAP_R:
         mContext->gl->fGetTexParameteriv(texTarget.get(), pname, &i);
         return JS::NumberValue(uint32_t(i));
-
-    case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
-        mContext->gl->fGetTexParameteriv(texTarget.get(), pname, &i);
-        return JS::BooleanValue(bool(i));
 
     case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
     case LOCAL_GL_TEXTURE_MAX_LOD:
@@ -999,11 +1014,13 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
         mBaseMipmapLevel = intParam;
         ClampLevelBaseAndMax();
+        intParam = mBaseMipmapLevel;
         break;
 
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
         mMaxMipmapLevel = intParam;
         ClampLevelBaseAndMax();
+        intParam = mMaxMipmapLevel;
         break;
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:

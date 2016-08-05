@@ -40,10 +40,9 @@ add_task(function* () {
   editor.input.value = "background-color";
 
   info("Pressing RETURN and waiting for the value field focus");
-  // Pressing ENTER triggeres 2 changed events, one for the new property, and
-  // one for the preview.
-  let onNameAdded = waitForNEvents(view, "ruleview-changed", 2);
+  let onNameAdded = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+
   yield onNameAdded;
 
   editor = inplaceEditor(view.styleDocument.activeElement);
