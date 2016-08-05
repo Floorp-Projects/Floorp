@@ -6,7 +6,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 var { extend } = require("sdk/core/heritage");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {Tools} = require("devtools/client/definitions");

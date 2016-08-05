@@ -24,7 +24,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 
-const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 const {Task} = require("devtools/shared/task");
 const l10n = new WebConsoleUtils.L10n(STRINGS_URI);

@@ -21,10 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gScriptSecurityManager",
                                    "@mozilla.org/scriptsecuritymanager;1",
                                    "nsIScriptSecurityManager");
 XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", () => {
-  return this.devtools.require("devtools/shared/webconsole/utils").Utils;
-});
-XPCOMUtils.defineLazyGetter(this, "l10n", () => {
-  return new this.WebConsoleUtils.L10n(STRINGS_URI);
+  return this.devtools.require("devtools/server/actors/utils/webconsole-utils").Utils;
 });
 
 this.InsecurePasswordUtils = {
@@ -34,7 +31,8 @@ this.InsecurePasswordUtils = {
     let category = "Insecure Password Field";
     // All web console messages are warnings for now.
     let flag = Ci.nsIScriptError.warningFlag;
-    let message = l10n.getStr(messageTag);
+    let bundle = Services.strings.createBundle(STRINGS_URI);
+    let message = bundle.GetStringFromName(messageTag);
     let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
     consoleMsg.initWithWindowID(message, domDoc.location.href, 0, 0, 0, flag, category, windowId);
 
