@@ -784,19 +784,6 @@ XPCJSContext::FinalizeCallback(JSFreeOp* fop,
             MOZ_ASSERT(!self->mGCIsRunning, "bad state");
             self->mGCIsRunning = true;
 
-            // We use this occasion to mark and sweep NativeInterfaces,
-            // NativeSets, and the WrappedNativeJSClasses...
-
-            // Do the marking...
-            XPCWrappedNativeScope::MarkAllWrappedNativesAndProtos();
-
-            // Mark the sets used in the call contexts. There is a small
-            // chance that a wrapper's set will change *while* a call is
-            // happening which uses that wrapper's old interfface set. So,
-            // we need to do this marking to avoid collecting those sets
-            // that might no longer be otherwise reachable from the wrappers
-            // or the wrapperprotos.
-
             // Skip this part if XPConnect is shutting down. We get into
             // bad locking problems with the thread iteration otherwise.
             if (!nsXPConnect::XPConnect()->IsShuttingDown()) {
