@@ -91,38 +91,128 @@ interaction.clickElement = function(el, strict = false, specCompat = false) {
   return a11y.getAccessible(el, true).then(acc => {
     let win = getWindow(el);
 
+    let selectEl;
+    let visibilityCheckEl = el;
+    if (el.localName == "option") {
+      selectEl = interaction.getSelectForOptionElement(el);
+      visibilityCheckEl = selectEl;
+    }
+
     let visible = false;
     if (specCompat) {
-      visible = element.isInteractable(el);
+      visible = element.isInteractable(visibilityCheckEl);
       if (!visible) {
         el.scrollIntoView(false);
       }
-      visible = element.isInteractable(el);
+      visible = element.isInteractable(visibilityCheckEl);
     } else {
-      visible = element.isVisible(el);
+      visible = element.isVisible(visibilityCheckEl);
     }
 
     if (!visible) {
       throw new ElementNotVisibleError("Element is not visible");
     }
-    a11y.assertVisible(acc, el, visible);
-    if (!atom.isElementEnabled(el)) {
+    a11y.assertVisible(acc, visibilityCheckEl, visible);
+    if (!atom.isElementEnabled(visibilityCheckEl)) {
       throw new InvalidElementStateError("Element is not enabled");
     }
-    a11y.assertEnabled(acc, el, true);
-    a11y.assertActionable(acc, el);
+    a11y.assertEnabled(acc, visibilityCheckEl, true);
+    a11y.assertActionable(acc, visibilityCheckEl);
 
+    // chrome elements
     if (element.isXULElement(el)) {
-      el.click();
+      if (el.localName == "option") {
+        interaction.selectOption(el);
+      } else {
+        el.click();
+      }
+
+    // content elements
     } else {
-      let rects = el.getClientRects();
-      let coords = {
-        x: rects[0].left + rects[0].width / 2.0,
-        y: rects[0].top + rects[0].height / 2.0,
-      };
-      event.synthesizeMouseAtPoint(coords.x, coords.y, {} /* opts */, win);
+      if (el.localName == "option") {
+        interaction.selectOption(el);
+      } else {
+        let centre = interaction.calculateCentreCoords(el);
+        let opts = {};
+        event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
+      }
     }
   });
+};
+
+interaction.calculateCentreCoords = function(el) {
+  let rects = el.getClientRects();
+  return {
+    x: rects[0].left + rects[0].width / 2.0,
+    y: rects[0].top + rects[0].height / 2.0,
+  };
+};
+
+/**
+ * Select <option> element in a <select> list.
+ *
+ * Because the dropdown list of select elements are implemented using
+ * native widget technology, our trusted synthesised events are not able
+ * to reach them.  Dropdowns are instead handled mimicking DOM events,
+ * which for obvious reasons is not ideal, but at the current point in
+ * time considered to be good enough.
+ *
+ * @param {HTMLOptionElement} option
+ *     Option element to select.
+ *
+ * @throws TypeError
+ *     If |el| is a XUL element or not an <option> element.
+ * @throws Error
+ *     If unable to find |el|'s parent <select> element.
+ */
+interaction.selectOption = function(el) {
+  if (element.isXULElement(el)) {
+    throw new Error("XUL dropdowns not supported");
+  }
+  if (el.localName != "option") {
+    throw new TypeError("Invalid elements");
+  }
+
+  let win = getWindow(el);
+  let parent = interaction.getSelectForOptionElement(el);
+
+  event.mouseover(parent);
+  event.mousemove(parent);
+  event.mousedown(parent);
+  event.focus(parent);
+  event.input(parent);
+
+  // toggle selectedness the way holding down control works
+  el.selected = !el.selected;
+
+  event.change(parent);
+  event.mouseup(parent);
+  event.click(parent);
+};
+
+/**
+ * Locate the <select> element that encapsulate an <option> element.
+ *
+ * @param {HTMLOptionElement} optionEl
+ *     Option element.
+ *
+ * @return {HTMLSelectElement}
+ *     Select element wrapping |optionEl|.
+ *
+ * @throws {Error}
+ *     If unable to find the <select> element.
+ */
+interaction.getSelectForOptionElement = function(optionEl) {
+  let parent = optionEl;
+  while (parent.parentNode && parent.localName != "select") {
+    parent = parent.parentNode;
+  }
+
+  if (parent.localName != "select") {
+    throw new Error("Unable to find parent of <option> element");
+  }
+
+  return parent;
 };
 
 /**
