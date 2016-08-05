@@ -672,7 +672,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     }
 
     //This method is called on the Gecko main thread.
-    @WrapForJNI(allowMultithread = true, stubName = "updateZoomedView")
+    @WrapForJNI(allowMultithread = true)
     public static void updateZoomedView(ByteBuffer data) {
         LayerView layerView = GeckoAppShell.getLayerView();
         if (layerView != null) {
