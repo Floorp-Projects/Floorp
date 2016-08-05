@@ -57,10 +57,6 @@ public:
   mozilla::tasktracer::TracedTaskCommon GetTracedTask();
 #endif
 
-  // If a failure is encountered, the reference is returned to the caller
-  static already_AddRefed<nsTimerImpl> PostTimerEvent(
-    already_AddRefed<nsTimerImpl> aTimerRef);
-
   int32_t GetGeneration()
   {
     return mGeneration;
@@ -149,25 +145,12 @@ public:
   // for use when logging timer firings.
   Name mName;
 
-  // Some callers expect to be able to access the callback while the
-  // timer is firing.
-  nsCOMPtr<nsITimerCallback> mTimerCallbackWhileFiring;
-
   // These members are set by Init and never reset.
   CallbackType          mCallbackType;
 
   // These members are set by the initiating thread, when the timer's type is
   // changed and during the period where it fires on that thread.
   uint8_t               mType;
-  bool                  mFiring;
-
-
-  // Use a bool (int) here to isolate loads and stores of these two members
-  // done on various threads under the protection of TimerThread::mLock, from
-  // loads and stores done on the initiating/type-changing/timer-firing thread
-  // to the above uint8_t/bool members.
-  bool                  mArmed;
-  bool                  mCanceled;
 
   // The generation number of this timer, re-generated each time the timer is
   // initialized so one-shot timers can be canceled and re-initialized by the
