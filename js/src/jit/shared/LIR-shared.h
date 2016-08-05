@@ -8215,21 +8215,6 @@ class LWasmStoreGlobalVarI64 : public LInstructionHelper<0, INT64_PIECES, 0>
     }
 };
 
-class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(AsmJSLoadFuncPtr);
-    explicit LAsmJSLoadFuncPtr(const LAllocation& index) {
-        setOperand(0, index);
-    }
-    const MAsmJSLoadFuncPtr* mir() const {
-        return mir_->toAsmJSLoadFuncPtr();
-    }
-    const LAllocation* index() {
-        return getOperand(0);
-    }
-};
-
 class LAsmJSParameter : public LInstructionHelper<1, 0, 0>
 {
   public:

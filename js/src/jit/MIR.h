@@ -13446,46 +13446,6 @@ class MWasmStoreGlobalVar
     }
 };
 
-class MAsmJSLoadFuncPtr
-  : public MUnaryInstruction,
-    public NoTypePolicy::Data
-{
-    MAsmJSLoadFuncPtr(MDefinition* index, uint32_t limit, unsigned globalDataOffset)
-      : MUnaryInstruction(index), limit_(limit), globalDataOffset_(globalDataOffset)
-    {
-        setResultType(MIRType::Pointer);
-    }
-
-    uint32_t limit_;
-    unsigned globalDataOffset_;
-
-  public:
-    INSTRUCTION_HEADER(AsmJSLoadFuncPtr)
-
-    static const uint32_t NoLimit = UINT32_MAX;
-
-    static MAsmJSLoadFuncPtr* New(TempAllocator& alloc, MDefinition* index, uint32_t limit,
-                                  unsigned globalDataOffset)
-    {
-        MOZ_ASSERT(limit != NoLimit);
-        return new(alloc) MAsmJSLoadFuncPtr(index, limit, globalDataOffset);
-    }
-
-    static MAsmJSLoadFuncPtr* New(TempAllocator& alloc, MDefinition* index,
-                                  unsigned globalDataOffset)
-    {
-        return new(alloc) MAsmJSLoadFuncPtr(index, NoLimit, globalDataOffset);
-    }
-
-    MDefinition* index() const { return getOperand(0); }
-    bool hasLimit() const { return limit_ != NoLimit; }
-    uint32_t limit() const { MOZ_ASSERT(hasLimit()); return limit_; }
-    unsigned globalDataOffset() const { return globalDataOffset_; }
-
-    HashNumber valueHash() const override;
-    bool congruentTo(const MDefinition* ins) const override;
-};
-
 class MAsmJSParameter : public MNullaryInstruction
 {
     ABIArg abi_;
@@ -13561,7 +13521,7 @@ class MWasmCall final
   public:
     class Callee {
       public:
-        enum Which { Internal, Import, Dynamic, Builtin };
+        enum Which { Internal, Import, WasmTable, AsmJSTable, Builtin };
       private:
         Which which_;
         union U {
@@ -13572,9 +13532,10 @@ class MWasmCall final
                 uint32_t tlsStackOffset_;
             } import;
             struct {
-                MDefinition* callee_;
+                uint32_t globalDataOffset_;
+                uint32_t length_;
                 wasm::SigIdDesc sigId_;
-            } dynamic;
+            } table;
             wasm::SymbolicAddress builtin_;
         } u;
       public:
@@ -13592,11 +13553,19 @@ class MWasmCall final
             c.u.import.tlsStackOffset_ = tlsStackOffset;
             return c;
         }
-        explicit Callee(MDefinition* callee, wasm::SigIdDesc sigId = wasm::SigIdDesc())
-          : which_(Dynamic)
-        {
-            u.dynamic.callee_ = callee;
-            u.dynamic.sigId_ = sigId;
+        static Callee wasmTable(uint32_t globalDataOffset, uint32_t length, wasm::SigIdDesc sigId) {
+            Callee c;
+            c.which_ = WasmTable;
+            c.u.table.globalDataOffset_ = globalDataOffset;
+            c.u.table.length_ = length;
+            c.u.table.sigId_ = sigId;
+            return c;
+        }
+        static Callee asmJSTable(uint32_t globalDataOffset) {
+            Callee c;
+            c.which_ = AsmJSTable;
+            c.u.table.globalDataOffset_ = globalDataOffset;
+            return c;
         }
         explicit Callee(wasm::SymbolicAddress callee) : which_(Builtin) {
             u.builtin_ = callee;
@@ -13616,13 +13585,20 @@ class MWasmCall final
             MOZ_ASSERT(which_ == Import);
             return u.import.tlsStackOffset_;
         }
-        MDefinition* dynamicPtr() const {
-            MOZ_ASSERT(which_ == Dynamic);
-            return u.dynamic.callee_;
+        bool isTable() const {
+            return which_ == WasmTable || which_ == AsmJSTable;
         }
-        wasm::SigIdDesc dynamicSigId() const {
-            MOZ_ASSERT(which_ == Dynamic);
-            return u.dynamic.sigId_;
+        uint32_t tableGlobalDataOffset() const {
+            MOZ_ASSERT(isTable());
+            return u.table.globalDataOffset_;
+        }
+        uint32_t wasmTableLength() const {
+            MOZ_ASSERT(which_ == WasmTable);
+            return u.table.length_;
+        }
+        wasm::SigIdDesc wasmTableSigId() const {
+            MOZ_ASSERT(which_ == WasmTable);
+            return u.table.sigId_;
         }
         wasm::SymbolicAddress builtin() const {
             MOZ_ASSERT(which_ == Builtin);
@@ -13653,7 +13629,8 @@ class MWasmCall final
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
     static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-                          const Args& args, MIRType resultType, size_t spIncrement);
+                          const Args& args, MIRType resultType, size_t spIncrement,
+                          MDefinition* tableIndex = nullptr);
 
     size_t numArgs() const {
         return argRegs_.length();
@@ -13667,11 +13644,6 @@ class MWasmCall final
     }
     Callee callee() const {
         return callee_;
-    }
-    size_t dynamicCalleeOperandIndex() const {
-        MOZ_ASSERT(callee_.which() == Callee::Dynamic);
-        MOZ_ASSERT(numArgs() == numOperands() - 1);
-        return numArgs();
     }
     size_t spIncrement() const {
         return spIncrement_;

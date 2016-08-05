@@ -970,31 +970,6 @@ class FunctionCompiler
         return true;
     }
 
-  private:
-    bool callPrivate(MWasmCall::Callee callee, const CallCompileState& call, ExprType ret,
-                     MDefinition** def)
-    {
-        MOZ_ASSERT(!inDeadCode());
-
-        CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);
-        switch (callee.which()) {
-          case MWasmCall::Callee::Internal: kind = CallSiteDesc::Relative; break;
-          case MWasmCall::Callee::Import:   kind = CallSiteDesc::Register; break;
-          case MWasmCall::Callee::Dynamic:  kind = CallSiteDesc::Register; break;
-          case MWasmCall::Callee::Builtin:  kind = CallSiteDesc::Register; break;
-        }
-
-        auto* ins = MWasmCall::New(alloc(), CallSiteDesc(call.lineOrBytecode_, kind), callee,
-                                   call.regArgs_, ToMIRType(ret), call.spIncrement_);
-        if (!ins)
-            return false;
-
-        curBlock_->add(ins);
-        *def = ins;
-        return true;
-    }
-
-  public:
     bool internalCall(const Sig& sig, uint32_t funcIndex, const CallCompileState& call,
                       MDefinition** def)
     {
@@ -1003,39 +978,61 @@ class FunctionCompiler
             return true;
         }
 
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Relative);
+        MIRType ret = ToMIRType(sig.ret());
         auto callee = MWasmCall::Callee::internal(funcIndex);
-        return callPrivate(callee, call, sig.ret(), def);
+        auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret, call.spIncrement_);
+        if (!ins)
+            return false;
+
+        curBlock_->add(ins);
+        *def = ins;
+        return true;
     }
 
-    bool funcPtrCall(uint32_t sigIndex, uint32_t length, uint32_t globalDataOffset,
-                     MDefinition* index, const CallCompileState& call, MDefinition** def)
+    bool callIndirect(uint32_t sigIndex, MDefinition* index, const CallCompileState& call,
+                      MDefinition** def)
     {
         if (inDeadCode()) {
             *def = nullptr;
             return true;
         }
 
+        const SigWithId& sig = mg_.sigs[sigIndex];
+
         MWasmCall::Callee callee;
-        if (mg().isAsmJS()) {
-            MOZ_ASSERT(IsPowerOfTwo(length));
-            MConstant* mask = MConstant::New(alloc(), Int32Value(length - 1));
+        if (mg_.isAsmJS()) {
+            const TableDesc& table = mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]];
+            MOZ_ASSERT(sig.id.kind() == SigIdDesc::Kind::None);
+            MOZ_ASSERT(IsPowerOfTwo(table.initial));
+
+            MConstant* mask = MConstant::New(alloc(), Int32Value(table.initial - 1));
             curBlock_->add(mask);
             MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask, MIRType::Int32);
             curBlock_->add(maskedIndex);
-            MInstruction* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), maskedIndex, globalDataOffset);
-            curBlock_->add(ptrFun);
-            callee = MWasmCall::Callee(ptrFun);
-            MOZ_ASSERT(mg_.sigs[sigIndex].id.kind() == SigIdDesc::Kind::None);
+
+            index = maskedIndex;
+            callee = MWasmCall::Callee::asmJSTable(table.globalDataOffset);
         } else {
-            MInstruction* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), index, length, globalDataOffset);
-            curBlock_->add(ptrFun);
-            callee = MWasmCall::Callee(ptrFun, mg_.sigs[sigIndex].id);
+            const TableDesc& table = mg_.tables[0];
+            MOZ_ASSERT(sig.id.kind() != SigIdDesc::Kind::None);
+            MOZ_ASSERT(mg_.tables.length() == 1);
+
+            callee = MWasmCall::Callee::wasmTable(table.globalDataOffset, table.initial, sig.id);
         }
 
-        return callPrivate(callee, call, mg_.sigs[sigIndex].ret(), def);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        MIRType ret = ToMIRType(sig.ret());
+        auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret, call.spIncrement_, index);
+        if (!ins)
+            return false;
+
+        curBlock_->add(ins);
+        *def = ins;
+        return true;
     }
 
-    bool callImport(unsigned globalDataOffset, const CallCompileState& call, ExprType ret,
+    bool callImport(unsigned globalDataOffset, const CallCompileState& call, ExprType exprRet,
                     MDefinition** def)
     {
         if (inDeadCode()) {
@@ -1045,11 +1042,20 @@ class FunctionCompiler
 
         MOZ_ASSERT(call.tlsStackOffset_ != UINT32_MAX);
 
+
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        MIRType ret = ToMIRType(exprRet);
         auto callee = MWasmCall::Callee::import(globalDataOffset, call.tlsStackOffset_);
-        return callPrivate(callee, call, ret, def);
+        auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret, call.spIncrement_);
+        if (!ins)
+            return false;
+
+        curBlock_->add(ins);
+        *def = ins;
+        return true;
     }
 
-    bool builtinCall(SymbolicAddress builtin, const CallCompileState& call, ValType type,
+    bool builtinCall(SymbolicAddress builtin, const CallCompileState& call, ValType valRet,
                      MDefinition** def)
     {
         if (inDeadCode()) {
@@ -1057,7 +1063,16 @@ class FunctionCompiler
             return true;
         }
 
-        return callPrivate(MWasmCall::Callee(builtin), call, ToExprType(type), def);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        MIRType ret = ToMIRType(valRet);
+        auto callee = MWasmCall::Callee(builtin);
+        auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret, call.spIncrement_);
+        if (!ins)
+            return false;
+
+        curBlock_->add(ins);
+        *def = ins;
+        return true;
     }
 
     /*********************************************** Control flow generation */
@@ -1875,12 +1890,8 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
 
-    const TableDesc& table = f.mg().isAsmJS()
-                             ? f.mg().tables[f.mg().asmJSSigToTableIndex[sigIndex]]
-                             : f.mg().tables[0];
-
     MDefinition* def;
-    if (!f.funcPtrCall(sigIndex, table.initial, table.globalDataOffset, callee, call, &def))
+    if (!f.callIndirect(sigIndex, callee, call, &def))
         return false;
 
     if (IsVoid(sig.ret()))

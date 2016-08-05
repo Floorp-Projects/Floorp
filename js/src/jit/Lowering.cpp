@@ -4105,12 +4105,6 @@ LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins)
 }
 
 void
-LIRGenerator::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
-{
-    define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index())), ins);
-}
-
-void
 LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
 {
     ABIArg abi = ins->abi();
@@ -4216,10 +4210,8 @@ LIRGenerator::visitWasmCall(MWasmCall* ins)
     for (unsigned i = 0; i < ins->numArgs(); i++)
         args[i] = useFixed(ins->getOperand(i), ins->registerForArg(i));
 
-    if (ins->callee().which() == MWasmCall::Callee::Dynamic) {
-        args[ins->dynamicCalleeOperandIndex()] =
-            useFixed(ins->callee().dynamicPtr(), WasmTableCallPtrReg);
-    }
+    if (ins->callee().isTable())
+        args[ins->numArgs()] = useFixed(ins->getOperand(ins->numArgs()), WasmTableCallIndexReg);
 
     LDefinition maybeTemp;
     if (ins->callee().which() == MWasmCall::Callee::Import)

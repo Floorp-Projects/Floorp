@@ -4982,26 +4982,6 @@ MWasmLoadGlobalVar::foldsTo(TempAllocator& alloc)
     return store->value();
 }
 
-HashNumber
-MAsmJSLoadFuncPtr::valueHash() const
-{
-    HashNumber hash = MDefinition::valueHash();
-    hash = addU32ToHash(hash, limit_);
-    hash = addU32ToHash(hash, globalDataOffset_);
-    return hash;
-}
-
-bool
-MAsmJSLoadFuncPtr::congruentTo(const MDefinition* ins) const
-{
-    if (ins->isAsmJSLoadFuncPtr()) {
-        const MAsmJSLoadFuncPtr* load = ins->toAsmJSLoadFuncPtr();
-        return limit_ == load->limit_ &&
-               globalDataOffset_ == load->globalDataOffset_;
-    }
-    return false;
-}
-
 MDefinition::AliasType
 MLoadSlot::mightAlias(const MDefinition* def) const
 {
@@ -5379,7 +5359,8 @@ MAsmJSUnsignedToFloat32::foldsTo(TempAllocator& alloc)
 
 MWasmCall*
 MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-               const Args& args, MIRType resultType, size_t spIncrement)
+               const Args& args, MIRType resultType, size_t spIncrement,
+               MDefinition* tableIndex)
 {
     MWasmCall* call = new(alloc) MWasmCall(desc, callee, spIncrement);
     call->setResultType(resultType);
@@ -5389,13 +5370,13 @@ MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee call
     for (size_t i = 0; i < call->argRegs_.length(); i++)
         call->argRegs_[i] = args[i].reg;
 
-    if (!call->init(alloc, call->argRegs_.length() + (callee.which() == Callee::Dynamic ? 1 : 0)))
+    if (!call->init(alloc, call->argRegs_.length() + (callee.isTable() ? 1 : 0)))
         return nullptr;
     // FixedList doesn't initialize its elements, so do an unchecked init.
     for (size_t i = 0; i < call->argRegs_.length(); i++)
         call->initOperand(i, args[i].def);
-    if (callee.which() == Callee::Dynamic)
-        call->initOperand(call->argRegs_.length(), callee.dynamicPtr());
+    if (callee.isTable())
+        call->initOperand(call->argRegs_.length(), tableIndex);
 
     return call;
 }
