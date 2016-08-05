@@ -13,6 +13,11 @@
 
 /*** Panel and outer controls ***/
 
+#downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
+  overflow: hidden;
+  display: block;
+}
+
 #downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent,
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
   padding: 0;
@@ -29,6 +34,52 @@
   /* The panel can be wider than this description after the blocked subview is
      shown, so center the text. */
   text-align: center;
+}
+
+.downloadsPanelFooter {
+  background-color: hsla(210,4%,10%,.07);
+  border-top: 1px solid hsla(210,4%,10%,.14);
+}
+
+.downloadsPanelFooter > toolbarseparator {
+  margin: 0;
+  border: 0;
+  min-width: 0;
+  border-left: 1px solid hsla(210,4%,10%,.14);
+  -moz-appearance: none !important;
+}
+
+.downloadsPanelFooterButton {
+  -moz-appearance: none;
+  background-color: transparent;
+  color: black;
+  margin: 0;
+  padding: 0;
+  min-height: 40px;
+}
+
+.downloadsPanelFooterButton:hover {
+  outline: 1px solid hsla(210,4%,10%,.07);
+  background-color: hsla(210,4%,10%,.07);
+}
+
+.downloadsPanelFooterButton:hover:active {
+  outline: 1px solid hsla(210,4%,10%,.12);
+  background-color: hsla(210,4%,10%,.12);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
+}
+
+.downloadsPanelFooterButton[default] {
+  background-color: #0996f8;
+  color: white;
+}
+
+.downloadsPanelFooterButton[default]:hover {
+  background-color: #0675d3;
+}
+
+.downloadsPanelFooterButton[default]:hover:active {
+  background-color: #0568ba;
 }
 
 #downloadsSummary {
@@ -63,15 +114,6 @@
 
 #downloadsSummaryDescription {
   color: -moz-nativehyperlinktext;
-}
-
-#downloadsHistory {
-  background: transparent;
-  cursor: pointer;
-}
-
-#downloadsHistory > .button-box {
-  margin: 1em;
 }
 
 /*** List items and similar elements in the summary ***/
@@ -230,21 +272,4 @@ richlistitem[type="download"]:last-child {
 #downloadsPanel-blockedSubview-details2 {
   -moz-margin-start: 64px;
   -moz-margin-end: 16px;
-}
-
-#downloadsPanel-blockedSubview-buttons {
-  height: 41px;
-  cursor: pointer;
-}
-
-#downloadsPanel-blockedSubview-buttons > button {
-  -moz-appearance: none;
-  padding: 0;
-  margin: 0;
-  background-color: transparent;
-}
-
-#downloadsPanel-blockedSubview-buttons > button[default] {
-  background-color: Highlight;
-  color: HighlightText;
 }
