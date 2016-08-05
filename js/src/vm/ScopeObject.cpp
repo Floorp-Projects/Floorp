@@ -2552,6 +2552,12 @@ DebugScopes::sweep(JSRuntime* rt)
     liveScopes.sweep();
 }
 
+void
+DebugScopes::finish()
+{
+    proxiedScopes.clear();
+}
+
 #ifdef JSGC_HASH_TABLE_CHECKS
 void
 DebugScopes::checkHashTablesAfterMovingGC(JSRuntime* runtime)
