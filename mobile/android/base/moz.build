@@ -1034,3 +1034,9 @@ DEFINES['TOPOBJDIR'] = TOPOBJDIR
 OBJDIR_PP_FILES.mobile.android.base += [
     'AndroidManifest.xml.in',
 ]
+
+gbjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
+    'media/ICodec.java',
+    'media/ICodecCallbacks.java',
+    'media/ICodecManager.java',
+]]
