@@ -91,7 +91,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Reflect",
   "resource://gre/modules/reflect.jsm");
 
-var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 
 /**
  * The scratchpad object handles the Scratchpad window functionality.

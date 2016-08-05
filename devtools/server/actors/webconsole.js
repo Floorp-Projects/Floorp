@@ -33,9 +33,9 @@ for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
         prop = "Utils";
       }
       if (isWorker) {
-        return require("devtools/shared/webconsole/worker-utils")[prop];
+        return require("devtools/server/actors/utils/webconsole-worker-utils")[prop];
       } else {
-        return require("devtools/shared/webconsole/utils")[prop];
+        return require("devtools/server/actors/utils/webconsole-utils")[prop];
       }
     }.bind(null, name),
     configurable: true,

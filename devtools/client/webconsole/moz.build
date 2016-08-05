@@ -17,5 +17,6 @@ DevToolsModules(
     'hudservice.js',
     'jsterm.js',
     'panel.js',
+    'utils.js',
     'webconsole.js',
 )

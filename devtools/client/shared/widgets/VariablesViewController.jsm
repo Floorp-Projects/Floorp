@@ -17,7 +17,7 @@ var {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 Object.defineProperty(this, "WebConsoleUtils", {
   get: function () {
-    return require("devtools/shared/webconsole/utils").Utils;
+    return require("devtools/client/webconsole/utils").Utils;
   },
   configurable: true,
   enumerable: true

@@ -9,7 +9,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 
 const {Utils: WebConsoleUtils, CONSOLE_WORKER_IDS} =
-  require("devtools/shared/webconsole/utils");
+  require("devtools/client/webconsole/utils");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 const BrowserLoaderModule = {};
 Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);

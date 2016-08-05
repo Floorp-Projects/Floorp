@@ -27,7 +27,7 @@ loader.lazyGetter(this, "toolboxStrings", function () {
 
 loader.lazyRequireGetter(this, "gcliInit", "devtools/shared/gcli/commands/index");
 loader.lazyRequireGetter(this, "util", "gcli/util/util");
-loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/shared/webconsole/utils", true);
+loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/utils/webconsole-utils", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants", true);

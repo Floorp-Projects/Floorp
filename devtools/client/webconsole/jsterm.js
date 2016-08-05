@@ -9,7 +9,7 @@
 const {Ci} = require("chrome");
 
 const {Utils: WebConsoleUtils} =
-  require("devtools/shared/webconsole/utils");
+  require("devtools/client/webconsole/utils");
 const promise = require("promise");
 const Debugger = require("Debugger");
 const Services = require("Services");
