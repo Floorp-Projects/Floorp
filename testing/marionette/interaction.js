@@ -105,12 +105,12 @@ interaction.clickElement = function(el, strict = false, specCompat = false) {
     if (!visible) {
       throw new ElementNotVisibleError("Element is not visible");
     }
-    a11y.checkVisible(acc, el, visible);
+    a11y.assertVisible(acc, el, visible);
     if (!atom.isElementEnabled(el)) {
       throw new InvalidElementStateError("Element is not enabled");
     }
-    a11y.checkEnabled(acc, el, true);
-    a11y.checkActionable(acc, el);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
 
     if (element.isXULElement(el)) {
       el.click();
@@ -141,7 +141,7 @@ interaction.sendKeysToElement = function(el, value, ignoreVisibility, strict = f
   let win = getWindow(el);
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el, true).then(acc => {
-    a11y.checkActionable(acc, el);
+    a11y.assertActionable(acc, el);
     event.sendKeysToElement(value, el, {ignoreVisibility: false}, win);
   });
 };
@@ -163,7 +163,7 @@ interaction.isElementDisplayed = function(el, strict = false) {
 
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
-    a11y.checkVisible(acc, el, displayed);
+    a11y.assertVisible(acc, el, displayed);
     return displayed;
   });
 };
@@ -195,7 +195,7 @@ interaction.isElementEnabled = function(el, strict = false) {
 
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
-    a11y.checkEnabled(acc, el, enabled);
+    a11y.assertEnabled(acc, el, enabled);
     return enabled;
   });
 };
@@ -232,7 +232,7 @@ interaction.isElementSelected = function(el, strict = false) {
 
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
-    a11y.checkSelected(acc, el, selected);
+    a11y.assertSelected(acc, el, selected);
     return selected;
   });
 };
