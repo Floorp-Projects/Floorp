@@ -261,7 +261,7 @@ assertEq(e.tbl1.get(1), null);
 e.tbl1.set(3, e.f1);
 assertEq(e.tbl1.get(0), e.tbl1.get(3));
 
-// Re-exports:
+// Re-exports and Identity:
 
 var code = textToBinary('(module (import "a" "b" (memory 1 1)) (export "foo" memory) (export "bar" memory))');
 var mem = new Memory({initial:1});
@@ -274,6 +274,18 @@ var tbl = new Table({initial:1, element:"anyfunc"});
 var e = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(tbl, e.foo);
 assertEq(tbl, e.bar);
+
+var code = textToBinary('(module (import "a" "b" (table 2 2)) (func $foo) (elem (i32.const 0) $foo) (export "foo" $foo))');
+var tbl = new Table({initial:2, element:"anyfunc"});
+var e1 = new Instance(new Module(code), {a:{b:tbl}}).exports;
+assertEq(e1.foo, tbl.get(0));
+tbl.set(1, e1.foo);
+assertEq(e1.foo, tbl.get(1));
+var e2 = new Instance(new Module(code), {a:{b:tbl}}).exports;
+assertEq(e2.foo, tbl.get(0));
+assertEq(e1.foo, tbl.get(1));
+assertEq(tbl.get(0) === e1.foo, false);
+assertEq(e1.foo === e2.foo, false);
 
 // Non-existent export errors
 
