@@ -186,15 +186,16 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   b.mPlanes[2].mWidth = mMetadata.frameWidth / 2;
   b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
 
-  RefPtr<VideoData> v = VideoData::Create(mInfo.mVideo,
-                                            mDecoder->GetImageContainer(),
-                                            -1,
-                                            currentFrameTime,
-                                            (USECS_PER_S / mFrameRate),
-                                            b,
-                                            1, // In raw video every frame is a keyframe
-                                            -1,
-                                            mPicture);
+  RefPtr<VideoData> v =
+    VideoData::CreateAndCopyData(mInfo.mVideo,
+                                 mDecoder->GetImageContainer(),
+                                 -1,
+                                 currentFrameTime,
+                                 (USECS_PER_S / mFrameRate),
+                                 b,
+                                 1, // In raw video every frame is a keyframe
+                                 -1,
+                                 mPicture);
   if (!v)
     return false;
 

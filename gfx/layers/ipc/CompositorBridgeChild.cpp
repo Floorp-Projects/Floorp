@@ -16,6 +16,7 @@
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/TextureClient.h"// for TextureClient
 #include "mozilla/layers/TextureClientPool.h"// for TextureClientPool
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"
@@ -182,11 +183,6 @@ CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoi
 
   // We release this ref in DeferredDestroyCompositor.
   sCompositorBridge = child;
-
-  int32_t width;
-  int32_t height;
-  sCompositorBridge->SendGetTileSize(&width, &height);
-  gfxPlatform::GetPlatform()->SetTileSize(width, height);
   return true;
 }
 
@@ -757,16 +753,6 @@ CompositorBridgeChild::SendFlushRendering()
 }
 
 bool
-CompositorBridgeChild::SendGetTileSize(int32_t* tileWidth, int32_t* tileHeight)
-{
-  MOZ_ASSERT(mCanSend);
-  if (!mCanSend) {
-    return true;
-  }
-  return PCompositorBridgeChild::SendGetTileSize(tileWidth, tileHeight);
-}
-
-bool
 CompositorBridgeChild::SendStartFrameTimeRecording(const int32_t& bufferSize, uint32_t* startIndex)
 {
   MOZ_ASSERT(mCanSend);
@@ -944,8 +930,7 @@ CompositorBridgeChild::GetTexturePool(LayersBackend aBackend,
 
   mTexturePools.AppendElement(
       new TextureClientPool(aBackend, aFormat,
-                            IntSize(gfxPlatform::GetPlatform()->GetTileWidth(),
-                                    gfxPlatform::GetPlatform()->GetTileHeight()),
+                            gfx::gfxVars::TileSize(),
                             aFlags,
                             gfxPrefs::LayersTileInitialPoolSize(),
                             gfxPrefs::LayersTilePoolUnusedSize(),

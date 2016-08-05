@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";
+using mozilla::gfx::BackendType from "mozilla/gfx/Types.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 
 namespace mozilla {
 namespace gfx {
@@ -20,6 +22,19 @@ struct DeviceInitData
   bool d3d11TextureSharingWorks;
   bool useD2D1;
   DxgiAdapterDesc adapter;
+};
+
+union GfxVarValue
+{
+  BackendType;
+  bool;
+  IntSize;
+};
+
+struct GfxVarUpdate
+{
+  size_t index;
+  GfxVarValue value;
 };
 
 } // namespace gfx

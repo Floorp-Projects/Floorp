@@ -7,14 +7,14 @@ import sys
 
 version = '0.5'
 
-deps = ['httplib2 == 0.7.3',
-        'mozfile == 1.1',
+deps = ['httplib2 == 0.9.2',
+        'mozfile == 1.2',
         'mozhttpd == 0.7',
-        'mozinfo == 0.7',
-        'mozinstall == 1.10',
-        'mozprocess == 0.19',
-        'mozprofile == 0.27',
-        'mozrunner == 6.0',
+        'mozinfo == 0.9',
+        'mozinstall == 1.12',
+        'mozprocess == 0.23',
+        'mozprofile == 0.28',
+        'mozrunner == 6.12',
         'mozversion == 1.4',
        ]
 

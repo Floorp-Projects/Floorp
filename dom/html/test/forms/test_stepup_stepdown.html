@@ -50,13 +50,13 @@ function checkAvailability()
     ["range", true],
     ["date", true],
     ["time", true],
+    ["month", true],
     ["color", false],
   ];
 
   var todoList =
   [
     ["datetime", true],
-    ["month", true],
     ["week", true],
     ["datetime-local", true],
   ];
@@ -381,6 +381,70 @@ function checkStepDown()
     [ '17:26',  'AnY',  null,  null,  1,  null,  true ],
     [ '17:26',  'aNy',  null,  null,  1,  null,  true ],
   ]},
+  { type: 'month', data: [
+    // Regular case.
+    [ '2016-08',  null,  null,  null,  null, '2016-07',   false ],
+    // Argument testing.
+    [ '2016-08',  null,  null,  null,  1,    '2016-07',   false ],
+    [ '2016-08',  null,  null,  null,  5,    '2016-03',   false ],
+    [ '2016-08',  null,  null,  null,  -1,   '2016-09',   false ],
+    [ '2016-08',  null,  null,  null,  0,    '2016-08',   false ],
+    // Month/Year wrapping.
+    [ '2016-01',  null,  null,  null,  1,    '2015-12',   false ],
+    [ '1969-02',  null,  null,  null,  4,    '1968-10',   false ],
+    [ '1969-01',  null,  null,  null,  -12,  '1970-01',   false ],
+    // Float values are rounded to integer (1.1 -> 1).
+    [ '2016-08',  null,  null,  null,  1.1,  '2016-07',   false ],
+    [ '2016-01',  null,  null,  null,  1.9,  '2015-12',   false ],
+    // With step values.
+    [ '2016-03',  '0.5', null,  null,  null,      '2016-02',   false ],
+    [ '2016-03',  '2',   null,  null,  null,      '2016-01',   false ],
+    [ '2016-03',  '0.25',null,  null,  4,         '2015-11',   false ],
+    [ '2016-12',  '1.1',  '2016-01', null,  1,    '2016-11',   false ],
+    [ '2016-12',  '1.1',  '2016-01', null,  2,    '2016-10',   false ],
+    [ '2016-12',  '1.1',  '2016-01', null,  10,   '2016-02',   false ],
+    [ '2016-12',  '1.1',  '2016-01', null,  12,   '2016-01',   false ],
+    [ '1968-12',  '1.1',  '1968-01', null,  8,    '1968-04',   false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '2016-02',  '0',   null,  null,  null, '2016-01',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '2016-02',  '-1',  null,  null,  null, '2016-01',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '2016-02',  'foo', null,  null,  null, '2016-01',   false ],
+    // Min values testing.
+    [ '2016-03',  '1',    'foo',     null,      2,     '2016-01',  false ],
+    [ '2016-02',  '1',    '2016-01', null,      null,  '2016-01',  false ],
+    [ '2016-01',  '1',    '2016-01', null,      null,  '2016-01',  false ],
+    [ '2016-01',  '1',    '2016-01', null,      1,     '2016-01',  false ],
+    [ '2016-05',  '3',    '2016-01', null,      null,  '2016-04',  false ],
+    [ '1969-01',  '5',    '1969-01', '1969-02', null,  '1969-01',  false ],
+    // Max values testing.
+    [ '2016-02',  '1',    null,  'foo',      null,  '2016-01',  false ],
+    [ '2016-02',  null,   null,  '2016-05',  null,  '2016-01',  false ],
+    [ '2016-03',  null,   null,  '2016-03',  null,  '2016-02',  false ],
+    [ '2016-07',  null,   null,  '2016-04',  4,     '2016-03',  false ],
+    [ '2016-07',  '2',    null,  '2016-04',  3,     '2016-01',  false ],
+    // Step mismatch.
+    [ '2016-04',  '2',    '2016-01',  null,         null,  '2016-03',  false ],
+    [ '2016-06',  '2',    '2016-01',  null,         2,     '2016-03',  false ],
+    [ '2016-05',  '2',    '2016-04',  '2016-08',    null,  '2016-04',  false ],
+    [ '1970-04',  '2',    null,       null,         null,  '1970-02',  false ],
+    [ '1970-09',  '3',    null,       null,         null,  '1970-06',  false ],
+    // Clamping.
+    [ '2016-05',  null,   null,       '2016-01',    null,  '2016-01',  false ],
+    [ '1970-05',  '2',    '1970-02',  '1970-05',    null,  '1970-04',  false ],
+    [ '1970-01',  '5',    '1970-02',  '1970-09',    10,    '1970-01',  false ],
+    [ '1970-07',  '5',    '1969-12',  '1970-10',    2,     '1969-12',  false ],
+    [ '1970-08',  '3',    '1970-01',  '1970-07',    15,    '1970-01',  false ],
+    [ '1970-10',  '3',    '1970-01',  '1970-06',    2,     '1970-04',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '1969-12',    false ],
+    // With step = 'any'.
+    [ '2016-01',  'any',  null,  null,  1,  null,  true ],
+    [ '2016-01',  'ANY',  null,  null,  1,  null,  true ],
+    [ '2016-01',  'AnY',  null,  null,  1,  null,  true ],
+    [ '2016-01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
   ];
 
   for (var test of testData) {
@@ -594,7 +658,6 @@ function checkStepUp()
     [ '2012-01-01',  '1.1',  '2012-01-01', null,  2,    '2012-01-03',   false ],
     [ '2012-01-01',  '1.1',  '2012-01-01', null,  10,   '2012-01-11',   false ],
     [ '2012-01-01',  '1.1',  '2012-01-01', null,  11,   '2012-01-12',   false ],
-    [ '1968-01-01',  '1.1',  '1968-01-01', null,  8,    '1968-01-09',   false ],
     // step = 0 isn't allowed (-> step = 1).
     [ '2012-01-01',  '0',   null,  null,  null, '2012-01-02',   false ],
     // step < 0 isn't allowed (-> step = 1).
@@ -612,7 +675,6 @@ function checkStepUp()
     [ '2012-01-01',  '1',    null,  'foo',        2,     '2012-01-03',  false ],
     [ '2012-01-01',  '1',    null,  '2012-01-10', 1,     '2012-01-02',  false ],
     [ '2012-01-02',  null,   null,  '2012-01-01', null,  '2012-01-02',  false ],
-    [ '2012-01-02',  null,   null,  '2012-01-02', null,  '2012-01-02',  false ],
     [ '2012-01-02',  null,   null,  '2012-01-02', null,  '2012-01-02',  false ],
     [ '1969-01-02',  '5',    '1969-01-01',  '1969-01-02', null,  '1969-01-02',  false ],
     // Step mismatch.
@@ -701,6 +763,71 @@ function checkStepUp()
     [ '17:26',  'ANY',  null,  null,  1,  null,  true ],
     [ '17:26',  'AnY',  null,  null,  1,  null,  true ],
     [ '17:26',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
+  { type: 'month', data: [
+    // Regular case.
+    [ '2016-08',  null,  null,  null,  null, '2016-09',   false ],
+    // Argument testing.
+    [ '2016-08',  null,  null,  null,  1,    '2016-09',   false ],
+    [ '2016-08',  null,  null,  null,  9,    '2017-05',   false ],
+    [ '2016-08',  null,  null,  null,  -1,   '2016-07',   false ],
+    [ '2016-08',  null,  null,  null,  0,    '2016-08',   false ],
+    // Month/Year wrapping.
+    [ '2015-12',  null,  null,  null,  1,    '2016-01',   false ],
+    [ '1968-12',  null,  null,  null,  4,    '1969-04',   false ],
+    [ '1970-01',  null,  null,  null,  -12,  '1969-01',   false ],
+    // Float values are rounded to integer (1.1 -> 1).
+    [ '2016-01',  null,  null,  null,  1.1,  '2016-02',   false ],
+    [ '2016-01',  null,  null,  null,  1.9,  '2016-02',   false ],
+    // With step values.
+    [ '2016-01',  '0.5',  null,         null,  null, '2016-02',   false ],
+    [ '2016-01',  '2',    null,         null,  null, '2016-03',   false ],
+    [ '2016-01',  '0.25', null,         null,  4,    '2016-05',   false ],
+    [ '2016-01',  '1.1',  '2016-01',    null,  1,    '2016-02',   false ],
+    [ '2016-01',  '1.1',  '2016-01',    null,  2,    '2016-03',   false ],
+    [ '2016-01',  '1.1',  '2016-01',    null,  10,   '2016-11',   false ],
+    [ '2016-01',  '1.1',  '2016-01',    null,  11,   '2016-12',   false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '2016-01',  '0',   null,  null,  null, '2016-02',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '2016-01',  '-1',  null,  null,  null, '2016-02',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '2016-01',  'foo', null,  null,  null, '2016-02',   false ],
+    // Min values testing.
+    [ '2016-01',  '1',   'foo',      null,  null,  '2016-02',  false ],
+    [ '2016-01',  null,  '2015-12',  null,  null,  '2016-02',  false ],
+    [ '2016-01',  null,  '2016-02',  null,  null,  '2016-02',  false ],
+    [ '2016-01',  null,  '2016-01',  null,  null,  '2016-02',  false ],
+    [ '2016-01',  null,  '2016-04',  null,  4,     '2016-05',  false ],
+    [ '2016-01',  '2',   '2016-04',  null,  3,     '2016-06',  false ],
+    // Max values testing.
+    [ '2016-01',  '1',    null,       'foo',        2,     '2016-03',  false ],
+    [ '2016-01',  '1',    null,       '2016-02',    1,     '2016-02',  false ],
+    [ '2016-02',  null,   null,       '2016-01',    null,  '2016-02',  false ],
+    [ '2016-02',  null,   null,       '2016-02',    null,  '2016-02',  false ],
+    [ '1969-02',  '5',    '1969-01',  '1969-02',    null,  '1969-02',  false ],
+    // Step mismatch.
+    [ '2016-02',  '2',    '2016-01',  null,         null,  '2016-03',  false ],
+    [ '2016-02',  '2',    '2016-01',  null,         2,     '2016-05',  false ],
+    [ '2016-05',  '2',    '2016-01',  '2016-06',    null,  '2016-05',  false ],
+    [ '1970-02',  '2',    null,       null,         null,  '1970-04',  false ],
+    [ '1970-05',  '3',    null,       null,         null,  '1970-08',  false ],
+    [ '1970-03',  '3',    null,       null,         null,  '1970-06',  false ],
+    [ '1970-03',  '3',    '1970-02',  null,         null,  '1970-05',  false ],
+    // Clamping.
+    [ '2016-01',  null,   '2016-12',  null,         null,  '2016-12',  false ],
+    [ '1970-02',  '2',    '1970-01',  '1970-04',    null,  '1970-03',  false ],
+    [ '1970-01',  '5',    '1970-02',  '1970-09',    10,    '1970-07',  false ],
+    [ '1969-11',  '5',    '1969-12',  '1970-06',    3,     '1970-05',  false ],
+    [ '1970-01',  '3',    '1970-02',  '1971-07',    15,    '1971-05',  false ],
+    [ '1970-01',  '3',    '1970-01',  '1970-06',    2,     '1970-04',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '1970-02',    false ],
+    // With step = 'any'.
+    [ '2016-01',  'any',  null,  null,  1,  null,  true ],
+    [ '2016-01',  'ANY',  null,  null,  1,  null,  true ],
+    [ '2016-01',  'AnY',  null,  null,  1,  null,  true ],
+    [ '2016-01',  'aNy',  null,  null,  1,  null,  true ],
   ]},
   ];
 

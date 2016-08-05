@@ -466,6 +466,8 @@ class MOZ_RAII JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
     friend void AutoGCRooter::trace(JSTracer* trc);
 
   protected:
+    virtual ~CustomAutoRooter() {}
+
     /** Supplied by derived class to trace roots. */
     virtual void trace(JSTracer* trc) = 0;
 

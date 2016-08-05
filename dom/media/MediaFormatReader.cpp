@@ -17,6 +17,7 @@
 #include "MediaResource.h"
 #include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
+#include "VideoFrameContainer.h"
 
 #include <algorithm>
 
@@ -1658,15 +1659,13 @@ MediaFormatReader::DemuxStartTime()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(!ForceZeroStartTime());
-  MOZ_ASSERT((!HasAudio() || mAudio.mFirstDemuxedSampleTime.isSome()) &&
-             (!HasVideo() || mVideo.mFirstDemuxedSampleTime.isSome()));
+  MOZ_ASSERT(HasAudio() || HasVideo());
 
-  return std::min(HasAudio()
-                  ? mAudio.mFirstDemuxedSampleTime.ref()
-                  : TimeUnit::FromInfinity(),
-                  HasVideo()
-                  ? mVideo.mFirstDemuxedSampleTime.ref()
-                  : TimeUnit::FromInfinity());
+  const TimeUnit startTime =
+    std::min(mAudio.mFirstDemuxedSampleTime.refOr(TimeUnit::FromInfinity()),
+             mVideo.mFirstDemuxedSampleTime.refOr(TimeUnit::FromInfinity()));
+
+  return startTime.IsInfinite() ? TimeUnit::FromMicroseconds(0) : startTime;
 }
 
 void

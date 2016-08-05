@@ -6,6 +6,7 @@
 #include "GPUChild.h"
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
+#include "mozilla/gfx/gfxVars.h"
 
 namespace mozilla {
 namespace gfx {
@@ -40,12 +41,22 @@ GPUChild::Init()
     prefs.AppendElement(GfxPrefSetting(pref->Index(), value));
   }
 
-  SendInit(prefs);
+  nsTArray<GfxVarUpdate> updates = gfxVars::FetchNonDefaultVars();
+  SendInit(prefs, updates);
+
+  gfxVars::AddReceiver(this);
+}
+
+void
+GPUChild::OnVarChanged(const GfxVarUpdate& aVar)
+{
+  SendUpdateVar(aVar);
 }
 
 void
 GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 {
+  gfxVars::RemoveReceiver(this);
   mHost->OnChannelClosed();
 }
 

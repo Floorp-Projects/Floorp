@@ -7594,8 +7594,12 @@ var TabContextMenu = {
 
     if (AppConstants.E10S_TESTING_ONLY) {
       menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-remote");
-      for (let menuItem of menuItems)
+      for (let menuItem of menuItems) {
         menuItem.hidden = !gMultiProcessBrowser;
+        if (menuItem.id == "context_openNonRemoteWindow") {
+          menuItem.disabled = !!parseInt(this.contextTab.getAttribute("usercontextid"));
+        }
+      }
     }
 
     disabled = gBrowser.visibleTabs.length == 1;

@@ -7,6 +7,8 @@
 #include <dlfcn.h>
 #include <math.h>
 #include <GLES2/gl2.h>
+#include <android/native_window.h>
+#include <android/native_window_jni.h>
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -62,12 +64,6 @@ AndroidBridge* AndroidBridge::sBridge = nullptr;
 pthread_t AndroidBridge::sJavaUiThread;
 static jobject sGlobalContext = nullptr;
 nsDataHashtable<nsStringHashKey, nsString> AndroidBridge::sStoragePaths;
-
-// This is a dummy class that can be used in the template for android::sp
-class AndroidRefable {
-    void incStrong(void* thing) { }
-    void decStrong(void* thing) { }
-};
 
 jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
 {
@@ -443,43 +439,6 @@ AndroidBridge::GetClipboardText(nsAString& aText)
     return !!text;
 }
 
-void
-AndroidBridge::ShowPersistentAlertNotification(const nsAString& aPersistentData,
-                                               const nsAString& aImageUrl,
-                                               const nsAString& aAlertTitle,
-                                               const nsAString& aAlertText,
-                                               const nsAString& aAlertCookie,
-                                               const nsAString& aAlertName,
-                                               nsIPrincipal* aPrincipal)
-{
-    nsAutoString host;
-    nsAlertsUtils::GetSourceHostPort(aPrincipal, host);
-
-    GeckoAppShell::ShowPersistentAlertNotificationWrapper
-        (aPersistentData, aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName, host);
-}
-
-void
-AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
-                                     const nsAString& aAlertTitle,
-                                     const nsAString& aAlertText,
-                                     const nsAString& aAlertCookie,
-                                     nsIObserver *aAlertListener,
-                                     const nsAString& aAlertName,
-                                     nsIPrincipal* aPrincipal)
-{
-    if (aAlertListener) {
-        // This will remove any observers already registered for this id
-        nsAppShell::PostEvent(AndroidGeckoEvent::MakeAddObserver(aAlertName, aAlertListener));
-    }
-
-    nsAutoString host;
-    nsAlertsUtils::GetSourceHostPort(aPrincipal, host);
-
-    GeckoAppShell::ShowAlertNotificationWrapper
-           (aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName, host);
-}
-
 int
 AndroidBridge::GetDPI()
 {
@@ -692,63 +651,6 @@ AndroidBridge::GetNativeSurface(JNIEnv* env, jobject surface) {
     return (void*)env->GetIntField(surface, jSurfacePointerField);
 }
 
-void
-AndroidBridge::OpenGraphicsLibraries()
-{
-    if (!mOpenedGraphicsLibraries) {
-        // Try to dlopen libjnigraphics.so for direct bitmap access on
-        // Android 2.2+ (API level 8)
-        mOpenedGraphicsLibraries = true;
-        mHasNativeWindowAccess = false;
-        mHasNativeWindowFallback = false;
-        mHasNativeBitmapAccess = false;
-
-        void *handle = dlopen("libjnigraphics.so", RTLD_LAZY | RTLD_LOCAL);
-        if (handle) {
-            AndroidBitmap_getInfo = (int (*)(JNIEnv *, jobject, void *))dlsym(handle, "AndroidBitmap_getInfo");
-            AndroidBitmap_lockPixels = (int (*)(JNIEnv *, jobject, void **))dlsym(handle, "AndroidBitmap_lockPixels");
-            AndroidBitmap_unlockPixels = (int (*)(JNIEnv *, jobject))dlsym(handle, "AndroidBitmap_unlockPixels");
-
-            mHasNativeBitmapAccess = AndroidBitmap_getInfo && AndroidBitmap_lockPixels && AndroidBitmap_unlockPixels;
-
-            ALOG_BRIDGE("Successfully opened libjnigraphics.so, have native bitmap access? %d", mHasNativeBitmapAccess);
-        }
-
-        // Try to dlopen libandroid.so for and native window access on
-        // Android 2.3+ (API level 9)
-        handle = dlopen("libandroid.so", RTLD_LAZY | RTLD_LOCAL);
-        if (handle) {
-            ANativeWindow_fromSurface = (void* (*)(JNIEnv*, jobject))dlsym(handle, "ANativeWindow_fromSurface");
-            ANativeWindow_release = (void (*)(void*))dlsym(handle, "ANativeWindow_release");
-            ANativeWindow_setBuffersGeometry = (int (*)(void*, int, int, int)) dlsym(handle, "ANativeWindow_setBuffersGeometry");
-            ANativeWindow_getWidth = (int (*)(void*))dlsym(handle, "ANativeWindow_getWidth");
-            ANativeWindow_getHeight = (int (*)(void*))dlsym(handle, "ANativeWindow_getHeight");
-
-            mHasNativeWindowAccess = ANativeWindow_fromSurface && ANativeWindow_release;
-
-            ALOG_BRIDGE("Successfully opened libandroid.so, have native window access? %d", mHasNativeWindowAccess);
-        }
-
-        if (mHasNativeWindowAccess)
-            return;
-
-        // Look up Surface functions, used for native window (surface) fallback
-        handle = dlopen("libsurfaceflinger_client.so", RTLD_LAZY);
-        if (handle) {
-            Surface_lock = (int (*)(void*, void*, void*, bool))dlsym(handle, "_ZN7android7Surface4lockEPNS0_11SurfaceInfoEPNS_6RegionEb");
-            Surface_unlockAndPost = (int (*)(void*))dlsym(handle, "_ZN7android7Surface13unlockAndPostEv");
-
-            handle = dlopen("libui.so", RTLD_LAZY);
-            if (handle) {
-                Region_constructor = (void (*)(void*))dlsym(handle, "_ZN7android6RegionC1Ev");
-                Region_set = (void (*)(void*, void*))dlsym(handle, "_ZN7android6Region3setERKNS_4RectE");
-
-                mHasNativeWindowFallback = Surface_lock && Surface_unlockAndPost && Region_constructor && Region_set;
-            }
-        }
-    }
-}
-
 namespace mozilla {
     class TracerRunnable : public Runnable{
     public:
@@ -823,43 +725,7 @@ namespace mozilla {
     }
 
 }
-bool
-AndroidBridge::HasNativeBitmapAccess()
-{
-    OpenGraphicsLibraries();
 
-    return mHasNativeBitmapAccess;
-}
-
-bool
-AndroidBridge::ValidateBitmap(jobject bitmap, int width, int height)
-{
-    // This structure is defined in Android API level 8's <android/bitmap.h>
-    // Because we can't depend on this, we get the function pointers via dlsym
-    // and define this struct ourselves.
-    struct BitmapInfo {
-        uint32_t width;
-        uint32_t height;
-        uint32_t stride;
-        uint32_t format;
-        uint32_t flags;
-    };
-
-    int err;
-    struct BitmapInfo info = { 0, };
-
-    JNIEnv* const env = jni::GetGeckoThreadEnv();
-
-    if ((err = AndroidBitmap_getInfo(env, bitmap, &info)) != 0) {
-        ALOG_BRIDGE("AndroidBitmap_getInfo failed! (error %d)", err);
-        return false;
-    }
-
-    if ((int)info.width != width || (int)info.height != height)
-        return false;
-
-    return true;
-}
 
 bool
 AndroidBridge::InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps)
@@ -1211,78 +1077,26 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
     env->ReleaseDoubleArrayElements(arr.Get(), info, 0);
 }
 
-void *
-AndroidBridge::LockBitmap(jobject bitmap)
-{
-    JNIEnv* const env = jni::GetGeckoThreadEnv();
-
-    int err;
-    void *buf;
-
-    if ((err = AndroidBitmap_lockPixels(env, bitmap, &buf)) != 0) {
-        ALOG_BRIDGE("AndroidBitmap_lockPixels failed! (error %d)", err);
-        buf = nullptr;
-    }
-
-    return buf;
-}
-
-void
-AndroidBridge::UnlockBitmap(jobject bitmap)
-{
-    JNIEnv* const env = jni::GetGeckoThreadEnv();
-
-    int err;
-
-    if ((err = AndroidBitmap_unlockPixels(env, bitmap)) != 0)
-        ALOG_BRIDGE("AndroidBitmap_unlockPixels failed! (error %d)", err);
-}
-
-
-bool
-AndroidBridge::HasNativeWindowAccess()
-{
-    OpenGraphicsLibraries();
-
-    // We have a fallback hack in place, so return true if that will work as well
-    return mHasNativeWindowAccess || mHasNativeWindowFallback;
-}
-
 void*
 AndroidBridge::AcquireNativeWindow(JNIEnv* aEnv, jobject aSurface)
 {
-    OpenGraphicsLibraries();
-
-    if (mHasNativeWindowAccess)
-        return ANativeWindow_fromSurface(aEnv, aSurface);
-
-    if (mHasNativeWindowFallback)
-        return GetNativeSurface(aEnv, aSurface);
-
-    return nullptr;
+    return ANativeWindow_fromSurface(aEnv, aSurface);
 }
 
 void
 AndroidBridge::ReleaseNativeWindow(void *window)
 {
-    if (!window)
-        return;
-
-    if (mHasNativeWindowAccess)
-        ANativeWindow_release(window);
-
-    // XXX: we don't ref the pointer we get from the fallback (GetNativeSurface), so we
-    // have nothing to do here. We should probably ref it.
+    return ANativeWindow_release((ANativeWindow*)window);
 }
 
 IntSize
 AndroidBridge::GetNativeWindowSize(void* window)
 {
-  if (!window || !ANativeWindow_getWidth || !ANativeWindow_getHeight) {
-    return IntSize(0, 0);
-  }
+    if (!window) {
+      return IntSize(0, 0);
+    }
 
-  return IntSize(ANativeWindow_getWidth(window), ANativeWindow_getHeight(window));
+    return IntSize(ANativeWindow_getWidth((ANativeWindow*)window), ANativeWindow_getHeight((ANativeWindow*)window));
 }
 
 jobject
@@ -1658,90 +1472,6 @@ AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
 
     aResult = jstrSampleName->ToCString();
     return true;
-}
-
-static float
-GetScaleFactor(nsPresContext* aPresContext) {
-    nsIPresShell* presShell = aPresContext->PresShell();
-    LayoutDeviceToLayerScale cumulativeResolution(presShell->GetCumulativeResolution());
-    return cumulativeResolution.scale;
-}
-
-nsresult
-AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedViewRect, ByteBuffer::Param buffer,
-                                  float zoomFactor) {
-    nsresult rv;
-
-    if (!buffer)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr <nsIDOMWindowUtils> utils = do_GetInterface(window);
-    if (!utils)
-        return NS_ERROR_FAILURE;
-
-    JNIEnv* const env = jni::GetGeckoThreadEnv();
-
-    AutoLocalJNIFrame jniFrame(env, 0);
-
-    if (!window) {
-        return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(window);
-    RefPtr<nsPresContext> presContext;
-    nsIDocShell* docshell = win->GetDocShell();
-
-    if (docshell) {
-        docshell->GetPresContext(getter_AddRefs(presContext));
-    }
-
-    if (!presContext) {
-        return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr <nsIPresShell> presShell = presContext->PresShell();
-
-    float scaleFactor = GetScaleFactor(presContext) ;
-
-    nscolor bgColor = NS_RGB(255, 255, 255);
-    uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING | nsIPresShell::RENDER_DOCUMENT_RELATIVE);
-    nsRect r(presContext->DevPixelsToAppUnits(zoomedViewRect.x / scaleFactor),
-             presContext->DevPixelsToAppUnits(zoomedViewRect.y / scaleFactor ),
-             presContext->DevPixelsToAppUnits(zoomedViewRect.width / scaleFactor ),
-             presContext->DevPixelsToAppUnits(zoomedViewRect.height / scaleFactor ));
-
-    bool is24bit = (GetScreenDepth() == 24);
-    SurfaceFormat format = is24bit ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::R5G6B5_UINT16;
-    gfxImageFormat iFormat = gfx::SurfaceFormatToImageFormat(format);
-    uint32_t stride = gfxASurface::FormatStrideForWidth(iFormat, zoomedViewRect.width);
-
-    uint8_t* data = static_cast<uint8_t*>(buffer->Address());
-    if (!data) {
-        return NS_ERROR_FAILURE;
-    }
-
-    MOZ_ASSERT (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO),
-              "Need BackendType::CAIRO support");
-    RefPtr < DrawTarget > dt = Factory::CreateDrawTargetForData(
-        BackendType::CAIRO, data, IntSize(zoomedViewRect.width, zoomedViewRect.height), stride,
-        format);
-    if (!dt || !dt->IsValid()) {
-        ALOG_BRIDGE("Error creating DrawTarget");
-        return NS_ERROR_FAILURE;
-    }
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-    MOZ_ASSERT(context); // already checked the draw target above
-    context->SetMatrix(context->CurrentMatrix().Scale(zoomFactor, zoomFactor));
-
-    rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
-
-    if (is24bit) {
-        gfxUtils::ConvertBGRAtoRGBA(data, stride * zoomedViewRect.height);
-    }
-
-    LayerView::updateZoomedView(buffer);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
 }
 
 void

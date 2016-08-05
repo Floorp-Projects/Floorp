@@ -26,6 +26,13 @@ add_task(function* () {
   ok((yield testActor.assertHighlightedNode("body")),
      "The highlighter highlights the right node");
 
+  let onNodeUnhighlighted = toolbox.once("node-unhighlight");
+  // move outside of the breadcrumb trail to trigger unhighlight
+  EventUtils.synthesizeMouseAtCenter(inspector.addNodeButton,
+    {type: "mousemove"},
+    inspector.addNodeButton.ownerDocument.defaultView);
+  yield onNodeUnhighlighted;
+
   onNodeHighlighted = toolbox.once("node-highlight");
   button = bcButtons.childNodes[2];
   EventUtils.synthesizeMouseAtCenter(button, {type: "mousemove"},

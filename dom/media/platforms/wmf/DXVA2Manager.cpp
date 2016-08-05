@@ -98,7 +98,6 @@ public:
   // into an image which is returned by aOutImage.
   HRESULT CopyToImage(IMFSample* aVideoSample,
                       const nsIntRect& aRegion,
-                      ImageContainer* aContainer,
                       Image** aOutImage) override;
 
   bool SupportsConfig(IMFMediaType* aType, float aFramerate) override;
@@ -439,7 +438,6 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
 HRESULT
 D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
                               const nsIntRect& aRegion,
-                              ImageContainer* aImageContainer,
                               Image** aOutImage)
 {
   RefPtr<IMFMediaBuffer> buffer;
@@ -519,7 +517,6 @@ public:
   // into an image which is returned by aOutImage.
   HRESULT CopyToImage(IMFSample* aVideoSample,
                       const nsIntRect& aRegion,
-                      ImageContainer* aContainer,
                       Image** aOutImage) override;
 
   HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight) override;
@@ -782,11 +779,9 @@ D3D11DXVA2Manager::CreateOutputSample(RefPtr<IMFSample>& aSample, ID3D11Texture2
 HRESULT
 D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
                                const nsIntRect& aRegion,
-                               ImageContainer* aContainer,
                                Image** aOutImage)
 {
   NS_ENSURE_TRUE(aVideoSample, E_POINTER);
-  NS_ENSURE_TRUE(aContainer, E_POINTER);
   NS_ENSURE_TRUE(aOutImage, E_POINTER);
 
   // Our video frame is stored in a non-sharable ID3D11Texture2D. We need

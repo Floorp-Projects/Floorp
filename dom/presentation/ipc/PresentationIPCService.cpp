@@ -364,7 +364,8 @@ PresentationIPCService::GetExistentSessionIdAtLaunch(uint64_t aWindowId,
 
 NS_IMETHODIMP
 PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
-                                            uint64_t aWindowId)
+                                            uint64_t aWindowId,
+                                            bool aIsLoading)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -377,7 +378,8 @@ PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
   AddRespondingSessionId(aWindowId, aSessionId);
 
   NS_WARN_IF(!sPresentationChild->SendNotifyReceiverReady(nsString(aSessionId),
-                                                          aWindowId));
+                                                          aWindowId,
+                                                          aIsLoading));
 
   // Release mCallback after using aSessionId
   // because aSessionId is held by mCallback.
