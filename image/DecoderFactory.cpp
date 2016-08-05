@@ -119,7 +119,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   }
 
   // Create an anonymous decoder. Interaction with the SurfaceCache and the
-  // owning RasterImage will be mediated by DecodingTask.
+  // owning RasterImage will be mediated by DecodedSurfaceProvider.
   RefPtr<Decoder> decoder =
     GetDecoder(aType, nullptr, bool(aDecoderFlags & DecoderFlags::IS_REDECODE));
   MOZ_ASSERT(decoder, "Should have a decoder now");
@@ -136,17 +136,25 @@ DecoderFactory::CreateDecoder(DecoderType aType,
     return nullptr;
   }
 
-  // Add a placeholder to the SurfaceCache so we won't trigger any more decoders
-  // with the same parameters.
+  // Create a DecodedSurfaceProvider which will manage the decoding process and
+  // make this decoder's output available in the surface cache.
   SurfaceKey surfaceKey =
     RasterSurfaceKey(aOutputSize, aSurfaceFlags, /* aFrameNum = */ 0);
+  NotNull<RefPtr<DecodedSurfaceProvider>> provider =
+    WrapNotNull(new DecodedSurfaceProvider(aImage,
+                                           WrapNotNull(decoder),
+                                           surfaceKey));
+
+  // Attempt to insert the surface provider into the surface cache right away so
+  // we won't trigger any more decoders with the same parameters.
   InsertOutcome outcome =
-    SurfaceCache::InsertPlaceholder(ImageKey(aImage.get()), surfaceKey);
+    SurfaceCache::Insert(provider, ImageKey(aImage.get()), surfaceKey);
   if (outcome != InsertOutcome::SUCCESS) {
     return nullptr;
   }
 
-  RefPtr<IDecodingTask> task = new DecodingTask(aImage, WrapNotNull(decoder));
+  // Return the surface provider in its IDecodingTask guise.
+  RefPtr<IDecodingTask> task = provider.get();
   return task.forget();
 }
 

@@ -63,33 +63,6 @@ protected:
 
 
 /**
- * An IDecodingTask implementation for full decodes of single frame images.
- */
-class DecodingTask final : public IDecodingTask
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodingTask, override)
-
-  DecodingTask(NotNull<RasterImage*> aImage,
-               NotNull<Decoder*> aDecoder);
-
-  void Run() override;
-  bool ShouldPreferSyncRun() const override;
-
-  // Full decodes are low priority compared to metadata decodes because they
-  // don't block layout or page load.
-  TaskPriority Priority() const override { return TaskPriority::eLow; }
-
-private:
-  virtual ~DecodingTask();
-
-  NotNull<RefPtr<RasterImage>> mImage;
-  NotNull<RefPtr<Decoder>> mDecoder;
-  RefPtr<imgFrame> mSurface;
-};
-
-
-/**
  * An IDecodingTask implementation for full decodes of animated images.
  */
 class AnimationDecodingTask final : public IDecodingTask
