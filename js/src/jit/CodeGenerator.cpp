@@ -5424,7 +5424,34 @@ CodeGenerator::visitNewTypedArray(LNewTypedArray* lir)
     masm.createGCObject(objReg, tempReg, templateObject, initialHeap,
                         ool->entry(), /*initContents*/true, /*convertDoubleElements*/false);
 
-    masm.initTypedArraySlots(objReg, tempReg, lengthReg, liveRegs, ool->entry(), ttemplate);
+    masm.initTypedArraySlots(objReg, tempReg, lengthReg, liveRegs, ool->entry(),
+                             ttemplate, TypedArrayLength::Fixed);
+
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitNewTypedArrayDynamicLength(LNewTypedArrayDynamicLength* lir)
+{
+    Register lengthReg = ToRegister(lir->length());
+    Register objReg = ToRegister(lir->output());
+    Register tempReg = ToRegister(lir->temp());
+    LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
+
+    JSObject* templateObject = lir->mir()->templateObject();
+    gc::InitialHeap initialHeap = lir->mir()->initialHeap();
+
+    TypedArrayObject* ttemplate = &templateObject->as<TypedArrayObject>();
+
+    OutOfLineCode* ool = oolCallVM(TypedArrayConstructorOneArgInfo, lir,
+                                   ArgList(ImmGCPtr(templateObject), lengthReg),
+                                   StoreRegisterTo(objReg));
+
+    masm.createGCObject(objReg, tempReg, templateObject, initialHeap,
+                        ool->entry(), /*initContents*/true, /*convertDoubleElements*/false);
+
+    masm.initTypedArraySlots(objReg, tempReg, lengthReg, liveRegs, ool->entry(),
+                             ttemplate, TypedArrayLength::Dynamic);
 
     masm.bind(ool->rejoin());
 }

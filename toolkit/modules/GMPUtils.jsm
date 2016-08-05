@@ -42,6 +42,11 @@ this.GMPUtils = {
    *          The plugin to check.
    */
   isPluginHidden: function(aPlugin) {
+    if (this._is32bitModeMacOS()) {
+      // GMPs are hidden on MacOS when running in 32 bit mode.
+      // See bug 1291537.
+      return true;
+    }
     if (!aPlugin.isEME) {
       return false;
     }
@@ -79,6 +84,13 @@ this.GMPUtils = {
     }
 
     return true;
+  },
+
+  _is32bitModeMacOS: function() {
+    if (AppConstants.platform != "macosx") {
+      return false;
+    }
+    return Services.appinfo.XPCOMABI.split("-")[0] == "x86";
   },
 
   /**
