@@ -1324,6 +1324,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
     void outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
 
+    // This function takes care of loading the callee's TLS and pinned regs but
+    // it is the caller's responsibility to save/restore TLS or pinned regs.
+    void wasmCallImport(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee);
+
+    // WasmTableCallIndexReg must contain the index of the indirect call.
+    void wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee);
+
     //}}} check_macroassembler_style
   public:
 
