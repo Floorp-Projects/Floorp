@@ -13,6 +13,9 @@ let whitelist = [
   // CodeMirror is imported as-is, see bug 1004423.
   {sourceName: /codemirror\.css$/i,
    isFromDevTools: true},
+  // The debugger uses cross-browser CSS.
+  {sourceName: /devtools\/client\/debugger\/new\/styles.css/i,
+   isFromDevTools: true},
   // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
   {sourceName: /web\/viewer\.css$/i,
    errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i,

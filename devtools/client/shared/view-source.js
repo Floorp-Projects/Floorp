@@ -50,14 +50,23 @@ exports.viewSourceInStyleEditor = Task.async(function* (toolbox, sourceURL,
  *
  * @return {Promise<boolean>}
  */
-exports.viewSourceInDebugger = Task.async(function* (toolbox, sourceURL,
-                                                     sourceLine) {
+exports.viewSourceInDebugger = Task.async(function* (toolbox, sourceURL, sourceLine) {
   // If the Debugger was already open, switch to it and try to show the
   // source immediately. Otherwise, initialize it and wait for the sources
   // to be added first.
   let debuggerAlreadyOpen = toolbox.getPanel("jsdebugger");
   let { panelWin: dbg } = yield toolbox.loadTool("jsdebugger");
 
+  // New debugger frontend
+  if (Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
+    yield toolbox.selectTool("jsdebugger");
+    // TODO: Properly handle case where source will never exist in the
+    // debugger
+    dbg.actions.selectSourceURL(sourceURL);
+    return true;
+  }
+
+  // Old debugger frontend
   if (!debuggerAlreadyOpen) {
     yield dbg.DebuggerController.waitForSourcesLoaded();
   }
