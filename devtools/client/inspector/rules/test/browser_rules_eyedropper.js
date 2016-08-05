@@ -59,6 +59,11 @@ add_task(function* () {
 
   info("Test that a color can be selected with the eyedropper");
   yield testSelect(view, swatch, inspector, testActor);
+
+  let onHidden = tooltip.once("hidden");
+  tooltip.hide();
+  yield onHidden;
+  ok(!tooltip.isVisible(), "color picker tooltip is closed");
 });
 
 function* testESC(swatch, inspector, testActor) {
