@@ -293,3 +293,6 @@ defineLazyGetter(globals, "CSSRule", () => Ci.nsIDOMCSSRule);
 defineLazyGetter(globals, "DOMParser", () => {
   return CC("@mozilla.org/xmlextras/domparser;1", "nsIDOMParser");
 });
+defineLazyGetter(globals, "WebSocket", () => {
+  return Services.appShell.hiddenDOMWindow.WebSocket;
+});

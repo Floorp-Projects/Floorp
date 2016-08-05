@@ -22,6 +22,7 @@
     "setTimeout": true,
     "uneval": true,
     "URL": true,
+    "WebSocket": true,
     "XMLHttpRequest": true,
     "_Iterator": true,
   },
