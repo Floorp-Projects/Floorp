@@ -1,2 +1,2 @@
-marionette-driver >= 1.4.0
+marionette-driver >= 2.0.0
 mozinfo >= 0.8
