@@ -1526,6 +1526,7 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd,
             supportedGroups &= ~(1U << ssl_named_groups[i].index);
         }
     }
+    ss->ssl3.dhePreferredGroup = NULL;
     for (i = 0; i < count; ++i) {
         NamedGroup name;
         const namedGroupDef *groupDef;
@@ -1551,6 +1552,9 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd,
         }
         groupDef = ssl_LookupNamedGroup(name);
         PORT_Assert(groupDef);
+        if (!ss->ssl3.dhePreferredGroup) {
+            ss->ssl3.dhePreferredGroup = groupDef;
+        }
         supportedGroups |= (1U << groupDef->index);
     }
     ss->namedGroups = supportedGroups;
@@ -1793,6 +1797,12 @@ ssl_SelectDHEParams(sslSocket *ss,
         PORT_Assert(gWeakDHParams);
         *groupDef = &weak_group_def;
         *params = gWeakDHParams;
+        return SECSuccess;
+    }
+    if (ss->ssl3.dhePreferredGroup &&
+        ssl_NamedGroupEnabled(ss, ss->ssl3.dhePreferredGroup)) {
+        *groupDef = ss->ssl3.dhePreferredGroup;
+        *params = ssl_GetDHEParams(ss->ssl3.dhePreferredGroup);
         return SECSuccess;
     }
     for (i = 0; i < ssl_named_group_count; ++i) {
