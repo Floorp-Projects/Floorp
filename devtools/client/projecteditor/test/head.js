@@ -11,6 +11,7 @@ const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const ProjectEditor = require("devtools/client/projecteditor/lib/projecteditor");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 
 const TEST_URL_ROOT = "http://mochi.test:8888/browser/devtools/client/projecteditor/test/";
 const SAMPLE_WEBAPP_URL = TEST_URL_ROOT + "/helper_homepage.html";
@@ -23,9 +24,9 @@ waitForExplicitFinish();
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
-// Set the testing flag on DevToolsUtils and reset it when the test ends
-DevToolsUtils.testing = true;
-registerCleanupFunction(() => DevToolsUtils.testing = false);
+// Set the testing flag and reset it when the test ends
+flags.testing = true;
+registerCleanupFunction(() => flags.testing = false);
 
 // Clear preferences that may be set during the course of tests.
 registerCleanupFunction(() => {

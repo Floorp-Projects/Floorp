@@ -9,10 +9,11 @@ var Cr = Components.results;
 
 const {require, DevToolsLoader, devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 do_register_cleanup(() => {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
 });
 
 // Register a console listener, so console messages don't just disappear

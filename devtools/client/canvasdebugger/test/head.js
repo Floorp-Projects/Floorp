@@ -16,6 +16,7 @@ var { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
 var { CanvasFront } = require("devtools/shared/fronts/canvas");
 var { setTimeout } = require("sdk/timers");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var flags = require("devtools/shared/flags");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
@@ -46,11 +47,11 @@ waitForExplicitFinish();
 
 var gToolEnabled = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
-  DevToolsUtils.testing = false;
+  flags.testing = false;
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", gToolEnabled);
 

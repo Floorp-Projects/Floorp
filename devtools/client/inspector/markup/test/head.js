@@ -19,9 +19,9 @@ var {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
 SimpleTest.requestCompleteLog();
 
 // Set the testing flag on DevToolsUtils and reset it when the test ends
-DevToolsUtils.testing = true;
+flags.testing = true;
 registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
 });
 
 // Clear preferences that may be set during the course of tests.

@@ -16,6 +16,7 @@ var Promise = require("promise");
 var Services = require("Services");
 var { WebAudioFront } = require("devtools/shared/fronts/webaudio");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var flags = require("devtools/shared/flags");
 var audioNodes = require("devtools/server/actors/utils/audionodes.json");
 var mm = null;
 
@@ -42,10 +43,10 @@ waitForExplicitFinish();
 
 var gToolEnabled = Services.prefs.getBoolPref("devtools.webaudioeditor.enabled");
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 
 registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", gToolEnabled);

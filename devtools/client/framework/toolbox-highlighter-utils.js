@@ -8,7 +8,7 @@
 
 const promise = require("promise");
 const {Task} = require("devtools/shared/task");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 
 /**
  * Client-side highlighter shared module.
@@ -250,7 +250,7 @@ exports.getHighlighterUtils = function (toolbox) {
   /**
    * Hide the highlighter.
    * @param {Boolean} forceHide Only really matters in test mode (when
-   * DevToolsUtils.testing is true). In test mode, hovering over several nodes
+   * flags.testing is true). In test mode, hovering over several nodes
    * in the markup view doesn't hide/show the highlighter to ease testing. The
    * highlighter stays visible at all times, except when the mouse leaves the
    * markup view, which is when this param is passed to true
@@ -258,7 +258,7 @@ exports.getHighlighterUtils = function (toolbox) {
    */
   let unhighlight = exported.unhighlight = Task.async(
   function* (forceHide = false) {
-    forceHide = forceHide || !DevToolsUtils.testing;
+    forceHide = forceHide || !flags.testing;
 
     // Note that if isRemoteHighlightable is true, there's no need to hide the
     // highlighter as the walker uses setTimeout to hide it after some time

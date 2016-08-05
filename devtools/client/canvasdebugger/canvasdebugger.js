@@ -14,11 +14,12 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
 const { CanvasFront } = require("devtools/shared/fronts/canvas");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const { Heritage, WidgetMethods, setNamedTimeout, clearNamedTimeout,
         setConditionalTimeout } = require("devtools/client/shared/widgets/view-helpers");
 
-const CANVAS_ACTOR_RECORDING_ATTEMPT = DevToolsUtils.testing ? 500 : 5000;
+const CANVAS_ACTOR_RECORDING_ATTEMPT = flags.testing ? 500 : 5000;
 
 const { Task } = require("devtools/shared/task");
 

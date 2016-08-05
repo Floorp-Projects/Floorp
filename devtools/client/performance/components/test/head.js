@@ -10,11 +10,12 @@ var { Assert } = require("resource://testing-common/Assert.jsm");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var flags = require("devtools/shared/flags");
 var { Task } = require("devtools/shared/task");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 var { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/performance/",
   window: this

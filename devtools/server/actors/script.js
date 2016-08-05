@@ -17,6 +17,7 @@ const { SourceActor, getSourceURL } = require("devtools/server/actors/source");
 const { DebuggerServer } = require("devtools/server/main");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 const { assert, dumpn, update, fetch } = DevToolsUtils;
 const promise = require("promise");
 const xpcInspector = require("xpcInspector");
@@ -509,7 +510,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this._prettyPrintWorker = new DevToolsWorker(
         "resource://devtools/server/actors/pretty-print-worker.js",
         { name: "pretty-print",
-          verbose: dumpn.wantLogging }
+          verbose: flags.wantLogging }
       );
     }
     return this._prettyPrintWorker;
