@@ -380,10 +380,6 @@ public:
     PostRestyleEventInternal(true);
   }
 
-#ifdef DEBUG
-  static nsCString ChangeHintToString(nsChangeHint aHint);
-#endif
-
 public:
   /**
    * Asynchronously clear style data from the root frame downwards and ensure
