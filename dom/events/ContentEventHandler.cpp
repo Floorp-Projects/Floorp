@@ -1584,6 +1584,7 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
   RefPtr<nsRange> range = new nsRange(mRootContent);
 
+  bool isVertical = false;
   LayoutDeviceIntRect rect;
   uint32_t offset = aEvent->mInput.mOffset;
   const uint32_t kEndOffset = offset + aEvent->mInput.mLength;
@@ -1596,8 +1597,11 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       return rv;
     }
 
-    // TODO: If the range is collapsed, that means offset reaches to the end
-    //       of the contents.  We need to do something here.
+    // If the range is collapsed, offset has already reached the end of the
+    // contents.
+    if (range->Collapsed()) {
+      break;
+    }
 
     // Get the first frame which causes some text after the offset.
     FrameAndNodeOffset firstFrame = GetFirstFrameHavingFlatTextInRange(range);
@@ -1623,6 +1627,9 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
     bool startsBetweenLineBreaker = false;
     nsAutoString chars;
+    // XXX not bidi-aware this class...
+    isVertical = firstFrame->GetWritingMode().IsVertical();
+
     AutoTArray<nsRect, 16> charRects;
 
     if (ShouldBreakLineBefore(firstContent, mRootContent)) {
@@ -1642,7 +1649,7 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
         // So, we need to avoid using current frame position.
         brRect = lastCharRect - frameRect.TopLeft();
         if (!wasLineBreaker) {
-          if (firstFrame->GetWritingMode().IsVertical()) {
+          if (isVertical) {
             // Right of the last character.
             brRect.y = brRect.YMost() + 1;
             brRect.height = 1;
@@ -1746,6 +1753,54 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       offset++;
     }
   }
+
+  // If the query range is longer than actual content length, we should append
+  // caret rect at the end of the content as the last character rect because
+  // native IME may want to query character rect at the end of contents for
+  // deciding the position of a popup window (e.g., suggest window for next
+  // word).  Note that when this method hasn't appended character rects, it
+  // means that the offset is too large or the query range is collapsed.
+  if (offset < kEndOffset || aEvent->mReply.mRectArray.IsEmpty()) {
+    // If we've already retrieved some character rects before current offset,
+    // we can guess the last rect from the last character's rect unless it's a
+    // line breaker.  (If it's a line breaker, the caret rect is in next line.)
+    if (!aEvent->mReply.mRectArray.IsEmpty() && !wasLineBreaker) {
+      rect = aEvent->mReply.mRectArray.LastElement();
+      if (isVertical) {
+        rect.y = rect.YMost() + 1;
+        rect.height = 1;
+        MOZ_ASSERT(rect.width);
+      } else {
+        rect.x = rect.XMost() + 1;
+        rect.width = 1;
+        MOZ_ASSERT(rect.height);
+      }
+      aEvent->mReply.mRectArray.AppendElement(rect);
+    } else {
+      // Note that don't use eQueryCaretRect here because if caret is at the
+      // end of the content, it returns actual caret rect instead of computing
+      // the rect itself.  It means that the result depends on caret position.
+      // So, we shouldn't use it for consistency result in automated tests.
+      WidgetQueryContentEvent queryTextRect(eQueryTextRect, *aEvent);
+      WidgetQueryContentEvent::Options options(*aEvent);
+      queryTextRect.InitForQueryTextRect(offset, 1, options);
+      rv = OnQueryTextRect(&queryTextRect);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (NS_WARN_IF(!queryTextRect.mSucceeded)) {
+        return NS_ERROR_FAILURE;
+      }
+      MOZ_ASSERT(!queryTextRect.mReply.mRect.IsEmpty());
+      if (queryTextRect.mReply.mWritingMode.IsVertical()) {
+        queryTextRect.mReply.mRect.height = 1;
+      } else {
+        queryTextRect.mReply.mRect.width = 1;
+      }
+      aEvent->mReply.mRectArray.AppendElement(queryTextRect.mReply.mRect);
+    }
+  }
+
   aEvent->mSucceeded = true;
   return NS_OK;
 }
