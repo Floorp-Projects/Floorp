@@ -6,7 +6,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 
 #include "mozilla/layers/Compositor.h"
-#ifdef MOZ_ANDROID_APZ
+#ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #endif
 
@@ -57,7 +57,7 @@ APZThreadUtils::RunOnControllerThread(already_AddRefed<Runnable> aTask)
 {
   RefPtr<Runnable> task = aTask;
 
-#ifdef MOZ_ANDROID_APZ
+#ifdef MOZ_WIDGET_ANDROID
   // This is needed while nsWindow::ConfigureAPZControllerThread is not propper
   // implemented.
   if (AndroidBridge::IsJavaUiThread()) {
@@ -83,7 +83,7 @@ APZThreadUtils::RunOnControllerThread(already_AddRefed<Runnable> aTask)
 /*static*/ bool
 APZThreadUtils::IsControllerThread()
 {
-#ifdef MOZ_ANDROID_APZ
+#ifdef MOZ_WIDGET_ANDROID
   return AndroidBridge::IsJavaUiThread();
 #else
   return sControllerThread == MessageLoop::current();
