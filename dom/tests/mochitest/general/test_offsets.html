@@ -12,8 +12,12 @@
   }
 </style>
 </head>
+
+<!-- We set a transform on the body element so that it creates a reference frame.
+     This makes sure that snapping of scrolled areas for the contained elements
+     is not influenced by offsets outside of this document. -->
 <body id="body" onload="setTimeout(testElements, 0, 'testelements', SimpleTest.finish);"
-      style="margin: 1px; border: 2px solid black; padding: 4px;">
+      style="margin: 1px; border: 2px solid black; padding: 4px; transform: translateY(1px);">
 
 <div id="testelements" style="margin: 0; border: 0; padding: 0;">
   <div id="div1" style="margin: 0; margin-left: 6px; margin-top: 2px; border: 1px solid green; padding: 6px; width: 50px; height: 20px"
@@ -55,7 +59,7 @@
   </div>
 
   <div id="scrollbox"
-       style="overflow: scroll; padding-left: 0px; margin: 3px; border: 4px solid green; max-width: 80px; max-height: 70px;"
+       style="overflow: scroll; padding-left: 0px; margin: 3px; border: 4px solid green; max-width: 80px; max-height: 70px"
        _scrollWidth="62" _scrollHeight="32"
        _clientLeft="1" _clientTop="1" _clientWidth="62" _clientHeight="32"><p id="p1" style="margin: 0; padding: 0;">One</p>
     <p id="p2">Two</p>

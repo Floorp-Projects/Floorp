@@ -9,6 +9,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'scale_yuv_argb.cpp',
     'ycbcr_to_rgb565.cpp',
     'YCbCrUtils.cpp',
     'yuv_convert.cpp',

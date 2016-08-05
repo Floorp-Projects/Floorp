@@ -198,7 +198,7 @@ public:
   bool GetPlaceholderVisibility() {
     return mPlaceholderVisibility;
   }
-  void UpdatePlaceholderText(bool aNotify); 
+  void UpdatePlaceholderText(bool aNotify);
 
   /**
    * Get the maxlength attribute
@@ -212,14 +212,50 @@ public:
   void HideSelectionIfBlurred();
 
   struct SelectionProperties {
-    SelectionProperties() : mStart(0), mEnd(0),
-      mDirection(nsITextControlFrame::eForward) {}
-    bool IsDefault() const {
-      return mStart == 0 && mEnd == 0 &&
-             mDirection == nsITextControlFrame::eForward;
-    }
-    int32_t mStart, mEnd;
-    nsITextControlFrame::SelectionDirection mDirection;
+    public:
+      SelectionProperties() : mStart(0), mEnd(0),
+        mDirection(nsITextControlFrame::eForward) {}
+      bool IsDefault() const
+      {
+        return mStart == 0 && mEnd == 0 &&
+               mDirection == nsITextControlFrame::eForward;
+      }
+      int32_t GetStart() const
+      {
+        return mStart;
+      }
+      void SetStart(int32_t value)
+      {
+        mIsDirty = true;
+        mStart = value;
+      }
+      int32_t GetEnd() const
+      {
+        return mEnd;
+      }
+      void SetEnd(int32_t value)
+      {
+        mIsDirty = true;
+        mEnd = value;
+      }
+      nsITextControlFrame::SelectionDirection GetDirection() const
+      {
+        return mDirection;
+      }
+      void SetDirection(nsITextControlFrame::SelectionDirection value)
+      {
+        mIsDirty = true;
+        mDirection = value;
+      }
+      // return true only if mStart, mEnd, or mDirection have been modified
+      bool IsDirty() const
+      {
+        return mIsDirty;
+      }
+    private:
+      int32_t mStart, mEnd;
+      bool mIsDirty = false;
+      nsITextControlFrame::SelectionDirection mDirection;
   };
 
   bool IsSelectionCached() const;

@@ -168,15 +168,15 @@ indexeddb_test(
         cursor_rq.onerror = t.unreached_func('openCursor should succeed');
         cursor_rq.onsuccess = t.step_func(function(e) {
             if (!cursor) {
-	            cursor = e.target.result;
-	            assert_true(!!cursor, "acquire cursor");
+                cursor = e.target.result;
+                assert_true(!!cursor, "acquire cursor");
 
-	            cursor.continue();
+                cursor.continue();
 
-	            assert_throws("InvalidAccessError", function() {
-	                cursor.continuePrimaryKey("A", 4);
-	            }, "index source check should precede iteration ongoing check");
-	            t.done();
+                assert_throws("InvalidAccessError", function() {
+                    cursor.continuePrimaryKey("A", 4);
+                }, "index source check should precede iteration ongoing check");
+                t.done();
             }
         });
     },
@@ -201,10 +201,10 @@ indexeddb_test(
                 return;
             }
 
-	        assert_throws("InvalidAccessError", function() {
-	            cursor.continuePrimaryKey("A", 4);
-	        }, "index source check should precede got_value_flag check");
-	        t.done();
+            assert_throws("InvalidAccessError", function() {
+                cursor.continuePrimaryKey("A", 4);
+            }, "index source check should precede got_value_flag check");
+            t.done();
         });
     },
     null,
@@ -221,15 +221,15 @@ indexeddb_test(
         cursor_rq.onerror = t.unreached_func('openCursor should succeed');
         cursor_rq.onsuccess = t.step_func(function(e) {
             if (!cursor) {
-	            cursor = e.target.result;
-	            assert_true(!!cursor, "acquire cursor");
+                cursor = e.target.result;
+                assert_true(!!cursor, "acquire cursor");
 
-	            cursor.continue();
+                cursor.continue();
 
-	            assert_throws("InvalidStateError", function() {
-	                cursor.continuePrimaryKey(null, 4);
-	            }, "iteration ongoing check should precede unset key check");
-	            t.done();
+                assert_throws("InvalidStateError", function() {
+                    cursor.continuePrimaryKey(null, 4);
+                }, "iteration ongoing check should precede unset key check");
+                t.done();
             }
         });
     },
