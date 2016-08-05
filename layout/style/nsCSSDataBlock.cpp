@@ -69,9 +69,24 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
     // For such 'mask-image' values (pointing to an in-document element),
     // there is no need to trigger image download.
     if (aProperty == eCSSProperty_mask_image) {
-      nsIURI* docURI = aDocument->GetDocumentURI();
+      // Filter out all fragment URLs.
+      // Since nsCSSValue::GetURLStructValue runs much faster than
+      // nsIURI::EqualsExceptRef bellow, we get performance gain by this
+      // early return.
+      URLValue* urlValue = aValue.GetURLStructValue();
+      if (urlValue->GetLocalURLFlag()) {
+        return;
+      }
+
+      // Even though urlValue is not a fragment URL, it might still refer to
+      // an internal resource.
+      // For example, aDocument base URL is "http://foo/index.html" and
+      // intentionally references a mask-image at
+      // url(http://foo/index.html#mask) which still refers to a resource in
+      // aDocument.
       nsIURI* imageURI = aValue.GetURLValue();
       if (imageURI) {
+        nsIURI* docURI = aDocument->GetDocumentURI();
         bool isEqualExceptRef = false;
         nsresult  rv = imageURI->EqualsExceptRef(docURI, &isEqualExceptRef);
         if (NS_SUCCEEDED(rv) && isEqualExceptRef) {

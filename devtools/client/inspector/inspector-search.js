@@ -10,9 +10,9 @@ const {Ci} = require("chrome");
 const promise = require("promise");
 const {Task} = require("devtools/shared/task");
 
-loader.lazyGetter(this, "system", () => require("devtools/shared/system"));
-loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
-loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/client/shared/autocomplete-popup").AutocompletePopup);
+const system = require("devtools/shared/system");
+const EventEmitter = require("devtools/shared/event-emitter");
+const {AutocompletePopup} = require("devtools/client/shared/autocomplete-popup");
 
 // Maximum number of selector suggestions shown in the panel.
 const MAX_SUGGESTIONS = 15;

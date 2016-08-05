@@ -90,10 +90,13 @@ exports.ONLOGOUT_NOTIFICATION = "fxaccounts:onlogout";
 // Internal to services/fxaccounts only
 exports.ON_FXA_UPDATE_NOTIFICATION = "fxaccounts:update";
 exports.ON_DEVICE_DISCONNECTED_NOTIFICATION = "fxaccounts:device_disconnected";
+exports.ON_PASSWORD_CHANGED_NOTIFICATION = "fxaccounts:password_changed";
+exports.ON_PASSWORD_RESET_NOTIFICATION = "fxaccounts:password_reset";
 
 exports.FXA_PUSH_SCOPE_ACCOUNT_UPDATE = "chrome://fxa-device-update";
 
 exports.ON_PROFILE_CHANGE_NOTIFICATION = "fxaccounts:profilechange";
+exports.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION = "fxaccounts:statechange";
 
 // UI Requests.
 exports.UI_REQUEST_SIGN_IN_FLOW = "signInFlow";

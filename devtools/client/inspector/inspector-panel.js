@@ -3,8 +3,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* Experimenting with 100 char long lines */
-/* eslint max-len: [2, 100, 2, {ignoreUrls: true, "ignorePattern": "\\s*require\\s*\\(|^\\s*loader\\.lazy|-\\*-"}] */ // eslint-disable-line
 
 "use strict";
 
@@ -27,17 +25,17 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-loader.lazyRequireGetter(this, "CSS", "CSS");
+const CSS = require("CSS");
 
-loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
-loader.lazyRequireGetter(this, "ComputedViewTool", "devtools/client/inspector/computed/computed", true);
-loader.lazyRequireGetter(this, "FontInspector", "devtools/client/inspector/fonts/fonts", true);
-loader.lazyRequireGetter(this, "HTMLBreadcrumbs", "devtools/client/inspector/breadcrumbs", true);
-loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
-loader.lazyRequireGetter(this, "MarkupView", "devtools/client/inspector/markup/markup", true);
-loader.lazyRequireGetter(this, "RuleViewTool", "devtools/client/inspector/rules/rules", true);
-loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
-loader.lazyRequireGetter(this, "ViewHelpers", "devtools/client/shared/widgets/view-helpers", true);
+const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
+const {ComputedViewTool} = require("devtools/client/inspector/computed/computed");
+const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
+const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
+const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
+const {MarkupView} = require("devtools/client/inspector/markup/markup");
+const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
+const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
+const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 
 loader.lazyGetter(this, "strings", () => {
   return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
@@ -216,7 +214,8 @@ InspectorPanel.prototype = {
       // is selected.
       this.updateDebuggerPausedWarning = () => {
         let notificationBox = this._toolbox.getNotificationBox();
-        let notification = notificationBox.getNotificationWithValue("inspector-script-paused");
+        let notification =
+            notificationBox.getNotificationWithValue("inspector-script-paused");
         if (!notification && this._toolbox.currentToolId == "inspector" &&
             this._toolbox.threadClient.paused) {
           let message = strings.GetStringFromName("debuggerPausedWarning.message");
@@ -1517,9 +1516,12 @@ InspectorPanel.prototype = {
   },
 
   /**
-   * Copy the content of a longString (via a promise resolving a LongStringActor) to the clipboard
-   * @param  {Promise} longStringActorPromise promise expected to resolve a LongStringActor instance
-   * @return {Promise} promise resolving (with no argument) when the string is sent to the clipboard
+   * Copy the content of a longString (via a promise resolving a
+   * LongStringActor) to the clipboard
+   * @param  {Promise} longStringActorPromise promise expected to
+   *         resolve a LongStringActor instance
+   * @return {Promise} promise resolving (with no argument) when the
+   *         string is sent to the clipboard
    */
   _copyLongString: function (longStringActorPromise) {
     return this._getLongString(longStringActorPromise).then(string => {
@@ -1529,7 +1531,8 @@ InspectorPanel.prototype = {
 
   /**
    * Retrieve the content of a longString (via a promise resolving a LongStringActor)
-   * @param  {Promise} longStringActorPromise promise expected to resolve a LongStringActor instance
+   * @param  {Promise} longStringActorPromise promise expected to
+   *         resolve a LongStringActor instance
    * @return {Promise} promise resolving with the retrieved string as argument
    */
   _getLongString: function (longStringActorPromise) {
