@@ -32,6 +32,7 @@
 #if MOZ_WIDGET_GTK != 2
 #include <cairo-gobject.h>
 #include "WidgetStyleCache.h"
+#include "prenv.h"
 #endif
 
 using mozilla::LookAndFeel;
@@ -1106,7 +1107,7 @@ nsLookAndFeel::Init()
     gboolean dark;
     g_object_get(settings, dark_setting, &dark, nullptr);
 
-    if (dark) {
+    if (dark && !PR_GetEnv("MOZ_ALLOW_GTK_DARK_THEME")) {
         g_object_set(settings, dark_setting, FALSE, nullptr);
     }
 
