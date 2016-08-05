@@ -1703,12 +1703,12 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 #ctrlTab-panel {
   -moz-appearance: none;
-  background: rgba(27%,27%,27%,.7);
+  background: rgba(33%,33%,33%,.85);
   color: white;
   border-style: none;
   padding: 20px 10px 10px;
   font-weight: bold;
-  text-shadow: 0 0 1px rgb(27%,27%,27%), 0 0 2px rgb(27%,27%,27%);
+  text-shadow: 0 0 1px rgb(12%,12%,12%), 0 0 2px rgb(12%,12%,12%);
 }
 
 .ctrlTab-favicon[src] {
