@@ -109,6 +109,15 @@ CssProperties.prototype = {
    */
   getValues(property) {
     return this.properties[property] ? this.properties[property].values : [];
+  },
+
+  /**
+   * Gets the CSS property names.
+   *
+   * @return {Array} An array of strings.
+   */
+  getNames(property) {
+    return Object.keys(this.properties);
   }
 };
 
