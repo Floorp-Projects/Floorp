@@ -114,7 +114,8 @@ this.SelectContentHelper.prototype = {
         break;
 
       case "Forms:DismissedDropDown":
-        if (this.initialSelection != this.element.item(this.element.selectedIndex)) {
+        let selectedOption = this.element.item(this.element.selectedIndex);
+        if (this.initialSelection != selectedOption) {
           let win = this.element.ownerDocument.defaultView;
           let inputEvent = new win.UIEvent("input", {
             bubbles: true,
@@ -138,7 +139,7 @@ this.SelectContentHelper.prototype = {
               bubbles: true,
               cancelable: true,
             });
-            this.element.dispatchEvent(mouseEvent);
+            selectedOption.dispatchEvent(mouseEvent);
           }
         }
 
