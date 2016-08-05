@@ -673,7 +673,9 @@ if test -n "${CLANG_CXX}${CLANG_CL}"; then
     _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
 fi
 
-MOZ_CONFIG_SANITIZE
+if test -n "$COMPILE_ENVIRONMENT"; then
+   MOZ_CONFIG_SANITIZE
+fi
 
 dnl ========================================================
 dnl = Enable treating compiler warnings as errors
