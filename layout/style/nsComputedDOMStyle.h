@@ -589,6 +589,8 @@ private:
     nsROCSSPrimitiveValue* aValue);
   void SetValueToPosition(const nsStyleImageLayers::Position& aPosition,
                           nsDOMCSSValueList* aValueList);
+  void SetValueToFragmentOrURL(const FragmentOrURL* aFragmentOrURL,
+                               nsROCSSPrimitiveValue* aValue);
 
   /**
    * A method to get a percentage base for a percentage value.  Returns true
