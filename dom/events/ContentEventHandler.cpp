@@ -1592,6 +1592,7 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       return rv;
     }
 
+    bool startsBetweenLineBreaker = false;
     AutoTArray<nsRect, 16> charRects;
 
     bool isLineBreaker = ShouldBreakLineBefore(firstContent, mRootContent);
@@ -1601,6 +1602,20 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       //       this sets the rect to caret rect at the start of the node.
       FrameRelativeRect brRect = GetLineBreakerRectBefore(firstFrame);
       charRects.AppendElement(brRect.RectRelativeTo(firstFrame));
+      if (kBRLength > 1 && offset == aEvent->mInput.mOffset && offset) {
+        // If the first frame for the previous offset of the query range and
+        // the first frame for the start of query range are same, that means
+        // the start offset is between the first line breaker (i.e., the range
+        // starts between "\r" and "\n").
+        rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset - 1, 1,
+                                        lineBreakType, true, nullptr);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        FrameAndNodeOffset frameForPrevious =
+          GetFirstFrameHavingFlatTextInRange(range);
+        startsBetweenLineBreaker = frameForPrevious.mFrame == firstFrame.mFrame;
+      }
     } else {
       rv = firstFrame->GetCharacterRectsInRange(firstFrame.mStartOffsetInNode,
                                                 kEndOffset - offset, charRects);
@@ -1639,8 +1654,17 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
         break;
       }
 
-      // TODO: If the query range is stated between a line breaker, i.e., \r[\n,
-      //       We shouldn't append a rect here.
+      // If the query range starts from between a line breaker, i.e., it starts
+      // between "\r" and "\n", the appended rect was for the "\n".  Therefore,
+      // we don't need to append same rect anymore for current "\r\n".
+      if (startsBetweenLineBreaker) {
+        continue;
+      }
+
+      // The appended rect was for "\r" of "\r\n".  Therefore, we need to
+      // append same rect for "\n" too because querying rect of "\r" and "\n"
+      // should return same rect.  E.g., IME may query previous character's
+      // rect of first character of a line.
       aEvent->mReply.mRectArray.AppendElement(rect);
       offset++;
     }
