@@ -19,6 +19,7 @@ DIRS += [
     'layout',
     'locales',
     'performance',
+    'platform',
     'pretty-fast',
     'qrcode',
     'security',
