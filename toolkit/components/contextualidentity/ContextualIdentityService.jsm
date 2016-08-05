@@ -116,7 +116,7 @@ _ContextualIdentityService.prototype = {
         this._lastUserContextId = data.lastUserContextId;
 
         this._dataReady = true;
-      } catch(error) {
+      } catch (error) {
         this.loadError(error);
       }
     }, (error) => {

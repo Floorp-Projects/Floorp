@@ -52,7 +52,7 @@ add_task(function test_extractFiles() {
 
   try {
     ZipUtils.extractFiles(archive, target);
-  } catch(e) {
+  } catch (e) {
     do_throw("Failed to extract synchronously!");
   }
 

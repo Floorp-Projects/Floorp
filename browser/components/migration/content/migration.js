@@ -342,7 +342,7 @@ var MigrationWizard = {
       var radioGroup = document.getElementById("homePageRadiogroup");
 
       this._newHomePage = radioGroup.selectedItem.value;
-    } catch(ex) {}
+    } catch (ex) {}
   },
 
   // 5 - Migrating
@@ -454,7 +454,7 @@ var MigrationWizard = {
             var prefFile = dirSvc.get("ProfDS", Components.interfaces.nsIFile);
             prefFile.append("prefs.js");
             prefSvc.savePrefFile(prefFile);
-          } catch(ex) {
+          } catch (ex) {
             dump(ex);
           }
         }

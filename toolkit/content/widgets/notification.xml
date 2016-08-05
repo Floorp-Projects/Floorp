@@ -356,7 +356,7 @@
                 context.drawWindow(win, win.scrollX, win.scrollY,
                                    width, height, bgcolor);
               }
-              catch(ex) { }
+              catch (ex) { }
             }
             else if (canvas) {
               canvas.parentNode.removeChild(canvas);

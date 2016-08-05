@@ -52,10 +52,33 @@ const JNINativeMethod AlarmReceiver::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class AndroidGamepadManager::Natives : public mozilla::jni::NativeImpl<AndroidGamepadManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[3];
+};
+
+template<class Impl>
+const JNINativeMethod AndroidGamepadManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<AndroidGamepadManager::OnAxisChange_t>(
+            mozilla::jni::NativeStub<AndroidGamepadManager::OnAxisChange_t, Impl>
+            ::template Wrap<&Impl::OnAxisChange>),
+
+    mozilla::jni::MakeNativeMethod<AndroidGamepadManager::OnButtonChange_t>(
+            mozilla::jni::NativeStub<AndroidGamepadManager::OnButtonChange_t, Impl>
+            ::template Wrap<&Impl::OnButtonChange>),
+
+    mozilla::jni::MakeNativeMethod<AndroidGamepadManager::OnGamepadChange_t>(
+            mozilla::jni::NativeStub<AndroidGamepadManager::OnGamepadChange_t, Impl>
+            ::template Wrap<&Impl::OnGamepadChange>)
+};
+
+template<class Impl>
 class GeckoAppShell::Natives : public mozilla::jni::NativeImpl<GeckoAppShell, Impl>
 {
 public:
-    static const JNINativeMethod methods[5];
+    static const JNINativeMethod methods[6];
 };
 
 template<class Impl>
@@ -64,6 +87,10 @@ const JNINativeMethod GeckoAppShell::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoAppShell::NotifyObservers_t>(
             mozilla::jni::NativeStub<GeckoAppShell::NotifyObservers_t, Impl>
             ::template Wrap<&Impl::NotifyObservers>),
+
+    mozilla::jni::MakeNativeMethod<GeckoAppShell::NotifyAlertListener_t>(
+            mozilla::jni::NativeStub<GeckoAppShell::NotifyAlertListener_t, Impl>
+            ::template Wrap<&Impl::NotifyAlertListener>),
 
     mozilla::jni::MakeNativeMethod<GeckoAppShell::NotifyUriVisited_t>(
             mozilla::jni::NativeStub<GeckoAppShell::NotifyUriVisited_t, Impl>
@@ -331,6 +358,37 @@ const JNINativeMethod PrefsHelper::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class Telemetry::Natives : public mozilla::jni::NativeImpl<Telemetry, Impl>
+{
+public:
+    static const JNINativeMethod methods[5];
+};
+
+template<class Impl>
+const JNINativeMethod Telemetry::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<Telemetry::AddHistogram_t>(
+            mozilla::jni::NativeStub<Telemetry::AddHistogram_t, Impl>
+            ::template Wrap<&Impl::AddHistogram>),
+
+    mozilla::jni::MakeNativeMethod<Telemetry::AddKeyedHistogram_t>(
+            mozilla::jni::NativeStub<Telemetry::AddKeyedHistogram_t, Impl>
+            ::template Wrap<&Impl::AddKeyedHistogram>),
+
+    mozilla::jni::MakeNativeMethod<Telemetry::AddUIEvent_t>(
+            mozilla::jni::NativeStub<Telemetry::AddUIEvent_t, Impl>
+            ::template Wrap<&Impl::AddUIEvent>),
+
+    mozilla::jni::MakeNativeMethod<Telemetry::StartUISession_t>(
+            mozilla::jni::NativeStub<Telemetry::StartUISession_t, Impl>
+            ::template Wrap<&Impl::StartUISession>),
+
+    mozilla::jni::MakeNativeMethod<Telemetry::StopUISession_t>(
+            mozilla::jni::NativeStub<Telemetry::StopUISession_t, Impl>
+            ::template Wrap<&Impl::StopUISession>)
+};
+
+template<class Impl>
 class ThumbnailHelper::Natives : public mozilla::jni::NativeImpl<ThumbnailHelper, Impl>
 {
 public:
@@ -343,6 +401,21 @@ const JNINativeMethod ThumbnailHelper::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<ThumbnailHelper::RequestThumbnail_t>(
             mozilla::jni::NativeStub<ThumbnailHelper::RequestThumbnail_t, Impl>
             ::template Wrap<&Impl::RequestThumbnail>)
+};
+
+template<class Impl>
+class ZoomedView::Natives : public mozilla::jni::NativeImpl<ZoomedView, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod ZoomedView::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<ZoomedView::RequestZoomedViewData_t>(
+            mozilla::jni::NativeStub<ZoomedView::RequestZoomedViewData_t, Impl>
+            ::template Wrap<&Impl::RequestZoomedViewData>)
 };
 
 template<class Impl>

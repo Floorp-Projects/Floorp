@@ -593,7 +593,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
                   if (suffix.charAt(suffix.length - 1) != "/")
                     suffix += "/";
-                } catch(e) {
+                } catch (e) {
                   suffix = ".com/";
                 }
                 break;

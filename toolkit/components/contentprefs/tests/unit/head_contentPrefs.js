@@ -108,7 +108,7 @@ var ContentPrefTest = {
     var file = this.getProfileDir();
     file.append(CONTENT_PREFS_DB_FILENAME);
     if (file.exists())
-      try { file.remove(false); } catch(e) { /* stupid windows box */ }
+      try { file.remove(false); } catch (e) { /* stupid windows box */ }
     return file;
   },
 

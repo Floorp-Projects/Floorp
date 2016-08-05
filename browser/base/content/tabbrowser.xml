@@ -1118,9 +1118,9 @@
             if (!this._previewMode) {
               this._recordTabAccess(this.mCurrentTab);
 
-              this.mCurrentTab.lastAccessed = Infinity;
+              this.mCurrentTab.updateLastAccessed();
               this.mCurrentTab.removeAttribute("unread");
-              oldTab.lastAccessed = Date.now();
+              oldTab.updateLastAccessed();
 
               let oldFindBar = oldTab._findBar;
               if (oldFindBar &&
@@ -1407,7 +1407,7 @@
               if (browser.currentURI.spec) {
                 try {
                   title = this.mURIFixup.createExposableURI(browser.currentURI).spec;
-                } catch(ex) {
+                } catch (ex) {
                   title = browser.currentURI.spec;
                 }
               }
@@ -1421,7 +1421,7 @@
                   const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                                  .getService(Components.interfaces.nsITextToSubURI);
                   title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
-                } catch(ex) { /* Do nothing. */ }
+                } catch (ex) { /* Do nothing. */ }
 
                 crop = "center";
 
@@ -2020,7 +2020,6 @@
 
             var position = this.tabs.length - 1;
             t._tPos = position;
-            t.lastAccessed = Date.now();
             t.permanentKey = {};
             this.tabContainer._setPositionalAttributes();
 
@@ -4426,7 +4425,7 @@
         <parameter name="aData"/>
         <body><![CDATA[
           let browser;
-          switch(aTopic) {
+          switch (aTopic) {
             case "live-resize-start":
               browser = this.mCurrentTab.linkedBrowser;
               let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
@@ -4479,7 +4478,6 @@
           this.mCurrentTab.permanentKey = this.mCurrentBrowser.permanentKey;
           this.mCurrentTab._tPos = 0;
           this.mCurrentTab._fullyOpen = true;
-          this.mCurrentTab.lastAccessed = Infinity;
           this.mCurrentTab.cachePosition = 0;
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
           this.mCurrentTab.hasBrowser = true;
@@ -6096,7 +6094,7 @@
               this.tabbrowser.getBrowserForTab(tab).loadURIWithFlags(url, flags);
               if (!bgLoad)
                 this.selectedItem = tab;
-            } catch(ex) {
+            } catch (ex) {
               // Just ignore invalid urls
             }
           }
@@ -6282,6 +6280,11 @@
     </content>
 
     <implementation>
+      <constructor><![CDATA[
+        if (!("_lastAccessed" in this)) {
+          this.updateLastAccessed();
+        }
+      ]]></constructor>
 
       <property name="_visuallySelected">
         <setter>
@@ -6357,10 +6360,13 @@
         <getter>
           return this._lastAccessed == Infinity ? Date.now() : this._lastAccessed;
         </getter>
-        <setter>
-          this._lastAccessed = val;
-        </setter>
       </property>
+      <method name="updateLastAccessed">
+        <parameter name="aDate"/>
+        <body><![CDATA[
+          this._lastAccessed = this.selected ? Infinity : (aDate || Date.now());
+        ]]></body>
+      </method>
 
       <field name="cachePosition">Infinity</field>
 

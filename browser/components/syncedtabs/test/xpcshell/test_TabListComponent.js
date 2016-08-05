@@ -22,7 +22,7 @@ const ACTION_METHODS = [
 add_task(function* testInitUninit() {
   let store = new SyncedTabsListStore();
   let ViewMock = sinon.stub();
-  let view = {render(){}, destroy(){}};
+  let view = {render() {}, destroy() {}};
 
   ViewMock.returns(view);
 

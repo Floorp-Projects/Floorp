@@ -167,7 +167,7 @@ PKT_SIGNUP.prototype = {
 
 $(function()
 {
-    if(!window.thePKT_SIGNUP){
+    if (!window.thePKT_SIGNUP) {
         var thePKT_SIGNUP = new PKT_SIGNUP();
         window.thePKT_SIGNUP = thePKT_SIGNUP;
         thePKT_SIGNUP.init();

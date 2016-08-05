@@ -1067,7 +1067,7 @@
     <handlers>
       <handler event="dialogaccept">
       <![CDATA[
-        if (!this._fireEvent("beforeaccept", this)){
+        if (!this._fireEvent("beforeaccept", this)) {
           return false;
         }
 

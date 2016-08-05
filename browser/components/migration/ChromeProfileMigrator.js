@@ -226,7 +226,7 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceHomePageURL", {
                                           { charset: "UTF-8" })
             ).homepage;
       }
-      catch(e) {
+      catch (e) {
         Cu.reportError("Error parsing Chrome's preferences file: " + e);
       }
     }

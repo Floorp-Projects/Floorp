@@ -69,7 +69,7 @@ add_task(function* test_alert_noargs() {
     try {
         alert();
         ok(true, "alert() without arguments should not throw!");
-    } catch(e) {
+    } catch (e) {
         ok(false, "alert() without arguments should not throw!");
     }
 
@@ -131,7 +131,7 @@ add_task(function* test_confirm_noargs() {
     try {
         rv = confirm();
         ok(true, "confirm() without arguments should not throw!");
-    } catch(e) {
+    } catch (e) {
         ok(false, "confirm() without arguments should not throw!");
     }
     is(rv, true, "check prompt return value");
@@ -194,7 +194,7 @@ add_task(function* test_prompt_noargs() {
     try {
         rv = prompt();
         ok(true, "prompt() without arguments should not throw!");
-    } catch(e) {
+    } catch (e) {
         ok(false, "prompt() without arguments should not throw!");
     }
     is(rv, "", "check prompt return value");

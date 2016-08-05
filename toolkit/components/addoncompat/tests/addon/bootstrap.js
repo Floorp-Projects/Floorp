@@ -289,13 +289,13 @@ function testAboutModuleRegistration()
         run: () => {
           try {
             listener.onStartRequest(this, context);
-          } catch(e) {}
+          } catch (e) {}
           try {
             listener.onDataAvailable(this, context, stream, 0, stream.available());
-          } catch(e) {}
+          } catch (e) {}
           try {
             listener.onStopRequest(this, context, Cr.NS_OK);
-          } catch(e) {}
+          } catch (e) {}
         }
       };
       Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
@@ -313,13 +313,13 @@ function testAboutModuleRegistration()
         {
           if (channel.notificationCallbacks)
             return channel.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
-        } catch(e) {}
+        } catch (e) {}
 
         try
         {
           if (channel.loadGroup && channel.loadGroup.notificationCallbacks)
             return channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
-        } catch(e) {}
+        } catch (e) {}
 
         return null;
       }
@@ -446,10 +446,10 @@ function testAboutModuleRegistration()
         request.open("GET", "about:test1", false);
         request.send(null);
         if (request.status != 200) {
-          throw(`about:test1 response had status ${request.status} - expected 200`);
+          throw (`about:test1 response had status ${request.status} - expected 200`);
         }
         if (request.responseText.indexOf("test1") == -1) {
-          throw(`about:test1 response had result ${request.responseText}`);
+          throw (`about:test1 response had result ${request.responseText}`);
         }
 
         request = new content.XMLHttpRequest();
@@ -457,16 +457,16 @@ function testAboutModuleRegistration()
         request.send(null);
 
         if (request.status != 200) {
-          throw(`about:test2 response had status ${request.status} - expected 200`);
+          throw (`about:test2 response had status ${request.status} - expected 200`);
         }
         if (request.responseText.indexOf("test2") == -1) {
-          throw(`about:test2 response had result ${request.responseText}`);
+          throw (`about:test2 response had result ${request.responseText}`);
         }
 
         sendAsyncMessage("test:result", {
           pass: true,
         });
-      } catch(e) {
+      } catch (e) {
         sendAsyncMessage("test:result", {
           pass: false,
           errorMsg: e.toString(),

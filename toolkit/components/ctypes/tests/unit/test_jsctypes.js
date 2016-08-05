@@ -7,7 +7,7 @@ try {
   // We might be running without privileges, in which case it's up to the
   // harness to give us the 'ctypes' object.
   Components.utils.import("resource://gre/modules/ctypes.jsm");
-} catch(e) {
+} catch (e) {
 }
 
 CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
@@ -661,7 +661,7 @@ function run_basic_abi_tests(library, t, name, toprimitive,
   let exn;
   try {
     ctypes.default_abi.toSource.call(null);
-  } catch(x) {
+  } catch (x) {
     exn = x;
   }
   do_check_true(!!exn); // Check that some exception was raised
@@ -2660,7 +2660,7 @@ function run_single_closure_tests(library, abi, suffix)
   var sentinelThrew = false;
   try {
   fn_v_t(function() {}, null, -1);
-  } catch(e) {
+  } catch (e) {
     sentinelThrew = true;
   }
   do_check_true(sentinelThrew);
@@ -2706,7 +2706,7 @@ function run_variadic_tests(library) {
 
   do_check_throws(function() {
     // No variadic closure callbacks allowed.
-    sum_va_type(function(){});
+    sum_va_type(function() {});
   }, Error);
 
   let count_true_va = library.declare("test_sum_va_cdecl", ctypes.default_abi, ctypes.uint8_t,

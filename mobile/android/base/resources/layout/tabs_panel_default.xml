@@ -55,7 +55,7 @@
                          android:background="@drawable/action_bar_button_inverse"
                          android:contentDescription="@string/menu">
 
-                <ImageButton
+                <ImageView
                         style="@style/UrlBar.ImageButton"
                         android:layout_width="wrap_content"
                         android:layout_height="@dimen/browser_toolbar_menu_icon_height"

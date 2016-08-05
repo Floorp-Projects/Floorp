@@ -564,7 +564,7 @@ SafeInstallOperation.prototype = {
       oldFile.moveTo(newFile.parent, newFile.leafName);
       this._installedFiles.push({ oldFile: oldFile, newFile: newFile, isMoveTo: true});
     }
-    catch(e) {
+    catch (e) {
       this.rollback();
       throw e;
     }
@@ -2019,7 +2019,7 @@ function makeSafe(aFunction) {
     try {
       return aFunction(...aArgs);
     }
-    catch(ex) {
+    catch (ex) {
       logger.warn("XPIProvider callback failed", ex);
     }
     return undefined;
@@ -6446,7 +6446,7 @@ AddonInstall.createInstall = function(aCallback, aFile) {
     let install = new AddonInstall(location, url);
     install.initLocalInstall(aCallback);
   }
-  catch(e) {
+  catch (e) {
     logger.error("Error creating install", e);
     makeSafe(aCallback)(null);
   }
@@ -7205,12 +7205,12 @@ AddonWrapper.prototype = {
       }
     }
 
-    if(this.isActive && addon.iconURL){
+    if (this.isActive && addon.iconURL) {
       icons[32] = addon.iconURL;
       icons[48] = addon.iconURL;
     }
 
-    if(this.isActive && addon.icon64URL){
+    if (this.isActive && addon.icon64URL) {
       icons[64] = addon.icon64URL;
     }
 

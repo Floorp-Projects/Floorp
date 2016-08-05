@@ -16,7 +16,7 @@ this.TelemetryLog = Object.freeze({
     var ts;
     try {
       ts = Math.floor(Telemetry.msSinceProcessStart());
-    } catch(e) {
+    } catch (e) {
       // If timestamp is screwed up, we just give up instead of making up
       // data.
       return;

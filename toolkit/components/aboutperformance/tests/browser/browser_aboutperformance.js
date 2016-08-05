@@ -272,7 +272,7 @@ add_task(function* test_close_tab() {
         if (found) {
           break;
         }
-      } while(true);
+      } while (true);
 
       if (mode == "close") {
         info(`Waiting for close`);

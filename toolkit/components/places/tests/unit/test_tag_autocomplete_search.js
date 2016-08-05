@@ -62,7 +62,7 @@ AutoCompleteInput.prototype = {
 try {
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
                 getService(Ci.nsITaggingService);
-} catch(ex) {
+} catch (ex) {
   do_throw("Could not get tagging service\n");
 }
 

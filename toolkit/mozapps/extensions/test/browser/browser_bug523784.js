@@ -82,7 +82,7 @@ function bug523784_test2(win) {
     win.addEventListener("load", function() {
       win.removeEventListener("load", arguments.callee, false);
 
-    executeSoon(function(){
+    executeSoon(function() {
       let moreInfoLink = win.document.getElementById("moreInfo");
       let cancelButton = win.document.documentElement.getButton("cancel");
       is(moreInfoLink.getAttribute("href"),

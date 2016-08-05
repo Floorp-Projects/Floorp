@@ -236,7 +236,7 @@ function clearDB() {
     file.append("places.sqlite");
     if (file.exists())
       file.remove(false);
-  } catch(ex) { dump("Exception: " + ex); }
+  } catch (ex) { dump("Exception: " + ex); }
 }
 
 

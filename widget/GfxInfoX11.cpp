@@ -299,6 +299,16 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
 
   // Don't evaluate any special cases if we're checking the downloaded blocklist.
   if (!aDriverInfo.Length()) {
+    // Blacklist software GL implementations from using layers acceleration.
+    // On the test infrastructure, we'll force-enable layers acceleration.
+    if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS &&
+        (mIsLlvmpipe || mIsOldSwrast))
+    {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      aFailureId = "FEATURE_FAILURE_SOFTWARE_GL";
+      return NS_OK;
+    }
+
     // Only check features relevant to Linux.
     if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS ||
         aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL ||

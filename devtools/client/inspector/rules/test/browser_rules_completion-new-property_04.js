@@ -41,12 +41,14 @@ add_task(function* () {
   let onSuggest = editor.once("after-suggest");
   let node = editor.popup.elements.get(bgcItem);
   EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
+
   yield onSuggest;
   is(editor.input.value, "background-color", "Correct value is autocompleted");
 
   info("Press RETURN to move the focus to a property value editor.");
-  let onModifications = waitForNEvents(view, "ruleview-changed", 2);
+  let onModifications = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+
   yield onModifications;
 
   // Getting the new value editor after focus

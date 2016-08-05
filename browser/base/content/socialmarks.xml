@@ -314,7 +314,7 @@
         <body><![CDATA[
         if (aEvent.eventPhase != aEvent.BUBBLING_PHASE)
           return;
-        switch(aEvent.type) {
+        switch (aEvent.type) {
           case "DOMLinkAdded": {
             // much of this logic is from DOMLinkHandler in browser.js, this sets
             // the presence icon for a chat user, we simply use favicon style
