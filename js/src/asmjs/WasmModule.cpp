@@ -415,15 +415,10 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
     Instance& instance = instanceObj->instance();
     const SharedTableVector& tables = instance.tables();
 
-    // Initialize tables that have a WasmTableObject first, so that this
-    // initialization can be done atomically.
-    if (tableObj && !tableObj->initialized() && !tableObj->init(cx, instanceObj))
-        return false;
-
-    // Initialize all remaining Tables that do not have objects.
+    // Ensure all tables are initialized before storing into them.
     for (const SharedTable& table : tables) {
         if (!table->initialized())
-            table->init(instance.code().segment());
+            table->init(instance);
     }
 
     // Now that all tables have been initialized, write elements.
@@ -462,14 +457,6 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
             return false;
         }
 
-        if (tableObj) {
-            MOZ_ASSERT(seg.tableIndex == 0);
-            for (uint32_t i = 0; i < seg.elems.length(); i++) {
-                if (!tableObj->setInstance(cx, offset + i, instanceObj))
-                    return false;
-            }
-        }
-
         // If profiling is already enabled in the wasm::Compartment, the new
         // instance must use the profiling entry for typed functions instead of
         // the default nonProfilingEntry.
@@ -477,10 +464,12 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
 
         uint8_t* codeBase = instance.codeBase();
         for (uint32_t i = 0; i < seg.elems.length(); i++) {
-            void* callee = codeBase + seg.elems[i];
+            void* code = codeBase + seg.elems[i];
             if (useProfilingEntry)
-                callee = codeBase + instance.code().lookupRange(callee)->funcProfilingEntry();
-            table.array()[offset + i] = callee;
+                code = codeBase + instance.code().lookupRange(code)->funcProfilingEntry();
+
+            if (!table.set(cx, offset + i, code, instance))
+                return false;
         }
 
         prevEnd = offset + seg.elems.length();

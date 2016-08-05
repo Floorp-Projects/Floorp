@@ -350,7 +350,7 @@ Instance::Instance(JSContext* cx,
     }
 
     for (size_t i = 0; i < tables_.length(); i++)
-        *addressOfTableBase(i) = tables_[i]->array();
+        *addressOfTableBase(i) = tables_[i]->base();
 }
 
 bool
@@ -406,6 +406,9 @@ Instance::tracePrivate(JSTracer* trc)
 
     for (const FuncImport& fi : metadata().funcImports)
         TraceNullableEdge(trc, &funcImportTls(fi).obj, "wasm import");
+
+    for (const SharedTable& table : tables_)
+        table->trace(trc);
 
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }
@@ -499,6 +502,12 @@ ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, double* ret)
 
     BitwiseCast(u64, ret);
     return true;
+}
+
+WasmInstanceObject*
+Instance::object() const
+{
+    return object_;
 }
 
 bool
@@ -767,7 +776,7 @@ Instance::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
         // can contain elements from multiple instances.
         MOZ_ASSERT(metadata().kind == ModuleKind::AsmJS);
 
-        void** array = table->array();
+        void** array = table->internalArray();
         uint32_t length = table->length();
         for (size_t i = 0; i < length; i++)
             UpdateEntry(*code_, newProfilingEnabled, &array[i]);
