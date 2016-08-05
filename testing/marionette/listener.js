@@ -664,8 +664,8 @@ function singleTap(id, corx, cory) {
 
   let a11y = accessibility.get(capabilities.raisesAccessibilityExceptions);
   return a11y.getAccessible(el, true).then(acc => {
-    a11y.checkVisible(acc, el, visible);
-    a11y.checkActionable(acc, el);
+    a11y.assertVisible(acc, el, visible);
+    a11y.assertActionable(acc, el);
     if (!curContainer.frame.document.createTouch) {
       actions.mouseEventsOnly = true;
     }
