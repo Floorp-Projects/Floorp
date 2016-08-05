@@ -181,12 +181,25 @@ function checkCoord(element, type, val, testname)
     is(element[type], Math.round(val), testname + " " + type);
 }
 
+function checkCoordFuzzy(element, type, val, fuzz, testname)
+{
+  if (val != -10000)
+    ok(Math.abs(element[type] - Math.round(val)) <= fuzz, testname + " " + type);
+}
+
 function checkCoords(element, type, left, top, width, height, testname)
 {
   checkCoord(element, type + "Left", left, testname);
   checkCoord(element, type + "Top", top, testname);
-  checkCoord(element, type + "Width", width, testname);
-  checkCoord(element, type + "Height", height, testname);
+
+  if (type == "scroll") {
+    // scrollWidth and scrollHeight can deviate by 1 pixel due to snapping.
+    checkCoordFuzzy(element, type + "Width", width, 1, testname);
+    checkCoordFuzzy(element, type + "Height", height, 1, testname);
+  } else {
+    checkCoord(element, type + "Width", width, testname);
+    checkCoord(element, type + "Height", height, testname);
+  }
 
   if (element instanceof SVGElement)
     return;
