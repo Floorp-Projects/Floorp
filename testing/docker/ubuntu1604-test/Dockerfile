@@ -7,6 +7,9 @@ WORKDIR /home/worker
 # %include testing/docker/recipes/tooltool.py
 ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
 
+# %include testing/docker/recipes/install-mercurial.sh
+ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
+
 # install non-build specific dependencies in a single layer
 ADD           system-setup.sh   /tmp/system-setup.sh
 RUN           bash /tmp/system-setup.sh

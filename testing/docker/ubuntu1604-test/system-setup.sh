@@ -97,10 +97,11 @@ tooltool_fetch() {
     rm manifest.tt
 }
 
+. /setup/install-mercurial.sh
+
 pip install --upgrade pip
 
 pip install virtualenv
-pip install mercurial
 
 # Install node
 tooltool_fetch <<'EOF'
