@@ -1472,6 +1472,82 @@ ContentEventHandler::GetFirstFrameHavingFlatTextInRange(nsRange* aRange)
   return FrameAndNodeOffset(firstFrame, nodePosition.mOffset);
 }
 
+ContentEventHandler::FrameRelativeRect
+ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame)
+{
+  // Note that this method should be called only with an element's frame whose
+  // open tag causes a line break.
+  MOZ_ASSERT(ShouldBreakLineBefore(aFrame->GetContent(), mRootContent));
+
+  nsIFrame* frameForFontMetrics = aFrame;
+
+  // If it's not a <br> frame, this method computes the line breaker's rect
+  // outside the frame.  Therefore, we need to compute with parent frame's
+  // font metrics in such case.
+  if (aFrame->GetType() != nsGkAtoms::brFrame && aFrame->GetParent()) {
+    frameForFontMetrics = aFrame->GetParent();
+  }
+
+  // Note that <br> element's rect is decided with line-height but we need
+  // a rect only with font height.  Additionally, <br> frame's width and
+  // height are 0 in quirks mode if it's not an empty line.  So, we cannot
+  // use frame rect information even if it's a <br> frame.
+
+  FrameRelativeRect result(aFrame);
+
+  RefPtr<nsFontMetrics> fontMetrics =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(frameForFontMetrics);
+  if (NS_WARN_IF(!fontMetrics)) {
+    return FrameRelativeRect();
+  }
+
+  const WritingMode kWritingMode = frameForFontMetrics->GetWritingMode();
+  nscoord baseline = aFrame->GetCaretBaseline();
+  if (kWritingMode.IsVertical()) {
+    if (kWritingMode.IsLineInverted()) {
+      result.mRect.x = baseline - fontMetrics->MaxDescent();
+    } else {
+      result.mRect.x = baseline - fontMetrics->MaxAscent();
+    }
+    result.mRect.width = fontMetrics->MaxHeight();
+  } else {
+    result.mRect.y = baseline - fontMetrics->MaxAscent();
+    result.mRect.height = fontMetrics->MaxHeight();
+  }
+
+  // If aFrame isn't a <br> frame, caret should be at outside of it because
+  // the line break is before its open tag.  For example, case of
+  // |<div><p>some text</p></div>|, caret is before <p> element and in <div>
+  // element, the caret should be left of top-left corner of <p> element like:
+  // 
+  // +-<div>-------------------  <div>'s border box
+  // | I +-<p>-----------------  <p>'s border box
+  // | I |
+  // | I |
+  // |   |
+  //   ^- caret
+  //
+  // However, this is a hack for unusual scenario.  This hack shouldn't be
+  // used as far as possible.
+  if (aFrame->GetType() != nsGkAtoms::brFrame) {
+    if (kWritingMode.IsVertical()) {
+      if (kWritingMode.IsLineInverted()) {
+        // above of top-left corner of aFrame.
+        result.mRect.x = 0;
+      } else {
+        // above of top-right corner of aFrame.
+        result.mRect.x = aFrame->GetRect().XMost() - result.mRect.width;
+      }
+      result.mRect.y = -mPresContext->AppUnitsPerDevPixel();
+    } else {
+      // left of top-left corner of aFrame.
+      result.mRect.x = -mPresContext->AppUnitsPerDevPixel();
+      result.mRect.y = 0;
+    }
+  }
+  return result;
+}
+
 nsresult
 ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 {
@@ -1481,6 +1557,8 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
   }
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
+  const uint32_t kBRLength = GetBRLength(lineBreakType);
+
   RefPtr<nsRange> range = new nsRange(mRootContent);
 
   LayoutDeviceIntRect rect;
@@ -1493,9 +1571,17 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       return rv;
     }
 
+    // TODO: If the range is collapsed, that means offset reaches to the end
+    //       of the contents.  We need to do something here.
+
     // get the starting frame
     FrameAndNodeOffset firstFrame = GetFirstFrameHavingFlatTextInRange(range);
     if (NS_WARN_IF(!firstFrame.IsValid())) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsIContent* firstContent = firstFrame.mFrame->GetContent();
+    if (NS_WARN_IF(!firstContent)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -1507,13 +1593,25 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
     }
 
     AutoTArray<nsRect, 16> charRects;
-    rv = firstFrame->GetCharacterRectsInRange(firstFrame.mStartOffsetInNode,
-                                              kEndOffset - offset, charRects);
-    if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(charRects.IsEmpty())) {
-      return rv;
+
+    bool isLineBreaker = ShouldBreakLineBefore(firstContent, mRootContent);
+    if (isLineBreaker) {
+      // TODO: If the frame isn't <br> and there was previous text frame or
+      //       <br>, we can set the rect to caret rect at the end.  Currently,
+      //       this sets the rect to caret rect at the start of the node.
+      FrameRelativeRect brRect = GetLineBreakerRectBefore(firstFrame);
+      charRects.AppendElement(brRect.RectRelativeTo(firstFrame));
+    } else {
+      rv = firstFrame->GetCharacterRectsInRange(firstFrame.mStartOffsetInNode,
+                                                kEndOffset - offset, charRects);
+      if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(charRects.IsEmpty())) {
+        // XXX: If the node isn't a text node and does not cause a line break,
+        //      we need to recompute with new range, but how?
+        return rv;
+      }
     }
 
-    for (size_t i = 0; i < charRects.Length(); i++) {
+    for (size_t i = 0; i < charRects.Length() && offset < kEndOffset; i++) {
       nsRect charRect = charRects[i];
       charRect.x += frameRect.x;
       charRect.y += frameRect.y;
@@ -1524,6 +1622,25 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       // return non-empty rect.
       EnsureNonEmptyRect(rect);
 
+      aEvent->mReply.mRectArray.AppendElement(rect);
+      offset++;
+
+      // If it's not a line breaker or the line breaker length is same as
+      // XP line breaker's, we need to do nothing for current character.
+      if (!isLineBreaker || kBRLength == 1) {
+        continue;
+      }
+
+      MOZ_ASSERT(kBRLength == 2);
+
+      // If it's already reached the end of query range, we don't need to do
+      // anymore.
+      if (offset == kEndOffset) {
+        break;
+      }
+
+      // TODO: If the query range is stated between a line breaker, i.e., \r[\n,
+      //       We shouldn't append a rect here.
       aEvent->mReply.mRectArray.AppendElement(rect);
       offset++;
     }
@@ -2293,6 +2410,34 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
     false, nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis());
   aEvent->mSucceeded = true;
   return NS_OK;
+}
+
+nsRect
+ContentEventHandler::FrameRelativeRect::RectRelativeTo(
+                                          nsIFrame* aDestFrame) const
+{
+  if (!mBaseFrame || NS_WARN_IF(!aDestFrame)) {
+    return nsRect();
+  }
+
+  if (NS_WARN_IF(aDestFrame->PresContext() != mBaseFrame->PresContext())) {
+    return nsRect();
+  }
+
+  if (aDestFrame == mBaseFrame) {
+    return mRect;
+  }
+
+  nsIFrame* rootFrame = mBaseFrame->PresContext()->PresShell()->GetRootFrame();
+  nsRect baseFrameRectInRootFrame =
+    nsLayoutUtils::TransformFrameRectToAncestor(mBaseFrame, nsRect(),
+                                                rootFrame);
+  nsRect destFrameRectInRootFrame =
+    nsLayoutUtils::TransformFrameRectToAncestor(aDestFrame, nsRect(),
+                                                rootFrame);
+  nsPoint difference =
+    destFrameRectInRootFrame.TopLeft() - baseFrameRectInRootFrame.TopLeft();
+  return mRect - difference;
 }
 
 } // namespace mozilla
