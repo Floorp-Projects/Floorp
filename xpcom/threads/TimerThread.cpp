@@ -621,7 +621,6 @@ TimerThread::AddTimerInternal(nsTimerImpl* aTimer)
     return -1;
   }
 
-  aTimer->mArmed = true;
   NS_ADDREF(aTimer);
 
 #ifdef MOZ_TASK_TRACER
@@ -652,8 +651,6 @@ TimerThread::ReleaseTimerInternal(nsTimerImpl* aTimer)
     // copied to a local array before releasing in shutdown
     mMonitor.AssertCurrentThreadOwns();
   }
-  // Order is crucial here -- see nsTimerImpl::Release.
-  aTimer->mArmed = false;
   NS_RELEASE(aTimer);
 }
 

@@ -139,9 +139,6 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
   mClosure(nullptr),
   mName(nsTimerImpl::Nothing),
   mCallbackType(CallbackType::Unknown),
-  mFiring(false),
-  mArmed(false),
-  mCanceled(false),
   mGeneration(0),
   mDelay(0),
   mITimer(aTimer)
@@ -219,7 +216,6 @@ nsTimerImpl::InitCommon(uint32_t aDelay, uint32_t aType)
   }
 
   gThread->RemoveTimer(this);
-  mCanceled = false;
   mTimeout = TimeStamp();
   mGeneration = gGenerator++;
 
@@ -316,7 +312,6 @@ nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelay, uint32_t aType)
 NS_IMETHODIMP
 nsTimerImpl::Cancel()
 {
-  mCanceled = true;
 
   if (gThread) {
     gThread->RemoveTimer(this);
@@ -442,7 +437,7 @@ nsTimerImpl::SetTarget(nsIEventTarget* aTarget)
 void
 nsTimerImpl::Fire()
 {
-  if (mCanceled) {
+  if (mCallbackType == CallbackType::Unknown) {
     return;
   }
 
