@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test capturing of fields outside of a form due to navigation</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="application/javascript;version=1.8">
+const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerContent.jsm");
+const { LoginManagerContent, FormLikeFactory } = LMCBackstagePass;
+
+let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+
+let loadPromise = new Promise(resolve => {
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("loginFrame").addEventListener("load", (evt) => {
+      resolve();
+    });
+  });
+});
+
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [
+      ["signon.formlessCapture.enabled", true],
+    ],
+  });
+
+  info("Waiting for page and frame loads");
+  yield loadPromise;
+
+  yield loadRecipes({
+    siteRecipes: [{
+      hosts: ["test1.mochi.test:8888"],
+      usernameSelector: "input[name='recipeuname']",
+      passwordSelector: "input[name='recipepword']",
+    }],
+  });
+});
+
+const DEFAULT_ORIGIN = "http://test1.mochi.test:8888";
+const SCRIPTS = {
+  PUSHSTATE: `history.pushState({}, "Pushed state", "?pushed");`,
+  WINDOW_LOCATION: `window.location = "data:text/html;charset=utf-8,window.location";`,
+};
+const TESTCASES = [
+  {
+    // Inputs
+    document: `<input type=password value="pass1">`,
+
+    // Expected outputs similar to RemoteLogins:onFormSubmit
+    hostname: DEFAULT_ORIGIN,
+    formSubmitURL: DEFAULT_ORIGIN,
+    usernameFieldValue: null,
+    newPasswordFieldValue: "pass1",
+    oldPasswordFieldValue: null,
+  },
+  {
+    document: `<input value="user1">
+      <input type=password value="pass1">`,
+
+    hostname: DEFAULT_ORIGIN,
+    formSubmitURL: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass1",
+    oldPasswordFieldValue: null,
+  },
+  {
+    document: `<input value="user1">
+      <input type=password value="pass1">
+      <input type=password value="pass2">`,
+
+    hostname: DEFAULT_ORIGIN,
+    formSubmitURL: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass2",
+    oldPasswordFieldValue: "pass1",
+  },
+  {
+    document: `<input value="user1">
+      <input type=password value="pass1">
+      <input type=password value="pass2">
+      <input type=password value="pass2">`,
+
+    hostname: DEFAULT_ORIGIN,
+    formSubmitURL: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass2",
+    oldPasswordFieldValue: "pass1",
+  },
+  {
+    document: `<input value="user1">
+      <input type=password value="user2" form="form1">
+      <input type=password value="pass1">
+      <form id="form1">
+        <input value="user3">
+        <input type=password value="pass2">
+      </form>`,
+
+    hostname: DEFAULT_ORIGIN,
+    formSubmitURL: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass1",
+    oldPasswordFieldValue: null,
+  },
+  {
+    document: `<!-- recipe field override -->
+      <input name="recipeuname" value="username from recipe">
+      <input value="default field username">
+      <input type=password value="pass1">
+      <input name="recipepword" type=password value="pass2">`,
+
+    hostname: DEFAULT_ORIGIN,
+    formSubmitURL: DEFAULT_ORIGIN,
+    usernameFieldValue: "username from recipe",
+    newPasswordFieldValue: "pass2",
+    oldPasswordFieldValue: null,
+  },
+];
+
+function getSubmitMessage() {
+  info("getSubmitMessage");
+  return new Promise((resolve, reject) => {
+    chromeScript.addMessageListener("formSubmissionProcessed", function processed(...args) {
+      info("got formSubmissionProcessed");
+      chromeScript.removeMessageListener("formSubmissionProcessed", processed);
+      resolve(...args);
+    });
+  });
+}
+
+add_task(function* test() {
+  let loginFrame = document.getElementById("loginFrame");
+
+  for (let tc of TESTCASES) {
+    for (let scriptName of Object.keys(SCRIPTS)) {
+      info("Starting testcase with script " + scriptName + ": " + JSON.stringify(tc));
+      let loadedPromise = new Promise((resolve) => {
+        loginFrame.addEventListener("load", function frameLoaded() {
+          loginFrame.removeEventListener("load", frameLoaded);
+          resolve();
+        });
+      });
+      loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
+      yield loadedPromise;
+
+      let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
+      frameDoc.documentElement.innerHTML = tc.document;
+      // Wait for the form to be processed before trying to submit.
+      yield promiseFormsProcessed();
+      let processedPromise = getSubmitMessage();
+      info("Running " + scriptName + " script to cause a submission");
+      frameDoc.defaultView.eval(SCRIPTS[scriptName]);
+
+      let submittedResult = yield processedPromise;
+
+      // Check data sent via RemoteLogins:onFormSubmit
+      is(submittedResult.hostname, tc.hostname, "Check hostname");
+      is(submittedResult.formSubmitURL, tc.formSubmitURL, "Check formSubmitURL");
+
+      if (tc.usernameFieldValue === null) {
+        is(submittedResult.usernameField, tc.usernameFieldValue, "Check usernameField");
+      } else {
+        is(submittedResult.usernameField.value, tc.usernameFieldValue, "Check usernameField");
+      }
+
+      is(submittedResult.newPasswordField.value, tc.newPasswordFieldValue, "Check newPasswordFieldValue");
+
+      if (tc.oldPasswordFieldValue === null) {
+        is(submittedResult.oldPasswordField, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
+      } else {
+        is(submittedResult.oldPasswordField.value, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
+      }
+    }
+  }
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="loginFrame" src="http://test1.mochi.test:8888/tests/toolkit/components/passwordmgr/test/mochitest/blank.html"></iframe>
+</div>
+<pre id="test"></pre>
+</body>
+</html>
