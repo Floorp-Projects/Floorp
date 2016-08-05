@@ -419,8 +419,8 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                        -1,
                                        picture);
     } else {
-      v = VideoData::CreateAndCopyData(mInfo.mVideo,
-                                       mDecoder->GetImageContainer(),
+      v = VideoData::CreateAndCopyIntoTextureClient(
+                                       mInfo.mVideo,
                                        pos,
                                        frame.mTimeUs,
                                        1, // We don't know the duration.
