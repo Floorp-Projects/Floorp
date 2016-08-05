@@ -395,6 +395,9 @@ ContentEventHandler::QueryContentRect(nsIContent* aContent,
 
   aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       resultRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
+  // Returning empty rect may cause native IME confused, let's make sure to
+  // return non-empty rect.
+  EnsureNonEmptyRect(aEvent->mReply.mRect);
   aEvent->mSucceeded = true;
 
   return NS_OK;
@@ -1387,6 +1390,22 @@ ContentEventHandler::OnQueryTextContent(WidgetQueryContentEvent* aEvent)
   return NS_OK;
 }
 
+void
+ContentEventHandler::EnsureNonEmptyRect(nsRect& aRect) const
+{
+  // See the comment in ContentEventHandler.h why this doesn't set them to
+  // one device pixel.
+  aRect.height = std::max(1, aRect.height);
+  aRect.width = std::max(1, aRect.width);
+}
+
+void
+ContentEventHandler::EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const
+{
+  aRect.height = std::max(1, aRect.height);
+  aRect.width = std::max(1, aRect.width);
+}
+
 ContentEventHandler::NodePosition
 ContentEventHandler::GetNodePositionHavingFlatText(
                        const NodePosition& aNodePosition)
@@ -1501,10 +1520,9 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
       rect = LayoutDeviceIntRect::FromUnknownRect(
                charRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
-
-      // Ensure at least 1px width and height for avoiding empty rect.
-      rect.height = std::max(1, rect.height);
-      rect.width = std::max(1, rect.width);
+      // Returning empty rect may cause native IME confused, let's make sure to
+      // return non-empty rect.
+      EnsureNonEmptyRect(rect);
 
       aEvent->mReply.mRectArray.AppendElement(rect);
       offset++;
@@ -1557,14 +1575,16 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   nsRect frameRect = rect;
   nsPoint ptOffset;
   firstFrame->GetPointFromOffset(startNodePosition.mOffset, &ptOffset);
-  // minus 1 to avoid creating an empty rect
   if (firstFrame->GetWritingMode().IsVertical()) {
-    rect.y += ptOffset.y - 1;
-    rect.height -= ptOffset.y - 1;
+    rect.y += ptOffset.y;
+    rect.height -= ptOffset.y;
   } else {
-    rect.x += ptOffset.x - 1;
-    rect.width -= ptOffset.x - 1;
+    rect.x += ptOffset.x;
+    rect.width -= ptOffset.x;
   }
+  // UnionRect() requires non-empty rect.  So, let's make sure to get non-emtpy
+  // rect from the first frame.
+  EnsureNonEmptyRect(rect);
 
   // get the ending frame
   NodePosition endNodePosition =
@@ -1600,6 +1620,9 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
     frameRect.SetRect(nsPoint(0, 0), frame->GetRect().Size());
     rv = ConvertToRootRelativeOffset(frame, frameRect);
     NS_ENSURE_SUCCESS(rv, rv);
+    // UnionRect() requires non-empty rect.  So, let's make sure to get
+    // non-emtpy rect from the frame.
+    EnsureNonEmptyRect(frameRect);
     if (frame != lastFrame) {
       // not last frame, so just add rect to previous result
       rect.UnionRect(rect, frameRect);
@@ -1608,12 +1631,14 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
 
   // get the ending frame rect
   lastFrame->GetPointFromOffset(endNodePosition.mOffset, &ptOffset);
-  // minus 1 to avoid creating an empty rect
   if (lastFrame->GetWritingMode().IsVertical()) {
-    frameRect.height -= lastFrame->GetRect().height - ptOffset.y - 1;
+    frameRect.height -= lastFrame->GetRect().height - ptOffset.y;
   } else {
-    frameRect.width -= lastFrame->GetRect().width - ptOffset.x - 1;
+    frameRect.width -= lastFrame->GetRect().width - ptOffset.x;
   }
+  // UnionRect() requires non-empty rect.  So, let's make sure to get non-empty
+  // rect from the last frame.
+  EnsureNonEmptyRect(frameRect);
 
   if (firstFrame == lastFrame) {
     rect.IntersectRect(rect, frameRect);
@@ -1622,6 +1647,9 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   }
   aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
+  // Returning empty rect may cause native IME confused, let's make sure to
+  // return non-empty rect.
+  EnsureNonEmptyRect(aEvent->mReply.mRect);
   aEvent->mReply.mWritingMode = lastFrame->GetWritingMode();
   aEvent->mSucceeded = true;
   return NS_OK;
@@ -1670,6 +1698,9 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
           caretFrame->PresContext()->AppUnitsPerDevPixel();
         aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
           caretRect.ToOutsidePixels(appUnitsPerDevPixel));
+        // Returning empty rect may cause native IME confused, let's make sure
+        // to return non-empty rect.
+        EnsureNonEmptyRect(aEvent->mReply.mRect);
         aEvent->mReply.mWritingMode = caretFrame->GetWritingMode();
         aEvent->mReply.mOffset = aEvent->mInput.mOffset;
         aEvent->mSucceeded = true;
@@ -1721,13 +1752,9 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
 
   aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
-  // If the caret rect is empty, let's make it non-empty rect.
-  if (!aEvent->mReply.mRect.width) {
-    aEvent->mReply.mRect.width = 1;
-  }
-  if (!aEvent->mReply.mRect.height) {
-    aEvent->mReply.mRect.height = 1;
-  }
+  // Returning empty rect may cause native IME confused, let's make sure to
+  // return non-empty rect.
+  EnsureNonEmptyRect(aEvent->mReply.mRect);
   aEvent->mSucceeded = true;
   return NS_OK;
 }
