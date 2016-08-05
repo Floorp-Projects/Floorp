@@ -221,8 +221,11 @@ _ContextualIdentityService.prototype = {
                        FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
       try {
         let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-        this._identities = json.decodeFromStream(inputStream,
-                                                 inputStream.available());
+        let data = json.decodeFromStream(inputStream,
+                                         inputStream.available());
+        this._identities = data.identities;
+        this._lastUserContextId = data.lastUserContextId;
+
         this._dataReady = true;
       } finally {
         inputStream.close();
