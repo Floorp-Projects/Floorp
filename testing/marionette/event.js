@@ -1279,3 +1279,18 @@ event.sendKeysToElement = function(
     throw new ElementNotVisibleError("Element is not visible");
   }
 };
+
+event.sendEvent = function(eventType, el, modifiers = {}, opts = {}) {
+  opts.canBubble = opts.canBubble || true;
+
+  let doc = el.ownerDocument || el.document;
+  let ev = doc.createEvent("Event");
+
+  ev.shiftKey = modifiers["shift"];
+  ev.metaKey = modifiers["meta"];
+  ev.altKey = modifiers["alt"];
+  ev.ctrlKey = modifiers["ctrl"];
+
+  ev.initEvent(eventType, opts.canBubble, true);
+  el.dispatchEvent(ev);
+};
