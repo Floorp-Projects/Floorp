@@ -48,6 +48,8 @@ public:
   static nsCString RestyleHintToString(nsRestyleHint aHint);
 
 #ifdef DEBUG
+  static nsCString ChangeHintToString(nsChangeHint aHint);
+
   /**
    * DEBUG ONLY method to verify integrity of style tree versus frame tree
    */
