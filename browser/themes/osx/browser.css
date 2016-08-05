@@ -3116,11 +3116,11 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 #ctrlTab-panel {
   -moz-appearance: none;
   -moz-window-shadow: none;
-  background: rgba(27%,27%,27%,.7);
+  background: rgba(33%,33%,33%,.85);
   color: white;
   border-style: none;
   padding: 20px 10px 10px;
-  text-shadow: 0 0 1px rgb(27%,27%,27%), 0 0 2px rgb(27%,27%,27%);
+  text-shadow: 0 0 1px rgb(12%,12%,12%), 0 0 2px rgb(12%,12%,12%);
 }
 
 .ctrlTab-favicon[src] {
