@@ -145,16 +145,16 @@ public:
   // for use when logging timer firings.
   Name mName;
 
-  // These members are set by Init and never reset.
-  CallbackType          mCallbackType;
-
   // These members are set by the initiating thread, when the timer's type is
   // changed and during the period where it fires on that thread.
+  CallbackType          mCallbackType;
   uint8_t               mType;
 
   // The generation number of this timer, re-generated each time the timer is
   // initialized so one-shot timers can be canceled and re-initialized by the
   // arming thread without any bad race conditions.
+  // This is only modified on the target thread, and only after removing the
+  // timer from the TimerThread. Is set on the arming thread, initially.
   int32_t               mGeneration;
 
   uint32_t              mDelay;
