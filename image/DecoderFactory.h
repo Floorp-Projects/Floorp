@@ -57,10 +57,9 @@ public:
    *                      from.
    * @param aIntrinsicSize The intrinsic size of the image, normally obtained
    *                       during the metadata decode.
-   * @param aTargetSize If not Nothing(), the target size which the image should
-   *                    be scaled to during decoding. It's an error to specify
-   *                    a target size for a decoder type which doesn't support
-   *                    downscale-during-decode.
+   * @param aOutputSize The output size for the decoder. If this is smaller than
+   *                    the intrinsic size, the decoder will downscale the
+   *                    image.
    * @param aDecoderFlags Flags specifying the behavior of this decoder.
    * @param aSurfaceFlags Flags specifying the type of output this decoder
    *                      should produce.
@@ -72,7 +71,7 @@ public:
                 NotNull<RasterImage*> aImage,
                 NotNull<SourceBuffer*> aSourceBuffer,
                 const gfx::IntSize& aIntrinsicSize,
-                const Maybe<gfx::IntSize>& aTargetSize,
+                const gfx::IntSize& aOutputSize,
                 DecoderFlags aDecoderFlags,
                 SurfaceFlags aSurfaceFlags,
                 int aSampleSize);
@@ -150,17 +149,17 @@ public:
    * @param aType Which type of decoder to create - JPEG, PNG, etc.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
-   * @param aTargetSize If not Nothing(), the target size which the image should
-   *                    be scaled to during decoding. It's an error to specify
-   *                    a target size for a decoder type which doesn't support
-   *                    downscale-during-decode.
+   * @param aOutputSize If Some(), the output size for the decoder. If this is
+   *                    smaller than the intrinsic size, the decoder will
+   *                    downscale the image. If Nothing(), the output size will
+   *                    be the intrinsic size.
    * @param aSurfaceFlags Flags specifying the type of output this decoder
    *                      should produce.
    */
   static already_AddRefed<Decoder>
   CreateAnonymousDecoder(DecoderType aType,
                          NotNull<SourceBuffer*> aSourceBuffer,
-                         const Maybe<gfx::IntSize>& aTargetSize,
+                         const Maybe<gfx::IntSize>& aOutputSize,
                          SurfaceFlags aSurfaceFlags);
 
   /**
