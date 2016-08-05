@@ -3073,6 +3073,8 @@ var SessionStoreInternal = {
 
     this._setWindowStateReady(aWindow);
 
+    this._sendWindowRestoredNotification(aWindow);
+
     Services.obs.notifyObservers(aWindow, NOTIFY_SINGLE_WINDOW_RESTORED, "");
 
     this._sendRestoreCompletedNotifications();
@@ -3255,7 +3257,7 @@ var SessionStoreInternal = {
     }
 
     if (tabData.lastAccessed) {
-      tab.lastAccessed = tabData.lastAccessed;
+      tab.updateLastAccessed(tabData.lastAccessed);
     }
 
     if ("attributes" in tabData) {
@@ -4095,6 +4097,17 @@ var SessionStoreInternal = {
   _sendWindowStateEvent: function ssi_sendWindowStateEvent(aWindow, aType) {
     let event = aWindow.document.createEvent("Events");
     event.initEvent("SSWindowState" + aType, true, false);
+    aWindow.dispatchEvent(event);
+  },
+
+  /**
+   * Dispatch the SSWindowRestored event for the given window.
+   * @param aWindow
+   *        The window which has been restored
+   */
+  _sendWindowRestoredNotification(aWindow) {
+    let event = aWindow.document.createEvent("Events");
+    event.initEvent("SSWindowRestored", true, false);
     aWindow.dispatchEvent(event);
   },
 

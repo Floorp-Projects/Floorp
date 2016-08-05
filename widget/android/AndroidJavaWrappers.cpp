@@ -26,27 +26,12 @@ jfieldID AndroidGeckoEvent::jToolTypes = 0;
 jfieldID AndroidGeckoEvent::jPointRadii = 0;
 jfieldID AndroidGeckoEvent::jOrientations = 0;
 jfieldID AndroidGeckoEvent::jXField = 0;
-jfieldID AndroidGeckoEvent::jYField = 0;
-jfieldID AndroidGeckoEvent::jZField = 0;
-jfieldID AndroidGeckoEvent::jWField = 0;
-jfieldID AndroidGeckoEvent::jDistanceField = 0;
-jfieldID AndroidGeckoEvent::jRectField = 0;
 
 jfieldID AndroidGeckoEvent::jCharactersField = 0;
 jfieldID AndroidGeckoEvent::jCharactersExtraField = 0;
-jfieldID AndroidGeckoEvent::jDataField = 0;
 jfieldID AndroidGeckoEvent::jMetaStateField = 0;
-jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
 jfieldID AndroidGeckoEvent::jPointerIndexField = 0;
-jfieldID AndroidGeckoEvent::jByteBufferField = 0;
-jfieldID AndroidGeckoEvent::jWidthField = 0;
-jfieldID AndroidGeckoEvent::jHeightField = 0;
-jfieldID AndroidGeckoEvent::jIDField = 0;
-jfieldID AndroidGeckoEvent::jGamepadButtonField = 0;
-jfieldID AndroidGeckoEvent::jGamepadButtonPressedField = 0;
-jfieldID AndroidGeckoEvent::jGamepadButtonValueField = 0;
-jfieldID AndroidGeckoEvent::jGamepadValuesField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -95,26 +80,12 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jToolTypes = geckoEvent.getField("mToolTypes", "[I");
     jPointRadii = geckoEvent.getField("mPointRadii", "[Landroid/graphics/Point;");
     jXField = geckoEvent.getField("mX", "D");
-    jYField = geckoEvent.getField("mY", "D");
-    jZField = geckoEvent.getField("mZ", "D");
-    jWField = geckoEvent.getField("mW", "D");
-    jRectField = geckoEvent.getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = geckoEvent.getField("mCharacters", "Ljava/lang/String;");
     jCharactersExtraField = geckoEvent.getField("mCharactersExtra", "Ljava/lang/String;");
-    jDataField = geckoEvent.getField("mData", "Ljava/lang/String;");
     jMetaStateField = geckoEvent.getField("mMetaState", "I");
-    jFlagsField = geckoEvent.getField("mFlags", "I");
     jCountField = geckoEvent.getField("mCount", "I");
     jPointerIndexField = geckoEvent.getField("mPointerIndex", "I");
-    jByteBufferField = geckoEvent.getField("mBuffer", "Ljava/nio/ByteBuffer;");
-    jWidthField = geckoEvent.getField("mWidth", "I");
-    jHeightField = geckoEvent.getField("mHeight", "I");
-    jIDField = geckoEvent.getField("mID", "I");
-    jGamepadButtonField = geckoEvent.getField("mGamepadButton", "I");
-    jGamepadButtonPressedField = geckoEvent.getField("mGamepadButtonPressed", "Z");
-    jGamepadButtonValueField = geckoEvent.getField("mGamepadButtonValue", "F");
-    jGamepadValuesField = geckoEvent.getField("mGamepadValues", "[F");
 }
 
 void
@@ -211,20 +182,6 @@ AndroidGeckoEvent::ReadStringArray(nsTArray<nsString> &array,
 }
 
 void
-AndroidGeckoEvent::ReadRectField(JNIEnv *jenv)
-{
-    AndroidRect r(jenv, jenv->GetObjectField(wrappedObject(), jRectField));
-    if (!r.isNull()) {
-        mRect.SetRect(r.Left(),
-                      r.Top(),
-                      r.Width(),
-                      r.Height());
-    } else {
-        mRect.SetEmpty();
-    }
-}
-
-void
 AndroidGeckoEvent::ReadStringFromJString(nsString &aString, JNIEnv *jenv,
                                          jstring s)
 {
@@ -250,19 +207,6 @@ AndroidGeckoEvent::ReadCharactersExtraField(JNIEnv *jenv)
 {
     jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jCharactersExtraField);
     ReadStringFromJString(mCharactersExtra, jenv, s);
-}
-
-void
-AndroidGeckoEvent::ReadDataField(JNIEnv *jenv)
-{
-    jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jDataField);
-    ReadStringFromJString(mData, jenv, s);
-}
-
-void
-AndroidGeckoEvent::UnionRect(nsIntRect const& aRect)
-{
-    mRect = aRect.Union(mRect);
 }
 
 void
@@ -307,79 +251,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         case VIEWPORT: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);
-            break;
-        }
-
-        case ZOOMEDVIEW: {
-            mX = jenv->GetDoubleField(jobj, jXField);
-            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-            ReadPointArray(mPoints, jenv, jPoints, 2);
-            mByteBuffer = new RefCountedJavaObject(jenv, jenv->GetObjectField(jobj, jByteBufferField));
-            break;
-        }
-
-        case CALL_OBSERVER: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            ReadDataField(jenv);
-            break;
-        }
-
-        case REMOVE_OBSERVER: {
-            ReadCharactersField(jenv);
-            break;
-        }
-
-        case LOW_MEMORY: {
-            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-            break;
-        }
-
-        case TELEMETRY_HISTOGRAM_ADD: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            mCount = jenv->GetIntField(jobj, jCountField);
-            break;
-        }
-
-        case TELEMETRY_UI_SESSION_START: {
-            ReadCharactersField(jenv);
-            mTime = jenv->GetLongField(jobj, jTimeField);
-            break;
-        }
-
-        case TELEMETRY_UI_SESSION_STOP: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            mTime = jenv->GetLongField(jobj, jTimeField);
-            break;
-        }
-
-        case TELEMETRY_UI_EVENT: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            ReadDataField(jenv);
-            mTime = jenv->GetLongField(jobj, jTimeField);
-            break;
-        }
-
-        case GAMEPAD_ADDREMOVE: {
-            mID = jenv->GetIntField(jobj, jIDField);
-            break;
-        }
-
-        case GAMEPAD_DATA: {
-            mID = jenv->GetIntField(jobj, jIDField);
-            if (mAction == ACTION_GAMEPAD_BUTTON) {
-                mGamepadButton = jenv->GetIntField(jobj, jGamepadButtonField);
-                mGamepadButtonPressed = jenv->GetBooleanField(jobj, jGamepadButtonPressedField);
-                mGamepadButtonValue = jenv->GetFloatField(jobj, jGamepadButtonValueField);
-            } else if (mAction == ACTION_GAMEPAD_AXES) {
-                // Flags is a bitfield of valid entries in gamepadvalues
-                mFlags = jenv->GetIntField(jobj, jFlagsField);
-                mCount = jenv->GetIntField(jobj, jCountField);
-                ReadFloatArray(mGamepadValues, jenv, jGamepadValuesField, mCount);
-            }
             break;
         }
 
