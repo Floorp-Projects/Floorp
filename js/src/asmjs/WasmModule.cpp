@@ -489,6 +489,32 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
     return true;
 }
 
+bool
+Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const
+{
+    MOZ_ASSERT(funcImports.length() == metadata_->funcImports.length());
+
+    if (metadata().isAsmJS())
+        return true;
+
+    for (size_t i = 0; i < metadata_->funcImports.length(); i++) {
+        HandleFunction f = funcImports[i];
+        if (!IsExportedFunction(f) || ExportedFunctionToInstance(f).isAsmJS())
+            continue;
+
+        uint32_t funcIndex = ExportedFunctionToIndex(f);
+        Instance& instance = ExportedFunctionToInstance(f);
+        const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
+
+        if (funcExport.sig() != metadata_->funcImports[i].sig()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // asm.js module instantiation supplies its own buffer, but for wasm, create and
 // initialize the buffer if one is requested. Either way, the buffer is wrapped
 // in a WebAssembly.Memory object which is what the Instance stores.
@@ -690,7 +716,8 @@ Module::instantiate(JSContext* cx,
                     HandleObject instanceProto,
                     MutableHandleWasmInstanceObject instanceObj) const
 {
-    MOZ_ASSERT(funcImports.length() == metadata_->funcImports.length());
+    if (!instantiateFunctions(cx, funcImports))
+        return false;
 
     RootedWasmMemoryObject memory(cx, memoryImport);
     if (!instantiateMemory(cx, &memory))

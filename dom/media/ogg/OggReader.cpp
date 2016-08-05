@@ -25,6 +25,7 @@ extern "C" {
 #include "gfx2DGlue.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
+#include "VideoFrameContainer.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::media;
@@ -880,15 +881,16 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
     b.mPlanes[i].mOffset = b.mPlanes[i].mSkip = 0;
   }
 
-  RefPtr<VideoData> v = VideoData::Create(mInfo.mVideo,
-                                            mDecoder->GetImageContainer(),
-                                            mResource.Tell(),
-                                            time,
-                                            endTime - time,
-                                            b,
-                                            isKeyframe,
-                                            aPacket->granulepos,
-                                            mPicture);
+  RefPtr<VideoData> v =
+    VideoData::CreateAndCopyData(mInfo.mVideo,
+                                 mDecoder->GetImageContainer(),
+                                 mResource.Tell(),
+                                 time,
+                                 endTime - time,
+                                 b,
+                                 isKeyframe,
+                                 aPacket->granulepos,
+                                 mPicture);
   if (!v) {
     // There may be other reasons for this error, but for
     // simplicity just assume the worst case: out of memory.

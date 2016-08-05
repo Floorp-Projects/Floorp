@@ -18,9 +18,12 @@
 #include "mozilla/gfx/2D.h"
 
 #include "imgFrame.h"
+#include "SurfaceCache.h"
 
 namespace mozilla {
 namespace image {
+
+class CachedSurface;
 
 /**
  * An interface for objects which can either store a surface or dynamically
@@ -37,28 +40,42 @@ public:
   /// @return a drawable reference to a surface.
   virtual DrawableFrameRef DrawableRef() = 0;
 
-  /// @return true if this ISurfaceProvider is acting as a placeholder, which is
-  /// to say that it doesn't have a surface and hence can't return a
-  /// non-empty DrawableFrameRef yet, but it will be able to in the future.
-  virtual bool IsPlaceholder() const = 0;
-
   /// @return true if DrawableRef() will return a completely decoded surface.
   virtual bool IsFinished() const = 0;
-
-  /// @return true if this ISurfaceProvider is locked. (@see SetLocked())
-  virtual bool IsLocked() const = 0;
-
-  /// If @aLocked is true, hint that this ISurfaceProvider is in use and it
-  /// should avoid releasing its resources.
-  virtual void SetLocked(bool aLocked) = 0;
 
   /// @return the number of bytes of memory this ISurfaceProvider is expected to
   /// require. Optimizations may result in lower real memory usage. Trivial
   /// overhead is ignored.
   virtual size_t LogicalSizeInBytes() const = 0;
 
+  /// @return the availability state of this ISurfaceProvider, which indicates
+  /// whether DrawableRef() could successfully return a surface. Should only be
+  /// called from SurfaceCache code as it relies on SurfaceCache for
+  /// synchronization.
+  AvailabilityState& Availability() { return mAvailability; }
+  const AvailabilityState& Availability() const { return mAvailability; }
+
 protected:
+  explicit ISurfaceProvider(AvailabilityState aAvailability)
+    : mAvailability(aAvailability)
+  { }
+
   virtual ~ISurfaceProvider() { }
+
+  /// @return true if this ISurfaceProvider is locked. (@see SetLocked())
+  /// Should only be called from SurfaceCache code as it relies on SurfaceCache
+  /// for synchronization.
+  virtual bool IsLocked() const = 0;
+
+  /// If @aLocked is true, hint that this ISurfaceProvider is in use and it
+  /// should avoid releasing its resources. Should only be called from
+  /// SurfaceCache code as it relies on SurfaceCache for synchronization.
+  virtual void SetLocked(bool aLocked) = 0;
+
+private:
+  friend class CachedSurface;
+
+  AvailabilityState mAvailability;
 };
 
 /**
@@ -70,12 +87,20 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SimpleSurfaceProvider, override)
 
   explicit SimpleSurfaceProvider(NotNull<imgFrame*> aSurface)
-    : mSurface(aSurface)
+    : ISurfaceProvider(AvailabilityState::StartAvailable())
+    , mSurface(aSurface)
   { }
 
   DrawableFrameRef DrawableRef() override { return mSurface->DrawableRef(); }
-  bool IsPlaceholder() const override { return false; }
   bool IsFinished() const override { return mSurface->IsFinished(); }
+
+  size_t LogicalSizeInBytes() const override
+  {
+    gfx::IntSize size = mSurface->GetSize();
+    return size.width * size.height * mSurface->GetBytesPerPixel();
+  }
+
+protected:
   bool IsLocked() const override { return bool(mLockRef); }
 
   void SetLocked(bool aLocked) override
@@ -88,12 +113,6 @@ public:
     // any volatile buffer it owns in memory.
     mLockRef = aLocked ? mSurface->DrawableRef()
                        : DrawableFrameRef();
-  }
-
-  size_t LogicalSizeInBytes() const override
-  {
-    gfx::IntSize size = mSurface->GetSize();
-    return size.width * size.height * mSurface->GetBytesPerPixel();
   }
 
 private:

@@ -425,16 +425,16 @@ GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
     static_cast<GrallocTextureData*>(textureClient->GetInternalData())->SetMediaBuffer(aSource);
   }
 
-  RefPtr<VideoData> data = VideoData::Create(mConfig,
-                                             mImageContainer,
-                                             0, // Filled later by caller.
-                                             0, // Filled later by caller.
-                                             1, // No way to pass sample duration from muxer to
-                                                // OMX codec, so we hardcode the duration here.
-                                             textureClient,
-                                             false, // Filled later by caller.
-                                             -1,
-                                             aPicture);
+  RefPtr<VideoData> data =
+    VideoData::CreateAndCopyIntoTextureClient(mConfig,
+                                              0, // Filled later by caller.
+                                              0, // Filled later by caller.
+                                              1, // No way to pass sample duration from muxer to
+                                                 // OMX codec, so we hardcode the duration here.
+                                              textureClient,
+                                              false, // Filled later by caller.
+                                              -1,
+                                              aPicture);
   return data.forget();
 }
 
@@ -494,15 +494,16 @@ GonkVideoDecoderManager::CreateVideoDataFromDataBuffer(MediaBuffer* aSource, gfx
   b.mPlanes[2].mOffset = 0;
   b.mPlanes[2].mSkip = 0;
 
-  RefPtr<VideoData> data = VideoData::Create(mConfig,
-                                             mImageContainer,
-                                             0, // Filled later by caller.
-                                             0, // Filled later by caller.
-                                             1, // We don't know the duration.
-                                             b,
-                                             0, // Filled later by caller.
-                                             -1,
-                                             aPicture);
+  RefPtr<VideoData> data =
+    VideoData::CreateAndCopyData(mConfig,
+                                 mImageContainer,
+                                 0, // Filled later by caller.
+                                 0, // Filled later by caller.
+                                 1, // We don't know the duration.
+                                 b,
+                                 0, // Filled later by caller.
+                                 -1,
+                                 aPicture);
 
   return data.forget();
 }

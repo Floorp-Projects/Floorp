@@ -1006,7 +1006,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void loadWasmPinnedRegsFromTls() {
         loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
         loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, globalData)), GlobalReg);
-        ma_addu(GlobalReg, Imm32(AsmJSGlobalRegBias));
+        ma_daddu(GlobalReg, Imm32(AsmJSGlobalRegBias));
     }
 
     // Instrumentation for entering and leaving the profiler.

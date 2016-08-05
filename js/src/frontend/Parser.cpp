@@ -1389,19 +1389,15 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
         break;
 
       case LegacyGenerator:
-        // FIXME: Catch these errors eagerly, in Parser::yieldExpression.
         MOZ_ASSERT(pc->lastYieldOffset != startYieldOffset);
-        if (kind == Arrow) {
-            reportWithOffset(ParseError, false, pc->lastYieldOffset,
-                             JSMSG_YIELD_IN_ARROW, js_yield_str);
-            return null();
-        }
-        if (type == ExpressionBody) {
-            reportBadReturn(pn, ParseError,
-                            JSMSG_BAD_GENERATOR_RETURN,
-                            JSMSG_BAD_ANON_GENERATOR_RETURN);
-            return null();
-        }
+
+        // These should throw while parsing the yield expression.
+        MOZ_ASSERT(kind != Arrow);
+        MOZ_ASSERT(!IsGetterKind(kind));
+        MOZ_ASSERT(!IsSetterKind(kind));
+        MOZ_ASSERT(!IsConstructorKind(kind));
+        MOZ_ASSERT(kind != Method);
+        MOZ_ASSERT(type != ExpressionBody);
         break;
 
       case StarGenerator:
@@ -6683,15 +6679,37 @@ Parser<ParseHandler>::yieldExpression(InHandling inHandling)
             return null();
         }
 
-        pc->sc->asFunctionBox()->setGeneratorKind(LegacyGenerator);
-        addTelemetry(JSCompartment::DeprecatedLegacyGenerator);
+        if (pc->sc->asFunctionBox()->isArrow()) {
+            reportWithOffset(ParseError, false, begin,
+                             JSMSG_YIELD_IN_ARROW, js_yield_str);
+            return null();
+        }
 
-        if (pc->funHasReturnExpr) {
+        if (pc->sc->asFunctionBox()->function()->isMethod() ||
+            pc->sc->asFunctionBox()->function()->isGetter() ||
+            pc->sc->asFunctionBox()->function()->isSetter())
+        {
+            reportWithOffset(ParseError, false, begin,
+                             JSMSG_YIELD_IN_METHOD, js_yield_str);
+            return null();
+        }
+
+
+        if (pc->funHasReturnExpr
+#if JS_HAS_EXPR_CLOSURES
+            || pc->sc->asFunctionBox()->function()->isExprBody()
+#endif
+            )
+        {
             /* As in Python (see PEP-255), disallow return v; in generators. */
             reportBadReturn(null(), ParseError, JSMSG_BAD_GENERATOR_RETURN,
                             JSMSG_BAD_ANON_GENERATOR_RETURN);
             return null();
         }
+
+        pc->sc->asFunctionBox()->setGeneratorKind(LegacyGenerator);
+        addTelemetry(JSCompartment::DeprecatedLegacyGenerator);
+
         MOZ_FALLTHROUGH;
 
       case LegacyGenerator:

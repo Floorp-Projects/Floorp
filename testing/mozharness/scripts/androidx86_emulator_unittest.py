@@ -503,6 +503,33 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             "emulator_index": emulator_index
         }
 
+    def _get_repo_url(self, path):
+        """
+           Return a url for a file (typically a tooltool manifest) in this hg repo
+           and using this revision (or mozilla-central/default if repo/rev cannot
+           be determined).
+
+           :param path specifies the directory path to the file of interest.
+        """
+        if 'GECKO_HEAD_REPOSITORY' in os.environ and 'GECKO_HEAD_REV' in os.environ:
+            # probably taskcluster
+            repo = os.environ['GECKO_HEAD_REPOSITORY']
+            revision = os.environ['GECKO_HEAD_REV']
+        elif self.buildbot_config and 'properties' in self.buildbot_config:
+            # probably buildbot
+            repo = 'https://hg.mozilla.org/%s' % self.buildbot_config['properties']['repo_path']
+            revision = self.buildbot_config['properties']['revision']
+        else:
+            # something unexpected!
+            repo = 'https://hg.mozilla.org/mozilla-central'
+            revision = 'default'
+            self.warning('Unable to find repo/revision for manifest; using mozilla-central/default')
+        url = '%s/raw-file/%s/%s' % (
+            repo,
+            revision,
+            path)
+        return url
+
     def _tooltool_fetch(self, url, dir):
         c = self.config
 
@@ -538,20 +565,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         # contents of the tar ball
         self.rmtree(dirs['abs_avds_dir'])
         self.mkdir_p(dirs['abs_avds_dir'])
-        if not self.buildbot_config:
-            # XXX until we figure out how to determine the repo_path, revision
-            url = 'https://hg.mozilla.org/%s/raw-file/%s/%s' % (
-                "try", "default", c["tooltool_manifest_path"])
-            self._tooltool_fetch(url, dirs['abs_avds_dir'])
-        elif self.buildbot_config and 'properties' in self.buildbot_config:
-            url = 'https://hg.mozilla.org/%s/raw-file/%s/%s' % (
-                self.buildbot_config['properties']['repo_path'],
-                self.buildbot_config['properties']['revision'],
-                c["tooltool_manifest_path"])
-            self._tooltool_fetch(url, dirs['abs_avds_dir'])
-        else:
-            self.fatal("properties in self.buildbot_config are required to "
-                       "retrieve tooltool manifest to be used for avds setup")
+        url = self._get_repo_url(c["tooltool_manifest_path"])
+        self._tooltool_fetch(url, dirs['abs_avds_dir'])
 
         avd_home_dir = self.abs_dirs['abs_avds_dir']
         if avd_home_dir != "/home/cltbld/.android":
@@ -682,8 +697,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         self.rmtree(dirs['abs_xre_dir'])
         self.mkdir_p(dirs['abs_xre_dir'])
         if self.config["hostutils_manifest_path"]:
-            url = 'https://hg.mozilla.org/%s/raw-file/%s/%s' % (
-                "try", "default", self.config["hostutils_manifest_path"])
+            url = self._get_repo_url(self.config["hostutils_manifest_path"])
             self._tooltool_fetch(url, dirs['abs_xre_dir'])
             for p in glob.glob(os.path.join(dirs['abs_xre_dir'], 'host-utils-*')):
                 if os.path.isdir(p) and os.path.isfile(os.path.join(p, 'xpcshell')):

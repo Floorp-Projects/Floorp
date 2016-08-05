@@ -14,7 +14,6 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsIObserver.h"
 #include "nsIAndroidBridge.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/dom/Touch.h"
@@ -416,23 +415,9 @@ private:
 public:
     static void InitGeckoEventClass(JNIEnv *jEnv);
 
-    static AndroidGeckoEvent* MakeNativePoke() {
-        AndroidGeckoEvent *event = new AndroidGeckoEvent();
-        event->Init(NATIVE_POKE);
-        return event;
-    }
-
     static AndroidGeckoEvent* MakeFromJavaObject(JNIEnv *jenv, jobject jobj) {
         AndroidGeckoEvent *event = new AndroidGeckoEvent();
         event->Init(jenv, jobj);
-        return event;
-    }
-
-    static AndroidGeckoEvent* MakeAddObserver(const nsAString &key, nsIObserver *observer) {
-        AndroidGeckoEvent *event = new AndroidGeckoEvent();
-        event->Init(ADD_OBSERVER);
-        event->mCharacters.Assign(key);
-        event->mObserver = observer;
         return event;
     }
 
@@ -463,37 +448,21 @@ public:
     const nsTArray<float>& Orientations() { return mOrientations; }
     const nsTArray<nsIntPoint>& PointRadii() { return mPointRadii; }
     double X() { return mX; }
-    double Y() { return mY; }
-    double Z() { return mZ; }
-    double W() { return mW; }
-    const nsIntRect& Rect() { return mRect; }
     nsString& Characters() { return mCharacters; }
     nsString& CharactersExtra() { return mCharactersExtra; }
-    nsString& Data() { return mData; }
     int MetaState() { return mMetaState; }
     Modifiers DOMModifiers() const;
     bool IsAltPressed() const { return (mMetaState & AMETA_ALT_MASK) != 0; }
     bool IsShiftPressed() const { return (mMetaState & AMETA_SHIFT_MASK) != 0; }
     bool IsCtrlPressed() const { return (mMetaState & AMETA_CTRL_MASK) != 0; }
     bool IsMetaPressed() const { return (mMetaState & AMETA_META_MASK) != 0; }
-    int Flags() { return mFlags; }
     int Count() { return mCount; }
     int PointerIndex() { return mPointerIndex; }
-    RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
-    int Width() { return mWidth; }
-    int Height() { return mHeight; }
-    int ID() { return mID; }
-    int GamepadButton() { return mGamepadButton; }
-    bool GamepadButtonPressed() { return mGamepadButtonPressed; }
-    float GamepadButtonValue() { return mGamepadButtonValue; }
-    const nsTArray<float>& GamepadValues() { return mGamepadValues; }
     int RequestId() { return mCount; } // for convenience
     bool CanCoalesceWith(AndroidGeckoEvent* ae);
     WidgetTouchEvent MakeTouchEvent(nsIWidget* widget);
     MultiTouchInput MakeMultiTouchInput(nsIWidget* widget);
     WidgetMouseEvent MakeMouseEvent(nsIWidget* widget);
-    void UnionRect(nsIntRect const& aRect);
-    nsIObserver *Observer() { return mObserver; }
     mozilla::layers::ScrollableLayerGuid ApzGuid();
     uint64_t ApzInputBlockId();
     nsEventStatus ApzEventStatus();
@@ -508,20 +477,11 @@ protected:
     nsTArray<float> mOrientations;
     nsTArray<float> mPressures;
     nsTArray<int> mToolTypes;
-    nsIntRect mRect;
-    int mFlags, mMetaState;
+    int mMetaState;
     int mCount;
-    double mX, mY, mZ, mW;
+    double mX;
     int mPointerIndex;
-    nsString mCharacters, mCharactersExtra, mData;
-    RefPtr<RefCountedJavaObject> mByteBuffer;
-    int mWidth, mHeight;
-    int mID;
-    int mGamepadButton;
-    bool mGamepadButtonPressed;
-    float mGamepadButtonValue;
-    nsTArray<float> mGamepadValues;
-    nsCOMPtr<nsIObserver> mObserver;
+    nsString mCharacters, mCharactersExtra;
     MultiTouchInput mApzInput;
     mozilla::layers::ScrollableLayerGuid mApzGuid;
     uint64_t mApzInputBlockId;
@@ -542,10 +502,8 @@ protected:
     void ReadStringArray(nsTArray<nsString> &aStrings,
                          JNIEnv *jenv,
                          jfieldID field);
-    void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);
-    void ReadDataField(JNIEnv *jenv);
     void ReadStringFromJString(nsString &aString, JNIEnv *jenv, jstring s);
 
     static jclass jGeckoEventClass;
@@ -559,71 +517,22 @@ protected:
     static jfieldID jToolTypes;
     static jfieldID jPointRadii;
     static jfieldID jXField;
-    static jfieldID jYField;
-    static jfieldID jZField;
-    static jfieldID jWField;
-    static jfieldID jDistanceField;
-    static jfieldID jRectField;
 
     static jfieldID jCharactersField;
     static jfieldID jCharactersExtraField;
-    static jfieldID jDataField;
     static jfieldID jMetaStateField;
-    static jfieldID jFlagsField;
     static jfieldID jCountField;
     static jfieldID jPointerIndexField;
 
-    static jfieldID jByteBufferField;
-
-    static jfieldID jWidthField;
-    static jfieldID jHeightField;
-
-    static jfieldID jIDField;
-    static jfieldID jGamepadButtonField;
-    static jfieldID jGamepadButtonPressedField;
-    static jfieldID jGamepadButtonValueField;
-    static jfieldID jGamepadValuesField;
-
 public:
     enum {
-        NATIVE_POKE = 0,
         MOTION_EVENT = 2,
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         VIEWPORT = 20,
         NATIVE_GESTURE_EVENT = 31,
-        CALL_OBSERVER = 33,
-        REMOVE_OBSERVER = 34,
-        LOW_MEMORY = 35,
-        TELEMETRY_HISTOGRAM_ADD = 37,
-        ADD_OBSERVER = 38,
-        TELEMETRY_UI_SESSION_START = 42,
-        TELEMETRY_UI_SESSION_STOP = 43,
-        TELEMETRY_UI_EVENT = 44,
-        GAMEPAD_ADDREMOVE = 45,
-        GAMEPAD_DATA = 46,
         LONG_PRESS = 47,
-        ZOOMEDVIEW = 48,
         dummy_java_enum_list_end
-    };
-
-    enum {
-        // Memory pressure levels. Keep these in sync with those in MemoryMonitor.java.
-        MEMORY_PRESSURE_NONE = 0,
-        MEMORY_PRESSURE_CLEANUP = 1,
-        MEMORY_PRESSURE_LOW = 2,
-        MEMORY_PRESSURE_MEDIUM = 3,
-        MEMORY_PRESSURE_HIGH = 4
-    };
-
-    enum {
-        ACTION_GAMEPAD_ADDED = 1,
-        ACTION_GAMEPAD_REMOVED = 2
-    };
-
-    enum {
-        ACTION_GAMEPAD_BUTTON = 1,
-        ACTION_GAMEPAD_AXES = 2
     };
 };
 

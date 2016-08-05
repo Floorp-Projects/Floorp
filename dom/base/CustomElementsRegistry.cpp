@@ -26,7 +26,7 @@ CustomElementsRegistry::IsCustomElementsEnabled(JSContext* aCx, JSObject* aObjec
 {
   JS::Rooted<JSObject*> obj(aCx, aObject);
   if (Preferences::GetBool("dom.webcomponents.customelements.enabled") ||
-      nsDocument::IsWebComponentsEnabled(aCx, obj)) {
+      Preferences::GetBool("dom.webcomponents.enabled")) {
     return true;
   }
 
