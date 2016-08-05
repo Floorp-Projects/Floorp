@@ -62,6 +62,15 @@
                 {
                     assert_equals(mediaElement.duration, segmentInfo.duration);
                     assert_greater_than_equal(mediaElement.duration, 2.0, 'Duration is >2.0s.');
+
+                    test.expectEvent(sourceBuffer, "updateend");
+                    sourceBuffer.remove(1.5, Infinity);
+                    assert_true(sourceBuffer.updating, "updating");
+                });
+
+                test.waitForExpectedEvents(function()
+                {
+                    assert_false(sourceBuffer.updating, "updating");
                     test.waitForCurrentTimeChange(mediaElement, function()
                     {
                         // Update duration.
