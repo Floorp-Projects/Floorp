@@ -1294,3 +1294,41 @@ event.sendEvent = function(eventType, el, modifiers = {}, opts = {}) {
   ev.initEvent(eventType, opts.canBubble, true);
   el.dispatchEvent(ev);
 };
+
+event.focus = function(el, opts = {}) {
+  opts.canBubble = opts.canBubble || true;
+  let doc = el.ownerDocument || el.document;
+  let win = doc.defaultView;
+
+  let ev = new win.FocusEvent(el);
+  ev.initEvent("focus", opts.canBubble, true);
+  el.dispatchEvent(ev);
+};
+
+event.mouseover = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "mouseover"}, el, modifiers, opts);
+};
+
+event.mousemove = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "mousemove"}, el, modifiers, opts);
+};
+
+event.mousedown = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "mousedown"}, el, modifiers, opts);
+};
+
+event.mouseup = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "mouseup"}, el, modifiers, opts);
+};
+
+event.click = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "click"}, el, modifiers, opts);
+};
+
+event.change = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "change"}, el, modifiers, opts);
+};
+
+event.input = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "input"}, el, modifiers, opts);
+};
