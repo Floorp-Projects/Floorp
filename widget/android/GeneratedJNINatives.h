@@ -638,6 +638,6 @@ const JNINativeMethod NativeJSObject::Natives<Impl>::methods[] = {
             ::template Wrap<&Impl::ToString>)
 };
 
-} /* widget */
+} /* java */
 } /* mozilla */
 #endif // GeneratedJNINatives_h

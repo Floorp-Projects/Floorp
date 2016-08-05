@@ -5576,6 +5576,6 @@ public:
     template<class Impl> class Natives;
 };
 
-} /* widget */
+} /* java */
 } /* mozilla */
 #endif // GeneratedJNIWrappers_h
