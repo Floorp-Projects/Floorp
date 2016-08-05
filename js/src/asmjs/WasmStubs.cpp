@@ -96,7 +96,7 @@ static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void
 // function has an ABI derived from its specific signature, so this function
 // must map from the ABI of ExportFuncPtr to the export's signature's ABI.
 Offsets
-wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
+wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
 {
     masm.haltingAlign(CodeAlignment);
 
@@ -573,7 +573,7 @@ static const unsigned SavedTlsReg = sizeof(void*);
 // signature of the import and calls into a compatible JIT function,
 // having boxed all the ABI arguments into the JIT stack frame layout.
 ProfilingOffsets
-wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
+wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi)
 {
     const Sig& sig = fi.sig();
 
@@ -606,25 +606,14 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
     Register callee = ABINonArgReturnReg0;   // live until call
     Register scratch = ABINonArgReturnReg1;  // repeatedly clobbered
 
-    // 2.1. Get ExitDatum
-    uint32_t globalDataOffset = fi.exitGlobalDataOffset();
-#if defined(JS_CODEGEN_X64)
-    masm.append(GlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
-#elif defined(JS_CODEGEN_X86)
-    masm.append(GlobalAccess(masm.movlWithPatch(Imm32(0), callee), globalDataOffset));
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    masm.computeEffectiveAddress(Address(GlobalReg, globalDataOffset - AsmJSGlobalRegBias), callee);
-#endif
+    // 2.1. Get callee
+    masm.loadWasmGlobalPtr(fi.tlsDataOffset() + offsetof(FuncImportTls, obj), callee);
 
-    // 2.2. Get callee
-    masm.loadPtr(Address(callee, offsetof(FuncImportExit, fun)), callee);
-
-    // 2.3. Save callee
+    // 2.2. Save callee
     masm.storePtr(callee, Address(masm.getStackPointer(), argOffset));
     argOffset += sizeof(size_t);
 
-    // 2.4. Load callee executable entry point
+    // 2.3. Load callee executable entry point
     masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
     masm.loadBaselineOrIonNoArgCheck(callee, callee, nullptr);
 
@@ -758,7 +747,6 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
     // reserveStack(sizeOfRetAddr) above means that the stack pointer is at a
     // different offset than when WasmTlsReg was stored.
     masm.loadPtr(Address(masm.getStackPointer(), jitFrameBytes + sizeOfRetAddr), WasmTlsReg);
-    masm.loadWasmPinnedRegsFromTls();
 
     GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, &offsets);
 
@@ -1005,8 +993,8 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.popFlags();              // after this, nothing that sets conditions
     masm.ret();                   // pop resumePC into PC
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    // Reserve space to store resumePC.
-    masm.subFromStackPtr(Imm32(sizeof(intptr_t)));
+    // Reserve space to store resumePC and HeapReg.
+    masm.subFromStackPtr(Imm32(2 * sizeof(intptr_t)));
     // set to zero so we can use masm.framePushed() below.
     masm.setFramePushed(0);
     static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too.");
@@ -1022,6 +1010,8 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.loadWasmActivationFromSymbolicAddress(IntArgReg0);
     masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(s0, masm.framePushed()));
+    // Store HeapReg into the reserved space.
+    masm.storePtr(HeapReg, Address(s0, masm.framePushed() + sizeof(intptr_t)));
 
 # ifdef USES_O32_ABI
     // MIPS ABI requires rewserving stack for registes $a0 to $a3.
@@ -1043,9 +1033,11 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
 
     // Pop resumePC into PC. Clobber HeapReg to make the jump and restore it
     // during jump delay slot.
-    masm.pop(HeapReg);
+    masm.loadPtr(Address(StackPointer, 0), HeapReg);
+    // Reclaim the reserve space.
+    masm.addToStackPtr(Imm32(2 * sizeof(intptr_t)));
     masm.as_jr(HeapReg);
-    masm.loadAsmJSHeapRegisterFromGlobalData();
+    masm.loadPtr(Address(StackPointer, -sizeof(intptr_t)), HeapReg);
 #elif defined(JS_CODEGEN_ARM)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
 

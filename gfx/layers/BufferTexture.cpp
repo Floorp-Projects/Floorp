@@ -92,7 +92,7 @@ protected:
 static bool UsingX11Compositor()
 {
 #ifdef MOZ_WIDGET_GTK
-  return gfxPlatformGtk::GetPlatform()->UseXRender();
+  return gfx::gfxVars::UseXRender();
 #endif
   return false;
 }

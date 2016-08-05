@@ -9,14 +9,31 @@
 #include "mozilla/DebugOnly.h"
 #include "TrackEncoder.h"
 #include "ContainerWriter.h"
+#include "CubebUtils.h"
 #include "MediaStreamGraph.h"
 #include "MediaStreamListener.h"
 #include "nsAutoPtr.h"
+#include "MediaStreamVideoSink.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Atomics.h"
 
 namespace mozilla {
+
+class MediaStreamVideoRecorderSink : public MediaStreamVideoSink
+{
+public:
+  explicit MediaStreamVideoRecorderSink(VideoTrackEncoder* aEncoder)
+    : mVideoEncoder(aEncoder) {}
+
+  // MediaStreamVideoSink methods
+  virtual void SetCurrentFrames(const VideoSegment& aSegment) override;
+  virtual void ClearFrames() override {}
+
+private:
+  virtual ~MediaStreamVideoRecorderSink() {}
+  VideoTrackEncoder* mVideoEncoder;
+};
 
 /**
  * MediaEncoder is the framework of encoding module, it controls and manages
@@ -54,6 +71,7 @@ namespace mozilla {
  */
 class MediaEncoder : public DirectMediaStreamListener
 {
+  friend class MediaStreamVideoRecorderSink;
 public :
   enum {
     ENCODE_METADDATA,
@@ -72,6 +90,7 @@ public :
     : mWriter(aWriter)
     , mAudioEncoder(aAudioEncoder)
     , mVideoEncoder(aVideoEncoder)
+    , mVideoSink(new MediaStreamVideoRecorderSink(mVideoEncoder))
     , mStartTime(TimeStamp::Now())
     , mMIMEType(aMIMEType)
     , mSizeOfBuffer(0)
@@ -155,7 +174,8 @@ public :
   static already_AddRefed<MediaEncoder> CreateEncoder(const nsAString& aMIMEType,
                                                       uint32_t aAudioBitrate, uint32_t aVideoBitrate,
                                                       uint32_t aBitrate,
-                                                      uint8_t aTrackTypes = ContainerWriter::CREATE_AUDIO_TRACK);
+                                                      uint8_t aTrackTypes = ContainerWriter::CREATE_AUDIO_TRACK,
+                                                      TrackRate aTrackRate = CubebUtils::PreferredSampleRate());
   /**
    * Encodes the raw track data and returns the final container data. Assuming
    * it is called on a single worker thread. The buffer of container data is
@@ -208,6 +228,10 @@ public :
    */
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  MediaStreamVideoRecorderSink* GetVideoSink() {
+    return mVideoSink.get();
+  }
+
 private:
   // Get encoded data from trackEncoder and write to muxer
   nsresult WriteEncodedDataToMuxer(TrackEncoder *aTrackEncoder);
@@ -216,6 +240,7 @@ private:
   nsAutoPtr<ContainerWriter> mWriter;
   nsAutoPtr<AudioTrackEncoder> mAudioEncoder;
   nsAutoPtr<VideoTrackEncoder> mVideoEncoder;
+  RefPtr<MediaStreamVideoRecorderSink> mVideoSink;
   TimeStamp mStartTime;
   nsString mMIMEType;
   int64_t mSizeOfBuffer;

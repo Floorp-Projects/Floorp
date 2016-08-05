@@ -9,6 +9,7 @@
 #include "gfxPlatform.h"
 #include "nsAutoRef.h"
 #include "nsTArray.h"
+#include "mozilla/gfx/gfxVars.h"
 
 #if (MOZ_WIDGET_GTK == 2)
 extern "C" {
@@ -103,18 +104,10 @@ public:
     static int32_t GetDPI();
     static double  GetDPIScale();
 
-    bool UseXRender() {
-#if defined(MOZ_X11)
-        return sUseXRender;
-#else
-        return false;
-#endif
-    }
-
 #ifdef MOZ_X11
     virtual void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) override {
       gfxPlatform::GetAzureBackendInfo(aObj);
-      aObj.DefineProperty("CairoUseXRender", UseXRender());
+      aObj.DefineProperty("CairoUseXRender", mozilla::gfx::gfxVars::UseXRender());
     }
 #endif
 
@@ -159,8 +152,6 @@ private:
                                              size_t &size) override;
 
 #ifdef MOZ_X11
-    static bool sUseXRender;
-
     Display* mCompositorDisplay;
 #endif
 

@@ -222,6 +222,14 @@ struct ParamTraits<mozilla::layers::LayersBackend>
 {};
 
 template <>
+struct ParamTraits<mozilla::gfx::BackendType>
+  : public ContiguousEnumSerializer<
+             mozilla::gfx::BackendType,
+             mozilla::gfx::BackendType::NONE,
+             mozilla::gfx::BackendType::BACKEND_LAST>
+{};
+
+template <>
 struct ParamTraits<mozilla::layers::ScaleMode>
   : public ContiguousEnumSerializer<
              mozilla::layers::ScaleMode,

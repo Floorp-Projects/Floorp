@@ -599,7 +599,6 @@ private:
   webrtc::VoiceEngine* mVoiceEngine;
   webrtc::Config mConfig;
   RefPtr<mozilla::AudioInput> mAudioInput;
-  bool mAudioEngineInit;
   bool mFullDuplex;
   bool mExtendedFilter;
   bool mDelayAgnostic;

@@ -144,7 +144,6 @@ public:
 
     RefPtr<VideoData> v =
       VideoData::CreateFromImage(mConfig,
-                                 mImageContainer,
                                  offset,
                                  presentationTimeUs,
                                  aDuration.ToMicroseconds(),

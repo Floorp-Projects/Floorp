@@ -238,7 +238,7 @@ SocialUI = {
       }
     }
     // update the disabled state of the button based on the command
-    for (let node of SocialMarks.nodes) {
+    for (let node of SocialMarks.nodes()) {
       if (canShare) {
         node.removeAttribute("disabled")
       } else {
@@ -1300,7 +1300,7 @@ var SocialMarksWidgetListener = {
  * Handles updates to toolbox and signals all buttons to update when necessary.
  */
 SocialMarks = {
-  get nodes() {
+  *nodes() {
     for (let p of Social.providers.filter(p => p.markURL)) {
       let widgetId = SocialMarks._toolbarHelper.idFromOrigin(p.origin);
       let widget = CustomizableUI.getWidget(widgetId);
@@ -1314,7 +1314,7 @@ SocialMarks = {
   update: function() {
     // querySelectorAll does not work on the menu panel, so we have to do this
     // the hard way.
-    for (let node of this.nodes) {
+    for (let node of this.nodes()) {
       // xbl binding is not complete on startup when buttons are not in toolbar,
       // verify update is available
       if (node.update) {

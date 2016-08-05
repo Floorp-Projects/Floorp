@@ -289,16 +289,17 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = (mFrame->height + 1) >> 1;
     }
 
-    RefPtr<VideoData> v = VideoData::Create(mInfo,
-                                            mImageContainer,
-                                            aSample->mOffset,
-                                            pts,
-                                            duration,
-                                            b,
-                                            !!mFrame->key_frame,
-                                            -1,
-                                            mInfo.ScaledImageRect(mFrame->width,
-                                                                  mFrame->height));
+    RefPtr<VideoData> v =
+      VideoData::CreateAndCopyData(mInfo,
+                                   mImageContainer,
+                                   aSample->mOffset,
+                                   pts,
+                                   duration,
+                                   b,
+                                   !!mFrame->key_frame,
+                                   -1,
+                                   mInfo.ScaledImageRect(mFrame->width,
+                                                         mFrame->height));
 
     if (!v) {
       NS_WARNING("image allocation error.");

@@ -1,3 +1,4 @@
+// |jit-test| test-also-wasm-baseline
 load(libdir + 'wasm.js');
 load(libdir + 'asserts.js');
 
@@ -74,6 +75,16 @@ assertErrorMessage(() => new Module(textToBinary('(module (memory 2 1))')), Type
 assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (memory 2 1)))')), TypeError, /maximum length less than initial length/);
 assertErrorMessage(() => new Module(textToBinary('(module (table (resizable 2 1)))')), TypeError, /maximum length less than initial length/);
 assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (table 2 1)))')), TypeError, /maximum length less than initial length/);
+
+// Import wasm-wasm type mismatch
+
+var e = new Instance(new Module(textToBinary('(module (func $i2v (param i32)) (export "i2v" $i2v) (func $f2v (param f32)) (export "f2v" $f2v))'))).exports;
+var i2vm = new Module(textToBinary('(module (import "a" "b" (param i32)))'));
+var f2vm = new Module(textToBinary('(module (import "a" "b" (param f32)))'));
+assertEq(new Instance(i2vm, {a:{b:e.i2v}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(i2vm, {a:{b:e.f2v}}), TypeError, /imported function signature mismatch/);
+assertErrorMessage(() => new Instance(f2vm, {a:{b:e.i2v}}), TypeError, /imported function signature mismatch/);
+assertEq(new Instance(f2vm, {a:{b:e.f2v}}) instanceof Instance, true);
 
 // Import order:
 
@@ -326,3 +337,28 @@ assertEq(tbl.get(3)(), 3);
 assertEq(tbl.get(4)(), 4);
 for (var i = 5; i < 10; i++)
     assertEq(tbl.get(i), null);
+
+// Cross-instance calls
+
+var i1 = new Instance(new Module(textToBinary(`(module (func) (func (param i32) (result i32) (i32.add (get_local 0) (i32.const 1))) (func) (export "f" 1))`)));
+var i2 = new Instance(new Module(textToBinary(`(module (import "a" "b" (param i32) (result i32)) (func $g (result i32) (call_import 0 (i32.const 13))) (export "g" $g))`)), {a:{b:i1.exports.f}});
+assertEq(i2.exports.g(), 14);
+
+var m = new Module(textToBinary(`(module
+    (import $val "a" "val" (global i32 immutable))
+    (import $next "a" "next" (result i32))
+    (memory 1)
+    (func $start (i32.store (i32.const 0) (get_global $val)))
+    (start $start)
+    (func $call (result i32)
+        (i32.add
+            (get_global $val)
+            (i32.add
+                (i32.load (i32.const 0))
+                (call_import $next))))
+    (export "call" $call)
+)`));
+var e = {call:() => 1000};
+for (var i = 0; i < 10; i++)
+    e = new Instance(m, {a:{val:i, next:e.call}}).exports;
+assertEq(e.call(), 1090);

@@ -8208,15 +8208,6 @@ class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LAsmJSLoadFFIFunc : public LInstructionHelper<1, 0, 0>
-{
-  public:
-    LIR_HEADER(AsmJSLoadFFIFunc);
-    MAsmJSLoadFFIFunc* mir() const {
-        return mir_->toAsmJSLoadFFIFunc();
-    }
-};
-
 class LAsmJSParameter : public LInstructionHelper<1, 0, 0>
 {
   public:
@@ -8281,76 +8272,80 @@ class LAsmJSPassStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
     }
 };
 
-class LAsmJSCallBase : public LInstruction
+class LWasmCallBase : public LInstruction
 {
     LAllocation* operands_;
     uint32_t numOperands_;
+    LDefinition maybeTemp_;
 
   public:
 
-    LAsmJSCallBase(LAllocation* operands, uint32_t numOperands)
+    LWasmCallBase(LAllocation* operands, uint32_t numOperands, LDefinition maybeTemp)
       : operands_(operands),
-        numOperands_(numOperands)
+        numOperands_(numOperands),
+        maybeTemp_(maybeTemp)
     {}
 
-    MAsmJSCall* mir() const {
-        return mir_->toAsmJSCall();
+    MWasmCall* mir() const {
+        return mir_->toWasmCall();
     }
 
-    bool isCall() const {
+    bool isCall() const override {
         return true;
+    }
+    bool isCallPreserved(AnyRegister reg) const override {
+        // All MWasmCalls preserve the TLS register:
+        //  - internal/indirect calls do by the internal wasm ABI
+        //  - import calls do by explicitly saving/restoring at the callsite
+        //  - builtin calls do because the TLS reg is non-volatile
+        return !reg.isFloat() && reg.gpr() == WasmTlsReg;
     }
 
     // LInstruction interface
-    size_t numOperands() const {
+    size_t numOperands() const override {
         return numOperands_;
     }
-    LAllocation* getOperand(size_t index) {
+    LAllocation* getOperand(size_t index) override {
         MOZ_ASSERT(index < numOperands_);
         return &operands_[index];
     }
-    void setOperand(size_t index, const LAllocation& a) {
+    void setOperand(size_t index, const LAllocation& a) override {
         MOZ_ASSERT(index < numOperands_);
         operands_[index] = a;
     }
-    size_t numTemps() const {
+    size_t numTemps() const override {
+        return maybeTemp_.isBogusTemp() ? 0 : 1;
+    }
+    LDefinition* getTemp(size_t index) override {
+        MOZ_ASSERT(!maybeTemp_.isBogusTemp());
+        return &maybeTemp_;
+    }
+    void setTemp(size_t index, const LDefinition& a) override {
+        MOZ_ASSERT(!maybeTemp_.isBogusTemp());
+        maybeTemp_ = a;
+    }
+    size_t numSuccessors() const override {
         return 0;
     }
-    LDefinition* getTemp(size_t index) {
-        MOZ_CRASH("no temps");
-    }
-    void setTemp(size_t index, const LDefinition& a) {
-        MOZ_CRASH("no temps");
-    }
-    size_t numSuccessors() const {
-        return 0;
-    }
-    MBasicBlock* getSuccessor(size_t i) const {
+    MBasicBlock* getSuccessor(size_t i) const override {
         MOZ_CRASH("no successors");
     }
-    void setSuccessor(size_t i, MBasicBlock*) {
+    void setSuccessor(size_t i, MBasicBlock*) override {
         MOZ_CRASH("no successors");
     }
 };
 
-class LAsmJSCall : public LAsmJSCallBase
+class LWasmCall : public LWasmCallBase
 {
      LDefinition def_;
 
   public:
-    LIR_HEADER(AsmJSCall);
+    LIR_HEADER(WasmCall);
 
-    LAsmJSCall(LAllocation* operands, uint32_t numOperands)
-      : LAsmJSCallBase(operands, numOperands),
+    LWasmCall(LAllocation* operands, uint32_t numOperands, LDefinition maybeTemp)
+      : LWasmCallBase(operands, numOperands, maybeTemp),
         def_(LDefinition::BogusTemp())
     {}
-
-    bool isCallPreserved(AnyRegister reg) const {
-        // WebAssembly functions preserve the TLS pointer register.
-        if (reg.isFloat() || reg.gpr() != WasmTlsReg)
-            return false;
-        return mir()->preservesTlsReg();
-    }
 
     // LInstruction interface
     size_t numDefs() const {
@@ -8367,19 +8362,18 @@ class LAsmJSCall : public LAsmJSCallBase
     }
 };
 
-class LAsmJSCallI64 : public LAsmJSCallBase
+class LWasmCallI64 : public LWasmCallBase
 {
     LDefinition defs_[INT64_PIECES];
 
   public:
-    LIR_HEADER(AsmJSCallI64);
+    LIR_HEADER(WasmCallI64);
 
-    LAsmJSCallI64(LAllocation* operands, uint32_t numOperands)
-      : LAsmJSCallBase(operands, numOperands)
+    LWasmCallI64(LAllocation* operands, uint32_t numOperands, LDefinition maybeTemp)
+      : LWasmCallBase(operands, numOperands, maybeTemp)
     {
-        for (size_t i = 0; i < numDefs(); i++) {
+        for (size_t i = 0; i < numDefs(); i++)
             defs_[i] = LDefinition::BogusTemp();
-        }
     }
 
     // LInstruction interface
