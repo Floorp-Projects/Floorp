@@ -1587,6 +1587,8 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
   LayoutDeviceIntRect rect;
   uint32_t offset = aEvent->mInput.mOffset;
   const uint32_t kEndOffset = offset + aEvent->mInput.mLength;
+  bool wasLineBreaker = false;
+  nsRect lastCharRect;
   while (offset < kEndOffset) {
     rv = SetRangeFromFlatTextOffset(range, offset, 1, lineBreakType, true,
                                     nullptr);
@@ -1624,11 +1626,34 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
     AutoTArray<nsRect, 16> charRects;
 
     if (ShouldBreakLineBefore(firstContent, mRootContent)) {
-      // TODO: If the frame isn't <br> and there was previous text frame or
-      //       <br>, we can set the rect to caret rect at the end.  Currently,
-      //       this sets the rect to caret rect at the start of the node.
-      FrameRelativeRect brRect = GetLineBreakerRectBefore(firstFrame);
-      charRects.AppendElement(brRect.RectRelativeTo(firstFrame));
+      nsRect brRect;
+      // If the frame is <br> frame, we can always trust
+      // GetLineBreakerRectBefore().  Otherwise, "after" the last character
+      // rect is better than its result.
+      // TODO: We need to look for the last character rect if non-br frame
+      //       causes a line break at first time of this loop.
+      if (firstFrame->GetType() == nsGkAtoms::brFrame ||
+          aEvent->mInput.mOffset == offset) {
+        FrameRelativeRect relativeBRRect = GetLineBreakerRectBefore(firstFrame);
+        brRect = relativeBRRect.RectRelativeTo(firstFrame);
+      } else {
+        // The frame position in the root widget will be added in the
+        // following for loop but we need the rect in the previous frame.
+        // So, we need to avoid using current frame position.
+        brRect = lastCharRect - frameRect.TopLeft();
+        if (!wasLineBreaker) {
+          if (firstFrame->GetWritingMode().IsVertical()) {
+            // Right of the last character.
+            brRect.y = brRect.YMost() + 1;
+            brRect.height = 1;
+          } else {
+            // Under the last character.
+            brRect.x = brRect.XMost() + 1;
+            brRect.width = 1;
+          }
+        }
+      }
+      charRects.AppendElement(brRect);
       chars.AssignLiteral("\n");
       if (kBRLength > 1 && offset == aEvent->mInput.mOffset && offset) {
         // If the first frame for the previous offset of the query range and
@@ -1680,6 +1705,7 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       nsRect charRect = charRects[i];
       charRect.x += frameRect.x;
       charRect.y += frameRect.y;
+      lastCharRect = charRect;
 
       rect = LayoutDeviceIntRect::FromUnknownRect(
                charRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
@@ -1692,7 +1718,8 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
       // If it's not a line breaker or the line breaker length is same as
       // XP line breaker's, we need to do nothing for current character.
-      if (chars[i] != '\n' || kBRLength == 1) {
+      wasLineBreaker = chars[i] == '\n';
+      if (!wasLineBreaker || kBRLength == 1) {
         continue;
       }
 
