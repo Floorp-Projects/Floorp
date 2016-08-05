@@ -115,9 +115,7 @@
       ]]></handler>
 
       <handler event="focus"><![CDATA[
-        let { AppConstants } =
-            Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-        if (AppConstants.platform == "macosx") {
+        if (/Mac/.test(navigator.platform)) {
           let findbar = this.findbar;
           findbar._onFindFieldFocus();
         }
@@ -1371,9 +1369,7 @@
           if (aIsInitialSelection && !this._startFindDeferred)
             return;
 
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-          if (AppConstants.platform == "macosx" && aIsInitialSelection && !aSelectionString) {
+          if (/Mac/.test(navigator.platform) && aIsInitialSelection && !aSelectionString) {
             let clipboardSearchString = this.browser.finder.clipboardSearchString;
             if (clipboardSearchString)
               aSelectionString = clipboardSearchString;
