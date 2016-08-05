@@ -197,9 +197,10 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
                        : SurfaceFormat::B8G8R8A8;
 
   // Make sure there's no animation or padding if we're downscaling.
-  MOZ_ASSERT_IF(mDownscaler, mNumFrames == 0);
-  MOZ_ASSERT_IF(mDownscaler, !GetImageMetadata().HasAnimation());
-  MOZ_ASSERT_IF(mDownscaler, transparency != TransparencyType::eFrameRect);
+  MOZ_ASSERT_IF(Size() != OutputSize(), mNumFrames == 0);
+  MOZ_ASSERT_IF(Size() != OutputSize(), !GetImageMetadata().HasAnimation());
+  MOZ_ASSERT_IF(Size() != OutputSize(),
+                transparency != TransparencyType::eFrameRect);
 
   // If this image is interlaced, we can display better quality intermediate
   // results to the user by post processing them with ADAM7InterpolatingFilter.
@@ -675,7 +676,8 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     int32_t rawTimeout = GetNextFrameDelay(png_ptr, info_ptr);
     decoder->PostIsAnimated(FrameTimeout::FromRawMilliseconds(rawTimeout));
 
-    if (decoder->mDownscaler && !decoder->IsFirstFrameDecode()) {
+    if (decoder->Size() != decoder->OutputSize() &&
+        !decoder->IsFirstFrameDecode()) {
       MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode "
                              "for an animated image?");
       png_error(decoder->mPNG, "Invalid downscale attempt"); // Abort decode.
