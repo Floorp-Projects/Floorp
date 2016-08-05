@@ -13,7 +13,6 @@
  * See Task documentation at https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Task.jsm.
  */
 
-var {Cu} = require("chrome");
 var {Task} = require("devtools/shared/task");
 var Promise = require("promise");
 
@@ -54,7 +53,7 @@ exports.asyncOnce = function asyncOnce(func) {
  */
 exports.listenOnce = function listenOnce(element, event, useCapture) {
   return new Promise(function (resolve, reject) {
-    var onEvent = function (ev) {
+    let onEvent = function (ev) {
       element.removeEventListener(event, onEvent, useCapture);
       resolve(ev);
     };

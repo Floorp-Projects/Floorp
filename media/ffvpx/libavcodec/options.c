@@ -34,7 +34,7 @@
 #include <string.h>
 
 FF_DISABLE_DEPRECATION_WARNINGS
-#include "options_table.h"
+#include "ff_options_table.h"
 FF_ENABLE_DEPRECATION_WARNINGS
 
 static const char* context_to_name(void* ptr) {

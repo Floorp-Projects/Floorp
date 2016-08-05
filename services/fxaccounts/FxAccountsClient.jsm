@@ -184,6 +184,27 @@ this.FxAccountsClient.prototype = {
   },
 
   /**
+   * Check the status of a session given a session token
+   *
+   * @param sessionTokenHex
+   *        The session token encoded in hex
+   * @return Promise
+   *        Resolves with a boolean indicating if the session is still valid
+   */
+  sessionStatus: function (sessionTokenHex) {
+    return this._request("/session/status", "GET",
+      deriveHawkCredentials(sessionTokenHex, "sessionToken")).then(
+        () => Promise.resolve(true),
+        error => {
+          if (isInvalidTokenError(error)) {
+            return Promise.resolve(false);
+          }
+          throw error;
+        }
+      );
+  },
+
+  /**
    * Destroy the current session with the Firefox Account API server
    *
    * @param sessionTokenHex

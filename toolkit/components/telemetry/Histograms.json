@@ -7839,6 +7839,13 @@
     "n_buckets": 10,
     "description": "The number of times a sync successfully completed in this session"
   },
+  "WEAVE_WIPE_SERVER_SUCCEEDED": {
+    "expires_in_version": "55",
+    "alert_emails": ["fx-team@mozilla.com"],
+    "kind": "boolean",
+    "bug_numbers": [1241699],
+    "description": "Stores 1 if a wipeServer call succeeded, and 0 if it failed."
+  },
   "WEBCRYPTO_EXTRACTABLE_IMPORT": {
     "expires_in_version": "never",
     "kind": "boolean",

@@ -6,7 +6,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const Services = require("Services");
 
 const EXPAND_TAB = "devtools.editor.expandtab";
