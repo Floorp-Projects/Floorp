@@ -4,6 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# PGO
+# ==============================================================
+option(env='MOZ_PGO', help='Build with profile guided optimizations')
+
+set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
+add_old_configure_assignment('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
+
 # yasm detection
 # ==============================================================
 yasm = check_prog('YASM', ['yasm'], allow_missing=True)
