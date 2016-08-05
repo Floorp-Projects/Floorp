@@ -1515,11 +1515,9 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
         break;
       }
       case MWasmCall::Callee::Import: {
-        Register temp = ToRegister(ins->getTemp(0));
-
         // Load the callee, before the caller's registers are clobbered.
         uint32_t globalDataOffset = callee.importGlobalDataOffset();;
-        masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code), temp);
+        masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code), ABINonArgReg0);
 
         // Save the caller's TLS register in a reserved stack slot (below the
         // call's stack arguments) for retrieval after the call.
@@ -1528,7 +1526,7 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
         // Switch to the callee's TLS and pinned registers and make the call.
         masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, tls), WasmTlsReg);
         masm.loadWasmPinnedRegsFromTls();
-        masm.call(mir->desc(), temp);
+        masm.call(mir->desc(), ABINonArgReg0);
 
         // After return, restore the caller's TLS and pinned registers.
         masm.loadPtr(Address(masm.getStackPointer(), callee.importTlsStackOffset()), WasmTlsReg);
