@@ -15,8 +15,8 @@ loader.lazyGetter(this, "GetStringFromName", () => {
   };
 });
 
-loader.lazyRequireGetter(this, "Editor", "devtools/client/sourceeditor/editor");
-loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
+const Editor = require("devtools/client/sourceeditor/editor");
+const beautify = require("devtools/shared/jsbeautify/beautify");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;
