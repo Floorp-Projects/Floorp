@@ -1328,6 +1328,10 @@ protected:
   bool ParsePolygonFunction(nsCSSValue& aValue);
   bool ParseCircleOrEllipseFunction(nsCSSKeyword, nsCSSValue& aValue);
   bool ParseInsetFunction(nsCSSValue& aValue);
+  // We parse position values differently for basic-shape, by expanding defaults
+  // and replacing keywords with percentages
+  bool ParsePositionValueForBasicShape(nsCSSValue& aOut);
+
 
   /* Functions for transform Parsing */
   bool ParseSingleTransform(bool aIsPrefixed, bool aDisallowRelativeValues,
@@ -12568,6 +12572,11 @@ bool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
 
 // Parses a CSS <position> value, for e.g. the 'background-position' property.
 // Spec reference: http://www.w3.org/TR/css3-background/#ltpositiongt
+// Invariants:
+//  - Always produces a four-value array on a successful parse.
+//  - The values are: X edge, X offset, Y edge, Y offset.
+//  - Edges are always keywords or null.
+//  - A |center| edge will not have an offset.
 bool
 CSSParserImpl::ParsePositionValue(nsCSSValue& aOut)
 {
@@ -12741,6 +12750,78 @@ CSSParserImpl::ParsePositionValue(nsCSSValue& aOut)
     yOffset = swapOffset;
   }
 
+  return true;
+}
+
+static void
+AdjustEdgeOffsetPairForBasicShape(nsCSSValue& aEdge,
+                                  nsCSSValue& aOffset,
+                                  uint8_t aDefaultEdge)
+{
+  // 0 length offsets are 0%
+  if (aOffset.IsLengthUnit() && aOffset.GetFloatValue() == 0.0) {
+    aOffset.SetPercentValue(0);
+  }
+
+  // Default edge is top/left in the 4-value case
+  // In case of 1 or 0 values, the default is center,
+  // but ParsePositionValue already handles this case
+  if (eCSSUnit_Null == aEdge.GetUnit()) {
+    aEdge.SetIntValue(aDefaultEdge, eCSSUnit_Enumerated);
+  }
+  // Default offset is 0%
+  if (eCSSUnit_Null == aOffset.GetUnit()) {
+    aOffset.SetPercentValue(0.0);
+  }
+  if (eCSSUnit_Enumerated == aEdge.GetUnit() &&
+      eCSSUnit_Percent == aOffset.GetUnit()) {
+    switch (aEdge.GetIntValue()) {
+      case NS_STYLE_IMAGELAYER_POSITION_CENTER:
+        aEdge.SetIntValue(aDefaultEdge, eCSSUnit_Enumerated);
+        MOZ_ASSERT(aOffset.GetPercentValue() == 0.0,
+                   "center cannot be used with an offset");
+        aOffset.SetPercentValue(0.5);
+        break;
+      case NS_STYLE_IMAGELAYER_POSITION_BOTTOM:
+        MOZ_ASSERT(aDefaultEdge == NS_STYLE_IMAGELAYER_POSITION_TOP);
+        aEdge.SetIntValue(aDefaultEdge, eCSSUnit_Enumerated);
+        aOffset.SetPercentValue(1 - aOffset.GetPercentValue());
+        break;
+      case NS_STYLE_IMAGELAYER_POSITION_RIGHT:
+        MOZ_ASSERT(aDefaultEdge == NS_STYLE_IMAGELAYER_POSITION_LEFT);
+        aEdge.SetIntValue(aDefaultEdge, eCSSUnit_Enumerated);
+        aOffset.SetPercentValue(1 - aOffset.GetPercentValue());
+    }
+  }
+}
+
+// https://drafts.csswg.org/css-shapes/#basic-shape-serialization
+// We set values to defaults while parsing for basic shapes
+// Invariants:
+//  - Always produces a four-value array on a successful parse.
+//  - The values are: X edge, X offset, Y edge, Y offset
+//  - Edges are always keywords (not including center)
+//  - Offsets are nonnull
+//  - Percentage offsets have keywords folded into them,
+//    so "bottom 40%" or "right 20%" will not exist.
+bool
+CSSParserImpl::ParsePositionValueForBasicShape(nsCSSValue& aOut)
+{
+  if (!ParsePositionValue(aOut)) {
+    return false;
+  }
+  nsCSSValue::Array* value = aOut.GetArrayValue();
+  nsCSSValue& xEdge   = value->Item(0);
+  nsCSSValue& xOffset = value->Item(1);
+  nsCSSValue& yEdge   = value->Item(2);
+  nsCSSValue& yOffset = value->Item(3);
+  // A keyword edge + percent offset pair can be contracted
+  // into the percentage with the default value in the edge.
+  // Offset lengths which are 0 can also be rewritten as 0%
+  AdjustEdgeOffsetPairForBasicShape(xEdge, xOffset,
+                                    NS_STYLE_IMAGELAYER_POSITION_LEFT);
+  AdjustEdgeOffsetPairForBasicShape(yEdge, yOffset,
+                                    NS_STYLE_IMAGELAYER_POSITION_TOP);
   return true;
 }
 
@@ -15976,7 +16057,7 @@ CSSParserImpl::ParseCircleOrEllipseFunction(nsCSSKeyword aKeyword,
 
     if (mToken.mType != eCSSToken_Ident ||
         !mToken.mIdent.LowerCaseEqualsLiteral("at") ||
-        !ParsePositionValue(position)) {
+        !ParsePositionValueForBasicShape(position)) {
       REPORT_UNEXPECTED_TOKEN(PEExpectedPosition);
       SkipUntil(')');
       return false;
