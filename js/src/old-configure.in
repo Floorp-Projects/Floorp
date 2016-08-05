@@ -1086,8 +1086,6 @@ MOZ_ARG_DISABLE_BOOL(ion,
 [  --disable-ion      Disable use of the IonMonkey JIT],
   ENABLE_ION= )
 
-AC_SUBST(ENABLE_METHODJIT_SPEW)
-
 AC_SUBST(ENABLE_ION)
 
 if test -n "$COMPILE_ENVIRONMENT"; then
@@ -1697,10 +1695,6 @@ dnl = Debugging Options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Debugging and Optimizations)
-
-if test "$ENABLE_METHODJIT_SPEW"; then
-    AC_DEFINE(JS_METHODJIT_SPEW)
-fi
 
 dnl ========================================================
 dnl = Enable code optimization. ON by default.
