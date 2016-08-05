@@ -163,7 +163,7 @@ add_task(function* test_execute()
   var statement;
   try {
      statement = db.createStatement(q);
-  } catch(ex) {
+  } catch (ex) {
     do_throw("bookmarks table does not have id field, schema is too old!");
   }
   finally {

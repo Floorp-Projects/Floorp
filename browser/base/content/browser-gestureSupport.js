@@ -853,7 +853,7 @@ var gHistorySwipeAnimation = {
     try {
       return SessionStore.getSessionHistory(gBrowser.selectedTab).entries[aIndex] != null;
     }
-    catch(ex) {
+    catch (ex) {
       return false;
     }
     return true;

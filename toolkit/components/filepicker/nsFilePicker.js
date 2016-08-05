@@ -234,7 +234,7 @@ nsFilePicker.prototype = {
       let result = Components.interfaces.nsIFilePicker.returnCancel;
       try {
         result = this.show();
-      } catch(ex) {
+      } catch (ex) {
       }
       if (aFilePickerShownCallback) {
         aFilePickerShownCallback.done(result);
@@ -264,7 +264,7 @@ nsFilePicker.prototype = {
       try {
         var appShellService = Components.classes[APPSHELL_SERV_CONTRACTID].getService(nsIAppShellService);
         parent = appShellService.hiddenDOMWindow;
-      } catch(ex) {
+      } catch (ex) {
         debug("Can't get parent.  xpconnect hates me so we can't get one from the appShellService.\n");
         debug(ex + "\n");
       }
@@ -278,7 +278,7 @@ nsFilePicker.prototype = {
                         .treeOwner
                         .QueryInterface(nsIInterfaceRequestor)
                         .getInterface(nsIBaseWindow);
-    } catch(ex) {
+    } catch (ex) {
       dump("file picker couldn't get base window\n"+ex+"\n");
     }
     try {
@@ -292,7 +292,7 @@ nsFilePicker.prototype = {
       this.mFileURL = o.retvals.fileURL;
       lastDirectory = o.retvals.directory;
       return o.retvals.buttonStatus;
-    } catch(ex) { dump("unable to open file picker\n" + ex + "\n"); }
+    } catch (ex) { dump("unable to open file picker\n" + ex + "\n"); }
 
     return null;
   }

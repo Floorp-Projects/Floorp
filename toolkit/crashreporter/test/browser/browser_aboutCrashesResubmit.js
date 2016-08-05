@@ -1,7 +1,7 @@
 function cleanup_and_finish() {
   try {
     cleanup_fake_appdir();
-  } catch(ex) {}
+  } catch (ex) {}
   Services.prefs.clearUserPref("breakpad.reportURL");
   BrowserTestUtils.removeTab(gBrowser.selectedTab).then(finish);
 }
@@ -21,7 +21,7 @@ function check_crash_list(crashes) {
     "about:crashes lists correct number of crash reports");
   // no point in checking this if the lists aren't the same length
   if (crashlinks.length == crashes.length) {
-    for(let i=0; i<crashes.length; i++) {
+    for (let i=0; i<crashes.length; i++) {
       Assert.equal(crashlinks[i].id, crashes[i].id, i + ": crash ID is correct");
       if (crashes[i].pending) {
         // we set the breakpad.reportURL pref in test()
@@ -74,14 +74,14 @@ function check_submit_pending(tab, crashes) {
 
       CrashID = id;
       CrashURL = url;
-      for(let x in result) {
+      for (let x in result) {
         if (x in SubmittedCrash.extra)
           is(result[x], SubmittedCrash.extra[x],
              "submitted value for " + x + " matches expected");
         else
           ok(false, "property " + x + " missing from submitted data!");
       }
-      for(let y in SubmittedCrash.extra) {
+      for (let y in SubmittedCrash.extra) {
         if (!(y in result))
           ok(false, "property " + y + " missing from result data!");
       }

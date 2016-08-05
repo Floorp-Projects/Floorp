@@ -52,7 +52,7 @@ add_task(function* test_removePages() {
   try {
     PlacesUtils.annotations.getPageAnnotation(pages[ANNO_INDEX], ANNO_NAME);
     do_throw("did not expire expire_never anno on a not bookmarked item");
-  } catch(ex) {}
+  } catch (ex) {}
 
   // Cleanup.
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);

@@ -40,7 +40,7 @@ function test_portal_not_found() {
       do_check_eq(++step, 2);
       do_check_true(success);
       do_check_eq(attempt, 1);
-      gServer.stop(function(){dump('server stop\n'); do_test_finished(); });
+      gServer.stop(function() {dump('server stop\n'); do_test_finished(); });
     }
   };
 

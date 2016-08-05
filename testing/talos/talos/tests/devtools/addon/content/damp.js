@@ -10,7 +10,7 @@ const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
 const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 
-const SIMPLE_URL = "chrome://damp/content/pages/simple.html";
+const SIMPLE_URL = webserver + "/tests/devtools/addon/content/pages/simple.html";
 const COMPLICATED_URL = webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
 
 function Damp() {

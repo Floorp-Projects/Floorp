@@ -727,25 +727,31 @@ public:
 
     ElementType GetElement(size_t index) const
     {
+        using JNIElemType = typename detail::TypeAdapter<ElementType>::JNIType;
+        static_assert(sizeof(ElementType) == sizeof(JNIElemType),
+                      "Size of native type must match size of JNI type");
+
         ElementType ret;
         (Base::Env()->*detail::TypeAdapter<ElementType>::GetArray)(
-                Base::Instance(), jsize(index), 1, &ret);
+                Base::Instance(), jsize(index), 1,
+                reinterpret_cast<JNIElemType*>(&ret));
         MOZ_CATCH_JNI_EXCEPTION(Base::Env());
         return ret;
     }
 
     nsTArray<ElementType> GetElements() const
     {
-        static_assert(sizeof(ElementType) ==
-                sizeof(typename detail::TypeAdapter<ElementType>::JNIType),
-                "Size of native type must match size of JNI type");
+        using JNIElemType = typename detail::TypeAdapter<ElementType>::JNIType;
+        static_assert(sizeof(ElementType) == sizeof(JNIElemType),
+                      "Size of native type must match size of JNI type");
 
         const jsize len = size_t(Base::Env()->GetArrayLength(Base::Instance()));
 
         nsTArray<ElementType> array((size_t(len)));
         array.SetLength(size_t(len));
         (Base::Env()->*detail::TypeAdapter<ElementType>::GetArray)(
-                Base::Instance(), 0, len, array.Elements());
+                Base::Instance(), 0, len,
+                reinterpret_cast<JNIElemType*>(array.Elements()));
         return array;
     }
 

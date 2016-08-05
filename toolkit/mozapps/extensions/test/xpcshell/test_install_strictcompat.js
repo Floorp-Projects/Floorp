@@ -183,7 +183,7 @@ function check_test_1() {
           do_check_eq(a1.icon64URL, uri + "icon64.png");
 
           a1.uninstall();
-          do_execute_soon(function(){run_test_2(a1)});
+          do_execute_soon(function() {run_test_2(a1)});
         });
       });
     }));

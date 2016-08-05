@@ -22,7 +22,7 @@ function isHostInMozPlaces(aURI)
   );
   let result = false;
   stmt.params.host = aURI.spec;
-  while(stmt.executeStep()) {
+  while (stmt.executeStep()) {
     if (stmt.row.url == aURI.spec) {
       result = true;
       break;

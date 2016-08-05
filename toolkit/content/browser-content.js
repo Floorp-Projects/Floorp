@@ -439,7 +439,7 @@ var Printing = {
   receiveMessage(message) {
     let objects = message.objects;
     let data = message.data;
-    switch(message.name) {
+    switch (message.name) {
       case "Printing:Preview:Enter": {
         this.enterPrintPreview(Services.wm.getOuterWindowWithId(data.windowID), data.simplifiedMode);
         break;
@@ -489,7 +489,7 @@ var Printing = {
                                        printSettings.kInitSaveAll);
 
       return printSettings;
-    } catch(e) {
+    } catch (e) {
       Components.utils.reportError(e);
     }
 
@@ -619,7 +619,7 @@ var Printing = {
         printSettings.docURL = contentWindow.document.baseURI;
 
       docShell.printPreview.printPreview(printSettings, contentWindow, this);
-    } catch(error) {
+    } catch (error) {
       // This might fail if we, for example, attempt to print a XUL document.
       // In that case, we inform the parent to bail out of print preview.
       Components.utils.reportError(error);
@@ -657,7 +657,7 @@ var Printing = {
       } else {
         histogram.add("WITHOUT_PREVIEW");
       }
-    } catch(e) {
+    } catch (e) {
       // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
       // causing an exception to be thrown which we catch here.
       if (e.result != Cr.NS_ERROR_ABORT) {
@@ -1352,7 +1352,7 @@ var ViewSelectionSource = {
       try {
         this._entityConverter = Cc["@mozilla.org/intl/entityconverter;1"]
                                   .createInstance(Ci.nsIEntityConverter);
-      } catch(e) { }
+      } catch (e) { }
     }
 
     const entityVersion = Ci.nsIEntityConverter.entityW3C;

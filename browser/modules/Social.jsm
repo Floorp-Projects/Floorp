@@ -46,7 +46,7 @@ function promiseSetAnnotation(aURI, providerList) {
       } else {
         PlacesUtils.annotations.removePageAnnotation(aURI, "social/mark");
       }
-    } catch(e) {
+    } catch (e) {
       Cu.reportError("SocialAnnotation failed: " + e);
     }
     deferred.resolve();

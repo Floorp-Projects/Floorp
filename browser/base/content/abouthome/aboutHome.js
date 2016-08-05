@@ -161,7 +161,7 @@ function ensureSnippetsMapThen(aCallback)
     try {
       cursorRequest = db.transaction(SNIPPETS_OBJECTSTORE_NAME)
                         .objectStore(SNIPPETS_OBJECTSTORE_NAME).openCursor();
-    } catch(ex) {
+    } catch (ex) {
       console.error(ex);
       invokeCallbacks();
       return;

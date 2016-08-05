@@ -518,7 +518,7 @@ for (let test of testParams) {
 
         do_check_eq(req_version, "2");
 
-        switch(item_id) {
+        switch (item_id) {
         case "addon1@tests.mozilla.org":
           do_check_eq(item_version, "5.0");
           do_check_eq(item_maxappversion, "2");

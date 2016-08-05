@@ -97,7 +97,7 @@ function observe(subject, topic, data) {
       if (data == PREF_SHOW_REMOTE_ICONS) {
         try {
           showRemoteIcons = Services.prefs.getBoolPref(PREF_SHOW_REMOTE_ICONS);
-        } catch(_) {
+        } catch (_) {
           showRemoteIcons = true; // no such pref - default is to show the icons.
         }
       }

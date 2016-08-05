@@ -193,7 +193,7 @@ var PKT_SAVED_OVERLAY = function (options)
                 cb(returnlist);
             },
             textToData: function(text) {
-                if($.trim(text).length > 25 || !$.trim(text).length) {
+                if ($.trim(text).length > 25 || !$.trim(text).length) {
                     if (text.length > 25) {
                         myself.showTagsError(myself.dictJSON.maxtaglength);
                         changestamp = Date.now();
@@ -591,7 +591,7 @@ PKT_SAVED.prototype = {
 
 $(function()
 {
-    if(!window.thePKT_SAVED){
+    if (!window.thePKT_SAVED) {
         var thePKT_SAVED = new PKT_SAVED();
         window.thePKT_SAVED = thePKT_SAVED;
         thePKT_SAVED.init();

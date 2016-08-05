@@ -2174,7 +2174,7 @@ this.Experiments.PreviousExperimentProvider.prototype = Object.freeze({
     this._log.trace("shutdown()");
     try {
       Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
-    } catch(e) {
+    } catch (e) {
       // Prevent crash in mochitest-browser3 on Mulet
     }
   },

@@ -349,7 +349,7 @@
 }
 
 #command-button-frames {
-  background: url("chrome://devtools/skin/images/dropmarker.svg") no-repeat right;
+  background: url("chrome://devtools/skin/images/dropmarker.svg") no-repeat;
 
   /* Override background-size from the command-button.
    The drop down arrow is smaller */
@@ -357,7 +357,11 @@
   min-width: 32px;
 }
 
-#command-button-frames:-moz-dir(rtl) {
+#command-button-frames:-moz-locale-dir(ltr) {
+  background-position: right;
+}
+
+#command-button-frames:-moz-locale-dir(rtl) {
   background-position: left;
 }
 

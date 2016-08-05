@@ -79,7 +79,7 @@ var _themeIDBeingDisabled = null;
   let wasThemeSelected = false;
   try {
     wasThemeSelected = _prefs.getBoolPref("isThemeSelected");
-  } catch(e) { }
+  } catch (e) { }
 
   if (wasThemeSelected) {
     _prefs.clearUserPref("isThemeSelected");
