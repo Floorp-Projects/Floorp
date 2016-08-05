@@ -519,7 +519,13 @@ WasmInstanceObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ WasmInstanceObject*
-WasmInstanceObject::create(JSContext* cx, HandleObject proto)
+WasmInstanceObject::create(JSContext* cx,
+                           UniqueCode code,
+                           HandleWasmMemoryObject memory,
+                           SharedTableVector&& tables,
+                           Handle<FunctionVector> funcImports,
+                           const ValVector& globalImports,
+                           HandleObject proto)
 {
     UniquePtr<WeakExportMap> exports = js::MakeUnique<WeakExportMap>(cx->zone(), ExportMap());
     if (!exports || !exports->init()) {
@@ -528,21 +534,31 @@ WasmInstanceObject::create(JSContext* cx, HandleObject proto)
     }
 
     AutoSetNewObjectMetadata metadata(cx);
-    auto* obj = NewObjectWithGivenProto<WasmInstanceObject>(cx, proto);
+    RootedWasmInstanceObject obj(cx, NewObjectWithGivenProto<WasmInstanceObject>(cx, proto));
     if (!obj)
         return nullptr;
 
     obj->setReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
     MOZ_ASSERT(obj->isNewborn());
-    return obj;
-}
 
-void
-WasmInstanceObject::init(UniqueInstance instance)
-{
-    MOZ_ASSERT(isNewborn());
-    initReservedSlot(INSTANCE_SLOT, PrivateValue((void*)instance.release()));
-    MOZ_ASSERT(!isNewborn());
+    // Root the Instance via WasmInstanceObject before any possible GC.
+    auto* instance = cx->new_<Instance>(cx,
+                                        obj,
+                                        Move(code),
+                                        memory,
+                                        Move(tables),
+                                        funcImports,
+                                        globalImports);
+    if (!instance)
+        return nullptr;
+
+    obj->initReservedSlot(INSTANCE_SLOT, PrivateValue(instance));
+    MOZ_ASSERT(!obj->isNewborn());
+
+    if (!instance->init(cx))
+        return nullptr;
+
+    return obj;
 }
 
 /* static */ bool

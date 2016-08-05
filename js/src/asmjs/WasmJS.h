@@ -138,8 +138,13 @@ class WasmInstanceObject : public NativeObject
     static const JSFunctionSpec methods[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmInstanceObject* create(JSContext* cx, HandleObject proto);
-    void init(UniquePtr<wasm::Instance> instance);
+    static WasmInstanceObject* create(JSContext* cx,
+                                      UniquePtr<wasm::Code> code,
+                                      HandleWasmMemoryObject memory,
+                                      Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
+                                      Handle<FunctionVector> funcImports,
+                                      const wasm::ValVector& globalImports,
+                                      HandleObject proto);
     wasm::Instance& instance() const;
 
     static bool getExportedFunction(JSContext* cx,

@@ -746,32 +746,15 @@ Module::instantiate(JSContext* cx,
     if (!code)
         return false;
 
-    // Create the Instance, ensuring that it is traceable via 'instanceObj'
-    // before any GC can occur and invalidate the pointers stored in global
-    // memory.
-
-    {
-        instanceObj.set(WasmInstanceObject::create(cx, instanceProto));
-        if (!instanceObj)
-            return false;
-
-        auto instance = cx->make_unique<Instance>(cx,
-                                                  instanceObj,
-                                                  Move(code),
-                                                  memory,
-                                                  Move(tables),
-                                                  funcImports,
-                                                  globalImports);
-        if (!instance)
-            return false;
-
-        instanceObj->init(Move(instance));
-    }
-
-    if (!instanceObj->instance().init(cx))
+    instanceObj.set(WasmInstanceObject::create(cx,
+                                               Move(code),
+                                               memory,
+                                               Move(tables),
+                                               funcImports,
+                                               globalImports,
+                                               instanceProto));
+    if (!instanceObj)
         return false;
-
-    // Create the export object.
 
     RootedObject exportObj(cx);
     RootedWasmTableObject table(cx, tableImport);
