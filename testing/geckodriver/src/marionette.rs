@@ -57,15 +57,6 @@ use zip;
 const DEFAULT_HOST: &'static str = "localhost";
 
 lazy_static! {
-    pub static ref E10S_PREFERENCES: [(&'static str, Pref); 1] = [
-        ("browser.tabs.remote.autostart", Pref::new(true)),
-    ];
-
-    pub static ref NON_E10S_PREFERENCES: [(&'static str, Pref); 2] = [
-        ("browser.tabs.remote.autostart", Pref::new(false)),
-        ("browser.tabs.remote.autostart.2", Pref::new(false)),
-    ];
-
     pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 45] = [
         ("app.update.auto", Pref::new(false)),
         ("app.update.enabled", Pref::new(false)),
@@ -284,9 +275,6 @@ pub struct MarionetteSettings {
     pub binary: Option<PathBuf>,
     pub connect_existing: bool,
 
-    /// Enable or disable Electrolysis, or multi-processing, in Gecko.
-    pub e10s: bool,
-
     /// Optionally increase Marionette's verbosity by providing a log
     /// level. The Gecko default is LogLevel::Info for optimised
     /// builds and LogLevel::Debug for debug builds.
@@ -299,7 +287,6 @@ pub struct MarionetteHandler {
     connect_existing: bool,
     browser: Option<FirefoxRunner>,
     port: Option<u16>,
-    e10s: bool,
     log_level: Option<LogLevel>,
 }
 
@@ -311,7 +298,6 @@ impl MarionetteHandler {
             connect_existing: settings.connect_existing,
             browser: None,
             port: settings.port,
-            e10s: settings.e10s,
             log_level: settings.log_level,
         }
     }
@@ -385,11 +371,6 @@ impl MarionetteHandler {
         prefs.insert_slice(&FIREFOX_REQUIRED_PREFERENCES[..]);
         if !custom_profile {
             prefs.insert_slice(&FIREFOX_DEFAULT_PREFERENCES[..]);
-            if self.e10s {
-                prefs.insert_slice(&E10S_PREFERENCES[..]);
-            } else {
-                prefs.insert_slice(&NON_E10S_PREFERENCES[..]);
-            }
         };
         if let Some(ref l) = self.log_level {
             prefs.insert("marionette.logging", Pref::new(l.to_string()));
