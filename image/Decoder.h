@@ -249,14 +249,6 @@ public:
    */
   bool WasAborted() const { return mDecodeAborted; }
 
-  /**
-   * Mark this decoder as aborted.
-   *
-   * XXX(seth): This is a temporary method which just exists to allow this patch
-   * series to be split into smaller patches. It'll be removed in a later patch.
-   */
-  void Abort() { mDecodeAborted = true; }
-
   enum DecodeStyle {
       PROGRESSIVE, // produce intermediate frames representing the partial
                    // state of the image
