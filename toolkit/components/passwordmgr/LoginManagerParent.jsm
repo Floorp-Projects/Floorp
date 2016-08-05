@@ -509,6 +509,12 @@ var LoginManagerParent = {
   },
 
   updateLoginAnchor: Task.async(function* (browser) {
+    // Once this preference is removed, this version of the fill doorhanger
+    // should be enabled for Desktop only, and not for Android or B2G.
+    if (!Services.prefs.getBoolPref("signon.ui.experimental")) {
+      return;
+    }
+
     // Copy the state to use for this execution of the task. These will not
     // change during this execution of the asynchronous function, but in case a
     // change happens in the state, the function will be retriggered.
@@ -519,16 +525,10 @@ var LoginManagerParent = {
     // Check if there are form logins for the site, ignoring formSubmitURL.
     let hasLogins = loginFormOrigin &&
                     LoginHelper.searchLoginsWithObject({
-                      formSubmitURL: "",
+                      httpRealm: null,
                       hostname: loginFormOrigin,
                       schemeUpgrades: LoginHelper.schemeUpgrades,
                     }).length > 0;
-
-    // Once this preference is removed, this version of the fill doorhanger
-    // should be enabled for Desktop only, and not for Android or B2G.
-    if (!Services.prefs.getBoolPref("signon.ui.experimental")) {
-      return;
-    }
 
     let showLoginAnchor = loginFormPresent || hasLogins;
 
