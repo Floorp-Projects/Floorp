@@ -1,0 +1,488 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "AndroidDecoderModule.h"
+#include "AndroidBridge.h"
+#include "AndroidSurfaceTexture.h"
+#include "GeneratedJNINatives.h"
+#include "GLImages.h"
+
+#include "MediaData.h"
+#include "MediaInfo.h"
+#include "VideoUtils.h"
+#include "VPXDecoder.h"
+
+#include "nsThreadUtils.h"
+#include "nsPromiseFlatString.h"
+#include "nsIGfxInfo.h"
+
+#include "prlog.h"
+
+#include <jni.h>
+
+#include <deque>
+
+#undef LOG
+#define LOG(arg, ...) MOZ_LOG(sAndroidDecoderModuleLog, \
+    mozilla::LogLevel::Debug, ("RemoteDataDecoder(%p)::%s: " arg, \
+      this, __func__, ##__VA_ARGS__))
+
+using namespace mozilla;
+using namespace mozilla::gl;
+using namespace mozilla::java;
+using namespace mozilla::java::sdk;
+using media::TimeUnit;
+
+namespace mozilla {
+
+class JavaCallbacksSupport
+  : public CodecProxy::NativeCallbacks::Natives<JavaCallbacksSupport>
+{
+public:
+  typedef CodecProxy::NativeCallbacks::Natives<JavaCallbacksSupport> Base;
+  using Base::AttachNative;
+
+  JavaCallbacksSupport(MediaDataDecoderCallback* aDecoderCallback)
+    : mDecoderCallback(aDecoderCallback)
+  {
+    MOZ_ASSERT(aDecoderCallback);
+  }
+
+  virtual ~JavaCallbacksSupport() {}
+
+  void OnInputExhausted()
+  {
+    if (mDecoderCallback) {
+      mDecoderCallback->InputExhausted();
+    }
+  }
+
+  virtual void HandleOutput(jni::ByteArray::Param aBytes, BufferInfo::Param aInfo) = 0;
+
+  void OnOutput(jni::ByteArray::Param aBytes, jni::Object::Param aInfo)
+  {
+    if (mDecoderCallback) {
+      HandleOutput(aBytes, BufferInfo::Ref::From(aInfo));
+    }
+  }
+
+  virtual void HandleOutputFormatChanged(MediaFormat::Param aFormat) {};
+
+  void OnOutputFormatChanged(jni::Object::Param aFormat)
+  {
+    if (mDecoderCallback) {
+      HandleOutputFormatChanged(MediaFormat::Ref::From(aFormat));
+    }
+  }
+
+  void OnError(bool aIsFatal)
+  {
+    if (mDecoderCallback) {
+      mDecoderCallback->Error(aIsFatal ?
+        MediaDataDecoderError::FATAL_ERROR :
+        MediaDataDecoderError::DECODE_ERROR);
+    }
+  }
+
+  void DisposeNative()
+  {
+    // TODO
+  }
+
+  void Cancel()
+  {
+    mDecoderCallback = nullptr;
+  }
+
+protected:
+  MediaDataDecoderCallback* mDecoderCallback;
+};
+
+struct SampleTime final
+{
+  SampleTime(int64_t aStart, int64_t aDuration)
+    : mStart(aStart)
+    , mDuration(aDuration)
+  {}
+
+  int64_t mStart;
+  int64_t mDuration;
+};
+
+
+class RemoteVideoDecoder final : public RemoteDataDecoder
+{
+public:
+  class CallbacksSupport final : public JavaCallbacksSupport
+  {
+  public:
+    CallbacksSupport(RemoteVideoDecoder* aDecoder, MediaDataDecoderCallback* aCallback)
+      : JavaCallbacksSupport(aCallback)
+      , mDecoder(aDecoder)
+    {}
+
+    virtual ~CallbacksSupport() {}
+
+    void HandleOutput(jni::ByteArray::Param aBytes, BufferInfo::Param aInfo) override
+    {
+      Maybe<int64_t> durationUs = mDecoder->mInputDurations.Get();
+      if (!durationUs) {
+        return;
+      }
+
+      int32_t flags;
+      bool ok = NS_SUCCEEDED(aInfo->Flags(&flags));
+      MOZ_ASSERT(ok);
+
+      int32_t offset;
+      ok |= NS_SUCCEEDED(aInfo->Offset(&offset));
+      MOZ_ASSERT(ok);
+
+      int64_t presentationTimeUs;
+      ok |= NS_SUCCEEDED(aInfo->PresentationTimeUs(&presentationTimeUs));
+      MOZ_ASSERT(ok);
+
+      int32_t size;
+      ok |= NS_SUCCEEDED(aInfo->Size(&size));
+      MOZ_ASSERT(ok);
+
+      NS_ENSURE_TRUE_VOID(ok);
+
+      if (size > 0) {
+        RefPtr<layers::Image> img =
+          new SurfaceTextureImage(mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mDisplay,
+                                  gl::OriginPos::BottomLeft);
+
+        RefPtr<VideoData> v =
+          VideoData::CreateFromImage(mDecoder->mConfig,
+                                    offset,
+                                    presentationTimeUs,
+                                    durationUs.value(),
+                                    img,
+                                    !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
+                                    presentationTimeUs,
+                                    gfx::IntRect(0, 0,
+                                                  mDecoder->mConfig.mDisplay.width,
+                                                  mDecoder->mConfig.mDisplay.height));
+
+        mDecoderCallback->Output(v);
+      }
+
+      if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
+        mDecoderCallback->DrainComplete();
+        return;
+      }
+    }
+
+    friend class RemoteDataDecoder;
+
+  private:
+    RemoteVideoDecoder* mDecoder;
+  };
+
+  RemoteVideoDecoder(const VideoInfo& aConfig,
+                   MediaFormat::Param aFormat,
+                   MediaDataDecoderCallback* aCallback,
+                   layers::ImageContainer* aImageContainer)
+    : RemoteDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
+                        aFormat, aCallback)
+    , mImageContainer(aImageContainer)
+    , mConfig(aConfig)
+  {
+  }
+
+  RefPtr<InitPromise> Init() override
+  {
+    mSurfaceTexture = AndroidSurfaceTexture::Create();
+    if (!mSurfaceTexture) {
+      NS_WARNING("Failed to create SurfaceTexture for video decode\n");
+      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    }
+
+    // Register native methods.
+    JavaCallbacksSupport::Init();
+
+    mJavaCallbacks = CodecProxy::NativeCallbacks::New();
+    JavaCallbacksSupport::AttachNative(mJavaCallbacks,
+                                       mozilla::MakeUnique<CallbacksSupport>(this, mCallback));
+
+    mJavaDecoder = CodecProxy::Create(mFormat, mSurfaceTexture->JavaSurface(), mJavaCallbacks);
+    if (mJavaDecoder == nullptr) {
+      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    }
+
+    mInputDurations.Clear();
+
+    return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+  }
+
+  nsresult Flush() override
+  {
+    mInputDurations.Clear();
+    return RemoteDataDecoder::Flush();
+  }
+
+  nsresult Input(MediaRawData* aSample) override
+  {
+    nsresult res = RemoteDataDecoder::Input(aSample);
+    NS_ENSURE_SUCCESS(res, res);
+
+    mInputDurations.Put(aSample->mDuration);
+    return NS_OK;
+  }
+
+private:
+  class DurationQueue {
+  public:
+
+    void Clear()
+    {
+      mValues.clear();
+    }
+
+    void Put(int64_t aDurationUs)
+    {
+      mValues.emplace_back(aDurationUs);
+    }
+
+    Maybe<int64_t> Get()
+    {
+      if (mValues.empty()) {
+        return Nothing();
+      }
+
+      auto value = Some(mValues.front());
+      mValues.pop_front();
+
+      return value;
+    }
+
+  private:
+    std::deque<int64_t> mValues;
+  };
+
+  layers::ImageContainer* mImageContainer;
+  const VideoInfo& mConfig;
+  RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
+  DurationQueue mInputDurations;
+};
+
+class RemoteAudioDecoder final : public RemoteDataDecoder
+{
+public:
+  RemoteAudioDecoder(const AudioInfo& aConfig,
+                   MediaFormat::Param aFormat,
+                   MediaDataDecoderCallback* aCallback)
+    : RemoteDataDecoder(MediaData::Type::AUDIO_DATA, aConfig.mMimeType,
+                        aFormat, aCallback)
+    , mConfig(aConfig)
+  {
+    JNIEnv* const env = jni::GetEnvForThread();
+
+    bool formatHasCSD = false;
+    NS_ENSURE_SUCCESS_VOID(aFormat->ContainsKey(NS_LITERAL_STRING("csd-0"), &formatHasCSD));
+
+    if (!formatHasCSD && aConfig.mCodecSpecificConfig->Length() >= 2) {
+      jni::ByteBuffer::LocalRef buffer(env);
+      buffer = jni::ByteBuffer::New(
+          aConfig.mCodecSpecificConfig->Elements(),
+          aConfig.mCodecSpecificConfig->Length());
+      NS_ENSURE_SUCCESS_VOID(aFormat->SetByteBuffer(NS_LITERAL_STRING("csd-0"),
+                                                    buffer));
+    }
+  }
+
+  RefPtr<InitPromise> Init() override
+  {
+    // Register native methods.
+    JavaCallbacksSupport::Init();
+
+    mJavaCallbacks = CodecProxy::NativeCallbacks::New();
+    JavaCallbacksSupport::AttachNative(mJavaCallbacks,
+                                       mozilla::MakeUnique<CallbacksSupport>(this, mCallback));
+
+    mJavaDecoder = CodecProxy::Create(mFormat, nullptr, mJavaCallbacks);
+    if (mJavaDecoder == nullptr) {
+      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+    }
+
+    return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
+  }
+
+private:
+  class CallbacksSupport final : public JavaCallbacksSupport
+  {
+  public:
+    CallbacksSupport(RemoteAudioDecoder* aDecoder, MediaDataDecoderCallback* aCallback)
+      : JavaCallbacksSupport(aCallback)
+      , mDecoder(aDecoder)
+    {}
+
+    virtual ~CallbacksSupport() {}
+
+    void HandleOutput(jni::ByteArray::Param aBytes, BufferInfo::Param aInfo) override
+    {
+      int32_t flags;
+      bool ok = NS_SUCCEEDED(aInfo->Flags(&flags));
+      MOZ_ASSERT(ok);
+
+      int32_t offset;
+      ok |= NS_SUCCEEDED(aInfo->Offset(&offset));
+      MOZ_ASSERT(ok);
+
+      int64_t presentationTimeUs;
+      ok |= NS_SUCCEEDED(aInfo->PresentationTimeUs(&presentationTimeUs));
+      MOZ_ASSERT(ok);
+
+      int32_t size;
+      ok |= NS_SUCCEEDED(aInfo->Size(&size));
+      MOZ_ASSERT(ok);
+
+      NS_ENSURE_TRUE_VOID(ok);
+
+      if (size > 0) {
+#ifdef MOZ_SAMPLE_TYPE_S16
+        const int32_t numSamples = size / 2;
+#else
+#error We only support 16-bit integer PCM
+#endif
+
+        const int32_t numFrames = numSamples / mOutputChannels;
+        AlignedAudioBuffer audio(numSamples);
+        if (!audio) {
+          return;
+        }
+
+        JNIEnv* const env = jni::GetEnvForThread();
+        jbyteArray bytes = aBytes.Get();
+        env->GetByteArrayRegion(bytes, offset, size,
+                                reinterpret_cast<jbyte*>(audio.get()));
+
+        RefPtr<AudioData> data = new AudioData(0, presentationTimeUs,
+                                              FramesToUsecs(numFrames, mOutputSampleRate).value(),
+                                              numFrames,
+                                              Move(audio),
+                                              mOutputChannels,
+                                              mOutputSampleRate);
+
+        mDecoderCallback->Output(data);
+      }
+
+      if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
+        mDecoderCallback->DrainComplete();
+        return;
+      }
+    }
+
+    void HandleOutputFormatChanged(MediaFormat::Param aFormat) override
+    {
+      aFormat->GetInteger(NS_LITERAL_STRING("channel-count"), &mOutputChannels);
+      AudioConfig::ChannelLayout layout(mOutputChannels);
+      if (!layout.IsValid()) {
+        mDecoderCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+        return;
+      }
+      aFormat->GetInteger(NS_LITERAL_STRING("sample-rate"), &mOutputSampleRate);
+      LOG("Audio output format changed: channels:%d sample rate:%d", mOutputChannels, mOutputSampleRate);
+    }
+
+  private:
+    RemoteAudioDecoder* mDecoder;
+    int32_t mOutputChannels;
+    int32_t mOutputSampleRate;
+  };
+
+  const AudioInfo& mConfig;
+};
+
+MediaDataDecoder*
+RemoteDataDecoder::CreateAudioDecoder(const AudioInfo& aConfig,
+                                          MediaFormat::Param aFormat,
+                                          MediaDataDecoderCallback* aCallback)
+{
+  return new RemoteAudioDecoder(aConfig, aFormat, aCallback);
+}
+
+MediaDataDecoder*
+RemoteDataDecoder::CreateVideoDecoder(const VideoInfo& aConfig,
+                                          MediaFormat::Param aFormat,
+                                          MediaDataDecoderCallback* aCallback,
+                                          layers::ImageContainer* aImageContainer)
+{
+  return new RemoteVideoDecoder(aConfig, aFormat, aCallback, aImageContainer);
+}
+
+RemoteDataDecoder::RemoteDataDecoder(MediaData::Type aType,
+                                     const nsACString& aMimeType,
+                                     MediaFormat::Param aFormat,
+                                     MediaDataDecoderCallback* aCallback)
+  : mType(aType)
+  , mMimeType(aMimeType)
+  , mFormat(aFormat)
+  , mCallback(aCallback)
+{
+}
+
+nsresult
+RemoteDataDecoder::Flush()
+{
+  mJavaDecoder->Flush();
+  return NS_OK;
+}
+
+nsresult
+RemoteDataDecoder::Drain()
+{
+  BufferInfo::LocalRef bufferInfo;
+  nsresult rv = BufferInfo::New(&bufferInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+  bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+
+  mJavaDecoder->Input(nullptr, bufferInfo);
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+RemoteDataDecoder::Shutdown()
+{
+  LOG("");
+  MOZ_ASSERT(mJavaDecoder && mJavaCallbacks);
+
+  mJavaDecoder->Release();
+  mJavaDecoder = nullptr;
+
+  JavaCallbacksSupport::GetNative(mJavaCallbacks)->Cancel();
+  mJavaCallbacks = nullptr;
+
+  mFormat = nullptr;
+
+  return NS_OK;
+}
+
+nsresult
+RemoteDataDecoder::Input(MediaRawData* aSample)
+{
+  MOZ_ASSERT(aSample != nullptr);
+
+  JNIEnv* const env = jni::GetEnvForThread();
+
+  // Copy sample data into Java byte array.
+  uint32_t length = aSample->Size();
+  jbyteArray data = env->NewByteArray(length);
+  env->SetByteArrayRegion(data, 0, length, reinterpret_cast<const jbyte*>(aSample->Data()));
+
+  jni::ByteArray::LocalRef bytes(env);
+  bytes = jni::Object::LocalRef::Adopt(env, data);
+
+  BufferInfo::LocalRef bufferInfo;
+  nsresult rv = BufferInfo::New(&bufferInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+  bufferInfo->Set(0, aSample->Size(), aSample->mTime, 0);
+
+  mJavaDecoder->Input(bytes, bufferInfo);
+
+  return NS_OK;
+}
+
+} // mozilla
