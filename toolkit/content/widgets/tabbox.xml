@@ -47,11 +47,7 @@
       </property>
 
       <field name="_handleMetaAltArrows" readonly="true">
-        {
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-          AppConstants.platform == "macosx";
-        }
+        /Mac/.test(navigator.platform)
       </field>
 
       <!-- _tabs and _tabpanels are deprecated, they exist only for
@@ -772,11 +768,7 @@
                                    onset="this.setAttribute('linkedpanel', val); return val;"/>
 
       <field name="arrowKeysShouldWrap" readonly="true">
-        {
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-          AppConstants.platform == "macosx";
-        }
+        /Mac/.test(navigator.platform)
       </field>
       <field name="TelemetryStopwatch" readonly="true">
         {
