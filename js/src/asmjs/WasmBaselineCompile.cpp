@@ -2114,6 +2114,10 @@ class BaseCompiler
 
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
         masm.wasmCallIndirect(desc, callee);
+
+        // After return, restore the caller's TLS and pinned registers.
+        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmPinnedRegsFromTls();
     }
 
     // Precondition: sync()
