@@ -785,8 +785,6 @@ if test "$GNU_CC"; then
         fi
     fi
 
-    MOZ_SET_WARNINGS_CFLAGS
-
     _DEFINES_CFLAGS='-include $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 
@@ -810,8 +808,6 @@ fi
 if test "$GNU_CXX"; then
     # FIXME: Let us build with strict aliasing. bug 414641.
     CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
-
-    MOZ_SET_WARNINGS_CXXFLAGS
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(topobjdir)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1116,11 +1112,6 @@ case "$target" in
         # and NSS with -mnop-fun-dllimport flag. The drawback of this solution is that
         # function thunks need to be generated for cross-DLL calls.
         MOZ_FOLD_LIBS_FLAGS=-mnop-fun-dllimport
-
-        # We use mix of both POSIX and Win32 printf format across the tree, so format
-        # warnings are useless on mingw.
-        MOZ_C_SUPPORTS_WARNING(-Wno-, format, ac_c_has_wno_format)
-        MOZ_CXX_SUPPORTS_WARNING(-Wno-, format, ac_cxx_has_wno_format)
     else
         TARGET_COMPILER_ABI=msvc
         HOST_LD='$(LD)'
