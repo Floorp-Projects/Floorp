@@ -1593,15 +1593,16 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
     }
 
     bool startsBetweenLineBreaker = false;
+    nsAutoString chars;
     AutoTArray<nsRect, 16> charRects;
 
-    bool isLineBreaker = ShouldBreakLineBefore(firstContent, mRootContent);
-    if (isLineBreaker) {
+    if (ShouldBreakLineBefore(firstContent, mRootContent)) {
       // TODO: If the frame isn't <br> and there was previous text frame or
       //       <br>, we can set the rect to caret rect at the end.  Currently,
       //       this sets the rect to caret rect at the start of the node.
       FrameRelativeRect brRect = GetLineBreakerRectBefore(firstFrame);
       charRects.AppendElement(brRect.RectRelativeTo(firstFrame));
+      chars.AssignLiteral("\n");
       if (kBRLength > 1 && offset == aEvent->mInput.mOffset && offset) {
         // If the first frame for the previous offset of the query range and
         // the first frame for the start of query range are same, that means
@@ -1624,6 +1625,30 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
         //      we need to recompute with new range, but how?
         return rv;
       }
+      // Assign the characters whose rects are computed by the call of
+      // nsTextFrame::GetCharacterRectsInRange().
+      AppendSubString(chars, firstContent, firstFrame.mStartOffsetInNode,
+                      charRects.Length());
+      if (NS_WARN_IF(chars.Length() != charRects.Length())) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (kBRLength > 1 && chars[0] == '\n' &&
+          offset == aEvent->mInput.mOffset && offset) {
+        // If start of range starting from previous offset of query range is
+        // same as the start of query range, the query range starts from
+        // between a line breaker (i.e., the range starts between "\r" and
+        // "\n").
+        RefPtr<nsRange> rangeToPrevOffset = new nsRange(mRootContent);
+        rv = SetRangeFromFlatTextOffset(rangeToPrevOffset,
+                                        aEvent->mInput.mOffset - 1, 1,
+                                        lineBreakType, true, nullptr);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        startsBetweenLineBreaker =
+          range->GetStartParent() == rangeToPrevOffset->GetStartParent() &&
+          range->StartOffset() == rangeToPrevOffset->StartOffset();
+      }
     }
 
     for (size_t i = 0; i < charRects.Length() && offset < kEndOffset; i++) {
@@ -1642,7 +1667,7 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
       // If it's not a line breaker or the line breaker length is same as
       // XP line breaker's, we need to do nothing for current character.
-      if (!isLineBreaker || kBRLength == 1) {
+      if (chars[i] != '\n' || kBRLength == 1) {
         continue;
       }
 
