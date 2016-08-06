@@ -110,33 +110,11 @@ const DirectorRegistry = exports.DirectorRegistry = {
  * E10S parent/child setup helpers
  */
 
-var gTrackedMessageManager = new Set();
-
-exports.setupParentProcess = function setupParentProcess({mm, prefix}) {
-  // prevents multiple subscriptions on the same messagemanager
-  if (gTrackedMessageManager.has(mm)) {
-    return;
-  }
-  gTrackedMessageManager.add(mm);
-
+exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
   // listen for director-script requests from the child process
-  mm.addMessageListener("debug:director-registry-request", handleChildRequest);
-
-  DebuggerServer.once("disconnected-from-child:" + prefix, handleMessageManagerDisconnected);
+  setMessageManager(mm);
 
   /* parent process helpers */
-
-  function handleMessageManagerDisconnected(evt, { mm: disconnected_mm }) {
-    // filter out not subscribed message managers
-    if (disconnected_mm !== mm || !gTrackedMessageManager.has(mm)) {
-      return;
-    }
-
-    gTrackedMessageManager.delete(mm);
-
-    // unregister for director-script requests handlers from the parent process (if any)
-    mm.removeMessageListener("debug:director-registry-request", handleChildRequest);
-  }
 
   function handleChildRequest(msg) {
     switch (msg.json.method) {
@@ -149,6 +127,21 @@ exports.setupParentProcess = function setupParentProcess({mm, prefix}) {
         throw new Error(ERR_DIRECTOR_PARENT_UNKNOWN_METHOD);
     }
   }
+
+  function setMessageManager(newMM) {
+    if (mm) {
+      mm.removeMessageListener("debug:director-registry-request", handleChildRequest);
+    }
+    mm = newMM;
+    if (mm) {
+      mm.addMessageListener("debug:director-registry-request", handleChildRequest);
+    }
+  }
+
+  return {
+    onBrowserSwap: setMessageManager,
+    onDisconnected: () => setMessageManager(null),
+  };
 };
 
 /**
