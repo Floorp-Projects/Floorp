@@ -4,16 +4,18 @@
 
 /*
   The :-moz-native-anonymous selector prefix prevents the styles defined here
-  from impacting web content.
-  Indeed, this pseudo-class is only available to chrome code.
+  from impacting web content. Indeed, this pseudo-class is only available to chrome code.
   This stylesheet is loaded as a ua stylesheet via the addon sdk, so having this
   pseudo-class is important.
   Having bug 1086532 fixed would make it possible to load this stylesheet in a
   <style scoped> node instead, directly in the native anonymous container
   element.
+
+  A specific selector should still be specified to avoid impacting non-devtools
+  chrome content.
 */
 
-:-moz-native-anonymous {
+:-moz-native-anonymous .highlighter-container {
   /*
   Content CSS applying to the html element impact the highlighters.
   To avoid that, possible cases have been set to initial.
