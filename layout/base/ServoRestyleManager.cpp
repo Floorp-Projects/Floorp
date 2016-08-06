@@ -75,45 +75,64 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
   }
 
   if (aContent->IsDirtyForServo()) {
-    nsChangeHint changeHint;
-    if (primaryFrame) {
-      changeHint = primaryFrame->StyleContext()->ConsumeStoredChangeHint();
-    } else {
-      // TODO: Use the frame constructor's UndisplayedNodeMap to store the old
-      // style contexts, and thus the change hints. That way we can in most
-      // cases avoid generating ReconstructFrame and push it to the list just to
-      // notice at frame construction that it doesn't need a frame.
-      changeHint = nsChangeHint_ReconstructFrame;
+    RefPtr<ServoComputedValues> computedValues =
+      dont_AddRef(Servo_GetComputedValues(aContent));
+    MOZ_ASSERT(computedValues);
+
+    // NB: Change hint processing only applies to elements, at least until we
+    // support display: contents.
+    if (aContent->IsElement()) {
+      nsChangeHint changeHint = nsChangeHint(0);
+      Element* element = aContent->AsElement();
+
+      // Add an explicit change hint if appropriate.
+      ServoElementSnapshot* snapshot;
+      if (mModifiedElements.Get(element, &snapshot)) {
+        changeHint |= snapshot->ExplicitChangeHint();
+      }
+
+      // Add the stored change hint if there's a frame. If there isn't a frame,
+      // generate a ReconstructFrame change hint if the new display value
+      // (which we can get from the ComputedValues stored on the node) is not
+      // none.
+      if (primaryFrame) {
+        changeHint |= primaryFrame->StyleContext()->ConsumeStoredChangeHint();
+      } else {
+        const nsStyleDisplay* currentDisplay =
+          Servo_GetStyleDisplay(computedValues);
+        if (currentDisplay->mDisplay != NS_STYLE_DISPLAY_NONE) {
+          changeHint |= nsChangeHint_ReconstructFrame;
+        }
+      }
+
+      // Add the new change hint to the list of elements to process if
+      // we need to do any work.
+      if (changeHint) {
+        aChangeListToProcess.AppendChange(primaryFrame, element, changeHint);
+      }
     }
 
-    // NB: The change list only expects elements.
-    if (changeHint && aContent->IsElement()) {
-      aChangeListToProcess.AppendChange(primaryFrame, aContent, changeHint);
-    }
-
+    // The frame reconstruction step (if needed) will ask for the descendants'
+    // style correctly. If not needed, we're done too.
     if (!primaryFrame) {
-      // The frame reconstruction step will ask for the descendant's style
-      // correctly.
+      aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO);
       return;
     }
 
-    // Even if we don't have a change hint, we still need to swap style contexts
-    // so our new style is updated properly.
-    RefPtr<ServoComputedValues> computedValues =
-      dont_AddRef(Servo_GetComputedValues(aContent));
+    // Hold the old style context alive, because it could become a dangling
+    // pointer during the replacement. In practice it's not a huge deal (on
+    // GetNextContinuationWithSameStyle the pointer is not dereferenced, only
+    // compared), but better not playing with dangling pointers if not needed.
+    RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
+    MOZ_ASSERT(oldStyleContext);
 
     // TODO: Figure out what pseudos does this content have, and do the proper
     // thing with them.
     RefPtr<nsStyleContext> newContext =
-      aStyleSet->GetContext(computedValues.forget(),
-                            aParentContext,
-                            nullptr,
+      aStyleSet->GetContext(computedValues.forget(), aParentContext, nullptr,
                             CSSPseudoElementType::NotPseudo);
 
-    RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
-    MOZ_ASSERT(oldStyleContext);
-
-    // XXX This could not always work as expected there are kinds of content
+    // XXX This could not always work as expected: there are kinds of content
     // with the first split and the last sharing style, but others not. We
     // should handle those properly.
     for (nsIFrame* f = primaryFrame; f;
@@ -129,7 +148,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
   if (aContent->HasDirtyDescendantsForServo()) {
     MOZ_ASSERT(primaryFrame,
                "Frame construction should be scheduled, and it takes the "
-               "correct style for the children");
+               "correct style for the children, so no need to be here.");
     FlattenedChildIterator it(aContent);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       RecreateStyleContexts(n, primaryFrame->StyleContext(),
