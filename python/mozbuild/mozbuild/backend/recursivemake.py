@@ -59,7 +59,7 @@ from ..frontend.data import (
     ObjdirPreprocessedFiles,
     PerSourceFlag,
     Program,
-    RustRlibLibrary,
+    RustCrate,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -577,7 +577,7 @@ class RecursiveMakeBackend(CommonBackend):
             else:
                 return False
 
-        elif isinstance(obj, RustRlibLibrary):
+        elif isinstance(obj, RustCrate):
             # Nothing to do because |Sources| has done the work for us.
             pass
 
@@ -1162,7 +1162,7 @@ class RecursiveMakeBackend(CommonBackend):
         if libdef.symbols_file:
             backend_file.write('SYMBOLS_FILE := %s\n' % libdef.symbols_file)
 
-        rust_rlibs = [o for o in libdef.linked_libraries if isinstance(o, RustRlibLibrary)]
+        rust_rlibs = [o for o in libdef.linked_libraries if isinstance(o, RustCrate)]
         if rust_rlibs:
             # write out Rust file with extern crate declarations.
             extern_crate_file = mozpath.join(libdef.objdir, 'rul.rs')
@@ -1219,7 +1219,7 @@ class RecursiveMakeBackend(CommonBackend):
                                         % (relpath, lib.import_name))
                     if isinstance(obj, SharedLibrary):
                         write_shared_and_system_libs(lib)
-                elif isinstance(lib, RustRlibLibrary):
+                elif isinstance(lib, RustCrate):
                     backend_file.write_once('RLIB_EXTERN_CRATE_OPTIONS += --extern %s=%s/%s\n'
                                             % (lib.crate_name, relpath, lib.rlib_filename))
                 elif isinstance(obj, SharedLibrary):
@@ -1244,7 +1244,7 @@ class RecursiveMakeBackend(CommonBackend):
         # libraries have been listed to ensure that the Rust objects are
         # searched after the C/C++ objects that might reference Rust symbols.
         # Building the Rust super-crate will take care of Rust->Rust linkage.
-        if isinstance(obj, SharedLibrary) and any(isinstance(o, RustRlibLibrary)
+        if isinstance(obj, SharedLibrary) and any(isinstance(o, RustCrate)
                                                   for o in obj.linked_libraries):
             backend_file.write('STATIC_LIBS += $(RS_STATICLIB_CRATE_OBJ)\n')
 

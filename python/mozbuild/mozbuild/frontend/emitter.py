@@ -60,7 +60,7 @@ from .data import (
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
     Program,
-    RustRlibLibrary,
+    RustCrate,
     SdkFiles,
     SharedLibrary,
     SimpleProgram,
@@ -195,7 +195,7 @@ class TreeMetadataEmitter(LoggingMixin):
     def _emit_libs_derived(self, contexts):
         # First do FINAL_LIBRARY linkage.
         for lib in (l for libs in self._libs.values() for l in libs):
-            if not isinstance(lib, (StaticLibrary, RustRlibLibrary)) or not lib.link_into:
+            if not isinstance(lib, (StaticLibrary, RustCrate)) or not lib.link_into:
                 continue
             if lib.link_into not in self._libs:
                 raise SandboxValidationError(
@@ -724,7 +724,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     (base, _) = mozpath.splitext(mozpath.basename(f))
                     crate_name = context.relsrcdir.replace('/', '_') + '_' + base
                     rlib_filename = 'lib' + base + '.rlib'
-                    lib = RustRlibLibrary(context, libname, crate_name,
+                    lib = RustCrate(context, libname, crate_name,
                                           mozpath.join(context.srcdir, mozpath.dirname(f)),
                                           rlib_filename, final_lib)
                     self._libs[libname].append(lib)
