@@ -30,7 +30,6 @@ from mozbuild.frontend.data import (
     GeneratedWebIDLFile,
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
-    RustCrate,
     SharedLibrary,
     TestManifest,
     TestWebIDLFile,
