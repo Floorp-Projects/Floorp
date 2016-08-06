@@ -13146,6 +13146,7 @@ class MWasmMemoryAccess
     MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
     MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
     bool isAtomicAccess() const { return (barrierBefore_ | barrierAfter_) != MembarNobits; }
+    bool isUnaligned() const { return align() && align() < byteSize(); }
 
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
     void setOffset(uint32_t o) { offset_ = o; }
