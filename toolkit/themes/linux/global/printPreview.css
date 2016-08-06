@@ -2,41 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ..... page navigation ..... */
-
-.home-arrow {
-  list-style-image: url("moz-icon://stock/gtk-goto-first-ltr?size=menu");
+.navigate-button {
+  min-width: 1.9em;
 }
 
-.home-arrow:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-goto-first-rtl?size=menu");
+.navigate-button > .toolbarbutton-icon {
+  display: none;
 }
-
-.end-arrow {
-  list-style-image: url("moz-icon://stock/gtk-goto-last-ltr?size=menu");
-}
-
-.end-arrow:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-goto-last-rtl?size=menu");
-}
-
-.previous-arrow {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
-}
-
-.previous-arrow:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
-}
-
-.next-arrow {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
-}
-
-.next-arrow:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
-}
-
-/* ..... orientation ..... */
 
 .toolbar-portrait-page {
   list-style-image: url("moz-icon://stock/gtk-orientation-portrait?size=button");
