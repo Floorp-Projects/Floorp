@@ -445,7 +445,7 @@ class Library(BaseLibrary):
         self.is_sdk = is_sdk
 
 
-class RustRlibLibrary(Library):
+class RustCrate(Library):
     """Context derived container object for a Rust rlib"""
 
     def __init__(self, context, basename, crate_name, srcdir, rlib_filename, link_into):
