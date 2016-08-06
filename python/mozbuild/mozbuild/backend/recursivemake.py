@@ -1246,7 +1246,7 @@ class RecursiveMakeBackend(CommonBackend):
         # Building the Rust super-crate will take care of Rust->Rust linkage.
         if isinstance(obj, SharedLibrary) and any(isinstance(o, RustRlibLibrary)
                                                   for o in obj.linked_libraries):
-            backend_file.write('STATIC_LIBS += librul.$(LIB_SUFFIX)\n')
+            backend_file.write('STATIC_LIBS += $(RS_STATICLIB_CRATE_OBJ)\n')
 
         for lib in obj.linked_system_libs:
             if obj.KIND == 'target':
