@@ -1023,13 +1023,6 @@
     "n_buckets": 50,
     "description": "PNG image decode speed (Kbytes/sec)"
   },
-  "IMAGE_OPTIMIZE_TO_565_USED": {
-    "expires_in_version": "54",
-    "kind": "boolean",
-    "description": "Records true each time a decoded image is optimized to R5G6B5 format.",
-    "alert_emails": ["seth@mozilla.com"],
-    "bug_numbers": [1281680]
-  },
   "CANVAS_2D_USED": {
     "expires_in_version": "never",
     "kind": "boolean",
