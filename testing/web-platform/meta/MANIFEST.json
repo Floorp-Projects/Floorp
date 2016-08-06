@@ -12642,8 +12642,12 @@
         "url": "/XMLHttpRequest/event-abort.htm"
       },
       {
-        "path": "XMLHttpRequest/event-error.html",
-        "url": "/XMLHttpRequest/event-error.html"
+        "path": "XMLHttpRequest/event-error.sub.html",
+        "url": "/XMLHttpRequest/event-error.sub.html"
+      },
+      {
+        "path": "XMLHttpRequest/event-error-order.sub.html",
+        "url": "/XMLHttpRequest/event-error-order.sub.html"
       },
       {
         "path": "XMLHttpRequest/event-load.htm",
@@ -12672,6 +12676,10 @@
       {
         "path": "XMLHttpRequest/event-timeout.htm",
         "url": "/XMLHttpRequest/event-timeout.htm"
+      },
+      {
+        "path": "XMLHttpRequest/event-timeout-order.htm",
+        "url": "/XMLHttpRequest/event-timeout-order.htm"
       },
       {
         "path": "XMLHttpRequest/event-upload-progress-crossorigin.sub.htm",
