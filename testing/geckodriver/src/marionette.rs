@@ -57,7 +57,7 @@ use zip;
 const DEFAULT_HOST: &'static str = "localhost";
 
 lazy_static! {
-    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 45] = [
+    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 46] = [
         ("app.update.auto", Pref::new(false)),
         ("app.update.enabled", Pref::new(false)),
         ("browser.displayedE10SPrompt.1", Pref::new(5)),
@@ -83,6 +83,7 @@ lazy_static! {
         ("datareporting.policy.dataSubmissionEnabled", Pref::new(false)),
         ("datareporting.policy.dataSubmissionPolicyAccepted", Pref::new(false)),
         ("devtools.errorconsole.enabled", Pref::new(true)),
+        ("dom.disable_open_during_load", Pref::new(false)),
         ("dom.ipc.reportProcessHangs", Pref::new(false)),
         ("focusmanager.testmode", Pref::new(true)),
         ("security.fileuri.origin_policy", Pref::new(3)),
