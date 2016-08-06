@@ -786,11 +786,13 @@ imgFrame::UnlockImageData()
       return NS_OK;
     }
 
-    // Convert the data surface to a GPU surface or a single color if possible.
-    // This will also release mImageSurface if possible.
+    // Convert our data surface to a GPU surface if possible. We'll also try to
+    // release mImageSurface.
     Optimize();
 
-    // Allow the OS to release our data surface.
+    // Allow the OS to release our data surface. Note that mImageSurface also
+    // keeps our volatile buffer alive, so this doesn't actually work unless we
+    // released mImageSurface in Optimize().
     mVBufPtr = nullptr;
   }
 
