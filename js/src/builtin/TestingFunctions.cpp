@@ -1445,7 +1445,7 @@ SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp)
 
     RootedNativeObject promise(cx, &args[0].toObject().as<NativeObject>());
     promise->setReservedSlot(PROMISE_STATE_SLOT, Int32Value(PROMISE_STATE_FULFILLED));
-    promise->setReservedSlot(PROMISE_RESULT_SLOT, UndefinedValue());
+    promise->setReservedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT, UndefinedValue());
 
     JS::dbg::onPromiseSettled(cx, promise);
     return true;

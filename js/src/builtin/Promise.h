@@ -30,11 +30,11 @@ class PromiseObject : public NativeObject
     }
     Value value()  {
         MOZ_ASSERT(state() == JS::PromiseState::Fulfilled);
-        return getFixedSlot(PROMISE_RESULT_SLOT);
+        return getFixedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT);
     }
     Value reason() {
         MOZ_ASSERT(state() == JS::PromiseState::Rejected);
-        return getFixedSlot(PROMISE_RESULT_SLOT);
+        return getFixedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT);
     }
 
     MOZ_MUST_USE bool resolve(JSContext* cx, HandleValue resolutionValue);
