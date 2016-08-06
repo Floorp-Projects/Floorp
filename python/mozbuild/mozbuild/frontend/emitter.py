@@ -725,6 +725,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     crate_name = context.relsrcdir.replace('/', '_') + '_' + base
                     rlib_filename = 'lib' + base + '.rlib'
                     lib = RustRlibLibrary(context, libname, crate_name,
+                                          mozpath.join(context.srcdir, mozpath.dirname(f)),
                                           rlib_filename, final_lib)
                     self._libs[libname].append(lib)
                     self._linkage.append((context, lib, 'USE_LIBS'))
