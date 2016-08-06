@@ -62,7 +62,7 @@ try {
         m = require(module);
 
         if (!setupChild in m) {
-          dumpn(`ERROR: module '${module}' does not export 'setupChild'`);
+          dumpn(`ERROR: module '${module}' does not export '${setupChild}'`);
           return false;
         }
 
