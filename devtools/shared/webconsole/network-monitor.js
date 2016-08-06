@@ -1575,10 +1575,13 @@ NetworkEventActorProxy.prototype = {
  */
 function setupParentProcess({ mm, prefix }) {
   let networkMonitor = new NetworkMonitorParent(mm, prefix);
-  DebuggerServer.once("disconnected-from-child:" + prefix, () => {
-    networkMonitor.destroy();
-    networkMonitor = null;
-  });
+  return {
+    onBrowserSwap: newMM => networkMonitor.setMessageManager(newMM),
+    onDisconnected: () => {
+      networkMonitor.destroy();
+      networkMonitor = null;
+    }
+  };
 }
 
 exports.setupParentProcess = setupParentProcess;
@@ -1595,16 +1598,25 @@ exports.setupParentProcess = setupParentProcess;
  *        The RDP connection prefix that uniquely identifies the connection.
  */
 function NetworkMonitorParent(mm, prefix) {
-  this.messageManager = mm;
   this.onNetMonitorMessage = this.onNetMonitorMessage.bind(this);
   this.onNetworkEvent = this.onNetworkEvent.bind(this);
-
-  mm.addMessageListener("debug:netmonitor", this.onNetMonitorMessage);
+  this.setMessageManager(mm);
 }
 
 NetworkMonitorParent.prototype = {
   netMonitor: null,
   messageManager: null,
+
+  setMessageManager(mm) {
+    if (this.messageManager) {
+      let oldMM = this.messageManager;
+      oldMM.removeMessageListener("debug:netmonitor", this.onNetMonitorMessage);
+    }
+    this.messageManager = mm;
+    if (mm) {
+      mm.addMessageListener("debug:netmonitor", this.onNetMonitorMessage);
+    }
+  },
 
   /**
    * Handler for "debug:netmonitor" messages received through the message manager
@@ -1665,11 +1677,7 @@ NetworkMonitorParent.prototype = {
   }),
 
   destroy: function () {
-    if (this.messageManager) {
-      let mm = this.messageManager;
-      mm.removeMessageListener("debug:netmonitor", this.onNetMonitorMessage);
-    }
-    this.messageManager = null;
+    this.setMessageManager(null);
 
     if (this.netMonitor) {
       this.netMonitor.destroy();

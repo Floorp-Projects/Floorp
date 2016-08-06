@@ -1031,6 +1031,7 @@ var DebuggerServer = {
 
     // provides hook to actor modules that need to exchange messages
     // between e10s parent and child processes
+    let parentModules = [];
     let onSetupInParent = function (msg) {
       // We may have multiple connectToChild instance running for the same tab
       // and need to filter the messages.
@@ -1045,11 +1046,11 @@ var DebuggerServer = {
         m = require(module);
 
         if (!setupParent in m) {
-          dumpn(`ERROR: module '${module}' does not export 'setupParent'`);
+          dumpn(`ERROR: module '${module}' does not export '${setupParent}'`);
           return false;
         }
 
-        m[setupParent]({ mm, prefix: connPrefix });
+        parentModules.push(m[setupParent]({ mm, prefix: connPrefix }));
 
         return true;
       } catch (e) {
@@ -1096,6 +1097,14 @@ var DebuggerServer = {
       // Add listeners to new frame and mm
       trackMessageManager();
 
+      // provides hook to actor modules that need to exchange messages
+      // between e10s parent and child processes
+      parentModules.forEach(mod => {
+        if (mod.onBrowserSwap) {
+          mod.onBrowserSwap(mm);
+        }
+      });
+
       if (childTransport) {
         childTransport.swapBrowser(mm);
       }
@@ -1104,6 +1113,12 @@ var DebuggerServer = {
     let destroy = DevToolsUtils.makeInfallible(function () {
       // provides hook to actor modules that need to exchange messages
       // between e10s parent and child processes
+      parentModules.forEach(mod => {
+        if (mod.onDisconnected) {
+          mod.onDisconnected();
+        }
+      });
+      // TODO: Remove this deprecated path once it's no longer needed by add-ons.
       DebuggerServer.emit("disconnected-from-child:" + connPrefix,
                           { mm, prefix: connPrefix });
 
