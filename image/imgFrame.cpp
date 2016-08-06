@@ -22,7 +22,6 @@
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Telemetry.h"
 #include "nsMargin.h"
 #include "nsThreadUtils.h"
 
@@ -440,8 +439,6 @@ imgFrame::Optimize()
 
   if (mFormat != SurfaceFormat::B8G8R8A8 &&
       optFormat == SurfaceFormat::R5G6B5_UINT16) {
-    Telemetry::Accumulate(Telemetry::IMAGE_OPTIMIZE_TO_565_USED, true);
-
     RefPtr<VolatileBuffer> buf =
       AllocateBufferForImage(mFrameRect.Size(), optFormat);
     if (!buf) {
