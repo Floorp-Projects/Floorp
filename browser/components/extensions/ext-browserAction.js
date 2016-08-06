@@ -10,8 +10,9 @@ XPCOMUtils.defineLazyGetter(this, "colorUtils", () => {
 });
 
 Cu.import("resource://devtools/shared/event-emitter.js");
-
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+
 var {
   EventManager,
   IconDetails,
@@ -21,6 +22,8 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // WeakMap[Extension -> BrowserAction]
 var browserActionMap = new WeakMap();
+
+global.browserActionOf = browserActionOf;
 
 // Responsible for the browser_action section of the manifest as well
 // as the associated popup.
@@ -97,10 +100,9 @@ BrowserAction.prototype = {
         let popupURL = this.getProperty(tab, "popup");
         this.tabManager.addActiveTabPermission(tab);
 
-        // If the widget has a popup URL defined, we open a popup, but do not
-        // dispatch a click event to the extension.
-        // If it has no popup URL defined, we dispatch a click event, but do not
-        // open a popup.
+        // Popups are shown only if a popup URL is defined; otherwise
+        // a "click" event is dispatched. This is done for compatibility with the
+        // Google Chrome onClicked extension API.
         if (popupURL) {
           try {
             new ViewPopup(this.extension, event.target, popupURL, this.browserStyle);
@@ -122,6 +124,42 @@ BrowserAction.prototype = {
 
     this.widget = widget;
   },
+
+  /**
+   * Triggers this browser action for the given window, with the same effects as
+   * if it were clicked by a user.
+   *
+   * This has no effect if the browser action is disabled for, or not
+   * present in, the given window.
+   */
+  triggerAction: Task.async(function* (window) {
+    let popup = ViewPopup.for(this.extension, window);
+    if (popup) {
+      popup.closePopup();
+      return;
+    }
+
+    let widget = this.widget.forWindow(window);
+    let tab = window.gBrowser.selectedTab;
+
+    if (!widget || !this.getProperty(tab, "enabled")) {
+      return;
+    }
+
+    // Popups are shown only if a popup URL is defined; otherwise
+    // a "click" event is dispatched. This is done for compatibility with the
+    // Google Chrome onClicked extension API.
+    if (this.getProperty(tab, "popup")) {
+      if (this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+        yield window.PanelUI.show();
+      }
+
+      let event = new window.CustomEvent("command", {bubbles: true, cancelable: true});
+      widget.node.dispatchEvent(event);
+    } else {
+      this.emit("click");
+    }
+  }),
 
   // Update the toolbar button |node| with the tab context data
   // in |tabData|.
