@@ -55,6 +55,7 @@ HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<mozilla::dom::NodeInfo
                                          FromParser aFromParser)
   : nsGenericHTMLFormElementWithState(aNodeInfo),
     mValueChanged(false),
+    mLastValueChangeWasInteractive(false),
     mHandlingSelect(false),
     mDoneAddingChildren(!aFromParser),
     mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)),
@@ -1344,7 +1345,9 @@ HTMLTextAreaElement::SetCustomValidity(const nsAString& aError)
 bool
 HTMLTextAreaElement::IsTooLong()
 {
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength) || !mValueChanged) {
+  if (!mValueChanged ||
+      !mLastValueChangeWasInteractive ||
+      !HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength)) {
     return false;
   }
 
@@ -1375,10 +1378,7 @@ HTMLTextAreaElement::IsValueMissing() const
 void
 HTMLTextAreaElement::UpdateTooLongValidityState()
 {
-  // TODO: this code will be re-enabled with bug 613016 and bug 613019.
-#if 0
   SetValidityState(VALIDITY_STATE_TOO_LONG, IsTooLong());
-#endif
 }
 
 void
@@ -1525,8 +1525,10 @@ HTMLTextAreaElement::InitializeKeyboardEventListeners()
 }
 
 NS_IMETHODIMP_(void)
-HTMLTextAreaElement::OnValueChanged(bool aNotify)
+HTMLTextAreaElement::OnValueChanged(bool aNotify, bool aWasInteractiveUserChange)
 {
+  mLastValueChangeWasInteractive = aWasInteractiveUserChange;
+
   // Update the validity state
   bool validBefore = IsValid();
   UpdateTooLongValidityState();
