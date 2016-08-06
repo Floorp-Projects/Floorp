@@ -433,57 +433,11 @@ imgFrame::Optimize()
     return NS_OK;
   }
 
-#ifdef ANDROID
-  SurfaceFormat optFormat = gfxPlatform::GetPlatform()
-    ->Optimal2DFormatForContent(gfxContentType::COLOR);
-
-  if (mFormat != SurfaceFormat::B8G8R8A8 &&
-      optFormat == SurfaceFormat::R5G6B5_UINT16) {
-    RefPtr<VolatileBuffer> buf =
-      AllocateBufferForImage(mFrameRect.Size(), optFormat);
-    if (!buf) {
-      return NS_OK;
-    }
-
-    RefPtr<DataSourceSurface> surf =
-      CreateLockedSurface(buf, mFrameRect.Size(), optFormat);
-    if (!surf) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    DataSourceSurface::MappedSurface mapping;
-    if (!surf->Map(DataSourceSurface::MapType::WRITE, &mapping)) {
-      gfxCriticalError() << "imgFrame::Optimize failed to map surface";
-      return NS_ERROR_FAILURE;
-    }
-
-    RefPtr<DrawTarget> target =
-      Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                       mapping.mData,
-                                       mFrameRect.Size(),
-                                       mapping.mStride,
-                                       optFormat);
-
-    if (!target) {
-      gfxWarning() << "imgFrame::Optimize failed in CreateDrawTargetForData";
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    Rect rect(0, 0, mFrameRect.width, mFrameRect.height);
-    target->DrawSurface(mImageSurface, rect, rect);
-    target->Flush();
-    surf->Unmap();
-
-    mImageSurface = surf;
-    mVBuf = buf;
-    mFormat = optFormat;
-  }
-#else
   mOptSurface = gfxPlatform::GetPlatform()
     ->ScreenReferenceDrawTarget()->OptimizeSourceSurface(mImageSurface);
   if (mOptSurface == mImageSurface) {
     mOptSurface = nullptr;
   }
-#endif
 
   if (mOptSurface) {
     mVBuf = nullptr;
