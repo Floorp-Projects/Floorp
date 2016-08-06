@@ -384,5 +384,11 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ]
     FINAL_TARGET_FILES += ['!dependentlibs.list']
 
-# This needs to be last
+# This library needs to be last to make XPCOM module registration work.
 USE_LIBS += ['StaticXULComponentsEnd']
+
+# The above library needs to be last for C++ purposes.  This library,
+# however, is entirely composed of Rust code, and needs to come after
+# all the C++ code so any possible C++ -> Rust calls can be resolved.
+if CONFIG['MOZ_RUST']:
+    USE_LIBS += ['gkrust']
