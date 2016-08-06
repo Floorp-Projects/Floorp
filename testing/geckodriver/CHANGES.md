@@ -6,6 +6,7 @@ All notable changes to this program is documented in this file.
 
 ### Changed
 - Removed `--no-e10s` flag, and geckodriver will from now rely on the Firefox default multiprocessing settings (override using preferences)
+- Disable pop-up blocker in the default profile by @juangj
 
 ## 0.10.0 (2016-08-02)
 
