@@ -29,26 +29,25 @@ add_task(function* tabsSendMessageReply() {
       }
     });
 
-    browser.runtime.sendMessage("respond-never", response => {
-      browser.test.fail(`Got unexpected response callback: ${response}`);
-      browser.test.notifyFail("sendMessage");
-    });
-
     Promise.all([
       browser.runtime.sendMessage("respond-now"),
       browser.runtime.sendMessage("respond-now-2"),
       new Promise(resolve => browser.runtime.sendMessage("respond-soon", resolve)),
       browser.runtime.sendMessage("respond-promise"),
       browser.runtime.sendMessage("respond-never"),
+      new Promise(resolve => {
+        browser.runtime.sendMessage("respond-never", response => { resolve(response); });
+      }),
 
       browser.runtime.sendMessage("respond-error").catch(error => Promise.resolve({error})),
       browser.runtime.sendMessage("throw-error").catch(error => Promise.resolve({error})),
-    ]).then(([respondNow, respondNow2, respondSoon, respondPromise, respondNever, respondError, throwError]) => {
+    ]).then(([respondNow, respondNow2, respondSoon, respondPromise, respondNever, respondNever2, respondError, throwError]) => {
       browser.test.assertEq("respond-now", respondNow, "Got the expected immediate response");
       browser.test.assertEq("respond-now-2", respondNow2, "Got the expected immediate response from the second listener");
       browser.test.assertEq("respond-soon", respondSoon, "Got the expected delayed response");
       browser.test.assertEq("respond-promise", respondPromise, "Got the expected promise response");
       browser.test.assertEq(undefined, respondNever, "Got the expected no-response resolution");
+      browser.test.assertEq(undefined, respondNever2, "Got the expected no-response resolution");
 
       browser.test.assertEq("respond-error", respondError.error.message, "Got the expected error response");
       browser.test.assertEq("throw-error", throwError.error.message, "Got the expected thrown error response");
