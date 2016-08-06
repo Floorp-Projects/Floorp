@@ -27,7 +27,7 @@ function runTest() {
 
   worker.onmessage = function(e) {
     if (e.data.type == 'finish') {
-      ok(true, "Testing done.\n");
+      ok(e.data.progressFired, "Progress was fired.");
       SimpleTest.finish();
     }
   };
