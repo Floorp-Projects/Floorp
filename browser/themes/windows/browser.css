@@ -2408,11 +2408,19 @@ notification[value="translation"] {
 .statuspanel-label {
   margin: 0;
   padding: 2px 4px;
-  background: linear-gradient(#fff, #ddd);
-  border: 1px none #ccc;
+  background: -moz-dialog;
+  border: 1px none ThreeDShadow;
   border-top-style: solid;
-  color: #333;
+  color: -moz-dialogText;
   text-shadow: none;
+}
+
+@media (-moz-windows-default-theme) {
+  .statuspanel-label {
+    background: linear-gradient(#fff, #ddd);
+    border-color: #ccc;
+    color: #333;
+  }
 }
 
 .statuspanel-label:-moz-locale-dir(ltr):not([mirror]),
