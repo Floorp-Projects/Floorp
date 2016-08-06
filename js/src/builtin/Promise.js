@@ -736,6 +736,7 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
 
     // Step 7.
     let state = GetPromiseState(promise);
+    let flags = UnsafeGetInt32FromReservedSlot(promise, PROMISE_FLAGS_SLOT);
     if (state === PROMISE_STATE_PENDING) {
         // Steps 7.a,b.
         // We only have a single list for fulfill and reject reactions.
@@ -764,18 +765,15 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
         let reason = UnsafeGetReservedSlot(promise, PROMISE_REACTIONS_OR_RESULT_SLOT);
 
         // Step 9.c.
-        if (UnsafeGetInt32FromReservedSlot(promise, PROMISE_IS_HANDLED_SLOT) !==
-            PROMISE_IS_HANDLED_STATE_HANDLED)
-        {
+        if (!(flags & PROMISE_FLAG_HANDLED))
             HostPromiseRejectionTracker(promise, PROMISE_REJECTION_TRACKER_OPERATION_HANDLE);
-        }
 
         // Step 9.d.
         EnqueuePromiseReactionJob(reaction, PROMISE_JOB_TYPE_REJECT, reason);
     }
 
     // Step 10.
-    UnsafeSetReservedSlot(promise, PROMISE_IS_HANDLED_SLOT, PROMISE_IS_HANDLED_STATE_HANDLED);
+    UnsafeSetReservedSlot(promise, PROMISE_FLAGS_SLOT, flags | PROMISE_FLAG_HANDLED);
 
     // Step 11.
     return resultCapability.promise;
@@ -791,5 +789,12 @@ function IsPromiseCapability(capability) {
 }
 
 function GetPromiseState(promise) {
-    return UnsafeGetInt32FromReservedSlot(promise, PROMISE_STATE_SLOT);
+    let flags = UnsafeGetInt32FromReservedSlot(promise, PROMISE_FLAGS_SLOT);
+    if (!(flags & PROMISE_FLAG_RESOLVED)) {
+        assert(!(flags & PROMISE_STATE_FULFILLED), "Fulfilled promises are resolved, too");
+        return PROMISE_STATE_PENDING;
+    }
+    if (flags & PROMISE_FLAG_FULFILLED)
+        return PROMISE_STATE_FULFILLED;
+    return PROMISE_STATE_REJECTED;
 }

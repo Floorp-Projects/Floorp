@@ -160,7 +160,11 @@ ResolvePromise(JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueO
     promise->setFixedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT, valueOrReason);
 
     // Step 6.
-    promise->setFixedSlot(PROMISE_STATE_SLOT, Int32Value(int32_t(state)));
+    int32_t flags = promise->getFixedSlot(PROMISE_FLAGS_SLOT).toInt32();
+    flags |= PROMISE_FLAG_RESOLVED;
+    if (state == JS::PromiseState::Fulfilled)
+        flags |= PROMISE_FLAG_FULFILLED;
+    promise->setFixedSlot(PROMISE_FLAGS_SLOT, Int32Value(flags));
 
     // Also null out the resolve/reject functions so they can be GC'd.
     promise->setFixedSlot(PROMISE_RESOLVE_FUNCTION_SLOT, UndefinedValue());
@@ -435,14 +439,13 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
             return nullptr;
 
         // Step 4.
-        promise->setFixedSlot(PROMISE_STATE_SLOT, Int32Value(PROMISE_STATE_PENDING));
+        promise->setFixedSlot(PROMISE_FLAGS_SLOT, Int32Value(0));
 
         // Steps 5-6.
         // Omitted, we allocate our single list of reaction records lazily.
 
         // Step 7.
-        promise->setFixedSlot(PROMISE_IS_HANDLED_SLOT,
-                              Int32Value(PROMISE_IS_HANDLED_STATE_UNHANDLED));
+        // Implicit, the handled flag is unset by default.
 
         // Store an allocation stack so we can later figure out what the
         // control flow was for some unexpected results. Frightfully expensive,
@@ -685,7 +688,7 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
 bool
 PromiseObject::resolve(JSContext* cx, HandleValue resolutionValue)
 {
-    if (this->getFixedSlot(PROMISE_STATE_SLOT).toInt32() != unsigned(JS::PromiseState::Pending))
+    if (state() != JS::PromiseState::Pending)
         return true;
 
     RootedValue funVal(cx, this->getReservedSlot(PROMISE_RESOLVE_FUNCTION_SLOT));
@@ -703,7 +706,7 @@ PromiseObject::resolve(JSContext* cx, HandleValue resolutionValue)
 bool
 PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
 {
-    if (this->getFixedSlot(PROMISE_STATE_SLOT).toInt32() != unsigned(JS::PromiseState::Pending))
+    if (state() != JS::PromiseState::Pending)
         return true;
 
     RootedValue resolveVal(cx, this->getReservedSlot(PROMISE_RESOLVE_FUNCTION_SLOT));
@@ -733,12 +736,8 @@ PromiseObject::onSettled(JSContext* cx)
     promise->setFixedSlot(PROMISE_RESOLUTION_SITE_SLOT, ObjectOrNullValue(stack));
     promise->setFixedSlot(PROMISE_RESOLUTION_TIME_SLOT, DoubleValue(MillisecondsSinceStartup()));
 
-    if (promise->state() == JS::PromiseState::Rejected &&
-        promise->getFixedSlot(PROMISE_IS_HANDLED_SLOT).toInt32() !=
-            PROMISE_IS_HANDLED_STATE_HANDLED)
-    {
+    if (promise->state() == JS::PromiseState::Rejected && promise->isUnhandled())
         cx->runtime()->addUnhandledRejectedPromise(cx, promise);
-    }
 
     JS::dbg::onPromiseSettled(cx, promise);
 }
