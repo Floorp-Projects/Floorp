@@ -31,9 +31,9 @@
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;" accesskey="&page.accesskey;" control="pageNumber"/>
       </xul:vbox>
-      <xul:toolbarbutton class="home-arrow tabbable"
+      <xul:toolbarbutton anonid="navigateHome" class="navigate-button tabbable"
         oncommand="parentNode.navigate(0, 0, 'home');" tooltiptext="&homearrow.tooltip;"/>
-      <xul:toolbarbutton class="previous-arrow tabbable"
+      <xul:toolbarbutton anonid="navigatePrevious" class="navigate-button tabbable"
         oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&previousarrow.tooltip;"/>
       <xul:hbox align="center" pack="center">
         <xul:textbox id="pageNumber" size="3" value="1" min="1" type="number"
@@ -41,9 +41,9 @@
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>
       </xul:hbox>
-      <xul:toolbarbutton class="next-arrow tabbable"
+      <xul:toolbarbutton anonid="navigateNext" class="navigate-button tabbable"
         oncommand="parentNode.navigate(1, 0, 0);" tooltiptext="&nextarrow.tooltip;"/>
-      <xul:toolbarbutton class="end-arrow tabbable"
+      <xul:toolbarbutton anonid="navigateEnd" class="navigate-button tabbable"
         oncommand="parentNode.navigate(0, 0, 'end');" tooltiptext="&endarrow.tooltip;"/>
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>
@@ -157,6 +157,13 @@
           this.mMessageManager = aPPBrowser.messageManager;
           this.mMessageManager.addMessageListener("Printing:Preview:UpdatePageCount", this);
           this.updateToolbar();
+
+          let $ = id => document.getAnonymousElementByAttribute(this, "anonid", id);
+          let ltr = document.documentElement.matches(":root:-moz-locale-dir(ltr)");
+          $("navigateHome").label = ltr ? "⏮" : "⏭";
+          $("navigatePrevious").label = ltr ? "◂" : "▸";
+          $("navigateNext").label = ltr ? "▸" : "◂";
+          $("navigateEnd").label = ltr ? "⏭" : "⏮";
         ]]>
         </body>
       </method>
