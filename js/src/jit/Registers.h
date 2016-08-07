@@ -123,11 +123,11 @@ struct Register64
     bool operator !=(Register64 other) const {
         return reg != other.reg;
     }
+    static Register64 Invalid() {
+        Register64 r(Register::Invalid());
+        return r;
+    }
 #else
-    explicit Register64(Register r)
-      : high(Register::Invalid()), low(Register::Invalid())
-    {}
-
     constexpr Register64(Register h, Register l)
       : high(h), low(l)
     {}
@@ -136,6 +136,10 @@ struct Register64
     }
     bool operator !=(Register64 other) const {
         return high != other.high || low != other.low;
+    }
+    static Register64 Invalid() {
+        Register64 r(Register::Invalid(), Register::Invalid());
+        return r;
     }
 #endif
 };
