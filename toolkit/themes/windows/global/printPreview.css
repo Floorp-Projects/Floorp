@@ -2,64 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ..... page navigation ..... */
-
-.home-arrow,
-.end-arrow:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/printpreview/arrow-left-end.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
+.navigate-button {
+  min-width: 1.9em;
 }
 
-.home-arrow:hover,
-.end-arrow:-moz-locale-dir(rtl):hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+.navigate-button > .toolbarbutton-icon {
+  display: none;
 }
-
-.end-arrow,
-.home-arrow:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/printpreview/arrow-right-end.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.end-arrow:hover,
-.home-arrow:-moz-locale-dir(rtl):hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.previous-arrow,
-.next-arrow:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/printpreview/arrow-left.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.previous-arrow:hover,
-.next-arrow:-moz-locale-dir(rtl):hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.next-arrow,
-.previous-arrow:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/printpreview/arrow-right.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.next-arrow:hover,
-.previous-arrow:-moz-locale-dir(rtl):hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-/* ...... scale in/decrement ..... */
-
-.up-arrow {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up-sharp.gif");
-}
-
-.down-arrow {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
-}
-
-
-/* ..... orientation ..... */
 
 .toolbar-portrait-page {
   list-style-image: url("chrome://global/skin/icons/Print-preview.png");

@@ -1411,9 +1411,11 @@
           let hiddenList = pref ? pref.split(",") : [];
 
           let currentEngineName = Services.search.currentEngine.name;
-          let engines = Services.search.getVisibleEngines()
-                                .filter(e => e.name != currentEngineName &&
-                                             hiddenList.indexOf(e.name) == -1);
+          let includeCurrentEngine = this.getAttribute("includecurrentengine");
+          let engines = Services.search.getVisibleEngines().filter(e => {
+            return (includeCurrentEngine || e.name != currentEngineName) &&
+                   !hiddenList.includes(e.name);
+          });
 
           let header = document.getAnonymousElementByAttribute(this, "anonid",
                                                                "search-panel-one-offs-header")

@@ -1758,10 +1758,10 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 .statuspanel-label {
   margin: 0;
   padding: 2px 4px;
-  background: linear-gradient(#fff, #ddd);
-  border: 1px none #ccc;
+  background: -moz-dialog;
+  border: 1px none ThreeDShadow;
   border-top-style: solid;
-  color: #333;
+  color: -moz-dialogText;
   text-shadow: none;
 }
 

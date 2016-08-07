@@ -80,10 +80,6 @@ toolkit.jar:
   skin/classic/global/icons/warning-16-XP.png                    (icons/warning-16-XP.png)
   skin/classic/global/icons/warning-64-XP.png                    (icons/warning-64-XP.png)
   skin/classic/global/icons/windowControls-XP.png                (icons/windowControls-XP.png)
-  skin/classic/global/printpreview/arrow-left-XP.png             (printpreview/arrow-left-XP.png)
-  skin/classic/global/printpreview/arrow-left-end-XP.png         (printpreview/arrow-left-end-XP.png)
-  skin/classic/global/printpreview/arrow-right-XP.png            (printpreview/arrow-right-XP.png)
-  skin/classic/global/printpreview/arrow-right-end-XP.png        (printpreview/arrow-right-end-XP.png)
   skin/classic/global/toolbar/spring-XP.png                      (toolbar/spring-XP.png)
   skin/classic/global/tree/sort-asc-XP.png                       (tree/sort-asc-XP.png)
   skin/classic/global/tree/sort-dsc-XP.png                       (tree/sort-dsc-XP.png)
@@ -124,10 +120,6 @@ toolkit.jar:
 % override chrome://global/skin/icons/warning-16.png              chrome://global/skin/icons/warning-16-XP.png             osversion<6
 % override chrome://global/skin/icons/warning-64.png              chrome://global/skin/icons/warning-64-XP.png             osversion<6
 % override chrome://global/skin/icons/windowControls.png          chrome://global/skin/icons/windowControls-XP.png         osversion<6
-% override chrome://global/skin/printpreview/arrow-left.png       chrome://global/skin/printpreview/arrow-left-XP.png      osversion<6
-% override chrome://global/skin/printpreview/arrow-left-end.png   chrome://global/skin/printpreview/arrow-left-end-XP.png  osversion<6
-% override chrome://global/skin/printpreview/arrow-right.png      chrome://global/skin/printpreview/arrow-right-XP.png     osversion<6
-% override chrome://global/skin/printpreview/arrow-right-end.png  chrome://global/skin/printpreview/arrow-right-end-XP.png osversion<6
 % override chrome://global/skin/toolbar/spring.png                chrome://global/skin/toolbar/spring-XP.png               osversion<6
 % override chrome://global/skin/tree/sort-asc.png                 chrome://global/skin/tree/sort-asc-XP.png                osversion<6
 % override chrome://global/skin/tree/sort-dsc.png                 chrome://global/skin/tree/sort-dsc-XP.png                osversion<6

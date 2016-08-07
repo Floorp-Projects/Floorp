@@ -9,10 +9,11 @@ const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
 });
 
 /**

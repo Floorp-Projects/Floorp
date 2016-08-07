@@ -9,5 +9,6 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 DevToolsModules(
     'packets.js',
     'stream-utils.js',
-    'transport.js'
+    'transport.js',
+    'websocket-transport.js',
 )
