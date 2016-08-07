@@ -920,6 +920,7 @@ pref("devtools.debugger.log.verbose", false);
 pref("devtools.debugger.remote-enabled", false);
 
 pref("devtools.debugger.remote-port", 6000);
+pref("devtools.debugger.remote-websocket", false);
 // Force debugger server binding on the loopback interface
 pref("devtools.debugger.force-local", true);
 // Display a prompt when a new connection starts to accept/reject it
@@ -4293,6 +4294,7 @@ pref("signon.rememberSignons.visibilityToggle", false);
 #endif
 pref("signon.autofillForms",                true);
 pref("signon.autologin.proxy",              false);
+pref("signon.formlessCapture.enabled",      true);
 pref("signon.storeWhenAutocompleteOff",     true);
 pref("signon.ui.experimental",              false);
 pref("signon.debug",                        false);

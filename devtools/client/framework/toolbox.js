@@ -56,8 +56,8 @@ loader.lazyRequireGetter(this, "Selection",
   "devtools/client/framework/selection", true);
 loader.lazyRequireGetter(this, "InspectorFront",
   "devtools/shared/fronts/inspector", true);
-loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/shared/DevToolsUtils");
+loader.lazyRequireGetter(this, "flags",
+  "devtools/shared/flags");
 loader.lazyRequireGetter(this, "showDoorhanger",
   "devtools/client/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "createPerformanceFront",
@@ -70,6 +70,8 @@ loader.lazyRequireGetter(this, "KeyShortcuts",
   "devtools/client/shared/key-shortcuts", true);
 loader.lazyRequireGetter(this, "ZoomKeys",
   "devtools/client/shared/zoom-keys");
+loader.lazyRequireGetter(this, "settleAll",
+  "devtools/shared/ThreadSafeDevToolsUtils", "settleAll");
 
 loader.lazyGetter(this, "registerHarOverlay", () => {
   return require("devtools/client/netmonitor/har/toolbox-overlay").register;
@@ -477,7 +479,7 @@ Toolbox.prototype = {
       // If in testing environment, wait for performance connection to finish,
       // so we don't have to explicitly wait for this in tests; ideally, all tests
       // will handle this on their own, but each have their own tear down function.
-      if (DevToolsUtils.testing) {
+      if (flags.testing) {
         yield performanceFrontConnection;
       }
 
@@ -1939,7 +1941,7 @@ Toolbox.prototype = {
           this.walker.on("highlighter-ready", this._highlighterReady);
           this.walker.on("highlighter-hide", this._highlighterHidden);
 
-          let autohide = !DevToolsUtils.testing;
+          let autohide = !flags.testing;
           this._highlighter = yield this._inspector.getHighlighter(autohide);
         }
       }.bind(this));
@@ -2118,39 +2120,39 @@ Toolbox.prototype = {
     // Finish all outstanding tasks (which means finish destroying panels and
     // then destroying the host, successfully or not) before destroying the
     // target.
-    this._destroyer = DevToolsUtils.settleAll(outstanding)
-                                   .catch(console.error)
-                                   .then(() => this.destroyHost())
-                                   .catch(console.error)
-                                   .then(() => {
-      // Targets need to be notified that the toolbox is being torn down.
-      // This is done after other destruction tasks since it may tear down
-      // fronts and the debugger transport which earlier destroy methods may
-      // require to complete.
-                                     if (!this._target) {
-                                       return null;
-                                     }
-                                     let target = this._target;
-                                     this._target = null;
-                                     this.highlighterUtils.release();
-                                     target.off("close", this.destroy);
-                                     return target.destroy();
-                                   }, console.error).then(() => {
-                                     this.emit("destroyed");
+    this._destroyer = settleAll(outstanding)
+        .catch(console.error)
+        .then(() => this.destroyHost())
+        .catch(console.error)
+        .then(() => {
+          // Targets need to be notified that the toolbox is being torn down.
+          // This is done after other destruction tasks since it may tear down
+          // fronts and the debugger transport which earlier destroy methods may
+          // require to complete.
+          if (!this._target) {
+            return null;
+          }
+          let target = this._target;
+          this._target = null;
+          this.highlighterUtils.release();
+          target.off("close", this.destroy);
+          return target.destroy();
+        }, console.error).then(() => {
+          this.emit("destroyed");
 
-      // Free _host after the call to destroyed in order to let a chance
-      // to destroyed listeners to still query toolbox attributes
-                                     this._host = null;
-                                     this._toolPanels.clear();
+          // Free _host after the call to destroyed in order to let a chance
+          // to destroyed listeners to still query toolbox attributes
+          this._host = null;
+          this._toolPanels.clear();
 
-      // Force GC to prevent long GC pauses when running tests and to free up
-      // memory in general when the toolbox is closed.
-                                     if (DevToolsUtils.testing) {
-                                       win.QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIDOMWindowUtils)
-           .garbageCollect();
-                                     }
-                                   }).then(null, console.error);
+          // Force GC to prevent long GC pauses when running tests and to free up
+          // memory in general when the toolbox is closed.
+          if (flags.testing) {
+            win.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDOMWindowUtils)
+              .garbageCollect();
+          }
+        }).then(null, console.error);
 
     let leakCheckObserver = ({wrappedJSObject: barrier}) => {
       // Make the leak detector wait until this toolbox is properly destroyed.

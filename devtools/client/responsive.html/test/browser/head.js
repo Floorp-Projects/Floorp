@@ -41,14 +41,14 @@ const asyncStorage = require("devtools/shared/async-storage");
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 Services.prefs.setCharPref("devtools.devices.url",
   TEST_URI_ROOT + "devices.json");
 Services.prefs.setBoolPref("devtools.responsive.html.enabled", true);
 
 registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
   Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref("devtools.responsive.html.enabled");
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");

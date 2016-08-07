@@ -16,6 +16,7 @@ var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } 
   require("devtools/shared/transport/transport");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
+var flags = require("devtools/shared/flags");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Promise = require("promise");
 var SyncPromise = require("devtools/shared/deprecated-sync-thenables");
@@ -56,14 +57,14 @@ Object.defineProperty(this, "Components", {
 });
 
 if (isWorker) {
-  dumpn.wantLogging = true;
-  dumpv.wantVerbose = true;
+  flags.wantLogging = true;
+  flags.wantVerbose = true;
 } else {
   const LOG_PREF = "devtools.debugger.log";
   const VERBOSE_PREF = "devtools.debugger.log.verbose";
 
-  dumpn.wantLogging = Services.prefs.getBoolPref(LOG_PREF);
-  dumpv.wantVerbose =
+  flags.wantLogging = Services.prefs.getBoolPref(LOG_PREF);
+  flags.wantVerbose =
     Services.prefs.getPrefType(VERBOSE_PREF) !== Services.prefs.PREF_INVALID &&
     Services.prefs.getBoolPref(VERBOSE_PREF);
 }

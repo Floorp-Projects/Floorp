@@ -98,6 +98,13 @@ Prompt.Client.prototype = {
   mode: Prompt.mode,
 
   /**
+   * When client is about to make a new connection, verify that the connection settings
+   * are compatible with this authenticator.
+   * @throws if validation requirements are not met
+   */
+  validateSettings() {},
+
+  /**
    * When client has just made a new socket connection, validate the connection
    * to ensure it meets the authenticator's policies.
    *
@@ -260,6 +267,17 @@ OOBCert.Client = function () {};
 OOBCert.Client.prototype = {
 
   mode: OOBCert.mode,
+
+  /**
+   * When client is about to make a new connection, verify that the connection settings
+   * are compatible with this authenticator.
+   * @throws if validation requirements are not met
+   */
+  validateSettings({ encryption }) {
+    if (!encryption) {
+      throw new Error(`${OOBCert.mode} authentication requires encryption.`);
+    }
+  },
 
   /**
    * When client has just made a new socket connection, validate the connection

@@ -13,7 +13,7 @@ const Actors = require("devtools/client/performance/legacy/actors");
 const { LegacyPerformanceRecording } = require("devtools/client/performance/legacy/recording");
 const { importRecording } = require("devtools/client/performance/legacy/recording");
 const { normalizePerformanceFeatures } = require("devtools/shared/performance/recording-utils");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 const { getDeviceFront } = require("devtools/shared/device/device");
 const { getSystemInfo } = require("devtools/shared/system");
 const events = require("sdk/event/core");
@@ -440,7 +440,7 @@ const LegacyPerformanceFront = Class({
    * Used only in tests.
    */
   _request: function (actorName, method, ...args) {
-    if (!DevToolsUtils.testing) {
+    if (!flags.testing) {
       throw new Error("LegacyPerformanceFront._request may only be used in tests.");
     }
     let actor = this[`_${actorName}`];
