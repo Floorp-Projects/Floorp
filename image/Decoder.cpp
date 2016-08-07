@@ -57,6 +57,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mSurfaceFlags(DefaultSurfaceFlags())
   , mInitialized(false)
   , mMetadataDecode(false)
+  , mHaveExplicitOutputSize(false)
   , mInFrame(false)
   , mFinishedNewFrame(false)
   , mReachedTerminalState(false)
@@ -93,6 +94,9 @@ Decoder::Init()
 
   // All decoders must have a SourceBufferIterator.
   MOZ_ASSERT(mIterator);
+
+  // Metadata decoders must not set an output size.
+  MOZ_ASSERT_IF(mMetadataDecode, !mHaveExplicitOutputSize);
 
   // It doesn't make sense to decode anything but the first frame if we can't
   // store anything in the SurfaceCache, since only the last frame we decode
@@ -148,6 +152,20 @@ Decoder::Decode(IResumable* aOnResume /* = nullptr */)
 
   return LexerResult(HasError() ? TerminalState::FAILURE
                                 : TerminalState::SUCCESS);
+}
+
+LexerResult
+Decoder::TerminateFailure()
+{
+  PostError();
+
+  // Perform final cleanup if need be.
+  if (!mReachedTerminalState) {
+    mReachedTerminalState = true;
+    CompleteDecode();
+  }
+
+  return LexerResult(TerminalState::FAILURE);
 }
 
 bool
@@ -227,24 +245,18 @@ Decoder::CompleteDecode()
   }
 }
 
-nsresult
-Decoder::SetTargetSize(const nsIntSize& aSize)
+void
+Decoder::SetOutputSize(const gfx::IntSize& aSize)
 {
-  // Make sure the size is reasonable.
-  if (MOZ_UNLIKELY(aSize.width <= 0 || aSize.height <= 0)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Create a downscaler that we'll filter our output through.
-  mDownscaler.emplace(aSize);
-
-  return NS_OK;
+  mOutputSize = Some(aSize);
+  mHaveExplicitOutputSize = true;
 }
 
-Maybe<IntSize>
-Decoder::GetTargetSize()
+Maybe<gfx::IntSize>
+Decoder::ExplicitOutputSize() const
 {
-  return mDownscaler ? Some(mDownscaler->TargetSize()) : Nothing();
+  MOZ_ASSERT_IF(mHaveExplicitOutputSize, mOutputSize);
+  return mHaveExplicitOutputSize ? mOutputSize : Nothing();
 }
 
 Maybe<uint32_t>
@@ -255,14 +267,34 @@ Decoder::TakeCompleteFrameCount()
   return finishedNewFrame ? Some(GetCompleteFrameCount()) : Nothing();
 }
 
+DecoderFinalStatus
+Decoder::FinalStatus() const
+{
+  return DecoderFinalStatus(IsMetadataDecode(),
+                            GetDecodeDone(),
+                            WasAborted(),
+                            HasError(),
+                            ShouldReportError());
+}
+
+DecoderTelemetry
+Decoder::Telemetry() const
+{
+  MOZ_ASSERT(mIterator);
+  return DecoderTelemetry(SpeedHistogram(),
+                          mIterator->ByteCount(),
+                          mIterator->ChunkCount(),
+                          mDecodeTime);
+}
+
 nsresult
 Decoder::AllocateFrame(uint32_t aFrameNum,
-                       const nsIntSize& aTargetSize,
-                       const nsIntRect& aFrameRect,
+                       const gfx::IntSize& aOutputSize,
+                       const gfx::IntRect& aFrameRect,
                        gfx::SurfaceFormat aFormat,
                        uint8_t aPaletteDepth)
 {
-  mCurrentFrame = AllocateFrameInternal(aFrameNum, aTargetSize, aFrameRect,
+  mCurrentFrame = AllocateFrameInternal(aFrameNum, aOutputSize, aFrameRect,
                                         aFormat, aPaletteDepth,
                                         mCurrentFrame.get());
 
@@ -288,8 +320,8 @@ Decoder::AllocateFrame(uint32_t aFrameNum,
 
 RawAccessFrameRef
 Decoder::AllocateFrameInternal(uint32_t aFrameNum,
-                               const nsIntSize& aTargetSize,
-                               const nsIntRect& aFrameRect,
+                               const gfx::IntSize& aOutputSize,
+                               const gfx::IntRect& aFrameRect,
                                SurfaceFormat aFormat,
                                uint8_t aPaletteDepth,
                                imgFrame* aPreviousFrame)
@@ -303,7 +335,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  if (aTargetSize.width <= 0 || aTargetSize.height <= 0 ||
+  if (aOutputSize.width <= 0 || aOutputSize.height <= 0 ||
       aFrameRect.width <= 0 || aFrameRect.height <= 0) {
     NS_WARNING("Trying to add frame with zero or negative size");
     return RawAccessFrameRef();
@@ -318,7 +350,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
 
   NotNull<RefPtr<imgFrame>> frame = WrapNotNull(new imgFrame());
   bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
-  if (NS_FAILED(frame->InitForDecoder(aTargetSize, aFrameRect, aFormat,
+  if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFrameRect, aFormat,
                                       aPaletteDepth, nonPremult))) {
     NS_WARNING("imgFrame::Init should succeed");
     return RawAccessFrameRef();
@@ -335,7 +367,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
       WrapNotNull(new SimpleSurfaceProvider(frame));
     InsertOutcome outcome =
       SurfaceCache::Insert(provider, ImageKey(mImage.get()),
-                           RasterSurfaceKey(aTargetSize,
+                           RasterSurfaceKey(aOutputSize,
                                             mSurfaceFlags,
                                             aFrameNum));
     if (outcome == InsertOutcome::FAILURE) {
@@ -399,12 +431,27 @@ Decoder::PostSize(int32_t aWidth,
                   int32_t aHeight,
                   Orientation aOrientation /* = Orientation()*/)
 {
-  // Validate
+  // Validate.
   MOZ_ASSERT(aWidth >= 0, "Width can't be negative!");
   MOZ_ASSERT(aHeight >= 0, "Height can't be negative!");
 
-  // Tell the image
+  // Set our intrinsic size.
   mImageMetadata.SetSize(aWidth, aHeight, aOrientation);
+
+  // Set our output size if it's not already set.
+  if (!mOutputSize) {
+    mOutputSize = Some(IntSize(aWidth, aHeight));
+  }
+
+  MOZ_ASSERT(mOutputSize->width <= aWidth && mOutputSize->height <= aHeight,
+             "Output size will result in upscaling");
+
+  // Create a downscaler if we need to downscale. This is used by legacy
+  // decoders that haven't been converted to use SurfacePipe yet.
+  // XXX(seth): Obviously, we'll remove this once all decoders use SurfacePipe.
+  if (mOutputSize->width < aWidth || mOutputSize->height < aHeight) {
+    mDownscaler.emplace(*mOutputSize);
+  }
 
   // Record this notification.
   mProgress |= FLAG_SIZE_AVAILABLE;
@@ -458,8 +505,8 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
 }
 
 void
-Decoder::PostInvalidation(const nsIntRect& aRect,
-                          const Maybe<nsIntRect>& aRectAtTargetSize
+Decoder::PostInvalidation(const gfx::IntRect& aRect,
+                          const Maybe<gfx::IntRect>& aRectAtOutputSize
                             /* = Nothing() */)
 {
   // We should be mid-frame
@@ -470,7 +517,7 @@ Decoder::PostInvalidation(const nsIntRect& aRect,
   // or we're past the first frame.
   if (ShouldSendPartialInvalidations() && mFrameCount == 1) {
     mInvalidRect.UnionRect(mInvalidRect, aRect);
-    mCurrentFrame->ImageUpdated(aRectAtTargetSize.valueOr(aRect));
+    mCurrentFrame->ImageUpdated(aRectAtOutputSize.valueOr(aRect));
   }
 }
 
@@ -504,13 +551,6 @@ Decoder::PostError()
   if (mInFrame && mCurrentFrame) {
     mCurrentFrame->Abort();
   }
-}
-
-Telemetry::ID
-Decoder::SpeedHistogram()
-{
-  // Use HistogramCount as an invalid Histogram ID.
-  return Telemetry::HistogramCount;
 }
 
 } // namespace image

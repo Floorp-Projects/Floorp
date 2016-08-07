@@ -941,28 +941,87 @@ nsCSSValue::AppendCircleOrEllipseToString(nsCSSKeyword aFunctionId,
 
   bool hasRadii = array->Item(1).GetUnit() != eCSSUnit_Null;
 
-  AppendPositionCoordinateToString(array->Item(1), aProperty,
+  // closest-side is the default, so we don't need to
+  // output it if all values are closest-side.
+  if (array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
+      array->Item(1).GetIntValue() == NS_RADIUS_CLOSEST_SIDE &&
+      (aFunctionId == eCSSKeyword_circle ||
+       (array->Item(2).GetUnit() == eCSSUnit_Enumerated &&
+        array->Item(2).GetIntValue() == NS_RADIUS_CLOSEST_SIDE))) {
+    hasRadii = false;
+  } else {
+    AppendPositionCoordinateToString(array->Item(1), aProperty,
                                      aResult, aSerialization);
 
-  if (hasRadii && aFunctionId == eCSSKeyword_ellipse) {
+    if (hasRadii && aFunctionId == eCSSKeyword_ellipse) {
+      aResult.Append(' ');
+      AppendPositionCoordinateToString(array->Item(2), aProperty,
+                                       aResult, aSerialization);
+    }
+  }
+
+  if (hasRadii) {
     aResult.Append(' ');
-    AppendPositionCoordinateToString(array->Item(2), aProperty,
-                                     aResult, aSerialization);
   }
 
   // Any position specified?
   if (array->Item(count).GetUnit() != eCSSUnit_Array) {
     MOZ_ASSERT(array->Item(count).GetUnit() == eCSSUnit_Null,
                "unexpected value");
+    // We only serialize to the 2 or 4 value form
+    // |circle()| is valid, but should be expanded
+    // to |circle(at 50% 50%)|
+    aResult.AppendLiteral("at 50% 50%");
     return;
   }
 
-  if (hasRadii) {
-    aResult.Append(' ');
-  }
   aResult.AppendLiteral("at ");
-  array->Item(count).AppendToString(eCSSProperty_object_position,
-                                    aResult, aSerialization);
+  array->Item(count).AppendBasicShapePositionToString(aResult, aSerialization);
+}
+
+// https://drafts.csswg.org/css-shapes/#basic-shape-serialization
+// basic-shape asks us to omit a lot of redundant things whilst serializing
+// position values. Other specs are not clear about this
+// (https://github.com/w3c/csswg-drafts/issues/368), so for now we special-case
+// basic shapes only
+void
+nsCSSValue::AppendBasicShapePositionToString(nsAString& aResult,
+                                             Serialization aSerialization) const
+{
+  const nsCSSValue::Array* array = GetArrayValue();
+  // We always parse these into an array of four elements
+  MOZ_ASSERT(array->Count() == 4,
+             "basic-shape position value doesn't have enough elements");
+
+  const nsCSSValue &xEdge   = array->Item(0);
+  const nsCSSValue &xOffset = array->Item(1);
+  const nsCSSValue &yEdge   = array->Item(2);
+  const nsCSSValue &yOffset = array->Item(3);
+
+  MOZ_ASSERT(xEdge.GetUnit() == eCSSUnit_Enumerated &&
+             yEdge.GetUnit() == eCSSUnit_Enumerated &&
+             xOffset.IsLengthPercentCalcUnit() &&
+             yOffset.IsLengthPercentCalcUnit() &&
+             xEdge.GetIntValue() != NS_STYLE_IMAGELAYER_POSITION_CENTER &&
+             yEdge.GetIntValue() != NS_STYLE_IMAGELAYER_POSITION_CENTER,
+             "Ensure invariants from ParsePositionValueBasicShape "
+             "haven't been modified");
+  if (xEdge.GetIntValue() == NS_STYLE_IMAGELAYER_POSITION_LEFT &&
+      yEdge.GetIntValue() == NS_STYLE_IMAGELAYER_POSITION_TOP) {
+    // We can omit these defaults
+    xOffset.AppendToString(eCSSProperty_UNKNOWN, aResult, aSerialization);
+    aResult.Append(' ');
+    yOffset.AppendToString(eCSSProperty_UNKNOWN, aResult, aSerialization);
+  } else {
+    // We only serialize to the two or four valued form
+    xEdge.AppendToString(eCSSProperty_object_position, aResult, aSerialization);
+    aResult.Append(' ');
+    xOffset.AppendToString(eCSSProperty_UNKNOWN, aResult, aSerialization);
+    aResult.Append(' ');
+    yEdge.AppendToString(eCSSProperty_object_position, aResult, aSerialization);
+    aResult.Append(' ');
+    yOffset.AppendToString(eCSSProperty_UNKNOWN, aResult, aSerialization);
+  }
 }
 
 // Helper to append |aString| with the shorthand sides notation used in e.g.

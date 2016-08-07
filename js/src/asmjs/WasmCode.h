@@ -223,30 +223,6 @@ class FuncImport
 
 typedef Vector<FuncImport, 0, SystemAllocPolicy> FuncImportVector;
 
-// TableDesc contains the metadata describing a table as well as the
-// module-specific offset of the table's base pointer in global memory.
-// The element kind of this table. Currently, wasm only has "any function" and
-// asm.js only "typed function".
-
-enum class TableKind
-{
-    AnyFunction,
-    TypedFunction
-};
-
-struct TableDesc
-{
-    TableKind kind;
-    uint32_t globalDataOffset;
-    uint32_t initial;
-    uint32_t maximum;
-
-    TableDesc() { PodZero(this); }
-    explicit TableDesc(TableKind kind) : kind(kind), globalDataOffset(0), initial(0), maximum(0) {}
-};
-
-WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)
-
 // A CodeRange describes a single contiguous range of code within a wasm
 // module's code segment. A CodeRange describes what the code does and, for
 // function bodies, the name and source coordinates of the function.

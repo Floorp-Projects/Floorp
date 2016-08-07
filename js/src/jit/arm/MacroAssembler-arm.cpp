@@ -5319,3 +5319,37 @@ MacroAssembler::storeUnboxedValue(ConstantOrRegister value, MIRType valueType,
                                   const BaseIndex& dest, MIRType slotType);
 
 //}}} check_macroassembler_style
+
+void
+MacroAssemblerARM::emitUnalignedLoad(bool isSigned, unsigned byteSize, Register ptr, Register tmp,
+                                     Register dest, unsigned offset)
+{
+    // Preconditions.
+    MOZ_ASSERT(ptr != tmp);
+    MOZ_ASSERT(ptr != dest);
+    MOZ_ASSERT(tmp != dest);
+    MOZ_ASSERT(byteSize <= 4);
+
+    for (unsigned i = 0; i < byteSize; i++) {
+        // Only the last byte load shall be signed, if needed.
+        bool signedByteLoad = isSigned && (i == byteSize - 1);
+        ma_dataTransferN(IsLoad, 8, signedByteLoad, ptr, Imm32(offset + i), i ? tmp : dest);
+        if (i)
+            as_orr(dest, dest, lsl(tmp, 8 * i));
+    }
+}
+
+void
+MacroAssemblerARM::emitUnalignedStore(unsigned byteSize, Register ptr, Register val,
+                                      unsigned offset)
+{
+    // Preconditions.
+    MOZ_ASSERT(ptr != val);
+    MOZ_ASSERT(byteSize <= 4);
+
+    for (unsigned i = 0; i < byteSize; i++) {
+        ma_dataTransferN(IsStore, 8 /* bits */, /* signed */ false, ptr, Imm32(offset + i), val);
+        if (i < byteSize - 1)
+            ma_lsr(Imm32(8), val, val);
+    }
+}

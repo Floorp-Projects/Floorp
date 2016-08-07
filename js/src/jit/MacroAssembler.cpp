@@ -2733,6 +2733,82 @@ MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Registe
     }
 }
 
+void
+MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee)
+{
+    // Load the callee, before the caller's registers are clobbered.
+    uint32_t globalDataOffset = callee.importGlobalDataOffset();
+    loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code), ABINonArgReg0);
+
+    MOZ_ASSERT(ABINonArgReg0 != WasmTlsReg, "by constraint");
+
+    // Switch to the callee's TLS and pinned registers and make the call.
+    loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, tls), WasmTlsReg);
+    loadWasmPinnedRegsFromTls();
+
+    call(desc, ABINonArgReg0);
+}
+
+void
+MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee)
+{
+    Register scratch = WasmTableCallScratchReg;
+    Register index = WasmTableCallIndexReg;
+
+    if (callee.which() == wasm::CalleeDesc::AsmJSTable) {
+        // asm.js tables require no signature check, have had their index masked
+        // into range and thus need no bounds check and cannot be external.
+        loadWasmGlobalPtr(callee.tableGlobalDataOffset(), scratch);
+        loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
+        call(desc, scratch);
+        return;
+    }
+
+    MOZ_ASSERT(callee.which() == wasm::CalleeDesc::WasmTable);
+
+    // Write the sig-id into the ABI sig-id register.
+    wasm::SigIdDesc sigId = callee.wasmTableSigId();
+    switch (sigId.kind()) {
+      case wasm::SigIdDesc::Kind::Global:
+        loadWasmGlobalPtr(sigId.globalDataOffset(), WasmTableCallSigReg);
+        break;
+      case wasm::SigIdDesc::Kind::Immediate:
+        move32(Imm32(sigId.immediate()), WasmTableCallSigReg);
+        break;
+      case wasm::SigIdDesc::Kind::None:
+        break;
+    }
+
+    // WebAssembly throws if the index is out-of-bounds.
+    branch32(Assembler::Condition::AboveOrEqual,
+             index, Imm32(callee.wasmTableLength()),
+             wasm::JumpTarget::OutOfBounds);
+
+    // Load the base pointer of the table.
+    loadWasmGlobalPtr(callee.tableGlobalDataOffset(), scratch);
+
+    // Load the callee from the table.
+    if (callee.wasmTableIsExternal()) {
+        static_assert(sizeof(wasm::ExternalTableElem) == 8 || sizeof(wasm::ExternalTableElem) == 16,
+                      "elements of external tables are two words");
+        if (sizeof(wasm::ExternalTableElem) == 8) {
+            computeEffectiveAddress(BaseIndex(scratch, index, TimesEight), scratch);
+        } else {
+            lshift32(Imm32(4), index);
+            addPtr(index, scratch);
+        }
+
+        loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, tls)), WasmTlsReg);
+        loadWasmPinnedRegsFromTls();
+
+        loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, code)), scratch);
+    } else {
+        loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
+    }
+
+    call(desc, scratch);
+}
+
 //}}} check_macroassembler_style
 
 void

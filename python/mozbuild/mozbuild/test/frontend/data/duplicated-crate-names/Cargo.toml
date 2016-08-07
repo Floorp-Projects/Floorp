@@ -1,0 +1,13 @@
+[package]
+name = "random-crate"
+version = "0.1.0"
+authors = [
+  "Nobody <nobody@mozilla.org>",
+]
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+crate-one = { path = "crate-one" }
+crate-two = { path = "crate-two" }

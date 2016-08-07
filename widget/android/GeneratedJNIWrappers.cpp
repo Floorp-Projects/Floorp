@@ -2281,5 +2281,5 @@ constexpr char NativeJSObject::ToBundle_t::signature[];
 constexpr char NativeJSObject::ToString_t::name[];
 constexpr char NativeJSObject::ToString_t::signature[];
 
-} /* widget */
+} /* java */
 } /* mozilla */

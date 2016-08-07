@@ -9,9 +9,9 @@
 #include "nsTArray.h"
 #include "nsReadableUtils.h"
 #include "plbase64.h"
-#include "prprf.h"
 #include "nsPrintfCString.h"
 #include "safebrowsing.pb.h"
+#include "mozilla/Snprintf.h"
 
 #define DEFAULT_PROTOCOL_VERSION "2.2"
 
@@ -484,7 +484,7 @@ nsUrlClassifierUtils::CanonicalNum(const nsACString& num,
 
   while (bytes--) {
     char buf[20];
-    PR_snprintf(buf, sizeof(buf), "%u", val & 0xff);
+    snprintf_literal(buf, "%u", val & 0xff);
     if (_retval.IsEmpty()) {
       _retval.Assign(buf);
     } else {

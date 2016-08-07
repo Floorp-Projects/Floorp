@@ -217,6 +217,7 @@ if __name__ == "__main__":
     clang_source_dir = source_dir + "/clang"
     compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
+    libcxxabi_source_dir = source_dir + "/libcxxabi"
 
     if is_darwin():
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
@@ -251,6 +252,7 @@ if __name__ == "__main__":
     clang_repo = config["clang_repo"]
     compiler_repo = config["compiler_repo"]
     libcxx_repo = config["libcxx_repo"]
+    libcxxabi_repo = config.get("libcxxabi_repo")
     stages = 3
     if "stages" in config:
         stages = int(config["stages"])
@@ -303,6 +305,8 @@ if __name__ == "__main__":
         svn_co(source_dir, clang_repo, clang_source_dir, llvm_revision)
         svn_co(source_dir, compiler_repo, compiler_rt_source_dir, llvm_revision)
         svn_co(source_dir, libcxx_repo, libcxx_source_dir, llvm_revision)
+        if libcxxabi_repo:
+            svn_co(source_dir, libcxxabi_repo, libcxxabi_source_dir, llvm_revision)
         for p in config.get("patches", {}).get(get_platform(), []):
             patch(p, source_dir)
     else:
@@ -310,13 +314,17 @@ if __name__ == "__main__":
         svn_update(clang_source_dir, llvm_revision)
         svn_update(compiler_rt_source_dir, llvm_revision)
         svn_update(libcxx_source_dir, llvm_revision)
+        if libcxxabi_repo:
+            svn_update(libcxxabi_source_dir, llvm_revision)
 
     symlinks = [(source_dir + "/clang",
                  llvm_source_dir + "/tools/clang"),
                 (source_dir + "/compiler-rt",
                  llvm_source_dir + "/projects/compiler-rt"),
                 (source_dir + "/libcxx",
-                 llvm_source_dir + "/projects/libcxx")]
+                 llvm_source_dir + "/projects/libcxx"),
+                (source_dir + "/libcxxabi",
+                 llvm_source_dir + "/projects/libcxxabi")]
     for l in symlinks:
         # On Windows, we have to re-copy the whole directory every time.
         if not is_windows() and os.path.islink(l[1]):
@@ -325,7 +333,8 @@ if __name__ == "__main__":
             shutil.rmtree(l[1])
         elif os.path.exists(l[1]):
             os.unlink(l[1])
-        symlink(l[0], l[1])
+        if os.path.exists(l[0]):
+            symlink(l[0], l[1])
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)

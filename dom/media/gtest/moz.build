@@ -37,7 +37,6 @@ if CONFIG['MOZ_WEBM_ENCODER']:
     ]
 
 if CONFIG['MOZ_RUST']:
-    SOURCES += ['hello.rs',]
     UNIFIED_SOURCES += ['TestRust.cpp',]
 
 

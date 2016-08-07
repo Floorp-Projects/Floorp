@@ -1,0 +1,14 @@
+[package]
+name = "random-crate"
+version = "0.1.0"
+authors = [
+  "Nobody <nobody@mozilla.org>",
+]
+
+build = "build.rs"
+
+[lib]
+crate-type = ["staticlib"]
+
+[build-dependencies]
+bogus = { version = "0.1.0" }

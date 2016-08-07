@@ -350,7 +350,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
   }
 
 #ifdef MOZ_WIDGET_GONK
-  if (!videoImage->IsValid() && !aImage && IsYV12Format(Y, Cb, Cr)) {
+  if (!videoImage->IsValid() && IsYV12Format(Y, Cb, Cr)) {
     // Failed to allocate gralloc. Try fallback.
     v->mImage = aContainer->CreatePlanarYCbCrImage();
     if (!v->mImage) {

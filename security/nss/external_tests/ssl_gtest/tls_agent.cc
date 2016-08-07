@@ -361,25 +361,28 @@ void TlsAgent::SetSignatureAlgorithms(const SSLSignatureAndHashAlg* algorithms,
   EXPECT_EQ(i, configuredCount) << "algorithms in use were all set";
 }
 
-void TlsAgent::CheckKEAType(SSLKEAType type) const {
+void TlsAgent::CheckKEA(SSLKEAType type, size_t kea_size) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
   EXPECT_EQ(type, csinfo_.keaType);
+  EXPECT_EQ(kea_size, info_.keaKeyBits);
+}
 
+void TlsAgent::CheckKEA(SSLKEAType type) const {
   PRUint32 ecKEAKeyBits = SSLInt_DetermineKEABits(server_key_bits_,
                                                   csinfo_.authType);
-
   switch (type) {
-      case ssl_kea_ecdh:
-          EXPECT_EQ(ecKEAKeyBits, info_.keaKeyBits);
-          break;
-      case ssl_kea_dh:
-          EXPECT_EQ(2048U, info_.keaKeyBits);
-          break;
-      case ssl_kea_rsa:
-          EXPECT_EQ(server_key_bits_, info_.keaKeyBits);
-          break;
-      default:
-          break;
+    case ssl_kea_ecdh:
+      CheckKEA(type, ecKEAKeyBits);
+      break;
+    case ssl_kea_dh:
+      CheckKEA(type, 2048);
+      break;
+    case ssl_kea_rsa:
+      CheckKEA(type, server_key_bits_);
+      break;
+    default:
+      EXPECT_TRUE(false) << "Unknown KEA type";
+      break;
   }
 }
 

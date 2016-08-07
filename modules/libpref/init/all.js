@@ -4589,7 +4589,11 @@ pref("layers.d3d11.disable-warp", true);
 #endif
 
 // Copy-on-write canvas
+#ifdef XP_WIN
+pref("layers.shared-buffer-provider.enabled", false);
+#else
 pref("layers.shared-buffer-provider.enabled", true);
+#endif
 
 // Force all possible layers to be always active layers
 pref("layers.force-active", false);

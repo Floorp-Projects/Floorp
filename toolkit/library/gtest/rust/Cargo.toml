@@ -1,0 +1,36 @@
+[package]
+name = "gkrust-gtest"
+version = "0.1.0"
+authors = ["nobody@mozilla.org"]
+license = "MPL-2.0"
+description = "Testing code for libgkrust"
+
+[dependencies]
+mp4parse-gtest = { path = "../../../../dom/media/gtest" }
+
+[lib]
+path = "lib.rs"
+crate-type = ["staticlib"]
+test = false
+doctest = false
+bench = false
+doc = false
+plugin = false
+harness = false
+
+# Explicitly specify what our profiles use.
+[profile.dev]
+opt-level = 1
+debug = true
+rpath = false
+lto = false
+debug-assertions = true
+codegen-units = 1
+
+[profile.release]
+opt-level = 2
+debug = true
+rpath = false
+lto = false
+debug-assertions = false
+codegen-units = 1

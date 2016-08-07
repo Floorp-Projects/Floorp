@@ -117,10 +117,10 @@ Error);
         (func $foo (result i32) (i32.const 42))
         (export "foo" $foo)
         (func $bar (result i32) (i32.const 13))
-        (table $foo $bar)
+        (table (resizable 10))
+        (elem (i32.const 0) $foo $bar)
         (export "tbl" table)
-    )
-    `))).exports;
+    )`))).exports;
     assertEq(e.foo(), 42);
     assertEq(e.tbl.get(0)(), 42);
     assertEq(e.tbl.get(1)(), 13);
@@ -150,6 +150,35 @@ Error);
     assertEq(e.foo(), 42);
     assertEq(e.tbl.get(1)(), 13);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", "", ">", "1,>", ">", ""]);
+    disableSPSProfiling();
+
+    var e2 = new Instance(new Module(textToBinary(`
+    (module
+        (type $v2i (func (result i32)))
+        (import "a" "b" (table 10))
+        (elem (i32.const 2) $bar)
+        (func $bar (result i32) (i32.const 99))
+        (func $baz (param $i i32) (result i32) (call_indirect $v2i (get_local $i)))
+        (export "baz" $baz)
+    )`)),
+    {a:{b:e.tbl}}).exports;
+
+    enableSPSProfiling();
+    enableSingleStepProfiling();
+    assertEq(e2.baz(0), 42);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
+    disableSPSProfiling();
+
+    enableSPSProfiling();
+    enableSingleStepProfiling();
+    assertEq(e2.baz(1), 13);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "1,1,>", "1,>", ">", ""]);
+    disableSPSProfiling();
+
+    enableSPSProfiling();
+    enableSingleStepProfiling();
+    assertEq(e2.baz(2), 99);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
     disableSPSProfiling();
 })();
 

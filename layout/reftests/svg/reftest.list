@@ -32,7 +32,7 @@ include svg-integration/reftest.list
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
 == clipPath-advanced-01.svg pass.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,1,6) fuzzy-if(OSX,1,6) fuzzy-if(skiaContent,1,300) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,1,6) fuzzy-if(OSX,1,6) fuzzy-if(skiaContent,1,630) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
 == clipPath-and-transform-01.svg pass.svg
 == clipPath-basic-01.svg pass.svg
 == clipPath-basic-02.svg pass.svg
@@ -167,7 +167,7 @@ fails-if(Android||B2G) pref(security.fileuri.strict_origin_policy,true) == filte
 == filter-scaled-01.svg pass.svg
 fuzzy-if(skiaContent,1,500) == filter-scaled-02.html filter-scaled-02-ref.html
 == filter-translated-01.svg filter-translated-01-ref.svg
-fuzzy-if(skiaContent,1,2500) == filters-and-group-opacity-01.svg filters-and-group-opacity-01-ref.svg
+fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-group-opacity-01-ref.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-02.svg foreignObject-02-ref.svg
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
@@ -201,7 +201,7 @@ fuzzy-if(skiaContent,1,550) == import-svg-01.html pass.svg
 == linearGradient-basic-02.svg pass.svg
 # off-by-one fuzziness expected. OS X is broken with bad aliasing though (bug 1023640).
 fuzzy-if(cocoaWidget,15,19679) fuzzy-if(winWidget,1,8800) fuzzy-if(!cocoaWidget&&!winWidget,1,4000) fuzzy-if(skiaContent,1,5000) == linearGradient-basic-03.svg linearGradient-basic-03-ref.svg
-fuzzy-if(skiaContent,1,20000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
+fuzzy-if(skiaContent,1,800000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
 == marker-effects-01.svg marker-effects-01-ref.svg
 fuzzy-if(skiaContent,1,100) == marker-viewBox-01.svg marker-viewBox-01-ref.svg
@@ -210,7 +210,7 @@ fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) == marker-o
 == marker-orientation-03.svg pass.svg
 == marker-orientation-04.svg pass.svg
 == mask-basic-01.svg pass.svg
-== mask-basic-02.svg mask-basic-02-ref.svg
+fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-basic-03.svg pass.svg
 == mask-basic-04.svg pass.svg
 == mask-extref-dataURI-01.svg pass.svg

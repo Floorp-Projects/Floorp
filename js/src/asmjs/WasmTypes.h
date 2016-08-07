@@ -81,6 +81,7 @@ using mozilla::Some;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
+class Code;
 class Memory;
 class Module;
 class Instance;
@@ -1039,6 +1040,121 @@ enum ModuleKind
     AsmJS
 };
 
+// TableDesc describes a table as well as the offset of the table's base pointer
+// in global memory. Currently, wasm only has "any function" and asm.js only
+// "typed function".
+
+enum class TableKind
+{
+    AnyFunction,
+    TypedFunction
+};
+
+struct TableDesc
+{
+    TableKind kind;
+    bool external;
+    uint32_t globalDataOffset;
+    uint32_t initial;
+    uint32_t maximum;
+
+    TableDesc() { PodZero(this); }
+};
+
+WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)
+
+// CalleeDesc describes how to compile one of the variety of asm.js/wasm calls.
+// This is hoisted into WasmTypes.h for sharing between Ion and Baseline.
+
+class CalleeDesc
+{
+  public:
+    enum Which { Internal, Import, WasmTable, AsmJSTable, Builtin };
+
+  private:
+    Which which_;
+    union U {
+        U() {}
+        uint32_t internalFuncIndex_;
+        struct {
+            uint32_t globalDataOffset_;
+        } import;
+        struct {
+            TableDesc desc_;
+            SigIdDesc sigId_;
+        } table;
+        SymbolicAddress builtin_;
+    } u;
+
+  public:
+    CalleeDesc() {}
+    static CalleeDesc internal(uint32_t callee) {
+        CalleeDesc c;
+        c.which_ = Internal;
+        c.u.internalFuncIndex_ = callee;
+        return c;
+    }
+    static CalleeDesc import(uint32_t globalDataOffset) {
+        CalleeDesc c;
+        c.which_ = Import;
+        c.u.import.globalDataOffset_ = globalDataOffset;
+        return c;
+    }
+    static CalleeDesc wasmTable(const TableDesc& desc, SigIdDesc sigId) {
+        CalleeDesc c;
+        c.which_ = WasmTable;
+        c.u.table.desc_ = desc;
+        c.u.table.sigId_ = sigId;
+        return c;
+    }
+    static CalleeDesc asmJSTable(const TableDesc& desc) {
+        CalleeDesc c;
+        c.which_ = AsmJSTable;
+        c.u.table.desc_ = desc;
+        return c;
+    }
+    static CalleeDesc builtin(SymbolicAddress callee) {
+        CalleeDesc c;
+        c.which_ = Builtin;
+        c.u.builtin_ = callee;
+        return c;
+    }
+    Which which() const {
+        return which_;
+    }
+    uint32_t internalFuncIndex() const {
+        MOZ_ASSERT(which_ == Internal);
+        return u.internalFuncIndex_;
+    }
+    uint32_t importGlobalDataOffset() const {
+        MOZ_ASSERT(which_ == Import);
+        return u.import.globalDataOffset_;
+    }
+    bool isTable() const {
+        return which_ == WasmTable || which_ == AsmJSTable;
+    }
+    uint32_t tableGlobalDataOffset() const {
+        MOZ_ASSERT(isTable());
+        return u.table.desc_.globalDataOffset;
+    }
+    uint32_t wasmTableLength() const {
+        MOZ_ASSERT(which_ == WasmTable);
+        return u.table.desc_.initial;
+    }
+    bool wasmTableIsExternal() const {
+        MOZ_ASSERT(which_ == WasmTable);
+        return u.table.desc_.external;
+    }
+    SigIdDesc wasmTableSigId() const {
+        MOZ_ASSERT(which_ == WasmTable);
+        return u.table.sigId_;
+    }
+    SymbolicAddress builtin() const {
+        MOZ_ASSERT(which_ == Builtin);
+        return u.builtin_;
+    }
+};
+
 // ExportArg holds the unboxed operands to the wasm entry trampoline which can
 // be called through an ExportFuncPtr.
 
@@ -1106,6 +1222,24 @@ struct FuncImportTls
     // imported functions, 'obj' points to the JSFunction.
     GCPtrObject obj;
     static_assert(sizeof(GCPtrObject) == sizeof(void*), "for JIT access");
+};
+
+// When a table can be shared between instances (it is "external"), the internal
+// representation is an array of ExternalTableElem instead of just an array of
+// code pointers.
+
+struct ExternalTableElem
+{
+    // The code to call when calling this element. The table ABI is the system
+    // ABI with the additional ABI requirements that:
+    //  - WasmTlsReg and any pinned registers have been loaded appropriately
+    //  - if this is a heterogeneous table that requires a signature check,
+    //    WasmTableCallSigReg holds the signature id.
+    void* code;
+
+    // The pointer to the callee's instance's TlsData. This must be loaded into
+    // WasmTlsReg before calling 'code'.
+    TlsData* tls;
 };
 
 // Constants:

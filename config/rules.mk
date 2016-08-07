@@ -240,10 +240,9 @@ CMOBJS = $(notdir $(CMSRCS:.m=.$(OBJ_SUFFIX)))
 CMMOBJS = $(notdir $(CMMSRCS:.mm=.$(OBJ_SUFFIX)))
 # ASFILES can have different extensions (.s, .asm)
 ASOBJS = $(notdir $(addsuffix .$(OBJ_SUFFIX),$(basename $(ASFILES))))
-RSOBJS = $(addprefix lib,$(notdir $(RSSRCS:.rs=.rlib)))
 RS_STATICLIB_CRATE_OBJ = $(addprefix lib,$(notdir $(RS_STATICLIB_CRATE_SRC:.rs=.$(LIB_SUFFIX))))
 ifndef OBJS
-_OBJS = $(COBJS) $(SOBJS) $(CPPOBJS) $(CMOBJS) $(CMMOBJS) $(ASOBJS) $(RSOBJS) $(RS_STATICLIB_CRATE_OBJ)
+_OBJS = $(COBJS) $(SOBJS) $(CPPOBJS) $(CMOBJS) $(CMMOBJS) $(ASOBJS)
 OBJS = $(strip $(_OBJS))
 endif
 
@@ -566,7 +565,7 @@ compile:: host target
 
 host:: $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
 
-target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
+target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(RUST_LIBRARY_FILE)
 
 include $(MOZILLA_DIR)/config/makefiles/target_binaries.mk
 endif
@@ -915,16 +914,33 @@ $(ASOBJS):
 endif
 
 ifdef MOZ_RUST
-# Assume any system libraries rustc links against are already
-# in the target's LIBS.
-$(RSOBJS):
-	$(REPORT_BUILD)
-	$(RUSTC) $(RUST_TARGET) $(RUSTFLAGS) --crate-type rlib --emit dep-info=$(MDDEPDIR)/$(call mk_libname,$<).pp,link=$(call mk_libname,$<) $(_VPATH_SRCS)
+ifdef CARGO_FILE
 
-$(RS_STATICLIB_CRATE_OBJ):
-	$(REPORT_BUILD)
-	$(RUSTC) $(RUST_TARGET) $(RUSTFLAGS) --crate-type staticlib $(RLIB_EXTERN_CRATE_OPTIONS) --emit dep-info=$(MDDEPDIR)/$(call mk_global_crate_libname,$(RS_STATICLIB_CRATE_SRC)).pp,link=$@ $(RS_STATICLIB_CRATE_SRC)
+ifdef MOZ_DEBUG
+cargo_build_flags =
+else
+cargo_build_flags = --release
 endif
+ifdef MOZ_CARGO_SUPPORTS_FROZEN
+cargo_build_flags += --frozen
+endif
+
+cargo_build_flags += --manifest-path $(CARGO_FILE)
+cargo_build_flags += --target=$(RUST_TARGET)
+cargo_build_flags += --verbose
+
+# Assume any system libraries rustc links against are already in the target's LIBS.
+#
+# We need to run cargo unconditionally, because cargo is the only thing that
+# has full visibility into how changes in Rust sources might affect the final
+# build.
+force-cargo-build:
+	$(REPORT_BUILD)
+	env CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(cargo_build_flags) --
+
+$(RUST_LIBRARY_FILE): force-cargo-build
+endif # CARGO_FILE
+endif # MOZ_RUST
 
 $(SOBJS):
 	$(REPORT_BUILD)

@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: pytoml
+Version: 0.1.10
+Summary: A parser for TOML-0.4.0
+Home-page: https://github.com/avakar/pytoml
+Author: Martin Vejnár
+Author-email: avakar@ratatanek.cz
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
