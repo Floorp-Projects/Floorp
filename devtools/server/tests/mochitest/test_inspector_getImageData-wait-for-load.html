@@ -18,9 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1192536
   <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <script type="application/javascript;version=1.8">
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const wasTesting = DevToolsUtils.testing;
-SimpleTest.registerCleanupFunction(() => DevToolsUtils.testing = wasTesting);
+const flags = require("devtools/shared/flags");
+const wasTesting = flags.testing;
+SimpleTest.registerCleanupFunction(() => flags.testing = wasTesting);
 
 const PATH = "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/";
 const BASE_IMAGE = PATH + "inspector-delay-image-response.sjs";
@@ -59,8 +59,8 @@ addTest(function setup() {
 addTest(function testTimeout() {
   info("Testing that the method aborts if the image takes too long to load.");
 
-  // imageToImageData() only times out when DTU.testing is not set.
-  DevToolsUtils.testing = false;
+  // imageToImageData() only times out when flags.testing is not set.
+  flags.testing = false;
 
   gImg.src = TIMEOUT_IMAGE;
 
@@ -72,7 +72,7 @@ addTest(function testNonExistentImage() {
   info("Testing that non-existent image causes a rejection.");
 
   // This test shouldn't hit the timeout.
-  DevToolsUtils.testing = true;
+  flags.testing = true;
 
   gImg.src = NONEXISTENT_IMAGE;
 
@@ -84,7 +84,7 @@ addTest(function testDelayedImage() {
   info("Testing that the method waits for an image to load.");
 
   // This test shouldn't hit the timeout.
-  DevToolsUtils.testing = true;
+  flags.testing = true;
 
   gImg.src = DELAYED_IMAGE;
 

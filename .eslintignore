@@ -110,6 +110,7 @@ devtools/server/*.jsm
 !devtools/server/child.js
 !devtools/server/css-logic.js
 !devtools/server/main.js
+!devtools/server/websocket-server.js
 devtools/server/actors/**
 !devtools/server/actors/inspector.js
 !devtools/server/actors/highlighters/eye-dropper.js
@@ -147,6 +148,7 @@ devtools/shared/tests/**
 devtools/shared/touch/**
 devtools/shared/transport/**
 !devtools/shared/transport/transport.js
+!devtools/shared/transport/websocket-transport.js
 devtools/shared/webconsole/test/**
 devtools/shared/worker/**
 !devtools/shared/worker/worker.js

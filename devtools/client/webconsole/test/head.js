@@ -45,7 +45,7 @@ const DOCS_GA_PARAMS = "?utm_source=mozilla" +
                        "&utm_medium=firefox-console-errors" +
                        "&utm_campaign=default";
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 
 function loadTab(url) {
   let deferred = promise.defer();
@@ -323,7 +323,7 @@ var finishTest = Task.async(function* () {
 });
 
 registerCleanupFunction(function* () {
-  DevToolsUtils.testing = false;
+  flags.testing = false;
 
   // Remove stored console commands in between tests
   yield asyncStorage.removeItem("webConsoleHistory");

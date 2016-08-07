@@ -25,6 +25,7 @@
   const { Cc, Cr, CC } = require("chrome");
   const DevToolsUtils = require("devtools/shared/DevToolsUtils");
   const { dumpn, dumpv } = DevToolsUtils;
+  const flags = require("devtools/shared/flags");
   const StreamUtils = require("devtools/shared/transport/stream-utils");
   const { Packet, JSONPacket, BulkPacket } =
   require("devtools/shared/transport/packets");
@@ -438,12 +439,12 @@
       let amountToRead = PACKET_HEADER_MAX - this._incomingHeader.length;
       this._incomingHeader +=
       StreamUtils.delimitedRead(this._scriptableInput, ":", amountToRead);
-      if (dumpv.wantVerbose) {
+      if (flags.wantVerbose) {
         dumpv("Header read: " + this._incomingHeader);
       }
 
       if (this._incomingHeader.endsWith(":")) {
-        if (dumpv.wantVerbose) {
+        if (flags.wantVerbose) {
           dumpv("Found packet header successfully: " + this._incomingHeader);
         }
         return true;
@@ -464,7 +465,7 @@
       if (!this._incoming.done) {
         return;
       }
-      if (dumpn.wantLogging) {
+      if (flags.wantLogging) {
         dumpn("Got: " + this._incoming);
       }
       this._destroyIncoming();
@@ -548,7 +549,7 @@
       this.emit("send", packet);
 
       let serial = this._serial.count++;
-      if (dumpn.wantLogging) {
+      if (flags.wantLogging) {
         // Check 'from' first, as 'echo' packets have both.
         if (packet.from) {
           dumpn("Packet " + serial + " sent from " + uneval(packet.from));
@@ -561,7 +562,7 @@
       if (other) {
         DevToolsUtils.executeSoon(DevToolsUtils.makeInfallible(() => {
           // Avoid the cost of JSON.stringify() when logging is disabled.
-          if (dumpn.wantLogging) {
+          if (flags.wantLogging) {
             dumpn("Received packet " + serial + ": " + JSON.stringify(packet, null, 2));
           }
           if (other.hooks) {

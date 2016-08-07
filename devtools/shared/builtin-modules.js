@@ -292,3 +292,6 @@ defineLazyGetter(globals, "CSS", () => {
                  {wantGlobalProperties: ["CSS"]});
   return sandbox.CSS;
 });
+defineLazyGetter(globals, "WebSocket", () => {
+  return Services.appShell.hiddenDOMWindow.WebSocket;
+});

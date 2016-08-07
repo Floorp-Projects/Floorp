@@ -12,12 +12,12 @@ let { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm",
 let { Assert } = require("resource://testing-common/Assert.jsm");
 let { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 let defer = require("devtools/shared/defer");
-let DevToolsUtils = require("devtools/shared/DevToolsUtils");
+let flags = require("devtools/shared/flags");
 let { Task } = require("devtools/shared/task");
 let { TargetFactory } = require("devtools/client/framework/target");
 let { Toolbox } = require("devtools/client/framework/toolbox");
 
-DevToolsUtils.testing = true;
+flags.testing = true;
 let { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/performance/",
   window: this

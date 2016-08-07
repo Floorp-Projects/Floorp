@@ -12,7 +12,6 @@ const {Ci} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
 const FocusManager = Services.focus;
-const {waitForTick} = require("devtools/shared/DevToolsUtils");
 
 const ELLIPSIS = Services.prefs.getComplexValue(
     "intl.ellipsis",
@@ -882,15 +881,17 @@ HTMLBreadcrumbs.prototype = {
     this.updateSelectors();
 
     // Make sure the selected node and its neighbours are visible.
-    waitForTick().then(() => {
-      this.scroll();
-      this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
-      doneUpdating();
-    }, e => {
-      // Only log this as an error if we haven't been destroyed in the meantime.
-      if (!this.isDestroyed) {
-        console.error(e);
+    setTimeout(() => {
+      try {
+        this.scroll();
+        this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
+        doneUpdating();
+      } catch (e) {
+        // Only log this as an error if we haven't been destroyed in the meantime.
+        if (!this.isDestroyed) {
+          console.error(e);
+        }
       }
-    });
+    }, 0);
   }
 };

@@ -130,14 +130,42 @@ DevToolsStartup.prototype = {
     }
   },
 
+  /**
+   * Handle the --start-debugger-server command line flag. The options are:
+   * --start-debugger-server
+   *   The portOrPath parameter is boolean true in this case. Reads and uses the defaults
+   *   from devtools.debugger.remote-port and devtools.debugger.remote-websocket prefs.
+   *   The default values of these prefs are port 6000, WebSocket disabled.
+   *
+   * --start-debugger-server 6789
+   *   Start the non-WebSocket server on port 6789.
+   *
+   * --start-debugger-server /path/to/filename
+   *   Start the server on a Unix domain socket.
+   *
+   * --start-debugger-server ws:6789
+   *   Start the WebSocket server on port 6789.
+   *
+   * --start-debugger-server ws:
+   *   Start the WebSocket server on the default port (taken from d.d.remote-port)
+   */
   handleDebuggerServerFlag: function (cmdLine, portOrPath) {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }
+
+    let webSocket = false;
+    let defaultPort = Services.prefs.getIntPref("devtools.debugger.remote-port");
     if (portOrPath === true) {
-      // Default to TCP port 6000 if no value given
-      portOrPath = 6000;
+      // Default to pref values if no values given on command line
+      webSocket = Services.prefs.getBoolPref("devtools.debugger.remote-websocket");
+      portOrPath = defaultPort;
+    } else if (portOrPath.startsWith("ws:")) {
+      webSocket = true;
+      let port = portOrPath.slice(3);
+      portOrPath = Number(port) ? port : defaultPort;
     }
+
     let { DevToolsLoader } =
       Cu.import("resource://devtools/shared/Loader.jsm", {});
 
@@ -158,6 +186,7 @@ DevToolsStartup.prototype = {
 
       let listener = debuggerServer.createListener();
       listener.portOrPath = portOrPath;
+      listener.webSocket = webSocket;
       listener.open();
       dump("Started debugger server on " + portOrPath + "\n");
     } catch (e) {
@@ -172,9 +201,10 @@ DevToolsStartup.prototype = {
   helpInfo: "  --jsconsole        Open the Browser Console.\n" +
             "  --jsdebugger       Open the Browser Toolbox.\n" +
             "  --devtools         Open DevTools on initial load.\n" +
-            "  --start-debugger-server [port|path] " +
+            "  --start-debugger-server [ws:][ <port> | <path> ] " +
             "Start the debugger server on a TCP port or " +
-            "Unix domain socket path.  Defaults to TCP port 6000.\n",
+            "Unix domain socket path.  Defaults to TCP port 6000. " +
+            "Use WebSocket protocol if ws: prefix is specified.\n",
 
   classID: Components.ID("{9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),

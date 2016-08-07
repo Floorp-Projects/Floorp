@@ -7,7 +7,7 @@
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 const createStore = require("devtools/client/shared/redux/create-store");
 const reducers = require("./reducers");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const flags = require("devtools/shared/flags");
 
 module.exports = function () {
   let shouldLog = false;
@@ -15,7 +15,7 @@ module.exports = function () {
 
   // If testing, store the action history in an array
   // we'll later attach to the store
-  if (DevToolsUtils.testing) {
+  if (flags.testing) {
     history = [];
     shouldLog = true;
   }

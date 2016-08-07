@@ -6,23 +6,9 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsFooter,
-#downloadsPanel-blockedSubview-buttons {
-  border-top: 1px solid ThreeDShadow;
-  background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
-}
-
-#downloadsHistory,
-#downloadsPanel-blockedSubview-openButton {
-  color: -moz-nativehyperlinktext;
-}
-
 @keyfocus@ #downloadsSummary:focus,
-@keyfocus@ #downloadsHistory:focus > .button-box {
+@keyfocus@ .downloadsPanelFooterButton:focus {
   outline: 1px -moz-dialogtext dotted;
-}
-
-@keyfocus@ #downloadsSummary:focus {
   outline-offset: -5px;
 }
 
