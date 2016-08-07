@@ -44,7 +44,7 @@ fuzzy-if(skiaContent,1,13) == clipping-3.html clipping-3-ref.xhtml # edge of bor
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
 fuzzy-if(true,1,20) fuzzy-if(d2d,64,196) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android,140,237) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
-fuzzy-if(Android,5,54) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) == clipping-4-image.html clipping-4-ref.html
+fuzzy-if(Android,5,54) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) fuzzy-if(skiaContent,1,140) == clipping-4-image.html clipping-4-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) fuzzy-if(skiaContent,1,77) == clipping-4-overflow-hidden.html clipping-4-ref.html
 == clipping-5-canvas.html clipping-5-refc.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html clipping-5-refi.html
@@ -57,7 +57,7 @@ fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1
 fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
 == intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
-fuzzy-if(Android,5,105) fuzzy-if(d2d,1,20) fuzzy-if(skiaContent,1,135) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
+fuzzy-if(Android,5,105) fuzzy-if(d2d,1,20) fuzzy-if(skiaContent,1,250) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
 fuzzy-if(true,1,33) fuzzy-if(d2d,48,350) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android,124,440) fuzzy-if(skiaContent,1,135) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
 
 # Inheritance

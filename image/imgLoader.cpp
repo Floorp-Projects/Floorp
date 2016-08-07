@@ -851,21 +851,6 @@ NewImageChannel(nsIChannel** aResult,
   }
   (*aResult)->SetLoadGroup(loadGroup);
 
-  // This is a workaround and a real fix in bug 1264231.
-  if (callbacks) {
-    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
-    if (loadContext) {
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      rv = (*aResult)->GetLoadInfo(getter_AddRefs(loadInfo));
-      NS_ENSURE_SUCCESS(rv, rv);
-      DocShellOriginAttributes originAttrs;
-      loadContext->GetOriginAttributes(originAttrs);
-      NeckoOriginAttributes neckoOriginAttrs;
-      neckoOriginAttrs.InheritFromDocShellToNecko(originAttrs);
-      loadInfo->SetOriginAttributes(neckoOriginAttrs);
-    }
-  }
-
   return NS_OK;
 }
 

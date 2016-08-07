@@ -885,6 +885,11 @@ nsDOMMutationObserver::HandleMutationsInternal()
     return;
   }
 
+  // We need the AutoSafeJSContext to ensure the slow script dialog is
+  // triggered. AutoSafeJSContext does that by pushing JSAutoRequest to stack.
+  // This needs to be outside the while loop.
+  AutoSafeJSContext cx;
+
   nsTArray<RefPtr<nsDOMMutationObserver> >* suppressedObservers = nullptr;
 
   while (sScheduledMutationObservers) {
@@ -905,6 +910,7 @@ nsDOMMutationObserver::HandleMutationsInternal()
       }
     }
     delete observers;
+    JS_CheckForInterrupt(cx);
   }
 
   if (suppressedObservers) {

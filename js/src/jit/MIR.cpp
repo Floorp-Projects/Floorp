@@ -4982,26 +4982,6 @@ MWasmLoadGlobalVar::foldsTo(TempAllocator& alloc)
     return store->value();
 }
 
-HashNumber
-MAsmJSLoadFuncPtr::valueHash() const
-{
-    HashNumber hash = MDefinition::valueHash();
-    hash = addU32ToHash(hash, limit_);
-    hash = addU32ToHash(hash, globalDataOffset_);
-    return hash;
-}
-
-bool
-MAsmJSLoadFuncPtr::congruentTo(const MDefinition* ins) const
-{
-    if (ins->isAsmJSLoadFuncPtr()) {
-        const MAsmJSLoadFuncPtr* load = ins->toAsmJSLoadFuncPtr();
-        return limit_ == load->limit_ &&
-               globalDataOffset_ == load->globalDataOffset_;
-    }
-    return false;
-}
-
 MDefinition::AliasType
 MLoadSlot::mightAlias(const MDefinition* def) const
 {
@@ -5378,10 +5358,11 @@ MAsmJSUnsignedToFloat32::foldsTo(TempAllocator& alloc)
 }
 
 MWasmCall*
-MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
-               const Args& args, MIRType resultType, size_t spIncrement)
+MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
+               const Args& args, MIRType resultType, uint32_t spIncrement, uint32_t tlsStackOffset,
+               MDefinition* tableIndex)
 {
-    MWasmCall* call = new(alloc) MWasmCall(desc, callee, spIncrement);
+    MWasmCall* call = new(alloc) MWasmCall(desc, callee, spIncrement, tlsStackOffset);
     call->setResultType(resultType);
 
     if (!call->argRegs_.init(alloc, args.length()))
@@ -5389,13 +5370,13 @@ MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee call
     for (size_t i = 0; i < call->argRegs_.length(); i++)
         call->argRegs_[i] = args[i].reg;
 
-    if (!call->init(alloc, call->argRegs_.length() + (callee.which() == Callee::Dynamic ? 1 : 0)))
+    if (!call->init(alloc, call->argRegs_.length() + (callee.isTable() ? 1 : 0)))
         return nullptr;
     // FixedList doesn't initialize its elements, so do an unchecked init.
     for (size_t i = 0; i < call->argRegs_.length(); i++)
         call->initOperand(i, args[i].def);
-    if (callee.which() == Callee::Dynamic)
-        call->initOperand(call->argRegs_.length(), callee.dynamicPtr());
+    if (callee.isTable())
+        call->initOperand(call->argRegs_.length(), tableIndex);
 
     return call;
 }
@@ -5899,17 +5880,17 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
     return res;
 }
 
-BarrierKind
+ResultWithOOM<BarrierKind>
 jit::PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
                                              MDefinition* obj, PropertyName* name,
                                              TemporaryTypeSet* observed)
 {
     if (observed->unknown())
-        return BarrierKind::NoBarrier;
+        return ResultWithOOM<BarrierKind>::ok(BarrierKind::NoBarrier);
 
     TypeSet* types = obj->resultTypeSet();
     if (!types || types->unknownObject())
-        return BarrierKind::TypeSet;
+        return ResultWithOOM<BarrierKind>::ok(BarrierKind::TypeSet);
 
     BarrierKind res = BarrierKind::NoBarrier;
 
@@ -5918,8 +5899,10 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
         if (!key)
             continue;
         while (true) {
+            if (!builder->alloc().ensureBallast())
+                return ResultWithOOM<BarrierKind>::fail();
             if (!key->hasStableClassAndProto(builder->constraints()))
-                return BarrierKind::TypeSet;
+                return ResultWithOOM<BarrierKind>::ok(BarrierKind::TypeSet);
             if (!key->proto().isObject())
                 break;
             JSObject* proto = builder->checkNurseryObject(key->proto().toObject());
@@ -5927,7 +5910,7 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
             BarrierKind kind = PropertyReadNeedsTypeBarrier(builder->constraints(),
                                                             key, name, observed);
             if (kind == BarrierKind::TypeSet)
-                return BarrierKind::TypeSet;
+                return ResultWithOOM<BarrierKind>::ok(BarrierKind::TypeSet);
 
             if (kind == BarrierKind::TypeTagOnly) {
                 MOZ_ASSERT(res == BarrierKind::NoBarrier || res == BarrierKind::TypeTagOnly);
@@ -5938,7 +5921,7 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
         }
     }
 
-    return res;
+    return ResultWithOOM<BarrierKind>::ok(res);
 }
 
 bool

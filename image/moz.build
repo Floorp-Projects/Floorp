@@ -52,6 +52,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'ClippedImage.cpp',
+    'DecodedSurfaceProvider.cpp',
     'DecodePool.cpp',
     'Decoder.cpp',
     'DecoderFactory.cpp',

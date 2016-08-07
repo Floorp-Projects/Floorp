@@ -111,12 +111,12 @@ public class SDKProcessor {
 
         implementationFile.append(
                 "} /* sdk */\n" +
-                "} /* widget */\n" +
+                "} /* java */\n" +
                 "} /* mozilla */\n");
 
         headerFile.append(
                 "} /* sdk */\n" +
-                "} /* widget */\n" +
+                "} /* java */\n" +
                 "} /* mozilla */\n" +
                 "#endif\n");
 

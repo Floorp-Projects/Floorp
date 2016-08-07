@@ -283,12 +283,18 @@ void TlsConnectTestBase::CheckConnected() {
   server_->CheckSecretsDestroyed();
 }
 
-void TlsConnectTestBase::CheckKeys(SSLKEAType keaType,
-                                   SSLAuthType authType) const {
-  client_->CheckKEAType(keaType);
-  server_->CheckKEAType(keaType);
-  client_->CheckAuthType(authType);
-  server_->CheckAuthType(authType);
+void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type,
+                                   SSLAuthType auth_type,
+                                   size_t kea_size) const {
+  if (kea_size) {
+    client_->CheckKEA(kea_type, kea_size);
+    server_->CheckKEA(kea_type, kea_size);
+  } else {
+    client_->CheckKEA(kea_type);
+    server_->CheckKEA(kea_type);
+  }
+  client_->CheckAuthType(auth_type);
+  server_->CheckAuthType(auth_type);
 }
 
 void TlsConnectTestBase::ConnectExpectFail() {

@@ -140,7 +140,7 @@ private:
   //   bit 0:      are we set to "uncacheable"?
   //   bit 1:      do we have a font size value?
   //   bit 2:      do we have a writing mode value?
-  //   bits 2-7:   unused
+  //   bits 3-7:   unused
   //   bits 8-15:  writing mode (uint8_t)
   //   bits 16-31: unused
   uint32_t mBits;

@@ -88,11 +88,7 @@
                 onget="return this.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
       <field name="pageUpOrDownMovesSelection">
-        {
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-          AppConstants.platform != "macosx";
-        }
+        !/Mac/.test(navigator.platform)
       </field>
       <property name="keepCurrentInView"
                 onget="return (this.getAttribute('keepcurrentinview') == 'true');"
@@ -671,9 +667,7 @@
             return true;
           }
 
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-          if (AppConstants.platform == "macosx") {
+          if (/Mac/.test(navigator.platform)) {
             // See if we can edit the cell.
             var row = this.currentIndex;
             if (this._cellSelType) {
@@ -1415,11 +1409,9 @@
           if (event.target != event.originalTarget)
             return;
 
-          let { AppConstants } =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
           // On Windows multiple clicking on tree columns only cycles one time
           // every 2 clicks.
-          if (AppConstants.platform == "win" && event.detail % 2 == 0)
+          if (/Win/.test(navigator.platform) && event.detail % 2 == 0)
             return;
 
           var tree = this.parentNode.parentNode;

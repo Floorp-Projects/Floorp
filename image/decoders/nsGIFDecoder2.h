@@ -24,10 +24,12 @@ class nsGIFDecoder2 : public Decoder
 public:
   ~nsGIFDecoder2();
 
+protected:
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
   nsresult FinishInternal() override;
-  virtual Telemetry::ID SpeedHistogram() override;
+
+  Maybe<Telemetry::ID> SpeedHistogram() const override;
 
 private:
   friend class DecoderFactory;

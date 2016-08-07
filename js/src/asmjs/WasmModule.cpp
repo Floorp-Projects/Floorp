@@ -415,15 +415,10 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
     Instance& instance = instanceObj->instance();
     const SharedTableVector& tables = instance.tables();
 
-    // Initialize tables that have a WasmTableObject first, so that this
-    // initialization can be done atomically.
-    if (tableObj && !tableObj->initialized() && !tableObj->init(cx, instanceObj))
-        return false;
-
-    // Initialize all remaining Tables that do not have objects.
+    // Ensure all tables are initialized before storing into them.
     for (const SharedTable& table : tables) {
         if (!table->initialized())
-            table->init(instance.code().segment());
+            table->init(instance);
     }
 
     // Now that all tables have been initialized, write elements.
@@ -462,14 +457,6 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
             return false;
         }
 
-        if (tableObj) {
-            MOZ_ASSERT(seg.tableIndex == 0);
-            for (uint32_t i = 0; i < seg.elems.length(); i++) {
-                if (!tableObj->setInstance(cx, offset + i, instanceObj))
-                    return false;
-            }
-        }
-
         // If profiling is already enabled in the wasm::Compartment, the new
         // instance must use the profiling entry for typed functions instead of
         // the default nonProfilingEntry.
@@ -477,10 +464,10 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
 
         uint8_t* codeBase = instance.codeBase();
         for (uint32_t i = 0; i < seg.elems.length(); i++) {
-            void* callee = codeBase + seg.elems[i];
+            void* code = codeBase + seg.elems[i];
             if (useProfilingEntry)
-                callee = codeBase + instance.code().lookupRange(callee)->funcProfilingEntry();
-            table.array()[offset + i] = callee;
+                code = codeBase + instance.code().lookupRange(code)->funcProfilingEntry();
+            table.set(offset + i, code, instance);
         }
 
         prevEnd = offset + seg.elems.length();
@@ -569,26 +556,48 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
 }
 
 bool
-Module::instantiateTable(JSContext* cx, HandleWasmTableObject tableImport,
+Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
                          SharedTableVector* tables) const
 {
-    for (const TableDesc& tableDesc : metadata_->tables) {
-        SharedTable table;
-        if (tableImport) {
-            table = &tableImport->table();
-            if (table->length() < tableDesc.initial || table->length() > tableDesc.maximum) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, "Table");
-                return false;
-            }
-        } else {
-            table = Table::create(cx, tableDesc.kind, tableDesc.initial);
-            if (!table)
-                return false;
+    if (tableObj) {
+        MOZ_ASSERT(!metadata_->isAsmJS());
+
+        MOZ_ASSERT(metadata_->tables.length() == 1);
+        const TableDesc& tableDesc = metadata_->tables[0];
+        MOZ_ASSERT(tableDesc.external);
+
+        Table& table = tableObj->table();
+        if (table.length() < tableDesc.initial || table.length() > tableDesc.maximum) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, "Table");
+            return false;
         }
 
-        if (!tables->emplaceBack(table)) {
+        if (!tables->append(&table)) {
             ReportOutOfMemory(cx);
             return false;
+        }
+    } else {
+        for (const TableDesc& tableDesc : metadata_->tables) {
+            SharedTable table;
+            if (tableDesc.external) {
+                MOZ_ASSERT(!tableObj);
+                MOZ_ASSERT(tableDesc.kind == TableKind::AnyFunction);
+
+                tableObj.set(WasmTableObject::create(cx, tableDesc.initial));
+                if (!tableObj)
+                    return false;
+
+                table = &tableObj->table();
+            } else {
+                table = Table::create(cx, tableDesc);
+                if (!table)
+                    return false;
+            }
+
+            if (!tables->emplaceBack(table)) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
         }
     }
 
@@ -640,7 +649,7 @@ ExportGlobalValue(JSContext* cx, const GlobalDescVector& globals, uint32_t globa
 static bool
 CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
-                   MutableHandleWasmTableObject tableObj,
+                   HandleWasmTableObject tableObj,
                    HandleWasmMemoryObject memoryObj,
                    const ValVector& globalImports,
                    const ExportVector& exports,
@@ -677,12 +686,6 @@ CreateExportObject(JSContext* cx,
             break;
           }
           case DefinitionKind::Table: {
-            if (!tableObj) {
-                MOZ_ASSERT(instance.tables().length() == 1);
-                tableObj.set(WasmTableObject::create(cx, *instance.tables()[0]));
-                if (!tableObj)
-                    return false;
-            }
             val = ObjectValue(*tableObj);
             break;
           }
@@ -723,8 +726,9 @@ Module::instantiate(JSContext* cx,
     if (!instantiateMemory(cx, &memory))
         return false;
 
+    RootedWasmTableObject table(cx, tableImport);
     SharedTableVector tables;
-    if (!instantiateTable(cx, tableImport, &tables))
+    if (!instantiateTable(cx, &table, &tables))
         return false;
 
     // To support viewing the source of an instance (Instance::createText), the
@@ -746,36 +750,18 @@ Module::instantiate(JSContext* cx,
     if (!code)
         return false;
 
-    // Create the Instance, ensuring that it is traceable via 'instanceObj'
-    // before any GC can occur and invalidate the pointers stored in global
-    // memory.
-
-    {
-        instanceObj.set(WasmInstanceObject::create(cx, instanceProto));
-        if (!instanceObj)
-            return false;
-
-        auto instance = cx->make_unique<Instance>(cx,
-                                                  instanceObj,
-                                                  Move(code),
-                                                  memory,
-                                                  Move(tables),
-                                                  funcImports,
-                                                  globalImports);
-        if (!instance)
-            return false;
-
-        instanceObj->init(Move(instance));
-    }
-
-    if (!instanceObj->instance().init(cx))
+    instanceObj.set(WasmInstanceObject::create(cx,
+                                               Move(code),
+                                               memory,
+                                               Move(tables),
+                                               funcImports,
+                                               globalImports,
+                                               instanceProto));
+    if (!instanceObj)
         return false;
 
-    // Create the export object.
-
     RootedObject exportObj(cx);
-    RootedWasmTableObject table(cx, tableImport);
-    if (!CreateExportObject(cx, instanceObj, &table, memory, globalImports, exports_, &exportObj))
+    if (!CreateExportObject(cx, instanceObj, table, memory, globalImports, exports_, &exportObj))
         return false;
 
     JSAtom* atom = Atomize(cx, InstanceExportField, strlen(InstanceExportField));

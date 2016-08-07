@@ -85,6 +85,26 @@ var Frames = {
 };
 Frames.init();
 
+var APIs = {
+  apis: new Map(),
+
+  register(namespace, schema, script) {
+    if (this.apis.has(namespace)) {
+      throw new Error(`API namespace already exists: ${namespace}`);
+    }
+
+    this.apis.set(namespace, {schema, script});
+  },
+
+  unregister(namespace) {
+    if (!this.apis.has(namespace)) {
+      throw new Error(`API namespace does not exist: ${namespace}`);
+    }
+
+    this.apis.delete(namespace);
+  },
+};
+
 // This object manages various platform-level issues related to
 // moz-extension:// URIs. It lives here so that it can be used in both
 // the parent and child processes.
@@ -274,6 +294,9 @@ this.ExtensionManagement = {
   startupExtension: Service.startupExtension.bind(Service),
   shutdownExtension: Service.shutdownExtension.bind(Service),
 
+  registerAPI: APIs.register.bind(APIs),
+  unregisterAPI: APIs.unregister.bind(APIs),
+
   getFrameId: Frames.getId.bind(Frames),
   getParentFrameId: Frames.getParentId.bind(Frames),
 
@@ -281,4 +304,6 @@ this.ExtensionManagement = {
   getAddonIdForWindow,
   getAPILevelForWindow,
   API_LEVELS,
+
+  APIs,
 };

@@ -2082,11 +2082,6 @@ class BaseCompiler
         masm.call(desc, calleeIndex);
     }
 
-    void callDynamic(Register callee, const FunctionCall& call) {
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
-        masm.call(desc, callee);
-    }
-
     void callSymbolic(wasm::SymbolicAddress callee, const FunctionCall& call) {
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
         masm.call(callee);
@@ -2094,56 +2089,47 @@ class BaseCompiler
 
     // Precondition: sync()
 
-    void funcPtrCall(const SigWithId& sig, uint32_t length, uint32_t globalDataOffset,
-                     Stk& indexVal, const FunctionCall& call)
+    void callIndirect(uint32_t sigIndex, Stk& indexVal, const FunctionCall& call)
     {
-        Register ptrReg = WasmTableCallPtrReg;
+        loadI32(WasmTableCallIndexReg, indexVal);
 
-        loadI32(ptrReg, indexVal);
+        const SigWithId& sig = mg_.sigs[sigIndex];
 
+        CalleeDesc callee;
         if (isCompilingAsmJS()) {
-            MOZ_ASSERT(IsPowerOfTwo(length));
-            masm.andPtr(Imm32((length - 1)), ptrReg);
+            MOZ_ASSERT(sig.id.kind() == SigIdDesc::Kind::None);
+            const TableDesc& table = mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]];
+
+            MOZ_ASSERT(IsPowerOfTwo(table.initial));
+            masm.andPtr(Imm32((table.initial - 1)), WasmTableCallIndexReg);
+
+            callee = CalleeDesc::asmJSTable(table);
         } else {
-            masm.branch32(Assembler::Condition::AboveOrEqual, ptrReg, Imm32(length),
-                          wasm::JumpTarget::OutOfBounds);
+            MOZ_ASSERT(sig.id.kind() != SigIdDesc::Kind::None);
+            MOZ_ASSERT(mg_.tables.length() == 1);
+            const TableDesc& table = mg_.tables[0];
+
+            callee = CalleeDesc::wasmTable(table, sig.id);
         }
 
-        switch (sig.id.kind()) {
-          case SigIdDesc::Kind::Global:
-            masm.loadWasmGlobalPtr(sig.id.globalDataOffset(), WasmTableCallSigReg);
-            break;
-          case SigIdDesc::Kind::Immediate:
-            masm.move32(Imm32(sig.id.immediate()), WasmTableCallSigReg);
-            break;
-          case SigIdDesc::Kind::None:
-            break;
-        }
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        masm.wasmCallIndirect(desc, callee);
 
-        {
-            ScratchI32 scratch(*this);
-            masm.loadWasmGlobalPtr(globalDataOffset, scratch);
-            masm.loadPtr(BaseIndex(scratch, ptrReg, ScalePointer, 0), ptrReg);
-        }
-
-        callDynamic(ptrReg, call);
+        // After return, restore the caller's TLS and pinned registers.
+        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmPinnedRegsFromTls();
     }
 
     // Precondition: sync()
 
     void callImport(unsigned globalDataOffset, const FunctionCall& call)
     {
-        // Load the callee, before the caller's registers are clobbered.
-        Register ptrReg = ABINonArgReg0;
-        masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code), ptrReg);
-
         // There is no need to preserve WasmTlsReg since it has already been
         // spilt to a local slot.
 
-        // Switch to the caller's TLS and pinned registers and make the call.
-        masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, tls), WasmTlsReg);
-        masm.loadWasmPinnedRegsFromTls();
-        callDynamic(ptrReg, call);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CalleeDesc callee = CalleeDesc::import(globalDataOffset);
+        masm.wasmCallImport(desc, callee);
 
         // After return, restore the caller's TLS and pinned registers.
         loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
@@ -5315,11 +5301,7 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
 
     Stk& callee = peek(numArgs);
 
-    const TableDesc& table = isCompilingAsmJS()
-                             ? mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]]
-                             : mg_.tables[0];
-
-    funcPtrCall(sig, table.initial, table.globalDataOffset, callee, baselineCall);
+    callIndirect(sigIndex, callee, baselineCall);
 
     endCall(baselineCall);
 
@@ -6749,11 +6731,6 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
     MOZ_ASSERT(!isAvailable(f.asDouble()));
     freeFPU(f);
     MOZ_ASSERT(isAvailable(f.asDouble()));
-#endif
-
-#if defined(JS_CODEGEN_X86)
-    MOZ_ASSERT(ScratchRegX86 != WasmTableCallPtrReg);
-    MOZ_ASSERT(ScratchRegX86 != WasmTableCallSigReg);
 #endif
 
     labelPool_.setAllocator(alloc_);

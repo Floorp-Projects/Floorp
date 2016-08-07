@@ -694,8 +694,9 @@ class HeapSlot : public WriteBarrieredBase<Value>
     }
 
 #ifdef DEBUG
-    bool preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot);
-    bool preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t slot, Value target) const;
+    bool preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot) const;
+    bool preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t slot,
+                                         const Value& target) const;
 #endif
 
     void set(NativeObject* owner, Kind kind, uint32_t slot, const Value& v) {

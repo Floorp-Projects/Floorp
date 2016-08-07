@@ -185,7 +185,7 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
                                               : SurfaceFormat::B8G8R8X8;
 
   // Make sure there's no animation if we're downscaling.
-  MOZ_ASSERT_IF(mDownscaler, !GetImageMetadata().HasAnimation());
+  MOZ_ASSERT_IF(Size() != OutputSize(), !GetImageMetadata().HasAnimation());
 
   SurfacePipeFlags pipeFlags = aIsInterlaced
                              ? SurfacePipeFlags::DEINTERLACE
@@ -204,7 +204,7 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
   } else {
     // This is an animation frame (and not the first). To minimize the memory
     // usage of animations, the image data is stored in paletted form.
-    MOZ_ASSERT(!mDownscaler);
+    MOZ_ASSERT(Size() == OutputSize());
     pipe =
       SurfacePipeFactory::CreatePalettedSurfacePipe(this, mGIFStruct.images_decoded,
                                                     Size(), aFrameRect, format,
@@ -775,11 +775,7 @@ nsGIFDecoder2::ReadImageDescriptor(const char* aData)
     return Transition::TerminateSuccess();
   }
 
-  if (mDownscaler) {
-    MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode for an animated "
-                           "image?");
-    mDownscaler.reset();
-  }
+  MOZ_ASSERT(Size() == OutputSize(), "Downscaling an animated image?");
 
   // Yield to allow access to the previous frame before we start a new one.
   return Transition::ToAfterYield(State::FINISH_IMAGE_DESCRIPTOR);
@@ -1077,10 +1073,10 @@ nsGIFDecoder2::SkipSubBlocks(const char* aData)
                                   nextSubBlockLength);
 }
 
-Telemetry::ID
-nsGIFDecoder2::SpeedHistogram()
+Maybe<Telemetry::ID>
+nsGIFDecoder2::SpeedHistogram() const
 {
-  return Telemetry::IMAGE_DECODE_SPEED_GIF;
+  return Some(Telemetry::IMAGE_DECODE_SPEED_GIF);
 }
 
 } // namespace image

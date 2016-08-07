@@ -30,24 +30,36 @@ namespace wasm {
 
 class Table : public ShareableBase<Table>
 {
+    UniquePtr<uint8_t[], JS::FreePolicy> array_;
     TableKind kind_;
-    UniquePtr<void*> array_;
     uint32_t length_;
     bool initialized_;
+    bool external_;
 
   public:
-    static RefPtr<Table> create(JSContext* cx, TableKind kind, uint32_t length);
+    static RefPtr<Table> create(JSContext* cx, const TableDesc& desc);
+    void trace(JSTracer* trc);
 
     // These accessors may be used before initialization.
 
+    bool external() const { return external_; }
     bool isTypedFunction() const { return kind_ == TableKind::TypedFunction; }
-    void** array() const { return array_.get(); }
     uint32_t length() const { return length_; }
+    uint8_t* base() const { return array_.get(); }
 
     // A Table must be initialized before any dependent instance can execute.
 
     bool initialized() const { return initialized_; }
-    void init(const CodeSegment& codeSegment);
+    void init(Instance& instance);
+
+    // After initialization, elements must be accessed. All updates must go
+    // through a set() function with the exception of (profiling) updates to the
+    // callee pointer that do not change which logical function is being called.
+
+    void** internalArray() const;
+    ExternalTableElem* externalArray() const;
+    void set(uint32_t index, void* code, Instance& instance);
+    void setNull(uint32_t index);
 
     // about:memory reporting:
 

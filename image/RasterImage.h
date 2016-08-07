@@ -28,6 +28,7 @@
 #include "DecodePool.h"
 #include "DecoderFactory.h"
 #include "FrameAnimator.h"
+#include "ImageMetadata.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
@@ -134,6 +135,8 @@ class Image;
 namespace image {
 
 class Decoder;
+struct DecoderFinalStatus;
+struct DecoderTelemetry;
 class ImageMetadata;
 class SourceBuffer;
 
@@ -196,14 +199,33 @@ public:
                       SurfaceFlags aSurfaceFlags = DefaultSurfaceFlags());
 
   /**
-   * Records telemetry and does final teardown of the provided decoder.
+   * Records decoding results, sends out any final notifications, updates the
+   * state of this image, and records telemetry.
    *
    * Main-thread only.
+   *
+   * @param aStatus      Final status information about the decoder. (Whether it
+   *                     encountered an error, etc.)
+   * @param aMetadata    Metadata about this image that the decoder gathered.
+   * @param aTelemetry   Telemetry data about the decoder.
+   * @param aProgress    Any final progress notifications to send.
+   * @param aInvalidRect Any final invalidation rect to send.
+   * @param aFrameCount  If Some(), a final updated count of the number of frames
+   *                     of animation the decoder has finished decoding so far.
+   *                     This is a lower bound for the total number of animation
+   *                     frames this image has.
+   * @param aFlags       The surface flags used by the decoder.
    */
-  void FinalizeDecoder(Decoder* aDecoder);
+  void NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
+                            const ImageMetadata& aMetadata,
+                            const DecoderTelemetry& aTelemetry,
+                            Progress aProgress,
+                            const gfx::IntRect& aInvalidRect,
+                            const Maybe<uint32_t>& aFrameCount,
+                            SurfaceFlags aSurfaceFlags);
 
-  // Helper method for FinalizeDecoder.
-  void ReportDecoderError(Decoder* aDecoder);
+  // Helper method for NotifyDecodeComplete.
+  void ReportDecoderError();
 
 
   //////////////////////////////////////////////////////////////////////////////
