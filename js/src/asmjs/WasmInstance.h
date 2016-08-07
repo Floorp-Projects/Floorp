@@ -43,10 +43,6 @@ class Instance
     const UniqueCode                     code_;
     GCPtrWasmMemoryObject                memory_;
     SharedTableVector                    tables_;
-
-    // Thread-local data for code running in this instance.
-    // When threading is supported, we need a TlsData object per thread per
-    // instance.
     TlsData                              tlsData_;
 
     // Internal helpers:
@@ -63,6 +59,10 @@ class Instance
 
     bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                     MutableHandleValue rval);
+
+    // Only WasmInstanceObject can call the private trace function.
+    friend class js::WasmInstanceObject;
+    void tracePrivate(JSTracer* trc);
 
   public:
     Instance(JSContext* cx,
@@ -87,12 +87,13 @@ class Instance
     const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
     size_t memoryLength() const;
+    TlsData& tlsData() { return tlsData_; }
 
     // This method returns a pointer to the GC object that owns this Instance.
     // Instances may be reached via weak edges (e.g., Compartment::instances_)
     // so this perform a read-barrier on the returned object.
 
-    WasmInstanceObject* object() const { return object_; }
+    WasmInstanceObject* object() const;
 
     // Execute the given export given the JS call arguments, storing the return
     // value in args.rval.

@@ -301,6 +301,11 @@ bool isIgnoredExprForMustUse(const Expr *E) {
 
   return false;
 }
+
+template<typename T>
+StringRef getNameChecked(const T& D) {
+  return D->getIdentifier() ? D->getName() : "";
+}
 }
 
 class CustomTypeAnnotation {
@@ -385,7 +390,7 @@ protected:
     if (getDeclarationNamespace(D) == "std") {
       // This doesn't check that it's really ::std::pair and not
       // ::std::something_else::pair, but should be good enough.
-      StringRef Name = D->getName();
+      StringRef Name = getNameChecked(D);
       if (Name == "pair" || Name == "atomic" || Name == "__atomic_base") {
         return false;
       }
@@ -477,7 +482,7 @@ public:
            !overridden && M != d->method_end(); ++M) {
         // The way that Clang checks if a method M overrides its parent method
         // is if the method has the same name but would not overload.
-        if (M->getName() == (*it)->getName() &&
+        if (getNameChecked(M) == getNameChecked(*it) &&
             !CI.getSema().IsOverload(*M, (*it), false)) {
           overridden = true;
           break;
@@ -549,7 +554,7 @@ bool classHasAddRefRelease(const CXXRecordDecl *D) {
   bool seenRelease = false;
   for (CXXRecordDecl::method_iterator method = D->method_begin();
        method != D->method_end(); ++method) {
-    const auto &name = method->getName();
+    const auto &name = getNameChecked(method);
     if (name == "AddRef") {
       seenAddRef = true;
     } else if (name == "Release") {
@@ -603,7 +608,7 @@ template <class T> bool IsInSystemHeader(const ASTContext &AC, const T &D) {
 const FieldDecl *getClassRefCntMember(const CXXRecordDecl *D) {
   for (RecordDecl::field_iterator field = D->field_begin(), e = D->field_end();
        field != e; ++field) {
-    if (field->getName() == "mRefCnt") {
+    if (getNameChecked(field) == "mRefCnt") {
       return *field;
     }
   }
@@ -723,7 +728,7 @@ AST_MATCHER(MemberExpr, isAddRefOrRelease) {
   ValueDecl *Member = Node.getMemberDecl();
   CXXMethodDecl *Method = dyn_cast<CXXMethodDecl>(Member);
   if (Method) {
-    const auto &Name = Method->getName();
+    const auto &Name = getNameChecked(Method);
     return Name == "AddRef" || Name == "Release";
   }
   return false;
@@ -1080,9 +1085,7 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
           .bind("node"),
       &explicitOperatorBoolChecker);
 
-  astMatcher.addMatcher(
-      cxxRecordDecl(allOf(decl().bind("decl"), hasRefCntMember())),
-      &noDuplicateRefCntMemberChecker);
+  astMatcher.addMatcher(cxxRecordDecl().bind("decl"), &noDuplicateRefCntMemberChecker);
 
   astMatcher.addMatcher(
       classTemplateSpecializationDecl(
@@ -1158,6 +1161,9 @@ void DiagnosticsMatcher::ScopeChecker::run(
 
   if (const ParmVarDecl *D =
           Result.Nodes.getNodeAs<ParmVarDecl>("parm_vardecl")) {
+    if (D->hasUnparsedDefaultArg() || D->hasUninstantiatedDefaultArg()) {
+      return;
+    }
     if (const Expr *Default = D->getDefaultArg()) {
       if (const MaterializeTemporaryExpr *E =
               dyn_cast<MaterializeTemporaryExpr>(Default)) {
@@ -1438,31 +1444,62 @@ void DiagnosticsMatcher::ExplicitOperatorBoolChecker::run(
 void DiagnosticsMatcher::NoDuplicateRefCntMemberChecker::run(
     const MatchFinder::MatchResult &Result) {
   DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned warningID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "Refcounted record %0 has multiple mRefCnt members");
-  unsigned note1ID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "Superclass %0 also has an mRefCnt member");
-  unsigned note2ID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note,
-      "Consider using the _INHERITED macros for AddRef and Release here");
+  const CXXRecordDecl *D = Result.Nodes.getNodeAs<CXXRecordDecl>("decl");
+  const FieldDecl *refCntMember = getClassRefCntMember(D);
+  const FieldDecl *foundRefCntBase = nullptr;
 
-  const CXXRecordDecl *decl = Result.Nodes.getNodeAs<CXXRecordDecl>("decl");
-  const FieldDecl *refCntMember = getClassRefCntMember(decl);
-  assert(refCntMember &&
-         "The matcher checked to make sure we have a refCntMember");
+  if (!D->hasDefinition())
+    return;
+  D = D->getDefinition();
+
+  // If we don't have an mRefCnt member, and we have less than 2 superclasses,
+  // we don't have to run this loop, as neither case will ever apply.
+  if (!refCntMember && D->getNumBases() < 2) {
+    return;
+  }
 
   // Check every superclass for whether it has a base with a refcnt member, and
   // warn for those which do
-  for (CXXRecordDecl::base_class_const_iterator base = decl->bases_begin(),
-                                                e = decl->bases_end();
-       base != e; ++base) {
-    const FieldDecl *baseRefCntMember = getBaseRefCntMember(base->getType());
+  for (auto &base : D->bases()) {
+    // Determine if this base class has an mRefCnt member
+    const FieldDecl *baseRefCntMember = getBaseRefCntMember(base.getType());
+
     if (baseRefCntMember) {
-      Diag.Report(decl->getLocStart(), warningID) << decl;
-      Diag.Report(baseRefCntMember->getLocStart(), note1ID)
+      if (refCntMember) {
+        // We have an mRefCnt, and superclass has an mRefCnt
+        unsigned error = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Error,
+            "Refcounted record %0 has multiple mRefCnt members");
+        unsigned note1 = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Note, "Superclass %0 also has an mRefCnt member");
+        unsigned note2 = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Note,
+            "Consider using the _INHERITED macros for AddRef and Release here");
+
+        Diag.Report(D->getLocStart(), error) << D;
+        Diag.Report(baseRefCntMember->getLocStart(), note1)
           << baseRefCntMember->getParent();
-      Diag.Report(refCntMember->getLocStart(), note2ID);
+        Diag.Report(refCntMember->getLocStart(), note2);
+      }
+
+      if (foundRefCntBase) {
+        unsigned error = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Error,
+            "Refcounted record %0 has multiple superclasses with mRefCnt members");
+        unsigned note = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Note,
+            "Superclass %0 has an mRefCnt member");
+
+        // superclass has mRefCnt, and another superclass also has an mRefCnt
+        Diag.Report(D->getLocStart(), error) << D;
+        Diag.Report(baseRefCntMember->getLocStart(), note)
+          << baseRefCntMember->getParent();
+        Diag.Report(foundRefCntBase->getLocStart(), note)
+          << foundRefCntBase->getParent();
+      }
+
+      // Record that we've found a base with a mRefCnt member
+      foundRefCntBase = baseRefCntMember;
     }
   }
 }

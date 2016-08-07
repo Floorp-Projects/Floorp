@@ -827,6 +827,9 @@ private:
            nsCSSKeyword aFunctionId,
            nsCSSProperty aProperty, nsAString& aResult,
            Serialization aValueSerialization) const;
+  void AppendBasicShapePositionToString(
+           nsAString& aResult,
+           Serialization aValueSerialization) const;
   void AppendInsetToString(nsCSSProperty aProperty, nsAString& aResult,
                            Serialization aValueSerialization) const;
 protected:

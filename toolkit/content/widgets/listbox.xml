@@ -966,9 +966,7 @@
         var control = this.control;
         if (!control || control.disabled)
           return;
-        let { AppConstants } =
-            Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-        if ((!event.ctrlKey || (AppConstants.platform == "macosx" && event.button == 2)) &&
+        if ((!event.ctrlKey || (/Mac/.test(navigator.platform) && event.button == 2)) &&
             !event.shiftKey && !event.metaKey) {
           if (!this.selected) {
             control.selectItem(this);

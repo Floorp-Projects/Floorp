@@ -57,13 +57,15 @@ public:
     mSampleSize = aSampleSize;
   }
 
+  void NotifyDone();
+
+protected:
   nsresult InitInternal() override;
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
   nsresult FinishInternal() override;
 
-  virtual Telemetry::ID SpeedHistogram() override;
-  void NotifyDone();
+  Maybe<Telemetry::ID> SpeedHistogram() const override;
 
 protected:
   Orientation ReadOrientationFromEXIF();

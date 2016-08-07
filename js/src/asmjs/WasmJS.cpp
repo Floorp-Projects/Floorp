@@ -515,11 +515,17 @@ WasmInstanceObject::finalize(FreeOp* fop, JSObject* obj)
 WasmInstanceObject::trace(JSTracer* trc, JSObject* obj)
 {
     if (!obj->as<WasmInstanceObject>().isNewborn())
-        obj->as<WasmInstanceObject>().instance().trace(trc);
+        obj->as<WasmInstanceObject>().instance().tracePrivate(trc);
 }
 
 /* static */ WasmInstanceObject*
-WasmInstanceObject::create(JSContext* cx, HandleObject proto)
+WasmInstanceObject::create(JSContext* cx,
+                           UniqueCode code,
+                           HandleWasmMemoryObject memory,
+                           SharedTableVector&& tables,
+                           Handle<FunctionVector> funcImports,
+                           const ValVector& globalImports,
+                           HandleObject proto)
 {
     UniquePtr<WeakExportMap> exports = js::MakeUnique<WeakExportMap>(cx->zone(), ExportMap());
     if (!exports || !exports->init()) {
@@ -528,21 +534,31 @@ WasmInstanceObject::create(JSContext* cx, HandleObject proto)
     }
 
     AutoSetNewObjectMetadata metadata(cx);
-    auto* obj = NewObjectWithGivenProto<WasmInstanceObject>(cx, proto);
+    RootedWasmInstanceObject obj(cx, NewObjectWithGivenProto<WasmInstanceObject>(cx, proto));
     if (!obj)
         return nullptr;
 
     obj->setReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
     MOZ_ASSERT(obj->isNewborn());
-    return obj;
-}
 
-void
-WasmInstanceObject::init(UniqueInstance instance)
-{
-    MOZ_ASSERT(isNewborn());
-    initReservedSlot(INSTANCE_SLOT, PrivateValue((void*)instance.release()));
-    MOZ_ASSERT(!isNewborn());
+    // Root the Instance via WasmInstanceObject before any possible GC.
+    auto* instance = cx->new_<Instance>(cx,
+                                        obj,
+                                        Move(code),
+                                        memory,
+                                        Move(tables),
+                                        funcImports,
+                                        globalImports);
+    if (!instance)
+        return nullptr;
+
+    obj->initReservedSlot(INSTANCE_SLOT, PrivateValue(instance));
+    MOZ_ASSERT(!obj->isNewborn());
+
+    if (!instance->init(cx))
+        return nullptr;
+
+    return obj;
 }
 
 /* static */ bool
@@ -820,68 +836,55 @@ const Class WasmTableObject::class_ =
     &WasmTableObject::classOps_
 };
 
+bool
+WasmTableObject::isNewborn() const
+{
+    MOZ_ASSERT(is<WasmTableObject>());
+    return getReservedSlot(TABLE_SLOT).isUndefined();
+}
+
 /* static */ void
 WasmTableObject::finalize(FreeOp* fop, JSObject* obj)
 {
     WasmTableObject& tableObj = obj->as<WasmTableObject>();
-    tableObj.table().Release();
-    if (tableObj.initialized())
-        fop->delete_(&tableObj.instanceVector());
+    if (!tableObj.isNewborn())
+        tableObj.table().Release();
 }
 
 /* static */ void
 WasmTableObject::trace(JSTracer* trc, JSObject* obj)
 {
     WasmTableObject& tableObj = obj->as<WasmTableObject>();
-    if (tableObj.initialized())
-        tableObj.instanceVector().trace(trc);
+    if (!tableObj.isNewborn())
+        tableObj.table().trace(trc);
 }
 
 /* static */ WasmTableObject*
-WasmTableObject::create(JSContext* cx, Table& table)
+WasmTableObject::create(JSContext* cx, uint32_t length)
 {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
 
     AutoSetNewObjectMetadata metadata(cx);
-    auto* obj = NewObjectWithGivenProto<WasmTableObject>(cx, proto);
+    RootedWasmTableObject obj(cx, NewObjectWithGivenProto<WasmTableObject>(cx, proto));
     if (!obj)
         return nullptr;
 
-    table.AddRef();
-    obj->initReservedSlot(TABLE_SLOT, PrivateValue(&table));
+    MOZ_ASSERT(obj->isNewborn());
 
-    MOZ_ASSERT(!obj->initialized());
+    TableDesc desc;
+    desc.kind = TableKind::AnyFunction;
+    desc.external = true;
+    desc.initial = length;
+    desc.maximum = length;
+
+    SharedTable table = Table::create(cx, desc);
+    if (!table)
+        return nullptr;
+
+    obj->initReservedSlot(TABLE_SLOT, PrivateValue(table.forget().take()));
+
+    MOZ_ASSERT(!obj->isNewborn());
     return obj;
-}
-
-bool
-WasmTableObject::initialized() const
-{
-    return !getReservedSlot(INSTANCE_VECTOR_SLOT).isUndefined();
-}
-
-bool
-WasmTableObject::init(JSContext* cx, HandleWasmInstanceObject instanceObj)
-{
-    MOZ_ASSERT(!initialized());
-    MOZ_ASSERT(!table().initialized());
-
-    // Ensure initialization is atomic so that the table is never left in an
-    // inconsistent state (where the Table is initialized but the
-    // WasmTableObject is not).
-
-    auto instanceVector = MakeUnique<InstanceVector>();
-    if (!instanceVector || !instanceVector->appendN(instanceObj.get(), table().length())) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    initReservedSlot(INSTANCE_VECTOR_SLOT, PrivateValue(instanceVector.release()));
-    table().init(instanceObj->instance().codeSegment());
-
-    MOZ_ASSERT(initialized());
-    MOZ_ASSERT(table().initialized());
-    return true;
 }
 
 /* static */ bool
@@ -949,15 +952,11 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    SharedTable table = Table::create(cx, TableKind::AnyFunction, initial);
+    RootedWasmTableObject table(cx, WasmTableObject::create(cx, initial));
     if (!table)
         return false;
 
-    RootedWasmTableObject tableObj(cx, WasmTableObject::create(cx, *table));
-    if (!tableObj)
-        return false;
-
-    args.rval().setObject(*tableObj);
+    args.rval().setObject(*table);
     return true;
 }
 
@@ -1005,16 +1004,14 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
     uint32_t index = uint32_t(indexDbl);
     MOZ_ASSERT(double(index) == indexDbl);
 
-    if (!tableObj->initialized()) {
+    if (!table.initialized()) {
         args.rval().setNull();
         return true;
     }
 
-    const InstanceVector& instanceVector = tableObj->instanceVector();
-    MOZ_ASSERT(instanceVector.length() == table.length());
-
-    RootedWasmInstanceObject instanceObj(cx, instanceVector[index]);
-    const CodeRange* codeRange = instanceObj->instance().code().lookupRange(table.array()[index]);
+    ExternalTableElem& elem = table.externalArray()[index];
+    Instance& instance = *elem.tls->instance;
+    const CodeRange* codeRange = instance.code().lookupRange(elem.code);
 
     // A non-function code range means the bad-indirect-call stub, so a null element.
     if (!codeRange || !codeRange->isFunction()) {
@@ -1022,6 +1019,7 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
         return true;
     }
 
+    RootedWasmInstanceObject instanceObj(cx, instance.object());
     RootedFunction fun(cx);
     if (!instanceObj->getExportedFunction(cx, instanceObj, codeRange->funcIndex(), &fun))
         return false;
@@ -1041,7 +1039,7 @@ WasmTableObject::get(JSContext* cx, unsigned argc, Value* vp)
 WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 {
     RootedWasmTableObject tableObj(cx, &args.thisv().toObject().as<WasmTableObject>());
-    const Table& table = tableObj->table();
+    Table& table = tableObj->table();
 
     if (!args.requireAtLeast(cx, "set", 2))
         return false;
@@ -1064,19 +1062,14 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         return false;
     }
 
-    if (!tableObj->initialized()) {
+    if (!table.initialized()) {
         if (!value) {
             args.rval().setUndefined();
             return true;
         }
 
-        RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
-        if (!tableObj->init(cx, instanceObj))
-            return false;
+        table.init(ExportedFunctionToInstance(value));
     }
-
-    const InstanceVector& instanceVector = tableObj->instanceVector();
-    MOZ_ASSERT(instanceVector.length() == table.length());
 
     if (value) {
         RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
@@ -1088,15 +1081,13 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         MOZ_ASSERT(value == f);
 #endif
 
-        if (!tableObj->setInstance(cx, index, instanceObj))
-            return false;
-
         Instance& instance = instanceObj->instance();
         const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
         const CodeRange& codeRange = instance.metadata().codeRanges[funcExport.codeRangeIndex()];
-        table.array()[index] = instance.codeSegment().base() + codeRange.funcTableEntry();
+        void* code = instance.codeSegment().base() + codeRange.funcTableEntry();
+        table.set(index, code, instance);
     } else {
-        table.array()[index] = instanceVector[index]->instance().codeSegment().badIndirectCallCode();
+        table.setNull(index);
     }
 
     args.rval().setUndefined();
@@ -1121,28 +1112,6 @@ Table&
 WasmTableObject::table() const
 {
     return *(Table*)getReservedSlot(TABLE_SLOT).toPrivate();
-}
-
-WasmTableObject::InstanceVector&
-WasmTableObject::instanceVector() const
-{
-    MOZ_ASSERT(initialized());
-    return *(InstanceVector*)getReservedSlot(INSTANCE_VECTOR_SLOT).toPrivate();
-}
-
-bool
-WasmTableObject::setInstance(JSContext* cx, uint32_t index, HandleWasmInstanceObject instanceObj)
-{
-    MOZ_ASSERT(initialized());
-    MOZ_ASSERT(instanceObj->instance().codeSegment().containsCodePC(table().array()[index]));
-
-    if (instanceVector()[index] != instanceObj) {
-        JS_ReportError(cx, "cross-module Table import NYI");
-        return false;
-    }
-
-    instanceVector()[index] = instanceObj;
-    return true;
 }
 
 // ============================================================================

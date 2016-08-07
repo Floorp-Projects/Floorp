@@ -6,6 +6,7 @@
 
 EXTRA_JS_MODULES += [
     'Extension.jsm',
+    'ExtensionAPI.jsm',
     'ExtensionContent.jsm',
     'ExtensionManagement.jsm',
     'ExtensionStorage.jsm',

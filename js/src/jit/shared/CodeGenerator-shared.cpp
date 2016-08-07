@@ -1508,53 +1508,33 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
     masm.bind(&ok);
 #endif
 
-    MWasmCall::Callee callee = mir->callee();
+    // Save the caller's TLS register in a reserved stack slot (below the
+    // call's stack arguments) for retrieval after the call.
+    if (mir->saveTls())
+        masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), mir->tlsStackOffset()));
+
+    const wasm::CallSiteDesc& desc = mir->desc();
+    const wasm::CalleeDesc& callee = mir->callee();
     switch (callee.which()) {
-      case MWasmCall::Callee::Internal: {
-        masm.call(mir->desc(), callee.internalFuncIndex());
+      case wasm::CalleeDesc::Internal:
+        masm.call(desc, callee.internalFuncIndex());
         break;
-      }
-      case MWasmCall::Callee::Import: {
-        Register temp = ToRegister(ins->getTemp(0));
-
-        // Load the callee, before the caller's registers are clobbered.
-        uint32_t globalDataOffset = callee.importGlobalDataOffset();;
-        masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code), temp);
-
-        // Save the caller's TLS register in a reserved stack slot (below the
-        // call's stack arguments) for retrieval after the call.
-        masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), callee.importTlsStackOffset()));
-
-        // Switch to the callee's TLS and pinned registers and make the call.
-        masm.loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, tls), WasmTlsReg);
-        masm.loadWasmPinnedRegsFromTls();
-        masm.call(mir->desc(), temp);
-
-        // After return, restore the caller's TLS and pinned registers.
-        masm.loadPtr(Address(masm.getStackPointer(), callee.importTlsStackOffset()), WasmTlsReg);
-        masm.loadWasmPinnedRegsFromTls();
+      case wasm::CalleeDesc::Import:
+        masm.wasmCallImport(desc, callee);
         break;
-      }
-      case MWasmCall::Callee::Dynamic: {
-        wasm::SigIdDesc sigId = callee.dynamicSigId();
-        switch (sigId.kind()) {
-          case wasm::SigIdDesc::Kind::Global:
-            masm.loadWasmGlobalPtr(sigId.globalDataOffset(), WasmTableCallSigReg);
-            break;
-          case wasm::SigIdDesc::Kind::Immediate:
-            masm.move32(Imm32(sigId.immediate()), WasmTableCallSigReg);
-            break;
-          case wasm::SigIdDesc::Kind::None:
-            break;
-        }
-        MOZ_ASSERT(WasmTableCallPtrReg == ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
-        masm.call(mir->desc(), WasmTableCallPtrReg);
+      case wasm::CalleeDesc::WasmTable:
+      case wasm::CalleeDesc::AsmJSTable:
+        masm.wasmCallIndirect(desc, callee);
         break;
-      }
-      case MWasmCall::Callee::Builtin: {
+      case wasm::CalleeDesc::Builtin:
         masm.call(callee.builtin());
         break;
-      }
+    }
+
+    // After return, restore the caller's TLS and pinned registers.
+    if (mir->saveTls()) {
+        masm.loadPtr(Address(masm.getStackPointer(), mir->tlsStackOffset()), WasmTlsReg);
+        masm.loadWasmPinnedRegsFromTls();
     }
 
     if (mir->spIncrement())

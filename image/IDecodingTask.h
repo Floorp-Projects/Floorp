@@ -14,12 +14,14 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 
+#include "imgFrame.h"
 #include "SourceBuffer.h"
 
 namespace mozilla {
 namespace image {
 
 class Decoder;
+class RasterImage;
 
 /// A priority hint that DecodePool can use when scheduling an IDecodingTask.
 enum class TaskPriority : uint8_t
@@ -47,23 +49,28 @@ public:
   /// DecodePool. Subclasses can override this if they need different behavior.
   void Resume() override;
 
-  /// @return a non-null weak pointer to the Decoder associated with this task.
-  virtual NotNull<Decoder*> GetDecoder() const = 0;
-
 protected:
+  /// Notify @aImage of @aDecoder's progress.
+  static void NotifyProgress(NotNull<RasterImage*> aImage,
+                             NotNull<Decoder*> aDecoder);
+
+  /// Notify @aImage that @aDecoder has finished.
+  static void NotifyDecodeComplete(NotNull<RasterImage*> aImage,
+                                   NotNull<Decoder*> aDecoder);
+
   virtual ~IDecodingTask() { }
 };
 
 
 /**
- * An IDecodingTask implementation for full decodes of images.
+ * An IDecodingTask implementation for full decodes of animated images.
  */
-class DecodingTask final : public IDecodingTask
+class AnimationDecodingTask final : public IDecodingTask
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodingTask, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnimationDecodingTask, override)
 
-  explicit DecodingTask(NotNull<Decoder*> aDecoder);
+  explicit AnimationDecodingTask(NotNull<Decoder*> aDecoder);
 
   void Run() override;
   bool ShouldPreferSyncRun() const override;
@@ -72,10 +79,8 @@ public:
   // don't block layout or page load.
   TaskPriority Priority() const override { return TaskPriority::eLow; }
 
-  NotNull<Decoder*> GetDecoder() const override { return mDecoder; }
-
 private:
-  virtual ~DecodingTask() { }
+  virtual ~AnimationDecodingTask() { }
 
   NotNull<RefPtr<Decoder>> mDecoder;
 };
@@ -101,8 +106,6 @@ public:
   // Metadata decodes run at the highest priority because they block layout and
   // page load.
   TaskPriority Priority() const override { return TaskPriority::eHigh; }
-
-  NotNull<Decoder*> GetDecoder() const override { return mDecoder; }
 
 private:
   virtual ~MetadataDecodingTask() { }
@@ -131,8 +134,6 @@ public:
   // they don't; in these situations, the test re-runs them manually. So no
   // matter what, we don't want to resume by posting a task to the DecodePool.
   void Resume() override { }
-
-  NotNull<Decoder*> GetDecoder() const override { return mDecoder; }
 
 private:
   virtual ~AnonymousDecodingTask() { }

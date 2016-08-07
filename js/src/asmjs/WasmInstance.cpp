@@ -350,7 +350,7 @@ Instance::Instance(JSContext* cx,
     }
 
     for (size_t i = 0; i < tables_.length(); i++)
-        *addressOfTableBase(i) = tables_[i]->array();
+        *addressOfTableBase(i) = tables_[i]->base();
 }
 
 bool
@@ -395,19 +395,33 @@ Instance::~Instance()
 }
 
 void
-Instance::trace(JSTracer* trc)
+Instance::tracePrivate(JSTracer* trc)
 {
-    // Ordinarily, an Instance is only marked via WasmInstanceObject's trace
-    // hook and so this TraceEdge() call is only useful to update the pointer on
-    // moving GC. However, if wasm is active in a wasm::Compartment during GC,
-    // all Instances are marked directly via Instance::trace() making this a
-    // necessary strong edge.
-    TraceEdge(trc, &object_, "wasm object");
+    // This method is only called from WasmInstanceObject so the only reason why
+    // TraceEdge is called is so that the pointer can be updated during a moving
+    // GC. TraceWeakEdge may sound better, but it is less efficient given that
+    // we know object_ is already marked.
+    MOZ_ASSERT(!IsAboutToBeFinalized(&object_));
+    TraceEdge(trc, &object_, "wasm instance object");
 
     for (const FuncImport& fi : metadata().funcImports)
         TraceNullableEdge(trc, &funcImportTls(fi).obj, "wasm import");
 
+    for (const SharedTable& table : tables_)
+        table->trace(trc);
+
     TraceNullableEdge(trc, &memory_, "wasm buffer");
+}
+
+void
+Instance::trace(JSTracer* trc)
+{
+    // Technically, instead of having this method, the caller could use
+    // Instance::object() to get the owning WasmInstanceObject to mark,
+    // but this method is simpler and more efficient. The trace hook of
+    // WasmInstanceObject will call Instance::tracePrivate at which point we
+    // can mark the rest of the children.
+    TraceEdge(trc, &object_, "wasm instance object");
 }
 
 SharedMem<uint8_t*>
@@ -488,6 +502,12 @@ ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, double* ret)
 
     BitwiseCast(u64, ret);
     return true;
+}
+
+WasmInstanceObject*
+Instance::object() const
+{
+    return object_;
 }
 
 bool
@@ -756,7 +776,7 @@ Instance::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
         // can contain elements from multiple instances.
         MOZ_ASSERT(metadata().kind == ModuleKind::AsmJS);
 
-        void** array = table->array();
+        void** array = table->internalArray();
         uint32_t length = table->length();
         for (size_t i = 0; i < length; i++)
             UpdateEntry(*code_, newProfilingEnabled, &array[i]);

@@ -1504,9 +1504,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   if (aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL) {
     inheritPrincipal = false;
-    triggeringPrincipal = principalToInheritAttributesFrom ?
-      nsNullPrincipal::CreateWithInheritedAttributes(principalToInheritAttributesFrom) :
-      nsNullPrincipal::CreateWithInheritedAttributes(this);
+    triggeringPrincipal = nsNullPrincipal::CreateWithInheritedAttributes(this);
   }
 
   uint32_t flags = 0;

@@ -572,14 +572,6 @@ public:
       return;
     }
 
-    // This is a workaround and it will be fix in bug 1264230.
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-    if (loadInfo) {
-      NeckoOriginAttributes originAttrs;
-      NS_GetOriginAttributes(channel, originAttrs);
-      loadInfo->SetOriginAttributes(originAttrs);
-    }
-
     // The listener holds a strong reference to us.  This creates a
     // reference cycle, once we've set mChannel, which is manually broken
     // in the listener's OnStartRequest method after it is finished with

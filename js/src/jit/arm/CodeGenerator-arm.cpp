@@ -2188,7 +2188,7 @@ CodeGeneratorARM::emitWasmCall(LWasmCallBase* ins)
 {
     MWasmCall* mir = ins->mir();
 
-    if (UseHardFpABI() || mir->callee().which() != MWasmCall::Callee::Builtin) {
+    if (UseHardFpABI() || mir->callee().which() != wasm::CalleeDesc::Builtin) {
         emitWasmCallBase(ins);
         return;
     }
@@ -2413,6 +2413,86 @@ CodeGeneratorARM::visitWasmLoadI64(LWasmLoadI64* lir)
     emitWasmLoad(lir);
 }
 
+template<typename T>
+void
+CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
+{
+    const MWasmLoad* mir = lir->mir();
+
+    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
+
+    uint32_t offset = mir->offset();
+    MOZ_ASSERT(offset <= INT32_MAX);
+
+    Register ptr = ToRegister(lir->ptrCopy());
+    if (offset)
+        masm.ma_add(Imm32(offset), ptr);
+
+    // Add HeapReg to ptr, so we can use base+index addressing in the byte loads.
+    masm.ma_add(HeapReg, ptr);
+
+    unsigned byteSize = mir->byteSize();
+    Scalar::Type type = mir->accessType();
+    bool isSigned = type == Scalar::Int8 || type == Scalar::Int16 || type == Scalar::Int32 ||
+                    type == Scalar::Int64;
+
+    MIRType mirType = mir->type();
+
+    Register tmp = ToRegister(lir->getTemp(1));
+
+    Register low;
+    if (IsFloatingPointType(mirType))
+        low = ToRegister(lir->getTemp(2));
+    else if (mirType == MIRType::Int64)
+        low = ToOutRegister64(lir).low;
+    else
+        low = ToRegister(lir->output());
+
+    MOZ_ASSERT(low != tmp);
+    MOZ_ASSERT(low != ptr);
+
+    masm.emitUnalignedLoad(isSigned, Min(byteSize, 4u), ptr, tmp, low);
+
+    if (IsFloatingPointType(mirType)) {
+        FloatRegister output = ToFloatRegister(lir->output());
+        if (byteSize == 4) {
+            MOZ_ASSERT(output.isSingle());
+            masm.ma_vxfer(low, output);
+        } else {
+            MOZ_ASSERT(byteSize == 8);
+            MOZ_ASSERT(output.isDouble());
+            Register high = ToRegister(lir->getTemp(3));
+            masm.emitUnalignedLoad(/* signed */ false, 4, ptr, tmp, high, /* offset */ 4);
+            masm.ma_vxfer(low, high, output);
+        }
+    } else if (mirType == MIRType::Int64) {
+        Register64 output = ToOutRegister64(lir);
+        if (type == Scalar::Int64) {
+            MOZ_ASSERT(byteSize == 8);
+            masm.emitUnalignedLoad(isSigned, 4, ptr, tmp, output.high, /* offset */ 4);
+        } else {
+            MOZ_ASSERT(byteSize <= 4);
+            // Propagate sign.
+            if (isSigned)
+                masm.ma_asr(Imm32(31), output.low, output.high);
+            else
+                masm.ma_mov(Imm32(0), output.high);
+        }
+    }
+}
+
+void
+CodeGeneratorARM::visitWasmUnalignedLoad(LWasmUnalignedLoad* lir)
+{
+    emitWasmUnalignedLoad(lir);
+}
+
+void
+CodeGeneratorARM::visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir)
+{
+    emitWasmUnalignedLoad(lir);
+}
+
 template <typename T>
 void
 CodeGeneratorARM::emitWasmStore(T* lir)
@@ -2474,6 +2554,66 @@ void
 CodeGeneratorARM::visitWasmStoreI64(LWasmStoreI64* lir)
 {
     emitWasmStore(lir);
+}
+
+template<typename T>
+void
+CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
+{
+    const MWasmStore* mir = lir->mir();
+
+    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
+
+    uint32_t offset = mir->offset();
+    MOZ_ASSERT(offset <= INT32_MAX);
+
+    Register ptr = ToRegister(lir->ptrCopy());
+    if (offset)
+        masm.ma_add(Imm32(offset), ptr);
+
+    // Add HeapReg to ptr, so we can use base+index addressing in the byte loads.
+    masm.ma_add(HeapReg, ptr);
+
+    MIRType mirType = mir->value()->type();
+
+    Register val = ToRegister(lir->valueHelper());
+    if (IsFloatingPointType(mirType)) {
+        masm.ma_vxfer(ToFloatRegister(lir->getOperand(LWasmUnalignedStore::ValueIndex)), val);
+    } else if (mirType == MIRType::Int64) {
+        Register64 input = ToRegister64(lir->getInt64Operand(LWasmUnalignedStoreI64::ValueIndex));
+        if (input.low != val)
+            masm.ma_mov(input.low, val);
+    }
+
+    unsigned byteSize = mir->byteSize();
+    masm.emitUnalignedStore(Min(byteSize, 4u), ptr, val);
+
+    if (byteSize > 4) {
+        // It's a double or an int64 load.
+        // Load the high 32 bits when counter == 4.
+        if (IsFloatingPointType(mirType)) {
+            FloatRegister fp = ToFloatRegister(lir->getOperand(LWasmUnalignedStore::ValueIndex));
+            MOZ_ASSERT(fp.isDouble());
+            ScratchRegisterScope scratch(masm);
+            masm.ma_vxfer(fp, scratch, val);
+        } else {
+            MOZ_ASSERT(mirType == MIRType::Int64);
+            masm.ma_mov(ToRegister64(lir->getInt64Operand(LWasmUnalignedStoreI64::ValueIndex)).high, val);
+        }
+        masm.emitUnalignedStore(4, ptr, val, /* offset */ 4);
+     }
+}
+
+void
+CodeGeneratorARM::visitWasmUnalignedStore(LWasmUnalignedStore* lir)
+{
+    emitWasmUnalignedStore(lir);
+}
+
+void
+CodeGeneratorARM::visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* lir)
+{
+    emitWasmUnalignedStore(lir);
 }
 
 void

@@ -113,7 +113,7 @@ VerifyRGBXFormat(uint8_t* aData, const IntSize &aSize, const int32_t aStride, Su
   // We should've initialized the data to be opaque already
   // On debug builds, verify that this is actually true.
   int height = aSize.height;
-  int width = aSize.width;
+  int width = aSize.width * 4;
 
   for (int row = 0; row < height; ++row) {
     for (int column = 0; column < width; column += 4) {

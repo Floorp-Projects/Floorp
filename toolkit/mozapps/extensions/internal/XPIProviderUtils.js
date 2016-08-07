@@ -87,7 +87,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "softDisabled", "foreignInstall", "hasBinaryComponents",
                           "strictCompatibility", "locales", "targetApplications",
                           "targetPlatforms", "multiprocessCompatible", "signedState",
-                          "seen"];
+                          "seen", "dependencies"];
 
 // Properties that should be migrated where possible from an old database. These
 // shouldn't include properties that can be read directly from install.rdf files
@@ -330,6 +330,10 @@ function DBAddonInternal(aLoaded) {
   AddonInternal.call(this);
 
   copyProperties(aLoaded, PROP_JSON_FIELDS, this);
+
+  if (!this.dependencies)
+    this.dependencies = [];
+  Object.freeze(this.dependencies);
 
   if (aLoaded._installLocation) {
     this._installLocation = aLoaded._installLocation;
@@ -2155,6 +2159,7 @@ this.XPIDatabaseReconcile = {
           descriptor: currentAddon._sourceBundle.persistentDescriptor,
           multiprocessCompatible: currentAddon.multiprocessCompatible,
           runInSafeMode: canRunInSafeMode(currentAddon),
+          dependencies: currentAddon.dependencies,
         };
       }
 

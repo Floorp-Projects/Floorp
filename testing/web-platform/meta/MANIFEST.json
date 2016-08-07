@@ -11406,12 +11406,12 @@
         "url": "/IndexedDB/idbcursor-continue.htm"
       },
       {
-        "path": "IndexedDB/idbcursor-continuePrimaryKey.htm",
-        "url": "/IndexedDB/idbcursor-continuePrimaryKey.htm"
-      },
-      {
         "path": "IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm",
         "url": "/IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm"
+      },
+      {
+        "path": "IndexedDB/idbcursor-continuePrimaryKey.htm",
+        "url": "/IndexedDB/idbcursor-continuePrimaryKey.htm"
       },
       {
         "path": "IndexedDB/idbcursor-direction-index-keyrange.htm",
@@ -12206,16 +12206,16 @@
         "url": "/IndexedDB/idbobjectstore_getAll.html"
       },
       {
+        "path": "IndexedDB/idbobjectstore_getAllKeys.html",
+        "url": "/IndexedDB/idbobjectstore_getAllKeys.html"
+      },
+      {
         "path": "IndexedDB/idbobjectstore_getKey.htm",
         "url": "/IndexedDB/idbobjectstore_getKey.htm"
       },
       {
         "path": "IndexedDB/idbobjectstore_getKey_exception_order.htm",
         "url": "/IndexedDB/idbobjectstore_getKey_exception_order.htm"
-      },
-      {
-        "path": "IndexedDB/idbobjectstore_getAllKeys.html",
-        "url": "/IndexedDB/idbobjectstore_getAllKeys.html"
       },
       {
         "path": "IndexedDB/idbobjectstore_index.htm",
@@ -37616,6 +37616,12 @@
         ]
       },
       "testharness": {
+        "css-shapes/basic-shape-circle-ellipse-serialization.html": [
+          {
+            "path": "css-shapes/basic-shape-circle-ellipse-serialization.html",
+            "url": "/css-shapes/basic-shape-circle-ellipse-serialization.html"
+          }
+        ],
         "html/semantics/forms/the-form-element/form-submission-sandbox.html": [
           {
             "path": "html/semantics/forms/the-form-element/form-submission-sandbox.html",

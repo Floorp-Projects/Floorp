@@ -1134,8 +1134,6 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
   // expire.
   SurfaceCache::UnlockEntries(ImageKey(this));
 
-  Maybe<IntSize> targetSize = mSize != aSize ? Some(aSize) : Nothing();
-
   // Determine which flags we need to decode this image with.
   DecoderFlags decoderFlags = DefaultDecoderFlags();
   if (aFlags & FLAG_ASYNC_NOTIFY) {
@@ -1163,7 +1161,7 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
                                                   decoderFlags, surfaceFlags);
   } else {
     task = DecoderFactory::CreateDecoder(mDecoderType, WrapNotNull(this),
-                                         mSourceBuffer, mSize, targetSize,
+                                         mSourceBuffer, mSize, aSize,
                                          decoderFlags, surfaceFlags,
                                          mRequestedSampleSize);
   }
@@ -1564,47 +1562,42 @@ RasterImage::NotifyProgress(Progress aProgress,
 }
 
 void
-RasterImage::FinalizeDecoder(Decoder* aDecoder)
+RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
+                                  const ImageMetadata& aMetadata,
+                                  const DecoderTelemetry& aTelemetry,
+                                  Progress aProgress,
+                                  const IntRect& aInvalidRect,
+                                  const Maybe<uint32_t>& aFrameCount,
+                                  SurfaceFlags aSurfaceFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aDecoder);
-  MOZ_ASSERT(aDecoder->HasError() || !aDecoder->InFrame(),
-             "Finalizing a decoder in the middle of a frame");
-
-  bool wasMetadata = aDecoder->IsMetadataDecode();
-  bool done = aDecoder->GetDecodeDone();
 
   // If the decoder detected an error, log it to the error console.
-  if (aDecoder->ShouldReportError() && !aDecoder->WasAborted()) {
-    ReportDecoderError(aDecoder);
+  if (aStatus.mShouldReportError && !aStatus.mWasAborted) {
+    ReportDecoderError();
   }
 
   // Record all the metadata the decoder gathered about this image.
-  bool metadataOK = SetMetadata(aDecoder->GetImageMetadata(), wasMetadata);
+  bool metadataOK = SetMetadata(aMetadata, aStatus.mWasMetadataDecode);
   if (!metadataOK) {
     // This indicates a serious error that requires us to discard all existing
     // surfaces and redecode to recover. We'll drop the results from this
     // decoder on the floor, since they aren't valid.
-    aDecoder->TakeProgress();
-    aDecoder->TakeInvalidRect();
     RecoverFromInvalidFrames(mSize,
-                             FromSurfaceFlags(aDecoder->GetSurfaceFlags()));
+                             FromSurfaceFlags(aSurfaceFlags));
     return;
   }
 
-  MOZ_ASSERT(mError || mHasSize || !aDecoder->HasSize(),
+  MOZ_ASSERT(mError || mHasSize || !aMetadata.HasSize(),
              "SetMetadata should've gotten a size");
 
-  if (!wasMetadata && aDecoder->GetDecodeDone() && !aDecoder->WasAborted()) {
+  if (!aStatus.mWasMetadataDecode && aStatus.mFinished && !aStatus.mWasAborted) {
     // Flag that we've been decoded before.
     mHasBeenDecoded = true;
   }
 
   // Send out any final notifications.
-  NotifyProgress(aDecoder->TakeProgress(),
-                 aDecoder->TakeInvalidRect(),
-                 aDecoder->TakeCompleteFrameCount(),
-                 aDecoder->GetSurfaceFlags());
+  NotifyProgress(aProgress, aInvalidRect, aFrameCount, aSurfaceFlags);
 
   if (mHasBeenDecoded && mAnimationState) {
     // We're done decoding and our AnimationState has been notified about all
@@ -1612,36 +1605,30 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
     mAnimationState->SetDoneDecoding(true);
   }
 
-  if (!wasMetadata && aDecoder->ChunkCount()) {
-    Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS,
-                          aDecoder->ChunkCount());
+  if (!aStatus.mWasMetadataDecode && aTelemetry.mChunkCount) {
+    Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, aTelemetry.mChunkCount);
   }
 
-  if (done) {
+  if (aStatus.mFinished) {
     // Do some telemetry if this isn't a metadata decode.
-    if (!wasMetadata) {
+    if (!aStatus.mWasMetadataDecode) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME,
-                            int32_t(aDecoder->DecodeTime().ToMicroseconds()));
+                            int32_t(aTelemetry.mDecodeTime.ToMicroseconds()));
 
-      // We record the speed for only some decoders. The rest have
-      // SpeedHistogram return HistogramCount.
-      Telemetry::ID id = aDecoder->SpeedHistogram();
-      if (id < Telemetry::HistogramCount) {
-        int32_t KBps = int32_t(aDecoder->BytesDecoded() /
-                               (1024 * aDecoder->DecodeTime().ToSeconds()));
-        Telemetry::Accumulate(id, KBps);
+      if (aTelemetry.mSpeedHistogram) {
+        Telemetry::Accumulate(*aTelemetry.mSpeedHistogram, aTelemetry.Speed());
       }
     }
 
     // Detect errors.
-    if (aDecoder->HasError() && !aDecoder->WasAborted()) {
+    if (aStatus.mHadError && !aStatus.mWasAborted) {
       DoError();
-    } else if (wasMetadata && !mHasSize) {
+    } else if (aStatus.mWasMetadataDecode && !mHasSize) {
       DoError();
     }
 
     // If we were waiting to fire the load event, go ahead and fire it now.
-    if (mLoadProgress && wasMetadata) {
+    if (mLoadProgress && aStatus.mWasMetadataDecode) {
       NotifyForLoadEvent(*mLoadProgress);
       mLoadProgress = Nothing();
       NotifyProgress(FLAG_ONLOAD_UNBLOCKED);
@@ -1649,14 +1636,14 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   }
 
   // If we were a metadata decode and a full decode was requested, do it.
-  if (done && wasMetadata && mWantFullDecode) {
+  if (aStatus.mFinished && aStatus.mWasMetadataDecode && mWantFullDecode) {
     mWantFullDecode = false;
     RequestDecodeForSize(mSize, DECODE_FLAGS_DEFAULT);
   }
 }
 
 void
-RasterImage::ReportDecoderError(Decoder* aDecoder)
+RasterImage::ReportDecoderError()
 {
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);

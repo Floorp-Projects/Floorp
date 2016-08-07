@@ -377,7 +377,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
     offsets->tableEntry = masm.currentOffset();
     switch (sigId.kind()) {
       case SigIdDesc::Kind::Global: {
-        Register scratch = WasmTableCallPtrReg; // clobbered by the indirect call
+        Register scratch = WasmTableCallScratchReg;
         masm.loadWasmGlobalPtr(sigId.globalDataOffset(), scratch);
         masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch,
                       JumpTarget::BadIndirectCall);

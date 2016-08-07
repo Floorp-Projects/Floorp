@@ -945,6 +945,13 @@ VARIABLES = {
 
         """),
 
+    'IS_RUST_LIBRARY': (bool, bool,
+        """Whether the current library defined by this moz.build is built by Rust.
+
+        The library defined by this moz.build should have a build definition in
+        a Cargo.toml file that exists in this moz.build's directory.
+        """),
+
     'UNIFIED_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Source code files that can be compiled together.
 
