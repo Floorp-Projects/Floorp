@@ -11,6 +11,7 @@
 #include "prprf.h"
 
 #include "nsUrlClassifierUtils.h"
+#include "nsPrintfCString.h"
 
 // MOZ_LOG=UrlClassifierProtocolParser:5
 mozilla::LazyLogModule gUrlClassifierProtocolParserLog("UrlClassifierProtocolParser");
@@ -61,8 +62,8 @@ ParseChunkRange(nsACString::const_iterator& aBegin,
 }
 
 ProtocolParser::ProtocolParser()
-    : mState(PROTOCOL_STATE_CONTROL)
-  , mUpdateStatus(NS_OK)
+  : mUpdateStatus(NS_OK)
+  , mState(PROTOCOL_STATE_CONTROL)
   , mUpdateWait(0)
   , mResetRequested(false)
   , mTableUpdate(nullptr)
@@ -112,6 +113,12 @@ ProtocolParser::AppendStream(const nsACString& aData)
     }
   }
   return NS_OK;
+}
+
+void
+ProtocolParser::End()
+{
+  // Inbound data has already been processed in every AppendStream() call.
 }
 
 nsresult
@@ -693,6 +700,179 @@ ProtocolParser::GetTableUpdate(const nsACString& aTable)
   mTableUpdates.AppendElement(update);
   return update;
 }
+
+///////////////////////////////////////////////////////////////////////
+// ProtocolParserProtobuf
+
+ProtocolParserProtobuf::ProtocolParserProtobuf()
+{
+}
+
+ProtocolParserProtobuf::~ProtocolParserProtobuf()
+{
+}
+
+nsresult
+ProtocolParserProtobuf::AppendStream(const nsACString& aData)
+{
+  // Protobuf data cannot be parsed progressively. Just save the incoming data.
+  mPending.Append(aData);
+  return NS_OK;
+}
+
+void
+ProtocolParserProtobuf::End()
+{
+  // mUpdateStatus will be updated to success as long as not all
+  // the responses are invalid.
+  mUpdateStatus = NS_ERROR_FAILURE;
+
+  FetchThreatListUpdatesResponse response;
+  if (!response.ParseFromArray(mPending.get(), mPending.Length())) {
+    NS_WARNING("ProtocolParserProtobuf failed parsing data.");
+    return;
+  }
+
+  for (int i = 0; i < response.list_update_responses_size(); i++) {
+    auto r = response.list_update_responses(i);
+    nsresult rv = ProcessOneResponse(r);
+    if (NS_SUCCEEDED(rv)) {
+      mUpdateStatus = rv;
+    } else {
+      NS_WARNING("Failed to process one response.");
+    }
+  }
+}
+
+nsresult
+ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
+{
+  // A response must have a threat type.
+  if (!aResponse.has_threat_type()) {
+    NS_WARNING("Threat type not initialized. This seems to be an invalid response.");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Convert threat type to list name.
+  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
+    do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+  nsCString listName;
+  nsresult rv = urlUtil->ConvertThreatTypeToListName(aResponse.threat_type(),
+                                                     listName);
+  if (NS_FAILED(rv)) {
+    PARSER_LOG((nsPrintfCString("Threat type to list name conversion error: %d",
+                               aResponse.threat_type())).get());
+    return NS_ERROR_FAILURE;
+  }
+
+  // Test if this is a full update.
+  bool isFullUpdate = false;
+  if (aResponse.has_response_type()) {
+    isFullUpdate =
+      aResponse.response_type() == ListUpdateResponse::FULL_UPDATE;
+  } else {
+    NS_WARNING("Response type not initialized.");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Warn if there's no new state.
+  if (!aResponse.has_new_client_state()) {
+    NS_WARNING("New state not initialized.");
+    return NS_ERROR_FAILURE;
+  }
+
+  PARSER_LOG(("==== Update for threat type '%d' ====", aResponse.threat_type()));
+  PARSER_LOG(("* listName: %s\n", listName.get()));
+  PARSER_LOG(("* newState: %s\n", aResponse.new_client_state().c_str()));
+  PARSER_LOG(("* isFullUpdate: %s\n", (isFullUpdate ? "yes" : "no")));
+  ProcessAdditionOrRemoval(aResponse.additions(), true /*aIsAddition*/);
+  ProcessAdditionOrRemoval(aResponse.removals(), false);
+  PARSER_LOG(("\n\n"));
+
+  return NS_OK;
+}
+
+nsresult
+ProtocolParserProtobuf::ProcessAdditionOrRemoval(const ThreatEntrySetList& aUpdate,
+                                                 bool aIsAddition)
+{
+  nsresult ret = NS_OK;
+
+  for (int i = 0; i < aUpdate.size(); i++) {
+    auto update = aUpdate.Get(i);
+    if (!update.has_compression_type()) {
+      NS_WARNING(nsPrintfCString("%s with no compression type.",
+                                  aIsAddition ? "Addition" : "Removal").get());
+      continue;
+    }
+
+    switch (update.compression_type()) {
+    case COMPRESSION_TYPE_UNSPECIFIED:
+      NS_WARNING("Unspecified compression type.");
+      break;
+
+    case RAW:
+      ret = (aIsAddition ? ProcessRawAddition(update)
+                         : ProcessRawRemoval(update));
+      break;
+
+    case RICE:
+      // Not implemented yet (see bug 1285848),
+      NS_WARNING("Encoded table update is not supported yet.");
+      break;
+    }
+  }
+
+  return ret;
+}
+
+nsresult
+ProtocolParserProtobuf::ProcessRawAddition(const ThreatEntrySet& aAddition)
+{
+  if (!aAddition.has_raw_hashes()) {
+    PARSER_LOG(("* No raw addition."));
+    return NS_OK;
+  }
+
+  auto rawHashes = aAddition.raw_hashes();
+  if (!rawHashes.has_prefix_size()) {
+    NS_WARNING("Raw hash has no prefix size");
+    return NS_OK;
+  }
+
+  auto prefixes = rawHashes.raw_hashes();
+  if (4 == rawHashes.prefix_size()) {
+    // Process fixed length prefixes separately.
+    uint32_t* fixedLengthPrefixes = (uint32_t*)prefixes.c_str();
+    size_t numOfFixedLengthPrefixes = prefixes.size() / 4;
+    PARSER_LOG(("* Raw addition (4 bytes)"));
+    PARSER_LOG(("  - # of prefixes: %d", numOfFixedLengthPrefixes));
+    PARSER_LOG(("  - Memory address: 0x%p", fixedLengthPrefixes));
+  } else {
+    // TODO: Process variable length prefixes including full hashes.
+    // See Bug 1283009.
+    PARSER_LOG((" Raw addition (%d bytes)", rawHashes.prefix_size()));
+  }
+
+  return NS_OK;
+}
+
+nsresult
+ProtocolParserProtobuf::ProcessRawRemoval(const ThreatEntrySet& aRemoval)
+{
+  if (!aRemoval.has_raw_indices()) {
+    NS_WARNING("A removal has no indices.");
+    return NS_OK;
+  }
+
+  // indices is an array of int32.
+  auto indices = aRemoval.raw_indices().indices();
+  PARSER_LOG(("* Raw removal"));
+  PARSER_LOG(("  - # of removal: %d", indices.size()));
+
+  return NS_OK;
+}
+
 
 } // namespace safebrowsing
 } // namespace mozilla
