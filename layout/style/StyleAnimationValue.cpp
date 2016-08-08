@@ -1944,8 +1944,11 @@ AddShapeFunction(nsCSSProperty aProperty,
              "expected geometry-box");
   MOZ_ASSERT(aArray2->Item(1).GetUnit() == eCSSUnit_Enumerated,
              "expected geometry-box");
-  MOZ_ASSERT(aArray1->Item(1).GetIntValue() == aArray2->Item(1).GetIntValue(),
-             "expected matching geometry-box values");
+
+  if (aArray1->Item(1).GetIntValue() != aArray2->Item(1).GetIntValue()) {
+    return nullptr; // Both shapes must use the same reference box.
+  }
+
   const nsCSSValue::Array* func1 = aArray1->Item(0).GetArrayValue();
   const nsCSSValue::Array* func2 = aArray2->Item(0).GetArrayValue();
   nsCSSKeyword shapeFuncName = func1->Item(0).GetKeywordValue();
