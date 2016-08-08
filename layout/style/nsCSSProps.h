@@ -732,7 +732,7 @@ public:
   static const KTableEntry kBoxDirectionKTable[];
   static const KTableEntry kBoxOrientKTable[];
   static const KTableEntry kBoxPackKTable[];
-  static const KTableEntry kClipShapeSizingKTable[];
+  static const KTableEntry kClipPathGeometryBoxKTable[];
   static const KTableEntry kCounterRangeKTable[];
   static const KTableEntry kCounterSpeakAsKTable[];
   static const KTableEntry kCounterSymbolsSystemKTable[];
