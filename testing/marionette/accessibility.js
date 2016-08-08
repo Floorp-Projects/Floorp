@@ -16,8 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(
 XPCOMUtils.defineLazyModuleGetter(
     this, "clearInterval", "resource://gre/modules/Timer.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "retrieval",
-    () => Cc["@mozilla.org/accessibleRetrieval;1"].getService(Ci.nsIAccessibleRetrieval));
+XPCOMUtils.defineLazyGetter(this, "service",
+    () => Cc["@mozilla.org/accessibilityService;1"].getService(Ci.nsIAccessibilityService));
 
 this.EXPORTED_SYMBOLS = ["accessibility"];
 
@@ -117,7 +117,7 @@ accessibility.Checks = class {
    */
   getAccessible(element, mustHaveAccessible = false) {
     return new Promise((resolve, reject) => {
-      let acc = retrieval.getAccessibleFor(element);
+      let acc = service.getAccessibleFor(element);
 
       // if accessible object is found, return it;
       // if it is not required, also resolve
@@ -135,7 +135,7 @@ accessibility.Checks = class {
       } else {
         let attempts = GET_ACCESSIBLE_ATTEMPTS;
         let intervalId = setInterval(() => {
-          let acc = retrieval.getAccessibleFor(element);
+          let acc = service.getAccessibleFor(element);
           if (acc || --attempts <= 0) {
             clearInterval(intervalId);
             if (acc) {
@@ -163,7 +163,7 @@ accessibility.Checks = class {
    */
   isActionableRole(accessible) {
     return accessibility.ActionableRoles.has(
-        retrieval.getStringRole(accessible.role));
+        service.getStringRole(accessible.role));
   }
 
   /**
