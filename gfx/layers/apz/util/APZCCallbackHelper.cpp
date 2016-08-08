@@ -338,18 +338,24 @@ APZCCallbackHelper::InitializeRootDisplayport(nsIPresShell* aPresShell)
   }
 }
 
+nsPresContext*
+APZCCallbackHelper::GetPresContextForContent(nsIContent* aContent)
+{
+  nsIDocument* doc = aContent->GetComposedDoc();
+  if (!doc) {
+      return nullptr;
+  }
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+      return nullptr;
+  }
+  return shell->GetPresContext();
+}
+
 nsIPresShell*
 APZCCallbackHelper::GetRootContentDocumentPresShellForContent(nsIContent* aContent)
 {
-    nsIDocument* doc = aContent->GetComposedDoc();
-    if (!doc) {
-        return nullptr;
-    }
-    nsIPresShell* shell = doc->GetShell();
-    if (!shell) {
-        return nullptr;
-    }
-    nsPresContext* context = shell->GetPresContext();
+    nsPresContext* context = GetPresContextForContent(aContent);
     if (!context) {
         return nullptr;
     }
