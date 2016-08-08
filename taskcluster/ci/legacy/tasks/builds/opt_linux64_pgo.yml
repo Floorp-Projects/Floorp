@@ -13,7 +13,7 @@ task:
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-pgo'
     - 'coalesce.v1.builds.{{project}}.linux64-pgo'
 
-  workerType: opt-linux64
+  workerType: 'gecko-{{level}}-b-linux'
 
   payload:
     supersederUrl: 'https://coalesce.mozilla-releng.net/v1/list/builds.{{project}}.linux64-pgo'
