@@ -21,6 +21,14 @@ menulist > menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
 }
 
+/* ::::: Variables ::::: */
+:root {
+  --panel-arrowcontent-padding: 10px;
+  --panel-arrowcontent-background: -moz-field;
+  --panel-arrowcontent-color: -moz-FieldText;
+  --panel-arrowcontent-border: 1px solid ThreeDShadow;
+}
+
 /* ::::: root elements ::::: */
 
 window,
