@@ -14,7 +14,7 @@
 "use strict";
 
 // Test for tabs opened using tabs.create and window.open
-function* runTabReloadAndCloseTest({extension, isInitiallyBlankUrl}) {
+function* runTabReloadAndCloseTest(extension) {
   let chromeScript = SpecialPowers.loadChromeScript(
       SimpleTest.getTestFileURL("file_teardown_test.js"));
   yield chromeScript.promiseOneMessage("chromescript-startup");
@@ -37,17 +37,8 @@ function* runTabReloadAndCloseTest({extension, isInitiallyBlankUrl}) {
   extension.sendMessage("reload extension page");
   let extensionPageUrl2 = yield extension.awaitMessage("extension page loaded");
 
-  // When the tab is opened with window.open, the initial URL happens to be
-  // about:blank.
-  if (isInitiallyBlankUrl) {
-    is(extensionPageUrl, "about:blank",
-        "The tab URL before reload should be about:blank");
-    isnot(extensionPageUrl, extensionPageUrl2,
-        "After a page reload the tab URL shouldn't be blank.");
-  } else {
-    is(extensionPageUrl, extensionPageUrl2,
-        "The tab's URL is expected to not change after a page reload");
-  }
+  is(extensionPageUrl, extensionPageUrl2,
+      "The tab's URL is expected to not change after a page reload");
 
   contextEvents = yield* getContextEvents();
   is(contextEvents.length, 2, "ExtensionContext change after tab reload");
@@ -105,7 +96,7 @@ add_task(function* test_extension_page_tabs_create_reload_and_close() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
 
-  yield* runTabReloadAndCloseTest({extension});
+  yield* runTabReloadAndCloseTest(extension);
 });
 
 add_task(function* test_extension_page_window_open_reload_and_close() {
@@ -136,16 +127,7 @@ add_task(function* test_extension_page_window_open_reload_and_close() {
   }
 
   function pageScript() {
-    if (performance.navigation.type === 0) { // TYPE_NAVIGATION
-      // The ExtensionContext URL happens to be "about:blank" when the page is
-      // loaded via window.open().
-      browser.test.sendMessage("extension page loaded", "about:blank");
-    } else if (performance.navigation.type === 1) { // TYPE_RELOAD
-      browser.test.sendMessage("extension page loaded", document.URL);
-    } else {
-      browser.test.notifyFail(
-          "Unexpected navigation type: " + performance.navigation.type);
-    }
+    browser.test.sendMessage("extension page loaded", document.URL);
   }
 
   let extensionData = {
@@ -160,7 +142,7 @@ add_task(function* test_extension_page_window_open_reload_and_close() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
   yield extension.awaitMessage("setup-intermediate-tab");
-  yield* runTabReloadAndCloseTest({extension, isInitiallyBlankUrl: true});
+  yield* runTabReloadAndCloseTest(extension);
 });
 </script>
 
