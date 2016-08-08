@@ -9581,13 +9581,13 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   COMPUTE_END_INHERITED(SVG, svg)
 }
 
-static already_AddRefed<nsStyleBasicShape>
+static already_AddRefed<StyleBasicShape>
 GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
                                nsStyleContext* aStyleContext,
                                nsPresContext* aPresContext,
                                RuleNodeCacheConditions& aConditions)
 {
-  RefPtr<nsStyleBasicShape> basicShape;
+  RefPtr<StyleBasicShape> basicShape;
 
   nsCSSValue::Array* shapeFunction = aValue.GetArrayValue();
   nsCSSKeyword functionName =
@@ -9595,7 +9595,7 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
 
   if (functionName == eCSSKeyword_polygon) {
     MOZ_ASSERT(!basicShape, "did not expect value");
-    basicShape = new nsStyleBasicShape(StyleBasicShapeType::Polygon);
+    basicShape = new StyleBasicShape(StyleBasicShapeType::Polygon);
     MOZ_ASSERT(shapeFunction->Count() > 1,
                "polygon has wrong number of arguments");
     size_t j = 1;
@@ -9630,7 +9630,7 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
       StyleBasicShapeType::Circle :
       StyleBasicShapeType::Ellipse;
     MOZ_ASSERT(!basicShape, "did not expect value");
-    basicShape = new nsStyleBasicShape(type);
+    basicShape = new StyleBasicShape(type);
     const int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
       SETCOORD_STORE_CALC | SETCOORD_ENUMERATED;
     size_t count = type == StyleBasicShapeType::Circle ? 2 : 3;
@@ -9666,7 +9666,7 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
     }
   } else if (functionName == eCSSKeyword_inset) {
     MOZ_ASSERT(!basicShape, "did not expect value");
-    basicShape = new nsStyleBasicShape(StyleBasicShapeType::Inset);
+    basicShape = new StyleBasicShape(StyleBasicShapeType::Inset);
     MOZ_ASSERT(shapeFunction->Count() == 6,
                "inset function has wrong number of arguments");
     MOZ_ASSERT(shapeFunction->Item(1).GetUnit() != eCSSUnit_Null,
@@ -9745,7 +9745,7 @@ SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
              "Expect one or both of a shape function and geometry-box");
 
   StyleClipShapeSizing sizingBox = StyleClipShapeSizing::NoBox;
-  RefPtr<nsStyleBasicShape> basicShape;
+  RefPtr<StyleBasicShape> basicShape;
   for (size_t i = 0; i < array->Count(); ++i) {
     if (array->Item(i).GetUnit() == eCSSUnit_Enumerated) {
       int32_t type = array->Item(i).GetIntValue();
