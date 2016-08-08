@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'nsAccessibleRelation.cpp',
+    'xpcAccessibilityService.cpp',
     'xpcAccessible.cpp',
     'xpcAccessibleApplication.cpp',
     'xpcAccessibleDocument.cpp',
@@ -26,6 +27,7 @@ SOURCES += [
 
 EXPORTS += [
     '!xpcAccEvents.h',
+    'xpcAccessibilityService.h',
 ]
 
 LOCAL_INCLUDES += [
