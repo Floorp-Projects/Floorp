@@ -59,14 +59,10 @@ def set_expires_after(config, tests):
 @transforms.add
 def set_download_symbols(config, tests):
     """In general, we download symbols immediately for debug builds, but only
-    on demand for everything else. ASAN builds shouldn't download
-    symbols since they don't product symbol zips see bug 1283879"""
+    on demand for everything else."""
     for test in tests:
         if test['test-platform'].split('/')[-1] == 'debug':
             test['mozharness']['download-symbols'] = True
-        elif test['build-platform'] == 'linux64-asan/opt':
-            if  'download-symbols' in test['mozharness']:
-                del test['mozharness']['download-symbols']
         else:
             test['mozharness']['download-symbols'] = 'ondemand'
         yield test
