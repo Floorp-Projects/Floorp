@@ -192,7 +192,7 @@ class MochiRemote(MochitestDesktop):
 
         # Support Firefox (browser), B2G (shell), SeaMonkey (navigator), and Webapp
         # Runtime (webapp).
-        if options.chrome:
+        if options.flavor == 'chrome':
             # append overlay to chrome.manifest
             chrome = "overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul"
             path = os.path.join(options.profilePath, 'extensions', 'staged',
@@ -226,7 +226,7 @@ class MochiRemote(MochitestDesktop):
         local = super(MochiRemote, self).getChromeTestDir(options)
         local = os.path.join(local, "chrome")
         remote = self.remoteChromeTestDir
-        if options.chrome:
+        if options.flavor == 'chrome':
             self.log.info("pushing %s to %s on device..." % (local, remote))
             self._dm.pushDir(local, remote)
         return remote
@@ -306,7 +306,7 @@ def run_test_harness(parser, options):
     options.runByDir = False
     # roboextender is used by mochitest-chrome tests like test_java_addons.html,
     # but not by any plain mochitests
-    if not options.chrome:
+    if options.flavor != 'chrome':
         options.extensionsToExclude.append('roboextender@mozilla.org')
 
     dm = options.dm

@@ -86,8 +86,8 @@ class ArgumentContainer():
 class MochitestArguments(ArgumentContainer):
     """General mochitest arguments."""
 
+    FLAVORS = ('a11y', 'browser', 'chrome', 'jetpack-addon', 'jetpack-package', 'plain')
     LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "FATAL")
-    LEVEL_STRING = ", ".join(LOG_LEVELS)
 
     args = [
         [["test_paths"],
@@ -96,6 +96,12 @@ class MochitestArguments(ArgumentContainer):
           "default": [],
           "help": "Test to run. Can be a single test file or a directory of tests "
                   "(to run recursively). If omitted, the entire suite is run.",
+          }],
+        [["-f", "--flavor"],
+         {"default": "plain",
+          "choices": FLAVORS,
+          "help": "Mochitest flavor to run, one of {}. Defaults to 'plain'.".format(FLAVORS),
+          "suppress": build_obj is not None,
           }],
         [["--keep-open"],
          {"nargs": "?",
@@ -182,13 +188,8 @@ class MochitestArguments(ArgumentContainer):
          {"dest": "consoleLevel",
           "choices": LOG_LEVELS,
           "default": "INFO",
-          "help": "One of %s to determine the level of console logging." % LEVEL_STRING,
-          "suppress": True,
-          }],
-        [["--chrome"],
-         {"action": "store_true",
-          "default": False,
-          "help": "Run chrome mochitests.",
+          "help": "One of {} to determine the level of console logging.".format(
+                  ', '.join(LOG_LEVELS)),
           "suppress": True,
           }],
         [["--bisect-chunk"],
@@ -207,37 +208,10 @@ class MochitestArguments(ArgumentContainer):
           "default": "",
           "help": "Stop running the test sequence at this test.",
           }],
-        [["--browser-chrome"],
-         {"action": "store_true",
-          "dest": "browserChrome",
-          "default": False,
-          "help": "run browser chrome Mochitests",
-          "suppress": True,
-          }],
         [["--subsuite"],
          {"default": None,
           "help": "Subsuite of tests to run. Unlike tags, subsuites also remove tests from "
                   "the default set. Only one can be specified at once.",
-          }],
-        [["--jetpack-package"],
-         {"action": "store_true",
-          "dest": "jetpackPackage",
-          "help": "Run jetpack package tests.",
-          "default": False,
-          "suppress": True,
-          }],
-        [["--jetpack-addon"],
-         {"action": "store_true",
-          "dest": "jetpackAddon",
-          "help": "Run jetpack addon tests.",
-          "default": False,
-          "suppress": True,
-          }],
-        [["--a11y"],
-         {"action": "store_true",
-          "help": "Run accessibility Mochitests.",
-          "default": False,
-          "suppress": True,
           }],
         [["--setenv"],
          {"action": "append",
