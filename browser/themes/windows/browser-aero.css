@@ -332,13 +332,6 @@
     color: white;
   }
 
-  @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7),{
-    #toolbar-menubar:not(:-moz-lwtheme) {
-      text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
-    }
-  }
-
   /* Show borders on vista through win8, but not on win10 and later: */
   @media (-moz-os-version: windows-vista),
          (-moz-os-version: windows-win7),
@@ -376,29 +369,6 @@
   #appcontent:not(:-moz-lwtheme) {
     background-color: -moz-dialog;
   }
-
-  #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
-    background-color: rgba(255,255,255,.5);
-    color: black;
-  }
-
-  @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7) {
-    #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
-      border-radius: 4px;
-    }
-
-    /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
-     * We use a different border for win8, and this is not necessary on win10+ */
-    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
-      border-top: 2px solid;
-      -moz-border-top-colors: @glassActiveBorderColor@ rgba(255,255,255,.6);
-    }
-
-    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
-      -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
-    }
-  }
 }
 
 @media (-moz-windows-glass) {
@@ -410,6 +380,27 @@
   #main-window[sizemode=fullscreen]:not(:-moz-lwtheme) {
     -moz-appearance: none;
     background-color: #556;
+  }
+
+  #toolbar-menubar:not(:-moz-lwtheme) {
+    text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
+  }
+
+  #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
+    background-color: rgba(255,255,255,.5);
+    color: black;
+    border-radius: 4px;
+  }
+
+  /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
+   * We use a different border for win8, and this is not necessary on win10+ */
+  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
+    border-top: 2px solid;
+    -moz-border-top-colors: @glassActiveBorderColor@ rgba(255,255,255,.6);
+  }
+
+  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
+    -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
   }
 
   /* Glass Fog */
