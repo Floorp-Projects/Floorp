@@ -35,9 +35,10 @@ function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
 
   info("Open the color picker tooltip and change the color");
   let picker = ruleView.tooltips.colorPicker;
-  let onShown = picker.tooltip.once("shown");
+  let onColorPickerReady = picker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onColorPickerReady;
+
   yield simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
     selector: "body",
     name: "background-image",
