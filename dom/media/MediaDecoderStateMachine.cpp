@@ -1100,7 +1100,12 @@ void MediaDecoderStateMachine::RecomputeDuration()
     return;
   }
 
-  if (duration < mObservedDuration.Ref()) {
+  // Only adjust the duration when an explicit duration isn't set (MSE).
+  // The duration is always exactly known with MSE and there's no need to adjust
+  // it based on what may have been seen in the past; in particular as this data
+  // may no longer exist such as when the mediasource duration was reduced.
+  if (mExplicitDuration.Ref().isNothing() &&
+      duration < mObservedDuration.Ref()) {
     duration = mObservedDuration;
   }
 
@@ -1410,8 +1415,6 @@ void MediaDecoderStateMachine::InitiateDecodeRecoverySeek(TrackSet aTracks)
                                    mReader.get(), mCurrentSeek.mTarget,
                                    mInfo, Duration(), GetMediaTime());
 
-  mOnSeekingStart.Notify(MediaDecoderEventVisibility::Suppressed);
-
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) {
     Reset(aTracks);
@@ -1631,7 +1634,9 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   // clamped value.
   UpdatePlaybackPositionInternal(mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
 
-  mOnSeekingStart.Notify(aSeekJob.mTarget.mEventVisibility);
+  if (aSeekJob.mTarget.mEventVisibility == MediaDecoderEventVisibility::Observable) {
+    mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
+  }
 
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) { Reset(); }

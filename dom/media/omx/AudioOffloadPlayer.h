@@ -194,7 +194,7 @@ private:
   MediaEventProducer<void> mOnPositionChanged;
   MediaEventProducer<void> mOnPlaybackEnded;
   MediaEventProducer<void> mOnPlayerTearDown;
-  MediaEventProducer<MediaDecoderEventVisibility> mOnSeekingStarted;
+  MediaEventProducer<void> mOnSeekingStarted;
   MediaEventListener mPositionChanged;
   MediaEventListener mPlaybackEnded;
   MediaEventListener mPlayerTearDown;

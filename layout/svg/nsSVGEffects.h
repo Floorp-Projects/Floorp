@@ -624,6 +624,12 @@ public:
    */
   static already_AddRefed<nsIURI>
   GetPaintURI(nsIFrame* aFrame, nsStyleSVGPaint nsStyleSVG::* aPaint);
+
+    /**
+   * A helper function to resolve SVG mask URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetMaskURI(nsIFrame* aFrame, uint32_t aIndex);
 };
 
 #endif /*NSSVGEFFECTS_H_*/
