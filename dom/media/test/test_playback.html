@@ -63,7 +63,7 @@ function startTest(test, token) {
     is(test.name, v.name, test.name + ": Name should match #2");
     checkMetadata(test.name, v, test);
     is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
-    ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
+    is(v.networkState, v.NETWORK_IDLE, test.name + " checking networkState");
     ok(v.ended, test.name + " checking playback has ended");
     ok(!v.finished, test.name + " shouldn't be finished");
     ok(!v.seenEnded, test.name + " shouldn't be ended");
