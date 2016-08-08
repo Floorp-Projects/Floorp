@@ -31,6 +31,5 @@ codegen-units = 1
 opt-level = 2
 debug = true
 rpath = false
-lto = false
+lto = true
 debug-assertions = false
-codegen-units = 1
