@@ -535,6 +535,19 @@ TEST_P(TlsConnectGeneric, Ffdhe3072) {
   Connect();
 }
 
+TEST_P(TlsConnectGenericPre13, PreferredFfdhe) {
+  EnableOnlyDheCiphers();
+  static const SSLDHEGroupType groups[] = {
+    ssl_ff_dhe_3072_group, ssl_ff_dhe_2048_group
+  };
+  EXPECT_EQ(SECSuccess,
+            SSL_DHEGroupPrefSet(server_->ssl_fd(), groups,
+                                PR_ARRAY_SIZE(groups)));
+
+  Connect();
+  CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign, 3072);
+}
+
 #ifdef NSS_ENABLE_TLS_1_3
 
 TEST_P(TlsConnectTls13, ResumeFfdhe) {
