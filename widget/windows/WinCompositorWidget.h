@@ -49,6 +49,7 @@ public:
   void PostRender(layers::LayerManagerComposite*) override;
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
   void EndRemoteDrawing() override;
+  bool NeedsToDeferEndRemoteDrawing() override;
   LayoutDeviceIntSize GetClientSize() override;
   already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
                                                             const LayoutDeviceIntRect& aRect,
@@ -100,6 +101,8 @@ private:
 
   // Locked back buffer of BasicCompositor
   uint8_t* mLockedBackBufferData;
+
+  bool mNotDeferEndRemoteDrawing;
 };
 
 } // namespace widget

@@ -10,7 +10,7 @@
 #include "GLContext.h"
 #include "WGLLibrary.h"
 #include "nsPrintfCString.h"
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 
 namespace mozilla {
 namespace gl {
@@ -127,7 +127,7 @@ public:
     {
         MOZ_ASSERT(wgl->HasDXInterop2());
 
-        RefPtr<ID3D11Device> d3d = gfx::DeviceManagerD3D11::Get()->GetContentDevice();
+        RefPtr<ID3D11Device> d3d = gfx::DeviceManagerDx::Get()->GetContentDevice();
         if (!d3d) {
             NS_WARNING("Failed to create D3D11 device.");
             return nullptr;

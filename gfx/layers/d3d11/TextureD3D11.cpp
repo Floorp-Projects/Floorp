@@ -11,7 +11,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "ReadbackManagerD3D11.h"
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
@@ -365,7 +365,7 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
   // to use from any thread.
   RefPtr<ID3D11Device> device = aDevice;
   if (!device) {
-    device = DeviceManagerD3D11::Get()->GetContentDevice();
+    device = DeviceManagerDx::Get()->GetContentDevice();
     if (!device) {
       return nullptr;
     }
@@ -696,7 +696,7 @@ DXGITextureHostD3D11::GetDevice()
     return nullptr;
   }
 
-  return DeviceManagerD3D11::Get()->GetCompositorDevice();
+  return DeviceManagerDx::Get()->GetCompositorDevice();
 }
 
 static CompositorD3D11* AssertD3D11Compositor(Compositor* aCompositor)
@@ -832,7 +832,7 @@ DXGIYCbCrTextureHostD3D11::GetDevice()
     return nullptr;
   }
 
-  return DeviceManagerD3D11::Get()->GetCompositorDevice();
+  return DeviceManagerDx::Get()->GetCompositorDevice();
 }
 
 void
@@ -1156,7 +1156,7 @@ SyncObjectD3D11::FinalizeFrame()
   HRESULT hr;
 
   if (!mD3D11Texture && mD3D11SyncedTextures.size()) {
-    RefPtr<ID3D11Device> device = DeviceManagerD3D11::Get()->GetContentDevice();
+    RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetContentDevice();
 
     hr = device->OpenSharedResource(mHandle, __uuidof(ID3D11Texture2D), (void**)(ID3D11Texture2D**)getter_AddRefs(mD3D11Texture));
 
@@ -1199,7 +1199,7 @@ SyncObjectD3D11::FinalizeFrame()
     box.front = box.top = box.left = 0;
     box.back = box.bottom = box.right = 1;
 
-    RefPtr<ID3D11Device> dev = DeviceManagerD3D11::Get()->GetContentDevice();
+    RefPtr<ID3D11Device> dev = DeviceManagerDx::Get()->GetContentDevice();
     if (!dev) {
       if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
         return;
