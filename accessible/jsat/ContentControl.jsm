@@ -222,7 +222,7 @@ this.ContentControl.prototype = {
         // (via ARIA roles, etc.), so we need to generate a click.
         // Could possibly be made simpler in the future. Maybe core
         // engine could expose nsCoreUtiles::DispatchMouseEvent()?
-        let docAcc = Utils.AccRetrieval.getAccessibleFor(this.document);
+        let docAcc = Utils.AccService.getAccessibleFor(this.document);
         let docX = {}, docY = {}, docW = {}, docH = {};
         docAcc.getBounds(docX, docY, docW, docH);
 
@@ -249,7 +249,7 @@ this.ContentControl.prototype = {
       }
     };
 
-    let focusedAcc = Utils.AccRetrieval.getAccessibleFor(
+    let focusedAcc = Utils.AccService.getAccessibleFor(
       this.document.activeElement);
     if (focusedAcc && this.vc.position === focusedAcc
         && focusedAcc.role === Roles.ENTRY) {
@@ -478,7 +478,7 @@ this.ContentControl.prototype = {
       }
 
       if (aOptions.moveToFocused) {
-        acc = Utils.AccRetrieval.getAccessibleFor(
+        acc = Utils.AccService.getAccessibleFor(
           this.document.activeElement) || acc;
       }
 
