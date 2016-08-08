@@ -5,7 +5,7 @@
 %include ../../shared/customizableui/panelUI.inc.css
 
 .panel-subviews {
-  background-color: -moz-field;
+  background-color: var(--panel-arrowcontent-background);
 }
 
 #PanelUI-contents #zoom-out-btn {
