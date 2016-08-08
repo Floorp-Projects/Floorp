@@ -1185,8 +1185,8 @@ GfxInfo::GetGfxDriverInfo()
     // Older than 11-18-2015
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), GfxDriverInfo::allDevices,
-      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED, DRIVER_LESS_THAN,
-      V(20,19,15,4331), "WEBGL_NATIVE_GL_OLD_INTEL");
+      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED, DRIVER_BUILD_ID_LESS_THAN,
+      4331, "WEBGL_NATIVE_GL_OLD_INTEL");
 
     // Older than 2-23-2016
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
