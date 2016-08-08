@@ -115,11 +115,11 @@ interface HTMLInputElement : HTMLElement {
 
   [Throws]
            // TODO: unsigned vs signed
-           attribute long selectionStart;
+           attribute long? selectionStart;
   [Throws]
-           attribute long selectionEnd;
+           attribute long? selectionEnd;
   [Throws]
-           attribute DOMString selectionDirection;
+           attribute DOMString? selectionDirection;
   [Throws]
   void setRangeText(DOMString replacement);
   [Throws]
