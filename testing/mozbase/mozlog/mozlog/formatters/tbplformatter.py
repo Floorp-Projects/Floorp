@@ -87,7 +87,7 @@ class TbplFormatter(BaseFormatter):
 
     @output_subtests
     def crash(self, data):
-        id = self.id_str(data["test"]) if "test" in data else "pid: %s" % data["process"]
+        id = data["test"] if "test" in data else "pid: %s" % data["process"]
 
         signature = data["signature"] if data["signature"] else "unknown top frame"
         rv = ["PROCESS-CRASH | %s | application crashed [%s]" % (id, signature)]
@@ -121,7 +121,7 @@ class TbplFormatter(BaseFormatter):
     def test_start(self, data):
         self.test_start_times[self.test_id(data["test"])] = data["time"]
 
-        return "TEST-START | %s\n" % self.id_str(data["test"])
+        return "TEST-START | %s\n" % data["test"]
 
     def test_status(self, data):
         if self.compact:
@@ -149,7 +149,7 @@ class TbplFormatter(BaseFormatter):
             if not message:
                 message = "- expected %s" % data["expected"]
             failure_line = "TEST-UNEXPECTED-%s | %s | %s %s\n" % (
-                data["status"], self.id_str(data["test"]), data["subtest"],
+                data["status"], data["test"], data["subtest"],
                 message)
             if data["expected"] != "PASS":
                 info_line = "TEST-INFO | expected %s\n" % data["expected"]
@@ -157,7 +157,7 @@ class TbplFormatter(BaseFormatter):
             return failure_line
 
         return "TEST-%s | %s | %s %s\n" % (
-            data["status"], self.id_str(data["test"]), data["subtest"],
+            data["status"], data["test"], data["subtest"],
             message)
 
     def test_end(self, data):
@@ -187,8 +187,18 @@ class TbplFormatter(BaseFormatter):
             if message and message[-1] == "\n":
                 message = message[:-1]
 
+            extra = data.get("extra", {})
+            if "reftest_screenshots" in extra:
+                screenshots = extra["reftest_screenshots"]
+                if len(screenshots) == 3:
+                     message += ("\nREFTEST   IMAGE 1 (TEST): %s\n"
+                                 "REFTEST   IMAGE 2 (REFERENCE): %s") % (screenshots[0]["screenshot"],
+                                                                         screenshots[2]["screenshot"])
+                elif len(screenshots) == 1:
+                    message += "\nREFTEST   IMAGE: %(image1)s" % screenshots[0]["screenshot"]
+
             failure_line = "TEST-UNEXPECTED-%s | %s | %s\n" % (
-                data["status"], self.id_str(test_id), message)
+            data["status"], test_id, message)
 
             if data["expected"] not in ("PASS", "OK"):
                 expected_msg = "expected %s | " % data["expected"]
@@ -198,7 +208,7 @@ class TbplFormatter(BaseFormatter):
 
             return failure_line + info_line
 
-        sections = ["TEST-%s" % data['status'], self.id_str(test_id)]
+        sections = ["TEST-%s" % data['status'], test_id]
         if duration_msg:
             sections.append(duration_msg)
         rv.append(' | '.join(sections) + '\n')
@@ -215,12 +225,6 @@ class TbplFormatter(BaseFormatter):
             return test_id
         else:
             return tuple(test_id)
-
-    def id_str(self, test_id):
-        if isinstance(test_id, (str, unicode)):
-            return test_id
-        else:
-            return " ".join(test_id)
 
     @output_subtests
     def valgrind_error(self, data):
