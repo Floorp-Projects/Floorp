@@ -939,15 +939,32 @@ XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
  */
 class SharedScriptData
 {
+    // This class is reference counted as follows: each pointer from a JSScript
+    // counts as one reference plus there may be one reference from the shared
+    // script data table.
+    mozilla::Atomic<uint32_t> refCount_;
+
     uint32_t dataLength_;
     uint32_t natoms_;
     uint32_t codeLength_;
-    mozilla::Atomic<bool, mozilla::ReleaseAcquire> marked_;
     uintptr_t data_[1];
 
   public:
     static SharedScriptData* new_(ExclusiveContext* cx, uint32_t codeLength,
                                   uint32_t srcnotesLength, uint32_t natoms);
+
+    uint32_t refCount() const {
+        return refCount_;
+    }
+    void incRefCount() {
+        refCount_++;
+    }
+    void decRefCount() {
+        MOZ_ASSERT(refCount_ != 0);
+        refCount_--;
+        if (refCount_ == 0)
+            js_free(this);
+    }
 
     uint32_t dataLength() const {
         return dataLength_;
@@ -970,13 +987,6 @@ class SharedScriptData
     }
     jsbytecode* code() {
         return reinterpret_cast<jsbytecode*>(data() + natoms_ * sizeof(GCPtrAtom));
-    }
-
-    bool marked() const {
-        return marked_;
-    }
-    void setMarked(bool marked) {
-        marked_ = marked;
     }
 
     void traceChildren(JSTracer* trc);
@@ -1007,9 +1017,6 @@ struct ScriptBytecodeHasher
 typedef HashSet<SharedScriptData*,
                 ScriptBytecodeHasher,
                 SystemAllocPolicy> ScriptDataTable;
-
-extern void
-UnmarkScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
 
 extern void
 SweepScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
