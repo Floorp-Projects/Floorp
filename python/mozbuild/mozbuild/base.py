@@ -90,7 +90,6 @@ class MozbuildObject(ProcessExecutionMixin):
         self._make = None
         self._topobjdir = mozpath.normsep(topobjdir) if topobjdir else topobjdir
         self._mozconfig = mozconfig
-        self._config_guess_output = None
         self._config_environment = None
         self._virtualenv_manager = None
 
@@ -159,32 +158,7 @@ class MozbuildObject(ProcessExecutionMixin):
             raise BuildEnvironmentNotFoundException(
                 'Could not find Mozilla source tree or build environment.')
 
-        # Now we try to load the config for this environment. If mozconfig is
-        # None, read_mozconfig() will attempt to find one in the existing
-        # environment. If no mozconfig is present, the config will not have
-        # much defined.
-        loader = MozconfigLoader(topsrcdir)
-        current_project = os.environ.get('MOZ_CURRENT_PROJECT')
-        config = loader.read_mozconfig(mozconfig, moz_build_app=current_project)
-
-        config_topobjdir = MozbuildObject.resolve_mozconfig_topobjdir(
-            topsrcdir, config)
-
-        # If we're inside a objdir and the found mozconfig resolves to
-        # another objdir, we abort. The reasoning here is that if you are
-        # inside an objdir you probably want to perform actions on that objdir,
-        # not another one. This prevents accidental usage of the wrong objdir
-        # when the current objdir is ambiguous.
-        if topobjdir and config_topobjdir:
-            if current_project:
-                config_topobjdir = os.path.join(config_topobjdir, current_project)
-
-            _config_topobjdir = config_topobjdir
-            if not samepath(topobjdir, _config_topobjdir):
-                raise ObjdirMismatchException(topobjdir, _config_topobjdir)
-
         topsrcdir = mozpath.normsep(topsrcdir)
-        topobjdir = topobjdir or config_topobjdir
         if topobjdir:
             topobjdir = mozpath.normsep(os.path.normpath(topobjdir))
 
@@ -193,31 +167,30 @@ class MozbuildObject(ProcessExecutionMixin):
                     'to be the same as your source directory (%s). This build '
                     'configuration is not supported.' % topsrcdir)
 
-        # If we can't resolve topobjdir, oh well. The constructor will figure
-        # it out via config.guess.
+        # If we can't resolve topobjdir, oh well. We'll figure out when we need
+        # one.
         return cls(topsrcdir, None, None, topobjdir=topobjdir,
                    mozconfig=mozconfig)
 
-    @staticmethod
-    def resolve_mozconfig_topobjdir(topsrcdir, mozconfig, default=None):
-        topobjdir = mozconfig['topobjdir'] or default
+    def resolve_mozconfig_topobjdir(self, default=None):
+        topobjdir = self.mozconfig['topobjdir'] or default
         if not topobjdir:
             return None
 
         if '@CONFIG_GUESS@' in topobjdir:
             topobjdir = topobjdir.replace('@CONFIG_GUESS@',
-                MozbuildObject.resolve_config_guess(mozconfig, topsrcdir))
+                self.resolve_config_guess())
 
         if not os.path.isabs(topobjdir):
-            topobjdir = os.path.abspath(os.path.join(topsrcdir, topobjdir))
+            topobjdir = os.path.abspath(os.path.join(self.topsrcdir, topobjdir))
 
         return mozpath.normsep(os.path.normpath(topobjdir))
 
     @property
     def topobjdir(self):
         if self._topobjdir is None:
-            self._topobjdir = MozbuildObject.resolve_mozconfig_topobjdir(
-                self.topsrcdir, self.mozconfig, default='obj-@CONFIG_GUESS@')
+            self._topobjdir = self.resolve_mozconfig_topobjdir(
+                default='obj-@CONFIG_GUESS@')
 
         return self._topobjdir
 
@@ -237,7 +210,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         This a dict as returned by MozconfigLoader.read_mozconfig()
         """
-        if self._mozconfig is MozconfigLoader.AUTODETECT:
+        if not isinstance(self._mozconfig, dict):
             loader = MozconfigLoader(self.topsrcdir)
             self._mozconfig = loader.read_mozconfig(path=self._mozconfig,
                 moz_build_app=os.environ.get('MOZ_CURRENT_PROJECT'))
@@ -379,9 +352,8 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return path
 
-    @staticmethod
-    def resolve_config_guess(mozconfig, topsrcdir):
-        make_extra = mozconfig['make_extra'] or []
+    def resolve_config_guess(self):
+        make_extra = self.mozconfig['make_extra'] or []
         make_extra = dict(m.split('=', 1) for m in make_extra)
 
         config_guess = make_extra.get('CONFIG_GUESS', None)
@@ -394,17 +366,17 @@ class MozbuildObject(ProcessExecutionMixin):
         if _config_guess_output:
             return _config_guess_output[0]
 
-        p = os.path.join(topsrcdir, 'build', 'autoconf', 'config.guess')
+        p = os.path.join(self.topsrcdir, 'build', 'autoconf', 'config.guess')
 
         # This is a little kludgy. We need access to the normalize_command
         # function. However, that's a method of a mach mixin, so we need a
         # class instance. Ideally the function should be accessible as a
         # standalone function.
-        o = MozbuildObject(topsrcdir, None, None, None)
+        o = MozbuildObject(self.topsrcdir, None, None, None)
         args = o._normalize_command([p], True)
 
         _config_guess_output.append(
-                subprocess.check_output(args, cwd=topsrcdir).strip())
+                subprocess.check_output(args, cwd=self.topsrcdir).strip())
         return _config_guess_output[0]
 
     def notify(self, msg):
@@ -467,14 +439,6 @@ class MozbuildObject(ProcessExecutionMixin):
         except Exception as e:
             self.log(logging.WARNING, 'notifier-failed', {'error':
                 e.message}, 'Notification center failed: {error}')
-
-    @property
-    def _config_guess(self):
-        if self._config_guess_output is None:
-            self._config_guess_output = MozbuildObject.resolve_config_guess(
-                self.mozconfig, self.topsrcdir)
-
-        return self._config_guess_output
 
     def _ensure_objdir_exists(self):
         if os.path.isdir(self.statedir):
@@ -699,6 +663,16 @@ class MachCommandBase(MozbuildObject):
                 detect_virtualenv_mozinfo=detect_virtualenv_mozinfo)
             topsrcdir = dummy.topsrcdir
             topobjdir = dummy._topobjdir
+            if topobjdir:
+                # If we're inside a objdir and the found mozconfig resolves to
+                # another objdir, we abort. The reasoning here is that if you
+                # are inside an objdir you probably want to perform actions on
+                # that objdir, not another one. This prevents accidental usage
+                # of the wrong objdir when the current objdir is ambiguous.
+                config_topobjdir = dummy.resolve_mozconfig_topobjdir()
+                if config_topobjdir and not samepath(topobjdir,
+                                                     config_topobjdir):
+                    raise ObjdirMismatchException(topobjdir, config_topobjdir)
         except BuildEnvironmentNotFoundException:
             pass
         except ObjdirMismatchException as e:
