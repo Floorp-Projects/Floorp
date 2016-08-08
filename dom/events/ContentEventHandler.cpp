@@ -1688,6 +1688,40 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame)
   return result;
 }
 
+ContentEventHandler::FrameRelativeRect
+ContentEventHandler::GuessLineBreakerRectAfter(nsIContent* aTextContent)
+{
+  // aTextContent should be a text node.
+  MOZ_ASSERT(aTextContent->IsNodeOfType(nsINode::eTEXT));
+
+  FrameRelativeRect result;
+  int32_t length = static_cast<int32_t>(aTextContent->Length());
+  if (NS_WARN_IF(length < 0)) {
+    return result;
+  }
+  // Get the last nsTextFrame which is caused by aTextContent.  Note that
+  // a text node can cause multiple text frames, e.g., the text is too long
+  // and wrapped by its parent block or the text has line breakers and its
+  // white-space property respects the line breakers (e.g., |pre|).
+  nsIFrame* lastTextFrame = nullptr;
+  nsresult rv = GetFrameForTextRect(aTextContent, length, true, &lastTextFrame);
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!lastTextFrame)) {
+    return result;
+  }
+  const nsRect kLastTextFrameRect = lastTextFrame->GetRect();
+  if (lastTextFrame->GetWritingMode().IsVertical()) {
+    // Below of the last text frame.
+    result.mRect.SetRect(0, kLastTextFrameRect.height,
+                         kLastTextFrameRect.width, 0);
+  } else {
+    // Right of the last text frame (not bidi-aware).
+    result.mRect.SetRect(kLastTextFrameRect.width, 0,
+                         0, kLastTextFrameRect.height);
+  }
+  result.mBaseFrame = lastTextFrame;
+  return result;
+}
+
 nsresult
 ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 {
@@ -1708,8 +1742,9 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
   bool wasLineBreaker = false;
   nsRect lastCharRect;
   while (offset < kEndOffset) {
+    nsCOMPtr<nsIContent> lastTextContent;
     rv = SetRangeFromFlatTextOffset(range, offset, 1, lineBreakType, true,
-                                    nullptr);
+                                    nullptr, getter_AddRefs(lastTextContent));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1749,52 +1784,9 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
     AutoTArray<nsRect, 16> charRects;
 
-    if (ShouldBreakLineBefore(firstContent, mRootContent) ||
-        IsMozBR(firstContent)) {
-      nsRect brRect;
-      // If the frame is <br> frame, we can always trust
-      // GetLineBreakerRectBefore().  Otherwise, "after" the last character
-      // rect is better than its result.
-      // TODO: We need to look for the last character rect if non-br frame
-      //       causes a line break at first time of this loop.
-      if (firstFrame->GetType() == nsGkAtoms::brFrame ||
-          aEvent->mInput.mOffset == offset) {
-        FrameRelativeRect relativeBRRect = GetLineBreakerRectBefore(firstFrame);
-        brRect = relativeBRRect.RectRelativeTo(firstFrame);
-      } else {
-        // The frame position in the root widget will be added in the
-        // following for loop but we need the rect in the previous frame.
-        // So, we need to avoid using current frame position.
-        brRect = lastCharRect - frameRect.TopLeft();
-        if (!wasLineBreaker) {
-          if (isVertical) {
-            // Right of the last character.
-            brRect.y = brRect.YMost() + 1;
-            brRect.height = 1;
-          } else {
-            // Under the last character.
-            brRect.x = brRect.XMost() + 1;
-            brRect.width = 1;
-          }
-        }
-      }
-      charRects.AppendElement(brRect);
-      chars.AssignLiteral("\n");
-      if (kBRLength > 1 && offset == aEvent->mInput.mOffset && offset) {
-        // If the first frame for the previous offset of the query range and
-        // the first frame for the start of query range are same, that means
-        // the start offset is between the first line breaker (i.e., the range
-        // starts between "\r" and "\n").
-        rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset - 1, 1,
-                                        lineBreakType, true, nullptr);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return NS_ERROR_UNEXPECTED;
-        }
-        FrameAndNodeOffset frameForPrevious =
-          GetFirstFrameInRangeForTextRect(range);
-        startsBetweenLineBreaker = frameForPrevious.mFrame == firstFrame.mFrame;
-      }
-    } else {
+    // If the first frame is a text frame, the result should be computed with
+    // the frame's API.
+    if (firstFrame->GetType() == nsGkAtoms::textFrame) {
       rv = firstFrame->GetCharacterRectsInRange(firstFrame.mOffsetInNode,
                                                 kEndOffset - offset, charRects);
       if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(charRects.IsEmpty())) {
@@ -1824,6 +1816,104 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
           range->GetStartParent() == rangeToPrevOffset->GetStartParent() &&
           range->StartOffset() == rangeToPrevOffset->StartOffset();
       }
+    }
+    // Other contents should cause a line breaker rect before it.
+    // Note that moz-<br> element does not cause any text, however,
+    // it represents empty line at the last of current block.  Therefore,
+    // we need to compute its rect too.
+    else if (ShouldBreakLineBefore(firstContent, mRootContent) ||
+             IsMozBR(firstContent)) {
+      nsRect brRect;
+      // If the frame is not a <br> frame, we need to compute the caret rect
+      // with last character's rect before firstContent if there is.
+      // For example, if caret is after "c" of |<p>abc</p><p>def</p>|, IME may
+      // query a line breaker's rect after "c".  Then, if we compute it only
+      // with the 2nd <p>'s block frame, the result will be:
+      //  +-<p>--------------------------------+
+      //  |abc                                 |
+      //  +------------------------------------+
+      //
+      // I+-<p>--------------------------------+
+      //  |def                                 |
+      //  +------------------------------------+
+      // However, users expect popup windows of IME should be positioned at
+      // right-bottom of "c" like this:
+      //  +-<p>--------------------------------+
+      //  |abcI                                |
+      //  +------------------------------------+
+      //
+      //  +-<p>--------------------------------+
+      //  |def                                 |
+      //  +------------------------------------+
+      // Therefore, if the first frame isn't a <br> frame and there is a text
+      // node before the first node in the queried range, we should compute the
+      // first rect with the previous character's rect.
+      // If we already compute a character's rect in the queried range, we can
+      // compute it with the cached last character's rect.  (However, don't
+      // use this path if it's a <br> frame because trusting <br> frame's rect
+      // is better than guessing the rect from the previous character.)
+      if (firstFrame->GetType() != nsGkAtoms::brFrame &&
+          aEvent->mInput.mOffset != offset) {
+        // The frame position in the root widget will be added in the
+        // following for loop but we need the rect in the previous frame.
+        // So, we need to avoid using current frame position.
+        brRect = lastCharRect - frameRect.TopLeft();
+        if (!wasLineBreaker) {
+          if (isVertical) {
+            // Right of the last character.
+            brRect.y = brRect.YMost() + 1;
+            brRect.height = 1;
+          } else {
+            // Under the last character.
+            brRect.x = brRect.XMost() + 1;
+            brRect.width = 1;
+          }
+        }
+      }
+      // If it's not a <br> frame and it's the first character rect at the
+      // queried range, we need to the previous character of the start of
+      // the queried range if there is a text node.
+      else if (firstFrame->GetType() != nsGkAtoms::brFrame && lastTextContent) {
+        FrameRelativeRect brRectRelativeToLastTextFrame =
+          GuessLineBreakerRectAfter(lastTextContent);
+        if (NS_WARN_IF(!brRectRelativeToLastTextFrame.IsValid())) {
+          return NS_ERROR_FAILURE;
+        }
+        brRect = brRectRelativeToLastTextFrame.RectRelativeTo(firstFrame);
+      }
+      // Otherwise, we need to compute the line breaker's rect only with the
+      // first frame's rect.  But this may be unexpected.  For example,
+      // |<div contenteditable>[<p>]abc</p></div>|.  In this case, caret is
+      // before "a", therefore, users expect the rect left of "a".  However,
+      // we don't have enough information about the next character here and
+      // this isn't usual case (e.g., IME typically tries to query the rect
+      // of "a" or caret rect for computing its popup position).  Therefore,
+      // we shouldn't do more complicated hack here unless we'll get some bug
+      // reports actually.
+      else {
+        FrameRelativeRect relativeBRRect = GetLineBreakerRectBefore(firstFrame);
+        brRect = relativeBRRect.RectRelativeTo(firstFrame);
+      }
+      charRects.AppendElement(brRect);
+      chars.AssignLiteral("\n");
+      if (kBRLength > 1 && offset == aEvent->mInput.mOffset && offset) {
+        // If the first frame for the previous offset of the query range and
+        // the first frame for the start of query range are same, that means
+        // the start offset is between the first line breaker (i.e., the range
+        // starts between "\r" and "\n").
+        rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset - 1, 1,
+                                        lineBreakType, true, nullptr);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        FrameAndNodeOffset frameForPrevious =
+          GetFirstFrameInRangeForTextRect(range);
+        startsBetweenLineBreaker = frameForPrevious.mFrame == firstFrame.mFrame;
+      }
+    } else {
+      NS_WARNING("The frame is neither a text frame nor a frame whose content "
+                 "causes a line break");
+      return NS_ERROR_FAILURE;
     }
 
     for (size_t i = 0; i < charRects.Length() && offset < kEndOffset; i++) {
@@ -2012,26 +2102,13 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   // node before the first node in the queried range, we should compute the
   // first rect with the previous character's rect.
   else if (firstFrame->GetType() != nsGkAtoms::brFrame && lastTextContent) {
-    int32_t length = static_cast<int32_t>(lastTextContent->Length());
-    if (NS_WARN_IF(length < 0)) {
+    FrameRelativeRect brRectAfterLastChar =
+      GuessLineBreakerRectAfter(lastTextContent);
+    if (NS_WARN_IF(!brRectAfterLastChar.IsValid())) {
       return NS_ERROR_FAILURE;
     }
-    nsIFrame* lastTextFrame = nullptr;
-    rv = GetFrameForTextRect(lastTextContent, length, true, &lastTextFrame);
-    if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!lastTextFrame)) {
-      return NS_ERROR_FAILURE;
-    }
-    const nsRect kLastTextFrameRect = lastTextFrame->GetRect();
-    if (lastTextFrame->GetWritingMode().IsVertical()) {
-      // Below of the last text frame.
-      rect.SetRect(0, kLastTextFrameRect.height,
-                   kLastTextFrameRect.width, 0);
-    } else {
-      // Right of the last text frame (not bidi-aware).
-      rect.SetRect(kLastTextFrameRect.width, 0,
-                   0, kLastTextFrameRect.height);
-    }
-    rv = ConvertToRootRelativeOffset(lastTextFrame, rect);
+    rect = brRectAfterLastChar.mRect;
+    rv = ConvertToRootRelativeOffset(brRectAfterLastChar.mBaseFrame, rect);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

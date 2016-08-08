@@ -386,6 +386,15 @@ protected:
   // doesn't check if aFrame should cause line break in non-debug build.
   FrameRelativeRect GetLineBreakerRectBefore(nsIFrame* aFrame);
 
+  // Returns a line breaker rect after aTextContent as there is a line breaker
+  // immediately after aTextContent.  This is useful when following block
+  // element causes a line break before it and it needs to compute the line
+  // breaker's rect.  For example, if there is |<p>abc</p><p>def</p>|, the
+  // rect of 2nd <p>'s line breaker should be at right of "c" in the first
+  // <p>, not the start of 2nd <p>.  The result is relative to the last text
+  // frame which represents the last character of aTextContent.
+  FrameRelativeRect GuessLineBreakerRectAfter(nsIContent* aTextContent);
+
   // Make aRect non-empty.  If width and/or height is 0, these methods set them
   // to 1.  Note that it doesn't set nsRect's width nor height to one device
   // pixel because using nsRect::ToOutsidePixels() makes actual width or height
