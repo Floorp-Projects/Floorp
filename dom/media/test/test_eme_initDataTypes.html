@@ -66,6 +66,14 @@ var tests = [
     expectPass: false,
   },
   {
+    name: "One valid and one invalid kid",
+    initDataType: 'keyids',
+    initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A", "invalid"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
     name: "Invalid initData",
     initDataType: 'keyids',
     initData: 'invalid initData',
@@ -84,9 +92,8 @@ var tests = [
     name: "'webm' initDataType with non 16 byte keyid",
     initDataType: 'webm',
     initData: 'YAYeAX5Hfod',
-    expectedRequest: '{\"kids\":[\"YAYeAX5Hfoc\"],\"type\":\"temporary\"}',
     sessionType: 'temporary',
-    expectPass: true,
+    expectPass: false,
   },
 ];
 
