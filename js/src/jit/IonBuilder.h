@@ -1080,7 +1080,7 @@ class IonBuilder
 
     MOZ_MUST_USE bool setCurrentAndSpecializePhis(MBasicBlock* block) {
         if (block) {
-            if (!block->specializePhis())
+            if (!block->specializePhis(alloc()))
                 return false;
         }
         setCurrent(block);
