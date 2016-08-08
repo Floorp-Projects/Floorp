@@ -42,7 +42,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize)
+                            nsISupports* aData, bool aAnonymize) override
   {
     if (SharedBufferManagerParent::sManagerMonitor) {
       SharedBufferManagerParent::sManagerMonitor->Lock();
