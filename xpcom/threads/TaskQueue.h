@@ -173,7 +173,7 @@ protected:
       : mQueue(aQueue)
     {
     }
-    NS_METHOD Run() override;
+    NS_IMETHOD Run() override;
   private:
     RefPtr<TaskQueue> mQueue;
   };
