@@ -31,6 +31,10 @@ codegen-units = 1
 opt-level = 2
 debug = true
 rpath = false
+# This would normally be 'true' for release configurations, but using LTO on
+# rul-gtest causes link failures due to symbols also being found in libxul's
+# librul.a.  But LTO'ing things here is not crucial and not LTO'ing things
+# enables us to link libxul-gtest, so we leave it turned off.
 lto = false
 debug-assertions = false
 codegen-units = 1
