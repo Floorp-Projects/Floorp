@@ -552,8 +552,6 @@ protected:
   void ForceComposition();
   void CancelCurrentCompositeTask();
   void Invalidate();
-  bool IsPendingComposite();
-  void FinishPendingComposite();
 
   RefPtr<Compositor> NewCompositor(const nsTArray<LayersBackend>& aBackendHints);
   void ResetCompositorTask(const nsTArray<LayersBackend>& aBackendHints,

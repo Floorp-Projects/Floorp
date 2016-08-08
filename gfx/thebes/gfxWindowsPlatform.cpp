@@ -73,7 +73,7 @@
 #include "VsyncSource.h"
 #include "DriverCrashGuard.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "D3D11Checks.h"
 
 using namespace mozilla;
@@ -351,7 +351,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-  DeviceManagerDx::Shutdown();
+  DeviceManagerD3D11::Shutdown();
   mDeviceManager = nullptr;
 
   mozilla::gfx::Factory::D2DCleanup();
@@ -384,11 +384,10 @@ gfxWindowsPlatform::InitAcceleration()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
 
-  DeviceManagerDx::Init();
+  DeviceManagerD3D11::Init();
 
   InitializeConfig();
   InitializeDevices();
-  InitializeDirectDraw();
   UpdateANGLEConfig();
   UpdateRenderMode();
 }
@@ -396,7 +395,7 @@ gfxWindowsPlatform::InitAcceleration()
 bool
 gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 {
-  DeviceManagerDx* dm = DeviceManagerDx::Get();
+  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
   if (!gfxPrefs::LayersPreferD3D9() && !dm->TextureSharingWorks()) {
     return false;
   }
@@ -446,7 +445,7 @@ gfxWindowsPlatform::HandleDeviceReset()
   }
 
   // Remove devices and adapters.
-  DeviceManagerDx::Get()->ResetDevices();
+  DeviceManagerD3D11::Get()->ResetDevices();
 
   // Reset local state. Note: we leave feature status variables as-is. They
   // will be recomputed by InitializeDevices().
@@ -939,7 +938,7 @@ gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
     *aResetReason = DeviceResetReason::OK;
   }
 
-  if (DeviceManagerDx::Get()->GetAnyDeviceRemovedReason(&mDeviceResetReason)) {
+  if (DeviceManagerD3D11::Get()->GetAnyDeviceRemovedReason(&mDeviceResetReason)) {
     mHasDeviceReset = true;
     if (aResetReason) {
       *aResetReason = mDeviceResetReason;
@@ -1424,21 +1423,6 @@ InitializeANGLEConfig()
 }
 
 void
-gfxWindowsPlatform::InitializeDirectDrawConfig()
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  FeatureState& ddraw = gfxConfig::GetFeature(Feature::DIRECT_DRAW);
-  ddraw.EnableByDefault();
-}
-
-void
-gfxWindowsPlatform::InitializeDirectDraw()
-{
-  DeviceManagerDx::Get()->InitializeDirectDraw();
-}
-
-void
 gfxWindowsPlatform::InitializeConfig()
 {
   if (!XRE_IsParentProcess()) {
@@ -1450,7 +1434,6 @@ gfxWindowsPlatform::InitializeConfig()
   InitializeD3D11Config();
   InitializeANGLEConfig();
   InitializeD2DConfig();
-  InitializeDirectDrawConfig();
 }
 
 void
@@ -1640,7 +1623,7 @@ gfxWindowsPlatform::InitializeD3D11()
     return;
   }
 
-  DeviceManagerDx::Get()->CreateDevices();
+  DeviceManagerD3D11::Get()->CreateDevices();
 }
 
 void
@@ -1682,7 +1665,7 @@ gfxWindowsPlatform::InitializeD2D()
 
   FeatureState& d2d1 = gfxConfig::GetFeature(Feature::DIRECT2D);
 
-  DeviceManagerDx* dm = DeviceManagerDx::Get();
+  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
 
   // We don't know this value ahead of time, but the user can force-override
   // it, so we use Disable instead of SetFailed.
@@ -2048,7 +2031,7 @@ gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aB
     aBackends.AppendElement(LayersBackend::LAYERS_D3D9);
   }
 
-  if (DeviceManagerDx::Get()->GetCompositorDevice()) {
+  if (DeviceManagerD3D11::Get()->GetCompositorDevice()) {
     aBackends.AppendElement(LayersBackend::LAYERS_D3D11);
   } else {
     NS_WARNING("Direct3D 11-accelerated layers are not supported on this system.");
@@ -2072,7 +2055,7 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
     return;
   }
 
-  DeviceManagerDx* dm = DeviceManagerDx::Get();
+  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
 
   aOut->useD3D11() = true;
   aOut->d3d11TextureSharingWorks() = dm->TextureSharingWorks();
@@ -2091,7 +2074,7 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
 bool
 gfxWindowsPlatform::SupportsPluginDirectDXGIDrawing()
 {
-  DeviceManagerDx* dm = DeviceManagerDx::Get();
+  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
   if (!dm->GetContentDevice() || !dm->TextureSharingWorks()) {
     return false;
   }

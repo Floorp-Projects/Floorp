@@ -47,7 +47,7 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class FeatureState;
-class DeviceManagerDx;
+class DeviceManagerD3D11;
 }
 namespace layers {
 class DeviceManagerD3D9;
@@ -100,7 +100,7 @@ struct ClearTypeParameterInfo {
 
 class gfxWindowsPlatform : public gfxPlatform
 {
-  friend class mozilla::gfx::DeviceManagerDx;
+  friend class mozilla::gfx::DeviceManagerD3D11;
 
 public:
     enum TextRenderingMode {
@@ -269,7 +269,6 @@ private:
     void InitializeD3D11();
     void InitializeD2D();
     bool InitDWriteSupport();
-    void InitializeDirectDraw();
 
     void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage,
                     const nsACString& aFailureId);
@@ -278,7 +277,6 @@ private:
     void InitializeD3D9Config();
     void InitializeD3D11Config();
     void InitializeD2DConfig();
-    void InitializeDirectDrawConfig();
 
     RefPtr<IDWriteFactory> mDWriteFactory;
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
