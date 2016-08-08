@@ -29,22 +29,28 @@ APPLICATION_CHOICE = '''
 Please choose the version of Firefox you want to build:
 %s
 
-Note: (For Firefox for Android)
+Note on Artifact Mode:
 
-The Firefox for Android front-end is built using Java, the Android
-Platform SDK, JavaScript, HTML, and CSS. If you want to work on the
-look-and-feel of Firefox for Android, you want "Firefox for Android
-Artifact Mode".
+Firefox for Desktop and Android supports a fast build mode called
+artifact mode. Artifact mode downloads pre-built C++ components rather
+than building them locally, trading bandwidth for time.
 
-Firefox for Android is built on top of the Gecko technology
-platform. Gecko is Mozilla's web rendering engine, similar to Edge,
+Artifact builds will be useful to many developers who are not working
+with compiled code. If you want to work on look-and-feel of Firefox,
+you want "Firefox for Desktop Artifact Mode".
+
+Similarly, if you want to work on the look-and-feel of Firefox for Android,
+you want "Firefox for Android Artifact Mode".
+
+To work on the Gecko technology platform, you would need to opt to full,
+non-artifact mode. Gecko is Mozilla's web rendering engine, similar to Edge,
 Blink, and WebKit. Gecko is implemented in C++ and JavaScript. If you
-want to work on web rendering, you want "Firefox for Android".
+want to work on web rendering, you want "Firefox for Desktop", or
+"Firefox for Android".
 
-If you don't know what you want, start with just "Firefox for Android
-Artifact Mode". Your builds will be much shorter than if you build
-Gecko as well. But don't worry! You can always switch configurations
-later.
+If you don't know what you want, start with just Artifact Mode of the desired
+platform. Your builds will be much shorter than if you build Gecko as well.
+But don't worry! You can always switch configurations later.
 
 You can learn more about Artifact mode builds at
 https://developer.mozilla.org/en-US/docs/Artifact_builds.
@@ -53,8 +59,8 @@ Your choice:
 '''
 
 APPLICATIONS_LIST=[
-    ('Firefox for Desktop', 'browser'),
     ('Firefox for Desktop Artifact Mode', 'browser_artifact_mode'),
+    ('Firefox for Desktop', 'browser'),
     ('Firefox for Android Artifact Mode', 'mobile_android_artifact_mode'),
     ('Firefox for Android', 'mobile_android'),
 ]
@@ -62,8 +68,8 @@ APPLICATIONS_LIST=[
 # This is a workaround for the fact that we must support python2.6 (which has
 # no OrderedDict)
 APPLICATIONS = dict(
-    browser=APPLICATIONS_LIST[0],
-    browser_artifact_mode=APPLICATIONS_LIST[1],
+    browser_artifact_mode=APPLICATIONS_LIST[0],
+    browser=APPLICATIONS_LIST[1],
     mobile_android_artifact_mode=APPLICATIONS_LIST[2],
     mobile_android=APPLICATIONS_LIST[3],
 )
