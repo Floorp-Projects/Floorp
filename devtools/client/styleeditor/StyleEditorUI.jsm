@@ -34,6 +34,7 @@ const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {ResponsiveUIManager} =
   require("resource://devtools/client/responsivedesign/responsivedesign.jsm");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const LOAD_ERROR = "error-load";
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
@@ -532,7 +533,7 @@ StyleEditorUI.prototype = {
         wire(summary, ".stylesheet-name", {
           events: {
             "keypress": (event) => {
-              if (event.keyCode == event.DOM_VK_RETURN) {
+              if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
                 this._view.activeSummary = summary;
               }
             }

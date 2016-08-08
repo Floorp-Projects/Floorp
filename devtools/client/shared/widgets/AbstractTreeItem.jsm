@@ -10,6 +10,7 @@ const { interfaces: Ci, utils: Cu } = Components;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
   "resource://devtools/shared/event-emitter.js");
@@ -588,15 +589,15 @@ AbstractTreeItem.prototype = {
     ViewHelpers.preventScrolling(e);
 
     switch (e.keyCode) {
-      case e.DOM_VK_UP:
+      case KeyCodes.DOM_VK_UP:
         this._focusPrevNode();
         return;
 
-      case e.DOM_VK_DOWN:
+      case KeyCodes.DOM_VK_DOWN:
         this._focusNextNode();
         return;
 
-      case e.DOM_VK_LEFT:
+      case KeyCodes.DOM_VK_LEFT:
         if (this._expanded && this._populated) {
           this.collapse();
         } else {
@@ -604,7 +605,7 @@ AbstractTreeItem.prototype = {
         }
         return;
 
-      case e.DOM_VK_RIGHT:
+      case KeyCodes.DOM_VK_RIGHT:
         if (!this._expanded) {
           this.expand();
         } else {
@@ -612,7 +613,7 @@ AbstractTreeItem.prototype = {
         }
         return;
 
-      case e.DOM_VK_PAGE_UP:
+      case KeyCodes.DOM_VK_PAGE_UP:
         let pageUpElement =
           this._getSiblingAtDelta(-this._getNodesPerPageSize());
         // There's a chance that the root node is hidden. In this case, its
@@ -624,7 +625,7 @@ AbstractTreeItem.prototype = {
         }
         return;
 
-      case e.DOM_VK_PAGE_DOWN:
+      case KeyCodes.DOM_VK_PAGE_DOWN:
         let pageDownElement =
           this._getSiblingAtDelta(this._getNodesPerPageSize());
         if (pageDownElement) {
@@ -634,11 +635,11 @@ AbstractTreeItem.prototype = {
         }
         return;
 
-      case e.DOM_VK_HOME:
+      case KeyCodes.DOM_VK_HOME:
         this._focusFirstNode();
         return;
 
-      case e.DOM_VK_END:
+      case KeyCodes.DOM_VK_END:
         this._focusLastNode();
         return;
     }

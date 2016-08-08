@@ -10,6 +10,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const JSOL = require("devtools/client/shared/vendor/jsol");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 loader.lazyRequireGetter(this, "TreeWidget",
                          "devtools/client/shared/widgets/TreeWidget", true);
@@ -845,7 +846,7 @@ StorageUI.prototype = {
    *        The event passed by the keypress event.
    */
   handleKeypress: function (event) {
-    if (event.keyCode == event.DOM_VK_ESCAPE && !this.sidebar.hidden) {
+    if (event.keyCode == KeyCodes.DOM_VK_ESCAPE && !this.sidebar.hidden) {
       // Stop Propagation to prevent opening up of split console
       this.hideSidebar();
       event.stopPropagation();
