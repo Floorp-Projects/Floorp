@@ -204,8 +204,11 @@ SiteHPKPState::ToString(nsCString& aString)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const uint64_t kSixtyDaysInSeconds = 60 * 24 * 60 * 60;
+
 nsSiteSecurityService::nsSiteSecurityService()
-  : mUsePreloadList(true)
+  : mMaxMaxAge(kSixtyDaysInSeconds)
+  , mUsePreloadList(true)
   , mPreloadListTimeOffset(0)
 {
 }
@@ -227,6 +230,10 @@ nsSiteSecurityService::Init()
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
+  mMaxMaxAge = mozilla::Preferences::GetInt(
+    "security.cert_pinning.max_max_age_seconds", kSixtyDaysInSeconds);
+  mozilla::Preferences::AddStrongObserver(this,
+    "security.cert_pinning.max_max_age_seconds");
   mUsePreloadList = mozilla::Preferences::GetBool(
     "network.stricttransportsecurity.preloadlist", true);
   mozilla::Preferences::AddStrongObserver(this,
@@ -297,9 +304,9 @@ SetStorageKey(nsAutoCString& storageKey, nsCString& hostname, uint32_t aType)
 // Expire times are in millis.  Since Headers max-age is in seconds, and
 // PR_Now() is in micros, normalize the units at milliseconds.
 static int64_t
-ExpireTimeFromMaxAge(int64_t maxAge)
+ExpireTimeFromMaxAge(uint64_t maxAge)
 {
-  return (PR_Now() / PR_USEC_PER_MSEC) + (maxAge * PR_MSEC_PER_SEC);
+  return (PR_Now() / PR_USEC_PER_MSEC) + ((int64_t)maxAge * PR_MSEC_PER_SEC);
 }
 
 nsresult
@@ -508,7 +515,7 @@ ParseSSSHeaders(uint32_t aType,
                 bool& foundIncludeSubdomains,
                 bool& foundMaxAge,
                 bool& foundUnrecognizedDirective,
-                int64_t& maxAge,
+                uint64_t& maxAge,
                 nsTArray<nsCString>& sha256keys)
 {
   // Strict transport security and Public Key Pinning have very similar
@@ -590,12 +597,12 @@ ParseSSSHeaders(uint32_t aType,
         }
       }
 
-      if (PR_sscanf(directive->mValue.get(), "%lld", &maxAge) != 1) {
+      if (PR_sscanf(directive->mValue.get(), "%llu", &maxAge) != 1) {
         SSSLOG(("SSS: could not parse delta-seconds"));
         return nsISiteSecurityService::ERROR_INVALID_MAX_AGE;
       }
 
-      SSSLOG(("SSS: parsed delta-seconds: %lld", maxAge));
+      SSSLOG(("SSS: parsed delta-seconds: %llu", maxAge));
     } else if (directive->mName.Length() == include_subd_var.Length() &&
                directive->mName.EqualsIgnoreCase(include_subd_var.get(),
                                                  include_subd_var.Length())) {
@@ -662,7 +669,7 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   bool foundMaxAge = false;
   bool foundIncludeSubdomains = false;
   bool foundUnrecognizedDirective = false;
-  int64_t maxAge = 0;
+  uint64_t maxAge = 0;
   nsTArray<nsCString> sha256keys;
   uint32_t sssrv = ParseSSSHeaders(aType, aHeader, foundIncludeSubdomains,
                                    foundMaxAge, foundUnrecognizedDirective,
@@ -742,6 +749,11 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
     return RemoveState(aType, aSourceURI, aFlags);
   }
 
+  // clamp maxAge to the maximum set by pref
+  if (maxAge > mMaxMaxAge) {
+    maxAge = mMaxMaxAge;
+  }
+
   bool chainMatchesPinset;
   rv = PublicKeyPinningService::ChainMatchesPinset(certList, sha256keys,
                                                    chainMatchesPinset);
@@ -785,7 +797,7 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   int64_t expireTime = ExpireTimeFromMaxAge(maxAge);
   SiteHPKPState dynamicEntry(expireTime, SecurityPropertySet,
                              foundIncludeSubdomains, sha256keys);
-  SSSLOG(("SSS: about to set pins for  %s, expires=%ld now=%ld maxAge=%ld\n",
+  SSSLOG(("SSS: about to set pins for  %s, expires=%ld now=%ld maxAge=%lu\n",
            host.get(), expireTime, PR_Now() / PR_USEC_PER_MSEC, maxAge));
 
   rv = SetHPKPState(host.get(), dynamicEntry, aFlags);
@@ -798,7 +810,7 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   }
 
   if (aMaxAge != nullptr) {
-    *aMaxAge = (uint64_t)maxAge;
+    *aMaxAge = maxAge;
   }
 
   if (aIncludeSubdomains != nullptr) {
@@ -827,7 +839,7 @@ nsSiteSecurityService::ProcessSTSHeader(nsIURI* aSourceURI,
   bool foundMaxAge = false;
   bool foundIncludeSubdomains = false;
   bool foundUnrecognizedDirective = false;
-  int64_t maxAge = 0;
+  uint64_t maxAge = 0;
   nsTArray<nsCString> unusedSHA256keys; // Required for sane internal interface
 
   uint32_t sssrv = ParseSSSHeaders(aType, aHeader, foundIncludeSubdomains,
@@ -862,7 +874,7 @@ nsSiteSecurityService::ProcessSTSHeader(nsIURI* aSourceURI,
   }
 
   if (aMaxAge != nullptr) {
-    *aMaxAge = (uint64_t)maxAge;
+    *aMaxAge = maxAge;
   }
 
   if (aIncludeSubdomains != nullptr) {
@@ -1202,6 +1214,8 @@ nsSiteSecurityService::Observe(nsISupports *subject,
       mozilla::Preferences::GetInt("test.currentTimeOffsetSeconds", 0);
     mProcessPKPHeadersFromNonBuiltInRoots = mozilla::Preferences::GetBool(
       "security.cert_pinning.process_headers_from_non_builtin_roots", false);
+    mMaxMaxAge = mozilla::Preferences::GetInt(
+      "security.cert_pinning.max_max_age_seconds", kSixtyDaysInSeconds);
   }
 
   return NS_OK;
