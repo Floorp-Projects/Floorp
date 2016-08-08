@@ -391,9 +391,9 @@ var openColorPickerAndSelectColor = Task.async(function* (view, ruleIndex,
   let cPicker = view.tooltips.colorPicker;
 
   info("Opening the colorpicker by clicking the color swatch");
-  let onShown = cPicker.tooltip.once("shown");
+  let onColorPickerReady = cPicker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onColorPickerReady;
 
   yield simulateColorPickerChange(view, cPicker, newRgba, expectedChange);
 
@@ -429,9 +429,9 @@ var openCubicBezierAndChangeCoords = Task.async(function* (view, ruleIndex,
   let bezierTooltip = view.tooltips.cubicBezier;
 
   info("Opening the cubicBezier by clicking the swatch");
-  let onShown = bezierTooltip.tooltip.once("shown");
+  let onBezierWidgetReady = bezierTooltip.once("ready");
   swatch.click();
-  yield onShown;
+  yield onBezierWidgetReady;
 
   let widget = yield bezierTooltip.widget;
 

@@ -43,9 +43,9 @@ function* testSimpleMultipleColorChanges(inspector, ruleView) {
 
   info("Opening the color picker");
   let picker = ruleView.tooltips.colorPicker;
-  let onShown = picker.tooltip.once("shown");
+  let onColorPickerReady = picker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onColorPickerReady;
 
   info("Changing the color several times");
   let colors = [
@@ -71,9 +71,9 @@ function* testComplexMultipleColorChanges(inspector, ruleView) {
 
   info("Opening the color picker");
   let picker = ruleView.tooltips.colorPicker;
-  let onShown = picker.tooltip.once("shown");
+  let onColorPickerReady = picker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onColorPickerReady;
 
   info("Changing the color several times");
   let colors = [
@@ -102,9 +102,9 @@ function* testOverriddenMultipleColorChanges(inspector, ruleView) {
 
   info("Opening the color picker");
   let picker = ruleView.tooltips.colorPicker;
-  let onShown = picker.tooltip.once("shown");
+  let onColorPickerReady = picker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onColorPickerReady;
 
   info("Changing the color several times");
   let colors = [
