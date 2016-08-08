@@ -496,7 +496,7 @@ class EncoderThreadPoolTerminator final : public nsIObserver
   public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHODIMP Observe(nsISupports *, const char *topic, const char16_t *) override
+    NS_IMETHOD Observe(nsISupports *, const char *topic, const char16_t *) override
     {
       NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"),
                    "Unexpected topic");

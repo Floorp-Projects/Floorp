@@ -274,9 +274,9 @@ public:
   }
 
   // nsIDNSListener
-  NS_IMETHODIMP OnLookupComplete(nsICancelable *request,
-                                 nsIDNSRecord *record,
-                                 nsresult status) override
+  NS_IMETHOD OnLookupComplete(nsICancelable *request,
+                              nsIDNSRecord *record,
+                              nsresult status) override
   {
     if (mTimer) {
       mTimer->Cancel();
@@ -290,7 +290,7 @@ public:
   }
 
   // nsITimerCallback
-  NS_IMETHODIMP Notify(nsITimer *timer) override
+  NS_IMETHOD Notify(nsITimer *timer) override
   {
     if (mRequest)
       mRequest->Cancel(NS_ERROR_NET_TIMEOUT);

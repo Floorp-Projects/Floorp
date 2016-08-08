@@ -33,14 +33,14 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHODIMP Init(nsIURI* aSource,
-                     nsIURI* aTarget,
-                     const nsAString& aDisplayName,
-                     nsIMIMEInfo *aMIMEInfo,
-                     PRTime aStartTime,
-                     nsIFile* aTempFile,
-                     nsICancelable* aCancelable,
-                     bool aIsPrivate) override {
+  NS_IMETHOD Init(nsIURI* aSource,
+                  nsIURI* aTarget,
+                  const nsAString& aDisplayName,
+                  nsIMIMEInfo *aMIMEInfo,
+                  PRTime aStartTime,
+                  nsIFile* aTempFile,
+                  nsICancelable* aCancelable,
+                  bool aIsPrivate) override {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -80,36 +80,36 @@ public:
     return rv;
   }
 
-  NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
-                              nsIRequest* aRequest, uint32_t aStateFlags,
-                              nsresult aStatus) override
+  NS_IMETHOD OnStateChange(nsIWebProgress* aWebProgress,
+                           nsIRequest* aRequest, uint32_t aStateFlags,
+                           nsresult aStatus) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
   }
-  
-  NS_IMETHODIMP OnStatusChange(nsIWebProgress *aWebProgress,
-                               nsIRequest *aRequest, nsresult aStatus,
-                               const char16_t *aMessage) override
+
+  NS_IMETHOD OnStatusChange(nsIWebProgress *aWebProgress,
+                            nsIRequest *aRequest, nsresult aStatus,
+                            const char16_t *aMessage) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
   }
 
-  NS_IMETHODIMP OnLocationChange(nsIWebProgress *aWebProgress,
-                                 nsIRequest *aRequest, nsIURI *aLocation,
-                                 uint32_t aFlags) override
+  NS_IMETHOD OnLocationChange(nsIWebProgress *aWebProgress,
+                              nsIRequest *aRequest, nsIURI *aLocation,
+                              uint32_t aFlags) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnLocationChange(aWebProgress, aRequest, aLocation, aFlags);
   }
-  
-  NS_IMETHODIMP OnProgressChange(nsIWebProgress *aWebProgress,
-                                 nsIRequest *aRequest,
-                                 int32_t aCurSelfProgress,
-                                 int32_t aMaxSelfProgress,
-                                 int32_t aCurTotalProgress,
-                                 int32_t aMaxTotalProgress) override
+
+  NS_IMETHOD OnProgressChange(nsIWebProgress *aWebProgress,
+                              nsIRequest *aRequest,
+                              int32_t aCurSelfProgress,
+                              int32_t aMaxSelfProgress,
+                              int32_t aCurTotalProgress,
+                              int32_t aMaxTotalProgress) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnProgressChange(aWebProgress, aRequest,
@@ -119,12 +119,12 @@ public:
                                     aMaxTotalProgress);
   }
 
-  NS_IMETHODIMP OnProgressChange64(nsIWebProgress *aWebProgress,
-                                   nsIRequest *aRequest,
-                                   int64_t aCurSelfProgress,
-                                   int64_t aMaxSelfProgress,
-                                   int64_t aCurTotalProgress,
-                                   int64_t aMaxTotalProgress) override
+  NS_IMETHOD OnProgressChange64(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest,
+                                int64_t aCurSelfProgress,
+                                int64_t aMaxSelfProgress,
+                                int64_t aCurTotalProgress,
+                                int64_t aMaxTotalProgress) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnProgressChange64(aWebProgress, aRequest,
@@ -134,36 +134,36 @@ public:
                                       aMaxTotalProgress);
   }
 
-  NS_IMETHODIMP OnRefreshAttempted(nsIWebProgress *aWebProgress,
-                                   nsIURI *aUri,
-                                   int32_t aDelay,
-                                   bool aSameUri,
-                                   bool *allowRefresh) override
+  NS_IMETHOD OnRefreshAttempted(nsIWebProgress *aWebProgress,
+                                nsIURI *aUri,
+                                int32_t aDelay,
+                                bool aSameUri,
+                                bool *allowRefresh) override
   {
     *allowRefresh = true;
     return NS_OK;
   }
 
-  NS_IMETHODIMP OnSecurityChange(nsIWebProgress *aWebProgress,
-                                 nsIRequest *aRequest, uint32_t aState) override
+  NS_IMETHOD OnSecurityChange(nsIWebProgress *aWebProgress,
+                              nsIRequest *aRequest, uint32_t aState) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnSecurityChange(aWebProgress, aRequest, aState);
   }
 
-  NS_IMETHODIMP SetSha256Hash(const nsACString& aHash) override
+  NS_IMETHOD SetSha256Hash(const nsACString& aHash) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->SetSha256Hash(aHash);
   }
 
-  NS_IMETHODIMP SetSignatureInfo(nsIArray* aSignatureInfo) override
+  NS_IMETHOD SetSignatureInfo(nsIArray* aSignatureInfo) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->SetSignatureInfo(aSignatureInfo);
   }
 
-  NS_IMETHODIMP SetRedirects(nsIArray* aRedirects) override
+  NS_IMETHOD SetRedirects(nsIArray* aRedirects) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->SetRedirects(aRedirects);
