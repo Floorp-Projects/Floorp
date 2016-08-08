@@ -8,7 +8,7 @@ task:
     name: '[TC] Browser Hazard Linux'
     description: Browser Hazard Analysis Linux
 
-  workerType: dbg-linux64
+  workerType: 'gecko-{{level}}-b-linux'
 
   scopes:
     - 'docker-worker:cache:tooltool-cache'

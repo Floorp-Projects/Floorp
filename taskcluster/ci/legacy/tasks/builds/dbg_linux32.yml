@@ -11,7 +11,7 @@ task:
   routes:
     - 'coalesce.v1.builds.{{project}}.dbg_linux32'
 
-  workerType: dbg-linux32
+  workerType: 'gecko-{{level}}-b-linux'
 
   payload:
     supersederUrl: 'https://coalesce.mozilla-releng.net/v1/list/builds.{{project}}.dbg_linux32'
