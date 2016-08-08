@@ -110,6 +110,39 @@ static_assert(NS_STYLE_INHERIT_MASK == (1 << nsStyleStructID_Length) - 1,
 static_assert((NS_RULE_NODE_IS_ANIMATION_RULE & NS_STYLE_INHERIT_MASK) == 0,
   "NS_RULE_NODE_IS_ANIMATION_RULE must not overlap the style struct bits.");
 
+struct FragmentOrURL
+{
+  FragmentOrURL() : mIsLocalRef(false) {}
+  FragmentOrURL(const FragmentOrURL& aSource)
+    : mIsLocalRef(false)
+  { *this = aSource; }
+
+  void SetValue(const nsCSSValue* aValue);
+  void SetNull();
+
+  FragmentOrURL& operator=(const FragmentOrURL& aOther);
+  bool operator==(const FragmentOrURL& aOther) const;
+  bool operator!=(const FragmentOrURL& aOther) const {
+    return !(*this == aOther);
+  }
+
+  bool EqualsExceptRef(nsIURI* aURI) const;
+
+  nsIURI* GetSourceURL() const { return mURL; }
+  void GetSourceString(nsString& aRef) const;
+
+  // When matching a url with mIsLocalRef set, resolve it against aURI;
+  // Otherwise, ignore aURL and return mURL directly.
+  already_AddRefed<nsIURI> Resolve(nsIURI* aURI) const;
+  already_AddRefed<nsIURI> Resolve(nsIContent* aContent) const;
+
+  bool IsLocalRef() const { return mIsLocalRef; }
+
+private:
+  nsCOMPtr<nsIURI> mURL;
+  bool    mIsLocalRef;
+};
+
 // The lifetime of these objects is managed by the presshell's arena.
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
 {
@@ -652,7 +685,7 @@ struct nsStyleImageLayers {
   friend struct Layer;
   struct Layer {
     nsStyleImage  mImage;         // [reset]
-    nsCOMPtr<nsIURI> mSourceURI;  // [reset]
+    FragmentOrURL mSourceURI;     // [reset]
                                   // mask-only property
                                   // This property is used for mask layer only.
                                   // For a background layer, it should always
@@ -3231,39 +3264,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
 protected:
   nscoord mColumnRuleWidth;  // [reset] coord
   nscoord mTwipsPerPixel;
-};
-
-struct FragmentOrURL
-{
-  FragmentOrURL() : mIsLocalRef(false) {}
-  FragmentOrURL(const FragmentOrURL& aSource)
-    : mIsLocalRef(false)
-  { *this = aSource; }
-
-  void SetValue(const nsCSSValue* aValue);
-  void SetNull();
-
-  FragmentOrURL& operator=(const FragmentOrURL& aOther);
-  bool operator==(const FragmentOrURL& aOther) const;
-  bool operator!=(const FragmentOrURL& aOther) const {
-    return !(*this == aOther);
-  }
-
-  bool EqualsExceptRef(nsIURI* aURI) const;
-
-  nsIURI* GetSourceURL() const { return mURL; }
-  void GetSourceString(nsString& aRef) const;
-
-  // When matching a url with mIsLocalRef set, resolve it against aURI;
-  // Otherwise, ignore aURL and return mURL directly.
-  already_AddRefed<nsIURI> Resolve(nsIURI* aURI) const;
-  already_AddRefed<nsIURI> Resolve(nsIContent* aContent) const;
-
-  bool IsLocalRef() const { return mIsLocalRef; }
-
-private:
-  nsCOMPtr<nsIURI> mURL;
-  bool    mIsLocalRef;
 };
 
 enum nsStyleSVGPaintType {

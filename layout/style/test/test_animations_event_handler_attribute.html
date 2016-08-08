@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=911987
+-->
+<head>
+  <meta charset=utf-8>
+  <title>Test for CSS Animation and Transition event handler
+         attributes. (Bug 911987)</title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  @keyframes anim  { to { margin-left: 100px } }
+  </style>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=911987">Mozilla Bug
+  911987</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+'use strict';
+
+// Create the div element with event handlers.
+// We need two elements: one with the content attribute speficied and one
+// with the IDL attribute specified since we can't set these independently.
+function createAndRegisterTargets(eventAttributes) {
+  var displayElement = document.getElementById('display');
+  var contentAttributeElement = document.createElement("div");
+  var idlAttributeElement     = document.createElement("div");
+  displayElement.appendChild(contentAttributeElement);
+  displayElement.appendChild(idlAttributeElement);
+
+  // Add handlers
+  eventAttributes.forEach(event => {
+    contentAttributeElement.setAttribute(event, 'handleEvent(event);');
+    contentAttributeElement.handlerType = 'content attribute';
+    idlAttributeElement[event] = handleEvent;
+    idlAttributeElement.handlerType = 'IDL attribute';
+  });
+
+  return [contentAttributeElement, idlAttributeElement];
+}
+
+function handleEvent(event) {
+  if (event.target.receivedEventType) {
+    ok(false, `Received ${event.type} event, but this element have previous `
+              `received event '${event.target.receivedEventType}'.`);
+    return;
+  }
+  event.target.receivedEventType = event.type;
+}
+
+function checkReceivedEvents(eventType, elements) {
+  elements.forEach(element => {
+    is(element.receivedEventType, eventType,
+       `Expected to receive '${eventType}', got
+        '${element.receivedEventType}', for event handler registered
+        using ${element.handlerType}`);
+    element.receivedEventType = undefined;
+  });
+}
+
+// Take over the refresh driver right from the start.
+advance_clock(0);
+
+// 1. Test CSS Animation event handlers.
+
+var targets = createAndRegisterTargets([ 'onanimationstart',
+                                         'onanimationiteration',
+                                         'onanimationend' ]);
+targets.forEach(div => {
+  div.setAttribute('style', 'animation: anim 100ms 2');
+  getComputedStyle(div).animationName;  // flush
+});
+
+advance_clock(0);
+checkReceivedEvents("animationstart", targets);
+
+advance_clock(100);
+checkReceivedEvents("animationiteration", targets);
+
+advance_clock(200);
+checkReceivedEvents("animationend", targets);
+
+targets.forEach(div => { div.remove(); });
+
+// 2. Test CSS Transition event handlers.
+
+advance_clock(0);
+var targets = createAndRegisterTargets([ 'ontransitionend' ]);
+targets.forEach(div => {
+  div.style.transition = 'margin-left 100ms';
+  getComputedStyle(div).marginLeft; // flush
+  div.style.marginLeft = "200px";
+  getComputedStyle(div).marginLeft; // flush
+});
+
+advance_clock(100);
+checkReceivedEvents("transitionend", targets);
+
+targets.forEach(div => { div.remove(); });
+
+// 3. Test prefixed CSS Animation event handlers.
+
+var targets = createAndRegisterTargets([ 'onwebkitanimationstart',
+                                         'onwebkitanimationiteration',
+                                         'onwebkitanimationend' ]);
+targets.forEach(div => {
+  div.setAttribute('style', 'animation: anim 100ms 2');
+  getComputedStyle(div).animationName;  // flush
+});
+
+advance_clock(0);
+checkReceivedEvents("webkitAnimationStart", targets);
+
+advance_clock(100);
+checkReceivedEvents("webkitAnimationIteration", targets);
+
+advance_clock(200);
+checkReceivedEvents("webkitAnimationEnd", targets);
+
+targets.forEach(div => { div.remove(); });
+
+// 4. Test prefixed CSS Transition event handlers.
+
+advance_clock(0);
+var targets = createAndRegisterTargets([ 'onwebkittransitionend' ]);
+targets.forEach(div => {
+  div.style.transition = 'margin-left 100ms';
+  getComputedStyle(div).marginLeft; // flush
+  div.style.marginLeft = "200px";
+  getComputedStyle(div).marginLeft; // flush
+});
+
+advance_clock(100);
+checkReceivedEvents("webkitTransitionEnd", targets);
+
+targets.forEach(div => { div.remove(); });
+
+SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+
+</script>
+</body>
+</html>

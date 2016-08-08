@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<title>background-position-x animation while running</title>
+<style>
+@keyframes holdBackgroundPosition {
+  from,to { background-position-x: 50%; }
+}
+#test {
+  height: 100px;
+  width: 100px;
+  background-repeat: no-repeat;
+  background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF/wAAAAAAQaMSAwAAABJJREFUeNpiYBgFo2AwAIAAAwACigABtnCV2AAAAABJRU5ErkJggg==); /* a 25x25 px red box */
+  background-position-x: 0px;
+  animation: holdBackgroundPosition 100s infinite;
+}
+</style>
+<div id="test" class="reftest-opaque-layer"></div>

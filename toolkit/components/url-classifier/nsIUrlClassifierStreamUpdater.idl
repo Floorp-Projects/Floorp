@@ -20,7 +20,9 @@ interface nsIUrlClassifierStreamUpdater : nsISupports
    * as well as in testing.
    * @param aRequestTables Comma-separated list of tables included in this
    *        update.
-   * @param aRequestBody The body for the request.
+   * @param aRequestPayload The payload for the request.
+   * @param aIsPostRequest Whether the request should be sent by POST method.
+   *                       Should be 'true' for v2 usage.
    * @param aUpdateUrl The plaintext url from which to request updates.
    * @param aSuccessCallback Called after a successful update.
    * @param aUpdateErrorCallback Called for problems applying the update
@@ -28,7 +30,8 @@ interface nsIUrlClassifierStreamUpdater : nsISupports
    *        connection refused error.
    */
   boolean downloadUpdates(in ACString aRequestTables,
-                          in ACString aRequestBody,
+                          in ACString aRequestPayload,
+                          in boolean aIsPostRequest,
                           in ACString aUpdateUrl,
                           in nsIUrlClassifierCallback aSuccessCallback,
                           in nsIUrlClassifierCallback aUpdateErrorCallback,
