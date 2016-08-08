@@ -562,10 +562,6 @@
   <string name="set_image_path_fail">&set_image_path_fail;</string>
   <string name="set_image_chooser_title">&set_image_chooser_title;</string>
 
-  <!-- Contacts API -->
-  <string name="contacts_account_chooser_dialog_title2">Share contacts from…</string>
-
-
   <!-- Guest mode -->
   <string name="new_guest_session">&new_guest_session;</string>
   <string name="exit_guest_session">&exit_guest_session;</string>
