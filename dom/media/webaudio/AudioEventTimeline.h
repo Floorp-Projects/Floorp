@@ -350,6 +350,9 @@ private:
   void GetValuesAtTimeHelper(TimeType aTime, float* aBuffer, const size_t aSize);
 
   template<class TimeType>
+  float GetValueAtTimeOfEvent(const AudioTimelineEvent* aNext);
+
+  template<class TimeType>
   float GetValuesAtTimeHelperInternal(TimeType aTime,
                                       const AudioTimelineEvent* aPrevious,
                                       const AudioTimelineEvent* aNext);
