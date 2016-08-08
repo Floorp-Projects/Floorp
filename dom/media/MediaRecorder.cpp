@@ -73,7 +73,7 @@ public:
     }
   }
 
-  NS_METHOD
+  NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport,
                  nsISupports* aData, bool aAnonymize) override
   {

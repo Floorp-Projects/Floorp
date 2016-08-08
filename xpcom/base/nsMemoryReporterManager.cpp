@@ -804,8 +804,8 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     // First iterate over all the segments and record how many of each kind
     // there were and their aggregate sizes. We use a hash table for this
@@ -987,8 +987,8 @@ class VsizeMaxContiguousReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = VsizeMaxContiguousDistinguishedAmount(&amount);
@@ -1010,8 +1010,8 @@ class PrivateReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = PrivateDistinguishedAmount(&amount);
@@ -1034,8 +1034,8 @@ class VsizeReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = VsizeDistinguishedAmount(&amount);
@@ -1061,8 +1061,8 @@ class ResidentReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = ResidentDistinguishedAmount(&amount);
@@ -1090,8 +1090,8 @@ class ResidentUniqueReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount = 0;
     nsresult rv = ResidentUniqueDistinguishedAmount(&amount);
@@ -1118,8 +1118,8 @@ class SystemHeapReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = SystemHeapSize(&amount);
@@ -1174,8 +1174,8 @@ class ResidentPeakReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount = 0;
     nsresult rv = ResidentPeakDistinguishedAmount(&amount);
@@ -1197,8 +1197,8 @@ class PageFaultsSoftReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     struct rusage usage;
     int err = getrusage(RUSAGE_SELF, &usage);
@@ -1241,8 +1241,8 @@ class PageFaultsHardReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount = 0;
     nsresult rv = PageFaultsHardDistinguishedAmount(&amount);
@@ -1298,8 +1298,8 @@ class JemallocHeapReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
@@ -1392,8 +1392,8 @@ class AtomTablesReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     size_t Main, Static;
     NS_SizeOfAtomTablesIncludingThis(MallocSizeOf, &Main, &Static);
@@ -1429,8 +1429,8 @@ class DeadlockDetectorReporter final : public nsIMemoryReporter
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "explicit/deadlock-detector", KIND_HEAP, UNITS_BYTES,
