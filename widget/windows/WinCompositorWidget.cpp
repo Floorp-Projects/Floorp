@@ -4,14 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WinCompositorWidget.h"
-#include "gfxPrefs.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsWindow.h"
 #include "VsyncDispatcher.h"
-
-#include <ddraw.h>
 
 namespace mozilla {
 namespace widget {
@@ -27,12 +23,6 @@ WinCompositorWidget::WinCompositorWidget(const CompositorWidgetInitData& aInitDa
    mLockedBackBufferData(nullptr)
 {
   MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
-
-  // mNotDeferEndRemoteDrawing is set on the main thread during init,
-  // but is only accessed after on the compositor thread.
-  mNotDeferEndRemoteDrawing = gfxPrefs::LayersCompositionFrameRate() == 0 ||
-                              gfxPlatform::IsInLayoutAsapMode() ||
-                              gfxPlatform::ForceSoftwareVsync();
 }
 
 void
@@ -120,36 +110,6 @@ WinCompositorWidget::EndRemoteDrawing()
     FreeWindowSurface(mCompositeDC);
   }
   mCompositeDC = nullptr;
-}
-
-bool
-WinCompositorWidget::NeedsToDeferEndRemoteDrawing()
-{
-  if(mNotDeferEndRemoteDrawing) {
-    return false;
-  }
-
-  IDirectDraw7* ddraw = DeviceManagerDx::Get()->GetDirectDraw();
-  if (!ddraw) {
-    return false;
-  }
-
-  DWORD scanLine = 0;
-  int height = ::GetSystemMetrics(SM_CYSCREEN);
-  HRESULT ret = ddraw->GetScanLine(&scanLine);
-  if (ret == DDERR_VERTICALBLANKINPROGRESS) {
-    scanLine = 0;
-  } else if (ret != DD_OK) {
-    return false;
-  }
-
-  // Check if there is a risk of tearing with GDI.
-  if (static_cast<int>(scanLine) > height / 2) {
-    // No need to defer.
-    return false;
-  }
-
-  return true;
 }
 
 already_AddRefed<gfx::DrawTarget>

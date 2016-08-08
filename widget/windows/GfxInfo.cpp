@@ -16,7 +16,7 @@
 #include "prprf.h"
 #include "GfxDriverInfo.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/gfx/Logging.h"
 #include "nsPrintfCString.h"
 #include "jsapi.h"
@@ -1335,7 +1335,7 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
     return;
   }
   if (d3d11 == gfx::FeatureStatus::Available) {
-    DeviceManagerDx* dm = DeviceManagerDx::Get();
+    DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
     JS::Rooted<JS::Value> val(aCx, JS::Int32Value(dm->GetD3D11Version()));
     JS_SetProperty(aCx, obj, "version", val);
 
