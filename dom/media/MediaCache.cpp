@@ -96,7 +96,7 @@ void MediaCacheFlusher::Init()
     mozilla::services::GetObserverService();
   if (observerService) {
     observerService->AddObserver(gMediaCacheFlusher, "last-pb-context-exited", true);
-    observerService->AddObserver(gMediaCacheFlusher, "network-clear-cache-stored-anywhere", true);
+    observerService->AddObserver(gMediaCacheFlusher, "cacheservice:empty-cache", true);
   }
 }
 
@@ -357,7 +357,7 @@ MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t c
   if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     MediaCache::Flush();
   }
-  if (strcmp(aTopic, "network-clear-cache-stored-anywhere") == 0) {
+  if (strcmp(aTopic, "cacheservice:empty-cache") == 0) {
     MediaCache::Flush();
   }
   return NS_OK;
