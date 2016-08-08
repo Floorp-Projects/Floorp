@@ -12,7 +12,7 @@ task:
     - 'index.buildbot.branches.{{project}}.linux64-valgrind'
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-valgrind'
 
-  workerType: opt-linux64
+  workerType: 'gecko-{{level}}-b-linux'
 
   payload:
     env:

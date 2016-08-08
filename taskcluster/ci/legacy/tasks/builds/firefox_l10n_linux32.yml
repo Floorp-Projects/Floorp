@@ -8,7 +8,7 @@ task:
       name: '[TC] Linux32 L10n'
       description: 'Linux32 L10n'
 
-  workerType: opt-linux32
+  workerType: 'gecko-{{level}}-b-linux'
 
   extra:
     treeherder:
