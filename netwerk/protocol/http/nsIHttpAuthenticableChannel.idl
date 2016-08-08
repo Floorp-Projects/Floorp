@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIProxiedChannel.idl"
+#include "nsIRequest.idl"
 
 interface nsILoadGroup;
 interface nsIURI;
 interface nsIInterfaceRequestor;
-typedef unsigned long nsLoadFlags;
 
 [scriptable, uuid(701093ac-5c7f-429c-99e3-423b041fccb4)]
 interface nsIHttpAuthenticableChannel : nsIProxiedChannel
