@@ -196,7 +196,12 @@ MediaSourceDecoder::Ended(bool aEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
   static_cast<MediaSourceResource*>(GetResource())->SetEnded(aEnded);
-  mEnded = true;
+  if (aEnded) {
+    // We want the MediaSourceReader to refresh its buffered range as it may
+    // have been modified (end lined up).
+    NotifyDataArrived();
+  }
+  mEnded = aEnded;
 }
 
 void
@@ -313,6 +318,8 @@ MediaSourceDecoder::CanPlayThrough()
 TimeInterval
 MediaSourceDecoder::ClampIntervalToEnd(const TimeInterval& aInterval)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!mEnded) {
     return aInterval;
   }
