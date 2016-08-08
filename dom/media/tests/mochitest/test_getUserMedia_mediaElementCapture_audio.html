@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<pre id="test">
+<script>
+
+createHTML({
+  bug: "1259788",
+  title: "Test CaptureStream audio content on HTMLMediaElement playing a gUM MediaStream",
+  visible: true
+});
+
+var audioContext;
+var gUMAudioElement;
+var analyser;
+runTest(() => getUserMedia({audio: true})
+  .then(stream => {
+    gUMAudioElement = createMediaElement("gUMAudio", "local", "gUMAudio", true);
+    gUMAudioElement.srcObject = stream;
+
+    audioContext = new AudioContext();
+    info("Capturing");
+
+    analyser = new AudioStreamAnalyser(audioContext,
+                                       gUMAudioElement.mozCaptureStream());
+    analyser.enableDebugCanvas();
+    return analyser.waitForAnalysisSuccess(array =>
+      array[analyser.binIndexForFrequency(50)]              < 50 &&
+      array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)] > 200 &&
+      array[analyser.binIndexForFrequency(2500)]            < 50);
+  })
+  .then(() => {
+    info("Audio flowing. Pausing.");
+    gUMAudioElement.pause();
+
+    return analyser.waitForAnalysisSuccess(array =>
+      array[analyser.binIndexForFrequency(50)]              < 50 &&
+      array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)] < 50 &&
+      array[analyser.binIndexForFrequency(2500)]            < 50);
+  })
+  .then(() => {
+    info("Audio stopped flowing. Playing.");
+    gUMAudioElement.play();
+
+    return analyser.waitForAnalysisSuccess(array =>
+      array[analyser.binIndexForFrequency(50)]              < 50 &&
+      array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)] > 200 &&
+      array[analyser.binIndexForFrequency(2500)]            < 50);
+  })
+  .then(() => {
+    info("Audio flowing. Removing source.");
+    var stream = gUMAudioElement.srcObject;
+    gUMAudioElement.srcObject = null;
+
+    return analyser.waitForAnalysisSuccess(array =>
+      array[analyser.binIndexForFrequency(50)]              < 50 &&
+      array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)] < 50 &&
+      array[analyser.binIndexForFrequency(2500)]            < 50)
+        .then(() => stream);
+  })
+  .then(stream => {
+    info("Audio stopped flowing. Setting source.");
+    gUMAudioElement.srcObject = stream;
+
+    return analyser.waitForAnalysisSuccess(array =>
+      array[analyser.binIndexForFrequency(50)]              < 50 &&
+      array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)] > 200 &&
+      array[analyser.binIndexForFrequency(2500)]            < 50);
+  })
+  .then(() => {
+    info("Audio flowing from new source. Adding a track.");
+    let oscillator = audioContext.createOscillator();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 2000;
+    oscillator.start();
+
+    let oscOut = audioContext.createMediaStreamDestination();
+    oscillator.connect(oscOut);
+
+    gUMAudioElement.srcObject.addTrack(oscOut.stream.getTracks()[0]);
+
+    return analyser.waitForAnalysisSuccess(array =>
+      array[analyser.binIndexForFrequency(50)]              < 50 &&
+      array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)] > 200 &&
+      array[analyser.binIndexForFrequency(1500)]            < 50 &&
+      array[analyser.binIndexForFrequency(2000)]            > 200 &&
+      array[analyser.binIndexForFrequency(2500)]            < 50);
+  })
+  .then(() => {
+    info("Audio flowing from new track. Removing a track.");
+
+    const gUMTrack = gUMAudioElement.srcObject.getTracks()[0];
+    gUMAudioElement.srcObject.removeTrack(gUMTrack);
+
+    is(gUMAudioElement.srcObject.getTracks().length, 1,
+       "A track should have been removed");
+
+    return analyser.waitForAnalysisSuccess(array =>
+      array[analyser.binIndexForFrequency(50)]              < 50 &&
+      array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)] < 50 &&
+      array[analyser.binIndexForFrequency(1500)]            < 50 &&
+      array[analyser.binIndexForFrequency(2000)]            > 200 &&
+      array[analyser.binIndexForFrequency(2500)]            < 50);
+  })
+  .then(() => ok(true, "Test passed."))
+  .catch(e => ok(false, "Test failed: " + e + (e.stack ? "\n" + e.stack : ""))));
+
+</script>
+</pre>
+</body>
+</html>
