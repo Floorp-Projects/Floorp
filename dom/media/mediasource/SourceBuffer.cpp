@@ -289,9 +289,6 @@ SourceBuffer::Ended()
   MOZ_ASSERT(IsAttached());
   MSE_DEBUG("Ended");
   mTrackBuffersManager->Ended();
-  // We want the MediaSourceReader to refresh its buffered range as it may
-  // have been modified (end lined up).
-  mMediaSource->GetDecoder()->NotifyDataArrived();
 }
 
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
