@@ -749,7 +749,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
             runtime->assertCanLock(ExclusiveAccessLock);
             runtime->exclusiveAccessLock.lock();
 #ifdef DEBUG
-            runtime->exclusiveAccessOwner = PR_GetCurrentThread();
+            runtime->exclusiveAccessOwner = mozilla::Some(ThisThread::GetId());
 #endif
         } else {
             MOZ_ASSERT(!runtime->mainThreadHasExclusiveAccess);
@@ -775,8 +775,8 @@ class MOZ_RAII AutoLockForExclusiveAccess
     ~AutoLockForExclusiveAccess() {
         if (runtime->numExclusiveThreads) {
 #ifdef DEBUG
-            MOZ_ASSERT(runtime->exclusiveAccessOwner == PR_GetCurrentThread());
-            runtime->exclusiveAccessOwner = nullptr;
+            MOZ_ASSERT(*runtime->exclusiveAccessOwner == ThisThread::GetId());
+            runtime->exclusiveAccessOwner.reset();
 #endif
             runtime->exclusiveAccessLock.unlock();
         } else {
