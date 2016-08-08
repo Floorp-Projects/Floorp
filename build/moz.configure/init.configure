@@ -71,6 +71,10 @@ set_config('MOZ_BUILD_ROOT', delayed_getattr(check_build_environment,
 set_config('DIST', delayed_getattr(check_build_environment, 'dist'))
 
 
+option(env='MOZ_AUTOMATION', help='Enable options for automated builds')
+set_config('MOZ_AUTOMATION', depends_if('MOZ_AUTOMATION')(lambda x: True))
+
+
 option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
 
 option(env='MOZ_CURRENT_PROJECT', nargs=1, help='Current build project')
