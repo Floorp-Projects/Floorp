@@ -2603,6 +2603,9 @@ pref("layout.css.scroll-behavior.damping-ratio", "1.0");
 // Is support for scroll-snap enabled?
 pref("layout.css.scroll-snap.enabled", true);
 
+// Is support for CSS shape-outside enabled?
+pref("layout.css.shape-outside.enabled", false);
+
 // Is support for document.fonts enabled?
 pref("layout.css.font-loading-api.enabled", true);
 
