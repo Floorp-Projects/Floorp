@@ -37778,6 +37778,30 @@
             "url": "/html/semantics/forms/the-form-element/form-submission-sandbox.html"
           }
         ],
+        "svg/linking/scripted/href-animate-element.html": [
+          {
+            "path": "svg/linking/scripted/href-animate-element.html",
+            "url": "/svg/linking/scripted/href-animate-element.html"
+          }
+        ],
+        "svg/linking/scripted/href-mpath-element.html": [
+          {
+            "path": "svg/linking/scripted/href-mpath-element.html",
+            "url": "/svg/linking/scripted/href-mpath-element.html"
+          }
+        ],
+        "svg/linking/scripted/href-script-element-markup.html": [
+          {
+            "path": "svg/linking/scripted/href-script-element-markup.html",
+            "url": "/svg/linking/scripted/href-script-element-markup.html"
+          }
+        ],
+        "svg/linking/scripted/href-script-element.html": [
+          {
+            "path": "svg/linking/scripted/href-script-element.html",
+            "url": "/svg/linking/scripted/href-script-element.html"
+          }
+        ],
         "web-animations/interfaces/Animation/effect.html": [
           {
             "path": "web-animations/interfaces/Animation/effect.html",
