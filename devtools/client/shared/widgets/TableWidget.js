@@ -8,6 +8,7 @@ loader.lazyRequireGetter(this, "setNamedTimeout",
   "devtools/client/shared/widgets/view-helpers", true);
 loader.lazyRequireGetter(this, "clearNamedTimeout",
   "devtools/client/shared/widgets/view-helpers", true);
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -469,7 +470,7 @@ TableWidget.prototype = {
     let cell;
 
     switch (event.keyCode) {
-      case event.DOM_VK_UP:
+      case KeyCodes.DOM_VK_UP:
         event.preventDefault();
 
         colName = selectedCell.parentNode.id;
@@ -487,7 +488,7 @@ TableWidget.prototype = {
 
         this.emit(EVENTS.ROW_SELECTED, cell.getAttribute("data-id"));
         break;
-      case event.DOM_VK_DOWN:
+      case KeyCodes.DOM_VK_DOWN:
         event.preventDefault();
 
         colName = selectedCell.parentNode.id;
@@ -1664,14 +1665,14 @@ EditableFieldsEngine.prototype = {
     }
 
     switch (event.keyCode) {
-      case event.DOM_VK_ESCAPE:
+      case KeyCodes.DOM_VK_ESCAPE:
         this.cancelEdit();
         event.preventDefault();
         break;
-      case event.DOM_VK_RETURN:
+      case KeyCodes.DOM_VK_RETURN:
         this.completeEdit();
         break;
-      case event.DOM_VK_TAB:
+      case KeyCodes.DOM_VK_TAB:
         if (this.onTab) {
           this.onTab(event);
         }

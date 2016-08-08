@@ -7,6 +7,7 @@
 
 const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
 const { AutocompletePopup } = require("devtools/client/shared/autocomplete-popup");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const CM_TERN_SCRIPTS = [
   "chrome://devtools/content/sourceeditor/codemirror/addon/tern/tern.js",
@@ -316,7 +317,7 @@ function onEditorKeypress({ ed, Editor }, cm, event) {
     return;
   }
 
-  if ((event.ctrlKey || event.metaKey) && event.keyCode == event.DOM_VK_SPACE) {
+  if ((event.ctrlKey || event.metaKey) && event.keyCode == KeyCodes.DOM_VK_SPACE) {
     // When Ctrl/Cmd + Space is pressed, two simultaneous keypresses are emitted
     // first one for just the Ctrl/Cmd and second one for combo. The first one
     // leave the autocompleteOpts.doNotAutocomplete as true, so we have to make
@@ -332,23 +333,23 @@ function onEditorKeypress({ ed, Editor }, cm, event) {
   }
 
   switch (event.keyCode) {
-    case event.DOM_VK_RETURN:
+    case KeyCodes.DOM_VK_RETURN:
       autocompleteOpts.doNotAutocomplete = true;
       break;
-    case event.DOM_VK_ESCAPE:
+    case KeyCodes.DOM_VK_ESCAPE:
       if (autocompleteOpts.popup.isOpen) {
         event.preventDefault();
       }
       break;
-    case event.DOM_VK_LEFT:
-    case event.DOM_VK_RIGHT:
-    case event.DOM_VK_HOME:
-    case event.DOM_VK_END:
+    case KeyCodes.DOM_VK_LEFT:
+    case KeyCodes.DOM_VK_RIGHT:
+    case KeyCodes.DOM_VK_HOME:
+    case KeyCodes.DOM_VK_END:
       autocompleteOpts.doNotAutocomplete = true;
       autocompleteOpts.popup.hidePopup();
       break;
-    case event.DOM_VK_BACK_SPACE:
-    case event.DOM_VK_DELETE:
+    case KeyCodes.DOM_VK_BACK_SPACE:
+    case KeyCodes.DOM_VK_DELETE:
       if (ed.config.mode == Editor.modes.css) {
         autocompleteOpts.completer.invalidateCache(ed.getCursor().line);
       }
