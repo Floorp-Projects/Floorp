@@ -73,6 +73,14 @@ We recommend the following tools for installing Python:
     official installers -- http://www.python.org/
 '''
 
+BROWSER_ARTIFACT_MODE_MOZCONFIG = '''
+Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
+
+<<<
+# Automatically download and use compiled C++ components:
+ac_add_options --enable-artifact-builds
+>>>
+'''
 
 # Upgrade Mercurial older than this.
 # This should match OLDEST_NON_LEGACY_VERSION from
@@ -117,6 +125,26 @@ class BaseBootstrapper(object):
         entirely from configure.
         '''
         pass
+
+    def install_browser_artifact_mode_packages(self):
+        '''
+        Install packages required to build Firefox for Desktop (application
+        'browser') in Artifact Mode.
+        '''
+        raise NotImplementedError(
+            'Cannot bootstrap Firefox for Desktop Artifact Mode: '
+            '%s does not yet implement install_browser_artifact_mode_packages()' %
+            __name__)
+
+    def suggest_browser_artifact_mode_mozconfig(self):
+        '''
+        Print a message to the console detailing what the user's mozconfig
+        should contain.
+
+        Firefox for Desktop Artifact Mode needs to enable artifact builds and
+        a path where the build artifacts will be written to.
+        '''
+        print(BROWSER_ARTIFACT_MODE_MOZCONFIG)
 
     def install_mobile_android_packages(self):
         '''

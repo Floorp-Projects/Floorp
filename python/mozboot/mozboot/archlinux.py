@@ -82,14 +82,21 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
         self.pacman_install(*self.SYSTEM_PACKAGES)
 
     def install_browser_packages(self):
-        self.aur_install(*self.BROWSER_AUR_PACKAGES)
-        self.pacman_install(*self.BROWSER_PACKAGES)
+        self.ensure_browser_packages()
+
+    def install_browser_artifact_mode_packages(self):
+        self.ensure_browser_packages(artifact_mode=True)
 
     def install_mobile_android_packages(self):
         self.ensure_mobile_android_packages()
 
     def install_mobile_android_artifact_mode_packages(self):
         self.ensure_mobile_android_packages(artifact_mode=True)
+
+    def ensure_browser_packages(self, artifact_mode=False):
+        # TODO: Figure out what not to install for artifact mode
+        self.aur_install(*self.BROWSER_AUR_PACKAGES)
+        self.pacman_install(*self.BROWSER_PACKAGES)
 
     def ensure_mobile_android_packages(self, artifact_mode=False):
         import android
