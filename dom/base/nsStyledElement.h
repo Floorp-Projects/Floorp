@@ -57,6 +57,8 @@ public:
 
 protected:
 
+  nsICSSDeclaration* GetExistingStyle();
+
   /**
    * Parse a style attr value into a CSS rulestruct (or, if there is no
    * document, leave it as a string) and return as nsAttrValue.
