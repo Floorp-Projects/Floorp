@@ -33,7 +33,7 @@ public:
     , mTestCase(aTestCase)
   { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     Go();
     return NS_OK;

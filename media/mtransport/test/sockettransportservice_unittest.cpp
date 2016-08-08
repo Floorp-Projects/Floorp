@@ -81,7 +81,7 @@ public:
   explicit EventReceived(SocketTransportServiceTest *test) :
       test_(test) {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     test_->ReceiveEvent();
     return NS_OK;
   }
@@ -96,7 +96,7 @@ public:
   explicit RegisterEvent(SocketTransportServiceTest *test) :
       test_(test) {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     test_->RegisterHandler();
     return NS_OK;
   }

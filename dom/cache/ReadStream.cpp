@@ -128,7 +128,7 @@ public:
     : mStream(aStream)
   { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mStream->NoteClosedOnOwningThread();
     mStream = nullptr;
@@ -137,7 +137,7 @@ public:
 
   // Note, we must proceed with the Run() method since our actor will not
   // clean itself up until we note that the stream is closed.
-  nsresult Cancel()
+  nsresult Cancel() override
   {
     Run();
     return NS_OK;
@@ -163,7 +163,7 @@ public:
     : mStream(aStream)
   { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mStream->ForgetOnOwningThread();
     mStream = nullptr;
@@ -172,7 +172,7 @@ public:
 
   // Note, we must proceed with the Run() method so that we properly
   // call RemoveListener on the actor.
-  nsresult Cancel()
+  nsresult Cancel() override
   {
     Run();
     return NS_OK;

@@ -654,8 +654,8 @@ public:
     : mWindow(aWindow), mPromise(aPromise)
   {}
 
-  NS_IMETHODIMP
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
@@ -772,8 +772,8 @@ public:
     : mWindow(aWindow), mPromise(aPromise), mDocumentURL(aDocumentURL)
   {}
 
-  NS_IMETHODIMP
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
@@ -872,8 +872,8 @@ public:
     : mWindow(aWindow), mPromise(aPromise)
   {}
 
-  NS_IMETHODIMP
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 

@@ -146,7 +146,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     SensorData sensorData;
     sensorData.sensor() = static_cast<SensorType>(mType);

@@ -37,7 +37,7 @@ public:
     {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         for (size_t i = 0 ; i < mObservers.Length() ; i++)
             mObservers[i]->ObserveActivity(mHttpChannel, mActivityType,

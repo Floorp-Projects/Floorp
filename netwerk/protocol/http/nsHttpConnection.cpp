@@ -1366,7 +1366,7 @@ public:
      , mDoRecv(doRecv)
     {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 

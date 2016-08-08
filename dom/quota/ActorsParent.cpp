@@ -670,7 +670,7 @@ private:
   { }
 
   NS_IMETHOD
-  Run();
+  Run() override;
 };
 
 class OriginOperationBase
@@ -793,7 +793,7 @@ protected:
   }
 
   NS_IMETHOD
-  Run();
+  Run() override;
 
   virtual nsresult
   DoInitOnMainThread()
@@ -1318,7 +1318,7 @@ private:
   RunOnMainThread();
 
   NS_IMETHOD
-  Run();
+  Run() override;
 };
 
 struct StorageDirectoryHelper::OriginProps
