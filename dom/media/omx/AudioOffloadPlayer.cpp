@@ -370,8 +370,9 @@ status_t AudioOffloadPlayer::DoSeek()
   mPositionTimeMediaUs = -1;
   mStartPosUs = mSeekTarget.GetTime().ToMicroseconds();
 
-  if (!mSeekPromise.IsEmpty()) {
-    mOnSeekingStarted.Notify(mSeekTarget.mEventVisibility);
+  if (!mSeekPromise.IsEmpty() &&
+      mSeekTarget.mEventVisibility == MediaDecoderEventVisibility::Observable) {
+    mOnSeekingStarted.Notify();
   }
 
   if (mPlaying) {

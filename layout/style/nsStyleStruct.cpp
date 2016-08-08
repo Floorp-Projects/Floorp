@@ -119,6 +119,102 @@ StyleStructContext::HackilyFindSomeDeviceContext()
 static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs);
 
 // --------------------
+// FragmentOrURL
+//
+void
+FragmentOrURL::SetValue(const nsCSSValue* aValue)
+{
+  mozilla::css::URLValue *urlVal = aValue->GetURLStructValue();
+  MOZ_ASSERT_IF(urlVal->GetLocalURLFlag(), urlVal->GetURI());
+  mIsLocalRef = urlVal->GetLocalURLFlag();
+
+  mURL = urlVal->GetURI();
+
+#ifdef DEBUG
+  if (mIsLocalRef) {
+    bool hasRef = false;
+    mURL->GetHasRef(&hasRef);
+    MOZ_ASSERT(hasRef);
+  }
+#endif
+}
+
+void
+FragmentOrURL::SetNull()
+{
+  mURL = nullptr;
+  mIsLocalRef = false;
+}
+
+FragmentOrURL&
+FragmentOrURL::operator=(const FragmentOrURL& aOther)
+{
+  mIsLocalRef = aOther.mIsLocalRef;
+  mURL = aOther.mURL;
+
+  return *this;
+}
+
+bool
+FragmentOrURL::operator==(const FragmentOrURL& aOther) const
+{
+  if (aOther.mIsLocalRef != mIsLocalRef) {
+    return false;
+  }
+
+  return EqualURIs(aOther.mURL, mURL);
+}
+
+bool
+FragmentOrURL::EqualsExceptRef(nsIURI* aURI) const
+{
+  bool ret = false;
+  mURL->EqualsExceptRef(aURI, &ret);
+  return ret;
+}
+
+void
+FragmentOrURL::GetSourceString(nsString &aRef) const
+{
+  MOZ_ASSERT(mURL);
+
+  nsCString cref;
+  if (mIsLocalRef) {
+    mURL->GetRef(cref);
+    cref.Insert('#', 0);
+  } else {
+    mURL->GetSpec(cref);
+  }
+
+  aRef = NS_ConvertUTF8toUTF16(cref);
+}
+
+already_AddRefed<nsIURI>
+FragmentOrURL::Resolve(nsIURI* aURI) const
+{
+  nsCOMPtr<nsIURI> result;
+
+  if (mIsLocalRef) {
+    nsCString ref;
+    mURL->GetRef(ref);
+
+    aURI->Clone(getter_AddRefs(result));
+    result->SetRef(ref);
+  } else {
+    result = mURL;
+  }
+
+  return result.forget();
+}
+
+already_AddRefed<nsIURI>
+FragmentOrURL::Resolve(nsIContent* aContent) const
+{
+  nsCOMPtr<nsIURI> url = aContent->GetBaseURI();
+  return Resolve(url);
+}
+
+// --------------------
 // nsStyleFont
 //
 nsStyleFont::nsStyleFont(const nsFont& aFont, StyleStructContext aContext)
@@ -1007,103 +1103,6 @@ nsStyleBasicShape::GetShapeTypeName() const
   }
   NS_NOTREACHED("unexpected type");
   return eCSSKeyword_UNKNOWN;
-}
-
-// --------------------
-// FragmentOrURL
-//
-
-void
-FragmentOrURL::SetValue(const nsCSSValue* aValue)
-{
-  mozilla::css::URLValue *urlVal = aValue->GetURLStructValue();
-  MOZ_ASSERT_IF(urlVal->GetLocalURLFlag(), urlVal->GetURI());
-  mIsLocalRef = urlVal->GetLocalURLFlag();
-
-  mURL = urlVal->GetURI();
-
-#ifdef DEBUG
-  if (mIsLocalRef) {
-    bool hasRef = false;
-    mURL->GetHasRef(&hasRef);
-    MOZ_ASSERT(hasRef);
-  }
-#endif
-}
-
-void
-FragmentOrURL::SetNull()
-{
-  mURL = nullptr;
-  mIsLocalRef = false;
-}
-
-FragmentOrURL&
-FragmentOrURL::operator=(const FragmentOrURL& aOther)
-{
-  mIsLocalRef = aOther.mIsLocalRef;
-  mURL = aOther.mURL;
-
-  return *this;
-}
-
-bool
-FragmentOrURL::operator==(const FragmentOrURL& aOther) const
-{
-  if (aOther.mIsLocalRef != mIsLocalRef) {
-    return false;
-  }
-
-  return EqualURIs(aOther.mURL, mURL);
-}
-
-bool
-FragmentOrURL::EqualsExceptRef(nsIURI* aURI) const
-{
-  bool ret = false;
-  mURL->EqualsExceptRef(aURI, &ret);
-  return ret;
-}
-
-void
-FragmentOrURL::GetSourceString(nsString &aRef) const
-{
-  MOZ_ASSERT(mURL);
-
-  nsCString cref;
-  if (mIsLocalRef) {
-    mURL->GetRef(cref);
-    cref.Insert('#', 0);
-  } else {
-    mURL->GetSpec(cref);
-  }
-
-  aRef = NS_ConvertUTF8toUTF16(cref);
-}
-
-already_AddRefed<nsIURI>
-FragmentOrURL::Resolve(nsIURI* aURI) const
-{
-  nsCOMPtr<nsIURI> result;
-
-  if (mIsLocalRef) {
-    nsCString ref;
-    mURL->GetRef(ref);
-
-    aURI->Clone(getter_AddRefs(result));
-    result->SetRef(ref);
-  } else {
-    result = mURL;
-  }
-
-  return result.forget();
-}
-
-already_AddRefed<nsIURI>
-FragmentOrURL::Resolve(nsIContent* aContent) const
-{
-  nsCOMPtr<nsIURI> url = aContent->GetBaseURI();
-  return Resolve(url);
 }
 
 // --------------------
@@ -2608,7 +2607,7 @@ nsStyleImageLayers::HasLayerWithImage() const
     // mLayers[i].mImage can be empty if mask-image prop value is a reference
     // to SVG mask element.
     // So we need to test both mSourceURI and mImage.
-    if (mLayers[i].mSourceURI || !mLayers[i].mImage.IsEmpty()) {
+    if (mLayers[i].mSourceURI.GetSourceURL() || !mLayers[i].mImage.IsEmpty()) {
       return true;
     }
   }
@@ -2835,7 +2834,7 @@ nsStyleImageLayers::Layer::operator==(const Layer& aOther) const
          mImage == aOther.mImage &&
          mMaskMode == aOther.mMaskMode &&
          mComposite == aOther.mComposite &&
-         EqualURIs(mSourceURI, aOther.mSourceURI);
+         mSourceURI == aOther.mSourceURI;
 }
 
 nsChangeHint
@@ -2843,7 +2842,7 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
                                           nsChangeHint aPositionChangeHint) const
 {
   nsChangeHint hint = nsChangeHint(0);
-  if (!EqualURIs(mSourceURI, aNewLayer.mSourceURI)) {
+  if (mSourceURI != aNewLayer.mSourceURI) {
     hint |= nsChangeHint_RepaintFrame;
 
     // If Layer::mSourceURI links to a SVG mask, it has a fragment. Not vice
@@ -2858,11 +2857,18 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
     // That is, if mSourceURI has a fragment, it may link to a SVG mask; If
     // not, it "must" not link to a SVG mask.
     bool maybeSVGMask = false;
-    if (mSourceURI) {
-      mSourceURI->GetHasRef(&maybeSVGMask);
+    if (mSourceURI.IsLocalRef()) {
+      maybeSVGMask = true;
+    } else if (mSourceURI.GetSourceURL()) {
+      mSourceURI.GetSourceURL()->GetHasRef(&maybeSVGMask);
     }
-    if (!maybeSVGMask && aNewLayer.mSourceURI) {
-      aNewLayer.mSourceURI->GetHasRef(&maybeSVGMask);
+
+    if (!maybeSVGMask) {
+      if (aNewLayer.mSourceURI.IsLocalRef()) {
+        maybeSVGMask = true;
+      } else if (aNewLayer.mSourceURI.GetSourceURL()) {
+        aNewLayer.mSourceURI.GetSourceURL()->GetHasRef(&maybeSVGMask);
+      }
     }
 
     // Return nsChangeHint_UpdateEffects and nsChangeHint_UpdateOverflow if
