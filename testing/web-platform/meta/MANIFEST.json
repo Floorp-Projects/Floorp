@@ -37634,6 +37634,12 @@
             "url": "/css-shapes/basic-shape-circle-ellipse-serialization.html"
           }
         ],
+        "domparsing/style_attribute_html.html": [
+          {
+            "path": "domparsing/style_attribute_html.html",
+            "url": "/domparsing/style_attribute_html.html"
+          }
+        ],
         "html/semantics/forms/the-form-element/form-submission-sandbox.html": [
           {
             "path": "html/semantics/forms/the-form-element/form-submission-sandbox.html",
