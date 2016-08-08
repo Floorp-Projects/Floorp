@@ -310,6 +310,15 @@ GetNextLabel(ParserContext& aCtx, string& aOutLabel)
 }
 
 static bool
+DecodeKey(string& aEncoded, Key& aOutDecoded)
+{
+  return
+    DecodeBase64KeyOrId(aEncoded, aOutDecoded) &&
+    // Key should be 128 bits long.
+    aOutDecoded.size() == CLEARKEY_KEY_LEN;
+}
+
+static bool
 ParseKeyObject(ParserContext& aCtx, KeyIdPair& aOutKey)
 {
   EXPECT_SYMBOL(aCtx, '{');
@@ -354,8 +363,8 @@ ParseKeyObject(ParserContext& aCtx, KeyIdPair& aOutKey)
 
   return !key.empty() &&
          !keyId.empty() &&
-         DecodeBase64(keyId, aOutKey.mKeyId) &&
-         DecodeBase64(key, aOutKey.mKey) &&
+         DecodeBase64KeyOrId(keyId, aOutKey.mKeyId) &&
+         DecodeKey(key, aOutKey.mKey) &&
          GetNextSymbol(aCtx) == '}';
 }
 
@@ -442,12 +451,12 @@ ParseKeyIds(ParserContext& aCtx, vector<KeyId>& aOutKeyIds)
   while (true) {
     string label;
     vector<uint8_t> keyId;
-    if (!GetNextLabel(aCtx, label) || !DecodeBase64(label, keyId)) {
+    if (!GetNextLabel(aCtx, label) ||
+        !DecodeBase64KeyOrId(label, keyId)) {
       return false;
     }
-    if (!keyId.empty()) {
-      aOutKeyIds.push_back(keyId);
-    }
+    assert(!keyId.empty());
+    aOutKeyIds.push_back(keyId);
 
     uint8_t sym = PeekSymbol(aCtx);
     if (!sym || sym == ']') {
@@ -484,10 +493,7 @@ ClearKeyUtils::ParseKeyIdsInitData(const uint8_t* aInitData,
 
     if (label == "kids") {
       // Parse "kids" array.
-      if (!ParseKeyIds(ctx, aOutKeyIds) ||
-          aOutKeyIds.empty()) {
-        return false;
-      }
+      if (!ParseKeyIds(ctx, aOutKeyIds)) return false;
     } else if (label == "type") {
       // Consume type string.
       if (!GetNextLabel(ctx, aOutSessionType)) return false;
