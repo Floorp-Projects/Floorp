@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for background script teardown</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+add_task(function* test_background_reload_and_unload() {
+  function backgroundScript() {
+    browser.test.onMessage.addListener(msg => {
+      browser.test.assertEq("reload-background", msg);
+      location.reload();
+    });
+    browser.test.sendMessage("background-url", location.href);
+  }
+
+  let chromeScript = SpecialPowers.loadChromeScript(
+      SimpleTest.getTestFileURL("file_teardown_test.js"));
+  yield chromeScript.promiseOneMessage("chromescript-startup");
+
+  let extensionData = {
+    background: `(${backgroundScript})();`,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  function* getContextEvents() {
+    chromeScript.sendAsyncMessage("get-context-events");
+    let contextEvents = yield chromeScript.promiseOneMessage("context-events");
+    return contextEvents.filter(event => event.extensionId == extension.id);
+  }
+  yield extension.startup();
+  let backgroundUrl = yield extension.awaitMessage("background-url");
+
+  let contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 1,
+      "ExtensionContext state change after loading an extension");
+  is(contextEvents[0].eventType, "load");
+  is(contextEvents[0].url, backgroundUrl,
+      "The ExtensionContext should be the background page");
+
+  extension.sendMessage("reload-background");
+  yield extension.awaitMessage("background-url");
+
+  contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 2,
+      "ExtensionContext state changes after reloading the background page");
+  is(contextEvents[0].eventType, "unload",
+      "Unload ExtensionContext of background page");
+  is(contextEvents[0].url, backgroundUrl, "ExtensionContext URL = background");
+  is(contextEvents[1].eventType, "load",
+      "Create new ExtensionContext for background page");
+  is(contextEvents[1].url, backgroundUrl, "ExtensionContext URL = background");
+  yield extension.unload();
+
+  contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 1,
+      "ExtensionContext state change after unloading the extension");
+  is(contextEvents[0].eventType, "unload",
+      "Unload ExtensionContext for background page after extension unloads");
+  is(contextEvents[0].url, backgroundUrl, "ExtensionContext URL = background");
+
+  chromeScript.sendAsyncMessage("cleanup");
+  chromeScript.destroy();
+});
+</script>
+
+</body>
+</html>
