@@ -589,7 +589,7 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
 
                 table = &tableObj->table();
             } else {
-                table = Table::create(cx, tableDesc);
+                table = Table::create(cx, tableDesc, /* HandleWasmTableObject = */ nullptr);
                 if (!table)
                     return false;
             }
