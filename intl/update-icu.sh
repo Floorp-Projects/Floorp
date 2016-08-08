@@ -62,6 +62,7 @@ for patch in \
  bug-1198952-workaround-make-3.82-bug.diff \
  bug-1228227-bug-1263325-libc++-gcc_hidden.diff \
  ucol_getKeywordValuesForLocale-ulist_resetList.diff \
+ unum_formatDoubleForFields.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
