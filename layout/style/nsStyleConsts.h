@@ -73,15 +73,6 @@ enum class StyleBoxShadowType : uint8_t {
   Inset,
 };
 
-// clip-path type
-// X11 has a #define for None causing conflicts, so we use None_ here
-enum class StyleClipPathType : uint8_t {
-  None_,
-  URL,
-  Shape,
-  Box,
-};
-
 // clip-path sizing
 enum class StyleClipShapeSizing : uint8_t {
   NoBox,
@@ -98,6 +89,15 @@ enum class StyleClipShapeSizing : uint8_t {
 enum class StyleFloatEdge : uint8_t {
   ContentBox,
   MarginBox,
+};
+
+// Shape source type
+// X11 has a #define for None causing conflicts, so we use None_ here
+enum class StyleShapeSourceType : uint8_t {
+  None_,
+  URL,
+  Shape,
+  Box,
 };
 
 // user-focus
