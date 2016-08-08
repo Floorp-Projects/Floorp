@@ -17,9 +17,6 @@ export MOZILLA_OFFICIAL=1
 
 ac_add_options --with-macbundlename-prefix=Firefox
 
-# Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
-ac_add_options --enable-warnings-as-errors
-
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
