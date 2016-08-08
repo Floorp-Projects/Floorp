@@ -145,6 +145,7 @@ private:
 
   const nsSTSPreload *GetPreloadListEntry(const char *aHost);
 
+  uint64_t mMaxMaxAge;
   bool mUsePreloadList;
   int64_t mPreloadListTimeOffset;
   bool mProcessPKPHeadersFromNonBuiltInRoots;
