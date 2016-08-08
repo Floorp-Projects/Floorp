@@ -764,7 +764,7 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_compiler=cxx_compiler,
                              other_c_compiler=c_compiler)
 
-include('compilechecks.configure')
+include('compile-checks.configure')
 
 @depends(c_compiler)
 def default_debug_flags(compiler_info):
