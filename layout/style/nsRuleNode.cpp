@@ -9731,7 +9731,7 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
 }
 
 static void
-SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
+SetStyleClipPathToCSSValue(StyleClipPath* aStyleClipPath,
                            const nsCSSValue* aValue,
                            nsStyleContext* aStyleContext,
                            nsPresContext* aPresContext,
@@ -9879,19 +9879,19 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
     case eCSSUnit_None:
     case eCSSUnit_Initial:
     case eCSSUnit_Unset:
-      svgReset->mClipPath = nsStyleClipPath();
+      svgReset->mClipPath = StyleClipPath();
       break;
     case eCSSUnit_Inherit:
       conditions.SetUncacheable();
       svgReset->mClipPath = parentSVGReset->mClipPath;
       break;
     case eCSSUnit_URL: {
-      svgReset->mClipPath = nsStyleClipPath();
+      svgReset->mClipPath = StyleClipPath();
       svgReset->mClipPath.SetURL(clipPathValue);
       break;
     }
     case eCSSUnit_Array: {
-      svgReset->mClipPath = nsStyleClipPath();
+      svgReset->mClipPath = StyleClipPath();
       SetStyleClipPathToCSSValue(&svgReset->mClipPath, clipPathValue, aContext,
                                  mPresContext, conditions);
       break;
