@@ -42,6 +42,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/Move.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/ErrorEvent.h"
@@ -4195,6 +4196,18 @@ WorkerPrivate::Constructor(JSContext* aCx,
   RefPtr<WorkerPrivate> worker =
     new WorkerPrivate(parent, aScriptURL, aIsChromeWorker,
                       aWorkerType, aWorkerName, *aLoadInfo);
+
+  // Gecko contexts always have an explicitly-set default locale (set by
+  // XPJSRuntime::Initialize for the main thread, set by
+  // WorkerThreadPrimaryRunnable::Run for workers just before running worker
+  // code), so this is never SpiderMonkey's builtin default locale.
+  JS::UniqueChars defaultLocale = JS_GetDefaultLocale(aCx);
+  if (NS_WARN_IF(!defaultLocale)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  worker->mDefaultLocale = Move(defaultLocale);
 
   if (!runtimeService->RegisterWorker(worker)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
