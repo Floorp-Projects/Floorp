@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 js_option('--enable-warnings-as-errors', env='MOZ_ENABLE_WARNINGS_AS_ERRORS',
+          default=depends('MOZ_AUTOMATION', '--help')(lambda x, _: bool(x)),
           help='Enable treating warnings as errors')
 
 add_old_configure_assignment(
