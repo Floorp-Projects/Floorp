@@ -82,7 +82,7 @@ class TestHeaderChecks(unittest.TestCase):
         sandbox.include_file(os.path.join(base_dir, 'util.configure'))
         sandbox.include_file(os.path.join(base_dir, 'checks.configure'))
         exec_(mock_compiler_defs, sandbox)
-        sandbox.include_file(os.path.join(base_dir, 'compilechecks.configure'))
+        sandbox.include_file(os.path.join(base_dir, 'compile-checks.configure'))
 
         status = 0
         try:
