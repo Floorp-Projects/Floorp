@@ -810,7 +810,8 @@ protected:
     nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
   };
 
-  nsresult PlayInternal();
+  // Will make this method return a already_AddRefed<Promise> in next patch.
+  void PlayInternal(ErrorResult& aRv);
 
   /** Use this method to change the mReadyState member, so required
    * events can be fired.
