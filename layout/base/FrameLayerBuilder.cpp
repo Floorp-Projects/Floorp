@@ -2047,6 +2047,11 @@ FrameLayerBuilder::GetDebugSingleOldPaintedLayerForFrame(nsIFrame* aFrame)
     }
     layer = data->mLayer;
   }
+
+  if (!layer) {
+    return nullptr;
+  }
+
   return layer->AsPaintedLayer();
 }
 

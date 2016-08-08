@@ -74,7 +74,7 @@
 #define TOUCH_EVENT MESSAGE_TO_EVENT
 #define DOCUMENT_ONLY_EVENT MESSAGE_TO_EVENT
 #define NON_IDL_EVENT MESSAGE_TO_EVENT
-#endif
+#endif /* MESSAGE_TO_EVENT */
 
 #ifdef DEFINED_FORWARDED_EVENT
 #error "Don't define DEFINED_FORWARDED_EVENT"
@@ -956,40 +956,58 @@ NON_IDL_EVENT(MozEdgeUICompleted,
               eSimpleGestureEventClass)
 
 // CSS Transition & Animation events:
-NON_IDL_EVENT(transitionend,
-              eTransitionEnd,
-              EventNameType_None,
-              eTransitionEventClass)
-NON_IDL_EVENT(animationstart,
-              eAnimationStart,
-              EventNameType_None,
-              eAnimationEventClass)
-NON_IDL_EVENT(animationend,
-              eAnimationEnd,
-              EventNameType_None,
-              eAnimationEventClass)
-NON_IDL_EVENT(animationiteration,
-              eAnimationIteration,
-              EventNameType_None,
-              eAnimationEventClass)
+EVENT(transitionend,
+      eTransitionEnd,
+      EventNameType_All,
+      eTransitionEventClass)
+EVENT(animationstart,
+      eAnimationStart,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(animationend,
+      eAnimationEnd,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(animationiteration,
+      eAnimationIteration,
+      EventNameType_All,
+      eAnimationEventClass)
 
 // Webkit-prefixed versions of Transition & Animation events, for web compat:
-NON_IDL_EVENT(webkitTransitionEnd,
-              eWebkitTransitionEnd,
-              EventNameType_None,
-              eTransitionEventClass)
-NON_IDL_EVENT(webkitAnimationEnd,
-              eWebkitAnimationEnd,
-              EventNameType_None,
-              eAnimationEventClass)
-NON_IDL_EVENT(webkitAnimationIteration,
-              eWebkitAnimationIteration,
-              EventNameType_None,
-              eAnimationEventClass)
-NON_IDL_EVENT(webkitAnimationStart,
-              eWebkitAnimationStart,
-              EventNameType_None,
-              eAnimationEventClass)
+EVENT(webkitAnimationEnd,
+      eWebkitAnimationEnd,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitAnimationIteration,
+      eWebkitAnimationIteration,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitAnimationStart,
+      eWebkitAnimationStart,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitTransitionEnd,
+      eWebkitTransitionEnd,
+      EventNameType_All,
+      eTransitionEventClass)
+#ifndef MESSAGE_TO_EVENT
+EVENT(webkitanimationend,
+      eWebkitAnimationEnd,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitanimationiteration,
+      eWebkitAnimationIteration,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkitanimationstart,
+      eWebkitAnimationStart,
+      EventNameType_All,
+      eAnimationEventClass)
+EVENT(webkittransitionend,
+      eWebkitTransitionEnd,
+      EventNameType_All,
+      eTransitionEventClass)
+#endif
 
 NON_IDL_EVENT(audioprocess,
               eAudioProcess,

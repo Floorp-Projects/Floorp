@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Reference for mask linked to local-ref URL</title>
+  <defs>
+    <mask id="circleMask1" x="0" y="0" width="100" height="100" >
+      <circle cx="50" cy="50" r="40" style="stroke:none; fill: #ffffff"/>
+    </mask>
+    <mask id="circleMask2" x="0" y="0" width="100" height="100" >
+      <circle cx="50" cy="150" r="40" style="stroke:none; fill: #ffffff"/>
+    </mask>
+    <mask id="circleMask3" x="0" y="0" width="100" height="100" >
+      <circle cx="50" cy="250" r="40" style="stroke:none; fill: #ffffff"/>
+    </mask>
+  </defs>
+  <rect id="mask1" x="10" y="10" width="80" height="80" fill="blue" mask="url(#circleMask1)"/>
+  <rect id="mask2" x="10" y="110" width="80" fill="blue" height="80" mask="url(#circleMask2)"/>
+  <rect id="mask3" x="10" y="210" width="80" fill="blue" height="80" mask="url(#circleMask3)"/>
+</svg>

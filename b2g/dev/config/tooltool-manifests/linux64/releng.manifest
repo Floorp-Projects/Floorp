@@ -16,11 +16,19 @@
 "unpack": true
 },
 {
-"version": "rustc 1.8.0 (db2939409 2016-04-11)",
-"size": 123218320,
-"digest": "7afcd7b39c4d5277db6b28951602aff4c698102ba45d3d811b353ca7446074beceebf03a2a529e323af19d73db4acbe96ec2bdad44def2e218ed36f55e82cab2",
+"version": "gecko rustc 1.10.0 (cfcb716cf 2016-07-03)",
+"size": 102276708,
+"digest": "8cc9ea8347fc7e6e6fdb15a8fd1faae977f1235a426b879b3f9128ec91d8f2b6268297ce80bf4eceb47738bd40bfeda13f143dc3fe85f1434b13adfbc095ab90",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
+"unpack": true
+},
+{
+"version": "cargo 0.13.0-nightly (664125b 2016-07-19)",
+"size": 3123796,
+"digest": "4b9d2bcb8488b6649ba6c748e19d33bfceb25c7566e882fc7e00322392e424a5a9c5878c11c61d57cdaecf67bcc110842c6eff95e49736e8f3c83d9ce1677122",
+"algorithm": "sha512",
+"filename": "cargo.tar.xz",
 "unpack": true
 },
 {
