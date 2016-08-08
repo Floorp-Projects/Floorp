@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DeviceManagerDx.h"
+#include "DeviceManagerD3D11.h"
 #include "D3D11Checks.h"
 #include "gfxConfig.h"
 #include "GfxDriverInfo.h"
@@ -17,38 +17,32 @@
 #include "nsIGfxInfo.h"
 #include "nsWindowsHelpers.h"
 #include <d3d11.h>
-#include <ddraw.h>
 
 namespace mozilla {
 namespace gfx {
 
 using namespace mozilla::widget;
 
-StaticAutoPtr<DeviceManagerDx> DeviceManagerDx::sInstance;
+StaticAutoPtr<DeviceManagerD3D11> DeviceManagerD3D11::sInstance;
 
 // We don't have access to the D3D11CreateDevice type in gfxWindowsPlatform.h,
 // since it doesn't include d3d11.h, so we use a static here. It should only
 // be used within InitializeD3D11.
 decltype(D3D11CreateDevice)* sD3D11CreateDeviceFn = nullptr;
 
-// We don't have access to the DirectDrawCreateEx type in gfxWindowsPlatform.h,
-// since it doesn't include ddraw.h, so we use a static here. It should only
-// be used within InitializeDirectDrawConfig.
-decltype(DirectDrawCreateEx)* sDirectDrawCreateExFn = nullptr;
-
 /* static */ void
-DeviceManagerDx::Init()
+DeviceManagerD3D11::Init()
 {
-  sInstance = new DeviceManagerDx();
+  sInstance = new DeviceManagerD3D11();
 }
 
 /* static */ void
-DeviceManagerDx::Shutdown()
+DeviceManagerD3D11::Shutdown()
 {
   sInstance = nullptr;
 }
 
-DeviceManagerDx::DeviceManagerDx()
+DeviceManagerD3D11::DeviceManagerD3D11()
  : mDeviceLock("gfxWindowsPlatform.mDeviceLock"),
    mIsWARP(false),
    mTextureSharingWorks(false),
@@ -75,7 +69,7 @@ IsWARPStable()
 }
 
 void
-DeviceManagerDx::CreateDevices()
+DeviceManagerD3D11::CreateDevices()
 {
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   MOZ_ASSERT(d3d11.IsEnabled());
@@ -153,7 +147,7 @@ DeviceManagerDx::CreateDevices()
 }
 
 IDXGIAdapter1*
-DeviceManagerDx::GetDXGIAdapter()
+DeviceManagerD3D11::GetDXGIAdapter()
 {
   if (mAdapter) {
     return mAdapter;
@@ -218,7 +212,7 @@ DeviceManagerDx::GetDXGIAdapter()
 }
 
 bool
-DeviceManagerDx::AttemptD3D11DeviceCreationHelperInner(
+DeviceManagerD3D11::AttemptD3D11DeviceCreationHelperInner(
   IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice, HRESULT& aResOut)
 {
   // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
@@ -241,7 +235,7 @@ DeviceManagerDx::AttemptD3D11DeviceCreationHelperInner(
 }
 
 bool
-DeviceManagerDx::AttemptD3D11DeviceCreationHelper(
+DeviceManagerD3D11::AttemptD3D11DeviceCreationHelper(
   FeatureState& aD3d11, IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice)
 {
   HRESULT hr;
@@ -276,7 +270,7 @@ DeviceManagerDx::AttemptD3D11DeviceCreationHelper(
 }
 
 void
-DeviceManagerDx::AttemptD3D11DeviceCreation(FeatureState& d3d11)
+DeviceManagerD3D11::AttemptD3D11DeviceCreation(FeatureState& d3d11)
 {
   RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
   if (!adapter) {
@@ -325,7 +319,7 @@ DeviceManagerDx::AttemptD3D11DeviceCreation(FeatureState& d3d11)
 }
 
 bool
-DeviceManagerDx::AttemptWARPDeviceCreationHelper(
+DeviceManagerD3D11::AttemptWARPDeviceCreationHelper(
   ScopedGfxFeatureReporter& aReporterWARP,
   RefPtr<ID3D11Device>& aOutDevice,
   HRESULT& aResOut)
@@ -348,7 +342,7 @@ DeviceManagerDx::AttemptWARPDeviceCreationHelper(
 }
 
 void
-DeviceManagerDx::AttemptWARPDeviceCreation()
+DeviceManagerD3D11::AttemptWARPDeviceCreation()
 {
   ScopedGfxFeatureReporter reporterWARP("D3D11-WARP", gfxPrefs::LayersD3D11ForceWARP());
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
@@ -385,7 +379,7 @@ DeviceManagerDx::AttemptWARPDeviceCreation()
 }
 
 bool
-DeviceManagerDx::AttemptD3D11ContentDeviceCreationHelper(
+DeviceManagerD3D11::AttemptD3D11ContentDeviceCreationHelper(
   IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aOutDevice, HRESULT& aResOut)
 {
   MOZ_SEH_TRY {
@@ -403,7 +397,7 @@ DeviceManagerDx::AttemptD3D11ContentDeviceCreationHelper(
 }
 
 FeatureStatus
-DeviceManagerDx::AttemptD3D11ContentDeviceCreation()
+DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
 {
   RefPtr<IDXGIAdapter1> adapter;
   if (!mIsWARP) {
@@ -462,7 +456,7 @@ DeviceManagerDx::AttemptD3D11ContentDeviceCreation()
 }
 
 bool
-DeviceManagerDx::CreateD3D11DecoderDeviceHelper(
+DeviceManagerD3D11::CreateD3D11DecoderDeviceHelper(
   IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice, HRESULT& aResOut)
 {
   MOZ_SEH_TRY{
@@ -480,7 +474,7 @@ DeviceManagerDx::CreateD3D11DecoderDeviceHelper(
 }
 
 RefPtr<ID3D11Device>
-DeviceManagerDx::CreateDecoderDevice()
+DeviceManagerD3D11::CreateDecoderDevice()
 {
   if (mCompositorDevice && mCompositorDeviceSupportsVideo && !mDecoderDevice) {
     mDecoderDevice = mCompositorDevice;
@@ -527,7 +521,7 @@ DeviceManagerDx::CreateDecoderDevice()
 }
 
 void
-DeviceManagerDx::ResetDevices()
+DeviceManagerD3D11::ResetDevices()
 {
   MutexAutoLock lock(mDeviceLock);
 
@@ -537,7 +531,7 @@ DeviceManagerDx::ResetDevices()
 }
 
 bool
-DeviceManagerDx::ContentAdapterIsParentAdapter(ID3D11Device* device)
+DeviceManagerD3D11::ContentAdapterIsParentAdapter(ID3D11Device* device)
 {
   DXGI_ADAPTER_DESC desc;
   if (!D3D11Checks::GetDxgiDesc(device, &desc)) {
@@ -597,7 +591,7 @@ DidDeviceReset(RefPtr<ID3D11Device> aDevice, DeviceResetReason* aOutReason)
 }
 
 bool
-DeviceManagerDx::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
+DeviceManagerD3D11::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
 {
   // Note: this can be called off the main thread, so we need to use
   // our threadsafe getters.
@@ -610,7 +604,7 @@ DeviceManagerDx::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
 }
 
 void
-DeviceManagerDx::DisableD3D11AfterCrash()
+DeviceManagerD3D11::DisableD3D11AfterCrash()
 {
   gfxConfig::Disable(Feature::D3D11_COMPOSITING,
     FeatureStatus::CrashedInHandler,
@@ -620,21 +614,21 @@ DeviceManagerDx::DisableD3D11AfterCrash()
 }
 
 RefPtr<ID3D11Device>
-DeviceManagerDx::GetCompositorDevice()
+DeviceManagerD3D11::GetCompositorDevice()
 {
   MutexAutoLock lock(mDeviceLock);
   return mCompositorDevice;
 }
 
 RefPtr<ID3D11Device>
-DeviceManagerDx::GetContentDevice()
+DeviceManagerD3D11::GetContentDevice()
 {
   MutexAutoLock lock(mDeviceLock);
   return mContentDevice;
 }
 
 unsigned
-DeviceManagerDx::GetD3D11Version() const
+DeviceManagerD3D11::GetD3D11Version() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mCompositorDevice) {
@@ -644,64 +638,15 @@ DeviceManagerDx::GetD3D11Version() const
 }
 
 bool
-DeviceManagerDx::TextureSharingWorks() const
+DeviceManagerD3D11::TextureSharingWorks() const
 {
   return mTextureSharingWorks;
 }
 
 bool
-DeviceManagerDx::IsWARP() const
+DeviceManagerD3D11::IsWARP() const
 {
   return mIsWARP;
-}
-
-void
-DeviceManagerDx::InitializeDirectDraw()
-{
-  MOZ_ASSERT(!mDirectDraw);
-
-  FeatureState& ddraw = gfxConfig::GetFeature(Feature::DIRECT_DRAW);
-  if (!ddraw.IsEnabled()) {
-    return;
-  }
-
-  // Check if DirectDraw is available on this system.
-  mDirectDrawDLL.own(LoadLibrarySystem32(L"ddraw.dll"));
-  if (!mDirectDrawDLL) {
-    ddraw.SetFailed(FeatureStatus::Unavailable, "DirectDraw not available on this computer",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_DDRAW_LIB"));
-    return;
-  }
-
-  sDirectDrawCreateExFn =
-    (decltype(DirectDrawCreateEx)*)GetProcAddress(mDirectDrawDLL, "DirectDrawCreateEx");
-  if (!sDirectDrawCreateExFn) {
-    ddraw.SetFailed(FeatureStatus::Unavailable, "DirectDraw not available on this computer",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_DDRAW_LIB"));
-    return;
-  }
-
-  HRESULT hr;
-  MOZ_SEH_TRY {
-    hr = sDirectDrawCreateExFn(nullptr, getter_AddRefs(mDirectDraw), IID_IDirectDraw7, nullptr);
-  } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-    ddraw.SetFailed(FeatureStatus::Failed, "Failed to create DirectDraw",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_DDRAW_LIB"));
-    gfxCriticalNote << "DoesCreatingDirectDrawFailed";
-    return;
-  }
-  if (FAILED(hr)) {
-    ddraw.SetFailed(FeatureStatus::Failed, "Failed to create DirectDraw",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_DDRAW_LIB"));
-    gfxCriticalNote << "DoesCreatingDirectDrawFailed " << hexa(hr);
-    return;
-  }
-}
-
-IDirectDraw7*
-DeviceManagerDx::GetDirectDraw()
-{
-  return mDirectDraw;
 }
 
 } // namespace gfx

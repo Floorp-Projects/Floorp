@@ -128,18 +128,7 @@ public:
 
   gfx::DrawTarget *GetDrawTarget() { return mDrawTarget; }
 
-  virtual bool IsPendingComposite() override
-  {
-    return mIsPendingEndRemoteDrawing;
-  }
-
-  virtual void FinishPendingComposite() override;
-
 private:
-
-  void TryToEndRemoteDrawing(bool aForceToEnd = false);
-
-  bool NeedsToDeferEndRemoteDrawing();
 
   // The final destination surface
   RefPtr<gfx::DrawTarget> mDrawTarget;
@@ -151,7 +140,6 @@ private:
   bool mDidExternalComposition;
 
   uint32_t mMaxTextureSize;
-  bool mIsPendingEndRemoteDrawing;
 };
 
 BasicCompositor* AssertBasicCompositor(Compositor* aCompositor);
