@@ -15,6 +15,7 @@
   skin/classic/browser/aboutSocialError.css                    (../shared/aboutSocialError.css)
   skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
   skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
+  skin/classic/browser/content-contextmenu.svg                 (../shared/content-contextmenu.svg)
   skin/classic/browser/addons/addon-install-blocked.svg        (../shared/addons/addon-install-blocked.svg)
   skin/classic/browser/addons/addon-install-confirm.svg        (../shared/addons/addon-install-confirm.svg)
   skin/classic/browser/addons/addon-install-downloading.svg    (../shared/addons/addon-install-downloading.svg)
