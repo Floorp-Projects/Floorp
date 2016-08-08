@@ -161,7 +161,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     promiseRejectionTrackerCallback(nullptr),
     promiseRejectionTrackerCallbackData(nullptr),
 #ifdef DEBUG
-    exclusiveAccessOwner(nullptr),
     mainThreadHasExclusiveAccess(false),
 #endif
     numExclusiveThreads(0),
@@ -432,7 +431,7 @@ JSRuntime::destroyRuntime()
      */
     finishSelfHosting();
 
-    MOZ_ASSERT(!exclusiveAccessOwner);
+    MOZ_ASSERT(exclusiveAccessOwner.isNothing());
 
     MOZ_ASSERT(!numExclusiveThreads);
     AutoLockForExclusiveAccess lock(this);
@@ -899,7 +898,8 @@ JSRuntime::assertCanLock(RuntimeLock which)
     // it must be done in the order below.
     switch (which) {
       case ExclusiveAccessLock:
-        MOZ_ASSERT(exclusiveAccessOwner != PR_GetCurrentThread());
+        MOZ_ASSERT_IF(exclusiveAccessOwner.isSome(),
+                      exclusiveAccessOwner.ref() != js::ThisThread::GetId());
         MOZ_FALLTHROUGH;
       case HelperThreadStateLock:
         MOZ_FALLTHROUGH;
