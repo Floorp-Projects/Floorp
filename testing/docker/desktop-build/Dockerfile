@@ -1,5 +1,10 @@
+# TODO remove VOLUME below when the base image is updated next.
 FROM          taskcluster/centos6-build-upd:0.1.6.20160329195300
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
+
+# TODO remove when base image is updated
+VOLUME /home/worker/workspace
+VOLUME /home/worker/tooltool-cache
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
 # operate on environment variables
