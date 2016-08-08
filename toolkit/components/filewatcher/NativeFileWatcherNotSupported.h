@@ -23,18 +23,18 @@ public:
     return NS_OK;
   };
 
-  NS_IMETHODIMP AddPath(const nsAString& aPathToWatch,
-                        nsINativeFileWatcherCallback* aOnChange,
-                        nsINativeFileWatcherErrorCallback* aOnError,
-                        nsINativeFileWatcherSuccessCallback* aOnSuccess) override
+  NS_IMETHOD AddPath(const nsAString& aPathToWatch,
+                     nsINativeFileWatcherCallback* aOnChange,
+                     nsINativeFileWatcherErrorCallback* aOnError,
+                     nsINativeFileWatcherSuccessCallback* aOnSuccess) override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   };
 
-  NS_IMETHODIMP RemovePath(const nsAString& aPathToRemove,
-                           nsINativeFileWatcherCallback* aOnChange,
-                           nsINativeFileWatcherErrorCallback* aOnError,
-                           nsINativeFileWatcherSuccessCallback* aOnSuccess) override
+  NS_IMETHOD RemovePath(const nsAString& aPathToRemove,
+                        nsINativeFileWatcherCallback* aOnChange,
+                        nsINativeFileWatcherErrorCallback* aOnError,
+                        nsINativeFileWatcherSuccessCallback* aOnSuccess) override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   };

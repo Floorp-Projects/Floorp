@@ -27,7 +27,7 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHODIMP_(txAExprResult*) GetResult() override
+    NS_IMETHOD_(txAExprResult*) GetResult() override
     {
         return mValue;
     }

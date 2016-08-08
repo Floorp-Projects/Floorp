@@ -254,9 +254,9 @@ public:
 
     virtual nsresult DoOpen() override;
 
-    NS_IMETHODIMP Close() override;
-    NS_IMETHODIMP Write(const char *buf, uint32_t count, uint32_t *result) override;
-    NS_IMETHODIMP Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags) override;
+    NS_IMETHOD Close() override;
+    NS_IMETHOD Write(const char *buf, uint32_t count, uint32_t *result) override;
+    NS_IMETHOD Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags) override;
 
 protected:
     virtual ~nsAtomicFileOutputStream()

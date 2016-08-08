@@ -73,7 +73,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::title, aTitle);
   }
-  NS_IMETHODIMP SetTitle(const nsAString& aTitle) override
+  NS_IMETHOD SetTitle(const nsAString& aTitle) override
   {
     SetHTMLAttr(nsGkAtoms::title, aTitle);
     return NS_OK;
@@ -82,7 +82,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::lang, aLang);
   }
-  NS_IMETHODIMP SetLang(const nsAString& aLang) override
+  NS_IMETHOD SetLang(const nsAString& aLang) override
   {
     SetHTMLAttr(nsGkAtoms::lang, aLang);
     return NS_OK;

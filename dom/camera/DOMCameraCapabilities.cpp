@@ -31,7 +31,7 @@ public:
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
