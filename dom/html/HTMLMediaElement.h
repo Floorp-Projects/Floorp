@@ -1259,6 +1259,8 @@ protected:
   // and queues a task to resolve them also to dispatch a "playing" event.
   void NotifyAboutPlaying();
 
+  already_AddRefed<Promise> CreateDOMPromise(ErrorResult& aRv) const;
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
