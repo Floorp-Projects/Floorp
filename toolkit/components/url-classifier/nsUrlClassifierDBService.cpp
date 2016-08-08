@@ -441,7 +441,28 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table)
 
   NS_ASSERTION(!mProtocolParser, "Should not have a protocol parser.");
 
-  mProtocolParser = new ProtocolParser();
+  // Check if we should use protobuf to parse the update.
+  bool useProtobuf = false;
+  for (size_t i = 0; i < mUpdateTables.Length(); i++) {
+    bool isCurProtobuf =
+      StringEndsWith(mUpdateTables[i], NS_LITERAL_CSTRING("-proto"));
+
+    if (0 == i) {
+      // Use the first table name to decice if all the subsequent tables
+      // should be '-proto'.
+      useProtobuf = isCurProtobuf;
+      continue;
+    }
+
+    if (useProtobuf != isCurProtobuf) {
+      NS_WARNING("Cannot mix 'proto' tables with other types "
+                 "within the same provider.");
+      break;
+    }
+  }
+
+  mProtocolParser = (useProtobuf ? new ProtocolParserProtobuf()
+                                 : new ProtocolParser());
   if (!mProtocolParser)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -511,6 +532,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
   NS_ENSURE_STATE(mUpdateObserver);
 
   mInStream = false;
+
+  mProtocolParser->End();
 
   if (NS_SUCCEEDED(mProtocolParser->Status())) {
     if (mProtocolParser->UpdateWait()) {

@@ -118,6 +118,7 @@ enum class MediaEventType : int8_t {
   PlaybackStarted,
   PlaybackStopped,
   PlaybackEnded,
+  SeekStarted,
   DecodeError,
   Invalidate
 };
@@ -243,9 +244,6 @@ public:
 
   MediaEventSource<MediaEventType>&
   OnPlaybackEvent() { return mOnPlaybackEvent; }
-
-  MediaEventSource<MediaDecoderEventVisibility>&
-  OnSeekingStart() { return mOnSeekingStart; }
 
   // Immutable after construction - may be called on any thread.
   bool IsRealTime() const { return mRealTime; }
@@ -949,7 +947,6 @@ private:
                         MediaDecoderEventVisibility> mFirstFrameLoadedEvent;
 
   MediaEventProducer<MediaEventType> mOnPlaybackEvent;
-  MediaEventProducer<MediaDecoderEventVisibility> mOnSeekingStart;
 
   // True if audio is offloading.
   // Playback will not start when audio is offloading.
