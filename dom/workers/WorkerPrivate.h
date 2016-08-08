@@ -15,8 +15,11 @@
 #include "nsIWorkerDebugger.h"
 #include "nsPIDOMWindow.h"
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsAutoPtr.h"
@@ -938,6 +941,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // fired on the main thread if the worker script fails to load
   nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
 
+  JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
   TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;
   uint32_t mNextTimeoutId;
@@ -1047,6 +1051,15 @@ public:
 
     MOZ_ASSERT(mDebugger != aDebugger);
     mDebugger = aDebugger;
+  }
+
+  JS::UniqueChars
+  AdoptDefaultLocale()
+  {
+    MOZ_ASSERT(mDefaultLocale,
+               "the default locale must have been successfully set for anyone "
+               "to be trying to adopt it");
+    return Move(mDefaultLocale);
   }
 
   void
