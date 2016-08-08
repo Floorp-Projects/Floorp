@@ -137,6 +137,16 @@ public:
   }
 
   /**
+   * Return true when it is better to defer EndRemoteDrawing().
+   *
+   * Called by BasicCompositor on the compositor thread for OMTC drawing
+   * after each composition.
+   */
+  virtual bool NeedsToDeferEndRemoteDrawing() {
+    return false;
+  }
+
+  /**
    * Called when shutting down the LayerManager to clean-up any cached resources.
    *
    * Always called from the compositing thread.
