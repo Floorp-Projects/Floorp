@@ -41,7 +41,7 @@ def _nsinstall_internal(argv):
   # implented.
   def BadArg(option, opt, value, parser):
     parser.error('option not supported: {0}'.format(opt))
-    
+
   p.add_option('-C', action="callback", metavar="CWD",
                callback=BadArg,
                help="NOT SUPPORTED")
