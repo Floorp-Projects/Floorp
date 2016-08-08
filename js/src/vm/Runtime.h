@@ -39,7 +39,6 @@
 #endif
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
-#include "threading/Thread.h"
 #include "vm/CodeCoverage.h"
 #include "vm/CommonPropertyNames.h"
 #include "vm/DateTime.h"
@@ -695,7 +694,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     js::Mutex exclusiveAccessLock;
 #ifdef DEBUG
-    mozilla::Maybe<js::Thread::Id> exclusiveAccessOwner;
+    PRThread* exclusiveAccessOwner;
     bool mainThreadHasExclusiveAccess;
 #endif
 
@@ -711,7 +710,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 #ifdef DEBUG
     bool currentThreadHasExclusiveAccess() {
         return (!numExclusiveThreads && mainThreadHasExclusiveAccess) ||
-               exclusiveAccessOwner == mozilla::Some(js::ThisThread::GetId());
+               exclusiveAccessOwner == PR_GetCurrentThread();
     }
 #endif // DEBUG
 
