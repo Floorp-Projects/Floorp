@@ -14,6 +14,8 @@ building_linux = depends(target)(lambda target: target.kernel == 'Linux')
 
 have_malloc = check_header('malloc.h')
 
+check_header('alloca.h')
+
 add_old_configure_assignment('HAVE_MALLOC_H', have_malloc)
 
 check_headers(

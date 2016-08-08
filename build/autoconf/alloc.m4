@@ -16,8 +16,6 @@ for file in $MALLOC_HEADERS; do
   fi
 done
 
-MOZ_CHECK_HEADERS(alloca.h)
-
 AC_CHECK_FUNCS(strndup posix_memalign memalign)
 
 AC_CHECK_FUNCS(malloc_usable_size)
