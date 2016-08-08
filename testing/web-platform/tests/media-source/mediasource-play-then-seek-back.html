@@ -30,7 +30,6 @@
 
                 function finishSeekThenPlay()
                 {
-                    assert_equals(mediaElement.currentTime, 0.0, 'Current time is 0.0');
                     test.expectEvent(mediaElement, 'seeked', 'mediaElement finished seek');
 
                     test.waitForExpectedEvents(confirmPlayThenEnd);
