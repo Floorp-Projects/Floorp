@@ -174,7 +174,7 @@ class MediaRecorder::Session: public nsIObserver,
       : mSession(aSession)
     { }
 
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       LOG(LogLevel::Debug, ("Session.PushBlobRunnable s=(%p)", mSession.get()));
       MOZ_ASSERT(NS_IsMainThread());
@@ -204,7 +204,7 @@ class MediaRecorder::Session: public nsIObserver,
       : mSession(aSession)
     { }
 
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       LOG(LogLevel::Debug, ("Session.ErrorNotifyRunnable s=(%p)", mSession.get()));
       MOZ_ASSERT(NS_IsMainThread());
@@ -233,7 +233,7 @@ class MediaRecorder::Session: public nsIObserver,
       , mEventName(aEventName)
     { }
 
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       LOG(LogLevel::Debug, ("Session.DispatchStartEventRunnable s=(%p)", mSession.get()));
       MOZ_ASSERT(NS_IsMainThread());
@@ -263,7 +263,7 @@ class MediaRecorder::Session: public nsIObserver,
     ~ExtractRunnable()
     {}
 
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       MOZ_ASSERT(NS_GetCurrentThread() == mSession->mReadThread);
 
@@ -363,7 +363,7 @@ class MediaRecorder::Session: public nsIObserver,
     explicit DestroyRunnable(Session* aSession)
       : mSession(aSession) {}
 
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       LOG(LogLevel::Debug, ("Session.DestroyRunnable session refcnt = (%d) stopIssued %d s=(%p)",
                          (int)mSession->mRefCnt, mSession->mStopIssued, mSession.get()));

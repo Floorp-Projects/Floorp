@@ -184,7 +184,7 @@ public:
 
   ~SensorRunnable() {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     NotifySensorChange(mSensorData);
     return NS_OK;

@@ -136,7 +136,7 @@ xpc::SharedMemoryEnabled() { return sSharedMemoryEnabled; }
 class AsyncFreeSnowWhite : public Runnable
 {
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
       TimeStamp start = TimeStamp::Now();
       bool hadSnowWhiteObjects = nsCycleCollector_doDeferredDeletion();

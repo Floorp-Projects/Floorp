@@ -328,7 +328,7 @@ public:
     aTarget->Dispatch(this, aTarget->NS_DISPATCH_NORMAL);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mozilla::ReentrantMonitorAutoEnter automon(mReentrantMonitor);
 

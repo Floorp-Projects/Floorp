@@ -47,7 +47,7 @@ public:
 
     virtual ~nsOnStartRequestEvent() {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         LOG(("nsOnStartRequestEvent::HandleEvent [req=%x]\n", mRequest.get()));
 
@@ -86,7 +86,7 @@ public:
 
     virtual ~nsOnStopRequestEvent() {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         LOG(("nsOnStopRequestEvent::HandleEvent [req=%x]\n", mRequest.get()));
 

@@ -272,7 +272,7 @@ public:
     : mFunction(Forward<F>(aFunction))
   { }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     static_assert(IsVoid<decltype(mFunction())>::value,
                   "The lambda must return void!");
     mFunction();

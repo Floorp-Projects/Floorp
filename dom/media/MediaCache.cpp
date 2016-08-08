@@ -1379,7 +1379,7 @@ MediaCache::Update()
 class UpdateEvent : public Runnable
 {
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (gMediaCache) {
       gMediaCache->Update();

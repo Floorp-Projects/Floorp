@@ -552,7 +552,7 @@ class nsGIOSetContentTypeEvent : public mozilla::Runnable
       // in SetContentTypeOfchannel.
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       mChannel->SetContentType(mContentType);
       return NS_OK;

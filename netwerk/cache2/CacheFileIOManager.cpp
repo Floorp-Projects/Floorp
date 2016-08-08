@@ -553,7 +553,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MonitorAutoLock mon(mMonitor);
 
@@ -602,7 +602,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsresult rv = NS_OK;
 
@@ -663,7 +663,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsresult rv;
 
@@ -713,7 +713,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsresult rv;
 
@@ -770,7 +770,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsresult rv;
 
@@ -815,7 +815,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsresult rv;
 
@@ -854,7 +854,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (!mHandle->IsClosed()) {
       CacheFileIOManager::gInstance->MaybeReleaseNSPRHandleInternal(mHandle);
@@ -886,7 +886,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsresult rv;
 
@@ -929,7 +929,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsresult rv;
 
@@ -973,7 +973,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mHandle->IsClosed() || mHandle->IsDoomed()) {
       return NS_OK;
@@ -1025,7 +1025,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mHandle->IsClosed() || mHandle->IsDoomed()) {
       return NS_OK;
@@ -1068,7 +1068,7 @@ public:
 
   virtual ~MetadataWriteScheduleEvent() { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     RefPtr<CacheFileIOManager> ioMan = CacheFileIOManager::gInstance;
     if (!ioMan) {
@@ -4111,7 +4111,7 @@ public:
     return mSize;
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mozilla::MonitorAutoLock mon(mMonitor);
     // Excluding this since the object itself is a member of CacheFileIOManager

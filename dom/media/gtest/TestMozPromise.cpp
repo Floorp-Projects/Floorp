@@ -47,7 +47,7 @@ public:
   , mIterations(aIterations)
   {}
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     if (!mPromise) {

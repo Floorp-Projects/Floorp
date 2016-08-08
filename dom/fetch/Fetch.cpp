@@ -120,8 +120,8 @@ public:
     MOZ_ASSERT(mResolver);
   }
 
-  NS_IMETHODIMP
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     AssertIsOnMainThread();
     RefPtr<FetchDriver> fetch;
