@@ -102,7 +102,6 @@ tasks:
               ln -s /home/worker/artifacts artifacts &&
               ./mach --log-no-times taskgraph decision
               --pushlog-id='{{pushlog_id}}'
-              --pushdate='{{pushdate}}'
               --project='{{project}}'
               --message='{{comment}}'
               --owner='{{owner}}'
