@@ -45,10 +45,6 @@ Push Information
 ``pushlog_id``
    The ID from the ``hg.mozilla.org`` pushlog
 
-``pushdate``
-   The timestamp of the push to the repository that triggered this decision
-   task.  Expressed as an integer seconds since the UNIX epoch.
-
 Tree Information
 ----------------
 

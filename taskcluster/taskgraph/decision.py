@@ -107,7 +107,6 @@ def get_decision_parameters(options):
         'message',
         'project',
         'pushlog_id',
-        'pushdate',
         'owner',
         'level',
         'target_tasks_method',

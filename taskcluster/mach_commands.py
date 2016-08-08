@@ -132,10 +132,6 @@ class MachCommands(MachCommandBase):
                      dest='pushlog_id',
                      required=True,
                      default=0)
-    @CommandArgument('--pushdate',
-                     dest='pushdate',
-                     required=True,
-                     default=0)
     @CommandArgument('--owner',
                      required=True,
                      help='email address of who owns this graph')
