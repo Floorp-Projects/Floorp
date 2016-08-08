@@ -19,6 +19,9 @@ let nestedNamespaceJson = [
             "type": "string",
           },
         ],
+        "returns": {
+          "type": "string",
+        },
       },
     ],
   },
