@@ -776,15 +776,17 @@ GlobalManager = {
       this._initializeBackgroundPage(contentWindow);
     }
 
-    let eventHandler = docShell.chromeEventHandler;
-    let listener = event => {
-      if (event.target != docShell.contentViewer.DOMDocument) {
-        return;
+    let innerWindowID = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+
+    let onUnload = subject => {
+      let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+      if (windowId == innerWindowID) {
+        Services.obs.removeObserver(onUnload, "inner-window-destroyed");
+        context.unload();
       }
-      eventHandler.removeEventListener("unload", listener, true);
-      context.unload();
     };
-    eventHandler.addEventListener("unload", listener, true);
+    Services.obs.addObserver(onUnload, "inner-window-destroyed", false);
   },
 
   _initializeBackgroundPage(contentWindow) {

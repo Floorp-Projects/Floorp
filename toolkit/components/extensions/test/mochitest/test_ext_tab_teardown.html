@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for extension tab teardown</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+// Test for tabs opened using tabs.create and window.open
+function* runTabReloadAndCloseTest({extension, isInitiallyBlankUrl}) {
+  let chromeScript = SpecialPowers.loadChromeScript(
+      SimpleTest.getTestFileURL("file_teardown_test.js"));
+  yield chromeScript.promiseOneMessage("chromescript-startup");
+  function* getContextEvents() {
+    chromeScript.sendAsyncMessage("get-context-events");
+    let contextEvents = yield chromeScript.promiseOneMessage("context-events");
+    dump(JSON.stringify(contextEvents));
+    return contextEvents.filter(event => event.extensionId == extension.id);
+  }
+
+  extension.sendMessage("open extension page");
+  let extensionPageUrl = yield extension.awaitMessage("extension page loaded");
+
+  let contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 1, "ExtensionContext change for opening a tab");
+  is(contextEvents[0].eventType, "load", "create ExtensionContext for tab");
+  is(contextEvents[0].url, extensionPageUrl,
+      "ExtensionContext URL after tab creation should be tab URL");
+
+  extension.sendMessage("reload extension page");
+  let extensionPageUrl2 = yield extension.awaitMessage("extension page loaded");
+
+  // When the tab is opened with window.open, the initial URL happens to be
+  // about:blank.
+  if (isInitiallyBlankUrl) {
+    is(extensionPageUrl, "about:blank",
+        "The tab URL before reload should be about:blank");
+    isnot(extensionPageUrl, extensionPageUrl2,
+        "After a page reload the tab URL shouldn't be blank.");
+  } else {
+    is(extensionPageUrl, extensionPageUrl2,
+        "The tab's URL is expected to not change after a page reload");
+  }
+
+  contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 2, "ExtensionContext change after tab reload");
+  is(contextEvents[0].eventType, "unload", "unload old ExtensionContext");
+  is(contextEvents[0].url, extensionPageUrl,
+      "ExtensionContext URL before reload should be tab URL");
+  is(contextEvents[1].eventType, "load", "create new ExtensionContext for tab");
+  is(contextEvents[1].url, extensionPageUrl2,
+      "ExtensionContext URL after reload should be tab URL");
+
+  extension.sendMessage("close extension page");
+  yield extension.awaitMessage("closed extension page");
+
+  contextEvents = yield* getContextEvents();
+  is(contextEvents.length, 1, "ExtensionContext after closing tab");
+  is(contextEvents[0].eventType, "unload", "unload tab's ExtensionContext");
+  is(contextEvents[0].url, extensionPageUrl2,
+      "ExtensionContext URL at closing tab should be tab URL");
+
+  chromeScript.sendAsyncMessage("cleanup");
+  chromeScript.destroy();
+  yield extension.unload();
+}
+
+add_task(function* test_extension_page_tabs_create_reload_and_close() {
+  function backgroundScript() {
+    let tabId;
+    browser.test.onMessage.addListener(msg => {
+      if (msg === "open extension page") {
+        chrome.tabs.create({url: "page.html"}, tab => {
+          tabId = tab.id;
+        });
+      } else if (msg === "reload extension page") {
+        chrome.tabs.reload(tabId);
+      } else if (msg === "close extension page") {
+        chrome.tabs.remove(tabId, () => {
+          browser.test.sendMessage("closed extension page");
+        });
+      }
+    });
+  }
+
+  function pageScript() {
+    browser.test.sendMessage("extension page loaded", document.URL);
+  }
+
+  let extensionData = {
+    background: `(${backgroundScript})();`,
+    files: {
+      "page.html": `<!DOCTYPE html><meta charset="utf-8"><script src="page.js"><\/script>`,
+      "page.js": `(${pageScript})();`,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+
+  yield* runTabReloadAndCloseTest({extension});
+});
+
+add_task(function* test_extension_page_window_open_reload_and_close() {
+  // This tests whether a context that is opened via window.open is properly
+  // disposed when the tab closes.
+  // The background page cannot use window.open (bugzil.la/1282021), so we open
+  // another extension page that manages the window.open-tab for testing.
+  function backgroundScript() {
+    chrome.tabs.create({url: "window.open.html"});
+  }
+
+  function windowOpenScript() {
+    let win;
+    browser.test.onMessage.addListener(msg => {
+      if (msg === "open extension page") {
+        win = window.open("page.html");
+      } else if (msg === "reload extension page") {
+        win.location.reload();
+      } else if (msg === "close extension page") {
+        browser.tabs.onRemoved.addListener(function listener() {
+          browser.tabs.onRemoved.removeListener(listener);
+          browser.test.sendMessage("closed extension page");
+        });
+        win.close();
+      }
+    });
+    browser.test.sendMessage("setup-intermediate-tab");
+  }
+
+  function pageScript() {
+    if (performance.navigation.type === 0) { // TYPE_NAVIGATION
+      // The ExtensionContext URL happens to be "about:blank" when the page is
+      // loaded via window.open().
+      browser.test.sendMessage("extension page loaded", "about:blank");
+    } else if (performance.navigation.type === 1) { // TYPE_RELOAD
+      browser.test.sendMessage("extension page loaded", document.URL);
+    } else {
+      browser.test.notifyFail(
+          "Unexpected navigation type: " + performance.navigation.type);
+    }
+  }
+
+  let extensionData = {
+    background: `(${backgroundScript})();`,
+    files: {
+      "page.html": `<!DOCTYPE html><meta charset="utf-8"><script src="page.js"><\/script>`,
+      "page.js": `(${pageScript})();`,
+      "window.open.html": `<!DOCTYPE html><meta charset="utf-8"><script src="window.open.js"><\/script>`,
+      "window.open.js": `(${windowOpenScript})();`,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  yield extension.awaitMessage("setup-intermediate-tab");
+  yield* runTabReloadAndCloseTest({extension, isInitiallyBlankUrl: true});
+});
+</script>
+
+</body>
+</html>
