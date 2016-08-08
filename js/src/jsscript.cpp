@@ -2417,10 +2417,10 @@ js::SharedScriptData::new_(ExclusiveContext* cx, uint32_t codeLength,
         return nullptr;
     }
 
+    entry->refCount_ = 0;
     entry->dataLength_ = dataLength;
     entry->natoms_ = natoms;
     entry->codeLength_ = codeLength;
-    entry->marked_ = false;
 
     /*
      * Call constructors to initialize the storage that will be accessed as a
@@ -2450,7 +2450,8 @@ JSScript::createScriptData(ExclusiveContext* cx, uint32_t codeLength, uint32_t s
 void
 JSScript::freeScriptData()
 {
-    js_free(scriptData_);
+    MOZ_ASSERT(scriptData_->refCount() == 1);
+    scriptData_->decRefCount();
     scriptData_ = nullptr;
 }
 
@@ -2459,6 +2460,7 @@ JSScript::setScriptData(js::SharedScriptData* data)
 {
     MOZ_ASSERT(!scriptData_);
     scriptData_ = data;
+    scriptData_->incRefCount();
 }
 
 /*
@@ -2472,6 +2474,7 @@ JSScript::shareScriptData(ExclusiveContext* cx)
 {
     SharedScriptData* ssd = scriptData();
     MOZ_ASSERT(ssd);
+    MOZ_ASSERT(ssd->refCount() == 1);
 
     AutoLockForExclusiveAccess lock(cx);
 
@@ -2488,45 +2491,27 @@ JSScript::shareScriptData(ExclusiveContext* cx)
             ReportOutOfMemory(cx);
             return false;
         }
+
+        // Being in the table counts as a reference on the script data.
+        scriptData()->incRefCount();
     }
 
-    /*
-     * During the IGC we need to ensure that bytecode is marked whenever it is
-     * accessed even if the bytecode was already in the table: at this point
-     * old scripts or exceptions pointing to the bytecode may no longer be
-     * reachable. This is effectively a read barrier.
-     */
-    if (cx->isJSContext()) {
-        JSContext* ncx = cx->asJSContext();
-        if (JS::IsIncrementalGCInProgress(ncx) && ncx->gc.isFullGc())
-            scriptData()->setMarked(true);
-    }
-
+    MOZ_ASSERT(scriptData()->refCount() >= 2);
     return true;
-}
-
-void
-js::UnmarkScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock)
-{
-    MOZ_ASSERT(rt->gc.isFullGc());
-    ScriptDataTable& table = rt->scriptDataTable(lock);
-    for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront())
-        e.front()->setMarked(false);
 }
 
 void
 js::SweepScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock)
 {
-    MOZ_ASSERT(rt->gc.isFullGc());
+    // Entries are removed from the table when their reference count is one,
+    // i.e. when the only reference to them is from the table entry.
+
     ScriptDataTable& table = rt->scriptDataTable(lock);
 
-    if (rt->keepAtoms())
-        return;
-
     for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
-        SharedScriptData* entry = e.front();
-        if (!entry->marked()) {
-            js_free(entry);
+        SharedScriptData* scriptData = e.front();
+        if (scriptData->refCount() == 1) {
+            scriptData->decRefCount();
             e.removeFront();
         }
     }
@@ -2539,8 +2524,14 @@ js::FreeScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock)
     if (!table.initialized())
         return;
 
-    for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront())
+    for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
+#ifdef DEBUG
+        SharedScriptData* scriptData = e.front();
+        fprintf(stderr, "ERROR: GC found live SharedScriptData %p with ref count %d at shutdown\n",
+                scriptData, scriptData->refCount());
+#endif
         js_free(e.front());
+    }
 
     table.clear();
 }
@@ -3139,6 +3130,9 @@ JSScript::finalize(FreeOp* fop)
         JS_POISON(data, 0xdb, computedSizeOfData());
         fop->free_(data);
     }
+
+    if (scriptData_)
+        scriptData_->decRefCount();
 
     fop->runtime()->contextFromMainThread()->caches.lazyScriptCache.remove(this);
 
@@ -3902,16 +3896,9 @@ JSScript::hasBreakpointsAt(jsbytecode* pc)
 void
 SharedScriptData::traceChildren(JSTracer* trc)
 {
+    MOZ_ASSERT(refCount() != 0);
     for (uint32_t i = 0; i < natoms(); ++i)
         TraceNullableEdge(trc, &atoms()[i], "atom");
-
-    /*
-     * As an invariant, a ScriptBytecodeEntry should not be 'marked' outside of
-     * a GC. Since SweepScriptBytecodes is only called during a full gc,
-     * to preserve this invariant, only mark during a full gc.
-     */
-    if (trc->isMarkingTracer() && trc->runtime()->gc.isFullGc())
-        setMarked(true);
 }
 
 void
