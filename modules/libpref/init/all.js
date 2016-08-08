@@ -5142,7 +5142,7 @@ pref("browser.safebrowsing.reportPhishURL", "https://%LOCALE%.phish-report.mozil
 pref("browser.safebrowsing.reportMalwareMistakeURL", "https://%LOCALE%.malware-error.mozilla.com/?hl=%LOCALE%&url=");
 
 // The table and global pref for blocking plugin content
-pref("browser.safebrowsing.blockedURIs.enabled", false);
+pref("browser.safebrowsing.blockedURIs.enabled", true);
 pref("urlclassifier.blockedTable", "test-block-simple,mozplugin-block-digest256");
 
 // The protocol version we communicate with mozilla server.
