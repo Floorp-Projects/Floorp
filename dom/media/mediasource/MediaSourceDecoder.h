@@ -92,7 +92,7 @@ private:
   RefPtr<MediaSourceDemuxer> mDemuxer;
   RefPtr<MediaFormatReader> mReader;
 
-  Atomic<bool> mEnded;
+  bool mEnded;
 };
 
 } // namespace mozilla
