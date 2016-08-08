@@ -2296,15 +2296,15 @@ const KTableEntry nsCSSProps::kFillRuleKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kClipShapeSizingKTable[] = {
-  { eCSSKeyword_content_box,   StyleClipShapeSizing::Content },
-  { eCSSKeyword_padding_box,   StyleClipShapeSizing::Padding },
-  { eCSSKeyword_border_box,    StyleClipShapeSizing::Border },
-  { eCSSKeyword_margin_box,    StyleClipShapeSizing::Margin },
-  { eCSSKeyword_fill_box,      StyleClipShapeSizing::Fill },
-  { eCSSKeyword_stroke_box,    StyleClipShapeSizing::Stroke },
-  { eCSSKeyword_view_box,      StyleClipShapeSizing::View },
-  { eCSSKeyword_UNKNOWN,       -1 }
+const KTableEntry nsCSSProps::kClipPathGeometryBoxKTable[] = {
+  { eCSSKeyword_content_box, StyleClipPathGeometryBox::Content },
+  { eCSSKeyword_padding_box, StyleClipPathGeometryBox::Padding },
+  { eCSSKeyword_border_box, StyleClipPathGeometryBox::Border },
+  { eCSSKeyword_margin_box, StyleClipPathGeometryBox::Margin },
+  { eCSSKeyword_fill_box, StyleClipPathGeometryBox::Fill },
+  { eCSSKeyword_stroke_box, StyleClipPathGeometryBox::Stroke },
+  { eCSSKeyword_view_box, StyleClipPathGeometryBox::View },
+  { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kShapeRadiusKTable[] = {
