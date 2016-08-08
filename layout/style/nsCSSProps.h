@@ -742,6 +742,7 @@ public:
   static const KTableEntry kFillRuleKTable[];
   static const KTableEntry kFilterFunctionKTable[];
   static const KTableEntry kImageRenderingKTable[];
+  static const KTableEntry kShapeOutsideShapeBoxKTable[];
   static const KTableEntry kShapeRenderingKTable[];
   static const KTableEntry kStrokeLinecapKTable[];
   static const KTableEntry kStrokeLinejoinKTable[];

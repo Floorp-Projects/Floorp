@@ -91,6 +91,15 @@ enum class StyleFloatEdge : uint8_t {
   MarginBox,
 };
 
+// shape-box for shape-outside
+enum class StyleShapeOutsideShapeBox : uint8_t {
+  NoBox,
+  Content,
+  Padding,
+  Border,
+  Margin
+};
+
 // Shape source type
 // X11 has a #define for None causing conflicts, so we use None_ here
 enum class StyleShapeSourceType : uint8_t {
