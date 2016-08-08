@@ -415,21 +415,13 @@ class ExtensionContext extends BaseContext {
     // reason. However, we waive here anyway in case that changes.
     Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
 
-    let apis = {
-      "storage": "chrome://extensions/content/schemas/storage.json",
-      "test": "chrome://extensions/content/schemas/test.json",
-    };
-
     let incognito = PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
-    this.childManager = new ChildAPIManager(this, mm, Object.keys(apis), {
+    this.childManager = new ChildAPIManager(this, mm, ["storage", "test"], {
       type: "content_script",
       url,
       incognito,
     });
 
-    for (let api in apis) {
-      Schemas.load(apis[api]);
-    }
     Schemas.inject(this.chromeObj, this.childManager);
 
     injectAPI(api(this), this.chromeObj);
