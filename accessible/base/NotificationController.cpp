@@ -219,24 +219,6 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   if (!(mDocument->mDocFlags & DocAccessible::eScrollInitialized))
     mDocument->AddScrollListener();
 
-  // Process content inserted notifications to update the tree. Process other
-  // notifications like DOM events and then flush event queue. If any new
-  // notifications are queued during this processing then they will be processed
-  // on next refresh. If notification processing queues up new events then they
-  // are processed in this refresh. If events processing queues up new events
-  // then new events are processed on next refresh.
-  // Note: notification processing or event handling may shut down the owning
-  // document accessible.
-
-  // Process only currently queued content inserted notifications.
-  for (auto iter = mContentInsertions.ConstIter(); !iter.Done(); iter.Next()) {
-    mDocument->ProcessContentInserted(iter.Key(), iter.UserData());
-    if (!mDocument) {
-      return;
-    }
-  }
-  mContentInsertions.Clear();
-
   // Process rendered text change notifications.
   for (auto iter = mTextHash.Iter(); !iter.Done(); iter.Next()) {
     nsCOMPtrHashKey<nsIContent>* entry = iter.Get();
@@ -311,16 +293,26 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       }
   #endif
 
-      // Make sure the text node is in accessible document still.
       Accessible* container = mDocument->AccessibleOrTrueContainer(containerNode);
       MOZ_ASSERT(container,
                  "Text node having rendered text hasn't accessible document!");
       if (container) {
-        mDocument->ProcessContentInserted(container, textNode);
+        nsTArray<nsCOMPtr<nsIContent>>* list =
+          mContentInsertions.LookupOrAdd(container);
+        list->AppendElement(textNode);
       }
     }
   }
   mTextHash.Clear();
+
+  // Process content inserted notifications to update the tree.
+  for (auto iter = mContentInsertions.ConstIter(); !iter.Done(); iter.Next()) {
+    mDocument->ProcessContentInserted(iter.Key(), iter.UserData());
+    if (!mDocument) {
+      return;
+    }
+  }
+  mContentInsertions.Clear();
 
   // Bind hanging child documents.
   uint32_t hangingDocCnt = mHangingChildDocuments.Length();
