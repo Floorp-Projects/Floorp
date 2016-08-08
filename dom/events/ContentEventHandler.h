@@ -273,7 +273,8 @@ protected:
                                       uint32_t aLength,
                                       LineBreakType aLineBreakType,
                                       bool aExpandToClusterBoundaries,
-                                      uint32_t* aNewOffset = nullptr);
+                                      uint32_t* aNewOffset = nullptr,
+                                      nsIContent** aLastTextNode = nullptr);
   // If the aRange isn't in text node but next to a text node, this method
   // modifies it in the text node.  Otherwise, not modified.
   nsresult AdjustCollapsedRangeMaybeIntoTextNode(nsRange* aCollapsedRange);
