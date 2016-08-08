@@ -94,13 +94,13 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
 
   nsStyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
   switch (basicShape->GetShapeType()) {
-    case nsStyleBasicShape::Type::eCircle:
+    case StyleBasicShapeType::Circle:
       return CreateClipPathCircle(aDrawTarget, r);
-    case nsStyleBasicShape::Type::eEllipse:
+    case StyleBasicShapeType::Ellipse:
       return CreateClipPathEllipse(aDrawTarget, r);
-    case nsStyleBasicShape::Type::ePolygon:
+    case StyleBasicShapeType::Polygon:
       return CreateClipPathPolygon(aDrawTarget, r);
-    case nsStyleBasicShape::Type::eInset:
+    case StyleBasicShapeType::Inset:
       // XXXkrit support all basic shapes
       break;
     default:

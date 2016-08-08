@@ -9595,7 +9595,7 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
 
   if (functionName == eCSSKeyword_polygon) {
     MOZ_ASSERT(!basicShape, "did not expect value");
-    basicShape = new nsStyleBasicShape(nsStyleBasicShape::ePolygon);
+    basicShape = new nsStyleBasicShape(StyleBasicShapeType::Polygon);
     MOZ_ASSERT(shapeFunction->Count() > 1,
                "polygon has wrong number of arguments");
     size_t j = 1;
@@ -9626,17 +9626,17 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
     }
   } else if (functionName == eCSSKeyword_circle ||
              functionName == eCSSKeyword_ellipse) {
-    nsStyleBasicShape::Type type = functionName == eCSSKeyword_circle ?
-      nsStyleBasicShape::eCircle :
-      nsStyleBasicShape::eEllipse;
+    StyleBasicShapeType type = functionName == eCSSKeyword_circle ?
+      StyleBasicShapeType::Circle :
+      StyleBasicShapeType::Ellipse;
     MOZ_ASSERT(!basicShape, "did not expect value");
     basicShape = new nsStyleBasicShape(type);
     const int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
       SETCOORD_STORE_CALC | SETCOORD_ENUMERATED;
-    size_t count = type == nsStyleBasicShape::eCircle ? 2 : 3;
+    size_t count = type == StyleBasicShapeType::Circle ? 2 : 3;
     MOZ_ASSERT(shapeFunction->Count() == count + 1,
                "unexpected arguments count");
-    MOZ_ASSERT(type == nsStyleBasicShape::eCircle ||
+    MOZ_ASSERT(type == StyleBasicShapeType::Circle ||
                (shapeFunction->Item(1).GetUnit() == eCSSUnit_Null) ==
                (shapeFunction->Item(2).GetUnit() == eCSSUnit_Null),
                "ellipse should have two radii or none");
@@ -9666,7 +9666,7 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
     }
   } else if (functionName == eCSSKeyword_inset) {
     MOZ_ASSERT(!basicShape, "did not expect value");
-    basicShape = new nsStyleBasicShape(nsStyleBasicShape::eInset);
+    basicShape = new nsStyleBasicShape(StyleBasicShapeType::Inset);
     MOZ_ASSERT(shapeFunction->Count() == 6,
                "inset function has wrong number of arguments");
     MOZ_ASSERT(shapeFunction->Item(1).GetUnit() != eCSSUnit_Null,
