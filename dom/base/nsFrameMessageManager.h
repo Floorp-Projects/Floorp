@@ -425,9 +425,9 @@ class nsScriptCacheCleaner final : public nsIObserver
     }
   }
 
-  NS_IMETHODIMP Observe(nsISupports *aSubject,
-                        const char *aTopic,
-                        const char16_t *aData) override
+  NS_IMETHOD Observe(nsISupports *aSubject,
+                     const char *aTopic,
+                     const char16_t *aData) override
   {
     if (strcmp("message-manager-flush-caches", aTopic) == 0) {
       nsMessageManagerScriptExecutor::PurgeCache();

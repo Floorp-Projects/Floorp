@@ -570,7 +570,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIObserver implementation.
-  NS_IMETHODIMP
+  NS_IMETHOD
   Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
   {
     MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_CLEAR_ORIGIN_DATA));

@@ -2486,7 +2486,7 @@ public:
     return Resolve(true);
   }
 
-  NS_IMETHODIMP GetTypes(nsIArray** aTypes) override
+  NS_IMETHOD GetTypes(nsIArray** aTypes) override
   {
     nsString storageType;
     mRequest->GetStorageType(storageType);

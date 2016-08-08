@@ -883,12 +883,12 @@ public:
   , mChannel(chan) {}
   NS_DECL_ISUPPORTS
 
-  NS_IMETHODIMP OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) override
+  NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) override
   {
     return mNext->OnStartRequest(aRequest, aContext);
   }
 
-  NS_IMETHODIMP OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) override
+  NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) override
   {
     if (NS_FAILED(aStatusCode) && NS_SUCCEEDED(mChannel->mStatus)) {
       LOG(("HttpBaseChannel::InterceptFailedOnStop %p seting status %x", mChannel, aStatusCode));
@@ -897,7 +897,7 @@ public:
     return mNext->OnStopRequest(aRequest, aContext, aStatusCode);
   }
 
-  NS_IMETHODIMP OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+  NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                            nsIInputStream *aInputStream, uint64_t aOffset,
                            uint32_t aCount) override
   {

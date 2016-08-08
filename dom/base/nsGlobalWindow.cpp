@@ -480,7 +480,7 @@ public:
     return mWindow->Observe(aSubject, aTopic, aData);
   }
   void Forget() { mWindow = nullptr; }
-  NS_IMETHODIMP GetInterface(const nsIID& aIID, void** aResult) override
+  NS_IMETHOD GetInterface(const nsIID& aIID, void** aResult) override
   {
     if (mWindow && aIID.Equals(NS_GET_IID(nsIDOMWindow)) && mWindow) {
       return mWindow->QueryInterface(aIID, aResult);

@@ -898,7 +898,7 @@ private:
     mMediaStreamTracks.Clear();
   }
 
-  NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
+  NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     LOG(LogLevel::Debug, ("Session.Observe XPCOM_SHUTDOWN %p", this));

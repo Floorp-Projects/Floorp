@@ -24,7 +24,7 @@ public:
     AssertIsOnMainThread();
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   OnUnsubscribe(nsresult aStatus, bool) override
   {
     // Warn if unsubscribing fails, but don't prevent the worker from

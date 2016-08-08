@@ -45,7 +45,7 @@ class WinWakeLockListener final : public nsIDOMMozWakeLockListener
 public:
   NS_DECL_ISUPPORTS;
 
-  NS_IMETHODIMP Notify(nsITimer *timer) override {
+  NS_IMETHOD Notify(nsITimer *timer) override {
     WAKE_LOCK_LOG("WinWakeLock: periodic timer fired");
     ResetScreenSaverTimeout();
     return NS_OK;
