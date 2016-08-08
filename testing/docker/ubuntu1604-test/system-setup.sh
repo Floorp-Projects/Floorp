@@ -162,16 +162,11 @@ apt-get -q -y -f install \
     libxcb-shm0 \
     libxcb-glx0 \
     libxcb-shape0
-libxcb1_version=$(dpkg-query -s libxcb1 | grep ^Version | awk '{ print $2 }')
-[ "$libxcb1_version" = "1.11.1-1ubuntu1" ] || exit 1
 
 apt-get -q -y -f install \
     libgl1-mesa-dri \
     libgl1-mesa-glx \
     mesa-common-dev
-mesa_version=$(dpkg-query -s libgl1-mesa-dri | grep ^Version | awk '{ print $2 }')
-echo $mesa_version
-[ "$mesa_version" = "11.2.0-1ubuntu2" ] || exit 1
 
 # revert the list of repos
 cp sources.list.orig /etc/apt/sources.list
