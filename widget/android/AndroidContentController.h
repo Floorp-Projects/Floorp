@@ -48,6 +48,9 @@ public:
                                        uint64_t aInputBlockId, bool aDefaultPrevented);
 private:
     nsWindow* mAndroidWindow;
+
+    void DispatchSingleTapToObservers(const LayoutDevicePoint& aPoint,
+                                      const ScrollableLayerGuid& aGuid) const;
 };
 
 } // namespace widget
