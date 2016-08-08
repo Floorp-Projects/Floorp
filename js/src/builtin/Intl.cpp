@@ -13,7 +13,6 @@
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
-#include "mozilla/ScopeExit.h"
 
 #include <string.h>
 
@@ -24,6 +23,7 @@
 #include "jsstr.h"
 
 #include "builtin/IntlTimeZoneData.h"
+#include "ds/Sort.h"
 #if ENABLE_INTL_API
 #include "unicode/ucal.h"
 #include "unicode/ucol.h"
@@ -48,8 +48,8 @@
 using namespace js;
 
 using mozilla::IsFinite;
+using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
-using mozilla::MakeScopeExit;
 using mozilla::PodCopy;
 using mozilla::Range;
 using mozilla::RangedPtr;
@@ -268,12 +268,41 @@ unum_setAttribute(UNumberFormat* fmt, UNumberFormatAttribute  attr, int32_t newV
     MOZ_CRASH("unum_setAttribute: Intl API disabled");
 }
 
+#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+
+int32_t
+unum_formatDoubleForFields(const UNumberFormat* fmt, double number, UChar* result,
+                           int32_t resultLength, UFieldPositionIterator* fpositer,
+                           UErrorCode* status)
+{
+    MOZ_CRASH("unum_formatDoubleForFields: Intl API disabled");
+}
+
+enum UNumberFormatFields {
+    UNUM_INTEGER_FIELD,
+    UNUM_GROUPING_SEPARATOR_FIELD,
+    UNUM_DECIMAL_SEPARATOR_FIELD,
+    UNUM_FRACTION_FIELD,
+    UNUM_SIGN_FIELD,
+    UNUM_PERCENT_FIELD,
+    UNUM_CURRENCY_FIELD,
+    UNUM_PERMILL_FIELD,
+    UNUM_EXPONENT_SYMBOL_FIELD,
+    UNUM_EXPONENT_SIGN_FIELD,
+    UNUM_EXPONENT_FIELD,
+    UNUM_FIELD_COUNT,
+};
+
+#else
+
 int32_t
 unum_formatDouble(const UNumberFormat* fmt, double number, UChar* result,
                   int32_t resultLength, UFieldPosition* pos, UErrorCode* status)
 {
     MOZ_CRASH("unum_formatDouble: Intl API disabled");
 }
+
+#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
 
 void
 unum_close(UNumberFormat* fmt)
@@ -1504,6 +1533,24 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
         return nullptr;
     }
 
+#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+    // If the still-experimental NumberFormat.prototype.formatToParts method is
+    // enabled, also add it.
+    if (cx->compartment()->creationOptions().experimentalNumberFormatFormatToPartsEnabled()) {
+        RootedValue ftp(cx);
+        HandlePropertyName name = cx->names().formatToParts;
+        if (!GlobalObject::getSelfHostedFunction(cx, cx->global(),
+                                                 cx->names().NumberFormatFormatToParts,
+                                                 name, 1, &ftp))
+        {
+            return nullptr;
+        }
+
+        if (!DefineProperty(cx, proto, cx->names().formatToParts, ftp, nullptr, nullptr, 0))
+            return nullptr;
+    }
+#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+
     RootedValue options(cx);
     if (!CreateDefaultOptions(cx, &options))
         return nullptr;
@@ -1710,33 +1757,75 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
     return toClose.forget();
 }
 
-static bool
-intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue result)
-{
-    // FormatNumber doesn't consider -0.0 to be negative.
-    if (IsNegativeZero(x))
-        x = 0.0;
+using FormattedNumberChars = Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE>;
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
+static bool
+PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double* x,
+                       UFieldPositionIterator* fpositer, FormattedNumberChars& formattedChars)
+{
+    // PartitionNumberPattern doesn't consider -0.0 to be negative.
+    if (IsNegativeZero(*x))
+        *x = 0.0;
+
+    MOZ_ASSERT(formattedChars.length() == 0,
+               "formattedChars must initially be empty");
+    MOZ_ALWAYS_TRUE(formattedChars.resize(INITIAL_CHAR_BUFFER_SIZE));
+
     UErrorCode status = U_ZERO_ERROR;
-    int32_t size = unum_formatDouble(nf, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                                     nullptr, &status);
+
+#if !defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+    MOZ_ASSERT(fpositer == nullptr,
+               "shouldn't be requesting field information from an ICU that "
+               "can't provide it");
+#endif
+
+    int32_t resultSize;
+#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+    resultSize =
+        unum_formatDoubleForFields(nf, *x,
+                                   Char16ToUChar(formattedChars.begin()), INITIAL_CHAR_BUFFER_SIZE,
+                                   fpositer, &status);
+#else
+    resultSize =
+        unum_formatDouble(nf, *x, Char16ToUChar(formattedChars.begin()), INITIAL_CHAR_BUFFER_SIZE,
+                          nullptr, &status);
+#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
     if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size))
+        MOZ_ASSERT(resultSize >= 0);
+        if (!formattedChars.resize(size_t(resultSize)))
             return false;
         status = U_ZERO_ERROR;
-        unum_formatDouble(nf, x, Char16ToUChar(chars.begin()), size, nullptr, &status);
+#ifdef DEBUG
+        int32_t size =
+#endif
+#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+            unum_formatDoubleForFields(nf, *x, Char16ToUChar(formattedChars.begin()), resultSize,
+                                       fpositer, &status);
+#else
+            unum_formatDouble(nf, *x, Char16ToUChar(formattedChars.begin()), resultSize,
+                              nullptr, &status);
+#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+        MOZ_ASSERT(size == resultSize);
     }
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
 
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    MOZ_ASSERT(resultSize >= 0);
+    return formattedChars.resize(size_t(resultSize));
+}
+
+static bool
+intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue result)
+{
+    // Passing null for |fpositer| will just not compute partition information,
+    // letting us common up all ICU number-formatting code.
+    FormattedNumberChars chars(cx);
+    if (!PartitionNumberPattern(cx, nf, &x, nullptr, chars))
+        return false;
+
+    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), chars.length());
     if (!str)
         return false;
 
@@ -1744,13 +1833,411 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
     return true;
 }
 
+using FieldType = ImmutablePropertyNamePtr JSAtomState::*;
+
+static FieldType
+GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
+{
+    // See intl/icu/source/i18n/unicode/unum.h for a detailed field list.  This
+    // list is deliberately exhaustive: cases might have to be added/removed if
+    // this code is compiled with a different ICU with more UNumberFormatFields
+    // enum initializers.  Please guard such cases with appropriate ICU
+    // version-testing #ifdefs, should cross-version divergence occur.
+    switch (fieldName) {
+      case UNUM_INTEGER_FIELD:
+        if (IsNaN(d))
+            return &JSAtomState::nan;
+        if (!IsFinite(d))
+            return &JSAtomState::infinity;
+        return &JSAtomState::integer;
+
+      case UNUM_GROUPING_SEPARATOR_FIELD:
+        return &JSAtomState::group;
+
+      case UNUM_DECIMAL_SEPARATOR_FIELD:
+        return &JSAtomState::decimal;
+
+      case UNUM_FRACTION_FIELD:
+        return &JSAtomState::fraction;
+
+      case UNUM_SIGN_FIELD: {
+        MOZ_ASSERT(!IsNegativeZero(d),
+                   "-0 should have been excluded by PartitionNumberPattern");
+
+        // Manual trawling through the ICU call graph appears to indicate that
+        // the basic formatting we request will never include a positive sign.
+        // But this analysis may be mistaken, so don't absolutely trust it.
+        return d < 0 ? &JSAtomState::minusSign : &JSAtomState::plusSign;
+      }
+
+      case UNUM_PERCENT_FIELD:
+        return &JSAtomState::percentSign;
+
+      case UNUM_CURRENCY_FIELD:
+        return &JSAtomState::currency;
+
+      case UNUM_PERMILL_FIELD:
+        MOZ_ASSERT_UNREACHABLE("unexpected permill field found, even though "
+                               "we don't use any user-defined patterns that "
+                               "would require a permill field");
+
+      case UNUM_EXPONENT_SYMBOL_FIELD:
+      case UNUM_EXPONENT_SIGN_FIELD:
+      case UNUM_EXPONENT_FIELD:
+        MOZ_ASSERT_UNREACHABLE("exponent field unexpectedly found in "
+                               "formatted number, even though UNUM_SCIENTIFIC "
+                               "and scientific notation were never requested");
+
+      case UNUM_FIELD_COUNT:
+        MOZ_ASSERT_UNREACHABLE("format field sentinel value returned by "
+                               "iterator!");
+    }
+
+    MOZ_ASSERT_UNREACHABLE("unenumerated, undocumented format field returned "
+                           "by iterator");
+    return nullptr;
+}
+
+#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+
+static bool
+intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue result)
+{
+    UErrorCode status = U_ZERO_ERROR;
+
+    UFieldPositionIterator* fpositer = ufieldpositer_open(&status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    MOZ_ASSERT(fpositer);
+    ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(fpositer);
+
+    FormattedNumberChars chars(cx);
+    if (!PartitionNumberPattern(cx, nf, &x, fpositer, chars))
+        return false;
+
+    RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
+    if (!partsArray)
+        return false;
+
+    RootedString overallResult(cx, NewStringCopyN<CanGC>(cx, chars.begin(), chars.length()));
+    if (!overallResult)
+        return false;
+
+    // First, vacuum up fields in the overall formatted string.
+
+    struct Field
+    {
+        uint32_t begin;
+        uint32_t end;
+        FieldType type;
+
+        // Needed for vector-resizing scratch space.
+        Field() = default;
+
+        Field(uint32_t begin, uint32_t end, FieldType type)
+          : begin(begin), end(end), type(type)
+        {}
+    };
+
+    using FieldsVector = Vector<Field, 16>;
+    FieldsVector fields(cx);
+
+    int32_t fieldInt, beginIndexInt, endIndexInt;
+    while ((fieldInt = ufieldpositer_next(fpositer, &beginIndexInt, &endIndexInt)) >= 0) {
+        MOZ_ASSERT(beginIndexInt >= 0);
+        MOZ_ASSERT(endIndexInt >= 0);
+        MOZ_ASSERT(beginIndexInt < endIndexInt,
+                   "erm, aren't fields always non-empty?");
+
+        FieldType type = GetFieldTypeForNumberField(UNumberFormatFields(fieldInt), x);
+        if (!fields.emplaceBack(uint32_t(beginIndexInt), uint32_t(endIndexInt), type))
+            return false;
+    }
+
+    // Second, merge sort the fields vector.  Expand the vector to have scratch
+    // space for performing the sort.
+    size_t fieldsLen = fields.length();
+    if (!fields.resizeUninitialized(fieldsLen * 2))
+        return false;
+
+    MOZ_ALWAYS_TRUE(MergeSort(fields.begin(), fieldsLen, fields.begin() + fieldsLen,
+                              [](const Field& left, const Field& right,
+                                 bool* lessOrEqual)
+                              {
+                                  // Sort first by begin index, then to place
+                                  // enclosing fields before nested fields.
+                                  *lessOrEqual = left.begin < right.begin ||
+                                                 (left.begin == right.begin &&
+                                                  left.end > right.end);
+                                  return true;
+                              }));
+
+    // Deallocate the scratch space.
+    if (!fields.resize(fieldsLen))
+        return false;
+
+    // Third, iterate over the sorted field list to generate a sequence of
+    // parts (what ECMA-402 actually exposes).  A part is a maximal character
+    // sequence entirely within no field or a single most-nested field.
+    //
+    // Diagrams may be helpful to illustrate how fields map to parts.  Consider
+    // formatting -19,766,580,028,249.41, the US national surplus (negative
+    // because it's actually a debt) on October 18, 2016.
+    //
+    //    var options =
+    //      { style: "currency", currency: "USD", currencyDisplay: "name" };
+    //    var usdFormatter = new Intl.NumberFormat("en-US", options);
+    //    usdFormatter.format(-19766580028249.41);
+    //
+    // The formatted result is "-19,766,580,028,249.41 US dollars".  ICU
+    // identifies these fields in the string:
+    //
+    //     UNUM_GROUPING_SEPARATOR_FIELD
+    //                   |
+    //   UNUM_SIGN_FIELD |  UNUM_DECIMAL_SEPARATOR_FIELD
+    //    |   __________/|   |
+    //    |  /   |   |   |   |
+    //   "-19,766,580,028,249.41 US dollars"
+    //     \________________/ |/ \_______/
+    //             |          |      |
+    //    UNUM_INTEGER_FIELD  |  UNUM_CURRENCY_FIELD
+    //                        |
+    //               UNUM_FRACTION_FIELD
+    //
+    // These fields map to parts as follows:
+    //
+    //         integer     decimal
+    //       _____|________  |
+    //      /  /| |\  |\  |\ |  literal
+    //     /| / | | \ | \ | \|  |
+    //   "-19,766,580,028,249.41 US dollars"
+    //    |  \___|___|___/    |/ \________/
+    //    |        |          |       |
+    //    |      group        |   currency
+    //    |                   |
+    //   minusSign        fraction
+    //
+    // The sign is a part.  Each comma is a part, splitting the integer field
+    // into parts for trillions/billions/&c. digits.  The decimal point is a
+    // part.  Cents are a part.  The space between cents and currency is a part
+    // (outside any field).  Last, the currency field is a part.
+    //
+    // Because parts fully partition the formatted string, we only track the
+    // end of each part -- the beginning is implicitly the last part's end.
+    struct Part
+    {
+        uint32_t end;
+        FieldType type;
+    };
+
+    class PartGenerator
+    {
+        // The fields in order from start to end, then least to most nested.
+        const FieldsVector& fields;
+
+        // Index of the current field, in |fields|, being considered to
+        // determine part boundaries.  |lastEnd <= fields[index].begin| is an
+        // invariant.
+        size_t index;
+
+        // The end index of the last part produced, always less than or equal
+        // to |limit|, strictly increasing.
+        uint32_t lastEnd;
+
+        // The length of the overall formatted string.
+        const uint32_t limit;
+
+        Vector<size_t, 4> enclosingFields;
+
+        void popEnclosingFieldsEndingAt(uint32_t end) {
+            MOZ_ASSERT_IF(enclosingFields.length() > 0,
+                          fields[enclosingFields.back()].end >= end);
+
+            while (enclosingFields.length() > 0 && fields[enclosingFields.back()].end == end)
+                enclosingFields.popBack();
+        }
+
+        bool nextPartInternal(Part* part) {
+            size_t len = fields.length();
+            MOZ_ASSERT(index <= len);
+
+            // If we're out of fields, all that remains are part(s) consisting
+            // of trailing portions of enclosing fields, and maybe a final
+            // literal part.
+            if (index == len) {
+                if (enclosingFields.length() > 0) {
+                    const auto& enclosing = fields[enclosingFields.popCopy()];
+                    part->end = enclosing.end;
+                    part->type = enclosing.type;
+
+                    // If additional enclosing fields end where this part ends,
+                    // pop them as well.
+                    popEnclosingFieldsEndingAt(part->end);
+                } else {
+                    part->end = limit;
+                    part->type = &JSAtomState::literal;
+                }
+
+                return true;
+            }
+
+            // Otherwise we still have a field to process.
+            const Field* current = &fields[index];
+            MOZ_ASSERT(lastEnd <= current->begin);
+            MOZ_ASSERT(current->begin < current->end);
+
+            // But first, deal with inter-field space.
+            if (lastEnd < current->begin) {
+                if (enclosingFields.length() > 0) {
+                    // Space between fields, within an enclosing field, is part
+                    // of that enclosing field, until the start of the current
+                    // field or the end of the enclosing field, whichever is
+                    // earlier.
+                    const auto& enclosing = fields[enclosingFields.back()];
+                    part->end = std::min(enclosing.end, current->begin);
+                    part->type = enclosing.type;
+                    popEnclosingFieldsEndingAt(part->end);
+                } else {
+                    // If there's no enclosing field, the space is a literal.
+                    part->end = current->begin;
+                    part->type = &JSAtomState::literal;
+                }
+
+                return true;
+            }
+
+            // Otherwise, the part spans a prefix of the current field.  Find
+            // the most-nested field containing that prefix.
+            const Field* next;
+            do {
+                current = &fields[index];
+
+                // If the current field is last, the part extends to its end.
+                if (++index == len) {
+                    part->end = current->end;
+                    part->type = current->type;
+                    return true;
+                }
+
+                next = &fields[index];
+                MOZ_ASSERT(current->begin <= next->begin);
+                MOZ_ASSERT(current->begin < next->end);
+
+                // If the next field nests within the current field, push an
+                // enclosing field.  (If there are no nested fields, don't
+                // bother pushing a field that'd be immediately popped.)
+                if (current->end > next->begin) {
+                    if (!enclosingFields.append(index - 1))
+                        return false;
+                }
+
+                // Do so until the next field begins after this one.
+            } while (current->begin == next->begin);
+
+            part->type = current->type;
+
+            if (current->end <= next->begin) {
+                // The next field begins after the current field ends.  Therefore
+                // the current part ends at the end of the current field.
+                part->end = current->end;
+                popEnclosingFieldsEndingAt(part->end);
+            } else {
+                // The current field encloses the next one.  The current part
+                // ends where the next field/part will start.
+                part->end = next->begin;
+            }
+
+            return true;
+        }
+
+      public:
+        PartGenerator(JSContext* cx, const FieldsVector& vec, uint32_t limit)
+          : fields(vec), index(0), lastEnd(0), limit(limit), enclosingFields(cx)
+        {}
+
+        bool nextPart(bool* hasPart, Part* part) {
+            // There are no parts left if we've partitioned the entire string.
+            if (lastEnd == limit) {
+                MOZ_ASSERT(enclosingFields.length() == 0);
+                *hasPart = false;
+                return true;
+            }
+
+            if (!nextPartInternal(part))
+                return false;
+
+            *hasPart = true;
+            lastEnd = part->end;
+            return true;
+        }
+    };
+
+    // Finally, generate the result array.
+    size_t lastEndIndex = 0;
+    uint32_t partIndex = 0;
+    RootedObject singlePart(cx);
+    RootedValue propVal(cx);
+
+    PartGenerator gen(cx, fields, chars.length());
+    do {
+        bool hasPart;
+        Part part;
+        if (!gen.nextPart(&hasPart, &part))
+            return false;
+
+        if (!hasPart)
+            break;
+
+        FieldType type = part.type;
+        size_t endIndex = part.end;
+
+        MOZ_ASSERT(lastEndIndex < endIndex);
+
+        singlePart = NewBuiltinClassInstance<PlainObject>(cx);
+        if (!singlePart)
+            return false;
+
+        propVal.setString(cx->names().*type);
+        if (!DefineProperty(cx, singlePart, cx->names().type, propVal))
+            return false;
+
+        JSLinearString* partSubstr =
+            NewDependentString(cx, overallResult, lastEndIndex, endIndex - lastEndIndex);
+        if (!partSubstr)
+            return false;
+
+        propVal.setString(partSubstr);
+        if (!DefineProperty(cx, singlePart, cx->names().value, propVal))
+            return false;
+
+        propVal.setObject(*singlePart);
+        if (!DefineElement(cx, partsArray, partIndex, propVal))
+            return false;
+
+        lastEndIndex = endIndex;
+        partIndex++;
+    } while (true);
+
+    MOZ_ASSERT(lastEndIndex == chars.length(),
+               "result array must partition the entire string");
+
+    result.setObject(*partsArray);
+    return true;
+}
+
+#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+
 bool
 js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args.length() == 3);
     MOZ_ASSERT(args[0].isObject());
     MOZ_ASSERT(args[1].isNumber());
+    MOZ_ASSERT(args[2].isBoolean());
 
     RootedObject numberFormat(cx, &args[0].toObject());
 
@@ -1778,8 +2265,21 @@ js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Use the UNumberFormat to actually format the number.
+    double d = args[1].toNumber();
     RootedValue result(cx);
-    bool success = intl_FormatNumber(cx, nf, args[1].toNumber(), &result);
+
+    bool success;
+#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+    if (args[2].toBoolean()) {
+        success = intl_FormatNumberToParts(cx, nf, d, &result);
+    } else
+#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+    {
+        MOZ_ASSERT(!args[2].toBoolean(),
+                   "shouldn't be doing formatToParts without an ICU that "
+                   "supports it");
+        success = intl_FormatNumber(cx, nf, d, &result);
+    }
 
     if (!isNumberFormatInstance)
         unum_close(nf);
@@ -2668,8 +3168,6 @@ intl_FormatDateTime(JSContext* cx, UDateFormat* df, double x, MutableHandleValue
     return true;
 }
 
-using FieldType = ImmutablePropertyNamePtr JSAtomState::*;
-
 static FieldType
 GetFieldTypeForFormatField(UDateFormatField fieldName)
 {
@@ -2774,7 +3272,7 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-    auto closeFieldPosIter = MakeScopeExit([&]() { ufieldpositer_close(fpositer); });
+    ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(fpositer);
 
     int32_t resultSize =
         udat_formatForFields(df, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
@@ -2811,7 +3309,6 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
     uint32_t partIndex = 0;
     RootedObject singlePart(cx);
     RootedValue partType(cx);
-    RootedString partSubstr(cx);
     RootedValue val(cx);
 
     auto AppendPart = [&](FieldType type, size_t beginIndex, size_t endIndex) {
@@ -2823,7 +3320,8 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
         if (!DefineProperty(cx, singlePart, cx->names().type, partType))
             return false;
 
-        partSubstr = SubstringKernel(cx, overallResult, beginIndex, endIndex - beginIndex);
+        JSLinearString* partSubstr =
+            NewDependentString(cx, overallResult, beginIndex, endIndex - beginIndex);
         if (!partSubstr)
             return false;
 
