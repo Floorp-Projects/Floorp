@@ -59,9 +59,9 @@ function* testAppears(view, swatch) {
   let bezierPanel = bezier.tooltip.panel;
   ok(bezierPanel, "The XUL panel for the cubic-bezier tooltip exists");
 
-  let onShown = bezier.tooltip.once("shown");
+  let onBezierWidgetReady = bezier.once("ready");
   swatch.click();
-  yield onShown;
+  yield onBezierWidgetReady;
 
   ok(true, "The cubic-bezier tooltip was shown on click of the cibuc swatch");
   ok(!inplaceEditor(swatch.parentNode),

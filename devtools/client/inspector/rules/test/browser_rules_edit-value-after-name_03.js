@@ -45,7 +45,7 @@ add_task(function* () {
 
   let onRuleViewChanged = view.once("ruleview-changed");
   let onPropertyValueUpdate = view.once("property-value-updated");
-  let onShown = colorPicker.tooltip.once("shown");
+  let onReady = colorPicker.once("ready");
 
   info("blur propEditor.nameSpan by clicking on the color swatch");
   EventUtils.synthesizeMouseAtCenter(swatchSpan, {},
@@ -58,7 +58,7 @@ add_task(function* () {
   yield onPropertyValueUpdate;
 
   info("wait for the color picker to be shown");
-  yield onShown;
+  yield onReady;
 
   ok(true, "The color picker was shown on click of the color swatch");
   ok(!inplaceEditor(propEditor.valueSpan),
