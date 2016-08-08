@@ -753,8 +753,8 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
 
   RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
-  if (service) {
-    return true;
+  if (!service) {
+    return false;
   }
 
   // First, get data from the handle
