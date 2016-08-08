@@ -1,8 +1,11 @@
 $inherits:
-  from: 'tasks/builds/firefox_docker_base.yml'
+  from: 'tasks/build.yml'
   variables:
+    build_product: firefox
     build_name: 'linux64-clang'
     build_type: 'opt'
+
+docker-image: desktop-build
 task:
   metadata:
     name: '[TC] Clang'
@@ -10,19 +13,22 @@ task:
 
   workerType: 'gecko-{{level}}-b-linux'
 
-  routes:
-    - 'index.buildbot.branches.{{project}}.clang'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.clang'
-
   scopes:
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
     - 'docker-worker:cache:tooltool-cache'
 
   payload:
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId:
+        task-reference: "<docker-image>"
+
     cache:
+      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
       tooltool-cache: '/home/worker/tooltool-cache'
 
     env:
-      MOZHARNESS_DISABLE: 'true'
       TOOLS_DISABLE: 'true'
       TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
 
@@ -31,9 +37,9 @@ task:
     command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/taskcluster/scripts/misc/build-clang-linux.sh" ]
 
     artifacts:
-      'public/clang.tar.xz':
-        type: file
-        path: '/home/worker/workspace/artifacts/clang.tar.xz'
+      'public':
+        type: directory
+        path: '/home/worker/workspace/artifacts/'
         expires:
           relative-datestamp: "1 year"
 
@@ -45,6 +51,7 @@ task:
       groupSymbol: Cc
       groupName: Compilers, submitted by taskcluster
       symbol: Clang
+      tier: 1
       machine:
         platform: linux64
     locations:
