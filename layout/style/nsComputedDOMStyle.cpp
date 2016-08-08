@@ -6029,10 +6029,10 @@ nsComputedDOMStyle::DoGetClipPath()
   switch (svg->mClipPath.GetType()) {
     case StyleShapeSourceType::Shape:
       return CreatePrimitiveValueForClipPath(svg->mClipPath.GetBasicShape(),
-                                             svg->mClipPath.GetSizingBox());
+                                             svg->mClipPath.GetReferenceBox());
     case StyleShapeSourceType::Box:
       return CreatePrimitiveValueForClipPath(nullptr,
-                                             svg->mClipPath.GetSizingBox());
+                                             svg->mClipPath.GetReferenceBox());
     case StyleShapeSourceType::URL: {
       // Bug 1288812 - we should only serialize fragment for local-ref URL.
       nsCOMPtr<nsIURI> pathURI = svg->mClipPath.GetURL()->GetSourceURL();

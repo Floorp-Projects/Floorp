@@ -3531,44 +3531,152 @@ private:
   nsStyleCorners mRadius;
 };
 
-struct StyleClipPath
+template<typename ReferenceBox>
+struct StyleShapeSource
 {
-  StyleClipPath();
-  StyleClipPath(const StyleClipPath& aSource);
-  ~StyleClipPath();
+  StyleShapeSource()
+    : mURL(nullptr)
+  {}
 
-  StyleClipPath& operator=(const StyleClipPath& aOther);
+  StyleShapeSource(const StyleShapeSource& aSource)
+    : StyleShapeSource()
+  {
+    if (aSource.mType == StyleShapeSourceType::URL) {
+      CopyURL(aSource);
+    } else if (aSource.mType == StyleShapeSourceType::Shape) {
+      SetBasicShape(aSource.mBasicShape, aSource.mReferenceBox);
+    } else if (aSource.mType == StyleShapeSourceType::Box) {
+      SetReferenceBox(aSource.mReferenceBox);
+    }
+  }
 
-  bool operator==(const StyleClipPath& aOther) const;
-  bool operator!=(const StyleClipPath& aOther) const {
+  ~StyleShapeSource()
+  {
+    ReleaseRef();
+  }
+
+  StyleShapeSource& operator=(const StyleShapeSource& aOther)
+  {
+    if (this == &aOther) {
+      return *this;
+    }
+
+    if (aOther.mType == StyleShapeSourceType::URL) {
+      CopyURL(aOther);
+    } else if (aOther.mType == StyleShapeSourceType::Shape) {
+      SetBasicShape(aOther.mBasicShape, aOther.mReferenceBox);
+    } else if (aOther.mType == StyleShapeSourceType::Box) {
+      SetReferenceBox(aOther.mReferenceBox);
+    } else {
+      ReleaseRef();
+      mReferenceBox = ReferenceBox::NoBox;
+      mType = StyleShapeSourceType::None_;
+    }
+    return *this;
+  }
+
+  bool operator==(const StyleShapeSource& aOther) const
+  {
+    if (mType != aOther.mType) {
+      return false;
+    }
+
+    if (mType == StyleShapeSourceType::URL) {
+      return mURL == aOther.mURL;
+    } else if (mType == StyleShapeSourceType::Shape) {
+      return *mBasicShape == *aOther.mBasicShape &&
+             mReferenceBox == aOther.mReferenceBox;
+    } else if (mType == StyleShapeSourceType::Box) {
+      return mReferenceBox == aOther.mReferenceBox;
+    }
+
+    return true;
+  }
+
+  bool operator!=(const StyleShapeSource& aOther) const
+  {
     return !(*this == aOther);
   }
 
-  StyleShapeSourceType GetType() const {
+  StyleShapeSourceType GetType() const
+  {
     return mType;
   }
 
-  FragmentOrURL* GetURL() const {
+  FragmentOrURL* GetURL() const
+  {
     MOZ_ASSERT(mType == StyleShapeSourceType::URL, "Wrong shape source type!");
     return mURL;
   }
-  bool SetURL(const nsCSSValue* aValue);
 
-  StyleBasicShape* GetBasicShape() const {
+  bool SetURL(const nsCSSValue* aValue)
+  {
+    if (!aValue->GetURLValue()) {
+      return false;
+    }
+
+    ReleaseRef();
+
+    mURL = new FragmentOrURL();
+    mURL->SetValue(aValue);
+    mType = StyleShapeSourceType::URL;
+    return true;
+  }
+
+  StyleBasicShape* GetBasicShape() const
+  {
     MOZ_ASSERT(mType == StyleShapeSourceType::Shape, "Wrong shape source type!");
     return mBasicShape;
   }
 
-  void SetBasicShape(StyleBasicShape* mBasicShape,
-                     StyleClipShapeSizing aSizingBox =
-                     StyleClipShapeSizing::NoBox);
+  void SetBasicShape(StyleBasicShape* aBasicShape,
+                     ReferenceBox aReferenceBox)
+  {
+    NS_ASSERTION(aBasicShape, "expected pointer");
+    ReleaseRef();
+    mBasicShape = aBasicShape;
+    mBasicShape->AddRef();
+    mReferenceBox = aReferenceBox;
+    mType = StyleShapeSourceType::Shape;
+  }
 
-  StyleClipShapeSizing GetSizingBox() const { return mSizingBox; }
-  void SetSizingBox(StyleClipShapeSizing aSizingBox);
+  ReferenceBox GetReferenceBox() const
+  {
+    MOZ_ASSERT(mType == StyleShapeSourceType::Box ||
+               mType == StyleShapeSourceType::Shape,
+               "Wrong shape source type!");
+    return mReferenceBox;
+  }
+
+  void SetReferenceBox(ReferenceBox aReferenceBox)
+  {
+    ReleaseRef();
+    mReferenceBox = aReferenceBox;
+    mType = StyleShapeSourceType::Box;
+  }
 
 private:
-  void ReleaseRef();
-  void CopyURL(const StyleClipPath& aOther);
+  void ReleaseRef()
+  {
+    if (mType == StyleShapeSourceType::Shape) {
+      NS_ASSERTION(mBasicShape, "expected pointer");
+      mBasicShape->Release();
+    } else if (mType == StyleShapeSourceType::URL) {
+      NS_ASSERTION(mURL, "expected pointer");
+      delete mURL;
+    }
+    // Both mBasicShape and mURL are pointers in a union. Nulling one of them
+    // nulls both of them.
+    mURL = nullptr;
+  }
+
+  void CopyURL(const StyleShapeSource& aOther)
+  {
+    ReleaseRef();
+
+    mURL = new FragmentOrURL(*aOther.mURL);
+    mType = StyleShapeSourceType::URL;
+  }
 
   void* operator new(size_t) = delete;
 
@@ -3576,9 +3684,11 @@ private:
     StyleBasicShape* mBasicShape;
     FragmentOrURL* mURL;
   };
-  StyleShapeSourceType mType;
-  StyleClipShapeSizing mSizingBox;
+  StyleShapeSourceType mType = StyleShapeSourceType::None_;
+  ReferenceBox mReferenceBox = ReferenceBox::NoBox;
 };
+
+using StyleClipPath = StyleShapeSource<StyleClipShapeSizing>;
 
 } // namespace mozilla
 
