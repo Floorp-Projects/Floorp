@@ -156,21 +156,22 @@ apt-get update
 # for mp4 codec (used in MSE tests)
 apt-get -q -y -f install ubuntu-restricted-extras
 
-# Various graphics related package versions are pinned because they are known
-# to work.
-apt-get -q -y -f --allow-downgrades install \
-    libxcb1=1.11.1-1ubuntu1 \
-    libxcb-render0=1.11.1-1ubuntu1 \
-    libxcb-shm0=1.11.1-1ubuntu1 \
-    libxcb-glx0=1.11.1-1ubuntu1 \
-    libxcb-shape0=1.11.1-1ubuntu1
+apt-get -q -y -f install \
+    libxcb1 \
+    libxcb-render0 \
+    libxcb-shm0 \
+    libxcb-glx0 \
+    libxcb-shape0
+libxcb1_version=$(dpkg-query -s libxcb1 | grep ^Version | awk '{ print $2 }')
+[ "$libxcb1_version" = "1.11.1-1ubuntu1" ] || exit 1
 
-apt-get -q -y -f --allow-downgrades install \
-    libegl1-mesa=11.2.0-1ubuntu2 \
-    libglapi-mesa=11.2.0-1ubuntu2 \
-    libgl1-mesa-dri=11.2.0-1ubuntu2 \
-    libgl1-mesa-glx=11.2.0-1ubuntu2 \
-    mesa-common-dev=11.2.0-1ubuntu2
+apt-get -q -y -f install \
+    libgl1-mesa-dri \
+    libgl1-mesa-glx \
+    mesa-common-dev
+mesa_version=$(dpkg-query -s libgl1-mesa-dri | grep ^Version | awk '{ print $2 }')
+echo $mesa_version
+[ "$mesa_version" = "11.2.0-1ubuntu2" ] || exit 1
 
 # revert the list of repos
 cp sources.list.orig /etc/apt/sources.list
