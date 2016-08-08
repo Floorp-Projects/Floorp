@@ -3893,9 +3893,6 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
             /* Unmark all weak maps in the zones being collected. */
             WeakMapBase::unmarkZone(zone);
         }
-
-        if (isFull)
-            UnmarkScriptData(rt, lock);
     }
 
     markRuntime(gcmarker, MarkRuntime, lock);
@@ -5421,8 +5418,7 @@ GCRuntime::endSweepPhase(bool destroyingRuntime, AutoLockForExclusiveAccess& loc
          * script and calls rt->destroyScriptHook, the hook can still access the
          * script's filename. See bug 323267.
          */
-        if (isFull)
-            SweepScriptData(rt, lock);
+        SweepScriptData(rt, lock);
 
         /* Clear out any small pools that we're hanging on to. */
         if (jit::JitRuntime* jitRuntime = rt->jitRuntime()) {
