@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_gfx_thebes_DeviceManagerD3D11_h
-#define mozilla_gfx_thebes_DeviceManagerD3D11_h
+#ifndef mozilla_gfx_thebes_DeviceManagerDx_h
+#define mozilla_gfx_thebes_DeviceManagerDx_h
 
 #include "gfxPlatform.h"
 #include "gfxTelemetry.h"
@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "nsTArray.h"
+#include "nsWindowsHelpers.h"
 
 #include <windows.h>
 #include <objbase.h>
@@ -28,6 +29,7 @@
 #endif
 
 struct ID3D11Device;
+struct IDirectDraw7;
 
 namespace mozilla {
 class ScopedGfxFeatureReporter;
@@ -35,21 +37,22 @@ class ScopedGfxFeatureReporter;
 namespace gfx {
 class FeatureState;
 
-class DeviceManagerD3D11 final
+class DeviceManagerDx final
 {
 public:
   static void Init();
   static void Shutdown();
 
-  DeviceManagerD3D11();
+  DeviceManagerDx();
 
-  static DeviceManagerD3D11* Get() {
+  static DeviceManagerDx* Get() {
     return sInstance;
   }
 
   RefPtr<ID3D11Device> GetCompositorDevice();
   RefPtr<ID3D11Device> GetContentDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
+  IDirectDraw7* GetDirectDraw();
 
   unsigned GetD3D11Version() const;
   bool TextureSharingWorks() const;
@@ -57,6 +60,7 @@ public:
 
   void CreateDevices();
   void ResetDevices();
+  void InitializeDirectDraw();
 
   // Call GetDeviceRemovedReason on each device until one returns
   // a failure.
@@ -99,7 +103,7 @@ private:
   bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 
 private:
-  static StaticAutoPtr<DeviceManagerD3D11> sInstance;
+  static StaticAutoPtr<DeviceManagerDx> sInstance;
 
   mozilla::Mutex mDeviceLock;
   nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
@@ -110,9 +114,11 @@ private:
   mozilla::Atomic<bool> mIsWARP;
   mozilla::Atomic<bool> mTextureSharingWorks;
   bool mCompositorDeviceSupportsVideo;
+  nsModuleHandle mDirectDrawDLL;
+  RefPtr<IDirectDraw7> mDirectDraw;
 };
 
 } // namespace gfx
 } // namespace mozilla
 
-#endif // mozilla_gfx_thebes_DeviceManagerD3D11_h
+#endif // mozilla_gfx_thebes_DeviceManagerDx_h
