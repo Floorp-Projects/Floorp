@@ -3484,13 +3484,9 @@ nsFlexContainerFrame::GetMainSizeFromReflowInput(
   if (aAxisTracker.IsRowOriented()) {
     // Row-oriented --> our main axis is the inline axis, so our main size
     // is our inline size (which should already be resolved).
-    // XXXdholbert ISize may be (wrongly) unconstrained right now: bug 1163238
-    // Uncomment when that's fixed:
-    /*
     NS_WARN_IF_FALSE(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
                      "Unconstrained inline size; this should only result from "
                      "huge sizes (not intrinsic sizing w/ orthogonal flows)");
-    */
     return aReflowInput.ComputedISize();
   }
 
@@ -3520,8 +3516,6 @@ GetLargestLineMainSize(const FlexLine* aFirstLine)
  *
  * Guaranteed to return a definite length, i.e. not NS_UNCONSTRAINEDSIZE,
  * aside from cases with huge lengths which happen to compute to that value.
- * XXXdholbert (this^ isn't quite true, if we're row-oriented and in an
- * orthogonal flow, per mentions of bug 1163238 in GetMainSizeFromReflowInput.)
  *
  * (Note: This function should be structurally similar to 'ComputeCrossSize()',
  * except that here, the caller has already grabbed the tentative size from the
@@ -3593,13 +3587,9 @@ nsFlexContainerFrame::ComputeCrossSize(const ReflowInput& aReflowInput,
   if (aAxisTracker.IsColumnOriented()) {
     // Column-oriented --> our cross axis is the inline axis, so our cross size
     // is our inline size (which should already be resolved).
-    // XXXdholbert ISize may be (wrongly) unconstrained right now: bug 1163238.
-    // Uncomment when that's fixed:
-    /*
     NS_WARN_IF_FALSE(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
                      "Unconstrained inline size; this should only result from "
                      "huge sizes (not intrinsic sizing w/ orthogonal flows)");
-    */
     *aIsDefinite = true;
     return aReflowInput.ComputedISize();
   }
