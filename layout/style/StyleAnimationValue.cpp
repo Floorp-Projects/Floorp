@@ -3503,8 +3503,8 @@ StyleClipBasicShapeToCSSArray(const nsStyleClipPath& aClipPath,
   nsCSSKeyword functionName = shape->GetShapeTypeName();
   RefPtr<nsCSSValue::Array> functionArray;
   switch (shape->GetShapeType()) {
-    case nsStyleBasicShape::Type::eCircle:
-    case nsStyleBasicShape::Type::eEllipse: {
+    case StyleBasicShapeType::Circle:
+    case StyleBasicShapeType::Ellipse: {
       const nsTArray<nsStyleCoord>& coords = shape->Coordinates();
       MOZ_ASSERT(coords.Length() == ShapeArgumentCount(functionName) - 1,
                  "Unexpected radii count");
@@ -3525,7 +3525,7 @@ StyleClipBasicShapeToCSSArray(const nsStyleClipPath& aClipPath,
                        functionArray->Item(functionArray->Count() - 1));
       break;
     }
-    case nsStyleBasicShape::Type::ePolygon: {
+    case StyleBasicShapeType::Polygon: {
       functionArray =
         aResult->Item(0).InitFunction(functionName,
                                       ShapeArgumentCount(functionName));
@@ -3546,7 +3546,7 @@ StyleClipBasicShapeToCSSArray(const nsStyleClipPath& aClipPath,
       }
       break;
     }
-    case nsStyleBasicShape::Type::eInset: {
+    case StyleBasicShapeType::Inset: {
       const nsTArray<nsStyleCoord>& coords = shape->Coordinates();
       MOZ_ASSERT(coords.Length() == ShapeArgumentCount(functionName) - 1,
                  "Unexpected offset count");
