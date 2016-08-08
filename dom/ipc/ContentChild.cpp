@@ -1642,6 +1642,15 @@ ContentChild::RecvNotifyGMPsChanged()
   return true;
 }
 
+bool
+ContentChild::RecvNotifyEmptyHTTPCache()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  obs->NotifyObservers(nullptr, "cacheservice:empty-cache", nullptr);
+  return true;
+}
+
 PCrashReporterChild*
 ContentChild::AllocPCrashReporterChild(const mozilla::dom::NativeThreadId& id,
                                        const uint32_t& processType)
