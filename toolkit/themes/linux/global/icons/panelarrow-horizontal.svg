@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20">
-  <path d="M 10,-0.2 L -0.2,10 10,20.2 z" fill="ThreeDShadow"/>
-  <path d="M 10,1.2 L 1.2,10 10,18.8 z" fill="-moz-Dialog"/>
-</svg>
