@@ -6,6 +6,12 @@ RUN useradd -d /home/worker -s /bin/bash -m worker
 # Declare default working folder
 WORKDIR       /home/worker
 
+# This will create a host mounted filesystem when the cache is stripped
+# on Try. This cancels out some of the performance losses of aufs. See
+# bug 1291940.
+VOLUME /home/worker/workspace
+VOLUME /home/worker/tooltool-cache
+
 # install non-build specific dependencies in a single layer
 ADD           system-setup.sh   /tmp/system-setup.sh
 RUN           bash /tmp/system-setup.sh
