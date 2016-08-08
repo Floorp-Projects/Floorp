@@ -55,12 +55,13 @@ var TestRunner = {
    *               iterator.
    */
   next: function (aValue) {
-    let { done, value } = TestRunner._iter.next(aValue);
-    if (done) {
+    let obj = TestRunner._iter.next(aValue);
+    if (obj.done) {
       finish();
       return;
     }
 
+    let value = obj.value || obj;
     if (value && typeof value.then == "function") {
       value.then(result => {
         next(result);
