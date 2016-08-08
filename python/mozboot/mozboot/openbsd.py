@@ -34,5 +34,12 @@ class OpenBSDBootstrapper(BaseBootstrapper):
         self.run_as_root(['pkg_add', '-z'] + self.packages)
 
     def install_browser_packages(self):
+        self.ensure_browser_packages()
+
+    def install_browser_artifact_mode_packages(self):
+        self.ensure_browser_packages(artifact_mode=True)
+
+    def ensure_browser_packages(self, artifact_mode=False):
+        # TODO: Figure out what not to install for artifact mode
         # we use -z because there's no other way to say "any autoconf-2.13"
         self.run_as_root(['pkg_add', '-z'] + self.browser_packages)

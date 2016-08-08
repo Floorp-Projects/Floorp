@@ -190,6 +190,9 @@ class OSXBootstrapper(BaseBootstrapper):
     def install_browser_packages(self):
         getattr(self, 'ensure_%s_browser_packages' % self.package_manager)()
 
+    def install_browser_artifact_mode_packages(self):
+        getattr(self, 'ensure_%s_browser_packages' % self.package_manager)(artifact_mode=True)
+
     def install_mobile_android_packages(self):
         getattr(self, 'ensure_%s_mobile_android_packages' % self.package_manager)()
 
@@ -320,7 +323,8 @@ class OSXBootstrapper(BaseBootstrapper):
         ]
         self._ensure_homebrew_packages(packages)
 
-    def ensure_homebrew_browser_packages(self):
+    def ensure_homebrew_browser_packages(self, artifact_mode=False):
+        # TODO: Figure out what not to install for artifact mode
         packages = [
             ('yasm', 'yasm'),
         ]
@@ -408,7 +412,8 @@ class OSXBootstrapper(BaseBootstrapper):
         self._ensure_macports_packages(packages)
         self.run_as_root([self.port, 'select', '--set', 'python', 'python27'])
 
-    def ensure_macports_browser_packages(self):
+    def ensure_macports_browser_packages(self, artifact_mode=False):
+        # TODO: Figure out what not to install for artifact mode
         packages = ['yasm']
 
         self._ensure_macports_packages(packages)

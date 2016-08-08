@@ -54,6 +54,7 @@ Your choice:
 
 APPLICATIONS_LIST=[
     ('Firefox for Desktop', 'browser'),
+    ('Firefox for Desktop Artifact Mode', 'browser_artifact_mode'),
     ('Firefox for Android Artifact Mode', 'mobile_android_artifact_mode'),
     ('Firefox for Android', 'mobile_android'),
 ]
@@ -62,8 +63,9 @@ APPLICATIONS_LIST=[
 # no OrderedDict)
 APPLICATIONS = dict(
     browser=APPLICATIONS_LIST[0],
-    mobile_android_artifact_mode=APPLICATIONS_LIST[1],
-    mobile_android=APPLICATIONS_LIST[2],
+    browser_artifact_mode=APPLICATIONS_LIST[1],
+    mobile_android_artifact_mode=APPLICATIONS_LIST[2],
+    mobile_android=APPLICATIONS_LIST[3],
 )
 
 STATE_DIR_INFO = '''
