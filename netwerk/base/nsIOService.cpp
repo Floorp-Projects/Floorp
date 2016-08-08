@@ -1377,15 +1377,14 @@ IsWifiActive()
 #endif
 }
 
-class
-nsWakeupNotifier : public Runnable
+class nsWakeupNotifier : public Runnable
 {
 public:
     explicit nsWakeupNotifier(nsIIOServiceInternal *ioService)
         :mIOService(ioService)
     { }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         return mIOService->NotifyWakeup();
     }
@@ -1931,7 +1930,7 @@ public:
     {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         MOZ_ASSERT(NS_IsMainThread());
         gIOService->SetAppOfflineInternal(mAppId, mState);

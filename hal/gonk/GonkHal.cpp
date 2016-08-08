@@ -426,7 +426,7 @@ namespace {
 
 class BatteryUpdater : public Runnable {
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     hal::BatteryInformation info;
     hal_impl::GetCurrentBatteryInformation(&info);
@@ -1046,7 +1046,7 @@ class AlarmFiredEvent : public Runnable {
 public:
   AlarmFiredEvent(int aGeneration) : mGeneration(aGeneration) {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     // Guard against spurious notifications caused by an alarm firing
     // concurrently with it being disabled.
     if (sAlarmData && !sAlarmData->mShuttingDown &&
@@ -1983,7 +1983,7 @@ public:
     , mThreadPriority(aThreadPriority)
   { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     NS_ASSERTION(NS_IsMainThread(), "Can only set thread priorities on main thread");
     hal_impl::DoSetThreadPriority(mThreadId, mThreadPriority);

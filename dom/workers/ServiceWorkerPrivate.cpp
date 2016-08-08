@@ -1448,7 +1448,7 @@ private:
     {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       AssertIsOnMainThread();
       nsresult rv = mChannel->ResetInterception();

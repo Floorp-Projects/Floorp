@@ -34,7 +34,7 @@ public:
     , mErrorCode(aErrorCode)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mErrorCode == nsITVServiceCallback::TV_ERROR_OK) {
       return mCallback->NotifySuccess(mDataList);

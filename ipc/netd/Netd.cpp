@@ -33,7 +33,7 @@ RefPtr<mozilla::ipc::NetdConsumer> gNetdConsumer;
 
 class StopNetdConsumer : public mozilla::Runnable {
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

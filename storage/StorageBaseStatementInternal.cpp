@@ -42,7 +42,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mStatement->mAsyncStatement) {
       sqlite3_finalize(mStatement->mAsyncStatement);
@@ -88,7 +88,7 @@ public:
     NS_PRECONDITION(aConnection, "You must provide a Connection");
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     (void)::sqlite3_finalize(mAsyncStatement);
     mAsyncStatement = nullptr;

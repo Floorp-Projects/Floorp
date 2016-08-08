@@ -1917,7 +1917,7 @@ public:
   nsAsyncMessageToSameProcessChild(JSContext* aCx, JS::Handle<JSObject*> aCpows)
     : nsSameProcessAsyncMessageBase(aCx, aCpows)
   { }
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsFrameMessageManager* ppm = nsFrameMessageManager::GetChildProcessManager();
     ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), nullptr, ppm);

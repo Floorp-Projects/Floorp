@@ -62,7 +62,7 @@ public:
   {}
   ~LogEvent() {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     AsyncLatencyLogger::Get(true)->WriteLog(mIndex, mID, mValue, mTimeStamp);
     return NS_OK;
   }

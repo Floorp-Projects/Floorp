@@ -120,7 +120,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mPresContext->DoChangeCharSet(mCharSet);
     return NS_OK;

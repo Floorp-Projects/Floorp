@@ -98,7 +98,7 @@ public:
   {}
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     AssertIsOnMainThread();
     nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);

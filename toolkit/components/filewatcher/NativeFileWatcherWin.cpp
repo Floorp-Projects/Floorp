@@ -43,7 +43,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
-  NS_METHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -81,7 +81,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
-  NS_METHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -118,7 +118,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
-  NS_METHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -233,7 +233,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mWorkerThread->Shutdown();

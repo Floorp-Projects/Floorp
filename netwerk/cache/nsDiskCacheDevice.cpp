@@ -62,7 +62,7 @@ public:
     {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         nsCacheServiceAutoLock lock;
         CACHE_LOG_DEBUG(("nsDiskCacheDeviceDeactivateEntryEvent[%p]\n", this));
@@ -85,7 +85,7 @@ public:
     explicit nsEvictDiskCacheEntriesEvent(nsDiskCacheDevice *device)
         : mDevice(device) {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         nsCacheServiceAutoLock lock;
         mDevice->EvictDiskCacheEntries(mDevice->mCacheCapacity);
