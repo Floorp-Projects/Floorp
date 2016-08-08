@@ -6027,20 +6027,20 @@ nsComputedDOMStyle::DoGetClipPath()
 {
   const nsStyleSVGReset* svg = StyleSVGReset();
   switch (svg->mClipPath.GetType()) {
-    case StyleClipPathType::Shape:
+    case StyleShapeSourceType::Shape:
       return CreatePrimitiveValueForClipPath(svg->mClipPath.GetBasicShape(),
                                              svg->mClipPath.GetSizingBox());
-    case StyleClipPathType::Box:
+    case StyleShapeSourceType::Box:
       return CreatePrimitiveValueForClipPath(nullptr,
                                              svg->mClipPath.GetSizingBox());
-    case StyleClipPathType::URL: {
+    case StyleShapeSourceType::URL: {
       // Bug 1288812 - we should only serialize fragment for local-ref URL.
       nsCOMPtr<nsIURI> pathURI = svg->mClipPath.GetURL()->GetSourceURL();
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
       val->SetURI(pathURI);
       return val.forget();
     }
-    case StyleClipPathType::None_: {
+    case StyleShapeSourceType::None_: {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
       val->SetIdent(eCSSKeyword_none);
       return val.forget();
