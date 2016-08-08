@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {Ci} = require("chrome");
 const defer = require("devtools/shared/defer");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const {CubicBezierWidget} =
@@ -18,6 +17,7 @@ const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {Task} = require("devtools/shared/task");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
 loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
   "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
+const ESCAPE_KEYCODE = KeyCodes.DOM_VK_ESCAPE;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
 
 /**

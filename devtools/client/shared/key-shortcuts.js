@@ -7,6 +7,7 @@
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const isOSX = Services.appinfo.OS === "Darwin";
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 // List of electron keys mapped to DOM API (DOM_VK_*) key code
 const ElectronKeysMapping = {
@@ -139,7 +140,7 @@ KeyShortcuts.parseElectronKey = function (window, str) {
   } else if (key in ElectronKeysMapping) {
     // Maps the others manually to DOM API DOM_VK_*
     key = ElectronKeysMapping[key];
-    shortcut.keyCode = window.KeyboardEvent[key];
+    shortcut.keyCode = KeyCodes[key];
     // Used only to stringify the shortcut
     shortcut.keyCodeString = key;
   } else {
