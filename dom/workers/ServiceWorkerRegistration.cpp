@@ -376,7 +376,7 @@ public:
   void
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
   {
-    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+    mPromise->MaybeResolveWithUndefined();
   }
 
   void
@@ -418,7 +418,7 @@ public:
     if (status.Failed()) {
       promise->MaybeReject(status);
     } else {
-      promise->MaybeResolve(JS::UndefinedHandleValue);
+      promise->MaybeResolveWithUndefined();
     }
     status.SuppressException();
     mPromiseProxy->CleanUp();
@@ -1119,7 +1119,7 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
   // level script evaluation.  See:
   // https://github.com/slightlyoff/ServiceWorker/issues/800
   if (worker->LoadScriptAsPartOfLoadingServiceWorkerScript()) {
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
 

@@ -586,7 +586,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
 
