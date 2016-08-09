@@ -1224,7 +1224,6 @@ my_LargeAllocFailCallback(void* data)
         return;
 
     MOZ_ASSERT(!rt->isHeapBusy());
-    MOZ_ASSERT(!rt->currentThreadHasExclusiveAccess());
 
     JS::PrepareForFullGC(cx);
     AutoKeepAtoms keepAtoms(cx->perThreadData);

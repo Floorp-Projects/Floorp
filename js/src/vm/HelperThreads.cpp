@@ -677,7 +677,6 @@ GlobalHelperThreadState::finishThreads()
 void
 GlobalHelperThreadState::lock()
 {
-    AssertCurrentThreadCanLock(HelperThreadStateLock);
     helperLock.lock();
 }
 
