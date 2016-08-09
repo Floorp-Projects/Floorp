@@ -49,7 +49,7 @@ function test() {
       const bp = queries.getBreakpoint(getState(), location);
       is(bp.condition, "hello", "The conditional expression is correct.");
 
-      let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.CONDITIONAL_BREAKPOINT_POPUP_SHOWING);
+      let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.CONDITIONAL_BREAKPOINT_POPUP_SHOWN);
       EventUtils.sendMouseEvent({ type: "click" },
                                 gDebugger.document.querySelector(".dbg-breakpoint"),
                                 gDebugger);
@@ -63,7 +63,7 @@ function test() {
       yield actions.setBreakpointCondition(location, "foo");
       yield actions.addBreakpoint(location);
 
-      finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.CONDITIONAL_BREAKPOINT_POPUP_SHOWING);
+      finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.CONDITIONAL_BREAKPOINT_POPUP_SHOWN);
       EventUtils.sendMouseEvent({ type: "click" },
                                 gDebugger.document.querySelector(".dbg-breakpoint"),
                                 gDebugger);

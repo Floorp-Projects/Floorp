@@ -62,7 +62,7 @@ function test_stringBundle() {
     "SaveLinkTitle",
   ];
 
-  for (let [, filePickerTitleKey] in Iterator(validFilePickerTitleKeys)) {
+  for (let filePickerTitleKey of validFilePickerTitleKeys) {
     // Just check that the string exists
     try {
       ContentAreaUtils.stringBundle.GetStringFromName(filePickerTitleKey);
