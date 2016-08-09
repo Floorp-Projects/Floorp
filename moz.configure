@@ -102,9 +102,9 @@ include_when('build/moz.configure/headers.configure',
 include_when('build/moz.configure/warnings.configure',
              when='--enable-compile-environment')
 
-@depends('--help')
+@dependable
 @imports(_from='mozbuild.backend', _import='backends')
-def build_backends_choices(help):
+def build_backends_choices():
     return tuple(backends)
 
 

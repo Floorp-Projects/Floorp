@@ -125,21 +125,18 @@ set_config('MOZCONFIG', depends(mozconfig)(lambda m: m['path']))
 # Hacks related to old-configure
 # ==============================
 
-@depends('--help')
-def old_configure_assignments(help):
+@dependable
+def old_configure_assignments():
     return []
 
-@depends('--help')
-def extra_old_configure_args(help):
+@dependable
+def extra_old_configure_args():
     return []
 
 @template
-@imports(_from='mozbuild.configure', _import='DependsFunction')
 def add_old_configure_assignment(var, value):
-    if not isinstance(var, DependsFunction):
-        var = depends('--help')(lambda x: var)
-    if not isinstance(value, DependsFunction):
-        value = depends('--help')(lambda x: value)
+    var = dependable(var)
+    value = dependable(value)
 
     @depends(old_configure_assignments, var, value)
     @imports(_from='mozbuild.shellutil', _import='quote')
@@ -248,9 +245,9 @@ add_old_configure_assignment('PYTHON', virtualenv_python)
 # below, so collect them.
 @template
 def early_options():
-    @depends('--help')
+    @dependable
     @imports('__sandbox__')
-    def early_options(help):
+    def early_options():
         return set(
             option.env
             for option in __sandbox__._options.itervalues()
@@ -804,8 +801,8 @@ add_old_configure_assignment('PKG_CONFIG', pkg_config)
 # actual implementation is located in b2g/moz.configure.
 # Remove this function as soon as 'android_ndk_include'
 # depends on 'target.'
-@depends('--help')
-def gonkdir(_):
+@dependable
+def gonkdir():
     return None
 
 include(include_project_configure)
