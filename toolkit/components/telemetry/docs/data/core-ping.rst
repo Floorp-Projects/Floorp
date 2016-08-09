@@ -68,7 +68,7 @@ vs. "Galaxy Note") than we are for shortened manufacturer names so we provide
 more characters for the model than the manufacturer.
 
 distributionId
-~~~~~~
+~~~~~~~~~~~~~~
 The ``distributionId`` contains the distribution ID as specified by
 preferences.json for a given distribution. More information on distributions
 can be found `here <https://wiki.mozilla.org/Mobile/Distribution_Files>`_.
