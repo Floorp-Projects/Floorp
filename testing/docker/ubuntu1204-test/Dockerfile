@@ -11,8 +11,9 @@ ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
 ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /tmp/install-mercurial.sh
 
 # install non-build specific dependencies in a single layer
-ADD           system-setup.sh   /tmp/system-setup.sh
-RUN           bash /tmp/system-setup.sh
+# %include testing/docker/recipes/ubuntu1204-test-system-setup.sh
+ADD topsrcdir/testing/docker/recipes/ubuntu1204-test-system-setup.sh /setup/system-setup.sh
+RUN           bash /setup/system-setup.sh
 
 # %include testing/docker/recipes/run-task
 ADD topsrcdir/testing/docker/recipes/run-task /home/worker/bin/run-task
