@@ -14,7 +14,7 @@
 #include <limits>
 #include <type_traits>
 #include "nsString.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsStyleStructFwd.h"
 #include "nsCSSKeywords.h"
 #include "mozilla/CSSEnabledState.h"
@@ -163,7 +163,7 @@
 #define CSS_PROPERTY_STORES_CALC                  (1<<8)
 
 // Define what mechanism the CSS parser uses for parsing the property.
-// See CSSParserImpl::ParseProperty(nsCSSProperty).  Don't use 0 so that
+// See CSSParserImpl::ParseProperty(nsCSSPropertyID).  Don't use 0 so that
 // we can verify that every property sets one of the values.
 //
 // CSS_PROPERTY_PARSE_FUNCTION must be used for shorthand properties,
@@ -381,18 +381,18 @@ public:
   static void ReleaseTable(void);
 
   // Looks up the property with name aProperty and returns its corresponding
-  // nsCSSProperty value.  If aProperty is the name of a custom property,
+  // nsCSSPropertyID value.  If aProperty is the name of a custom property,
   // then eCSSPropertyExtra_variable will be returned.
-  static nsCSSProperty LookupProperty(const nsAString& aProperty,
+  static nsCSSPropertyID LookupProperty(const nsAString& aProperty,
                                       EnabledState aEnabled);
-  static nsCSSProperty LookupProperty(const nsACString& aProperty,
+  static nsCSSPropertyID LookupProperty(const nsACString& aProperty,
                                       EnabledState aEnabled);
   // As above, but looked up using a property's IDL name.
   // eCSSPropertyExtra_variable won't be returned from these methods.
-  static nsCSSProperty LookupPropertyByIDLName(
+  static nsCSSPropertyID LookupPropertyByIDLName(
       const nsAString& aPropertyIDLName,
       EnabledState aEnabled);
-  static nsCSSProperty LookupPropertyByIDLName(
+  static nsCSSPropertyID LookupPropertyByIDLName(
       const nsACString& aPropertyIDLName,
       EnabledState aEnabled);
 
@@ -401,14 +401,14 @@ public:
   static bool IsCustomPropertyName(const nsAString& aProperty);
   static bool IsCustomPropertyName(const nsACString& aProperty);
 
-  static inline bool IsShorthand(nsCSSProperty aProperty) {
+  static inline bool IsShorthand(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
   }
 
   // Must be given a longhand property.
-  static bool IsInherited(nsCSSProperty aProperty);
+  static bool IsInherited(nsCSSPropertyID aProperty);
 
   // Same but for @font-face descriptors
   static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
@@ -423,14 +423,14 @@ public:
   static bool IsPredefinedCounterStyle(const nsACString& aStyle);
 
   // Given a property enum, get the string value
-  static const nsAFlatCString& GetStringValue(nsCSSProperty aProperty);
+  static const nsAFlatCString& GetStringValue(nsCSSPropertyID aProperty);
   static const nsAFlatCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsAFlatCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 
   // Given a CSS Property and a Property Enum Value
   // Return back a const nsString& representation of the
   // value. Return back nullstr if no value is found
-  static const nsAFlatCString& LookupPropertyValue(nsCSSProperty aProperty, int32_t aValue);
+  static const nsAFlatCString& LookupPropertyValue(nsCSSPropertyID aProperty, int32_t aValue);
 
   // Get a color name for a predefined color value like buttonhighlight or activeborder
   // Sets the aStr param to the name of the propertyID
@@ -482,7 +482,7 @@ private:
   static const uint32_t        kFlagsTable[eCSSProperty_COUNT];
 
 public:
-  static inline bool PropHasFlags(nsCSSProperty aProperty, uint32_t aFlags)
+  static inline bool PropHasFlags(nsCSSPropertyID aProperty, uint32_t aFlags)
   {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
@@ -493,7 +493,7 @@ public:
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
   }
 
-  static inline uint32_t PropertyParseType(nsCSSProperty aProperty)
+  static inline uint32_t PropertyParseType(nsCSSPropertyID aProperty)
   {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
@@ -501,7 +501,7 @@ public:
            CSS_PROPERTY_PARSE_PROPERTY_MASK;
   }
 
-  static inline uint32_t ValueRestrictions(nsCSSProperty aProperty)
+  static inline uint32_t ValueRestrictions(nsCSSPropertyID aProperty)
   {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
@@ -514,7 +514,7 @@ private:
   static const uint32_t kParserVariantTable[eCSSProperty_COUNT_no_shorthands];
 
 public:
-  static inline uint32_t ParserVariant(nsCSSProperty aProperty) {
+  static inline uint32_t ParserVariant(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
                "out of range");
     return nsCSSProps::kParserVariantTable[aProperty];
@@ -523,12 +523,12 @@ public:
 private:
   // A table for shorthand properties.  The appropriate index is the
   // property ID minus eCSSProperty_COUNT_no_shorthands.
-  static const nsCSSProperty *const
+  static const nsCSSPropertyID *const
     kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands];
 
 public:
   static inline
-  const nsCSSProperty * SubpropertyEntryFor(nsCSSProperty aProperty) {
+  const nsCSSPropertyID * SubpropertyEntryFor(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(eCSSProperty_COUNT_no_shorthands <= aProperty &&
                aProperty < eCSSProperty_COUNT,
                "out of range");
@@ -539,7 +539,7 @@ public:
   // Returns an eCSSProperty_UNKNOWN-terminated array of the shorthand
   // properties containing |aProperty|, sorted from those that contain
   // the most properties to those that contain the least.
-  static const nsCSSProperty * ShorthandsContaining(nsCSSProperty aProperty) {
+  static const nsCSSPropertyID * ShorthandsContaining(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(gShorthandsContainingPool, "uninitialized");
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
                "out of range");
@@ -547,12 +547,12 @@ public:
   }
 private:
   // gShorthandsContainingTable is an array of the return values for
-  // ShorthandsContaining (arrays of nsCSSProperty terminated by
+  // ShorthandsContaining (arrays of nsCSSPropertyID terminated by
   // eCSSProperty_UNKNOWN) pointing into memory in
   // gShorthandsContainingPool (which contains all of those arrays in a
   // single allocation, and is the one pointer that should be |free|d).
-  static nsCSSProperty *gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
-  static nsCSSProperty* gShorthandsContainingPool;
+  static nsCSSPropertyID *gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
+  static nsCSSPropertyID* gShorthandsContainingPool;
   static bool BuildShorthandsContainingTable();
 
 private:
@@ -572,7 +572,7 @@ public:
    * Return an index for aProperty that is unique within its SID and in
    * the range 0 <= index < PropertyCountInStruct(aSID).
    */
-  static size_t PropertyIndexInStruct(nsCSSProperty aProperty) {
+  static size_t PropertyIndexInStruct(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
                "out of range");
     return gPropertyIndexInStruct[aProperty];
@@ -581,7 +581,7 @@ public:
 private:
   // A table for logical property groups.  Indexes are
   // nsCSSPropertyLogicalGroup values.
-  static const nsCSSProperty* const
+  static const nsCSSPropertyID* const
     kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT];
 
 public:
@@ -603,7 +603,7 @@ public:
    * getting too many of these properties, we should make kLogicalGroupTable
    * be a simple array of eCSSProperty_COUNT length.)
    */
-  static const nsCSSProperty* LogicalGroup(nsCSSProperty aProperty);
+  static const nsCSSPropertyID* LogicalGroup(nsCSSPropertyID aProperty);
 
 private:
   static bool gPropertyEnabled[eCSSProperty_COUNT_with_aliases];
@@ -623,7 +623,7 @@ public:
    * As a special case, the string "cssFloat" is returned for the float
    * property.  nullptr is returned for internal properties.
    */
-  static const char* PropertyIDLName(nsCSSProperty aProperty)
+  static const char* PropertyIDLName(nsCSSPropertyID aProperty)
   {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
@@ -638,14 +638,14 @@ public:
    * Returns the position of the specified property in a list of all
    * properties sorted by their IDL name.
    */
-  static int32_t PropertyIDLNameSortPosition(nsCSSProperty aProperty)
+  static int32_t PropertyIDLNameSortPosition(nsCSSPropertyID aProperty)
   {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
     return kIDLNameSortPositionTable[aProperty];
   }
 
-  static bool IsEnabled(nsCSSProperty aProperty) {
+  static bool IsEnabled(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
     return gPropertyEnabled[aProperty];
@@ -658,13 +658,13 @@ public:
 
 public:
 
-  static mozilla::UseCounter UseCounterFor(nsCSSProperty aProperty) {
+  static mozilla::UseCounter UseCounterFor(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
                "out of range");
     return gPropertyUseCounter[aProperty];
   }
 
-  static bool IsEnabled(nsCSSProperty aProperty, EnabledState aEnabled)
+  static bool IsEnabled(nsCSSPropertyID aProperty, EnabledState aEnabled)
   {
     if (IsEnabled(aProperty)) {
       return true;
@@ -687,13 +687,13 @@ public:
 
 public:
 
-// Storing the enabledstate_ value in an nsCSSProperty variable is a small hack
+// Storing the enabledstate_ value in an nsCSSPropertyID variable is a small hack
 // to avoid needing a separate variable declaration for its real type
 // (CSSEnabledState), which would then require using a block and
 // therefore a pair of macros by consumers for the start and end of the loop.
 #define CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(it_, prop_, enabledstate_)   \
-  for (const nsCSSProperty *it_ = nsCSSProps::SubpropertyEntryFor(prop_), \
-                            es_ = (nsCSSProperty)((enabledstate_) |       \
+  for (const nsCSSPropertyID *it_ = nsCSSProps::SubpropertyEntryFor(prop_), \
+                            es_ = (nsCSSPropertyID)((enabledstate_) |       \
                                                   CSSEnabledState(0));    \
        *it_ != eCSSProperty_UNKNOWN; ++it_)                               \
     if (nsCSSProps::IsEnabled(*it_, (mozilla::CSSEnabledState) es_))

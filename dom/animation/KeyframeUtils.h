@@ -98,7 +98,7 @@ public:
    */
   static void ApplySpacing(nsTArray<Keyframe>& aKeyframes,
                            SpacingMode aSpacingMode,
-                           nsCSSProperty aProperty,
+                           nsCSSPropertyID aProperty,
                            nsTArray<ComputedKeyframeValues>& aComputedValues);
 
   /**
@@ -137,7 +137,7 @@ public:
    * @param aProperty The property to check.
    * @return true if |aProperty| is animatable.
    */
-  static bool IsAnimatableProperty(nsCSSProperty aProperty);
+  static bool IsAnimatableProperty(nsCSSPropertyID aProperty);
 };
 
 } // namespace mozilla

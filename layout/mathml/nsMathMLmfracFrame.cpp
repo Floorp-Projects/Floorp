@@ -629,7 +629,7 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
   Rect rect = NSRectToRect(mRect + ToReferenceFrame(),
                            presContext->AppUnitsPerDevPixel());
   
-  nsCSSProperty colorProp = mFrame->StyleContext()->GetTextFillColorProp();
+  nsCSSPropertyID colorProp = mFrame->StyleContext()->GetTextFillColorProp();
   ColorPattern color(ToDeviceColor(
                                  mFrame->GetVisitedDependentColor(colorProp)));
  

@@ -21,7 +21,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "CSSVariableDeclarations.h"
 #include "nsCSSDataBlock.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsCSSProps.h"
 #include "nsIStyleRule.h"
 #include "nsStringFwd.h"
@@ -112,19 +112,19 @@ public:
    * |mOrder| whenever a property is parsed into an expanded data block
    * for this declaration.  aProperty must not be a shorthand.
    */
-  void ValueAppended(nsCSSProperty aProperty);
+  void ValueAppended(nsCSSPropertyID aProperty);
 
-  void RemoveProperty(nsCSSProperty aProperty);
+  void RemoveProperty(nsCSSPropertyID aProperty);
 
-  bool HasProperty(nsCSSProperty aProperty) const;
+  bool HasProperty(nsCSSPropertyID aProperty) const;
 
-  void GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
-  void GetAuthoredValue(nsCSSProperty aProperty, nsAString& aValue) const;
+  void GetValue(nsCSSPropertyID aProperty, nsAString& aValue) const;
+  void GetAuthoredValue(nsCSSPropertyID aProperty, nsAString& aValue) const;
 
   bool HasImportantData() const {
     return mImportantData || mImportantVariables;
   }
-  bool GetValueIsImportant(nsCSSProperty aProperty) const;
+  bool GetValueIsImportant(nsCSSPropertyID aProperty) const;
   bool GetValueIsImportant(const nsAString& aProperty) const;
 
   /**
@@ -238,7 +238,7 @@ public:
    * |aFromBlock|.  |aChanged| is set to true if the declaration
    * changed as a result of the call, and to false otherwise.
    */
-  bool TryReplaceValue(nsCSSProperty aProperty, bool aIsImportant,
+  bool TryReplaceValue(nsCSSPropertyID aProperty, bool aIsImportant,
                          nsCSSExpandedDataBlock& aFromBlock,
                          bool* aChanged)
   {
@@ -267,7 +267,7 @@ public:
     return block->TryReplaceValue(aProperty, aFromBlock, aChanged);
   }
 
-  bool HasNonImportantValueFor(nsCSSProperty aProperty) const {
+  bool HasNonImportantValueFor(nsCSSPropertyID aProperty) const {
     MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty), "must be longhand");
     return !!mData->ValueFor(aProperty);
   }
@@ -353,16 +353,16 @@ private:
   Declaration& operator=(const Declaration& aCopy) = delete;
   bool operator==(const Declaration& aCopy) const = delete;
 
-  void GetValue(nsCSSProperty aProperty, nsAString& aValue,
+  void GetValue(nsCSSPropertyID aProperty, nsAString& aValue,
                 nsCSSValue::Serialization aValueSerialization) const;
 
   static void AppendImportanceToString(bool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
-  bool AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
-  bool AppendValueToString(nsCSSProperty aProperty, nsAString& aResult,
+  bool AppendValueToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
+  bool AppendValueToString(nsCSSPropertyID aProperty, nsAString& aResult,
                            nsCSSValue::Serialization aValueSerialization) const;
   // Helper for ToString with strange semantics regarding aValue.
-  void AppendPropertyAndValueToString(nsCSSProperty aProperty,
+  void AppendPropertyAndValueToString(nsCSSPropertyID aProperty,
                                       nsAutoString& aValue,
                                       nsAString& aResult) const;
   // helper for ToString that serializes a custom property declaration for
@@ -373,12 +373,12 @@ private:
   void GetImageLayerValue(nsCSSCompressedDataBlock *data,
                           nsAString& aValue,
                           nsCSSValue::Serialization aSerialization,
-                          const nsCSSProperty aTable[]) const;
+                          const nsCSSPropertyID aTable[]) const;
 
   void GetImageLayerPositionValue(nsCSSCompressedDataBlock *data,
                                   nsAString& aValue,
                                   nsCSSValue::Serialization aSerialization,
-                                  const nsCSSProperty aTable[]) const;
+                                  const nsCSSPropertyID aTable[]) const;
 
 public:
   /**
@@ -386,12 +386,12 @@ public:
    * declarations.  For custom properties, eCSSPropertyExtra_variable
    * is returned.
    */
-  nsCSSProperty GetPropertyAt(uint32_t aIndex) const {
+  nsCSSPropertyID GetPropertyAt(uint32_t aIndex) const {
     uint32_t value = mOrder[aIndex];
     if (value >= eCSSProperty_COUNT) {
       return eCSSPropertyExtra_variable;
     }
-    return nsCSSProperty(value);
+    return nsCSSPropertyID(value);
   }
 
   /**
@@ -410,7 +410,7 @@ public:
 
 private:
   // The order of properties in this declaration.  Longhand properties are
-  // represented by their nsCSSProperty value, and each custom property (--*)
+  // represented by their nsCSSPropertyID value, and each custom property (--*)
   // is represented by a value that begins at eCSSProperty_COUNT.
   //
   // Subtracting eCSSProperty_COUNT from those values that represent custom

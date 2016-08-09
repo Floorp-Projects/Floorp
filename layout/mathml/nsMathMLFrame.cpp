@@ -364,7 +364,7 @@ void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
     NSRectToNonEmptySnappedRect(mRect + ToReferenceFrame(),
                                 mFrame->PresContext()->AppUnitsPerDevPixel(),
                                 *drawTarget);
-  nsCSSProperty colorProp = mFrame->StyleContext()->GetTextFillColorProp();
+  nsCSSPropertyID colorProp = mFrame->StyleContext()->GetTextFillColorProp();
   ColorPattern color(ToDeviceColor(
                                  mFrame->GetVisitedDependentColor(colorProp)));
   drawTarget->FillRect(rect, color);

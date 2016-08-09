@@ -8,7 +8,7 @@
 #define mozilla_AnimValuesStyleRule_h
 
 #include "mozilla/StyleAnimationValue.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsCSSPropertySet.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsImpl.h" // For NS_DECL_ISUPPORTS
@@ -36,7 +36,7 @@ public:
   void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 
-  void AddValue(nsCSSProperty aProperty, const StyleAnimationValue &aStartValue)
+  void AddValue(nsCSSPropertyID aProperty, const StyleAnimationValue &aStartValue)
   {
     PropertyStyleAnimationValuePair pair = { aProperty, aStartValue };
     mPropertyValuePairs.AppendElement(pair);
@@ -44,7 +44,7 @@ public:
       nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
   }
 
-  void AddValue(nsCSSProperty aProperty, StyleAnimationValue&& aStartValue)
+  void AddValue(nsCSSPropertyID aProperty, StyleAnimationValue&& aStartValue)
   {
     PropertyStyleAnimationValuePair* pair = mPropertyValuePairs.AppendElement();
     pair->mProperty = aProperty;

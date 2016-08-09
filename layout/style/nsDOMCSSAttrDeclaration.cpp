@@ -172,7 +172,7 @@ nsDOMCSSAttributeDeclaration::GetParentObject()
 }
 
 NS_IMETHODIMP
-nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
+nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
                                                const nsAString& aValue)
 {
   // Scripted modifications to style.opacity or style.transform

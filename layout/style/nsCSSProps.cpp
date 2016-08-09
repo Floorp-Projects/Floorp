@@ -81,11 +81,11 @@ static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
 static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
 static nsStaticCaseInsensitiveNameTable* gPredefinedCounterStyleTable;
-static nsDataHashtable<nsCStringHashKey,nsCSSProperty>* gPropertyIDLNameTable;
+static nsDataHashtable<nsCStringHashKey,nsCSSPropertyID>* gPropertyIDLNameTable;
 
-/* static */ nsCSSProperty *
+/* static */ nsCSSPropertyID *
   nsCSSProps::gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
-/* static */ nsCSSProperty* nsCSSProps::gShorthandsContainingPool = nullptr;
+/* static */ nsCSSPropertyID* nsCSSProps::gShorthandsContainingPool = nullptr;
 
 static const char* const kCSSRawFontDescs[] = {
 #define CSS_FONT_DESC(name_, method_) #name_,
@@ -128,7 +128,7 @@ static const char* const kCSSRawPredefinedCounterStyles[] = {
 };
 
 struct PropertyAndCount {
-  nsCSSProperty property;
+  nsCSSPropertyID property;
   uint32_t count;
 };
 
@@ -151,7 +151,7 @@ enum {
 };
 
 // The names are in kCSSRawProperties.
-static nsCSSProperty gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
+static nsCSSPropertyID gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 #define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)  \
   eCSSProperty_##propid_ ,
 #include "nsCSSPropAliasList.h"
@@ -192,10 +192,10 @@ nsCSSProps::AddRefTable(void)
         kCSSRawPredefinedCounterStyles,
         ArrayLength(kCSSRawPredefinedCounterStyles));
 
-    gPropertyIDLNameTable = new nsDataHashtable<nsCStringHashKey,nsCSSProperty>;
-    for (nsCSSProperty p = nsCSSProperty(0);
+    gPropertyIDLNameTable = new nsDataHashtable<nsCStringHashKey,nsCSSPropertyID>;
+    for (nsCSSPropertyID p = nsCSSPropertyID(0);
          size_t(p) < ArrayLength(kIDLNameTable);
-         p = nsCSSProperty(p + 1)) {
+         p = nsCSSPropertyID(p + 1)) {
       if (kIDLNameTable[p]) {
         gPropertyIDLNameTable->Put(nsDependentCString(kIDLNameTable[p]), p);
       }
@@ -243,15 +243,15 @@ nsCSSProps::AddRefTable(void)
         CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
         CSS_PROPERTY_ENABLED_IN_CHROME
       };
-      for (nsCSSProperty shorthand = eCSSProperty_COUNT_no_shorthands;
+      for (nsCSSPropertyID shorthand = eCSSProperty_COUNT_no_shorthands;
            shorthand < eCSSProperty_COUNT;
-           shorthand = nsCSSProperty(shorthand + 1)) {
+           shorthand = nsCSSPropertyID(shorthand + 1)) {
         for (size_t i = 0; i < ArrayLength(flagsToCheck); i++) {
           uint32_t flag = flagsToCheck[i];
           if (!nsCSSProps::PropHasFlags(shorthand, flag)) {
             continue;
           }
-          for (const nsCSSProperty* p =
+          for (const nsCSSPropertyID* p =
                  nsCSSProps::SubpropertyEntryFor(shorthand);
                *p != eCSSProperty_UNKNOWN;
                ++p) {
@@ -266,7 +266,7 @@ nsCSSProps::AddRefTable(void)
       // Assert that CSS_PROPERTY_INTERNAL is used on properties in
       // #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL sections of nsCSSPropList.h
       // and on no others.
-      static nsCSSProperty nonInternalProperties[] = {
+      static nsCSSPropertyID nonInternalProperties[] = {
         #define CSS_PROP(name_, id_, ...)           eCSSProperty_##id_,
         #define CSS_PROP_SHORTHAND(name_, id_, ...) eCSSProperty_##id_,
         #define CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -281,7 +281,7 @@ nsCSSProps::AddRefTable(void)
 
       bool found[eCSSProperty_COUNT];
       PodArrayZero(found);
-      for (nsCSSProperty p : nonInternalProperties) {
+      for (nsCSSPropertyID p : nonInternalProperties) {
         MOZ_ASSERT(!nsCSSProps::PropHasFlags(p, CSS_PROPERTY_INTERNAL),
                    "properties defined outside of #ifndef "
                    "CSS_PROP_LIST_EXCLUDE_INTERNAL sections must not have "
@@ -291,7 +291,7 @@ nsCSSProps::AddRefTable(void)
 
       for (size_t i = 0; i < ArrayLength(found); ++i) {
         if (!found[i]) {
-          auto p = static_cast<nsCSSProperty>(i);
+          auto p = static_cast<nsCSSPropertyID>(i);
           MOZ_ASSERT(nsCSSProps::PropHasFlags(p, CSS_PROPERTY_INTERNAL),
                      "properties defined in #ifndef "
                      "CSS_PROP_LIST_EXCLUDE_INTERNAL sections must have "
@@ -312,9 +312,9 @@ nsCSSProps::BuildShorthandsContainingTable()
   memset(occurrenceCounts, 0, sizeof(occurrenceCounts));
   PropertyAndCount subpropCounts[eCSSProperty_COUNT -
                                    eCSSProperty_COUNT_no_shorthands];
-  for (nsCSSProperty shorthand = eCSSProperty_COUNT_no_shorthands;
+  for (nsCSSPropertyID shorthand = eCSSProperty_COUNT_no_shorthands;
        shorthand < eCSSProperty_COUNT;
-       shorthand = nsCSSProperty(shorthand + 1)) {
+       shorthand = nsCSSPropertyID(shorthand + 1)) {
 #ifdef DEBUG_SHORTHANDS_CONTAINING
     printf("Considering shorthand property '%s'.\n",
            nsCSSProps::GetStringValue(shorthand).get());
@@ -328,7 +328,7 @@ nsCSSProps::BuildShorthandsContainingTable()
       // shorthands-containing lists.
       continue;
     }
-    for (const nsCSSProperty* subprops = SubpropertyEntryFor(shorthand);
+    for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(shorthand);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {
       MOZ_ASSERT(0 <= *subprops && *subprops < eCSSProperty_COUNT_no_shorthands,
@@ -339,27 +339,27 @@ nsCSSProps::BuildShorthandsContainingTable()
   }
 
   uint32_t poolEntries = 0;
-  for (nsCSSProperty longhand = nsCSSProperty(0);
+  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
        longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSProperty(longhand + 1)) {
+       longhand = nsCSSPropertyID(longhand + 1)) {
     uint32_t count = occurrenceCounts[longhand];
     if (count > 0)
       // leave room for terminator
       poolEntries += count + 1;
   }
 
-  gShorthandsContainingPool = new nsCSSProperty[poolEntries];
+  gShorthandsContainingPool = new nsCSSPropertyID[poolEntries];
   if (!gShorthandsContainingPool)
     return false;
 
   // Initialize all entries to point to their null-terminator.
   {
-    nsCSSProperty *poolCursor = gShorthandsContainingPool - 1;
-    nsCSSProperty *lastTerminator =
+    nsCSSPropertyID *poolCursor = gShorthandsContainingPool - 1;
+    nsCSSPropertyID *lastTerminator =
       gShorthandsContainingPool + poolEntries - 1;
-    for (nsCSSProperty longhand = nsCSSProperty(0);
+    for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
          longhand < eCSSProperty_COUNT_no_shorthands;
-         longhand = nsCSSProperty(longhand + 1)) {
+         longhand = nsCSSPropertyID(longhand + 1)) {
       uint32_t count = occurrenceCounts[longhand];
       if (count > 0) {
         poolCursor += count + 1;
@@ -393,7 +393,7 @@ nsCSSProps::BuildShorthandsContainingTable()
       // shorthands-containing lists.
       continue;
     }
-    for (const nsCSSProperty* subprops =
+    for (const nsCSSPropertyID* subprops =
            SubpropertyEntryFor(shorthandAndCount->property);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {
@@ -402,13 +402,13 @@ nsCSSProps::BuildShorthandsContainingTable()
   }
 
 #ifdef DEBUG_SHORTHANDS_CONTAINING
-  for (nsCSSProperty longhand = nsCSSProperty(0);
+  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
        longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSProperty(longhand + 1)) {
+       longhand = nsCSSPropertyID(longhand + 1)) {
     printf("Property %s is in %d shorthands.\n",
            nsCSSProps::GetStringValue(longhand).get(),
            occurrenceCounts[longhand]);
-    for (const nsCSSProperty *shorthands = ShorthandsContaining(longhand);
+    for (const nsCSSPropertyID *shorthands = ShorthandsContaining(longhand);
          *shorthands != eCSSProperty_UNKNOWN;
          ++shorthands) {
       printf("  %s\n", nsCSSProps::GetStringValue(*shorthands).get());
@@ -418,19 +418,19 @@ nsCSSProps::BuildShorthandsContainingTable()
 
 #ifdef DEBUG
   // Verify that all values that should be are present.
-  for (nsCSSProperty shorthand = eCSSProperty_COUNT_no_shorthands;
+  for (nsCSSPropertyID shorthand = eCSSProperty_COUNT_no_shorthands;
        shorthand < eCSSProperty_COUNT;
-       shorthand = nsCSSProperty(shorthand + 1)) {
+       shorthand = nsCSSPropertyID(shorthand + 1)) {
     if (nsCSSProps::PropHasFlags(shorthand, CSS_PROPERTY_IS_ALIAS)) {
       // Don't put shorthands that are acting as aliases in the
       // shorthands-containing lists.
       continue;
     }
-    for (const nsCSSProperty* subprops = SubpropertyEntryFor(shorthand);
+    for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(shorthand);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {
       uint32_t count = 0;
-      for (const nsCSSProperty *shcont = ShorthandsContaining(*subprops);
+      for (const nsCSSPropertyID *shcont = ShorthandsContaining(*subprops);
            *shcont != eCSSProperty_UNKNOWN;
            ++shcont) {
         if (*shcont == shorthand)
@@ -443,14 +443,14 @@ nsCSSProps::BuildShorthandsContainingTable()
   }
 
   // Verify that there are no extra values
-  for (nsCSSProperty longhand = nsCSSProperty(0);
+  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
        longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSProperty(longhand + 1)) {
-    for (const nsCSSProperty *shorthands = ShorthandsContaining(longhand);
+       longhand = nsCSSPropertyID(longhand + 1)) {
+    for (const nsCSSPropertyID *shorthands = ShorthandsContaining(longhand);
          *shorthands != eCSSProperty_UNKNOWN;
          ++shorthands) {
       uint32_t count = 0;
-      for (const nsCSSProperty* subprops = SubpropertyEntryFor(*shorthands);
+      for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(*shorthands);
            *subprops != eCSSProperty_UNKNOWN;
            ++subprops) {
         if (*subprops == longhand)
@@ -491,7 +491,7 @@ nsCSSProps::ReleaseTable(void)
 }
 
 /* static */ bool
-nsCSSProps::IsInherited(nsCSSProperty aProperty)
+nsCSSProps::IsInherited(nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(!IsShorthand(aProperty));
 
@@ -514,7 +514,7 @@ nsCSSProps::IsCustomPropertyName(const nsAString& aProperty)
          StringBeginsWith(aProperty, NS_LITERAL_STRING("--"));
 }
 
-nsCSSProperty
+nsCSSPropertyID
 nsCSSProps::LookupProperty(const nsACString& aProperty,
                            EnabledState aEnabled)
 {
@@ -525,7 +525,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
     return eCSSPropertyExtra_variable;
   }
 
-  nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  nsCSSPropertyID res = nsCSSPropertyID(gPropertyTable->Lookup(aProperty));
   if (MOZ_LIKELY(res < eCSSProperty_COUNT)) {
     if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
       res = eCSSProperty_UNKNOWN;
@@ -548,7 +548,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
   return eCSSProperty_UNKNOWN;
 }
 
-nsCSSProperty
+nsCSSPropertyID
 nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
 {
   if (nsLayoutUtils::CSSVariablesEnabled() &&
@@ -560,7 +560,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
   // LookupProperty(nsACString&).  The table will do its own
   // converting and avoid a PromiseFlatCString() call.
   MOZ_ASSERT(gPropertyTable, "no lookup table, needs addref");
-  nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  nsCSSPropertyID res = nsCSSPropertyID(gPropertyTable->Lookup(aProperty));
   if (MOZ_LIKELY(res < eCSSProperty_COUNT)) {
     if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
       res = eCSSProperty_UNKNOWN;
@@ -583,11 +583,11 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
   return eCSSProperty_UNKNOWN;
 }
 
-nsCSSProperty
+nsCSSPropertyID
 nsCSSProps::LookupPropertyByIDLName(const nsACString& aPropertyIDLName,
                                     EnabledState aEnabled)
 {
-  nsCSSProperty res;
+  nsCSSPropertyID res;
   if (!gPropertyIDLNameTable->Get(aPropertyIDLName, &res)) {
     return eCSSProperty_UNKNOWN;
   }
@@ -598,7 +598,7 @@ nsCSSProps::LookupPropertyByIDLName(const nsACString& aPropertyIDLName,
   return res;
 }
 
-nsCSSProperty
+nsCSSPropertyID
 nsCSSProps::LookupPropertyByIDLName(const nsAString& aPropertyIDLName,
                                     EnabledState aEnabled)
 {
@@ -678,7 +678,7 @@ nsCSSProps::IsPredefinedCounterStyle(const nsACString& aStyle)
 }
 
 const nsAFlatCString&
-nsCSSProps::GetStringValue(nsCSSProperty aProperty)
+nsCSSProps::GetStringValue(nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(gPropertyTable, "no lookup table, needs addref");
   if (gPropertyTable) {
@@ -2504,7 +2504,7 @@ nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
 };
 
 const nsAFlatCString&
-nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, int32_t aValue)
+nsCSSProps::LookupPropertyValue(nsCSSPropertyID aProp, int32_t aValue)
 {
   MOZ_ASSERT(aProp >= 0 && aProp < eCSSProperty_COUNT,
              "property out of range");
@@ -2588,7 +2588,7 @@ const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #undef CSS_PROP_SHORTHAND
 };
 
-static const nsCSSProperty gAllSubpropTable[] = {
+static const nsCSSPropertyID gAllSubpropTable[] = {
 #define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
@@ -2601,7 +2601,7 @@ static const nsCSSProperty gAllSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gAnimationSubpropTable[] = {
+static const nsCSSPropertyID gAnimationSubpropTable[] = {
   eCSSProperty_animation_duration,
   eCSSProperty_animation_timing_function,
   eCSSProperty_animation_delay,
@@ -2616,7 +2616,7 @@ static const nsCSSProperty gAnimationSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderRadiusSubpropTable[] = {
+static const nsCSSPropertyID gBorderRadiusSubpropTable[] = {
   // Code relies on these being in topleft-topright-bottomright-bottomleft
   // order.
   eCSSProperty_border_top_left_radius,
@@ -2626,7 +2626,7 @@ static const nsCSSProperty gBorderRadiusSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gOutlineRadiusSubpropTable[] = {
+static const nsCSSPropertyID gOutlineRadiusSubpropTable[] = {
   // Code relies on these being in topleft-topright-bottomright-bottomleft
   // order.
   eCSSProperty__moz_outline_radius_topLeft,
@@ -2636,7 +2636,7 @@ static const nsCSSProperty gOutlineRadiusSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBackgroundSubpropTable[] = {
+static const nsCSSPropertyID gBackgroundSubpropTable[] = {
   eCSSProperty_background_color,
   eCSSProperty_background_image,
   eCSSProperty_background_repeat,
@@ -2649,13 +2649,13 @@ static const nsCSSProperty gBackgroundSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBackgroundPositionSubpropTable[] = {
+static const nsCSSPropertyID gBackgroundPositionSubpropTable[] = {
   eCSSProperty_background_position_x,
   eCSSProperty_background_position_y,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderSubpropTable[] = {
+static const nsCSSPropertyID gBorderSubpropTable[] = {
   eCSSProperty_border_top_width,
   eCSSProperty_border_right_width,
   eCSSProperty_border_bottom_width,
@@ -2680,7 +2680,7 @@ static const nsCSSProperty gBorderSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderBlockEndSubpropTable[] = {
+static const nsCSSPropertyID gBorderBlockEndSubpropTable[] = {
   // Declaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_block_end_width,
@@ -2689,7 +2689,7 @@ static const nsCSSProperty gBorderBlockEndSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderBlockStartSubpropTable[] = {
+static const nsCSSPropertyID gBorderBlockStartSubpropTable[] = {
   // Declaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_block_start_width,
@@ -2698,7 +2698,7 @@ static const nsCSSProperty gBorderBlockStartSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderBottomSubpropTable[] = {
+static const nsCSSPropertyID gBorderBottomSubpropTable[] = {
   // Declaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_bottom_width,
@@ -2710,7 +2710,7 @@ static const nsCSSProperty gBorderBottomSubpropTable[] = {
 static_assert(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
               NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
               "box side constants not top/right/bottom/left == 0/1/2/3");
-static const nsCSSProperty gBorderColorSubpropTable[] = {
+static const nsCSSPropertyID gBorderColorSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   // Code relies on these matching the NS_SIDE_* constants.
   eCSSProperty_border_top_color,
@@ -2720,7 +2720,7 @@ static const nsCSSProperty gBorderColorSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderInlineEndSubpropTable[] = {
+static const nsCSSPropertyID gBorderInlineEndSubpropTable[] = {
   // Declaration.cpp output the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_inline_end_width,
@@ -2729,7 +2729,7 @@ static const nsCSSProperty gBorderInlineEndSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderLeftSubpropTable[] = {
+static const nsCSSPropertyID gBorderLeftSubpropTable[] = {
   // Declaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_left_width,
@@ -2738,7 +2738,7 @@ static const nsCSSProperty gBorderLeftSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderRightSubpropTable[] = {
+static const nsCSSPropertyID gBorderRightSubpropTable[] = {
   // Declaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_right_width,
@@ -2747,7 +2747,7 @@ static const nsCSSProperty gBorderRightSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderInlineStartSubpropTable[] = {
+static const nsCSSPropertyID gBorderInlineStartSubpropTable[] = {
   // Declaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_inline_start_width,
@@ -2756,7 +2756,7 @@ static const nsCSSProperty gBorderInlineStartSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderStyleSubpropTable[] = {
+static const nsCSSPropertyID gBorderStyleSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_border_top_style,
   eCSSProperty_border_right_style,
@@ -2765,7 +2765,7 @@ static const nsCSSProperty gBorderStyleSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderTopSubpropTable[] = {
+static const nsCSSPropertyID gBorderTopSubpropTable[] = {
   // Declaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_top_width,
@@ -2774,7 +2774,7 @@ static const nsCSSProperty gBorderTopSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderWidthSubpropTable[] = {
+static const nsCSSPropertyID gBorderWidthSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_border_top_width,
   eCSSProperty_border_right_width,
@@ -2783,7 +2783,7 @@ static const nsCSSProperty gBorderWidthSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gFontSubpropTable[] = {
+static const nsCSSPropertyID gFontSubpropTable[] = {
   eCSSProperty_font_family,
   eCSSProperty_font_style,
   eCSSProperty_font_weight,
@@ -2805,7 +2805,7 @@ static const nsCSSProperty gFontSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gFontVariantSubpropTable[] = {
+static const nsCSSPropertyID gFontVariantSubpropTable[] = {
   eCSSProperty_font_variant_alternates,
   eCSSProperty_font_variant_caps,
   eCSSProperty_font_variant_east_asian,
@@ -2815,14 +2815,14 @@ static const nsCSSProperty gFontVariantSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gListStyleSubpropTable[] = {
+static const nsCSSPropertyID gListStyleSubpropTable[] = {
   eCSSProperty_list_style_type,
   eCSSProperty_list_style_image,
   eCSSProperty_list_style_position,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMarginSubpropTable[] = {
+static const nsCSSPropertyID gMarginSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_margin_top,
   eCSSProperty_margin_right,
@@ -2832,7 +2832,7 @@ static const nsCSSProperty gMarginSubpropTable[] = {
 };
 
 
-static const nsCSSProperty gOutlineSubpropTable[] = {
+static const nsCSSPropertyID gOutlineSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_outline_width,
@@ -2841,13 +2841,13 @@ static const nsCSSProperty gOutlineSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gColumnsSubpropTable[] = {
+static const nsCSSPropertyID gColumnsSubpropTable[] = {
   eCSSProperty__moz_column_count,
   eCSSProperty__moz_column_width,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gColumnRuleSubpropTable[] = {
+static const nsCSSPropertyID gColumnRuleSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty__moz_column_rule_width,
@@ -2856,27 +2856,27 @@ static const nsCSSProperty gColumnRuleSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gFlexSubpropTable[] = {
+static const nsCSSPropertyID gFlexSubpropTable[] = {
   eCSSProperty_flex_grow,
   eCSSProperty_flex_shrink,
   eCSSProperty_flex_basis,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gFlexFlowSubpropTable[] = {
+static const nsCSSPropertyID gFlexFlowSubpropTable[] = {
   eCSSProperty_flex_direction,
   eCSSProperty_flex_wrap,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gGridTemplateSubpropTable[] = {
+static const nsCSSPropertyID gGridTemplateSubpropTable[] = {
   eCSSProperty_grid_template_areas,
   eCSSProperty_grid_template_rows, 
   eCSSProperty_grid_template_columns,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gGridSubpropTable[] = {
+static const nsCSSPropertyID gGridSubpropTable[] = {
   eCSSProperty_grid_template_areas,
   eCSSProperty_grid_template_rows,
   eCSSProperty_grid_template_columns,
@@ -2888,19 +2888,19 @@ static const nsCSSProperty gGridSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gGridColumnSubpropTable[] = {
+static const nsCSSPropertyID gGridColumnSubpropTable[] = {
   eCSSProperty_grid_column_start,
   eCSSProperty_grid_column_end,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gGridRowSubpropTable[] = {
+static const nsCSSPropertyID gGridRowSubpropTable[] = {
   eCSSProperty_grid_row_start,
   eCSSProperty_grid_row_end,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gGridAreaSubpropTable[] = {
+static const nsCSSPropertyID gGridAreaSubpropTable[] = {
   eCSSProperty_grid_row_start,
   eCSSProperty_grid_column_start,
   eCSSProperty_grid_row_end,
@@ -2908,19 +2908,19 @@ static const nsCSSProperty gGridAreaSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gGridGapSubpropTable[] = {
+static const nsCSSPropertyID gGridGapSubpropTable[] = {
   eCSSProperty_grid_row_gap,
   eCSSProperty_grid_column_gap,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gOverflowSubpropTable[] = {
+static const nsCSSPropertyID gOverflowSubpropTable[] = {
   eCSSProperty_overflow_x,
   eCSSProperty_overflow_y,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gPaddingSubpropTable[] = {
+static const nsCSSPropertyID gPaddingSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_padding_top,
   eCSSProperty_padding_right,
@@ -2929,26 +2929,26 @@ static const nsCSSProperty gPaddingSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gTextDecorationSubpropTable[] = {
+static const nsCSSPropertyID gTextDecorationSubpropTable[] = {
   eCSSProperty_text_decoration_color,
   eCSSProperty_text_decoration_line,
   eCSSProperty_text_decoration_style,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gTextEmphasisSubpropTable[] = {
+static const nsCSSPropertyID gTextEmphasisSubpropTable[] = {
   eCSSProperty_text_emphasis_style,
   eCSSProperty_text_emphasis_color,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gWebkitTextStrokeSubpropTable[] = {
+static const nsCSSPropertyID gWebkitTextStrokeSubpropTable[] = {
   eCSSProperty__webkit_text_stroke_width,
   eCSSProperty__webkit_text_stroke_color,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gTransitionSubpropTable[] = {
+static const nsCSSPropertyID gTransitionSubpropTable[] = {
   eCSSProperty_transition_property,
   eCSSProperty_transition_duration,
   eCSSProperty_transition_timing_function,
@@ -2956,7 +2956,7 @@ static const nsCSSProperty gTransitionSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderImageSubpropTable[] = {
+static const nsCSSPropertyID gBorderImageSubpropTable[] = {
   eCSSProperty_border_image_source,
   eCSSProperty_border_image_slice,
   eCSSProperty_border_image_width,
@@ -2965,7 +2965,7 @@ static const nsCSSProperty gBorderImageSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMarkerSubpropTable[] = {
+static const nsCSSPropertyID gMarkerSubpropTable[] = {
   eCSSProperty_marker_start,
   eCSSProperty_marker_mid,
   eCSSProperty_marker_end,
@@ -2974,18 +2974,18 @@ static const nsCSSProperty gMarkerSubpropTable[] = {
 
 // Subproperty tables for shorthands that are just aliases with
 // different parsing rules.
-static const nsCSSProperty gMozTransformSubpropTable[] = {
+static const nsCSSPropertyID gMozTransformSubpropTable[] = {
   eCSSProperty_transform,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gScrollSnapTypeSubpropTable[] = {
+static const nsCSSPropertyID gScrollSnapTypeSubpropTable[] = {
   eCSSProperty_scroll_snap_type_x,
   eCSSProperty_scroll_snap_type_y,
   eCSSProperty_UNKNOWN
 };
 #ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
-static const nsCSSProperty gMaskSubpropTable[] = {
+static const nsCSSPropertyID gMaskSubpropTable[] = {
   eCSSProperty_mask_image,
   eCSSProperty_mask_repeat,
   eCSSProperty_mask_position_x,
@@ -2997,7 +2997,7 @@ static const nsCSSProperty gMaskSubpropTable[] = {
   eCSSProperty_mask_mode,
   eCSSProperty_UNKNOWN
 };
-static const nsCSSProperty gMaskPositionSubpropTable[] = {
+static const nsCSSPropertyID gMaskPositionSubpropTable[] = {
   eCSSProperty_mask_position_x,
   eCSSProperty_mask_position_y,
   eCSSProperty_UNKNOWN
@@ -3006,7 +3006,7 @@ static const nsCSSProperty gMaskPositionSubpropTable[] = {
 // FIXME: mask-border tables should be added when we implement
 // mask-border properties.
 
-const nsCSSProperty *const
+const nsCSSPropertyID *const
 nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
 // Need an extra level of macro nesting to force expansion of method_
@@ -3021,7 +3021,7 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 };
 
 
-static const nsCSSProperty gOffsetLogicalGroupTable[] = {
+static const nsCSSPropertyID gOffsetLogicalGroupTable[] = {
   eCSSProperty_top,
   eCSSProperty_right,
   eCSSProperty_bottom,
@@ -3029,25 +3029,25 @@ static const nsCSSProperty gOffsetLogicalGroupTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMaxSizeLogicalGroupTable[] = {
+static const nsCSSPropertyID gMaxSizeLogicalGroupTable[] = {
   eCSSProperty_max_height,
   eCSSProperty_max_width,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMinSizeLogicalGroupTable[] = {
+static const nsCSSPropertyID gMinSizeLogicalGroupTable[] = {
   eCSSProperty_min_height,
   eCSSProperty_min_width,
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gSizeLogicalGroupTable[] = {
+static const nsCSSPropertyID gSizeLogicalGroupTable[] = {
   eCSSProperty_height,
   eCSSProperty_width,
   eCSSProperty_UNKNOWN
 };
 
-const nsCSSProperty* const
+const nsCSSPropertyID* const
 nsCSSProps::kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT] = {
 #define CSS_PROP_LOGICAL_GROUP_SHORTHAND(id_) g##id_##SubpropTable,
 #define CSS_PROP_LOGICAL_GROUP_AXIS(name_) g##name_##LogicalGroupTable,
@@ -3061,7 +3061,7 @@ nsCSSProps::kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT] = {
 // Mapping of logical longhand properties to their logical group (which
 // represents the physical longhands the logical properties an correspond
 // to).  The format is pairs of values, where the first is the logical
-// longhand property (an nsCSSProperty) and the second is the logical group
+// longhand property (an nsCSSPropertyID) and the second is the logical group
 // (an nsCSSPropertyLogicalGroup), stored in a flat array (like KTableEntry
 // arrays).
 static const int gLogicalGroupMappingTable[] = {
@@ -3073,8 +3073,8 @@ static const int gLogicalGroupMappingTable[] = {
 #undef CSS_PROP_LOGICAL
 };
 
-/* static */ const nsCSSProperty*
-nsCSSProps::LogicalGroup(nsCSSProperty aProperty)
+/* static */ const nsCSSPropertyID*
+nsCSSProps::LogicalGroup(nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
              "out of range");
