@@ -177,4 +177,4 @@ cd /
 rm -rf /setup ~/.ccache ~/.cache ~/.npm
 apt-get clean
 apt-get autoclean
-rm $0
+rm -f $0
