@@ -49,7 +49,7 @@ function buildItems() {
   if (weaveXPCService.ready) {
     let engine = Weave.Service.engineManager.get("tabs");
 
-    for (let [guid, client] in Iterator(engine.getAllClients())) {
+    for (let [guid, client] of Object.entries(engine.getAllClients())) {
       clients.set(guid, client);
       for (let tab of client.tabs) {
         let url = tab.urlHistory[0];

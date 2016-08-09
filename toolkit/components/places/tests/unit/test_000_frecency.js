@@ -70,7 +70,7 @@ function* task_initializeBucket(bucket) {
   // generate a date within the cutoff period
   var dateInPeriod = (now - ((cutoff - 1) * 86400 * 1000)) * 1000;
 
-  for (let [bonusName, visitType] in Iterator(bonusPrefs)) {
+  for (let [bonusName, visitType] of Object.entries(bonusPrefs)) {
     var frecency = -1;
     var calculatedURI = null;
     var matchTitle = "";

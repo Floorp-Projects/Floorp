@@ -24,6 +24,7 @@
   text-indent: initial;
   letter-spacing: initial;
   word-spacing: initial;
+  color: initial;
 }
 
 :-moz-native-anonymous .highlighter-container {

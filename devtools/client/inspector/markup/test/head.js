@@ -389,13 +389,16 @@ function collapseSelectionAndShiftTab(inspector) {
  */
 function checkFocusedAttribute(attrName, editMode) {
   let focusedAttr = Services.focus.focusedElement;
-  is(focusedAttr ? focusedAttr.parentNode.dataset.attr : undefined,
-     attrName, attrName + " attribute editor is currently focused.");
-  is(focusedAttr ? focusedAttr.tagName : undefined,
-     editMode ? "input" : "span",
-     editMode
-     ? attrName + " is in edit mode"
-     : attrName + " is not in edit mode");
+  ok(focusedAttr, "Has a focused element");
+
+  let dataAttr = focusedAttr.parentNode.dataset.attr;
+  is(dataAttr, attrName, attrName + " attribute editor is currently focused.");
+  if (editMode) {
+    // Using a multiline editor for attributes, the focused element should be a textarea.
+    is(focusedAttr.tagName, "textarea", attrName + "is in edit mode");
+  } else {
+    is(focusedAttr.tagName, "span", attrName + "is not in edit mode");
+  }
 }
 
 /**

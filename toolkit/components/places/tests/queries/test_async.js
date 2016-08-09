@@ -342,7 +342,7 @@ var DataHelper = {
    */
   _makeDataWithDefaults: function DH__makeDataWithDefaults(aData, aDefaults) {
     let dat = {};
-    for (let [prop, val] in Iterator(aDefaults)) {
+    for (let [prop, val] of Object.entries(aDefaults)) {
       dat[prop] = aData.hasOwnProperty(prop) ? aData[prop] : val;
     }
     return dat;
@@ -356,7 +356,7 @@ function run_test()
 
 add_task(function* test_async()
 {
-  for (let [, test] in Iterator(tests)) {
+  for (let test of tests) {
     yield PlacesUtils.bookmarks.eraseEverything();
 
     test.__proto__ = new Test();
