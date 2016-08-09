@@ -2438,19 +2438,6 @@ if test -z "$MOZ_GOOGLE_API_KEY"; then
 fi
 AC_SUBST(MOZ_GOOGLE_API_KEY)
 
-# Allow to specify a Google OAuth API key file that contains the client ID and
-# the secret key to be used for various Google OAuth API requests.
-MOZ_ARG_WITH_STRING(google-oauth-api-keyfile,
-[ --with-google-oauth-api-keyfile=file  Use the client id and secret key contained in the given keyfile for Google OAuth API requests],
- [MOZ_GOOGLE_OAUTH_API_CLIENTID=`cat $withval | cut -f 1 -d " "`
-  MOZ_GOOGLE_OAUTH_API_KEY=`cat $withval | cut -f 2 -d " "`])
-if test -z "$MOZ_GOOGLE_OAUTH_API_CLIENTID"; then
-    MOZ_GOOGLE_OAUTH_API_CLIENTID=no-google-oauth-api-clientid
-    MOZ_GOOGLE_OAUTH_API_KEY=no-google-oauth-api-key
-fi
-AC_SUBST(MOZ_GOOGLE_OAUTH_API_CLIENTID)
-AC_SUBST(MOZ_GOOGLE_OAUTH_API_KEY)
-
 # Allow specifying a Bing API key file that contains the client ID and the
 # secret key to be used for the Bing Translation API requests.
 MOZ_ARG_WITH_STRING(bing-api-keyfile,
