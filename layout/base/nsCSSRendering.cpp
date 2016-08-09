@@ -2746,15 +2746,15 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
 
     // Fit the gradient line exactly into the source rect.
     if (lineStart.x != lineEnd.x) {
-      rectLen = srcSize.width;
+      rectLen = aPresContext->CSSPixelsToDevPixels(aSrc.width);
       offset = ((double)aSrc.x - lineStart.x) / lineLength;
       lineStart.x = aSrc.x;
-      lineEnd.x = aSrc.x + srcSize.width;
+      lineEnd.x = aSrc.x + rectLen;
     } else {
-      rectLen = srcSize.height;
+      rectLen = aPresContext->CSSPixelsToDevPixels(aSrc.height);
       offset = ((double)aSrc.y - lineStart.y) / lineLength;
       lineStart.y = aSrc.y;
-      lineEnd.y = aSrc.y + srcSize.height;
+      lineEnd.y = aSrc.y + rectLen;
     }
 
     // Adjust gradient stop positions for the new gradient line.
