@@ -37,6 +37,7 @@ task:
           disable_signing.py
           platform_supports_post_upload_to_latest.py
       MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
+      TOOLTOOL_CACHE: /home/worker/tooltool-cache
       MH_CUSTOM_BUILD_VARIANT_CFG: api-15-gradle
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
