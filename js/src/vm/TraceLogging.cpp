@@ -893,14 +893,13 @@ TraceLoggerThreadState::forMainThread(PerThreadData* mainThread)
 TraceLoggerThread*
 js::TraceLoggerForCurrentThread()
 {
-    PRThread* thread = PR_GetCurrentThread();
     if (!EnsureTraceLoggerState())
         return nullptr;
-    return traceLoggerState->forThread(thread);
+    return traceLoggerState->forThread(ThisThread::GetId());
 }
 
 TraceLoggerThread*
-TraceLoggerThreadState::forThread(PRThread* thread)
+TraceLoggerThreadState::forThread(const Thread::Id& thread)
 {
     MOZ_ASSERT(initialized);
 
