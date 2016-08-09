@@ -204,19 +204,6 @@ defineLazyGetter(exports.modules, "xpcInspector", () => {
   return Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
 });
 
-defineLazyGetter(exports.modules, "indexedDB", () => {
-  // On xpcshell, we can't instantiate indexedDB without crashing
-  try {
-    let sandbox
-      = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
-                   {wantGlobalProperties: ["indexedDB"]});
-    return sandbox.indexedDB;
-
-  } catch (e) {
-    return {};
-  }
-});
-
 defineLazyGetter(exports.modules, "FileReader", () => {
   let sandbox
     = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
@@ -295,3 +282,4 @@ defineLazyGetter(globals, "CSS", () => {
 defineLazyGetter(globals, "WebSocket", () => {
   return Services.appShell.hiddenDOMWindow.WebSocket;
 });
+lazyRequireGetter(globals, "indexedDB", "sdk/indexed-db", true);

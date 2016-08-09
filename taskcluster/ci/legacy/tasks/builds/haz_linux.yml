@@ -8,7 +8,7 @@ task:
     name: '[TC] Browser Hazard Linux'
     description: Browser Hazard Analysis Linux
 
-  workerType: dbg-linux64
+  workerType: 'gecko-{{level}}-b-linux'
 
   scopes:
     - 'docker-worker:cache:tooltool-cache'
@@ -18,14 +18,14 @@ task:
   payload:
     cache:
       level-{{level}}-{{project}}-build-linux64-haz-workspace: '/home/worker/workspace'
-      tooltool-cache: '/home/worker/tools/tooltool-cache'
+      tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
       relengAPIProxy: true
 
     env:
       MOZCONFIG: 'browser/config/mozconfigs/linux64/hazards'
-      TOOLTOOL_CACHE: '/home/worker/tools/tooltool-cache'
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
       TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/linux64/hazard.manifest'
 
     maxRunTime: 36000
@@ -49,6 +49,7 @@ task:
       groupSymbol: tc
       groupName: Submitted by taskcluster for your pleasure
       symbol: H
+      tier: 1
       collection:
         debug: true
     # Rather then enforcing particular conventions we require that all build

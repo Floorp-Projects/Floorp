@@ -8,6 +8,7 @@
 const Immutable = require("devtools/client/shared/vendor/immutable");
 
 exports.ConsoleCommand = Immutable.Record({
+  id: null,
   allowRepeating: false,
   messageText: null,
   source: null,
@@ -17,6 +18,7 @@ exports.ConsoleCommand = Immutable.Record({
 });
 
 exports.ConsoleMessage = Immutable.Record({
+  id: null,
   allowRepeating: true,
   source: null,
   type: null,
@@ -27,5 +29,4 @@ exports.ConsoleMessage = Immutable.Record({
   repeatId: null,
   category: "output",
   severity: "log",
-  id: null,
 });

@@ -1,6 +1,11 @@
 FROM          taskcluster/ubuntu1204-test-upd:0.1.11.20160628204600
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
+# This will create a host mounted filesystem when the cache is stripped
+# on Try. This cancels out some of the performance losses of aufs. See
+# bug 1291940.
+VOLUME /home/worker/workspace
+
 # Add utilities and configuration
 COPY           dot-files/config              /home/worker/.config
 COPY           dot-files/pulse               /home/worker/.pulse

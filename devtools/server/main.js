@@ -863,10 +863,25 @@ var DebuggerServer = {
           transport.hooks = {
             onClosed: () => {
               if (!dbg.isClosed) {
-                dbg.postMessage(JSON.stringify({
-                  type: "disconnect",
-                  id,
-                }));
+                // If the worker happens to be shutting down while we are trying
+                // to close the connection, there is a small interval during
+                // which no more runnables can be dispatched to the worker, but
+                // the worker debugger has not yet been closed. In that case,
+                // the call to postMessage below will fail. The onClosed hook on
+                // DebuggerTransport is not supposed to throw exceptions, so we
+                // need to make sure to catch these early.
+                try {
+                  dbg.postMessage(JSON.stringify({
+                    type: "disconnect",
+                    id,
+                  }));
+                } catch (e) {
+                  // We can safely ignore these exceptions. The only time the
+                  // call to postMessage can fail is if the worker is either
+                  // shutting down, or has finished shutting down. In both
+                  // cases, there is nothing to clean up, so we don't care
+                  // whether this message arrives or not.
+                }
               }
 
               connection.cancelForwarding(id);
@@ -1444,6 +1459,26 @@ DebuggerServerConnection.prototype = {
    *        otherwise.
    */
   removeActorPool(actorPool, noCleanup) {
+    // When a connection is closed, it removes each of its actor pools. When an
+    // actor pool is removed, it calls the disconnect method on each of its
+    // actors. Some actors, such as ThreadActor, manage their own actor pools.
+    // When the disconnect method is called on these actors, they manually
+    // remove their actor pools. Consequently, this method is reentrant.
+    //
+    // In addition, some actors, such as ThreadActor, perform asynchronous work
+    // (in the case of ThreadActor, because they need to resume), before they
+    // remove each of their actor pools. Since we don't wait for this work to
+    // be completed, we can end up in this function recursively after the
+    // connection already set this._extraPools to null.
+    //
+    // This is a bug: if the disconnect method can perform asynchronous work,
+    // then we should wait for that work to be completed before setting this.
+    // _extraPools to null. As a temporary solution, it should be acceptable
+    // to just return early (if this._extraPools has been set to null, all
+    // actors pools for this connection should already have been removed).
+    if (this._extraPools === null) {
+      return;
+    }
     let index = this._extraPools.lastIndexOf(actorPool);
     if (index > -1) {
       let pool = this._extraPools.splice(index, 1);

@@ -40,6 +40,7 @@ task:
       MH_CUSTOM_BUILD_VARIANT_CFG: api-15
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
 
     command: ["/bin/bash", "bin/build.sh"]
 

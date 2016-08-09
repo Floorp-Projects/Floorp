@@ -54,8 +54,8 @@ static inline css::Side operator++(css::Side& side, int) {
 #define NS_SIDE_TO_HALF_CORNER(side_, second_, parallel_) \
   ((((side_) + !!(second_))*2 + ((side_) + !(parallel_))%2) % 8)
 
-// Basic Shapes (currently unused)
-enum class StyleBasicShape : uint8_t{
+// Basic shapes
+enum class StyleBasicShapeType : uint8_t {
   Polygon,
   Circle,
   Ellipse,
@@ -73,17 +73,8 @@ enum class StyleBoxShadowType : uint8_t {
   Inset,
 };
 
-// clip-path type
-// X11 has a #define for None causing conflicts, so we use None_ here
-enum class StyleClipPathType : uint8_t {
-  None_,
-  URL,
-  Shape,
-  Box,
-};
-
-// clip-path sizing
-enum class StyleClipShapeSizing : uint8_t {
+// clip-path geometry box
+enum class StyleClipPathGeometryBox : uint8_t {
   NoBox,
   Content,
   Padding,
@@ -98,6 +89,24 @@ enum class StyleClipShapeSizing : uint8_t {
 enum class StyleFloatEdge : uint8_t {
   ContentBox,
   MarginBox,
+};
+
+// shape-box for shape-outside
+enum class StyleShapeOutsideShapeBox : uint8_t {
+  NoBox,
+  Content,
+  Padding,
+  Border,
+  Margin
+};
+
+// Shape source type
+// X11 has a #define for None causing conflicts, so we use None_ here
+enum class StyleShapeSourceType : uint8_t {
+  None_,
+  URL,
+  Shape,
+  Box,
 };
 
 // user-focus
