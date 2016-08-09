@@ -773,7 +773,7 @@ Telephony::EnumerateCallStateComplete()
 
   HandleAudioAgentState();
   if (mReadyPromise) {
-    mReadyPromise->MaybeResolve(JS::UndefinedHandleValue);
+    mReadyPromise->MaybeResolveWithUndefined();
   }
 
   if (NS_FAILED(mService->RegisterListener(mListener))) {

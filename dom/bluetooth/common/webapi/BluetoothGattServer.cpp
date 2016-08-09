@@ -550,7 +550,7 @@ BluetoothGattServer::StopAdvertising(ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
 
   if (mAdvertisingAppUuid.IsCleared()) {
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
 
@@ -840,7 +840,7 @@ private:
   {
     mServer->mPendingService = nullptr;
     mServer->mServices.AppendElement(mService);
-    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+    mPromise->MaybeResolveWithUndefined();
   }
 
   void OnErrorFired() override
