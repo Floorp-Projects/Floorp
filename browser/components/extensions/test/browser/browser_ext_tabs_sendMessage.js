@@ -21,11 +21,6 @@ add_task(function* tabsSendMessageReply() {
           if (msg == "content-script-ready") {
             let tabId = sender.tab.id;
 
-            browser.tabs.sendMessage(tabId, "respond-never", response => {
-              browser.test.fail(`Got unexpected response callback: ${response}`);
-              browser.test.notifyFail("sendMessage");
-            });
-
             Promise.all([
               promiseResponse,
 
@@ -34,12 +29,15 @@ add_task(function* tabsSendMessageReply() {
               new Promise(resolve => browser.tabs.sendMessage(tabId, "respond-soon", resolve)),
               browser.tabs.sendMessage(tabId, "respond-promise"),
               browser.tabs.sendMessage(tabId, "respond-never"),
+              new Promise(resolve => {
+                browser.runtime.sendMessage("respond-never", response => { resolve(response); });
+              }),
 
               browser.tabs.sendMessage(tabId, "respond-error").catch(error => Promise.resolve({error})),
               browser.tabs.sendMessage(tabId, "throw-error").catch(error => Promise.resolve({error})),
 
               browser.tabs.sendMessage(firstTab, "no-listener").catch(error => Promise.resolve({error})),
-            ]).then(([response, respondNow, respondNow2, respondSoon, respondPromise, respondNever, respondError, throwError, noListener]) => {
+            ]).then(([response, respondNow, respondNow2, respondSoon, respondPromise, respondNever, respondNever2, respondError, throwError, noListener]) => {
               browser.test.assertEq("expected-response", response, "Content script got the expected response");
 
               browser.test.assertEq("respond-now", respondNow, "Got the expected immediate response");
@@ -47,6 +45,7 @@ add_task(function* tabsSendMessageReply() {
               browser.test.assertEq("respond-soon", respondSoon, "Got the expected delayed response");
               browser.test.assertEq("respond-promise", respondPromise, "Got the expected promise response");
               browser.test.assertEq(undefined, respondNever, "Got the expected no-response resolution");
+              browser.test.assertEq(undefined, respondNever2, "Got the expected no-response resolution");
 
               browser.test.assertEq("respond-error", respondError.error.message, "Got the expected error response");
               browser.test.assertEq("throw-error", throwError.error.message, "Got the expected thrown error response");

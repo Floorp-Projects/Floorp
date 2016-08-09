@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
+const {Cc, Ci, Cu, CC} = require("chrome");
 const events = require("sdk/event/core");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
@@ -17,6 +17,20 @@ const { Task } = require("devtools/shared/task");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "Sqlite", "resource://gre/modules/Sqlite.jsm");
+
+// We give this a funny name to avoid confusion with the global
+// indexedDB.
+loader.lazyGetter(this, "indexedDBForStorage", () => {
+  // On xpcshell, we can't instantiate indexedDB without crashing
+  try {
+    let sandbox
+      = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
+                   {wantGlobalProperties: ["indexedDB"]});
+    return sandbox.indexedDB;
+  } catch (e) {
+    return {};
+  }
+});
 
 var gTrackedMessageManager = new Map();
 
@@ -1736,12 +1750,12 @@ var indexedDBHelpers = {
    * database `name`.
    */
   openWithPrincipal(principal, name) {
-    return require("indexedDB").openForPrincipal(principal, name);
+    return indexedDBForStorage.openForPrincipal(principal, name);
   },
 
   removeDB: Task.async(function* (host, principal, name) {
     let result = new promise(resolve => {
-      let request = require("indexedDB").deleteForPrincipal(principal, name);
+      let request = indexedDBForStorage.deleteForPrincipal(principal, name);
 
       request.onsuccess = () => {
         resolve({});

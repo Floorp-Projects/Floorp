@@ -6,8 +6,6 @@
 #ifndef __nsAccessibilityService_h__
 #define __nsAccessibilityService_h__
 
-#include "nsIAccessibilityService.h"
-
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/a11y/FocusManager.h"
 #include "mozilla/a11y/Role.h"
@@ -15,7 +13,9 @@
 #include "mozilla/Preferences.h"
 
 #include "nsIObserver.h"
+#include "nsIAccessibleEvent.h"
 #include "nsIEventListenerService.h"
+#include "xpcAccessibilityService.h"
 
 class nsImageFrame;
 class nsIArray;
@@ -68,7 +68,6 @@ struct MarkupMapInfo {
 class nsAccessibilityService final : public mozilla::a11y::DocManager,
                                      public mozilla::a11y::FocusManager,
                                      public mozilla::a11y::SelectionManager,
-                                     public nsIAccessibilityService,
                                      public nsIListenerChangeListener,
                                      public nsIObserver
 {
@@ -80,16 +79,14 @@ public:
   NS_IMETHOD ListenersChanged(nsIArray* aEventChanges) override;
 
 protected:
-  virtual ~nsAccessibilityService();
+  ~nsAccessibilityService();
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLERETRIEVAL
   NS_DECL_NSIOBSERVER
 
-  // nsIAccessibilityService
-  virtual Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                bool aCanCreate) override;
+  Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
+                                        bool aCanCreate);
   already_AddRefed<Accessible>
     CreatePluginAccessible(nsPluginFrame* aFrame, nsIContent* aContent,
                            Accessible* aContext);
@@ -98,10 +95,31 @@ public:
    * Adds/remove ATK root accessible for gtk+ native window to/from children
    * of the application accessible.
    */
-  virtual Accessible* AddNativeRootAccessible(void* aAtkAccessible) override;
-  virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible) override;
+  Accessible* AddNativeRootAccessible(void* aAtkAccessible);
+  void RemoveNativeRootAccessible(Accessible* aRootAccessible);
 
-  virtual bool HasAccessible(nsIDOMNode* aDOMNode) override;
+  bool HasAccessible(nsIDOMNode* aDOMNode);
+
+  /**
+   * Get a string equivalent for an accessilbe role value.
+   */
+  void GetStringRole(uint32_t aRole, nsAString& aString);
+
+  /**
+   * Get a string equivalent for an accessible state/extra state.
+   */
+  void GetStringStates(uint32_t aState, uint32_t aExtraState,
+                       nsISupports **aStringStates);
+
+  /**
+   * Get a string equivalent for an accessible event value.
+   */
+  void GetStringEventType(uint32_t aEventType, nsAString& aString);
+
+  /**
+   * Get a string equivalent for an accessible relation type.
+   */
+  void GetStringRelationType(uint32_t aRelationType, nsAString& aString);
 
   // nsAccesibilityService
   /**
@@ -123,7 +141,7 @@ public:
    */
   void ContentRemoved(nsIPresShell* aPresShell, nsIContent* aChild);
 
-  virtual void UpdateText(nsIPresShell* aPresShell, nsIContent* aContent);
+  void UpdateText(nsIPresShell* aPresShell, nsIContent* aContent);
 
   /**
    * Update XUL:tree accessible tree when treeview is changed.
@@ -139,9 +157,9 @@ public:
   /**
    * Update list bullet accessible.
    */
-  virtual void UpdateListBullet(nsIPresShell* aPresShell,
-                                nsIContent* aHTMLListItemContent,
-                                bool aHasBullet);
+  void UpdateListBullet(nsIPresShell* aPresShell,
+                        nsIContent* aHTMLListItemContent,
+                        bool aHasBullet);
 
   /**
    * Update the image map.
@@ -163,14 +181,14 @@ public:
   /**
    * Notify that presshell is activated.
    */
-  virtual void PresShellActivated(nsIPresShell* aPresShell);
+  void PresShellActivated(nsIPresShell* aPresShell);
 
   /**
    * Recreate an accessible for the given content node in the presshell.
    */
   void RecreateAccessible(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual void FireAccessibleEvent(uint32_t aEvent, Accessible* aTarget) override;
+  void FireAccessibleEvent(uint32_t aEvent, Accessible* aTarget);
 
   // nsAccessibiltiyService
 
@@ -178,6 +196,11 @@ public:
    * Return true if accessibility service has been shutdown.
    */
   static bool IsShutdown() { return gIsShutdown; }
+
+  /**
+   * Return true if accessibility service has been initialized by platform.
+   */
+  static bool IsPlatformCaller() { return gIsPlatformCaller; };
 
   /**
    * Creates an accessible for the given DOM node.
@@ -205,7 +228,7 @@ public:
 
 private:
   // nsAccessibilityService creation is controlled by friend
-  // NS_GetAccessibilityService, keep constructors private.
+  // GetOrCreateAccService, keep constructors private.
   nsAccessibilityService();
   nsAccessibilityService(const nsAccessibilityService&);
   nsAccessibilityService& operator =(const nsAccessibilityService&);
@@ -258,15 +281,21 @@ private:
    */
   static bool gIsShutdown;
 
+  /**
+   * Indicates whether accessibility service was initialized by platform.
+   */
+  static bool gIsPlatformCaller;
+
   nsDataHashtable<nsPtrHashKey<const nsIAtom>, const mozilla::a11y::MarkupMapInfo*> mMarkupMaps;
 
   friend nsAccessibilityService* GetAccService();
+  friend nsAccessibilityService* GetOrCreateAccService(bool);
+  friend bool CanShutdownAccService();
   friend mozilla::a11y::FocusManager* mozilla::a11y::FocusMgr();
   friend mozilla::a11y::SelectionManager* mozilla::a11y::SelectionMgr();
   friend mozilla::a11y::ApplicationAccessible* mozilla::a11y::ApplicationAcc();
   friend mozilla::a11y::xpcAccessibleApplication* mozilla::a11y::XPCApplicationAcc();
-
-  friend nsresult NS_GetAccessibilityService(nsIAccessibilityService** aResult);
+  friend class xpcAccessibilityService;
 };
 
 /**
@@ -277,6 +306,16 @@ GetAccService()
 {
   return nsAccessibilityService::gAccessibilityService;
 }
+
+/**
+ * Return accessibility service instance; creating one if necessary.
+ */
+nsAccessibilityService* GetOrCreateAccService(bool aIsPlatformCaller = true);
+
+/**
+ * Return a flag indicating if accessibility service can be shutdown.
+ */
+bool CanShutdownAccService();
 
 /**
  * Return true if we're in a content process and not B2G.
@@ -294,7 +333,7 @@ IPCAccessibilityActive()
 
 /**
  * Map nsIAccessibleEvents constants to strings. Used by
- * nsIAccessibleRetrieval::getStringEventType() method.
+ * nsAccessibilityService::GetStringEventType() method.
  */
 static const char kEventTypeNames[][40] = {
   "unknown",                                 //
@@ -387,5 +426,4 @@ static const char kEventTypeNames[][40] = {
   "text value change",                       // EVENT_TEXT_VALUE_CHANGE
 };
 
-#endif /* __nsIAccessibilityService_h__ */
-
+#endif

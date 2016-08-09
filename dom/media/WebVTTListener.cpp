@@ -89,6 +89,7 @@ NS_IMETHODIMP
 WebVTTListener::OnStartRequest(nsIRequest* aRequest,
                                nsISupports* aContext)
 {
+  VTT_LOG("WebVTTListener::OnStartRequest\n");
   return NS_OK;
 }
 
@@ -97,6 +98,7 @@ WebVTTListener::OnStopRequest(nsIRequest* aRequest,
                               nsISupports* aContext,
                               nsresult aStatus)
 {
+  VTT_LOG("WebVTTListener::OnStopRequest\n");
   if (NS_FAILED(aStatus)) {
     mElement->SetReadyState(TextTrackReadyState::FailedToLoad);
   }
@@ -136,6 +138,7 @@ WebVTTListener::OnDataAvailable(nsIRequest* aRequest,
                                 uint64_t aOffset,
                                 uint32_t aCount)
 {
+  VTT_LOG("WebVTTListener::OnDataAvailable\n");
   uint32_t count = aCount;
   while (count > 0) {
     uint32_t read;

@@ -91,17 +91,17 @@ apt-get install -y -f ${apt_packages[@]}
 dpkg-reconfigure locales
 
 # set up tooltool (temporarily)
-curl https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py > /setup/tooltool.py
 tooltool_fetch() {
     cat >manifest.tt
     python /setup/tooltool.py fetch
     rm manifest.tt
 }
 
+. /setup/install-mercurial.sh
+
 pip install --upgrade pip
 
 pip install virtualenv
-pip install mercurial
 
 # Install node
 tooltool_fetch <<'EOF'

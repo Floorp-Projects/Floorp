@@ -311,30 +311,35 @@ class LinuxToolchainTest(BaseToolchainTest):
         version='4.9.3',
         type='gcc',
         compiler='/usr/bin/gcc',
+        language='C',
     )
     GXX_4_9_RESULT = CompilerResult(
         flags=['-std=gnu++11'],
         version='4.9.3',
         type='gcc',
         compiler='/usr/bin/g++',
+        language='C++',
     )
     GCC_5_RESULT = CompilerResult(
         flags=['-std=gnu99'],
         version='5.2.1',
         type='gcc',
         compiler='/usr/bin/gcc-5',
+        language='C',
     )
     GXX_5_RESULT = CompilerResult(
         flags=['-std=gnu++11'],
         version='5.2.1',
         type='gcc',
         compiler='/usr/bin/g++-5',
+        language='C++',
     )
     CLANG_3_3_RESULT = CompilerResult(
         flags=[],
         version='3.3.0',
         type='clang',
         compiler='/usr/bin/clang-3.3',
+        language='C',
     )
     CLANGXX_3_3_RESULT = 'Only clang/llvm 3.6 or newer is supported.'
     CLANG_3_6_RESULT = CompilerResult(
@@ -342,12 +347,14 @@ class LinuxToolchainTest(BaseToolchainTest):
         version='3.6.2',
         type='clang',
         compiler='/usr/bin/clang',
+        language='C',
     )
     CLANGXX_3_6_RESULT = CompilerResult(
         flags=['-std=gnu++11'],
         version='3.6.2',
         type='clang',
         compiler='/usr/bin/clang++',
+        language='C++',
     )
 
     def test_gcc(self):
@@ -753,6 +760,14 @@ class WindowsToolchainTest(BaseToolchainTest):
         version='19.00.23918',
         type='msvc',
         compiler='/usr/bin/cl',
+        language='C',
+    )
+    VSXX_2015u2_RESULT = CompilerResult(
+        flags=[],
+        version='19.00.23918',
+        type='msvc',
+        compiler='/usr/bin/cl',
+        language='C++',
     )
     CLANG_CL_3_9_RESULT = CompilerResult(
         flags=['-Xclang', '-std=gnu99',
@@ -760,12 +775,14 @@ class WindowsToolchainTest(BaseToolchainTest):
         version='18.00.30723',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
+        language='C',
     )
     CLANGXX_CL_3_9_RESULT = CompilerResult(
         flags=['-fms-compatibility-version=18.00.30723', '-fallback'],
         version='18.00.30723',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
+        language='C++',
     )
     CLANG_3_3_RESULT = LinuxToolchainTest.CLANG_3_3_RESULT
     CLANGXX_3_3_RESULT = LinuxToolchainTest.CLANGXX_3_3_RESULT
@@ -781,7 +798,7 @@ class WindowsToolchainTest(BaseToolchainTest):
     def test_msvc(self):
         self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.VS_2015u2_RESULT,
-            'cxx_compiler': self.VS_2015u2_RESULT,
+            'cxx_compiler': self.VSXX_2015u2_RESULT,
         })
 
     def test_unsupported_msvc(self):

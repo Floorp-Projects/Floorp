@@ -39,155 +39,150 @@
  * DOM elements, but they may include things like Blobs and typed arrays.
  *
  */
-const {Cc, Ci, Cu, Cr} = require("chrome");
-const {indexedDB} = require("sdk/indexed-db");
+
+"use strict";
+
 const Promise = require("promise");
 
-module.exports = (function () {
-  "use strict";
+const DBNAME = "devtools-async-storage";
+const DBVERSION = 1;
+const STORENAME = "keyvaluepairs";
+var db = null;
 
-  var DBNAME = "devtools-async-storage";
-  var DBVERSION = 1;
-  var STORENAME = "keyvaluepairs";
-  var db = null;
-
-  function withStore(type, onsuccess, onerror) {
-    if (db) {
-      var transaction = db.transaction(STORENAME, type);
-      var store = transaction.objectStore(STORENAME);
+function withStore(type, onsuccess, onerror) {
+  if (db) {
+    let transaction = db.transaction(STORENAME, type);
+    let store = transaction.objectStore(STORENAME);
+    onsuccess(store);
+  } else {
+    let openreq = indexedDB.open(DBNAME, DBVERSION);
+    openreq.onerror = function withStoreOnError() {
+      onerror();
+    };
+    openreq.onupgradeneeded = function withStoreOnUpgradeNeeded() {
+      // First time setup: create an empty object store
+      openreq.result.createObjectStore(STORENAME);
+    };
+    openreq.onsuccess = function withStoreOnSuccess() {
+      db = openreq.result;
+      let transaction = db.transaction(STORENAME, type);
+      let store = transaction.objectStore(STORENAME);
       onsuccess(store);
-    } else {
-      var openreq = indexedDB.open(DBNAME, DBVERSION);
-      openreq.onerror = function withStoreOnError() {
-        onerror();
+    };
+  }
+}
+
+function getItem(itemKey) {
+  return new Promise((resolve, reject) => {
+    let req;
+    withStore("readonly", (store) => {
+      store.transaction.oncomplete = function onComplete() {
+        let value = req.result;
+        if (value === undefined) {
+          value = null;
+        }
+        resolve(value);
       };
-      openreq.onupgradeneeded = function withStoreOnUpgradeNeeded() {
-        // First time setup: create an empty object store
-        openreq.result.createObjectStore(STORENAME);
+      req = store.get(itemKey);
+      req.onerror = function getItemOnError() {
+        reject("Error in asyncStorage.getItem(): ", req.error.name);
       };
-      openreq.onsuccess = function withStoreOnSuccess() {
-        db = openreq.result;
-        var transaction = db.transaction(STORENAME, type);
-        var store = transaction.objectStore(STORENAME);
-        onsuccess(store);
+    }, reject);
+  });
+}
+
+function setItem(itemKey, value) {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", (store) => {
+      store.transaction.oncomplete = resolve;
+      let req = store.put(value, itemKey);
+      req.onerror = function setItemOnError() {
+        reject("Error in asyncStorage.setItem(): ", req.error.name);
       };
+    }, reject);
+  });
+}
+
+function removeItem(itemKey) {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", (store) => {
+      store.transaction.oncomplete = resolve;
+      let req = store.delete(itemKey);
+      req.onerror = function removeItemOnError() {
+        reject("Error in asyncStorage.removeItem(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function clear() {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", (store) => {
+      store.transaction.oncomplete = resolve;
+      let req = store.clear();
+      req.onerror = function clearOnError() {
+        reject("Error in asyncStorage.clear(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function length() {
+  return new Promise((resolve, reject) => {
+    let req;
+    withStore("readonly", (store) => {
+      store.transaction.oncomplete = function onComplete() {
+        resolve(req.result);
+      };
+      req = store.count();
+      req.onerror = function lengthOnError() {
+        reject("Error in asyncStorage.length(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function key(n) {
+  return new Promise((resolve, reject) => {
+    if (n < 0) {
+      resolve(null);
+      return;
     }
-  }
 
-  function getItem(key) {
-    return new Promise((resolve, reject) => {
-      var req;
-      withStore("readonly", (store) => {
-        store.transaction.oncomplete = function onComplete() {
-          var value = req.result;
-          if (value === undefined) {
-            value = null;
-          }
-          resolve(value);
-        };
-        req = store.get(key);
-        req.onerror = function getItemOnError() {
-          reject("Error in asyncStorage.getItem(): ", req.error.name);
-        };
-      }, reject);
-    });
-  }
+    let req;
+    withStore("readonly", (store) => {
+      store.transaction.oncomplete = function onComplete() {
+        let cursor = req.result;
+        resolve(cursor ? cursor.key : null);
+      };
+      let advanced = false;
+      req = store.openCursor();
+      req.onsuccess = function keyOnSuccess() {
+        let cursor = req.result;
+        if (!cursor) {
+          // this means there weren"t enough keys
+          return;
+        }
+        if (n === 0 || advanced) {
+          // Either 1) we have the first key, return it if that's what they
+          // wanted, or 2) we"ve got the nth key.
+          return;
+        }
 
-  function setItem(key, value) {
-    return new Promise((resolve, reject) => {
-      withStore("readwrite", (store) => {
-        store.transaction.oncomplete = resolve;
-        var req = store.put(value, key);
-        req.onerror = function setItemOnError() {
-          reject("Error in asyncStorage.setItem(): ", req.error.name);
-        };
-      }, reject);
-    });
-  }
+        // Otherwise, ask the cursor to skip ahead n records
+        advanced = true;
+        cursor.advance(n);
+      };
+      req.onerror = function keyOnError() {
+        reject("Error in asyncStorage.key(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
 
-  function removeItem(key) {
-    return new Promise((resolve, reject) => {
-      withStore("readwrite", (store) => {
-        store.transaction.oncomplete = resolve;
-        var req = store.delete(key);
-        req.onerror = function removeItemOnError() {
-          reject("Error in asyncStorage.removeItem(): ", req.error.name);
-        };
-      }, reject);
-    });
-  }
-
-  function clear() {
-    return new Promise((resolve, reject) => {
-      withStore("readwrite", (store) => {
-        store.transaction.oncomplete = resolve;
-        var req = store.clear();
-        req.onerror = function clearOnError() {
-          reject("Error in asyncStorage.clear(): ", req.error.name);
-        };
-      }, reject);
-    });
-  }
-
-  function length() {
-    return new Promise((resolve, reject) => {
-      var req;
-      withStore("readonly", (store) => {
-        store.transaction.oncomplete = function onComplete() {
-          resolve(req.result);
-        };
-        req = store.count();
-        req.onerror = function lengthOnError() {
-          reject("Error in asyncStorage.length(): ", req.error.name);
-        };
-      }, reject);
-    });
-  }
-
-  function key(n) {
-    return new Promise((resolve, reject) => {
-      if (n < 0) {
-        resolve(null);
-        return;
-      }
-
-      var req;
-      withStore("readonly", (store) => {
-        store.transaction.oncomplete = function onComplete() {
-          var cursor = req.result;
-          resolve(cursor ? cursor.key : null);
-        };
-        var advanced = false;
-        req = store.openCursor();
-        req.onsuccess = function keyOnSuccess() {
-          var cursor = req.result;
-          if (!cursor) {
-            // this means there weren"t enough keys
-            return;
-          }
-          if (n === 0 || advanced) {
-            // Either 1) we have the first key, return it if that's what they
-            // wanted, or 2) we"ve got the nth key.
-            return;
-          }
-
-          // Otherwise, ask the cursor to skip ahead n records
-          advanced = true;
-          cursor.advance(n);
-        };
-        req.onerror = function keyOnError() {
-          reject("Error in asyncStorage.key(): ", req.error.name);
-        };
-      }, reject);
-    });
-  }
-
-  return {
-    getItem: getItem,
-    setItem: setItem,
-    removeItem: removeItem,
-    clear: clear,
-    length: length,
-    key: key
-  };
-}());
+exports.getItem = getItem;
+exports.setItem = setItem;
+exports.removeItem = removeItem;
+exports.clear = clear;
+exports.length = length;
+exports.key = key;

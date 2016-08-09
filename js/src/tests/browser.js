@@ -13,6 +13,60 @@
 //       bizarre things that might break the harness.
 
 (function(global) {
+  /**********************************************************************
+   * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
+   **********************************************************************/
+
+  var ReflectApply = global.Reflect.apply;
+
+  // BEWARE: ObjectGetOwnPropertyDescriptor is only safe to use if its result
+  //         is inspected using own-property-examining functionality.  Directly
+  //         accessing properties on a returned descriptor without first
+  //         verifying the property's existence can invoke user-modifiable
+  //         behavior.
+  var ObjectGetOwnPropertyDescriptor = global.Object.getOwnPropertyDescriptor;
+
+  var document = global.document;
+  var documentBody = global.document.body;
+  var documentDocumentElement = global.document.documentElement;
+  var DocumentCreateElement = global.document.createElement;
+  var ElementInnerHTMLSetter =
+    ObjectGetOwnPropertyDescriptor(global.Element.prototype, "innerHTML").set;
+  var HTMLIFramePrototypeContentWindowGetter =
+    ObjectGetOwnPropertyDescriptor(global.HTMLIFrameElement.prototype, "contentWindow").get;
+  var HTMLIFramePrototypeRemove = global.HTMLIFrameElement.prototype.remove;
+  var NodePrototypeAppendChild = global.Node.prototype.appendChild;
+  var NodePrototypeTextContentSetter =
+    ObjectGetOwnPropertyDescriptor(global.Node.prototype, "textContent").set;
+
+  // Cached DOM nodes used by the test harness itself.  (We assume the test
+  // doesn't misbehave in a way that actively interferes with what the test
+  // harness runner observes, e.g. navigating the page to a different location.
+  // Short of running every test in a worker -- which has its own problems --
+  // there's no way to isolate a test from the page to that extent.)
+  var printOutputContainer =
+    global.document.getElementById("jsreftest-print-output-container");
+
+  /****************************
+   * GENERAL HELPER FUNCTIONS *
+   ****************************/
+
+  function AppendChild(elt, kid) {
+    ReflectApply(NodePrototypeAppendChild, elt, [kid]);
+  }
+
+  function CreateElement(name) {
+    return ReflectApply(DocumentCreateElement, document, [name]);
+  }
+
+  function HTMLSetAttribute(element, name, value) {
+    ReflectApply(HTMLElementPrototypeSetAttribute, element, [name, value]);
+  }
+
+  function SetTextContent(element, text) {
+    ReflectApply(NodePrototypeTextContentSetter, element, [text]);
+  }
+
   /****************************
    * UTILITY FUNCTION EXPORTS *
    ****************************/
@@ -20,10 +74,12 @@
   var newGlobal = global.newGlobal;
   if (typeof newGlobal !== "function") {
     newGlobal = function newGlobal() {
-      var iframe = global.document.createElement("iframe");
-      global.document.documentElement.appendChild(iframe);
-      var win = iframe.contentWindow;
-      iframe.remove();
+      var iframe = CreateElement("iframe");
+      AppendChild(documentDocumentElement, iframe);
+      var win =
+        ReflectApply(HTMLIFramePrototypeContentWindowGetter, iframe, []);
+      ReflectApply(HTMLIFramePrototypeRemove, iframe, []);
+
       // Shim in "evaluate"
       win.evaluate = win.eval;
       return win;
@@ -31,20 +87,63 @@
     global.newGlobal = newGlobal;
   }
 
-  // This function is *only* used in this file!  Ultimately it should only be
-  // used by other exports in this IIFE, but for now just export it so that
-  // functions not exported within this IIFE (but still in this file) can use
-  // it.
-  function DocumentWrite(s) {
-    try {
-      var msgDiv = global.document.createElement('div');
-      msgDiv.innerHTML = s;
-      global.document.body.appendChild(msgDiv);
-    } catch (e) {
-      global.document.write(s + '<br>\n');
-    }
+  // This function is *only* used by shell.js's for-browsers |print()| function!
+  // It's only defined/exported here because it needs CreateElement and friends,
+  // only defined here, and we're not yet ready to move them to shell.js.
+  function AddPrintOutput(s) {
+    var msgDiv = CreateElement("div");
+    SetTextContent(msgDiv, s);
+    AppendChild(printOutputContainer, msgDiv);
   }
-  global.DocumentWrite = DocumentWrite;
+  global.AddPrintOutput = AddPrintOutput;
+
+  /*************************************************************************
+   * HARNESS-CENTRIC EXPORTS (we should generally work to eliminate these) *
+   *************************************************************************/
+
+  // This overwrites shell.js's version that merely prints the given string.
+  function writeHeaderToLog(string) {
+    string = String(string);
+
+    // First dump to the console.
+    dump(string + "\n");
+
+    // Then output to the page.
+    var h2 = CreateElement("h2");
+    SetTextContent(h2, string);
+    AppendChild(printOutputContainer, h2);
+  }
+  global.writeHeaderToLog = writeHeaderToLog;
+
+  // XXX This function overwrites one in shell.js.  We should define the
+  //     separate versions in a single location.  Also the dependence on
+  //     |global.{PASSED,FAILED}| is very silly.
+  function writeFormattedResult(expect, actual, string, passed) {
+    // XXX remove this?  it's unneeded in the shell version
+    string = String(string);
+
+    dump(string + "\n");
+
+    var font = CreateElement("font");
+    if (passed) {
+      HTMLSetAttribute(font, "color", "#009900");
+      SetTextContent(font, " \u00A0" + global.PASSED);
+    } else {
+      HTMLSetAttribute(font, "color", "#aa0000");
+      SetTextContent(font, "\u00A0" + global.FAILED + expect);
+    }
+
+    var b = CreateElement("b");
+    AppendChild(b, font);
+
+    var tt = CreateElement("tt");
+    SetTextContent(tt, string);
+    AppendChild(tt, b);
+
+    AppendChild(printOutputContainer, tt);
+    AppendChild(printOutputContainer, CreateElement("br"));
+  }
+  global.writeFormattedResult = writeFormattedResult;
 })(this);
 
 
@@ -67,81 +166,12 @@ function testPassesUnlessItThrows() {
 }
 
 /*
- * Requests to load the given JavaScript file before the file containing the
- * test case.
- */
-function include(file) {
-  outputscripttag(file, {language: "type", mimetype: "text/javascript"});
-}
-
-/*
  * Sets a restore function which restores the standard built-in ECMAScript
  * properties after a destructive test case, and which will be called after
  * the test case terminates.
  */
 function setRestoreFunction(restore) {
   jstestsRestoreFunction = restore;
-}
-
-function htmlesc(str) {
-  if (str == '<')
-    return '&lt;';
-  if (str == '>')
-    return '&gt;';
-  if (str == '&')
-    return '&amp;';
-  return str;
-}
-
-function print() {
-  var s = 'TEST-INFO | ';
-  var a;
-  for (var i = 0; i < arguments.length; i++)
-  {
-    a = arguments[i];
-    s += String(a) + ' ';
-  }
-
-  if (typeof dump == 'function')
-  {
-    dump( s + '\n');
-  }
-
-  s = s.replace(/[<>&]/g, htmlesc);
-
-  DocumentWrite(s);
-}
-
-function writeHeaderToLog( string ) {
-  string = String(string);
-
-  if (typeof dump == 'function')
-  {
-    dump( string + '\n');
-  }
-
-  string = string.replace(/[<>&]/g, htmlesc);
-
-  DocumentWrite( "<h2>" + string + "</h2>" );
-}
-
-function writeFormattedResult( expect, actual, string, passed ) {
-  string = String(string);
-
-  if (typeof dump == 'function')
-  {
-    dump( string + '\n');
-  }
-
-  string = string.replace(/[<>&]/g, htmlesc);
-
-  var s = "<tt>"+ string ;
-  s += "<b>" ;
-  s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
-    : "<font color=#aa0000>&nbsp;" +  FAILED + expect;
-
-  DocumentWrite( s + "</font></b></tt><br>" );
-  return passed;
 }
 
 window.onerror = function (msg, page, line)
@@ -192,10 +222,6 @@ function gc()
   {
     print('gc: ' + ex);
   }
-}
-
-function quit()
-{
 }
 
 function options(aOptionName)
@@ -274,11 +300,6 @@ function optionsInit() {
       options.initvalues[optionName] = true;
     }
   }
-}
-
-function gczeal(z)
-{
-  SpecialPowers.setGCZeal(z);
 }
 
 function jsTestDriverBrowserInit()

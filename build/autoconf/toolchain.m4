@@ -49,34 +49,11 @@ AC_DEFUN([MOZ_CROSS_COMPILER],
 [
 echo "cross compiling from $host to $target"
 
-_SAVE_CC="$CC"
-_SAVE_CFLAGS="$CFLAGS"
-_SAVE_LDFLAGS="$LDFLAGS"
-
 if test -z "$HOST_AR_FLAGS"; then
     HOST_AR_FLAGS="$AR_FLAGS"
 fi
 AC_CHECK_PROGS(HOST_RANLIB, $HOST_RANLIB ranlib, ranlib, :)
 AC_CHECK_PROGS(HOST_AR, $HOST_AR ar, ar, :)
-CC="$HOST_CC"
-CFLAGS="$HOST_CFLAGS"
-LDFLAGS="$HOST_LDFLAGS"
-
-AC_MSG_CHECKING([whether the host c compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works])
-AC_TRY_COMPILE([], [return(0);],
-    [ac_cv_prog_hostcc_works=1 AC_MSG_RESULT([yes])],
-    AC_MSG_ERROR([installation or configuration problem: host compiler $HOST_CC cannot create executables.]) )
-
-CC="$HOST_CXX"
-CFLAGS="$HOST_CXXFLAGS"
-AC_MSG_CHECKING([whether the host c++ compiler ($HOST_CXX $HOST_CXXFLAGS $HOST_LDFLAGS) works])
-AC_TRY_COMPILE([], [return(0);],
-    [ac_cv_prog_hostcxx_works=1 AC_MSG_RESULT([yes])],
-    AC_MSG_ERROR([installation or configuration problem: host compiler $HOST_CXX cannot create executables.]) )
-
-CC=$_SAVE_CC
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
 
 dnl AC_CHECK_PROGS manually goes through $PATH, and as such fails to handle
 dnl absolute or relative paths. Relative paths wouldn't work anyways, but

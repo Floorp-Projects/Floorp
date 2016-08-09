@@ -1066,6 +1066,7 @@ protected:
 
   bool ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow);
   bool ParseShadowList(nsCSSProperty aProperty);
+  bool ParseShapeOutside(nsCSSValue& aValue);
   bool ParseTransitionProperty();
   bool ParseTransitionTimingFunctionValues(nsCSSValue& aValue);
   bool ParseTransitionTimingFunctionValueComponent(float& aComponent,
@@ -1324,6 +1325,8 @@ protected:
   }
 
   /* Functions for basic shapes */
+  bool ParseReferenceBoxAndBasicShape(nsCSSValue& aValue,
+                                      const KTableEntry aBoxKeywordTable[]);
   bool ParseBasicShape(nsCSSValue& aValue, bool* aConsumedTokens);
   bool ParsePolygonFunction(nsCSSValue& aValue);
   bool ParseCircleOrEllipseFunction(nsCSSKeyword, nsCSSValue& aValue);
@@ -11759,6 +11762,8 @@ CSSParserImpl::ParseSingleValuePropertyByFunction(nsCSSValue& aValue,
       return ParseScrollSnapDestination(aValue);
     case eCSSProperty_scroll_snap_coordinate:
       return ParseScrollSnapCoordinate(aValue);
+    case eCSSProperty_shape_outside:
+      return ParseShapeOutside(aValue);
     case eCSSProperty_text_align:
       return ParseTextAlign(aValue);
     case eCSSProperty_text_align_last:
@@ -12078,17 +12083,21 @@ CSSParserImpl::ParseImageLayersItem(
   aState.mClip->mValue.SetIntValue(NS_STYLE_IMAGELAYER_CLIP_BORDER,
                                    eCSSUnit_Enumerated);
 
-  aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_REPEAT,
-                                      eCSSUnit_Enumerated);
-  aState.mRepeat->mYValue.Reset();
+
+
 
   if (eCSSProperty_mask == aTable[nsStyleImageLayers::shorthand]) {
     aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_BORDER,
                                        eCSSUnit_Enumerated);
+    aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT,
+                                        eCSSUnit_Enumerated);
   } else {
     aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_PADDING,
                                        eCSSUnit_Enumerated);
+    aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_REPEAT,
+                                        eCSSUnit_Enumerated);
   }
+  aState.mRepeat->mYValue.Reset();
 
   RefPtr<nsCSSValue::Array> positionXArr = nsCSSValue::Array::Create(2);
   RefPtr<nsCSSValue::Array> positionYArr = nsCSSValue::Array::Create(2);
@@ -16165,6 +16174,48 @@ CSSParserImpl::ParseBasicShape(nsCSSValue& aValue, bool* aConsumedTokens)
   }
 }
 
+bool
+CSSParserImpl::ParseReferenceBoxAndBasicShape(
+  nsCSSValue& aValue,
+  const KTableEntry aBoxKeywordTable[])
+{
+  nsCSSValue referenceBox;
+  bool hasBox = ParseEnum(referenceBox, aBoxKeywordTable);
+
+  const bool boxCameFirst = hasBox;
+
+  nsCSSValue basicShape;
+  bool basicShapeConsumedTokens = false;
+  bool hasShape = ParseBasicShape(basicShape, &basicShapeConsumedTokens);
+
+  // Parsing wasn't successful if ParseBasicShape consumed tokens but failed
+  // or if the token was neither a reference box nor a basic shape.
+  if ((!hasShape && basicShapeConsumedTokens) || (!hasBox && !hasShape)) {
+    return false;
+  }
+
+  // Check if the second argument is a reference box if the first wasn't.
+  if (!hasBox) {
+    hasBox = ParseEnum(referenceBox, aBoxKeywordTable);
+  }
+
+  RefPtr<nsCSSValue::Array> fullValue =
+    nsCSSValue::Array::Create((hasBox && hasShape) ? 2 : 1);
+
+  if (hasBox && hasShape) {
+    fullValue->Item(boxCameFirst ? 0 : 1) = referenceBox;
+    fullValue->Item(boxCameFirst ? 1 : 0) = basicShape;
+  } else if (hasBox) {
+    fullValue->Item(0) = referenceBox;
+  } else {
+    MOZ_ASSERT(hasShape, "should've bailed if we got neither box nor shape");
+    fullValue->Item(0) = basicShape;
+  }
+
+  aValue.SetArrayValue(fullValue, eCSSUnit_Array);
+  return true;
+}
+
 /* Parse a clip-path url to a <clipPath> element or a basic shape. */
 bool CSSParserImpl::ParseClipPath()
 {
@@ -16177,44 +16228,27 @@ bool CSSParserImpl::ParseClipPath()
       return false;
     }
 
-    nsCSSValue referenceBox;
-    bool hasBox = ParseEnum(referenceBox, nsCSSProps::kClipShapeSizingKTable);
-
-    const bool boxCameFirst = hasBox;
-
-    nsCSSValue basicShape;
-    bool basicShapeConsumedTokens = false;
-    bool hasShape = ParseBasicShape(basicShape, &basicShapeConsumedTokens);
-
-    // Parsing wasn't successful if ParseBasicShape consumed tokens but failed
-    // or if the token was neither a reference box nor a basic shape.
-    if ((!hasShape && basicShapeConsumedTokens) || (!hasBox && !hasShape)) {
+    if (!ParseReferenceBoxAndBasicShape(
+          value, nsCSSProps::kClipPathGeometryBoxKTable)) {
       return false;
     }
-
-    // Check if the second argument is a reference box if the first wasn't.
-    if (!hasBox) {
-      hasBox = ParseEnum(referenceBox, nsCSSProps::kClipShapeSizingKTable);
-    }
-
-    RefPtr<nsCSSValue::Array> fullValue =
-      nsCSSValue::Array::Create((hasBox && hasShape) ? 2 : 1);
-
-    if (hasBox && hasShape) {
-      fullValue->Item(boxCameFirst ? 0 : 1) = referenceBox;
-      fullValue->Item(boxCameFirst ? 1 : 0) = basicShape;
-    } else if (hasBox) {
-      fullValue->Item(0) = referenceBox;
-    } else {
-      MOZ_ASSERT(hasShape, "should've bailed if we got neither box nor shape");
-      fullValue->Item(0) = basicShape;
-    }
-
-    value.SetArrayValue(fullValue, eCSSUnit_Array);
   }
 
   AppendValue(eCSSProperty_clip_path, value);
   return true;
+}
+
+// none | [ <basic-shape> || <shape-box> ] | <image>
+bool
+CSSParserImpl::ParseShapeOutside(nsCSSValue& aValue)
+{
+  if (ParseSingleTokenVariant(aValue, VARIANT_HUO, nullptr)) {
+    // 'inherit', 'initial', 'unset', 'none', and <image> url must be alone.
+    return true;
+  }
+
+  return ParseReferenceBoxAndBasicShape(
+    aValue, nsCSSProps::kShapeOutsideShapeBoxKTable);
 }
 
 bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)

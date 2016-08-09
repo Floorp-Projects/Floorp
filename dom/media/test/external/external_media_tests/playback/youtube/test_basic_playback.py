@@ -23,8 +23,8 @@ class TestBasicYouTubePlayback(MediaTestCase):
                         interval=1)
             try:
                 verbose_until(wait, youtube,
-                              lambda y: y.video_src.startswith('mediasource'),
-                              "Failed to find 'mediasource' in video src url.")
+                              lambda y: y.video_src.startswith('blob'),
+                              "Failed to find 'blob' in video src url.")
             except TimeoutException as e:
                 raise self.failureException(e)
 

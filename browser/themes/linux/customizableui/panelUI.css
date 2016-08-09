@@ -5,7 +5,7 @@
 %include ../../shared/customizableui/panelUI.inc.css
 
 .panel-subviews {
-  background-color: -moz-dialog;
+  background-color: var(--panel-arrowcontent-background);
 }
 
 #BMB_bookmarksPopup > menuitem[type="checkbox"] {

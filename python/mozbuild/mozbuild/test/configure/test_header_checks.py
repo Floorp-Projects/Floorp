@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import textwrap
 import unittest
+import mozpack.path as mozpath
 
 from StringIO import StringIO
 
@@ -44,32 +45,40 @@ class TestHeaderChecks(unittest.TestCase):
                 expected_flags=expected_flags),
         }
 
+        base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
+
         mock_compiler_defs = textwrap.dedent('''\
+            @depends('--help')
+            def extra_toolchain_flags(_):
+                return []
+
+            include('%s/compilers-util.configure')
+
+            @compiler_class
             @depends('--help')
             def c_compiler(_):
                 return namespace(
                     flags=[],
                     compiler=os.path.abspath('/usr/bin/mockcc'),
                     wrapper=[],
+                    language='C',
                 )
 
+            @compiler_class
             @depends('--help')
             def cxx_compiler(_):
                 return namespace(
                     flags=[],
                     compiler=os.path.abspath('/usr/bin/mockcc'),
                     wrapper=[],
+                    language='C++',
                 )
-            @depends('--help')
-            def extra_toolchain_flags(_):
-                return []
-        ''')
+        ''' % mozpath.normsep(base_dir))
 
         config = {}
         out = StringIO()
         sandbox = ConfigureTestSandbox(paths, config, {}, ['/bin/configure'],
                                        out, out)
-        base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
         sandbox.include_file(os.path.join(base_dir, 'util.configure'))
         sandbox.include_file(os.path.join(base_dir, 'checks.configure'))
         exec_(mock_compiler_defs, sandbox)

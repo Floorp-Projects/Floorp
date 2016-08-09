@@ -1097,6 +1097,7 @@ class Marionette(object):
         '''
         return "%s%s" % (self.baseurl, relative_url)
 
+    @do_process_check
     def start_session(self, desired_capabilities=None, session_id=None, timeout=60):
         """Create a new Marionette session.
 
