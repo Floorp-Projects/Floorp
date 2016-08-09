@@ -1693,6 +1693,33 @@ class MOZ_RAII AutoEnterIonCompilation
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+namespace gc {
+
+// In debug builds, set/unset the GC sweeping flag for the current thread.
+struct MOZ_RAII AutoSetThreadIsSweeping
+{
+#ifdef DEBUG
+    AutoSetThreadIsSweeping()
+      : threadData_(js::TlsPerThreadData.get())
+    {
+        MOZ_ASSERT(!threadData_->gcSweeping);
+        threadData_->gcSweeping = true;
+    }
+
+    ~AutoSetThreadIsSweeping() {
+        MOZ_ASSERT(threadData_->gcSweeping);
+        threadData_->gcSweeping = false;
+    }
+
+  private:
+    PerThreadData* threadData_;
+#else
+    AutoSetThreadIsSweeping() {}
+#endif
+};
+
+} // namespace gc
+
 /*
  * Provides a delete policy that can be used for objects which have their
  * lifetime managed by the GC and can only safely be destroyed while the nursery
@@ -1709,10 +1736,16 @@ struct GCManagedDeletePolicy
     void operator()(const T* ptr) {
         if (ptr) {
             JSRuntime* rt = TlsPerThreadData.get()->runtimeIfOnOwnerThread();
-            if (rt)
+            if (rt) {
+                // The object may contain nursery pointers and must only be
+                // destroyed after a minor GC.
                 rt->gc.callAfterMinorGC(deletePtr, const_cast<T*>(ptr));
-            else
+            } else {
+                // The object cannot contain nursery pointers so can be
+                // destroyed immediately.
+                gc::AutoSetThreadIsSweeping threadIsSweeping;
                 js_delete(const_cast<T*>(ptr));
+            }
         }
     }
 
