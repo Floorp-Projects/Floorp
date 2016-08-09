@@ -522,6 +522,8 @@
   ERROR(NS_ERROR_DOM_UNKNOWN_ERR,                  FAILURE(30)),
   ERROR(NS_ERROR_DOM_DATA_ERR,                     FAILURE(31)),
   ERROR(NS_ERROR_DOM_OPERATION_ERR,                FAILURE(32)),
+  /* https://heycam.github.io/webidl/#notallowederror */
+  ERROR(NS_ERROR_DOM_NOT_ALLOWED_ERR,              FAILURE(33)),
   /* DOM error codes defined by us */
   ERROR(NS_ERROR_DOM_SECMAN_ERR,                   FAILURE(1001)),
   ERROR(NS_ERROR_DOM_WRONG_TYPE_ERR,               FAILURE(1002)),
