@@ -8,6 +8,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows' and CONFIG['COMPILE_ENVIRONMENT']:
     DIRS += ['msaa', 'ia2']
 
 XPIDL_SOURCES += [
+    'nsIAccessibilityService.idl',
     'nsIAccessible.idl',
     'nsIAccessibleApplication.idl',
     'nsIAccessibleCaretMoveEvent.idl',
@@ -21,7 +22,6 @@ XPIDL_SOURCES += [
     'nsIAccessibleObjectAttributeChangedEvent.idl',
     'nsIAccessiblePivot.idl',
     'nsIAccessibleRelation.idl',
-    'nsIAccessibleRetrieval.idl',
     'nsIAccessibleRole.idl',
     'nsIAccessibleSelectable.idl',
     'nsIAccessibleStateChangeEvent.idl',
@@ -38,8 +38,3 @@ XPIDL_SOURCES += [
 ]
 
 XPIDL_MODULE = 'accessibility'
-
-EXPORTS += [
-    'nsIAccessibilityService.h',
-]
-

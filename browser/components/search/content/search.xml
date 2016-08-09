@@ -1746,7 +1746,12 @@
           let stopEvent = false;
 
           // Tab cycles through the one-offs and moves the focus out at the end.
-          if (event.keyCode == KeyEvent.DOM_VK_TAB) {
+          // But only if non-Shift modifiers aren't also pressed, to avoid
+          // clobbering other shortcuts.
+          if (event.keyCode == KeyEvent.DOM_VK_TAB &&
+              !event.altKey &&
+              !event.ctrlKey &&
+              !event.metaKey) {
             stopEvent = this.advanceSelection(!event.shiftKey, false, true);
           }
 

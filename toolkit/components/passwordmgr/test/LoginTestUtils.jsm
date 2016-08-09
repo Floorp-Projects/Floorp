@@ -111,7 +111,7 @@ this.LoginTestUtils.testData = {
                                   "form_field_username", "form_field_password");
     loginInfo.QueryInterface(Ci.nsILoginMetaInfo);
     if (modifications) {
-      for (let [name, value] of Iterator(modifications)) {
+      for (let [name, value] of Object.entries(modifications)) {
         loginInfo[name] = value;
       }
     }
@@ -131,7 +131,7 @@ this.LoginTestUtils.testData = {
                                   "the password", "", "");
     loginInfo.QueryInterface(Ci.nsILoginMetaInfo);
     if (modifications) {
-      for (let [name, value] of Iterator(modifications)) {
+      for (let [name, value] of Object.entries(modifications)) {
         loginInfo[name] = value;
       }
     }

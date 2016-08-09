@@ -51,6 +51,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase,
                              public nsIDOMHTMLElement
 {
 public:
+  using Element::SetTabIndex;
+  using Element::Focus;
   explicit nsGenericHTMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElementBase(aNodeInfo)
   {
@@ -103,20 +105,6 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::hidden, aHidden, aError);
   }
   virtual void Click();
-  virtual int32_t TabIndexDefault()
-  {
-    return -1;
-  }
-  int32_t TabIndex()
-  {
-    return GetIntAttr(nsGkAtoms::tabindex, TabIndexDefault());
-  }
-  void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError)
-  {
-    SetHTMLIntAttr(nsGkAtoms::tabindex, aTabIndex, aError);
-  }
-  virtual void Focus(mozilla::ErrorResult& aError);
-  virtual void Blur(mozilla::ErrorResult& aError);
   void GetAccessKey(nsString& aAccessKey)
   {
     GetHTMLAttr(nsGkAtoms::accesskey, aAccessKey);

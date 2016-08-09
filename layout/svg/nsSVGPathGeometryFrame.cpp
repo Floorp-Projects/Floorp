@@ -266,6 +266,7 @@ nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (!IsVisibleForPainting(aBuilder) && aBuilder->IsForPainting())) {
     return;
   }
+  DisplayOutline(aBuilder, aLists);
   aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplaySVGPathGeometry(aBuilder, this));
 }

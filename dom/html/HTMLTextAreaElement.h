@@ -106,7 +106,7 @@ public:
   NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify) override;
   NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
-  NS_IMETHOD_(void) OnValueChanged(bool aNotify) override;
+  NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
 
   // nsIContent
@@ -293,6 +293,8 @@ protected:
   nsCOMPtr<nsIControllers> mControllers;
   /** Whether or not the value has changed since its default value was given. */
   bool                     mValueChanged;
+  /** Whether or not the last change to the value was made interactively by the user. */
+  bool                     mLastValueChangeWasInteractive;
   /** Whether or not we are already handling select event. */
   bool                     mHandlingSelect;
   /** Whether or not we are done adding children (always true if not

@@ -40,7 +40,7 @@ enum class ListAllowance { eDisallow, eAllow };
 
 /**
  * A comparator to sort nsCSSProperty values such that longhands are sorted
- * before shorthands, and shorthands with less components are sorted before
+ * before shorthands, and shorthands with fewer components are sorted before
  * shorthands with more components.
  *
  * Using this allows us to prioritize values specified by longhands (or smaller

@@ -304,7 +304,7 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
   D3DPRESENT_PARAMETERS params = {0};
   params.BackBufferWidth = 1;
   params.BackBufferHeight = 1;
-  params.BackBufferFormat = D3DFMT_UNKNOWN;
+  params.BackBufferFormat = D3DFMT_A8R8G8B8;
   params.BackBufferCount = 1;
   params.SwapEffect = D3DSWAPEFFECT_DISCARD;
   params.hDeviceWindow = nullptr;

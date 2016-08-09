@@ -206,7 +206,6 @@ define(function (require, exports, module) {
               role: "presentation",
             },
               DOM.a({
-                href: "#",
                 tabIndex: this.state.tabActive === index ? 0 : -1,
                 "aria-controls": "panel-" + index,
                 "aria-selected": isTabSelected,

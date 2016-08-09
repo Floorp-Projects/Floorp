@@ -317,6 +317,8 @@ public:
   mozilla::dom::SVGSVGElement* GetOwnerSVGElement();
   nsSVGElement* GetViewportElement();
   already_AddRefed<mozilla::dom::SVGAnimatedString> ClassName();
+  virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
+
 protected:
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 

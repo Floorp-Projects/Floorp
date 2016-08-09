@@ -9,11 +9,15 @@
       using the default script language attributes, then execute the
       test.
     -->
-    <script type="text/javascript" src="shell.js">
-    </script>
-    <script type="text/javascript" src="browser.js">
-    </script>
   </head>
   <body>
+    <!--
+      print() appends div-element children to this, so this div must appear
+      before all script elements.
+    -->
+    <div id="jsreftest-print-output-container"></div>
+
+    <script type="text/javascript" src="shell.js"></script>
+    <script type="text/javascript" src="browser.js"></script>
   </body>
 </html>
