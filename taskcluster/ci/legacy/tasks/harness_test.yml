@@ -18,9 +18,6 @@ task:
   workerType: desktop-test-xlarge
   provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
-  routes:
-    - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}'
-    - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}'
   scopes:
     - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
     - 'docker-worker:cache:level-{{level}}-{{project}}-test-workspace'
