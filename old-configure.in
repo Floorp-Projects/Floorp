@@ -2418,46 +2418,6 @@ case "${target}" in
 
 esac
 
-# Allow to specify a Mozilla API key file that contains the secret key to be
-# used for various Mozilla API requests.
-MOZ_ARG_WITH_STRING(mozilla-api-keyfile,
-[  --with-mozilla-api-keyfile=file   Use the secret key contained in the given keyfile for Mozilla API requests],
-  MOZ_MOZILLA_API_KEY=`cat $withval`)
-if test -z "$MOZ_MOZILLA_API_KEY"; then
-    MOZ_MOZILLA_API_KEY=no-mozilla-api-key
-fi
-AC_SUBST(MOZ_MOZILLA_API_KEY)
-
-# Allow to specify a Google API key file that contains the secret key to be
-# used for various Google API requests.
-MOZ_ARG_WITH_STRING(google-api-keyfile,
-[  --with-google-api-keyfile=file   Use the secret key contained in the given keyfile for Google API requests],
-  MOZ_GOOGLE_API_KEY=`cat $withval`)
-if test -z "$MOZ_GOOGLE_API_KEY"; then
-    MOZ_GOOGLE_API_KEY=no-google-api-key
-fi
-AC_SUBST(MOZ_GOOGLE_API_KEY)
-
-# Allow specifying a Bing API key file that contains the client ID and the
-# secret key to be used for the Bing Translation API requests.
-MOZ_ARG_WITH_STRING(bing-api-keyfile,
-[  --with-bing-api-keyfile=file   Use the client id and secret key contained in the given keyfile for Bing API requests],
- [MOZ_BING_API_CLIENTID=`cat $withval | cut -f 1 -d " "`
-  MOZ_BING_API_KEY=`cat $withval | cut -f 2 -d " "`])
-if test -z "$MOZ_BING_API_CLIENTID"; then
-    MOZ_BING_API_CLIENTID=no-bing-api-clientid
-    MOZ_BING_API_KEY=no-bing-api-key
-fi
-AC_SUBST(MOZ_BING_API_CLIENTID)
-AC_SUBST(MOZ_BING_API_KEY)
-
-# Allow specifying an Adjust SDK key file that contains the app token used for
-# Adjust SDK requests.
-MOZ_ARG_WITH_STRING(adjust-sdk-keyfile,
-[  --with-adjust-sdk-keyfile=file   Use the app token contained in the given keyfile for Adjust SDK requests],
-  MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN=`cat $withval`)
-AC_SUBST(MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN)
-
 # Optional Firefox for Android partner distribution directory.
 MOZ_ARG_WITH_STRING(android-distribution-directory,
 [  --with-android-distribution-directory=dir
@@ -2982,7 +2942,7 @@ dnl ========================================================
 dnl = Include install tracking on Android
 dnl ========================================================
 if test -n "$MOZ_INSTALL_TRACKING"; then
-    if test -z "$MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN"; then
+    if test -z "$MOZ_ADJUST_SDK_KEY"; then
         AC_MSG_ERROR([Must specify --with-adjust-sdk-keyfile when MOZ_INSTALL_TRACKING is defined!])
     fi
 fi
