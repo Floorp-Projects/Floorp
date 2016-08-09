@@ -22,8 +22,8 @@ const kModalHighlightRepaintFreqMs = 10;
 const kHighlightAllPref = "findbar.highlightAll";
 const kModalHighlightPref = "findbar.modalHighlight";
 const kFontPropsCSS = ["color", "font-family", "font-kerning", "font-size",
-  "font-size-adjust", "font-stretch", "font-variant", "font-weight", "letter-spacing",
-  "text-emphasis", "text-orientation", "text-transform", "word-spacing"];
+  "font-size-adjust", "font-stretch", "font-variant", "font-weight", "line-height",
+  "letter-spacing", "text-emphasis", "text-orientation", "text-transform", "word-spacing"];
 const kFontPropsCamelCase = kFontPropsCSS.map(prop => {
   let parts = prop.split("-");
   return parts.shift() + parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join("");
@@ -38,19 +38,13 @@ const kModalOutlineId = kModalIdPrefix + "-findbar-modalHighlight-outline";
 const kModalStyle = `
 .findbar-modalHighlight-outline {
   position: absolute;
-  background: linear-gradient(to bottom, #f1ee00, #edcc00);
-  border: 1px solid #f5e600;
+  background: #ffc535;
   border-radius: 3px;
-  box-shadow: 0px 2px 3px rgba(0,0,0,.8);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,.1);
   color: #000;
-  margin-top: -3px;
-  margin-inline-end: 0;
-  margin-bottom: 0;
-  margin-inline-start: -3px;
-  padding-top: 2px;
-  padding-inline-end: 2px;
-  padding-bottom: 0;
-  padding-inline-start: 4px;
+  display: -moz-box;
+  margin: -2px 0 0 -2px !important;
+  padding: 2px !important;
   pointer-events: none;
   z-index: 2;
 }
@@ -60,12 +54,23 @@ const kModalStyle = `
 }
 
 .findbar-modalHighlight-outline[grow] {
-  transform: scaleX(1.5) scaleY(1.5)
+  animation-name: findbar-modalHighlight-outlineAnim;
+}
+
+@keyframes findbar-modalHighlight-outlineAnim {
+  from {
+    transform: scaleX(0) scaleY(0);
+  }
+  50% {
+    transform: scaleX(1.5) scaleY(1.5);
+  }
+  to {
+    transform: scaleX(0) scaleY(0);
+  }
 }
 
 .findbar-modalHighlight-outline[hidden] {
   opacity: 0;
-  display: -moz-box;
 }
 
 .findbar-modalHighlight-outline:not([disable-transitions]) {
@@ -74,10 +79,17 @@ const kModalStyle = `
   transition-timing-function: linear;
 }
 
+.findbar-modalHighlight-outline-text {
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: top !important;
+}
+
 .findbar-modalHighlight-outlineMask {
   background: #000;
   mix-blend-mode: multiply;
-  opacity: .2;
+  opacity: .35;
+  pointer-events: none;
   position: absolute;
   z-index: 1;
 }
@@ -94,7 +106,8 @@ const kModalStyle = `
 
 .findbar-modalHighlight-rect {
   background: #fff;
-  border: 1px solid #666;
+  margin: -1px 0 0 -1px !important;
+  padding: 0 1px 2px 1px !important;
   position: absolute;
 }
 
@@ -154,8 +167,8 @@ FinderHighlighter.prototype = {
 
   get modalStyleSheet() {
     if (!this._modalStyleSheet) {
-      this._modalStyleSheet = kModalStyle.replace(/(\.|#)findbar-/g,
-        "$1" + kModalIdPrefix + "-findbar-");
+      this._modalStyleSheet = kModalStyle.replace(/findbar-/g,
+        kModalIdPrefix + "-findbar-");
     }
     return this._modalStyleSheet;
   },
@@ -371,7 +384,7 @@ FinderHighlighter.prototype = {
         return;
       }
 
-      let rect = foundRange.getBoundingClientRect();
+      let rect = foundRange.getClientRects()[0];
       let fontStyle = this._getRangeFontStyle(foundRange);
       if (typeof this._brightText == "undefined") {
         this._brightText = this._isColorBright(fontStyle.color);
@@ -387,6 +400,8 @@ FinderHighlighter.prototype = {
 
       outlineNode = this._modalHighlightOutline;
       outlineNode.setTextContentForElement(kModalOutlineId + "-text", textContent.join(" "));
+      // Correct the line-height to align the text in the middle of the box.
+      fontStyle.lineHeight = rect.height + "px";
       outlineNode.setAttributeForElement(kModalOutlineId + "-text", "style",
         this._getHTMLFontStyle(fontStyle));
 
@@ -394,20 +409,16 @@ FinderHighlighter.prototype = {
         outlineNode.removeAttributeForElement(kModalOutlineId, "hidden");
       let { scrollX, scrollY } = this._getScrollPosition(window);
       outlineNode.setAttributeForElement(kModalOutlineId, "style",
-        `top: ${scrollY + rect.top}px; left: ${scrollX + rect.left}px`);
+        `top: ${scrollY + rect.top}px; left: ${scrollX + rect.left}px;
+        height: ${rect.height}px; width: ${rect.width}px;`);
     }
 
     outlineNode = this._modalHighlightOutline;
-    if (typeof outlineNode.getAttributeForElement(kModalOutlineId, "grow") == "string")
-      return;
-
+    try {
+      outlineNode.removeAttributeForElement(kModalOutlineId, "grow");
+    } catch (ex) {}
     window.requestAnimationFrame(() => {
       outlineNode.setAttributeForElement(kModalOutlineId, "grow", true);
-      this._listenForOutlineEvent(kModalOutlineId, "transitionend", () => {
-        try {
-          outlineNode.removeAttributeForElement(kModalOutlineId, "grow");
-        } catch (ex) {}
-      });
     });
   },
 
@@ -598,7 +609,7 @@ FinderHighlighter.prototype = {
     for (let prop of Object.getOwnPropertyNames(fontStyle)) {
       let idx = kFontPropsCamelCase.indexOf(prop);
       if (idx == -1)
-        continue
+        continue;
       style.push(`${kFontPropsCSS[idx]}: ${fontStyle[prop]};`);
     }
     return style.join(" ");
@@ -692,7 +703,9 @@ FinderHighlighter.prototype = {
     outlineBox.setAttribute("id", kModalOutlineId);
     outlineBox.className = kModalOutlineId + (kDebug ? ` ${kModalIdPrefix}-findbar-debug` : "");
     let outlineBoxText = document.createElement("span");
-    outlineBoxText.setAttribute("id", kModalOutlineId + "-text");
+    let attrValue = kModalOutlineId + "-text";
+    outlineBoxText.setAttribute("id", attrValue);
+    outlineBoxText.setAttribute("class", attrValue);
     outlineBox.appendChild(outlineBoxText);
 
     container.appendChild(outlineBox);
@@ -731,7 +744,7 @@ FinderHighlighter.prototype = {
       let maskContent = [];
       const kRectClassName = kModalIdPrefix + "-findbar-modalHighlight-rect";
       if (this._modalHighlightRectsMap) {
-        for (let rects of this._modalHighlightRectsMap.values()) {
+        for (let [range, rects] of this._modalHighlightRectsMap) {
           for (let rect of rects) {
             maskContent.push(`<div class="${kRectClassName}" style="top: ${rect.y}px;
               left: ${rect.x}px; height: ${rect.height}px; width: ${rect.width}px;"></div>`);
@@ -805,36 +818,6 @@ FinderHighlighter.prototype = {
       dwu.loadSheetUsingURIString(uri, dwu.AGENT_SHEET);
     } catch (e) {}
     this._modalInstalledSheets.set(document, uri);
-  },
-
-  /**
-   * One can not simply listen to events on a specific AnonymousContent node.
-   * That's why we need to listen on the chromeEventHandler instead and check if
-   * the IDs match of the event target.
-   * IMPORTANT: once the event was fired on the specified element and the handler
-   *            invoked, we remove the event listener right away. That's because
-   *            we don't need more in this class.
-   *
-   * @param {String}   elementId Identifier of the element we expect the event from.
-   * @param {String}   eventName Name of the event to start listening for.
-   * @param {Function} handler   Function to invoke when we detected the event
-   *                             on the designated node.
-   */
-  _listenForOutlineEvent(elementId, eventName, handler) {
-    let target = this.finder._docShell.chromeEventHandler;
-    target.addEventListener(eventName, function onEvent(event) {
-      // Start at originalTarget, bubble through ancestors and call handlers when
-      // needed.
-      let node = event.originalTarget;
-      while (node) {
-        if (node.id == elementId) {
-          handler();
-          target.removeEventListener(eventName, onEvent);
-          break;
-        }
-        node = node.parentNode;
-      }
-    });
   },
 
   /**
