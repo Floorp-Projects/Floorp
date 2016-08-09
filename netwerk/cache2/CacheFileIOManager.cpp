@@ -1099,6 +1099,7 @@ NS_IMPL_ISUPPORTS(CacheFileIOManager, nsITimerCallback)
 CacheFileIOManager::CacheFileIOManager()
   : mShuttingDown(false)
   , mTreeCreated(false)
+  , mTreeCreationFailed(false)
   , mOverLimitEvicting(false)
   , mRemovingTrashDirs(false)
 {
@@ -3710,11 +3711,15 @@ CacheFileIOManager::CreateCacheTree()
   MOZ_ASSERT(mIOThread->IsCurrentThread());
   MOZ_ASSERT(!mTreeCreated);
 
-  if (!mCacheDirectory) {
+  if (!mCacheDirectory || mTreeCreationFailed) {
     return NS_ERROR_FILE_INVALID_PATH;
   }
 
   nsresult rv;
+
+  // Set the flag here and clear it again below when the tree is created
+  // successfully.
+  mTreeCreationFailed = true;
 
   // ensure parent directory exists
   nsCOMPtr<nsIFile> parentDir;
@@ -3736,6 +3741,7 @@ CacheFileIOManager::CreateCacheTree()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mTreeCreated = true;
+  mTreeCreationFailed = false;
 
   if (!mContextEvictor) {
     RefPtr<CacheFileContextEvictor> contextEvictor;
