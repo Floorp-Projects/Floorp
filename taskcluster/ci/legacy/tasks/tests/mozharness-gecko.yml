@@ -36,8 +36,6 @@ task:
           /usr/bin/pip2 install tox &&
           /home/worker/.local/bin/tox -e py27-hg3.7
   extra:
-    extra:
-        build_product: '{{build_product}}'
     locations:
         build: null
         tests: null
@@ -45,6 +43,7 @@ task:
         machine:
             platform: lint
         symbol: MH
+        tier: 2
     treeherderEnv:
         - production
         - staging
