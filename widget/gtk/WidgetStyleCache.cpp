@@ -567,7 +567,8 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       return GetWidgetStyleWithClass(MOZ_GTK_TEXT_VIEW,
                                      GTK_STYLE_CLASS_VIEW);
     case MOZ_GTK_FRAME_BORDER:
-      return CreateChildCSSNode("border", MOZ_GTK_FRAME);
+      style = CreateChildCSSNode("border", MOZ_GTK_FRAME);
+      break;
     case MOZ_GTK_TREEVIEW_VIEW:
       // TODO - create from CSS node
       return GetWidgetStyleWithClass(MOZ_GTK_TREEVIEW,

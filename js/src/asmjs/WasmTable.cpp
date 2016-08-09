@@ -21,12 +21,13 @@
 #include "jscntxt.h"
 
 #include "asmjs/WasmInstance.h"
+#include "asmjs/WasmJS.h"
 
 using namespace js;
 using namespace js::wasm;
 
 /* static */ SharedTable
-Table::create(JSContext* cx, const TableDesc& desc)
+Table::create(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject)
 {
     SharedTable table = cx->new_<Table>();
     if (!table)
@@ -43,6 +44,7 @@ Table::create(JSContext* cx, const TableDesc& desc)
     if (!array)
         return nullptr;
 
+    table->maybeObject_.set(maybeObject);
     table->array_.reset((uint8_t*)array);
     table->kind_ = desc.kind;
     table->length_ = desc.initial;
@@ -73,14 +75,38 @@ Table::init(Instance& instance)
 }
 
 void
-Table::trace(JSTracer* trc)
+Table::tracePrivate(JSTracer* trc)
 {
+    // If this table has a WasmTableObject, then this method is only called by
+    // WasmTableObject's trace hook so maybeObject_ must already be marked.
+    // TraceEdge is called so that the pointer can be updated during a moving
+    // GC. TraceWeakEdge may sound better, but it is less efficient given that
+    // we know object_ is already marked.
+    if (maybeObject_) {
+        MOZ_ASSERT(!gc::IsAboutToBeFinalized(&maybeObject_));
+        TraceEdge(trc, &maybeObject_, "wasm table object");
+    }
+
     if (!initialized_ || !external_)
         return;
 
     ExternalTableElem* array = externalArray();
     for (uint32_t i = 0; i < length_; i++)
         array[i].tls->instance->trace(trc);
+}
+
+void
+Table::trace(JSTracer* trc)
+{
+    // The trace hook of WasmTableObject will call Table::tracePrivate at
+    // which point we can mark the rest of the children. If there is no
+    // WasmTableObject, call Table::tracePrivate directly. Redirecting through
+    // the WasmTableObject avoids marking the entire Table on each incoming
+    // edge (once per dependent Instance).
+    if (maybeObject_)
+        TraceEdge(trc, &maybeObject_, "wasm table object");
+    else
+        tracePrivate(trc);
 }
 
 void**

@@ -32,6 +32,9 @@ MOZ_MUST_USE nsresult
 Base64Encode(const nsAString& aBinary, nsAString& aBase64);
 
 MOZ_MUST_USE nsresult
+Base64Decode(const char* aBase64, uint32_t aBase64Len, char** aBinary,
+             uint32_t* aBinaryLen);
+MOZ_MUST_USE nsresult
 Base64Decode(const nsACString& aBase64, nsACString& aBinary);
 MOZ_MUST_USE nsresult
 Base64Decode(const nsAString& aBase64, nsAString& aBinary);

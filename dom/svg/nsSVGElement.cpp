@@ -610,6 +610,9 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
           didSetResult = true;
         }
         foundMatch = true;
+      } else if (aAttribute == nsGkAtoms::tabindex) {
+        didSetResult = aResult.ParseIntValue(aValue);
+        foundMatch = true;
       }
     }
 
@@ -1118,6 +1121,19 @@ already_AddRefed<SVGAnimatedString>
 nsSVGElement::ClassName()
 {
   return mClassAttribute.ToDOMAnimatedString(this);
+}
+
+bool
+nsSVGElement::IsFocusableInternal(int32_t* aTabIndex, bool)
+{
+  int32_t index = TabIndex();
+
+  if (index == -1) {
+    return false;
+  }
+
+  *aTabIndex = index;
+  return true;
 }
 
 //------------------------------------------------------------------------

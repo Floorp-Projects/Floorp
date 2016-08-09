@@ -856,7 +856,7 @@ WasmTableObject::trace(JSTracer* trc, JSObject* obj)
 {
     WasmTableObject& tableObj = obj->as<WasmTableObject>();
     if (!tableObj.isNewborn())
-        tableObj.table().trace(trc);
+        tableObj.table().tracePrivate(trc);
 }
 
 /* static */ WasmTableObject*
@@ -877,7 +877,7 @@ WasmTableObject::create(JSContext* cx, uint32_t length)
     desc.initial = length;
     desc.maximum = length;
 
-    SharedTable table = Table::create(cx, desc);
+    SharedTable table = Table::create(cx, desc, obj);
     if (!table)
         return nullptr;
 

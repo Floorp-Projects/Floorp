@@ -10,11 +10,15 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/PContentChild.h"
+#include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/SendStream.h"
+#include "mozilla/unused.h"
 #include "nsIAsyncInputStream.h"
 
 namespace mozilla {
@@ -345,7 +349,7 @@ AutoIPCStream::~AutoIPCStream()
 }
 
 void
-AutoIPCStream::Serialize(nsIInputStream* aStream, PContentChild* aManager)
+AutoIPCStream::Serialize(nsIInputStream* aStream, dom::PContentChild* aManager)
 {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
