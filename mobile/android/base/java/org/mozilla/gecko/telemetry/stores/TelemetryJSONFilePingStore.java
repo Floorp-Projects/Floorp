@@ -118,6 +118,10 @@ public class TelemetryJSONFilePingStore extends TelemetryPingStore {
     @Override
     public void maybePrunePings() {
         final File[] files = storeDir.listFiles(uuidFilenameFilter);
+        if (files == null) {
+            return;
+        }
+
         if (files.length < MAX_PING_COUNT) {
             return;
         }

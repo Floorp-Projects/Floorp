@@ -241,7 +241,7 @@ add_task(function* test_multiple_sessions() {
   let sessions = recorder.getPreviousSessions();
   do_check_eq(Object.keys(sessions).length, 10);
 
-  for (let [i, session] in Iterator(sessions)) {
+  for (let [i, session] of Object.entries(sessions)) {
     do_check_eq(session.activeTicks, i);
 
     if (i > 0) {

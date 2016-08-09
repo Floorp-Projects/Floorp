@@ -2904,11 +2904,7 @@ function TextEditor(container, node, templateId) {
     stopOnReturn: true,
     trigger: "dblclick",
     multiline: true,
-    maxWidth: () => {
-      let elementRect = this.value.getBoundingClientRect();
-      let containerRect = this.container.elt.getBoundingClientRect();
-      return containerRect.right - elementRect.left - 2;
-    },
+    maxWidth: () => getAutocompleteMaxWidth(this.value, this.container.elt),
     trimOutput: false,
     done: (val, commit) => {
       if (!commit) {
@@ -3003,6 +2999,8 @@ function ElementEditor(container, node) {
     this.tag.setAttribute("tabindex", "-1");
     editableField({
       element: this.tag,
+      multiline: true,
+      maxWidth: () => getAutocompleteMaxWidth(this.tag, this.container.elt),
       trigger: "dblclick",
       stopOnReturn: true,
       done: this.onTagEdit.bind(this),
@@ -3013,6 +3011,8 @@ function ElementEditor(container, node) {
   // Make the new attribute space editable.
   this.newAttr.editMode = editableField({
     element: this.newAttr,
+    multiline: true,
+    maxWidth: () => getAutocompleteMaxWidth(this.newAttr, this.container.elt),
     trigger: "dblclick",
     stopOnReturn: true,
     contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
@@ -3233,6 +3233,8 @@ ElementEditor.prototype = {
       stopOnReturn: true,
       selectAll: false,
       initial: initial,
+      multiline: true,
+      maxWidth: () => getAutocompleteMaxWidth(inner, this.container.elt),
       contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
       popup: this.markup.popup,
       start: (editor, event) => {
@@ -3603,6 +3605,17 @@ function map(value, oldMin, oldMax, newMin, newMax) {
     return value;
   }
   return newMin + (newMax - newMin) * ((value - oldMin) / ratio);
+}
+
+/**
+ * Retrieve the available width between a provided element left edge and a container right
+ * edge. This used can be used as a max-width for inplace-editor (autocomplete) widgets
+ * replacing Editor elements of the the markup-view;
+ */
+function getAutocompleteMaxWidth(element, container) {
+  let elementRect = element.getBoundingClientRect();
+  let containerRect = container.getBoundingClientRect();
+  return containerRect.right - elementRect.left - 2;
 }
 
 loader.lazyGetter(MarkupView.prototype, "strings", () => Services.strings.createBundle(
