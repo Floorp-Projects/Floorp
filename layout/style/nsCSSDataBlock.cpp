@@ -523,14 +523,14 @@ nsCSSExpandedDataBlock::ComputeNumProps(uint32_t* aNumPropsNormal,
                                         uint32_t* aNumPropsImportant)
 {
   *aNumPropsNormal = *aNumPropsImportant = 0;
-  for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
+  for (size_t iHigh = 0; iHigh < nsCSSPropertyIDSet::kChunkCount; ++iHigh) {
     if (!mPropertiesSet.HasPropertyInChunk(iHigh))
       continue;
-    for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
+    for (size_t iLow = 0; iLow < nsCSSPropertyIDSet::kBitsInChunk; ++iLow) {
       if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
         continue;
 #ifdef DEBUG
-      nsCSSPropertyID iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
+      nsCSSPropertyID iProp = nsCSSPropertyIDSet::CSSPropertyAt(iHigh, iLow);
 #endif
       MOZ_ASSERT(!nsCSSProps::IsShorthand(iProp), "out of range");
       MOZ_ASSERT(PropertyAt(iProp)->GetUnit() != eCSSUnit_Null,
@@ -605,11 +605,11 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
     // assert that we didn't have any other properties on this expanded data
     // block that we didn't find in aOrder
     uint32_t numPropsInSet = 0;
-    for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; iHigh++) {
+    for (size_t iHigh = 0; iHigh < nsCSSPropertyIDSet::kChunkCount; iHigh++) {
       if (!mPropertiesSet.HasPropertyInChunk(iHigh)) {
         continue;
       }
-      for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; iLow++) {
+      for (size_t iLow = 0; iLow < nsCSSPropertyIDSet::kBitsInChunk; iLow++) {
         if (mPropertiesSet.HasPropertyAt(iHigh, iLow)) {
           numPropsInSet++;
         }
@@ -640,13 +640,13 @@ nsCSSExpandedDataBlock::AddLonghandProperty(nsCSSPropertyID aProperty,
 void
 nsCSSExpandedDataBlock::Clear()
 {
-  for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
+  for (size_t iHigh = 0; iHigh < nsCSSPropertyIDSet::kChunkCount; ++iHigh) {
     if (!mPropertiesSet.HasPropertyInChunk(iHigh))
       continue;
-    for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
+    for (size_t iLow = 0; iLow < nsCSSPropertyIDSet::kBitsInChunk; ++iLow) {
       if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
         continue;
-      nsCSSPropertyID iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
+      nsCSSPropertyID iProp = nsCSSPropertyIDSet::CSSPropertyAt(iHigh, iLow);
       ClearLonghandProperty(iProp);
     }
   }

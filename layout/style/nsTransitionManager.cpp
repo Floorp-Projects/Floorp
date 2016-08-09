@@ -17,7 +17,7 @@
 #include "nsRefreshDriver.h"
 #include "nsRuleProcessorData.h"
 #include "nsRuleWalker.h"
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyIDSet.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
@@ -457,7 +457,7 @@ nsTransitionManager::UpdateTransitions(
   // 'transition-property' on down, and later ones will override earlier
   // ones (tracked using |whichStarted|).
   bool startedAny = false;
-  nsCSSPropertySet whichStarted;
+  nsCSSPropertyIDSet whichStarted;
   for (uint32_t i = aDisp->mTransitionPropertyCount; i-- != 0; ) {
     const StyleTransition& t = aDisp->mTransitions[i];
     // Check the combined duration (combination of delay and duration)
@@ -509,7 +509,7 @@ nsTransitionManager::UpdateTransitions(
   if (aElementTransitions) {
     bool checkProperties =
       aDisp->mTransitions[0].GetProperty() != eCSSPropertyExtra_all_properties;
-    nsCSSPropertySet allTransitionProperties;
+    nsCSSPropertyIDSet allTransitionProperties;
     if (checkProperties) {
       for (uint32_t i = aDisp->mTransitionPropertyCount; i-- != 0; ) {
         const StyleTransition& t = aDisp->mTransitions[i];
@@ -588,7 +588,7 @@ nsTransitionManager::ConsiderStartingTransition(
   nsStyleContext* aOldStyleContext,
   nsStyleContext* aNewStyleContext,
   bool* aStartedAny,
-  nsCSSPropertySet* aWhichStarted)
+  nsCSSPropertyIDSet* aWhichStarted)
 {
   // IsShorthand itself will assert if aProperty is not a property.
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),

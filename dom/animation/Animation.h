@@ -33,7 +33,7 @@
 #endif
 
 struct JSContext;
-class nsCSSPropertySet;
+class nsCSSPropertyIDSet;
 class nsIDocument;
 class nsPresContext;
 
@@ -313,7 +313,7 @@ public:
    * properties that are changed are added to |aSetProperties|.
    */
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                    nsCSSPropertySet& aSetProperties);
+                    nsCSSPropertyIDSet& aSetProperties);
 
   void NotifyEffectTimingUpdated();
 
