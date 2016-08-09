@@ -63,6 +63,8 @@ public:
   virtual TextureClient* GetTextureClient() { return nullptr; }
 
   virtual void OnShutdown() {}
+
+  virtual bool SetForwarder(CompositableForwarder* aFwd) { return true; }
 };
 
 
@@ -123,6 +125,8 @@ public:
   virtual void NotifyInactive() override;
 
   virtual void OnShutdown() override { Destroy(); }
+
+  virtual bool SetForwarder(CompositableForwarder* aFwd) override;
 
 protected:
   PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
