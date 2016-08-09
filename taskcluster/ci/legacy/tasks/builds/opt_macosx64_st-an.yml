@@ -20,3 +20,4 @@ task:
       groupSymbol: "?"
       groupName: Submitted by taskcluster
       symbol: S
+      tier: 1

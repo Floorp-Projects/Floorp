@@ -1424,7 +1424,13 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
 
     case eCSSProperty_clip_path:
       AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
-                            nsCSSProps::kClipShapeSizingKTable),
+                            nsCSSProps::kClipPathGeometryBoxKTable),
+                         aResult);
+      break;
+
+    case eCSSProperty_shape_outside:
+      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
+                            nsCSSProps::kShapeOutsideShapeBoxKTable),
                          aResult);
       break;
 
@@ -2522,7 +2528,8 @@ nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
 
     if (nsCSSProps::PropHasFlags(aProperty,
                                  CSS_PROPERTY_VALUE_LIST_USES_COMMAS) ||
-        aProperty == eCSSProperty_clip_path)
+        aProperty == eCSSProperty_clip_path ||
+        aProperty == eCSSProperty_shape_outside)
       aResult.Append(char16_t(','));
     aResult.Append(char16_t(' '));
   }

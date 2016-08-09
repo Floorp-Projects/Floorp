@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<style>
+rect,
+text,
+foreignObject,
+circle,
+ellipse,
+image,
+line,
+path,
+polygon,
+polyline {
+  outline: 1px solid;
+}
+
+</style>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="visible">
+  <g>
+    <rect width="100" height="100" style="fill: yellow"/>
+    <text x="0" y="140" font-family="Verdana" font-size="20">
+      Hello world
+    </text>
+    <foreignObject x="0" y="160" width="200" height="60">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        Here is a paragraph that requires word wrap
+      </div>
+    </foreignObject>
+    <circle cx="40" cy="275" r="40" style="fill: green"/>
+    <ellipse cx="70" cy="380" rx="70" ry="50" style="fill: yellow"/>
+    <image x="0" y="450" height="100" width="100"/>
+    <line x1="0" y1="580" x2="100" y2="580" style="stroke: red; stroke-width: 2"/>
+    <path d="M50 600 L10 650 L90 650 Z"/>
+    <polygon points="300,50 350,0 400,50" style="fill: lime"/>
+    <polyline points="300,80 350,70 400,80" style="fill: none; stroke: black;stroke-width: 3"/>
+    <g transform="translate(300, 70)" style="outline: 1px solid">
+      <circle cx="50" cy="50" r="20" style="fill: blue; outline: 0px"/>
+    </g>
+    <g transform="translate(300, 150)" style="outline: 1px solid">
+      <circle cx="50" cy="50" r="20" style="fill: green; outline: 0px"/>
+      <g>
+        <rect x="15" y="15" width="30" height="10" style="fill: blue"/>
+      </g>
+    </g>
+    <svg x="300" y="250">
+      <rect x="30" y="10" height="50" width="50" style="fill: red"/>
+    </svg>
+  </g>
+</svg>
+</body>
+</html>

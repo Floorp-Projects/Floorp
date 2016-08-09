@@ -8,7 +8,7 @@ task:
     name: '[TC] JS Shell Hazard Linux'
     description: JS Shell Hazard Analysis Linux
 
-  workerType: dbg-linux64
+  workerType: 'gecko-{{level}}-b-linux'
 
   scopes:
     - 'docker-worker:cache:tooltool-cache'
@@ -18,13 +18,13 @@ task:
   payload:
     cache:
       level-{{level}}-{{project}}-build-linux64-haz-workspace: '/home/worker/workspace'
-      tooltool-cache: '/home/worker/tools/tooltool-cache'
+      tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
       relengAPIProxy: true
 
     env:
-      TOOLTOOL_CACHE: '/home/worker/tools/tooltool-cache'
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
       TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/linux64/hazard.manifest'
 
     maxRunTime: 36000
@@ -48,6 +48,7 @@ task:
       groupSymbol: SM-tc
       groupName: SpiderMonkey, submitted by taskcluster
       symbol: H
+      tier: 1
       collection:
         debug: true
     # Rather then enforcing particular conventions we require that all build

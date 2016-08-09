@@ -12,12 +12,12 @@ task:
   scopes:
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux32-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux32-{{build_type}}-workspace'
 
   payload:
     cache:
       tooltool-cache: '/home/worker/tooltool-cache'
-      level-{{level}}-{{project}}-build-linux32-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-linux32-{{build_type}}-workspace: '/home/worker/workspace'
 
     features:
       relengAPIProxy: true

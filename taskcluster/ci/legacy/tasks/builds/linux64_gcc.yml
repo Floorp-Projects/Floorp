@@ -8,7 +8,7 @@ task:
     name: '[TC] GCC'
     description: 'GCC'
 
-  workerType: opt-linux64
+  workerType: 'gecko-{{level}}-b-linux'
 
   routes:
     - 'index.buildbot.branches.{{project}}.gcc'

@@ -12,7 +12,7 @@ task:
     - 'index.buildbot.branches.{{project}}.linux64-debug'
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-debug'
 
-  workerType: dbg-linux64
+  workerType: 'gecko-{{level}}-b-linux'
 
   payload:
     env:
@@ -23,6 +23,7 @@ task:
       groupSymbol: tc
       groupName: Submitted by taskcluster
       symbol: B
+      tier: 1
       collection:
         debug: true
 

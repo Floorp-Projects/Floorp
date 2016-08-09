@@ -109,6 +109,10 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                     return;
                 }
 
+                if (!tab.isAudioPlaying()) {
+                    return;
+                }
+
                 mTabReference = new WeakReference<>(tab);
                 notifyControlInterfaceChanged(ACTION_PAUSE);
                 break;

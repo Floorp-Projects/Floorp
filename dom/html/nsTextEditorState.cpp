@@ -978,7 +978,8 @@ nsTextInputListener::EditAction()
   }
 
   if (!mSettingValue) {
-    mTxtCtrlElement->OnValueChanged(true);
+    mTxtCtrlElement->OnValueChanged(/* aNotify = */ true,
+                                    /* aWasInteractiveUserChange = */ true);
   }
 
   return NS_OK;
@@ -2182,7 +2183,8 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
   // can assume that it's safe to notify.
   ValueWasChanged(!!mRootNode);
 
-  mTextCtrlElement->OnValueChanged(!!mRootNode);
+  mTextCtrlElement->OnValueChanged(/* aNotify = */ !!mRootNode,
+                                   /* aWasInteractiveUserChange = */ false);
 
   return true;
 }

@@ -732,7 +732,7 @@ public:
   static const KTableEntry kBoxDirectionKTable[];
   static const KTableEntry kBoxOrientKTable[];
   static const KTableEntry kBoxPackKTable[];
-  static const KTableEntry kClipShapeSizingKTable[];
+  static const KTableEntry kClipPathGeometryBoxKTable[];
   static const KTableEntry kCounterRangeKTable[];
   static const KTableEntry kCounterSpeakAsKTable[];
   static const KTableEntry kCounterSymbolsSystemKTable[];
@@ -742,6 +742,7 @@ public:
   static const KTableEntry kFillRuleKTable[];
   static const KTableEntry kFilterFunctionKTable[];
   static const KTableEntry kImageRenderingKTable[];
+  static const KTableEntry kShapeOutsideShapeBoxKTable[];
   static const KTableEntry kShapeRenderingKTable[];
   static const KTableEntry kStrokeLinecapKTable[];
   static const KTableEntry kStrokeLinejoinKTable[];

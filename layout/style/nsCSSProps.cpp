@@ -2296,15 +2296,15 @@ const KTableEntry nsCSSProps::kFillRuleKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kClipShapeSizingKTable[] = {
-  { eCSSKeyword_content_box,   StyleClipShapeSizing::Content },
-  { eCSSKeyword_padding_box,   StyleClipShapeSizing::Padding },
-  { eCSSKeyword_border_box,    StyleClipShapeSizing::Border },
-  { eCSSKeyword_margin_box,    StyleClipShapeSizing::Margin },
-  { eCSSKeyword_fill_box,      StyleClipShapeSizing::Fill },
-  { eCSSKeyword_stroke_box,    StyleClipShapeSizing::Stroke },
-  { eCSSKeyword_view_box,      StyleClipShapeSizing::View },
-  { eCSSKeyword_UNKNOWN,       -1 }
+const KTableEntry nsCSSProps::kClipPathGeometryBoxKTable[] = {
+  { eCSSKeyword_content_box, StyleClipPathGeometryBox::Content },
+  { eCSSKeyword_padding_box, StyleClipPathGeometryBox::Padding },
+  { eCSSKeyword_border_box, StyleClipPathGeometryBox::Border },
+  { eCSSKeyword_margin_box, StyleClipPathGeometryBox::Margin },
+  { eCSSKeyword_fill_box, StyleClipPathGeometryBox::Fill },
+  { eCSSKeyword_stroke_box, StyleClipPathGeometryBox::Stroke },
+  { eCSSKeyword_view_box, StyleClipPathGeometryBox::View },
+  { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kShapeRadiusKTable[] = {
@@ -2338,6 +2338,14 @@ const KTableEntry nsCSSProps::kImageRenderingKTable[] = {
 const KTableEntry nsCSSProps::kMaskTypeKTable[] = {
   { eCSSKeyword_luminance, NS_STYLE_MASK_TYPE_LUMINANCE },
   { eCSSKeyword_alpha, NS_STYLE_MASK_TYPE_ALPHA },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
+const KTableEntry nsCSSProps::kShapeOutsideShapeBoxKTable[] = {
+  { eCSSKeyword_content_box, StyleShapeOutsideShapeBox::Content },
+  { eCSSKeyword_padding_box, StyleShapeOutsideShapeBox::Padding },
+  { eCSSKeyword_border_box, StyleShapeOutsideShapeBox::Border },
+  { eCSSKeyword_margin_box, StyleShapeOutsideShapeBox::Margin },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

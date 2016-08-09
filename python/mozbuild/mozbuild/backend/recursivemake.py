@@ -204,8 +204,6 @@ class BackendMakeFile(object):
         self.environment = environment
         self.name = mozpath.join(objdir, 'backend.mk')
 
-        # XPIDLFiles attached to this file.
-        self.idls = []
         self.xpt_name = None
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
@@ -433,7 +431,6 @@ class RecursiveMakeBackend(CommonBackend):
         # CommonBackend handles XPIDLFile and TestManifest, but we want to do
         # some extra things for them.
         if isinstance(obj, XPIDLFile):
-            backend_file.idls.append(obj)
             backend_file.xpt_name = '%s.xpt' % obj.module
             self._idl_dirs.add(obj.relobjdir)
 

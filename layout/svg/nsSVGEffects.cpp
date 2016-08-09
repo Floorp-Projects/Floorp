@@ -579,7 +579,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame* aFrame)
 
   result.mFilter = GetOrCreateFilterProperty(aFrame);
 
-  if (style->mClipPath.GetType() == StyleClipPathType::URL) {
+  if (style->mClipPath.GetType() == StyleShapeSourceType::URL) {
     nsCOMPtr<nsIURI> pathURI = nsSVGEffects::GetClipPathURI(aFrame);
     result.mClipPath =
       GetPaintingProperty(pathURI, aFrame, ClipPathProperty());
@@ -929,7 +929,7 @@ already_AddRefed<nsIURI>
 nsSVGEffects::GetClipPathURI(nsIFrame* aFrame)
 {
   const nsStyleSVGReset* svgResetStyle = aFrame->StyleSVGReset();
-  MOZ_ASSERT(svgResetStyle->mClipPath.GetType() == StyleClipPathType::URL);
+  MOZ_ASSERT(svgResetStyle->mClipPath.GetType() == StyleShapeSourceType::URL);
 
   FragmentOrURL* url = svgResetStyle->mClipPath.GetURL();
   return ResolveFragmentOrURL(aFrame, url);
