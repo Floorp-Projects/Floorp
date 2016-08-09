@@ -387,8 +387,9 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
   if (!buffered.Contains(seekTime)) {
     if (!buffered.Contains(aTime)) {
       // We don't have the data to seek to.
-      return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
-                                          __func__);
+      return SeekPromise::CreateAndReject(
+        mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
+                              DemuxerFailureReason::WAITING_FOR_DATA, __func__);
     }
     // Theorically we should reject the promise with WAITING_FOR_DATA,
     // however, to avoid unwanted regressions we assume that if at this time
