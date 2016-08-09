@@ -185,7 +185,7 @@
      *                     that is copied.  See stream-utils.js.
      */
     startBulkSend: function (header) {
-      this.emit("startBulkSend", header);
+      this.emit("startbulksend", header);
 
       let packet = new BulkPacket(this);
       packet.header = header;
@@ -201,7 +201,7 @@
      *        closing the transport (likely because a stream closed or failed).
      */
     close: function (reason) {
-      this.emit("onClosed", reason);
+      this.emit("close", reason);
 
       this.active = false;
       this._input.close();
@@ -479,7 +479,7 @@
       DevToolsUtils.executeSoon(DevToolsUtils.makeInfallible(() => {
       // Ensure the transport is still alive by the time this runs.
         if (this.active) {
-          this.emit("onPacket", object);
+          this.emit("packet", object);
           this.hooks.onPacket(object);
         }
       }, "DebuggerTransport instance's this.hooks.onPacket"));
@@ -495,7 +495,7 @@
       DevToolsUtils.executeSoon(DevToolsUtils.makeInfallible(() => {
       // Ensure the transport is still alive by the time this runs.
         if (this.active) {
-          this.emit("onBulkPacket", ...args);
+          this.emit("bulkpacket", ...args);
           this.hooks.onBulkPacket(...args);
         }
       }, "DebuggerTransport instance's this.hooks.onBulkPacket"));
@@ -566,7 +566,7 @@
             dumpn("Received packet " + serial + ": " + JSON.stringify(packet, null, 2));
           }
           if (other.hooks) {
-            other.emit("onPacket", packet);
+            other.emit("packet", packet);
             other.hooks.onPacket(packet);
           }
         }, "LocalDebuggerTransport instance's this.other.hooks.onPacket"));
@@ -583,7 +583,7 @@
      * done with it.
      */
     startBulkSend: function ({actor, type, length}) {
-      this.emit("startBulkSend", {actor, type, length});
+      this.emit("startbulksend", {actor, type, length});
 
       let serial = this._serial.count++;
 
@@ -617,7 +617,7 @@
           done: deferred
         };
 
-        this.other.emit("onBulkPacket", packet);
+        this.other.emit("bulkpacket", packet);
         this.other.hooks.onBulkPacket(packet);
 
         // Await the result of reading from the stream
@@ -744,12 +744,12 @@
         // this point with a dead messageManager which only throws errors but does not
         // seem to indicate in any other way that it is dead.
       }
-      this.emit("onClosed");
+      this.emit("close");
       this.hooks.onClosed();
     },
 
     receiveMessage: function ({data}) {
-      this.emit("onPacket", data);
+      this.emit("packet", data);
       this.hooks.onPacket(data);
     },
 
