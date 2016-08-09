@@ -47,6 +47,7 @@ PrincipalOriginAttributes::InheritFromDocShellToDoc(const DocShellOriginAttribut
   mSignedPkg = aAttrs.mSignedPkg;
 
   mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
+  mFirstPartyDomain = aAttrs.mFirstPartyDomain;
 }
 
 void
@@ -60,6 +61,7 @@ PrincipalOriginAttributes::InheritFromNecko(const NeckoOriginAttributes& aAttrs)
   mSignedPkg = aAttrs.mSignedPkg;
 
   mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
+  mFirstPartyDomain = aAttrs.mFirstPartyDomain;
 }
 
 void
@@ -77,6 +79,7 @@ DocShellOriginAttributes::InheritFromDocToChildDocShell(const PrincipalOriginAtt
   mSignedPkg = aAttrs.mSignedPkg;
 
   mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
+  mFirstPartyDomain = aAttrs.mFirstPartyDomain;
 }
 
 void
@@ -93,6 +96,7 @@ NeckoOriginAttributes::InheritFromDocToNecko(const PrincipalOriginAttributes& aA
   // mSignedPkg accordingly by mSignedPkgInBrowser
 
   mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
+  mFirstPartyDomain = aAttrs.mFirstPartyDomain;
 }
 
 void
@@ -109,6 +113,7 @@ NeckoOriginAttributes::InheritFromDocShellToNecko(const DocShellOriginAttributes
   // mSignedPkg accordingly by mSignedPkgInBrowser
 
   mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
+  mFirstPartyDomain = aAttrs.mFirstPartyDomain;
 }
 
 void
@@ -159,6 +164,11 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
     value.Truncate();
     value.AppendInt(mPrivateBrowsingId);
     params->Set(NS_LITERAL_STRING("privateBrowsingId"), value);
+  }
+
+  if (!mFirstPartyDomain.IsEmpty()) {
+    MOZ_RELEASE_ASSERT(mFirstPartyDomain.FindCharInSet(dom::quota::QuotaManager::kReplaceChars) == kNotFound);
+    params->Set(NS_LITERAL_STRING("firstPartyDomain"), mFirstPartyDomain);
   }
 
   aStr.Truncate();
@@ -247,6 +257,12 @@ public:
       return true;
     }
 
+    if (aName.EqualsLiteral("firstPartyDomain")) {
+      MOZ_RELEASE_ASSERT(mOriginAttributes->mFirstPartyDomain.IsEmpty());
+      mOriginAttributes->mFirstPartyDomain.Assign(aValue);
+      return true;
+    }
+
     // No other attributes are supported.
     return false;
   }
@@ -307,6 +323,7 @@ OriginAttributes::SetFromGenericAttributes(const GenericOriginAttributes& aAttrs
   mUserContextId = aAttrs.mUserContextId;
   mSignedPkg = aAttrs.mSignedPkg;
   mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
+  mFirstPartyDomain = aAttrs.mFirstPartyDomain;
 }
 
 BasePrincipal::BasePrincipal()
