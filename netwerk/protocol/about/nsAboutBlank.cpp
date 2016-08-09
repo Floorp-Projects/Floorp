@@ -5,7 +5,6 @@
 
 #include "nsAboutBlank.h"
 #include "nsStringStream.h"
-#include "nsDOMString.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
 
@@ -43,13 +42,6 @@ nsAboutBlank::GetURIFlags(nsIURI *aURI, uint32_t *result)
               nsIAboutModule::MAKE_LINKABLE |
               nsIAboutModule::HIDE_FROM_ABOUTABOUT;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAboutBlank::GetIndexedDBOriginPostfix(nsIURI *aURI, nsAString &result)
-{
-    SetDOMStringToNull(result);
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

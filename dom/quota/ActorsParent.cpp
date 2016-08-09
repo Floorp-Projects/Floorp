@@ -4639,63 +4639,6 @@ QuotaManager::GetStorageId(PersistenceType aPersistenceType,
   aDatabaseId = str;
 }
 
-static nsresult
-TryGetInfoForAboutURI(nsIPrincipal* aPrincipal,
-                      nsACString& aGroup,
-                      nsACString& aASCIIOrigin,
-                      bool* aIsApp)
-{
-  NS_ASSERTION(aPrincipal, "Don't hand me a null principal!");
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!uri) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  bool isAbout;
-  rv = uri->SchemeIs("about", &isAbout);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!isAbout) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIAboutModule> module;
-  rv = NS_GetAboutModule(uri, getter_AddRefs(module));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> inner = NS_GetInnermostURI(uri);
-  NS_ENSURE_TRUE(inner, NS_ERROR_FAILURE);
-
-  nsAutoString postfix;
-  rv = module->GetIndexedDBOriginPostfix(uri, postfix);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString origin;
-  if (DOMStringIsNull(postfix)) {
-    rv = inner->GetSpec(origin);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    nsAutoCString scheme;
-    rv = inner->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    origin = scheme + NS_LITERAL_CSTRING(":") + NS_ConvertUTF16toUTF8(postfix);
-  }
-
-  ToLowerCase(origin);
-  aGroup.Assign(origin);
-  aASCIIOrigin.Assign(origin);
-
-  if (aIsApp) {
-    *aIsApp = false;
-  }
-
-  return NS_OK;
-}
-
 // static
 nsresult
 QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
@@ -4706,14 +4649,6 @@ QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
-
-  if (aGroup && aOrigin) {
-    nsresult rv =
-      TryGetInfoForAboutURI(aPrincipal, *aGroup, *aOrigin, aIsApp);
-    if (NS_SUCCEEDED(rv)) {
-      return NS_OK;
-    }
-  }
 
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     GetInfoForChrome(aSuffix, aGroup, aOrigin, aIsApp);
