@@ -189,18 +189,20 @@ from its prototype:
     `undefined`.
 
 `isProxy`
-:   If the referent is a (scripted) proxy, return `true`. If the referent is not
-    a (scripted) proxy, return `false`.
+:   If the referent is a (scripted) proxy, either revoked or not, return `true`.
+    If the referent is not a (scripted) proxy, return `false`.
 
 `proxyTarget`
-:   If the referent is a (scripted) proxy, return a `Debugger.Object` instance
-    referring to the ECMAScript `[[ProxyTarget]]` of the referent. If the referent
-    is not a (scripted) proxy, return `undefined`.
+:   If the referent is a non-revoked (scripted) proxy, return a `Debugger.Object`
+    instance referring to the ECMAScript `[[ProxyTarget]]` of the referent.
+    If the referent is a revoked (scripted) proxy, return `null`.
+    If the referent is not a (scripted) proxy, return `undefined`.
 
 `proxyHandler`
-:   If the referent is a (scripted) proxy, return a `Debugger.Object` instance
-    referring to the ECMAScript `[[ProxyHandler]]` of the referent. If the referent
-    is not a (scripted) proxy, return `undefined`.
+:   If the referent is a non-revoked (scripted) proxy, return a `Debugger.Object`
+    instance referring to the ECMAScript `[[ProxyHandler]]` of the referent.
+    If the referent is a revoked (scripted) proxy, return `null`.
+    If the referent is not a (scripted) proxy, return `undefined`.
 
 `promiseState`
 :   If the referent is a [`Promise`][promise], this is an object describing
