@@ -36,7 +36,7 @@
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsAutoPtr, nsRefPtr, etc
 #include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsCSSProperty.h"              // for nsCSSProperty
+#include "nsCSSPropertyID.h"              // for nsCSSPropertyID
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for Layer::Release, etc
 #include "nsRect.h"                     // for mozilla::gfx::IntRect

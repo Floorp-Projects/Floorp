@@ -41,7 +41,7 @@ NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPropertyValue(const nsCSSProperty aPropID,
+nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
                                       nsAString& aValue)
 {
   NS_PRECONDITION(aPropID != eCSSProperty_UNKNOWN,
@@ -75,7 +75,7 @@ nsDOMCSSDeclaration::GetCustomPropertyValue(const nsAString& aPropertyName,
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
+nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
                                       const nsAString& aValue)
 {
   switch (aPropID) {
@@ -195,7 +195,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
                                       nsAString& aReturn)
 {
-  const nsCSSProperty propID =
+  const nsCSSPropertyID propID =
     nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
@@ -214,7 +214,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetAuthoredPropertyValue(const nsAString& aPropertyName,
                                               nsAString& aReturn)
 {
-  const nsCSSProperty propID =
+  const nsCSSPropertyID propID =
     nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
@@ -255,7 +255,7 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
                                  const nsAString& aPriority)
 {
   // In the common (and fast) cases we can use the property id
-  nsCSSProperty propID =
+  nsCSSPropertyID propID =
     nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     return NS_OK;
@@ -291,7 +291,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
                                     nsAString& aReturn)
 {
-  const nsCSSProperty propID =
+  const nsCSSPropertyID propID =
     nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
@@ -327,7 +327,7 @@ nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
 }
 
 nsresult
-nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
+nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
                                         const nsAString& aPropValue,
                                         bool aIsImportant)
 {
@@ -404,7 +404,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 }
 
 nsresult
-nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
+nsDOMCSSDeclaration::RemoveProperty(const nsCSSPropertyID aPropID)
 {
   css::Declaration* olddecl = GetCSSDeclaration(eOperation_RemoveProperty);
   if (!olddecl) {

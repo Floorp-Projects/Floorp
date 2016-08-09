@@ -124,7 +124,7 @@ Declaration::MapsImportantInheritedStyleData() const
 }
 
 void
-Declaration::ValueAppended(nsCSSProperty aProperty)
+Declaration::ValueAppended(nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(!mData && !mImportantData,
              "should only be called while expanded");
@@ -136,7 +136,7 @@ Declaration::ValueAppended(nsCSSProperty aProperty)
 }
 
 void
-Declaration::RemoveProperty(nsCSSProperty aProperty)
+Declaration::RemoveProperty(nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT);
 
@@ -159,7 +159,7 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
 }
 
 bool
-Declaration::HasProperty(nsCSSProperty aProperty) const
+Declaration::HasProperty(nsCSSPropertyID aProperty) const
 {
   MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
              "property ID out of range");
@@ -171,7 +171,7 @@ Declaration::HasProperty(nsCSSProperty aProperty) const
 }
 
 bool
-Declaration::AppendValueToString(nsCSSProperty aProperty,
+Declaration::AppendValueToString(nsCSSPropertyID aProperty,
                                  nsAString& aResult,
                                  nsCSSValue::Serialization aSerialization) const
 {
@@ -190,13 +190,13 @@ Declaration::AppendValueToString(nsCSSProperty aProperty,
 }
 
 void
-Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
+Declaration::GetValue(nsCSSPropertyID aProperty, nsAString& aValue) const
 {
   GetValue(aProperty, aValue, nsCSSValue::eNormalized);
 }
 
 void
-Declaration::GetAuthoredValue(nsCSSProperty aProperty, nsAString& aValue) const
+Declaration::GetAuthoredValue(nsCSSPropertyID aProperty, nsAString& aValue) const
 {
   GetValue(aProperty, aValue, nsCSSValue::eAuthorSpecified);
 }
@@ -204,7 +204,7 @@ Declaration::GetAuthoredValue(nsCSSProperty aProperty, nsAString& aValue) const
 static void
 AppendSingleImageLayerPositionValue(const nsCSSValue& aPositionX,
                                     const nsCSSValue& aPositionY,
-                                    const nsCSSProperty aTable[],
+                                    const nsCSSPropertyID aTable[],
                                     nsAString& aValue,
                                     nsCSSValue::Serialization aSerialization)
 {
@@ -241,7 +241,7 @@ Declaration::GetImageLayerValue(
                    nsCSSCompressedDataBlock *data,
                    nsAString& aValue,
                    nsCSSValue::Serialization aSerialization,
-                   const nsCSSProperty aTable[]) const
+                   const nsCSSPropertyID aTable[]) const
 {
   // We know from our caller that all subproperties were specified.
   // However, we still can't represent that in the shorthand unless
@@ -444,7 +444,7 @@ Declaration::GetImageLayerPositionValue(
                    nsCSSCompressedDataBlock *data,
                    nsAString& aValue,
                    nsCSSValue::Serialization aSerialization,
-                   const nsCSSProperty aTable[]) const
+                   const nsCSSPropertyID aTable[]) const
 {
   // We know from above that all subproperties were specified.
   // However, we still can't represent that in the shorthand unless
@@ -473,7 +473,7 @@ Declaration::GetImageLayerPositionValue(
 }
 
 void
-Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
+Declaration::GetValue(nsCSSPropertyID aProperty, nsAString& aValue,
                       nsCSSValue::Serialization aSerialization) const
 {
   aValue.Truncate(0);
@@ -592,7 +592,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     case eCSSProperty_border_color:
     case eCSSProperty_border_style:
     case eCSSProperty_border_width: {
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       MOZ_ASSERT(nsCSSProps::GetStringValue(subprops[0]).Find("-top") !=
                  kNotFound, "first subprop must be top");
@@ -614,7 +614,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     }
     case eCSSProperty_border_radius:
     case eCSSProperty__moz_outline_radius: {
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       const nsCSSValue* vals[4] = {
         data->ValueFor(subprops[0]),
@@ -686,13 +686,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         break;
       }
 
-      const nsCSSProperty* subproptables[3] = {
+      const nsCSSPropertyID* subproptables[3] = {
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color),
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_style),
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_width)
       };
       bool match = true;
-      for (const nsCSSProperty** subprops = subproptables,
+      for (const nsCSSPropertyID** subprops = subproptables,
                **subprops_end = ArrayEnd(subproptables);
            subprops < subprops_end; ++subprops) {
         const nsCSSValue *firstSide = data->ValueFor((*subprops)[0]);
@@ -721,7 +721,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     case eCSSProperty_border_block_end:
     case eCSSProperty__moz_column_rule:
     case eCSSProperty_outline: {
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       MOZ_ASSERT(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
                                 NS_LITERAL_CSTRING("-color")),
@@ -890,7 +890,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       break;
     }
     case eCSSProperty_font_variant: {
-      const nsCSSProperty *subprops =
+      const nsCSSPropertyID *subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       const nsCSSValue *fontVariantLigatures =
         data->ValueFor(eCSSProperty_font_variant_ligatures);
@@ -898,7 +898,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       // all subproperty values normal? system font?
       bool normalLigs = true, normalNonLigs = true, systemFont = true,
            hasSystem = false;
-      for (const nsCSSProperty *sp = subprops; *sp != eCSSProperty_UNKNOWN; sp++) {
+      for (const nsCSSPropertyID *sp = subprops; *sp != eCSSProperty_UNKNOWN; sp++) {
         const nsCSSValue *spVal = data->ValueFor(*sp);
         bool isNormal = (spVal->GetUnit() == eCSSUnit_Normal);
         if (*sp == eCSSProperty_font_variant_ligatures) {
@@ -928,7 +928,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       } else {
         // iterate over and append non-normal values
         bool appendSpace = false;
-        for (const nsCSSProperty *sp = subprops;
+        for (const nsCSSPropertyID *sp = subprops;
              *sp != eCSSProperty_UNKNOWN; sp++) {
           const nsCSSValue *spVal = data->ValueFor(*sp);
           if (spVal && spVal->GetUnit() != eCSSUnit_Normal) {
@@ -1067,7 +1067,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       break;
     }
     case eCSSProperty_animation: {
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_animation);
       static const size_t numProps = 8;
       MOZ_ASSERT(subprops[numProps] == eCSSProperty_UNKNOWN,
@@ -1127,7 +1127,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     }
     case eCSSProperty__moz_columns: {
       // Two values, column-count and column-width, separated by a space.
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       AppendValueToString(subprops[0], aValue, aSerialization);
       aValue.Append(char16_t(' '));
@@ -1136,7 +1136,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     }
     case eCSSProperty_flex: {
       // flex-grow, flex-shrink, flex-basis, separated by single space
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
 
       AppendValueToString(subprops[0], aValue, aSerialization);
@@ -1148,7 +1148,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     }
     case eCSSProperty_flex_flow: {
       // flex-direction, flex-wrap, separated by single space
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       MOZ_ASSERT(subprops[2] == eCSSProperty_UNKNOWN,
                  "must have exactly two subproperties");
@@ -1161,7 +1161,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     case eCSSProperty_grid_row:
     case eCSSProperty_grid_column: {
       // grid-{row,column}-start, grid-{row,column}-end, separated by a slash
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       MOZ_ASSERT(subprops[2] == eCSSProperty_UNKNOWN,
                  "must have exactly two subproperties");
@@ -1173,7 +1173,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       break;
     }
     case eCSSProperty_grid_area: {
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       MOZ_ASSERT(subprops[4] == eCSSProperty_UNKNOWN,
                  "must have exactly four subproperties");
@@ -1338,7 +1338,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       break;
     }
     case eCSSProperty_grid_gap: {
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       MOZ_ASSERT(subprops[2] == eCSSProperty_UNKNOWN,
                  "must have exactly two subproperties");
@@ -1378,7 +1378,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     }
     case eCSSProperty__moz_transform: {
       // shorthands that are just aliases with different parsing rules
-      const nsCSSProperty* subprops =
+      const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       MOZ_ASSERT(subprops[1] == eCSSProperty_UNKNOWN,
                  "must have exactly one subproperty");
@@ -1435,7 +1435,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
 bool
 Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
-  nsCSSProperty propID = nsCSSProps::
+  nsCSSPropertyID propID = nsCSSProps::
     LookupProperty(aProperty, CSSEnabledState::eIgnoreEnabledState);
   if (propID == eCSSProperty_UNKNOWN) {
     return false;
@@ -1449,7 +1449,7 @@ Declaration::GetValueIsImportant(const nsAString& aProperty) const
 }
 
 bool
-Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
+Declaration::GetValueIsImportant(nsCSSPropertyID aProperty) const
 {
   if (!mImportantData)
     return false;
@@ -1474,7 +1474,7 @@ Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
 }
 
 void
-Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
+Declaration::AppendPropertyAndValueToString(nsCSSPropertyID aProperty,
                                             nsAutoString& aValue,
                                             nsAString& aResult) const
 {
@@ -1565,9 +1565,9 @@ Declaration::ToString(nsAString& aString) const
 
   int32_t count = mOrder.Length();
   int32_t index;
-  AutoTArray<nsCSSProperty, 16> shorthandsUsed;
+  AutoTArray<nsCSSPropertyID, 16> shorthandsUsed;
   for (index = 0; index < count; index++) {
-    nsCSSProperty property = GetPropertyAt(index);
+    nsCSSPropertyID property = GetPropertyAt(index);
 
     if (property == eCSSPropertyExtra_variable) {
       uint32_t variableIndex = mOrder[index] - eCSSProperty_COUNT;
@@ -1582,7 +1582,7 @@ Declaration::ToString(nsAString& aString) const
 
     // If we already used this property in a shorthand, skip it.
     if (shorthandsUsed.Length() > 0) {
-      for (const nsCSSProperty *shorthands =
+      for (const nsCSSPropertyID *shorthands =
              nsCSSProps::ShorthandsContaining(property);
            *shorthands != eCSSProperty_UNKNOWN; ++shorthands) {
         if (shorthandsUsed.Contains(*shorthands)) {
@@ -1596,13 +1596,13 @@ Declaration::ToString(nsAString& aString) const
 
     // Try to use this property in a shorthand.
     nsAutoString value;
-    for (const nsCSSProperty *shorthands =
+    for (const nsCSSPropertyID *shorthands =
            nsCSSProps::ShorthandsContaining(property);
          *shorthands != eCSSProperty_UNKNOWN; ++shorthands) {
       // ShorthandsContaining returns the shorthands in order from those
       // that contain the most subproperties to those that contain the
       // least, which is exactly the order we want to test them.
-      nsCSSProperty shorthand = *shorthands;
+      nsCSSPropertyID shorthand = *shorthands;
 
       GetValue(shorthand, value);
 
@@ -1691,7 +1691,7 @@ Declaration::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
 {
   aReturn.Truncate();
   if (aIndex < mOrder.Length()) {
-    nsCSSProperty property = GetPropertyAt(aIndex);
+    nsCSSPropertyID property = GetPropertyAt(aIndex);
     if (property == eCSSPropertyExtra_variable) {
       GetCustomPropertyNameAt(aIndex, aReturn);
       return true;

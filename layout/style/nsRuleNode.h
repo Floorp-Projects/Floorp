@@ -961,7 +961,7 @@ public:
    */
   static void
   ComputePropertiesOverridingAnimation(
-                              const nsTArray<nsCSSProperty>& aProperties,
+                              const nsTArray<nsCSSPropertyID>& aProperties,
                               nsStyleContext* aStyleContext,
                               nsCSSPropertySet& aPropertiesOverridden);
 

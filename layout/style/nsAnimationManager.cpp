@@ -558,10 +558,10 @@ private:
     const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
     nsTArray<Keyframe>& aKeyframes);
   void AppendProperty(nsPresContext* aPresContext,
-                      nsCSSProperty aProperty,
+                      nsCSSPropertyID aProperty,
                       nsTArray<PropertyValuePair>& aPropertyValues);
   nsCSSValue GetComputedValue(nsPresContext* aPresContext,
-                              nsCSSProperty aProperty);
+                              nsCSSPropertyID aProperty);
 
   static TimingParams TimingParamsFrom(
     const StyleAnimation& aStyleAnimation)
@@ -881,9 +881,9 @@ CSSAnimationBuilder::GetKeyframePropertyValues(
     mResolvedStyles.Get(aPresContext, mStyleContext,
                         aKeyframeRule->Declaration());
 
-  for (nsCSSProperty prop = nsCSSProperty(0);
+  for (nsCSSPropertyID prop = nsCSSPropertyID(0);
        prop < eCSSProperty_COUNT_no_shorthands;
-       prop = nsCSSProperty(prop + 1)) {
+       prop = nsCSSPropertyID(prop + 1)) {
     if (nsCSSProps::kAnimTypeTable[prop] == eStyleAnimType_None ||
         !aKeyframeRule->Declaration()->HasNonImportantValueFor(prop)) {
       continue;
@@ -997,9 +997,9 @@ CSSAnimationBuilder::FillInMissingKeyframeValues(
                             ? nullptr : &aKeyframes[endKeyframeIndex];
 
   // Iterate through all properties and fill-in missing values
-  for (nsCSSProperty prop = nsCSSProperty(0);
+  for (nsCSSPropertyID prop = nsCSSPropertyID(0);
        prop < eCSSProperty_COUNT_no_shorthands;
-       prop = nsCSSProperty(prop + 1)) {
+       prop = nsCSSPropertyID(prop + 1)) {
     if (!aAnimatedProperties.HasProperty(prop)) {
       continue;
     }
@@ -1016,7 +1016,7 @@ CSSAnimationBuilder::FillInMissingKeyframeValues(
 void
 CSSAnimationBuilder::AppendProperty(
     nsPresContext* aPresContext,
-    nsCSSProperty aProperty,
+    nsCSSPropertyID aProperty,
     nsTArray<PropertyValuePair>& aPropertyValues)
 {
   PropertyValuePair propertyValue;
@@ -1028,7 +1028,7 @@ CSSAnimationBuilder::AppendProperty(
 
 nsCSSValue
 CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
-                                      nsCSSProperty aProperty)
+                                      nsCSSPropertyID aProperty)
 {
   nsCSSValue result;
   StyleAnimationValue computedValue;

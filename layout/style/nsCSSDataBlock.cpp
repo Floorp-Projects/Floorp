@@ -55,7 +55,7 @@ ShouldIgnoreColors(nsRuleData *aRuleData)
  */
 static void
 TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
-                           nsStyleContext* aContext, nsCSSProperty aProperty,
+                           nsStyleContext* aContext, nsCSSPropertyID aProperty,
                            bool aForTokenStream)
 {
   MOZ_ASSERT(aDocument);
@@ -125,7 +125,7 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
 
 static void
 TryToStartImageLoad(const nsCSSValue& aValue, nsIDocument* aDocument,
-                    nsStyleContext* aContext, nsCSSProperty aProperty,
+                    nsStyleContext* aContext, nsCSSPropertyID aProperty,
                     bool aForTokenStream)
 {
   if (aValue.GetUnit() == eCSSUnit_List) {
@@ -146,7 +146,7 @@ TryToStartImageLoad(const nsCSSValue& aValue, nsIDocument* aDocument,
 }
 
 static inline bool
-ShouldStartImageLoads(nsRuleData *aRuleData, nsCSSProperty aProperty)
+ShouldStartImageLoads(nsRuleData *aRuleData, nsCSSPropertyID aProperty)
 {
   // Don't initiate image loads for if-visited styles.  This is
   // important because:
@@ -160,7 +160,7 @@ ShouldStartImageLoads(nsRuleData *aRuleData, nsCSSProperty aProperty)
 }
 
 static void
-MapSinglePropertyInto(nsCSSProperty aTargetProp,
+MapSinglePropertyInto(nsCSSPropertyID aTargetProp,
                       const nsCSSValue* aSrcValue,
                       nsCSSValue* aTargetValue,
                       nsRuleData* aRuleData)
@@ -212,7 +212,7 @@ MapSinglePropertyInto(nsCSSProperty aTargetProp,
  * style context.
  */
 static inline void
-EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
+EnsurePhysicalProperty(nsCSSPropertyID& aProperty, nsRuleData* aRuleData)
 {
   bool isAxisProperty =
     nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_AXIS);
@@ -258,7 +258,7 @@ EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
     index = side;
   }
 
-  const nsCSSProperty* props = nsCSSProps::LogicalGroup(aProperty);
+  const nsCSSPropertyID* props = nsCSSProps::LogicalGroup(aProperty);
   size_t len = isAxisProperty ? 2 : 4;
 #ifdef DEBUG
     for (size_t i = 0; i < len; i++) {
@@ -312,7 +312,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
   // right property when one can be expressed using both logical and
   // physical property names.
   for (uint32_t i = mNumProps; i-- > 0; ) {
-    nsCSSProperty iProp = PropertyAtIndex(i);
+    nsCSSPropertyID iProp = PropertyAtIndex(i);
     if (nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]) &
         aRuleData->mSIDs) {
       if (nsCSSProps::PropHasFlags(iProp, CSS_PROPERTY_LOGICAL)) {
@@ -337,7 +337,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 }
 
 const nsCSSValue*
-nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
+nsCSSCompressedDataBlock::ValueFor(nsCSSPropertyID aProperty) const
 {
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
              "Don't call for shorthands");
@@ -360,7 +360,7 @@ nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
 }
 
 bool
-nsCSSCompressedDataBlock::TryReplaceValue(nsCSSProperty aProperty,
+nsCSSCompressedDataBlock::TryReplaceValue(nsCSSPropertyID aProperty,
                                           nsCSSExpandedDataBlock& aFromBlock,
                                           bool *aChanged)
 {
@@ -480,7 +480,7 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
    * corresponding to the stored data in the compressed block.
    */
   for (uint32_t i = 0; i < aBlock->mNumProps; i++) {
-    nsCSSProperty iProp = aBlock->PropertyAtIndex(i);
+    nsCSSPropertyID iProp = aBlock->PropertyAtIndex(i);
     MOZ_ASSERT(!nsCSSProps::IsShorthand(iProp), "out of range");
     MOZ_ASSERT(!HasPropertyBit(iProp),
                "compressed block has property multiple times");
@@ -530,7 +530,7 @@ nsCSSExpandedDataBlock::ComputeNumProps(uint32_t* aNumPropsNormal,
       if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
         continue;
 #ifdef DEBUG
-      nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
+      nsCSSPropertyID iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
 #endif
       MOZ_ASSERT(!nsCSSProps::IsShorthand(iProp), "out of range");
       MOZ_ASSERT(PropertyAt(iProp)->GetUnit() != eCSSUnit_Null,
@@ -570,7 +570,7 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
    * clearing the data in the expanded block.
    */
   for (size_t i = 0; i < aOrder.Length(); i++) {
-    nsCSSProperty iProp = static_cast<nsCSSProperty>(aOrder[i]);
+    nsCSSPropertyID iProp = static_cast<nsCSSPropertyID>(aOrder[i]);
     if (iProp >= eCSSProperty_COUNT) {
       // a custom property
       continue;
@@ -627,7 +627,7 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
 }
 
 void
-nsCSSExpandedDataBlock::AddLonghandProperty(nsCSSProperty aProperty,
+nsCSSExpandedDataBlock::AddLonghandProperty(nsCSSPropertyID aProperty,
                                             const nsCSSValue& aValue)
 {
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
@@ -646,7 +646,7 @@ nsCSSExpandedDataBlock::Clear()
     for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
       if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
         continue;
-      nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
+      nsCSSPropertyID iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
       ClearLonghandProperty(iProp);
     }
   }
@@ -655,7 +655,7 @@ nsCSSExpandedDataBlock::Clear()
 }
 
 void
-nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
+nsCSSExpandedDataBlock::ClearProperty(nsCSSPropertyID aPropID)
 {
   if (nsCSSProps::IsShorthand(aPropID)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
@@ -668,7 +668,7 @@ nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 }
 
 void
-nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
+nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSPropertyID aPropID)
 {
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aPropID), "out of range");
 
@@ -679,7 +679,7 @@ nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
 
 bool
 nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                                          nsCSSProperty aPropID,
+                                          nsCSSPropertyID aPropID,
                                           CSSEnabledState aEnabledState,
                                           bool aIsImportant,
                                           bool aOverrideImportant,
@@ -711,7 +711,7 @@ nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
 
 bool
 nsCSSExpandedDataBlock::DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                                            nsCSSProperty aPropID,
+                                            nsCSSPropertyID aPropID,
                                             bool aIsImportant,
                                             bool aOverrideImportant,
                                             bool aMustCallValueAppended,
@@ -764,7 +764,7 @@ nsCSSExpandedDataBlock::DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
 }
 
 void
-nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
+nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSPropertyID aPropID,
                                         nsRuleData* aRuleData) const
 {
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aPropID));
@@ -772,7 +772,7 @@ nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
   const nsCSSValue* src = PropertyAt(aPropID);
   MOZ_ASSERT(src->GetUnit() != eCSSUnit_Null);
 
-  nsCSSProperty physicalProp = aPropID;
+  nsCSSPropertyID physicalProp = aPropID;
   if (nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_LOGICAL)) {
     EnsurePhysicalProperty(physicalProp, aRuleData);
   }
@@ -794,7 +794,7 @@ nsCSSExpandedDataBlock::DoAssertInitialState()
   mPropertiesImportant.AssertIsEmpty("not initial state");
 
   for (uint32_t i = 0; i < eCSSProperty_COUNT_no_shorthands; ++i) {
-    nsCSSProperty prop = nsCSSProperty(i);
+    nsCSSPropertyID prop = nsCSSPropertyID(i);
     MOZ_ASSERT(PropertyAt(prop)->GetUnit() == eCSSUnit_Null,
                "not initial state");
   }
