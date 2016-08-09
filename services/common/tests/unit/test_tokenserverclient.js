@@ -42,7 +42,7 @@ add_test(function test_working_bid_exchange() {
   client.getTokenFromBrowserIDAssertion(url, "assertion", cb);
   let result = cb.wait();
   do_check_eq("object", typeof(result));
-  do_check_attribute_count(result, 5);
+  do_check_attribute_count(result, 6);
   do_check_eq(service, result.endpoint);
   do_check_eq("id", result.id);
   do_check_eq("key", result.key);
