@@ -272,6 +272,15 @@ PersistentBufferProviderShared::BorrowDrawTarget(const gfx::IntRect& aPersistedR
     if (mTextures.length() >= 4) {
       // We should never need to buffer that many textures, something's wrong.
       MOZ_ASSERT(false);
+      // In theory we throttle the main thread when the compositor can't keep up,
+      // so we shoud never get in a situation where we sent 4 textures to the
+      // compositor and the latter as not released any of them.
+      // This seems to happen, however, in some edge cases such as just after a
+      // device reset (cf. Bug 1291163).
+      // It would be pretty bad to keep piling textures up at this point so we
+      // call NotifyInactive to remove some of our textures.
+      NotifyInactive();
+      // Give up now. The caller can fall-back to a non-shared buffer provider.
       return nullptr;
     }
 
