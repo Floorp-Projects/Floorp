@@ -71,7 +71,7 @@ class TestLinterTypes(TestCase):
 
         self.lint.lintargs['use_filters'] = False
         result = self.lint.roll(self.files)
-        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result), 2)
 
 
 if __name__ == '__main__':
