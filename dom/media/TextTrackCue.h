@@ -360,6 +360,9 @@ private:
       mTrack->NotifyCueUpdated(aCue);
     }
   }
+
+  void NotifyDisplayStatesChanged();
+
   void SetDefaultCueSettings();
   nsresult StashDocument();
 

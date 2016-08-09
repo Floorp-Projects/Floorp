@@ -232,5 +232,21 @@ TextTrackCue::ComputedPositionAlign()
   return PositionAlignSetting::Center;
 }
 
+void
+TextTrackCue::NotifyDisplayStatesChanged()
+{
+  if (!mReset) {
+    return;
+  }
+
+  if (!mTrack ||
+      !mTrack->GetTextTrackList() ||
+      !mTrack->GetTextTrackList()->GetMediaElement()) {
+    return;
+  }
+
+  mTrack->GetTextTrackList()->GetMediaElement()->NotifyCueDisplayStatesChanged();
+}
+
 } // namespace dom
 } // namespace mozilla

@@ -6207,5 +6207,16 @@ HTMLMediaElement::OnVisibilityChange(Visibility aOldVisibility,
   }
 
 }
+
+void
+HTMLMediaElement::NotifyCueDisplayStatesChanged()
+{
+  if (!mTextTrackManager) {
+    return;
+  }
+
+  mTextTrackManager->DispatchUpdateCueDisplay();
+}
+
 } // namespace dom
 } // namespace mozilla
