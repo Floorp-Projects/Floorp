@@ -12,6 +12,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "MediaDataDemuxer.h"
 #include "nsAutoRef.h"
