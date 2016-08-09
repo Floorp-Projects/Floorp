@@ -246,7 +246,9 @@ class ExclusiveContext : public ContextFriendFields,
      */
   protected:
     unsigned            enterCompartmentDepth_;
-    inline void setCompartment(JSCompartment* comp);
+
+    inline void setCompartment(JSCompartment* comp,
+                               const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
   public:
     bool hasEnteredCompartment() const {
         return enterCompartmentDepth_ > 0;
@@ -257,9 +259,13 @@ class ExclusiveContext : public ContextFriendFields,
     }
 #endif
 
-    inline void enterCompartment(JSCompartment* c);
+    // If |c| or |oldCompartment| is the atoms compartment, the
+    // |exclusiveAccessLock| must be held.
+    inline void enterCompartment(JSCompartment* c,
+                                 const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
     inline void enterNullCompartment();
-    inline void leaveCompartment(JSCompartment* oldCompartment);
+    inline void leaveCompartment(JSCompartment* oldCompartment,
+                                 const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
 
     void setHelperThread(HelperThread* helperThread);
     HelperThread* helperThread() const { return helperThread_; }
