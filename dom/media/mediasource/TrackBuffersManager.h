@@ -345,6 +345,7 @@ private:
 
   void CheckSequenceDiscontinuity(const media::TimeUnit& aPresentationTime);
   void ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData);
+  media::TimeInterval PresentationInterval(const TrackBuffer& aSamples) const;
   bool CheckNextInsertionIndex(TrackData& aTrackData,
                                const media::TimeUnit& aSampleTime);
   void InsertFrames(TrackBuffer& aSamples,
