@@ -194,8 +194,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "gWebRTCUI",
-  "resource:///modules/webrtcUI.jsm", "webrtcUI");
+XPCOMUtils.defineLazyModuleGetter(this, "webrtcUI",
+  "resource:///modules/webrtcUI.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "TabCrashHandler",
   "resource:///modules/ContentCrashHandlers.jsm");
