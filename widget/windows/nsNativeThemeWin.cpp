@@ -1351,7 +1351,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
 
       if (isHTML) {
         nsIComboboxControlFrame* ccf = do_QueryFrame(aFrame);
-        isOpen = (ccf && ccf->IsDroppedDown());
+        isOpen = (ccf && ccf->IsDroppedDownOrHasParentPopup());
       }
       else
         isOpen = IsOpenButton(aFrame);
@@ -3367,7 +3367,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t
 
       if (isHTML) {
         nsIComboboxControlFrame* ccf = do_QueryFrame(aFrame);
-        isOpen = (ccf && ccf->IsDroppedDown());
+        isOpen = (ccf && ccf->IsDroppedDownOrHasParentPopup());
       }
       else
         isOpen = IsOpenButton(aFrame);

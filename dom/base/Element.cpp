@@ -291,6 +291,55 @@ Element::UpdateEditableState(bool aNotify)
   }
 }
 
+int32_t
+Element::TabIndex()
+{
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::tabindex);
+  if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
+    return attrVal->GetIntegerValue();
+  }
+
+  return TabIndexDefault();
+}
+
+void
+Element::Focus(mozilla::ErrorResult& aError)
+{
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm && domElement) {
+    aError = fm->SetFocus(domElement, 0);
+  }
+}
+
+void
+Element::SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError)
+{
+  nsAutoString value;
+  value.AppendInt(aTabIndex);
+
+  SetAttr(nsGkAtoms::tabindex, value, aError);
+}
+
+void
+Element::Blur(mozilla::ErrorResult& aError)
+{
+  if (!ShouldBlur(this)) {
+    return;
+  }
+
+  nsIDocument* doc = GetComposedDoc();
+  if (!doc) {
+    return;
+  }
+
+  nsPIDOMWindowOuter* win = doc->GetWindow();
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (win && fm) {
+    aError = fm->ClearFocus(win);
+  }
+}
+
 EventStates
 Element::StyleStateFromLocks() const
 {

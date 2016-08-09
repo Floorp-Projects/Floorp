@@ -934,6 +934,96 @@ template<XDRMode mode>
 bool
 XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 
+/*
+ * Common data that can be shared between many scripts in a single runtime.
+ */
+class SharedScriptData
+{
+    // This class is reference counted as follows: each pointer from a JSScript
+    // counts as one reference plus there may be one reference from the shared
+    // script data table.
+    mozilla::Atomic<uint32_t> refCount_;
+
+    uint32_t dataLength_;
+    uint32_t natoms_;
+    uint32_t codeLength_;
+    uintptr_t data_[1];
+
+  public:
+    static SharedScriptData* new_(ExclusiveContext* cx, uint32_t codeLength,
+                                  uint32_t srcnotesLength, uint32_t natoms);
+
+    uint32_t refCount() const {
+        return refCount_;
+    }
+    void incRefCount() {
+        refCount_++;
+    }
+    void decRefCount() {
+        MOZ_ASSERT(refCount_ != 0);
+        refCount_--;
+        if (refCount_ == 0)
+            js_free(this);
+    }
+
+    uint32_t dataLength() const {
+        return dataLength_;
+    }
+    uint8_t* data() {
+        return reinterpret_cast<uint8_t*>(data_);
+    }
+
+    uint32_t natoms() const {
+        return natoms_;
+    }
+    GCPtrAtom* atoms() {
+        if (!natoms_)
+            return nullptr;
+        return reinterpret_cast<GCPtrAtom*>(data());
+    }
+
+    uint32_t codeLength() const {
+        return codeLength_;
+    }
+    jsbytecode* code() {
+        return reinterpret_cast<jsbytecode*>(data() + natoms_ * sizeof(GCPtrAtom));
+    }
+
+    void traceChildren(JSTracer* trc);
+
+  private:
+    SharedScriptData() = delete;
+    SharedScriptData(const SharedScriptData&) = delete;
+    SharedScriptData& operator=(const SharedScriptData&) = delete;
+};
+
+struct ScriptBytecodeHasher
+{
+    struct Lookup
+    {
+        const uint8_t* data;
+        uint32_t length;
+
+        explicit Lookup(SharedScriptData* ssd) : data(ssd->data()), length(ssd->dataLength()) {}
+    };
+    static HashNumber hash(const Lookup& l) { return mozilla::HashBytes(l.data, l.length); }
+    static bool match(SharedScriptData* entry, const Lookup& lookup) {
+        if (entry->dataLength() != lookup.length)
+            return false;
+        return mozilla::PodEqual<uint8_t>(entry->data(), lookup.data, lookup.length);
+    }
+};
+
+typedef HashSet<SharedScriptData*,
+                ScriptBytecodeHasher,
+                SystemAllocPolicy> ScriptDataTable;
+
+extern void
+SweepScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
+
+extern void
+FreeScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
+
 } /* namespace js */
 
 class JSScript : public js::gc::TenuredCell
@@ -980,12 +1070,10 @@ class JSScript : public js::gc::TenuredCell
     // Word-sized fields.
 
   private:
-    jsbytecode*     code_;     /* bytecodes and their immediate operands */
+    js::SharedScriptData* scriptData_;
   public:
     uint8_t*        data;      /* pointer to variable-length data array (see
                                    comment above Create() for details) */
-
-    js::GCPtrAtom* atoms;      /* maps immediate index to literal struct */
 
     JSCompartment*  compartment_;
 
@@ -1026,7 +1114,6 @@ class JSScript : public js::gc::TenuredCell
 
     // 32-bit fields.
 
-    uint32_t        length_;    /* length of code vector */
     uint32_t        dataSize_;  /* size of the used part of the data array */
 
     uint32_t        lineno_;    /* base line number of script */
@@ -1035,7 +1122,6 @@ class JSScript : public js::gc::TenuredCell
     uint32_t        mainOffset_;/* offset of main entry point from code, after
                                    predef'ing prologue */
 
-    uint32_t        natoms_;    /* length of atoms array */
     uint32_t        nslots_;    /* vars plus maximum stack depth */
 
     /* Range of characters in scriptSource which contains this script's source. */
@@ -1200,7 +1286,7 @@ class JSScript : public js::gc::TenuredCell
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
 #if JS_BITS_PER_WORD == 32
-    // No padding currently required.
+    uint32_t padding_;
 #endif
 
     //
@@ -1248,16 +1334,20 @@ class JSScript : public js::gc::TenuredCell
 
     void setVersion(JSVersion v) { version = v; }
 
-    // Script bytecode is immutable after creation.
-    jsbytecode* code() const {
-        return code_;
-    }
-    size_t length() const {
-        return length_;
+    js::SharedScriptData* scriptData() {
+        return scriptData_;
     }
 
-    void setCode(jsbytecode* code) { code_ = code; }
-    void setLength(size_t length) { length_ = length; }
+    // Script bytecode is immutable after creation.
+    jsbytecode* code() const {
+        if (!scriptData_)
+            return nullptr;
+        return scriptData_->code();
+    }
+    size_t length() const {
+        MOZ_ASSERT(scriptData_);
+        return scriptData_->codeLength();
+    }
 
     jsbytecode* codeEnd() const { return code() + length(); }
 
@@ -1714,6 +1804,12 @@ class JSScript : public js::gc::TenuredCell
   private:
     bool makeTypes(JSContext* cx);
 
+    bool createScriptData(js::ExclusiveContext* cx, uint32_t codeLength, uint32_t srcnotesLength,
+                          uint32_t natoms);
+    bool shareScriptData(js::ExclusiveContext* cx);
+    void freeScriptData();
+    void setScriptData(js::SharedScriptData* data);
+
   public:
     uint32_t getWarmUpCount() const { return warmUpCount; }
     uint32_t incWarmUpCounter(uint32_t amount = 1) { return warmUpCount += amount; }
@@ -1807,11 +1903,18 @@ class JSScript : public js::gc::TenuredCell
 
     bool hasLoops();
 
-    size_t natoms() const { return natoms_; }
+    size_t natoms() const {
+        MOZ_ASSERT(scriptData_);
+        return scriptData_->natoms();
+    }
+    js::GCPtrAtom* atoms() const {
+        MOZ_ASSERT(scriptData_);
+        return scriptData_->atoms();
+    }
 
     js::GCPtrAtom& getAtom(size_t index) const {
         MOZ_ASSERT(index < natoms());
-        return atoms[index];
+        return atoms()[index];
     }
 
     js::GCPtrAtom& getAtom(jsbytecode* pc) const {
@@ -2410,61 +2513,6 @@ class LazyScript : public gc::TenuredCell
 
 /* If this fails, add/remove padding within LazyScript. */
 JS_STATIC_ASSERT(sizeof(LazyScript) % js::gc::CellSize == 0);
-
-struct SharedScriptData
-{
-    uint32_t length;
-    uint32_t natoms;
-    mozilla::Atomic<bool, mozilla::ReleaseAcquire> marked;
-    jsbytecode data[1];
-
-    static SharedScriptData* new_(ExclusiveContext* cx, uint32_t codeLength,
-                                  uint32_t srcnotesLength, uint32_t natoms);
-
-    GCPtrAtom* atoms() {
-        if (!natoms)
-            return nullptr;
-        return reinterpret_cast<GCPtrAtom*>(data + length - sizeof(JSAtom*) * natoms);
-    }
-
-    static SharedScriptData* fromBytecode(const jsbytecode* bytecode) {
-        return (SharedScriptData*)(bytecode - offsetof(SharedScriptData, data));
-    }
-
-  private:
-    SharedScriptData() = delete;
-    SharedScriptData(const SharedScriptData&) = delete;
-};
-
-struct ScriptBytecodeHasher
-{
-    struct Lookup
-    {
-        jsbytecode*         code;
-        uint32_t            length;
-
-        explicit Lookup(SharedScriptData* ssd) : code(ssd->data), length(ssd->length) {}
-    };
-    static HashNumber hash(const Lookup& l) { return mozilla::HashBytes(l.code, l.length); }
-    static bool match(SharedScriptData* entry, const Lookup& lookup) {
-        if (entry->length != lookup.length)
-            return false;
-        return mozilla::PodEqual<jsbytecode>(entry->data, lookup.code, lookup.length);
-    }
-};
-
-typedef HashSet<SharedScriptData*,
-                ScriptBytecodeHasher,
-                SystemAllocPolicy> ScriptDataTable;
-
-extern void
-UnmarkScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
-
-extern void
-SweepScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
-
-extern void
-FreeScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
 
 struct ScriptAndCounts
 {

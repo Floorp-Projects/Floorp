@@ -20,7 +20,6 @@
 #include "HTMLTableAccessibleWrap.h"
 #include "HyperTextAccessibleWrap.h"
 #include "RootAccessible.h"
-#include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsArrayUtils.h"
 #include "nsAttrName.h"
@@ -265,6 +264,7 @@ nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nullptr;
 ApplicationAccessible* nsAccessibilityService::gApplicationAccessible = nullptr;
 xpcAccessibleApplication* nsAccessibilityService::gXPCApplicationAccessible = nullptr;
 bool nsAccessibilityService::gIsShutdown = true;
+bool nsAccessibilityService::gIsPlatformCaller = false;
 
 nsAccessibilityService::nsAccessibilityService() :
   DocManager(), FocusManager(), mMarkupMaps(ArrayLength(sMarkupMapList))
@@ -340,8 +340,6 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges)
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAccessibilityService,
                             DocManager,
-                            nsIAccessibilityService,
-                            nsIAccessibleRetrieval,
                             nsIObserver,
                             nsIListenerChangeListener,
                             nsISelectionListener) // from SelectionManager
@@ -359,7 +357,6 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
-// nsIAccessibilityService
 void
 nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode)
 {
@@ -371,16 +368,12 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode)
   }
 }
 
-// nsIAccessibilityService
 void
 nsAccessibilityService::FireAccessibleEvent(uint32_t aEvent,
                                             Accessible* aTarget)
 {
   nsEventShell::FireEvent(aEvent, aTarget);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIAccessibilityService
 
 Accessible*
 nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
@@ -737,58 +730,26 @@ nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
     document->RecreateAccessible(aContent);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsIAccessibleRetrieval
-
-NS_IMETHODIMP
-nsAccessibilityService::GetApplicationAccessible(nsIAccessible** aAccessibleApplication)
-{
-  NS_ENSURE_ARG_POINTER(aAccessibleApplication);
-
-  NS_IF_ADDREF(*aAccessibleApplication = XPCApplicationAcc());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
-                                         nsIAccessible **aAccessible)
-{
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nullptr;
-  if (!aNode)
-    return NS_OK;
-
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  if (!node)
-    return NS_ERROR_INVALID_ARG;
-
-  DocAccessible* document = GetDocAccessible(node->OwnerDoc());
-  if (document)
-    NS_IF_ADDREF(*aAccessible = ToXPC(document->GetAccessible(node)));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsAccessibilityService::GetStringRole(uint32_t aRole, nsAString& aString)
 {
 #define ROLE(geckoRole, stringRole, atkRole, \
              macRole, msaaRole, ia2Role, nameRule) \
   case roles::geckoRole: \
     CopyUTF8toUTF16(stringRole, aString); \
-    return NS_OK;
+    return;
 
   switch (aRole) {
 #include "RoleMap.h"
     default:
       aString.AssignLiteral("unknown");
-      return NS_OK;
+      return;
   }
 
 #undef ROLE
 }
 
-NS_IMETHODIMP
+void
 nsAccessibilityService::GetStringStates(uint32_t aState, uint32_t aExtraState,
                                         nsISupports **aStringStates)
 {
@@ -797,113 +758,159 @@ nsAccessibilityService::GetStringStates(uint32_t aState, uint32_t aExtraState,
   uint64_t state = nsAccUtils::To64State(aState, aExtraState);
 
   // states
-  if (state & states::UNAVAILABLE)
+  if (state & states::UNAVAILABLE) {
     stringStates->Add(NS_LITERAL_STRING("unavailable"));
-  if (state & states::SELECTED)
+  }
+  if (state & states::SELECTED) {
     stringStates->Add(NS_LITERAL_STRING("selected"));
-  if (state & states::FOCUSED)
+  }
+  if (state & states::FOCUSED) {
     stringStates->Add(NS_LITERAL_STRING("focused"));
-  if (state & states::PRESSED)
+  }
+  if (state & states::PRESSED) {
     stringStates->Add(NS_LITERAL_STRING("pressed"));
-  if (state & states::CHECKED)
+  }
+  if (state & states::CHECKED) {
     stringStates->Add(NS_LITERAL_STRING("checked"));
-  if (state & states::MIXED)
+  }
+  if (state & states::MIXED) {
     stringStates->Add(NS_LITERAL_STRING("mixed"));
-  if (state & states::READONLY)
+  }
+  if (state & states::READONLY) {
     stringStates->Add(NS_LITERAL_STRING("readonly"));
-  if (state & states::HOTTRACKED)
+  }
+  if (state & states::HOTTRACKED) {
     stringStates->Add(NS_LITERAL_STRING("hottracked"));
-  if (state & states::DEFAULT)
+  }
+  if (state & states::DEFAULT) {
     stringStates->Add(NS_LITERAL_STRING("default"));
-  if (state & states::EXPANDED)
+  }
+  if (state & states::EXPANDED) {
     stringStates->Add(NS_LITERAL_STRING("expanded"));
-  if (state & states::COLLAPSED)
+  }
+  if (state & states::COLLAPSED) {
     stringStates->Add(NS_LITERAL_STRING("collapsed"));
-  if (state & states::BUSY)
+  }
+  if (state & states::BUSY) {
     stringStates->Add(NS_LITERAL_STRING("busy"));
-  if (state & states::FLOATING)
+  }
+  if (state & states::FLOATING) {
     stringStates->Add(NS_LITERAL_STRING("floating"));
-  if (state & states::ANIMATED)
+  }
+  if (state & states::ANIMATED) {
     stringStates->Add(NS_LITERAL_STRING("animated"));
-  if (state & states::INVISIBLE)
+  }
+  if (state & states::INVISIBLE) {
     stringStates->Add(NS_LITERAL_STRING("invisible"));
-  if (state & states::OFFSCREEN)
+  }
+  if (state & states::OFFSCREEN) {
     stringStates->Add(NS_LITERAL_STRING("offscreen"));
-  if (state & states::SIZEABLE)
+  }
+  if (state & states::SIZEABLE) {
     stringStates->Add(NS_LITERAL_STRING("sizeable"));
-  if (state & states::MOVEABLE)
+  }
+  if (state & states::MOVEABLE) {
     stringStates->Add(NS_LITERAL_STRING("moveable"));
-  if (state & states::SELFVOICING)
+  }
+  if (state & states::SELFVOICING) {
     stringStates->Add(NS_LITERAL_STRING("selfvoicing"));
-  if (state & states::FOCUSABLE)
+  }
+  if (state & states::FOCUSABLE) {
     stringStates->Add(NS_LITERAL_STRING("focusable"));
-  if (state & states::SELECTABLE)
+  }
+  if (state & states::SELECTABLE) {
     stringStates->Add(NS_LITERAL_STRING("selectable"));
-  if (state & states::LINKED)
+  }
+  if (state & states::LINKED) {
     stringStates->Add(NS_LITERAL_STRING("linked"));
-  if (state & states::TRAVERSED)
+  }
+  if (state & states::TRAVERSED) {
     stringStates->Add(NS_LITERAL_STRING("traversed"));
-  if (state & states::MULTISELECTABLE)
+  }
+  if (state & states::MULTISELECTABLE) {
     stringStates->Add(NS_LITERAL_STRING("multiselectable"));
-  if (state & states::EXTSELECTABLE)
+  }
+  if (state & states::EXTSELECTABLE) {
     stringStates->Add(NS_LITERAL_STRING("extselectable"));
-  if (state & states::PROTECTED)
+  }
+  if (state & states::PROTECTED) {
     stringStates->Add(NS_LITERAL_STRING("protected"));
-  if (state & states::HASPOPUP)
+  }
+  if (state & states::HASPOPUP) {
     stringStates->Add(NS_LITERAL_STRING("haspopup"));
-  if (state & states::REQUIRED)
+  }
+  if (state & states::REQUIRED) {
     stringStates->Add(NS_LITERAL_STRING("required"));
-  if (state & states::ALERT)
+  }
+  if (state & states::ALERT) {
     stringStates->Add(NS_LITERAL_STRING("alert"));
-  if (state & states::INVALID)
+  }
+  if (state & states::INVALID) {
     stringStates->Add(NS_LITERAL_STRING("invalid"));
-  if (state & states::CHECKABLE)
+  }
+  if (state & states::CHECKABLE) {
     stringStates->Add(NS_LITERAL_STRING("checkable"));
+  }
 
   // extraStates
-  if (state & states::SUPPORTS_AUTOCOMPLETION)
+  if (state & states::SUPPORTS_AUTOCOMPLETION) {
     stringStates->Add(NS_LITERAL_STRING("autocompletion"));
-  if (state & states::DEFUNCT)
+  }
+  if (state & states::DEFUNCT) {
     stringStates->Add(NS_LITERAL_STRING("defunct"));
-  if (state & states::SELECTABLE_TEXT)
+  }
+  if (state & states::SELECTABLE_TEXT) {
     stringStates->Add(NS_LITERAL_STRING("selectable text"));
-  if (state & states::EDITABLE)
+  }
+  if (state & states::EDITABLE) {
     stringStates->Add(NS_LITERAL_STRING("editable"));
-  if (state & states::ACTIVE)
+  }
+  if (state & states::ACTIVE) {
     stringStates->Add(NS_LITERAL_STRING("active"));
-  if (state & states::MODAL)
+  }
+  if (state & states::MODAL) {
     stringStates->Add(NS_LITERAL_STRING("modal"));
-  if (state & states::MULTI_LINE)
+  }
+  if (state & states::MULTI_LINE) {
     stringStates->Add(NS_LITERAL_STRING("multi line"));
-  if (state & states::HORIZONTAL)
+  }
+  if (state & states::HORIZONTAL) {
     stringStates->Add(NS_LITERAL_STRING("horizontal"));
-  if (state & states::OPAQUE1)
+  }
+  if (state & states::OPAQUE1) {
     stringStates->Add(NS_LITERAL_STRING("opaque"));
-  if (state & states::SINGLE_LINE)
+  }
+  if (state & states::SINGLE_LINE) {
     stringStates->Add(NS_LITERAL_STRING("single line"));
-  if (state & states::TRANSIENT)
+  }
+  if (state & states::TRANSIENT) {
     stringStates->Add(NS_LITERAL_STRING("transient"));
-  if (state & states::VERTICAL)
+  }
+  if (state & states::VERTICAL) {
     stringStates->Add(NS_LITERAL_STRING("vertical"));
-  if (state & states::STALE)
+  }
+  if (state & states::STALE) {
     stringStates->Add(NS_LITERAL_STRING("stale"));
-  if (state & states::ENABLED)
+  }
+  if (state & states::ENABLED) {
     stringStates->Add(NS_LITERAL_STRING("enabled"));
-  if (state & states::SENSITIVE)
+  }
+  if (state & states::SENSITIVE) {
     stringStates->Add(NS_LITERAL_STRING("sensitive"));
-  if (state & states::EXPANDABLE)
+  }
+  if (state & states::EXPANDABLE) {
     stringStates->Add(NS_LITERAL_STRING("expandable"));
+  }
 
   //unknown states
-  if (!stringStates->Length())
+  if (!stringStates->Length()) {
     stringStates->Add(NS_LITERAL_STRING("unknown"));
+  }
 
   stringStates.forget(aStringStates);
-  return NS_OK;
 }
 
-// nsIAccessibleRetrieval::getStringEventType()
-NS_IMETHODIMP
+void
 nsAccessibilityService::GetStringEventType(uint32_t aEventType,
                                            nsAString& aString)
 {
@@ -912,103 +919,32 @@ nsAccessibilityService::GetStringEventType(uint32_t aEventType,
 
   if (aEventType >= ArrayLength(kEventTypeNames)) {
     aString.AssignLiteral("unknown");
-    return NS_OK;
+    return;
   }
 
   CopyUTF8toUTF16(kEventTypeNames[aEventType], aString);
-  return NS_OK;
 }
 
-// nsIAccessibleRetrieval::getStringRelationType()
-NS_IMETHODIMP
+void
 nsAccessibilityService::GetStringRelationType(uint32_t aRelationType,
                                               nsAString& aString)
 {
-  NS_ENSURE_ARG(aRelationType <= static_cast<uint32_t>(RelationType::LAST));
+  NS_ENSURE_TRUE_VOID(aRelationType <= static_cast<uint32_t>(RelationType::LAST));
 
 #define RELATIONTYPE(geckoType, geckoTypeName, atkType, msaaType, ia2Type) \
   case RelationType::geckoType: \
     aString.AssignLiteral(geckoTypeName); \
-    return NS_OK;
+    return;
 
   RelationType relationType = static_cast<RelationType>(aRelationType);
   switch (relationType) {
 #include "RelationTypeMap.h"
     default:
       aString.AssignLiteral("unknown");
-      return NS_OK;
+      return;
   }
 
 #undef RELATIONTYPE
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
-                                               nsIAccessible** aAccessible)
-{
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nullptr;
-  if (!aNode)
-    return NS_OK;
-
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  if (!node)
-    return NS_ERROR_INVALID_ARG;
-
-  // Search for an accessible in each of our per document accessible object
-  // caches. If we don't find it, and the given node is itself a document, check
-  // our cache of document accessibles (document cache). Note usually shutdown
-  // document accessibles are not stored in the document cache, however an
-  // "unofficially" shutdown document (i.e. not from DocManager) can still
-  // exist in the document cache.
-  Accessible* accessible = FindAccessibleInCache(node);
-  if (!accessible) {
-    nsCOMPtr<nsIDocument> document(do_QueryInterface(node));
-    if (document)
-      accessible = GetExistingDocAccessible(document);
-  }
-
-  NS_IF_ADDREF(*aAccessible = ToXPC(accessible));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateAccessiblePivot(nsIAccessible* aRoot,
-                                              nsIAccessiblePivot** aPivot)
-{
-  NS_ENSURE_ARG_POINTER(aPivot);
-  NS_ENSURE_ARG(aRoot);
-  *aPivot = nullptr;
-
-  Accessible* accessibleRoot = aRoot->ToInternalAccessible();
-  NS_ENSURE_TRUE(accessibleRoot, NS_ERROR_INVALID_ARG);
-
-  nsAccessiblePivot* pivot = new nsAccessiblePivot(accessibleRoot);
-  NS_ADDREF(*aPivot = pivot);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::SetLogging(const nsACString& aModules)
-{
-#ifdef A11Y_LOG
-  logging::Enable(PromiseFlatCString(aModules));
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::IsLogged(const nsAString& aModule, bool* aIsLogged)
-{
-  NS_ENSURE_ARG_POINTER(aIsLogged);
-  *aIsLogged = false;
-
-#ifdef A11Y_LOG
-  *aIsLogged = logging::IsEnabled(aModule);
-#endif
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1327,6 +1263,7 @@ nsAccessibilityService::Init()
 #endif
 
   gAccessibilityService = this;
+  NS_ADDREF(gAccessibilityService); // will release in Shutdown()
 
   if (XRE_IsParentProcess())
     gApplicationAccessible = new ApplicationAccessibleWrap();
@@ -1359,6 +1296,15 @@ nsAccessibilityService::Init()
 void
 nsAccessibilityService::Shutdown()
 {
+  // Application is going to be closed, shutdown accessibility and mark
+  // accessibility service as shutdown to prevent calls of its methods.
+  // Don't null accessibility service static member at this point to be safe
+  // if someone will try to operate with it.
+
+  MOZ_ASSERT(!gIsShutdown, "Accessibility was shutdown already");
+
+  gIsShutdown = true;
+
   // Remove observers.
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
@@ -1384,15 +1330,6 @@ nsAccessibilityService::Shutdown()
   sPluginTimers = nullptr;
 #endif
 
-  // Application is going to be closed, shutdown accessibility and mark
-  // accessibility service as shutdown to prevent calls of its methods.
-  // Don't null accessibility service static member at this point to be safe
-  // if someone will try to operate with it.
-
-  NS_ASSERTION(!gIsShutdown, "Accessibility was shutdown already");
-
-  gIsShutdown = true;
-
   if (XRE_IsParentProcess())
     PlatformShutdown();
 
@@ -1402,6 +1339,10 @@ nsAccessibilityService::Shutdown()
 
   NS_IF_RELEASE(gXPCApplicationAccessible);
   gXPCApplicationAccessible = nullptr;
+
+  NS_RELEASE(gAccessibilityService);
+  gAccessibilityService = nullptr;
+  gIsPlatformCaller = false;
 }
 
 already_AddRefed<Accessible>
@@ -1756,9 +1697,6 @@ nsAccessibilityService::MarkupAttributes(const nsIContent* aContent,
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsIAccessibilityService (DON'T put methods here)
-
 Accessible*
 nsAccessibilityService::AddNativeRootAccessible(void* aAtkAccessible)
 {
@@ -1803,38 +1741,6 @@ nsAccessibilityService::HasAccessible(nsIDOMNode* aDOMNode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// NS_GetAccessibilityService
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Return accessibility service; creating one if necessary.
- */
-nsresult
-NS_GetAccessibilityService(nsIAccessibilityService** aResult)
-{
-  NS_ENSURE_TRUE(aResult, NS_ERROR_NULL_POINTER);
-  *aResult = nullptr;
-
-  if (nsAccessibilityService::gAccessibilityService) {
-    NS_ADDREF(*aResult = nsAccessibilityService::gAccessibilityService);
-    return NS_OK;
-  }
-
-  RefPtr<nsAccessibilityService> service = new nsAccessibilityService();
-  NS_ENSURE_TRUE(service, NS_ERROR_OUT_OF_MEMORY);
-
-  if (!service->Init()) {
-    service->Shutdown();
-    return NS_ERROR_FAILURE;
-  }
-
-  statistics::A11yInitialized();
-
-  NS_ADDREF(*aResult = service);
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private (DON'T put methods here)
 
 #ifdef MOZ_XUL
@@ -1868,6 +1774,38 @@ nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
   return accessible.forget();
 }
 #endif
+
+nsAccessibilityService*
+GetOrCreateAccService(bool aIsPlatformCaller)
+{
+  if (aIsPlatformCaller) {
+    nsAccessibilityService::gIsPlatformCaller = aIsPlatformCaller;
+  }
+
+  if (!nsAccessibilityService::gAccessibilityService) {
+    RefPtr<nsAccessibilityService> service = new nsAccessibilityService();
+    if (!service->Init()) {
+      service->Shutdown();
+      return nullptr;
+    }
+  }
+
+  MOZ_ASSERT(nsAccessibilityService::gAccessibilityService,
+             "Accessible service is not initialized.");
+  return nsAccessibilityService::gAccessibilityService;
+}
+
+bool
+CanShutdownAccService()
+{
+  nsAccessibilityService* accService = nsAccessibilityService::gAccessibilityService;
+  if (!accService) {
+    return false;
+  }
+  return !xpcAccessibilityService::IsInUse() &&
+         !accService->IsPlatformCaller() && !accService->IsShutdown() &&
+         !nsCoreUtils::AccEventObserversExist();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Services

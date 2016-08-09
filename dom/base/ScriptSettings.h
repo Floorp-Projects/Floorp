@@ -443,6 +443,23 @@ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+/**
+ * Use AutoSlowOperation when native side calls many JS callbacks in a row
+ * and slow script dialog should be activated if too much time is spent going
+ * through those callbacks.
+ * AutoSlowOperation puts a JSAutoRequest on the stack so that we don't continue
+ * to reset the watchdog and CheckForInterrupt can be then used to check whether
+ * JS execution should be interrupted.
+ */
+class MOZ_RAII AutoSlowOperation : public dom::AutoJSAPI
+{
+public:
+  explicit AutoSlowOperation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  void CheckForInterrupt();
+private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 } // namespace mozilla
 
 #endif // mozilla_dom_ScriptSettings_h
