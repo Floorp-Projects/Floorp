@@ -33,8 +33,8 @@ function run(test_window)
   let height_val = 182;
   iframe_style.width = width_val + "px";
   iframe_style.height = height_val + "px";
-  for (let [feature, value] in
-         Iterator({ "width": width_val, "height": height_val })) {
+  for (let [feature, value] of
+         Object.entries({ "width": width_val, "height": height_val })) {
     should_apply("all and (" + feature + ": " + value + "px)");
     should_not_apply("all and (" + feature + ": " + (value + 1) + "px)");
     should_not_apply("all and (" + feature + ": " + (value - 1) + "px)");
