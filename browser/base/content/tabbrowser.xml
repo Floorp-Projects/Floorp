@@ -1370,16 +1370,28 @@
 
       <method name="setBrowserSharing">
         <parameter name="aBrowser"/>
-        <parameter name="aSharingState"/>
+        <parameter name="aState"/>
         <body><![CDATA[
           let tab = this.getTabForBrowser(aBrowser);
           if (!tab)
             return;
 
-          if (aSharingState)
-            tab.setAttribute("sharing", aSharingState);
-          else
+          let sharing;
+          if (aState.screen) {
+            sharing = "screen";
+          } else if (aState.camera) {
+            sharing = "camera";
+          } else if (aState.microphone) {
+            sharing = "microphone";
+          }
+
+          if (sharing) {
+            tab.setAttribute("sharing", sharing);
+            tab._sharingState = aState;
+          } else {
             tab.removeAttribute("sharing");
+            tab._sharingState = null;
+          }
           this._tabAttrModified(tab, ["sharing"]);
 
           if (aBrowser == this.mCurrentBrowser)
