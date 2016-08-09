@@ -32,12 +32,16 @@ def rustc_info(rustc):
 @depends_if(cargo)
 @checking('cargo support for --frozen')
 @imports('subprocess')
+@imports('os')
 def cargo_supports_frozen(cargo):
     try:
         lines = subprocess.check_output(
             [cargo, 'help', 'build']
         ).splitlines()
-        return any('    --frozen' in l for l in lines)
+        supported = any('    --frozen' in l for l in lines)
+        if 'MOZ_AUTOMATION' in os.environ and not supported:
+            die('cargo in automation must support --frozen')
+        return supported
     except subprocess.CalledProcessError as e:
         die('Failed to call cargo: %s', e.message)
 
