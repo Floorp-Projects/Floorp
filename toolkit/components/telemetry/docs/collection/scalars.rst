@@ -6,7 +6,7 @@ Historically we started to overload our histogram mechanism to also collect scal
 such as flag values, counts, labels and others.
 The scalar measurement types are the suggested way to collect that kind of scalar data.
 We currently only support recording of scalars from the parent process.
-The serialized scalar data is submitted with the :doc:`main pings <main-ping>`.
+The serialized scalar data is submitted with the :doc:`main pings <../data/main-ping>`.
 
 The API
 =======

@@ -8,8 +8,8 @@ A *Telemetry ping* is the data that we send to Mozillas Telemetry servers.
 
 That data is stored as a JSON object client-side and contains common information to all pings and a payload specific to a certain *ping types*.
 
-The top-level structure is defined by the :doc:`common-ping` format.
-It contains some basic information shared between different ping types, the :doc:`environment` data (optional) and the data specific to the *ping type*, the *payload*.
+The top-level structure is defined by the :doc:`../data/common-ping` format.
+It contains some basic information shared between different ping types, the :doc:`../data/environment` data (optional) and the data specific to the *ping type*, the *payload*.
 
 Submission
 ==========
@@ -21,7 +21,7 @@ If a ping fails to successfully submit to the server immediately (e.g. because
 of missing internet connection), Telemetry will store it on disk and retry to
 send it until the maximum ping age is exceeded (14 days).
 
-*Note:* the :doc:`main pings <main-ping>` are kept locally even after successful submission to enable the HealthReport and SelfSupport features. They will be deleted after their retention period of 180 days.
+*Note:* the :doc:`main pings <../data/main-ping>` are kept locally even after successful submission to enable the HealthReport and SelfSupport features. They will be deleted after their retention period of 180 days.
 
 Sending of pending pings starts as soon as the delayed startup is finished. They are sent in batches, newest-first, with up
 to 10 persisted pings per batch plus all unpersisted pings.
@@ -42,15 +42,21 @@ The telemetry server team is working towards `the common services status codes <
 Ping types
 ==========
 
-* :doc:`main <main-ping>` - contains the information collected by Telemetry (Histograms, hang stacks, ...)
-* :doc:`saved-session <main-ping>` - has the same format as a main ping, but it contains the *"classic"* Telemetry payload with measurements covering the whole browser session. This is only a separate type to make storage of saved-session easier server-side. This is temporary and will be removed soon.
-* :doc:`crash <crash-ping>` - a ping that is captured and sent after Firefox crashes.
-* :doc:`uitour-ping` - a ping submitted via the UITour API
+We send Telemetry with different ping types. The :doc:`main <../data/main-ping>` ping is the ping that contains the bulk of the Telemetry measurements for Firefox. For more specific use-cases, we also send other custom ping types.
+
+Examples are:
+
+* :doc:`main <../data/main-ping>` - contains the information collected by Telemetry (Histograms, hang stacks, ...)
+* :doc:`saved-session <../data/main-ping>` - has the same format as a main ping, but it contains the *"classic"* Telemetry payload with measurements covering the whole browser session. This is only a separate type to make storage of saved-session easier server-side. This is temporary and will be removed soon.
+* :doc:`crash <../data/crash-ping>` - a ping that is captured and sent after Firefox crashes.
 * ``activation`` - *planned* - sent right after installation or profile creation
 * ``upgrade`` - *planned* - sent right after an upgrade
-* :doc:`heartbeat-ping` - contains information on Heartbeat surveys
-* :doc:`deletion <deletion-ping>` - sent when FHR upload is disabled, requesting deletion of the data associated with this user
-* :doc:`sync <sync-ping>` - sent after a sync is completed or fails, contains information on sync errors and performance.
+* :doc:`deletion <../data/deletion-ping>` - sent when FHR upload is disabled, requesting deletion of the data associated with this user
+* :doc:`uitour <../data/uitour-ping>` - a ping submitted via the UITour API
+* :doc:`heartbeat <../data/heartbeat-ping>` - contains information on Heartbeat surveys
+* :doc:`sync <../data/sync-ping>` - sent after a sync is completed or fails, contains information on sync errors and performance.
+
+Pings sent from code that ships with Firefox are listed in the :doc:`data documentation <../data/index>`.
 
 Archiving
 =========

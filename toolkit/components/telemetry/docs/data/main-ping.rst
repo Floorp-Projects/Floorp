@@ -2,6 +2,9 @@
 "main" ping
 ===========
 
+.. toctree::
+   :maxdepth: 2
+
 This is the "main" Telemetry ping type, whose payload contains most of the measurements that are used to track the performance and health of Firefox in the wild.
 It includes the histograms and other performance and diagnostic data.
 
@@ -101,7 +104,7 @@ Structure::
 
 scalars
 ~~~~~~~
-This section contains the :doc:`scalars` that are valid for the current platform. Scalars are not created nor submitted if no data was added to them, and are only reported with subsession pings. Scalar data is only currently reported for the main process. Their type and format is described by the ``Scalars.yaml`` file. Its most recent version is available `here <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
+This section contains the :doc:`../collection/scalars` that are valid for the current platform. Scalars are not created nor submitted if no data was added to them, and are only reported with subsession pings. Scalar data is only currently reported for the main process. Their type and format is described by the ``Scalars.yaml`` file. Its most recent version is available `here <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
 
 childPayloads
 -------------
@@ -129,7 +132,7 @@ Only available in the extended set of measures, it contains a set of counters re
 
 UITelemetry
 ~~~~~~~~~~~
-Only available in the extended set of measures. See the documentation for :doc:`/browser/docs/UITelemetry <UITelemetry>`.
+Only available in the extended set of measures. For more see :ref:`uitelemetry`.
 
 startupInterrupted
 ~~~~~~~~~~~~~~~~~~
