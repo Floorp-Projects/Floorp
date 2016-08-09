@@ -87,6 +87,9 @@ protected:
                    const nsTArray<nsString>& aTokens);
   void RemoveInternal(const nsAttrValue* aAttr,
                       const nsTArray<nsString>& aTokens);
+  void ReplaceInternal(const nsAttrValue* aAttr,
+                       const nsAString& aToken,
+                       const nsAString& aNewToken);
   inline const nsAttrValue* GetParsedAttr();
 
   nsCOMPtr<Element> mElement;
