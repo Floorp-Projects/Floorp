@@ -3020,7 +3020,7 @@ WorkerMain(void* arg)
 
 // Workers can spawn other workers, so we need a lock to access workerThreads.
 static Mutex* workerThreadsLock = nullptr;
-static Vector<PRThread*, 0, SystemAllocPolicy> workerThreads;
+static Vector<js::Thread*, 0, SystemAllocPolicy> workerThreads;
 
 class MOZ_RAII AutoLockWorkerThreads : public LockGuard<Mutex>
 {
@@ -3081,10 +3081,8 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    PRThread* thread = PR_CreateThread(PR_USER_THREAD, WorkerMain, input,
-                                       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD,
-                                       gMaxStackSize + 128 * 1024);
-    if (!thread) {
+    auto thread = js_new<Thread>(Thread::Options().setStackSize(gMaxStackSize + 128 * 1024));
+    if (!thread || !thread->init(WorkerMain, input)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -3092,7 +3090,7 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
     AutoLockWorkerThreads alwt;
     if (!workerThreads.append(thread)) {
         ReportOutOfMemory(cx);
-        PR_JoinThread(thread);
+        thread->join();
         return false;
     }
 
@@ -3250,14 +3248,14 @@ KillWorkerThreads()
         // We need to leave the AutoLockWorkerThreads scope before we call
         // PR_JoinThread, to avoid deadlocks when AutoLockWorkerThreads is
         // used by the worker thread.
-        PRThread* thread;
+        Thread* thread;
         {
             AutoLockWorkerThreads alwt;
             if (workerThreads.empty())
                 break;
             thread = workerThreads.popCopy();
         }
-        PR_JoinThread(thread);
+        thread->join();
     }
 
     js_delete(workerThreadsLock);
