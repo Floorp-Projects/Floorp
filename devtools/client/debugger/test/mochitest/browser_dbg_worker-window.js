@@ -44,8 +44,9 @@ add_task(function* () {
   is(activeTools.join(","), "webconsole,jsdebugger,scratchpad,options",
     "Correct set of tools supported by worker");
 
-  yield toolbox.destroy();
   terminateWorkerInTab(tab, WORKER_URL);
   yield waitForWorkerClose(workerClient);
   yield close(client);
+
+  yield toolbox.destroy();
 });

@@ -176,6 +176,9 @@ user_pref("layout.css.prefixes.webkit", true);
 // Enable -webkit-{min|max}-device-pixel-ratio media queries for testing
 user_pref("layout.css.prefixes.device-pixel-ratio-webkit", true);
 
+// Enable CSS shape-outside for testing
+user_pref("layout.css.shape-outside.enabled", true);
+
 // Disable spammy layout warnings because they pollute test logs
 user_pref("layout.spammy_warnings.enabled", false);
 

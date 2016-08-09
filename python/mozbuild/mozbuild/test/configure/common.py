@@ -145,6 +145,15 @@ class ConfigureTestSandbox(ConfigureSandbox):
                 ),
             )
 
+        if what == '_winreg':
+            def OpenKey(*args, **kwargs):
+                raise WindowsError()
+
+            return ReadOnlyNamespace(
+                HKEY_LOCAL_MACHINE=0,
+                OpenKey=OpenKey,
+            )
+
         return super(ConfigureTestSandbox, self)._get_one_import(what)
 
     def create_unicode_buffer(self, *args, **kwargs):
