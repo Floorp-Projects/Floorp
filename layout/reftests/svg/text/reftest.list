@@ -122,7 +122,7 @@ fuzzy-if(skiaContent,1,15) == textpath.svg textpath-ref.svg
 
 == textLength.svg textLength-ref.svg
 fuzzy-if(skiaContent,1,200) == textLength-2.svg textLength-2-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,17) fuzzy-if(skiaContent,1,100) == textLength-3.svg textLength-3-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,17) fuzzy-if(skiaContent,4,100) == textLength-3.svg textLength-3-ref.svg
 == textLength-4.svg textLength-4-ref.svg
 == textLength-5.svg textLength-5-ref.svg
 == textLength-6.svg textLength-6-ref.svg
