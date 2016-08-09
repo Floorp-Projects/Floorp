@@ -23,6 +23,7 @@
 #endif
 #include "GMPContentParent.h"
 #include "MediaPrefs.h"
+#include "VideoUtils.h"
 
 #include "mozilla/dom/CrashReporterParent.h"
 using mozilla::dom::CrashReporterParent;
