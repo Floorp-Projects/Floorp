@@ -182,12 +182,28 @@ struct TenureCount
 // of potential collisions.
 struct TenureCountCache
 {
-    TenureCount entries[16];
+    static const size_t EntryShift = 4;
+    static const size_t EntryCount = 1 << EntryShift;
+
+    TenureCount entries[EntryCount];
 
     TenureCountCache() { mozilla::PodZero(this); }
 
+    HashNumber hash(ObjectGroup* group) {
+#if JS_BITS_PER_WORD == 32
+        static const size_t ZeroBits = 3;
+#else
+        static const size_t ZeroBits = 4;
+#endif
+
+        uintptr_t word = uintptr_t(group);
+        MOZ_ASSERT((word & ((1 << ZeroBits) - 1)) == 0);
+        word >>= ZeroBits;
+        return HashNumber((word >> EntryShift) ^ word);
+    }
+
     TenureCount& findEntry(ObjectGroup* group) {
-        return entries[PointerHasher<ObjectGroup*, 3>::hash(group) % mozilla::ArrayLength(entries)];
+        return entries[hash(group) % EntryCount];
     }
 };
 
