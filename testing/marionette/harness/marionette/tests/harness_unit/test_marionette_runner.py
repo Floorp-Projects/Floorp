@@ -135,14 +135,17 @@ def runner(mach_parsed_kwargs):
 
 
 @pytest.fixture()
-def mock_runner(runner, mock_marionette):
+def mock_runner(runner, mock_marionette, monkeypatch):
     """
     MarionetteTestRunner instance with mocked-out
-    self.marionette and other properties.
+    self.marionette and other properties,
+    to enable testing runner.run_tests().
     """
     runner.driverclass = mock_marionette
-    runner._set_baseurl = Mock()
-    runner.run_test_set = Mock()
+    for attr in ['_set_baseurl', 'run_test_set', '_capabilities']:
+        setattr(runner, attr, Mock())
+    runner._appName = 'fake_app'
+    monkeypatch.setattr('marionette.runner.base.mozversion', Mock())
     return runner
 
 
@@ -367,8 +370,7 @@ def test_add_test_directory(runner):
         assert test_dir in test['filepath']
     assert len(runner.tests) == 4
 
-def test_add_test_manifest(runner):
-    runner._appName = 'fake_app'
+def test_add_test_manifest(mock_runner):
     manifest = "/path/to/fake/manifest.ini"
     active_tests = [{'expected': 'pass',
                      'path': u'/path/to/fake/test_expected_pass.py'},
@@ -381,18 +383,18 @@ def test_add_test_manifest(runner):
                         read=DEFAULT, active_tests=DEFAULT) as mocks:
             mocks['active_tests'].return_value = active_tests
             with pytest.raises(IOError) as err:
-                runner.add_test(manifest)
+                mock_runner.add_test(manifest)
             assert "does not exist" in err.value.message
             assert mocks['read'].call_count == mocks['active_tests'].call_count == 1
             args, kwargs = mocks['active_tests'].call_args
-            assert kwargs['app'] == runner._appName
-            runner.tests, runner.manifest_skipped_tests = [], []
+            assert kwargs['app'] == mock_runner._appName
+            mock_runner.tests, mock_runner.manifest_skipped_tests = [], []
             with patch('marionette.runner.base.os.path.exists', return_value=True):
-                runner.add_test(manifest)
+                mock_runner.add_test(manifest)
             assert mocks['read'].call_count == mocks['active_tests'].call_count == 2
-    assert len(runner.tests) == 2
-    assert len(runner.manifest_skipped_tests) == 1
-    for test in runner.tests:
+    assert len(mock_runner.tests) == 2
+    assert len(mock_runner.manifest_skipped_tests) == 1
+    for test in mock_runner.tests:
         assert test['filepath'].endswith(('test_expected_pass.py', 'test_expected_fail.py'))
         if test['filepath'].endswith('test_expected_fail.py'):
             assert test['expected'] == 'fail'
@@ -401,48 +403,42 @@ def test_add_test_manifest(runner):
 
 
 def test_cleanup_with_manifest(mock_runner):
-    mock_runner._appName = 'fake_app'
     with patch.multiple('marionette.runner.base.TestManifest',
                         read=DEFAULT, active_tests=DEFAULT) as mocks:
         mocks['active_tests'].return_value = [{'expected':'pass', 'path':'test_something.py'}]
-        with patch('marionette.runner.base.mozversion.get_version'):
-            with patch('marionette.runner.base.os.path.exists', return_value=True):
-                mock_runner.run_tests(['fake_manifest.ini'])
+        with patch('marionette.runner.base.os.path.exists', return_value=True):
+            mock_runner.run_tests(['fake_manifest.ini'])
     assert mock_runner.marionette is None
     assert mock_runner.httpd is None
 
 def test_cleanup_empty_manifest(mock_runner):
-    mock_runner._appName = 'fake_app'
     with patch.multiple('marionette.runner.base.TestManifest',
                         read=DEFAULT, active_tests=DEFAULT) as mocks:
         mocks['active_tests'].return_value = []
-        with patch('marionette.runner.base.mozversion.get_version'):
-            with pytest.raises(Exception) as exc:
-                mock_runner.run_tests(['fake_empty_manifest.ini'])
+        with pytest.raises(Exception) as exc:
+            mock_runner.run_tests(['fake_empty_manifest.ini'])
     assert "no tests to run" in exc.value.message
     assert mock_runner.marionette is None
     assert mock_runner.httpd is None
 
 
-def test_reset_test_stats(runner):
+def test_reset_test_stats(mock_runner):
     def reset_successful(runner):
         stats = ['passed', 'failed', 'unexpected_successes', 'todo', 'skipped', 'failures']
         return all([((s in vars(runner)) and (not vars(runner)[s])) for s in stats])
-    assert reset_successful(runner)
-    runner.passed = 1
-    runner.failed = 1
-    runner.failures.append(['TEST-UNEXPECTED-FAIL'])
-    assert not reset_successful(runner)
-    with pytest.raises(Exception):
-        runner.run_tests([u'test_fake_thing.py'])
-    assert reset_successful(runner)
+    assert reset_successful(mock_runner)
+    mock_runner.passed = 1
+    mock_runner.failed = 1
+    mock_runner.failures.append(['TEST-UNEXPECTED-FAIL'])
+    assert not reset_successful(mock_runner)
+    mock_runner.run_tests([u'test_fake_thing.py'])
+    assert reset_successful(mock_runner)
 
 
 def test_initialize_test_run(mock_runner):
     tests = [u'test_fake_thing.py']
     mock_runner.reset_test_stats = Mock()
-    with patch('marionette.runner.base.mozversion.get_version'):
-        mock_runner.run_tests(tests)
+    mock_runner.run_tests(tests)
     assert mock_runner.reset_test_stats.called
     with pytest.raises(AssertionError) as test_exc:
         mock_runner.run_tests([])
@@ -457,8 +453,7 @@ def test_initialize_test_run(mock_runner):
 def test_add_tests(mock_runner):
     assert len(mock_runner.tests) == 0
     fake_tests = ["test_" + i + ".py" for i in "abc"]
-    with patch('marionette.runner.base.mozversion.get_version'):
-        mock_runner.run_tests(fake_tests)
+    mock_runner.run_tests(fake_tests)
     assert len(mock_runner.tests) == 3
     for (test_name, added_test) in zip(fake_tests, mock_runner.tests):
         assert added_test['filepath'].endswith(test_name)
