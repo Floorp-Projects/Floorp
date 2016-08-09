@@ -422,10 +422,6 @@ js::ExclusiveContext::setCompartment(JSCompartment* comp)
     MOZ_ASSERT_IF(isJSContext() && comp,
                   !comp->zone()->usedByExclusiveThread);
 
-    // Only one thread can be in the atoms compartment at a time.
-    MOZ_ASSERT_IF(runtime_->isAtomsCompartment(comp),
-                  runtime_->currentThreadHasExclusiveAccess());
-
     // Make sure that the atoms compartment has its own zone.
     MOZ_ASSERT_IF(comp && !runtime_->isAtomsCompartment(comp),
                   !comp->zone()->isAtomsZone());
