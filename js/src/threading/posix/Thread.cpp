@@ -37,6 +37,12 @@ class js::Thread::Id::PlatformData
   bool hasThread;
 };
 
+/* static */ js::HashNumber
+js::Thread::Hasher::hash(const Lookup& l)
+{
+  return mozilla::HashBytes(&l.platformData()->ptThread, sizeof(pthread_t));
+}
+
 inline js::Thread::Id::PlatformData*
 js::Thread::Id::platformData()
 {

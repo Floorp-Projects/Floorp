@@ -21,6 +21,12 @@ class js::Thread::Id::PlatformData
   unsigned id;
 };
 
+/* static */ js::HashNumber
+js::Thread::Hasher::hash(const Lookup& l)
+{
+  return mozilla::HashBytes(l.platformData_, sizeof(l.platformData_));
+}
+
 inline js::Thread::Id::PlatformData*
 js::Thread::Id::platformData()
 {
