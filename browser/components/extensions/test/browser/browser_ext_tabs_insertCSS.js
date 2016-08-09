@@ -49,7 +49,7 @@ add_task(function* testExecuteScript() {
         return browser.tabs.executeScript({
           code: `(${checkCSS})()`,
         });
-      }).then(result => {
+      }).then(([result]) => {
         browser.test.assertEq(background, result[0], "Expected background color");
         browser.test.assertEq(foreground, result[1], "Expected foreground color");
         return next();
