@@ -117,7 +117,7 @@ MIME_MAP = {
     '.checksums': 'text/plain',
     '.dmg': 'application/x-iso9660-image',
     '.mar': 'application/octet-stream',
-    '.xpi': 'application/zip'
+    '.xpi': 'application/x-xpinstall'
 }
 
 
