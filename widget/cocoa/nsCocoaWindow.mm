@@ -1225,13 +1225,13 @@ NS_IMETHODIMP nsCocoaWindow::Move(double aX, double aY)
 }
 
 // Position the window behind the given window
-NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                     nsIWidget *aWidget, bool aActivate)
+NS_IMETHODIMP nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                         nsIWidget *aWidget, bool aActivate)
 {
   return NS_OK;
 }
 
-NS_METHOD nsCocoaWindow::SetSizeMode(nsSizeMode aMode)
+NS_IMETHODIMP nsCocoaWindow::SetSizeMode(nsSizeMode aMode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
