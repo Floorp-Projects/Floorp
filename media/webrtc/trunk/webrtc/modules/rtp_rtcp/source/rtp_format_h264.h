@@ -74,6 +74,7 @@ class RtpPacketizerH264 : public RtpPacketizer {
   typedef std::queue<Packet> PacketQueue;
 
   void GeneratePackets();
+  void PacketizeMode0(size_t fragment_offset, size_t fragment_length);
   void PacketizeFuA(size_t fragment_offset, size_t fragment_length);
   int PacketizeStapA(size_t fragment_index,
                      size_t fragment_offset,

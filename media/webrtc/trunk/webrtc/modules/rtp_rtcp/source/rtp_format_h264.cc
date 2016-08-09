@@ -156,13 +156,28 @@ void RtpPacketizerH264::GeneratePackets() {
   for (size_t i = 0; i < fragmentation_.fragmentationVectorSize;) {
     size_t fragment_offset = fragmentation_.fragmentationOffset[i];
     size_t fragment_length = fragmentation_.fragmentationLength[i];
-    if (fragment_length > max_payload_len_ || packetization_mode_ == 0) {
+    if (packetization_mode_ == 0) {
+      PacketizeMode0(fragment_offset, fragment_length);
+      ++i;
+    } else if (fragment_length > max_payload_len_) {
       PacketizeFuA(fragment_offset, fragment_length);
       ++i;
     } else {
       i = PacketizeStapA(i, fragment_offset, fragment_length);
     }
   }
+}
+
+void RtpPacketizerH264::PacketizeMode0(size_t fragment_offset,
+                                       size_t fragment_length) {
+
+  uint8_t header = payload_data_[fragment_offset];
+  packets_.push(Packet(fragment_offset,
+                       fragment_length,
+                       true,
+                       true,
+                       false,
+                       header));
 }
 
 void RtpPacketizerH264::PacketizeFuA(size_t fragment_offset,
