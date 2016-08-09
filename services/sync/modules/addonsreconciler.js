@@ -247,9 +247,9 @@ AddonsReconciler.prototype = {
     let file = path || DEFAULT_STATE_FILE;
     let state = {version: 1, addons: {}, changes: []};
 
-    for (let [id, record] in Iterator(this._addons)) {
+    for (let [id, record] of Object.entries(this._addons)) {
       state.addons[id] = {};
-      for (let [k, v] in Iterator(record)) {
+      for (let [k, v] of Object.entries(record)) {
         if (k == "modified") {
           state.addons[id][k] = v.getTime();
         }
@@ -358,7 +358,7 @@ AddonsReconciler.prototype = {
 
       // Look for locally-defined add-ons that no longer exist and update their
       // record.
-      for (let [id, addon] in Iterator(this._addons)) {
+      for (let [id, addon] of Object.entries(this._addons)) {
         if (id in ids) {
           continue;
         }
