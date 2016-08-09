@@ -14,7 +14,9 @@ It also contains optional further information:
 
 Finally, the structure also contains the `payload`, which is the specific data submitted for the respective *ping type*.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       type: <string>, // "main", "activation", "deletion", "saved-session", ...

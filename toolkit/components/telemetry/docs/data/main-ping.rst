@@ -22,7 +22,9 @@ After a new subsession split, the ``internal-telemetry-after-subsession-split`` 
 
 *Note:* ``saved-session`` is sent with a different ping type (``saved-session``, not ``main``), but otherwise has the same format as discussed here.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       version: 4,
@@ -93,7 +95,9 @@ processes
 ---------
 This section contains per-process data.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "processes" : {
       ... other processes ...
@@ -142,7 +146,9 @@ js
 ~~
 This section contains a series of counters from the JavaScript engine.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "js" : {
       "setProto": <unsigned integer>, // Number of times __proto__ is set
@@ -214,7 +220,9 @@ To avoid submitting overly large payloads, some limits are applied:
 * Identical, adjacent "(chrome script)" or "(content script)" stack entries are collapsed together. If a stack is reduced, the "(reduced stack)" frame marker is added as the oldest frame.
 * The depth of the reported stacks is limited to 11 entries. This value represents the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "threadHangStats" : [
       {
@@ -253,7 +261,9 @@ Some limits are applied:
 * Reported chrome hang stacks are limited in depth to 50 entries.
 * The maximum number of reported stacks is 50.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "chromeHangs" : {
       "memoryMap" : [
@@ -292,7 +302,9 @@ log
 ---
 This section contains a log of important or unusual events reported through Telemetry.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "log": [
       [
@@ -319,7 +331,9 @@ Note: in most cases the webrtc and loop dictionaries inside of
 IceCandidatesStats will simply be empty as the user has not used any WebRTC
 PeerConnection at all during the ping report time.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "webrtc": {
       "IceCandidatesStats": {
@@ -347,7 +361,9 @@ fileIOReports
 -------------
 Contains the statistics of main-thread I/O recorded during the execution. Only the I/O stats for the XRE and the profile directories are currently reported, neither of them disclosing the full local path.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "fileIOReports": {
       "{xre}": [
@@ -366,7 +382,9 @@ lateWrites
 ----------
 This sections reports writes to the file system that happen during shutdown. The reported data contains the stack and the loaded libraries at the time the writes happened.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "lateWrites" : {
       "memoryMap" : [
@@ -390,7 +408,9 @@ addonDetails
 ------------
 This section contains per-addon telemetry details, as reported by each addon provider. The XPI provider is the only one reporting at the time of writing (`see DXR <https://dxr.mozilla.org/mozilla-central/search?q=setTelemetryDetails&case=true>`_). Telemetry does not manipulate or enforce a specific format for the supplied provider's data.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "addonDetails": {
       "XPI": {
@@ -419,7 +439,9 @@ slowSQL
 -------
 This section contains the informations about the slow SQL queries for both the main and other threads. The execution of an SQL statement is considered slow if it takes 50ms or more on the main thread or 100ms or more on other threads. Slow SQL statements will be automatically trimmed to 1000 characters. This limit doesn't include the ellipsis and database name, that are appended at the end of the stored statement.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "slowSQL": {
       "mainThread": {
@@ -446,7 +468,9 @@ UIMeasurements
 --------------
 This section contains UI specific telemetry measurements and events. This section is mainly populated with Android-specific data and events (`see here <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3AUITelemetry.%28addEvent|startSession|stopSession%29&redirect=false&case=false>`_).
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     "UIMeasurements": [
       {
