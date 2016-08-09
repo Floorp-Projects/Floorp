@@ -160,6 +160,7 @@ public:
                                    const int& w, const int& h) override;
 
   virtual bool RecvDeviceChange() override;
+  int SetFakeDeviceChangeEvents();
 
   // these are response messages to our outgoing requests
   virtual bool RecvReplyNumberOfCaptureDevices(const int&) override;
