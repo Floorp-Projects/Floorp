@@ -145,7 +145,7 @@ test_description_schema = Schema({
 
         # The setting for --download-symbols (if omitted, the option will not
         # be passed to mozharness)
-        Optional('download-symbols'): Any(True, False, 'ondemand'),
+        Optional('download-symbols'): Any(True, 'ondemand'),
 
         # If set, then MOZ_NODE_PATH=/usr/local/bin/node is included in the
         # environment.  This is more than just a helpful path setting -- it
