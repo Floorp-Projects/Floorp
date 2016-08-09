@@ -1225,6 +1225,7 @@
             }
 
             updateUserContextUIIndicator();
+            gIdentityHandler.updateSharingIndicator();
 
             this.tabContainer._setPositionalAttributes();
 
@@ -1380,6 +1381,9 @@
           else
             tab.removeAttribute("sharing");
           this._tabAttrModified(tab, ["sharing"]);
+
+          if (aBrowser == this.mCurrentBrowser)
+            gIdentityHandler.updateSharingIndicator();
         ]]></body>
       </method>
 

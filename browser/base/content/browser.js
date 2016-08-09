@@ -6777,6 +6777,14 @@ var gIdentityHandler = {
     this.refreshIdentityBlock();
   },
 
+  updateSharingIndicator() {
+    let sharing = gBrowser.selectedTab.getAttribute("sharing");
+    if (sharing)
+      this._identityBox.setAttribute("sharing", sharing);
+    else
+      this._identityBox.removeAttribute("sharing");
+  },
+
   /**
    * Attempt to provide proper IDN treatment for host names
    */
