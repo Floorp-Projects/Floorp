@@ -840,13 +840,24 @@ class TestChecksConfigure(unittest.TestCase):
             "simple_keyfile('Mozilla API')",
             args=['--with-mozilla-api-keyfile=/foo/bar/does/not/exist'],
             includes=includes)
-        self.assertEqual(status, 0)
+        self.assertEqual(status, 1)
         self.assertEqual(output, textwrap.dedent('''\
             checking for the Mozilla API key... no
+            ERROR: '/foo/bar/does/not/exist': No such file or directory.
         '''))
-        self.assertEqual(config, {
-            'MOZ_MOZILLA_API_KEY': 'no-mozilla-api-key',
-        })
+        self.assertEqual(config, {})
+
+        with MockedOpen({'key': ''}):
+            config, output, status = self.get_result(
+                "simple_keyfile('Mozilla API')",
+                args=['--with-mozilla-api-keyfile=key'],
+                includes=includes)
+            self.assertEqual(status, 1)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Mozilla API key... no
+                ERROR: 'key' is empty.
+            '''))
+            self.assertEqual(config, {})
 
         with MockedOpen({'key': 'fake-key\n'}):
             config, output, status = self.get_result(
@@ -879,14 +890,24 @@ class TestChecksConfigure(unittest.TestCase):
             "id_and_secret_keyfile('Bing API')",
             args=['--with-bing-api-keyfile=/foo/bar/does/not/exist'],
             includes=includes)
-        self.assertEqual(status, 0)
+        self.assertEqual(status, 1)
         self.assertEqual(output, textwrap.dedent('''\
             checking for the Bing API key... no
+            ERROR: '/foo/bar/does/not/exist': No such file or directory.
         '''))
-        self.assertEqual(config, {
-            'MOZ_BING_API_CLIENTID': 'no-bing-api-clientid',
-            'MOZ_BING_API_KEY': 'no-bing-api-key',
-        })
+        self.assertEqual(config, {})
+
+        with MockedOpen({'key': ''}):
+            config, output, status = self.get_result(
+                "id_and_secret_keyfile('Bing API')",
+                args=['--with-bing-api-keyfile=key'],
+                includes=includes)
+            self.assertEqual(status, 1)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Bing API key... no
+                ERROR: 'key' is empty.
+            '''))
+            self.assertEqual(config, {})
 
         with MockedOpen({'key': 'fake-id fake-key\n'}):
             config, output, status = self.get_result(
