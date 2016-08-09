@@ -40,6 +40,7 @@ EXPORTS.mozilla.gfx += [
     'PathHelpers.h',
     'PatternHelpers.h',
     'Point.h',
+    'Polygon.h',
     'Quaternion.h',
     'RecordedEvent.h',
     'RecordingTypes.h',
