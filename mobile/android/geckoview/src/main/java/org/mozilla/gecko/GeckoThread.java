@@ -346,12 +346,6 @@ public class GeckoThread extends Thread {
             // Mark as handled.
             QUEUED_CALLS.set(i, null);
 
-            if (call.method == null) {
-                final GeckoEvent e = (GeckoEvent) call.target;
-                GeckoAppShell.notifyGeckoOfEvent(e);
-                e.recycle();
-                continue;
-            }
             invokeMethod(call.method, call.target, call.args);
         }
         if (lastSkipped < 0) {
@@ -532,18 +526,6 @@ public class GeckoThread extends Thread {
 
         // Remove pumpMessageLoop() idle handler
         Looper.myQueue().removeIdleHandler(idleHandler);
-    }
-
-    public static void addPendingEvent(final GeckoEvent e) {
-        synchronized (QUEUED_CALLS) {
-            if (isRunning()) {
-                // We may just have switched to running state.
-                GeckoAppShell.notifyGeckoOfEvent(e);
-                e.recycle();
-            } else {
-                QUEUED_CALLS.add(new QueuedCall(null, e, null, State.RUNNING));
-            }
-        }
     }
 
     @WrapForJNI(calledFrom = "gecko")

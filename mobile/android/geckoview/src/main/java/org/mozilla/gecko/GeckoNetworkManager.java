@@ -318,7 +318,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     private static native void onStatusChanged(String status);
 
     /**
-     * Send current network state and connection type as a GeckoEvent, to whomever is listening.
+     * Send current network state and connection type to whomever is listening.
      */
     private void sendNetworkStateToListeners(final Context context) {
         if (currentConnectionType != previousConnectionType ||

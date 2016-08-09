@@ -8,7 +8,6 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.home.PanelLayout.DatasetBacked;
 import org.mozilla.gecko.home.PanelLayout.FilterManager;
 

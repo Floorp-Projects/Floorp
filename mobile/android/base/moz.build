@@ -212,7 +212,6 @@ geckoview_java_files = [
     'GeckoEditable.java',
     'GeckoEditableClient.java',
     'GeckoEditableListener.java',
-    'GeckoEvent.java',
     'GeckoHalDefines.java',
     'GeckoInputConnection.java',
     'GeckoJavaSampler.java',
