@@ -255,8 +255,7 @@ Blob::ToFile()
 already_AddRefed<File>
 Blob::ToFile(const nsAString& aName, ErrorResult& aRv) const
 {
-  AutoTArray<RefPtr<BlobImpl>, 1> blobImpls;
-  blobImpls.AppendElement(mImpl);
+  AutoTArray<RefPtr<BlobImpl>, 1> blobImpls({mImpl});
 
   nsAutoString contentType;
   mImpl->GetType(contentType);
