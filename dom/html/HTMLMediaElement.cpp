@@ -48,10 +48,9 @@
 
 #include "MediaError.h"
 #include "MediaDecoder.h"
-#include "MediaPrefs.h"
+#include "nsICategoryManager.h"
 #include "MediaResource.h"
 
-#include "nsICategoryManager.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsCycleCollectionParticipant.h"
@@ -3033,42 +3032,6 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
   return rv;
 }
 
-/* static */
-void HTMLMediaElement::VideoDecodeSuspendTimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  auto element = static_cast<HTMLMediaElement*>(aClosure);
-  element->mVideoDecodeSuspendTime.Start();
-  element->mVideoDecodeSuspendTimer = nullptr;
-}
-
-void HTMLMediaElement::HiddenVideoStart()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mHiddenPlayTime.Start();
-  if (mVideoDecodeSuspendTimer) {
-    // Already started, just keep it running.
-    return;
-  }
-  mVideoDecodeSuspendTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mVideoDecodeSuspendTimer->InitWithNamedFuncCallback(
-    VideoDecodeSuspendTimerCallback, this,
-    MediaPrefs::MDSMSuspendBackgroundVideoDelay(), nsITimer::TYPE_ONE_SHOT,
-    "HTMLMediaElement::VideoDecodeSuspendTimerCallback");
-}
-
-void HTMLMediaElement::HiddenVideoStop()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mHiddenPlayTime.Pause();
-  mVideoDecodeSuspendTime.Pause();
-  if (!mVideoDecodeSuspendTimer) {
-    return;
-  }
-  mVideoDecodeSuspendTimer->Cancel();
-  mVideoDecodeSuspendTimer = nullptr;
-}
-
 #ifdef MOZ_EME
 void
 HTMLMediaElement::ReportEMETelemetry()
@@ -3155,7 +3118,6 @@ HTMLMediaElement::ReportTelemetry()
     // We have a valid video.
     double playTime = mPlayTime.Total();
     double hiddenPlayTime = mHiddenPlayTime.Total();
-    double videoDecodeSuspendTime = mVideoDecodeSuspendTime.Total();
 
     Telemetry::Accumulate(Telemetry::VIDEO_PLAY_TIME_MS, SECONDS_TO_MS(playTime));
     LOG(LogLevel::Debug, ("%p VIDEO_PLAY_TIME_MS = %f", this, playTime));
@@ -3164,7 +3126,8 @@ HTMLMediaElement::ReportTelemetry()
     LOG(LogLevel::Debug, ("%p VIDEO_HIDDEN_PLAY_TIME_MS = %f", this, hiddenPlayTime));
 
     if (playTime > 0.0) {
-      // We have actually played something -> Report some valid-video telemetry.
+      // We have actually played something -> Report hidden/total ratio.
+      uint32_t hiddenPercentage = uint32_t(hiddenPlayTime / playTime * 100.0 + 0.5);
 
       // Keyed by audio+video or video alone, and by a resolution range.
       nsCString key(mMediaInfo.HasAudio() ? "AV," : "V,");
@@ -3186,7 +3149,6 @@ HTMLMediaElement::ReportTelemetry()
       }
       key.AppendASCII(resolution);
 
-      uint32_t hiddenPercentage = uint32_t(hiddenPlayTime / playTime * 100.0 + 0.5);
       Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE,
                             key,
                             hiddenPercentage);
@@ -3196,17 +3158,6 @@ HTMLMediaElement::ReportTelemetry()
                             hiddenPercentage);
       LOG(LogLevel::Debug, ("%p VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE = %u, keys: '%s' and 'All'",
                             this, hiddenPercentage, key.get()));
-
-      uint32_t videoDecodeSuspendPercentage =
-        uint32_t(videoDecodeSuspendTime / playTime * 100.0 + 0.5);
-      Telemetry::Accumulate(Telemetry::VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE,
-                            key,
-                            videoDecodeSuspendPercentage);
-      Telemetry::Accumulate(Telemetry::VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE,
-                            NS_LITERAL_CSTRING("All"),
-                            videoDecodeSuspendPercentage);
-      LOG(LogLevel::Debug, ("%p VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE = %u, keys: '%s' and 'All'",
-                            this, videoDecodeSuspendPercentage, key.get()));
 
       if (data.mInterKeyframeCount != 0) {
         uint32_t average_ms =
@@ -4757,14 +4708,14 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
   if ((aName.EqualsLiteral("play") || aName.EqualsLiteral("playing"))) {
     mPlayTime.Start();
     if (IsHidden()) {
-      HiddenVideoStart();
+      mHiddenPlayTime.Start();
     }
   } else if (aName.EqualsLiteral("waiting")) {
     mPlayTime.Pause();
-    HiddenVideoStop();
+    mHiddenPlayTime.Pause();
   } else if (aName.EqualsLiteral("pause")) {
     mPlayTime.Pause();
-    HiddenVideoStop();
+    mHiddenPlayTime.Pause();
   }
 
   return NS_OK;
@@ -4962,10 +4913,10 @@ HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
   bool visible = !IsHidden();
   if (visible) {
     // Visible -> Just pause hidden play time (no-op if already paused).
-    HiddenVideoStop();
+    mHiddenPlayTime.Pause();
   } else if (mPlayTime.IsStarted()) {
     // Not visible, play time is running -> Start hidden play time if needed.
-    HiddenVideoStart();
+    mHiddenPlayTime.Start();
   }
 
   if (mDecoder && !IsBeingDestroyed()) {
