@@ -981,7 +981,6 @@ class WorkerThreadPrimaryRunnable final : public Runnable
   WorkerPrivate* mWorkerPrivate;
   RefPtr<WorkerThread> mThread;
   JSContext* mParentContext;
-  JS::UniqueChars mDefaultLocale;
 
   class FinishedRunnable final : public Runnable
   {
@@ -1006,10 +1005,8 @@ class WorkerThreadPrimaryRunnable final : public Runnable
 public:
   WorkerThreadPrimaryRunnable(WorkerPrivate* aWorkerPrivate,
                               WorkerThread* aThread,
-                              JSContext* aParentContext,
-                              JS::UniqueChars aDefaultLocale)
-  : mWorkerPrivate(aWorkerPrivate), mThread(aThread),
-    mParentContext(aParentContext), mDefaultLocale(Move(aDefaultLocale))
+                              JSContext* aParentContext)
+  : mWorkerPrivate(aWorkerPrivate), mThread(aThread), mParentContext(aParentContext)
   {
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aThread);
@@ -1620,16 +1617,9 @@ RuntimeService::ScheduleWorker(WorkerPrivate* aWorkerPrivate)
   }
 
   JSContext* cx = CycleCollectedJSRuntime::Get()->Context();
-  JSContext* parentContext = JS_GetParentContext(cx);
-  JS::UniqueChars defaultLocale =
-    parentContext ? JS_GetDefaultLocale(parentContext) : nullptr;
-  if (!parentContext) {
-    NS_WARNING("Could not obtain parent context's locale!");
-  }
-
   nsCOMPtr<nsIRunnable> runnable =
-    new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread, parentContext,
-                                    Move(defaultLocale));
+    new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread,
+                                    JS_GetParentContext(cx));
   if (NS_FAILED(thread->DispatchPrimaryRunnable(friendKey, runnable.forget()))) {
     UnregisterWorker(aWorkerPrivate);
     return false;
@@ -2569,14 +2559,6 @@ WorkerThreadPrimaryRunnable::Run()
       // XXX need to fire an error at parent.
       NS_ERROR("Failed to create runtime and context!");
       return NS_ERROR_FAILURE;
-    }
-
-    if (mDefaultLocale) {
-      if (!JS_SetDefaultLocale(cx, mDefaultLocale.get())) {
-        NS_WARNING("Could not set worker locale!");
-      }
-
-      mDefaultLocale = nullptr;
     }
 
     {
