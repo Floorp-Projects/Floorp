@@ -8283,16 +8283,6 @@
     "n_buckets": 50,
     "bug_numbers": [1287987]
   },
-  "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
-    "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2180'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
-    "keyed": true,
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 50,
-    "bug_numbers": [1293145]
-  },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
     "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
     "expires_in_version": "55",
