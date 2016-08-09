@@ -871,16 +871,7 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
   let chromeWin = aBrowser.ownerGlobal;
   let tabbrowser = chromeWin.gBrowser;
   if (tabbrowser) {
-    let sharing;
-    if (aState.screen) {
-      sharing = "screen";
-    } else if (aState.camera) {
-      sharing = "camera";
-    } else if (aState.microphone) {
-      sharing = "microphone";
-    }
-
-    tabbrowser.setBrowserSharing(aBrowser, sharing);
+    tabbrowser.setBrowserSharing(aBrowser, aState);
   }
 
   let captureState;
