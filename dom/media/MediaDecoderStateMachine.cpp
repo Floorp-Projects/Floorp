@@ -1452,14 +1452,16 @@ void MediaDecoderStateMachine::BufferedRangeUpdated()
 void MediaDecoderStateMachine::ReaderSuspendedChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("ReaderSuspendedChanged: suspended = %d", mIsReaderSuspended.Ref());
+  DECODER_LOG("ReaderSuspendedChanged: %d", mIsReaderSuspended.Ref());
 
-  if (IsShutdown() || !HasVideo() || mIsReaderSuspended || IsDecodingFirstFrame()) {
+  if (IsShutdown()) {
     return;
   }
-
-  InitiateDecodeRecoverySeek(TrackSet(TrackInfo::kAudioTrack,
-                                      TrackInfo::kVideoTrack));
+  if (mIsReaderSuspended && mState != DECODER_STATE_DORMANT) {
+    SetDormant(true);
+  } else if (!mIsReaderSuspended && mState == DECODER_STATE_DORMANT) {
+    SetDormant(false);
+  }
 }
 
 void
