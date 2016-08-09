@@ -450,7 +450,7 @@ struct JSContext : public js::ExclusiveContext,
     }
 
     void minorGC(JS::gcreason::Reason reason) {
-        gc.minorGC(this, reason);
+        gc.minorGC(reason);
     }
 
   public:

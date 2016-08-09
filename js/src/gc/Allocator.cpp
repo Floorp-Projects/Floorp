@@ -84,7 +84,7 @@ GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize, size_t nDynamicS
         return obj;
 
     if (allowGC && !rt->mainThread.suppressGC) {
-        minorGC(cx, JS::gcreason::OUT_OF_NURSERY);
+        minorGC(JS::gcreason::OUT_OF_NURSERY);
 
         // Exceeding gcMaxBytes while tenuring can disable the Nursery.
         if (nursery.isEnabled()) {
@@ -227,7 +227,7 @@ GCRuntime::gcIfNeededPerAllocation(JSContext* cx)
     // Invoking the interrupt callback can fail and we can't usefully
     // handle that here. Just check in case we need to collect instead.
     if (rt->hasPendingInterrupt())
-        gcIfRequested(cx);
+        gcIfRequested();
 
     // If we have grown past our GC heap threshold while in the middle of
     // an incremental GC, we're growing faster than we're GCing, so stop

@@ -6467,17 +6467,20 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC& lock)
 }
 
 void
-GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pretenureGroups)
+GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
 {
     MOZ_ASSERT(!rt->isHeapBusy());
 
     if (rt->mainThread.suppressGC)
         return;
 
+    gcstats::AutoPhase ap(stats, phase);
+
     minorGCTriggerReason = JS::gcreason::NO_REASON;
     TraceLoggerThread* logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
-    nursery.collect(rt, reason, pretenureGroups);
+    Nursery::ObjectGroupList pretenureGroups;
+    nursery.collect(rt, reason, &pretenureGroups);
     MOZ_ASSERT(nursery.isEmpty());
 
     blocksToFreeAfterMinorGC.freeAll();
@@ -6487,23 +6490,19 @@ GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pr
         CheckHeapAfterMovingGC(rt);
 #endif
 
-    AutoLockGC lock(rt);
-    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-        maybeAllocTriggerZoneGC(zone, lock);
-}
-
-// Alternate to the runtime-taking form that allows marking object groups as
-// needing pretenuring.
-void
-GCRuntime::minorGC(JSContext* cx, JS::gcreason::Reason reason)
-{
-    gcstats::AutoPhase ap(stats, gcstats::PHASE_MINOR_GC);
-
-    Nursery::ObjectGroupList pretenureGroups;
-    minorGCImpl(reason, &pretenureGroups);
+    JSContext* cx = rt->contextFromMainThread();
     for (size_t i = 0; i < pretenureGroups.length(); i++) {
-        if (pretenureGroups[i]->canPreTenure())
-            pretenureGroups[i]->setShouldPreTenure(cx);
+        ObjectGroup* group = pretenureGroups[i];
+        if (group->canPreTenure()) {
+            AutoCompartment ac(cx, group->compartment());
+            group->setShouldPreTenure(cx);
+        }
+    }
+
+    {
+        AutoLockGC lock(rt);
+        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+            maybeAllocTriggerZoneGC(zone, lock);
     }
 }
 
@@ -6530,16 +6529,12 @@ GCRuntime::enableGenerationalGC()
 }
 
 bool
-GCRuntime::gcIfRequested(JSContext* cx /* = nullptr */)
+GCRuntime::gcIfRequested()
 {
     // This method returns whether a major GC was performed.
 
-    if (minorGCRequested()) {
-        if (cx)
-            minorGC(cx, minorGCTriggerReason);
-        else
-            minorGC(minorGCTriggerReason);
-    }
+    if (minorGCRequested())
+        minorGC(minorGCTriggerReason);
 
     if (majorGCRequested()) {
         if (!isIncrementalGCInProgress())
