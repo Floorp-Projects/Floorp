@@ -1148,6 +1148,9 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   // cause a crash when we're restored.
   NS_ASSERTION(mHwnd, "Couldn't find an HWND when initialising?");
   if (::IsIconic(mHwnd) || mDevice->GetDeviceRemovedReason() != S_OK) {
+    // We are not going to render, and not going to call EndFrame so we have to
+    // read-unlock our textures to prevent them from accumulating.
+    ReadUnlockTextures();
     *aRenderBoundsOut = IntRect();
     return;
   }
@@ -1157,6 +1160,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   // Failed to create a render target or the view.
   if (!UpdateRenderTarget() || !mDefaultRT || !mDefaultRT->mRTView ||
       mSize.width <= 0 || mSize.height <= 0) {
+    ReadUnlockTextures();
     *aRenderBoundsOut = IntRect();
     return;
   }
