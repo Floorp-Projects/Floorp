@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 function getConnection(dbName, extraOptions={}) {
   let path = dbName + ".sqlite";
   let options = {path: path};
-  for (let [k, v] in Iterator(extraOptions)) {
+  for (let [k, v] of Object.entries(extraOptions)) {
     options[k] = v;
   }
 
@@ -34,7 +34,7 @@ function* getDummyDatabase(name, extraOptions={}) {
   let c = yield getConnection(name, extraOptions);
   c._initialStatementCount = 0;
 
-  for (let [k, v] in Iterator(TABLES)) {
+  for (let [k, v] of Object.entries(TABLES)) {
     yield c.execute("CREATE TABLE " + k + "(" + v + ")");
     c._initialStatementCount++;
   }

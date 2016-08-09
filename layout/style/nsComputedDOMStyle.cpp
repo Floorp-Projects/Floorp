@@ -2148,7 +2148,7 @@ nsComputedDOMStyle::DoGetImageLayerImage(const nsStyleImageLayers& aLayers)
     if (aLayers.mLayers[i].mSourceURI.IsLocalRef()) {
       // This is how we represent a 'mask-image' reference for a local URI,
       // such as 'mask-image:url(#mymask)' or 'mask:url(#mymask)'
-      val->SetURI(aLayers.mLayers[i].mSourceURI.GetSourceURL());
+      SetValueToFragmentOrURL(&aLayers.mLayers[i].mSourceURI, val);
     } else {
       SetValueToStyleImage(image, val);
     }
@@ -2385,6 +2385,28 @@ nsComputedDOMStyle::SetValueToPosition(
   RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
   SetValueToPositionCoord(aPosition.mYPosition, valY);
   aValueList->AppendCSSValue(valY.forget());
+}
+
+
+void
+nsComputedDOMStyle::SetValueToFragmentOrURL(
+    const FragmentOrURL* aFragmentOrURL,
+    nsROCSSPrimitiveValue* aValue)
+{
+  if (aFragmentOrURL->IsLocalRef()) {
+    nsString fragment;
+    aFragmentOrURL->GetSourceString(fragment);
+    fragment.Insert(u"url(\"", 0);
+    fragment.Append(u"\")");
+    aValue->SetString(fragment);
+  } else {
+    nsCOMPtr<nsIURI> url = aFragmentOrURL->GetSourceURL();
+    if (url) {
+      aValue->SetURI(url);
+    } else {
+      aValue->SetIdent(eCSSKeyword_none);
+    }
+  }
 }
 
 already_AddRefed<CSSValue>
@@ -5560,12 +5582,9 @@ nsComputedDOMStyle::GetSVGPaintFor(bool aFill)
     }
     case eStyleSVGPaintType_Server:
     {
-      // Bug 1288812 - we should only serialize fragment for local-ref URL.
       RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
       RefPtr<nsROCSSPrimitiveValue> fallback = new nsROCSSPrimitiveValue;
-      nsCOMPtr<nsIURI> paintServerURI =
-        paint->mPaint.mPaintServer->GetSourceURL();
-      val->SetURI(paintServerURI);
+      SetValueToFragmentOrURL(paint->mPaint.mPaintServer, val);
       SetToRGBAColor(fallback, paint->mFallbackColor);
 
       valueList->AppendCSSValue(val.forget());
@@ -5603,13 +5622,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerEnd()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  // Bug 1288812 - we should only serialize fragment for local-ref URL.
-  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerEnd.GetSourceURL();
-
-  if (markerURI)
-    val->SetURI(markerURI);
-  else
-    val->SetIdent(eCSSKeyword_none);
+  SetValueToFragmentOrURL(&StyleSVG()->mMarkerEnd, val);
 
   return val.forget();
 }
@@ -5618,13 +5631,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerMid()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  // Bug 1288812 - we should only serialize fragment for local-ref URL.
-  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerMid.GetSourceURL();
-
-  if (markerURI)
-    val->SetURI(markerURI);
-  else
-    val->SetIdent(eCSSKeyword_none);
+  SetValueToFragmentOrURL(&StyleSVG()->mMarkerMid, val);
 
   return val.forget();
 }
@@ -5633,13 +5640,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerStart()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  // Bug 1288812 - we should only serialize fragment for local-ref URL.
-  nsCOMPtr<nsIURI> markerURI = StyleSVG()->mMarkerStart.GetSourceURL();
-
-  if (markerURI)
-    val->SetURI(markerURI);
-  else
-    val->SetIdent(eCSSKeyword_none);
+  SetValueToFragmentOrURL(&StyleSVG()->mMarkerStart, val);
 
   return val.forget();
 }
@@ -5915,11 +5916,11 @@ nsComputedDOMStyle::BasicShapeRadiiToString(nsAString& aCssText,
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
-  const nsStyleBasicShape* aStyleBasicShape)
+  const StyleBasicShape* aStyleBasicShape)
 {
   MOZ_ASSERT(aStyleBasicShape, "Expect a valid basic shape pointer!");
 
-  nsStyleBasicShape::Type type = aStyleBasicShape->GetShapeType();
+  StyleBasicShapeType type = aStyleBasicShape->GetShapeType();
   // Shape function name and opening parenthesis.
   nsAutoString shapeFunctionString;
   AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(
@@ -5927,7 +5928,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
                      shapeFunctionString);
   shapeFunctionString.Append('(');
   switch (type) {
-    case nsStyleBasicShape::Type::ePolygon: {
+    case StyleBasicShapeType::Polygon: {
       bool hasEvenOdd = aStyleBasicShape->GetFillRule() ==
         NS_STYLE_FILL_RULE_EVENODD;
       if (hasEvenOdd) {
@@ -5949,11 +5950,11 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
       }
       break;
     }
-    case nsStyleBasicShape::Type::eCircle:
-    case nsStyleBasicShape::Type::eEllipse: {
+    case StyleBasicShapeType::Circle:
+    case StyleBasicShapeType::Ellipse: {
       const nsTArray<nsStyleCoord>& radii = aStyleBasicShape->Coordinates();
       MOZ_ASSERT(radii.Length() ==
-                 (type == nsStyleBasicShape::Type::eCircle ? 1 : 2),
+                 (type == StyleBasicShapeType::Circle ? 1 : 2),
                  "wrong number of radii");
       for (size_t i = 0; i < radii.Length(); ++i) {
         nsAutoString radius;
@@ -5974,7 +5975,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
       shapeFunctionString.Append(positionString);
       break;
     }
-    case nsStyleBasicShape::Type::eInset: {
+    case StyleBasicShapeType::Inset: {
       BoxValuesToString(shapeFunctionString, aStyleBasicShape->Coordinates());
       if (aStyleBasicShape->HasRadius()) {
         shapeFunctionString.AppendLiteral(" round ");
@@ -5993,10 +5994,12 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
   return functionValue.forget();
 }
 
+template<typename ReferenceBox>
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
-  const nsStyleBasicShape* aStyleBasicShape,
-  StyleClipShapeSizing aSizingBox)
+nsComputedDOMStyle::CreatePrimitiveValueForShapeSource(
+  const StyleBasicShape* aStyleBasicShape,
+  ReferenceBox aReferenceBox,
+  const KTableEntry aBoxKeywordTable[])
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   if (aStyleBasicShape) {
@@ -6004,41 +6007,38 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
       CreatePrimitiveValueForBasicShape(aStyleBasicShape));
   }
 
-  if (aSizingBox == StyleClipShapeSizing::NoBox) {
+  if (aReferenceBox == ReferenceBox::NoBox) {
     return valueList.forget();
   }
 
-  nsAutoString boxString;
-  AppendASCIItoUTF16(
-    nsCSSProps::ValueToKeyword(aSizingBox,
-                               nsCSSProps::kClipShapeSizingKTable),
-                               boxString);
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetString(boxString);
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(aReferenceBox, aBoxKeywordTable));
   valueList->AppendCSSValue(val.forget());
 
   return valueList.forget();
 }
 
+template<typename ReferenceBox>
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetClipPath()
+nsComputedDOMStyle::GetShapeSource(
+  const StyleShapeSource<ReferenceBox>& aShapeSource,
+  const KTableEntry aBoxKeywordTable[])
 {
-  const nsStyleSVGReset* svg = StyleSVGReset();
-  switch (svg->mClipPath.GetType()) {
-    case StyleClipPathType::Shape:
-      return CreatePrimitiveValueForClipPath(svg->mClipPath.GetBasicShape(),
-                                             svg->mClipPath.GetSizingBox());
-    case StyleClipPathType::Box:
-      return CreatePrimitiveValueForClipPath(nullptr,
-                                             svg->mClipPath.GetSizingBox());
-    case StyleClipPathType::URL: {
-      // Bug 1288812 - we should only serialize fragment for local-ref URL.
-      nsCOMPtr<nsIURI> pathURI = svg->mClipPath.GetURL()->GetSourceURL();
+  switch (aShapeSource.GetType()) {
+    case StyleShapeSourceType::Shape:
+      return CreatePrimitiveValueForShapeSource(aShapeSource.GetBasicShape(),
+                                                aShapeSource.GetReferenceBox(),
+                                                aBoxKeywordTable);
+    case StyleShapeSourceType::Box:
+      return CreatePrimitiveValueForShapeSource(nullptr,
+                                                aShapeSource.GetReferenceBox(),
+                                                aBoxKeywordTable);
+    case StyleShapeSourceType::URL: {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetURI(pathURI);
+      SetValueToFragmentOrURL(aShapeSource.GetURL(), val);
       return val.forget();
     }
-    case StyleClipPathType::None_: {
+    case StyleShapeSourceType::None_: {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
       val->SetIdent(eCSSKeyword_none);
       return val.forget();
@@ -6047,6 +6047,20 @@ nsComputedDOMStyle::DoGetClipPath()
       NS_NOTREACHED("unexpected type");
   }
   return nullptr;
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetClipPath()
+{
+  return GetShapeSource(StyleSVGReset()->mClipPath,
+                        nsCSSProps::kClipPathGeometryBoxKTable);
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetShapeOutside()
+{
+  return GetShapeSource(StyleDisplay()->mShapeOutside,
+                        nsCSSProps::kShapeOutsideShapeBoxKTable);
 }
 
 void
@@ -6066,9 +6080,8 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
   // Handle url().
   if (aStyleFilter.GetType() == NS_STYLE_FILTER_URL) {
-    // Bug 1288812 - we should only serialize fragment for local-ref URL.
-    nsCOMPtr<nsIURI> filterURI = aStyleFilter.GetURL()->GetSourceURL();
-    value->SetURI(filterURI);
+    MOZ_ASSERT(aStyleFilter.GetURL()->GetSourceURL());
+    SetValueToFragmentOrURL(aStyleFilter.GetURL(), value);
     return value.forget();
   }
 
@@ -6146,7 +6159,7 @@ nsComputedDOMStyle::DoGetMask()
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   if (firstLayer.mSourceURI.GetSourceURL()) {
-    val->SetURI(firstLayer.mSourceURI.GetSourceURL());
+    SetValueToFragmentOrURL(&firstLayer.mSourceURI, val);
   } else {
     val->SetIdent(eCSSKeyword_none);
   }

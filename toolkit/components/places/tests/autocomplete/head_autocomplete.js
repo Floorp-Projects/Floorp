@@ -268,7 +268,7 @@ function run_test() {
 
   Task.spawn(function* () {
     // Iterate over all tasks and execute them
-    for (let [, [fn, args]] in Iterator(gNextTestSetupTasks)) {
+    for (let [fn, args] of gNextTestSetupTasks) {
       yield fn.apply(this, args);
     }
 

@@ -89,13 +89,13 @@ class VideoPuppeteer(object):
             self.video = videos_found[0]
             self.marionette.execute_script("log('video element obtained');")
             if autostart:
-                self.start();
+                self.start()
 
     def start(self):
         # To get an accurate expected_duration, playback must have started
         wait = Wait(self, timeout=self.timeout)
-        verbose_until(wait, self, lambda v: v.current_time > 0,
-                      "Check if video current_time > 0")
+        verbose_until(wait, self, playback_started,
+                      "Check if video has played some range")
         self._start_time = self.current_time
         self._start_wall_time = clock()
         self.update_expected_duration()
@@ -172,6 +172,20 @@ class VideoPuppeteer(object):
             and the duration that has been set.
         """
         return self.expected_duration - self.current_time
+
+    @property
+    def played(self):
+        """
+        :return: A TimeRanges objected containing the played time ranges.
+        """
+        raw_time_ranges = self.execute_video_script(
+            'var played = arguments[0].wrappedJSObject.played;'
+            'var timeRanges = [];'
+            'for (var i = 0; i < played.length; i++) {'
+            'timeRanges.push([played.start(i), played.end(i)]);'
+            '}'
+            'return [played.length, timeRanges];')
+        return TimeRanges(raw_time_ranges[0], raw_time_ranges[1])
 
     @property
     def video_src(self):
@@ -277,6 +291,26 @@ class VideoException(Exception):
     pass
 
 
+class TimeRanges:
+    """
+    Class to represent the TimeRanges data returned by played(). Exposes a
+    similar interface to the JavaScript TimeRanges object.
+    """
+    def __init__(self, length, ranges):
+        self.length = length
+        self.ranges = [(pair[0], pair[1]) for pair in ranges]
+
+    def __repr__(self):
+        return 'TimeRanges: length: {}, ranges: {}'\
+               .format(self.length, self.ranges)
+
+    def start(self, index):
+        return self.ranges[index][0]
+
+    def end(self, index):
+        return self.ranges[index][1]
+
+
 def playback_started(video):
     """
     Determine if video has started
@@ -286,9 +320,12 @@ def playback_started(video):
     :return: True if is playing; False otherwise
     """
     try:
-        return video.current_time > video._start_time
+        played_ranges = video.played
+        return played_ranges.length > 0 and \
+               played_ranges.start(0) < played_ranges.end(0) and \
+               played_ranges.end(0) > 0.0
     except Exception as e:
-        print ('Got exception %s' % e)
+        print ('Got exception {}'.format(e))
         return False
 
 
