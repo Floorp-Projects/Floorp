@@ -58,20 +58,22 @@ class FilterPath(object):
         return repr(self.path)
 
 
-def filterpaths(paths, include=None, exclude=None):
+def filterpaths(paths, linter, **lintargs):
     """Filters a list of paths.
 
-    Given a list of paths, and a list of include and exclude
-    directives, return the set of paths that should be linted.
+    Given a list of paths, and a linter definition plus extra
+    arguments, return the set of paths that should be linted.
 
     :param paths: A starting list of paths to possibly lint.
-    :param include: A list of include directives. May contain glob patterns.
-    :param exclude: A list of exclude directives. May contain glob patterns.
-    :returns: A tuple containing a list of file paths to lint, and a list
-              of file paths that should be excluded (but that the algorithm
-              was unable to apply).
+    :param linter: A linter definition.
+    :param lintargs: Extra arguments passed to the linter.
+    :returns: A list of file paths to lint.
     """
-    if not include and not exclude:
+    include = linter.get('include', [])
+    exclude = lintargs.get('exclude', [])
+    exclude.extend(linter.get('exclude', []))
+
+    if not lintargs.get('use_filters', True) or (not include and not exclude):
         return paths
 
     include = map(FilterPath, include or [])
@@ -132,4 +134,6 @@ def filterpaths(paths, include=None, exclude=None):
                 for p, f in path.finder.find(pattern.path):
                     keep.add(path.join(p))
 
-    return ([f.path for f in keep], [f.path for f in discard])
+    # Only pass paths we couldn't exclude here to the underlying linter
+    lintargs['exclude'] = [f.path for f in discard]
+    return [f.path for f in keep]
