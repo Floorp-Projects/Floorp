@@ -4,14 +4,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
-                                   "@mozilla.org/content/style-sheet-service;1",
-                                   "nsIStyleSheetService");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -48,35 +42,21 @@ function promisePopupShown(popup) {
   });
 }
 
-XPCOMUtils.defineLazyGetter(this, "stylesheets", () => {
-  let styleSheetURI = NetUtil.newURI("chrome://browser/content/extension.css");
+XPCOMUtils.defineLazyGetter(global, "stylesheets", () => {
+  let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
+      .getService(Components.interfaces.nsIStyleSheetService);
+  let styleSheetURI = Services.io.newURI("chrome://browser/content/extension.css",
+                                         null, null);
   let styleSheet = styleSheetService.preloadSheet(styleSheetURI,
                                                   styleSheetService.AGENT_SHEET);
   let stylesheets = [styleSheet];
 
   if (AppConstants.platform === "macosx") {
-    styleSheetURI = NetUtil.newURI("chrome://browser/content/extension-mac.css");
+    styleSheetURI = Services.io.newURI("chrome://browser/content/extension-mac.css",
+                                       null, null);
     let macStyleSheet = styleSheetService.preloadSheet(styleSheetURI,
                                                        styleSheetService.AGENT_SHEET);
     stylesheets.push(macStyleSheet);
-  }
-  return stylesheets;
-});
-
-XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
-  let stylesheets = [];
-
-  if (AppConstants.platform === "macosx") {
-    let styleSheetURI = NetUtil.newURI("chrome://browser/content/extension-mac-panel.css");
-    let macStyleSheet = styleSheetService.preloadSheet(styleSheetURI,
-                                                       styleSheetService.AGENT_SHEET);
-    stylesheets.push(macStyleSheet);
-  }
-  if (AppConstants.platform === "win") {
-    let styleSheetURI = NetUtil.newURI("chrome://browser/content/extension-win-panel.css");
-    let winStyleSheet = styleSheetService.preloadSheet(styleSheetURI,
-                                                       styleSheetService.AGENT_SHEET);
-    stylesheets.push(winStyleSheet);
   }
   return stylesheets;
 });
@@ -143,20 +123,11 @@ class BasePopup {
         break;
 
       case "DOMWindowCreated":
-        if (event.target === this.browser.contentDocument) {
+        if (this.browserStyle && event.target === this.browser.contentDocument) {
           let winUtils = this.browser.contentWindow
-                             .QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
-
-          if (this.browserStyle) {
-            for (let stylesheet of stylesheets) {
-              winUtils.addSheet(stylesheet, winUtils.AGENT_SHEET);
-            }
-          }
-          if (!this.fixedWidth) {
-            for (let stylesheet of standaloneStylesheets) {
-              winUtils.addSheet(stylesheet, winUtils.AGENT_SHEET);
-            }
+              .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+          for (let stylesheet of global.stylesheets) {
+            winUtils.addSheet(stylesheet, winUtils.AGENT_SHEET);
           }
         }
         break;
@@ -203,8 +174,6 @@ class BasePopup {
     this.browser = document.createElementNS(XUL_NS, "browser");
     this.browser.setAttribute("type", "content");
     this.browser.setAttribute("disableglobalhistory", "true");
-    this.browser.setAttribute("transparent", "true");
-    this.browser.setAttribute("class", "webextension-popup-browser");
     this.browser.setAttribute("webextension-view-type", "popup");
 
     // We only need flex sizing for the sake of the slide-in sub-views of the
