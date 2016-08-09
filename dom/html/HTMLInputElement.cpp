@@ -1468,7 +1468,7 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       }
     } else if (MaxLengthApplies() && aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
-    } else if (aName == nsGkAtoms::pattern) {
+    } else if (aName == nsGkAtoms::pattern && !mParserCreating) {
       UpdatePatternMismatchValidityState();
     } else if (aName == nsGkAtoms::multiple) {
       UpdateTypeMismatchValidityState();
