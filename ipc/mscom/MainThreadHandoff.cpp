@@ -148,7 +148,8 @@ MainThreadHandoff::OnCall(ICallFrame* aFrame)
   // (2) Execute the method call syncrhonously on the main thread
   RefPtr<HandoffRunnable> handoffInfo(new HandoffRunnable(aFrame,
                                                           targetInterface.get()));
-  if (!mInvoker.Invoke(do_AddRef(handoffInfo))) {
+  MainThreadInvoker invoker;
+  if (!invoker.Invoke(do_AddRef(handoffInfo))) {
     MOZ_ASSERT(false);
     return E_UNEXPECTED;
   }
@@ -173,15 +174,7 @@ MainThreadHandoff::OnCall(ICallFrame* aFrame)
     return S_OK;
   }
 
-  // (5) Scan the outputs looking for any outparam interfaces that need wrapping.
-  // NB: WalkFrame does not correctly handle array outparams. It processes the
-  // first element of an array but not the remaining elements (if any).
-  hr = aFrame->WalkFrame(CALLFRAME_WALK_OUT, this);
-  if (FAILED(hr)) {
-    return hr;
-  }
-
-  // (6) Unfortunately ICallFrame::WalkFrame does not correctly handle array
+  // (5) Unfortunately ICallFrame::WalkFrame does not correctly handle array
   // outparams. Instead, we find out whether anybody has called
   // mscom::RegisterArrayData to supply array parameter information and use it
   // if available. This is a terrible hack, but it works for the short term. In
@@ -190,6 +183,14 @@ MainThreadHandoff::OnCall(ICallFrame* aFrame)
   const ArrayData* arrayData = FindArrayData(iid, method);
   if (arrayData) {
     hr = FixArrayElements(aFrame, *arrayData);
+    if (FAILED(hr)) {
+      return hr;
+    }
+  } else {
+    // (6) Scan the outputs looking for any outparam interfaces that need wrapping.
+    // NB: WalkFrame does not correctly handle array outparams. It processes the
+    // first element of an array but not the remaining elements (if any).
+    hr = aFrame->WalkFrame(CALLFRAME_WALK_OUT, this);
     if (FAILED(hr)) {
       return hr;
     }
@@ -225,35 +226,54 @@ MainThreadHandoff::FixArrayElements(ICallFrame* aFrame,
 {
   // Extract the array length
   VARIANT paramVal;
+  VariantInit(&paramVal);
   HRESULT hr = aFrame->GetParam(aArrayData.mLengthParamIndex, &paramVal);
-  MOZ_ASSERT(paramVal.vt == (VT_I4 | VT_BYREF) ||
-             paramVal.vt == (VT_UI4 | VT_BYREF));
+  MOZ_ASSERT(SUCCEEDED(hr) &&
+             (paramVal.vt == (VT_I4 | VT_BYREF) ||
+             paramVal.vt == (VT_UI4 | VT_BYREF)));
   if (FAILED(hr) || (paramVal.vt != (VT_I4 | VT_BYREF) &&
                      paramVal.vt != (VT_UI4 | VT_BYREF))) {
     return hr;
   }
 
   const LONG arrayLength = *(paramVal.plVal);
-  if (arrayLength <= 1) {
-    // Nothing needs to be processed (we skip index 0)
+  if (!arrayLength) {
+    // Nothing to do
     return S_OK;
   }
 
   // Extract the array parameter
+  VariantInit(&paramVal);
+  PVOID arrayPtr = nullptr;
   hr = aFrame->GetParam(aArrayData.mArrayParamIndex, &paramVal);
-  if (FAILED(hr)) {
+  if (hr == DISP_E_BADVARTYPE) {
+    // ICallFrame::GetParam is not able to coerce the param into a VARIANT.
+    // That's ok, we can try to do it ourselves.
+    CALLFRAMEPARAMINFO paramInfo;
+    hr = aFrame->GetParamInfo(aArrayData.mArrayParamIndex, &paramInfo);
+    if (FAILED(hr)) {
+      return hr;
+    }
+    PVOID stackBase = aFrame->GetStackLocation();
+    // We dereference twice because we need to obtain the value of a parameter
+    // from a stack offset (one), and since that is an outparam, we need to
+    // find the value that is actually being returned (two).
+    arrayPtr = **reinterpret_cast<PVOID**>(reinterpret_cast<PBYTE>(stackBase) +
+                                           paramInfo.stackOffset);
+  } else if (FAILED(hr)) {
     return hr;
+  } else {
+    arrayPtr = ResolveArrayPtr(paramVal);
   }
-  PVOID arrayPtr = ResolveArrayPtr(paramVal);
+
   MOZ_ASSERT(arrayPtr);
   if (!arrayPtr) {
     return DISP_E_BADVARTYPE;
   }
 
-  // Start index is 1 because ICallFrame::WalkFrame already took care of index
-  // 0. We walk the remaining elements of the array and invoke OnWalkInterface
-  // to wrap each one, just as ICallFrame::WalkFrame would do.
-  for (LONG index = 1; index < arrayLength; ++index) {
+  // We walk the elements of the array and invoke OnWalkInterface to wrap each
+  // one, just as ICallFrame::WalkFrame would do.
+  for (LONG index = 0; index < arrayLength; ++index) {
     hr = OnWalkInterface(aArrayData.mArrayParamIid,
                          ResolveInterfacePtr(arrayPtr, paramVal.vt, index),
                          FALSE, TRUE);
