@@ -1627,6 +1627,27 @@ DrawTargetCairo::CreateFilter(FilterType aType)
   return FilterNodeSoftware::Create(aType);
 }
 
+void
+DrawTargetCairo::GetGlyphRasterizationMetrics(ScaledFont *aScaledFont, const uint16_t* aGlyphIndices,
+                                              uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics)
+{
+  for (uint32_t i = 0; i < aNumGlyphs; i++) {
+    cairo_glyph_t glyph;
+    cairo_text_extents_t extents;
+    glyph.index = aGlyphIndices[i];
+    glyph.x = 0;
+    glyph.y = 0;
+    cairo_glyph_extents(mContext, &glyph, 1, &extents);
+
+    aGlyphMetrics[i].mXBearing = extents.x_bearing;
+    aGlyphMetrics[i].mXAdvance = extents.x_advance;
+    aGlyphMetrics[i].mYBearing = extents.y_bearing;
+    aGlyphMetrics[i].mYAdvance = extents.y_advance;
+    aGlyphMetrics[i].mWidth = extents.width;
+    aGlyphMetrics[i].mHeight = extents.height;
+  }
+}
+
 already_AddRefed<SourceSurface>
 DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
                                              const IntSize &aSize,
