@@ -9,6 +9,11 @@
 #include "mozilla/mscom/InterceptorLog.h"
 
 #include "Accessible2.h"
+#include "Accessible2_2.h"
+#include "AccessibleHypertext2.h"
+#include "AccessibleTableCell.h"
+
+#include "AccessibleHypertext2_i.c"
 
 namespace mozilla {
 namespace a11y {
@@ -22,7 +27,11 @@ namespace a11y {
 static const mozilla::mscom::ArrayData sPlatformChildArrayData[] = {
   {IID_IEnumVARIANT, 3, 1, VT_DISPATCH, IID_IDispatch, 2},
   {IID_IAccessible2, 30, 1, VT_UNKNOWN | VT_BYREF, IID_IAccessibleRelation, 2},
-  {IID_IAccessibleRelation, 7, 1, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 2}
+  {IID_IAccessibleRelation, 7, 1, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 2},
+  {IID_IAccessible2_2, 48, 2, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 3},
+  {IID_IAccessibleTableCell, 4, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1},
+  {IID_IAccessibleTableCell, 7, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1},
+  {IID_IAccessibleHypertext2, 25, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1}
 };
 
 // Type libraries are thread-neutral, so we can register those from any
