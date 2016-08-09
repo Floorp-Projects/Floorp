@@ -3589,8 +3589,8 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   basic->BeginTransaction();
   basic->SetTarget(context);
 
-  if (aItem->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
-    static_cast<nsDisplaySVGEffects*>(aItem)->PaintAsLayer(aBuilder, aCtx, basic);
+  if (aItem->GetType() == nsDisplayItem::TYPE_MASK) {
+    static_cast<nsDisplayMask*>(aItem)->PaintAsLayer(aBuilder, aCtx, basic);
     if (basic->InTransaction()) {
       basic->AbortTransaction();
     }
