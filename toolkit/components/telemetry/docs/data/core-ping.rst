@@ -22,7 +22,9 @@ Submission will be per the Edge server specification::
 Note: Counts below (e.g. search & usage times) are “since the last
 ping”, not total for the whole application lifetime.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       "v": 7, // ping format version
@@ -51,7 +53,7 @@ Structure::
       "searches": <object>, // Optional, object of search use counts in the
                             // format: { "engine.source": <pos integer> }
                             // e.g.: { "yahoo.suggestion": 3, "other.listitem": 1 }
-      "experiments": [<string>, …], // Optional, array of identifiers
+      "experiments": [<string>, /* … */], // Optional, array of identifiers
                                     // for the active experiments
     }
 
