@@ -591,7 +591,7 @@ function pref(name, value) {
   thePref.setDefault(value);
 }
 
-exports.Services = Services;
+module.exports = Services;
 // This is exported to silence eslint and, at some point, perhaps to
 // provide it when loading devtools.js in order to install the default
 // preferences.
