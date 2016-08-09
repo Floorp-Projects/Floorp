@@ -41,6 +41,7 @@ task:
       machine:
         platform: lint
       symbol: ES
+      tier: 1
     treeherderEnv:
       - production
       - staging
