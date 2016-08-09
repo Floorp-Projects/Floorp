@@ -32,9 +32,9 @@ function initializeAutoCompletion(ctx, options = {}) {
                         Editor.keyFor("autocompletion", { noaccel: true });
   if (ed.config.mode == Editor.modes.js) {
     let defs = [
-      "./tern/browser",
-      "./tern/ecma5",
-    ].map(require);
+      require("./tern/browser"),
+      require("./tern/ecma5"),
+    ];
 
     CM_TERN_SCRIPTS.forEach(ed.loadScript, ed);
     win.tern = require("./tern/tern");
