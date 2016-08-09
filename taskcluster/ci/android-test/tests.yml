@@ -175,11 +175,7 @@ mochitest-webgl:
     loopback-video: true
     e10s: false
     max-run-time: 7200
-    instance-size:
-        by-test-platform:
-            android-4.3-arm7-api-15/opt: default
-            android-4.3-arm7-api-15-gradle/opt: default
-            android-4.3-arm7-api-15/debug: xlarge
+    instance-size: xlarge
     mozharness:
         script: mozharness/scripts/android_emulator_unittest.py
         no-read-buildbot-config: true

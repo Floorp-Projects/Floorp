@@ -22,7 +22,6 @@
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Telemetry.h"
 #include "nsMargin.h"
 #include "nsThreadUtils.h"
 
@@ -434,59 +433,11 @@ imgFrame::Optimize()
     return NS_OK;
   }
 
-#ifdef ANDROID
-  SurfaceFormat optFormat = gfxPlatform::GetPlatform()
-    ->Optimal2DFormatForContent(gfxContentType::COLOR);
-
-  if (mFormat != SurfaceFormat::B8G8R8A8 &&
-      optFormat == SurfaceFormat::R5G6B5_UINT16) {
-    Telemetry::Accumulate(Telemetry::IMAGE_OPTIMIZE_TO_565_USED, true);
-
-    RefPtr<VolatileBuffer> buf =
-      AllocateBufferForImage(mFrameRect.Size(), optFormat);
-    if (!buf) {
-      return NS_OK;
-    }
-
-    RefPtr<DataSourceSurface> surf =
-      CreateLockedSurface(buf, mFrameRect.Size(), optFormat);
-    if (!surf) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    DataSourceSurface::MappedSurface mapping;
-    if (!surf->Map(DataSourceSurface::MapType::WRITE, &mapping)) {
-      gfxCriticalError() << "imgFrame::Optimize failed to map surface";
-      return NS_ERROR_FAILURE;
-    }
-
-    RefPtr<DrawTarget> target =
-      Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                       mapping.mData,
-                                       mFrameRect.Size(),
-                                       mapping.mStride,
-                                       optFormat);
-
-    if (!target) {
-      gfxWarning() << "imgFrame::Optimize failed in CreateDrawTargetForData";
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    Rect rect(0, 0, mFrameRect.width, mFrameRect.height);
-    target->DrawSurface(mImageSurface, rect, rect);
-    target->Flush();
-    surf->Unmap();
-
-    mImageSurface = surf;
-    mVBuf = buf;
-    mFormat = optFormat;
-  }
-#else
   mOptSurface = gfxPlatform::GetPlatform()
     ->ScreenReferenceDrawTarget()->OptimizeSourceSurface(mImageSurface);
   if (mOptSurface == mImageSurface) {
     mOptSurface = nullptr;
   }
-#endif
 
   if (mOptSurface) {
     mVBuf = nullptr;
@@ -835,11 +786,13 @@ imgFrame::UnlockImageData()
       return NS_OK;
     }
 
-    // Convert the data surface to a GPU surface or a single color if possible.
-    // This will also release mImageSurface if possible.
+    // Convert our data surface to a GPU surface if possible. We'll also try to
+    // release mImageSurface.
     Optimize();
 
-    // Allow the OS to release our data surface.
+    // Allow the OS to release our data surface. Note that mImageSurface also
+    // keeps our volatile buffer alive, so this doesn't actually work unless we
+    // released mImageSurface in Optimize().
     mVBufPtr = nullptr;
   }
 

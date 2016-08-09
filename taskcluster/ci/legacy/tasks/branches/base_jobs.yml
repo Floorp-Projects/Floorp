@@ -293,9 +293,9 @@ tasks:
     root: true
     when:
       file_patterns:
-        - 'taskcluster/**.py'
+        - 'taskcluster/**/*.py'
         - 'config/mozunit.py'
-        - 'python/mach/**.py'
+        - 'python/mach/**/*.py'
   android-api-15-gradle-dependencies:
     task: tasks/builds/android_api_15_gradle_dependencies.yml
     root: true

@@ -35,7 +35,7 @@ task:
     artifacts:
       'public/build':
         type: directory
-        path: '/home/worker/workspace/build/upload/'
+        path: '/home/worker/artifacts/'
         expires:
           relative-datestamp: '1 year'
 
@@ -66,3 +66,4 @@ task:
       groupName: Submitted by taskcluster
       tier: 2
       symbol: L10n
+      jobKind: build

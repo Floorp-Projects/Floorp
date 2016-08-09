@@ -15,6 +15,7 @@
     "dump": true,
     "exports": true,
     "isWorker": true,
+    "indexedDB": true,
     "loader": true,
     "module": true,
     "reportError": true,

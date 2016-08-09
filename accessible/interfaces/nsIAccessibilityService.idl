@@ -16,8 +16,8 @@ interface nsIAccessiblePivot;
  * nsIAccessible for a given DOM node.  More documentation at:
  *   http://www.mozilla.org/projects/ui/accessibility
  */
-[scriptable, builtinclass, uuid(17f86615-1a3d-4021-b227-3a2ef5cbffd8)]
-interface nsIAccessibleRetrieval : nsISupports
+[scriptable, builtinclass, uuid(9a6f80fe-25cc-405c-9f8f-25869bc9f94e)]
+interface nsIAccessibilityService : nsISupports
 {
   /**
    * Return application accessible.
@@ -99,12 +99,10 @@ interface nsIAccessibleRetrieval : nsISupports
   boolean isLogged(in AString aModule);
 };
 
-
-%{ C++
-
-// for component registration
-// {663CA4A8-D219-4000-925D-D8F66406B626}
-#define NS_ACCESSIBLE_RETRIEVAL_CID \
-{ 0x663ca4a8, 0xd219, 0x4000, { 0x92, 0x5d, 0xd8, 0xf6, 0x64, 0x6, 0xb6, 0x26 } }
-
-%}
+/**
+ * @deprecated, use nsIAccessibilityService instead.
+ */
+[scriptable, builtinclass, uuid(d85e0cbe-47ce-490c-8488-f821dd2be0c2)]
+interface nsIAccessibleRetrieval : nsIAccessibilityService
+{
+};

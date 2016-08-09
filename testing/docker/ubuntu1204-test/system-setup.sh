@@ -124,13 +124,13 @@ apt-get install -y --force-yes ${apt_packages[@]}
 
 dpkg-reconfigure locales
 
-# set up tooltool (temporarily)
-curl https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py > /setup/tooltool.py
 tooltool_fetch() {
     cat >manifest.tt
     python /setup/tooltool.py fetch
     rm manifest.tt
 }
+
+. /tmp/install-mercurial.sh
 
 # install peep
 tooltool_fetch <<'EOF'
@@ -154,9 +154,6 @@ cat >requirements.txt <<'EOF'
 # tarball:
 # sha256: qryO8YzdvYoqnH-SvEPi_qVLEUczDWXbkg7zzpgS49w
 virtualenv==13.1.2
-
-# sha256: wJnELXTi1SC2HdNyzZlrD6dgXAZheDT9exPHm5qaWzA
-mercurial==3.7.3
 EOF
 peep install -r requirements.txt
 

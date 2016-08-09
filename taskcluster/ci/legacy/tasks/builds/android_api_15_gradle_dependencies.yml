@@ -45,6 +45,7 @@ task:
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
       GRADLE_USER_HOME: '/home/worker/workspace/build/src/dotgradle-online'
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
 
     maxRunTime: 36000
 

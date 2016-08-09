@@ -401,7 +401,7 @@ Instance::tracePrivate(JSTracer* trc)
     // TraceEdge is called is so that the pointer can be updated during a moving
     // GC. TraceWeakEdge may sound better, but it is less efficient given that
     // we know object_ is already marked.
-    MOZ_ASSERT(!IsAboutToBeFinalized(&object_));
+    MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
     TraceEdge(trc, &object_, "wasm instance object");
 
     for (const FuncImport& fi : metadata().funcImports)
