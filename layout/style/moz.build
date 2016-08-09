@@ -43,7 +43,7 @@ EXPORTS += [
     'nsCSSParser.h',
     'nsCSSPropAliasList.h',
     'nsCSSPropertyID.h',
-    'nsCSSPropertySet.h',
+    'nsCSSPropertyIDSet.h',
     'nsCSSPropList.h',
     'nsCSSPropLogicalGroupList.h',
     'nsCSSProps.h',

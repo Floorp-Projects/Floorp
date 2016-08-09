@@ -53,7 +53,7 @@
 #include "CSSVariableResolver.h"
 #include "nsCSSParser.h"
 #include "CounterStyleManager.h"
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyIDSet.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "nsDeviceContext.h"
 #include "nsQueryObject.h"
@@ -10600,7 +10600,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
 nsRuleNode::ComputePropertiesOverridingAnimation(
                               const nsTArray<nsCSSPropertyID>& aProperties,
                               nsStyleContext* aStyleContext,
-                              nsCSSPropertySet& aPropertiesOverridden)
+                              nsCSSPropertyIDSet& aPropertiesOverridden)
 {
   /*
    * Set up an nsRuleData with all the structs needed for all of the
