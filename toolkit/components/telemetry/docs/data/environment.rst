@@ -16,7 +16,9 @@ This currently affects the following sections:
 - addons
 
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       build: {

@@ -8,7 +8,9 @@ A/B experiments.
 
 The client ID is submitted with this ping.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       version: 1,
