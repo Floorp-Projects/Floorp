@@ -17,7 +17,6 @@
 #include "nsCOMArray.h"
 
 #include "GeneratedJNIWrappers.h"
-#include "AndroidJavaWrappers.h"
 
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
@@ -35,12 +34,15 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/jni/Utils.h"
 #include "nsIObserver.h"
+#include "nsDataHashtable.h"
+
+#include "Units.h"
 
 // Some debug #defines
 // #define DEBUG_ANDROID_EVENTS
 // #define DEBUG_ANDROID_WIDGET
 
-class nsIObserver;
+class nsPIDOMWindowOuter;
 
 namespace base {
 class Thread;
@@ -50,6 +52,7 @@ typedef void* EGLSurface;
 
 namespace mozilla {
 
+class AutoLocalJNIFrame;
 class Runnable;
 
 namespace hal {
@@ -145,7 +148,6 @@ public:
     bool GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult);
     bool GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId, uint32_t aFrameId, nsCString & aResult);
 
-    void GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort);
     void ContentDocumentChanged();
     bool IsContentDocumentDisplayed();
 

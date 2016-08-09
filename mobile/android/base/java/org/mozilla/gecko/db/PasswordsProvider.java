@@ -9,7 +9,6 @@ import java.util.HashMap;
 import org.mozilla.gecko.CrashHandler;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoMessageReceiver;
 import org.mozilla.gecko.NSSBridge;
 import org.mozilla.gecko.db.BrowserContract.DeletedPasswords;

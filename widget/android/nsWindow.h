@@ -20,7 +20,6 @@
 struct ANPEvent;
 
 namespace mozilla {
-    class AndroidGeckoEvent;
     class TextComposition;
     class WidgetTouchEvent;
 
@@ -68,14 +67,7 @@ private:
     NPZCSupport* mNPZCSupport;
 
 public:
-    static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     static nsWindow* TopWindow();
-
-    bool OnContextmenuEvent(mozilla::AndroidGeckoEvent *ae);
-    void OnLongTapEvent(mozilla::AndroidGeckoEvent *ae);
-    bool OnMultitouchEvent(mozilla::AndroidGeckoEvent *ae);
-    void OnNativeGestureEvent(mozilla::AndroidGeckoEvent *ae);
-    void OnMouseEvent(mozilla::AndroidGeckoEvent *ae);
 
     void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
 

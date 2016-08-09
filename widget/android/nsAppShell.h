@@ -21,7 +21,6 @@
 #include "nsIAndroidBridge.h"
 
 namespace mozilla {
-class AndroidGeckoEvent;
 bool ProcessNextEvent();
 void NotifyEvent();
 }
@@ -56,8 +55,6 @@ public:
             return Type::kGeneralActivity;
         }
     };
-
-    class LegacyGeckoEvent;
 
     template<typename T>
     class LambdaEvent : public Event
@@ -131,8 +128,6 @@ public:
         sAppShell->mEventQueue.Post(mozilla::MakeUnique<LambdaEvent<T>>(
                 mozilla::Move(lambda)));
     }
-
-    static void PostEvent(mozilla::AndroidGeckoEvent* event);
 
     // Post a event and wait for it to finish running on the Gecko thread.
     static void SyncRunEvent(Event&& event,

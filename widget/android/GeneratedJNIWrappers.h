@@ -4072,29 +4072,6 @@ public:
 
     auto DeactivateProgramAndRestoreState(bool, int32_t, int32_t, int32_t, int32_t) const -> void;
 
-    struct GetDisplayPort_t {
-        typedef GeckoLayerClient Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<
-                bool,
-                bool,
-                int32_t,
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "getDisplayPort";
-        static constexpr char signature[] =
-                "(ZZILorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)Lorg/mozilla/gecko/gfx/DisplayPortMetrics;";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto GetDisplayPort(bool, bool, int32_t, mozilla::jni::Object::Param) const -> mozilla::jni::Object::LocalRef;
-
     struct IsContentDocumentDisplayed_t {
         typedef GeckoLayerClient Owner;
         typedef bool ReturnType;
@@ -4888,30 +4865,6 @@ public:
     };
 
     auto OnSelectionDragState(bool) const -> void;
-
-    struct RequestContentRepaint_t {
-        typedef NativePanZoomController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                float,
-                float,
-                float,
-                float,
-                float> Args;
-        static constexpr char name[] = "requestContentRepaint";
-        static constexpr char signature[] =
-                "(FFFFF)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::UI;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto RequestContentRepaint(float, float, float, float, float) const -> void;
 
     struct SetScrollingRootContent_t {
         typedef NativePanZoomController Owner;

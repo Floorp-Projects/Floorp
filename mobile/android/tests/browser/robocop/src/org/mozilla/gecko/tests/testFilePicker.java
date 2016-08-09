@@ -8,7 +8,6 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fFail;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONException;

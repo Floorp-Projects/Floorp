@@ -8,7 +8,6 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -402,23 +401,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             mDisplayPort = DisplayPortCalculator.calculate(getViewportMetrics(), null);
         }
         return mDisplayPort;
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ImmutableViewportMetrics metrics) {
-        Tabs tabs = Tabs.getInstance();
-        if (isBrowserContentDisplayed && tabs.isSelectedTabId(tabId)) {
-            // for foreground tabs, send the viewport update unless the document
-            // displayed is different from the content document. In that case, just
-            // calculate the display port.
-            return handleViewportMessage(metrics, pageSizeUpdate ? ViewportMessageType.PAGE_SIZE : ViewportMessageType.UPDATE);
-        } else {
-            // for background tabs, request a new display port calculation, so that
-            // when we do switch to that tab, we have the correct display port and
-            // don't need to draw twice (once to allow the first-paint viewport to
-            // get to java, and again once java figures out the display port).
-            return DisplayPortCalculator.calculate(metrics, null);
-        }
     }
 
     @WrapForJNI(calledFrom = "gecko")

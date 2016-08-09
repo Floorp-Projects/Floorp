@@ -230,8 +230,6 @@ AndroidBridge::AndroidBridge()
     jInputStream = inputStream.getGlobalRef();
     jClose = inputStream.getMethod("close", "()V");
     jAvailable = inputStream.getMethod("available", "()I");
-
-    InitAndroidJavaWrappers(jEnv);
 }
 
 // Raw JNIEnv variants.
@@ -273,19 +271,6 @@ jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const char* strin
 
 jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const nsACString& string) {
     return NewJavaString(frame, NS_ConvertUTF8toUTF16(string));
-}
-
-void AutoGlobalWrappedJavaObject::Dispose() {
-    if (isNull()) {
-        return;
-    }
-
-    GetEnvForThread()->DeleteGlobalRef(wrapped_obj);
-    wrapped_obj = nullptr;
-}
-
-AutoGlobalWrappedJavaObject::~AutoGlobalWrappedJavaObject() {
-    Dispose();
 }
 
 static void
@@ -1233,12 +1218,6 @@ NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
-{
-    AndroidBridge::Bridge()->GetDisplayPort(aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged()
 {
     AndroidBridge::Bridge()->ContentDocumentChanged();
@@ -1435,61 +1414,6 @@ AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
 
     aResult = jstrSampleName->ToCString();
     return true;
-}
-
-void
-AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
-{
-
-    ALOG_BRIDGE("Enter: %s", __PRETTY_FUNCTION__);
-    if (!mLayerClient) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    JNIEnv* const env = jni::GetGeckoThreadEnv();
-    AutoLocalJNIFrame jniFrame(env, 1);
-
-    int width, height;
-    float x, y,
-        pageLeft, pageTop, pageRight, pageBottom,
-        cssPageLeft, cssPageTop, cssPageRight, cssPageBottom,
-        zoom;
-    metrics->GetX(&x);
-    metrics->GetY(&y);
-    metrics->GetWidth(&width);
-    metrics->GetHeight(&height);
-    metrics->GetPageLeft(&pageLeft);
-    metrics->GetPageTop(&pageTop);
-    metrics->GetPageRight(&pageRight);
-    metrics->GetPageBottom(&pageBottom);
-    metrics->GetCssPageLeft(&cssPageLeft);
-    metrics->GetCssPageTop(&cssPageTop);
-    metrics->GetCssPageRight(&cssPageRight);
-    metrics->GetCssPageBottom(&cssPageBottom);
-    metrics->GetZoom(&zoom);
-
-    auto jmetrics = ImmutableViewportMetrics::New(
-            pageLeft, pageTop, pageRight, pageBottom,
-            cssPageLeft, cssPageTop, cssPageRight, cssPageBottom,
-            x, y, width, height,
-            zoom);
-
-    DisplayPortMetrics::LocalRef displayPortMetrics = mLayerClient->GetDisplayPort(
-            aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, jmetrics);
-
-    if (!displayPortMetrics) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    AndroidRectF rect(env, displayPortMetrics->MPosition().Get());
-    float resolution = displayPortMetrics->Resolution();
-
-    *displayPort = new nsAndroidDisplayport(rect, resolution);
-    (*displayPort)->AddRef();
-
-    ALOG_BRIDGE("Exit: %s", __PRETTY_FUNCTION__);
 }
 
 void
