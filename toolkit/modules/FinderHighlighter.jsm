@@ -530,12 +530,19 @@ FinderHighlighter.prototype = {
    *                  properties
    */
   _getWindowDimensions(window) {
-    let width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
-    let height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
+    // First we'll try without flushing layout, because it's way faster.
+    let dwu = this._getDWU(window);
+    let {width, height} = dwu.getBoundsWithoutFlushing(window.document.body);
+
+    if (!width || !height) {
+      // We need a flush after all :'(
+      width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
+      height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
+    }
 
     let scrollbarHeight = {};
     let scrollbarWidth = {};
-    this._getDWU(window).getScrollbarSize(false, scrollbarWidth, scrollbarHeight);
+    dwu.getScrollbarSize(false, scrollbarWidth, scrollbarHeight);
     width -= scrollbarWidth.value;
     height -= scrollbarHeight.value;
 
