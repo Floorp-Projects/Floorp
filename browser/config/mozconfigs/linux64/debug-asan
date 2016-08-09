@@ -1,5 +1,3 @@
-ac_add_options --with-google-oauth-api-keyfile=/builds/google-oauth-api.key
-
 # Use at least -O1 for optimization to avoid stack space
 # exhaustions caused by Clang function inlining.
 ac_add_options --enable-debug
