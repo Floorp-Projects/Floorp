@@ -232,7 +232,6 @@ private:
   bool Open(Callback & aCallback, bool aTruncate, bool aPriority, bool aBypassIfBusy);
   // Loads from disk asynchronously
   bool Load(bool aTruncate, bool aPriority);
-  void OnLoaded();
 
   void RememberCallback(Callback & aCallback);
   void InvokeCallbacksLock();
@@ -240,6 +239,7 @@ private:
   bool InvokeCallbacks(bool aReadOnly);
   bool InvokeCallback(Callback & aCallback);
   void InvokeAvailableCallback(Callback const & aCallback);
+  void OnFetched(Callback const & aCallback);
 
   nsresult OpenOutputStreamInternal(int64_t offset, nsIOutputStream * *_retval);
 
