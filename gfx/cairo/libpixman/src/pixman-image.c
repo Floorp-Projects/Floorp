@@ -33,6 +33,31 @@
 
 static const pixman_color_t transparent_black = { 0, 0, 0, 0 };
 
+/**
+ ** bug 1293598 - clean up every pointer after free to avoid
+ ** "dereferencing freed memory" problem
+ **/
+#define PIXMAN_POSION
+
+static void
+free_memory_withoffset (void** p, int offset)
+{
+#ifdef PIXMAN_POISON
+    if (*p) {
+#endif
+        free (*p + offset);
+#ifdef PIXMAN_POISON
+        *p = NULL;
+    }
+#endif
+}
+
+static void
+free_memory (void** p)
+{
+  free_memory_withoffset (p, 0);
+}
+
 static void
 gradient_property_changed (pixman_image_t *image)
 {
@@ -145,8 +170,8 @@ _pixman_image_fini (pixman_image_t *image)
 
 	pixman_region32_fini (&common->clip_region);
 
-	free (common->transform);
-	free (common->filter_params);
+	free_memory (&common->transform);
+	free_memory (&common->filter_params);
 
 	if (common->alpha_map)
 	    pixman_image_unref ((pixman_image_t *)common->alpha_map);
@@ -158,7 +183,7 @@ _pixman_image_fini (pixman_image_t *image)
 	    if (image->gradient.stops)
 	    {
 		/* See _pixman_init_gradient() for an explanation of the - 1 */
-		free (image->gradient.stops - 1);
+		free_memory_withoffset (&image->gradient.stops, -1);
 	    }
 
 	    /* This will trigger if someone adds a property_changed
@@ -169,8 +194,11 @@ _pixman_image_fini (pixman_image_t *image)
 		image->common.property_changed == gradient_property_changed);
 	}
 
-	if (image->type == BITS && image->bits.free_me)
-	    free (image->bits.free_me);
+	if (image->type == BITS && image->bits.free_me) {
+	    free_memory (&image->bits.free_me);
+	    image->bits.bits = NULL;
+        }
+
 
 	return TRUE;
     }
@@ -210,7 +238,7 @@ pixman_image_unref (pixman_image_t *image)
 {
     if (_pixman_image_fini (image))
     {
-	free (image);
+	free_memory (&image);
 	return TRUE;
     }
 
