@@ -40,7 +40,7 @@ public:
 
   void CopyGlyphsToSink(const GlyphBuffer &aBuffer, ID2D1GeometrySink *aSink);
 
-  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) { MOZ_ASSERT(false); }
+  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics);
 
   virtual bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton);
 
