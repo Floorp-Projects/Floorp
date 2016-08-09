@@ -909,6 +909,7 @@ class Shape;
 class BaseShape;
 class UnownedBaseShape;
 class WasmInstanceObject;
+class WasmTableObject;
 namespace jit {
 class JitCode;
 } // namespace jit
@@ -961,6 +962,7 @@ typedef ReadBarriered<jit::JitCode*> ReadBarrieredJitCode;
 typedef ReadBarriered<ObjectGroup*> ReadBarrieredObjectGroup;
 typedef ReadBarriered<JS::Symbol*> ReadBarrieredSymbol;
 typedef ReadBarriered<WasmInstanceObject*> ReadBarrieredWasmInstanceObject;
+typedef ReadBarriered<WasmTableObject*> ReadBarrieredWasmTableObject;
 
 typedef ReadBarriered<Value> ReadBarrieredValue;
 

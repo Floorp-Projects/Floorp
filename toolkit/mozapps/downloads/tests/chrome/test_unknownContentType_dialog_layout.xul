@@ -82,9 +82,9 @@ function loadNextTest() {
 }
 
 function checkWindow(win) {
-  for (let [id, props] in Iterator(tests[testIndex].elements)) {
+  for (let [id, props] of Object.entries(tests[testIndex].elements)) {
     let elem = win.dialog.dialogElement(id);
-    for (let [prop, value] in Iterator(props)) {
+    for (let [prop, value] of Object.entries(props)) {
       is(elem[prop], value,
          "Element with id " + id + " has property " +
          prop + " set to " + value);

@@ -1,0 +1,68 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SVG tabIndex - Bug 778654</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="visible">
+  <foreignObject id="f" x="0" y="0" width="200" height="60" tabindex="0">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <p>Here is a paragraph that requires word wrap</p>
+    </body>
+  </foreignObject>
+  <rect id="r" x="0" y="70" width="100" height="100" fill="yellow" tabIndex="1"/>
+  <text id="t" x="0" y="200" tabindex="2">
+        This is SVG text
+  </text>
+</svg>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  var f = document.getElementById('f');
+  var r = document.getElementById('r');
+  var t = document.getElementById('t');
+
+  try {
+    // Step 1: Checking by assigning tabIndex
+    is(f.tabIndex, 0, "foreignObject initial tabIndex");
+    f.tabIndex = 1;
+    is(f.tabIndex, 1, "foreignObject tabIndex is set to 1");
+
+    is(r.tabIndex, 1, "rect initial tabIndex");
+    r.tabIndex = 2;
+    is(r.tabIndex, 2, "rect tabIndex is set to 2");
+
+    is(t.tabIndex, 2, "text initial tabIndex");
+    t.tabIndex = 3;
+    is(t.tabIndex, 3, "text is set to 3");
+
+    // Step 2: Checking by triggering TAB event
+    is(document.activeElement.tabIndex, -1, "In the beginning, the active element tabindex is -1");
+
+    synthesizeKey("VK_TAB", {});
+    is(document.activeElement.tabIndex, 1, "The active element tabindex is 1");
+
+    synthesizeKey("VK_TAB", {});
+    is(document.activeElement.tabIndex, 2, "The active element tabindex is 2");
+
+    synthesizeKey("VK_TAB", {});
+    is(document.activeElement.tabIndex, 3, "The active element tabindex is 3");
+  } catch(e) {
+    ok(false, "Got unexpected exception" + e);
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+</script>
+</pre>
+</body>
+</html>

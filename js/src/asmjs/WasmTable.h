@@ -30,14 +30,21 @@ namespace wasm {
 
 class Table : public ShareableBase<Table>
 {
-    UniquePtr<uint8_t[], JS::FreePolicy> array_;
-    TableKind kind_;
-    uint32_t length_;
-    bool initialized_;
-    bool external_;
+    typedef UniquePtr<uint8_t[], JS::FreePolicy> UniqueByteArray;
+
+    ReadBarrieredWasmTableObject maybeObject_;
+    UniqueByteArray              array_;
+    TableKind                    kind_;
+    uint32_t                     length_;
+    bool                         initialized_;
+    bool                         external_;
+
+    void tracePrivate(JSTracer* trc);
+    friend class js::WasmTableObject;
 
   public:
-    static RefPtr<Table> create(JSContext* cx, const TableDesc& desc);
+    static RefPtr<Table> create(JSContext* cx, const TableDesc& desc,
+                                HandleWasmTableObject maybeObject);
     void trace(JSTracer* trc);
 
     // These accessors may be used before initialization.

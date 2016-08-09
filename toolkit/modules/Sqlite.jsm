@@ -685,7 +685,7 @@ ConnectionData.prototype = Object.freeze({
         let paramsArray = statement.newBindingParamsArray();
         for (let p of params) {
           let bindings = paramsArray.newBindingParams();
-          for (let [key, value] of Iterator(p)) {
+          for (let [key, value] of Object.entries(p)) {
             bindings.bindByName(key, value);
           }
           paramsArray.addParams(bindings);

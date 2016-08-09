@@ -24,6 +24,7 @@ function test() {
     const constants = gDebugger.require("./content/constants");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
+    const CONDITIONAL_POPUP_SHOWN = gDebugger.EVENTS.CONDITIONAL_BREAKPOINT_POPUP_SHOWN;
 
     function addBreakpoint1() {
       return actions.addBreakpoint({ actor: gSources.selectedValue, line: 18 });
@@ -38,23 +39,34 @@ function test() {
 
     function modBreakpoint2() {
       setCaretPosition(19);
+
+      let popupShown = waitForDebuggerEvents(gPanel, CONDITIONAL_POPUP_SHOWN);
       gSources._onCmdAddConditionalBreakpoint();
+      return popupShown;
     }
 
-    function addBreakpoint3() {
+    function* addBreakpoint3() {
       let finished = waitForDispatch(gPanel, constants.ADD_BREAKPOINT);
+      let popupShown = waitForDebuggerEvents(gPanel, CONDITIONAL_POPUP_SHOWN);
+
       setCaretPosition(20);
       gSources._onCmdAddConditionalBreakpoint();
-      return finished;
+      yield finished;
+      yield popupShown;
     }
 
-    function modBreakpoint3() {
-      let finished = waitForDispatch(gPanel, constants.SET_BREAKPOINT_CONDITION);
+    function* modBreakpoint3() {
       setCaretPosition(20);
+
+      let popupShown = waitForDebuggerEvents(gPanel, CONDITIONAL_POPUP_SHOWN);
       gSources._onCmdAddConditionalBreakpoint();
+      yield popupShown;
+
       typeText(gSources._cbTextbox, "bamboocha");
+
+      let finished = waitForDispatch(gPanel, constants.SET_BREAKPOINT_CONDITION);
       EventUtils.sendKey("RETURN", gDebugger);
-      return finished;
+      yield finished;
     }
 
     function addBreakpoint4() {

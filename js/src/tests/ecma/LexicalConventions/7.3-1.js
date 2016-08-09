@@ -53,6 +53,5 @@ function test() {
 
     gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : " ignored chars after line terminator of single-line comment";
   }
-  stopTest();
   return ( gTestcases );
 }

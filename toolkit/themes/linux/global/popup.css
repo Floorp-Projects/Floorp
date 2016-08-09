@@ -7,8 +7,8 @@
 /* ::::: Variables ::::: */
 .panel-arrowcontent {
   --panel-arrowcontent-padding: 10px;
-  --panel-arrowcontent-background: -moz-Dialog;
-  --panel-arrowcontent-color: -moz-DialogText;
+  --panel-arrowcontent-background: -moz-field;
+  --panel-arrowcontent-color: -moz-fieldText;
   --panel-arrowcontent-border: 1px solid ThreeDShadow;
 }
 
@@ -48,7 +48,7 @@ panel[type="arrow"][side="right"] {
 
 .panel-arrow[side="top"],
 .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://global/skin/icons/panelarrow-vertical.svg");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical-themed.svg");
   position: relative;
   margin-left: 6px;
   margin-right: 6px;
@@ -65,7 +65,7 @@ panel[type="arrow"][side="right"] {
 
 .panel-arrow[side="left"],
 .panel-arrow[side="right"] {
-  list-style-image: url("chrome://global/skin/icons/panelarrow-horizontal.svg");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal-themed.svg");
   position: relative;
   margin-top: 6px;
   margin-bottom: 6px;

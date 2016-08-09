@@ -19,7 +19,8 @@ var callee = i => `(func $f${i} (type $v2i) (result i32) (i32.const ${i}))`;
 
 // A table should not hold exported functions alive and exported functions
 // should not hold their originating table alive. Live exported functions should
-// hold instances alive. Nothing should hold the export object alive.
+// hold instances alive and instances hold imported tables alive. Nothing
+// should hold the export object alive.
 resetFinalizeCount();
 var i = evalText(`(module (table (resizable 2)) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
@@ -48,10 +49,10 @@ gc();
 assertEq(finalizeCount(), 2);
 t = null;
 gc();
-assertEq(finalizeCount(), 3);
+assertEq(finalizeCount(), 2);
 i = null;
 gc();
-assertEq(finalizeCount(), 3);
+assertEq(finalizeCount(), 2);
 assertEq(f(), 0);
 f = null;
 gc();
@@ -196,7 +197,7 @@ tbl.edge = makeFinalizeObserver();
 function runTest() {
     tbl = null;
     gc();
-    assertEq(finalizeCount(), 1);
+    assertEq(finalizeCount(), 0);
     return 100;
 }
 var i = evalText(

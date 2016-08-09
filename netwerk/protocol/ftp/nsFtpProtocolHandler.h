@@ -42,11 +42,11 @@ private:
 
     // Stuff for the timer callback function
     struct timerStruct {
-        nsCOMPtr<nsITimer>      timer;
-        nsFtpControlConnection *conn;
-        char                   *key;
+        nsCOMPtr<nsITimer> timer;
+        RefPtr<nsFtpControlConnection> conn;
+        char *key;
         
-        timerStruct() : conn(nullptr), key(nullptr) {}
+        timerStruct() : key(nullptr) {}
         
         ~timerStruct() {
             if (timer)
@@ -55,7 +55,6 @@ private:
                 free(key);
             if (conn) {
                 conn->Disconnect(NS_ERROR_ABORT);
-                NS_RELEASE(conn);
             }
         }
     };

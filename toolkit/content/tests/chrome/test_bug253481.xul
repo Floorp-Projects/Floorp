@@ -71,7 +71,7 @@ SimpleTest.waitForClipboard(testString, function() {
                        .getService(Components.interfaces.nsIClipboardHelper);
   clip.copyString(testString);
 }, function() {
-  for (let [item, expected] in Iterator(expectedResults)) {
+  for (let [item, expected] of Object.entries(expectedResults)) {
      testPaste(item, $(item), expected);
   }
 
