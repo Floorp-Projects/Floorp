@@ -135,6 +135,84 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared()
   Destroy();
 }
 
+bool
+PersistentBufferProviderShared::SetForwarder(CompositableForwarder* aFwd)
+{
+  MOZ_ASSERT(aFwd);
+  if (!aFwd) {
+    return false;
+  }
+
+  if (mFwd == aFwd) {
+    // The forwarder should not change most of the time.
+    return true;
+  }
+
+  if (IsActivityTracked()) {
+    mFwd->GetActiveResourceTracker().RemoveObject(this);
+  }
+
+  if (mFwd->AsTextureForwarder() != aFwd->AsTextureForwarder() ||
+      mFwd->GetCompositorBackendType() != aFwd->GetCompositorBackendType()) {
+    // We are going to be used with an different and/or incompatible forwarder.
+    // This should be extremely rare. We have to copy the front buffer into a
+    // texture that is compatible with the new forwarder.
+
+    // Grab the current front buffer.
+    RefPtr<TextureClient> prevTexture = GetTexture(mFront);
+
+    // Get rid of everything else
+    Destroy();
+
+    if (prevTexture) {
+      RefPtr<TextureClient> newTexture = TextureClient::CreateForDrawing(
+        aFwd, mFormat, mSize,
+        BackendSelector::Canvas,
+        TextureFlags::DEFAULT,
+        TextureAllocationFlags::ALLOC_DEFAULT
+      );
+
+      MOZ_ASSERT(newTexture);
+      if (!newTexture) {
+        return false;
+      }
+
+      // If we early-return in one of the following branches, we will
+      // leave the buffer provider in an empty state, since we called
+      // Destroy. Not ideal but at least we won't try to use it with a
+      // an incompatible ipc channel.
+
+      if (!newTexture->Lock(OpenMode::OPEN_WRITE)) {
+        return false;
+      }
+
+      if (!prevTexture->Lock(OpenMode::OPEN_READ)) {
+        newTexture->Unlock();
+        return false;
+      }
+
+      bool success = prevTexture->CopyToTextureClient(newTexture, nullptr, nullptr);
+
+      prevTexture->Unlock();
+      newTexture->Unlock();
+
+      if (!success) {
+        return false;
+      }
+
+      if (!mTextures.append(newTexture)) {
+        return false;
+      }
+      mFront = Some<uint32_t>(mTextures.length() - 1);
+      mBack = mFront;
+    }
+  }
+
+  mFwd = aFwd;
+
+  return true;
+}
+
 TextureClient*
 PersistentBufferProviderShared::GetTexture(Maybe<uint32_t> aIndex)
 {

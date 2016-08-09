@@ -126,6 +126,10 @@ ClientCanvasLayer::RenderLayer()
 
   FirePreTransactionCallback();
   if (mBufferProvider && mBufferProvider->GetTextureClient()) {
+    if (!mBufferProvider->SetForwarder(mCanvasClient->GetForwarder())) {
+      gfxCriticalNote << "BufferProvider::SetForwarder failed";
+      return;
+    }
     mCanvasClient->UpdateFromTexture(mBufferProvider->GetTextureClient());
   } else {
     mCanvasClient->Update(gfx::IntSize(mBounds.width, mBounds.height), this);
