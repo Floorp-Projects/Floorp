@@ -709,6 +709,8 @@ public:
     }
   }
 
+  void NotifyCueDisplayStatesChanged();
+
   bool GetHasUserInteraction()
   {
     return mHasUserInteraction;
