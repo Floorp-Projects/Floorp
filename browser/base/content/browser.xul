@@ -747,16 +747,10 @@
                          aria-label="&urlbar.webNotsNotificationAnchor3.label;"/>
                   <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon camera-icon" role="button"
                          aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
-                  <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon camera-icon in-use" role="button"
-                         aria-label="&urlbar.webRTCSharingDevicesNotificationAnchor.label;"/>
                   <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon microphone-icon" role="button"
                          aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
-                  <image id="webRTC-sharingMicrophone-notification-icon" class="notification-anchor-icon microphone-icon in-use" role="button"
-                         aria-label="&urlbar.webRTCSharingMicrophoneNotificationAnchor.label;"/>
                   <image id="webRTC-shareScreen-notification-icon" class="notification-anchor-icon screen-icon" role="button"
                          aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
-                  <image id="webRTC-sharingScreen-notification-icon" class="notification-anchor-icon screen-icon in-use" role="button"
-                         aria-label="&urlbar.webRTCSharingScreenNotificationAnchor.label;"/>
                   <image id="pointerLock-notification-icon" class="notification-anchor-icon pointerLock-icon" role="button"
                          aria-label="&urlbar.pointerLockNotificationAnchor.label;"/>
                   <image id="servicesInstall-notification-icon" class="notification-anchor-icon service-icon" role="button"
