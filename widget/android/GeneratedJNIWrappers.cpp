@@ -1277,14 +1277,6 @@ auto GeckoLayerClient::DeactivateProgramAndRestoreState(bool a0, int32_t a1, int
     return mozilla::jni::Method<DeactivateProgramAndRestoreState_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4);
 }
 
-constexpr char GeckoLayerClient::GetDisplayPort_t::name[];
-constexpr char GeckoLayerClient::GetDisplayPort_t::signature[];
-
-auto GeckoLayerClient::GetDisplayPort(bool a0, bool a1, int32_t a2, mozilla::jni::Object::Param a3) const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetDisplayPort_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3);
-}
-
 constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::name[];
 constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::signature[];
 
@@ -1498,14 +1490,6 @@ constexpr char NativePanZoomController::OnSelectionDragState_t::signature[];
 auto NativePanZoomController::OnSelectionDragState(bool a0) const -> void
 {
     return mozilla::jni::Method<OnSelectionDragState_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
-}
-
-constexpr char NativePanZoomController::RequestContentRepaint_t::name[];
-constexpr char NativePanZoomController::RequestContentRepaint_t::signature[];
-
-auto NativePanZoomController::RequestContentRepaint(float a0, float a1, float a2, float a3, float a4) const -> void
-{
-    return mozilla::jni::Method<RequestContentRepaint_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2, a3, a4);
 }
 
 constexpr char NativePanZoomController::SetScrollingRootContent_t::name[];
