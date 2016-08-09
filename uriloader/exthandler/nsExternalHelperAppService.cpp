@@ -582,6 +582,7 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] =
   { IMAGE_ICO, "ico,cur", "ICO Image" },
   { IMAGE_JPEG, "jpeg,jpg,jfif,pjpeg,pjp", "JPEG Image" },
   { IMAGE_PNG, "png", "PNG Image" },
+  { IMAGE_APNG, "apng", "APNG Image" },
   { IMAGE_TIFF, "tiff,tif", "TIFF Image" },
   { IMAGE_XBM, "xbm", "XBM Image" },
   { IMAGE_SVG_XML, "svg", "Scalable Vector Graphics" },
