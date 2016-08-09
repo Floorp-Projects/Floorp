@@ -638,6 +638,26 @@ struct GlyphBuffer
   uint32_t mNumGlyphs;  //!< Number of glyphs mGlyphs points to.
 };
 
+struct GlyphMetrics
+{
+  // Horizontal distance from the origin to the leftmost side of the bounding
+  // box of the drawn glyph. This can be negative!
+  Float mXBearing;
+  // Horizontal distance from the origin of this glyph to the origin of the
+  // next glyph.
+  Float mXAdvance;
+  // Vertical distance from the origin to the topmost side of the bounding box
+  // of the drawn glyph.
+  Float mYBearing;
+  // Vertical distance from the origin of this glyph to the origin of the next
+  // glyph, this is used when drawing vertically and will typically be 0.
+  Float mYAdvance;
+  // Width of the glyph's black box.
+  Float mWidth;
+  // Height of the glyph's black box.
+  Float mHeight;
+};
+
 /** This class is an abstraction of a backend/platform specific font object
  * at a particular size. It is passed into text drawing calls to describe
  * the font used for the drawing call.
@@ -666,6 +686,10 @@ public:
    * others.
    */
   virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint = nullptr) = 0;
+
+  /* This gets the metrics of a set of glyphs for the current font face.
+   */
+  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) = 0;
 
   virtual bool GetFontFileData(FontFileDataOutput, void *) { return false; }
 
@@ -1111,6 +1135,22 @@ public:
   virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) = 0;
 
   Matrix GetTransform() const { return mTransform; }
+
+  /*
+   * Get the metrics of a glyph, including any additional spacing that is taken
+   * during rasterization to this backends (for example because of antialiasing
+   * filters.
+   *
+   * aScaledFont The scaled font used when drawing.
+   * aGlyphIndices An array of indices for the glyphs whose the metrics are wanted
+   * aNumGlyphs The amount of elements in aGlyphIndices
+   * aGlyphMetrics The glyph metrics
+   */
+  virtual void GetGlyphRasterizationMetrics(ScaledFont *aScaledFont, const uint16_t* aGlyphIndices,
+                                            uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics)
+  {
+    aScaledFont->GetGlyphDesignMetrics(aGlyphIndices, aNumGlyphs, aGlyphMetrics);
+  }
 
   /**
    * Set a transform on the surface, this transform is applied at drawing time
