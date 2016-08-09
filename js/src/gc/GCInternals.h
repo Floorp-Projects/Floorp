@@ -146,29 +146,6 @@ struct MovingTracer : JS::CallbackTracer
 #endif
 };
 
-// In debug builds, set/unset the GC sweeping flag for the current thread.
-struct MOZ_RAII AutoSetThreadIsSweeping
-{
-#ifdef DEBUG
-    AutoSetThreadIsSweeping()
-      : threadData_(js::TlsPerThreadData.get())
-    {
-        MOZ_ASSERT(!threadData_->gcSweeping);
-        threadData_->gcSweeping = true;
-    }
-
-    ~AutoSetThreadIsSweeping() {
-        MOZ_ASSERT(threadData_->gcSweeping);
-        threadData_->gcSweeping = false;
-    }
-
-  private:
-    PerThreadData* threadData_;
-#else
-    AutoSetThreadIsSweeping() {}
-#endif
-};
-
 // Structure for counting how many times objects in a particular group have
 // been tenured during a minor collection.
 struct TenureCount
