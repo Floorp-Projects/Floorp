@@ -123,22 +123,6 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_macosx64_st-an.yml
-  aries-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_aries_eng.yml
-      debug:
-        task: tasks/builds/b2g_aries_debug.yml
-  nexus-5l-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_5l_eng.yml
-      debug:
-        task: tasks/builds/b2g_nexus_5l_debug.yml
   sm-tsan:
     platforms:
       - Linux64

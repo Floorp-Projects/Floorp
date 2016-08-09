@@ -249,15 +249,6 @@
   color: hsl(210,30%,85%);
 }
 
-.breadcrumbs-widget-item:-moz-focusring {
-  outline: none;
-}
-
-.breadcrumbs-widget-item[checked]:-moz-focusring > .button-box {
-  outline: var(--theme-focus-outline);
-  outline-offset: -1px;
-}
-
 .breadcrumbs-widget-item > .button-box {
   border: none;
   padding-top: 0;

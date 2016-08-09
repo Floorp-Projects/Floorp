@@ -9,6 +9,7 @@
 #include "plbase64.h"
 
 #include "mozilla/Base64.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Services.h"
 #include "nsMemory.h"
 #include "nsString.h"
@@ -57,8 +58,8 @@ nsSecretDecoderRing::~nsSecretDecoderRing()
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::Encrypt(unsigned char* data, int32_t dataLen,
-                             unsigned char** result, int32_t* _retval)
+nsSecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
+                             unsigned char** result, uint32_t* _retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -104,8 +105,8 @@ nsSecretDecoderRing::Encrypt(unsigned char* data, int32_t dataLen,
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::Decrypt(unsigned char* data, int32_t dataLen,
-                             unsigned char** result, int32_t* _retval)
+nsSecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
+                             unsigned char** result, uint32_t* _retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -149,7 +150,7 @@ nsSecretDecoderRing::EncryptString(const char* text, char** _retval)
 {
   nsresult rv = NS_OK;
   unsigned char *encrypted = 0;
-  int32_t eLen;
+  uint32_t eLen = 0;
 
   if (!text || !_retval) {
     rv = NS_ERROR_INVALID_POINTER;
@@ -159,7 +160,7 @@ nsSecretDecoderRing::EncryptString(const char* text, char** _retval)
   rv = Encrypt((unsigned char *)text, strlen(text), &encrypted, &eLen);
   if (rv != NS_OK) { goto loser; }
 
-  rv = encode(encrypted, eLen, _retval);
+  rv = Base64Encode(BitwiseCast<const char*>(encrypted), eLen, _retval);
 
 loser:
   if (encrypted) PORT_Free(encrypted);
@@ -173,17 +174,18 @@ nsSecretDecoderRing::DecryptString(const char* crypt, char** _retval)
   nsresult rv = NS_OK;
   char *r = 0;
   unsigned char *decoded = 0;
-  int32_t decodedLen;
+  uint32_t decodedLen = 0;
   unsigned char *decrypted = 0;
-  int32_t decryptedLen;
+  uint32_t decryptedLen = 0;
 
   if (!crypt || !_retval) {
     rv = NS_ERROR_INVALID_POINTER;
     goto loser;
   }
 
-  rv = decode(crypt, &decoded, &decodedLen);
-  if (rv != NS_OK) goto loser;
+  rv = Base64Decode(crypt, strlen(crypt), BitwiseCast<char**>(&decoded),
+                    &decodedLen);
+  if (NS_FAILED(rv)) goto loser;
 
   rv = Decrypt(decoded, decodedLen, &decrypted, &decryptedLen);
   if (rv != NS_OK) goto loser;
@@ -200,7 +202,7 @@ nsSecretDecoderRing::DecryptString(const char* crypt, char** _retval)
 
 loser:
   if (decrypted) PORT_Free(decrypted);
-  if (decoded) PR_DELETE(decoded);
+  if (decoded) free(decoded);
 
   return rv;
 }
@@ -294,40 +296,3 @@ nsSecretDecoderRing::SetWindow(nsISupports*)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// Support routines
-
-nsresult
-nsSecretDecoderRing::encode(const unsigned char* data, int32_t dataLen,
-                            char** _retval)
-{
-  if (dataLen < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  return Base64Encode(BitwiseCast<const char*>(data),
-                      AssertedCast<uint32_t>(dataLen), _retval);
-}
-
-nsresult
-nsSecretDecoderRing::decode(const char* data, unsigned char** result,
-                            int32_t* _retval)
-{
-  uint32_t len = strlen(data);
-  int adjust = 0;
-
-  /* Compute length adjustment */
-  if (data[len-1] == '=') {
-    adjust++;
-    if (data[len - 2] == '=') {
-      adjust++;
-    }
-  }
-
-  *result = (unsigned char *)PL_Base64Decode(data, len, nullptr);
-  if (!*result) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  *_retval = (len*3)/4 - adjust;
-
-  return NS_OK;
-}
