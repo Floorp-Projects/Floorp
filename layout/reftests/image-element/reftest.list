@@ -26,7 +26,7 @@ fuzzy-if(skiaContent,1,326) == element-paint-sharpness-01b.html element-paint-sh
 == element-paint-sharpness-02a.html element-paint-sharpness-02b.html
 fuzzy-if(B2G,11,4) == element-paint-sharpness-02b.html element-paint-sharpness-02c.html
 == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01-ref.html
-fuzzy-if(!isDebugBuild&&gtkWidget&&/^Linux\x20i686/.test(http.oscpu),79,1191) == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html # Linux32 from GCC update
+fuzzy-if(skiaContent,187,1191) == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html # Linux32 from GCC update
 == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01-ref.html
 skip-if(B2G||Mulet) == element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
