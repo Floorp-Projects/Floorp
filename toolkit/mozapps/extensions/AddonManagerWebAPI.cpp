@@ -40,7 +40,8 @@ AddonManagerWebAPI::IsValidSite(nsIURI* uri)
   }
 
   if (host.Equals("addons.mozilla.org") ||
-      host.Equals("discovery.addons.mozilla.org")) {
+      host.Equals("discovery.addons.mozilla.org") ||
+      host.Equals("testpilot.firefox.com")) {
     return true;
   }
 
@@ -50,6 +51,8 @@ AddonManagerWebAPI::IsValidSite(nsIURI* uri)
         host.Equals("discovery.addons.allizom.org") ||
         host.Equals("addons-dev.allizom.org") ||
         host.Equals("discovery.addons-dev.allizom.org") ||
+        host.Equals("testpilot.stage.mozaws.net") ||
+        host.Equals("testpilot.dev.mozaws.net") ||
         host.Equals("example.com")) {
       return true;
     }
