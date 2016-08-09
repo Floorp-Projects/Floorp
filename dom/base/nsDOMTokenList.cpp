@@ -14,6 +14,7 @@
 #include "nsError.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMTokenListBinding.h"
+#include "nsWhitespaceTokenizer.h"
 #include "mozilla/ErrorResult.h"
 
 using namespace mozilla;
@@ -329,17 +330,48 @@ nsDOMTokenList::Replace(const nsAString& aToken,
   }
 
   const nsAttrValue* attr = GetParsedAttr();
-  if (!attr || !attr->Contains(aToken)) {
+  if (!attr) {
     return;
   }
 
-  AutoTArray<nsString, 1> tokens;
+  ReplaceInternal(attr, aToken, aNewToken);
+}
 
-  tokens.AppendElement(aToken);
-  RemoveInternal(attr, tokens);
+void
+nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
+                                const nsAString& aToken,
+                                const nsAString& aNewToken)
+{
+  nsAutoString attribute;
+  aAttr->ToString(attribute);
 
-  tokens[0] = aNewToken;
-  AddInternal(attr, tokens);
+  nsAutoString result;
+
+  nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
+    tokenizer(attribute);
+
+  bool sawIt = false;
+  while (tokenizer.hasMoreTokens()) {
+    auto currentToken = tokenizer.nextToken();
+    if (currentToken.Equals(aToken) || currentToken.Equals(aNewToken)) {
+      if (!sawIt) {
+        sawIt = true;
+        if (!result.IsEmpty()) {
+          result.Append(char16_t(' '));
+        }
+        result.Append(aNewToken);
+      }
+    } else {
+      if (!result.IsEmpty()) {
+        result.Append(char16_t(' '));
+      }
+      result.Append(currentToken);
+    }
+  }
+
+  if (sawIt) {
+    mElement->SetAttr(kNameSpaceID_None, mAttrAtom, result, true);
+  }
 }
 
 bool
