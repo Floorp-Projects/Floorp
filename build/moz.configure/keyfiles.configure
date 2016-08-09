@@ -25,10 +25,9 @@ def keyfile(desc, help=None, callback=lambda x: x):
                     result = fh.read().strip()
                     if result:
                         return callback(result)
-            except FatalCheckError:
-                raise
-            except IOError:
-                pass
+                    raise FatalCheckError("'%s' is empty." % value[0])
+            except IOError as e:
+                raise FatalCheckError("'%s': %s." % (value[0], e.strerror))
         return no_key
 
     return keyfile
