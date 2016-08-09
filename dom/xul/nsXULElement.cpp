@@ -1697,39 +1697,12 @@ nsXULElement::Focus()
     return rv.StealNSResult();
 }
 
-void
-nsXULElement::Focus(ErrorResult& rv)
-{
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-    nsCOMPtr<nsIDOMElement> elem = do_QueryObject(this);
-    if (fm) {
-        rv = fm->SetFocus(this, 0);
-    }
-}
-
 NS_IMETHODIMP
 nsXULElement::Blur()
 {
     ErrorResult rv;
     Blur(rv);
     return rv.StealNSResult();
-}
-
-void
-nsXULElement::Blur(ErrorResult& rv)
-{
-    if (!ShouldBlur(this))
-      return;
-
-    nsIDocument* doc = GetComposedDoc();
-    if (!doc)
-      return;
-
-    nsPIDOMWindowOuter* win = doc->GetWindow();
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (win && fm) {
-      rv = fm->ClearFocus(win);
-    }
 }
 
 NS_IMETHODIMP

@@ -62,6 +62,9 @@ add_task(function* () {
     let newNodeFront = yield getNodeFront(newSelection, inspector);
     is(newNodeFront, inspector.selection.nodeFront,
        "The current selection is correct");
+    is(container.getAttribute("aria-activedescendant"),
+       container.querySelector("button[checked]").id,
+      "aria-activedescendant is set correctly");
 
     currentSelection = newSelection;
   }

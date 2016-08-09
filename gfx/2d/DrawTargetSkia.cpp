@@ -103,6 +103,31 @@ ReleaseTemporarySurface(void* aPixels, void* aContext)
   }
 }
 
+static void
+WriteRGBXFormat(uint8_t* aData, const IntSize &aSize,
+                const int32_t aStride, SurfaceFormat aFormat)
+{
+  if (aFormat != SurfaceFormat::B8G8R8X8 || aSize.IsEmpty()) {
+    return;
+  }
+
+  int height = aSize.height;
+  int width = aSize.width * 4;
+
+  for (int row = 0; row < height; ++row) {
+    for (int column = 0; column < width; column += 4) {
+#ifdef IS_BIG_ENDIAN
+      aData[column] = 0xFF;
+#else
+      aData[column + 3] = 0xFF;
+#endif
+    }
+    aData += aStride;
+  }
+
+  return;
+}
+
 #ifdef DEBUG
 static bool
 VerifyRGBXFormat(uint8_t* aData, const IntSize &aSize, const int32_t aStride, SurfaceFormat aFormat)
@@ -1377,43 +1402,76 @@ DrawTargetSkia::UsingSkiaGPU() const
 #endif
 }
 
+#ifdef USE_SKIA_GPU
+already_AddRefed<SourceSurface>
+DrawTargetSkia::OptimizeGPUSourceSurface(SourceSurface *aSurface) const
+{
+  // Check if the underlying SkBitmap already has an associated GrTexture.
+  if (aSurface->GetType() == SurfaceType::SKIA &&
+      static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap().getTexture()) {
+    RefPtr<SourceSurface> surface(aSurface);
+    return surface.forget();
+  }
+
+  SkBitmap bitmap = GetBitmapForSurface(aSurface);
+
+  // Upload the SkBitmap to a GrTexture otherwise.
+  SkAutoTUnref<GrTexture> texture(
+      GrRefCachedBitmapTexture(mGrContext.get(), bitmap, GrTextureParams::ClampBilerp()));
+
+  if (texture) {
+    // Create a new SourceSurfaceSkia whose SkBitmap contains the GrTexture.
+    RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
+    if (surface->InitFromGrTexture(texture, aSurface->GetSize(), aSurface->GetFormat())) {
+      return surface.forget();
+    }
+  }
+
+  // The data was too big to fit in a GrTexture.
+  if (aSurface->GetType() == SurfaceType::SKIA) {
+    // It is already a Skia source surface, so just reuse it as-is.
+    RefPtr<SourceSurface> surface(aSurface);
+    return surface.forget();
+  }
+
+  // Wrap it in a Skia source surface so that can do tiled uploads on-demand.
+  RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
+  surface->InitFromBitmap(bitmap);
+  return surface.forget();
+}
+#endif
+
+already_AddRefed<SourceSurface>
+DrawTargetSkia::OptimizeSourceSurfaceForUnknownAlpha(SourceSurface *aSurface) const
+{
+#ifdef USE_SKIA_GPU
+  if (UsingSkiaGPU()) {
+    return OptimizeGPUSourceSurface(aSurface);
+  }
+#endif
+
+  if (aSurface->GetType() == SurfaceType::SKIA) {
+    RefPtr<SourceSurface> surface(aSurface);
+    return surface.forget();
+  }
+
+  RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
+
+  // For plugins, GDI can sometimes just write 0 to the alpha channel
+  // even for RGBX formats. In this case, we have to manually write
+  // the alpha channel to make Skia happy with RGBX and in case GDI
+  // writes some bad data. Luckily, this only happens on plugins.
+  WriteRGBXFormat(dataSurface->GetData(), dataSurface->GetSize(),
+                  dataSurface->Stride(), dataSurface->GetFormat());
+  return dataSurface.forget();
+}
+
 already_AddRefed<SourceSurface>
 DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
 #ifdef USE_SKIA_GPU
   if (UsingSkiaGPU()) {
-    // Check if the underlying SkBitmap already has an associated GrTexture.
-    if (aSurface->GetType() == SurfaceType::SKIA &&
-        static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap().getTexture()) {
-      RefPtr<SourceSurface> surface(aSurface);
-      return surface.forget();
-    }
-
-    SkBitmap bitmap = GetBitmapForSurface(aSurface);
-
-    // Upload the SkBitmap to a GrTexture otherwise.
-    SkAutoTUnref<GrTexture> texture(
-      GrRefCachedBitmapTexture(mGrContext.get(), bitmap, GrTextureParams::ClampBilerp()));
-
-    if (texture) {
-      // Create a new SourceSurfaceSkia whose SkBitmap contains the GrTexture.
-      RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
-      if (surface->InitFromGrTexture(texture, aSurface->GetSize(), aSurface->GetFormat())) {
-        return surface.forget();
-      }
-    }
-
-    // The data was too big to fit in a GrTexture.
-    if (aSurface->GetType() == SurfaceType::SKIA) {
-      // It is already a Skia source surface, so just reuse it as-is.
-      RefPtr<SourceSurface> surface(aSurface);
-      return surface.forget();
-    }
-
-    // Wrap it in a Skia source surface so that can do tiled uploads on-demand.
-    RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
-    surface->InitFromBitmap(bitmap);
-    return surface.forget();
+    return OptimizeGPUSourceSurface(aSurface);
   }
 #endif
 

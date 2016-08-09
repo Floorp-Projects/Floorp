@@ -6342,8 +6342,7 @@ nsWindow::DispatchEventToRootAccessible(uint32_t aEventType)
         return;
     }
 
-    nsCOMPtr<nsIAccessibilityService> accService =
-        services::GetAccessibilityService();
+    nsAccessibilityService* accService = GetOrCreateAccService();
     if (!accService) {
         return;
     }

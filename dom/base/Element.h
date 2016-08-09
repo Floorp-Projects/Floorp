@@ -193,6 +193,31 @@ public:
    */
   void UpdateLinkState(EventStates aState);
 
+  virtual int32_t TabIndexDefault()
+  {
+    return -1;
+  }
+
+  /**
+   * Get tabIndex of this element. If not found, return TabIndexDefault.
+   */
+  int32_t TabIndex();
+
+  /**
+   * Set tabIndex value to this element.
+   */
+  void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError);
+
+  /**
+   * Make focus on this element.
+   */
+  virtual void Focus(mozilla::ErrorResult& aError);
+
+  /**
+   * Show blur and clear focus.
+   */
+  virtual void Blur(mozilla::ErrorResult& aError);
+
   /**
    * The style state of this element. This is the real state of the element
    * with any style locks applied for pseudo-class inspecting.

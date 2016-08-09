@@ -194,6 +194,9 @@ SVGAElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
     }
     return true;
   }
+  if (nsSVGElement::IsFocusableInternal(aTabIndex, aWithMouse)) {
+    return true;
+  }
 
   if (aTabIndex) {
     *aTabIndex = -1;

@@ -670,7 +670,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIHardwareKeyHandler,
 #endif
 
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
+#include "xpcAccessibilityService.h"
 
   MAKE_CTOR(CreateA11yService, nsIAccessibilityService, NS_GetAccessibilityService)
 #endif

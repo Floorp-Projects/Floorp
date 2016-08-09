@@ -31,7 +31,7 @@ using mozilla::Move;
 #ifdef MOZ_B2G
 #define IPC_LOG(...)
 #else
-static LazyLogModule sLogModule("ipc");
+static mozilla::LazyLogModule sLogModule("ipc");
 #define IPC_LOG(...) MOZ_LOG(sLogModule, LogLevel::Debug, (__VA_ARGS__))
 #endif
 
@@ -97,6 +97,7 @@ static LazyLogModule sLogModule("ipc");
  */
 
 using namespace mozilla;
+using namespace mozilla::ipc;
 using namespace std;
 
 using mozilla::dom::AutoNoJSAPI;
