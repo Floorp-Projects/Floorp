@@ -18,7 +18,7 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsTArray.h"
 
-class nsCSSPropertySet;
+class nsCSSPropertyIDSet;
 class nsIFrame;
 class nsIStyleRule;
 class nsPresContext;
@@ -235,7 +235,7 @@ private:
   static void
   GetOverriddenProperties(nsStyleContext* aStyleContext,
                           EffectSet& aEffectSet,
-                          nsCSSPropertySet& aPropertiesOverridden);
+                          nsCSSPropertyIDSet& aPropertiesOverridden);
 
   static void
   UpdateCascadeResults(EffectSet& aEffectSet,

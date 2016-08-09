@@ -4,8 +4,8 @@
 
 /* bit vectors for sets of CSS properties */
 
-#ifndef nsCSSPropertySet_h__
-#define nsCSSPropertySet_h__
+#ifndef nsCSSPropertyIDSet_h__
+#define nsCSSPropertyIDSet_h__
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
@@ -14,13 +14,13 @@
 #include <limits.h> // for CHAR_BIT
 
 /**
- * nsCSSPropertySet maintains a set of non-shorthand CSS properties.  In
+ * nsCSSPropertyIDSet maintains a set of non-shorthand CSS properties.  In
  * other words, for each longhand CSS property we support, it has a bit
  * for whether that property is in the set.
  */
-class nsCSSPropertySet {
+class nsCSSPropertyIDSet {
 public:
-    nsCSSPropertySet() { Empty(); }
+    nsCSSPropertyIDSet() { Empty(); }
     // auto-generated copy-constructor OK
 
     void AssertInSetRange(nsCSSPropertyID aProperty) const {
@@ -63,7 +63,7 @@ public:
         }
     }
 
-    bool Equals(const nsCSSPropertySet& aOther) const {
+    bool Equals(const nsCSSPropertyIDSet& aOther) const {
       return mozilla::PodEqual(mProperties, aOther.mProperties);
     }
 
@@ -95,4 +95,4 @@ private:
     property_set_type mProperties[kChunkCount];
 };
 
-#endif /* !defined(nsCSSPropertySet_h__) */
+#endif /* !defined(nsCSSPropertyIDSet_h__) */
