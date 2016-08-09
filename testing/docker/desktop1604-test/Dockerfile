@@ -61,11 +61,6 @@ RUN npm install -g npm@^2.0.0 \
  && rm -rf ~/.npm
 ENV PATH $PATH:/home/worker/bin
 
-# Remove once running under 'worker' user.  This is necessary for pulseaudio to start
-# XXX: change this back to worker:worker once permissions issues are resolved
-RUN            chown -R root:root /home/worker
-
-
 # TODO Re-enable worker when bug 1093833 lands
 #USER          worker
 
@@ -97,6 +92,8 @@ ADD fonts.conf /home/worker/.fonts.conf
 ADD motd /etc/taskcluster-motd
 ADD taskcluster-interactive-shell /bin/taskcluster-interactive-shell
 RUN chmod +x /bin/taskcluster-interactive-shell
+
+RUN chown -R worker:worker /home/worker
 
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
