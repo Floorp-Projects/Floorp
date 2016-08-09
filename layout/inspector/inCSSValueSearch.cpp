@@ -36,7 +36,7 @@ inCSSValueSearch::inCSSValueSearch()
     mNormalizeChromeURLs(false)
 {
   nsCSSProps::AddRefTable();
-  mProperties = new nsCSSProperty[100];
+  mProperties = new nsCSSPropertyID[100];
 }
 
 inCSSValueSearch::~inCSSValueSearch()
@@ -222,7 +222,7 @@ inCSSValueSearch::SetNormalizeChromeURLs(bool aNormalizeChromeURLs)
 NS_IMETHODIMP 
 inCSSValueSearch::AddPropertyCriteria(const char16_t *aPropName)
 {
-  nsCSSProperty prop =
+  nsCSSPropertyID prop =
     nsCSSProps::LookupProperty(nsDependentString(aPropName),
                                CSSEnabledState::eIgnoreEnabledState);
   mProperties[mPropertyCount] = prop;

@@ -206,7 +206,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // 10000px on all corners; this triggers the clamping to make
       // circular ends.  This assumes the <hr> isn't larger than
       // that in *both* dimensions.
-      for (const nsCSSProperty* props =
+      for (const nsCSSPropertyID* props =
             nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_radius);
            *props != eCSSProperty_UNKNOWN; ++props) {
         nsCSSValue* dimen = aData->ValueFor(*props);

@@ -18,7 +18,7 @@
 #include "mozilla/DOMEventTargetHelper.h" // for DOMEventTargetHelper
 #include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadOnly
 #include "mozilla/dom/Promise.h" // for Promise
-#include "nsCSSProperty.h" // for nsCSSProperty
+#include "nsCSSPropertyID.h" // for nsCSSPropertyID
 #include "nsIGlobalObject.h"
 
 // X11 has a #define for CurrentTime.

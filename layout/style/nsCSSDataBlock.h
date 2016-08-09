@@ -64,7 +64,7 @@ public:
    *
    * Must not be called for shorthands.
    */
-  const nsCSSValue* ValueFor(nsCSSProperty aProperty) const;
+  const nsCSSValue* ValueFor(nsCSSPropertyID aProperty) const;
 
   /**
    * Attempt to replace the value for |aProperty| stored in this block
@@ -74,7 +74,7 @@ public:
    * actually made a change to the block, but regardless, if it
    * returns true, the value in |aFromBlock| was erased.
    */
-  bool TryReplaceValue(nsCSSProperty aProperty,
+  bool TryReplaceValue(nsCSSPropertyID aProperty,
                          nsCSSExpandedDataBlock& aFromBlock,
                          bool* aChanged);
 
@@ -108,9 +108,9 @@ private:
   }
 
 public:
-  // Ideally, |nsCSSProperty| would be |enum nsCSSProperty : int16_t|.  But
+  // Ideally, |nsCSSPropertyID| would be |enum nsCSSPropertyID : int16_t|.  But
   // not all of the compilers we use are modern enough to support small
-  // enums.  So we manually squeeze nsCSSProperty into 16 bits ourselves.
+  // enums.  So we manually squeeze nsCSSPropertyID into 16 bits ourselves.
   // The static assertion below ensures it fits.
   typedef int16_t CompressedCSSProperty;
   static const size_t MaxCompressedCSSProperty = INT16_MAX;
@@ -125,7 +125,7 @@ private:
                       // |nsCachedStyleData::GetBitForSID|.
   uint32_t mNumProps;
   // nsCSSValue elements are stored after these fields, and
-  // nsCSSProperty elements are stored -- each one compressed as a
+  // nsCSSPropertyID elements are stored -- each one compressed as a
   // CompressedCSSProperty -- after the nsCSSValue elements.  Space for them
   // is allocated in |operator new| above.  The static assertions following
   // this class make sure that the value and property elements are aligned
@@ -144,9 +144,9 @@ private:
     return Values() + i;
   }
 
-  nsCSSProperty PropertyAtIndex(uint32_t i) const {
+  nsCSSPropertyID PropertyAtIndex(uint32_t i) const {
     MOZ_ASSERT(i < mNumProps, "property index out of range");
-    nsCSSProperty prop = (nsCSSProperty)CompressedProperties()[i];
+    nsCSSPropertyID prop = (nsCSSPropertyID)CompressedProperties()[i];
     MOZ_ASSERT(!nsCSSProps::IsShorthand(prop), "out of range");
     return prop;
   }
@@ -159,7 +159,7 @@ private:
     memcpy(ValueAtIndex(i), aValue, sizeof(nsCSSValue));
   }
 
-  void SetPropertyAtIndex(uint32_t i, nsCSSProperty aProperty) {
+  void SetPropertyAtIndex(uint32_t i, nsCSSPropertyID aProperty) {
     MOZ_ASSERT(i < mNumProps, "set property index out of range");
     CompressedProperties()[i] = (CompressedCSSProperty)aProperty;
   }
@@ -181,7 +181,7 @@ static_assert(NS_ALIGNMENT_OF(nsCSSCompressedDataBlock::CompressedCSSProperty) =
 // Make sure that sizeof(CompressedCSSProperty) is big enough.
 static_assert(eCSSProperty_COUNT_no_shorthands <=
               nsCSSCompressedDataBlock::MaxCompressedCSSProperty,
-              "nsCSSProperty doesn't fit in StoredSizeOfCSSProperty");
+              "nsCSSPropertyID doesn't fit in StoredSizeOfCSSProperty");
 
 class nsCSSExpandedDataBlock
 {
@@ -218,7 +218,7 @@ public:
    * !important properties in the expanded block; otherwise
    * |*aImportantBlock| will be set to null.
    *
-   * aOrder is an array of nsCSSProperty values specifying the order
+   * aOrder is an array of nsCSSPropertyID values specifying the order
    * to store values in the two data blocks.
    */
   void Compress(nsCSSCompressedDataBlock **aNormalBlock,
@@ -229,7 +229,7 @@ public:
    * Copy a value into this expanded block.  This does NOT destroy
    * the source value object.  |aProperty| cannot be a shorthand.
    */
-  void AddLonghandProperty(nsCSSProperty aProperty, const nsCSSValue& aValue);
+  void AddLonghandProperty(nsCSSPropertyID aProperty, const nsCSSValue& aValue);
 
   /**
    * Clear the state of this expanded block.
@@ -240,12 +240,12 @@ public:
    * Clear the data for the given property (including the set and
    * important bits).  Can be used with shorthand properties.
    */
-  void ClearProperty(nsCSSProperty aPropID);
+  void ClearProperty(nsCSSPropertyID aPropID);
 
   /**
    * Same as ClearProperty, but faster and cannot be used with shorthands.
    */
-  void ClearLonghandProperty(nsCSSProperty aPropID);
+  void ClearLonghandProperty(nsCSSPropertyID aPropID);
 
   /**
    * Transfer the state for |aPropID| (which may be a shorthand)
@@ -263,7 +263,7 @@ public:
    * non-null and |aPropID| has a use counter.
    */
   bool TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                         nsCSSProperty aPropID,
+                         nsCSSPropertyID aPropID,
                          mozilla::CSSEnabledState aEnabledState,
                          bool aIsImportant,
                          bool aOverrideImportant,
@@ -277,7 +277,7 @@ public:
    * This is used for copying parsed-at-computed-value-time properties
    * that had variable references.  aPropID must be a longhand property.
    */
-  void MapRuleInfoInto(nsCSSProperty aPropID, nsRuleData* aRuleData) const;
+  void MapRuleInfoInto(nsCSSPropertyID aPropID, nsRuleData* aRuleData) const;
 
   void AssertInitialState() {
 #ifdef DEBUG
@@ -299,7 +299,7 @@ private:
    * Worker for TransferFromBlock; cannot be used with shorthands.
    */
   bool DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                             nsCSSProperty aPropID,
+                             nsCSSPropertyID aPropID,
                              bool aIsImportant,
                              bool aOverrideImportant,
                              bool aMustCallValueAppended,
@@ -326,40 +326,40 @@ private:
    * Return the storage location within |this| of the value of the
    * property |aProperty|.
    */
-  nsCSSValue* PropertyAt(nsCSSProperty aProperty) {
+  nsCSSValue* PropertyAt(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty &&
                aProperty < eCSSProperty_COUNT_no_shorthands,
                "property out of range");
     return &mValues[aProperty];
   }
-  const nsCSSValue* PropertyAt(nsCSSProperty aProperty) const {
+  const nsCSSValue* PropertyAt(nsCSSPropertyID aProperty) const {
     MOZ_ASSERT(0 <= aProperty &&
                aProperty < eCSSProperty_COUNT_no_shorthands,
                "property out of range");
     return &mValues[aProperty];
   }
 
-  void SetPropertyBit(nsCSSProperty aProperty) {
+  void SetPropertyBit(nsCSSPropertyID aProperty) {
     mPropertiesSet.AddProperty(aProperty);
   }
 
-  void ClearPropertyBit(nsCSSProperty aProperty) {
+  void ClearPropertyBit(nsCSSPropertyID aProperty) {
     mPropertiesSet.RemoveProperty(aProperty);
   }
 
-  bool HasPropertyBit(nsCSSProperty aProperty) {
+  bool HasPropertyBit(nsCSSPropertyID aProperty) {
     return mPropertiesSet.HasProperty(aProperty);
   }
 
-  void SetImportantBit(nsCSSProperty aProperty) {
+  void SetImportantBit(nsCSSPropertyID aProperty) {
     mPropertiesImportant.AddProperty(aProperty);
   }
 
-  void ClearImportantBit(nsCSSProperty aProperty) {
+  void ClearImportantBit(nsCSSPropertyID aProperty) {
     mPropertiesImportant.RemoveProperty(aProperty);
   }
 
-  bool HasImportantBit(nsCSSProperty aProperty) {
+  bool HasImportantBit(nsCSSPropertyID aProperty) {
     return mPropertiesImportant.HasProperty(aProperty);
   }
 

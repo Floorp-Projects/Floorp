@@ -22,7 +22,7 @@ using namespace mozilla::dom;
 // Helper function
 static bool
 GetCSSComputedValue(Element* aElem,
-                    nsCSSProperty aPropID,
+                    nsCSSPropertyID aPropID,
                     nsAString& aResult)
 {
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aPropID),
@@ -52,7 +52,7 @@ GetCSSComputedValue(Element* aElem,
 }
 
 // Class Methods
-nsSMILCSSProperty::nsSMILCSSProperty(nsCSSProperty aPropID,
+nsSMILCSSProperty::nsSMILCSSProperty(nsCSSPropertyID aPropID,
                                      Element* aElement)
   : mPropID(aPropID), mElement(aElement)
 {
@@ -186,7 +186,7 @@ nsSMILCSSProperty::ClearAnimValue()
 // Based on http://www.w3.org/TR/SVG/propidx.html
 // static
 bool
-nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
+nsSMILCSSProperty::IsPropertyAnimatable(nsCSSPropertyID aPropID)
 {
   // NOTE: Right now, Gecko doesn't recognize the following properties from
   // the SVG Property Index:

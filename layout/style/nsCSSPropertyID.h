@@ -5,8 +5,8 @@
 
 /* enum types for CSS properties and their values */
  
-#ifndef nsCSSProperty_h___
-#define nsCSSProperty_h___
+#ifndef nsCSSPropertyID_h___
+#define nsCSSPropertyID_h___
 
 #include <nsHashKeys.h>
 
@@ -17,7 +17,7 @@
    To change the list of properties, see nsCSSPropList.h
 
  */
-enum nsCSSProperty {
+enum nsCSSPropertyID {
   eCSSProperty_UNKNOWN = -1,
 
   #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
@@ -70,7 +70,7 @@ namespace mozilla {
 
 template<>
 inline PLDHashNumber
-Hash<nsCSSProperty>(const nsCSSProperty& aValue)
+Hash<nsCSSPropertyID>(const nsCSSPropertyID& aValue)
 {
   return uint32_t(aValue);
 }
@@ -112,4 +112,4 @@ enum nsCSSPropertyLogicalGroup {
   eCSSPropertyLogicalGroup_COUNT
 };
 
-#endif /* nsCSSProperty_h___ */
+#endif /* nsCSSPropertyID_h___ */
