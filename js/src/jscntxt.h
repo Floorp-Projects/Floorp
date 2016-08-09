@@ -267,8 +267,6 @@ class ExclusiveContext : public ContextFriendFields,
     // Threads with an ExclusiveContext may freely access any data in their
     // compartment and zone.
     JSCompartment* compartment() const {
-        MOZ_ASSERT_IF(runtime_->isAtomsCompartment(compartment_),
-                      runtime_->currentThreadHasExclusiveAccess());
         return compartment_;
     }
     JS::Zone* zone() const {
@@ -746,11 +744,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
     void init(JSRuntime* rt) {
         runtime = rt;
         if (runtime->numExclusiveThreads) {
-            runtime->assertCanLock(ExclusiveAccessLock);
             runtime->exclusiveAccessLock.lock();
-#ifdef DEBUG
-            runtime->exclusiveAccessOwner = PR_GetCurrentThread();
-#endif
         } else {
             MOZ_ASSERT(!runtime->mainThreadHasExclusiveAccess);
 #ifdef DEBUG
@@ -774,10 +768,6 @@ class MOZ_RAII AutoLockForExclusiveAccess
     }
     ~AutoLockForExclusiveAccess() {
         if (runtime->numExclusiveThreads) {
-#ifdef DEBUG
-            MOZ_ASSERT(runtime->exclusiveAccessOwner == PR_GetCurrentThread());
-            runtime->exclusiveAccessOwner = nullptr;
-#endif
             runtime->exclusiveAccessLock.unlock();
         } else {
             MOZ_ASSERT(runtime->mainThreadHasExclusiveAccess);
