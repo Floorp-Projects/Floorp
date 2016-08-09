@@ -39,6 +39,11 @@ using mozilla::CheckedUint32;
 // mozilla::Monitor non-reentrant.
 namespace mozilla {
 
+// EME Key System String.
+static const char* const kEMEKeySystemClearkey = "org.w3.clearkey";
+static const char* const kEMEKeySystemWidevine = "com.widevine.alpha";
+static const char* const kEMEKeySystemPrimetime = "com.adobe.primetime";
+
 /**
  * ReentrantMonitorConditionallyEnter
  *
