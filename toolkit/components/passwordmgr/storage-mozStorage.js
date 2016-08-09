@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const DB_VERSION = 5; // The database schema version
+const DB_VERSION = 6; // The database schema version
+const PERMISSION_SAVE_LOGINS = "login-saving";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -1178,6 +1179,44 @@ LoginManagerStorage_mozStorage.prototype = {
     if (!this._dbConnection.tableExists("moz_deleted_logins")) {
       this._dbConnection.createTable("moz_deleted_logins", this._dbSchema.tables.moz_deleted_logins);
     }
+  },
+
+  /*
+   * _dbMigrateToVersion6
+   *
+   * Version 6 migrates all the hosts from
+   * moz_disabledHosts to the permission manager.
+   */
+  _dbMigrateToVersion6 : function () {
+    let disabledHosts = [];
+    let query = "SELECT hostname FROM moz_disabledHosts";
+    let stmt;
+
+    try {
+      stmt = this._dbCreateStatement(query);
+
+      while (stmt.executeStep()) {
+        disabledHosts.push(stmt.row.hostname);
+      }
+
+      for (let host of disabledHosts) {
+        try {
+          let uri = Services.io.newURI(host, null, null);
+          Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+    } catch (e) {
+      this.log(`_dbMigrateToVersion6 failed: ${e.name} : ${e.message}`);
+    } finally {
+      if (stmt) {
+        stmt.reset();
+      }
+    }
+
+    query = "DELETE FROM moz_disabledHosts";
+    this._dbConnection.executeSimpleSQL(query);
   },
 
   /*
