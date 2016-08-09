@@ -5849,16 +5849,6 @@ JS_SetDefaultLocale(JSContext* cx, const char* locale)
     return cx->setDefaultLocale(locale);
 }
 
-JS_PUBLIC_API(UniqueChars)
-JS_GetDefaultLocale(JSContext* cx)
-{
-    AssertHeapIsIdle(cx);
-    if (const char* locale = cx->getDefaultLocale())
-        return UniqueChars(JS_strdup(cx, locale));
-
-    return nullptr;
-}
-
 JS_PUBLIC_API(void)
 JS_ResetDefaultLocale(JSContext* cx)
 {
