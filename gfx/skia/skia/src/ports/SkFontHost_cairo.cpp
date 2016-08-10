@@ -67,6 +67,12 @@ void SkInitCairoFT(bool fontHintingEnabled)
     gSetLcdFilter = &FT_Library_SetLcdFilter;
     gGlyphSlotEmbolden = &FT_GlyphSlot_Embolden;
 #endif
+    // FT_Library_SetLcdFilter may be provided but have no effect if FreeType
+    // is built without FT_CONFIG_OPTION_SUBPIXEL_RENDERING.
+    if (gSetLcdFilter &&
+        gSetLcdFilter(nullptr, FT_LCD_FILTER_NONE) == FT_Err_Unimplemented_Feature) {
+        gSetLcdFilter = nullptr;
+    }
 }
 
 #ifndef CAIRO_HAS_FC_FONT
