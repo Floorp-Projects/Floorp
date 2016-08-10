@@ -66,13 +66,19 @@ add_task(function* test_navigate_full_domain() {
   gBrowser.removeTab(tab);
 });
 
-add_task(function* test_navigate_numbers() {
+add_task(function* test_navigate_valid_numbers() {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield* runURLBarSearchTest("1234", true, false);
+  yield* runURLBarSearchTest("1234", true, true);
   gBrowser.removeTab(tab);
 });
 
+add_task(function* test_navigate_invalid_numbers() {
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  yield* runURLBarSearchTest("123456789012345", true, false);
+  gBrowser.removeTab(tab);
+});
 function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
   return function* test_navigate_single_host() {
     const pref = "browser.fixup.domainwhitelist.localhost";

@@ -198,7 +198,7 @@ UDPSocket::CloseWithReason(nsresult aReason)
 
   if (mClosed) {
     if (NS_SUCCEEDED(aReason)) {
-      mClosed->MaybeResolve(JS::UndefinedHandleValue);
+      mClosed->MaybeResolveWithUndefined();
     } else {
       mClosed->MaybeReject(aReason);
     }
@@ -469,7 +469,7 @@ UDPSocket::InitLocal(const nsAString& aLocalAddress,
     return rv;
   }
 
-  mOpened->MaybeResolve(JS::UndefinedHandleValue);
+  mOpened->MaybeResolveWithUndefined();
 
   return NS_OK;
 }
@@ -736,7 +736,7 @@ UDPSocket::CallListenerOpened()
     return NS_OK;
   }
 
-  mOpened->MaybeResolve(JS::UndefinedHandleValue);
+  mOpened->MaybeResolveWithUndefined();
 
   return NS_OK;
 }

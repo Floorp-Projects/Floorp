@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
     # Other things than us are going to run this file, so we need to give it
     # executable permissions.
-    os.chmod('config.status', 0755)
+    os.chmod('config.status', 0o755)
     if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
         os.environ['WRITE_MOZINFO'] = '1'
         # Until we have access to the virtualenv from this script, execute

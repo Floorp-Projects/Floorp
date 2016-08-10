@@ -10541,7 +10541,6 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
 
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
-                                           IsPrivateBrowsing(),
                                            getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
@@ -10602,7 +10601,6 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
 
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
-                                           IsPrivateBrowsing(),
                                            getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
@@ -11455,7 +11453,14 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    if (changingStorage->IsPrivate() != IsPrivateBrowsing()) {
+    uint32_t privateBrowsingId = 0;
+    nsIPrincipal *storagePrincipal = changingStorage->GetPrincipal();
+    rv = storagePrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if ((privateBrowsingId > 0) != IsPrivateBrowsing()) {
       return NS_OK;
     }
 

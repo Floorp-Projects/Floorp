@@ -34,6 +34,8 @@ DecoderFactory::GetDecoderType(const char* aMimeType)
     type = DecoderType::PNG;
   } else if (!strcmp(aMimeType, IMAGE_X_PNG)) {
     type = DecoderType::PNG;
+  } else if (!strcmp(aMimeType, IMAGE_APNG)) {
+    type = DecoderType::PNG;
 
   // GIF
   } else if (!strcmp(aMimeType, IMAGE_GIF)) {

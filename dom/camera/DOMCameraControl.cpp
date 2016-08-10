@@ -1100,7 +1100,7 @@ nsDOMCameraControl::ReleaseHardware(ErrorResult& aRv)
 
   if (!mCameraControl) {
     // Always succeed if the camera instance is already closed.
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
 
@@ -1291,7 +1291,7 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
       if (!mSetInitialConfig) {
         RefPtr<Promise> promise = mReleasePromise.forget();
         if (promise) {
-          promise->MaybeResolve(JS::UndefinedHandleValue);
+          promise->MaybeResolveWithUndefined();
         }
 
         CameraClosedEventInit eventInit;
@@ -1409,7 +1409,7 @@ nsDOMCameraControl::OnRecorderStateChange(CameraControlListener::RecorderState a
       {
         RefPtr<Promise> promise = mStartRecordingPromise.forget();
         if (promise) {
-          promise->MaybeResolve(JS::UndefinedHandleValue);
+          promise->MaybeResolveWithUndefined();
         }
 
         state = NS_LITERAL_STRING("Started");
@@ -1640,7 +1640,7 @@ nsDOMCameraControl::OnUserError(CameraControlListener::UserContext aContext, nsr
         // This value indicates that the hardware is already closed; which for
         // kInStopCamera, is not actually an error.
         if (promise) {
-          promise->MaybeResolve(JS::UndefinedHandleValue);
+          promise->MaybeResolveWithUndefined();
         }
 
         return;

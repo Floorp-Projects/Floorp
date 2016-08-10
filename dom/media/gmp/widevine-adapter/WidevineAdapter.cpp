@@ -5,6 +5,7 @@
 
 #include "WidevineAdapter.h"
 #include "content_decryption_module.h"
+#include "VideoUtils.h"
 #include "WidevineDecryptor.h"
 #include "WidevineUtils.h"
 #include "WidevineVideoDecoder.h"
@@ -12,7 +13,6 @@
 #include "gmp-api/gmp-decryption.h"
 #include "gmp-api/gmp-video-codec.h"
 #include "gmp-api/gmp-platform.h"
-#include "mozilla/EMEUtils.h"
 #include "mozilla/StaticPtr.h"
 
 static const GMPPlatformAPI* sPlatform = nullptr;

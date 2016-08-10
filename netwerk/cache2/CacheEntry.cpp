@@ -923,8 +923,14 @@ void CacheEntry::OnHandleClosed(CacheEntryHandle const* aHandle)
 
   mozilla::MutexAutoLock lock(mLock);
 
-  if (IsDoomed() && mHandlesCount == 0 && NS_SUCCEEDED(mFileStatus)) {
+  if (IsDoomed() && NS_SUCCEEDED(mFileStatus) &&
+      // Note: mHandlesCount is dropped before this method is called
+      (mHandlesCount == 0 ||
+       (mHandlesCount == 1 && mWriter && mWriter != aHandle))
+      ) {
     // This entry is no longer referenced from outside and is doomed.
+    // We can do this also when there is just reference from the writer,
+    // no one else could ever reach the written data.
     // Tell the file to kill the handle, i.e. bypass any I/O operations
     // on it except removing the file.
     mFile->Kill();
@@ -1653,6 +1659,17 @@ void CacheEntry::DoomFile()
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
   if (NS_SUCCEEDED(mFileStatus)) {
+    if (mHandlesCount == 0 ||
+        (mHandlesCount == 1 && mWriter)) {
+      // We kill the file also when there is just reference from the writer,
+      // no one else could ever reach the written data.  Obvisouly also
+      // when there is no reference at all (should we ever end up here
+      // in that case.)
+      // Tell the file to kill the handle, i.e. bypass any I/O operations
+      // on it except removing the file.
+      mFile->Kill();
+    }
+
     // Always calls the callback asynchronously.
     rv = mFile->Doom(mDoomCallback ? this : nullptr);
     if (NS_SUCCEEDED(rv)) {
