@@ -64,7 +64,7 @@ public:
     : mContext(aContext), mType(aType), mRootHasSecureConnection(aRootHasSecureConnection)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     NS_ASSERTION(mContext,
                  "You can't call this runnable without a requesting context");

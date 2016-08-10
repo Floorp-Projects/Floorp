@@ -5570,12 +5570,6 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
     MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery.isEmpty());
 
-    // Threads with an exclusive context can hit refillFreeList while holding
-    // the exclusive access lock. To avoid deadlocking when we try to acquire
-    // this lock during GC and the other thread is waiting, make sure we hold
-    // the exclusive access lock during GC sessions.
-    MOZ_ASSERT(rt->currentThreadHasExclusiveAccess());
-
     if (rt->exclusiveThreadsPresent()) {
         // Lock the helper thread state when changing the heap state in the
         // presence of exclusive threads, to avoid racing with refillFreeList.
@@ -6208,9 +6202,6 @@ GCRuntime::checkCanCallAPI()
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
     MOZ_RELEASE_ASSERT(!rt->isHeapBusy());
 
-    /* The engine never locks across anything that could GC. */
-    MOZ_ASSERT(!rt->currentThreadHasExclusiveAccess());
-
     MOZ_ASSERT(isAllocAllowed());
 }
 
@@ -6467,17 +6458,20 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC& lock)
 }
 
 void
-GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pretenureGroups)
+GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
 {
     MOZ_ASSERT(!rt->isHeapBusy());
 
     if (rt->mainThread.suppressGC)
         return;
 
+    gcstats::AutoPhase ap(stats, phase);
+
     minorGCTriggerReason = JS::gcreason::NO_REASON;
     TraceLoggerThread* logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
-    nursery.collect(rt, reason, pretenureGroups);
+    Nursery::ObjectGroupList pretenureGroups;
+    nursery.collect(rt, reason, &pretenureGroups);
     MOZ_ASSERT(nursery.isEmpty());
 
     blocksToFreeAfterMinorGC.freeAll();
@@ -6487,23 +6481,19 @@ GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pr
         CheckHeapAfterMovingGC(rt);
 #endif
 
-    AutoLockGC lock(rt);
-    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-        maybeAllocTriggerZoneGC(zone, lock);
-}
-
-// Alternate to the runtime-taking form that allows marking object groups as
-// needing pretenuring.
-void
-GCRuntime::minorGC(JSContext* cx, JS::gcreason::Reason reason)
-{
-    gcstats::AutoPhase ap(stats, gcstats::PHASE_MINOR_GC);
-
-    Nursery::ObjectGroupList pretenureGroups;
-    minorGCImpl(reason, &pretenureGroups);
+    JSContext* cx = rt->contextFromMainThread();
     for (size_t i = 0; i < pretenureGroups.length(); i++) {
-        if (pretenureGroups[i]->canPreTenure())
-            pretenureGroups[i]->setShouldPreTenure(cx);
+        ObjectGroup* group = pretenureGroups[i];
+        if (group->canPreTenure()) {
+            AutoCompartment ac(cx, group->compartment());
+            group->setShouldPreTenure(cx);
+        }
+    }
+
+    {
+        AutoLockGC lock(rt);
+        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+            maybeAllocTriggerZoneGC(zone, lock);
     }
 }
 
@@ -6530,16 +6520,12 @@ GCRuntime::enableGenerationalGC()
 }
 
 bool
-GCRuntime::gcIfRequested(JSContext* cx /* = nullptr */)
+GCRuntime::gcIfRequested()
 {
     // This method returns whether a major GC was performed.
 
-    if (minorGCRequested()) {
-        if (cx)
-            minorGC(cx, minorGCTriggerReason);
-        else
-            minorGC(minorGCTriggerReason);
-    }
+    if (minorGCRequested())
+        minorGC(minorGCTriggerReason);
 
     if (majorGCRequested()) {
         if (!isIncrementalGCInProgress())

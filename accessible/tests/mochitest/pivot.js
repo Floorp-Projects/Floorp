@@ -519,7 +519,7 @@ function removeVCRootChecker(aPivot)
  */
 function removeVCRootInvoker(aRootNode)
 {
-  this.pivot = gAccRetrieval.createAccessiblePivot(getAccessible(aRootNode));
+  this.pivot = gAccService.createAccessiblePivot(getAccessible(aRootNode));
   this.invoke = function removeVCRootInvoker_invoke()
   {
     this.pivot.position = this.pivot.root.firstChild;

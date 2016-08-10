@@ -126,7 +126,7 @@ class AsyncNotifyRunnable : public Runnable
       mObservers.AppendElement(aObserver);
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be running on the main thread");
       MOZ_ASSERT(mTracker, "mTracker should not be null");
@@ -207,7 +207,7 @@ class AsyncNotifyCurrentStateRunnable : public Runnable
       mImage = mProgressTracker->GetImage();
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be running on the main thread");
       mObserver->SetNotificationsDeferred(false);

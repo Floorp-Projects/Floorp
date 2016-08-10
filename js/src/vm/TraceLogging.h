@@ -16,6 +16,7 @@
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
 #include "threading/Mutex.h"
+#include "threading/Thread.h"
 #include "vm/TraceLoggingGraph.h"
 #include "vm/TraceLoggingTypes.h"
 
@@ -294,9 +295,9 @@ class TraceLoggerThread
 class TraceLoggerThreadState
 {
 #ifdef JS_TRACE_LOGGING
-    typedef HashMap<PRThread*,
+    typedef HashMap<Thread::Id,
                     TraceLoggerThread*,
-                    PointerHasher<PRThread*, 3>,
+                    Thread::Hasher,
                     SystemAllocPolicy> ThreadLoggerHashMap;
     typedef Vector<TraceLoggerThread*, 1, js::SystemAllocPolicy > MainThreadLoggers;
 
@@ -330,7 +331,7 @@ class TraceLoggerThreadState
 
     TraceLoggerThread* forMainThread(JSRuntime* runtime);
     TraceLoggerThread* forMainThread(jit::CompileRuntime* runtime);
-    TraceLoggerThread* forThread(PRThread* thread);
+    TraceLoggerThread* forThread(const Thread::Id& thread);
 
     bool isTextIdEnabled(uint32_t textId) {
         if (textId < TraceLogger_Last)

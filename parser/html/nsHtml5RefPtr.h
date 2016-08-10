@@ -17,7 +17,7 @@ class nsHtml5RefPtrReleaser : public mozilla::Runnable
       explicit nsHtml5RefPtrReleaser(T* aPtr)
           : mPtr(aPtr)
         {}
-      NS_IMETHODIMP Run()
+      NS_IMETHOD Run() override
         {
           mPtr->Release();
           return NS_OK;

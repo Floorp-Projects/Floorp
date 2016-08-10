@@ -430,7 +430,7 @@ public:
     , mError(aRuntime, aError)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsPIDOMWindowInner* win = mWindow;

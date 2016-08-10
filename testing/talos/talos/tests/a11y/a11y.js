@@ -1,4 +1,4 @@
-gAccRetrieval = 0;
+gAccService = 0;
 
 // Make sure not to touch Components before potentially invoking enablePrivilege,
 // because otherwise it won't be there.
@@ -9,15 +9,15 @@ nsIDOMNode = Components.interfaces.nsIDOMNode;
 function initAccessibility()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  if (!gAccRetrieval) {
-    var retrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"];
-    if (retrieval) { // fails if build lacks accessibility module
-      gAccRetrieval =
-      Components.classes["@mozilla.org/accessibleRetrieval;1"]
-                .getService(Components.interfaces.nsIAccessibleRetrieval);
+  if (!gAccService) {
+    var service = Components.classes["@mozilla.org/accessibilityService;1"];
+    if (service) { // fails if build lacks accessibility module
+      gAccService =
+      Components.classes["@mozilla.org/accessibilityService;1"]
+                .getService(Components.interfaces.nsIAccessibilityService);
     }
   }
-  return gAccRetrieval;
+  return gAccService;
 }
 
 function getAccessible(aAccOrElmOrID, aInterfaces)
@@ -41,7 +41,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces)
   var acc = (aAccOrElmOrID instanceof nsIAccessible) ? aAccOrElmOrID : null;
   if (!acc) {
     try {
-      acc = gAccRetrieval.getAccessibleFor(elm);
+      acc = gAccService.getAccessibleFor(elm);
     } catch (e) {
     }
   }

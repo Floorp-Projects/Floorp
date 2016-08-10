@@ -68,7 +68,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsCOMPtr<nsIMemoryInfoDumper> dumper =
       do_GetService("@mozilla.org/memory-info-dumper;1");

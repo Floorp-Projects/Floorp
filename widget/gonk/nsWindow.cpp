@@ -176,7 +176,7 @@ public:
       , mApzResponse(aApzResponse)
     {}
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
         if (gFocusedWindow) {
             gFocusedWindow->DispatchTouchEventForAPZ(mInput, mGuid, mInputBlockId, mApzResponse);
         }

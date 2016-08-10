@@ -466,6 +466,9 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   padding: 2px 3px;
   -moz-appearance: none;
   border: 1px solid transparent;
+  border-radius: 1px;
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
 }
 
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]) {
@@ -478,6 +481,12 @@ toolbarbutton.bookmark-item[open="true"] {
   border-color: var(--toolbarbutton-active-bordercolor);
   box-shadow: var(--toolbarbutton-active-boxshadow);
   background: var(--toolbarbutton-active-background);
+}
+
+toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):-moz-lwtheme {
+  background-color: rgba(255,255,255,.25);
+  background-origin: padding-box;
+  background-clip: padding-box;
 }
 
 .bookmark-item > .toolbarbutton-icon,
@@ -2708,4 +2717,21 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 .browser-extension-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
   overflow: hidden;
+}
+
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+  .cui-widget-panelview[id^=PanelUI-webext-] {
+    border-radius: 4px;
+  }
+}
+
+.webextension-popup-browser {
+  margin-right: -1px;
+  border-radius: inherit;
+}
+
+#PanelUI-popup .webextension-popup-browser {
+  margin: 0;
 }

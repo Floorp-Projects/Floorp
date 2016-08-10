@@ -77,7 +77,7 @@ public:
     mTee = aTee;
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (!mBuf) {
       NS_WARNING("nsInputStreamTeeWriteEvent::Run() "

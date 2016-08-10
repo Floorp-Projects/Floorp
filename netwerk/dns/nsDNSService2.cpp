@@ -454,7 +454,7 @@ public:
     {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         MOZ_ASSERT(NS_IsMainThread());
         nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

@@ -1556,7 +1556,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mChannel->Redirect3Complete();
     mNewChannel->OverrideWithSynthesizedResponse(mHead, mInput, mListener);
     return NS_OK;

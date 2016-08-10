@@ -1360,7 +1360,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     return NS_OK;
   }
@@ -9105,7 +9105,7 @@ nsDocument::UnblockOnload(bool aFireSync)
 class nsUnblockOnloadEvent : public Runnable {
 public:
   explicit nsUnblockOnloadEvent(nsDocument* aDoc) : mDoc(aDoc) {}
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mDoc->DoUnblockOnload();
     return NS_OK;
   }
@@ -9990,7 +9990,7 @@ public:
   }
   virtual ~nsDelayedEventDispatcher() {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     FireOrClearDelayedEvents(mDocuments, true);
     return NS_OK;
@@ -11445,7 +11445,7 @@ public:
   explicit nsCallRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
     : mRequest(Move(aRequest)) { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mRequest->GetDocument()->RequestFullScreen(Move(mRequest));
     return NS_OK;

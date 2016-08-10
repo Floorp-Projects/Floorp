@@ -74,7 +74,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     NS_ASSERTION(NS_IsMainThread(),
                  "AsyncShowFilePicker should be on the main thread!");

@@ -42,9 +42,19 @@ public:
 
   virtual nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
 
+  // Returns the atom for the namespace URI associated with the given ID. The
+  // ID must be within range and not be kNameSpaceID_None (i.e. zero);
   nsIAtom* NameSpaceURIAtom(int32_t aNameSpaceID) {
-    MOZ_ASSERT(aNameSpaceID > 0 && (int64_t) aNameSpaceID <= (int64_t) mURIArray.Length());
-    return mURIArray.ElementAt(aNameSpaceID - 1); // id is index + 1
+    MOZ_ASSERT(aNameSpaceID > 0);
+    return NameSpaceURIAtomForServo(aNameSpaceID);
+  }
+
+  // NB: This function should only be called by Servo code (and the above
+  // accessor), which uses the empty atom to represent kNameSpaceID_None.
+  nsIAtom* NameSpaceURIAtomForServo(int32_t aNameSpaceID) {
+    MOZ_ASSERT(aNameSpaceID >= 0);
+    MOZ_ASSERT((int64_t) aNameSpaceID < (int64_t) mURIArray.Length());
+    return mURIArray.ElementAt(aNameSpaceID);
   }
 
   int32_t GetNameSpaceID(const nsAString& aURI,

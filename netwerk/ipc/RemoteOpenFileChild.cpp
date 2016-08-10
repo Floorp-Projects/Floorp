@@ -54,7 +54,7 @@ public:
     }
 
 private:
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(mListener);

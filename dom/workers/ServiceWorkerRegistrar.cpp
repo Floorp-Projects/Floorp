@@ -530,8 +530,8 @@ public:
     AssertIsOnBackgroundThread();
   }
 
-  NS_IMETHODIMP
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     RefPtr<ServiceWorkerRegistrar> service = ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(service);

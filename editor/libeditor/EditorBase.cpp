@@ -1772,7 +1772,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     // Note that we don't need to check mDispatchInputEvent here.  We need
     // to check it only when the editor requests to dispatch the input event.

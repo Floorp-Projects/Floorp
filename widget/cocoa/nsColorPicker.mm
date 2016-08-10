@@ -162,6 +162,10 @@ nsColorPicker::Open(nsIColorPickerShownCallback* aCallback)
 void
 nsColorPicker::Update(NSColor* aColor)
 {
+  NSColor *color = aColor;
+  if ([[aColor colorSpaceName] isEqualToString:NSNamedColorSpace]) {
+    color = [aColor colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
+  }
   GetHexStringFromNSColor(aColor, mColor);
   mCallback->Update(mColor);
 }

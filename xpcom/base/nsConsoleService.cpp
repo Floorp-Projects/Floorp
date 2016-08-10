@@ -128,7 +128,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     Preferences::AddBoolVarCache(&sLoggingEnabled, "consoleservice.enabled", true);
     Preferences::AddBoolVarCache(&sLoggingBuffered, "consoleservice.buffered", true);

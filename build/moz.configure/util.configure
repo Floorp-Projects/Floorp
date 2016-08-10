@@ -349,6 +349,9 @@ def depends_when(*args, **kwargs):
     if not len(kwargs) == 1 and kwargs.get('when'):
         die('depends_when requires a single keyword argument, "when"')
     when = kwargs['when']
+    if not when:
+        return depends(*args)
+
     def decorator(fn):
         @depends(when, *args)
         def wrapper(val, *args):

@@ -121,7 +121,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     // This event shuts down the worker thread and so must be main thread.
     MOZ_ASSERT(NS_IsMainThread());
@@ -148,7 +148,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread(),
                "AsyncRevealOperation should not be run on the main thread!");

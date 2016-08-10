@@ -37,8 +37,8 @@ public:
     AssertIsOnBackgroundThread();
   }
 
-  NS_IMETHODIMP
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     AssertIsInMainProcess();
     AssertIsOnBackgroundThread();
@@ -77,8 +77,8 @@ public:
     AssertIsOnBackgroundThread();
   }
 
-  NS_IMETHODIMP
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     AssertIsInMainProcess();
     AssertIsOnBackgroundThread();
@@ -125,7 +125,7 @@ public:
     MOZ_ASSERT(mBackgroundThread);
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     if (NS_IsMainThread()) {
       nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);

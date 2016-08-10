@@ -624,7 +624,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
@@ -699,7 +699,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
@@ -740,7 +740,7 @@ public:
     MOZ_ASSERT(aCallback, "Must pass a non-null callback!");
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
@@ -804,7 +804,7 @@ public:
     MOZ_ASSERT(aCallback, "Must pass a non-null callback!");
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (NS_IsMainThread()) {
       (void)mCallback->HandleCompletion();
@@ -904,7 +904,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread(), "This should not be called on the main thread");
 
@@ -1236,7 +1236,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread(), "This should not be called on the main thread");
 
@@ -1308,7 +1308,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread(), "This should not be called on the main thread");
 
@@ -1505,7 +1505,7 @@ public:
     }
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
@@ -1599,7 +1599,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread(),
                "This should not be called on the main thread");

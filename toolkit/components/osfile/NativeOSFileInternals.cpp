@@ -421,7 +421,7 @@ public:
       MOZ_ASSERT(!NS_IsMainThread());
     }
 
-  NS_METHOD Run() {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     (void)mOnError->Complete(mOperation, mOSError);
 
@@ -471,7 +471,7 @@ public:
       MOZ_ASSERT(!NS_IsMainThread());
     }
 
-  NS_METHOD Run() {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     (void)mOnSuccess->Complete(mResult);
 

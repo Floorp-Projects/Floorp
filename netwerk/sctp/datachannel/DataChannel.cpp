@@ -2299,7 +2299,7 @@ public:
     mBlob(aBlob)
   {}
 
-  NS_IMETHODIMP Run() {
+  NS_IMETHOD Run() override {
     // ReadBlob() is responsible to releasing the reference
     DataChannelConnection *self = mConnection;
     self->ReadBlob(mConnection.forget(), mStream, mBlob);
@@ -2352,7 +2352,7 @@ public:
     }
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     ASSERT_WEBRTC(NS_IsMainThread());
 

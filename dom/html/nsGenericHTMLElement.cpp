@@ -122,7 +122,7 @@ class nsAutoFocusEvent : public Runnable
 public:
   explicit nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (!fm) {
       return NS_ERROR_NULL_POINTER;
