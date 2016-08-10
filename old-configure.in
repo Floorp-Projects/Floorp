@@ -799,24 +799,6 @@ if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
 fi
 
 dnl ========================================================
-dnl = Enable Gecko integrated IPC fuzzer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(ipc-fuzzer,
-[  --enable-ipc-fuzzer       Enable IPC fuzzer (default=no)],
-    MOZ_FAULTY=1,
-    MOZ_FAULTY= )
-AC_SUBST(MOZ_FAULTY)
-
-if test -n "$MOZ_FAULTY" && test "$OS_ARCH" = "WINNT"; then
-    AC_MSG_ERROR([--enable-ipc-fuzzer is not supported on this platform.])
-fi
-
-if test -n "$MOZ_FAULTY"; then
-    MOZ_FAULTY=1
-    AC_DEFINE(MOZ_FAULTY)
-fi
-
-dnl ========================================================
 dnl = Enable DMD
 dnl ========================================================
 
