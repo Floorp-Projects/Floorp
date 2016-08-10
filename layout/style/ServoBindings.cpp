@@ -6,6 +6,7 @@
 
 #include "mozilla/ServoBindings.h"
 
+#include "ChildIterator.h"
 #include "StyleStructContext.h"
 #include "gfxFontFamilyList.h"
 #include "nsAttrValueInlines.h"
@@ -29,6 +30,7 @@
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 #define IMPL_STRONG_REF_TYPE_FOR(type_) \
   already_AddRefed<type_>               \
@@ -119,6 +121,32 @@ RawGeckoElement*
 Gecko_GetDocumentElement(RawGeckoDocument* aDoc)
 {
   return aDoc->GetDocumentElement();
+}
+
+StyleChildrenIterator*
+Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNode* aNode)
+{
+  if (!aNode->IsElement()) {
+    return nullptr;
+  }
+
+  Element* el = aNode->AsElement();
+  return StyleChildrenIterator::IsNeeded(el) ? new StyleChildrenIterator(el)
+                                             : nullptr;
+}
+
+void
+Gecko_DropStyleChildrenIterator(StyleChildrenIterator* aIterator)
+{
+  MOZ_ASSERT(aIterator);
+  delete aIterator;
+}
+
+RawGeckoNode*
+Gecko_GetNextStyleChild(StyleChildrenIterator* aIterator)
+{
+  MOZ_ASSERT(aIterator);
+  return aIterator->GetNextChild();
 }
 
 EventStates::ServoType

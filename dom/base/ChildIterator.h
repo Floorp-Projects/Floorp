@@ -249,6 +249,33 @@ private:
 #endif
 };
 
+/**
+ * StyleChildrenIterator traverses the children of the element from the
+ * perspective of the style system, particularly the children we need to traverse
+ * during restyle. This is identical to AllChildrenIterator with eAllChildren,
+ * _except_ that we detect and skip any native anonymous children that are used
+ * to implement pseudo-elements (since the style system needs to cascade those
+ * using different algorithms).
+ *
+ * Note: it assumes that no mutation of the DOM or frame tree takes place during
+ * iteration, and will break horribly if that is not true.
+ */
+class StyleChildrenIterator : private AllChildrenIterator {
+public:
+  explicit StyleChildrenIterator(nsIContent* aContent)
+    : AllChildrenIterator(aContent, nsIContent::eAllChildren)
+  {
+    MOZ_COUNT_CTOR(StyleChildrenIterator);
+  }
+  ~StyleChildrenIterator() { MOZ_COUNT_DTOR(StyleChildrenIterator); }
+
+  nsIContent* GetNextChild();
+
+  // Returns true if we cannot find all the children we need to style by
+  // traversing the siblings of the first child.
+  static bool IsNeeded(Element* aParent);
+};
+
 } // namespace dom
 } // namespace mozilla
 
