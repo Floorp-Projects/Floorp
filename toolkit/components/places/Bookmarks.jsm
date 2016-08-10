@@ -77,10 +77,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
-
-// Imposed to limit database size.
-const DB_URL_LENGTH_MAX = 65536;
-const DB_TITLE_LENGTH_MAX = 4096;
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesSyncUtils",
+                                  "resource://gre/modules/PlacesSyncUtils.jsm");
 
 const MATCH_ANYWHERE_UNMODIFIED = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE_UNMODIFIED;
 const BEHAVIOR_BOOKMARK = Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
@@ -662,7 +660,7 @@ var Bookmarks = Object.freeze({
     if (!Array.isArray(orderedChildrenGuids) || !orderedChildrenGuids.length)
       throw new Error("Must provide a sorted array of children GUIDs.");
     try {
-      orderedChildrenGuids.forEach(VALIDATORS.guid);
+      orderedChildrenGuids.forEach(PlacesUtils.BOOKMARK_VALIDATORS.guid);
     } catch (ex) {
       throw new Error("Invalid GUID found in the sorted children array.");
     }
@@ -1275,117 +1273,9 @@ function rowsToItemsArray(rows) {
   });
 }
 
-/**
- * Executes a boolean validate function, throwing if it returns false.
- *
- * @param boolValidateFn
- *        A boolean validate function.
- * @return the input value.
- * @throws if input doesn't pass the validate function.
- */
-function simpleValidateFunc(boolValidateFn) {
-  return (v, input) => {
-    if (!boolValidateFn(v, input))
-      throw new Error("Invalid value");
-    return v;
-  };
-}
-
-/**
- * List of validators, one per each known property.
- * Validators must throw if the property value is invalid and return a fixed up
- * version of the value, if needed.
- */
-const VALIDATORS = Object.freeze({
-  guid: simpleValidateFunc(v => typeof(v) == "string" &&
-                                PlacesUtils.isValidGuid(v)),
-  parentGuid: simpleValidateFunc(v => typeof(v) == "string" &&
-                                      /^[a-zA-Z0-9\-_]{12}$/.test(v)),
-  index: simpleValidateFunc(v => Number.isInteger(v) &&
-                                 v >= Bookmarks.DEFAULT_INDEX),
-  dateAdded: simpleValidateFunc(v => v.constructor.name == "Date"),
-  lastModified: simpleValidateFunc(v => v.constructor.name == "Date"),
-  type: simpleValidateFunc(v => Number.isInteger(v) &&
-                                [ Bookmarks.TYPE_BOOKMARK
-                                , Bookmarks.TYPE_FOLDER
-                                , Bookmarks.TYPE_SEPARATOR ].includes(v)),
-  title: v => {
-    simpleValidateFunc(val => val === null || typeof(val) == "string").call(this, v);
-    if (!v)
-      return null;
-    return v.slice(0, DB_TITLE_LENGTH_MAX);
-  },
-  url: v => {
-    simpleValidateFunc(val => (typeof(val) == "string" && val.length <= DB_URL_LENGTH_MAX) ||
-                              (val instanceof Ci.nsIURI && val.spec.length <= DB_URL_LENGTH_MAX) ||
-                              (val instanceof URL && val.href.length <= DB_URL_LENGTH_MAX)
-                      ).call(this, v);
-    if (typeof(v) === "string")
-      return new URL(v);
-    if (v instanceof Ci.nsIURI)
-      return new URL(v.spec);
-    return v;
-  }
-});
-
-/**
- * Checks validity of a bookmark object, filling up default values for optional
- * properties.
- *
- * @param input (object)
- *        The bookmark object to validate.
- * @param behavior (object) [optional]
- *        Object defining special behavior for some of the properties.
- *        The following behaviors may be optionally set:
- *         - requiredIf: if the provided condition is satisfied, then this
- *                       property is required.
- *         - validIf: if the provided condition is not satisfied, then this
- *                    property is invalid.
- *         - defaultValue: an undefined property should default to this value.
- *
- * @return a validated and normalized bookmark-item.
- * @throws if the object contains invalid data.
- * @note any unknown properties are pass-through.
- */
-function validateBookmarkObject(input, behavior={}) {
-  if (!input)
-    throw new Error("Input should be a valid object");
-  let normalizedInput = {};
-  let required = new Set();
-  for (let prop in behavior) {
-    if (behavior[prop].hasOwnProperty("required") && behavior[prop].required) {
-      required.add(prop);
-    }
-    if (behavior[prop].hasOwnProperty("requiredIf") && behavior[prop].requiredIf(input)) {
-      required.add(prop);
-    }
-    if (behavior[prop].hasOwnProperty("validIf") && input[prop] !== undefined &&
-        !behavior[prop].validIf(input)) {
-      throw new Error(`Invalid value for property '${prop}': ${input[prop]}`);
-    }
-    if (behavior[prop].hasOwnProperty("defaultValue") && input[prop] === undefined) {
-      input[prop] = behavior[prop].defaultValue;
-    }
-  }
-
-  for (let prop in input) {
-    if (required.has(prop)) {
-      required.delete(prop);
-    } else if (input[prop] === undefined) {
-      // Skip undefined properties that are not required.
-      continue;
-    }
-    if (VALIDATORS.hasOwnProperty(prop)) {
-      try {
-        normalizedInput[prop] = VALIDATORS[prop](input[prop], input);
-      } catch (ex) {
-        throw new Error(`Invalid value for property '${prop}': ${input[prop]}`);
-      }
-    }
-  }
-  if (required.size > 0)
-    throw new Error(`The following properties were expected: ${[...required].join(", ")}`);
-  return normalizedInput;
+function validateBookmarkObject(input, behavior) {
+  return PlacesUtils.validateItemProperties(
+    PlacesUtils.BOOKMARK_VALIDATORS, input, behavior);
 }
 
 /**

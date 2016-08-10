@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Livemark Feed</title>
+  <link href="https://example.com/"/>
+  <updated>2016-08-09T19:51:45.147Z</updated>
+  <author>
+    <name>John Doe</name>
+  </author>
+  <id>urn:uuid:e7947414-6ee0-4009-ae75-8b0ad3c6894b</id>
+  <entry>
+    <title>Some awesome article</title>
+    <link href="https://example.com/some-article"/>
+    <id>urn:uuid:d72ce019-0a56-4a0b-ac03-f66117d78141</id>
+    <updated>2016-08-09T19:57:22.178Z</updated>
+    <summary>My great article summary.</summary>
+  </entry>
+</feed>
