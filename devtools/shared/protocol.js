@@ -1091,17 +1091,6 @@ var generateRequestHandlers = function (actorSpec, actorProto) {
 };
 
 /**
- * Create an actor class for the given actor prototype.
- *
- * @param object actorProto
- *    The actor prototype.  Must have a 'typeName' property,
- *    should have method definitions, can have event definitions.
- */
-exports.ActorClass = function (actorProto) {
-  return ActorClassWithSpec(generateActorSpec(actorProto), actorProto);
-};
-
-/**
  * Create an actor class for the given actor specification and prototype.
  *
  * @param object actorSpec
@@ -1420,19 +1409,6 @@ var generateRequestMethods = function (actorSpec, frontProto) {
   frontProto._actorSpec = actorSpec;
 
   return frontProto;
-};
-
-/**
- * Create a front class for the given actor class and front prototype.
- *
- * @param ActorClass actorType
- *    The actor class you're creating a front for.
- * @param object frontProto
- *    The front prototype.  Must have a 'typeName' property,
- *    should have method definitions, can have event definitions.
- */
-exports.FrontClass = function (actorType, frontProto) {
-  return FrontClassWithSpec(prototypeOf(actorType)._actorSpec, frontProto);
 };
 
 /**

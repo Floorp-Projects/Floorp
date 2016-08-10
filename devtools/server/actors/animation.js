@@ -29,8 +29,7 @@ const {Cu} = require("chrome");
 const promise = require("promise");
 const {Task} = require("devtools/shared/task");
 const protocol = require("devtools/shared/protocol");
-const {ActorClass, Actor, FrontClass, Front,
-       Arg, method, RetVal, types} = protocol;
+const {Actor, ActorClassWithSpec} = protocol;
 const {animationPlayerSpec, animationsSpec} = require("devtools/shared/specs/animation");
 const events = require("sdk/event/core");
 
