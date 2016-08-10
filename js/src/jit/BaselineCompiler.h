@@ -210,6 +210,7 @@ namespace jit {
     _(JSOP_RETURN)             \
     _(JSOP_FUNCTIONTHIS)       \
     _(JSOP_GLOBALTHIS)         \
+    _(JSOP_CHECKISOBJ)         \
     _(JSOP_CHECKTHIS)          \
     _(JSOP_CHECKRETURN)        \
     _(JSOP_NEWTARGET)          \
