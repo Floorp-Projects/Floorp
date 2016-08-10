@@ -185,7 +185,7 @@ public:
   }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     AssertIsOnMainThread();
 

@@ -62,7 +62,7 @@ MockFxaStorageManager.prototype = {
   },
 
   updateAccountData(updatedFields) {
-    for (let [name, value] of Iterator(updatedFields)) {
+    for (let [name, value] of Object.entries(updatedFields)) {
       if (value == null) {
         delete this.accountData[name];
       } else {

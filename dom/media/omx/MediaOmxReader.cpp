@@ -82,7 +82,7 @@ public:
     MOZ_ASSERT(mOmxReader.get());
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mOmxReader->OnTaskQueue());
     NotifyDataArrived();

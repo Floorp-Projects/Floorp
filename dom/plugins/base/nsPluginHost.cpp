@@ -1416,7 +1416,7 @@ class nsPluginUnloadRunnable : public Runnable
 public:
   explicit nsPluginUnloadRunnable(uint32_t aPluginId) : mPluginId(aPluginId) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     if (!host) {
@@ -4195,7 +4195,7 @@ public:
     PR_REMOVE_LINK(this);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     RefPtr<nsNPAPIPluginInstance> instance;
 

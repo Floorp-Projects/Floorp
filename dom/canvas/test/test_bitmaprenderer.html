@@ -70,7 +70,16 @@ function runTest(canvasWidth, canvasHeight, nextTest) {
     canvas2.style.display = "none";
     var snapshotRef = snapshotWindow(window);
 
-    var results = compareSnapshots(snapshot, snapshotRef, true);
+    // bitmaprenderers use an ImageLayer whereas a normal 2d canvas uses a canvas layer. This
+    // can result in some anti-aliasing differences on the edge. We consider slight AA differences
+    // to be reasonable when using different codepaths so fuzz a little bit.
+    var fuzz = { numDifferentPixels:  0,
+                 maxDifference: 0 };
+    if (SpecialPowers.Services.appinfo.widgetToolkit == "android") {
+      fuzz.maxDifference = 14;
+      fuzz.numDifferentPixels = 130;
+    }
+    var results = compareSnapshots(snapshot, snapshotRef, true, fuzz);
     ok(results[0], "Screenshots should be the same");
 
     document.body.removeChild(canvasRef);

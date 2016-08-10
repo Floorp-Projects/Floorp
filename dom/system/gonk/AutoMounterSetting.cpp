@@ -167,7 +167,7 @@ public:
   CheckVolumeSettingsRunnable(const nsACString& aVolumeName)
     : mVolumeName(aVolumeName) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsISettingsService> settingsService =
@@ -199,7 +199,7 @@ class SetStatusRunnable : public Runnable
 public:
   SetStatusRunnable(int32_t aStatus) : mStatus(aStatus) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsISettingsService> settingsService =

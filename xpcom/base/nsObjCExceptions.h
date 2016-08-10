@@ -227,15 +227,4 @@ NS_OBJC_TRY(_e, )
                                                 }                               \
                                                 return _rv;
 
-#define NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK @try {
-#define NS_OBJC_END_TRY_LOGONLY_BLOCK   } @catch(NSException *_exn) {           \
-                                          nsObjCExceptionLog(_exn);             \
-                                        }
-
-#define NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK_RETURN    @try {
-#define NS_OBJC_END_TRY_LOGONLY_BLOCK_RETURN(_rv) } @catch(NSException *_exn) { \
-                                                    nsObjCExceptionLog(_exn);   \
-                                                  }                             \
-                                                  return _rv;
-
 #endif // nsObjCExceptions_h_

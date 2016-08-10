@@ -322,7 +322,7 @@ public:
   { }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     AssertIsOnMainThread();
     if (!mWindow->IsCurrentInnerWindow()) {

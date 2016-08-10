@@ -391,7 +391,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsresult rv = mCallback->Complete(mStatus, mValue);
 

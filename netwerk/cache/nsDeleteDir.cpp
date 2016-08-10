@@ -22,7 +22,7 @@ using namespace mozilla;
 class nsBlockOnBackgroundThreadEvent : public Runnable {
 public:
   nsBlockOnBackgroundThreadEvent() {}
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MutexAutoLock lock(nsDeleteDir::gInstance->mLock);
     nsDeleteDir::gInstance->mNotified = true;

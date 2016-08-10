@@ -3,9 +3,9 @@
 <script>
 function replaceBody()
 {
-  var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-    getService(Components.interfaces.nsIAccessibleRetrieval);
-  accRetrieval.getAccessibleFor(document);
+  var accService = Components.classes["@mozilla.org/accessibilityService;1"].
+    getService(Components.interfaces.nsIAccessibilityService);
+  accService.getAccessibleFor(document);
 
   var newBody = document.createElement("body");
   newBody.setAttribute("contentEditable", "true");

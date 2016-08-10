@@ -577,7 +577,7 @@ public:
   }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mSignal.name().EqualsLiteral("PropertyChanged"));
@@ -607,7 +607,7 @@ public:
   }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mSignal.name().EqualsLiteral("PropertyChanged"));
@@ -1736,7 +1736,7 @@ public:
   PrepareAdapterRunnable()
   { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -2149,7 +2149,7 @@ private:
 class StartBluetoothRunnable final : public Runnable
 {
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     // This could block. It should never be run on the main thread.
     MOZ_ASSERT(!NS_IsMainThread()); // BT thread
@@ -2216,7 +2216,7 @@ BluetoothDBusService::StartInternal(BluetoothReplyRunnable* aRunnable)
 class DisableBluetoothRunnable final : public Runnable
 {
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (NS_IsMainThread()) {
       // Clear |sControllerArray| here while we're on the main thread
@@ -2309,7 +2309,7 @@ public:
 class StopBluetoothRunnable final : public Runnable
 {
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread()); // BT thread
 
@@ -3551,8 +3551,8 @@ public:
     MOZ_ASSERT(mManager);
   }
 
-  nsresult
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -3583,7 +3583,7 @@ public:
     MOZ_ASSERT(aManager);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

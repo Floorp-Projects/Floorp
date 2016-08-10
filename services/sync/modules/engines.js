@@ -487,7 +487,7 @@ EngineManager.prototype = {
 
   getAll: function () {
     let engines = [];
-    for (let [name, engine] in Iterator(this._engines)) {
+    for (let [, engine] of Object.entries(this._engines)) {
       engines.push(engine);
     }
     return engines;
@@ -1523,7 +1523,7 @@ SyncEngine.prototype = {
       coll.delete();
     });
 
-    for (let [key, val] in Iterator(this._delete)) {
+    for (let [key, val] of Object.entries(this._delete)) {
       // Remove the key for future uses
       delete this._delete[key];
 
@@ -1546,7 +1546,7 @@ SyncEngine.prototype = {
     }
 
     // Mark failed WBOs as changed again so they are reuploaded next time.
-    for (let [id, when] in Iterator(this._modified)) {
+    for (let [id, when] of Object.entries(this._modified)) {
       this._tracker.addChangedID(id, when);
     }
     this._modified = {};

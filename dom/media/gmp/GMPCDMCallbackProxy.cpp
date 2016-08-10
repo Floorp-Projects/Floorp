@@ -34,7 +34,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mProxy->OnSetSessionId(mToken, mSid);
     return NS_OK;
   }
@@ -67,7 +67,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mProxy->OnResolveLoadSessionPromise(mPid, mSuccess);
     return NS_OK;
   }
@@ -111,7 +111,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mProxy->OnRejectPromise(mPid, mException, mMsg);
     return NS_OK;
   }
@@ -162,7 +162,7 @@ public:
     mMsg.AppendElements(aMessage);
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mProxy->OnSessionMessage(mSid, ToMediaKeyMessageType(mMsgType), mMsg);
     return NS_OK;
   }
@@ -199,7 +199,7 @@ public:
     , mTimestamp(aExpiryTime)
   {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mProxy->OnExpirationChange(mSid, mTimestamp);
     return NS_OK;
   }
@@ -261,7 +261,7 @@ public:
     , mMsg(NS_ConvertUTF8toUTF16(aMessage))
   {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mProxy->OnSessionError(mSid, mException, mSystemCode, mMsg);
     return NS_OK;
   }

@@ -128,7 +128,7 @@ class nsResumeTimeoutsEvent : public Runnable
 public:
   explicit nsResumeTimeoutsEvent(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mWindow->ResumeTimeouts(false);
     return NS_OK;

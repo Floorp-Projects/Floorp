@@ -47,7 +47,7 @@ class GetIntPrefEvent : public Runnable {
 public:
   GetIntPrefEvent(const char* aPref, int32_t* aResult)
     : mPref(aPref), mResult(aResult) {}
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     return Preferences::GetInt(mPref, mResult);
   }
 private:

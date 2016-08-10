@@ -512,7 +512,7 @@ void nsBaseWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener)
 // Close this nsBaseWidget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsBaseWidget::Destroy()
+NS_IMETHODIMP nsBaseWidget::Destroy()
 {
   // Just in case our parent is the only ref to us
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -757,7 +757,7 @@ nsCursor nsBaseWidget::GetCursor()
   return mCursor;
 }
 
-NS_METHOD nsBaseWidget::SetCursor(nsCursor aCursor)
+NS_IMETHODIMP nsBaseWidget::SetCursor(nsCursor aCursor)
 {
   mCursor = aCursor;
   return NS_OK;
@@ -1466,12 +1466,12 @@ void nsBaseWidget::OnDestroy()
   ReleaseContentController();
 }
 
-NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
+NS_IMETHODIMP nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsBaseWidget::MoveClient(double aX, double aY)
+NS_IMETHODIMP nsBaseWidget::MoveClient(double aX, double aY)
 {
   LayoutDeviceIntPoint clientOffset(GetClientOffset());
 
@@ -1485,9 +1485,9 @@ NS_METHOD nsBaseWidget::MoveClient(double aX, double aY)
   }
 }
 
-NS_METHOD nsBaseWidget::ResizeClient(double aWidth,
-                                     double aHeight,
-                                     bool aRepaint)
+NS_IMETHODIMP nsBaseWidget::ResizeClient(double aWidth,
+                                         double aHeight,
+                                         bool aRepaint)
 {
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
   NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
@@ -1509,11 +1509,11 @@ NS_METHOD nsBaseWidget::ResizeClient(double aWidth,
   }
 }
 
-NS_METHOD nsBaseWidget::ResizeClient(double aX,
-                                     double aY,
-                                     double aWidth,
-                                     double aHeight,
-                                     bool aRepaint)
+NS_IMETHODIMP nsBaseWidget::ResizeClient(double aX,
+                                         double aY,
+                                         double aWidth,
+                                         double aHeight,
+                                         bool aRepaint)
 {
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
   NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
@@ -1550,7 +1550,7 @@ NS_METHOD nsBaseWidget::ResizeClient(double aX,
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetClientBounds(LayoutDeviceIntRect &aRect)
+NS_IMETHODIMP nsBaseWidget::GetClientBounds(LayoutDeviceIntRect &aRect)
 {
   return GetBounds(aRect);
 }
@@ -1559,7 +1559,7 @@ NS_METHOD nsBaseWidget::GetClientBounds(LayoutDeviceIntRect &aRect)
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
+NS_IMETHODIMP nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
 {
   aRect = mBounds;
   return NS_OK;
@@ -1570,12 +1570,12 @@ NS_METHOD nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
 * this method must be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetScreenBounds(LayoutDeviceIntRect& aRect)
+NS_IMETHODIMP nsBaseWidget::GetScreenBounds(LayoutDeviceIntRect& aRect)
 {
   return GetBounds(aRect);
 }
 
-NS_METHOD nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect)
+NS_IMETHODIMP nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect)
 {
   if (SizeMode() != nsSizeMode_Normal) {
     return NS_ERROR_FAILURE;
@@ -1601,7 +1601,7 @@ nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin &margins)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsBaseWidget::EnableDragDrop(bool aEnable)
+NS_IMETHODIMP nsBaseWidget::EnableDragDrop(bool aEnable)
 {
   return NS_OK;
 }
@@ -1611,7 +1611,7 @@ uint32_t nsBaseWidget::GetMaxTouchPoints() const
   return 0;
 }
 
-NS_METHOD nsBaseWidget::SetModal(bool aModal)
+NS_IMETHODIMP nsBaseWidget::SetModal(bool aModal)
 {
   return NS_ERROR_FAILURE;
 }

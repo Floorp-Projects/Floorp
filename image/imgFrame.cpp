@@ -756,7 +756,7 @@ public:
     MOZ_ASSERT(mTarget);
   }
 
-  NS_IMETHOD Run() { return mTarget->UnlockImageData(); }
+  NS_IMETHOD Run() override { return mTarget->UnlockImageData(); }
 
 private:
   RefPtr<imgFrame> mTarget;

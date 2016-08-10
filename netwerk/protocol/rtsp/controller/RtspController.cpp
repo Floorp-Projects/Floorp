@@ -213,7 +213,7 @@ public:
     mData.Assign(data);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mListener->OnMediaDataAvailable(mIndex, mData, mLength,
@@ -256,7 +256,7 @@ public:
     , mMetaData(meta)
   { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mListener->OnConnected(mIndex, mMetaData);
@@ -295,7 +295,7 @@ public:
     , mReason(reason)
   { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mListener->OnDisconnected(mIndex, mReason);

@@ -70,7 +70,7 @@ function configureClients(clients, clientSettings = {}) {
   // Configure the instance Sync created.
   let engine = Weave.Service.engineManager.get("tabs");
   // each client record is expected to have an id.
-  for (let [guid, client] in Iterator(clients)) {
+  for (let [guid, client] of Object.entries(clients)) {
     client.id = guid;
   }
   engine.clients = clients;

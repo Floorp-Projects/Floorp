@@ -15,7 +15,7 @@ public:
   explicit nsDestroyThreadEvent(nsIThread *thread)
     : mThread(thread)
   {}
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mThread->Shutdown();
     return NS_OK;

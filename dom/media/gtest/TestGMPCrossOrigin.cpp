@@ -361,7 +361,7 @@ public:
   explicit NotifyObserversTask(const char* aTopic)
     : mTopic(aTopic)
   {}
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
@@ -644,7 +644,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       for (auto& update : mUpdates) {
         mRunner->Update(update);

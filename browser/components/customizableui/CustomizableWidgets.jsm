@@ -61,7 +61,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 
 function setAttributes(aNode, aAttrs) {
   let doc = aNode.ownerDocument;
-  for (let [name, value] of Iterator(aAttrs)) {
+  for (let [name, value] of Object.entries(aAttrs)) {
     if (!value) {
       if (aNode.hasAttribute(name))
         aNode.removeAttribute(name);

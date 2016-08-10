@@ -258,7 +258,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mDevice->IsActiveCache(mGroup, mClientID))
     {
@@ -875,7 +875,7 @@ public:
     mDB = aDB;
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mDB->Close();
     return NS_OK;

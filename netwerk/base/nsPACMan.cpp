@@ -75,7 +75,7 @@ public:
     mPACURL = pacURL;
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     mCallback->OnQueryComplete(mStatus, mPACString, mPACURL);
     mCallback = nullptr;
@@ -103,7 +103,7 @@ public:
   {
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
     mThread->Shutdown();
@@ -124,7 +124,7 @@ public:
   {
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
     if (mPACMan->mPACThread) {
@@ -152,7 +152,7 @@ public:
   {
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
     mPACMan->mLoader = nullptr;
@@ -194,7 +194,7 @@ public:
     mSetupPACURI = pacURI;
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
     if (mCancel) {

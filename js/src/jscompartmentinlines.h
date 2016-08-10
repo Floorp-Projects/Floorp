@@ -34,23 +34,27 @@ JSCompartment::unsafeUnbarrieredMaybeGlobal() const
     return *global_.unsafeGet();
 }
 
-js::AutoCompartment::AutoCompartment(ExclusiveContext* cx, JSObject* target)
+js::AutoCompartment::AutoCompartment(ExclusiveContext* cx, JSObject* target,
+                                     js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
   : cx_(cx),
-    origin_(cx->compartment_)
+    origin_(cx->compartment_),
+    maybeLock_(maybeLock)
 {
-    cx_->enterCompartment(target->compartment());
+    cx_->enterCompartment(target->compartment(), maybeLock);
 }
 
-js::AutoCompartment::AutoCompartment(ExclusiveContext* cx, JSCompartment* target)
+js::AutoCompartment::AutoCompartment(ExclusiveContext* cx, JSCompartment* target,
+                                     js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
   : cx_(cx),
-    origin_(cx_->compartment_)
+    origin_(cx_->compartment_),
+    maybeLock_(maybeLock)
 {
-    cx_->enterCompartment(target);
+    cx_->enterCompartment(target, maybeLock);
 }
 
 js::AutoCompartment::~AutoCompartment()
 {
-    cx_->leaveCompartment(origin_);
+    cx_->leaveCompartment(origin_, maybeLock_);
 }
 
 inline bool

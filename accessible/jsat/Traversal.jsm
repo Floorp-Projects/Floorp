@@ -382,7 +382,7 @@ this.TraversalHelper = {
   getHelperPivot: function TraversalHelper_getHelperPivot(aRoot) {
     let pivot = this.helperPivotCache.get(aRoot.DOMNode);
     if (!pivot) {
-      pivot = Utils.AccRetrieval.createAccessiblePivot(aRoot);
+      pivot = Utils.AccService.createAccessiblePivot(aRoot);
       this.helperPivotCache.set(aRoot.DOMNode, pivot);
     }
 

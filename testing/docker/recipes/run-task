@@ -21,6 +21,7 @@ import errno
 import grp
 import os
 import pwd
+import re
 import subprocess
 import sys
 
@@ -74,17 +75,40 @@ def vcs_checkout(args):
     if base_repo == 'https://hg.mozilla.org/mozilla-central':
         base_repo = b'https://hg.mozilla.org/mozilla-unified'
 
+    # Specify method to checkout a revision. This defaults to revisions as
+    # SHA-1 strings, but also supports symbolic revisions like `tip` via the
+    # branch flag.
+    if os.environ.get('GECKO_HEAD_REV'):
+        revision_flag = b'--revision'
+        revision = os.environ['GECKO_HEAD_REV']
+    elif os.environ.get('GECKO_HEAD_REF'):
+        revision_flag = b'--branch'
+        revision = os.environ['GECKO_HEAD_REF']
+    else:
+        print('revision is not specified for checkout')
+        sys.exit(1)
+
     res = run_and_prefix_output(b'vcs', [
         b'/usr/bin/hg', b'robustcheckout',
         b'--sharebase', b'/home/worker/hg-shared',
         b'--purge',
         b'--upstream', base_repo,
-        b'--revision', os.environ['GECKO_HEAD_REV'],
+        revision_flag, revision,
         os.environ['GECKO_HEAD_REPOSITORY'], args.vcs_checkout
     ])
 
     if res:
         sys.exit(res)
+
+    # Update the current revision hash and ensure that it is well formed.
+    revision = subprocess.check_output(
+        [b'/usr/bin/hg', b'log',
+         b'--rev', b'.',
+         b'--template', b'{node}'],
+        cwd=args.vcs_checkout)
+
+    assert re.match('^[a-f0-9]{40}$', revision)
+    os.environ['GECKO_HEAD_REV'] = revision
 
 
 def main(args):
@@ -154,8 +178,16 @@ def main(args):
     os.setresgid(gid, gid, gid)
     os.setresuid(uid, uid, uid)
 
+    # Checkout the repository, setting the GECKO_HEAD_REV to the current
+    # revision hash. Revision hashes have priority over symbolic revisions. We
+    # disallow running tasks with symbolic revisions unless they have been
+    # resolved by a checkout.
     if checkout:
         vcs_checkout(args)
+    elif not os.environ.get('GECKO_HEAD_REV') and \
+            os.environ.get('GECKO_HEAD_REF'):
+        print('task should be defined in terms of non-symbolic revision')
+        return 1
 
     return run_and_prefix_output('task', task_args)
 

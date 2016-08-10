@@ -38,7 +38,8 @@ namespace mozilla {
 // up to date.
 //
 // Please see the wiki page for more information.
-// https://wiki.mozilla.org/Copy_n_Paste
+// https://wiki.mozilla.org/AccessibleCaret
+//
 class AccessibleCaret
 {
 public:
