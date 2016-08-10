@@ -14,6 +14,7 @@ static const int MAY_ACCESS = SandboxBroker::MAY_ACCESS;
 static const int MAY_READ = SandboxBroker::MAY_READ;
 static const int MAY_WRITE = SandboxBroker::MAY_WRITE;
 //static const int MAY_CREATE = SandboxBroker::MAY_CREATE;
+//static const int RECURSIVE = SandboxBroker::RECURSIVE;
 static const auto AddAlways = SandboxBroker::Policy::AddAlways;
 
 TEST(SandboxBrokerPolicyLookup, Simple)
@@ -56,5 +57,42 @@ TEST(SandboxBrokerPolicyLookup, CopyCtor)
     << "Non-added path is present in copy source.";
 }
 
-} // namespace mozilla
+TEST(SandboxBrokerPolicyLookup, Recursive)
+{
+  SandboxBroker::Policy psrc;
+  psrc.AddPath(MAY_READ | MAY_WRITE, "/dev/null", AddAlways);
+  psrc.AddPath(MAY_READ, "/dev/zero", AddAlways);
+  psrc.AddPath(MAY_READ, "/dev/urandom", AddAlways);
 
+  EXPECT_EQ(MAY_ACCESS | MAY_READ | MAY_WRITE, psrc.Lookup("/dev/null"))
+    << "Basic path is present.";
+  EXPECT_EQ(MAY_ACCESS | MAY_READ, psrc.Lookup("/dev/zero"))
+    << "Basic path has no extra flags";
+
+  psrc.AddDir(MAY_READ | MAY_WRITE, "/dev/");
+
+  EXPECT_EQ(MAY_ACCESS | MAY_READ | MAY_WRITE, psrc.Lookup("/dev/random"))
+    << "Permission via recursive dir.";
+  EXPECT_EQ(MAY_ACCESS | MAY_READ | MAY_WRITE, psrc.Lookup("/dev/sd/0"))
+    << "Permission via recursive dir, nested deeper";
+  EXPECT_EQ(0, psrc.Lookup("/dev/sd/0/"))
+    << "Invalid path format.";
+  EXPECT_EQ(0, psrc.Lookup("/usr/dev/sd"))
+    << "Match must be a prefix.";
+
+  psrc.AddDir(MAY_READ, "/dev/sd/");
+  EXPECT_EQ(MAY_ACCESS | MAY_READ | MAY_WRITE, psrc.Lookup("/dev/sd/0"))
+    << "Extra permissions from parent path granted.";
+  EXPECT_EQ(0, psrc.Lookup("/dev/.."))
+    << "Refuse attempted subdir escape.";
+
+  psrc.AddDir(MAY_READ, "/tmp");
+  EXPECT_EQ(MAY_ACCESS | MAY_READ, psrc.Lookup("/tmp/good/a"))
+    << "Check whether dir add with no trailing / was sucessful.";
+  EXPECT_EQ(0, psrc.Lookup("/tmp_good_but_bad"))
+    << "Enforce terminator on directories.";
+  EXPECT_EQ(0, psrc.Lookup("/tmp/."))
+    << "Do not allow opening a directory handle.";
+}
+
+} // namespace mozilla

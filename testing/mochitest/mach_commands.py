@@ -84,6 +84,9 @@ ALL_FLAVORS = {
         'suite': 'plain',
         'aliases': ('plain', 'mochitest'),
         'enabled_apps': ('firefox', 'b2g', 'android', 'mulet'),
+        'extra_args': {
+            'flavor': 'plain',
+        }
     },
     'chrome': {
         'suite': 'chrome',
