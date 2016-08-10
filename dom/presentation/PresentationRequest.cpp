@@ -7,10 +7,12 @@
 #include "PresentationRequest.h"
 
 #include "ControllerConnectionCollection.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/PresentationRequestBinding.h"
 #include "mozilla/dom/PresentationConnectionAvailableEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozIThirdPartyUtil.h"
+#include "nsContentSecurityManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocument.h"
 #include "nsIPresentationService.h"
@@ -155,6 +157,12 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     return nullptr;
   }
 
+  if (IsProhibitMixedSecurityContexts(doc) &&
+      !IsPrioriAuthenticatedURL(mUrl)) {
+    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return promise.forget();
+  }
+
   if (doc->GetSandboxFlags() & SANDBOXED_PRESENTATION) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
@@ -196,10 +204,6 @@ already_AddRefed<Promise>
 PresentationRequest::Reconnect(const nsAString& aPresentationId,
                                ErrorResult& aRv)
 {
-  // TODO: Before starting to reconnect, we have to run the prohibits
-  // mixed security contexts algorithm first. This will be implemented
-  // in bug 1254488.
-
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -215,6 +219,12 @@ PresentationRequest::Reconnect(const nsAString& aPresentationId,
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  if (IsProhibitMixedSecurityContexts(doc) &&
+      !IsPrioriAuthenticatedURL(mUrl)) {
+    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return promise.forget();
   }
 
   if (doc->GetSandboxFlags() & SANDBOXED_PRESENTATION) {
@@ -324,6 +334,12 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
     return nullptr;
   }
 
+  if (IsProhibitMixedSecurityContexts(doc) &&
+      !IsPrioriAuthenticatedURL(mUrl)) {
+    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return promise.forget();
+  }
+
   if (doc->GetSandboxFlags() & SANDBOXED_PRESENTATION) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
@@ -351,4 +367,72 @@ PresentationRequest::DispatchConnectionAvailableEvent(PresentationConnection* aC
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   return asyncDispatcher->PostDOMEvent();
+}
+
+bool
+PresentationRequest::IsProhibitMixedSecurityContexts(nsIDocument* aDocument)
+{
+  MOZ_ASSERT(aDocument);
+
+  if (nsContentUtils::IsChromeDoc(aDocument)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDocument> doc = aDocument;
+  while (doc && !nsContentUtils::IsChromeDoc(doc)) {
+    if (nsContentUtils::HttpsStateIsModern(doc)) {
+      return true;
+    }
+
+    doc = doc->GetParentDocument();
+  }
+
+  return false;
+}
+
+bool
+PresentationRequest::IsPrioriAuthenticatedURL(const nsAString& aUrl)
+{
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aUrl))) {
+    return false;
+  }
+
+  nsAutoCString scheme;
+  nsresult rv = uri->GetScheme(scheme);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  if (scheme.EqualsLiteral("data")) {
+    return true;
+  }
+
+  nsAutoCString uriSpec;
+  rv = uri->GetSpec(uriSpec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  if (uriSpec.EqualsLiteral("about:blank") ||
+      uriSpec.EqualsLiteral("about:srcdoc")) {
+    return true;
+  }
+
+  PrincipalOriginAttributes attrs;
+  nsCOMPtr<nsIPrincipal> principal =
+    BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+  if (NS_WARN_IF(!principal)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIContentSecurityManager> csm =
+    do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
+  if (NS_WARN_IF(!csm)) {
+    return false;
+  }
+
+  bool isTrustworthyOrigin = false;
+  csm->IsOriginPotentiallyTrustworthy(principal, &isTrustworthyOrigin);
+  return isTrustworthyOrigin;
 }
