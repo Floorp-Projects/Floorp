@@ -139,7 +139,21 @@ var gTests = [
     yield indicator;
     yield checkSharingUI({video: true, audio: true});
 
-    yield stopSharing();
+    yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
+    activateSecondaryAction(kActionDeny);
+
+    yield promiseObserverCalled("recording-device-events");
+    yield expectObserverCalled("getUserMedia:revoke");
+
+    yield promiseNoPopupNotification("webRTC-sharingDevices");
+    yield expectObserverCalled("recording-window-ended");
+
+    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
+      todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
+    }
+
+    yield expectNoObserverCalled();
+    yield checkNotSharing();
 
     // the stream is already closed, but this will do some cleanup anyway
     yield closeStream(true);
@@ -167,11 +181,14 @@ var gTests = [
     yield indicator;
     yield checkSharingUI({video: true, audio: true});
 
+    yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
+
     info("reloading the web page");
     promise = promiseObserverCalled("recording-device-events");
     content.location.reload();
     yield promise;
 
+    yield promiseNoPopupNotification("webRTC-sharingDevices");
     if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
       todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
     }
@@ -402,7 +419,27 @@ var gTests = [
       yield indicator;
       yield checkSharingUI({video: aRequestVideo, audio: aRequestAudio});
 
-      yield stopSharing(aRequestVideo ? "camera" : "microphone");
+      yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
+      let expectedIcon = "webRTC-sharingDevices";
+      if (aRequestAudio && !aRequestVideo)
+        expectedIcon = "webRTC-sharingMicrophone";
+      is(PopupNotifications.getNotification("webRTC-sharingDevices").anchorID,
+         expectedIcon + "-notification-icon", "anchored to correct icon");
+      is(PopupNotifications.panel.firstChild.getAttribute("popupid"), expectedIcon,
+         "panel using correct icon");
+
+      // Stop sharing.
+      activateSecondaryAction(kActionDeny);
+
+      yield promiseObserverCalled("recording-device-events");
+      yield expectObserverCalled("getUserMedia:revoke");
+
+      yield promiseNoPopupNotification("webRTC-sharingDevices");
+      yield expectObserverCalled("recording-window-ended");
+
+      if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
+        todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
+      }
 
       // Check that permissions have been removed as expected.
       let audioPerm = Perms.testExactPermission(uri, "microphone");
@@ -434,8 +471,8 @@ var gTests = [
 },
 
 {
-  desc: "test showControlCenter",
-  run: function checkShowControlCenter() {
+  desc: "test showSharingDoorhanger",
+  run: function checkShowSharingDoorhanger() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(false, true);
     yield promise;
@@ -453,21 +490,21 @@ var gTests = [
     yield indicator;
     yield checkSharingUI({video: true});
 
-    ok(gIdentityHandler._identityPopup.hidden, "control center should be hidden");
-    if ("nsISystemStatusBar" in Ci) {
-      let activeStreams = webrtcUI.getActiveStreams(true, false, false);
-      webrtcUI.showSharingDoorhanger(activeStreams[0], "Devices");
-    }
-    else {
-      let win =
-        Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
-      let elt = win.document.getElementById("audioVideoButton");
-      EventUtils.synthesizeMouseAtCenter(elt, {}, win);
-      yield promiseWaitForCondition(() => !gIdentityHandler._identityPopup.hidden);
-    }
-    ok(!gIdentityHandler._identityPopup.hidden, "control center should be open");
+    yield promisePopupNotificationShown("webRTC-sharingDevices", () => {
+      if ("nsISystemStatusBar" in Ci) {
+        let activeStreams = webrtcUI.getActiveStreams(true, false, false);
+        webrtcUI.showSharingDoorhanger(activeStreams[0], "Devices");
+      }
+      else {
+        let win =
+          Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
+        let elt = win.document.getElementById("audioVideoButton");
+        EventUtils.synthesizeMouseAtCenter(elt, {}, win);
+      }
+    });
 
-    gIdentityHandler._identityPopup.hidden = true;
+    PopupNotifications.panel.firstChild.button.click();
+    ok(!PopupNotifications.isPanelOpen, "notification panel closed");
     yield expectNoObserverCalled();
 
     yield closeStream();
@@ -529,8 +566,6 @@ function test() {
 
     is(PopupNotifications._currentNotifications.length, 0,
        "should start the test without any prior popup notification");
-    ok(gIdentityHandler._identityPopup.hidden,
-       "should start the test with the control center hidden");
 
     Task.spawn(function () {
       yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});

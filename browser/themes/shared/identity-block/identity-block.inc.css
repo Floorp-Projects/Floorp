@@ -94,49 +94,6 @@
   opacity: 1;
 }
 
-/* SHARING ICON */
-
-#sharing-icon {
-  width: 16px;
-  height: 16px;
-  margin-inline-start: -16px;
-  position: relative;
-  display: none;
-}
-
-#identity-box[sharing="camera"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#camera");
-}
-
-#identity-box[sharing="microphone"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#microphone");
-}
-
-#identity-box[sharing="screen"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#screen");
-}
-
-#identity-box[sharing] > #sharing-icon {
-  display: -moz-box;
-  filter: url("chrome://browser/skin/filters.svg#fill");
-  fill: rgb(224, 41, 29);
-  animation-delay: -1.5s;
-}
-
-#identity-box[sharing] > #identity-icon,
-#sharing-icon {
-  animation: 3s linear pulse infinite;
-}
-
-@keyframes pulse {
-  0%, 16.66%, 83.33%, 100% {
-    opacity: 0;
-  }
-  33.33%, 66.66% {
-    opacity: 1;
-  }
-}
-
 /* TRACKING PROTECTION ICON */
 
 #tracking-protection-icon {

@@ -136,19 +136,21 @@ this.webrtcUI = {
       aActiveStream.browser.focus();
     }
     browserWindow.focus();
-    let identityBox = browserWindow.document.getElementById("identity-box");
+    let PopupNotifications = browserWindow.PopupNotifications;
+    let notif = PopupNotifications.getNotification("webRTC-sharing" + aType,
+                                                   aActiveStream.browser);
     if (AppConstants.platform == "macosx" && !Services.focus.activeWindow) {
       browserWindow.addEventListener("activate", function onActivate() {
         browserWindow.removeEventListener("activate", onActivate);
         Services.tm.mainThread.dispatch(function() {
-          identityBox.click();
+          notif.reshow();
         }, Ci.nsIThread.DISPATCH_NORMAL);
       });
       Cc["@mozilla.org/widget/macdocksupport;1"].getService(Ci.nsIMacDockSupport)
         .activateApplication(true);
       return;
     }
-    identityBox.click();
+    notif.reshow();
   },
 
   updateMainActionLabel: function(aMenuList) {
@@ -235,9 +237,7 @@ this.webrtcUI = {
           webrtcUI._streams.splice(index, 1);
         else
           webrtcUI._streams[index] = {browser: aMessage.target, state: aMessage.data};
-        let tabbrowser = aMessage.target.ownerGlobal.gBrowser;
-        if (tabbrowser)
-          tabbrowser.setBrowserSharing(aMessage.target, aMessage.data);
+        updateBrowserSpecificIndicator(aMessage.target, aMessage.data);
         break;
       case "child-process-shutdown":
         webrtcUI.processIndicators.delete(aMessage.target);
@@ -865,4 +865,146 @@ function updateIndicators(data, target) {
     gIndicatorWindow.close();
     gIndicatorWindow = null;
   }
+}
+
+function updateBrowserSpecificIndicator(aBrowser, aState) {
+  let chromeWin = aBrowser.ownerGlobal;
+  let tabbrowser = chromeWin.gBrowser;
+  if (tabbrowser) {
+    let sharing;
+    if (aState.screen) {
+      sharing = "screen";
+    } else if (aState.camera) {
+      sharing = "camera";
+    } else if (aState.microphone) {
+      sharing = "microphone";
+    }
+
+    tabbrowser.setBrowserSharing(aBrowser, sharing);
+  }
+
+  let captureState;
+  if (aState.camera && aState.microphone) {
+    captureState = "CameraAndMicrophone";
+  } else if (aState.camera) {
+    captureState = "Camera";
+  } else if (aState.microphone) {
+    captureState = "Microphone";
+  }
+
+  let stringBundle = chromeWin.gNavigatorBundle;
+
+  let windowId = aState.windowId;
+  let notification; // Used by action callbacks.
+  let mainAction = {
+    label: stringBundle.getString("getUserMedia.continueSharing.label"),
+    accessKey: stringBundle.getString("getUserMedia.continueSharing.accesskey"),
+    callback: function () {},
+    dismiss: true
+  };
+  let secondaryActions = [{
+    label: stringBundle.getString("getUserMedia.stopSharing.label"),
+    accessKey: stringBundle.getString("getUserMedia.stopSharing.accesskey"),
+    callback: function () {
+      let uris = aBrowser._devicePermissionURIs || [];
+      uris = uris.concat(Services.io.newURI(aState.documentURI, null, null));
+      let perms = Services.perms;
+      for (let uri of uris) {
+        if (aState.camera &&
+            perms.testExactPermission(uri, "camera") == perms.ALLOW_ACTION)
+          perms.remove(uri, "camera");
+        if (aState.microphone &&
+            perms.testExactPermission(uri, "microphone") == perms.ALLOW_ACTION)
+          perms.remove(uri, "microphone");
+      }
+      let mm = notification.browser.messageManager;
+      mm.sendAsyncMessage("webrtc:StopSharing", windowId);
+    }
+  }];
+  let options = {
+    hideNotNow: true,
+    dismissed: true,
+    eventCallback: function(aTopic, aNewBrowser) {
+      if (aTopic == "shown") {
+        let popupId = captureState == "Microphone" ? "Microphone" : "Devices";
+        this.browser.ownerDocument
+            .getElementById("webRTC-sharingDevices-notification")
+            .setAttribute("popupid", "webRTC-sharing" + popupId);
+      }
+
+      if (aTopic == "swapping") {
+        webrtcUI.swapBrowserForNotification(this.browser, aNewBrowser);
+        return true;
+      }
+
+      return false;
+    }
+  };
+  if (captureState) {
+    let anchorId = captureState == "Microphone" ? "webRTC-sharingMicrophone-notification-icon"
+                                                : "webRTC-sharingDevices-notification-icon";
+    let message = stringBundle.getString("getUserMedia.sharing" + captureState + ".message2");
+    notification =
+      chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingDevices", message,
+                                        anchorId, mainAction, secondaryActions, options);
+  }
+  else {
+    removeBrowserNotification(aBrowser, "webRTC-sharingDevices");
+    aBrowser._devicePermissionURIs = null;
+  }
+
+  // Now handle the screen sharing indicator.
+  if (!aState.screen) {
+    removeBrowserNotification(aBrowser, "webRTC-sharingScreen");
+    return;
+  }
+
+  let screenSharingNotif; // Used by action callbacks.
+  let isBrowserSharing = aState.screen == "Browser";
+  options = {
+    hideNotNow: !isBrowserSharing,
+    dismissed: true,
+    eventCallback: function(aTopic, aNewBrowser) {
+      if (aTopic == "shown") {
+        this.browser.ownerDocument
+            .getElementById("webRTC-sharingScreen-notification")
+            .setAttribute("popupid", "webRTC-sharingScreen");
+      }
+
+      if (aTopic == "swapping") {
+        webrtcUI.swapBrowserForNotification(this.browser, aNewBrowser);
+        return true;
+      }
+
+      return false;
+    }
+  };
+  secondaryActions = [{
+    label: stringBundle.getString("getUserMedia.stopSharing.label"),
+    accessKey: stringBundle.getString("getUserMedia.stopSharing.accesskey"),
+    callback: function () {
+      let mm = screenSharingNotif.browser.messageManager;
+      mm.sendAsyncMessage("webrtc:StopSharing", "screen:" + windowId);
+    }
+  }];
+
+  // Ending browser-sharing from the gUM doorhanger is not supported at the moment.
+  // See bug 1142091.
+  if (isBrowserSharing)
+    mainAction = secondaryActions = null;
+  // If we are sharing both a window and the screen, we show 'Screen'.
+  let stringId = "getUserMedia.sharing" + aState.screen;
+  screenSharingNotif =
+    chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingScreen",
+                                      stringBundle.getString(stringId + ".message"),
+                                      "webRTC-sharingScreen-notification-icon",
+                                      mainAction, secondaryActions, options);
+}
+
+function removeBrowserNotification(aBrowser, aNotificationId) {
+  let win = aBrowser.ownerGlobal;
+  let notification =
+    win.PopupNotifications.getNotification(aNotificationId, aBrowser);
+  if (notification)
+    win.PopupNotifications.remove(notification);
 }
