@@ -479,7 +479,7 @@ class nsIWidget : public nsISupports
      * aUseAttachedEvents if true, events are sent to the attached listener
      * instead of the normal listener.
      */
-    NS_IMETHOD AttachViewToTopLevel(bool aUseAttachedEvents) = 0;
+    virtual void AttachViewToTopLevel(bool aUseAttachedEvents) = 0;
 
     /**
      * Accessor functions to get and set the attached listener. Used by

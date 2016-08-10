@@ -262,7 +262,7 @@ public:
   CreateChild(const LayoutDeviceIntRect& aRect,
               nsWidgetInitData* aInitData = nullptr,
               bool aForceUseIWidgetParent = false) override;
-  NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents) override;
+  virtual void            AttachViewToTopLevel(bool aUseAttachedEvents) override;
   virtual nsIWidgetListener* GetAttachedWidgetListener() override;
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
