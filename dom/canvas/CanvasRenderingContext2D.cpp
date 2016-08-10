@@ -2808,7 +2808,7 @@ CanvasRenderingContext2D::FillRect(double aX, double aY, double aW,
 
   CompositionOp op = UsedOperation();
   bool discardContent = PatternIsOpaque(Style::FILL)
-    && (op == CompositionOp::OP_OVER || op == CompositionOp::OP_DEST_OUT);
+    && (op == CompositionOp::OP_OVER || op == CompositionOp::OP_SOURCE);
 
   const gfx::Rect fillRect(aX, aY, aW, aH);
   EnsureTarget(discardContent ? &fillRect : nullptr);
