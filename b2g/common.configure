@@ -25,5 +25,7 @@ def package_moztt(value):
 
 set_define('PACKAGE_MOZTT', package_moztt)
 
+imply_option('MOZ_ENABLE_WARNINGS_AS_ERRORS',
+             depends(target)(lambda t: t.os == 'Android'), reason='--target')
 
 include('../toolkit/moz.configure')

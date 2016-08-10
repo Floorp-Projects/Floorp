@@ -92,7 +92,7 @@ class EventLoopLagDispatcher : public Runnable
     explicit EventLoopLagDispatcher(int aLag)
       : mLag(aLag) {}
 
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       nsCOMPtr<nsIObserverService> obsService =
         mozilla::services::GetObserverService();

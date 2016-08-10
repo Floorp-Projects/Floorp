@@ -12,9 +12,6 @@ ac_add_options --enable-clang-plugin
 
 . $topsrcdir/build/win32/mozconfig.vs-latest
 
-# Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
-ac_add_options --enable-warnings-as-errors
-
 . "$topsrcdir/build/mozconfig.rust"
 
 . "$topsrcdir/build/mozconfig.common.override"

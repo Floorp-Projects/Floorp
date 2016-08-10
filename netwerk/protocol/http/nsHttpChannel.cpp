@@ -6584,7 +6584,7 @@ public:
         MOZ_ASSERT(!NS_IsMainThread(), "Shouldn't be created on main thread");
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         MOZ_ASSERT(NS_IsMainThread(), "Should run on main thread");
         if (mEventSink) {

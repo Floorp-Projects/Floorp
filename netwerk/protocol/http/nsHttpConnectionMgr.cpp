@@ -204,7 +204,7 @@ public:
         , mIParam(iparam)
         , mVParam(vparam) {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         (mMgr->*mHandler)(mIParam, mVParam);
         return NS_OK;

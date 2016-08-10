@@ -64,9 +64,9 @@ function* testPickerDimension(ruleView) {
   let swatch = valueSpan.querySelector(".ruleview-colorswatch");
   let cPicker = ruleView.tooltips.colorPicker;
 
-  let onShown = cPicker.tooltip.once("shown");
+  let onReady = cPicker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onReady;
 
   // The colorpicker spectrum's iframe has a fixed width height, so let's
   // make sure the tooltip is at least as big as that

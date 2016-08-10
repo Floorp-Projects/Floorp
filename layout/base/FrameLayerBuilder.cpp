@@ -3832,8 +3832,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       aList->SetNeedsTransparentSurface();
     }
 
-    if (mParameters.mForEventsOnly && !item->GetChildren() &&
-        itemType != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+    if (mParameters.mForEventsAndPluginsOnly && !item->GetChildren() &&
+        (itemType != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS &&
+         itemType != nsDisplayItem::TYPE_PLUGIN)) {
       continue;
     }
 
@@ -4928,7 +4929,7 @@ ContainerState::Finish(uint32_t* aTextContentFlags,
 {
   mPaintedLayerDataTree.Finish();
 
-  if (!mParameters.mForEventsOnly) {
+  if (!mParameters.mForEventsAndPluginsOnly) {
     NS_ASSERTION(mContainerBounds.IsEqualInterior(mAccumulatedChildBounds),
                  "Bounds computation mismatch");
   }

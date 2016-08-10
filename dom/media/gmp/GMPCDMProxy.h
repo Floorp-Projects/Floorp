@@ -217,7 +217,7 @@ private:
       , mReason(aReason)
     {
     }
-    NS_METHOD Run() {
+    NS_IMETHOD Run() override {
       mProxy->RejectPromise(mId, mCode, mReason);
       return NS_OK;
     }

@@ -30,7 +30,7 @@ CameraControlImpl::CameraControlImpl()
   {
   public:
     NS_IMETHOD
-    Run()
+    Run() override
     {
       char stackBaseGuess;
       profiler_register_thread("CameraThread", &stackBaseGuess);

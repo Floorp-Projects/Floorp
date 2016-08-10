@@ -69,13 +69,13 @@ this.Utils = { // jshint ignore:line
       Ci.nsIDOMWindowUtils);
   },
 
-  get AccRetrieval() {
-    if (!this._AccRetrieval) {
-      this._AccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
-        getService(Ci.nsIAccessibleRetrieval);
+  get AccService() {
+    if (!this._AccService) {
+      this._AccService = Cc['@mozilla.org/accessibilityService;1'].
+        getService(Ci.nsIAccessibilityService);
     }
 
-    return this._AccRetrieval;
+    return this._AccService;
   },
 
   set MozBuildApp(value) {
@@ -295,7 +295,7 @@ this.Utils = { // jshint ignore:line
 
   getVirtualCursor: function getVirtualCursor(aDocument) {
     let doc = (aDocument instanceof Ci.nsIAccessible) ? aDocument :
-      this.AccRetrieval.getAccessibleFor(aDocument);
+      this.AccService.getAccessibleFor(aDocument);
 
     return doc.QueryInterface(Ci.nsIAccessibleDocument).virtualCursor;
   },
@@ -539,7 +539,7 @@ State.prototype = {
     return !!(this.base & other.base || this.extended & other.extended);
   },
   toString: function State_toString() {
-    let stateStrings = Utils.AccRetrieval.
+    let stateStrings = Utils.AccService.
       getStringStates(this.base, this.extended);
     let statesArray = new Array(stateStrings.length);
     for (let i = 0; i < statesArray.length; i++) {
@@ -640,7 +640,7 @@ this.Logger = { // jshint ignore:line
     }
 
     try {
-      return'[ ' + Utils.AccRetrieval.getStringRole(aAccessible.role) +
+      return'[ ' + Utils.AccService.getStringRole(aAccessible.role) +
         ' | ' + aAccessible.name + ' ]';
     } catch (x) {
       return '[ defunct ]';
@@ -648,12 +648,12 @@ this.Logger = { // jshint ignore:line
   },
 
   eventToString: function eventToString(aEvent) {
-    let str = Utils.AccRetrieval.getStringEventType(aEvent.eventType);
+    let str = Utils.AccService.getStringEventType(aEvent.eventType);
     if (aEvent.eventType == Events.STATE_CHANGE) {
       let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
       let stateStrings = event.isExtraState ?
-        Utils.AccRetrieval.getStringStates(0, event.state) :
-        Utils.AccRetrieval.getStringStates(event.state, 0);
+        Utils.AccService.getStringStates(0, event.state) :
+        Utils.AccService.getStringStates(event.state, 0);
       str += ' (' + stateStrings.item(0) + ')';
     }
 
@@ -887,7 +887,7 @@ PivotContext.prototype = {
         hints.push(hint);
       } else if (aAccessible.actionCount > 0) {
         hints.push({
-          string: Utils.AccRetrieval.getStringRole(
+          string: Utils.AccService.getStringRole(
             aAccessible.role).replace(/\s/g, '') + '-hint'
         });
       }

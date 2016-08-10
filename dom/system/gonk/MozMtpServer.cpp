@@ -53,7 +53,7 @@ public:
       mEventType(aEventType)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     // Runs on the MtpWatcherUpdate->mIOThread
     MOZ_ASSERT(!NS_IsMainThread());
@@ -148,7 +148,7 @@ public:
     : mMozMtpServer(aMozMtpServer)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -166,7 +166,7 @@ public:
     : mMozMtpServer(aMozMtpServer)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

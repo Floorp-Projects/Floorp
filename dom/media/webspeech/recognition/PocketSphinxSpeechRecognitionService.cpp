@@ -47,7 +47,7 @@ public:
   }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread()); // This method is supposed to run on the main
                                    // thread!
@@ -96,7 +96,7 @@ public:
   }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     char const* hyp;
     int rv;

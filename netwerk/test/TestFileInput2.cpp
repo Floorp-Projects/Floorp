@@ -131,7 +131,7 @@ Copy(nsIInputStream* inStr, nsIOutputStream* outStr,
 class FileSpecWorker : public nsIRunnable {
 public:
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
         nsresult rv;
 
         PRIntervalTime startTime = PR_IntervalNow();
@@ -228,7 +228,7 @@ NS_IMPL_ISUPPORTS(FileSpecWorker, nsIRunnable)
 class FileChannelWorker : public nsIRunnable {
 public:
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
         nsresult rv;
 
         PRIntervalTime startTime = PR_IntervalNow();

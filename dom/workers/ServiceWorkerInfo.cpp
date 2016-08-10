@@ -93,7 +93,7 @@ public:
     }
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     // We need to update the state of all instances atomically before notifying
     // them to make sure that the observed state for all instances inside

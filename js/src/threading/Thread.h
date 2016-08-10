@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/IndexSequence.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
@@ -36,8 +37,11 @@ class ThreadTrampoline;
 class Thread
 {
 public:
+  struct Hasher;
+
   class Id
   {
+    friend struct Hasher;
     class PlatformData;
     void* platformData_[2];
 
@@ -66,6 +70,18 @@ public:
 
     Options& setStackSize(size_t sz) { stackSize_ = sz; return *this; }
     size_t stackSize() const { return stackSize_; }
+  };
+
+  // A js::HashTable hash policy for keying hash tables by js::Thread::Id.
+  struct Hasher
+  {
+    typedef Id Lookup;
+
+    static HashNumber hash(const Lookup& l);
+
+    static bool match(const Id& key, const Lookup& lookup) {
+      return key == lookup;
+    }
   };
 
   // Create a Thread in an initially unjoinable state. A thread of execution can

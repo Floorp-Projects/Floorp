@@ -625,17 +625,13 @@ class GCRuntime
     bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason);
     MOZ_MUST_USE bool maybeGC(Zone* zone);
     void maybePeriodicFullGC();
-    void minorGC(JS::gcreason::Reason reason) {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MINOR_GC);
-        minorGCImpl(reason, nullptr);
-    }
-    void minorGC(JSContext* cx, JS::gcreason::Reason reason);
+    void minorGC(JS::gcreason::Reason reason,
+                 gcstats::Phase phase = gcstats::PHASE_MINOR_GC) JS_HAZ_GC_CALL;
     void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_EVICT_NURSERY);
-        minorGCImpl(reason, nullptr);
+        minorGC(reason, gcstats::PHASE_EVICT_NURSERY);
     }
     // The return value indicates whether a major GC was performed.
-    bool gcIfRequested(JSContext* cx = nullptr);
+    bool gcIfRequested();
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
     void startGC(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
     void gcSlice(JS::gcreason::Reason reason, int64_t millis = 0);
@@ -889,8 +885,6 @@ class GCRuntime
         NotFinished = 0,
         Finished
     };
-
-    void minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pretenureGroups) JS_HAZ_GC_CALL;
 
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
