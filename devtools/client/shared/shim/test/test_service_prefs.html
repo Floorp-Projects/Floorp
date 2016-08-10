@@ -181,14 +181,7 @@ function do_tests() {
     }
   };
 
-  try {
-    threw = false;
-    branch0.addObserver("devtools.branch1", null, null);
-  } catch (e) {
-    threw = true;
-  }
-  ok(threw, "invalid branch name to addObserver");
-
+  branch0.addObserver("devtools.branch1", null, null);
   branch0.addObserver("devtools.branch1.", observer, false);
   branch1.addObserver("", observer, false);
 
@@ -208,6 +201,15 @@ function do_tests() {
   isDeeply(notifications, {
     "somestring": true
   }, "removeObserver worked");
+
+  clearNotificationList();
+  branch0.addObserver("devtools.branch1.somestring", observer, false);
+  Services.prefs.setCharPref("devtools.branch1.somestring", "northern shoveler");
+  isDeeply(notifications, {
+    "devtools.branch1.somestring": true,
+    "somestring": true
+  }, "notifications sent to two listeners");
+  branch0.removeObserver("devtools.branch1.somestring", observer);
 
   // Make sure we update if the pref change comes from somewhere else.
   clearNotificationList();
