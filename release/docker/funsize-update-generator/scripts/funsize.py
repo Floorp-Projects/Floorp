@@ -23,6 +23,7 @@ ALLOWED_URL_PREFIXES = [
     "https://queue.taskcluster.net/",
     "http://ftp.mozilla.org/",
     "http://download.mozilla.org/",
+    "https://archive.mozilla.org/",
 ]
 
 DEFAULT_FILENAME_TEMPLATE = "{appName}-{branch}-{version}-{platform}-" \
