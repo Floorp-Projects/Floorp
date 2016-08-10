@@ -1503,8 +1503,7 @@ WebGLContext::ValidatePackSize(const char* funcName, uint32_t width, uint32_t he
 
 void
 WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                         GLenum type,
-                         const dom::Nullable<dom::ArrayBufferView>& pixels,
+                         GLenum type, const dom::ArrayBufferView& view,
                          ErrorResult& out_error)
 {
     if (!ReadPixels_SharedPrecheck(&out_error))
@@ -1514,15 +1513,6 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
         ErrorInvalidOperation("readPixels: PIXEL_PACK_BUFFER must be null.");
         return;
     }
-
-    //////
-
-    if (pixels.IsNull()) {
-        ErrorInvalidValue("readPixels: null destination buffer");
-        return;
-    }
-
-    const auto& view = pixels.Value();
 
     //////
 
