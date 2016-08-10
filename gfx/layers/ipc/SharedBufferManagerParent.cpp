@@ -13,6 +13,7 @@
 #include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"      // for Transport
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "mozilla/Unused.h"
 #include "nsIMemoryReporter.h"

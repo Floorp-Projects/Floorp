@@ -33,7 +33,7 @@ class RemoteContentController : public GeckoContentController
   using GeckoContentController::APZStateChange;
 
 public:
-  explicit RemoteContentController(uint64_t aLayersId);
+  RemoteContentController();
 
   virtual ~RemoteContentController();
 
@@ -57,6 +57,12 @@ public:
                                     APZStateChange aChange,
                                     int aArg) override;
 
+  virtual void UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent) override;
+
+  virtual void UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent) override;
+
+  virtual void SetScrollingRootContent(bool aIsRootContent) override;
+
   virtual void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
                                          const nsString& aEvent) override;
 
@@ -70,7 +76,6 @@ public:
 
 private:
   MessageLoop* mCompositorThread;
-  uint64_t mLayersId;
   bool mCanSend;
 
   // Mutex protecting members below accessed from multiple threads.

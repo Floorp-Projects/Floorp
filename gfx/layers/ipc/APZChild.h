@@ -9,24 +9,17 @@
 
 #include "mozilla/layers/PAPZChild.h"
 
-class nsIObserver;
-
 namespace mozilla {
 
-namespace dom {
-class TabChild;
-} // namespace dom
-
 namespace layers {
+
+class GeckoContentController;
 
 class APZChild final : public PAPZChild
 {
 public:
-  static APZChild* Create(const dom::TabId& aTabId);
-
+  explicit APZChild(RefPtr<GeckoContentController> aController);
   ~APZChild();
-
-  void SetBrowser(dom::TabChild* aBrowser);
 
   bool RecvRequestContentRepaint(const FrameMetrics& frame) override;
 
@@ -37,11 +30,16 @@ public:
                      const uint64_t& aInputBlockId,
                      const bool& aCallTakeFocusForClickFromTap) override;
 
-  bool RecvNotifyMozMouseScrollEvent(const uint64_t& aLayersId,
-                                     const ViewID& aScrollId,
+  bool RecvUpdateOverscrollVelocity(const float& aX, const float& aY, const bool& aIsRootContent) override;
+
+  bool RecvUpdateOverscrollOffset(const float& aX, const float& aY, const bool& aIsRootContent) override;
+
+  bool RecvSetScrollingRootContent(const bool& aIsRootContent) override;
+
+  bool RecvNotifyMozMouseScrollEvent(const ViewID& aScrollId,
                                      const nsString& aEvent) override;
 
-  bool RecvNotifyAPZStateChange(const ViewID& aViewId,
+  bool RecvNotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                 const APZStateChange& aChange,
                                 const int& aArg) override;
 
@@ -50,13 +48,7 @@ public:
   bool RecvDestroy() override;
 
 private:
-  APZChild();
-
-  void SetObserver(nsIObserver* aObserver);
-
-  RefPtr<dom::TabChild> mBrowser;
-  RefPtr<nsIObserver> mObserver;
-  bool mDestroyed;
+  RefPtr<GeckoContentController> mController;
 };
 
 } // namespace layers
