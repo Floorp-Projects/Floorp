@@ -1,0 +1,159 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test allow-presentation sandboxing flag</title>
+<script type="application/javascript;version=1.8">
+
+"use strict";
+
+function is(a, b, msg) {
+  window.parent.postMessage((a === b ? "OK " : "KO ") + msg, "*");
+}
+
+function ok(a, msg) {
+  window.parent.postMessage((a ? "OK " : "KO ") + msg, "*");
+}
+
+function info(msg) {
+  window.parent.postMessage("INFO " + msg, "*");
+}
+
+function command(msg) {
+  window.parent.postMessage("COMMAND " + JSON.stringify(msg), "*");
+}
+
+function finish() {
+  window.parent.postMessage("DONE", "*");
+}
+
+function testGetAvailability() {
+  return new Promise(function(aResolve, aReject) {
+    ok(navigator.presentation, "navigator.presentation should be available.");
+    var request = new PresentationRequest("http://example.com");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        ok(false, "Unexpected success, should get a security error.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "SecurityError", "Should get a security error.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testStartRequest() {
+  return new Promise(function(aResolve, aReject) {
+    var request = new PresentationRequest("http://example.com");
+
+    request.start().then(
+      function(aAvailability) {
+        ok(false, "Unexpected success, should get a security error.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "SecurityError", "Should get a security error.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testReconnectRequest() {
+  return new Promise(function(aResolve, aReject) {
+    var request = new PresentationRequest("http://example.com");
+
+    request.reconnect("dummyId").then(
+      function(aConnection) {
+        ok(false, "Unexpected success, should get a security error.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "SecurityError", "Should get a security error.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testGetAvailabilityForAboutBlank() {
+  return new Promise(function(aResolve, aReject) {
+    var request = new PresentationRequest("about:blank");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        ok(true, "Success due to a priori authenticated URL.");
+        aResolve();
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting availability: " + aError);
+        aReject();
+      }
+    );
+  });
+}
+
+function testGetAvailabilityForAboutSrcdoc() {
+  return new Promise(function(aResolve, aReject) {
+    var request = new PresentationRequest("about:srcdoc");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        ok(true, "Success due to a priori authenticated URL.");
+        aResolve();
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting availability: " + aError);
+        aReject();
+      }
+    );
+  });
+}
+
+function testGetAvailabilityForDataURL() {
+  return new Promise(function(aResolve, aReject) {
+    var request = new PresentationRequest("data:text/html,1");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        ok(true, "Success due to a priori authenticated URL.");
+        aResolve();
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting availability: " + aError);
+        aReject();
+      }
+    );
+  });
+}
+
+function runTest() {
+  testGetAvailability()
+  .then(testStartRequest)
+  .then(testReconnectRequest)
+  .then(testGetAvailabilityForAboutBlank)
+  .then(testGetAvailabilityForAboutSrcdoc)
+  .then(testGetAvailabilityForDataURL)
+  .then(finish);
+}
+
+window.addEventListener("message", function onMessage(evt) {
+  window.removeEventListener("message", onMessage);
+  if (evt.data === "start") {
+    runTest();
+  }
+}, false);
+
+window.setTimeout(function() {
+  command("ready-to-start");
+}, 3000);
+
+</script>
+</head>
+<body>
+</body>
+</html>

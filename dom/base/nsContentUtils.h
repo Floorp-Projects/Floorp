@@ -2666,6 +2666,14 @@ public:
    */
   static nsIDocShell* GetDocShellForEventTarget(mozilla::dom::EventTarget* aTarget);
 
+  /**
+   * Returns true if the "HTTPS state" of the document should be "modern". See:
+   *
+   * https://html.spec.whatwg.org/#concept-document-https-state
+   * https://fetch.spec.whatwg.org/#concept-response-https-state
+   */
+  static bool HttpsStateIsModern(nsIDocument* aDocument);
+
 private:
   static bool InitializeEventTable();
 
