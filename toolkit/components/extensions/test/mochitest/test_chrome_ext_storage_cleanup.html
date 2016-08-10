@@ -108,10 +108,11 @@ add_task(function* test_uninstall() {
   let extension = ExtensionTestUtils.loadExtension({
     background: `(${writeData})()`,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",
-  }, ID);
+  });
 
   yield extension.startup();
   yield extension.awaitMessage("finished");
@@ -126,10 +127,11 @@ add_task(function* test_uninstall() {
   extension = ExtensionTestUtils.loadExtension({
     background: `(${readData})()`,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",
-  }, ID);
+  });
 
   yield extension.startup();
   let results = yield extension.awaitMessage("results");
@@ -143,10 +145,11 @@ add_task(function* test_uninstall() {
   extension = ExtensionTestUtils.loadExtension({
     background: `(${readData})()`,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",
-  }, ID);
+  });
 
   yield extension.startup();
   results = yield extension.awaitMessage("results");

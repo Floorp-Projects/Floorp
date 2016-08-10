@@ -211,7 +211,7 @@ ServerBSO.prototype = {
     }
 
     // Alert when we see unrecognized fields.
-    for (let [key, value] in Iterator(parsed)) {
+    for (let [key, value] of Object.entries(parsed)) {
       switch (key) {
         case "payload":
           if (typeof(value) != "string") {
@@ -325,7 +325,7 @@ StorageServerCollection.prototype = {
    */
   keys: function keys(filter) {
     let ids = [];
-    for (let [id, bso] in Iterator(this._bsos)) {
+    for (let [id, bso] of Object.entries(this._bsos)) {
       if (!bso.deleted && (!filter || filter(id, bso))) {
         ids.push(id);
       }
@@ -345,7 +345,7 @@ StorageServerCollection.prototype = {
    */
   bsos: function bsos(filter) {
     let os = [];
-    for (let [id, bso] in Iterator(this._bsos)) {
+    for (let [id, bso] of Object.entries(this._bsos)) {
       if (!bso.deleted) {
         os.push(bso);
       }
@@ -440,7 +440,7 @@ StorageServerCollection.prototype = {
   count: function count(options) {
     options = options || {};
     let c = 0;
-    for (let [id, bso] in Iterator(this._bsos)) {
+    for (let [id, bso] of Object.entries(this._bsos)) {
       if (bso.modified && this._inResultSet(bso, options)) {
         c++;
       }
@@ -598,7 +598,7 @@ StorageServerCollection.prototype = {
     }
 
     let deleted = [];
-    for (let [id, bso] in Iterator(this._bsos)) {
+    for (let [id, bso] of Object.entries(this._bsos)) {
       if (this._inResultSet(bso, options)) {
         this._log.debug("Deleting " + JSON.stringify(bso));
         deleted.push(bso.id);
@@ -1052,10 +1052,10 @@ StorageServer.prototype = {
       throw new Error("Unknown user.");
     }
     let userCollections = this.users[username].collections;
-    for (let [id, contents] in Iterator(collections)) {
+    for (let [id, contents] of Object.entries(collections)) {
       let coll = userCollections[id] ||
                  this._insertCollection(userCollections, id);
-      for (let [bsoID, payload] in Iterator(contents)) {
+      for (let [bsoID, payload] of Object.entries(contents)) {
         coll.insert(bsoID, payload);
       }
     }
@@ -1136,7 +1136,7 @@ StorageServer.prototype = {
   infoCounts: function infoCounts(username) {
     let data = {};
     let collections = this.users[username].collections;
-    for (let [k, v] in Iterator(collections)) {
+    for (let [k, v] of Object.entries(collections)) {
       let count = v.count();
       if (!count) {
         continue;
@@ -1151,7 +1151,7 @@ StorageServer.prototype = {
   infoUsage: function infoUsage(username) {
     let data = {};
     let collections = this.users[username].collections;
-    for (let [k, v] in Iterator(collections)) {
+    for (let [k, v] of Object.entries(collections)) {
       data[k] = v.totalPayloadSize;
     }
 
@@ -1668,7 +1668,7 @@ StorageServer.prototype = {
 this.storageServerForUsers =
  function storageServerForUsers(users, contents, callback) {
   let server = new StorageServer(callback);
-  for (let [user, pass] in Iterator(users)) {
+  for (let [user, pass] of Object.entries(users)) {
     server.registerUser(user, pass);
     server.createContents(user, contents);
   }

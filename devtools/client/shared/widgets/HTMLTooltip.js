@@ -369,7 +369,7 @@ HTMLTooltip.prototype = {
     }
 
     if (this.useXulWrapper) {
-      this._showXulWrapperAt(left, top);
+      yield this._showXulWrapperAt(left, top);
     } else {
       this.container.style.left = left + "px";
       this.container.style.top = top + "px";

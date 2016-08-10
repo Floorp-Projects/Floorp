@@ -16,7 +16,9 @@ This currently affects the following sections:
 - addons
 
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       build: {
@@ -279,11 +281,11 @@ The object contains:
   engine is currently set as the default.
 
 - a ``loadPath`` property: an anonymized path of the engine xml file, e.g.
- jar:[app]/omni.ja!browser/engine.xml
+  jar:[app]/omni.ja!browser/engine.xml
   (where 'browser' is the name of the chrome package, not a folder)
- [profile]/searchplugins/engine.xml
- [distribution]/searchplugins/common/engine.xml
- [other]/engine.xml
+  [profile]/searchplugins/engine.xml
+  [distribution]/searchplugins/common/engine.xml
+  [other]/engine.xml
 
 - an ``origin`` property: the value will be ``default`` for engines that are built-in or from distribution partners, ``verified`` for user-installed engines with valid verification hashes, ``unverified`` for non-default engines without verification hash, and ``invalid`` for engines with broken verification hashes.
 

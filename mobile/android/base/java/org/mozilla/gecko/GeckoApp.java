@@ -144,6 +144,7 @@ public abstract class GeckoApp
     public static final String ACTION_LAUNCH_SETTINGS      = "org.mozilla.gecko.SETTINGS";
     public static final String ACTION_LOAD                 = "org.mozilla.gecko.LOAD";
     public static final String ACTION_INIT_PW              = "org.mozilla.gecko.INIT_PW";
+    public static final String ACTION_SWITCH_TAB           = "org.mozilla.gecko.SWITCH_TAB";
 
     public static final String INTENT_REGISTER_STUMBLER_LISTENER = "org.mozilla.gecko.STUMBLER_REGISTER_LOCAL_LISTENER";
 
@@ -2077,6 +2078,9 @@ public abstract class GeckoApp
             // Copy extras.
             settingsIntent.putExtras(intent.getUnsafe());
             startActivity(settingsIntent);
+        } else if (ACTION_SWITCH_TAB.equals(action)) {
+            final int tabId = intent.getIntExtra("TabId", -1);
+            Tabs.getInstance().selectTab(tabId);
         }
 
         recordStartupActionTelemetry(passedUri, action);

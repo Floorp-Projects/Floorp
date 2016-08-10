@@ -38,6 +38,18 @@ public class SafeIntent {
         }
     }
 
+    public int getIntExtra(final String name, final int defaultValue) {
+        try {
+            return intent.getIntExtra(name, defaultValue);
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
+            return defaultValue;
+        } catch (RuntimeException e) {
+            Log.w(LOGTAG, "Couldn't get intent extras.", e);
+            return defaultValue;
+        }
+    }
+
     public String getStringExtra(final String name) {
         try {
             return intent.getStringExtra(name);

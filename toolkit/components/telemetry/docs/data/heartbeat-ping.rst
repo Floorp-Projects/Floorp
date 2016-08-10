@@ -15,14 +15,16 @@ These "meta fields" will be repeated verbatim in the payload section.
 
 The environment block and client ID are submitted with this ping.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       type: "heartbeat",
       version: 4,
       clientId: <UUID>,
-      environment: { ... }
-      ... common ping data ...
+      environment: { /* ... */ }
+      // ... common ping data
       payload: {
         version: 1,
         flowId: <string>,
@@ -34,9 +36,9 @@ Structure::
         closedTS: <integer epoch timestamp>,
         expiredTS: <integer epoch timestamp>,
         windowClosedTS: <integer epoch timestamp>,
-        ... user's rating below ...
+        // ... user's rating below
         score: <integer>,
-        ... survey meta fields below ...
+        // ... survey meta fields below
         surveyId: <string>,
         surveyVersion: <integer>,
         testing: <boolean>

@@ -1317,6 +1317,7 @@ struct SetEnumValueHelper
   }
 
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
+  DEFINE_ENUM_CLASS_SETTER(StyleFloat, None_, InlineEnd)
   DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
   DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None_, SelectMenu)
 
@@ -6072,7 +6073,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
            display->mFloat, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentDisplay->mFloat,
-           NS_STYLE_FLOAT_NONE);
+           StyleFloat::None_);
   // Save mFloat in mOriginalFloat in case we need it later
   display->mOriginalFloat = display->mFloat;
 
@@ -6197,7 +6198,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       // 1) if position is 'absolute' or 'fixed' then display must be
       // block-level and float must be 'none'
       EnsureBlockDisplay(display->mDisplay);
-      display->mFloat = NS_STYLE_FLOAT_NONE;
+      display->mFloat = StyleFloat::None_;
 
       // Note that it's OK to cache this struct in the ruletree
       // because it's fine as-is for any style context that points to
@@ -6205,7 +6206,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       // more specific rule sets "position: static") will use
       // mOriginalDisplay and mOriginalFloat, which we have carefully
       // not changed.
-    } else if (display->mFloat != NS_STYLE_FLOAT_NONE) {
+    } else if (display->mFloat != StyleFloat::None_) {
       // 2) if float is not none, and display is not none, then we must
       // set a block-level 'display' type per CSS2.1 section 9.7.
       EnsureBlockDisplay(display->mDisplay);

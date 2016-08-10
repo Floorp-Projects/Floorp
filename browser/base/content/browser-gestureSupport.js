@@ -125,7 +125,7 @@ var gGestureSupport = {
    */
   _setupGesture: function GS__setupGesture(aEvent, aGesture, aPref, aInc, aDec) {
     // Try to load user-set values from preferences
-    for (let [pref, def] in Iterator(aPref))
+    for (let [pref, def] of Object.entries(aPref))
       aPref[pref] = this._getPref(aGesture + "." + pref, def);
 
     // Keep track of the total deltas and latching behavior

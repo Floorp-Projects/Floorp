@@ -29,10 +29,12 @@ add_task(function* test_tab_options_privileges() {
     });
   }
 
+  const ID = "options_privileges@tests.mozilla.org";
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
 
     manifest: {
+      applications: {gecko: {id: ID}},
       "permissions": ["tabs"],
       "options_ui": {
         "page": "options.html",

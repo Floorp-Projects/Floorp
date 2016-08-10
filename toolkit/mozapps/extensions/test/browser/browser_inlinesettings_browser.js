@@ -16,7 +16,11 @@ var installedAddons = [];
 function installAddon(details) {
   let id = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
                                               .generateUUID().number;
-  let xpi = Extension.generateXPI(id, details);
+  if (!details.manifest) {
+    details.manifest = {};
+  }
+  details.manifest.applications = {gecko: {id}};
+  let xpi = Extension.generateXPI(details);
 
   return AddonManager.installTemporaryAddon(xpi).then(addon => {
     SimpleTest.registerCleanupFunction(function() {

@@ -34,10 +34,13 @@ function backgroundScript() {
   browser.test.notifyPass("background script ran");
 }
 
+const ID = "debug@tests.mozilla.org";
 let extensionData = {
   useAddonManager: "temporary",
   background: "(" + backgroundScript.toString() + ")()",
-  manifest: {},
+  manifest: {
+    applications: {gecko: {id: ID}},
+  },
   files: {},
 };
 
@@ -50,7 +53,7 @@ add_task(function* () {
   yield new Promise(function(resolve) {
     window.BrowserToolboxProcess.emit("connectionchange", "opened", {
       setAddonOptions(id, options) {
-        if (id === extension.id) {
+        if (id === ID) {
           let context = Cu.waiveXrays(options.global);
           ok(context.chrome, "global context has a chrome object");
           ok(context.browser, "global context has a browser object");
@@ -62,7 +65,7 @@ add_task(function* () {
   });
 
   let addon = yield new Promise((resolve, reject) => {
-    AddonManager.getAddonByID(extension.id, addon => addon ? resolve(addon) : reject());
+    AddonManager.getAddonByID(ID, addon => addon ? resolve(addon) : reject());
   });
 
   ok(addon, `Got the addon wrapper for ${addon.id}`);

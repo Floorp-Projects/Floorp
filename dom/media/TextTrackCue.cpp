@@ -54,7 +54,9 @@ TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow,
   , mText(aText)
   , mStartTime(aStartTime)
   , mEndTime(aEndTime)
-  , mReset(false)
+  , mReset(false, "TextTrackCue::mReset")
+  , mHaveStartedWatcher(false)
+  , mWatchManager(this, AbstractThread::MainThread())
 {
   SetDefaultCueSettings();
   MOZ_ASSERT(aOwnerWindow);
@@ -74,7 +76,9 @@ TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow,
   , mStartTime(aStartTime)
   , mEndTime(aEndTime)
   , mTrackElement(aTrackElement)
-  , mReset(false)
+  , mReset(false, "TextTrackCue::mReset")
+  , mHaveStartedWatcher(false)
+  , mWatchManager(this, AbstractThread::MainThread())
 {
   SetDefaultCueSettings();
   MOZ_ASSERT(aOwnerWindow);
@@ -230,6 +234,22 @@ TextTrackCue::ComputedPositionAlign()
     return PositionAlignSetting::Line_right;
   }
   return PositionAlignSetting::Center;
+}
+
+void
+TextTrackCue::NotifyDisplayStatesChanged()
+{
+  if (!mReset) {
+    return;
+  }
+
+  if (!mTrack ||
+      !mTrack->GetTextTrackList() ||
+      !mTrack->GetTextTrackList()->GetMediaElement()) {
+    return;
+  }
+
+  mTrack->GetTextTrackList()->GetMediaElement()->NotifyCueDisplayStatesChanged();
 }
 
 } // namespace dom

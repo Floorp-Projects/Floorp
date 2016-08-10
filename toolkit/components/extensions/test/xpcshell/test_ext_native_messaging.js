@@ -88,9 +88,10 @@ add_task(function* test_happy_path() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["nativeMessaging"],
     },
-  }, ID);
+  });
 
   yield extension.startup();
   yield extension.awaitMessage("ready");
@@ -156,9 +157,10 @@ if (AppConstants.platform == "win") {
     let extension = ExtensionTestUtils.loadExtension({
       background,
       manifest: {
+        applications: {gecko: {id: ID}},
         permissions: ["nativeMessaging"],
       },
-    }, ID);
+    });
 
     yield extension.startup();
     yield extension.awaitMessage("done");
@@ -195,9 +197,10 @@ add_task(function* test_sendNativeMessage() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["nativeMessaging"],
     },
-  }, ID);
+  });
 
   yield extension.startup();
   yield extension.awaitMessage("finished");
@@ -242,9 +245,10 @@ add_task(function* test_disconnect() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["nativeMessaging"],
     },
-  }, ID);
+  });
 
   yield extension.startup();
   yield extension.awaitMessage("ready");
@@ -295,9 +299,10 @@ add_task(function* test_write_limit() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["nativeMessaging"],
     },
-  }, ID);
+  });
 
   yield extension.startup();
 
@@ -333,9 +338,10 @@ add_task(function* test_read_limit() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["nativeMessaging"],
     },
-  }, ID);
+  });
 
   yield extension.startup();
 
@@ -414,9 +420,10 @@ add_task(function* test_child_process() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      applications: {gecko: {id: ID}},
       permissions: ["nativeMessaging"],
     },
-  }, ID);
+  });
 
   yield extension.startup();
 
@@ -443,9 +450,10 @@ add_task(function* test_stderr() {
     let extension = ExtensionTestUtils.loadExtension({
       background,
       manifest: {
+        applications: {gecko: {id: ID}},
         permissions: ["nativeMessaging"],
       },
-    }, ID);
+    });
 
     yield extension.startup();
     yield extension.awaitMessage("finished");

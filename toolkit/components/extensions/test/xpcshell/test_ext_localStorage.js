@@ -26,16 +26,17 @@ function backgroundScript() {
   browser.test.notifyPass("localStorage");
 }
 
+const ID = "test-webextension@mozilla.com";
 let extensionData = {
+  manifest: {applications: {gecko: {id: ID}}},
   background: backgroundScript,
 };
 
 add_task(function* test_localStorage() {
-  let id = "test-webextension@mozilla.com";
   const RESULTS = ["item1", "item2", "deleted", "cleared", "item1"];
 
   for (let expected of RESULTS) {
-    let extension = ExtensionTestUtils.loadExtension(extensionData, id);
+    let extension = ExtensionTestUtils.loadExtension(extensionData);
 
     yield extension.startup();
 

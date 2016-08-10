@@ -53,7 +53,7 @@ ifdef ENABLE_TESTS
 # Implemented in testing/testsuite-targets.mk
 
 mochitest-browser-chrome:
-	$(RUN_MOCHITEST) --browser-chrome
+	$(RUN_MOCHITEST) --flavor=browser
 	$(CHECK_TEST_ERROR)
 
 mochitest:: mochitest-browser-chrome

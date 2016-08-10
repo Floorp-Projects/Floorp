@@ -7,14 +7,16 @@ It contains basic information shared between different ping types, which enables
 
 It also contains optional further information:
 
-* the :doc:`environment data <environment>`, which contains important info to correlate the measurements against
+* the :doc:`environment data <../data/environment>`, which contains important info to correlate the measurements against
 * the ``clientId``, a UUID identifying a profile and allowing user-oriented correlation of data
 
 *Note:* Both are not submitted with all ping types due to privacy concerns. This and the data it that can be correlated against is inspected under the `data collection policy <https://wiki.mozilla.org/Firefox/Data_Collection>`_.
 
 Finally, the structure also contains the `payload`, which is the specific data submitted for the respective *ping type*.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       type: <string>, // "main", "activation", "deletion", "saved-session", ...

@@ -8,7 +8,9 @@ The environment block that is sent with this ping varies: if Firefox was running
 
 The client ID is submitted with this ping.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       version: 1,

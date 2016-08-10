@@ -30,9 +30,9 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   let bezierTooltip = ruleView.tooltips.cubicBezier;
 
   info("Showing the tooltip");
-  let onShown = bezierTooltip.tooltip.once("shown");
+  let onBezierWidgetReady = bezierTooltip.once("ready");
   swatch.click();
-  yield onShown;
+  yield onBezierWidgetReady;
 
   let widget = yield bezierTooltip.widget;
   info("Simulating a change of curve in the widget");

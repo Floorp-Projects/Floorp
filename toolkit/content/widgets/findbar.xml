@@ -760,6 +760,8 @@
             event.initEvent("findbaropen", true, false);
             this.dispatchEvent(event);
 
+            this.browser.finder.onFindbarOpen();
+
             return true;
           }
           return false;

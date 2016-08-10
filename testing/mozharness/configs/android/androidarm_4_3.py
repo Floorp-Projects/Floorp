@@ -123,7 +123,7 @@ config = {
                 "--extra-profile-file=fonts",
                 "--extra-profile-file=hyphenation",
                 "--screenshot-on-fail",
-                "--chrome",
+                "--flavor=chrome",
             ],
         },
         "mochitest-plain-gpu": {

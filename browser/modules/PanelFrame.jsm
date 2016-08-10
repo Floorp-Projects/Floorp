@@ -81,7 +81,7 @@ var PanelFrameInternal = {
         attrs["message"] = "true";
         attrs["messagemanagergroup"] = aType;
       }
-      for (let [k, v] of Iterator(attrs)) {
+      for (let [k, v] of Object.entries(attrs)) {
         frame.setAttribute(k, v);
       }
       aParent.appendChild(frame);

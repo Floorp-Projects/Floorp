@@ -33,8 +33,6 @@ function promiseInstallWebExtension(aData) {
   return promiseInstallAllFiles([addonFile]).then(() => {
     Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
     return promiseAddonStartup();
-  }).then(() => {
-    return promiseAddonByID(aData.id);
   });
 }
 
@@ -264,14 +262,17 @@ add_task(function*() {
 add_task(function* test_options_ui() {
   let OPTIONS_RE = /^moz-extension:\/\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\/options\.html$/;
 
-  let addon = yield promiseInstallWebExtension({
+  const ID = "webextension@tests.mozilla.org";
+  yield promiseInstallWebExtension({
     manifest: {
+      applications: {gecko: {id: ID}},
       "options_ui": {
         "page": "options.html",
       },
     },
   });
 
+  let addon = yield promiseAddonByID(ID);
   equal(addon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
         "Addon should have an INLINE_BROWSER options type");
 
@@ -280,8 +281,10 @@ add_task(function* test_options_ui() {
 
   addon.uninstall();
 
-  addon = yield promiseInstallWebExtension({
+  const ID2 = "webextension2@tests.mozilla.org";
+  yield promiseInstallWebExtension({
     manifest: {
+      applications: {gecko: {id: ID2}},
       "options_ui": {
         "page": "options.html",
         "open_in_tab": true,
@@ -289,6 +292,7 @@ add_task(function* test_options_ui() {
     },
   });
 
+  addon = yield promiseAddonByID(ID2);
   equal(addon.optionsType, AddonManager.OPTIONS_TYPE_TAB,
         "Addon should have a TAB options type");
 
@@ -305,8 +309,8 @@ add_task(function* test_experiments_dependencies() {
     return;
 
   let addonFile = createTempWebExtensionFile({
-    id: "meh@experiment",
     manifest: {
+      applications: {gecko: {id: "meh@experiment"}},
       "permissions": ["experiments.meh"],
     },
   });

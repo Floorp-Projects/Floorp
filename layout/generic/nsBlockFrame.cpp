@@ -4255,12 +4255,12 @@ nsBlockFrame::SplitFloat(BlockReflowInput& aState,
     nextInFlow->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
   }
 
-  uint8_t floatStyle =
+  StyleFloat floatStyle =
     aFloat->StyleDisplay()->PhysicalFloats(aState.mReflowInput.GetWritingMode());
-  if (floatStyle == NS_STYLE_FLOAT_LEFT) {
+  if (floatStyle == StyleFloat::Left) {
     aState.mFloatManager->SetSplitLeftFloatAcrossBreak();
   } else {
-    MOZ_ASSERT(floatStyle == NS_STYLE_FLOAT_RIGHT, "unexpected float side");
+    MOZ_ASSERT(floatStyle == StyleFloat::Right, "Unexpected float side!");
     aState.mFloatManager->SetSplitRightFloatAcrossBreak();
   }
 

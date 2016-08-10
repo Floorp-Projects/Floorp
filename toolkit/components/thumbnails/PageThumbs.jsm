@@ -368,17 +368,26 @@ this.PageThumbs = {
     let originalURL;
     let channelError = false;
 
-    if (!aBrowser.isRemoteBrowser) {
-      let channel = aBrowser.docShell.currentDocumentChannel;
-      originalURL = channel.originalURI.spec;
-      // see if this was an error response.
-      channelError = this._isChannelErrorResponse(channel);
-    } else {
-      // We need channel info (bug 1073957)
-      originalURL = url;
-    }
-
     Task.spawn((function* task() {
+      if (!aBrowser.isRemoteBrowser) {
+        let channel = aBrowser.docShell.currentDocumentChannel;
+        originalURL = channel.originalURI.spec;
+        // see if this was an error response.
+        channelError = PageThumbUtils.isChannelErrorResponse(channel);
+      } else {
+        let resp = yield new Promise(resolve => {
+          let mm = aBrowser.messageManager;
+          let respName = "Browser:Thumbnail:GetOriginalURL:Response";
+          mm.addMessageListener(respName, function onResp(msg) {
+            mm.removeMessageListener(respName, onResp);
+            resolve(msg.data);
+          });
+          mm.sendAsyncMessage("Browser:Thumbnail:GetOriginalURL");
+        });
+        originalURL = resp.originalURL || url;
+        channelError = resp.channelError;
+      }
+
       let isSuccess = true;
       try {
         let blob = yield this.captureToBlob(aBrowser);
@@ -493,25 +502,6 @@ this.PageThumbs = {
    */
   createCanvas: function PageThumbs_createCanvas(aWindow) {
     return PageThumbUtils.createCanvas(aWindow);
-  },
-
-  /**
-   * Given a channel, returns true if it should be considered an "error
-   * response", false otherwise.
-   */
-  _isChannelErrorResponse: function(channel) {
-    // No valid document channel sounds like an error to me!
-    if (!channel)
-      return true;
-    if (!(channel instanceof Ci.nsIHttpChannel))
-      // it might be FTP etc, so assume it's ok.
-      return false;
-    try {
-      return !channel.requestSucceeded;
-    } catch (_) {
-      // not being able to determine success is surely failure!
-      return true;
-    }
   },
 
   _prefEnabled: function PageThumbs_prefEnabled() {
