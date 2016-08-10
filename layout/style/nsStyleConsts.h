@@ -123,17 +123,19 @@ enum class StyleUserFocus : uint8_t {
 };
 
 // user-select
-#define NS_STYLE_USER_SELECT_NONE       0
-#define NS_STYLE_USER_SELECT_TEXT       1
-#define NS_STYLE_USER_SELECT_ELEMENT    2
-#define NS_STYLE_USER_SELECT_ELEMENTS   3
-#define NS_STYLE_USER_SELECT_ALL        4
-#define NS_STYLE_USER_SELECT_TOGGLE     5
-#define NS_STYLE_USER_SELECT_TRI_STATE  6
-#define NS_STYLE_USER_SELECT_AUTO       7 // internal value - please use nsFrame::IsSelectable()
-#define NS_STYLE_USER_SELECT_MOZ_ALL    8 // force selection of all children, unless an ancestor has NONE set - bug 48096
-#define NS_STYLE_USER_SELECT_MOZ_NONE   9 // Like NONE, but doesn't change selection behavior for descendants whose user-select is not AUTO.
-#define NS_STYLE_USER_SELECT_MOZ_TEXT   10 // Like TEXT, except that it won't get overridden by ancestors having ALL.
+enum class StyleUserSelect : uint8_t {
+  None_,
+  Text,
+  Element,
+  Elements,
+  All,
+  Toggle,
+  TriState,
+  Auto,     // internal value - please use nsFrame::IsSelectable()
+  MozAll,   // force selection of all children, unless an ancestor has NONE set - bug 48096
+  MozNone,  // Like NONE, but doesn't change selection behavior for descendants whose user-select is not AUTO.
+  MozText,  // Like TEXT, except that it won't get overridden by ancestors having ALL.
+};
 
 // user-input
 #define NS_STYLE_USER_INPUT_NONE      0
