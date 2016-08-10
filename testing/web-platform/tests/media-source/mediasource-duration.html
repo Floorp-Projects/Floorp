@@ -28,9 +28,6 @@
 
                   test.waitForExpectedEvents(function()
                   {
-                      assert_equals(mediaElement.duration, fullDuration, 'mediaElement fullDuration');
-                      assert_equals(mediaSource.duration, fullDuration, 'mediaSource fullDuration');
-
                       test.expectEvent(mediaElement, 'seeking', 'seeking to seekTo');
                       test.expectEvent(mediaElement, 'timeupdate', 'timeupdate while seeking to seekTo');
                       test.expectEvent(mediaElement, 'seeked', 'seeked to seekTo');
@@ -55,9 +52,9 @@
 
                   test.waitForExpectedEvents(function()
                   {
+                      // remove will not remove partial frames. The truncated duration is as such the highest end time.
+                      truncatedDuration = sourceBuffer.buffered.end(sourceBuffer.buffered.length-1);
                       assert_greater_than_equal(mediaElement.currentTime, seekTo, 'Playback time has reached seekTo');
-                      assert_equals(mediaElement.duration, fullDuration, 'mediaElement fullDuration after seekTo');
-                      assert_equals(mediaSource.duration, fullDuration, 'mediaSource fullDuration after seekTo');
                       test.expectEvent(mediaElement, 'seeking', 'Seeking to truncated duration');
 
                       assert_false(sourceBuffer.updating, 'sourceBuffer.updating');
@@ -135,8 +132,10 @@
 
               test.waitForExpectedEvents(function()
               {
-                  assert_equals(mediaElement.currentTime, truncatedDuration,
+                  assert_greater_than_equal(mediaElement.currentTime, truncatedDuration,
                                 'Playback time has reached truncatedDuration');
+                  // The mediaSource.readyState is "ended". Buffered ranges have been adjusted to the longest track.
+                  truncatedDuration = sourceBuffer.buffered.end(sourceBuffer.buffered.length-1);
                   assert_equals(mediaElement.duration, truncatedDuration,
                                 'mediaElement truncatedDuration after seek to it');
                   assert_equals(mediaSource.duration, truncatedDuration,
@@ -158,8 +157,10 @@
               var durationchangeEventCounter = 0;
               var durationchangeEventHandler = test.step_func(function(event)
               {
-                  assert_equals(mediaElement.duration, newDuration, 'mediaElement newDuration');
-                  assert_equals(mediaSource.duration, newDuration, 'mediaSource newDuration');
+                  assert_equals(mediaElement.duration, mediaSource.duration, 'mediaElement newDuration');
+                  // Final duration may be greater than originally set as per MSE's 2.4.6 Duration change
+                  // Adjust newDuration accordingly.
+                  assert_less_than_equal(newDuration, mediaSource.duration, 'mediaSource newDuration');
                   durationchangeEventCounter++;
               });
 
@@ -172,8 +173,6 @@
 
               test.waitForExpectedEvents(function()
               {
-                  assert_equals(mediaElement.duration, fullDuration, 'mediaElement fullDuration');
-                  assert_equals(mediaSource.duration, fullDuration, 'mediaSource fullDuration');
                   assert_less_than(mediaElement.currentTime, newDuration / 2, 'mediaElement currentTime');
 
                   assert_false(sourceBuffer.updating, "updating");
@@ -189,10 +188,6 @@
 
               test.waitForExpectedEvents(function()
               {
-                  assert_equals(mediaElement.duration, fullDuration, 'mediaElement fullDuration');
-                  assert_equals(mediaSource.duration, fullDuration, 'mediaSource fullDuration');
-                  assert_less_than(mediaElement.currentTime, newDuration / 2, 'mediaElement currentTime');
-
                   // Media load also fires 'durationchange' event, so only start counting them now.
                   mediaElement.addEventListener('durationchange', durationchangeEventHandler);
 
@@ -200,11 +195,6 @@
 
                   // Truncate duration. This should result in one 'durationchange' fired.
                   mediaSource.duration = newDuration;
-              });
-
-              test.waitForExpectedEvents(function()
-              {
-                  assert_false(sourceBuffer.updating, "updating");
 
                   // Final duration may be greater than originally set as per MSE's 2.4.6 Duration change
                   // Adjust newDuration accordingly.
