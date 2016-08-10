@@ -13050,6 +13050,32 @@ class MDebugger : public MNullaryInstruction
     TRIVIAL_NEW_WRAPPERS
 };
 
+class MCheckIsObj
+  : public MUnaryInstruction,
+    public BoxInputsPolicy::Data
+{
+    uint8_t checkKind_;
+
+    explicit MCheckIsObj(MDefinition* toCheck, uint8_t checkKind)
+      : MUnaryInstruction(toCheck), checkKind_(checkKind)
+    {
+        setResultType(MIRType::Value);
+        setResultTypeSet(toCheck->resultTypeSet());
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(CheckIsObj)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, checkValue))
+
+    uint8_t checkKind() const { return checkKind_; }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 class MCheckObjCoercible
   : public MUnaryInstruction,
     public BoxInputsPolicy::Data
@@ -13066,7 +13092,6 @@ class MCheckObjCoercible
     INSTRUCTION_HEADER(CheckObjCoercible)
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, checkValue))
-
 };
 
 class MDebugCheckSelfHosted

@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Ci} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "setNamedTimeout",
   "devtools/client/shared/widgets/view-helpers", true);
@@ -1350,17 +1349,17 @@ Column.prototype = {
     // Only sort the array if we are sorting based on this column
     if (this.sorted == 1) {
       items.sort((a, b) => {
-        let val1 = (a[this.id] instanceof Ci.nsIDOMNode) ?
+        let val1 = (a[this.id] instanceof Node) ?
             a[this.id].textContent : a[this.id];
-        let val2 = (b[this.id] instanceof Ci.nsIDOMNode) ?
+        let val2 = (b[this.id] instanceof Node) ?
             b[this.id].textContent : b[this.id];
         return val1 > val2;
       });
     } else if (this.sorted > 1) {
       items.sort((a, b) => {
-        let val1 = (a[this.id] instanceof Ci.nsIDOMNode) ?
+        let val1 = (a[this.id] instanceof Node) ?
             a[this.id].textContent : a[this.id];
-        let val2 = (b[this.id] instanceof Ci.nsIDOMNode) ?
+        let val2 = (b[this.id] instanceof Node) ?
             b[this.id].textContent : b[this.id];
         return val2 > val1;
       });
@@ -1504,18 +1503,18 @@ Cell.prototype = {
       return;
     }
 
-    if (this.wrapTextInElements && !(value instanceof Ci.nsIDOMNode)) {
+    if (this.wrapTextInElements && !(value instanceof Node)) {
       let span = this.label.ownerDocument.createElementNS(HTML_NS, "span");
       span.textContent = value;
       value = span;
     }
 
-    if (!(value instanceof Ci.nsIDOMNode) &&
+    if (!(value instanceof Node) &&
         value.length > MAX_VISIBLE_STRING_SIZE) {
       value = value .substr(0, MAX_VISIBLE_STRING_SIZE) + "\u2026";
     }
 
-    if (value instanceof Ci.nsIDOMNode) {
+    if (value instanceof Node) {
       this.label.removeAttribute("value");
 
       while (this.label.firstChild) {

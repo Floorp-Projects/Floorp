@@ -10,6 +10,8 @@
 #include <vector>
 #include <ostream>
 
+#include "PathHelpers.h"
+
 namespace mozilla {
 namespace gfx {
 
@@ -63,7 +65,11 @@ public:
   virtual void Close();
 
   /* Add an arc to the current figure */
-  virtual void Arc(const Point &, float, float, float, bool) { }
+  virtual void Arc(const Point &aOrigin, float aRadius, float aStartAngle,
+                   float aEndAngle, bool aAntiClockwise) {
+    ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle,
+                aAntiClockwise);
+  }
 
   /* Point the current subpath is at - or where the next subpath will start
    * if there is no active subpath.

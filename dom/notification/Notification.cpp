@@ -2710,7 +2710,7 @@ Notification::ShowPersistentNotification(JSContext* aCx,
   // "Otherwise, resolve promise with undefined."
   // The Notification may still not be shown due to other errors, but the spec
   // is not concerned with those.
-  p->MaybeResolve(JS::UndefinedHandleValue);
+  p->MaybeResolveWithUndefined();
 
   RefPtr<Notification> notification =
     CreateAndShow(aCx, aGlobal, aTitle, aOptions, aScope, aRv);

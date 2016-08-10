@@ -3,14 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsICache.idl"
 
 interface nsIInputStream;
 interface nsIOutputStream;
 interface nsICacheEntryDoomCallback;
-
-// ************************ REMOVE **********************
-typedef long nsCacheAccessMode;
-typedef long nsCacheStoragePolicy;
 
 interface nsICacheListener;
 interface nsIFile;

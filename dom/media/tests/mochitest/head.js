@@ -838,6 +838,7 @@ VideoStreamHelper.prototype = {
 
   waitForFrames: function(canvas, timeout_value) {
     var intervalId = this.startCapturingFrames();
+    timeout_value = timeout_value || 8000;
 
     return addFinallyToPromise(timeout(
       Promise.all([
@@ -846,7 +847,7 @@ VideoStreamHelper.prototype = {
         this._helper.waitForPixelColor(canvas, this._helper.red, 128,
                                        canvas.id + " should become red")
       ]),
-      2000,
+      timeout_value,
       "Timed out waiting for frames")).finally(() => clearInterval(intervalId));
   },
 

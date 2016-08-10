@@ -269,10 +269,10 @@ public:
   using nsIConstraintValidation::ReportValidity;
   // nsIConstraintValidation::SetCustomValidity() is fine.
   // XPCOM Select is fine
-  uint32_t GetSelectionStart(ErrorResult& aError);
-  void SetSelectionStart(uint32_t aSelectionStart, ErrorResult& aError);
-  uint32_t GetSelectionEnd(ErrorResult& aError);
-  void SetSelectionEnd(uint32_t aSelectionEnd, ErrorResult& aError);
+  Nullable<uint32_t> GetSelectionStart(ErrorResult& aError);
+  void SetSelectionStart(const Nullable<uint32_t>& aSelectionStart, ErrorResult& aError);
+  Nullable<uint32_t> GetSelectionEnd(ErrorResult& aError);
+  void SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd, ErrorResult& aError);
   void GetSelectionDirection(nsAString& aDirection, ErrorResult& aError);
   void SetSelectionDirection(const nsAString& aDirection, ErrorResult& aError);
   void SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd, const Optional<nsAString>& aDirecton, ErrorResult& aError);

@@ -650,12 +650,11 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
     if (count > 1) {
       nickname.AppendPrintf(" #%d", count);
     }
-    CERTCertificate *cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
-                                           const_cast<char*>(nickname.get()));
+    UniqueCERTCertificate cert(CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
+                                                       nickname.get()));
     if (!cert) {
       break;
     }
-    CERT_DestroyCertificate(cert);
     count++;
   }
   SECItem *newNick = new SECItem;

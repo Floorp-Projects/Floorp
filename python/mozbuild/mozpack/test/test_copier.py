@@ -337,8 +337,8 @@ class TestFileCopier(TestWithTmpDir):
         # Make file and directory unwritable. Reminder: making a directory
         # unwritable prevents modifications (including deletes) from the list
         # of files in that directory.
-        os.chmod(p, 0400)
-        os.chmod(self.tmpdir, 0400)
+        os.chmod(p, 0o400)
+        os.chmod(self.tmpdir, 0o400)
 
         copier = FileCopier()
         copier.add('dummy', GeneratedFile('content'))

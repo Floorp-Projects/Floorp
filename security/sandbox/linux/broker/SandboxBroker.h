@@ -28,14 +28,6 @@ class FileDescriptor;
 // seccomp-bpf can filter only on argument register values, not
 // parameters passed in memory like pathnames.)
 //
-// The policy is currently just a map from strings to sets of
-// permissions; the broker doesn't attempt to interpret or
-// canonicalize pathnames.  This makes the broker simpler, and thus
-// less likely to contain vulnerabilities a compromised client could
-// exploit.  (This might need to change in the future if we need to
-// whitelist a set of files that could change after policy
-// construction, like hotpluggable devices.)
-//
 // The broker currently runs on a thread in the parent process (with
 // effective uid changed on B2G), which is for memory efficiency
 // (compared to forking a process) and simplicity (compared to having
@@ -49,15 +41,18 @@ class SandboxBroker final
 {
  public:
   enum Perms {
-    MAY_ACCESS = 1 << 0,
-    MAY_READ = 1 << 1,
-    MAY_WRITE = 1 << 2,
-    MAY_CREATE = 1 << 3,
+    MAY_ACCESS    = 1 << 0,
+    MAY_READ      = 1 << 1,
+    MAY_WRITE     = 1 << 2,
+    MAY_CREATE    = 1 << 3,
     // This flag is for testing policy changes -- when the client is
     // used with the seccomp-bpf integration, an access to this file
     // will invoke a crash dump with the context of the syscall.
     // (This overrides all other flags.)
     CRASH_INSTEAD = 1 << 4,
+    // Applies to everything below this path, including subdirs created
+    // at runtime
+    RECURSIVE     = 1 << 5,
   };
   // Bitwise operations on enum values return ints, so just use int in
   // the hash table type (and below) to avoid cluttering code with casts.
@@ -81,6 +76,9 @@ class SandboxBroker final
     // This adds all regular files (not directories) in the tree
     // rooted at the given path.
     void AddTree(int aPerms, const char* aPath);
+    // A directory, and all files and directories under it, even those
+    // added after creation (the dir itself must exist).
+    void AddDir(int aPerms, const char* aPath);
     // All files in a directory with a given prefix; useful for devices.
     void AddPrefix(int aPerms, const char* aDir, const char* aPrefix);
     // Default: add file if it exists when creating policy or if we're
@@ -93,6 +91,13 @@ class SandboxBroker final
     int Lookup(const char* aPath) const {
       return Lookup(nsDependentCString(aPath));
     }
+  private:
+    // ValidatePath checks |path| and returns true if these conditions are met
+    // * Greater than 0 length
+    // * Is an absolute path
+    // * No trailing slash
+    // * No /../ path traversal
+    bool ValidatePath(const char* path) const;
   };
 
   // Constructing a broker involves creating a socketpair and a

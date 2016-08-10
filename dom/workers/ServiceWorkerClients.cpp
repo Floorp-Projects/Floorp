@@ -97,7 +97,7 @@ class GetRunnable final : public Runnable
           new ServiceWorkerWindowClient(promise->GetParentObject(), *mValue);
         promise->MaybeResolve(windowClient.get());
       } else {
-        promise->MaybeResolve(JS::UndefinedHandleValue);
+        promise->MaybeResolveWithUndefined();
       }
       mPromiseProxy->CleanUp();
       return true;
@@ -246,7 +246,7 @@ public:
     MOZ_ASSERT(promise);
 
     if (NS_SUCCEEDED(mResult)) {
-      promise->MaybeResolve(JS::UndefinedHandleValue);
+      promise->MaybeResolveWithUndefined();
     } else {
       promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     }

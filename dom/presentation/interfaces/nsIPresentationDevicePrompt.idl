@@ -29,9 +29,10 @@ interface nsIPresentationDeviceRequest : nsISupports
   void select(in nsIPresentationDevice device);
 
   /*
-    Callback after selection failed or canceled by user.
+   * Callback after selection failed or canceled by user.
+   * @param reason The error cause for canceling this request.
    */
-  void cancel();
+  void cancel(in nsresult reason);
 };
 
 /*
