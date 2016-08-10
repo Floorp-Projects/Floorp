@@ -144,11 +144,11 @@ function do_tests() {
   WrappedPrefs.setIntPref("devtools.branch2.someint", -93);
   is(WrappedPrefs.getIntPref("devtools.branch2.someint"), -93, "set int pref");
   WrappedPrefs.setCharPref("devtools.branch1.somestring", "hello");
-  ok(WrappedPrefs.getCharPref("devtools.branch1.somestring"), "hello",
+  is(WrappedPrefs.getCharPref("devtools.branch1.somestring"), "hello",
     "set string pref");
 
   Services.prefs.clearUserPref("devtools.branch1.somestring");
-  ok(Services.prefs.getCharPref("devtools.branch1.somestring"), "dinosaurs",
+  is(Services.prefs.getCharPref("devtools.branch1.somestring"), "dinosaurs",
     "clear string pref");
 
   ok(Services.prefs.prefHasUserValue("devtools.branch1.somebool"),
@@ -168,9 +168,9 @@ function do_tests() {
   Services.prefs.setCharPref("devtools.branch1.somestring", "octopus");
   is(Services.prefs.getCharPref("devtools.branch1.somestring"), "octopus",
     "set correctly via branch");
-  ok(branch0.getCharPref("devtools.branch1.somestring"), "octopus",
+  is(branch0.getCharPref("devtools.branch1.somestring"), "octopus",
     "get via base branch");
-  ok(branch1.getCharPref("somestring"), "octopus", "get via branch");
+  is(branch1.getCharPref("somestring"), "octopus", "get via branch");
 
 
   let notifications = {};
