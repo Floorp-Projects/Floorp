@@ -46,7 +46,6 @@ NS_IMPL_FRAMEARENA_HELPERS(nsNumberControlFrame)
 NS_QUERYFRAME_HEAD(nsNumberControlFrame)
   NS_QUERYFRAME_ENTRY(nsNumberControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-  NS_QUERYFRAME_ENTRY(nsITextControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
@@ -471,72 +470,6 @@ nsIAtom*
 nsNumberControlFrame::GetType() const
 {
   return nsGkAtoms::numberControlFrame;
-}
-
-NS_IMETHODIMP
-nsNumberControlFrame::GetEditor(nsIEditor **aEditor)
-{
-  return GetTextFieldFrame()->GetEditor(aEditor);
-}
-
-NS_IMETHODIMP
-nsNumberControlFrame::SetSelectionStart(int32_t aSelectionStart)
-{
-  return GetTextFieldFrame()->SetSelectionStart(aSelectionStart);
-}
-
-NS_IMETHODIMP
-nsNumberControlFrame::SetSelectionEnd(int32_t aSelectionEnd)
-{
-  return GetTextFieldFrame()->SetSelectionEnd(aSelectionEnd);
-}
-
-NS_IMETHODIMP
-nsNumberControlFrame::SetSelectionRange(int32_t aSelectionStart,
-                                        int32_t aSelectionEnd,
-                                        SelectionDirection aDirection)
-{
-  return GetTextFieldFrame()->SetSelectionRange(aSelectionStart, aSelectionEnd,
-                                                aDirection);
-}
-
-NS_IMETHODIMP
-nsNumberControlFrame::GetSelectionRange(int32_t* aSelectionStart,
-                                        int32_t* aSelectionEnd,
-                                        SelectionDirection* aDirection)
-{
-  return GetTextFieldFrame()->GetSelectionRange(aSelectionStart, aSelectionEnd,
-                                                aDirection);
-}
-
-NS_IMETHODIMP
-nsNumberControlFrame::GetOwnedSelectionController(nsISelectionController** aSelCon)
-{
-  return GetTextFieldFrame()->GetOwnedSelectionController(aSelCon);
-}
-
-nsFrameSelection*
-nsNumberControlFrame::GetOwnedFrameSelection()
-{
-  return GetTextFieldFrame()->GetOwnedFrameSelection();
-}
-
-nsresult
-nsNumberControlFrame::GetPhonetic(nsAString& aPhonetic)
-{
-  return GetTextFieldFrame()->GetPhonetic(aPhonetic);
-}
-
-nsresult
-nsNumberControlFrame::EnsureEditorInitialized()
-{
-  return GetTextFieldFrame()->EnsureEditorInitialized();
-}
-
-nsresult
-nsNumberControlFrame::ScrollSelectionIntoView()
-{
-  return GetTextFieldFrame()->ScrollSelectionIntoView();
 }
 
 void
