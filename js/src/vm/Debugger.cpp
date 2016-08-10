@@ -895,7 +895,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
     if (!cx->isThrowingOverRecursed() && !cx->isThrowingOutOfMemory()) {
         /* For each Debugger.Frame, fire its onPop handler, if any. */
         for (size_t i = 0; i < frames.length(); i++) {
-            HandleNativeObject frameobj = frames[i];
+            Handle<DebuggerFrame*> frameobj = frames[i];
             Debugger* dbg = Debugger::fromChildJSObject(frameobj);
             EnterDebuggeeNoExecute nx(cx, *dbg);
 
@@ -1947,7 +1947,7 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
 
     // Call onStep for frames that have the handler set.
     for (size_t i = 0; i < frames.length(); i++) {
-        HandleNativeObject frame = frames[i];
+        Handle<DebuggerFrame*> frame = frames[i];
         if (frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
             continue;
 
@@ -2507,7 +2507,7 @@ Debugger::forEachDebuggerFrame(AbstractFramePtr frame, FrameFn fn)
 Debugger::getDebuggerFrames(AbstractFramePtr frame, MutableHandle<DebuggerFrameVector> frames)
 {
     bool hadOOM = false;
-    forEachDebuggerFrame(frame, [&](NativeObject* frameobj) {
+    forEachDebuggerFrame(frame, [&](DebuggerFrame* frameobj) {
         if (!hadOOM && !frames.append(frameobj))
             hadOOM = true;
     });
@@ -2972,7 +2972,7 @@ Debugger::trace(JSTracer* trc)
      * frames.)
      */
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        HeapPtr<NativeObject*>& frameobj = r.front().value();
+        HeapPtr<DebuggerFrame*>& frameobj = r.front().value();
         MOZ_ASSERT(MaybeForwarded(frameobj.get())->getPrivate());
         TraceEdge(trc, &frameobj, "live Debugger.Frame");
     }
@@ -6154,7 +6154,7 @@ Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from, AbstractFramePt
     });
 
     for (size_t i = 0; i < frames.length(); i++) {
-        HandleNativeObject frameobj = frames[i];
+        Handle<DebuggerFrame*> frameobj = frames[i];
         Debugger* dbg = Debugger::fromChildJSObject(frameobj);
 
         // Update frame object's ScriptFrameIter::data pointer.
