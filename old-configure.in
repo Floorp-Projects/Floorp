@@ -1309,6 +1309,7 @@ AC_SUBST_LIST(SSSE3_FLAGS)
 AC_SUBST(MOZ_LINKER)
 if test -n "$MOZ_LINKER"; then
   AC_DEFINE(MOZ_LINKER)
+  MOZ_LINKER_EXTRACT=1
 fi
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
