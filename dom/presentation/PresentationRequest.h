@@ -9,6 +9,8 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 
+class nsIDocument;
+
 namespace mozilla {
 namespace dom {
 
@@ -55,6 +57,12 @@ private:
 
   void FindOrCreatePresentationConnection(const nsAString& aPresentationId,
                                           Promise* aPromise);
+
+  // Implement https://w3c.github.io/webappsec-mixed-content/#categorize-settings-object
+  bool IsProhibitMixedSecurityContexts(nsIDocument* aDocument);
+
+  // Implement https://w3c.github.io/webappsec-mixed-content/#a-priori-authenticated-url
+  bool IsPrioriAuthenticatedURL(const nsAString& aUrl);
 
   nsString mUrl;
   RefPtr<PresentationAvailability> mAvailability;
