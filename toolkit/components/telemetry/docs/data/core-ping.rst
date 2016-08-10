@@ -22,7 +22,9 @@ Submission will be per the Edge server specification::
 Note: Counts below (e.g. search & usage times) are “since the last
 ping”, not total for the whole application lifetime.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       "v": 7, // ping format version
@@ -51,7 +53,7 @@ Structure::
       "searches": <object>, // Optional, object of search use counts in the
                             // format: { "engine.source": <pos integer> }
                             // e.g.: { "yahoo.suggestion": 3, "other.listitem": 1 }
-      "experiments": [<string>, …], // Optional, array of identifiers
+      "experiments": [<string>, /* … */], // Optional, array of identifiers
                                     // for the active experiments
     }
 
@@ -68,7 +70,7 @@ vs. "Galaxy Note") than we are for shortened manufacturer names so we provide
 more characters for the model than the manufacturer.
 
 distributionId
-~~~~~~
+~~~~~~~~~~~~~~
 The ``distributionId`` contains the distribution ID as specified by
 preferences.json for a given distribution. More information on distributions
 can be found `here <https://wiki.mozilla.org/Mobile/Distribution_Files>`_.

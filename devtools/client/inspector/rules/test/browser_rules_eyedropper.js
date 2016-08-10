@@ -59,6 +59,11 @@ add_task(function* () {
 
   info("Test that a color can be selected with the eyedropper");
   yield testSelect(view, swatch, inspector, testActor);
+
+  let onHidden = tooltip.once("hidden");
+  tooltip.hide();
+  yield onHidden;
+  ok(!tooltip.isVisible(), "color picker tooltip is closed");
 });
 
 function* testESC(swatch, inspector, testActor) {
@@ -103,9 +108,9 @@ function* openEyedropper(view, swatch) {
   let tooltip = view.tooltips.colorPicker.tooltip;
 
   info("Click on the swatch");
-  let onShown = tooltip.once("shown");
+  let onColorPickerReady = view.tooltips.colorPicker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onColorPickerReady;
 
   let dropperButton = tooltip.doc.querySelector("#eyedropper-button");
 

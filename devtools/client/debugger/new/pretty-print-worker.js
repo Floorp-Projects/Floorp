@@ -46,7 +46,7 @@ var Debugger =
 /***/ 0:
 /***/ function(module, exports, __webpack_require__) {
 
-	var prettyFast = __webpack_require__(492);
+	var prettyFast = __webpack_require__(515);
 	
 	self.onmessage = function (msg) {
 	  var _prettyPrint = prettyPrint(msg.data);
@@ -100,7 +100,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 492:
+/***/ 515:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2; fill-column: 80 -*- */
@@ -122,8 +122,8 @@ var Debugger =
 	}(this, function () {
 	  "use strict";
 	
-	  var acorn = this.acorn || __webpack_require__(493);
-	  var sourceMap = this.sourceMap || __webpack_require__(494);
+	  var acorn = this.acorn || __webpack_require__(516);
+	  var sourceMap = this.sourceMap || __webpack_require__(517);
 	  var SourceNode = sourceMap.SourceNode;
 	
 	  // If any of these tokens are seen before a "[" token, we know that "[" token
@@ -982,7 +982,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 493:
+/***/ 516:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// Acorn is a tiny, fast JavaScript parser written in JavaScript.
@@ -3642,7 +3642,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 494:
+/***/ 517:
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -3650,14 +3650,14 @@ var Debugger =
 	 * Licensed under the New BSD license. See LICENSE.txt or:
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
-	exports.SourceMapGenerator = __webpack_require__(495).SourceMapGenerator;
-	exports.SourceMapConsumer = __webpack_require__(501).SourceMapConsumer;
-	exports.SourceNode = __webpack_require__(503).SourceNode;
+	exports.SourceMapGenerator = __webpack_require__(518).SourceMapGenerator;
+	exports.SourceMapConsumer = __webpack_require__(524).SourceMapConsumer;
+	exports.SourceNode = __webpack_require__(526).SourceNode;
 
 
 /***/ },
 
-/***/ 495:
+/***/ 518:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3671,10 +3671,10 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var base64VLQ = __webpack_require__(496);
-	  var util = __webpack_require__(498);
-	  var ArraySet = __webpack_require__(499).ArraySet;
-	  var MappingList = __webpack_require__(500).MappingList;
+	  var base64VLQ = __webpack_require__(519);
+	  var util = __webpack_require__(521);
+	  var ArraySet = __webpack_require__(522).ArraySet;
+	  var MappingList = __webpack_require__(523).MappingList;
 	
 	  /**
 	   * An instance of the SourceMapGenerator represents a source map which is
@@ -4064,7 +4064,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 496:
+/***/ 519:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4108,7 +4108,7 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var base64 = __webpack_require__(497);
+	  var base64 = __webpack_require__(520);
 	
 	  // A single base 64 digit can contain 6 bits of data. For the base 64 variable
 	  // length quantities we use in the source map spec, the first bit is the sign,
@@ -4213,7 +4213,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 497:
+/***/ 520:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4262,7 +4262,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 498:
+/***/ 521:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4588,7 +4588,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 499:
+/***/ 522:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4602,7 +4602,7 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(498);
+	  var util = __webpack_require__(521);
 	
 	  /**
 	   * A data structure which is a combination of an array and a set. Adding a new
@@ -4692,7 +4692,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 500:
+/***/ 523:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4706,7 +4706,7 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(498);
+	  var util = __webpack_require__(521);
 	
 	  /**
 	   * Determine whether mappingB is after mappingA with respect to generated
@@ -4785,7 +4785,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 501:
+/***/ 524:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4799,10 +4799,10 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(498);
-	  var binarySearch = __webpack_require__(502);
-	  var ArraySet = __webpack_require__(499).ArraySet;
-	  var base64VLQ = __webpack_require__(496);
+	  var util = __webpack_require__(521);
+	  var binarySearch = __webpack_require__(525);
+	  var ArraySet = __webpack_require__(522).ArraySet;
+	  var base64VLQ = __webpack_require__(519);
 	
 	  /**
 	   * A SourceMapConsumer instance represents a parsed source map which we can
@@ -5367,7 +5367,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 502:
+/***/ 525:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5454,7 +5454,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 503:
+/***/ 526:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5468,8 +5468,8 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var SourceMapGenerator = __webpack_require__(495).SourceMapGenerator;
-	  var util = __webpack_require__(498);
+	  var SourceMapGenerator = __webpack_require__(518).SourceMapGenerator;
+	  var util = __webpack_require__(521);
 	
 	  // Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
 	  // operating systems these days (capturing the result).
