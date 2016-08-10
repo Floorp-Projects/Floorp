@@ -234,6 +234,10 @@ const globals = exports.globals = {
            .createInstance(Ci.nsIXMLHttpRequest);
   },
 
+  Node: Ci.nsIDOMNode,
+  Element: Ci.nsIDOMElement,
+  DocumentFragment: Ci.nsIDOMDocumentFragment,
+
   // Make sure `define` function exists.  This allows defining some modules
   // in AMD format while retaining CommonJS compatibility through this hook.
   // JSON Viewer needs modules in AMD format, as it currently uses RequireJS

@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci } = require("chrome");
-
 const PANE_APPEARANCE_DELAY = 50;
 const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 const WIDGET_FOCUSABLE_NODES = new Set(["vbox", "hbox"]);
@@ -128,7 +126,7 @@ const ViewHelpers = exports.ViewHelpers = {
    *         called preventDefault.
    */
   dispatchEvent: function (target, type, detail) {
-    if (!(target instanceof Ci.nsIDOMNode)) {
+    if (!(target instanceof Node)) {
       // Event cancelled.
       return true;
     }
@@ -190,9 +188,9 @@ const ViewHelpers = exports.ViewHelpers = {
    *         True if it's a node, false otherwise.
    */
   isNode: function (object) {
-    return object instanceof Ci.nsIDOMNode ||
-           object instanceof Ci.nsIDOMElement ||
-           object instanceof Ci.nsIDOMDocumentFragment;
+    return object instanceof Node ||
+           object instanceof Element ||
+           object instanceof DocumentFragment;
   },
 
   /**
@@ -792,12 +790,12 @@ const WidgetMethods = exports.WidgetMethods = {
     // If the two items were constructed with prebuilt nodes as
     // DocumentFragments, then those DocumentFragments are now
     // empty and need to be reassembled.
-    if (firstPrebuiltTarget instanceof Ci.nsIDOMDocumentFragment) {
+    if (firstPrebuiltTarget instanceof DocumentFragment) {
       for (let node of firstTarget.childNodes) {
         firstPrebuiltTarget.appendChild(node.cloneNode(true));
       }
     }
-    if (secondPrebuiltTarget instanceof Ci.nsIDOMDocumentFragment) {
+    if (secondPrebuiltTarget instanceof DocumentFragment) {
       for (let node of secondTarget.childNodes) {
         secondPrebuiltTarget.appendChild(node.cloneNode(true));
       }
