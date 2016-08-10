@@ -6,7 +6,7 @@
 
 const { Cu } = require("chrome");
 const { Task } = require("devtools/shared/task");
-const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
+const { Actor, ActorClass } = require("devtools/shared/protocol");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 
@@ -33,7 +33,7 @@ const RECORDING_STATE_CHANGE_EVENTS = new Set([
  *
  * @see devtools/shared/shared/performance.js for documentation.
  */
-var PerformanceActor = ActorClassWithSpec(performanceSpec, {
+var PerformanceActor = ActorClass(performanceSpec, {
   traits: {
     features: {
       withMarkers: true,

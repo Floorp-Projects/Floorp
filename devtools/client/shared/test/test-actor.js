@@ -46,9 +46,225 @@ function getHighlighterCanvasFrameHelper(conn, actorID) {
   }
 }
 
-var TestActor = exports.TestActor = protocol.ActorClass({
+var testSpec = protocol.generateActorSpec({
   typeName: "testActor",
 
+  methods: {
+    getNumberOfElementMatches: {
+      request: {
+        selector: Arg(0, "string"),
+      },
+      response: {
+        value: RetVal("number")
+      }
+    },
+    getHighlighterAttribute: {
+      request: {
+        nodeID: Arg(0, "string"),
+        name: Arg(1, "string"),
+        actorID: Arg(2, "string")
+      },
+      response: {
+        value: RetVal("string")
+      }
+    },
+    getHighlighterNodeTextContent: {
+      request: {
+        nodeID: Arg(0, "string"),
+        actorID: Arg(1, "string")
+      },
+      response: {
+        value: RetVal("string")
+      }
+    },
+    getSelectorHighlighterBoxNb: {
+      request: {
+        highlighter: Arg(0, "string"),
+      },
+      response: {
+        value: RetVal("number")
+      }
+    },
+    changeHighlightedNodeWaitForUpdate: {
+      request: {
+        name: Arg(0, "string"),
+        value: Arg(1, "string"),
+        actorID: Arg(2, "string")
+      },
+      response: {}
+    },
+    waitForHighlighterEvent: {
+      request: {
+        event: Arg(0, "string"),
+        actorID: Arg(1, "string")
+      },
+      response: {}
+    },
+    waitForEventOnNode: {
+      request: {
+        eventName: Arg(0, "string"),
+        selector: Arg(1, "nullable:string")
+      },
+      response: {}
+    },
+    changeZoomLevel: {
+      request: {
+        level: Arg(0, "string"),
+        actorID: Arg(1, "string"),
+      },
+      response: {}
+    },
+    assertElementAtPoint: {
+      request: {
+        x: Arg(0, "number"),
+        y: Arg(1, "number"),
+        selector: Arg(2, "string")
+      },
+      response: {
+        value: RetVal("boolean")
+      }
+    },
+    getAllAdjustedQuads: {
+      request: {
+        selector: Arg(0, "string")
+      },
+      response: {
+        value: RetVal("json")
+      }
+    },
+    synthesizeMouse: {
+      request: {
+        object: Arg(0, "json")
+      },
+      response: {}
+    },
+    synthesizeKey: {
+      request: {
+        args: Arg(0, "json")
+      },
+      response: {}
+    },
+    hasPseudoClassLock: {
+      request: {
+        selector: Arg(0, "string"),
+        pseudo: Arg(1, "string")
+      },
+      response: {
+        value: RetVal("boolean")
+      }
+    },
+    loadAndWaitForCustomEvent: {
+      request: {
+        url: Arg(0, "string")
+      },
+      response: {}
+    },
+    hasNode: {
+      request: {
+        selector: Arg(0, "string")
+      },
+      response: {
+        value: RetVal("boolean")
+      }
+    },
+    getBoundingClientRect: {
+      request: {
+        selector: Arg(0, "string"),
+      },
+      response: {
+        value: RetVal("json")
+      }
+    },
+    setProperty: {
+      request: {
+        selector: Arg(0, "string"),
+        property: Arg(1, "string"),
+        value: Arg(2, "string")
+      },
+      response: {}
+    },
+    getProperty: {
+      request: {
+        selector: Arg(0, "string"),
+        property: Arg(1, "string")
+      },
+      response: {
+        value: RetVal("string")
+      }
+    },
+    getAttribute: {
+      request: {
+        selector: Arg(0, "string"),
+        property: Arg(1, "string")
+      },
+      response: {
+        value: RetVal("string")
+      }
+    },
+    setAttribute: {
+      request: {
+        selector: Arg(0, "string"),
+        property: Arg(1, "string"),
+        value: Arg(2, "string")
+      },
+      response: {}
+    },
+    removeAttribute: {
+      request: {
+        selector: Arg(0, "string"),
+        property: Arg(1, "string")
+      },
+      response: {}
+    },
+    reload: {
+      request: {},
+      response: {}
+    },
+    reloadFrame: {
+      request: {
+        selector: Arg(0, "string"),
+      },
+      response: {}
+    },
+    eval: {
+      request: {
+        js: Arg(0, "string")
+      },
+      response: {
+        value: RetVal("nullable:json")
+      }
+    },
+    scrollWindow: {
+      request: {
+        x: Arg(0, "number"),
+        y: Arg(1, "number"),
+        relative: Arg(2, "nullable:boolean"),
+      },
+      response: {
+        value: RetVal("json")
+      }
+    },
+    reflow: {},
+    getNodeRect: {
+      request: {
+        selector: Arg(0, "string")
+      },
+      response: {
+        value: RetVal("json")
+      }
+    },
+    getNodeInfo: {
+      request: {
+        selector: Arg(0, "string")
+      },
+      response: {
+        value: RetVal("json")
+      }
+    }
+  }
+});
+
+var TestActor = exports.TestActor = protocol.ActorClass(testSpec, {
   initialize: function (conn, tabActor, options) {
     this.conn = conn;
     this.tabActor = tabActor;
@@ -94,17 +310,9 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * Helper to get the number of elements matching a selector
    * @param {string} CSS selector.
    */
-  getNumberOfElementMatches: protocol.method(function (selector,
-                                                       root = this.content.document) {
+  getNumberOfElementMatches: function (selector, root = this.content.document) {
     return root.querySelectorAll(selector).length;
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-    },
-    response: {
-      value: RetVal("number")
-    }
-  }),
+  },
 
   /**
    * Get a value for a given attribute name, on one of the elements of the box
@@ -115,21 +323,12 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * - {String} actorID The highlighter actor ID
    * @return {String} The value, if found, null otherwise
    */
-  getHighlighterAttribute: protocol.method(function (nodeID, name, actorID) {
+  getHighlighterAttribute: function (nodeID, name, actorID) {
     let helper = getHighlighterCanvasFrameHelper(this.conn, actorID);
     if (helper) {
       return helper.getAttributeForElement(nodeID, name);
     }
-  }, {
-    request: {
-      nodeID: Arg(0, "string"),
-      name: Arg(1, "string"),
-      actorID: Arg(2, "string")
-    },
-    response: {
-      value: RetVal("string")
-    }
-  }),
+  },
 
   /**
    * Get the textcontent of one of the elements of the box model highlighter,
@@ -138,22 +337,14 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} actorID The highlighter actor ID
    * @return {String} The textcontent value
    */
-  getHighlighterNodeTextContent: protocol.method(function (nodeID, actorID) {
+  getHighlighterNodeTextContent: function (nodeID, actorID) {
     let value;
     let helper = getHighlighterCanvasFrameHelper(this.conn, actorID);
     if (helper) {
       value = helper.getTextContentForElement(nodeID);
     }
     return value;
-  }, {
-    request: {
-      nodeID: Arg(0, "string"),
-      actorID: Arg(1, "string")
-    },
-    response: {
-      value: RetVal("string")
-    }
-  }),
+  },
 
   /**
    * Get the number of box-model highlighters created by the SelectorHighlighter
@@ -161,7 +352,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @return {Number} The number of box-model highlighters created, or null if the
    * SelectorHighlighter was not found.
    */
-  getSelectorHighlighterBoxNb: protocol.method(function (actorID) {
+  getSelectorHighlighterBoxNb: function (actorID) {
     let highlighter = this.conn.getActor(actorID);
     let {_highlighter: h} = highlighter;
     if (!h || !h._highlighters) {
@@ -169,14 +360,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     } else {
       return h._highlighters.length;
     }
-  }, {
-    request: {
-      highlighter: Arg(0, "string"),
-    },
-    response: {
-      value: RetVal("number")
-    }
-  }),
+  },
 
   /**
    * Subscribe to the box-model highlighter's update event, modify an attribute of
@@ -186,7 +370,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} the new value for the attribute
    * @param {String} actorID The highlighter actor ID
    */
-  changeHighlightedNodeWaitForUpdate: protocol.method(function (name, value, actorID) {
+  changeHighlightedNodeWaitForUpdate: function (name, value, actorID) {
     let deferred = defer();
 
     let highlighter = this.conn.getActor(actorID);
@@ -199,32 +383,19 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     h.currentNode.setAttribute(name, value);
 
     return deferred.promise;
-  }, {
-    request: {
-      name: Arg(0, "string"),
-      value: Arg(1, "string"),
-      actorID: Arg(2, "string")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Subscribe to a given highlighter event and respond when the event is received.
    * @param {String} event The name of the highlighter event to listen to
    * @param {String} actorID The highlighter actor ID
    */
-  waitForHighlighterEvent: protocol.method(function (event, actorID) {
+  waitForHighlighterEvent: function (event, actorID) {
     let highlighter = this.conn.getActor(actorID);
     let {_highlighter: h} = highlighter;
 
     return h.once(event);
-  }, {
-    request: {
-      event: Arg(0, "string"),
-      actorID: Arg(1, "string")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Wait for a specific event on a node matching the provided selector.
@@ -232,7 +403,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} selector Optional:  css selector of the node which should
    *        trigger the event. If ommitted, target will be the content window
    */
-  waitForEventOnNode: protocol.method(function (eventName, selector) {
+  waitForEventOnNode: function (eventName, selector) {
     return new Promise(resolve => {
       let node = selector ? this._querySelector(selector) : this.content;
       node.addEventListener(eventName, function onEvent() {
@@ -240,13 +411,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
         resolve();
       });
     });
-  }, {
-    request: {
-      eventName: Arg(0, "string"),
-      selector: Arg(1, "nullable:string")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Change the zoom level of the page.
@@ -255,7 +420,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {Number} level The new zoom level
    * @param {String} actorID Optional. The highlighter actor ID
    */
-  changeZoomLevel: protocol.method(function (level, actorID) {
+  changeZoomLevel: function (level, actorID) {
     dumpn("Zooming page to " + level);
     let deferred = defer();
 
@@ -275,32 +440,16 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     docShell.contentViewer.fullZoom = level;
 
     return deferred.promise;
-  }, {
-    request: {
-      level: Arg(0, "string"),
-      actorID: Arg(1, "string"),
-    },
-    response: {}
-  }),
+  },
 
-  assertElementAtPoint: protocol.method(function (x, y, selector) {
+  assertElementAtPoint: function (x, y, selector) {
     let elementAtPoint = getElementFromPoint(this.content.document, x, y);
     if (!elementAtPoint) {
       throw new Error("Unable to find element at (" + x + ", " + y + ")");
     }
     let node = this._querySelector(selector);
     return node == elementAtPoint;
-  }, {
-    request: {
-      x: Arg(0, "number"),
-      y: Arg(1, "number"),
-      selector: Arg(2, "string")
-    },
-    response: {
-      value: RetVal("boolean")
-    }
-  }),
-
+  },
 
   /**
    * Get all box-model regions' adjusted boxquads for the given element
@@ -308,7 +457,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @return {Object} An object with each property being a box-model region, each
    * of them being an object with the p1/p2/p3/p4 properties
    */
-  getAllAdjustedQuads: protocol.method(function (selector) {
+  getAllAdjustedQuads: function (selector) {
     let regions = {};
     let node = this._querySelector(selector);
     for (let boxType of ["content", "padding", "border", "margin"]) {
@@ -316,14 +465,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     }
 
     return regions;
-  }, {
-    request: {
-      selector: Arg(0, "string")
-    },
-    response: {
-      value: RetVal("json")
-    }
-  }),
+  },
 
   /**
    * Synthesize a mouse event on an element, after ensuring that it is visible
@@ -337,7 +479,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    *                  synthesizeMouseAtCenter will be used instead
    * @param {Object} options Other event options
    */
-  synthesizeMouse: protocol.method(function ({ selector, x, y, center, options }) {
+  synthesizeMouse: function ({ selector, x, y, center, options }) {
     let node = this._querySelector(selector);
     node.scrollIntoView();
     if (center) {
@@ -345,26 +487,16 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     } else {
       EventUtils.synthesizeMouse(node, x, y, options, node.ownerDocument.defaultView);
     }
-  }, {
-    request: {
-      object: Arg(0, "json")
-    },
-    response: {}
-  }),
+  },
 
   /**
   * Synthesize a key event for an element. This handler doesn't send a message
   * back. Consumers should listen to specific events on the inspector/highlighter
   * to know when the event got synthesized.
   */
-  synthesizeKey: protocol.method(function ({key, options, content}) {
+  synthesizeKey: function ({key, options, content}) {
     EventUtils.synthesizeKey(key, options, this.content);
-  }, {
-    request: {
-      args: Arg(0, "json")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Check that an element currently has a pseudo-class lock.
@@ -372,20 +504,12 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} pseudo The pseudoclass to check for
    * @return {Boolean}
    */
-  hasPseudoClassLock: protocol.method(function (selector, pseudo) {
+  hasPseudoClassLock: function (selector, pseudo) {
     let node = this._querySelector(selector);
     return DOMUtils.hasPseudoClassLock(node, pseudo);
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-      pseudo: Arg(1, "string")
-    },
-    response: {
-      value: RetVal("boolean")
-    }
-  }),
+  },
 
-  loadAndWaitForCustomEvent: protocol.method(function (url) {
+  loadAndWaitForCustomEvent: function (url) {
     let deferred = defer();
     let self = this;
     // Wait for DOMWindowCreated first, as listening on the current outerwindow
@@ -400,14 +524,9 @@ var TestActor = exports.TestActor = protocol.ActorClass({
 
     this.content.location = url;
     return deferred.promise;
-  }, {
-    request: {
-      url: Arg(0, "string")
-    },
-    response: {}
-  }),
+  },
 
-  hasNode: protocol.method(function (selector) {
+  hasNode: function (selector) {
     try {
       // _querySelector throws if the node doesn't exists
       this._querySelector(selector);
@@ -415,31 +534,17 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     } catch (e) {
       return false;
     }
-  }, {
-    request: {
-      selector: Arg(0, "string")
-    },
-    response: {
-      value: RetVal("boolean")
-    }
-  }),
+  },
 
   /**
    * Get the bounding rect for a given DOM node once.
    * @param {String} selector selector identifier to select the DOM node
    * @return {json} the bounding rect info
    */
-  getBoundingClientRect: protocol.method(function (selector) {
+  getBoundingClientRect: function (selector) {
     let node = this._querySelector(selector);
     return node.getBoundingClientRect();
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-    },
-    response: {
-      value: RetVal("json")
-    }
-  }),
+  },
 
   /**
    * Set a JS property on a DOM Node.
@@ -447,17 +552,10 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} property The property name
    * @param {String} value The attribute value
    */
-  setProperty: protocol.method(function (selector, property, value) {
+  setProperty: function (selector, property, value) {
     let node = this._querySelector(selector);
     node[property] = value;
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-      property: Arg(1, "string"),
-      value: Arg(2, "string")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Get a JS property on a DOM Node.
@@ -465,18 +563,10 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} property The property name
    * @return {String} value The attribute value
    */
-  getProperty: protocol.method(function (selector, property) {
+  getProperty: function (selector, property) {
     let node = this._querySelector(selector);
     return node[property];
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-      property: Arg(1, "string")
-    },
-    response: {
-      value: RetVal("string")
-    }
-  }),
+  },
 
   /**
    * Get an attribute on a DOM Node.
@@ -484,18 +574,10 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} attribute The attribute name
    * @return {String} value The attribute value
    */
-  getAttribute: protocol.method(function (selector, attribute) {
+  getAttribute: function (selector, attribute) {
     let node = this._querySelector(selector);
     return node.getAttribute(attribute);
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-      property: Arg(1, "string")
-    },
-    response: {
-      value: RetVal("string")
-    }
-  }),
+  },
 
   /**
    * Set an attribute on a DOM Node.
@@ -503,49 +585,33 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} attribute The attribute name
    * @param {String} value The attribute value
    */
-  setAttribute: protocol.method(function (selector, attribute, value) {
+  setAttribute: function (selector, attribute, value) {
     let node = this._querySelector(selector);
     node.setAttribute(attribute, value);
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-      property: Arg(1, "string"),
-      value: Arg(2, "string")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Remove an attribute from a DOM Node.
    * @param {String} selector The node selector
    * @param {String} attribute The attribute name
    */
-  removeAttribute: protocol.method(function (selector, attribute) {
+  removeAttribute: function (selector, attribute) {
     let node = this._querySelector(selector);
     node.removeAttribute(attribute);
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-      property: Arg(1, "string")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Reload the content window.
    */
-  reload: protocol.method(function () {
+  reload: function () {
     this.content.location.reload();
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   /**
    * Reload an iframe and wait for its load event.
    * @param {String} selector The node selector
    */
-  reloadFrame: protocol.method(function (selector) {
+  reloadFrame: function (selector) {
     let node = this._querySelector(selector);
 
     let deferred = defer();
@@ -558,30 +624,18 @@ var TestActor = exports.TestActor = protocol.ActorClass({
 
     node.contentWindow.location.reload();
     return deferred.promise;
-  }, {
-    request: {
-      selector: Arg(0, "string"),
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Evaluate a JS string in the context of the content document.
    * @param {String} js JS string to evaluate
    * @return {json} The evaluation result
    */
-  eval: protocol.method(function (js) {
+  eval: function (js) {
     // We have to use a sandbox, as CSP prevent us from using eval on apps...
     let sb = Cu.Sandbox(this.content, { sandboxPrototype: this.content });
     return Cu.evalInSandbox(js, sb);
-  }, {
-    request: {
-      js: Arg(0, "string")
-    },
-    response: {
-      value: RetVal("nullable:json")
-    }
-  }),
+  },
 
   /**
    * Scrolls the window to a particular set of coordinates in the document, or
@@ -594,7 +648,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @return {Object} An object with x / y properties, representing the number
    * of pixels that the document has been scrolled horizontally and vertically.
    */
-  scrollWindow: protocol.method(function (x, y, relative) {
+  scrollWindow: function (x, y, relative) {
     if (isNaN(x) || isNaN(y)) {
       return {};
     }
@@ -610,38 +664,22 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     this.content[relative ? "scrollBy" : "scrollTo"](x, y);
 
     return deferred.promise;
-  }, {
-    request: {
-      x: Arg(0, "number"),
-      y: Arg(1, "number"),
-      relative: Arg(2, "nullable:boolean"),
-    },
-    response: {
-      value: RetVal("json")
-    }
-  }),
+  },
 
   /**
    * Forces the reflow and waits for the next repaint.
    */
-  reflow: protocol.method(function () {
+  reflow: function () {
     let deferred = defer();
     this.content.document.documentElement.offsetWidth;
     this.content.requestAnimationFrame(deferred.resolve);
 
     return deferred.promise;
-  }),
+  },
 
-  getNodeRect: protocol.method(Task.async(function* (selector) {
+  getNodeRect: Task.async(function* (selector) {
     let node = this._querySelector(selector);
     return getRect(this.content, node, this.content);
-  }), {
-    request: {
-      selector: Arg(0, "string")
-    },
-    response: {
-      value: RetVal("json")
-    }
   }),
 
   /**
@@ -657,7 +695,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * - {String} innerHTML.
    * - {String} textContent.
    */
-  getNodeInfo: protocol.method(function (selector) {
+  getNodeInfo: function (selector) {
     let node = this._querySelector(selector);
     let info = null;
 
@@ -676,17 +714,10 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     }
 
     return info;
-  }, {
-    request: {
-      selector: Arg(0, "string")
-    },
-    response: {
-      value: RetVal("json")
-    }
-  })
+  }
 });
 
-var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
+var TestActorFront = exports.TestActorFront = protocol.FrontClass(testSpec, {
   initialize: function (client, { testActor }, toolbox) {
     protocol.Front.prototype.initialize.call(this, client, { actor: testActor });
     this.manage(this);

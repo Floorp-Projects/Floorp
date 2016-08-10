@@ -5,7 +5,7 @@
 
 const {
   Front,
-  FrontClassWithSpec,
+  FrontClass,
   custom,
   preEvent
 } = require("devtools/shared/protocol");
@@ -15,7 +15,7 @@ const {
 } = require("devtools/shared/specs/animation");
 const { Task } = require("devtools/shared/task");
 
-const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
+const AnimationPlayerFront = FrontClass(animationPlayerSpec, {
   initialize: function (conn, form, detail, ctx) {
     Front.prototype.initialize.call(this, conn, form, detail, ctx);
 
@@ -123,7 +123,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
 
 exports.AnimationPlayerFront = AnimationPlayerFront;
 
-const AnimationsFront = FrontClassWithSpec(animationsSpec, {
+const AnimationsFront = FrontClass(animationsSpec, {
   initialize: function (client, {animationsActor}) {
     Front.prototype.initialize.call(this, client, {actor: animationsActor});
     this.manage(this);

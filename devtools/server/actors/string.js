@@ -11,7 +11,7 @@ var promise = require("promise");
 var protocol = require("devtools/shared/protocol");
 const {longStringSpec} = require("devtools/shared/specs/string");
 
-exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
+exports.LongStringActor = protocol.ActorClass(longStringSpec, {
   initialize: function (conn, str) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.str = str;
