@@ -38,8 +38,7 @@ def compiler_class(compiler):
 
             if check_msg:
                 def checking_fn(fn):
-                    return checking(check_msg,
-                                    callback=lambda r: r is not None)(fn)
+                    return checking(check_msg)(fn)
             else:
                 def checking_fn(fn):
                     return fn
@@ -55,9 +54,11 @@ def compiler_class(compiler):
                 flags += extra_flags
                 flags.append('-c')
 
-                return try_invoke_compiler(
+                if try_invoke_compiler(
                     compiler.wrapper + [compiler.compiler] + compiler.flags,
-                    compiler.language, source, flags, onerror=onerror)
+                    compiler.language, source, flags,
+                    onerror=onerror) is not None:
+                    return True
 
             return func
 
