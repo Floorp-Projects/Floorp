@@ -458,7 +458,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * has to be different.
      */
     typedef HashMap<AbstractFramePtr,
-                    HeapPtr<NativeObject*>,
+                    HeapPtr<DebuggerFrame*>,
                     DefaultHasher<AbstractFramePtr>,
                     RuntimeAllocPolicy> FrameMap;
     FrameMap frames;
@@ -650,7 +650,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * |frame|. |global| is |frame|'s global object; if nullptr or omitted, we
      * compute it ourselves from |frame|.
      */
-    using DebuggerFrameVector = GCVector<NativeObject*>;
+    using DebuggerFrameVector = GCVector<DebuggerFrame*>;
     static MOZ_MUST_USE bool getDebuggerFrames(AbstractFramePtr frame,
                                                MutableHandle<DebuggerFrameVector> frames);
 
