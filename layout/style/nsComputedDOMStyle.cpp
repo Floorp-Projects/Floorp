@@ -6148,7 +6148,7 @@ nsComputedDOMStyle::DoGetMask()
       firstLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_BORDER ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
       firstLayer.mMaskMode != NS_STYLE_MASK_MODE_MATCH_SOURCE ||
-      !firstLayer.mPosition.IsInitialValue() ||
+      !firstLayer.mPosition.IsInitialValue(nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mRepeat.IsInitialValue(nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mSize.IsInitialValue() ||
       !(firstLayer.mImage.GetType() == eStyleImageType_Null ||
