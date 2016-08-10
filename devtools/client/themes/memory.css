@@ -436,7 +436,8 @@ html, body, #app, #memory-tool {
    * These subcolumns may have specific widths or need to flex.
    */
   display: flex;
-  text-align: end;
+  /* Make sure units/decimals/... are always vertically aligned to right in both LTR and RTL locales */
+  text-align: right;
   border-inline-end: var(--cell-border-color) 1px solid;
 }
 
@@ -486,7 +487,11 @@ html, body, #app, #memory-tool {
 }
 
 .heap-tree-number {
-  padding-inline-start: 3px;
+  padding: 0 3px;
+  flex: 1;
+  color: var(--theme-content-color3);
+  /* Make sure number doesn't appear backwards on RTL locales */
+  direction: ltr;
 }
 
 .heap-tree-percent {
@@ -497,11 +502,6 @@ html, body, #app, #memory-tool {
 .heap-tree-number,
 .heap-tree-percent {
   font-family: var(--monospace-font-family);
-}
-
-.heap-tree-number {
-  flex: 1;
-  color: var(--theme-content-color3);
 }
 
 .heap-tree-percent {
