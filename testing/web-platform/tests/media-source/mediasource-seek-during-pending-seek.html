@@ -73,7 +73,16 @@
 
               test.waitForExpectedEvents(function()
               {
-                  assert_greater_than(mediaElement.readyState, mediaElement.HAVE_CURRENT_DATA, 'Greater than HAVE_CURRENT_DATA');
+              	  // Note: we just completed the seek. However, we only have less than a second worth of data to play. It is possible that
+              	  // playback has reached the end since the seek completed.
+              	  if (!mediaElement.paused)
+              	  {
+                      assert_greater_than_equal(mediaElement.readyState, mediaElement.HAVE_CURRENT_DATA, 'Greater or equal than HAVE_CURRENT_DATA');
+                  }
+                  else
+                  {
+                      assert_true(mediaElement.ended);
+                  }
                   test.done();
               });
 
@@ -161,7 +170,16 @@
 
               test.waitForExpectedEvents(function()
               {
-                  assert_greater_than(mediaElement.readyState, mediaElement.HAVE_CURRENT_DATA, 'Greater than HAVE_CURRENT_DATA');
+              	  // Note: we just completed the seek. However, we only have less than a second worth of data to play. It is possible that
+              	  // playback has reached the end since the seek completed.
+              	  if (!mediaElement.paused)
+              	  {
+                      assert_greater_than_equal(mediaElement.readyState, mediaElement.HAVE_CURRENT_DATA, 'Greater or equal than HAVE_CURRENT_DATA');
+                  }
+                  else
+                  {
+                      assert_true(mediaElement.ended);
+                  }
                   test.done();
               });
           }, 'Test seeking to a new location during a pending seek.');
