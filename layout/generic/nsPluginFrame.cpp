@@ -642,7 +642,7 @@ nsPluginFrame::CallSetWindow(bool aCheckIsHidden)
 
   // window must be in "display pixels"
   double scaleFactor = 1.0;
-  if (NS_FAILED(mInstanceOwner->GetContentsScaleFactor(&scaleFactor))) {
+  if (NS_FAILED(instanceOwnerRef->GetContentsScaleFactor(&scaleFactor))) {
     scaleFactor = 1.0;
   }
   size_t intScaleFactor = ceil(scaleFactor);
@@ -651,12 +651,15 @@ nsPluginFrame::CallSetWindow(bool aCheckIsHidden)
   window->width = intBounds.width / intScaleFactor;
   window->height = intBounds.height / intScaleFactor;
 
-  mInstanceOwner->ResolutionMayHaveChanged();
+  // BE CAREFUL: By the time we get here the PluginFrame is sometimes destroyed
+  // and poisoned. If we reference local fields (implicit this deref),
+  // we will crash.
+  instanceOwnerRef->ResolutionMayHaveChanged();
 
   // This will call pi->SetWindow and take care of window subclassing
   // if needed, see bug 132759. Calling SetWindow can destroy this frame
   // so check for that before doing anything else with this frame's memory.
-  if (mInstanceOwner->UseAsyncRendering()) {
+  if (instanceOwnerRef->UseAsyncRendering()) {
     rv = pi->AsyncSetWindow(window);
   }
   else {
