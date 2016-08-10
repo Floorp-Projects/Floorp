@@ -319,7 +319,7 @@ public:
     MOZ_ASSERT(aImgRequest);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "I should be running on the main thread!");
     mImgRequest->ContinueCancel(mStatus);
@@ -368,7 +368,7 @@ public:
     MOZ_ASSERT(aImgRequest);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "I should be running on the main thread!");
     mImgRequest->ContinueEvict();

@@ -191,7 +191,7 @@ private:
     {}
 
   private:
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       mEntry->InvokeAvailableCallback(mCallback);
       return NS_OK;
@@ -210,7 +210,7 @@ private:
       : mEntry(aEntry), mRv(aRv) {}
 
   private:
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       nsCOMPtr<nsICacheEntryDoomCallback> callback;
       {

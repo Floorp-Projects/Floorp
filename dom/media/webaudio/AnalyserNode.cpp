@@ -36,7 +36,7 @@ class AnalyserNodeEngine final : public AudioNodeEngine
     {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       RefPtr<AnalyserNode> node =
         static_cast<AnalyserNode*>(mStream->Engine()->NodeMainThread());

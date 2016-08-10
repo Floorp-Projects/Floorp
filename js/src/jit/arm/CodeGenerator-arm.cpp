@@ -2422,7 +2422,11 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
     MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
 
     uint32_t offset = mir->offset();
-    MOZ_ASSERT(offset <= INT32_MAX);
+    if (offset > INT32_MAX) {
+        // This is unreachable because of bounds checks.
+        masm.breakpoint();
+        return;
+    }
 
     Register ptr = ToRegister(lir->ptrCopy());
     if (offset)

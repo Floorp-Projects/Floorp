@@ -484,7 +484,7 @@ public:
     return NS_DispatchToMainThread(this);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     // Discard the resumption if the spell checker was disabled after the
     // resumption was scheduled.

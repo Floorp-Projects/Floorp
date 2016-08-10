@@ -1011,7 +1011,7 @@ public:
     : mElement(dse),
       mTitleDefault(wtm) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     ErrorResult rv;
     mElement->SetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault, rv);

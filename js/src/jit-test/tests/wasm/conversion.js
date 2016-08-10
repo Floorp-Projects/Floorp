@@ -283,3 +283,7 @@ testConversion('f64', 'convert_u', 'i32', 40, 40);
 
 testConversion('f32', 'demote', 'f64', 40.1, 40.099998474121094);
 testConversion('f64', 'promote', 'f32', 40.1, 40.099998474121094);
+
+// Non-canonical NaNs.
+assertEq(wasmEvalText('(module (func (result i32) (i32.reinterpret/f32 (f32.demote/f64 (f64.const -nan:0x4444444444444)))) (export "" 0))')(), -0x1dddde);
+assertEq(wasmEvalText('(module (func (result i32) (local i64) (set_local 0 (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))) (i32.xor (i32.wrap/i64 (get_local 0)) (i32.wrap/i64 (i64.shr_u (get_local 0) (i64.const 32))))) (export "" 0))')(), -0x4003bbbc);

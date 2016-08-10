@@ -20,9 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "uuidGenerator",
-                                   "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
-
 /* exported ExtensionTestUtils */
 
 let BASE_MANIFEST = Object.freeze({
@@ -277,8 +274,8 @@ var ExtensionTestUtils = {
     manager.observe(null, "addons-startup", null);
   },
 
-  loadExtension(data, id = uuidGenerator.generateUUID().number) {
-    let extension = Extension.generate(id, data);
+  loadExtension(data) {
+    let extension = Extension.generate(data);
 
     return new ExtensionWrapper(extension, this.currentScope);
   },

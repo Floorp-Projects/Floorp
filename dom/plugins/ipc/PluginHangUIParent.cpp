@@ -46,7 +46,7 @@ public:
   }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     mozilla::Telemetry::Accumulate(
               mozilla::Telemetry::PLUGIN_HANG_UI_USER_RESPONSE, mResponseCode);

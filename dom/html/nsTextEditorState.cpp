@@ -91,7 +91,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     if (!mTextEditorState) {
       return NS_OK;
     }
@@ -1115,7 +1115,7 @@ public:
     aState.mValueTransferInProgress = true;
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     NS_ENSURE_TRUE(mState, NS_ERROR_NULL_POINTER);
 
     // Transfer the saved value to the editor if we have one

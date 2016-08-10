@@ -376,8 +376,8 @@ public:
     AssertIsOnBackgroundThread();
   }
 
-  NS_IMETHODIMP
-  Run()
+  NS_IMETHOD
+  Run() override
   {
     AssertIsInMainProcess();
 
@@ -503,7 +503,7 @@ public:
     MOZ_ASSERT(mContentParent);
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

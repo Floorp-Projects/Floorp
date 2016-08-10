@@ -291,7 +291,7 @@ public:
     mConduit(aConduit) {}
 
   /* we exist solely to proxy release of the conduit */
-  NS_IMETHOD Run() { return NS_OK; }
+  NS_IMETHOD Run() override { return NS_OK; }
 private:
   RefPtr<MediaSessionConduit> mConduit;
 };

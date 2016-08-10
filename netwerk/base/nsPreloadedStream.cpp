@@ -114,10 +114,10 @@ public:
                 nsIInputStreamCallback *aCallback)
       : mStream(aStream),
         mCallback(aCallback) {}
-    
+
     virtual ~RunOnThread() {}
-    
-    NS_IMETHOD Run()
+
+    NS_IMETHOD Run() override
     {
         mCallback->OnInputStreamReady(mStream);
         return NS_OK;

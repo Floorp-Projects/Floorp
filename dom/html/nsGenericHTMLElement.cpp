@@ -122,7 +122,7 @@ class nsAutoFocusEvent : public Runnable
 public:
   explicit nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (!fm) {
       return NS_ERROR_NULL_POINTER;
@@ -1382,9 +1382,9 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttr
       nsCSSValue* cssFloat = aRuleData->ValueForFloat();
       if (cssFloat->GetUnit() == eCSSUnit_Null) {
         if (align == NS_STYLE_TEXT_ALIGN_LEFT) {
-          cssFloat->SetIntValue(NS_STYLE_FLOAT_LEFT, eCSSUnit_Enumerated);
+          cssFloat->SetIntValue(StyleFloat::Left, eCSSUnit_Enumerated);
         } else if (align == NS_STYLE_TEXT_ALIGN_RIGHT) {
-          cssFloat->SetIntValue(NS_STYLE_FLOAT_RIGHT, eCSSUnit_Enumerated);
+          cssFloat->SetIntValue(StyleFloat::Right, eCSSUnit_Enumerated);
         }
       }
       nsCSSValue* verticalAlign = aRuleData->ValueForVerticalAlign();

@@ -126,7 +126,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData, bool aAnonymize)
+                              nsISupports* aData, bool aAnonymize) override
     {
         nsresult rv;
 
@@ -184,7 +184,7 @@ public:
 
     NS_IMETHOD
     CollectReports(nsIMemoryReporterCallback* aCb,
-                   nsISupports* aClosure, bool aAnonymize)
+                   nsISupports* aClosure, bool aAnonymize) override
     {
         HANDLE ProcessHandle = GetCurrentProcess();
 

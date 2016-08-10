@@ -68,6 +68,10 @@ XPCOMUtils.defineLazyGetter(this, "require", () => {
 Cu.import("resource://gre/modules/ExtensionContent.jsm");
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
+
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
@@ -510,8 +514,7 @@ var UUIDMap = {
 
     let uuid = null;
     if (create) {
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-      uuid = uuidGenerator.generateUUID().number;
+      uuid = uuidGen.generateUUID().number;
       uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
 
       map[id] = uuid;
@@ -1161,17 +1164,19 @@ this.ExtensionData = class {
  * @param {string} installType
  */
 class MockExtension {
-  constructor(id, file, rootURI, installType) {
-    this.id = id;
+  constructor(file, rootURI, installType) {
+    this.id = null;
     this.file = file;
     this.rootURI = rootURI;
     this.installType = installType;
+    this.addon = null;
 
     let promiseEvent = eventName => new Promise(resolve => {
       let onstartup = (msg, extension) => {
-        if (extension.id == this.id) {
+        if (this.addon && extension.id == this.addon.id) {
           Management.off(eventName, onstartup);
 
+          this.id = extension.id;
           this._extension = extension;
           resolve(extension);
         }
@@ -1296,11 +1301,10 @@ this.Extension = class extends ExtensionData {
    * The generated extension is stored in the system temporary directory,
    * and an nsIFile object pointing to it is returned.
    *
-   * @param {string} id
    * @param {object} data
    * @returns {nsIFile}
    */
-  static generateXPI(id, data) {
+  static generateXPI(data) {
     let manifest = data.manifest;
     if (!manifest) {
       manifest = {};
@@ -1324,15 +1328,12 @@ this.Extension = class extends ExtensionData {
       }
     }
 
-    provide(manifest, ["applications", "gecko", "id"], id);
-
     provide(manifest, ["name"], "Generated extension");
     provide(manifest, ["manifest_version"], 2);
     provide(manifest, ["version"], "1.0");
 
     if (data.background) {
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-      let bgScript = uuidGenerator.generateUUID().number + ".js";
+      let bgScript = uuidGen.generateUUID().number + ".js";
 
       provide(manifest, ["background", "scripts"], [bgScript], true);
       files[bgScript] = data.background;
@@ -1396,12 +1397,11 @@ this.Extension = class extends ExtensionData {
    * Generates a new extension using |Extension.generateXPI|, and initializes a
    * new |Extension| instance which will execute it.
    *
-   * @param {string} id
    * @param {object} data
    * @returns {Extension}
    */
-  static generate(id, data) {
-    let file = this.generateXPI(id, data);
+  static generate(data) {
+    let file = this.generateXPI(data);
 
     flushJarCache(file);
     Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
@@ -1411,7 +1411,19 @@ this.Extension = class extends ExtensionData {
 
     // This may be "temporary" or "permanent".
     if (data.useAddonManager) {
-      return new MockExtension(id, file, jarURI, data.useAddonManager);
+      return new MockExtension(file, jarURI, data.useAddonManager);
+    }
+
+    let id;
+    if (data.manifest) {
+      if (data.manifest.applications && data.manifest.applications.gecko) {
+        id = data.manifest.applications.gecko.id;
+      } else if (data.manifest.browser_specific_settings && data.manifest.browser_specific_settings.gecko) {
+        id = data.manifest.browser_specific_settings.gecko.id;
+      }
+    }
+    if (!id) {
+      id = uuidGen.generateUUID().number;
     }
 
     return new Extension({

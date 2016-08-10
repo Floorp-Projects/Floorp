@@ -12,6 +12,9 @@ Cu.import("resource://gre/modules/Geometry.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "TextToSubURIService",
                                          "@mozilla.org/intl/texttosuburi;1",
                                          "nsITextToSubURI");
@@ -316,6 +319,11 @@ Finder.prototype = {
   onFindbarClose: function() {
     this.enableSelection();
     this.highlighter.highlight(false);
+    BrowserUtils.trackToolbarVisibility(this._docShell, "findbar", false);
+  },
+
+  onFindbarOpen: function() {
+    BrowserUtils.trackToolbarVisibility(this._docShell, "findbar", true);
   },
 
   onModalHighlightChange(useModalHighlight) {

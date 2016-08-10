@@ -67,7 +67,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mResult = mLoader->LoadModule(mFile);
     return NS_OK;

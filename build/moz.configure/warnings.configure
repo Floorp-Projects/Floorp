@@ -1,0 +1,111 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+js_option('--enable-warnings-as-errors', env='MOZ_ENABLE_WARNINGS_AS_ERRORS',
+          default=depends('MOZ_AUTOMATION', '--help')(lambda x, _: bool(x)),
+          help='Enable treating warnings as errors')
+
+add_old_configure_assignment(
+    'MOZ_ENABLE_WARNINGS_AS_ERRORS',
+    depends('--enable-warnings-as-errors')(lambda x: bool(x)))
+
+
+# GCC/Clang warnings:
+# https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Warning-Options.html
+
+# lots of useful warnings
+add_gcc_warning('-Wall')
+
+# catches C++ version forward-compat issues
+add_gcc_warning('-Wc++11-compat', cxx_compiler)
+
+# catches bugs, e.g. "if (c); foo();", few false positives
+add_gcc_warning('-Wempty-body')
+
+# catches return types with qualifiers like const
+add_gcc_warning('-Wignored-qualifiers')
+
+# function declaration hides virtual function from base class
+add_gcc_warning('-Woverloaded-virtual', cxx_compiler)
+
+# catches pointer arithmetic using NULL or sizeof(void)
+add_gcc_warning('-Wpointer-arith')
+
+# catches comparing signed/unsigned ints
+add_gcc_warning('-Wsign-compare')
+
+# catches overflow bugs, few false positives
+add_gcc_warning('-Wtype-limits')
+
+# catches some dead code
+add_gcc_warning('-Wunreachable-code')
+
+# catches treating string literals as non-const
+add_gcc_warning('-Wwrite-strings', cxx_compiler)
+
+# turned on by -Wall, but we use offsetof on non-POD types frequently
+add_gcc_warning('-Wno-invalid-offsetof', cxx_compiler)
+
+# catches objects passed by value to variadic functions.
+check_and_add_gcc_warning('-Wclass-varargs')
+
+# catches issues around loops
+check_and_add_gcc_warning('-Wloop-analysis')
+
+# catches C++ version forward-compat issues
+check_and_add_gcc_warning('-Wc++11-compat-pedantic', cxx_compiler)
+check_and_add_gcc_warning('-Wc++14-compat', cxx_compiler)
+check_and_add_gcc_warning('-Wc++14-compat-pedantic', cxx_compiler)
+check_and_add_gcc_warning('-Wc++1z-compat', cxx_compiler)
+
+# catches unintentional switch case fallthroughs
+check_and_add_gcc_warning('-Wimplicit-fallthrough', cxx_compiler)
+
+# catches expressions used as a null pointer constant
+# XXX: at the time of writing, the version of clang used on the OS X test
+# machines has a bug that causes it to reject some valid files if both
+# -Wnon-literal-null-conversion and -Wsometimes-uninitialized are
+# specified. We work around this by instead using
+# -Werror=non-literal-null-conversion, but we only do that when
+# --enable-warnings-as-errors is specified so that no unexpected fatal
+# warnings are produced.
+check_and_add_gcc_warning('-Werror=non-literal-null-conversion',
+                          when='--enable-warnings-as-errors')
+
+# catches string literals used in boolean expressions
+check_and_add_gcc_warning('-Wstring-conversion')
+
+# catches inconsistent use of mutexes
+check_and_add_gcc_warning('-Wthread-safety')
+
+# we inline 'new' and 'delete' in mozalloc
+check_and_add_gcc_warning('-Wno-inline-new-delete', cxx_compiler)
+
+# Prevent the following GCC warnings from being treated as errors:
+# too many false positives
+check_and_add_gcc_warning('-Wno-error=maybe-uninitialized')
+
+# we don't want our builds held hostage when a platform-specific API
+# becomes deprecated.
+check_and_add_gcc_warning('-Wno-error=deprecated-declarations')
+
+# false positives depending on optimization
+check_and_add_gcc_warning('-Wno-error=array-bounds')
+
+# can't get rid of those PGO warnings
+check_and_add_gcc_warning('-Wno-error=coverage-mismatch', when='MOZ_PGO')
+
+# false positives during PGO
+check_and_add_gcc_warning('-Wno-error=free-nonheap-object', when='MOZ_PGO')
+
+# We use mix of both POSIX and Win32 printf format across the tree, so format
+# warnings are useless on mingw.
+check_and_add_gcc_warning('-Wno-format',
+                          when=depends(target)(lambda t: t.kernel == 'WINNT'))
+
+# Please keep these last in this file
+add_old_configure_assignment('_WARNINGS_CFLAGS', warnings_cflags)
+add_old_configure_assignment('_WARNINGS_CXXFLAGS', warnings_cxxflags)

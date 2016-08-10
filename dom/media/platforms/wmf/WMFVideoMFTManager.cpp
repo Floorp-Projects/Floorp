@@ -299,7 +299,7 @@ public:
     , mFailureReason(aFailureReason)
   {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
     nsACString* failureReason = &mFailureReason;
     nsCString secondFailureReason;

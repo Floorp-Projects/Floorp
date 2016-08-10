@@ -107,7 +107,7 @@ public:
     , mStatus(status)
   {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     hal::FMRadioOperationInformation info;
     info.operation() = mOp;
     info.status() = mStatus;
