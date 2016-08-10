@@ -1631,11 +1631,7 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
         JS_updateMallocCounter(context, mWidth * mHeight * 4);
       }
 
-      // Skia with the BGRX format requires the unused alpha channel (X) to be zero.
-      bool isOpaqueSkia = mOpaque && mTarget->GetBackendType() == BackendType::SKIA;
-      if (!canDiscardContent || isOpaqueSkia) {
-        mTarget->ClearRect(canvasRect);
-      }
+      mTarget->ClearRect(canvasRect);
 
       // Force a full layer transaction since we didn't have a layer before
       // and now we might need one.
