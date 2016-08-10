@@ -44,7 +44,7 @@ skip-if(B2G||Mulet) fuzzy-if(d2d,1,1083) fuzzy-if(skiaContent,1,2200) == border-
 fails == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html # bug 424274
 fails == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html # bug 424274
 skip-if(B2G||Mulet) fuzzy-if(d2d,1,16359) fuzzy-if(skiaContent,1,17000) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fuzzy-if(d2d,1,5453) fuzzy-if(skiaContent,1,11000) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(d2d,1,5453) fuzzy-if(skiaContent,1,5500) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fuzzy-if(d2d,1,29973) fuzzy-if(skiaContent,1,60000) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fuzzy-if(d2d,1,2478) fuzzy-if(skiaContent,1,2500) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 fails == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html # bug 424274
