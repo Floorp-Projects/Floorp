@@ -668,7 +668,8 @@ imgRequestProxy::GetImagePrincipal(nsIPrincipal** aPrincipal)
     return NS_ERROR_FAILURE;
   }
 
-  NS_ADDREF(*aPrincipal = GetOwner()->GetPrincipal());
+  nsCOMPtr<nsIPrincipal> principal = GetOwner()->GetPrincipal();
+  principal.forget(aPrincipal);
   return NS_OK;
 }
 
