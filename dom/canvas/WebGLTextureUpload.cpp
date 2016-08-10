@@ -184,6 +184,9 @@ ValidateUnpackBytes(WebGLContext* webgl, const char* funcName, uint32_t width,
                     uint32_t height, uint32_t depth, const webgl::PackingInfo& pi,
                     uint32_t byteCount, webgl::TexUnpackBlob* blob)
 {
+    if (!width || !height || !depth)
+        return true;
+
     const auto bytesPerPixel = webgl::BytesPerPixel(pi);
     const auto bytesPerRow = CheckedUint32(blob->mRowLength) * bytesPerPixel;
     const auto rowStride = RoundUpToMultipleOf(bytesPerRow, blob->mAlignment);
