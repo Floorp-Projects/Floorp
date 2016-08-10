@@ -133,7 +133,6 @@ enum class StyleUserSelect : uint8_t {
   TriState,
   Auto,     // internal value - please use nsFrame::IsSelectable()
   MozAll,   // force selection of all children, unless an ancestor has NONE set - bug 48096
-  MozNone,  // Like NONE, but doesn't change selection behavior for descendants whose user-select is not AUTO.
   MozText,  // Like TEXT, except that it won't get overridden by ancestors having ALL.
 };
 
