@@ -57,9 +57,15 @@ child:
                   ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
                   bool aCallTakeFocusForClickFromTap);
 
-  async NotifyMozMouseScrollEvent(uint64_t aLayersId, ViewID aScrollId, nsString aEvent);
+  async UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent);
 
-  async NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
+  async UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent);
+
+  async SetScrollingRootContent(bool aIsRootContent);
+
+  async NotifyMozMouseScrollEvent(ViewID aScrollId, nsString aEvent);
+
+  async NotifyAPZStateChange(ScrollableLayerGuid aGuid, APZStateChange aChange, int aArg);
 
   async NotifyFlushComplete();
 
