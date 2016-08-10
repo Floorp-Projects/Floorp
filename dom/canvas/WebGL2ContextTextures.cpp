@@ -58,21 +58,25 @@ WebGL2Context::TexImage3D(GLenum rawTexImageTarget, GLint level, GLenum internal
         return;
     }
 
+    const dom::ArrayBufferView* view = nullptr;
+    if (!maybeView.IsNull()) {
+        view = &maybeView.Value();
+    }
+
     const bool isSubImage = false;
     const GLint xOffset = 0;
     const GLint yOffset = 0;
     const GLint zOffset = 0;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
                        yOffset, zOffset, width, height, depth, border, unpackFormat,
-                       unpackType, maybeView);
+                       unpackType, view);
 }
 
 void
 WebGL2Context::TexSubImage3D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                              GLint yOffset, GLint zOffset, GLsizei width, GLsizei height,
                              GLsizei depth, GLenum unpackFormat, GLenum unpackType,
-                             const dom::Nullable<dom::ArrayBufferView>& maybeView,
-                             ErrorResult& /*out_rv*/)
+                             const dom::ArrayBufferView& view, ErrorResult&)
 {
     const char funcName[] = "texSubImage3D";
     const uint8_t funcDims = 3;
@@ -90,14 +94,14 @@ WebGL2Context::TexSubImage3D(GLenum rawTexImageTarget, GLint level, GLint xOffse
     const GLint border = 0;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
                        yOffset, zOffset, width, height, depth, border, unpackFormat,
-                       unpackType, maybeView);
+                       unpackType, &view);
 }
 
 void
 WebGL2Context::TexSubImage3D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                              GLint yOffset, GLint zOffset, GLenum unpackFormat,
-                             GLenum unpackType, dom::ImageData* imageData,
-                             ErrorResult& /*out_rv*/)
+                             GLenum unpackType, const dom::ImageData& imageData,
+                             ErrorResult&)
 {
     const char funcName[] = "texSubImage3D";
     const uint8_t funcDims = 3;
@@ -119,8 +123,8 @@ WebGL2Context::TexSubImage3D(GLenum rawTexImageTarget, GLint level, GLint xOffse
 void
 WebGL2Context::TexSubImage3D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                              GLint yOffset, GLint zOffset, GLenum unpackFormat,
-                             GLenum unpackType, dom::Element* elem,
-                             ErrorResult* const out_rv)
+                             GLenum unpackType, const dom::Element& elem,
+                             ErrorResult& out_rv)
 {
     const char funcName[] = "texSubImage3D";
     const uint8_t funcDims = 3;
@@ -136,7 +140,7 @@ WebGL2Context::TexSubImage3D(GLenum rawTexImageTarget, GLint level, GLint xOffse
     const bool isSubImage = true;
     const GLenum internalFormat = 0;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
-                       yOffset, zOffset, unpackFormat, unpackType, elem, out_rv);
+                       yOffset, zOffset, unpackFormat, unpackType, elem, &out_rv);
 }
 
 void
