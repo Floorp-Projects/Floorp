@@ -8,7 +8,6 @@
 
 #include "MediaResource.h"
 #include "MediaResourceCallback.h"
-#include "RtspMediaResource.h"
 
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"
@@ -1506,8 +1505,6 @@ MediaResource::Create(MediaResourceCallback* aCallback, nsIChannel* aChannel)
   RefPtr<MediaResource> resource;
   if (fc || IsBlobURI(uri)) {
     resource = new FileMediaResource(aCallback, aChannel, uri, contentType);
-  } else if (IsRtspURI(uri)) {
-    resource = new RtspMediaResource(aCallback, aChannel, uri, contentType);
   } else {
     resource = new ChannelMediaResource(aCallback, aChannel, uri, contentType);
   }
