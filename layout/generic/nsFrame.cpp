@@ -2183,14 +2183,14 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     aBuilder->IsBuildingLayerEventRegions() &&
     StyleUserInterface()->GetEffectivePointerEvents(this) !=
       NS_STYLE_POINTER_EVENTS_NONE;
-  bool opacityItemForEventsOnly = false;
+  bool opacityItemForEventsAndPluginsOnly = false;
   if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
-      !aBuilder->WillComputePluginGeometry() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
       !nsLayoutUtils::HasCurrentAnimationOfProperty(this,
                                                     eCSSProperty_opacity)) {
-    if (needEventRegions) {
-      opacityItemForEventsOnly = true;
+    if (needEventRegions ||
+        aBuilder->WillComputePluginGeometry()) {
+      opacityItemForEventsAndPluginsOnly = true;
     } else {
       return;
     }
@@ -2457,7 +2457,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     opacityClipState.Clear();
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList,
-                                        containerItemScrollClip, opacityItemForEventsOnly));
+                                        containerItemScrollClip, opacityItemForEventsAndPluginsOnly));
   }
 
   /* If we're going to apply a transformation and don't have preserve-3d set, wrap

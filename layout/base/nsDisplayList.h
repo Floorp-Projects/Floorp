@@ -3378,7 +3378,7 @@ public:
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    nsDisplayList* aList,
                    const DisplayItemScrollClip* aScrollClip,
-                   bool aForEventsOnly);
+                   bool aForEventsAndPluginsOnly);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOpacity();
 #endif
@@ -3420,7 +3420,7 @@ public:
 
 private:
   float mOpacity;
-  bool mForEventsOnly;
+  bool mForEventsAndPluginsOnly;
 };
 
 class nsDisplayBlendMode : public nsDisplayWrapList {
