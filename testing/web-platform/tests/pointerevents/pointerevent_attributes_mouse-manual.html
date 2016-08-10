@@ -75,6 +75,14 @@
                             assert_equals(event.isPrimary, true, "isPrimary should be true");
                         }, event.type + ".isPrimary attribute is correct.");
 
+                        // Test width and height
+                        test(function () {
+                            assert_equals(event.width, 1, "width of mouse should be 1");
+                        }, event.type + ".width attribute is correct.");
+                        test(function () {
+                            assert_equals(event.height, 1, "height of mouse should be 1");
+                        }, event.type + ".height attribute is correct.");
+
                         check_PointerEvent(event);
                         detected_eventTypes[event.type] = true;
                         if (Object.keys(detected_eventTypes).length == eventList.length)
