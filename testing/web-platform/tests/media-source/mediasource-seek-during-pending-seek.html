@@ -30,7 +30,7 @@
 
                   // Seek to a new position before letting the initial seek to 0 completes.
                   test.expectEvent(mediaElement, 'seeking', 'mediaElement');
-                  mediaElement.currentTime = secondSegmentInfo.timecode;
+                  mediaElement.currentTime = Math.max(secondSegmentInfo.timev, secondSegmentInfo.timea);
                   assert_true(mediaElement.seeking, 'mediaElement is seeking');
 
                   // Append media data for time 0.
@@ -94,7 +94,7 @@
 
                   // Seek to a new position.
                   test.expectEvent(mediaElement, 'seeking', 'mediaElement');
-                  mediaElement.currentTime = secondSegmentInfo.timecode;
+                  mediaElement.currentTime = Math.max(secondSegmentInfo.timev, secondSegmentInfo.timea);
                   assert_true(mediaElement.seeking, 'mediaElement is seeking');
 
               });
@@ -105,7 +105,7 @@
 
                   // Seek to a second position while the first seek is still pending.
                   test.expectEvent(mediaElement, 'seeking', 'mediaElement');
-                  mediaElement.currentTime = thirdSegmentInfo.timecode;
+                  mediaElement.currentTime = Math.max(thirdSegmentInfo.timev, thirdSegmentInfo.timea);
                   assert_true(mediaElement.seeking, 'mediaElement is seeking');
 
                   // Append media data for the first seek position.
@@ -115,7 +115,8 @@
 
               test.waitForExpectedEvents(function()
               {
-                  assert_true(mediaElement.seeking, 'mediaElement is still seeking');
+                  // Note that we can't assume that the element is still seeking
+                  // when the seeking event is fired as the operation is asynchronous.
 
                   // Append media data for the second seek position.
                   test.expectEvent(sourceBuffer, 'updateend', 'sourceBuffer');
