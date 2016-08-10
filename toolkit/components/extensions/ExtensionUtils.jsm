@@ -166,7 +166,7 @@ class BaseContext {
     this.onClose = new Set();
     this.checkedLastError = false;
     this._lastError = null;
-    this.contextId = ++gContextId;
+    this.contextId = `${++gContextId}-${Services.appinfo.uniqueProcessID}`;
     this.unloaded = false;
     this.extensionId = extensionId;
     this.jsonSandbox = null;
@@ -1334,8 +1334,7 @@ Messenger.prototype = {
   },
 
   connect(messageManager, name, recipient) {
-    // TODO(robwu): Use a process ID instead of the process type. bugzil.la/1287626
-    let portId = `${gNextPortId++}-${Services.appinfo.processType}`;
+    let portId = `${gNextPortId++}-${Services.appinfo.uniqueProcessID}`;
     let port = new Port(this.context, messageManager, name, portId, null);
     let msg = {name, portId};
     this._sendMessage(messageManager, "Extension:Connect", msg, recipient)
