@@ -1024,21 +1024,25 @@ FindStartOfUndefinedAndUninitializedSlots(NativeObject* templateObj, uint32_t ns
 }
 
 static void
-AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj, uint32_t count)
+AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj, int32_t count)
 {
     JS::AutoCheckCannotGC nogc(cx);
 
     obj->initPrivate(nullptr);
-    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(count));
 
     // Typed arrays with a non-compile-time known size that have a count of zero
     // eventually are essentially typed arrays with inline elements. The bounds
     // check will make sure that no elements are read or written to that memory.
-    if (count == 0) {
-        obj->setInlineElements();
+    // Negative numbers will bail out to the slow path, which in turn will raise
+    // an invalid argument exception.
+    if (count <= 0) {
+        if (count == 0)
+            obj->setInlineElements();
+        obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
         return;
     }
 
+    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(count));
     size_t nbytes;
 
     switch (obj->type()) {
