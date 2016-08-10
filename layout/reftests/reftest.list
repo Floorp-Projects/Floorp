@@ -19,6 +19,9 @@ include w3c-css/received/reftest.list
 include abs-pos/reftest.list
 include position-relative/reftest.list
 
+# apng-mime
+include apng-mime/reftest.list
+
 include async-scrolling/reftest.list
 
 # backgrounds/

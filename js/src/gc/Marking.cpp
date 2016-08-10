@@ -23,6 +23,7 @@
 #include "js/SliceBudget.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
+#include "vm/Debugger.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/Symbol.h"

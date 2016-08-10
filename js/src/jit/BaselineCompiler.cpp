@@ -1296,6 +1296,29 @@ BaselineCompiler::emit_JSOP_NULL()
     return true;
 }
 
+typedef bool (*ThrowCheckIsObjectFn)(JSContext*, CheckIsObjectKind);
+static const VMFunction ThrowCheckIsObjectInfo =
+    FunctionInfo<ThrowCheckIsObjectFn>(ThrowCheckIsObject);
+
+bool
+BaselineCompiler::emit_JSOP_CHECKISOBJ()
+{
+    frame.syncStack(0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+
+    Label ok;
+    masm.branchTestObject(Assembler::Equal, R0, &ok);
+
+    prepareVMCall();
+
+    pushArg(Imm32(GET_UINT8(pc)));
+    if (!callVM(ThrowCheckIsObjectInfo))
+        return false;
+
+    masm.bind(&ok);
+    return true;
+}
+
 typedef bool (*ThrowUninitializedThisFn)(JSContext*, BaselineFrame* frame);
 static const VMFunction ThrowUninitializedThisInfo =
     FunctionInfo<ThrowUninitializedThisFn>(BaselineThrowUninitializedThis);

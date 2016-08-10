@@ -705,8 +705,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
   // For a SVG doc:
   //   SVG 1.1 say that  if we fail to resolve a mask, we should draw the
   //   object unmasked.
-  nsIDocument* currentDoc = frame->PresContext()->Document();
-  bool shouldGenerateMaskLayer = currentDoc->IsSVGDocument()
+  bool shouldGenerateMaskLayer = hasSVGLayout
                                  ? maskFrames.Length() == 1 && maskFrames[0]
                                  : maskFrames.Length() > 0;
 

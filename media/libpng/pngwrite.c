@@ -1,8 +1,8 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.6.19 [November 12, 2015]
- * Copyright (c) 1998-2002,2004,2006-2015 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.24 [August 4, 2016]
+ * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -22,7 +22,7 @@
 /* Write out all the unknown chunks for the current given location */
 static void
 write_unknown_chunks(png_structrp png_ptr, png_const_inforp info_ptr,
-   unsigned int where)
+    unsigned int where)
 {
    if (info_ptr->unknown_chunks_num != 0)
    {
@@ -152,11 +152,11 @@ png_write_info_before_PLTE(png_structrp png_ptr, png_const_inforp info_ptr)
 #    ifdef PNG_WRITE_sRGB_SUPPORTED
                if ((info_ptr->valid & PNG_INFO_sRGB) != 0)
                   png_app_warning(png_ptr,
-                     "profile matches sRGB but writing iCCP instead");
+                      "profile matches sRGB but writing iCCP instead");
 #     endif
 
             png_write_iCCP(png_ptr, info_ptr->iccp_name,
-               info_ptr->iccp_profile);
+                info_ptr->iccp_profile);
          }
 #     ifdef PNG_WRITE_sRGB_SUPPORTED
          else
@@ -392,7 +392,7 @@ png_write_end(png_structrp png_ptr, png_inforp info_ptr)
       for (i = 0; i < info_ptr->num_text; i++)
       {
          png_debug2(2, "Writing trailer text chunk %d, type %d", i,
-            info_ptr->text[i].compression);
+             info_ptr->text[i].compression);
          /* An internationalized chunk? */
          if (info_ptr->text[i].compression > 0)
          {
@@ -702,7 +702,7 @@ png_write_row(png_structrp png_ptr, png_const_bytep row)
       return;
 
    png_debug2(1, "in png_write_row (row %u, pass %d)",
-      png_ptr->row_number, png_ptr->pass);
+       png_ptr->row_number, png_ptr->pass);
 
    /* Initialize transformations and other stuff if first time */
    if (png_ptr->row_number == 0 && png_ptr->pass == 0)
@@ -1078,7 +1078,7 @@ png_set_filter(png_structrp png_ptr, int method, int filters)
              * is not available so the filter can't be used.  Just warn here.
              */
             png_app_warning(png_ptr,
-               "png_set_filter: UP/AVG/PAETH cannot be added after start");
+                "png_set_filter: UP/AVG/PAETH cannot be added after start");
             filters &= ~(PNG_FILTER_UP|PNG_FILTER_AVG|PNG_FILTER_PAETH);
          }
 
@@ -1104,13 +1104,13 @@ png_set_filter(png_structrp png_ptr, int method, int filters)
 
          if (png_ptr->try_row == NULL)
             png_ptr->try_row = png_voidcast(png_bytep,
-               png_malloc(png_ptr, buf_size));
+                png_malloc(png_ptr, buf_size));
 
          if (num_filters > 1)
          {
             if (png_ptr->tst_row == NULL)
                png_ptr->tst_row = png_voidcast(png_bytep,
-                  png_malloc(png_ptr, buf_size));
+                   png_malloc(png_ptr, buf_size));
          }
       }
       png_ptr->do_filter = (png_byte)filters;
@@ -1637,7 +1637,7 @@ png_write_image_16bit(png_voidp argument)
 
 static png_byte
 png_unpremultiply(png_uint_32 component, png_uint_32 alpha,
-   png_uint_32 reciprocal/*from the above macro*/)
+    png_uint_32 reciprocal/*from the above macro*/)
 {
    /* The following gives 1.0 for an alpha of 0, which is fine, otherwise if 0/0
     * is represented as some other value there is more likely to be a
@@ -1857,16 +1857,16 @@ png_image_set_PLTE(png_image_write_control *display)
             if (channels >= 3) /* RGB */
             {
                palette[i].blue = png_unpremultiply(entry[afirst + (2 ^ bgr)],
-                  alpha, reciprocal);
+                   alpha, reciprocal);
                palette[i].green = png_unpremultiply(entry[afirst + 1], alpha,
-                  reciprocal);
+                   reciprocal);
                palette[i].red = png_unpremultiply(entry[afirst + bgr], alpha,
-                  reciprocal);
+                   reciprocal);
             }
 
             else /* gray */
                palette[i].blue = palette[i].red = palette[i].green =
-                  png_unpremultiply(entry[afirst], alpha, reciprocal);
+                   png_unpremultiply(entry[afirst], alpha, reciprocal);
          }
       }
 
@@ -1913,11 +1913,11 @@ png_image_set_PLTE(png_image_write_control *display)
 #   endif
 
    png_set_PLTE(image->opaque->png_ptr, image->opaque->info_ptr, palette,
-      entries);
+       entries);
 
    if (num_trans > 0)
       png_set_tRNS(image->opaque->png_ptr, image->opaque->info_ptr, tRNS,
-         num_trans, NULL);
+          num_trans, NULL);
 
    image->colormap_entries = entries;
 }
@@ -1926,7 +1926,7 @@ static int
 png_image_write_main(png_voidp argument)
 {
    png_image_write_control *display = png_voidcast(png_image_write_control*,
-      argument);
+       argument);
    png_imagep image = display->image;
    png_structrp png_ptr = image->opaque->png_ptr;
    png_inforp info_ptr = image->opaque->info_ptr;
@@ -1989,24 +1989,24 @@ png_image_write_main(png_voidp argument)
          png_uint_32 entries = image->colormap_entries;
 
          png_set_IHDR(png_ptr, info_ptr, image->width, image->height,
-            entries > 16 ? 8 : (entries > 4 ? 4 : (entries > 2 ? 2 : 1)),
-            PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
-            PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+             entries > 16 ? 8 : (entries > 4 ? 4 : (entries > 2 ? 2 : 1)),
+             PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
+             PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
          png_image_set_PLTE(display);
       }
 
       else
          png_error(image->opaque->png_ptr,
-            "no color-map for color-mapped image");
+             "no color-map for color-mapped image");
    }
 
    else
       png_set_IHDR(png_ptr, info_ptr, image->width, image->height,
-         write_16bit ? 16 : 8,
-         ((format & PNG_FORMAT_FLAG_COLOR) ? PNG_COLOR_MASK_COLOR : 0) +
-         ((format & PNG_FORMAT_FLAG_ALPHA) ? PNG_COLOR_MASK_ALPHA : 0),
-         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+          write_16bit ? 16 : 8,
+          ((format & PNG_FORMAT_FLAG_COLOR) ? PNG_COLOR_MASK_COLOR : 0) +
+          ((format & PNG_FORMAT_FLAG_ALPHA) ? PNG_COLOR_MASK_ALPHA : 0),
+          PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
    /* Counter-intuitively the data transformations must be called *after*
     * png_write_info, not before as in the read code, but the 'set' functions
@@ -2021,11 +2021,11 @@ png_image_write_main(png_voidp argument)
 
       if ((image->flags & PNG_IMAGE_FLAG_COLORSPACE_NOT_sRGB) == 0)
          png_set_cHRM_fixed(png_ptr, info_ptr,
-            /* color      x       y */
-            /* white */ 31270, 32900,
-            /* red   */ 64000, 33000,
-            /* green */ 30000, 60000,
-            /* blue  */ 15000,  6000
+             /* color      x       y */
+             /* white */ 31270, 32900,
+             /* red   */ 64000, 33000,
+             /* green */ 30000, 60000,
+             /* blue  */ 15000,  6000
          );
    }
 
@@ -2119,7 +2119,7 @@ png_image_write_main(png_voidp argument)
        (colormap == 0 && display->convert_to_8bit != 0))
    {
       png_bytep row = png_voidcast(png_bytep, png_malloc(png_ptr,
-         png_get_rowbytes(png_ptr, info_ptr)));
+          png_get_rowbytes(png_ptr, info_ptr)));
       int result;
 
       display->local_row = row;
@@ -2159,10 +2159,10 @@ png_image_write_main(png_voidp argument)
 
 static void (PNGCBAPI
 image_memory_write)(png_structp png_ptr, png_bytep/*const*/ data,
-   png_size_t size)
+    png_size_t size)
 {
    png_image_write_control *display = png_voidcast(png_image_write_control*,
-      png_ptr->io_ptr/*backdoor: png_get_io_ptr(png_ptr)*/);
+       png_ptr->io_ptr/*backdoor: png_get_io_ptr(png_ptr)*/);
    const png_alloc_size_t ob = display->output_bytes;
 
    /* Check for overflow; this should never happen: */
@@ -2193,22 +2193,22 @@ static int
 png_image_write_memory(png_voidp argument)
 {
    png_image_write_control *display = png_voidcast(png_image_write_control*,
-      argument);
+       argument);
 
    /* The rest of the memory-specific init and write_main in an error protected
     * environment.  This case needs to use callbacks for the write operations
     * since libpng has no built in support for writing to memory.
     */
    png_set_write_fn(display->image->opaque->png_ptr, display/*io_ptr*/,
-         image_memory_write, image_memory_flush);
+       image_memory_write, image_memory_flush);
 
    return png_image_write_main(display);
 }
 
 int PNGAPI
 png_image_write_to_memory(png_imagep image, void *memory,
-   png_alloc_size_t * PNG_RESTRICT memory_bytes, int convert_to_8bit,
-   const void *buffer, png_int_32 row_stride, const void *colormap)
+    png_alloc_size_t * PNG_RESTRICT memory_bytes, int convert_to_8bit,
+    const void *buffer, png_int_32 row_stride, const void *colormap)
 {
    /* Write the image to the given buffer, or count the bytes if it is NULL */
    if (image != NULL && image->version == PNG_IMAGE_VERSION)
@@ -2260,12 +2260,12 @@ png_image_write_to_memory(png_imagep image, void *memory,
 
       else
          return png_image_error(image,
-            "png_image_write_to_memory: invalid argument");
+             "png_image_write_to_memory: invalid argument");
    }
 
    else if (image != NULL)
       return png_image_error(image,
-         "png_image_write_to_memory: incorrect PNG_IMAGE_VERSION");
+          "png_image_write_to_memory: incorrect PNG_IMAGE_VERSION");
 
    else
       return 0;
@@ -2274,7 +2274,7 @@ png_image_write_to_memory(png_imagep image, void *memory,
 #ifdef PNG_SIMPLIFIED_WRITE_STDIO_SUPPORTED
 int PNGAPI
 png_image_write_to_stdio(png_imagep image, FILE *file, int convert_to_8bit,
-   const void *buffer, png_int_32 row_stride, const void *colormap)
+    const void *buffer, png_int_32 row_stride, const void *colormap)
 {
    /* Write the image to the given (FILE*). */
    if (image != NULL && image->version == PNG_IMAGE_VERSION)
@@ -2310,12 +2310,12 @@ png_image_write_to_stdio(png_imagep image, FILE *file, int convert_to_8bit,
 
       else
          return png_image_error(image,
-            "png_image_write_to_stdio: invalid argument");
+             "png_image_write_to_stdio: invalid argument");
    }
 
    else if (image != NULL)
       return png_image_error(image,
-         "png_image_write_to_stdio: incorrect PNG_IMAGE_VERSION");
+          "png_image_write_to_stdio: incorrect PNG_IMAGE_VERSION");
 
    else
       return 0;
@@ -2323,8 +2323,8 @@ png_image_write_to_stdio(png_imagep image, FILE *file, int convert_to_8bit,
 
 int PNGAPI
 png_image_write_to_file(png_imagep image, const char *file_name,
-   int convert_to_8bit, const void *buffer, png_int_32 row_stride,
-   const void *colormap)
+    int convert_to_8bit, const void *buffer, png_int_32 row_stride,
+    const void *colormap)
 {
    /* Write the image to the named file. */
    if (image != NULL && image->version == PNG_IMAGE_VERSION)
@@ -2336,7 +2336,7 @@ png_image_write_to_file(png_imagep image, const char *file_name,
          if (fp != NULL)
          {
             if (png_image_write_to_stdio(image, fp, convert_to_8bit, buffer,
-               row_stride, colormap) != 0)
+                row_stride, colormap) != 0)
             {
                int error; /* from fflush/fclose */
 
@@ -2377,12 +2377,12 @@ png_image_write_to_file(png_imagep image, const char *file_name,
 
       else
          return png_image_error(image,
-            "png_image_write_to_file: invalid argument");
+             "png_image_write_to_file: invalid argument");
    }
 
    else if (image != NULL)
       return png_image_error(image,
-         "png_image_write_to_file: incorrect PNG_IMAGE_VERSION");
+          "png_image_write_to_file: incorrect PNG_IMAGE_VERSION");
 
    else
       return 0;

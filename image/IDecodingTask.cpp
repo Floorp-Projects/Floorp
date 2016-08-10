@@ -105,7 +105,8 @@ IDecodingTask::Resume()
 ///////////////////////////////////////////////////////////////////////////////
 
 AnimationDecodingTask::AnimationDecodingTask(NotNull<Decoder*> aDecoder)
-  : mDecoder(aDecoder)
+  : mMutex("mozilla::image::AnimationDecodingTask")
+  , mDecoder(aDecoder)
 {
   MOZ_ASSERT(!mDecoder->IsMetadataDecode(),
              "Use MetadataDecodingTask for metadata decodes");
@@ -116,6 +117,8 @@ AnimationDecodingTask::AnimationDecodingTask(NotNull<Decoder*> aDecoder)
 void
 AnimationDecodingTask::Run()
 {
+  MutexAutoLock lock(mMutex);
+
   while (true) {
     LexerResult result = mDecoder->Decode(WrapNotNull(this));
 

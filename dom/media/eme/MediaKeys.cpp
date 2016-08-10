@@ -283,7 +283,7 @@ MediaKeys::ResolvePromise(PromiseId aId)
     mKeySessions.Put(session->GetSessionId(), session);
     promise->MaybeResolve(session);
   } else {
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
   }
   MOZ_ASSERT(!mPromises.Contains(aId));
 }

@@ -172,14 +172,14 @@ ScreenOrientation::LockOrientationTask::Run()
 
   if (mDocument->Hidden()) {
     // Active orientation lock is not the document's orientation lock.
-    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+    mPromise->MaybeResolveWithUndefined();
     mDocument->SetOrientationPendingPromise(nullptr);
     return NS_OK;
   }
 
   if (mOrientationLock == eScreenOrientation_None) {
     mScreenOrientation->UnlockDeviceOrientation();
-    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+    mPromise->MaybeResolveWithUndefined();
     mDocument->SetOrientationPendingPromise(nullptr);
     return NS_OK;
   }
@@ -201,7 +201,7 @@ ScreenOrientation::LockOrientationTask::Run()
       (mOrientationLock == eScreenOrientation_Default &&
        mDocument->CurrentOrientationAngle() == 0)) {
     // Orientation lock will not cause an orientation change.
-    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+    mPromise->MaybeResolveWithUndefined();
     mDocument->SetOrientationPendingPromise(nullptr);
   }
 
@@ -550,7 +550,7 @@ ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration)
 
     Promise* pendingPromise = doc->GetOrientationPendingPromise();
     if (pendingPromise) {
-      pendingPromise->MaybeResolve(JS::UndefinedHandleValue);
+      pendingPromise->MaybeResolveWithUndefined();
       doc->SetOrientationPendingPromise(nullptr);
     }
 
@@ -636,7 +636,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
     Promise* pendingPromise = doc->GetOrientationPendingPromise();
     if (pendingPromise) {
-      pendingPromise->MaybeResolve(JS::UndefinedHandleValue);
+      pendingPromise->MaybeResolveWithUndefined();
       doc->SetOrientationPendingPromise(nullptr);
     }
 

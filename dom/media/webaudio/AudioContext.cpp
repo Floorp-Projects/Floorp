@@ -871,7 +871,7 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
 
   if (aPromise) {
     Promise* promise = reinterpret_cast<Promise*>(aPromise);
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
     DebugOnly<bool> rv = mPromiseGripArray.RemoveElement(promise);
     MOZ_ASSERT(rv, "Promise wasn't in the grip array?");
   }

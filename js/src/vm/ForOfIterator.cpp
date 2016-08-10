@@ -135,10 +135,10 @@ ForOfIterator::next(MutableHandleValue vp, bool* done)
     if (!js::Call(cx_, v, iterator, &v))
         return false;
 
-    RootedObject resultObj(cx_, ToObject(cx_, v));
-    if (!resultObj)
-        return false;
+    if (!v.isObject())
+        return ThrowCheckIsObject(cx_, CheckIsObjectKind::IteratorNext);
 
+    RootedObject resultObj(cx_, &v.toObject());
     if (!GetProperty(cx_, resultObj, resultObj, cx_->names().done, &v))
         return false;
 
