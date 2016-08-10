@@ -8499,7 +8499,7 @@ DebuggerObject::proxyTargetGetter(JSContext* cx, unsigned argc, Value* vp)
     if (!DebuggerObject::scriptedProxyTarget(cx, object, &result))
         return false;
 
-    args.rval().setObject(*result);
+    args.rval().setObjectOrNull(result);
     return true;
 }
 
@@ -8516,7 +8516,7 @@ DebuggerObject::proxyHandlerGetter(JSContext* cx, unsigned argc, Value* vp)
     if (!DebuggerObject::scriptedProxyHandler(cx, object, &result))
         return false;
 
-    args.rval().setObject(*result);
+    args.rval().setObjectOrNull(result);
     return true;
 }
 
@@ -9901,6 +9901,10 @@ DebuggerObject::scriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
     RootedObject unwrapped(cx, js::GetProxyTargetObject(referent));
+    if(!unwrapped) {
+      result.set(nullptr);
+      return true;
+    }
     return dbg->wrapDebuggeeObject(cx, unwrapped, result);
 }
 
@@ -9912,6 +9916,10 @@ DebuggerObject::scriptedProxyHandler(JSContext* cx, HandleDebuggerObject object,
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
     RootedObject unwrapped(cx, ScriptedProxyHandler::handlerObject(referent));
+    if(!unwrapped) {
+      result.set(nullptr);
+      return true;
+    }
     return dbg->wrapDebuggeeObject(cx, unwrapped, result);
 }
 
