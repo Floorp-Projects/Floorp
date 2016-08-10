@@ -43,7 +43,7 @@ public:
 
   HWND hidden_window_hwnd;
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     // Jump through some hoops to locate the hidden window.
     nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
     nsCOMPtr<nsIXULWindow> hiddenWindow;

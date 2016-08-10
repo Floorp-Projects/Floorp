@@ -77,13 +77,6 @@ interface nsIAboutModule : nsISupports
      * registered to deal with.
      */
     unsigned long getURIFlags(in nsIURI aURI);
-
-    /**
-     * Returns the Indexed DB origin's postfix used for the given about: URI.
-     * If the postfix returned is null then the URI's path (e.g. "home" for
-     * about:home) will be used to construct the origin.
-     */
-    DOMString getIndexedDBOriginPostfix(in nsIURI aURI);
 };
 
 %{C++

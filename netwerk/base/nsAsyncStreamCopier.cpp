@@ -36,7 +36,7 @@ public:
         : mCopier(aCopier)
       , mTarget(NS_GetCurrentThread())
       { }
-    NS_METHOD Run()
+    NS_IMETHOD Run() override
     {
       nsresult rv = mCopier->ApplyBufferingPolicy();
       if (NS_FAILED(rv)) {

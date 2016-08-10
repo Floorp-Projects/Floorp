@@ -2718,3 +2718,20 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   padding: 0;
   overflow: hidden;
 }
+
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+  .cui-widget-panelview[id^=PanelUI-webext-] {
+    border-radius: 4px;
+  }
+}
+
+.webextension-popup-browser {
+  margin-right: -1px;
+  border-radius: inherit;
+}
+
+#PanelUI-popup .webextension-popup-browser {
+  margin: 0;
+}

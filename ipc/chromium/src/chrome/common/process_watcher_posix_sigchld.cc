@@ -89,8 +89,7 @@ public:
       KillProcess();
   }
 
-  // @override
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     // we may have already been signaled by the time this runs
     if (process_)

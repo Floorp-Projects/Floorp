@@ -681,7 +681,7 @@ BUILD_JSVAL(JSValueTag tag, uint64_t payload)
 static inline bool
 JSVAL_IS_DOUBLE_IMPL(jsval_layout l)
 {
-    return l.asBits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE;
+    return (l.asBits | mozilla::DoubleTypeTraits::kSignBit) <= JSVAL_SHIFTED_TAG_MAX_DOUBLE;
 }
 
 static inline jsval_layout
@@ -689,7 +689,7 @@ DOUBLE_TO_JSVAL_IMPL(double d)
 {
     jsval_layout l;
     l.asDouble = d;
-    MOZ_ASSERT(l.asBits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE);
+    MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
     return l;
 }
 
@@ -941,9 +941,8 @@ MAGIC_UINT32_TO_JSVAL_IMPL(uint32_t payload)
 static inline bool
 JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
 {
-    uint64_t lbits = lhs.asBits, rbits = rhs.asBits;
-    return (lbits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE && rbits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE) ||
-           (((lbits ^ rbits) & 0xFFFF800000000000LL) == 0);
+    return (JSVAL_IS_DOUBLE_IMPL(lhs) && JSVAL_IS_DOUBLE_IMPL(rhs)) ||
+           (((lhs.asBits ^ rhs.asBits) & 0xFFFF800000000000LL) == 0);
 }
 
 static inline JSValueType

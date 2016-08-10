@@ -160,8 +160,8 @@ TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
               : mTarget(aTarget)
             { }
 
-            NS_IMETHODIMP
-            Run()
+            NS_IMETHOD
+            Run() override
             {
               OnSystemError(mTarget, CameraControlListener::kSystemService, 100, 0);
               return NS_OK;

@@ -561,7 +561,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
     nsNavHistory* navHistory = nsNavHistory::GetHistoryService();

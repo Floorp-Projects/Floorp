@@ -75,3 +75,81 @@ def check_headers(*headers, **kwargs):
     for header in headers:
         checks.append(check_header(header, **kwargs))
     return checks
+
+
+@depends(c_compiler)
+def warnings_cflags(c_compiler):
+    return []
+
+@depends(cxx_compiler)
+def warnings_cxxflags(cxx_compiler):
+    return []
+
+
+# Tests whether GCC or clang support the given warning flag, and if it is,
+# add it to the list of warning flags for the build.
+# - `warning` is the warning flag (e.g. -Wfoo)
+# - `compiler` (optional) is the compiler to test against (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, both compilers
+#   are tested.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the warning flag is wanted.
+# - `check`, when not set, skips checking whether the flag is supported and
+#   adds it to the list of warning flags unconditionally. This is only meant
+#   for add_gcc_warning().
+@template
+def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
+    if compiler:
+        compilers = (compiler,)
+    else:
+        compilers = (c_compiler, cxx_compiler)
+
+    if not when:
+        when = depends('--help')(lambda _: True)
+
+    for c in compilers:
+        assert c in (c_compiler, cxx_compiler)
+        lang, warnings_flags = {
+            c_compiler: ('C', warnings_cflags),
+            cxx_compiler: ('C++', warnings_cxxflags),
+        }[c]
+
+        # GCC and clang will fail if given an unknown warning option like
+        # -Wfoobar. But later versions won't fail if given an unknown negated
+        # warning option like -Wno-foobar. So when we are checking for support
+        # of a negated warning option, we actually test the positive form, but
+        # add the negated form to the flags variable.
+        if (warning.startswith('-Wno-') and
+                not warning.startswith('-Wno-error=')):
+            flags = ['-Werror', '-W' + warning[5:]]
+        elif warning.startswith('-Werror='):
+            flags = [warning]
+        else:
+            flags = ['-Werror', warning]
+
+        @depends(c, when)
+        def result(c, when):
+            if when and c.type in ('clang', 'gcc'):
+                return True
+
+        if check:
+            result = c.try_compile(
+                flags=flags, when=result,
+                check_msg='whether the %s compiler supports %s' % (lang,
+                                                                   warning))
+
+        @depends(result, warnings_flags)
+        def maybe_add_flag(result, warnings_flags):
+            if result is not None:
+                warnings_flags.append(warning)
+
+# Add the given warning to the list of warning flags for the build.
+# - `warning` is the warning flag (e.g. -Wfoo)
+# - `compiler` (optional) is the compiler to add the flag for (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, the warning flag
+#   is added for both compilers.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the warning flag is wanted.
+@template
+def add_gcc_warning(warning, compiler=None, when=None):
+    check_and_add_gcc_warning(warning, compiler, when, check=False)

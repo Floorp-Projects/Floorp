@@ -478,7 +478,7 @@ public:
     : mNodeId(aNodeId)
   {
   }
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
     MOZ_ASSERT(obsService);
@@ -1061,7 +1061,7 @@ public:
   }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     for (uint32_t i = 0, length = mCallbacks.Length(); i < length; ++i) {
       mCallbacks[i]->Done(mGMPContentParent);

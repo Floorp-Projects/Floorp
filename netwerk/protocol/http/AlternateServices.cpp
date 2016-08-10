@@ -484,7 +484,7 @@ public:
     , mPort(port)
     {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       MOZ_ASSERT(NS_IsMainThread());
       gHttpHandler->ConnMgr()->ClearHostMapping(mHost, mPort);

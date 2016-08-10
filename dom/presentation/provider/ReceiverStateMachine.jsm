@@ -83,8 +83,16 @@ var handlers = [
     }
   },
   function _closingHandler(stateMachine, command) {
-    // ignore every command in closing state.
-    DEBUG && debug("unexpected command: " + JSON.stringify(command)); // jshint ignore:line
+    switch (command.type) {
+      case CommandType.DISCONNECT:
+        stateMachine.state = State.CLOSED;
+        stateMachine._notifyDisconnected(command.reason);
+        break;
+      default:
+        debug("unexpected command: " + JSON.stringify(command));
+        // ignore unexpected command
+        break;
+    }
   },
   function _closedHandler(stateMachine, command) {
     // ignore every command in closed state.

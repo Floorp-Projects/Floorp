@@ -154,7 +154,7 @@ public:
   explicit NotifyNetworkActivity(NetworkActivityMonitor::Direction aDirection)
     : mDirection(aDirection)
   {}
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

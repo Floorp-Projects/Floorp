@@ -27,6 +27,10 @@ sys.dont_write_bytecode = old_bytecode
 def FlagsForFile(filename):
     mach = mach_module.get_mach()
     out = StringIO()
+
+    # Mach calls sys.stdout.fileno(), so we need to fake it when capturing it.
+    # Returning an invalid file descriptor does the trick.
+    out.fileno = lambda: -1
     out.encoding = None
     mach.run(['compileflags', filename], stdout=out, stderr=out)
 

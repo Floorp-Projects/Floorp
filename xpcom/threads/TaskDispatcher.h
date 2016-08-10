@@ -174,7 +174,7 @@ private:
     public:
       explicit TaskGroupRunnable(UniquePtr<PerThreadTaskGroup>&& aTasks) : mTasks(Move(aTasks)) {}
 
-      NS_IMETHODIMP Run()
+      NS_IMETHOD Run() override
       {
         // State change tasks get run all together before any code is run, so
         // that all state changes are made in an atomic unit.

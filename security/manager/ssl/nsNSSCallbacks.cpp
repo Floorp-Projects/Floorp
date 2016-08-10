@@ -181,7 +181,7 @@ nsHTTPDownloadEvent::Run()
 struct nsCancelHTTPDownloadEvent : Runnable {
   RefPtr<nsHTTPListener> mListener;
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mListener->FreeLoadGroup(true);
     mListener = nullptr;
     return NS_OK;

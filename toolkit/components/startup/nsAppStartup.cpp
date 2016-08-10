@@ -107,7 +107,7 @@ private:
 public:
   explicit nsAppExitEvent(nsAppStartup *service) : mService(service) {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     // Tell the appshell to exit
     mService->mAppShell->Exit();
 

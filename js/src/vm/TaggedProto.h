@@ -75,11 +75,6 @@ struct InternalBarrierMethods<TaggedProto>
     static bool isMarkable(TaggedProto proto) {
         return proto.isObject();
     }
-
-    static bool isInsideNursery(TaggedProto proto) {
-        return proto.isObject() &&
-            gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(proto.toObject()));
-    }
 };
 
 template<class Outer>

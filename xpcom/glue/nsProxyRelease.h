@@ -31,7 +31,7 @@ public:
   explicit ProxyReleaseEvent(already_AddRefed<T> aDoomed)
   : mDoomed(aDoomed.take()) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     NS_IF_RELEASE(mDoomed);
     return NS_OK;
