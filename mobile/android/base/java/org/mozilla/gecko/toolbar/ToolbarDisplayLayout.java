@@ -343,7 +343,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             return url;
         }
 
-        return ReaderModeUtils.getUrlFromAboutReader(url);
+        return ReaderModeUtils.stripAboutReaderUrl(url);
     }
 
     private void updateSiteIdentity(@NonNull Tab tab) {
