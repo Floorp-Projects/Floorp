@@ -133,7 +133,7 @@ public:
                                          nsNativeWidget aNativeParent,
                                          const LayoutDeviceIntRect& aRect,
                                          nsWidgetInitData* aInitData) override;
-    NS_IMETHOD Destroy(void) override;
+    virtual void Destroy() override;
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&) override;
     NS_IMETHOD SetParent(nsIWidget* aNewParent) override;
     virtual nsIWidget *GetParent(void) override;

@@ -703,11 +703,11 @@ nsWindow::DestroyChildWindows()
     }
 }
 
-NS_IMETHODIMP
-nsWindow::Destroy(void)
+void
+nsWindow::Destroy()
 {
     if (mIsDestroyed || !mCreated)
-        return NS_OK;
+        return;
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = true;
@@ -804,8 +804,6 @@ nsWindow::Destroy(void)
 
     // Save until last because OnDestroy() may cause us to be deleted.
     OnDestroy();
-
-    return NS_OK;
 }
 
 nsIWidget *

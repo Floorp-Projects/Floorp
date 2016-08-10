@@ -1572,8 +1572,8 @@ nsWindow::Create(nsIWidget* aParent,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::Destroy(void)
+void
+nsWindow::Destroy()
 {
     nsBaseWidget::mOnDestroyCalled = true;
 
@@ -1603,8 +1603,6 @@ nsWindow::Destroy(void)
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
 #endif
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP

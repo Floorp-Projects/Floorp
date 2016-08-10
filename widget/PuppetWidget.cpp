@@ -170,11 +170,11 @@ PuppetWidget::CreateChild(const LayoutDeviceIntRect& aRect,
           widget.forget() : nullptr);
 }
 
-NS_IMETHODIMP
+void
 PuppetWidget::Destroy()
 {
   if (mOnDestroyCalled) {
-    return NS_OK;
+    return;
   }
   mOnDestroyCalled = true;
 
@@ -191,7 +191,6 @@ PuppetWidget::Destroy()
   }
   mLayerManager = nullptr;
   mTabChild = nullptr;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

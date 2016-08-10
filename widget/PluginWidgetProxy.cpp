@@ -94,7 +94,7 @@ PluginWidgetProxy::GetParent(void)
   return mParent.get();
 }
 
-NS_IMETHODIMP
+void
 PluginWidgetProxy::Destroy()
 {
   PWLOG("PluginWidgetProxy::Destroy()\n");
@@ -106,7 +106,7 @@ PluginWidgetProxy::Destroy()
     mActor = nullptr;
   }
 
-  return PuppetWidget::Destroy();
+  PuppetWidget::Destroy();
 }
 
 void

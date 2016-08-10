@@ -512,7 +512,7 @@ void nsBaseWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener)
 // Close this nsBaseWidget
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::Destroy()
+void nsBaseWidget::Destroy()
 {
   // Just in case our parent is the only ref to us
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -526,8 +526,6 @@ NS_IMETHODIMP nsBaseWidget::Destroy()
   // Allow our scroll capture container to be cleaned up, if we have one.
   mScrollCaptureContainer = nullptr;
 #endif
-
-  return NS_OK;
 }
 
 

@@ -557,16 +557,16 @@ nsChildView::GetXULWindowWidget()
   return nullptr;
 }
 
-NS_IMETHODIMP nsChildView::Destroy()
+void nsChildView::Destroy()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Make sure that no composition is in progress while disconnecting
   // ourselves from the view.
   MutexAutoLock lock(mViewTearDownLock);
 
   if (mOnDestroyCalled)
-    return NS_OK;
+    return;
   mOnDestroyCalled = true;
 
   // Stuff below may delete the last ref to this
@@ -583,9 +583,7 @@ NS_IMETHODIMP nsChildView::Destroy()
 
   nsBaseWidget::OnDestroy();
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 #pragma mark -
