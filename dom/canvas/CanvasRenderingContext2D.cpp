@@ -1521,6 +1521,21 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
     return mRenderingMode;
   }
 
+  // If the next drawing command covers the entire canvas, we can skip copying
+  // from the previous frame and/or clearing the canvas.
+  gfx::Rect canvasRect(0, 0, mWidth, mHeight);
+  bool canDiscardContent = aCoveredRect &&
+    CurrentState().transform.TransformBounds(*aCoveredRect).Contains(canvasRect);
+
+  // If a clip is active we don't know for sure that the next drawing command
+  // will really cover the entire canvas.
+  for (uint32_t i = 0; i < mStyleStack.Length(); i++) {
+    if (!mStyleStack[i].clipsPushed.IsEmpty()) {
+      canDiscardContent = false;
+      break;
+    }
+  }
+
   ScheduleStableStateCallback();
 
   // we'll do a few extra things at the end of this method if we changed the
@@ -1528,12 +1543,9 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   RefPtr<PersistentBufferProvider> oldBufferProvider = mBufferProvider;
 
   if (mBufferProvider && mode == mRenderingMode) {
-    gfx::Rect rect(0, 0, mWidth, mHeight);
-    if (aCoveredRect && CurrentState().transform.TransformBounds(*aCoveredRect).Contains(rect)) {
-      mTarget = mBufferProvider->BorrowDrawTarget(IntRect());
-    } else {
-      mTarget = mBufferProvider->BorrowDrawTarget(IntRect(0, 0, mWidth, mHeight));
-    }
+    auto persistedRect = canDiscardContent ? IntRect()
+                                           : IntRect(0, 0, mWidth, mHeight);
+    mTarget = mBufferProvider->BorrowDrawTarget(persistedRect);
 
     mode = mRenderingMode;
   }
@@ -1614,7 +1626,11 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
         JS_updateMallocCounter(context, mWidth * mHeight * 4);
       }
 
-      mTarget->ClearRect(gfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+      // Skia with the BGRX format requires the unused alpha channel (X) to be zero.
+      bool isOpaqueSkia = mOpaque && mTarget->GetBackendType() == BackendType::SKIA;
+      if (!canDiscardContent || isOpaqueSkia) {
+        mTarget->ClearRect(canvasRect);
+      }
 
       // Force a full layer transaction since we didn't have a layer before
       // and now we might need one.
@@ -1633,7 +1649,7 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
       // This limits the clip extents to the size of the canvas.
       // A fix in Cairo would probably be preferable, but requires somewhat
       // invasive changes.
-      mTarget->PushClipRect(gfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+      mTarget->PushClipRect(canvasRect);
     }
 
     // Restore clip and transform.
