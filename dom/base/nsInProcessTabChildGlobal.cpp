@@ -311,7 +311,7 @@ public:
                       bool aRunInGlobalScope)
       : mTabChild(aTabChild), mURL(aURL), mRunInGlobalScope(aRunInGlobalScope) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mTabChild->LoadFrameScript(mURL, mRunInGlobalScope);
     return NS_OK;

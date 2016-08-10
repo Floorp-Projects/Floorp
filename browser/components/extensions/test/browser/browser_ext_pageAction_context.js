@@ -87,7 +87,7 @@ function* runTests(options) {
     background: `(${background})(${options.getTests})`,
   });
 
-  let pageActionId = makeWidgetId(extension.id) + "-page-action";
+  let pageActionId;
   let currentWindow = window;
   let windows = [];
 
@@ -111,6 +111,10 @@ function* runTests(options) {
 
   let awaitFinish = new Promise(resolve => {
     extension.onMessage("nextTest", (expecting, testsRemaining) => {
+      if (!pageActionId) {
+        pageActionId = `${makeWidgetId(extension.id)}-page-action`;
+      }
+
       checkDetails(expecting);
 
       if (testsRemaining) {

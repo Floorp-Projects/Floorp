@@ -7,6 +7,7 @@
 
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -27,6 +28,21 @@ const versionAttr = Cc["@mozilla.org/hash-property-bag;1"]
 versionAttr.setPropertyAsUint32("version", LATEST_VERSION);
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+
+function sleep(aMs) {
+  let deferred = Promise.defer();
+
+  let timer = Cc["@mozilla.org/timer;1"]
+                .createInstance(Ci.nsITimer);
+
+  timer.initWithCallback({
+    notify: function () {
+      deferred.resolve();
+    },
+  }, aMs, timer.TYPE_ONE_SHOT);
+
+  return deferred.promise;
+}
 
 function MockFactory(aClass) {
   this._cls = aClass;
@@ -213,10 +229,13 @@ function createDevice(host, port, serviceName, serviceType, domainName, attribut
 function registerService() {
   Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
 
+  let deferred = Promise.defer();
+
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {},
     registerService: function(serviceInfo, listener) {
+      deferred.resolve();
       this.serviceRegistered++;
       return {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
@@ -243,24 +262,30 @@ function registerService() {
     removeDevice: function(device) {},
     updateDevice: function(device) {},
   };
-  Assert.equal(mockObj.serviceRegistered, 1);
-  Assert.equal(mockObj.serviceUnregistered, 0);
 
-  // Unregister
-  provider.listener = null;
-  Assert.equal(mockObj.serviceRegistered, 1);
-  Assert.equal(mockObj.serviceUnregistered, 1);
+  deferred.promise.then(function() {
+    Assert.equal(mockObj.serviceRegistered, 1);
+    Assert.equal(mockObj.serviceUnregistered, 0);
 
-  run_next_test();
+    // Unregister
+    provider.listener = null;
+    Assert.equal(mockObj.serviceRegistered, 1);
+    Assert.equal(mockObj.serviceUnregistered, 1);
+
+    run_next_test();
+  });
 }
 
 function noRegisterService() {
   Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
 
+  let deferred = Promise.defer();
+
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {},
     registerService: function(serviceInfo, listener) {
+      deferred.resolve();
       Assert.ok(false, "should not register service if not discoverable");
     },
     resolveService: function(serviceInfo, listener) {},
@@ -277,18 +302,29 @@ function noRegisterService() {
     removeDevice: function(device) {},
     updateDevice: function(device) {},
   };
-  provider.listener = null;
 
-  run_next_test();
+  let race = Promise.race([
+    deferred.promise,
+    sleep(1000),
+  ]);
+
+  race.then(() => {
+    provider.listener = null;
+
+    run_next_test();
+  });
 }
 
 function registerServiceDynamically() {
   Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
 
+  let deferred = Promise.defer();
+
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {},
     registerService: function(serviceInfo, listener) {
+      deferred.resolve();
       this.serviceRegistered++;
       return {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
@@ -315,25 +351,29 @@ function registerServiceDynamically() {
     removeDevice: function(device) {},
     updateDevice: function(device) {},
   };
+
   Assert.equal(mockObj.serviceRegistered, 0);
   Assert.equal(mockObj.serviceUnregistered, 0);
 
   // Enable registration
   Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
-  Assert.equal(mockObj.serviceRegistered, 1);
-  Assert.equal(mockObj.serviceUnregistered, 0);
 
-  // Disable registration
-  Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
-  Assert.equal(mockObj.serviceRegistered, 1);
-  Assert.equal(mockObj.serviceUnregistered, 1);
+  deferred.promise.then(function() {
+    Assert.equal(mockObj.serviceRegistered, 1);
+    Assert.equal(mockObj.serviceUnregistered, 0);
 
-  // Try unregister
-  provider.listener = null;
-  Assert.equal(mockObj.serviceRegistered, 1);
-  Assert.equal(mockObj.serviceUnregistered, 1);
+    // Disable registration
+    Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
+    Assert.equal(mockObj.serviceRegistered, 1);
+    Assert.equal(mockObj.serviceUnregistered, 1);
 
-  run_next_test();
+    // Try unregister
+    provider.listener = null;
+    Assert.equal(mockObj.serviceRegistered, 1);
+    Assert.equal(mockObj.serviceUnregistered, 1);
+
+    run_next_test();
+  });
 }
 
 function addDevice() {
@@ -403,7 +443,6 @@ function handleSessionRequest() {
   let mockSDObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
-      do_print('xxx start discovery');
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -662,6 +701,9 @@ function ignoreIncompatibleDevice() {
                                 12345,
                                 "service.name",
                                 SERVICE_TYPE);
+
+  let deferred = Promise.defer();
+
   let mockSDObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
@@ -676,8 +718,9 @@ function ignoreIncompatibleDevice() {
       };
     },
     registerService: function(serviceInfo, listener) {
+      deferred.resolve();
       listener.onServiceRegistered(createDevice("",
-                                                0,
+                                                54321,
                                                 mockDevice.serviceName,
                                                 mockDevice.serviceType));
       return {
@@ -697,7 +740,11 @@ function ignoreIncompatibleDevice() {
 
   let mockServerObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
-    startServer: function() {},
+    startServer: function() {
+      Services.tm.currentThread.dispatch(() => {
+        this.listener.onServerReady(this.port, this.certFingerprint);
+      }, Ci.nsIThread.DISPATCH_NORMAL);
+    },
     sessionRequest: function() {},
     close: function() {},
     id: '',
@@ -705,7 +752,8 @@ function ignoreIncompatibleDevice() {
     isCompatibleServer: function(version) {
       return false;
     },
-    port: 0,
+    port: 54321,
+    certFingerprint: 'mock-cert-fingerprint',
     listener: null,
   };
 
@@ -716,15 +764,18 @@ function ignoreIncompatibleDevice() {
 
   // Register service
   provider.listener = listener;
-  Assert.equal(mockServerObj.id, mockDevice.host);
 
-  // Start discovery
-  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
-  Assert.equal(listener.count(), 0);
+  deferred.promise.then(function() {
+    Assert.equal(mockServerObj.id, mockDevice.host);
 
-  provider.listener = null;
+    // Start discovery
+    Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+    Assert.equal(listener.count(), 0);
 
-  run_next_test();
+    provider.listener = null;
+
+    run_next_test();
+  });
 }
 
 function ignoreSelfDevice() {
@@ -735,6 +786,8 @@ function ignoreSelfDevice() {
                                 12345,
                                 "service.name",
                                 SERVICE_TYPE);
+
+  let deferred = Promise.defer();
   let mockSDObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
@@ -749,6 +802,7 @@ function ignoreSelfDevice() {
       };
     },
     registerService: function(serviceInfo, listener) {
+      deferred.resolve();
       listener.onServiceRegistered(createDevice("",
                                                 0,
                                                 mockDevice.serviceName,
@@ -770,7 +824,11 @@ function ignoreSelfDevice() {
 
   let mockServerObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
-    startServer: function() {},
+    startServer: function() {
+      Services.tm.currentThread.dispatch(() => {
+        this.listener.onServerReady(this.port, this.certFingerprint);
+      }, Ci.nsIThread.DISPATCH_NORMAL);
+    },
     sessionRequest: function() {},
     close: function() {},
     id: '',
@@ -778,7 +836,8 @@ function ignoreSelfDevice() {
     isCompatibleServer: function(version) {
       return this.version === version;
     },
-    port: 0,
+    port: 54321,
+    certFingerprint: 'mock-cert-fingerprint',
     listener: null,
   };
 
@@ -789,15 +848,17 @@ function ignoreSelfDevice() {
 
   // Register service
   provider.listener = listener;
-  Assert.equal(mockServerObj.id, mockDevice.host);
+  deferred.promise.then(() => {
+    Assert.equal(mockServerObj.id, mockDevice.host);
 
-  // Start discovery
-  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
-  Assert.equal(listener.count(), 0);
+    // Start discovery
+    Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+    Assert.equal(listener.count(), 0);
 
-  provider.listener = null;
+    provider.listener = null;
 
-  run_next_test();
+    run_next_test();
+  });
 }
 
 function addDeviceDynamically() {
@@ -1090,7 +1151,7 @@ function serverClosed() {
 
   let serverListener = provider.QueryInterface(Ci.nsIPresentationControlServerListener);
   let randomPort = 9527;
-  serverListener.onPortChange(randomPort);
+  serverListener.onServerReady(randomPort, '');
 
   Assert.equal(mockObj.serviceRegistered, 2);
   Assert.equal(mockObj.serviceUnregistered, 1);
@@ -1105,7 +1166,68 @@ function serverClosed() {
   run_next_test();
 }
 
+function serverRetry() {
+  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
+
+  let isRetrying = false;
+
+  let mockSDObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {},
+    registerService: function(serviceInfo, listener) {
+      Assert.ok(isRetrying, "register service after retrying startServer");
+      provider.listener = null;
+      run_next_test();
+    },
+    resolveService: function(serviceInfo, listener) {}
+  };
+
+  let mockServerObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
+    startServer: function(encrypted, port) {
+      if (!isRetrying) {
+        isRetrying = true;
+        Services.tm.currentThread.dispatch(() => {
+          this.listener.onServerStopped(Cr.NS_ERROR_FAILURE);
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+      } else {
+        this.port = 54321;
+        Services.tm.currentThread.dispatch(() => {
+          this.listener.onServerReady(this.port, this.certFingerprint);
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+      }
+    },
+    sessionRequest: function() {},
+    close: function() {},
+    id: '',
+    version: LATEST_VERSION,
+    port: 0,
+    certFingerprint: 'mock-cert-fingerprint',
+    listener: null,
+  };
+
+  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+  let listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) {},
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+    onSessionRequest: function(device, url, presentationId, controlChannel) {}
+  };
+
+  provider.listener = listener;
+}
+
 function run_test() {
+  // Need profile dir to store the key / cert
+  do_get_profile();
+  // Ensure PSM is initialized
+  Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
+
   let infoHook = new ContractHook(INFO_CONTRACT_ID, MockDNSServiceInfo);
 
   do_register_cleanup(() => {
@@ -1127,6 +1249,7 @@ function run_test() {
   add_test(updateDevice);
   add_test(diffDiscovery);
   add_test(serverClosed);
+  add_test(serverRetry);
 
   run_next_test();
 }

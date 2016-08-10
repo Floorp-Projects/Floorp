@@ -413,7 +413,7 @@ PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
 namespace {
 class AddPreferencesMemoryReporterRunnable : public Runnable
 {
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     return RegisterStrongMemoryReporter(new PreferenceServiceReporter());
   }

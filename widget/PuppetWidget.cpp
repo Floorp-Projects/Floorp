@@ -1241,7 +1241,7 @@ PuppetWidget::GetWindowPosition()
   return nsIntPoint(winX, winY) + GetOwningTabChild()->GetClientOffset().ToUnknownPoint();
 }
 
-NS_METHOD
+NS_IMETHODIMP
 PuppetWidget::GetScreenBounds(LayoutDeviceIntRect& aRect) {
   aRect.MoveTo(WidgetToScreenOffset());
   aRect.SizeTo(mBounds.Size());

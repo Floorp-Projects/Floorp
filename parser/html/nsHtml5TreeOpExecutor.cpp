@@ -53,7 +53,7 @@ class nsHtml5ExecutorReflusher : public Runnable
     explicit nsHtml5ExecutorReflusher(nsHtml5TreeOpExecutor* aExecutor)
       : mExecutor(aExecutor)
     {}
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       mExecutor->RunFlushLoop();
       return NS_OK;

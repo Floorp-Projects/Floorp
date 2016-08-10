@@ -4,15 +4,15 @@
   <script>
     const STATE_BUSY = Components.interfaces.nsIAccessibleStates.STATE_BUSY;
 
-    var gRetrieval = null;
+    var gService = null;
     function waitForDocLoad()
     {
-      if (!gRetrieval) {
-        gRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-         getService(Components.interfaces.nsIAccessibleRetrieval);
+      if (!gService) {
+        gService = Components.classes["@mozilla.org/accessibilityService;1"].
+         getService(Components.interfaces.nsIAccessibilityService);
       }
 
-      var accDoc = gRetrieval.getAccessibleFor(document);
+      var accDoc = gService.getAccessibleFor(document);
 
       var state = {};
       accDoc.getState(state, {});
@@ -27,7 +27,7 @@
     function hideIFrame()
     {
       var iframe = document.getElementById("iframe");
-      gRetrieval.getAccessibleFor(iframe.contentDocument);
+      gService.getAccessibleFor(iframe.contentDocument);
       iframe.style.display = 'none';
     }
   </script>

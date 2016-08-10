@@ -185,6 +185,10 @@ RemoteFinder.prototype = {
     this._browser.messageManager.sendAsyncMessage("Finder:FindbarClose");
   },
 
+  onFindbarOpen: function () {
+    this._browser.messageManager.sendAsyncMessage("Finder:FindbarOpen");
+  },
+
   onModalHighlightChange: function(aUseModalHighlight) {
     this._browser.messageManager.sendAsyncMessage("Finder:ModalHighlightChange", {
       useModalHighlight: aUseModalHighlight
@@ -240,6 +244,7 @@ RemoteFinderListener.prototype = {
     "Finder:RemoveSelection",
     "Finder:FocusContent",
     "Finder:FindbarClose",
+    "Finder:FindbarOpen",
     "Finder:KeyPress",
     "Finder:MatchesCount",
     "Finder:ModalHighlightChange"
@@ -321,6 +326,10 @@ RemoteFinderListener.prototype = {
 
       case "Finder:FindbarClose":
         this._finder.onFindbarClose();
+        break;
+
+      case "Finder:FindbarOpen":
+        this._finder.onFindbarOpen();
         break;
 
       case "Finder:KeyPress":

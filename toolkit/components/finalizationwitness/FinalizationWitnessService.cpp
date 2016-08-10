@@ -41,7 +41,7 @@ public:
     , mValue(aValue)
   { }
 
-  NS_METHOD Run() {
+  NS_IMETHOD Run() override {
     nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
     if (!observerService) {

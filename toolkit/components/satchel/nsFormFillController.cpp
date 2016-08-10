@@ -725,7 +725,7 @@ public:
     MOZ_ASSERT(mObserver, "You shouldn't call this runnable with a null observer!");
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mObserver->OnUpdateSearchResult(mSearch, mResult);
     return NS_OK;
   }

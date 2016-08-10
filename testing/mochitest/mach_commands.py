@@ -90,7 +90,7 @@ ALL_FLAVORS = {
         'aliases': ('chrome', 'mochitest-chrome'),
         'enabled_apps': ('firefox', 'mulet', 'b2g', 'android'),
         'extra_args': {
-            'chrome': True,
+            'flavor': 'chrome',
         }
     },
     'browser-chrome': {
@@ -98,7 +98,7 @@ ALL_FLAVORS = {
         'aliases': ('browser', 'browser-chrome', 'mochitest-browser-chrome', 'bc'),
         'enabled_apps': ('firefox',),
         'extra_args': {
-            'browserChrome': True,
+            'flavor': 'browser',
         }
     },
     'jetpack-package': {
@@ -106,7 +106,7 @@ ALL_FLAVORS = {
         'aliases': ('jetpack-package', 'mochitest-jetpack-package', 'jpp'),
         'enabled_apps': ('firefox',),
         'extra_args': {
-            'jetpackPackage': True,
+            'flavor': 'jetpack-package',
         }
     },
     'jetpack-addon': {
@@ -114,7 +114,7 @@ ALL_FLAVORS = {
         'aliases': ('jetpack-addon', 'mochitest-jetpack-addon', 'jpa'),
         'enabled_apps': ('firefox',),
         'extra_args': {
-            'jetpackAddon': True,
+            'flavor': 'jetpack-addon',
         }
     },
     'a11y': {
@@ -122,7 +122,7 @@ ALL_FLAVORS = {
         'aliases': ('a11y', 'mochitest-a11y', 'accessibility'),
         'enabled_apps': ('firefox',),
         'extra_args': {
-            'a11y': True,
+            'flavor': 'a11y',
         }
     },
 }

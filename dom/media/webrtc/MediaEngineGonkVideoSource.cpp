@@ -582,7 +582,7 @@ MediaEngineGonkVideoSource::OnUserError(UserContext aContext, nsresult aError)
       mCallbacks.SwapElements(aCallbacks);
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       uint32_t callbackNumbers = mCallbacks.Length();
       for (uint8_t i = 0; i < callbackNumbers; i++) {
@@ -629,7 +629,7 @@ MediaEngineGonkVideoSource::OnTakePictureComplete(const uint8_t* aData, uint32_t
       mMimeType = aMimeType;
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       RefPtr<dom::Blob> blob =
         dom::Blob::CreateMemoryBlob(nullptr, mPhotoData, mPhotoDataLength, mMimeType);

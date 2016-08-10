@@ -105,7 +105,7 @@ public:
   }
 
 protected:
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     mRunnable->Run();
 

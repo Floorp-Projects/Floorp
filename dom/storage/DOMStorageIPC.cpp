@@ -308,7 +308,7 @@ public:
   {}
 
 private:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (!mParent->IPCOpen()) {
       return NS_OK;
@@ -668,7 +668,7 @@ private:
   nsString mValue;
   nsresult mRv;
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (!mParent->IPCOpen()) {
       return NS_OK;
@@ -749,7 +749,7 @@ public:
   {}
 
 private:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (!mParent->IPCOpen()) {
       return NS_OK;

@@ -520,7 +520,7 @@ class nsAsyncRollup : public Runnable
 {
 public:
   explicit nsAsyncRollup(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     if (mFrame.IsAlive()) {
       static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())
@@ -535,7 +535,7 @@ class nsAsyncResize : public Runnable
 {
 public:
   explicit nsAsyncResize(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     if (mFrame.IsAlive()) {
       nsComboboxControlFrame* combo =

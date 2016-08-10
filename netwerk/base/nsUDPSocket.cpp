@@ -81,7 +81,7 @@ public:
     , mOpt(aOpt)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     return mSocket->SetSocketOption(mOpt);
   }

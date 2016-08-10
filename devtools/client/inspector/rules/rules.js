@@ -1591,7 +1591,7 @@ function RuleViewTool(inspector, window) {
   this.view.on("ruleview-refreshed", this.onViewRefreshed);
   this.view.on("ruleview-linked-clicked", this.onLinkClicked);
 
-  this.inspector.selection.on("detached", this.onSelected);
+  this.inspector.selection.on("detached-front", this.onSelected);
   this.inspector.selection.on("new-node-front", this.onSelected);
   this.inspector.selection.on("pseudoclass", this.refresh);
   this.inspector.target.on("navigate", this.clearUserProperties);
@@ -1722,7 +1722,7 @@ RuleViewTool.prototype = {
   destroy: function () {
     this.inspector.walker.off("mutations", this.onMutations);
     this.inspector.walker.off("resize", this.onResized);
-    this.inspector.selection.off("detached", this.onSelected);
+    this.inspector.selection.off("detached-front", this.onSelected);
     this.inspector.selection.off("pseudoclass", this.refresh);
     this.inspector.selection.off("new-node-front", this.onSelected);
     this.inspector.target.off("navigate", this.clearUserProperties);

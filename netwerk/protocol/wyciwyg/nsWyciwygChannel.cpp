@@ -51,7 +51,7 @@ public:
   explicit nsWyciwygSetCharsetandSourceEvent(nsWyciwygChannel *aChannel)
     : nsWyciwygAsyncEvent(aChannel) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mChannel->SetCharsetAndSourceInternal();
     return NS_OK;
@@ -63,7 +63,7 @@ public:
   nsWyciwygWriteEvent(nsWyciwygChannel *aChannel, const nsAString &aData)
     : nsWyciwygAsyncEvent(aChannel), mData(aData) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mChannel->WriteToCacheEntryInternal(mData);
     return NS_OK;
@@ -77,7 +77,7 @@ public:
   nsWyciwygCloseEvent(nsWyciwygChannel *aChannel, nsresult aReason)
     : nsWyciwygAsyncEvent(aChannel), mReason(aReason) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mChannel->CloseCacheEntryInternal(mReason);
     return NS_OK;

@@ -59,9 +59,14 @@ function loopOfferAnser() {
   pcs = Cc["@mozilla.org/presentation/control-service;1"]
         .createInstance(Ci.nsIPresentationControlService);
   pcs.id = 'controllerID';
-  pcs.startServer(PRESENTER_CONTROL_CHANNEL_PORT);
+  pcs.listener = {
+    onServerReady: function() {
+      testPresentationServer();
+    }
+  };
 
-  testPresentationServer();
+  // First run with TLS enabled.
+  pcs.startServer(true, PRESENTER_CONTROL_CHANNEL_PORT);
 }
 
 
@@ -139,6 +144,7 @@ function testPresentationServer() {
     id: 'presentatorID',
     address: '127.0.0.1',
     port: PRESENTER_CONTROL_CHANNEL_PORT,
+    certFingerprint: pcs.certFingerprint,
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
   };
 
@@ -202,57 +208,6 @@ function testPresentationServer() {
 function terminateRequest() {
   let yayFuncs = makeJointSuccess(['controllerControlChannelConnected',
                                    'controllerControlChannelDisconnected',
-                                   'presenterControlChannelDisconnected']);
-  let controllerControlChannel;
-
-  pcs.listener = {
-    onTerminateRequest: function(deviceInfo, presentationId, controlChannel, isFromReceiverj) {
-      controllerControlChannel = controlChannel;
-      Assert.equal(deviceInfo.id, pcs.id, 'expected device id');
-      Assert.equal(deviceInfo.address, '127.0.0.1', 'expected device address');
-      Assert.equal(presentationId, 'testPresentationId', 'expected presentation id');
-      Assert.equal(isFromReceiver, false, 'expected request from controller');
-
-      controllerControlChannel.listener = {
-        notifyConnected: function() {
-          Assert.ok(true, 'control channel notify connected');
-          yayFuncs.controllerControlChannelConnected();
-        },
-        notifyDisconnected: function(aReason) {
-          Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, 'controllerControlChannel notify disconncted');
-          yayFuncs.controllerControlChannelDisconnected();
-        },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
-      };
-    },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServerListener]),
-  };
-
-  let presenterDeviceInfo = {
-    id: 'presentatorID',
-    address: '127.0.0.1',
-    port: PRESENTER_CONTROL_CHANNEL_PORT,
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
-  };
-
-  let presenterControlChannel = pcs.connect(presenterDeviceInfo);
-
-  presenterControlChannel.listener = {
-    notifyConnected: function() {
-      presenterControlChannel.terminate('testPresentationId', 'http://example.com');
-      presenterControlChannel.disconnect(CLOSE_CONTROL_CHANNEL_REASON);
-    },
-    notifyDisconnected: function(aReason) {
-      Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, '4. presenterControlChannel notify disconnected');
-      yayFuncs.presenterControlChannelDisconnected();
-    },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
-  };
-}
-
-function terminateRequest() {
-  let yayFuncs = makeJointSuccess(['controllerControlChannelConnected',
-                                   'controllerControlChannelDisconnected',
                                    'presenterControlChannelDisconnected',
                                    'terminatedByController',
                                    'terminatedByReceiver']);
@@ -299,6 +254,7 @@ function terminateRequest() {
     id: 'presentatorID',
     address: '127.0.0.1',
     port: PRESENTER_CONTROL_CHANNEL_PORT,
+    certFingerprint: pcs.certFingerprint,
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
   };
 
@@ -351,6 +307,7 @@ function terminateRequestAbnormal() {
     id: 'presentatorID',
     address: '127.0.0.1',
     port: PRESENTER_CONTROL_CHANNEL_PORT,
+    certFingerprint: pcs.certFingerprint,
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
   };
 
@@ -370,7 +327,7 @@ function terminateRequestAbnormal() {
 
 function setOffline() {
   pcs.listener = {
-    onPortChange: function(aPort) {
+    onServerReady: function(aPort, aCertFingerprint) {
       Assert.notEqual(aPort, 0, 'TCPPresentationServer port changed and the port should be valid');
       pcs.close();
       run_next_test();
@@ -384,8 +341,14 @@ function setOffline() {
 
 function oneMoreLoop() {
   try {
-    pcs.startServer(PRESENTER_CONTROL_CHANNEL_PORT);
-    testPresentationServer();
+    pcs.listener = {
+      onServerReady: function() {
+        testPresentationServer();
+      }
+    };
+
+    // Second run with TLS disabled.
+    pcs.startServer(false, PRESENTER_CONTROL_CHANNEL_PORT);
   } catch (e) {
     Assert.ok(false, 'TCP presentation init fail:' + e);
     run_next_test();
@@ -396,7 +359,7 @@ function oneMoreLoop() {
 function shutdown()
 {
   pcs.listener = {
-    onPortChange: function(aPort) {
+    onServerReady: function(aPort, aCertFingerprint) {
       Assert.ok(false, 'TCPPresentationServer port changed');
     },
   };
@@ -420,6 +383,11 @@ add_test(oneMoreLoop);
 add_test(shutdown);
 
 function run_test() {
+  // Need profile dir to store the key / cert
+  do_get_profile();
+  // Ensure PSM is initialized
+  Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
+
   Services.prefs.setBoolPref("dom.presentation.tcp_server.debug", true);
 
   do_register_cleanup(() => {

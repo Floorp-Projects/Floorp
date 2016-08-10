@@ -121,7 +121,7 @@ addMessageListener(
     eventManager.start();
 
     function contentStarted() {
-      let accDoc = Utils.AccRetrieval.getAccessibleFor(content.document);
+      let accDoc = Utils.AccService.getAccessibleFor(content.document);
       if (accDoc && !Utils.getState(accDoc).contains(States.BUSY)) {
         sendAsyncMessage('AccessFu:ContentStarted');
       } else {

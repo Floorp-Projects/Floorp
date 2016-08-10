@@ -83,15 +83,10 @@ class CentOSFedoraBootstrapper(BaseBootstrapper):
         self.dnf_install(*self.packages)
 
     def install_browser_packages(self):
-        self.dnf_groupinstall(*self.browser_group_packages)
-        self.dnf_install(*self.browser_packages)
+        self.ensure_browser_packages()
 
-        if self.distro in ('CentOS', 'CentOS Linux'):
-            yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.i686.rpm'
-            if platform.architecture()[0] == '64bit':
-                yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.x86_64.rpm'
-
-            self.run_as_root(['rpm', '-ivh', yasm])
+    def install_browser_artifact_mode_packages(self):
+        self.ensure_browser_packages(artifact_mode=True)
 
     def install_mobile_android_packages(self):
         if self.distro in ('CentOS', 'CentOS Linux'):
@@ -104,6 +99,18 @@ class CentOSFedoraBootstrapper(BaseBootstrapper):
             BaseBootstrapper.install_mobile_android_artifact_mode_packages(self)
         elif self.distro == 'Fedora':
             self.install_fedora_mobile_android_packages(artifact_mode=True)
+
+    def ensure_browser_packages(self, artifact_mode=False):
+        # TODO: Figure out what not to install for artifact mode
+        self.dnf_groupinstall(*self.browser_group_packages)
+        self.dnf_install(*self.browser_packages)
+
+        if self.distro in ('CentOS', 'CentOS Linux'):
+            yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.i686.rpm'
+            if platform.architecture()[0] == '64bit':
+                yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.x86_64.rpm'
+
+            self.run_as_root(['rpm', '-ivh', yasm])
 
     def install_fedora_mobile_android_packages(self, artifact_mode=False):
         import android

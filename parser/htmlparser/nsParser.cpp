@@ -117,7 +117,7 @@ public:
     : mParser(aParser)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mParser->HandleParserContinueEvent(this);
     return NS_OK;

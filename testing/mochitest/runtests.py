@@ -619,8 +619,7 @@ class MochitestBase(object):
         if options.logFile:
             options.logFile = self.getLogFilePath(options.logFile)
 
-        if options.browserChrome or options.chrome or \
-           options.a11y or options.jetpackPackage or options.jetpackAddon:
+        if options.flavor in ('a11y', 'browser', 'chrome', 'jetpack-addon', 'jetpack-package'):
             self.makeTestConfig(options)
         else:
             if options.autorun:
@@ -689,32 +688,31 @@ class MochitestBase(object):
             if options.debugger:
                 self.urlOpts.append("interactiveDebugger=true")
 
-    def getTestFlavor(self, options):
-        if options.browserChrome:
-            return "browser-chrome"
-        elif options.jetpackPackage:
-            return "jetpack-package"
-        elif options.jetpackAddon:
-            return "jetpack-addon"
-        elif options.chrome:
-            return "chrome"
-        elif options.a11y:
-            return "a11y"
-        else:
-            return "mochitest"
+    def normflavor(self, flavor):
+        """
+        In some places the string 'browser-chrome' is expected instead of
+        'browser' and 'mochitest' instead of 'plain'. Normalize the flavor
+        strings for those instances.
+        """
+        # TODO Use consistent flavor strings everywhere and remove this
+        if flavor == 'browser':
+            return 'browser-chrome'
+        elif flavor == 'plain':
+            return 'mochitest'
+        return flavor
 
     # This check can be removed when bug 983867 is fixed.
     def isTest(self, options, filename):
         allow_js_css = False
-        if options.browserChrome:
+        if options.flavor == 'browser':
             allow_js_css = True
             testPattern = re.compile(r"browser_.+\.js")
-        elif options.jetpackPackage:
+        elif options.flavor == 'jetpack-package':
             allow_js_css = True
             testPattern = re.compile(r"test-.+\.js")
-        elif options.jetpackAddon:
+        elif options.flavor == 'jetpack-addon':
             testPattern = re.compile(r".+\.xpi")
-        elif options.chrome or options.a11y:
+        elif options.flavor in ('a11y', 'chrome'):
             testPattern = re.compile(r"(browser|test)_.+\.(xul|html|js|xhtml)")
         else:
             testPattern = re.compile(r"test_")
@@ -728,19 +726,11 @@ class MochitestBase(object):
                 not re.search(r'\^headers\^$', filename))
 
     def setTestRoot(self, options):
-        if options.browserChrome:
-            if options.immersiveMode:
+        if options.flavor != 'plain':
+            self.testRoot = options.flavor
+
+            if options.flavor == 'browser' and options.immersiveMode:
                 self.testRoot = 'metro'
-            else:
-                self.testRoot = 'browser'
-        elif options.jetpackPackage:
-            self.testRoot = 'jetpack-package'
-        elif options.jetpackAddon:
-            self.testRoot = 'jetpack-addon'
-        elif options.a11y:
-            self.testRoot = 'a11y'
-        elif options.chrome:
-            self.testRoot = 'chrome'
         else:
             self.testRoot = self.TEST_PATH
         self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
@@ -760,9 +750,9 @@ class MochitestBase(object):
             else:
                 testURL = "/".join([testURL, options.test_paths[0]])
 
-        if options.chrome or options.a11y:
+        if options.flavor in ('a11y', 'chrome'):
             testURL = "/".join([testHost, self.CHROME_PATH])
-        elif options.browserChrome or options.jetpackPackage or options.jetpackAddon:
+        elif options.flavor in ('browser', 'jetpack-addon', 'jetpack-package'):
             testURL = "about:blank"
         if options.nested_oop:
             testURL = "/".join([testHost, self.NESTED_OOP_TEST_PATH])
@@ -1066,8 +1056,7 @@ toolbar#nav-bar {
                         self.log.warning("runtime file %s not found; defaulting to chunk-by-dir" %
                                          runtime_file)
                         options.chunkByRuntime = None
-                        flavor = self.getTestFlavor(options)
-                        if flavor in ('browser-chrome', 'devtools-chrome'):
+                        if options.flavor == 'browser':
                             # these values match current mozharness configs
                             options.chunkbyDir = 5
                         else:
@@ -1154,7 +1143,7 @@ toolbar#nav-bar {
             assert manifestFileAbs.startswith(SCRIPT_DIR)
             manifest = TestManifest([manifestFileAbs], strict=False)
         else:
-            masterName = self.getTestFlavor(options) + '.ini'
+            masterName = self.normflavor(options.flavor) + '.ini'
             masterPath = os.path.join(SCRIPT_DIR, self.testRoot, masterName)
 
             if os.path.exists(masterPath):
@@ -1210,7 +1199,7 @@ toolbar#nav-bar {
         # inheriting all other inheritable handles as well.
         # We need to inherit them for plain mochitests for test logging purposes, so
         # we do so on the basis of a specific environment variable.
-        if self.getTestFlavor(options) == "mochitest":
+        if options.flavor == 'plain':
             browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"] = "1"
 
         # interpolate environment passed with options
@@ -1634,7 +1623,7 @@ class MochitestDesktop(MochitestBase):
 
     def buildProfile(self, options):
         """ create the profile and add optional chrome bits and files if requested """
-        if options.browserChrome and options.timeout:
+        if options.flavor == 'browser' and options.timeout:
             options.extraPrefs.append(
                 "testing.browserTestHarness.timeout=%d" %
                 options.timeout)
@@ -2111,21 +2100,28 @@ class MochitestDesktop(MochitestBase):
         self.urlOpts = []
 
     def resolve_runtime_file(self, options):
+        """
+        Return a path to the runtimes file for a given flavor and
+        subsuite.
+        """
+        template = "mochitest{e10s}-{suite_slug}.runtimes.json"
         data_dir = os.path.join(SCRIPT_DIR, 'runtimes')
 
-        flavor = self.getTestFlavor(options)
-        if flavor == 'browser-chrome' and options.subsuite == 'devtools':
-            flavor = 'devtools-chrome'
-        elif flavor == 'mochitest':
-            flavor = 'plain'
+        # Determine the suite slug in the runtimes file name
+        slug = self.normflavor(options.flavor)
+        if slug == 'browser-chrome' and options.subsuite == 'devtools':
+            slug = 'devtools-chrome'
+        elif slug == 'mochitest':
+            slug = 'plain'
             if options.subsuite:
-                flavor = options.subsuite
+                slug = options.subsuite
 
-        base = 'mochitest'
+        e10s = ''
         if options.e10s:
-            base = '{}-e10s'.format(base)
-        return os.path.join(data_dir, '{}-{}.runtimes.json'.format(
-            base, flavor))
+            e10s = '-e10s'
+
+        return os.path.join(data_dir, template.format(
+            e10s=e10s, suite_slug=slug))
 
     def normalize_paths(self, paths):
         # Normalize test paths so they are relative to test root
@@ -2195,7 +2191,7 @@ class MochitestDesktop(MochitestBase):
 
         # a11y and chrome tests don't run with e10s enabled in CI. Need to set
         # this here since |mach mochitest| sets the flavor after argument parsing.
-        if options.a11y or options.chrome:
+        if options.flavor in ('a11y', 'chrome'):
             options.e10s = False
         mozinfo.update({"e10s": options.e10s})  # for test manifest parsing.
 
@@ -2241,7 +2237,7 @@ class MochitestDesktop(MochitestBase):
         e10s_mode = "e10s" if options.e10s else "non-e10s"
 
         # printing total number of tests
-        if options.browserChrome:
+        if options.flavor == 'browser':
             print "TEST-INFO | checking window state"
             print "Browser Chrome Test Summary"
             print "\tPassed: %s" % self.countpass
@@ -2386,9 +2382,9 @@ class MochitestDesktop(MochitestBase):
 
             # detect shutdown leaks for m-bc runs
             detectShutdownLeaks = mozinfo.info[
-                "debug"] and options.browserChrome
+                "debug"] and options.flavor == 'browser'
 
-            self.start_script_args.append(self.getTestFlavor(options))
+            self.start_script_args.append(self.normflavor(options.flavor))
             marionette_args = {
                 'symbols_path': options.symbolsPath,
                 'socket_timeout': options.marionette_socket_timeout,
@@ -2677,13 +2673,7 @@ def run_test_harness(parser, options):
 
     options.runByDir = False
 
-    if runner.getTestFlavor(options) == 'mochitest':
-        options.runByDir = True
-
-    if runner.getTestFlavor(options) == 'browser-chrome':
-        options.runByDir = True
-
-    if runner.getTestFlavor(options) == 'chrome':
+    if options.flavor in ('plain', 'browser', 'chrome'):
         options.runByDir = True
 
     if mozinfo.info.get('buildapp') == 'mulet':

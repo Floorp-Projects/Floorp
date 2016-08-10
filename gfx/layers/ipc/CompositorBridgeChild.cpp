@@ -932,6 +932,8 @@ CompositorBridgeChild::GetTexturePool(LayersBackend aBackend,
       new TextureClientPool(aBackend, aFormat,
                             gfx::gfxVars::TileSize(),
                             aFlags,
+                            gfxPrefs::LayersTilePoolShrinkTimeout(),
+                            gfxPrefs::LayersTilePoolClearTimeout(),
                             gfxPrefs::LayersTileInitialPoolSize(),
                             gfxPrefs::LayersTilePoolUnusedSize(),
                             this));

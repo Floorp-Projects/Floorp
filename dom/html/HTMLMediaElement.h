@@ -709,6 +709,8 @@ public:
     }
   }
 
+  void NotifyCueDisplayStatesChanged();
+
   bool GetHasUserInteraction()
   {
     return mHasUserInteraction;
@@ -1125,6 +1127,23 @@ protected:
     return isPaused;
   }
 
+  /**
+   * Video has been playing while hidden and, if feature was enabled, would
+   * trigger suspending decoder.
+   * Used to track hidden-video-decode-suspend telemetry.
+   */
+  static void VideoDecodeSuspendTimerCallback(nsITimer* aTimer, void* aClosure);
+  /**
+   * Video is now both: playing and hidden.
+   * Used to track hidden-video telemetry.
+   */
+  void HiddenVideoStart();
+  /**
+   * Video is not playing anymore and/or has become visible.
+   * Used to track hidden-video telemetry.
+   */
+  void HiddenVideoStop();
+
 #ifdef MOZ_EME
   void ReportEMETelemetry();
 #endif
@@ -1375,8 +1394,11 @@ protected:
   // Range of time played.
   RefPtr<TimeRanges> mPlayed;
 
-  // Timer used for updating progress events
+  // Timer used for updating progress events.
   nsCOMPtr<nsITimer> mProgressTimer;
+
+  // Timer used to simulate video-suspend.
+  nsCOMPtr<nsITimer> mVideoDecodeSuspendTimer;
 
 #ifdef MOZ_EME
   // Encrypted Media Extension media keys.
@@ -1635,6 +1657,9 @@ private:
 
   // Total time a video has spent playing while hidden.
   TimeDurationAccumulator mHiddenPlayTime;
+
+  // Total time a video has (or would have) spent in video-decode-suspend mode.
+  TimeDurationAccumulator mVideoDecodeSuspendTime;
 
   // Indicates if user has interacted with the element.
   // Used to block autoplay when disabled.

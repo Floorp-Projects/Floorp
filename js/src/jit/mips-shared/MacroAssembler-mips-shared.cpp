@@ -383,6 +383,40 @@ void
 MacroAssemblerMIPSShared::ma_load(Register dest, const BaseIndex& src,
                                   LoadStoreSize size, LoadStoreExtension extension)
 {
+    if (isLoongson() && ZeroExtend != extension && Imm8::IsInSignedRange(src.offset)) {
+        Register index = src.index;
+
+        if (src.scale != TimesOne) {
+            int32_t shift = Imm32::ShiftOf(src.scale).value;
+
+            MOZ_ASSERT(SecondScratchReg != src.base);
+            index = SecondScratchReg;
+#ifdef JS_CODEGEN_MIPS64
+            asMasm().ma_dsll(index, src.index, Imm32(shift));
+#else
+            asMasm().ma_sll(index, src.index, Imm32(shift));
+#endif
+        }
+
+        switch (size) {
+          case SizeByte:
+            as_gslbx(dest, src.base, index, src.offset);
+            break;
+          case SizeHalfWord:
+            as_gslhx(dest, src.base, index, src.offset);
+            break;
+          case SizeWord:
+            as_gslwx(dest, src.base, index, src.offset);
+            break;
+          case SizeDouble:
+            as_gsldx(dest, src.base, index, src.offset);
+            break;
+          default:
+            MOZ_CRASH("Invalid argument for ma_load");
+        }
+        return;
+    }
+
     asMasm().computeScaledAddress(src, SecondScratchReg);
     asMasm().ma_load(dest, Address(SecondScratchReg, src.offset), size, extension);
 }
@@ -391,6 +425,40 @@ void
 MacroAssemblerMIPSShared::ma_store(Register data, const BaseIndex& dest,
                                    LoadStoreSize size, LoadStoreExtension extension)
 {
+    if (isLoongson() && Imm8::IsInSignedRange(dest.offset)) {
+        Register index = dest.index;
+
+        if (dest.scale != TimesOne) {
+            int32_t shift = Imm32::ShiftOf(dest.scale).value;
+
+            MOZ_ASSERT(SecondScratchReg != dest.base);
+            index = SecondScratchReg;
+#ifdef JS_CODEGEN_MIPS64
+            asMasm().ma_dsll(index, dest.index, Imm32(shift));
+#else
+            asMasm().ma_sll(index, dest.index, Imm32(shift));
+#endif
+        }
+
+        switch (size) {
+          case SizeByte:
+            as_gssbx(data, dest.base, index, dest.offset);
+            break;
+          case SizeHalfWord:
+            as_gsshx(data, dest.base, index, dest.offset);
+            break;
+          case SizeWord:
+            as_gsswx(data, dest.base, index, dest.offset);
+            break;
+          case SizeDouble:
+            as_gssdx(data, dest.base, index, dest.offset);
+            break;
+          default:
+            MOZ_CRASH("Invalid argument for ma_store");
+        }
+        return;
+    }
+
     asMasm().computeScaledAddress(dest, SecondScratchReg);
     asMasm().ma_store(data, Address(SecondScratchReg, dest.offset), size, extension);
 }
@@ -399,6 +467,48 @@ void
 MacroAssemblerMIPSShared::ma_store(Imm32 imm, const BaseIndex& dest,
                                    LoadStoreSize size, LoadStoreExtension extension)
 {
+    if (isLoongson() && Imm8::IsInSignedRange(dest.offset)) {
+        Register data = zero;
+        Register index = dest.index;
+
+        if (imm.value) {
+            MOZ_ASSERT(ScratchRegister != dest.base);
+            MOZ_ASSERT(ScratchRegister != dest.index);
+            data = ScratchRegister;
+            ma_li(data, imm);
+        }
+
+        if (dest.scale != TimesOne) {
+            int32_t shift = Imm32::ShiftOf(dest.scale).value;
+
+            MOZ_ASSERT(SecondScratchReg != dest.base);
+            index = SecondScratchReg;
+#ifdef JS_CODEGEN_MIPS64
+            asMasm().ma_dsll(index, dest.index, Imm32(shift));
+#else
+            asMasm().ma_sll(index, dest.index, Imm32(shift));
+#endif
+        }
+
+        switch (size) {
+          case SizeByte:
+            as_gssbx(data, dest.base, index, dest.offset);
+            break;
+          case SizeHalfWord:
+            as_gsshx(data, dest.base, index, dest.offset);
+            break;
+          case SizeWord:
+            as_gsswx(data, dest.base, index, dest.offset);
+            break;
+          case SizeDouble:
+            as_gssdx(data, dest.base, index, dest.offset);
+            break;
+          default:
+            MOZ_CRASH("Invalid argument for ma_store");
+        }
+        return;
+    }
+
     // Make sure that SecondScratchReg contains absolute address so that
     // offset is 0.
     asMasm().computeEffectiveAddress(dest, SecondScratchReg);

@@ -42,6 +42,7 @@ add_task(function* test_inline_options_uninstall() {
 
   let extension = yield loadExtension({
     manifest: {
+      applications: {gecko: {id: "inline_options_uninstall@tests.mozilla.org"}},
       "options_ui": {
         "page": "options.html",
       },

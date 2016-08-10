@@ -23,7 +23,7 @@ public:
 
     nsIOEvent(int i) : mIndex(i) {}
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
         LOG(("Run [%d]\n", mIndex));
         return NS_OK;
     }

@@ -256,7 +256,6 @@ def old_configure_options(*options):
     '--enable-url-classifier',
     '--enable-valgrind',
     '--enable-verify-mar',
-    '--enable-warnings-as-errors',
     '--enable-webapp-runtime',
     '--enable-webrtc',
     '--enable-websms-backend',

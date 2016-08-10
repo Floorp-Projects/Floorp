@@ -389,7 +389,7 @@ public:
     MOZ_ASSERT(mNode);
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     return nsContentUtils::DispatchTrustedEvent(mNode->OwnerDoc(),
                                                 mNode,
                                                 mSuccess ? NS_LITERAL_STRING("load")

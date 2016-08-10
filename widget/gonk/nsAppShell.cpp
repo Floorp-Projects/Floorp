@@ -355,7 +355,7 @@ public:
     SwitchEventRunnable(hal::SwitchEvent& aEvent) : mEvent(aEvent)
     {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         hal::NotifySwitchStateFromInputDevice(mEvent.device(),
           mEvent.status());
