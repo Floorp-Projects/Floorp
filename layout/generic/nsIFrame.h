@@ -2689,7 +2689,8 @@ public:
    *  @param aSelectStyle  out param. Returns the type of selection style found
    *                        (using values defined in nsStyleConsts.h).
    */
-  virtual nsresult  IsSelectable(bool* aIsSelectable, uint8_t* aSelectStyle) const = 0;
+  virtual nsresult IsSelectable(bool* aIsSelectable,
+                            mozilla::StyleUserSelect* aSelectStyle) const = 0;
 
   /** 
    *  Called to retrieve the SelectionController associated with the frame.

@@ -2144,17 +2144,17 @@ const KTableEntry nsCSSProps::kUserModifyKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kUserSelectKTable[] = {
-  { eCSSKeyword_none,       NS_STYLE_USER_SELECT_NONE },
-  { eCSSKeyword_auto,       NS_STYLE_USER_SELECT_AUTO },
-  { eCSSKeyword_text,       NS_STYLE_USER_SELECT_TEXT },
-  { eCSSKeyword_element,    NS_STYLE_USER_SELECT_ELEMENT },
-  { eCSSKeyword_elements,   NS_STYLE_USER_SELECT_ELEMENTS },
-  { eCSSKeyword_all,        NS_STYLE_USER_SELECT_ALL },
-  { eCSSKeyword_toggle,     NS_STYLE_USER_SELECT_TOGGLE },
-  { eCSSKeyword_tri_state,  NS_STYLE_USER_SELECT_TRI_STATE },
-  { eCSSKeyword__moz_all,   NS_STYLE_USER_SELECT_MOZ_ALL },
-  { eCSSKeyword__moz_none,  NS_STYLE_USER_SELECT_NONE },
-  { eCSSKeyword__moz_text,  NS_STYLE_USER_SELECT_MOZ_TEXT },
+  { eCSSKeyword_none,       StyleUserSelect::None_ },
+  { eCSSKeyword_auto,       StyleUserSelect::Auto },
+  { eCSSKeyword_text,       StyleUserSelect::Text },
+  { eCSSKeyword_element,    StyleUserSelect::Element },
+  { eCSSKeyword_elements,   StyleUserSelect::Elements },
+  { eCSSKeyword_all,        StyleUserSelect::All },
+  { eCSSKeyword_toggle,     StyleUserSelect::Toggle },
+  { eCSSKeyword_tri_state,  StyleUserSelect::TriState },
+  { eCSSKeyword__moz_all,   StyleUserSelect::MozAll },
+  { eCSSKeyword__moz_none,  StyleUserSelect::None_ },
+  { eCSSKeyword__moz_text,  StyleUserSelect::MozText },
   { eCSSKeyword_UNKNOWN,    -1 }
 };
 
