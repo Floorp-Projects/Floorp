@@ -253,7 +253,7 @@ BluetoothGattService::AddIncludedService(BluetoothGattService& aIncludedService,
                         NS_ERROR_UNEXPECTED);
 
   mIncludedServices.AppendElement(&aIncludedService);
-  promise->MaybeResolve(JS::UndefinedHandleValue);
+  promise->MaybeResolveWithUndefined();
 
   return promise.forget();
 }

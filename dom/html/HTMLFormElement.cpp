@@ -119,6 +119,8 @@ HTMLFormElement::HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNode
     mInvalidElementsCount(0),
     mEverTriedInvalidSubmit(false)
 {
+  // We start out valid.
+  AddStatesSilently(NS_EVENT_STATE_VALID);
 }
 
 HTMLFormElement::~HTMLFormElement()

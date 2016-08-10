@@ -222,3 +222,7 @@ XPC_MSG_DEF(NS_ERROR_CONTENT_CRASHED                  , "The process that hosted
 /* Codes for the JS-implemented Push DOM API. These can be removed as part of bug 1252660. */
 XPC_MSG_DEF(NS_ERROR_DOM_PUSH_INVALID_KEY_ERR         , "Invalid raw ECDSA P-256 public key.")
 XPC_MSG_DEF(NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR      , "A subscription with a different application server key already exists.")
+
+/* Codes defined in WebIDL https://heycam.github.io/webidl/#idl-DOMException-error-names */
+XPC_MSG_DEF(NS_ERROR_DOM_NOT_FOUND_ERR                , "The object can not be found here.")
+XPC_MSG_DEF(NS_ERROR_DOM_NOT_ALLOWED_ERR              , "The request is not allowed.")

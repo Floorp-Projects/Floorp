@@ -264,6 +264,7 @@ public:
   NS_IMETHOD GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement) final;
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) final;
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
+  NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
 
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
 
@@ -277,6 +278,7 @@ public:
   const PrincipalOriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
+  uint32_t PrivateBrowsingId() const { return mOriginAttributes.mPrivateBrowsingId; }
   bool IsInIsolatedMozBrowserElement() const { return mOriginAttributes.mInIsolatedMozBrowser; }
 
   enum PrincipalKind {

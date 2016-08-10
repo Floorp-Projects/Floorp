@@ -1696,7 +1696,7 @@ Navigator::GetFeature(const nsAString& aName, ErrorResult& aRv)
     return p.forget();
   }
 
-  p->MaybeResolve(JS::UndefinedHandleValue);
+  p->MaybeResolveWithUndefined();
   return p.forget();
 }
 
@@ -1795,12 +1795,12 @@ Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
       return p.forget();
     }
 
-    p->MaybeResolve(JS::UndefinedHandleValue);
+    p->MaybeResolveWithUndefined();
     return p.forget();
   }
 
   // resolve with <undefined> because the feature name is not supported
-  p->MaybeResolve(JS::UndefinedHandleValue);
+  p->MaybeResolveWithUndefined();
 
   return p.forget();
 }
