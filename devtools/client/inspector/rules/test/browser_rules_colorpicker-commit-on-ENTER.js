@@ -28,9 +28,9 @@ add_task(function* () {
 function* testPressingEnterCommitsChanges(swatch, ruleView) {
   let cPicker = ruleView.tooltips.colorPicker;
 
-  let onShown = cPicker.tooltip.once("shown");
+  let onColorPickerReady = cPicker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onColorPickerReady;
 
   yield simulateColorPickerChange(ruleView, cPicker, [0, 255, 0, .5], {
     selector: "body",

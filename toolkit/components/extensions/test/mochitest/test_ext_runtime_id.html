@@ -28,6 +28,7 @@ add_task(function* test_runtime_id() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
+      applications: {gecko: {id}},
       "content_scripts": [{
         "matches": ["http://mochi.test/*/file_sample.html"],
         "run_at": "document_start",
@@ -40,7 +41,7 @@ add_task(function* test_runtime_id() {
     files: {
       "content_script.js": `(${content})()`,
     },
-  }, id);
+  });
 
   yield extension.startup();
 

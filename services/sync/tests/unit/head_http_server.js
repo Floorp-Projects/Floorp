@@ -179,7 +179,7 @@ ServerCollection.prototype = {
    */
   keys: function keys(filter) {
     let ids = [];
-    for (let [id, wbo] in Iterator(this._wbos)) {
+    for (let [id, wbo] of Object.entries(this._wbos)) {
       if (wbo.payload && (!filter || filter(id, wbo))) {
         ids.push(id);
       }
@@ -199,7 +199,7 @@ ServerCollection.prototype = {
    */
   wbos: function wbos(filter) {
     let os = [];
-    for (let [id, wbo] in Iterator(this._wbos)) {
+    for (let [id, wbo] of Object.entries(this._wbos)) {
       if (wbo.payload) {
         os.push(wbo);
       }
@@ -276,7 +276,7 @@ ServerCollection.prototype = {
   count: function(options) {
     options = options || {};
     let c = 0;
-    for (let [id, wbo] in Iterator(this._wbos)) {
+    for (let [id, wbo] of Object.entries(this._wbos)) {
       if (wbo.modified && this._inResultSet(wbo, options)) {
         c++;
       }
@@ -288,7 +288,7 @@ ServerCollection.prototype = {
     let result;
     if (options.full) {
       let data = [];
-      for (let [id, wbo] in Iterator(this._wbos)) {
+      for (let [id, wbo] of Object.entries(this._wbos)) {
         // Drop deleted.
         if (wbo.modified && this._inResultSet(wbo, options)) {
           data.push(wbo.get());
@@ -304,7 +304,7 @@ ServerCollection.prototype = {
       options.recordCount = data.length;
     } else {
       let data = [];
-      for (let [id, wbo] in Iterator(this._wbos)) {
+      for (let [id, wbo] of Object.entries(this._wbos)) {
         if (this._inResultSet(wbo, options)) {
           data.push(id);
         }
@@ -349,7 +349,7 @@ ServerCollection.prototype = {
 
   delete: function(options) {
     let deleted = [];
-    for (let [id, wbo] in Iterator(this._wbos)) {
+    for (let [id, wbo] of Object.entries(this._wbos)) {
       if (this._inResultSet(wbo, options)) {
         this._log.debug("Deleting " + JSON.stringify(wbo));
         deleted.push(wbo.id);
@@ -684,10 +684,10 @@ SyncServer.prototype = {
       throw new Error("Unknown user.");
     }
     let userCollections = this.users[username].collections;
-    for (let [id, contents] in Iterator(collections)) {
+    for (let [id, contents] of Object.entries(collections)) {
       let coll = userCollections[id] ||
                  this._insertCollection(userCollections, id);
-      for (let [wboID, payload] in Iterator(contents)) {
+      for (let [wboID, payload] of Object.entries(contents)) {
         coll.insert(wboID, payload);
       }
     }
@@ -1016,7 +1016,7 @@ SyncServer.prototype = {
  */
 function serverForUsers(users, contents, callback) {
   let server = new SyncServer(callback);
-  for (let [user, pass] in Iterator(users)) {
+  for (let [user, pass] of Object.entries(users)) {
     server.registerUser(user, pass);
     server.createContents(user, contents);
   }

@@ -45,6 +45,7 @@ add_task(function* test_contentscript() {
 
   let extensionData = {
     manifest: {
+      applications: {gecko: {id: "contentscript@tests.mozilla.org"}},
       content_scripts: [
         {
           "matches": ["http://mochi.test/*/file_sample.html"],

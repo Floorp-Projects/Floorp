@@ -81,8 +81,10 @@ add_task(function* test_contentscript_create_iframe() {
     });
   }
 
+  const ID = "contentscript@tests.mozilla.org";
   let extensionData = {
     manifest: {
+      applications: {gecko: {id: ID}},
       content_scripts: [
         {
           "matches": ["http://mochi.test/*/file_sample.html"],

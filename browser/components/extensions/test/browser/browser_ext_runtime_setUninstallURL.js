@@ -4,8 +4,9 @@ let {AddonManager} = Components.utils.import("resource://gre/modules/AddonManage
 let {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
 function* makeAndInstallXPI(id, backgroundScript, loadedURL) {
-  let xpi = Extension.generateXPI(id, {
-    background: "(" + backgroundScript.toString() + ")()",
+  let xpi = Extension.generateXPI({
+    manifest: {applications: {gecko: {id}}},
+    background: backgroundScript,
   });
   SimpleTest.registerCleanupFunction(function cleanupXPI() {
     Services.obs.notifyObservers(xpi, "flush-cache-entry", null);

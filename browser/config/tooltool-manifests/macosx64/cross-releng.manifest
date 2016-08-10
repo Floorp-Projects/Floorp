@@ -25,10 +25,10 @@
 },
 {
 "version": "cargo 0.13.0-nightly (664125b 2016-07-19)",
-"size": 2571167,
-"digest": "b2616459fbf15c75b54628a6bfe8cf89c0841ea08431f5096e72be4fac4c685785dfc7a2f18a03a5f7bd377e78d3c108e5029b12616842cbbd0497ff7363fdaf",
+"size": 3123796,
+"digest": "4b9d2bcb8488b6649ba6c748e19d33bfceb25c7566e882fc7e00322392e424a5a9c5878c11c61d57cdaecf67bcc110842c6eff95e49736e8f3c83d9ce1677122",
 "algorithm": "sha512",
-"filename": "cargo.tar.bz2",
+"filename": "cargo.tar.xz",
 "unpack": true
 },
 {

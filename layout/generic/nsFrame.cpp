@@ -4496,9 +4496,9 @@ nsIFrame::InlinePrefISizeData::ForceBreak()
         }
       }
 
-      uint8_t floatStyle = floatDisp->PhysicalFloats(mLineContainerWM);
-      nscoord& floats_cur = floatStyle == NS_STYLE_FLOAT_LEFT
-                              ? floats_cur_left : floats_cur_right;
+      StyleFloat floatStyle = floatDisp->PhysicalFloats(mLineContainerWM);
+      nscoord& floats_cur =
+        floatStyle == StyleFloat::Left ? floats_cur_left : floats_cur_right;
       nscoord floatWidth = floatInfo.Width();
       // Negative-width floats don't change the available space so they
       // shouldn't change our intrinsic line width either.

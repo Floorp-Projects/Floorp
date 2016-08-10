@@ -140,7 +140,7 @@ config = {
                 "--total-chunks=%(total_chunks)s",
                 "--this-chunk=%(this_chunk)s",
                 "--quiet",
-                "--chrome",
+                "--flavor=chrome",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--certificate-path=%(certificate_path)s",

@@ -153,7 +153,7 @@ AddonsEngine.prototype = {
    */
   getChangedIDs: function getChangedIDs() {
     let changes = {};
-    for (let [id, modified] in Iterator(this._tracker.changedIDs)) {
+    for (let [id, modified] of Object.entries(this._tracker.changedIDs)) {
       changes[id] = modified;
     }
 
