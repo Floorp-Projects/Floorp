@@ -9,10 +9,10 @@
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsITextControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
 
+class nsITextControlFrame;
 class nsPresContext;
 
 namespace mozilla {
@@ -29,7 +29,7 @@ class HTMLInputElement;
  */
 class nsNumberControlFrame final : public nsContainerFrame
                                  , public nsIAnonymousContentCreator
-                                 , public nsITextControlFrame
+                                 , public nsIFormControlFrame
 {
   friend nsIFrame*
   NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -86,34 +86,6 @@ public:
     return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
-
-  // nsITextControlFrame
-  NS_IMETHOD    GetEditor(nsIEditor **aEditor) override;
-
-  NS_IMETHOD    SetSelectionStart(int32_t aSelectionStart) override;
-  NS_IMETHOD    SetSelectionEnd(int32_t aSelectionEnd) override;
-
-  NS_IMETHOD    SetSelectionRange(int32_t aSelectionStart,
-                                  int32_t aSelectionEnd,
-                                  SelectionDirection aDirection = eNone) override;
-
-  NS_IMETHOD    GetSelectionRange(int32_t* aSelectionStart,
-                                  int32_t* aSelectionEnd,
-                                  SelectionDirection* aDirection = nullptr) override;
-
-  NS_IMETHOD    GetOwnedSelectionController(nsISelectionController** aSelCon) override;
-  virtual nsFrameSelection* GetOwnedFrameSelection() override;
-
-  virtual nsresult GetPhonetic(nsAString& aPhonetic) override;
-
-  /**
-   * Ensure mEditor is initialized with the proper flags and the default value.
-   * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
-   * @throws various and sundry other things
-   */
-  virtual nsresult EnsureEditorInitialized() override;
-
-  virtual nsresult ScrollSelectionIntoView() override;
 
   // nsIFormControlFrame
   virtual void SetFocus(bool aOn, bool aRepaint) override;
