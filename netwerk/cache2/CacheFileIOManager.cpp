@@ -575,8 +575,16 @@ public:
     rv = CacheFileIOManager::gInstance->mIOThread->Dispatch(
       this, CacheIOThread::CLOSE);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    PRIntervalTime const waitTime = PR_MillisecondsToInterval(1000);
     while (!mNotified) {
-      mon.Wait();
+      mon.Wait(waitTime);
+      if (!mNotified) {
+        // If there is any IO blocking on the IO thread, this will
+        // try to cancel it.  Returns no later than after two seconds.
+        MonitorAutoUnlock unmon(mMonitor); // Prevent delays
+        CacheFileIOManager::gInstance->mIOThread->CancelBlockingIO();
+      }
     }
   }
 
@@ -1569,6 +1577,8 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  CacheIOThread::Cancelable cancelable(true /* never called for special handles */);
+
   if (!mTreeCreated) {
     rv = CreateCacheTree();
     if (NS_FAILED(rv)) return rv;
@@ -1783,6 +1793,8 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
+  CacheIOThread::Cancelable cancelable(!aHandle->IsSpecialFile());
+
   // Maybe close file handle (can be legally bypassed after shutdown)
   rv = MaybeReleaseNSPRHandleInternal(aHandle);
 
@@ -1791,6 +1803,7 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
   if ((aHandle->mIsDoomed || aHandle->mInvalid) && NS_SUCCEEDED(rv)) {
     LOG(("CacheFileIOManager::CloseHandleInternal() - Removing file from "
          "disk"));
+
     aHandle->mFile->Remove(false);
   }
 
@@ -1860,6 +1873,8 @@ CacheFileIOManager::ReadInternal(CacheFileHandle *aHandle, int64_t aOffset,
     NS_WARNING("Trying to read from non-existent file");
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  CacheIOThread::Cancelable cancelable(!aHandle->IsSpecialFile());
 
   if (!aHandle->mFD) {
     rv = OpenNSPRHandle(aHandle);
@@ -1970,6 +1985,8 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
     // the file and we end up with I/O anyway.
     return NS_OK;
   }
+
+  CacheIOThread::Cancelable cancelable(!aHandle->IsSpecialFile());
 
   if (!aHandle->mFileExists) {
     rv = CreateFile(aHandle);
@@ -2092,6 +2109,8 @@ CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle,
   if (aHandle->IsDoomed()) {
     return NS_OK;
   }
+
+  CacheIOThread::Cancelable cancelable(!aHandle->IsSpecialFile());
 
   if (aPinningDoomRestriction > NO_RESTRICTION) {
     switch (aHandle->mPinning) {
@@ -2226,6 +2245,8 @@ CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash)
     return DoomFileInternal(handle);
   }
 
+  CacheIOThread::Cancelable cancelable(true);
+
   // There is no handle for this file, delete the file if exists
   nsCOMPtr<nsIFile> file;
   rv = GetFile(aHash, getter_AddRefs(file));
@@ -2277,7 +2298,8 @@ nsresult
 CacheFileIOManager::MaybeReleaseNSPRHandleInternal(CacheFileHandle *aHandle,
                                                    bool aIgnoreShutdownLag)
 {
-  LOG(("CacheFileIOManager::MaybeReleaseNSPRHandleInternal() [handle=%p]", aHandle));
+  LOG(("CacheFileIOManager::MaybeReleaseNSPRHandleInternal() [handle=%p, ignore shutdown=%d]",
+       aHandle, aIgnoreShutdownLag));
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
@@ -2315,10 +2337,16 @@ CacheFileIOManager::MaybeReleaseNSPRHandleInternal(CacheFileHandle *aHandle,
     return NS_OK;
   }
 
+  CacheIOThread::Cancelable cancelable(!aHandle->IsSpecialFile());
+
   PRStatus status = PR_Close(fd);
   if (status != PR_SUCCESS) {
+    LOG(("CacheFileIOManager::MaybeReleaseNSPRHandleInternal() "
+         "failed to close [handle=%p, status=%u]", aHandle, status));
     return NS_ERROR_FAILURE;
   }
+
+  LOG(("CacheFileIOManager::MaybeReleaseNSPRHandleInternal() DONE"));
 
   return NS_OK;
 }
@@ -2484,6 +2512,8 @@ CacheFileIOManager::TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
     LOG(("  killing the handle, file not truncated"));
     return NS_OK;
   }
+
+  CacheIOThread::Cancelable cancelable(!aHandle->IsSpecialFile());
 
   if (!aHandle->mFileExists) {
     rv = CreateFile(aHandle);
@@ -2676,6 +2706,8 @@ CacheFileIOManager::EvictIfOverLimitInternal()
          "running."));
     return NS_OK;
   }
+
+  CacheIOThread::Cancelable cancelable(true);
 
   int64_t freeSpace;
   rv = mCacheDirectory->GetDiskSpaceAvailable(&freeSpace);
@@ -3285,6 +3317,8 @@ CacheFileIOManager::RemoveTrashInternal()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  CacheIOThread::Cancelable cancelable(true);
+
   MOZ_ASSERT(!mTrashTimer);
   MOZ_ASSERT(mRemovingTrashDirs);
 
@@ -3883,6 +3917,9 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
         rv = NS_ERROR_FILE_NO_DEVICE_SPACE;
       }
     }
+    if (NS_FAILED(rv)) {
+      LOG(("CacheFileIOManager::OpenNSPRHandle() Create failed with 0x%08x", rv));
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     aHandle->mFileExists = true;
@@ -3892,6 +3929,9 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
       LOG(("  file doesn't exists"));
       aHandle->mFileExists = false;
       return DoomFileInternal(aHandle);
+    }
+    if (NS_FAILED(rv)) {
+      LOG(("CacheFileIOManager::OpenNSPRHandle() Open failed with 0x%08x", rv));
     }
     NS_ENSURE_SUCCESS(rv, rv);
   }
