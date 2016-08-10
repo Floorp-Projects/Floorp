@@ -1158,7 +1158,7 @@
          date = date.getTime();
        }
 
-       if (typeof date !== "number" || isNaN(date)) {
+       if (isNaN(date)) {
          throw new TypeError("|date| parameter of " + fn + " must be a " +
                              "|Date| instance or number");
        }
