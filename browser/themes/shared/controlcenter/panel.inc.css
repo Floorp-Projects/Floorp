@@ -381,15 +381,6 @@ description#identity-popup-content-verifier,
   height: 16px;
 }
 
-.identity-popup-permission-icon.in-use {
-  fill: rgb(224, 41, 29);
-  animation: 1.5s ease in-use-blink infinite;
-}
-
-@keyframes in-use-blink {
-  50% { opacity: 0; }
-}
-
 .identity-popup-permission-label {
   margin-inline-start: 1em;
 }

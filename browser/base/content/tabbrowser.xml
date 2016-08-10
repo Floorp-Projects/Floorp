@@ -1225,7 +1225,6 @@
             }
 
             updateUserContextUIIndicator();
-            gIdentityHandler.updateSharingIndicator();
 
             this.tabContainer._setPositionalAttributes();
 
@@ -1370,32 +1369,17 @@
 
       <method name="setBrowserSharing">
         <parameter name="aBrowser"/>
-        <parameter name="aState"/>
+        <parameter name="aSharingState"/>
         <body><![CDATA[
           let tab = this.getTabForBrowser(aBrowser);
           if (!tab)
             return;
 
-          let sharing;
-          if (aState.screen) {
-            sharing = "screen";
-          } else if (aState.camera) {
-            sharing = "camera";
-          } else if (aState.microphone) {
-            sharing = "microphone";
-          }
-
-          if (sharing) {
-            tab.setAttribute("sharing", sharing);
-            tab._sharingState = aState;
-          } else {
+          if (aSharingState)
+            tab.setAttribute("sharing", aSharingState);
+          else
             tab.removeAttribute("sharing");
-            tab._sharingState = null;
-          }
           this._tabAttrModified(tab, ["sharing"]);
-
-          if (aBrowser == this.mCurrentBrowser)
-            gIdentityHandler.updateSharingIndicator();
         ]]></body>
       </method>
 
