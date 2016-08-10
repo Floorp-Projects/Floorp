@@ -8,13 +8,13 @@
 
 const { ActorPool } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object");
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
+const { ActorClass } = require("devtools/shared/protocol");
 const { frameSpec } = require("devtools/shared/specs/frame");
 
 /**
  * An actor for a specified stack frame.
  */
-let FrameActor = ActorClassWithSpec(frameSpec, {
+let FrameActor = ActorClass(frameSpec, {
   /**
    * Creates the Frame actor.
    *
