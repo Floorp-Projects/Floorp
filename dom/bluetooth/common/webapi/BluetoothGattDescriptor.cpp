@@ -281,7 +281,7 @@ BluetoothGattDescriptor::WriteValue(
     mValue.Clear();
     mValue.AppendElements(aValue.Data(), aValue.Length());
 
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
 

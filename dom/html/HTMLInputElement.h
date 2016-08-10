@@ -688,11 +688,11 @@ public:
 
   // XPCOM Select() is OK
 
-  int32_t GetSelectionStart(ErrorResult& aRv);
-  void SetSelectionStart(int32_t aValue, ErrorResult& aRv);
+  Nullable<int32_t> GetSelectionStart(ErrorResult& aRv);
+  void SetSelectionStart(const Nullable<int32_t>& aValue, ErrorResult& aRv);
 
-  int32_t GetSelectionEnd(ErrorResult& aRv);
-  void SetSelectionEnd(int32_t aValue, ErrorResult& aRv);
+  Nullable<int32_t> GetSelectionEnd(ErrorResult& aRv);
+  void SetSelectionEnd(const Nullable<int32_t>& aValue, ErrorResult& aRv);
 
   void GetSelectionDirection(nsAString& aValue, ErrorResult& aRv);
   void SetSelectionDirection(const nsAString& aValue, ErrorResult& aRv);
@@ -1481,9 +1481,9 @@ private:
   }
 
   /**
-   * Returns true if setRangeText can be called on element
+   * Returns true if selection methods can be called on element
    */
-  bool SupportsSetRangeText() const {
+  bool SupportsTextSelection() const {
     return mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_SEARCH ||
            mType == NS_FORM_INPUT_URL || mType == NS_FORM_INPUT_TEL ||
            mType == NS_FORM_INPUT_PASSWORD || mType == NS_FORM_INPUT_NUMBER;

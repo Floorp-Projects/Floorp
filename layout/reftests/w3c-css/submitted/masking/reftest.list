@@ -19,6 +19,7 @@ fails == mask-mode-to-mask-type.html mask-mode-to-mask-type-ref.html
 fails == mask-image-1a.html mask-image-1-ref.html
 fails == mask-image-1b.html mask-image-1-ref.html
 fails == mask-image-1c.html mask-image-1-ref.html
+== mask-image-1d.html mask-image-1-ref.html
 fails == mask-image-2.html mask-image-2-ref.html
 fails == mask-image-3a.html mask-image-3-ref.html
 fails == mask-image-3b.html mask-image-3-ref.html

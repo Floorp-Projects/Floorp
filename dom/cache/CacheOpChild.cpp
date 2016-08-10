@@ -128,7 +128,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
     }
     case CacheOpResult::TCachePutAllResult:
     {
-      mPromise->MaybeResolve(JS::UndefinedHandleValue);
+      mPromise->MaybeResolveWithUndefined();
       break;
     }
     case CacheOpResult::TCacheDeleteResult:
@@ -212,7 +212,7 @@ void
 CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid)
 {
   if (aResponseOrVoid.type() == CacheResponseOrVoid::Tvoid_t) {
-    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+    mPromise->MaybeResolveWithUndefined();
     return;
   }
 

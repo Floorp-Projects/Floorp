@@ -130,45 +130,45 @@ var testcases = [ {
     protocolChange: true,
   }, {
     input: "1.2.3",
-    fixedURI: "http://1.2.3/",
+    fixedURI: "http://1.2.0.3/",
     protocolChange: true,
   }, {
     input: "1.2.3/",
-    fixedURI: "http://1.2.3/",
+    fixedURI: "http://1.2.0.3/",
     protocolChange: true,
   }, {
     input: "1.2.3/foo",
-    fixedURI: "http://1.2.3/foo",
+    fixedURI: "http://1.2.0.3/foo",
     protocolChange: true,
   }, {
     input: "1.2.3/123",
-    fixedURI: "http://1.2.3/123",
+    fixedURI: "http://1.2.0.3/123",
     protocolChange: true,
   }, {
     input: "1.2.3:8000",
-    fixedURI: "http://1.2.3:8000/",
+    fixedURI: "http://1.2.0.3:8000/",
     protocolChange: true,
   }, {
     input: "1.2.3:8000/",
-    fixedURI: "http://1.2.3:8000/",
+    fixedURI: "http://1.2.0.3:8000/",
     protocolChange: true,
   }, {
     input: "1.2.3:8000/foo",
-    fixedURI: "http://1.2.3:8000/foo",
+    fixedURI: "http://1.2.0.3:8000/foo",
     protocolChange: true,
   }, {
     input: "1.2.3:8000/123",
-    fixedURI: "http://1.2.3:8000/123",
+    fixedURI: "http://1.2.0.3:8000/123",
     protocolChange: true,
   }, {
     input: "http://1.2.3",
-    fixedURI: "http://1.2.3/",
+    fixedURI: "http://1.2.0.3/",
   }, {
     input: "http://1.2.3/",
-    fixedURI: "http://1.2.3/",
+    fixedURI: "http://1.2.0.3/",
   }, {
     input: "http://1.2.3/foo",
-    fixedURI: "http://1.2.3/foo",
+    fixedURI: "http://1.2.0.3/foo",
   }, {
     input: "[::1]",
     fixedURI: "http://[::1]/",
@@ -222,8 +222,7 @@ var testcases = [ {
     protocolChange: true
   }, {
     input: "1234",
-    fixedURI: "http://1234/",
-    alternateURI: "http://www.1234.com/",
+    fixedURI: "http://0.0.4.210/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleHosts: true,
@@ -362,8 +361,7 @@ var testcases = [ {
     affectedByDNSForSingleHosts: true,
   }, {
     input: "32.7",
-    fixedURI: "http://32.7/",
-    alternateURI: "http://www.32.7/",
+    fixedURI: "http://32.0.0.7/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleHosts: true,
@@ -376,8 +374,7 @@ var testcases = [ {
     affectedByDNSForSingleHosts: true,
   }, {
     input: "5/2",
-    fixedURI: "http://5/2",
-    alternateURI: "http://www.5.com/2",
+    fixedURI: "http://0.0.0.5/2",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleHosts: true,

@@ -1521,6 +1521,26 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
     return mRenderingMode;
   }
 
+  // If the next drawing command covers the entire canvas, we can skip copying
+  // from the previous frame and/or clearing the canvas.
+  gfx::Rect canvasRect(0, 0, mWidth, mHeight);
+  bool canDiscardContent = aCoveredRect &&
+    CurrentState().transform.TransformBounds(*aCoveredRect).Contains(canvasRect);
+
+  // If a clip is active we don't know for sure that the next drawing command
+  // will really cover the entire canvas.
+  for (const auto& style : mStyleStack) {
+    if (!canDiscardContent) {
+      break;
+    }
+    for (const auto& clipOrTransform : style.clipsAndTransforms) {
+      if (clipOrTransform.IsClip()) {
+        canDiscardContent = false;
+        break;
+      }
+    }
+  }
+
   ScheduleStableStateCallback();
 
   // we'll do a few extra things at the end of this method if we changed the
@@ -1528,12 +1548,9 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   RefPtr<PersistentBufferProvider> oldBufferProvider = mBufferProvider;
 
   if (mBufferProvider && mode == mRenderingMode) {
-    gfx::Rect rect(0, 0, mWidth, mHeight);
-    if (aCoveredRect && CurrentState().transform.TransformBounds(*aCoveredRect).Contains(rect)) {
-      mTarget = mBufferProvider->BorrowDrawTarget(IntRect());
-    } else {
-      mTarget = mBufferProvider->BorrowDrawTarget(IntRect(0, 0, mWidth, mHeight));
-    }
+    auto persistedRect = canDiscardContent ? IntRect()
+                                           : IntRect(0, 0, mWidth, mHeight);
+    mTarget = mBufferProvider->BorrowDrawTarget(persistedRect);
 
     mode = mRenderingMode;
   }
@@ -1614,7 +1631,7 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
         JS_updateMallocCounter(context, mWidth * mHeight * 4);
       }
 
-      mTarget->ClearRect(gfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+      mTarget->ClearRect(canvasRect);
 
       // Force a full layer transaction since we didn't have a layer before
       // and now we might need one.
@@ -1626,6 +1643,9 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
       Redraw();
     }
 
+    // Restore clips and transform.
+    mTarget->SetTransform(Matrix());
+
     if (mTarget->GetBackendType() == gfx::BackendType::CAIRO) {
       // Cairo doesn't play well with huge clips. When given a very big clip it
       // will try to allocate big mask surface without taking the target
@@ -1633,14 +1653,16 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
       // This limits the clip extents to the size of the canvas.
       // A fix in Cairo would probably be preferable, but requires somewhat
       // invasive changes.
-      mTarget->PushClipRect(gfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+      mTarget->PushClipRect(canvasRect);
     }
 
-    // Restore clip and transform.
-    for (uint32_t i = 0; i < mStyleStack.Length(); i++) {
-      mTarget->SetTransform(mStyleStack[i].transform);
-      for (uint32_t c = 0; c < mStyleStack[i].clipsPushed.Length(); c++) {
-        mTarget->PushClip(mStyleStack[i].clipsPushed[c]);
+    for (const auto& style : mStyleStack) {
+      for (const auto& clipOrTransform : style.clipsAndTransforms) {
+        if (clipOrTransform.IsClip()) {
+          mTarget->PushClip(clipOrTransform.clip);
+        } else {
+          mTarget->SetTransform(clipOrTransform.transform);
+        }
       }
     }
   } else {
@@ -1752,9 +1774,11 @@ CanvasRenderingContext2D::ReturnTarget()
 {
   if (mTarget && mBufferProvider && mTarget != sErrorTarget) {
     CurrentState().transform = mTarget->GetTransform();
-    for (uint32_t i = 0; i < mStyleStack.Length(); i++) {
-      for (uint32_t c = 0; c < mStyleStack[i].clipsPushed.Length(); c++) {
-        mTarget->PopClip();
+    for (const auto& style : mStyleStack) {
+      for (const auto& clipOrTransform : style.clipsAndTransforms) {
+        if (clipOrTransform.IsClip()) {
+          mTarget->PopClip();
+        }
       }
     }
 
@@ -1934,8 +1958,10 @@ CanvasRenderingContext2D::Restore()
 
   TransformWillUpdate();
 
-  for (uint32_t i = 0; i < CurrentState().clipsPushed.Length(); i++) {
-    mTarget->PopClip();
+  for (const auto& clipOrTransform : CurrentState().clipsAndTransforms) {
+    if (clipOrTransform.IsClip()) {
+      mTarget->PopClip();
+    }
   }
 
   mStyleStack.RemoveElementAt(mStyleStack.Length() - 1);
@@ -1958,10 +1984,8 @@ CanvasRenderingContext2D::Scale(double aX, double aY, ErrorResult& aError)
 
   Matrix newMatrix = mTarget->GetTransform();
   newMatrix.PreScale(aX, aY);
-  if (!newMatrix.IsFinite()) {
-    return;
-  }
-  mTarget->SetTransform(newMatrix);
+
+  SetTransformInternal(newMatrix);
 }
 
 void
@@ -1974,10 +1998,8 @@ CanvasRenderingContext2D::Rotate(double aAngle, ErrorResult& aError)
   }
 
   Matrix newMatrix = Matrix::Rotation(aAngle) * mTarget->GetTransform();
-  if (!newMatrix.IsFinite()) {
-    return;
-  }
-  mTarget->SetTransform(newMatrix);
+
+  SetTransformInternal(newMatrix);
 }
 
 void
@@ -1991,10 +2013,8 @@ CanvasRenderingContext2D::Translate(double aX, double aY, ErrorResult& aError)
 
   Matrix newMatrix = mTarget->GetTransform();
   newMatrix.PreTranslate(aX, aY);
-  if (!newMatrix.IsFinite()) {
-    return;
-  }
-  mTarget->SetTransform(newMatrix);
+
+  SetTransformInternal(newMatrix);
 }
 
 void
@@ -2010,10 +2030,8 @@ CanvasRenderingContext2D::Transform(double aM11, double aM12, double aM21,
 
   Matrix newMatrix(aM11, aM12, aM21, aM22, aDx, aDy);
   newMatrix *= mTarget->GetTransform();
-  if (!newMatrix.IsFinite()) {
-    return;
-  }
-  mTarget->SetTransform(newMatrix);
+
+  SetTransformInternal(newMatrix);
 }
 
 void
@@ -2028,11 +2046,26 @@ CanvasRenderingContext2D::SetTransform(double aM11, double aM12,
     return;
   }
 
-  Matrix matrix(aM11, aM12, aM21, aM22, aDx, aDy);
-  if (!matrix.IsFinite()) {
+  SetTransformInternal(Matrix(aM11, aM12, aM21, aM22, aDx, aDy));
+}
+
+void
+CanvasRenderingContext2D::SetTransformInternal(const Matrix& aTransform)
+{
+  if (!aTransform.IsFinite()) {
     return;
   }
-  mTarget->SetTransform(matrix);
+
+  // Save the transform in the clip stack to be able to replay clips properly.
+  auto& clipsAndTransforms = CurrentState().clipsAndTransforms;
+  if (clipsAndTransforms.IsEmpty() || clipsAndTransforms.LastElement().IsClip()) {
+    clipsAndTransforms.AppendElement(ClipState(aTransform));
+  } else {
+    // If the last item is a transform we can replace it instead of appending
+    // a new item.
+    clipsAndTransforms.LastElement().transform = aTransform;
+  }
+  mTarget->SetTransform(aTransform);
 }
 
 void
@@ -2808,7 +2841,7 @@ CanvasRenderingContext2D::FillRect(double aX, double aY, double aW,
 
   CompositionOp op = UsedOperation();
   bool discardContent = PatternIsOpaque(Style::FILL)
-    && (op == CompositionOp::OP_OVER || op == CompositionOp::OP_DEST_OUT);
+    && (op == CompositionOp::OP_OVER || op == CompositionOp::OP_SOURCE);
 
   const gfx::Rect fillRect(aX, aY, aW, aH);
   EnsureTarget(discardContent ? &fillRect : nullptr);
@@ -3102,7 +3135,7 @@ CanvasRenderingContext2D::Clip(const CanvasWindingRule& aWinding)
   }
 
   mTarget->PushClip(mPath);
-  CurrentState().clipsPushed.AppendElement(mPath);
+  CurrentState().clipsAndTransforms.AppendElement(ClipState(mPath));
 }
 
 void
@@ -3117,7 +3150,7 @@ CanvasRenderingContext2D::Clip(const CanvasPath& aPath, const CanvasWindingRule&
   }
 
   mTarget->PushClip(gfxpath);
-  CurrentState().clipsPushed.AppendElement(gfxpath);
+  CurrentState().clipsAndTransforms.AppendElement(ClipState(gfxpath));
 }
 
 void

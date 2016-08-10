@@ -86,6 +86,26 @@ cacerts = /etc/ssl/certs/ca-certificates.crt
 
 [extensions]
 robustcheckout = /usr/local/mercurial/robustcheckout.py
+
+# Settings to make 1-click loaners more useful.
+[extensions]
+color =
+histedit =
+pager =
+rebase =
+
+[diff]
+git = 1
+showfunc = 1
+
+[pager]
+pager = LESS=FRSXQ less
+
+attend-help = true
+attend-incoming = true
+attend-log = true
+attend-outgoing = true
+attend-status = true
 EOF
 
 chmod 644 /etc/mercurial/hgrc

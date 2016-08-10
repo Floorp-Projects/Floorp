@@ -6,6 +6,7 @@
 
 #include "domstubs.idl"
 #include "nsIDocShellTreeItem.idl"
+#include "nsIRequest.idl"
 
 %{ C++
 #include "js/TypeDecls.h"
@@ -45,8 +46,6 @@ interface nsITabChild;
 interface nsICommandManager;
 interface nsICommandParams;
 native TabChildRef(already_AddRefed<nsITabChild>);
-
-typedef unsigned long nsLoadFlags;
 
 [scriptable, builtinclass, uuid(049234fe-da10-478b-bc5d-bc6f9a1ba63d)]
 interface nsIDocShell : nsIDocShellTreeItem
