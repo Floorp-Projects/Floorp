@@ -34,7 +34,7 @@ namespace CrashReporter {
 void AnnotateMozCrashReason(const char* aReason);
 } // namespace CrashReporter
 
-#  define MOZ_CRASH_ANNOTATE(...) CrashReporter::AnnotateMozCrashReason("" __VA_ARGS__)
+#  define MOZ_CRASH_ANNOTATE(...) CrashReporter::AnnotateMozCrashReason(__VA_ARGS__)
 #else
 #  define MOZ_CRASH_ANNOTATE(...) do { /* nothing */ } while (0)
 #endif
