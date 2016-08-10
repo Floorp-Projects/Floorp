@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import os
 import signal
 import traceback
 from collections import defaultdict
@@ -17,6 +18,7 @@ from multiprocessing import (
 from .errors import LintersNotConfigured
 from .types import supported_types
 from .parser import Parser
+from .vcs import VCSFiles
 
 
 def _run_linters(queue, paths, **lintargs):
@@ -67,8 +69,11 @@ class LintRoller(object):
 
     def __init__(self, **lintargs):
         self.parse = Parser()
+        self.vcs = VCSFiles()
+
         self.linters = []
         self.lintargs = lintargs
+        self.lintargs['root'] = self.vcs.root or os.getcwd()
 
     def read(self, paths):
         """Parse one or more linters and add them to the registry.
@@ -81,20 +86,31 @@ class LintRoller(object):
         for path in paths:
             self.linters.append(self.parse(path))
 
-    def roll(self, paths, num_procs=None):
+    def roll(self, paths=None, rev=None, workdir=None, num_procs=None):
         """Run all of the registered linters against the specified file paths.
 
         :param paths: An iterable of files and/or directories to lint.
+        :param rev: Lint all files touched by the specified revision.
+        :param workdir: Lint all files touched in the working directory.
         :param num_procs: The number of processes to use. Default: cpu count
         :return: A dictionary with file names as the key, and a list of
                  :class:`~result.ResultContainer`s as the value.
         """
-        if not self.linters:
-            raise LintersNotConfigured
-
+        paths = paths or []
         if isinstance(paths, basestring):
             paths = [paths]
 
+        if not self.linters:
+            raise LintersNotConfigured
+
+        # Calculate files from VCS
+        if rev:
+            paths.extend(self.vcs.by_rev(rev))
+        if workdir:
+            paths.extend(self.vcs.by_workdir())
+        paths = paths or ['.']
+
+        # Set up multiprocessing
         m = Manager()
         queue = m.Queue()
 
