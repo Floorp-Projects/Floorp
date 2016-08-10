@@ -108,14 +108,14 @@ function testCopyBuffers(srcTarget, dstTarget, copyRead, copyWrite) {
   if (expectedGLError == gl.NO_ERROR) {
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Copying should work");
 
-    var retBuffer = new ArrayBuffer(length);
+    var retBuffer = new Uint8Array(length);
     gl.getBufferSubData(dstTarget, 0, retBuffer);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR,
         "gl.getBufferSubData(" + targetToString(gl, dstTarget) +
         ", 0, retBuffer) should work");
 
     var failed = false;
-    var retArray = new Float32Array(retBuffer);
+    var retArray = new Float32Array(retBuffer.buffer);
     for (var i = 0; i < vertices.length; i++) {
       if (originalData[i] != retArray[i]) {
         failed = true;
