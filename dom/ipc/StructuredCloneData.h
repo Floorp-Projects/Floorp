@@ -75,11 +75,16 @@ public:
 
   StructuredCloneData(const StructuredCloneData&) = delete;
 
+  StructuredCloneData(StructuredCloneData&& aOther) = default;
+
   ~StructuredCloneData()
   {}
 
   StructuredCloneData&
   operator=(const StructuredCloneData& aOther) = delete;
+
+  StructuredCloneData&
+  operator=(StructuredCloneData&& aOther) = default;
 
   const nsTArray<RefPtr<BlobImpl>>& BlobImpls() const
   {
