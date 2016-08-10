@@ -989,6 +989,7 @@ class Marionette(object):
         finally:
             self.set_prefs(original_prefs)
 
+    @do_process_check
     def enforce_gecko_prefs(self, prefs):
         """
         Checks if the running instance has the given prefs. If not, it will kill the
@@ -1056,6 +1057,7 @@ class Marionette(object):
                 self.cleanup()
                 raise exc, 'Requested restart of the application was aborted', tb
 
+    @do_process_check
     def restart(self, clean=False, in_app=False):
         """
         This will terminate the currently running instance, and spawn a new instance
