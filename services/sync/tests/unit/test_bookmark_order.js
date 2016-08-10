@@ -17,12 +17,28 @@ function getBookmarks(folderId) {
     if (itemId == -1)
       break;
 
+    let isOrphan = PlacesUtils.annotations.itemHasAnnotation(itemId,
+      "sync/parent");
     switch (PlacesUtils.bookmarks.getItemType(itemId)) {
       case PlacesUtils.bookmarks.TYPE_BOOKMARK:
-        bookmarks.push(PlacesUtils.bookmarks.getItemTitle(itemId));
+        let title = PlacesUtils.bookmarks.getItemTitle(itemId);
+        if (isOrphan) {
+          let requestedParent = PlacesUtils.annotations.getItemAnnotation(
+            itemId, "sync/parent");
+          bookmarks.push({ title, requestedParent });
+        } else {
+          bookmarks.push(title);
+        }
         break;
       case PlacesUtils.bookmarks.TYPE_FOLDER:
-        bookmarks.push(getBookmarks(itemId));
+        let titles = getBookmarks(itemId);
+        if (isOrphan) {
+          let requestedParent = PlacesUtils.annotations.getItemAnnotation(
+            itemId, "sync/parent");
+          bookmarks.push({ titles, requestedParent });
+        } else {
+          bookmarks.push(titles);
+        }
         break;
       default:
         _("Unsupported item type..");
@@ -96,13 +112,14 @@ function run_test() {
   let id40 = "f40_aaaaaaaa";
   _("insert missing parent -> append to unfiled");
   apply(bookmark(id41, id40));
-  check([id10, id20, [id31], id41]);
+  check([id10, id20, [id31], { title: id41, requestedParent: id40 }]);
 
   let id42 = "42_aaaaaaaaa";
 
   _("insert another missing parent -> append");
   apply(bookmark(id42, id40));
-  check([id10, id20, [id31], id41, id42]);
+  check([id10, id20, [id31], { title: id41, requestedParent: id40 },
+    { title: id42, requestedParent: id40 }]);
 
   _("insert folder -> move children and followers");
   let f40 = folder(id40, "", [id41, id42]);
