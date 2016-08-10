@@ -28,7 +28,7 @@ import sys
 
 def print_line(prefix, m):
     now = datetime.datetime.utcnow()
-    print('[%s %sZ] %s' % (prefix, now.isoformat(), m), end='')
+    print(b'[%s %sZ] %s' % (prefix, now.isoformat(), m), end=b'')
 
 
 def run_and_prefix_output(prefix, args):
@@ -36,7 +36,7 @@ def run_and_prefix_output(prefix, args):
 
     Returns the process exit code.
     """
-    print_line(prefix, 'executing %s\n' % args)
+    print_line(prefix, b'executing %s\n' % args)
 
     # Note: TaskCluster's stdin is a TTY. This attribute is lost
     # when we pass sys.stdin to the invoked process. If we cared
@@ -57,7 +57,7 @@ def run_and_prefix_output(prefix, args):
 
     while True:
         data = p.stdout.readline()
-        if data == '':
+        if data == b'':
             break
 
         print_line(prefix, data)
@@ -112,7 +112,7 @@ def vcs_checkout(args):
 
 
 def main(args):
-    print_line('setup', 'run-task started\n')
+    print_line(b'setup', b'run-task started\n')
 
     if os.getuid() != 0:
         print('assertion failed: not running as root')
@@ -172,7 +172,7 @@ def main(args):
     # This code is modeled after what `sudo` was observed to do in a Docker
     # container. We do not bother calling setrlimit() because containers have
     # their own limits.
-    print_line('setup', 'running as %s:%s\n' % (args.user, args.group))
+    print_line(b'setup', b'running as %s:%s\n' % (args.user, args.group))
     os.setgroups(gids)
     os.umask(022)
     os.setresgid(gid, gid, gid)
@@ -189,7 +189,7 @@ def main(args):
         print('task should be defined in terms of non-symbolic revision')
         return 1
 
-    return run_and_prefix_output('task', task_args)
+    return run_and_prefix_output(b'task', task_args)
 
 
 if __name__ == '__main__':
