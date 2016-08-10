@@ -16,6 +16,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm");
+
 this.PageThumbUtils = {
   // The default background color for page thumbnails.
   THUMBNAIL_BG_COLOR: "#fff",
@@ -263,6 +266,10 @@ this.PageThumbUtils = {
   },
 
   shouldStoreContentThumbnail: function (aDocument, aDocShell) {
+    if (BrowserUtils.isToolbarVisible(aDocShell, "findbar")) {
+      return false;
+    }
+
     // FIXME Bug 720575 - Don't capture thumbnails for SVG or XML documents as
     //       that currently regresses Talos SVG tests.
     if (aDocument instanceof Ci.nsIDOMXMLDocument) {
