@@ -3,7 +3,6 @@
   <script type="text/javascript">
 window.onload = function() {
     var ctx = document.getElementById("c1").getContext("2d");
-    ctx.mozFillRule = "evenodd";
 
     ctx.moveTo(50, 50);
     ctx.lineTo(250, 50);
@@ -17,7 +16,7 @@ window.onload = function() {
     ctx.lineTo(200, 100);
     ctx.lineTo(100, 100);
 
-    ctx.fill();
+    ctx.fill("evenodd");
 }
   </script>
 </head>

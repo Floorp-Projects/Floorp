@@ -3,16 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 body {
-  padding: 64px 0;
-}
-
-@media (max-width: 785px) {
-  body {
-    padding-top: 64px;
-    padding-inline-end: 0;
-    padding-bottom: 64px;
-    padding-inline-start: 51px;
-  }
+  padding: 64px 51px;
 }
 
 @media print {

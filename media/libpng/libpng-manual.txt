@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.23 - June 9, 2016
+ libpng version 1.6.24 - August 4, 2016
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2016 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.23 - June 9, 2016
+ libpng versions 0.97, January 1998, through 1.6.24 - August 4, 2016
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2016 Glenn Randers-Pehrson
 
@@ -559,7 +559,7 @@ non-interlaced case the row that was just handled is simply one less than the
 passed in row number, and pass will always be 0.  For the interlaced case the
 same applies unless the row value is 0, in which case the row just handled was
 the last one from one of the preceding passes.  Because interlacing may skip a
-pass you cannot be sure that the preceding pass is just 'pass-1', if you really
+pass you cannot be sure that the preceding pass is just 'pass-1'; if you really
 need to know what the last pass is record (row,pass) from the callback and use
 the last recorded value each time.
 
@@ -2230,7 +2230,8 @@ is exactly the same.  If you are planning on displaying the image
 after each pass, the "rectangle" effect is generally considered the
 better looking one.
 
-If you only want the "sparkle" effect, just call png_read_rows() as
+If you only want the "sparkle" effect, just call png_read_row() or
+png_read_rows() as
 normal, with the third parameter NULL.  Make sure you make pass over
 the image number_of_passes times, and you don't change the data in the
 rows between calls.  You can change the locations of the data, just
@@ -2239,6 +2240,8 @@ pass, and assumes the data from previous passes is still valid.
 
     png_read_rows(png_ptr, row_pointers, NULL,
         number_of_rows);
+    or
+    png_read_row(png_ptr, row_pointers, NULL);
 
 If you only want the first effect (the rectangles), do the same as
 before except pass the row buffer in the third parameter, and leave
@@ -2246,6 +2249,8 @@ the second parameter NULL.
 
     png_read_rows(png_ptr, NULL, row_pointers,
         number_of_rows);
+    or
+    png_read_row(png_ptr, NULL, row_pointers);
 
 If you don't want libpng to handle the interlacing details, just call
 png_read_rows() PNG_INTERLACE_ADAM7_PASSES times to read in all the images.
@@ -5345,7 +5350,7 @@ Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.23 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.24 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer

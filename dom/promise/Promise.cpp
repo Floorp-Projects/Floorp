@@ -926,6 +926,14 @@ Promise::MaybeReject(JSContext* aCx,
 #endif // SPIDERMONKEY_PROMISE
 
 void
+Promise::MaybeResolveWithUndefined()
+{
+  NS_ASSERT_OWNINGTHREAD(Promise);
+
+  MaybeResolve(JS::UndefinedHandleValue);
+}
+
+void
 Promise::MaybeReject(const RefPtr<MediaStreamError>& aArg) {
   NS_ASSERT_OWNINGTHREAD(Promise);
 
@@ -947,7 +955,6 @@ Promise::MaybeRejectWithUndefined()
 
   MaybeSomething(JS::UndefinedHandleValue, &Promise::MaybeReject);
 }
-
 
 #ifdef SPIDERMONKEY_PROMISE
 void

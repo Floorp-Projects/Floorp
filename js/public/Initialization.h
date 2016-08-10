@@ -86,6 +86,22 @@ JS_InitWithFailureDiagnostic(void)
 #endif
 }
 
+/*
+ * Returns true if SpiderMonkey has been initialized successfully, even if it has
+ * possibly been shut down.
+ *
+ * Note that it is the responsibility of the embedder to call JS_Init() and
+ * JS_ShutDown() at the correct times, and therefore this API should ideally not
+ * be necessary to use.  This is only intended to be used in cases where the
+ * embedder isn't in full control of deciding whether to initialize SpiderMonkey
+ * or hand off the task to another consumer.
+ */
+inline bool
+JS_IsInitialized(void)
+{
+  return JS::detail::libraryInitState != JS::detail::InitState::Uninitialized;
+}
+
 /**
  * Destroy free-standing resources allocated by SpiderMonkey, not associated
  * with any runtime, context, or other structure.

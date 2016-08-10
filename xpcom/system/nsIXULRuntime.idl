@@ -162,4 +162,10 @@ interface nsIXULRuntime : nsISupports
    * True if this is an official build (MOZILLA_OFFICIAL).
    */
   readonly attribute boolean isOfficial;
+
+  /**
+   * True if Windows DLL blocklist initialized correctly. This is
+   * primarily for automated testing purposes.
+   */
+  readonly attribute boolean windowsDLLBlocklistStatus;
 };

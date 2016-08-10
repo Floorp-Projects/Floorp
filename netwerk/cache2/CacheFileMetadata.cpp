@@ -845,6 +845,11 @@ CacheFileMetadata::InitEmptyMetadata()
   // We're creating a new entry. If there is any old data truncate it.
   if (mHandle) {
     mHandle->SetPinned(Pinned());
+    // We can pronounce the handle as invalid now, because it simply
+    // doesn't have the correct metadata.  This will cause IO operations
+    // be bypassed during shutdown (mainly dooming it, when a channel
+    // is canceled by closing the window.)
+    mHandle->SetInvalid();
     if (mHandle->FileExists() && mHandle->FileSize()) {
       CacheFileIOManager::TruncateSeekSetEOF(mHandle, 0, 0, nullptr);
     }

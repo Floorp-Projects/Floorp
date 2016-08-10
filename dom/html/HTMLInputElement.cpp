@@ -1468,7 +1468,7 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       }
     } else if (MaxLengthApplies() && aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
-    } else if (aName == nsGkAtoms::pattern) {
+    } else if (aName == nsGkAtoms::pattern && !mParserCreating) {
       UpdatePatternMismatchValidityState();
     } else if (aName == nsGkAtoms::multiple) {
       UpdateTypeMismatchValidityState();
@@ -5612,25 +5612,16 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
                                     const Optional<nsAString>& aDirection,
                                     ErrorResult& aRv)
 {
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-  if (textControlFrame) {
-    // Default to forward, even if not specified.
-    // Note that we don't currently support directionless selections, so
-    // "none" is treated like "forward".
-    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
-    if (aDirection.WasPassed() && aDirection.Value().EqualsLiteral("backward")) {
-      dir = nsITextControlFrame::eBackward;
-    }
+  if (!SupportsTextSelection()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
 
-    aRv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
-    if (!aRv.Failed()) {
-      aRv = textControlFrame->ScrollSelectionIntoView();
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
-                                 true, false);
-      asyncDispatcher->PostDOMEvent();
-    }
+  nsresult rv = SetSelectionRange(aSelectionStart, aSelectionEnd,
+    aDirection.WasPassed() ? aDirection.Value() : NullString());
+
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
   }
 }
 
@@ -5639,19 +5630,36 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
                                     int32_t aSelectionEnd,
                                     const nsAString& aDirection)
 {
-  ErrorResult rv;
-  Optional<nsAString> direction;
-  direction = &aDirection;
+  nsresult rv = NS_OK;
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
+  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
+  if (textControlFrame) {
+    // Default to forward, even if not specified.
+    // Note that we don't currently support directionless selections, so
+    // "none" is treated like "forward".
+    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
+    if (!aDirection.IsEmpty() && aDirection.EqualsLiteral("backward")) {
+      dir = nsITextControlFrame::eBackward;
+    }
 
-  SetSelectionRange(aSelectionStart, aSelectionEnd, direction, rv);
-  return rv.StealNSResult();
+    rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
+    if (NS_SUCCEEDED(rv)) {
+      rv = textControlFrame->ScrollSelectionIntoView();
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
+                                 true, false);
+      asyncDispatcher->PostDOMEvent();
+    }
+  }
+
+  return rv;
 }
 
 void
 HTMLInputElement::SetRangeText(const nsAString& aReplacement, ErrorResult& aRv)
 {
-  if (!SupportsSetRangeText()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  if (!SupportsTextSelection()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
@@ -5676,8 +5684,8 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
                                ErrorResult& aRv, int32_t aSelectionStart,
                                int32_t aSelectionEnd)
 {
-  if (!SupportsSetRangeText()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  if (!SupportsTextSelection()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
@@ -5763,21 +5771,20 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
   SetSelectionRange(aSelectionStart, aSelectionEnd, direction, aRv);
 }
 
-int32_t
+Nullable<int32_t>
 HTMLInputElement::GetSelectionStart(ErrorResult& aRv)
 {
-  int32_t selEnd, selStart;
-  aRv = GetSelectionRange(&selStart, &selEnd);
-
-  if (aRv.Failed()) {
-    nsTextEditorState* state = GetEditorState();
-    if (state && state->IsSelectionCached()) {
-      aRv = NS_OK;
-      return state->GetSelectionProperties().GetStart();
-    }
+  if (!SupportsTextSelection()) {
+    return Nullable<int32_t>();
   }
 
-  return selStart;
+  int32_t selStart;
+  nsresult rv = GetSelectionStart(&selStart);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+
+  return Nullable<int32_t>(selStart);
 }
 
 NS_IMETHODIMP
@@ -5785,17 +5792,39 @@ HTMLInputElement::GetSelectionStart(int32_t* aSelectionStart)
 {
   NS_ENSURE_ARG_POINTER(aSelectionStart);
 
-  ErrorResult rv;
-  *aSelectionStart = GetSelectionStart(rv);
-  return rv.StealNSResult();
+  int32_t selEnd, selStart;
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
+
+  if (NS_FAILED(rv)) {
+    nsTextEditorState* state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      *aSelectionStart = state->GetSelectionProperties().GetStart();
+      return NS_OK;
+    }
+    return rv;
+  }
+
+  *aSelectionStart = selStart;
+  return NS_OK;
 }
 
 void
-HTMLInputElement::SetSelectionStart(int32_t aSelectionStart, ErrorResult& aRv)
+HTMLInputElement::SetSelectionStart(const Nullable<int32_t>& aSelectionStart,
+                                    ErrorResult& aRv)
 {
+  if (!SupportsTextSelection()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  int32_t selStart = 0;
+  if (!aSelectionStart.IsNull()) {
+    selStart = aSelectionStart.Value();
+  }
+
   nsTextEditorState* state = GetEditorState();
   if (state && state->IsSelectionCached()) {
-    state->GetSelectionProperties().SetStart(aSelectionStart);
+    state->GetSelectionProperties().SetStart(selStart);
     return;
   }
 
@@ -5811,7 +5840,7 @@ HTMLInputElement::SetSelectionStart(int32_t aSelectionStart, ErrorResult& aRv)
     return;
   }
 
-  start = aSelectionStart;
+  start = selStart;
   if (end < start) {
     end = start;
   }
@@ -5823,25 +5852,25 @@ NS_IMETHODIMP
 HTMLInputElement::SetSelectionStart(int32_t aSelectionStart)
 {
   ErrorResult rv;
-  SetSelectionStart(aSelectionStart, rv);
+  Nullable<int32_t> selStart(aSelectionStart);
+  SetSelectionStart(selStart, rv);
   return rv.StealNSResult();
 }
 
-int32_t
+Nullable<int32_t>
 HTMLInputElement::GetSelectionEnd(ErrorResult& aRv)
 {
-  int32_t selStart, selEnd;
-  aRv = GetSelectionRange(&selStart, &selEnd);
-
-  if (aRv.Failed()) {
-    nsTextEditorState* state = GetEditorState();
-    if (state && state->IsSelectionCached()) {
-      aRv = NS_OK;
-      return state->GetSelectionProperties().GetEnd();
-    }
+  if (!SupportsTextSelection()) {
+    return Nullable<int32_t>();
   }
 
-  return selEnd;
+  int32_t selEnd;
+  nsresult rv = GetSelectionEnd(&selEnd);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+
+  return Nullable<int32_t>(selEnd);
 }
 
 NS_IMETHODIMP
@@ -5849,17 +5878,39 @@ HTMLInputElement::GetSelectionEnd(int32_t* aSelectionEnd)
 {
   NS_ENSURE_ARG_POINTER(aSelectionEnd);
 
-  ErrorResult rv;
-  *aSelectionEnd = GetSelectionEnd(rv);
-  return rv.StealNSResult();
+  int32_t selEnd, selStart;
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
+
+  if (NS_FAILED(rv)) {
+    nsTextEditorState* state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      *aSelectionEnd = state->GetSelectionProperties().GetEnd();
+      return NS_OK;
+    }
+    return rv;
+  }
+
+  *aSelectionEnd = selEnd;
+  return NS_OK;
 }
 
 void
-HTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd, ErrorResult& aRv)
+HTMLInputElement::SetSelectionEnd(const Nullable<int32_t>& aSelectionEnd,
+                                  ErrorResult& aRv)
 {
+  if (!SupportsTextSelection()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  int32_t selEnd = 0;
+  if (!aSelectionEnd.IsNull()) {
+    selEnd = aSelectionEnd.Value();
+  }
+
   nsTextEditorState* state = GetEditorState();
   if (state && state->IsSelectionCached()) {
-    state->GetSelectionProperties().SetEnd(aSelectionEnd);
+    state->GetSelectionProperties().SetEnd(selEnd);
     return;
   }
 
@@ -5875,7 +5926,7 @@ HTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd, ErrorResult& aRv)
     return;
   }
 
-  end = aSelectionEnd;
+  end = selEnd;
   if (start > end) {
     start = end;
   }
@@ -5887,7 +5938,8 @@ NS_IMETHODIMP
 HTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd)
 {
   ErrorResult rv;
-  SetSelectionEnd(aSelectionEnd, rv);
+  Nullable<int32_t> selEnd(aSelectionEnd);
+  SetSelectionEnd(selEnd, rv);
   return rv.StealNSResult();
 }
 
@@ -5929,6 +5981,11 @@ DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirecti
 void
 HTMLInputElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aRv)
 {
+  if (!SupportsTextSelection()) {
+    aDirection.SetIsVoid(true);
+    return;
+  }
+
   nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
   nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
@@ -5964,6 +6021,11 @@ HTMLInputElement::GetSelectionDirection(nsAString& aDirection)
 void
 HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult& aRv)
 {
+  if (!SupportsTextSelection()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
   nsTextEditorState* state = GetEditorState();
   if (state && state->IsSelectionCached()) {
     nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eNone;

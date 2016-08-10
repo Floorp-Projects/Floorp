@@ -19,9 +19,9 @@ builds:
       - Linux64 ASan
     types:
       opt:
-        task: tasks/builds/opt_linux64-asan.yml
+        task: tasks/builds/opt_linux64_asan.yml
       debug:
-        task: tasks/builds/dbg_linux64-asan.yml
+        task: tasks/builds/dbg_linux64_asan.yml
   linux64-pgo:
     platforms:
       - Linux64 PGO

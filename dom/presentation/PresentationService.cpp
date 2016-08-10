@@ -173,9 +173,9 @@ PresentationDeviceRequest::CreateSessionInfo(nsIPresentationDevice* aDevice)
 }
 
 NS_IMETHODIMP
-PresentationDeviceRequest::Cancel()
+PresentationDeviceRequest::Cancel(nsresult aReason)
 {
-  return mCallback->NotifyError(NS_ERROR_DOM_ABORT_ERR);
+  return mCallback->NotifyError(aReason);
 }
 
 /*

@@ -324,9 +324,9 @@ class FileCopier(FileRegistry):
                     os.mkdir(d)
 
             if not os.access(d, os.W_OK):
-                umask = os.umask(0077)
+                umask = os.umask(0o077)
                 os.umask(umask)
-                os.chmod(d, 0777 & ~umask)
+                os.chmod(d, 0o777 & ~umask)
 
         if isinstance(remove_unaccounted, FileRegistry):
             existing_files = set(os.path.normpath(os.path.join(destination, p))
@@ -412,7 +412,7 @@ class FileCopier(FileRegistry):
                 if os.name == 'nt' and not os.access(f, os.W_OK):
                     # It doesn't matter what we set permissions to since we
                     # will remove this file shortly.
-                    os.chmod(f, 0600)
+                    os.chmod(f, 0o600)
 
                 os.remove(f)
                 result.removed_files.add(f)
@@ -454,7 +454,7 @@ class FileCopier(FileRegistry):
                     if e.errno in (errno.EPERM, errno.EACCES):
                         # Permissions may not allow deletion. So ensure write
                         # access is in place before attempting to rmdir again.
-                        os.chmod(d, 0700)
+                        os.chmod(d, 0o700)
                         os.rmdir(d)
                     else:
                         raise

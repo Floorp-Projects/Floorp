@@ -15342,6 +15342,10 @@
         "url": "/domparsing/innerhtml-01.xhtml"
       },
       {
+	"path": "domparsing/innerhtml-02.html",
+	"url": "/domparsing/innerhtml-02.html"
+      },
+      {
         "path": "domparsing/innerhtml-03.xhtml",
         "url": "/domparsing/innerhtml-03.xhtml"
       },
@@ -37628,6 +37632,12 @@
           {
             "path": "css-shapes/basic-shape-circle-ellipse-serialization.html",
             "url": "/css-shapes/basic-shape-circle-ellipse-serialization.html"
+          }
+        ],
+        "domparsing/style_attribute_html.html": [
+          {
+            "path": "domparsing/style_attribute_html.html",
+            "url": "/domparsing/style_attribute_html.html"
           }
         ],
         "html/semantics/forms/the-form-element/form-submission-sandbox.html": [

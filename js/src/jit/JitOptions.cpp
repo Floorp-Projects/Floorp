@@ -117,6 +117,9 @@ DefaultJitOptions::DefaultJitOptions()
     // Toggle whether eager scalar replacement is globally disabled.
     SET_DEFAULT(disableScalarReplacement, false);
 
+    // Toggles whether CacheIR stubs are used.
+    SET_DEFAULT(disableCacheIR, false);
+
     // Toggles whether shared stubs are used in Ionmonkey.
     SET_DEFAULT(disableSharedStubs, false);
 

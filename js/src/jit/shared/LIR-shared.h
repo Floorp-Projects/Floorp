@@ -8696,6 +8696,22 @@ class LCheckReturn : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0
     static const size_t ThisValue = BOX_PIECES;
 };
 
+class LCheckIsObj : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CheckIsObj)
+
+    static const size_t CheckValue = 0;
+
+    explicit LCheckIsObj(const LBoxAllocation& value) {
+        setBoxOperand(CheckValue, value);
+    }
+
+    MCheckIsObj* mir() const {
+        return mir_->toCheckIsObj();
+    }
+};
+
 class LCheckObjCoercible : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
 {
   public:

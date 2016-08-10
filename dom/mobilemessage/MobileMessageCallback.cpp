@@ -364,7 +364,7 @@ MobileMessageCallback::NotifyGetSmscAddressFailed(int32_t aError)
 NS_IMETHODIMP
 MobileMessageCallback::NotifySetSmscAddress()
 {
-  mPromise->MaybeResolve(JS::UndefinedHandleValue);
+  mPromise->MaybeResolveWithUndefined();
   return NS_OK;
 }
 

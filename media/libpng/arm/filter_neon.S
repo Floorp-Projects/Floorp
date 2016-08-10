@@ -10,12 +10,6 @@
  * and license in png.h
  */
 
-/* These are required because Mozilla's moz.build system doesn't pass
- * -DDefined macros to the assembler.
- */
-#define PNG_READ_SUPPORTED
-#define MOZ_PNG_HAVE_ARM_NEON
-
 /* This is required to get the symbol renames, which are #defines, and the
  * definitions (or not) of PNG_ARM_NEON_OPT and PNG_ARM_NEON_IMPLEMENTATION.
  */

@@ -2716,7 +2716,7 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
         attached = true;
     }
 
-    if (!attached) {
+    if (!attached && !JitOptions.disableCacheIR) {
         mozilla::Maybe<CacheIRWriter> writer;
         GetPropIRGenerator gen(cx, pc, val, name, res);
         if (!gen.tryAttachStub(writer))
