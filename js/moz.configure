@@ -172,3 +172,14 @@ def vtune(value):
 
 set_config('MOZ_VTUNE', vtune)
 set_define('MOZ_VTUNE', vtune)
+
+
+js_option('--enable-gc-trace', env='JS_GC_TRACE',
+          help='Enable tracing of allocation and finalization')
+
+@depends('--enable-gc-trace')
+def gc_trace(value):
+    if value:
+        return True
+
+set_define('JS_GC_TRACE', gc_trace)
