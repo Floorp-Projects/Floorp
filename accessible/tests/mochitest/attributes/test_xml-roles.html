@@ -31,6 +31,7 @@
       testAttrs("section", {"xml-roles" : "region"}, true);
       testAttrs("main", {"xml-roles" : "main"}, true); // // ARIA override
       testAttrs("form", {"xml-roles" : "form"}, true);
+      testAttrs("feed", {"xml-roles" : "feed"}, true);
       testAttrs("article", {"xml-roles" : "article"}, true);
       testAttrs("main_element", {"xml-roles" : "main"}, true);
 
@@ -159,6 +160,7 @@
   <section id="section">a section</section>
   <article id="main" role="main">a main area</article>
   <article id="form" role="form">a form area</article>
+  <div id="feed" role="feed">a feed</div>
   <article id="article">article</article>
   <main id="main_element">another main area</main>
 
