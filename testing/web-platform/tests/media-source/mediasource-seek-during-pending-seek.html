@@ -53,8 +53,22 @@
 
               test.waitForExpectedEvents(function()
               {
-                  test.expectEvent(mediaSource, 'sourceended', 'mediaSource ended');
-                  mediaSource.endOfStream();
+                  if (sourceBuffer.updating)
+                  {
+                      // The event playing was fired prior to the appendBuffer completing.
+                      test.expectEvent(sourceBuffer, 'updateend', 'sourceBuffer');
+                      test.waitForExpectedEvents(function()
+                      {
+                          assert_false(sourceBuffer.updating, 'append have compleded');
+                          test.expectEvent(mediaSource, 'sourceended', 'mediaSource ended');
+                          mediaSource.endOfStream();
+                      });
+                  }
+                  else
+                  {
+                      test.expectEvent(mediaSource, 'sourceended', 'mediaSource ended');
+                      mediaSource.endOfStream();
+                  }
               });
 
               test.waitForExpectedEvents(function()
@@ -119,7 +133,6 @@
                   // when the seeking event is fired as the operation is asynchronous.
 
                   // Append media data for the second seek position.
-                  test.expectEvent(sourceBuffer, 'updateend', 'sourceBuffer');
                   test.expectEvent(mediaElement, 'seeked', 'mediaElement finished seek');
                   MediaSourceUtil.appendUntilEventFires(test, mediaElement, 'seeked', sourceBuffer, mediaData, segmentInfo, segmentIndex);
               });
@@ -128,8 +141,22 @@
               {
                   assert_false(mediaElement.seeking, 'mediaElement is no longer seeking');
 
-                  test.expectEvent(mediaSource, 'sourceended', 'mediaSource ended');
-                  mediaSource.endOfStream();
+                  if (sourceBuffer.updating)
+                  {
+                      // The event seeked was fired prior to the appendBuffer completing.
+                      test.expectEvent(sourceBuffer, 'updateend', 'sourceBuffer');
+                      test.waitForExpectedEvents(function()
+                      {
+                          assert_false(sourceBuffer.updating, 'append have compleded');
+                          test.expectEvent(mediaSource, 'sourceended', 'mediaSource ended');
+                          mediaSource.endOfStream();
+                      });
+                  }
+                  else
+                  {
+                      test.expectEvent(mediaSource, 'sourceended', 'mediaSource ended');
+                      mediaSource.endOfStream();
+                  }
               });
 
               test.waitForExpectedEvents(function()
