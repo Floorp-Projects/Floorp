@@ -6,5 +6,7 @@
 DevToolsModules(
     'bundle.js',
     'panel.js',
+    'pretty-print-worker.js',
+    'source-map-worker.js',
     'styles.css'
 )

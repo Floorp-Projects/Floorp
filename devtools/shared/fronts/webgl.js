@@ -13,7 +13,7 @@ const protocol = require("devtools/shared/protocol");
 /**
  * The corresponding Front object for the ShaderActor.
  */
-const ShaderFront = protocol.FrontClassWithSpec(shaderSpec, {
+const ShaderFront = protocol.FrontClass(shaderSpec, {
   initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   }
@@ -24,7 +24,7 @@ exports.ShaderFront = ShaderFront;
 /**
  * The corresponding Front object for the ProgramActor.
  */
-const ProgramFront = protocol.FrontClassWithSpec(programSpec, {
+const ProgramFront = protocol.FrontClass(programSpec, {
   initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   }
@@ -35,7 +35,7 @@ exports.ProgramFront = ProgramFront;
 /**
  * The corresponding Front object for the WebGLActor.
  */
-const WebGLFront = protocol.FrontClassWithSpec(webGLSpec, {
+const WebGLFront = protocol.FrontClass(webGLSpec, {
   initialize: function (client, { webglActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: webglActor });
     this.manage(this);

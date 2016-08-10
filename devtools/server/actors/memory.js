@@ -23,7 +23,7 @@ loader.lazyRequireGetter(this, "StackFrameCache",
  *
  * @see devtools/server/performance/memory.js for documentation.
  */
-exports.MemoryActor = protocol.ActorClassWithSpec(memorySpec, {
+exports.MemoryActor = protocol.ActorClass(memorySpec, {
   initialize: function (conn, parent, frameCache = new StackFrameCache()) {
     protocol.Actor.prototype.initialize.call(this, conn);
 

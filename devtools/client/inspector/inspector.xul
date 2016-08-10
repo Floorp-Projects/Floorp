@@ -40,14 +40,15 @@
           class="devtools-button" />
         <html:div class="devtools-toolbar-spacer" />
         <html:span id="inspector-searchlabel" />
-        <textbox id="inspector-searchbox"
-          type="search"
-          timeout="50"
-          class="devtools-searchinput"
-          placeholder="&inspectorSearchHTML.label3;"/>
+        <html:div id="inspector-search" class="devtools-searchbox">
+          <html:input id="inspector-searchbox" class="devtools-searchinput"
+                      type="search"
+                      placeholder="&inspectorSearchHTML.label3;"/>
+          <html:button id="inspector-searchinput-clear" class="devtools-searchinput-clear" tabindex="-1"></html:button>
+        </html:div>
         <html:button id="inspector-eyedropper-toggle"
-          title="&inspectorEyeDropper.label;"
-          class="devtools-button command-button-invertable" />
+                     title="&inspectorEyeDropper.label;"
+                     class="devtools-button command-button-invertable" />
         <div xmlns="http://www.w3.org/1999/xhtml"
           id="inspector-sidebar-toggle-box" />
       </html:div>

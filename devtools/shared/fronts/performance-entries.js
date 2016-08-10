@@ -4,12 +4,14 @@
 "use strict";
 
 const { Front, FrontClass } = require("devtools/shared/protocol");
-const { eventLoopLagSpec } = require("devtools/shared/specs/eventlooplag");
+const performanceSpec = require("devtools/shared/specs/performance-entries");
 
-exports.EventLoopLagFront = FrontClass(eventLoopLagSpec, {
+var PerformanceEntriesFront = FrontClass(performanceSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.call(this, client);
-    this.actorID = form.eventLoopLagActor;
+    this.actorID = form.performanceEntriesActor;
     this.manage(this);
   },
 });
+
+exports.PerformanceEntriesFront = PerformanceEntriesFront;

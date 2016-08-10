@@ -6777,6 +6777,22 @@ var gIdentityHandler = {
     this.refreshIdentityBlock();
   },
 
+  updateSharingIndicator() {
+    let tab = gBrowser.selectedTab;
+    let sharing = tab.getAttribute("sharing");
+    if (sharing)
+      this._identityBox.setAttribute("sharing", sharing);
+    else
+      this._identityBox.removeAttribute("sharing");
+
+    this._sharingState = tab._sharingState;
+
+    if (this._identityPopup.state == "open") {
+      this.updateSitePermissions();
+      this._identityPopupMultiView.setHeightToFit();
+    }
+  },
+
   /**
    * Attempt to provide proper IDN treatment for host names
    */
@@ -7233,7 +7249,32 @@ var gIdentityHandler = {
 
     let uri = gBrowser.currentURI;
 
-    for (let permission of SitePermissions.getPermissionDetailsByURI(uri)) {
+    let permissions = SitePermissions.getPermissionDetailsByURI(uri);
+    if (this._sharingState) {
+      // If WebRTC device or screen permissions are in use, we need to find
+      // the associated permission item to set the inUse field to true.
+      for (let id of ["camera", "microphone", "screen"]) {
+        if (this._sharingState[id]) {
+          let found = false;
+          for (let permission of permissions) {
+            if (permission.id != id)
+              continue;
+            found = true;
+            permission.inUse = true;
+            break;
+          }
+          if (!found) {
+            // If the permission item we were looking for doesn't exist,
+            // the user has temporarily allowed sharing and we need to add
+            // an item in the permissions array to reflect this.
+            let permission = SitePermissions.getPermissionItem(id);
+            permission.inUse = true;
+            permissions.push(permission);
+          }
+        }
+      }
+    }
+    for (let permission of permissions) {
       let item = this._createPermissionItem(permission);
       this._permissionList.appendChild(item);
     }
@@ -7245,9 +7286,12 @@ var gIdentityHandler = {
     container.setAttribute("align", "center");
 
     let img = document.createElement("image");
-    let isBlocked = (aPermission.state == SitePermissions.BLOCK) ? " blocked" : "";
-    img.setAttribute("class",
-      "identity-popup-permission-icon " + aPermission.id + "-icon" + isBlocked);
+    let classes = "identity-popup-permission-icon " + aPermission.id + "-icon";
+    if (aPermission.state == SitePermissions.BLOCK)
+      classes += " blocked";
+    if (aPermission.inUse)
+      classes += " in-use";
+    img.setAttribute("class", classes);
 
     let nameLabel = document.createElement("label");
     nameLabel.setAttribute("flex", "1");
@@ -7258,13 +7302,36 @@ var gIdentityHandler = {
     stateLabel.setAttribute("flex", "1");
     stateLabel.setAttribute("class", "identity-popup-permission-state-label");
     stateLabel.textContent = SitePermissions.getStateLabel(
-      aPermission.id, aPermission.state);
+      aPermission.id, aPermission.state, aPermission.inUse || false);
 
     let button = document.createElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
     button.addEventListener("command", () => {
       this._permissionList.removeChild(container);
       this._identityPopupMultiView.setHeightToFit();
+      if (aPermission.inUse &&
+          ["camera", "microphone", "screen"].includes(aPermission.id)) {
+        let windowId = this._sharingState.windowId;
+        if (aPermission.id == "screen") {
+          windowId = "screen:" + windowId;
+        } else {
+          // If we set persistent permissions or the sharing has
+          // started due to existing persistent permissions, we need
+          // to handle removing these even for frames with different hostnames.
+          let uris = gBrowser.selectedBrowser._devicePermissionURIs || [];
+          for (let uri of uris) {
+            // It's not possible to stop sharing one of camera/microphone
+            // without the other.
+            for (let id of ["camera", "microphone"]) {
+              if (this._sharingState[id] &&
+                  SitePermissions.get(uri, id) == SitePermissions.ALLOW)
+                SitePermissions.remove(uri, id);
+            }
+          }
+        }
+        let mm = gBrowser.selectedBrowser.messageManager;
+        mm.sendAsyncMessage("webrtc:StopSharing", windowId);
+      }
       SitePermissions.remove(gBrowser.currentURI, aPermission.id);
     });
 
