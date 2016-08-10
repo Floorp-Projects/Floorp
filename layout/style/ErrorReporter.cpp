@@ -46,7 +46,7 @@ public:
   void SetPending() { mPending = true; }
 
   // When invoked as a runnable, zap the cache.
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mURI = nullptr;
     mSpec.Truncate();
     mPending = false;

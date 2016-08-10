@@ -23,7 +23,7 @@
 
     // Force the creation of an accessible for the hidden window's document.
     var doc = Services.appShell.hiddenDOMWindow.document;
-    gAccRetrieval.getAccessibleFor(doc);
+    gAccService.getAccessibleFor(doc);
 
     // The private hidden window will be lazily created that's why we need to do
     // it here *before* loading '../events.js' or else we'll have a duplicate
@@ -31,7 +31,7 @@
     var privateDoc = Services.appShell.hiddenPrivateDOMWindow.document;
 
     // Force the creation of an accessible for the private hidden window's doc.
-    gAccRetrieval.getAccessibleFor(privateDoc);
+    gAccService.getAccessibleFor(privateDoc);
   </script>
 
   <script type="application/javascript"

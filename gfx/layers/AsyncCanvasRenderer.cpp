@@ -51,7 +51,7 @@ AsyncCanvasRenderer::NotifyElementAboutAttributesChanged()
       : mRenderer(aRenderer)
     {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       if (mRenderer) {
         dom::HTMLCanvasElement::SetAttrFromAsyncCanvasRenderer(mRenderer);
@@ -86,7 +86,7 @@ AsyncCanvasRenderer::NotifyElementAboutInvalidation()
       : mRenderer(aRenderer)
     {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       if (mRenderer) {
         dom::HTMLCanvasElement::InvalidateFromAsyncCanvasRenderer(mRenderer);

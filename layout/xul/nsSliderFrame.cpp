@@ -207,7 +207,7 @@ public:
     mValue(aValue), mUserChanged(aUserChanged)
   {}
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     return mListener->ValueChanged(nsDependentAtomString(mWhich),
                                    mValue, mUserChanged);
@@ -228,7 +228,7 @@ public:
     mDragBeginning(aDragBeginning)
   {}
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     return mListener->DragStateChanged(mDragBeginning);
   }

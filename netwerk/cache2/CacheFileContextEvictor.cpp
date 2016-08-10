@@ -553,6 +553,14 @@ CacheFileContextEvictor::EvictEntries()
   }
 
   while (true) {
+    if (CacheObserver::ShuttingDown()) {
+      LOG(("CacheFileContextEvictor::EvictEntries() - Stopping evicting due to "
+           "shutdown."));
+      mEvicting = true; // We don't want to start eviction again during shutdown
+                        // process. Setting this flag to true ensures it.
+      return NS_OK;
+    }
+
     if (CacheIOThread::YieldAndRerun()) {
       LOG(("CacheFileContextEvictor::EvictEntries() - Breaking loop for higher "
            "level events."));

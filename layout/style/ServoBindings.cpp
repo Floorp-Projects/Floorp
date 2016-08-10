@@ -155,7 +155,7 @@ nsIAtom*
 Gecko_Namespace(RawGeckoElement* aElement)
 {
   int32_t id = aElement->NodeInfo()->NamespaceID();
-  return nsContentUtils::NameSpaceManager()->NameSpaceURIAtom(id);
+  return nsContentUtils::NameSpaceManager()->NameSpaceURIAtomForServo(id);
 }
 
 nsIAtom*

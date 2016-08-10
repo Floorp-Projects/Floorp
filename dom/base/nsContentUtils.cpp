@@ -4858,7 +4858,7 @@ public:
     mParent = mContent->GetParent();
     mDoc = mContent->OwnerDoc();
   }
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mContent->UnbindFromTree();
     return NS_OK;
   }

@@ -19,10 +19,12 @@ public:
 
   explicit TCPDeviceInfo(const nsACString& aId,
                          const nsACString& aAddress,
-                         const uint16_t aPort)
+                         const uint16_t aPort,
+                         const nsACString& aCertFingerprint)
     : mId(aId)
     , mAddress(aAddress)
     , mPort(aPort)
+    , mCertFingerprint(aCertFingerprint)
   {
   }
 
@@ -32,6 +34,7 @@ private:
   nsCString mId;
   nsCString mAddress;
   uint16_t mPort;
+  nsCString mCertFingerprint;
 };
 
 NS_IMPL_ISUPPORTS(TCPDeviceInfo,
@@ -59,9 +62,16 @@ TCPDeviceInfo::GetPort(uint16_t* aPort)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TCPDeviceInfo::GetCertFingerprint(nsACString& aCertFingerprint)
+{
+  aCertFingerprint = mCertFingerprint;
+  return NS_OK;
 }
-}
-}
+
+} // namespace presentation
+} // namespace dom
+} // namespace mozilla
 
 #endif /* !__TCPDeviceInfo_h__ */
 

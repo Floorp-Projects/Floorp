@@ -458,6 +458,7 @@ private:
   nsCOMPtr<nsIFile>                    mCacheProfilelessDirectory;
 #endif
   bool                                 mTreeCreated;
+  bool                                 mTreeCreationFailed;
   CacheFileHandles                     mHandles;
   nsTArray<CacheFileHandle *>          mHandlesByLastUsed;
   nsTArray<CacheFileHandle *>          mSpecialHandles;

@@ -69,7 +69,7 @@ public:
     , mInitDataType(aInitDataType)
   {
   }
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     // Note: Null check the owner, as the decoder could have been shutdown
     // since this event was dispatched.
     MediaDecoderOwner* owner = mDecoder->GetOwner();

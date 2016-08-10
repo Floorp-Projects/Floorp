@@ -4375,10 +4375,10 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
 nsDisplayOpacity::nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame, nsDisplayList* aList,
                                    const DisplayItemScrollClip* aScrollClip,
-                                   bool aForEventsOnly)
+                                   bool aForEventsAndPluginsOnly)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
     , mOpacity(aFrame->StyleEffects()->mOpacity)
-    , mForEventsOnly(aForEventsOnly)
+    , mForEventsAndPluginsOnly(aForEventsAndPluginsOnly)
 {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
 }
@@ -4404,7 +4404,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerLayerParameters& aContainerParameters) {
   ContainerLayerParameters params = aContainerParameters;
-  params.mForEventsOnly = mForEventsOnly;
+  params.mForEventsAndPluginsOnly = mForEventsAndPluginsOnly;
   RefPtr<Layer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            params, nullptr,
@@ -4548,7 +4548,7 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
   // If we only created this item so that we'd get correct nsDisplayEventRegions for child
   // frames, then force us to inactive to avoid unnecessary layerization changes for content
   // that won't ever be painted.
-  if (mForEventsOnly) {
+  if (mForEventsAndPluginsOnly) {
     MOZ_ASSERT(mOpacity == 0);
     return LAYER_INACTIVE;
   }

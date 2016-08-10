@@ -255,7 +255,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     LOG(("NotifyUpdateListenerEvent::Run() [this=%p]", this));
 

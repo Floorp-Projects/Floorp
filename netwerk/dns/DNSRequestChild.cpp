@@ -167,7 +167,7 @@ public:
     , mReasonForCancel(aReason)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mDnsRequest->mIPCOpen) {
       // Send request to Parent process.

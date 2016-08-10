@@ -317,7 +317,7 @@ protected:
         }
       }
 
-      NS_IMETHODIMP Run()
+      NS_IMETHOD Run() override
       {
         PROMISE_LOG("ResolveOrRejectRunnable::Run() [this=%p]", this);
         mThenValue->DoResolveOrReject(mPromise->Value());
@@ -955,7 +955,7 @@ public:
   ProxyRunnable(typename PromiseType::Private* aProxyPromise, MethodCall<PromiseType, ThisType, ArgTypes...>* aMethodCall)
     : mProxyPromise(aProxyPromise), mMethodCall(aMethodCall) {}
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     RefPtr<PromiseType> p = mMethodCall->Invoke();
     mMethodCall = nullptr;

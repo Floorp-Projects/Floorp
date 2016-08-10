@@ -385,7 +385,7 @@ struct Zone : public JS::shadow::Zone,
 
     bool isSystem;
 
-    bool usedByExclusiveThread;
+    mozilla::Atomic<bool> usedByExclusiveThread;
 
     // True when there are active frames.
     bool active;

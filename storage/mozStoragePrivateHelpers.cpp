@@ -256,7 +256,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     (void)mCallback->Complete(NS_OK, nullptr);
     return NS_OK;

@@ -94,7 +94,7 @@ public:
   { }
 
 protected:
-  NS_IMETHODIMP Run() {
+  NS_IMETHOD Run() override {
     dom::ContentChild* child = dom::ContentChild::GetSingleton();
     MOZ_ASSERT(child);
     child->SendOpenAnonymousTemporaryFile(mResultPtr);

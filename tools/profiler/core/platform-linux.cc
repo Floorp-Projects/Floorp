@@ -637,7 +637,7 @@ static void DoStartTask() {
 static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
   class StartTask : public Runnable {
   public:
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
       DoStartTask();
       return NS_OK;
     }

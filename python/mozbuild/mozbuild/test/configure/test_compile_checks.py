@@ -18,8 +18,7 @@ from mozunit import main
 from test_toolchain_helpers import FakeCompiler
 
 
-class TestHeaderChecks(unittest.TestCase):
-
+class BaseCompileChecks(unittest.TestCase):
     def get_mock_compiler(self, expected_test_content=None, expected_flags=None):
         expected_flags = expected_flags or []
         def mock_compiler(stdin, args):
@@ -59,6 +58,7 @@ class TestHeaderChecks(unittest.TestCase):
             def c_compiler(_):
                 return namespace(
                     flags=[],
+                    type='gcc',
                     compiler=os.path.abspath('/usr/bin/mockcc'),
                     wrapper=[],
                     language='C',
@@ -69,6 +69,7 @@ class TestHeaderChecks(unittest.TestCase):
             def cxx_compiler(_):
                 return namespace(
                     flags=[],
+                    type='gcc',
                     compiler=os.path.abspath('/usr/bin/mockcc'),
                     wrapper=[],
                     language='C++',
@@ -82,7 +83,7 @@ class TestHeaderChecks(unittest.TestCase):
         sandbox.include_file(os.path.join(base_dir, 'util.configure'))
         sandbox.include_file(os.path.join(base_dir, 'checks.configure'))
         exec_(mock_compiler_defs, sandbox)
-        sandbox.include_file(os.path.join(base_dir, 'compilechecks.configure'))
+        sandbox.include_file(os.path.join(base_dir, 'compile-checks.configure'))
 
         status = 0
         try:
@@ -93,6 +94,8 @@ class TestHeaderChecks(unittest.TestCase):
 
         return config, out.getvalue(), status
 
+
+class TestHeaderChecks(BaseCompileChecks):
     def test_try_compile_include(self):
         expected_test_content = textwrap.dedent('''\
           #include <foo.h>
@@ -257,6 +260,142 @@ class TestHeaderChecks(unittest.TestCase):
             checking for baz/foo-bar.h... no
             checking for baz-quux/foo-bar.h... no
         '''))
+
+
+class TestWarningChecks(BaseCompileChecks):
+    def get_warnings(self):
+        return textwrap.dedent('''\
+            set_config('_WARNINGS_CFLAGS', warnings_cflags)
+            set_config('_WARNINGS_CXXFLAGS', warnings_cxxflags)
+        ''')
+
+    def test_check_and_add_gcc_warning(self):
+        for flag, expected_flags in (
+            ('-Wfoo', ['-Werror', '-Wfoo']),
+            ('-Wno-foo', ['-Werror', '-Wfoo']),
+            ('-Werror=foo', ['-Werror=foo']),
+            ('-Wno-error=foo', ['-Wno-error=foo']),
+        ):
+            cmd = textwrap.dedent('''\
+                check_and_add_gcc_warning('%s')
+            ''' % flag) + self.get_warnings()
+
+            config, out, status = self.do_compile_test(
+                cmd, expected_flags=expected_flags)
+            self.assertEqual(status, 0)
+            self.assertEqual(config, {
+                '_WARNINGS_CFLAGS': [flag],
+                '_WARNINGS_CXXFLAGS': [flag],
+            })
+            self.assertEqual(out, textwrap.dedent('''\
+                checking whether the C compiler supports {flag}... yes
+                checking whether the C++ compiler supports {flag}... yes
+            '''.format(flag=flag)))
+
+    def test_check_and_add_gcc_warning_one(self):
+        cmd = textwrap.dedent('''\
+            check_and_add_gcc_warning('-Wfoo', cxx_compiler)
+        ''') + self.get_warnings()
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            '_WARNINGS_CFLAGS': [],
+            '_WARNINGS_CXXFLAGS': ['-Wfoo'],
+        })
+        self.assertEqual(out, textwrap.dedent('''\
+            checking whether the C++ compiler supports -Wfoo... yes
+        '''))
+
+    def test_check_and_add_gcc_warning_when(self):
+        cmd = textwrap.dedent('''\
+            @depends('--help')
+            def never(_):
+                return False
+            check_and_add_gcc_warning('-Wfoo', cxx_compiler, when=never)
+        ''') + self.get_warnings()
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            '_WARNINGS_CFLAGS': [],
+            '_WARNINGS_CXXFLAGS': [],
+        })
+        self.assertEqual(out, '')
+
+        cmd = textwrap.dedent('''\
+            @depends('--help')
+            def always(_):
+                return True
+            check_and_add_gcc_warning('-Wfoo', cxx_compiler, when=always)
+        ''') + self.get_warnings()
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            '_WARNINGS_CFLAGS': [],
+            '_WARNINGS_CXXFLAGS': ['-Wfoo'],
+        })
+        self.assertEqual(out, textwrap.dedent('''\
+            checking whether the C++ compiler supports -Wfoo... yes
+        '''))
+
+    def test_add_gcc_warning(self):
+        cmd = textwrap.dedent('''\
+            add_gcc_warning('-Wfoo')
+        ''') + self.get_warnings()
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            '_WARNINGS_CFLAGS': ['-Wfoo'],
+            '_WARNINGS_CXXFLAGS': ['-Wfoo'],
+        })
+        self.assertEqual(out, '')
+
+    def test_add_gcc_warning_one(self):
+        cmd = textwrap.dedent('''\
+            add_gcc_warning('-Wfoo', c_compiler)
+        ''') + self.get_warnings()
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            '_WARNINGS_CFLAGS': ['-Wfoo'],
+            '_WARNINGS_CXXFLAGS': [],
+        })
+        self.assertEqual(out, '')
+
+    def test_add_gcc_warning_when(self):
+        cmd = textwrap.dedent('''\
+            @depends('--help')
+            def never(_):
+                return False
+            add_gcc_warning('-Wfoo', c_compiler, when=never)
+        ''') + self.get_warnings()
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            '_WARNINGS_CFLAGS': [],
+            '_WARNINGS_CXXFLAGS': [],
+        })
+        self.assertEqual(out, '')
+
+        cmd = textwrap.dedent('''\
+            @depends('--help')
+            def always(_):
+                return True
+            add_gcc_warning('-Wfoo', c_compiler, when=always)
+        ''') + self.get_warnings()
+
+        config, out, status = self.do_compile_test(cmd)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            '_WARNINGS_CFLAGS': ['-Wfoo'],
+            '_WARNINGS_CXXFLAGS': [],
+        })
+        self.assertEqual(out, '')
 
 
 if __name__ == '__main__':

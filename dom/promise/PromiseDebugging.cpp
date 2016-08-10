@@ -52,7 +52,7 @@ public:
     PromiseDebugging::FlushUncaughtRejectionsInternal();
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     FlushSync();
     return NS_OK;
   }

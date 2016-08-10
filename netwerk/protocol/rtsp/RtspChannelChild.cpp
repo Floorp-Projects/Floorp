@@ -93,7 +93,7 @@ public:
   {
     MOZ_RELEASE_ASSERT(aListener);
   }
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mListener->OnStartRequest(mRequest, mContext);
@@ -198,7 +198,7 @@ public:
   {
     MOZ_RELEASE_ASSERT(aListener);
   }
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mListener->OnStopRequest(mRequest, mContext, mStatus);

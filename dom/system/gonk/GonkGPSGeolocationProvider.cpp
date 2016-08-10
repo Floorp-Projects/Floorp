@@ -111,7 +111,7 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
     UpdateLocationEvent(nsGeoPosition* aPosition)
       : mPosition(aPosition)
     {}
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
       RefPtr<GonkGPSGeolocationProvider> provider =
         GonkGPSGeolocationProvider::GetSingleton();
       nsCOMPtr<nsIGeolocationUpdate> callback = provider->mLocationCallback;
@@ -275,7 +275,7 @@ GonkGPSGeolocationProvider::SetCapabilitiesCallback(uint32_t capabilities)
     UpdateCapabilitiesEvent(uint32_t aCapabilities)
       : mCapabilities(aCapabilities)
     {}
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
       RefPtr<GonkGPSGeolocationProvider> provider =
         GonkGPSGeolocationProvider::GetSingleton();
 
@@ -343,7 +343,7 @@ GonkGPSGeolocationProvider::AGPSStatusCallback(AGpsStatus* status)
     AGPSStatusEvent(AGpsStatusValue aStatus)
       : mStatus(aStatus)
     {}
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
       RefPtr<GonkGPSGeolocationProvider> provider =
         GonkGPSGeolocationProvider::GetSingleton();
 
@@ -372,7 +372,7 @@ GonkGPSGeolocationProvider::AGPSRILSetIDCallback(uint32_t flags)
     RequestSetIDEvent(uint32_t flags)
       : mFlags(flags)
     {}
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
       RefPtr<GonkGPSGeolocationProvider> provider =
         GonkGPSGeolocationProvider::GetSingleton();
       provider->RequestSetID(mFlags);
@@ -392,7 +392,7 @@ GonkGPSGeolocationProvider::AGPSRILRefLocCallback(uint32_t flags)
   public:
     RequestRefLocEvent()
     {}
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
       RefPtr<GonkGPSGeolocationProvider> provider =
         GonkGPSGeolocationProvider::GetSingleton();
       provider->SetReferenceLocation();

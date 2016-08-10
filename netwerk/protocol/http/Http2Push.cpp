@@ -34,7 +34,7 @@ class CallChannelOnPush final : public Runnable {
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     RefPtr<nsHttpChannel> channel;
