@@ -475,7 +475,7 @@ nsBaseWidget::CreateChild(const LayoutDeviceIntRect& aRect,
 }
 
 // Attach a view to our widget which we'll send events to.
-NS_IMETHODIMP
+void
 nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents)
 {
   NS_ASSERTION((mWindowType == eWindowType_toplevel ||
@@ -485,8 +485,6 @@ nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents)
                "Can't attach to window of that type");
 
   mUseAttachedEvents = aUseAttachedEvents;
-
-  return NS_OK;
 }
 
 nsIWidgetListener* nsBaseWidget::GetAttachedWidgetListener()
