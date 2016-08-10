@@ -507,7 +507,7 @@ class nsIWidget : public nsISupports
      * This method does not delete the widget.
      */
 
-    NS_IMETHOD Destroy(void) = 0;
+    virtual void Destroy() = 0;
 
     /**
      * Destroyed() returns true if Destroy() has been called already.

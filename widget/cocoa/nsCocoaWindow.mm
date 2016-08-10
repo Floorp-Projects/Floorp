@@ -526,10 +526,10 @@ nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect &aRect)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Destroy()
+void nsCocoaWindow::Destroy()
 {
   if (mOnDestroyCalled)
-    return NS_OK;
+    return;
   mOnDestroyCalled = true;
 
   // SetFakeModal(true) is called for non-modal window opened by modal window.
@@ -573,8 +573,6 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
       nsCocoaUtils::HideOSChromeOnScreen(false);
     }
   }
-
-  return NS_OK;
 }
 
 nsIWidget* nsCocoaWindow::GetSheetWindowParent(void)

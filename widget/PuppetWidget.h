@@ -76,7 +76,7 @@ public:
               nsWidgetInitData* aInitData = nullptr,
               bool aForceUseIWidgetParent = false) override;
 
-  NS_IMETHOD Destroy() override;
+  virtual void Destroy() override;
 
   NS_IMETHOD Show(bool aState) override;
 

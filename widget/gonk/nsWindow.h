@@ -52,7 +52,7 @@ public:
                                          void* aNativeParent,
                                          const LayoutDeviceIntRect& aRect,
                                          nsWidgetInitData* aInitData) override;
-    NS_IMETHOD Destroy(void);
+    virtual void Destroy();
 
     NS_IMETHOD Show(bool aState);
     virtual bool IsVisible() const;
