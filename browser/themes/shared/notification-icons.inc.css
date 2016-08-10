@@ -41,12 +41,16 @@
   margin-inline-end: 10px;
 }
 
-#notification-popup-box > .notification-anchor-icon:hover {
+#notification-popup-box > .notification-anchor-icon:not(.in-use):hover {
   fill: #606060;
 }
 
 /* INDIVIDUAL NOTIFICATIONS */
 
+/* For the moment we apply the color filter only on the icons listed here.
+   The first two selectors are used by socialchat.xml (bug 1275558). */
+.webRTC-sharingDevices-notification-icon,
+.webRTC-sharingMicrophone-notification-icon,
 .camera-icon,
 .geo-icon,
 .indexedDB-icon,
@@ -65,9 +69,20 @@
 .popup-notification-icon[popupid="webRTC-shareDevices"],
 .popup-notification-icon[popupid="webRTC-shareMicrophone"],
 .popup-notification-icon[popupid="webRTC-shareScreen"],
+.popup-notification-icon[popupid="webRTC-sharingDevices"],
+.popup-notification-icon[popupid="webRTC-sharingMicrophone"],
+.popup-notification-icon[popupid="webRTC-sharingScreen"],
 .popup-notification-icon[popupid="web-notifications"] {
   filter: url(chrome://browser/skin/filters.svg#fill);
   fill: #999;
+}
+
+/* The first two selectors are used by socialchat.xml (bug 1275558). The
+   notifications in the chat window are only shown when they are in use. */
+.webRTC-sharingDevices-notification-icon,
+.webRTC-sharingMicrophone-notification-icon,
+.in-use {
+  fill: #fea01b;
 }
 
 .popup-notification-icon[popupid="web-notifications"],
@@ -131,8 +146,11 @@
   transform: scaleX(-1);
 }
 
+/* The first selector is used by socialchat.xml (bug 1275558). */
+.webRTC-sharingDevices-notification-icon,
 .camera-icon,
-.popup-notification-icon[popupid="webRTC-shareDevices"] {
+.popup-notification-icon[popupid="webRTC-shareDevices"],
+.popup-notification-icon[popupid="webRTC-sharingDevices"] {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#camera);
 }
 
@@ -140,6 +158,8 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#camera-blocked);
 }
 
+/* The first selector is used by socialchat.xml (bug 1275558). */
+.webRTC-sharingMicrophone-notification-icon,
 .microphone-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone);
 }
@@ -148,11 +168,13 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone-blocked);
 }
 
-.popup-notification-icon[popupid="webRTC-shareMicrophone"] {
+.popup-notification-icon[popupid="webRTC-shareMicrophone"],
+.popup-notification-icon[popupid="webRTC-sharingMicrophone"] {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone-detailed);
 }
 
 .popup-notification-icon[popupid="webRTC-shareScreen"],
+.popup-notification-icon[popupid="webRTC-sharingScreen"],
 .screen-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#screen);
 }

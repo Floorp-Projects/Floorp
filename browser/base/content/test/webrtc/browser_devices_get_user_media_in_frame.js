@@ -71,7 +71,21 @@ var gTests = [
     is(Perms.testExactPermission(uri, "camera"), Perms.ALLOW_ACTION,
                                  "camera persistently allowed");
 
-    yield stopSharing();
+    yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
+    activateSecondaryAction(kActionDeny);
+
+    yield promiseObserverCalled("recording-device-events");
+    yield expectObserverCalled("getUserMedia:revoke");
+
+    yield promiseNoPopupNotification("webRTC-sharingDevices");
+    yield expectObserverCalled("recording-window-ended");
+
+    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
+      todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
+    }
+
+    yield expectNoObserverCalled();
+    yield checkNotSharing();
 
     // The persistent permissions for the frame should have been removed.
     is(Perms.testExactPermission(uri, "microphone"), Perms.UNKNOWN_ACTION,
@@ -110,6 +124,7 @@ var gTests = [
     yield promiseReloadFrame("frame1");
     yield promise;
 
+    yield promiseNoPopupNotification("webRTC-sharingDevices");
     if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
       todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
     }
@@ -186,14 +201,15 @@ var gTests = [
     yield promiseReloadFrame("frame2");
     yield promise;
 
-    yield expectObserverCalled("recording-window-ended");
     yield checkSharingUI({video: false, audio: true});
+    yield expectObserverCalled("recording-window-ended");
     if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
       todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
     }
     yield expectNoObserverCalled();
 
     yield closeStream(false, "frame1");
+    yield promiseNoPopupNotification("webRTC-sharingDevices");
     yield expectNoObserverCalled();
     yield checkNotSharing();
   }
