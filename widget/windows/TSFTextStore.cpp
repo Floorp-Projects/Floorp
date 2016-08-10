@@ -3620,7 +3620,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
 
   const TSFStaticSink* kSink = TSFStaticSink::GetInstance();
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
-      mContentForTSF.IsLayoutChangedAfter(acpEnd)) {
+      mContentForTSF.IsLayoutChangedAt(acpEnd)) {
     const Selection& selectionForTSF = SelectionForTSFRef();
     // The bug of Microsoft Office IME 2010 for Japanese is similar to
     // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
@@ -3644,13 +3644,12 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // available, we should use it as the result.
       if ((kIsMSOfficeJapaneseIME2010 ||
            sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar) &&
-          !mContentForTSF.IsLayoutChangedAfter(acpStart) &&
           acpStart < acpEnd) {
         acpEnd = acpStart;
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::GetTextExt() hacked the offsets "
            "of the first character of changing range of the composition "
-           "string for TIP acpStart=%d, acpEnd=%d",
+           "string for TIP, new values are: acpStart=%d, acpEnd=%d",
            this, acpStart, acpEnd));
       }
       // Although, the condition is not clear, MS-IME sometimes retrieves the
@@ -3662,10 +3661,20 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
                acpStart == acpEnd &&
                selectionForTSF.IsCollapsed() &&
                selectionForTSF.EndOffset() == acpEnd) {
-        acpEnd = acpStart = mContentForTSF.MinOffsetOfLayoutChanged();
+        if (mContentForTSF.MinOffsetOfLayoutChanged() > LONG_MAX) {
+          MOZ_LOG(sTextStoreLog, LogLevel::Error,
+            ("0x%p   TSFTextStore::GetTextExt(), FAILED due to the text "
+             "is too big for TSF (cannot treat modified offset as LONG), "
+             "mContentForTSF.MinOffsetOfLayoutChanged()=%u",
+             this, mContentForTSF.MinOffsetOfLayoutChanged()));
+          return E_FAIL;
+        }
+        int32_t minOffsetOfLayoutChanged =
+          static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
+        acpEnd = acpStart = std::max(minOffsetOfLayoutChanged - 1, 0);
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::GetTextExt() hacked the offsets "
-           "of the caret of the composition string for TIP acpStart=%d, "
+          ("0x%p   TSFTextStore::GetTextExt() hacked the offsets of the caret "
+           "of the composition string for TIP, new values are: acpStart=%d, "
            "acpEnd=%d", this, acpStart, acpEnd));
       }
     }
@@ -3680,8 +3689,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
       MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-        ("0x%p   TSFTextStore::GetTextExt() hacked the offsets for "
-         "TIP acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+        ("0x%p   TSFTextStore::GetTextExt() hacked the offsets for TIP, "
+         "new values are: acpStart=%d, acpEnd=%d",
+         this, acpStart, acpEnd));
     }
     // Some Chinese TIPs of Microsoft doesn't show candidate window in e10s
     // mode on Win8 or later.
@@ -3695,12 +3705,13 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
       MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-        ("0x%p   TSFTextStore::GetTextExt() hacked the offsets for "
-         "TIP acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+        ("0x%p   TSFTextStore::GetTextExt() hacked the offsets for TIP, "
+         "new values are: acpStart=%d, acpEnd=%d",
+         this, acpStart, acpEnd));
     }
   }
 
-  if (mContentForTSF.IsLayoutChangedAfter(acpEnd)) {
+  if (mContentForTSF.IsLayoutChangedAt(acpEnd)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("0x%p   TSFTextStore::GetTextExt() returned TS_E_NOLAYOUT "
        "(acpEnd=%d)", this, acpEnd));
