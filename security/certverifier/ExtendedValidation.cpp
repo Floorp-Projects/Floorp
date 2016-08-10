@@ -30,7 +30,7 @@ struct nsMyTrustedEVInfo
   const unsigned char ev_root_sha256_fingerprint[SHA256_LENGTH];
   const char* issuer_base64;
   const char* serial_base64;
-  CERTCertificate* cert;
+  mozilla::UniqueCERTCertificate cert;
 };
 
 // HOWTO enable additional CA root certificates for EV:
@@ -1289,7 +1289,7 @@ isEVPolicy(SECOidTag policyOIDTag)
 namespace mozilla { namespace psm {
 
 bool
-CertIsAuthoritativeForEVPolicy(const CERTCertificate* cert,
+CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
                                const mozilla::pkix::CertPolicyId& policy)
 {
   PR_ASSERT(cert);
@@ -1299,7 +1299,7 @@ CertIsAuthoritativeForEVPolicy(const CERTCertificate* cert,
 
   for (size_t iEV = 0; iEV < PR_ARRAY_SIZE(myTrustedEVInfos); ++iEV) {
     nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
-    if (entry.cert && CERT_CompareCerts(cert, entry.cert)) {
+    if (entry.cert && CERT_CompareCerts(cert.get(), entry.cert.get())) {
       const SECOidData* oidData = SECOID_FindOIDByTag(entry.oid_tag);
       if (oidData && oidData->oid.len == policy.numBytes &&
           !memcmp(oidData->oid.data, policy.bytes, policy.numBytes)) {
@@ -1335,7 +1335,7 @@ IdentityInfoInit()
 
     ias.serialNumber.type = siUnsignedInteger;
 
-    entry.cert = CERT_FindCertByIssuerAndSN(nullptr, &ias);
+    entry.cert = UniqueCERTCertificate(CERT_FindCertByIssuerAndSN(nullptr, &ias));
 
     SECITEM_FreeItem(&ias.derIssuer, false);
     SECITEM_FreeItem(&ias.serialNumber, false);
@@ -1387,7 +1387,6 @@ IdentityInfoInit()
     }
 
     if (rv != SECSuccess) {
-      CERT_DestroyCertificate(entry.cert);
       entry.cert = nullptr;
       entry.oid_tag = SEC_OID_UNKNOWN;
       return PR_FAILURE;
@@ -1410,10 +1409,7 @@ CleanupIdentityInfo()
 {
   for (size_t iEV = 0; iEV < PR_ARRAY_SIZE(myTrustedEVInfos); ++iEV) {
     nsMyTrustedEVInfo &entry = myTrustedEVInfos[iEV];
-    if (entry.cert) {
-      CERT_DestroyCertificate(entry.cert);
-      entry.cert = nullptr;
-    }
+    entry.cert = nullptr;
   }
 
   memset(&sIdentityInfoCallOnce, 0, sizeof(PRCallOnceType));

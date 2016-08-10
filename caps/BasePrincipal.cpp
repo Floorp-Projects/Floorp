@@ -566,6 +566,13 @@ BasePrincipal::GetUserContextId(uint32_t* aUserContextId)
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId)
+{
+  *aPrivateBrowsingId = PrivateBrowsingId();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement)
 {
   *aIsInIsolatedMozBrowserElement = IsInIsolatedMozBrowserElement();

@@ -338,7 +338,7 @@ MediaKeySession::Close(ErrorResult& aRv)
   if (IsClosed() || !mKeys->GetCDMProxy()) {
     EME_LOG("MediaKeySession[%p,'%s'] Close() already closed",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
   PromiseId pid = mKeys->StorePromise(promise);
@@ -361,7 +361,7 @@ MediaKeySession::OnClosed()
   mIsClosed = true;
   mKeys->OnSessionClosed(this);
   mKeys = nullptr;
-  mClosed->MaybeResolve(JS::UndefinedHandleValue);
+  mClosed->MaybeResolveWithUndefined();
 }
 
 bool

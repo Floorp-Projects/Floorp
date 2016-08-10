@@ -220,7 +220,16 @@
      */ \
     macro(JSOP_DUP2,      13, "dup2",       NULL,         1,  2,  4, JOF_BYTE) \
     \
-    macro(JSOP_UNUSED14,  14, "unused14",   NULL,         1,  0,  0, JOF_BYTE) \
+    /*
+     * Checks that the top value on the stack is an object, and throws a
+     * TypeError if not. The operand 'kind' is used only to generate an
+     * appropriate error message.
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands: uint8_t kind
+     *   Stack: result => result
+     */ \
+    macro(JSOP_CHECKISOBJ,14, "checkisobj", NULL,         2,  1,  1, JOF_UINT8) \
     \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes

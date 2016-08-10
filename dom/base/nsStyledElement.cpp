@@ -154,6 +154,17 @@ nsStyledElement::ReparseStyleAttribute(bool aForceInDataDoc)
   return NS_OK;
 }
 
+nsICSSDeclaration*
+nsStyledElement::GetExistingStyle()
+{
+  Element::nsDOMSlots* slots = GetExistingDOMSlots();
+  if (!slots) {
+    return nullptr;
+  }
+
+  return slots->mStyle;
+}
+
 void
 nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
                                      nsAttrValue& aResult,
@@ -170,6 +181,7 @@ nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
 
   if (aForceInDataDoc ||
       !doc->IsLoadedAsData() ||
+      GetExistingStyle() ||
       doc->IsStaticDocument()) {
     bool isCSS = true; // assume CSS until proven otherwise
 

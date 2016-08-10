@@ -308,6 +308,13 @@ interface nsIPrincipal : nsISerializable
     [infallible] readonly attribute unsigned long userContextId;
 
     /**
+     * Gets the id of the private browsing state of the context containing
+     * this principal. If the principal has a private browsing value of 0, it
+     * is not in private browsing.
+     */
+    [infallible] readonly attribute unsigned long privateBrowsingId;
+
+    /**
      * Returns true iff the principal is inside an isolated mozbrowser element.
      * <iframe mozbrowser mozapp> and <xul:browser> are not considered to be
      * mozbrowser elements.  <iframe mozbrowser noisolation> does not count as

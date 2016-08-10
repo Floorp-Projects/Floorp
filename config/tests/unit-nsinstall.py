@@ -119,7 +119,7 @@ class TestNsinstall(unittest.TestCase):
         def test_nsinstall_m(self):
             "Test that nsinstall -m works (set mode)"
             testfile = self.touch("testfile")
-            mode = 0600
+            mode = 0o600
             os.chmod(testfile, mode)
             testdir = self.mkdirs("testdir")
             self.assertEqual(nsinstall(["-m", "{0:04o}"

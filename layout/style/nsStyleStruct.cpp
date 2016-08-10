@@ -2488,12 +2488,21 @@ nsStyleImageLayers::HasLayerWithImage() const
 }
 
 bool
-nsStyleImageLayers::Position::IsInitialValue() const
+nsStyleImageLayers::Position::IsInitialValue(LayerType aType) const
 {
-  if (mXPosition.mPercent == 0.0 && mXPosition.mLength == 0 &&
-      mXPosition.mHasPercent && mYPosition.mPercent == 0.0 &&
-      mYPosition.mLength == 0 && mYPosition.mHasPercent) {
-    return true;
+  if (aType == LayerType::Background) {
+    if (mXPosition.mPercent == 0.0 && mXPosition.mLength == 0 &&
+        mXPosition.mHasPercent && mYPosition.mPercent == 0.0 &&
+        mYPosition.mLength == 0 && mYPosition.mHasPercent) {
+      return true;
+    }
+  } else {
+    MOZ_ASSERT(aType == LayerType::Mask);
+    if (mXPosition.mPercent == 0.5f && mXPosition.mLength == 0 &&
+        mXPosition.mHasPercent && mYPosition.mPercent == 0.5f &&
+        mYPosition.mLength == 0 && mYPosition.mHasPercent) {
+      return true;
+    }
   }
 
   return false;
@@ -2658,7 +2667,6 @@ nsStyleImageLayers::Layer::Layer()
   , mComposite(NS_STYLE_MASK_COMPOSITE_ADD)
   , mMaskMode(NS_STYLE_MASK_MODE_MATCH_SOURCE)
 {
-  mPosition.SetInitialPercentValues(0.0f); // Initial value is "0% 0%"
   mImage.SetNull();
   mSize.SetInitialValues();
 }
@@ -2674,9 +2682,11 @@ nsStyleImageLayers::Layer::Initialize(nsStyleImageLayers::LayerType aType)
 
   if (aType == LayerType::Background) {
     mOrigin = NS_STYLE_IMAGELAYER_ORIGIN_PADDING;
+    mPosition.SetInitialPercentValues(0.0f); // Initial value is "0% 0%"
   } else {
     MOZ_ASSERT(aType == LayerType::Mask, "unsupported layer type.");
     mOrigin = NS_STYLE_IMAGELAYER_ORIGIN_BORDER;
+    mPosition.SetInitialPercentValues(0.5f); // Initial value is "50% 50%"
   }
 }
 
