@@ -444,6 +444,9 @@ TextureClient::Lock(OpenMode aMode)
 {
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(!mIsLocked);
+  if (!IsValid()) {
+    return false;
+  }
   if (mIsLocked) {
     return mOpenMode == aMode;
   }
@@ -493,7 +496,7 @@ TextureClient::Unlock()
 {
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mIsLocked);
-  if (!mIsLocked) {
+  if (!IsValid() || !mIsLocked) {
     return;
   }
 
@@ -622,7 +625,7 @@ TextureClient::BorrowDrawTarget()
   // but we should have a way to get a SourceSurface directly instead.
   //MOZ_ASSERT(mOpenMode & OpenMode::OPEN_WRITE);
 
-  if (!mIsLocked) {
+  if (!IsValid() || !mIsLocked) {
     return nullptr;
   }
 
