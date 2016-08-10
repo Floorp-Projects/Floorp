@@ -25,6 +25,13 @@
   display: inline-block;
 }
 
+/* Add element toolbar button */
+#inspector-element-add-button::before {
+  background-image: url("chrome://devtools/skin/images/add.svg");
+  list-style-image: url("chrome://devtools/skin/images/add.svg");
+  -moz-user-focus: normal;
+}
+
 #inspector-searchlabel {
   overflow: hidden;
   margin-inline-end: 2px;
@@ -50,6 +57,21 @@
 }
 .theme-firebug #inspector-searchbox {
   line-height: 17px;
+}
+
+/* Eyedropper toolbar button */
+
+#inspector-eyedropper-toggle {
+  /* hidden by default, until we can check that the required highlighter exists */
+  display: none;
+}
+
+#inspector-eyedropper-toggle::before {
+  background-image: var(--eyedropper-image);
+}
+
+#inspector-sidebar-toggle-box {
+  line-height: initial;
 }
 
 #inspector-breadcrumbs-toolbar {
@@ -97,21 +119,25 @@
   font: message-box;
 }
 
-/* Eyedropper toolbar button */
-
-#inspector-eyedropper-toggle {
-  /* hidden by default, until we can check that the required highlighter exists */
-  display: none;
+/* Set the minimum width for the side bar so, all tabs are
+  properly visible. The value can be decreased when bug 1281789
+  is fixed and the all-tabs-menu is available again. */
+#inspector-sidebar-container {
+  overflow: hidden;
+  min-width: 450px;
+  position: relative;
 }
 
-#inspector-eyedropper-toggle::before {
-  background-image: var(--eyedropper-image);
+#inspector-sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
-/* Add element toolbar button */
-#inspector-element-add-button::before {
-  background-image: url("chrome://devtools/skin/images/add.svg");
-  list-style-image: url("chrome://devtools/skin/images/add.svg");
+/* Override `-moz-user-focus:ignore;` from toolkit/content/minimal-xul.css */
+.inspector-tabpanel > * {
   -moz-user-focus: normal;
 }
 
