@@ -3400,6 +3400,13 @@ public:
   {
     // We don't need to compute an invalidation region since we have LayerTreeInvalidation
   }
+  virtual bool IsInvalid(nsRect& aRect) override
+  {
+    if (mForEventsAndPluginsOnly) {
+      return false;
+    }
+    return nsDisplayWrapList::IsInvalid(aRect);
+  }
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder,
                             float aOpacity,
                             const DisplayItemClip* aClip) override;
