@@ -46,6 +46,8 @@ add_task(function* () {
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, toggleButton);
 
+  yield monitor.panelWin.once(TAB_UPDATED);
+
   is(toggleButton.hasAttribute("disabled"), false,
     "The pane toggle button should still be enabled after being pressed.");
   is(toggleButton.classList.contains("pane-collapsed"), false,
