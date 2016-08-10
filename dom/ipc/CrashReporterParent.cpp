@@ -176,7 +176,7 @@ CrashReporterParent::FinalizeChildData()
       : mCR(aCR)
     { }
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
       mCR->NotifyCrashService();
       return NS_OK;
     }

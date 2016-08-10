@@ -705,7 +705,7 @@ public:
       mListenerMT(mChannel->mListenerMT),
       mSize(aSize) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
@@ -2282,7 +2282,7 @@ public:
     : mChannel(aChannel)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();

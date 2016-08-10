@@ -6698,7 +6698,7 @@ public:
   explicit AsyncCheckPointerCaptureStateCaller(int32_t aPointerId)
     : mPointerId(aPointerId) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsIPresShell::CheckPointerCaptureState(mPointerId);
     return NS_OK;

@@ -49,8 +49,8 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 function A(o) { 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var acc = Components.classes['@mozilla.org/accessibleRetrieval;1']
-                         .getService(Components.interfaces.nsIAccessibleRetrieval);
+  var acc = Components.classes['@mozilla.org/accessibilityService;1']
+                         .getService(Components.interfaces.nsIAccessibilityService);
   return acc.getAccessibleFor(o);
 }
 

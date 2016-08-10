@@ -136,7 +136,7 @@ public:
   {
     MOZ_RELEASE_ASSERT(aChannelEvent);
   }
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mChannelEvent->Run();
     return NS_OK;
@@ -515,7 +515,7 @@ public:
     MOZ_RELEASE_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(aChild);
   }
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     mChild->Close(mCode, mReason);
@@ -563,7 +563,7 @@ public:
     MOZ_RELEASE_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(aChild);
   }
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     if (mBinaryMsg) {
@@ -638,7 +638,7 @@ public:
     MOZ_RELEASE_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(aChild);
   }
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mChild->SendBinaryStream(mStream, mLength);

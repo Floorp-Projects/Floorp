@@ -1718,7 +1718,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mCallback->HandleResult(mStatus, mResult);
     return NS_OK;

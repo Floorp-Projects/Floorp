@@ -16,6 +16,7 @@
 #include "nsIPresentationDeviceProvider.h"
 #include "nsIPresentationLocalDevice.h"
 #include "nsIPresentationControlService.h"
+#include "nsITimer.h"
 #include "nsIWindowWatcher.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -106,6 +107,8 @@ private:
 
   nsresult StartTCPService();
 
+  void AbortServerRetry();
+
   // Now support HDMI display only and there should be only one HDMI display.
   nsCOMPtr<nsIPresentationLocalDevice> mDevice = nullptr;
   // weak pointer
@@ -119,6 +122,10 @@ private:
 
   bool mInitialized = false;
   uint16_t mPort;
+
+  bool mIsServerRetrying = false;
+  uint32_t mServerRetryMs;
+  nsCOMPtr<nsITimer> mServerRetryTimer;
 };
 
 } // mozilla

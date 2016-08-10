@@ -51,7 +51,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     LOG(("NotifyCacheFileListenerEvent::Run() [this=%p]", this));
 
@@ -90,7 +90,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     LOG(("NotifyChunkListenerEvent::Run() [this=%p]", this));
 

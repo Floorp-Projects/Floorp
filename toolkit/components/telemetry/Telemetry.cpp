@@ -839,7 +839,7 @@ public:
     mTelemetry->mCallbacks.Clear();
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     LoadFailedLockCount(mTelemetry->mFailedLockCount);
     mTelemetry->mLastShutdownTime = 
       ReadLastShutdownDuration(mShutdownTimeFilename);

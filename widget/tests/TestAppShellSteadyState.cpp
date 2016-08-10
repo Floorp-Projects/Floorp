@@ -45,7 +45,7 @@ public:
   { }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     return mAppShell->Exit();
   }
@@ -55,7 +55,7 @@ class StableStateRunnable : public Runnable
 {
 public:
   NS_IMETHOD
-  Run()
+  Run() override
   {
     if (gStableStateEventHasRun) {
       fail("StableStateRunnable already ran");
@@ -75,7 +75,7 @@ public:
   { }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     if (mShouldHaveRun == gStableStateEventHasRun) {
       passed("StableStateRunnable state correct (%s)",
@@ -98,7 +98,7 @@ public:
   { }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     CheckStableStateRunnable::Run();
 
@@ -132,7 +132,7 @@ public:
   { }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     ScheduleStableStateRunnable::Run();
 

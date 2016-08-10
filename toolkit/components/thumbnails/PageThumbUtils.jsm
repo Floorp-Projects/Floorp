@@ -331,5 +331,24 @@ this.PageThumbUtils = {
       }
     } // httpChannel
     return true;
-  }
+  },
+
+  /**
+   * Given a channel, returns true if it should be considered an "error
+   * response", false otherwise.
+   */
+  isChannelErrorResponse: function(channel) {
+    // No valid document channel sounds like an error to me!
+    if (!channel)
+      return true;
+    if (!(channel instanceof Ci.nsIHttpChannel))
+      // it might be FTP etc, so assume it's ok.
+      return false;
+    try {
+      return !channel.requestSucceeded;
+    } catch (_) {
+      // not being able to determine success is surely failure!
+      return true;
+    }
+  },
 };

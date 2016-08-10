@@ -1,0 +1,34 @@
+$inherits:
+  from: 'tasks/builds/b2g_phone_eng_base.yml'
+  variables:
+    build_name: 'aries-eng'
+    build_type: 'opt'
+task:
+  scopes:
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-eng'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-eng-objdir-gecko'
+    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
+  metadata:
+    name: '[TC] B2G Aries Eng'
+
+  payload:
+    cache:
+      level-{{level}}-{{project}}-build-aries-eng: /home/worker/workspace
+      level-{{level}}-{{project}}-build-aries-eng-objdir-gecko: /home/worker/objdir-gecko
+    features:
+      relengAPIProxy: true
+    env:
+      TARGET: 'aries'
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      symbol: Be
+      groupSymbol: Aries
+      groupName: Aries Device Image
+      machine:
+        platform: b2g-device-image
+    locations:
+      img: 'private/build/aries.zip'

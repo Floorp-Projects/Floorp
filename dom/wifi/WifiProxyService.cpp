@@ -42,7 +42,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     gWifiProxyService->DispatchWifiEvent(mEvent, mInterface);
@@ -64,7 +64,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
     nsAutoString event;
@@ -97,7 +97,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     gWifiProxyService->DispatchWifiResult(mResult, mInterface);
@@ -120,7 +120,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     WifiResultOptions result;
     if (gWpaSupplicant->ExecuteCommand(mOptions, result, mInterface)) {

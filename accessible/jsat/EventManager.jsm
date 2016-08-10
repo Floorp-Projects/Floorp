@@ -559,7 +559,7 @@ this.EventManager.prototype = {
     }
 
     if (tabstate) {
-      let docAcc = Utils.AccRetrieval.getAccessibleFor(aWebProgress.DOMWindow.document);
+      let docAcc = Utils.AccService.getAccessibleFor(aWebProgress.DOMWindow.document);
       this.present(Presentation.tabStateChanged(docAcc, tabstate));
     }
   },
@@ -567,7 +567,7 @@ this.EventManager.prototype = {
   onProgressChange: function onProgressChange() {},
 
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
-    let docAcc = Utils.AccRetrieval.getAccessibleFor(aWebProgress.DOMWindow.document);
+    let docAcc = Utils.AccService.getAccessibleFor(aWebProgress.DOMWindow.document);
     this.present(Presentation.tabStateChanged(docAcc, 'newdoc'));
   },
 

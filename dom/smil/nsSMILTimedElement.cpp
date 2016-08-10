@@ -95,7 +95,7 @@ namespace
     {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       InternalSMILTimeEvent event(true, mMsg);
       event.mDetail = mDetail;

@@ -553,7 +553,7 @@ public:
     document->UnblockOnload(true);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mProcessor->TransformToDoc(nullptr, false);
     return NS_OK;

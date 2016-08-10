@@ -9,15 +9,15 @@
   <![CDATA[
     function doTest()
     {
-      var accRetrieval = SpecialPowers.Cc["@mozilla.org/accessibleRetrieval;1"].
-        getService(SpecialPowers.Ci.nsIAccessibleRetrieval);
+      var accService = SpecialPowers.Cc["@mozilla.org/accessibilityService;1"].
+        getService(SpecialPowers.Ci.nsIAccessibilityService);
 
       var treecol = document.getElementById("col");
       var x = treecol.boxObject.screenX;
       var y = treecol.boxObject.screenY;
 
       var tree = document.getElementById("tree");
-      var treeAcc = accRetrieval.getAccessibleFor(tree);
+      var treeAcc = accService.getAccessibleFor(tree);
       treeAcc.getChildAtPoint(x + 1, y + 1);
     }
   ]]>
