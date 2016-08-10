@@ -1591,6 +1591,17 @@ CompartmentChecker::check(SavedStacks* stacks)
 /* static */ ReconstructedSavedFramePrincipals ReconstructedSavedFramePrincipals::IsSystem;
 /* static */ ReconstructedSavedFramePrincipals ReconstructedSavedFramePrincipals::IsNotSystem;
 
+UTF8CharsZ
+BuildUTF8StackString(JSContext* cx, HandleObject stack)
+{
+    RootedString stackStr(cx);
+    if (!JS::BuildStackString(cx, stack, &stackStr))
+        return UTF8CharsZ();
+
+    char* chars = JS_EncodeStringToUTF8(cx, stackStr);
+    return UTF8CharsZ(chars, strlen(chars));
+}
+
 } /* namespace js */
 
 namespace JS {
