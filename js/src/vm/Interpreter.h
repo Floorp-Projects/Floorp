@@ -559,6 +559,13 @@ void
 ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
                            frontend::Definition::Kind declKind);
 
+enum class CheckIsObjectKind : uint8_t {
+    IteratorNext
+};
+
+bool
+ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind);
+
 bool
 ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame);
 
