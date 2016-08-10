@@ -1,5 +1,3 @@
-.. _healthreport:
-
 ================================
 Firefox Health Report (Obsolete)
 ================================
@@ -11,7 +9,7 @@ Firefox Health Report is a background service that collects application
 metrics and periodically submits them to a central server. The core
 parts of the service are implemented in this directory. However, the
 actual XPCOM service is implemented in the
-:ref:`data_reporting_service`.
+``data_reporting_service`.
 
 The core types can actually be instantiated multiple times and used to
 power multiple data submission services within a single Gecko

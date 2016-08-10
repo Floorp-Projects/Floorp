@@ -1978,7 +1978,7 @@ var CustomizableUIInternal = {
       let restored = false;
       if (placementsPreexisted) {
         log.debug("Restoring " + aArea + " from pre-existing placements");
-        for (let [position, id] in Iterator(gPlacements.get(aArea))) {
+        for (let [position, id] of gPlacements.get(aArea).entries()) {
           this.moveWidgetWithinArea(id, position);
         }
         gDirty = false;

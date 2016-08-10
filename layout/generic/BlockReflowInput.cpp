@@ -779,10 +779,9 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Find a place to place the float. The CSS2 spec doesn't want
   // floats overlapping each other or sticking out of the containing
   // block if possible (CSS2 spec section 9.5.1, see the rule list).
-  uint8_t floatStyle = floatDisplay->PhysicalFloats(wm);
-  NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floatStyle) ||
-               (NS_STYLE_FLOAT_RIGHT == floatStyle),
-               "invalid float type");
+  StyleFloat floatStyle = floatDisplay->PhysicalFloats(wm);
+  MOZ_ASSERT(StyleFloat::Left == floatStyle || StyleFloat::Right == floatStyle,
+             "Invalid float type!");
 
   // Can the float fit here?
   bool keepFloatOnSameLine = false;
@@ -876,7 +875,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // LineLeft() and LineRight() here, because we would only have to
   // convert the result back into this block's writing mode.
   LogicalPoint floatPos(wm);
-  bool leftFloat = NS_STYLE_FLOAT_LEFT == floatStyle;
+  bool leftFloat = floatStyle == StyleFloat::Left;
 
   if (leftFloat == wm.IsBidiLTR()) {
     floatPos.I(wm) = floatAvailableSpace.mRect.IStart(wm);
@@ -1036,12 +1035,12 @@ BlockReflowInput::PushFloatPastBreak(nsIFrame *aFloat)
   //    must have their tops below the top of this float)
   //  * don't waste much time trying to reflow this float again until
   //    after the break
-  uint8_t floatStyle =
+  StyleFloat floatStyle =
     aFloat->StyleDisplay()->PhysicalFloats(mReflowInput.GetWritingMode());
-  if (floatStyle == NS_STYLE_FLOAT_LEFT) {
+  if (floatStyle == StyleFloat::Left) {
     mFloatManager->SetPushedLeftFloatPastBreak();
   } else {
-    MOZ_ASSERT(floatStyle == NS_STYLE_FLOAT_RIGHT, "unexpected float value");
+    MOZ_ASSERT(floatStyle == StyleFloat::Right, "Unexpected float value!");
     mFloatManager->SetPushedRightFloatPastBreak();
   }
 

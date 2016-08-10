@@ -169,7 +169,7 @@ function BasicNotification(testId) {
 }
 
 BasicNotification.prototype.addOptions = function(options) {
-  for (let [name, value] in Iterator(options))
+  for (let [name, value] of Object.entries(options))
     this.options[name] = value;
 };
 

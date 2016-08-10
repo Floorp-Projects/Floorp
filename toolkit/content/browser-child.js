@@ -549,6 +549,22 @@ addMessageListener("Browser:Thumbnail:CheckState", function (aMessage) {
   });
 });
 
+/**
+ * Remote GetOriginalURL request handler for PageThumbs.
+ */
+addMessageListener("Browser:Thumbnail:GetOriginalURL", function (aMessage) {
+  let channel = docShell.currentDocumentChannel;
+  let channelError = PageThumbUtils.isChannelErrorResponse(channel);
+  let originalURL;
+  try {
+    originalURL = channel.originalURI.spec;
+  } catch (ex) {}
+  sendAsyncMessage("Browser:Thumbnail:GetOriginalURL:Response", {
+    channelError: channelError,
+    originalURL: originalURL,
+  });
+});
+
 // The AddonsChild needs to be rooted so that it stays alive as long as
 // the tab.
 var AddonsChild = RemoteAddonsChild.init(this);

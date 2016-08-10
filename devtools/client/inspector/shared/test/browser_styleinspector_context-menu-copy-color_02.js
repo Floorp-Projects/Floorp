@@ -81,9 +81,9 @@ function* testColorPickerEdit(inspector, view) {
 
   info("Opening the color picker");
   let picker = view.tooltips.colorPicker;
-  let onShown = picker.tooltip.once("shown");
+  let onColorPickerReady = picker.once("ready");
   swatchElement.click();
-  yield onShown;
+  yield onColorPickerReady;
 
   let rgbaColor = [83, 183, 89, 1];
   let rgbaColorText = "rgba(83, 183, 89, 1)";

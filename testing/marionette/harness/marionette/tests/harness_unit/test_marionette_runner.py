@@ -400,6 +400,30 @@ def test_add_test_manifest(runner):
             assert test['expected'] == 'pass'
 
 
+def test_cleanup_with_manifest(mock_runner):
+    mock_runner._appName = 'fake_app'
+    with patch.multiple('marionette.runner.base.TestManifest',
+                        read=DEFAULT, active_tests=DEFAULT) as mocks:
+        mocks['active_tests'].return_value = [{'expected':'pass', 'path':'test_something.py'}]
+        with patch('marionette.runner.base.mozversion.get_version'):
+            with patch('marionette.runner.base.os.path.exists', return_value=True):
+                mock_runner.run_tests(['fake_manifest.ini'])
+    assert mock_runner.marionette is None
+    assert mock_runner.httpd is None
+
+def test_cleanup_empty_manifest(mock_runner):
+    mock_runner._appName = 'fake_app'
+    with patch.multiple('marionette.runner.base.TestManifest',
+                        read=DEFAULT, active_tests=DEFAULT) as mocks:
+        mocks['active_tests'].return_value = []
+        with patch('marionette.runner.base.mozversion.get_version'):
+            with pytest.raises(Exception) as exc:
+                mock_runner.run_tests(['fake_empty_manifest.ini'])
+    assert "no tests to run" in exc.value.message
+    assert mock_runner.marionette is None
+    assert mock_runner.httpd is None
+
+
 def test_reset_test_stats(runner):
     def reset_successful(runner):
         stats = ['passed', 'failed', 'unexpected_successes', 'todo', 'skipped', 'failures']

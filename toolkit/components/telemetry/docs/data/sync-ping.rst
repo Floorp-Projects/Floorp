@@ -7,7 +7,9 @@ pertaining to sync performance and error information. It does not contain the en
 
 A JSON-schema document describing the exact format of the ping's payload property can be found at `services/sync/tests/unit/sync\_ping\_schema.json <https://dxr.mozilla.org/mozilla-central/source/services/sync/tests/unit/sync_ping_schema.json>`_.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       version: 4,

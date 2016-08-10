@@ -86,7 +86,7 @@ WBORecord.prototype = {
   toJSON: function toJSON() {
     // Copy fields from data to be stringified, making sure payload is a string
     let obj = {};
-    for (let [key, val] in Iterator(this.data))
+    for (let [key, val] of Object.entries(this.data))
       obj[key] = key == "payload" ? JSON.stringify(val) : val;
     if (this.ttl)
       obj.ttl = this.ttl;

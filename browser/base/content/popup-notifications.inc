@@ -22,7 +22,7 @@
         <label id="webRTC-selectWindow-label"
                control="webRTC-selectWindow-menulist"/>
         <menulist id="webRTC-selectWindow-menulist"
-                  oncommand="gWebRTCUI.updateMainActionLabel(this);">
+                  oncommand="webrtcUI.updateMainActionLabel(this);">
           <menupopup id="webRTC-selectWindow-menupopup"/>
         </menulist>
         <description id="webRTC-all-windows-shared" hidden="true">&getUserMedia.allWindowsShared.message;</description>

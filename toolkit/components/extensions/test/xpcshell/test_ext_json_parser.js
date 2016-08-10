@@ -5,7 +5,7 @@
 add_task(function* test_json_parser() {
   const ID = "json@test.web.extension";
 
-  let xpi = Extension.generateXPI(ID, {
+  let xpi = Extension.generateXPI({
     files: {
       "manifest.json": String.raw`{
         // This is a manifest.

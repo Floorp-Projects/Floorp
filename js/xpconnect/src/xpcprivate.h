@@ -1402,8 +1402,7 @@ class XPCNativeSet final
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   protected:
-    static XPCNativeSet* NewInstance(XPCNativeInterface** array,
-                                     uint16_t count);
+    static XPCNativeSet* NewInstance(nsTArray<XPCNativeInterface*>&& array);
     static XPCNativeSet* NewInstanceMutate(XPCNativeSet*       otherSet,
                                            XPCNativeInterface* newInterface,
                                            uint16_t            position);
@@ -2912,30 +2911,14 @@ template<class T>
 class ArrayAutoMarkingPtr : public AutoMarkingPtr
 {
   public:
-    explicit ArrayAutoMarkingPtr(JSContext* cx)
-      : AutoMarkingPtr(cx), mPtr(nullptr), mCount(0) {}
-    ArrayAutoMarkingPtr(JSContext* cx, T** ptr, uint32_t count, bool clear)
-      : AutoMarkingPtr(cx), mPtr(ptr), mCount(count)
-    {
-        if (!mPtr) mCount = 0;
-        else if (clear) memset(mPtr, 0, mCount*sizeof(T*));
-    }
-
-    T** get() const { return mPtr; }
-    operator T**() const { return mPtr; }
-    T** operator->() const { return mPtr; }
-
-    ArrayAutoMarkingPtr<T>& operator =(const ArrayAutoMarkingPtr<T>& other)
-    {
-        mPtr = other.mPtr;
-        mCount = other.mCount;
-        return *this;
-    }
+    ArrayAutoMarkingPtr(JSContext* cx, nsTArray<T*>& ptr)
+      : AutoMarkingPtr(cx), mPtr(ptr)
+    {}
 
   protected:
     virtual void TraceJS(JSTracer* trc)
     {
-        for (uint32_t i = 0; i < mCount; i++) {
+        for (uint32_t i = 0; i < mPtr.Length(); i++) {
             if (mPtr[i]) {
                 mPtr[i]->TraceJS(trc);
                 mPtr[i]->AutoTrace(trc);
@@ -2945,15 +2928,14 @@ class ArrayAutoMarkingPtr : public AutoMarkingPtr
 
     virtual void MarkAfterJSFinalize()
     {
-        for (uint32_t i = 0; i < mCount; i++) {
+        for (uint32_t i = 0; i < mPtr.Length(); i++) {
             if (mPtr[i])
                 mPtr[i]->Mark();
         }
     }
 
   private:
-    T** mPtr;
-    uint32_t mCount;
+    nsTArray<T*>& mPtr;
 };
 
 typedef ArrayAutoMarkingPtr<XPCNativeInterface> AutoMarkingNativeInterfacePtrArrayPtr;

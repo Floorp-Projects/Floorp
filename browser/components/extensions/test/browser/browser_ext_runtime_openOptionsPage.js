@@ -42,6 +42,7 @@ add_task(function* test_inline_options() {
 
   let extension = yield loadExtension({
     manifest: {
+      applications: {gecko: {id: "inline_options@tests.mozilla.org"}},
       "options_ui": {
         "page": "options.html",
       },
@@ -135,6 +136,7 @@ add_task(function* test_tab_options() {
 
   let extension = yield loadExtension({
     manifest: {
+      applications: {gecko: {id: "tab_options@tests.mozilla.org"}},
       "options_ui": {
         "page": "options.html",
         "open_in_tab": true,
@@ -229,7 +231,9 @@ add_task(function* test_tab_options() {
 
 add_task(function* test_options_no_manifest() {
   let extension = yield loadExtension({
-    manifest: {},
+    manifest: {
+      applications: {gecko: {id: "no_options@tests.mozilla.org"}},
+    },
 
     background: function() {
       browser.test.log("Try to open options page when not specified in the manifest.");

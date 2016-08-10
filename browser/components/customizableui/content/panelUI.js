@@ -38,7 +38,7 @@ const PanelUI = {
 
   _initialized: false,
   init: function() {
-    for (let [k, v] of Iterator(this.kElements)) {
+    for (let [k, v] of Object.entries(this.kElements)) {
       // Need to do fresh let-bindings per iteration
       let getKey = k;
       let id = v;

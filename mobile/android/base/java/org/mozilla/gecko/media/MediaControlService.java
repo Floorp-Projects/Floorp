@@ -19,6 +19,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
@@ -297,7 +298,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             .setLargeIcon(generateCoverArt(tab))
             .setContentTitle(tab.getTitle())
             .setContentText(tab.getURL())
-            .setContentIntent(createContentIntent())
+            .setContentIntent(createContentIntent(tab.getId()))
             .setDeleteIntent(createDeleteIntent())
             .setStyle(style)
             .addAction(createNotificationAction(action))
@@ -330,9 +331,11 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         return new Notification.Action.Builder(icon, title, pendingIntent).build();
     }
 
-    private PendingIntent createContentIntent() {
+    private PendingIntent createContentIntent(int tabId) {
         Intent intent = new Intent(getApplicationContext(), BrowserApp.class);
-        return PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+        intent.setAction(GeckoApp.ACTION_SWITCH_TAB);
+        intent.putExtra("TabId", tabId);
+        return PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private PendingIntent createDeleteIntent() {

@@ -6,7 +6,9 @@ This ping is generated when a user turns off FHR upload from the Preferences pan
 
 This ping contains the client id and no environment data.
 
-Structure::
+Structure:
+
+.. code-block:: js
 
     {
       version: 4,

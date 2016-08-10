@@ -67,21 +67,4 @@ interface nsIBrowserHistory : nsISupports
      */
     void removePagesByTimeframe(in PRTime aBeginTime,
                                 in PRTime aEndTime);
-
-    /**
-     * Removes all visits in a given timeframe.
-     * Limits are included: aBeginTime <= timeframe <= aEndTime.
-     * Any pages that becomes unvisited as a result will also be deleted.
-     *
-     * @param aBeginTime
-     *        Microseconds from epoch, representing the initial time.
-     * @param aEndTime
-     *        Microseconds from epoch, representing the final time.
-     *
-     * @note The removal happens in a batch.
-     *
-     * @deprecated Please use PlacesUtils.history.removeVisitsByFilter instead
-     */
-    void removeVisitsByTimeframe(in PRTime aBeginTime,
-                                 in PRTime aEndTime);
 };

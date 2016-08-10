@@ -1479,12 +1479,12 @@ const KTableEntry nsCSSProps::kHyphensKTable[] = {
 };
 
 KTableEntry nsCSSProps::kFloatKTable[] = {
-  { eCSSKeyword_none,         NS_STYLE_FLOAT_NONE },
-  { eCSSKeyword_left,         NS_STYLE_FLOAT_LEFT },
-  { eCSSKeyword_right,        NS_STYLE_FLOAT_RIGHT },
-  { eCSSKeyword_inline_start, NS_STYLE_FLOAT_INLINE_START },
-  { eCSSKeyword_inline_end,   NS_STYLE_FLOAT_INLINE_END },
-  { eCSSKeyword_UNKNOWN,      -1 }
+  { eCSSKeyword_none, StyleFloat::None_ },
+  { eCSSKeyword_left, StyleFloat::Left },
+  { eCSSKeyword_right, StyleFloat::Right },
+  { eCSSKeyword_inline_start, StyleFloat::InlineStart },
+  { eCSSKeyword_inline_end, StyleFloat::InlineEnd },
+  { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kFloatEdgeKTable[] = {

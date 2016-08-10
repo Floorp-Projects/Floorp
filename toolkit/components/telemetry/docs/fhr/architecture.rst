@@ -6,7 +6,7 @@ Architecture
 
 ``healthreporter.jsm`` contains the main interface for FHR, the
 ``HealthReporter`` type. An instance of this is created by the
-:ref:`data_reporting_service`.
+``data_reporting_service`.
 
 ``providers.jsm`` contains numerous ``Metrics.Provider`` and
 ``Metrics.Measurement`` used for collecting application metrics. If you

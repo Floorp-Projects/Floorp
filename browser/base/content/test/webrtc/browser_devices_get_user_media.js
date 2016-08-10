@@ -492,8 +492,8 @@ var gTests = [
 
     yield promisePopupNotificationShown("webRTC-sharingDevices", () => {
       if ("nsISystemStatusBar" in Ci) {
-        let activeStreams = gWebRTCUI.getActiveStreams(true, false, false);
-        gWebRTCUI.showSharingDoorhanger(activeStreams[0], "Devices");
+        let activeStreams = webrtcUI.getActiveStreams(true, false, false);
+        webrtcUI.showSharingDoorhanger(activeStreams[0], "Devices");
       }
       else {
         let win =

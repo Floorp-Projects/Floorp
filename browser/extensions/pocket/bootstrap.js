@@ -40,7 +40,7 @@ const PREFS = {
 
 function setDefaultPrefs() {
   let branch = Services.prefs.getDefaultBranch(PREF_BRANCH);
-  for (let [key, val] in Iterator(PREFS)) {
+  for (let [key, val] of Object.entries(PREFS)) {
     // If someone beat us to setting a default, don't overwrite it.  This can
     // happen if distribution.ini sets the default first.
     if (branch.getPrefType(key) != branch.PREF_INVALID)

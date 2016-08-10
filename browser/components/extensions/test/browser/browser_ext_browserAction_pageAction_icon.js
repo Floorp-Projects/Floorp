@@ -256,13 +256,12 @@ add_task(function* testDetailsObjects() {
 
   const RESOLUTION_PREF = "layout.css.devPixelsPerPx";
 
-  let pageActionId = makeWidgetId(extension.id) + "-page-action";
+  yield extension.startup();
+
+  let pageActionId = `${makeWidgetId(extension.id)}-page-action`;
   let browserActionWidget = getBrowserActionWidget(extension);
 
-
-  yield extension.startup();
   let tests = yield extension.awaitMessage("ready");
-
   for (let test of tests) {
     extension.sendMessage("setIcon", test);
     yield extension.awaitMessage("iconSet");
