@@ -249,9 +249,6 @@ PrefBranch.prototype = {
 
   /** @see nsIPrefBranch.addObserver */
   addObserver: function (domain, observer, holdWeak) {
-    if (domain !== "" && !domain.endsWith(".")) {
-      throw new Error("invalid domain to addObserver: " + domain);
-    }
     if (holdWeak) {
       throw new Error("shim prefs only supports strong observers");
     }
@@ -325,7 +322,8 @@ PrefBranch.prototype = {
    */
   _notify: function (relativeName) {
     for (let domain in this._observers) {
-      if (relativeName.startsWith(domain)) {
+      if (relativeName === domain || domain === "" ||
+          (domain.endsWith(".") && relativeName.startsWith(domain))) {
         // Allow mutation while walking.
         let localList = this._observers[domain].slice();
         for (let observer of localList) {
