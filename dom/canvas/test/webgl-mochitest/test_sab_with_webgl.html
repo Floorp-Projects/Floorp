@@ -156,8 +156,8 @@ function TestScreenColor(gl, r, g, b, a) {
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
 
   var arr2 = new SharedArrayBuffer(8*4);
-  gl.getBufferSubData(gl.ARRAY_BUFFER, 0, arr2);
   var view2 = new Float32Array(arr2);
+  gl.getBufferSubData(gl.ARRAY_BUFFER, 0, view2);
   var equal = true;
   for(var i = 0; i < 8; ++i) {
     if (view[i] != view2[i]) equal = false;
