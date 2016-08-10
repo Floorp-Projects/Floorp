@@ -28,7 +28,7 @@ const rootSpec = protocol.generateActorSpec({
   }
 });
 
-var RootActor = protocol.ActorClassWithSpec(rootSpec, {
+var RootActor = protocol.ActorClass(rootSpec, {
   typeName: "root",
   initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -45,7 +45,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   }
 });
 
-var RootFront = protocol.FrontClassWithSpec(rootSpec, {
+var RootFront = protocol.FrontClass(rootSpec, {
   initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
