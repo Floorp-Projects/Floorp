@@ -63,7 +63,7 @@ public:
     mInterruptStatus = status;
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     DoCopy();
     return NS_OK;
   }

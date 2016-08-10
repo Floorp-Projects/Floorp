@@ -154,7 +154,7 @@ private:
  *     {
  *     public:
  *       FooRunnable(const Bar &aBar) : mBar(aBar) {}
- *       NS_IMETHOD Run()
+ *       NS_IMETHOD Run() override
  *       {
  *         // Use mBar
  *       }
@@ -189,7 +189,7 @@ public:
   explicit LambdaRunnable(OnRunType&& aOnRun) : mOnRun(Move(aOnRun)) {}
 private:
   NS_IMETHODIMP
-  Run()
+  Run() override
   {
     return mOnRun();
   }

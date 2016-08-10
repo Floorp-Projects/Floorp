@@ -246,7 +246,9 @@ class ExclusiveContext : public ContextFriendFields,
      */
   protected:
     unsigned            enterCompartmentDepth_;
-    inline void setCompartment(JSCompartment* comp);
+
+    inline void setCompartment(JSCompartment* comp,
+                               const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
   public:
     bool hasEnteredCompartment() const {
         return enterCompartmentDepth_ > 0;
@@ -257,9 +259,13 @@ class ExclusiveContext : public ContextFriendFields,
     }
 #endif
 
-    inline void enterCompartment(JSCompartment* c);
+    // If |c| or |oldCompartment| is the atoms compartment, the
+    // |exclusiveAccessLock| must be held.
+    inline void enterCompartment(JSCompartment* c,
+                                 const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
     inline void enterNullCompartment();
-    inline void leaveCompartment(JSCompartment* oldCompartment);
+    inline void leaveCompartment(JSCompartment* oldCompartment,
+                                 const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
 
     void setHelperThread(HelperThread* helperThread);
     HelperThread* helperThread() const { return helperThread_; }
@@ -267,8 +273,6 @@ class ExclusiveContext : public ContextFriendFields,
     // Threads with an ExclusiveContext may freely access any data in their
     // compartment and zone.
     JSCompartment* compartment() const {
-        MOZ_ASSERT_IF(runtime_->isAtomsCompartment(compartment_),
-                      runtime_->currentThreadHasExclusiveAccess());
         return compartment_;
     }
     JS::Zone* zone() const {
@@ -450,7 +454,7 @@ struct JSContext : public js::ExclusiveContext,
     }
 
     void minorGC(JS::gcreason::Reason reason) {
-        gc.minorGC(this, reason);
+        gc.minorGC(reason);
     }
 
   public:
@@ -746,11 +750,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
     void init(JSRuntime* rt) {
         runtime = rt;
         if (runtime->numExclusiveThreads) {
-            runtime->assertCanLock(ExclusiveAccessLock);
             runtime->exclusiveAccessLock.lock();
-#ifdef DEBUG
-            runtime->exclusiveAccessOwner = PR_GetCurrentThread();
-#endif
         } else {
             MOZ_ASSERT(!runtime->mainThreadHasExclusiveAccess);
 #ifdef DEBUG
@@ -774,10 +774,6 @@ class MOZ_RAII AutoLockForExclusiveAccess
     }
     ~AutoLockForExclusiveAccess() {
         if (runtime->numExclusiveThreads) {
-#ifdef DEBUG
-            MOZ_ASSERT(runtime->exclusiveAccessOwner == PR_GetCurrentThread());
-            runtime->exclusiveAccessOwner = nullptr;
-#endif
             runtime->exclusiveAccessLock.unlock();
         } else {
             MOZ_ASSERT(runtime->mainThreadHasExclusiveAccess);

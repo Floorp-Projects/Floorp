@@ -179,7 +179,7 @@ CaptureTask::PostTrackEndEvent()
     explicit TrackEndRunnable(CaptureTask* aTask)
       : mTask(aTask) {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
       mTask->TaskComplete(nullptr, NS_ERROR_FAILURE);
       mTask = nullptr;

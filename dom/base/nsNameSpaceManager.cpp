@@ -66,6 +66,8 @@ bool nsNameSpaceManager::Init()
 
 
   // Need to be ordered according to ID.
+  MOZ_ASSERT(mURIArray.IsEmpty());
+  REGISTER_NAMESPACE(nsGkAtoms::empty, kNameSpaceID_None);
   REGISTER_NAMESPACE(nsGkAtoms::nsuri_xmlns, kNameSpaceID_XMLNS);
   REGISTER_NAMESPACE(nsGkAtoms::nsuri_xml, kNameSpaceID_XML);
   REGISTER_NAMESPACE(nsGkAtoms::nsuri_xhtml, kNameSpaceID_XHTML);
@@ -97,7 +99,7 @@ nsNameSpaceManager::RegisterNameSpace(const nsAString& aURI,
   nsCOMPtr<nsIAtom> atom = NS_Atomize(aURI);
   nsresult rv = NS_OK;
   if (!mURIToIDTable.Get(atom, &aNameSpaceID)) {
-    aNameSpaceID = mURIArray.Length() + 1; // id is index + 1
+    aNameSpaceID = mURIArray.Length();
 
     rv = AddNameSpace(atom.forget(), aNameSpaceID);
     if (NS_FAILED(rv)) {
@@ -114,15 +116,16 @@ nsresult
 nsNameSpaceManager::GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI)
 {
   NS_PRECONDITION(aNameSpaceID >= 0, "Bogus namespace ID");
-  
-  int32_t index = aNameSpaceID - 1; // id is index + 1
-  if (index < 0 || index >= int32_t(mURIArray.Length())) {
+
+  // We have historically treated GetNameSpaceURI calls for kNameSpaceID_None
+  // as erroneous.
+  if (aNameSpaceID <= 0 || aNameSpaceID >= int32_t(mURIArray.Length())) {
     aURI.Truncate();
 
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  mURIArray.ElementAt(index)->ToString(aURI);
+  mURIArray.ElementAt(aNameSpaceID)->ToString(aURI);
 
   return NS_OK;
 }
@@ -224,10 +227,8 @@ nsresult nsNameSpaceManager::AddNameSpace(already_AddRefed<nsIAtom> aURI,
     // We've wrapped...  Can't do anything else here; just bail.
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
-  NS_ASSERTION(aNameSpaceID - 1 == (int32_t) mURIArray.Length(),
-               "BAD! AddNameSpace not called in right order!");
 
+  MOZ_ASSERT(aNameSpaceID == (int32_t) mURIArray.Length());
   mURIArray.AppendElement(uri.forget());
   mURIToIDTable.Put(mURIArray.LastElement(), aNameSpaceID);
 
@@ -244,9 +245,7 @@ nsNameSpaceManager::AddDisabledNameSpace(already_AddRefed<nsIAtom> aURI,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  NS_ASSERTION(aNameSpaceID - 1 == (int32_t) mURIArray.Length(),
-               "BAD! AddDisabledNameSpace not called in right order!");
-
+  MOZ_ASSERT(aNameSpaceID == (int32_t) mURIArray.Length());
   mURIArray.AppendElement(uri.forget());
   mDisabledURIToIDTable.Put(mURIArray.LastElement(), aNameSpaceID);
 

@@ -102,7 +102,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
         , mRemainingTime(aRemainingTime)
       {}
 
-      NS_IMETHODIMP Run() {
+      NS_IMETHOD Run() override {
         hal::NotifyBatteryChange(hal::BatteryInformation(mLevel, mCharging, mRemainingTime));
         return NS_OK;
       }
@@ -151,7 +151,7 @@ Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv* jenv, jcla
     public:
       ExitFullScreenRunnable(jobject view) : mView(view) {}
 
-      NS_IMETHODIMP Run() {
+      NS_IMETHOD Run() override {
         JNIEnv* const env = jni::GetGeckoThreadEnv();
         nsPluginInstanceOwner::ExitFullScreen(mView);
         env->DeleteGlobalRef(mView);

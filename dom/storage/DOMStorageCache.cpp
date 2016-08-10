@@ -700,7 +700,7 @@ private:
   int64_t* mTarget;
   int64_t mDelta;
 
-  NS_IMETHOD Run() { *mTarget = mDelta; return NS_OK; }
+  NS_IMETHOD Run() override { *mTarget = mDelta; return NS_OK; }
 };
 
 } // namespace

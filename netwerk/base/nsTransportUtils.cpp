@@ -64,7 +64,7 @@ public:
 
     ~nsTransportStatusEvent() {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         // since this event is being handled, we need to clear the proxy's ref.
         // if not coalescing all, then last event may not equal self!

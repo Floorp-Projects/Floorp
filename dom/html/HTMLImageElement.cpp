@@ -92,7 +92,7 @@ public:
     mDocument->BlockOnload();
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mElement->mPendingImageLoadTask == this) {
       mElement->mPendingImageLoadTask = nullptr;

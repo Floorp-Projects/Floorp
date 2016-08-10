@@ -2626,7 +2626,7 @@ class PreciseGCRunnable : public Runnable
     PreciseGCRunnable(ScheduledGCCallback* aCallback, bool aShrinking)
     : mCallback(aCallback), mShrinking(aShrinking) {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
 

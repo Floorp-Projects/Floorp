@@ -22,7 +22,7 @@ def compiler_class(compiler):
         # - `check_msg` is the message to be printed to accompany compiling the
         #   test program.
         def try_compile(self, includes=None, body='', flags=None,
-                        check_msg=None, onerror=lambda: None):
+                        check_msg=None, when=None, onerror=lambda: None):
             includes = includes or []
             source_lines = ['#include <%s>' % f for f in includes]
             source = '\n'.join(source_lines) + '\n'
@@ -48,7 +48,7 @@ def compiler_class(compiler):
                 if flags:
                     return flags[:]
 
-            @depends(self, extra_toolchain_flags)
+            @depends_when(self, extra_toolchain_flags, when=when)
             @checking_fn
             def func(compiler, extra_flags):
                 flags = get_flags() or []

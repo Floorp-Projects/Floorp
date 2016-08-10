@@ -32,7 +32,7 @@ public:
         : mCallback(cb), mResult(result) {
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         LOG(("nsAsyncVerifyRedirectCallbackEvent::Run() "
              "callback to %p with result %x",

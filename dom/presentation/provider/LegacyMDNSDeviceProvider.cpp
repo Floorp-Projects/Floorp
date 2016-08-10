@@ -205,7 +205,8 @@ LegacyMDNSDeviceProvider::Connect(Device* aDevice,
 
   RefPtr<TCPDeviceInfo> deviceInfo = new TCPDeviceInfo(aDevice->Id(),
                                                        aDevice->Address(),
-                                                       aDevice->Port());
+                                                       aDevice->Port(),
+                                                       EmptyCString());
 
   return mPresentationService->Connect(deviceInfo, aRetVal);
 }

@@ -915,10 +915,13 @@ class AutoCompartment
 {
     ExclusiveContext * const cx_;
     JSCompartment * const origin_;
+    const js::AutoLockForExclusiveAccess* maybeLock_;
 
   public:
-    inline AutoCompartment(ExclusiveContext* cx, JSObject* target);
-    inline AutoCompartment(ExclusiveContext* cx, JSCompartment* target);
+    inline AutoCompartment(ExclusiveContext* cx, JSObject* target,
+                           js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    inline AutoCompartment(ExclusiveContext* cx, JSCompartment* target,
+                           js::AutoLockForExclusiveAccess* maybeLock = nullptr);
     inline ~AutoCompartment();
 
     ExclusiveContext* context() const { return cx_; }

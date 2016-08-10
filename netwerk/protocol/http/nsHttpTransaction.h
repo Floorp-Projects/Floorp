@@ -206,7 +206,7 @@ private:
                                 nsIInterfaceRequestor* aCallbacks)
         : mTrans(aTrans), mCallbacks(aCallbacks) {}
 
-        NS_IMETHOD Run()
+        NS_IMETHOD Run() override
         {
             if (mTrans->mConnection)
                 mTrans->mConnection->SetSecurityCallbacks(mCallbacks);

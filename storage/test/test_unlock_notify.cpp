@@ -50,7 +50,7 @@ public:
     }
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mozilla::ReentrantMonitorAutoEnter lock(monitor);
 
@@ -102,7 +102,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mozilla::ReentrantMonitorAutoEnter lock(monitor);
     WaitFor(READ_LOCK);

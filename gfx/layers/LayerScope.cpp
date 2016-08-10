@@ -349,7 +349,7 @@ private:
             : mLayerScopeManager(aLayerScopeManager)
         {
         }
-        NS_IMETHOD Run() {
+        NS_IMETHOD Run() override {
             mLayerScopeManager->mWebSocketManager =
                 mozilla::MakeUnique<LayerScopeWebSocketManager>();
             return NS_OK;

@@ -46,7 +46,7 @@ public:
         , mStatus(status)
     {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
         mListener->OnCacheEntryDoomed(mStatus);
         NS_RELEASE(mListener);

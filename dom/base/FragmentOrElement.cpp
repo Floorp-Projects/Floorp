@@ -1276,7 +1276,7 @@ public:
     }
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     nsAutoScriptBlocker scriptBlocker;
     uint32_t len = mSubtreeRoots.Length();

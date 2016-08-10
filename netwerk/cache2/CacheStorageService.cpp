@@ -236,7 +236,7 @@ public:
   }
 
 private:
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     if (CacheStorageService::IsOnManagementThread()) {
       LOG(("WalkMemoryCacheRunnable::Run - collecting [this=%p]", this));
@@ -317,7 +317,7 @@ private:
   virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
                            int64_t aDataSize, int32_t aFetchCount,
                            uint32_t aLastModifiedTime, uint32_t aExpirationTime,
-                           bool aPinned)
+                           bool aPinned) override
   {
     nsresult rv;
 
@@ -381,7 +381,7 @@ private:
     {
     }
 
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       MOZ_ASSERT(NS_IsMainThread());
 
@@ -414,7 +414,7 @@ private:
     bool mPinned;
   };
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     // The main loop
     nsresult rv;
@@ -492,7 +492,7 @@ private:
   virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
                            int64_t aDataSize, int32_t aFetchCount,
                            uint32_t aLastModifiedTime, uint32_t aExpirationTime,
-                           bool aPinned)
+                           bool aPinned) override
   {
     // Called directly from CacheFileIOManager::GetEntryInfo.
 
@@ -1724,7 +1724,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
   {
   public:
     explicit Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       mCallback->OnCacheEntryDoomed(NS_ERROR_NOT_AVAILABLE);
       return NS_OK;
@@ -1848,7 +1848,7 @@ CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
   {
   public:
     explicit Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
-    NS_IMETHODIMP Run()
+    NS_IMETHOD Run() override
     {
       mCallback->OnCacheEntryDoomed(NS_OK);
       return NS_OK;

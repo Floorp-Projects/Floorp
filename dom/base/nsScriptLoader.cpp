@@ -1196,7 +1196,7 @@ public:
     : mLoader(aLoader)
     , mRequest(aRequest)
   {}
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     return mLoader->ProcessRequest(mRequest);
   }

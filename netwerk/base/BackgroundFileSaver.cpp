@@ -71,7 +71,7 @@ public:
   {
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHOD Run() override
   {
     return mSaver->NotifyTargetChange(mTarget);
   }

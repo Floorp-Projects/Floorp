@@ -395,7 +395,7 @@ public:
   {
   }
 
-  NS_METHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mReader->OnTaskQueue());
 
@@ -420,7 +420,7 @@ public:
   {
   }
 
-  NS_METHOD Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mReader->OnTaskQueue());
 

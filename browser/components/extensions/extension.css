@@ -11,7 +11,7 @@ input {
 /* Variables */
 html,
 body {
-  background-color: #fcfcfc;
+  background: transparent;
   box-sizing: border-box;
   color: #222426;
   cursor: default;
