@@ -8,7 +8,7 @@ require("devtools/shared/fronts/highlighters");
 const { SimpleStringFront } = require("devtools/shared/fronts/string");
 const {
   Front,
-  FrontClassWithSpec,
+  FrontClass,
   custom,
   preEvent,
   types
@@ -84,7 +84,7 @@ const AttributeModificationList = Class({
  * the parent node from clients, but the `children` request should be used
  * to traverse children.
  */
-const NodeFront = FrontClassWithSpec(nodeSpec, {
+const NodeFront = FrontClass(nodeSpec, {
   initialize: function (conn, form, detail, ctx) {
     // The parent node
     this._parent = null;
@@ -444,7 +444,7 @@ exports.NodeFront = NodeFront;
 /**
  * Client side of a node list as returned by querySelectorAll()
  */
-const NodeListFront = FrontClassWithSpec(nodeListSpec, {
+const NodeListFront = FrontClass(nodeListSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.call(this, client, form);
   },
@@ -484,7 +484,7 @@ exports.NodeListFront = NodeListFront;
 /**
  * Client side of the DOM walker.
  */
-const WalkerFront = FrontClassWithSpec(walkerSpec, {
+const WalkerFront = FrontClass(walkerSpec, {
   // Set to true if cleanup should be requested after every mutation list.
   autoCleanup: true,
 
@@ -940,7 +940,7 @@ exports.WalkerFront = WalkerFront;
  * Client side of the inspector actor, which is used to create
  * inspector-related actors, including the walker.
  */
-var InspectorFront = FrontClassWithSpec(inspectorSpec, {
+var InspectorFront = FrontClass(inspectorSpec, {
   initialize: function (client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.inspectorActor;

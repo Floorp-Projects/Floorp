@@ -14,7 +14,7 @@ const protocol = require("devtools/shared/protocol");
  * front.start();
  * // now wait for events to come
  */
-const ReflowFront = protocol.FrontClassWithSpec(reflowSpec, {
+const ReflowFront = protocol.FrontClass(reflowSpec, {
   initialize: function (client, {reflowActor}) {
     protocol.Front.prototype.initialize.call(this, client, {actor: reflowActor});
     this.manage(this);
