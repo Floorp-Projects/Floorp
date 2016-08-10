@@ -2,11 +2,12 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/bookmark_utils.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
@@ -16,7 +17,7 @@ initTestLogging("Trace");
 
 Service.engineManager.register(BookmarksEngine);
 
-add_test(function bad_record_allIDs() {
+add_task(function* bad_record_allIDs() {
   let server = new SyncServer();
   server.start();
   let syncTesting = new SyncTestingInfrastructure(server.server);
@@ -46,10 +47,10 @@ add_test(function bad_record_allIDs() {
 
   _("Clean up.");
   PlacesUtils.bookmarks.removeItem(badRecordID);
-  server.stop(run_next_test);
+  yield new Promise(r => server.stop(r));
 });
 
-add_test(function test_ID_caching() {
+add_task(function* test_ID_caching() {
   let server = new SyncServer();
   server.start();
   let syncTesting = new SyncTestingInfrastructure(server.server);
@@ -61,7 +62,9 @@ add_test(function test_ID_caching() {
 
   let mobileID = store.idForGUID("mobile");
   _("Change the GUID for that item, and drop the mobile anno.");
-  store._setGUID(mobileID, "abcdefghijkl");
+  let mobileRoot = BookmarkSpecialIds.specialIdForGUID("mobile", false);
+  let mobileGUID = yield PlacesUtils.promiseItemGuid(mobileRoot);
+  yield PlacesSyncUtils.bookmarks.changeGuid(mobileGUID, "abcdefghijkl");
   PlacesUtils.annotations.removeItemAnnotation(mobileID, "mobile/bookmarksRoot");
 
   let err;
@@ -88,7 +91,7 @@ add_test(function test_ID_caching() {
   do_check_eq(newMobileID, store.idForGUID("mobile", false));
 
   do_check_eq(store.GUIDForId(mobileID), "abcdefghijkl");
-  server.stop(run_next_test);
+  yield new Promise(r => server.stop(r));
 });
 
 function serverForFoo(engine) {
@@ -310,7 +313,7 @@ function FakeRecord(constructor, r) {
 }
 
 // Bug 632287.
-add_test(function test_mismatched_types() {
+add_task(function* test_mismatched_types() {
   _("Ensure that handling a record that changes type causes deletion " +
     "then re-adding.");
 
@@ -322,6 +325,7 @@ add_test(function test_mismatched_types() {
     "description":null,
     "parentid": "toolbar"
   };
+  oldRecord.cleartext = oldRecord;
 
   let newRecord = {
     "id": "l1nZZXfB8nC7",
@@ -337,6 +341,7 @@ add_test(function test_mismatched_types() {
        "oT74WwV8_j4P", "IztsItWVSo3-"],
     "parentid": "toolbar"
   };
+  newRecord.cleartext = newRecord;
 
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
@@ -349,8 +354,8 @@ add_test(function test_mismatched_types() {
     let bms = PlacesUtils.bookmarks;
     let oldR = new FakeRecord(BookmarkFolder, oldRecord);
     let newR = new FakeRecord(Livemark, newRecord);
-    oldR._parent = PlacesUtils.bookmarks.toolbarFolder;
-    newR._parent = PlacesUtils.bookmarks.toolbarFolder;
+    oldR.parentid = PlacesUtils.bookmarks.toolbarGuid;
+    newR.parentid = PlacesUtils.bookmarks.toolbarGuid;
 
     store.applyIncoming(oldR);
     _("Applied old. It's a folder.");
@@ -373,11 +378,11 @@ add_test(function test_mismatched_types() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
-    server.stop(run_next_test);
+    yield new Promise(r => server.stop(r));
   }
 });
 
-add_test(function test_bookmark_guidMap_fail() {
+add_task(function* test_bookmark_guidMap_fail() {
   _("Ensure that failures building the GUID map cause early death.");
 
   let engine = new BookmarksEngine(Service);
@@ -426,26 +431,10 @@ add_test(function test_bookmark_guidMap_fail() {
   do_check_eq(err, "Nooo");
 
   PlacesUtils.promiseBookmarksTree = pbt;
-  server.stop(run_next_test);
+  yield new Promise(r => server.stop(r));
 });
 
-add_test(function test_bookmark_is_taggable() {
-  let engine = new BookmarksEngine(Service);
-  let store = engine._store;
-
-  do_check_true(store.isTaggable("bookmark"));
-  do_check_true(store.isTaggable("microsummary"));
-  do_check_true(store.isTaggable("query"));
-  do_check_false(store.isTaggable("folder"));
-  do_check_false(store.isTaggable("livemark"));
-  do_check_false(store.isTaggable(null));
-  do_check_false(store.isTaggable(undefined));
-  do_check_false(store.isTaggable(""));
-
-  run_next_test();
-});
-
-add_test(function test_bookmark_tag_but_no_uri() {
+add_task(function* test_bookmark_tag_but_no_uri() {
   _("Ensure that a bookmark record with tags, but no URI, doesn't throw an exception.");
 
   let engine = new BookmarksEngine(Service);
@@ -454,12 +443,30 @@ add_test(function test_bookmark_tag_but_no_uri() {
   // We're simply checking that no exception is thrown, so
   // no actual checks in this test.
 
-  store._tagURI(null, ["foo"]);
-  store._tagURI(null, null);
-  store._tagURI(Utils.makeURI("about:fake"), null);
+  yield PlacesSyncUtils.bookmarks.insert({
+    kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
+    guid: Utils.makeGUID(),
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "http://example.com",
+    tags: ["foo"],
+  });
+  yield PlacesSyncUtils.bookmarks.insert({
+    kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
+    guid: Utils.makeGUID(),
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "http://example.org",
+    tags: null,
+  });
+  yield PlacesSyncUtils.bookmarks.insert({
+    kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
+    guid: Utils.makeGUID(),
+    url: "about:fake",
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    tags: null,
+  });
 
   let record = {
-    _parent:     PlacesUtils.bookmarks.toolbarFolder,
+    parentid:    PlacesUtils.bookmarks.toolbarGuid,
     id:          Utils.makeGUID(),
     description: "",
     tags:        ["foo"],
@@ -473,11 +480,9 @@ add_test(function test_bookmark_tag_but_no_uri() {
   store.create(record);
   record.tags = ["bar"];
   store.update(record);
-
-  run_next_test();
 });
 
-add_test(function test_misreconciled_root() {
+add_task(function* test_misreconciled_root() {
   _("Ensure that we don't reconcile an arbitrary record with a root.");
 
   let engine = new BookmarksEngine(Service);
@@ -538,7 +543,7 @@ add_test(function test_misreconciled_root() {
   do_check_eq(parentGUIDBefore, parentGUIDAfter);
   do_check_eq(parentIDBefore, parentIDAfter);
 
-  server.stop(run_next_test);
+  yield new Promise(r => server.stop(r));
 });
 
 function run_test() {
