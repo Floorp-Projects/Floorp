@@ -794,9 +794,9 @@ protected:
 
     // Returns true if layout of the character at the aOffset has not been
     // calculated.
-    bool IsLayoutChangedAfter(uint32_t aOffset) const
+    bool IsLayoutChangedAt(uint32_t aOffset) const
     {
-      return mInitialized && (mMinTextModifiedOffset < aOffset);
+      return IsLayoutChanged() && (mMinTextModifiedOffset <= aOffset);
     }
     // Returns true if layout of the content has been changed, i.e., the new
     // layout has not been calculated.
