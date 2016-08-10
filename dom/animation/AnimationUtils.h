@@ -60,6 +60,13 @@ public:
    */
   static bool
   IsOffscreenThrottlingEnabled();
+
+  /**
+   * Returns true if the preference to enable the core Web Animations API is
+   * true.
+   */
+  static bool
+  IsCoreAPIEnabled();
 };
 
 } // namespace mozilla
