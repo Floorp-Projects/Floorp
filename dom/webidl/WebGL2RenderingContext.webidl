@@ -318,8 +318,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     /* Buffer objects */
     void copyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset,
                            GLintptr writeOffset, GLsizeiptr size);
-    void getBufferSubData(GLenum target, GLintptr offset, ArrayBuffer? returnedData);
-    void getBufferSubData(GLenum target, GLintptr offset, SharedArrayBuffer returnedData);
+    void getBufferSubData(GLenum target, GLintptr offset, ArrayBufferView dstData);
 
     [Throws] /* Throws on readback in a write-only context. */
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
@@ -327,7 +326,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     /* Include our WebGL 1 function override(s) */
     [Throws]
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                    GLenum type, ArrayBufferView? pixels);
+                    GLenum type, ArrayBufferView pixels);
 
     /* Framebuffer objects */
     void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0,
@@ -338,8 +337,8 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void invalidateFramebuffer(GLenum target, sequence<GLenum> attachments);
 
     [Throws]
-    void invalidateSubFramebuffer (GLenum target, sequence<GLenum> attachments,
-                                   GLint x, GLint y, GLsizei width, GLsizei height);
+    void invalidateSubFramebuffer(GLenum target, sequence<GLenum> attachments, GLint x,
+                                  GLint y, GLsizei width, GLsizei height);
 
     void readBuffer(GLenum src);
 
@@ -366,10 +365,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     [Throws] // Can't actually throw.
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                       GLenum format, GLenum type, ArrayBufferView? pixels);
+                       GLenum format, GLenum type, ArrayBufferView pixels);
     [Throws] // Can't actually throw.
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLint zoffset, GLenum format, GLenum type, ImageData? data);
+                       GLint zoffset, GLenum format, GLenum type, ImageData data);
     [Throws]
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLenum format, GLenum type, HTMLImageElement image);
@@ -427,7 +426,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
                     ArrayBufferView? pixels);
     [Throws] // Can't throw.
     void texImage2D(GLenum target, GLint level, GLenum internalformat, GLenum format,
-                    GLenum type, ImageData? pixels);
+                    GLenum type, ImageData pixels);
     [Throws] // May throw DOMException
     void texImage2D(GLenum target, GLint level, GLenum internalformat, GLenum format,
                     GLenum type, HTMLImageElement image);
@@ -443,10 +442,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     [Throws] // Can't throw.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLsizei width, GLsizei height, GLenum format, GLenum type,
-                       ArrayBufferView? pixels);
+                       ArrayBufferView pixels);
     [Throws] // Can't throw.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, ImageData? pixels);
+                       GLenum format, GLenum type, ImageData pixels);
     [Throws]  // May throw DOMException
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLImageElement image);
