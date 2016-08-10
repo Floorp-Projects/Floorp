@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_TCPSocketChild_h
 #define mozilla_dom_TCPSocketChild_h
 
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/net/PTCPSocketChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"

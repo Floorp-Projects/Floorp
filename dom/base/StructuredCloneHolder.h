@@ -36,6 +36,8 @@ public:
   StructuredCloneHolderBase(StructuredCloneScope aScope = StructuredCloneScope::SameProcessSameThread);
   virtual ~StructuredCloneHolderBase();
 
+  StructuredCloneHolderBase(StructuredCloneHolderBase&& aOther) = default;
+
   // These methods should be implemented in order to clone data.
   // Read more documentation in js/public/StructuredClone.h.
 
@@ -149,6 +151,8 @@ public:
                                  TransferringSupport aSupportsTransferring,
                                  StructuredCloneScope aStructuredCloneScope);
   virtual ~StructuredCloneHolder();
+
+  StructuredCloneHolder(StructuredCloneHolder&& aOther) = default;
 
   // Normally you should just use Write() and Read().
 
