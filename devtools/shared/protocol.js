@@ -1099,7 +1099,7 @@ var generateRequestHandlers = function (actorSpec, actorProto) {
  *    The actor prototype. Should have method definitions, can have event
  *    definitions.
  */
-var ActorClassWithSpec = function (actorSpec, actorProto) {
+var ActorClass = function (actorSpec, actorProto) {
   if (!actorSpec.typeName) {
     throw Error("Actor specification must have a typeName member.");
   }
@@ -1109,7 +1109,7 @@ var ActorClassWithSpec = function (actorSpec, actorProto) {
 
   return cls;
 };
-exports.ActorClassWithSpec = ActorClassWithSpec;
+exports.ActorClass = ActorClass;
 
 /**
  * Base class for client-side actor fronts.
@@ -1420,7 +1420,7 @@ var generateRequestMethods = function (actorSpec, frontProto) {
  *    The object prototype.  Must have a 'typeName' property,
  *    should have method definitions, can have event definitions.
  */
-var FrontClassWithSpec = function (actorSpec, frontProto) {
+var FrontClass = function (actorSpec, frontProto) {
   frontProto.extends = Front;
   let cls = Class(generateRequestMethods(actorSpec, frontProto));
 
@@ -1431,7 +1431,7 @@ var FrontClassWithSpec = function (actorSpec, frontProto) {
 
   return cls;
 };
-exports.FrontClassWithSpec = FrontClassWithSpec;
+exports.FrontClass = FrontClass;
 
 exports.dumpActorSpec = function (type) {
   let actorSpec = type.actorSpec;

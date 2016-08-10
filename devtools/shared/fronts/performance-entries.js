@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
+const { Front, FrontClass } = require("devtools/shared/protocol");
 const performanceSpec = require("devtools/shared/specs/performance-entries");
 
-var PerformanceEntriesFront = FrontClassWithSpec(performanceSpec, {
+var PerformanceEntriesFront = FrontClass(performanceSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.performanceEntriesActor;
