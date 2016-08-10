@@ -227,7 +227,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
                             GLint yOffset, GLint zOffset, GLsizei rawWidth,
                             GLsizei rawHeight, GLsizei rawDepth, GLint border,
                             GLenum unpackFormat, GLenum unpackType,
-                            const dom::Nullable<dom::ArrayBufferView>& maybeView)
+                            const dom::ArrayBufferView* view)
 {
     uint32_t width, height, depth;
     if (!ValidateExtents(mContext, funcName, rawWidth, rawHeight, rawDepth, border,
@@ -246,21 +246,16 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     const uint8_t* bytes = nullptr;
     uint32_t byteCount = 0;
 
-    if (!maybeView.IsNull()) {
-        const auto& view = maybeView.Value();
+    if (view) {
+        view->ComputeLengthAndData();
+        bytes = view->DataAllowShared();
+        byteCount = view->LengthAllowShared();
 
-        const auto jsType = JS_GetArrayBufferViewType(view.Obj());
+        const auto& jsType = view->Type();
         if (!DoesJSTypeMatchUnpackType(pi.type, jsType)) {
             mContext->ErrorInvalidOperation("%s: `pixels` not compatible with `type`.",
                                             funcName);
             return;
-        }
-
-        if (width && height && depth) {
-            view.ComputeLengthAndData();
-
-            bytes = view.DataAllowShared();
-            byteCount = view.LengthAllowShared();
         }
     } else if (isSubImage) {
         mContext->ErrorInvalidValue("%s: `pixels` must not be null.", funcName);
@@ -336,16 +331,16 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
 
 static already_AddRefed<gfx::DataSourceSurface>
 FromImageData(WebGLContext* webgl, const char* funcName, GLenum unpackType,
-              dom::ImageData* imageData, dom::Uint8ClampedArray* scopedArr)
+              const dom::ImageData& imageData, dom::Uint8ClampedArray* scopedArr)
 {
-    DebugOnly<bool> inited = scopedArr->Init(imageData->GetDataObject());
+    DebugOnly<bool> inited = scopedArr->Init(imageData.GetDataObject());
     MOZ_ASSERT(inited);
 
     scopedArr->ComputeLengthAndData();
     const DebugOnly<size_t> dataSize = scopedArr->Length();
     const void* const data = scopedArr->Data();
 
-    const gfx::IntSize size(imageData->Width(), imageData->Height());
+    const gfx::IntSize size(imageData.Width(), imageData.Height());
     const size_t stride = size.width * 4;
     const gfx::SurfaceFormat surfFormat = gfx::SurfaceFormat::R8G8B8A8;
 
@@ -370,22 +365,16 @@ void
 WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
                             GLint level, GLenum internalFormat, GLint xOffset,
                             GLint yOffset, GLint zOffset, GLenum unpackFormat,
-                            GLenum unpackType, dom::ImageData* imageData)
+                            GLenum unpackType, const dom::ImageData& imageData)
 {
     const bool usePBOs = false;
     webgl::PackingInfo pi;
     if (!mContext->ValidateUnpackInfo(funcName, usePBOs, unpackFormat, unpackType, &pi))
         return;
 
-    if (!imageData) {
-        // Spec says to generate an INVALID_VALUE error
-        mContext->ErrorInvalidValue("%s: Null ImageData.", funcName);
-        return;
-    }
-
     // Eventually, these will be args.
-    const uint32_t width = imageData->Width();
-    const uint32_t height = imageData->Height();
+    const uint32_t width = imageData.Width();
+    const uint32_t height = imageData.Height();
     const uint32_t depth = 1;
 
     dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(dom::RootingCx());
@@ -403,7 +392,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     webgl::TexUnpackSurface blob(mContext, target, width, height, depth, surf,
                                  isAlphaPremult);
 
-    const uint32_t fullRows = imageData->Height();
+    const uint32_t fullRows = imageData.Height();
     const uint32_t tailPixels = 0;
     if (!mContext->ValidateUnpackPixels(funcName, fullRows, tailPixels, &blob))
         return;
@@ -419,7 +408,7 @@ void
 WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
                             GLint level, GLenum internalFormat, GLint xOffset,
                             GLint yOffset, GLint zOffset, GLenum unpackFormat,
-                            GLenum unpackType, dom::Element* elem,
+                            GLenum unpackType, const dom::Element& elem,
                             ErrorResult* const out_error)
 {
     const bool usePBOs = false;
@@ -439,7 +428,8 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
         flags |= nsLayoutUtils::SFE_PREFER_NO_PREMULTIPLY_ALPHA;
 
     RefPtr<gfx::DrawTarget> idealDrawTarget = nullptr; // Don't care for now.
-    auto sfer = nsLayoutUtils::SurfaceFromElement(elem, flags, idealDrawTarget);
+    auto sfer = nsLayoutUtils::SurfaceFromElement(const_cast<dom::Element*>(&elem), flags,
+                                                  idealDrawTarget);
 
     //////
 
