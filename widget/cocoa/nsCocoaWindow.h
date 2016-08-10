@@ -235,7 +235,7 @@ public:
                                          nsWidgetInitData* aInitData = nullptr)
                                          override;
 
-    NS_IMETHOD              Destroy() override;
+    virtual void            Destroy() override;
 
     NS_IMETHOD              Show(bool aState) override;
     virtual nsIWidget*      GetSheetWindowParent(void) override;

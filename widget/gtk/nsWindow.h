@@ -97,7 +97,7 @@ public:
                                          nsNativeWidget aNativeParent,
                                          const LayoutDeviceIntRect& aRect,
                                          nsWidgetInitData* aInitData) override;
-    NS_IMETHOD         Destroy(void) override;
+    virtual void       Destroy() override;
     virtual nsIWidget *GetParent() override;
     virtual float      GetDPI() override;
     virtual double     GetDefaultScaleInternal() override;

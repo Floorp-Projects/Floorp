@@ -528,8 +528,8 @@ nsWindow::Create(nsIWidget* aParent,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::Destroy(void)
+void
+nsWindow::Destroy()
 {
     for (uint32_t i = 0; i < mChildren.Length(); ++i) {
         // why do we still have children?

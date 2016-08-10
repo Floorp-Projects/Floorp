@@ -143,7 +143,7 @@ public:
   NS_IMETHOD              CaptureMouse(bool aCapture) override;
   virtual nsIWidgetListener*  GetWidgetListener() override;
   virtual void            SetWidgetListener(nsIWidgetListener* alistener) override;
-  NS_IMETHOD              Destroy() override;
+  virtual void            Destroy() override;
   NS_IMETHOD              SetParent(nsIWidget* aNewParent) override;
   virtual nsIWidget*      GetParent(void) override;
   virtual nsIWidget*      GetTopLevelWidget() override;

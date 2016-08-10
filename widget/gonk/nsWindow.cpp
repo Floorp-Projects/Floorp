@@ -334,8 +334,8 @@ nsWindow::Create(nsIWidget* aParent,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::Destroy(void)
+void
+nsWindow::Destroy()
 {
     mOnDestroyCalled = true;
     mScreen->UnregisterWindow(this);
@@ -343,7 +343,6 @@ nsWindow::Destroy(void)
         gFocusedWindow = nullptr;
     }
     nsBaseWidget::OnDestroy();
-    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -165,8 +165,7 @@ PluginWidgetParent::KillWidget()
   PWLOG("PluginWidgetParent::KillWidget() widget=%p\n", (void*)mWidget.get());
   if (mWidget) {
     mWidget->UnregisterPluginWindowForRemoteUpdates();
-    DebugOnly<nsresult> rv = mWidget->Destroy();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "widget destroy failure");
+    mWidget->Destroy();
 #if defined(MOZ_WIDGET_GTK)
     mWidget->SetNativeData(NS_NATIVE_PLUGIN_OBJECT_PTR, (uintptr_t)0);
     mWrapper = nullptr;

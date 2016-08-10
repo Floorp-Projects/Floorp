@@ -34,7 +34,7 @@ public:
                                          const LayoutDeviceIntRect& aRect,
                                          nsWidgetInitData* aInitData = nullptr)
                                          override;
-    NS_IMETHOD Destroy() override;
+    virtual void Destroy() override;
     NS_IMETHOD Show(bool aState) override;
     NS_IMETHOD              Enable(bool aState) override {
         return NS_OK;
