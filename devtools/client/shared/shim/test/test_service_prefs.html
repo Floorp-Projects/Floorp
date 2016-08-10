@@ -16,7 +16,7 @@ var exports = {}
 var module = {exports};
 
  // Add some starter prefs.
-localStorage.setItem("devtools.branch1.somebool", JSON.stringify({
+localStorage.setItem("Services.prefs:devtools.branch1.somebool", JSON.stringify({
   // bool
   type: 128,
   defaultValue: false,
@@ -24,7 +24,7 @@ localStorage.setItem("devtools.branch1.somebool", JSON.stringify({
   userValue: false
 }));
 
-localStorage.setItem("devtools.branch1.somestring", JSON.stringify({
+localStorage.setItem("Services.prefs:devtools.branch1.somestring", JSON.stringify({
   // string
   type: 32,
   defaultValue: "dinosaurs",
@@ -32,7 +32,7 @@ localStorage.setItem("devtools.branch1.somestring", JSON.stringify({
   userValue: "elephants"
 }));
 
-localStorage.setItem("devtools.branch2.someint", JSON.stringify({
+localStorage.setItem("Services.prefs:devtools.branch2.someint", JSON.stringify({
   // string
   type: 64,
   defaultValue: -16,
