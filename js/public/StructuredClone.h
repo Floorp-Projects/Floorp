@@ -7,6 +7,7 @@
 #ifndef js_StructuredClone_h
 #define js_StructuredClone_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/BufferList.h"
 
 #include <stdint.h>
@@ -153,7 +154,7 @@ enum OwnTransferablePolicy {
     NoTransferables
 };
 
-class JSStructuredCloneData : public mozilla::BufferList<js::SystemAllocPolicy>
+class MOZ_NON_MEMMOVABLE JSStructuredCloneData : public mozilla::BufferList<js::SystemAllocPolicy>
 {
     typedef js::SystemAllocPolicy AllocPolicy;
     typedef mozilla::BufferList<js::SystemAllocPolicy> BufferList;
