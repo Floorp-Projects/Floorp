@@ -609,48 +609,6 @@ else
     fi
 fi # COMPILE_ENVIRONMENT
 
-dnl =================================================================
-dnl Set up and test static assertion macros used to avoid AC_TRY_RUN,
-dnl which is bad when cross compiling.
-dnl =================================================================
-if test "$COMPILE_ENVIRONMENT"; then
-configure_static_assert_macros='
-#define CONFIGURE_STATIC_ASSERT(condition) CONFIGURE_STATIC_ASSERT_IMPL(condition, __LINE__)
-#define CONFIGURE_STATIC_ASSERT_IMPL(condition, line) CONFIGURE_STATIC_ASSERT_IMPL2(condition, line)
-#define CONFIGURE_STATIC_ASSERT_IMPL2(condition, line) typedef int static_assert_line_##line[(condition) ? 1 : -1]
-'
-
-dnl test that the macros actually work:
-AC_MSG_CHECKING(that static assertion macros used in autoconf tests work)
-AC_CACHE_VAL(ac_cv_static_assertion_macros_work,
- [AC_LANG_SAVE
-  AC_LANG_C
-  ac_cv_static_assertion_macros_work="yes"
-  AC_TRY_COMPILE([$configure_static_assert_macros],
-                 [CONFIGURE_STATIC_ASSERT(1)],
-                 ,
-                 ac_cv_static_assertion_macros_work="no")
-  AC_TRY_COMPILE([$configure_static_assert_macros],
-                 [CONFIGURE_STATIC_ASSERT(0)],
-                 ac_cv_static_assertion_macros_work="no",
-                 )
-  AC_LANG_CPLUSPLUS
-  AC_TRY_COMPILE([$configure_static_assert_macros],
-                 [CONFIGURE_STATIC_ASSERT(1)],
-                 ,
-                 ac_cv_static_assertion_macros_work="no")
-  AC_TRY_COMPILE([$configure_static_assert_macros],
-                 [CONFIGURE_STATIC_ASSERT(0)],
-                 ac_cv_static_assertion_macros_work="no",
-                 )
-  AC_LANG_RESTORE
- ])
-AC_MSG_RESULT("$ac_cv_static_assertion_macros_work")
-if test "$ac_cv_static_assertion_macros_work" = "no"; then
-    AC_MSG_ERROR([Compiler cannot compile macros used in autoconf tests.])
-fi
-fi # COMPILE_ENVIRONMENT
-
 dnl ========================================================
 dnl Android libstdc++, placed here so it can use MOZ_ARCH
 dnl computed above.
@@ -815,26 +773,6 @@ if test "$GNU_CXX"; then
 else
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
 fi
-
-dnl ========================================================
-dnl Checking for 64-bit OS
-dnl ========================================================
-if test "$COMPILE_ENVIRONMENT"; then
-AC_LANG_SAVE
-AC_LANG_C
-AC_MSG_CHECKING(for 64-bit OS)
-AC_TRY_COMPILE([$configure_static_assert_macros],
-               [CONFIGURE_STATIC_ASSERT(sizeof(void*) == 8)],
-               result="yes", result="no")
-AC_MSG_RESULT("$result")
-if test "$result" = "yes"; then
-    AC_DEFINE(HAVE_64BIT_BUILD)
-    HAVE_64BIT_BUILD=1
-fi
-AC_SUBST(HAVE_64BIT_BUILD)
-AC_LANG_RESTORE
-fi # COMPILE_ENVIRONMENT
-
 
 dnl ========================================================
 dnl = Use Valgrind
