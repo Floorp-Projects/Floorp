@@ -43,6 +43,33 @@ namespace layers {
 struct TileClient;
 } // namespace layers
 } // namespace mozilla
+
+namespace mozilla {
+struct SerializedStructuredCloneBuffer;
+} // namespace mozilla
+
+namespace mozilla {
+namespace dom {
+namespace ipc {
+class StructuredCloneData;
+} // namespace ipc
+} // namespace dom
+} // namespace mozilla
+
+namespace mozilla {
+namespace dom {
+class ClonedMessageData;
+class MessagePortMessage;
+namespace indexedDB {
+struct StructuredCloneReadInfo;
+class SerializedStructuredCloneReadInfo;
+class ObjectStoreCursorResponse;
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
+
+class JSStructuredCloneData;
+
 //
 // nsTArray is a resizable array class, like std::vector.
 //
@@ -673,29 +700,30 @@ struct MOZ_NEEDS_MEMMOVABLE_TYPE nsTArray_CopyChooser
 // Some classes require constructors/destructors to be called, so they are
 // specialized here.
 //
+#define DECLARE_USE_COPY_CONSTRUCTORS(T)                \
+  template<>                                            \
+  struct nsTArray_CopyChooser<T>                        \
+  {                                                     \
+    typedef nsTArray_CopyWithConstructors<T> Type;      \
+  };
+
 template<class E>
 struct nsTArray_CopyChooser<JS::Heap<E>>
 {
   typedef nsTArray_CopyWithConstructors<JS::Heap<E>> Type;
 };
 
-template<>
-struct nsTArray_CopyChooser<nsRegion>
-{
-  typedef nsTArray_CopyWithConstructors<nsRegion> Type;
-};
-
-template<>
-struct nsTArray_CopyChooser<nsIntRegion>
-{
-  typedef nsTArray_CopyWithConstructors<nsIntRegion> Type;
-};
-
-template<>
-struct nsTArray_CopyChooser<mozilla::layers::TileClient>
-{
-  typedef nsTArray_CopyWithConstructors<mozilla::layers::TileClient> Type;
-};
+DECLARE_USE_COPY_CONSTRUCTORS(nsRegion)
+DECLARE_USE_COPY_CONSTRUCTORS(nsIntRegion)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::layers::TileClient)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::SerializedStructuredCloneBuffer)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::ipc::StructuredCloneData)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::ClonedMessageData)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::StructuredCloneReadInfo);
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::ObjectStoreCursorResponse)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo);
+DECLARE_USE_COPY_CONSTRUCTORS(JSStructuredCloneData)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::MessagePortMessage)
 
 
 //

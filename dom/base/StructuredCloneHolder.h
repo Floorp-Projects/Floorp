@@ -34,6 +34,8 @@ public:
   StructuredCloneHolderBase();
   virtual ~StructuredCloneHolderBase();
 
+  StructuredCloneHolderBase(StructuredCloneHolderBase&& aOther) = default;
+
   // These methods should be implemented in order to clone data.
   // Read more documentation in js/public/StructuredClone.h.
 
@@ -152,6 +154,8 @@ public:
                                  TransferringSupport aSupportsTransferring,
                                  ContextSupport aContextSupport);
   virtual ~StructuredCloneHolder();
+
+  StructuredCloneHolder(StructuredCloneHolder&& aOther) = default;
 
   // Normally you should just use Write() and Read().
 

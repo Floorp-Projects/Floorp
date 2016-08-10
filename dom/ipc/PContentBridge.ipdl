@@ -16,7 +16,8 @@ include PTabContext;
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
-using class mozilla::dom::ipc::StructuredCloneData from "ipc/IPCMessageUtils.h";
+using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
+using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
 
 namespace mozilla {
 namespace dom {
