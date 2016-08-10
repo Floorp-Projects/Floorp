@@ -8,31 +8,38 @@
 // by NodeActor actor (see 'onNodeActorForm' method).
 
 const Events = require("sdk/event/core");
-const {ActorClass, Actor, FrontClass, Front, method} =
+const {ActorClassWithSpec, Actor, FrontClassWithSpec, Front, generateActorSpec} =
   require("devtools/shared/protocol");
 
 const {NodeActor} = require("devtools/server/actors/inspector");
 
-var EventsFormActor = ActorClass({
+var eventsSpec = generateActorSpec({
   typeName: "eventsFormActor",
 
+  methods: {
+    attach: {
+      request: {},
+      response: {}
+    },
+    detach: {
+      request: {},
+      response: {}
+    }
+  }
+});
+
+var EventsFormActor = ActorClassWithSpec(eventsSpec, {
   initialize: function () {
     Actor.prototype.initialize.apply(this, arguments);
   },
 
-  attach: method(function () {
+  attach: function () {
     Events.on(NodeActor, "form", this.onNodeActorForm);
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
-  detach: method(function () {
+  detach: function () {
     Events.off(NodeActor, "form", this.onNodeActorForm);
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   onNodeActorForm: function (event) {
     let nodeActor = event.target;
@@ -43,7 +50,7 @@ var EventsFormActor = ActorClass({
   }
 });
 
-var EventsFormFront = FrontClass(EventsFormActor, {
+var EventsFormFront = FrontClassWithSpec(eventsSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.apply(this, arguments);
 
