@@ -490,3 +490,18 @@ def servo_target_dir(value):
 
 set_define('MOZ_STYLO', depends_if(servo_target_dir)(lambda x: bool(x)))
 set_config('SERVO_TARGET_DIR', servo_target_dir)
+
+# Gecko integrated IPC fuzzer
+# ==============================================================
+option('--enable-ipc-fuzzer', env='MOZ_FAULTY',
+       help='Enable IPC fuzzer')
+
+@depends('--enable-ipc-fuzzer', target)
+def ipc_fuzzer(value, target):
+    if value:
+        if target.os == 'WINNT':
+            die('--enable-ipc-fuzzer is not supported on this platform.')
+        return bool(value)
+
+set_config('MOZ_FAULTY', ipc_fuzzer)
+set_define('MOZ_FAULTY', ipc_fuzzer)
