@@ -184,22 +184,6 @@ MediaDecoder::ResourceCallback::SetMediaSeekable(bool aMediaSeekable)
 }
 
 void
-MediaDecoder::ResourceCallback::ResetConnectionState()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    mDecoder->ResetConnectionState();
-  }
-}
-
-nsresult
-MediaDecoder::ResourceCallback::FinishDecoderSetup(MediaResource* aResource)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return mDecoder ? mDecoder->FinishDecoderSetup(aResource) : NS_ERROR_FAILURE;
-}
-
-void
 MediaDecoder::ResourceCallback::NotifyNetworkError()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1010,26 +994,6 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   NotifySuspendedStatusChanged();
 }
 
-nsresult
-MediaDecoder::FinishDecoderSetup(MediaResource* aResource)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IsShutdown());
-  HTMLMediaElement* element = mOwner->GetMediaElement();
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-  element->FinishDecoderSetup(this, aResource);
-  return NS_OK;
-}
-
-void
-MediaDecoder::ResetConnectionState()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IsShutdown());
-  mOwner->ResetConnectionState();
-  MOZ_ASSERT(IsShutdown());
-}
-
 void
 MediaDecoder::NetworkError()
 {
@@ -1738,15 +1702,6 @@ MediaDecoder::IsWebMEnabled()
 {
   return Preferences::GetBool("media.webm.enabled");
 }
-
-#ifdef NECKO_PROTOCOL_rtsp
-bool
-MediaDecoder::IsRtspEnabled()
-{
-  //Currently the Rtsp decoded by omx.
-  return (Preferences::GetBool("media.rtsp.enabled", false) && IsOmxEnabled());
-}
-#endif
 
 #ifdef MOZ_OMX_DECODER
 bool
