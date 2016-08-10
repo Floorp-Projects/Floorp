@@ -58,6 +58,10 @@ struct StructuredCloneReadInfo
   ~StructuredCloneReadInfo();
 
   // In IndexedDatabaseInlines.h
+  inline
+  StructuredCloneReadInfo(StructuredCloneReadInfo&& aOther);
+
+  // In IndexedDatabaseInlines.h
   inline StructuredCloneReadInfo&
   operator=(StructuredCloneReadInfo&& aOther);
 
