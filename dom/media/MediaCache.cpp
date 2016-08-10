@@ -277,16 +277,17 @@ protected:
   };
 
   struct BlockOwner {
-    BlockOwner() : mStream(nullptr), mClass(READAHEAD_BLOCK) {}
+    constexpr BlockOwner() {}
 
     // The stream that owns this block, or null if the block is free.
-    MediaCacheStream* mStream;
+    MediaCacheStream* mStream = nullptr;
     // The block index in the stream. Valid only if mStream is non-null.
-    uint32_t            mStreamBlock;
+    // Initialized to an insane value to highlight misuse.
+    uint32_t          mStreamBlock = UINT32_MAX;
     // Time at which this block was last used. Valid only if
     // mClass is METADATA_BLOCK or PLAYED_BLOCK.
-    TimeStamp           mLastUseTime;
-    BlockClass          mClass;
+    TimeStamp         mLastUseTime;
+    BlockClass        mClass = READAHEAD_BLOCK;
   };
 
   struct Block {
