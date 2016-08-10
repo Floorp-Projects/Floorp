@@ -183,3 +183,14 @@ def gc_trace(value):
         return True
 
 set_define('JS_GC_TRACE', gc_trace)
+
+
+js_option('--enable-perf', env='JS_ION_PERF',
+          help='Enable Linux perf integration')
+
+@depends('--enable-perf')
+def ion_perf(value):
+    if value:
+        return True
+
+set_define('JS_ION_PERF', ion_perf)
