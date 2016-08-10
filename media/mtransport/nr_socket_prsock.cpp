@@ -135,12 +135,6 @@ nrappkit copyright:
 #endif
 #undef strlcpy
 
-// TCPSocketChild.h doesn't include TypedArray.h
-namespace mozilla {
-namespace dom {
-class ArrayBuffer;
-}
-}
 #include "mozilla/dom/network/TCPSocketChild.h"
 
 #ifdef LOG_TEMP_INFO
