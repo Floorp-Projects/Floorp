@@ -48,6 +48,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
@@ -1390,7 +1391,7 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
 bool
 ContentChild::RecvNotifyLayerAllocated(const dom::TabId& aTabId, const uint64_t& aLayersId)
 {
-  APZChild* apz = APZChild::Create(aTabId);
+  APZChild* apz = ContentProcessController::Create(aTabId);
   return CompositorBridgeChild::Get()->SendPAPZConstructor(apz, aLayersId);
 }
 
