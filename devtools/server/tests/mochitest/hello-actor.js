@@ -14,7 +14,7 @@ const helloSpec = protocol.generateActorSpec({
   }
 });
 
-var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
+var HelloActor = protocol.ActorClass(helloSpec, {
   initialize: function () {
     protocol.Actor.prototype.initialize.apply(this, arguments);
     this.counter = 0;

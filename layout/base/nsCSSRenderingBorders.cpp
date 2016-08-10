@@ -767,13 +767,8 @@ nsCSSBorderRenderer::GetStraightBorderPoint(mozilla::css::Side aSide,
         // +-------------------------+----
         // |                         |
         // |                         |
-        if (isHorizontal) {
-          P.x += signs[0] * borderWidth / 2.0f;
-          P.y += signs[1] * borderWidth / 2.0f;
-        } else {
-          P.x += signs[0] * borderWidth / 2.0f;
-          P.y += signs[1] * borderWidth / 2.0f;
-        }
+        P.x += signs[0] * borderWidth / 2.0f;
+        P.y += signs[1] * borderWidth / 2.0f;
       } else {
         // Two dots are drawn separately.
         //

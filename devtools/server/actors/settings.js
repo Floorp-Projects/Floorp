@@ -64,7 +64,7 @@ function loadSettingsFile() {
   }
 }
 
-var SettingsActor = exports.SettingsActor = protocol.ActorClassWithSpec(settingsSpec, {
+var SettingsActor = exports.SettingsActor = protocol.ActorClass(settingsSpec, {
   _getSettingsService: function () {
     let win = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
     return win.navigator.mozSettings;

@@ -98,6 +98,42 @@ SandboxBroker::Policy::Policy(const Policy& aOther) {
   }
 }
 
+// Chromium
+// sandbox/linux/syscall_broker/broker_file_permission.cc
+// Async signal safe
+bool
+SandboxBroker::Policy::ValidatePath(const char* path) const {
+  if (!path)
+    return false;
+
+  const size_t len = strlen(path);
+  // No empty paths
+  if (len == 0)
+    return false;
+  // Paths must be absolute and not relative
+  if (path[0] != '/')
+    return false;
+  // No trailing / (but "/" is valid)
+  if (len > 1 && path[len - 1] == '/')
+    return false;
+  // No trailing /.
+  if (len >= 2 && path[len - 2] == '/' && path[len - 1] == '.')
+    return false;
+  // No trailing /..
+  if (len >= 3 && path[len - 3] == '/' && path[len - 2] == '.' &&
+      path[len - 1] == '.')
+    return false;
+  // No /../ anywhere
+  for (size_t i = 0; i < len; i++) {
+    if (path[i] == '/' && (len - i) > 3) {
+      if (path[i + 1] == '.' && path[i + 2] == '.' && path[i + 3] == '/') {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 void
 SandboxBroker::Policy::AddPath(int aPerms, const char* aPath,
                                AddCondition aCond)
@@ -154,6 +190,38 @@ SandboxBroker::Policy::AddTree(int aPerms, const char* aPath)
 }
 
 void
+SandboxBroker::Policy::AddDir(int aPerms, const char* aPath)
+{
+  struct stat statBuf;
+
+  if (stat(aPath, &statBuf) != 0) {
+    return;
+  }
+
+  if (!S_ISDIR(statBuf.st_mode)) {
+    return;
+  }
+
+  nsDependentCString path(aPath);
+  MOZ_ASSERT(path.Length() <= kMaxPathLen - 1);
+  // Enforce trailing / on aPath
+  if (path[path.Length() - 1] != '/') {
+    path.Append('/');
+  }
+  int origPerms;
+  if (!mMap.Get(path, &origPerms)) {
+    origPerms = MAY_ACCESS;
+  } else {
+    MOZ_ASSERT(origPerms & MAY_ACCESS);
+  }
+  int newPerms = origPerms | aPerms | RECURSIVE;
+  if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
+    SANDBOX_LOG_ERROR("policy for %s: %d -> %d", aPath, origPerms, newPerms);
+  }
+  mMap.Put(path, newPerms);
+}
+
+void
 SandboxBroker::Policy::AddPrefix(int aPerms, const char* aDir,
                                  const char* aPrefix)
 {
@@ -178,7 +246,39 @@ SandboxBroker::Policy::AddPrefix(int aPerms, const char* aDir,
 int
 SandboxBroker::Policy::Lookup(const nsACString& aPath) const
 {
-  return mMap.Get(aPath);
+  // Early exit for paths explicitly found in the
+  // whitelist.
+  // This means they will not gain extra permissions
+  // from recursive paths.
+  int perms = mMap.Get(aPath);
+  if (perms) {
+    return perms;
+  }
+
+  // Not a legally constructed path
+  if (!ValidatePath(PromiseFlatCString(aPath).get()))
+    return 0;
+
+  // Now it's either an illegal access, or a recursive
+  // directory permission. We'll have to check the entire
+  // whitelist for the best match (slower).
+  int allPerms = 0;
+  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+    const nsACString& whiteListPath = iter.Key();
+    const int& perms = iter.Data();
+
+    if (!(perms & RECURSIVE))
+      continue;
+
+    // passed part starts with something on the whitelist
+    if (StringBeginsWith(aPath, whiteListPath)) {
+      allPerms |= perms;
+    }
+  }
+
+  // Strip away the RECURSIVE flag as it doesn't
+  // necessarily apply to aPath.
+  return allPerms & ~RECURSIVE;
 }
 
 static bool

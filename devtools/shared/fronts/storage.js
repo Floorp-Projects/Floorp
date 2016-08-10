@@ -7,7 +7,7 @@ const protocol = require("devtools/shared/protocol");
 const specs = require("devtools/shared/specs/storage");
 
 for (let childSpec of Object.values(specs.childSpecs)) {
-  protocol.FrontClassWithSpec(childSpec, {
+  protocol.FrontClass(childSpec, {
     form(form, detail) {
       if (detail === "actorid") {
         this.actorID = form;
@@ -21,7 +21,7 @@ for (let childSpec of Object.values(specs.childSpecs)) {
   });
 }
 
-const StorageFront = protocol.FrontClassWithSpec(specs.storageSpec, {
+const StorageFront = protocol.FrontClass(specs.storageSpec, {
   initialize(client, tabForm) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.storageActor;

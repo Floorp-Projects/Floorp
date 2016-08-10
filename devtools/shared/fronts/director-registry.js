@@ -9,7 +9,7 @@ const protocol = require("devtools/shared/protocol");
 /**
  * The corresponding Front object for the DirectorRegistryActor.
  */
-const DirectorRegistryFront = protocol.FrontClassWithSpec(directorRegistrySpec, {
+const DirectorRegistryFront = protocol.FrontClass(directorRegistrySpec, {
   initialize: function (client, { directorRegistryActor }) {
     protocol.Front.prototype.initialize.call(this, client, {
       actor: directorRegistryActor

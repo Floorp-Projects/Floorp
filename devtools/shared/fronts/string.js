@@ -9,7 +9,7 @@ const {Class} = require("sdk/core/heritage");
 const {longStringSpec} = require("devtools/shared/specs/string");
 const protocol = require("devtools/shared/protocol");
 
-const LongStringFront = protocol.FrontClassWithSpec(longStringSpec, {
+const LongStringFront = protocol.FrontClass(longStringSpec, {
   initialize: function (client) {
     protocol.Front.prototype.initialize.call(this, client);
   },
