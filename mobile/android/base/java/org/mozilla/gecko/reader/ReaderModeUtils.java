@@ -12,6 +12,14 @@ import android.net.Uri;
 public class ReaderModeUtils {
     private static final String LOGTAG = "ReaderModeUtils";
 
+    /**
+     * Extract the URL from a valid about:reader URL. You may want to use stripAboutReaderUrl
+     * instead to always obtain a valid String.
+     *
+     * @see #stripAboutReaderUrl(String) for a safer version that returns the original URL for malformed/invalid
+     *     URLs.
+     * @return <code>null</code> if the URL is malformed or doesn't contain a URL parameter.
+     */
     public static String getUrlFromAboutReader(String aboutReaderUrl) {
         return StringUtils.getQueryParameter(aboutReaderUrl, "url");
     }
