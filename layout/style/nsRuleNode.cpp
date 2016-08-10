@@ -1319,7 +1319,6 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
   DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
   DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None_, SelectMenu)
-  DEFINE_ENUM_CLASS_SETTER(StyleUserSelect, None_, All)
 
 #undef DEF_SET_ENUMERATED_VALUE
 };
@@ -5143,7 +5142,7 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
            ui->mUserSelect, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentUI->mUserSelect,
-           StyleUserSelect::Auto);
+           NS_STYLE_USER_SELECT_AUTO);
 
   // ime-mode: enum, inherit, initial
   SetValue(*aRuleData->ValueForImeMode(),

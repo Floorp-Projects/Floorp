@@ -7688,9 +7688,9 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
   NS_ASSERTION(aOffset && *aOffset <= contentLength, "aOffset out of range");
 
   bool selectable;
-  StyleUserSelect selectStyle;
+  uint8_t selectStyle;  
   IsSelectable(&selectable, &selectStyle);
-  if (selectStyle == StyleUserSelect::All)
+  if (selectStyle == NS_STYLE_USER_SELECT_ALL)
     return CONTINUE_UNSELECTABLE;
 
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
@@ -7877,9 +7877,9 @@ nsTextFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKey
   NS_ASSERTION (aOffset && *aOffset <= contentLength, "aOffset out of range");
 
   bool selectable;
-  StyleUserSelect selectStyle;
+  uint8_t selectStyle;
   IsSelectable(&selectable, &selectStyle);
-  if (selectStyle == StyleUserSelect::All)
+  if (selectStyle == NS_STYLE_USER_SELECT_ALL)
     return CONTINUE_UNSELECTABLE;
 
   int32_t offset = GetContentOffset() + (*aOffset < 0 ? contentLength : *aOffset);
