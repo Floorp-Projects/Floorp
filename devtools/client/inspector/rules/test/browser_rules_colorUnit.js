@@ -42,9 +42,9 @@ function* basicTest(view, name, result) {
   let cPicker = view.tooltips.colorPicker;
   let swatch = getRuleViewProperty(view, "#testid", "color").valueSpan
       .querySelector(".ruleview-colorswatch");
-  let onShown = cPicker.tooltip.once("shown");
+  let onColorPickerReady = cPicker.once("ready");
   swatch.click();
-  yield onShown;
+  yield onColorPickerReady;
 
   yield simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
     selector: "#testid",
