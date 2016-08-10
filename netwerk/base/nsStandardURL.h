@@ -185,6 +185,9 @@ private:
     void     InvalidateCache(bool invalidateCachedFile = true);
 
     bool     ValidIPv6orHostname(const char *host, uint32_t aLen);
+    static bool     IsValidOfBase(unsigned char c, const uint32_t base);
+    static nsresult ParseIPv4Number(nsCString &input, uint32_t &number);
+    static nsresult NormalizeIPv4(const nsCSubstring &host, nsCString &result);
     nsresult NormalizeIDN(const nsCSubstring &host, nsCString &result);
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 

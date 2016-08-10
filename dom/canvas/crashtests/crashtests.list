@@ -16,7 +16,6 @@ skip-if(Android||B2G) skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 
 load 794463-1.html
 load 802926-1.html
 load 896047-1.html
-load 896047-2.html
 load 916128-1.html
 load 934939-1.html
 load 1099143-1.html

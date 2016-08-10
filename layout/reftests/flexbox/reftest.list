@@ -40,13 +40,13 @@ fuzzy-if(B2G,10,3) fuzzy-if(cocoaWidget,1,2) random-if(winWidget) == flexbox-ali
 # Tests for dynamic insertions of content into a flex container
 # (with existing [div | span | text] inside the flexbox, and new content
 # inserted adjacent to that existing content.)
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
+== flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 == flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+== flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
+== flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 == flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+== flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 == flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
 == flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml

@@ -1,4 +1,4 @@
-// |jit-test| error: is undefined
+// |jit-test| error: TypeError
 
 load(libdir + "iteration.js");
 

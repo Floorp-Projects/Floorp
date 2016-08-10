@@ -140,6 +140,8 @@ public:
     MaybeSomething(aArg, &Promise::MaybeResolve);
   }
 
+  void MaybeResolveWithUndefined();
+
   inline void MaybeReject(nsresult aArg) {
     MOZ_ASSERT(NS_FAILED(aArg));
     MaybeSomething(aArg, &Promise::MaybeReject);

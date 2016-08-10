@@ -71,6 +71,14 @@ NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(nsIURI *aURI,
   rv = noRefURI->GetAsciiSpec(cacheKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // This is the only way how to recognize appcache data by the anonymous
+  // flag.  There is no way to switch to e.g. a different session, because
+  // there is just a single session for an appcache version (identified
+  // by the client id).
+  if (LoadInfo()->IsAnonymous()) {
+    cacheKey = NS_LITERAL_CSTRING("anon&") + cacheKey;
+  }
+
   nsAutoCString scheme;
   rv = noRefURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);

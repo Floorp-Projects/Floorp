@@ -56,7 +56,7 @@ function testStartConnectionCancelPrompt() {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
       info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-cancel');
+      gScript.sendAsyncMessage('trigger-device-prompt-cancel', SpecialPowers.Cr.NS_ERROR_DOM_NOT_ALLOWED_ERR);
     });
 
     request.start().then(
@@ -65,7 +65,28 @@ function testStartConnectionCancelPrompt() {
         aReject();
       },
       function(aError) {
-        is(aError.name, "AbortError", "AbortError is expected when the prompt is canceled.");
+        is(aError.name, "NotAllowedError", "NotAllowedError is expected when the prompt is canceled.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testStartConnectionNoDevice() {
+  return new Promise(function(aResolve, aReject) {
+    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+      gScript.removeMessageListener('device-prompt', devicePromptHandler);
+      info("Device prompt is triggered.");
+      gScript.sendAsyncMessage('trigger-device-prompt-cancel', SpecialPowers.Cr.NS_ERROR_DOM_NOT_FOUND_ERR);
+    });
+
+    request.start().then(
+      function(aConnection) {
+        ok(false, "|start| shouldn't succeed in this case.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "NotFoundError", "NotFoundError is expected when no available device.");
         aResolve();
       }
     );
@@ -361,6 +382,7 @@ function runTests() {
   testCreateRequestWithEmptyURL().
   then(setup).
   then(testStartConnectionCancelPrompt).
+  then(testStartConnectionNoDevice).
   then(testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit).
   then(testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportInit).
   then(testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportReady).

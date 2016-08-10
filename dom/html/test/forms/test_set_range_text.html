@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       } catch (ex) {
        opThrows = true;
       }
-      ok(opThrows, msg + " should throw NotSupportedError");
+      ok(opThrows, msg + " should throw InvalidStateError");
     }
 
     var numOfSelectCalls = 0, expectedNumOfSelectCalls = 0;
@@ -77,7 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       } catch (ex) {
         opThrows = true;
       }
-      is(opThrows, false, msg + " should not throw NotSupportedError");
+      is(opThrows, false, msg + " should not throw InvalidStateError");
 
       elem.addEventListener("select", function (aEvent) {
         ok(true, "select event should be fired for " + aEvent.target.id);

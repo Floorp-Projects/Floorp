@@ -5736,7 +5736,7 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
   // 1. If mediaKeys and the mediaKeys attribute are the same object,
   // return a resolved promise.
   if (mMediaKeys == aMediaKeys) {
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+    promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
 
@@ -5822,7 +5822,7 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
   // 5.5 Let this object's attaching media keys value be false.
 
   // 5.6 Resolve promise.
-  promise->MaybeResolve(JS::UndefinedHandleValue);
+  promise->MaybeResolveWithUndefined();
 
   // 6. Return promise.
   return promise.forget();

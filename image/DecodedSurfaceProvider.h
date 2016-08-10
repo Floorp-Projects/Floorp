@@ -70,6 +70,9 @@ private:
   /// The image associated with our decoder. Dropped after decoding.
   RefPtr<RasterImage> mImage;
 
+  /// Mutex protecting access to mDecoder.
+  Mutex mMutex;
+
   /// The decoder that will generate our surface. Dropped after decoding.
   RefPtr<Decoder> mDecoder;
 

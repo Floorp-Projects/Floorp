@@ -4569,6 +4569,18 @@ LIRGenerator::visitCheckReturn(MCheckReturn* ins)
 }
 
 void
+LIRGenerator::visitCheckIsObj(MCheckIsObj* ins)
+{
+    MDefinition* checkVal = ins->checkValue();
+    MOZ_ASSERT(checkVal->type() == MIRType::Value);
+
+    LCheckIsObj* lir = new(alloc()) LCheckIsObj(useBoxAtStart(checkVal));
+    redefine(ins, checkVal);
+    add(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitCheckObjCoercible(MCheckObjCoercible* ins)
 {
     MDefinition* checkVal = ins->checkValue();

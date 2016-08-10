@@ -67,7 +67,7 @@ const l10n = exports.l10n = {
  *       }, ...
  *     });
  */
-var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
+var CSSUsageActor = protocol.ActorClass(cssUsageSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
 

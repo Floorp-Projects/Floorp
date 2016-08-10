@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
+const { Front, FrontClass } = require("devtools/shared/protocol");
 const { performanceRecordingSpec } = require("devtools/shared/specs/performance-recording");
 
 loader.lazyRequireGetter(this, "PerformanceIO",
@@ -18,7 +18,7 @@ loader.lazyRequireGetter(this, "merge", "sdk/util/object", true);
  * This can be used on older Profiler implementations, but the methods cannot
  * be changed -- you must introduce a new method, and detect the server.
  */
-const PerformanceRecordingFront = FrontClassWithSpec(performanceRecordingSpec, merge({
+const PerformanceRecordingFront = FrontClass(performanceRecordingSpec, merge({
   form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
