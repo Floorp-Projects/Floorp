@@ -17,6 +17,7 @@ const Heritage = require("sdk/core/heritage");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+const {Task} = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
 loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
@@ -558,6 +559,7 @@ Tooltip.prototype = {
  *        The devtools toolbox, needed to get the devtools main window.
  */
 function SwatchBasedEditorTooltip(toolbox, stylesheet) {
+  EventEmitter.decorate(this);
   // Creating a tooltip instance
   // This one will consume outside clicks as it makes more sense to let the user
   // close the tooltip by clicking out
@@ -605,8 +607,15 @@ function SwatchBasedEditorTooltip(toolbox, stylesheet) {
 }
 
 SwatchBasedEditorTooltip.prototype = {
+  /**
+   * Show the editor tooltip for the currently active swatch.
+   *
+   * @return {Promise} a promise that resolves once the editor tooltip is displayed, or
+   *         immediately if there is no currently active swatch.
+   */
   show: function () {
     if (this.activeSwatch) {
+      let onShown = this.tooltip.once("shown");
       this.tooltip.show(this.activeSwatch, "topcenter bottomleft");
 
       // When the tooltip is closed by clicking outside the panel we want to
@@ -622,7 +631,11 @@ SwatchBasedEditorTooltip.prototype = {
           this.activeSwatch = null;
         }
       });
+
+      return onShown;
     }
+
+    return Promise.resolve();
   },
 
   hide: function () {
@@ -797,9 +810,9 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
    * Overriding the SwatchBasedEditorTooltip.show function to set spectrum's
    * color.
    */
-  show: function () {
+  show: Task.async(function* () {
     // Call then parent class' show function
-    SwatchBasedEditorTooltip.prototype.show.call(this);
+    yield SwatchBasedEditorTooltip.prototype.show.call(this);
     // Then set spectrum's color and listen to color changes to preview them
     if (this.activeSwatch) {
       this.currentSwatchColor = this.activeSwatch.nextSibling;
@@ -820,8 +833,9 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
       } else {
         eyeButton.style.display = "none";
       }
+      this.emit("ready");
     }, e => console.error(e));
-  },
+  }),
 
   _onSpectrumColorChange: function (event, rgba, cssColor) {
     this._selectColor(cssColor);
@@ -944,9 +958,9 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
    * Overriding the SwatchBasedEditorTooltip.show function to set the cubic
    * bezier curve in the widget
    */
-  show: function () {
+  show: Task.async(function* () {
     // Call the parent class' show function
-    SwatchBasedEditorTooltip.prototype.show.call(this);
+    yield SwatchBasedEditorTooltip.prototype.show.call(this);
     // Then set the curve and listen to changes to preview them
     if (this.activeSwatch) {
       this.currentBezierValue = this.activeSwatch.nextSibling;
@@ -954,9 +968,10 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
         widget.off("updated", this._onUpdate);
         widget.cssCubicBezierValue = this.currentBezierValue.textContent;
         widget.on("updated", this._onUpdate);
+        this.emit("ready");
       });
     }
-  },
+  }),
 
   _onUpdate: function (event, bezier) {
     if (!this.activeSwatch) {
@@ -1016,9 +1031,9 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
     return new CSSFilterEditorWidget(container, filter);
   },
 
-  show: function () {
+  show: Task.async(function* () {
     // Call the parent class' show function
-    SwatchBasedEditorTooltip.prototype.show.call(this);
+    yield SwatchBasedEditorTooltip.prototype.show.call(this);
     // Then set the filter value and listen to changes to preview them
     if (this.activeSwatch) {
       this.currentFilterValue = this.activeSwatch.nextSibling;
@@ -1026,8 +1041,9 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
       this.widget.on("updated", this._onUpdate);
       this.widget.setCssValue(this.currentFilterValue.textContent);
       this.widget.render();
+      this.emit("ready");
     }
-  },
+  }),
 
   _onUpdate: function (event, filters) {
     if (!this.activeSwatch) {

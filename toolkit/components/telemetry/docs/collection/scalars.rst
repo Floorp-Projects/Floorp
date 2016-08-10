@@ -6,7 +6,7 @@ Historically we started to overload our histogram mechanism to also collect scal
 such as flag values, counts, labels and others.
 The scalar measurement types are the suggested way to collect that kind of scalar data.
 We currently only support recording of scalars from the parent process.
-The serialized scalar data is submitted with the :doc:`main pings <main-ping>`.
+The serialized scalar data is submitted with the :doc:`main pings <../data/main-ping>`.
 
 The API
 =======
@@ -15,7 +15,9 @@ or the `C++ API <https://dxr.mozilla.org/mozilla-central/source/toolkit/componen
 
 JS API
 ------
-Probes in privileged JavaScript code can use the following functions to manipulate scalars::
+Probes in privileged JavaScript code can use the following functions to manipulate scalars:
+
+.. code-block:: js
 
   Services.telemetry.scalarAdd(aName, aValue);
   Services.telemetry.scalarSet(aName, aValue);
@@ -27,7 +29,9 @@ additional informations.
 
 C++ API
 -------
-Probes in native code can use the more convenient helper functions declared in `Telemetry.h <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_::
+Probes in native code can use the more convenient helper functions declared in `Telemetry.h <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_:
+
+.. code-block:: cpp
 
     void ScalarAdd(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
     void ScalarSet(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
@@ -41,7 +45,9 @@ Scalar probes are required to be registered, both for validation and transparenc
 in the `Scalars.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_
 definition file.
 
-The probes in the definition file are represented in a fixed-depth, two-level structure::
+The probes in the definition file are represented in a fixed-depth, two-level structure:
+
+.. code-block:: yaml
 
     # The following is a group.
     a.group.hierarchy:
@@ -63,7 +69,9 @@ Group and probe names need to follow a few rules:
 - group names must be alpha-numeric + ``.``, with no leading/trailing digit or ``.``;
 - probe names must be alpha-numeric + ``_``, with no leading/trailing digit or ``_``.
 
-A probe can be defined as follows::
+A probe can be defined as follows:
+
+.. code-block:: yaml
 
     a.group.hierarchy:
       a_scalar:

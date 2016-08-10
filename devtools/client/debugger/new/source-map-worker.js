@@ -50,14 +50,14 @@ var Debugger =
 	
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 	
-	var _require = __webpack_require__(504);
+	var _require = __webpack_require__(527);
 	
 	var SourceMapConsumer = _require.SourceMapConsumer;
 	var SourceNode = _require.SourceNode;
 	var SourceMapGenerator = _require.SourceMapGenerator;
 	
-	var toPairs = __webpack_require__(515);
-	var includes = __webpack_require__(540);
+	var toPairs = __webpack_require__(538);
+	var includes = __webpack_require__(563);
 	
 	var sourceMapConsumers = new Map();
 	var sourceNodes = new Map();
@@ -115,16 +115,26 @@ var Debugger =
 	function getGeneratedSourceLocation(originalSource, originalLocation) {
 	  var generatedSourceId = getGeneratedSourceId(originalSource);
 	  var consumer = _getConsumer(generatedSourceId);
-	  var generatedLocation = consumer.generatedPositionFor({
+	
+	  var _consumer$generatedPo = consumer.generatedPositionFor({
 	    source: originalSource.url,
 	    line: originalLocation.line,
 	    column: 0
 	  });
 	
+	  var column = _consumer$generatedPo.column;
+	  var line = _consumer$generatedPo.line;
+	
+	  // The debugger server expects line breakpoints to have a column undefined
+	
+	  if (column == 0) {
+	    column = undefined;
+	  }
+	
 	  return {
 	    sourceId: generatedSourceId,
-	    line: generatedLocation.line,
-	    column: generatedLocation.column
+	    line,
+	    column
 	  };
 	}
 	
@@ -152,12 +162,18 @@ var Debugger =
 	  });
 	}
 	
-	function getOriginalSourcePosition(generatedSource, location) {
+	function getOriginalSourcePosition(generatedSource, _ref5) {
+	  var column = _ref5.column;
+	  var line = _ref5.line;
+	
 	  var consumer = _getConsumer(generatedSource.id);
-	  var position = consumer.originalPositionFor({
-	    line: location.line,
-	    column: location.column
-	  });
+	
+	  // The source-map library expects line breakpoints to be 0
+	  if (column == undefined) {
+	    column = 0;
+	  }
+	
+	  var position = consumer.originalPositionFor({ line, column });
 	
 	  return {
 	    url: position.source,
@@ -178,11 +194,11 @@ var Debugger =
 	  }));
 	}
 	
-	function makeOriginalSource(_ref5) {
-	  var url = _ref5.url;
-	  var source = _ref5.source;
-	  var _ref5$id = _ref5.id;
-	  var id = _ref5$id === undefined ? 1 : _ref5$id;
+	function makeOriginalSource(_ref6) {
+	  var url = _ref6.url;
+	  var source = _ref6.source;
+	  var _ref6$id = _ref6.id;
+	  var id = _ref6$id === undefined ? 1 : _ref6$id;
 	
 	  var generatedSourceId = source.id;
 	  return {
@@ -192,10 +208,10 @@ var Debugger =
 	  };
 	}
 	
-	function createSourceMap(_ref6) {
-	  var source = _ref6.source;
-	  var mappings = _ref6.mappings;
-	  var code = _ref6.code;
+	function createSourceMap(_ref7) {
+	  var source = _ref7.source;
+	  var mappings = _ref7.mappings;
+	  var code = _ref7.code;
 	
 	  var generator = new SourceMapGenerator({ file: source.url });
 	  mappings.forEach(mapping => generator.addMapping(mapping));
@@ -203,6 +219,11 @@ var Debugger =
 	
 	  _setConsumer(source, generator.toJSON());
 	  return generator.toJSON();
+	}
+	
+	function clearData() {
+	  sourceMapConsumers.clear();
+	  sourceNodes.clear();
 	}
 	
 	var publicInterface = {
@@ -215,7 +236,8 @@ var Debugger =
 	  isGenerated,
 	  getGeneratedSourceId,
 	  createSourceMap,
-	  makeOriginalSource
+	  makeOriginalSource,
+	  clearData
 	};
 	
 	self.onmessage = function (msg) {
@@ -707,7 +729,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 383:
+/***/ 382:
 /***/ function(module, exports, __webpack_require__) {
 
 	var isFunction = __webpack_require__(211),
@@ -781,7 +803,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 504:
+/***/ 527:
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -789,14 +811,14 @@ var Debugger =
 	 * Licensed under the New BSD license. See LICENSE.txt or:
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
-	exports.SourceMapGenerator = __webpack_require__(505).SourceMapGenerator;
-	exports.SourceMapConsumer = __webpack_require__(511).SourceMapConsumer;
-	exports.SourceNode = __webpack_require__(514).SourceNode;
+	exports.SourceMapGenerator = __webpack_require__(528).SourceMapGenerator;
+	exports.SourceMapConsumer = __webpack_require__(534).SourceMapConsumer;
+	exports.SourceNode = __webpack_require__(537).SourceNode;
 
 
 /***/ },
 
-/***/ 505:
+/***/ 528:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -806,10 +828,10 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var base64VLQ = __webpack_require__(506);
-	var util = __webpack_require__(508);
-	var ArraySet = __webpack_require__(509).ArraySet;
-	var MappingList = __webpack_require__(510).MappingList;
+	var base64VLQ = __webpack_require__(529);
+	var util = __webpack_require__(531);
+	var ArraySet = __webpack_require__(532).ArraySet;
+	var MappingList = __webpack_require__(533).MappingList;
 	
 	/**
 	 * An instance of the SourceMapGenerator represents a source map which is
@@ -1207,7 +1229,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 506:
+/***/ 529:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -1247,7 +1269,7 @@ var Debugger =
 	 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 */
 	
-	var base64 = __webpack_require__(507);
+	var base64 = __webpack_require__(530);
 	
 	// A single base 64 digit can contain 6 bits of data. For the base 64 variable
 	// length quantities we use in the source map spec, the first bit is the sign,
@@ -1354,7 +1376,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 507:
+/***/ 530:
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -1428,7 +1450,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 508:
+/***/ 531:
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -1852,7 +1874,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 509:
+/***/ 532:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -1862,7 +1884,7 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var util = __webpack_require__(508);
+	var util = __webpack_require__(531);
 	var has = Object.prototype.hasOwnProperty;
 	
 	/**
@@ -1963,7 +1985,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 510:
+/***/ 533:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -1973,7 +1995,7 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var util = __webpack_require__(508);
+	var util = __webpack_require__(531);
 	
 	/**
 	 * Determine whether mappingB is after mappingA with respect to generated
@@ -2049,7 +2071,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 511:
+/***/ 534:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -2059,11 +2081,11 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var util = __webpack_require__(508);
-	var binarySearch = __webpack_require__(512);
-	var ArraySet = __webpack_require__(509).ArraySet;
-	var base64VLQ = __webpack_require__(506);
-	var quickSort = __webpack_require__(513).quickSort;
+	var util = __webpack_require__(531);
+	var binarySearch = __webpack_require__(535);
+	var ArraySet = __webpack_require__(532).ArraySet;
+	var base64VLQ = __webpack_require__(529);
+	var quickSort = __webpack_require__(536).quickSort;
 	
 	function SourceMapConsumer(aSourceMap) {
 	  var sourceMap = aSourceMap;
@@ -3138,7 +3160,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 512:
+/***/ 535:
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3256,7 +3278,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 513:
+/***/ 536:
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3377,7 +3399,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 514:
+/***/ 537:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3387,8 +3409,8 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var SourceMapGenerator = __webpack_require__(505).SourceMapGenerator;
-	var util = __webpack_require__(508);
+	var SourceMapGenerator = __webpack_require__(528).SourceMapGenerator;
+	var util = __webpack_require__(531);
 	
 	// Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
 	// operating systems these days (capturing the result).
@@ -3791,11 +3813,11 @@ var Debugger =
 
 /***/ },
 
-/***/ 515:
+/***/ 538:
 /***/ function(module, exports, __webpack_require__) {
 
-	var createToPairs = __webpack_require__(516),
-	    keys = __webpack_require__(526);
+	var createToPairs = __webpack_require__(539),
+	    keys = __webpack_require__(549);
 	
 	/**
 	 * Creates an array of own enumerable string keyed-value pairs for `object`
@@ -3828,13 +3850,13 @@ var Debugger =
 
 /***/ },
 
-/***/ 516:
+/***/ 539:
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPairs = __webpack_require__(517),
-	    getTag = __webpack_require__(519),
-	    mapToArray = __webpack_require__(524),
-	    setToPairs = __webpack_require__(525);
+	var baseToPairs = __webpack_require__(540),
+	    getTag = __webpack_require__(542),
+	    mapToArray = __webpack_require__(547),
+	    setToPairs = __webpack_require__(548);
 	
 	/** `Object#toString` result references. */
 	var mapTag = '[object Map]',
@@ -3865,10 +3887,10 @@ var Debugger =
 
 /***/ },
 
-/***/ 517:
+/***/ 540:
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(518);
+	var arrayMap = __webpack_require__(541);
 	
 	/**
 	 * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
@@ -3890,7 +3912,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 518:
+/***/ 541:
 /***/ function(module, exports) {
 
 	/**
@@ -3918,14 +3940,14 @@ var Debugger =
 
 /***/ },
 
-/***/ 519:
+/***/ 542:
 /***/ function(module, exports, __webpack_require__) {
 
-	var DataView = __webpack_require__(520),
+	var DataView = __webpack_require__(543),
 	    Map = __webpack_require__(231),
-	    Promise = __webpack_require__(521),
-	    Set = __webpack_require__(522),
-	    WeakMap = __webpack_require__(523),
+	    Promise = __webpack_require__(544),
+	    Set = __webpack_require__(545),
+	    WeakMap = __webpack_require__(546),
 	    toSource = __webpack_require__(217);
 	
 	/** `Object#toString` result references. */
@@ -3995,7 +4017,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 520:
+/***/ 543:
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(209),
@@ -4009,7 +4031,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 521:
+/***/ 544:
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(209),
@@ -4023,7 +4045,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 522:
+/***/ 545:
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(209),
@@ -4037,7 +4059,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 523:
+/***/ 546:
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(209),
@@ -4051,7 +4073,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 524:
+/***/ 547:
 /***/ function(module, exports) {
 
 	/**
@@ -4076,7 +4098,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 525:
+/***/ 548:
 /***/ function(module, exports) {
 
 	/**
@@ -4101,15 +4123,15 @@ var Debugger =
 
 /***/ },
 
-/***/ 526:
+/***/ 549:
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseHas = __webpack_require__(527),
-	    baseKeys = __webpack_require__(528),
-	    indexKeys = __webpack_require__(529),
-	    isArrayLike = __webpack_require__(533),
-	    isIndex = __webpack_require__(538),
-	    isPrototype = __webpack_require__(539);
+	var baseHas = __webpack_require__(550),
+	    baseKeys = __webpack_require__(551),
+	    indexKeys = __webpack_require__(552),
+	    isArrayLike = __webpack_require__(556),
+	    isIndex = __webpack_require__(561),
+	    isPrototype = __webpack_require__(562);
 	
 	/**
 	 * Creates an array of the own enumerable property names of `object`.
@@ -4164,7 +4186,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 527:
+/***/ 550:
 /***/ function(module, exports, __webpack_require__) {
 
 	var getPrototype = __webpack_require__(5);
@@ -4197,7 +4219,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 528:
+/***/ 551:
 /***/ function(module, exports) {
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
@@ -4220,14 +4242,14 @@ var Debugger =
 
 /***/ },
 
-/***/ 529:
+/***/ 552:
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseTimes = __webpack_require__(530),
-	    isArguments = __webpack_require__(531),
+	var baseTimes = __webpack_require__(553),
+	    isArguments = __webpack_require__(554),
 	    isArray = __webpack_require__(201),
-	    isLength = __webpack_require__(536),
-	    isString = __webpack_require__(537);
+	    isLength = __webpack_require__(559),
+	    isString = __webpack_require__(560);
 	
 	/**
 	 * Creates an array of index keys for `object` values of arrays,
@@ -4251,7 +4273,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 530:
+/***/ 553:
 /***/ function(module, exports) {
 
 	/**
@@ -4278,10 +4300,10 @@ var Debugger =
 
 /***/ },
 
-/***/ 531:
+/***/ 554:
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLikeObject = __webpack_require__(532);
+	var isArrayLikeObject = __webpack_require__(555);
 	
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]';
@@ -4331,10 +4353,10 @@ var Debugger =
 
 /***/ },
 
-/***/ 532:
+/***/ 555:
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(533),
+	var isArrayLike = __webpack_require__(556),
 	    isObjectLike = __webpack_require__(7);
 	
 	/**
@@ -4371,12 +4393,12 @@ var Debugger =
 
 /***/ },
 
-/***/ 533:
+/***/ 556:
 /***/ function(module, exports, __webpack_require__) {
 
-	var getLength = __webpack_require__(534),
+	var getLength = __webpack_require__(557),
 	    isFunction = __webpack_require__(211),
-	    isLength = __webpack_require__(536);
+	    isLength = __webpack_require__(559);
 	
 	/**
 	 * Checks if `value` is array-like. A value is considered array-like if it's
@@ -4412,10 +4434,10 @@ var Debugger =
 
 /***/ },
 
-/***/ 534:
+/***/ 557:
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(535);
+	var baseProperty = __webpack_require__(558);
 	
 	/**
 	 * Gets the "length" property value of `object`.
@@ -4435,7 +4457,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 535:
+/***/ 558:
 /***/ function(module, exports) {
 
 	/**
@@ -4456,7 +4478,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 536:
+/***/ 559:
 /***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
@@ -4499,7 +4521,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 537:
+/***/ 560:
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(201),
@@ -4546,7 +4568,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 538:
+/***/ 561:
 /***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
@@ -4575,7 +4597,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 539:
+/***/ 562:
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -4600,14 +4622,14 @@ var Debugger =
 
 /***/ },
 
-/***/ 540:
+/***/ 563:
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIndexOf = __webpack_require__(541),
-	    isArrayLike = __webpack_require__(533),
-	    isString = __webpack_require__(537),
-	    toInteger = __webpack_require__(543),
-	    values = __webpack_require__(545);
+	var baseIndexOf = __webpack_require__(564),
+	    isArrayLike = __webpack_require__(556),
+	    isString = __webpack_require__(560),
+	    toInteger = __webpack_require__(566),
+	    values = __webpack_require__(568);
 	
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
@@ -4660,10 +4682,10 @@ var Debugger =
 
 /***/ },
 
-/***/ 541:
+/***/ 564:
 /***/ function(module, exports, __webpack_require__) {
 
-	var indexOfNaN = __webpack_require__(542);
+	var indexOfNaN = __webpack_require__(565);
 	
 	/**
 	 * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
@@ -4694,7 +4716,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 542:
+/***/ 565:
 /***/ function(module, exports) {
 
 	/**
@@ -4724,10 +4746,10 @@ var Debugger =
 
 /***/ },
 
-/***/ 543:
+/***/ 566:
 /***/ function(module, exports, __webpack_require__) {
 
-	var toFinite = __webpack_require__(544);
+	var toFinite = __webpack_require__(567);
 	
 	/**
 	 * Converts `value` to an integer.
@@ -4767,10 +4789,10 @@ var Debugger =
 
 /***/ },
 
-/***/ 544:
+/***/ 567:
 /***/ function(module, exports, __webpack_require__) {
 
-	var toNumber = __webpack_require__(383);
+	var toNumber = __webpack_require__(382);
 	
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0,
@@ -4816,11 +4838,11 @@ var Debugger =
 
 /***/ },
 
-/***/ 545:
+/***/ 568:
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseValues = __webpack_require__(546),
-	    keys = __webpack_require__(526);
+	var baseValues = __webpack_require__(569),
+	    keys = __webpack_require__(549);
 	
 	/**
 	 * Creates an array of the own enumerable string keyed property values of `object`.
@@ -4857,10 +4879,10 @@ var Debugger =
 
 /***/ },
 
-/***/ 546:
+/***/ 569:
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(518);
+	var arrayMap = __webpack_require__(541);
 	
 	/**
 	 * The base implementation of `_.values` and `_.valuesIn` which creates an
