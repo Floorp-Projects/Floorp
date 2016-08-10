@@ -321,6 +321,7 @@ option('--target', nargs=1,
             'used')
 
 @imports(_from='mozbuild.configure.constants', _import='CPU')
+@imports(_from='mozbuild.configure.constants', _import='CPU_bitness')
 @imports(_from='mozbuild.configure.constants', _import='Endianness')
 @imports(_from='mozbuild.configure.constants', _import='Kernel')
 @imports(_from='mozbuild.configure.constants', _import='OS')
@@ -419,6 +420,7 @@ def split_triplet(triplet):
     return namespace(
         alias=triplet,
         cpu=CPU(canonical_cpu),
+        bitness=CPU_bitness[canonical_cpu],
         kernel=Kernel(canonical_kernel),
         os=OS(canonical_os),
         endianness=Endianness(endianness),
@@ -467,6 +469,16 @@ def cross_compiling(host, target):
 set_config('CROSS_COMPILE', cross_compiling)
 set_define('CROSS_COMPILE', cross_compiling)
 add_old_configure_assignment('CROSS_COMPILE', cross_compiling)
+
+
+@depends(target)
+def have_64_bit(target):
+    if target.bitness == 64:
+        return True
+
+set_config('HAVE_64BIT_BUILD', have_64_bit)
+set_define('HAVE_64BIT_BUILD', have_64_bit)
+add_old_configure_assignment('HAVE_64BIT_BUILD', have_64_bit)
 
 
 # Autoconf needs these set

@@ -766,12 +766,14 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
 
 include('compile-checks.configure')
 
-have_64_bit = try_compile(body='static_assert(sizeof(void *) == 8, "")',
-                          check_msg='for 64-bit OS')
+@depends(have_64_bit,
+         try_compile(body='static_assert(sizeof(void *) == 8, "")',
+                     check_msg='for 64-bit OS'))
+def check_have_64_bit(have_64_bit, compiler_have_64_bit):
+    if have_64_bit != compiler_have_64_bit:
+        configure_error('The target compiler does not agree with configure '
+                        'about the target bitness.')
 
-set_config('HAVE_64BIT_BUILD', have_64_bit)
-set_define('HAVE_64BIT_BUILD', have_64_bit)
-add_old_configure_assignment('HAVE_64BIT_BUILD', have_64_bit)
 
 @depends(c_compiler)
 def default_debug_flags(compiler_info):
