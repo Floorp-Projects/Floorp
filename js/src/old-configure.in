@@ -1920,18 +1920,6 @@ if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
 fi
 
 dnl ========================================================
-dnl Enable changes that make the shell more deterministic
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(more-deterministic,
-[  --enable-more-deterministic
-                          Enable changes that make the shell more deterministic],
-    JS_MORE_DETERMINISTIC=1,
-    JS_MORE_DETERMINISTIC= )
-if test -n "$JS_MORE_DETERMINISTIC"; then
-    AC_DEFINE(JS_MORE_DETERMINISTIC)
-fi
-
-dnl ========================================================
 dnl Enable breakpoint for artificial OOMs
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(oom-breakpoint,
