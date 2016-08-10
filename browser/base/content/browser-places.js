@@ -1419,14 +1419,21 @@ var BookmarkingUI = {
         Services.prefs.removeObserver(this.RECENTLY_BOOKMARKED_PREF, prefObserver, false);
         PlacesUtils.bookmarks.removeObserver(this._recentlyBookmarkedObserver);
         this._recentlyBookmarkedObserver = null;
-        placesContextMenu.removeEventListener("popupshowing", onPlacesContextMenuShowing);
+        if (placesContextMenu) {
+          placesContextMenu.removeEventListener("popupshowing", onPlacesContextMenuShowing);
+        }
         bookmarksMenu.removeEventListener("popuphidden", onBookmarksMenuHidden);
       }
     };
 
     Services.prefs.addObserver(this.RECENTLY_BOOKMARKED_PREF, prefObserver, false);
     PlacesUtils.bookmarks.addObserver(this._recentlyBookmarkedObserver, true);
-    placesContextMenu.addEventListener("popupshowing", onPlacesContextMenuShowing);
+
+    // The context menu doesn't exist in non-browser windows on Mac
+    if (placesContextMenu) {
+      placesContextMenu.addEventListener("popupshowing", onPlacesContextMenuShowing);
+    }
+
     bookmarksMenu.addEventListener("popuphidden", onBookmarksMenuHidden);
   },
 
