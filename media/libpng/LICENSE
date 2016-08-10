@@ -8,10 +8,6 @@ COPYRIGHT NOTICE, DISCLAIMER, and LICENSE:
 If you modify libpng you may insert additional notices immediately following
 this sentence.
 
-pnglibconf.h and moz.build are distributed under the Mozilla Public License,
-v. 2.0. If a copy of the MPL was not distributed with this file, You can
-obtain one at http://mozilla.org/MPL/2.0/.
-
 This modified version of libpng code adds animated PNG support and is
 released under the libpng license described below. The modifications are
 Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2016 Max Stepin,
@@ -20,7 +16,7 @@ surrounding them in the modified libpng source files.
 
 This code is released under the libpng license.
 
-libpng versions 1.0.7, July 1, 2000 through 1.6.23, June 9, 2016 are
+libpng versions 1.0.7, July 1, 2000 through 1.6.24, August 4, 2016 are
 Copyright (c) 2000-2002, 2004, 2006-2016 Glenn Randers-Pehrson, are
 derived from libpng-1.0.6, and are distributed according to the same
 disclaimer and license as libpng-1.0.6 with the following individuals
@@ -137,4 +133,4 @@ any encryption software.  See the EAR, paragraphs 734.3(b)(3) and
 
 Glenn Randers-Pehrson
 glennrp at users.sourceforge.net
-June 9, 2016
+August 4, 2016

@@ -10,8 +10,6 @@ interface nsIRequestObserver;
 interface nsIInterfaceRequestor;
 interface nsIRequestContext;
 
-typedef unsigned long nsLoadFlags;
-
 /**
  * A load group maintains a collection of nsIRequest objects.
  * This is used in lots of places where groups of requests need to be tracked.

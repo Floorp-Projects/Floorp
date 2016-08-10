@@ -818,3 +818,11 @@ DllBlocklist_WriteNotes(HANDLE file)
               kUser32BeforeBlocklistParameterLen, &nBytes, nullptr);
   }
 }
+
+MFBT_API bool
+DllBlocklist_CheckStatus()
+{
+  if (sBlocklistInitFailed || sUser32BeforeBlocklist)
+    return false;
+  return true;
+}

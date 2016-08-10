@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Image srcset mutations</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<script type="application/javascript">
+"use strict";
+window.onload = function() {
+  // Smoke test, check picture working as expected
+  const t0 = document.querySelector("#test0 img");
+  ok(t0.currentSrc.endsWith("apng"), `t0: expected pass.apng, got '${t0.currentSrc}'`);
+
+  // Test that the apng is selected over bogus types.
+  const t1 = document.querySelector("#test1 img");
+  ok(t1.currentSrc.endsWith("apng"), `t1: expected pass.apng, got '${t1.currentSrc}'`);
+
+  // Test that tree order precedence applies
+  const t2 = document.querySelector("#test2 img");
+  ok(t2.currentSrc.endsWith("apng"), `t2: expected pass.apng, got '${t2.currentSrc}'`);
+
+  // Test that apng doesn't alway win
+  const t3 = document.querySelector("#test3 img");
+  ok(t3.currentSrc.endsWith("apng"), `t3: expected pass.apng, got '${t3.currentSrc}'`);
+
+  // Test dynamically constructed picture, where apng is selected over a bogus
+  // source or the img src attribute
+  const pic = document.createElement("picture");
+  pic.id = "test4";
+  const t4 = document.createElement("img");
+  const bogusSource = document.createElement("source");
+  bogusSource.type = "bogus/bogus";
+  bogusSource.srcset = "fail.png";
+  const legitSource = document.createElement("source");
+  legitSource.type = "image/apng";
+  legitSource.srcset = "pass.apng";
+  pic.appendChild(bogusSource);
+  pic.appendChild(legitSource);
+  pic.appendChild(t4);
+  t4.src = "fail.png";
+  document.body.appendChild(pic);
+  t4.onload = ()=>{
+    ok(t4.currentSrc.endsWith("apng"), `t4: Expected pass.apng, got '${t4.currentSrc}'`);
+    SimpleTest.finish();
+  }
+};
+SimpleTest.waitForExplicitFinish();
+</script>
+
+<body>
+  <picture id="test0">
+    <srouce>
+    <img src="pass.apng">
+  </picture>
+  <picture id="test1">
+    <source type="bogus/type" srcset="fail.png">
+    <source type="image/apng" srcset="pass.apng">
+    <source type="image/jpeg" srcset="fail.png">
+    <img src="fail-fallback">
+  </picture>
+  <picture id="test2">
+    <source type="image/png" srcset="pass.apng">
+    <source srcset="fail.png">
+    <source type="bogus/type" srcset="fail.png">
+    <img src="fail-fallback">
+  </picture>
+  <picture id="test3">
+    <source type="image/jpeg" srcset="pass.apng">
+    <source type="image/apng" srcset="fail.png">
+    <img src="fail-fallback">
+  </picture>
+</body>
+
+</html>

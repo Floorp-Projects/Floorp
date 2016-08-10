@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_psm_ExtendedValidation_h
-#define mozilla_psm_ExtendedValidation_h
+#ifndef ExtendedValidation_h
+#define ExtendedValidation_h
 
+#include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "prtypes.h"
 
@@ -22,10 +23,10 @@ SECStatus GetFirstEVPolicy(CERTCertificate* cert,
 
 // CertIsAuthoritativeForEVPolicy does NOT evaluate whether the cert is trusted
 // or distrusted.
-bool CertIsAuthoritativeForEVPolicy(const CERTCertificate* cert,
+bool CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
                                     const mozilla::pkix::CertPolicyId& policy);
 #endif
 
 } } // namespace mozilla::psm
 
-#endif // mozilla_psm_ExtendedValidation_h
+#endif // ExtendedValidation_h

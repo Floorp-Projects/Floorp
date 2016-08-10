@@ -54,17 +54,12 @@ public:
   nsIPrincipal* GetPrincipal();
   bool PrincipalEquals(nsIPrincipal* aPrincipal);
   bool CanAccess(nsIPrincipal* aPrincipal);
-  bool IsPrivate()
-  {
-    return mIsPrivate;
-  }
 
   DOMStorage(nsPIDOMWindowInner* aWindow,
              DOMStorageManager* aManager,
              DOMStorageCache* aCache,
              const nsAString& aDocumentURI,
-             nsIPrincipal* aPrincipal,
-             bool aIsPrivate);
+             nsIPrincipal* aPrincipal);
 
   // WebIDL
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -119,7 +114,7 @@ public:
   static bool CanUseStorage(nsPIDOMWindowInner* aWindow,
                             DOMStorage* aStorage = nullptr);
 
-  bool IsPrivate() const { return mIsPrivate; }
+  bool IsPrivate() const;
   bool IsSessionOnly() const { return mIsSessionOnly; }
 
   bool IsForkOf(const DOMStorage* aOther) const
@@ -142,9 +137,6 @@ private:
   // Principal this DOMStorage (i.e. localStorage or sessionStorage) has
   // been created for
   nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  // Whether this storage is running in private-browsing window.
-  bool mIsPrivate : 1;
 
   // Whether storage is set to persist data only per session, may change
   // dynamically and is set by CanUseStorage function that is called

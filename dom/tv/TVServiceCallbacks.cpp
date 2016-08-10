@@ -59,7 +59,7 @@ TVServiceSourceSetterCallback::NotifySuccess(nsIArray* aDataList)
     return rv;
   }
 
-  mPromise->MaybeResolve(JS::UndefinedHandleValue);
+  mPromise->MaybeResolveWithUndefined();
   return NS_OK;
 }
 
@@ -124,7 +124,7 @@ TVServiceChannelScanCallback::NotifySuccess(nsIArray* aDataList)
 
   mSource->SetIsScanning(mIsScanning);
 
-  mPromise->MaybeResolve(JS::UndefinedHandleValue);
+  mPromise->MaybeResolveWithUndefined();
   return NS_OK;
 }
 
@@ -211,7 +211,7 @@ TVServiceChannelSetterCallback::NotifySuccess(nsIArray* aDataList)
     return rv;
   }
 
-  mPromise->MaybeResolve(JS::UndefinedHandleValue);
+  mPromise->MaybeResolveWithUndefined();
   return NS_OK;
 }
 
@@ -434,7 +434,7 @@ TVServiceProgramGetterCallback::NotifySuccess(nsIArray* aDataList)
   }
 
   if (mIsSingular && length == 0) {
-    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+    mPromise->MaybeResolveWithUndefined();
     return NS_OK;
   }
 

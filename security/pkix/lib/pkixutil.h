@@ -236,6 +236,12 @@ Result VerifySignedData(TrustDomain& trustDomain,
                         const der::SignedDataWithSignature& signedData,
                         Input signerSubjectPublicKeyInfo);
 
+// Extracts the key parameters from |subjectPublicKeyInfo|, invoking
+// the relevant methods of |trustDomain|.
+Result
+CheckSubjectPublicKeyInfo(Input subjectPublicKeyInfo, TrustDomain& trustDomain,
+                          EndEntityOrCA endEntityOrCA);
+
 // In a switch over an enum, sometimes some compilers are not satisfied that
 // all control flow paths have been considered unless there is a default case.
 // However, in our code, such a default case is almost always unreachable dead

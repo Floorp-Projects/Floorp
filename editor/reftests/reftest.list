@@ -82,7 +82,7 @@ needs-focus == spellcheck-non-latin-japanese.html spellcheck-non-latin-japanese-
 needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
 skip-if(B2G||Mulet) == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(browserIsRemote,255,3) asserts-if(browserIsRemote,0-1) skip-if(B2G||Mulet) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(browserIsRemote,255,3) asserts-if(browserIsRemote,0-1) skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,5) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2824) == 642800.html 642800-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
 != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html

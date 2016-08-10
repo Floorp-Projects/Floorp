@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
 <pre id="test">
 <script type="application/javascript">
   var t = document.getElementById('testnodes');
-  is(t.innerHTML, 
+  is(t.innerHTML,
      "<span>hi</span> there <!-- mon ami -->",
      "comment nodes should be included");
 
@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
   t.appendChild(document.createElement("textarea"));
   t.firstChild.appendChild(document.createTextNode("\nhello"));
   // This is the old behavior. Spec requires something else.
-  is(t.innerHTML, "<textarea>\nhello</textarea>",
+  is(t.innerHTML, "<textarea>\n\nhello</textarea>",
      "No extra newlines should be inserted to the textarea!");
 
   t.innerHTML = null;
@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
   t.firstChild.textContent = "<foo>";
   is(t.innerHTML, "<math>&lt;foo&gt;</math>");
 
-  // Prefix is serialized if element isn't HTML/SVG/MathML  
+  // Prefix is serialized if element isn't HTML/SVG/MathML
   t.innerHTML = null;
   t.appendChild(document.createElementNS("http://www.example.org", "ex:example"));
   t.firstChild.textContent = "<foo>";
@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
 
   t.firstChild.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:bar", "http://bar");
   is(t.innerHTML, '<example xml:lang="us-en" xlink:href="foo" xmlns="http://foo" xmlns:bar="http://bar">&lt;foo&gt;</example>');
-  
+
   t.firstChild.setAttributeNS("http://www.helloworldns.org", "hello:world", "!");
   is(t.innerHTML, '<example xml:lang="us-en" xlink:href="foo" xmlns="http://foo" xmlns:bar="http://bar" hello:world="!">&lt;foo&gt;</example>');
 

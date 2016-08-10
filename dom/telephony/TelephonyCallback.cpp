@@ -24,7 +24,7 @@ TelephonyCallback::TelephonyCallback(Promise* aPromise)
 NS_IMETHODIMP
 TelephonyCallback::NotifySuccess()
 {
-  mPromise->MaybeResolve(JS::UndefinedHandleValue);
+  mPromise->MaybeResolveWithUndefined();
   return NS_OK;
 }
 
