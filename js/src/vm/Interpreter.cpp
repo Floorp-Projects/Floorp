@@ -1825,7 +1825,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
-CASE(JSOP_UNUSED14)
 CASE(JSOP_UNUSED149)
 CASE(JSOP_UNUSED179)
 CASE(JSOP_UNUSED180)
@@ -2555,6 +2554,15 @@ CASE(JSOP_GLOBALTHIS)
     }
 }
 END_CASE(JSOP_GLOBALTHIS)
+
+CASE(JSOP_CHECKISOBJ)
+{
+    if (!REGS.sp[-1].isObject()) {
+        MOZ_ALWAYS_FALSE(ThrowCheckIsObject(cx, CheckIsObjectKind(GET_UINT8(REGS.pc))));
+        goto error;
+    }
+}
+END_CASE(JSOP_CHECKISOBJ)
 
 CASE(JSOP_CHECKTHIS)
 {
@@ -4966,6 +4974,19 @@ js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
                              kindStr, printable.ptr());
     }
+}
+
+bool
+js::ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind)
+{
+    switch (kind) {
+      case CheckIsObjectKind::IteratorNext:
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NEXT_RETURNED_PRIMITIVE);
+        break;
+      default:
+        MOZ_CRASH("Unknown kind");
+    }
+    return false;
 }
 
 bool

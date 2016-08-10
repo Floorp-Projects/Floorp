@@ -28,7 +28,7 @@ function collect_results(iter) {
 }
 
 // We have to put a full result for the end, because the return will re-box.
-var expected = [{value: 1}, 13, "foo", {value: 34, done: true}];
+var expected = [{value: 1}, {value: 34, done: true}];
 
 // Sanity check.
 assertDeepEq(expected, collect_results(results(expected)));

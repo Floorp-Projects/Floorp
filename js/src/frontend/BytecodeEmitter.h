@@ -19,6 +19,7 @@
 #include "frontend/Parser.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
+#include "vm/Interpreter.h"
 
 namespace js {
 
@@ -503,6 +504,9 @@ struct BytecodeEmitter
     // Helper to emit JSOP_DUPAT. The argument is the value's depth on the
     // JS stack, as measured from the top.
     MOZ_MUST_USE bool emitDupAt(unsigned slotFromTop);
+
+    // Helper to emit JSOP_CHECKISOBJ.
+    MOZ_MUST_USE bool emitCheckIsObj(CheckIsObjectKind kind);
 
     // Emit a bytecode followed by an uint16 immediate operand stored in
     // big-endian order.
