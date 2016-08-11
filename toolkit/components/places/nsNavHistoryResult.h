@@ -291,7 +291,8 @@ public:
                            int64_t aParentId,
                            const nsACString& aGUID,
                            const nsACString& aParentGUID,
-                           const nsACString &aOldValue);
+                           const nsACString &aOldValue,
+                           uint16_t aSource);
 
 protected:
   virtual ~nsNavHistoryResultNode() {}

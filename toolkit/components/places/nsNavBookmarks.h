@@ -166,6 +166,7 @@ public:
                                  bool aIsBookmarkFolder,
                                  int32_t* aIndex,
                                  const nsACString& aGUID,
+                                 uint16_t aSource,
                                  int64_t* aNewFolder);
 
   /**
@@ -337,6 +338,7 @@ private:
                               const nsACString& aParentGuid,
                               int64_t aGrandParentId,
                               nsIURI* aURI,
+                              uint16_t aSource,
                               int64_t* _itemId,
                               nsACString& _guid);
 
@@ -363,7 +365,10 @@ private:
 
   class RemoveFolderTransaction final : public nsITransaction {
   public:
-    explicit RemoveFolderTransaction(int64_t aID) : mID(aID) {}
+    RemoveFolderTransaction(int64_t aID, uint16_t aSource)
+      : mID(aID)
+      , mSource(aSource)
+    {}
 
     NS_DECL_ISUPPORTS
 
@@ -379,7 +384,7 @@ private:
       rv = bookmarks->GetItemTitle(mID, mTitle);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      return bookmarks->RemoveItem(mID);
+      return bookmarks->RemoveItem(mID, mSource);
     }
 
     NS_IMETHOD UndoTransaction() override {
@@ -387,7 +392,8 @@ private:
       NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
       int64_t newFolder;
       return bookmarks->CreateContainerWithID(mID, mParent, mTitle, true,
-                                              &mIndex, EmptyCString(), &newFolder);
+                                              &mIndex, EmptyCString(),
+                                              mSource, &newFolder);
     }
 
     NS_IMETHOD RedoTransaction() override {
@@ -408,6 +414,7 @@ private:
     ~RemoveFolderTransaction() {}
 
     int64_t mID;
+    uint16_t mSource;
     int64_t mParent;
     nsCString mTitle;
     int32_t mIndex;

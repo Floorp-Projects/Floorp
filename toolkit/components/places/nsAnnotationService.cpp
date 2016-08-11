@@ -263,7 +263,8 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
                                        const nsACString& aName,
                                        nsIVariant* aValue,
                                        int32_t aFlags,
-                                       uint16_t aExpiration)
+                                       uint16_t aExpiration,
+                                       uint16_t aSource)
 {
   PROFILER_LABEL("AnnotationService", "SetItemAnnotation",
     js::ProfileEntry::Category::OTHER);
@@ -290,7 +291,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       rv = aValue->GetAsInt32(&valueInt);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetItemAnnotationInt32(aItemId, aName, valueInt, aFlags, aExpiration);
+        rv = SetItemAnnotationInt32(aItemId, aName, valueInt, aFlags, aExpiration, aSource);
         NS_ENSURE_SUCCESS(rv, rv);
         return NS_OK;
       }
@@ -303,7 +304,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       rv = aValue->GetAsInt64(&valueLong);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetItemAnnotationInt64(aItemId, aName, valueLong, aFlags, aExpiration);
+        rv = SetItemAnnotationInt64(aItemId, aName, valueLong, aFlags, aExpiration, aSource);
         NS_ENSURE_SUCCESS(rv, rv);
         return NS_OK;
       }
@@ -315,7 +316,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       double valueDouble;
       rv = aValue->GetAsDouble(&valueDouble);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetItemAnnotationDouble(aItemId, aName, valueDouble, aFlags, aExpiration);
+      rv = SetItemAnnotationDouble(aItemId, aName, valueDouble, aFlags, aExpiration, aSource);
       NS_ENSURE_SUCCESS(rv, rv);
       return NS_OK;
     }
@@ -332,7 +333,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       nsAutoString stringValue;
       rv = aValue->GetAsAString(stringValue);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetItemAnnotationString(aItemId, aName, stringValue, aFlags, aExpiration);
+      rv = SetItemAnnotationString(aItemId, aName, stringValue, aFlags, aExpiration, aSource);
       NS_ENSURE_SUCCESS(rv, rv);
       return NS_OK;
     }
@@ -366,7 +367,8 @@ nsAnnotationService::SetItemAnnotationString(int64_t aItemId,
                                              const nsACString& aName,
                                              const nsAString& aValue,
                                              int32_t aFlags,
-                                             uint16_t aExpiration)
+                                             uint16_t aExpiration,
+                                             uint16_t aSource)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -377,7 +379,7 @@ nsAnnotationService::SetItemAnnotationString(int64_t aItemId,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource));
 
   return NS_OK;
 }
@@ -436,7 +438,8 @@ nsAnnotationService::SetItemAnnotationInt32(int64_t aItemId,
                                             const nsACString& aName,
                                             int32_t aValue,
                                             int32_t aFlags,
-                                            uint16_t aExpiration)
+                                            uint16_t aExpiration,
+                                            uint16_t aSource)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -447,7 +450,7 @@ nsAnnotationService::SetItemAnnotationInt32(int64_t aItemId,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource));
 
   return NS_OK;
 }
@@ -506,7 +509,8 @@ nsAnnotationService::SetItemAnnotationInt64(int64_t aItemId,
                                             const nsACString& aName,
                                             int64_t aValue,
                                             int32_t aFlags,
-                                            uint16_t aExpiration)
+                                            uint16_t aExpiration,
+                                            uint16_t aSource)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -517,7 +521,7 @@ nsAnnotationService::SetItemAnnotationInt64(int64_t aItemId,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource));
 
   return NS_OK;
 }
@@ -576,7 +580,8 @@ nsAnnotationService::SetItemAnnotationDouble(int64_t aItemId,
                                              const nsACString& aName,
                                              double aValue,
                                              int32_t aFlags,
-                                             uint16_t aExpiration)
+                                             uint16_t aExpiration,
+                                             uint16_t aSource)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -587,7 +592,7 @@ nsAnnotationService::SetItemAnnotationDouble(int64_t aItemId,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource));
 
   return NS_OK;
 }
@@ -1412,14 +1417,15 @@ nsAnnotationService::RemovePageAnnotation(nsIURI* aURI,
 
 NS_IMETHODIMP
 nsAnnotationService::RemoveItemAnnotation(int64_t aItemId,
-                                          const nsACString& aName)
+                                          const nsACString& aName,
+                                          uint16_t aSource)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
   nsresult rv = RemoveAnnotationInternal(nullptr, aItemId, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationRemoved(aItemId, aName));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationRemoved(aItemId, aName, aSource));
 
   return NS_OK;
 }
@@ -1452,7 +1458,8 @@ nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
 
 
 NS_IMETHODIMP
-nsAnnotationService::RemoveItemAnnotations(int64_t aItemId)
+nsAnnotationService::RemoveItemAnnotations(int64_t aItemId,
+                                           uint16_t aSource)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -1469,7 +1476,8 @@ nsAnnotationService::RemoveItemAnnotations(int64_t aItemId)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationRemoved(aItemId, EmptyCString()));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationRemoved(aItemId, EmptyCString(),
+                                                 aSource));
 
   return NS_OK;
 }
@@ -1565,7 +1573,8 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
 NS_IMETHODIMP
 nsAnnotationService::CopyItemAnnotations(int64_t aSourceItemId,
                                          int64_t aDestItemId,
-                                         bool aOverwriteDest)
+                                         bool aOverwriteDest,
+                                         uint16_t aSource)
 {
   NS_ENSURE_ARG_MIN(aSourceItemId, 1);
   NS_ENSURE_ARG_MIN(aDestItemId, 1);
@@ -1613,7 +1622,7 @@ nsAnnotationService::CopyItemAnnotations(int64_t aSourceItemId,
     if (annoExistsOnDest) {
       if (!aOverwriteDest)
         continue;
-      rv = RemoveItemAnnotation(aDestItemId, annoName);
+      rv = RemoveItemAnnotation(aDestItemId, annoName, aSource);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -1631,7 +1640,7 @@ nsAnnotationService::CopyItemAnnotations(int64_t aSourceItemId,
     rv = copyStmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aDestItemId, annoName));
+    NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aDestItemId, annoName, aSource));
   }
 
   rv = transaction.Commit();

@@ -34,6 +34,8 @@ const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const PARENT_ANNO = "sync/parent";
 
+const { SOURCE_SYNC } = Ci.nsINavBookmarksService;
+
 const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   KINDS: {
     BOOKMARK: "bookmark",
@@ -156,7 +158,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
                                              child.oldIndex, child.parentId,
                                              child.index, child.type,
                                              child.guid, parentGuid,
-                                             parentGuid ]);
+                                             parentGuid, SOURCE_SYNC ]);
         }
       })
     );
@@ -166,7 +168,9 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    * Removes an item from the database.
    */
   remove: Task.async(function* (guid) {
-    return PlacesUtils.bookmarks.remove(guid);
+    return PlacesUtils.bookmarks.remove(guid, {
+      source: SOURCE_SYNC,
+    });
   }),
 
   /**
@@ -176,7 +180,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    */
   clear: Task.async(function* (folderGuid) {
     let folderId = yield PlacesUtils.promiseItemId(folderGuid);
-    PlacesUtils.bookmarks.removeFolderChildren(folderId);
+    PlacesUtils.bookmarks.removeFolderChildren(folderId, SOURCE_SYNC);
   }),
 
   /**
@@ -265,7 +269,9 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       { guid: { required: true }
       , type: { validIf: () => false }
       , index: { validIf: () => false }
+      , source: { validIf: () => false }
       });
+    updateInfo.source = SOURCE_SYNC;
 
     return updateSyncBookmark(updateInfo);
   }),
@@ -411,7 +417,8 @@ var annotateOrphan = Task.async(function* (item, requestedParentGuid) {
   let itemId = yield PlacesUtils.promiseItemId(item.guid);
   PlacesUtils.annotations.setItemAnnotation(itemId,
     PARENT_ANNO, requestedParentGuid, 0,
-    PlacesUtils.annotations.EXPIRE_NEVER);
+    PlacesUtils.annotations.EXPIRE_NEVER,
+    SOURCE_SYNC);
 });
 
 var reparentOrphans = Task.async(function* (item) {
@@ -437,6 +444,7 @@ var reparentOrphans = Task.async(function* (item) {
         guid: orphanGuids[i],
         parentGuid: item.guid,
         index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+        source: SOURCE_SYNC,
       });
       isReparented = true;
     } catch (ex) {
@@ -446,7 +454,7 @@ var reparentOrphans = Task.async(function* (item) {
     if (isReparented) {
       // Remove the annotation once we've reparented the item.
       PlacesUtils.annotations.removeItemAnnotation(orphanIds[i],
-        PARENT_ANNO);
+        PARENT_ANNO, SOURCE_SYNC);
     }
   }
 });
@@ -516,6 +524,7 @@ var insertSyncLivemark = Task.async(function* (requestedParent, insertInfo) {
     feedURI,
     siteURI,
     guid: insertInfo.guid,
+    source: SOURCE_SYNC,
   });
 
   return insertBookmarkMetadata(item.id, item, insertInfo);
@@ -526,7 +535,8 @@ var insertBookmarkMetadata = Task.async(function* (itemId, item, insertInfo) {
   if (insertInfo.query) {
     PlacesUtils.annotations.setItemAnnotation(itemId,
       SMART_BOOKMARKS_ANNO, insertInfo.query, 0,
-      PlacesUtils.annotations.EXPIRE_NEVER);
+      PlacesUtils.annotations.EXPIRE_NEVER,
+      SOURCE_SYNC);
     item.query = insertInfo.query;
   }
 
@@ -541,6 +551,7 @@ var insertBookmarkMetadata = Task.async(function* (itemId, item, insertInfo) {
     yield PlacesUtils.keywords.insert({
       keyword: insertInfo.keyword,
       url: item.url.href,
+      source: SOURCE_SYNC,
     });
     item.keyword = insertInfo.keyword;
   }
@@ -548,14 +559,16 @@ var insertBookmarkMetadata = Task.async(function* (itemId, item, insertInfo) {
   if (insertInfo.description) {
     PlacesUtils.annotations.setItemAnnotation(itemId,
       DESCRIPTION_ANNO, insertInfo.description, 0,
-      PlacesUtils.annotations.EXPIRE_NEVER);
+      PlacesUtils.annotations.EXPIRE_NEVER,
+      SOURCE_SYNC);
     item.description = insertInfo.description;
   }
 
   if (insertInfo.loadInSidebar) {
     PlacesUtils.annotations.setItemAnnotation(itemId,
       SIDEBAR_ANNO, insertInfo.loadInSidebar, 0,
-      PlacesUtils.annotations.EXPIRE_NEVER);
+      PlacesUtils.annotations.EXPIRE_NEVER,
+      SOURCE_SYNC);
     item.loadInSidebar = insertInfo.loadInSidebar;
   }
 
@@ -659,7 +672,10 @@ var updateSyncBookmark = Task.async(function* (updateInfo) {
   if (shouldReinsert) {
     delete updateInfo.source;
     let newItem = validateNewBookmark(updateInfo);
-    yield PlacesUtils.bookmarks.remove(oldItem.guid);
+    yield PlacesUtils.bookmarks.remove({
+      guid: oldItem.guid,
+      source: SOURCE_SYNC,
+    });
     // A reinsertion likely indicates a confused client, since there aren't
     // public APIs for changing livemark URLs or an item's kind (e.g., turning
     // a folder into a separator while preserving its annos and position).
@@ -735,12 +751,16 @@ var updateBookmarkMetadata = Task.async(function* (itemId, oldItem, newItem, upd
       url: oldItem.url.href,
     });
     if (entry) {
-      yield PlacesUtils.keywords.remove(entry.keyword);
+      yield PlacesUtils.keywords.remove({
+        keyword: entry.keyword,
+        source: SOURCE_SYNC,
+      });
     }
     if (updateInfo.keyword) {
       yield PlacesUtils.keywords.insert({
         keyword: updateInfo.keyword,
         url: newItem.url.href,
+        source: SOURCE_SYNC,
       });
     }
     newItem.keyword = updateInfo.keyword;
@@ -750,10 +770,11 @@ var updateBookmarkMetadata = Task.async(function* (itemId, oldItem, newItem, upd
     if (updateInfo.description) {
       PlacesUtils.annotations.setItemAnnotation(itemId,
         DESCRIPTION_ANNO, updateInfo.description, 0,
-        PlacesUtils.annotations.EXPIRE_NEVER);
+        PlacesUtils.annotations.EXPIRE_NEVER,
+        SOURCE_SYNC);
     } else {
       PlacesUtils.annotations.removeItemAnnotation(itemId,
-        DESCRIPTION_ANNO);
+        DESCRIPTION_ANNO, SOURCE_SYNC);
     }
     newItem.description = updateInfo.description;
   }
@@ -762,10 +783,11 @@ var updateBookmarkMetadata = Task.async(function* (itemId, oldItem, newItem, upd
     if (updateInfo.loadInSidebar) {
       PlacesUtils.annotations.setItemAnnotation(itemId,
         SIDEBAR_ANNO, updateInfo.loadInSidebar, 0,
-        PlacesUtils.annotations.EXPIRE_NEVER);
+        PlacesUtils.annotations.EXPIRE_NEVER,
+        SOURCE_SYNC);
     } else {
       PlacesUtils.annotations.removeItemAnnotation(itemId,
-        SIDEBAR_ANNO);
+        SIDEBAR_ANNO, SOURCE_SYNC);
     }
     newItem.loadInSidebar = updateInfo.loadInSidebar;
   }
@@ -773,7 +795,8 @@ var updateBookmarkMetadata = Task.async(function* (itemId, oldItem, newItem, upd
   if (updateInfo.hasOwnProperty("query")) {
     PlacesUtils.annotations.setItemAnnotation(itemId,
       SMART_BOOKMARKS_ANNO, updateInfo.query, 0,
-      PlacesUtils.annotations.EXPIRE_NEVER);
+      PlacesUtils.annotations.EXPIRE_NEVER,
+      SOURCE_SYNC);
     newItem.query = updateInfo.query;
   }
 
@@ -814,6 +837,8 @@ function validateNewBookmark(info) {
     // the sync, which orders children according to their placement in the
     // `BookmarkFolder::children` array.
     , index: { validIf: () => false }
+    // This module always uses `nsINavBookmarksService::SOURCE_SYNC`.
+    , source: { validIf: () => false }
     , guid: { required: true }
     , url: { requiredIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
                               , BookmarkSyncUtils.KINDS.MICROSUMMARY
@@ -852,6 +877,7 @@ function validateNewBookmark(info) {
   insertInfo.dateAdded = insertInfo.lastModified = time;
 
   insertInfo.type = getTypeForKind(insertInfo.kind);
+  insertInfo.source = SOURCE_SYNC;
 
   return insertInfo;
 }
@@ -874,10 +900,10 @@ var tagItem = Task.async(function (item, tags) {
   // tag IDs, we temporarily tag a dummy URI, ensuring the tags exist.
   let dummyURI = PlacesUtils.toURI("about:weave#BStore_tagURI");
   let bookmarkURI = PlacesUtils.toURI(item.url.href);
-  PlacesUtils.tagging.tagURI(dummyURI, newTags);
-  PlacesUtils.tagging.untagURI(bookmarkURI, null);
-  PlacesUtils.tagging.tagURI(bookmarkURI, newTags);
-  PlacesUtils.tagging.untagURI(dummyURI, null);
+  PlacesUtils.tagging.tagURI(dummyURI, newTags, SOURCE_SYNC);
+  PlacesUtils.tagging.untagURI(bookmarkURI, null, SOURCE_SYNC);
+  PlacesUtils.tagging.tagURI(bookmarkURI, newTags, SOURCE_SYNC);
+  PlacesUtils.tagging.untagURI(dummyURI, null, SOURCE_SYNC);
 
   return newTags;
 });
@@ -892,8 +918,9 @@ function shouldUpdateBookmark(updateInfo) {
     if (!updateInfo.hasOwnProperty(prop)) {
       continue;
     }
-    // We should have at least one more property, in addition to `guid`.
-    if (++propsToUpdate >= 2) {
+    // We should have at least one more property, in addition to `guid` and
+    // `source`.
+    if (++propsToUpdate >= 3) {
       return true;
     }
   }
