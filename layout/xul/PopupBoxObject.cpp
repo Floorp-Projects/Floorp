@@ -335,6 +335,9 @@ PopupBoxObject::GetAlignmentPosition(nsString& positionStr)
     case POPUPPOSITION_AFTERPOINTER:
       positionStr.AssignLiteral("after_pointer");
       break;
+    case POPUPPOSITION_SELECTION:
+      positionStr.AssignLiteral("selection");
+      break;
     default:
       // Leave as an empty string.
       break;
