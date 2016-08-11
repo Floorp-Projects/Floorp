@@ -15,6 +15,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "getExtensionUUID", () => {
+  let {getExtensionUUID} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  return getExtensionUUID;
+});
+
 /*
  * This file should be kept short and simple since it's loaded even
  * when no extensions are running.
@@ -84,6 +89,11 @@ var Frames = {
   },
 };
 Frames.init();
+
+function getURLForExtension(id, path = "") {
+  let uuid = getExtensionUUID(id);
+  return `moz-extension://${uuid}/${path}`;
+}
 
 // This object manages various platform-level issues related to
 // moz-extension:// URIs. It lives here so that it can be used in both
@@ -276,6 +286,8 @@ this.ExtensionManagement = {
 
   getFrameId: Frames.getId.bind(Frames),
   getParentFrameId: Frames.getParentId.bind(Frames),
+
+  getURLForExtension,
 
   // exported API Level Helpers
   getAddonIdForWindow,
