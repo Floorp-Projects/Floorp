@@ -17,7 +17,7 @@ namespace jsipc {
 class JavaScriptParent : public JavaScriptBase<PJavaScriptParent>
 {
   public:
-    explicit JavaScriptParent(JSRuntime* rt);
+    explicit JavaScriptParent(JSContext* cx);
     virtual ~JavaScriptParent();
 
     bool init();

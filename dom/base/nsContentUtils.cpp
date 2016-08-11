@@ -2790,7 +2790,10 @@ nsIPrincipal*
 nsContentUtils::ObjectPrincipal(JSObject* aObj)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(JS_GetObjectRuntime(aObj) == CycleCollectedJSRuntime::Get()->Runtime());
+
+#ifdef DEBUG
+  JS::AssertObjectBelongsToCurrentThread(aObj);
+#endif
 
   // This is duplicated from nsScriptSecurityManager. We don't call through there
   // because the API unnecessarily requires a JSContext for historical reasons.

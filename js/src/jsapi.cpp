@@ -559,18 +559,6 @@ JS_EndRequest(JSContext* cx)
     StopRequest(cx);
 }
 
-JS_PUBLIC_API(JSRuntime*)
-JS_GetRuntime(JSContext* cx)
-{
-    return cx->runtime();
-}
-
-JS_PUBLIC_API(JSContext*)
-JS_GetContext(JSRuntime* rt)
-{
-    return rt->contextFromMainThread();
-}
-
 JS_PUBLIC_API(JSContext*)
 JS_GetParentContext(JSContext* cx)
 {
@@ -1942,10 +1930,11 @@ JS_IsNative(JSObject* obj)
     return obj->isNative();
 }
 
-JS_PUBLIC_API(JSRuntime*)
-JS_GetObjectRuntime(JSObject* obj)
+JS_PUBLIC_API(void)
+JS::AssertObjectBelongsToCurrentThread(JSObject* obj)
 {
-    return obj->compartment()->runtimeFromMainThread();
+    JSRuntime* rt = obj->compartment()->runtimeFromAnyThread();
+    MOZ_RELEASE_ASSERT(CurrentThreadCanAccessRuntime(rt));
 }
 
 

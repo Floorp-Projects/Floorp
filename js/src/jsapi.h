@@ -998,9 +998,6 @@ JS_GetContextPrivate(JSContext* cx);
 JS_PUBLIC_API(void)
 JS_SetContextPrivate(JSContext* cx, void* data);
 
-extern JS_PUBLIC_API(JSRuntime*)
-JS_GetRuntime(JSContext* cx);
-
 extern JS_PUBLIC_API(JSContext*)
 JS_GetParentContext(JSContext* cx);
 
@@ -1044,16 +1041,6 @@ class MOZ_RAII JSAutoRequest
     static void operator delete(void*, size_t) { }
 #endif
 };
-
-extern JS_PUBLIC_API(JSRuntime*)
-JS_GetRuntime(JSContext* cx);
-
-/**
- * Returns the runtime's JSContext. The plan is to expose a single type to the
- * API, so this function will likely be removed soon.
- */
-extern JS_PUBLIC_API(JSContext*)
-JS_GetContext(JSRuntime* rt);
 
 extern JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext* cx);
@@ -1244,6 +1231,13 @@ ContextOptionsRef(JSContext* cx);
  */
 JS_PUBLIC_API(bool)
 InitSelfHostedCode(JSContext* cx);
+
+/**
+ * Asserts (in debug and release builds) that `obj` belongs to the current
+ * thread's context.
+ */
+JS_PUBLIC_API(void)
+AssertObjectBelongsToCurrentThread(JSObject* obj);
 
 } /* namespace JS */
 
@@ -2455,9 +2449,6 @@ JS_NewObject(JSContext* cx, const JSClass* clasp);
 
 extern JS_PUBLIC_API(bool)
 JS_IsNative(JSObject* obj);
-
-extern JS_PUBLIC_API(JSRuntime*)
-JS_GetObjectRuntime(JSObject* obj);
 
 /**
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default

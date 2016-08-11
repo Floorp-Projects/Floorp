@@ -26,16 +26,15 @@ UpdateChildWeakPointersBeforeSweepingZoneGroup(JSContext* cx, void* data)
     static_cast<JavaScriptChild*>(data)->updateWeakPointers();
 }
 
-JavaScriptChild::JavaScriptChild(JSRuntime* rt)
-  : JavaScriptShared(rt),
-    JavaScriptBase<PJavaScriptChild>(rt)
+JavaScriptChild::JavaScriptChild(JSContext* cx)
+  : JavaScriptShared(cx),
+    JavaScriptBase<PJavaScriptChild>(cx)
 {
 }
 
 JavaScriptChild::~JavaScriptChild()
 {
-    JSContext* cx = JS_GetContext(rt_);
-    JS_RemoveWeakPointerZoneGroupCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup);
+    JS_RemoveWeakPointerZoneGroupCallback(cx_, UpdateChildWeakPointersBeforeSweepingZoneGroup);
 }
 
 bool
@@ -46,8 +45,7 @@ JavaScriptChild::init()
     if (!WrapperAnswer::init())
         return false;
 
-    JSContext* cx = JS_GetContext(rt_);
-    JS_AddWeakPointerZoneGroupCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup, this);
+    JS_AddWeakPointerZoneGroupCallback(cx_, UpdateChildWeakPointersBeforeSweepingZoneGroup, this);
     return true;
 }
 
@@ -68,9 +66,9 @@ JavaScriptChild::scopeForTargetObjects()
 }
 
 PJavaScriptChild*
-mozilla::jsipc::NewJavaScriptChild(JSRuntime* rt)
+mozilla::jsipc::NewJavaScriptChild(JSContext* cx)
 {
-    JavaScriptChild* child = new JavaScriptChild(rt);
+    JavaScriptChild* child = new JavaScriptChild(cx);
     if (!child->init()) {
         delete child;
         return nullptr;

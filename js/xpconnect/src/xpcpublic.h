@@ -561,7 +561,7 @@ class ErrorReport {
 };
 
 void
-DispatchScriptErrorEvent(nsPIDOMWindowInner* win, JSRuntime* rt, xpc::ErrorReport* xpcReport,
+DispatchScriptErrorEvent(nsPIDOMWindowInner* win, JSContext* cx, xpc::ErrorReport* xpcReport,
                          JS::Handle<JS::Value> exception);
 
 // Get a stack of the sort that can be passed to
@@ -584,9 +584,6 @@ FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
 // and unique. However, there are no guarantees of either property.
 extern void
 GetCurrentCompartmentName(JSContext*, nsCString& name);
-
-JSRuntime*
-GetJSRuntime();
 
 void AddGCCallback(xpcGCCallback cb);
 void RemoveGCCallback(xpcGCCallback cb);

@@ -1028,9 +1028,9 @@ struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
     const char* prefix;
     FILE* output;
 
-    DumpHeapTracer(FILE* fp, JSRuntime* rt)
-      : JS::CallbackTracer(rt, DoNotTraceWeakMaps),
-        js::WeakMapTracer(rt), prefix(""), output(fp)
+    DumpHeapTracer(FILE* fp, JSContext* cx)
+      : JS::CallbackTracer(cx, DoNotTraceWeakMaps),
+        js::WeakMapTracer(cx), prefix(""), output(fp)
     {}
 
   private:
@@ -1165,6 +1165,12 @@ JS::ObjectPtr::finalize(JSRuntime* rt)
     if (IsIncrementalBarrierNeeded(rt->contextFromMainThread()))
         IncrementalObjectBarrier(value);
     value = nullptr;
+}
+
+void
+JS::ObjectPtr::finalize(JSContext* cx)
+{
+    finalize(cx->runtime());
 }
 
 void

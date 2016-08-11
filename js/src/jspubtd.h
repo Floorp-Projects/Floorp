@@ -321,7 +321,12 @@ class RootLists
     void finishPersistentRoots();
 };
 
-struct ContextFriendFields
+struct RootingContext
+{
+    RootLists roots;
+};
+
+struct ContextFriendFields : public RootingContext
 {
   protected:
     JSRuntime* const     runtime_;
@@ -333,9 +338,6 @@ struct ContextFriendFields
     JS::Zone*           zone_;
 
   public:
-    /* Rooting structures. */
-    RootLists           roots;
-
     explicit ContextFriendFields(JSRuntime* rt)
       : runtime_(rt), compartment_(nullptr), zone_(nullptr)
     {}
