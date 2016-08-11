@@ -123,6 +123,11 @@ menulist > menupopup {
   min-width: 0px;
 }
 
+menulist > menupopup:not([position]) {
+  margin-inline-start: -13px;
+  margin-top: -2px;
+}
+
 menulist[editable="true"] > menupopup {
   -moz-appearance: none;
 }
