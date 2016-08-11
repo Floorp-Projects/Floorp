@@ -179,7 +179,6 @@
     ],
     "properties": {
       "sync": {
-        "unsupported": true,
         "$ref": "StorageArea",
         "description": "Items in the <code>sync</code> storage area are synced by the browser.",
         "properties": {
