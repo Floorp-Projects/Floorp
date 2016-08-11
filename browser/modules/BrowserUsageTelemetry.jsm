@@ -20,6 +20,7 @@ const MAX_UNIQUE_VISITED_DOMAINS = 100;
 
 // Observed topic names.
 const WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
+const TAB_RESTORING_TOPIC = "SSTabRestoring";
 const TELEMETRY_SUBSESSIONSPLIT_TOPIC = "internal-telemetry-after-subsession-split";
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
 
@@ -48,6 +49,21 @@ function getOpenTabsAndWinsCounts() {
 let URICountListener = {
   // A set containing the visited domains, see bug 1271310.
   _domainSet: new Set(),
+  // A map to keep track of the URIs loaded from the restored tabs.
+  _restoredURIsMap: new WeakMap(),
+
+  isValidURI(uri) {
+    // Only consider http(s) schemas.
+    return uri.schemeIs("http") || uri.schemeIs("https");
+  },
+
+  addRestoredURI(browser, uri) {
+    if (!this.isValidURI(uri)) {
+      return;
+    }
+
+    this._restoredURIsMap.set(browser, uri.spec);
+  },
 
   onLocationChange(browser, webProgress, request, uri, flags) {
     // Don't count this URI if it's an error page.
@@ -60,8 +76,25 @@ let URICountListener = {
       return;
     }
 
-    // Only consider http(s) schemas.
-    if (!uri.schemeIs("http") && !uri.schemeIs("https")) {
+    if (!this.isValidURI(uri)) {
+      return;
+    }
+
+    // The SessionStore sets the URI of a tab first, firing onLocationChange the
+    // first time, then manages content loading using its scheduler. Once content
+    // loads, we will hit onLocationChange again.
+    // We can catch the first case by checking for null requests: be advised that
+    // this can also happen when navigating page fragments, so account for it.
+    if (!request &&
+        !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
+      return;
+    }
+
+    // If the URI we're loading is in the _restoredURIsMap, then it comes from a
+    // restored tab. If so, let's skip it and remove it from the map as we want to
+    // count page refreshes.
+    if (this._restoredURIsMap.get(browser) === uri.spec) {
+      this._restoredURIsMap.delete(browser);
       return;
     }
 
@@ -146,6 +179,13 @@ let BrowserUsageTelemetry = {
       case "unload":
         this._unregisterWindow(event.target);
         break;
+      case TAB_RESTORING_TOPIC:
+        // We're restoring a new tab from a previous or crashed session.
+        // We don't want to track the URIs from these tabs, so let
+        // |URICountListener| know about them.
+        let browser = event.target.linkedBrowser;
+        URICountListener.addRestoredURI(browser, browser.currentURI);
+        break;
     }
   },
 
@@ -182,6 +222,7 @@ let BrowserUsageTelemetry = {
     if (PrivateBrowsingUtils.isWindowPrivate(win)) {
       return;
     }
+    win.gBrowser.tabContainer.addEventListener(TAB_RESTORING_TOPIC, this);
     win.gBrowser.addTabsProgressListener(URICountListener);
   },
 
@@ -196,6 +237,7 @@ let BrowserUsageTelemetry = {
     if (PrivateBrowsingUtils.isWindowPrivate(win.defaultView)) {
       return;
     }
+    win.defaultView.gBrowser.tabContainer.removeEventListener(TAB_RESTORING_TOPIC, this);
     win.defaultView.gBrowser.removeTabsProgressListener(URICountListener);
   },
 
