@@ -618,7 +618,7 @@ Chunk::init(JSRuntime* rt)
 
     /* Initialize the chunk info. */
     info.init();
-    new (&info.trailer) ChunkTrailer(rt);
+    new (&trailer) ChunkTrailer(rt);
 
     /* The rest of info fields are initialized in pickChunk. */
 }
