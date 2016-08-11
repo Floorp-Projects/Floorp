@@ -444,18 +444,14 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
   }
 
   // if the popup has just been opened, make sure the scrolled window is at 0,0
-  if (mIsOpenChanged) {
-    // Don't scroll menulists as they will scroll to their selected item on their own.
-    nsCOMPtr<nsIDOMXULMenuListElement> menulist =
-      do_QueryInterface(aParentMenu ? aParentMenu->GetContent() : nullptr);
-    if (!menulist) {
-      nsIScrollableFrame *scrollframe = do_QueryFrame(nsBox::GetChildXULBox(this));
-      if (scrollframe) {
-        nsWeakFrame weakFrame(this);
-        scrollframe->ScrollTo(nsPoint(0,0), nsIScrollableFrame::INSTANT);
-        if (!weakFrame.IsAlive()) {
-          return;
-        }
+  // Don't scroll menulists as they will scroll to their selected item on their own.
+  if (mIsOpenChanged && !IsMenuList()) {
+    nsIScrollableFrame *scrollframe = do_QueryFrame(nsBox::GetChildXULBox(this));
+    if (scrollframe) {
+      nsWeakFrame weakFrame(this);
+      scrollframe->ScrollTo(nsPoint(0,0), nsIScrollableFrame::INSTANT);
+      if (!weakFrame.IsAlive()) {
+        return;
       }
     }
   }
@@ -572,6 +568,18 @@ void
 nsMenuPopupFrame::ReflowCallbackCanceled()
 {
   mReflowCallbackData.Clear();
+}
+
+bool
+nsMenuPopupFrame::IsMenuList()
+{
+  nsIFrame* parentMenu = GetParent();
+  if (!parentMenu) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(parentMenu->GetContent());
+  return menulist != nullptr;
 }
 
 nsIContent*
@@ -1732,13 +1740,9 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem)
 
 void nsMenuPopupFrame::ChangeByPage(bool aIsUp)
 {
-  nsIFrame* parentMenu = GetParent();
-  if (parentMenu) {
-    // Only scroll by page within menulists.
-    nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(parentMenu->GetContent());
-    if (!menulist) {
-      return;
-    }
+  // Only scroll by page within menulists.
+  if (!IsMenuList()) {
+    return;
   }
 
   nsMenuFrame* newMenu = nullptr;
@@ -1870,19 +1874,13 @@ nsMenuPopupFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
     // On Windows, a menulist should update its value whenever navigation was
     // done by the keyboard.
 #ifdef XP_WIN
-    if (aFromKey && IsOpen()) {
-      nsIFrame* parentMenu = GetParent();
-      if (parentMenu) {
-        nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(parentMenu->GetContent());
-        if (menulist) {
-          // Fire a command event as the new item, but we don't want to close
-          // the menu, blink it, or update any other state of the menuitem. The
-          // command event will cause the item to be selected.
-          nsContentUtils::DispatchXULCommand(aMenuItem->GetContent(), /* aTrusted = */ true,
-                                             nullptr, PresContext()->PresShell(),
-                                             false, false, false, false);
-        }
-      }
+    if (aFromKey && IsOpen() && IsMenuList()) {
+      // Fire a command event as the new item, but we don't want to close
+      // the menu, blink it, or update any other state of the menuitem. The
+      // command event will cause the item to be selected.
+      nsContentUtils::DispatchXULCommand(aMenuItem->GetContent(), /* aTrusted = */ true,
+                                         nullptr, PresContext()->PresShell(),
+                                         false, false, false, false);
     }
 #endif
   }
