@@ -74,13 +74,12 @@ gfxPlatformMac::gfxPlatformMac()
     DisableFontActivation();
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
-    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) |
-                          BackendTypeBit(BackendType::SKIA) |
+    uint32_t canvasMask = BackendTypeBit(BackendType::SKIA) |
                           BackendTypeBit(BackendType::COREGRAPHICS);
     uint32_t contentMask = BackendTypeBit(BackendType::COREGRAPHICS) |
                            BackendTypeBit(BackendType::SKIA);
-    InitBackendPrefs(canvasMask, BackendType::COREGRAPHICS,
-                     contentMask, BackendType::COREGRAPHICS);
+    InitBackendPrefs(canvasMask, BackendType::SKIA,
+                     contentMask, BackendType::SKIA);
 
     // XXX: Bug 1036682 - we run out of fds on Mac when using tiled layers because
     // with 256x256 tiles we can easily hit the soft limit of 800 when using double
