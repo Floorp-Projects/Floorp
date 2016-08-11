@@ -587,8 +587,9 @@ ExtensionTabManager.prototype = {
 
     if (this.hasTabPermission(tab)) {
       result.url = browser.currentURI.spec;
-      if (browser.contentTitle) {
-        result.title = browser.contentTitle;
+      let title = browser.contentTitle || tab.label;
+      if (title) {
+        result.title = title;
       }
       let icon = window.gBrowser.getIcon(tab);
       if (icon) {

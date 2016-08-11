@@ -40,6 +40,80 @@ add_task(function* testDuplicateTab() {
   }
 });
 
+add_task(function* testDuplicateTabLazily() {
+  function background() {
+    let tabLoadComplete = new Promise(resolve => {
+      browser.test.onMessage.addListener((message, tabId, result) => {
+        if (message == "duplicate-tab-done") {
+          resolve(tabId);
+        }
+      });
+    });
+
+    function awaitLoad(tabId) {
+      return new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
+          if (tabId == tabId_ && changed.status == "complete") {
+            browser.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        });
+      });
+    }
+
+    let startTabId;
+    let url = "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
+    browser.tabs.create({url}, tab => {
+      startTabId = tab.id;
+
+      awaitLoad(startTabId).then(() => {
+        browser.test.sendMessage("duplicate-tab", startTabId);
+
+        tabLoadComplete.then(unloadedTabId => {
+          browser.tabs.get(startTabId, loadedtab => {
+            browser.test.assertEq("Dummy test page", loadedtab.title, "Title should be returned for loaded pages");
+            browser.test.assertEq("complete", loadedtab.status, "Tab status should be complete for loaded pages");
+          });
+
+          browser.tabs.get(unloadedTabId, unloadedtab => {
+            browser.test.assertEq("Dummy test page", unloadedtab.title, "Title should be returned after page has been unloaded");
+          });
+
+          browser.tabs.remove([tab.id, unloadedTabId]);
+          browser.test.notifyPass("tabs.hasCorrectTabTitle");
+        });
+      }).catch(e => {
+        browser.test.fail(`${e} :: ${e.stack}`);
+        browser.test.notifyFail("tabs.hasCorrectTabTitle");
+      });
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background,
+  });
+
+  extension.onMessage("duplicate-tab", tabId => {
+    let {TabManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+
+    let tab = TabManager.getTab(tabId);
+    // This is a bit of a hack to load a tab in the background.
+    let newTab = gBrowser.duplicateTab(tab, false);
+
+    BrowserTestUtils.waitForEvent(newTab, "SSTabRestored", () => true).then(() => {
+      extension.sendMessage("duplicate-tab-done", TabManager.getId(newTab));
+    });
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("tabs.hasCorrectTabTitle");
+  yield extension.unload();
+});
+
 add_task(function* testDuplicatePinnedTab() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
   gBrowser.pinTab(tab);
