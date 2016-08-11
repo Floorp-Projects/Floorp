@@ -340,6 +340,7 @@ class RegisterAllocator
     }
 
     LMoveGroup* getInputMoveGroup(LInstruction* ins);
+    LMoveGroup* getFixReuseMoveGroup(LInstruction* ins);
     LMoveGroup* getMoveGroupAfter(LInstruction* ins);
 
     CodePosition minimalDefEnd(LNode* ins) {
