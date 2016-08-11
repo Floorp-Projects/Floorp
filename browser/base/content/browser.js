@@ -4461,6 +4461,8 @@ var XULBrowserWindow = {
 
       BookmarkingUI.onLocationChange();
 
+      gIdentityHandler.onLocationChange();
+
       SocialUI.updateState();
 
       UITour.onLocationChange(location);
@@ -6539,6 +6541,11 @@ var gIdentityHandler = {
    */
   _state: 0,
 
+  /**
+   * Whether a permission is just removed from permission list.
+   */
+  _permissionJustRemoved: false,
+
   get _isBroken() {
     return this._state & Ci.nsIWebProgressListener.STATE_IS_BROKEN;
   },
@@ -6664,6 +6671,14 @@ var gIdentityHandler = {
   get _permissionList () {
     delete this._permissionList;
     return this._permissionList = document.getElementById("identity-popup-permission-list");
+  },
+  get _permissionEmptyHint() {
+    delete this._permissionEmptyHint;
+    return this._permissionEmptyHint = document.getElementById("identity-popup-permission-empty-hint");
+  },
+  get _permissionReloadHint () {
+    delete this._permissionReloadHint;
+    return this._permissionReloadHint = document.getElementById("identity-popup-permission-reload-hint");
   },
   get _permissionAnchors () {
     delete this._permissionAnchors;
@@ -7284,6 +7299,25 @@ var gIdentityHandler = {
     dt.setDragImage(this._identityIcon, 16, 16);
   },
 
+  onLocationChange: function () {
+    this._permissionJustRemoved = false;
+    this.updatePermissionHint();
+  },
+
+  updatePermissionHint: function () {
+    if (!this._permissionList.hasChildNodes() && !this._permissionJustRemoved) {
+      this._permissionEmptyHint.removeAttribute("hidden");
+    } else {
+      this._permissionEmptyHint.setAttribute("hidden", "true");
+    }
+
+    if (this._permissionJustRemoved) {
+      this._permissionReloadHint.removeAttribute("hidden");
+    } else {
+      this._permissionReloadHint.setAttribute("hidden", "true");
+    }
+  },
+
   updateSitePermissions: function () {
     while (this._permissionList.hasChildNodes())
       this._permissionList.removeChild(this._permissionList.lastChild);
@@ -7319,6 +7353,8 @@ var gIdentityHandler = {
       let item = this._createPermissionItem(permission);
       this._permissionList.appendChild(item);
     }
+
+    this.updatePermissionHint();
   },
 
   _createPermissionItem: function (aPermission) {
@@ -7373,6 +7409,8 @@ var gIdentityHandler = {
         mm.sendAsyncMessage("webrtc:StopSharing", windowId);
       }
       SitePermissions.remove(gBrowser.currentURI, aPermission.id);
+      this._permissionJustRemoved = true;
+      this.updatePermissionHint();
     });
 
     container.appendChild(img);
