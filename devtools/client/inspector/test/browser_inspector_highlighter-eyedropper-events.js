@@ -35,7 +35,7 @@ add_task(function* () {
 
 function* respondsToMoveEvents(helper) {
   info("Checking that the eyedropper responds to events from the mouse and keyboard");
-  let {mouse, synthesizeKey} = helper;
+  let {mouse} = helper;
 
   for (let {type, x, y, key, shift, expected} of MOVE_EVENTS_DATA) {
     info(`Simulating a ${type} event to move to ${expected.x} ${expected.y}`);
@@ -43,7 +43,7 @@ function* respondsToMoveEvents(helper) {
       yield mouse.move(x, y);
     } else if (type === "keyboard") {
       let options = shift ? {shiftKey: true} : {};
-      yield synthesizeKey({key, options});
+      yield EventUtils.synthesizeKey(key, options);
     }
     yield checkPosition(expected, helper);
   }
@@ -55,17 +55,17 @@ function* checkPosition({x, y}, {getElementAttribute}) {
      `The eyedropper is at the expected ${x} ${y} position`);
 }
 
-function* respondsToReturnAndEscape({synthesizeKey, isElementHidden, show}) {
+function* respondsToReturnAndEscape({isElementHidden, show}) {
   info("Simulating return to select the color and hide the eyedropper");
 
-  yield synthesizeKey({key: "VK_RETURN", options: {}});
+  yield EventUtils.synthesizeKey("VK_RETURN", {});
   let hidden = yield isElementHidden("root");
   ok(hidden, "The eyedropper has been hidden");
 
   info("Showing the eyedropper again and simulating escape to hide it");
 
   yield show("html");
-  yield synthesizeKey({key: "VK_ESCAPE", options: {}});
+  yield EventUtils.synthesizeKey("VK_ESCAPE", {});
   hidden = yield isElementHidden("root");
   ok(hidden, "The eyedropper has been hidden again");
 }
