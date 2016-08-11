@@ -437,7 +437,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     // First, notify the DOM that we have a script error, but only if
     // our window is still the current inner.
-    JSContext* rootingCx = nsContentUtils::RootingCx();
+    JS::RootingContext* rootingCx = RootingCx();
     if (win->IsCurrentInnerWindow() && win->GetDocShell() && !sHandlingScriptError) {
       AutoRestore<bool> recursionGuard(sHandlingScriptError);
       sHandlingScriptError = true;

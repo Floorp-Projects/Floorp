@@ -2720,7 +2720,7 @@ NotifyOffThreadScriptCompletedRunnable::Run()
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    JS::Rooted<JSScript*> script(nsContentUtils::RootingCx());
+    JS::Rooted<JSScript*> script(RootingCx());
     {
         AutoJSAPI jsapi;
         if (!jsapi.Init(xpc::CompilationScope())) {
