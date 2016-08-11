@@ -30,15 +30,9 @@ TraceParent(JSTracer* trc, void* data)
     static_cast<JavaScriptParent*>(data)->trace(trc);
 }
 
-JavaScriptParent::JavaScriptParent(JSContext* cx)
-  : JavaScriptShared(cx),
-    JavaScriptBase<PJavaScriptParent>(cx)
-{
-}
-
 JavaScriptParent::~JavaScriptParent()
 {
-    JS_RemoveExtraGCRootsTracer(cx_, TraceParent, this);
+    JS_RemoveExtraGCRootsTracer(danger::GetJSContext(), TraceParent, this);
 }
 
 bool
@@ -47,7 +41,7 @@ JavaScriptParent::init()
     if (!WrapperOwner::init())
         return false;
 
-    JS_AddExtraGCRootsTracer(cx_, TraceParent, this);
+    JS_AddExtraGCRootsTracer(danger::GetJSContext(), TraceParent, this);
     return true;
 }
 
@@ -190,9 +184,9 @@ JavaScriptParent::CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx)
 }
 
 PJavaScriptParent*
-mozilla::jsipc::NewJavaScriptParent(JSContext* cx)
+mozilla::jsipc::NewJavaScriptParent()
 {
-    JavaScriptParent* parent = new JavaScriptParent(cx);
+    JavaScriptParent* parent = new JavaScriptParent();
     if (!parent->init()) {
         delete parent;
         return nullptr;

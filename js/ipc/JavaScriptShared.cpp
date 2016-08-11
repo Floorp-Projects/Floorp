@@ -132,9 +132,8 @@ bool JavaScriptShared::sLoggingInitialized;
 bool JavaScriptShared::sLoggingEnabled;
 bool JavaScriptShared::sStackLoggingEnabled;
 
-JavaScriptShared::JavaScriptShared(JSContext* cx)
-  : cx_(cx),
-    refcount_(1),
+JavaScriptShared::JavaScriptShared()
+  : refcount_(1),
     nextSerialNumber_(1)
 {
     if (!sLoggingInitialized) {
