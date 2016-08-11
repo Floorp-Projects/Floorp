@@ -717,7 +717,9 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   // anyway).
   CertVerifier::Flags flags = CertVerifier::FLAG_LOCAL_ONLY |
                               CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST;
-  if (certVerifier->VerifySSLServerCert(nssCert, nullptr, // stapled ocsp
+  if (certVerifier->VerifySSLServerCert(nssCert,
+                                        nullptr, // stapledOCSPResponse
+                                        nullptr, // sctsFromTLSExtension
                                         now, nullptr, // pinarg
                                         host.get(), // hostname
                                         certList,

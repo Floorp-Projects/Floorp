@@ -8070,6 +8070,33 @@
     "n_buckets": 10,
     "description": "How many permanent certificate overrides a user has stored."
   },
+  "SSL_SCTS_ORIGIN": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "bug_numbers": [1293231],
+    "releaseChannelCollection": "opt-out",
+    "description": "Origin of Signed Certificate Timestamps received (1=Embedded, 2=TLS handshake extension, 3=Stapled OCSP response)"
+  },
+  "SSL_SCTS_PER_CONNECTION": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "bug_numbers": [1293231],
+    "releaseChannelCollection": "opt-out",
+    "description": "Histogram of Signed Certificate Timestamps per SSL connection, from all sources (embedded / OCSP Stapling / TLS handshake). Bucket 0 counts the cases when no SCTs were received, or none were extracted due to parsing errors."
+  },
+  "SSL_SCTS_VERIFICATION_STATUS": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "bug_numbers": [1293231],
+    "releaseChannelCollection": "opt-out",
+    "description": "Verification status of Signed Certificate Timestamps received (0=Decoding error, 1=SCT verified, 2=SCT from unknown log, 3=Invalid SCT signature, 4=SCT timestamp is in the future)"
+  },
   "SSL_SERVER_AUTH_EKU": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "never",

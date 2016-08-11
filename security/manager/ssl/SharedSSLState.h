@@ -43,6 +43,10 @@ public:
   {
     mOCSPMustStapleEnabled = mustStapleEnabled;
   }
+  void SetSignedCertTimestampsEnabled(bool signedCertTimestampsEnabled)
+  {
+    mSignedCertTimestampsEnabled = signedCertTimestampsEnabled;
+  }
 
   // The following methods may be called from any thread
   bool SocketCreated();
@@ -50,6 +54,10 @@ public:
   static void NoteCertOverrideServiceInstantiated();
   bool IsOCSPStaplingEnabled() const { return mOCSPStaplingEnabled; }
   bool IsOCSPMustStapleEnabled() const { return mOCSPMustStapleEnabled; }
+  bool IsSignedCertTimestampsEnabled() const
+  {
+    return mSignedCertTimestampsEnabled;
+  }
 
 private:
   ~SharedSSLState();
@@ -67,6 +75,7 @@ private:
   bool mSocketCreated;
   bool mOCSPStaplingEnabled;
   bool mOCSPMustStapleEnabled;
+  bool mSignedCertTimestampsEnabled;
 };
 
 SharedSSLState* PublicSSLState();

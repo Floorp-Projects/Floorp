@@ -86,6 +86,11 @@ pref("security.pki.netscape_step_up_policy", 1);
 pref("security.pki.netscape_step_up_policy", 2);
 #endif
 
+// Configures Certificate Transparency support mode:
+// 0: Fully disabled.
+// 1: Only collect telemetry. CT qualification checks are not performed.
+pref("security.pki.certificate_transparency.mode", 1);
+
 pref("security.webauth.u2f", false);
 pref("security.webauth.u2f_enable_softtoken", false);
 pref("security.webauth.u2f_enable_usbtoken", false);
