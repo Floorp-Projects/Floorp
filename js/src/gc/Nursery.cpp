@@ -502,7 +502,7 @@ js::Nursery::maybeEndProfile(ProfileKey key)
 }
 
 void
-js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList* pretenureGroups)
+js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
 {
     MOZ_ASSERT(!rt->mainThread.suppressGC);
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessRuntime(rt));
@@ -653,11 +653,19 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     // the nursery is full, look for object groups that are getting promoted
     // excessively and try to pretenure them.
     maybeStartProfile(ProfileKey::Pretenure);
-    if (pretenureGroups && (promotionRate > 0.8 || reason == JS::gcreason::FULL_STORE_BUFFER)) {
+    uint32_t pretenureCount = 0;
+    if (promotionRate > 0.8 || reason == JS::gcreason::FULL_STORE_BUFFER) {
+        JSContext* cx = rt->contextFromMainThread();
         for (size_t i = 0; i < ArrayLength(tenureCounts.entries); i++) {
             const TenureCount& entry = tenureCounts.entries[i];
-            if (entry.count >= 3000)
-                mozilla::Unused << pretenureGroups->append(entry.group); // ignore alloc failure
+            if (entry.count >= 3000) {
+                ObjectGroup* group = entry.group;
+                if (group->canPreTenure()) {
+                    AutoCompartment ac(cx, group->compartment());
+                    group->setShouldPreTenure(cx);
+                    pretenureCount++;
+                }
+            }
         }
     }
     maybeEndProfile(ProfileKey::Pretenure);
@@ -677,6 +685,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     if (totalTime > 1000)
         rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, reason);
     rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, sizeOfHeapCommitted());
+    rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
 
     rt->gc.stats.endNurseryCollection(reason);
     TraceMinorGCEnd();
