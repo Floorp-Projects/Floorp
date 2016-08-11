@@ -87,6 +87,28 @@ RestyleManagerHandle::Ptr::FlushOverflowChangedTracker()
 }
 
 void
+RestyleManagerHandle::Ptr::ContentInserted(dom::Element* aContainer,
+                                           nsIContent* aChild)
+{
+  FORWARD(ContentInserted, (aContainer, aChild));
+}
+
+void
+RestyleManagerHandle::Ptr::ContentAppended(dom::Element* aContainer,
+                                           nsIContent* aFirstNewContent)
+{
+  FORWARD(ContentAppended, (aContainer, aFirstNewContent));
+}
+
+void
+RestyleManagerHandle::Ptr::ContentRemoved(dom::Element* aContainer,
+                                            nsIContent* aOldChild,
+                                            nsIContent* aFollowingSibling)
+{
+  FORWARD(ContentRemoved, (aContainer, aOldChild, aFollowingSibling));
+}
+
+void
 RestyleManagerHandle::Ptr::RestyleForInsertOrChange(dom::Element* aContainer,
                                                     nsIContent* aChild)
 {
@@ -100,13 +122,6 @@ RestyleManagerHandle::Ptr::RestyleForAppend(dom::Element* aContainer,
   FORWARD(RestyleForAppend, (aContainer, aFirstNewContent));
 }
 
-void
-RestyleManagerHandle::Ptr::RestyleForRemove(dom::Element* aContainer,
-                                            nsIContent* aOldChild,
-                                            nsIContent* aFollowingSibling)
-{
-  FORWARD(RestyleForRemove, (aContainer, aOldChild, aFollowingSibling));
-}
 
 nsresult
 RestyleManagerHandle::Ptr::ContentStateChanged(nsIContent* aContent,
