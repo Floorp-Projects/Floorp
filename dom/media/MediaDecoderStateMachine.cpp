@@ -1400,15 +1400,7 @@ void MediaDecoderStateMachine::ReaderSuspendedChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("ReaderSuspendedChanged: %d", mIsReaderSuspended.Ref());
-
-  if (IsShutdown()) {
-    return;
-  }
-  if (mIsReaderSuspended && mState != DECODER_STATE_DORMANT) {
-    SetDormant(true);
-  } else if (!mIsReaderSuspended && mState == DECODER_STATE_DORMANT) {
-    SetDormant(false);
-  }
+  SetDormant(mIsReaderSuspended);
 }
 
 void
