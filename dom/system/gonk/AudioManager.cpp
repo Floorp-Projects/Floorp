@@ -596,7 +596,7 @@ AudioManager::Observe(nsISupports* aSubject,
   // To process the volume control on each volume categories according to
   // change of settings
   else if (!strcmp(aTopic, MOZ_SETTINGS_CHANGE_ID)) {
-    RootedDictionary<dom::SettingChangeNotification> setting(nsContentUtils::RootingCx());
+    RootedDictionary<dom::SettingChangeNotification> setting(RootingCx());
     if (!WrappedJSToDictionary(aSubject, setting)) {
       return NS_OK;
     }
@@ -1135,7 +1135,7 @@ AudioManager::MaybeUpdateVolumeSettingToDatabase(bool aForce)
   }
 
   // Send events to update the Gaia volumes
-  JS::Rooted<JS::Value> value(nsContentUtils::RootingCx());
+  JS::Rooted<JS::Value> value(RootingCx());
   uint32_t volume = 0;
   for (uint32_t idx = 0; idx < MOZ_ARRAY_LENGTH(gVolumeData); ++idx) {
     int32_t streamType = gVolumeData[idx].mStreamType;

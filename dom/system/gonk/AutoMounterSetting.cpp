@@ -132,7 +132,7 @@ AutoMounterSetting::AutoMounterSetting()
   nsCOMPtr<nsISettingsServiceLock> lock;
   settingsService->CreateLock(nullptr, getter_AddRefs(lock));
   nsCOMPtr<nsISettingsServiceCallback> callback = new SettingsServiceCallback();
-  JS::Rooted<JS::Value> value(nsContentUtils::RootingCx());
+  JS::Rooted<JS::Value> value(RootingCx());
   value.setInt32(AUTOMOUNTER_DISABLE);
   lock->Set(UMS_MODE, value, callback, nullptr);
   value.setInt32(mStatus);
@@ -209,7 +209,7 @@ public:
     settingsService->CreateLock(nullptr, getter_AddRefs(lock));
     // lock may be null if this gets called during shutdown.
     if (lock) {
-      JS::Rooted<JS::Value> value(nsContentUtils::RootingCx(),
+      JS::Rooted<JS::Value> value(RootingCx(),
 				  JS::Int32Value(mStatus));
       lock->Set(UMS_STATUS, value, nullptr, nullptr);
     }
@@ -247,7 +247,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"ums.autoMount","value":true}
 
-  RootedDictionary<SettingChangeNotification> setting(nsContentUtils::RootingCx());
+  RootedDictionary<SettingChangeNotification> setting(RootingCx());
   if (!WrappedJSToDictionary(aSubject, setting)) {
     return NS_OK;
   }
