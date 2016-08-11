@@ -1504,29 +1504,35 @@ ParseResumptionValueAsObject(JSContext* cx, HandleValue rv, JSTrapStatus* status
     return true;
 }
 
+static bool
+ParseResumptionValue(JSContext* cx, HandleValue rval, JSTrapStatus* statusp, MutableHandleValue vp)
+{
+    if (rval.isUndefined()) {
+        *statusp = JSTRAP_CONTINUE;
+        vp.setUndefined();
+        return true;
+    }
+    if (rval.isNull()) {
+        *statusp = JSTRAP_ERROR;
+        vp.setUndefined();
+        return true;
+    }
+    return ParseResumptionValueAsObject(cx, rval, statusp, vp);
+}
+
 JSTrapStatus
 Debugger::parseResumptionValueHelper(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                      const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
                                      MutableHandleValue vp, bool callHook)
 {
-    vp.setUndefined();
     if (!ok)
         return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
-    if (rv.isUndefined()) {
-        ac.reset();
-        return JSTRAP_CONTINUE;
-    }
-    if (rv.isNull()) {
-        ac.reset();
-        return JSTRAP_ERROR;
-    }
 
     JSContext* cx = ac->context()->asJSContext();
+    RootedValue rvRoot(cx, rv);
     JSTrapStatus status = JSTRAP_CONTINUE;
     RootedValue v(cx);
-    RootedValue rvRoot(cx, rv);
-
-    if (!ParseResumptionValueAsObject(cx, rvRoot, &status, &v) ||
+    if (!ParseResumptionValue(cx, rvRoot, &status, &v) ||
         !unwrapDebuggeeValue(cx, &v))
     {
         return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
