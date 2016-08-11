@@ -100,7 +100,6 @@ class ResultsSink:
         self.fp = options.output_fp
 
         self.groups = {}
-        self.output_dict = {}
         self.counts = {'PASS': 0, 'FAIL': 0, 'TIMEOUT': 0, 'SKIP': 0}
         self.n = 0
 
@@ -129,16 +128,6 @@ class ResultsSink:
             result = TestResult.from_output(output)
             tup = (result.result, result.test.expect, result.test.random)
             dev_label = self.LABELS[tup][1]
-
-            if output.test.path in self.output_dict.keys():
-                if self.output_dict[output.test.path] != output:
-                    self.counts['FAIL'] += 1
-                    self.print_automation_result(
-                            "TEST-UNEXPECTED-FAIL", result.test, time=output.dt,
-                            message="Same test with different flag producing different output")
-            else:
-                self.output_dict[output.test.path] = output
-
             if output.timed_out:
                 dev_label = 'TIMEOUTS'
             self.groups.setdefault(dev_label, []).append(result)
