@@ -46,7 +46,7 @@
   border: 0;
   min-width: 0;
   border-left: 1px solid var(--panel-separator-color);
-  -moz-appearance: none !important;
+  -moz-appearance: none;
 }
 
 .downloadsPanelFooterButton {
