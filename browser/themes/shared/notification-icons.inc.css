@@ -270,10 +270,10 @@
 
 @keyframes pluginBlockedNotification {
   from {
-    opacity: 0 !important;
+    opacity: 0;
   }
   to {
-    opacity: 1 !important;
+    opacity: 1;
   }
 }
 
