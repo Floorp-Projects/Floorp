@@ -593,11 +593,6 @@ protected:
 
   bool IsStateMachineScheduled() const;
 
-  // Returns true if we're not playing and the decode thread has filled its
-  // decode buffers and is waiting. We can shut the decode thread down in this
-  // case as it may not be needed again.
-  bool IsPausedAndDecoderWaiting();
-
   // These return true if the respective stream's decode has not yet reached
   // the end of stream.
   bool IsAudioDecoding();
