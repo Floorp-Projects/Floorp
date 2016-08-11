@@ -88,8 +88,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     class ModuleEntry : public mozilla::Module
     {
     public:
-        explicit ModuleEntry(JSContext* aCx)
-          : mozilla::Module(), obj(aCx), thisObjectKey(aCx)
+        explicit ModuleEntry(JS::RootingContext* aRootingCx)
+          : mozilla::Module(), obj(aRootingCx), thisObjectKey(aRootingCx)
         {
             mVersion = mozilla::Module::kVersion;
             mCIDs = nullptr;
