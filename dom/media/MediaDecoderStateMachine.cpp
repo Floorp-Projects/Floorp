@@ -1368,58 +1368,12 @@ void MediaDecoderStateMachine::VisibilityChanged()
     }
 
     // Start video-only seek to the current time...
-    InitiateDecodeRecoverySeek();
+    SeekJob seekJob;
+    seekJob.mTarget = SeekTarget(GetMediaTime(),
+                                 SeekTarget::Type::AccurateVideoOnly,
+                                 MediaDecoderEventVisibility::Suppressed);
+    InitiateSeek(Move(seekJob));
   }
-}
-
-// InitiateVideoDecodeRecoverySeek is responsible for setting up a video-only
-// seek using the seek task. When suspension of decoding for videos that are in
-// background tabs (ie. invisible) is enabled, the audio keeps playing and when
-// switching back to decoding video, it is highly desirable to not cause the
-// audio to pause as the video is seeked else there be a noticeable audio glitch
-// as the tab becomes visible.
-void
-MediaDecoderStateMachine::InitiateDecodeRecoverySeek()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("InitiateDecodeRecoverySeek");
-
-  SeekJob seekJob;
-  seekJob.mTarget = SeekTarget(GetMediaTime(),
-                               SeekTarget::Type::AccurateVideoOnly,
-                               MediaDecoderEventVisibility::Suppressed);
-
-  SetState(DECODER_STATE_SEEKING);
-
-  // Discard the existing seek task.
-  DiscardSeekTaskIfExist();
-
-  mSeekTaskRequest.DisconnectIfExists();
-
-  // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
-  CancelMediaDecoderReaderWrapperCallback();
-
-  MOZ_ASSERT(!mCurrentSeek.Exists());
-  mCurrentSeek = Move(seekJob);
-  // Create a new SeekTask instance for the incoming seek task.
-  mSeekTask = new AccurateSeekTask(mDecoderID, OwnerThread(),
-                                   mReader.get(), mCurrentSeek.mTarget,
-                                   mInfo, Duration(), GetMediaTime());
-
-  // Reset our state machine and decoding pipeline before seeking.
-  if (mSeekTask->NeedToResetMDSM()) {
-    Reset(TrackInfo::kVideoTrack);
-  }
-
-  // Do the seek.
-  mSeekTaskRequest.Begin(
-    mSeekTask->Seek(Duration())->Then(OwnerThread(), __func__, this,
-                                      &MediaDecoderStateMachine::OnSeekTaskResolved,
-                                      &MediaDecoderStateMachine::OnSeekTaskRejected));
-  // Nobody is listening to this as OnSeekTaskResolved handles what is
-  // required but the promise needs to exist or SeekJob::Exists() will
-  // assert.
-  RefPtr<MediaDecoder::SeekPromise> unused = mCurrentSeek.mPromise.Ensure(__func__);
 }
 
 void MediaDecoderStateMachine::BufferedRangeUpdated()
@@ -1604,7 +1558,9 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   CancelMediaDecoderReaderWrapperCallback();
 
   // Create a new SeekTask instance for the incoming seek task.
-  if (aSeekJob.mTarget.IsAccurate() || aSeekJob.mTarget.IsFast()) {
+  if (aSeekJob.mTarget.IsAccurate() ||
+      aSeekJob.mTarget.IsFast() ||
+      aSeekJob.mTarget.IsVideoOnly()) {
     mSeekTask = new AccurateSeekTask(mDecoderID, OwnerThread(),
                                      mReader.get(), aSeekJob.mTarget,
                                      mInfo, Duration(), GetMediaTime());
@@ -1616,10 +1572,10 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
     MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
   }
 
-  // Stop playback now to ensure that while we're outside the monitor
-  // dispatching SeekingStarted, playback doesn't advance and mess with
-  // mCurrentPosition that we've setting to seekTime here.
-  StopPlayback();
+  // Don't stop playback for a video-only seek since audio is playing.
+  if (!aSeekJob.mTarget.IsVideoOnly()) {
+    StopPlayback();
+  }
 
   // aSeekJob.mTarget.mTime might be different from
   // mSeekTask->GetSeekTarget().mTime because the seek task might clamp the seek
@@ -1632,7 +1588,13 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   }
 
   // Reset our state machine and decoding pipeline before seeking.
-  if (mSeekTask->NeedToResetMDSM()) { Reset(); }
+  if (mSeekTask->NeedToResetMDSM()) {
+    if (aSeekJob.mTarget.IsVideoOnly()) {
+      Reset(TrackInfo::kVideoTrack);
+    } else {
+      Reset();
+    }
+  }
 
   // Do the seek.
   mSeekTaskRequest.Begin(mSeekTask->Seek(Duration())
