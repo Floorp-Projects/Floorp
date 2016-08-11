@@ -27,6 +27,17 @@ namespace webrtc {
 class VideoEngine;
 class VideoCaptureModule;
 
+// The observer is registered using RegisterInputObserver() and
+// deregistered using DeregisterInputObserver().
+class WEBRTC_DLLEXPORT ViEInputObserver {
+ public:
+  // This method is called if an input device is connected or disconnected .
+  virtual void DeviceChange() = 0;
+
+ protected:
+  virtual ~ViEInputObserver() {}
+};
+
 // This structure describes one set of the supported capabilities for a capture
 // device.
 struct CaptureCapability {
@@ -216,8 +227,12 @@ class WEBRTC_DLLEXPORT ViECapture {
   virtual int RegisterObserver(const int capture_id,
                                ViECaptureObserver& observer) = 0;
 
+  virtual int RegisterInputObserver(ViEInputObserver* observer) = 0;
+
   // Removes an already registered instance of ViECaptureObserver.
   virtual int DeregisterObserver(const int capture_id) = 0;
+
+  virtual int DeregisterInputObserver() = 0;
 
  protected:
   ViECapture() {}

@@ -6,6 +6,7 @@
 #define MOZILLA_MEDIAMANAGER_H
 
 #include "MediaEngine.h"
+#include "DeviceChangeCallback.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsAutoPtr.h"
@@ -187,6 +188,7 @@ typedef void (*WindowListenerCallback)(MediaManager *aThis,
 
 class MediaManager final : public nsIMediaManagerService,
                            public nsIObserver
+                          ,public DeviceChangeCallback
 {
   friend GetUserMediaCallbackMediaStreamListener;
 public:
@@ -256,6 +258,9 @@ public:
 
   typedef nsTArray<RefPtr<MediaDevice>> SourceSet;
   static bool IsPrivateBrowsing(nsPIDOMWindowInner* window);
+
+  virtual int AddDeviceChangeCallback(DeviceChangeCallback* aCallback) override;
+  virtual void OnDeviceChange() override;
 private:
   typedef media::Pledge<SourceSet*, dom::MediaStreamError*> PledgeSourceSet;
   typedef media::Pledge<const char*, dom::MediaStreamError*> PledgeChar;
@@ -308,6 +313,7 @@ private:
                               void *aData);
 
   void StopMediaStreams();
+  void RemoveMediaDevicesCallback(uint64_t aWindowID);
 
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;
