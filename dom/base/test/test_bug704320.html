@@ -5,21 +5,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=704320
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 704320 - HTTPS to HTTPS</title>
+  <title>Test for Bug 704320</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="referrerHelper.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
 <script type="application/javascript;version=1.7">
 
-var testIframeUrls = [
-  // HTTPS to HTTPS
-  'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=https&policy=no-referrer-when-downgrade',
-  'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=https&policy=no-referrer',
-  'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=https&policy=unsafe-url',
-  'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=https&policy=origin',
-  'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=https&policy=origin-when-cross-origin'
-];
+//generates URLs to test
+var generateURLArray = (function(from, to){
+  const baseURL = '://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=';
+  const schemeTo = '&scheme-to=';
+
+  return [
+    from + baseURL + from + schemeTo + to + '&policy=no-referrer-when-downgrade',
+    from + baseURL + from + schemeTo + to + '&policy=no-referrer',
+    from + baseURL + from + schemeTo + to + '&policy=unsafe-url',
+    from + baseURL + from + schemeTo + to + '&policy=origin',
+    from + baseURL + from + schemeTo + to + '&policy=origin-when-cross-origin',
+  ];
+});
+
+var testIframeUrls = generateURLArray('http', 'http');
+testIframeUrls = testIframeUrls.concat(generateURLArray('https', 'https'));
+testIframeUrls = testIframeUrls.concat(generateURLArray('http', 'https'));
+testIframeUrls = testIframeUrls.concat(generateURLArray('https', 'http'));
 
 SimpleTest.waitForExplicitFinish();
 var advance = function() { tests.next(); };
@@ -29,6 +39,7 @@ var advance = function() { tests.next(); };
  * It performs all tests in sequence using in the same iframe.
  */
 var tests = (function() {
+  SimpleTest.requestLongerTimeout(4);
   var iframe = document.getElementById("testframe");
   iframe.onload = function() {
      advance();
@@ -51,12 +62,10 @@ var tests = (function() {
 </head>
 
 <body onload="tests.next();">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=704320">Mozilla Bug 704320 - HTTPS to HTTPS</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=704320">Mozilla Bug 704320 - HTTP/HTTPS to HTTPS/HTTP</a>
 <p id="display"></p>
 <pre id="content">
 </pre>
   <iframe id="testframe"></iframe>
 
 </body>
-</html>
-
