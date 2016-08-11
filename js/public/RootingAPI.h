@@ -660,7 +660,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
         *stack = reinterpret_cast<Rooted<void*>*>(this);
     }
 
-    inline js::RootedListHeads& rootLists(js::RootingContext* cx) {
+    inline js::RootedListHeads& rootLists(JS::RootingContext* cx) {
         return rootLists(reinterpret_cast<JSContext*>(cx));
     }
     inline js::RootedListHeads& rootLists(JSContext* cx) {
@@ -992,7 +992,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
         return js::PerThreadDataFriendFields::getMainThread(rt)->roots;
     }
     js::RootLists& rootLists(JSContext* cx) { return rootLists(js::GetRuntime(cx)); }
-    js::RootLists& rootLists(js::RootingContext* cx) {
+    js::RootLists& rootLists(JS::RootingContext* cx) {
         return rootLists(reinterpret_cast<JSContext*>(cx));
     }
 
