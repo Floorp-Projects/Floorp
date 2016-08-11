@@ -28,6 +28,11 @@ function init()
   document.getElementById("menulist").open = true;
 }
 
+function isWithinHalfPixel(a, b)
+{
+  return Math.abs(a - b) <= 0.5;
+}
+
 function recreate()
 {
   if (gState == "before") {
@@ -49,18 +54,18 @@ function checkSize()
   var menurect = menulist.getBoundingClientRect();
   var popuprect = menulist.menupopup.getBoundingClientRect();
 
-  ok(Math.round(menurect.left) == Math.round(popuprect.left) &&
-     Math.round(menurect.right) == Math.round(popuprect.right) &&
-     Math.round(popuprect.right) - Math.round(popuprect.left) > 0,
-     "height " + gState)
+  let marginLeft = parseFloat(getComputedStyle(menulist.menupopup).marginLeft);
+  ok(isWithinHalfPixel(menurect.left + marginLeft, popuprect.left), "left position " + gState);
+  ok(isWithinHalfPixel(menurect.right + marginLeft, popuprect.right), "right position " + gState);
+  ok(Math.round(popuprect.right) - Math.round(popuprect.left) > 0, "height " + gState)
   document.getElementById("menulist").open = false;
 }
 ]]>
 </script>
 
-<hbox>
+<hbox align="center" pack="center">
   <menulist id="menulist" onpopupshown="checkSize();" onpopuphidden="recreate();">
-    <menupopup>
+    <menupopup position="after_start">
       <menuitem label="Cat"/>
     </menupopup>
   </menulist>

@@ -13,6 +13,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMXULElement.h"
+#include "nsIDOMXULMenuListElement.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsCSSFrameConstructor.h"
@@ -710,6 +711,22 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
   }
 
   nsAutoString position;
+
+#ifdef XP_MACOSX
+  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aMenu);
+  bool isNonEditableMenulist = false;
+  if (menulist) {
+    bool editable;
+    menulist->GetEditable(&editable);
+    isNonEditableMenulist = !editable;
+  }
+
+  if (isNonEditableMenulist) {
+    position.AssignLiteral("selection");
+  }
+  else
+#endif
+
   if (onMenuBar || !onmenu)
     position.AssignLiteral("after_start");
   else
