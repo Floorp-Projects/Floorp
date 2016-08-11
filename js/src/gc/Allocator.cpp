@@ -535,12 +535,9 @@ Chunk::findDecommittedArenaOffset()
 // ///////////  System -> Chunk Allocator  /////////////////////////////////////
 
 Chunk*
-GCRuntime::pickChunk(const AutoLockGC& lock,
-                     AutoMaybeStartBackgroundAllocation& maybeStartBackgroundAllocation)
+GCRuntime::getOrAllocChunk(const AutoLockGC& lock,
+                           AutoMaybeStartBackgroundAllocation& maybeStartBackgroundAllocation)
 {
-    if (availableChunks(lock).count())
-        return availableChunks(lock).head();
-
     Chunk* chunk = emptyChunks(lock).pop();
     if (!chunk) {
         chunk = Chunk::allocate(rt);
@@ -549,11 +546,32 @@ GCRuntime::pickChunk(const AutoLockGC& lock,
         MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
     }
 
-    MOZ_ASSERT(chunk->unused());
-    MOZ_ASSERT(!fullChunks(lock).contains(chunk));
-
     if (wantBackgroundAllocation(lock))
         maybeStartBackgroundAllocation.tryToStartBackgroundAllocation(rt);
+
+    return chunk;
+}
+
+void
+GCRuntime::recycleChunk(Chunk* chunk, const AutoLockGC& lock)
+{
+    emptyChunks(lock).push(chunk);
+}
+
+Chunk*
+GCRuntime::pickChunk(const AutoLockGC& lock,
+                     AutoMaybeStartBackgroundAllocation& maybeStartBackgroundAllocation)
+{
+    if (availableChunks(lock).count())
+        return availableChunks(lock).head();
+
+    Chunk* chunk = getOrAllocChunk(lock, maybeStartBackgroundAllocation);
+
+    chunk->init(rt);
+    MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
+    MOZ_ASSERT(chunk->unused());
+    MOZ_ASSERT(!fullChunks(lock).contains(chunk));
+    MOZ_ASSERT(!availableChunks(lock).contains(chunk));
 
     chunkAllocationSinceLastGC = true;
 
@@ -583,6 +601,7 @@ BackgroundAllocTask::run()
             chunk = Chunk::allocate(runtime);
             if (!chunk)
                 break;
+            chunk->init(runtime);
         }
         chunkPool_.push(chunk);
     }
@@ -594,7 +613,6 @@ Chunk::allocate(JSRuntime* rt)
     Chunk* chunk = static_cast<Chunk*>(MapAlignedPages(ChunkSize, ChunkSize));
     if (!chunk)
         return nullptr;
-    chunk->init(rt);
     rt->gc.stats.count(gcstats::STAT_NEW_CHUNK);
     return chunk;
 }

@@ -841,6 +841,10 @@ class GCRuntime
         return NonEmptyChunksIter(ChunkPool::Iter(availableChunks_), ChunkPool::Iter(fullChunks_));
     }
 
+    Chunk* getOrAllocChunk(const AutoLockGC& lock,
+                           AutoMaybeStartBackgroundAllocation& maybeStartBGAlloc);
+    void recycleChunk(Chunk* chunk, const AutoLockGC& lock);
+
 #ifdef JS_GC_ZEAL
     void startVerifyPreBarriers();
     void endVerifyPreBarriers();
