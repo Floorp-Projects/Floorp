@@ -392,7 +392,7 @@ TErrorResult<CleanupPolicy>::ClearUnionData()
 {
   AssertInOwningThread();
   if (IsJSException()) {
-    JSContext* cx = nsContentUtils::RootingCx();
+    JSContext* cx = dom::danger::GetJSContext();
     MOZ_ASSERT(cx);
     mJSException.setUndefined();
     js::RemoveRawValueRoot(cx, &mJSException);
@@ -436,7 +436,7 @@ TErrorResult<CleanupPolicy>::operator=(TErrorResult<CleanupPolicy>&& aRHS)
     mMessage = aRHS.mMessage;
     aRHS.mMessage = nullptr;
   } else if (aRHS.IsJSException()) {
-    JSContext* cx = nsContentUtils::RootingCx();
+    JSContext* cx = dom::danger::GetJSContext();
     MOZ_ASSERT(cx);
     mJSException.setUndefined();
     if (!js::AddRawValueRoot(cx, &mJSException, "TErrorResult::mJSException")) {
@@ -495,7 +495,7 @@ TErrorResult<CleanupPolicy>::CloneTo(TErrorResult& aRv) const
 #ifdef DEBUG
     aRv.mUnionState = HasJSException;
 #endif
-    JSContext* cx = nsContentUtils::RootingCx();
+    JSContext* cx = dom::danger::GetJSContext();
     JS::Rooted<JS::Value> exception(cx, mJSException);
     aRv.ThrowJSException(cx, exception);
   }
