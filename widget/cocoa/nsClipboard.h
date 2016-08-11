@@ -6,7 +6,7 @@
 #ifndef nsClipboard_h_
 #define nsClipboard_h_
 
-#include "nsBaseClipboard.h"
+#include "nsIClipboard.h"
 #include "nsXPIDLString.h"
 #include "mozilla/StaticPtr.h"
 
@@ -14,17 +14,14 @@
 
 class nsITransferable;
 
-class nsClipboard : public nsBaseClipboard
+class nsClipboard : public nsIClipboard
 {
 
 public:
   nsClipboard();
-  virtual ~nsClipboard();
 
-  // nsIClipboard  
-  NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
-                                    int32_t aWhichClipboard, bool *_retval);
-  NS_IMETHOD SupportsFindClipboard(bool *_retval);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICLIPBOARD
 
   // On macOS, cache the transferable of the current selection (chrome/content)
   // in the parent process. This is needed for the services menu which
@@ -46,8 +43,13 @@ protected:
   void SetSelectionCache(nsITransferable* aTransferable);
   
 private:
+  virtual ~nsClipboard();
   int32_t mCachedClipboard;
   int32_t mChangeCount; // Set to the native change count after any modification of the clipboard.
+
+  bool                        mIgnoreEmptyNotification;
+  nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
+  nsCOMPtr<nsITransferable>   mTransferable;
 };
 
 #endif // nsClipboard_h_

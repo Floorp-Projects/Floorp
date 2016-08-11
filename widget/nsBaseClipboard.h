@@ -34,8 +34,6 @@ protected:
 
   NS_IMETHOD SetNativeClipboardData ( int32_t aWhichClipboard ) = 0;
   NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, int32_t aWhichClipboard ) = 0;
-  virtual void ClearSelectionCache () = 0;
-  virtual void SetSelectionCache (nsITransferable* aTransferable) = 0;
 
   bool                mEmptyingForSetData;
   bool                mIgnoreEmptyNotification;
