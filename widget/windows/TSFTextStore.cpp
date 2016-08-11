@@ -3782,7 +3782,14 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     options.mRelativeToInsertionPoint = true;
     startOffset -= mSelectionForTSF.StartOffset();
   }
-  event.InitForQueryTextRect(startOffset, acpEnd - acpStart, options);
+  // ContentEventHandler and ContentCache return actual caret rect when
+  // the queried range is collapsed and selection is collapsed at the
+  // queried range.  Then, its height (in horizontal layout, width in vertical
+  // layout) may be different from actual font height of the line.  In such
+  // case, users see "dancing" of candidate or suggest window of TIP.
+  // For preventing it, we should query text rect with at least 1 length.
+  uint32_t length = std::max(static_cast<int32_t>(acpEnd - acpStart), 1);
+  event.InitForQueryTextRect(startOffset, length, options);
 
   DispatchEvent(event);
   if (NS_WARN_IF(!event.mSucceeded)) {
@@ -3791,6 +3798,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
        "eQueryTextRect failure", this));
     return TS_E_INVALIDPOS; // but unexpected failure, maybe.
   }
+
   // IMEs don't like empty rects, fix here
   if (event.mReply.mRect.width <= 0)
     event.mReply.mRect.width = 1;
