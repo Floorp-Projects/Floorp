@@ -342,6 +342,7 @@ function check_test_pt2() {
 
     // The blocked add-on should have changed to soft disabled
     do_check_eq(check_addon_state(addons[5]), "true,true,false");
+    do_check_eq(check_addon_state(addons[6]), "true,true,true");
     do_check_eq(check_plugin_state(PLUGINS[5]), "true,false");
 
     // These should have been unchanged
@@ -349,7 +350,6 @@ function check_test_pt2() {
     do_check_eq(check_addon_state(addons[1]), "false,false,false");
     do_check_eq(check_addon_state(addons[3]), "true,true,false");
     do_check_eq(check_addon_state(addons[4]), "false,false,false");
-    do_check_eq(check_addon_state(addons[6]), "false,false,true");
     do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
     do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
     do_check_eq(check_plugin_state(PLUGINS[3]), "true,false");
