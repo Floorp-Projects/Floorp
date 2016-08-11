@@ -410,33 +410,32 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
 // Branch functions
 
 void
-MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp,
                                         Label* label)
 {
+    MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
     MOZ_ASSERT(ptr != temp);
-    branchPtrInNurseryRangeImpl(cond, ptr, temp, label);
+    movePtr(ptr, temp);
+    branchPtrInNurseryChunkImpl(cond, temp, label);
 }
 
 void
-MacroAssembler::branchPtrInNurseryRange(Condition cond, const Address& address, Register temp,
+MacroAssembler::branchPtrInNurseryChunk(Condition cond, const Address& address, Register temp,
                                         Label* label)
 {
-    branchPtrInNurseryRangeImpl(cond, address, temp, label);
+    MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
+    loadPtr(address, temp);
+    branchPtrInNurseryChunkImpl(cond, temp, label);
 }
 
-template <typename T>
 void
-MacroAssembler::branchPtrInNurseryRangeImpl(Condition cond, const T& ptr, Register temp,
-                                            Label* label)
+MacroAssembler::branchPtrInNurseryChunkImpl(Condition cond, Register ptr, Label* label)
 {
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
 
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-    addPtr(ptr, temp);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              temp, Imm32(nursery.nurserySize()), label);
+    orPtr(Imm32(gc::ChunkMask), ptr);
+    branch32(cond, Address(ptr, gc::ChunkLocationOffsetFromLastByte),
+             Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
 }
 
 void
@@ -448,7 +447,7 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& addres
     Label done;
 
     branchTestObject(Assembler::NotEqual, address, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryRange(cond, address, temp, label);
+    branchPtrInNurseryChunk(cond, address, temp, label);
 
     bind(&done);
 }
@@ -462,7 +461,7 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, R
     Label done;
 
     branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+    branchPtrInNurseryChunk(cond, value.payloadReg(), temp, label);
 
     bind(&done);
 }
