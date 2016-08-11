@@ -305,7 +305,10 @@
                 return;
 
             i++;
-            MediaSourceUtil.append(test, sourceBuffer, MediaSourceUtil.extractSegmentData(mediaData, segmentInfo.media[i]), onAppendDone);
+            if (i < segmentInfo.media.length)
+            {
+                MediaSourceUtil.append(test, sourceBuffer, MediaSourceUtil.extractSegmentData(mediaData, segmentInfo.media[i]), onAppendDone);
+            }
         };
         MediaSourceUtil.append(test, sourceBuffer, MediaSourceUtil.extractSegmentData(mediaData, segmentInfo.media[i]), onAppendDone);
 
