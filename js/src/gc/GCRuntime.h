@@ -1387,6 +1387,30 @@ class MOZ_RAII AutoEnterIteration {
     }
 };
 
+// After pulling a Chunk out of the empty chunks pool, we want to run the
+// background allocator to refill it. The code that takes Chunks does so under
+// the GC lock. We need to start the background allocation under the helper
+// threads lock. To avoid lock inversion we have to delay the start until after
+// we are outside the GC lock. This class handles that delay automatically.
+class MOZ_RAII AutoMaybeStartBackgroundAllocation
+{
+    GCRuntime* gc;
+
+  public:
+    AutoMaybeStartBackgroundAllocation()
+      : gc(nullptr)
+    {}
+
+    void tryToStartBackgroundAllocation(GCRuntime& gc) {
+        this->gc = &gc;
+    }
+
+    ~AutoMaybeStartBackgroundAllocation() {
+        if (gc)
+            gc->startBackgroundAllocTaskIfIdle();
+    }
+};
+
 #ifdef JS_GC_ZEAL
 
 inline bool
