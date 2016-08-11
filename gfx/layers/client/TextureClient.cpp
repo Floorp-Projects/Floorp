@@ -1104,6 +1104,11 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
     return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
   }
 
+  if (moz2DBackend == BackendType::SKIA && aFormat == SurfaceFormat::B8G8R8X8) {
+    // Skia doesn't support RGBX, so ensure we clear the buffer for the proper alpha values.
+    aAllocFlags = TextureAllocationFlags(aAllocFlags | ALLOC_CLEAR_BUFFER);
+  }
+
   // Can't do any better than a buffer texture client.
   return TextureClient::CreateForRawBufferAccess(aAllocator, aFormat, aSize,
                                                  moz2DBackend, aTextureFlags, aAllocFlags);
