@@ -321,12 +321,29 @@ class RootLists
     void finishPersistentRoots();
 };
 
+} // namespace js
+
+namespace JS {
+
+/*
+ * JS::RootingContext is a base class of ContextFriendFields and JSContext.
+ * This class can be used to let code construct a Rooted<> or PersistentRooted<>
+ * instance, without giving it full access to the JSContext.
+ */
 struct RootingContext
 {
-    RootLists roots;
+    js::RootLists roots;
+
+    static RootingContext* get(JSContext* cx) {
+        return reinterpret_cast<RootingContext*>(cx);
+    }
 };
 
-struct ContextFriendFields : public RootingContext
+} // namespace JS
+
+namespace js {
+
+struct ContextFriendFields : public JS::RootingContext
 {
   protected:
     JSRuntime* const     runtime_;

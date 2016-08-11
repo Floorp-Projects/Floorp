@@ -293,7 +293,7 @@ GetJSContext()
 }
 } // namespace danger
 
-js::RootingContext*
+JS::RootingContext*
 RootingCx()
 {
   return CycleCollectedJSRuntime::Get()->RootingCx();
