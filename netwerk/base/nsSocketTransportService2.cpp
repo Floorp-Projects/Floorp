@@ -747,6 +747,12 @@ nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
 NS_IMETHODIMP
 nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
 {
+#ifndef XP_WIN
+    // On windows poll can hang and this became worse when we introduced the
+    // patch for bug 698882 (see also bug 1292181), therefore we reverted the
+    // behavior on windows to be as before bug 698882, e.g. write to the socket
+    // also if an event dispatch is on the socket thread and writing to the
+    // socket for each event.
     if (PR_GetCurrentThread() == gSocketThread) {
         // this check is redundant to one done inside ::Signal(), but
         // we can do it here and skip obtaining the lock - given that
@@ -755,6 +761,7 @@ nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
         SOCKET_LOG(("OnDispatchedEvent Same Thread Skip Signal\n"));
         return NS_OK;
     }
+#endif
 
     MutexAutoLock lock(mLock);
     if (mPollableEvent) {
