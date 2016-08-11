@@ -675,7 +675,7 @@ D3D9TextureData::BorrowDrawTarget()
       gfxCriticalError() << "Failed to lock rect borrowing the target in D3D9 (BDT) " << hexa(hr);
       return nullptr;
     }
-    dt = gfxPlatform::GetPlatform()->CreateDrawTargetForData((uint8_t*)rect.pBits, mSize,
+    dt = gfxPlatform::CreateDrawTargetForData((uint8_t*)rect.pBits, mSize,
                                                              rect.Pitch, mFormat);
     if (!dt) {
       return nullptr;
