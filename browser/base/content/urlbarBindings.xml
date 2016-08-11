@@ -366,8 +366,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           // Do the command of the selected one-off if it's not an engine.
-          let selectedOneOff =
-            this.popup.oneOffSearchButtons.visuallySelectedButton;
+          let selectedOneOff = this.popup.oneOffSearchButtons.selectedButton;
           if (selectedOneOff && !selectedOneOff.engine) {
             selectedOneOff.doCommand();
             return;
@@ -415,7 +414,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "searchengine":
                 if (selectedOneOff && selectedOneOff.engine) {
                   // Replace the engine with the selected one-off engine.
-                  action.params.engineName = engine.name;
+                  action.params.engineName = selectedOneOff.engine.name;
                 }
                 [url, postData] = this._recordSearchEngineLoad(
                   action.params.engineName,
@@ -1638,7 +1637,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </body>
       </method>
 
-      <method name="_visuallySelectedOneOffChanged">
+      <method name="_selectedOneOffChanged">
         <body><![CDATA[
           // Update all searchengine result items to use the newly selected
           // engine.
@@ -1693,8 +1692,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // reused, always return a non-null name here by falling back to the
           // current engine.
           let engine =
-            (this.oneOffSearchButtons.visuallySelectedButton &&
-             this.oneOffSearchButtons.visuallySelectedButton.engine) ||
+            (this.oneOffSearchButtons.selectedButton &&
+             this.oneOffSearchButtons.selectedButton.engine) ||
              Services.search.currentEngine;
           return engine ? engine.name : null;
         ]]></getter>
@@ -1769,8 +1768,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </implementation>
     <handlers>
 
-      <handler event="OneOffsVisuallySelectedButtonChanged"><![CDATA[
-        this._visuallySelectedOneOffChanged();
+      <handler event="SelectedOneOffButtonChanged"><![CDATA[
+        this._selectedOneOffChanged();
       ]]></handler>
 
       <handler event="mousedown"><![CDATA[

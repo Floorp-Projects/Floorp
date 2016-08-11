@@ -1558,11 +1558,10 @@
               // selected will do the button's command, not search.
               this.popup.selectedIndex = -1;
             }
+            let event = document.createEvent("Events");
+            event.initEvent("SelectedOneOffButtonChanged", true, false);
+            this.dispatchEvent(event);
           }
-
-          let event = document.createEvent("Events");
-          event.initEvent("OneOffsVisuallySelectedButtonChanged", true, false);
-          this.dispatchEvent(event);
         ]]></body>
       </method>
 
@@ -1911,7 +1910,7 @@
         event.preventDefault();
       ]]></handler>
 
-      <handler event="mouseover"><![CDATA[
+      <handler event="mousemove"><![CDATA[
         let target = event.originalTarget;
         if (target.localName != "button")
           return;
