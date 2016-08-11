@@ -390,6 +390,11 @@ gfxWindowsPlatform::InitAcceleration()
   InitializeDevices();
   UpdateANGLEConfig();
   UpdateRenderMode();
+
+  // If we have Skia and we didn't init dwrite already, do it now.
+  if (!mDWriteFactory && GetDefaultContentBackend() == BackendType::SKIA) {
+    InitDWriteSupport();
+  }
 }
 
 bool
@@ -405,7 +410,15 @@ gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 bool
 gfxWindowsPlatform::InitDWriteSupport()
 {
-  MOZ_ASSERT(!mDWriteFactory && IsVistaOrLater());
+  if (!IsVistaOrLater()) {
+    return false;
+  }
+
+  // DWrite is only supported on Windows 7 with the platform update and higher.
+  // We check this by seeing if D2D1 support is available.
+  if (!Factory::SupportsD2D1()) {
+    return false;
+  }
 
   mozilla::ScopedGfxFeatureReporter reporter("DWrite");
   decltype(DWriteCreateFactory)* createDWriteFactory = (decltype(DWriteCreateFactory)*)
@@ -1598,13 +1611,6 @@ gfxWindowsPlatform::InitializeDevices()
   if (!gfxConfig::IsEnabled(Feature::DIRECT2D)) {
     if (XRE_IsContentProcess() && GetParentDevicePrefs().useD2D1()) {
       RecordContentDeviceFailure(TelemetryDeviceCode::D2D1);
-    }
-
-    // Usually we want D2D in order to use DWrite, but if the users have it
-    // forced, we'll let them have it, as unsupported configuration.
-    if (gfxPrefs::DirectWriteFontRenderingForceEnabled() && !mDWriteFactory) {
-      gfxCriticalNote << "Attempting DWrite without D2D support";
-      InitDWriteSupport();
     }
   }
 }
