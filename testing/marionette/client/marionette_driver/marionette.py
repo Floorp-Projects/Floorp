@@ -545,7 +545,6 @@ class Marionette(object):
     DEFAULT_STARTUP_TIMEOUT = 120
     DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
 
-    @do_process_check
     def __init__(self, host='localhost', port=2828, app=None, bin=None,
                  baseurl=None, timeout=None, socket_timeout=DEFAULT_SOCKET_TIMEOUT,
                  startup_timeout=None, **instance_args):
@@ -990,7 +989,6 @@ class Marionette(object):
         finally:
             self.set_prefs(original_prefs)
 
-    @do_process_check
     def enforce_gecko_prefs(self, prefs):
         """
         Checks if the running instance has the given prefs. If not, it will kill the
@@ -1058,7 +1056,6 @@ class Marionette(object):
                 self.cleanup()
                 raise exc, 'Requested restart of the application was aborted', tb
 
-    @do_process_check
     def restart(self, clean=False, in_app=False):
         """
         This will terminate the currently running instance, and spawn a new instance
