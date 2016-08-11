@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test Background Suspended Video Fires 'ended' Event</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<p id="display">
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="text/javascript">
+"use strict";
+
+var manager = new MediaTestManager;
+
+startTest({
+  desc: "Test Background Suspended Video Fires 'ended' Event",
+  prefs: [
+    [ "media.test.setVisible", true ],
+    [ "media.suspend-bkgnd-video.enabled", true ],
+    // User a short delay to ensure video decode suspend happens before end
+    // of video.
+    [ "media.suspend-bkgnd-video.delay-ms", 1000 ]
+  ],
+  tests: [ { name: "gizmo.mp4" } ],
+  runTest: (test, token) => {
+    let v = appendVideoToDoc(test.name, token);
+    manager.started(token);
+
+    // This test checks that 'ended' event is received for videos with
+    // suspended video decoding. This is important for looping video logic
+    // handling in HTMLMediaElement.
+    waitUntilPlaying(v)
+      .then(() => testVideoSuspendsWhenHidden(v))
+      .then(() => waitUntilEnded(v))
+      .then(() => {
+        ok(v.currentTime >= v.duration, 'current time approximates duration.');
+        manager.finished(token);
+      });
+  }
+});
+</script>
+</pre>
