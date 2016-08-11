@@ -1368,31 +1368,25 @@ void MediaDecoderStateMachine::VisibilityChanged()
     }
 
     // Start video-only seek to the current time...
-    InitiateDecodeRecoverySeek(TrackSet(TrackInfo::kVideoTrack));
+    InitiateDecodeRecoverySeek();
   }
 }
 
-// InitiateDecodeRecoverySeek is responsible for setting up a seek using the
-// seek task for the following situations:
-// 1. When suspension of decoding for videos that are in
+// InitiateVideoDecodeRecoverySeek is responsible for setting up a video-only
+// seek using the seek task. When suspension of decoding for videos that are in
 // background tabs (ie. invisible) is enabled, the audio keeps playing and when
 // switching back to decoding video, it is highly desirable to not cause the
 // audio to pause as the video is seeked else there be a noticeable audio glitch
 // as the tab becomes visible.
-// 2. When there is a decoder limit set, suspended videos may be resumed and
-// require the seek to recover the original seek position for both audio and
-// video.
-void MediaDecoderStateMachine::InitiateDecodeRecoverySeek(TrackSet aTracks)
+void
+MediaDecoderStateMachine::InitiateDecodeRecoverySeek()
 {
   MOZ_ASSERT(OnTaskQueue());
-
   DECODER_LOG("InitiateDecodeRecoverySeek");
 
   SeekJob seekJob;
-  SeekTarget::Type seekTargetType = aTracks.contains(TrackInfo::kAudioTrack)
-                                    ? SeekTarget::Type::Accurate
-                                    : SeekTarget::Type::AccurateVideoOnly;
-  seekJob.mTarget = SeekTarget(GetMediaTime(), seekTargetType,
+  seekJob.mTarget = SeekTarget(GetMediaTime(),
+                               SeekTarget::Type::AccurateVideoOnly,
                                MediaDecoderEventVisibility::Suppressed);
 
   SetState(DECODER_STATE_SEEKING);
@@ -1414,7 +1408,7 @@ void MediaDecoderStateMachine::InitiateDecodeRecoverySeek(TrackSet aTracks)
 
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) {
-    Reset(aTracks);
+    Reset(TrackInfo::kVideoTrack);
   }
 
   // Do the seek.
