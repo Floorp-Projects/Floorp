@@ -283,7 +283,6 @@ struct GCSizes
 #define FOR_EACH_SIZE(macro) \
     macro(_, MallocHeap, marker) \
     macro(_, NonHeap,    nurseryCommitted) \
-    macro(_, NonHeap,    nurseryDecommitted) \
     macro(_, MallocHeap, nurseryMallocedBuffers) \
     macro(_, MallocHeap, storeBufferVals) \
     macro(_, MallocHeap, storeBufferCells) \

@@ -260,30 +260,6 @@ GCRuntime::checkIncrementalZoneState(ExclusiveContext* cx, T* t)
 
 // ///////////  Arena -> Thing Allocator  //////////////////////////////////////
 
-// After pulling a Chunk out of the empty chunks pool, we want to run the
-// background allocator to refill it. The code that takes Chunks does so under
-// the GC lock. We need to start the background allocation under the helper
-// threads lock. To avoid lock inversion we have to delay the start until after
-// we are outside the GC lock. This class handles that delay automatically.
-class MOZ_RAII js::gc::AutoMaybeStartBackgroundAllocation
-{
-    JSRuntime* runtime;
-
-  public:
-    AutoMaybeStartBackgroundAllocation()
-      : runtime(nullptr)
-    {}
-
-    void tryToStartBackgroundAllocation(JSRuntime* rt) {
-        runtime = rt;
-    }
-
-    ~AutoMaybeStartBackgroundAllocation() {
-        if (runtime)
-            runtime->gc.startBackgroundAllocTaskIfIdle();
-    }
-};
-
 void
 GCRuntime::startBackgroundAllocTaskIfIdle()
 {
@@ -547,7 +523,7 @@ GCRuntime::getOrAllocChunk(const AutoLockGC& lock,
     }
 
     if (wantBackgroundAllocation(lock))
-        maybeStartBackgroundAllocation.tryToStartBackgroundAllocation(rt);
+        maybeStartBackgroundAllocation.tryToStartBackgroundAllocation(rt->gc);
 
     return chunk;
 }

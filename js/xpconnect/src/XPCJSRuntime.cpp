@@ -2631,11 +2631,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
         "GC arenas in non-empty chunks that is decommitted, i.e. it takes up "
         "address space but no physical memory or swap space.");
 
-    REPORT_BYTES(rtPath2 + NS_LITERAL_CSTRING("runtime/gc/nursery-decommitted"),
-        KIND_NONHEAP, rtStats.runtime.gc.nurseryDecommitted,
-        "Memory allocated to the GC's nursery that is decommitted, i.e. it takes up "
-        "address space but no physical memory or swap space.");
-
     REPORT_GC_BYTES(rtPath + NS_LITERAL_CSTRING("gc-heap/unused-chunks"),
         rtStats.gcHeapUnusedChunks,
         "Empty GC chunks which will soon be released unless claimed for new "
