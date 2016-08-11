@@ -341,24 +341,74 @@ void
 ServoRestyleManager::RestyleForInsertOrChange(Element* aContainer,
                                               nsIContent* aChild)
 {
-  // XXX Emilio we can do way better.
-  PostRestyleEvent(aContainer, eRestyle_Subtree, nsChangeHint(0));
+  //
+  // XXXbholley: We need the Gecko logic here to correctly restyle for things
+  // like :empty and positional selectors (though we may not need to post
+  // restyle events as agressively as the Gecko path does).
+  //
+  // Bug 1297899 tracks this work.
+  //
+}
+
+void
+ServoRestyleManager::ContentInserted(Element* aContainer, nsIContent* aChild)
+{
+  if (!aContainer->ServoData().get()) {
+    // This can happen with display:none. Bug 1297249 tracks more investigation
+    // and assertions here.
+    return;
+  }
+
+  // Style the new subtree because we will most likely need it during subsequent
+  // frame construction. Bug 1298281 tracks deferring this work in the lazy
+  // frame construction case.
+  StyleSet()->StyleNewSubtree(aChild);
+
+  RestyleForInsertOrChange(aContainer, aChild);
 }
 
 void
 ServoRestyleManager::RestyleForAppend(Element* aContainer,
                                       nsIContent* aFirstNewContent)
 {
-  // XXX Emilio we can do way better.
-  PostRestyleEvent(aContainer, eRestyle_Subtree, nsChangeHint(0));
+  //
+  // XXXbholley: We need the Gecko logic here to correctly restyle for things
+  // like :empty and positional selectors (though we may not need to post
+  // restyle events as agressively as the Gecko path does).
+  //
+  // Bug 1297899 tracks this work.
+  //
 }
 
 void
-ServoRestyleManager::RestyleForRemove(Element* aContainer,
-                                      nsIContent* aOldChild,
-                                      nsIContent* aFollowingSibling)
+ServoRestyleManager::ContentAppended(Element* aContainer,
+                                     nsIContent* aFirstNewContent)
 {
-  NS_WARNING("stylo: ServoRestyleManager::RestyleForRemove not implemented");
+  if (!aContainer->ServoData().get()) {
+    // This can happen with display:none. Bug 1297249 tracks more investigation
+    // and assertions here.
+    return;
+  }
+
+  // Style the new subtree because we will most likely need it during subsequent
+  // frame construction. Bug 1298281 tracks deferring this work in the lazy
+  // frame construction case.
+  if (aFirstNewContent->GetNextSibling()) {
+    aContainer->SetHasDirtyDescendantsForServo();
+    StyleSet()->StyleNewChildren(aContainer);
+  } else {
+    StyleSet()->StyleNewSubtree(aFirstNewContent);
+  }
+
+  RestyleForAppend(aContainer, aFirstNewContent);
+}
+
+void
+ServoRestyleManager::ContentRemoved(Element* aContainer,
+                                    nsIContent* aOldChild,
+                                    nsIContent* aFollowingSibling)
+{
+  NS_WARNING("stylo: ServoRestyleManager::ContentRemoved not implemented");
 }
 
 nsresult
