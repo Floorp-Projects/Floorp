@@ -217,7 +217,11 @@ Narrator.prototype = {
       let tw = this._treeWalker;
       if (!this._isParagraphInView(tw.currentNode)) {
         tw.currentNode = tw.root;
-        while (tw.nextNode() && !this._isParagraphInView(tw.currentNode)) {}
+        while (tw.nextNode()) {
+          if (this._isParagraphInView(tw.currentNode)) {
+            break;
+          }
+        }
       }
       if (tw.currentNode == tw.root) {
         tw.nextNode();
