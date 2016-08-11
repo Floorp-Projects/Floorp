@@ -1493,6 +1493,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
   if (aHostname && aUsage == certificateUsageSSLServer) {
     srv = certVerifier->VerifySSLServerCert(nssCert,
                                             nullptr, // stapledOCSPResponse
+                                            nullptr, // sctsFromTLSExtension
                                             aTime,
                                             nullptr, // Assume no context
                                             aHostname,
@@ -1507,6 +1508,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
                                    resultChain,
                                    aFlags,
                                    nullptr, // stapledOCSPResponse
+                                   nullptr, // sctsFromTLSExtension
                                    &evOidPolicy);
   }
 
