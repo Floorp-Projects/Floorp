@@ -1357,10 +1357,12 @@ class DebugScopes
 #endif
 
     static DebugScopeObject* hasDebugScope(JSContext* cx, ScopeObject& scope);
-    static bool addDebugScope(JSContext* cx, ScopeObject& scope, DebugScopeObject& debugScope);
+    static bool addDebugScope(JSContext* cx, Handle<ScopeObject*> scope,
+                              Handle<DebugScopeObject*> debugScope);
 
     static DebugScopeObject* hasDebugScope(JSContext* cx, const ScopeIter& si);
-    static bool addDebugScope(JSContext* cx, const ScopeIter& si, DebugScopeObject& debugScope);
+    static bool addDebugScope(JSContext* cx, const ScopeIter& si,
+                              Handle<DebugScopeObject*> debugScope);
 
     static bool updateLiveScopes(JSContext* cx);
     static LiveScopeVal* hasLiveScope(ScopeObject& scope);
@@ -1614,14 +1616,8 @@ AnalyzeEntrainedVariables(JSContext* cx, HandleScript script);
 namespace JS {
 
 template <>
-struct DeletePolicy<js::DebugScopeObject>
-{
-    explicit DeletePolicy(JSRuntime* rt) : rt_(rt) {}
-    void operator()(const js::DebugScopeObject* ptr);
-
-  private:
-    JSRuntime* rt_;
-};
+struct DeletePolicy<js::DebugScopes> : public js::GCManagedDeletePolicy<js::DebugScopes>
+{};
 
 } // namespace JS
 
