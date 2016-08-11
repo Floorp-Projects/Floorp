@@ -309,7 +309,7 @@ ServoRestyleManager::ProcessPendingRestyles()
 
     if (root->IsDirtyForServo() || root->HasDirtyDescendantsForServo()) {
       mInStyleRefresh = true;
-      styleSet->RestyleSubtree(root);
+      styleSet->StyleDocument(/* aLeaveDirtyBits = */ true);
 
       // First do any queued-up frame creation. (see bugs 827239 and 997506).
       //
@@ -329,15 +329,10 @@ ServoRestyleManager::ProcessPendingRestyles()
     }
   }
 
-  mModifiedElements.Clear();
-
-  // NB: we restyle from the root element, but the document also gets the
-  // HAS_DIRTY_DESCENDANTS flag as part of the loop on PostRestyleEvent, and we
-  // use that to check we have pending restyles.
-  //
-  // Thus, they need to get cleared here.
   MOZ_ASSERT(!doc->IsDirtyForServo());
-  doc->UnsetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  MOZ_ASSERT(!doc->HasDirtyDescendantsForServo());
+
+  mModifiedElements.Clear();
 
   IncrementRestyleGeneration();
 }
