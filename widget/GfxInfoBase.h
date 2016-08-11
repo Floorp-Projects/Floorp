@@ -59,6 +59,8 @@ public:
   NS_IMETHOD GetFeatureLog(JSContext*, JS::MutableHandle<JS::Value>) override;
   NS_IMETHOD GetActiveCrashGuards(JSContext*, JS::MutableHandle<JS::Value>) override;
 
+  NS_IMETHOD Reset(const nsAString& aVendorID, const nsAString& aDeviceID) override;
+
   // Initialization function. If you override this, you must call this class's
   // version of Init first.
   // We need Init to be called separately from the constructor so we can

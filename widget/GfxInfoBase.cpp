@@ -576,6 +576,13 @@ GfxInfoBase::Init()
 }
 
 NS_IMETHODIMP
+GfxInfoBase::Reset(const nsAString& aVendorID, const nsAString& aDeviceID)
+{
+  NS_ABORT();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId, int32_t* aStatus)
 {
   int32_t blocklistAll = gfxPrefs::BlocklistAll();
