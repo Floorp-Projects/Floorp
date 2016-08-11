@@ -297,6 +297,9 @@ AudioNode::DisconnectFromOutputIfConnected(AudioNode& aDestination, uint32_t aOu
   WEB_AUDIO_API_LOG("%f: %s %u Disconnect()", Context()->CurrentTime(),
                     NodeType(), Id());
 
+  MOZ_ASSERT(aOutputIndex < mOutputNodes.Length());
+  MOZ_ASSERT(aInputIndex < aDestination.InputNodes().Length());
+
   // An upstream node may be starting to play on the graph thread, and the
   // engine for a downstream node may be sending a PlayingRefChangeHandler
   // ADDREF message to this (main) thread.  Wait for a round trip before
@@ -363,14 +366,18 @@ AudioNode::Disconnect(ErrorResult& aRv)
   for (int32_t outputIndex = mOutputNodes.Length() - 1; outputIndex >= 0; --outputIndex) {
     AudioNode* dest = mOutputNodes[outputIndex];
     for (int32_t inputIndex = dest->mInputNodes.Length() - 1; inputIndex >= 0; --inputIndex) {
-      DisconnectFromOutputIfConnected(*dest, outputIndex, inputIndex);
+      if (DisconnectFromOutputIfConnected(*dest, outputIndex, inputIndex)) {
+        break;
+      }
     }
   }
 
   for (int32_t outputIndex = mOutputParams.Length() - 1; outputIndex >= 0; --outputIndex) {
     AudioParam* dest = mOutputParams[outputIndex];
     for (int32_t inputIndex = dest->InputNodes().Length() - 1; inputIndex >= 0; --inputIndex) {
-      DisconnectFromParamIfConnected(*dest, outputIndex, inputIndex);
+      if (DisconnectFromParamIfConnected(*dest, outputIndex, inputIndex)) {
+        break;
+      }
     }
   }
 
@@ -391,7 +398,9 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
     for (int32_t inputIndex = dest->mInputNodes.Length() - 1; inputIndex >= 0; --inputIndex) {
       InputNode& input = dest->mInputNodes[inputIndex];
       if (input.mOutputPort == aOutput) {
-        DisconnectFromOutputIfConnected(*dest, outputIndex, inputIndex);
+        if (DisconnectFromOutputIfConnected(*dest, outputIndex, inputIndex)) {
+          break;
+        }
       }
     }
   }
@@ -401,7 +410,9 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
     for (int32_t inputIndex = dest->InputNodes().Length() - 1; inputIndex >= 0; --inputIndex) {
       const InputNode& input = dest->InputNodes()[inputIndex];
       if (input.mOutputPort == aOutput) {
-        DisconnectFromParamIfConnected(*dest, outputIndex, inputIndex);
+        if (DisconnectFromParamIfConnected(*dest, outputIndex, inputIndex)) {
+          break;
+        }
       }
     }
   }
@@ -447,7 +458,10 @@ AudioNode::Disconnect(AudioNode& aDestination, uint32_t aOutput, ErrorResult& aR
     for (int32_t inputIndex = aDestination.mInputNodes.Length() - 1; inputIndex >= 0; --inputIndex) {
       InputNode& input = aDestination.mInputNodes[inputIndex];
       if (input.mOutputPort == aOutput) {
-        wasConnected |= DisconnectFromOutputIfConnected(aDestination, outputIndex, inputIndex);
+        if (DisconnectFromOutputIfConnected(aDestination, outputIndex, inputIndex)) {
+          wasConnected = true;
+          break;
+        }
       }
     }
   }
@@ -502,7 +516,10 @@ AudioNode::Disconnect(AudioParam& aDestination, ErrorResult& aRv)
 
   for (int32_t outputIndex = mOutputParams.Length() - 1; outputIndex >= 0; --outputIndex) {
     for (int32_t inputIndex = aDestination.InputNodes().Length() - 1; inputIndex >= 0; --inputIndex) {
-        wasConnected |= DisconnectFromParamIfConnected(aDestination, outputIndex, inputIndex);
+        if (DisconnectFromParamIfConnected(aDestination, outputIndex, inputIndex)) {
+          wasConnected = true;
+          break;
+        }
     }
   }
 
@@ -526,7 +543,10 @@ AudioNode::Disconnect(AudioParam& aDestination, uint32_t aOutput, ErrorResult& a
     for (int32_t inputIndex = aDestination.InputNodes().Length() - 1; inputIndex >= 0; --inputIndex) {
       const InputNode& input = aDestination.InputNodes()[inputIndex];
       if (input.mOutputPort == aOutput) {
-        wasConnected |= DisconnectFromParamIfConnected(aDestination, outputIndex, inputIndex);
+        if (DisconnectFromParamIfConnected(aDestination, outputIndex, inputIndex)) {
+          wasConnected = true;
+          break;
+        }
       }
     }
   }
