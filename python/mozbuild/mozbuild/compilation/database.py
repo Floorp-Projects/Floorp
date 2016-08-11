@@ -7,13 +7,10 @@
 import os
 import types
 
-from mozbuild.base import MozbuildObject
 from mozbuild.compilation import util
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.data import (
     Sources,
-    HostSources,
-    UnifiedSources,
     GeneratedSources,
     DirectoryTraversal,
     Defines,
@@ -23,12 +20,9 @@ from mozbuild.frontend.data import (
     SimpleProgram,
 )
 from mozbuild.shellutil import (
-    split as shell_split,
     quote as shell_quote,
 )
 from mozbuild.util import expand_variables
-from mach.config import ConfigSettings
-from mach.logging import LoggingManager
 import mozpack.path as mozpath
 from collections import (
     defaultdict,
@@ -47,10 +41,6 @@ class CompileDBBackend(CommonBackend):
 
         # The cache for per-directory flags
         self._flags = {}
-
-        log_manager = LoggingManager()
-        self._cmd = MozbuildObject(self.environment.topsrcdir, ConfigSettings(),
-                                   log_manager, self.environment.topobjdir)
 
         self._envs = {}
         self._includes = defaultdict(list)
