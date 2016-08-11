@@ -57,7 +57,6 @@ class ObjectElements;
 class NativeObject;
 class Nursery;
 class HeapSlot;
-class ObjectGroup;
 
 void SetGCZeal(JSRuntime*, uint8_t, uint32_t);
 
@@ -173,13 +172,11 @@ class Nursery
     /* The maximum number of bytes allowed to reside in nursery buffers. */
     static const size_t MaxNurseryBufferSize = 1024;
 
-    typedef Vector<ObjectGroup*, 0, SystemAllocPolicy> ObjectGroupList;
-
     /*
      * Do a minor collection, optionally specifying a list to store groups which
      * should be pretenured afterwards.
      */
-    void collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList* pretenureGroups);
+    void collect(JSRuntime* rt, JS::gcreason::Reason reason);
 
     /*
      * Check if the thing at |*ref| in the Nursery has been forwarded. If so,
