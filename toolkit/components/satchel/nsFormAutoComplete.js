@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
-                                  "resource://gre/modules/FormHistory.jsm");
 
 function isAutocompleteDisabled(aField) {
     if (aField.autocomplete !== "") {
@@ -24,6 +22,141 @@ function isAutocompleteDisabled(aField) {
 
     return aField.form && aField.form.autocomplete === "off";
 }
+
+/**
+ * An abstraction to talk with the FormHistory database over
+ * the message layer. FormHistoryClient will take care of
+ * figuring out the most appropriate message manager to use,
+ * and what things to send.
+ *
+ * It is assumed that nsFormAutoComplete will only ever use
+ * one instance at a time, and will not attempt to perform more
+ * than one search request with the same instance at a time.
+ * However, nsFormAutoComplete might call remove() any number of
+ * times with the same instance of the client.
+ *
+ * @param Object with the following properties:
+ *
+ *        formField (DOM node):
+ *          A DOM node that we're requesting form history for.
+ *
+ *        inputName (string):
+ *          The name of the input to do the FormHistory look-up
+ *          with. If this is searchbar-history, then formField
+ *          needs to be null, otherwise constructing will throw.
+ */
+function FormHistoryClient({ formField, inputName }) {
+    if (formField && inputName != this.SEARCHBAR_ID) {
+        let window = formField.ownerDocument.defaultView;
+        let topDocShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDocShell)
+                             .sameTypeRootTreeItem
+                             .QueryInterface(Ci.nsIDocShell);
+        this.mm = topDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIContentFrameMessageManager);
+    } else {
+        if (inputName == this.SEARCHBAR_ID) {
+          if (formField) {
+              throw new Error("FormHistoryClient constructed with both a " +
+                              "formField and an inputName. This is not " +
+                              "supported, and only empty results will be " +
+                              "returned.");
+          }
+        }
+        this.mm = Services.cpmm;
+    }
+
+    this.inputName = inputName;
+    this.id = FormHistoryClient.nextRequestID++;
+}
+
+FormHistoryClient.prototype = {
+    SEARCHBAR_ID: "searchbar-history",
+
+    // It is assumed that nsFormAutoComplete only uses / cares about
+    // one FormHistoryClient at a time, and won't attempt to have
+    // multiple in-flight searches occurring with the same FormHistoryClient.
+    // We use an ID number per instantiated FormHistoryClient to make
+    // sure we only respond to messages that were meant for us.
+    id: 0,
+    callback: null,
+    inputName: "",
+    mm: null,
+
+    /**
+     * Query FormHistory for some results.
+     *
+     * @param searchString (string)
+     *        The string to search FormHistory for. See
+     *        FormHistory.getAutoCompleteResults.
+     * @param params (object)
+     *        An Object with search properties. See
+     *        FormHistory.getAutoCompleteResults.
+     * @param callback
+     *        A callback function that will take a single
+     *        argument (the found entries).
+     */
+    requestAutoCompleteResults(searchString, params, callback) {
+        this.mm.sendAsyncMessage("FormHistory:AutoCompleteSearchAsync", {
+            id: this.id,
+            searchString,
+            params,
+        });
+
+        this.mm.addMessageListener("FormHistory:AutoCompleteSearchResults",
+                                   this);
+        this.callback = callback;
+    },
+
+    /**
+     * Cancel an in-flight results request. This ensures that the
+     * callback that requestAutoCompleteResults was passed is never
+     * called from this FormHistoryClient.
+     */
+    cancel() {
+        this.clearListeners();
+    },
+
+    /**
+     * Remove an item from FormHistory.
+     *
+     * @param value (string)
+     *
+     *        The value to remove for this particular
+     *        field.
+     */
+    remove(value) {
+        this.mm.sendAsyncMessage("FormHistory:RemoveEntry", {
+            inputName: this.inputName,
+            value,
+        });
+    },
+
+    // Private methods
+
+    receiveMessage(msg) {
+        let { id, results } = msg.data;
+        if (id != this.id) {
+            return;
+        }
+        if (!this.callback) {
+            Cu.reportError("FormHistoryClient received message with no " +
+                           "callback");
+            return;
+        }
+        this.callback(results);
+        this.clearListeners();
+    },
+
+    clearListeners() {
+        this.mm.removeMessageListener("FormHistory:AutoCompleteSearchResults",
+                                      this);
+        this.callback = null;
+    },
+};
+
+FormHistoryClient.nextRequestID = 1;
+
 
 function FormAutoComplete() {
     this.init();
@@ -49,12 +182,12 @@ FormAutoComplete.prototype = {
     _boundaryWeight     : 25,
     _prefixWeight       : 5,
 
-    // Only one query is performed at a time, which will be stored in _pendingQuery
-    // while the query is being performed. It will be cleared when the query finishes,
-    // is cancelled, or an error occurs. If a new query occurs while one is already
-    // pending, the existing one is cancelled. The pending query will be an
-    // mozIStoragePendingStatement object.
-    _pendingQuery       : null,
+    // Only one query via FormHistoryClient is performed at a time, and the
+    // most recent FormHistoryClient which will be stored in _pendingClient
+    // while the query is being performed. It will be cleared when the query
+    // finishes, is cancelled, or an error occurs. If a new query occurs while
+    // one is already pending, the existing one is cancelled.
+    _pendingClient       : null,
 
     init : function() {
         // Preferences. Add observer so we get notified of changes.
@@ -163,9 +296,11 @@ FormAutoComplete.prototype = {
             aUntrimmedSearchString = "";
         }
 
+        let client = new FormHistoryClient({ formField: aField, inputName: aInputName });
+
         // If we have datalist results, they become our "empty" result.
         let emptyResult = aDatalistResult ||
-                          new FormAutoCompleteResult(FormHistory, [],
+                          new FormAutoCompleteResult(client, [],
                                                      aInputName,
                                                      aUntrimmedSearchString,
                                                      null);
@@ -280,7 +415,7 @@ FormAutoComplete.prototype = {
 
             // Start with an empty list.
             let result = aDatalistResult ?
-                new FormAutoCompleteResult(FormHistory, [], aInputName, aUntrimmedSearchString, null) :
+                new FormAutoCompleteResult(client, [], aInputName, aUntrimmedSearchString, null) :
                 emptyResult;
 
             let processEntry = (aEntries) => {
@@ -300,7 +435,7 @@ FormAutoComplete.prototype = {
                 }
             }
 
-            this.getAutoCompleteValues(aInputName, searchString, processEntry);
+            this.getAutoCompleteValues(client, aInputName, searchString, processEntry);
         }
     },
 
@@ -340,22 +475,23 @@ FormAutoComplete.prototype = {
     },
 
     stopAutoCompleteSearch : function () {
-        if (this._pendingQuery) {
-            this._pendingQuery.cancel();
-            this._pendingQuery = null;
+        if (this._pendingClient) {
+            this._pendingClient.cancel();
+            this._pendingClient = null;
         }
     },
 
     /*
      * Get the values for an autocomplete list given a search string.
      *
+     *  client - a FormHistoryClient instance to perform the search with
      *  fieldName - fieldname field within form history (the form input name)
      *  searchString - string to search for
      *  callback - called when the values are available. Passed an array of objects,
      *             containing properties for each result. The callback is only called
      *             when successful.
      */
-    getAutoCompleteValues : function (fieldName, searchString, callback) {
+    getAutoCompleteValues : function (client, fieldName, searchString, callback) {
         let params = {
             agedWeight:         this._agedWeight,
             bucketSize:         this._bucketSize,
@@ -368,30 +504,11 @@ FormAutoComplete.prototype = {
         }
 
         this.stopAutoCompleteSearch();
-
-        let results = [];
-        let processResults = {
-          handleResult: aResult => {
-            results.push(aResult);
-          },
-          handleError: aError => {
-            this.log("getAutocompleteValues failed: " + aError.message);
-          },
-          handleCompletion: aReason => {
-            // Check that the current query is still the one we created. Our
-            // query might have been canceled shortly before completing, in
-            // that case we don't want to call the callback anymore.
-            if (query == this._pendingQuery) {
-              this._pendingQuery = null;
-              if (!aReason) {
-                callback(results);
-              }
-            }
-          }
-        };
-
-        let query = FormHistory.getAutoCompleteResults(searchString, params, processResults);
-        this._pendingQuery = query;
+        client.requestAutoCompleteResults(searchString, params, (entries) => {
+            this._pendingClient = null;
+            callback(entries);
+        });
+        this._pendingClient = client;
     },
 
     /*
@@ -421,146 +538,13 @@ FormAutoComplete.prototype = {
 
 }; // end of FormAutoComplete implementation
 
-/**
- * FormAutoCompleteChild
- *
- * Implements the nsIFormAutoComplete interface in a child content process,
- * and forwards the auto-complete requests to the parent process which
- * also implements a nsIFormAutoComplete interface and has
- * direct access to the FormHistory database.
- */
-function FormAutoCompleteChild() {
-  this.init();
-}
-
-FormAutoCompleteChild.prototype = {
-    classID          : Components.ID("{c11c21b2-71c9-4f87-a0f8-5e13f50495fd}"),
-    QueryInterface   : XPCOMUtils.generateQI([Ci.nsIFormAutoComplete, Ci.nsISupportsWeakReference]),
-
-    _debug: false,
-    _enabled: true,
-    _pendingSearch: null,
-
-    /*
-     * init
-     *
-     * Initializes the content-process side of the FormAutoComplete component,
-     * and add a listener for the message that the parent process sends when
-     * a result is produced.
-     */
-    init: function() {
-      this._debug    = Services.prefs.getBoolPref("browser.formfill.debug");
-      this._enabled  = Services.prefs.getBoolPref("browser.formfill.enable");
-      this.log("init");
-    },
-
-    /*
-     * log
-     *
-     * Internal function for logging debug messages
-     */
-    log : function (message) {
-      if (!this._debug)
-        return;
-      dump("FormAutoCompleteChild: " + message + "\n");
-    },
-
-    autoCompleteSearchAsync : function (aInputName, aUntrimmedSearchString,
-                                        aField, aPreviousResult, aDatalistResult,
-                                        aListener) {
-      this.log("autoCompleteSearchAsync");
-
-      if (this._pendingSearch) {
-        this.stopAutoCompleteSearch();
-      }
-
-      let window = aField.ownerDocument.defaultView;
-
-      let rect = BrowserUtils.getElementBoundingScreenRect(aField);
-      let direction = window.getComputedStyle(aField).direction;
-      let mockField = {};
-      if (isAutocompleteDisabled(aField))
-          mockField.autocomplete = "off";
-      if (aField.maxLength > -1)
-          mockField.maxLength = aField.maxLength;
-
-      let datalistResult = aDatalistResult ?
-        { values: aDatalistResult.wrappedJSObject._values,
-          labels: aDatalistResult.wrappedJSObject._labels} :
-        null;
-
-      let topLevelDocshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDocShell)
-                                   .sameTypeRootTreeItem
-                                   .QueryInterface(Ci.nsIDocShell);
-
-      let mm = topLevelDocshell.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIContentFrameMessageManager);
-
-      mm.sendAsyncMessage("FormHistory:AutoCompleteSearchAsync", {
-        inputName: aInputName,
-        untrimmedSearchString: aUntrimmedSearchString,
-        mockField: mockField,
-        datalistResult: datalistResult,
-        previousSearchString: aPreviousResult && aPreviousResult.searchString.trim().toLowerCase(),
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-        direction: direction,
-      });
-
-      let search = this._pendingSearch = {};
-      let searchFinished = message => {
-        mm.removeMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
-
-        // Check whether stopAutoCompleteSearch() was called, i.e. the search
-        // was cancelled, while waiting for a result.
-        if (search != this._pendingSearch) {
-          return;
-        }
-        this._pendingSearch = null;
-
-        let result = new FormAutoCompleteResult(
-          null,
-          Array.from(message.data.results, res => ({ text: res })),
-          null,
-          aUntrimmedSearchString,
-          mm
-        );
-        if (aListener) {
-          aListener.onSearchCompletion(result);
-        }
-      }
-
-      mm.addMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
-      this.log("autoCompleteSearchAsync message was sent");
-    },
-
-    stopAutoCompleteSearch : function () {
-      this.log("stopAutoCompleteSearch");
-      this._pendingSearch = null;
-    },
-
-    stopControllingInput(aField) {
-      let window = aField.ownerDocument.defaultView;
-      let topLevelDocshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDocShell)
-                                   .sameTypeRootTreeItem
-                                   .QueryInterface(Ci.nsIDocShell);
-      let mm = topLevelDocshell.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIContentFrameMessageManager);
-      mm.sendAsyncMessage("FormAutoComplete:Disconnect");
-    }
-}; // end of FormAutoCompleteChild implementation
-
 // nsIAutoCompleteResult implementation
-function FormAutoCompleteResult(formHistory,
+function FormAutoCompleteResult(client,
                                 entries,
                                 fieldName,
                                 searchString,
                                 messageManager) {
-    this.formHistory = formHistory;
+    this.client = client;
     this.entries = entries;
     this.fieldName = fieldName;
     this.searchString = searchString;
@@ -572,7 +556,7 @@ FormAutoCompleteResult.prototype = {
                                             Ci.nsISupportsWeakReference]),
 
     // private
-    formHistory : null,
+    client : null,
     entries : null,
     fieldName : null,
 
@@ -638,26 +622,9 @@ FormAutoCompleteResult.prototype = {
         let [removedEntry] = this.entries.splice(index, 1);
 
         if (removeFromDB) {
-            if (this.formHistory) {
-                this.formHistory.update({ op: "remove",
-                                          fieldname: this.fieldName,
-                                          value: removedEntry.text });
-            } else {
-                this.messageManager.sendAsyncMessage("FormAutoComplete:RemoveEntry",
-                                                     { index });
-            }
+            this.client.remove(removedEntry.text);
         }
     }
 };
 
-
-if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT &&
-    Services.prefs.getBoolPref("browser.tabs.remote.desktopbehavior", false)) {
-  // Register the stub FormAutoComplete module in the child which will
-  // forward messages to the parent through the process message manager.
-  let component = [FormAutoCompleteChild];
-  this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
-} else {
-  let component = [FormAutoComplete];
-  this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
-}
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FormAutoComplete]);
