@@ -56,6 +56,10 @@ function makeMemoryTest(url, generator) {
   return Task.async(function* () {
     waitForExplicitFinish();
 
+    // It can take a long time to save a snapshot to disk, read the snapshots
+    // back from disk, and finally perform analyses on them.
+    requestLongerTimeout(2);
+
     const tab = yield addTab(url);
     const results = yield openMemoryPanel(tab);
 
