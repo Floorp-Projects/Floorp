@@ -8,6 +8,7 @@
 import mozunit
 import unittest
 import xpidl
+import header
 
 
 class TestParser(unittest.TestCase):
@@ -94,6 +95,20 @@ attribute long bar;
         self.assertTrue(isinstance(a, xpidl.Attribute))
         self.assertEqual("bar", a.name)
         self.assertEqual("long", a.type)
+
+    def testOverloadedVirtual(self):
+        i = self.p.parse("""[uuid(abc)] interface foo {
+attribute long bar;
+void getBar();
+};""", filename='f')
+        self.assertTrue(isinstance(i, xpidl.IDL))
+        class FdMock:
+            def write(self, s):
+                pass
+        try:
+            header.print_header(i, FdMock(), filename='f')
+        except Exception as e:
+            self.assertEqual(e.args[0], "Unexpected overloaded virtual method GetBar in interface foo")
 
 if __name__ == '__main__':
     mozunit.main()
