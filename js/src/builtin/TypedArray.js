@@ -1044,10 +1044,12 @@ function TypedArraySort(comparefn) {
     var isTypedArray = IsObject(obj) && IsTypedArray(obj);
 
     var buffer;
-    if (isTypedArray)
+    if (isTypedArray) {
         buffer = GetAttachedArrayBuffer(obj);
-    else
+    }
+    else {
         buffer = callFunction(CallTypedArrayMethodIfWrapped, obj, obj, "GetAttachedArrayBuffer");
+    }
 
     // Step 3.
     var len;
@@ -1065,15 +1067,15 @@ function TypedArraySort(comparefn) {
         } else if (IsInt8TypedArray(obj)) {
             return CountingSort(obj, len, true /* signed */);
         } else if (IsUint16TypedArray(obj)) {
-            return RadixSort(obj, len, 2 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, comparefn);
         } else if (IsInt16TypedArray(obj)) {
-            return RadixSort(obj, len, 2 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 2 /* nbytes */, true /* signed */, false /* floating */, comparefn);
         } else if (IsUint32TypedArray(obj)) {
-            return RadixSort(obj, len, 4 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, false /* signed */, false /* floating */, comparefn);
         } else if (IsInt32TypedArray(obj)) {
-            return RadixSort(obj, len, 4 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, false /* floating */, comparefn);
         } else if (IsFloat32TypedArray(obj)) {
-            return RadixSort(obj, len, 4 /* nbytes */, true /* signed */, true /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, true /* floating */, comparefn);
         }
     }
 
