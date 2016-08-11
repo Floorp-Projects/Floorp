@@ -657,7 +657,6 @@ menuitem.bookmark-item {
 /* ::::: primary toolbar buttons ::::: */
 
 %include ../shared/toolbarbuttons.inc.css
-%include ../shared/menupanel.inc.css
 
 @media (-moz-windows-theme: luna-silver) and (max-resolution: 1dppx) {
   :-moz-any(@primaryToolbarButtons@),
@@ -698,6 +697,28 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 :-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1:-moz-any(@primaryToolbarButtons@, .toolbarbutton-legacy-addon) > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon,
 #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   max-width: 18px;
+}
+
+%include ../shared/menupanel.inc.css
+
+@media (-moz-windows-default-theme) {
+  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-icon,
+  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+    filter: url(chrome://browser/skin/filters.svg#fill);
+    fill: currentColor;
+  }
+}
+
+@media not all and (-moz-windows-default-theme) {
+  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-icon,
+  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+  toolbaritem[cui-areatype="menu-panel"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon {
+    filter: url(chrome://browser/skin/filters.svg#fill);
+    fill: currentColor;
+    opacity: 0.7 !important; /* !important overrides .toolbarbutton-1[disabled=true] rule */
+  }
 }
 
 .findbar-button,

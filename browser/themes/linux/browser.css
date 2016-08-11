@@ -815,6 +815,15 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   opacity: 0.4;
 }
 
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+toolbaritem[cui-areatype="menu-panel"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon {
+  filter: url(chrome://browser/skin/filters.svg#fill);
+  fill: currentColor;
+  opacity: 0.7 !important; /* !important overrides .toolbarbutton-1[disabled=true] rule */
+}
+
 /* Fullscreen window controls */
 #window-controls {
   -moz-box-align: start;
