@@ -1739,9 +1739,6 @@ public:
 
   static JSContext *GetCurrentJSContext();
   static JSContext *GetCurrentJSContextForThread();
-  inline static JSContext *RootingCx() {
-    return mozilla::dom::danger::GetJSContext();
-  }
 
   /**
    * Case insensitive comparison between two strings. However it only ignores
