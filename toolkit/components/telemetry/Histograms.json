@@ -8086,7 +8086,7 @@
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
     "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
     "expires_in_version": "55",
-    "description": "Percentage of total time spent playing video while element is hidden. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2180'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
+    "description": "Percentage of total time spent playing video while element is hidden. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
     "high": 100,
@@ -8096,7 +8096,7 @@
   "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
     "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
     "expires_in_version": "55",
-    "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2180'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
+    "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
     "high": 100,
@@ -8106,7 +8106,7 @@
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
     "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
     "expires_in_version": "55",
-    "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2180'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
+    "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
@@ -8116,12 +8116,22 @@
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
     "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
     "expires_in_version": "55",
-    "description": "Maximum interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2180'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
+    "description": "Maximum interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
     "bug_numbers": [1289668]
+  },
+  "VIDEO_SUSPEND_RECOVERY_TIME_MS" : {
+    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
+    "expires_in_version": "55",
+    "description": "Time taken for a video to resume after decoding was suspended, in milliseconds. Keyed by audio presence, hw acceleration, and by height ranges (boundaries: 240. 480, 720, 1080, 2160), e.g.: 'V,0-240', 'AV(hw),2160+'; and 'All' will accumulate all percentages.",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "bug_numbers": [1294349]
   },
   "VIDEO_UNLOAD_STATE": {
     "alert_emails": ["ajones@mozilla.com"],
