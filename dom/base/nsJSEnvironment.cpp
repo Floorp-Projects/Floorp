@@ -421,12 +421,12 @@ class ScriptErrorEvent : public Runnable
 {
 public:
   ScriptErrorEvent(nsPIDOMWindowInner* aWindow,
-                   JSContext* aContext,
+                   JS::RootingContext* aRootingCx,
                    xpc::ErrorReport* aReport,
                    JS::Handle<JS::Value> aError)
     : mWindow(aWindow)
     , mReport(aReport)
-    , mError(aContext, aError)
+    , mError(aRootingCx, aError)
   {}
 
   NS_IMETHOD Run() override
@@ -495,10 +495,10 @@ bool ScriptErrorEvent::sHandlingScriptError = false;
 namespace xpc {
 
 void
-DispatchScriptErrorEvent(nsPIDOMWindowInner *win, JSContext *cx, xpc::ErrorReport *xpcReport,
-                         JS::Handle<JS::Value> exception)
+DispatchScriptErrorEvent(nsPIDOMWindowInner *win, JS::RootingContext* rootingCx,
+                         xpc::ErrorReport *xpcReport, JS::Handle<JS::Value> exception)
 {
-  nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, cx, xpcReport, exception));
+  nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, rootingCx, xpcReport, exception));
 }
 
 } /* namespace xpc */
