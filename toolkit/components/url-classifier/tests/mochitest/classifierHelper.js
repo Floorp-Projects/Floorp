@@ -23,6 +23,17 @@ classifierHelper._updates = [];
 // removed after test complete.
 classifierHelper._updatesToCleanup = [];
 
+classifierHelper._initsCB = [];
+
+// This function return a Promise, promise is resolved when SafeBrowsing.jsm
+// is initialized.
+classifierHelper.waitForInit = function() {
+  return new Promise(function(resolve, reject) {
+    classifierHelper._initsCB.push(resolve);
+    gScript.sendAsyncMessage("waitForInit");
+  });
+}
+
 // This function is used to allow completion for specific "list",
 // some lists like "test-malware-simple" is default disabled to ask for complete.
 // "list" is the db we would like to allow it
@@ -115,6 +126,17 @@ classifierHelper.resetDB = function() {
   });
 };
 
+classifierHelper.reloadDatabase = function() {
+  return new Promise(function(resolve, reject) {
+    gScript.addMessageListener("reloadSuccess", function handler() {
+      gScript.removeMessageListener('reloadSuccess', handler);
+      resolve();
+    });
+
+    gScript.sendAsyncMessage("doReload");
+  });
+}
+
 classifierHelper._update = function(testUpdate, onsuccess, onerror) {
   // Queue the task if there is still an on-going update
   classifierHelper._updates.push({"data": testUpdate,
@@ -147,9 +169,17 @@ classifierHelper._updateError = function(errorCode) {
   }
 };
 
+classifierHelper._inited = function() {
+  classifierHelper._initsCB.forEach(function (cb) {
+    cb();
+  });
+  classifierHelper._initsCB = [];
+};
+
 classifierHelper._setup = function() {
   gScript.addMessageListener("updateSuccess", classifierHelper._updateSuccess);
   gScript.addMessageListener("updateError", classifierHelper._updateError);
+  gScript.addMessageListener("safeBrowsingInited", classifierHelper._inited);
 
   // cleanup will be called at end of each testcase to remove all the urls added to database.
   SimpleTest.registerCleanupFunction(classifierHelper._cleanup);
