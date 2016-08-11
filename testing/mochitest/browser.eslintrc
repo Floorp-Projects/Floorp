@@ -35,6 +35,7 @@
     "requestLongerTimeout": false,
     "SimpleTest": false,
     "SpecialPowers": false,
+    "TestUtils": false,
     "thisTestLeaksUncaughtRejectionsAndShouldBeFixed": false,
     "todo": false,
     "todo_is": false,
