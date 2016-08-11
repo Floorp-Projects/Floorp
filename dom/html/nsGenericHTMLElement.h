@@ -95,7 +95,6 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::dir, aDir, aError);
   }
-  already_AddRefed<nsDOMStringMap> Dataset();
   bool Hidden() const
   {
     return GetBoolAttr(nsGkAtoms::hidden);
@@ -279,8 +278,6 @@ public:
   virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() override;
   virtual bool UndoScope() override;
   virtual void SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError) override;
-  // Callback for destructor of of dataset to ensure to null out weak pointer.
-  nsresult ClearDataset();
 
   /**
    * Get width and height, using given image request if attributes are unset.

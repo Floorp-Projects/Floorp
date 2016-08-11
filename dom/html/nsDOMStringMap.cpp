@@ -46,7 +46,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMStringMap)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMStringMap)
 
-nsDOMStringMap::nsDOMStringMap(nsGenericHTMLElement* aElement)
+nsDOMStringMap::nsDOMStringMap(Element* aElement)
   : mElement(aElement),
     mRemovingProp(false)
 {
