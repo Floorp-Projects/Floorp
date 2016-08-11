@@ -731,6 +731,7 @@ nsIPresShell::FrameSelection()
 static bool sSynthMouseMove = true;
 static uint32_t sNextPresShellId;
 static bool sPointerEventEnabled = true;
+static bool sPointerEventImplicitCapture = false;
 static bool sAccessibleCaretEnabled = false;
 static bool sAccessibleCaretOnTouch = false;
 static bool sBeforeAfterKeyboardEventEnabled = false;
@@ -808,7 +809,13 @@ PresShell::PresShell()
                                  "dom.w3c_pointer_events.enabled", true);
     addedPointerEventEnabled = true;
   }
-
+  static bool addedPointerEventImplicitCapture = false;
+  if (!addedPointerEventImplicitCapture) {
+    Preferences::AddBoolVarCache(&sPointerEventImplicitCapture,
+                                 "dom.w3c_pointer_events.implicit_capture",
+                                 true);
+    addedPointerEventImplicitCapture = true;
+  }
   mPaintingIsFrozen = false;
   mHasCSSBackgroundColor = true;
   mIsLastChromeOnlyEscapeKeyConsumed = false;
@@ -7690,6 +7697,19 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // Prevent application crashes, in case damaged frame.
         if (!frameKeeper.IsAlive()) {
           frame = nullptr;
+        }
+        // Implicit pointer capture for touch
+        if (sPointerEventImplicitCapture &&
+            pointerEvent->mMessage == ePointerDown &&
+            pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+          nsCOMPtr<nsIContent> targetContent;
+          frame->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
+          while (targetContent && !targetContent->IsElement()) {
+            targetContent = targetContent->GetParent();
+          }
+          if (targetContent) {
+            SetPointerCapturingContent(pointerEvent->pointerId, targetContent);
+          }
         }
       }
     }
