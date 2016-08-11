@@ -539,6 +539,8 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     AutoDisableProxyCheck disableStrictProxyChecking(rt);
     mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
 
+    size_t initialUsedSpace = position() - start();
+
     // Move objects pointed to by roots from the nursery to the major heap.
     TenuringTracer mover(rt, this);
 
@@ -636,12 +638,14 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     static const double GrowThreshold   = 0.05;
     static const double ShrinkThreshold = 0.01;
     maybeStartProfile(ProfileKey::Resize);
-    double promotionRate = mover.tenuredSize / double(allocationEnd() - start());
-    if (promotionRate > GrowThreshold)
-        growAllocableSpace();
-    else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
-        shrinkAllocableSpace();
-    previousPromotionRate_ = promotionRate;
+    double promotionRate = mover.tenuredSize / double(initialUsedSpace);
+    if (initialUsedSpace > NurseryChunkUsableSize / 2) {
+        if (reason == JS::gcreason::OUT_OF_NURSERY && promotionRate > GrowThreshold)
+            growAllocableSpace();
+        else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
+            shrinkAllocableSpace();
+        previousPromotionRate_ = promotionRate;
+    }
     maybeEndProfile(ProfileKey::Resize);
 
     // If we are promoting the nursery, or exhausted the store buffer with
