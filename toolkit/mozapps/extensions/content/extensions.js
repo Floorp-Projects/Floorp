@@ -202,18 +202,9 @@ function loadView(aViewId) {
 }
 
 function isCorrectlySigned(aAddon) {
-  // Temporary add-ons do not require signing.
-  if (aAddon.scope == AddonManager.SCOPE_TEMPORARY)
-      return true;
-  // On UNIX platforms except OSX, an additional location for system add-ons
-  // exists in /usr/{lib,share}/mozilla/extensions. Add-ons installed there
-  // do not require signing either.
-  if (aAddon.scope == AddonManager.SCOPE_SYSTEM &&
-      Services.appinfo.OS != "Darwin")
-    return true;
-  if (aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING)
-    return false;
-  return true;
+  // Add-ons without an "isCorrectlySigned" property are correctly signed as
+  // they aren't the correct type for signing.
+  return aAddon.isCorrectlySigned !== false;
 }
 
 function isDiscoverEnabled() {
