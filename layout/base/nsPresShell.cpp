@@ -4327,7 +4327,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
     // because it can be the case that the container is a ShadowRoot
     // which is a document fragment.
     mPresContext->RestyleManager()->
-      RestyleForAppend(aContainer->AsElement(), aFirstNewContent);
+      ContentAppended(aContainer->AsElement(), aFirstNewContent);
   }
 
   mFrameConstructor->ContentAppended(aContainer, aFirstNewContent, true);
@@ -4363,7 +4363,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
     // because it can be the case that the container is a ShadowRoot
     // which is a document fragment.
     mPresContext->RestyleManager()->
-      RestyleForInsertOrChange(aContainer->AsElement(), aChild);
+      ContentInserted(aContainer->AsElement(), aChild);
   }
 
   mFrameConstructor->ContentInserted(aContainer, aChild, nullptr, true);
@@ -4411,7 +4411,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 
   if (aContainer && aContainer->IsElement()) {
     mPresContext->RestyleManager()->
-      RestyleForRemove(aContainer->AsElement(), aChild, oldNextSibling);
+      ContentRemoved(aContainer->AsElement(), aChild, oldNextSibling);
   }
 
   // After removing aChild from tree we should save information about live ancestor

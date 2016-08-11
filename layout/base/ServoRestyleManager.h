@@ -51,13 +51,19 @@ public:
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                     nsRestyleHint aRestyleHint);
   void ProcessPendingRestyles();
+
+  void ContentInserted(dom::Element* aContainer, nsIContent* aChild);
+  void ContentAppended(dom::Element* aContainer,
+                       nsIContent* aFirstNewContent);
+  void ContentRemoved(dom::Element* aContainer,
+                      nsIContent* aOldChild,
+                      nsIContent* aFollowingSibling);
+
   void RestyleForInsertOrChange(dom::Element* aContainer,
                                 nsIContent* aChild);
   void RestyleForAppend(dom::Element* aContainer,
                         nsIContent* aFirstNewContent);
-  void RestyleForRemove(dom::Element* aContainer,
-                        nsIContent* aOldChild,
-                        nsIContent* aFollowingSibling);
+
   nsresult ContentStateChanged(nsIContent* aContent,
                                EventStates aStateMask);
   void AttributeWillChange(dom::Element* aElement,
