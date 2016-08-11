@@ -500,6 +500,14 @@ NetworkResponseListener.prototype = {
    * Parse security state of this request and report it to the client.
    */
   _getSecurityInfo: DevToolsUtils.makeInfallible(function () {
+    // Many properties of the securityInfo (e.g., the server certificate or HPKP
+    // status) are not available in the content process and can't be even touched safely,
+    // because their C++ getters trigger assertions. This function is called in content
+    // process for synthesized responses from service workers, in the parent otherwise.
+    if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
+      return;
+    }
+
     // Take the security information from the original nsIHTTPChannel instead of
     // the nsIRequest received in onStartRequest. If response to this request
     // was a redirect from http to https, the request object seems to contain
