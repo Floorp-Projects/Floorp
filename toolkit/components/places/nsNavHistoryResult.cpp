@@ -2846,7 +2846,8 @@ nsNavHistoryQueryResultNode::OnItemAdded(int64_t aItemId,
                                          const nsACString& aTitle,
                                          PRTime aDateAdded,
                                          const nsACString& aGUID,
-                                         const nsACString& aParentGUID)
+                                         const nsACString& aParentGUID,
+                                         uint16_t aSource)
 {
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
       mLiveUpdate != QUERYUPDATE_SIMPLE &&  mLiveUpdate != QUERYUPDATE_TIME) {
@@ -2864,7 +2865,8 @@ nsNavHistoryQueryResultNode::OnItemRemoved(int64_t aItemId,
                                            uint16_t aItemType,
                                            nsIURI* aURI,
                                            const nsACString& aGUID,
-                                           const nsACString& aParentGUID)
+                                           const nsACString& aParentGUID,
+                                           uint16_t aSource)
 {
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
       mLiveUpdate != QUERYUPDATE_SIMPLE && mLiveUpdate != QUERYUPDATE_TIME) {
@@ -2885,7 +2887,8 @@ nsNavHistoryQueryResultNode::OnItemChanged(int64_t aItemId,
                                            int64_t aParentId,
                                            const nsACString& aGUID,
                                            const nsACString& aParentGUID,
-                                           const nsACString& aOldValue)
+                                           const nsACString& aOldValue,
+                                           uint16_t aSource)
 {
   // History observers should not get OnItemChanged
   // but should get the corresponding history notifications instead.
@@ -2932,7 +2935,7 @@ nsNavHistoryQueryResultNode::OnItemChanged(int64_t aItemId,
                                                aIsAnnotationProperty,
                                                aNewValue, aLastModified,
                                                aItemType, aParentId, aGUID,
-                                               aParentGUID, aOldValue);
+                                               aParentGUID, aOldValue, aSource);
 }
 
 NS_IMETHODIMP
@@ -2962,7 +2965,8 @@ nsNavHistoryQueryResultNode::OnItemMoved(int64_t aFolder,
                                          uint16_t aItemType,
                                          const nsACString& aGUID,
                                          const nsACString& aOldParentGUID,
-                                         const nsACString& aNewParentGUID)
+                                         const nsACString& aNewParentGUID,
+                                         uint16_t aSource)
 {
   // 1. The query cannot be affected by the item's position
   // 2. For the time being, we cannot optimize this not to update
@@ -3533,7 +3537,8 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
                                           const nsACString& aTitle,
                                           PRTime aDateAdded,
                                           const nsACString& aGUID,
-                                          const nsACString& aParentGUID)
+                                          const nsACString& aParentGUID,
+                                          uint16_t aSource)
 {
   MOZ_ASSERT(aParentFolder == mTargetFolderItemId, "Got wrong bookmark update");
 
@@ -3638,7 +3643,8 @@ nsNavHistoryFolderResultNode::OnItemRemoved(int64_t aItemId,
                                             uint16_t aItemType,
                                             nsIURI* aURI,
                                             const nsACString& aGUID,
-                                            const nsACString& aParentGUID)
+                                            const nsACString& aParentGUID,
+                                            uint16_t aSource)
 {
   // Folder shortcuts should not be notified removal of the target folder.
   MOZ_ASSERT_IF(mItemId != mTargetFolderItemId, aItemId != mTargetFolderItemId);
@@ -3698,7 +3704,8 @@ nsNavHistoryResultNode::OnItemChanged(int64_t aItemId,
                                       int64_t aParentId,
                                       const nsACString& aGUID,
                                       const nsACString& aParentGUID,
-                                      const nsACString& aOldValue)
+                                      const nsACString& aOldValue,
+                                      uint16_t aSource)
 {
   if (aItemId != mItemId)
     return NS_OK;
@@ -3789,7 +3796,8 @@ nsNavHistoryFolderResultNode::OnItemChanged(int64_t aItemId,
                                             int64_t aParentId,
                                             const nsACString& aGUID,
                                             const nsACString& aParentGUID,
-                                            const nsACString& aOldValue)
+                                            const nsACString& aOldValue,
+                                            uint16_t aSource)
 {
   RESTART_AND_RETURN_IF_ASYNC_PENDING();
 
@@ -3797,7 +3805,7 @@ nsNavHistoryFolderResultNode::OnItemChanged(int64_t aItemId,
                                                aIsAnnotationProperty,
                                                aNewValue, aLastModified,
                                                aItemType, aParentId, aGUID,
-                                               aParentGUID, aOldValue);
+                                               aParentGUID, aOldValue, aSource);
 }
 
 /**
@@ -3888,7 +3896,8 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
                                           uint16_t aItemType,
                                           const nsACString& aGUID,
                                           const nsACString& aOldParentGUID,
-                                          const nsACString& aNewParentGUID)
+                                          const nsACString& aNewParentGUID,
+                                          uint16_t aSource)
 {
   NS_ASSERTION(aOldParent == mTargetFolderItemId || aNewParent == mTargetFolderItemId,
                "Got a bookmark message that doesn't belong to us");
@@ -3950,12 +3959,12 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
     }
     if (aOldParent == mTargetFolderItemId) {
       OnItemRemoved(aItemId, aOldParent, aOldIndex, aItemType, itemURI,
-                    aGUID, aOldParentGUID);
+                    aGUID, aOldParentGUID, nsINavBookmarksService::SOURCE_DEFAULT);
     }
     if (aNewParent == mTargetFolderItemId) {
       OnItemAdded(aItemId, aNewParent, aNewIndex, aItemType, itemURI, itemTitle,
                   RoundedPRNow(), // This is a dummy dateAdded, not the real value.
-                  aGUID, aNewParentGUID);
+                  aGUID, aNewParentGUID, nsINavBookmarksService::SOURCE_DEFAULT);
     }
   }
   return NS_OK;
@@ -4434,22 +4443,23 @@ nsNavHistoryResult::OnItemAdded(int64_t aItemId,
                                 const nsACString& aTitle,
                                 PRTime aDateAdded,
                                 const nsACString& aGUID,
-                                const nsACString& aParentGUID)
+                                const nsACString& aParentGUID,
+                                uint16_t aSource)
 {
   NS_ENSURE_ARG(aItemType != nsINavBookmarksService::TYPE_BOOKMARK ||
                 aURI);
 
   ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aParentId,
     OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
-                aGUID, aParentGUID)
+                aGUID, aParentGUID, aSource)
   );
   ENUMERATE_HISTORY_OBSERVERS(
     OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
-                aGUID, aParentGUID)
+                aGUID, aParentGUID, aSource)
   );
   ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
     OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
-                aGUID, aParentGUID)
+                aGUID, aParentGUID, aSource)
   );
   return NS_OK;
 }
@@ -4462,20 +4472,21 @@ nsNavHistoryResult::OnItemRemoved(int64_t aItemId,
                                   uint16_t aItemType,
                                   nsIURI* aURI,
                                   const nsACString& aGUID,
-                                  const nsACString& aParentGUID)
+                                  const nsACString& aParentGUID,
+                                  uint16_t aSource)
 {
   NS_ENSURE_ARG(aItemType != nsINavBookmarksService::TYPE_BOOKMARK ||
                 aURI);
 
   ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aParentId,
       OnItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGUID,
-                    aParentGUID));
+                    aParentGUID, aSource));
   ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
       OnItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGUID,
-                    aParentGUID));
+                    aParentGUID, aSource));
   ENUMERATE_HISTORY_OBSERVERS(
       OnItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGUID,
-                    aParentGUID));
+                    aParentGUID, aSource));
   return NS_OK;
 }
 
@@ -4490,12 +4501,13 @@ nsNavHistoryResult::OnItemChanged(int64_t aItemId,
                                   int64_t aParentId,
                                   const nsACString& aGUID,
                                   const nsACString& aParentGUID,
-                                  const nsACString& aOldValue)
+                                  const nsACString& aOldValue,
+                                  uint16_t aSource)
 {
   ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
     OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aNewValue,
                   aLastModified, aItemType, aParentId, aGUID, aParentGUID,
-                  aOldValue));
+                  aOldValue, aSource));
 
   // Note: folder-nodes set their own bookmark observer only once they're
   // opened, meaning we cannot optimize this code path for changes done to
@@ -4519,7 +4531,7 @@ nsNavHistoryResult::OnItemChanged(int64_t aItemId,
           folder->StartIncrementalUpdate()) {
         node->OnItemChanged(aItemId, aProperty, aIsAnnotationProperty,
                             aNewValue, aLastModified, aItemType, aParentId,
-                            aGUID, aParentGUID, aOldValue);
+                            aGUID, aParentGUID, aOldValue, aSource);
       }
     }
   }
@@ -4570,25 +4582,26 @@ nsNavHistoryResult::OnItemMoved(int64_t aItemId,
                                 uint16_t aItemType,
                                 const nsACString& aGUID,
                                 const nsACString& aOldParentGUID,
-                                const nsACString& aNewParentGUID)
+                                const nsACString& aNewParentGUID,
+                                uint16_t aSource)
 {
   ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aOldParent,
       OnItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex,
-                  aItemType, aGUID, aOldParentGUID, aNewParentGUID));
+                  aItemType, aGUID, aOldParentGUID, aNewParentGUID, aSource));
   if (aNewParent != aOldParent) {
     ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aNewParent,
         OnItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex,
-                    aItemType, aGUID, aOldParentGUID, aNewParentGUID));
+                    aItemType, aGUID, aOldParentGUID, aNewParentGUID, aSource));
   }
   ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnItemMoved(aItemId, aOldParent, aOldIndex,
                                                 aNewParent, aNewIndex,
                                                 aItemType, aGUID,
                                                 aOldParentGUID,
-                                                aNewParentGUID));
+                                                aNewParentGUID, aSource));
   ENUMERATE_HISTORY_OBSERVERS(OnItemMoved(aItemId, aOldParent, aOldIndex,
                                           aNewParent, aNewIndex, aItemType,
                                           aGUID, aOldParentGUID,
-                                          aNewParentGUID));
+                                          aNewParentGUID, aSource));
   return NS_OK;
 }
 
