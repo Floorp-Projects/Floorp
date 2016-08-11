@@ -583,7 +583,12 @@ Toolbox.prototype = {
       ["forceReload2", true]
     ].forEach(([id, force]) => {
       let key = toolboxStrings("toolbox." + id + ".key");
-      shortcuts.on(key, this.reloadTarget.bind(this, force));
+      shortcuts.on(key, (name, event) => {
+        this.reloadTarget(force);
+
+        // Prevent Firefox shortcuts from reloading the page
+        event.preventDefault();
+      });
     });
   },
 
