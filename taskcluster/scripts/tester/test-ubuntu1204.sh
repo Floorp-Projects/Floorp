@@ -22,9 +22,7 @@ echo "running as" $(id)
 : mozharness args               "${@}"
 
 set -v
-
-mkdir -p ${WORKSPACE}
-cd ${WORKSPACE}
+cd $WORKSPACE
 
 fail() {
     echo # make sure error message is on a new line
