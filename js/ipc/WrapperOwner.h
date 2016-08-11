@@ -24,7 +24,7 @@ class WrapperOwner : public virtual JavaScriptShared
                        mozilla::ipc::IProtocol>::ActorDestroyReason
            ActorDestroyReason;
 
-    explicit WrapperOwner(JSRuntime* rt);
+    explicit WrapperOwner(JSContext* cx);
     bool init();
 
     // Standard internal methods.

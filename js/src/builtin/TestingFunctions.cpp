@@ -1655,7 +1655,7 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
     JS::ProfilingFrameIterator::RegisterState state;
     uint32_t physicalFrameNo = 0;
     const unsigned propAttrs = JSPROP_ENUMERATE;
-    for (JS::ProfilingFrameIterator i(cx->runtime(), state); !i.done(); ++i, ++physicalFrameNo) {
+    for (JS::ProfilingFrameIterator i(cx, state); !i.done(); ++i, ++physicalFrameNo) {
         MOZ_ASSERT(i.stackAddress() != nullptr);
 
         // Array holding all inline frames in a single physical jit stack frame.

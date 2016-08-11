@@ -21,7 +21,7 @@ namespace jsipc {
 class WrapperAnswer : public virtual JavaScriptShared
 {
   public:
-    explicit WrapperAnswer(JSRuntime* rt) : JavaScriptShared(rt) {}
+    explicit WrapperAnswer(JSContext* cx) : JavaScriptShared(cx) {}
 
     bool RecvPreventExtensions(const ObjectId& objId, ReturnStatus* rs);
     bool RecvGetPropertyDescriptor(const ObjectId& objId, const JSIDVariant& id,

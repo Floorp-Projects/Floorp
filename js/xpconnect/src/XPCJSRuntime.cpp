@@ -1628,8 +1628,8 @@ ReloadPrefsCallback(const char* pref, void* data)
 XPCJSRuntime::~XPCJSRuntime()
 {
     // Elsewhere we abort immediately if XPCJSRuntime initialization fails.
-    // Therefore the runtime must be non-null.
-    MOZ_ASSERT(MaybeRuntime());
+    // Therefore the context must be non-null.
+    MOZ_ASSERT(MaybeContext());
 
     // This destructor runs before ~CycleCollectedJSRuntime, which does the
     // actual JS_DestroyRuntime() call. But destroying the runtime triggers
@@ -1690,7 +1690,7 @@ XPCJSRuntime::~XPCJSRuntime()
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the runtime is gone
     if (PseudoStack* stack = mozilla_get_pseudo_stack())
-        stack->sampleRuntime(nullptr);
+        stack->sampleContext(nullptr);
 #endif
 
     Preferences::UnregisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
@@ -1790,12 +1790,6 @@ xpc::GetCurrentCompartmentName(JSContext* cx, nsCString& name)
     GetCompartmentName(compartment, name, &anonymizeID, false);
 }
 
-JSRuntime*
-xpc::GetJSRuntime()
-{
-    return XPCJSRuntime::Get()->Runtime();
-}
-
 void
 xpc::AddGCCallback(xpcGCCallback cb)
 {
@@ -1811,7 +1805,7 @@ xpc::RemoveGCCallback(xpcGCCallback cb)
 static int64_t
 JSMainRuntimeGCHeapDistinguishedAmount()
 {
-    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    JSContext* cx = danger::GetJSContext();
     return int64_t(JS_GetGCParameter(cx, JSGC_TOTAL_CHUNKS)) *
            js::gc::ChunkSize;
 }
@@ -1819,22 +1813,22 @@ JSMainRuntimeGCHeapDistinguishedAmount()
 static int64_t
 JSMainRuntimeTemporaryPeakDistinguishedAmount()
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    return JS::PeakSizeOfTemporary(rt);
+    JSContext* cx = danger::GetJSContext();
+    return JS::PeakSizeOfTemporary(cx);
 }
 
 static int64_t
 JSMainRuntimeCompartmentsSystemDistinguishedAmount()
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    return JS::SystemCompartmentCount(rt);
+    JSContext* cx = danger::GetJSContext();
+    return JS::SystemCompartmentCount(cx);
 }
 
 static int64_t
 JSMainRuntimeCompartmentsUserDistinguishedAmount()
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    return JS::UserCompartmentCount(rt);
+    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    return JS::UserCompartmentCount(cx);
 }
 
 class JSMainRuntimeTemporaryPeakReporter final : public nsIMemoryReporter
@@ -3442,14 +3436,12 @@ XPCJSRuntime::Initialize()
       return rv;
     }
 
-    MOZ_ASSERT(Runtime());
-    JSRuntime* runtime = Runtime();
+    MOZ_ASSERT(Context());
+    JSContext* cx = Context();
 
-    JSContext* cx = JS_GetContext(runtime);
-
-    mUnprivilegedJunkScope.init(runtime, nullptr);
-    mPrivilegedJunkScope.init(runtime, nullptr);
-    mCompilationScope.init(runtime, nullptr);
+    mUnprivilegedJunkScope.init(cx, nullptr);
+    mPrivilegedJunkScope.init(cx, nullptr);
+    mCompilationScope.init(cx, nullptr);
 
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
@@ -3554,7 +3546,7 @@ XPCJSRuntime::Initialize()
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);
 #ifdef MOZ_ENABLE_PROFILER_SPS
     if (PseudoStack* stack = mozilla_get_pseudo_stack())
-        stack->sampleRuntime(runtime);
+        stack->sampleContext(cx);
 #endif
     JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryCallback);
     js::SetActivityCallback(cx, ActivityCallback, this);
@@ -3618,7 +3610,7 @@ XPCJSRuntime::newXPCJSRuntime()
         return nullptr;
     }
 
-    if (self->Runtime()                         &&
+    if (self->Context()                         &&
         self->GetMultiCompartmentWrappedJSMap() &&
         self->GetWrappedJSClassMap()            &&
         self->GetIID2NativeInterfaceMap()       &&
@@ -3761,7 +3753,6 @@ XPCJSRuntime::DebugDump(int16_t depth)
     depth--;
     XPC_LOG_ALWAYS(("XPCJSRuntime @ %x", this));
         XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mJSRuntime @ %x", Runtime()));
         XPC_LOG_ALWAYS(("mJSContext @ %x", Context()));
 
         XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %x with %d wrapperclasses(s)",

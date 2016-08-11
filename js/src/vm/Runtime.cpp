@@ -887,25 +887,25 @@ js::CurrentThreadCanAccessZone(Zone* zone)
 }
 
 JS_FRIEND_API(void)
-JS::UpdateJSRuntimeProfilerSampleBufferGen(JSRuntime* runtime, uint32_t generation,
+JS::UpdateJSContextProfilerSampleBufferGen(JSContext* cx, uint32_t generation,
                                            uint32_t lapCount)
 {
-    runtime->setProfilerSampleBufferGen(generation);
-    runtime->updateProfilerSampleBufferLapCount(lapCount);
+    cx->setProfilerSampleBufferGen(generation);
+    cx->updateProfilerSampleBufferLapCount(lapCount);
 }
 
 JS_FRIEND_API(bool)
-JS::IsProfilingEnabledForRuntime(JSRuntime* runtime)
+JS::IsProfilingEnabledForContext(JSContext* cx)
 {
-    MOZ_ASSERT(runtime);
-    return runtime->spsProfiler.enabled();
+    MOZ_ASSERT(cx);
+    return cx->spsProfiler.enabled();
 }
 
 JSRuntime::IonBuilderList&
 JSRuntime::ionLazyLinkList()
 {
     MOZ_ASSERT(TlsPerThreadData.get()->runtimeFromMainThread(),
-            "Should only be mutated by the main thread.");
+               "Should only be mutated by the main thread.");
     return ionLazyLinkList_;
 }
 

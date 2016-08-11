@@ -12209,7 +12209,7 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     // Hold strong ref to ourselves while we call the callback.
     nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
     ErrorResult rv;
-    JS::Rooted<JS::Value> ignoredVal(CycleCollectedJSRuntime::Get()->Runtime());
+    JS::Rooted<JS::Value> ignoredVal(RootingCx());
     callback->Call(me, handler->GetArgs(), &ignoredVal, rv, reason);
     if (rv.IsUncatchableException()) {
       abortIntervalHandler = true;

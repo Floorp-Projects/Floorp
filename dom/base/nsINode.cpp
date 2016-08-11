@@ -1531,8 +1531,7 @@ static nsresult
 CheckForOutdatedParent(nsINode* aParent, nsINode* aNode)
 {
   if (JSObject* existingObjUnrooted = aNode->GetWrapper()) {
-    JSRuntime* runtime = JS_GetObjectRuntime(existingObjUnrooted);
-    JS::Rooted<JSObject*> existingObj(runtime, existingObjUnrooted);
+    JS::Rooted<JSObject*> existingObj(RootingCx(), existingObjUnrooted);
 
     AutoJSContext cx;
     nsIGlobalObject* global = aParent->OwnerDoc()->GetScopeObject();

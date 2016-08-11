@@ -489,8 +489,8 @@ struct VerifyTraceProtoAndIfaceCacheCalledTracer : public JS::CallbackTracer
 {
   bool ok;
 
-  explicit VerifyTraceProtoAndIfaceCacheCalledTracer(JSRuntime *rt)
-    : JS::CallbackTracer(rt), ok(false)
+  explicit VerifyTraceProtoAndIfaceCacheCalledTracer(JSContext* cx)
+    : JS::CallbackTracer(cx), ok(false)
   {}
 
   void onChild(const JS::GCCellPtr&) override {
@@ -3243,8 +3243,7 @@ WrappedJSToDictionary(nsISupports* aObject, T& aDictionary)
 {
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(aObject);
   NS_ENSURE_TRUE(wrappedObj, false);
-  JS::Rooted<JSObject*> obj(CycleCollectedJSRuntime::Get()->Runtime(),
-                            wrappedObj->GetJSObject());
+  JS::Rooted<JSObject*> obj(RootingCx(), wrappedObj->GetJSObject());
   NS_ENSURE_TRUE(obj, false);
 
   nsIGlobalObject* global = xpc::NativeGlobal(obj);

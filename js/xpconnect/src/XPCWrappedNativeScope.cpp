@@ -474,11 +474,11 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     if (mXrayExpandos.initialized())
         mXrayExpandos.destroy();
 
-    JSRuntime* rt = XPCJSRuntime::Get()->Runtime();
-    mContentXBLScope.finalize(rt);
+    JSContext* cx = dom::danger::GetJSContext();
+    mContentXBLScope.finalize(cx);
     for (size_t i = 0; i < mAddonScopes.Length(); i++)
-        mAddonScopes[i].finalize(rt);
-    mGlobalJSObject.finalize(rt);
+        mAddonScopes[i].finalize(cx);
+    mGlobalJSObject.finalize(cx);
 }
 
 // static

@@ -110,7 +110,7 @@ class GeckoSampler: public Sampler {
   virtual void ToJSObjectAsync(double aSinceTime = 0, mozilla::dom::Promise* aPromise = 0);
   void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
   void StreamTaskTracer(SpliceableJSONWriter& aWriter);
-  void FlushOnJSShutdown(JSRuntime* aRuntime);
+  void FlushOnJSShutdown(JSContext* aContext);
   bool ProfileJS() const { return mProfileJS; }
   bool ProfileJava() const { return mProfileJava; }
   bool ProfileGPU() const { return mProfileGPU; }

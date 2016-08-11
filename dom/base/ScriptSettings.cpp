@@ -293,10 +293,10 @@ GetJSContext()
 }
 } // namespace danger
 
-JSRuntime*
-GetJSRuntime()
+js::RootingContext*
+RootingCx()
 {
-  return CycleCollectedJSRuntime::Get()->Runtime();
+  return CycleCollectedJSRuntime::Get()->RootingCx();
 }
 
 AutoJSAPI::AutoJSAPI()
@@ -590,7 +590,7 @@ AutoJSAPI::ReportException()
                       nsContentUtils::IsCallerChrome(),
                       inner ? inner->WindowID() : 0);
       if (inner && jsReport.report()->errorNumber != JSMSG_OUT_OF_MEMORY) {
-        DispatchScriptErrorEvent(inner, JS_GetRuntime(cx()), xpcReport, exn);
+        DispatchScriptErrorEvent(inner, cx(), xpcReport, exn);
       } else {
         JS::Rooted<JSObject*> stack(cx(),
           xpc::FindExceptionStackForConsoleReport(inner, exn));
