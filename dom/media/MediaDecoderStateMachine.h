@@ -510,11 +510,10 @@ protected:
   // Clears any previous seeking state and initiates a new seek on the decoder.
   RefPtr<MediaDecoder::SeekPromise> InitiateSeek(SeekJob aSeekJob);
 
-  // Clears any previous seeking state and initiates a seek on the decoder to
-  // resync the video and audio positions, when recovering from video decoding
-  // being suspended in background or from audio and video decoding being
-  // suspended due to the decoder limit.
-  void InitiateDecodeRecoverySeek(TrackSet aTracks);
+  // Clears any previous seeking state and initiates a video-only seek on the
+  // decoder to catch up the video to the current audio position, when recovering
+  // from video decoding being suspended in background.
+  void InitiateDecodeRecoverySeek();
 
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
