@@ -180,6 +180,16 @@ function tunnelToInnerBrowser(outer, inner) {
       outer.setDocShellIsActiveAndForeground = value => {
         inner.frameLoader.tabParent.setDocShellIsActiveAndForeground(value);
       };
+
+      // Make the PopupNotifications object available on the iframe's owner
+      // This is used for permission doorhangers
+      Object.defineProperty(inner.ownerGlobal, "PopupNotifications", {
+        get() {
+          return outer.ownerGlobal.PopupNotifications;
+        },
+        configurable: true,
+        enumerable: true,
+      });
     }),
 
     stop() {
@@ -209,6 +219,9 @@ function tunnelToInnerBrowser(outer, inner) {
       delete outer.hasContentOpener;
       delete outer.docShellIsActive;
       delete outer.setDocShellIsActiveAndForeground;
+
+      // Delete the PopupNotifications getter added for permission doorhangers
+      delete inner.ownerGlobal.PopupNotifications;
 
       mmTunnel.destroy();
       mmTunnel = null;
