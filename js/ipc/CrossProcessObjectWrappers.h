@@ -78,13 +78,13 @@ void
 GetWrappedCPOWTag(JSObject* obj, nsACString& out);
 
 PJavaScriptParent*
-NewJavaScriptParent(JSContext* cx);
+NewJavaScriptParent();
 
 void
 ReleaseJavaScriptParent(PJavaScriptParent* parent);
 
 PJavaScriptChild*
-NewJavaScriptChild(JSContext* cx);
+NewJavaScriptChild();
 
 void
 ReleaseJavaScriptChild(PJavaScriptChild* child);

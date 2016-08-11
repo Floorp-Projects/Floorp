@@ -50,9 +50,8 @@ struct AuxCPOWData
     {}
 };
 
-WrapperOwner::WrapperOwner(JSContext* cx)
-  : JavaScriptShared(cx),
-    inactive_(false)
+WrapperOwner::WrapperOwner()
+  : inactive_(false)
 {
 }
 

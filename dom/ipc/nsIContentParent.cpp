@@ -58,7 +58,7 @@ nsIContentParent::AsContentBridgeParent()
 PJavaScriptParent*
 nsIContentParent::AllocPJavaScriptParent()
 {
-  return NewJavaScriptParent(danger::GetJSContext());
+  return NewJavaScriptParent();
 }
 
 bool
