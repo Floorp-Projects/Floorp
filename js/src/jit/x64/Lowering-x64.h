@@ -40,7 +40,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
 
     LDefinition tempToUnbox();
 
-    bool needTempForPostBarrier() { return false; }
+    bool needTempForPostBarrier() { return true; }
 
     void lowerDivI64(MDiv* div);
     void lowerModI64(MMod* mod);
