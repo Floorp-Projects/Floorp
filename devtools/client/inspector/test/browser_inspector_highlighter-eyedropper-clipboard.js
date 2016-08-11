@@ -14,7 +14,7 @@ add_task(function* () {
                .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
 
-  let {show, synthesizeKey, finalize,
+  let {show, finalize,
        waitForElementAttributeSet, waitForElementAttributeRemoved} = helper;
 
   info("Show the eyedropper with the copyOnSelect option");
@@ -25,8 +25,7 @@ add_task(function* () {
 
   yield waitForClipboard(() => {
     info("Activate the eyedropper so the background color is copied");
-    let generateKey = synthesizeKey({key: "VK_RETURN", options: {}});
-    generateKey.next();
+    EventUtils.synthesizeKey("VK_RETURN", {});
   }, "#FF0000");
 
   ok(true, "The clipboard contains the right value");
