@@ -53,11 +53,14 @@ let BookmarkSpecialIds = {
   // Create the special mobile folder to store mobile bookmarks.
   createMobileRoot: function createMobileRoot() {
     let root = PlacesUtils.placesRootId;
-    let mRoot = PlacesUtils.bookmarks.createFolder(root, "mobile", -1);
+    let mRoot = PlacesUtils.bookmarks.createFolder(root, "mobile", -1,
+      /* guid */ null, PlacesUtils.bookmarks.SOURCE_SYNC);
     PlacesUtils.annotations.setItemAnnotation(
-      mRoot, BookmarkAnnos.MOBILEROOT_ANNO, 1, 0, PlacesUtils.annotations.EXPIRE_NEVER);
+      mRoot, BookmarkAnnos.MOBILEROOT_ANNO, 1, 0,
+      PlacesUtils.annotations.EXPIRE_NEVER, PlacesUtils.bookmarks.SOURCE_SYNC);
     PlacesUtils.annotations.setItemAnnotation(
-      mRoot, BookmarkAnnos.EXCLUDEBACKUP_ANNO, 1, 0, PlacesUtils.annotations.EXPIRE_NEVER);
+      mRoot, BookmarkAnnos.EXCLUDEBACKUP_ANNO, 1, 0,
+      PlacesUtils.annotations.EXPIRE_NEVER, PlacesUtils.bookmarks.SOURCE_SYNC);
     return mRoot;
   },
 

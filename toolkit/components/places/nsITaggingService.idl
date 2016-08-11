@@ -29,8 +29,13 @@ interface nsITaggingService : nsISupports
    *        Array of tags to set for the given URL.  Each element within the
    *        array can be either a tag name (non-empty string) or a concrete
    *        itemId of a tag container.
+   * @param [optional] aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*.
+   *        Defaults to SOURCE_DEFAULT if omitted.
    */
-  void tagURI(in nsIURI aURI, in nsIVariant aTags);
+  void tagURI(in nsIURI aURI,
+              in nsIVariant aTags,
+              [optional] in unsigned short aSource);
 
   /**
    * Removes tags from a URL. Tags from aTags which are not set for the
@@ -42,8 +47,13 @@ interface nsITaggingService : nsISupports
    *        Array of tags to unset.  Pass null to remove all tags from the given
    *        url.  Each element within the array can be either a tag name
    *        (non-empty string) or a concrete itemId of a tag container.
+   * @param [optional] aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*.
+   *        Defaults to SOURCE_DEFAULT if omitted.
    */
-  void untagURI(in nsIURI aURI, in nsIVariant aTags);
+  void untagURI(in nsIURI aURI,
+                in nsIVariant aTags,
+                [optional] in unsigned short aSource);
 
   /**
    * Retrieves all URLs tagged with the given tag.

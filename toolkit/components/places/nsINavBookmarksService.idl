@@ -56,6 +56,9 @@ interface nsINavBookmarkObserver : nsISupports
    *        The unique ID associated with the item.
    * @param aParentGuid
    *        The unique ID associated with the item's parent.
+   * @param aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*,
+   *        passed to the method that notifies the observer.
    */
   void onItemAdded(in long long aItemId,
                    in long long aParentId,
@@ -65,7 +68,8 @@ interface nsINavBookmarkObserver : nsISupports
                    in AUTF8String aTitle,
                    in PRTime aDateAdded,
                    in ACString aGuid,
-                   in ACString aParentGuid);
+                   in ACString aParentGuid,
+                   in unsigned short aSource);
 
   /**
    * Notifies that an item was removed.  Called after the actual remove took
@@ -88,6 +92,9 @@ interface nsINavBookmarkObserver : nsISupports
    *        The unique ID associated with the item.
    * @param aParentGuid
    *        The unique ID associated with the item's parent.
+   * @param aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*,
+   *        passed to the method that notifies the observer.
    */
   void onItemRemoved(in long long aItemId,
                      in long long aParentId,
@@ -95,7 +102,8 @@ interface nsINavBookmarkObserver : nsISupports
                      in unsigned short aItemType,
                      in nsIURI aURI,
                      in ACString aGuid,
-                     in ACString aParentGuid);
+                     in ACString aParentGuid,
+                     in unsigned short aSource);
 
   /**
    * Notifies that an item's information has changed.  This will be called
@@ -125,6 +133,9 @@ interface nsINavBookmarkObserver : nsISupports
    * @param aOldValue
    *        For certain properties, this is set to the new value of the
    *        property (see the list below).
+   * @param aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*,
+   *        passed to the method that notifies the observer.
    *
    * @note List of values that may be associated with properties:
    *       aProperty     | aNewValue
@@ -156,7 +167,8 @@ interface nsINavBookmarkObserver : nsISupports
                      in long long aParentId,
                      in ACString aGuid,
                      in ACString aParentGuid,
-                     in AUTF8String aOldValue);
+                     in AUTF8String aOldValue,
+                     in unsigned short aSource);
 
   /**
    * Notifies that the item was visited.  Can be invoked only for TYPE_BOOKMARK
@@ -218,6 +230,9 @@ interface nsINavBookmarkObserver : nsISupports
    *        The unique ID associated with the old item's parent.
    * @param aNewParentGuid
    *        The unique ID associated with the new item's parent.
+   * @param aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*,
+   *        passed to the method that notifies the observer.
    */
   void onItemMoved(in long long aItemId,
                    in long long aOldParentId,
@@ -227,7 +242,8 @@ interface nsINavBookmarkObserver : nsISupports
                    in unsigned short aItemType,
                    in ACString aGuid,
                    in ACString aOldParentGuid,
-                   in ACString aNewParentGuid);
+                   in ACString aNewParentGuid,
+                   in unsigned short aSource);
 };
 
 /**
@@ -278,6 +294,15 @@ interface nsINavBookmarksService : nsISupports
   // This const exists just to avoid reusing the value.
   const unsigned short TYPE_DYNAMIC_CONTAINER = 4;
 
+  // Change source constants. These are used to distinguish changes made by
+  // Sync and bookmarks import from other Places consumers, though they can
+  // be extended to support other callers. Sources are passed as optional
+  // parameters to methods used by Sync, and forwarded to observers.
+  const unsigned short SOURCE_DEFAULT = 0;
+  const unsigned short SOURCE_SYNC = 1;
+  const unsigned short SOURCE_IMPORT = 2;
+  const unsigned short SOURCE_IMPORT_REPLACE = 3;
+
   /**
    * Inserts a child bookmark into the given folder.
    *
@@ -293,6 +318,10 @@ interface nsINavBookmarksService : nsISupports
    *         The GUID to be set for the new item.  If not set, a new GUID is
    *         generated.  Unless you've a very sound reason, such as an undo
    *         manager implementation, do not pass this argument.
+   *  @param [optional] aSource
+   *         The change source. This is forwarded to all bookmark observers,
+   *         allowing them to distinguish between insertions from different
+   *         callers. Defaults to SOURCE_DEFAULT if omitted.
    *  @return The ID of the newly-created bookmark.
    *
    *  @note aTitle will be truncated to TITLE_LENGTH_MAX and
@@ -301,14 +330,18 @@ interface nsINavBookmarksService : nsISupports
    */
   long long insertBookmark(in long long aParentId, in nsIURI aURI,
                            in long aIndex, in AUTF8String aTitle,
-                           [optional] in ACString aGuid);
+                           [optional] in ACString aGuid,
+                           [optional] in unsigned short aSource);
 
   /**
    * Removes a child item. Used to delete a bookmark or separator.
    *  @param aItemId
    *         The child item to remove
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
    */
-  void removeItem(in long long aItemId);
+  void removeItem(in long long aItemId, [optional] in unsigned short aSource);
 
   /**
    * Creates a new child folder and inserts it under the given parent.
@@ -322,18 +355,25 @@ interface nsINavBookmarksService : nsISupports
    *         The GUID to be set for the new item.  If not set, a new GUID is
    *         generated.  Unless you've a very sound reason, such as an undo
    *         manager implementation, do not pass this argument.
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
    *  @return The ID of the newly-inserted folder.
    *  @throws if aGuid is malformed.
    */
   long long createFolder(in long long aParentFolder, in AUTF8String name,
                          in long index,
-                         [optional] in ACString aGuid);
+                         [optional] in ACString aGuid,
+                         [optional] in unsigned short aSource);
 
   /**
    * Gets an undo-able transaction for removing a folder from the bookmarks
    * tree.
    *  @param aItemId
    *         The id of the folder to remove.
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
    *  @return An object implementing nsITransaction that can be used to undo
    *          or redo the action.
    *
@@ -345,15 +385,20 @@ interface nsINavBookmarksService : nsISupports
    * specific IDs (potentially dangerous if abused by other code!) in the
    * public API.
    */
-  nsITransaction getRemoveFolderTransaction(in long long aItemId);
+  nsITransaction getRemoveFolderTransaction(in long long aItemId,
+                                            [optional] in unsigned short aSource);
 
   /**
    * Convenience function for container services.  Removes
    * all children of the given folder.
    *  @param aItemId
    *         The id of the folder to remove children from.
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
    */
-  void removeFolderChildren(in long long aItemId);
+  void removeFolderChildren(in long long aItemId,
+                            [optional] in unsigned short aSource);
 
   /**
    * Moves an item to a different container, preserving its contents.
@@ -363,12 +408,18 @@ interface nsINavBookmarksService : nsISupports
    *         The id of the new parent
    *  @param aIndex
    *         The index under aNewParent, or DEFAULT_INDEX to append
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
    *
    * NOTE: When moving down in the same container we take into account the
    * removal of the original item. If you want to move from index X to
    * index Y > X you must use moveItem(id, folder, Y + 1)
    */
-  void moveItem(in long long aItemId, in long long aNewParentId, in long aIndex);
+  void moveItem(in long long aItemId,
+                in long long aNewParentId,
+                in long aIndex,
+                [optional] in unsigned short aSource);
 
   /**
    * Inserts a bookmark separator into the given folder at the given index.
@@ -381,11 +432,15 @@ interface nsINavBookmarksService : nsISupports
    *         The GUID to be set for the new item.  If not set, a new GUID is
    *         generated.  Unless you've a very sound reason, such as an undo
    *         manager implementation, do not pass this argument.
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
    *  @return The ID of the new separator.
    *  @throws if aGuid is malformed.
    */
   long long insertSeparator(in long long aParentId, in long aIndex,
-                            [optional] in ACString aGuid);
+                            [optional] in ACString aGuid,
+                            [optional] in unsigned short aSource);
 
   /**
    * Get the itemId given the containing folder and the index.
@@ -404,10 +459,14 @@ interface nsINavBookmarksService : nsISupports
    *         The id of the item whose title should be updated.
    *  @param aTitle
    *         The new title for the bookmark.
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
    *
    *  @note  aTitle will be truncated to TITLE_LENGTH_MAX.
    */
-  void setItemTitle(in long long aItemId, in AUTF8String aTitle);
+  void setItemTitle(in long long aItemId, in AUTF8String aTitle,
+                    [optional] in unsigned short aSource);
 
   /**
    * Get the title for an item.
@@ -428,8 +487,13 @@ interface nsINavBookmarksService : nsISupports
    * @param aDateAdded
    *        the new date added value in microseconds.  Note that it is rounded
    *        down to milliseconds precision.
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
    */
-  void setItemDateAdded(in long long aItemId, in PRTime aDateAdded);
+  void setItemDateAdded(in long long aItemId,
+                        in PRTime aDateAdded,
+                        [optional] in unsigned short aSource);
 
   /**
    * Get the date added time for an item.
@@ -449,13 +513,18 @@ interface nsINavBookmarksService : nsISupports
    * @param aLastModified
    *        the new last modified value in microseconds.  Note that it is
    *        rounded down to milliseconds precision.
+   * @param [optional] aSource
+   *        The change source, forwarded to all bookmark observers. Defaults
+   *        to SOURCE_DEFAULT.
    *
    * @note This is the only method that will send an itemChanged notification
    *       for the property.  lastModified will still be updated in
    *       any other method that changes an item property, but we will send
    *       the corresponding itemChanged notification instead.
    */
-  void setItemLastModified(in long long aItemId, in PRTime aLastModified);
+  void setItemLastModified(in long long aItemId,
+                           in PRTime aLastModified,
+                           [optional] in unsigned short aSource);
 
   /**
    * Get the last modified time for an item.
@@ -492,10 +561,14 @@ interface nsINavBookmarksService : nsISupports
    *
    *  @param aItemId    The id of the item to modify
    *  @param aNewIndex  The new index
+   *  @param aSource    The optional change source, forwarded to all bookmark
+   *                    observers. Defaults to SOURCE_DEFAULT.
    *
    *  @throws If aNewIndex is out of bounds.
    */
-  void setItemIndex(in long long aItemId, in long aNewIndex);
+  void setItemIndex(in long long aItemId,
+                    in long aNewIndex,
+                    [optional] in unsigned short aSource);
 
   /**
    * Get an item's type (bookmark, separator, folder).
@@ -529,7 +602,9 @@ interface nsINavBookmarksService : nsISupports
    * This changes which "place" the bookmark points at,
    * which means all annotations, etc are carried along.
    */
-  void changeBookmarkURI(in long long aItemId, in nsIURI aNewURI);
+  void changeBookmarkURI(in long long aItemId,
+                         in nsIURI aNewURI,
+                         [optional] in unsigned short aSource);
 
   /**
    * Get the parent folder's id for an item.
@@ -550,7 +625,9 @@ interface nsINavBookmarksService : nsISupports
    *
    * @deprecated Use PlacesUtils.keywords.insert() API instead.
    */
-  void setKeywordForBookmark(in long long aItemId, in AString aKeyword);
+  void setKeywordForBookmark(in long long aItemId,
+                             in AString aKeyword,
+                             [optional] in unsigned short aSource);
 
   /**
    * Retrieves the keyword for the given bookmark. Will be void string
