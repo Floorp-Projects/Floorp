@@ -27,7 +27,7 @@ namespace dom {
 PJavaScriptChild*
 nsIContentChild::AllocPJavaScriptChild()
 {
-  return NewJavaScriptChild(danger::GetJSContext());
+  return NewJavaScriptChild();
 }
 
 bool
