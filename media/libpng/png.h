@@ -29,6 +29,12 @@
  * and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
  * surrounding them in the modified libpng source files.
  *
+ * This modified version of libpng code adds Intel-SSE support and is
+ * released under the libpng license described below. The modifications are
+ * Copyright (c) 2016 Google, Inc., and consist of the source files in the
+ * "sse2" subdirectory and added code in pngpriv.h delimited by
+ * #ifndef PNG_INTEL_SSE_OPT / #endif directives.
+ *
  * This code is released under the libpng license.
  *
  * Some files in the "contrib" directory and some configure-generated
