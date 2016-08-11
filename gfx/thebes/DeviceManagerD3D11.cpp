@@ -92,6 +92,35 @@ DeviceManagerD3D11::CreateDevices()
   }
 
   if (XRE_IsParentProcess()) {
+    // reset the primary adapter information, given the adapter from device creation
+    RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
+    DXGI_ADAPTER_DESC adapterDesc;
+    nsString vendorID;
+    nsString deviceID;
+
+    if (!adapter) { // no dxgiadapter
+      d3d11.SetFailed(FeatureStatus::Failed, "No DXGI adapter found",
+                      NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DXGIADAPTER"));
+      return;
+    }
+
+    adapter->GetDesc(&adapterDesc);
+
+    vendorID.AppendPrintf("0x%04x", adapterDesc.VendorId);
+    deviceID.AppendPrintf("0x%04x", adapterDesc.DeviceId);
+
+    if (nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo()) {
+      gfxInfo->Reset(vendorID, deviceID);
+
+      // check device to see if blacklisted after device creation successful
+      nsCString message;
+      nsCString failureId;
+      if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &message, failureId)) {
+        d3d11.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+        return;
+      }
+    }
+
     if (!gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR)) {
       AttemptD3D11DeviceCreation(d3d11);
       if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
