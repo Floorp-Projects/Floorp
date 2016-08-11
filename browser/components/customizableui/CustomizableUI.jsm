@@ -1358,6 +1358,9 @@ var CustomizableUIInternal = {
       }
       node.setAttribute("removable", aWidget.removable);
       node.setAttribute("overflows", aWidget.overflows);
+      if (aWidget.tabSpecific) {
+        node.setAttribute("tabspecific", aWidget.tabSpecific);
+      }
       node.setAttribute("label", this.getLocalizedProperty(aWidget, "label"));
       let additionalTooltipArguments = [];
       if (aWidget.shortcutId) {
@@ -2310,6 +2313,7 @@ var CustomizableUIInternal = {
       overflows: true,
       defaultArea: null,
       shortcutId: null,
+      tabSpecific: false,
       tooltiptext: null,
       showInPrivateBrowsing: true,
       _introducedInVersion: -1,
@@ -2340,7 +2344,7 @@ var CustomizableUIInternal = {
       }
     }
 
-    const kOptBoolProps = ["removable", "showInPrivateBrowsing", "overflows"];
+    const kOptBoolProps = ["removable", "showInPrivateBrowsing", "overflows", "tabSpecific"];
     for (let prop of kOptBoolProps) {
       if (typeof aData[prop] == "boolean") {
         widget[prop] = aData[prop];
