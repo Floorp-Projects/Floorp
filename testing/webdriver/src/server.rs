@@ -120,7 +120,7 @@ impl <T: WebDriverHandler<U>,
                         match msg.command {
                             WebDriverCommand::NewSession(_) => {
                                 Err(WebDriverError::new(
-                                    ErrorStatus::UnsupportedOperation,
+                                    ErrorStatus::SessionNotCreated,
                                     "Session is already started"))
                             },
                             _ => {
