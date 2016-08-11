@@ -145,14 +145,22 @@ public:
                    mozilla::pkix::AuxiliaryExtension extension,
                    mozilla::pkix::Input extensionData) override;
 
+  // Resets the OCSP stapling status and SCT lists accumulated during
+  // the chain building.
+  void ResetAccumulatedState();
+
   CertVerifier::OCSPStaplingStatus GetOCSPStaplingStatus() const
   {
     return mOCSPStaplingStatus;
   }
-  void ResetOCSPStaplingStatus()
-  {
-    mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
-  }
+
+  // SCT lists (see Certificate Transparency) extracted during
+  // certificate verification. Note that the returned Inputs are invalidated
+  // the next time a chain is built and by ResetAccumulatedState method
+  // (and when the TrustDomain object is destroyed).
+
+  mozilla::pkix::Input GetSCTListFromCertificate() const;
+  mozilla::pkix::Input GetSCTListFromOCSPStapling() const;
 
 private:
   enum EncodedResponseSource {
@@ -180,6 +188,9 @@ private:
   const char* mHostname; // non-owning - only used for pinning checks
   nsCOMPtr<nsICertBlocklist> mCertBlocklist;
   CertVerifier::OCSPStaplingStatus mOCSPStaplingStatus;
+  // Certificate Transparency data extracted during certificate verification
+  UniqueSECItem mSCTListFromCertificate;
+  UniqueSECItem mSCTListFromOCSPStapling;
 };
 
 } } // namespace mozilla::psm
