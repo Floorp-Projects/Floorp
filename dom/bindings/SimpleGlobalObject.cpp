@@ -95,7 +95,7 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
   // We can't root our return value with our AutoJSAPI because the rooting
   // analysis thinks ~AutoJSAPI can GC.  So we need to root in a scope outside
   // the lifetime of the AutoJSAPI.
-  JS::Rooted<JSObject*> global(nsContentUtils::RootingCx());
+  JS::Rooted<JSObject*> global(RootingCx());
 
   { // Scope to ensure the AutoJSAPI destructor runs before we end up returning
     AutoJSAPI jsapi;

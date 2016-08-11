@@ -508,7 +508,7 @@ SpeechRecognition::NotifyFinalResult(SpeechEvent* aEvent)
 {
   ResetAndEnd();
 
-  RootedDictionary<SpeechRecognitionEventInit> init(nsContentUtils::RootingCx());
+  RootedDictionary<SpeechRecognitionEventInit> init(RootingCx());
   init.mBubbles = true;
   init.mCancelable = false;
   // init.mResultIndex = 0;

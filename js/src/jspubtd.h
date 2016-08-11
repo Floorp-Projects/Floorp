@@ -42,13 +42,13 @@ class JS_FRIEND_API(OwningCompileOptions);
 class JS_FRIEND_API(TransitiveCompileOptions);
 class JS_PUBLIC_API(CompartmentOptions);
 
+struct RootingContext;
 class Value;
 struct Zone;
 
 } /* namespace JS */
 
 namespace js {
-struct ContextFriendFields;
 class RootLists;
 } // namespace js
 
@@ -184,7 +184,7 @@ class JS_PUBLIC_API(AutoGCRooter)
 {
   public:
     AutoGCRooter(JSContext* cx, ptrdiff_t tag);
-    AutoGCRooter(js::ContextFriendFields* cx, ptrdiff_t tag);
+    AutoGCRooter(JS::RootingContext* cx, ptrdiff_t tag);
 
     ~AutoGCRooter() {
         MOZ_ASSERT(this == *stackTop);

@@ -550,7 +550,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
     if (info && NS_SUCCEEDED(info->IsFunction(&isFunc)) && isFunc) {
         RefPtr<nsXPCWrappedJS> wrapper;
-        RootedObject obj(nsContentUtils::RootingCx(), self->GetJSObject());
+        RootedObject obj(RootingCx(), self->GetJSObject());
         nsresult rv = nsXPCWrappedJS::GetNewOrUsed(obj, aIID, getter_AddRefs(wrapper));
 
         // Do the same thing we do for the "check for any existing wrapper" case above.
