@@ -896,6 +896,25 @@ MacroAssemblerMIPSShared::ma_liNegZero(FloatRegister dest)
 void
 MacroAssemblerMIPSShared::ma_sd(FloatRegister ft, BaseIndex address)
 {
+    if (isLoongson() && Imm8::IsInSignedRange(address.offset)) {
+        Register index = address.index;
+
+        if (address.scale != TimesOne) {
+            int32_t shift = Imm32::ShiftOf(address.scale).value;
+
+            MOZ_ASSERT(SecondScratchReg != address.base);
+            index = SecondScratchReg;
+#ifdef JS_CODEGEN_MIPS64
+            asMasm().ma_dsll(index, address.index, Imm32(shift));
+#else
+            asMasm().ma_sll(index, address.index, Imm32(shift));
+#endif
+        }
+
+        as_gssdx(ft, address.base, index, address.offset);
+        return;
+    }
+
     asMasm().computeScaledAddress(address, SecondScratchReg);
     asMasm().ma_sd(ft, Address(SecondScratchReg, address.offset));
 }
@@ -903,6 +922,25 @@ MacroAssemblerMIPSShared::ma_sd(FloatRegister ft, BaseIndex address)
 void
 MacroAssemblerMIPSShared::ma_ss(FloatRegister ft, BaseIndex address)
 {
+    if (isLoongson() && Imm8::IsInSignedRange(address.offset)) {
+        Register index = address.index;
+
+        if (address.scale != TimesOne) {
+            int32_t shift = Imm32::ShiftOf(address.scale).value;
+
+            MOZ_ASSERT(SecondScratchReg != address.base);
+            index = SecondScratchReg;
+#ifdef JS_CODEGEN_MIPS64
+            asMasm().ma_dsll(index, address.index, Imm32(shift));
+#else
+            asMasm().ma_sll(index, address.index, Imm32(shift));
+#endif
+        }
+
+        as_gsssx(ft, address.base, index, address.offset);
+        return;
+    }
+
     asMasm().computeScaledAddress(address, SecondScratchReg);
     asMasm().ma_ss(ft, Address(SecondScratchReg, address.offset));
 }
