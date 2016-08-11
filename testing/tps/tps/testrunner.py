@@ -371,6 +371,9 @@ class TPSTestRunner(object):
         if self.debug:
             self.preferences.update(self.debug_preferences)
 
+        if 'preferences' in self.config:
+            self.preferences.update(self.config['preferences'])
+
     def run_tests(self):
         # delete the logfile if it already exists
         if os.access(self.logfile, os.F_OK):
