@@ -1031,30 +1031,31 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!rootsHash.init(256))
         return false;
 
-    /*
-     * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
-     * for default backward API compatibility.
-     */
-    AutoLockGC lock(rt);
-    MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
-    setMaxMallocBytes(maxbytes);
+    {
+        AutoLockGC lock(rt);
 
-    const char* size = getenv("JSGC_MARK_STACK_LIMIT");
-    if (size)
-        setMarkStackLimit(atoi(size), lock);
+        /*
+         * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
+         * for default backward API compatibility.
+         */
+        MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
+        setMaxMallocBytes(maxbytes);
 
-    jitReleaseNumber = majorGCNumber + JIT_SCRIPT_RELEASE_TYPES_PERIOD;
+        const char* size = getenv("JSGC_MARK_STACK_LIMIT");
+        if (size)
+            setMarkStackLimit(atoi(size), lock);
 
-    if (!nursery.init(maxNurseryBytes))
-        return false;
+        jitReleaseNumber = majorGCNumber + JIT_SCRIPT_RELEASE_TYPES_PERIOD;
 
-    if (!nursery.isEnabled()) {
-        MOZ_ASSERT(nursery.nurserySize() == 0);
-        ++rt->gc.generationalDisabled;
-    } else {
-        MOZ_ASSERT(nursery.nurserySize() > 0);
-        if (!storeBuffer.enable())
+        if (!nursery.init(maxNurseryBytes, lock))
             return false;
+
+        if (!nursery.isEnabled()) {
+            MOZ_ASSERT(nursery.nurserySize() == 0);
+            ++rt->gc.generationalDisabled;
+        } else {
+            MOZ_ASSERT(nursery.nurserySize() > 0);
+        }
     }
 
 #ifdef JS_GC_ZEAL
@@ -6494,7 +6495,6 @@ GCRuntime::disableGenerationalGC()
     if (isGenerationalGCEnabled()) {
         evictNursery(JS::gcreason::API);
         nursery.disable();
-        storeBuffer.disable();
     }
     ++rt->gc.generationalDisabled;
 }
@@ -6504,10 +6504,8 @@ GCRuntime::enableGenerationalGC()
 {
     MOZ_ASSERT(generationalDisabled > 0);
     --generationalDisabled;
-    if (generationalDisabled == 0) {
+    if (generationalDisabled == 0)
         nursery.enable();
-        storeBuffer.enable();
-    }
 }
 
 bool

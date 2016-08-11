@@ -491,16 +491,16 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             // If the buffer is for an inline typed object, the data pointer
             // may be in the nursery, so include a barrier to make sure this
             // object is updated if that typed object moves.
-            if (!IsInsideNursery(obj) && cx->runtime()->gc.nursery.isInside(buffer->dataPointerEither())) {
-                // Shared buffer data should never be nursery-allocated, so
-                // we need to fail here if isSharedMemory.  However, mmap()
-                // can place a SharedArrayRawBuffer up against the bottom end
-                // of the nursery, and a zero-length buffer will erroneously be
+            auto ptr = buffer->dataPointerEither();
+            if (!IsInsideNursery(obj) && cx->runtime()->gc.nursery.isInside(ptr)) {
+                // Shared buffer data should never be nursery-allocated, so we
+                // need to fail here if isSharedMemory.  However, mmap() can
+                // place a SharedArrayRawBuffer up against the bottom end of a
+                // nursery chunk, and a zero-length buffer will erroneously be
                 // perceived as being inside the nursery; sidestep that.
                 if (isSharedMemory) {
                     MOZ_ASSERT(buffer->byteLength() == 0 &&
-                               cx->runtime()->gc.nursery.start() ==
-                                   buffer->dataPointerEither().unwrapValue());
+                               (uintptr_t(ptr.unwrapValue()) & gc::ChunkMask) == 0);
                 } else {
                     cx->runtime()->gc.storeBuffer.putWholeCell(obj);
                 }
