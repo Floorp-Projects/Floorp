@@ -71,9 +71,9 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     memset(mData.get(), 0, blurDataSize);
 
     RefPtr<DrawTarget> dt =
-        gfxPlatform::GetPlatform()->CreateDrawTargetForData(mData.get(), size,
-                                                            mBlur->GetStride(),
-                                                            SurfaceFormat::A8);
+        gfxPlatform::CreateDrawTargetForData(mData.get(), size,
+                                             mBlur->GetStride(),
+                                             SurfaceFormat::A8);
     if (!dt || !dt->IsValid()) {
         return nullptr;
     }

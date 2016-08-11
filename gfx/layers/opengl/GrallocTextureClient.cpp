@@ -224,8 +224,8 @@ GrallocTextureData::BorrowDrawTarget()
     return nullptr;
   }
   long byteStride = mGraphicBuffer->getStride() * BytesPerPixel(mFormat);
-  return gfxPlatform::GetPlatform()->CreateDrawTargetForData(mMappedBuffer, mSize,
-                                                             byteStride, mFormat);
+  return gfxPlatform::CreateDrawTargetForData(mMappedBuffer, mSize,
+                                              byteStride, mFormat);
 }
 
 bool
