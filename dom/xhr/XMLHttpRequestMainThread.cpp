@@ -2460,7 +2460,7 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant)
     }
 
     // ArrayBuffer?
-    JSContext* rootingCx = nsContentUtils::RootingCx();
+    JS::RootingContext* rootingCx = RootingCx();
     JS::Rooted<JS::Value> realVal(rootingCx);
 
     nsresult rv = aVariant->GetAsJSVal(&realVal);
