@@ -127,9 +127,33 @@ public:
                                    ServoElementSnapshot* aSnapshot);
 
   /**
-   * Restyles a whole subtree of nodes.
+   * Performs a Servo traversal to compute style for all dirty nodes in the
+   * document.
+   *
+   * If aLeaveDirtyBits is true, the dirty/dirty-descendant bits are not
+   * cleared.
    */
-  void RestyleSubtree(nsINode* aNode);
+  void StyleDocument(bool aLeaveDirtyBits);
+
+  /**
+   * Eagerly styles a subtree of dirty nodes that were just appended to the
+   * tree. This is used in situations where we need the style immediately and
+   * cannot wait for a future batch restyle.
+   *
+   * The subtree must have the root dirty bit set, which currently gets
+   * propagated to all descendants. The dirty bits are cleared before
+   * returning.
+   */
+  void StyleNewSubtree(nsIContent* aContent);
+
+  /**
+   * Like the above, but does not assume that the root node is dirty. When
+   * appending multiple children to a potentially-non-dirty node, it's
+   * preferable to call StyleNewChildren on the node rather than making multiple
+   * calls to StyleNewSubtree on each child, since it allows for more
+   * parallelism.
+   */
+  void StyleNewChildren(nsIContent* aParent);
 
   bool StylingStarted() const { return mStylingStarted; }
 

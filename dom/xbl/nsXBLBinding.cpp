@@ -242,7 +242,7 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
 #endif
 
     if (servoStyleSet) {
-      servoStyleSet->RestyleSubtree(child);
+      servoStyleSet->StyleNewSubtree(child);
     }
   }
 }
