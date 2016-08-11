@@ -156,6 +156,12 @@ interface nsIGfxInfo : nsISupports
   // only useful on X11
   [noscript, notxpcom] void GetData();
 
+  /**
+   * At startup we sometimes have to make a guess what device we're going to be
+   * using. We can reset this once we've gotten an exact device.
+   */
+  [noscript] void Reset (in AString aVendorID, in AString aDeviceID);
+
   [implicit_jscontext]
   jsval getInfo();
 
