@@ -419,11 +419,11 @@
           // display debug information about the cert error.
           var errorCode = document.getElementById("errorCode");
           if (errorCode) {
-            errorCode.href = "#technicalInformation";
+            errorCode.href = "javascript:void(0)";
             errorCode.addEventListener("click", () => {
-              var div = document.getElementById("certificateErrorDebugInformation");
-              if (toggleDisplay(div) == "block") {
-                div.scrollIntoView({block: "start", behavior: "smooth"});
+              let debugInfo = document.getElementById("certificateErrorDebugInformation");
+              if (toggleDisplay(debugInfo) == "block") {
+                debugInfo.scrollIntoView({block: "start", behavior: "smooth"});
               }
             }, false);
           }
@@ -646,7 +646,6 @@
     </div>
 
     <div id="certificateErrorDebugInformation">
-      <a name="technicalInformation"></a>
       <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
       <div id="certificateErrorText"/>
       <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
