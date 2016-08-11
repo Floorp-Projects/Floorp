@@ -409,6 +409,52 @@ this.Utils = {
     }
   }),
 
+  /**
+   * Move a json file in the profile directory. Will fail if a file exists at the
+   * destination.
+   *
+   * @returns a promise that resolves to undefined on success, or rejects on failure
+   *
+   * @param aFrom
+   *        Current path to the JSON file saved on disk, relative to profileDir/weave
+   *        .json will be appended to the file name.
+   * @param aTo
+   *        New path to the JSON file saved on disk, relative to profileDir/weave
+   *        .json will be appended to the file name.
+   * @param that
+   *        Object to use for logging
+   */
+  jsonMove(aFrom, aTo, that) {
+    let pathFrom = OS.Path.join(OS.Constants.Path.profileDir, "weave",
+                                ...(aFrom + ".json").split("/"));
+    let pathTo = OS.Path.join(OS.Constants.Path.profileDir, "weave",
+                              ...(aTo + ".json").split("/"));
+    if (that._log) {
+      that._log.trace("Moving " + pathFrom + " to " + pathTo);
+    }
+    return OS.File.move(pathFrom, pathTo, { noOverwrite: true });
+  },
+
+  /**
+   * Removes a json file in the profile directory.
+   *
+   * @returns a promise that resolves to undefined on success, or rejects on failure
+   *
+   * @param filePath
+   *        Current path to the JSON file saved on disk, relative to profileDir/weave
+   *        .json will be appended to the file name.
+   * @param that
+   *        Object to use for logging
+   */
+  jsonRemove(filePath, that) {
+    let path = OS.Path.join(OS.Constants.Path.profileDir, "weave",
+                            ...(filePath + ".json").split("/"));
+    if (that._log) {
+      that._log.trace("Deleting " + path);
+    }
+    return OS.File.remove(path, { ignoreAbsent: true });
+  },
+
   getErrorString: function Utils_getErrorString(error, args) {
     try {
       return Str.errors.get(error, args || null);
