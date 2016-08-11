@@ -756,17 +756,17 @@ struct ChunkTrailer
 {
     /* Construct a Nursery ChunkTrailer. */
     ChunkTrailer(JSRuntime* rt, StoreBuffer* sb)
-      : location(gc::ChunkLocationBitNursery), storeBuffer(sb), runtime(rt)
+      : location(ChunkLocation::Nursery), storeBuffer(sb), runtime(rt)
     {}
 
     /* Construct a Tenured heap ChunkTrailer. */
     explicit ChunkTrailer(JSRuntime* rt)
-      : location(gc::ChunkLocationBitTenuredHeap), storeBuffer(nullptr), runtime(rt)
+      : location(ChunkLocation::TenuredHeap), storeBuffer(nullptr), runtime(rt)
     {}
 
   public:
     /* The index the chunk in the nursery, or LocationTenuredHeap. */
-    uint32_t        location;
+    ChunkLocation   location;
     uint32_t        padding;
 
     /* The store buffer for writes to things in this chunk or nullptr. */
