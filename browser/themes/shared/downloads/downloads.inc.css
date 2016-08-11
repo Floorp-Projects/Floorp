@@ -38,14 +38,14 @@
 
 .downloadsPanelFooter {
   background-color: hsla(210,4%,10%,.07);
-  border-top: 1px solid hsla(210,4%,10%,.14);
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 .downloadsPanelFooter > toolbarseparator {
   margin: 0;
   border: 0;
   min-width: 0;
-  border-left: 1px solid hsla(210,4%,10%,.14);
+  border-left: 1px solid var(--panel-separator-color);
   -moz-appearance: none !important;
 }
 

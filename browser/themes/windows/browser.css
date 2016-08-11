@@ -1372,7 +1372,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 }
 
 #urlbar-search-footer {
-  border-top: 1px solid hsla(210,4%,10%,.14);
+  border-top: 1px solid var(--panel-separator-color);
   background-color: hsla(210,4%,10%,.07);
 }
 
