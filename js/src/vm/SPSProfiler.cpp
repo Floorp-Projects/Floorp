@@ -508,28 +508,28 @@ ProfileEntry::setPC(jsbytecode* pc) volatile
 }
 
 JS_FRIEND_API(void)
-js::SetRuntimeProfilingStack(JSRuntime* rt, ProfileEntry* stack, uint32_t* size, uint32_t max)
+js::SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, uint32_t* size, uint32_t max)
 {
-    rt->spsProfiler.setProfilingStack(stack, size, max);
+    cx->spsProfiler.setProfilingStack(stack, size, max);
 }
 
 JS_FRIEND_API(void)
-js::EnableRuntimeProfilingStack(JSRuntime* rt, bool enabled)
+js::EnableContextProfilingStack(JSContext* cx, bool enabled)
 {
-    rt->spsProfiler.enable(enabled);
+    cx->spsProfiler.enable(enabled);
 }
 
 JS_FRIEND_API(void)
-js::RegisterRuntimeProfilingEventMarker(JSRuntime* rt, void (*fn)(const char*))
+js::RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*))
 {
-    MOZ_ASSERT(rt->spsProfiler.enabled());
-    rt->spsProfiler.setEventMarker(fn);
+    MOZ_ASSERT(cx->spsProfiler.enabled());
+    cx->spsProfiler.setEventMarker(fn);
 }
 
 JS_FRIEND_API(jsbytecode*)
-js::ProfilingGetPC(JSRuntime* rt, JSScript* script, void* ip)
+js::ProfilingGetPC(JSContext* cx, JSScript* script, void* ip)
 {
-    return rt->spsProfiler.ipToPC(script, size_t(ip));
+    return cx->spsProfiler.ipToPC(script, size_t(ip));
 }
 
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext* cx

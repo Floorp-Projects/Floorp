@@ -3977,7 +3977,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, uint64_t aValue,
     return NS_OK;
   }
 
-  JS::RootedValue value(GetJSRuntime(), JS_NumberValue((double)aValue));
+  JS::RootedValue value(RootingCx(), JS_NumberValue((double)aValue));
   return ResolveInternal(i, value);
 }
 

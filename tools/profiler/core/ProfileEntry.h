@@ -265,7 +265,7 @@ public:
     StackKey mStack;
   };
 
-  explicit UniqueStacks(JSRuntime* aRuntime);
+  explicit UniqueStacks(JSContext* aContext);
 
   Stack BeginStack(const OnStackFrameKey& aRoot);
   uint32_t LookupJITFrameDepth(void* aAddr);
@@ -283,7 +283,7 @@ public:
   UniqueJSONStrings mUniqueStrings;
 
 private:
-  JSRuntime* mRuntime;
+  JSContext* mContext;
 
   // To avoid incurring JitcodeGlobalTable lookup costs for every JIT frame,
   // we cache the depth of frames keyed by JIT code address. If an address a

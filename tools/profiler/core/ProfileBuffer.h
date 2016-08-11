@@ -22,7 +22,7 @@ public:
 
   void addTag(const ProfileEntry& aTag);
   void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId, double aSinceTime,
-                           JSRuntime* rt, UniqueStacks& aUniqueStacks);
+                           JSContext* cx, UniqueStacks& aUniqueStacks);
   void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId, double aSinceTime,
                            UniqueStacks& aUniqueStacks);
   void DuplicateLastSample(int aThreadId);

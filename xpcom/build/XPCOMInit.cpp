@@ -999,7 +999,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // duplicating the call in XPCJSRuntime::~XPCJSRuntime() in case that
   // never fired.
   if (PseudoStack* stack = mozilla_get_pseudo_stack()) {
-    stack->sampleRuntime(nullptr);
+    stack->sampleContext(nullptr);
   }
 #endif
 

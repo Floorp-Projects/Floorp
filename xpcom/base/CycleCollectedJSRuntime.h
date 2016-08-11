@@ -324,20 +324,20 @@ public:
   virtual void EndCycleCollectionCallback(CycleCollectorResults& aResults) = 0;
   virtual void DispatchDeferredDeletion(bool aContinuation, bool aPurge = false) = 0;
 
-  JSRuntime* Runtime() const
-  {
-    MOZ_ASSERT(mJSRuntime);
-    return mJSRuntime;
-  }
-
   JSContext* Context() const
   {
     MOZ_ASSERT(mJSContext);
     return mJSContext;
   }
 
+  js::RootingContext* RootingCx() const
+  {
+    MOZ_ASSERT(mJSContext);
+    return js::ContextFriendFields::get(mJSContext);
+  }
+
 protected:
-  JSRuntime* MaybeRuntime() const { return mJSRuntime; }
+  JSContext* MaybeContext() const { return mJSContext; }
 
 public:
   // nsThread entrypoints
@@ -401,7 +401,6 @@ private:
 
   JSZoneParticipant mJSZoneCycleCollectorGlobal;
 
-  JSRuntime* mJSRuntime;
   JSContext* mJSContext;
 
   JS::GCSliceCallback mPrevGCSliceCallback;

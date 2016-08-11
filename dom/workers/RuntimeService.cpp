@@ -743,8 +743,8 @@ private:
   operator=(const WorkerThreadContextPrivate&) = delete;
 };
 
-JSContext*
-InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
+bool
+InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSContext* aWorkerCx)
 {
   aWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(!aWorkerPrivate->GetJSContext(), "Already has a context!");
@@ -752,9 +752,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
   JSSettings settings;
   aWorkerPrivate->CopyJSSettings(settings);
 
-  JSContext* workerCx = JS_GetContext(aRuntime);
-
-  JS::ContextOptionsRef(workerCx) = settings.contextOptions;
+  JS::ContextOptionsRef(aWorkerCx) = settings.contextOptions;
 
   JSSettings::JSGCSettingsArray& gcSettings = settings.gcSettings;
 
@@ -763,17 +761,17 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     const JSSettings::JSGCSetting& setting = gcSettings[index];
     if (setting.IsSet()) {
       NS_ASSERTION(setting.value, "Can't handle 0 values!");
-      JS_SetGCParameter(workerCx, setting.key, setting.value);
+      JS_SetGCParameter(aWorkerCx, setting.key, setting.value);
     }
   }
 
-  JS_SetNativeStackQuota(workerCx, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
+  JS_SetNativeStackQuota(aWorkerCx, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
 
   // Security policy:
   static const JSSecurityCallbacks securityCallbacks = {
     ContentSecurityPolicyAllows
   };
-  JS_SetSecurityCallbacks(workerCx, &securityCallbacks);
+  JS_SetSecurityCallbacks(aWorkerCx, &securityCallbacks);
 
   // Set up the asm.js cache callbacks
   static const JS::AsmJSCacheOps asmJSCacheOps = {
@@ -782,22 +780,22 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     AsmJSCacheOpenEntryForWrite,
     asmjscache::CloseEntryForWrite
   };
-  JS::SetAsmJSCacheOps(workerCx, &asmJSCacheOps);
+  JS::SetAsmJSCacheOps(aWorkerCx, &asmJSCacheOps);
 
-  if (!JS::InitSelfHostedCode(workerCx)) {
+  if (!JS::InitSelfHostedCode(aWorkerCx)) {
     NS_WARNING("Could not init self-hosted code!");
-    return nullptr;
+    return false;
   }
 
-  JS_SetInterruptCallback(workerCx, InterruptCallback);
+  JS_SetInterruptCallback(aWorkerCx, InterruptCallback);
 
-  js::SetCTypesActivityCallback(workerCx, CTypesActivityCallback);
+  js::SetCTypesActivityCallback(aWorkerCx, CTypesActivityCallback);
 
 #ifdef JS_GC_ZEAL
-  JS_SetGCZeal(workerCx, settings.gcZeal, settings.gcZealFrequency);
+  JS_SetGCZeal(aWorkerCx, settings.gcZeal, settings.gcZealFrequency);
 #endif
 
-  return workerCx;
+  return true;
 }
 
 static bool
@@ -851,12 +849,11 @@ public:
 
   ~WorkerJSRuntime()
   {
-    JSRuntime* rt = MaybeRuntime();
-    if (!rt) {
+    JSContext* cx = MaybeContext();
+    if (!cx) {
       return;   // Initialize() must have failed
     }
 
-    JSContext* cx = JS_GetContext(rt);
     delete static_cast<WorkerThreadContextPrivate*>(JS_GetContextPrivate(cx));
     JS_SetContextPrivate(cx, nullptr);
 
@@ -2552,10 +2549,9 @@ WorkerThreadPrimaryRunnable::Run()
       return rv;
     }
 
-    JSRuntime* rt = runtime.Runtime();
+    JSContext* cx = runtime.Context();
 
-    JSContext* cx = InitJSContextForWorker(mWorkerPrivate, rt);
-    if (!cx) {
+    if (!InitJSContextForWorker(mWorkerPrivate, cx)) {
       // XXX need to fire an error at parent.
       NS_ERROR("Failed to create runtime and context!");
       return NS_ERROR_FAILURE;
@@ -2565,7 +2561,7 @@ WorkerThreadPrimaryRunnable::Run()
 #ifdef MOZ_ENABLE_PROFILER_SPS
       PseudoStack* stack = mozilla_get_pseudo_stack();
       if (stack) {
-        stack->sampleRuntime(rt);
+        stack->sampleContext(cx);
       }
 #endif
 
@@ -2583,7 +2579,7 @@ WorkerThreadPrimaryRunnable::Run()
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
       if (stack) {
-        stack->sampleRuntime(nullptr);
+        stack->sampleContext(nullptr);
       }
 #endif
     }

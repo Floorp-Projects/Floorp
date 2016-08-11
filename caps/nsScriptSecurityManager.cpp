@@ -76,7 +76,7 @@ using namespace mozilla::dom;
 
 nsIIOService    *nsScriptSecurityManager::sIOService = nullptr;
 nsIStringBundle *nsScriptSecurityManager::sStrBundle = nullptr;
-JSRuntime       *nsScriptSecurityManager::sRuntime   = 0;
+JSContext       *nsScriptSecurityManager::sContext   = nullptr;
 bool nsScriptSecurityManager::sStrictFileOriginPolicy = true;
 
 ///////////////////////////
@@ -1413,19 +1413,18 @@ nsresult nsScriptSecurityManager::Init()
 
     //-- Register security check callback in the JS engine
     //   Currently this is used to control access to function.caller
-    sRuntime = xpc::GetJSRuntime();
+    sContext = danger::GetJSContext();
 
     static const JSSecurityCallbacks securityCallbacks = {
         ContentSecurityPolicyPermitsJSAction,
         JSPrincipalsSubsume,
     };
 
-    JSContext* cx = JS_GetContext(sRuntime);
-    MOZ_ASSERT(!JS_GetSecurityCallbacks(cx));
-    JS_SetSecurityCallbacks(cx, &securityCallbacks);
-    JS_InitDestroyPrincipalsCallback(cx, nsJSPrincipals::Destroy);
+    MOZ_ASSERT(!JS_GetSecurityCallbacks(sContext));
+    JS_SetSecurityCallbacks(sContext, &securityCallbacks);
+    JS_InitDestroyPrincipalsCallback(sContext, nsJSPrincipals::Destroy);
 
-    JS_SetTrustedPrincipals(cx, system);
+    JS_SetTrustedPrincipals(sContext, system);
 
     return NS_OK;
 }
@@ -1448,10 +1447,10 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void)
 void
 nsScriptSecurityManager::Shutdown()
 {
-    if (sRuntime) {
-        JS_SetSecurityCallbacks(JS_GetContext(sRuntime), nullptr);
-        JS_SetTrustedPrincipals(JS_GetContext(sRuntime), nullptr);
-        sRuntime = nullptr;
+    if (sContext) {
+        JS_SetSecurityCallbacks(sContext, nullptr);
+        JS_SetTrustedPrincipals(sContext, nullptr);
+        sContext = nullptr;
     }
 
     NS_IF_RELEASE(sIOService);

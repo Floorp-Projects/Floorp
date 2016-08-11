@@ -1711,8 +1711,8 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
     return;
   }
 
-  JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
-  JS::Rooted<JSScript*> script(rt);
+  js::RootingContext* rcx = RootingCx();
+  JS::Rooted<JSScript*> script(rcx);
 
   nsMessageManagerScriptHolder* holder = sCachedScripts->Get(aURL);
   if (holder && holder->WillRunInGlobalScope() == aRunInGlobalScope) {
@@ -1725,7 +1725,7 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
                                  shouldCache, &script);
   }
 
-  JS::Rooted<JSObject*> global(rt, mGlobal->GetJSObject());
+  JS::Rooted<JSObject*> global(rcx, mGlobal->GetJSObject());
   if (global) {
     AutoEntryScript aes(global, "message manager script load");
     JSContext* cx = aes.cx();

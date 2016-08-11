@@ -2448,7 +2448,7 @@ ConstructJSImplementation(const char* aContractId,
       do_QueryInterface(implISupports);
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     if (gpi) {
-      JS::Rooted<JS::Value> initReturn(GetJSRuntime());
+      JS::Rooted<JS::Value> initReturn(RootingCx());
       rv = gpi->Init(window, &initReturn);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);

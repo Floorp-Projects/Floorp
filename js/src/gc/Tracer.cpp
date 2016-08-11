@@ -435,3 +435,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
     }
     buf[bufsize - 1] = '\0';
 }
+
+JS::CallbackTracer::CallbackTracer(JSContext* cx, WeakMapTraceKind weakTraceKind)
+  : CallbackTracer(cx->runtime(), weakTraceKind)
+{}

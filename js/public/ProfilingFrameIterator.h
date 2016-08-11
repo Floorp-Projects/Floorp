@@ -14,6 +14,7 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
+struct JSContext;
 struct JSRuntime;
 class JSScript;
 
@@ -89,7 +90,7 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
         void* lr;
     };
 
-    ProfilingFrameIterator(JSRuntime* rt, const RegisterState& state,
+    ProfilingFrameIterator(JSContext* cx, const RegisterState& state,
                            uint32_t sampleBufferGen = UINT32_MAX);
     ~ProfilingFrameIterator();
     void operator++();
@@ -135,7 +136,7 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
 };
 
 JS_FRIEND_API(bool)
-IsProfilingEnabledForRuntime(JSRuntime* runtime);
+IsProfilingEnabledForContext(JSContext* cx);
 
 /**
  * After each sample run, this method should be called with the latest sample
@@ -146,7 +147,7 @@ IsProfilingEnabledForRuntime(JSRuntime* runtime);
  * JSRuntime for documentation about what these values are used for.
  */
 JS_FRIEND_API(void)
-UpdateJSRuntimeProfilerSampleBufferGen(JSRuntime* runtime, uint32_t generation,
+UpdateJSContextProfilerSampleBufferGen(JSContext* cx, uint32_t generation,
                                        uint32_t lapCount);
 
 struct ForEachProfiledFrameOp
@@ -155,7 +156,7 @@ struct ForEachProfiledFrameOp
     // lookups on JitcodeGlobalTable.
     class MOZ_STACK_CLASS FrameHandle
     {
-        friend JS_PUBLIC_API(void) ForEachProfiledFrame(JSRuntime* rt, void* addr,
+        friend JS_PUBLIC_API(void) ForEachProfiledFrame(JSContext* cx, void* addr,
                                                         ForEachProfiledFrameOp& op);
 
         JSRuntime* rt_;
@@ -188,7 +189,7 @@ struct ForEachProfiledFrameOp
 };
 
 JS_PUBLIC_API(void)
-ForEachProfiledFrame(JSRuntime* rt, void* addr, ForEachProfiledFrameOp& op);
+ForEachProfiledFrame(JSContext* cx, void* addr, ForEachProfiledFrameOp& op);
 
 } // namespace JS
 
