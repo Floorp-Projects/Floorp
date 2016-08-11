@@ -108,6 +108,12 @@ GetCamerasChild() {
   return CamerasSingleton::Child();
 }
 
+CamerasChild*
+GetCamerasChildIfExists() {
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  return CamerasSingleton::Child();
+}
+
 bool
 CamerasChild::RecvReplyFailure(void)
 {
@@ -576,6 +582,13 @@ CamerasChild::RecvDeliverFrame(const int& capEngine,
     LOG(("DeliverFrame called with dead callback"));
   }
   SendReleaseFrame(shmem);
+  return true;
+}
+
+bool
+CamerasChild::RecvDeviceChange()
+{
+  this->OnDeviceChange();
   return true;
 }
 

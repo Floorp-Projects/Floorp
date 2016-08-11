@@ -15,6 +15,7 @@
 #include "webrtc/system_wrappers/interface/trace.h"
 
 using namespace webrtc;
+using namespace videocapturemodule;
 
 #pragma mark **** hidden class interface
 
@@ -38,11 +39,24 @@ using namespace webrtc;
     return self;
 }
 
+- (void)registerOwner:(VideoCaptureMacAVFoundationInfo*)owner {
+    [_lock lock];
+    _owner = owner;
+    [_lock unlock];
+}
+
 /// ***** Objective-C. Similar to C++ destructor
 /// ***** Returns nothing
 - (void)dealloc {
 
     [_captureDevicesInfo release];
+
+    // Remove Observers
+    NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+    for (id observer in _observers)
+        [notificationCenter removeObserver:observer];
+    [_observers release];
+    [_lock release];
 
     [super dealloc];
 }
@@ -222,6 +236,33 @@ using namespace webrtc;
 
     _captureDeviceCountInfo = 0;
     [self getCaptureDevices];
+
+    _lock = [[NSLock alloc] init];
+
+    //register device connected / disconnected event
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+
+    id deviceWasConnectedObserver = [notificationCenter addObserverForName:AVCaptureDeviceWasConnectedNotification
+        object:nil
+        queue:[NSOperationQueue mainQueue]
+        usingBlock:^(NSNotification *note) {
+            [_lock lock];
+            if(_owner)
+                _owner->DeviceChange();
+            [_lock unlock];
+        }];
+
+    id deviceWasDisconnectedObserver = [notificationCenter addObserverForName:AVCaptureDeviceWasDisconnectedNotification
+        object:nil
+        queue:[NSOperationQueue mainQueue]
+        usingBlock:^(NSNotification *note) {
+            [_lock lock];
+            if(_owner)
+                _owner->DeviceChange();
+            [_lock unlock];
+        }];
+
+    _observers = [[NSArray alloc] initWithObjects:deviceWasConnectedObserver, deviceWasDisconnectedObserver, nil];
 
     return [NSNumber numberWithInt:0];
 }

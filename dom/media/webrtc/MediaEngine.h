@@ -11,6 +11,7 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/VideoStreamTrack.h"
+#include "DeviceChangeCallback.h"
 
 namespace mozilla {
 
@@ -41,7 +42,7 @@ enum MediaEngineState {
   kReleased
 };
 
-class MediaEngine
+class MediaEngine : public DeviceChangeCallback
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngine)

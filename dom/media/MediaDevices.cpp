@@ -179,6 +179,72 @@ NS_INTERFACE_MAP_BEGIN(MediaDevices)
   NS_INTERFACE_MAP_ENTRY(MediaDevices)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
+void
+MediaDevices::OnDeviceChange()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsresult rv = CheckInnerWindowCorrectness();
+  if (NS_FAILED(rv))
+    return;
+
+  if (!(MediaManager::Get()->IsActivelyCapturingOrHasAPermission(GetOwner()->WindowID()) ||
+    Preferences::GetBool("media.navigator.permission.disabled", false))) {
+    return;
+  }
+
+  DispatchTrustedEvent(NS_LITERAL_STRING("devicechange"));
+}
+
+mozilla::dom::EventHandlerNonNull*
+MediaDevices::GetOndevicechange()
+{
+  if (NS_IsMainThread()) {
+    return GetEventHandler(nsGkAtoms::ondevicechange, EmptyString());
+  }
+  return GetEventHandler(nullptr, NS_LITERAL_STRING("devicechange"));
+}
+
+void
+MediaDevices::SetOndevicechange(mozilla::dom::EventHandlerNonNull* aCallback)
+{
+  if (NS_IsMainThread()) {
+    SetEventHandler(nsGkAtoms::ondevicechange, EmptyString(), aCallback);
+  } else {
+    SetEventHandler(nullptr, NS_LITERAL_STRING("devicechange"), aCallback);
+  }
+
+  MediaManager::Get()->AddDeviceChangeCallback(this);
+}
+
+nsresult
+MediaDevices::AddEventListener(const nsAString& aType,
+  nsIDOMEventListener* aListener,
+  bool aUseCapture, bool aWantsUntrusted,
+  uint8_t optional_argc)
+{
+  MediaManager::Get()->AddDeviceChangeCallback(this);
+
+  return mozilla::DOMEventTargetHelper::AddEventListener(aType, aListener,
+    aUseCapture,
+    aWantsUntrusted,
+    optional_argc);
+}
+
+void
+MediaDevices::AddEventListener(const nsAString& aType,
+  dom::EventListener* aListener,
+  const dom::AddEventListenerOptionsOrBoolean& aOptions,
+  const dom::Nullable<bool>& aWantsUntrusted,
+  ErrorResult& aRv)
+{
+  MediaManager::Get()->AddDeviceChangeCallback(this);
+
+  return mozilla::DOMEventTargetHelper::AddEventListener(aType, aListener,
+    aOptions,
+    aWantsUntrusted,
+    aRv);
+}
+
 JSObject*
 MediaDevices::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
