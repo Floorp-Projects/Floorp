@@ -1711,7 +1711,7 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
     return;
   }
 
-  js::RootingContext* rcx = RootingCx();
+  JS::RootingContext* rcx = RootingCx();
   JS::Rooted<JSScript*> script(rcx);
 
   nsMessageManagerScriptHolder* holder = sCachedScripts->Get(aURL);

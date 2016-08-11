@@ -245,7 +245,7 @@ FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
     return nullptr;
   }
 
-  js::RootingContext* rcx = RootingCx();
+  JS::RootingContext* rcx = RootingCx();
   JS::RootedObject exceptionObject(rcx, &exceptionValue.toObject());
   JSObject* stackObject = ExceptionStackOrNull(exceptionObject);
   if (stackObject) {

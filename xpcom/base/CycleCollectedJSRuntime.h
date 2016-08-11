@@ -330,10 +330,10 @@ public:
     return mJSContext;
   }
 
-  js::RootingContext* RootingCx() const
+  JS::RootingContext* RootingCx() const
   {
     MOZ_ASSERT(mJSContext);
-    return js::ContextFriendFields::get(mJSContext);
+    return JS::RootingContext::get(mJSContext);
   }
 
 protected:
