@@ -32,11 +32,9 @@
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(200,200,200,.5);
 
-  --identity-box-verified-background-color: #fff;
-
   --panel-separator-color: ThreeDShadow;
 
-  --urlbar-separator-color: hsla(0,0%,16%,.2);
+  --urlbar-separator-color: ThreeDShadow;
 }
 
 #menubar-items {
@@ -1008,10 +1006,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 #identity-box:-moz-locale-dir(rtl) {
   border-top-right-radius: 1.5px;
   border-bottom-right-radius: 1.5px;
-}
-
-#identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover):not([open=true]) {
-  background-color: var(--identity-box-verified-background-color);
 }
 
 #identity-box:-moz-focusring {

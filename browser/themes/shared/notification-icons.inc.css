@@ -41,12 +41,6 @@
   margin-inline-end: 10px;
 }
 
-#notification-popup-box > .notification-anchor-icon:hover {
-  fill: #606060;
-}
-
-/* INDIVIDUAL NOTIFICATIONS */
-
 .camera-icon,
 .geo-icon,
 .indexedDB-icon,
@@ -67,8 +61,15 @@
 .popup-notification-icon[popupid="webRTC-shareScreen"],
 .popup-notification-icon[popupid="web-notifications"] {
   filter: url(chrome://browser/skin/filters.svg#fill);
-  fill: #999;
+  fill: currentColor;
+  opacity: .4;
 }
+
+.notification-anchor-icon:hover {
+  opacity: .6;
+}
+
+/* INDIVIDUAL NOTIFICATIONS */
 
 .popup-notification-icon[popupid="web-notifications"],
 .desktop-notification-icon {
@@ -252,7 +253,8 @@
 
 .plugin-icon.plugin-blocked {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-blocked);
-  fill: #d92215 !important; /* important! to override the default hover color */
+  fill: #d92215;
+  opacity: 1 !important; /* !important to override the default hover opacity */
 }
 
 #notification-popup-box[hidden] {
@@ -268,10 +270,10 @@
 
 @keyframes pluginBlockedNotification {
   from {
-    opacity: 0;
+    opacity: 0 !important;
   }
   to {
-    opacity: 1;
+    opacity: 1 !important;
   }
 }
 
