@@ -1278,16 +1278,37 @@ struct CycleCollectorStats
   constexpr CycleCollectorStats() :
     mMaxGCDuration(0), mRanSyncForgetSkippable(false), mSuspected(0),
     mMaxSkippableDuration(0), mMaxSliceTime(0), mMaxSliceTimeSinceClear(0),
-    mTotalSliceTime(0), mAnyLockedOut(false), mExtraForgetSkippableCalls(0) {}
+    mTotalSliceTime(0), mAnyLockedOut(false), mExtraForgetSkippableCalls(0),
+    mFile(nullptr) {}
 
   void Init()
   {
     Clear();
     mMaxSliceTimeSinceClear = 0;
+
+    char* env = getenv("MOZ_CCTIMER");
+    if (!env) {
+      return;
+    }
+    if (strcmp(env, "none") == 0) {
+      mFile = nullptr;
+    } else if (strcmp(env, "stdout") == 0) {
+      mFile = stdout;
+    } else if (strcmp(env, "stderr") == 0) {
+      mFile = stderr;
+    } else {
+      mFile = fopen(env, "a");
+      if (!mFile) {
+        MOZ_CRASH("Failed to open MOZ_CCTIMER log file.");
+      }
+    }
   }
 
   void Clear()
   {
+    if (mFile && mFile != stdout && mFile != stderr) {
+      fclose(mFile);
+    }
     mBeginSliceTime = TimeStamp();
     mEndSliceTime = TimeStamp();
     mBeginTime = TimeStamp();
@@ -1356,6 +1377,9 @@ struct CycleCollectorStats
   bool mAnyLockedOut;
 
   int32_t mExtraForgetSkippableCalls;
+
+  // A file to dump CC activity to; set by MOZ_CCTIMER environment variable.
+  FILE* mFile;
 };
 
 CycleCollectorStats gCCStats;
@@ -1593,7 +1617,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   uint32_t minForgetSkippableTime = (sMinForgetSkippableTime == UINT32_MAX)
     ? 0 : sMinForgetSkippableTime;
 
-  if (sPostGCEventsToConsole) {
+  if (sPostGCEventsToConsole || gCCStats.mFile) {
     nsCString mergeMsg;
     if (aResults.mMergedZones) {
       mergeMsg.AssignLiteral(" merged");
@@ -1623,10 +1647,15 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
                                           PR_USEC_PER_MSEC,
                                         sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
                                         gCCStats.mMaxSkippableDuration, sRemovedPurples));
-    nsCOMPtr<nsIConsoleService> cs =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (cs) {
-      cs->LogStringMessage(msg.get());
+    if (sPostGCEventsToConsole) {
+      nsCOMPtr<nsIConsoleService> cs =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (cs) {
+        cs->LogStringMessage(msg.get());
+      }
+    }
+    if (gCCStats.mFile) {
+      fprintf(gCCStats.mFile, "%s\n", NS_ConvertUTF16toUTF8(msg).get());
     }
   }
 
