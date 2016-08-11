@@ -471,10 +471,6 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  if (IsVideoDecodeSuspended()) {
-    return true;
-  }
-
   if (VideoQueue().GetSize() == 0) {
     return false;
   }
@@ -1805,13 +1801,6 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
     return NS_OK;
   }
 
-  if (IsVideoDecodeSuspended() && !IsDecodingFirstFrame()) {
-    // The element is invisible and background videos should be suspended.
-    // If the first frame has already been decoded, don't request anymore video
-    // frames.
-    return NS_OK;
-  }
-
   if (!IsVideoDecoding() || mReader->IsRequestingVideoData() ||
       mReader->IsWaitingVideoData()) {
     return NS_OK;
@@ -2635,12 +2624,6 @@ bool MediaDecoderStateMachine::IsStateMachineScheduled() const
 {
   MOZ_ASSERT(OnTaskQueue());
   return mDispatchedStateMachine || mDelayedScheduler.IsScheduled();
-}
-
-bool MediaDecoderStateMachine::IsVideoDecodeSuspended() const
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return mIsReaderSuspended;
 }
 
 void

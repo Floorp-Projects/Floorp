@@ -598,10 +598,6 @@ protected:
   // case as it may not be needed again.
   bool IsPausedAndDecoderWaiting();
 
-  // Returns true if the video decoding is suspended because the element is not
-  // visible
-  bool IsVideoDecodeSuspended() const;
-
   // These return true if the respective stream's decode has not yet reached
   // the end of stream.
   bool IsAudioDecoding();
