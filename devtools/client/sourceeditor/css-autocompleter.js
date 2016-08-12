@@ -6,6 +6,7 @@
 
 /* eslint-disable complexity */
 const {cssTokenizer, cssTokenizerWithLineColumn} = require("devtools/shared/css-parsing-utils");
+const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
 /**
  * Here is what this file (+ css-parsing-utils.js) do.
@@ -86,7 +87,8 @@ const SELECTOR_STATES = {
 function CSSCompleter(options = {}) {
   this.walker = options.walker;
   this.maxEntries = options.maxEntries || 15;
-  this.cssProperties = options.cssProperties;
+  // If no css properties database is passed in, default to the client list.
+  this.cssProperties = options.cssProperties || getClientCssProperties();
 
   this.propertyNames = this.cssProperties.getNames().sort();
 

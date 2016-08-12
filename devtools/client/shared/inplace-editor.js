@@ -23,7 +23,6 @@
 
 "use strict";
 
-const {Ci} = require("chrome");
 const Services = require("Services");
 const focusManager = Services.focus;
 const {KeyCodes} = require("devtools/client/shared/keycodes");

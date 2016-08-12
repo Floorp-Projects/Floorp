@@ -9,7 +9,7 @@ const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const flags = require("devtools/shared/flags");
-const {getClientCssPropertiesForTests} = require("devtools/shared/fronts/css-properties");
+const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
 flags.testing = true;
 SimpleTest.registerCleanupFunction(() => {
@@ -63,7 +63,7 @@ function setup(cb, additionalOpts = {}) {
     lineNumbers: true,
     foldGutter: true,
     gutters: ["CodeMirror-linenumbers", "breakpoints", "CodeMirror-foldgutter"],
-    cssProperties: getClientCssPropertiesForTests()
+    cssProperties: getClientCssProperties()
   };
 
   for (let o in additionalOpts) {

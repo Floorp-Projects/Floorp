@@ -65,7 +65,7 @@ function test() {
 }
 
 function runTests() {
-  let completer = new CSSCompleter({cssProperties: getClientCssPropertiesForTests()});
+  let completer = new CSSCompleter({cssProperties: getClientCssProperties()});
   let checkState = state => {
     if (state[0] == "null" && (!completer.state || completer.state == "null")) {
       return true;
