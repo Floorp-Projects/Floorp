@@ -33,7 +33,7 @@ add_test(function test_fcp_template_for_transparent_structure() {
   }
 
   let berTlv = berHelper.decode(tag_test.length);
-  let iter = Iterator(berTlv.value);
+  let iter = berTlv.value.values();
   let tlv = berHelper.searchForNextTag(BER_FCP_FILE_DESCRIPTOR_TAG, iter);
   equal(tlv.value.fileStructure, UICC_EF_STRUCTURE[EF_STRUCTURE_TRANSPARENT]);
 
@@ -71,7 +71,7 @@ add_test(function test_fcp_template_for_linear_fixed_structure() {
   }
 
   let berTlv = berHelper.decode(tag_test.length);
-  let iter = Iterator(berTlv.value);
+  let iter = berTlv.value.values();
   let tlv = berHelper.searchForNextTag(BER_FCP_FILE_DESCRIPTOR_TAG, iter);
   equal(tlv.value.fileStructure, UICC_EF_STRUCTURE[EF_STRUCTURE_LINEAR_FIXED]);
   equal(tlv.value.recordLength, 0x1A);
