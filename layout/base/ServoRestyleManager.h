@@ -77,6 +77,15 @@ public:
 
   bool HasPendingRestyles() { return !mModifiedElements.IsEmpty(); }
 
+  /**
+   * Gets the appropriate frame given a content and a pseudo-element tag.
+   *
+   * Right now only supports a null tag, before or after. If the pseudo-element
+   * is not null, the content needs to be an element.
+   */
+  static nsIFrame* FrameForPseudoElement(nsIContent* aContent,
+                                         nsIAtom* aPseudoTagOrNull);
+
 protected:
   ~ServoRestyleManager() {}
 
