@@ -475,3 +475,18 @@ simple_keyfile('Google API')
 id_and_secret_keyfile('Bing API')
 
 simple_keyfile('Adjust SDK')
+
+# Servo integration
+# ==============================================================
+option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
+       help='Absolute path of the target directory where libgeckoservo can '
+            'be found. This is generally servo_src_dir/target/release.'
+            'Passing this flag enables experimental integration with the '
+            'servo style system')
+
+@depends_if('--with-servo')
+def servo_target_dir(value)
+    return value[0]
+
+set_define('MOZ_STYLO', depends_if(servo_target_dir)(lambda x: bool(x))
+set_config('SERVO_TARGET_DIR', servo_target_dir)

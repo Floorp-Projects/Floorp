@@ -214,7 +214,12 @@ if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
 
 OS_LIBS += CONFIG['MOZ_CAIRO_OSLIBS']
 OS_LIBS += CONFIG['MOZ_WEBRTC_X11_LIBS']
-OS_LIBS += CONFIG['MOZ_SERVO_LIBS']
+
+if CONFIG['SERVO_TARGET_DIR']:
+    if CONFIG['_MSC_VER']:
+        OS_LIBS += ['%s/geckoservo' % CONFIG['SERVO_TARGET_DIR']]
+    else:
+        OS_LIBS += ['-L%s' % CONFIG['SERVO_TARGET_DIR'], '-lgeckoservo']
 
 if CONFIG['MOZ_SYSTEM_JPEG']:
     OS_LIBS += CONFIG['MOZ_JPEG_LIBS']
