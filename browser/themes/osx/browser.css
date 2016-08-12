@@ -3475,10 +3475,5 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 }
 
 .webextension-popup-browser {
-  margin-right: -1px;
   border-radius: inherit;
-}
-
-#PanelUI-popup .webextension-popup-browser {
-  margin: 0;
 }
