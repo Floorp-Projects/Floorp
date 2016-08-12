@@ -320,7 +320,10 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getAccessible(aParentId)),
-        new invokerChecker(EVENT_REORDER, getNode(aParentId).parentNode)
+        new invokerChecker(EVENT_REORDER, getNode(aParentId).parentNode),
+        new unexpectedInvokerChecker(EVENT_HIDE, getAccessible(aChild1Id)),
+        new unexpectedInvokerChecker(EVENT_HIDE, getAccessible(aChild2Id)),
+        new unexpectedInvokerChecker(EVENT_REORDER, getAccessible(aParentId))
       ];
 
       this.invoke = function removeGrandChildrenNHideParent_invoke()
