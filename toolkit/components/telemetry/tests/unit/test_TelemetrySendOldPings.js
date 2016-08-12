@@ -144,19 +144,18 @@ function pingHandler(aRequest) {
   gSeenPings++;
 }
 
-function run_test() {
+add_task(function* test_setup() {
   PingServer.start();
   PingServer.registerPingHandler(pingHandler);
   do_get_profile();
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   // Make sure we don't generate unexpected pings due to pref changes.
-  setEmptyPrefWatchlist();
+  yield setEmptyPrefWatchlist();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   Services.prefs.setCharPref(TelemetryController.Constants.PREF_SERVER,
                              "http://localhost:" + PingServer.port);
-  run_next_test();
-}
+});
 
 /**
  * Setup the tests by making sure the ping storage directory is available, otherwise
