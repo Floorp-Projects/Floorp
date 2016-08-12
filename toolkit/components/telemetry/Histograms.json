@@ -5382,7 +5382,7 @@
     "kind": "enumerated",
     "n_values": 5,
     "releaseChannelCollection": "opt-out",
-    "description": "Result of showing the search reset prompt to the user. 0=restored original default, 1=kept current engine, 2=changed engine, 3=closed the page"
+    "description": "Result of showing the search reset prompt to the user. 0=restored original default, 1=kept current engine, 2=changed engine, 3=closed the page, 4=opened search settings"
   },
   "SEARCH_SERVICE_INIT_MS": {
     "expires_in_version": "never",

@@ -7453,11 +7453,9 @@ nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
 
   UpdateIteratorFromOffset(properties, aInOffset, iter);
 
-  for (int32_t i = 0; i < aLength; i++) {
-    if (aInOffset > GetContentEnd()) {
-      break;
-    }
-
+  const int32_t kContentEnd = GetContentEnd();
+  const int32_t kEndOffset = std::min(aInOffset + aLength, kContentEnd + 1);
+  while (aInOffset < kEndOffset) {
     if (!iter.IsOriginalCharSkipped() &&
         !mTextRun->IsClusterStart(iter.GetSkippedOffset())) {
       FindClusterStart(mTextRun,
@@ -7472,12 +7470,12 @@ nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
     rect.y = point.y;
 
     nscoord iSize = 0;
-    gfxSkipCharsIterator nextIter(iter);
-    if (aInOffset < GetContentEnd()) {
+    if (aInOffset < kContentEnd) {
+      gfxSkipCharsIterator nextIter(iter);
       nextIter.AdvanceOriginal(1);
       if (!nextIter.IsOriginalCharSkipped() &&
           !mTextRun->IsClusterStart(nextIter.GetSkippedOffset())) {
-        FindClusterEnd(mTextRun, GetContentEnd(), &nextIter);
+        FindClusterEnd(mTextRun, kContentEnd, &nextIter);
       }
 
       gfxFloat advance =
@@ -7499,9 +7497,11 @@ nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
       }
     }
     aRects.AppendElement(rect);
-
-    iter.AdvanceOriginal(1);
     aInOffset++;
+    // Don't advance iter if we've reached the end
+    if (aInOffset < kEndOffset) {
+      iter.AdvanceOriginal(1);
+    }
   }
 
   return NS_OK;
@@ -7688,9 +7688,9 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
   NS_ASSERTION(aOffset && *aOffset <= contentLength, "aOffset out of range");
 
   bool selectable;
-  uint8_t selectStyle;  
+  StyleUserSelect selectStyle;
   IsSelectable(&selectable, &selectStyle);
-  if (selectStyle == NS_STYLE_USER_SELECT_ALL)
+  if (selectStyle == StyleUserSelect::All)
     return CONTINUE_UNSELECTABLE;
 
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
@@ -7877,9 +7877,9 @@ nsTextFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKey
   NS_ASSERTION (aOffset && *aOffset <= contentLength, "aOffset out of range");
 
   bool selectable;
-  uint8_t selectStyle;
+  StyleUserSelect selectStyle;
   IsSelectable(&selectable, &selectStyle);
-  if (selectStyle == NS_STYLE_USER_SELECT_ALL)
+  if (selectStyle == StyleUserSelect::All)
     return CONTINUE_UNSELECTABLE;
 
   int32_t offset = GetContentOffset() + (*aOffset < 0 ? contentLength : *aOffset);

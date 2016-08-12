@@ -44,7 +44,7 @@ def try_compile(includes=None, body='', language='C++', flags=None, check_msg=No
 #   conditional on the value of that function.
 @template
 def check_header(header, language='C++', flags=None, includes=None, when=None):
-    when = when or depends('--help')(lambda _: True)
+    when = when or always
 
     if includes:
         includes = includes[:]
@@ -55,8 +55,7 @@ def check_header(header, language='C++', flags=None, includes=None, when=None):
     @depends_when(try_compile(includes=includes, language=language, flags=flags,
                               check_msg='for %s' % header), when=when)
     def have_header(value):
-        if value is not None:
-            return True
+        return value
     header_var = 'HAVE_%s' % (header.upper()
                                     .replace('-', '_')
                                     .replace('/', '_')
@@ -104,8 +103,7 @@ def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
     else:
         compilers = (c_compiler, cxx_compiler)
 
-    if not when:
-        when = depends('--help')(lambda _: True)
+    when = when or always
 
     for c in compilers:
         assert c in (c_compiler, cxx_compiler)
@@ -140,7 +138,7 @@ def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
 
         @depends(result, warnings_flags)
         def maybe_add_flag(result, warnings_flags):
-            if result is not None:
+            if result:
                 warnings_flags.append(warning)
 
 # Add the given warning to the list of warning flags for the build.

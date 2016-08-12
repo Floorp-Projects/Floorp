@@ -58,8 +58,7 @@
       <field name="_anchorElement">null</field>
       <field name="_mainViewHeight">0</field>
       <field name="_subViewObserver">null</field>
-      <field name="__transitioning">false</field>
-      <field name="_ignoreMutations">false</field>
+      <field name="__transitioning">true</field>
 
       <property name="showingSubView" readonly="true"
                 onget="return this._viewStack.getAttribute('viewtype') == 'subview'"/>
@@ -68,22 +67,6 @@
                 onget="return this._mainViewId ? document.getElementById(this._mainViewId) : null;"/>
       <property name="showingSubViewAsMainView" readonly="true"
                 onget="return this.getAttribute('mainViewIsSubView') == 'true'"/>
-
-      <property name="ignoreMutations">
-        <getter>
-          return this._ignoreMutations;
-        </getter>
-        <setter><![CDATA[
-          this._ignoreMutations = val;
-          if (!val && this._panel.state == "open") {
-            if (this.showingSubView) {
-              this._syncContainerWithSubView();
-            } else {
-              this._syncContainerWithMainView();
-            }
-          }
-        ]]></setter>
-      </property>
 
       <property name="_transitioning">
         <getter>
@@ -223,7 +206,10 @@
           let container = this._viewContainer;
           this._transitioning = true;
 
-          let onTransitionEnd = () => {
+          let onTransitionEnd = (event) => {
+            if (event.propertyName != "transform") {
+              return;
+            }
             container.removeEventListener("transitionend", onTransitionEnd);
             this._transitioning = false;
           };
@@ -296,7 +282,6 @@
               }
               break;
             case "popupshowing":
-              this.setAttribute("panelopen", "true");
               // Bug 941196 - The panel can get taller when opening a subview. Disabling
               // autoPositioning means that the panel won't jump around if an opened
               // subview causes the panel to exceed the dimensions of the screen in the
@@ -312,9 +297,18 @@
                 subtree: true
               });
 
-              break;
-            case "popupshown":
-              this._setMaxHeight();
+              let onTransitionEnd = (event) => {
+                if (event.propertyName != "transform") {
+                  return;
+                }
+                let panel = event.target;
+                panel.removeEventListener("tranitionend", onTransitionEnd);
+                // Needed in case the panel is closed before the transition ends.
+                if (panel.state == "open") {
+                  this.setAttribute("panelopen", "true");
+                }
+              };
+              this._panel.addEventListener("transitionend", onTransitionEnd);
               break;
             case "popuphidden":
               this.removeAttribute("panelopen");
@@ -338,22 +332,9 @@
         ]]></body>
       </method>
 
-      <method name="_setMaxHeight">
-        <body><![CDATA[
-          if (!this._shouldSetHeight())
-            return;
-
-          // Ignore the mutation that'll fire when we set the height of
-          // the main view.
-          this.ignoreMutations = true;
-          this._mainView.style.height =
-            this.getBoundingClientRect().height + "px";
-          this.ignoreMutations = false;
-        ]]></body>
-      </method>
       <method name="_adjustContainerHeight">
         <body><![CDATA[
-          if (!this.ignoreMutations && !this.showingSubView && !this._transitioning) {
+          if (!this.showingSubView && !this._transitioning) {
             let height;
             if (this.showingSubViewAsMainView) {
               height = this._heightOfSubview(this._mainView);
@@ -371,7 +352,7 @@
             return;
           }
 
-          if (!this.ignoreMutations && this.showingSubView) {
+          if (this.showingSubView) {
             let newHeight = this._heightOfSubview(this._currentSubView, this._subViews);
             this._viewContainer.style.height = newHeight + "px";
           }

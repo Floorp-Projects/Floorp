@@ -17,7 +17,7 @@ sync_htmlparser:
   Retrieves the HTML parser and Java to C++ translator sources from Mozilla's 
   htmlparser repository.
 sync_javaparser:
-  Retrieves the javaparser sources from Google Code.
+  Retrieves the javaparser sources from GitHub.
 sync:
   Runs both sync_javaparser and sync_htmlparser.
 javaparser:
@@ -43,4 +43,4 @@ clean:
   Runs both clean_javaparser and clean_htmlparser.
 
 Ben Newman (23 September 2009)
-Henri Sivonen (21 April 2010)
+Henri Sivonen (11 August 2016)

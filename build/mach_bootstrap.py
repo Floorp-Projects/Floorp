@@ -51,6 +51,8 @@ SEARCH_PATHS = [
     'python/pyyaml/lib',
     'python/requests',
     'python/slugid',
+    'python/py',
+    'python/pytest',
     'python/voluptuous',
     'build',
     'build/pymake',

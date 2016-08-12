@@ -41,7 +41,6 @@ import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -91,8 +90,6 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -105,7 +102,6 @@ public class GeckoPreferences
 extends AppCompatPreferenceActivity
 implements
 GeckoActivityStatus,
-GeckoEventListener,
 NativeEventListener,
 OnPreferenceChangeListener,
 OnSharedPreferenceChangeListener
@@ -374,11 +370,9 @@ OnSharedPreferenceChangeListener
         // Use setResourceToOpen to specify these extras.
         Bundle intentExtras = getIntent().getExtras();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
-            "Sanitize:Finished");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Sanitize:Finished");
 
-        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
-            "Snackbar:Show");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Snackbar:Show");
 
         // Add handling for long-press click.
         // This is only for Android 3.0 and below (which use the long-press-context-menu paradigm).
@@ -512,11 +506,9 @@ OnSharedPreferenceChangeListener
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
-            "Sanitize:Finished");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Sanitize:Finished");
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
-            "Snackbar:Show");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Snackbar:Show");
 
         if (mPrefsRequest != null) {
             PrefsHelper.removeObserver(mPrefsRequest);
@@ -620,29 +612,27 @@ OnSharedPreferenceChangeListener
     }
 
     @Override
-    public void handleMessage(String event, JSONObject message) {
+    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
         try {
-            if (event.equals("Sanitize:Finished")) {
-                boolean success = message.getBoolean("success");
-                final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
+            switch (event) {
+                case "Sanitize:Finished":
+                    boolean success = message.getBoolean("success");
+                    final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
 
-                SnackbarBuilder.builder(GeckoPreferences.this)
-                        .message(stringRes)
-                        .duration(Snackbar.LENGTH_LONG)
-                        .buildAndShow();
+                    SnackbarBuilder.builder(GeckoPreferences.this)
+                            .message(stringRes)
+                            .duration(Snackbar.LENGTH_LONG)
+                            .buildAndShow();
+                    break;
+                case "Snackbar:Show":
+                    SnackbarBuilder.builder(this)
+                            .fromEvent(message)
+                            .callback(callback)
+                            .buildAndShow();
+                    break;
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
-        }
-    }
-
-    @Override
-    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
-        if ("Snackbar:Show".equals(event)) {
-            SnackbarBuilder.builder(this)
-                    .fromEvent(message)
-                    .callback(callback)
-                    .buildAndShow();
         }
     }
 

@@ -16,7 +16,7 @@ var exports = {}
 var module = {exports};
 
  // Add some starter prefs.
-localStorage.setItem("devtools.branch1.somebool", JSON.stringify({
+localStorage.setItem("Services.prefs:devtools.branch1.somebool", JSON.stringify({
   // bool
   type: 128,
   defaultValue: false,
@@ -24,7 +24,7 @@ localStorage.setItem("devtools.branch1.somebool", JSON.stringify({
   userValue: false
 }));
 
-localStorage.setItem("devtools.branch1.somestring", JSON.stringify({
+localStorage.setItem("Services.prefs:devtools.branch1.somestring", JSON.stringify({
   // string
   type: 32,
   defaultValue: "dinosaurs",
@@ -32,7 +32,7 @@ localStorage.setItem("devtools.branch1.somestring", JSON.stringify({
   userValue: "elephants"
 }));
 
-localStorage.setItem("devtools.branch2.someint", JSON.stringify({
+localStorage.setItem("Services.prefs:devtools.branch2.someint", JSON.stringify({
   // string
   type: 64,
   defaultValue: -16,
@@ -144,11 +144,11 @@ function do_tests() {
   WrappedPrefs.setIntPref("devtools.branch2.someint", -93);
   is(WrappedPrefs.getIntPref("devtools.branch2.someint"), -93, "set int pref");
   WrappedPrefs.setCharPref("devtools.branch1.somestring", "hello");
-  ok(WrappedPrefs.getCharPref("devtools.branch1.somestring"), "hello",
+  is(WrappedPrefs.getCharPref("devtools.branch1.somestring"), "hello",
     "set string pref");
 
   Services.prefs.clearUserPref("devtools.branch1.somestring");
-  ok(Services.prefs.getCharPref("devtools.branch1.somestring"), "dinosaurs",
+  is(Services.prefs.getCharPref("devtools.branch1.somestring"), "dinosaurs",
     "clear string pref");
 
   ok(Services.prefs.prefHasUserValue("devtools.branch1.somebool"),
@@ -168,9 +168,9 @@ function do_tests() {
   Services.prefs.setCharPref("devtools.branch1.somestring", "octopus");
   is(Services.prefs.getCharPref("devtools.branch1.somestring"), "octopus",
     "set correctly via branch");
-  ok(branch0.getCharPref("devtools.branch1.somestring"), "octopus",
+  is(branch0.getCharPref("devtools.branch1.somestring"), "octopus",
     "get via base branch");
-  ok(branch1.getCharPref("somestring"), "octopus", "get via branch");
+  is(branch1.getCharPref("somestring"), "octopus", "get via branch");
 
 
   let notifications = {};
@@ -181,14 +181,7 @@ function do_tests() {
     }
   };
 
-  try {
-    threw = false;
-    branch0.addObserver("devtools.branch1", null, null);
-  } catch (e) {
-    threw = true;
-  }
-  ok(threw, "invalid branch name to addObserver");
-
+  branch0.addObserver("devtools.branch1", null, null);
   branch0.addObserver("devtools.branch1.", observer, false);
   branch1.addObserver("", observer, false);
 
@@ -208,6 +201,15 @@ function do_tests() {
   isDeeply(notifications, {
     "somestring": true
   }, "removeObserver worked");
+
+  clearNotificationList();
+  branch0.addObserver("devtools.branch1.somestring", observer, false);
+  Services.prefs.setCharPref("devtools.branch1.somestring", "northern shoveler");
+  isDeeply(notifications, {
+    "devtools.branch1.somestring": true,
+    "somestring": true
+  }, "notifications sent to two listeners");
+  branch0.removeObserver("devtools.branch1.somestring", observer);
 
   // Make sure we update if the pref change comes from somewhere else.
   clearNotificationList();
