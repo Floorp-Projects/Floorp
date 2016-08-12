@@ -4244,7 +4244,11 @@ Darwin:1)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
 Linux:1)
-    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
+    case $CPU_ARCH in
+        x86_64|x86)
+            MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
+        ;;
+    esac
     ;;
 esac
 
