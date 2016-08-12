@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
@@ -98,10 +98,10 @@ PresentationDevicePrompt.prototype = {
     }
 
     if (aIndex < 0) {                    // Cancel request if no selected device,
-      this._request.cancel(Cr.NS_ERROR_NOT_ALLOWED_ERR);
+      this._request.cancel(Cr.NS_ERROR_DOM_NOT_ALLOWED_ERR);
       return;
     } else if (!this._devices.length) {  // or there is no available devices
-      this._request.cancel(Cr.NS_ERROR_NOT_FOUND_ERR);
+      this._request.cancel(Cr.NS_ERROR_DOM_NOT_FOUND_ERR);
       return;
     }
 
