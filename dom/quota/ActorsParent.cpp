@@ -4655,17 +4655,14 @@ QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  bool isNullPrincipal;
-  nsresult rv = aPrincipal->GetIsNullPrincipal(&isNullPrincipal);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (isNullPrincipal) {
+  if (aPrincipal->GetIsNullPrincipal()) {
     NS_WARNING("IndexedDB not supported from this principal!");
     return NS_ERROR_FAILURE;
   }
 
   nsCString origin;
-  rv = aPrincipal->GetOrigin(origin);
+  nsresult rv = aPrincipal->GetOrigin(origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (origin.EqualsLiteral(kChromeOrigin)) {

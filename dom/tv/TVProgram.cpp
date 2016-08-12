@@ -33,8 +33,8 @@ TVProgram::TVProgram(nsISupports* aOwner,
 
   aData->GetEventId(mEventId);
   aData->GetTitle(mTitle);
-  aData->GetStartTime(&mStartTime);
-  aData->GetDuration(&mDuration);
+  mStartTime = aData->GetStartTime();
+  mDuration = aData->GetDuration();
   aData->GetDescription(mDescription);
   aData->GetRating(mRating);
 

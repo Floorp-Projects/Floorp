@@ -407,9 +407,7 @@ IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
     *aIsSystemPrincipal = false;
   }
 
-  bool isNullPrincipal;
-  if (NS_WARN_IF(NS_FAILED(aPrincipal->GetIsNullPrincipal(&isNullPrincipal))) ||
-      isNullPrincipal) {
+  if (aPrincipal->GetIsNullPrincipal()) {
     return false;
   }
 
