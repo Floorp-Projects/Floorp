@@ -73,8 +73,9 @@
     }))
     .then(() => getUserMedia({audio: true, video: true})).then(stream => {
       info("Test cloning a stream into inception");
-      var inceptionClone = stream.clone().clone().clone().clone().clone()
-                                 .clone().clone().clone().clone().clone();
+      var clone = stream;
+      var clones = Array(10).fill().map(() => clone = clone.clone());
+      var inceptionClone = clones.pop();
       checkMediaStreamCloneAgainstOriginal(inceptionClone, stream);
       stream.getTracks().forEach(t => (stream.removeTrack(t),
                                        inceptionClone.addTrack(t)));
@@ -85,7 +86,8 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, inceptionClone);
-      return playback.playMedia(false);
+      return playback.playMedia(false)
+        .then(() => clones.forEach(c => c.getTracks().forEach(t => t.stop())));
     })
     .then(() => getUserMedia({audio: true, video: true})).then(stream => {
       info("Test adding tracks from many stream clones to the original stream");
