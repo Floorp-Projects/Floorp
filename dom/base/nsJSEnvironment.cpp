@@ -188,7 +188,6 @@ static nsScriptNameSpaceManager *gNameSpaceManager;
 
 static PRTime sFirstCollectionTime;
 
-static JSRuntime* sRuntime;
 static JSContext* sContext;
 
 static bool sIsInitialized;
@@ -246,8 +245,8 @@ FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
     return nullptr;
   }
 
-  JSRuntime* rt = GetJSRuntime();
-  JS::RootedObject exceptionObject(rt, &exceptionValue.toObject());
+  JS::RootingContext* rcx = RootingCx();
+  JS::RootedObject exceptionObject(rcx, &exceptionValue.toObject());
   JSObject* stackObject = ExceptionStackOrNull(exceptionObject);
   if (stackObject) {
     return stackObject;
@@ -268,7 +267,7 @@ FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
   if (!stack) {
     return nullptr;
   }
-  JS::RootedValue value(rt);
+  JS::RootedValue value(rcx);
   stack->GetNativeSavedFrame(&value);
   if (value.isObject()) {
     return &value.toObject();
@@ -422,12 +421,12 @@ class ScriptErrorEvent : public Runnable
 {
 public:
   ScriptErrorEvent(nsPIDOMWindowInner* aWindow,
-                   JSRuntime* aRuntime,
+                   JS::RootingContext* aRootingCx,
                    xpc::ErrorReport* aReport,
                    JS::Handle<JS::Value> aError)
     : mWindow(aWindow)
     , mReport(aReport)
-    , mError(aRuntime, aError)
+    , mError(aRootingCx, aError)
   {}
 
   NS_IMETHOD Run() override
@@ -438,7 +437,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     // First, notify the DOM that we have a script error, but only if
     // our window is still the current inner.
-    JSContext* rootingCx = nsContentUtils::RootingCx();
+    JS::RootingContext* rootingCx = RootingCx();
     if (win->IsCurrentInnerWindow() && win->GetDocShell() && !sHandlingScriptError) {
       AutoRestore<bool> recursionGuard(sHandlingScriptError);
       sHandlingScriptError = true;
@@ -496,10 +495,10 @@ bool ScriptErrorEvent::sHandlingScriptError = false;
 namespace xpc {
 
 void
-DispatchScriptErrorEvent(nsPIDOMWindowInner *win, JSRuntime *rt, xpc::ErrorReport *xpcReport,
-                         JS::Handle<JS::Value> exception)
+DispatchScriptErrorEvent(nsPIDOMWindowInner *win, JS::RootingContext* rootingCx,
+                         xpc::ErrorReport *xpcReport, JS::Handle<JS::Value> exception)
 {
-  nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, rt, xpcReport, exception));
+  nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, rootingCx, xpcReport, exception));
 }
 
 } /* namespace xpc */
@@ -1196,7 +1195,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
   sPendingLoadCount = 0;
   sLoadingInProgress = false;
 
-  if (!nsContentUtils::XPConnect() || !sRuntime) {
+  if (!nsContentUtils::XPConnect() || !sContext) {
     return;
   }
 
@@ -2234,7 +2233,6 @@ mozilla::dom::StartupJSEnvironment()
   sNeedsFullGC = false;
   sNeedsGCAfterCC = false;
   gNameSpaceManager = nullptr;
-  sRuntime = nullptr;
   sContext = nullptr;
   sIsInitialized = false;
   sDidShutdown = false;
@@ -2378,12 +2376,10 @@ nsJSContext::EnsureStatics()
     MOZ_CRASH();
   }
 
-  sRuntime = xpc::GetJSRuntime();
-  if (!sRuntime) {
+  sContext = danger::GetJSContext();
+  if (!sContext) {
     MOZ_CRASH();
   }
-
-  sContext = JS_GetContext(sRuntime);
 
   // Let's make sure that our main thread is the same as the xpcom main thread.
   MOZ_ASSERT(NS_IsMainThread());

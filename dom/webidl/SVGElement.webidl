@@ -15,6 +15,7 @@ interface SVGElement : Element {
 
   [Constant]
   readonly attribute SVGAnimatedString className;
+  [SameObject] readonly attribute DOMStringMap dataset;
   [PutForwards=cssText, Constant]
   readonly attribute CSSStyleDeclaration style;
 

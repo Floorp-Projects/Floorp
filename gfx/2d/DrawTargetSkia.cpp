@@ -998,17 +998,47 @@ DrawTargetSkia::ReturnCGContext(CGContextRef aCGContext)
 CGContextRef
 BorrowedCGContext::BorrowCGContextFromDrawTarget(DrawTarget *aDT)
 {
-  MOZ_ASSERT(aDT->GetBackendType() == BackendType::SKIA);
-  DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
-  return skiaDT->BorrowCGContext(DrawOptions());
+  if (aDT->GetBackendType() == BackendType::SKIA) {
+    DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
+    return skiaDT->BorrowCGContext(DrawOptions());
+  } else if (aDT->GetBackendType() == BackendType::COREGRAPHICS) {
+    DrawTargetCG* cgDT = static_cast<DrawTargetCG*>(aDT);
+    cgDT->Flush();
+    cgDT->MarkChanged();
+
+    // swap out the context
+    CGContextRef cg = cgDT->mCg;
+    if (MOZ2D_ERROR_IF(!cg)) {
+      return nullptr;
+    }
+    cgDT->mCg = nullptr;
+
+    // save the state to make it easier for callers to avoid mucking with things
+    CGContextSaveGState(cg);
+
+    return cg;
+  }
+
+  MOZ_ASSERT(false);
+  return nullptr;
 }
 
 void
 BorrowedCGContext::ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg)
 {
-  MOZ_ASSERT(aDT->GetBackendType() == BackendType::SKIA);
-  DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
-  skiaDT->ReturnCGContext(cg);
+  if (aDT->GetBackendType() == BackendType::SKIA) {
+    DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
+    skiaDT->ReturnCGContext(cg);
+    return;
+  } else if (aDT->GetBackendType() == BackendType::COREGRAPHICS) {
+    DrawTargetCG* cgDT = static_cast<DrawTargetCG*>(aDT);
+
+    CGContextRestoreGState(cg);
+    cgDT->mCg = cg;
+    return;
+  }
+
+  MOZ_ASSERT(false);
 }
 
 static void

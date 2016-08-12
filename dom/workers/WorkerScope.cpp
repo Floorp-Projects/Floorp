@@ -621,7 +621,7 @@ public:
     MOZ_ASSERT(aPromiseProxy);
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   Run() override
   {
     AssertIsOnMainThread();

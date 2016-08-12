@@ -175,7 +175,7 @@ class nsHtml5Parser final : public nsIParser,
     /**
      * Don't call. For interface compat only.
      */
-    NS_IMETHODIMP CancelParsingEvents() override;
+    NS_IMETHOD CancelParsingEvents() override;
 
     /**
      * Don't call. For interface compat only.

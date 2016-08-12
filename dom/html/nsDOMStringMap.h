@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
-#include "nsGenericHTMLElement.h"
+#include "mozilla/dom/Element.h"
 #include "jsfriendapi.h" // For js::ExpandoAndGeneration
 
 namespace mozilla {
@@ -32,7 +32,7 @@ public:
     return mElement;
   }
 
-  explicit nsDOMStringMap(nsGenericHTMLElement* aElement);
+  explicit nsDOMStringMap(mozilla::dom::Element* aElement);
 
   // WebIDL API
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
@@ -49,7 +49,7 @@ private:
   virtual ~nsDOMStringMap();
 
 protected:
-  RefPtr<nsGenericHTMLElement> mElement;
+  RefPtr<mozilla::dom::Element> mElement;
   // Flag to guard against infinite recursion.
   bool mRemovingProp;
   static bool DataPropToAttr(const nsAString& aProp, nsAutoString& aResult);

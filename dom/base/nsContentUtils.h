@@ -1739,9 +1739,6 @@ public:
 
   static JSContext *GetCurrentJSContext();
   static JSContext *GetCurrentJSContextForThread();
-  inline static JSContext *RootingCx() {
-    return mozilla::dom::danger::GetJSContext();
-  }
 
   /**
    * Case insensitive comparison between two strings. However it only ignores
@@ -2665,6 +2662,14 @@ public:
    * Try to find the docshell corresponding to the given event target.
    */
   static nsIDocShell* GetDocShellForEventTarget(mozilla::dom::EventTarget* aTarget);
+
+  /**
+   * Returns true if the "HTTPS state" of the document should be "modern". See:
+   *
+   * https://html.spec.whatwg.org/#concept-document-https-state
+   * https://fetch.spec.whatwg.org/#concept-response-https-state
+   */
+  static bool HttpsStateIsModern(nsIDocument* aDocument);
 
 private:
   static bool InitializeEventTable();

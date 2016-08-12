@@ -148,7 +148,7 @@ private:
 
     static nsIIOService    *sIOService;
     static nsIStringBundle *sStrBundle;
-    static JSRuntime       *sRuntime;
+    static JSContext       *sContext;
 };
 
 namespace mozilla {

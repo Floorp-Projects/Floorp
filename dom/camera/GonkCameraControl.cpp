@@ -978,7 +978,7 @@ nsGonkCameraControl::SetThumbnailSize(const Size& aSize)
     }
     ~SetThumbnailSize() { MOZ_COUNT_DTOR(SetThumbnailSize); }
 
-    NS_IMETHODIMP
+    NS_IMETHOD
     Run() override
     {
       nsresult rv = mCameraControl->SetThumbnailSizeImpl(mSize);
@@ -1096,7 +1096,7 @@ nsGonkCameraControl::SetPictureSize(const Size& aSize)
     }
     ~SetPictureSize() { MOZ_COUNT_DTOR(SetPictureSize); }
 
-    NS_IMETHODIMP
+    NS_IMETHOD
     Run() override
     {
       nsresult rv = mCameraControl->SetPictureSizeImpl(mSize);
@@ -1480,7 +1480,7 @@ nsGonkCameraControl::OnAutoFocusComplete(bool aSuccess, bool aExpired)
       , mExpired(aExpired)
     { }
 
-    NS_IMETHODIMP
+    NS_IMETHOD
     Run() override
     {
       mCameraControl->OnAutoFocusComplete(mSuccess, mExpired);
@@ -2264,7 +2264,7 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
       mTarget->OnPoster(mDst, mDstLength);
     }
 
-    NS_IMETHODIMP Run() override
+    NS_IMETHOD Run() override
     {
 #ifdef MOZ_WIDGET_GONK
       // NV21 (yuv420sp) is 12 bits / pixel

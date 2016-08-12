@@ -384,7 +384,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
     uint8_t paramCount = methodInfo->GetParamCount();
     uint8_t inArgs = paramCount - 1;
 
-    JS::Rooted<txParamArrayHolder> invokeParams(mozilla::dom::GetJSRuntime());
+    JS::Rooted<txParamArrayHolder> invokeParams(mozilla::dom::RootingCx());
     if (!invokeParams.get().Init(paramCount)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

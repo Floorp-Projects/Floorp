@@ -405,7 +405,7 @@ public:
     NS_RELEASE_THIS();
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     if (mFrame.IsAlive()) {
       static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())->

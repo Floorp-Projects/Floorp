@@ -2253,9 +2253,9 @@ InlineFrameIterator::InlineFrameIterator(JSContext* cx, const JitFrameIterator* 
 }
 
 InlineFrameIterator::InlineFrameIterator(JSRuntime* rt, const JitFrameIterator* iter)
-  : calleeTemplate_(rt),
+  : calleeTemplate_(rt->contextFromMainThread()),
     calleeRVA_(),
-    script_(rt)
+    script_(rt->contextFromMainThread())
 {
     resetOn(iter);
 }

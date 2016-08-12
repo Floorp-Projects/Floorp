@@ -76,12 +76,12 @@ public:
         mEntityID = entityID;
     }
 
-    NS_IMETHODIMP GetLastModifiedTime(PRTime* lastModifiedTime) override {
+    NS_IMETHOD GetLastModifiedTime(PRTime* lastModifiedTime) override {
         *lastModifiedTime = mLastModifiedTime;
         return NS_OK;
     }
 
-    NS_IMETHODIMP SetLastModifiedTime(PRTime lastModifiedTime) override {
+    NS_IMETHOD SetLastModifiedTime(PRTime lastModifiedTime) override {
         mLastModifiedTime = lastModifiedTime;
         return NS_OK;
     }

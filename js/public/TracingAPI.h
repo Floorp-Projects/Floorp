@@ -132,6 +132,7 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
       : JSTracer(rt, JSTracer::TracerKindTag::Callback, weakTraceKind),
         contextName_(nullptr), contextIndex_(InvalidIndex), contextFunctor_(nullptr)
     {}
+    CallbackTracer(JSContext* cx, WeakMapTraceKind weakTraceKind = TraceWeakMapValues);
 
     // Override these methods to receive notification when an edge is visited
     // with the type contained in the callback. The default implementation

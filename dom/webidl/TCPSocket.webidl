@@ -89,6 +89,11 @@ interface TCPSocket : EventTarget {
   void close();
 
   /**
+   * Close the socket immediately without waiting for unsent data.
+   */
+  [ChromeOnly] void closeImmediately();
+
+  /**
    * Write data to the socket.
    *
    * @param data The data to write to the socket.

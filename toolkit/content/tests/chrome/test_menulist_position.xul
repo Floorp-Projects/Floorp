@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist position Test"
+        onload="setTimeout(init, 0)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<!--
+  This test checks the position of a menulist's popup.
+  -->
+
+<script>
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+var menulist;
+
+function init()
+{
+  menulist = document.getElementById("menulist");
+  menulist.open = true;
+}
+
+function isWithinHalfPixel(a, b)
+{
+  return Math.abs(a - b) <= 0.5;
+}
+
+function popupShown()
+{
+  var menurect = menulist.getBoundingClientRect();
+  var popuprect = menulist.menupopup.getBoundingClientRect();
+
+  let marginLeft = parseFloat(getComputedStyle(menulist.menupopup).marginLeft);
+  ok(isWithinHalfPixel(menurect.left + marginLeft, popuprect.left), "left position");
+  ok(isWithinHalfPixel(menurect.right + marginLeft, popuprect.right), "right position");
+
+  let index = menulist.selectedIndex;
+  if (menulist.selectedItem && navigator.platform.indexOf("Mac") >= 0) {
+    let menulistlabel = document.getAnonymousElementByAttribute(menulist, "class", "menulist-label");
+    let mitemlabel = document.getAnonymousElementByAttribute(menulist.selectedItem, "class", "menu-iconic-text");
+
+    ok(isWithinHalfPixel(menulistlabel.getBoundingClientRect().left,
+                         mitemlabel.getBoundingClientRect().left),
+       "Labels horizontally aligned for index " + index);
+    ok(isWithinHalfPixel(menulistlabel.getBoundingClientRect().top,
+                         mitemlabel.getBoundingClientRect().top),
+       "Labels vertically aligned for index " + index);
+  }
+  else {
+    let marginTop = parseFloat(getComputedStyle(menulist.menupopup).marginTop);
+    ok(isWithinHalfPixel(menurect.bottom + marginTop, popuprect.top),
+       "Vertical alignment with no selection for index " + index);
+  }
+
+  menulist.open = false;
+}
+
+function popupHidden()
+{
+  if (!menulist.selectedItem) {
+    SimpleTest.finish();
+  }
+  else {
+    menulist.selectedItem = menulist.selectedItem.nextSibling;
+    menulist.open = true;
+  }
+}
+]]>
+</script>
+
+<hbox align="center" pack="center" style="margin-top: 100px;">
+  <menulist id="menulist" onpopupshown="popupShown();" onpopuphidden="popupHidden();">
+    <menupopup>
+      <menuitem label="One"/>
+      <menuitem label="Two"/>
+      <menuitem label="Three"/>
+      <menuitem label="Four"/>
+      <menuitem label="Five"/>
+    </menupopup>
+  </menulist>
+</hbox>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>
