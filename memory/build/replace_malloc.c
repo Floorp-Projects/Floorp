@@ -223,6 +223,28 @@ valloc_impl(size_t size)
   return replace_valloc(size);
 }
 
+void
+malloc_protect_impl(void* ptr, uint32_t* id)
+{
+  if (MOZ_UNLIKELY(!replace_malloc_initialized))
+    init();
+  if (MOZ_LIKELY(!replace_malloc_protect))
+    je_malloc_protect(ptr, id);
+  else
+    replace_malloc_protect(ptr, id);
+}
+
+void
+malloc_unprotect_impl(void* ptr, uint32_t* id)
+{
+  if (MOZ_UNLIKELY(!replace_malloc_initialized))
+    init();
+  if (MOZ_LIKELY(!replace_malloc_unprotect))
+    je_malloc_unprotect(ptr, id);
+  else
+    replace_malloc_unprotect(ptr, id);
+}
+
 size_t
 malloc_usable_size_impl(usable_ptr_t ptr)
 {
