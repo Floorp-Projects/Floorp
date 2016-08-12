@@ -1038,17 +1038,30 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
   }
 }
 
-static const char* const gMachineStateStr[] = {
-  "DECODING_METADATA",
-  "WAIT_FOR_CDM",
-  "DORMANT",
-  "DECODING",
-  "SEEKING",
-  "BUFFERING",
-  "COMPLETED",
-  "SHUTDOWN",
-  "ERROR"
-};
+/* static */ const char*
+MediaDecoderStateMachine::ToStateStr(State aState)
+{
+  switch (aState) {
+    case DECODER_STATE_DECODING_METADATA: return "DECODING_METADATA";
+    case DECODER_STATE_WAIT_FOR_CDM:      return "WAIT_FOR_CDM";
+    case DECODER_STATE_DORMANT:           return "DORMANT";
+    case DECODER_STATE_DECODING:          return "DECODING";
+    case DECODER_STATE_SEEKING:           return "SEEKING";
+    case DECODER_STATE_BUFFERING:         return "BUFFERING";
+    case DECODER_STATE_COMPLETED:         return "COMPLETED";
+    case DECODER_STATE_SHUTDOWN:          return "SHUTDOWN";
+    case DECODER_STATE_ERROR:             return "ERROR";
+    default: MOZ_ASSERT_UNREACHABLE("Invalid state.");
+  }
+  return "UNKNOWN";
+}
+
+const char*
+MediaDecoderStateMachine::ToStateStr()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  return ToStateStr(mState);
+}
 
 void MediaDecoderStateMachine::SetState(State aState)
 {
@@ -1057,7 +1070,7 @@ void MediaDecoderStateMachine::SetState(State aState)
     return;
   }
   DECODER_LOG("Change machine state from %s to %s",
-              gMachineStateStr[mState], gMachineStateStr[aState]);
+              ToStateStr(), ToStateStr(aState));
 
   mState = aState;
 
@@ -2777,7 +2790,7 @@ MediaDecoderStateMachine::DumpDebugInfo()
       "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
       "mIsAudioPrerolling=%d mIsVideoPrerolling=%d",
       GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1,
-      gMachineStateStr[mState], mPlayState.Ref(), mDecodingFirstFrame, IsPlaying(),
+      ToStateStr(), mPlayState.Ref(), mDecodingFirstFrame, IsPlaying(),
       AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
       mIsAudioPrerolling, mIsVideoPrerolling);
   });
