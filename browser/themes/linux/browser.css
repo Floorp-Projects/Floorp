@@ -1950,6 +1950,10 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   overflow: hidden;
 }
 
+.webextension-popup-browser {
+  border-radius: inherit;
+}
+
 .menuitem-iconic[usercontextid] > .menu-iconic-left > .menu-iconic-icon {
   visibility: visible;
 }
