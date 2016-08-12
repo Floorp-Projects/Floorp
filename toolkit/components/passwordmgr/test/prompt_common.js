@@ -1,3 +1,10 @@
+/**
+ * NOTE:
+ * This file is currently only being used for tests which haven't been
+ * fixed to work with e10s. Favor using the `prompt_common.js` file that
+ * is in `toolkit/components/prompts/test/` instead.
+ */
+
 var Ci = SpecialPowers.Ci;
 ok(Ci != null, "Access Ci");
 var Cc = SpecialPowers.Cc;

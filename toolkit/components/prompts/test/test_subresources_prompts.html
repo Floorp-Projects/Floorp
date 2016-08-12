@@ -134,11 +134,6 @@ add_task(function* runTestAuth()
     defButton   : "button0",
   };
 
-  if (isE10S) {
-    state.checkHidden = false;
-    state.checkMsg = "Use Password Manager to remember this password."
-  }
-
   action = {
     buttonClick : "ok",
     setCheckbox : false,
@@ -175,11 +170,6 @@ add_task(function* runTestAuth()
     focused     : "textField",
     defButton   : "button0",
   };
-
-  if (isE10S) {
-    state.checkHidden = false;
-    state.checkMsg = "Use Password Manager to remember this password."
-  }
 
   action = {
     buttonClick : "ok",
