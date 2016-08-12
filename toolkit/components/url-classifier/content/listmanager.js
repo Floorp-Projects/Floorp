@@ -396,13 +396,19 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
     // never been downloaded. See Bug 1287058 for supporting
     // partial update.
     let stateArray = [];
-    tableArray.forEach(() => stateArray.push(''));
+    tableArray.forEach(listName => {
+      // See Bug 1287059. We save the state to prefs until we support
+      // "saving states to HashStore".
+      let statePrefName = "browser.safebrowsing.provider.google4.state." + listName;
+      let stateBase64 = this.prefs_.getPref(statePrefName, "");
+      stateArray.push(stateBase64 ? atob(stateBase64) : "");
+    });
 
     let urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
                      .getService(Ci.nsIUrlClassifierUtils);
     let requestPayload =  urlUtils.makeUpdateRequestV4(tableArray,
-                                                stateArray,
-                                                tableArray.length);
+                                                       stateArray,
+                                                       tableArray.length);
     // Use a base64-encoded request.
     streamerMap.requestPayload = btoa(requestPayload);
     streamerMap.isPostRequest = false;
