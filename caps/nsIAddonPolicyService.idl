@@ -41,6 +41,11 @@ interface nsIAddonPolicyService : nsISupports
   ACString getGeneratedBackgroundPageUrl(in ACString aAddonId);
 
   /**
+   * Returns true if the addon was granted the |aPerm| API permission.
+   */
+  boolean addonHasPermission(in AString aAddonId, in AString aPerm);
+
+  /**
    * Returns true if unprivileged code associated with the given addon may load
    * data from |aURI|.
    */

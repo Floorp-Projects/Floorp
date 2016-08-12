@@ -796,7 +796,7 @@ FMRadioService::Observe(nsISupports* aSubject,
 
   // The string that we're interested in will be a JSON string looks like:
   //  {"key":"airplaneMode.enabled","value":true}
-  RootedDictionary<dom::SettingChangeNotification> setting(nsContentUtils::RootingCx());
+  RootedDictionary<dom::SettingChangeNotification> setting(RootingCx());
   if (!WrappedJSToDictionary(aSubject, setting)) {
     return NS_OK;
   }

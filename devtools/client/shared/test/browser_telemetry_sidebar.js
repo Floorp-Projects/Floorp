@@ -59,10 +59,7 @@ function checkResults(Telemetry) {
       continue;
     }
 
-    if (histId.endsWith("OPENED_PER_USER_FLAG")) {
-      ok(value.length === 1 && value[0] === true,
-         "Per user value " + histId + " has a single value of true");
-    } else if (histId === "DEVTOOLS_TOOLBOX_OPENED_COUNT") {
+    if (histId === "DEVTOOLS_TOOLBOX_OPENED_COUNT") {
       is(value.length, 1, histId + " has only one entry");
     } else if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");

@@ -80,6 +80,44 @@ LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefiniti
     defineReuseInput(ins, mir, 0);
 }
 
+template<size_t Temps>
+void
+LIRGeneratorX86Shared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
+                                          MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
+{
+    ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+#if defined(JS_NUNBOX32)
+    if (mir->isRotate())
+        ins->setTemp(0, temp());
+#endif
+
+    static_assert(LShiftI64::Rhs == INT64_PIECES, "Assume Rhs is located at INT64_PIECES.");
+    static_assert(LRotateI64::Count == INT64_PIECES, "Assume Count is located at INT64_PIECES.");
+
+    // shift operator should be constant or in register ecx
+    // x86 can't shift a non-ecx register
+    if (rhs->isConstant()) {
+        ins->setOperand(INT64_PIECES, useOrConstantAtStart(rhs));
+    } else {
+        // The operands are int64, but we only care about the lower 32 bits of
+        // the RHS. On 32-bit, the code below will load that part in ecx and
+        // will discard the upper half.
+        ensureDefined(rhs);
+        LUse use(ecx);
+        use.setVirtualRegister(rhs->virtualRegister());
+        ins->setOperand(INT64_PIECES, use);
+    }
+
+    defineInt64ReuseInput(ins, mir, 0);
+}
+
+template void LIRGeneratorX86Shared::lowerForShiftInt64(
+    LInstructionHelper<INT64_PIECES, INT64_PIECES+1, 0>* ins, MDefinition* mir,
+    MDefinition* lhs, MDefinition* rhs);
+template void LIRGeneratorX86Shared::lowerForShiftInt64(
+    LInstructionHelper<INT64_PIECES, INT64_PIECES+1, 1>* ins, MDefinition* mir,
+    MDefinition* lhs, MDefinition* rhs);
+
 void
 LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
                                    MDefinition* input)
@@ -250,9 +288,18 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
 }
 
 void
-LIRGeneratorX86Shared::lowerAsmSelect(MAsmSelect* ins)
+LIRGeneratorX86Shared::visitAsmSelect(MAsmSelect* ins)
 {
-    MOZ_ASSERT(ins->type() != MIRType::Int64);
+    if (ins->type() == MIRType::Int64) {
+        auto* lir = new(alloc()) LAsmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
+                                               useInt64(ins->falseExpr()),
+                                               useRegister(ins->condExpr())
+                                              );
+
+        defineInt64ReuseInput(lir, ins, LAsmSelectI64::TrueExprIndex);
+        return;
+    }
+
     auto* lir = new(alloc()) LAsmSelect(useRegisterAtStart(ins->trueExpr()),
                                         use(ins->falseExpr()),
                                         useRegister(ins->condExpr())

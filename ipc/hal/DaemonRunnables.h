@@ -84,7 +84,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     ((*mObj).*mMethod)();
     return NS_OK;
@@ -140,7 +140,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     ((*mObj).*mMethod)(ConvertArg<Arg1>(mArg1));
     return NS_OK;
@@ -203,7 +203,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     ((*mObj).*mMethod)(ConvertArg<Arg1>(mArg1),
                        ConvertArg<Arg2>(mArg2),
@@ -280,7 +280,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -340,7 +340,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -407,7 +407,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -478,7 +478,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -552,7 +552,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -629,7 +629,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -709,7 +709,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -796,7 +796,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -890,7 +890,7 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

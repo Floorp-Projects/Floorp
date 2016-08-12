@@ -4,9 +4,9 @@
  */
 
 var gTestfile = 'ownkeys-trap-duplicates.js';
-var BUGNUMBER = 1257779;
+var BUGNUMBER = 1293995;
 var summary =
-  "Scripted proxies' [[OwnPropertyKeys]] should throw if the trap " +
+  "Scripted proxies' [[OwnPropertyKeys]] should not throw if the trap " +
   "implementation returns duplicate properties and the object is " +
   "non-extensible or has non-configurable properties";
 
@@ -17,11 +17,12 @@ print(BUGNUMBER + ": " + summary);
  **************/
 
 var target = Object.preventExtensions({ a: 1 });
+var proxy = new Proxy(target, { ownKeys(t) { return ["a", "a"]; } });
+assertDeepEq(Object.getOwnPropertyNames(proxy), ["a", "a"]);
 
-var proxy = new Proxy(target, { ownKeys(t) { return ['a', 'a']; } });
-
-assertThrowsInstanceOf(() => Object.getOwnPropertyNames(proxy),
-                       TypeError);
+target = Object.freeze({ a: 1 });
+proxy = new Proxy(target, { ownKeys(t) { return ["a", "a"]; } });
+assertDeepEq(Object.getOwnPropertyNames(proxy), ["a", "a"]);
 
 /******************************************************************************/
 

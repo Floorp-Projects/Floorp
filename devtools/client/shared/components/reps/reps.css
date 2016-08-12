@@ -131,16 +131,6 @@
   font-weight: bold;
 }
 
-.objectLeftBrace,
-.arrayLeftBracket {
-  margin-right: 4px;
-}
-
-.objectRightBrace,
-.arrayRightBracket {
-  margin-left: 4px;
-}
-
 /******************************************************************************/
 /* Cycle reference*/
 

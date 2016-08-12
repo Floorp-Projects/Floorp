@@ -55,7 +55,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHODIMP Notify(nsITimer* aTimer) final
+  NS_IMETHOD Notify(nsITimer* aTimer) final
   {
     NS_DispatchToMainThread(this);
     return NS_OK;

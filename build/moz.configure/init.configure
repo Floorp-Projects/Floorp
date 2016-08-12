@@ -125,21 +125,18 @@ set_config('MOZCONFIG', depends(mozconfig)(lambda m: m['path']))
 # Hacks related to old-configure
 # ==============================
 
-@depends('--help')
-def old_configure_assignments(help):
+@dependable
+def old_configure_assignments():
     return []
 
-@depends('--help')
-def extra_old_configure_args(help):
+@dependable
+def extra_old_configure_args():
     return []
 
 @template
-@imports(_from='mozbuild.configure', _import='DependsFunction')
 def add_old_configure_assignment(var, value):
-    if not isinstance(var, DependsFunction):
-        var = depends('--help')(lambda x: var)
-    if not isinstance(value, DependsFunction):
-        value = depends('--help')(lambda x: value)
+    var = dependable(var)
+    value = dependable(value)
 
     @depends(old_configure_assignments, var, value)
     @imports(_from='mozbuild.shellutil', _import='quote')
@@ -248,9 +245,9 @@ add_old_configure_assignment('PYTHON', virtualenv_python)
 # below, so collect them.
 @template
 def early_options():
-    @depends('--help')
+    @dependable
     @imports('__sandbox__')
-    def early_options(help):
+    def early_options():
         return set(
             option.env
             for option in __sandbox__._options.itervalues()
@@ -324,6 +321,7 @@ option('--target', nargs=1,
             'used')
 
 @imports(_from='mozbuild.configure.constants', _import='CPU')
+@imports(_from='mozbuild.configure.constants', _import='CPU_bitness')
 @imports(_from='mozbuild.configure.constants', _import='Endianness')
 @imports(_from='mozbuild.configure.constants', _import='Kernel')
 @imports(_from='mozbuild.configure.constants', _import='OS')
@@ -422,6 +420,7 @@ def split_triplet(triplet):
     return namespace(
         alias=triplet,
         cpu=CPU(canonical_cpu),
+        bitness=CPU_bitness[canonical_cpu],
         kernel=Kernel(canonical_kernel),
         os=OS(canonical_os),
         endianness=Endianness(endianness),
@@ -470,6 +469,16 @@ def cross_compiling(host, target):
 set_config('CROSS_COMPILE', cross_compiling)
 set_define('CROSS_COMPILE', cross_compiling)
 add_old_configure_assignment('CROSS_COMPILE', cross_compiling)
+
+
+@depends(target)
+def have_64_bit(target):
+    if target.bitness == 64:
+        return True
+
+set_config('HAVE_64BIT_BUILD', have_64_bit)
+set_define('HAVE_64BIT_BUILD', have_64_bit)
+add_old_configure_assignment('HAVE_64BIT_BUILD', have_64_bit)
 
 
 # Autoconf needs these set
@@ -804,8 +813,8 @@ add_old_configure_assignment('PKG_CONFIG', pkg_config)
 # actual implementation is located in b2g/moz.configure.
 # Remove this function as soon as 'android_ndk_include'
 # depends on 'target.'
-@depends('--help')
-def gonkdir(_):
+@dependable
+def gonkdir():
     return None
 
 include(include_project_configure)

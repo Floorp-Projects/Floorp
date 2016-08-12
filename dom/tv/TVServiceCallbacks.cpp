@@ -44,7 +44,7 @@ TVServiceSourceSetterCallback::~TVServiceSourceSetterCallback()
 {
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceSourceSetterCallback::NotifySuccess(nsIArray* aDataList)
 {
   // |aDataList| is expected to be null for setter callbacks.
@@ -63,7 +63,7 @@ TVServiceSourceSetterCallback::NotifySuccess(nsIArray* aDataList)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceSourceSetterCallback::NotifyError(uint16_t aErrorCode)
 {
   switch (aErrorCode) {
@@ -113,7 +113,7 @@ TVServiceChannelScanCallback::~TVServiceChannelScanCallback()
 {
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceChannelScanCallback::NotifySuccess(nsIArray* aDataList)
 {
   // |aDataList| is expected to be null for setter callbacks.
@@ -128,7 +128,7 @@ TVServiceChannelScanCallback::NotifySuccess(nsIArray* aDataList)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceChannelScanCallback::NotifyError(uint16_t aErrorCode)
 {
   switch (aErrorCode) {
@@ -179,7 +179,7 @@ TVServiceChannelSetterCallback::~TVServiceChannelSetterCallback()
 {
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceChannelSetterCallback::NotifySuccess(nsIArray* aDataList)
 {
   // |aDataList| is expected to be with only one element.
@@ -215,7 +215,7 @@ TVServiceChannelSetterCallback::NotifySuccess(nsIArray* aDataList)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceChannelSetterCallback::NotifyError(uint16_t aErrorCode)
 {
   switch (aErrorCode) {
@@ -260,7 +260,7 @@ TVServiceTunerGetterCallback::~TVServiceTunerGetterCallback()
 {
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceTunerGetterCallback::NotifySuccess(nsIArray* aDataList)
 {
   if (!aDataList) {
@@ -289,7 +289,7 @@ TVServiceTunerGetterCallback::NotifySuccess(nsIArray* aDataList)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceTunerGetterCallback::NotifyError(uint16_t aErrorCode)
 {
   switch (aErrorCode) {
@@ -337,7 +337,7 @@ TVServiceChannelGetterCallback::~TVServiceChannelGetterCallback()
 {
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceChannelGetterCallback::NotifySuccess(nsIArray* aDataList)
 {
   if (!aDataList) {
@@ -370,7 +370,7 @@ TVServiceChannelGetterCallback::NotifySuccess(nsIArray* aDataList)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceChannelGetterCallback::NotifyError(uint16_t aErrorCode)
 {
   switch (aErrorCode) {
@@ -419,7 +419,7 @@ TVServiceProgramGetterCallback::~TVServiceProgramGetterCallback()
 {
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceProgramGetterCallback::NotifySuccess(nsIArray* aDataList)
 {
   if (!aDataList) {
@@ -468,7 +468,7 @@ TVServiceProgramGetterCallback::NotifySuccess(nsIArray* aDataList)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVServiceProgramGetterCallback::NotifyError(uint16_t aErrorCode)
 {
   switch (aErrorCode) {

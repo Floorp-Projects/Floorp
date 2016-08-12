@@ -42,7 +42,7 @@ public:
   : mDesc(aDesc)
   {}
 
-  NS_IMETHODIMP Run() override;
+  NS_IMETHOD Run() override;
 
   static void UploadEnded(bool deleteUploadFile);
 

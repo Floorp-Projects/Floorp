@@ -32,11 +32,9 @@
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(200,200,200,.5);
 
-  --identity-box-verified-background-color: #fff;
-
   --panel-separator-color: ThreeDShadow;
 
-  --urlbar-separator-color: hsla(0,0%,16%,.2);
+  --urlbar-separator-color: ThreeDShadow;
 }
 
 #menubar-items {
@@ -817,6 +815,15 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   opacity: 0.4;
 }
 
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+toolbaritem[cui-areatype="menu-panel"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon {
+  filter: url(chrome://browser/skin/filters.svg#fill);
+  fill: currentColor;
+  opacity: 0.7 !important; /* !important overrides .toolbarbutton-1[disabled=true] rule */
+}
+
 /* Fullscreen window controls */
 #window-controls {
   -moz-box-align: start;
@@ -985,7 +992,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 #urlbar-search-footer {
-  border-top: 1px solid hsla(210,4%,10%,.14);
+  border-top: 1px solid var(--panel-separator-color);
   background-color: hsla(210,4%,10%,.07);
 }
 
@@ -1045,10 +1052,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 #identity-box:-moz-locale-dir(rtl) {
   border-top-right-radius: 1.5px;
   border-bottom-right-radius: 1.5px;
-}
-
-#identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover):not([open=true]) {
-  background-color: var(--identity-box-verified-background-color);
 }
 
 #identity-box:-moz-focusring {
@@ -1993,12 +1996,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
 }
 
 .webextension-popup-browser {
-  margin-right: -1px;
   border-radius: inherit;
-}
-
-#PanelUI-popup .webextension-popup-browser {
-  margin: 0;
 }
 
 .menuitem-iconic[usercontextid] > .menu-iconic-left > .menu-iconic-icon {

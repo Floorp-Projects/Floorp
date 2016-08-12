@@ -34,7 +34,7 @@ InputPortListener::UnregisterInputPort(InputPort* aPort)
   mInputPorts.RemoveElement(aPort);
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 InputPortListener::NotifyConnectionChanged(const nsAString& aPortId,
                                            bool aIsConnected)
 {

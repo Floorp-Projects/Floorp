@@ -73,7 +73,7 @@ amManager.prototype = {
 
       case "message-manager-close":
       case "message-manager-disconnect":
-        AddonManager.webAPI.clearInstallsFrom(aSubject);
+        this.childClosed(aSubject);
         break;
     }
   },
@@ -164,7 +164,37 @@ amManager.prototype = {
     AddonManagerPrivate.backgroundUpdateTimerHandler();
   },
 
-  addonListener: null,
+  // Maps message manager instances for content processes to the associated
+  // AddonListener instances.
+  addonListeners: new Map(),
+
+  _addAddonListener(target) {
+    if (!this.addonListeners.has(target)) {
+      let handler = (event, id, needsRestart) => {
+        target.sendAsyncMessage(MSG_ADDON_EVENT, {event, id, needsRestart});
+      };
+      let listener = {
+        onEnabling: (addon, needsRestart) => handler("onEnabling", addon.id, needsRestart),
+        onEnabled: (addon) => handler("onEnabled", addon.id, false),
+        onDisabling: (addon, needsRestart) => handler("onDisabling", addon.id, needsRestart),
+        onDisabled: (addon) => handler("onDisabled", addon.id, false),
+        onInstalling: (addon, needsRestart) => handler("onInstalling", addon.id, needsRestart),
+        onInstalled: (addon) => handler("onInstalled", addon.id, false),
+        onUninstalling: (addon, needsRestart) => handler("onUninstalling", addon.id, needsRestart),
+        onUninstalled: (addon) => handler("onUninstalled", addon.id, false),
+        onOperationCancelled: (addon) => handler("onOperationCancelled", addon.id, false),
+      };
+      this.addonListeners.set(target, listener);
+      AddonManager.addAddonListener(listener);
+    }
+  },
+
+  _removeAddonListener(target) {
+    if (this.addonListeners.has(target)) {
+      AddonManager.removeAddonListener(this.addonListeners.get(target));
+      this.addonListeners.delete(target);
+    }
+  },
 
   /**
    * messageManager callback function.
@@ -228,31 +258,20 @@ amManager.prototype = {
       }
 
       case MSG_ADDON_EVENT_REQ: {
+        let target = aMessage.target;
         if (payload.enabled) {
-          if (!this.addonListener) {
-            let target = aMessage.target;
-            let handler = (event, id, needsRestart) => {
-              target.sendAsyncMessage(MSG_ADDON_EVENT, {event, id, needsRestart});
-            };
-            this.addonListener = {
-              onEnabling: (addon, needsRestart) => handler("onEnabling", addon.id, needsRestart),
-              onEnabled: (addon) => handler("onEnabled", addon.id, false),
-              onDisabling: (addon, needsRestart) => handler("onDisabling", addon.id, needsRestart),
-              onDisabled: (addon) => handler("onDisabled", addon.id, false),
-              onInstalling: (addon, needsRestart) => handler("onInstalling", addon.id, needsRestart),
-              onInstalled: (addon) => handler("onInstalled", addon.id, false),
-              onUninstalling: (addon, needsRestart) => handler("onUninstalling", addon.id, needsRestart),
-              onUninstalled: (addon) => handler("onUninstalled", addon.id, false),
-              onOperationCancelled: (addon) => handler("onOperationCancelled", addon.id, false),
-            };
-          }
-          AddonManager.addAddonListener(this.addonListener);
-        } else if (this.addonListener) {
-          AddonManager.removeAddonListener(this.addonListener);
+          this._addAddonListener(target);
+        } else {
+          this._removeAddonListener(target);
         }
       }
     }
     return undefined;
+  },
+
+  childClosed(target) {
+    AddonManager.webAPI.clearInstallsFrom(target);
+    this._removeAddonListener(target);
   },
 
   sendEvent(target, data) {

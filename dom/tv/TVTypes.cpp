@@ -31,14 +31,14 @@ TVTunerData::~TVTunerData()
   }
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVTunerData::GetId(nsAString& aId)
 {
   aId = mId;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVTunerData::SetId(const nsAString& aId)
 {
   if (aId.IsEmpty()) {
@@ -49,21 +49,21 @@ TVTunerData::SetId(const nsAString& aId)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVTunerData::GetStreamType(uint16_t* aStreamType)
 {
   *aStreamType = mStreamType;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVTunerData::SetStreamType(const uint16_t aStreamType)
 {
   mStreamType = aStreamType;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVTunerData::GetSupportedSourceTypes(uint32_t* aCount,
                                      char*** aSourceTypes)
 {
@@ -80,7 +80,7 @@ TVTunerData::GetSupportedSourceTypes(uint32_t* aCount,
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVTunerData::SetSupportedSourceTypes(uint32_t aCount,
                                      const char** aSourceTypes)
 {
@@ -128,14 +128,14 @@ TVChannelData::~TVChannelData()
 {
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::GetNetworkId(nsAString& aNetworkId)
 {
   aNetworkId = mNetworkId;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::SetNetworkId(const nsAString& aNetworkId)
 {
   if (aNetworkId.IsEmpty()) {
@@ -146,14 +146,14 @@ TVChannelData::SetNetworkId(const nsAString& aNetworkId)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::GetTransportStreamId(nsAString& aTransportStreamId)
 {
   aTransportStreamId = mTransportStreamId;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::SetTransportStreamId(const nsAString& aTransportStreamId)
 {
   if (aTransportStreamId.IsEmpty()) {
@@ -164,14 +164,14 @@ TVChannelData::SetTransportStreamId(const nsAString& aTransportStreamId)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::GetServiceId(nsAString& aServiceId)
 {
   aServiceId = mServiceId;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::SetServiceId(const nsAString& aServiceId)
 {
   if (aServiceId.IsEmpty()) {
@@ -182,14 +182,14 @@ TVChannelData::SetServiceId(const nsAString& aServiceId)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::GetType(nsAString& aType)
 {
   aType = mType;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::SetType(const nsAString& aType)
 {
   if (aType.IsEmpty()) {
@@ -204,14 +204,14 @@ TVChannelData::SetType(const nsAString& aType)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::GetNumber(nsAString& aNumber)
 {
   aNumber = mNumber;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::SetNumber(const nsAString& aNumber)
 {
   if (aNumber.IsEmpty()) {
@@ -222,14 +222,14 @@ TVChannelData::SetNumber(const nsAString& aNumber)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::GetName(nsAString& aName)
 {
   aName = mName;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::SetName(const nsAString& aName)
 {
   if (aName.IsEmpty()) {
@@ -240,28 +240,28 @@ TVChannelData::SetName(const nsAString& aName)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::GetIsEmergency(bool *aIsEmergency)
 {
   *aIsEmergency = mIsEmergency;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::SetIsEmergency(bool aIsEmergency)
 {
   mIsEmergency = aIsEmergency;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::GetIsFree(bool *aIsFree)
 {
   *aIsFree = mIsFree;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVChannelData::SetIsFree(bool aIsFree)
 {
   mIsFree = aIsFree;
@@ -295,14 +295,14 @@ TVProgramData::~TVProgramData()
   }
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::GetEventId(nsAString& aEventId)
 {
   aEventId = mEventId;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::SetEventId(const nsAString& aEventId)
 {
   if (aEventId.IsEmpty()) {
@@ -313,14 +313,14 @@ TVProgramData::SetEventId(const nsAString& aEventId)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::GetTitle(nsAString& aTitle)
 {
   aTitle = mTitle;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::SetTitle(const nsAString& aTitle)
 {
   if (aTitle.IsEmpty()) {
@@ -331,63 +331,63 @@ TVProgramData::SetTitle(const nsAString& aTitle)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::GetStartTime(uint64_t *aStartTime)
 {
   *aStartTime = mStartTime;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::SetStartTime(uint64_t aStartTime)
 {
   mStartTime = aStartTime;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::GetDuration(uint64_t *aDuration)
 {
   *aDuration = mDuration;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::SetDuration(uint64_t aDuration)
 {
   mDuration = aDuration;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::GetDescription(nsAString& aDescription)
 {
   aDescription = mDescription;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::SetDescription(const nsAString& aDescription)
 {
   mDescription = aDescription;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::GetRating(nsAString& aRating)
 {
   aRating = mRating;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::SetRating(const nsAString& aRating)
 {
   mRating = aRating;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::GetAudioLanguages(uint32_t* aCount,
                                  char*** aLanguages)
 {
@@ -404,7 +404,7 @@ TVProgramData::GetAudioLanguages(uint32_t* aCount,
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::SetAudioLanguages(uint32_t aCount,
                                  const char** aLanguages)
 {
@@ -428,7 +428,7 @@ TVProgramData::SetAudioLanguages(uint32_t aCount,
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::GetSubtitleLanguages(uint32_t* aCount,
                                     char*** aLanguages)
 {
@@ -445,7 +445,7 @@ TVProgramData::GetSubtitleLanguages(uint32_t* aCount,
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVProgramData::SetSubtitleLanguages(uint32_t aCount,
                                     const char** aLanguages)
 {

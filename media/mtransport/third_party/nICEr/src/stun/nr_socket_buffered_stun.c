@@ -417,20 +417,18 @@ static void nr_socket_buffered_stun_connected_cb(NR_SOCKET s, int how, void *arg
 {
   nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)arg;
   int r, _status;
+  NR_SOCKET fd;
 
   assert(!sock->connected);
 
   sock->connected = 1;
 
+  if ((r=nr_socket_getfd(sock->inner, &fd)))
+    ABORT(r);
+  NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_WRITE);
+
   // once connected arm for read
   if (sock->readable_cb) {
-    NR_SOCKET fd;
-
-    /* don't use |s| directly here because the NAT emulator depends on handing
-       you its implementation here. */
-    if ((r=nr_socket_getfd(sock->inner, &fd)))
-      ABORT(r);
-
     NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_READ, sock->readable_cb, sock->readable_cb_arg);
   }
 

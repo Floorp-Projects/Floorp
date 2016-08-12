@@ -96,6 +96,8 @@ def parse_args():
                           help='Extra args to pass to valgrind.')
     harness_og.add_option('--rr', action='store_true',
                           help='Run tests under RR record-and-replay debugger.')
+    harness_og.add_option('-C', '--check-output', action='store_true',
+                          help='Run tests to check output for different jit-flags')
     op.add_option_group(harness_og)
 
     input_og = OptionGroup(op, "Inputs", "Change what tests are run.")

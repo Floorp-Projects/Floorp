@@ -248,7 +248,7 @@ void DisableExtraThreads();
  * the main thread as |JSRuntime::mainThread|, for select operations
  * performed off thread, such as parsing.
  */
-class PerThreadData : public PerThreadDataFriendFields
+class PerThreadData
 {
     /*
      * Backpointer to the full shared JSRuntime* with which this
@@ -372,16 +372,13 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::jit::JitActivation* jitActivation;
 
     /* See comment for JSRuntime::interrupt_. */
-  private:
+  protected:
     mozilla::Atomic<uintptr_t, mozilla::Relaxed> jitStackLimit_;
-    void resetJitStackLimit();
 
     // Like jitStackLimit_, but not reset to trigger interrupts.
     uintptr_t jitStackLimitNoInterrupt_;
 
   public:
-    void initJitStackLimit();
-
     uintptr_t jitStackLimit() const { return jitStackLimit_; }
 
     // For read-only JIT use:
@@ -448,28 +445,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::WasmActivation * volatile wasmActivationStack_;
 
   public:
-    /*
-     * Youngest frame of a saved stack that will be picked up as an async stack
-     * by any new Activation, and is nullptr when no async stack should be used.
-     *
-     * The JS::AutoSetAsyncStackForNewCalls class can be used to set this.
-     *
-     * New activations will reset this to nullptr on construction after getting
-     * the current value, and will restore the previous value on destruction.
-     */
-    JS::PersistentRooted<js::SavedFrame*> asyncStackForNewActivations;
-
-    /*
-     * Value of asyncCause to be attached to asyncStackForNewActivations.
-     */
-    const char* asyncCauseForNewActivations;
-
-    /*
-     * True if the async call was explicitly requested, e.g. via
-     * callFunctionWithAsyncStack.
-     */
-    bool asyncCallIsExplicit;
-
     /* If non-null, report JavaScript entry points to this monitor. */
     JS::dbg::AutoEntryMonitor* entryMonitor;
 

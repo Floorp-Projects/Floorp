@@ -154,7 +154,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
       columnNumber.Construct();
       columnNumber.Value() = scriptEvent->Colno();
 
-      error.Construct(GetJSRuntime());
+      error.Construct(RootingCx());
       scriptEvent->GetError(&error.Value());
     } else {
       msgOrEvent.SetAsEvent() = aEvent->InternalDOMEvent();
@@ -210,7 +210,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
   MOZ_ASSERT(mTypedHandler.Type() == TypedEventHandler::eNormal);
   ErrorResult rv;
   RefPtr<EventHandlerNonNull> handler = mTypedHandler.NormalEventHandler();
-  JS::Rooted<JS::Value> retval(CycleCollectedJSRuntime::Get()->Runtime());
+  JS::Rooted<JS::Value> retval(RootingCx());
   handler->Call(mTarget, *(aEvent->InternalDOMEvent()), &retval, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
