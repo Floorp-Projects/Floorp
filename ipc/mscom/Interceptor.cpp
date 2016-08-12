@@ -8,6 +8,7 @@
 #include "mozilla/mscom/Interceptor.h"
 #include "mozilla/mscom/InterceptorLog.h"
 
+#include "mozilla/mscom/DispatchForwarder.h"
 #include "mozilla/mscom/MainThreadInvoker.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/utils.h"
@@ -272,6 +273,17 @@ Interceptor::ThreadSafeQueryInterface(REFIID aIid, IUnknown** aOutInterface)
     *aOutInterface = static_cast<IInterceptor*>(this);
     (*aOutInterface)->AddRef();
     return S_OK;
+  }
+
+  if (aIid == IID_IDispatch) {
+    STAUniquePtr<IDispatch> disp;
+    IDispatch* rawDisp = nullptr;
+    HRESULT hr = QueryInterfaceTarget(aIid, (void**)&rawDisp);
+    if (FAILED(hr)) {
+      return hr;
+    }
+    disp.reset(rawDisp);
+    return DispatchForwarder::Create(this, disp, aOutInterface);
   }
 
   return GetInterceptorForIID(aIid, (void**)aOutInterface);
