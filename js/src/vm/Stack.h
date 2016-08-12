@@ -1999,10 +1999,21 @@ class NonBuiltinScriptFrameIter : public ScriptFrameIter
  * Blindly iterate over all frames in the current thread's stack. These frames
  * can be from different contexts and compartments, so beware.
  */
-class AllFramesIter : public ScriptFrameIter
+class AllFramesIter : public FrameIter
 {
   public:
     explicit AllFramesIter(JSContext* cx)
+      : FrameIter(cx, ScriptFrameIter::IGNORE_DEBUGGER_EVAL_PREV_LINK)
+    {}
+};
+
+/* Iterates over all script frame in the current thread's stack.
+ * See also AllFramesIter and ScriptFrameIter.
+ */
+class AllScriptFramesIter : public ScriptFrameIter
+{
+  public:
+    explicit AllScriptFramesIter(JSContext* cx)
       : ScriptFrameIter(cx, ScriptFrameIter::IGNORE_DEBUGGER_EVAL_PREV_LINK)
     {}
 };

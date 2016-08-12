@@ -55,6 +55,7 @@ class FrameIterator
     const CallSite* callsite_;
     const CodeRange* codeRange_;
     uint8_t* fp_;
+    uint8_t* pc_;
     bool missingFrameMessage_;
 
     void settle();
@@ -69,6 +70,8 @@ class FrameIterator
     bool mutedErrors() const;
     JSAtom* functionDisplayAtom() const;
     unsigned lineOrBytecode() const;
+    inline void* fp() const { return fp_; }
+    inline uint8_t* pc() const { return pc_; }
 };
 
 // An ExitReason describes the possible reasons for leaving compiled wasm code
