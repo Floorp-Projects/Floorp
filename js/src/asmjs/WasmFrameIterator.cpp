@@ -50,6 +50,7 @@ FrameIterator::FrameIterator()
     callsite_(nullptr),
     codeRange_(nullptr),
     fp_(nullptr),
+    pc_(nullptr),
     missingFrameMessage_(false)
 {
     MOZ_ASSERT(done());
@@ -61,6 +62,7 @@ FrameIterator::FrameIterator(const WasmActivation& activation)
     callsite_(nullptr),
     codeRange_(nullptr),
     fp_(activation.fp()),
+    pc_(nullptr),
     missingFrameMessage_(false)
 {
     if (fp_) {
@@ -73,6 +75,7 @@ FrameIterator::FrameIterator(const WasmActivation& activation)
         MOZ_ASSERT(done());
         return;
     }
+    pc_ = (uint8_t*)pc;
 
     code_ = activation_->compartment()->wasm.lookupCode(pc);
     MOZ_ASSERT(code_);
@@ -126,11 +129,13 @@ FrameIterator::settle()
 
     switch (codeRange_->kind()) {
       case CodeRange::Function:
+        pc_ = (uint8_t*)returnAddress;
         callsite_ = code_->lookupCallSite(returnAddress);
         MOZ_ASSERT(callsite_);
         break;
       case CodeRange::Entry:
         fp_ = nullptr;
+        pc_ = nullptr;
         code_ = nullptr;
         codeRange_ = nullptr;
         MOZ_ASSERT(done());

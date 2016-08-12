@@ -3635,9 +3635,15 @@ js::DumpBacktrace(JSContext* cx, FILE* fp)
     }
     size_t depth = 0;
     for (AllFramesIter i(cx); !i.done(); ++i, ++depth) {
-        const char* filename = JS_GetScriptFilename(i.script());
-        unsigned line = PCToLineNumber(i.script(), i.pc());
-        JSScript* script = i.script();
+        const char* filename;
+        unsigned line;
+        if (i.hasScript()) {
+            filename = JS_GetScriptFilename(i.script());
+            line = PCToLineNumber(i.script(), i.pc());
+        } else {
+            filename = i.filename();
+            line = i.computeLine();
+        }
         char frameType =
             i.isInterp() ? 'i' :
             i.isBaseline() ? 'b' :
@@ -3645,9 +3651,15 @@ js::DumpBacktrace(JSContext* cx, FILE* fp)
             i.isWasm() ? 'W' :
             '?';
 
-        sprinter.printf("#%d %14p %c   %s:%d (%p @ %d)\n",
-                        depth, i.rawFramePtr(), frameType, filename, line,
-                        script, script->pcToOffset(i.pc()));
+        sprinter.printf("#%d %14p %c   %s:%d",
+                        depth, i.rawFramePtr(), frameType, filename, line);
+
+        if (i.hasScript()) {
+            sprinter.printf(" (%p @ %d)\n",
+                            i.script(), i.script()->pcToOffset(i.pc()));
+        } else {
+            sprinter.printf(" (%p)\n", i.pc());
+        }
     }
     fprintf(fp, "%s", sprinter.string());
 #ifdef XP_WIN32
