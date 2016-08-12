@@ -50,6 +50,11 @@
                          android:layout_alignParentBottom="true">
             </FrameLayout>
 
+            <view class="org.mozilla.gecko.media.VideoPlayer" android:id="@+id/video_player"
+                         android:layout_height="match_parent"
+                         android:layout_width="match_parent">
+            </view>
+
             <ViewStub android:id="@+id/zoomed_view_stub"
                       android:inflatedId="@+id/zoomed_view"
                       android:layout="@layout/zoomed_view"
