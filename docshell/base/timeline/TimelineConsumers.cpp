@@ -158,12 +158,9 @@ bool
 TimelineConsumers::HasConsumer(nsIDocShell* aDocShell)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!aDocShell) {
-    return false;
-  }
-  bool isTimelineRecording = false;
-  aDocShell->GetRecordProfileTimelineMarkers(&isTimelineRecording);
-  return isTimelineRecording;
+  return aDocShell
+       ? aDocShell->GetRecordProfileTimelineMarkers()
+       : false;
 }
 
 bool

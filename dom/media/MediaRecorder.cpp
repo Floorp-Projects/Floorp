@@ -719,11 +719,9 @@ private:
       return false;
     }
 
-    uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-    doc->NodePrincipal()->GetAppStatus(&appStatus);
-
     // Certified applications can always assign AUDIO_3GPP
-    if (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED) {
+    if (doc->NodePrincipal()->GetAppStatus() ==
+        nsIPrincipal::APP_STATUS_CERTIFIED) {
       return true;
     }
 
