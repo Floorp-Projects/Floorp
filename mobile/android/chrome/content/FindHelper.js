@@ -148,7 +148,6 @@ var FindHelper = {
           Cu.reportError("Warning: selected tab changed during find!");
           // fall through and restore viewport on the initial tab anyway
         }
-        this._targetTab.setViewport(JSON.parse(this._initialViewport));
         this._targetTab.sendViewportUpdate();
       }
     } else {
