@@ -374,7 +374,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearData", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
-    Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "Viewport:Flush", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
@@ -1780,11 +1779,6 @@ var BrowserApp = {
 
       case "FullScreen:Exit":
         browser.contentDocument.exitFullscreen();
-        break;
-
-      case "Viewport:Change":
-        if (this.isBrowserContentDocumentDisplayed())
-          this.selectedTab.setViewport(JSON.parse(aData));
         break;
 
       case "Viewport:Flush":
@@ -3533,11 +3527,7 @@ Tab.prototype = {
         stub: stub
       };
       Messaging.sendRequest(message);
-
-      this.overscrollController = new OverscrollController(this);
     }
-
-    this.browser.contentWindow.controllers.insertControllerAt(0, this.overscrollController);
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                 Ci.nsIWebProgress.NOTIFY_LOCATION |
@@ -3560,8 +3550,6 @@ Tab.prototype = {
     this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.addEventListener("DOMAutoComplete", this, true);
     this.browser.addEventListener("blur", this, true);
-    this.browser.addEventListener("scroll", this, true);
-    this.browser.addEventListener("MozScrolledAreaChanged", this, true);
     this.browser.addEventListener("pageshow", this, true);
     this.browser.addEventListener("MozApplicationManifest", this, true);
     this.browser.addEventListener("TabPreZombify", this, true);
@@ -3654,8 +3642,6 @@ Tab.prototype = {
     if (!this.browser)
       return;
 
-    this.browser.contentWindow.controllers.removeController(this.overscrollController);
-
     this.browser.removeProgressListener(this.filter);
     this.filter.removeProgressListener(this);
     this.filter = null;
@@ -3674,8 +3660,6 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.removeEventListener("DOMAutoComplete", this, true);
     this.browser.removeEventListener("blur", this, true);
-    this.browser.removeEventListener("scroll", this, true);
-    this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
     this.browser.removeEventListener("pageshow", this, true);
     this.browser.removeEventListener("MozApplicationManifest", this, true);
     this.browser.removeEventListener("TabPreZombify", this, true);
@@ -3718,58 +3702,6 @@ Tab.prototype = {
     return this.browser.docShellIsActive;
   },
 
-  setDisplayPort: function(aDisplayPort) {
-    let zoom = this._zoom;
-    let resolution = this.restoredSessionZoom() || aDisplayPort.resolution;
-    if (zoom <= 0 || resolution <= 0)
-      return;
-
-    // "zoom" is the user-visible zoom of the "this" tab
-    // "resolution" is the zoom at which we wish gecko to render "this" tab at
-    // these two may be different if we are, for example, trying to render a
-    // large area of the page at low resolution because the user is panning real
-    // fast.
-    // The gecko scroll position is in CSS pixels. The display port rect
-    // values (aDisplayPort), however, are in CSS pixels multiplied by the desired
-    // rendering resolution. Therefore care must be taken when doing math with
-    // these sets of values, to ensure that they are normalized to the same coordinate
-    // space first.
-
-    let element = this.browser.contentDocument.documentElement;
-    if (!element)
-      return;
-
-    // we should never be drawing background tabs at resolutions other than the user-
-    // visible zoom. for foreground tabs, however, if we are drawing at some other
-    // resolution, we need to set the resolution as specified.
-    let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    if (BrowserApp.selectedTab == this) {
-      if (resolution != this._drawZoom) {
-        this._drawZoom = resolution;
-        cwu.setResolutionAndScaleTo(resolution / window.devicePixelRatio);
-      }
-    } else if (!fuzzyEquals(resolution, zoom)) {
-      dump("Warning: setDisplayPort resolution did not match zoom for background tab! (" + resolution + " != " + zoom + ")");
-    }
-
-    // Finally, we set the display port as a set of margins around the visible viewport.
-
-    let scrollx = this.browser.contentWindow.scrollX * zoom;
-    let scrolly = this.browser.contentWindow.scrollY * zoom;
-    let displayPortMargins = {
-      left: scrollx - aDisplayPort.left,
-      top: scrolly - aDisplayPort.top,
-      right: aDisplayPort.right - (scrollx + gScreenWidth),
-      bottom: aDisplayPort.bottom - (scrolly + gScreenHeight)
-    };
-
-    cwu.setDisplayPortMarginsForElement(displayPortMargins.left,
-                                        displayPortMargins.top,
-                                        displayPortMargins.right,
-                                        displayPortMargins.bottom,
-                                        element, 0);
-  },
-
   setScrollClampingSize: function(zoom) {
     let viewportWidth = gScreenWidth / zoom;
     let viewportHeight = gScreenHeight / zoom;
@@ -3786,79 +3718,6 @@ Tab.prototype = {
     let win = this.browser.contentWindow;
     win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).
         setScrollPositionClampingScrollPortSize(scrollPortWidth, scrollPortHeight);
-  },
-
-  setViewport: function(aViewport) {
-    return;
-  },
-
-  setResolution: function(aZoom, aForce) {
-    return;
-  },
-
-  getViewport: function() {
-    let zoom = this.restoredSessionZoom() || this._zoom;
-
-    let viewport = {
-      width: gScreenWidth,
-      height: gScreenHeight,
-      cssWidth: gScreenWidth / zoom,
-      cssHeight: gScreenHeight / zoom,
-      pageLeft: 0,
-      pageTop: 0,
-      pageRight: gScreenWidth,
-      pageBottom: gScreenHeight,
-      // We make up matching css page dimensions
-      cssPageLeft: 0,
-      cssPageTop: 0,
-      cssPageRight: gScreenWidth / zoom,
-      cssPageBottom: gScreenHeight / zoom,
-      zoom: zoom,
-    };
-
-    // Set the viewport offset to current scroll offset
-    viewport.cssX = this.browser.contentWindow.scrollX || 0;
-    viewport.cssY = this.browser.contentWindow.scrollY || 0;
-
-    // Transform coordinates based on zoom
-    viewport.x = Math.round(viewport.cssX * viewport.zoom);
-    viewport.y = Math.round(viewport.cssY * viewport.zoom);
-
-    let doc = this.browser.contentDocument;
-    if (doc != null) {
-      let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      let cssPageRect = cwu.getRootBounds();
-
-      /*
-       * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
-       * this causes the page size to jump around wildly during page load. After the page is loaded,
-       * send updates regardless of page size; we'll zoom to fit the content as needed.
-       *
-       * In the check below, we floor the viewport size because there might be slight rounding errors
-       * introduced in the CSS page size due to the conversion to and from app units in Gecko. The
-       * error should be no more than one app unit so doing the floor is overkill, but safe in the
-       * sense that the extra page size updates that get sent as a result will be mostly harmless.
-       */
-      let pageLargerThanScreen = (Math.ceil(cssPageRect.width) >= Math.floor(viewport.cssWidth))
-                              && (Math.ceil(cssPageRect.height) >= Math.floor(viewport.cssHeight));
-      if (doc.readyState === 'complete' || pageLargerThanScreen) {
-        viewport.cssPageLeft = cssPageRect.left;
-        viewport.cssPageTop = cssPageRect.top;
-        viewport.cssPageRight = cssPageRect.right;
-        viewport.cssPageBottom = cssPageRect.bottom;
-        /* Transform the page width and height based on the zoom factor. */
-        viewport.pageLeft = (viewport.cssPageLeft * viewport.zoom);
-        viewport.pageTop = (viewport.cssPageTop * viewport.zoom);
-        viewport.pageRight = (viewport.cssPageRight * viewport.zoom);
-        viewport.pageBottom = (viewport.cssPageBottom * viewport.zoom);
-      }
-    }
-
-    return viewport;
-  },
-
-  sendViewportUpdate: function(aPageSizeUpdate) {
-    return;
   },
 
   // These constants are used to prioritize high quality metadata over low quality data, so that
@@ -4230,25 +4089,6 @@ Tab.prototype = {
         break;
       }
 
-      case "scroll": {
-        let win = this.browser.contentWindow;
-        if (this.userScrollPos.x != win.scrollX || this.userScrollPos.y != win.scrollY) {
-          this.sendViewportUpdate();
-        }
-        break;
-      }
-
-      case "MozScrolledAreaChanged": {
-        // This event is only fired for root scroll frames, and only when the
-        // scrolled area has actually changed, so no need to check for that.
-        // Just make sure it's the event for the correct root scroll frame.
-        if (aEvent.originalTarget != this.browser.contentDocument)
-          return;
-
-        this.sendViewportUpdate(true);
-        break;
-      }
-
       case "PluginBindingAttached": {
         PluginHelper.handlePluginBindingAttached(this, aEvent);
         break;
@@ -4486,10 +4326,6 @@ Tab.prototype = {
       this.contentDocumentIsDisplayed = false;
       this.hasTouchListener = false;
       Services.obs.notifyObservers(this.browser, "Session:NotifyLocationChange", null);
-    } else {
-      setTimeout(function() {
-        this.sendViewportUpdate();
-      }.bind(this), 0);
     }
   },
 
@@ -4592,10 +4428,6 @@ Tab.prototype = {
     // for now anyway.
   },
 
-  viewportSizeUpdated: function viewportSizeUpdated() {
-    this.sendViewportUpdate(); // recompute displayport
-  },
-
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "before-first-paint":
@@ -4609,11 +4441,6 @@ Tab.prototype = {
 
           if (contentDocument instanceof Ci.nsIImageDocument) {
             contentDocument.shrinkToFit();
-          }
-
-          let zoom = this.restoredSessionZoom();
-          if (zoom) {
-            this.setResolution(zoom, true);
           }
         }
         break;
@@ -4663,9 +4490,6 @@ var BrowserEventHandler = {
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
-      case 'touchstart':
-        this._handleTouchStart(aEvent);
-        break;
       case 'touchend':
         if (this._inCluster) {
           aEvent.preventDefault();
@@ -4756,19 +4580,6 @@ var BrowserEventHandler = {
   },
 
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "dom-touch-listener-added") {
-      let tab = BrowserApp.getTabForWindow(aSubject.top);
-      if (!tab || tab.hasTouchListener)
-        return;
-
-      tab.hasTouchListener = true;
-      Messaging.sendRequest({
-        type: "Tab:HasTouchListener",
-        tabID: tab.id
-      });
-      return;
-    }
-
     // the remaining events are all dependent on the browser content document being the
     // same as the browser displayed document. if they are not the same, we should ignore
     // the event.
@@ -4779,56 +4590,6 @@ var BrowserEventHandler = {
 
   handleUserEvent: function(aTopic, aData) {
     switch (aTopic) {
-
-      case "Gesture:Scroll": {
-        // If we've lost our scrollable element, return. Don't cancel the
-        // override, as we probably don't want Java to handle panning until the
-        // user releases their finger.
-        if (this._scrollableElement == null)
-          return;
-
-        // If this is the first scroll event and we can't scroll in the direction
-        // the user wanted, and neither can any non-root sub-frame, cancel the
-        // override so that Java can handle panning the main document.
-        let data = JSON.parse(aData);
-
-        // round the scroll amounts because they come in as floats and might be
-        // subject to minor rounding errors because of zoom values. I've seen values
-        // like 0.99 come in here and get truncated to 0; this avoids that problem.
-        let zoom = BrowserApp.selectedTab._zoom;
-        let x = Math.round(data.x / zoom);
-        let y = Math.round(data.y / zoom);
-
-        if (this._firstScrollEvent) {
-          while (this._scrollableElement != null &&
-                 !this._elementCanScroll(this._scrollableElement, x, y))
-            this._scrollableElement = this._findScrollableElement(this._scrollableElement, false);
-
-          let doc = BrowserApp.selectedBrowser.contentDocument;
-          if (this._scrollableElement == null ||
-              this._scrollableElement == doc.documentElement) {
-            Messaging.sendRequest({ type: "Panning:CancelOverride" });
-            return;
-          }
-
-          this._firstScrollEvent = false;
-        }
-
-        // Scroll the scrollable element
-        if (this._elementCanScroll(this._scrollableElement, x, y)) {
-          this._scrollElementBy(this._scrollableElement, x, y);
-          Messaging.sendRequest({ type: "Gesture:ScrollAck", scrolled: true });
-          SelectionHandler.subdocumentScrolled(this._scrollableElement);
-        } else {
-          Messaging.sendRequest({ type: "Gesture:ScrollAck", scrolled: false });
-        }
-
-        break;
-      }
-
-      case "Gesture:CancelTouch":
-        this._cancelTapHighlight();
-        break;
 
       case "Gesture:ClickInZoomedView":
         this._clickInZoomedView = true;
@@ -4875,11 +4636,6 @@ var BrowserEventHandler = {
         this._cancelTapHighlight();
         break;
       }
-
-      case"Gesture:DoubleTap":
-        this._cancelTapHighlight();
-        this.onDoubleTap(aData);
-        break;
 
       default:
         dump('BrowserEventHandler.handleUserEvent: unexpected topic "' + aTopic + '"');
@@ -5848,14 +5604,6 @@ var XPInstallObserver = {
   }
 };
 
-// Blindly copied from Safari documentation for now.
-const kViewportMinScale  = 0;
-const kViewportMaxScale  = 10;
-const kViewportMinWidth  = 200;
-const kViewportMaxWidth  = 10000;
-const kViewportMinHeight = 223;
-const kViewportMaxHeight = 10000;
-
 var ViewportHandler = {
   // The cached viewport metadata for each document. We tie viewport metadata to each document
   // instead of to each tab so that we don't have to update it when the document changes. Using an
@@ -5864,25 +5612,10 @@ var ViewportHandler = {
 
   init: function init() {
     Services.obs.addObserver(this, "Window:Resize", false);
-    Services.obs.addObserver(this, "zoom-constraints-updated", false);
   },
 
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "zoom-constraints-updated":
-        // aSubject should be a document, so let's find the tab corresponding
-        // to that if there is one
-        let constraints = JSON.parse(aData);
-        let doc = aSubject;
-        constraints.isRTL = doc.documentElement.dir == "rtl";
-        ViewportHandler.setMetadataForDocument(doc, constraints);
-        let tab = BrowserApp.getTabForWindow(doc.defaultView);
-        if (tab) {
-          constraints.type = "Tab:ViewportMetadata";
-          constraints.tabID = tab.id;
-          Messaging.sendRequest(constraints);
-        }
-        return;
       case "Window:Resize":
         if (window.outerWidth == gScreenWidth && window.outerHeight == gScreenHeight)
           break;
@@ -5892,9 +5625,6 @@ var ViewportHandler = {
         gScreenWidth = window.outerWidth * window.devicePixelRatio;
         gScreenHeight = window.outerHeight * window.devicePixelRatio;
         let tabs = BrowserApp.tabs;
-        for (let i = 0; i < tabs.length; i++) {
-          tabs[i].viewportSizeUpdated();
-        }
         break;
       default:
         return;
@@ -6475,29 +6205,6 @@ var IdentityHandler = {
       return this._lastLocation.hostname;
     }
   }
-};
-
-function OverscrollController(aTab) {
-  this.tab = aTab;
-}
-
-OverscrollController.prototype = {
-  supportsCommand : function supportsCommand(aCommand) {
-    if (aCommand != "cmd_linePrevious" && aCommand != "cmd_scrollPageUp")
-      return false;
-
-    return (this.tab.getViewport().y == 0);
-  },
-
-  isCommandEnabled : function isCommandEnabled(aCommand) {
-    return this.supportsCommand(aCommand);
-  },
-
-  doCommand : function doCommand(aCommand){
-    Messaging.sendRequest({ type: "ToggleChrome:Focus" });
-  },
-
-  onEvent : function onEvent(aEvent) { }
 };
 
 var SearchEngines = {
