@@ -5132,7 +5132,6 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
   Unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
   // If this canvas was contained in the drawn window, the pre-transaction callback
   // may have returned its DT. If so, we must reacquire it here.
-  EnsureTarget();
   if (drawDT) {
     RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
     if (NS_WARN_IF(!snapshot)) {
@@ -5648,7 +5647,6 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
     srcLine += aW * 4;
   }
 
-  EnsureTarget();
   if (!IsTargetValid()) {
     return NS_ERROR_FAILURE;
   }
