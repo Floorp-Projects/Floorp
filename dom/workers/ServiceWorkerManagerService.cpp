@@ -54,7 +54,7 @@ public:
     MOZ_ASSERT(mBackgroundThread);
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   Run() override
   {
     if (NS_IsMainThread()) {

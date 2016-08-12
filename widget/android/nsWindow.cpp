@@ -1032,7 +1032,6 @@ public:
         // Gecko, and that's what we do here.
         const bool resetting = !!mLayerClient;
         mLayerClient = layerClient;
-        layerClient->OnGeckoReady();
 
         if (resetting) {
             // Since we are re-linking the new java objects to Gecko, we need
@@ -1051,6 +1050,8 @@ public:
         NPZCSupport::AttachNative(
                 npzc, mozilla::MakeUnique<NPZCSupport>(&window, npzc));
 #endif
+
+        layerClient->OnGeckoReady();
     }
 
     void OnSizeChanged(int32_t aWindowWidth, int32_t aWindowHeight,

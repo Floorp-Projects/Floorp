@@ -301,8 +301,7 @@ BrowserElementParent::OpenWindowInProcess(nsPIDOMWindowOuter* aOpenerWindow,
   }
 
   // Return popupFrameElement's window.
-  nsCOMPtr<nsIFrameLoader> frameLoader;
-  popupFrameElement->GetFrameLoader(getter_AddRefs(frameLoader));
+  RefPtr<nsFrameLoader> frameLoader = popupFrameElement->GetFrameLoader();
   NS_ENSURE_TRUE(frameLoader, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
   nsCOMPtr<nsIDocShell> docshell;

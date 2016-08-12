@@ -93,13 +93,16 @@ function SortByColumn(array, len, aux, col) {
 
 // Sorts integers and float32. |signed| is true for int16 and int32, |floating|
 // is true for float32.
-function RadixSort(array, len, nbytes, signed, floating, comparefn) {
+function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
 
     // Determined by performance testing.
     if (len < 128) {
         QuickSort(array, len, comparefn);
         return array;
     }
+
+    // Verify that the buffer is non-null
+    assert(buffer !== null, "Attached data buffer should be reified when array length is >= 128.");
 
     let aux = new List();
     for (let i = 0; i < len; i++) {
@@ -111,7 +114,7 @@ function RadixSort(array, len, nbytes, signed, floating, comparefn) {
 
     // Preprocess
     if (floating) {
-        view = new Int32Array(array.buffer);
+        view = new Int32Array(buffer);
 
         // Flip sign bit for positive numbers; flip all bits for negative
         // numbers

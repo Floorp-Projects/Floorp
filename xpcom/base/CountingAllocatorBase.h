@@ -21,9 +21,9 @@ namespace mozilla {
 //   class MyMemoryReporter : public CountingAllocatorBase<MyMemoryReporter>
 //   {
 //     ...
-//     NS_IMETHODIMP
+//     NS_IMETHOD
 //     CollectReports(nsIHandleReportCallback* aHandleReport,
-//                    nsISupports* aData, bool aAnonymize)
+//                    nsISupports* aData, bool aAnonymize) override
 //     {
 //        return MOZ_COLLECT_REPORT(
 //          "explicit/path/to/somewhere", KIND_HEAP, UNITS_BYTES,

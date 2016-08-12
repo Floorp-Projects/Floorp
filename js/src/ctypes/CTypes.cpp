@@ -7325,7 +7325,7 @@ CClosure::Create(JSContext* cx,
       return nullptr;
   }
 
-  ClosureInfo* cinfo = cx->new_<ClosureInfo>(JS_GetRuntime(cx));
+  ClosureInfo* cinfo = cx->new_<ClosureInfo>(cx);
   if (!cinfo) {
     JS_ReportOutOfMemory(cx);
     return nullptr;
@@ -7403,10 +7403,9 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
 
   // Retrieve the essentials from our closure object.
   ArgClosure argClosure(cif, result, args, static_cast<ClosureInfo*>(userData));
-  JSRuntime* rt = argClosure.cinfo->rt;
-  RootedObject fun(rt, argClosure.cinfo->jsfnObj);
+  JSContext* cx = argClosure.cinfo->cx;
+  RootedObject fun(cx, argClosure.cinfo->jsfnObj);
 
-  JSContext* cx = JS_GetContext(rt);
   js::PrepareScriptEnvironmentAndInvoke(cx, fun, argClosure);
 }
 

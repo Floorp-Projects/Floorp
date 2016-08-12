@@ -1706,6 +1706,7 @@ void SkCanvas::onClipRegion(const SkRegion& rgn, SkRegion::Op op) {
 
 #ifdef SK_DEBUG
 void SkCanvas::validateClip() const {
+#ifndef SK_DISABLE_SLOW_DEBUG_VALIDATION
     // construct clipRgn from the clipstack
     const SkBaseDevice* device = this->getDevice();
     if (!device) {
@@ -1736,6 +1737,7 @@ void SkCanvas::validateClip() const {
             }
         }
     }
+#endif
 }
 #endif
 

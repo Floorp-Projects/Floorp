@@ -5,8 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsMenuBarX;
-interface nsCocoaWindow;
 interface nsIWidget;
 
 [ptr] native NSWindowPtr(NSWindow);
@@ -24,7 +22,7 @@ interface nsPIWidgetCocoa : nsISupports
 
   // Find the displayed child sheet (if aShown) or a child sheet that
   // wants to be displayed (if !aShown)
-  nsCocoaWindow GetChildSheet(in boolean aShown);
+  nsIWidget GetChildSheet(in boolean aShown);
   
   // Get the parent widget (if any) StandardCreate() was called with.
   nsIWidget GetRealParent();

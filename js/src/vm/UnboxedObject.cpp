@@ -141,7 +141,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
             Label notObject;
             masm.branchTestObject(Assembler::NotEqual, valueAddress, &notObject);
             Register valueObject = masm.extractObject(valueAddress, scratch1);
-            masm.branchPtrInNurseryRange(Assembler::Equal, valueObject, scratch2, &postBarrier);
+            masm.branchPtrInNurseryChunk(Assembler::Equal, valueObject, scratch2, &postBarrier);
             masm.bind(&notObject);
         }
     }

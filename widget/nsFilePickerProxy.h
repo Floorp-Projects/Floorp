@@ -34,23 +34,23 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIFilePicker (less what's in nsBaseFilePicker)
-    NS_IMETHODIMP Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle, int16_t aMode) override;
-    NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter) override;
-    NS_IMETHODIMP GetDefaultString(nsAString& aDefaultString) override;
-    NS_IMETHODIMP SetDefaultString(const nsAString& aDefaultString) override;
-    NS_IMETHODIMP GetDefaultExtension(nsAString& aDefaultExtension) override;
-    NS_IMETHODIMP SetDefaultExtension(const nsAString& aDefaultExtension) override;
-    NS_IMETHODIMP GetFilterIndex(int32_t* aFilterIndex) override;
-    NS_IMETHODIMP SetFilterIndex(int32_t aFilterIndex) override;
-    NS_IMETHODIMP GetFile(nsIFile** aFile) override;
-    NS_IMETHODIMP GetFileURL(nsIURI** aFileURL) override;
-    NS_IMETHODIMP GetFiles(nsISimpleEnumerator** aFiles) override;
+    NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle, int16_t aMode) override;
+    NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter) override;
+    NS_IMETHOD GetDefaultString(nsAString& aDefaultString) override;
+    NS_IMETHOD SetDefaultString(const nsAString& aDefaultString) override;
+    NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension) override;
+    NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension) override;
+    NS_IMETHOD GetFilterIndex(int32_t* aFilterIndex) override;
+    NS_IMETHOD SetFilterIndex(int32_t aFilterIndex) override;
+    NS_IMETHOD GetFile(nsIFile** aFile) override;
+    NS_IMETHOD GetFileURL(nsIURI** aFileURL) override;
+    NS_IMETHOD GetFiles(nsISimpleEnumerator** aFiles) override;
 
-    NS_IMETHODIMP GetDomFileOrDirectory(nsISupports** aValue) override;
-    NS_IMETHODIMP GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aValue) override;
+    NS_IMETHOD GetDomFileOrDirectory(nsISupports** aValue) override;
+    NS_IMETHOD GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aValue) override;
 
-    NS_IMETHODIMP Show(int16_t* aReturn) override;
-    NS_IMETHODIMP Open(nsIFilePickerShownCallback* aCallback) override;
+    NS_IMETHOD Show(int16_t* aReturn) override;
+    NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
 
     // PFilePickerChild
     virtual bool

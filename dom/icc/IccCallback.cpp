@@ -99,7 +99,7 @@ IccContactToMozContact(JSContext* aCx, GlobalObject& aGlobal,
   return NS_OK;
 }
 
-static NS_IMETHODIMP
+static nsresult
 IccContactListToMozContactList(JSContext* aCx, GlobalObject& aGlobal,
                                nsIIccContact** aContacts, uint32_t aCount,
                                nsTArray<RefPtr<mozContact>>& aContactList)

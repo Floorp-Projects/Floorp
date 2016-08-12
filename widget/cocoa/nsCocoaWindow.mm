@@ -770,8 +770,9 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
         [NSApp endSheet:nativeParentWindow];
       }
 
-      nsCocoaWindow* sheetShown = nullptr;
-      if (NS_SUCCEEDED(piParentWidget->GetChildSheet(true, &sheetShown)) &&
+      nsCOMPtr<nsIWidget> sheetShown;
+      if (NS_SUCCEEDED(piParentWidget->GetChildSheet(
+                           true, getter_AddRefs(sheetShown))) &&
           (!sheetShown || sheetShown == this)) {
         // If this sheet is already the sheet actually being shown, don't
         // tell it to show again. Otherwise the number of calls to
@@ -888,11 +889,12 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
         
         [TopLevelWindowData deactivateInWindow:mWindow];
 
-        nsCocoaWindow* siblingSheetToShow = nullptr;
+        nsCOMPtr<nsIWidget> siblingSheetToShow;
         bool parentIsSheet = false;
 
         if (nativeParentWindow && piParentWidget &&
-            NS_SUCCEEDED(piParentWidget->GetChildSheet(false, &siblingSheetToShow)) &&
+            NS_SUCCEEDED(piParentWidget->GetChildSheet(
+                             false, getter_AddRefs(siblingSheetToShow))) &&
             siblingSheetToShow) {
           // First, give sibling sheets an opportunity to show.
           siblingSheetToShow->Show(true);
@@ -1842,7 +1844,7 @@ NS_IMETHODIMP nsCocoaWindow::SendSetZLevelEvent()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::GetChildSheet(bool aShown, nsCocoaWindow** _retval)
+NS_IMETHODIMP nsCocoaWindow::GetChildSheet(bool aShown, nsIWidget** _retval)
 {
   nsIWidget* child = GetFirstChild();
 
@@ -1853,7 +1855,8 @@ NS_IMETHODIMP nsCocoaWindow::GetChildSheet(bool aShown, nsCocoaWindow** _retval)
       if (cocoaWindow->mWindow &&
           ((aShown && [cocoaWindow->mWindow isVisible]) ||
           (!aShown && cocoaWindow->mSheetNeedsShow))) {
-        *_retval = cocoaWindow;
+        nsCOMPtr<nsIWidget> widget = cocoaWindow;
+        widget.forget(_retval);
         return NS_OK;
       }
     }

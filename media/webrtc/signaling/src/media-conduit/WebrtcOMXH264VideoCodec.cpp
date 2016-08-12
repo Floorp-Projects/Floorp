@@ -170,7 +170,7 @@ public:
     lock.NotifyAll();
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MonitorAutoLock lock(mMonitor);
     if (mEnding) {

@@ -17,7 +17,6 @@ namespace jsipc {
 class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
 {
   public:
-    explicit JavaScriptChild(JSRuntime* rt);
     virtual ~JavaScriptChild();
 
     bool init();

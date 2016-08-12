@@ -756,17 +756,17 @@ struct ChunkTrailer
 {
     /* Construct a Nursery ChunkTrailer. */
     ChunkTrailer(JSRuntime* rt, StoreBuffer* sb)
-      : location(gc::ChunkLocationBitNursery), storeBuffer(sb), runtime(rt)
+      : location(ChunkLocation::Nursery), storeBuffer(sb), runtime(rt)
     {}
 
     /* Construct a Tenured heap ChunkTrailer. */
     explicit ChunkTrailer(JSRuntime* rt)
-      : location(gc::ChunkLocationBitTenuredHeap), storeBuffer(nullptr), runtime(rt)
+      : location(ChunkLocation::TenuredHeap), storeBuffer(nullptr), runtime(rt)
     {}
 
   public:
     /* The index the chunk in the nursery, or LocationTenuredHeap. */
-    uint32_t        location;
+    ChunkLocation   location;
     uint32_t        padding;
 
     /* The store buffer for writes to things in this chunk or nullptr. */
@@ -815,9 +815,6 @@ struct ChunkInfo
 
     /* Number of free, committed arenas. */
     uint32_t        numArenasFreeCommitted;
-
-    /* Information shared by all Chunk types. */
-    ChunkTrailer    trailer;
 };
 
 /*
@@ -851,7 +848,7 @@ struct ChunkInfo
  */
 const size_t BytesPerArenaWithHeader = ArenaSize + ArenaBitmapBytes;
 const size_t ChunkDecommitBitmapBytes = ChunkSize / ArenaSize / JS_BITS_PER_BYTE;
-const size_t ChunkBytesAvailable = ChunkSize - sizeof(ChunkInfo) - ChunkDecommitBitmapBytes;
+const size_t ChunkBytesAvailable = ChunkSize - sizeof(ChunkTrailer) - sizeof(ChunkInfo) - ChunkDecommitBitmapBytes;
 const size_t ArenasPerChunk = ChunkBytesAvailable / BytesPerArenaWithHeader;
 
 #ifdef JS_GC_SMALL_CHUNK_SIZE
@@ -939,7 +936,8 @@ const size_t ChunkPadSize = ChunkSize
                             - (sizeof(Arena) * ArenasPerChunk)
                             - sizeof(ChunkBitmap)
                             - sizeof(PerArenaBitmap)
-                            - sizeof(ChunkInfo);
+                            - sizeof(ChunkInfo)
+                            - sizeof(ChunkTrailer);
 static_assert(ChunkPadSize < BytesPerArenaWithHeader,
               "If the chunk padding is larger than an arena, we should have one more arena.");
 
@@ -957,6 +955,7 @@ struct Chunk
     ChunkBitmap     bitmap;
     PerArenaBitmap  decommittedArenas;
     ChunkInfo       info;
+    ChunkTrailer    trailer;
 
     static Chunk* fromAddress(uintptr_t addr) {
         addr &= ~ChunkMask;
@@ -991,7 +990,7 @@ struct Chunk
     }
 
     bool isNurseryChunk() const {
-        return info.trailer.storeBuffer;
+        return trailer.storeBuffer;
     }
 
     Arena* allocateArena(JSRuntime* rt, JS::Zone* zone, AllocKind kind, const AutoLockGC& lock);
@@ -1003,10 +1002,9 @@ struct Chunk
     void decommitAllArenasWithoutUnlocking(const AutoLockGC& lock);
 
     static Chunk* allocate(JSRuntime* rt);
+    void init(JSRuntime* rt);
 
   private:
-    inline void init(JSRuntime* rt);
-
     void decommitAllArenas(JSRuntime* rt);
 
     /* Search for a decommitted arena to allocate. */
@@ -1028,12 +1026,10 @@ static_assert(sizeof(Chunk) == ChunkSize,
               "Ensure the hardcoded chunk size definition actually matches the struct.");
 static_assert(js::gc::ChunkMarkBitmapOffset == offsetof(Chunk, bitmap),
               "The hardcoded API bitmap offset must match the actual offset.");
-static_assert(js::gc::ChunkRuntimeOffset == offsetof(Chunk, info) +
-                                            offsetof(ChunkInfo, trailer) +
+static_assert(js::gc::ChunkRuntimeOffset == offsetof(Chunk, trailer) +
                                             offsetof(ChunkTrailer, runtime),
               "The hardcoded API runtime offset must match the actual offset.");
-static_assert(js::gc::ChunkLocationOffset == offsetof(Chunk, info) +
-                                             offsetof(ChunkInfo, trailer) +
+static_assert(js::gc::ChunkLocationOffset == offsetof(Chunk, trailer) +
                                              offsetof(ChunkTrailer, location),
               "The hardcoded API location offset must match the actual offset.");
 
@@ -1126,7 +1122,7 @@ Cell::asTenured()
 inline JSRuntime*
 Cell::runtimeFromMainThread() const
 {
-    JSRuntime* rt = chunk()->info.trailer.runtime;
+    JSRuntime* rt = chunk()->trailer.runtime;
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
     return rt;
 }
@@ -1140,7 +1136,7 @@ Cell::shadowRuntimeFromMainThread() const
 inline JSRuntime*
 Cell::runtimeFromAnyThread() const
 {
-    return chunk()->info.trailer.runtime;
+    return chunk()->trailer.runtime;
 }
 
 inline JS::shadow::Runtime*
@@ -1170,7 +1166,7 @@ Cell::chunk() const
 inline StoreBuffer*
 Cell::storeBuffer() const
 {
-    return chunk()->info.trailer.storeBuffer;
+    return chunk()->trailer.storeBuffer;
 }
 
 inline JS::TraceKind
@@ -1364,6 +1360,9 @@ TenuredCell::isAligned() const
     return Arena::isAligned(address(), arena()->getThingSize());
 }
 #endif
+
+static const int32_t ChunkLocationOffsetFromLastByte =
+    int32_t(gc::ChunkLocationOffset) - int32_t(gc::ChunkMask);
 
 } /* namespace gc */
 } /* namespace js */

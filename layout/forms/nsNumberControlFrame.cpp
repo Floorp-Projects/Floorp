@@ -308,7 +308,7 @@ public:
       mTextField(aTextField)
   {}
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     if (mNumber->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS)) {
       HTMLInputElement::FromContent(mTextField)->Focus();

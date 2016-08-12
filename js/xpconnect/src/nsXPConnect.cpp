@@ -408,7 +408,7 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
         // TraceProtoAndIfaceCache unless that flag is set.
         if (!((const js::Class*)clasp)->isWrappedNative())
         {
-            VerifyTraceProtoAndIfaceCacheCalledTracer trc(JS_GetRuntime(cx));
+            VerifyTraceProtoAndIfaceCacheCalledTracer trc(cx);
             TraceChildren(&trc, GCCellPtr(global.get()));
             MOZ_ASSERT(trc.ok, "Trace hook on global needs to call TraceXPCGlobal for XPConnect compartments.");
         }

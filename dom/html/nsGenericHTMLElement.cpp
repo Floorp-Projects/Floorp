@@ -209,37 +209,10 @@ nsGenericHTMLElement::CopyInnerTo(Element* aDst)
   return NS_OK;
 }
 
-already_AddRefed<nsDOMStringMap>
-nsGenericHTMLElement::Dataset()
-{
-  nsDOMSlots *slots = DOMSlots();
-
-  if (!slots->mDataset) {
-    // mDataset is a weak reference so assignment will not AddRef.
-    // AddRef is called before returning the pointer.
-    slots->mDataset = new nsDOMStringMap(this);
-  }
-
-  RefPtr<nsDOMStringMap> ret = slots->mDataset;
-  return ret.forget();
-}
-
 NS_IMETHODIMP
 nsGenericHTMLElement::GetDataset(nsISupports** aDataset)
 {
   *aDataset = Dataset().take();
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::ClearDataset()
-{
-  nsDOMSlots *slots = GetExistingDOMSlots();
-
-  NS_ASSERTION(slots && slots->mDataset,
-               "Slots should exist and dataset should not be null.");
-  slots->mDataset = nullptr;
-
   return NS_OK;
 }
 

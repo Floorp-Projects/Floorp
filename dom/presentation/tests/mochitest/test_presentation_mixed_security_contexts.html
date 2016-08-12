@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <meta charset="utf-8">
+  <title>Test default request for B2G Presentation API at sender side</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1268758">Test allow-presentation sandboxing flag</a>
+<iframe id="iframe" src="https://example.com/tests/dom/presentation/tests/mochitest/file_presentation_mixed_security_contexts.html"></iframe>
+<script type="application/javascript;version=1.8">
+
+"use strict";
+
+var iframe = document.getElementById("iframe");
+var readyToStart = false;
+var testSetuped = false;
+
+function setup() {
+  SpecialPowers.addPermission("presentation",
+                              true, { url: "https://example.com/tests/dom/presentation/tests/mochitest/file_presentation_mixed_security_contexts.html",
+                                      originAttributes: {
+                                        appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
+                                        inIsolatedMozBrowser: false }});
+
+  return new Promise(function(aResolve, aReject) {
+    addEventListener("message", function listener(event) {
+      var message = event.data;
+      if (/^OK /.exec(message)) {
+        ok(true, message.replace(/^OK /, ""));
+      } else if (/^KO /.exec(message)) {
+        ok(false, message.replace(/^KO /, ""));
+      } else if (/^INFO /.exec(message)) {
+        info(message.replace(/^INFO /, ""));
+      } else if (/^COMMAND /.exec(message)) {
+        var command = JSON.parse(message.replace(/^COMMAND /, ""));
+        if (command === "ready-to-start") {
+          readyToStart = true;
+          startTest();
+        }
+      } else if (/^DONE$/.exec(message)) {
+        window.removeEventListener('message', listener);
+        SimpleTest.finish();
+      }
+    }, false);
+
+    testSetuped = true;
+    aResolve();
+  });
+}
+
+iframe.onload = startTest();
+
+function startTest() {
+  if (!(testSetuped && readyToStart)) {
+    return;
+  }
+  iframe.contentWindow.postMessage("start", "*");
+}
+
+function runTests() {
+  ok(navigator.presentation, "navigator.presentation should be available.");
+  setup().then(startTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPermissions([
+  {type: "presentation-device-manage", allow: false, context: document},
+  {type: "presentation", allow: true, context: document},
+  {type: "presentation", allow: true, context: iframe.contentDocument},
+], function() {
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
+                                      ["dom.presentation.session_transport.data_channel.enable", false]]},
+                            runTests);
+});
+
+</script>
+</body>
+</html>
