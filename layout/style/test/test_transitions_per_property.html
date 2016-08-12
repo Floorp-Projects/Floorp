@@ -742,10 +742,10 @@ var clipPathTests = [
   { start: "circle(20px)", end: "content-box", expected: ["content-box"] },
   { start: "content-box", end: "circle(20px)", expected: ["circle", ["20px", "at", "50%", "50%"]] },
   // url to shape
-  { start: "circle(20px)", end: "url('#a')", expected: ["url", ["\"#a\""]] },
+  { start: "circle(20px)", end: "url('#a')", expected: ["url", ["\""+document.URL+"#a\""]] },
   { start: "url('#a')", end: "circle(20px)", expected: ["circle", ["20px", "at", "50%", "50%"]] },
   // url to none
-  { start: "none", end: "url('#a')", expected: ["url", ["\"#a\""]] },
+  { start: "none", end: "url('#a')", expected: ["url", ["\""+document.URL+"#a\""]] },
   { start: "url('#a')", end: "none", expected: ["none"] },
 
 ];
