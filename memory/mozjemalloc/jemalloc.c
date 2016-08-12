@@ -238,7 +238,7 @@
 
 #ifndef NO_TLS
 static unsigned long tlsIndex = 0xffffffff;
-#endif 
+#endif
 
 #define	__thread
 #define	_pthread_self() __threadid()
@@ -2420,10 +2420,10 @@ pages_map(void *addr, size_t size)
          * or the nearest available memory above that address, providing a near-guarantee
          * that those bits are clear. If they are not, we return NULL below to indicate
          * out-of-memory.
-         * 
-         * The addr is chosen as 0x0000070000000000, which still allows about 120TB of virtual 
+         *
+         * The addr is chosen as 0x0000070000000000, which still allows about 120TB of virtual
          * address space.
-         * 
+         *
          * See Bug 589735 for more information.
          */
 	bool check_placement = true;
@@ -2445,8 +2445,8 @@ pages_map(void *addr, size_t size)
 		ret = NULL;
 	}
 #if defined(__ia64__)
-        /* 
-         * If the allocated memory doesn't have its upper 17 bits clear, consider it 
+        /*
+         * If the allocated memory doesn't have its upper 17 bits clear, consider it
          * as out of memory.
         */
         else if ((long long)ret & 0xffff800000000000) {
@@ -5618,7 +5618,7 @@ malloc_init_hard(void)
 				"", "");
 		abort();
 	}
-#else	
+#else
 	pagesize = (size_t) result;
 	pagesize_mask = (size_t) result - 1;
 	pagesize_2pow = ffs((int)result) - 1;
@@ -6464,7 +6464,7 @@ MOZ_MEMORY_API void
 free_impl(void *ptr)
 {
 	size_t offset;
-	
+
 	DARWIN_ONLY((szone->free)(szone, ptr); return);
 
 	UTRACE(ptr, 0, 0);
@@ -7176,8 +7176,8 @@ MOZ_MEMORY_API void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIG
  * we need to initialize the heap at the first opportunity we get.
  * DLL_PROCESS_ATTACH in DllMain is that opportunity.
  */
-BOOL APIENTRY DllMain(HINSTANCE hModule, 
-                      DWORD reason, 
+BOOL APIENTRY DllMain(HINSTANCE hModule,
+                      DWORD reason,
                       LPVOID lpReserved)
 {
   switch (reason) {
@@ -7188,7 +7188,7 @@ BOOL APIENTRY DllMain(HINSTANCE hModule,
       /* Initialize the heap */
       malloc_init_hard();
       break;
-    
+
     case DLL_PROCESS_DETACH:
       break;
 
