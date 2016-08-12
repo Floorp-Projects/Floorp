@@ -1245,14 +1245,6 @@ auto DisplayPortMetrics::Resolution() const -> float
 const char GeckoLayerClient::name[] =
         "org/mozilla/gecko/gfx/GeckoLayerClient";
 
-constexpr char GeckoLayerClient::ActivateProgram_t::name[];
-constexpr char GeckoLayerClient::ActivateProgram_t::signature[];
-
-auto GeckoLayerClient::ActivateProgram() const -> void
-{
-    return mozilla::jni::Method<ActivateProgram_t>::Call(GeckoLayerClient::mCtx, nullptr);
-}
-
 constexpr char GeckoLayerClient::ContentDocumentChanged_t::name[];
 constexpr char GeckoLayerClient::ContentDocumentChanged_t::signature[];
 
@@ -1267,14 +1259,6 @@ constexpr char GeckoLayerClient::CreateFrame_t::signature[];
 auto GeckoLayerClient::CreateFrame() const -> mozilla::jni::Object::LocalRef
 {
     return mozilla::jni::Method<CreateFrame_t>::Call(GeckoLayerClient::mCtx, nullptr);
-}
-
-constexpr char GeckoLayerClient::DeactivateProgramAndRestoreState_t::name[];
-constexpr char GeckoLayerClient::DeactivateProgramAndRestoreState_t::signature[];
-
-auto GeckoLayerClient::DeactivateProgramAndRestoreState(bool a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4) const -> void
-{
-    return mozilla::jni::Method<DeactivateProgramAndRestoreState_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4);
 }
 
 constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::name[];
@@ -1372,22 +1356,6 @@ constexpr char LayerRenderer::Frame::BeginDrawing_t::signature[];
 auto LayerRenderer::Frame::BeginDrawing() const -> void
 {
     return mozilla::jni::Method<BeginDrawing_t>::Call(Frame::mCtx, nullptr);
-}
-
-constexpr char LayerRenderer::Frame::DrawBackground_t::name[];
-constexpr char LayerRenderer::Frame::DrawBackground_t::signature[];
-
-auto LayerRenderer::Frame::DrawBackground() const -> void
-{
-    return mozilla::jni::Method<DrawBackground_t>::Call(Frame::mCtx, nullptr);
-}
-
-constexpr char LayerRenderer::Frame::DrawForeground_t::name[];
-constexpr char LayerRenderer::Frame::DrawForeground_t::signature[];
-
-auto LayerRenderer::Frame::DrawForeground() const -> void
-{
-    return mozilla::jni::Method<DrawForeground_t>::Call(Frame::mCtx, nullptr);
 }
 
 constexpr char LayerRenderer::Frame::EndDrawing_t::name[];

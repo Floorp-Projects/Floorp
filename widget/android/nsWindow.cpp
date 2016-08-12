@@ -3317,18 +3317,7 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
         return;
     }
 
-    CompositorOGL *compositor = static_cast<CompositorOGL*>(aManager->GetCompositor());
-    compositor->ResetProgram();
-    gl::GLContext* gl = compositor->gl();
-    bool scissorEnabled = gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
-    GLint scissorRect[4];
-    gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
-
-    client->ActivateProgram();
     frame->BeginDrawing();
-    frame->DrawBackground();
-    client->DeactivateProgramAndRestoreState(scissorEnabled,
-        scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
 }
 
 void
@@ -3342,21 +3331,7 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
         return;
     }
 
-    CompositorOGL *compositor = static_cast<CompositorOGL*>(aManager->GetCompositor());
-    compositor->ResetProgram();
-    gl::GLContext* gl = compositor->gl();
-    bool scissorEnabled = gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
-    GLint scissorRect[4];
-    gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
-
-    MOZ_ASSERT(mLayerViewSupport);
-    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
-
-    client->ActivateProgram();
-    mLayerRendererFrame->DrawForeground();
     mLayerRendererFrame->EndDrawing();
-    client->DeactivateProgramAndRestoreState(scissorEnabled,
-        scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
     mLayerRendererFrame = nullptr;
 }
 

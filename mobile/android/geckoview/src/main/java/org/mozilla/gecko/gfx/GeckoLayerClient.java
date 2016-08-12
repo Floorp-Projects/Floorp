@@ -46,8 +46,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private boolean mRecordDrawTimes;
     private final DrawTimingQueue mDrawTimingQueue;
 
-    private VirtualLayer mRootLayer;
-
     /* The Gecko viewport as per the UI thread. Must be touched only on the UI thread.
      * If any events being sent to Gecko that are relative to the Gecko viewport position,
      * they must (a) be relative to this viewport, and (b) be sent on the UI thread to
@@ -159,7 +157,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private void onGeckoReady() {
         mGeckoIsReady = true;
 
-        mRootLayer = new VirtualLayer(new IntSize(mView.getWidth(), mView.getHeight()));
         mLayerRenderer = mView.getRenderer();
 
         sendResizeEventIfNecessary(true, null);
@@ -201,10 +198,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
         return DisplayPortCalculator.aboutToCheckerboard(mViewportMetrics,
                 mPanZoomController.getVelocityVector(), mDisplayPort);
-    }
-
-    Layer getRoot() {
-        return mGeckoIsReady ? mRootLayer : null;
     }
 
     public LayerView getView() {
@@ -627,12 +620,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
         mToolbarAnimator.populateViewTransform(mCurrentViewTransform, mFrameMetrics);
 
-        if (mRootLayer != null) {
-            mRootLayer.setPositionAndResolution(
-                x, y, x + width, y + height,
-                resolution);
-        }
-
         if (layersUpdated && mRecordDrawTimes) {
             // If we got a layers update, that means a draw finished. Check to see if the area drawn matches
             // one of our requested displayports; if it does calculate the draw time and notify the
@@ -904,19 +891,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             Log.w(LOGTAG, e);
             return null;
         }
-    }
-
-    @WrapForJNI
-    public void activateProgram() {
-        mLayerRenderer.activateDefaultProgram();
-    }
-
-    @WrapForJNI
-    public void deactivateProgramAndRestoreState(boolean enableScissor,
-            int scissorX, int scissorY, int scissorW, int scissorH)
-    {
-        mLayerRenderer.deactivateDefaultProgram();
-        mLayerRenderer.restoreState(enableScissor, scissorX, scissorY, scissorW, scissorH);
     }
 
     private void geometryChanged(DisplayPortMetrics displayPort) {

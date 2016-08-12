@@ -8,7 +8,6 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.graphics.Bitmap;
@@ -47,21 +46,13 @@ public class LayerRenderer {
      * frame.
      */
     private static final int MAX_FRAME_TIME = 16;   /* 1000 ms / 60 FPS */
-
-    private static final int FRAME_RATE_METER_WIDTH = 128;
-    private static final int FRAME_RATE_METER_HEIGHT = 32;
-
     private static final long NANOS_PER_MS = 1000000;
-    private static final int NANOS_PER_SECOND = 1000000000;
-
     private static final int MAX_SCROLL_SPEED_TO_REQUEST_ZOOM_RENDER = 5;
 
     private final LayerView mView;
     private ByteBuffer mCoordByteBuffer;
     private FloatBuffer mCoordBuffer;
-    private RenderContext mLastPageContext;
     private int mMaxTextureSize;
-    private int mBackgroundColor;
 
     private long mLastFrameTime;
     private final CopyOnWriteArrayList<RenderTask> mTasks;
@@ -71,70 +62,12 @@ public class LayerRenderer {
     private int mCurrentFrame, mFrameTimingsSum, mDroppedFrames;
 
     private IntBuffer mPixelBuffer;
-
-    // Used by GLES 2.0
-    private int mProgram;
-    private int mPositionHandle;
-    private int mTextureHandle;
-    private int mSampleHandle;
-    private int mTMatrixHandle;
-
     private List<LayerView.ZoomedViewListener> mZoomedViewListeners;
     private float mLastViewLeft;
     private float mLastViewTop;
 
-    // column-major matrix applied to each vertex to shift the viewport from
-    // one ranging from (-1, -1),(1,1) to (0,0),(1,1) and to scale all sizes by
-    // a factor of 2 to fill up the screen
-    public static final float[] DEFAULT_TEXTURE_MATRIX = {
-        2.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 2.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 2.0f, 0.0f,
-        -1.0f, -1.0f, 0.0f, 1.0f
-    };
-
-    private static final int COORD_BUFFER_SIZE = 20;
-
-    // The shaders run on the GPU directly, the vertex shader is only applying the
-    // matrix transform detailed above
-
-    // Note we flip the y-coordinate in the vertex shader from a
-    // coordinate system with (0,0) in the top left to one with (0,0) in
-    // the bottom left.
-
-    public static final String DEFAULT_VERTEX_SHADER =
-        "uniform mat4 uTMatrix;\n" +
-        "attribute vec4 vPosition;\n" +
-        "attribute vec2 aTexCoord;\n" +
-        "varying vec2 vTexCoord;\n" +
-        "void main() {\n" +
-        "    gl_Position = uTMatrix * vPosition;\n" +
-        "    vTexCoord.x = aTexCoord.x;\n" +
-        "    vTexCoord.y = 1.0 - aTexCoord.y;\n" +
-        "}\n";
-
-    // We use highp because the screenshot textures
-    // we use are large and we stretch them alot
-    // so we need all the precision we can get.
-    // Unfortunately, highp is not required by ES 2.0
-    // so on GPU's like Mali we end up getting mediump
-    public static final String DEFAULT_FRAGMENT_SHADER =
-        "precision highp float;\n" +
-        "varying vec2 vTexCoord;\n" +
-        "uniform sampler2D sTexture;\n" +
-        "void main() {\n" +
-        "    gl_FragColor = texture2D(sTexture, vTexCoord);\n" +
-        "}\n";
-
     public LayerRenderer(LayerView view) {
         mView = view;
-
-        final BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
-        bitmapOptions.inScaled = false;
-        Bitmap scrollbarImage =
-                BitmapUtils.decodeResource(view.getContext(), R.drawable.scrollbar, bitmapOptions);
-        IntSize size = new IntSize(scrollbarImage.getWidth(), scrollbarImage.getHeight());
-        scrollbarImage = expandCanvasToPowerOfTwo(scrollbarImage, size);
 
         mTasks = new CopyOnWriteArrayList<RenderTask>();
         mLastFrameTime = System.nanoTime();
@@ -143,24 +76,6 @@ public class LayerRenderer {
         mCurrentFrame = mFrameTimingsSum = mDroppedFrames = 0;
 
         mZoomedViewListeners = new ArrayList<LayerView.ZoomedViewListener>();
-    }
-
-    private Bitmap expandCanvasToPowerOfTwo(Bitmap image, IntSize size) {
-        IntSize potSize = size.nextPowerOfTwo();
-        if (size.equals(potSize)) {
-            return image;
-        }
-        // make the bitmap size a power-of-two in both dimensions if it's not already.
-        Bitmap potImage = Bitmap.createBitmap(potSize.width, potSize.height, image.getConfig());
-        new Canvas(potImage).drawBitmap(image, new Matrix(), null);
-        return potImage;
-    }
-
-    private Bitmap diagonalFlip(Bitmap image) {
-        Matrix rotation = new Matrix();
-        rotation.setValues(new float[] { 0, 1, 0, 1, 0, 0, 0, 0, 1 }); // transform (x,y) into (y,x)
-        Bitmap rotated = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), rotation, true);
-        return rotated;
     }
 
     public void destroy() {
@@ -174,62 +89,12 @@ public class LayerRenderer {
 
     void onSurfaceCreated(EGLConfig config) {
         createDefaultProgram();
-        activateDefaultProgram();
     }
 
     public void createDefaultProgram() {
-        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, DEFAULT_VERTEX_SHADER);
-        int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, DEFAULT_FRAGMENT_SHADER);
-
-        mProgram = GLES20.glCreateProgram();
-        GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
-        GLES20.glAttachShader(mProgram, fragmentShader); // add the fragment shader to program
-        GLES20.glLinkProgram(mProgram);                  // creates OpenGL program executables
-
-        // Get handles to the vertex shader's vPosition, aTexCoord, sTexture, and uTMatrix members.
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
-        mTextureHandle = GLES20.glGetAttribLocation(mProgram, "aTexCoord");
-        mSampleHandle = GLES20.glGetUniformLocation(mProgram, "sTexture");
-        mTMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uTMatrix");
-
         int maxTextureSizeResult[] = new int[1];
         GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSizeResult, 0);
         mMaxTextureSize = maxTextureSizeResult[0];
-    }
-
-    // Activates the shader program.
-    public void activateDefaultProgram() {
-        // Add the program to the OpenGL environment
-        GLES20.glUseProgram(mProgram);
-
-        // Set the transformation matrix
-        GLES20.glUniformMatrix4fv(mTMatrixHandle, 1, false, DEFAULT_TEXTURE_MATRIX, 0);
-
-        // Enable the arrays from which we get the vertex and texture coordinates
-        GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glEnableVertexAttribArray(mTextureHandle);
-
-        GLES20.glUniform1i(mSampleHandle, 0);
-
-        // TODO: Move these calls into a separate deactivate() call that is called after the
-        // underlay and overlay are rendered.
-    }
-
-    // Deactivates the shader program. This must be done to avoid crashes after returning to the
-    // Gecko C++ compositor from Java.
-    public void deactivateDefaultProgram() {
-        GLES20.glDisableVertexAttribArray(mTextureHandle);
-        GLES20.glDisableVertexAttribArray(mPositionHandle);
-        GLES20.glUseProgram(0);
-    }
-
-    void restoreState(boolean enableScissor, int scissorX, int scissorY, int scissorW, int scissorH) {
-        GLES20.glScissor(scissorX, scissorY, scissorW, scissorH);
-        if (enableScissor) {
-            GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
-        } else {
-            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
-        }
     }
 
     public int getMaxTextureSize() {
@@ -275,36 +140,6 @@ public class LayerRenderer {
         return pixelBuffer;
     }
 
-    private RenderContext createScreenContext(ImmutableViewportMetrics metrics) {
-        RectF viewport = new RectF(0.0f, 0.0f, metrics.getWidth(), metrics.getHeight());
-        RectF pageRect = metrics.getPageRect();
-
-        return createContext(viewport, pageRect, 1.0f);
-    }
-
-    private RenderContext createPageContext(ImmutableViewportMetrics metrics) {
-        RectF viewport = metrics.getViewport();
-        RectF pageRect = metrics.getPageRect();
-        float zoomFactor = metrics.zoomFactor;
-
-        return createContext(new RectF(RectUtils.round(viewport)), pageRect, zoomFactor);
-    }
-
-    private RenderContext createContext(RectF viewport, RectF pageRect, float zoomFactor) {
-        if (mCoordBuffer == null) {
-            // Initialize the FloatBuffer that will be used to store all vertices and texture
-            // coordinates in draw() commands.
-            mCoordByteBuffer = DirectBufferAllocator.allocate(COORD_BUFFER_SIZE * 4);
-            mCoordByteBuffer.order(ByteOrder.nativeOrder());
-            mCoordBuffer = mCoordByteBuffer.asFloatBuffer();
-            if (mCoordBuffer == null) {
-                throw new IllegalStateException();
-            }
-        }
-        return new RenderContext(viewport, pageRect, zoomFactor,
-                                 mPositionHandle, mTextureHandle, mCoordBuffer);
-    }
-
     private void updateDroppedFrames(long frameStartTime) {
         int frameElapsedTime = (int)((System.nanoTime() - frameStartTime) / NANOS_PER_MS);
 
@@ -320,56 +155,8 @@ public class LayerRenderer {
         int averageTime = mFrameTimingsSum / mFrameTimings.length;
     }
 
-    /*
-     * create a vertex shader type (GLES20.GL_VERTEX_SHADER)
-     * or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
-     */
-    public static int loadShader(int type, String shaderCode) {
-        int shader = GLES20.glCreateShader(type);
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-        return shader;
-    }
-
     public Frame createFrame(ImmutableViewportMetrics metrics) {
         return new Frame(metrics);
-    }
-
-    class FadeRunnable implements Runnable {
-        private boolean mStarted;
-        long mRunAt; // Would be private but we need both file access and high performance.
-
-        void scheduleStartFade(long delay) {
-            mRunAt = SystemClock.elapsedRealtime() + delay;
-            if (!mStarted) {
-                mView.postDelayed(this, delay);
-                mStarted = true;
-            }
-        }
-
-        void scheduleNextFadeFrame() {
-            if (mStarted) {
-                Log.e(LOGTAG, "scheduleNextFadeFrame() called while scheduled for starting fade");
-            }
-            mView.postDelayed(this, 1000L / 60L); // request another frame at 60fps
-        }
-
-        boolean timeToFade() {
-            return !mStarted;
-        }
-
-        @Override
-        public void run() {
-            long timeDelta = mRunAt - SystemClock.elapsedRealtime();
-            if (timeDelta > 0) {
-                // the run-at time was pushed back, so reschedule
-                mView.postDelayed(this, timeDelta);
-            } else {
-                // reached the run-at time, execute
-                mStarted = false;
-                mView.requestRender();
-            }
-        }
     }
 
     public class Frame {
@@ -377,27 +164,9 @@ public class LayerRenderer {
         private long mFrameStartTime;
         // A fixed snapshot of the viewport metrics that this frame is using to render content.
         private final ImmutableViewportMetrics mFrameMetrics;
-        // A rendering context for page-positioned layers, and one for screen-positioned layers.
-        private final RenderContext mPageContext, mScreenContext;
-        // Whether a layer was updated.
-        private boolean mUpdated;
-        private final Rect mPageRect;
-        private final Rect mAbsolutePageRect;
 
         public Frame(ImmutableViewportMetrics metrics) {
             mFrameMetrics = metrics;
-
-            // Work out the offset due to margins
-            Layer rootLayer = mView.getLayerClient().getRoot();
-            mPageContext = createPageContext(metrics);
-            mScreenContext = createScreenContext(metrics);
-
-            RectF pageRect = mFrameMetrics.getPageRect();
-            mAbsolutePageRect = RectUtils.round(pageRect);
-
-            PointF origin = mFrameMetrics.getOrigin();
-            pageRect.offset(-origin.x, -origin.y);
-            mPageRect = RectUtils.round(pageRect);
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
@@ -405,55 +174,12 @@ public class LayerRenderer {
         public void beginDrawing() {
             mFrameStartTime = System.nanoTime();
 
-            mUpdated = true;
-
-            Layer rootLayer = mView.getLayerClient().getRoot();
-
             // Run through pre-render tasks
             runRenderTasks(mTasks, false, mFrameStartTime);
-
-            /* Update layers. */
-            if (rootLayer != null) {
-                // Called on compositor thread.
-                mUpdated &= rootLayer.update(mPageContext);
-            }
         }
 
-        private void clear(int color) {
-            GLES20.glClearColor(((color >> 16) & 0xFF) / 255.0f,
-                                ((color >> 8) & 0xFF) / 255.0f,
-                                (color & 0xFF) / 255.0f,
-                                0.0f);
-            // The bits set here need to match up with those used
-            // in gfx/layers/opengl/LayerManagerOGL.cpp.
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT |
-                           GLES20.GL_DEPTH_BUFFER_BIT);
-        }
 
-        /** This function is invoked via JNI; be careful when modifying signature. */
-        @WrapForJNI
-        public void drawBackground() {
-            // Any GL state which is changed here must be restored in
-            // restoreState(...)
-
-            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
-
-            // Update background color.
-            mBackgroundColor = mView.getBackgroundColor();
-
-            // Clear the page area to the page background colour.
-            clear(mBackgroundColor);
-        }
-
-        @WrapForJNI
-        public void drawForeground() {
-            // Any GL state which is changed here must be restored in
-            // restoreState(...)
-
-            runRenderTasks(mTasks, true, mFrameStartTime);
-        }
-
-        private void maybeRequestZoomedViewRender(RenderContext context) {
+        private void maybeRequestZoomedViewRender() {
             // Concurrently update of mZoomedViewListeners should not be an issue here
             // because the following line is just a short-circuit
             if (mZoomedViewListeners.size() == 0) {
@@ -463,8 +189,8 @@ public class LayerRenderer {
             // When scrolling fast, do not request zoomed view render to avoid to slow down
             // the scroll in the main view.
             // Speed is estimated using the offset changes between 2 display frame calls
-            final float viewLeft = context.viewport.left;
-            final float viewTop = context.viewport.top;
+            final float viewLeft = Math.round(mFrameMetrics.getViewport().left);
+            final float viewTop = Math.round(mFrameMetrics.getViewport().top);
             boolean shouldWaitToRender = false;
 
             if (Math.abs(mLastViewLeft - viewLeft) > MAX_SCROLL_SPEED_TO_REQUEST_ZOOM_RENDER ||
@@ -489,24 +215,22 @@ public class LayerRenderer {
             });
         }
 
+
         /** This function is invoked via JNI; be careful when modifying signature. */
         @WrapForJNI
         public void endDrawing() {
-            // If a layer update requires further work, schedule another redraw
-            if (!mUpdated)
-                mView.requestRender();
-
             PanningPerfAPI.recordFrameTime();
 
-            maybeRequestZoomedViewRender(mPageContext);
+            runRenderTasks(mTasks, true, mFrameStartTime);
+            maybeRequestZoomedViewRender();
 
             /* Used by robocop for testing purposes */
             IntBuffer pixelBuffer = mPixelBuffer;
-            if (mUpdated && pixelBuffer != null) {
+            if (pixelBuffer != null) {
                 synchronized (pixelBuffer) {
                     pixelBuffer.position(0);
-                    GLES20.glReadPixels(0, 0, (int)mScreenContext.viewport.width(),
-                                        (int)mScreenContext.viewport.height(), GLES20.GL_RGBA,
+                    GLES20.glReadPixels(0, 0, Math.round(mFrameMetrics.getWidth()),
+                                        Math.round(mFrameMetrics.getHeight()), GLES20.GL_RGBA,
                                         GLES20.GL_UNSIGNED_BYTE, pixelBuffer);
                     pixelBuffer.notify();
                 }
