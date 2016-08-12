@@ -60,7 +60,6 @@
 
 :root[devtoolstheme="dark"] #identity-box {
   --identity-box-chrome-color: #46afe3;
-  --identity-box-verified-background-color: transparent;
 }
 
 :root[devtoolstheme="light"] {

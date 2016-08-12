@@ -442,10 +442,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     explicit ProtocolProxyQueryHandler(PeerConnectionMedia *pcm) :
       pcm_(pcm) {}
 
-    NS_IMETHODIMP OnProxyAvailable(nsICancelable *request,
-                                   nsIChannel *aChannel,
-                                   nsIProxyInfo *proxyinfo,
-                                   nsresult result) override;
+    NS_IMETHOD OnProxyAvailable(nsICancelable *request,
+                                nsIChannel *aChannel,
+                                nsIProxyInfo *proxyinfo,
+                                nsresult result) override;
     NS_DECL_ISUPPORTS
 
    private:

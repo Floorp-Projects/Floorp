@@ -217,13 +217,27 @@ PollableEvent::Signal()
     SOCKET_LOG(("PollableEvent::Signal Failed on no FD\n"));
     return false;
   }
+#ifndef XP_WIN
+  // On windows poll can hang and this became worse when we introduced the
+  // patch for bug 698882 (see also bug 1292181), therefore we reverted the
+  // behavior on windows to be as before bug 698882, e.g. write to the socket
+  // also if an event dispatch is on the socket thread and writing to the
+  // socket for each event. See bug 1292181.
   if (PR_GetCurrentThread() == gSocketThread) {
     SOCKET_LOG(("PollableEvent::Signal OnSocketThread nop\n"));
     return true;
   }
+#endif
+
+#ifndef XP_WIN
+  // To wake up the poll writing once is enough, but for Windows that can cause
+  // hangs so we will write for every event.
+  // For non-Windows systems it is enough to write just once.
   if (mSignaled) {
     return true;
   }
+#endif
+
   mSignaled = true;
   int32_t status = PR_Write(mWriteFD, "M", 1);
   SOCKET_LOG(("PollableEvent::Signal PR_Write %d\n", status));
@@ -248,7 +262,29 @@ PollableEvent::Clear()
     return false;
   }
   char buf[2048];
-  int32_t status = PR_Read(mReadFD, buf, 2048);
+  int32_t status;
+#ifdef XP_WIN
+  // On Windows we are writing to the socket for each event, to be sure that we
+  // do not have any deadlock read from the socket as much as we can.
+  while (true) {
+    status = PR_Read(mReadFD, buf, 2048);
+    SOCKET_LOG(("PollableEvent::Signal PR_Read %d\n", status));
+    if (status == 0) {
+      SOCKET_LOG(("PollableEvent::Clear EOF!\n"));
+      return false;
+    }
+    if (status < 0) {
+      PRErrorCode code = PR_GetError();
+      if (code == PR_WOULD_BLOCK_ERROR) {
+        return true;
+      } else {
+        SOCKET_LOG(("PollableEvent::Clear unexpected error %d\n", code));
+        return false;
+      }
+    }
+  }
+#else
+  status = PR_Read(mReadFD, buf, 2048);
   SOCKET_LOG(("PollableEvent::Signal PR_Read %d\n", status));
 
   if (status == 1) {
@@ -270,7 +306,8 @@ PollableEvent::Clear()
   }
   SOCKET_LOG(("PollableEvent::Clear unexpected error %d\n", code));
   return false;
-}
+#endif //XP_WIN
 
+}
 } // namespace net
 } // namespace mozilla

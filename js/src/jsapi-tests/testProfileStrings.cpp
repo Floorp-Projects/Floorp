@@ -20,9 +20,9 @@ reset(JSContext* cx)
 {
     psize = max_stack = 0;
     memset(pstack, 0, sizeof(pstack));
-    cx->runtime()->spsProfiler.stringsReset();
-    cx->runtime()->spsProfiler.enableSlowAssertions(true);
-    js::EnableRuntimeProfilingStack(cx->runtime(), true);
+    cx->spsProfiler.stringsReset();
+    cx->spsProfiler.enableSlowAssertions(true);
+    js::EnableContextProfilingStack(cx, true);
 }
 
 static const JSClass ptestClass = {
@@ -47,14 +47,14 @@ test_fn2(JSContext* cx, unsigned argc, JS::Value* vp)
 static bool
 enable(JSContext* cx, unsigned argc, JS::Value* vp)
 {
-    js::EnableRuntimeProfilingStack(cx->runtime(), true);
+    js::EnableContextProfilingStack(cx, true);
     return true;
 }
 
 static bool
 disable(JSContext* cx, unsigned argc, JS::Value* vp)
 {
-    js::EnableRuntimeProfilingStack(cx->runtime(), false);
+    js::EnableContextProfilingStack(cx, false);
     return true;
 }
 
@@ -80,7 +80,7 @@ static const JSFunctionSpec ptestFunctions[] = {
 static JSObject*
 initialize(JSContext* cx)
 {
-    js::SetRuntimeProfilingStack(cx->runtime(), pstack, &psize, 10);
+    js::SetContextProfilingStack(cx, pstack, &psize, 10);
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     return JS_InitClass(cx, global, nullptr, &ptestClass, Prof, 0,
                         nullptr, ptestFunctions, nullptr, nullptr);
@@ -126,8 +126,8 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
         CHECK(max_stack >= 6);
         CHECK(psize == 0);
     }
-    js::EnableRuntimeProfilingStack(cx->runtime(), false);
-    js::SetRuntimeProfilingStack(cx->runtime(), pstack, &psize, 3);
+    js::EnableContextProfilingStack(cx, false);
+    js::SetContextProfilingStack(cx, pstack, &psize, 3);
     reset(cx);
     {
         JS::RootedValue rval(cx);
@@ -177,8 +177,8 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
         CHECK(max_stack >= 8);
     }
 
-    js::EnableRuntimeProfilingStack(cx->runtime(), false);
-    js::SetRuntimeProfilingStack(cx->runtime(), pstack, &psize, 3);
+    js::EnableContextProfilingStack(cx, false);
+    js::SetContextProfilingStack(cx, pstack, &psize, 3);
     reset(cx);
     {
         /* Limit the size of the stack and make sure we don't overflow */
@@ -227,7 +227,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
     EXEC("function b(p) { p.test_fn(); }");
     EXEC("function a() { var p = new Prof(); p.enable(); b(p); }");
     reset(cx);
-    js::EnableRuntimeProfilingStack(cx->runtime(), false);
+    js::EnableContextProfilingStack(cx, false);
     {
         /* enable it in the middle of JS and make sure things check out */
         JS::RootedValue rval(cx);

@@ -154,9 +154,9 @@ protected:
   const uint64_t mProcessId;
 
   /**
-   * The JS Runtime for the main thread.
+   * The JS Context for the main thread.
    */
-  JSRuntime* const mRuntime;
+  JSContext* const mContext;
 
   /**
    * Generate unique identifiers.
@@ -630,7 +630,7 @@ public:
   /**
    * Construct a performance group.
    *
-   * @param rt The container runtime. Used to generate a unique identifier.
+   * @param cx The container context. Used to generate a unique identifier.
    * @param service The performance service. Used during destruction to
    *   cleanup the hash tables.
    * @param name A name for the group, designed mostly for debugging purposes,
@@ -645,7 +645,7 @@ public:
    * @param scope the scope of this group.
    */
   static nsPerformanceGroup*
-    Make(JSRuntime* rt,
+    Make(JSContext* cx,
          nsPerformanceStatsService* service,
          const nsAString& name,
          const nsAString& addonId,

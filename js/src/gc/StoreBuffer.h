@@ -384,7 +384,7 @@ class StoreBuffer
     {
     }
 
-    bool enable();
+    MOZ_MUST_USE bool enable();
     void disable();
     bool isEnabled() const { return enabled_; }
 

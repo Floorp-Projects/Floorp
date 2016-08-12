@@ -143,10 +143,10 @@ private:
        SocketListener() { }
 
        /* nsIServerSocketListener */
-       NS_IMETHODIMP OnSocketAccepted(nsIServerSocket *aServ,
-                                      nsISocketTransport *aTransport) override;
-       NS_IMETHODIMP OnStopListening(nsIServerSocket *aServ,
-                                   nsresult aStatus) override
+       NS_IMETHOD OnSocketAccepted(nsIServerSocket *aServ,
+                                   nsISocketTransport *aTransport) override;
+       NS_IMETHOD OnStopListening(nsIServerSocket *aServ,
+                                  nsresult aStatus) override
        {
            return NS_OK;
        }
@@ -171,7 +171,7 @@ private:
         bool WriteToStream(void *aPtr, uint32_t aSize);
 
         // nsIInputStreamCallback
-        NS_IMETHODIMP OnInputStreamReady(nsIAsyncInputStream *aStream) override;
+        NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream *aStream) override;
 
     private:
         virtual ~SocketHandler() { CloseConnection(); }
@@ -797,7 +797,7 @@ public:
               mHost(host)
         {  }
 
-        NS_IMETHODIMP Run() override {
+        NS_IMETHOD Run() override {
             mHost->mList.insertBack(mData);
             return NS_OK;
         }
@@ -821,7 +821,7 @@ public:
             : mHost(host)
         {  }
 
-        NS_IMETHODIMP Run() override {
+        NS_IMETHOD Run() override {
             mHost->RemoveData();
             return NS_OK;
         }
@@ -843,7 +843,7 @@ public:
             : mHost(host)
         {  }
 
-        NS_IMETHODIMP Run() override {
+        NS_IMETHOD Run() override {
             // Sendout all appended debug data.
             DebugGLData *d = nullptr;
             while ((d = mHost->mList.popFirst()) != nullptr) {

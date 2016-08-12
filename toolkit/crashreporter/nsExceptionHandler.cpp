@@ -2126,7 +2126,7 @@ public:
     , mAppendAppNotes(true)
     {}
 
-  NS_METHOD Run() override;
+  NS_IMETHOD Run() override;
 
 private:
   nsCString mKey;

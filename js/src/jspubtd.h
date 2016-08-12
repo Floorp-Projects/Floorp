@@ -42,13 +42,13 @@ class JS_FRIEND_API(OwningCompileOptions);
 class JS_FRIEND_API(TransitiveCompileOptions);
 class JS_PUBLIC_API(CompartmentOptions);
 
+struct RootingContext;
 class Value;
 struct Zone;
 
 } /* namespace JS */
 
 namespace js {
-struct ContextFriendFields;
 class RootLists;
 } // namespace js
 
@@ -184,7 +184,7 @@ class JS_PUBLIC_API(AutoGCRooter)
 {
   public:
     AutoGCRooter(JSContext* cx, ptrdiff_t tag);
-    AutoGCRooter(js::ContextFriendFields* cx, ptrdiff_t tag);
+    AutoGCRooter(JS::RootingContext* cx, ptrdiff_t tag);
 
     ~AutoGCRooter() {
         MOZ_ASSERT(this == *stackTop);
@@ -321,11 +321,42 @@ class RootLists
     void finishPersistentRoots();
 };
 
-struct ContextFriendFields
+} // namespace js
+
+namespace JS {
+
+/*
+ * JS::RootingContext is a base class of ContextFriendFields and JSContext.
+ * This class can be used to let code construct a Rooted<> or PersistentRooted<>
+ * instance, without giving it full access to the JSContext.
+ */
+struct RootingContext
+{
+    js::RootLists roots;
+
+#ifdef DEBUG
+    // Whether the derived class is a JSContext or an ExclusiveContext.
+    bool isJSContext;
+#endif
+
+    explicit RootingContext(bool isJSContextArg)
+#ifdef DEBUG
+      : isJSContext(isJSContextArg)
+#endif
+    {}
+
+    static RootingContext* get(JSContext* cx) {
+        return reinterpret_cast<RootingContext*>(cx);
+    }
+};
+
+} // namespace JS
+
+namespace js {
+
+struct ContextFriendFields : public JS::RootingContext
 {
   protected:
-    JSRuntime* const     runtime_;
-
     /* The current compartment. */
     JSCompartment*      compartment_;
 
@@ -333,12 +364,10 @@ struct ContextFriendFields
     JS::Zone*           zone_;
 
   public:
-    /* Rooting structures. */
-    RootLists           roots;
+    /* Limit pointer for checking native stack consumption. */
+    uintptr_t nativeStackLimit[js::StackKindCount];
 
-    explicit ContextFriendFields(JSRuntime* rt)
-      : runtime_(rt), compartment_(nullptr), zone_(nullptr)
-    {}
+    explicit ContextFriendFields(bool isJSContext);
 
     static const ContextFriendFields* get(const JSContext* cx) {
         return reinterpret_cast<const ContextFriendFields*>(cx);
@@ -348,7 +377,6 @@ struct ContextFriendFields
         return reinterpret_cast<ContextFriendFields*>(cx);
     }
 
-    friend JSRuntime* GetRuntime(const JSContext* cx);
     friend JSCompartment* GetContextCompartment(const JSContext* cx);
     friend JS::Zone* GetContextZone(const JSContext* cx);
     template <typename T> friend class JS::Rooted;
@@ -364,12 +392,6 @@ struct ContextFriendFields
  *   usable without resorting to jsfriendapi.h, and when JSContext is an
  *   incomplete type.
  */
-inline JSRuntime*
-GetRuntime(const JSContext* cx)
-{
-    return ContextFriendFields::get(cx)->runtime_;
-}
-
 inline JSCompartment*
 GetContextCompartment(const JSContext* cx)
 {
@@ -381,57 +403,6 @@ GetContextZone(const JSContext* cx)
 {
     return ContextFriendFields::get(cx)->zone_;
 }
-
-class PerThreadData;
-
-struct PerThreadDataFriendFields
-{
-  private:
-    // Note: this type only exists to permit us to derive the offset of
-    // the perThread data within the real JSRuntime* type in a portable
-    // way.
-    struct RuntimeDummy : JS::shadow::Runtime
-    {
-        struct PerThreadDummy {
-            void* field1;
-            uintptr_t field2;
-#ifdef JS_DEBUG
-            uint64_t field3;
-#endif
-        } mainThread;
-    };
-
-  public:
-    /* Rooting structures. */
-    RootLists roots;
-
-    PerThreadDataFriendFields();
-
-    /* Limit pointer for checking native stack consumption. */
-    uintptr_t nativeStackLimit[js::StackKindCount];
-
-    static const size_t RuntimeMainThreadOffset = offsetof(RuntimeDummy, mainThread);
-
-    static inline PerThreadDataFriendFields* get(js::PerThreadData* pt) {
-        return reinterpret_cast<PerThreadDataFriendFields*>(pt);
-    }
-
-    static inline PerThreadDataFriendFields* getMainThread(JSRuntime* rt) {
-        // mainThread must always appear directly after |JS::shadow::Runtime|.
-        // Tested by a JS_STATIC_ASSERT in |jsfriendapi.cpp|
-        return reinterpret_cast<PerThreadDataFriendFields*>(
-            reinterpret_cast<char*>(rt) + RuntimeMainThreadOffset);
-    }
-
-    static inline const PerThreadDataFriendFields* getMainThread(const JSRuntime* rt) {
-        // mainThread must always appear directly after |JS::shadow::Runtime|.
-        // Tested by a JS_STATIC_ASSERT in |jsfriendapi.cpp|
-        return reinterpret_cast<const PerThreadDataFriendFields*>(
-            reinterpret_cast<const char*>(rt) + RuntimeMainThreadOffset);
-    }
-
-    template <typename T> friend class JS::Rooted;
-};
 
 } /* namespace js */
 

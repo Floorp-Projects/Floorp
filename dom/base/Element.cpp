@@ -147,6 +147,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsComputedDOMStyle.h"
+#include "nsDOMStringMap.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3862,3 +3863,29 @@ Element::GetReferrerPolicyAsEnum()
   }
   return net::RP_Unset;
 }
+
+already_AddRefed<nsDOMStringMap>
+Element::Dataset()
+{
+  nsDOMSlots *slots = DOMSlots();
+
+  if (!slots->mDataset) {
+    // mDataset is a weak reference so assignment will not AddRef.
+    // AddRef is called before returning the pointer.
+    slots->mDataset = new nsDOMStringMap(this);
+  }
+
+  RefPtr<nsDOMStringMap> ret = slots->mDataset;
+  return ret.forget();
+}
+
+void
+Element::ClearDataset()
+{
+  nsDOMSlots *slots = GetExistingDOMSlots();
+
+  MOZ_ASSERT(slots && slots->mDataset,
+             "Slots should exist and dataset should not be null.");
+  slots->mDataset = nullptr;
+}
+

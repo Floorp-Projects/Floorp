@@ -473,5 +473,15 @@ add_task(function* test_mousemove_correcttarget() {
 
   yield hideSelectPopup(selectPopup);
 
+  // The popup should be closed when fullscreen mode is entered or exited.
+  for (let steps = 0; steps < 2; steps++) {
+    yield openSelectPopup(selectPopup, true);
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
+    let sizeModeChanged = BrowserTestUtils.waitForEvent(window, "sizemodechange");
+    BrowserFullScreen();
+    yield sizeModeChanged;
+    yield popupHiddenPromise;
+  }
+
   yield BrowserTestUtils.removeTab(tab);
 });

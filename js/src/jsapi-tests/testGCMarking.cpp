@@ -32,7 +32,7 @@ class CCWTestTracer : public JS::CallbackTracer {
     JS::TraceKind expectedKind;
 
     CCWTestTracer(JSContext* cx, void** expectedThingp, JS::TraceKind expectedKind)
-      : JS::CallbackTracer(JS_GetRuntime(cx)),
+      : JS::CallbackTracer(cx),
         okay(true),
         numberOfThingsTraced(0),
         expectedThingp(expectedThingp),

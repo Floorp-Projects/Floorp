@@ -279,6 +279,8 @@ if (hasI64()) {
     testI64Eqz(40, 0);
     testI64Eqz(0, 1);
 
+    assertEqI64(wasmEvalText(`(module (func (param i64) (result i64) (local i64) (set_local 1 (i64.shl (get_local 0) (get_local 0))) (i64.shl (get_local 1) (get_local 1))) (export "" 0))`)(createI64(2)), 2048);
+
     // Test MTest's GVN branch inversion.
     var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (i64.eqz (i64.trunc_s/f32 (get_local 0))) (i32.const 0) (i32.const 1))) (export "" 0))`);
     assertEq(testTrunc(0), 0);

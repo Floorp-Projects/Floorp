@@ -685,7 +685,7 @@ BluetoothHfpManager::HandleVolumeChanged(nsISupports* aSubject)
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"volumeup", "value":10}
   //  {"key":"volumedown", "value":2}
-  RootedDictionary<dom::SettingChangeNotification> setting(nsContentUtils::RootingCx());
+  RootedDictionary<dom::SettingChangeNotification> setting(RootingCx());
   if (!WrappedJSToDictionary(aSubject, setting)) {
     return;
   }
@@ -751,7 +751,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
   mService = service;
 
   // Signal
-  JS::Rooted<JS::Value> value(dom::GetJSRuntime());
+  JS::Rooted<JS::Value> value(dom::RootingCx());
   voiceInfo->GetRelSignalStrength(&value);
   if (value.isNumber()) {
     mSignal = (int)ceil(value.toNumber() / 20.0);

@@ -582,7 +582,7 @@ BluetoothHfpManager::HandleVolumeChanged(nsISupports* aSubject)
   //  {"key":"volumedown", "value":2}
 
   RootedDictionary<dom::SettingChangeNotification>
-    setting(nsContentUtils::RootingCx());
+    setting(RootingCx());
 
   if (!WrappedJSToDictionary(aSubject, setting)) {
     return;
@@ -641,7 +641,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
   }
   UpdateCIND(CINDType::SERVICE, service);
 
-  JS::Rooted<JS::Value> value(dom::GetJSRuntime());
+  JS::Rooted<JS::Value> value(dom::RootingCx());
   voiceInfo->GetRelSignalStrength(&value);
   if (value.isNumber()) {
     uint8_t signal = ceil(value.toNumber() / 20.0);

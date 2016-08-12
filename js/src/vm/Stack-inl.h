@@ -871,30 +871,30 @@ ActivationEntryMonitor::~ActivationEntryMonitor()
 Activation::Activation(JSContext* cx, Kind kind)
   : cx_(cx),
     compartment_(cx->compartment()),
-    prev_(cx->runtime_->activation_),
+    prev_(cx->activation_),
     prevProfiling_(prev_ ? prev_->mostRecentProfiling() : nullptr),
     hideScriptedCallerCount_(0),
     frameCache_(cx),
-    asyncStack_(cx, cx->runtime_->asyncStackForNewActivations),
-    asyncCause_(cx->runtime_->asyncCauseForNewActivations),
-    asyncCallIsExplicit_(cx->runtime_->asyncCallIsExplicit),
+    asyncStack_(cx, cx->asyncStackForNewActivations),
+    asyncCause_(cx->asyncCauseForNewActivations),
+    asyncCallIsExplicit_(cx->asyncCallIsExplicit),
     kind_(kind)
 {
-    cx->runtime_->asyncStackForNewActivations = nullptr;
-    cx->runtime_->asyncCauseForNewActivations = nullptr;
-    cx->runtime_->asyncCallIsExplicit = false;
-    cx->runtime_->activation_ = this;
+    cx->asyncStackForNewActivations = nullptr;
+    cx->asyncCauseForNewActivations = nullptr;
+    cx->asyncCallIsExplicit = false;
+    cx->activation_ = this;
 }
 
 Activation::~Activation()
 {
-    MOZ_ASSERT_IF(isProfiling(), this != cx_->runtime()->profilingActivation_);
-    MOZ_ASSERT(cx_->runtime_->activation_ == this);
+    MOZ_ASSERT_IF(isProfiling(), this != cx_->profilingActivation_);
+    MOZ_ASSERT(cx_->activation_ == this);
     MOZ_ASSERT(hideScriptedCallerCount_ == 0);
-    cx_->runtime_->activation_ = prev_;
-    cx_->runtime_->asyncCauseForNewActivations = asyncCause_;
-    cx_->runtime_->asyncStackForNewActivations = asyncStack_;
-    cx_->runtime_->asyncCallIsExplicit = asyncCallIsExplicit_;
+    cx_->activation_ = prev_;
+    cx_->asyncCauseForNewActivations = asyncCause_;
+    cx_->asyncStackForNewActivations = asyncStack_;
+    cx_->asyncCallIsExplicit = asyncCallIsExplicit_;
 }
 
 bool

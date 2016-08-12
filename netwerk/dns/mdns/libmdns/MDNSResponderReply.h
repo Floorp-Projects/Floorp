@@ -29,7 +29,7 @@ public:
                       const nsACString& aReplyDomain,
                       BrowseOperator* aContext);
 
-  NS_IMETHODIMP Run() override;
+  NS_IMETHOD Run() override;
 
   static void Reply(DNSServiceRef aSdRef,
                     DNSServiceFlags aFlags,
@@ -62,7 +62,7 @@ public:
                         const nsACString& aDomain,
                         RegisterOperator* aContext);
 
-  NS_IMETHODIMP Run() override;
+  NS_IMETHOD Run() override;
 
   static void Reply(DNSServiceRef aSdRef,
                     DNSServiceFlags aFlags,
@@ -97,7 +97,7 @@ public:
                        ResolveOperator* aContext);
   ~ResolveReplyRunnable();
 
-  NS_IMETHODIMP Run() override;
+  NS_IMETHOD Run() override;
 
   static void Reply(DNSServiceRef aSdRef,
                     DNSServiceFlags aFlags,
@@ -136,7 +136,7 @@ public:
                            GetAddrInfoOperator* aContext);
   ~GetAddrInfoReplyRunnable();
 
-  NS_IMETHODIMP Run() override;
+  NS_IMETHOD Run() override;
 
   static void Reply(DNSServiceRef aSdRef,
                     DNSServiceFlags aFlags,

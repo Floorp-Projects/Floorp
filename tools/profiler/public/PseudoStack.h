@@ -315,23 +315,23 @@ public:
     return sMin(mStackPointer, mozilla::sig_safe_t(mozilla::ArrayLength(mStack)));
   }
 
-  void sampleRuntime(JSRuntime* runtime) {
+  void sampleContext(JSContext* context) {
 #ifndef SPS_STANDALONE
-    if (mRuntime && !runtime) {
+    if (mContext && !context) {
       // On JS shut down, flush the current buffer as stringifying JIT samples
-      // requires a live JSRuntime.
+      // requires a live JSContext.
       flushSamplerOnJSShutdown();
     }
 
-    mRuntime = runtime;
+    mContext = context;
 
-    if (!runtime) {
+    if (!context) {
       return;
     }
 
     static_assert(sizeof(mStack[0]) == sizeof(js::ProfileEntry),
                   "mStack must be binary compatible with js::ProfileEntry.");
-    js::SetRuntimeProfilingStack(runtime,
+    js::SetContextProfilingStack(context,
                                  (js::ProfileEntry*) mStack,
                                  (uint32_t*) &mStackPointer,
                                  (uint32_t) mozilla::ArrayLength(mStack));
@@ -341,9 +341,9 @@ public:
   }
 #ifndef SPS_STANDALONE
   void enableJSSampling() {
-    if (mRuntime) {
-      js::EnableRuntimeProfilingStack(mRuntime, true);
-      js::RegisterRuntimeProfilingEventMarker(mRuntime, &ProfilerJSEventMarker);
+    if (mContext) {
+      js::EnableContextProfilingStack(mContext, true);
+      js::RegisterContextProfilingEventMarker(mContext, &ProfilerJSEventMarker);
       mStartJSSampling = false;
     } else {
       mStartJSSampling = true;
@@ -355,8 +355,8 @@ public:
   }
   void disableJSSampling() {
     mStartJSSampling = false;
-    if (mRuntime)
-      js::EnableRuntimeProfilingStack(mRuntime, false);
+    if (mContext)
+      js::EnableContextProfilingStack(mContext, false);
   }
 #endif
 
@@ -372,7 +372,7 @@ public:
     , mSleeping(false)
     , mRefCnt(1)
 #ifndef SPS_STANDALONE
-    , mRuntime(nullptr)
+    , mContext(nullptr)
 #endif
     , mStartJSSampling(false)
     , mPrivacyMode(false)
@@ -414,8 +414,8 @@ public:
 
  public:
 #ifndef SPS_STANDALONE
-  // The runtime which is being sampled
-  JSRuntime *mRuntime;
+  // The context which is being sampled
+  JSContext *mContext;
 #endif
   // Start JS Profiling when possible
   bool mStartJSSampling;

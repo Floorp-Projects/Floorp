@@ -534,7 +534,7 @@ public:
   void StoreChangeHint(nsChangeHint aHint)
   {
     MOZ_ASSERT(!IsShared());
-    mStoredChangeHint = aHint;
+    mStoredChangeHint |= aHint;
 #ifdef DEBUG
     mConsumedChangeHint = false;
 #endif

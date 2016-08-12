@@ -22,11 +22,6 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     typedef WrapperAnswer Answer;
 
   public:
-    explicit JavaScriptBase(JSRuntime* rt)
-      : JavaScriptShared(rt),
-        WrapperOwner(rt),
-        WrapperAnswer(rt)
-    {}
     virtual ~JavaScriptBase() {}
 
     virtual void ActorDestroy(WrapperOwner::ActorDestroyReason why) {

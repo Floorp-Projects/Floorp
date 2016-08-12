@@ -4,14 +4,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.panel-arrowcontent {
-  --panel-arrowcontent-padding: 16px;
-  --panel-arrowcontent-background: linear-gradient(hsla(0,0%,99%,1), hsla(0,0%,99%,.975) 10%, hsla(0,0%,98%,.975));
-  --panel-arrowcontent-color: hsl(0,0%,10%);
-  --panel-arrowcontent-border: none;
-  --panel-arrowcontent-border-radius: 3.5px;
-}
-
 menupopup,
 panel {
   -moz-appearance: menupopup;
@@ -59,7 +51,8 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrow[side="top"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.png");
+  list-style-image: var(--panel-arrow-image-vertical,
+                        url("chrome://global/skin/arrow/panelarrow-vertical.png"));
   margin-left: 16px;
   margin-right: 16px;
   margin-bottom: -1px;
@@ -91,7 +84,8 @@ panel[type="arrow"][side="right"] {
 @media (min-resolution: 2dppx) {
   .panel-arrow[side="top"],
   .panel-arrow[side="bottom"] {
-    list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical@2x.png");
+    list-style-image: var(--panel-arrow-image-vertical,
+                          url("chrome://global/skin/arrow/panelarrow-vertical@2x.png"));
     width: 18px;
     height: 10px;
   }
@@ -127,6 +121,11 @@ tooltip[titletip="true"] {
 
 menulist > menupopup {
   min-width: 0px;
+}
+
+menulist > menupopup:not([position]) {
+  margin-inline-start: -13px;
+  margin-top: -2px;
 }
 
 menulist[editable="true"] > menupopup {
