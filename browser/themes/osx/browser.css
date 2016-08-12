@@ -3462,3 +3462,11 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   padding: 0;
   overflow: hidden;
 }
+
+.cui-widget-panelview[id^=PanelUI-webext-] {
+  border-radius: 3.5px;
+}
+
+.webextension-popup-browser {
+  border-radius: inherit;
+}

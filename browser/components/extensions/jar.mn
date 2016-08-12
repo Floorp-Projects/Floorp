@@ -4,7 +4,13 @@
 
 browser.jar:
     content/browser/extension.css
+#ifdef XP_MACOSX
     content/browser/extension-mac.css
+    content/browser/extension-mac-panel.css
+#endif
+#ifdef XP_WIN
+    content/browser/extension-win-panel.css
+#endif
     content/browser/extension.svg
     content/browser/ext-bookmarks.js
     content/browser/ext-browserAction.js
