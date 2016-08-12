@@ -1994,7 +1994,8 @@ var gCSSProperties = {
       "scale3d(4, 4, 4)", "scale3d(-2, 3, -7)", "scalez(4)",
       "scalez(-6)", "rotate3d(2, 3, 4, 45deg)",
       "rotate3d(-3, 7, 0, 12rad)", "rotatex(15deg)", "rotatey(-12grad)",
-      "rotatez(72rad)", "rotatex(0.125turn)", "perspective(1000px)",
+      "rotatez(72rad)", "rotatex(0.125turn)",
+      "perspective(0px)", "perspective(1000px)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)",
     ],
     invalid_values: ["1px", "#0000ff", "red", "auto",
@@ -2014,7 +2015,7 @@ var gCSSProperties = {
       "translate(10px, calc(min(5px,10%)))",
       "translate(calc(max(5px,10%)), 10%)",
       "matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))",
-      "perspective(0px)", "perspective(-10px)", "matrix3d(dinosaur)",
+      "perspective(-10px)", "matrix3d(dinosaur)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15%, 16)",
@@ -2087,8 +2088,8 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
-    other_values: [ "1000px", "500.2px" ],
-    invalid_values: [ "pants", "200", "0", "-100px", "-27.2em", "0px" ]
+    other_values: [ "1000px", "500.2px", "0", "0px" ],
+    invalid_values: [ "pants", "200", "-100px", "-27.2em" ]
   },
   "backface-visibility": {
     domProp: "backfaceVisibility",
@@ -4689,7 +4690,8 @@ var gCSSProperties = {
       "scale3d(4, 4, 4)", "scale3d(-2, 3, -7)", "scalez(4)",
       "scalez(-6)", "rotate3d(2, 3, 4, 45deg)",
       "rotate3d(-3, 7, 0, 12rad)", "rotatex(15deg)", "rotatey(-12grad)",
-      "rotatez(72rad)", "rotatex(0.125turn)", "perspective(1000px)",
+      "rotatez(72rad)", "rotatex(0.125turn)",
+      "perspective(0px)", "perspective(1000px)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)",
       /* valid only when prefixed */
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13px, 14em, 15px, 16)",
@@ -4710,7 +4712,7 @@ var gCSSProperties = {
       "translate(10px, calc(min(5px,10%)))",
       "translate(calc(max(5px,10%)), 10%)",
       "matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))",
-      "perspective(0px)", "perspective(-10px)", "matrix3d(dinosaur)",
+      "perspective(-10px)", "matrix3d(dinosaur)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15%, 16)",
