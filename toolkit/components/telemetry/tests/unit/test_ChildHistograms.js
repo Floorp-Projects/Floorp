@@ -73,7 +73,7 @@ add_task(function*() {
   yield TelemetryController.testSetup();
   if (runningInParent) {
     // Make sure we don't generate unexpected pings due to pref changes.
-    setEmptyPrefWatchlist();
+    yield setEmptyPrefWatchlist();
   }
 
   // Run test in child, don't wait for it to finish.

@@ -465,10 +465,6 @@ const getHighlighterHelperFor = (type) => Task.async(
         yield testActor.synthesizeMouse(options);
       },
 
-      synthesizeKey: function* (options) {
-        yield testActor.synthesizeKey(options);
-      },
-
       // This object will synthesize any "mouse" prefixed event to the
       // `testActor`, using the name of method called as suffix for the
       // event's name.
