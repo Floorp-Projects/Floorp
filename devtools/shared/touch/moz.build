@@ -6,5 +6,6 @@
 
 DevToolsModules(
     'simulator-content.js',
+    'simulator-core.js',
     'simulator.js',
 )
