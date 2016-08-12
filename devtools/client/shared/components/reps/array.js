@@ -122,13 +122,19 @@ define(function (require, exports, module) {
       let mode = this.props.mode || "short";
       let object = this.props.object;
       let items;
+      let brackets;
+      let needSpace = function (space) {
+        return space ? { left: "[ ", right: " ]"} : { left: "[", right: "]"};
+      };
 
       if (mode == "tiny") {
         let isEmpty = object.length === 0;
         items = DOM.span({className: "length"}, isEmpty ? "" : object.length);
+        brackets = needSpace(false);
       } else {
         let max = (mode == "short") ? 3 : 300;
         items = this.arrayIterator(object, max);
+        brackets = needSpace(items.length > 0);
       }
 
       let objectLink = this.props.objectLink || DOM.span;
@@ -140,13 +146,13 @@ define(function (require, exports, module) {
             className: "arrayLeftBracket",
             role: "presentation",
             object: object
-          }, "["),
+          }, brackets.left),
           items,
           objectLink({
             className: "arrayRightBracket",
             role: "presentation",
             object: object
-          }, "]"),
+          }, brackets.right),
           DOM.span({
             className: "arrayProperties",
             role: "group"}

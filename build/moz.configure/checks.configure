@@ -93,7 +93,6 @@ def checking(what, callback=None):
 # use that value instead.
 @template
 @imports(_from='mozbuild.shellutil', _import='quote')
-@imports(_from='mozbuild.configure', _import='DependsFunction')
 def check_prog(var, progs, what=None, input=None, allow_missing=False,
                paths=None):
     if input:
@@ -115,10 +114,8 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
     what = what or var.lower()
 
     # Trick to make a @depends function out of an immediate value.
-    if not isinstance(progs, DependsFunction):
-        progs = depends('--help')(lambda h: progs)
-    if not isinstance(paths, DependsFunction):
-        paths = depends('--help')(lambda h: paths)
+    progs = dependable(progs)
+    paths = dependable(paths)
 
     @depends_if(input, progs, paths)
     @checking('for %s' % what, lambda x: quote(x) if x else 'not found')

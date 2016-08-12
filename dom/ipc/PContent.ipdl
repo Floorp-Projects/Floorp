@@ -660,6 +660,11 @@ child:
     async NotifyGMPsChanged();
 
     /**
+     * Notify the child that cache is emptied.
+     */
+    async NotifyEmptyHTTPCache();
+
+    /**
      * Send a `push` event without data to a service worker in the child.
      */
     async Push(nsCString scope, Principal principal, nsString messageId);

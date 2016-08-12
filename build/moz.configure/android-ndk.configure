@@ -14,9 +14,7 @@ js_option('--with-android-toolchain', nargs=1,
 js_option('--with-android-gnu-compiler-version', nargs=1,
           help='GNU compiler version to use')
 
-@depends('--help')
-def min_android_version(_):
-    return '9'
+min_android_version = dependable('9')
 
 js_option('--with-android-version',
           nargs=1,

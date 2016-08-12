@@ -9,17 +9,19 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
-const { store } = require("devtools/client/webconsole/new-console-output/store");
+const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
 const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/console-output"));
 const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
+
+const store = configureStore();
 
 function NewConsoleOutputWrapper(parentNode, jsterm) {
   let childComponent = ConsoleOutput({ jsterm });
   let filterBar = FilterBar({});
   let provider = React.createElement(
     Provider,
-    { store: store },
+    { store },
     React.DOM.div(
       {className: "webconsole-output-wrapper"},
       filterBar,

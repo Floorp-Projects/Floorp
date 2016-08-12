@@ -57,7 +57,7 @@ if __name__ == '__main__':
     env["XPCOM_DEBUG_BREAK"] = "warn"
 
     # For VC12+, make sure we can find the right bitness of pgort1x0.dll
-    if not substs['HAVE_64BIT_BUILD']:
+    if not substs.get('HAVE_64BIT_BUILD'):
         for e in ('VS140COMNTOOLS', 'VS120COMNTOOLS'):
             if e not in env:
                 continue

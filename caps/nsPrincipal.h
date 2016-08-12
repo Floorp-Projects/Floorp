@@ -79,6 +79,7 @@ public:
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  virtual bool AddonHasPermission(const nsAString& aPerm) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
   virtual void GetScriptLocation(nsACString &aStr) override;
   nsresult GetOriginInternal(nsACString& aOrigin) override;
