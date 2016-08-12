@@ -2728,11 +2728,12 @@ nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt,
 {
   // OK. We want to try the following sources of mimetype information, in this order:
   // 1. defaultMimeEntries array
-  // 2. User-set preferences (managed by the handler service)
-  // 3. OS-provided information
-  // 4. our "extras" array
-  // 5. Information from plugins
-  // 6. The "ext-to-type-mapping" category
+  // 2. OS-provided information
+  // 3. our "extras" array
+  // 4. Information from plugins
+  // 5. The "ext-to-type-mapping" category
+  // Note that, we are intentionally not looking at the handler service, because
+  // that can be affected by websites, which leads to undesired behavior.
 
   // Early return if called with an empty extension parameter
   if (aFileExt.IsEmpty()) {
@@ -2743,15 +2744,6 @@ nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt,
   for (auto& entry : defaultMimeEntries) {
     if (aFileExt.LowerCaseEqualsASCII(entry.mFileExtension)) {
       aContentType = entry.mMimeType;
-      return NS_OK;
-    }
-  }
-
-  // Check user-set prefs
-  nsCOMPtr<nsIHandlerService> handlerSvc = do_GetService(NS_HANDLERSERVICE_CONTRACTID);
-  if (handlerSvc) {
-    nsresult rv = handlerSvc->GetTypeFromExtension(aFileExt, aContentType);
-    if (NS_SUCCEEDED(rv) && !aContentType.IsEmpty()) {
       return NS_OK;
     }
   }
