@@ -34,10 +34,11 @@ namespace indexedDB {
 
  Basic strategy is the following
 
- Numbers: 0x10 n n n n n n n n    ("n"s are encoded 64bit float)
- Dates:   0x20 n n n n n n n n    ("n"s are encoded 64bit float)
- Strings: 0x30 s s s ... 0        ("s"s are encoded unicode bytes)
- Arrays:  0x50 i i i ... 0        ("i"s are encoded array items)
+ Numbers:  0x10 n n n n n n n n    ("n"s are encoded 64bit float)
+ Dates:    0x20 n n n n n n n n    ("n"s are encoded 64bit float)
+ Strings:  0x30 s s s ... 0        ("s"s are encoded unicode bytes)
+ Binaries: 0x40 s s s ... 0        ("s"s are encoded unicode bytes)
+ Arrays:   0x50 i i i ... 0        ("i"s are encoded array items)
 
 
  When encoding floats, 64bit IEEE 754 are almost sortable, except that
@@ -60,6 +61,9 @@ namespace indexedDB {
  The reason that (3FFF+80) - FFFF is encoded "shifted up" 6 bits is to maximize
  the chance that the last character is 0. See below for why.
 
+ When encoding binaries, the algorithm is the same to how strings are encoded.
+ Since each octet in binary is in the range of [0-255], it'll take 1 to 2 encoded
+ unicode bytes.
 
  When encoding Arrays, we use an additional trick. Rather than adding a byte
  containing the value 0x50 to indicate type, we instead add 0x50 to the next byte.
@@ -112,7 +116,7 @@ Key::ToLocaleBasedKey(Key& aTarget, const nsCString& aLocale) const
     return NS_OK;
   }
 
-  if (IsFloat() || IsDate()) {
+  if (IsFloat() || IsDate() || IsBinary()) {
     aTarget.mBuffer = mBuffer;
     return NS_OK;
   }
@@ -292,6 +296,16 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
       EncodeNumber(t, eDate + aTypeOffset);
       return NS_OK;
     }
+
+    if (JS_IsArrayBufferObject(obj)) {
+      EncodeBinary(obj, /* aIsViewObject */ false, aTypeOffset);
+      return NS_OK;
+    }
+
+    if (JS_IsArrayBufferViewObject(obj)) {
+      EncodeBinary(obj, /* aIsViewObject */ true, aTypeOffset);
+      return NS_OK;
+    }
   }
 
   return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
@@ -369,6 +383,15 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
   else if (*aPos - aTypeOffset == eFloat) {
     aVal.setDouble(DecodeNumber(aPos, aEnd));
   }
+  else if (*aPos - aTypeOffset == eBinary) {
+    JSObject* binary = DecodeBinary(aPos, aEnd, aCx);
+    if (!binary) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    aVal.setObject(*binary);
+  }
   else {
     NS_NOTREACHED("Unknown key type!");
   }
@@ -403,6 +426,13 @@ template <typename T>
 void
 Key::EncodeString(const T* aStart, const T* aEnd, uint8_t aTypeOffset)
 {
+  EncodeAsString(aStart, aEnd, eString + aTypeOffset);
+}
+
+template <typename T>
+void
+Key::EncodeAsString(const T* aStart, const T* aEnd, uint8_t aType)
+{
   // First measure how long the encoded string will be.
 
   // The +2 is for initial 3 and trailing 0. We'll compensate for multi-byte
@@ -426,7 +456,7 @@ Key::EncodeString(const T* aStart, const T* aEnd, uint8_t aTypeOffset)
   buffer += oldLen;
 
   // Write type marker
-  *(buffer++) = eString + aTypeOffset;
+  *(buffer++) = aType;
 
   // Encode string
   for (const T* iter = start; iter < end; ++iter) {
@@ -616,6 +646,82 @@ Key::DecodeNumber(const unsigned char*& aPos, const unsigned char* aEnd)
           (0 - number);
 
   return pun.d;
+}
+
+void
+Key::EncodeBinary(JSObject* aObject, bool aIsViewObject, uint8_t aTypeOffset)
+{
+  uint8_t* bufferData;
+  uint32_t bufferLength;
+  bool unused;
+
+  if (aIsViewObject) {
+    js::GetArrayBufferViewLengthAndData(aObject, &bufferLength, &unused, &bufferData);
+  } else {
+    js::GetArrayBufferLengthAndData(aObject, &bufferLength, &unused, &bufferData);
+  }
+
+  EncodeAsString(bufferData, bufferData + bufferLength, eBinary + aTypeOffset);
+}
+
+// static
+JSObject*
+Key::DecodeBinary(const unsigned char*& aPos,
+                  const unsigned char* aEnd,
+                  JSContext* aCx)
+{
+  MOZ_ASSERT(*aPos % eMaxType == eBinary, "Don't call me!");
+
+  const unsigned char* buffer = ++aPos;
+
+  // First measure how big the decoded array buffer will be.
+  size_t size = 0;
+  const unsigned char* iter;
+  for (iter = buffer; iter < aEnd && *iter != eTerminator; ++iter) {
+    if (*iter & 0x80) {
+      iter++;
+    }
+    ++size;
+  }
+
+  if (!size) {
+    return JS_NewArrayBuffer(aCx, 0);
+  }
+
+  uint8_t* out = static_cast<uint8_t*>(JS_malloc(aCx, size));
+  if (NS_WARN_IF(!out)) {
+    return nullptr;
+  }
+
+  uint8_t* pos = out;
+
+  // Set end so that we don't have to check for null termination in the loop
+  // below
+  if (iter < aEnd) {
+    aEnd = iter;
+  }
+
+  for (iter = buffer; iter < aEnd;) {
+    if (!(*iter & 0x80)) {
+      *pos = *(iter++) - ONE_BYTE_ADJUST;
+    }
+    else {
+      uint16_t c = (uint16_t(*(iter++)) << 8);
+      if (iter < aEnd) {
+        c |= *(iter++);
+      }
+      *pos = static_cast<uint8_t>(c - TWO_BYTE_ADJUST - 0x8000);
+    }
+
+    ++pos;
+  }
+
+  aPos = iter + 1;
+
+  MOZ_ASSERT(static_cast<size_t>(pos - out) == size,
+             "Should have written the whole buffer");
+
+  return JS_NewArrayBufferWithContents(aCx, size, out);
 }
 
 nsresult
