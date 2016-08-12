@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <algorithm>
+#include <limits>
 
 #include "gfxUtils.h"
 #include "mozilla/dom/TabChild.h"
@@ -5637,7 +5638,7 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
     return false;
   }
   nscoord perspective = cbDisplay->mChildPerspective.GetCoordValue();
-  if (perspective <= 0) {
+  if (perspective < 0) {
     return true;
   }
 
@@ -5690,8 +5691,10 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
    */
   perspectiveOrigin += frameToCbGfxOffset;
 
-  aOutMatrix._34 =
-    -1.0 / NSAppUnitsToFloatPixels(perspective, aAppUnitsPerPixel);
+  Float perspectivePx = std::max(NSAppUnitsToFloatPixels(perspective,
+                                                         aAppUnitsPerPixel),
+                                 std::numeric_limits<Float>::epsilon());
+  aOutMatrix._34 = -1.0 / perspectivePx;
   aOutMatrix.ChangeBasis(perspectiveOrigin);
   return true;
 }
