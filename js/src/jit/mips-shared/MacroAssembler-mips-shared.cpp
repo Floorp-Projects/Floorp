@@ -264,13 +264,6 @@ MacroAssemblerMIPSShared::ma_mul(Register rd, Register rs, Imm32 imm)
 }
 
 void
-MacroAssemblerMIPSShared::ma_mult(Register rs, Imm32 imm)
-{
-    ma_li(ScratchRegister, imm);
-    as_mult(rs, ScratchRegister);
-}
-
-void
 MacroAssemblerMIPSShared::ma_mul_branch_overflow(Register rd, Register rs, Register rt, Label* overflow)
 {
     as_mult(rs, rt);
