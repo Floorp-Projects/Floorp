@@ -6,6 +6,9 @@
 
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/dom/ChildIterator.h"
+#include "nsContentUtils.h"
+#include "nsStyleChangeList.h"
 
 using namespace mozilla::dom;
 
@@ -79,10 +82,10 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
       Servo_GetComputedValues(aContent).Consume();
     MOZ_ASSERT(computedValues);
 
+    nsChangeHint changeHint = nsChangeHint(0);
     // NB: Change hint processing only applies to elements, at least until we
     // support display: contents.
     if (aContent->IsElement()) {
-      nsChangeHint changeHint = nsChangeHint(0);
       Element* element = aContent->AsElement();
 
       // Add an explicit change hint if appropriate.
@@ -140,6 +143,36 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
       f->SetStyleContext(newContext);
     }
 
+    // Update pseudo-elements state if appropriate.
+    if (aContent->IsElement()) {
+      Element* aElement = aContent->AsElement();
+      const static CSSPseudoElementType pseudosToRestyle[] = {
+        CSSPseudoElementType::before, CSSPseudoElementType::after,
+      };
+
+      for (CSSPseudoElementType pseudoType : pseudosToRestyle) {
+        nsIAtom* pseudoTag =
+          nsCSSPseudoElements::GetPseudoAtom(pseudoType);
+        if (nsIFrame* pseudoFrame =
+              FrameForPseudoElement(aElement, pseudoTag)) {
+          // TODO: we could maybe make this more performant via calling into
+          // Servo just once to know which pseudo-elements we've got to restyle?
+          RefPtr<nsStyleContext> pseudoContext =
+            aStyleSet->ProbePseudoElementStyle(aElement, pseudoType,
+                                               newContext);
+
+          // If pseudoContext is null here, it means the frame is going away, so
+          // our change hint computation should have already indicated we need
+          // to reframe.
+          MOZ_ASSERT_IF(!pseudoContext,
+                        changeHint & nsChangeHint_ReconstructFrame);
+          if (pseudoContext) {
+            pseudoFrame->SetStyleContext(pseudoContext);
+          }
+        }
+      }
+    }
+
     // TODO: There are other continuations we still haven't restyled, mostly
     // pseudo-elements. We have to deal with those, and with anonymous boxes.
     aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO);
@@ -187,7 +220,37 @@ MarkChildrenAsDirtyForServo(nsIContent* aContent)
   }
 }
 
-void
+/* static */ nsIFrame*
+ServoRestyleManager::FrameForPseudoElement(nsIContent* aContent,
+                                           nsIAtom* aPseudoTagOrNull)
+{
+  MOZ_ASSERT_IF(aPseudoTagOrNull, aContent->IsElement());
+  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
+
+  if (!aPseudoTagOrNull) {
+    return primaryFrame;
+  }
+
+  if (!primaryFrame) {
+    return nullptr;
+  }
+
+  // NOTE: we probably need to special-case display: contents here. Gecko's
+  // RestyleManager passes the primary frame of the parent instead.
+  if (aPseudoTagOrNull == nsCSSPseudoElements::before) {
+    return nsLayoutUtils::GetBeforeFrameForContent(primaryFrame, aContent);
+  }
+
+  if (aPseudoTagOrNull == nsCSSPseudoElements::after) {
+    return nsLayoutUtils::GetAfterFrameForContent(primaryFrame, aContent);
+  }
+
+  MOZ_CRASH("Unkown pseudo-element given to "
+            "ServoRestyleManager::FrameForPseudoElement");
+  return nullptr;
+}
+
+/* static */ void
 ServoRestyleManager::NoteRestyleHint(Element* aElement, nsRestyleHint aHint)
 {
   const nsRestyleHint HANDLED_RESTYLE_HINTS = eRestyle_Self |
