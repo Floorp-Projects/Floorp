@@ -54,6 +54,8 @@ MALLOC_DECL(realloc, void *, void *, size_t)
 MALLOC_DECL_VOID(free, void *)
 MALLOC_DECL(memalign, void *, size_t, size_t)
 MALLOC_DECL(valloc, void *, size_t)
+MALLOC_DECL_VOID(malloc_protect, void *, uint32_t *)
+MALLOC_DECL_VOID(malloc_unprotect, void *, uint32_t *)
 MALLOC_DECL(malloc_usable_size, size_t, usable_ptr_t)
 MALLOC_DECL(malloc_good_size, size_t, size_t)
 #  endif
