@@ -80,7 +80,7 @@ struct PeekData {
   void* mClosure;
 };
 
-static NS_METHOD
+static nsresult
 CallPeekFunc(nsIInputStream *aInStream, void *aClosure,
              const char *aFromSegment, uint32_t aToOffset, uint32_t aCount,
              uint32_t *aWriteCount)

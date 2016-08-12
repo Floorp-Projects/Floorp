@@ -44,8 +44,8 @@ private:
 
   nsresult TeeSegment(const char* aBuf, uint32_t aCount);
 
-  static NS_METHOD WriteSegmentFun(nsIInputStream*, void*, const char*,
-                                   uint32_t, uint32_t, uint32_t*);
+  static nsresult WriteSegmentFun(nsIInputStream*, void*, const char*,
+                                  uint32_t, uint32_t, uint32_t*);
 
 private:
   nsCOMPtr<nsIInputStream>  mSource;
@@ -190,7 +190,7 @@ nsInputStreamTee::TeeSegment(const char* aBuf, uint32_t aCount)
   }
 }
 
-NS_METHOD
+nsresult
 nsInputStreamTee::WriteSegmentFun(nsIInputStream* aIn, void* aClosure,
                                   const char* aFromSegment, uint32_t aOffset,
                                   uint32_t aCount, uint32_t* aWriteCount)
