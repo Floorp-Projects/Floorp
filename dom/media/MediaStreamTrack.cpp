@@ -18,7 +18,7 @@
 #undef LOG
 #endif
 
-static PRLogModuleInfo* gMediaStreamTrackLog;
+static mozilla::LazyLogModule gMediaStreamTrackLog("MediaStreamTrack");
 #define LOG(type, msg) MOZ_LOG(gMediaStreamTrackLog, type, msg)
 
 namespace mozilla {
@@ -119,10 +119,6 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
     mEnabled(true), mRemote(aSource->IsRemote()),
     mConstraints(aConstraints)
 {
-
-  if (!gMediaStreamTrackLog) {
-    gMediaStreamTrackLog = PR_NewLogModule("MediaStreamTrack");
-  }
 
   GetSource().RegisterSink(this);
 
