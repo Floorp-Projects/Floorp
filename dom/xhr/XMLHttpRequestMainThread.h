@@ -511,12 +511,12 @@ protected:
 
   nsresult DetectCharset();
   nsresult AppendToResponseText(const char * aBuffer, uint32_t aBufferLen);
-  static NS_METHOD StreamReaderFunc(nsIInputStream* in,
-                void* closure,
-                const char* fromRawSegment,
-                uint32_t toOffset,
-                uint32_t count,
-                uint32_t *writeCount);
+  static nsresult StreamReaderFunc(nsIInputStream* in,
+                                   void* closure,
+                                   const char* fromRawSegment,
+                                   uint32_t toOffset,
+                                   uint32_t count,
+                                   uint32_t *writeCount);
   nsresult CreateResponseParsedJSON(JSContext* aCx);
   void CreatePartialBlob(ErrorResult& aRv);
   bool CreateDOMBlob(nsIRequest *request);

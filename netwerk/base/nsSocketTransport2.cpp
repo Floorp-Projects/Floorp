@@ -653,7 +653,7 @@ nsSocketOutputStream::WriteSegments(nsReadSegmentFun reader, void *closure,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD
+nsresult
 nsSocketOutputStream::WriteFromSegments(nsIInputStream *input,
                                         void *closure,
                                         const char *fromSegment,

@@ -136,7 +136,7 @@ private:
   void ProcessResourceCache(const ResourceCacheInfo* aInfo);
 
   // Callback for nsIInputStream::ReadSegment() to read manifest
-  static NS_METHOD WriteManifest(nsIInputStream* aStream,
+  static nsresult WriteManifest(nsIInputStream* aStream,
                                 void* aManifest,
                                 const char* aFromRawSegment,
                                 uint32_t aToOffset,

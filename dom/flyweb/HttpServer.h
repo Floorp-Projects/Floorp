@@ -129,12 +129,12 @@ private:
 
     void SetSecurityObserver(bool aListen);
 
-    static NS_METHOD ReadSegmentsFunc(nsIInputStream* aIn,
-                                      void* aClosure,
-                                      const char* aBuffer,
-                                      uint32_t aToOffset,
-                                      uint32_t aCount,
-                                      uint32_t* aWriteCount);
+    static nsresult ReadSegmentsFunc(nsIInputStream* aIn,
+                                     void* aClosure,
+                                     const char* aBuffer,
+                                     uint32_t aToOffset,
+                                     uint32_t aCount,
+                                     uint32_t* aWriteCount);
     nsresult ConsumeInput(const char*& aBuffer,
                           const char* aEnd);
     nsresult ConsumeLine(const char* aBuffer,

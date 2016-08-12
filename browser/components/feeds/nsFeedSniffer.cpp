@@ -331,7 +331,7 @@ nsFeedSniffer::OnStartRequest(nsIRequest* request, nsISupports* context)
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsFeedSniffer::AppendSegmentToString(nsIInputStream* inputStream,
                                      void* closure,
                                      const char* rawSegment,
