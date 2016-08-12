@@ -410,11 +410,9 @@ this.LoginManagerStorage_json.prototype = {
         this._store.data.disabledHosts.splice(foundIndex, 1);
         this._store.saveSoon();
       }
-    } else {
-      if (foundIndex == -1) {
-        this._store.data.disabledHosts.push(hostname);
-        this._store.saveSoon();
-      }
+    } else if (foundIndex == -1) {
+      this._store.data.disabledHosts.push(hostname);
+      this._store.saveSoon();
     }
 
     this._sendNotification(enabled ? "hostSavingEnabled" : "hostSavingDisabled", hostname);

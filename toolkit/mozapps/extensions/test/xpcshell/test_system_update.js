@@ -417,10 +417,9 @@ function* verify_state(initialState, finalState = undefined) {
   if (finalState == undefined) {
     finalState = initialState;
   }
-  else {
+  else if (finalState[0]) {
     // If the new state is using the profile then that directory will exist.
-    if (finalState[0])
-      expectedDirs++;
+    expectedDirs++;
   }
 
   do_print("Checking final state.");
