@@ -14,6 +14,7 @@
 #include "nsDOMTokenList.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
+#include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPrincipal.h"
 #include "nsNameSpaceManager.h"
@@ -24,7 +25,10 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/ServoElementSnapshot.h"
+#include "mozilla/ServoRestyleManager.h"
 #include "mozilla/dom/Element.h"
+
+using namespace mozilla;
 
 #define IMPL_STRONG_REF_TYPE(name, T)           \
   already_AddRefed<T> name::Consume() {         \
@@ -196,15 +200,17 @@ Gecko_UnsetNodeFlags(RawGeckoNode* aNode, uint32_t aFlags)
 }
 
 nsStyleContext*
-Gecko_GetStyleContext(RawGeckoNode* aNode)
+Gecko_GetStyleContext(RawGeckoNode* aNode, nsIAtom* aPseudoTagOrNull)
 {
   MOZ_ASSERT(aNode->IsContent());
-  nsIFrame* primaryFrame = aNode->AsContent()->GetPrimaryFrame();
-  if (!primaryFrame) {
+  nsIFrame* relevantFrame =
+    ServoRestyleManager::FrameForPseudoElement(aNode->AsContent(),
+                                               aPseudoTagOrNull);
+  if (!relevantFrame) {
     return nullptr;
   }
 
-  return primaryFrame->StyleContext();
+  return relevantFrame->StyleContext();
 }
 
 nsChangeHint
@@ -728,6 +734,12 @@ Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
 }
 
 void
+Gecko_ClearStyleContents(nsStyleContent* aContent)
+{
+  aContent->AllocateContents(0);
+}
+
+void
 Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen)
 {
   aLayers->mLayers.EnsureLengthAtLeast(aLen);
@@ -819,7 +831,7 @@ Servo_DropNodeData(ServoNodeData* data)
 
 RawServoStyleSheetStrong
 Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length,
-                              mozilla::css::SheetParsingMode mode,
+                              css::SheetParsingMode mode,
                               const uint8_t* base_bytes, uint32_t base_length,
                               ThreadSafeURIHolder* base,
                               ThreadSafeURIHolder* referrer,

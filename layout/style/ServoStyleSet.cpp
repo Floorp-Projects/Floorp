@@ -114,8 +114,7 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
   bool skipFixup = false;
 
   return NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
-                            aPseudoType,
-                            Move(aComputedValues), skipFixup);
+                            aPseudoType, Move(aComputedValues), skipFixup);
 }
 
 already_AddRefed<nsStyleContext>
