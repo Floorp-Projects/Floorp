@@ -60,7 +60,7 @@ addons = [
     'unsafe-content-script',
 ]
 
-addons = ['source/test/addons/%s.xpi' % f for f in addons]
+addons = ['%s.xpi' % f for f in addons]
 GENERATED_FILES += addons
 
 TEST_HARNESS_FILES.testing.mochitest['jetpack-addon']['addon-sdk'].source.test.addons += [
