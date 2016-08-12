@@ -2288,15 +2288,19 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
         TrackID audioTrackId = mMediaInfo.mAudio.mTrackId;
         RefPtr<MediaStreamTrackSource> trackSource =
           getter->GetMediaStreamTrackSource(audioTrackId);
-        out->mStream->CreateDOMTrack(audioTrackId, MediaSegment::AUDIO,
-                                     trackSource);
+        RefPtr<MediaStreamTrack> track =
+          out->mStream->CreateDOMTrack(audioTrackId, MediaSegment::AUDIO,
+                                       trackSource);
+        out->mStream->AddTrackInternal(track);
       }
       if (HasVideo()) {
         TrackID videoTrackId = mMediaInfo.mVideo.mTrackId;
         RefPtr<MediaStreamTrackSource> trackSource =
           getter->GetMediaStreamTrackSource(videoTrackId);
-        out->mStream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO,
-                                     trackSource);
+        RefPtr<MediaStreamTrack> track =
+          out->mStream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO,
+                                       trackSource);
+        out->mStream->AddTrackInternal(track);
       }
     }
   }
