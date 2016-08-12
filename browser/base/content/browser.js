@@ -4108,10 +4108,8 @@ function updateCharacterEncodingMenuState()
     if (charsetMenu) {
       charsetMenu.removeAttribute("disabled");
     }
-  } else {
-    if (charsetMenu) {
-      charsetMenu.setAttribute("disabled", "true");
-    }
+  } else if (charsetMenu) {
+    charsetMenu.setAttribute("disabled", "true");
   }
 }
 
@@ -7829,9 +7827,8 @@ var MousePosTracker = {
     if (hover) {
       if (listener.onMouseEnter)
         listener.onMouseEnter();
-    } else {
-      if (listener.onMouseLeave)
-        listener.onMouseLeave();
+    } else if (listener.onMouseLeave) {
+      listener.onMouseLeave();
     }
   }
 };
