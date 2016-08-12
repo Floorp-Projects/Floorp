@@ -8,7 +8,7 @@
 const TESTCASE_URI = TEST_BASE_HTTP + "autocomplete.html";
 const MAX_SUGGESTIONS = 15;
 
-const {getClientCssPropertiesForTests} = require("devtools/shared/fronts/css-properties");
+const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 const {CSSProperties, CSSValues} = getCSSKeywords();
 
 // Test cases to test that autocompletion works correctly when enabled.
@@ -196,7 +196,7 @@ function checkState(index, sourceEditor, popup) {
  *                     CSS values the property can have.
  */
 function getCSSKeywords() {
-  let cssProperties = getClientCssPropertiesForTests();
+  let cssProperties = getClientCssProperties();
   let props = {};
   let propNames = cssProperties.getNames();
   propNames.forEach(prop => {

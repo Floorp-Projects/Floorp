@@ -33,6 +33,7 @@ const Services = require("Services");
 const promise = require("promise");
 const events = require("devtools/shared/event-emitter");
 const { PrefObserver } = require("devtools/client/styleeditor/utils");
+const { getClientCssProperties } = require("devtools/shared/fronts/css-properties");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/locale/sourceeditor.properties");
@@ -234,9 +235,12 @@ function Editor(config) {
     this.config.externalScripts = [];
   }
 
-  // Ensure that autocompletion has cssProperties if it's passed in via the options.
   if (this.config.cssProperties) {
+    // Ensure that autocompletion has cssProperties if it's passed in via the options.
     this.config.autocompleteOpts.cssProperties = this.config.cssProperties;
+  } else {
+    // Use a static client-side database of CSS values if none is provided.
+    this.config.cssProperties = getClientCssProperties();
   }
 
   events.decorate(this);
@@ -287,35 +291,29 @@ Editor.prototype = {
           Services.scriptloader.loadSubScript(url, win, "utf8");
         }
       });
-      if (this.config.cssProperties) {
-        // Replace the propertyKeywords, colorKeywords and valueKeywords
-        // properties of the CSS MIME type with the values provided by the CSS properties
-        // database.
+      // Replace the propertyKeywords, colorKeywords and valueKeywords
+      // properties of the CSS MIME type with the values provided by the CSS properties
+      // database.
 
-        const {
-          propertyKeywords,
-          colorKeywords,
-          valueKeywords
-        } = getCSSKeywords(this.config.cssProperties);
+      const {
+        propertyKeywords,
+        colorKeywords,
+        valueKeywords
+      } = getCSSKeywords(this.config.cssProperties);
 
-        let cssSpec = win.CodeMirror.resolveMode("text/css");
-        cssSpec.propertyKeywords = propertyKeywords;
-        cssSpec.colorKeywords = colorKeywords;
-        cssSpec.valueKeywords = valueKeywords;
-        win.CodeMirror.defineMIME("text/css", cssSpec);
+      let cssSpec = win.CodeMirror.resolveMode("text/css");
+      cssSpec.propertyKeywords = propertyKeywords;
+      cssSpec.colorKeywords = colorKeywords;
+      cssSpec.valueKeywords = valueKeywords;
+      win.CodeMirror.defineMIME("text/css", cssSpec);
 
-        let scssSpec = win.CodeMirror.resolveMode("text/x-scss");
-        scssSpec.propertyKeywords = propertyKeywords;
-        scssSpec.colorKeywords = colorKeywords;
-        scssSpec.valueKeywords = valueKeywords;
-        win.CodeMirror.defineMIME("text/x-scss", scssSpec);
+      let scssSpec = win.CodeMirror.resolveMode("text/x-scss");
+      scssSpec.propertyKeywords = propertyKeywords;
+      scssSpec.colorKeywords = colorKeywords;
+      scssSpec.valueKeywords = valueKeywords;
+      win.CodeMirror.defineMIME("text/x-scss", scssSpec);
 
-        win.CodeMirror.commands.save = () => this.emit("saveRequested");
-      } else if (this.config.mode === Editor.modes.css) {
-        console.warn("The CSS properties are defaulting to the those provided by " +
-                     "CodeMirror as no CSS database was provided for CSS values " +
-                     "specific to the target platform.");
-      }
+      win.CodeMirror.commands.save = () => this.emit("saveRequested");
 
       // Create a CodeMirror instance add support for context menus,
       // overwrite the default controller (otherwise items in the top and
@@ -530,12 +528,6 @@ Editor.prototype = {
    * See Editor.modes for the list of all supported modes.
    */
   setMode: function (value) {
-    if (value === Editor.modes.css && !this.config.cssProperties) {
-      console.warn("Switching to CSS mode in the editor, but no CSS properties " +
-                   "database was provided to CodeMirror. CodeMirror will default" +
-                   "to its built-in values, and not use the values specific to the " +
-                   "target platform.");
-    }
     this.setOption("mode", value);
 
     // If autocomplete was set up and the mode is changing, then
