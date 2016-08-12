@@ -425,7 +425,7 @@ struct CopySegmentClosure {
   ChannelMediaResource*  mResource;
 };
 
-NS_METHOD
+nsresult
 ChannelMediaResource::CopySegmentToCache(nsIInputStream *aInStream,
                                          void *aClosure,
                                          const char *aFromSegment,

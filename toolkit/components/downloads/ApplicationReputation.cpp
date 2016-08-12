@@ -1311,7 +1311,7 @@ PendingLookup::Notify(nsITimer* aTimer)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIStreamListener
-static NS_METHOD
+static nsresult
 AppendSegmentToString(nsIInputStream* inputStream,
                       void *closure,
                       const char *rawSegment,

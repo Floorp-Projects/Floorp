@@ -529,12 +529,12 @@ public:
     nsresult         mSinkCondition;
   };
 
-  static NS_METHOD ConsumeInputBuffer(nsIInputStream* aInStr,
-                                      void* aClosure,
-                                      const char* aBuffer,
-                                      uint32_t aOffset,
-                                      uint32_t aCount,
-                                      uint32_t* aCountWritten)
+  static nsresult ConsumeInputBuffer(nsIInputStream* aInStr,
+                                     void* aClosure,
+                                     const char* aBuffer,
+                                     uint32_t aOffset,
+                                     uint32_t aCount,
+                                     uint32_t* aCountWritten)
   {
     ReadSegmentsState* state = (ReadSegmentsState*)aClosure;
 
@@ -585,12 +585,12 @@ public:
     nsresult        mSourceCondition;
   };
 
-  static NS_METHOD FillOutputBuffer(nsIOutputStream* aOutStr,
-                                    void* aClosure,
-                                    char* aBuffer,
-                                    uint32_t aOffset,
-                                    uint32_t aCount,
-                                    uint32_t* aCountRead)
+  static nsresult FillOutputBuffer(nsIOutputStream* aOutStr,
+                                   void* aClosure,
+                                   char* aBuffer,
+                                   uint32_t aOffset,
+                                   uint32_t aCount,
+                                   uint32_t* aCountRead)
   {
     WriteSegmentsState* state = (WriteSegmentsState*)aClosure;
 
@@ -729,7 +729,7 @@ NS_ConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
 
 //-----------------------------------------------------------------------------
 
-static NS_METHOD
+static nsresult
 TestInputStream(nsIInputStream* aInStr,
                 void* aClosure,
                 const char* aBuffer,
@@ -756,7 +756,7 @@ NS_InputStreamIsBuffered(nsIInputStream* aStream)
   return result || NS_SUCCEEDED(rv);
 }
 
-static NS_METHOD
+static nsresult
 TestOutputStream(nsIOutputStream* aOutStr,
                  void* aClosure,
                  char* aBuffer,
@@ -785,7 +785,7 @@ NS_OutputStreamIsBuffered(nsIOutputStream* aStream)
 
 //-----------------------------------------------------------------------------
 
-NS_METHOD
+nsresult
 NS_CopySegmentToStream(nsIInputStream* aInStr,
                        void* aClosure,
                        const char* aBuffer,
@@ -808,7 +808,7 @@ NS_CopySegmentToStream(nsIInputStream* aInStr,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 NS_CopySegmentToBuffer(nsIInputStream* aInStr,
                        void* aClosure,
                        const char* aBuffer,
@@ -822,7 +822,7 @@ NS_CopySegmentToBuffer(nsIInputStream* aInStr,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 NS_CopySegmentToBuffer(nsIOutputStream* aOutStr,
                        void* aClosure,
                        char* aBuffer,
@@ -836,7 +836,7 @@ NS_CopySegmentToBuffer(nsIOutputStream* aOutStr,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 NS_DiscardSegment(nsIInputStream* aInStr,
                   void* aClosure,
                   const char* aBuffer,
@@ -850,7 +850,7 @@ NS_DiscardSegment(nsIInputStream* aInStr,
 
 //-----------------------------------------------------------------------------
 
-NS_METHOD
+nsresult
 NS_WriteSegmentThunk(nsIInputStream* aInStr,
                      void* aClosure,
                      const char* aBuffer,

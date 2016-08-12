@@ -876,7 +876,7 @@ struct mimetype_closure
 };
 
 /* prototype for these defined below */
-static NS_METHOD
+static nsresult
 sniff_mimetype_callback(nsIInputStream* in, void* closure,
                         const char* fromRawSegment, uint32_t toOffset,
                         uint32_t count, uint32_t* writeCount);
@@ -1139,7 +1139,7 @@ imgRequest::SetProperties(const nsACString& aContentType,
   }
 }
 
-static NS_METHOD
+static nsresult
 sniff_mimetype_callback(nsIInputStream* in,
                         void* data,
                         const char* fromRawSegment,

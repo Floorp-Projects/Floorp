@@ -682,7 +682,7 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 PackagedAppService::PackagedAppDownloader::ConsumeData(nsIInputStream *aStream,
                                                        void *aClosure,
                                                        const char *aFromRawSegment,

@@ -148,12 +148,12 @@ private:
     // Static method used to write data into the cache entry or discard
     // if there's no writer. Used as a writer function of
     // nsIInputStream::ReadSegments.
-    static NS_METHOD ConsumeData(nsIInputStream *aStream,
-                                 void *aClosure,
-                                 const char *aFromRawSegment,
-                                 uint32_t aToOffset,
-                                 uint32_t aCount,
-                                 uint32_t *aWriteCount);
+    static nsresult ConsumeData(nsIInputStream *aStream,
+                                void *aClosure,
+                                const char *aFromRawSegment,
+                                uint32_t aToOffset,
+                                uint32_t aCount,
+                                uint32_t *aWriteCount);
 
     //---------------------------------------------------------------
     // For PackagedAppVerifierListener.
