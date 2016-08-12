@@ -1121,7 +1121,7 @@ GCRuntime::finishRoots()
     if (rootsHash.initialized())
         rootsHash.clear();
 
-    rt->mainThread.roots.finishPersistentRoots();
+    rt->contextFromMainThread()->roots.finishPersistentRoots();
 }
 
 bool
@@ -4450,7 +4450,8 @@ GCRuntime::findZoneEdgesForWeakMaps()
 void
 GCRuntime::findZoneGroups(AutoLockForExclusiveAccess& lock)
 {
-    ZoneComponentFinder finder(rt->mainThread.nativeStackLimit[StackForSystemCode], lock);
+    JSContext* cx = rt->contextFromMainThread();
+    ZoneComponentFinder finder(cx->nativeStackLimit[StackForSystemCode], lock);
     if (!isIncremental || !findZoneEdgesForWeakMaps())
         finder.useOneComponent();
 
