@@ -15,6 +15,13 @@ def walk_template_to_given_base(value, desired_tag_prefix):
     '''
     # Base case
     t = value.type
+    # It's possible that we're dealing with an alias template that looks like:
+    #   template<typename Protocol>
+    #   using ManagedContainer = nsTHashtable<nsPtrHashKey<Protocol>>;
+    # In which case we want to strip the indirection, and strip_typedefs()
+    # accomplishes this.  (Disclaimer: I tried it and it worked and it didn't
+    # break my other use cases, if things start exploding, do reconsider.)
+    t = t.strip_typedefs()
     if t.tag.startswith(desired_tag_prefix):
         return value
     for f in t.fields():
@@ -48,17 +55,33 @@ class thashtable_printer(object):
         value = walk_template_to_given_base(outer_value, 'nsTHashtable<')
         self.value = value
 
-        # This will be the nsBaseHashtableET.
         self.entry_type = value.type.template_argument(0)
+
+        # -- Determine whether we're a hashTABLE or a hashSET
+        # If we're a table, the entry type will be a nsBaseHashtableET template.
+        # If we're a set, it will be something like nsPtrHashKey.
+        #
+        # So, assume we're a set if we're not nsBaseHashtableET<
+        # (It should ideally also be true that the type ends with HashKey, but
+        # since nsBaseHashtableET causes us to assume "mData" exists, let's
+        # pivot based on that.)
+        self.is_table = self.entry_type.tag.startswith('nsBaseHashtableET<')
+
         # While we know that it has a field `mKeyHash` for the hash-code and
-        # book-keeping, and a DataType field mData for the value, the key field
-        # frustratingly varies by key type.
+        # book-keeping, and a DataType field mData for the value (if we're a
+        # table), the key field frustratingly varies by key type.
         #
         # So we want to walk its key type to figure out the field name.  And we
         # do mean field name.  The field object is no good for subscripting the
         # value unless the field was directly owned by that value's type.  But
         # by using a string name, we save ourselves all that fanciness.
-        key_type = self.entry_type.template_argument(0)
+
+        if self.is_table:
+            # For nsBaseHashtableET<KeyClass, DataType>, we want the KeyClass
+            key_type = self.entry_type.template_argument(0)
+        else:
+            # If we're a set, our entry type is the key class already!
+            key_type = self.entry_type
         self.key_field_name = None
         for f in key_type.fields():
             # No need to traverse up the type hierarchy...
@@ -70,7 +93,6 @@ class thashtable_printer(object):
             # ...and assume the first one we find is the key.
             self.key_field_name = f.name
             break
-
 
     def children(self):
         table = self.value['mTable']
@@ -89,12 +111,17 @@ class thashtable_printer(object):
             # if that's the case.
             if entry['mKeyHash'] <= 1:
                 continue
+
             yield ('%d' % i, entry[key_field_name])
-            yield ('%d' % i, entry['mData'])
+            if self.is_table:
+                yield ('%d' % i, entry['mData'])
 
     def to_string(self):
         # The most specific template type is the most interesting.
         return str(self.outermost_type)
 
     def display_hint(self):
-        return 'map'
+        if self.is_table:
+            return 'map'
+        else:
+            return 'array'
