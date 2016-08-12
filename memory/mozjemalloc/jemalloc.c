@@ -200,7 +200,7 @@
  * to reallocate a region of memory it previously freed, which has since
  * been allocated for use by another thread.
  */
-#undef MALLOC_PROTECTED_REGIONS
+#define MALLOC_PROTECTED_REGIONS
 
 /*
  * MALLOC_BALANCE enables monitoring of arena lock contention and dynamically
