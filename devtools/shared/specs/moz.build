@@ -16,6 +16,7 @@ DevToolsModules(
     'device.js',
     'director-manager.js',
     'director-registry.js',
+    'emulation.js',
     'environment.js',
     'eventlooplag.js',
     'frame.js',
