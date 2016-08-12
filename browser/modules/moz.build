@@ -45,6 +45,7 @@ EXTRA_JS_MODULES += [
     'Social.jsm',
     'TabGroupsMigrator.jsm',
     'TransientPrefs.jsm',
+    'URLBarZoom.jsm',
     'webrtcUI.jsm',
 ]
 
