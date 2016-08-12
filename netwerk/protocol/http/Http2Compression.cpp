@@ -31,7 +31,7 @@ public:
 
   HpackStaticTableReporter() {}
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
@@ -58,7 +58,7 @@ public:
     : mCompressor(aCompressor)
   {}
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {

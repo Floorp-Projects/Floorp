@@ -19,7 +19,7 @@ var connection;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
-    navigator.presentation.defaultRequest = new PresentationRequest("http://example.com");
+    navigator.presentation.defaultRequest = new PresentationRequest("https://example.com");
 
     navigator.presentation.defaultRequest.getAvailability().then(
       function(aAvailability) {

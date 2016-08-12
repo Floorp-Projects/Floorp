@@ -8,7 +8,6 @@
     <style>
       path {
         fill-rule: evenodd;
-        fill: #999999;
       }
     </style>
   </defs>

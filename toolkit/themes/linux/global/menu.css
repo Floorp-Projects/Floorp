@@ -183,7 +183,7 @@ menuitem[type="radio"] {
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  -moz-appearance: menuseparator !important;
+  -moz-appearance: menuseparator;
   margin: 2px 0;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;

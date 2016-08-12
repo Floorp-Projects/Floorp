@@ -27,28 +27,28 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec
 public:
   NS_DECL_ISUPPORTS
 
-  NS_METHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings,
+  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings,
                  bool aIsPrintPreview) final;
 
   virtual already_AddRefed<PrintTarget> MakePrintTarget() final;
 
-  NS_METHOD GetDrawEventRecorder(mozilla::gfx::DrawEventRecorder** aDrawEventRecorder) final;
+  NS_IMETHOD GetDrawEventRecorder(mozilla::gfx::DrawEventRecorder** aDrawEventRecorder) final;
 
   float GetDPI() final;
 
   float GetPrintingScale() final;
 
-  NS_METHOD BeginDocument(const nsAString& aTitle,
-                          const nsAString& aPrintToFileName,
-                          int32_t aStartPage, int32_t aEndPage) final;
+  NS_IMETHOD BeginDocument(const nsAString& aTitle,
+                           const nsAString& aPrintToFileName,
+                           int32_t aStartPage, int32_t aEndPage) final;
 
-  NS_METHOD EndDocument() final;
+  NS_IMETHOD EndDocument() final;
 
-  NS_METHOD AbortDocument() final;
+  NS_IMETHOD AbortDocument() final;
 
-  NS_METHOD BeginPage() final;
+  NS_IMETHOD BeginPage() final;
 
-  NS_METHOD EndPage() final;
+  NS_IMETHOD EndPage() final;
 
 private:
   ~nsDeviceContextSpecProxy() {}

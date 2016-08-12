@@ -630,7 +630,10 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     }
 
     void notifySizeChanged(int windowWidth, int windowHeight, int screenWidth, int screenHeight) {
-        mCompositor.onSizeChanged(windowWidth, windowHeight, screenWidth, screenHeight);
+        final Compositor compositor = mCompositor;
+        if (compositor != null) {
+            compositor.onSizeChanged(windowWidth, windowHeight, screenWidth, screenHeight);
+        }
     }
 
     void serverSurfaceDestroyed() {

@@ -781,7 +781,7 @@ AudioBufferSourceNode::NotifyMainThreadStreamFinished()
   public:
     explicit EndedEventDispatcher(AudioBufferSourceNode* aNode)
       : mNode(aNode) {}
-    NS_IMETHODIMP Run() override
+    NS_IMETHOD Run() override
     {
       // If it's not safe to run scripts right now, schedule this to run later
       if (!nsContentUtils::IsSafeToRunScript()) {

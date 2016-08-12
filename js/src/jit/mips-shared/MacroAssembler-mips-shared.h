@@ -125,7 +125,6 @@ class MacroAssemblerMIPSShared : public Assembler
 
     // multiplies.  For now, there are only few that we care about.
     void ma_mul(Register rd, Register rs, Imm32 imm);
-    void ma_mult(Register rs, Imm32 imm);
     void ma_mul_branch_overflow(Register rd, Register rs, Register rt, Label* overflow);
     void ma_mul_branch_overflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 

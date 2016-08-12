@@ -4,14 +4,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: Variables ::::: */
-.panel-arrowcontent {
-  --panel-arrowcontent-padding: 10px;
-  --panel-arrowcontent-background: -moz-field;
-  --panel-arrowcontent-color: -moz-fieldText;
-  --panel-arrowcontent-border: 1px solid ThreeDShadow;
-}
-
 /* ::::: menupopup ::::: */
 
 menupopup,
@@ -48,7 +40,8 @@ panel[type="arrow"][side="right"] {
 
 .panel-arrow[side="top"],
 .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical-themed.svg");
+  list-style-image: var(--panel-arrow-image-vertical,
+                        url("chrome://global/skin/arrow/panelarrow-vertical-themed.svg"));
   position: relative;
   margin-left: 6px;
   margin-right: 6px;

@@ -93,7 +93,7 @@ BluetoothReplyRunnable::Run()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mReply);
 
-  JS::Rooted<JS::Value> v(nsContentUtils::RootingCx(), JS::UndefinedValue());
+  JS::Rooted<JS::Value> v(RootingCx(), JS::UndefinedValue());
 
   nsresult rv;
   if (mReply->type() != BluetoothReply::TBluetoothReplySuccess) {

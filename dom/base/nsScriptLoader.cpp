@@ -119,7 +119,7 @@ nsScriptLoadRequest::MaybeCancelOffThreadScript()
     return;
   }
 
-  JSContext* cx = JS_GetContext(xpc::GetJSRuntime());
+  JSContext* cx = danger::GetJSContext();
   JS::CancelOffThreadScript(cx, mOffThreadToken);
   mOffThreadToken = nullptr;
 }
