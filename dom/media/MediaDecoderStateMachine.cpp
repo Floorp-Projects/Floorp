@@ -1383,10 +1383,16 @@ void MediaDecoderStateMachine::VisibilityChanged()
 
     // Start video-only seek to the current time...
     SeekJob seekJob;
+
+    const SeekTarget::Type type = HasAudio()
+                                  ? SeekTarget::Type::Accurate
+                                  : SeekTarget::Type::PrevSyncPoint;
+
     seekJob.mTarget = SeekTarget(GetMediaTime(),
-                                 SeekTarget::Type::Accurate,
+                                 type,
                                  MediaDecoderEventVisibility::Suppressed,
                                  true /* aVideoOnly */);
+
     InitiateSeek(Move(seekJob));
   }
 }
