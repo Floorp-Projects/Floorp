@@ -130,16 +130,10 @@ class TestHeaderChecks(BaseCompileChecks):
 
     def test_try_compile_failure(self):
         cmd = textwrap.dedent('''\
-            @depends(try_compile(body='somefn();', flags=['-funknown-flag']))
-            def have_fn(value):
-                if value is not None:
-                    return True
+            have_fn = try_compile(body='somefn();', flags=['-funknown-flag'])
             set_config('HAVE_SOMEFN', have_fn)
 
-            @depends(try_compile(body='anotherfn();', language='C'))
-            def have_another(value):
-                if value is not None:
-                    return True
+            have_another = try_compile(body='anotherfn();', language='C')
             set_config('HAVE_ANOTHERFN', have_another)
         ''')
 
@@ -151,11 +145,8 @@ class TestHeaderChecks(BaseCompileChecks):
 
     def test_try_compile_msg(self):
         cmd = textwrap.dedent('''\
-            @depends(try_compile(language='C++', flags=['-fknown-flag'],
-                     check_msg='whether -fknown-flag works'))
-            def known_flag(result):
-                if result is not None:
-                    return True
+            known_flag = try_compile(language='C++', flags=['-fknown-flag'],
+                                     check_msg='whether -fknown-flag works')
             set_config('HAVE_KNOWN_FLAG', known_flag)
         ''')
         config, out, status = self.do_compile_test(cmd)

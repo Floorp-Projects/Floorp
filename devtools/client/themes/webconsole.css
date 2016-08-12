@@ -536,6 +536,12 @@ a {
   flex-shrink: 0;
 }
 
+/*Do not mirror the twisty because container force to ltr */
+.message .theme-twisty:dir(rtl),
+.message .theme-twisty:-moz-locale-dir(rtl) {
+  transform: none;
+}
+
 .cm-s-mozilla a[class] {
   font-style: italic;
   text-decoration: none;

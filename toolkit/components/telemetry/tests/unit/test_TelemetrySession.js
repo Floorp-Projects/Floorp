@@ -434,14 +434,12 @@ function write_fake_failedprofilelocks_file() {
   writeStringToFile(file, contents);
 }
 
-function run_test() {
-  do_test_pending();
-
+add_task(function* test_setup() {
   // Addon manager needs a profile directory
   do_get_profile();
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
   // Make sure we don't generate unexpected pings due to pref changes.
-  setEmptyPrefWatchlist();
+  yield setEmptyPrefWatchlist();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
@@ -474,8 +472,9 @@ function run_test() {
     });
   });
 
-  Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(run_next_test));
-}
+  yield new Promise(resolve =>
+    Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(resolve)));
+});
 
 add_task(function* asyncSetup() {
   yield TelemetryController.testSetup();
@@ -1863,5 +1862,4 @@ add_task(function* test_userIdleAndSchedlerTick() {
 
 add_task(function* stopServer() {
   yield PingServer.stop();
-  do_test_finished();
 });

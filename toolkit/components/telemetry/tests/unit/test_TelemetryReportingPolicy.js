@@ -56,22 +56,20 @@ function setMinimumPolicyVersion(aNewPolicyVersion) {
   Preferences.set(PREF_MINIMUM_POLICY_VERSION, aNewPolicyVersion);
 }
 
-function run_test() {
+add_task(function* test_setup() {
   // Addon manager needs a profile directory
   do_get_profile(true);
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Make sure we don't generate unexpected pings due to pref changes.
-  setEmptyPrefWatchlist();
+  yield setEmptyPrefWatchlist();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   // Don't bypass the notifications in this test, we'll fake it.
   Services.prefs.setBoolPref(PREF_BYPASS_NOTIFICATION, false);
 
   TelemetryReportingPolicy.setup();
-
-  run_next_test();
-}
+});
 
 add_task(function* test_firstRun() {
   const PREF_FIRST_RUN = "toolkit.telemetry.reportingpolicy.firstRun";

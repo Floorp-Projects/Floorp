@@ -229,8 +229,16 @@ const BackgroundPageThumbs = {
       // "resetting" the capture requires more work - so for now, we just
       // discard it.
       if (curCapture && curCapture.pending) {
-        curCapture._done(null, TEL_CAPTURE_DONE_CRASHED);
-        // _done automatically continues queue processing.
+        // Continue queue processing by calling curCapture._done().  Do it after
+        // this crashed listener returns, though.  A new browser will be created
+        // immediately (on the same stack as the _done call stack) if there are
+        // any more queued-up captures, and that seems to mess up the new
+        // browser's message manager if it happens on the same stack as the
+        // listener.  Trying to send a message to the manager in that case
+        // throws NS_ERROR_NOT_INITIALIZED.
+        Services.tm.currentThread.dispatch(() => {
+          curCapture._done(null, TEL_CAPTURE_DONE_CRASHED);
+        }, Ci.nsIEventTarget.DISPATCH_NORMAL);
       }
       // else: we must have been idle and not currently doing a capture (eg,
       // maybe a GC or similar crashed) - so there's no need to attempt a

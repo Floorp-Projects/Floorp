@@ -1,0 +1,46 @@
+Metadata-Version: 1.1
+Name: py
+Version: 1.4.31
+Summary: library with cross-python path, ini-parsing, io, code, log facilities
+Home-page: http://pylib.readthedocs.org/
+Author: holger krekel, Ronny Pfannschmidt, Benjamin Peterson and others
+Author-email: pytest-dev@python.org
+License: MIT license
+Description: .. image:: https://drone.io/bitbucket.org/pytest-dev/py/status.png
+           :target: https://drone.io/bitbucket.org/pytest-dev/py/latest
+        .. image:: https://pypip.in/v/py/badge.png
+           :target: https://pypi.python.org/pypi/py
+        
+        The py lib is a Python development support library featuring
+        the following tools and modules:
+        
+        * py.path:  uniform local and svn path objects
+        * py.apipkg:  explicit API control and lazy-importing
+        * py.iniconfig:  easy parsing of .ini files
+        * py.code: dynamic code generation and introspection
+        
+        NOTE: prior to the 1.4 release this distribution used to
+        contain py.test which is now its own package, see http://pytest.org
+        
+        For questions and more information please visit http://pylib.readthedocs.org
+        
+        Bugs and issues: http://bitbucket.org/pytest-dev/py/issues/
+        
+        Authors: Holger Krekel and others, 2004-2015
+        
+Platform: unix
+Platform: linux
+Platform: osx
+Platform: cygwin
+Platform: win32
+Classifier: Development Status :: 6 - Mature
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Topic :: Software Development :: Testing
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Utilities
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3

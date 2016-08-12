@@ -77,6 +77,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mDemuxOnly(false)
   , mSeekScheduled(false)
   , mVideoFrameContainer(aVideoFrameContainer)
+  , mExplicitDuration(mTaskQueue, Maybe<double>(), "MediaFormatReader::mExplicitDuration(Mirror)")
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
@@ -140,6 +141,8 @@ MediaFormatReader::Shutdown()
   mDemuxer = nullptr;
   mPlatform = nullptr;
   mVideoFrameContainer = nullptr;
+
+  mExplicitDuration.DisconnectIfConnected();
 
   return MediaDecoderReader::Shutdown();
 }
@@ -251,6 +254,10 @@ MediaFormatReader::AsyncReadMetadata()
     metadata->mInfo = mInfo;
     metadata->mTags = nullptr;
     return MetadataPromise::CreateAndResolve(metadata, __func__);
+  }
+
+  if (mDecoder->CanonicalExplicitDuration()) {
+    mExplicitDuration.Connect(mDecoder->CanonicalExplicitDuration());
   }
 
   RefPtr<MetadataPromise> p = mMetadataPromise.Ensure(__func__);
@@ -388,6 +395,7 @@ bool
 MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(!IsSuspended());
 
   auto& decoder = GetDecoderData(aTrack);
 
@@ -454,6 +462,8 @@ bool
 MediaFormatReader::EnsureDecoderInitialized(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(!IsSuspended());
+
   auto& decoder = GetDecoderData(aTrack);
 
   if (!decoder.mDecoder || decoder.mInitPromise.Exists()) {
@@ -463,21 +473,14 @@ MediaFormatReader::EnsureDecoderInitialized(TrackType aTrack)
   if (decoder.mDecoderInitialized) {
     return true;
   }
-  if (IsSuspended()) {
-    return false;
-  }
 
   RefPtr<MediaFormatReader> self = this;
   decoder.mInitPromise.Begin(decoder.mDecoder->Init()
        ->Then(OwnerThread(), __func__,
               [self] (TrackType aTrack) {
+                MOZ_ASSERT(!self->IsSuspended());
                 auto& decoder = self->GetDecoderData(aTrack);
                 decoder.mInitPromise.Complete();
-
-                if (self->IsSuspended()) {
-                  return;
-                }
-
                 decoder.mDecoderInitialized = true;
                 MonitorAutoLock mon(decoder.mMonitor);
                 decoder.mDescription = decoder.mDecoder->GetDescriptionName();
@@ -946,6 +949,14 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  // Don't try to create or initialize decoders
+  // (which might allocate hardware resources) when suspended.
+  if (IsSuspended()) {
+    // Should've deleted decoders when suspended.
+    MOZ_ASSERT(!mAudio.mDecoder && !mVideo.mDecoder);
+    return;
+  }
+
   auto& decoder = GetDecoderData(aTrack);
 
   if (decoder.mQueuedSamples.IsEmpty()) {
@@ -1073,6 +1084,20 @@ MediaFormatReader::InternalSeek(TrackType aTrack, const InternalSeekTarget& aTar
                     [self, aTrack] (DemuxerFailureReason aResult) {
                       auto& decoder = self->GetDecoderData(aTrack);
                       decoder.mSeekRequest.Complete();
+
+                      if (aResult == DemuxerFailureReason::END_OF_STREAM) {
+                        // We want to enter EOS when performing an
+                        // internal seek only if we're attempting to seek past
+                        // the explicit duration to avoid unwanted ended
+                        // event to be fired.
+                        if (self->mExplicitDuration.Ref().isSome() &&
+                            decoder.mTimeThreshold.ref().Time() <
+                            TimeUnit::FromSeconds(
+                              self->mExplicitDuration.Ref().ref())) {
+                          aResult = DemuxerFailureReason::WAITING_FOR_DATA;
+                        }
+                      }
+
                       switch (aResult) {
                         case DemuxerFailureReason::WAITING_FOR_DATA:
                           self->NotifyWaitingForData(aTrack);
@@ -1720,6 +1745,14 @@ MediaFormatReader::OnSeekFailed(TrackType aTrack, DemuxerFailureReason aResult)
     mVideo.mSeekRequest.Complete();
   } else {
     mAudio.mSeekRequest.Complete();
+  }
+
+  // We want to enter EOS when performing a seek only if we're attempting to
+  // seek past the explicit duration to avoid unwanted ended
+  // event to be fired.
+  if (mExplicitDuration.Ref().isSome() &&
+      mPendingSeekTime.ref() < TimeUnit::FromSeconds(mExplicitDuration.Ref().ref())) {
+    aResult = DemuxerFailureReason::WAITING_FOR_DATA;
   }
 
   if (aResult == DemuxerFailureReason::WAITING_FOR_DATA) {

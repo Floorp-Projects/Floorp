@@ -6,6 +6,15 @@
 
 "use strict";
 
+let l10n;
+try {
+  const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+  const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
+  l10n = new WebConsoleUtils.L10n(STRINGS_URI);
+} catch (e) {
+  l10n = require("devtools/client/webconsole/new-console-output/test/fixtures/l10n");
+}
+
 const {
   MESSAGE_SOURCE,
   MESSAGE_TYPE,
@@ -17,18 +26,9 @@ const {
   LEVELS,
   SEVERITY_LOG,
 } = require("../constants");
-const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
-const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
-const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 const { ConsoleMessage } = require("../types");
 
-let messageId = 0;
-function getNextMessageId() {
-  // Return the next message id, as a string.
-  return "" + messageId++;
-}
-
-function prepareMessage(packet) {
+function prepareMessage(packet, idGenerator) {
   // This packet is already in the expected packet structure. Simply return.
   if (!packet.source) {
     packet = transformPacket(packet);
@@ -37,7 +37,7 @@ function prepareMessage(packet) {
   if (packet.allowRepeating) {
     packet = packet.set("repeatId", getRepeatId(packet));
   }
-  return packet.set("id", getNextMessageId());
+  return packet.set("id", idGenerator.getNextId());
 }
 
 /**

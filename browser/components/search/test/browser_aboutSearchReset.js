@@ -6,7 +6,8 @@ const TELEMETRY_RESULT_ENUM = {
   RESTORED_DEFAULT: 0,
   KEPT_CURRENT: 1,
   CHANGED_ENGINE: 2,
-  CLOSED_PAGE: 3
+  CLOSED_PAGE: 3,
+  OPENED_SETTINGS: 4
 };
 
 const kSearchStr = "a search";
@@ -77,12 +78,15 @@ var gTests = [
   run: function* () {
     let currentEngine = Services.search.currentEngine;
     let originalEngine = Services.search.originalDefaultEngine;
+    let doc = gBrowser.contentDocument;
+    let defaultEngineSpan = doc.getElementById("defaultEngine");
+    is(defaultEngineSpan.textContent, originalEngine.name,
+       "the name of the original default engine is displayed");
+
     let expectedURL = originalEngine.
                       getSubmission(kSearchStr, null, kSearchPurpose).
                       uri.spec;
-
     let loadPromise = promiseStoppedLoad(expectedURL);
-    let doc = gBrowser.contentDocument;
     let button = doc.getElementById("searchResetChangeEngine");
     is(doc.activeElement, button,
        "the 'Change Search Engine' button is focused");
@@ -98,41 +102,15 @@ var gTests = [
 },
 
 {
-  desc: "Test the engine selector drop down.",
+  desc: "Click the settings link.",
   run: function* () {
-    let originalEngineName = Services.search.originalDefaultEngine.name;
-
-    let doc = gBrowser.contentDocument;
-    let list = doc.getElementById("defaultEngine");
-    is(list.value, originalEngineName,
-       "the default selection of the dropdown is the original default engine");
-
-    let defaultEngines = Services.search.getDefaultEngines();
-    is(list.childNodes.length, defaultEngines.length,
-       "the dropdown has the correct count of engines");
-
-    // Select an engine that isn't the original default one.
-    let engine;
-    for (let i = 0; i < defaultEngines.length; ++i) {
-      if (defaultEngines[i].name != originalEngineName) {
-        engine = defaultEngines[i];
-        engine.hidden = true;
-        break;
-      }
-    }
-    list.value = engine.name;
-
-    let expectedURL = engine.getSubmission(kSearchStr, null, kSearchPurpose)
-                            .uri.spec;
-    let loadPromise = promiseStoppedLoad(expectedURL);
-    doc.getElementById("searchResetChangeEngine").click();
+    let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
+                                                     false,
+                                                     "about:preferences#search")
+    gBrowser.contentDocument.getElementById("linkSettingsPage").click();
     yield loadPromise;
 
-    ok(!engine.hidden, "the selected engine has been unhidden");
-    is(engine, Services.search.currentEngine,
-       "the current engine is what was selected in the drop down");
-
-    checkTelemetryRecords(TELEMETRY_RESULT_ENUM.CHANGED_ENGINE);
+    checkTelemetryRecords(TELEMETRY_RESULT_ENUM.OPENED_SETTINGS);
   }
 },
 

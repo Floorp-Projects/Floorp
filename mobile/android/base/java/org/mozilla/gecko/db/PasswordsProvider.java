@@ -49,7 +49,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
     private static final HashMap<String, String> DISABLED_HOSTS_PROJECTION_MAP;
 
     // this should be kept in sync with the version in toolkit/components/passwordmgr/storage-mozStorage.js
-    private static final int DB_VERSION = 5;
+    private static final int DB_VERSION = 6;
     private static final String DB_FILENAME = "signons.sqlite";
     private static final String WHERE_GUID_IS_NULL = BrowserContract.DeletedPasswords.GUID + " IS NULL";
     private static final String WHERE_GUID_IS_VALUE = BrowserContract.DeletedPasswords.GUID + " = ?";

@@ -9,8 +9,9 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/TaskQueue.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/StateMirroring.h"
+#include "mozilla/TaskQueue.h"
 
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
@@ -579,6 +580,9 @@ private:
   RefPtr<GMPCrashHelper> mCrashHelper;
 
   void SetBlankDecode(TrackType aTrack, bool aIsBlankDecode);
+
+  // The duration explicitly set by JS, mirrored from the main thread.
+  Mirror<Maybe<double>> mExplicitDuration;
 };
 
 } // namespace mozilla

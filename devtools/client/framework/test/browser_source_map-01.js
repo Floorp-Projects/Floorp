@@ -19,25 +19,22 @@ const PAGE_URL = `${DEBUGGER_ROOT}doc_empty-tab-01.html`;
 const JS_URL = `${URL_ROOT}code_binary_search.js`;
 const COFFEE_URL = `${URL_ROOT}code_binary_search.coffee`;
 const { SourceMapService } = require("devtools/client/framework/source-map-service");
+const { serialize } = require("devtools/client/framework/location-store");
 
 add_task(function* () {
   const toolbox = yield openNewTabAndToolbox(PAGE_URL, "jsdebugger");
-
   const service = new SourceMapService(toolbox.target);
-
-  const aggregator = [];
+  let aggregator = new Map();
 
   function onUpdate(e, oldLoc, newLoc) {
     if (oldLoc.line === 6) {
       checkLoc1(oldLoc, newLoc);
     } else if (oldLoc.line === 8) {
       checkLoc2(oldLoc, newLoc);
-    } else if (oldLoc.line === 2) {
-      checkLoc3(oldLoc, newLoc);
     } else {
       throw new Error(`Unexpected location update: ${JSON.stringify(oldLoc)}`);
     }
-    aggregator.push(newLoc);
+    aggregator.set(serialize(oldLoc), newLoc);
   }
 
   let loc1 = { url: JS_URL, line: 6 };
@@ -51,7 +48,9 @@ add_task(function* () {
   yield createScript(JS_URL);
   yield sourceShown;
 
-  yield waitUntil(() => aggregator.length === 2);
+  yield waitUntil(() => aggregator.size === 2);
+
+  aggregator = Array.from(aggregator.values());
 
   ok(aggregator.find(i => i.url === COFFEE_URL && i.line === 4), "found first updated location");
   ok(aggregator.find(i => i.url === COFFEE_URL && i.line === 6), "found second updated location");

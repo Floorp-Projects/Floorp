@@ -45,7 +45,6 @@ public:
 
     void NotifyLoadRequested(nsPrefetchNode *node);
     void NotifyLoadCompleted(nsPrefetchNode *node);
-    void DispatchEvent(nsPrefetchNode *node, bool aSuccess);
 
 private:
     ~nsPrefetchService();
@@ -71,12 +70,6 @@ private:
     // true if pending document loads have ever reached zero.
     int32_t                            mHaveProcessed;
     bool                               mDisabled;
-
-    // In usual case prefetch does not start until all normal loads are done.
-    // Aggressive mode ignores normal loads and just start prefetch ASAP.
-    // It's mainly for testing purpose and discoraged for normal use;
-    // see https://bugzilla.mozilla.org/show_bug.cgi?id=1281415 for details.
-    bool                               mAggressive;
 };
 
 //-----------------------------------------------------------------------------
@@ -115,7 +108,6 @@ private:
     nsCOMPtr<nsIChannel>        mChannel;
     nsCOMPtr<nsIChannel>        mRedirectChannel;
     int64_t                     mBytesRead;
-    bool                        mShouldFireLoadEvent;
 };
 
 #endif // !nsPrefetchService_h__
