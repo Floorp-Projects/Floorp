@@ -1495,6 +1495,105 @@ ContentEventHandler::GetFirstFrameHavingFlatTextInRange(nsRange* aRange)
   return FrameAndNodeOffset(firstFrame, nodePosition.mOffset);
 }
 
+ContentEventHandler::FrameAndNodeOffset
+ContentEventHandler::GetLastFrameHavingFlatTextInRange(nsRange* aRange)
+{
+  NodePosition nodePosition;
+  nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
+  iter->Init(aRange);
+
+  nsINode* endNode = aRange->GetEndParent();
+  uint32_t endOffset = static_cast<uint32_t>(aRange->EndOffset());
+  // If the end point is start of a text node or specified by its parent and
+  // index, the node shouldn't be included into the range.  For example,
+  // with this case, |<p>abc[<br>]def</p>|, the range ends at 3rd children of
+  // <p> (see the range creation rules, "2.4. Cases: <element/>]"). This causes
+  // following frames:
+  // +----+-----+
+  // | abc|[<br>|
+  // +----+-----+
+  // +----+
+  // |]def|
+  // +----+
+  // So, if this method includes the 2nd text frame's rect to its result, the
+  // caller will return too tall rect which includes 2 lines in this case isn't
+  // expected by native IME  (e.g., popup of IME will be positioned at bottom
+  // of "d" instead of right-bottom of "c").  Therefore, this method shouldn't
+  // include the last frame when its content isn't really in aRange.
+  nsINode* nextNodeOfRangeEnd = nullptr;
+  if (endNode->IsNodeOfType(nsINode::eTEXT)) {
+    if (!endOffset) {
+      nextNodeOfRangeEnd = endNode;
+    }
+  } else if (endOffset < endNode->GetChildCount()) {
+    nextNodeOfRangeEnd = endNode->GetChildAt(endOffset);
+  }
+
+  for (iter->Last(); !iter->IsDone(); iter->Prev()) {
+    nsINode* node = iter->GetCurrentNode();
+    if (NS_WARN_IF(!node)) {
+      break;
+    }
+
+    if (!node->IsContent() || node == nextNodeOfRangeEnd) {
+      continue;
+    }
+
+    if (node->IsNodeOfType(nsINode::eTEXT)) {
+      nodePosition.mNode = node;
+      if (node == aRange->GetEndParent()) {
+        nodePosition.mOffset = aRange->EndOffset();
+      } else {
+        nodePosition.mOffset = node->Length();
+      }
+      break;
+    }
+
+    if (ShouldBreakLineBefore(node->AsContent(), mRootContent)) {
+      nodePosition.mNode = node;
+      nodePosition.mOffset = 0;
+      break;
+    }
+  }
+
+  if (!nodePosition.IsValid()) {
+    return FrameAndNodeOffset();
+  }
+
+  nsIFrame* lastFrame = nullptr;
+  GetFrameForTextRect(nodePosition.mNode, nodePosition.mOffset,
+                      true, &lastFrame);
+  if (!lastFrame) {
+    return FrameAndNodeOffset();
+  }
+
+  // If the last frame is a text frame, we need to check if the range actually
+  // includes at least one character in the range.  Therefore, if it's not a
+  // text frame, we need to do nothing anymore.
+  if (lastFrame->GetType() != nsGkAtoms::textFrame) {
+    return FrameAndNodeOffset(lastFrame, nodePosition.mOffset);
+  }
+
+  int32_t start, end;
+  if (NS_WARN_IF(NS_FAILED(lastFrame->GetOffsets(start, end)))) {
+    return FrameAndNodeOffset();
+  }
+
+  // If the start offset in the node is same as the computed offset in the
+  // node, the frame shouldn't be added to the text rect.  So, this should
+  // return previous text frame and its last offset.
+  if (nodePosition.mOffset == start) {
+    MOZ_ASSERT(nodePosition.mOffset);
+    GetFrameForTextRect(nodePosition.mNode, --nodePosition.mOffset,
+                        true, &lastFrame);
+    if (NS_WARN_IF(!lastFrame)) {
+      return FrameAndNodeOffset();
+    }
+  }
+
+  return FrameAndNodeOffset(lastFrame, nodePosition.mOffset);
+}
+
 ContentEventHandler::FrameRelativeRect
 ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame)
 {
@@ -1677,14 +1776,14 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
         startsBetweenLineBreaker = frameForPrevious.mFrame == firstFrame.mFrame;
       }
     } else {
-      rv = firstFrame->GetCharacterRectsInRange(firstFrame.mStartOffsetInNode,
+      rv = firstFrame->GetCharacterRectsInRange(firstFrame.mOffsetInNode,
                                                 kEndOffset - offset, charRects);
       if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(charRects.IsEmpty())) {
         return rv;
       }
       // Assign the characters whose rects are computed by the call of
       // nsTextFrame::GetCharacterRectsInRange().
-      AppendSubString(chars, firstContent, firstFrame.mStartOffsetInNode,
+      AppendSubString(chars, firstContent, firstFrame.mOffsetInNode,
                       charRects.Length());
       if (NS_WARN_IF(chars.Length() != charRects.Length())) {
         return NS_ERROR_UNEXPECTED;
@@ -1832,49 +1931,64 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   iter->Init(range);
 
-  // get the starting frame
-  NodePosition startNodePosition(iter->GetCurrentNode(), range->StartOffset());
-  if (!startNodePosition.mNode) {
-    startNodePosition =
-      GetNodePositionHavingFlatText(range->GetStartParent(),
-                                    startNodePosition.mOffset);
-    if (NS_WARN_IF(!startNodePosition.IsValid())) {
+  // Get the first frame which causes some text after the offset.
+  FrameAndNodeOffset firstFrame = GetFirstFrameHavingFlatTextInRange(range);
+
+  // If GetFirstFrameHavingFlatTextInRange() does not return valid frame,
+  // that means that there is no remaining content which causes text.
+  // So, in such case, we must have reached the end of the contents.
+  if (!firstFrame.IsValid()) {
+    // TODO: Handle this case later.
+    return NS_ERROR_FAILURE;
+  }
+
+  // For GetLineBreakerRectBefore() doesn't work well with block frame, so,
+  // this should fail if there is only block frame in the queried range for now.
+  // TODO: Fix later.
+  bool hasSetRect = false;
+
+  nsRect rect, frameRect;
+  nsPoint ptOffset;
+
+  // Get the starting frame rect if it's not a block frame.
+  if (firstFrame->GetType() == nsGkAtoms::textFrame) {
+    hasSetRect = true;
+    rect.SetRect(nsPoint(0, 0), firstFrame->GetRect().Size());
+    rv = ConvertToRootRelativeOffset(firstFrame, rect);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    frameRect = rect;
+    firstFrame->GetPointFromOffset(firstFrame.mOffsetInNode, &ptOffset);
+    if (firstFrame->GetWritingMode().IsVertical()) {
+      rect.y += ptOffset.y;
+      rect.height -= ptOffset.y;
+    } else {
+      rect.x += ptOffset.x;
+      rect.width -= ptOffset.x;
+    }
+  } else if (firstFrame->GetType() == nsGkAtoms::brFrame) {
+    hasSetRect = true;
+    FrameRelativeRect relativeRect = GetLineBreakerRectBefore(firstFrame);
+    if (NS_WARN_IF(!relativeRect.IsValid())) {
       return NS_ERROR_FAILURE;
     }
-  }
-  nsIFrame* firstFrame = nullptr;
-  rv = GetFrameForTextRect(startNodePosition.mNode, startNodePosition.mOffset,
-                           true, &firstFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // get the starting frame rect
-  nsRect rect(nsPoint(0, 0), firstFrame->GetRect().Size());
-  rv = ConvertToRootRelativeOffset(firstFrame, rect);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsRect frameRect = rect;
-  nsPoint ptOffset;
-  firstFrame->GetPointFromOffset(startNodePosition.mOffset, &ptOffset);
-  if (firstFrame->GetWritingMode().IsVertical()) {
-    rect.y += ptOffset.y;
-    rect.height -= ptOffset.y;
-  } else {
-    rect.x += ptOffset.x;
-    rect.width -= ptOffset.x;
+    rect = relativeRect.RectRelativeTo(firstFrame);
+    rv = ConvertToRootRelativeOffset(firstFrame, rect);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    frameRect = rect;
   }
   // UnionRect() requires non-empty rect.  So, let's make sure to get non-emtpy
   // rect from the first frame.
   EnsureNonEmptyRect(rect);
 
-  // get the ending frame
-  NodePosition endNodePosition =
-    GetNodePositionHavingFlatText(range->GetEndParent(), range->EndOffset());
-  if (NS_WARN_IF(!endNodePosition.IsValid())) {
+  // Get the last frame which causes some text in the range.
+  FrameAndNodeOffset lastFrame = GetLastFrameHavingFlatTextInRange(range);
+  if (NS_WARN_IF(!lastFrame.IsValid())) {
     return NS_ERROR_FAILURE;
   }
-  nsIFrame* lastFrame = nullptr;
-  rv = GetFrameForTextRect(endNodePosition.mNode, endNodePosition.mOffset,
-                           range->Collapsed(), &lastFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // iterate over all covered frames
   for (nsIFrame* frame = firstFrame; frame != lastFrame;) {
@@ -1889,16 +2003,40 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
         if (!node->IsNodeOfType(nsINode::eCONTENT)) {
           continue;
         }
-        frame = node->AsContent()->GetPrimaryFrame();
+        nsIFrame* primaryFrame = node->AsContent()->GetPrimaryFrame();
+        // The node may be hidden by CSS.
+        if (!primaryFrame) {
+          continue;
+        }
+        // We should take only text frame's rect and br frame's rect.  We can
+        // always use frame rect of text frame and GetLineBreakerRectBefore()
+        // can return exactly correct rect only for <br> frame for now.  On the
+        // other hand, GetLineBreakRectBefore() returns guessed caret rect for
+        // the other frames.  We shouldn't include such odd rect to the result.
+        if (primaryFrame->GetType() == nsGkAtoms::textFrame ||
+            primaryFrame->GetType() == nsGkAtoms::brFrame) {
+          frame = primaryFrame;
+        }
       } while (!frame && !iter->IsDone());
       if (!frame) {
-        // this can happen when the end offset of the range is 0.
-        frame = lastFrame;
+        break;
       }
     }
-    frameRect.SetRect(nsPoint(0, 0), frame->GetRect().Size());
+    hasSetRect = true;
+    if (frame->GetType() == nsGkAtoms::textFrame) {
+      frameRect.SetRect(nsPoint(0, 0), frame->GetRect().Size());
+    } else {
+      MOZ_ASSERT(frame->GetType() == nsGkAtoms::brFrame);
+      FrameRelativeRect relativeRect = GetLineBreakerRectBefore(frame);
+      if (NS_WARN_IF(!relativeRect.IsValid())) {
+        return NS_ERROR_FAILURE;
+      }
+      frameRect = relativeRect.RectRelativeTo(frame);
+    }
     rv = ConvertToRootRelativeOffset(frame, frameRect);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     // UnionRect() requires non-empty rect.  So, let's make sure to get
     // non-emtpy rect from the frame.
     EnsureNonEmptyRect(frameRect);
@@ -1908,21 +2046,39 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
     }
   }
 
-  // get the ending frame rect
-  lastFrame->GetPointFromOffset(endNodePosition.mOffset, &ptOffset);
-  if (lastFrame->GetWritingMode().IsVertical()) {
-    frameRect.height -= lastFrame->GetRect().height - ptOffset.y;
-  } else {
-    frameRect.width -= lastFrame->GetRect().width - ptOffset.x;
+  // TODO: We need to fix this case later.
+  if (NS_WARN_IF(!hasSetRect)) {
+    return NS_ERROR_FAILURE;
   }
-  // UnionRect() requires non-empty rect.  So, let's make sure to get non-empty
-  // rect from the last frame.
-  EnsureNonEmptyRect(frameRect);
 
-  if (firstFrame == lastFrame) {
-    rect.IntersectRect(rect, frameRect);
-  } else {
-    rect.UnionRect(rect, frameRect);
+  // Get the ending frame rect.
+  // FYI: If first frame and last frame are same, frameRect is already set
+  //      to the rect excluding the text before the query range.
+  if (firstFrame.mFrame != lastFrame.mFrame) {
+    frameRect.SetRect(nsPoint(0, 0), lastFrame->GetRect().Size());
+    rv = ConvertToRootRelativeOffset(lastFrame, frameRect);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  // Shrink the last frame for cutting off the text after the query range.
+  if (lastFrame->GetType() == nsGkAtoms::textFrame) {
+    lastFrame->GetPointFromOffset(lastFrame.mOffsetInNode, &ptOffset);
+    if (lastFrame->GetWritingMode().IsVertical()) {
+      frameRect.height -= lastFrame->GetRect().height - ptOffset.y;
+    } else {
+      frameRect.width -= lastFrame->GetRect().width - ptOffset.x;
+    }
+    // UnionRect() requires non-empty rect.  So, let's make sure to get
+    // non-empty rect from the last frame.
+    EnsureNonEmptyRect(frameRect);
+
+    if (firstFrame.mFrame == lastFrame.mFrame) {
+      rect.IntersectRect(rect, frameRect);
+    } else {
+      rect.UnionRect(rect, frameRect);
+    }
   }
   aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
