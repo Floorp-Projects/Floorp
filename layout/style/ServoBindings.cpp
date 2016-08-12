@@ -709,8 +709,22 @@ Gecko_CreateGradient(uint8_t aShape,
 void
 Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize)
 {
-  auto base = reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils> *>(aArray);
+  auto base =
+    reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator,
+                                   nsTArray_CopyWithMemutils>*>(aArray);
+
   base->EnsureCapacity<nsTArrayInfallibleAllocator>(aCapacity, aElemSize);
+}
+
+void
+Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
+{
+  auto base =
+    reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator,
+                                   nsTArray_CopyWithMemutils>*>(aArray);
+
+  base->template ShiftData<nsTArrayInfallibleAllocator>(0, base->Length(), 0,
+                                                        aElementSize, aElementAlign);
 }
 
 void
