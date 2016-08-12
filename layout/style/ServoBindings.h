@@ -224,6 +224,11 @@ void Gecko_StoreStyleDifference(RawGeckoNode* node, nsChangeHint change);
 // friend function declaration in nsTArray.h
 void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
 
+// Same here, `array` must be an nsTArray<T>, for some T.
+//
+// Important note: Only valid for POD types, since destructors won't be run
+// otherwise. This is ensured with rust traits for the relevant structs.
+void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len);
 
