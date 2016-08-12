@@ -664,23 +664,6 @@ internal_HistogramAdd(Histogram& histogram, int32_t value)
   return internal_HistogramAdd(histogram, value, dataset);
 }
 
-nsresult
-internal_HistogramAddCategorical(mozilla::Telemetry::ID id, const nsCString& label)
-{
-  uint32_t labelId = 0;
-  if (NS_FAILED(gHistograms[id].label_id(label.get(), &labelId))) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  Histogram* h = nullptr;
-  nsresult rv = internal_GetHistogramByEnumId(id, &h);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return internal_HistogramAdd(*h, labelId);
-}
-
 void
 internal_HistogramClear(Histogram& aHistogram, bool onlySubsession)
 {
@@ -1481,13 +1464,11 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
       return false;
     }
 
-    nsresult rv = internal_HistogramAddCategorical(id, NS_ConvertUTF16toUTF8(label));
+    nsresult rv = gHistograms[id].label_id(NS_ConvertUTF16toUTF8(label).get(), &value);
     if (NS_FAILED(rv)) {
       JS_ReportError(cx, "Unknown label for categorical histogram");
       return false;
     }
-
-    return true;
   } else {
     // All other accumulations expect one numerical argument.
     if (!args.length()) {
@@ -2156,7 +2137,11 @@ TelemetryHistogram::AccumulateCategorical(mozilla::Telemetry::ID aId,
   if (!internal_CanRecordBase()) {
     return;
   }
-  internal_HistogramAddCategorical(aId, label);
+  uint32_t labelId = 0;
+  if (NS_FAILED(gHistograms[aId].label_id(label.get(), &labelId))) {
+    return;
+  }
+  internal_Accumulate(aId, labelId);
 }
 
 void
