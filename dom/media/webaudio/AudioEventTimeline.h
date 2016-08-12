@@ -341,6 +341,13 @@ public:
   {
     while (mEvents.Length() > 1 &&
         aTime > mEvents[1].template Time<TimeType>()) {
+
+      if (mEvents[1].mType == AudioTimelineEvent::SetTarget) {
+        mLastComputedValue = GetValuesAtTimeHelperInternal(
+                                mEvents[1].template Time<TimeType>(),
+                                &mEvents[0], nullptr);
+      }
+
       mEvents.RemoveElementAt(0);
     }
   }
