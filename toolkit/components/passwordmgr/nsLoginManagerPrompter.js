@@ -511,6 +511,7 @@ LoginManagerPrompter.prototype = {
     var checkboxLabel = null;
     var epicfail = false;
     var canAutologin = false;
+    var notifyObj;
 
     try {
       this.log("===== promptAuth called =====");
@@ -551,8 +552,8 @@ LoginManagerPrompter.prototype = {
         canRememberLogin = false;
 
       // if checkboxLabel is null, the checkbox won't be shown at all.
-      var notifyBox = this._getNotifyBox();
-      if (canRememberLogin && !notifyBox)
+      notifyObj = this._getPopupNote() || this._getNotifyBox();
+      if (canRememberLogin && !notifyObj)
         checkboxLabel = this._getLocalizedString("rememberPassword");
     } catch (e) {
       // Ignore any errors and display the prompt anyway.
@@ -574,7 +575,7 @@ LoginManagerPrompter.prototype = {
     // determine if the login should be saved. If there isn't a
     // notification box, only save the login if the user set the
     // checkbox to do so.
-    var rememberLogin = notifyBox ? canRememberLogin : checkbox.value;
+    var rememberLogin = notifyObj ? canRememberLogin : checkbox.value;
     if (!ok || !rememberLogin || epicfail)
       return ok;
 
@@ -601,7 +602,6 @@ LoginManagerPrompter.prototype = {
         this.log("New login seen for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
 
-        let notifyObj = this._getPopupNote() || notifyBox;
         if (notifyObj)
           this._showSaveLoginNotification(notifyObj, newLogin);
         else
@@ -609,7 +609,6 @@ LoginManagerPrompter.prototype = {
       } else if (password != selectedLogin.password) {
         this.log("Updating password for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
-        let notifyObj = this._getPopupNote() || notifyBox;
         if (notifyObj)
           this._showChangeLoginNotification(notifyObj,
                                             selectedLogin, newLogin);
