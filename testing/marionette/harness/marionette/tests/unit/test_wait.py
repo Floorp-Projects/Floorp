@@ -17,8 +17,9 @@ class TickingClock(object):
         self.ticks = 0
         self.increment = incr
 
-    def sleep(self, dur):
-        self.ticks += self.increment
+    def sleep(self, dur=None):
+        dur = dur if dur is not None else self.increment
+        self.ticks += dur
 
     @property
     def now(self):
@@ -265,6 +266,40 @@ class WaitUntilTest(MarionetteTestCase):
         with self.assertRaisesRegexp(errors.TimeoutException,
                                      "Timed out after 1.0 seconds"):
             wt.until(lambda x: x.true(), is_true=now)
+
+    def test_timeout_elapsed_interval_by_delayed_condition_return(self):
+        def callback(mn):
+            self.clock.sleep(11)
+            return mn.false()
+
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 11.0 seconds"):
+            self.wt.until(callback)
+        # With a delayed conditional return > timeout, only 1 iteration is possible
+        self.assertEqual(self.m.waited, 1)
+
+    def test_timeout_with_delayed_condition_return(self):
+        def callback(mn):
+            self.clock.sleep(.5)
+            return mn.false()
+
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 10.0 seconds"):
+            self.wt.until(callback)
+        # With a delayed conditional return < interval, 10 iterations should be possible
+        self.assertEqual(self.m.waited, 10)
+
+    def test_timeout_interval_shorter_than_delayed_condition_return(self):
+        def callback(mn):
+            self.clock.sleep(2)
+            return mn.false()
+
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 10.0 seconds"):
+            self.wt.until(callback)
+        # With a delayed return of the conditional which takes twice that long than the interval,
+        # half of the iterations should be possible
+        self.assertEqual(self.m.waited, 5)
 
     def test_message(self):
         self.wt.exceptions = (TypeError,)

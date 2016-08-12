@@ -2098,6 +2098,29 @@ TSFTextStore::ContentForTSFRef()
 }
 
 bool
+TSFTextStore::CanAccessActualContentDirectly() const
+{
+  if (!mContentForTSF.IsInitialized() || mSelectionForTSF.IsDirty()) {
+    return true;
+  }
+
+  // If the cached content has been changed by something except composition,
+  // the content cache may be different from actual content.
+  if (mPendingTextChangeData.IsValid() &&
+      !mPendingTextChangeData.mCausedOnlyByComposition) {
+    return false;
+  }
+
+  // If the cached selection isn't changed, cached content and actual content
+  // should be same.
+  if (!mPendingSelectionChangeData.IsValid()) {
+    return true;
+  }
+
+  return mSelectionForTSF.EqualsExceptDirection(mPendingSelectionChangeData);
+}
+
+bool
 TSFTextStore::GetCurrentText(nsAString& aTextContent)
 {
   if (mContentForTSF.IsInitialized()) {
@@ -3707,6 +3730,13 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     // the position where TSFTextStore believes it at.
     options.mRelativeToInsertionPoint = true;
     startOffset -= mComposition.mStart;
+  } else if (!CanAccessActualContentDirectly()) {
+    // If TSF/TIP cannot access actual content directly, there may be pending
+    // text and/or selection changes which have not been notified TSF yet.
+    // Therefore, we should use relative to insertion point query since
+    // TSF/TIP computes the offset from the cached selection.
+    options.mRelativeToInsertionPoint = true;
+    startOffset -= mSelectionForTSF.StartOffset();
   }
   event.InitForQueryTextRect(startOffset, acpEnd - acpStart, options);
 
@@ -5170,6 +5200,13 @@ TSFTextStore::CreateNativeCaret()
     // position where TSFTextStore believes it at.
     options.mRelativeToInsertionPoint = true;
     caretOffset -= mComposition.mStart;
+  } else if (!CanAccessActualContentDirectly()) {
+    // If TSF/TIP cannot access actual content directly, there may be pending
+    // text and/or selection changes which have not been notified TSF yet.
+    // Therefore, we should use relative to insertion point query since
+    // TSF/TIP computes the offset from the cached selection.
+    options.mRelativeToInsertionPoint = true;
+    caretOffset -= mSelectionForTSF.StartOffset();
   }
   queryCaretRect.InitForQueryCaretRect(caretOffset, options);
 

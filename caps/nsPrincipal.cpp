@@ -787,6 +787,17 @@ nsExpandedPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 }
 
 bool
+nsExpandedPrincipal::AddonHasPermission(const nsAString& aPerm)
+{
+  for (size_t i = 0; i < mPrincipals.Length(); ++i) {
+    if (BasePrincipal::Cast(mPrincipals[i])->AddonHasPermission(aPerm)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
 nsExpandedPrincipal::IsOnCSSUnprefixingWhitelist()
 {
   // CSS Unprefixing Whitelist is a per-origin thing; doesn't really make sense

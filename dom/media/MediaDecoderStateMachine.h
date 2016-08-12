@@ -120,7 +120,9 @@ enum class MediaEventType : int8_t {
   PlaybackEnded,
   SeekStarted,
   DecodeError,
-  Invalidate
+  Invalidate,
+  EnterVideoSuspend,
+  ExitVideoSuspend
 };
 
 /*
@@ -508,12 +510,6 @@ protected:
   // Clears any previous seeking state and initiates a new seek on the decoder.
   RefPtr<MediaDecoder::SeekPromise> InitiateSeek(SeekJob aSeekJob);
 
-  // Clears any previous seeking state and initiates a seek on the decoder to
-  // resync the video and audio positions, when recovering from video decoding
-  // being suspended in background or from audio and video decoding being
-  // suspended due to the decoder limit.
-  void InitiateDecodeRecoverySeek(TrackSet aTracks);
-
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
   // Ensures a task to decode audio has been dispatched to the decode task queue.
@@ -590,15 +586,6 @@ protected:
   nsresult RunStateMachine();
 
   bool IsStateMachineScheduled() const;
-
-  // Returns true if we're not playing and the decode thread has filled its
-  // decode buffers and is waiting. We can shut the decode thread down in this
-  // case as it may not be needed again.
-  bool IsPausedAndDecoderWaiting();
-
-  // Returns true if the video decoding is suspended because the element is not
-  // visible
-  bool IsVideoDecodeSuspended() const;
 
   // These return true if the respective stream's decode has not yet reached
   // the end of stream.

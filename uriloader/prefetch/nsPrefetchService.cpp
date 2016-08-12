@@ -54,7 +54,6 @@ static LazyLogModule gPrefetchLog("nsPrefetch");
 
 #define PREFETCH_PREF "network.prefetch-next"
 #define PARALLELISM_PREF "network.prefetch-next.parallelism"
-#define AGGRESSIVE_PREF "network.prefetch-next.aggressive"
 
 //-----------------------------------------------------------------------------
 // helpers
@@ -82,7 +81,6 @@ nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService,
     , mService(aService)
     , mChannel(nullptr)
     , mBytesRead(0)
-    , mShouldFireLoadEvent(false)
 {
     nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
     mSources.AppendElement(source);
@@ -189,25 +187,6 @@ nsPrefetchNode::OnStartRequest(nsIRequest *aRequest,
 {
     nsresult rv;
 
-    nsCOMPtr<nsIHttpChannel> httpChannel =
-        do_QueryInterface(aRequest, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // if the load is cross origin without CORS, or the CORS access is rejected,
-    // always fire load event to avoid leaking site information.
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    mShouldFireLoadEvent = loadInfo->GetTainting() == LoadTainting::Opaque ||
-                           (loadInfo->GetTainting() == LoadTainting::CORS &&
-                            (NS_FAILED(mChannel->GetStatus(&rv)) ||
-                             NS_FAILED(rv)));
-
-    // no need to prefetch http error page
-    bool requestSucceeded;
-    if (NS_FAILED(httpChannel->GetRequestSucceeded(&requestSucceeded)) ||
-        !requestSucceeded) {
-      return NS_BINDING_ABORTED;
-    }
-
     nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
         do_QueryInterface(aRequest, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -217,8 +196,6 @@ nsPrefetchNode::OnStartRequest(nsIRequest *aRequest,
     if (NS_SUCCEEDED(cacheInfoChannel->IsFromCache(&fromCache)) &&
         fromCache) {
         LOG(("document is already in the cache; canceling prefetch\n"));
-        // although it's canceled we still want to fire load event
-        mShouldFireLoadEvent = true;
         return NS_BINDING_ABORTED;
     }
 
@@ -268,7 +245,6 @@ nsPrefetchNode::OnStopRequest(nsIRequest *aRequest,
     }
 
     mService->NotifyLoadCompleted(this);
-    mService->DispatchEvent(this, mShouldFireLoadEvent || NS_SUCCEEDED(aStatus));
     mService->ProcessNextURI(this);
     return NS_OK;
 }
@@ -360,7 +336,6 @@ nsPrefetchService::nsPrefetchService()
     , mStopCount(0)
     , mHaveProcessed(false)
     , mDisabled(true)
-    , mAggressive(false)
 {
 }
 
@@ -368,7 +343,6 @@ nsPrefetchService::~nsPrefetchService()
 {
     Preferences::RemoveObserver(this, PREFETCH_PREF);
     Preferences::RemoveObserver(this, PARALLELISM_PREF);
-    Preferences::RemoveObserver(this, AGGRESSIVE_PREF);
     // cannot reach destructor if prefetch in progress (listener owns reference
     // to this service)
     EmptyQueue();
@@ -388,9 +362,6 @@ nsPrefetchService::Init()
         mMaxParallelism = 1;
     }
     Preferences::AddWeakObserver(this, PARALLELISM_PREF);
-
-    mAggressive = Preferences::GetBool(AGGRESSIVE_PREF, false);
-    Preferences::AddWeakObserver(this, AGGRESSIVE_PREF);
 
     // Observe xpcom-shutdown event
     nsCOMPtr<nsIObserverService> observerService =
@@ -437,14 +408,11 @@ nsPrefetchService::ProcessNextURI(nsPrefetchNode *aFinished)
         }
 
         //
-        // if opening the channel fails (e.g. security check returns an error),
-        // send an error event and then just skip to the next uri
+        // if opening the channel fails, then just skip to the next uri
         //
         rv = node->OpenChannel();
         if (NS_SUCCEEDED(rv)) {
             mCurrentNodes.AppendElement(node);
-        } else {
-          DispatchEvent(node, false);
         }
     }
     while (NS_FAILED(rv));
@@ -472,23 +440,6 @@ nsPrefetchService::NotifyLoadCompleted(nsPrefetchNode *node)
 
     observerService->NotifyObservers(static_cast<nsIStreamListener*>(node),
                                      "prefetch-load-completed", nullptr);
-}
-
-void
-nsPrefetchService::DispatchEvent(nsPrefetchNode *node, bool aSuccess)
-{
-    for (uint32_t i = 0; i < node->mSources.Length(); i++) {
-      nsCOMPtr<nsINode> domNode = do_QueryReferent(node->mSources.ElementAt(i));
-      if (domNode && domNode->IsInComposedDoc()) {
-        nsContentUtils::DispatchTrustedEvent(domNode->OwnerDoc(),
-                                             domNode,
-                                             aSuccess ?
-                                              NS_LITERAL_STRING("load") :
-                                              NS_LITERAL_STRING("error"),
-                                             /* aCanBubble = */ false,
-                                             /* aCancelable = */ false);
-      }
-    }
 }
 
 //-----------------------------------------------------------------------------
@@ -824,11 +775,6 @@ nsPrefetchService::OnStateChange(nsIWebProgress* aWebProgress,
                                  uint32_t progressStateFlags, 
                                  nsresult aStatus)
 {
-    if (mAggressive) {
-        LOG(("Document load state is ignored in aggressive mode"));
-        return NS_OK;
-    }
-
     if (progressStateFlags & STATE_IS_DOCUMENT) {
         if (progressStateFlags & STATE_STOP)
             StartPrefetching();
@@ -916,13 +862,6 @@ nsPrefetchService::Observe(nsISupports     *aSubject,
             while (!mQueue.empty() && mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
                 ProcessNextURI(nullptr);
             }
-        } else if (!strcmp(pref, AGGRESSIVE_PREF)) {
-          mAggressive = Preferences::GetBool(AGGRESSIVE_PREF, false);
-          // in aggressive mode, clear stop count and start prefetching immediately
-          if (mAggressive) {
-            mStopCount = 0;
-            StartPrefetching();
-          }
         }
     }
 

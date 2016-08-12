@@ -136,10 +136,6 @@
   margin-inline-start: -12px !important;
 }
 
-.expander:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
 .expandable {
   visibility: visible;
 }

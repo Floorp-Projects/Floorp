@@ -103,20 +103,11 @@ add_test(function test_livemark_descriptions() {
 add_test(function test_livemark_invalid() {
   _("Livemarks considered invalid by nsLivemarkService are skipped.");
 
-  _("Parent is 0, which is invalid. Will be set to unfiled.");
-  let noParentRec = makeLivemark(record631361.payload, true);
-  noParentRec._parent = 0;
-  store.create(noParentRec);
-  let recID = store.idForGUID(noParentRec.id, true);
-  do_check_true(recID > 0);
-  do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(recID), PlacesUtils.bookmarks.unfiledBookmarksFolder);
-
   _("Parent is unknown. Will be set to unfiled.");
   let lateParentRec = makeLivemark(record631361.payload, true);
   let parentGUID = Utils.makeGUID();
   lateParentRec.parentid = parentGUID;
-  lateParentRec._parent = store.idForGUID(parentGUID);   // Usually done by applyIncoming.
-  do_check_eq(-1, lateParentRec._parent);
+  do_check_eq(-1, store.idForGUID(parentGUID));
 
   store.create(lateParentRec);
   recID = store.idForGUID(lateParentRec.id, true);
@@ -133,7 +124,7 @@ add_test(function test_livemark_invalid() {
 
   _("Parent is a Livemark. Will be skipped.");
   let lmParentRec = makeLivemark(record631361.payload, true);
-  lmParentRec._parent = recID;
+  lmParentRec.parentid = store.GUIDForId(recID);
   store.create(lmParentRec);
   // No exception, but no creation occurs.
   do_check_eq(-1, store.idForGUID(lmParentRec.id, true));

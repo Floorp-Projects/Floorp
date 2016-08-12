@@ -20,10 +20,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
@@ -47,6 +45,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -56,7 +55,10 @@ import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -365,6 +367,34 @@ public class BrowserSearch extends HomeFragment
         mList.setOnItemSelectedListener(listener);
         mList.setOnFocusChangeListener(listener);
 
+        mList.setContextMenuInfoFactory(new HomeContextMenuInfo.Factory() {
+            @Override
+            public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
+                final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
+
+                int bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
+                info.bookmarkId = bookmarkId;
+
+                int historyId = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
+                info.historyId = historyId;
+
+                boolean isBookmark = bookmarkId != -1;
+                boolean isHistory = historyId != -1;
+
+                if (isBookmark && isHistory) {
+                    info.itemType = HomeContextMenuInfo.RemoveItemType.COMBINED;
+                } else if (isBookmark) {
+                    info.itemType = HomeContextMenuInfo.RemoveItemType.BOOKMARKS;
+                } else if (isHistory) {
+                    info.itemType = HomeContextMenuInfo.RemoveItemType.HISTORY;
+                }
+
+                return info;
+            }
+        });
+
         mList.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, android.view.KeyEvent event) {
@@ -382,6 +412,43 @@ public class BrowserSearch extends HomeFragment
             "SearchEngines:Data");
 
         mSearchEngineBar.setOnSearchBarClickListener(this);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
+        if (!(menuInfo instanceof HomeContextMenuInfo)) {
+            return;
+        }
+
+        HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
+
+        MenuInflater inflater = new MenuInflater(view.getContext());
+        inflater.inflate(R.menu.browsersearch_contextmenu, menu);
+
+        menu.setHeaderTitle(info.getDisplayTitle());
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        ContextMenuInfo menuInfo = item.getMenuInfo();
+        if (!(menuInfo instanceof HomeContextMenuInfo)) {
+            return false;
+        }
+
+        final HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
+        final Context context = getActivity();
+
+        final int itemId = item.getItemId();
+
+        if (itemId == R.id.browsersearch_remove) {
+            // Position for Top Sites grid items, but will always be -1 since this is only for BrowserSearch result
+            final int position = -1;
+
+            new RemoveItemByUrlTask(context, info.url, info.itemType, position).execute();
+            return true;
+        }
+
+        return false;
     }
 
     @Override

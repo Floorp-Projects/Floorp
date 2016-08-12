@@ -2216,6 +2216,12 @@ public:
     this->SwapElements(aOther);
   }
 
+  MOZ_IMPLICIT AutoTArray(std::initializer_list<E> aIL)
+  {
+    Init();
+    this->AppendElements(aIL.begin(), aIL.size());
+  }
+
   self_type& operator=(const self_type& aOther)
   {
     base_type::operator=(aOther);

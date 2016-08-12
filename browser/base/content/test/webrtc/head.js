@@ -384,6 +384,12 @@ function* closeStream(aAlreadyClosed, aFrameId) {
   if (promises)
     yield Promise.all(promises);
 
+  // If a GC occurs before MediaStream.stop() is dispatched, we'll receive
+  // recording-device-events for each track instead of one for the stream.
+  if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
+    todo(false, "Stream was GC'd before MediaStream.stop() was dispatched (bug 1284038)");
+  }
+
   yield* assertWebRTCIndicatorStatus(null);
 }
 

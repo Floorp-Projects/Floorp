@@ -200,7 +200,8 @@ public:
   virtual void SetNextInFlow(nsIFrame*) override;
   virtual nsIAtom* GetType() const override;
 
-  virtual nsresult  IsSelectable(bool* aIsSelectable, uint8_t* aSelectStyle) const override;
+  virtual nsresult IsSelectable(bool* aIsSelectable,
+                      mozilla::StyleUserSelect* aSelectStyle) const override;
 
   virtual nsresult  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon) override;
 

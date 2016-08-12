@@ -54,8 +54,10 @@ class Wait(object):
 
         :param interval: How often the condition should be evaluated.
             In reality the interval may be greater as the cost of
-            evaluating the condition function is not factored in.  The
-            default polling interval is `wait.DEFAULT_INTERVAL`.
+            evaluating the condition function. If that is not the case the
+            interval for the next condition function call is shortend to keep
+            the original interval sequence as best as possible.
+            The default polling interval is `wait.DEFAULT_INTERVAL`.
 
         :param ignored_exceptions: Ignore specific types of exceptions
             whilst waiting for the condition.  Any exceptions not
@@ -120,20 +122,25 @@ class Wait(object):
 
         while not until(self.clock, self.end):
             try:
+                next = self.clock.now + self.interval
                 rv = condition(self.marionette)
             except (KeyboardInterrupt, SystemExit):
                 raise
             except self.exceptions:
                 last_exc = sys.exc_info()
 
+            # Re-adjust the interval depending on how long the callback
+            # took to evaluate the condition
+            interval_new = max(next - self.clock.now, 0)
+
             if not rv:
-                self.clock.sleep(self.interval)
+                self.clock.sleep(interval_new)
                 continue
 
             if rv is not None:
                 return rv
 
-            self.clock.sleep(self.interval)
+            self.clock.sleep(interval_new)
 
         if message:
             message = " with message: %s" % message

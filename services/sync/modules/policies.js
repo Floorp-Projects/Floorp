@@ -572,6 +572,7 @@ ErrorHandler.prototype = {
     let logs = ["Sync", "FirefoxAccounts", "Hawk", "Common.TokenServerClient",
                 "Sync.SyncMigration", "browserwindow.syncui",
                 "Services.Common.RESTRequest", "Services.Common.RESTRequest",
+                "BookmarkSyncUtils"
                ];
 
     this._logManager = new LogManager(Svc.Prefs, logs, "sync");

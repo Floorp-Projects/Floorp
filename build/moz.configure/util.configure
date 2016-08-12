@@ -302,6 +302,24 @@ def namespace(**kwargs):
     return ReadOnlyNamespace(**kwargs)
 
 
+# Turn an object into an object that can be used as an argument to @depends.
+# The given object can be a literal value, a function that takes no argument,
+# or, for convenience, a @depends function.
+@template
+@imports(_from='inspect', _import='isfunction')
+@imports(_from='mozbuild.configure', _import='DependsFunction')
+def dependable(obj):
+    if isinstance(obj, DependsFunction):
+        return obj
+    if isfunction(obj):
+        return depends('--help')(lambda _: obj())
+    return depends('--help')(lambda _: obj)
+
+
+always = dependable(True)
+never = dependable(False)
+
+
 # Some @depends function return namespaces, and one could want to use one
 # specific attribute from such a namespace as a "value" given to functions
 # such as `set_config`. But those functions do not take immediate values.

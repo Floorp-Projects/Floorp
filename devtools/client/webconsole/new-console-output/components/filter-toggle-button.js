@@ -8,7 +8,6 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const { store } = require("devtools/client/webconsole/new-console-output/store");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const {
   SEVERITY_FILTER
@@ -23,11 +22,12 @@ const FilterToggleButton = createClass({
     filterType: PropTypes.string.isRequired,
     filterKey: PropTypes.string.isRequired,
     active: PropTypes.bool.isRequired,
+    dispatch: PropTypes.func.isRequired,
   },
 
   onClick: function () {
     if (this.props.filterType === SEVERITY_FILTER) {
-      store.dispatch(actions.severityFilter(
+      this.props.dispatch(actions.severityFilter(
         this.props.filterKey, !this.props.active));
     }
   },

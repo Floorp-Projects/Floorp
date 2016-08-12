@@ -89,8 +89,7 @@ class MachCommands(MachCommandBase):
         # is a simple way to keep environments separate, at the price of
         # launching Python multiple times. Most tests are run via mozunit,
         # which produces output in the format Mozilla infrastructure expects.
-        # Some tests are run via pytest, and these should be equipped with a
-        # local mozunit_report plugin to meet output expectations.
+        # Some tests are run via pytest.
         return_code = 0
         found_tests = False
         if test_objects is None:
@@ -98,9 +97,6 @@ class MachCommands(MachCommandBase):
             # test resolution.
             if path_only:
                 if tests:
-                    self.virtualenv_manager.install_pip_package(
-                       'pytest==2.9.1'
-                    )
                     test_objects = [{'path': p} for p in find_tests_by_path()]
                 else:
                     self.log(logging.WARN, 'python-test', {},
@@ -160,4 +156,3 @@ class MachCommands(MachCommandBase):
             return 1
 
         return 0 if return_code == 0 else 1
-

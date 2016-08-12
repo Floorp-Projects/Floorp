@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const DB_VERSION = 5; // The database schema version
+const DB_VERSION = 6; // The database schema version
+const PERMISSION_SAVE_LOGINS = "login-saving";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -285,7 +286,7 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     // Send a notification that a login was added.
-    this._sendNotification("addLogin", loginClone);
+    LoginHelper.notifyStorageChanged("addLogin", loginClone);
   },
 
 
@@ -317,7 +318,7 @@ LoginManagerStorage_mozStorage.prototype = {
         stmt.reset();
       }
     }
-    this._sendNotification("removeLogin", storedLogin);
+    LoginHelper.notifyStorageChanged("removeLogin", storedLogin);
   },
 
 
@@ -399,7 +400,7 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
 
-    this._sendNotification("modifyLogin", [oldStoredLogin, newLogin]);
+    LoginHelper.notifyStorageChanged("modifyLogin", [oldStoredLogin, newLogin]);
   },
 
 
@@ -621,66 +622,7 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
 
-    this._sendNotification("removeAllLogins", null);
-  },
-
-
-  /*
-   * getAllDisabledHosts
-   *
-   */
-  getAllDisabledHosts : function (count) {
-    let disabledHosts = this._queryDisabledHosts(null);
-
-    this.log("_getAllDisabledHosts: returning " + disabledHosts.length + " disabled hosts.");
-    if (count)
-      count.value = disabledHosts.length; // needed for XPCOM
-    return disabledHosts;
-  },
-
-
-  /*
-   * getLoginSavingEnabled
-   *
-   */
-  getLoginSavingEnabled : function (hostname) {
-    this.log("Getting login saving is enabled for " + hostname);
-    return this._queryDisabledHosts(hostname).length == 0
-  },
-
-
-  /*
-   * setLoginSavingEnabled
-   *
-   */
-  setLoginSavingEnabled : function (hostname, enabled) {
-    // Throws if there are bogus values.
-    LoginHelper.checkHostnameValue(hostname);
-
-    this.log("Setting login saving enabled for " + hostname + " to " + enabled);
-    let query;
-    if (enabled)
-      query = "DELETE FROM moz_disabledHosts " +
-              "WHERE hostname = :hostname";
-    else
-      query = "INSERT INTO moz_disabledHosts " +
-              "(hostname) VALUES (:hostname)";
-    let params = { hostname: hostname };
-
-    let stmt
-    try {
-      stmt = this._dbCreateStatement(query, params);
-      stmt.execute();
-    } catch (e) {
-      this.log("setLoginSavingEnabled failed: " + e.name + " : " + e.message);
-      throw new Error("Couldn't write to database");
-    } finally {
-      if (stmt) {
-        stmt.reset();
-      }
-    }
-
-    this._sendNotification(enabled ? "hostSavingEnabled" : "hostSavingDisabled", hostname);
+    LoginHelper.notifyStorageChanged("removeAllLogins", null);
   },
 
 
@@ -764,28 +706,6 @@ LoginManagerStorage_mozStorage.prototype = {
 
 
   /*
-   * _sendNotification
-   *
-   * Send a notification when stored data is changed.
-   */
-  _sendNotification : function (changeType, data) {
-    let dataObject = data;
-    // Can't pass a raw JS string or array though notifyObservers(). :-(
-    if (data instanceof Array) {
-      dataObject = Cc["@mozilla.org/array;1"].
-                   createInstance(Ci.nsIMutableArray);
-      for (let i = 0; i < data.length; i++)
-        dataObject.appendElement(data[i], false);
-    } else if (typeof(data) == "string") {
-      dataObject = Cc["@mozilla.org/supports-string;1"].
-                   createInstance(Ci.nsISupportsString);
-      dataObject.data = data;
-    }
-    Services.obs.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
-  },
-
-
-  /*
    * _getIdForLogin
    *
    * Returns an array with two items: [id, login]. If the login was not
@@ -819,40 +739,6 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     return [id, foundLogin];
-  },
-
-
-  /*
-   * _queryDisabledHosts
-   *
-   * Returns an array of hostnames from the database according to the
-   * criteria given in the argument. If the argument hostname is null, the
-   * result array contains all hostnames
-   */
-  _queryDisabledHosts : function (hostname) {
-    let disabledHosts = [];
-
-    let query = "SELECT hostname FROM moz_disabledHosts";
-    let params = {};
-    if (hostname) {
-      query += " WHERE hostname = :hostname";
-      params = { hostname: hostname };
-    }
-
-    let stmt;
-    try {
-      stmt = this._dbCreateStatement(query, params);
-      while (stmt.executeStep())
-        disabledHosts.push(stmt.row.hostname);
-    } catch (e) {
-      this.log("_queryDisabledHosts failed: " + e.name + " : " + e.message);
-    } finally {
-      if (stmt) {
-        stmt.reset();
-      }
-    }
-
-    return disabledHosts;
   },
 
 
@@ -1293,6 +1179,44 @@ LoginManagerStorage_mozStorage.prototype = {
     if (!this._dbConnection.tableExists("moz_deleted_logins")) {
       this._dbConnection.createTable("moz_deleted_logins", this._dbSchema.tables.moz_deleted_logins);
     }
+  },
+
+  /*
+   * _dbMigrateToVersion6
+   *
+   * Version 6 migrates all the hosts from
+   * moz_disabledHosts to the permission manager.
+   */
+  _dbMigrateToVersion6 : function () {
+    let disabledHosts = [];
+    let query = "SELECT hostname FROM moz_disabledHosts";
+    let stmt;
+
+    try {
+      stmt = this._dbCreateStatement(query);
+
+      while (stmt.executeStep()) {
+        disabledHosts.push(stmt.row.hostname);
+      }
+
+      for (let host of disabledHosts) {
+        try {
+          let uri = Services.io.newURI(host, null, null);
+          Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+    } catch (e) {
+      this.log(`_dbMigrateToVersion6 failed: ${e.name} : ${e.message}`);
+    } finally {
+      if (stmt) {
+        stmt.reset();
+      }
+    }
+
+    query = "DELETE FROM moz_disabledHosts";
+    this._dbConnection.executeSimpleSQL(query);
   },
 
   /*

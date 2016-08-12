@@ -288,7 +288,9 @@ function getSnapshot(histogramId) {
 function setEmptyPrefWatchlist() {
   let TelemetryEnvironment =
     Cu.import("resource://gre/modules/TelemetryEnvironment.jsm").TelemetryEnvironment;
-  TelemetryEnvironment.testWatchPreferences(new Map());
+  return TelemetryEnvironment.onInitialized().then(() => {
+    TelemetryEnvironment.testWatchPreferences(new Map());
+  });
 }
 
 if (runningInParent) {

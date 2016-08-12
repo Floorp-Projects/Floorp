@@ -697,6 +697,12 @@ MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
     case MediaEventType::Invalidate:
       Invalidate();
       break;
+    case MediaEventType::EnterVideoSuspend:
+      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("mozentervideosuspend"));
+      break;
+    case MediaEventType::ExitVideoSuspend:
+      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("mozexitvideosuspend"));
+      break;
   }
 }
 

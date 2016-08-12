@@ -14,7 +14,6 @@ const { getAllFilters } = require("devtools/client/webconsole/new-console-output
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
 const messagesActions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const uiActions = require("devtools/client/webconsole/new-console-output/actions/ui");
-const { store } = require("devtools/client/webconsole/new-console-output/store");
 const {
   SEVERITY_FILTER
 } = require("../constants");
@@ -30,23 +29,23 @@ const FilterBar = createClass({
   },
 
   onClearOutputButtonClick: function () {
-    store.dispatch(messagesActions.messagesClear());
+    this.props.dispatch(messagesActions.messagesClear());
   },
 
   onToggleFilterConfigBarButtonClick: function () {
-    store.dispatch(uiActions.filterBarToggle());
+    this.props.dispatch(uiActions.filterBarToggle());
   },
 
   onClearFiltersButtonClick: function () {
-    store.dispatch(messagesActions.filtersClear());
+    this.props.dispatch(messagesActions.filtersClear());
   },
 
   onSearchInput: function (e) {
-    store.dispatch(messagesActions.messagesSearch(e.target.value));
+    this.props.dispatch(messagesActions.messagesSearch(e.target.value));
   },
 
   render() {
-    const {filter, ui} = this.props;
+    const {dispatch, filter, ui} = this.props;
     let configFilterBarVisible = ui.configFilterBarVisible;
     let children = [];
 
@@ -78,22 +77,30 @@ const FilterBar = createClass({
             active: filter.error,
             label: "Errors",
             filterType: SEVERITY_FILTER,
-            filterKey: "error"}),
+            filterKey: "error",
+            dispatch
+          }),
           FilterToggleButton({
             active: filter.warn,
             label: "Warnings",
             filterType: SEVERITY_FILTER,
-            filterKey: "warn"}),
+            filterKey: "warn",
+            dispatch
+          }),
           FilterToggleButton({
             active: filter.log,
             label: "Logs",
             filterType: SEVERITY_FILTER,
-            filterKey: "log"}),
+            filterKey: "log",
+            dispatch
+          }),
           FilterToggleButton({
             active: filter.info,
             label: "Info",
             filterType: SEVERITY_FILTER,
-            filterKey: "info"})
+            filterKey: "info",
+            dispatch
+          })
         )
       );
     }
