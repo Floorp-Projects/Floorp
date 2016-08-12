@@ -35,6 +35,7 @@
 
 #include "ds/PageProtectingVector.h"
 #include "jit/ExecutableAllocator.h"
+#include "jit/JitAllocPolicy.h"
 #include "jit/JitSpewer.h"
 
 // Spew formatting helpers.
