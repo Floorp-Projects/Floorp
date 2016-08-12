@@ -273,10 +273,6 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   padding: 0;
 }
 
-.cui-widget-panelview[id^=PanelUI-webext-] {
-  border-radius: 3.5px;
-}
-
 panelview[id^=PanelUI-webext-] {
   overflow: hidden;
 }

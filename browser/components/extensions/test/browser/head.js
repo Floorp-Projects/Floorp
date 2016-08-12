@@ -10,7 +10,7 @@
  *          promisePopupShown promisePopupHidden
  *          openContextMenu closeContextMenu
  *          openExtensionContextMenu closeExtensionContextMenu
- *          imageBuffer getListStyleImage
+ *          imageBuffer getListStyleImage getPanelForNode
  */
 
 var {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -81,6 +81,13 @@ function promisePopupHidden(popup) {
     };
     popup.addEventListener("popuphidden", onPopupHidden);
   });
+}
+
+function getPanelForNode(node) {
+  while (node.localName != "panel") {
+    node = node.parentNode;
+  }
+  return node;
 }
 
 function getBrowserActionWidget(extension) {
