@@ -782,9 +782,9 @@ CodeGeneratorMIPSShared::visitShiftI(LShiftI* ins)
                 masm.ma_srl(dest, lhs, Imm32(shift));
             } else {
                 // x >>> 0 can overflow.
-                masm.move32(lhs, dest);
                 if (ins->mir()->toUrsh()->fallible())
-                    bailoutCmp32(Assembler::LessThan, dest, Imm32(0), ins->snapshot());
+                    bailoutCmp32(Assembler::LessThan, lhs, Imm32(0), ins->snapshot());
+                masm.move32(lhs, dest);
             }
             break;
           default:

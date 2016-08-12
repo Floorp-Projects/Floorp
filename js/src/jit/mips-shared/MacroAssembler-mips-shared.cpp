@@ -284,9 +284,9 @@ void
 MacroAssemblerMIPSShared::ma_div_branch_overflow(Register rd, Register rs, Register rt, Label* overflow)
 {
     as_div(rs, rt);
-    as_mflo(rd);
     as_mfhi(ScratchRegister);
     ma_b(ScratchRegister, ScratchRegister, overflow, Assembler::NonZero);
+    as_mflo(rd);
 }
 
 void
