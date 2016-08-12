@@ -1880,21 +1880,33 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx,
 UniquePtr<uint8_t[]>
 CanvasRenderingContext2D::GetImageBuffer(int32_t* aFormat)
 {
+  UniquePtr<uint8_t[]> ret;
+
   *aFormat = 0;
 
-  EnsureTarget();
-  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
-  if (!snapshot) {
-    return nullptr;
+  RefPtr<SourceSurface> snapshot;
+  if (mTarget) {
+    snapshot = mTarget->Snapshot();
+  } else if (mBufferProvider) {
+    snapshot = mBufferProvider->BorrowSnapshot();
+  } else {
+    EnsureTarget();
+    snapshot = mTarget->Snapshot();
   }
 
-  RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-  if (!data || data->GetSize() != IntSize(mWidth, mHeight)) {
-    return nullptr;
+  if (snapshot) {
+    RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+    if (data && data->GetSize() == IntSize(mWidth, mHeight)) {
+      *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+      ret = SurfaceToPackedBGRA(data);
+    }
   }
 
-  *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
-  return SurfaceToPackedBGRA(data);
+  if (!mTarget && mBufferProvider) {
+    mBufferProvider->ReturnSnapshot(snapshot.forget());
+  }
+
+  return ret;
 }
 
 nsString CanvasRenderingContext2D::GetHitRegion(const mozilla::gfx::Point& aPoint)
