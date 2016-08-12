@@ -201,6 +201,8 @@ public:
       nsAutoString str;
       aKey.ToString(str);
       AppendPrintf("\"%s\"", NS_ConvertUTF16toUTF8(str).get());
+    } else if (aKey.IsBinary()) {
+      AssignLiteral("[object ArrayBuffer]");
     } else {
       MOZ_ASSERT(aKey.IsArray());
       AssignLiteral("[...]");
