@@ -20,8 +20,8 @@ function* testInArea(area) {
       "popup-a.html": scriptPage("popup-a.js"),
       "popup-a.js": function() {
         window.onload = () => {
-          let background = window.getComputedStyle(document.body).backgroundColor;
-          browser.test.assertEq("rgb(252, 252, 252)", background);
+          let color = window.getComputedStyle(document.body).color;
+          browser.test.assertEq("rgb(34, 36, 38)", color);
           browser.runtime.sendMessage("from-popup-a");
         };
         browser.runtime.onMessage.addListener(msg => {
