@@ -2743,10 +2743,5 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 }
 
 .webextension-popup-browser {
-  margin-right: -1px;
   border-radius: inherit;
-}
-
-#PanelUI-popup .webextension-popup-browser {
-  margin: 0;
 }

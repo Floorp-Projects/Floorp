@@ -1959,12 +1959,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
 }
 
 .webextension-popup-browser {
-  margin-right: -1px;
   border-radius: inherit;
-}
-
-#PanelUI-popup .webextension-popup-browser {
-  margin: 0;
 }
 
 .menuitem-iconic[usercontextid] > .menu-iconic-left > .menu-iconic-icon {
