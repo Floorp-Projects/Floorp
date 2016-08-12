@@ -635,11 +635,11 @@ var clipPathTests = [
   // none to shape
   { start: "none",
     end: "circle(500px at 500px 500px) border-box",
-    expected: ["circle", ["500px at 500px 500px"], "border-box"]
+    expected: ["circle", ["500px at calc(500px + 0%) calc(500px + 0%)"], "border-box"]
   },
   { start: "none",
     end: "ellipse(500px 500px at 500px 500px) border-box",
-    expected: ["ellipse", ["500px 500px at 500px 500px"], "border-box"]
+    expected: ["ellipse", ["500px 500px at calc(500px + 0%) calc(500px + 0%)"], "border-box"]
   },
   { start: "none",
     end: "polygon(evenodd, 500px 500px, 500px 500px) border-box",
@@ -656,11 +656,11 @@ var clipPathTests = [
     expected: ["ellipse", ["200px 200px at 50% 50%"]] },
   { start: "circle(100px at 100px 100px) border-box",
     end: "circle(500px at 500px 500px) border-box",
-    expected: ["circle", ["200px at 200px 200px"]]
+    expected: ["circle", ["200px at calc(200px + 0%) calc(200px + 0%)"]]
   },
   { start: "ellipse(100px 100px at 100px 100px) border-box",
     end: "ellipse(500px 500px at 500px 500px) border-box",
-    expected: ["ellipse", ["200px 200px at 200px 200px"]]
+    expected: ["ellipse", ["200px 200px at calc(200px + 0%) calc(200px + 0%)"]]
   },
   { start: "polygon(evenodd, 100px 100px, 100px 100px) border-box",
     end: "polygon(evenodd, 500px 500px, 500px 500px) border-box",
@@ -716,11 +716,11 @@ var clipPathTests = [
   // mismatching boxes
   { start: "circle(100px at 100px 100px) border-box",
     end: "circle(500px at 500px 500px) content-box",
-    expected: ["circle", ["500px at 500px 500px"], "content-box"]
+    expected: ["circle", ["500px at calc(500px + 0%) calc(500px + 0%)"], "content-box"]
   },
   { start: "ellipse(100px 100px at 100px 100px) border-box",
     end: "ellipse(500px 500px at 500px 500px) content-box",
-    expected: ["ellipse", ["500px 500px at 500px 500px"], "content-box"]
+    expected: ["ellipse", ["500px 500px at calc(500px + 0%) calc(500px + 0%)"], "content-box"]
   },
   { start: "polygon(evenodd, 100px 100px, 100px 100px) border-box",
     end: "polygon(evenodd, 500px 500px, 500px 500px) content-box",
@@ -733,7 +733,7 @@ var clipPathTests = [
   // mismatching functions
   { start: "circle(100px at 100px 100px) border-box",
     end: "ellipse(500px 500px at 500px 500px) border-box",
-    expected: ["ellipse", ["500px 500px at 500px 500px"], "border-box"]
+    expected: ["ellipse", ["500px 500px at calc(500px + 0%) calc(500px + 0%)"], "border-box"]
   },
   { start: "inset(0px round 20px)", end: "ellipse(500px 500px)",
     expected: ["ellipse", ["500px 500px at 50% 50%"]]
