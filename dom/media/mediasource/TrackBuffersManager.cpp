@@ -1219,8 +1219,27 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 
   // 1. For each coded frame in the media segment run the following steps:
   // Coded Frame Processing steps 1.1 to 1.21.
-  ProcessFrames(mVideoTracks.mQueuedSamples, mVideoTracks);
-  mVideoTracks.mQueuedSamples.Clear();
+
+  if (mSourceBufferAttributes->GetAppendMode() == SourceBufferAppendMode::Sequence &&
+      mVideoTracks.mQueuedSamples.Length() && mAudioTracks.mQueuedSamples.Length()) {
+    // When we are in sequence mode, the order in which we process the frames is
+    // important as it determines the future value of timestampOffset.
+    // So we process the earliest sample first. See bug 1293576.
+    TimeInterval videoInterval =
+      PresentationInterval(mVideoTracks.mQueuedSamples);
+    TimeInterval audioInterval =
+      PresentationInterval(mAudioTracks.mQueuedSamples);
+    if (audioInterval.mStart < videoInterval.mStart) {
+      ProcessFrames(mAudioTracks.mQueuedSamples, mAudioTracks);
+      ProcessFrames(mVideoTracks.mQueuedSamples, mVideoTracks);
+    } else {
+      ProcessFrames(mVideoTracks.mQueuedSamples, mVideoTracks);
+      ProcessFrames(mAudioTracks.mQueuedSamples, mAudioTracks);
+    }
+  } else {
+    ProcessFrames(mVideoTracks.mQueuedSamples, mVideoTracks);
+    ProcessFrames(mAudioTracks.mQueuedSamples, mAudioTracks);
+  }
 
 #if defined(DEBUG)
   if (HasVideo()) {
@@ -1231,12 +1250,6 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
                  track[i]->mKeyframe);
     }
   }
-#endif
-
-  ProcessFrames(mAudioTracks.mQueuedSamples, mAudioTracks);
-  mAudioTracks.mQueuedSamples.Clear();
-
-#if defined(DEBUG)
   if (HasAudio()) {
     const auto& track = mAudioTracks.mBuffers.LastElement();
     MOZ_ASSERT(track.IsEmpty() || track[0]->mKeyframe);
@@ -1246,6 +1259,9 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
     }
   }
 #endif
+
+  mVideoTracks.mQueuedSamples.Clear();
+  mAudioTracks.mQueuedSamples.Clear();
 
   UpdateBufferedRanges();
 
@@ -1320,6 +1336,22 @@ TrackBuffersManager::CheckSequenceDiscontinuity(const TimeUnit& aPresentationTim
     mAudioTracks.mNeedRandomAccessPoint = true;
     mSourceBufferAttributes->ResetGroupStartTimestamp();
   }
+}
+
+TimeInterval
+TrackBuffersManager::PresentationInterval(const TrackBuffer& aSamples) const
+{
+  TimeInterval presentationInterval =
+    TimeInterval(TimeUnit::FromMicroseconds(aSamples[0]->mTime),
+                 TimeUnit::FromMicroseconds(aSamples[0]->GetEndTime()));
+
+  for (uint32_t i = 1; i < aSamples.Length(); i++) {
+    auto& sample = aSamples[i];
+    presentationInterval = presentationInterval.Span(
+      TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
+                   TimeUnit::FromMicroseconds(sample->GetEndTime())));
+  }
+  return presentationInterval;
 }
 
 void

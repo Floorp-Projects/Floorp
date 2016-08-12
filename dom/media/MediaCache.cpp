@@ -96,7 +96,7 @@ void MediaCacheFlusher::Init()
     mozilla::services::GetObserverService();
   if (observerService) {
     observerService->AddObserver(gMediaCacheFlusher, "last-pb-context-exited", true);
-    observerService->AddObserver(gMediaCacheFlusher, "network-clear-cache-stored-anywhere", true);
+    observerService->AddObserver(gMediaCacheFlusher, "cacheservice:empty-cache", true);
   }
 }
 
@@ -277,16 +277,17 @@ protected:
   };
 
   struct BlockOwner {
-    BlockOwner() : mStream(nullptr), mClass(READAHEAD_BLOCK) {}
+    constexpr BlockOwner() {}
 
     // The stream that owns this block, or null if the block is free.
-    MediaCacheStream* mStream;
+    MediaCacheStream* mStream = nullptr;
     // The block index in the stream. Valid only if mStream is non-null.
-    uint32_t            mStreamBlock;
+    // Initialized to an insane value to highlight misuse.
+    uint32_t          mStreamBlock = UINT32_MAX;
     // Time at which this block was last used. Valid only if
     // mClass is METADATA_BLOCK or PLAYED_BLOCK.
-    TimeStamp           mLastUseTime;
-    BlockClass          mClass;
+    TimeStamp         mLastUseTime;
+    BlockClass        mClass = READAHEAD_BLOCK;
   };
 
   struct Block {
@@ -357,7 +358,7 @@ MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t c
   if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     MediaCache::Flush();
   }
-  if (strcmp(aTopic, "network-clear-cache-stored-anywhere") == 0) {
+  if (strcmp(aTopic, "cacheservice:empty-cache") == 0) {
     MediaCache::Flush();
   }
   return NS_OK;
