@@ -162,7 +162,9 @@ public:
         nsIPrincipal* principal = doc ? doc->NodePrincipal() : nullptr;
         source = new BasicUnstoppableTrackSource(principal);
       }
-      track = mStream->CreateDOMTrack(aTrackID, aType, source);
+      RefPtr<MediaStreamTrack> newTrack =
+        mStream->CreateDOMTrack(aTrackID, aType, source);
+      mStream->AddTrackInternal(newTrack);
     }
   }
 
@@ -809,7 +811,10 @@ DOMMediaStream::InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGrap
   InitInputStreamCommon(audioCaptureStream, aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
-  CreateDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, audioCaptureSource);
+  RefPtr<MediaStreamTrack> track =
+    CreateDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, audioCaptureSource);
+  AddTrackInternal(track);
+
   audioCaptureStream->Start();
 }
 
@@ -977,7 +982,27 @@ DOMMediaStream::RemovePrincipalChangeObserver(
   return mPrincipalChangeObservers.RemoveElement(aObserver);
 }
 
-MediaStreamTrack*
+void
+DOMMediaStream::AddTrackInternal(MediaStreamTrack* aTrack)
+{
+  MOZ_ASSERT(aTrack->mOwningStream == this);
+  MOZ_ASSERT(FindOwnedDOMTrack(aTrack->GetInputStream(),
+                               aTrack->mInputTrackID,
+                               aTrack->mTrackID));
+  MOZ_ASSERT(!FindPlaybackDOMTrack(aTrack->GetOwnedStream(),
+                                   aTrack->mTrackID));
+
+  LOG(LogLevel::Debug, ("DOMMediaStream %p Adding owned track %p", this, aTrack));
+
+  mTracks.AppendElement(
+    new TrackPort(mPlaybackPort, aTrack, TrackPort::InputPortOwnership::EXTERNAL));
+
+  NotifyTrackAdded(aTrack);
+
+  DispatchTrackEvent(NS_LITERAL_STRING("addtrack"), aTrack);
+}
+
+already_AddRefed<MediaStreamTrack>
 DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
                                MediaStreamTrackSource* aSource,
                                const MediaTrackConstraints& aConstraints)
@@ -987,7 +1012,7 @@ DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
 
   MOZ_ASSERT(FindOwnedDOMTrack(GetInputStream(), aTrackID) == nullptr);
 
-  MediaStreamTrack* track;
+  RefPtr<MediaStreamTrack> track;
   switch (aType) {
   case MediaSegment::AUDIO:
     track = new AudioStreamTrack(this, aTrackID, aTrackID, aSource, aConstraints);
@@ -999,19 +1024,13 @@ DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
     MOZ_CRASH("Unhandled track type");
   }
 
-  LOG(LogLevel::Debug, ("DOMMediaStream %p Created new track %p with ID %u", this, track, aTrackID));
+  LOG(LogLevel::Debug, ("DOMMediaStream %p Created new track %p with ID %u",
+                        this, track.get(), aTrackID));
 
   mOwnedTracks.AppendElement(
     new TrackPort(mOwnedPort, track, TrackPort::InputPortOwnership::EXTERNAL));
 
-  mTracks.AppendElement(
-    new TrackPort(mPlaybackPort, track, TrackPort::InputPortOwnership::EXTERNAL));
-
-  NotifyTrackAdded(track);
-
-  DispatchTrackEvent(NS_LITERAL_STRING("addtrack"), track);
-
-  return track;
+  return track.forget();
 }
 
 already_AddRefed<MediaStreamTrack>
