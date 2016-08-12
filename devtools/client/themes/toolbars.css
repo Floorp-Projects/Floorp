@@ -462,7 +462,7 @@
 .devtools-searchinput-clear {
   position: absolute;
   top: 3.5px;
-  right: 7px;
+  offset-inline-end: 7px;
   padding: 0;
   border: 0;
   width: 16px;
