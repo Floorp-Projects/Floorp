@@ -10447,8 +10447,7 @@ StkProactiveCmdHelperObject.prototype = {
   },
 
   searchForTag: function(tag, ctlvs) {
-    let iter = Iterator(ctlvs);
-    for (let [index, ctlv] in iter) {
+    for (let ctlv of ctlvs) {
       if ((ctlv.tag & ~COMPREHENSIONTLV_FLAG_CR) == tag) {
         return ctlv;
       }
@@ -11055,7 +11054,7 @@ BerTlvHelperObject.prototype = {
   },
 
   searchForNextTag: function(tag, iter) {
-    for (let [index, tlv] in iter) {
+    for (let tlv of iter) {
       if (tlv.tag === tag) {
         return tlv;
       }
@@ -11406,7 +11405,7 @@ ICCIOHelperObject.prototype = {
 
     let berTlv = BerTlvHelper.decode(octetLen);
     // See TS 102 221 Table 11.4 for the content order of getResponse.
-    let iter = Iterator(berTlv.value);
+    let iter = berTlv.value.values();
     let tlv = BerTlvHelper.searchForNextTag(BER_FCP_FILE_DESCRIPTOR_TAG,
                                             iter);
     if (!tlv ||

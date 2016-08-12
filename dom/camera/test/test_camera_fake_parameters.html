@@ -469,26 +469,22 @@ suite.test('bug-1054803', function() {
       ok(found == 1, "found size " + size.toSource() + " in pictureSizes");
     });
 
-    var sizeGenerator = Iterator(expSizes);
+    var sizeIterator = expSizes.values();
     return new Promise(function(resolve, reject) {
       function nextSize() {
-        try {
-          var size = sizeGenerator.next()[1];
-          var sync = suite.waitParameterPush();
-          cam.setPictureSize(size);
-          sync.then(function() {
-            var got = cam.getPictureSize();
-            ok(got.width == size.width && got.height == size.height,
-              "Set size " + size.toSource() + ", got size " + got.toSource());
-            nextSize();
-          }, reject);
-        } catch(e) {
-          if (e instanceof StopIteration) {
-            resolve();
-          } else {
-            reject(e);
-          }
+        var {value:size, done} = sizeIterator.next();
+        if (done) {
+          resolve();
+          return;
         }
+        var sync = suite.waitParameterPush();
+        cam.setPictureSize(size);
+        sync.then(function() {
+          var got = cam.getPictureSize();
+          ok(got.width == size.width && got.height == size.height,
+            "Set size " + size.toSource() + ", got size " + got.toSource());
+          nextSize();
+        }, reject);
       }
 
       nextSize();
