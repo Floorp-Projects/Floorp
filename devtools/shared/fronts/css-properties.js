@@ -178,10 +178,12 @@ function getCssProperties(toolbox) {
 }
 
 /**
- * Get a client-side CssProperties. This is useful for dependencies in tests.
+ * Get a client-side CssProperties. This is useful for dependencies in tests, or parts
+ * of the codebase that don't particularly need to match every known CSS property on
+ * the target.
  * @return {CssProperties}
  */
-function getClientCssPropertiesForTests() {
+function getClientCssProperties() {
   return new CssProperties(normalizeCssData(CSS_PROPERTIES_DB));
 }
 
@@ -262,6 +264,6 @@ module.exports = {
   CssPropertiesFront,
   CssProperties,
   getCssProperties,
-  getClientCssPropertiesForTests,
+  getClientCssProperties,
   initCssProperties
 };

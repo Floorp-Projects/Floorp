@@ -96,7 +96,7 @@ function runTests() {
     inspector = InspectorFront(target.client, target.form);
     inspector.getWalker().then(walker => {
       completer = new CSSCompleter({walker: walker,
-                                    cssProperties: getClientCssPropertiesForTests()});
+                                    cssProperties: getClientCssProperties()});
       checkStateAndMoveOn();
     });
   });
