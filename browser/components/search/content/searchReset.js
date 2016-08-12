@@ -16,34 +16,11 @@ const TELEMETRY_RESULT_ENUM = {
 };
 
 window.onload = function() {
-  let list = document.getElementById("defaultEngine");
-  let originalDefault = Services.search.originalDefaultEngine.name;
-  Services.search.getDefaultEngines().forEach(e => {
-    let opt = document.createElement("option");
-    opt.setAttribute("value", e.name);
-    opt.engine = e;
-    opt.textContent = e.name;
-    if (e.iconURI)
-      opt.style.backgroundImage = 'url("' + e.iconURI.spec + '")';
-    if (e.name == originalDefault)
-      opt.setAttribute("selected", "true");
-    list.appendChild(opt);
-  });
-
-  let updateIcon = () => {
-    list.style.setProperty("--engine-icon-url",
-                           list.selectedOptions[0].style.backgroundImage);
-  };
-
-  list.addEventListener("change", updateIcon);
-  // When selecting using the keyboard, the 'change' event is only fired after
-  // the user presses <enter> or moves the focus elsewhere.
-  // keypress/keyup fire too late and cause flicker when updating the icon.
-  // keydown fires too early and the selected option isn't changed yet.
-  list.addEventListener("keydown", () => {
-    Services.tm.mainThread.dispatch(updateIcon, Ci.nsIThread.DISPATCH_NORMAL);
-  });
-  updateIcon();
+  let defaultEngine = document.getElementById("defaultEngine");
+  let originalDefault = Services.search.originalDefaultEngine;
+  defaultEngine.textContent = originalDefault.name;
+  defaultEngine.style.backgroundImage =
+    'url("' + originalDefault.iconURI.spec + '")';
 
   document.getElementById("searchResetChangeEngine").focus();
   window.addEventListener("unload", recordPageClosed);
@@ -90,18 +67,12 @@ function keepCurrentEngine() {
 }
 
 function changeSearchEngine() {
-  let list = document.getElementById("defaultEngine");
-  let engine = list.selectedOptions[0].engine;
+  let engine = Services.search.originalDefaultEngine;
   if (engine.hidden)
     engine.hidden = false;
   Services.search.currentEngine = engine;
 
-  // Record if we restored the original default or changed to another engine.
-  let originalDefault = Services.search.originalDefaultEngine.name;
-  let code = TELEMETRY_RESULT_ENUM.CHANGED_ENGINE;
-  if (Services.search.originalDefaultEngine.name == engine.name)
-    code = TELEMETRY_RESULT_ENUM.RESTORED_DEFAULT;
-  record(code);
+  record(TELEMETRY_RESULT_ENUM.RESTORED_DEFAULT);
 
   doSearch();
 }
