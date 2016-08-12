@@ -473,7 +473,7 @@ SetAllowRelazification(JSContext* cx, bool allow)
     MOZ_ASSERT(rt->allowRelazificationForTesting != allow);
     rt->allowRelazificationForTesting = allow;
 
-    for (AllFramesIter i(cx); !i.done(); ++i)
+    for (AllScriptFramesIter i(cx); !i.done(); ++i)
         i.script()->setDoNotRelazify(allow);
 }
 
