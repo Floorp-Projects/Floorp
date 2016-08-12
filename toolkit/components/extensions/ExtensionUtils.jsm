@@ -1402,7 +1402,7 @@ class ChildAPIManager {
   }
 
   close() {
-    this.messageManager.sendAsyncMessage("Extension:CloseProxyContext", {childId: this.id});
+    this.messageManager.sendAsyncMessage("API:CloseProxyContext", {childId: this.id});
   }
 
   get cloneScope() {

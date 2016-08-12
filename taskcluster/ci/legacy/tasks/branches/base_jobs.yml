@@ -345,6 +345,7 @@ tasks:
         file_patterns:
           - 'testing/marionette/harness/**'
           - 'testing/mozharness/scripts/marionette_harness_tests.py'
+          - 'testing/config/marionette_harness_test_requirements.txt'
   linux64-gcc:
     task: tasks/builds/linux64_gcc.yml
     root: true

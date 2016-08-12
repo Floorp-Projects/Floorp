@@ -15,6 +15,9 @@ const PREF_INT = 64;
 const PREF_BOOL = 128;
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
+// We prefix all our local storage items with this.
+const PREFIX = "Services.prefs:";
+
 /**
  * Create a new preference object.
  *
@@ -101,7 +104,7 @@ Preference.prototype = {
       userValue: this.userValue,
     };
 
-    localStorage.setItem(this.fullName, JSON.stringify(store));
+    localStorage.setItem(PREFIX + this.fullName, JSON.stringify(store));
     this.branch._notify(this.name);
   },
 
@@ -249,9 +252,6 @@ PrefBranch.prototype = {
 
   /** @see nsIPrefBranch.addObserver */
   addObserver: function (domain, observer, holdWeak) {
-    if (domain !== "" && !domain.endsWith(".")) {
-      throw new Error("invalid domain to addObserver: " + domain);
-    }
     if (holdWeak) {
       throw new Error("shim prefs only supports strong observers");
     }
@@ -325,7 +325,8 @@ PrefBranch.prototype = {
    */
   _notify: function (relativeName) {
     for (let domain in this._observers) {
-      if (relativeName.startsWith(domain)) {
+      if (relativeName === domain || domain === "" ||
+          (domain.endsWith(".") && relativeName.startsWith(domain))) {
         // Allow mutation while walking.
         let localList = this._observers[domain].slice();
         for (let observer of localList) {
@@ -448,9 +449,12 @@ PrefBranch.prototype = {
     // representations.
     for (let i = 0; i < localStorage.length; ++i) {
       let keyName = localStorage.key(i);
-      let {userValue, hasUserValue, defaultValue} =
-          JSON.parse(localStorage.getItem(keyName));
-      this._findOrCreatePref(keyName, userValue, hasUserValue, defaultValue);
+      if (keyName.startsWith(PREFIX)) {
+        let {userValue, hasUserValue, defaultValue} =
+            JSON.parse(localStorage.getItem(keyName));
+        this._findOrCreatePref(keyName.slice(PREFIX.length), userValue,
+                               hasUserValue, defaultValue);
+      }
     }
 
     this._onStorageChange = this._onStorageChange.bind(this);

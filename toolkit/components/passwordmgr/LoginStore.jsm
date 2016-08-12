@@ -73,6 +73,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
@@ -111,7 +112,10 @@ const kSaveDelayMs = 1500;
  * For example, this number should NOT be changed when a new optional field is
  * added to a login entry.
  */
-const kDataVersion = 1;
+const kDataVersion = 2;
+
+// The permission type we store in the permission manager.
+const PERMISSION_SAVE_LOGINS = "login-saving";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// LoginStore
@@ -268,14 +272,36 @@ LoginStore.prototype = {
     if (!this.data.logins) {
       this.data.logins = [];
     }
+
+    // Stub needed for login imports before data has been migrated.
     if (!this.data.disabledHosts) {
       this.data.disabledHosts = [];
+    }
+
+    if (this.data.version === 1) {
+      this._migrateDisabledHosts();
     }
 
     // Indicate that the current version of the code has touched the file.
     this.data.version = kDataVersion;
 
     this.dataReady = true;
+  },
+
+  /**
+   * Migrates disabled hosts to the permission manager.
+   */
+  _migrateDisabledHosts: function () {
+    for (let host of this.data.disabledHosts) {
+      try {
+        let uri = Services.io.newURI(host, null, null);
+        Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+
+    delete this.data.disabledHosts;
   },
 
   /**

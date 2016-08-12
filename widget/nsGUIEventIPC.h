@@ -981,8 +981,10 @@ struct ParamTraits<mozilla::ContentCache>
     WriteParam(aMsg, aParam.mSelection.mAnchor);
     WriteParam(aMsg, aParam.mSelection.mFocus);
     WriteParam(aMsg, aParam.mSelection.mWritingMode);
-    WriteParam(aMsg, aParam.mSelection.mAnchorCharRect);
-    WriteParam(aMsg, aParam.mSelection.mFocusCharRect);
+    WriteParam(aMsg, aParam.mSelection.mAnchorCharRects[0]);
+    WriteParam(aMsg, aParam.mSelection.mAnchorCharRects[1]);
+    WriteParam(aMsg, aParam.mSelection.mFocusCharRects[0]);
+    WriteParam(aMsg, aParam.mSelection.mFocusCharRects[1]);
     WriteParam(aMsg, aParam.mSelection.mRect);
     WriteParam(aMsg, aParam.mFirstCharRect);
     WriteParam(aMsg, aParam.mCaret.mOffset);
@@ -999,8 +1001,10 @@ struct ParamTraits<mozilla::ContentCache>
            ReadParam(aMsg, aIter, &aResult->mSelection.mAnchor) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mFocus) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mWritingMode) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mAnchorCharRect) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mFocusCharRect) &&
+           ReadParam(aMsg, aIter, &aResult->mSelection.mAnchorCharRects[0]) &&
+           ReadParam(aMsg, aIter, &aResult->mSelection.mAnchorCharRects[1]) &&
+           ReadParam(aMsg, aIter, &aResult->mSelection.mFocusCharRects[0]) &&
+           ReadParam(aMsg, aIter, &aResult->mSelection.mFocusCharRects[1]) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mRect) &&
            ReadParam(aMsg, aIter, &aResult->mFirstCharRect) &&
            ReadParam(aMsg, aIter, &aResult->mCaret.mOffset) &&

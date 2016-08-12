@@ -17,12 +17,11 @@ javaparser:: \
   jar cf javaparser.jar -C javaparser/bin .
 
 sync_javaparser:: \
-; if [ -d javaparser/.svn ] ; \
-  then cd javaparser ; svn up ; cd .. ; \
-  else \
-    rm -rf javaparser ; \
-    svn co http://javaparser.googlecode.com/svn/trunk/JavaParser javaparser ; \
-  fi
+; if [ ! -d javaparser/.git ] ; \
+    then rm -rf javaparser ; \
+    git clone https://github.com/javaparser/javaparser.git ; \
+  fi ; \
+  cd javaparser ; git checkout javaparser-1.0.6 ; cd .. 
 
 sync_htmlparser:: \
 ; if [ -d htmlparser/.hg ] ; \
