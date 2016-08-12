@@ -8,10 +8,12 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.home.HomeBanner;
 import org.mozilla.gecko.home.HomeFragment;
@@ -62,6 +64,10 @@ public class ActivityStream extends FrameLayout implements HomeScreen {
     public void load(LoaderManager lm, FragmentManager fm, String panelId, Bundle restoreData,
                      PropertyAnimator animator) {
         // Signal to load data from storage as needed, compare with HomePager
+        RecyclerView rv = (RecyclerView) findViewById(R.id.activity_stream_main_recyclerview);
+        rv.setAdapter(new MainRecyclerAdapter(getContext()));
+        rv.setLayoutManager(new LinearLayoutManager(getContext()));
+        rv.setHasFixedSize(true);
     }
 
     @Override
