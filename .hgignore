@@ -78,6 +78,9 @@ _OPT\.OBJ/
 ^devtools/client/chrome.manifest$
 ^devtools/shared/chrome.manifest$
 
+# Ignore node_modules directories in devtools
+^devtools/client/.*/node_modules/
+
 # git checkout of libstagefright
 ^media/libstagefright/android$
 

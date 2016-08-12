@@ -138,7 +138,7 @@ js::gc::AllocateWholeCellSet(Arena* arena)
         return nullptr;
     }
 
-    if (nursery.approxFreeSpace() < ArenaCellSet::NurseryFreeThresholdBytes)
+    if (nursery.freeSpace() < ArenaCellSet::NurseryFreeThresholdBytes)
         rt->gc.storeBuffer.setAboutToOverflow();
 
     auto cells = static_cast<ArenaCellSet*>(data);

@@ -450,6 +450,9 @@ typedef nsIMemoryReporterCallback nsIHandleReportCallback;
 
 namespace mozilla {
 
+// All the following registration/unregistration functions don't use
+// MOZ_MUST_USE because ignoring failures is common and reasonable.
+
 // Register a memory reporter.  The manager service will hold a strong
 // reference to this reporter.
 XPCOM_API(nsresult) RegisterStrongMemoryReporter(nsIMemoryReporter* aReporter);
@@ -473,7 +476,6 @@ XPCOM_API(nsresult) UnregisterWeakMemoryReporter(nsIMemoryReporter* aReporter);
 // manager.
 
 typedef int64_t (*InfallibleAmountFn)();
-typedef nsresult (*FallibleAmountFn)(int64_t* aAmount);
 
 #define DECL_REGISTER_DISTINGUISHED_AMOUNT(kind, name) \
     nsresult Register##name##DistinguishedAmount(kind##AmountFn aAmountFn);

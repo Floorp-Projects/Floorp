@@ -294,6 +294,12 @@ div.CodeMirror span.eval-text {
   background-position: -42px -14px;
 }
 
+/* Mirror the twisty for rtl direction */
+.theme-twisty:dir(rtl),
+.theme-twisty:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .theme-checkbox {
   display: inline-block;
   border: 0;

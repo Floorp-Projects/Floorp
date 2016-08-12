@@ -50,13 +50,13 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   GetInterfaces(uint32_t *_count, nsIID ***_array) override
   {
     return NS_CI_INTERFACE_GETTER_NAME(Statement)(_count, _array);
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   GetScriptableHelper(nsIXPCScriptable **_helper) override
   {
     static StatementJSHelper sJSHelper;
@@ -64,35 +64,35 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   GetContractID(char **_contractID) override
   {
     *_contractID = nullptr;
     return NS_OK;
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   GetClassDescription(char **_desc) override
   {
     *_desc = nullptr;
     return NS_OK;
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   GetClassID(nsCID **_id) override
   {
     *_id = nullptr;
     return NS_OK;
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   GetFlags(uint32_t *_flags) override
   {
     *_flags = 0;
     return NS_OK;
   }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   GetClassIDNoAlloc(nsCID *_cid) override
   {
     return NS_ERROR_NOT_AVAILABLE;

@@ -99,14 +99,13 @@ class ExclusiveContext : public ContextFriendFields,
     friend struct StackBaseShape;
     friend void JSScript::initCompartment(ExclusiveContext* cx);
     friend class jit::JitContext;
-    friend class Activation;
+
+    // runtime_ is private to hide it from JSContext. JSContext inherits from
+    // JSRuntime, so it's more efficient to use the base class.
+    JSRuntime* const runtime_;
 
     // The thread on which this context is running, if this is not a JSContext.
     HelperThread* helperThread_;
-
-    // Hide runtime_ from JSContext. JSContext inherits from JSRuntime, so it's
-    // more efficient to use |this|.
-    using ContextFriendFields::runtime_;
 
   public:
     enum ContextKind {
@@ -214,9 +213,9 @@ class ExclusiveContext : public ContextFriendFields,
     FreeOp* defaultFreeOp() { return runtime_->defaultFreeOp(); }
     void* contextAddressForJit() { return runtime_->unsafeContextFromAnyThread(); }
     void* runtimeAddressOfInterruptUint32() { return runtime_->addressOfInterruptUint32(); }
-    void* stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
+    void* stackLimitAddress(StackKind kind) { return &nativeStackLimit[kind]; }
     void* stackLimitAddressForJitCode(StackKind kind);
-    uintptr_t stackLimit(StackKind kind) { return runtime_->mainThread.nativeStackLimit[kind]; }
+    uintptr_t stackLimit(StackKind kind) { return nativeStackLimit[kind]; }
     uintptr_t stackLimitForJitCode(StackKind kind);
     size_t gcSystemPageSize() { return gc::SystemPageSize(); }
     bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
@@ -393,6 +392,8 @@ struct JSContext : public js::ExclusiveContext,
     /* Client opaque pointer. */
     void* data;
 
+    void resetJitStackLimit();
+
   public:
 
     /*
@@ -404,6 +405,8 @@ struct JSContext : public js::ExclusiveContext,
      * Note: if this ever shows up in a profile, just add caching!
      */
     JSVersion findVersion() const;
+
+    void initJitStackLimit();
 
     JS::ContextOptions& options() {
         return options_;
@@ -418,6 +421,28 @@ struct JSContext : public js::ExclusiveContext,
     bool jitIsBroken;
 
     void updateJITEnabled();
+
+    /*
+     * Youngest frame of a saved stack that will be picked up as an async stack
+     * by any new Activation, and is nullptr when no async stack should be used.
+     *
+     * The JS::AutoSetAsyncStackForNewCalls class can be used to set this.
+     *
+     * New activations will reset this to nullptr on construction after getting
+     * the current value, and will restore the previous value on destruction.
+     */
+    JS::PersistentRooted<js::SavedFrame*> asyncStackForNewActivations;
+
+    /*
+     * Value of asyncCause to be attached to asyncStackForNewActivations.
+     */
+    const char* asyncCauseForNewActivations;
+
+    /*
+     * True if the async call was explicitly requested, e.g. via
+     * callFunctionWithAsyncStack.
+     */
+    bool asyncCallIsExplicit;
 
     /* Whether this context has JS frames on the stack. */
     bool currentlyRunning() const;

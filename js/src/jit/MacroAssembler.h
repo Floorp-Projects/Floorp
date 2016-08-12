@@ -994,9 +994,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T>
     inline CodeOffsetJump branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label) PER_SHARED_ARCH;
 
-    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
+    void branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
-    void branchPtrInNurseryRange(Condition cond, const Address& address, Register temp, Label* label)
+    void branchPtrInNurseryChunk(Condition cond, const Address& address, Register temp, Label* label)
         DEFINED_ON(x86);
     void branchValueIsNurseryObject(Condition cond, const Address& address, Register temp, Label* label) PER_ARCH;
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label) PER_ARCH;
@@ -1208,8 +1208,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
         DEFINED_ON(x86_shared);
 
-    template <typename T>
-    void branchPtrInNurseryRangeImpl(Condition cond, const T& ptr, Register temp, Label* label)
+    void branchPtrInNurseryChunkImpl(Condition cond, Register ptr, Label* label)
         DEFINED_ON(x86);
     template <typename T>
     void branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp, Label* label)

@@ -559,18 +559,6 @@ JS_EndRequest(JSContext* cx)
     StopRequest(cx);
 }
 
-JS_PUBLIC_API(JSRuntime*)
-JS_GetRuntime(JSContext* cx)
-{
-    return cx->runtime();
-}
-
-JS_PUBLIC_API(JSContext*)
-JS_GetContext(JSRuntime* rt)
-{
-    return rt->contextFromMainThread();
-}
-
 JS_PUBLIC_API(JSContext*)
 JS_GetParentContext(JSContext* cx)
 {
@@ -1515,23 +1503,23 @@ JS_GetExternalStringFinalizer(JSString* str)
 }
 
 static void
-SetNativeStackQuotaAndLimit(JSRuntime* rt, StackKind kind, size_t stackSize)
+SetNativeStackQuotaAndLimit(JSContext* cx, StackKind kind, size_t stackSize)
 {
-    rt->nativeStackQuota[kind] = stackSize;
+    cx->nativeStackQuota[kind] = stackSize;
 
 #if JS_STACK_GROWTH_DIRECTION > 0
     if (stackSize == 0) {
-        rt->mainThread.nativeStackLimit[kind] = UINTPTR_MAX;
+        cx->nativeStackLimit[kind] = UINTPTR_MAX;
     } else {
-        MOZ_ASSERT(rt->nativeStackBase <= size_t(-1) - stackSize);
-        rt->mainThread.nativeStackLimit[kind] = rt->nativeStackBase + stackSize - 1;
+        MOZ_ASSERT(cx->nativeStackBase <= size_t(-1) - stackSize);
+        cx->nativeStackLimit[kind] = cx->nativeStackBase + stackSize - 1;
     }
 #else
     if (stackSize == 0) {
-        rt->mainThread.nativeStackLimit[kind] = 0;
+        cx->nativeStackLimit[kind] = 0;
     } else {
-        MOZ_ASSERT(rt->nativeStackBase >= stackSize);
-        rt->mainThread.nativeStackLimit[kind] = rt->nativeStackBase - (stackSize - 1);
+        MOZ_ASSERT(cx->nativeStackBase >= stackSize);
+        cx->nativeStackLimit[kind] = cx->nativeStackBase - (stackSize - 1);
     }
 #endif
 }
@@ -1540,8 +1528,7 @@ JS_PUBLIC_API(void)
 JS_SetNativeStackQuota(JSContext* cx, size_t systemCodeStackSize, size_t trustedScriptStackSize,
                        size_t untrustedScriptStackSize)
 {
-    JSRuntime* rt = cx->runtime();
-    MOZ_ASSERT(rt->requestDepth == 0);
+    MOZ_ASSERT(cx->requestDepth == 0);
 
     if (!trustedScriptStackSize)
         trustedScriptStackSize = systemCodeStackSize;
@@ -1553,11 +1540,11 @@ JS_SetNativeStackQuota(JSContext* cx, size_t systemCodeStackSize, size_t trusted
     else
         MOZ_ASSERT(untrustedScriptStackSize < trustedScriptStackSize);
 
-    SetNativeStackQuotaAndLimit(rt, StackForSystemCode, systemCodeStackSize);
-    SetNativeStackQuotaAndLimit(rt, StackForTrustedScript, trustedScriptStackSize);
-    SetNativeStackQuotaAndLimit(rt, StackForUntrustedScript, untrustedScriptStackSize);
+    SetNativeStackQuotaAndLimit(cx, StackForSystemCode, systemCodeStackSize);
+    SetNativeStackQuotaAndLimit(cx, StackForTrustedScript, trustedScriptStackSize);
+    SetNativeStackQuotaAndLimit(cx, StackForUntrustedScript, untrustedScriptStackSize);
 
-    rt->initJitStackLimit();
+    cx->initJitStackLimit();
 }
 
 /************************************************************************/
@@ -1942,10 +1929,11 @@ JS_IsNative(JSObject* obj)
     return obj->isNative();
 }
 
-JS_PUBLIC_API(JSRuntime*)
-JS_GetObjectRuntime(JSObject* obj)
+JS_PUBLIC_API(void)
+JS::AssertObjectBelongsToCurrentThread(JSObject* obj)
 {
-    return obj->compartment()->runtimeFromMainThread();
+    JSRuntime* rt = obj->compartment()->runtimeFromAnyThread();
+    MOZ_RELEASE_ASSERT(CurrentThreadCanAccessRuntime(rt));
 }
 
 
@@ -3799,7 +3787,6 @@ JS::ReadOnlyCompileOptions::copyPODOptions(const ReadOnlyCompileOptions& rhs)
 
 JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
     : ReadOnlyCompileOptions(),
-      runtime(GetRuntime(cx)),
       elementRoot(cx),
       elementAttributeNameRoot(cx),
       introductionScriptRoot(cx)
@@ -4942,9 +4929,9 @@ JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
   JSContext* cx, HandleObject stack, const char* asyncCause,
   JS::AutoSetAsyncStackForNewCalls::AsyncCallKind kind)
   : cx(cx),
-    oldAsyncStack(cx, cx->runtime()->asyncStackForNewActivations),
-    oldAsyncCause(cx->runtime()->asyncCauseForNewActivations),
-    oldAsyncCallIsExplicit(cx->runtime()->asyncCallIsExplicit)
+    oldAsyncStack(cx, cx->asyncStackForNewActivations),
+    oldAsyncCause(cx->asyncCauseForNewActivations),
+    oldAsyncCallIsExplicit(cx->asyncCallIsExplicit)
 {
     CHECK_REQUEST(cx);
 
@@ -4956,17 +4943,17 @@ JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
 
     SavedFrame* asyncStack = &stack->as<SavedFrame>();
 
-    cx->runtime()->asyncStackForNewActivations = asyncStack;
-    cx->runtime()->asyncCauseForNewActivations = asyncCause;
-    cx->runtime()->asyncCallIsExplicit = kind == AsyncCallKind::EXPLICIT;
+    cx->asyncStackForNewActivations = asyncStack;
+    cx->asyncCauseForNewActivations = asyncCause;
+    cx->asyncCallIsExplicit = kind == AsyncCallKind::EXPLICIT;
 }
 
 JS::AutoSetAsyncStackForNewCalls::~AutoSetAsyncStackForNewCalls()
 {
-    cx->runtime()->asyncCauseForNewActivations = oldAsyncCause;
-    cx->runtime()->asyncStackForNewActivations =
+    cx->asyncCauseForNewActivations = oldAsyncCause;
+    cx->asyncStackForNewActivations =
       oldAsyncStack ? &oldAsyncStack->as<SavedFrame>() : nullptr;
-    cx->runtime()->asyncCallIsExplicit = oldAsyncCallIsExplicit;
+    cx->asyncCallIsExplicit = oldAsyncCallIsExplicit;
 }
 
 /************************************************************************/
@@ -6455,15 +6442,10 @@ JS_CallOnce(JSCallOnceType* once, JSInitCallback func)
 }
 
 AutoGCRooter::AutoGCRooter(JSContext* cx, ptrdiff_t tag)
-  : down(ContextFriendFields::get(cx)->roots.autoGCRooters_),
-    tag_(tag),
-    stackTop(&ContextFriendFields::get(cx)->roots.autoGCRooters_)
-{
-    MOZ_ASSERT(this != *stackTop);
-    *stackTop = this;
-}
+  : AutoGCRooter(JS::RootingContext::get(cx), tag)
+{}
 
-AutoGCRooter::AutoGCRooter(ContextFriendFields* cx, ptrdiff_t tag)
+AutoGCRooter::AutoGCRooter(JS::RootingContext* cx, ptrdiff_t tag)
   : down(cx->roots.autoGCRooters_),
     tag_(tag),
     stackTop(&cx->roots.autoGCRooters_)

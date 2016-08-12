@@ -94,7 +94,7 @@ Icc::NotifyEvent(const nsAString& aName)
 nsresult
 Icc::NotifyStkEvent(const nsAString& aName, nsIStkProactiveCmd* aStkProactiveCmd)
 {
-  JSContext* cx = nsContentUtils::RootingCx();
+  JS::RootingContext* cx = RootingCx();
   JS::Rooted<JS::Value> value(cx);
 
   nsCOMPtr<nsIStkCmdFactory> cmdFactory =

@@ -9,6 +9,8 @@ this.EXPORTED_SYMBOLS = ["BookmarkSpecialIds", "BookmarkAnnos"];
 const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-common/async.js");
 
 let BookmarkAnnos = {
   ALLBOOKMARKS_ANNO:    "AllBookmarks",
@@ -21,6 +23,25 @@ let BookmarkAnnos = {
   PARENT_ANNO:          "sync/parent",
   ORGANIZERQUERY_ANNO:  "PlacesOrganizer/OrganizerQuery",
 };
+
+// Accessing `PlacesUtils.bookmarks` initializes the bookmarks service, which,
+// in turn, initializes the database and upgrades the schema as a side effect.
+// This causes Sync unit tests that exercise older database formats to fail,
+// so we define this map as a lazy getter.
+XPCOMUtils.defineLazyGetter(this, "SpecialGUIDToPlacesGUID", () => {
+  return {
+    "menu": PlacesUtils.bookmarks.menuGuid,
+    "places": PlacesUtils.bookmarks.rootGuid,
+    "tags": PlacesUtils.bookmarks.tagsGuid,
+    "toolbar": PlacesUtils.bookmarks.toolbarGuid,
+    "unfiled": PlacesUtils.bookmarks.unfiledGuid,
+
+    get mobile() {
+      let mobileRootId = BookmarkSpecialIds.findMobileRoot(true);
+      return Async.promiseSpinningly(PlacesUtils.promiseItemGuid(mobileRootId));
+    },
+  };
+});
 
 let BookmarkSpecialIds = {
 
@@ -71,6 +92,10 @@ let BookmarkSpecialIds = {
       if (this.specialIdForGUID(guid, false) == id)
         return guid;
     return null;
+  },
+
+  syncIDToPlacesGUID(g) {
+    return g in SpecialGUIDToPlacesGUID ? SpecialGUIDToPlacesGUID[g] : g;
   },
 
   get menu() {

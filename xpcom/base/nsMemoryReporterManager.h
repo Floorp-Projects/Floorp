@@ -183,9 +183,12 @@ public:
   SizeOfTabFns mSizeOfTabFns;
 
 private:
-  nsresult RegisterReporterHelper(nsIMemoryReporter* aReporter,
-                                  bool aForce, bool aStrongRef, bool aIsAsync);
-  nsresult StartGettingReports();
+  MOZ_MUST_USE nsresult
+  RegisterReporterHelper(nsIMemoryReporter* aReporter,
+                         bool aForce, bool aStrongRef, bool aIsAsync);
+
+  MOZ_MUST_USE nsresult StartGettingReports();
+  // No MOZ_MUST_USE here because ignoring the result is common and reasonable.
   nsresult FinishReporting();
 
   void DispatchReporter(nsIMemoryReporter* aReporter, bool aIsAsync,
@@ -273,8 +276,9 @@ private:
   PendingReportersState* mPendingReportersState;
 
   PendingProcessesState* GetStateForGeneration(uint32_t aGeneration);
-  static bool StartChildReport(mozilla::dom::ContentParent* aChild,
-                               const PendingProcessesState* aState);
+  static MOZ_MUST_USE bool
+  StartChildReport(mozilla::dom::ContentParent* aChild,
+                   const PendingProcessesState* aState);
 };
 
 #define NS_MEMORY_REPORTER_MANAGER_CID \

@@ -777,6 +777,18 @@ TCPSocket::MaybeReportErrorAndCloseIfOpen(nsresult status) {
 void
 TCPSocket::Close()
 {
+  CloseHelper(true);
+}
+
+void
+TCPSocket::CloseImmediately()
+{
+  CloseHelper(false);
+}
+
+void
+TCPSocket::CloseHelper(bool waitForUnsentData)
+{
   if (mReadyState == TCPReadyState::Closed || mReadyState == TCPReadyState::Closing) {
     return;
   }
@@ -792,12 +804,13 @@ TCPSocket::Close()
   if (mMultiplexStream) {
     mMultiplexStream->GetCount(&count);
   }
-  if (!count) {
+  if (!count || !waitForUnsentData) {
     if (mSocketOutputStream) {
       mSocketOutputStream->Close();
       mSocketOutputStream = nullptr;
     }
   }
+
   if (mSocketInputStream) {
     mSocketInputStream->Close();
     mSocketInputStream = nullptr;

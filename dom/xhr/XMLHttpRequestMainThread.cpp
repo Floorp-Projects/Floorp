@@ -2460,7 +2460,7 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant)
     }
 
     // ArrayBuffer?
-    JSContext* rootingCx = nsContentUtils::RootingCx();
+    JS::RootingContext* rootingCx = RootingCx();
     JS::Rooted<JS::Value> realVal(rootingCx);
 
     nsresult rv = aVariant->GetAsJSVal(&realVal);
@@ -2788,7 +2788,7 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
     for (RequestHeader& header : mAuthorRequestHeaders) {
       bool safe = false;
       for (uint32_t i = 0; i < ArrayLength(kCrossOriginSafeHeaders); ++i) {
-        if (header.name.EqualsASCII(kCrossOriginSafeHeaders[i])) {
+        if (header.name.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
           safe = true;
           break;
         }
@@ -2963,13 +2963,14 @@ XMLHttpRequestMainThread::SetRequestHeader(const nsACString& aName,
   }
 
   // Step 6.1
-  nsAutoCString lowercaseName;
-  nsContentUtils::ASCIIToLower(aName, lowercaseName);
+  // Skipping for now, as normalizing the case of header names may not be
+  // web-compatible. See bug 1285036.
 
   // Step 6.2
   bool notAlreadySet = true;
+  const nsCaseInsensitiveCStringComparator ignoreCase;
   for (RequestHeader& header : mAuthorRequestHeaders) {
-    if (header.name.Equals(lowercaseName)) {
+    if (header.name.Equals(aName, ignoreCase)) {
       // Gecko-specific: invalid headers can be set by privileged
       //                 callers, but will not merge.
       if (isPrivilegedCaller && isForbiddenHeader) {
@@ -2986,7 +2987,7 @@ XMLHttpRequestMainThread::SetRequestHeader(const nsACString& aName,
   // Step 6.3
   if (notAlreadySet) {
     RequestHeader newHeader = {
-      nsCString(lowercaseName), nsCString(value)
+      nsCString(aName), nsCString(value)
     };
     mAuthorRequestHeaders.AppendElement(newHeader);
   }
@@ -3234,7 +3235,7 @@ XMLHttpRequestMainThread::GetAuthorRequestHeaderValue(const char* aName,
                                                       nsACString& outValue)
 {
   for (RequestHeader& header : mAuthorRequestHeaders) {
-    if (header.name.Equals(aName)) {
+    if (header.name.EqualsIgnoreCase(aName)) {
       outValue.Assign(header.value);
       return;
     }

@@ -442,7 +442,7 @@ public:
   {
     MOZ_ASSERT(mManager);
   }
-  NS_METHOD Run() override
+  NS_IMETHOD Run() override
   {
     mManager->OnConnect(EmptyString());
     return NS_OK;
@@ -475,7 +475,7 @@ public:
   {
     MOZ_ASSERT(mManager);
   }
-  NS_METHOD Run() override
+  NS_IMETHOD Run() override
   {
     mManager->OnDisconnect(EmptyString());
     return NS_OK;

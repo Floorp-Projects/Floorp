@@ -130,7 +130,7 @@ class Logging;
 class JavaScriptShared : public CPOWManager
 {
   public:
-    explicit JavaScriptShared(JSRuntime* rt);
+    JavaScriptShared();
     virtual ~JavaScriptShared();
 
     bool init();
@@ -183,7 +183,6 @@ class JavaScriptShared : public CPOWManager
     virtual JSObject* scopeForTargetObjects() = 0;
 
   protected:
-    JSRuntime* rt_;
     uintptr_t refcount_;
 
     IdToObjectMap objects_;

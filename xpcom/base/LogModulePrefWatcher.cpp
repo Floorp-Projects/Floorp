@@ -51,10 +51,14 @@ LoadPrefValue(const char* aName)
 void
 LoadExistingPrefs()
 {
+  nsIPrefBranch* root = Preferences::GetRootBranch();
+  if (!root) {
+    return;
+  }
+
   uint32_t count;
   char** names;
-  nsresult rv = Preferences::GetRootBranch()->
-      GetChildList(kLoggingPrefPrefix, &count, &names);
+  nsresult rv = root->GetChildList(kLoggingPrefPrefix, &count, &names);
   if (NS_SUCCEEDED(rv) && count) {
     for (size_t i = 0; i < count; i++) {
       LoadPrefValue(names[i]);

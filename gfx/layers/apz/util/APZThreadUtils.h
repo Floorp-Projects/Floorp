@@ -78,7 +78,7 @@ class GenericTimerCallback final : public GenericTimerCallbackBase
 public:
   explicit GenericTimerCallback(const Function& aFunction) : mFunction(aFunction) {}
 
-  NS_IMETHODIMP Notify(nsITimer*) override
+  NS_IMETHOD Notify(nsITimer*) override
   {
     mFunction();
     return NS_OK;

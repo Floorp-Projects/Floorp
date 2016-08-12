@@ -129,10 +129,8 @@ CreateGlobalAndRunTest(JSContext* cx)
 TEST(GCPostBarriers, nsTArray) {
   CycleCollectedJSRuntime* ccrt = CycleCollectedJSRuntime::Get();
   ASSERT_TRUE(ccrt != nullptr);
-  JSRuntime* rt = ccrt->Runtime();
-  ASSERT_TRUE(rt != nullptr);
-
-  JSContext* cx = JS_GetContext(rt);
+  JSContext* cx = ccrt->Context();
+  ASSERT_TRUE(cx != nullptr);
 
   JS_BeginRequest(cx);
 

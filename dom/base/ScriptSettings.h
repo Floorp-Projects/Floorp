@@ -136,7 +136,7 @@ JSContext* GetJSContext();
 
 } // namespace danger
 
-JSRuntime* GetJSRuntime();
+JS::RootingContext* RootingCx();
 
 class ScriptSettingsStack;
 class ScriptSettingsStackEntry {

@@ -62,6 +62,11 @@ add_task(function* test_backButton_forwardButton() {
                                          "formless_basic.html?second");
     yield fillTestPage(aBrowser);
 
+    let forwardButton = document.getElementById("forward-button");
+    // We need to wait for the forward button transition to complete before we
+    // can click it, so we hook up a listener to wait for it to be ready.
+    let forwardTransitionPromise = BrowserTestUtils.waitForEvent(forwardButton, "transitionend");
+
     let backPromise = BrowserTestUtils.browserStopped(aBrowser);
     EventUtils.synthesizeMouseAtCenter(document.getElementById("back-button"), {});
     yield backPromise;
@@ -73,8 +78,7 @@ add_task(function* test_backButton_forwardButton() {
     // Now go forward again after filling
     yield fillTestPage(aBrowser);
 
-    let forwardButton = document.getElementById("forward-button");
-    yield BrowserTestUtils.waitForEvent(forwardButton, "transitionend");
+    yield forwardTransitionPromise;
     info("transition done");
     yield BrowserTestUtils.waitForCondition(() => {
       return forwardButton.disabled == false;

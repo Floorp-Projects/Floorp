@@ -29,7 +29,6 @@ using namespace testing;
 // GTest fixture class that all of our tests derive from.
 struct DevTools : public ::testing::Test {
   bool                       _initialized;
-  JSRuntime*                 rt;
   JSContext*                 cx;
   JSCompartment*             compartment;
   JS::Zone*                  zone;
@@ -37,23 +36,19 @@ struct DevTools : public ::testing::Test {
 
   DevTools()
     : _initialized(false),
-      rt(nullptr),
       cx(nullptr)
   { }
 
   virtual void SetUp() {
     MOZ_ASSERT(!_initialized);
 
-    rt = getRuntime();
-    if (!rt)
+    cx = getContext();
+    if (!cx)
       return;
-
-    MOZ_RELEASE_ASSERT(!cx);
-    cx = JS_GetContext(rt);
 
     JS_BeginRequest(cx);
 
-    global.init(rt, createGlobal());
+    global.init(cx, createGlobal());
     if (!global)
       return;
     JS_EnterCompartment(cx, global);
@@ -64,8 +59,8 @@ struct DevTools : public ::testing::Test {
     _initialized = true;
   }
 
-  JSRuntime* getRuntime() {
-    return CycleCollectedJSRuntime::Get()->Runtime();
+  JSContext* getContext() {
+    return CycleCollectedJSRuntime::Get()->Context();
   }
 
   static void reportError(JSContext* cx, const char* message, JSErrorReport* report) {

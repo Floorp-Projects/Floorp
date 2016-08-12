@@ -765,25 +765,17 @@ ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdV
         return props.appendAll(trapResult);
 
     // Step 16.
+    // The algorithm below always removes all occurences of the same key
+    // at once, so we can use a set here.
     Rooted<GCHashSet<jsid>> uncheckedResultKeys(cx, GCHashSet<jsid>(cx));
     if (!uncheckedResultKeys.init(trapResult.length()))
         return false;
 
-    bool foundDuplicate = false;
     for (size_t i = 0, len = trapResult.length(); i < len; i++) {
         MOZ_ASSERT(!JSID_IS_VOID(trapResult[i]));
 
-        // This dup-checking (and complaining only if we reach the end of the
-        // overall algorithm, but not if we exit early without erroring) is
-        // dumb, but it's ECMA state of the art right now.  This should be
-        // fixed in <https://github.com/tc39/ecma262/issues/461>.
-        auto ptr = uncheckedResultKeys.lookupForAdd(trapResult[i]);
-        if (!ptr) {
-            if (!uncheckedResultKeys.add(ptr, trapResult[i]))
-                return false;
-        } else {
-            foundDuplicate = true;
-        }
+        if (!uncheckedResultKeys.put(trapResult[i]))
+            return false;
     }
 
     // Step 17.
@@ -823,7 +815,7 @@ ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdV
     }
 
     // Step 20.
-    if (!uncheckedResultKeys.empty() || foundDuplicate) {
+    if (!uncheckedResultKeys.empty()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NEW);
         return false;
     }

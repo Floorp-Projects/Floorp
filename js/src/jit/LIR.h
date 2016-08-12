@@ -807,6 +807,7 @@ class LInstruction
     LSafepoint* safepoint_;
 
     LMoveGroup* inputMoves_;
+    LMoveGroup* fixReuseMoves_;
     LMoveGroup* movesAfter_;
 
   protected:
@@ -814,6 +815,7 @@ class LInstruction
       : snapshot_(nullptr),
         safepoint_(nullptr),
         inputMoves_(nullptr),
+        fixReuseMoves_(nullptr),
         movesAfter_(nullptr)
     { }
 
@@ -829,6 +831,12 @@ class LInstruction
     }
     void setInputMoves(LMoveGroup* moves) {
         inputMoves_ = moves;
+    }
+    LMoveGroup* fixReuseMoves() const {
+        return fixReuseMoves_;
+    }
+    void setFixReuseMoves(LMoveGroup* moves) {
+        fixReuseMoves_ = moves;
     }
     LMoveGroup* movesAfter() const {
         return movesAfter_;

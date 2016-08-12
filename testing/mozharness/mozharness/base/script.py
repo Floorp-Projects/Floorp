@@ -15,8 +15,11 @@ import codecs
 from contextlib import contextmanager
 import datetime
 import errno
+import fnmatch
+import functools
 import gzip
 import inspect
+import itertools
 import os
 import platform
 import pprint
@@ -25,9 +28,11 @@ import shutil
 import socket
 import subprocess
 import sys
+import tarfile
 import time
 import traceback
 import urllib2
+import zipfile
 import httplib
 import urlparse
 import hashlib
@@ -47,9 +52,9 @@ except ImportError:
 
 from mozprocess import ProcessHandler
 from mozharness.base.config import BaseConfig
-from mozharness.base.errors import ZipErrorList
 from mozharness.base.log import SimpleFileLogger, MultiFileLogger, \
     LogMixin, OutputParser, DEBUG, INFO, ERROR, FATAL
+
 
 def platform_name():
     pm = PlatformMixin()
@@ -453,39 +458,28 @@ class ScriptMixin(PlatformMixin):
             **retry_args
         )
 
-    def download_unzip(self, url, parent_dir, target_unzip_dirs=None, halt_on_failure=True):
-        """Generic method to download and extract a zip file.
+    def download_unpack(self, url, extract_to, extract_dirs=None,
+                        error_level=FATAL):
+        """Generic method to download and extract a compressed file.
 
         The downloaded file will always be saved to the working directory and is not getting
         deleted after extracting.
 
         Args:
             url (str): URL where the file to be downloaded is located.
-            parent_dir (str): directory where the downloaded file will
+            extract_to (str): directory where the downloaded file will
                               be extracted to.
-            target_unzip_dirs (list, optional): directories inside the zip file to extract.
-                                                Defaults to `None`.
-            halt_on_failure (bool, optional): whether or not to redefine the
-                                              log level as `FATAL` on errors. Defaults to True.
+            extract_dirs (list, optional): directories inside the archive to extract.
+                                           Defaults to `None`.
+            error_level (str, optional): log level to use in case an error occurs.
+                                         Defaults to `FATAL`.
 
         """
         dirs = self.query_abs_dirs()
-        zipfile = self.download_file(url, parent_dir=dirs['abs_work_dir'],
-                                     error_level=FATAL)
-
-        command = self.query_exe('unzip', return_type='list')
-        # Always overwrite to not get an input in a hidden pipe if files already exist
-        command.extend(['-q', '-o', zipfile, '-d', parent_dir])
-        if target_unzip_dirs:
-            command.extend(target_unzip_dirs)
-        # TODO error_list: http://www.info-zip.org/mans/unzip.html#DIAGNOSTICS
-        # unzip return code 11 is 'no matching files were found'
-        self.run_command(command,
-                         error_list=ZipErrorList,
-                         halt_on_failure=halt_on_failure,
-                         fatal_exit_code=3,
-                         success_codes=[0, 11],
-                         )
+        archive = self.download_file(url, parent_dir=dirs['abs_work_dir'],
+                                     error_level=error_level)
+        self.unpack(archive, extract_to, extract_dirs=extract_dirs,
+                    error_level=error_level)
 
     def load_json_url(self, url, error_level=None, *args, **kwargs):
         """ Returns a json object from a url (it retries). """
@@ -1105,7 +1099,7 @@ class ScriptMixin(PlatformMixin):
             output_timeout (int): amount of seconds to wait for output before
               the process is killed.
             fatal_exit_code (int, optional): call `self.fatal` if the return value
-              of the command is not on in `success_codes`. Defaults to 2.
+              of the command is not in `success_codes`. Defaults to 2.
             error_level (str, optional): log level name to use on error. Defaults
               to `ERROR`.
             **kwargs: Arbitrary keyword arguments.
@@ -1397,26 +1391,69 @@ class ScriptMixin(PlatformMixin):
                 self.log(msg, error_level=error_level)
         os.utime(file_name, times)
 
-    def unpack(self, filename, extract_to):
-        '''
-        This method allows us to extract a file regardless of its extension
+    def unpack(self, filename, extract_to, extract_dirs=None,
+               error_level=ERROR, fatal_exit_code=2, verbose=False):
+        """The method allows to extract a file regardless of its extension.
 
         Args:
             filename (str): filename of the compressed file.
             extract_to (str): where to extract the compressed file.
-        '''
-        # XXX: Make sure that filename has a extension of one of our supported file formats
-        m = re.search('\.tar\.(bz2|gz)$', filename)
-        if m:
-            command = self.query_exe('tar', return_type='list')
-            tar_cmd = "jxfv"
-            if m.group(1) == "gz":
-                tar_cmd = "zxfv"
-            command.extend([tar_cmd, filename, "-C", extract_to])
-            self.run_command(command, halt_on_failure=True)
+            extract_dirs (list, optional): directories inside the archive file to extract.
+                                           Defaults to `None`.
+            fatal_exit_code (int, optional): call `self.fatal` if the return value
+              of the command is not in `success_codes`. Defaults to 2.
+            verbose (bool, optional): whether or not extracted content should be displayed.
+                                      Defaults to False.
+
+        Raises:
+            IOError: on `filename` file not found.
+
+        """
+        def _filter_entries(namelist):
+            """Filter entries of the archive based on the specified list of to extract dirs."""
+            filter_partial = functools.partial(fnmatch.filter, namelist)
+            for entry in itertools.chain(*map(filter_partial, extract_dirs or ['*'])):
+                yield entry
+
+        if not os.path.isfile(filename):
+            raise IOError('Could not find file to extract: %s' % filename)
+
+        if zipfile.is_zipfile(filename):
+            try:
+                self.info('Using ZipFile to extract {} to {}'.format(filename, extract_to))
+                with zipfile.ZipFile(filename) as bundle:
+                    for entry in _filter_entries(bundle.namelist()):
+                        if verbose:
+                            self.info(' %s' % entry)
+                        bundle.extract(entry, path=extract_to)
+
+                        # ZipFile doesn't preserve permissions during extraction:
+                        # http://bugs.python.org/issue15795
+                        fname = os.path.realpath(os.path.join(extract_to, entry))
+                        mode = bundle.getinfo(entry).external_attr >> 16 & 0x1FF
+                        # Only set permissions if attributes are available. Otherwise all
+                        # permissions will be removed eg. on Windows.
+                        if mode:
+                            os.chmod(fname, mode)
+            except zipfile.BadZipfile as e:
+                self.log('%s (%s)' % (e.message, filename),
+                         level=error_level, exit_code=fatal_exit_code)
+
+        # Bug 1211882 - is_tarfile cannot be trusted for dmg files
+        elif tarfile.is_tarfile(filename) and not filename.lower().endswith('.dmg'):
+            try:
+                self.info('Using TarFile to extract {} to {}'.format(filename, extract_to))
+                with tarfile.open(filename) as bundle:
+                    for entry in _filter_entries(bundle.getnames()):
+                        if verbose:
+                            self.info(' %s' % entry)
+                        bundle.extract(entry, path=extract_to)
+            except tarfile.TarError as e:
+                self.log('%s (%s)' % (e.message, filename),
+                         level=error_level, exit_code=fatal_exit_code)
         else:
-            # XXX implement
-            pass
+            self.log('No extraction method found for: %s' % filename,
+                     level=error_level, exit_code=fatal_exit_code)
 
 
 def PreScriptRun(func):

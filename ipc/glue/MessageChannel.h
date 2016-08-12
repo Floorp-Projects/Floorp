@@ -15,7 +15,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Vector.h"
-#include "mozilla/WeakPtr.h"
 #if defined(OS_WIN)
 #include "mozilla/ipc/Neutering.h"
 #endif // defined(OS_WIN)
@@ -356,7 +355,7 @@ class MessageChannel : HasResultCodes
     }
 
     MessageListener *Listener() const {
-        return mListener.get();
+        return mListener;
     }
 
     void DebugAbort(const char* file, int line, const char* cond,
@@ -576,7 +575,9 @@ class MessageChannel : HasResultCodes
     };
 
   private:
-    mozilla::WeakPtr<MessageListener> mListener;
+    // Based on presumption the listener owns and overlives the channel,
+    // this is never nullified.
+    MessageListener* mListener;
     ChannelState mChannelState;
     RefPtr<RefCountedMonitor> mMonitor;
     Side mSide;

@@ -38,23 +38,25 @@ Kernel = EnumString.subclass(
     'WINNT',
 )
 
-CPU = EnumString.subclass(
-    'aarch64',
-    'Alpha',
-    'arm',
-    'hppa',
-    'ia64',
-    'mips32',
-    'mips64',
-    'ppc',
-    'ppc64',
-    's390',
-    's390x',
-    'sparc',
-    'sparc64',
-    'x86',
-    'x86_64',
-)
+CPU_bitness = {
+    'aarch64': 64,
+    'Alpha': 32,
+    'arm': 32,
+    'hppa': 32,
+    'ia64': 64,
+    'mips32': 32,
+    'mips64': 64,
+    'ppc': 32,
+    'ppc64': 64,
+    's390': 32,
+    's390x': 64,
+    'sparc': 32,
+    'sparc64': 64,
+    'x86': 32,
+    'x86_64': 64,
+}
+
+CPU = EnumString.subclass(*CPU_bitness.keys())
 
 Endianness = EnumString.subclass(
     'big',

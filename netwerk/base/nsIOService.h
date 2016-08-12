@@ -216,13 +216,13 @@ public:
     {
     }
 
-    NS_IMETHODIMP GetMode(int32_t *aMode) override
+    NS_IMETHOD GetMode(int32_t *aMode) override
     {
         *aMode = mMode;
         return NS_OK;
     }
 
-    NS_IMETHODIMP GetAppId(uint32_t *aAppId) override
+    NS_IMETHOD GetAppId(uint32_t *aAppId) override
     {
         *aAppId = mAppId;
         return NS_OK;
