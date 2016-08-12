@@ -318,18 +318,18 @@ protected:
     // this struct shouldn't be used before calling
     // ContentEventHandler::Init().
     nsIFrame* mFrame;
-    // Start offset in the node of mFrame
-    int32_t mStartOffsetInNode;
+    // offset in the node of mFrame
+    int32_t mOffsetInNode;
 
     FrameAndNodeOffset()
       : mFrame(nullptr)
-      , mStartOffsetInNode(-1)
+      , mOffsetInNode(-1)
     {
     }
 
     FrameAndNodeOffset(nsIFrame* aFrame, int32_t aStartOffsetInNode)
       : mFrame(aFrame)
-      , mStartOffsetInNode(aStartOffsetInNode)
+      , mOffsetInNode(aStartOffsetInNode)
     {
     }
 
@@ -337,12 +337,17 @@ protected:
     const nsIFrame* operator->() const { return mFrame; }
     operator nsIFrame*() { return mFrame; }
     operator const nsIFrame*() const { return mFrame; }
-    bool IsValid() const { return mFrame && mStartOffsetInNode >= 0; }
+    bool IsValid() const { return mFrame && mOffsetInNode >= 0; }
   };
   // Get first frame after the start of the given range for computing text rect.
   // This returns invalid FrameAndNodeOffset if there is no content which
-  // causes text after the start of the range.
+  // causes text in the range.  mOffsetInNode is start offset in the frame.
   FrameAndNodeOffset GetFirstFrameHavingFlatTextInRange(nsRange* aRange);
+
+  // Get last frame before the end of the given range for computing text rect.
+  // This returns invalid FrameAndNodeOffset if there is no content which
+  // causes text in the range.  mOffsetInNode is end offset in the frame.
+  FrameAndNodeOffset GetLastFrameHavingFlatTextInRange(nsRange* aRange);
 
   struct MOZ_STACK_CLASS FrameRelativeRect final
   {
