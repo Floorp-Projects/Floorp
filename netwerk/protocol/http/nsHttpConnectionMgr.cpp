@@ -414,10 +414,7 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
     nsCOMPtr<nsISpeculativeConnectionOverrider> overrider =
         do_GetInterface(callbacks);
 
-    bool allow1918 = false;
-    if (overrider) {
-        overrider->GetAllow1918(&allow1918);
-    }
+    bool allow1918 = overrider ? overrider->GetAllow1918() : false;
 
     // Hosts that are Local IP Literals should not be speculatively
     // connected - Bug 853423.
@@ -440,11 +437,11 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
 
     if (overrider) {
         args->mOverridesOK = true;
-        overrider->GetParallelSpeculativeConnectLimit(
-            &args->mParallelSpeculativeConnectLimit);
-        overrider->GetIgnoreIdle(&args->mIgnoreIdle);
-        overrider->GetIsFromPredictor(&args->mIsFromPredictor);
-        overrider->GetAllow1918(&args->mAllow1918);
+        args->mParallelSpeculativeConnectLimit =
+            overrider->GetParallelSpeculativeConnectLimit();
+        args->mIgnoreIdle = overrider->GetIgnoreIdle();
+        args->mIsFromPredictor = overrider->GetIsFromPredictor();
+        args->mAllow1918 = overrider->GetAllow1918();
     }
 
     return PostEvent(&nsHttpConnectionMgr::OnMsgSpeculativeConnect, 0, args);
