@@ -75,28 +75,28 @@ public:
   std::string name;
   std::vector<std::string> candidates;
 
-  virtual NS_IMETHODIMP OnCreateOfferSuccess(const char* offer, ER&) = 0;
-  virtual NS_IMETHODIMP OnCreateOfferError(uint32_t code, const char *msg, ER&) = 0;
-  virtual NS_IMETHODIMP OnCreateAnswerSuccess(const char* answer, ER&) = 0;
-  virtual NS_IMETHODIMP OnCreateAnswerError(uint32_t code, const char *msg, ER&) = 0;
-  virtual NS_IMETHODIMP OnSetLocalDescriptionSuccess(ER&) = 0;
-  virtual NS_IMETHODIMP OnSetRemoteDescriptionSuccess(ER&) = 0;
-  virtual NS_IMETHODIMP OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&) = 0;
-  virtual NS_IMETHODIMP OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&) = 0;
-  virtual NS_IMETHODIMP NotifyDataChannel(nsIDOMDataChannel *channel, ER&) = 0;
-  virtual NS_IMETHODIMP OnStateChange(mozilla::dom::PCObserverStateType state_type, ER&,
+  NS_IMETHOD OnCreateOfferSuccess(const char* offer, ER&) = 0;
+  NS_IMETHOD OnCreateOfferError(uint32_t code, const char *msg, ER&) = 0;
+  NS_IMETHOD OnCreateAnswerSuccess(const char* answer, ER&) = 0;
+  NS_IMETHOD OnCreateAnswerError(uint32_t code, const char *msg, ER&) = 0;
+  NS_IMETHOD OnSetLocalDescriptionSuccess(ER&) = 0;
+  NS_IMETHOD OnSetRemoteDescriptionSuccess(ER&) = 0;
+  NS_IMETHOD OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&) = 0;
+  NS_IMETHOD OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&) = 0;
+  NS_IMETHOD NotifyDataChannel(nsIDOMDataChannel *channel, ER&) = 0;
+  NS_IMETHOD OnStateChange(mozilla::dom::PCObserverStateType state_type, ER&,
                                       void* = nullptr) = 0;
-  virtual NS_IMETHODIMP OnAddStream(mozilla::DOMMediaStream &stream, ER&) = 0;
-  virtual NS_IMETHODIMP OnRemoveStream(mozilla::DOMMediaStream &stream, ER&) = 0;
-  virtual NS_IMETHODIMP OnAddTrack(mozilla::dom::MediaStreamTrack &track, ER&) = 0;
-  virtual NS_IMETHODIMP OnRemoveTrack(mozilla::dom::MediaStreamTrack &track, ER&) = 0;
-  virtual NS_IMETHODIMP OnReplaceTrackSuccess(ER&) = 0;
-  virtual NS_IMETHODIMP OnReplaceTrackError(uint32_t code, const char *msg, ER&) = 0;
-  virtual NS_IMETHODIMP OnAddIceCandidateSuccess(ER&) = 0;
-  virtual NS_IMETHODIMP OnAddIceCandidateError(uint32_t code, const char *msg, ER&) = 0;
-  virtual NS_IMETHODIMP OnIceCandidate(uint16_t level, const char *mid,
+  NS_IMETHOD OnAddStream(mozilla::DOMMediaStream &stream, ER&) = 0;
+  NS_IMETHOD OnRemoveStream(mozilla::DOMMediaStream &stream, ER&) = 0;
+  NS_IMETHOD OnAddTrack(mozilla::dom::MediaStreamTrack &track, ER&) = 0;
+  NS_IMETHOD OnRemoveTrack(mozilla::dom::MediaStreamTrack &track, ER&) = 0;
+  NS_IMETHOD OnReplaceTrackSuccess(ER&) = 0;
+  NS_IMETHOD OnReplaceTrackError(uint32_t code, const char *msg, ER&) = 0;
+  NS_IMETHOD OnAddIceCandidateSuccess(ER&) = 0;
+  NS_IMETHOD OnAddIceCandidateError(uint32_t code, const char *msg, ER&) = 0;
+  NS_IMETHOD OnIceCandidate(uint16_t level, const char *mid,
                                        const char *candidate, ER&) = 0;
-  virtual NS_IMETHODIMP OnNegotiationNeeded(ER&) = 0;
+  NS_IMETHOD OnNegotiationNeeded(ER&) = 0;
 protected:
   mozilla::PeerConnectionImpl *pc;
   std::vector<mozilla::DOMMediaStream *> streams;

@@ -371,7 +371,7 @@ public:
   }
 
 private:
-  NS_IMETHODIMP
+  NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
@@ -396,7 +396,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  NS_IMETHODIMP
+  NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
@@ -422,7 +422,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  NS_IMETHODIMP
+  NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
@@ -449,7 +449,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  NS_IMETHODIMP
+  NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
@@ -999,7 +999,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // duplicating the call in XPCJSRuntime::~XPCJSRuntime() in case that
   // never fired.
   if (PseudoStack* stack = mozilla_get_pseudo_stack()) {
-    stack->sampleRuntime(nullptr);
+    stack->sampleContext(nullptr);
   }
 #endif
 

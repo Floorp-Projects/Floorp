@@ -144,7 +144,7 @@
 .panel-subviews {
   padding: 4px;
   background-clip: padding-box;
-  border-left: 1px solid hsla(210,4%,10%,.3);
+  border-left: 1px solid var(--panel-separator-color);
   box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
               0 0 7px hsla(210,4%,10%,.1);
   margin-inline-start: var(--panel-ui-exit-subview-gutter-width);
@@ -186,7 +186,7 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
 
 .panel-subview-header {
   margin: -4px -4px 4px;
-  box-shadow: 0 -1px 0 hsla(210,4%,10%,.05) inset;
+  border-bottom: 1px solid var(--panel-separator-color);
   color: GrayText;
   font-variant: small-caps;
 }
@@ -577,7 +577,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-footer-inner,
 #PanelUI-footer-fxa:not([hidden]) {
   display: flex;
-  border-top: 1px solid hsla(210,4%,10%,.14);
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 #PanelUI-multiView[viewtype="subview"] #PanelUI-footer-inner,
@@ -588,7 +588,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-footer-inner > toolbarseparator,
 #PanelUI-footer-fxa > toolbarseparator {
   border: 0;
-  border-left: 1px solid hsla(210,4%,10%,.14);
+  border-left: 1px solid var(--panel-separator-color);
   margin: 7px 0 7px;
   -moz-appearance: none;
 }
@@ -617,7 +617,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-update-status {
-  border-top: 1px solid hsla(210,4%,10%,.14);
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 #PanelUI-update-status {
@@ -1099,27 +1099,25 @@ menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
   background-color: hsla(210,4%,10%,.12);
-  border-color: hsla(210,4%,10%,.14);
+  border-color: var(--panel-separator-color);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
 .subviewbutton.panel-subview-footer {
   margin: 4px -4px -4px;
   background-color: hsla(210,4%,10%,.07);
-  border-top: 1px solid hsla(210,4%,10%,.12);
+  border-top: 1px solid var(--panel-separator-color);
   border-radius: 0;
 }
 
 menuitem.panel-subview-footer@menuStateHover@,
 .subviewbutton.panel-subview-footer@buttonStateHover@ {
   background-color: hsla(210,4%,10%,.15);
-  border-top: 1px solid hsla(210,4%,10%,.14);
 }
 
 menuitem.panel-subview-footer@menuStateActive@,
 .subviewbutton.panel-subview-footer@buttonStateActive@ {
   background-color: hsla(210,4%,10%,.19);
-  border-top: 1px solid hsla(210,4%,10%,.14);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
@@ -1522,23 +1520,21 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   -moz-box-align: center;
   padding: 1px;
   margin: 0 0 2px;
-  background-color: hsla(210,4%,10%,0);
+  background-color: transparent;
   border-radius: 2px;
-  border-width: 1px;
-  border-style: solid;
-  border-color: hsla(210,4%,10%,0);
+  border: 1px solid transparent;
 }
 
 .subviewradio@buttonStateHover@ {
   background-color: hsla(210,4%,10%,.08);
-  border-color: hsla(210,4%,10%,.11);
+  border-color: var(--panel-separator-color);
 }
 
 .subviewradio[selected],
 .subviewradio[selected]:hover,
 .subviewradio@buttonStateActive@ {
   background-color: hsla(210,4%,10%,.12);
-  border-color: hsla(210,4%,10%,.14);
+  border-color: var(--panel-separator-color);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 

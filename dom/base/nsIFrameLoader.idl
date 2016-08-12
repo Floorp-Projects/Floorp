@@ -256,7 +256,7 @@ interface nsIFrameLoaderOwner : nsISupports
   /**
    * The frame loader owned by this nsIFrameLoaderOwner
    */
-  readonly attribute nsIFrameLoader frameLoader;
+  [binaryname(FrameLoaderXPCOM)] readonly attribute nsIFrameLoader frameLoader;
   [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
 
   /**

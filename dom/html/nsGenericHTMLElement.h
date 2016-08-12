@@ -73,7 +73,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::title, aTitle);
   }
-  NS_IMETHODIMP SetTitle(const nsAString& aTitle) override
+  NS_IMETHOD SetTitle(const nsAString& aTitle) override
   {
     SetHTMLAttr(nsGkAtoms::title, aTitle);
     return NS_OK;
@@ -82,7 +82,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::lang, aLang);
   }
-  NS_IMETHODIMP SetLang(const nsAString& aLang) override
+  NS_IMETHOD SetLang(const nsAString& aLang) override
   {
     SetHTMLAttr(nsGkAtoms::lang, aLang);
     return NS_OK;
@@ -95,7 +95,6 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::dir, aDir, aError);
   }
-  already_AddRefed<nsDOMStringMap> Dataset();
   bool Hidden() const
   {
     return GetBoolAttr(nsGkAtoms::hidden);
@@ -279,8 +278,6 @@ public:
   virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() override;
   virtual bool UndoScope() override;
   virtual void SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError) override;
-  // Callback for destructor of of dataset to ensure to null out weak pointer.
-  nsresult ClearDataset();
 
   /**
    * Get width and height, using given image request if attributes are unset.

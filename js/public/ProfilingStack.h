@@ -188,17 +188,17 @@ class ProfileEntry
 };
 
 JS_FRIEND_API(void)
-SetRuntimeProfilingStack(JSRuntime* rt, ProfileEntry* stack, uint32_t* size,
+SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, uint32_t* size,
                          uint32_t max);
 
 JS_FRIEND_API(void)
-EnableRuntimeProfilingStack(JSRuntime* rt, bool enabled);
+EnableContextProfilingStack(JSContext* cx, bool enabled);
 
 JS_FRIEND_API(void)
-RegisterRuntimeProfilingEventMarker(JSRuntime* rt, void (*fn)(const char*));
+RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
 
 JS_FRIEND_API(jsbytecode*)
-ProfilingGetPC(JSRuntime* rt, JSScript* script, void* ip);
+ProfilingGetPC(JSContext* cx, JSScript* script, void* ip);
 
 } // namespace js
 

@@ -379,6 +379,13 @@ AssemblerMIPSShared::as_xori(Register rd, Register rs, int32_t j)
     return writeInst(InstImm(op_xori, rs, rd, Imm16(j)).encode());
 }
 
+BufferOffset
+AssemblerMIPSShared::as_lui(Register rd, int32_t j)
+{
+    MOZ_ASSERT(Imm16::IsInUnsignedRange(j));
+    return writeInst(InstImm(op_lui, zero, rd, Imm16(j)).encode());
+}
+
 // Branch and jump instructions
 BufferOffset
 AssemblerMIPSShared::as_bal(BOffImm16 off)
@@ -564,13 +571,6 @@ BufferOffset
 AssemblerMIPSShared::as_mul(Register rd, Register rs, Register rt)
 {
     return writeInst(InstReg(op_special2, rs, rt, rd, ff_mul).encode());
-}
-
-BufferOffset
-AssemblerMIPSShared::as_lui(Register rd, int32_t j)
-{
-    MOZ_ASSERT(Imm16::IsInUnsignedRange(j));
-    return writeInst(InstImm(op_lui, zero, rd, Imm16(j)).encode());
 }
 
 // Shift instructions

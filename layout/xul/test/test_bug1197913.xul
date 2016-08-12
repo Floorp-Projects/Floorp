@@ -17,14 +17,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1197913
      target="_blank">Mozilla Bug 1197913</a>
   </body>
 
-  <menulist>
-    <menupopup>
-      <menuitem label="Car" />
-      <menuitem label="Taxi" id="target" />
-      <menuitem label="Bus" />
-    </menupopup>
-  </menulist>
-
+  <hbox align="center" pack="center">
+    <menulist>
+      <menupopup>
+        <menuitem label="Car" />
+        <menuitem label="Taxi" id="target" />
+        <menuitem label="Bus" />
+      </menupopup>
+    </menulist>
+  </hbox>
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[

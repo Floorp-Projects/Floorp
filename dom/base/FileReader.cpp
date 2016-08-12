@@ -181,7 +181,7 @@ FileReader::GetResult(JSContext* aCx,
   }
 }
 
-static NS_IMETHODIMP
+static NS_METHOD
 ReadFuncBinaryString(nsIInputStream* in,
                      void* closure,
                      const char* fromRawSegment,

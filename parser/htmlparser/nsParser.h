@@ -248,7 +248,7 @@ class nsParser final : public nsIParser,
      *  @update  kmcclusk 5/18/98
      */
 
-    NS_IMETHODIMP CancelParsingEvents() override;
+    NS_IMETHOD CancelParsingEvents() override;
 
     /**
      * Return true.

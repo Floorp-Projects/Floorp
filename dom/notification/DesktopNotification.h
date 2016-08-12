@@ -151,7 +151,7 @@ class AlertServiceObserver: public nsIObserver
 
   void Disconnect() { mNotification = nullptr; }
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   Observe(nsISupports* aSubject,
           const char* aTopic,
           const char16_t* aData) override

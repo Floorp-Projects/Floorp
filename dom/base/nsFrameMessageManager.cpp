@@ -1711,8 +1711,8 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
     return;
   }
 
-  JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
-  JS::Rooted<JSScript*> script(rt);
+  JS::RootingContext* rcx = RootingCx();
+  JS::Rooted<JSScript*> script(rcx);
 
   nsMessageManagerScriptHolder* holder = sCachedScripts->Get(aURL);
   if (holder && holder->WillRunInGlobalScope() == aRunInGlobalScope) {
@@ -1725,7 +1725,7 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
                                  shouldCache, &script);
   }
 
-  JS::Rooted<JSObject*> global(rt, mGlobal->GetJSObject());
+  JS::Rooted<JSObject*> global(rcx, mGlobal->GetJSObject());
   if (global) {
     AutoEntryScript aes(global, "message manager script load");
     JSContext* cx = aes.cx();
@@ -1845,7 +1845,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   const nsAString& aURL,
   bool aRunInGlobalScope)
 {
-  JS::Rooted<JSScript*> script(nsContentUtils::RootingCx());
+  JS::Rooted<JSScript*> script(RootingCx());
   TryCacheLoadAndCompileScript(aURL, aRunInGlobalScope, true, &script);
 }
 
@@ -1914,8 +1914,9 @@ class nsAsyncMessageToSameProcessChild : public nsSameProcessAsyncMessageBase,
                                          public Runnable
 {
 public:
-  nsAsyncMessageToSameProcessChild(JSContext* aCx, JS::Handle<JSObject*> aCpows)
-    : nsSameProcessAsyncMessageBase(aCx, aCpows)
+  nsAsyncMessageToSameProcessChild(JS::RootingContext* aRootingCx,
+                                   JS::Handle<JSObject*> aCpows)
+    : nsSameProcessAsyncMessageBase(aRootingCx, aCpows)
   { }
   NS_IMETHOD Run() override
   {
@@ -1956,10 +1957,11 @@ public:
                                       JS::Handle<JSObject *> aCpows,
                                       nsIPrincipal* aPrincipal) override
   {
+    JS::RootingContext* rcx = JS::RootingContext::get(aCx);
     RefPtr<nsAsyncMessageToSameProcessChild> ev =
-      new nsAsyncMessageToSameProcessChild(aCx, aCpows);
+      new nsAsyncMessageToSameProcessChild(rcx, aCpows);
 
-    nsresult rv = ev->Init(aCx, aMessage, aData, aPrincipal);
+    nsresult rv = ev->Init(aMessage, aData, aPrincipal);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2073,8 +2075,9 @@ class nsAsyncMessageToSameProcessParent : public nsSameProcessAsyncMessageBase,
                                           public SameProcessMessageQueue::Runnable
 {
 public:
-  nsAsyncMessageToSameProcessParent(JSContext* aCx, JS::Handle<JSObject*> aCpows)
-    : nsSameProcessAsyncMessageBase(aCx, aCpows)
+  nsAsyncMessageToSameProcessParent(JS::RootingContext* aRootingCx,
+                                    JS::Handle<JSObject*> aCpows)
+    : nsSameProcessAsyncMessageBase(aRootingCx, aCpows)
   { }
   virtual nsresult HandleMessage() override
   {
@@ -2111,7 +2114,7 @@ public:
     queue->Flush();
 
     if (nsFrameMessageManager::sSameProcessParentManager) {
-      SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
+      SameProcessCpowHolder cpows(JS::RootingContext::get(aCx), aCpows);
       RefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr, aMessage,
                           true, &aData, &cpows, aPrincipal, aRetVal);
@@ -2126,9 +2129,10 @@ public:
                                   nsIPrincipal* aPrincipal) override
   {
     SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
+    JS::RootingContext* rcx = JS::RootingContext::get(aCx);
     RefPtr<nsAsyncMessageToSameProcessParent> ev =
-      new nsAsyncMessageToSameProcessParent(aCx, aCpows);
-    nsresult rv = ev->Init(aCx, aMessage, aData, aPrincipal);
+      new nsAsyncMessageToSameProcessParent(rcx, aCpows);
+    nsresult rv = ev->Init(aMessage, aData, aPrincipal);
 
     if (NS_FAILED(rv)) {
       return rv;
@@ -2226,15 +2230,18 @@ nsFrameMessageManager::MarkForCC()
   return true;
 }
 
-nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(JSContext* aCx, JS::Handle<JSObject*> aCpows)
-  : mRuntime(nullptr)
-  , mCpows(aCx, aCpows)
+nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(JS::RootingContext* aRootingCx,
+                                                             JS::Handle<JSObject*> aCpows)
+  : mRootingCx(aRootingCx)
+  , mCpows(aRootingCx, aCpows)
+#ifdef DEBUG
+  , mCalledInit(false)
+#endif
 { }
 
 
 nsresult
-nsSameProcessAsyncMessageBase::Init(JSContext* aCx,
-                                    const nsAString& aMessage,
+nsSameProcessAsyncMessageBase::Init(const nsAString& aMessage,
                                     StructuredCloneData& aData,
                                     nsIPrincipal* aPrincipal)
 {
@@ -2243,9 +2250,11 @@ nsSameProcessAsyncMessageBase::Init(JSContext* aCx,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mRuntime = js::GetRuntime(aCx);
   mMessage = aMessage;
   mPrincipal = aPrincipal;
+#ifdef DEBUG
+  mCalledInit = true;
+#endif
 
   return NS_OK;
 }
@@ -2256,9 +2265,9 @@ nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
                                               nsFrameMessageManager* aManager)
 {
   // Make sure that we have called Init() and it has succeeded.
-  MOZ_ASSERT(mRuntime);
+  MOZ_ASSERT(mCalledInit);
   if (aManager) {
-    SameProcessCpowHolder cpows(mRuntime, mCpows);
+    SameProcessCpowHolder cpows(mRootingCx, mCpows);
 
     RefPtr<nsFrameMessageManager> mm = aManager;
     mm->ReceiveMessage(aTarget, aTargetFrameLoader, mMessage, false, &mData,

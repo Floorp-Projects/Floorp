@@ -24,29 +24,33 @@ function runTests() {
   let runningTest = false;
   let iframe = document.getElementById("testFrame");
   let iframeWin = iframe.contentWindow;
-  let emptySearch = "";
-  let searchWithCoordinates;
+  let rect;
+  let x;
+  let y;
 
   window.addEventListener("message", event => {
     if (event.data == "started") {
       ok(!runningTest, "Start to test " + testIdx);
       runningTest = true;
-
-      let rect = iframeWin.document.getElementById("testImage").getBoundingClientRect();
-      let x = rect.left + rect.width / 2;
-      let y = rect.top + rect.height / 2;
-      searchWithCoordinates = "?" + rect.width / 2 + "," + rect.height / 2;
-      synthesizeMouseAtPoint(x, y, { type: 'mousedown' }, iframeWin);
-      synthesizeMouseAtPoint(x, y, { type: 'mouseup' }, iframeWin);
+      rect = iframeWin.document.getElementById("testImage").getBoundingClientRect();
+      x = rect.width / 2;
+      y = rect.height / 2;
+      synthesizeMouseAtPoint(rect.left + x, rect.top + y, { type: 'mousedown' }, iframeWin);
+      synthesizeMouseAtPoint(rect.left + x, rect.top + y, { type: 'mouseup' }, iframeWin);
     }
     else if (runningTest && event.data == "empty_frame_loaded") {
       ok(testUrls[testIdx].includes("noDefault=false"), "Page unload");
       let search = iframeWin.location.search;
-        
-      //url trigger by image with ismap attribute should contains coordinates
-      let expectSearch = testUrls[testIdx].includes("isMap=true") ?
-                         searchWithCoordinates : emptySearch;
-      ok(search == expectSearch, "expect:" + expectSearch + " got:" + search);
+      if (testUrls[testIdx].includes("isMap=true")) {
+        // url trigger by image with ismap attribute should contains coordinates
+        // try to parse coordinates and check them with small tolerance
+        let coorStr = search.split("?");
+        let coordinates = coorStr[1].split(",");
+        ok(Math.abs(coordinates[0] - x) <= 1, "expect X=" + x + " got " + coordinates[0]);
+        ok(Math.abs(coordinates[1] - y) <= 1, "expect Y=" + y + " got " + coordinates[1]);
+      } else {
+        ok(search == "", "expect empty search string got:" + search);
+      }
       nextTest();
     }
     else if (runningTest && event.data == "finished") {

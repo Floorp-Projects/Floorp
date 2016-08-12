@@ -36,7 +36,7 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
   queue->Flush();
 
   if (mChromeMessageManager) {
-    SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
+    SameProcessCpowHolder cpows(JS::RootingContext::get(aCx), aCpows);
     RefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
     nsCOMPtr<nsIFrameLoader> fl = GetFrameLoader();
     mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aPrincipal,
@@ -49,8 +49,10 @@ class nsAsyncMessageToParent : public nsSameProcessAsyncMessageBase,
                                public SameProcessMessageQueue::Runnable
 {
 public:
-  nsAsyncMessageToParent(JSContext* aCx, JS::Handle<JSObject*> aCpows, nsInProcessTabChildGlobal* aTabChild)
-    : nsSameProcessAsyncMessageBase(aCx, aCpows)
+  nsAsyncMessageToParent(JS::RootingContext* aRootingCx,
+                         JS::Handle<JSObject*> aCpows,
+                         nsInProcessTabChildGlobal* aTabChild)
+    : nsSameProcessAsyncMessageBase(aRootingCx, aCpows)
     , mTabChild(aTabChild)
   { }
 
@@ -71,10 +73,11 @@ nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
                                               nsIPrincipal* aPrincipal)
 {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
+  JS::RootingContext* rcx = JS::RootingContext::get(aCx);
   RefPtr<nsAsyncMessageToParent> ev =
-    new nsAsyncMessageToParent(aCx, aCpows, this);
+    new nsAsyncMessageToParent(rcx, aCpows, this);
 
-  nsresult rv = ev->Init(aCx, aMessage, aData, aPrincipal);
+  nsresult rv = ev->Init(aMessage, aData, aPrincipal);
   if (NS_FAILED(rv)) {
     return rv;
   }

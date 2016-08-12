@@ -35,6 +35,8 @@
 
 #include "SpecialSystemDirectory.h"
 
+#include "mozilla/dom/ScriptSettings.h"
+
 #include "mozilla/Services.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
@@ -1219,9 +1221,8 @@ nsXREDirProvider::DoShutdown()
       // Phase 2c: Now that things are torn down, force JS GC so that things which depend on
       // resources which are about to go away in "profile-before-change" are destroyed first.
 
-      JSRuntime *rt = xpc::GetJSRuntime();
-      if (rt) {
-        JS_GC(JS_GetContext(rt));
+      if (JSContext* cx = dom::danger::GetJSContext()) {
+        JS_GC(cx);
       }
 
       // Phase 3: Notify observers of a profile change

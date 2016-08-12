@@ -30,7 +30,7 @@ class DeleteRunnable : public Runnable
   public:
     DeleteRunnable() {}
 
-    NS_IMETHODIMP
+    NS_IMETHOD
     Run() override
     {
       nsCOMPtr<nsIFile> tmpFile;

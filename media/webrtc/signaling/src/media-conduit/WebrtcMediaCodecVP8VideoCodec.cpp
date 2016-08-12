@@ -108,7 +108,7 @@ public:
     lock.NotifyAll();
   }
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mThread);
 

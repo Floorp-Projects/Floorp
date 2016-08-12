@@ -43,14 +43,14 @@ InputPortData::~InputPortData()
 {
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 InputPortData::GetId(nsAString& aId)
 {
   aId = mId;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 InputPortData::SetId(const nsAString& aId)
 {
   if (aId.IsEmpty()) {
@@ -61,14 +61,14 @@ InputPortData::SetId(const nsAString& aId)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 InputPortData::GetType(nsAString& aType)
 {
   aType = mType;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 InputPortData::SetType(const nsAString& aType)
 {
   if (aType.IsEmpty()) {
@@ -83,14 +83,14 @@ InputPortData::SetType(const nsAString& aType)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 InputPortData::GetConnected(bool* aIsConnected)
 {
   *aIsConnected = mIsConnected;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 InputPortData::SetConnected(const bool aIsConnected)
 {
   mIsConnected = aIsConnected;

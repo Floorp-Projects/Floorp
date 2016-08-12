@@ -38,7 +38,7 @@ TVSourceListener::UnregisterSource(TVSource* aSource)
   }
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVSourceListener::NotifyChannelScanned(const nsAString& aTunerId,
                                        const nsAString& aSourceType,
                                        nsITVChannelData* aChannelData)
@@ -48,7 +48,7 @@ TVSourceListener::NotifyChannelScanned(const nsAString& aTunerId,
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVSourceListener::NotifyChannelScanComplete(const nsAString& aTunerId,
                                             const nsAString& aSourceType)
 {
@@ -57,7 +57,7 @@ TVSourceListener::NotifyChannelScanComplete(const nsAString& aTunerId,
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVSourceListener::NotifyChannelScanStopped(const nsAString& aTunerId,
                                            const nsAString& aSourceType)
 {
@@ -66,7 +66,7 @@ TVSourceListener::NotifyChannelScanStopped(const nsAString& aTunerId,
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 TVSourceListener::NotifyEITBroadcasted(const nsAString& aTunerId,
                                        const nsAString& aSourceType,
                                        nsITVChannelData* aChannelData,

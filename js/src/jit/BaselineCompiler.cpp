@@ -2529,7 +2529,7 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
     Register temp = R1.scratchReg();
 
     Label skipBarrier;
-    masm.branchPtrInNurseryRange(Assembler::Equal, objReg, temp, &skipBarrier);
+    masm.branchPtrInNurseryChunk(Assembler::Equal, objReg, temp, &skipBarrier);
     masm.branchValueIsNurseryObject(Assembler::NotEqual, R0, temp, &skipBarrier);
 
     masm.call(&postBarrierSlot_); // Won't clobber R0
@@ -2945,7 +2945,7 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
 
         Label skipBarrier;
 
-        masm.branchPtrInNurseryRange(Assembler::Equal, reg, temp, &skipBarrier);
+        masm.branchPtrInNurseryChunk(Assembler::Equal, reg, temp, &skipBarrier);
         masm.branchValueIsNurseryObject(Assembler::NotEqual, R0, temp, &skipBarrier);
 
         masm.call(&postBarrierSlot_);
@@ -3977,8 +3977,8 @@ BaselineCompiler::emit_JSOP_INITIALYIELD()
 
     Register temp = R1.scratchReg();
     Label skipBarrier;
-    masm.branchPtrInNurseryRange(Assembler::Equal, genObj, temp, &skipBarrier);
-    masm.branchPtrInNurseryRange(Assembler::NotEqual, scopeObj, temp, &skipBarrier);
+    masm.branchPtrInNurseryChunk(Assembler::Equal, genObj, temp, &skipBarrier);
+    masm.branchPtrInNurseryChunk(Assembler::NotEqual, scopeObj, temp, &skipBarrier);
     masm.push(genObj);
     MOZ_ASSERT(genObj == R2.scratchReg());
     masm.call(&postBarrierSlot_);
@@ -4022,8 +4022,8 @@ BaselineCompiler::emit_JSOP_YIELD()
 
         Register temp = R1.scratchReg();
         Label skipBarrier;
-        masm.branchPtrInNurseryRange(Assembler::Equal, genObj, temp, &skipBarrier);
-        masm.branchPtrInNurseryRange(Assembler::NotEqual, scopeObj, temp, &skipBarrier);
+        masm.branchPtrInNurseryChunk(Assembler::Equal, genObj, temp, &skipBarrier);
+        masm.branchPtrInNurseryChunk(Assembler::NotEqual, scopeObj, temp, &skipBarrier);
         MOZ_ASSERT(genObj == R2.scratchReg());
         masm.call(&postBarrierSlot_);
         masm.bind(&skipBarrier);

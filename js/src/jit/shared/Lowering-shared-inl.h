@@ -126,10 +126,6 @@ template <size_t Ops, size_t Temps> void
 LIRGeneratorShared::defineInt64ReuseInput(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir,
                                           MDefinition* mir, uint32_t operand)
 {
-#if JS_BITS_PER_WORD == 32
-    MOZ_CRASH("Temporarily disabled due to bug 1290450.");
-#endif
-
     // Note: Any other operand that is not the same as this operand should be
     // marked as not being "atStart". The regalloc cannot handle those and can
     // overwrite the inputs!

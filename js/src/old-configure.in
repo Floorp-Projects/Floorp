@@ -1692,17 +1692,6 @@ if test -n "$JS_GC_SMALL_CHUNK_SIZE"; then
 fi
 
 dnl ========================================================
-dnl = Use GC tracing
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gc-trace,
-[  --enable-gc-trace  Enable tracing of allocation and finalization],
-    JS_GC_TRACE=1,
-    JS_GC_TRACE= )
-if test -n "$JS_GC_TRACE"; then
-    AC_DEFINE(JS_GC_TRACE)
-fi
-
-dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(valgrind,
@@ -1867,30 +1856,6 @@ MOZ_ARG_ENABLE_BOOL(gczeal,
     JS_GC_ZEAL= )
 if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
     AC_DEFINE(JS_GC_ZEAL)
-fi
-
-dnl ========================================================
-dnl = Enable perf logging for ion.
-dnl = Perf logging is OFF by default
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(perf,
-[  --enable-perf           Enable Linux perf integration],
-  JS_ION_PERF=1,
-  JS_ION_PERF= )
-if test -n "$JS_ION_PERF"; then
-    AC_DEFINE(JS_ION_PERF)
-fi
-
-dnl ========================================================
-dnl Enable changes that make the shell more deterministic
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(more-deterministic,
-[  --enable-more-deterministic
-                          Enable changes that make the shell more deterministic],
-    JS_MORE_DETERMINISTIC=1,
-    JS_MORE_DETERMINISTIC= )
-if test -n "$JS_MORE_DETERMINISTIC"; then
-    AC_DEFINE(JS_MORE_DETERMINISTIC)
 fi
 
 dnl ========================================================
