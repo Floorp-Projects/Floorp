@@ -38,11 +38,9 @@ using namespace js;
 using mozilla::Move;
 using mozilla::PodArrayZero;
 
-// Required by PerThreadDataFriendFields::getMainThread()
-JS_STATIC_ASSERT(offsetof(JSRuntime, mainThread) ==
-                 PerThreadDataFriendFields::RuntimeMainThreadOffset);
-
-PerThreadDataFriendFields::PerThreadDataFriendFields()
+js::ContextFriendFields::ContextFriendFields(bool isJSContext)
+  : JS::RootingContext(isJSContext),
+    compartment_(nullptr), zone_(nullptr)
 {
     PodArrayZero(nativeStackLimit);
 #if JS_STACK_GROWTH_DIRECTION > 0

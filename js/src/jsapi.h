@@ -3824,7 +3824,6 @@ class JS_FRIEND_API(ReadOnlyCompileOptions) : public TransitiveCompileOptions
  */
 class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
 {
-    JSRuntime* runtime;
     PersistentRootedObject elementRoot;
     PersistentRootedString elementAttributeNameRoot;
     PersistentRootedScript introductionScriptRoot;

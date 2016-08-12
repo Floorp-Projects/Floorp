@@ -300,7 +300,7 @@ Zone::notifyObservingDebuggers()
 {
     for (CompartmentsInZoneIter comps(this); !comps.done(); comps.next()) {
         JSRuntime* rt = runtimeFromAnyThread();
-        RootedGlobalObject global(rt, comps->unsafeUnbarrieredMaybeGlobal());
+        RootedGlobalObject global(rt->contextFromMainThread(), comps->unsafeUnbarrieredMaybeGlobal());
         if (!global)
             continue;
 

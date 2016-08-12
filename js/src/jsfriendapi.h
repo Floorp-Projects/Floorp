@@ -999,9 +999,7 @@ RunningWithTrustedPrincipals(JSContext* cx);
 inline uintptr_t
 GetNativeStackLimit(JSContext* cx, StackKind kind, int extraAllowance = 0)
 {
-    PerThreadDataFriendFields* mainThread =
-      PerThreadDataFriendFields::getMainThread(GetRuntime(cx));
-    uintptr_t limit = mainThread->nativeStackLimit[kind];
+    uintptr_t limit = ContextFriendFields::get(cx)->nativeStackLimit[kind];
 #if JS_STACK_GROWTH_DIRECTION > 0
     limit += extraAllowance;
 #else

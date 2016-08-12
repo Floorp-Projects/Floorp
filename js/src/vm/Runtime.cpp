@@ -84,8 +84,7 @@ js::DisableExtraThreads()
 const JSSecurityCallbacks js::NullSecurityCallbacks = { };
 
 PerThreadData::PerThreadData(JSRuntime* runtime)
-  : PerThreadDataFriendFields(),
-    runtime_(runtime),
+  : runtime_(runtime),
 #ifdef JS_TRACE_LOGGING
     traceLogger(nullptr),
 #endif
@@ -141,9 +140,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     profilerSampleBufferGen_(0),
     profilerSampleBufferLapCount_(1),
     wasmActivationStack_(nullptr),
-    asyncStackForNewActivations(this),
-    asyncCauseForNewActivations(nullptr),
-    asyncCallIsExplicit(false),
     entryMonitor(nullptr),
     noExecuteDebuggerTop(nullptr),
     parentRuntime(parentRuntime),
@@ -602,26 +598,6 @@ InvokeInterruptCallback(JSContext* cx)
 }
 
 void
-JSRuntime::resetJitStackLimit()
-{
-    // Note that, for now, we use the untrusted limit for ion. This is fine,
-    // because it's the most conservative limit, and if we hit it, we'll bail
-    // out of ion into the interpreter, which will do a proper recursion check.
-#ifdef JS_SIMULATOR
-    jitStackLimit_ = jit::Simulator::StackLimit();
-#else
-    jitStackLimit_ = mainThread.nativeStackLimit[StackForUntrustedScript];
-#endif
-    jitStackLimitNoInterrupt_ = jitStackLimit_;
-}
-
-void
-JSRuntime::initJitStackLimit()
-{
-    resetJitStackLimit();
-}
-
-void
 JSRuntime::requestInterrupt(InterruptMode mode)
 {
     interrupt_ = true;
@@ -647,7 +623,7 @@ JSRuntime::handleInterrupt(JSContext* cx)
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
     if (interrupt_ || jitStackLimit_ == UINTPTR_MAX) {
         interrupt_ = false;
-        resetJitStackLimit();
+        cx->resetJitStackLimit();
         return InvokeInterruptCallback(cx);
     }
     return true;
