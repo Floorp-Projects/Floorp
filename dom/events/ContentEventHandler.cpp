@@ -664,11 +664,27 @@ ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
 }
 
 nsresult
+ContentEventHandler::GenerateFlatTextContent(nsIContent* aContent,
+                                             nsAFlatString& aString,
+                                             LineBreakType aLineBreakType)
+{
+  MOZ_ASSERT(aString.IsEmpty());
+
+  RefPtr<nsRange> range = new nsRange(mRootContent);
+  ErrorResult rv;
+  range->SelectNodeContents(*aContent, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+  return GenerateFlatTextContent(range, aString, aLineBreakType);
+}
+
+nsresult
 ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
                                              nsAFlatString& aString,
                                              LineBreakType aLineBreakType)
 {
-  NS_ASSERTION(aString.IsEmpty(), "aString must be empty string");
+  MOZ_ASSERT(aString.IsEmpty());
 
   if (aRange->Collapsed()) {
     return NS_OK;
@@ -1722,6 +1738,49 @@ ContentEventHandler::GuessLineBreakerRectAfter(nsIContent* aTextContent)
   return result;
 }
 
+ContentEventHandler::FrameRelativeRect
+ContentEventHandler::GuessFirstCaretRectIn(nsIFrame* aFrame)
+{
+  const WritingMode kWritingMode = aFrame->GetWritingMode();
+
+  // Computes the font height, but if it's not available, we should use
+  // default font size of Firefox.  The default font size in default settings
+  // is 16px.
+  RefPtr<nsFontMetrics> fontMetrics =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
+  const nscoord kMaxHeight =
+    fontMetrics ? fontMetrics->MaxHeight() :
+                  16 * mPresContext->AppUnitsPerDevPixel();
+
+  nsRect caretRect;
+  const nsRect kContentRect = aFrame->GetContentRect() - aFrame->GetPosition();
+  caretRect.y = kContentRect.y;
+  if (!kWritingMode.IsVertical()) {
+    if (kWritingMode.IsBidiLTR()) {
+      caretRect.x = kContentRect.x;
+    } else {
+      // Move 1px left for the space of caret itself.
+      const nscoord kOnePixel = mPresContext->AppUnitsPerDevPixel();
+      caretRect.x = kContentRect.XMost() - kOnePixel;
+    }
+    caretRect.height = kMaxHeight;
+    // However, don't add kOnePixel here because it may cause 2px width at
+    // aligning the edge to device pixels.
+    caretRect.width = 1;
+  } else {
+    if (kWritingMode.IsVerticalLR()) {
+      caretRect.x = kContentRect.x;
+    } else {
+      caretRect.x = kContentRect.XMost() - kMaxHeight;
+    }
+    caretRect.width = kMaxHeight;
+    // Don't add app units for a device pixel because it may cause 2px height
+    // at aligning the edge to device pixels.
+    caretRect.height = 1;
+  }
+  return FrameRelativeRect(caretRect, aFrame);
+}
+
 nsresult
 ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 {
@@ -1758,10 +1817,23 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
     // Get the first frame which causes some text after the offset.
     FrameAndNodeOffset firstFrame = GetFirstFrameInRangeForTextRect(range);
 
-    // If GetFirstFrameInRangeForTextRect() does not return valid frame,
-    // that means that there is no remaining content which causes text.
-    // So, in such case, we must have reached the end of the contents.
+    // If GetFirstFrameInRangeForTextRect() does not return valid frame, that
+    // means that there are no visible frames having text or the offset reached
+    // the end of contents.
     if (!firstFrame.IsValid()) {
+      nsAutoString allText;
+      rv = GenerateFlatTextContent(mRootContent, allText, lineBreakType);
+      // If the offset doesn't reach the end of contents yet but there is no
+      // frames for the node, that means that current offset's node is hidden
+      // by CSS or something.  Ideally, we should handle it with the last
+      // visible text node's last character's rect, but it's not usual cases
+      // in actual web services.  Therefore, currently, we should make this
+      // case fail.
+      if (NS_WARN_IF(NS_FAILED(rv)) || offset < allText.Length()) {
+        return NS_ERROR_FAILURE;
+      }
+      // Otherwise, we should append caret rect at the end of the contents
+      // later.
       break;
     }
 
@@ -2045,12 +2117,85 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   // Get the first frame which causes some text after the offset.
   FrameAndNodeOffset firstFrame = GetFirstFrameInRangeForTextRect(range);
 
-  // If GetFirstFrameInRangeForTextRect() does not return valid frame,
-  // that means that there is no remaining content which causes text.
-  // So, in such case, we must have reached the end of the contents.
+  // If GetFirstFrameInRangeForTextRect() does not return valid frame, that
+  // means that there are no visible frames having text or the offset reached
+  // the end of contents.
   if (!firstFrame.IsValid()) {
-    // TODO: Handle this case later.
-    return NS_ERROR_FAILURE;
+    nsAutoString allText;
+    rv = GenerateFlatTextContent(mRootContent, allText, lineBreakType);
+    // If the offset doesn't reach the end of contents but there is no frames
+    // for the node, that means that current offset's node is hidden by CSS or
+    // something.  Ideally, we should handle it with the last visible text
+    // node's last character's rect, but it's not usual cases in actual web
+    // services.  Therefore, currently, we should make this case fail.
+    if (NS_WARN_IF(NS_FAILED(rv)) ||
+        static_cast<uint32_t>(aEvent->mInput.mOffset) < allText.Length()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Look for the last frame which should be included text rects.
+    ErrorResult erv;
+    range->SelectNodeContents(*mRootContent, erv);
+    if (NS_WARN_IF(erv.Failed())) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    nsRect rect;
+    FrameAndNodeOffset lastFrame = GetLastFrameInRangeForTextRect(range);
+    // If there is at least one frame which can be used for computing a rect
+    // for a character or a line breaker, we should use it for guessing the
+    // caret rect at the end of the contents.
+    if (lastFrame) {
+      if (NS_WARN_IF(!lastFrame->GetContent())) {
+        return NS_ERROR_FAILURE;
+      }
+      FrameRelativeRect relativeRect;
+      // If there is a <br> frame at the end, it represents an empty line at
+      // the end with moz-<br> or content <br> in a block level element.
+      if (lastFrame->GetType() == nsGkAtoms::brFrame) {
+        relativeRect = GetLineBreakerRectBefore(lastFrame);
+      }
+      // If there is a text frame at the end, use its information.
+      else if (lastFrame->GetType() == nsGkAtoms::textFrame) {
+        relativeRect = GuessLineBreakerRectAfter(lastFrame->GetContent());
+      }
+      // If there is an empty frame which is neither a text frame nor a <br>
+      // frame at the end, guess caret rect in it.
+      else {
+        relativeRect = GuessFirstCaretRectIn(lastFrame);
+      }
+      if (NS_WARN_IF(!relativeRect.IsValid())) {
+        return NS_ERROR_FAILURE;
+      }
+      rect = relativeRect.RectRelativeTo(lastFrame);
+      rv = ConvertToRootRelativeOffset(lastFrame, rect);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      aEvent->mReply.mWritingMode = lastFrame->GetWritingMode();
+    }
+    // Otherwise, if there are no contents in mRootContent, guess caret rect in
+    // its frame (with its font height and content box).
+    else {
+      nsIFrame* rootContentFrame = mRootContent->GetPrimaryFrame();
+      if (NS_WARN_IF(!rootContentFrame)) {
+        return NS_ERROR_FAILURE;
+      }
+      FrameRelativeRect relativeRect = GuessFirstCaretRectIn(rootContentFrame);
+      if (NS_WARN_IF(!relativeRect.IsValid())) {
+        return NS_ERROR_FAILURE;
+      }
+      rect = relativeRect.RectRelativeTo(rootContentFrame);
+      rv = ConvertToRootRelativeOffset(rootContentFrame, rect);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      aEvent->mReply.mWritingMode = rootContentFrame->GetWritingMode();
+    }
+    aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
+      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
+    EnsureNonEmptyRect(aEvent->mReply.mRect);
+    aEvent->mSucceeded = true;
+    return NS_OK;
   }
 
   nsRect rect, frameRect;
