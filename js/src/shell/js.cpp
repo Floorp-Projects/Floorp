@@ -3123,7 +3123,10 @@ GroupOf(JSContext* cx, unsigned argc, JS::Value* vp)
         return false;
     }
     JSObject* obj = &args[0].toObject();
-    args.rval().set(JS_NumberValue(double(uintptr_t(obj->group()) >> 3)));
+    ObjectGroup* group = obj->getGroup(cx);
+    if (!group)
+        return false;
+    args.rval().set(JS_NumberValue(double(uintptr_t(group) >> 3)));
     return true;
 }
 
