@@ -80,7 +80,7 @@
     "no-empty-pattern": 2,
 
     // No assiging to exception variable
-    // "no-ex-assign": 2,
+    "no-ex-assign": 2,
 
     // No using !! where casting to boolean is already happening
     // "no-extra-boolean-cast": 2,
