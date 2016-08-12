@@ -169,6 +169,9 @@ public:
 
   virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
 
+  virtual void GetGlyphRasterizationMetrics(ScaledFont *aScaledFont, const uint16_t* aGlyphIndices,
+                                            uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) override;
+
   virtual void *GetNativeSurface(NativeSurfaceType aType) override;
 
   bool Init(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat = nullptr);

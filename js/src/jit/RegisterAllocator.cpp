@@ -511,11 +511,24 @@ RegisterAllocator::init()
 LMoveGroup*
 RegisterAllocator::getInputMoveGroup(LInstruction* ins)
 {
+    MOZ_ASSERT(!ins->fixReuseMoves());
     if (ins->inputMoves())
         return ins->inputMoves();
 
     LMoveGroup* moves = LMoveGroup::New(alloc());
     ins->setInputMoves(moves);
+    ins->block()->insertBefore(ins, moves);
+    return moves;
+}
+
+LMoveGroup*
+RegisterAllocator::getFixReuseMoveGroup(LInstruction* ins)
+{
+    if (ins->fixReuseMoves())
+        return ins->fixReuseMoves();
+
+    LMoveGroup* moves = LMoveGroup::New(alloc());
+    ins->setFixReuseMoves(moves);
     ins->block()->insertBefore(ins, moves);
     return moves;
 }

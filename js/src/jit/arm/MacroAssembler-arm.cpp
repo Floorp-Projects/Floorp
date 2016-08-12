@@ -5220,7 +5220,7 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 // Branch functions
 
 void
-MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp,
                                         Label* label)
 {
     AutoRegisterScope scratch2(*this, secondScratchReg_);
@@ -5229,13 +5229,10 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
     MOZ_ASSERT(ptr != temp);
     MOZ_ASSERT(ptr != scratch2);
 
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    uintptr_t startChunk = nursery.start() >> Nursery::ChunkShift;
-
-    ma_mov(Imm32(startChunk), scratch2);
-    as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
-    branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-             scratch2, Imm32(nursery.numChunks()), label);
+    ma_lsr(Imm32(gc::ChunkShift), ptr, scratch2);
+    ma_lsl(Imm32(gc::ChunkShift), scratch2, scratch2);
+    load32(Address(scratch2, gc::ChunkLocationOffset), scratch2);
+    branch32(cond, scratch2, Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
 }
 
 void
@@ -5245,10 +5242,10 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& addres
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
     Label done;
-
     branchTestObject(Assembler::NotEqual, address, cond == Assembler::Equal ? &done : label);
+
     loadPtr(address, temp);
-    branchPtrInNurseryRange(cond, temp, InvalidReg, label);
+    branchPtrInNurseryChunk(cond, temp, InvalidReg, label);
 
     bind(&done);
 }
@@ -5260,9 +5257,9 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
     Label done;
-
     branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+
+    branchPtrInNurseryChunk(cond, value.payloadReg(), InvalidReg, label);
 
     bind(&done);
 }

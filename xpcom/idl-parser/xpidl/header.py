@@ -346,6 +346,21 @@ def write_interface(iface, fd):
     if iface.namemap is None:
         raise Exception("Interface was not resolved.")
 
+    # Confirm that no names of methods will overload in this interface
+    names = set()
+    def record_name(name):
+        if name in names:
+            raise Exception("Unexpected overloaded virtual method %s in interface %s"
+                            % (name, iface.name))
+        names.add(name)
+    for m in iface.members:
+        if type(m) == xpidl.Attribute:
+            record_name(attributeNativeName(m, getter=True))
+            if not m.readonly:
+                record_name(attributeNativeName(m, getter=False))
+        elif type(m) == xpidl.Method:
+            record_name(methodNativeName(m))
+
     def write_const_decls(g):
         fd.write("  enum {\n")
         enums = []

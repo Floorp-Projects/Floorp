@@ -937,6 +937,24 @@ DrawTargetD2D1::CreateFilter(FilterType aType)
   return FilterNodeD2D1::Create(mDC, aType);
 }
 
+void
+DrawTargetD2D1::GetGlyphRasterizationMetrics(ScaledFont *aScaledFont, const uint16_t* aGlyphIndices,
+                                             uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics)
+{
+  MOZ_ASSERT(aScaledFont->GetType() == FontType::DWRITE);
+
+  aScaledFont->GetGlyphDesignMetrics(aGlyphIndices, aNumGlyphs, aGlyphMetrics);
+
+  // GetDesignGlyphMetrics returns 'ideal' glyph metrics, we need to pad to
+  // account for antialiasing.
+  for (uint32_t i = 0; i < aNumGlyphs; i++) {
+    if (aGlyphMetrics[i].mWidth > 0 && aGlyphMetrics[i].mHeight > 0) {
+      aGlyphMetrics[i].mWidth += 2.0f;
+      aGlyphMetrics[i].mXBearing -= 1.0f;
+    }
+  }
+}
+
 bool
 DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
 {

@@ -51,21 +51,18 @@ var {
   injectAPI,
   flushJarCache,
   detectLanguage,
+  getInnerWindowID,
   promiseDocumentReady,
   ChildAPIManager,
 } = ExtensionUtils;
+
+XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
 
 function isWhenBeforeOrSame(when1, when2) {
   let table = {"document_start": 0,
                "document_end": 1,
                "document_idle": 2};
   return table[when1] <= table[when2];
-}
-
-function getInnerWindowID(window) {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils)
-    .currentInnerWindowID;
 }
 
 // This is the fairly simple API that we inject into content
@@ -323,11 +320,8 @@ class ExtensionContext extends BaseContext {
     this.isExtensionPage = isExtensionPage;
     this.extension = ExtensionManager.get(extensionId);
     this.extensionId = extensionId;
-    this.contentWindow = contentWindow;
-    this.windowId = getInnerWindowID(contentWindow);
 
-    contentWindow.addEventListener("pageshow", this, true);
-    contentWindow.addEventListener("pagehide", this, true);
+    this.setContentWindow(contentWindow);
 
     let frameId = WebNavigationFrames.getFrameId(contentWindow);
     this.frameId = frameId;
@@ -375,7 +369,7 @@ class ExtensionContext extends BaseContext {
       // the content script to be associated with both the extension and
       // the tab holding the content page.
       let metadata = {
-        "inner-window-id": this.windowId,
+        "inner-window-id": this.innerWindowID,
         addonId: attrs.addonId,
       };
 
@@ -433,14 +427,6 @@ class ExtensionContext extends BaseContext {
     }
   }
 
-  handleEvent(event) {
-    if (event.type == "pageshow") {
-      this.active = true;
-    } else if (event.type == "pagehide") {
-      this.active = false;
-    }
-  }
-
   get cloneScope() {
     return this.sandbox;
   }
@@ -473,25 +459,21 @@ class ExtensionContext extends BaseContext {
   close() {
     super.unload();
 
-    if (this.windowId === getInnerWindowID(this.contentWindow)) {
-      this.contentWindow.removeEventListener("pageshow", this, true);
-      this.contentWindow.removeEventListener("pagehide", this, true);
-    }
-
-    for (let script of this.scripts) {
-      if (script.requiresCleanup) {
-        script.cleanup(this.contentWindow);
-      }
-    }
-
     this.childManager.close();
 
-    // Overwrite the content script APIs with an empty object if the APIs objects are still
-    // defined in the content window (See Bug 1214658 for rationale).
-    if (this.isExtensionPage && !Cu.isDeadWrapper(this.contentWindow) &&
-        Cu.waiveXrays(this.contentWindow).browser === this.chromeObj) {
-      Cu.createObjectIn(this.contentWindow, {defineAs: "browser"});
-      Cu.createObjectIn(this.contentWindow, {defineAs: "chrome"});
+    if (this.contentWindow) {
+      for (let script of this.scripts) {
+        if (script.requiresCleanup) {
+          script.cleanup(this.contentWindow);
+        }
+      }
+
+      // Overwrite the content script APIs with an empty object if the APIs objects are still
+      // defined in the content window (bug 1214658).
+      if (this.isExtensionPage) {
+        Cu.createObjectIn(this.contentWindow, {defineAs: "browser"});
+        Cu.createObjectIn(this.contentWindow, {defineAs: "chrome"});
+      }
     }
     Cu.nukeSandbox(this.sandbox);
     this.sandbox = null;

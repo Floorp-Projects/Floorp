@@ -181,7 +181,7 @@ public:
     , mAudioChannel(aAudioChannel)
   {}
 
-  NS_IMETHODIMP Run() override
+  NS_IMETHOD Run() override
   {
     RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
     if (!service) {

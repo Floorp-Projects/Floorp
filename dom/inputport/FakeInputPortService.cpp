@@ -138,7 +138,7 @@ FakeInputPortService::Shutdown()
   }
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 FakeInputPortService::GetInputPortListener(nsIInputPortListener** aInputPortListener)
 {
   if (!mInputPortListener) {
@@ -151,14 +151,14 @@ FakeInputPortService::GetInputPortListener(nsIInputPortListener** aInputPortList
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 FakeInputPortService::SetInputPortListener(nsIInputPortListener* aInputPortListener)
 {
   mInputPortListener = aInputPortListener;
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
+NS_IMETHODIMP
 FakeInputPortService::GetInputPorts(nsIInputPortServiceCallback* aCallback)
 {
   if (!aCallback) {

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jscntxt.h"
 #include "jsfriendapi.h"
 
 #include "vm/Runtime.h"
@@ -27,9 +28,9 @@ MemProfiler::GetGCHeapProfiler(JSRuntime* runtime)
 }
 
 MemProfiler*
-MemProfiler::GetMemProfiler(JSRuntime* runtime)
+MemProfiler::GetMemProfiler(JSContext* context)
 {
-    return &runtime->gc.mMemProfiler;
+    return &context->gc.mMemProfiler;
 }
 
 void

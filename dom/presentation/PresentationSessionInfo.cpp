@@ -15,7 +15,7 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocShell.h"
-#include "nsIFrameLoader.h"
+#include "nsFrameLoader.h"
 #include "nsIMutableArray.h"
 #include "nsINetAddr.h"
 #include "nsISocketTransport.h"
@@ -1366,9 +1366,8 @@ PresentationPresentingInfo::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  nsCOMPtr<nsIFrameLoader> frameLoader;
-  rv = owner->GetFrameLoader(getter_AddRefs(frameLoader));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsCOMPtr<nsIFrameLoader> frameLoader = owner->GetFrameLoader();
+  if (NS_WARN_IF(!frameLoader)) {
     ReplyError(NS_ERROR_DOM_OPERATION_ERR);
     return;
   }

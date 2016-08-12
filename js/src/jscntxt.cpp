@@ -125,7 +125,6 @@ js::DestroyContext(JSContext* cx)
         MOZ_CRASH("Attempted to destroy a context while it is in a request.");
 
     cx->roots.checkNoGCRooters();
-    cx->roots.finishPersistentRoots();
 
     /*
      * Dump remaining type inference results while we still have a context.
@@ -883,7 +882,8 @@ js::GetErrorMessage(void* userRef, const unsigned errorNumber)
 
 ExclusiveContext::ExclusiveContext(JSRuntime* rt, PerThreadData* pt, ContextKind kind,
                                    const JS::ContextOptions& options)
-  : ContextFriendFields(rt),
+  : ContextFriendFields(kind == Context_JS),
+    runtime_(rt),
     helperThread_(nullptr),
     contextKind_(kind),
     options_(options),
@@ -921,7 +921,10 @@ JSContext::JSContext(JSRuntime* parentRuntime)
     generatingError(false),
     data(nullptr),
     outstandingRequests(0),
-    jitIsBroken(false)
+    jitIsBroken(false),
+    asyncStackForNewActivations(this),
+    asyncCauseForNewActivations(nullptr),
+    asyncCallIsExplicit(false)
 {
     MOZ_ASSERT(static_cast<ContextFriendFields*>(this) ==
                ContextFriendFields::get(this));
@@ -1095,6 +1098,26 @@ ExclusiveContext::stackLimitForJitCode(StackKind kind)
 #else
     return stackLimit(kind);
 #endif
+}
+
+void
+JSContext::resetJitStackLimit()
+{
+    // Note that, for now, we use the untrusted limit for ion. This is fine,
+    // because it's the most conservative limit, and if we hit it, we'll bail
+    // out of ion into the interpreter, which will do a proper recursion check.
+#ifdef JS_SIMULATOR
+    jitStackLimit_ = jit::Simulator::StackLimit();
+#else
+    jitStackLimit_ = nativeStackLimit[StackForUntrustedScript];
+#endif
+    jitStackLimitNoInterrupt_ = jitStackLimit_;
+}
+
+void
+JSContext::initJitStackLimit()
+{
+    resetJitStackLimit();
 }
 
 JSVersion

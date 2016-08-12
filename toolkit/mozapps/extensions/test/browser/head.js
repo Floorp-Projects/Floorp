@@ -1152,6 +1152,12 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
 }
 
 MockAddon.prototype = {
+  get isCorrectlySigned() {
+    if (this.signedState === AddonManager.SIGNEDSTATE_NOT_REQUIRED)
+      return true;
+    return this.signedState > AddonManager.SIGNEDSTATE_MISSING;
+  },
+
   get shouldBeActive() {
     return !this.appDisabled && !this._userDisabled &&
            !(this.pendingOperations & AddonManager.PENDING_UNINSTALL);

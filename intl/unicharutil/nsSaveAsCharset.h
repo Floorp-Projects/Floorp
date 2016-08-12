@@ -24,7 +24,7 @@ public:
 
   NS_IMETHOD Convert(const nsAString& ain, nsACString& aOut) override;
 
-  NS_IMETHODIMP GetCharset(nsACString& aCharset) override;
+  NS_IMETHOD GetCharset(nsACString& aCharset) override;
 
 private:
 

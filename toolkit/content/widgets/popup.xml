@@ -425,7 +425,9 @@
           } else {
             arrowbox.pack = "start";
           }
-          arrowbox.style.transform = "translate(0, " + -offset + "px)";
+          if (offset != "0") {
+            arrowbox.style.transform = "translate(0, " + -offset + "px)";
+          }
 
           // The assigned side stays the same regardless of direction.
           var isRTL = (window.getComputedStyle(this).direction == "rtl");
@@ -447,7 +449,9 @@
           } else {
             arrowbox.pack = "start";
           }
-          arrowbox.style.transform = "translate(" + -offset + "px, 0)";
+          if (offset != "0") {
+            arrowbox.style.transform = "translate(" + -offset + "px, 0)";
+          }
 
           if (position.indexOf("before_") == 0) {
             container.dir = "reverse";

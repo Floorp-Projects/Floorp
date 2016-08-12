@@ -160,7 +160,7 @@
          popuponly menulist to be its immediate parent. -->
     <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
       <menupopup rolluponmousewheel="true"
-                 activateontab="true"
+                 activateontab="true" position="after_start"
 #ifdef XP_WIN
                  consumeoutsideclicks="false" ignorekeys="handled"
 #endif

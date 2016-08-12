@@ -1235,7 +1235,7 @@ nsObjectLoadingContent::OnDataAvailable(nsIRequest *aRequest,
 
 // nsIFrameLoaderOwner
 NS_IMETHODIMP
-nsObjectLoadingContent::GetFrameLoader(nsIFrameLoader** aFrameLoader)
+nsObjectLoadingContent::GetFrameLoaderXPCOM(nsIFrameLoader** aFrameLoader)
 {
   NS_IF_ADDREF(*aFrameLoader = mFrameLoader);
   return NS_OK;

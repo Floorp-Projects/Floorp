@@ -264,13 +264,6 @@ MacroAssemblerMIPSShared::ma_mul(Register rd, Register rs, Imm32 imm)
 }
 
 void
-MacroAssemblerMIPSShared::ma_mult(Register rs, Imm32 imm)
-{
-    ma_li(ScratchRegister, imm);
-    as_mult(rs, ScratchRegister);
-}
-
-void
 MacroAssemblerMIPSShared::ma_mul_branch_overflow(Register rd, Register rs, Register rt, Label* overflow)
 {
     as_mult(rs, rt);
@@ -291,9 +284,9 @@ void
 MacroAssemblerMIPSShared::ma_div_branch_overflow(Register rd, Register rs, Register rt, Label* overflow)
 {
     as_div(rs, rt);
-    as_mflo(rd);
     as_mfhi(ScratchRegister);
     ma_b(ScratchRegister, ScratchRegister, overflow, Assembler::NonZero);
+    as_mflo(rd);
 }
 
 void
@@ -896,6 +889,25 @@ MacroAssemblerMIPSShared::ma_liNegZero(FloatRegister dest)
 void
 MacroAssemblerMIPSShared::ma_sd(FloatRegister ft, BaseIndex address)
 {
+    if (isLoongson() && Imm8::IsInSignedRange(address.offset)) {
+        Register index = address.index;
+
+        if (address.scale != TimesOne) {
+            int32_t shift = Imm32::ShiftOf(address.scale).value;
+
+            MOZ_ASSERT(SecondScratchReg != address.base);
+            index = SecondScratchReg;
+#ifdef JS_CODEGEN_MIPS64
+            asMasm().ma_dsll(index, address.index, Imm32(shift));
+#else
+            asMasm().ma_sll(index, address.index, Imm32(shift));
+#endif
+        }
+
+        as_gssdx(ft, address.base, index, address.offset);
+        return;
+    }
+
     asMasm().computeScaledAddress(address, SecondScratchReg);
     asMasm().ma_sd(ft, Address(SecondScratchReg, address.offset));
 }
@@ -903,6 +915,25 @@ MacroAssemblerMIPSShared::ma_sd(FloatRegister ft, BaseIndex address)
 void
 MacroAssemblerMIPSShared::ma_ss(FloatRegister ft, BaseIndex address)
 {
+    if (isLoongson() && Imm8::IsInSignedRange(address.offset)) {
+        Register index = address.index;
+
+        if (address.scale != TimesOne) {
+            int32_t shift = Imm32::ShiftOf(address.scale).value;
+
+            MOZ_ASSERT(SecondScratchReg != address.base);
+            index = SecondScratchReg;
+#ifdef JS_CODEGEN_MIPS64
+            asMasm().ma_dsll(index, address.index, Imm32(shift));
+#else
+            asMasm().ma_sll(index, address.index, Imm32(shift));
+#endif
+        }
+
+        as_gsssx(ft, address.base, index, address.offset);
+        return;
+    }
+
     asMasm().computeScaledAddress(address, SecondScratchReg);
     asMasm().ma_ss(ft, Address(SecondScratchReg, address.offset));
 }
@@ -1547,18 +1578,17 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 }
 
 void
-MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp,
                                         Label* label)
 {
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     MOZ_ASSERT(ptr != temp);
     MOZ_ASSERT(ptr != SecondScratchReg);
 
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
-    addPtr(ptr, SecondScratchReg);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              SecondScratchReg, Imm32(nursery.nurserySize()), label);
+    movePtr(ptr, SecondScratchReg);
+    orPtr(Imm32(gc::ChunkMask), SecondScratchReg);
+    branch32(cond, Address(SecondScratchReg, gc::ChunkLocationOffsetFromLastByte),
+             Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
 }
 
 void

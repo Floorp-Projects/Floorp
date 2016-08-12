@@ -1535,7 +1535,7 @@ public:
   explicit nsFrameLoaderDestroyRunnable(nsFrameLoader* aFrameLoader)
    : mFrameLoader(aFrameLoader), mPhase(eDestroyDocShell) {}
 
-  NS_IMETHODIMP Run() override;
+  NS_IMETHOD Run() override;
 };
 
 void
@@ -2735,8 +2735,10 @@ class nsAsyncMessageToChild : public nsSameProcessAsyncMessageBase,
                               public Runnable
 {
 public:
-  nsAsyncMessageToChild(JSContext* aCx, JS::Handle<JSObject*> aCpows, nsFrameLoader* aFrameLoader)
-    : nsSameProcessAsyncMessageBase(aCx, aCpows)
+  nsAsyncMessageToChild(JS::RootingContext* aRootingCx,
+                        JS::Handle<JSObject*> aCpows,
+                        nsFrameLoader* aFrameLoader)
+    : nsSameProcessAsyncMessageBase(aRootingCx, aCpows)
     , mFrameLoader(aFrameLoader)
   {
   }
@@ -2786,8 +2788,9 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
   }
 
   if (mChildMessageManager) {
-    RefPtr<nsAsyncMessageToChild> ev = new nsAsyncMessageToChild(aCx, aCpows, this);
-    nsresult rv = ev->Init(aCx, aMessage, aData, aPrincipal);
+    JS::RootingContext* rcx = JS::RootingContext::get(aCx);
+    RefPtr<nsAsyncMessageToChild> ev = new nsAsyncMessageToChild(rcx, aCpows, this);
+    nsresult rv = ev->Init(aMessage, aData, aPrincipal);
     if (NS_FAILED(rv)) {
       return rv;
     }

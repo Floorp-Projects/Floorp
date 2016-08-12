@@ -16,12 +16,11 @@ const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 var gHttpServer = null;
 
-function run_test() {
-  do_test_pending();
+add_task(function* test_setup() {
   do_get_profile();
 
   // Make sure we don't generate unexpected pings due to pref changes.
-  setEmptyPrefWatchlist();
+  yield setEmptyPrefWatchlist();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
@@ -29,9 +28,7 @@ function run_test() {
   // Start the webserver to check if the pending ping correctly arrives.
   gHttpServer = new HttpServer();
   gHttpServer.start(-1);
-
-  run_next_test();
-}
+});
 
 add_task(function* testSendPendingOnIdleDaily() {
   // Create a valid pending ping.
@@ -72,5 +69,5 @@ add_task(function* testSendPendingOnIdleDaily() {
   Assert.equal(ping.id, PENDING_PING.id);
   Assert.equal(ping.type, PENDING_PING.type);
 
-  gHttpServer.stop(do_test_finished);
+  yield new Promise(resolve => gHttpServer.stop(resolve));
 });

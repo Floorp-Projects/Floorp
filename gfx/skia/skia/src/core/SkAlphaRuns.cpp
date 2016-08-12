@@ -13,7 +13,9 @@ void SkAlphaRuns::reset(int width) {
     SkASSERT(width > 0);
 
 #ifdef SK_DEBUG
+#ifndef SK_DISABLE_SLOW_DEBUG_VALIDATION
     sk_memset16((uint16_t*)fRuns, (uint16_t)(-42), width);
+#endif
 #endif
     fRuns[0] = SkToS16(width);
     fRuns[width] = 0;
@@ -25,6 +27,7 @@ void SkAlphaRuns::reset(int width) {
 
 #ifdef SK_DEBUG
     void SkAlphaRuns::assertValid(int y, int maxStep) const {
+#ifndef SK_DISABLE_SLOW_DEBUG_VALIDATION
         int max = (y + 1) * maxStep - (y == maxStep - 1);
 
         const int16_t* runs = fRuns;
@@ -35,6 +38,7 @@ void SkAlphaRuns::reset(int width) {
             alpha += *runs;
             runs += *runs;
         }
+#endif
     }
 
     void SkAlphaRuns::dump() const {
@@ -56,6 +60,7 @@ void SkAlphaRuns::reset(int width) {
     }
 
     void SkAlphaRuns::validate() const {
+#ifndef SK_DISABLE_SLOW_DEBUG_VALIDATION
         SkASSERT(fWidth > 0);
 
         int         count = 0;
@@ -68,5 +73,6 @@ void SkAlphaRuns::reset(int width) {
             runs += *runs;
         }
         SkASSERT(count == fWidth);
+#endif
     }
 #endif

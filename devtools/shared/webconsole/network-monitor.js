@@ -722,15 +722,14 @@ NetworkResponseListener.prototype = {
  *        logged.
  * @param object owner
  *        The network monitor owner. This object needs to hold:
- *        - onNetworkEvent(requestInfo, channel, networkMonitor).
+ *        - onNetworkEvent(requestInfo)
  *          This method is invoked once for every new network request and it is
- *          given the following arguments: the initial network request
- *          information, and the channel. The third argument is the NetworkMonitor
- *          instance. onNetworkEvent() must return an object which holds several add*()
- *          methods which are used to add further network request/response
- *          information.
- *        - stackTraceCollector If the owner has this optional property, it will
- *          be used as a StackTraceCollector by the NetworkMonitor.
+ *          given the initial network request information as an argument.
+ *          onNetworkEvent() must return an object which holds several add*()
+ *          methods which are used to add further network request/response information.
+ *        - stackTraceCollector
+ *          If the owner has this optional property, it will be used as a
+ *          StackTraceCollector by the NetworkMonitor.
  */
 function NetworkMonitor(filters, owner) {
   this.filters = filters;
@@ -1089,7 +1088,7 @@ NetworkMonitor.prototype = {
       cookies = NetworkHelper.parseCookieHeader(cookieHeader);
     }
 
-    httpActivity.owner = this.owner.onNetworkEvent(event, channel);
+    httpActivity.owner = this.owner.onNetworkEvent(event);
 
     this._setupResponseListener(httpActivity);
 

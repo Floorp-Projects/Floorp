@@ -138,7 +138,7 @@ public:
   {
   }
 
-  NS_IMETHODIMP Notify(nsITimer*) override
+  NS_IMETHOD Notify(nsITimer*) override
   {
     if (nsCOMPtr<nsIWidget> widget = do_QueryReferent(mWidget)) {
       APZCCallbackHelper::FireSingleTapEvent(mPoint, mModifiers, widget);
