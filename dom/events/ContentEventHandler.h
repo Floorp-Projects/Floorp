@@ -240,6 +240,14 @@ protected:
                                        uint32_t aXPStartOffset,
                                        uint32_t aXPEndOffset,
                                        LineBreakType aLineBreakType);
+  // Get the contents in aContent (meaning all children of aContent) as plain
+  // text.  E.g., specifying mRootContent gets whole text in it.
+  // Note that the result is not same as .textContent.  The result is
+  // optimized for native IMEs.  For example, <br> element and some block
+  // elements causes "\n" (or "\r\n"), see also ShouldBreakLineBefore().
+  nsresult GenerateFlatTextContent(nsIContent* aContent,
+                                   nsAFlatString& aString,
+                                   LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
   nsresult GenerateFlatTextContent(nsRange* aRange,
                                    nsAFlatString& aString,
@@ -394,6 +402,21 @@ protected:
   // <p>, not the start of 2nd <p>.  The result is relative to the last text
   // frame which represents the last character of aTextContent.
   FrameRelativeRect GuessLineBreakerRectAfter(nsIContent* aTextContent);
+
+  // Returns a guessed first rect.  I.e., it may be different from actual
+  // caret when selection is collapsed at start of aFrame.  For example, this
+  // guess the caret rect only with the content box of aFrame and its font
+  // height like:
+  // +-aFrame----------------- (border box)
+  // |
+  // |  +--------------------- (content box)
+  // |  | I
+  //      ^ guessed caret rect
+  // However, actual caret is computed with more information like line-height,
+  // child frames of aFrame etc.  But this does not emulate actual caret
+  // behavior exactly for simpler and faster code because it's difficult and
+  // we're not sure it's worthwhile to do it with complicated implementation.
+  FrameRelativeRect GuessFirstCaretRectIn(nsIFrame* aFrame);
 
   // Make aRect non-empty.  If width and/or height is 0, these methods set them
   // to 1.  Note that it doesn't set nsRect's width nor height to one device
