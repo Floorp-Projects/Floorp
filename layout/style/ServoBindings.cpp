@@ -13,6 +13,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"
+#include "nsIContentInlines.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
@@ -61,7 +62,7 @@ Gecko_NodeIsElement(RawGeckoNode* aNode)
 RawGeckoNode*
 Gecko_GetParentNode(RawGeckoNode* aNode)
 {
-  return aNode->GetParentNode();
+  return aNode->GetFlattenedTreeParentNode();
 }
 
 RawGeckoNode*
@@ -91,7 +92,8 @@ Gecko_GetNextSibling(RawGeckoNode* aNode)
 RawGeckoElement*
 Gecko_GetParentElement(RawGeckoElement* aElement)
 {
-  return aElement->GetParentElement();
+  nsINode* parentNode = aElement->GetFlattenedTreeParentNode();
+  return parentNode->IsElement() ? parentNode->AsElement() : nullptr;
 }
 
 RawGeckoElement*
