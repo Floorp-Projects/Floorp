@@ -6,7 +6,8 @@ const TELEMETRY_RESULT_ENUM = {
   RESTORED_DEFAULT: 0,
   KEPT_CURRENT: 1,
   CHANGED_ENGINE: 2,
-  CLOSED_PAGE: 3
+  CLOSED_PAGE: 3,
+  OPENED_SETTINGS: 4
 };
 
 const kSearchStr = "a search";
@@ -97,6 +98,19 @@ var gTests = [
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.RESTORED_DEFAULT);
     Services.search.currentEngine = currentEngine;
+  }
+},
+
+{
+  desc: "Click the settings link.",
+  run: function* () {
+    let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
+                                                     false,
+                                                     "about:preferences#search")
+    gBrowser.contentDocument.getElementById("linkSettingsPage").click();
+    yield loadPromise;
+
+    checkTelemetryRecords(TELEMETRY_RESULT_ENUM.OPENED_SETTINGS);
   }
 },
 
