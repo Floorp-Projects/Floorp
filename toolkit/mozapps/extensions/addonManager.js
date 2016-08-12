@@ -247,10 +247,8 @@ amManager.prototype = {
             };
           }
           AddonManager.addAddonListener(this.addonListener);
-        } else {
-          if (this.addonListener) {
-            AddonManager.removeAddonListener(this.addonListener);
-          }
+        } else if (this.addonListener) {
+          AddonManager.removeAddonListener(this.addonListener);
         }
       }
     }

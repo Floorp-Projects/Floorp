@@ -182,13 +182,11 @@ this.AddonWatcher = {
             // Wait a little before displaying another one.
             continue;
           }
-        } else {
+        } else if (now - alerts.latestNotificationTimeStamp <= delayBetweenFreezeAlerts) {
           // Even in case of freeze, we want to avoid needlessly spamming the user.
-          if (now - alerts.latestNotificationTimeStamp <= delayBetweenFreezeAlerts) {
-            // We have already displayed an alert for this add-on recently.
-            // Wait a little before displaying another one.
-            continue;
-          }
+          // We have already displayed an alert for this add-on recently.
+          // Wait a little before displaying another one.
+          continue;
         }
 
         // Ok, time to inform the user.

@@ -55,11 +55,9 @@ var TabsInTitlebar = {
         delete this._disallowed[condition];
         this._update(true);
       }
-    } else {
-      if (!(condition in this._disallowed)) {
-        this._disallowed[condition] = null;
-        this._update(true);
-      }
+    } else if (!(condition in this._disallowed)) {
+      this._disallowed[condition] = null;
+      this._update(true);
     }
   },
 
@@ -298,11 +296,11 @@ function updateTitlebarDisplay() {
       }
       document.documentElement.setAttribute("drawtitle", "true");
     }
-  } else { // not OS X
-    if (TabsInTitlebar.enabled)
-      document.documentElement.setAttribute("chromemargin", "0,2,2,2");
-    else
-      document.documentElement.removeAttribute("chromemargin");
+  } else if (TabsInTitlebar.enabled) {
+    // not OS X
+    document.documentElement.setAttribute("chromemargin", "0,2,2,2");
+  } else {
+    document.documentElement.removeAttribute("chromemargin");
   }
 }
 
