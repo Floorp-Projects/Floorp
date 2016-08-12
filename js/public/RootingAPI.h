@@ -661,18 +661,16 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
     }
 
     inline js::RootedListHeads& rootLists(JS::RootingContext* cx) {
-        return rootLists(reinterpret_cast<JSContext*>(cx));
+        return rootLists(static_cast<js::ContextFriendFields*>(cx));
+    }
+    inline js::RootedListHeads& rootLists(js::ContextFriendFields* cx) {
+        if (JS::Zone* zone = cx->zone_)
+            return JS::shadow::Zone::asShadowZone(zone)->stackRoots_;
+        MOZ_ASSERT(cx->isJSContext);
+        return cx->roots.stackRoots_;
     }
     inline js::RootedListHeads& rootLists(JSContext* cx) {
-        if (JS::Zone* zone = js::GetContextZone(cx))
-            return JS::shadow::Zone::asShadowZone(zone)->stackRoots_;
-        return rootLists(js::GetRuntime(cx));
-    }
-    inline js::RootedListHeads& rootLists(js::PerThreadDataFriendFields* pt) {
-        return pt->roots.stackRoots_;
-    }
-    inline js::RootedListHeads& rootLists(JSRuntime* rt) {
-        return js::PerThreadDataFriendFields::getMainThread(rt)->roots.stackRoots_;
+        return rootLists(js::ContextFriendFields::get(cx));
     }
 
   public:
@@ -987,14 +985,16 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
         roots.heapRoots_[kind].insertBack(reinterpret_cast<JS::PersistentRooted<void*>*>(this));
     }
 
-    js::RootLists& rootLists(js::PerThreadDataFriendFields* pt) { return pt->roots; }
-    js::RootLists& rootLists(JSRuntime* rt) {
-        return js::PerThreadDataFriendFields::getMainThread(rt)->roots;
+    js::RootLists& rootLists(JSContext* cx) {
+        return rootLists(JS::RootingContext::get(cx));
     }
-    js::RootLists& rootLists(JSContext* cx) { return rootLists(js::GetRuntime(cx)); }
     js::RootLists& rootLists(JS::RootingContext* cx) {
-        return rootLists(reinterpret_cast<JSContext*>(cx));
+        MOZ_ASSERT(cx->isJSContext);
+        return cx->roots;
     }
+
+    // Disallow ExclusiveContext*.
+    js::RootLists& rootLists(js::ContextFriendFields* cx) = delete;
 
   public:
     PersistentRooted() : ptr(GCPolicy<T>::initial()) {}

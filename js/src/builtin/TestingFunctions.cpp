@@ -1042,8 +1042,8 @@ class HasChildTracer : public JS::CallbackTracer
     }
 
   public:
-    HasChildTracer(JSRuntime* rt, HandleValue child)
-      : JS::CallbackTracer(rt, TraceWeakMapKeysValues), child_(rt, child), found_(false)
+    HasChildTracer(JSContext* cx, HandleValue child)
+      : JS::CallbackTracer(cx, TraceWeakMapKeysValues), child_(cx, child), found_(false)
     {}
 
     bool found() const { return found_; }
@@ -1061,7 +1061,7 @@ HasChild(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    HasChildTracer trc(cx->runtime(), child);
+    HasChildTracer trc(cx, child);
     TraceChildren(&trc, parent.toGCThing(), parent.traceKind());
     args.rval().setBoolean(trc.found());
     return true;
