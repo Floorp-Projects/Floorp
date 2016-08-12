@@ -90,7 +90,7 @@ MarkExactStackRoots(JSRuntime* rt, JSTracer* trc)
 {
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next())
         TraceStackRoots(trc, zone->stackRoots_);
-    rt->mainThread.roots.traceStackRoots(trc);
+    rt->contextFromMainThread()->roots.traceStackRoots(trc);
 }
 
 template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
@@ -119,7 +119,7 @@ JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
 static void
 MarkPersistentRooted(JSRuntime* rt, JSTracer* trc)
 {
-    rt->mainThread.roots.tracePersistentRoots(trc);
+    rt->contextFromMainThread()->roots.tracePersistentRoots(trc);
 }
 
 template <typename T>

@@ -2033,7 +2033,7 @@ private:
 class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
 public:
   CrossAxisPositionTracker(FlexLine* aFirstLine,
-                           uint8_t aAlignContent,
+                           const ReflowInput& aReflowInput,
                            nscoord aContentBoxCrossSize,
                            bool aIsCrossSizeDefinite,
                            const FlexboxAxisTracker& aAxisTracker);
@@ -2737,7 +2737,7 @@ MainAxisPositionTracker::TraversePackingSpace()
 
 CrossAxisPositionTracker::
   CrossAxisPositionTracker(FlexLine* aFirstLine,
-                           uint8_t aAlignContent,
+                           const ReflowInput& aReflowInput,
                            nscoord aContentBoxCrossSize,
                            bool aIsCrossSizeDefinite,
                            const FlexboxAxisTracker& aAxisTracker)
@@ -2745,7 +2745,7 @@ CrossAxisPositionTracker::
                     aAxisTracker.IsCrossAxisReversed()),
     mPackingSpaceRemaining(0),
     mNumPackingSpacesRemaining(0),
-    mAlignContent(aAlignContent)
+    mAlignContent(aReflowInput.mStylePosition->ComputedAlignContent())
 {
   MOZ_ASSERT(aFirstLine, "null first line pointer");
 
@@ -2757,17 +2757,26 @@ CrossAxisPositionTracker::
   // XXX strip of the <overflow-position> bit until we implement that
   mAlignContent &= ~NS_STYLE_ALIGN_FLAG_BITS;
 
-  if (aIsCrossSizeDefinite && !aFirstLine->getNext()) {
-    // "If the flex container has only a single line (even if it's a
-    // multi-line flex container) and has a definite cross size, the cross
-    // size of the flex line is the flex container's inner cross size."
+  if (!aFirstLine->getNext()) {
+    // "If the flex container is single-line and has a definite cross size, the
+    // cross size of the flex line is the flex container's inner cross size."
+    //
     // SOURCE: http://dev.w3.org/csswg/css-flexbox/#algo-line-break
     // NOTE: This means (by definition) that there's no packing space, which
     // means we don't need to be concerned with "align-conent" at all and we
     // can return early. This is handy, because this is the usual case (for
     // single-line flexbox).
-    aFirstLine->SetLineCrossSize(aContentBoxCrossSize);
-    return;
+    if (aIsCrossSizeDefinite) {
+      aFirstLine->SetLineCrossSize(aContentBoxCrossSize);
+      return;
+    }
+
+    // "If the flex container is single-line, then clamp the line's
+    // cross-size to be within the container's computed min and max cross-size
+    // properties."
+    aFirstLine->SetLineCrossSize(NS_CSS_MINMAX(aFirstLine->GetLineCrossSize(),
+                                               aReflowInput.ComputedMinBSize(),
+                                               aReflowInput.ComputedMaxBSize()));
   }
 
   // NOTE: The rest of this function should essentially match
@@ -3484,13 +3493,9 @@ nsFlexContainerFrame::GetMainSizeFromReflowInput(
   if (aAxisTracker.IsRowOriented()) {
     // Row-oriented --> our main axis is the inline axis, so our main size
     // is our inline size (which should already be resolved).
-    // XXXdholbert ISize may be (wrongly) unconstrained right now: bug 1163238
-    // Uncomment when that's fixed:
-    /*
     NS_WARN_IF_FALSE(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
                      "Unconstrained inline size; this should only result from "
                      "huge sizes (not intrinsic sizing w/ orthogonal flows)");
-    */
     return aReflowInput.ComputedISize();
   }
 
@@ -3520,8 +3525,6 @@ GetLargestLineMainSize(const FlexLine* aFirstLine)
  *
  * Guaranteed to return a definite length, i.e. not NS_UNCONSTRAINEDSIZE,
  * aside from cases with huge lengths which happen to compute to that value.
- * XXXdholbert (this^ isn't quite true, if we're row-oriented and in an
- * orthogonal flow, per mentions of bug 1163238 in GetMainSizeFromReflowInput.)
  *
  * (Note: This function should be structurally similar to 'ComputeCrossSize()',
  * except that here, the caller has already grabbed the tentative size from the
@@ -3593,13 +3596,9 @@ nsFlexContainerFrame::ComputeCrossSize(const ReflowInput& aReflowInput,
   if (aAxisTracker.IsColumnOriented()) {
     // Column-oriented --> our cross axis is the inline axis, so our cross size
     // is our inline size (which should already be resolved).
-    // XXXdholbert ISize may be (wrongly) unconstrained right now: bug 1163238.
-    // Uncomment when that's fixed:
-    /*
     NS_WARN_IF_FALSE(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
                      "Unconstrained inline size; this should only result from "
                      "huge sizes (not intrinsic sizing w/ orthogonal flows)");
-    */
     *aIsDefinite = true;
     return aReflowInput.ComputedISize();
   }
@@ -3806,10 +3805,10 @@ FlexLine::PositionItemsInCrossAxis(nscoord aLineStartPosition,
 }
 
 void
-nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
-                             ReflowOutput&     aDesiredSize,
+nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
+                             ReflowOutput& aDesiredSize,
                              const ReflowInput& aReflowInput,
-                             nsReflowStatus&          aStatus)
+                             nsReflowStatus& aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFlexContainerFrame");
@@ -4030,9 +4029,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // scope of a particular flex line)
   CrossAxisPositionTracker
     crossAxisPosnTracker(lines.getFirst(),
-                         aReflowInput.mStylePosition->ComputedAlignContent(),
-                         contentBoxCrossSize, isCrossSizeDefinite,
-                         aAxisTracker);
+                         aReflowInput, contentBoxCrossSize,
+                         isCrossSizeDefinite, aAxisTracker);
 
   // Now that we know the cross size of each line (including
   // "align-content:stretch" adjustments, from the CrossAxisPositionTracker

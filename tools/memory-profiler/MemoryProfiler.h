@@ -22,7 +22,6 @@
 
 #define MEMORY_PROFILER_CONTRACT_ID "@mozilla.org/tools/memory-profiler;1"
 
-struct JSRuntime;
 struct PRLock;
 
 namespace mozilla {
@@ -30,17 +29,17 @@ namespace mozilla {
 class NativeProfilerImpl;
 class GCHeapProfilerImpl;
 
-struct ProfilerForJSRuntime
+struct ProfilerForJSContext
 {
-  ProfilerForJSRuntime()
+  ProfilerForJSContext()
     : mProfiler(nullptr)
     , mEnabled(false)
   {}
   GCHeapProfilerImpl* mProfiler;
   bool mEnabled;
 };
-using JSRuntimeProfilerMap =
-  nsDataHashtable<nsClearingPtrHashKey<JSRuntime>, ProfilerForJSRuntime>;
+using JSContextProfilerMap =
+  nsDataHashtable<nsClearingPtrHashKey<JSContext>, ProfilerForJSContext>;
 
 class MemoryProfiler final : public nsIMemoryProfiler
 {
@@ -53,12 +52,12 @@ private:
   ~MemoryProfiler() {}
 
   // The accesses to other static member are guarded by sLock and
-  // sProfileRuntimeCount.
+  // sProfileContextCount.
   static PRLock* sLock;
-  static uint32_t sProfileRuntimeCount;
+  static uint32_t sProfileContextCount;
 
   static StaticAutoPtr<NativeProfilerImpl> sNativeProfiler;
-  static StaticAutoPtr<JSRuntimeProfilerMap> sJSRuntimeProfilerMap;
+  static StaticAutoPtr<JSContextProfilerMap> sJSContextProfilerMap;
   static TimeStamp sStartTime;
 };
 

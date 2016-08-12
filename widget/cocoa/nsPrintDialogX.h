@@ -22,11 +22,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHODIMP Init() override;
-  NS_IMETHODIMP Show(nsPIDOMWindowOuter *aParent, nsIPrintSettings *aSettings,
-                     nsIWebBrowserPrint *aWebBrowserPrint) override;
-  NS_IMETHODIMP ShowPageSetup(nsPIDOMWindowOuter *aParent,
-                              nsIPrintSettings *aSettings) override;
+  NS_IMETHOD Init() override;
+  NS_IMETHOD Show(nsPIDOMWindowOuter *aParent, nsIPrintSettings *aSettings,
+                  nsIWebBrowserPrint *aWebBrowserPrint) override;
+  NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter *aParent,
+                           nsIPrintSettings *aSettings) override;
 
 protected:
   virtual ~nsPrintDialogServiceX();

@@ -480,15 +480,9 @@ XPCShellEnvironment::Init()
     // is unbuffered by default
     setbuf(stdout, 0);
 
-    JSRuntime *rt = xpc::GetJSRuntime();
-    if (!rt) {
-        NS_ERROR("failed to get JSRuntime from nsJSRuntimeService!");
-        return false;
-    }
-
-    mGlobalHolder.init(rt);
-
     AutoSafeJSContext cx;
+
+    mGlobalHolder.init(cx);
 
     nsCOMPtr<nsIXPConnect> xpc =
       do_GetService(nsIXPConnect::GetCID());

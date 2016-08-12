@@ -25,14 +25,11 @@ def pkg_config_version(pkg_config):
 #   will be returned to the caller.
 #   Returns `True` when the package description is fulfilled.
 @template
-@imports(_from='mozbuild.configure', _import='DependsFunction')
-def pkg_check_modules(var, package_desc,
-                      condition=depends('--help')(lambda _: True),
+def pkg_check_modules(var, package_desc, condition=always,
                       allow_missing=False):
     if isinstance(package_desc, (tuple, list)):
         package_desc = ' '.join(package_desc)
-    if not isinstance(package_desc, DependsFunction):
-        package_desc = depends('--help')(lambda _: package_desc)
+    package_desc = dependable(package_desc)
 
     @depends_when(pkg_config, pkg_config_version, when=condition)
     def check_pkg_config(pkg_config, version):

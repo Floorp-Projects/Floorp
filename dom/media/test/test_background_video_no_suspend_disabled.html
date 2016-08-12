@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test Background Video Doesn't Suspend When Feature Disabled</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<p id="display">
+<div id="content" style="display:none"></div>
+<pre id="test">
+<script>
+"use strict";
+
+var manager = new MediaTestManager;
+
+startTest({
+  desc: "Test Background Video Doesn't Suspend When Feature Disabled.",
+  prefs: [
+    [ 'media.test.setVisible', true ],
+    [ 'media.suspend-bkgnd-video.enabled', false ],
+    [ 'media.suspend-bkgnd-video.delay-ms', 0 ]
+  ],
+  tests: [ { name: "gizmo.mp4" } ],
+  runTest: (test, token) => {
+    let v = appendVideoToDoc(test.name, token);
+    manager.started(token);
+
+    /* This test checks that suspend doesn't occur when the feature is disabled */
+    waitUntilPlaying(v)
+      .then(() => checkVideoDoesntSuspend(v))
+      .then(() => {
+        ok(true, 'Video ended before decode was suspended');
+        manager.finished(token); })
+      .catch((e) => {
+        ok(false, 'Test Failed: ' + e.toString());
+        manager.finished(token); });
+  }
+});
+</script>
+</pre>

@@ -149,6 +149,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
 
         mRecentTabsAdapter.startListeningForClosedTabs();
+        mRecentTabsAdapter.startListeningForHistorySanitize();
 
         if (mSavedRestoreBundle != null) {
             setPanelStateFromBundle(mSavedRestoreBundle);
@@ -442,7 +443,6 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                             }
 
                             GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());
-                    mRecentTabsAdapter.clearLastSessionData();
                             Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
                         }
                     });
@@ -654,11 +654,13 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         super.onDestroyView();
 
         mRecentTabsAdapter.stopListeningForClosedTabs();
+        mRecentTabsAdapter.stopListeningForHistorySanitize();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+
         if (mSyncStatusListener != null) {
             FirefoxAccounts.removeSyncStatusListener(mSyncStatusListener);
             mSyncStatusListener = null;

@@ -395,7 +395,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
                                       nsIIOService* serv, bool reuseGlobal,
                                       bool cache, MutableHandleValue retval)
 {
-    RootedObject target_obj(nsContentUtils::RootingCx(), targetObjArg);
+    RootedObject target_obj(RootingCx(), targetObjArg);
 
     nsCOMPtr<nsIGlobalObject> globalObject = xpc::NativeGlobal(target_obj);
     ErrorResult result;

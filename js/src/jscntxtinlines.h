@@ -353,7 +353,7 @@ GetNativeStackLimit(ExclusiveContext* cx)
         // unlikely that we'll be mixing trusted and untrusted code together.
         kind = StackForTrustedScript;
     }
-    return cx->perThreadData->nativeStackLimit[kind];
+    return cx->nativeStackLimit[kind];
 }
 
 inline LifoAlloc&

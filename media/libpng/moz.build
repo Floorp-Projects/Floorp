@@ -38,6 +38,13 @@ if CONFIG['MOZ_PNG_ARM_NEON']:
         'arm/filter_neon.S'
     ]
 
+if CONFIG['INTEL_ARCHITECTURE']:
+    DEFINES['PNG_INTEL_SSE'] = True
+    UNIFIED_SOURCES += [
+        'sse2/filter_sse2_intrinsics.c',
+        'sse2/intel_init.c'
+    ]
+
 Library('mozpng')
 
 FINAL_LIBRARY = 'gkmedias'

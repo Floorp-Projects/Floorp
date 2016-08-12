@@ -224,12 +224,23 @@ void
 Gecko_StoreStyleDifference(RawGeckoNode* aNode, nsChangeHint aChangeHintToStore)
 {
 #ifdef MOZ_STYLO
-  // XXXEmilio probably storing it in the nearest content parent is a sane thing
-  // to do if this case can ever happen?
   MOZ_ASSERT(aNode->IsContent());
+  MOZ_ASSERT(aNode->IsDirtyForServo(),
+             "Change hint stored in a not-dirty node");
 
-  nsIContent* aContent = aNode->AsContent();
-  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
+  // For elements, we need to store the change hint in the proper style context.
+  // For text nodes, we want to store the change hint in the parent element,
+  // since Gecko's change list only operates on Elements, and we'll fail to
+  // compute the change hint for the element properly because the property won't
+  // always be in the cache of the parent's nsStyleContext.
+  //
+  // For Gecko this is not a problem, because they access the inherited structs
+  // from the parent style context in order to inherit them, so they're found in
+  // the cache and get compared.
+  Element* aElement =
+    aNode->IsElement() ? aNode->AsElement() : aNode->GetParentElement();
+
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (!primaryFrame) {
     // TODO: Pick the undisplayed content map from the frame-constructor, and
     // stick it there. For now we're generating ReconstructFrame

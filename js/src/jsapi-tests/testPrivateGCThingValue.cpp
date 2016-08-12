@@ -23,7 +23,7 @@ class TestTracer : public JS::CallbackTracer
     bool found;
 
     explicit TestTracer(JSContext* cx)
-      : JS::CallbackTracer(JS_GetRuntime(cx)),
+      : JS::CallbackTracer(cx),
         found(false)
     { }
 };

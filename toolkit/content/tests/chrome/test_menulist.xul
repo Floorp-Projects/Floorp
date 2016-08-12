@@ -282,7 +282,18 @@ function checkScrollAndFinish()
   isnot(editableMenulist.inputField.selectionStart, editableMenulist.inputField.textLength,
         "mouse event on editable menulist with outline caret position");
 
-  SimpleTest.finish();
+  let menulist = $("menulist-size");
+  menulist.addEventListener("popupshown", function testAltClose() {
+    menulist.removeEventListener("popupshown", testAltClose);
+
+    sendKey("ALT");
+    is(menulist.menupopup.state, "open", "alt doesn't close menulist");
+    menulist.open = false;
+
+    SimpleTest.finish();
+  });
+
+  menulist.open = true;
 }
 
 ]]>

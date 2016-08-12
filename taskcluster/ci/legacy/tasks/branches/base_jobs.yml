@@ -56,6 +56,8 @@ builds:
       - sm-compacting
       - sm-rootanalysis
       - sm-package
+      - sm-asan
+      - sm-msan
     types:
       opt:
         task: tasks/builds/opt_linux64.yml
@@ -231,6 +233,26 @@ builds:
       file_patterns:
        - js/public/**
        - js/src/**
+  sm-asan:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_asan.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-msan:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_msan.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   win32:
     platforms:
       - win32
@@ -345,6 +367,7 @@ tasks:
         file_patterns:
           - 'testing/marionette/harness/**'
           - 'testing/mozharness/scripts/marionette_harness_tests.py'
+          - 'testing/config/marionette_harness_test_requirements.txt'
   linux64-gcc:
     task: tasks/builds/linux64_gcc.yml
     root: true

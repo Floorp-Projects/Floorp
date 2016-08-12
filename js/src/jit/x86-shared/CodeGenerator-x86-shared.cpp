@@ -940,17 +940,15 @@ CodeGeneratorX86Shared::visitAddI64(LAddI64* lir)
 {
     const LInt64Allocation lhs = lir->getInt64Operand(LAddI64::Lhs);
     const LInt64Allocation rhs = lir->getInt64Operand(LAddI64::Rhs);
-    Register64 out = ToOutRegister64(lir);
 
-    if (ToRegister64(lhs) != out)
-        masm.move64(ToRegister64(lhs), out);
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
 
     if (IsConstant(rhs)) {
-        masm.add64(Imm64(ToInt64(rhs)), out);
+        masm.add64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
         return;
     }
 
-    masm.add64(ToOperandOrRegister64(rhs), out);
+    masm.add64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
 }
 
 void
@@ -977,17 +975,15 @@ CodeGeneratorX86Shared::visitSubI64(LSubI64* lir)
 {
     const LInt64Allocation lhs = lir->getInt64Operand(LSubI64::Lhs);
     const LInt64Allocation rhs = lir->getInt64Operand(LSubI64::Rhs);
-    Register64 out = ToOutRegister64(lir);
 
-    if (ToRegister64(lhs) != out)
-        masm.move64(ToRegister64(lhs), out);
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
 
     if (IsConstant(rhs)) {
-        masm.sub64(Imm64(ToInt64(rhs)), out);
+        masm.sub64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
         return;
     }
 
-    masm.sub64(ToOperandOrRegister64(rhs), out);
+    masm.sub64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
 }
 
 void
@@ -1110,41 +1106,39 @@ CodeGeneratorX86Shared::visitMulI64(LMulI64* lir)
 {
     const LInt64Allocation lhs = lir->getInt64Operand(LMulI64::Lhs);
     const LInt64Allocation rhs = lir->getInt64Operand(LMulI64::Rhs);
-    Register64 out = ToOutRegister64(lir);
 
-    if (ToRegister64(lhs) != out)
-        masm.move64(ToRegister64(lhs), out);
+    MOZ_ASSERT(ToRegister64(lhs) == ToOutRegister64(lir));
 
     if (IsConstant(rhs)) {
         int64_t constant = ToInt64(rhs);
         switch (constant) {
           case -1:
-            masm.neg64(out);
+            masm.neg64(ToRegister64(lhs));
             return;
           case 0:
-            masm.xor64(out, out);
+            masm.xor64(ToRegister64(lhs), ToRegister64(lhs));
             return;
           case 1:
             // nop
             return;
           case 2:
-            masm.add64(out, out);
+            masm.add64(ToRegister64(lhs), ToRegister64(lhs));
             return;
           default:
             if (constant > 0) {
                 // Use shift if constant is power of 2.
                 int32_t shift = mozilla::FloorLog2(constant);
                 if (int64_t(1) << shift == constant) {
-                    masm.lshift64(Imm32(shift), out);
+                    masm.lshift64(Imm32(shift), ToRegister64(lhs));
                     return;
                 }
             }
             Register temp = ToTempRegisterOrInvalid(lir->temp());
-            masm.mul64(Imm64(constant), out, temp);
+            masm.mul64(Imm64(constant), ToRegister64(lhs), temp);
         }
     } else {
         Register temp = ToTempRegisterOrInvalid(lir->temp());
-        masm.mul64(ToOperandOrRegister64(rhs), out, temp);
+        masm.mul64(ToOperandOrRegister64(rhs), ToRegister64(lhs), temp);
     }
 }
 
@@ -1791,29 +1785,27 @@ CodeGeneratorX86Shared::visitBitOpI64(LBitOpI64* lir)
 {
     const LInt64Allocation lhs = lir->getInt64Operand(LBitOpI64::Lhs);
     const LInt64Allocation rhs = lir->getInt64Operand(LBitOpI64::Rhs);
-    Register64 out = ToOutRegister64(lir);
 
-    if (ToRegister64(lhs) != out)
-        masm.move64(ToRegister64(lhs), out);
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
 
     switch (lir->bitop()) {
       case JSOP_BITOR:
         if (IsConstant(rhs))
-            masm.or64(Imm64(ToInt64(rhs)), out);
+            masm.or64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
         else
-            masm.or64(ToOperandOrRegister64(rhs), out);
+            masm.or64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
         break;
       case JSOP_BITXOR:
         if (IsConstant(rhs))
-            masm.xor64(Imm64(ToInt64(rhs)), out);
+            masm.xor64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
         else
-            masm.xor64(ToOperandOrRegister64(rhs), out);
+            masm.xor64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
         break;
       case JSOP_BITAND:
         if (IsConstant(rhs))
-            masm.and64(Imm64(ToInt64(rhs)), out);
+            masm.and64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
         else
-            masm.and64(ToOperandOrRegister64(rhs), out);
+            masm.and64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
         break;
       default:
         MOZ_CRASH("unexpected binary opcode");
@@ -1877,25 +1869,23 @@ CodeGeneratorX86Shared::visitShiftI64(LShiftI64* lir)
 {
     const LInt64Allocation lhs = lir->getInt64Operand(LShiftI64::Lhs);
     LAllocation* rhs = lir->getOperand(LShiftI64::Rhs);
-    Register64 out = ToOutRegister64(lir);
 
-    if (ToRegister64(lhs) != out)
-        masm.move64(ToRegister64(lhs), out);
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
 
     if (rhs->isConstant()) {
         int32_t shift = int32_t(rhs->toConstant()->toInt64() & 0x3F);
         switch (lir->bitop()) {
           case JSOP_LSH:
             if (shift)
-                masm.lshift64(Imm32(shift), out);
+                masm.lshift64(Imm32(shift), ToRegister64(lhs));
             break;
           case JSOP_RSH:
             if (shift)
-                masm.rshift64Arithmetic(Imm32(shift), out);
+                masm.rshift64Arithmetic(Imm32(shift), ToRegister64(lhs));
             break;
           case JSOP_URSH:
             if (shift)
-                masm.rshift64(Imm32(shift), out);
+                masm.rshift64(Imm32(shift), ToRegister64(lhs));
             break;
           default:
             MOZ_CRASH("Unexpected shift op");
@@ -1906,13 +1896,13 @@ CodeGeneratorX86Shared::visitShiftI64(LShiftI64* lir)
     MOZ_ASSERT(ToRegister(rhs) == ecx);
     switch (lir->bitop()) {
       case JSOP_LSH:
-        masm.lshift64(ecx, out);
+        masm.lshift64(ecx, ToRegister64(lhs));
         break;
       case JSOP_RSH:
-        masm.rshift64Arithmetic(ecx, out);
+        masm.rshift64Arithmetic(ecx, ToRegister64(lhs));
         break;
       case JSOP_URSH:
-        masm.rshift64(ecx, out);
+        masm.rshift64(ecx, ToRegister64(lhs));
         break;
       default:
         MOZ_CRASH("Unexpected shift op");
@@ -4860,22 +4850,21 @@ CodeGeneratorX86Shared::visitRotateI64(LRotateI64* lir)
     Register64 output = ToOutRegister64(lir);
     Register temp = ToTempRegisterOrInvalid(lir->temp());
 
-    if (input != output)
-        masm.move64(input, output);
+    MOZ_ASSERT(input == output);
 
     if (count->isConstant()) {
         int32_t c = int32_t(count->toConstant()->toInt64() & 0x3F);
         if (!c)
             return;
         if (mir->isLeftRotate())
-            masm.rotateLeft64(Imm32(c), output, output, temp);
+            masm.rotateLeft64(Imm32(c), input, output, temp);
         else
-            masm.rotateRight64(Imm32(c), output, output, temp);
+            masm.rotateRight64(Imm32(c), input, output, temp);
     } else {
         if (mir->isLeftRotate())
-            masm.rotateLeft64(ToRegister(count), output, output, temp);
+            masm.rotateLeft64(ToRegister(count), input, output, temp);
         else
-            masm.rotateRight64(ToRegister(count), output, output, temp);
+            masm.rotateRight64(ToRegister(count), input, output, temp);
     }
 }
 

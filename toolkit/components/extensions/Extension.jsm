@@ -93,6 +93,8 @@ var {
   flushJarCache,
 } = ExtensionUtils;
 
+XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
+
 const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
@@ -143,6 +145,7 @@ var Management = {
 
     for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
       let scope = {
+        get console() { return console; },
         ExtensionContext,
         extensions: this,
         global: scriptScope,
@@ -253,12 +256,15 @@ ExtensionContext = class extends BaseContext {
   constructor(extension, params) {
     super(extension.id);
 
-    let {type, contentWindow, uri} = params;
+    let {type, uri} = params;
     this.extension = extension;
     this.type = type;
-    this.contentWindow = contentWindow || null;
     this.uri = uri || extension.baseURI;
     this.incognito = params.incognito || false;
+
+    if (params.contentWindow) {
+      this.setContentWindow(params.contentWindow);
+    }
 
     // This is the MessageSender property passed to extension.
     // It can be augmented by the "page-open" hook.
@@ -279,11 +285,6 @@ ExtensionContext = class extends BaseContext {
     if (this.externallyVisible) {
       this.extension.views.add(this);
     }
-  }
-
-  get docShell() {
-    return this.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDocShell);
   }
 
   get cloneScope() {

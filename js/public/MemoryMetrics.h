@@ -283,7 +283,6 @@ struct GCSizes
 #define FOR_EACH_SIZE(macro) \
     macro(_, MallocHeap, marker) \
     macro(_, NonHeap,    nurseryCommitted) \
-    macro(_, NonHeap,    nurseryDecommitted) \
     macro(_, MallocHeap, nurseryMallocedBuffers) \
     macro(_, MallocHeap, storeBufferVals) \
     macro(_, MallocHeap, storeBufferCells) \
@@ -886,13 +885,13 @@ extern JS_PUBLIC_API(bool)
 CollectRuntimeStats(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVisitor* opv, bool anonymize);
 
 extern JS_PUBLIC_API(size_t)
-SystemCompartmentCount(JSRuntime* rt);
+SystemCompartmentCount(JSContext* cx);
 
 extern JS_PUBLIC_API(size_t)
-UserCompartmentCount(JSRuntime* rt);
+UserCompartmentCount(JSContext* cx);
 
 extern JS_PUBLIC_API(size_t)
-PeakSizeOfTemporary(const JSRuntime* rt);
+PeakSizeOfTemporary(const JSContext* cx);
 
 extern JS_PUBLIC_API(bool)
 AddSizeOfTab(JSContext* cx, JS::HandleObject obj, mozilla::MallocSizeOf mallocSizeOf,

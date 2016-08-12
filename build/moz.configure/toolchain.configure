@@ -62,8 +62,8 @@ set_config('HAVE_YASM', have_yasm)
 # Until the YASM variable is not necessary in old-configure.
 add_old_configure_assignment('YASM', have_yasm)
 
-@depends('--help')
-def extra_toolchain_flags(_):
+@dependable
+def extra_toolchain_flags():
     # This value will be overriden for android builds, where
     # extra flags are required to do basic checks.
     return []
@@ -765,6 +765,15 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_c_compiler=c_compiler)
 
 include('compile-checks.configure')
+
+@depends(have_64_bit,
+         try_compile(body='static_assert(sizeof(void *) == 8, "")',
+                     check_msg='for 64-bit OS'))
+def check_have_64_bit(have_64_bit, compiler_have_64_bit):
+    if have_64_bit != compiler_have_64_bit:
+        configure_error('The target compiler does not agree with configure '
+                        'about the target bitness.')
+
 
 @depends(c_compiler)
 def default_debug_flags(compiler_info):

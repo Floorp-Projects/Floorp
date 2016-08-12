@@ -172,3 +172,36 @@ def vtune(value):
 
 set_config('MOZ_VTUNE', vtune)
 set_define('MOZ_VTUNE', vtune)
+
+
+js_option('--enable-gc-trace', env='JS_GC_TRACE',
+          help='Enable tracing of allocation and finalization')
+
+@depends('--enable-gc-trace')
+def gc_trace(value):
+    if value:
+        return True
+
+set_define('JS_GC_TRACE', gc_trace)
+
+
+js_option('--enable-perf', env='JS_ION_PERF',
+          help='Enable Linux perf integration')
+
+@depends('--enable-perf')
+def ion_perf(value):
+    if value:
+        return True
+
+set_define('JS_ION_PERF', ion_perf)
+
+
+js_option('--enable-more-deterministic', env='JS_MORE_DETERMINISTIC',
+          help='Enable changes that make the shell more deterministic')
+
+@depends('--enable-more-deterministic')
+def more_deterministic(value):
+    if value:
+        return True
+
+set_define('JS_MORE_DETERMINISTIC', more_deterministic)

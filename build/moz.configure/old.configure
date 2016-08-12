@@ -145,8 +145,8 @@ def old_configure_options(*options):
     for opt in options:
         option(opt, nargs='*', help='Help missing for old configure options')
 
-    @depends('--help')
-    def all_options(help):
+    @dependable
+    def all_options():
         return list(options)
 
     return depends(prepare_configure, extra_old_configure_args, all_options,
@@ -181,7 +181,6 @@ def old_configure_options(*options):
     '--enable-faststripe',
     '--enable-feeds',
     '--enable-gamepad',
-    '--enable-gc-trace',
     '--enable-gconf',
     '--enable-gczeal',
     '--enable-gio',
@@ -203,7 +202,6 @@ def old_configure_options(*options):
     '--enable-media-navigator',
     '--enable-memory-sanitizer',
     '--enable-mobile-optimize',
-    '--enable-more-deterministic',
     '--enable-mozril-geoloc',
     '--enable-necko-protocols',
     '--enable-necko-wifi',
@@ -215,7 +213,6 @@ def old_configure_options(*options):
     '--enable-oom-breakpoint',
     '--enable-optimize',
     '--enable-parental-controls',
-    '--enable-perf',
     '--enable-permissions',
     '--enable-pie',
     '--enable-png-arm-neon-support',
@@ -438,10 +435,10 @@ def post_old_configure(raw_config):
 # them. We only do so for options that haven't been declared so far,
 # which should be a proxy for the options that old-configure handles
 # and that we don't know anything about.
-@depends('--help')
+@dependable
 @imports('__sandbox__')
 @imports(_from='mozbuild.configure.options', _import='Option')
-def remaining_mozconfig_options(_):
+def remaining_mozconfig_options():
     helper = __sandbox__._helper
     for arg in helper:
         if helper._origins[arg] != 'mozconfig':

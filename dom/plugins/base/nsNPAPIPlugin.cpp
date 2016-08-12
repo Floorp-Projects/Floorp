@@ -1062,7 +1062,7 @@ _getwindowobject(NPP npp)
   nsCOMPtr<nsPIDOMWindowOuter> outer = doc->GetWindow();
   NS_ENSURE_TRUE(outer, nullptr);
 
-  JS::Rooted<JSObject*> global(nsContentUtils::RootingCx(),
+  JS::Rooted<JSObject*> global(dom::RootingCx(),
                                nsGlobalWindow::Cast(outer)->GetGlobalJSObject());
   return nsJSObjWrapper::GetNewOrUsed(npp, global);
 }

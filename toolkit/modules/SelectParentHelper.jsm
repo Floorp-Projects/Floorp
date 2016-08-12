@@ -86,6 +86,12 @@ this.SelectParentHelper = {
         }
         break;
 
+      case "fullscreen":
+        if (currentMenulist) {
+          currentMenulist.menupopup.hidePopup();
+        }
+        break;
+
       case "popuphidden":
         currentBrowser.messageManager.sendAsyncMessage("Forms:DismissedDropDown", {});
         let popup = event.target;
@@ -118,6 +124,7 @@ this.SelectParentHelper = {
     popup.addEventListener("mouseover", this);
     popup.addEventListener("mouseout", this);
     browser.ownerDocument.defaultView.addEventListener("keydown", this, true);
+    browser.ownerDocument.defaultView.addEventListener("fullscreen", this, true);
     browser.messageManager.addMessageListener("Forms:UpdateDropDown", this);
   },
 
@@ -127,6 +134,7 @@ this.SelectParentHelper = {
     popup.removeEventListener("mouseover", this);
     popup.removeEventListener("mouseout", this);
     browser.ownerDocument.defaultView.removeEventListener("keydown", this, true);
+    browser.ownerDocument.defaultView.removeEventListener("fullscreen", this, true);
     browser.messageManager.removeMessageListener("Forms:UpdateDropDown", this);
   },
 

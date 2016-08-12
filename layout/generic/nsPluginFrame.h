@@ -105,7 +105,7 @@ public:
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
-  NS_METHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) override;
+  NS_IMETHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) override;
 
   virtual void SetIsDocumentActive(bool aIsActive) override;
 

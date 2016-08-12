@@ -204,9 +204,9 @@ public:
     mImageCache = nullptr;
   }
 
-  NS_IMETHODIMP Observe(nsISupports* aSubject,
-                        const char* aTopic,
-                        const char16_t* aSomeData) override
+  NS_IMETHOD Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const char16_t* aSomeData) override
   {
     if (!mImageCache || strcmp(aTopic, "memory-pressure")) {
       return NS_OK;
