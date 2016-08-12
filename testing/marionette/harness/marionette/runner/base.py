@@ -715,6 +715,7 @@ class BaseMarionetteTestRunner(object):
                 'avd_home': self.extra_kwargs.get('avd_home'),
                 'adb_path': self.extra_kwargs.get('adb_path'),
                 'emulator_binary': self.extra_kwargs.get('emulator_bin'),
+                'avd': self.extra_kwargs.get('avd'),
             })
 
         if self.address:
