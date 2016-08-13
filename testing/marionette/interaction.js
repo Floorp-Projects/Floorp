@@ -118,25 +118,25 @@ interaction.clickElement = function*(el, strict = false, specCompat = false) {
     visibilityCheckEl = interaction.getSelectForOptionElement(el);
   }
 
-  let visible = false;
+  let interactable = false;
   if (specCompat) {
     if (!element.isInteractable(visibilityCheckEl)) {
       el.scrollIntoView(false);
     }
-    visible = element.isInteractable(visibilityCheckEl);
+    interactable = element.isInteractable(visibilityCheckEl);
   } else {
-    visible = element.isVisible(visibilityCheckEl);
+    interactable = element.isVisible(visibilityCheckEl);
+  }
+  if (!interactable) {
+    throw new ElementNotVisibleError();
   }
 
-  if (!visible) {
-    throw new ElementNotVisibleError("Element not visible");
+  if (!atom.isElementEnabled(el)) {
+    throw new InvalidElementStateError("Element is not enabled");
   }
 
   yield a11y.getAccessible(el, true).then(acc => {
-    a11y.assertVisible(acc, el, visible);
-    if (!atom.isElementEnabled(el)) {
-      throw new InvalidElementStateError("Element is not enabled");
-    }
+    a11y.assertVisible(acc, el, interactable);
     a11y.assertEnabled(acc, el, true);
     a11y.assertActionable(acc, el);
   });
