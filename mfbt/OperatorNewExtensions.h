@@ -10,7 +10,6 @@
 #define mozilla_OperatorNewExtensions_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 
 // Credit goes to WebKit for this implementation, cf.
 // https://bugs.webkit.org/show_bug.cgi?id=74676
@@ -39,10 +38,10 @@ enum NotNullTag {
  * those limitations in mind, we can't put MOZ_NONNULL on the global,
  * standardized placement new function in any event.
  *
- * We do, however, add MOZ_NONNULL here for the potential benefit of static
- * analysis tools that understand such annotations.
+ * We deliberately don't add MOZ_NONNULL(3) to tag |p| as non-null, to benefit
+ * hypothetical static analyzers.  Doing so makes |MOZ_ASSERT(p)|'s internal
+ * test vacuous, and some compilers warn about such vacuous tests.
  */
-MOZ_NONNULL(3)
 inline void*
 operator new(size_t, mozilla::NotNullTag, void* p)
 {
