@@ -109,58 +109,56 @@ this.interaction = {};
  * @throws {InvalidElementStateError}
  *     If |el| is not enabled.
  */
-interaction.clickElement = function(el, strict = false, specCompat = false) {
+interaction.clickElement = function*(el, strict = false, specCompat = false) {
+  let win = getWindow(el);
   let a11y = accessibility.get(strict);
-  return a11y.getAccessible(el, true).then(acc => {
-    let win = getWindow(el);
 
-    let selectEl;
-    let visibilityCheckEl = el;
-    if (el.localName == "option") {
-      selectEl = interaction.getSelectForOptionElement(el);
-      visibilityCheckEl = selectEl;
-    }
+  let visibilityCheckEl  = el;
+  if (el.localName == "option") {
+    visibilityCheckEl = interaction.getSelectForOptionElement(el);
+  }
 
-    let visible = false;
-    if (specCompat) {
-      visible = element.isInteractable(visibilityCheckEl);
-      if (!visible) {
-        el.scrollIntoView(false);
-      }
-      visible = element.isInteractable(visibilityCheckEl);
-    } else {
-      visible = element.isVisible(visibilityCheckEl);
+  let visible = false;
+  if (specCompat) {
+    if (!element.isInteractable(visibilityCheckEl)) {
+      el.scrollIntoView(false);
     }
+    visible = element.isInteractable(visibilityCheckEl);
+  } else {
+    visible = element.isVisible(visibilityCheckEl);
+  }
 
-    if (!visible) {
-      throw new ElementNotVisibleError("Element is not visible");
-    }
-    a11y.assertVisible(acc, visibilityCheckEl, visible);
-    if (!atom.isElementEnabled(visibilityCheckEl)) {
+  if (!visible) {
+    throw new ElementNotVisibleError("Element not visible");
+  }
+
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, visible);
+    if (!atom.isElementEnabled(el)) {
       throw new InvalidElementStateError("Element is not enabled");
     }
-    a11y.assertEnabled(acc, visibilityCheckEl, true);
-    a11y.assertActionable(acc, visibilityCheckEl);
-
-    // chrome elements
-    if (element.isXULElement(el)) {
-      if (el.localName == "option") {
-        interaction.selectOption(el);
-      } else {
-        el.click();
-      }
-
-    // content elements
-    } else {
-      if (el.localName == "option") {
-        interaction.selectOption(el);
-      } else {
-        let centre = interaction.calculateCentreCoords(el);
-        let opts = {};
-        event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
-      }
-    }
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
   });
+
+  // chrome elements
+  if (element.isXULElement(el)) {
+    if (el.localName == "option") {
+      interaction.selectOption(el);
+    } else {
+      el.click();
+    }
+
+  // content elements
+  } else {
+    if (el.localName == "option") {
+      interaction.selectOption(el);
+    } else {
+      let centre = interaction.calculateCentreCoords(el);
+      let opts = {};
+      event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
+    }
+  }
 };
 
 /**
