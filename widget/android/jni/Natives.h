@@ -210,9 +210,6 @@ using namespace detail;
 
 namespace detail {
 
-template<class Traits, class Impl, class Args, bool IsStatic, bool IsVoid>
-class NativeStubImpl;
-
 // ProxyArg is used to handle JNI ref arguments for proxies. Because a proxied
 // call may happen outside of the original JNI native call, we must save all
 // JNI ref arguments as global refs to avoid the arguments going out of scope.
@@ -408,10 +405,6 @@ void Dispatch(const T&) {}
 
 } // namespace detail
 
-template<class Cls, class Impl> class NativeImpl;
-
-namespace detail {
-
 // Wrapper methods that convert arguments from the JNI types to the native
 // types, e.g. from jobject to jni::Object::Ref. For instance methods, the
 // wrapper methods also convert calls to calls on objects.
@@ -428,44 +421,62 @@ namespace detail {
 #define MOZ_JNICALL JNICALL
 #endif
 
-// Specialization for instance methods with non-void return type
+template<class Traits, class Impl, class Args = typename Traits::Args>
+class NativeStub;
+
 template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
-                     /* IsStatic = */ false, /* IsVoid = */ false>
+class NativeStub<Traits, Impl, jni::Args<Args...>>
 {
-    typedef typename Traits::Owner Owner;
-    typedef typename Traits::ReturnType ReturnType;
-    typedef typename TypeAdapter<ReturnType>::JNIType ReturnJNIType;
+    using Owner = typename Traits::Owner;
+    using ReturnType = typename Traits::ReturnType;
+
+    static constexpr bool isStatic = Traits::isStatic;
+    static constexpr bool isVoid = mozilla::IsVoid<ReturnType>::value;
+
+    struct VoidType { using JNIType = void; };
+    using ReturnJNIType = typename Conditional<
+            isVoid, VoidType, TypeAdapter<ReturnType>>::Type::JNIType;
+
+    using ReturnTypeForNonVoidInstance = typename Conditional<
+            !isStatic && !isVoid, ReturnType, VoidType>::Type;
+    using ReturnTypeForVoidInstance = typename Conditional<
+            !isStatic && isVoid, ReturnType, VoidType&>::Type;
+    using ReturnTypeForNonVoidStatic = typename Conditional<
+            isStatic && !isVoid, ReturnType, VoidType>::Type;
+    using ReturnTypeForVoidStatic = typename Conditional<
+            isStatic && isVoid, ReturnType, VoidType&>::Type;
+
+    static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT || isVoid,
+                  "Dispatched calls must have void return type");
 
 public:
-    // Instance method
-    template<ReturnType (Impl::*Method) (Args...)>
-    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
-            jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    // Non-void instance method
+    template<ReturnTypeForNonVoidInstance (Impl::*Method) (Args...)>
+    static MOZ_JNICALL ReturnJNIType
+    Wrap(JNIEnv* env, jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
-        static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT,
-                      "Dispatched calls must have void return type");
 
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
+            // There is a pending JNI exception at this point.
             return ReturnJNIType();
         }
         return TypeAdapter<ReturnType>::FromNative(env,
                 (impl->*Method)(TypeAdapter<Args>::ToNative(env, args)...));
     }
 
-    // Instance method with instance reference
-    template<ReturnType (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
-    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
-            jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    // Non-void instance method with instance reference
+    template<ReturnTypeForNonVoidInstance (Impl::*Method)
+             (const typename Owner::LocalRef&, Args...)>
+    static MOZ_JNICALL ReturnJNIType
+    Wrap(JNIEnv* env, jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
-        static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT,
-                      "Dispatched calls must have void return type");
 
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
+            // There is a pending JNI exception at this point.
             return ReturnJNIType();
         }
         auto self = Owner::LocalRef::Adopt(env, instance);
@@ -474,20 +485,11 @@ public:
         self.Forget();
         return res;
     }
-};
 
-// Specialization for instance methods with void return type
-template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
-                     /* IsStatic = */ false, /* IsVoid = */ true>
-{
-    typedef typename Traits::Owner Owner;
-
-public:
-    // Instance method
-    template<void (Impl::*Method) (Args...)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env,
-            jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    // Void instance method
+    template<ReturnTypeForVoidInstance (Impl::*Method) (Args...)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
@@ -497,17 +499,20 @@ public:
                      Args...>>(Method, env, instance, args...));
             return;
         }
+
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
+            // There is a pending JNI exception at this point.
             return;
         }
         (impl->*Method)(TypeAdapter<Args>::ToNative(env, args)...);
     }
 
-    // Instance method with instance reference
-    template<void (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env,
-            jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    // Void instance method with instance reference
+    template<ReturnTypeForVoidInstance (Impl::*Method)
+             (const typename Owner::LocalRef&, Args...)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
@@ -517,8 +522,10 @@ public:
                      Args...>>(Method, env, instance, args...));
             return;
         }
+
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
+            // There is a pending JNI exception at this point.
             return;
         }
         auto self = Owner::LocalRef::Adopt(env, instance);
@@ -527,8 +534,10 @@ public:
     }
 
     // Overload for DisposeNative
-    template<void (*DisposeNative) (const typename Owner::LocalRef&)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env, jobject instance)
+    template<ReturnTypeForVoidInstance (*DisposeNative)
+             (const typename Owner::LocalRef&)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jobject instance)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
@@ -541,42 +550,30 @@ public:
                     DisposeNative, env, cls.Get(), instance));
             return;
         }
+
         auto self = Owner::LocalRef::Adopt(env, instance);
         (Impl::DisposeNative)(self);
         self.Forget();
     }
-};
 
-// Specialization for static methods with non-void return type
-template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
-                     /* IsStatic = */ true, /* IsVoid = */ false>
-{
-    typedef typename Traits::ReturnType ReturnType;
-    typedef typename TypeAdapter<ReturnType>::JNIType ReturnJNIType;
-
-public:
-    // Static method
-    template<ReturnType (*Method) (Args...)>
-    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
-            jclass, typename TypeAdapter<Args>::JNIType... args)
+    // Non-void static method
+    template<ReturnTypeForNonVoidStatic (*Method) (Args...)>
+    static MOZ_JNICALL ReturnJNIType
+    Wrap(JNIEnv* env, jclass, typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
-        static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT,
-                      "Dispatched calls must have void return type");
 
         return TypeAdapter<ReturnType>::FromNative(env,
                 (*Method)(TypeAdapter<Args>::ToNative(env, args)...));
     }
 
-    // Static method with class reference
-    template<ReturnType (*Method) (const Class::LocalRef&, Args...)>
-    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
-            jclass cls, typename TypeAdapter<Args>::JNIType... args)
+    // Non-void static method with class reference
+    template<ReturnTypeForNonVoidStatic (*Method)
+             (const Class::LocalRef&, Args...)>
+    static MOZ_JNICALL ReturnJNIType
+    Wrap(JNIEnv* env, jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
-        static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT,
-                      "Dispatched calls must have void return type");
 
         auto clazz = Class::LocalRef::Adopt(env, cls);
         const auto res = TypeAdapter<ReturnType>::FromNative(env,
@@ -584,20 +581,11 @@ public:
         clazz.Forget();
         return res;
     }
-};
 
-// Specialization for static methods with void return type
-template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
-                     /* IsStatic = */ true, /* IsVoid = */ true>
-{
-    typedef typename Traits::Owner Owner;
-
-public:
-    // Static method
-    template<void (*Method) (Args...)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env,
-            jclass cls, typename TypeAdapter<Args>::JNIType... args)
+    // Void static method
+    template<ReturnTypeForVoidStatic (*Method) (Args...)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
@@ -607,13 +595,15 @@ public:
                     Args...>>(Method, env, cls, args...));
             return;
         }
+
         (*Method)(TypeAdapter<Args>::ToNative(env, args)...);
     }
 
-    // Static method with class reference
-    template<void (*Method) (const Class::LocalRef&, Args...)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env,
-            jclass cls, typename TypeAdapter<Args>::JNIType... args)
+    // Void static method with class reference
+    template<ReturnTypeForVoidStatic (*Method)
+             (const Class::LocalRef&, Args...)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
@@ -623,21 +613,11 @@ public:
                     Args...>>(Method, env, cls, args...));
             return;
         }
+
         auto clazz = Class::LocalRef::Adopt(env, cls);
         (*Method)(clazz, TypeAdapter<Args>::ToNative(env, args)...);
         clazz.Forget();
     }
-};
-
-} // namespace detail
-
-// Form a stub wrapper from a native method's traits class and an implementing
-// class. The stub wrapper has a Wrap function that will form a wrapped stub.
-template<class Traits, class Impl>
-struct NativeStub : detail::NativeStubImpl
-    <Traits, Impl, typename Traits::Args, Traits::isStatic,
-     mozilla::IsVoid<typename Traits::ReturnType>::value>
-{
 };
 
 // Generate a JNINativeMethod from a native
