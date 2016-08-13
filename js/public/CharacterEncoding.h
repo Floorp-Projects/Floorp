@@ -127,6 +127,9 @@ class ConstUTF8CharsZ
       : data_(aBytes)
     {
         MOZ_ASSERT(aBytes[aLength] == '\0');
+#ifdef DEBUG
+        validate(aLength);
+#endif
     }
 
     const void* get() const { return data_; }
@@ -134,6 +137,11 @@ class ConstUTF8CharsZ
     const char* c_str() const { return data_; }
 
     explicit operator bool() const { return data_ != nullptr; }
+
+  private:
+#ifdef DEBUG
+    void validate(size_t aLength);
+#endif
 };
 
 /*
