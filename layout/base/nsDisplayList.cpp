@@ -2286,7 +2286,7 @@ nsDisplayItem::ForceActiveLayers()
 
 static int32_t ZIndexForFrame(nsIFrame* aFrame)
 {
-  if (!aFrame->IsAbsPosContaininingBlock() && !aFrame->IsFlexOrGridItem())
+  if (!aFrame->IsAbsPosContainingBlock() && !aFrame->IsFlexOrGridItem())
     return 0;
 
   const nsStylePosition* position = aFrame->StylePosition();
