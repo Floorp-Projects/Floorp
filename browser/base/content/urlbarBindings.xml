@@ -434,12 +434,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // search query (or "keyword" in URI-fixup terminology), then load a
           // search using the one-off's engine.
           if (selectedOneOff && selectedOneOff.engine) {
-            // `url` (which is this.value) may be an autofilled string.  Search
-            // only with the portion that the user typed, if any, by preferring
-            // the autocomplete controller's searchString.
-            let value = this._searchStringOnHandleEnter ||
-                        this.mController.searchString ||
-                        url;
+            let value = this.oneOffSearchQuery;
             let fixup;
             try {
               fixup = Services.uriFixup.getFixupURIInfo(
@@ -469,6 +464,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           });
         ]]></body>
       </method>
+
+      <property name="oneOffSearchQuery">
+        <getter><![CDATA[
+          // this.textValue may be an autofilled string.  Search only with the
+          // portion that the user typed, if any, by preferring the autocomplete
+          // controller's searchString (including _searchStringOnHandleEnter).
+          return this._searchStringOnHandleEnter ||
+                 this.mController.searchString ||
+                 this.textValue;
+        ]]></getter>
+      </property>
 
       <method name="_loadURL">
         <parameter name="url"/>
