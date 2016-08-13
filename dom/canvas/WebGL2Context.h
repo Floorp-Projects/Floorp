@@ -52,12 +52,15 @@ private:
 
 public:
     void GetBufferSubData(GLenum target, GLintptr offset,
-                          const dom::ArrayBufferView& dstData);
+                          const dom::Nullable<dom::ArrayBuffer>& maybeData);
+    void GetBufferSubData(GLenum target, GLintptr offset,
+                          const dom::SharedArrayBuffer& data);
     void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
                     GLenum type, WebGLsizeiptr offset, ErrorResult& out_error);
 
-    void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                    GLenum type, const dom::ArrayBufferView& pixels,
+    void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                    GLenum format, GLenum type,
+                    const dom::Nullable<dom::ArrayBufferView>& pixels,
                     ErrorResult& out_error)
     {
         WebGLContext::ReadPixels(x, y, width, height, format, type, pixels, out_error);
@@ -99,28 +102,39 @@ public:
                       GLsizei height);
     void TexStorage3D(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width,
                       GLsizei height, GLsizei depth);
-
     void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, const dom::Nullable<dom::ArrayBufferView>& data);
-
+                    GLenum unpackType,
+                    const dom::Nullable<dom::ArrayBufferView>& pixels);
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLenum unpackFormat, GLenum unpackType,
-                       const dom::ArrayBufferView& data, ErrorResult&);
+                       const dom::Nullable<dom::ArrayBufferView>& pixels,
+                       ErrorResult& out_rv);
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLenum unpackFormat, GLenum unpackType,
-                       const dom::ImageData& data, ErrorResult&);
+                       dom::ImageData* data, ErrorResult& out_rv);
+protected:
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLenum unpackFormat, GLenum unpackType,
-                       const dom::Element& elem, ErrorResult& out_error);
+                       dom::Element* elem, ErrorResult* const out_rv);
+public:
+    template<class T>
+    inline void
+    TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
+                  GLenum unpackFormat, GLenum unpackType, T& any, ErrorResult& out_rv)
+    {
+        TexSubImage3D(target, level, xOffset, yOffset, zOffset, unpackFormat, unpackType,
+                      &any, &out_rv);
+    }
 
     void CopyTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                            GLint zOffset, GLint x, GLint y, GLsizei width,
                            GLsizei height);
     void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
                               GLsizei width, GLsizei height, GLsizei depth,
-                              GLint border, const dom::ArrayBufferView& data);
+                              GLint border,
+                              const dom::ArrayBufferView& data);
     void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                                  GLint zOffset, GLsizei width, GLsizei height,
                                  GLsizei depth, GLenum sizedUnpackFormat,
@@ -161,7 +175,7 @@ public:
     template<typename T>
     void
     TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-               GLenum unpackFormat, GLenum unpackType, const T& any, ErrorResult& out_rv)
+               GLenum unpackFormat, GLenum unpackType, T& any, ErrorResult& out_rv)
     {
         WebGLContext::TexImage2D(texImageTarget, level, internalFormat, unpackFormat,
                                  unpackType, any, out_rv);
@@ -170,17 +184,16 @@ public:
     void
     TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
                   GLsizei width, GLsizei height, GLenum unpackFormat, GLenum unpackType,
-                  const dom::ArrayBufferView& view, ErrorResult&)
+                  const dom::Nullable<dom::ArrayBufferView>& pixels, ErrorResult& out_rv)
     {
         WebGLContext::TexSubImage2D(texImageTarget, level, xOffset, yOffset, width,
-                                    height, unpackFormat, unpackType, view);
+                                    height, unpackFormat, unpackType, pixels, out_rv);
     }
 
     template<typename T>
     inline void
     TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                  GLenum unpackFormat, GLenum unpackType, const T& any,
-                  ErrorResult& out_rv)
+                  GLenum unpackFormat, GLenum unpackType, T& any, ErrorResult& out_rv)
     {
         WebGLContext::TexSubImage2D(texImageTarget, level, xOffset, yOffset, unpackFormat,
                                     unpackType, any, out_rv);

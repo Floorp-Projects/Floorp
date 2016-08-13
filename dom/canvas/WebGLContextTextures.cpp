@@ -342,11 +342,6 @@ WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalF
         return;
     }
 
-    const dom::ArrayBufferView* view = nullptr;
-    if (!maybeView.IsNull()) {
-        view = &maybeView.Value();
-    }
-
     const bool isSubImage = false;
     const GLint xOffset = 0;
     const GLint yOffset = 0;
@@ -354,13 +349,13 @@ WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalF
     const GLsizei depth = 1;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
                        yOffset, zOffset, width, height, depth, border, unpackFormat,
-                       unpackType, view);
+                       unpackType, maybeView);
 }
 
 void
 WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
                          GLenum unpackFormat, GLenum unpackType,
-                         const dom::ImageData& imageData, ErrorResult&)
+                         dom::ImageData* imageData, ErrorResult&)
 {
     const char funcName[] = "texImage2D";
     const uint8_t funcDims = 2;
@@ -383,8 +378,8 @@ WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalF
 
 void
 WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
-                         GLenum unpackFormat, GLenum unpackType, const dom::Element& elem,
-                         ErrorResult& out_error)
+                         GLenum unpackFormat, GLenum unpackType, dom::Element* elem,
+                         ErrorResult* const out_error)
 {
     const char funcName[] = "texImage2D";
     const uint8_t funcDims = 2;
@@ -402,7 +397,7 @@ WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalF
     const GLint yOffset = 0;
     const GLint zOffset = 0;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
-                       yOffset, zOffset, unpackFormat, unpackType, elem, &out_error);
+                       yOffset, zOffset, unpackFormat, unpackType, elem, out_error);
 }
 
 ////////////////////////////////////////
@@ -412,7 +407,8 @@ void
 WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                             GLint yOffset, GLsizei width, GLsizei height,
                             GLenum unpackFormat, GLenum unpackType,
-                            const dom::ArrayBufferView& view)
+                            const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                            ErrorResult&)
 {
     const char funcName[] = "texSubImage2D";
     const uint8_t funcDims = 2;
@@ -432,13 +428,13 @@ WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset
     const GLint border = 0;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
                        yOffset, zOffset, width, height, depth, border, unpackFormat,
-                       unpackType, &view);
+                       unpackType, maybeView);
 }
 
 void
 WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                             GLint yOffset, GLenum unpackFormat, GLenum unpackType,
-                            const dom::ImageData& imageData, ErrorResult&)
+                            dom::ImageData* imageData, ErrorResult&)
 {
     const char funcName[] = "texSubImage2D";
     const uint8_t funcDims = 2;
@@ -461,7 +457,7 @@ WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset
 void
 WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                             GLint yOffset, GLenum unpackFormat, GLenum unpackType,
-                            const dom::Element& elem, ErrorResult& out_error)
+                            dom::Element* elem, ErrorResult* const out_error)
 {
     const char funcName[] = "texSubImage2D";
     const uint8_t funcDims = 2;
@@ -478,7 +474,7 @@ WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset
     const GLenum internalFormat = 0;
     const GLint zOffset = 0;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
-                       yOffset, zOffset, unpackFormat, unpackType, elem, &out_error);
+                       yOffset, zOffset, unpackFormat, unpackType, elem, out_error);
 }
 
 ////////////////////////////////////////
