@@ -318,7 +318,8 @@ checkReportFlags(JSContext* cx, unsigned* flags)
 }
 
 bool
-js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format, va_list ap)
+js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
+                  ErrorArgumentsType argumentsType, va_list ap)
 {
     char* message;
     char16_t* ucmessage;
@@ -338,7 +339,18 @@ js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format, va_list ap)
 
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
-    report.ucmessage = ucmessage = InflateString(cx, message, &messagelen);
+    if (argumentsType == ArgumentsAreASCII || argumentsType == ArgumentsAreLatin1) {
+        ucmessage = InflateString(cx, message, &messagelen);
+    } else {
+        JS::UTF8Chars utf8(message, messagelen);
+        size_t unused;
+        ucmessage = LossyUTF8CharsToNewTwoByteCharsZ(cx, utf8, &unused).get();
+    }
+    if (!ucmessage) {
+        js_free(message);
+        return false;
+    }
+    report.ucmessage = ucmessage;
     PopulateReportBlame(cx, &report);
 
     warning = JSREPORT_IS_WARNING(report.flags);
@@ -539,7 +551,7 @@ class MOZ_RAII AutoMessageArgs
             if (passed_) {
                 lengths_[i] = js_strlen(args_[i]);
             } else if (typeArg == ArgumentsAreASCII || typeArg == ArgumentsAreLatin1) {
-                char* charArg = va_arg(ap, char*);
+                const char* charArg = va_arg(ap, char*);
                 size_t charArgLength = strlen(charArg);
                 args_[i] = InflateString(cx, charArg, &charArgLength);
                 if (!args_[i])
@@ -547,6 +559,13 @@ class MOZ_RAII AutoMessageArgs
                 allocatedElements_ = true;
                 MOZ_ASSERT(charArgLength == js_strlen(args_[i]));
                 lengths_[i] = charArgLength;
+            } else if (typeArg == ArgumentsAreUTF8) {
+                const char* charArg = va_arg(ap, char*);
+                JS::UTF8Chars utf8(charArg, strlen(charArg));
+                args_[i] = LossyUTF8CharsToNewTwoByteCharsZ(cx, utf8, &lengths_[i]).get();
+                if (!args_[i])
+                    return false;
+                allocatedElements_ = true;
             } else {
                 args_[i] = va_arg(ap, char16_t*);
                 lengths_[i] = js_strlen(args_[i]);
