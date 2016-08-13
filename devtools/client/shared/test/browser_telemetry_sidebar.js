@@ -52,7 +52,7 @@ function* testSidebar(toolbox) {
 function checkResults(Telemetry) {
   let result = Telemetry.prototype.telemetryInfo;
 
-  for (let [histId, value] of Iterator(result)) {
+  for (let [histId, value] of Object.entries(result)) {
     if (histId.startsWith("DEVTOOLS_INSPECTOR_")) {
       // Inspector stats are tested in browser_telemetry_toolboxtabs.js so we
       // skip them here because we only open the inspector once for this test.
