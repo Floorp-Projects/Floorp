@@ -128,13 +128,6 @@ var StarUI = {
             }
             this.panel.hidePopup();
             break;
-          // This case is for catching character-generating keypresses
-          case 0:
-            let accessKey = document.getElementById("key_close");
-            if (eventMatchesKey(aEvent, accessKey)) {
-                this.panel.hidePopup();
-            }
-            break;
         }
         break;
       case "mouseout":
