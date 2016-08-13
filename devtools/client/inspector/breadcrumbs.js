@@ -815,6 +815,7 @@ HTMLBreadcrumbs.prototype = {
     }
 
     // If this was an interesting deletion; then trim the breadcrumb trail
+    let trimmed = false;
     if (reason === "markupmutation") {
       for (let {type, removed} of mutations) {
         if (type !== "childList") {
@@ -825,6 +826,7 @@ HTMLBreadcrumbs.prototype = {
           let removedIndex = this.indexOf(node);
           if (removedIndex > -1) {
             this.cutAfter(removedIndex - 1);
+            trimmed = true;
           }
         }
       }
@@ -833,6 +835,10 @@ HTMLBreadcrumbs.prototype = {
     if (!this.selection.isElementNode()) {
       // no selection
       this.setCursor(-1);
+      if (trimmed) {
+        // Since something changed, notify the interested parties.
+        this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
+      }
       return;
     }
 
