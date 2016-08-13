@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from ../performance-controller.js */
 /* import-globals-from ../performance-view.js */
-/* globals document, Iterator */
+/* globals document */
 "use strict";
 
 /**
@@ -59,7 +59,7 @@ var ToolbarView = {
    * Creates the timeline markers filter popup.
    */
   _buildMarkersFilterPopup: function () {
-    for (let [markerName, markerDetails] of Iterator(TIMELINE_BLUEPRINT)) {
+    for (let [markerName, markerDetails] of Object.entries(TIMELINE_BLUEPRINT)) {
       let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("closemenu", "none");
       menuitem.setAttribute("type", "checkbox");
