@@ -441,7 +441,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
-        @WrapForJNI(allowMultithread = true)
+        @WrapForJNI
         public void beginDrawing() {
             mFrameStartTime = System.nanoTime();
 
@@ -500,7 +500,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
-        @WrapForJNI(allowMultithread = true)
+        @WrapForJNI
         public void drawBackground() {
             // Any GL state which is changed here must be restored in
             // restoreState(...)
@@ -514,7 +514,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             clear(mBackgroundColor);
         }
 
-        @WrapForJNI(allowMultithread = true)
+        @WrapForJNI
         public void drawForeground() {
             // Any GL state which is changed here must be restored in
             // restoreState(...)
@@ -577,7 +577,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
-        @WrapForJNI(allowMultithread = true)
+        @WrapForJNI
         public void endDrawing() {
             // If a layer update requires further work, schedule another redraw
             if (!mUpdated)

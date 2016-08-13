@@ -113,12 +113,6 @@ public class testEventDispatcher extends JavascriptBridgeTest
         getJS().syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "error");
 
         getJS().syncCall("send_test_message", NATIVE_EXCEPTION_EVENT);
-        fAssertNotSame("Should have saved a message", null, savedMessage);
-        try {
-            savedMessage.toString();
-            fFail("Using NativeJSContainer should throw after disposal");
-        } catch (final NullPointerException e) {
-        }
 
         getJS().syncCall("send_test_message", UI_EVENT);
         waitForAsyncEvent();
@@ -260,6 +254,9 @@ public class testEventDispatcher extends JavascriptBridgeTest
                 fFail("Response type should be valid: " + response);
             }
 
+            // Save this message for post-disposal check.
+            savedMessage = message;
+
         } else if (NATIVE_EXCEPTION_EVENT.equals(event)) {
             // Make sure we throw the right exceptions.
             try {
@@ -280,8 +277,12 @@ public class testEventDispatcher extends JavascriptBridgeTest
             } catch (final NativeJSObject.InvalidPropertyException e) {
             }
 
-            // Save this message for post-disposal check.
-            savedMessage = message;
+            fAssertNotSame("Should have saved a message", null, savedMessage);
+            try {
+                savedMessage.toString();
+                fFail("Using NativeJSContainer should throw after disposal");
+            } catch (final NullPointerException e) {
+            }
 
             // Save this test for last; make sure EventDispatcher catches InvalidPropertyException.
             message.getString("nonexistent_string");

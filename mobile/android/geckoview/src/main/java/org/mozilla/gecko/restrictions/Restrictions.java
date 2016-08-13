@@ -97,7 +97,7 @@ public class Restrictions {
         return getConfiguration(context).canLoadUrl(url);
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static boolean isUserRestricted() {
         return isUserRestricted(GeckoAppShell.getApplicationContext());
     }
@@ -110,7 +110,7 @@ public class Restrictions {
         return getConfiguration(context).isAllowed(restrictable);
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static boolean isAllowed(int action, String url) {
         final Restrictable restrictable;
         try {
