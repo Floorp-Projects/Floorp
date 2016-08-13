@@ -81,6 +81,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
 #include "vm/StopIterationObject.h"
+#include "vm/String.h"
 #include "vm/StringBuffer.h"
 #include "vm/Symbol.h"
 #include "vm/TypedArrayCommon.h"
@@ -4950,6 +4951,22 @@ JS_NewStringCopyZ(JSContext* cx, const char* s)
     if (!s)
         return cx->runtime()->emptyString;
     return NewStringCopyZ<CanGC>(cx, s);
+}
+
+JS_PUBLIC_API(JSString*)
+JS_NewStringCopyUTF8Z(JSContext* cx, const JS::ConstUTF8CharsZ s)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    return NewStringCopyUTF8Z<CanGC>(cx, s);
+}
+
+JS_PUBLIC_API(JSString*)
+JS_NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars s)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    return NewStringCopyUTF8N<CanGC>(cx, s);
 }
 
 JS_PUBLIC_API(bool)
