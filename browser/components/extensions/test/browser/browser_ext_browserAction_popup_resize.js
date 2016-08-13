@@ -175,23 +175,17 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
   let checkPanelPosition = () => {
     is(panel.getAttribute("side"), arrowSide, "Panel arrow is positioned as expected");
 
-    function isGreaterThanOrWithinPixelRoundingError(a, b, message) {
-      let result = a + 1 >= b;
-      ok(result, `${a} should be greater than or within one pixel of ${b}: ${message}`);
-    }
-
     let panelRect = panel.getBoundingClientRect();
     if (arrowSide == "top") {
-      isGreaterThanOrWithinPixelRoundingError(panelRect.top, origPanelRect.top, "Panel has not moved downwards");
-      isGreaterThanOrWithinPixelRoundingError(panelRect.bottom, origPanelRect.bottom, "Panel has not shrunk from original size");
+      ok(panelRect.top, origPanelRect.top, "Panel has not moved downwards");
+      ok(panelRect.bottom >= origPanelRect.bottom, `Panel has not shrunk from original size (${panelRect.bottom} >= ${origPanelRect.bottom})`);
 
       let screenBottom = browserWin.screen.availTop + win.screen.availHeight;
       let panelBottom = browserWin.mozInnerScreenY + panelRect.bottom;
       ok(panelBottom <= screenBottom, `Bottom of popup should be on-screen. (${panelBottom} <= ${screenBottom})`);
     } else {
-      isGreaterThanOrWithinPixelRoundingError(panelRect.bottom, origPanelRect.bottom, "Panel has not moved upwards");
-      // The arguments here are reversed compared to the above calls due to the coordinate system.
-      isGreaterThanOrWithinPixelRoundingError(origPanelRect.top, panelRect.top, "Panel has not shrunk from original size");
+      ok(panelRect.bottom, origPanelRect.bottom, "Panel has not moved upwards");
+      ok(panelRect.top <= origPanelRect.top, `Panel has not shrunk from original size (${panelRect.top} <= ${origPanelRect.top})`);
 
       let panelTop = browserWin.mozInnerScreenY + panelRect.top;
       ok(panelTop >= browserWin.screen.availTop, `Top of popup should be on-screen. (${panelTop} >= ${browserWin.screen.availTop})`);

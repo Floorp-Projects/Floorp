@@ -152,7 +152,7 @@ const PanelUI = {
           anchor = aEvent.target;
         }
 
-        this.panel.addEventListener("popupshown", function onPopupShown(event) {
+        this.panel.addEventListener("popupshown", function onPopupShown() {
           this.removeEventListener("popupshown", onPopupShown);
           resolve();
         });
