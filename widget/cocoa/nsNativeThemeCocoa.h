@@ -123,7 +123,7 @@ protected:
                        nsIFrame* aFrame, mozilla::EventStates inState);
   void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
                       mozilla::EventStates inState, uint8_t aWidgetType,
-                      nsIFrame* aFrame);
+                      nsIFrame* aFrame, float aOriginalHeight);
   void DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
                     mozilla::EventStates inState, nsIFrame* aFrame,
                     const NSSize& aIconSize, NSString* aImageName,
