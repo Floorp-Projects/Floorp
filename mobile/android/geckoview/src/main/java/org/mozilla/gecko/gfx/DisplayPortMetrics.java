@@ -19,16 +19,16 @@ import android.graphics.RectF;
  * subsection of that with compositor scaling.
  */
 public final class DisplayPortMetrics {
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public final float resolution;
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     private final RectF mPosition;
 
     public DisplayPortMetrics() {
         this(0, 0, 0, 0, 1);
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public DisplayPortMetrics(float left, float top, float right, float bottom, float resolution) {
         this.resolution = resolution;
         mPosition = new RectF(left, top, right, bottom);

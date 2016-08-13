@@ -32,7 +32,7 @@ public final class Clipboard {
         mContext = c.getApplicationContext();
     }
 
-    @WrapForJNI(stubName = "GetClipboardTextWrapper")
+    @WrapForJNI(calledFrom = "gecko")
     public static String getText() {
         // If we're on the UI thread or the background thread, we have a looper on the thread
         // and can just call this directly. For any other threads, post the call to the
@@ -59,7 +59,7 @@ public final class Clipboard {
         }
     }
 
-    @WrapForJNI(stubName = "SetClipboardText")
+    @WrapForJNI(calledFrom = "gecko")
     public static void setText(final CharSequence text) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
@@ -90,7 +90,7 @@ public final class Clipboard {
     /**
      * @return true if the clipboard is nonempty, false otherwise.
      */
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static boolean hasText() {
         if (Versions.feature11Plus) {
             android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -105,7 +105,7 @@ public final class Clipboard {
     /**
      * Deletes all text from the clipboard.
      */
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static void clearText() {
         setText(null);
     }
