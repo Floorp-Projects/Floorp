@@ -19,10 +19,7 @@ private:
 
 public:
     static void NotifyAlarmFired() {
-        nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-            hal::NotifyAlarmFired();
-        });
-        NS_DispatchToMainThread(runnable);
+        hal::NotifyAlarmFired();
     }
 };
 
