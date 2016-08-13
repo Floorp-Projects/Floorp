@@ -8,23 +8,47 @@ package org.mozilla.gecko.annotationProcessors;
  * Object holding annotation data. Used by GeneratableElementIterator.
  */
 public class AnnotationInfo {
-    public final String wrapperName;
-    public final boolean isMultithreaded;
-    public final boolean noThrow;
-    public final boolean narrowChars;
-    public final boolean catchException;
+    public enum ExceptionMode {
+        ABORT,
+        NSRESULT,
+        IGNORE;
 
-    public AnnotationInfo(String aWrapperName, boolean aIsMultithreaded,
-                          boolean aNoThrow, boolean aNarrowChars, boolean aCatchException) {
-        wrapperName = aWrapperName;
-        isMultithreaded = aIsMultithreaded;
-        noThrow = aNoThrow;
-        narrowChars = aNarrowChars;
-        catchException = aCatchException;
-
-        if (noThrow && catchException) {
-            // It doesn't make sense to have these together
-            throw new IllegalArgumentException("noThrow and catchException are not allowed together");
+        String nativeValue() {
+            return "mozilla::jni::ExceptionMode::" + name();
         }
+    }
+
+    public enum CallingThread {
+        GECKO,
+        UI,
+        ANY;
+
+        String nativeValue() {
+            return "mozilla::jni::CallingThread::" + name();
+        }
+    }
+
+    public enum DispatchTarget {
+        GECKO,
+        PROXY,
+        CURRENT;
+
+        String nativeValue() {
+            return "mozilla::jni::DispatchTarget::" + name();
+        }
+    }
+
+    public final String wrapperName;
+    public final ExceptionMode exceptionMode;
+    public final CallingThread callingThread;
+    public final DispatchTarget dispatchTarget;
+
+    public AnnotationInfo(String wrapperName, ExceptionMode exceptionMode,
+                          CallingThread callingThread, DispatchTarget dispatchTarget) {
+
+        this.wrapperName = wrapperName;
+        this.exceptionMode = exceptionMode;
+        this.callingThread = callingThread;
+        this.dispatchTarget = dispatchTarget;
     }
 }
