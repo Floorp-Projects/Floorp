@@ -1239,9 +1239,10 @@ var checkFloatBuffer = function(gl, target, expected, opt_msg, opt_errorRange) {
   if (opt_errorRange === undefined)
     opt_errorRange = 0.001;
 
-  var floatArray = new Float32Array(expected.length);
-  gl.getBufferSubData(target, 0, floatArray);
+  var outData = new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT * expected.length);
+  gl.getBufferSubData(target, 0, outData);
 
+  var floatArray = new Float32Array(outData);
   for (var i = 0; i < expected.length; i++) {
     if (Math.abs(floatArray[i] - expected[i]) > opt_errorRange) {
       testFailed(opt_msg);
