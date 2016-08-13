@@ -506,7 +506,7 @@ public class GeckoThread extends Thread {
         // above, because otherwise the JNI code hasn't been loaded yet.
         ThreadUtils.postToUiThread(new Runnable() {
             @Override public void run() {
-                GeckoAppShell.registerJavaUiThread();
+                registerUiThread();
             }
         });
 
@@ -679,4 +679,7 @@ public class GeckoThread extends Thread {
                                  String.class, category, String.class, data);
         }
     }
+
+    // Implemented in mozglue/android/APKOpen.cpp.
+    /* package */ static native void registerUiThread();
 }

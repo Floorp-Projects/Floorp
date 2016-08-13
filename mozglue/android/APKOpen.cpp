@@ -110,6 +110,7 @@ JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg)
 
 namespace {
     JavaVM* sJavaVM;
+    pthread_t sJavaUiThread;
 }
 
 void
@@ -150,6 +151,18 @@ abortThroughJava(const char* msg)
     }
 
     env->PopLocalFrame(nullptr);
+}
+
+NS_EXPORT pthread_t
+getJavaUiThread()
+{
+    return sJavaUiThread;
+}
+
+extern "C" NS_EXPORT void MOZ_JNICALL
+Java_org_mozilla_gecko_GeckoThread_registerUiThread(JNIEnv*, jclass)
+{
+    sJavaUiThread = pthread_self();
 }
 
 #define JNI_STUBS

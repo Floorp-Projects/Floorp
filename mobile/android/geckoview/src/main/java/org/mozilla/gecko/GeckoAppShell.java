@@ -237,9 +237,6 @@ public class GeckoAppShell
 
     /* The Android-side API: API methods that Android calls */
 
-    // Initialization methods
-    public static native void registerJavaUiThread();
-
     // helper methods
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
     public static native void dispatchMemoryPressure();
