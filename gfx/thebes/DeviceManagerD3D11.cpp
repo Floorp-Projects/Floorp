@@ -57,16 +57,6 @@ DeviceManagerD3D11::DeviceManagerD3D11()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
 }
 
-static inline bool
-IsWARPStable()
-{
-  // It seems like nvdxgiwrap makes a mess of WARP. See bug 1154703.
-  if (!IsWin8OrLater() || GetModuleHandleA("nvdxgiwrap.dll")) {
-    return false;
-  }
-  return true;
-}
-
 void
 DeviceManagerD3D11::CreateDevices()
 {
@@ -92,29 +82,13 @@ DeviceManagerD3D11::CreateDevices()
   }
 
   if (XRE_IsParentProcess()) {
-    if (!gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR)) {
+    if (!gfxPrefs::LayersD3D11ForceWARP()) {
       AttemptD3D11DeviceCreation(d3d11);
-      if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
-        return;
-      }
-
-      // If we failed to get a device, but WARP is allowed and might work,
-      // re-enable D3D11 and switch to WARP.
-      if (!mCompositorDevice && IsWARPStable() && !gfxPrefs::LayersD3D11DisableWARP()) {
-        gfxConfig::Reenable(Feature::D3D11_COMPOSITING, Fallback::USE_D3D11_WARP_COMPOSITOR);
-      }
-    }
-
-    // If that failed, see if we can use WARP.
-    if (gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR)) {
-      MOZ_ASSERT(d3d11.IsEnabled());
-      MOZ_ASSERT(!mCompositorDevice);
-      MOZ_ASSERT(IsWARPStable() || gfxPrefs::LayersD3D11ForceWARP());
-
+    } else {
       AttemptWARPDeviceCreation();
-      if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
-        return;
-      }
+    }
+    if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
+      return;
     }
 
     // If we still have no device by now, exit.
@@ -129,7 +103,7 @@ DeviceManagerD3D11::CreateDevices()
     // Child processes do not need a compositor, but they do need to know
     // whether the parent process is using WARP and whether or not texture
     // sharing works.
-    mIsWARP = gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR);
+    mIsWARP = gfxPrefs::LayersD3D11ForceWARP();
     mTextureSharingWorks =
       gfxPlatform::GetPlatform()->GetParentDevicePrefs().d3d11TextureSharingWorks();
   }

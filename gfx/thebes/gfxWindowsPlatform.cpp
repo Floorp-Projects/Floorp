@@ -1512,24 +1512,13 @@ gfxWindowsPlatform::InitializeD3D11Config()
   nsCString message;
   nsCString failureId;
   if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &message, failureId)) {
-    if (IsWARPStable() && !gfxPrefs::LayersD3D11DisableWARP()) {
-      // We do not expect hardware D3D11 to work, so we'll try WARP.
-      gfxConfig::EnableFallback(Fallback::USE_D3D11_WARP_COMPOSITOR, message.get());
-    } else {
-      // There is little to no chance of D3D11 working, so just disable it.
-      d3d11.Disable(FeatureStatus::Blacklisted, message.get(),
-                    failureId);
-    }
+    d3d11.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
 
   // Check if the user really, really wants WARP.
   if (gfxPrefs::LayersD3D11ForceWARP()) {
     // Force D3D11 on even if we disabled it.
-    d3d11.UserForceEnable("User force-enabled WARP on disabled hardware");
-
-    gfxConfig::EnableFallback(
-      Fallback::USE_D3D11_WARP_COMPOSITOR,
-      "Force-enabled by user preference");
+    d3d11.UserForceEnable("User force-enabled WARP");
   }
 }
 
@@ -1540,15 +1529,11 @@ gfxWindowsPlatform::UpdateDeviceInitData()
     return false;
   }
 
-  if (gfxConfig::InitOrUpdate(Feature::D3D11_COMPOSITING,
-                              GetParentDevicePrefs().useD3D11(),
-                              FeatureStatus::Disabled,
-                              "Disabled by parent process"))
-  {
-    if (GetParentDevicePrefs().useD3D11WARP()) {
-      gfxConfig::EnableFallback(Fallback::USE_D3D11_WARP_COMPOSITOR, "Requested by parent process");
-    }
-  }
+  gfxConfig::InitOrUpdate(
+    Feature::D3D11_COMPOSITING,
+    GetParentDevicePrefs().useD3D11(),
+    FeatureStatus::Disabled,
+    "Disabled by parent process");
 
   gfxConfig::InitOrUpdate(
     Feature::DIRECT2D,
@@ -1556,9 +1541,7 @@ gfxWindowsPlatform::UpdateDeviceInitData()
     FeatureStatus::Disabled,
     "Disabled by parent process");
 
-
   InitializeANGLEConfig();
-
   return true;
 }
 
@@ -2065,7 +2048,6 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
 
   aOut->useD3D11() = true;
   aOut->d3d11TextureSharingWorks() = dm->TextureSharingWorks();
-  aOut->useD3D11WARP() = dm->IsWARP();
   aOut->useD2D1() = gfxConfig::IsEnabled(Feature::DIRECT2D);
 
   if (RefPtr<ID3D11Device> device = dm->GetCompositorDevice()) {
