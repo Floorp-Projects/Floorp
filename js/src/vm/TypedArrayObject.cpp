@@ -84,10 +84,12 @@ TypedArrayObject::notifyBufferDetached(JSContext* cx, void* newData)
     setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
     setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
 
-    // Free the data slot pointer if has no inline data
+    // If the object is in the nursery, the buffer will be freed by the next
+    // nursery GC. Free the data slot pointer if the object has no inline data.
     Nursery& nursery = cx->runtime()->gc.nursery;
-    if (!hasBuffer() && !hasInlineElements() && !nursery.isInside(elements())) {
-        nursery.removeMallocedBuffer(elements());
+    if (isTenured() && !hasBuffer() && !hasInlineElements() &&
+        !nursery.isInside(elements()))
+    {
         js_free(elements());
     }
 
@@ -116,10 +118,12 @@ TypedArrayObject::ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarra
     // tarray is not shared, because if it were it would have a buffer.
     memcpy(buffer->dataPointer(), tarray->viewDataUnshared(), tarray->byteLength());
 
-    // Free the data slot pointer if has no inline data
+    // If the object is in the nursery, the buffer will be freed by the next
+    // nursery GC. Free the data slot pointer if the object has no inline data.
     Nursery& nursery = cx->runtime()->gc.nursery;
-    if (!tarray->hasInlineElements() && !nursery.isInside(tarray->elements())) {
-        nursery.removeMallocedBuffer(tarray->elements());
+    if (tarray->isTenured() && !tarray->hasInlineElements() &&
+        !nursery.isInside(tarray->elements()))
+    {
         js_free(tarray->elements());
     }
 
