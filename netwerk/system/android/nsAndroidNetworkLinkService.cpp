@@ -58,6 +58,6 @@ nsAndroidNetworkLinkService::GetLinkType(uint32_t *aLinkType)
     return NS_OK;
   }
 
-  *aLinkType = java::GeckoAppShell::NetworkLinkType();
+  *aLinkType = java::GeckoAppShell::GetNetworkLinkType();
   return NS_OK;
 }

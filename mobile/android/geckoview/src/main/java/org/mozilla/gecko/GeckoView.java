@@ -106,8 +106,11 @@ public class GeckoView extends LayerView
         }
     }
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private static final class Window extends JNIObject {
+        @WrapForJNI(skip = true)
+        /* package */ Window() {}
+
         static native void open(Window instance, GeckoView view, Compositor compositor,
                                 String chromeURI,
                                 int width, int height);
