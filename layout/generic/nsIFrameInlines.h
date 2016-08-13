@@ -55,6 +55,12 @@ nsIFrame::IsAbsPosContainingBlock() const
 }
 
 bool
+nsIFrame::IsFixedPosContainingBlock() const
+{
+  return StyleDisplay()->IsFixedPosContainingBlock(this);
+}
+
+bool
 nsIFrame::IsRelativelyPositioned() const
 {
   return StyleDisplay()->IsRelativelyPositioned(this);
