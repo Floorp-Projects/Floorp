@@ -417,12 +417,11 @@ TokenServerClient.prototype = {
 
     this._log.debug("Successful token response");
     cb(null, {
-      id:             result.id,
-      key:            result.key,
-      endpoint:       result.api_endpoint,
-      uid:            result.uid,
-      duration:       result.duration,
-      hashed_fxa_uid: result.hashed_fxa_uid,
+      id:       result.id,
+      key:      result.key,
+      endpoint: result.api_endpoint,
+      uid:      result.uid,
+      duration: result.duration,
     });
   },
 
