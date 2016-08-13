@@ -336,9 +336,9 @@ public:
 
     static const bool isStatic = IsStatic;
 
-    ProxyNativeCall(NativeCallType nativeCall,
+    ProxyNativeCall(ThisArgJNIType thisArg,
+                    NativeCallType nativeCall,
                     JNIEnv* env,
-                    ThisArgJNIType thisArg,
                     typename ProxyArg<Args>::JNIType... args)
         : mNativeCall(nativeCall)
         , mThisArg(env, ThisArgClass::Ref::From(thisArg))
@@ -379,29 +379,40 @@ public:
     }
 };
 
-template<class Traits, class Impl, class O, bool S, bool V, typename... A>
-typename mozilla::EnableIf<Traits::dispatchTarget == DispatchTarget::PROXY,
-                           void>::Type
-Dispatch(UniquePtr<ProxyNativeCall<Impl, O, S, V, A...>>&& call)
+template<class Impl, bool HasThisArg, typename... Args>
+struct Dispatcher
 {
-    Impl::OnNativeCall(Move(*call));
-}
+    template<class Traits, bool IsStatic = Traits::isStatic,
+             typename... ProxyArgs>
+    static typename EnableIf<
+            Traits::dispatchTarget == DispatchTarget::PROXY, void>::Type
+    Run(ProxyArgs&&... args)
+    {
+        Impl::OnNativeCall(ProxyNativeCall<
+                Impl, typename Traits::Owner, IsStatic,
+                HasThisArg, Args...>(Forward<ProxyArgs>(args)...));
+    }
 
-template<class Traits, class Impl, class O, bool S, bool V, typename... A>
-typename mozilla::EnableIf<Traits::dispatchTarget == DispatchTarget::GECKO,
-                           void>::Type
-Dispatch(UniquePtr<ProxyNativeCall<Impl, O, S, V, A...>>&& call)
-{
-    DispatchToGeckoThread(Move(call));
-}
+    template<class Traits, bool IsStatic = Traits::isStatic,
+             typename ThisArg, typename... ProxyArgs>
+    static typename EnableIf<
+            Traits::dispatchTarget == DispatchTarget::GECKO, void>::Type
+    Run(ThisArg thisArg, ProxyArgs&&... args)
+    {
+        // For a static method, do not forward the "this arg" (i.e. the class
+        // local ref) if the implementation does not request it. This saves us
+        // a pair of calls to add/delete global ref.
+        DispatchToGeckoThread(MakeUnique<ProxyNativeCall<
+                Impl, typename Traits::Owner, IsStatic, HasThisArg,
+                Args...>>(HasThisArg || !IsStatic ? thisArg : nullptr,
+                          Forward<ProxyArgs>(args)...));
+    }
 
-// The dummy Dispatch function below is chosen during overload resolution if
-// none of the above conditional overloads apply. Because Dispatch is called
-// with an rvalue, the && version is always chosen before the const& version,
-// if possible.
-
-template<class Traits, typename T>
-void Dispatch(const T&) {}
+    template<class Traits, bool IsStatic = false, typename... ProxyArgs>
+    static typename EnableIf<
+            Traits::dispatchTarget == DispatchTarget::CURRENT, void>::Type
+    Run(ProxyArgs&&... args) {}
+};
 
 } // namespace detail
 
@@ -453,7 +464,8 @@ public:
     // Non-void instance method
     template<ReturnTypeForNonVoidInstance (Impl::*Method) (Args...)>
     static MOZ_JNICALL ReturnJNIType
-    Wrap(JNIEnv* env, jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    Wrap(JNIEnv* env, jobject instance,
+         typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
@@ -470,7 +482,8 @@ public:
     template<ReturnTypeForNonVoidInstance (Impl::*Method)
              (const typename Owner::LocalRef&, Args...)>
     static MOZ_JNICALL ReturnJNIType
-    Wrap(JNIEnv* env, jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    Wrap(JNIEnv* env, jobject instance,
+         typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
@@ -489,14 +502,14 @@ public:
     // Void instance method
     template<ReturnTypeForVoidInstance (Impl::*Method) (Args...)>
     static MOZ_JNICALL void
-    Wrap(JNIEnv* env, jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    Wrap(JNIEnv* env, jobject instance,
+         typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
-            Dispatch<Traits>(MakeUnique<ProxyNativeCall<
-                     Impl, Owner, /* IsStatic */ false, /* HasThisArg */ false,
-                     Args...>>(Method, env, instance, args...));
+            Dispatcher<Impl, /* HasThisArg */ false, Args...>::
+                    template Run<Traits>(instance, Method, env, args...);
             return;
         }
 
@@ -512,14 +525,14 @@ public:
     template<ReturnTypeForVoidInstance (Impl::*Method)
              (const typename Owner::LocalRef&, Args...)>
     static MOZ_JNICALL void
-    Wrap(JNIEnv* env, jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    Wrap(JNIEnv* env, jobject instance,
+         typename TypeAdapter<Args>::JNIType... args)
     {
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
-            Dispatch<Traits>(MakeUnique<ProxyNativeCall<
-                     Impl, Owner, /* IsStatic */ false, /* HasThisArg */ true,
-                     Args...>>(Method, env, instance, args...));
+            Dispatcher<Impl, /* HasThisArg */ true, Args...>::
+                    template Run<Traits>(instance, Method, env, args...);
             return;
         }
 
@@ -542,12 +555,10 @@ public:
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
-            auto cls = Class::LocalRef::Adopt(
-                    env, env->GetObjectClass(instance));
-            Dispatch<Traits>(MakeUnique<ProxyNativeCall<
-                    Impl, Owner, /* IsStatic */ true, /* HasThisArg */ false,
-                    const typename Owner::LocalRef&>>(
-                    DisposeNative, env, cls.Get(), instance));
+            using LocalRef = typename Owner::LocalRef;
+            Dispatcher<Impl, /* HasThisArg */ false, const LocalRef&>::
+                    template Run<Traits, /* IsStatic */ true>(
+                    /* ThisArg */ nullptr, DisposeNative, env, instance);
             return;
         }
 
@@ -590,9 +601,8 @@ public:
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
-            Dispatch<Traits>(MakeUnique<ProxyNativeCall<
-                    Impl, Owner, /* IsStatic */ true, /* HasThisArg */ false,
-                    Args...>>(Method, env, cls, args...));
+            Dispatcher<Impl, /* HasThisArg */ false, Args...>::
+                    template Run<Traits>(cls, Method, env, args...);
             return;
         }
 
@@ -608,9 +618,8 @@ public:
         MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
-            Dispatch<Traits>(MakeUnique<ProxyNativeCall<
-                    Impl, Owner, /* IsStatic */ true, /* HasThisArg */ true,
-                    Args...>>(Method, env, cls, args...));
+            Dispatcher<Impl, /* HasThisArg */ true, Args...>::
+                    template Run<Traits>(cls, Method, env, args...);
             return;
         }
 
