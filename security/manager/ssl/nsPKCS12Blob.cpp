@@ -242,21 +242,20 @@ finish:
 static bool
 isExtractable(SECKEYPrivateKey *privKey)
 {
-  SECItem value;
-  bool    isExtractable = false;
-  SECStatus rv;
-
-  rv=PK11_ReadRawAttribute(PK11_TypePrivKey, privKey, CKA_EXTRACTABLE, &value);
+  ScopedAutoSECItem value;
+  SECStatus rv = PK11_ReadRawAttribute(PK11_TypePrivKey, privKey,
+                                       CKA_EXTRACTABLE, &value);
   if (rv != SECSuccess) {
     return false;
   }
+
+  bool isExtractable = false;
   if ((value.len == 1) && value.data) {
     isExtractable = !!(*(CK_BBOOL*)value.data);
   }
-  SECITEM_FreeItem(&value, false);
   return isExtractable;
 }
-  
+
 // nsPKCS12Blob::ExportToFile
 //
 // Having already loaded the certs, form them into a blob (loading the keys
