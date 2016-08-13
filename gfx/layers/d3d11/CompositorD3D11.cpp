@@ -10,7 +10,7 @@
 
 #include "gfxWindowsPlatform.h"
 #include "nsIWidget.h"
-#include "nsIGfxInfo.h"
+#include "mozilla/gfx/D3D11Checks.h"
 #include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/layers/ImageHost.h"
 #include "mozilla/layers/ContentHost.h"
@@ -34,6 +34,8 @@ namespace mozilla {
 using namespace gfx;
 
 namespace layers {
+
+static bool CanUsePartialPresents(ID3D11Device* aDevice);
 
 struct Vertex
 {
@@ -141,6 +143,7 @@ CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, widget::Compos
   , mAttachments(nullptr)
   , mHwnd(nullptr)
   , mDisableSequenceForNextFrame(false)
+  , mAllowPartialPresents(false)
   , mVerifyBuffersFailed(false)
 {
 }
@@ -186,7 +189,6 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
   }
 
   mDevice->GetImmediateContext(getter_AddRefs(mContext));
-
   if (!mContext) {
     gfxCriticalNote << "[D3D11] failed to get immediate context";
     *out_failureReason = "FEATURE_FAILURE_D3D11_CONTEXT";
@@ -406,7 +408,34 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
     return false;
   }
 
+  mAllowPartialPresents = CanUsePartialPresents(mDevice);
+
   reporter.SetSuccessful();
+  return true;
+}
+
+static bool
+CanUsePartialPresents(ID3D11Device* aDevice)
+{
+  if (gfxPrefs::PartialPresent() > 0) {
+    return true;
+  }
+  if (gfxPrefs::PartialPresent() < 0) {
+    return false;
+  }
+  if (DeviceManagerD3D11::Get()->IsWARP()) {
+    return true;
+  }
+
+  DXGI_ADAPTER_DESC desc;
+  if (!D3D11Checks::GetDxgiDesc(aDevice, &desc)) {
+    return false;
+  }
+
+  // We have to disable partial presents on NVIDIA (bug 1189940).
+  if (desc.VendorId == 0x10de) {
+    return false;
+  }
 
   return true;
 }
@@ -1071,23 +1100,8 @@ CompositorD3D11::EndFrame()
   if (oldSize == mSize) {
     RefPtr<IDXGISwapChain1> chain;
     HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
-    // We can force partial present or block partial present, based on the value of
-    // this preference; the default is to disable it on Nvidia (bug 1189940)
-    bool allowPartialPresent = false;
 
-    int32_t partialPresentPref = gfxPrefs::PartialPresent();
-    if (partialPresentPref > 0) {
-      allowPartialPresent = true;
-    } else if (partialPresentPref < 0) {
-      allowPartialPresent = false;
-    } else if (partialPresentPref == 0) {
-      nsString vendorID;
-      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-      gfxInfo->GetAdapterVendorID(vendorID);
-      allowPartialPresent = !vendorID.EqualsLiteral("0x10de") || isWARP;
-    }
-
-    if (SUCCEEDED(hr) && chain && allowPartialPresent) {
+    if (SUCCEEDED(hr) && chain && mAllowPartialPresents) {
       DXGI_PRESENT_PARAMETERS params;
       PodZero(&params);
       params.DirtyRectsCount = mInvalidRegion.GetNumRects();
