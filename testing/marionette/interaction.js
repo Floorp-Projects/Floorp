@@ -79,12 +79,35 @@ this.interaction = {};
 /**
  * Interact with an element by clicking it.
  *
+ * The element is scrolled into view before visibility- or interactability
+ * checks are performed.
+ *
+ * Selenium-style visibility checks will be performed if |specCompat|
+ * is false (default).  Otherwise pointer-interactability checks will be
+ * performed.  If either of these fail an {@code ElementNotVisibleError}
+ * is returned.
+ *
+ * If |strict| is enabled (defaults to disabled), further accessibility
+ * checks will be performed, and these may result in an {@code
+ * ElementNotAccessibleError} being returned.
+ *
+ * When |el| is not enabled, an {@code InvalidElementStateError}
+ * is returned.
+ *
  * @param {DOMElement|XULElement} el
  *     Element to click.
  * @param {boolean=} strict
  *     Enforce strict accessibility tests.
  * @param {boolean=} specCompat
  *     Use WebDriver specification compatible interactability definition.
+ *
+ * @throws {ElementNotVisibleError}
+ *     If either Selenium-style visibility check or
+ *     pointer-interactability check fails.
+ * @throws {ElementNotAccessibleError}
+ *     If |strict| is true and element is not accessible.
+ * @throws {InvalidElementStateError}
+ *     If |el| is not enabled.
  */
 interaction.clickElement = function(el, strict = false, specCompat = false) {
   let a11y = accessibility.get(strict);
@@ -140,6 +163,16 @@ interaction.clickElement = function(el, strict = false, specCompat = false) {
   });
 };
 
+/**
+ * Calculate the in-view centre point, that is the centre point of the
+ * area of the first DOM client rectangle that is inside the viewport.
+ *
+ * @param {DOMElement} el
+ *     Element to calculate the visible centre point of.
+ *
+ * @return {Object.<string, number>}
+ *     X- and Y-position.
+ */
 interaction.calculateCentreCoords = function(el) {
   let rects = el.getClientRects();
   return {
