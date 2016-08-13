@@ -239,7 +239,6 @@ toolkit/components/reader/Readability.js
 toolkit/components/reader/JSDOMParser.js
 
 # Uses preprocessing
-toolkit/content/widgets/videocontrols.xml
 toolkit/content/widgets/wizard.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
 toolkit/components/search/nsSearchService.js
