@@ -537,7 +537,7 @@ class MOZ_RAII AutoMessageArgs
         for (uint16_t i = 0; i < count_; i++) {
             if (passed_) {
                 lengths_[i] = js_strlen(args_[i]);
-            } else if (typeArg == ArgumentsAreASCII) {
+            } else if (typeArg == ArgumentsAreASCII || typeArg == ArgumentsAreLatin1) {
                 char* charArg = va_arg(ap, char*);
                 size_t charArgLength = strlen(charArg);
                 args_[i] = InflateString(cx, charArg, &charArgLength);
