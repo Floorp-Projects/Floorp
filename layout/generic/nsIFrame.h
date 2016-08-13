@@ -3176,6 +3176,7 @@ public:
   inline uint8_t GetDisplay() const;
   inline bool IsFloating() const;
   inline bool IsAbsPosContainingBlock() const;
+  inline bool IsFixedPosContainingBlock() const;
   inline bool IsRelativelyPositioned() const;
   inline bool IsAbsolutelyPositioned() const;
 
