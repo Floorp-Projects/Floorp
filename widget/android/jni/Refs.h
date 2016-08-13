@@ -25,43 +25,6 @@ template<class Cls> class GlobalRef;
 template<class Cls> class DependentRef;
 
 
-// How exception during a JNI call should be treated.
-enum class ExceptionMode
-{
-    // Abort on unhandled excepion (default).
-    ABORT,
-    // Ignore the exception and return to caller.
-    IGNORE,
-    // Catch any exception and return a nsresult.
-    NSRESULT,
-};
-
-// Thread that a particular JNI call is allowed on.
-enum class CallingThread
-{
-    // Can be called from any thread (default).
-    ANY,
-    // Can be called from the Gecko thread.
-    GECKO,
-    // Can be called from the Java UI thread.
-    UI,
-};
-
-// If and where a JNI call will be dispatched.
-enum class DispatchTarget
-{
-    // Call happens synchronously on the calling thread (default).
-    CURRENT,
-    // Call happens synchronously on the calling thread, but the call is
-    // wrapped in a function object and is passed thru UsesNativeCallProxy.
-    // Method must return void.
-    PROXY,
-    // Call is dispatched asynchronously on the Gecko thread. Method must
-    // return void.
-    GECKO,
-};
-
-
 // Class to hold the native types of a method's arguments.
 // For example, if a method has signature (ILjava/lang/String;)V,
 // its arguments class would be jni::Args<int32_t, jni::String::Param>
