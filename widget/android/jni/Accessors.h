@@ -39,7 +39,7 @@ class Accessor
     static void GetNsresult(JNIEnv* env, nsresult* rv)
     {
         if (env->ExceptionCheck()) {
-#ifdef DEBUG
+#ifdef MOZ_CHECK_JNI
             env->ExceptionDescribe();
 #endif
             env->ExceptionClear();
@@ -77,6 +77,10 @@ protected:
 
     static void BeginAccess(const Context& ctx)
     {
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
+        static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT,
+                      "Dispatching not supported for method call");
+
         if (sID) {
             return;
         }
@@ -196,6 +200,10 @@ private:
 
     static void BeginAccess(const Context& ctx)
     {
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
+        static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT,
+                      "Dispatching not supported for field access");
+
         if (sID) {
             return;
         }
