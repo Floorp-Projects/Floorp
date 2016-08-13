@@ -249,6 +249,7 @@ ReportTooBigCharacter(JSContext* cx, uint32_t v)
 enum InflateUTF8Action {
     CountAndReportInvalids,
     CountAndIgnoreInvalids,
+    AssertNoInvalids,
     Copy
 };
 
@@ -261,7 +262,8 @@ static bool
 InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, size_t* dstlenp,
                           bool* isAsciip)
 {
-    *isAsciip = true;
+    if (Action != AssertNoInvalids)
+        *isAsciip = true;
 
     // Count how many char16_t characters need to be in the inflated string.
     // |i| is the index into |src|, and |j| is the the index into |dst|.
@@ -276,7 +278,8 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
 
         } else {
             // Non-ASCII code unit.  Determine its length in bytes (n).
-            *isAsciip = false;
+            if (Action != AssertNoInvalids)
+                *isAsciip = false;
             uint32_t n = 1;
             while (v & (0x80 >> n))
                 n++;
@@ -286,6 +289,8 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
                 if (Action == CountAndReportInvalids) {                 \
                     report(cx, arg);                                    \
                     return false;                                       \
+                } else if (Action == AssertNoInvalids) {                \
+                    MOZ_CRASH("invalid UTF-8 string: " # report);       \
                 } else {                                                \
                     if (Action == Copy)                                 \
                         dst[j] = char16_t(REPLACE_UTF8);                \
@@ -350,7 +355,8 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
         }
     }
 
-    *dstlenp = j;
+    if (Action != AssertNoInvalids)
+        *dstlenp = j;
 
     return true;
 }
@@ -398,3 +404,12 @@ JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t
     return InflateUTF8StringHelper<CountAndIgnoreInvalids>(cx, utf8, outlen);
 }
 
+#ifdef DEBUG
+void
+JS::ConstUTF8CharsZ::validate(size_t aLength)
+{
+    MOZ_ASSERT(data_);
+    UTF8Chars chars(data_, aLength);
+    InflateUTF8StringToBuffer<AssertNoInvalids>(nullptr, chars, nullptr, nullptr, nullptr);
+}
+#endif
