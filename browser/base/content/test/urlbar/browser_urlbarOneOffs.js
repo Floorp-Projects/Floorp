@@ -154,9 +154,9 @@ add_task(function* searchWith() {
                "Search with " + Services.search.currentEngine.name,
                "Sanity check: first result's action text");
 
-  // Tab to the first one-off.  Now the first result and the first one-off
+  // Alt+Down to the first one-off.  Now the first result and the first one-off
   // should both be selected.
-  EventUtils.synthesizeKey("VK_TAB", {})
+  EventUtils.synthesizeKey("VK_DOWN", { altKey: true })
   assertState(0, 0, typedValue);
 
   let engineName = gURLBar.popup.oneOffSearchButtons.selectedButton.engine.name;
@@ -196,8 +196,8 @@ add_task(function* oneOffReturn() {
 
   assertState(0, -1, typedValue);
 
-  // Tab to select the first one-off.
-  EventUtils.synthesizeKey("VK_TAB", {})
+  // Alt+Down to select the first one-off.
+  EventUtils.synthesizeKey("VK_DOWN", { altKey: true })
   assertState(0, 0, typedValue);
 
   let resultsPromise = promiseSearchResultsLoaded();
