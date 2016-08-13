@@ -36,6 +36,31 @@ enum class ExceptionMode
     NSRESULT,
 };
 
+// Thread that a particular JNI call is allowed on.
+enum class CallingThread
+{
+    // Can be called from any thread (default).
+    ANY,
+    // Can be called from the Gecko thread.
+    GECKO,
+    // Can be called from the Java UI thread.
+    UI,
+};
+
+// If and where a JNI call will be dispatched.
+enum class DispatchTarget
+{
+    // Call happens synchronously on the calling thread (default).
+    CURRENT,
+    // Call happens synchronously on the calling thread, but the call is
+    // wrapped in a function object and is passed thru UsesNativeCallProxy.
+    // Method must return void.
+    PROXY,
+    // Call is dispatched asynchronously on the Gecko thread. Method must
+    // return void.
+    GECKO,
+};
+
 
 // Class to hold the native types of a method's arguments.
 // For example, if a method has signature (ILjava/lang/String;)V,
@@ -77,7 +102,8 @@ class Ref
 protected:
     static JNIEnv* FindEnv()
     {
-        return Cls::isMultithreaded ? GetEnvForThread() : GetGeckoThreadEnv();
+        return Cls::callingThread == CallingThread::GECKO ?
+                GetGeckoThreadEnv() : GetEnvForThread();
     }
 
     Type mInstance;
@@ -231,7 +257,7 @@ public:
 };
 
 
-template<class Cls, typename Type>
+template<class Cls, typename Type = jobject>
 class ObjectBase
 {
 protected:
@@ -248,7 +274,7 @@ public:
     using GlobalRef = jni::GlobalRef<Cls>;
     using Param = const Ref&;
 
-    static const bool isMultithreaded = true;
+    static const CallingThread callingThread = CallingThread::ANY;
     static const char name[];
 
     explicit ObjectBase(const Context& ctx) : mCtx(ctx) {}
