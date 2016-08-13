@@ -236,17 +236,17 @@ public:
                        GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLint border, GLenum unpackFormat, GLenum unpackType,
-                       const dom::ArrayBufferView* view);
+                       const dom::Nullable<dom::ArrayBufferView>& maybeView);
 
     void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
                        GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLenum unpackFormat, GLenum unpackType,
-                       const dom::ImageData& imageData);
+                       dom::ImageData* imageData);
 
     void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
                        GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLenum unpackFormat, GLenum unpackType,
-                       const dom::Element& elem, ErrorResult* const out_error);
+                       dom::Element* elem, ErrorResult* const out_error);
 
     void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
                        GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
