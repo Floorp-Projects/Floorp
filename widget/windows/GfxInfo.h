@@ -46,8 +46,6 @@ public:
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
 
-  NS_IMETHOD Reset(const nsAString& aVendorID, const nsAString& aDeviceID) override;
-
   virtual nsresult Init() override;
 
   virtual uint32_t OperatingSystemVersion() override { return mWindowsVersion; }
@@ -74,8 +72,6 @@ protected:
 private:
 
   void AddCrashReportAnnotations();
-  nsresult UpdatePrimaryDeviceInfo(DISPLAY_DEVICEW &displayDevice);
-  void CheckAndUpdateDriverInfo();
 
   nsString mDeviceString;
   nsString mDeviceID;
