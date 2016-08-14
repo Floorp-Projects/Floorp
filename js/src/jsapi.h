@@ -5304,6 +5304,7 @@ class JSErrorReport
     JS::ConstUTF8CharsZ message_;
 
     // Offending source line without final '\n'.
+    // If ownsLinebuf__ is true, the buffer is freed in destructor.
     const char16_t* linebuf_;
 
     // Number of chars in linebuf_. Does not include trailing '\0'.
@@ -5318,7 +5319,7 @@ class JSErrorReport
         filename(nullptr), lineno(0), column(0),
         flags(0), errorNumber(0),
         exnType(0), isMuted(false),
-        ownsMessage_(false)
+        ownsLinebuf_(false), ownsMessage_(false)
     {}
 
     ~JSErrorReport() {
@@ -5334,6 +5335,7 @@ class JSErrorReport
     bool            isMuted : 1;    /* See the comment in ReadOnlyCompileOptions. */
 
   private:
+    bool ownsLinebuf_ : 1;
     bool ownsMessage_ : 1;
 
   public:
@@ -5346,7 +5348,12 @@ class JSErrorReport
     size_t tokenOffset() const {
         return tokenOffset_;
     }
-    void initLinebuf(const char16_t* linebuf, size_t linebufLength, size_t tokenOffset);
+    void initOwnedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg, size_t tokenOffsetArg) {
+        initBorrowedLinebuf(linebufArg, linebufLengthArg, tokenOffsetArg);
+        ownsLinebuf_ = true;
+    }
+    void initBorrowedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg, size_t tokenOffsetArg);
+    void freeLinebuf();
 
     const JS::ConstUTF8CharsZ message() const {
         return message_;

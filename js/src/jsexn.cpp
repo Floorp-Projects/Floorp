@@ -192,7 +192,7 @@ js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
         const char16_t* linebufCopy = (const char16_t*)cursor;
         js_memcpy(cursor, report->linebuf(), linebufSize);
         cursor += linebufSize;
-        copy->initLinebuf(linebufCopy, report->linebufLength(), report->tokenOffset());
+        copy->initBorrowedLinebuf(linebufCopy, report->linebufLength(), report->tokenOffset());
     }
 
     if (report->filename) {
