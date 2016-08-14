@@ -261,7 +261,7 @@ js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber)
     fprintf(stderr, "ReportOverRecursed called\n");
 #endif
     if (maybecx) {
-        JS_ReportErrorNumber(maybecx, GetErrorMessage, nullptr, errorNumber);
+        JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr, errorNumber);
         maybecx->overRecursed_ = true;
     }
 }
@@ -292,7 +292,7 @@ js::ReportAllocationOverflow(ExclusiveContext* cxArg)
     JSContext* cx = cxArg->asJSContext();
 
     AutoSuppressGC suppressGC(cx);
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ALLOC_OVERFLOW);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ALLOC_OVERFLOW);
 }
 
 /*
