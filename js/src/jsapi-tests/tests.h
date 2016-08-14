@@ -298,14 +298,14 @@ class JSAPITest
         cx = nullptr;
     }
 
-    static void reportWarning(JSContext* cx, const char* message, JSErrorReport* report) {
+    static void reportWarning(JSContext* cx, JSErrorReport* report) {
         MOZ_RELEASE_ASSERT(report);
         MOZ_RELEASE_ASSERT(JSREPORT_IS_WARNING(report->flags));
 
         fprintf(stderr, "%s:%u:%s\n",
                 report->filename ? report->filename : "<no filename>",
                 (unsigned int) report->lineno,
-                message);
+                report->message().c_str());
     }
 
     virtual const JSClass * getGlobalClass() {

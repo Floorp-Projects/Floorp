@@ -5855,7 +5855,7 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
     flags = nsIScriptError::errorFlag | nsIScriptError::exceptionFlag;
   }
 
-  if (message.IsEmpty()) {
+  if (message.IsEmpty() && aFallbackMessage) {
     nsDependentCString fallbackMessage(aFallbackMessage);
     if (!AppendUTF8toUTF16(fallbackMessage, message, mozilla::fallible)) {
       // Try again, with only a 1 KB string. Do this infallibly this time.
