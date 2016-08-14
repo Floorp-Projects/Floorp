@@ -589,11 +589,8 @@ CompileError::throwError(JSContext* cx)
 CompileError::~CompileError()
 {
     js_free((void*)report.linebuf());
-    js_free((void*)report.ucmessage);
     js_free(message);
     message = nullptr;
-
-    PodZero(&report);
 }
 
 bool

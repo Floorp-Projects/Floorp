@@ -327,7 +327,8 @@ PACLogErrorOrWarning(const nsAString& aKind, JSErrorReport* aReport)
   nsString formattedMessage(NS_LITERAL_STRING("PAC Execution "));
   formattedMessage += aKind;
   formattedMessage += NS_LITERAL_STRING(": ");
-  formattedMessage += aReport->ucmessage;
+  if (aReport->message())
+    formattedMessage.Append(NS_ConvertUTF8toUTF16(aReport->message().c_str()));
   formattedMessage += NS_LITERAL_STRING(" [");
   formattedMessage.Append(aReport->linebuf(), aReport->linebufLength());
   formattedMessage += NS_LITERAL_STRING("]");
