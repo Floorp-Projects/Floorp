@@ -588,7 +588,6 @@ CompileError::throwError(JSContext* cx)
 
 CompileError::~CompileError()
 {
-    js_free((void*)report.linebuf());
     js_free(message);
     message = nullptr;
 }
@@ -689,7 +688,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
         if (!linebuf)
             return false;
 
-        err.report.initLinebuf(linebuf.release(), windowLength, offset - windowStart);
+        err.report.initOwnedLinebuf(linebuf.release(), windowLength, offset - windowStart);
     }
 
     if (cx->isJSContext())
