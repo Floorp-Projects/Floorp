@@ -169,7 +169,7 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 }
 
 void
-xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
+xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
                        bool aIsChrome, uint64_t aWindowID)
 {
     mCategory = aIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
@@ -177,8 +177,8 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
     mWindowID = aWindowID;
 
     ErrorReportToMessageString(aReport, mErrorMsg);
-    if (mErrorMsg.IsEmpty() && aFallbackMessage) {
-        mErrorMsg.AssignWithConversion(aFallbackMessage);
+    if (mErrorMsg.IsEmpty() && aToStringResult) {
+        AppendUTF8toUTF16(aToStringResult, mErrorMsg);
     }
 
     if (!aReport->filename) {
