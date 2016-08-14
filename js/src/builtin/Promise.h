@@ -23,6 +23,9 @@ class PromiseObject : public NativeObject
     static PromiseObject* create(JSContext* cx, HandleObject executor,
                                  HandleObject proto = nullptr);
 
+    static JSObject* unforgeableResolve(JSContext* cx, HandleValue value);
+    static JSObject* unforgeableReject(JSContext* cx, HandleValue value);
+
     JS::PromiseState state() {
         int32_t flags = getFixedSlot(PROMISE_FLAGS_SLOT).toInt32();
         if (!(flags & PROMISE_FLAG_RESOLVED)) {
