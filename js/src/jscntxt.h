@@ -67,7 +67,7 @@ TraceCycleDetectionSet(JSTracer* trc, AutoCycleDetector::Set& set);
 
 struct AutoResolving;
 
-namespace frontend { struct CompileError; }
+namespace frontend { class CompileError; }
 
 /*
  * Execution Context Overview:
