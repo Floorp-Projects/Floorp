@@ -336,7 +336,7 @@ PACLogErrorOrWarning(const nsAString& aKind, JSErrorReport* aReport)
 }
 
 static void
-PACWarningReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aReport)
+PACWarningReporter(JSContext* aCx, JSErrorReport* aReport)
 {
   MOZ_ASSERT(aReport);
   MOZ_ASSERT(JSREPORT_IS_WARNING(aReport->flags));

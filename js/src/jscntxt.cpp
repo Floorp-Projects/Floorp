@@ -159,8 +159,8 @@ AutoResolving::alreadyStartedSlow() const
 }
 
 static void
-ReportError(JSContext* cx, const char* message, JSErrorReport* reportp,
-            JSErrorCallback callback, void* userRef)
+ReportError(JSContext* cx, JSErrorReport* reportp, JSErrorCallback callback,
+            void* userRef)
 {
     /*
      * Check the error report, and set a JavaScript-catchable exception
@@ -176,11 +176,11 @@ ReportError(JSContext* cx, const char* message, JSErrorReport* reportp,
     }
 
     if (JSREPORT_IS_WARNING(reportp->flags)) {
-        CallWarningReporter(cx, message, reportp);
+        CallWarningReporter(cx, reportp);
         return;
     }
 
-    ErrorToException(cx, message, reportp, callback, userRef);
+    ErrorToException(cx, reportp, callback, userRef);
 }
 
 /*
@@ -322,7 +322,6 @@ js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
                   ErrorArgumentsType argumentsType, va_list ap)
 {
     JSErrorReport report;
-    bool warning;
 
     if (checkReportFlags(cx, &flags))
         return true;
@@ -349,9 +348,9 @@ js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
     }
     PopulateReportBlame(cx, &report);
 
-    warning = JSREPORT_IS_WARNING(report.flags);
+    bool warning = JSREPORT_IS_WARNING(report.flags);
 
-    ReportError(cx, report.message().c_str(), &report, nullptr, nullptr);
+    ReportError(cx, &report, nullptr, nullptr);
     return warning;
 }
 
@@ -386,11 +385,7 @@ bool
 js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* report,
                bool reportWarnings)
 {
-    if (!report) {
-        fprintf(file, "%s\n", message);
-        fflush(file);
-        return false;
-    }
+    MOZ_ASSERT(report);
 
     /* Conditionally ignore reported warnings. */
     if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings)
@@ -411,6 +406,9 @@ js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* re
                              JSREPORT_IS_STRICT(report->flags) ? "strict " : "");
         JS_free(cx, tmp);
     }
+
+    if (!message)
+        message = report->message().c_str();
 
     /* embedded newlines -- argh! */
     const char* ctmp;
@@ -584,13 +582,11 @@ class MOZ_RAII AutoMessageArgs
 bool
 js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                            void* userRef, const unsigned errorNumber,
-                           char** messagep, const char16_t** messageArgs,
+                           const char16_t** messageArgs,
                            ErrorArgumentsType argumentsType,
                            JSErrorReport* reportp, va_list ap)
 {
     const JSErrorFormatString* efs;
-
-    *messagep = nullptr;
 
     if (!callback)
         callback = GetErrorMessage;
@@ -629,7 +625,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
 
                 buffer = fmt = InflateString(cx, efs->format, &len);
                 if (!buffer)
-                    goto error;
+                    return false;
                 expandedLength = len
                                  - (3 * args.count()) /* exclude the {n} */
                                  + args.totalLength();
@@ -641,7 +637,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 ucmessage = out = cx->pod_malloc<char16_t>(expandedLength + 1);
                 if (!out) {
                     js_free(buffer);
-                    goto error;
+                    return false;
                 }
                 while (*fmt) {
                     if (*fmt == '{') {
@@ -664,13 +660,9 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 js_free(buffer);
                 size_t msgLen = PointerRangeSize(ucmessage, static_cast<const char16_t*>(out));
                 mozilla::Range<const char16_t> ucmsg(ucmessage, msgLen);
-                *messagep = JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, ucmsg).c_str();
-                if (!*messagep)
-                    goto error;
-
                 char* utf8 = JS::CharsToNewUTF8CharsZ(cx, ucmsg).c_str();
                 if (!utf8)
-                    goto error;
+                    return false;
                 reportp->initOwnedMessage(utf8);
             }
         } else {
@@ -681,35 +673,25 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
              * entire message.
              */
             if (efs->format) {
-                *messagep = DuplicateString(cx, efs->format).release();
-                if (!*messagep)
-                    goto error;
-
                 char* message = DuplicateString(cx, efs->format).release();
                 if (!message)
-                    goto error;
+                    return false;
                 reportp->initOwnedMessage(message);
             }
         }
     }
-    if (*messagep == nullptr) {
+    if (!reportp->message()) {
         /* where's the right place for this ??? */
         const char* defaultErrorMessage
             = "No error message available for error number %d";
         size_t nbytes = strlen(defaultErrorMessage) + 16;
-        *messagep = cx->pod_malloc<char>(nbytes);
-        if (!*messagep)
-            goto error;
-        snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
+        char* message = cx->pod_malloc<char>(nbytes);
+        if (!message)
+            return false;
+        snprintf(message, nbytes, defaultErrorMessage, errorNumber);
+        reportp->initOwnedMessage(message);
     }
     return true;
-
-error:
-    if (*messagep) {
-        js_free((void*)*messagep);
-        *messagep = nullptr;
-    }
-    return false;
 }
 
 bool
@@ -718,7 +700,6 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
                         ErrorArgumentsType argumentsType, va_list ap)
 {
     JSErrorReport report;
-    char* message;
     bool warning;
 
     if (checkReportFlags(cx, &flags))
@@ -730,13 +711,11 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
     PopulateReportBlame(cx, &report);
 
     if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
-                                &message, nullptr, argumentsType, &report, ap)) {
+                                nullptr, argumentsType, &report, ap)) {
         return false;
     }
 
-    ReportError(cx, message, &report, callback, userRef);
-
-    js_free(message);
+    ReportError(cx, &report, callback, userRef);
 
     return warning;
 }
@@ -744,14 +723,14 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
 static bool
 ExpandErrorArguments(ExclusiveContext* cx, JSErrorCallback callback,
                      void* userRef, const unsigned errorNumber,
-                     char** messagep, const char16_t** messageArgs,
+                     const char16_t** messageArgs,
                      ErrorArgumentsType argumentsType,
                      JSErrorReport* reportp, ...)
 {
     va_list ap;
     va_start(ap, reportp);
     bool expanded = js::ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
-                                               messagep, messageArgs, argumentsType, reportp, ap);
+                                               messageArgs, argumentsType, reportp, ap);
     va_end(ap);
     return expanded;
 }
@@ -770,29 +749,25 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
     report.errorNumber = errorNumber;
     PopulateReportBlame(cx, &report);
 
-    char* message;
     if (!ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                              &message, args, ArgumentsAreUnicode, &report))
+                              args, ArgumentsAreUnicode, &report))
     {
         return false;
     }
 
-    ReportError(cx, message, &report, callback, userRef);
-
-    js_free(message);
+    ReportError(cx, &report, callback, userRef);
 
     return warning;
 }
 
 void
-js::CallWarningReporter(JSContext* cx, const char* message, JSErrorReport* reportp)
+js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp)
 {
-    MOZ_ASSERT(message);
     MOZ_ASSERT(reportp);
     MOZ_ASSERT(JSREPORT_IS_WARNING(reportp->flags));
 
     if (JS::WarningReporter warningReporter = cx->runtime()->warningReporter)
-        warningReporter(cx, message, reportp);
+        warningReporter(cx, reportp);
 }
 
 bool

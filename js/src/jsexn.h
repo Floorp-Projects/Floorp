@@ -39,7 +39,7 @@ ComputeStackString(JSContext* cx);
  * the rug.
  */
 extern void
-ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
+ErrorToException(JSContext* cx, JSErrorReport* reportp,
                  JSErrorCallback callback, void* userRef);
 
 extern JSErrorReport*

@@ -1452,7 +1452,7 @@ struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
         return reportp;
     }
 
-    const char* message()
+    const JS::ConstUTF8CharsZ message()
     {
         return message_;
     }
@@ -1474,14 +1474,10 @@ struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
     JSErrorReport* reportp;
 
     // And we may have a message.
-    const char* message_;
+    JS::ConstUTF8CharsZ message_;
 
     // Or we may need to synthesize a JSErrorReport one of our own.
     JSErrorReport ownedReport;
-
-    // Or a message of our own.  If this is non-null, we need to clean up both
-    // it and ownedReport.
-    char* ownedMessage;
 
     // And we have a string to maybe keep alive that has pointers into
     // it from ownedReport.
@@ -1498,9 +1494,6 @@ struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
 
     // And for our filename.
     JSAutoByteString filename;
-
-    // True if we need to free message_ and the stuff in ownedReport
-    bool ownsMessageAndReport;
 };
 
 /* Implemented in vm/StructuredClone.cpp. */
