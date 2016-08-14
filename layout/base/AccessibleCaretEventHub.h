@@ -176,7 +176,8 @@ public:
   virtual const char* Name() const { return ""; }
 
   virtual nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
-                                const nsPoint& aPoint, int32_t aTouchId)
+                                const nsPoint& aPoint, int32_t aTouchId,
+                                EventClassID aEventClass)
   {
     return nsEventStatus_eIgnore;
   }
