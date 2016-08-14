@@ -7458,6 +7458,24 @@ DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
     return dbg->wrapDebuggeeValue(cx, value);
 }
 
+/* static */ bool
+DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame, mozilla::Range<const char16_t> chars,
+                    HandleObject bindings, const EvalOptions& options, JSTrapStatus& status,
+                    MutableHandleValue value)
+{
+    MOZ_ASSERT(frame->isLive());
+
+    Debugger* dbg = frame->owner();
+
+    Maybe<ScriptFrameIter> maybeIter;
+    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
+        return false;
+    ScriptFrameIter& iter = *maybeIter;
+
+    UpdateFrameIterPc(iter);
+
+    return DebuggerGenericEval(cx, chars, bindings, options, status, value, dbg, nullptr, &iter);
+}
 
 /* statuc */ bool
 DebuggerFrame::isLive() const
@@ -8009,14 +8027,12 @@ DebuggerFrame_setOnPop(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerFrame_eval(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::evalMethod(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME_ITER(cx, argc, vp, "eval", args, thisobj, _, iter);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "eval", args, frame);
     if (!args.requireAtLeast(cx, "Debugger.Frame.prototype.eval", 1))
         return false;
-    Debugger* dbg = Debugger::fromChildJSObject(thisobj);
-    UpdateFrameIterPc(iter);
 
     AutoStableStringChars stableChars(cx);
     if (!ValueToStableChars(cx, "Debugger.Frame.prototype.eval", args[0], stableChars))
@@ -8024,25 +8040,23 @@ DebuggerFrame_eval(JSContext* cx, unsigned argc, Value* vp)
     mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
 
     EvalOptions options;
-    if (!ParseEvalOptions(cx, args.get(1), options))
+   if (!ParseEvalOptions(cx, args.get(1), options))
         return false;
 
     JSTrapStatus status;
     RootedValue value(cx);
-    if (!DebuggerGenericEval(cx, chars, nullptr, options, status, &value, dbg, nullptr, &iter))
+    if (!DebuggerFrame::eval(cx, frame, chars, nullptr, options, status, &value))
         return false;
 
-    return dbg->newCompletionValue(cx, status, value, args.rval());
+    return frame->owner()->newCompletionValue(cx, status, value, args.rval());
 }
 
-static bool
-DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::evalWithBindingsMethod(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME_ITER(cx, argc, vp, "evalWithBindings", args, thisobj, _, iter);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "evalWithBindings", args, frame);
     if (!args.requireAtLeast(cx, "Debugger.Frame.prototype.evalWithBindings", 2))
         return false;
-    Debugger* dbg = Debugger::fromChildJSObject(thisobj);
-    UpdateFrameIterPc(iter);
 
     AutoStableStringChars stableChars(cx);
     if (!ValueToStableChars(cx, "Debugger.Frame.prototype.evalWithBindings", args[0],
@@ -8062,10 +8076,10 @@ DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
 
     JSTrapStatus status;
     RootedValue value(cx);
-    if (!DebuggerGenericEval(cx, chars, bindings, options, status, &value, dbg, nullptr, &iter))
+    if (!DebuggerFrame::eval(cx, frame, chars, bindings, options, status, &value))
         return false;
 
-    return dbg->newCompletionValue(cx, status, value, args.rval());
+    return frame->owner()->newCompletionValue(cx, status, value, args.rval());
 }
 
 /* static */ bool
@@ -8095,8 +8109,8 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
 };
 
 const JSFunctionSpec DebuggerFrame::methods_[] = {
-    JS_FN("eval", DebuggerFrame_eval, 1, 0),
-    JS_FN("evalWithBindings", DebuggerFrame_evalWithBindings, 1, 0),
+    JS_FN("eval", DebuggerFrame::evalMethod, 1, 0),
+    JS_FN("evalWithBindings", DebuggerFrame::evalWithBindingsMethod, 1, 0),
     JS_FS_END
 };
 
