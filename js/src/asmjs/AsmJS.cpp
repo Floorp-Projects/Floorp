@@ -7363,8 +7363,8 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList, unsi
 static bool
 LinkFail(JSContext* cx, const char* str)
 {
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage,
-                                 nullptr, JSMSG_USE_ASM_LINK_FAIL, str);
+    JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                      JSMSG_USE_ASM_LINK_FAIL, str);
     return false;
 }
 
