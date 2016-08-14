@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozversion
-from marionette_driver.errors import MarionetteException
-
 from firefox_ui_harness.testcases import FirefoxTestCase
 
 
