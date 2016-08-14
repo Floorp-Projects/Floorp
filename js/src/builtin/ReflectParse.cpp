@@ -3651,7 +3651,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
         } else if (isModule) {
             target = ParseTarget::Module;
         } else {
-            JS_ReportError(cx, "Bad target value, expected 'script' or 'module'");
+            JS_ReportErrorASCII(cx, "Bad target value, expected 'script' or 'module'");
             return false;
         }
     }
@@ -3724,7 +3724,7 @@ JS_InitReflectParse(JSContext* cx, HandleObject global)
     if (!GetProperty(cx, global, global, cx->names().Reflect, &reflectVal))
         return false;
     if (!reflectVal.isObject()) {
-        JS_ReportError(cx, "JS_InitReflectParse must be called during global initialization");
+        JS_ReportErrorASCII(cx, "JS_InitReflectParse must be called during global initialization");
         return false;
     }
 

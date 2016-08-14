@@ -58,7 +58,7 @@ Library::Name(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 1) {
-    JS_ReportError(cx, "libraryName takes one argument");
+    JS_ReportErrorASCII(cx, "libraryName takes one argument");
     return false;
   }
 
@@ -67,7 +67,7 @@ Library::Name(JSContext* cx, unsigned argc, Value* vp)
   if (arg.isString()) {
     str = arg.toString();
   } else {
-    JS_ReportError(cx, "name argument must be a string");
+    JS_ReportErrorASCII(cx, "name argument must be a string");
     return false;
   }
 
@@ -101,7 +101,7 @@ Library::Create(JSContext* cx, Value path_, const JSCTypesCallbacks* callbacks)
     return nullptr;
 
   if (!path.isString()) {
-    JS_ReportError(cx, "open takes a string argument");
+    JS_ReportErrorASCII(cx, "open takes a string argument");
     return nullptr;
   }
 
@@ -213,12 +213,12 @@ Library::Open(JSContext* cx, unsigned argc, Value* vp)
   if (!ctypesObj)
     return false;
   if (!IsCTypesGlobal(ctypesObj)) {
-    JS_ReportError(cx, "not a ctypes object");
+    JS_ReportErrorASCII(cx, "not a ctypes object");
     return false;
   }
 
   if (args.length() != 1 || args[0].isUndefined()) {
-    JS_ReportError(cx, "open requires a single argument");
+    JS_ReportErrorASCII(cx, "open requires a single argument");
     return false;
   }
 
@@ -238,12 +238,12 @@ Library::Close(JSContext* cx, unsigned argc, Value* vp)
   if (!obj)
     return false;
   if (!IsLibrary(obj)) {
-    JS_ReportError(cx, "not a library");
+    JS_ReportErrorASCII(cx, "not a library");
     return false;
   }
 
   if (args.length() != 0) {
-    JS_ReportError(cx, "close doesn't take any arguments");
+    JS_ReportErrorASCII(cx, "close doesn't take any arguments");
     return false;
   }
 
@@ -263,13 +263,13 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
   if (!obj)
     return false;
   if (!IsLibrary(obj)) {
-    JS_ReportError(cx, "not a library");
+    JS_ReportErrorASCII(cx, "not a library");
     return false;
   }
 
   PRLibrary* library = GetLibrary(obj);
   if (!library) {
-    JS_ReportError(cx, "library not open");
+    JS_ReportErrorASCII(cx, "library not open");
     return false;
   }
 
@@ -284,12 +284,12 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
   //    accessors. If 'type' is a PointerType to a FunctionType, the result will
   //    be a function pointer, as with 1).
   if (args.length() < 2) {
-    JS_ReportError(cx, "declare requires at least two arguments");
+    JS_ReportErrorASCII(cx, "declare requires at least two arguments");
     return false;
   }
 
   if (!args[0].isString()) {
-    JS_ReportError(cx, "first argument must be a string");
+    JS_ReportErrorASCII(cx, "first argument must be a string");
     return false;
   }
 
@@ -313,7 +313,7 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
     if (args[1].isPrimitive() ||
         !CType::IsCType(args[1].toObjectOrNull()) ||
         !CType::IsSizeDefined(args[1].toObjectOrNull())) {
-      JS_ReportError(cx, "second argument must be a type of defined size");
+      JS_ReportErrorASCII(cx, "second argument must be a type of defined size");
       return false;
     }
 
@@ -336,7 +336,7 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
     // Look up the function symbol.
     fnptr = PR_FindFunctionSymbol(library, symbol.begin());
     if (!fnptr) {
-      JS_ReportError(cx, "couldn't find function symbol in library");
+      JS_ReportErrorASCII(cx, "couldn't find function symbol in library");
       return false;
     }
     data = &fnptr;
@@ -348,7 +348,7 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
 
     data = PR_FindSymbol(library, symbol.begin());
     if (!data) {
-      JS_ReportError(cx, "couldn't find symbol in library");
+      JS_ReportErrorASCII(cx, "couldn't find symbol in library");
       return false;
     }
   }

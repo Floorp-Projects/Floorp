@@ -15757,7 +15757,7 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
             // TODO (Bug 1173651): Xrays currently cannot wrap iterators. Change
             // after bug 1023984 is fixed.
             if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
-              JS_ReportError(cx, "Xray wrapping of iterators not supported.");
+              JS_ReportErrorASCII(cx, "Xray wrapping of iterators not supported.");
               return false;
             }
             JS::Rooted<JSObject*> result(cx);

@@ -2390,7 +2390,7 @@ static bool GetObjectProperty(JSContext* cx, HandleObject obj,
   }
 
   if (val.isPrimitive()) {
-    JS_ReportError(cx, "missing or non-object field");
+    JS_ReportErrorASCII(cx, "missing or non-object field");
     return false;
   }
 
@@ -5051,7 +5051,7 @@ ABI::ToSource(JSContext* cx, unsigned argc, Value* vp)
       result = JS_NewStringCopyZ(cx, "ctypes.winapi_abi");
       break;
     default:
-      JS_ReportError(cx, "not a valid ABICode");
+      JS_ReportErrorASCII(cx, "not a valid ABICode");
       return false;
   }
   if (!result)
@@ -5417,7 +5417,7 @@ ArrayType::CreateInternal(JSContext* cx,
   // If our length is undefined, both our size and length will be undefined.
   size_t baseSize;
   if (!CType::GetSafeSize(baseType, &baseSize)) {
-    JS_ReportError(cx, "base size must be defined");
+    JS_ReportErrorASCII(cx, "base size must be defined");
     return nullptr;
   }
 
@@ -6211,7 +6211,7 @@ StructType::Define(JSContext* cx, unsigned argc, Value* vp)
   }
 
   if (CType::IsSizeDefined(obj)) {
-    JS_ReportError(cx, "StructType has already been defined");
+    JS_ReportErrorASCII(cx, "StructType has already been defined");
     return false;
   }
 
@@ -6252,7 +6252,7 @@ StructType::ConstructData(JSContext* cx,
   }
 
   if (!CType::IsSizeDefined(obj)) {
-    JS_ReportError(cx, "cannot construct an opaque StructType");
+    JS_ReportErrorASCII(cx, "cannot construct an opaque StructType");
     return false;
   }
 
@@ -6698,7 +6698,7 @@ PrepareCIF(JSContext* cx,
 {
   ffi_abi abi;
   if (!GetABI(cx, ObjectOrNullValue(fninfo->mABI), &abi)) {
-    JS_ReportError(cx, "Invalid ABI specification");
+    JS_ReportErrorASCII(cx, "Invalid ABI specification");
     return false;
   }
 
@@ -6717,13 +6717,13 @@ PrepareCIF(JSContext* cx,
   case FFI_OK:
     return true;
   case FFI_BAD_ABI:
-    JS_ReportError(cx, "Invalid ABI specification");
+    JS_ReportErrorASCII(cx, "Invalid ABI specification");
     return false;
   case FFI_BAD_TYPEDEF:
-    JS_ReportError(cx, "Invalid type specification");
+    JS_ReportErrorASCII(cx, "Invalid type specification");
     return false;
   default:
-    JS_ReportError(cx, "Unknown libffi error");
+    JS_ReportErrorASCII(cx, "Unknown libffi error");
     return false;
   }
 }
@@ -6792,7 +6792,7 @@ CreateFunctionInfo(JSContext* cx,
 
   ffi_abi abi;
   if (!GetABI(cx, abiType, &abi)) {
-    JS_ReportError(cx, "Invalid ABI specification");
+    JS_ReportErrorASCII(cx, "Invalid ABI specification");
     return false;
   }
   fninfo->mABI = abiType.toObjectOrNull();
@@ -6815,18 +6815,18 @@ CreateFunctionInfo(JSContext* cx,
     if (isEllipsis) {
       fninfo->mIsVariadic = true;
       if (i < 1) {
-        JS_ReportError(cx, "\"...\" may not be the first and only parameter "
-                       "type of a variadic function declaration");
+        JS_ReportErrorASCII(cx, "\"...\" may not be the first and only parameter "
+                            "type of a variadic function declaration");
         return false;
       }
       if (i < args.length() - 1) {
-        JS_ReportError(cx, "\"...\" must be the last parameter type of a "
-                       "variadic function declaration");
+        JS_ReportErrorASCII(cx, "\"...\" must be the last parameter type of a "
+                            "variadic function declaration");
         return false;
       }
       if (GetABICode(fninfo->mABI) != ABI_DEFAULT) {
-        JS_ReportError(cx, "Variadic functions must use the __cdecl calling "
-                       "convention");
+        JS_ReportErrorASCII(cx, "Variadic functions must use the __cdecl calling "
+                            "convention");
         return false;
       }
       break;
@@ -6957,12 +6957,12 @@ FunctionType::ConstructData(JSContext* cx,
 
   FunctionInfo* fninfo = FunctionType::GetFunctionInfo(typeObj);
   if (fninfo->mIsVariadic) {
-    JS_ReportError(cx, "Can't declare a variadic callback function");
+    JS_ReportErrorASCII(cx, "Can't declare a variadic callback function");
     return false;
   }
   if (GetABICode(fninfo->mABI) == ABI_WINAPI) {
-    JS_ReportError(cx, "Can't declare a ctypes.winapi_abi callback function, "
-                   "use ctypes.stdcall_abi instead");
+    JS_ReportErrorASCII(cx, "Can't declare a ctypes.winapi_abi callback function, "
+                        "use ctypes.stdcall_abi instead");
     return false;
   }
 
@@ -7056,7 +7056,7 @@ FunctionType::Call(JSContext* cx,
   if (!slot.isUndefined() && Library::IsLibrary(&slot.toObject())) {
     PRLibrary* library = Library::GetLibrary(&slot.toObject());
     if (!library) {
-      JS_ReportError(cx, "library is not open");
+      JS_ReportErrorASCII(cx, "library is not open");
       return false;
     }
   }
@@ -7312,7 +7312,7 @@ CClosure::Create(JSContext* cx,
 
     // Make sure the callback returns something.
     if (CType::GetTypeCode(fninfo->mReturnType) == TYPE_void_t) {
-      JS_ReportError(cx, "A void callback can't pass an error sentinel");
+      JS_ReportErrorASCII(cx, "A void callback can't pass an error sentinel");
       return nullptr;
     }
 
@@ -7353,14 +7353,14 @@ CClosure::Create(JSContext* cx,
   cinfo->closure =
     static_cast<ffi_closure*>(ffi_closure_alloc(sizeof(ffi_closure), &code));
   if (!cinfo->closure || !code) {
-    JS_ReportError(cx, "couldn't create closure - libffi error");
+    JS_ReportErrorASCII(cx, "couldn't create closure - libffi error");
     return nullptr;
   }
 
   ffi_status status = ffi_prep_closure_loc(cinfo->closure, &fninfo->mCIF,
     CClosure::ClosureStub, cinfo, code);
   if (status != FFI_OK) {
-    JS_ReportError(cx, "couldn't create closure - libffi error");
+    JS_ReportErrorASCII(cx, "couldn't create closure - libffi error");
     return nullptr;
   }
 
@@ -7801,7 +7801,7 @@ CData::GetRuntime(JSContext* cx, unsigned argc, Value* vp)
   size_t targetSize;
   if (!CType::GetSafeSize(targetType, &targetSize) ||
       targetSize != sizeof(void*)) {
-    JS_ReportError(cx, "target CType has non-pointer size");
+    JS_ReportErrorASCII(cx, "target CType has non-pointer size");
     return false;
   }
 
@@ -8036,7 +8036,7 @@ CDataFinalizer::Methods::ToSource(JSContext* cx, unsigned argc, Value* vp)
   } else {
     RootedObject objType(cx, CDataFinalizer::GetCType(cx, objThis));
     if (!objType) {
-      JS_ReportError(cx, "CDataFinalizer has no type");
+      JS_ReportErrorASCII(cx, "CDataFinalizer has no type");
       return false;
     }
 
@@ -8139,7 +8139,7 @@ CDataFinalizer::GetValue(JSContext* cx, JSObject* obj,
 
   if (!p) {
     // We have called |dispose| or |forget| already.
-    JS_ReportError(cx, "Attempting to get the value of an empty CDataFinalizer");
+    JS_ReportErrorASCII(cx, "Attempting to get the value of an empty CDataFinalizer");
     return false;
   }
 
@@ -8167,7 +8167,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, Value* vp)
   RootedObject objSelf(cx, &args.callee());
   RootedObject objProto(cx);
   if (!GetObjectProperty(cx, objSelf, "prototype", &objProto)) {
-    JS_ReportError(cx, "CDataFinalizer.prototype does not exist");
+    JS_ReportErrorASCII(cx, "CDataFinalizer.prototype does not exist");
     return false;
   }
 
@@ -8258,7 +8258,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, Value* vp)
   }
   if (freePointer) {
     // Note: We could handle that case, if necessary.
-    JS_ReportError(cx, "Internal Error during CDataFinalizer. Object cannot be represented");
+    JS_ReportErrorASCII(cx, "Internal Error during CDataFinalizer. Object cannot be represented");
     return false;
   }
 
@@ -8307,15 +8307,15 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, Value* vp)
 
   ffi_abi abi;
   if (!GetABI(cx, ObjectOrNullValue(funInfoFinalizer->mABI), &abi)) {
-    JS_ReportError(cx, "Internal Error: "
-                   "Invalid ABI specification in CDataFinalizer");
+    JS_ReportErrorASCII(cx, "Internal Error: "
+                        "Invalid ABI specification in CDataFinalizer");
     return false;
   }
 
   ffi_type* rtype = CType::GetFFIType(cx, funInfoFinalizer->mReturnType);
   if (!rtype) {
-    JS_ReportError(cx, "Internal Error: "
-                   "Could not access ffi type of CDataFinalizer");
+    JS_ReportErrorASCII(cx, "Internal Error: "
+                        "Could not access ffi type of CDataFinalizer");
     return false;
   }
 
@@ -8415,7 +8415,7 @@ CDataFinalizer::Methods::Forget(JSContext* cx, unsigned argc, Value* vp)
   RootedValue valJSData(cx);
   RootedObject ctype(cx, GetCType(cx, obj));
   if (!ConvertToJS(cx, ctype, nullptr, p->cargs, false, true, &valJSData)) {
-    JS_ReportError(cx, "CDataFinalizer value cannot be represented");
+    JS_ReportErrorASCII(cx, "CDataFinalizer value cannot be represented");
     return false;
   }
 

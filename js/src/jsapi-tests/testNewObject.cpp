@@ -16,23 +16,23 @@ constructHook(JSContext* cx, unsigned argc, JS::Value* vp)
 
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     if (!obj) {
-        JS_ReportError(cx, "test failed, could not construct object");
+        JS_ReportErrorASCII(cx, "test failed, could not construct object");
         return false;
     }
     if (strcmp(JS_GetClass(obj)->name, "Object") != 0) {
-        JS_ReportError(cx, "test failed, wrong class for 'this'");
+        JS_ReportErrorASCII(cx, "test failed, wrong class for 'this'");
         return false;
     }
     if (args.length() != 3) {
-        JS_ReportError(cx, "test failed, argc == %d", args.length());
+        JS_ReportErrorASCII(cx, "test failed, argc == %d", args.length());
         return false;
     }
     if (!args[0].isInt32() || args[2].toInt32() != 2) {
-        JS_ReportError(cx, "test failed, wrong value in args[2]");
+        JS_ReportErrorASCII(cx, "test failed, wrong value in args[2]");
         return false;
     }
     if (!args.isConstructing()) {
-        JS_ReportError(cx, "test failed, not constructing");
+        JS_ReportErrorASCII(cx, "test failed, not constructing");
         return false;
     }
 
