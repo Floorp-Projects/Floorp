@@ -145,10 +145,18 @@ public:
 protected:
   // Argument aRect should be relative to CustomContentContainerFrame().
   void SetCaretElementStyle(const nsRect& aRect, float aZoomLevel);
+  void SetTextOverlayElementStyle(const nsRect& aRect, float aZoomLevel);
+  void SetCaretImageElementStyle(const nsRect& aRect, float aZoomLevel);
   void SetSelectionBarElementStyle(const nsRect& aRect, float aZoomLevel);
 
   // Get current zoom level.
   float GetZoomLevel();
+
+  // Element which contains the text overly for the 'Contains' test.
+  dom::Element* TextOverlayElement() const
+  {
+    return mCaretElementHolder->GetElementById(sTextOverlayElementId);
+  }
 
   // Element which contains the caret image for 'Contains' test.
   dom::Element* CaretImageElement() const
@@ -228,6 +236,7 @@ protected:
   static float sHeight;
   static float sMarginLeft;
   static float sBarWidth;
+  static const nsLiteralString sTextOverlayElementId;
   static const nsLiteralString sCaretImageElementId;
   static const nsLiteralString sSelectionBarElementId;
 
