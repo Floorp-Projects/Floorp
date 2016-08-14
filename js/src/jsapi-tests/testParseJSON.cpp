@@ -307,7 +307,7 @@ Error(JSContext* cx, const char (&input)[N], uint32_t expectedLine,
     CHECK(report.report()->errorNumber == JSMSG_JSON_BAD_PARSE);
 
     const char* lineAndColumnASCII = JS_smprintf("line %d column %d", expectedLine, expectedColumn);
-    CHECK(strstr(report.message().c_str(), lineAndColumnASCII) != nullptr);
+    CHECK(strstr(report.toStringResult().c_str(), lineAndColumnASCII) != nullptr);
     js_free((void*)lineAndColumnASCII);
 
     /* We do not execute JS, so there should be no exception thrown. */

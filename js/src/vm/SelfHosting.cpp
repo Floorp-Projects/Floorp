@@ -37,6 +37,7 @@
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
+#include "js/CharacterEncoding.h"
 #include "js/Date.h"
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
@@ -71,7 +72,7 @@ selfHosting_WarningReporter(JSContext* cx, JSErrorReport* report)
     MOZ_ASSERT(report);
     MOZ_ASSERT(JSREPORT_IS_WARNING(report->flags));
 
-    PrintError(cx, stderr, nullptr, report, true);
+    PrintError(cx, stderr, JS::ConstUTF8CharsZ(), report, true);
 }
 
 static bool
@@ -2682,7 +2683,7 @@ MaybePrintAndClearPendingException(JSContext* cx, FILE* file)
     }
 
     MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
-    PrintError(cx, file, report.message().c_str(), report.report(), true);
+    PrintError(cx, file, report.toStringResult(), report.report(), true);
 }
 
 class MOZ_STACK_CLASS AutoSelfHostingErrorReporter

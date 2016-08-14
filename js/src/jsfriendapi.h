@@ -1452,9 +1452,9 @@ struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
         return reportp;
     }
 
-    const JS::ConstUTF8CharsZ message()
+    const JS::ConstUTF8CharsZ toStringResult()
     {
-        return message_;
+        return toStringResult_;
     }
 
   private:
@@ -1473,9 +1473,6 @@ struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
     // We may have a provided JSErrorReport, so need a way to represent that.
     JSErrorReport* reportp;
 
-    // And we may have a message.
-    JS::ConstUTF8CharsZ message_;
-
     // Or we may need to synthesize a JSErrorReport one of our own.
     JSErrorReport ownedReport;
 
@@ -1489,11 +1486,14 @@ struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
     // And we need to root our exception value.
     JS::RootedObject exnObject;
 
-    // And possibly some byte storage for our message_.
-    JSAutoByteString bytesStorage;
-
     // And for our filename.
     JSAutoByteString filename;
+
+    // We may have a result of error.toString().
+    // FIXME: We should not call error.toString(), since it could have side
+    //        effect (see bug 633623).
+    JS::ConstUTF8CharsZ toStringResult_;
+    JSAutoByteString toStringResultBytesStorage;
 };
 
 /* Implemented in vm/StructuredClone.cpp. */
