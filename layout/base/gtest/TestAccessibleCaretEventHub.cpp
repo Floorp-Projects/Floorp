@@ -40,7 +40,8 @@ public:
   {
   }
 
-  MOCK_METHOD1(PressCaret, nsresult(const nsPoint& aPoint));
+  MOCK_METHOD2(PressCaret,
+               nsresult(const nsPoint& aPoint, EventClassID aEventClass));
   MOCK_METHOD1(DragCaret, nsresult(const nsPoint& aPoint));
   MOCK_METHOD0(ReleaseCaret, nsresult());
   MOCK_METHOD1(TapCaret, nsresult(const nsPoint& aPoint));
@@ -266,7 +267,7 @@ AccessibleCaretEventHubTester::TestPressReleaseOnNoCaret(
   PressEventCreator aPressEventCreator,
   ReleaseEventCreator aReleaseEventCreator)
 {
-  EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+  EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
     .WillOnce(Return(NS_ERROR_FAILURE));
 
   EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), ReleaseCaret()).Times(0);
@@ -301,7 +302,7 @@ AccessibleCaretEventHubTester::TestPressReleaseOnCaret(
   {
     InSequence dummy;
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_OK));
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), SelectWordOrShortcut(_))
@@ -351,7 +352,7 @@ AccessibleCaretEventHubTester::TestPressMoveReleaseOnNoCaret(
   {
     InSequence dummy;
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_ERROR_FAILURE));
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), DragCaret(_)).Times(0);
@@ -405,7 +406,7 @@ AccessibleCaretEventHubTester::TestPressMoveReleaseOnCaret(
   {
     InSequence dummy;
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_OK));
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), DragCaret(_))
@@ -455,7 +456,7 @@ TEST_F(AccessibleCaretEventHubTester,
   {
     InSequence dummy;
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_OK));
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), DragCaret(_))
@@ -525,7 +526,7 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
   {
     InSequence dummy;
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_ERROR_FAILURE));
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), SelectWordOrShortcut(_))
@@ -533,7 +534,7 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
 
     EXPECT_CALL(check, Call("longtap with scrolling"));
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_ERROR_FAILURE));
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), SelectWordOrShortcut(_))
@@ -608,7 +609,7 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordFailed(
   {
     InSequence dummy;
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_ERROR_FAILURE));
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), SelectWordOrShortcut(_))
@@ -651,7 +652,7 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
   {
     InSequence dummy;
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_ERROR_FAILURE));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), DragCaret(_)).Times(0);
 
@@ -661,7 +662,7 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
     EXPECT_CALL(check, Call("2"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_ERROR_FAILURE));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), DragCaret(_)).Times(0);
 

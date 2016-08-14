@@ -179,7 +179,7 @@ AccessibleCaret::Intersects(const AccessibleCaret& aCaret) const
 }
 
 bool
-AccessibleCaret::Contains(const nsPoint& aPoint) const
+AccessibleCaret::Contains(const nsPoint& aPoint, TouchArea aTouchArea) const
 {
   if (!IsVisuallyVisible()) {
     return false;
@@ -190,6 +190,11 @@ AccessibleCaret::Contains(const nsPoint& aPoint) const
   nsRect caretImageRect =
     nsLayoutUtils::GetRectRelativeToFrame(CaretImageElement(), RootFrame());
 
+  if (aTouchArea == TouchArea::CaretImage) {
+    return caretImageRect.Contains(aPoint);
+  }
+
+  MOZ_ASSERT(aTouchArea == TouchArea::Full, "Unexpected TouchArea type!");
   return textOverlayRect.Contains(aPoint) || caretImageRect.Contains(aPoint);
 }
 
