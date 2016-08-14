@@ -631,8 +631,8 @@ ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg);
  * Returns false otherwise.
  */
 extern bool
-PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* report,
-           bool reportWarnings);
+PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
+           JSErrorReport* report, bool reportWarnings);
 
 /*
  * Send a JSErrorReport to the warningReporter callback.

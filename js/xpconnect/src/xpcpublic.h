@@ -516,7 +516,7 @@ class ErrorReport {
                   , mIsMuted(false)
     {}
 
-    void Init(JSErrorReport* aReport, const char* aFallbackMessage,
+    void Init(JSErrorReport* aReport, const char* aToStringResult,
               bool aIsChrome, uint64_t aWindowID);
     void Init(JSContext* aCx, mozilla::dom::Exception* aException,
               bool aIsChrome, uint64_t aWindowID);

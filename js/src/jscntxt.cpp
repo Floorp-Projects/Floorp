@@ -382,8 +382,8 @@ js::ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg)
 }
 
 bool
-js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* report,
-               bool reportWarnings)
+js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
+               JSErrorReport* report, bool reportWarnings)
 {
     MOZ_ASSERT(report);
 
@@ -407,8 +407,7 @@ js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* re
         JS_free(cx, tmp);
     }
 
-    if (!message)
-        message = report->message().c_str();
+    const char* message = toStringResult ? toStringResult.c_str() : report->message().c_str();
 
     /* embedded newlines -- argh! */
     const char* ctmp;
