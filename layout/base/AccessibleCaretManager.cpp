@@ -457,14 +457,22 @@ AccessibleCaretManager::ProvideHapticFeedback()
 }
 
 nsresult
-AccessibleCaretManager::PressCaret(const nsPoint& aPoint)
+AccessibleCaretManager::PressCaret(const nsPoint& aPoint,
+                                   EventClassID aEventClass)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (mFirstCaret->Contains(aPoint)) {
+  MOZ_ASSERT(aEventClass == eMouseEventClass || aEventClass == eTouchEventClass,
+             "Unexpected event class!");
+
+  using TouchArea = AccessibleCaret::TouchArea;
+  TouchArea touchArea =
+    aEventClass == eMouseEventClass ? TouchArea::CaretImage : TouchArea::Full;
+
+  if (mFirstCaret->Contains(aPoint, touchArea)) {
     mActiveCaret = mFirstCaret.get();
     SetSelectionDirection(eDirPrevious);
-  } else if (mSecondCaret->Contains(aPoint)) {
+  } else if (mSecondCaret->Contains(aPoint, touchArea)) {
     mActiveCaret = mSecondCaret.get();
     SetSelectionDirection(eDirNext);
   }
