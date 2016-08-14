@@ -290,14 +290,13 @@ xpc::ErrorReport::ErrorReportToMessageString(JSErrorReport* aReport,
                                              nsAString& aString)
 {
     aString.Truncate();
-    const char16_t* m = aReport->ucmessage;
-    if (m) {
+    if (aReport->message()) {
         JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSContext::Get()->Context(), aReport->exnType);
         if (name) {
             AssignJSFlatString(aString, name);
             aString.AppendLiteral(": ");
         }
-        aString.Append(m);
+        aString.Append(NS_ConvertUTF8toUTF16(aReport->message().c_str()));
     }
 }
 
