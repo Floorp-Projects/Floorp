@@ -33,6 +33,7 @@ float AccessibleCaret::sHeight = 0.0f;
 float AccessibleCaret::sMarginLeft = 0.0f;
 float AccessibleCaret::sBarWidth = 0.0f;
 
+NS_NAMED_LITERAL_STRING(AccessibleCaret::sTextOverlayElementId, "text-overlay");
 NS_NAMED_LITERAL_STRING(AccessibleCaret::sCaretImageElementId, "image");
 NS_NAMED_LITERAL_STRING(AccessibleCaret::sSelectionBarElementId, "bar");
 
@@ -184,10 +185,12 @@ AccessibleCaret::Contains(const nsPoint& aPoint) const
     return false;
   }
 
-  nsRect rect =
+  nsRect textOverlayRect =
+    nsLayoutUtils::GetRectRelativeToFrame(TextOverlayElement(), RootFrame());
+  nsRect caretImageRect =
     nsLayoutUtils::GetRectRelativeToFrame(CaretImageElement(), RootFrame());
 
-  return rect.Contains(aPoint);
+  return textOverlayRect.Contains(aPoint) || caretImageRect.Contains(aPoint);
 }
 
 void
@@ -223,6 +226,7 @@ AccessibleCaret::CreateCaretElement(nsIDocument* aDocument) const
 {
   // Content structure of AccessibleCaret
   // <div class="moz-accessiblecaret">  <- CaretElement()
+  //   <div id="text-overlay"           <- TextOverlayElement()
   //   <div id="image">                 <- CaretImageElement()
   //   <div id="bar">                   <- SelectionBarElement()
 
@@ -240,6 +244,7 @@ AccessibleCaret::CreateCaretElement(nsIDocument* aDocument) const
     parent->AppendChildTo(child, false);
   };
 
+  CreateAndAppendChildElement(sTextOverlayElementId);
   CreateAndAppendChildElement(sCaretImageElementId);
   CreateAndAppendChildElement(sSelectionBarElementId);
 
@@ -290,13 +295,11 @@ AccessibleCaret::SetPosition(nsIFrame* aFrame, int32_t aOffset)
   mImaginaryCaretRect = imaginaryCaretRect;
   mZoomLevel = zoomLevel;
 
-  // SetCaretElementStyle() and SetSelectionBarElementStyle() require the
-  // input rect relative to container frame.
+  // SetCaretElementStyle() requires the input rect relative to container frame.
   nsRect imaginaryCaretRectInContainerFrame = imaginaryCaretRectInFrame;
   nsLayoutUtils::TransformRect(aFrame, CustomContentContainerFrame(),
                                imaginaryCaretRectInContainerFrame);
   SetCaretElementStyle(imaginaryCaretRectInContainerFrame, mZoomLevel);
-  SetSelectionBarElementStyle(imaginaryCaretRectInContainerFrame, mZoomLevel);
 
   return PositionChangedResult::Changed;
 }
@@ -315,39 +318,58 @@ AccessibleCaret::SetCaretElementStyle(const nsRect& aRect, float aZoomLevel)
 {
   nsPoint position = CaretElementPosition(aRect);
   nsAutoString styleStr;
-  styleStr.AppendPrintf("left: %dpx; top: %dpx; padding-top: %dpx;",
+  styleStr.AppendPrintf("left: %dpx; top: %dpx; "
+                        "width: %.2fpx; height: %.2fpx; margin-left: %.2fpx",
                         nsPresContext::AppUnitsToIntCSSPixels(position.x),
                         nsPresContext::AppUnitsToIntCSSPixels(position.y),
-                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
-
-  styleStr.AppendPrintf(" width: %.2fpx; height: %.2fpx; margin-left: %.2fpx",
                         sWidth / aZoomLevel,
                         sHeight / aZoomLevel,
                         sMarginLeft / aZoomLevel);
 
-  ErrorResult rv;
-  CaretElement()->SetAttribute(NS_LITERAL_STRING("style"), styleStr, rv);
-  MOZ_ASSERT(!rv.Failed());
+  CaretElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr, true);
+  AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());
 
-  AC_LOG("Set caret style: %s", NS_ConvertUTF16toUTF8(styleStr).get());
+  // Set style string for children.
+  SetTextOverlayElementStyle(aRect, aZoomLevel);
+  SetCaretImageElementStyle(aRect, aZoomLevel);
+  SetSelectionBarElementStyle(aRect, aZoomLevel);
+}
+
+void
+AccessibleCaret::SetTextOverlayElementStyle(const nsRect& aRect,
+                                            float aZoomLevel)
+{
+  nsAutoString styleStr;
+  styleStr.AppendPrintf("height: %dpx;",
+                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
+  TextOverlayElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr,
+                                true);
+  AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());
+}
+
+void
+AccessibleCaret::SetCaretImageElementStyle(const nsRect& aRect,
+                                           float aZoomLevel)
+{
+  nsAutoString styleStr;
+  styleStr.AppendPrintf("margin-top: %dpx;",
+                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
+  CaretImageElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr,
+                               true);
+  AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());
 }
 
 void
 AccessibleCaret::SetSelectionBarElementStyle(const nsRect& aRect,
                                              float aZoomLevel)
 {
-  int32_t height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
-  nsAutoString barStyleStr;
-  barStyleStr.AppendPrintf("margin-top: -%dpx; height: %dpx;",
-                           height, height);
-
-  barStyleStr.AppendPrintf(" width: %.2fpx;", sBarWidth / aZoomLevel);
-
-  ErrorResult rv;
-  SelectionBarElement()->SetAttribute(NS_LITERAL_STRING("style"), barStyleStr, rv);
-  MOZ_ASSERT(!rv.Failed());
-
-  AC_LOG("Set bar style: %s", NS_ConvertUTF16toUTF8(barStyleStr).get());
+  nsAutoString styleStr;
+  styleStr.AppendPrintf("height: %dpx; width: %.2fpx;",
+                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height),
+                        sBarWidth / aZoomLevel);
+  SelectionBarElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr,
+                                 true);
+  AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());
 }
 
 float
