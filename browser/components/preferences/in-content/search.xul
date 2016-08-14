@@ -80,6 +80,7 @@
                 />
         <spacer flex="1"/>
         <button id="removeEngineButton"
+                class="searchEngineAction"
                 label="&removeEngine.label;"
                 accesskey="&removeEngine.accesskey;"
                 disabled="true"
