@@ -349,10 +349,21 @@ div:-moz-native-anonymous.moz-accessiblecaret {
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret,
+div:-moz-native-anonymous.moz-accessiblecaret > #text-overlay,
 div:-moz-native-anonymous.moz-accessiblecaret > #image,
 div:-moz-native-anonymous.moz-accessiblecaret > #bar {
   position: absolute;
   z-index: 2147483647;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret > #text-overlay,
+div:-moz-native-anonymous.moz-accessiblecaret > #image {
+  top: 0;
+  width: 100%;
+
+  /* Override this property in moz-custom-content-container to make dummy touch
+   * listener work. */
+  pointer-events: auto;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret > #image {
@@ -360,13 +371,7 @@ div:-moz-native-anonymous.moz-accessiblecaret > #image {
   background-size: 100%;
   background-repeat: no-repeat;
   background-origin: content-box;
-  top: 0;
-  width: 100%;
   height: 100%;
-
-  /* Override this property in moz-custom-content-container to make dummy touch
-   * listener work. */
-  pointer-events: auto;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret > #bar {
@@ -382,14 +387,22 @@ div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
   background-image: url("resource://gre-resources/accessiblecaret-normal@1x.png");
 }
 
+div:-moz-native-anonymous.moz-accessiblecaret.left > #text-overlay,
+div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
+  margin-left: -39%;
+}
+
 div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
   background-image: url("resource://gre-resources/accessiblecaret-tilt-left@1x.png");
-  margin-left: -39%;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret.right > #text-overlay,
+div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
+  margin-left: 41%;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
   background-image: url("resource://gre-resources/accessiblecaret-tilt-right@1x.png");
-  margin-left: 41%;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.none {
