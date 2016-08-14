@@ -5317,19 +5317,19 @@ class JSErrorReport
   public:
     JSErrorReport()
       : linebuf_(nullptr), linebufLength_(0), tokenOffset_(0),
-        filename(nullptr), lineno(0), column(0), isMuted(false),
-        flags(0), errorNumber(0), ucmessage(nullptr),
-        exnType(0)
+        filename(nullptr), ucmessage(nullptr), lineno(0), column(0),
+        flags(0), errorNumber(0),
+        exnType(0), isMuted(false)
     {}
 
     const char*     filename;      /* source file name, URL, etc., or null */
+    const char16_t* ucmessage;     /* the (default) error message */
     unsigned        lineno;         /* source line number */
     unsigned        column;         /* zero-based column index in line */
-    bool            isMuted;        /* See the comment in ReadOnlyCompileOptions. */
     unsigned        flags;          /* error/warning, etc. */
     unsigned        errorNumber;    /* the error number, e.g. see js.msg */
-    const char16_t* ucmessage;     /* the (default) error message */
     int16_t         exnType;        /* One of the JSExnType constants */
+    bool            isMuted;        /* See the comment in ReadOnlyCompileOptions. */
 
     const char16_t* linebuf() const {
         return linebuf_;
