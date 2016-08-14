@@ -44,14 +44,14 @@ var gPermissionManager = {
     isSeparator: function(aIndex) { return false; },
     isSorted: function() { return false; },
     isContainer: function(aIndex) { return false; },
-    setTree: function(aTree){},
+    setTree: function(aTree) {},
     getImageSrc: function(aRow, aColumn) {},
     getProgressMode: function(aRow, aColumn) {},
     getCellValue: function(aRow, aColumn) {},
     cycleHeader: function(column) {},
-    getRowProperties: function(row){ return ""; },
-    getColumnProperties: function(column){ return ""; },
-    getCellProperties: function(row,column){
+    getRowProperties: function(row) { return ""; },
+    getColumnProperties: function(column) { return ""; },
+    getCellProperties: function(row,column) {
       if (column.element.getAttribute("id") == "siteCol")
         return "ltr";
 
@@ -98,13 +98,13 @@ var gPermissionManager = {
         principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
         // If we have ended up with an unknown scheme, the following will throw.
         principal.origin;
-      } catch(ex) {
+      } catch (ex) {
         uri = Services.io.newURI("http://" + input_url, null, null);
         principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
         // If we have ended up with an unknown scheme, the following will throw.
         principal.origin;
       }
-    } catch(ex) {
+    } catch (ex) {
       var message = this._bundle.getString("invalidURI");
       var title = this._bundle.getString("invalidURITitle");
       Services.prompt.alert(window, title, message);
@@ -349,12 +349,12 @@ var gPermissionManager = {
 
   onPermissionKeyPress: function (aEvent)
   {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE
-#ifdef XP_MACOSX
-        || aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE
-#endif
-       )
+    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE) {
       this.onPermissionDeleted();
+    } else if (AppConstants.platform == "macosx" &&
+               aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE) {
+      this.onPermissionDeleted();
+    }
   },
 
   _lastPermissionSortColumn: "",

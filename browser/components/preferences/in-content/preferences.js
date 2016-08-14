@@ -221,7 +221,7 @@ function confirmRestartPrompt(aRestartToEnable, aDefaultButtonIndex,
                     Services.prompt.BUTTON_TITLE_IS_STRING);
   }
 
-  switch(aDefaultButtonIndex) {
+  switch (aDefaultButtonIndex) {
     case 0:
       buttonFlags += Services.prompt.BUTTON_POS_0_DEFAULT;
       break;

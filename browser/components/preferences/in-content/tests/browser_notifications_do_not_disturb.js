@@ -7,7 +7,7 @@ registerCleanupFunction(function() {
     gBrowser.removeTab(gBrowser.tabs[1]);
 });
 
-add_task(function() {
+add_task(function*() {
   let prefs = yield openPreferencesViaOpenPreferencesAPI("paneContent", undefined, {leaveOpen: true});
   is(prefs.selectedPane, "paneContent", "Content pane was selected");
 
