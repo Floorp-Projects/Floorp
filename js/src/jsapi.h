@@ -5403,8 +5403,7 @@ class JSErrorReport
 
 namespace JS {
 
-typedef void
-(* WarningReporter)(JSContext* cx, const char* message, JSErrorReport* report);
+using WarningReporter = void (*)(JSContext* cx, JSErrorReport* report);
 
 extern JS_PUBLIC_API(WarningReporter)
 SetWarningReporter(JSContext* cx, WarningReporter reporter);
