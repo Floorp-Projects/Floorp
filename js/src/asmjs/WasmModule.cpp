@@ -438,7 +438,7 @@ Module::initSegments(JSContext* cx,
 
                 HandleFunction f = funcImports[elemFuncIndex];
                 if (!IsExportedWasmFunction(f)) {
-                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
                     return false;
                 }
 
@@ -492,7 +492,7 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
         const FuncDefExport& funcDefExport = instance.metadata().lookupFuncDefExport(funcDefIndex);
 
         if (funcDefExport.sig() != metadata_->funcImports[i].sig()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
             return false;
         }
     }

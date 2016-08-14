@@ -466,15 +466,15 @@ ReportDataCloneError(JSContext* cx,
 
     switch (errorId) {
       case JS_SCERR_DUP_TRANSFERABLE:
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SC_DUP_TRANSFERABLE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_DUP_TRANSFERABLE);
         break;
 
       case JS_SCERR_TRANSFERABLE:
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SC_NOT_TRANSFERABLE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_NOT_TRANSFERABLE);
         break;
 
       case JS_SCERR_UNSUPPORTED_TYPE:
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SC_UNSUPPORTED_TYPE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_UNSUPPORTED_TYPE);
         break;
 
       default:
@@ -1093,7 +1093,7 @@ JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 bool
 JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj)
 {
-    JS_ReportErrorNumber(context(), GetErrorMessage, nullptr, JSMSG_SC_SHMEM_MUST_TRANSFER);
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_SHMEM_MUST_TRANSFER);
     return false;
 }
 
@@ -1474,7 +1474,8 @@ JSStructuredCloneWriter::transferOwnership()
             size_t nbytes = arrayBuffer->byteLength();
 
             if (arrayBuffer->isWasm() || arrayBuffer->isPreparedForAsmJS()) {
-                JS_ReportErrorNumber(context(), GetErrorMessage, nullptr, JSMSG_WASM_NO_TRANSFER);
+                JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                          JSMSG_WASM_NO_TRANSFER);
                 return false;
             }
 
@@ -2109,8 +2110,8 @@ JSStructuredCloneReader::readTransferMap()
             // tricky, and it will be a very rare problem in any case.
             // Just fail at the receiving end if we can't handle it.
             if (!context()->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
-                JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                                     JSMSG_SC_NOT_TRANSFERABLE);
+                JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                          JSMSG_SC_NOT_TRANSFERABLE);
                 return false;
             }
             obj = SharedArrayBufferObject::New(context(), (SharedArrayRawBuffer*)content);
@@ -2161,8 +2162,8 @@ JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag)
     JSPrincipals* principals;
     if (principalsTag == SCTAG_JSPRINCIPALS) {
         if (!context()->runtime()->readPrincipals) {
-            JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                                 JSMSG_SC_UNSUPPORTED_TYPE);
+            JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                      JSMSG_SC_UNSUPPORTED_TYPE);
             return nullptr;
         }
 
@@ -2351,7 +2352,7 @@ JS_ReadStructuredClone(JSContext* cx, JSStructuredCloneData& buf,
     CHECK_REQUEST(cx);
 
     if (version > JS_STRUCTURED_CLONE_VERSION) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_CLONE_VERSION);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_CLONE_VERSION);
         return false;
     }
     const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;

@@ -727,8 +727,8 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
         reportp = ErrorFromException(cx, exnObject);
 
         if (!reportp && sniffingBehavior == NoSideEffects) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_ERR_DURING_THROW);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_ERR_DURING_THROW);
             return false;
         }
 

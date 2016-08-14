@@ -243,7 +243,7 @@ ReportInvalidCharacter(js::ExclusiveContext* cx, uint32_t offset)
 static void
 ReportBufferTooSmall(JSContext* cx, uint32_t dummy)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
 }
 
 static void

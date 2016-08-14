@@ -178,7 +178,7 @@ wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
 static bool
 ThrowBadImportArg(JSContext* cx)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
     return false;
 }
 
@@ -548,7 +548,7 @@ GetCompileArgs(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes*
         return false;
 
     if (!callArgs[0].isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
 
@@ -566,7 +566,7 @@ GetCompileArgs(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes*
         if (!(*bytecode)->append(buffer.dataPointer(), buffer.byteLength()))
             return false;
     } else {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
 
@@ -734,7 +734,7 @@ WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isObject() || !args[0].toObject().is<WasmModuleObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MOD_ARG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MOD_ARG);
         return false;
     }
 
@@ -1233,7 +1233,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!elementVal.isString()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
         return false;
     }
 
@@ -1242,7 +1242,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!StringEqualsAscii(elementStr, "anyfunc")) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
         return false;
     }
 
@@ -1335,7 +1335,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 
     RootedFunction value(cx);
     if (!IsExportedFunction(args[1], &value) && !args[1].isNull()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
         return false;
     }
 
