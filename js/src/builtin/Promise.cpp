@@ -22,25 +22,6 @@
 
 using namespace js;
 
-static const JSFunctionSpec promise_methods[] = {
-    JS_SELF_HOSTED_FN("catch", "Promise_catch", 1, 0),
-    JS_SELF_HOSTED_FN("then", "Promise_then", 2, 0),
-    JS_FS_END
-};
-
-static const JSFunctionSpec promise_static_methods[] = {
-    JS_SELF_HOSTED_FN("all", "Promise_static_all", 1, 0),
-    JS_SELF_HOSTED_FN("race", "Promise_static_race", 1, 0),
-    JS_SELF_HOSTED_FN("reject", "Promise_static_reject", 1, 0),
-    JS_SELF_HOSTED_FN("resolve", "Promise_static_resolve", 1, 0),
-    JS_FS_END
-};
-
-static const JSPropertySpec promise_static_properties[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "Promise_static_get_species", 0),
-    JS_PS_END
-};
-
 static double
 MillisecondsSinceStartup()
 {
@@ -285,6 +266,45 @@ RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp)
     return result;
 }
 
+// ES2016, 25.4.1.3.2, steps 7-13.
+static bool
+ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resolutionVal)
+{
+    // Step 7.
+    if (!resolutionVal.isObject())
+        return FulfillMaybeWrappedPromise(cx, promise, resolutionVal);
+
+    RootedObject resolution(cx, &resolutionVal.toObject());
+
+    // Step 8.
+    RootedValue thenVal(cx);
+    bool status = GetProperty(cx, resolution, resolution, cx->names().then, &thenVal);
+
+    // Step 9.
+    if (!status) {
+        RootedValue error(cx);
+        if (!GetAndClearException(cx, &error))
+            return false;
+
+        return RejectMaybeWrappedPromise(cx, promise, error);
+    }
+
+    // Step 10 (implicit).
+
+    // Step 11.
+    if (!IsCallable(thenVal)) {
+        return FulfillMaybeWrappedPromise(cx, promise, resolutionVal);
+    }
+
+    // Step 12.
+    RootedValue promiseVal(cx, ObjectValue(*promise));
+    if (!EnqueuePromiseResolveThenableJob(cx, promiseVal, resolutionVal, thenVal))
+        return false;
+
+    // Step 13.
+    return true;
+}
+
 // ES2016, 25.4.1.3.2.
 static bool
 ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp)
@@ -326,46 +346,10 @@ ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp)
         return status;
     }
 
-    // Step 7.
-    if (!resolutionVal.isObject()) {
-        bool status = FulfillMaybeWrappedPromise(cx, promise, resolutionVal);
-        if (status)
-            args.rval().setUndefined();
-        return status;
-    }
-
-    RootedObject resolution(cx, &resolutionVal.toObject());
-
-    // Step 8.
-    RootedValue thenVal(cx);
-    bool status = GetProperty(cx, resolution, resolution, cx->names().then, &thenVal);
-
-    // Step 9.
-    if (!status) {
-        RootedValue error(cx);
-        if (!GetAndClearException(cx, &error))
-            return false;
-
-        return RejectMaybeWrappedPromise(cx, promise, error);
-    }
-
-    // Step 10 (implicit).
-
-    // Step 11.
-    if (!IsCallable(thenVal)) {
-        bool status = FulfillMaybeWrappedPromise(cx, promise, resolutionVal);
-        if (status)
-            args.rval().setUndefined();
-        return status;
-    }
-
-    // Step 12.
-    if (!EnqueuePromiseResolveThenableJob(cx, promiseVal, resolutionVal, thenVal))
-        return false;
-
-    // Step 13.
-    args.rval().setUndefined();
-    return true;
+    bool status = ResolvePromiseInternal(cx, promise, resolutionVal);
+    if (status)
+        args.rval().setUndefined();
+    return status;
 }
 
 // ES2016, 25.4.1.3.
@@ -402,7 +386,308 @@ CreateResolvingFunctions(JSContext* cx, HandleValue promise,
     return true;
 }
 
+static PromiseObject*
+CreatePromiseObjectInternal(JSContext* cx, HandleObject proto, bool protoIsWrapped)
+{
+    // Step 3.
+    Rooted<PromiseObject*> promise(cx);
+    // Enter the unwrapped proto's compartment, if that's different from
+    // the current one.
+    // All state stored in a Promise's fixed slots must be created in the
+    // same compartment, so we get all of that out of the way here.
+    // (Except for the resolution functions, which are created below.)
+    mozilla::Maybe<AutoCompartment> ac;
+    if (protoIsWrapped)
+        ac.emplace(cx, proto);
+
+    promise = NewObjectWithClassProto<PromiseObject>(cx, proto);
+    if (!promise)
+        return nullptr;
+
+    // Step 4.
+    promise->setFixedSlot(PROMISE_FLAGS_SLOT, Int32Value(0));
+
+    // Steps 5-6.
+    // Omitted, we allocate our single list of reaction records lazily.
+
+    // Step 7.
+    // Implicit, the handled flag is unset by default.
+
+    // Store an allocation stack so we can later figure out what the
+    // control flow was for some unexpected results. Frightfully expensive,
+    // but oh well.
+    RootedObject stack(cx);
+    if (cx->options().asyncStack() || cx->compartment()->isDebuggee()) {
+        if (!JS::CaptureCurrentStack(cx, &stack, JS::StackCapture(JS::AllFrames())))
+            return nullptr;
+    }
+    promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectOrNullValue(stack));
+    promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT,
+                          DoubleValue(MillisecondsSinceStartup()));
+
+    return promise;
+}
+
+/**
+ * Unforgeable version of ES2016, 25.4.4.4, Promise.reject.
+ */
+/* static */ JSObject*
+PromiseObject::unforgeableReject(JSContext* cx, HandleValue value)
+{
+    // Steps 1-2 (omitted).
+
+    // Roughly step 3.
+    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx, nullptr, false));
+    if (!promise)
+        return nullptr;
+
+    // Let the Debugger know about this Promise.
+    JS::dbg::onNewPromise(cx, promise);
+
+    // Roughly step 4.
+    if (!ResolvePromise(cx, promise, value, JS::PromiseState::Rejected))
+        return nullptr;
+
+    // Step 5.
+    return promise;
+}
+
+/**
+ * Unforgeable version of ES2016, 25.4.4.5, Promise.resolve.
+ */
+/* static */ JSObject*
+PromiseObject::unforgeableResolve(JSContext* cx, HandleValue value)
+{
+    // Steps 1-2 (omitted).
+
+    // Step 3.
+    if (value.isObject()) {
+        JSObject* obj = &value.toObject();
+        if (IsWrapper(obj))
+            obj = CheckedUnwrap(obj);
+        // Instead of getting the `constructor` property, do an unforgeable
+        // check.
+        if (obj && obj->is<PromiseObject>())
+            return obj;
+    }
+
+    // Step 4.
+    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx, nullptr, false));
+    if (!promise)
+        return nullptr;
+
+    // Let the Debugger know about this Promise.
+    JS::dbg::onNewPromise(cx, promise);
+
+    // Steps 5.
+    if (!ResolvePromiseInternal(cx, promise, value))
+        return nullptr;
+
+    // Step 6.
+    return promise;
+}
+
+// ES6, 25.4.1.5.1.
+/* static */ bool
+GetCapabilitiesExecutor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedFunction F(cx, &args.callee().as<JSFunction>());
+
+    // Steps 1-2 (implicit).
+
+    // Steps 3-4.
+    if (!F->getExtendedSlot(0).isUndefined() || !F->getExtendedSlot(1).isUndefined()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_PROMISE_CAPABILITY_HAS_SOMETHING_ALREADY);
+        return false;
+    }
+
+    // Step 5.
+    F->setExtendedSlot(0, args.get(0));
+
+    // Step 6.
+    F->setExtendedSlot(1, args.get(1));
+
+    // Step 7.
+    args.rval().setUndefined();
+    return true;
+}
+
+// ES2016, 25.4.1.5.
+// Creates PromiseCapability records, see 25.4.1.1.
+static bool
+NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
+                     MutableHandleObject resolve, MutableHandleObject reject)
+{
+    RootedValue cVal(cx, ObjectValue(*C));
+
+    // Steps 1-2.
+    if (!IsConstructor(C)) {
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, -1, cVal, nullptr);
+        return false;
+    }
+
+    // Step 3 (omitted).
+
+    // Step 4.
+    RootedAtom funName(cx, cx->names().empty);
+    RootedFunction executor(cx, NewNativeFunction(cx, GetCapabilitiesExecutor, 2, funName,
+                                                  gc::AllocKind::FUNCTION_EXTENDED));
+    if (!executor)
+        return false;
+
+    // Step 5 (omitted).
+
+    // Step 6.
+    FixedConstructArgs<1> cargs(cx);
+    cargs[0].setObject(*executor);
+    if (!Construct(cx, cVal, cargs, cVal, promise))
+        return false;
+
+    // Step 7.
+    RootedValue resolveVal(cx, executor->getExtendedSlot(0));
+    if (!IsCallable(resolveVal)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_PROMISE_RESOLVE_FUNCTION_NOT_CALLABLE);
+        return false;
+    }
+
+    // Step 8.
+    RootedValue rejectVal(cx, executor->getExtendedSlot(1));
+    if (!IsCallable(rejectVal)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_PROMISE_REJECT_FUNCTION_NOT_CALLABLE);
+        return false;
+    }
+
+    // Step 9 (well, the equivalent for all of promiseCapabilities' fields.)
+    resolve.set(&resolveVal.toObject());
+    reject.set(&rejectVal.toObject());
+
+    // Step 10.
+    return true;
+}
+
+enum ResolveOrRejectMode {
+    ResolveMode,
+    RejectMode
+};
+
+static bool
+CommonStaticResolveRejectImpl(JSContext* cx, unsigned argc, Value* vp, ResolveOrRejectMode mode)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedValue x(cx, args.get(0));
+
+    // Steps 1-2.
+    if (!args.thisv().isObject()) {
+        const char* msg = mode == ResolveMode
+                          ? "Receiver of Promise.resolve call"
+                          : "Receiver of Promise.reject call";
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, msg);
+        return false;
+    }
+    RootedValue cVal(cx, args.thisv());
+    RootedObject C(cx, &cVal.toObject());
+
+    // Step 3 of Resolve.
+    if (mode == ResolveMode && x.isObject()) {
+        RootedObject xObj(cx, &x.toObject());
+        bool isPromise = false;
+        if (xObj->is<PromiseObject>()) {
+            isPromise = true;
+        } else if (IsWrapper(xObj)) {
+            // Treat instances of Promise from other compartments as Promises
+            // here, too.
+            // It's important to do the GetProperty for the `constructor`
+            // below through the wrapper, because wrappers can change the
+            // outcome, so instead of unwrapping and then performing the
+            // GetProperty, just check here and then operate on the original
+            // object again.
+            RootedObject unwrappedObject(cx, CheckedUnwrap(xObj));
+            if (unwrappedObject && unwrappedObject->is<PromiseObject>())
+                isPromise = true;
+        }
+        if (isPromise) {
+            RootedValue ctorVal(cx);
+            if (!GetProperty(cx, xObj, xObj, cx->names().constructor, &ctorVal))
+                return false;
+            if (ctorVal == cVal) {
+                args.rval().set(x);
+                return true;
+            }
+        }
+    }
+
+    // Steps 4-5 of Resolve, 3-4 of Reject.
+    RootedObject promiseCtor(cx);
+    if (!GetBuiltinConstructor(cx, JSProto_Promise, &promiseCtor))
+        return false;
+    RootedObject promise(cx);
+
+    // If the current constructor is the original Promise constructor, we can
+    // optimize things by skipping the creation and invocation of the resolve
+    // and reject callbacks, directly creating and resolving the new Promise.
+    if (promiseCtor == C) {
+        // Roughly step 4 of Resolve, 3 of Reject.
+        promise = CreatePromiseObjectInternal(cx, nullptr, false);
+        if (!promise)
+            return false;
+
+        // Let the Debugger know about this Promise.
+        JS::dbg::onNewPromise(cx, promise);
+
+        // Roughly step 5 of Resolve.
+        if (mode == ResolveMode) {
+            if (!ResolvePromiseInternal(cx, promise, x))
+                return false;
+        } else {
+            // Roughly step 4 of Reject.
+            Rooted<PromiseObject*> promiseObj(cx, &promise->as<PromiseObject>());
+            if (!ResolvePromise(cx, promiseObj, x, JS::PromiseState::Rejected))
+                return false;
+        }
+    } else {
+        // Step 4 of Resolve, 3 of Reject.
+        RootedObject resolveFun(cx);
+        RootedObject rejectFun(cx);
+        if (!NewPromiseCapability(cx, C, &promise, &resolveFun, &rejectFun))
+            return false;
+
+        // Step 5 of Resolve, 4 of Reject.
+        FixedInvokeArgs<1> args2(cx);
+        args2[0].set(x);
+        RootedValue calleeOrRval(cx, ObjectValue(mode == ResolveMode ? *resolveFun : *rejectFun));
+        if (!Call(cx, calleeOrRval, UndefinedHandleValue, args2, &calleeOrRval))
+            return false;
+    }
+
+    // Step 6 of Resolve, 4 of Reject.
+    args.rval().setObject(*promise);
+    return true;
+}
+
+/**
+ * ES2016, 25.4.4.4, Promise.reject.
+ */
+static bool
+Promise_reject(JSContext* cx, unsigned argc, Value* vp)
+{
+    return CommonStaticResolveRejectImpl(cx, argc, vp, RejectMode);
+}
+
+/**
+ * ES2016, 25.4.4.5, Promise.resolve.
+ */
+static bool
+Promise_resolve(JSContext* cx, unsigned argc, Value* vp)
+{
+    return CommonStaticResolveRejectImpl(cx, argc, vp, ResolveMode);
+}
+
 // ES2016, February 12 draft, 25.4.3.1. steps 3-11.
+/* static */
 PromiseObject*
 PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
 {
@@ -422,43 +707,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     }
 
 
-    // Step 3.
-    Rooted<PromiseObject*> promise(cx);
-    {
-        // Enter the unwrapped proto's compartment, if that's different from
-        // the current one.
-        // All state stored in a Promise's fixed slots must be created in the
-        // same compartment, so we get all of that out of the way here.
-        // (Except for the resolution functions, which are created below.)
-        mozilla::Maybe<AutoCompartment> ac;
-        if (wrappedProto)
-            ac.emplace(cx, usedProto);
-
-        promise = NewObjectWithClassProto<PromiseObject>(cx, usedProto);
-        if (!promise)
-            return nullptr;
-
-        // Step 4.
-        promise->setFixedSlot(PROMISE_FLAGS_SLOT, Int32Value(0));
-
-        // Steps 5-6.
-        // Omitted, we allocate our single list of reaction records lazily.
-
-        // Step 7.
-        // Implicit, the handled flag is unset by default.
-
-        // Store an allocation stack so we can later figure out what the
-        // control flow was for some unexpected results. Frightfully expensive,
-        // but oh well.
-        RootedObject stack(cx);
-        if (cx->options().asyncStack() || cx->compartment()->isDebuggee()) {
-            if (!JS::CaptureCurrentStack(cx, &stack, JS::StackCapture(JS::AllFrames())))
-                return nullptr;
-        }
-        promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectOrNullValue(stack));
-        promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT,
-                              DoubleValue(MillisecondsSinceStartup()));
-    }
+    // Steps 3-7.
+    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx, usedProto, wrappedProto));
 
     RootedValue promiseVal(cx, ObjectValue(*promise));
     if (wrappedProto && !cx->compartment()->wrap(cx, &promiseVal))
@@ -1140,6 +1390,25 @@ CreatePromisePrototype(JSContext* cx, JSProtoKey key)
 {
     return cx->global()->createBlankPrototype(cx, &PromiseObject::protoClass_);
 }
+
+static const JSFunctionSpec promise_methods[] = {
+    JS_SELF_HOSTED_FN("catch", "Promise_catch", 1, 0),
+    JS_SELF_HOSTED_FN("then", "Promise_then", 2, 0),
+    JS_FS_END
+};
+
+static const JSFunctionSpec promise_static_methods[] = {
+    JS_SELF_HOSTED_FN("all", "Promise_static_all", 1, 0),
+    JS_SELF_HOSTED_FN("race", "Promise_static_race", 1, 0),
+    JS_FN("reject", Promise_reject, 1, 0),
+    JS_FN("resolve", Promise_resolve, 1, 0),
+    JS_FS_END
+};
+
+static const JSPropertySpec promise_static_properties[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "Promise_static_get_species", 0),
+    JS_PS_END
+};
 
 static const ClassSpec PromiseObjectClassSpec = {
     GenericCreateConstructor<PromiseConstructor, 1, gc::AllocKind::FUNCTION>,
