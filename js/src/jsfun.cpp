@@ -109,8 +109,8 @@ AdvanceToActiveCallLinear(JSContext* cx, NonBuiltinScriptFrameIter& iter, Handle
 static void
 ThrowTypeErrorBehavior(JSContext* cx)
 {
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                 JSMSG_THROW_TYPE_ERROR);
+    JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
+                                     JSMSG_THROW_TYPE_ERROR);
 }
 
 static bool
@@ -144,8 +144,8 @@ ArgumentsRestrictions(JSContext* cx, HandleFunction fun)
 
     // Otherwise emit a strict warning about |f.arguments| to discourage use of
     // this non-standard, performance-harmful feature.
-    if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, GetErrorMessage,
-                                      nullptr, JSMSG_DEPRECATED_USAGE, js_arguments_str))
+    if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING | JSREPORT_STRICT, GetErrorMessage,
+                                           nullptr, JSMSG_DEPRECATED_USAGE, js_arguments_str))
     {
         return false;
     }
@@ -231,8 +231,8 @@ CallerRestrictions(JSContext* cx, HandleFunction fun)
 
     // Otherwise emit a strict warning about |f.caller| to discourage use of
     // this non-standard, performance-harmful feature.
-    if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, GetErrorMessage,
-                                      nullptr, JSMSG_DEPRECATED_USAGE, js_caller_str))
+    if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING | JSREPORT_STRICT, GetErrorMessage,
+                                           nullptr, JSMSG_DEPRECATED_USAGE, js_caller_str))
     {
         return false;
     }
@@ -287,8 +287,8 @@ CallerGetterImpl(JSContext* cx, const CallArgs& args)
         MOZ_ASSERT(!callerFun->isBuiltin(), "non-builtin iterator returned a builtin?");
 
         if (callerFun->strict()) {
-            JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                         JSMSG_CALLER_IS_STRICT);
+            JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
+                                              JSMSG_CALLER_IS_STRICT);
             return false;
         }
     }
@@ -352,8 +352,8 @@ CallerSetterImpl(JSContext* cx, const CallArgs& args)
     MOZ_ASSERT(!callerFun->isBuiltin(), "non-builtin iterator returned a builtin?");
 
     if (callerFun->strict()) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                     JSMSG_CALLER_IS_STRICT);
+        JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
+                                          JSMSG_CALLER_IS_STRICT);
         return false;
     }
 

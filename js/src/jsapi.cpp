@@ -169,19 +169,19 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
         if (!str)
             return false;
 
-        JSAutoByteString propName(cx, str);
-        if (!propName)
+        JSAutoByteString propName;
+        if (!propName.encodeUtf8(cx, str))
             return false;
 
         if (ErrorTakesObjectArgument(code_)) {
-            return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_,
-                                                obj->getClass()->name, propName.ptr());
+            return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr, code_,
+                                                    obj->getClass()->name, propName.ptr());
         }
 
-        return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_,
-                                            propName.ptr());
+        return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr, code_,
+                                                propName.ptr());
     }
-    return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_);
+    return JS_ReportErrorFlagsAndNumberASCII(cx, flags, GetErrorMessage, nullptr, code_);
 }
 
 JS_PUBLIC_API(bool)
@@ -192,7 +192,7 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
     MOZ_ASSERT(!ErrorTakesArguments(code_));
 
     unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_WARNING | JSREPORT_STRICT);
-    return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_);
+    return JS_ReportErrorFlagsAndNumberASCII(cx, flags, GetErrorMessage, nullptr, code_);
 }
 
 JS_PUBLIC_API(bool)

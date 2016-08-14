@@ -352,9 +352,10 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
                 char linenoStr[15];
                 SprintfLiteral(linenoStr, "%" PRIuSIZE, script->lineno());
                 unsigned flags = warning ? JSREPORT_WARNING : JSREPORT_ERROR;
-                return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr,
-                                                    JSMSG_DEBUGGEE_WOULD_RUN,
-                                                    filename, linenoStr);
+                // FIXME: filename should be UTF-8 (bug 987069).
+                return JS_ReportErrorFlagsAndNumberLatin1(cx, flags, GetErrorMessage, nullptr,
+                                                          JSMSG_DEBUGGEE_WOULD_RUN,
+                                                          filename, linenoStr);
             }
         }
         return true;
