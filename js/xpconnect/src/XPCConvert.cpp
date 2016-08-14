@@ -1202,8 +1202,8 @@ XPCConvert::JSErrorToXPCException(const char* message,
     RefPtr<nsScriptError> data;
     if (report) {
         nsAutoString bestMessage;
-        if (report && report->ucmessage) {
-            bestMessage = static_cast<const char16_t*>(report->ucmessage);
+        if (report && report->message()) {
+            CopyUTF8toUTF16(report->message().c_str(), bestMessage);
         } else if (message) {
             CopyASCIItoUTF16(message, bestMessage);
         } else {

@@ -5305,6 +5305,10 @@ JS_ReportAllocationOverflow(JSContext* cx);
 
 class JSErrorReport
 {
+    // The (default) error message.
+    // If ownsMessage_ is true, the it is freed in destructor.
+    JS::ConstUTF8CharsZ message_;
+
     // Offending source line without final '\n'.
     const char16_t* linebuf_;
 
@@ -5317,20 +5321,28 @@ class JSErrorReport
   public:
     JSErrorReport()
       : linebuf_(nullptr), linebufLength_(0), tokenOffset_(0),
-        filename(nullptr), ucmessage(nullptr), lineno(0), column(0),
+        filename(nullptr), lineno(0), column(0),
         flags(0), errorNumber(0),
-        exnType(0), isMuted(false)
+        exnType(0), isMuted(false),
+        ownsMessage_(false)
     {}
 
+    ~JSErrorReport() {
+        freeMessage();
+    }
+
     const char*     filename;      /* source file name, URL, etc., or null */
-    const char16_t* ucmessage;     /* the (default) error message */
     unsigned        lineno;         /* source line number */
     unsigned        column;         /* zero-based column index in line */
     unsigned        flags;          /* error/warning, etc. */
     unsigned        errorNumber;    /* the error number, e.g. see js.msg */
     int16_t         exnType;        /* One of the JSExnType constants */
-    bool            isMuted;        /* See the comment in ReadOnlyCompileOptions. */
+    bool            isMuted : 1;    /* See the comment in ReadOnlyCompileOptions. */
 
+  private:
+    bool ownsMessage_ : 1;
+
+  public:
     const char16_t* linebuf() const {
         return linebuf_;
     }
@@ -5341,6 +5353,23 @@ class JSErrorReport
         return tokenOffset_;
     }
     void initLinebuf(const char16_t* linebuf, size_t linebufLength, size_t tokenOffset);
+
+    const JS::ConstUTF8CharsZ message() const {
+        return message_;
+    }
+
+    void initOwnedMessage(const char* messageArg) {
+        initBorrowedMessage(messageArg);
+        ownsMessage_ = true;
+    }
+    void initBorrowedMessage(const char* messageArg) {
+        MOZ_ASSERT(!message_);
+        message_ = JS::ConstUTF8CharsZ(messageArg, strlen(messageArg));
+    }
+
+    JSString* newMessageString(JSContext* cx);
+
+    void freeMessage();
 };
 
 /*
