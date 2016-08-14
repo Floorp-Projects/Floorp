@@ -28,6 +28,7 @@
 #include "jswrapper.h"
 
 #include "gc/Marking.h"
+#include "js/CharacterEncoding.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/SavedStacks.h"
@@ -512,7 +513,7 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     // we cannot construct the Error constructor without self-hosted code. Just
     // print the error to stderr to help debugging.
     if (cx->runtime()->isSelfHostingCompartment(cx->compartment())) {
-        PrintError(cx, stderr, nullptr, reportp, true);
+        PrintError(cx, stderr, JS::ConstUTF8CharsZ(), reportp, true);
         return;
     }
 
@@ -852,7 +853,7 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
 
     const char* utf8Message = nullptr;
     if (str)
-        utf8Message = bytesStorage.encodeUtf8(cx, str);
+        utf8Message = toStringResultBytesStorage.encodeUtf8(cx, str);
     if (!utf8Message)
         utf8Message = "unknown (can't convert to string)";
 
@@ -870,7 +871,7 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
             return false;
         }
     } else {
-        message_ = JS::ConstUTF8CharsZ(utf8Message, strlen(utf8Message));
+        toStringResult_ = JS::ConstUTF8CharsZ(utf8Message, strlen(utf8Message));
         /* Flag the error as an exception. */
         reportp->flags |= JSREPORT_EXCEPTION;
     }
@@ -914,7 +915,7 @@ ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx, va_list ap)
         return false;
     }
 
-    message_ = ownedReport.message();
+    toStringResult_ = ownedReport.message();
     reportp = &ownedReport;
     return true;
 }
