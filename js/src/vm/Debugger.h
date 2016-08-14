@@ -1270,7 +1270,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool executeInGlobal(JSContext* cx, HandleDebuggerObject object,
                                              mozilla::Range<const char16_t> chars,
                                              HandleObject bindings, const EvalOptions& options,
-                                             MutableHandleValue result);
+                                             JSTrapStatus& status, MutableHandleValue value);
     static MOZ_MUST_USE bool makeDebuggeeValue(JSContext* cx, HandleDebuggerObject object,
                                                HandleValue value, MutableHandleValue result);
     static MOZ_MUST_USE bool unsafeDereference(JSContext* cx, HandleDebuggerObject object,
