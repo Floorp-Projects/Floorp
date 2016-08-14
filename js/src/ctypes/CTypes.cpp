@@ -97,8 +97,10 @@ GetDeflatedUTF8StringLength(JSContext* maybecx, const CharT* chars,
         js::gc::AutoSuppressGC suppress(maybecx);
         char buffer[10];
         SprintfLiteral(buffer, "0x%x", c);
-        JS_ReportErrorFlagsAndNumber(maybecx, JSREPORT_ERROR, GetErrorMessage,
-                                     nullptr, JSMSG_BAD_SURROGATE_CHAR, buffer);
+        JS_ReportErrorFlagsAndNumberASCII(maybecx, JSREPORT_ERROR,
+                                          GetErrorMessage,
+                                          nullptr, JSMSG_BAD_SURROGATE_CHAR,
+                                          buffer);
     }
     return (size_t) -1;
 }

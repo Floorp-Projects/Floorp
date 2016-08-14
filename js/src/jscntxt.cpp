@@ -834,21 +834,21 @@ js::ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v,
 
     if (strcmp(bytes.get(), js_undefined_str) == 0 ||
         strcmp(bytes.get(), js_null_str) == 0) {
-        ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
-                                          GetErrorMessage, nullptr,
-                                          JSMSG_NO_PROPERTIES, bytes.get(),
-                                          nullptr, nullptr);
+        ok = JS_ReportErrorFlagsAndNumberLatin1(cx, JSREPORT_ERROR,
+                                                GetErrorMessage, nullptr,
+                                                JSMSG_NO_PROPERTIES,
+                                                bytes.get());
     } else if (v.isUndefined()) {
-        ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
-                                          GetErrorMessage, nullptr,
-                                          JSMSG_UNEXPECTED_TYPE, bytes.get(),
-                                          js_undefined_str, nullptr);
+        ok = JS_ReportErrorFlagsAndNumberLatin1(cx, JSREPORT_ERROR,
+                                                GetErrorMessage, nullptr,
+                                                JSMSG_UNEXPECTED_TYPE,
+                                                bytes.get(), js_undefined_str);
     } else {
         MOZ_ASSERT(v.isNull());
-        ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
-                                          GetErrorMessage, nullptr,
-                                          JSMSG_UNEXPECTED_TYPE, bytes.get(),
-                                          js_null_str, nullptr);
+        ok = JS_ReportErrorFlagsAndNumberLatin1(cx, JSREPORT_ERROR,
+                                                GetErrorMessage, nullptr,
+                                                JSMSG_UNEXPECTED_TYPE,
+                                                bytes.get(), js_null_str);
     }
 
     return ok;
@@ -886,8 +886,8 @@ js::ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNum
     if (!bytes)
         return false;
 
-    ok = JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage,
-                                      nullptr, errorNumber, bytes.get(), arg1, arg2);
+    ok = JS_ReportErrorFlagsAndNumberLatin1(cx, flags, GetErrorMessage, nullptr, errorNumber,
+                                            bytes.get(), arg1, arg2);
     return ok;
 }
 
