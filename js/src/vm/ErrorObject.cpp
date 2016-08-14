@@ -176,7 +176,7 @@ js::ErrorObject::checkAndUnwrapThis(JSContext* cx, CallArgs& args, const char* f
 
     RootedObject target(cx, CheckedUnwrap(&thisValue.toObject()));
     if (!target) {
-        JS_ReportError(cx, "Permission denied to access object");
+        JS_ReportErrorASCII(cx, "Permission denied to access object");
         return false;
     }
 
@@ -195,7 +195,7 @@ js::ErrorObject::checkAndUnwrapThis(JSContext* cx, CallArgs& args, const char* f
 
         target = CheckedUnwrap(proto);
         if (!target) {
-            JS_ReportError(cx, "Permission denied to access object");
+            JS_ReportErrorASCII(cx, "Permission denied to access object");
             return false;
         }
     }

@@ -200,7 +200,7 @@ XPC_WN_DoubleWrappedGetter(JSContext* cx, unsigned argc, Value* vp)
     // It is a double wrapped object. This should really never appear in
     // content these days, but addons still do it - see bug 965921.
     if (MOZ_UNLIKELY(!nsContentUtils::IsCallerChrome())) {
-        JS_ReportError(cx, "Attempt to use .wrappedJSObject in untrusted code");
+        JS_ReportErrorASCII(cx, "Attempt to use .wrappedJSObject in untrusted code");
         return false;
     }
     args.rval().setObject(*realObject);
@@ -694,7 +694,7 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext* cx, HandleObject obj, HandleI
 #define PRE_HELPER_STUB                                                       \
     JSObject* unwrapped = js::CheckedUnwrap(obj, false);                      \
     if (!unwrapped) {                                                         \
-        JS_ReportError(cx, "Permission denied to operate on object.");        \
+        JS_ReportErrorASCII(cx, "Permission denied to operate on object.");   \
         return false;                                                         \
     }                                                                         \
     if (!IS_WN_REFLECTOR(unwrapped)) {                                        \

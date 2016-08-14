@@ -895,7 +895,7 @@ ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject 
 
     FunctionDeclarationVector* funDecls = self->functionDeclarations();
     if (!funDecls) {
-        JS_ReportError(cx, "Module function declarations have already been instantiated");
+        JS_ReportErrorASCII(cx, "Module function declarations have already been instantiated");
         return false;
     }
 
@@ -936,7 +936,7 @@ ModuleObject::evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValu
     RootedScript script(cx, self->script());
     RootedModuleEnvironmentObject scope(cx, self->environment());
     if (!scope) {
-        JS_ReportError(cx, "Module declarations have not yet been instantiated");
+        JS_ReportErrorASCII(cx, "Module declarations have not yet been instantiated");
         return false;
     }
 

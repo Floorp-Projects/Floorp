@@ -41,7 +41,7 @@ stepFunc(JSContext *aCtx,
   nsresult rv =
     xpc->GetWrappedNativeOfJSObject(aCtx, obj, getter_AddRefs(wrapper));
   if (NS_FAILED(rv)) {
-    ::JS_ReportError(aCtx, "mozIStorageStatement::step() could not obtain native statement");
+    ::JS_ReportErrorASCII(aCtx, "mozIStorageStatement::step() could not obtain native statement");
     return false;
   }
 
@@ -67,7 +67,7 @@ stepFunc(JSContext *aCtx,
   }
 
   if (NS_FAILED(rv)) {
-    ::JS_ReportError(aCtx, "mozIStorageStatement::step() returned an error");
+    ::JS_ReportErrorASCII(aCtx, "mozIStorageStatement::step() returned an error");
     return false;
   }
 

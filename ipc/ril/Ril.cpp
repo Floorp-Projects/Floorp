@@ -154,7 +154,7 @@ RilConsumer::PostRILMessage(JSContext* aCx, unsigned aArgc, Value* aVp)
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   if (args.length() != 2) {
-    JS_ReportError(aCx, "Expecting two arguments with the RIL message");
+    JS_ReportErrorASCII(aCx, "Expecting two arguments with the RIL message");
     return false;
   }
 
@@ -197,7 +197,7 @@ RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
   } else if (!v.isPrimitive()) {
     JSObject* obj = v.toObjectOrNull();
     if (!JS_IsTypedArrayObject(obj)) {
-      JS_ReportError(aCx, "Object passed in wasn't a typed array");
+      JS_ReportErrorASCII(aCx, "Object passed in wasn't a typed array");
       return NS_ERROR_FAILURE;
     }
 
@@ -205,7 +205,7 @@ RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
     if (type != js::Scalar::Int8 &&
         type != js::Scalar::Uint8 &&
         type != js::Scalar::Uint8Clamped) {
-      JS_ReportError(aCx, "Typed array data is not octets");
+      JS_ReportErrorASCII(aCx, "Typed array data is not octets");
       return NS_ERROR_FAILURE;
     }
 
@@ -217,19 +217,19 @@ RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
       data = JS_GetArrayBufferViewData(obj, &isShared, nogc);
     }
     if (isShared) {
-      JS_ReportError(
+      JS_ReportErrorASCII(
         aCx, "Incorrect argument.  Shared memory not supported");
       return NS_ERROR_FAILURE;
     }
     raw = MakeUnique<UnixSocketRawData>(data, size);
   } else {
-    JS_ReportError(
+    JS_ReportErrorASCII(
       aCx, "Incorrect argument. Expecting a string or a typed array");
     return NS_ERROR_FAILURE;
   }
 
   if (!raw) {
-    JS_ReportError(aCx, "Unable to post to RIL");
+    JS_ReportErrorASCII(aCx, "Unable to post to RIL");
     return NS_ERROR_FAILURE;
   }
 

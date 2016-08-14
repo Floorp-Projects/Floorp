@@ -150,7 +150,7 @@ bool
 wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
 {
     if (!v.isObject()) {
-        JS_ReportError(cx, "i64 JS value must be an object");
+        JS_ReportErrorASCII(cx, "i64 JS value must be an object");
         return false;
     }
 
@@ -1511,7 +1511,7 @@ static bool
 WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
 {
     if (!cx->startAsyncTaskCallback || !cx->finishAsyncTaskCallback) {
-        JS_ReportError(cx, "WebAssembly.compile not supported in this runtime.");
+        JS_ReportErrorASCII(cx, "WebAssembly.compile not supported in this runtime.");
         return false;
     }
 
