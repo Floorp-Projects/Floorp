@@ -502,7 +502,7 @@ js::GetErrorTypeName(JSContext* cx, int16_t exnType)
 }
 
 void
-js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
+js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
                      JSErrorCallback callback, void* userRef)
 {
     MOZ_ASSERT(reportp);
@@ -512,7 +512,7 @@ js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
     // we cannot construct the Error constructor without self-hosted code. Just
     // print the error to stderr to help debugging.
     if (cx->runtime()->isSelfHostingCompartment(cx->compartment())) {
-        PrintError(cx, stderr, message, reportp, true);
+        PrintError(cx, stderr, nullptr, reportp, true);
         return;
     }
 
@@ -634,8 +634,6 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
 
 ErrorReport::ErrorReport(JSContext* cx)
   : reportp(nullptr),
-    message_(nullptr),
-    ownedMessage(nullptr),
     str(cx),
     strChars(cx),
     exnObject(cx)
@@ -644,10 +642,6 @@ ErrorReport::ErrorReport(JSContext* cx)
 
 ErrorReport::~ErrorReport()
 {
-    if (!ownedMessage)
-        return;
-
-    js_free(ownedMessage);
 }
 
 void
@@ -856,25 +850,27 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
         }
     }
 
+    const char* utf8Message = nullptr;
     if (str)
-        message_ = bytesStorage.encodeUtf8(cx, str);
-    if (!message_)
-        message_ = "unknown (can't convert to string)";
+        utf8Message = bytesStorage.encodeUtf8(cx, str);
+    if (!utf8Message)
+        utf8Message = "unknown (can't convert to string)";
 
     if (!reportp) {
         // This is basically an inlined version of
         //
         //   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-        //                            JSMSG_UNCAUGHT_EXCEPTION, message_);
+        //                            JSMSG_UNCAUGHT_EXCEPTION, utf8Message);
         //
         // but without the reporting bits.  Instead it just puts all
         // the stuff we care about in our ownedReport and message_.
-        if (!populateUncaughtExceptionReportUTF8(cx, message_)) {
+        if (!populateUncaughtExceptionReportUTF8(cx, utf8Message)) {
             // Just give up.  We're out of memory or something; not much we can
             // do here.
             return false;
         }
     } else {
+        message_ = JS::ConstUTF8CharsZ(utf8Message, strlen(utf8Message));
         /* Flag the error as an exception. */
         reportp->flags |= JSREPORT_EXCEPTION;
     }
@@ -913,14 +909,13 @@ ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx, va_list ap)
     }
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr,
-                                JSMSG_UNCAUGHT_EXCEPTION, &ownedMessage,
+                                JSMSG_UNCAUGHT_EXCEPTION,
                                 nullptr, ArgumentsAreUTF8, &ownedReport, ap)) {
         return false;
     }
 
+    message_ = ownedReport.message();
     reportp = &ownedReport;
-    message_ = ownedMessage;
-    ownsMessageAndReport = true;
     return true;
 }
 
