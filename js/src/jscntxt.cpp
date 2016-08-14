@@ -321,45 +321,37 @@ bool
 js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
                   ErrorArgumentsType argumentsType, va_list ap)
 {
-    char* message;
-    char16_t* ucmessage;
-    size_t messagelen;
     JSErrorReport report;
     bool warning;
 
     if (checkReportFlags(cx, &flags))
         return true;
 
-    message = JS_vsmprintf(format, ap);
+    UniqueChars message(JS_vsmprintf(format, ap));
     if (!message) {
         ReportOutOfMemory(cx);
         return false;
     }
-    messagelen = strlen(message);
 
-    MOZ_ASSERT_IF(argumentsType == ArgumentsAreASCII, JS::StringIsASCII(message));
+    MOZ_ASSERT_IF(argumentsType == ArgumentsAreASCII, JS::StringIsASCII(message.get()));
 
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
-    if (argumentsType == ArgumentsAreASCII || argumentsType == ArgumentsAreLatin1) {
-        ucmessage = InflateString(cx, message, &messagelen);
+    if (argumentsType == ArgumentsAreASCII || argumentsType == ArgumentsAreUTF8) {
+        report.initOwnedMessage(message.release());
     } else {
-        JS::UTF8Chars utf8(message, messagelen);
-        size_t unused;
-        ucmessage = LossyUTF8CharsToNewTwoByteCharsZ(cx, utf8, &unused).get();
+        MOZ_ASSERT(argumentsType == ArgumentsAreLatin1);
+        Latin1Chars latin1(message.get(), strlen(message.get()));
+        UTF8CharsZ utf8(JS::CharsToNewUTF8CharsZ(cx, latin1));
+        if (!utf8)
+            return false;
+        report.initOwnedMessage(reinterpret_cast<const char*>(utf8.get()));
     }
-    if (!ucmessage) {
-        js_free(message);
-        return false;
-    }
-    report.ucmessage = ucmessage;
     PopulateReportBlame(cx, &report);
 
     warning = JSREPORT_IS_WARNING(report.flags);
 
-    ReportError(cx, message, &report, nullptr, nullptr);
-    js_free(message);
-    js_free(ucmessage);
+    ReportError(cx, report.message().c_str(), &report, nullptr, nullptr);
     return warning;
 }
 
@@ -585,7 +577,7 @@ class MOZ_RAII AutoMessageArgs
  * The format string addressed by the error number may contain operands
  * identified by the format {N}, where N is a decimal digit. Each of these
  * is to be replaced by the Nth argument from the va_list. The complete
- * message is placed into reportp->ucmessage converted to a JSString.
+ * message is placed into reportp->message_.
  *
  * Returns true if the expansion succeeds (can fail if out of memory).
  */
@@ -624,6 +616,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 char16_t* buffer;
                 char16_t* fmt;
                 char16_t* out;
+                const char16_t* ucmessage;
 #ifdef DEBUG
                 int expandedArgs = 0;
 #endif
@@ -645,7 +638,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 * Note - the above calculation assumes that each argument
                 * is used once and only once in the expansion !!!
                 */
-                reportp->ucmessage = out = cx->pod_malloc<char16_t>(expandedLength + 1);
+                ucmessage = out = cx->pod_malloc<char16_t>(expandedLength + 1);
                 if (!out) {
                     js_free(buffer);
                     goto error;
@@ -669,12 +662,16 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 MOZ_ASSERT(expandedArgs == args.count());
                 *out = 0;
                 js_free(buffer);
-                size_t msgLen = PointerRangeSize(static_cast<const char16_t*>(reportp->ucmessage),
-                                                 static_cast<const char16_t*>(out));
-                mozilla::Range<const char16_t> ucmsg(reportp->ucmessage, msgLen);
+                size_t msgLen = PointerRangeSize(ucmessage, static_cast<const char16_t*>(out));
+                mozilla::Range<const char16_t> ucmsg(ucmessage, msgLen);
                 *messagep = JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, ucmsg).c_str();
                 if (!*messagep)
                     goto error;
+
+                char* utf8 = JS::CharsToNewUTF8CharsZ(cx, ucmsg).c_str();
+                if (!utf8)
+                    goto error;
+                reportp->initOwnedMessage(utf8);
             }
         } else {
             /* Non-null messageArgs should have at least one non-null arg. */
@@ -684,14 +681,14 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
              * entire message.
              */
             if (efs->format) {
-                size_t len;
                 *messagep = DuplicateString(cx, efs->format).release();
                 if (!*messagep)
                     goto error;
-                len = strlen(*messagep);
-                reportp->ucmessage = InflateString(cx, *messagep, &len);
-                if (!reportp->ucmessage)
+
+                char* message = DuplicateString(cx, efs->format).release();
+                if (!message)
                     goto error;
+                reportp->initOwnedMessage(message);
             }
         }
     }
@@ -708,10 +705,6 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
     return true;
 
 error:
-    if (reportp->ucmessage) {
-        js_free((void*)reportp->ucmessage);
-        reportp->ucmessage = nullptr;
-    }
     if (*messagep) {
         js_free((void*)*messagep);
         *messagep = nullptr;
@@ -744,7 +737,6 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
     ReportError(cx, message, &report, callback, userRef);
 
     js_free(message);
-    js_free((void*)report.ucmessage);
 
     return warning;
 }
@@ -788,7 +780,6 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
     ReportError(cx, message, &report, callback, userRef);
 
     js_free(message);
-    js_free((void*)report.ucmessage);
 
     return warning;
 }
