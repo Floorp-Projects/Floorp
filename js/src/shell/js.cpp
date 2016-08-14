@@ -1628,8 +1628,8 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         {
             if (saveBytecode) {
                 if (!JS::CompartmentCreationOptionsRef(cx).cloneSingletons()) {
-                    JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                                         JSSMSG_CACHE_SINGLETON_FAILED);
+                    JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                              JSSMSG_CACHE_SINGLETON_FAILED);
                     return false;
                 }
 
@@ -1709,8 +1709,8 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
             }
 
             if (!PodEqual(loadBuffer, saveBuffer.get(), loadLength)) {
-                JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                                     JSSMSG_CACHE_EQ_CONTENT_FAILED);
+                JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                          JSSMSG_CACHE_EQ_CONTENT_FAILED);
                 return false;
             }
         }
@@ -2229,7 +2229,7 @@ ValueToScript(JSContext* cx, Value vArg, JSFunction** funp = nullptr)
     }
 
     if (!fun->isInterpreted()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_SCRIPTS_ONLY);
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_SCRIPTS_ONLY);
         return nullptr;
     }
 
@@ -2287,7 +2287,7 @@ LineToPC(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_LINE2PC_USAGE);
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_LINE2PC_USAGE);
         return false;
     }
 
@@ -2839,8 +2839,7 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
            return false;
 
         if (!script->filename()) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                                 JSSMSG_FILE_SCRIPTS_ONLY);
+            JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_FILE_SCRIPTS_ONLY);
             return false;
         }
 
@@ -4367,7 +4366,7 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
     // The first argument to the shell is its path, which we assume is our own
     // argv[0].
     if (sArgc < 1) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
     }
     if (!argv.append(strdup(sArgv[0])))
@@ -4410,7 +4409,7 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
     pid_t pid = fork();
     switch (pid) {
       case -1:
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
       case 0:
         (void)execv(sArgv[0], argv.get());
@@ -4424,7 +4423,7 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
     if (status != 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
     }
 

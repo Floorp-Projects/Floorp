@@ -179,8 +179,7 @@ GetPrototype(JSContext* cx, HandleObject obj)
         return nullptr;
     }
     if (!prototypeVal.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_INVALID_PROTOTYPE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_PROTOTYPE);
         return nullptr;
     }
     return &prototypeVal.toObject();
@@ -693,8 +692,7 @@ ArrayMetaTypeDescr::construct(JSContext* cx, unsigned argc, Value* vp)
     // Compute the byte size.
     CheckedInt32 size = CheckedInt32(elementType->size()) * length;
     if (!size.isValid()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_TYPEDOBJECT_TOO_BIG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
         return false;
     }
 
@@ -867,8 +865,7 @@ StructMetaTypeDescr::create(JSContext* cx,
         // the field's alignment.
         CheckedInt32 offset = roundUpToAlignment(sizeSoFar, fieldType->alignment());
         if (!offset.isValid()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_TYPEDOBJECT_TOO_BIG);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
             return nullptr;
         }
         MOZ_ASSERT(offset.value() >= 0);
@@ -886,8 +883,7 @@ StructMetaTypeDescr::create(JSContext* cx,
         // Add space for this field to the total struct size.
         sizeSoFar = offset + fieldType->size();
         if (!sizeSoFar.isValid()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_TYPEDOBJECT_TOO_BIG);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
             return nullptr;
         }
 
@@ -910,8 +906,7 @@ StructMetaTypeDescr::create(JSContext* cx,
     // Adjust the total size to be a multiple of the final alignment.
     CheckedInt32 totalSize = roundUpToAlignment(sizeSoFar, alignment);
     if (!totalSize.isValid()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_TYPEDOBJECT_TOO_BIG);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
         return nullptr;
     }
 
@@ -1024,8 +1019,7 @@ StructMetaTypeDescr::construct(JSContext* cx, unsigned int argc, Value* vp)
         return true;
     }
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                         JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS);
     return false;
 }
 
@@ -1791,9 +1785,8 @@ TypedObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue receiv
       case type::Array:
         if (JSID_IS_ATOM(id, cx->names().length)) {
             if (!typedObj->isAttached()) {
-                JS_ReportErrorNumber(
-                    cx, GetErrorMessage,
-                    nullptr, JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
                 return false;
             }
 
@@ -1887,8 +1880,8 @@ TypedObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id, Handl
       case type::Array: {
         if (JSID_IS_ATOM(id, cx->names().length)) {
             if (receiver.isObject() && obj == &receiver.toObject()) {
-                JS_ReportErrorNumber(cx, GetErrorMessage,
-                                     nullptr, JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
                 return false;
             }
             return result.failReadOnly();
@@ -1900,8 +1893,8 @@ TypedObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id, Handl
                 return SetPropertyByDefining(cx, id, v, receiver, result);
 
             if (index >= uint32_t(typedObj->length())) {
-                JS_ReportErrorNumber(cx, GetErrorMessage,
-                                     nullptr, JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX);
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX);
                 return false;
             }
 
@@ -1943,7 +1936,7 @@ TypedObject::obj_getOwnPropertyDescriptor(JSContext* cx, HandleObject obj, Handl
 {
     Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
     if (!typedObj->isAttached()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
         return false;
     }
 
@@ -2338,16 +2331,14 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
         buffer = &args[0].toObject().as<ArrayBufferObject>();
 
         if (callee->opaque() || buffer->isDetached()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
             return false;
         }
 
         int32_t offset;
         if (args.length() >= 2 && !args[1].isUndefined()) {
             if (!args[1].isInt32()) {
-                JS_ReportErrorNumber(cx, GetErrorMessage,
-                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
                 return false;
             }
 
@@ -2357,16 +2348,14 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
         }
 
         if (args.length() >= 3 && !args[2].isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
             return false;
         }
 
         if (!CheckOffset(offset, callee->size(), callee->alignment(),
                          buffer->byteLength()))
         {
-            JS_ReportErrorNumber(cx, GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
             return false;
         }
 
@@ -2396,8 +2385,7 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
     }
 
     // Something bogus.
-    JS_ReportErrorNumber(cx, GetErrorMessage,
-                         nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
     return false;
 }
 

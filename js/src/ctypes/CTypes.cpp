@@ -181,8 +181,8 @@ bufferTooSmall:
     *dstlenp = (origDstlen - dstlen);
     if (maybecx) {
         js::gc::AutoSuppressGC suppress(maybecx);
-        JS_ReportErrorNumber(maybecx, GetErrorMessage, nullptr,
-                             JSMSG_BUFFER_TOO_SMALL);
+        JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr,
+                                  JSMSG_BUFFER_TOO_SMALL);
     }
     return false;
 }
@@ -4351,8 +4351,8 @@ CType::ConstructData(JSContext* cx,
   case TYPE_void_t:
     return CannotConstructError(cx, "void_t");
   case TYPE_function:
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                         CTYPESMSG_FUNCTION_CONSTRUCT);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              CTYPESMSG_FUNCTION_CONSTRUCT);
     return false;
   case TYPE_pointer:
     return PointerType::ConstructData(cx, obj, args);
