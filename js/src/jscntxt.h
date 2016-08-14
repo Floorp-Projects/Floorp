@@ -616,7 +616,7 @@ ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback callback
 extern bool
 ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                        void* userRef, const unsigned errorNumber,
-                       char** message, const char16_t** messageArgs,
+                       const char16_t** messageArgs,
                        ErrorArgumentsType argumentsType,
                        JSErrorReport* reportp, va_list ap);
 
@@ -628,7 +628,7 @@ ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg);
  * Prints a full report and returns true if the given report is non-nullptr
  * and the report doesn't have the JSREPORT_WARNING flag set or reportWarnings
  * is true.
- * Returns false otherwise, printing just the message if the report is nullptr.
+ * Returns false otherwise.
  */
 extern bool
 PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* report,
@@ -638,7 +638,7 @@ PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* report
  * Send a JSErrorReport to the warningReporter callback.
  */
 void
-CallWarningReporter(JSContext* cx, const char* message, JSErrorReport* report);
+CallWarningReporter(JSContext* cx, JSErrorReport* report);
 
 extern bool
 ReportIsNotDefined(JSContext* cx, HandlePropertyName name);

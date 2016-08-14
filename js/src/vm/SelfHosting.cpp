@@ -66,12 +66,12 @@ using mozilla::PodMove;
 using mozilla::Maybe;
 
 static void
-selfHosting_WarningReporter(JSContext* cx, const char* message, JSErrorReport* report)
+selfHosting_WarningReporter(JSContext* cx, JSErrorReport* report)
 {
     MOZ_ASSERT(report);
     MOZ_ASSERT(JSREPORT_IS_WARNING(report->flags));
 
-    PrintError(cx, stderr, message, report, true);
+    PrintError(cx, stderr, nullptr, report, true);
 }
 
 static bool
@@ -2682,7 +2682,7 @@ MaybePrintAndClearPendingException(JSContext* cx, FILE* file)
     }
 
     MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
-    PrintError(cx, file, report.message(), report.report(), true);
+    PrintError(cx, file, report.message().c_str(), report.report(), true);
 }
 
 class MOZ_STACK_CLASS AutoSelfHostingErrorReporter
