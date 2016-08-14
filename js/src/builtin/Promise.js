@@ -495,47 +495,9 @@ function AddDependentPromise(dependentPromise) {
         _DefineDataProperty(reactions, reactions.length, reaction);
 }
 
-// ES6, 25.4.4.4.
-function Promise_static_reject(r) {
-    // Step 1.
-    let C = this;
+// ES2016, 25.4.4.4 (implemented in C++).
 
-    // Step 2.
-    if (!IsObject(C))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, "Receiver of Promise.reject call");
-
-    // Steps 3-4.
-    let promiseCapability = NewPromiseCapability(C);
-
-    // Steps 5-6.
-    callContentFunction(promiseCapability.reject, undefined, r);
-
-    // Step 7.
-    return promiseCapability.promise;
-}
-
-// ES6, 25.4.4.5.
-function Promise_static_resolve(x) {
-    // Step 1.
-    let C = this;
-
-    // Step 2.
-    if (!IsObject(C))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, "Receiver of Promise.resolve call");
-
-    // Step 3.
-    if (IsObject(x) && (IsPromise(x) || IsWrappedPromise(x)) && x.constructor === C)
-        return x;
-
-    // Steps 4-5.
-    let promiseCapability = NewPromiseCapability(C);
-
-    // Steps 6-7.
-    callContentFunction(promiseCapability.resolve, undefined, x);
-
-    // Step 8.
-    return promiseCapability.promise;
-}
+// ES2016, 25.4.4.5 (implemented in C++).
 
 // ES6, 25.4.4.6.
 function Promise_static_get_species() {
