@@ -568,7 +568,7 @@ void
 CompileError::throwError(JSContext* cx)
 {
     if (JSREPORT_IS_WARNING(report.flags)) {
-        CallWarningReporter(cx, message, &report);
+        CallWarningReporter(cx, &report);
         return;
     }
 
@@ -583,13 +583,11 @@ CompileError::throwError(JSContext* cx)
     // as the non-top-level "load", "eval", or "compile" native function
     // returns false, the top-level reporter will eventually receive the
     // uncaught exception report.
-    ErrorToException(cx, message, &report, nullptr, nullptr);
+    ErrorToException(cx, &report, nullptr, nullptr);
 }
 
 CompileError::~CompileError()
 {
-    js_free(message);
-    message = nullptr;
 }
 
 bool
@@ -636,7 +634,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
         }
     }
 
-    if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber, &err.message,
+    if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
                                 nullptr, ArgumentsAreLatin1, &err.report, args))
     {
         return false;
