@@ -137,7 +137,7 @@ Load(JSContext *cx,
         return false;
 
     if (!JS_IsGlobalObject(obj)) {
-        JS_ReportError(cx, "Trying to load() into a non-global object");
+        JS_ReportErrorASCII(cx, "Trying to load() into a non-global object");
         return false;
     }
 

@@ -230,7 +230,7 @@ StartProfiling(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (!args[1].isInt32()) {
-        JS_ReportError(cx, "startProfiling: invalid arguments (int expected)");
+        JS_ReportErrorASCII(cx, "startProfiling: invalid arguments (int expected)");
         return false;
     }
     pid_t pid = static_cast<pid_t>(args[1].toInt32());

@@ -252,7 +252,7 @@ AccessCheck::checkPassToPrivilegedCode(JSContext* cx, HandleObject wrapper, Hand
         return true;
 
     // Badness.
-    JS_ReportError(cx, "Permission denied to pass object to privileged code");
+    JS_ReportErrorASCII(cx, "Permission denied to pass object to privileged code");
     return false;
 }
 

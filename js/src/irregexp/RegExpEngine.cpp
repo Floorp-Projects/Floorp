@@ -1765,7 +1765,7 @@ RegExpCompiler::Assemble(JSContext* cx,
 
     if (reg_exp_too_big_) {
         code.destroy();
-        JS_ReportError(cx, "regexp too big");
+        JS_ReportErrorASCII(cx, "regexp too big");
         return RegExpCode();
     }
 
@@ -1806,7 +1806,7 @@ irregexp::CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData*
                          bool unicode)
 {
     if ((data->capture_count + 1) * 2 - 1 > RegExpMacroAssembler::kMaxRegister) {
-        JS_ReportError(cx, "regexp too big");
+        JS_ReportErrorASCII(cx, "regexp too big");
         return RegExpCode();
     }
 

@@ -416,7 +416,7 @@ JavaScriptShared::toSymbolVariant(JSContext* cx, JS::Symbol* symArg, SymbolVaria
         return true;
     }
 
-    JS_ReportError(cx, "unique symbol can't be used with CPOW");
+    JS_ReportErrorASCII(cx, "unique symbol can't be used with CPOW");
     return false;
 }
 
@@ -482,7 +482,7 @@ JavaScriptShared::findObjectById(JSContext* cx, const ObjectId& objId)
 {
     RootedObject obj(cx, objects_.find(objId));
     if (!obj) {
-        JS_ReportError(cx, "operation not possible on dead CPOW");
+        JS_ReportErrorASCII(cx, "operation not possible on dead CPOW");
         return nullptr;
     }
 
@@ -551,7 +551,7 @@ JavaScriptShared::fromDescriptor(JSContext* cx, Handle<PropertyDescriptor> desc,
 bool
 UnknownPropertyStub(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    JS_ReportError(cx, "getter could not be wrapped via CPOWs");
+    JS_ReportErrorASCII(cx, "getter could not be wrapped via CPOWs");
     return false;
 }
 
@@ -559,7 +559,7 @@ bool
 UnknownStrictPropertyStub(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp,
                           ObjectOpResult& result)
 {
-    JS_ReportError(cx, "setter could not be wrapped via CPOWs");
+    JS_ReportErrorASCII(cx, "setter could not be wrapped via CPOWs");
     return false;
 }
 
