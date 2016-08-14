@@ -86,6 +86,7 @@
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
+#include "nsUTF8Utils.h"
 #include "prthread.h"
 #include "xpcpublic.h"
 
@@ -5811,7 +5812,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
 }
 
 void
-WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
+WorkerPrivate::ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
                            JSErrorReport* aReport)
 {
   AssertIsOnWorkerThread();
@@ -5855,13 +5856,19 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
     flags = nsIScriptError::errorFlag | nsIScriptError::exceptionFlag;
   }
 
-  if (message.IsEmpty() && aFallbackMessage) {
-    nsDependentCString fallbackMessage(aFallbackMessage);
-    if (!AppendUTF8toUTF16(fallbackMessage, message, mozilla::fallible)) {
+  if (message.IsEmpty() && aToStringResult) {
+    nsDependentCString toStringResult(aToStringResult.c_str());
+    if (!AppendUTF8toUTF16(toStringResult, message, mozilla::fallible)) {
       // Try again, with only a 1 KB string. Do this infallibly this time.
       // If the user doesn't have 1 KB to spare we're done anyways.
-      nsDependentCString truncatedFallbackMessage(aFallbackMessage, 1024);
-      AppendUTF8toUTF16(truncatedFallbackMessage, message);
+      uint32_t index = std::min(uint32_t(1024), toStringResult.Length());
+
+      // Drop the last code point that may be cropped.
+      index = RewindToPriorUTF8Codepoint(toStringResult.BeginReading(), index);
+
+      nsDependentCString truncatedToStringResult(aToStringResult.c_str(),
+                                                 index);
+      AppendUTF8toUTF16(truncatedToStringResult, message);
     }
   }
 

@@ -1090,11 +1090,11 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             // extract the report and build an xpcexception from that
             const JSErrorReport* report;
             if (nullptr != (report = JS_ErrorFromException(cx, obj))) {
-                JSAutoByteString message;
-                JSString* str;
-                if (nullptr != (str = ToString(cx, s)))
-                    message.encodeLatin1(cx, str);
-                return JSErrorToXPCException(message.ptr(), ifaceName,
+                JSAutoByteString toStringResult;
+                RootedString str(cx, ToString(cx, s));
+                if (str)
+                    toStringResult.encodeUtf8(cx, str);
+                return JSErrorToXPCException(toStringResult.ptr(), ifaceName,
                                              methodName, report, exceptn);
             }
 
@@ -1191,7 +1191,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
 
 // static
 nsresult
-XPCConvert::JSErrorToXPCException(const char* message,
+XPCConvert::JSErrorToXPCException(const char* toStringResult,
                                   const char* ifaceName,
                                   const char* methodName,
                                   const JSErrorReport* report,
@@ -1204,8 +1204,8 @@ XPCConvert::JSErrorToXPCException(const char* message,
         nsAutoString bestMessage;
         if (report && report->message()) {
             CopyUTF8toUTF16(report->message().c_str(), bestMessage);
-        } else if (message) {
-            CopyASCIItoUTF16(message, bestMessage);
+        } else if (toStringResult) {
+            CopyUTF8toUTF16(toStringResult, bestMessage);
         } else {
             bestMessage.AssignLiteral("JavaScript Error");
         }
