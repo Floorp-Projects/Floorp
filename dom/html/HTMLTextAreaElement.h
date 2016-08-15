@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsITextControlElement.h"
+#include "nsIControllers.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
 #include "nsGenericHTMLElement.h"
