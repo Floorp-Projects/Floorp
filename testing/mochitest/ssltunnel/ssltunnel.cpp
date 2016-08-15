@@ -30,7 +30,7 @@
 #include "ssl.h"
 #include "sslproto.h"
 #include "plhash.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;

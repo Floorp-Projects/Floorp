@@ -8,7 +8,7 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Move.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/unused.h"
 
 #include <cmath>

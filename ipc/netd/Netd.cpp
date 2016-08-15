@@ -16,7 +16,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "SystemProperty.h"
 
 #define NETD_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)

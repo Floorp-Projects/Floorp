@@ -11,7 +11,7 @@
 #include "nsDebug.h"
 #include "prprf.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 /* ==================================================================== */
 

@@ -24,7 +24,7 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
 #include "nsCCUncollectableMarker.h"

@@ -33,7 +33,7 @@
 #include "nsGkAtoms.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsFloatManager.h"
 #include "prenv.h"
 #include "plstr.h"

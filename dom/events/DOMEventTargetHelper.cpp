@@ -6,7 +6,7 @@
 
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsGlobalWindow.h"
 #include "ScriptSettings.h"
 #include "mozilla/DOMEventTargetHelper.h"

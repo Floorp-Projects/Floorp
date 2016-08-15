@@ -33,7 +33,7 @@
 #include "xpcprivate.h"
 #include "XrayWrapper.h"
 #include "nsPrintfCString.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsGlobalWindow.h"
 
 #include "mozilla/dom/ScriptSettings.h"

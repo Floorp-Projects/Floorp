@@ -61,7 +61,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Move.h"
 #include "mozilla/Services.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsRefPtrHashtable.h"
 #include "TouchEvents.h"
 #include "WritingModes.h"

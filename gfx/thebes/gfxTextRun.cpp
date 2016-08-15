@@ -10,7 +10,7 @@
 #include "gfxUserFontSet.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsGkAtoms.h"
 #include "nsILanguageAtomService.h"
 #include "nsServiceManagerUtils.h"

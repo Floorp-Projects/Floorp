@@ -45,7 +45,7 @@
 #include "nsStyleUtil.h"
 #include "nsIPrincipal.h"
 #include "nsICSSUnprefixingService.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsContentUtils.h"
 #include "nsAutoPtr.h"
 #include "CSSCalc.h"

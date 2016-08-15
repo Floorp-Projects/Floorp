@@ -23,7 +23,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsXPCOM.h"
 #include "prprf.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);

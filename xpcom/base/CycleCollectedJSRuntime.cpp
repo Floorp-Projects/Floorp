@@ -60,7 +60,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Move.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/TimelineMarker.h"

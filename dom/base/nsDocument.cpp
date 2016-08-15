@@ -23,7 +23,7 @@
 
 #include "mozilla/Logging.h"
 #include "plstr.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "mozilla/Telemetry.h"
 #include "nsIInterfaceRequestor.h"

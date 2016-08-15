@@ -31,7 +31,7 @@
 
 #include "mozilla/LookAndFeel.h"
 #include "nsCSSRendering.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "nsDisplayList.h"
 

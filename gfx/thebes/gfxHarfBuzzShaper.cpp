@@ -9,7 +9,7 @@
 #include "gfxHarfBuzzShaper.h"
 #include "gfxFontUtils.h"
 #include "gfxTextRun.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeScriptCodes.h"
 #include "nsUnicodeNormalizer.h"

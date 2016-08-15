@@ -27,7 +27,7 @@
 #include <string.h>
 #include "prdtoa.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "prmem.h"
 #include "nsCRTGlue.h"
 #include "nsTextFormatter.h"

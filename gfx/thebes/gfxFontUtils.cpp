@@ -14,7 +14,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/BinarySearch.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "nsCOMPtr.h"
 #include "nsIUUIDGenerator.h"
