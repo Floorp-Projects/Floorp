@@ -485,7 +485,7 @@ option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
             'servo style system')
 
 @depends_if('--with-servo')
-def servo_target_dir(value)
+def servo_target_dir(value):
     return value[0]
 
 set_define('MOZ_STYLO', depends_if(servo_target_dir)(lambda x: bool(x))
