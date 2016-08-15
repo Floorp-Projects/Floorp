@@ -7,7 +7,7 @@
   <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
-<video id="v1" autoplay></video>
+<video id="v1"></video>
 <video id="v2" autoplay></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -20,7 +20,11 @@ if (media == null) {
   SimpleTest.finish();
 } else {
   v1.src = media.name;
-  v2.srcObject = v1.mozCaptureStream();
+  v1.preload = 'metadata';
+  v1.onloadedmetadata = function() {
+    v2.srcObject = v1.mozCaptureStream();
+    v1.play();
+  };
   var onPlayingEventFired = false;
 
   v2.onplaying = function() {
