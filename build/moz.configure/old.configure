@@ -292,7 +292,6 @@ def old_configure_options(*options):
     '--with-nss-prefix',
     '--with-pthreads',
     '--with-qemu-exe',
-    '--with-servo',
     '--with-sixgill',
     '--with-soft-float',
     '--with-system-bz2',
