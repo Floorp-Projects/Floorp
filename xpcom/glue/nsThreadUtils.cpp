@@ -55,7 +55,7 @@ CancelableRunnable::Cancel()
 
 //-----------------------------------------------------------------------------
 
-NS_METHOD
+nsresult
 NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
 {
   nsCOMPtr<nsIThread> thread;
@@ -89,7 +89,7 @@ NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 NS_GetCurrentThread(nsIThread** aResult)
 {
 #ifdef MOZILLA_INTERNAL_API
@@ -105,7 +105,7 @@ NS_GetCurrentThread(nsIThread** aResult)
 #endif
 }
 
-NS_METHOD
+nsresult
 NS_GetMainThread(nsIThread** aResult)
 {
 #ifdef MOZILLA_INTERNAL_API
@@ -135,7 +135,7 @@ NS_IsMainThread()
 }
 #endif
 
-NS_METHOD
+nsresult
 NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
   nsresult rv;
@@ -168,14 +168,14 @@ NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
 // It is common to call NS_DispatchToCurrentThread with a newly
 // allocated runnable with a refcount of zero. To keep us from leaking
 // the runnable if the dispatch method fails, we take a death grip.
-NS_METHOD
+nsresult
 NS_DispatchToCurrentThread(nsIRunnable* aEvent)
 {
   nsCOMPtr<nsIRunnable> event(aEvent);
   return NS_DispatchToCurrentThread(event.forget());
 }
 
-NS_METHOD
+nsresult
 NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispatchFlags)
 {
   LeakRefPtr<nsIRunnable> event(Move(aEvent));
@@ -195,7 +195,7 @@ NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispat
 // likely that the runnable is being dispatched to the main thread
 // because it owns main thread only objects, so it is not safe to
 // release them here.
-NS_METHOD
+nsresult
 NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
 {
   nsCOMPtr<nsIRunnable> event(aEvent);
@@ -203,7 +203,7 @@ NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
-NS_METHOD
+nsresult
 NS_ProcessPendingEvents(nsIThread* aThread, PRIntervalTime aTimeout)
 {
   nsresult rv = NS_OK;
