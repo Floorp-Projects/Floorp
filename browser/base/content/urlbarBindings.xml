@@ -366,8 +366,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           // Do the command of the selected one-off if it's not an engine.
-          let selectedOneOff =
-            this.popup.oneOffSearchButtons.visuallySelectedButton;
+          let selectedOneOff = this.popup.oneOffSearchButtons.selectedButton;
           if (selectedOneOff && !selectedOneOff.engine) {
             selectedOneOff.doCommand();
             return;
@@ -415,7 +414,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "searchengine":
                 if (selectedOneOff && selectedOneOff.engine) {
                   // Replace the engine with the selected one-off engine.
-                  action.params.engineName = engine.name;
+                  action.params.engineName = selectedOneOff.engine.name;
                 }
                 [url, postData] = this._recordSearchEngineLoad(
                   action.params.engineName,
@@ -435,12 +434,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // search query (or "keyword" in URI-fixup terminology), then load a
           // search using the one-off's engine.
           if (selectedOneOff && selectedOneOff.engine) {
-            // `url` (which is this.value) may be an autofilled string.  Search
-            // only with the portion that the user typed, if any, by preferring
-            // the autocomplete controller's searchString.
-            let value = this._searchStringOnHandleEnter ||
-                        this.mController.searchString ||
-                        url;
+            let value = this.oneOffSearchQuery;
             let fixup;
             try {
               fixup = Services.uriFixup.getFixupURIInfo(
@@ -470,6 +464,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           });
         ]]></body>
       </method>
+
+      <property name="oneOffSearchQuery">
+        <getter><![CDATA[
+          // this.textValue may be an autofilled string.  Search only with the
+          // portion that the user typed, if any, by preferring the autocomplete
+          // controller's searchString (including _searchStringOnHandleEnter).
+          return this._searchStringOnHandleEnter ||
+                 this.mController.searchString ||
+                 this.textValue;
+        ]]></getter>
+      </property>
 
       <method name="_loadURL">
         <parameter name="url"/>
@@ -1292,6 +1297,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   class="search-one-offs"
                   compact="true"
                   includecurrentengine="true"
+                  disabletab="true"
                   flex="1"/>
       </xul:hbox>
     </content>
@@ -1638,7 +1644,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </body>
       </method>
 
-      <method name="_visuallySelectedOneOffChanged">
+      <method name="_selectedOneOffChanged">
         <body><![CDATA[
           // Update all searchengine result items to use the newly selected
           // engine.
@@ -1693,8 +1699,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // reused, always return a non-null name here by falling back to the
           // current engine.
           let engine =
-            (this.oneOffSearchButtons.visuallySelectedButton &&
-             this.oneOffSearchButtons.visuallySelectedButton.engine) ||
+            (this.oneOffSearchButtons.selectedButton &&
+             this.oneOffSearchButtons.selectedButton.engine) ||
              Services.search.currentEngine;
           return engine ? engine.name : null;
         ]]></getter>
@@ -1769,8 +1775,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </implementation>
     <handlers>
 
-      <handler event="OneOffsVisuallySelectedButtonChanged"><![CDATA[
-        this._visuallySelectedOneOffChanged();
+      <handler event="SelectedOneOffButtonChanged"><![CDATA[
+        this._selectedOneOffChanged();
       ]]></handler>
 
       <handler event="mousedown"><![CDATA[

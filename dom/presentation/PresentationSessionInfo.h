@@ -13,6 +13,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsINetworkInfoService.h"
 #include "nsIPresentationControlChannel.h"
 #include "nsIPresentationDevice.h"
 #include "nsIPresentationListener.h"
@@ -171,11 +172,13 @@ protected:
 // Session info with controlling browsing context (sender side) behaviors.
 class PresentationControllingInfo final : public PresentationSessionInfo
                                         , public nsIServerSocketListener
+                                        , public nsIListNetworkAddressesListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
   NS_DECL_NSISERVERSOCKETLISTENER
+  NS_DECL_NSILISTNETWORKADDRESSESLISTENER
 
   PresentationControllingInfo(const nsAString& aUrl,
                               const nsAString& aSessionId)

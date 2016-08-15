@@ -256,7 +256,6 @@ public:
     uint16_t GetScreenAngle();
 
     int GetAPIVersion() { return mAPIVersion; }
-    bool IsHoneycomb() { return mAPIVersion >= 11 && mAPIVersion <= 13; }
 
     void InvalidateAndScheduleComposite();
 
@@ -308,14 +307,6 @@ protected:
     AndroidBridge();
     ~AndroidBridge();
 
-    bool mOpenedGraphicsLibraries;
-    void OpenGraphicsLibraries();
-    void* GetNativeSurface(JNIEnv* env, jobject surface);
-
-    bool mHasNativeBitmapAccess;
-    bool mHasNativeWindowAccess;
-    bool mHasNativeWindowFallback;
-
     int mAPIVersion;
 
     bool QueueSmsRequest(nsIMobileMessageCallback* aRequest, uint32_t* aRequestIdOut);
@@ -331,20 +322,7 @@ protected:
     jmethodID jClose;
     jmethodID jAvailable;
 
-    // other things
-    jmethodID jNotifyAppShellReady;
-    jmethodID jGetOutstandingDrawEvents;
-    jmethodID jPostToJavaThread;
-    jmethodID jCreateSurface;
-    jmethodID jShowSurface;
-    jmethodID jHideSurface;
-    jmethodID jDestroySurface;
-
     jmethodID jCalculateLength;
-
-    // For native surface stuff
-    jclass jSurfaceClass;
-    jfieldID jSurfacePointerField;
 
     // some convinient types to have around
     jclass jStringClass;

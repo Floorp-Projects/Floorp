@@ -95,7 +95,7 @@ xul|scrollbarbutton {
 %ifndef MOZ_GRAPHENE
 /* -moz-touch-enabled? media elements */
 :-moz-any(video, audio) > xul|videocontrols {
-  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
+  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControlsGonk");
 }
 
 select:not([size]):not([multiple]) > xul|scrollbar,

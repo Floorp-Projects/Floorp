@@ -37,6 +37,7 @@ class ReftestFormatter(TbplFormatter):
     def test_end(self, data):
         extra = data.get('extra', {})
         status = data['status']
+        test = data['test']
 
         status_msg = "TEST-"
         if 'expected' in data:
@@ -47,24 +48,19 @@ class ReftestFormatter(TbplFormatter):
             status_msg += status
             if extra.get('status_msg') == 'Random':
                 status_msg += "(EXPECTED RANDOM)"
-        test = self.id_str(data['test'])
-        if 'message' in data:
-            status_details = data['message']
-        elif isinstance(data['test'], tuple):
-            status_details = 'image comparison ({})'.format(data['test'][1])
-        else:
-            status_details = '(LOAD ONLY)'
 
-        output_text = "%s | %s | %s" % (status_msg, test, status_details)
-        if 'differences' in extra:
-            diff_msg = (", max difference: %(max_difference)s"
-                        ", number of differing pixels: %(differences)s") % extra
-            diagnostic_data = ("REFTEST   IMAGE 1 (TEST): %(image1)s\n"
-                               "REFTEST   IMAGE 2 (REFERENCE): %(image2)s") % extra
-            output_text += '%s\n%s' % (diff_msg, diagnostic_data)
-        elif "image1" in extra:
-            diagnostic_data = "REFTEST   IMAGE: %(image1)s" % extra
-            output_text += '\n%s' % diagnostic_data
+
+        output_text = "%s | %s | %s" % (status_msg, test, data.get("message", ""))
+
+        if "reftest_screenshots" in extra:
+            screenshots = extra["reftest_screenshots"]
+            if len(screenshots) == 3:
+                output_text += ("\nREFTEST   IMAGE 1 (TEST): %s\n"
+                                "REFTEST   IMAGE 2 (REFERENCE): %s") % (screenshots[0]["screenshot"],
+                                                                         screenshots[2]["screenshot"])
+            elif len(screenshots) == 1:
+                output_text += "\nREFTEST   IMAGE: %(image1)s" % screenshots[0]["screenshot"]
+
 
         output_text += "\nREFTEST TEST-END | %s" % test
         return "%s\n" % output_text
@@ -98,11 +94,6 @@ class ReftestFormatter(TbplFormatter):
         lines = ["REFTEST INFO | %s" % s for s in lines]
         lines.append("REFTEST SUITE-END | Shutdown")
         return "INFO | Result summary:\n{}\n".format('\n'.join(lines))
-
-    def id_str(self, test_id):
-        if isinstance(test_id, basestring):
-            return test_id
-        return test_id[0]
 
 
 class OutputHandler(object):

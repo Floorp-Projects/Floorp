@@ -1277,12 +1277,11 @@
         <body><![CDATA[
           switch (event.type) {
             case "input":
-              // The urlbar's value property can be a moz-action URI, but we
-              // want the value that the user sees, which is textValue.  So see
-              // if the textbox has a textValue property, and use it if so.
-              this.query = typeof(event.target.textValue) == "string" ?
-                           event.target.textValue :
-                           event.target.value;
+              // Allow the consumer's input to override its value property with
+              // a oneOffSearchQuery property.  That way if the value is not
+              // actually what the user typed (e.g., it's autofilled, or it's a
+              // mozaction URI), the consumer has some way of providing it.
+              this.query = event.target.oneOffSearchQuery || event.target.value;
               break;
             case "popupshowing":
               this._rebuild();
@@ -1558,11 +1557,10 @@
               // selected will do the button's command, not search.
               this.popup.selectedIndex = -1;
             }
+            let event = document.createEvent("Events");
+            event.initEvent("SelectedOneOffButtonChanged", true, false);
+            this.dispatchEvent(event);
           }
-
-          let event = document.createEvent("Events");
-          event.initEvent("OneOffsVisuallySelectedButtonChanged", true, false);
-          this.dispatchEvent(event);
         ]]></body>
       </method>
 
@@ -1751,7 +1749,8 @@
           if (event.keyCode == KeyEvent.DOM_VK_TAB &&
               !event.altKey &&
               !event.ctrlKey &&
-              !event.metaKey) {
+              !event.metaKey &&
+              this.getAttribute("disabletab") != "true") {
             stopEvent = this.advanceSelection(!event.shiftKey, false, true);
           }
 
@@ -1911,7 +1910,7 @@
         event.preventDefault();
       ]]></handler>
 
-      <handler event="mouseover"><![CDATA[
+      <handler event="mousemove"><![CDATA[
         let target = event.originalTarget;
         if (target.localName != "button")
           return;

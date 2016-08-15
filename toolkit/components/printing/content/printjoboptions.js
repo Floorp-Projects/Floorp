@@ -22,12 +22,10 @@ function checkDouble(element, maxVal)
     value = value.replace(/[^\.|^0-9]/g,"");
     if (!value) {
       element.value = "";
+    } else if (value > maxVal) {
+      element.value = maxVal;
     } else {
-      if (value > maxVal) {
-        element.value = maxVal;
-      } else {
-        element.value = value;
-      }
+      element.value = value;
     }
   }
 }

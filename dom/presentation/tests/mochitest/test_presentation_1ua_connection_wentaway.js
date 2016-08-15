@@ -84,18 +84,6 @@ function setup() {
     gScript.sendAsyncMessage('trigger-on-session-request', receiverUrl);
   });
 
-  gScript.addMessageListener('offer-sent', function offerSentHandler() {
-    debug('Got message: offer-sent');
-    gScript.removeMessageListener('offer-sent', offerSentHandler);
-    gScript.sendAsyncMessage('trigger-on-offer');
-  });
-
-  gScript.addMessageListener('answer-sent', function answerSentHandler() {
-    debug('Got message: answer-sent');
-    gScript.removeMessageListener('answer-sent', answerSentHandler);
-    gScript.sendAsyncMessage('trigger-on-answer');
-  });
-
   return Promise.resolve();
 }
 

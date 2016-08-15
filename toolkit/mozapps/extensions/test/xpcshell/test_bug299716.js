@@ -105,9 +105,8 @@ function do_check_item(aItem, aVersion, aAddonsEntry) {
       do_throw("Addon " + aAddonsEntry.id + " wasn't detected");
     if (aItem.version != aVersion)
       do_throw("Addon " + aAddonsEntry.id + " was version " + aItem.version + " instead of " + aVersion);
-  } else {
-    if (aItem != null)
-      do_throw("Addon " + aAddonsEntry.id + " was detected");
+  } else if (aItem != null) {
+    do_throw("Addon " + aAddonsEntry.id + " was detected");
   }
 }
 

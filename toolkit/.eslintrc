@@ -80,7 +80,7 @@
     "no-empty-pattern": 2,
 
     // No assiging to exception variable
-    // "no-ex-assign": 2,
+    "no-ex-assign": 2,
 
     // No using !! where casting to boolean is already happening
     // "no-extra-boolean-cast": 2,
@@ -98,7 +98,7 @@
     "no-irregular-whitespace": 2,
 
     // No single if block inside an else block
-    // "no-lonely-if": 2,
+    "no-lonely-if": 2,
 
     // No mixing spaces and tabs in indent
     "no-mixed-spaces-and-tabs": [2, "smart-tabs"],
