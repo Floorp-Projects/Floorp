@@ -195,9 +195,6 @@ xpcAccessible::GetDOMNode(nsIDOMNode** aDOMNode)
 NS_IMETHODIMP
 xpcAccessible::GetId(nsAString& aID)
 {
-#if defined(XP_WIN)
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else
   ProxyAccessible* proxy = IntlGeneric().AsProxy();
   if (!proxy) {
     return NS_ERROR_FAILURE;
@@ -208,7 +205,6 @@ xpcAccessible::GetId(nsAString& aID)
   aID.Assign(id);
 
   return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP
@@ -482,16 +478,12 @@ xpcAccessible::GetRelationByType(uint32_t aType,
     return NS_OK;
   }
 
-#if defined(XP_WIN)
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else
   ProxyAccessible* proxy = IntlGeneric().AsProxy();
   nsTArray<ProxyAccessible*> targets =
     proxy->RelationByType(static_cast<RelationType>(aType));
   NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &targets));
 
   return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP

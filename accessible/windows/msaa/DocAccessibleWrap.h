@@ -22,14 +22,10 @@ public:
 
   // IAccessible
 
-  // Override get_accParent for e10s
-  virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent(
-      /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent) override;
-
-  // Override get_accValue to provide URL when no other value is available
-  virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accValue(
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszValue) override;
+    // Override get_accValue to provide URL when no other value is available
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accValue( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ BSTR __RPC_FAR *pszValue);
 
   // Accessible
   virtual void Shutdown();

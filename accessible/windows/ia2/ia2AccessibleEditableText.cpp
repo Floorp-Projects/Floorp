@@ -24,7 +24,9 @@ ia2AccessibleEditableText::copyText(long aStartOffset, long aEndOffset)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  MOZ_ASSERT(!HyperTextProxyFor(this));
+  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
+    return proxy->CopyText(aStartOffset, aEndOffset) ? S_OK : E_INVALIDARG;
+  }
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -44,7 +46,9 @@ ia2AccessibleEditableText::deleteText(long aStartOffset, long aEndOffset)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  MOZ_ASSERT(!HyperTextProxyFor(this));
+    if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
+      return proxy->DeleteText(aStartOffset, aEndOffset) ? S_OK : E_INVALIDARG;
+    }
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -66,7 +70,9 @@ ia2AccessibleEditableText::insertText(long aOffset, BSTR *aText)
 
   uint32_t length = ::SysStringLen(*aText);
   nsAutoString text(*aText, length);
-  MOZ_ASSERT(!HyperTextProxyFor(this));
+  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
+    return proxy->InsertText(text, aOffset) ? S_OK : E_INVALIDARG;
+  }
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -86,7 +92,9 @@ ia2AccessibleEditableText::cutText(long aStartOffset, long aEndOffset)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  MOZ_ASSERT(!HyperTextProxyFor(this));
+  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
+    return proxy->CutText(aStartOffset, aEndOffset) ? S_OK : E_INVALIDARG;
+  }
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -106,7 +114,9 @@ ia2AccessibleEditableText::pasteText(long aOffset)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  MOZ_ASSERT(!HyperTextProxyFor(this));
+  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
+    return proxy->PasteText(aOffset) ? S_OK : E_INVALIDARG;
+  }
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())

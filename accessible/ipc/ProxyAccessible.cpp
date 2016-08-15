@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProxyAccessible.h"
-#include "mozilla/a11y/DocAccessibleParent.h"
+#include "DocAccessibleParent.h"
 #include "DocAccessible.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/dom/Element.h"
@@ -18,6 +18,69 @@
 
 namespace mozilla {
 namespace a11y {
+
+void
+ProxyAccessible::Shutdown()
+{
+  MOZ_DIAGNOSTIC_ASSERT(!IsDoc());
+  NS_ASSERTION(!mOuterDoc, "Why do we still have a child doc?");
+  xpcAccessibleDocument* xpcDoc =
+    GetAccService()->GetCachedXPCDocument(Document());
+  if (xpcDoc) {
+    xpcDoc->NotifyOfShutdown(this);
+  }
+
+  // XXX Ideally  this wouldn't be necessary, but it seems OuterDoc accessibles
+  // can be destroyed before the doc they own.
+  if (!mOuterDoc) {
+    uint32_t childCount = mChildren.Length();
+    for (uint32_t idx = 0; idx < childCount; idx++)
+      mChildren[idx]->Shutdown();
+  } else {
+    if (mChildren.Length() != 1)
+      MOZ_CRASH("outer doc doesn't own adoc!");
+
+    mChildren[0]->AsDoc()->Unbind();
+  }
+
+  mChildren.Clear();
+  ProxyDestroyed(this);
+  mDoc->RemoveAccessible(this);
+}
+
+void
+ProxyAccessible::SetChildDoc(DocAccessibleParent* aParent)
+{
+  if (aParent) {
+    MOZ_ASSERT(mChildren.IsEmpty());
+    mChildren.AppendElement(aParent);
+    mOuterDoc = true;
+  } else {
+    MOZ_ASSERT(mChildren.Length() == 1);
+    mChildren.Clear();
+    mOuterDoc = false;
+  }
+}
+
+bool
+ProxyAccessible::MustPruneChildren() const
+{
+  // this is the equivalent to nsAccUtils::MustPrune for proxies and should be
+  // kept in sync with that.
+  if (mRole != roles::MENUITEM && mRole != roles::COMBOBOX_OPTION
+      && mRole != roles::OPTION && mRole != roles::ENTRY
+      && mRole != roles::FLAT_EQUATION && mRole != roles::PASSWORD_TEXT
+      && mRole != roles::PUSHBUTTON && mRole != roles::TOGGLE_BUTTON
+      && mRole != roles::GRAPHIC && mRole != roles::SLIDER
+      && mRole != roles::PROGRESSBAR && mRole != roles::SEPARATOR)
+    return false;
+
+  if (mChildren.Length() != 1)
+    return false;
+
+  return mChildren[0]->Role() == roles::TEXT_LEAF
+    || mChildren[0]->Role() == roles::STATICTEXT;
+}
 
 uint64_t
 ProxyAccessible::State() const
@@ -969,6 +1032,55 @@ ProxyAccessible::TakeFocus()
   Unused << mDoc->SendTakeFocus(mID);
 }
 
+uint32_t
+ProxyAccessible::EmbeddedChildCount() const
+{
+  size_t count = 0, kids = mChildren.Length();
+  for (size_t i = 0; i < kids; i++) {
+    if (mChildren[i]->IsEmbeddedObject()) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+int32_t
+ProxyAccessible::IndexOfEmbeddedChild(const ProxyAccessible* aChild)
+{
+  size_t index = 0, kids = mChildren.Length();
+  for (size_t i = 0; i < kids; i++) {
+    if (mChildren[i]->IsEmbeddedObject()) {
+      if (mChildren[i] == aChild) {
+        return index;
+      }
+
+      index++;
+    }
+  }
+
+  return -1;
+}
+
+ProxyAccessible*
+ProxyAccessible::EmbeddedChildAt(size_t aChildIdx)
+{
+  size_t index = 0, kids = mChildren.Length();
+  for (size_t i = 0; i < kids; i++) {
+    if (!mChildren[i]->IsEmbeddedObject()) {
+      continue;
+    }
+
+    if (index == aChildIdx) {
+      return mChildren[i];
+    }
+
+    index++;
+  }
+
+  return nullptr;
+}
+
 ProxyAccessible*
 ProxyAccessible::FocusedChild()
 {
@@ -1063,5 +1175,18 @@ ProxyAccessible::DOMNodeID(nsString& aID)
   Unused << mDoc->SendDOMNodeID(mID, &aID);
 }
 
+Accessible*
+ProxyAccessible::OuterDocOfRemoteBrowser() const
+{
+  auto tab = static_cast<dom::TabParent*>(mDoc->Manager());
+  dom::Element* frame = tab->GetOwnerElement();
+  NS_ASSERTION(frame, "why isn't the tab in a frame!");
+  if (!frame)
+    return nullptr;
+
+  DocAccessible* chromeDoc = GetExistingDocAccessible(frame->OwnerDoc());
+
+  return chromeDoc ? chromeDoc->GetAccessible(frame) : nullptr;
+}
 }
 }
