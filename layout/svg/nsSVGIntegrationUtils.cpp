@@ -623,8 +623,9 @@ ComputeOpacity(const nsSVGIntegrationUtils::PaintFramesParams& aParams)
   return opacity;
 }
 
-DrawResult
-nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
+static bool
+ValidateSVGFrame(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
+                 bool aHasSVGLayout, DrawResult* aResult)
 {
 #ifdef DEBUG
   NS_ASSERTION(!(aParams.frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) ||
@@ -633,6 +634,28 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
                "Should not use nsSVGIntegrationUtils on this SVG frame");
 #endif
 
+  nsIFrame* frame = aParams.frame;
+  const nsIContent* content = frame->GetContent();
+  if (aHasSVGLayout) {
+    nsISVGChildFrame *svgChildFrame = do_QueryFrame(frame);
+    if (!svgChildFrame || !frame->GetContent()->IsSVGElement()) {
+      NS_ASSERTION(false, "why?");
+      *aResult = DrawResult::BAD_ARGS;
+      return false;
+    }
+    if (!static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
+      // The SVG spec says not to draw _anything_
+      *aResult = DrawResult::SUCCESS;
+      return false;
+    }
+  }
+
+  return true;
+}
+
+DrawResult
+nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
+{
   /* SVG defines the following rendering model:
    *
    *  1. Render geometry
@@ -647,17 +670,10 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
    * + Merge opacity and masking if both used together.
    */
   nsIFrame* frame = aParams.frame;
-  const nsIContent* content = frame->GetContent();
+  DrawResult result = DrawResult::SUCCESS;
   bool hasSVGLayout = (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
-  if (hasSVGLayout) {
-    nsISVGChildFrame *svgChildFrame = do_QueryFrame(frame);
-    if (!svgChildFrame || !frame->GetContent()->IsSVGElement()) {
-      NS_ASSERTION(false, "why?");
-      return DrawResult::BAD_ARGS;
-    }
-    if (!static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
-      return DrawResult::SUCCESS; // The SVG spec says not to draw _anything_
-    }
+  if (!ValidateSVGFrame(aParams, hasSVGLayout, &result)) {
+    return result;
   }
 
   float opacity = ComputeOpacity(aParams);
@@ -764,7 +780,6 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
     targetOffset = drawRect.TopLeft();
   }
 
-  DrawResult result = DrawResult::SUCCESS;
   bool shouldGenerateMask = (opacity != 1.0f || shouldGenerateClipMaskLayer ||
                              shouldGenerateMaskLayer);
 
