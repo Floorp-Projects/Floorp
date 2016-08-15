@@ -365,6 +365,7 @@ struct nsStyleImage
   }
   imgRequestProxy* GetImageData() const {
     MOZ_ASSERT(mType == eStyleImageType_Image, "Data is not an image!");
+    MOZ_ASSERT(mImage);
     MOZ_ASSERT(mImageTracked,
                "Should be tracking any image we're going to use!");
     return mImage;
