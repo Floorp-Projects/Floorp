@@ -87,9 +87,7 @@ struct ParamTraits<SerializedLoadContext>
         !ReadParam(aMsg, aIter, &suffix)) {
       return false;
     }
-    aResult->mOriginAttributes.PopulateFromSuffix(suffix);
-
-    return true;
+    return aResult->mOriginAttributes.PopulateFromSuffix(suffix);
   }
 };
 
