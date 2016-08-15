@@ -26,12 +26,10 @@
           if (cs.direction == "rtl") {
             this.setAttribute("rtl", "true");
           }
-        } else {
+        } else if (cs.writingMode.endsWith("-rl")) {
           // writing-modes 'vertical-rl' and 'sideways-rl' want rtl resizers,
           // as they will appear at the bottom left of the element
-          if (cs.writingMode.endsWith("-rl")) {
-            this.setAttribute("rtl", "true");
-          }
+          this.setAttribute("rtl", "true");
         }
       ]]>
       </constructor>

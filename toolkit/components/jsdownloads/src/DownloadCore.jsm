@@ -509,7 +509,12 @@ this.Download.prototype = {
         this.progress = 100;
         this.succeeded = true;
         this.hasPartialData = false;
-      } catch (ex) {
+      } catch (originalEx) {
+        // We may choose a different exception to propagate in the code below,
+        // or wrap the original one. We do this mutation in a different variable
+        // because of the "no-ex-assign" ESLint rule.
+        let ex = originalEx;
+
         // Fail with a generic status code on cancellation, so that the caller
         // is forced to actually check the status properties to see if the
         // download was canceled or failed because of other reasons.

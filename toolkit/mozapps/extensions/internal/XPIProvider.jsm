@@ -6100,13 +6100,13 @@ AddonInstall.prototype = {
           this.downloadFailed(error, message);
         });
       }
+      else if (aRequest instanceof Ci.nsIHttpChannel) {
+        this.downloadFailed(AddonManager.ERROR_NETWORK_FAILURE,
+                            aRequest.responseStatus + " " +
+                            aRequest.responseStatusText);
+      }
       else {
-        if (aRequest instanceof Ci.nsIHttpChannel)
-          this.downloadFailed(AddonManager.ERROR_NETWORK_FAILURE,
-                              aRequest.responseStatus + " " +
-                              aRequest.responseStatusText);
-        else
-          this.downloadFailed(AddonManager.ERROR_NETWORK_FAILURE, aStatus);
+        this.downloadFailed(AddonManager.ERROR_NETWORK_FAILURE, aStatus);
       }
     }
     else {
@@ -7544,10 +7544,9 @@ AddonWrapper.prototype = {
         XPIProvider.updateAddonDisabledState(addon, undefined, val);
       }
     }
-    else {
+    else if (!addon.userDisabled) {
       // Only set softDisabled if not already disabled
-      if (!addon.userDisabled)
-        addon.softDisabled = val;
+      addon.softDisabled = val;
     }
 
     return val;

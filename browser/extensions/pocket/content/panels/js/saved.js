@@ -267,10 +267,8 @@ var PKT_SAVED_OVERLAY = function (options)
                     inputwrapper.find('.pkt_ext_tag_input').tokenInput('remove',{name:selected.find('p').text()});
                 }
             }
-            else {
-                if ($(e.target).parent().hasClass('token-input-input-token')) {
-                    e.stopImmediatePropagation();
-                }
+            else if ($(e.target).parent().hasClass('token-input-input-token')) {
+                e.stopImmediatePropagation();
             }
         });
     };
