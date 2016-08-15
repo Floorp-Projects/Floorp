@@ -206,9 +206,15 @@ enum nsChangeHint {
    */
   nsChangeHint_UpdateBackgroundPosition = 1 << 26,
 
-  // IMPORTANT NOTE: When adding new hints, consider whether you need to
-  // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
-  // add them to RestyleManager::ChangeHintToString.
+  // IMPORTANT NOTE: When adding new hints, consider whether you need
+  // to add them to NS_HintsNotHandledForDescendantsIn() below. Please
+  // also add them to RestyleManager::ChangeHintToString and modify
+  // nsChangeHint_AllHints below accordingly.
+
+  /**
+   * Dummy hint value for all hints. It exists for compile time check.
+   */
+  nsChangeHint_AllHints = (1 << 27) - 1,
 };
 
 // Redefine these operators to return nothing. This will catch any use
