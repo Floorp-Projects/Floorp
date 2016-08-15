@@ -233,12 +233,21 @@ extern TwoByteCharsZ
 UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 /*
+ * Like UTF8CharsToNewTwoByteCharsZ, but for ConstUTF8CharsZ.
+ */
+extern TwoByteCharsZ
+UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen);
+
+/*
  * The same as UTF8CharsToNewTwoByteCharsZ(), except that any malformed UTF-8 characters
  * will be replaced by \uFFFD. No exception will be thrown for malformed UTF-8
  * input.
  */
 extern TwoByteCharsZ
 LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
+
+extern TwoByteCharsZ
+LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen);
 
 /*
  * Returns the length of the char buffer required to encode |s| as UTF8.
