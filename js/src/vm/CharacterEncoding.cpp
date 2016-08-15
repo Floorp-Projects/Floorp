@@ -399,9 +399,23 @@ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* out
 }
 
 TwoByteCharsZ
+JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen)
+{
+    UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
+    return InflateUTF8StringHelper<CountAndReportInvalids>(cx, chars, outlen);
+}
+
+TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
     return InflateUTF8StringHelper<CountAndIgnoreInvalids>(cx, utf8, outlen);
+}
+
+TwoByteCharsZ
+JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen)
+{
+    UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
+    return InflateUTF8StringHelper<CountAndIgnoreInvalids>(cx, chars, outlen);
 }
 
 #ifdef DEBUG
