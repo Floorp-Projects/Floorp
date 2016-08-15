@@ -2041,7 +2041,7 @@ this.XPIDatabaseReconcile = {
 
     if (!systemAddonLocation.isValid(addons)) {
       // Hide the system add-on updates if any are invalid.
-      logger.info("One or more updated system add-ons invalid, falling back to defaults.");
+      logger.warn("One or more updated system add-ons invalid, falling back to defaults.");
       hideLocation = KEY_APP_SYSTEM_ADDONS;
     }
 
