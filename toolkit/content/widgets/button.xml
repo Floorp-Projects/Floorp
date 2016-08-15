@@ -27,13 +27,11 @@
         <setter><![CDATA[
           if (this.boxObject instanceof MenuBoxObject) {
             this.boxObject.openMenu(val);
-          } else {
+          } else if (val) {
             // Fall back to just setting the attribute
-            if (val) {
-              this.setAttribute('open', 'true');
-            } else {
-              this.removeAttribute('open');
-            }
+            this.setAttribute('open', 'true');
+          } else {
+            this.removeAttribute('open');
           }
           return val;
         ]]></setter>
@@ -292,11 +290,9 @@
             this.buttondown = false;
             this._pendingActive = true;
           }
-          else {
-            if (this._pendingActive) {
-              this.buttondown = true;
-              this._pendingActive = false;
-            }
+          else if (this._pendingActive) {
+            this.buttondown = true;
+            this._pendingActive = false;
           }
 
           if (v)
