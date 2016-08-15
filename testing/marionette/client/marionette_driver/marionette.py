@@ -540,7 +540,7 @@ class Marionette(object):
     TIMEOUT_SEARCH = 'implicit'
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
-    DEFAULT_SOCKET_TIMEOUT = 360
+    DEFAULT_SOCKET_TIMEOUT = 60
     DEFAULT_STARTUP_TIMEOUT = 120
 
     def __init__(self, host='localhost', port=2828, app=None, app_args=None,
