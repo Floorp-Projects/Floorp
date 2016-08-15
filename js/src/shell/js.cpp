@@ -4637,13 +4637,13 @@ WithSourceHook(JSContext* cx, unsigned argc, Value* vp)
     RootedObject callee(cx, &args.callee());
 
     if (args.length() != 2) {
-        ReportUsageError(cx, callee, "Wrong number of arguments.");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments.");
         return false;
     }
 
     if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()
         || !args[1].isObject() || !args[1].toObject().is<JSFunction>()) {
-        ReportUsageError(cx, callee, "First and second arguments must be functions.");
+        ReportUsageErrorASCII(cx, callee, "First and second arguments must be functions.");
         return false;
     }
 
@@ -5087,12 +5087,12 @@ ReflectTrackedOptimizations(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (args.length() != 1) {
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
     if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
-        ReportUsageError(cx, callee, "Argument must be a function");
+        ReportUsageErrorASCII(cx, callee, "Argument must be a function");
         return false;
     }
 
@@ -5214,14 +5214,14 @@ DumpScopeChain(JSContext* cx, unsigned argc, Value* vp)
     RootedObject callee(cx, &args.callee());
 
     if (args.length() != 1) {
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
     if (!args[0].isObject() ||
         !(args[0].toObject().is<JSFunction>() || args[0].toObject().is<ModuleObject>()))
     {
-        ReportUsageError(cx, callee, "Argument must be an interpreted function or a module");
+        ReportUsageErrorASCII(cx, callee, "Argument must be an interpreted function or a module");
         return false;
     }
 
@@ -5231,7 +5231,7 @@ DumpScopeChain(JSContext* cx, unsigned argc, Value* vp)
     if (obj->is<JSFunction>()) {
         RootedFunction fun(cx, &obj->as<JSFunction>());
         if (!fun->isInterpreted()) {
-            ReportUsageError(cx, callee, "Argument must be an interpreted function");
+            ReportUsageErrorASCII(cx, callee, "Argument must be an interpreted function");
             return false;
         }
         script = fun->getOrCreateScript(cx);
@@ -5487,19 +5487,19 @@ WasmLoop(JSContext* cx, unsigned argc, Value* vp)
     RootedObject callee(cx, &args.callee());
 
     if (args.length() < 1 || args.length() > 2) {
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
     if (!args[0].isString()) {
-        ReportUsageError(cx, callee, "First argument must be a String");
+        ReportUsageErrorASCII(cx, callee, "First argument must be a String");
         return false;
     }
 
     RootedObject importObj(cx);
     if (!args.get(1).isUndefined()) {
         if (!args.get(1).isObject()) {
-            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
+            ReportUsageErrorASCII(cx, callee, "Second argument, if present, must be an Object");
             return false;
         }
         importObj = &args[1].toObject();
