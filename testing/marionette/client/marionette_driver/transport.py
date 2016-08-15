@@ -132,9 +132,7 @@ class TcpTransport(object):
         self.application_type = None
         self.last_id = 0
         self.expected_response = None
-
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(self.socket_timeout)
+        self.sock = None
 
     def _unmarshal(self, packet):
         msg = None
@@ -210,6 +208,9 @@ class TcpTransport(object):
         Returns a tuple of the protocol level and the application type.
         """
         try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.settimeout(self.socket_timeout)
+
             self.sock.connect((self.addr, self.port))
         except:
             # Unset self.sock so that the next attempt to send will cause
@@ -276,11 +277,12 @@ class TcpTransport(object):
     def close(self):
         """Close the socket."""
         if self.sock:
+            self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
+            self.sock = None
 
     def __del__(self):
         self.close()
-        self.sock = None
 
 
 def wait_for_port(host, port, timeout=60):
@@ -294,6 +296,7 @@ def wait_for_port(host, port, timeout=60):
             sock.settimeout(0.5)
             sock.connect((host, port))
             data = sock.recv(16)
+            sock.shutdown(socket.SHUT_RDWR)
             sock.close()
             if ":" in data:
                 return True
