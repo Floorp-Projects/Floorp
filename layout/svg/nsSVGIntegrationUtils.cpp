@@ -604,6 +604,25 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
   return DrawResult::SUCCESS;
 }
 
+static float
+ComputeOpacity(const nsSVGIntegrationUtils::PaintFramesParams& aParams)
+{
+  nsIFrame* frame = aParams.frame;
+
+  MOZ_ASSERT(!nsSVGUtils::CanOptimizeOpacity(frame) ||
+             !aParams.callerPaintsOpacity,
+             "How can we be optimizing the opacity into the svg as well as having the caller paint it?");
+
+  float opacity = frame->StyleEffects()->mOpacity;
+
+  if (opacity != 1.0f &&
+      (nsSVGUtils::CanOptimizeOpacity(frame) || aParams.callerPaintsOpacity)) {
+    return 1.0f;
+  }
+
+  return opacity;
+}
+
 DrawResult
 nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
 {
@@ -641,17 +660,10 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
     }
   }
 
-  float opacity = frame->StyleEffects()->mOpacity;
-  if (opacity != 1.0f &&
-      (nsSVGUtils::CanOptimizeOpacity(frame) ||
-       aParams.callerPaintsOpacity)) {
-    opacity = 1.0f;
-  }
+  float opacity = ComputeOpacity(aParams);
   if (opacity == 0.0f) {
     return DrawResult::SUCCESS;
   }
-  MOZ_ASSERT(!nsSVGUtils::CanOptimizeOpacity(frame) || !aParams.callerPaintsOpacity,
-             "How can we be optimizing the opacity into the svg as well as having the caller paint it?");
 
   /* Properties are added lazily and may have been removed by a restyle,
      so make sure all applicable ones are set again. */
