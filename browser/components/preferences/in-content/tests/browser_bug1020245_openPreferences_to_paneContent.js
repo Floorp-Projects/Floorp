@@ -7,7 +7,7 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.preferences.instantApply");
 });
 
-add_task(function() {
+add_task(function*() {
   let prefs = yield openPreferencesViaOpenPreferencesAPI("paneContent");
   is(prefs.selectedPane, "paneContent", "Content pane was selected");
   prefs = yield openPreferencesViaOpenPreferencesAPI("advanced", "updateTab");

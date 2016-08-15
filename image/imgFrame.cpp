@@ -324,8 +324,11 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    target = gfxPlatform::GetPlatform()->
-      CreateDrawTargetForData(ptr, mFrameRect.Size(), stride, mFormat);
+    target = gfxPlatform::CreateDrawTargetForData(
+                            ptr,
+                            mFrameRect.Size(),
+                            stride,
+                            mFormat);
   } else {
     // We can't use data surfaces for content, so we'll create an offscreen
     // surface instead.  This means if someone later calls RawAccessRef(), we

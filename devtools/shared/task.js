@@ -136,7 +136,7 @@ function isGenerator(value) {
 /**
  * This object provides the public module functions.
  */
-this.Task = {
+var Task = {
   /**
    * Creates and starts a new task.
    *

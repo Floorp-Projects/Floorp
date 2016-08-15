@@ -1424,14 +1424,13 @@ gfxPlatform::CreateSimilarSoftwareDrawTarget(DrawTarget* aDT,
   return dt.forget();
 }
 
-already_AddRefed<DrawTarget>
+/* static */ already_AddRefed<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
 {
-  NS_ASSERTION(mContentBackend != BackendType::NONE, "No backend.");
+  BackendType backendType = gfxVars::ContentBackend();
+  NS_ASSERTION(backendType != BackendType::NONE, "No backend.");
 
-  BackendType backendType = mContentBackend;
-
-  if (!Factory::DoesBackendSupportDataDrawtarget(mContentBackend)) {
+  if (!Factory::DoesBackendSupportDataDrawtarget(backendType)) {
     backendType = BackendType::CAIRO;
   }
 
@@ -2354,12 +2353,6 @@ gfxPlatform::AsyncPanZoomEnabled()
 #else
   return gfxPrefs::AsyncPanZoomEnabledDoNotUseDirectly();
 #endif
-}
-
-/*virtual*/ bool
-gfxPlatform::UseProgressivePaint()
-{
-  return gfxPrefs::ProgressivePaintDoNotUseDirectly();
 }
 
 /*static*/ bool

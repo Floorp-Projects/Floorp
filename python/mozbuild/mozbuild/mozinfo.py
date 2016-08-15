@@ -155,7 +155,6 @@ def write_mozinfo(file, config, env=os.environ):
     """
     build_conf = build_dict(config, env)
     if isinstance(file, basestring):
-        with open(file, "w") as f:
-            json.dump(build_conf, f)
-    else:
-        json.dump(build_conf, file)
+        file = open(file, 'wb')
+
+    json.dump(build_conf, file, sort_keys=True, indent=4)

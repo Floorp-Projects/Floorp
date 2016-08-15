@@ -17,6 +17,8 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "gfxMatrix.h"
 
+#include <limits>
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 
@@ -552,9 +554,10 @@ ProcessPerspective(Matrix4x4& aMatrix,
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
-  float depth = ProcessTranslatePart(aData->Item(1), aContext,
-                                     aPresContext, aConditions,
-                                     nullptr);
+  float depth = std::max(ProcessTranslatePart(aData->Item(1), aContext,
+                                              aPresContext, aConditions,
+                                              nullptr),
+                         std::numeric_limits<float>::epsilon());
   aMatrix.Perspective(depth);
 }
 

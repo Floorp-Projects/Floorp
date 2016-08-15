@@ -4,7 +4,7 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.preferences.instantApply");
 });
 
-add_task(function() {
+add_task(function*() {
   yield openPreferencesViaOpenPreferencesAPI("paneContent", null, {leaveOpen: true});
   let doc = gBrowser.contentDocument;
   var langGroup = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString).data

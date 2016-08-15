@@ -395,6 +395,9 @@ ContentEventHandler::QueryContentRect(nsIContent* aContent,
 
   aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       resultRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
+  // Returning empty rect may cause native IME confused, let's make sure to
+  // return non-empty rect.
+  EnsureNonEmptyRect(aEvent->mReply.mRect);
   aEvent->mSucceeded = true;
 
   return NS_OK;
@@ -415,6 +418,11 @@ static bool IsContentBR(nsIContent* aContent)
                                 nsGkAtoms::mozeditorbogusnode,
                                 nsGkAtoms::_true,
                                 eIgnoreCase);
+}
+
+static bool IsMozBR(nsIContent* aContent)
+{
+  return aContent->IsHTMLElement(nsGkAtoms::br) && !IsContentBR(aContent);
 }
 
 static void ConvertToNativeNewlines(nsAFlatString& aString)
@@ -656,11 +664,27 @@ ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
 }
 
 nsresult
+ContentEventHandler::GenerateFlatTextContent(nsIContent* aContent,
+                                             nsAFlatString& aString,
+                                             LineBreakType aLineBreakType)
+{
+  MOZ_ASSERT(aString.IsEmpty());
+
+  RefPtr<nsRange> range = new nsRange(mRootContent);
+  ErrorResult rv;
+  range->SelectNodeContents(*aContent, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+  return GenerateFlatTextContent(range, aString, aLineBreakType);
+}
+
+nsresult
 ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
                                              nsAFlatString& aString,
                                              LineBreakType aLineBreakType)
 {
-  NS_ASSERTION(aString.IsEmpty(), "aString must be empty string");
+  MOZ_ASSERT(aString.IsEmpty());
 
   if (aRange->Collapsed()) {
     return NS_OK;
@@ -945,10 +969,14 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
                                                 uint32_t aLength,
                                                 LineBreakType aLineBreakType,
                                                 bool aExpandToClusterBoundaries,
-                                                uint32_t* aNewOffset)
+                                                uint32_t* aNewOffset,
+                                                nsIContent** aLastTextNode)
 {
   if (aNewOffset) {
     *aNewOffset = aOffset;
+  }
+  if (aLastTextNode) {
+    *aLastTextNode = nullptr;
   }
 
   // Special case like <br contenteditable>
@@ -982,6 +1010,11 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
       continue;
     }
     nsIContent* content = node->AsContent();
+
+    if (aLastTextNode && content->IsNodeOfType(nsINode::eTEXT)) {
+      NS_IF_RELEASE(*aLastTextNode);
+      NS_ADDREF(*aLastTextNode = content);
+    }
 
     uint32_t textLength =
       content->IsNodeOfType(nsINode::eTEXT) ?
@@ -1071,7 +1104,19 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
         // Rule #2.1: ]textNode or text]Node or textNode]
         uint32_t xpOffset = endOffset - offset;
         if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
-          xpOffset = ConvertToXPOffset(content, xpOffset);
+          uint32_t xpOffsetCurrent = ConvertToXPOffset(content, xpOffset);
+          if (xpOffset && GetBRLength(aLineBreakType) > 1) {
+            MOZ_ASSERT(GetBRLength(aLineBreakType) == 2);
+            uint32_t xpOffsetPre = ConvertToXPOffset(content, xpOffset - 1);
+            // If previous character's XP offset is same as current character's,
+            // it means that the end offset is between \r and \n.  So, the
+            // range end should be after the \n.
+            if (xpOffsetPre == xpOffsetCurrent) {
+              xpOffset = xpOffsetCurrent + 1;
+            } else {
+              xpOffset = xpOffsetCurrent;
+            }
+          }
         }
         if (aExpandToClusterBoundaries) {
           rv = ExpandToClusterBoundary(content, true, &xpOffset);
@@ -1375,43 +1420,365 @@ ContentEventHandler::OnQueryTextContent(WidgetQueryContentEvent* aEvent)
   return NS_OK;
 }
 
-// Adjust to use a child node if possible
-// to make the returned rect more accurate
-static nsINode* AdjustTextRectNode(nsINode* aNode,
-                                   int32_t& aNodeOffset)
+void
+ContentEventHandler::EnsureNonEmptyRect(nsRect& aRect) const
 {
-  int32_t childCount = int32_t(aNode->GetChildCount());
-  nsINode* node = aNode;
-  if (childCount) {
-    if (aNodeOffset < childCount) {
-      node = aNode->GetChildAt(aNodeOffset);
-      aNodeOffset = 0;
-    } else if (aNodeOffset == childCount) {
-      node = aNode->GetChildAt(childCount - 1);
-      aNodeOffset = node->IsNodeOfType(nsINode::eTEXT) ?
-        static_cast<int32_t>(static_cast<nsIContent*>(node)->TextLength()) : 1;
-    }
-  }
-  return node;
+  // See the comment in ContentEventHandler.h why this doesn't set them to
+  // one device pixel.
+  aRect.height = std::max(1, aRect.height);
+  aRect.width = std::max(1, aRect.width);
 }
 
-static
-nsIFrame*
-GetFirstFrameInRange(nsRange* aRange)
+void
+ContentEventHandler::EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const
 {
-  // used to iterate over all contents and their frames
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  aRect.height = std::max(1, aRect.height);
+  aRect.width = std::max(1, aRect.width);
+}
+
+ContentEventHandler::NodePosition
+ContentEventHandler::GetNodePositionHavingFlatText(
+                       const NodePosition& aNodePosition)
+{
+  return GetNodePositionHavingFlatText(aNodePosition.mNode,
+                                       aNodePosition.mOffset);
+}
+
+ContentEventHandler::NodePosition
+ContentEventHandler::GetNodePositionHavingFlatText(nsINode* aNode,
+                                                   int32_t aNodeOffset)
+{
+  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+    return NodePosition(aNode, aNodeOffset);
+  }
+
+  int32_t childCount = static_cast<int32_t>(aNode->GetChildCount());
+
+  // If it's a empty element node, returns itself.
+  if (!childCount) {
+    MOZ_ASSERT(!aNodeOffset || aNodeOffset == 1);
+    return NodePosition(aNode, aNodeOffset);
+  }
+
+  // If there is a node at given position, return the start of it.
+  if (aNodeOffset < childCount) {
+    return NodePosition(aNode->GetChildAt(aNodeOffset), 0);
+  }
+
+  // If the offset represents "after" the node, we need to return the last
+  // child of it.  For example, if a range is |<p>[<br>]</p>|, then, the
+  // end point is {<p>, 1}.  In such case, callers need the <br> node.
+  if (aNodeOffset == childCount) {
+    NodePosition result;
+    result.mNode = aNode->GetChildAt(childCount - 1);
+    result.mOffset = result.mNode->IsNodeOfType(nsINode::eTEXT) ?
+      static_cast<int32_t>(result.mNode->AsContent()->TextLength()) : 1;
+  }
+
+  NS_WARNING("aNodeOffset is invalid value");
+  return NodePosition();
+}
+
+ContentEventHandler::FrameAndNodeOffset
+ContentEventHandler::GetFirstFrameInRangeForTextRect(nsRange* aRange)
+{
+  NodePosition nodePosition;
+  nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
+  for (iter->Init(aRange); !iter->IsDone(); iter->Next()) {
+    nsINode* node = iter->GetCurrentNode();
+    if (NS_WARN_IF(!node)) {
+      break;
+    }
+
+    if (!node->IsContent()) {
+      continue;
+    }
+
+    if (node->IsNodeOfType(nsINode::eTEXT)) {
+      // If the range starts at the end of a text node, we need to find
+      // next node which causes text.
+      int32_t offsetInNode =
+        node == aRange->GetStartParent() ? aRange->StartOffset() : 0;
+      if (static_cast<uint32_t>(offsetInNode) < node->Length()) {
+        nodePosition.mNode = node;
+        nodePosition.mOffset = offsetInNode;
+        break;
+      }
+      continue;
+    }
+
+    // If the element node causes a line break before it, it's the first
+    // node causing text.
+    if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
+        IsMozBR(node->AsContent())) {
+      nodePosition.mNode = node;
+      nodePosition.mOffset = 0;
+    }
+  }
+
+  if (!nodePosition.IsValid()) {
+    return FrameAndNodeOffset();
+  }
+
+  nsIFrame* firstFrame = nullptr;
+  GetFrameForTextRect(nodePosition.mNode, nodePosition.mOffset,
+                      true, &firstFrame);
+  return FrameAndNodeOffset(firstFrame, nodePosition.mOffset);
+}
+
+ContentEventHandler::FrameAndNodeOffset
+ContentEventHandler::GetLastFrameInRangeForTextRect(nsRange* aRange)
+{
+  NodePosition nodePosition;
+  nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   iter->Init(aRange);
 
-  // get the starting frame
-  int32_t nodeOffset = aRange->StartOffset();
-  nsINode* node = iter->GetCurrentNode();
-  if (!node) {
-    node = AdjustTextRectNode(aRange->GetStartParent(), nodeOffset);
+  nsINode* endNode = aRange->GetEndParent();
+  uint32_t endOffset = static_cast<uint32_t>(aRange->EndOffset());
+  // If the end point is start of a text node or specified by its parent and
+  // index, the node shouldn't be included into the range.  For example,
+  // with this case, |<p>abc[<br>]def</p>|, the range ends at 3rd children of
+  // <p> (see the range creation rules, "2.4. Cases: <element/>]"). This causes
+  // following frames:
+  // +----+-----+
+  // | abc|[<br>|
+  // +----+-----+
+  // +----+
+  // |]def|
+  // +----+
+  // So, if this method includes the 2nd text frame's rect to its result, the
+  // caller will return too tall rect which includes 2 lines in this case isn't
+  // expected by native IME  (e.g., popup of IME will be positioned at bottom
+  // of "d" instead of right-bottom of "c").  Therefore, this method shouldn't
+  // include the last frame when its content isn't really in aRange.
+  nsINode* nextNodeOfRangeEnd = nullptr;
+  if (endNode->IsNodeOfType(nsINode::eTEXT)) {
+    if (!endOffset) {
+      nextNodeOfRangeEnd = endNode;
+    }
+  } else if (endOffset < endNode->GetChildCount()) {
+    nextNodeOfRangeEnd = endNode->GetChildAt(endOffset);
   }
-  nsIFrame* firstFrame = nullptr;
-  GetFrameForTextRect(node, nodeOffset, true, &firstFrame);
-  return firstFrame;
+
+  for (iter->Last(); !iter->IsDone(); iter->Prev()) {
+    nsINode* node = iter->GetCurrentNode();
+    if (NS_WARN_IF(!node)) {
+      break;
+    }
+
+    if (!node->IsContent() || node == nextNodeOfRangeEnd) {
+      continue;
+    }
+
+    if (node->IsNodeOfType(nsINode::eTEXT)) {
+      nodePosition.mNode = node;
+      if (node == aRange->GetEndParent()) {
+        nodePosition.mOffset = aRange->EndOffset();
+      } else {
+        nodePosition.mOffset = node->Length();
+      }
+      break;
+    }
+
+    if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
+        IsMozBR(node->AsContent())) {
+      nodePosition.mNode = node;
+      nodePosition.mOffset = 0;
+      break;
+    }
+  }
+
+  if (!nodePosition.IsValid()) {
+    return FrameAndNodeOffset();
+  }
+
+  nsIFrame* lastFrame = nullptr;
+  GetFrameForTextRect(nodePosition.mNode, nodePosition.mOffset,
+                      true, &lastFrame);
+  if (!lastFrame) {
+    return FrameAndNodeOffset();
+  }
+
+  // If the last frame is a text frame, we need to check if the range actually
+  // includes at least one character in the range.  Therefore, if it's not a
+  // text frame, we need to do nothing anymore.
+  if (lastFrame->GetType() != nsGkAtoms::textFrame) {
+    return FrameAndNodeOffset(lastFrame, nodePosition.mOffset);
+  }
+
+  int32_t start, end;
+  if (NS_WARN_IF(NS_FAILED(lastFrame->GetOffsets(start, end)))) {
+    return FrameAndNodeOffset();
+  }
+
+  // If the start offset in the node is same as the computed offset in the
+  // node, the frame shouldn't be added to the text rect.  So, this should
+  // return previous text frame and its last offset.
+  if (nodePosition.mOffset == start) {
+    MOZ_ASSERT(nodePosition.mOffset);
+    GetFrameForTextRect(nodePosition.mNode, --nodePosition.mOffset,
+                        true, &lastFrame);
+    if (NS_WARN_IF(!lastFrame)) {
+      return FrameAndNodeOffset();
+    }
+  }
+
+  return FrameAndNodeOffset(lastFrame, nodePosition.mOffset);
+}
+
+ContentEventHandler::FrameRelativeRect
+ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame)
+{
+  // Note that this method should be called only with an element's frame whose
+  // open tag causes a line break or moz-<br> for computing empty last line's
+  // rect.
+  MOZ_ASSERT(ShouldBreakLineBefore(aFrame->GetContent(), mRootContent) ||
+             IsMozBR(aFrame->GetContent()));
+
+  nsIFrame* frameForFontMetrics = aFrame;
+
+  // If it's not a <br> frame, this method computes the line breaker's rect
+  // outside the frame.  Therefore, we need to compute with parent frame's
+  // font metrics in such case.
+  if (aFrame->GetType() != nsGkAtoms::brFrame && aFrame->GetParent()) {
+    frameForFontMetrics = aFrame->GetParent();
+  }
+
+  // Note that <br> element's rect is decided with line-height but we need
+  // a rect only with font height.  Additionally, <br> frame's width and
+  // height are 0 in quirks mode if it's not an empty line.  So, we cannot
+  // use frame rect information even if it's a <br> frame.
+
+  FrameRelativeRect result(aFrame);
+
+  RefPtr<nsFontMetrics> fontMetrics =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(frameForFontMetrics);
+  if (NS_WARN_IF(!fontMetrics)) {
+    return FrameRelativeRect();
+  }
+
+  const WritingMode kWritingMode = frameForFontMetrics->GetWritingMode();
+  nscoord baseline = aFrame->GetCaretBaseline();
+  if (kWritingMode.IsVertical()) {
+    if (kWritingMode.IsLineInverted()) {
+      result.mRect.x = baseline - fontMetrics->MaxDescent();
+    } else {
+      result.mRect.x = baseline - fontMetrics->MaxAscent();
+    }
+    result.mRect.width = fontMetrics->MaxHeight();
+  } else {
+    result.mRect.y = baseline - fontMetrics->MaxAscent();
+    result.mRect.height = fontMetrics->MaxHeight();
+  }
+
+  // If aFrame isn't a <br> frame, caret should be at outside of it because
+  // the line break is before its open tag.  For example, case of
+  // |<div><p>some text</p></div>|, caret is before <p> element and in <div>
+  // element, the caret should be left of top-left corner of <p> element like:
+  // 
+  // +-<div>-------------------  <div>'s border box
+  // | I +-<p>-----------------  <p>'s border box
+  // | I |
+  // | I |
+  // |   |
+  //   ^- caret
+  //
+  // However, this is a hack for unusual scenario.  This hack shouldn't be
+  // used as far as possible.
+  if (aFrame->GetType() != nsGkAtoms::brFrame) {
+    if (kWritingMode.IsVertical()) {
+      if (kWritingMode.IsLineInverted()) {
+        // above of top-left corner of aFrame.
+        result.mRect.x = 0;
+      } else {
+        // above of top-right corner of aFrame.
+        result.mRect.x = aFrame->GetRect().XMost() - result.mRect.width;
+      }
+      result.mRect.y = -mPresContext->AppUnitsPerDevPixel();
+    } else {
+      // left of top-left corner of aFrame.
+      result.mRect.x = -mPresContext->AppUnitsPerDevPixel();
+      result.mRect.y = 0;
+    }
+  }
+  return result;
+}
+
+ContentEventHandler::FrameRelativeRect
+ContentEventHandler::GuessLineBreakerRectAfter(nsIContent* aTextContent)
+{
+  // aTextContent should be a text node.
+  MOZ_ASSERT(aTextContent->IsNodeOfType(nsINode::eTEXT));
+
+  FrameRelativeRect result;
+  int32_t length = static_cast<int32_t>(aTextContent->Length());
+  if (NS_WARN_IF(length < 0)) {
+    return result;
+  }
+  // Get the last nsTextFrame which is caused by aTextContent.  Note that
+  // a text node can cause multiple text frames, e.g., the text is too long
+  // and wrapped by its parent block or the text has line breakers and its
+  // white-space property respects the line breakers (e.g., |pre|).
+  nsIFrame* lastTextFrame = nullptr;
+  nsresult rv = GetFrameForTextRect(aTextContent, length, true, &lastTextFrame);
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!lastTextFrame)) {
+    return result;
+  }
+  const nsRect kLastTextFrameRect = lastTextFrame->GetRect();
+  if (lastTextFrame->GetWritingMode().IsVertical()) {
+    // Below of the last text frame.
+    result.mRect.SetRect(0, kLastTextFrameRect.height,
+                         kLastTextFrameRect.width, 0);
+  } else {
+    // Right of the last text frame (not bidi-aware).
+    result.mRect.SetRect(kLastTextFrameRect.width, 0,
+                         0, kLastTextFrameRect.height);
+  }
+  result.mBaseFrame = lastTextFrame;
+  return result;
+}
+
+ContentEventHandler::FrameRelativeRect
+ContentEventHandler::GuessFirstCaretRectIn(nsIFrame* aFrame)
+{
+  const WritingMode kWritingMode = aFrame->GetWritingMode();
+
+  // Computes the font height, but if it's not available, we should use
+  // default font size of Firefox.  The default font size in default settings
+  // is 16px.
+  RefPtr<nsFontMetrics> fontMetrics =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
+  const nscoord kMaxHeight =
+    fontMetrics ? fontMetrics->MaxHeight() :
+                  16 * mPresContext->AppUnitsPerDevPixel();
+
+  nsRect caretRect;
+  const nsRect kContentRect = aFrame->GetContentRect() - aFrame->GetPosition();
+  caretRect.y = kContentRect.y;
+  if (!kWritingMode.IsVertical()) {
+    if (kWritingMode.IsBidiLTR()) {
+      caretRect.x = kContentRect.x;
+    } else {
+      // Move 1px left for the space of caret itself.
+      const nscoord kOnePixel = mPresContext->AppUnitsPerDevPixel();
+      caretRect.x = kContentRect.XMost() - kOnePixel;
+    }
+    caretRect.height = kMaxHeight;
+    // However, don't add kOnePixel here because it may cause 2px width at
+    // aligning the edge to device pixels.
+    caretRect.width = 1;
+  } else {
+    if (kWritingMode.IsVerticalLR()) {
+      caretRect.x = kContentRect.x;
+    } else {
+      caretRect.x = kContentRect.XMost() - kMaxHeight;
+    }
+    caretRect.width = kMaxHeight;
+    // Don't add app units for a device pixel because it may cause 2px height
+    // at aligning the edge to device pixels.
+    caretRect.height = 1;
+  }
+  return FrameRelativeRect(caretRect, aFrame);
 }
 
 nsresult
@@ -1423,20 +1790,55 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
   }
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
-  RefPtr<nsRange> range = new nsRange(mRootContent);
-  uint32_t offset = aEvent->mInput.mOffset;
+  const uint32_t kBRLength = GetBRLength(lineBreakType);
 
+  RefPtr<nsRange> range = new nsRange(mRootContent);
+
+  bool isVertical = false;
   LayoutDeviceIntRect rect;
-  while (aEvent->mInput.mLength > aEvent->mReply.mRectArray.Length()) {
+  uint32_t offset = aEvent->mInput.mOffset;
+  const uint32_t kEndOffset = offset + aEvent->mInput.mLength;
+  bool wasLineBreaker = false;
+  nsRect lastCharRect;
+  while (offset < kEndOffset) {
+    nsCOMPtr<nsIContent> lastTextContent;
     rv = SetRangeFromFlatTextOffset(range, offset, 1, lineBreakType, true,
-                                    nullptr);
+                                    nullptr, getter_AddRefs(lastTextContent));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    // get the starting frame
-    nsIFrame* firstFrame = GetFirstFrameInRange(range);
-    if (NS_WARN_IF(!firstFrame)) {
+    // If the range is collapsed, offset has already reached the end of the
+    // contents.
+    if (range->Collapsed()) {
+      break;
+    }
+
+    // Get the first frame which causes some text after the offset.
+    FrameAndNodeOffset firstFrame = GetFirstFrameInRangeForTextRect(range);
+
+    // If GetFirstFrameInRangeForTextRect() does not return valid frame, that
+    // means that there are no visible frames having text or the offset reached
+    // the end of contents.
+    if (!firstFrame.IsValid()) {
+      nsAutoString allText;
+      rv = GenerateFlatTextContent(mRootContent, allText, lineBreakType);
+      // If the offset doesn't reach the end of contents yet but there is no
+      // frames for the node, that means that current offset's node is hidden
+      // by CSS or something.  Ideally, we should handle it with the last
+      // visible text node's last character's rect, but it's not usual cases
+      // in actual web services.  Therefore, currently, we should make this
+      // case fail.
+      if (NS_WARN_IF(NS_FAILED(rv)) || offset < allText.Length()) {
+        return NS_ERROR_FAILURE;
+      }
+      // Otherwise, we should append caret rect at the end of the contents
+      // later.
+      break;
+    }
+
+    nsIContent* firstContent = firstFrame.mFrame->GetContent();
+    if (NS_WARN_IF(!firstContent)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -1447,32 +1849,238 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       return rv;
     }
 
-    int32_t nodeOffset = range->StartOffset();
+    bool startsBetweenLineBreaker = false;
+    nsAutoString chars;
+    // XXX not bidi-aware this class...
+    isVertical = firstFrame->GetWritingMode().IsVertical();
+
     AutoTArray<nsRect, 16> charRects;
-    rv = firstFrame->GetCharacterRectsInRange(
-           nodeOffset,
-           aEvent->mInput.mLength - aEvent->mReply.mRectArray.Length(),
-           charRects);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+
+    // If the first frame is a text frame, the result should be computed with
+    // the frame's API.
+    if (firstFrame->GetType() == nsGkAtoms::textFrame) {
+      rv = firstFrame->GetCharacterRectsInRange(firstFrame.mOffsetInNode,
+                                                kEndOffset - offset, charRects);
+      if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(charRects.IsEmpty())) {
+        return rv;
+      }
+      // Assign the characters whose rects are computed by the call of
+      // nsTextFrame::GetCharacterRectsInRange().
+      AppendSubString(chars, firstContent, firstFrame.mOffsetInNode,
+                      charRects.Length());
+      if (NS_WARN_IF(chars.Length() != charRects.Length())) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (kBRLength > 1 && chars[0] == '\n' &&
+          offset == aEvent->mInput.mOffset && offset) {
+        // If start of range starting from previous offset of query range is
+        // same as the start of query range, the query range starts from
+        // between a line breaker (i.e., the range starts between "\r" and
+        // "\n").
+        RefPtr<nsRange> rangeToPrevOffset = new nsRange(mRootContent);
+        rv = SetRangeFromFlatTextOffset(rangeToPrevOffset,
+                                        aEvent->mInput.mOffset - 1, 1,
+                                        lineBreakType, true, nullptr);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        startsBetweenLineBreaker =
+          range->GetStartParent() == rangeToPrevOffset->GetStartParent() &&
+          range->StartOffset() == rangeToPrevOffset->StartOffset();
+      }
+    }
+    // Other contents should cause a line breaker rect before it.
+    // Note that moz-<br> element does not cause any text, however,
+    // it represents empty line at the last of current block.  Therefore,
+    // we need to compute its rect too.
+    else if (ShouldBreakLineBefore(firstContent, mRootContent) ||
+             IsMozBR(firstContent)) {
+      nsRect brRect;
+      // If the frame is not a <br> frame, we need to compute the caret rect
+      // with last character's rect before firstContent if there is.
+      // For example, if caret is after "c" of |<p>abc</p><p>def</p>|, IME may
+      // query a line breaker's rect after "c".  Then, if we compute it only
+      // with the 2nd <p>'s block frame, the result will be:
+      //  +-<p>--------------------------------+
+      //  |abc                                 |
+      //  +------------------------------------+
+      //
+      // I+-<p>--------------------------------+
+      //  |def                                 |
+      //  +------------------------------------+
+      // However, users expect popup windows of IME should be positioned at
+      // right-bottom of "c" like this:
+      //  +-<p>--------------------------------+
+      //  |abcI                                |
+      //  +------------------------------------+
+      //
+      //  +-<p>--------------------------------+
+      //  |def                                 |
+      //  +------------------------------------+
+      // Therefore, if the first frame isn't a <br> frame and there is a text
+      // node before the first node in the queried range, we should compute the
+      // first rect with the previous character's rect.
+      // If we already compute a character's rect in the queried range, we can
+      // compute it with the cached last character's rect.  (However, don't
+      // use this path if it's a <br> frame because trusting <br> frame's rect
+      // is better than guessing the rect from the previous character.)
+      if (firstFrame->GetType() != nsGkAtoms::brFrame &&
+          aEvent->mInput.mOffset != offset) {
+        // The frame position in the root widget will be added in the
+        // following for loop but we need the rect in the previous frame.
+        // So, we need to avoid using current frame position.
+        brRect = lastCharRect - frameRect.TopLeft();
+        if (!wasLineBreaker) {
+          if (isVertical) {
+            // Right of the last character.
+            brRect.y = brRect.YMost() + 1;
+            brRect.height = 1;
+          } else {
+            // Under the last character.
+            brRect.x = brRect.XMost() + 1;
+            brRect.width = 1;
+          }
+        }
+      }
+      // If it's not a <br> frame and it's the first character rect at the
+      // queried range, we need to the previous character of the start of
+      // the queried range if there is a text node.
+      else if (firstFrame->GetType() != nsGkAtoms::brFrame && lastTextContent) {
+        FrameRelativeRect brRectRelativeToLastTextFrame =
+          GuessLineBreakerRectAfter(lastTextContent);
+        if (NS_WARN_IF(!brRectRelativeToLastTextFrame.IsValid())) {
+          return NS_ERROR_FAILURE;
+        }
+        brRect = brRectRelativeToLastTextFrame.RectRelativeTo(firstFrame);
+      }
+      // Otherwise, we need to compute the line breaker's rect only with the
+      // first frame's rect.  But this may be unexpected.  For example,
+      // |<div contenteditable>[<p>]abc</p></div>|.  In this case, caret is
+      // before "a", therefore, users expect the rect left of "a".  However,
+      // we don't have enough information about the next character here and
+      // this isn't usual case (e.g., IME typically tries to query the rect
+      // of "a" or caret rect for computing its popup position).  Therefore,
+      // we shouldn't do more complicated hack here unless we'll get some bug
+      // reports actually.
+      else {
+        FrameRelativeRect relativeBRRect = GetLineBreakerRectBefore(firstFrame);
+        brRect = relativeBRRect.RectRelativeTo(firstFrame);
+      }
+      charRects.AppendElement(brRect);
+      chars.AssignLiteral("\n");
+      if (kBRLength > 1 && offset == aEvent->mInput.mOffset && offset) {
+        // If the first frame for the previous offset of the query range and
+        // the first frame for the start of query range are same, that means
+        // the start offset is between the first line breaker (i.e., the range
+        // starts between "\r" and "\n").
+        rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset - 1, 1,
+                                        lineBreakType, true, nullptr);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        FrameAndNodeOffset frameForPrevious =
+          GetFirstFrameInRangeForTextRect(range);
+        startsBetweenLineBreaker = frameForPrevious.mFrame == firstFrame.mFrame;
+      }
+    } else {
+      NS_WARNING("The frame is neither a text frame nor a frame whose content "
+                 "causes a line break");
+      return NS_ERROR_FAILURE;
     }
 
-    for (size_t i = 0; i < charRects.Length(); i++) {
+    for (size_t i = 0; i < charRects.Length() && offset < kEndOffset; i++) {
       nsRect charRect = charRects[i];
       charRect.x += frameRect.x;
       charRect.y += frameRect.y;
+      lastCharRect = charRect;
 
       rect = LayoutDeviceIntRect::FromUnknownRect(
                charRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
-
-      // Ensure at least 1px width and height for avoiding empty rect.
-      rect.height = std::max(1, rect.height);
-      rect.width = std::max(1, rect.width);
+      // Returning empty rect may cause native IME confused, let's make sure to
+      // return non-empty rect.
+      EnsureNonEmptyRect(rect);
 
       aEvent->mReply.mRectArray.AppendElement(rect);
+      offset++;
+
+      // If it's not a line breaker or the line breaker length is same as
+      // XP line breaker's, we need to do nothing for current character.
+      wasLineBreaker = chars[i] == '\n';
+      if (!wasLineBreaker || kBRLength == 1) {
+        continue;
+      }
+
+      MOZ_ASSERT(kBRLength == 2);
+
+      // If it's already reached the end of query range, we don't need to do
+      // anymore.
+      if (offset == kEndOffset) {
+        break;
+      }
+
+      // If the query range starts from between a line breaker, i.e., it starts
+      // between "\r" and "\n", the appended rect was for the "\n".  Therefore,
+      // we don't need to append same rect anymore for current "\r\n".
+      if (startsBetweenLineBreaker) {
+        continue;
+      }
+
+      // The appended rect was for "\r" of "\r\n".  Therefore, we need to
+      // append same rect for "\n" too because querying rect of "\r" and "\n"
+      // should return same rect.  E.g., IME may query previous character's
+      // rect of first character of a line.
+      aEvent->mReply.mRectArray.AppendElement(rect);
+      offset++;
     }
-    offset += charRects.Length();
   }
+
+  // If the query range is longer than actual content length, we should append
+  // caret rect at the end of the content as the last character rect because
+  // native IME may want to query character rect at the end of contents for
+  // deciding the position of a popup window (e.g., suggest window for next
+  // word).  Note that when this method hasn't appended character rects, it
+  // means that the offset is too large or the query range is collapsed.
+  if (offset < kEndOffset || aEvent->mReply.mRectArray.IsEmpty()) {
+    // If we've already retrieved some character rects before current offset,
+    // we can guess the last rect from the last character's rect unless it's a
+    // line breaker.  (If it's a line breaker, the caret rect is in next line.)
+    if (!aEvent->mReply.mRectArray.IsEmpty() && !wasLineBreaker) {
+      rect = aEvent->mReply.mRectArray.LastElement();
+      if (isVertical) {
+        rect.y = rect.YMost() + 1;
+        rect.height = 1;
+        MOZ_ASSERT(rect.width);
+      } else {
+        rect.x = rect.XMost() + 1;
+        rect.width = 1;
+        MOZ_ASSERT(rect.height);
+      }
+      aEvent->mReply.mRectArray.AppendElement(rect);
+    } else {
+      // Note that don't use eQueryCaretRect here because if caret is at the
+      // end of the content, it returns actual caret rect instead of computing
+      // the rect itself.  It means that the result depends on caret position.
+      // So, we shouldn't use it for consistency result in automated tests.
+      WidgetQueryContentEvent queryTextRect(eQueryTextRect, *aEvent);
+      WidgetQueryContentEvent::Options options(*aEvent);
+      queryTextRect.InitForQueryTextRect(offset, 1, options);
+      rv = OnQueryTextRect(&queryTextRect);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (NS_WARN_IF(!queryTextRect.mSucceeded)) {
+        return NS_ERROR_FAILURE;
+      }
+      MOZ_ASSERT(!queryTextRect.mReply.mRect.IsEmpty());
+      if (queryTextRect.mReply.mWritingMode.IsVertical()) {
+        queryTextRect.mReply.mRect.height = 1;
+      } else {
+        queryTextRect.mReply.mRect.width = 1;
+      }
+      aEvent->mReply.mRectArray.AppendElement(queryTextRect.mReply.mRect);
+    }
+  }
+
   aEvent->mSucceeded = true;
   return NS_OK;
 }
@@ -1485,11 +2093,19 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
     return rv;
   }
 
+  // If mLength is 0 (this may be caused by bug of native IME), we should
+  // redirect this event to OnQueryCaretRect().
+  if (!aEvent->mInput.mLength) {
+    return OnQueryCaretRect(aEvent);
+  }
+
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
   RefPtr<nsRange> range = new nsRange(mRootContent);
+  nsCOMPtr<nsIContent> lastTextContent;
   rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset,
                                   aEvent->mInput.mLength, lineBreakType, true,
-                                  &aEvent->mReply.mOffset);
+                                  &aEvent->mReply.mOffset,
+                                  getter_AddRefs(lastTextContent));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = GenerateFlatTextContent(range, aEvent->mReply.mString, lineBreakType);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1498,38 +2114,180 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   iter->Init(range);
 
-  // get the starting frame
-  int32_t nodeOffset = range->StartOffset();
-  nsINode* node = iter->GetCurrentNode();
-  if (!node) {
-    node = AdjustTextRectNode(range->GetStartParent(), nodeOffset);
-  }
-  nsIFrame* firstFrame = nullptr;
-  rv = GetFrameForTextRect(node, nodeOffset, true, &firstFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Get the first frame which causes some text after the offset.
+  FrameAndNodeOffset firstFrame = GetFirstFrameInRangeForTextRect(range);
 
-  // get the starting frame rect
-  nsRect rect(nsPoint(0, 0), firstFrame->GetRect().Size());
-  rv = ConvertToRootRelativeOffset(firstFrame, rect);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsRect frameRect = rect;
+  // If GetFirstFrameInRangeForTextRect() does not return valid frame, that
+  // means that there are no visible frames having text or the offset reached
+  // the end of contents.
+  if (!firstFrame.IsValid()) {
+    nsAutoString allText;
+    rv = GenerateFlatTextContent(mRootContent, allText, lineBreakType);
+    // If the offset doesn't reach the end of contents but there is no frames
+    // for the node, that means that current offset's node is hidden by CSS or
+    // something.  Ideally, we should handle it with the last visible text
+    // node's last character's rect, but it's not usual cases in actual web
+    // services.  Therefore, currently, we should make this case fail.
+    if (NS_WARN_IF(NS_FAILED(rv)) ||
+        static_cast<uint32_t>(aEvent->mInput.mOffset) < allText.Length()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Look for the last frame which should be included text rects.
+    ErrorResult erv;
+    range->SelectNodeContents(*mRootContent, erv);
+    if (NS_WARN_IF(erv.Failed())) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    nsRect rect;
+    FrameAndNodeOffset lastFrame = GetLastFrameInRangeForTextRect(range);
+    // If there is at least one frame which can be used for computing a rect
+    // for a character or a line breaker, we should use it for guessing the
+    // caret rect at the end of the contents.
+    if (lastFrame) {
+      if (NS_WARN_IF(!lastFrame->GetContent())) {
+        return NS_ERROR_FAILURE;
+      }
+      FrameRelativeRect relativeRect;
+      // If there is a <br> frame at the end, it represents an empty line at
+      // the end with moz-<br> or content <br> in a block level element.
+      if (lastFrame->GetType() == nsGkAtoms::brFrame) {
+        relativeRect = GetLineBreakerRectBefore(lastFrame);
+      }
+      // If there is a text frame at the end, use its information.
+      else if (lastFrame->GetType() == nsGkAtoms::textFrame) {
+        relativeRect = GuessLineBreakerRectAfter(lastFrame->GetContent());
+      }
+      // If there is an empty frame which is neither a text frame nor a <br>
+      // frame at the end, guess caret rect in it.
+      else {
+        relativeRect = GuessFirstCaretRectIn(lastFrame);
+      }
+      if (NS_WARN_IF(!relativeRect.IsValid())) {
+        return NS_ERROR_FAILURE;
+      }
+      rect = relativeRect.RectRelativeTo(lastFrame);
+      rv = ConvertToRootRelativeOffset(lastFrame, rect);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      aEvent->mReply.mWritingMode = lastFrame->GetWritingMode();
+    }
+    // Otherwise, if there are no contents in mRootContent, guess caret rect in
+    // its frame (with its font height and content box).
+    else {
+      nsIFrame* rootContentFrame = mRootContent->GetPrimaryFrame();
+      if (NS_WARN_IF(!rootContentFrame)) {
+        return NS_ERROR_FAILURE;
+      }
+      FrameRelativeRect relativeRect = GuessFirstCaretRectIn(rootContentFrame);
+      if (NS_WARN_IF(!relativeRect.IsValid())) {
+        return NS_ERROR_FAILURE;
+      }
+      rect = relativeRect.RectRelativeTo(rootContentFrame);
+      rv = ConvertToRootRelativeOffset(rootContentFrame, rect);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      aEvent->mReply.mWritingMode = rootContentFrame->GetWritingMode();
+    }
+    aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
+      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
+    EnsureNonEmptyRect(aEvent->mReply.mRect);
+    aEvent->mSucceeded = true;
+    return NS_OK;
+  }
+
+  nsRect rect, frameRect;
   nsPoint ptOffset;
-  firstFrame->GetPointFromOffset(nodeOffset, &ptOffset);
-  // minus 1 to avoid creating an empty rect
-  if (firstFrame->GetWritingMode().IsVertical()) {
-    rect.y += ptOffset.y - 1;
-    rect.height -= ptOffset.y - 1;
-  } else {
-    rect.x += ptOffset.x - 1;
-    rect.width -= ptOffset.x - 1;
-  }
 
-  // get the ending frame
-  nodeOffset = range->EndOffset();
-  node = AdjustTextRectNode(range->GetEndParent(), nodeOffset);
-  nsIFrame* lastFrame = nullptr;
-  rv = GetFrameForTextRect(node, nodeOffset, range->Collapsed(), &lastFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // If the first frame is a text frame, the result should be computed with
+  // the frame's rect but not including the rect before start point of the
+  // queried range.
+  if (firstFrame->GetType() == nsGkAtoms::textFrame) {
+    rect.SetRect(nsPoint(0, 0), firstFrame->GetRect().Size());
+    rv = ConvertToRootRelativeOffset(firstFrame, rect);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    frameRect = rect;
+    // Exclude the rect before start point of the queried range.
+    firstFrame->GetPointFromOffset(firstFrame.mOffsetInNode, &ptOffset);
+    if (firstFrame->GetWritingMode().IsVertical()) {
+      rect.y += ptOffset.y;
+      rect.height -= ptOffset.y;
+    } else {
+      rect.x += ptOffset.x;
+      rect.width -= ptOffset.x;
+    }
+  }
+  // If first frame causes a line breaker but it's not a <br> frame, we cannot
+  // compute proper rect only with the frame because typically caret is at
+  // right of the last character of it.  For example, if caret is after "c" of
+  // |<p>abc</p><p>def</p>|, IME may query a line breaker's rect after "c".
+  // Then, if we compute it only with the 2nd <p>'s block frame, the result
+  // will be:
+  //  +-<p>--------------------------------+
+  //  |abc                                 |
+  //  +------------------------------------+
+  //
+  // I+-<p>--------------------------------+
+  //  |def                                 |
+  //  +------------------------------------+
+  // However, users expect popup windows of IME should be positioned at
+  // right-bottom of "c" like this:
+  //  +-<p>--------------------------------+
+  //  |abcI                                |
+  //  +------------------------------------+
+  //
+  //  +-<p>--------------------------------+
+  //  |def                                 |
+  //  +------------------------------------+
+  // Therefore, if the first frame isn't a <br> frame and there is a text
+  // node before the first node in the queried range, we should compute the
+  // first rect with the previous character's rect.
+  else if (firstFrame->GetType() != nsGkAtoms::brFrame && lastTextContent) {
+    FrameRelativeRect brRectAfterLastChar =
+      GuessLineBreakerRectAfter(lastTextContent);
+    if (NS_WARN_IF(!brRectAfterLastChar.IsValid())) {
+      return NS_ERROR_FAILURE;
+    }
+    rect = brRectAfterLastChar.mRect;
+    rv = ConvertToRootRelativeOffset(brRectAfterLastChar.mBaseFrame, rect);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    frameRect = rect;
+  }
+  // Otherwise, we need to compute the line breaker's rect only with the
+  // first frame's rect.  But this may be unexpected.  For example,
+  // |<div contenteditable>[<p>]abc</p></div>|.  In this case, caret is before
+  // "a", therefore, users expect the rect left of "a".  However, we don't
+  // have enough information about the next character here and this isn't
+  // usual case (e.g., IME typically tries to query the rect of "a" or caret
+  // rect for computing its popup position).  Therefore, we shouldn't do
+  // more complicated hack here unless we'll get some bug reports actually.
+  else {
+    FrameRelativeRect relativeRect = GetLineBreakerRectBefore(firstFrame);
+    if (NS_WARN_IF(!relativeRect.IsValid())) {
+      return NS_ERROR_FAILURE;
+    }
+    rect = relativeRect.RectRelativeTo(firstFrame);
+    rv = ConvertToRootRelativeOffset(firstFrame, rect);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    frameRect = rect;
+  }
+  // UnionRect() requires non-empty rect.  So, let's make sure to get non-emtpy
+  // rect from the first frame.
+  EnsureNonEmptyRect(rect);
+
+  // Get the last frame which causes some text in the range.
+  FrameAndNodeOffset lastFrame = GetLastFrameInRangeForTextRect(range);
+  if (NS_WARN_IF(!lastFrame.IsValid())) {
+    return NS_ERROR_FAILURE;
+  }
 
   // iterate over all covered frames
   for (nsIFrame* frame = firstFrame; frame != lastFrame;) {
@@ -1537,45 +2295,90 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
     if (!frame) {
       do {
         iter->Next();
-        node = iter->GetCurrentNode();
+        nsINode* node = iter->GetCurrentNode();
         if (!node) {
           break;
         }
         if (!node->IsNodeOfType(nsINode::eCONTENT)) {
           continue;
         }
-        frame = static_cast<nsIContent*>(node)->GetPrimaryFrame();
+        nsIFrame* primaryFrame = node->AsContent()->GetPrimaryFrame();
+        // The node may be hidden by CSS.
+        if (!primaryFrame) {
+          continue;
+        }
+        // We should take only text frame's rect and br frame's rect.  We can
+        // always use frame rect of text frame and GetLineBreakerRectBefore()
+        // can return exactly correct rect only for <br> frame for now.  On the
+        // other hand, GetLineBreakRectBefore() returns guessed caret rect for
+        // the other frames.  We shouldn't include such odd rect to the result.
+        if (primaryFrame->GetType() == nsGkAtoms::textFrame ||
+            primaryFrame->GetType() == nsGkAtoms::brFrame) {
+          frame = primaryFrame;
+        }
       } while (!frame && !iter->IsDone());
       if (!frame) {
-        // this can happen when the end offset of the range is 0.
-        frame = lastFrame;
+        break;
       }
     }
-    frameRect.SetRect(nsPoint(0, 0), frame->GetRect().Size());
+    if (frame->GetType() == nsGkAtoms::textFrame) {
+      frameRect.SetRect(nsPoint(0, 0), frame->GetRect().Size());
+    } else {
+      MOZ_ASSERT(frame->GetType() == nsGkAtoms::brFrame);
+      FrameRelativeRect relativeRect = GetLineBreakerRectBefore(frame);
+      if (NS_WARN_IF(!relativeRect.IsValid())) {
+        return NS_ERROR_FAILURE;
+      }
+      frameRect = relativeRect.RectRelativeTo(frame);
+    }
     rv = ConvertToRootRelativeOffset(frame, frameRect);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    // UnionRect() requires non-empty rect.  So, let's make sure to get
+    // non-emtpy rect from the frame.
+    EnsureNonEmptyRect(frameRect);
     if (frame != lastFrame) {
       // not last frame, so just add rect to previous result
       rect.UnionRect(rect, frameRect);
     }
   }
 
-  // get the ending frame rect
-  lastFrame->GetPointFromOffset(nodeOffset, &ptOffset);
-  // minus 1 to avoid creating an empty rect
-  if (lastFrame->GetWritingMode().IsVertical()) {
-    frameRect.height -= lastFrame->GetRect().height - ptOffset.y - 1;
-  } else {
-    frameRect.width -= lastFrame->GetRect().width - ptOffset.x - 1;
+  // Get the ending frame rect.
+  // FYI: If first frame and last frame are same, frameRect is already set
+  //      to the rect excluding the text before the query range.
+  if (firstFrame.mFrame != lastFrame.mFrame) {
+    frameRect.SetRect(nsPoint(0, 0), lastFrame->GetRect().Size());
+    rv = ConvertToRootRelativeOffset(lastFrame, frameRect);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
-  if (firstFrame == lastFrame) {
-    rect.IntersectRect(rect, frameRect);
-  } else {
-    rect.UnionRect(rect, frameRect);
+  // Shrink the last frame for cutting off the text after the query range.
+  if (lastFrame->GetType() == nsGkAtoms::textFrame) {
+    lastFrame->GetPointFromOffset(lastFrame.mOffsetInNode, &ptOffset);
+    if (lastFrame->GetWritingMode().IsVertical()) {
+      frameRect.height -= lastFrame->GetRect().height - ptOffset.y;
+    } else {
+      frameRect.width -= lastFrame->GetRect().width - ptOffset.x;
+    }
+    // UnionRect() requires non-empty rect.  So, let's make sure to get
+    // non-empty rect from the last frame.
+    EnsureNonEmptyRect(frameRect);
+
+    if (firstFrame.mFrame == lastFrame.mFrame) {
+      rect.IntersectRect(rect, frameRect);
+    } else {
+      rect.UnionRect(rect, frameRect);
+    }
   }
+
   aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
+  // Returning empty rect may cause native IME confused, let's make sure to
+  // return non-empty rect.
+  EnsureNonEmptyRect(aEvent->mReply.mRect);
   aEvent->mReply.mWritingMode = lastFrame->GetWritingMode();
   aEvent->mSucceeded = true;
   return NS_OK;
@@ -1604,18 +2407,15 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
     return rv;
   }
 
-  LineBreakType lineBreakType = GetLineBreakType(aEvent);
-
-  nsRect caretRect;
-
   // When the selection is collapsed and the queried offset is current caret
   // position, we should return the "real" caret rect.
   if (mSelection->IsCollapsed()) {
+    nsRect caretRect;
     nsIFrame* caretFrame = nsCaret::GetGeometry(mSelection, &caretRect);
     if (caretFrame) {
       uint32_t offset;
       rv = GetFlatTextLengthBefore(mFirstSelectedRange,
-                                   &offset, lineBreakType);
+                                   &offset, GetLineBreakType(aEvent));
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == aEvent->mInput.mOffset) {
         rv = ConvertToRootRelativeOffset(caretFrame, caretRect);
@@ -1624,6 +2424,9 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
           caretFrame->PresContext()->AppUnitsPerDevPixel();
         aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
           caretRect.ToOutsidePixels(appUnitsPerDevPixel));
+        // Returning empty rect may cause native IME confused, let's make sure
+        // to return non-empty rect.
+        EnsureNonEmptyRect(aEvent->mReply.mRect);
         aEvent->mReply.mWritingMode = caretFrame->GetWritingMode();
         aEvent->mReply.mOffset = aEvent->mInput.mOffset;
         aEvent->mSucceeded = true;
@@ -1632,56 +2435,23 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
     }
   }
 
-  // Otherwise, we should set the guessed caret rect.
-  RefPtr<nsRange> range = new nsRange(mRootContent);
-  rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset, 0,
-                                  lineBreakType, true,
-                                  &aEvent->mReply.mOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = AdjustCollapsedRangeMaybeIntoTextNode(range);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  // Otherwise, we should guess the caret rect from the character's rect.
+  WidgetQueryContentEvent queryTextRectEvent(eQueryTextRect, *aEvent);
+  WidgetQueryContentEvent::Options options(*aEvent);
+  queryTextRectEvent.InitForQueryTextRect(aEvent->mInput.mOffset, 1, options);
+  rv = OnQueryTextRect(&queryTextRectEvent);
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!queryTextRectEvent.mSucceeded)) {
+    return NS_ERROR_FAILURE;
   }
-
-  int32_t xpOffsetInFrame;
-  nsIFrame* frame;
-  rv = GetStartFrameAndOffset(range, frame, xpOffsetInFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsPoint posInFrame;
-  rv = frame->GetPointFromOffset(range->StartOffset(), &posInFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aEvent->mReply.mWritingMode = frame->GetWritingMode();
-  bool isVertical = aEvent->mReply.mWritingMode.IsVertical();
-
-  nsRect rect;
-  rect.x = posInFrame.x;
-  rect.y = posInFrame.y;
-
-  RefPtr<nsFontMetrics> fontMetrics =
-    nsLayoutUtils::GetInflatedFontMetricsForFrame(frame);
-  if (isVertical) {
-    rect.width = fontMetrics->MaxHeight();
-    rect.height = caretRect.height;
+  queryTextRectEvent.mReply.mString.Truncate();
+  aEvent->mReply = queryTextRectEvent.mReply;
+  if (aEvent->GetWritingMode().IsVertical()) {
+    aEvent->mReply.mRect.height = 1;
   } else {
-    rect.width = caretRect.width;
-    rect.height = fontMetrics->MaxHeight();
-  }
-
-  rv = ConvertToRootRelativeOffset(frame, rect);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
-      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
-  // If the caret rect is empty, let's make it non-empty rect.
-  if (!aEvent->mReply.mRect.width) {
     aEvent->mReply.mRect.width = 1;
   }
-  if (!aEvent->mReply.mRect.height) {
-    aEvent->mReply.mRect.height = 1;
-  }
+  // Returning empty rect may cause native IME confused, let's make sure to
+  // return non-empty rect.
   aEvent->mSucceeded = true;
   return NS_OK;
 }
@@ -2246,6 +3016,34 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
     false, nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis());
   aEvent->mSucceeded = true;
   return NS_OK;
+}
+
+nsRect
+ContentEventHandler::FrameRelativeRect::RectRelativeTo(
+                                          nsIFrame* aDestFrame) const
+{
+  if (!mBaseFrame || NS_WARN_IF(!aDestFrame)) {
+    return nsRect();
+  }
+
+  if (NS_WARN_IF(aDestFrame->PresContext() != mBaseFrame->PresContext())) {
+    return nsRect();
+  }
+
+  if (aDestFrame == mBaseFrame) {
+    return mRect;
+  }
+
+  nsIFrame* rootFrame = mBaseFrame->PresContext()->PresShell()->GetRootFrame();
+  nsRect baseFrameRectInRootFrame =
+    nsLayoutUtils::TransformFrameRectToAncestor(mBaseFrame, nsRect(),
+                                                rootFrame);
+  nsRect destFrameRectInRootFrame =
+    nsLayoutUtils::TransformFrameRectToAncestor(aDestFrame, nsRect(),
+                                                rootFrame);
+  nsPoint difference =
+    destFrameRectInRootFrame.TopLeft() - baseFrameRectInRootFrame.TopLeft();
+  return mRect - difference;
 }
 
 } // namespace mozilla

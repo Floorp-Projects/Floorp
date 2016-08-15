@@ -138,15 +138,13 @@ private:
   static nsIThread* gDbBackgroundThread;
 };
 
-class nsUrlClassifierDBServiceWorker final :
-  public nsIUrlClassifierDBServiceWorker
+class nsUrlClassifierDBServiceWorker final : public nsIUrlClassifierDBService
 {
 public:
   nsUrlClassifierDBServiceWorker();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERDBSERVICE
-  NS_DECL_NSIURLCLASSIFIERDBSERVICEWORKER
 
   nsresult Init(uint32_t aGethashNoise, nsCOMPtr<nsIFile> aCacheDir);
 
@@ -165,6 +163,15 @@ public:
   nsresult DoLocalLookup(const nsACString& spec,
                          const nsACString& tables,
                          LookupResultArray* results);
+
+  // Open the DB connection
+  nsresult OpenDb();
+
+  // Provide a way to forcibly close the db connection.
+  nsresult CloseDb();
+
+  nsresult CacheCompletions(CacheResultArray * aEntries);
+  nsresult CacheMisses(PrefixArray * aEntries);
 
 private:
   // No subclassing

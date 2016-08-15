@@ -157,7 +157,7 @@ function loadPrivilegedScriptTest() {
     mockedSessionTransport.callback = null;
 
     /* Register original factories. */
-    for (var data in originalFactoryData) {
+    for (var data of originalFactoryData) {
       registerOriginalFactory(data.contractId, data.mockedClassId,
                               data.mockedFactory, data.originalClassId,
                               data.originalFactory);

@@ -4325,15 +4325,13 @@ function resetEnvironment() {
         debugDump("removing DYLD_LIBRARY_PATH environment variable");
         gEnv.set("DYLD_LIBRARY_PATH", "");
       }
-    } else {
-      if (gEnvLdLibraryPath) {
-        debugDump("setting LD_LIBRARY_PATH environment variable value back " +
-                  "to " + gEnvLdLibraryPath);
-        gEnv.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
-      } else if (gEnvLdLibraryPath !== null) {
-        debugDump("removing LD_LIBRARY_PATH environment variable");
-        gEnv.set("LD_LIBRARY_PATH", "");
-      }
+    } else if (gEnvLdLibraryPath) {
+      debugDump("setting LD_LIBRARY_PATH environment variable value back " +
+                "to " + gEnvLdLibraryPath);
+      gEnv.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
+    } else if (gEnvLdLibraryPath !== null) {
+      debugDump("removing LD_LIBRARY_PATH environment variable");
+      gEnv.set("LD_LIBRARY_PATH", "");
     }
   }
 

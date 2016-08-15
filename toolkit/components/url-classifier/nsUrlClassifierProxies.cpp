@@ -21,8 +21,7 @@ DispatchToWorkerThread(nsIRunnable* r)
   return t->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
-NS_IMPL_ISUPPORTS(UrlClassifierDBServiceWorkerProxy,
-                  nsIUrlClassifierDBServiceWorker)
+NS_IMPL_ISUPPORTS(UrlClassifierDBServiceWorkerProxy, nsIUrlClassifierDBService)
 
 NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::Lookup(nsIPrincipal* aPrincipal,
@@ -115,7 +114,7 @@ UrlClassifierDBServiceWorkerProxy::FinishStream()
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod(mTarget,
-                      &nsIUrlClassifierDBServiceWorker::FinishStream);
+                      &nsUrlClassifierDBServiceWorker::FinishStream);
   return DispatchToWorkerThread(r);
 }
 
@@ -149,7 +148,7 @@ UrlClassifierDBServiceWorkerProxy::FinishUpdate()
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod(mTarget,
-                      &nsIUrlClassifierDBServiceWorker::FinishUpdate);
+                      &nsUrlClassifierDBServiceWorker::FinishUpdate);
   return DispatchToWorkerThread(r);
 }
 
@@ -158,7 +157,7 @@ UrlClassifierDBServiceWorkerProxy::CancelUpdate()
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod(mTarget,
-                      &nsIUrlClassifierDBServiceWorker::CancelUpdate);
+                      &nsUrlClassifierDBServiceWorker::CancelUpdate);
   return DispatchToWorkerThread(r);
 }
 
@@ -167,29 +166,29 @@ UrlClassifierDBServiceWorkerProxy::ResetDatabase()
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod(mTarget,
-                      &nsIUrlClassifierDBServiceWorker::ResetDatabase);
+                      &nsUrlClassifierDBServiceWorker::ResetDatabase);
   return DispatchToWorkerThread(r);
 }
 
-NS_IMETHODIMP
+nsresult
 UrlClassifierDBServiceWorkerProxy::OpenDb()
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod(mTarget,
-                      &nsIUrlClassifierDBServiceWorker::OpenDb);
+                      &nsUrlClassifierDBServiceWorker::OpenDb);
   return DispatchToWorkerThread(r);
 }
 
-NS_IMETHODIMP
+nsresult
 UrlClassifierDBServiceWorkerProxy::CloseDb()
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod(mTarget,
-                      &nsIUrlClassifierDBServiceWorker::CloseDb);
+                      &nsUrlClassifierDBServiceWorker::CloseDb);
   return DispatchToWorkerThread(r);
 }
 
-NS_IMETHODIMP
+nsresult
 UrlClassifierDBServiceWorkerProxy::CacheCompletions(CacheResultArray * aEntries)
 {
   nsCOMPtr<nsIRunnable> r = new CacheCompletionsRunnable(mTarget, aEntries);
@@ -203,7 +202,7 @@ UrlClassifierDBServiceWorkerProxy::CacheCompletionsRunnable::Run()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 UrlClassifierDBServiceWorkerProxy::CacheMisses(PrefixArray * aEntries)
 {
   nsCOMPtr<nsIRunnable> r = new CacheMissesRunnable(mTarget, aEntries);

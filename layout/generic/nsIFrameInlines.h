@@ -49,9 +49,15 @@ nsIFrame::IsFloating() const
 }
 
 bool
-nsIFrame::IsAbsPosContaininingBlock() const
+nsIFrame::IsAbsPosContainingBlock() const
 {
   return StyleDisplay()->IsAbsPosContainingBlock(this);
+}
+
+bool
+nsIFrame::IsFixedPosContainingBlock() const
+{
+  return StyleDisplay()->IsFixedPosContainingBlock(this);
 }
 
 bool

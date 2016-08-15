@@ -979,9 +979,8 @@ var gEditItemOverlay = {
         if (curTagIndex == -1)
           tags.push(tagCheckbox.label);
       }
-      else {
-        if (curTagIndex != -1)
-          tags.splice(curTagIndex, 1);
+      else if (curTagIndex != -1) {
+        tags.splice(curTagIndex, 1);
       }
       this._element("tagsField").value = tags.join(", ");
       this._updateTags();

@@ -130,10 +130,8 @@ RokuApp.prototype = {
       if (callback) {
         callback(new RemoteMedia(this.resourceURL, listener));
       }
-    } else {
-      if (callback) {
-        callback();
-      }
+    } else if (callback) {
+      callback();
     }
   }
 }

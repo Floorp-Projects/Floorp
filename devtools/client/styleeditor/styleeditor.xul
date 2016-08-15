@@ -18,7 +18,6 @@
 <?xml-stylesheet href="chrome://devtools/content/shared/splitview.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/splitview.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/content/styleeditor/styleeditor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/styleeditor.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 

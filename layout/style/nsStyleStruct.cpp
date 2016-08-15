@@ -124,11 +124,13 @@ static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs);
 void
 FragmentOrURL::SetValue(const nsCSSValue* aValue)
 {
-  mozilla::css::URLValue *urlVal = aValue->GetURLStructValue();
-  MOZ_ASSERT_IF(urlVal->GetLocalURLFlag(), urlVal->GetURI());
-  mIsLocalRef = urlVal->GetLocalURLFlag();
+  mozilla::css::URLValueData *urlData = aValue->GetUnit() == eCSSUnit_URL
+    ? static_cast<mozilla::css::URLValueData *>(aValue->GetURLStructValue())
+    : static_cast<mozilla::css::URLValueData *>(aValue->GetImageStructValue());
+  MOZ_ASSERT_IF(urlData->GetLocalURLFlag(), urlData->GetURI());
+  mIsLocalRef = urlData->GetLocalURLFlag();
 
-  mURL = urlVal->GetURI();
+  mURL = urlData->GetURI();
 
 #ifdef DEBUG
   if (mIsLocalRef) {
