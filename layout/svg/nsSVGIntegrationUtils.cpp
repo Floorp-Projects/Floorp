@@ -653,6 +653,56 @@ ValidateSVGFrame(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
   return true;
 }
 
+static void
+SetupContextMatrix(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
+                   nsPoint& aOffsetToBoundingBox,
+                   nsPoint& aToUserSpace,
+                   nsPoint& aOffsetToUserSpace)
+{
+  nsIFrame* frame = aParams.frame;
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
+
+  nsPoint firstFrameOffset = GetOffsetToBoundingBox(firstFrame);
+  aOffsetToBoundingBox = aParams.builder->ToReferenceFrame(firstFrame) - firstFrameOffset;
+  if (!firstFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    /* Snap the offset if the reference frame is not a SVG frame,
+     * since other frames will be snapped to pixel when rendering. */
+    aOffsetToBoundingBox = nsPoint(
+      frame->PresContext()->RoundAppUnitsToNearestDevPixels(aOffsetToBoundingBox.x),
+      frame->PresContext()->RoundAppUnitsToNearestDevPixels(aOffsetToBoundingBox.y));
+  }
+
+  // After applying only "aOffsetToBoundingBox", aCtx would have its origin at
+  // the top left corner of frame's bounding box (over all continuations).
+  // However, SVG painting needs the origin to be located at the origin of the
+  // SVG frame's "user space", i.e. the space in which, for example, the
+  // frame's BBox lives.
+  // SVG geometry frames and foreignObject frames apply their own offsets, so
+  // their position is relative to their user space. So for these frame types,
+  // if we want aCtx to be in user space, we first need to subtract the
+  // frame's position so that SVG painting can later add it again and the
+  // frame is painted in the right place.
+
+  gfxPoint toUserSpaceGfx = nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(frame);
+  aToUserSpace =
+    nsPoint(nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.x)),
+            nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.y)));
+
+  aOffsetToUserSpace = aOffsetToBoundingBox - aToUserSpace;
+
+#ifdef DEBUG
+  bool hasSVGLayout = (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
+  NS_ASSERTION(hasSVGLayout || aOffsetToBoundingBox == aOffsetToUserSpace,
+               "For non-SVG frames there shouldn't be any additional offset");
+#endif
+
+  gfxPoint devPixelOffsetToUserSpace =
+    nsLayoutUtils::PointToGfxPoint(aOffsetToUserSpace,
+                                   frame->PresContext()->AppUnitsPerDevPixel());
+  aParams.ctx.SetMatrix(aParams.ctx.CurrentMatrix().Translate(devPixelOffsetToUserSpace));
+}
+
 DrawResult
 nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
 {
@@ -681,6 +731,14 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
     return DrawResult::SUCCESS;
   }
 
+  gfxContext& context = aParams.ctx;
+  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(&context);
+  nsPoint offsetToBoundingBox;
+  nsPoint toUserSpace;
+  nsPoint offsetToUserSpace;
+  SetupContextMatrix(aParams, offsetToBoundingBox, toUserSpace,
+                     offsetToUserSpace);
+
   /* Properties are added lazily and may have been removed by a restyle,
      so make sure all applicable ones are set again. */
   nsIFrame* firstFrame =
@@ -692,46 +750,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
 
   bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
-  gfxContext& context = aParams.ctx;
-  DrawTarget* drawTarget = context.GetDrawTarget();
-  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(&context);
-
-  nsPoint firstFrameOffset = GetOffsetToBoundingBox(firstFrame);
-  nsPoint offsetToBoundingBox = aParams.builder->ToReferenceFrame(firstFrame) - firstFrameOffset;
-  if (!firstFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    /* Snap the offset if the reference frame is not a SVG frame,
-     * since other frames will be snapped to pixel when rendering. */
-    offsetToBoundingBox = nsPoint(
-      frame->PresContext()->RoundAppUnitsToNearestDevPixels(offsetToBoundingBox.x),
-      frame->PresContext()->RoundAppUnitsToNearestDevPixels(offsetToBoundingBox.y));
-  }
-
-  // After applying only "offsetToBoundingBox", aCtx would have its origin at
-  // the top left corner of frame's bounding box (over all continuations).
-  // However, SVG painting needs the origin to be located at the origin of the
-  // SVG frame's "user space", i.e. the space in which, for example, the
-  // frame's BBox lives.
-  // SVG geometry frames and foreignObject frames apply their own offsets, so
-  // their position is relative to their user space. So for these frame types,
-  // if we want aCtx to be in user space, we first need to subtract the
-  // frame's position so that SVG painting can later add it again and the
-  // frame is painted in the right place.
-
-  gfxPoint toUserSpaceGfx = nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(frame);
-  nsPoint toUserSpace(nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.x)),
-                      nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.y)));
-  nsPoint offsetToUserSpace = offsetToBoundingBox - toUserSpace;
-
-  NS_ASSERTION(hasSVGLayout || offsetToBoundingBox == offsetToUserSpace,
-               "For non-SVG frames there shouldn't be any additional offset");
-
-  gfxPoint devPixelOffsetToUserSpace =
-    nsLayoutUtils::PointToGfxPoint(offsetToUserSpace,
-                                   frame->PresContext()->AppUnitsPerDevPixel());
-  context.SetMatrix(context.CurrentMatrix().Translate(devPixelOffsetToUserSpace));
 
   gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(frame);
-
   const nsStyleSVGReset *svgReset = firstFrame->StyleSVGReset();
   nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
 
@@ -791,7 +811,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
       frame->GetVisualOverflowRectRelativeToSelf() + toUserSpace;
     context.Clip(NSRectToSnappedRect(clipRect,
                                   frame->PresContext()->AppUnitsPerDevPixel(),
-                                  *drawTarget));
+                                  *context.GetDrawTarget()));
     Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface;
     if (shouldGenerateMaskLayer) {
