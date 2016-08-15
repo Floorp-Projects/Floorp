@@ -3695,6 +3695,7 @@ Tab.prototype = {
     } else {
       this.browser.setAttribute("type", "content-targetable");
       this.browser.docShellIsActive = false;
+      this.browser.blur();
     }
   },
 
