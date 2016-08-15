@@ -2180,14 +2180,15 @@ AssertEq(JSContext* cx, unsigned argc, Value* vp)
         const char* actual = ToSource(cx, args[0], &bytes0);
         const char* expected = ToSource(cx, args[1], &bytes1);
         if (args.length() == 2) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED,
-                                 actual, expected);
+            JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED,
+                                       actual, expected);
         } else {
             JSAutoByteString bytes2(cx, args[2].toString());
             if (!bytes2)
                 return false;
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED_MSG,
-                                 actual, expected, bytes2.ptr());
+            JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr,
+                                       JSSMSG_ASSERT_EQ_FAILED_MSG,
+                                       actual, expected, bytes2.ptr());
         }
         return false;
     }
@@ -2891,9 +2892,13 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
                 bupline = 0;
                 while (line1 < line2) {
                     if (!fgets(linebuf, lineBufLen, file)) {
-                        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                                             JSSMSG_UNEXPECTED_EOF,
-                                             script->filename());
+                        /*
+                         * FIXME: script->filename() should become UTF-8
+                         *        (bug 987069).
+                         */
+                        JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr,
+                                                   JSSMSG_UNEXPECTED_EOF,
+                                                   script->filename());
                         return false;
                     }
                     line1++;

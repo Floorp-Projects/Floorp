@@ -158,7 +158,7 @@ GetProxyTrap(JSContext* cx, HandleObject handler, HandlePropertyName name, Mutab
         if (!bytes)
             return false;
 
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.ptr());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.ptr());
         return false;
     }
 

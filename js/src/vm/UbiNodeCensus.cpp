@@ -1102,8 +1102,8 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue)
     if (!byBytes)
         return nullptr;
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_CENSUS_BREAKDOWN,
-                         byBytes.ptr());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_CENSUS_BREAKDOWN,
+                               byBytes.ptr());
     return nullptr;
 }
 

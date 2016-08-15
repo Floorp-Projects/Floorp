@@ -808,8 +808,10 @@ bool
 js::ReportIsNotDefined(JSContext* cx, HandleId id)
 {
     JSAutoByteString printable;
-    if (ValueToPrintable(cx, IdToValue(id), &printable))
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, printable.ptr());
+    if (ValueToPrintable(cx, IdToValue(id), &printable)) {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED,
+                                   printable.ptr());
+    }
     return false;
 }
 
@@ -865,9 +867,9 @@ js::ReportMissingArg(JSContext* cx, HandleValue v, unsigned arg)
         if (!bytes)
             return;
     }
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                         JSMSG_MISSING_FUN_ARG, argbuf,
-                         bytes ? bytes.get() : "");
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               JSMSG_MISSING_FUN_ARG,
+                               argbuf, bytes ? bytes.get() : "");
 }
 
 bool
