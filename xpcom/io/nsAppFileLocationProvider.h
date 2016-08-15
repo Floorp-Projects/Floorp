@@ -32,7 +32,7 @@ private:
   }
 
 protected:
-  NS_METHOD CloneMozBinDirectory(nsIFile** aLocalFile);
+  nsresult CloneMozBinDirectory(nsIFile** aLocalFile);
   /**
   * Get the product directory. This is a user-specific directory for storing
   * application settings (e.g. the Application Data directory on windows
@@ -40,10 +40,10 @@ protected:
   * @param aLocal If true, should try to get a directory that is only stored
   *               locally (ie not transferred with roaming profiles)
   */
-  NS_METHOD GetProductDirectory(nsIFile** aLocalFile,
-                                bool aLocal = false);
-  NS_METHOD GetDefaultUserProfileRoot(nsIFile** aLocalFile,
-                                      bool aLocal = false);
+  nsresult GetProductDirectory(nsIFile** aLocalFile,
+                               bool aLocal = false);
+  nsresult GetDefaultUserProfileRoot(nsIFile** aLocalFile,
+                                     bool aLocal = false);
 
 #if defined(MOZ_WIDGET_COCOA)
   static bool IsOSXLeopard();
