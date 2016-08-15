@@ -15,7 +15,7 @@
 
 #include "NetworkUtils.h"
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "SystemProperty.h"
 
 #include <android/log.h>

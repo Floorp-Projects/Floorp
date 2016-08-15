@@ -8,7 +8,7 @@
 #include <string.h>
 #include "nsColor.h"
 #include "nsColorNames.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsString.h"
 #include "mozilla/ArrayUtils.h"
 

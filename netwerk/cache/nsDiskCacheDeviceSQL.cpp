@@ -8,7 +8,7 @@
 #include "mozilla/Attributes.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "nsCache.h"
 #include "nsDiskCache.h"

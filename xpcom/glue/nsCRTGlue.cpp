@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #ifdef XP_WIN
 #include <io.h>

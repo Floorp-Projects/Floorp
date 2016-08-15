@@ -18,7 +18,7 @@
 #include "nsSerializationHelper.h"
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include <algorithm>
 

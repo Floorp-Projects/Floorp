@@ -6,7 +6,7 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsPosixLocale.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "plstr.h"
 #include "nsReadableUtils.h"
 

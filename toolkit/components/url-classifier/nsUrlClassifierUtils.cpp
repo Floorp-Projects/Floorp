@@ -11,7 +11,7 @@
 #include "plbase64.h"
 #include "nsPrintfCString.h"
 #include "safebrowsing.pb.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #define DEFAULT_PROTOCOL_VERSION "2.2"
 

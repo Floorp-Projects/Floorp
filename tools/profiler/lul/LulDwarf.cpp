@@ -51,7 +51,7 @@
 #include <string>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "LulCommonExt.h"
 #include "LulDwarfInt.h"

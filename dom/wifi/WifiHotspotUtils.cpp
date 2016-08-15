@@ -14,7 +14,7 @@
 
 #include "prinit.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
 
