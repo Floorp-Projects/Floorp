@@ -18,7 +18,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsGridContainerFrame.h"
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #ifdef DEBUG
 #include "nsBlockFrame.h"

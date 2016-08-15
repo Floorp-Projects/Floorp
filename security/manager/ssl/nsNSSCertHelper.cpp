@@ -8,7 +8,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -627,7 +627,7 @@ ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data,
   uint32_t i;
   char buffer[5];
   for (i=0; i<data->len; i++) {
-    snprintf_literal(buffer, "%02x ", data->data[i]);
+    SprintfLiteral(buffer, "%02x ", data->data[i]);
     AppendASCIItoUTF16(buffer, text);
     if ((i+1)%16 == 0) {
       text.AppendLiteral(SEPARATOR);
@@ -971,7 +971,7 @@ ProcessGeneralName(const UniquePLArenaPool& arena, CERTGeneralName* current,
 	    && guid.len == 16) {
 	  char buf[40];
 	  unsigned char *d = guid.data;
-          snprintf_literal(buf,
+          SprintfLiteral(buf,
             "{%.2x%.2x%.2x%.2x-%.2x%.2x-%.2x%.2x-%.2x%.2x-%.2x%.2x%.2x%.2x%.2x%.2x}",
             d[3], d[2], d[1], d[0], d[5], d[4], d[7], d[6],
             d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
@@ -1199,7 +1199,7 @@ ProcessUserNotice(SECItem* derNotice, nsAString& text,
       unsigned long number;
       char buffer[60];
       if (SEC_ASN1DecodeInteger(*itemList, &number) == SECSuccess) {
-        snprintf_literal(buffer, "#%lu", number);
+        SprintfLiteral(buffer, "#%lu", number);
         if (itemList != notice->noticeReference.noticeNumbers)
           text.AppendLiteral(", ");
         AppendASCIItoUTF16(buffer, text);
@@ -1488,7 +1488,7 @@ ProcessMSCAVersion(SECItem  *extData,
 
   /* Apparently, the encoding is <minor><major>, with 16 bits each */
   char buf[50];
-  if (snprintf_literal(buf, "%lu.%lu", version & 0xFFFF, version >> 16) <= 0) {
+  if (SprintfLiteral(buf, "%lu.%lu", version & 0xFFFF, version >> 16) <= 0) {
     return NS_ERROR_FAILURE;
   }
 

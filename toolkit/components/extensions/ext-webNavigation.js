@@ -170,10 +170,7 @@ extensions.registerSchemaAPI("webNavigation", (extension, context) => {
       onHistoryStateUpdated: new WebNavigationEventManager(context, "onHistoryStateUpdated").api(),
       onCreatedNavigationTarget: ignoreEvent(context, "webNavigation.onCreatedNavigationTarget"),
       getAllFrames(details) {
-        let tab = TabManager.getTab(details.tabId);
-        if (!tab) {
-          return Promise.reject({message: `No tab found with tabId: ${details.tabId}`});
-        }
+        let tab = TabManager.getTab(details.tabId, context);
 
         let {innerWindowID, messageManager} = tab.linkedBrowser;
         let recipient = {innerWindowID};
@@ -182,10 +179,7 @@ extensions.registerSchemaAPI("webNavigation", (extension, context) => {
                       .then((results) => results.map(convertGetFrameResult.bind(null, details.tabId)));
       },
       getFrame(details) {
-        let tab = TabManager.getTab(details.tabId);
-        if (!tab) {
-          return Promise.reject({message: `No tab found with tabId: ${details.tabId}`});
-        }
+        let tab = TabManager.getTab(details.tabId, context);
 
         let recipient = {
           innerWindowID: tab.linkedBrowser.innerWindowID,

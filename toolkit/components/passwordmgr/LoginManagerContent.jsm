@@ -387,17 +387,15 @@ var LoginManagerContent = {
       // We update the FormLike so it (most important .elements) is fresh when the task eventually
       // runs since changes to the elements could affect our field heuristics.
       this._formLikeByRootElement.set(formLike.rootElement, formLike);
+    } else if (window.document.readyState == "complete") {
+      log("Arming the DeferredTask we just created since document.readyState == 'complete'");
+      deferredTask.arm();
     } else {
-      if (window.document.readyState == "complete") {
-        log("Arming the DeferredTask we just created since document.readyState == 'complete'");
+      window.addEventListener("DOMContentLoaded", function armPasswordAddedTask() {
+        window.removeEventListener("DOMContentLoaded", armPasswordAddedTask);
+        log("Arming the onDOMInputPasswordAdded DeferredTask due to DOMContentLoaded");
         deferredTask.arm();
-      } else {
-        window.addEventListener("DOMContentLoaded", function armPasswordAddedTask() {
-          window.removeEventListener("DOMContentLoaded", armPasswordAddedTask);
-          log("Arming the onDOMInputPasswordAdded DeferredTask due to DOMContentLoaded");
-          deferredTask.arm();
-        });
-      }
+      });
     }
   },
 
@@ -787,16 +785,15 @@ var LoginManagerContent = {
         log("(form ignored -- all 3 pw fields differ)");
         return [null, null, null];
       }
-    } else { // pwFields.length == 2
-      if (pw1 == pw2) {
-        // Treat as if 1 pw field
-        newPasswordField = pwFields[0].element;
-        oldPasswordField = null;
-      } else {
-        // Just assume that the 2nd password is the new password
-        oldPasswordField = pwFields[0].element;
-        newPasswordField = pwFields[1].element;
-      }
+    } else if (pw1 == pw2) {
+      // pwFields.length == 2
+      // Treat as if 1 pw field
+      newPasswordField = pwFields[0].element;
+      oldPasswordField = null;
+    } else {
+      // Just assume that the 2nd password is the new password
+      oldPasswordField = pwFields[0].element;
+      newPasswordField = pwFields[1].element;
     }
 
     log("Password field (new) id/name is: ", newPasswordField.id, " / ", newPasswordField.name);

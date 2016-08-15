@@ -4325,31 +4325,26 @@ OverflowableToolbar.prototype = {
       // fire afterwards; that's ok!
     }
     // If it used to be overflowed...
-    else {
+    else if (!nowOverflowed) {
       // ... and isn't anymore, let's remove our bookkeeping:
-      if (!nowOverflowed) {
-        this._collapsed.delete(aNode.id);
-        aNode.removeAttribute("cui-anchorid");
-        aNode.removeAttribute("overflowedItem");
-        CustomizableUIInternal.notifyListeners("onWidgetUnderflow", aNode, this._target);
+      this._collapsed.delete(aNode.id);
+      aNode.removeAttribute("cui-anchorid");
+      aNode.removeAttribute("overflowedItem");
+      CustomizableUIInternal.notifyListeners("onWidgetUnderflow", aNode, this._target);
 
-        if (!this._collapsed.size) {
-          this._toolbar.removeAttribute("overflowing");
-          CustomizableUI.removeListener(this);
-        }
+      if (!this._collapsed.size) {
+        this._toolbar.removeAttribute("overflowing");
+        CustomizableUI.removeListener(this);
       }
+    } else if (aNode.previousSibling) {
       // but if it still is, it must have changed places. Bookkeep:
-      else {
-        if (aNode.previousSibling) {
-          let prevId = aNode.previousSibling.id;
-          let minSize = this._collapsed.get(prevId);
-          this._collapsed.set(aNode.id, minSize);
-        } else {
-          // If it's now the first item in the overflow list,
-          // maybe we can return it:
-          this._moveItemsBackToTheirOrigin();
-        }
-      }
+      let prevId = aNode.previousSibling.id;
+      let minSize = this._collapsed.get(prevId);
+      this._collapsed.set(aNode.id, minSize);
+    } else {
+      // If it's now the first item in the overflow list,
+      // maybe we can return it:
+      this._moveItemsBackToTheirOrigin();
     }
   },
 

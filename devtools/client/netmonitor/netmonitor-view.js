@@ -466,7 +466,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   initialize: function () {
     dumpn("Initializing the RequestsMenuView");
 
-    this.widget = new SideMenuWidget($("#requests-menu-contents"));
+    let widgetParentEl = $("#requests-menu-contents");
+    this.widget = new SideMenuWidget(widgetParentEl);
     this._splitter = $("#network-inspector-view-splitter");
     this._summary = $("#requests-menu-network-summary-button");
     this._summary.setAttribute("label", L10N.getStr("networkMenu.empty"));
@@ -475,7 +476,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     // Create a tooltip for the newly appended network request item.
     this.tooltip = new HTMLTooltip(NetMonitorController._toolbox, { type: "arrow" });
-    this.tooltip.startTogglingOnHover(this.widget, this._onHover, {
+    this.tooltip.startTogglingOnHover(widgetParentEl, this._onHover, {
       toggleDelay: REQUESTS_TOOLTIP_TOGGLE_DELAY,
       interactive: true
     });

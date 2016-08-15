@@ -873,7 +873,7 @@ TEST(Pipes, Read_AsyncWait_Clone)
 
 namespace {
 
-NS_METHOD
+nsresult
 CloseDuringReadFunc(nsIInputStream *aReader,
                     void* aClosure,
                     const char* aFromSegment,

@@ -12,7 +12,7 @@
 
 #include "jsprf.h"
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
 
 #include <stdarg.h>
@@ -312,7 +312,7 @@ static bool cvt_f(SprintfState* ss, double d, const char* fmt0, const char* fmt1
         }
     }
 #endif
-    snprintf_literal(fout, fin, d);
+    SprintfLiteral(fout, fin, d);
 
     return (*ss->stuff)(ss, fout, strlen(fout));
 }

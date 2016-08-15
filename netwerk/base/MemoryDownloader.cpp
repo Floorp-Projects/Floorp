@@ -49,7 +49,7 @@ MemoryDownloader::OnStopRequest(nsIRequest* aRequest,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 MemoryDownloader::ConsumeData(nsIInputStream* aIn,
                               void* aClosure,
                               const char* aFromRawSegment,

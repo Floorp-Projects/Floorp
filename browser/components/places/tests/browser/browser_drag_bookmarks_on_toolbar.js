@@ -232,13 +232,11 @@ function nextTest() {
       test.run();
     });
   }
-  else {
+  else if (wasCollapsed) {
     // Collapse the personal toolbar if needed.
-    if (wasCollapsed) {
-      promiseSetToolbarVisibility(toolbar, false).then(finish);
-    } else {
-      finish();
-    }
+    promiseSetToolbarVisibility(toolbar, false).then(finish);
+  } else {
+    finish();
   }
 }
 

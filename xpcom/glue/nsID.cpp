@@ -6,7 +6,7 @@
 
 #include "nsID.h"
 #include "nsMemory.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 void nsID::Clear()
 {
@@ -123,11 +123,11 @@ nsID::ToString() const
 void
 nsID::ToProvidedString(char (&aDest)[NSID_LENGTH]) const
 {
-  snprintf_literal(aDest, gIDFormat,
-                   m0, (uint32_t)m1, (uint32_t)m2,
-                   (uint32_t)m3[0], (uint32_t)m3[1], (uint32_t)m3[2],
-                   (uint32_t)m3[3], (uint32_t)m3[4], (uint32_t)m3[5],
-                   (uint32_t)m3[6], (uint32_t)m3[7]);
+  SprintfLiteral(aDest, gIDFormat,
+                 m0, (uint32_t)m1, (uint32_t)m2,
+                 (uint32_t)m3[0], (uint32_t)m3[1], (uint32_t)m3[2],
+                 (uint32_t)m3[3], (uint32_t)m3[4], (uint32_t)m3[5],
+                 (uint32_t)m3[6], (uint32_t)m3[7]);
 }
 
 #endif // XPCOM_GLUE_AVOID_NSPR

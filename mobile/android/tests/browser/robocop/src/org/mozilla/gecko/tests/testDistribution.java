@@ -285,9 +285,9 @@ public class testDistribution extends ContentProviderTest {
         // Call Distribution.init with the mock package.
         Actions.EventExpecter distributionSetExpecter = mActions.expectGeckoEvent("Distribution:Set:OK");
         Distribution dist = Distribution.init(mActivity, aPackagePath, "prefs-" + System.currentTimeMillis());
-        DistroSharedPrefsImport.importPreferences(mActivity, dist);
         distributionSetExpecter.blockForEvent();
         distributionSetExpecter.unregisterListener();
+        DistroSharedPrefsImport.importPreferences(mActivity, dist);
         return dist;
     }
 

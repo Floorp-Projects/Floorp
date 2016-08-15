@@ -5,55 +5,65 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include LayersSurfaces;
+include protocol PLayer;
+include protocol PTexture;
+include protocol PVRLayer;
+include LayersMessages;
+
 include "VRMessageUtils.h";
 
 using struct mozilla::gfx::VRFieldOfView from "gfxVR.h";
-using struct mozilla::gfx::VRDeviceUpdate from "gfxVR.h";
+using struct mozilla::gfx::VRDisplayInfo from "gfxVR.h";
 using struct mozilla::gfx::VRSensorUpdate from "gfxVR.h";
+using struct mozilla::gfx::VRHMDSensorState from "gfxVR.h";
+using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
+
 
 namespace mozilla {
 namespace gfx {
 
 /**
- * The PVRManager protocol is used to enable communication of VR device
+ * The PVRManager protocol is used to enable communication of VR display
  * enumeration and sensor state between the compositor thread and
  * content threads/processes.
  */
 sync protocol PVRManager
 {
+  manages PTexture;
+  manages PVRLayer;
+
 parent:
-  // (Re)Enumerate VR Devices.  An updated list of VR devices will be returned
-  // asynchronously to children via UpdateDeviceInfo.
-  async RefreshDevices();
+  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend,
+                 TextureFlags aTextureFlags, uint64_t aSerial);
 
-  // Reset the sensor of the device identified by aDeviceID so that the current
+  async PVRLayer(uint32_t aDisplayID, float aLeftEyeX, float aLeftEyeY, float aLeftEyeWidth, float aLeftEyeHeight, float aRightEyeX, float aRightEyeY, float aRightEyeWidth, float aRightEyeHeight);
+
+  // (Re)Enumerate VR Displays.  An updated list of VR displays will be returned
+  // asynchronously to children via UpdateDisplayInfo.
+  async RefreshDisplays();
+
+  // Reset the sensor of the display identified by aDisplayID so that the current
   // sensor state is the "Zero" position.
-  async ResetSensor(uint32_t aDeviceID);
+  async ResetSensor(uint32_t aDisplayID);
 
-  // KeepSensorTracking is called continuously by children to indicate their
-  // interest in receiving sensor data from the device identified by aDeviceID.
-  // This will activate any physical sensor tracking system requiring
-  // initialization and guarantee that it will remain active until at least one
-  // second has passed since the last KeepSensorTracking call has been made.
-  // Sensor data will be sent asynchronously via UpdateDeviceSensors
-  async KeepSensorTracking(uint32_t aDeviceID);
-
-  // Set the field of view parameters for an HMD identified by aDeviceID
-  async SetFOV(uint32_t aDeviceID, VRFieldOfView aFOVLeft,
-               VRFieldOfView aFOVRight, double zNear, double zFar);
+  sync GetSensorState(uint32_t aDisplayID) returns(VRHMDSensorState aState);
+  sync GetImmediateSensorState(uint32_t aDisplayID) returns(VRHMDSensorState aState);
+  sync SetHaveEventListener(bool aHaveEventListener);
 
 child:
 
-  // Notify children of updated VR device enumeration and details.  This will
-  // be sent to all children when the parent receives RefreshDevices, even
+  async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
+
+  // Notify children of updated VR display enumeration and details.  This will
+  // be sent to all children when the parent receives RefreshDisplays, even
   // if no changes have been detected.  This ensures that Promises exposed
   // through DOM calls are always resolved.
-  async UpdateDeviceInfo(VRDeviceUpdate[] aDeviceUpdates);
+  async UpdateDisplayInfo(VRDisplayInfo[] aDisplayUpdates);
 
-  // Notify children of updated VR device sensor states.  This will be
-  // sent once per frame for at least one second after the parent receives
-  // KeepSensorTracking.
-  async UpdateDeviceSensors(VRSensorUpdate[] aDeviceSensorUpdates);
+  async NotifyVSync();
+  async NotifyVRVSync(uint32_t aDisplayID);
 
   async __delete__();
 

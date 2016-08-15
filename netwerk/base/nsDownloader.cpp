@@ -88,7 +88,7 @@ nsDownloader::OnStopRequest(nsIRequest  *request,
     return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsDownloader::ConsumeData(nsIInputStream* in,
                           void* closure,
                           const char* fromRawSegment,

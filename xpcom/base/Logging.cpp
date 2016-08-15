@@ -12,7 +12,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsClassHashtable.h"
@@ -221,10 +221,10 @@ public:
       const char* pidTokenPtr = strstr(logFile, kPIDToken);
       char buf[2048];
       if (pidTokenPtr &&
-          snprintf_literal(buf, "%.*s%d%s",
-            static_cast<int>(pidTokenPtr - logFile), logFile,
-            detail::log_pid(),
-            pidTokenPtr + strlen(kPIDToken)) > 0)
+          SprintfLiteral(buf, "%.*s%d%s",
+                         static_cast<int>(pidTokenPtr - logFile), logFile,
+                         detail::log_pid(),
+                         pidTokenPtr + strlen(kPIDToken)) > 0)
       {
         logFile = buf;
       }
@@ -252,7 +252,7 @@ public:
 
     if (mRotate > 0) {
       char buf[2048];
-      snprintf_literal(buf, "%s.%d", mOutFilePath.get(), aFileNum);
+      SprintfLiteral(buf, "%s.%d", mOutFilePath.get(), aFileNum);
 
       // rotate doesn't support append.
       file = fopen(buf, "w");
@@ -270,7 +270,7 @@ public:
   void RemoveFile(uint32_t aFileNum)
   {
     char buf[2048];
-    snprintf_literal(buf, "%s.%d", mOutFilePath.get(), aFileNum);
+    SprintfLiteral(buf, "%s.%d", mOutFilePath.get(), aFileNum);
     remove(buf);
   }
 
@@ -337,7 +337,7 @@ public:
 
     char noNameThread[40];
     if (!currentThreadName) {
-      snprintf_literal(noNameThread, "Unnamed thread %p", currentThread);
+      SprintfLiteral(noNameThread, "Unnamed thread %p", currentThread);
       currentThreadName = noNameThread;
     }
 

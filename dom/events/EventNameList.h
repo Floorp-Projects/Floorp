@@ -599,7 +599,18 @@ WINDOW_ONLY_EVENT(devicelight,
                   eDeviceLight,
                   EventNameType_None,
                   eBasicEventClass)
-
+WINDOW_ONLY_EVENT(vrdisplayconnect,
+                  eVRDisplayConnect,
+                  EventNameType_None,
+                  eBasicEventClass)
+WINDOW_ONLY_EVENT(vrdisplaydisconnect,
+                  eVRDisplayDisconnect,
+                  EventNameType_None,
+                  eBasicEventClass)
+WINDOW_ONLY_EVENT(vrdisplaypresentchange,
+                  eVRDisplayPresentChange,
+                  EventNameType_None,
+                  eBasicEventClass)
 // Install events as per W3C Manifest spec
 WINDOW_ONLY_EVENT(install,
                   eInstall,

@@ -433,11 +433,6 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         containerLayer->SetScaleToResolution(attrs.scaleToResolution(),
                                              attrs.presShellResolution());
         containerLayer->SetEventRegionsOverride(attrs.eventRegionsOverride());
-        containerLayer->SetInputFrameID(attrs.inputFrameID());
-
-        if (attrs.hmdDeviceID()) {
-          containerLayer->SetVRDeviceID(attrs.hmdDeviceID());
-        }
 
         break;
       }

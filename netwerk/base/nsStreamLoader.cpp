@@ -124,7 +124,7 @@ nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
                                 void *closure,
                                 const char *fromSegment,

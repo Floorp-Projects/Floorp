@@ -481,10 +481,9 @@ PlacesViewBase.prototype = {
       if (aPopup._startMarker.nextSibling != statusMenuitem)
         aPopup.insertBefore(statusMenuitem, aPopup._startMarker.nextSibling);
     }
-    else {
+    else if (aPopup._statusMenuitem.parentNode == aPopup) {
       // The livemark has finished loading.
-      if (aPopup._statusMenuitem.parentNode == aPopup)
-        aPopup.removeChild(aPopup._statusMenuitem);
+      aPopup.removeChild(aPopup._statusMenuitem);
     }
   },
 

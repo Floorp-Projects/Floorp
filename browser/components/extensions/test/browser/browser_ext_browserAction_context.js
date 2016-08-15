@@ -44,6 +44,35 @@ function* runTests(options) {
     let tabs = [];
     let tests = getTests(tabs, expectDefaults);
 
+    {
+      let tabId = 0xdeadbeef;
+      let calls = [
+        () => browser.browserAction.enable(tabId),
+        () => browser.browserAction.disable(tabId),
+        () => browser.browserAction.setTitle({tabId, title: "foo"}),
+        () => browser.browserAction.setIcon({tabId, path: "foo.png"}),
+        () => browser.browserAction.setPopup({tabId, popup: "foo.html"}),
+        () => browser.browserAction.setBadgeText({tabId, text: "foo"}),
+        () => browser.browserAction.setBadgeBackgroundColor({tabId, color: [0xff, 0, 0, 0xff]}),
+      ];
+
+      for (let call of calls) {
+        let checkError = e => {
+          browser.test.assertTrue(e.message.includes(`Invalid tab ID: ${tabId}`),
+                                  `Expected invalid tab ID error, got ${e}`);
+        };
+        try {
+          call().then(() => {
+            browser.test.fail(`Expected call to fail: ${call}`);
+          }, e => {
+            checkError(e);
+          });
+        } catch (e) {
+          checkError(e);
+        }
+      }
+    }
+
     // Runs the next test in the `tests` array, checks the results,
     // and passes control back to the outer test scope.
     function nextTest() {

@@ -79,6 +79,13 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
     PRMJ_NowInit();
 
+    // The first invocation of `ProcessCreation` creates a temporary thread
+    // and crashes if that fails, i.e. because we're out of memory. To prevent
+    // that from happening at some later time, get it out of the way during
+    // startup.
+    bool ignored;
+    mozilla::TimeStamp::ProcessCreation(ignored);
+
 #ifdef DEBUG
     CheckMessageParameterCounts();
 #endif

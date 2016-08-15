@@ -47,11 +47,4 @@ makeShaderVS LayerQuadBlendVS
 makeShaderVS LayerQuadBlendMaskVS
 makeShaderPS BlendShader
 
-SRC=CompositorD3D11VR.hlsl
-DEST=CompositorD3D11ShadersVR.h
-
-rm -f $DEST
-makeShaderVS Oculus050VRDistortionVS
-makeShaderPS Oculus050VRDistortionPS
-
 rm $tempfile

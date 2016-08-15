@@ -716,13 +716,11 @@ PluginContent.prototype = {
             overlay.addEventListener("click", this, true);
           }
           plugin.reload(true);
-        } else {
-          if (this.canActivatePlugin(plugin)) {
-            if (overlay) {
-              overlay.removeEventListener("click", this, true);
-            }
-            plugin.playPlugin();
+        } else if (this.canActivatePlugin(plugin)) {
+          if (overlay) {
+            overlay.removeEventListener("click", this, true);
           }
+          plugin.playPlugin();
         }
       }
     }
@@ -1026,17 +1024,15 @@ PluginContent.prototype = {
                                  .getInterface(Ci.nsIDOMWindowUtils);
       let event = new this.content.CustomEvent("PluginCrashReporterDisplayed", {bubbles: true});
       winUtils.dispatchEventToChromeOnly(plugin, event);
-    } else {
+    } else if (!doc.mozNoPluginCrashedNotification) {
       // If another plugin on the page was large enough to show our UI, we don't
       // want to show a notification bar.
-      if (!doc.mozNoPluginCrashedNotification) {
-        this.global.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification",
-                                     { messageString: message, pluginID: runID });
-        // Remove the notification when the page is reloaded.
-        doc.defaultView.top.addEventListener("unload", event => {
-          this.hideNotificationBar("plugin-crashed");
-        }, false);
-      }
+      this.global.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification",
+                                   { messageString: message, pluginID: runID });
+      // Remove the notification when the page is reloaded.
+      doc.defaultView.top.addEventListener("unload", event => {
+        this.hideNotificationBar("plugin-crashed");
+      }, false);
     }
   },
 

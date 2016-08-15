@@ -43,7 +43,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   nsAutoString buffer;
   supportsString->GetData(buffer);
 
-  java::Clipboard::SetClipboardText(buffer);
+  java::Clipboard::SetText(buffer);
   return NS_OK;
 }
 

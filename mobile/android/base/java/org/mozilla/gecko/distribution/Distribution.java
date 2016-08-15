@@ -867,7 +867,7 @@ public class Distribution {
         return context.getApplicationInfo().dataDir;
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static String[] getDistributionDirectories() {
         final Context context = GeckoAppShell.getApplicationContext();
 

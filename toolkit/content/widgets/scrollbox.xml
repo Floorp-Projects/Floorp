@@ -605,9 +605,9 @@
           if (event.detail == 1)
             return;
         }
-        else {    // horizontal scrollbox
-          if (event.detail == 0)
-            return;
+        else if (event.detail == 0) {
+          // horizontal scrollbox
+          return;
         }
 
         this.setAttribute("notoverflowing", "true");
@@ -640,9 +640,9 @@
           if (event.detail == 1)
             return;
         }
-        else {    // horizontal scrollbox
-          if (event.detail == 0)
-            return;
+        else if (event.detail == 0) {
+          // horizontal scrollbox
+          return;
         }
 
         this.removeAttribute("notoverflowing");

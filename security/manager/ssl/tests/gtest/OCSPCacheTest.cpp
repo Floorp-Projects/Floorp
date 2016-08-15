@@ -8,7 +8,7 @@
 #include "OCSPCache.h"
 #include "gtest/gtest.h"
 #include "mozilla/Casting.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nss.h"
 #include "pkix/pkixtypes.h"
 #include "pkixtestutil.h"

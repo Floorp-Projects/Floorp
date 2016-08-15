@@ -30,7 +30,7 @@
 #include "mozilla/Logging.h"
 #include "nsServiceManagerUtils.h"
 #include "gfxPlatform.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 struct JSContext;
 class JSObject;

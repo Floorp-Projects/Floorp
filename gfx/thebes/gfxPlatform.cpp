@@ -610,16 +610,14 @@ gfxPlatform::Init()
     {
       nsAutoCString forcedPrefs;
       // D2D prefs
-      forcedPrefs.AppendPrintf("FP(D%d%d%d",
+      forcedPrefs.AppendPrintf("FP(D%d%d",
                                gfxPrefs::Direct2DDisabled(),
-                               gfxPrefs::Direct2DForceEnabled(),
-                               gfxPrefs::DirectWriteFontRenderingForceEnabled());
+                               gfxPrefs::Direct2DForceEnabled());
       // Layers prefs
-      forcedPrefs.AppendPrintf("-L%d%d%d%d%d",
+      forcedPrefs.AppendPrintf("-L%d%d%d%d",
                                gfxPrefs::LayersAMDSwitchableGfxEnabled(),
                                gfxPrefs::LayersAccelerationDisabledDoNotUseDirectly(),
                                gfxPrefs::LayersAccelerationForceEnabledDoNotUseDirectly(),
-                               gfxPrefs::LayersD3D11DisableWARP(),
                                gfxPrefs::LayersD3D11ForceWARP());
       // WebGL prefs
       forcedPrefs.AppendPrintf("-W%d%d%d%d%d%d%d%d",

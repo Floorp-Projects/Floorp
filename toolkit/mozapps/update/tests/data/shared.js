@@ -48,9 +48,6 @@ const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
 const XRE_EXECUTABLE_FILE          = "XREExeF";
 const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
 
-const CRC_ERROR   = 4;
-const WRITE_ERROR = 7;
-
 const DIR_PATCH        = "0";
 const DIR_TOBEDELETED  = "tobedeleted";
 const DIR_UPDATES      = "updates";

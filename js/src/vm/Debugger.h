@@ -1178,6 +1178,11 @@ class DebuggerFrame : public NativeObject
     static DebuggerFrameType getType(HandleDebuggerFrame frame);
     static DebuggerFrameImplementation getImplementation(HandleDebuggerFrame frame);
 
+    static MOZ_MUST_USE bool eval(JSContext* cx, HandleDebuggerFrame frame,
+                                  mozilla::Range<const char16_t> chars, HandleObject bindings,
+                                  const EvalOptions& options, JSTrapStatus& status,
+                                  MutableHandleValue value);
+
     bool isLive() const;
 
   private:
@@ -1203,6 +1208,9 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool thisGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool implementationGetter(JSContext* cx, unsigned argc, Value* vp);
+
+    static MOZ_MUST_USE bool evalMethod(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool evalWithBindingsMethod(JSContext* cx, unsigned argc, Value* vp);
 
     Debugger* owner() const;
 };
@@ -1270,7 +1278,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool executeInGlobal(JSContext* cx, HandleDebuggerObject object,
                                              mozilla::Range<const char16_t> chars,
                                              HandleObject bindings, const EvalOptions& options,
-                                             MutableHandleValue result);
+                                             JSTrapStatus& status, MutableHandleValue value);
     static MOZ_MUST_USE bool makeDebuggeeValue(JSContext* cx, HandleDebuggerObject object,
                                                HandleValue value, MutableHandleValue result);
     static MOZ_MUST_USE bool unsafeDereference(JSContext* cx, HandleDebuggerObject object,

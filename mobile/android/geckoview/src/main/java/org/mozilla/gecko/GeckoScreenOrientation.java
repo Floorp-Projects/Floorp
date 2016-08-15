@@ -132,7 +132,7 @@ public class GeckoScreenOrientation {
         return update(getScreenOrientation(aAndroidOrientation, getRotation()));
     }
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "gecko")
     private static native void onOrientationChange(short screenOrientation, short angle);
 
     /*

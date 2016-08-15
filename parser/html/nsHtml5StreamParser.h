@@ -248,17 +248,17 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     void FlushTreeOpsAndDisarmTimer();
 
     void ParseAvailableData();
-    
+
     void DoStopRequest();
-    
+
     void DoDataAvailable(const uint8_t* aBuffer, uint32_t aLength);
 
-    static NS_METHOD CopySegmentsToParser(nsIInputStream *aInStream,
-                                          void *aClosure,
-                                          const char *aFromSegment,
-                                          uint32_t aToOffset,
-                                          uint32_t aCount,
-                                          uint32_t *aWriteCount);
+    static nsresult CopySegmentsToParser(nsIInputStream *aInStream,
+                                         void *aClosure,
+                                         const char *aFromSegment,
+                                         uint32_t aToOffset,
+                                         uint32_t aCount,
+                                         uint32_t *aWriteCount);
 
     bool IsTerminatedOrInterrupted()
     {

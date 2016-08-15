@@ -8,7 +8,7 @@
 #include "nsMemory.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include <algorithm>
 
 template<typename T>
@@ -18,7 +18,7 @@ DataToString(const char* aFormat, T aData)
   static const int size = 32;
   char buf[size];
 
-  int len = snprintf_literal(buf, aFormat, aData);
+  int len = SprintfLiteral(buf, aFormat, aData);
   MOZ_ASSERT(len >= 0);
 
   return static_cast<char*>(nsMemory::Clone(buf, std::min(len + 1, size) *
