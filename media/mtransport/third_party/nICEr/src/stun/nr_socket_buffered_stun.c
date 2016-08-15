@@ -405,13 +405,27 @@ static int nr_socket_buffered_stun_accept(void *obj, nr_transport_addr *addrp, n
 static void nr_socket_buffered_stun_connected_cb(NR_SOCKET s, int how, void *arg)
 {
   nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)arg;
+  int r, _status;
+  NR_SOCKET fd;
 
   assert(!sock->connected);
 
   sock->connected = 1;
+
+  if ((r=nr_socket_getfd(sock->inner, &fd)))
+    ABORT(r);
+  NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_WRITE);
+
   if (sock->pending) {
     r_log(LOG_GENERIC, LOG_INFO, "Invoking writable_cb on connected (%u)", (uint32_t) sock->pending);
     nr_socket_buffered_stun_writable_cb(s, how, arg);
+  }
+
+  _status=0;
+abort:
+  if (_status) {
+    r_log(LOG_GENERIC, LOG_ERR, "Failure in nr_socket_buffered_stun_connected_cb: %d", _status);
+
   }
 }
 
