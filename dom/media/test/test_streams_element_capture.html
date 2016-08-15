@@ -35,12 +35,9 @@ function startTest(test) {
   var vout = document.createElement('video');
 
   v.src = test.name;
-  var stream = v.mozCaptureStreamUntilEnded();
-  is(stream.currentTime, 0, test.name + " stream initial currentTime");
-  vout.srcObject = stream;
-  is(vout.srcObject, stream, test.name + " set output element .srcObject correctly");
+  var stream;
 
-  var checkEnded = function(test, vout, stream) { return function() {
+  var checkEnded = function() {
     is(stream.currentTime, vout.currentTime, test.name + " stream final currentTime");
     if (test.duration) {
       isGreaterThanOrEqualEps(vout.currentTime, test.duration,
@@ -54,12 +51,22 @@ function startTest(test) {
     vout.parentNode.removeChild(vout);
     removeNodeAndSource(v);
     SimpleTest.finish();
-  }}(test, vout, stream);
+  };
   vout.addEventListener("ended", checkEnded, false);
 
   document.body.appendChild(vout);
-  v.play();
-  vout.play();
+
+  var onloadedmetadata = function (ev) {
+    stream = v.mozCaptureStreamUntilEnded();
+    is(stream.currentTime, 0, test.name + " stream initial currentTime");
+    vout.srcObject = stream;
+    is(vout.srcObject, stream, test.name + " set output element .srcObject correctly");
+    v.play();
+    vout.play();
+  }
+
+  v.preload = 'metadata';
+  v.addEventListener('loadedmetadata', onloadedmetadata, false);
 
   // Log events for debugging.
   var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
