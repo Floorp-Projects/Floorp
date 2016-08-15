@@ -245,7 +245,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     @Override @WrapForJNI(allowMultithread = true) // PanZoomController
     public void destroy() {
-        if (mDestroyed) {
+        if (mDestroyed || !mTarget.isGeckoReady()) {
             return;
         }
         mDestroyed = true;
