@@ -11,6 +11,7 @@ var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var flags = require("./flags");
+var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
 
 loader.lazyRequireGetter(this, "FileUtils",
                          "resource://gre/modules/FileUtils.jsm", true);
@@ -32,9 +33,9 @@ exports.executeSoon = function executeSoon(aFn) {
     // Only enable async stack reporting when DEBUG_JS_MODULES is set
     // (customized local builds) to avoid a performance penalty.
     if (AppConstants.DEBUG_JS_MODULES || flags.testing) {
-      let stack = components.stack;
+      let stack = getStack();
       executor = () => {
-        Cu.callFunctionWithAsyncStack(aFn, stack, "DevToolsUtils.executeSoon");
+        callFunctionWithAsyncStack(aFn, stack, "DevToolsUtils.executeSoon");
       };
     } else {
       executor = aFn;

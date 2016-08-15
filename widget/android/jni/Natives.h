@@ -178,16 +178,15 @@ struct NativePtr<Impl, /* UseWeakPtr = */ true>
 using namespace detail;
 
 /**
- * For C++ classes whose native methods all return void, they can choose to
- * have the native calls go through a proxy by inheriting from
- * mozilla::jni::UsesNativeCallProxy, and overriding the OnNativeCall member.
- * Subsequently, every native call is automatically wrapped in a functor
- * object, and the object is passed to OnNativeCall. The OnNativeCall
- * implementation can choose to invoke the call, save it, dispatch it to a
- * different thread, etc. Each copy of functor may only be invoked once.
+ * For JNI native methods that are dispatched to a proxy, i.e. using
+ * @WrapForJNI(dispatchTo = "proxy"), the implementing C++ class must provide a
+ * OnNativeCall member. Subsequently, every native call is automatically
+ * wrapped in a functor object, and the object is passed to OnNativeCall. The
+ * OnNativeCall implementation can choose to invoke the call, save it, dispatch
+ * it to a different thread, etc. Each copy of functor may only be invoked
+ * once.
  *
  * class MyClass : public MyJavaClass::Natives<MyClass>
- *               , public mozilla::jni::UsesNativeCallProxy
  * {
  *     // ...
  *
@@ -209,20 +208,7 @@ using namespace detail;
  * };
  */
 
-struct UsesNativeCallProxy
-{
-    template<class Functor>
-    static void OnNativeCall(Functor&& call)
-    {
-        // The default behavior is to invoke the call right away.
-        call();
-    }
-};
-
 namespace detail {
-
-template<class Traits, class Impl, class Args, bool IsStatic, bool IsVoid>
-class NativeStubImpl;
 
 // ProxyArg is used to handle JNI ref arguments for proxies. Because a proxied
 // call may happen outside of the original JNI native call, we must save all
@@ -263,16 +249,12 @@ template<typename C> struct ProxyArg<const C&> : ProxyArg<C> {};
 template<> struct ProxyArg<StringParam> : ProxyArg<String::Ref> {};
 template<class C> struct ProxyArg<LocalRef<C>> : ProxyArg<typename C::Ref> {};
 
-// ProxyNativeCall implements the functor object that is passed to
-// UsesNativeCallProxy::OnNativeCall
+// ProxyNativeCall implements the functor object that is passed to OnNativeCall
 template<class Impl, class Owner, bool IsStatic,
          bool HasThisArg /* has instance/class local ref in the call */,
          typename... Args>
-class ProxyNativeCall
+class ProxyNativeCall : public AbstractCall
 {
-    template<class T, class I, class A, bool S, bool V>
-    friend class detail::NativeStubImpl;
-
     // "this arg" refers to the Class::LocalRef (for static methods) or
     // Owner::LocalRef (for instance methods) that we optionally (as indicated
     // by HasThisArg) pass into the destination C++ function.
@@ -297,15 +279,6 @@ class ProxyNativeCall
     typename ThisArgClass::GlobalRef mThisArg;
     // Saved arguments.
     mozilla::Tuple<typename ProxyArg<Args>::Type...> mArgs;
-
-    ProxyNativeCall(NativeCallType nativeCall,
-                    JNIEnv* env,
-                    ThisArgJNIType thisArg,
-                    typename ProxyArg<Args>::JNIType... args)
-        : mNativeCall(nativeCall)
-        , mThisArg(env, ThisArgClass::Ref::From(thisArg))
-        , mArgs(ProxyArg<Args>::From(env, args)...)
-    {}
 
     // We cannot use IsStatic and HasThisArg directly (without going through
     // extra hoops) because GCC complains about invalid overloads, so we use
@@ -363,6 +336,15 @@ public:
 
     static const bool isStatic = IsStatic;
 
+    ProxyNativeCall(ThisArgJNIType thisArg,
+                    NativeCallType nativeCall,
+                    JNIEnv* env,
+                    typename ProxyArg<Args>::JNIType... args)
+        : mNativeCall(nativeCall)
+        , mThisArg(env, ThisArgClass::Ref::From(thisArg))
+        , mArgs(ProxyArg<Args>::From(env, args)...)
+    {}
+
     ProxyNativeCall(ProxyNativeCall&&) = default;
     ProxyNativeCall(const ProxyNativeCall&) = default;
 
@@ -381,7 +363,7 @@ public:
     void SetTarget(NativeCallType call) { mNativeCall = call; }
     template<typename T> void SetTarget(T&&) const { MOZ_CRASH(); }
 
-    void operator()()
+    void operator()() override
     {
         JNIEnv* const env = GetEnvForThread();
         typename ThisArgClass::LocalRef thisArg(env, mThisArg);
@@ -397,29 +379,42 @@ public:
     }
 };
 
-// We can only use Impl::OnNativeCall when Impl is derived from
-// UsesNativeCallProxy, otherwise it's a compile error. Therefore, the real
-// Dispatch function is conditional on UsesNativeCallProxy being a base class
-// of Impl. Otherwise, the dummy Dispatch function below that is chosen during
-// overload resolution. Because Dispatch is called with an rvalue, the &&
-// version is always chosen before the const& version, if possible.
-
-template<class Impl, class O, bool S, bool V, typename... A>
-typename mozilla::EnableIf<
-        mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value, void>::Type
-Dispatch(ProxyNativeCall<Impl, O, S, V, A...>&& call)
+template<class Impl, bool HasThisArg, typename... Args>
+struct Dispatcher
 {
-    Impl::OnNativeCall(mozilla::Move(call));
-}
+    template<class Traits, bool IsStatic = Traits::isStatic,
+             typename... ProxyArgs>
+    static typename EnableIf<
+            Traits::dispatchTarget == DispatchTarget::PROXY, void>::Type
+    Run(ProxyArgs&&... args)
+    {
+        Impl::OnNativeCall(ProxyNativeCall<
+                Impl, typename Traits::Owner, IsStatic,
+                HasThisArg, Args...>(Forward<ProxyArgs>(args)...));
+    }
 
-template<typename T>
-void Dispatch(const T&) {}
+    template<class Traits, bool IsStatic = Traits::isStatic,
+             typename ThisArg, typename... ProxyArgs>
+    static typename EnableIf<
+            Traits::dispatchTarget == DispatchTarget::GECKO, void>::Type
+    Run(ThisArg thisArg, ProxyArgs&&... args)
+    {
+        // For a static method, do not forward the "this arg" (i.e. the class
+        // local ref) if the implementation does not request it. This saves us
+        // a pair of calls to add/delete global ref.
+        DispatchToGeckoThread(MakeUnique<ProxyNativeCall<
+                Impl, typename Traits::Owner, IsStatic, HasThisArg,
+                Args...>>(HasThisArg || !IsStatic ? thisArg : nullptr,
+                          Forward<ProxyArgs>(args)...));
+    }
+
+    template<class Traits, bool IsStatic = false, typename... ProxyArgs>
+    static typename EnableIf<
+            Traits::dispatchTarget == DispatchTarget::CURRENT, void>::Type
+    Run(ProxyArgs&&... args) {}
+};
 
 } // namespace detail
-
-template<class Cls, class Impl> class NativeImpl;
-
-namespace detail {
 
 // Wrapper methods that convert arguments from the JNI types to the native
 // types, e.g. from jobject to jni::Object::Ref. For instance methods, the
@@ -437,42 +432,64 @@ namespace detail {
 #define MOZ_JNICALL JNICALL
 #endif
 
-// Specialization for instance methods with non-void return type
+template<class Traits, class Impl, class Args = typename Traits::Args>
+class NativeStub;
+
 template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
-                     /* IsStatic = */ false, /* IsVoid = */ false>
+class NativeStub<Traits, Impl, jni::Args<Args...>>
 {
-    typedef typename Traits::Owner Owner;
-    typedef typename Traits::ReturnType ReturnType;
-    typedef typename TypeAdapter<ReturnType>::JNIType ReturnJNIType;
+    using Owner = typename Traits::Owner;
+    using ReturnType = typename Traits::ReturnType;
+
+    static constexpr bool isStatic = Traits::isStatic;
+    static constexpr bool isVoid = mozilla::IsVoid<ReturnType>::value;
+
+    struct VoidType { using JNIType = void; };
+    using ReturnJNIType = typename Conditional<
+            isVoid, VoidType, TypeAdapter<ReturnType>>::Type::JNIType;
+
+    using ReturnTypeForNonVoidInstance = typename Conditional<
+            !isStatic && !isVoid, ReturnType, VoidType>::Type;
+    using ReturnTypeForVoidInstance = typename Conditional<
+            !isStatic && isVoid, ReturnType, VoidType&>::Type;
+    using ReturnTypeForNonVoidStatic = typename Conditional<
+            isStatic && !isVoid, ReturnType, VoidType>::Type;
+    using ReturnTypeForVoidStatic = typename Conditional<
+            isStatic && isVoid, ReturnType, VoidType&>::Type;
+
+    static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT || isVoid,
+                  "Dispatched calls must have void return type");
 
 public:
-    // Instance method
-    template<ReturnType (Impl::*Method) (Args...)>
-    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
-            jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    // Non-void instance method
+    template<ReturnTypeForNonVoidInstance (Impl::*Method) (Args...)>
+    static MOZ_JNICALL ReturnJNIType
+    Wrap(JNIEnv* env, jobject instance,
+         typename TypeAdapter<Args>::JNIType... args)
     {
-        static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
-                      "Native call proxy only supports void return type");
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
+            // There is a pending JNI exception at this point.
             return ReturnJNIType();
         }
         return TypeAdapter<ReturnType>::FromNative(env,
                 (impl->*Method)(TypeAdapter<Args>::ToNative(env, args)...));
     }
 
-    // Instance method with instance reference
-    template<ReturnType (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
-    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
-            jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    // Non-void instance method with instance reference
+    template<ReturnTypeForNonVoidInstance (Impl::*Method)
+             (const typename Owner::LocalRef&, Args...)>
+    static MOZ_JNICALL ReturnJNIType
+    Wrap(JNIEnv* env, jobject instance,
+         typename TypeAdapter<Args>::JNIType... args)
     {
-        static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
-                      "Native call proxy only supports void return type");
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
+            // There is a pending JNI exception at this point.
             return ReturnJNIType();
         }
         auto self = Owner::LocalRef::Adopt(env, instance);
@@ -481,47 +498,47 @@ public:
         self.Forget();
         return res;
     }
-};
 
-// Specialization for instance methods with void return type
-template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
-                     /* IsStatic = */ false, /* IsVoid = */ true>
-{
-    typedef typename Traits::Owner Owner;
-
-public:
-    // Instance method
-    template<void (Impl::*Method) (Args...)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env,
-            jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    // Void instance method
+    template<ReturnTypeForVoidInstance (Impl::*Method) (Args...)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jobject instance,
+         typename TypeAdapter<Args>::JNIType... args)
     {
-        if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
-            Dispatch(ProxyNativeCall<
-                     Impl, Owner, /* IsStatic */ false, /* HasThisArg */ false,
-                     Args...>(Method, env, instance, args...));
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
+
+        if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
+            Dispatcher<Impl, /* HasThisArg */ false, Args...>::
+                    template Run<Traits>(instance, Method, env, args...);
             return;
         }
+
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
+            // There is a pending JNI exception at this point.
             return;
         }
         (impl->*Method)(TypeAdapter<Args>::ToNative(env, args)...);
     }
 
-    // Instance method with instance reference
-    template<void (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env,
-            jobject instance, typename TypeAdapter<Args>::JNIType... args)
+    // Void instance method with instance reference
+    template<ReturnTypeForVoidInstance (Impl::*Method)
+             (const typename Owner::LocalRef&, Args...)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jobject instance,
+         typename TypeAdapter<Args>::JNIType... args)
     {
-        if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
-            Dispatch(ProxyNativeCall<
-                     Impl, Owner, /* IsStatic */ false, /* HasThisArg */ true,
-                     Args...>(Method, env, instance, args...));
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
+
+        if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
+            Dispatcher<Impl, /* HasThisArg */ true, Args...>::
+                    template Run<Traits>(instance, Method, env, args...);
             return;
         }
+
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
+            // There is a pending JNI exception at this point.
             return;
         }
         auto self = Owner::LocalRef::Adopt(env, instance);
@@ -530,51 +547,44 @@ public:
     }
 
     // Overload for DisposeNative
-    template<void (*DisposeNative) (const typename Owner::LocalRef&)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env, jobject instance)
+    template<ReturnTypeForVoidInstance (*DisposeNative)
+             (const typename Owner::LocalRef&)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jobject instance)
     {
-        if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
-            auto cls = Class::LocalRef::Adopt(
-                    env, env->GetObjectClass(instance));
-            Dispatch(ProxyNativeCall<Impl, Owner, /* IsStatic */ true,
-                    /* HasThisArg */ false, const typename Owner::LocalRef&>(
-                    DisposeNative, env, cls.Get(), instance));
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
+
+        if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
+            using LocalRef = typename Owner::LocalRef;
+            Dispatcher<Impl, /* HasThisArg */ false, const LocalRef&>::
+                    template Run<Traits, /* IsStatic */ true>(
+                    /* ThisArg */ nullptr, DisposeNative, env, instance);
             return;
         }
+
         auto self = Owner::LocalRef::Adopt(env, instance);
         (Impl::DisposeNative)(self);
         self.Forget();
     }
-};
 
-// Specialization for static methods with non-void return type
-template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
-                     /* IsStatic = */ true, /* IsVoid = */ false>
-{
-    typedef typename Traits::ReturnType ReturnType;
-    typedef typename TypeAdapter<ReturnType>::JNIType ReturnJNIType;
-
-public:
-    // Static method
-    template<ReturnType (*Method) (Args...)>
-    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
-            jclass, typename TypeAdapter<Args>::JNIType... args)
+    // Non-void static method
+    template<ReturnTypeForNonVoidStatic (*Method) (Args...)>
+    static MOZ_JNICALL ReturnJNIType
+    Wrap(JNIEnv* env, jclass, typename TypeAdapter<Args>::JNIType... args)
     {
-        static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
-                      "Native call proxy only supports void return type");
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         return TypeAdapter<ReturnType>::FromNative(env,
                 (*Method)(TypeAdapter<Args>::ToNative(env, args)...));
     }
 
-    // Static method with class reference
-    template<ReturnType (*Method) (const Class::LocalRef&, Args...)>
-    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
-            jclass cls, typename TypeAdapter<Args>::JNIType... args)
+    // Non-void static method with class reference
+    template<ReturnTypeForNonVoidStatic (*Method)
+             (const Class::LocalRef&, Args...)>
+    static MOZ_JNICALL ReturnJNIType
+    Wrap(JNIEnv* env, jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
-        static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
-                      "Native call proxy only supports void return type");
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
 
         auto clazz = Class::LocalRef::Adopt(env, cls);
         const auto res = TypeAdapter<ReturnType>::FromNative(env,
@@ -582,56 +592,41 @@ public:
         clazz.Forget();
         return res;
     }
-};
 
-// Specialization for static methods with void return type
-template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
-                     /* IsStatic = */ true, /* IsVoid = */ true>
-{
-    typedef typename Traits::Owner Owner;
-
-public:
-    // Static method
-    template<void (*Method) (Args...)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env,
-            jclass cls, typename TypeAdapter<Args>::JNIType... args)
+    // Void static method
+    template<ReturnTypeForVoidStatic (*Method) (Args...)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
-        if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
-            Dispatch(ProxyNativeCall<
-                    Impl, Owner, /* IsStatic */ true, /* HasThisArg */ false,
-                    Args...>(Method, env, cls, args...));
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
+
+        if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
+            Dispatcher<Impl, /* HasThisArg */ false, Args...>::
+                    template Run<Traits>(cls, Method, env, args...);
             return;
         }
+
         (*Method)(TypeAdapter<Args>::ToNative(env, args)...);
     }
 
-    // Static method with class reference
-    template<void (*Method) (const Class::LocalRef&, Args...)>
-    static MOZ_JNICALL void Wrap(JNIEnv* env,
-            jclass cls, typename TypeAdapter<Args>::JNIType... args)
+    // Void static method with class reference
+    template<ReturnTypeForVoidStatic (*Method)
+             (const Class::LocalRef&, Args...)>
+    static MOZ_JNICALL void
+    Wrap(JNIEnv* env, jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
-        if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
-            Dispatch(ProxyNativeCall<
-                    Impl, Owner, /* IsStatic */ true, /* HasThisArg */ true,
-                    Args...>(Method, env, cls, args...));
+        MOZ_ASSERT_JNI_THREAD(Traits::callingThread);
+
+        if (Traits::dispatchTarget != DispatchTarget::CURRENT) {
+            Dispatcher<Impl, /* HasThisArg */ true, Args...>::
+                    template Run<Traits>(cls, Method, env, args...);
             return;
         }
+
         auto clazz = Class::LocalRef::Adopt(env, cls);
         (*Method)(clazz, TypeAdapter<Args>::ToNative(env, args)...);
         clazz.Forget();
     }
-};
-
-} // namespace detail
-
-// Form a stub wrapper from a native method's traits class and an implementing
-// class. The stub wrapper has a Wrap function that will form a wrapped stub.
-template<class Traits, class Impl>
-struct NativeStub : detail::NativeStubImpl
-    <Traits, Impl, typename Traits::Args, Traits::isStatic,
-     mozilla::IsVoid<typename Traits::ReturnType>::value>
-{
 };
 
 // Generate a JNINativeMethod from a native

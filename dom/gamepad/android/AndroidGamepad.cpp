@@ -13,17 +13,10 @@ namespace dom {
 
 class AndroidGamepadManager final
   : public java::AndroidGamepadManager::Natives<AndroidGamepadManager>
-  , public jni::UsesNativeCallProxy
 {
   AndroidGamepadManager() = delete;
 
 public:
-  template<class Functor>
-  static void OnNativeCall(Functor&& aCall)
-  {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(Move(aCall)));
-  }
-
   static void
   OnGamepadChange(int32_t aID, bool aAdded)
   {

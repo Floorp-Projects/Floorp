@@ -130,7 +130,7 @@
                     this.thumb.setTime(newValue);
                     this.Utils.positionLabel.setAttribute("value", this.thumb.timeLabel.value);
                     // Update the value bar to match the thumb position.
-                    var percent = newValue / this.max;
+                    let percent = newValue / this.max;
                     this.valueBar.value = Math.round(percent * 10000); // has max=10000
                 }
 
@@ -154,7 +154,7 @@
               case "maxpos":
                 if (this.type == "scrubber") {
                     // Update the value bar to match the thumb position.
-                    var percent = this.value / newValue;
+                    let percent = this.value / newValue;
                     this.valueBar.value = Math.round(percent * 10000); // has max=10000
                 }
                 this.setAttribute("max", newValue);
@@ -773,14 +773,14 @@
                 seekToPosition : function(newPosition) {
                     newPosition /= 1000; // convert from ms
                     this.log("+++ seeking to " + newPosition);
-#ifdef MOZ_WIDGET_GONK
-                    // We use fastSeek() on B2G, and an accurate (but slower)
-                    // seek on other platforms (that are likely to be higher
-                    // perf).
-                    this.video.fastSeek(newPosition);
-#else
-                    this.video.currentTime = newPosition;
-#endif
+                    if (this.videocontrols.isGonk) {
+                        // We use fastSeek() on B2G, and an accurate (but slower)
+                        // seek on other platforms (that are likely to be higher
+                        // perf).
+                        this.video.fastSeek(newPosition);
+                    } else {
+                        this.video.currentTime = newPosition;
+                    }
                 },
 
                 setVolume : function(newVolume) {
@@ -1142,7 +1142,7 @@
                 },
 
                 _getComputedPropertyValueAsInt : function(element, property) {
-                  let value = window.getComputedStyle(element, null).getPropertyValue(property);
+                  let value = getComputedStyle(element, null).getPropertyValue(property);
                   return parseInt(value, 10);
                 },
 
@@ -1156,18 +1156,17 @@
                         keystroke += "alt-";
                     if (event.shiftKey)
                         keystroke += "shift-";
-#ifdef XP_MACOSX
-                    if (event.metaKey)
-                        keystroke += "accel-";
-                    if (event.ctrlKey)
-                        keystroke += "control-";
-#else
-                    if (event.metaKey)
-                        keystroke += "meta-";
-                    if (event.ctrlKey)
-                        keystroke += "accel-";
-#endif
-
+                    if (navigator.platform.startsWith("Mac")) {
+                        if (event.metaKey)
+                            keystroke += "accel-";
+                        if (event.ctrlKey)
+                            keystroke += "control-";
+                    } else {
+                        if (event.metaKey)
+                            keystroke += "meta-";
+                        if (event.ctrlKey)
+                            keystroke += "accel-";
+                    }
                     switch (event.keyCode) {
                         case KeyEvent.DOM_VK_UP:
                             keystroke += "upArrow";
@@ -1245,7 +1244,7 @@
                             default:
                                 return;
                         }
-                    } catch(e) { /* ignore any exception from setting .currentTime */ }
+                    } catch (e) { /* ignore any exception from setting .currentTime */ }
 
                     event.preventDefault(); // Prevent page scrolling
                 },
@@ -1357,8 +1356,8 @@
                 toggleClosedCaption : function () {
                   if (this.overlayableTextTracks.length === 1) {
                     const lastTTIdx = this.overlayableTextTracks[0].index;
-
-                    return this.changeTextTrack(this.isClosedCaptionOn() ? 0 : lastTTIdx);
+                    this.changeTextTrack(this.isClosedCaptionOn() ? 0 : lastTTIdx);
+                    return;
                   }
 
                   if (this.textTrackList.hasAttribute("hidden")) {
@@ -1462,7 +1461,7 @@
                 _controlBarHeight : 0,
                 _overlayPlayButtonHeight : 64,
                 _overlayPlayButtonWidth : 64,
-                _volumeStackMarginEnd : 8,
+                _controlBarPaddingEnd: 8,
                 adjustControlSize : function adjustControlSize() {
                     let doc = this.video.ownerDocument;
 
@@ -1480,7 +1479,7 @@
                     let isFullscreenUnavailable = this.controlBar.hasAttribute("fullscreen-unavailable");
                     if (isFullscreenUnavailable) {
                         // When the fullscreen button is hidden we add margin-end to the volume stack.
-                        minWidthAllControls -= this._fullscreenButtonWidth - this._volumeStackMarginEnd;
+                        minWidthAllControls -= this._fullscreenButtonWidth - this._controlBarPaddingEnd;
                     }
 
                     let minHeightForControlBar = this._controlBarHeight;
@@ -1876,7 +1875,7 @@
 
     <handlers>
         <handler event="mouseup">
-          if(event.originalTarget.nodeName == "vbox") {
+          if (event.originalTarget.nodeName == "vbox") {
             if (this.TouchUtils.firstShow)
               this.Utils.video.play();
             this.TouchUtils.toggleControls();
@@ -1884,6 +1883,14 @@
         </handler>
     </handlers>
 
+  </binding>
+
+  <binding id="touchControlsGonk" extends="chrome://global/content/bindings/videoControls.xml#touchControls">
+    <implementation>
+      <constructor>
+          this.isGonk = true;
+      </constructor>
+    </implementation>
   </binding>
 
   <binding id="noControls">

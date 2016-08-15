@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <algorithm>
+#include <limits>
 
 #include "gfxUtils.h"
 #include "mozilla/dom/TabChild.h"
@@ -29,7 +30,6 @@
 #include "nsStyleTransformMatrix.h"
 #include "gfxMatrix.h"
 #include "gfxPrefs.h"
-#include "gfxVR.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
@@ -2286,7 +2286,7 @@ nsDisplayItem::ForceActiveLayers()
 
 static int32_t ZIndexForFrame(nsIFrame* aFrame)
 {
-  if (!aFrame->IsAbsPosContaininingBlock() && !aFrame->IsFlexOrGridItem())
+  if (!aFrame->IsAbsPosContainingBlock() && !aFrame->IsFlexOrGridItem())
     return 0;
 
   const nsStylePosition* position = aFrame->StylePosition();
@@ -5637,7 +5637,7 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
     return false;
   }
   nscoord perspective = cbDisplay->mChildPerspective.GetCoordValue();
-  if (perspective <= 0) {
+  if (perspective < 0) {
     return true;
   }
 
@@ -5690,8 +5690,10 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
    */
   perspectiveOrigin += frameToCbGfxOffset;
 
-  aOutMatrix._34 =
-    -1.0 / NSAppUnitsToFloatPixels(perspective, aAppUnitsPerPixel);
+  Float perspectivePx = std::max(NSAppUnitsToFloatPixels(perspective,
+                                                         aAppUnitsPerPixel),
+                                 std::numeric_limits<Float>::epsilon());
+  aOutMatrix._34 = -1.0 / perspectivePx;
   aOutMatrix.ChangeBasis(perspectiveOrigin);
   return true;
 }
@@ -6649,31 +6651,6 @@ nsDisplaySVGEffects::~nsDisplaySVGEffects()
 }
 #endif
 
-nsDisplayVR::nsDisplayVR(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                         nsDisplayList* aList, mozilla::gfx::VRDeviceProxy* aHMD)
-  : nsDisplayOwnLayer(aBuilder, aFrame, aList)
-  , mHMD(aHMD)
-{
-}
-
-already_AddRefed<Layer>
-nsDisplayVR::BuildLayer(nsDisplayListBuilder* aBuilder,
-                        LayerManager* aManager,
-                        const ContainerLayerParameters& aContainerParameters)
-{
-  ContainerLayerParameters newContainerParameters = aContainerParameters;
-  uint32_t flags = FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
-  RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
-                           newContainerParameters, nullptr, flags);
-
-  container->SetVRDeviceID(mHMD->GetDeviceInfo().GetDeviceID());
-  container->SetInputFrameID(mHMD->GetSensorState().inputFrameID);
-  container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
-                         /*the value is irrelevant*/nullptr);
-
-  return container.forget();
-}
 nsRegion nsDisplaySVGEffects::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                               bool* aSnap)
 {

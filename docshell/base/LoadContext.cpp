@@ -45,7 +45,6 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
   : mTopFrameElement(nullptr)
   , mNestedFrameId(0)
   , mIsContent(true)
-  , mUsePrivateBrowsing(false)
   , mUseRemoteTabs(false)
 #ifdef DEBUG
   , mIsNotNull(true)
@@ -53,7 +52,7 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
 {
   PrincipalOriginAttributes poa = BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
   mOriginAttributes.InheritFromDocToChildDocShell(poa);
-  mOriginAttributes.SyncAttributesWithPrivateBrowsing(mUsePrivateBrowsing);
+  mUsePrivateBrowsing = (poa.mPrivateBrowsingId != 0);
   if (!aOptionalBase) {
     return;
   }

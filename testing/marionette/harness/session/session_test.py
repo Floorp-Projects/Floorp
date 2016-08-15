@@ -29,6 +29,7 @@ from marionette_driver.marionette import Marionette
 from marionette_driver.wait import Wait
 from marionette_driver.expected import element_present, element_not_present
 from mozlog import get_default_logger
+from runner import PingServer
 
 from marionette.marionette_test import (
         SkipTest,
@@ -235,6 +236,8 @@ class CommonTestCase(unittest.TestCase):
         # a persistent circular reference which in turn would prevent
         # proper garbage collection.
         self.start_time = time.time()
+        self.pingServer = PingServer()
+        self.pingServer.start()
         self.marionette = Marionette(bin=self.binary, profile=self.profile)
         if self.marionette.session is None:
             self.marionette.start_session()
@@ -247,6 +250,7 @@ class CommonTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.marionette.cleanup()
+        self.pingServer.stop()
 
     def cleanTest(self):
         self._deleteSession()

@@ -648,22 +648,15 @@ PresentationControllingInfo::GetAddress()
     return rv;
   }
 
-#elif defined(MOZ_MULET)
-  // In simulator,we need to use the "127.0.0.1" as target address.
-  NS_DispatchToMainThread(
-    NewRunnableMethod<nsCString>(
-      this,
-      &PresentationControllingInfo::OnGetAddress,
-      "127.0.0.1"));
-
 #else
-  // TODO Get host IP via other platforms.
+  nsCOMPtr<nsINetworkInfoService> networkInfo = do_GetService(NETWORKINFOSERVICE_CONTRACT_ID);
+  MOZ_ASSERT(networkInfo);
 
-  NS_DispatchToMainThread(
-    NewRunnableMethod<nsCString>(
-      this,
-      &PresentationControllingInfo::OnGetAddress,
-      EmptyCString()));
+  nsresult rv = networkInfo->ListNetworkAddresses(this);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 #endif
 
   return NS_OK;
@@ -948,6 +941,50 @@ PresentationControllingInfo::Reconnect(nsIPresentationServiceCallback* aCallback
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return mReconnectCallback->NotifyError(rv);
   }
+
+  return NS_OK;
+}
+
+// nsIListNetworkAddressesListener
+NS_IMETHODIMP
+PresentationControllingInfo::OnListedNetworkAddresses(const char** aAddressArray,
+                                                      uint32_t aAddressArraySize)
+{
+  if (!aAddressArraySize) {
+    return OnListNetworkAddressesFailed();
+  }
+
+  // TODO bug 1228504 Take all IP addresses in PresentationChannelDescription
+  // into account. And at the first stage Presentation API is only exposed on
+  // Firefox OS where the first IP appears enough for most scenarios.
+
+  nsAutoCString ip;
+  ip.Assign(aAddressArray[0]);
+
+  // On Firefox desktop, the IP address is retrieved from a callback function.
+  // To make consistent code sequence, following function call is dispatched
+  // into main thread instead of calling it directly.
+  NS_DispatchToMainThread(
+    NewRunnableMethod<nsCString>(
+      this,
+      &PresentationControllingInfo::OnGetAddress,
+      ip));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationControllingInfo::OnListNetworkAddressesFailed()
+{
+  PRES_ERROR("PresentationControllingInfo:OnListNetworkAddressesFailed");
+
+  // In 1-UA case, transport channel can still be established
+  // on loopback interface even if no network address available.
+  NS_DispatchToMainThread(
+    NewRunnableMethod<nsCString>(
+      this,
+      &PresentationControllingInfo::OnGetAddress,
+      "127.0.0.1"));
 
   return NS_OK;
 }

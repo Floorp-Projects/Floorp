@@ -15,7 +15,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
  * thread, call {@link #clone()} to make a copy, and use the copy on the other thread.
  * When a copy is first used, it becomes attached to the thread using it.
  */
-@WrapForJNI
+@WrapForJNI(calledFrom = "gecko")
 public final class NativeJSContainer extends NativeJSObject
 {
     private NativeJSContainer() {

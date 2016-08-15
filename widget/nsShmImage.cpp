@@ -274,7 +274,7 @@ nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
     }
   }
 
-  return gfxPlatform::GetPlatform()->CreateDrawTargetForData(
+  return gfxPlatform::CreateDrawTargetForData(
     reinterpret_cast<unsigned char*>(mShmAddr)
       + BytesPerPixel(mFormat) * (bounds.y * mSize.width + bounds.x),
     bounds.Size(),

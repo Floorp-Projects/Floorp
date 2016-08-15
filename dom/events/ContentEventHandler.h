@@ -240,6 +240,14 @@ protected:
                                        uint32_t aXPStartOffset,
                                        uint32_t aXPEndOffset,
                                        LineBreakType aLineBreakType);
+  // Get the contents in aContent (meaning all children of aContent) as plain
+  // text.  E.g., specifying mRootContent gets whole text in it.
+  // Note that the result is not same as .textContent.  The result is
+  // optimized for native IMEs.  For example, <br> element and some block
+  // elements causes "\n" (or "\r\n"), see also ShouldBreakLineBefore().
+  nsresult GenerateFlatTextContent(nsIContent* aContent,
+                                   nsAFlatString& aString,
+                                   LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
   nsresult GenerateFlatTextContent(nsRange* aRange,
                                    nsAFlatString& aString,
@@ -273,7 +281,8 @@ protected:
                                       uint32_t aLength,
                                       LineBreakType aLineBreakType,
                                       bool aExpandToClusterBoundaries,
-                                      uint32_t* aNewOffset = nullptr);
+                                      uint32_t* aNewOffset = nullptr,
+                                      nsIContent** aLastTextNode = nullptr);
   // If the aRange isn't in text node but next to a text node, this method
   // modifies it in the text node.  Otherwise, not modified.
   nsresult AdjustCollapsedRangeMaybeIntoTextNode(nsRange* aCollapsedRange);
@@ -304,6 +313,117 @@ protected:
   nsresult QueryTextRectByRange(nsRange* aRange,
                                 LayoutDeviceIntRect& aRect,
                                 WritingMode& aWritingMode);
+
+  // Returns a node and position in the node for computing text rect.
+  NodePosition GetNodePositionHavingFlatText(const NodePosition& aNodePosition);
+  NodePosition GetNodePositionHavingFlatText(nsINode* aNode,
+                                             int32_t aNodeOffset);
+
+  struct MOZ_STACK_CLASS FrameAndNodeOffset final
+  {
+    // mFrame is safe since this can live in only stack class and
+    // ContentEventHandler doesn't modify layout after
+    // ContentEventHandler::Init() flushes pending layout.  In other words,
+    // this struct shouldn't be used before calling
+    // ContentEventHandler::Init().
+    nsIFrame* mFrame;
+    // offset in the node of mFrame
+    int32_t mOffsetInNode;
+
+    FrameAndNodeOffset()
+      : mFrame(nullptr)
+      , mOffsetInNode(-1)
+    {
+    }
+
+    FrameAndNodeOffset(nsIFrame* aFrame, int32_t aStartOffsetInNode)
+      : mFrame(aFrame)
+      , mOffsetInNode(aStartOffsetInNode)
+    {
+    }
+
+    nsIFrame* operator->() { return mFrame; }
+    const nsIFrame* operator->() const { return mFrame; }
+    operator nsIFrame*() { return mFrame; }
+    operator const nsIFrame*() const { return mFrame; }
+    bool IsValid() const { return mFrame && mOffsetInNode >= 0; }
+  };
+  // Get first frame after the start of the given range for computing text rect.
+  // This returns invalid FrameAndNodeOffset if there is no content which
+  // should affect to computing text rect in the range.  mOffsetInNode is start
+  // offset in the frame.
+  FrameAndNodeOffset GetFirstFrameInRangeForTextRect(nsRange* aRange);
+
+  // Get last frame before the end of the given range for computing text rect.
+  // This returns invalid FrameAndNodeOffset if there is no content which
+  // should affect to computing text rect in the range.  mOffsetInNode is end
+  // offset in the frame.
+  FrameAndNodeOffset GetLastFrameInRangeForTextRect(nsRange* aRange);
+
+  struct MOZ_STACK_CLASS FrameRelativeRect final
+  {
+    // mRect is relative to the mBaseFrame's position.
+    nsRect mRect;
+    nsIFrame* mBaseFrame;
+
+    FrameRelativeRect()
+      : mBaseFrame(nullptr)
+    {
+    }
+
+    explicit FrameRelativeRect(nsIFrame* aBaseFrame)
+      : mBaseFrame(aBaseFrame)
+    {
+    }
+
+    FrameRelativeRect(const nsRect& aRect, nsIFrame* aBaseFrame)
+      : mRect(aRect)
+      , mBaseFrame(aBaseFrame)
+    {
+    }
+
+    bool IsValid() const { return mBaseFrame != nullptr; }
+
+    // Returns an nsRect relative to aBaseFrame instead of mBaseFrame.
+    nsRect RectRelativeTo(nsIFrame* aBaseFrame) const;
+  };
+
+  // Returns a rect for line breaker before the node of aFrame (If aFrame is
+  // a <br> frame or a block level frame, it causes a line break at its
+  // element's open tag, see also ShouldBreakLineBefore()).  Note that this
+  // doesn't check if aFrame should cause line break in non-debug build.
+  FrameRelativeRect GetLineBreakerRectBefore(nsIFrame* aFrame);
+
+  // Returns a line breaker rect after aTextContent as there is a line breaker
+  // immediately after aTextContent.  This is useful when following block
+  // element causes a line break before it and it needs to compute the line
+  // breaker's rect.  For example, if there is |<p>abc</p><p>def</p>|, the
+  // rect of 2nd <p>'s line breaker should be at right of "c" in the first
+  // <p>, not the start of 2nd <p>.  The result is relative to the last text
+  // frame which represents the last character of aTextContent.
+  FrameRelativeRect GuessLineBreakerRectAfter(nsIContent* aTextContent);
+
+  // Returns a guessed first rect.  I.e., it may be different from actual
+  // caret when selection is collapsed at start of aFrame.  For example, this
+  // guess the caret rect only with the content box of aFrame and its font
+  // height like:
+  // +-aFrame----------------- (border box)
+  // |
+  // |  +--------------------- (content box)
+  // |  | I
+  //      ^ guessed caret rect
+  // However, actual caret is computed with more information like line-height,
+  // child frames of aFrame etc.  But this does not emulate actual caret
+  // behavior exactly for simpler and faster code because it's difficult and
+  // we're not sure it's worthwhile to do it with complicated implementation.
+  FrameRelativeRect GuessFirstCaretRectIn(nsIFrame* aFrame);
+
+  // Make aRect non-empty.  If width and/or height is 0, these methods set them
+  // to 1.  Note that it doesn't set nsRect's width nor height to one device
+  // pixel because using nsRect::ToOutsidePixels() makes actual width or height
+  // to 2 pixels because x and y may not be aligned to device pixels.
+  void EnsureNonEmptyRect(nsRect& aRect) const;
+  void EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const;
 };
 
 } // namespace mozilla

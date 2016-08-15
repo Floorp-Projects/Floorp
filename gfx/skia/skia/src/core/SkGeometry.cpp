@@ -1316,6 +1316,9 @@ int SkConic::BuildUnitArc(const SkVector& uStart, const SkVector& uStop, SkRotat
     const SkPoint finalP = { x, y };
     const SkPoint& lastQ = quadrantPts[quadrant * 2];  // will already be a unit-vector
     const SkScalar dot = SkVector::DotProduct(lastQ, finalP);
+    if (!SkScalarIsFinite(dot)) {
+        return 0;
+    }
     SkASSERT(0 <= dot && dot <= SK_Scalar1 + SK_ScalarNearlyZero);
 
     if (dot < 1) {

@@ -9,6 +9,10 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "GPUParent.h"
 
+#if defined(XP_WIN)
+# include "mozilla/mscom/MainThreadRuntime.h"
+#endif
+
 namespace mozilla {
 namespace gfx {
 
@@ -25,7 +29,13 @@ public:
 
 private:
   DISALLOW_COPY_AND_ASSIGN(GPUProcessImpl);
+
   GPUParent mGPU;
+
+#if defined(XP_WIN)
+  // This object initializes and configures COM.
+  mozilla::mscom::MainThreadRuntime mCOMRuntime;
+#endif
 };
 
 } // namespace gfx

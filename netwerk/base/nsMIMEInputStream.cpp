@@ -50,9 +50,9 @@ private:
         nsWriteSegmentFun mWriter;
         void* mClosure;
     };
-    static NS_METHOD ReadSegCb(nsIInputStream* aIn, void* aClosure,
-                               const char* aFromRawSegment, uint32_t aToOffset,
-                               uint32_t aCount, uint32_t *aWriteCount);
+    static nsresult ReadSegCb(nsIInputStream* aIn, void* aClosure,
+                              const char* aFromRawSegment, uint32_t aToOffset,
+                              uint32_t aCount, uint32_t *aWriteCount);
 
     nsCString mHeaders;
     nsCOMPtr<nsIStringInputStream> mHeaderStream;
@@ -232,7 +232,7 @@ NS_IMETHODIMP nsMIMEInputStream::ReadSegments(nsWriteSegmentFun aWriter,
     return mStream->ReadSegments(ReadSegCb, &state, aCount, _retval);
 }
 
-NS_METHOD
+nsresult
 nsMIMEInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                              const char* aFromRawSegment,
                              uint32_t aToOffset, uint32_t aCount,

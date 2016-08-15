@@ -64,7 +64,7 @@ nsScreenAndroid::GetPixelDepth(int32_t *aPixelDepth)
       return NS_ERROR_FAILURE;
     }
 
-    *aPixelDepth = java::GeckoAppShell::GetScreenDepthWrapper();
+    *aPixelDepth = java::GeckoAppShell::GetScreenDepth();
     return NS_OK;
 }
 

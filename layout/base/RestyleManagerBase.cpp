@@ -1116,7 +1116,7 @@ RestyleManagerBase::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           // It's because we need to set this state on each affected frame
           // that we can't coalesce nsChangeHint_UpdateContainingBlock hints up
           // to ancestors (i.e. it can't be an inherited change hint).
-          if (cont->IsAbsPosContaininingBlock()) {
+          if (cont->IsAbsPosContainingBlock()) {
             if (cont->StyleDisplay()->HasTransform(cont)) {
               cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
             }

@@ -498,6 +498,13 @@ this.worker = new WorkerDebuggerLoader({
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "": "resource://gre/modules/commonjs/",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+    // Modules here are intended to have one implementation for
+    // chrome, and a separate implementation for content.  Here we
+    // map the directory to the chrome subdirectory, but the content
+    // loader will map to the content subdirectory.  See the
+    // README.md in devtools/shared/platform.
+    "devtools/shared/platform": "resource://devtools/shared/platform/chrome",
+    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "devtools": "resource://devtools",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "promise": "resource://gre/modules/Promise-backend.js",

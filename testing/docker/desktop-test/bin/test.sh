@@ -15,24 +15,6 @@ if [ $(id -u) = 0 ]; then
     exec sudo -E -u worker bash /home/worker/bin/test.sh "${@}"
 fi
 
-fail() {
-    echo # make sure error message is on a new line
-    echo "[test.sh:error]" "${@}"
-    exit 1
-}
-
-####
-# Now get the test-linux.sh script from the given Gecko tree and run it with
-# the same arguments.
-####
-
 [ -d $WORKSPACE ] || mkdir -p $WORKSPACE
 cd $WORKSPACE
-
-script=taskcluster/scripts/tester/test-ubuntu1204.sh
-url=${GECKO_HEAD_REPOSITORY}/raw-file/${GECKO_HEAD_REV}/${script}
-if ! curl --fail -o ./test-linux.sh --retry 10 $url; then
-    fail "failed downloading test-linux.sh from ${GECKO_HEAD_REPOSITORY}"
-fi
-chmod +x ./test-linux.sh
-exec ./test-linux.sh "${@}"
+exec /home/worker/bin/test-linux.sh "${@}"

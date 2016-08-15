@@ -143,7 +143,7 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/ElementBinding.h"
-#include "mozilla/dom/VRDevice.h"
+#include "mozilla/dom/VRDisplay.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsComputedDOMStyle.h"
@@ -3305,10 +3305,8 @@ GetFullScreenError(nsIDocument* aDoc)
 }
 
 void
-Element::RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
-                           ErrorResult& aError)
+Element::RequestFullscreen(ErrorResult& aError)
 {
-  MOZ_ASSERT_IF(!aCx, aOptions.isNullOrUndefined());
   // Only grant full-screen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
   // This stops the full-screen from being abused similar to the popups of old,
@@ -3323,29 +3321,6 @@ Element::RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
 
   auto request = MakeUnique<FullscreenRequest>(this);
   request->mIsCallerChrome = nsContentUtils::IsCallerChrome();
-
-  RequestFullscreenOptions fsOptions;
-  // We need to check if options is convertible to a dict first before
-  // trying to init fsOptions; otherwise Init() would throw, and we want to
-  // silently ignore non-dictionary values
-  if (aCx) {
-    bool convertible;
-    if (!IsConvertibleToDictionary(aCx, aOptions, &convertible)) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    if (convertible) {
-      if (!fsOptions.Init(aCx, aOptions)) {
-        aError.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-
-      if (fsOptions.mVrDisplay) {
-        request->mVRHMDDevice = fsOptions.mVrDisplay->GetHMD();
-      }
-    }
-  }
 
   OwnerDoc()->AsyncRequestFullScreen(Move(request));
 }

@@ -200,21 +200,25 @@ SetFromTanRadians(double left, double right, double bottom, double top)
   return fovInfo;
 }
 
-HMDInfoOSVR::HMDInfoOSVR(OSVR_ClientContext* context,
+VRDisplayOSVR::VRDisplayOSVR(OSVR_ClientContext* context,
                          OSVR_ClientInterface* iface,
                          OSVR_DisplayConfig* display)
-  : VRHMDInfo(VRHMDType::OSVR, false)
+  : VRDisplayHost(VRDisplayType::OSVR)
   , m_ctx(context)
   , m_iface(iface)
   , m_display(display)
 {
 
-  MOZ_COUNT_CTOR_INHERITED(HMDInfoOSVR, VRHMDInfo);
+  MOZ_COUNT_CTOR_INHERITED(VRDisplayOSVR, VRDisplayHost);
 
-  mDeviceInfo.mDeviceName.AssignLiteral("OSVR HMD");
-  mDeviceInfo.mSupportedSensorBits = VRStateValidFlags::State_None;
-  mDeviceInfo.mSupportedSensorBits =
-    VRStateValidFlags::State_Orientation | VRStateValidFlags::State_Position;
+  mDisplayInfo.mIsConnected = true;
+  mDisplayInfo.mDisplayName.AssignLiteral("OSVR HMD");
+  mDisplayInfo.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None;
+  mDisplayInfo.mCapabilityFlags =
+    VRDisplayCapabilityFlags::Cap_Orientation | VRDisplayCapabilityFlags::Cap_Position;
+
+  mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
+  mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
 
   // XXX OSVR display topology allows for more than one viewer
   // will assume only one viewer for now (most likely stay that way)
@@ -227,7 +231,7 @@ HMDInfoOSVR::HMDInfoOSVR(OSVR_ClientContext* context,
     // XXX for now there is only one surface per eye
     osvr_ClientGetViewerEyeSurfaceProjectionClippingPlanes(
       *m_display, 0, eye, 0, &left, &right, &bottom, &top);
-    mDeviceInfo.mRecommendedEyeFOV[eye] = mDeviceInfo.mMaximumEyeFOV[eye] =
+    mDisplayInfo.mEyeFOV[eye] =
       SetFromTanRadians(-left, right, -bottom, top);
   }
 
@@ -236,36 +240,14 @@ HMDInfoOSVR::HMDInfoOSVR(OSVR_ClientContext* context,
   OSVR_DisplayDimension width, height;
   osvr_ClientGetDisplayDimensions(*m_display, 0, &width, &height);
 
-  SetFOV(mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Left],
-         mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Right], 0.01,
-         10000.0);
-}
 
-void
-HMDInfoOSVR::Destroy()
-{
-  // destroy non-owning pointers
-  m_ctx = nullptr;
-  m_iface = nullptr;
-  m_display = nullptr;
-}
-
-bool
-HMDInfoOSVR::SetFOV(const gfx::VRFieldOfView& aFOVLeft,
-                    const gfx::VRFieldOfView& aFOVRight, double zNear,
-                    double zFar)
-{
-  OSVR_EyeCount numEyes;
-  osvr_ClientGetNumEyesForViewer(*m_display, 0, &numEyes);
   for (uint8_t eye = 0; eye < numEyes; eye++) {
-
-    mDeviceInfo.mEyeFOV[eye] = eye == 0 ? aFOVLeft : aFOVRight;
 
     OSVR_ViewportDimension l, b, w, h;
     osvr_ClientGetRelativeViewportForViewerEyeSurface(*m_display, 0, eye, 0, &l,
                                                       &b, &w, &h);
-    mDeviceInfo.mEyeResolution.width = w;
-    mDeviceInfo.mEyeResolution.height = h;
+    mDisplayInfo.mEyeResolution.width = w;
+    mDisplayInfo.mEyeResolution.height = h;
     OSVR_Pose3 eyePose;
     // Viewer eye pose may not be immediately available, update client context until we get it
     OSVR_ReturnCode ret =
@@ -274,51 +256,30 @@ HMDInfoOSVR::SetFOV(const gfx::VRFieldOfView& aFOVLeft,
       osvr_ClientUpdate(*m_ctx);
       ret = osvr_ClientGetViewerEyePose(*m_display, 0, eye, &eyePose);
     }
-    mDeviceInfo.mEyeTranslation[eye].x = eyePose.translation.data[0];
-    mDeviceInfo.mEyeTranslation[eye].y = eyePose.translation.data[1];
-    mDeviceInfo.mEyeTranslation[eye].z = eyePose.translation.data[2];
-
-    mDeviceInfo.mEyeProjectionMatrix[eye] =
-      mDeviceInfo.mEyeFOV[eye].ConstructProjectionMatrix(zNear, zFar, true);
+    mDisplayInfo.mEyeTranslation[eye].x = eyePose.translation.data[0];
+    mDisplayInfo.mEyeTranslation[eye].y = eyePose.translation.data[1];
+    mDisplayInfo.mEyeTranslation[eye].z = eyePose.translation.data[2];
   }
-
-  mConfiguration.hmdType = mDeviceInfo.mType;
-  mConfiguration.value = 0;
-  mConfiguration.fov[VRDeviceInfo::Eye_Left] = aFOVLeft;
-  mConfiguration.fov[VRDeviceInfo::Eye_Right] = aFOVRight;
-
-  return true;
 }
 
 void
-HMDInfoOSVR::FillDistortionConstants(
-  uint32_t whichEye, const IntSize& textureSize, const IntRect& eyeViewport,
-  const Size& destViewport, const Rect& destRect, VRDistortionConstants& values)
+VRDisplayOSVR::Destroy()
 {
-}
-
-bool
-HMDInfoOSVR::KeepSensorTracking()
-{
-  // Tracking is enabled if the device supports tracking and in that
-  // case is enabled automatically unless you cannot connect to it
-  return true;
+  // destroy non-owning pointers
+  m_ctx = nullptr;
+  m_iface = nullptr;
+  m_display = nullptr;
 }
 
 void
-HMDInfoOSVR::NotifyVsync(const mozilla::TimeStamp& aVsyncTimestamp)
-{
-}
-
-void
-HMDInfoOSVR::ZeroSensor()
+VRDisplayOSVR::ZeroSensor()
 {
   // recenter pose aka reset yaw
   osvr_ClientSetRoomRotationUsingHead(*m_ctx);
 }
 
 VRHMDSensorState
-HMDInfoOSVR::GetSensorState()
+VRDisplayOSVR::GetSensorState()
 {
 
   //update client context before anything
@@ -337,7 +298,7 @@ HMDInfoOSVR::GetSensorState()
   result.timestamp = timestamp.seconds;
 
   if (ret == OSVR_RETURN_SUCCESS) {
-    result.flags |= VRStateValidFlags::State_Orientation;
+    result.flags |= VRDisplayCapabilityFlags::Cap_Orientation;
     result.orientation[0] = orientation.data[1];
     result.orientation[1] = orientation.data[2];
     result.orientation[2] = orientation.data[3];
@@ -347,7 +308,7 @@ HMDInfoOSVR::GetSensorState()
   OSVR_PositionState position;
   ret = osvr_GetPositionState(*m_iface, &timestamp, &position);
   if (ret == OSVR_RETURN_SUCCESS) {
-    result.flags |= VRStateValidFlags::State_Position;
+    result.flags |= VRDisplayCapabilityFlags::Cap_Position;
     result.position[0] = position.data[0];
     result.position[1] = position.data[1];
     result.position[2] = position.data[2];
@@ -357,93 +318,39 @@ HMDInfoOSVR::GetSensorState()
 }
 
 VRHMDSensorState
-HMDInfoOSVR::GetImmediateSensorState()
+VRDisplayOSVR::GetImmediateSensorState()
 {
   return GetSensorState();
 }
 
-struct RenderTargetSetOSVR : public VRHMDRenderingSupport::RenderTargetSet
+#if defined(XP_WIN)
+
+void
+VRDisplayOSVR::SubmitFrame(TextureSourceD3D11* aSource,
+  const IntSize& aSize,
+  const VRHMDSensorState& aSensorState,
+  const gfx::Rect& aLeftEyeRect,
+  const gfx::Rect& aRightEyeRect)
 {
-  RenderTargetSetOSVR(Compositor* aCompositor, const IntSize& aSize,
-                      HMDInfoOSVR* aHMD)
-  {
+  // XXX Add code to submit frame
+}
 
-    size = aSize;
-    mCompositorBackend = aCompositor->GetBackendType();
-    currentRenderTarget = 0;
-    const uint32_t numTargets = 2;
-    renderTargets.SetLength(numTargets);
-    for (uint32_t i = 0; i < numTargets; ++i) {
-      renderTargets[i] = aCompositor->CreateRenderTarget(
-        IntRect(0, 0, aSize.width, aSize.height), INIT_MODE_NONE);
-    }
-  }
-
-  bool Valid() const
-  {
-    for (uint32_t i = 0; i < renderTargets.Length(); ++i) {
-      if (!renderTargets[i])
-        return false;
-    }
-    return true;
-  }
-
-  already_AddRefed<CompositingRenderTarget> GetNextRenderTarget() override
-  {
-    currentRenderTarget = (currentRenderTarget + 1) % renderTargets.Length();
-    renderTargets[currentRenderTarget]->ClearOnBind();
-    RefPtr<CompositingRenderTarget> rt = renderTargets[currentRenderTarget];
-    return rt.forget();
-  }
-
-  void Destroy() {}
-
-  ~RenderTargetSetOSVR() {}
-
-  int currentRenderTarget;
-  LayersBackend mCompositorBackend;
-};
-
-already_AddRefed<VRHMDRenderingSupport::RenderTargetSet>
-HMDInfoOSVR::CreateRenderTargetSet(layers::Compositor* aCompositor,
-                                   const IntSize& aSize)
-{
-#ifdef XP_WIN
-  if (aCompositor->GetBackendType() == layers::LayersBackend::LAYERS_D3D11) {
-    layers::CompositorD3D11* comp11 =
-      static_cast<layers::CompositorD3D11*>(aCompositor);
-
-    RefPtr<RenderTargetSetOSVR> rts =
-      new RenderTargetSetOSVR(comp11, aSize, this);
-    if (!rts->Valid()) {
-      return nullptr;
-    }
-
-    return rts.forget();
-  }
 #endif
 
-  if (aCompositor->GetBackendType() == layers::LayersBackend::LAYERS_OPENGL) {
-  }
-
-  return nullptr;
+void
+VRDisplayOSVR::StartPresentation()
+{
+  // XXX Add code to start VR Presentation
 }
 
 void
-HMDInfoOSVR::DestroyRenderTargetSet(RenderTargetSet* aRTSet)
+VRDisplayOSVR::StopPresentation()
 {
-  RenderTargetSetOSVR* rts = static_cast<RenderTargetSetOSVR*>(aRTSet);
-  rts->Destroy();
+  // XXX Add code to end VR Presentation
 }
 
-void
-HMDInfoOSVR::SubmitFrame(RenderTargetSet* aRTSet, int32_t aInputFrameID)
-{
-  // XXX, add renderManager code to submit frame
-}
-
-already_AddRefed<VRHMDManagerOSVR>
-VRHMDManagerOSVR::Create()
+already_AddRefed<VRDisplayManagerOSVR>
+VRDisplayManagerOSVR::Create()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -453,12 +360,12 @@ VRHMDManagerOSVR::Create()
   if (!LoadOSVRRuntime()) {
     return nullptr;
   }
-  RefPtr<VRHMDManagerOSVR> manager = new VRHMDManagerOSVR();
+  RefPtr<VRDisplayManagerOSVR> manager = new VRDisplayManagerOSVR();
   return manager.forget();
 }
 
 void
-VRHMDManagerOSVR::CheckOSVRStatus()
+VRDisplayManagerOSVR::CheckOSVRStatus()
 {
   if (mOSVRInitialized) {
     return;
@@ -482,7 +389,7 @@ VRHMDManagerOSVR::CheckOSVRStatus()
 }
 
 void
-VRHMDManagerOSVR::InitializeClientContext()
+VRDisplayManagerOSVR::InitializeClientContext()
 {
   // already initialized
   if (mClientContextInitialized) {
@@ -511,7 +418,7 @@ VRHMDManagerOSVR::InitializeClientContext()
 }
 
 void
-VRHMDManagerOSVR::InitializeInterface()
+VRDisplayManagerOSVR::InitializeInterface()
 {
   // already initialized
   if (mInterfaceInitialized) {
@@ -528,7 +435,7 @@ VRHMDManagerOSVR::InitializeInterface()
 }
 
 void
-VRHMDManagerOSVR::InitializeDisplay()
+VRDisplayManagerOSVR::InitializeDisplay()
 {
   // display is fully configured
   if (mDisplayConfigInitialized) {
@@ -563,7 +470,7 @@ VRHMDManagerOSVR::InitializeDisplay()
 }
 
 bool
-VRHMDManagerOSVR::Init()
+VRDisplayManagerOSVR::Init()
 {
 
   // OSVR server should be running in the background
@@ -587,7 +494,7 @@ VRHMDManagerOSVR::Init()
 }
 
 void
-VRHMDManagerOSVR::Destroy()
+VRDisplayManagerOSVR::Destroy()
 {
   if (mOSVRInitialized) {
     MOZ_ASSERT(NS_GetCurrentThread() == mOSVRThread);
@@ -605,7 +512,7 @@ VRHMDManagerOSVR::Destroy()
 }
 
 void
-VRHMDManagerOSVR::GetHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult)
+VRDisplayManagerOSVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
   // make sure context, interface and display are initialized
   CheckOSVRStatus();
@@ -614,7 +521,7 @@ VRHMDManagerOSVR::GetHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult)
     return;
   }
 
-  mHMDInfo = new HMDInfoOSVR(&m_ctx, &m_iface, &m_display);
+  mHMDInfo = new VRDisplayOSVR(&m_ctx, &m_iface, &m_display);
 
   if (mHMDInfo) {
     aHMDResult.AppendElement(mHMDInfo);

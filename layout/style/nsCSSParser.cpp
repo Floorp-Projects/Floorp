@@ -45,7 +45,7 @@
 #include "nsStyleUtil.h"
 #include "nsIPrincipal.h"
 #include "nsICSSUnprefixingService.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsContentUtils.h"
 #include "nsAutoPtr.h"
 #include "CSSCalc.h"
@@ -6774,14 +6774,14 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
 
       case eCSSToken_Number:
         if (tk->mIntegerValid) {
-          snprintf_literal(buffer, "%06d", tk->mInteger);
+          SprintfLiteral(buffer, "%06d", tk->mInteger);
           str.AssignWithConversion(buffer);
         }
         break;
 
       case eCSSToken_Dimension:
         if (tk->mIdent.Length() <= 6) {
-          snprintf_literal(buffer, "%06.0f", tk->mNumber);
+          SprintfLiteral(buffer, "%06.0f", tk->mNumber);
           nsAutoString temp;
           temp.AssignWithConversion(buffer);
           temp.Right(str, 6 - tk->mIdent.Length());
@@ -7817,10 +7817,8 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       ((aVariantMask & (VARIANT_LENGTH | VARIANT_ZERO_ANGLE)) != 0 &&
        eCSSToken_Number == tk->mType &&
        tk->mNumber == 0.0f)) {
-    if (((aVariantMask & VARIANT_POSITIVE_DIMENSION) != 0 &&
-         tk->mNumber <= 0.0) ||
-        ((aVariantMask & VARIANT_NONNEGATIVE_DIMENSION) != 0 &&
-         tk->mNumber < 0.0)) {
+    if ((aVariantMask & VARIANT_NONNEGATIVE_DIMENSION) != 0 &&
+        tk->mNumber < 0.0) {
         UngetToken();
         AssertNextTokenAt(lineBefore, colBefore);
         return CSSParseResult::NotFound;
@@ -15682,8 +15680,8 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
          eAngle,
          eTwoAngles,
          eNumber,
-         ePositiveLength,
-         ePositiveAbsoluteLength,
+         eNonNegativeLength,
+         eNonNegativeAbsoluteLength,
          eTwoNumbers,
          eThreeNumbers,
          eThreeNumbersOneAngle,
@@ -15704,8 +15702,8 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     {VARIANT_ANGLE_OR_ZERO},
     {VARIANT_ANGLE_OR_ZERO, VARIANT_ANGLE_OR_ZERO},
     {VARIANT_NUMBER},
-    {VARIANT_LENGTH|VARIANT_POSITIVE_DIMENSION},
-    {VARIANT_LB|VARIANT_POSITIVE_DIMENSION},
+    {VARIANT_LENGTH|VARIANT_NONNEGATIVE_DIMENSION},
+    {VARIANT_LB|VARIANT_NONNEGATIVE_DIMENSION},
     {VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_ANGLE_OR_ZERO},
@@ -15733,8 +15731,8 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     eAngle,
     eTwoAngles,
     eNumber,
-    ePositiveAbsoluteLength,
-    ePositiveAbsoluteLength,
+    eNonNegativeAbsoluteLength,
+    eNonNegativeAbsoluteLength,
     eTwoNumbers,
     eThreeNumbers,
     eThreeNumbersOneAngle,
@@ -15842,7 +15840,7 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     break;
   case eCSSKeyword_perspective:
     /* Exactly one scale number. */
-    variantIndex = ePositiveLength;
+    variantIndex = eNonNegativeLength;
     aMinElems = 1U;
     aMaxElems = 1U;
     break;

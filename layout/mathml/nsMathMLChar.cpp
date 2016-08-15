@@ -31,7 +31,7 @@
 
 #include "mozilla/LookAndFeel.h"
 #include "nsCSSRendering.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "nsDisplayList.h"
 
@@ -317,7 +317,7 @@ nsPropertiesTable::ElementAt(DrawTarget*   /* aDrawTarget */,
   if (mCharCache != aChar) {
     // The key in the property file is interpreted as ASCII and kept
     // as such ...
-    char key[10]; snprintf_literal(key, "\\u%04X", aChar);
+    char key[10]; SprintfLiteral(key, "\\u%04X", aChar);
     nsAutoString value;
     nsresult rv = mGlyphProperties->GetStringProperty(nsDependentCString(key),
                                                       value);

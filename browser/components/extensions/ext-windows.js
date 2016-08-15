@@ -93,10 +93,7 @@ extensions.registerSchemaAPI("windows", (extension, context) => {
             return Promise.reject({message: "`tabId` may not be used in conjunction with `url`"});
           }
 
-          let tab = TabManager.getTab(createData.tabId);
-          if (tab == null) {
-            return Promise.reject({message: `Invalid tab ID: ${createData.tabId}`});
-          }
+          let tab = TabManager.getTab(createData.tabId, context);
 
           // Private browsing tabs can only be moved to private browsing
           // windows.

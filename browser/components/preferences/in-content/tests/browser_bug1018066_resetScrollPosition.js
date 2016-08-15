@@ -8,7 +8,7 @@ registerCleanupFunction(function() {
     gBrowser.removeTab(gBrowser.tabs[1]);
 });
 
-add_task(function() {
+add_task(function*() {
   originalWindowHeight = window.outerHeight;
   window.resizeTo(window.outerWidth, 300);
   let prefs = yield openPreferencesViaOpenPreferencesAPI("paneApplications", undefined, {leaveOpen: true});

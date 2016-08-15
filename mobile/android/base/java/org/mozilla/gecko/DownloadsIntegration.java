@@ -113,7 +113,7 @@ public class DownloadsIntegration implements NativeEventListener
                 PackageManager.COMPONENT_ENABLED_STATE_DEFAULT == state);
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static String getTemporaryDownloadDirectory() {
         Context context = GeckoAppShell.getApplicationContext();
 
@@ -132,7 +132,7 @@ public class DownloadsIntegration implements NativeEventListener
     }
 
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static void scanMedia(final String aFile, String aMimeType) {
         String mimeType = aMimeType;
         if (UNKNOWN_MIME_TYPES.contains(mimeType)) {

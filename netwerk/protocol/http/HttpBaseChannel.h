@@ -364,6 +364,9 @@ protected:
   // for a possible synthesized response instead.
   bool ShouldIntercept(nsIURI* aURI = nullptr);
 
+  // Check if mPrivateBrowsingId matches between LoadInfo and LoadContext.
+  void CheckPrivateBrowsing();
+
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 

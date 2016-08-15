@@ -419,7 +419,7 @@ SourceBuffer::Append(const char* aData, size_t aLength)
   return NS_OK;
 }
 
-static NS_METHOD
+static nsresult
 AppendToSourceBuffer(nsIInputStream*,
                      void* aClosure,
                      const char* aFromRawSegment,

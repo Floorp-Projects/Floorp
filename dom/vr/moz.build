@@ -5,11 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'VRDevice.h',
+    'VRDisplay.h',
+    'VREventObserver.h',
     ]
 
 UNIFIED_SOURCES = [
-    'VRDevice.cpp',
+    'VRDisplay.cpp',
+    'VREventObserver.cpp',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

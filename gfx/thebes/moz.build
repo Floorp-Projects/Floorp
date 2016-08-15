@@ -51,6 +51,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.gfx += [
+    'D3D11Checks.h',
     'DeviceManagerD3D11.h',
     'PrintTarget.h',
     'PrintTargetThebes.h',
