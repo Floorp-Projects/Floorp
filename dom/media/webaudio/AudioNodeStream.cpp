@@ -582,7 +582,7 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       }
     }
 
-    if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
+    if (GetDisabledTrackMode(static_cast<TrackID>(AUDIO_TRACK)) != DisabledTrackMode::ENABLED) {
       for (uint32_t i = 0; i < outputCount; ++i) {
         mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
       }
@@ -621,7 +621,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
     mEngine->ProduceBlockBeforeInput(this, aFrom, &mLastChunks[0]);
     NS_ASSERTION(mLastChunks[0].GetDuration() == WEBAUDIO_BLOCK_SIZE,
                  "Invalid WebAudio chunk size");
-    if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
+    if (GetDisabledTrackMode(static_cast<TrackID>(AUDIO_TRACK)) != DisabledTrackMode::ENABLED) {
       mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
   }

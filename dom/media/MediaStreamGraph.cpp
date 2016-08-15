@@ -1826,7 +1826,7 @@ MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   amount += mVideoOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mMainThreadListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  amount += mDisabledTrackIDs.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  amount += mDisabledTracks.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mConsumers.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   return amount;
@@ -2439,43 +2439,75 @@ MediaStream::RunAfterPendingUpdates(already_AddRefed<nsIRunnable> aRunnable)
 }
 
 void
-MediaStream::SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled)
+MediaStream::SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode)
 {
-  if (aEnabled) {
-    mDisabledTrackIDs.RemoveElement(aTrackID);
-  } else {
-    if (!mDisabledTrackIDs.Contains(aTrackID)) {
-      mDisabledTrackIDs.AppendElement(aTrackID);
+  if (aMode == DisabledTrackMode::ENABLED) {
+    for (int32_t i = mDisabledTracks.Length() - 1; i >= 0; --i) {
+      if (aTrackID == mDisabledTracks[i].mTrackID) {
+        mDisabledTracks.RemoveElementAt(i);
+        return;
+      }
     }
+  } else {
+    for (const DisabledTrack& t : mDisabledTracks) {
+      if (aTrackID == t.mTrackID) {
+        NS_ERROR("Changing disabled track mode for a track is not allowed");
+        return;
+      }
+    }
+    mDisabledTracks.AppendElement(Move(DisabledTrack(aTrackID, aMode)));
   }
 }
 
+DisabledTrackMode
+MediaStream::GetDisabledTrackMode(TrackID aTrackID)
+{
+  for (const DisabledTrack& t : mDisabledTracks) {
+    if (t.mTrackID == aTrackID) {
+      return t.mMode;
+    }
+  }
+  return DisabledTrackMode::ENABLED;
+}
+
 void
-MediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
+MediaStream::SetTrackEnabled(TrackID aTrackID, DisabledTrackMode aMode)
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream, TrackID aTrackID, bool aEnabled) :
-      ControlMessage(aStream), mTrackID(aTrackID), mEnabled(aEnabled) {}
+    Message(MediaStream* aStream, TrackID aTrackID, DisabledTrackMode aMode) :
+      ControlMessage(aStream),
+      mTrackID(aTrackID),
+      mMode(aMode) {}
     void Run() override
     {
-      mStream->SetTrackEnabledImpl(mTrackID, mEnabled);
+      mStream->SetTrackEnabledImpl(mTrackID, mMode);
     }
     TrackID mTrackID;
-    bool mEnabled;
+    DisabledTrackMode mMode;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackID, aEnabled));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackID, aMode));
 }
 
 void
 MediaStream::ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment)
 {
-  if (!mDisabledTrackIDs.Contains(aTrackID)) {
+  DisabledTrackMode mode = GetDisabledTrackMode(aTrackID);
+  if (mode == DisabledTrackMode::ENABLED) {
     return;
   }
-  aSegment->ReplaceWithDisabled();
-  if (aRawSegment) {
-    aRawSegment->ReplaceWithDisabled();
+  if (mode == DisabledTrackMode::SILENCE_BLACK) {
+    aSegment->ReplaceWithDisabled();
+    if (aRawSegment) {
+      aRawSegment->ReplaceWithDisabled();
+    }
+  } else if (mode == DisabledTrackMode::SILENCE_FREEZE) {
+    aSegment->ReplaceWithNull();
+    if (aRawSegment) {
+      aRawSegment->ReplaceWithNull();
+    }
+  } else {
+    MOZ_CRASH("Unsupported mode");
   }
 }
 
@@ -2893,19 +2925,21 @@ SourceMediaStream::FinishWithLockHeld()
 }
 
 void
-SourceMediaStream::SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled)
+SourceMediaStream::SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode)
 {
   {
     MutexAutoLock lock(mMutex);
     for (TrackBound<DirectMediaStreamTrackListener>& l: mDirectTrackListeners) {
       if (l.mTrackID == aTrackID) {
-        bool oldEnabled = !mDisabledTrackIDs.Contains(aTrackID);
-        if (!oldEnabled && aEnabled) {
+        MOZ_ASSERT(l.mListener->mMedia->GetType() == MediaSegment::AUDIO,
+                   "Must implement DisabledTrackMode support for MediaStreamTrackDirectListener for video");
+        bool oldEnabled = GetDisabledTrackMode(aTrackID) == DisabledTrackMode::ENABLED;
+        if (!oldEnabled && aMode == DisabledTrackMode::ENABLED) {
           STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
                                        "direct listener enabled",
                                        this, aTrackID));
           l.mListener->DecreaseDisabled();
-        } else if (oldEnabled && !aEnabled) {
+        } else if (oldEnabled && aMode != DisabledTrackMode::ENABLED) {
           STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
                                        "direct listener disabled",
                                        this, aTrackID));
@@ -2914,7 +2948,7 @@ SourceMediaStream::SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled)
       }
     }
   }
-  MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
+  MediaStream::SetTrackEnabledImpl(aTrackID, aMode);
 }
 
 void
