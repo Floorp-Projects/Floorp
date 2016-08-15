@@ -7672,7 +7672,7 @@ AddonWrapper.prototype = {
 
       logger.debug(`reloading add-on ${addon.id}`);
 
-      if (!this.temporarilyInstalled) {;
+      if (!this.temporarilyInstalled) {
         let addonFile = addon.getResourceURI;
         XPIProvider.updateAddonDisabledState(addon, true);
         Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
