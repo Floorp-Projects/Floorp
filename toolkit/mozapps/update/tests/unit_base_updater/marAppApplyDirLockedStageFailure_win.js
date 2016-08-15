@@ -33,7 +33,6 @@ function setupUpdaterTestFinished() {
  */
 function stageUpdateFinished() {
   removeUpdateInProgressLockFile(getAppBaseDir());
-  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(PERFORMING_STAGED_UPDATE);

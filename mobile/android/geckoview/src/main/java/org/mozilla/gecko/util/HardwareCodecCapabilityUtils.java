@@ -36,7 +36,7 @@ public final class HardwareCodecCapabilityUtils {
     COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m
   };
 
-  @WrapForJNI(allowMultithread = true, stubName = "FindDecoderCodecInfoForMimeType")
+  @WrapForJNI
   public static boolean findDecoderCodecInfoForMimeType(String aMimeType) {
     for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
       MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);

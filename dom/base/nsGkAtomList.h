@@ -948,6 +948,9 @@ GK_ATOM(onussdreceived, "onussdreceived")
 GK_ATOM(onversionchange, "onversionchange")
 GK_ATOM(onvoicechange, "onvoicechange")
 GK_ATOM(onvoiceschanged, "onvoiceschanged")
+GK_ATOM(onvrdisplayconnect, "onvrdisplayconnect")
+GK_ATOM(onvrdisplaydisconnect, "onvrdisplaydisconnect")
+GK_ATOM(onvrdisplaypresentchange, "onvrdisplaypresentchange")
 GK_ATOM(onwebkitAnimationEnd, "onwebkitAnimationEnd")
 GK_ATOM(onwebkitAnimationIteration, "onwebkitAnimationIteration")
 GK_ATOM(onwebkitAnimationStart, "onwebkitAnimationStart")
@@ -2449,8 +2452,6 @@ GK_ATOM(onresume, "onresume")
 GK_ATOM(onmark, "onmark")
 GK_ATOM(onboundary, "onboundary")
 #endif
-
-GK_ATOM(vr_state, "vr-state")
 
 // Contextual Identity / Containers
 GK_ATOM(usercontextid, "usercontextid")

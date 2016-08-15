@@ -341,7 +341,7 @@ partial interface Navigator {
 
 partial interface Navigator {
   [Throws, Pref="dom.vr.enabled"]
-  Promise<sequence<VRDevice>> getVRDevices();
+  Promise<sequence<VRDisplay>> getVRDisplays();
 };
 
 #ifdef MOZ_B2G_BT

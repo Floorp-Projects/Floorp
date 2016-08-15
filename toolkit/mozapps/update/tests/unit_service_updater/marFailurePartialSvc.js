@@ -32,6 +32,14 @@ function setupUpdaterTestFinished() {
 function runUpdateFinished() {
   checkAppBundleModTime();
   standardInit();
+  Assert.equal(readStatusFile(), STATE_NONE,
+               "the status file failure code" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.updateCount, 1,
+               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_FAILED,
+               "the update state" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).errorCode, LOADSOURCE_ERROR_WRONG_SIZE,
+               "the update errorCode" + MSG_SHOULD_EQUAL);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContents(LOG_PARTIAL_FAILURE);

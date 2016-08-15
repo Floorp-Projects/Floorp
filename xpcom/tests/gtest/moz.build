@@ -31,6 +31,12 @@ UNIFIED_SOURCES += [
     'TestXPIDLString.cpp',
 ]
 
+# Compile TestAllocReplacement separately so Windows headers don't pollute
+# the global namespace for other files.
+SOURCES += [
+    'TestAllocReplacement.cpp',
+]
+
 LOCAL_INCLUDES += [
     '../../base',
 ]

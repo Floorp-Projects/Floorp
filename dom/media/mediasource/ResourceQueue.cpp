@@ -9,7 +9,7 @@
 #include "MediaData.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 extern mozilla::LogModule* GetSourceBufferResourceLog();
 
@@ -165,7 +165,7 @@ ResourceQueue::Dump(const char* aPath)
     ResourceItem* item = ResourceAt(i);
 
     char buf[255];
-    snprintf_literal(buf, "%s/%08u.bin", aPath, i);
+    SprintfLiteral(buf, "%s/%08u.bin", aPath, i);
     FILE* fp = fopen(buf, "wb");
     if (!fp) {
       return;

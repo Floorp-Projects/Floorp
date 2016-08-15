@@ -503,6 +503,15 @@ interface ChromeWindow {
   void beginWindowMove(Event mouseDownEvent, optional Element? panel = null);
 };
 
+partial interface Window {
+  [Pref="dom.vr.enabled"]
+  attribute EventHandler onvrdisplayconnect;
+  [Pref="dom.vr.enabled"]
+  attribute EventHandler onvrdisplaydisconnect;
+  [Pref="dom.vr.enabled"]
+  attribute EventHandler onvrdisplaypresentchange;
+};
+
 Window implements ChromeWindow;
 Window implements GlobalFetch;
 Window implements ImageBitmapFactories;

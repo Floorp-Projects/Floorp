@@ -10,7 +10,7 @@
 #include "nsString.h"
 #include "nsCharTraits.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 struct testcaseLine {
   wchar_t* c1;

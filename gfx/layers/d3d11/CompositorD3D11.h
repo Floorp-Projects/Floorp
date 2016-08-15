@@ -98,13 +98,6 @@ public:
                         const gfx::Matrix4x4& aTransform,
                         const gfx::Rect& aVisibleRect) override;
 
-  /* Helper for when the primary effect is VR_DISTORTION */
-  void DrawVRDistortion(const gfx::Rect &aRect,
-                        const gfx::IntRect &aClipRect,
-                        const EffectChain &aEffectChain,
-                        gfx::Float aOpacity,
-                        const gfx::Matrix4x4 &aTransform);
-
   /**
    * Start a new frame. If aClipRectIn is null, sets *aClipRectOut to the
    * screen dimensions. 
@@ -198,6 +191,7 @@ private:
   VertexShaderConstants mVSConstants;
   PixelShaderConstants mPSConstants;
   bool mDisableSequenceForNextFrame;
+  bool mAllowPartialPresents;
 
   gfx::IntRect mInvalidRect;
   // This is the clip rect applied to the default DrawTarget (i.e. the window)

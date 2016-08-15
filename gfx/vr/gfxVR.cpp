@@ -5,25 +5,7 @@
 
 #include <math.h>
 
-#include "prlink.h"
-#include "prmem.h"
-#include "prenv.h"
-#include "nsString.h"
-
-#include "gfxPrefs.h"
 #include "gfxVR.h"
-#if defined(XP_WIN)
-#include "gfxVROculus.h"
-#endif
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-#include "gfxVROculus050.h"
-#include "gfxVROSVR.h"
-#endif
-#include "gfxVRCardboard.h"
-
-#include "mozilla/unused.h"
-#include "mozilla/layers/Compositor.h"
-#include "mozilla/layers/TextureHost.h"
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
@@ -32,33 +14,12 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-Atomic<uint32_t> VRHMDManager::sDeviceBase(0);
-
-VRHMDInfo::VRHMDInfo(VRHMDType aType, bool aUseMainThreadOrientation)
-{
-  MOZ_COUNT_CTOR(VRHMDInfo);
-  mDeviceInfo.mType = aType;
-  mDeviceInfo.mDeviceID = VRHMDManager::AllocateDeviceID();
-  mDeviceInfo.mUseMainThreadOrientation = aUseMainThreadOrientation;
-}
-
-VRHMDInfo::~VRHMDInfo()
-{
-  MOZ_COUNT_DTOR(VRHMDInfo);
-}
+Atomic<uint32_t> VRDisplayManager::sDisplayBase(0);
 
 /* static */ uint32_t
-VRHMDManager::AllocateDeviceID()
+VRDisplayManager::AllocateDisplayID()
 {
-  return ++sDeviceBase;
-}
-
-VRHMDRenderingSupport::RenderTargetSet::RenderTargetSet()
-{
-}
-
-VRHMDRenderingSupport::RenderTargetSet::~RenderTargetSet()
-{
+  return ++sDisplayBase;
 }
 
 Matrix4x4

@@ -24,7 +24,7 @@ public class AudioFocusAgent {
 
     private String mAudioFocusState = LOST_FOCUS;
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static void notifyStartedPlaying() {
         if (!isAttachedToContext()) {
             return;
@@ -33,7 +33,7 @@ public class AudioFocusAgent {
         AudioFocusAgent.getInstance().requestAudioFocusIfNeeded();
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     public static void notifyStoppedPlaying() {
         if (!isAttachedToContext()) {
             return;

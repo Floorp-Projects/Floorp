@@ -1196,9 +1196,9 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
     png_byte dispose_op, png_byte blend_op)
 {
     if (width == 0 || width > PNG_UINT_31_MAX)
-        png_error(png_ptr, "invalid width in fcTL (> 2^31-1)");
+        png_error(png_ptr, "invalid width in fcTL (0 or > 2^31-1)");
     if (height == 0 || height > PNG_UINT_31_MAX)
-        png_error(png_ptr, "invalid height in fcTL (> 2^31-1)");
+        png_error(png_ptr, "invalid height in fcTL (0 or > 2^31-1)");
     if (x_offset > PNG_UINT_31_MAX)
         png_error(png_ptr, "invalid x_offset in fcTL (> 2^31-1)");
     if (y_offset > PNG_UINT_31_MAX)

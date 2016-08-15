@@ -61,7 +61,6 @@ using namespace mozilla::jni;
 using namespace mozilla::java;
 
 AndroidBridge* AndroidBridge::sBridge = nullptr;
-pthread_t AndroidBridge::sJavaUiThread;
 static jobject sGlobalContext = nullptr;
 nsDataHashtable<nsStringHashKey, nsString> AndroidBridge::sStoragePaths;
 
@@ -326,7 +325,7 @@ AndroidBridge::GetHandlersForMimeType(const nsAString& aMimeType,
 {
     ALOG_BRIDGE("AndroidBridge::GetHandlersForMimeType");
 
-    auto arr = GeckoAppShell::GetHandlersForMimeTypeWrapper(aMimeType, aAction);
+    auto arr = GeckoAppShell::GetHandlersForMimeType(aMimeType, aAction);
     if (!arr)
         return false;
 
@@ -371,7 +370,7 @@ AndroidBridge::GetHandlersForURL(const nsAString& aURL,
 {
     ALOG_BRIDGE("AndroidBridge::GetHandlersForURL");
 
-    auto arr = GeckoAppShell::GetHandlersForURLWrapper(aURL, aAction);
+    auto arr = GeckoAppShell::GetHandlersForURL(aURL, aAction);
     if (!arr)
         return false;
 
@@ -391,7 +390,7 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
 {
     ALOG_BRIDGE("AndroidBridge::GetMimeTypeFromExtensions");
 
-    auto jstrType = GeckoAppShell::GetMimeTypeFromExtensionsWrapper(aFileExt);
+    auto jstrType = GeckoAppShell::GetMimeTypeFromExtensions(aFileExt);
 
     if (jstrType) {
         aMimeType = jstrType->ToCString();
@@ -403,7 +402,7 @@ AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType, nsACString&
 {
     ALOG_BRIDGE("AndroidBridge::GetExtensionFromMimeType");
 
-    auto jstrExt = GeckoAppShell::GetExtensionFromMimeTypeWrapper(aMimeType);
+    auto jstrExt = GeckoAppShell::GetExtensionFromMimeType(aMimeType);
 
     if (jstrExt) {
         aFileExt = jstrExt->ToCString();
@@ -415,7 +414,7 @@ AndroidBridge::GetClipboardText(nsAString& aText)
 {
     ALOG_BRIDGE("AndroidBridge::GetClipboardText");
 
-    auto text = Clipboard::GetClipboardTextWrapper();
+    auto text = Clipboard::GetText();
 
     if (text) {
         aText = text->ToString();
@@ -432,7 +431,7 @@ AndroidBridge::GetDPI()
 
     const int DEFAULT_DPI = 160;
 
-    sDPI = GeckoAppShell::GetDpiWrapper();
+    sDPI = GeckoAppShell::GetDpi();
     if (!sDPI) {
         return DEFAULT_DPI;
     }
@@ -452,7 +451,7 @@ AndroidBridge::GetScreenDepth()
     const int DEFAULT_DEPTH = 16;
 
     if (jni::IsAvailable()) {
-        sDepth = GeckoAppShell::GetScreenDepthWrapper();
+        sDepth = GeckoAppShell::GetScreenDepth();
     }
     if (!sDepth)
         return DEFAULT_DEPTH;
@@ -478,7 +477,7 @@ AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern)
             ALOG_BRIDGE("  invalid vibration duration < 0");
             return;
         }
-        GeckoAppShell::Vibrate1(d);
+        GeckoAppShell::Vibrate(d);
         return;
     }
 
@@ -507,7 +506,7 @@ AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern)
     }
     env->ReleaseLongArrayElements(array, elts, 0);
 
-    GeckoAppShell::VibrateA(LongArray::Ref::From(array), -1 /* don't repeat */);
+    GeckoAppShell::Vibrate(LongArray::Ref::From(array), -1 /* don't repeat */);
 }
 
 void
@@ -518,7 +517,7 @@ AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
     if (!aColors)
         return;
 
-    auto arr = GeckoAppShell::GetSystemColoursWrapper();
+    auto arr = GeckoAppShell::GetSystemColors();
     if (!arr)
         return;
 
@@ -551,8 +550,7 @@ AndroidBridge::GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSiz
     if (!aBuf)
         return;
 
-    auto arr = GeckoAppShell::GetIconForExtensionWrapper
-                                             (NS_ConvertUTF8toUTF16(aFileExt), aIconSize);
+    auto arr = GeckoAppShell::GetIconForExtension(NS_ConvertUTF8toUTF16(aFileExt), aIconSize);
 
     NS_ASSERTION(arr != nullptr, "AndroidBridge::GetIconForExtension: Returned pixels array is null!");
     if (!arr)
@@ -706,7 +704,7 @@ namespace mozilla {
 bool
 AndroidBridge::InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps)
 {
-    auto arr = GeckoAppShell::InitCameraWrapper
+    auto arr = GeckoAppShell::InitCamera
       (NS_ConvertUTF8toUTF16(contentType), (int32_t) camera, (int32_t) *width, (int32_t) *height);
 
     if (!arr)
@@ -733,7 +731,7 @@ AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInf
 
     // To prevent calling too many methods through JNI, the Java method returns
     // an array of double even if we actually want a double and a boolean.
-    auto arr = GeckoAppShell::GetCurrentBatteryInformationWrapper();
+    auto arr = GeckoAppShell::GetCurrentBatteryInformation();
 
     JNIEnv* const env = arr.Env();
     if (!arr || env->GetArrayLength(arr.Get()) != 3) {
@@ -755,7 +753,7 @@ AndroidBridge::HandleGeckoMessage(JSContext* cx, JS::HandleObject object)
     ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
 
     auto message = widget::CreateNativeJSContainer(cx, object);
-    GeckoAppShell::HandleGeckoMessageWrapper(message);
+    GeckoAppShell::HandleGeckoMessage(message);
 }
 
 nsresult
@@ -810,7 +808,7 @@ AndroidBridge::SendMessage(const nsAString& aNumber,
     if (!QueueSmsRequest(aRequest, &requestId))
         return;
 
-    GeckoAppShell::SendMessageWrapper(aNumber, aMessage, requestId);
+    GeckoAppShell::SendMessage(aNumber, aMessage, requestId);
 }
 
 void
@@ -822,7 +820,7 @@ AndroidBridge::GetMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest
     if (!QueueSmsRequest(aRequest, &requestId))
         return;
 
-    GeckoAppShell::GetMessageWrapper(aMessageId, requestId);
+    GeckoAppShell::GetMessage(aMessageId, requestId);
 }
 
 void
@@ -834,7 +832,7 @@ AndroidBridge::DeleteMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequ
     if (!QueueSmsRequest(aRequest, &requestId))
         return;
 
-    GeckoAppShell::DeleteMessageWrapper(aMessageId, requestId);
+    GeckoAppShell::DeleteMessage(aMessageId, requestId);
 }
 
 void
@@ -861,7 +859,7 @@ NS_IMPL_ISUPPORTS0(MessageCursorContinueCallback)
 NS_IMETHODIMP
 MessageCursorContinueCallback::HandleContinue()
 {
-    GeckoAppShell::GetNextMessageWrapper(mRequestId);
+    GeckoAppShell::GetNextMessage(mRequestId);
     return NS_OK;
 }
 
@@ -903,14 +901,14 @@ AndroidBridge::CreateMessageCursor(bool aHasStartDate,
 
     int64_t startDate = aHasStartDate ? aStartDate : -1;
     int64_t endDate = aHasEndDate ? aEndDate : -1;
-    GeckoAppShell::CreateMessageCursorWrapper(startDate, endDate,
-                                              ObjectArray::Ref::From(numbers),
-                                              aNumbersCount,
-                                              aDelivery,
-                                              aHasRead, aRead,
-                                              aHasThreadId, aThreadId,
-                                              aReverse,
-                                              requestId);
+    GeckoAppShell::CreateMessageCursor(startDate, endDate,
+                                       ObjectArray::Ref::From(numbers),
+                                       aNumbersCount,
+                                       aDelivery,
+                                       aHasRead, aRead,
+                                       aHasThreadId, aThreadId,
+                                       aReverse,
+                                       requestId);
 
     nsCOMPtr<nsICursorContinueCallback> callback = 
        new MessageCursorContinueCallback(requestId);
@@ -922,7 +920,7 @@ NS_IMPL_ISUPPORTS0(ThreadCursorContinueCallback)
 NS_IMETHODIMP
 ThreadCursorContinueCallback::HandleContinue()
 {
-    GeckoAppShell::GetNextThreadWrapper(mRequestId);
+    GeckoAppShell::GetNextThread(mRequestId);
     return NS_OK;
 }
 
@@ -936,7 +934,7 @@ AndroidBridge::CreateThreadCursor(nsIMobileMessageCursorCallback* aRequest)
         return nullptr;
     }
 
-    GeckoAppShell::CreateThreadCursorWrapper(requestId);
+    GeckoAppShell::CreateThreadCursor(requestId);
 
     nsCOMPtr<nsICursorContinueCallback> callback =
         new ThreadCursorContinueCallback(requestId);
@@ -1037,7 +1035,7 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
     // To prevent calling too many methods through JNI, the Java method returns
     // an array of double even if we actually want an integer, a boolean, and an integer.
 
-    auto arr = GeckoAppShell::GetCurrentNetworkInformationWrapper();
+    auto arr = GeckoAppShell::GetCurrentNetworkInformation();
 
     JNIEnv* const env = arr.Env();
     if (!arr || env->GetArrayLength(arr.Get()) != 3) {
@@ -1325,7 +1323,7 @@ AndroidBridge::GetScreenOrientation()
 {
     ALOG_BRIDGE("AndroidBridge::GetScreenOrientation");
 
-    int16_t orientation = GeckoAppShell::GetScreenOrientationWrapper();
+    int16_t orientation = GeckoAppShell::GetScreenOrientation();
 
     if (!orientation)
         return dom::eScreenOrientation_None;
@@ -1356,7 +1354,7 @@ AndroidBridge::GetProxyForURI(const nsACString & aSpec,
         return NS_ERROR_FAILURE;
     }
 
-    auto jstrRet = GeckoAppShell::GetProxyForURIWrapper(aSpec, aScheme, aHost, aPort);
+    auto jstrRet = GeckoAppShell::GetProxyForURI(aSpec, aScheme, aHost, aPort);
 
     if (!jstrRet)
         return NS_ERROR_FAILURE;
@@ -1415,8 +1413,8 @@ AndroidBridge::AddPluginView(jobject view, const LayoutDeviceRect& rect, bool is
         return;
 
     CSSRect cssRect = rect / win->GetDefaultScale();
-    GeckoAppShell::AddPluginViewWrapper(Object::Ref::From(view), cssRect.x, cssRect.y,
-                                        cssRect.width, cssRect.height, isFullScreen);
+    GeckoAppShell::AddPluginView(Object::Ref::From(view), cssRect.x, cssRect.y,
+                                 cssRect.width, cssRect.height, isFullScreen);
 }
 
 extern "C"
@@ -1427,7 +1425,7 @@ Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, j
 bool
 AndroidBridge::GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult)
 {
-    auto jstrThreadName = GeckoJavaSampler::GetThreadNameJavaProfilingWrapper(aThreadId);
+    auto jstrThreadName = GeckoJavaSampler::GetThreadName(aThreadId);
 
     if (!jstrThreadName)
         return false;
@@ -1440,7 +1438,7 @@ bool
 AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
                                           uint32_t aFrameId, nsCString & aResult)
 {
-    auto jstrSampleName = GeckoJavaSampler::GetFrameNameJavaProfilingWrapper
+    auto jstrSampleName = GeckoJavaSampler::GetFrameName
             (aThreadId, aSampleId, aFrameId);
 
     if (!jstrSampleName)

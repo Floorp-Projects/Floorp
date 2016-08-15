@@ -375,7 +375,6 @@ UNIFIED_SOURCES += [
     'LayersTypes.cpp',
     'opengl/CompositingRenderTargetOGL.cpp',
     'opengl/CompositorOGL.cpp',
-    'opengl/CompositorOGLVR.cpp',
     'opengl/GLBlitTextureImageHelper.cpp',
     'opengl/OGLShaderProgram.cpp',
     'opengl/TextureClientOGL.cpp',

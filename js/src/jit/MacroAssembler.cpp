@@ -1058,28 +1058,11 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
     }
 
     nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
-
-    // Elements can only be stored in the nursery since typed arrays have a
-    // finalizer that frees the memory, but the finalizer is only called for
-    // tenured objects. Allocating the memory in the nursery is done to avoid
-    // memory leaks.
-    if (nbytes > Nursery::MaxNurseryBufferSize)
-        return;
-
     Nursery& nursery = cx->runtime()->gc.nursery;
-    void* buf = nursery.allocateBuffer(obj->zone(), nbytes);
+    void* buf = nursery.allocateBuffer(obj, nbytes);
     if (buf) {
-        if (nursery.isInside(buf) || obj->isTenured()) {
-            obj->initPrivate(buf);
-            memset(buf, 0, nbytes);
-        } else {
-            // If the nursery is full, |allocateBuffer| will try to allocate
-            // the memory in the tenured heap. This will leak memory when the
-            // object is not tenured since the finalizer will not be called for
-            // non-tenured objects.
-            nursery.removeMallocedBuffer(buf);
-            js_free(buf);
-        }
+        obj->initPrivate(buf);
+        memset(buf, 0, nbytes);
     }
 }
 

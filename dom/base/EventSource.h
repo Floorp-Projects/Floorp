@@ -127,12 +127,12 @@ protected:
                                uint32_t          aFormatStringsLen);
   nsresult ConsoleError();
 
-  static NS_METHOD StreamReaderFunc(nsIInputStream *aInputStream,
-                                    void           *aClosure,
-                                    const char     *aFromRawSegment,
-                                    uint32_t        aToOffset,
-                                    uint32_t        aCount,
-                                    uint32_t       *aWriteCount);
+  static nsresult StreamReaderFunc(nsIInputStream *aInputStream,
+                                   void           *aClosure,
+                                   const char     *aFromRawSegment,
+                                   uint32_t        aToOffset,
+                                   uint32_t        aCount,
+                                   uint32_t       *aWriteCount);
   nsresult SetFieldAndClear();
   nsresult ClearFields();
   nsresult ResetEvent();
