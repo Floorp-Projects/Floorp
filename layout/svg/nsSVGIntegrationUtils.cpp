@@ -703,6 +703,49 @@ SetupContextMatrix(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
   aParams.ctx.SetMatrix(aParams.ctx.CurrentMatrix().Translate(devPixelOffsetToUserSpace));
 }
 
+static already_AddRefed<gfxContext>
+CreateBlendTarget(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
+                  IntPoint& aTargetOffset)
+{
+  MOZ_ASSERT(aParams.frame->StyleEffects()->mMixBlendMode !=
+             NS_STYLE_BLEND_NORMAL);
+
+  // Create a temporary context to draw to so we can blend it back with
+  // another operator.
+  IntRect drawRect = ComputeClipExtsInDeviceSpace(aParams.ctx);
+
+  RefPtr<DrawTarget> targetDT = aParams.ctx.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(), SurfaceFormat::B8G8R8A8);
+  if (!targetDT || !targetDT->IsValid()) {
+    return nullptr;
+  }
+
+  RefPtr<gfxContext> target = gfxContext::CreateOrNull(targetDT);
+  MOZ_ASSERT(target); // already checked the draw target above
+  target->SetMatrix(aParams.ctx.CurrentMatrix() *
+                    gfxMatrix::Translation(-drawRect.TopLeft()));
+  aTargetOffset = drawRect.TopLeft();
+
+  return target.forget();
+}
+
+static void
+BlendToTarget(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
+              gfxContext* aTarget, const IntPoint& aTargetOffset)
+{
+  MOZ_ASSERT(aParams.frame->StyleEffects()->mMixBlendMode !=
+             NS_STYLE_BLEND_NORMAL);
+
+  RefPtr<DrawTarget> targetDT = aTarget->GetDrawTarget();
+  RefPtr<SourceSurface> targetSurf = targetDT->Snapshot();
+
+  gfxContext& context = aParams.ctx;
+  gfxContextAutoSaveRestore save(&context);
+  context.SetMatrix(gfxMatrix()); // This will be restored right after.
+  RefPtr<gfxPattern> pattern = new gfxPattern(targetSurf, Matrix::Translation(aTargetOffset.x, aTargetOffset.y));
+  context.SetPattern(pattern);
+  context.Paint();
+}
+
 DrawResult
 nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
 {
@@ -782,22 +825,13 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
                 !shouldApplyClipPath && !shouldApplyBasicShape);
 
   // These are used if we require a temporary surface for a custom blend mode.
-  RefPtr<gfxContext> target = &aParams.ctx;
   IntPoint targetOffset;
-
-  if (frame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-    // Create a temporary context to draw to so we can blend it back with
-    // another operator.
-    IntRect drawRect = ComputeClipExtsInDeviceSpace(context);
-
-    RefPtr<DrawTarget> targetDT = context.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(), SurfaceFormat::B8G8R8A8);
-    if (!targetDT || !targetDT->IsValid()) {
-      return DrawResult::TEMPORARY_ERROR;
-    }
-    target = gfxContext::CreateOrNull(targetDT);
-    MOZ_ASSERT(target); // already checked the draw target above
-    target->SetMatrix(context.CurrentMatrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
-    targetOffset = drawRect.TopLeft();
+  RefPtr<gfxContext> target =
+    (aParams.frame->StyleEffects()->mMixBlendMode == NS_STYLE_BLEND_NORMAL)
+      ? RefPtr<gfxContext>(&aParams.ctx).forget()
+      : CreateBlendTarget(aParams, targetOffset);
+  if (!target) {
+    return DrawResult::TEMPORARY_ERROR;
   }
 
   bool shouldGenerateMask = (opacity != 1.0f || shouldGenerateClipMaskLayer ||
@@ -882,16 +916,9 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
     context.Restore();
   }
 
-  if (frame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-    RefPtr<DrawTarget> targetDT = target->GetDrawTarget();
-    target = nullptr;
-    RefPtr<SourceSurface> targetSurf = targetDT->Snapshot();
-
-    gfxContextAutoSaveRestore save(&context);
-    context.SetMatrix(gfxMatrix()); // This will be restored right after.
-    RefPtr<gfxPattern> pattern = new gfxPattern(targetSurf, Matrix::Translation(targetOffset.x, targetOffset.y));
-    context.SetPattern(pattern);
-    context.Paint();
+  if (aParams.frame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+    MOZ_ASSERT(target != &aParams.ctx);
+    BlendToTarget(aParams, target, targetOffset);
   }
 
   return result;
