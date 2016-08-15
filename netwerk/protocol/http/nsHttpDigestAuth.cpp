@@ -7,6 +7,8 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/Sprintf.h"
+
 #include "nsHttp.h"
 #include "nsHttpDigestAuth.h"
 #include "nsIHttpAuthenticableChannel.h"
@@ -15,7 +17,6 @@
 #include "nsString.h"
 #include "nsEscape.h"
 #include "nsNetCID.h"
-#include "prprf.h"
 #include "nsCRT.h"
 #include "nsICryptoHash.h"
 #include "nsComponentManagerUtils.h"
@@ -279,7 +280,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
     if (v) {
       uint32_t nc;
       v->GetData(&nc);
-      PR_snprintf(nonce_count, sizeof(nonce_count), "%08x", ++nc);
+      SprintfLiteral(nonce_count, "%08x", ++nc);
       v->SetData(nc);
     }
   }
