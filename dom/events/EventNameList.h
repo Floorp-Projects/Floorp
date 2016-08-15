@@ -286,10 +286,6 @@ EVENT(loadedmetadata,
       eLoadedMetaData,
       EventNameType_HTML,
       eBasicEventClass)
-EVENT(loadend,
-      eLoadEnd,
-      EventNameType_HTML,
-      eBasicEventClass)
 EVENT(loadstart,
       eLoadStart,
       EventNameType_HTML,
@@ -709,7 +705,7 @@ NON_IDL_EVENT(DOMFocusOut,
               eLegacyDOMFocusOut,
               EventNameType_HTMLXUL,
               eUIEventClass)
-
+                                  
 NON_IDL_EVENT(DOMMouseScroll,
               eLegacyMouseLineOrPageScroll,
               EventNameType_HTMLXUL,
@@ -718,7 +714,7 @@ NON_IDL_EVENT(MozMousePixelScroll,
               eLegacyMousePixelScroll,
               EventNameType_HTMLXUL,
               eMouseScrollEventClass)
-
+                                                
 NON_IDL_EVENT(open,
               eOpen,
               EventNameType_None,

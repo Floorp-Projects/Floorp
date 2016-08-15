@@ -230,15 +230,8 @@ nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
   // Fire the appropriate DOM event.
   if (NS_SUCCEEDED(aStatus)) {
     FireEvent(NS_LITERAL_STRING("load"));
-
-    // Do not fire loadend event for multipart/x-mixed-replace image streams.
-    bool isMultipart;
-    if (NS_FAILED(aRequest->GetMultipart(&isMultipart)) || !isMultipart) {
-      FireEvent(NS_LITERAL_STRING("loadend"));
-    }
   } else {
     FireEvent(NS_LITERAL_STRING("error"));
-    FireEvent(NS_LITERAL_STRING("loadend"));
   }
 
   nsCOMPtr<nsINode> thisNode = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -635,9 +628,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
       aChannel->GetURI(getter_AddRefs(mCurrentURI));
-
     FireEvent(NS_LITERAL_STRING("error"));
-    FireEvent(NS_LITERAL_STRING("loadend"));
     aError.Throw(rv);
   }
   return listener.forget();
@@ -673,7 +664,7 @@ nsImageLoadingContent::ForceReload(const mozilla::dom::Optional<bool>& aNotify,
   ImageLoadType loadType = \
     (mCurrentRequestFlags & REQUEST_IS_IMAGESET) ? eImageLoadType_Imageset
                                                  : eImageLoadType_Normal;
-  nsresult rv = LoadImage(currentURI, true, notify, loadType, true, nullptr,
+  nsresult rv = LoadImage(currentURI, true, notify, loadType, nullptr,
                           nsIRequest::VALIDATE_ALWAYS);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
@@ -757,17 +748,13 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
     return NS_OK;
   }
 
-  // Fire loadstart event
-  FireEvent(NS_LITERAL_STRING("loadstart"));
-
-  // Parse the URI string to get image URI
+  // Second, parse the URI string to get image URI
   nsCOMPtr<nsIURI> imageURI;
   nsresult rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   if (NS_FAILED(rv)) {
-    // Cancel image requests and then fire error and loadend events per spec
+    // Cancel image requests and fire error event per spec
     CancelImageRequests(aNotify);
     FireEvent(NS_LITERAL_STRING("error"));
-    FireEvent(NS_LITERAL_STRING("loadend"));
     return NS_OK;
   }
 
@@ -791,7 +778,7 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
 
   NS_TryToSetImmutable(imageURI);
 
-  return LoadImage(imageURI, aForce, aNotify, aImageLoadType, false, doc);
+  return LoadImage(imageURI, aForce, aNotify, aImageLoadType, doc);
 }
 
 nsresult
@@ -799,20 +786,13 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  bool aForce,
                                  bool aNotify,
                                  ImageLoadType aImageLoadType,
-                                 bool aLoadStart,
                                  nsIDocument* aDocument,
                                  nsLoadFlags aLoadFlags)
 {
-  // Fire loadstart event if required
-  if (aLoadStart) {
-    FireEvent(NS_LITERAL_STRING("loadstart"));
-  }
-
   if (!mLoadingEnabled) {
     // XXX Why fire an error here? seems like the callers to SetLoadingEnabled
     // don't want/need it.
     FireEvent(NS_LITERAL_STRING("error"));
-    FireEvent(NS_LITERAL_STRING("loadend"));
     return NS_OK;
   }
 
@@ -869,7 +849,6 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                policyType);
   if (!NS_CP_ACCEPTED(cpDecision)) {
     FireEvent(NS_LITERAL_STRING("error"));
-    FireEvent(NS_LITERAL_STRING("loadend"));
     SetBlockedRequest(aNewURI, cpDecision);
     return NS_OK;
   }
@@ -942,9 +921,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
       mCurrentURI = aNewURI;
-
     FireEvent(NS_LITERAL_STRING("error"));
-    FireEvent(NS_LITERAL_STRING("loadend"));
     return NS_OK;
   }
 
