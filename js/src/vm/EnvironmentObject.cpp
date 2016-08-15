@@ -1811,8 +1811,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
             return false;
 
         if (!argsObj) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
-                                 "Debugger scope");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
+                                      "Debugger scope");
             return false;
         }
 
@@ -1834,8 +1834,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
             return false;
 
         if (!success) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
-                                 "Debugger scope");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
+                                      "Debugger scope");
             return false;
         }
 
@@ -1891,8 +1891,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
             return false;
 
         if (!argsObj) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
-                                 "Debugger env");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
+                                      "Debugger env");
             return false;
         }
 
@@ -1908,8 +1908,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
             return false;
 
         if (!success) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
-                                 "Debugger env");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
+                                      "Debugger env");
             return false;
         }
 

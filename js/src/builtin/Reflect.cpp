@@ -64,8 +64,8 @@ Reflect_apply(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     if (!IsCallable(args.get(0))) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION,
-                             "Reflect.apply argument");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION,
+                                  "Reflect.apply argument");
         return false;
     }
 
@@ -87,8 +87,8 @@ Reflect_construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     if (!IsConstructor(args.get(0))) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
-                             "Reflect.construct argument");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
+                                  "Reflect.construct argument");
         return false;
     }
 
@@ -97,8 +97,8 @@ Reflect_construct(JSContext* cx, unsigned argc, Value* vp)
     if (argc > 2) {
         newTarget = args[2];
         if (!IsConstructor(newTarget)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
-                                 "Reflect.construct argument 3");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
+                                      "Reflect.construct argument 3");
             return false;
         }
     }

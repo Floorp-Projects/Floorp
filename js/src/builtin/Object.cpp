@@ -437,15 +437,15 @@ obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 2) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "Object.setPrototypeOf", "1", "");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "Object.setPrototypeOf", "1", "");
         return false;
     }
 
     /* Step 1-2. */
     if (args[0].isNullOrUndefined()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                             args[0].isNull() ? "null" : "undefined", "object");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                                  args[0].isNull() ? "null" : "undefined", "object");
         return false;
     }
 
@@ -677,8 +677,8 @@ js::obj_create(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "Object.create", "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "Object.create", "0", "s");
         return false;
     }
 
@@ -981,8 +981,8 @@ obj_defineProperties(JSContext* cx, unsigned argc, Value* vp)
 
     /* Step 2. */
     if (args.length() < 2) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "Object.defineProperties", "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "Object.defineProperties", "0", "s");
         return false;
     }
     RootedValue val(cx, args[1]);

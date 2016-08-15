@@ -1325,7 +1325,7 @@ ProxyCreate(JSContext* cx, CallArgs& args, const char* callerName)
 
     // Step 2.
     if (IsRevokedScriptedProxy(target)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_ARG_REVOKED, "1");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_PROXY_ARG_REVOKED, "1");
         return false;
     }
 
@@ -1336,7 +1336,7 @@ ProxyCreate(JSContext* cx, CallArgs& args, const char* callerName)
 
     // Step 4.
     if (IsRevokedScriptedProxy(handler)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_ARG_REVOKED, "2");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_PROXY_ARG_REVOKED, "2");
         return false;
     }
 

@@ -265,8 +265,8 @@ class SCInput {
     bool readArray(T* p, size_t nelems);
 
     bool reportTruncated() {
-         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                              JSMSG_SC_BAD_SERIALIZED_DATA, "truncated");
+         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                   "truncated");
          return false;
      }
 
@@ -1110,8 +1110,8 @@ JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref)
     }
 
     if (memory.count() == UINT32_MAX) {
-        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                             JSMSG_NEED_DIET, "object graph to serialize");
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_NEED_DIET,
+                                  "object graph to serialize");
         return false;
     }
 
@@ -1607,8 +1607,8 @@ JSStructuredCloneReader::checkDouble(double d)
     jsval_layout l;
     l.asDouble = d;
     if (!JSVAL_IS_DOUBLE_IMPL(l)) {
-        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                             JSMSG_SC_BAD_SERIALIZED_DATA, "unrecognized NaN");
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "unrecognized NaN");
         return false;
     }
     return true;
@@ -1645,8 +1645,8 @@ JSString*
 JSStructuredCloneReader::readStringImpl(uint32_t nchars)
 {
     if (nchars > JSString::MAX_LENGTH) {
-        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                             JSMSG_SC_BAD_SERIALIZED_DATA, "string length");
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "string length");
         return nullptr;
     }
     Chars<CharT> chars(context());
@@ -1678,8 +1678,8 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Mut
                                         bool v1Read)
 {
     if (arrayType > Scalar::Uint8Clamped) {
-        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                             JSMSG_SC_BAD_SERIALIZED_DATA, "unhandled typed array element type");
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "unhandled typed array element type");
         return false;
     }
 
@@ -1894,8 +1894,9 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
             return false;
         JS::ClippedTime t = JS::TimeClip(d);
         if (!NumbersAreIdentical(d, t.toDouble())) {
-            JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                                 JSMSG_SC_BAD_SERIALIZED_DATA, "date");
+            JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                      JSMSG_SC_BAD_SERIALIZED_DATA,
+                                      "date");
             return false;
         }
         JSObject* obj = NewDateObjectMsec(context(), t);
@@ -1911,8 +1912,9 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
         if (!in.readPair(&tag2, &stringData))
             return false;
         if (tag2 != SCTAG_STRING) {
-            JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                                 JSMSG_SC_BAD_SERIALIZED_DATA, "regexp");
+            JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                      JSMSG_SC_BAD_SERIALIZED_DATA,
+                                      "regexp");
             return false;
         }
         JSString* str = readString(stringData);
@@ -1944,9 +1946,9 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
 
       case SCTAG_BACK_REFERENCE_OBJECT: {
         if (data >= allObjs.length() || !allObjs[data].isObject()) {
-            JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                                 JSMSG_SC_BAD_SERIALIZED_DATA,
-                                 "invalid back reference in input");
+            JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                      JSMSG_SC_BAD_SERIALIZED_DATA,
+                                      "invalid back reference in input");
             return false;
         }
         vp.set(allObjs[data]);
@@ -1956,9 +1958,8 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
       case SCTAG_TRANSFER_MAP_HEADER:
       case SCTAG_TRANSFER_MAP_PENDING_ENTRY:
         // We should be past all the transfer map tags.
-        JS_ReportErrorNumber(context(), GetErrorMessage, NULL,
-                             JSMSG_SC_BAD_SERIALIZED_DATA,
-                             "invalid input");
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "invalid input");
         return false;
 
       case SCTAG_ARRAY_BUFFER_OBJECT:
@@ -2019,8 +2020,9 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
         }
 
         if (!callbacks || !callbacks->read) {
-            JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                                 JSMSG_SC_BAD_SERIALIZED_DATA, "unsupported type");
+            JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                      JSMSG_SC_BAD_SERIALIZED_DATA,
+                                      "unsupported type");
             return false;
         }
         JSObject* obj = callbacks->read(context(), this, tag, data, closure);
@@ -2051,8 +2053,8 @@ JSStructuredCloneReader::readHeader()
 
     MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
     if (data < uint32_t(scope)) {
-        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                             JSMSG_SC_BAD_SERIALIZED_DATA, "incompatible structured clone scope");
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "incompatible structured clone scope");
         return false;
     }
 
@@ -2178,8 +2180,8 @@ JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag)
     } else if (principalsTag == SCTAG_NULL_JSPRINCIPALS) {
         principals = nullptr;
     } else {
-        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                             JSMSG_SC_BAD_SERIALIZED_DATA, "bad SavedFrame principals");
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "bad SavedFrame principals");
         return nullptr;
     }
     savedFrame->initPrincipalsAlreadyHeld(principals);
@@ -2572,8 +2574,9 @@ JS_ReadTypedArray(JSStructuredCloneReader* r, MutableHandleValue vp)
             return false;
         return r->readTypedArray(arrayType, nelems, vp);
     } else {
-        JS_ReportErrorNumber(r->context(), GetErrorMessage, nullptr,
-                             JSMSG_SC_BAD_SERIALIZED_DATA, "expected type array");
+        JS_ReportErrorNumberASCII(r->context(), GetErrorMessage, nullptr,
+                                  JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "expected type array");
         return false;
     }
 }

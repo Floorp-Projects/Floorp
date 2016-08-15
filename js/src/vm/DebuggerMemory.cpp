@@ -66,8 +66,8 @@ DebuggerMemory::getDebugger()
 /* static */ bool
 DebuggerMemory::construct(JSContext* cx, unsigned argc, Value* vp)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
-                         "Debugger.Memory");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
+                              "Debugger.Source");
     return false;
 }
 
@@ -178,8 +178,8 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
     Debugger* dbg = memory->getDebugger();
 
     if (!dbg->trackingAllocationSites) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_TRACKING_ALLOCATIONS,
-                             "drainAllocationsLog");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_TRACKING_ALLOCATIONS,
+                                  "drainAllocationsLog");
         return false;
     }
 
@@ -266,9 +266,9 @@ DebuggerMemory::setMaxAllocationsLogLength(JSContext* cx, unsigned argc, Value* 
         return false;
 
     if (max < 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                             "(set maxAllocationsLogLength)'s parameter",
-                             "not a positive integer");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                  "(set maxAllocationsLogLength)'s parameter",
+                                  "not a positive integer");
         return false;
     }
 
@@ -307,9 +307,9 @@ DebuggerMemory::setAllocationSamplingProbability(JSContext* cx, unsigned argc, V
 
     // Careful!  This must also reject NaN.
     if (!(0.0 <= probability && probability <= 1.0)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                             "(set allocationSamplingProbability)'s parameter",
-                             "not a number between 0 and 1");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                  "(set allocationSamplingProbability)'s parameter",
+                                  "not a number between 0 and 1");
         return false;
     }
 

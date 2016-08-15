@@ -534,8 +534,8 @@ SavedFrame::isSelfHosted(JSContext* cx)
 /* static */ bool
 SavedFrame::construct(JSContext* cx, unsigned argc, Value* vp)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
-                         "SavedFrame");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
+                              "SavedFrame");
     return false;
 }
 

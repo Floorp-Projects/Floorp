@@ -933,7 +933,7 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "memory");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "memory");
         return false;
     }
 
@@ -998,7 +998,7 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
     uint32_t ret = grow(memory, delta, cx);
 
     if (ret == uint32_t(-1)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "memory");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "memory");
         return false;
     }
 
@@ -1217,7 +1217,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "table");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "table");
         return false;
     }
 
@@ -1381,7 +1381,7 @@ WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
     uint32_t ret = table->table().grow(delta, cx);
 
     if (ret == uint32_t(-1)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "table");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW, "table");
         return false;
     }
 
