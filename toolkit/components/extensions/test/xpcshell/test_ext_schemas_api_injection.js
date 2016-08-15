@@ -46,7 +46,7 @@ add_task(function* testSchemaAPIInjection() {
   yield Schemas.load(url);
 
   // Register an API that will skip the background page.
-  Management.registerSchemaAPI("noBackgroundAPI.testnamespace", (extension, context) => {
+  Management.registerSchemaAPI("noBackgroundAPI.testnamespace", context => {
     if (context.type !== "background") {
       return {
         noBackgroundAPI: {
@@ -63,7 +63,7 @@ add_task(function* testSchemaAPIInjection() {
   });
 
   // Register an API that will skip any but the background page.
-  Management.registerSchemaAPI("backgroundAPI.testnamespace", (extension, context) => {
+  Management.registerSchemaAPI("backgroundAPI.testnamespace", context => {
     if (context.type === "background") {
       return {
         backgroundAPI: {

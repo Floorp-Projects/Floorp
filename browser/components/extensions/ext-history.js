@@ -130,7 +130,7 @@ function getObserver() {
   return _observer;
 }
 
-extensions.registerSchemaAPI("history", (extension, context) => {
+extensions.registerSchemaAPI("history", context => {
   return {
     history: {
       addUrl: function(details) {
