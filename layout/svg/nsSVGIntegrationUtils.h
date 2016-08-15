@@ -149,6 +149,9 @@ public:
   static DrawResult
   PaintFramesWithEffects(const PaintFramesParams& aParams);
 
+  static DrawResult
+  PaintFilter(const PaintFramesParams& aParams);
+
   /**
    * SVG frames expect to paint in SVG user units, which are equal to CSS px
    * units. This method provides a transform matrix to multiply onto a
