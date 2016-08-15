@@ -141,8 +141,8 @@ ErrorWrongTypeArg(JSContext* cx, unsigned argIndex, Handle<TypeDescr*> typeDescr
     if (!typeNameStr)
         return false;
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR,
-                         typeNameStr, charArgIndex);
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR,
+                               typeNameStr, charArgIndex);
     JS_free(cx, typeNameStr);
     return false;
 }
