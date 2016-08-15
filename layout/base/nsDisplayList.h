@@ -56,9 +56,6 @@ class Layer;
 class ImageLayer;
 class ImageContainer;
 } // namespace layers
-namespace gfx {
-class VRDeviceProxy;
-} // namespace gfx
 } // namespace mozilla
 
 // A set of blend modes, that never includes OP_OVER (since it's
@@ -4383,31 +4380,6 @@ public:
   nscoord mVisIEndEdge;
   // Cached result of mFrame->IsSelected().  Only initialized when needed.
   mutable mozilla::Maybe<bool> mIsFrameSelected;
-};
-
-/**
- * A wrapper layer that wraps its children in a container, then renders
- * everything with an appropriate VR effect based on the HMDInfo.
- */
-
-class nsDisplayVR : public nsDisplayOwnLayer {
-public:
-  nsDisplayVR(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-              nsDisplayList* aList, mozilla::gfx::VRDeviceProxy* aHMD);
-
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) override
-  {
-    return mozilla::LAYER_ACTIVE;
-  }
-
-  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager,
-                                             const ContainerLayerParameters& aContainerParameters) override;
-
-protected:
-  RefPtr<mozilla::gfx::VRDeviceProxy> mHMD;
 };
 
 #endif /*NSDISPLAYLIST_H_*/

@@ -113,7 +113,7 @@ WebVTTListener::OnStopRequest(nsIRequest* aRequest,
   return aStatus;
 }
 
-NS_METHOD
+nsresult
 WebVTTListener::ParseChunk(nsIInputStream* aInStream, void* aClosure,
                            const char* aFromSegment, uint32_t aToOffset,
                            uint32_t aCount, uint32_t* aWriteCount)

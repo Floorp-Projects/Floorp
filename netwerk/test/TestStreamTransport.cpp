@@ -135,12 +135,12 @@ public:
         return mInput->AsyncWait(this, 0, 0, nullptr);
     }
 
-    static NS_METHOD FillOutputBuffer(nsIOutputStream *outStr,
-                                      void *closure,
-                                      char *buffer,
-                                      uint32_t offset,
-                                      uint32_t count,
-                                      uint32_t *countRead)
+    static nsresult FillOutputBuffer(nsIOutputStream *outStr,
+                                     void *closure,
+                                     char *buffer,
+                                     uint32_t offset,
+                                     uint32_t count,
+                                     uint32_t *countRead)
     {
         MyCopier *self = (MyCopier *) closure;
 

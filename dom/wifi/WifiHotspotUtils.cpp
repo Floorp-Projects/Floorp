@@ -14,7 +14,7 @@
 
 #include "prinit.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
 
@@ -178,10 +178,10 @@ int32_t WifiHotspotUtils::do_wifi_hostapd_get_stations()
   }
   stations++;
 
-  snprintf_literal(cmd, "STA-NEXT %s", addr);
+  SprintfLiteral(cmd, "STA-NEXT %s", addr);
   while (sendCommand(ctrl_conn, cmd, addr, &addrLen) == 0) {
     stations++;
-    snprintf_literal(cmd, "STA-NEXT %s", addr);
+    SprintfLiteral(cmd, "STA-NEXT %s", addr);
   }
 
   return stations;

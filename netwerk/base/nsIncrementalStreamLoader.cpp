@@ -111,7 +111,7 @@ nsIncrementalStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsIncrementalStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
                                            void *closure,
                                            const char *fromSegment,

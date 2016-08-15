@@ -43,7 +43,7 @@ nsUnknownDecoder::ConvertedStreamListener::~ConvertedStreamListener()
 {
 }
 
-NS_IMETHODIMP
+nsresult
 nsUnknownDecoder::ConvertedStreamListener::
                   AppendDataToString(nsIInputStream* inputStream,
                                      void* closure,

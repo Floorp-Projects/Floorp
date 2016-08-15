@@ -78,8 +78,8 @@
   }
 }
 
-.text-link,
-.text-link:focus {
+description > .text-link,
+description > .text-link:focus {
   margin: 0px;
   padding: 0px;
 }

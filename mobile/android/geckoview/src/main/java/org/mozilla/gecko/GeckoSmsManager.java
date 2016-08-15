@@ -1213,32 +1213,32 @@ public class GeckoSmsManager
     private static final long serialVersionUID = 158467542575633280L;
   }
 
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   public static native void notifySmsReceived(int aId, String aSender, String aBody, int aMessageClass, long aSentTimestamp, long aTimestamp);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifySmsSendFailed(int aError, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, boolean aRead, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifyGetSmsFailed(int aError, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifySmsDeleted(boolean aDeleted, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifySmsDeleteFailed(int aError, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifySmsMarkedAsRead(boolean aMarkedAsRead, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifySmsMarkAsReadFailed(int aError, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifyCursorError(int aError, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifyThreadCursorResult(long aId, String aLastMessageSubject, String aBody, long aUnreadCount, Object[] aParticipants, long aTimestamp, String aLastMessageType, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifyMessageCursorResult(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, long aThreadId, boolean aRead, int aRequestId);
-  @WrapForJNI
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
   private static native void notifyCursorDone(int aRequestId);
 }

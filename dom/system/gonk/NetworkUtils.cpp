@@ -15,7 +15,7 @@
 
 #include "NetworkUtils.h"
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "SystemProperty.h"
 
 #include <android/log.h>
@@ -1175,11 +1175,11 @@ void NetworkUtils::setInterfaceDns(CommandChain* aChain,
   int written;
 
   if (SDK_VERSION >= 20) {
-    written = snprintf_literal(command, "resolver setnetdns %d %s",
-                               GET_FIELD(mNetId), GET_CHAR(mDomain));
+    written = SprintfLiteral(command, "resolver setnetdns %d %s",
+                             GET_FIELD(mNetId), GET_CHAR(mDomain));
   } else {
-    written = snprintf_literal(command, "resolver setifdns %s %s",
-                               GET_CHAR(mIfname), GET_CHAR(mDomain));
+    written = SprintfLiteral(command, "resolver setifdns %s %s",
+                             GET_CHAR(mIfname), GET_CHAR(mDomain));
   }
 
   nsTArray<nsString>& dnses = GET_FIELD(mDnses);
@@ -1957,7 +1957,7 @@ CommandResult NetworkUtils::setDNS(NetworkParams& aOptions)
       NS_ConvertUTF16toUTF8 autoDns(aOptions.mDnses[i]);
 
       char dns_prop_key[Property::VALUE_MAX_LENGTH];
-      snprintf_literal(dns_prop_key, "net.dns%d", i+1);
+      SprintfLiteral(dns_prop_key, "net.dns%d", i+1);
       Property::Set(dns_prop_key, autoDns.get());
     }
   } else {

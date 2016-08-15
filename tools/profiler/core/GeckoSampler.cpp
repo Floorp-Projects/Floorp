@@ -485,7 +485,7 @@ void BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
           firstRun = false;
 
           double sampleTime =
-              java::GeckoJavaSampler::GetSampleTimeJavaProfiling(0, sampleId);
+              java::GeckoJavaSampler::GetSampleTime(0, sampleId);
 
           aWriter.StartObjectElement();
             aWriter.DoubleProperty("time", sampleTime);
@@ -562,7 +562,7 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 
   #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
       if (ProfileJava()) {
-        java::GeckoJavaSampler::PauseJavaProfiling();
+        java::GeckoJavaSampler::Pause();
 
         aWriter.Start();
         {
@@ -570,7 +570,7 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
         }
         aWriter.End();
 
-        java::GeckoJavaSampler::UnpauseJavaProfiling();
+        java::GeckoJavaSampler::Unpause();
       }
   #endif
 #endif

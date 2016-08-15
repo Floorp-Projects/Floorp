@@ -94,9 +94,9 @@ public:
     void OnSocketReady(nsresult condition); 
 
 private:
-    static NS_METHOD WriteFromSegments(nsIInputStream *, void *,
-                                       const char *, uint32_t offset,
-                                       uint32_t count, uint32_t *countRead);
+    static nsresult WriteFromSegments(nsIInputStream *, void *,
+                                      const char *, uint32_t offset,
+                                      uint32_t count, uint32_t *countRead);
 
     nsSocketTransport                *mTransport;
     ThreadSafeAutoRefCnt              mWriterRefCnt;

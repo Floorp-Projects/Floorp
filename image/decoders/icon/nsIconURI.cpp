@@ -9,7 +9,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -94,7 +94,7 @@ nsMozIconURI::GetSpec(nsACString& aSpec)
     aSpec += kSizeStrings[mIconSize];
   } else {
     char buf[20];
-    snprintf_literal(buf, "%d", mSize);
+    SprintfLiteral(buf, "%d", mSize);
     aSpec.Append(buf);
   }
 

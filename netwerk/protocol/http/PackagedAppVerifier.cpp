@@ -127,7 +127,7 @@ PackagedAppVerifier::OnStartRequest(nsIRequest *aRequest,
   return mHasher->Init(kResourceHashType);
 }
 
-NS_METHOD
+nsresult
 PackagedAppVerifier::WriteManifest(nsIInputStream* aStream,
                                    void* aManifest,
                                    const char* aFromRawSegment,

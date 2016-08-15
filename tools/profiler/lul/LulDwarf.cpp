@@ -51,7 +51,7 @@
 #include <string>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "LulCommonExt.h"
 #include "LulDwarfInt.h"
@@ -1664,89 +1664,89 @@ bool CallFrameInfo::ReportIncomplete(Entry *entry) {
 void CallFrameInfo::Reporter::Incomplete(uint64 offset,
                                          CallFrameInfo::EntryKind kind) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI %s at offset 0x%llx in '%s': entry ends early\n",
-                   filename_.c_str(), CallFrameInfo::KindName(kind), offset,
-                   section_.c_str());
+  SprintfLiteral(buf,
+                 "%s: CFI %s at offset 0x%llx in '%s': entry ends early\n",
+                 filename_.c_str(), CallFrameInfo::KindName(kind), offset,
+                 section_.c_str());
   log_(buf);
 }
 
 void CallFrameInfo::Reporter::EarlyEHTerminator(uint64 offset) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI at offset 0x%llx in '%s': saw end-of-data marker"
-                   " before end of section contents\n",
-                   filename_.c_str(), offset, section_.c_str());
+  SprintfLiteral(buf,
+                 "%s: CFI at offset 0x%llx in '%s': saw end-of-data marker"
+                 " before end of section contents\n",
+                 filename_.c_str(), offset, section_.c_str());
   log_(buf);
 }
 
 void CallFrameInfo::Reporter::CIEPointerOutOfRange(uint64 offset,
                                                    uint64 cie_offset) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI frame description entry at offset 0x%llx in '%s':"
-                   " CIE pointer is out of range: 0x%llx\n",
-                   filename_.c_str(), offset, section_.c_str(), cie_offset);
+  SprintfLiteral(buf,
+                 "%s: CFI frame description entry at offset 0x%llx in '%s':"
+                 " CIE pointer is out of range: 0x%llx\n",
+                 filename_.c_str(), offset, section_.c_str(), cie_offset);
   log_(buf);
 }
 
 void CallFrameInfo::Reporter::BadCIEId(uint64 offset, uint64 cie_offset) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI frame description entry at offset 0x%llx in '%s':"
-                   " CIE pointer does not point to a CIE: 0x%llx\n",
-                   filename_.c_str(), offset, section_.c_str(), cie_offset);
+  SprintfLiteral(buf,
+                 "%s: CFI frame description entry at offset 0x%llx in '%s':"
+                 " CIE pointer does not point to a CIE: 0x%llx\n",
+                 filename_.c_str(), offset, section_.c_str(), cie_offset);
   log_(buf);
 }
 
 void CallFrameInfo::Reporter::UnrecognizedVersion(uint64 offset, int version) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI frame description entry at offset 0x%llx in '%s':"
-                   " CIE specifies unrecognized version: %d\n",
-                   filename_.c_str(), offset, section_.c_str(), version);
+  SprintfLiteral(buf,
+                 "%s: CFI frame description entry at offset 0x%llx in '%s':"
+                 " CIE specifies unrecognized version: %d\n",
+                 filename_.c_str(), offset, section_.c_str(), version);
   log_(buf);
 }
 
 void CallFrameInfo::Reporter::UnrecognizedAugmentation(uint64 offset,
                                                        const string &aug) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI frame description entry at offset 0x%llx in '%s':"
-                   " CIE specifies unrecognized augmentation: '%s'\n",
-                   filename_.c_str(), offset, section_.c_str(), aug.c_str());
+  SprintfLiteral(buf,
+                 "%s: CFI frame description entry at offset 0x%llx in '%s':"
+                 " CIE specifies unrecognized augmentation: '%s'\n",
+                 filename_.c_str(), offset, section_.c_str(), aug.c_str());
   log_(buf);
 }
 
 void CallFrameInfo::Reporter::InvalidPointerEncoding(uint64 offset,
                                                      uint8 encoding) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI common information entry at offset 0x%llx in '%s':"
-                   " 'z' augmentation specifies invalid pointer encoding: "
-                   "0x%02x\n",
-                   filename_.c_str(), offset, section_.c_str(), encoding);
+  SprintfLiteral(buf,
+                 "%s: CFI common information entry at offset 0x%llx in '%s':"
+                 " 'z' augmentation specifies invalid pointer encoding: "
+                 "0x%02x\n",
+                 filename_.c_str(), offset, section_.c_str(), encoding);
   log_(buf);
 }
 
 void CallFrameInfo::Reporter::UnusablePointerEncoding(uint64 offset,
                                                       uint8 encoding) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI common information entry at offset 0x%llx in '%s':"
-                   " 'z' augmentation specifies a pointer encoding for which"
-                   " we have no base address: 0x%02x\n",
-                   filename_.c_str(), offset, section_.c_str(), encoding);
+  SprintfLiteral(buf,
+                 "%s: CFI common information entry at offset 0x%llx in '%s':"
+                 " 'z' augmentation specifies a pointer encoding for which"
+                 " we have no base address: 0x%02x\n",
+                 filename_.c_str(), offset, section_.c_str(), encoding);
   log_(buf);
 }
 
 void CallFrameInfo::Reporter::RestoreInCIE(uint64 offset, uint64 insn_offset) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI common information entry at offset 0x%llx in '%s':"
-                   " the DW_CFA_restore instruction at offset 0x%llx"
-                   " cannot be used in a common information entry\n",
-                   filename_.c_str(), offset, section_.c_str(), insn_offset);
+  SprintfLiteral(buf,
+                 "%s: CFI common information entry at offset 0x%llx in '%s':"
+                 " the DW_CFA_restore instruction at offset 0x%llx"
+                 " cannot be used in a common information entry\n",
+                 filename_.c_str(), offset, section_.c_str(), insn_offset);
   log_(buf);
 }
 
@@ -1754,11 +1754,11 @@ void CallFrameInfo::Reporter::BadInstruction(uint64 offset,
                                              CallFrameInfo::EntryKind kind,
                                              uint64 insn_offset) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI %s at offset 0x%llx in section '%s':"
-                   " the instruction at offset 0x%llx is unrecognized\n",
-                   filename_.c_str(), CallFrameInfo::KindName(kind),
-                   offset, section_.c_str(), insn_offset);
+  SprintfLiteral(buf,
+                 "%s: CFI %s at offset 0x%llx in section '%s':"
+                 " the instruction at offset 0x%llx is unrecognized\n",
+                 filename_.c_str(), CallFrameInfo::KindName(kind),
+                 offset, section_.c_str(), insn_offset);
   log_(buf);
 }
 
@@ -1766,12 +1766,12 @@ void CallFrameInfo::Reporter::NoCFARule(uint64 offset,
                                         CallFrameInfo::EntryKind kind,
                                         uint64 insn_offset) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI %s at offset 0x%llx in section '%s':"
-                   " the instruction at offset 0x%llx assumes that a CFA rule "
-                   "has been set, but none has been set\n",
-                   filename_.c_str(), CallFrameInfo::KindName(kind), offset,
-                   section_.c_str(), insn_offset);
+  SprintfLiteral(buf,
+                 "%s: CFI %s at offset 0x%llx in section '%s':"
+                 " the instruction at offset 0x%llx assumes that a CFA rule "
+                 "has been set, but none has been set\n",
+                 filename_.c_str(), CallFrameInfo::KindName(kind), offset,
+                 section_.c_str(), insn_offset);
   log_(buf);
 }
 
@@ -1779,13 +1779,13 @@ void CallFrameInfo::Reporter::EmptyStateStack(uint64 offset,
                                               CallFrameInfo::EntryKind kind,
                                               uint64 insn_offset) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI %s at offset 0x%llx in section '%s':"
-                   " the DW_CFA_restore_state instruction at offset 0x%llx"
-                   " should pop a saved state from the stack, but the stack "
-                   "is empty\n",
-                   filename_.c_str(), CallFrameInfo::KindName(kind), offset,
-                   section_.c_str(), insn_offset);
+  SprintfLiteral(buf,
+                 "%s: CFI %s at offset 0x%llx in section '%s':"
+                 " the DW_CFA_restore_state instruction at offset 0x%llx"
+                 " should pop a saved state from the stack, but the stack "
+                 "is empty\n",
+                 filename_.c_str(), CallFrameInfo::KindName(kind), offset,
+                 section_.c_str(), insn_offset);
   log_(buf);
 }
 
@@ -1793,12 +1793,12 @@ void CallFrameInfo::Reporter::ClearingCFARule(uint64 offset,
                                               CallFrameInfo::EntryKind kind,
                                               uint64 insn_offset) {
   char buf[300];
-  snprintf_literal(buf,
-                   "%s: CFI %s at offset 0x%llx in section '%s':"
-                   " the DW_CFA_restore_state instruction at offset 0x%llx"
-                   " would clear the CFA rule in effect\n",
-                   filename_.c_str(), CallFrameInfo::KindName(kind), offset,
-                   section_.c_str(), insn_offset);
+  SprintfLiteral(buf,
+                 "%s: CFI %s at offset 0x%llx in section '%s':"
+                 " the DW_CFA_restore_state instruction at offset 0x%llx"
+                 " would clear the CFA rule in effect\n",
+                 filename_.c_str(), CallFrameInfo::KindName(kind), offset,
+                 section_.c_str(), insn_offset);
   log_(buf);
 }
 
@@ -1866,8 +1866,8 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
 
   char buf[100];
   if (debug) {
-    snprintf_literal(buf, "LUL.DW  << DwarfExpr, len is %d\n",
-                     (int)(end1 - cursor));
+    SprintfLiteral(buf, "LUL.DW  << DwarfExpr, len is %d\n",
+                   (int)(end1 - cursor));
     summ->Log(buf);
   }
   
@@ -1891,7 +1891,7 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
       case DW_OP_lit0 ... DW_OP_lit31: {
         int32_t simm32 = (int32_t)(opc - DW_OP_lit0);
         if (debug) {
-          snprintf_literal(buf, "LUL.DW   DW_OP_lit%d\n", (int)simm32);
+          SprintfLiteral(buf, "LUL.DW   DW_OP_lit%d\n", (int)simm32);
           summ->Log(buf);
         }
         (void) summ->AddPfxInstr(PfxInstr(PX_SImm32, simm32));
@@ -1904,8 +1904,8 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
         cursor += len;
         DW_REG_NUMBER reg = (DW_REG_NUMBER)(opc - DW_OP_breg0);
         if (debug) {
-          snprintf_literal(buf, "LUL.DW   DW_OP_breg%d %lld\n",
-                           (int)reg, (long long int)n);
+          SprintfLiteral(buf, "LUL.DW   DW_OP_breg%d %lld\n",
+                         (int)reg, (long long int)n);
           summ->Log(buf);
         }
         // PfxInstr only allows a 32 bit signed offset.  So we
@@ -1926,7 +1926,7 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
         uint32_t u32 = (uint32_t)(u64 & 0xFFFFFFFF);
         int32_t  s32 = (int32_t)u32;
         if (debug) {
-          snprintf_literal(buf, "LUL.DW   DW_OP_const4s %d\n", (int)s32);
+          SprintfLiteral(buf, "LUL.DW   DW_OP_const4s %d\n", (int)s32);
           summ->Log(buf);
         }
         (void) summ->AddPfxInstr(PfxInstr(PX_SImm32, s32));
@@ -1942,7 +1942,7 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
       no_operands:
         MOZ_ASSERT(nm && pxop != PX_End);
         if (debug) {
-          snprintf_literal(buf, "LUL.DW   DW_OP_%s\n", nm);
+          SprintfLiteral(buf, "LUL.DW   DW_OP_%s\n", nm);
           summ->Log(buf);
         }
         (void) summ->AddPfxInstr(PfxInstr(pxop));
@@ -1950,7 +1950,7 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
 
       default:
         if (debug) {
-          snprintf_literal(buf, "LUL.DW   unknown opc %d\n", (int)opc);
+          SprintfLiteral(buf, "LUL.DW   unknown opc %d\n", (int)opc);
           summ->Log(buf);
         }
         goto fail;
@@ -1977,8 +1977,8 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
   // Insert an end marker, and declare success.
   (void) summ->AddPfxInstr(PfxInstr(PX_End));
   if (debug) {
-    snprintf_literal(buf, "LUL.DW   conversion of dwarf expression succeeded, "
-                          "ix = %d\n", (int)start_ix);
+    SprintfLiteral(buf, "LUL.DW   conversion of dwarf expression succeeded, "
+                        "ix = %d\n", (int)start_ix);
     summ->Log(buf);
     summ->Log("LUL.DW  >>\n");
   }
@@ -1998,8 +1998,8 @@ bool DwarfCFIToModule::Entry(size_t offset, uint64 address, uint64 length,
                              unsigned return_address) {
   if (DEBUG_DWARF) {
     char buf[100];
-    snprintf_literal(buf, "LUL.DW DwarfCFIToModule::Entry 0x%llx,+%lld\n",
-                     address, length);
+    SprintfLiteral(buf, "LUL.DW DwarfCFIToModule::Entry 0x%llx,+%lld\n",
+                   address, length);
     summ_->Log(buf);
   }
   
@@ -2034,7 +2034,7 @@ const UniqueString* DwarfCFIToModule::RegisterName(int i) {
     return usu_->ToUniqueString(".ra");
 
   char buf[30];
-  snprintf_literal(buf, "dwarf_reg_%u", reg);
+  SprintfLiteral(buf, "dwarf_reg_%u", reg);
   return usu_->ToUniqueString(buf);
 }
 
@@ -2047,7 +2047,7 @@ bool DwarfCFIToModule::UndefinedRule(uint64 address, int reg) {
 bool DwarfCFIToModule::SameValueRule(uint64 address, int reg) {
   if (DEBUG_DWARF) {
     char buf[100];
-    snprintf_literal(buf, "LUL.DW  0x%llx: old r%d = Same\n", address, reg);
+    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = Same\n", address, reg);
     summ_->Log(buf);
   }
   // reg + 0
@@ -2059,8 +2059,8 @@ bool DwarfCFIToModule::OffsetRule(uint64 address, int reg,
                                   int base_register, long offset) {
   if (DEBUG_DWARF) {
     char buf[100];
-    snprintf_literal(buf, "LUL.DW  0x%llx: old r%d = *(r%d + %ld)\n",
-                     address, reg, base_register, offset);
+    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = *(r%d + %ld)\n",
+                   address, reg, base_register, offset);
     summ_->Log(buf);
   }
   // *(base_register + offset)
@@ -2072,8 +2072,8 @@ bool DwarfCFIToModule::ValOffsetRule(uint64 address, int reg,
                                      int base_register, long offset) {
   if (DEBUG_DWARF) {
     char buf[100];
-    snprintf_literal(buf, "LUL.DW  0x%llx: old r%d = r%d + %ld\n",
-                     address, reg, base_register, offset);
+    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = r%d + %ld\n",
+                   address, reg, base_register, offset);
     summ_->Log(buf);
   }
   // base_register + offset
@@ -2085,8 +2085,8 @@ bool DwarfCFIToModule::RegisterRule(uint64 address, int reg,
                                     int base_register) {
   if (DEBUG_DWARF) {
     char buf[100];
-    snprintf_literal(buf, "LUL.DW  0x%llx: old r%d = r%d\n",
-                     address, reg, base_register);
+    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = r%d\n",
+                   address, reg, base_register);
     summ_->Log(buf);
   }
   // base_register + 0
@@ -2141,8 +2141,7 @@ void DwarfCFIToModule::Reporter::UndefinedNotSupported(
     size_t offset,
     const UniqueString* reg) {
   char buf[300];
-  snprintf_literal(buf,
-                   "DwarfCFIToModule::Reporter::UndefinedNotSupported()\n");
+  SprintfLiteral(buf, "DwarfCFIToModule::Reporter::UndefinedNotSupported()\n");
   log_(buf);
   //BPLOG(INFO) << file_ << ", section '" << section_
   //  << "': the call frame entry at offset 0x"
@@ -2171,10 +2170,10 @@ void DwarfCFIToModule::Reporter::ExpressionCouldNotBeSummarised(
   if (!is_power_of_2(n_complaints))
     return;
   char buf[300];
-  snprintf_literal(buf,
-                   "DwarfCFIToModule::Reporter::"
-                   "ExpressionCouldNotBeSummarised(shown %llu times)\n",
-                   (unsigned long long int)n_complaints);
+  SprintfLiteral(buf,
+                 "DwarfCFIToModule::Reporter::"
+                 "ExpressionCouldNotBeSummarised(shown %llu times)\n",
+                 (unsigned long long int)n_complaints);
   log_(buf);
 }
 
