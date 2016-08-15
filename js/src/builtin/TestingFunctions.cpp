@@ -542,8 +542,8 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
     wasm::Bytes bytes;
     UniqueChars error;
     if (!wasm::TextToBinary(twoByteChars.twoByteChars(), &bytes, &error)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
-                             error.get() ? error.get() : "out of memory");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
+                                  error.get() ? error.get() : "out of memory");
         return false;
     }
 
@@ -967,9 +967,9 @@ NondeterministicGetWeakMapKeys(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
     if (!args[0].isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "nondeterministicGetWeakMapKeys", "WeakMap",
-                             InformalValueTypeName(args[0]));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "nondeterministicGetWeakMapKeys", "WeakMap",
+                                  InformalValueTypeName(args[0]));
         return false;
     }
     RootedObject arr(cx);
@@ -977,9 +977,9 @@ NondeterministicGetWeakMapKeys(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_NondeterministicGetWeakMapKeys(cx, mapObj, &arr))
         return false;
     if (!arr) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "nondeterministicGetWeakMapKeys", "WeakMap",
-                             args[0].toObject().getClass()->name);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "nondeterministicGetWeakMapKeys", "WeakMap",
+                                  args[0].toObject().getClass()->name);
         return false;
     }
     args.rval().setObject(*arr);
@@ -3184,9 +3184,9 @@ GetConstructorName(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args[0].isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "getConstructorName", "Object",
-                             InformalValueTypeName(args[0]));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "getConstructorName", "Object",
+                                  InformalValueTypeName(args[0]));
         return false;
     }
 

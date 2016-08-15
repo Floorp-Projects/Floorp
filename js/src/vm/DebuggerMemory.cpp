@@ -83,14 +83,15 @@ DebuggerMemory::checkThis(JSContext* cx, CallArgs& args, const char* fnName)
     const Value& thisValue = args.thisv();
 
     if (!thisValue.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, InformalValueTypeName(thisValue));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                                  InformalValueTypeName(thisValue));
         return nullptr;
     }
 
     JSObject& thisObject = thisValue.toObject();
     if (!thisObject.is<DebuggerMemory>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             class_.name, fnName, thisObject.getClass()->name);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                  class_.name, fnName, thisObject.getClass()->name);
         return nullptr;
     }
 
@@ -99,8 +100,8 @@ DebuggerMemory::checkThis(JSContext* cx, CallArgs& args, const char* fnName)
     // of Debugger.Memory. It is the only object that is<DebuggerMemory>() but
     // doesn't have a Debugger instance.
     if (thisObject.as<DebuggerMemory>().getReservedSlot(JSSLOT_DEBUGGER).isUndefined()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             class_.name, fnName, "prototype object");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                  class_.name, fnName, "prototype object");
         return nullptr;
     }
 

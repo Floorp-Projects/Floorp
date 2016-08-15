@@ -193,7 +193,7 @@ TraceLoggerThread::enable()
 bool
 TraceLoggerThread::fail(JSContext* cx, const char* error)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TRACELOGGER_ENABLE_FAIL, error);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TRACELOGGER_ENABLE_FAIL, error);
     failed = true;
     enabled_ = 0;
 

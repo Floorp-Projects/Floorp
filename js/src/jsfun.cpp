@@ -1141,10 +1141,9 @@ fun_toStringHelper(JSContext* cx, HandleObject obj, unsigned indent)
         if (JSFunToStringOp op = obj->getOpsFunToString())
             return op(cx, obj, indent);
 
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_INCOMPATIBLE_PROTO,
-                             js_Function_str, js_toString_str,
-                             "object");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_INCOMPATIBLE_PROTO,
+                                  js_Function_str, js_toString_str, "object");
         return nullptr;
     }
 
@@ -1288,8 +1287,8 @@ js::fun_apply(JSContext* cx, unsigned argc, Value* vp)
     } else {
         // Step 3.
         if (!args[1].isObject()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_BAD_APPLY_ARGS, js_apply_str);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_BAD_APPLY_ARGS, js_apply_str);
             return false;
         }
 

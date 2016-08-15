@@ -191,8 +191,8 @@ js::GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* me
                              MutableHandleObject objp)
 {
     if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             method, "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  method, "0", "s");
         return false;
     }
 
@@ -262,8 +262,8 @@ bool
 CheckCallable(JSContext* cx, JSObject* obj, const char* fieldName)
 {
     if (obj && !obj->isCallable()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                             fieldName);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                  fieldName);
         return false;
     }
     return true;
@@ -340,8 +340,8 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
                 return false;
             desc.setGetterObject(&v.toObject());
         } else if (!v.isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                                 js_getter_str);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                      js_getter_str);
             return false;
         }
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
@@ -358,8 +358,8 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
                 return false;
             desc.setSetterObject(&v.toObject());
         } else if (!v.isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                                 js_setter_str);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                      js_setter_str);
             return false;
         }
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
@@ -2839,8 +2839,8 @@ js::WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject cal
         return op(cx, obj, id, callable);
 
     if (!obj->isNative() || obj->is<TypedArrayObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
-                             obj->getClass()->name);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
+                                  obj->getClass()->name);
         return false;
     }
 
