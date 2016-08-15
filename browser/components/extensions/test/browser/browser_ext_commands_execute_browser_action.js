@@ -63,7 +63,7 @@ function* testExecuteBrowserActionWithOptions(options = {}) {
 
       browser.test.sendMessage("send-keys");
     });
-  }
+  };
 
   let extension = ExtensionTestUtils.loadExtension(extensionOptions);
 
@@ -111,3 +111,4 @@ add_task(function* test_execute_browser_action_in_hamburger_menu_without_popup()
     inArea: CustomizableUI.AREA_PANEL,
   });
 });
+
