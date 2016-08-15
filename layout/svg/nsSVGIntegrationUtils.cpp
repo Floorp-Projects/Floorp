@@ -747,7 +747,7 @@ BlendToTarget(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 }
 
 DrawResult
-nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
+nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 {
   /* SVG defines the following rendering model:
    *
@@ -755,7 +755,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
    *  2. Apply filter
    *  3. Apply clipping, masking, group opacity
    *
-   * We follow this, but perform a couple of optimizations:
+   * We handle #3 here and perform a couple of optimizations:
    *
    * + Use cairo's clipPath when representable natively (single object
    *   clip region).
@@ -889,23 +889,13 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
   }
 
   /* Paint the child */
-  if (effectProperties.HasValidFilter() && !aParams.builder->IsForGenerateGlyphMask()) {
-    RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
-                                       offsetToUserSpace);
-
-    nsRegion dirtyRegion = aParams.dirtyRect - offsetToBoundingBox;
-    gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(frame);
-    nsFilterInstance::PaintFilteredFrame(frame, target->GetDrawTarget(),
-                                         tm, &callback, &dirtyRegion);
-  } else {
-    target->SetMatrix(matrixAutoSaveRestore.Matrix());
-    BasicLayerManager* basic = static_cast<BasicLayerManager*>(aParams.layerManager);
-    RefPtr<gfxContext> oldCtx = basic->GetTarget();
-    basic->SetTarget(target);
-    aParams.layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
-                                          aParams.builder);
-    basic->SetTarget(oldCtx);
-  }
+  target->SetMatrix(matrixAutoSaveRestore.Matrix());
+  BasicLayerManager* basic = static_cast<BasicLayerManager*>(aParams.layerManager);
+  RefPtr<gfxContext> oldCtx = basic->GetTarget();
+  basic->SetTarget(target);
+  aParams.layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
+                                        aParams.builder);
+  basic->SetTarget(oldCtx);
 
   if (shouldApplyClipPath || shouldApplyBasicShape) {
     context.Restore();

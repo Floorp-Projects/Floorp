@@ -6689,7 +6689,7 @@ nsDisplaySVGEffects::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                                   aManager, mOpacityItemCreated);
 
   image::DrawResult result =
-    nsSVGIntegrationUtils::PaintFramesWithEffects(params);
+    nsSVGIntegrationUtils::PaintMaskAndClipPath(params);
 
   nsDisplaySVGEffectsGeometry::UpdateDrawResult(this, result);
 }
