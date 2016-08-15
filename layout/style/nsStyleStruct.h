@@ -2605,7 +2605,7 @@ public:
     return !(*this == aOther);
   }
 
-  NS_INLINE_DECL_REFCOUNTING(StyleBasicShape);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StyleBasicShape);
 
 private:
   ~StyleBasicShape() {}
