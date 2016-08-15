@@ -355,15 +355,14 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
     return true;
 }
 
-typedef bool (*CountAction)(JSContext*, const UTF8Chars, char16_t*, size_t*, bool* isAsciip);
-
+template <InflateUTF8Action Action>
 static TwoByteCharsZ
-InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, CountAction countAction, size_t* outlen)
+InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 {
     *outlen = 0;
 
     bool isAscii;
-    if (!countAction(cx, src, /* dst = */ nullptr, outlen, &isAscii))
+    if (!InflateUTF8StringToBuffer<Action>(cx, src, /* dst = */ nullptr, outlen, &isAscii))
         return TwoByteCharsZ();
 
     char16_t* dst = cx->pod_malloc<char16_t>(*outlen + 1);  // +1 for NUL
@@ -390,14 +389,12 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, CountAction countAct
 TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper(cx, utf8, InflateUTF8StringToBuffer<CountAndReportInvalids>,
-                                   outlen);
+    return InflateUTF8StringHelper<CountAndReportInvalids>(cx, utf8, outlen);
 }
 
 TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper(cx, utf8, InflateUTF8StringToBuffer<CountAndIgnoreInvalids>,
-                                   outlen);
+    return InflateUTF8StringHelper<CountAndIgnoreInvalids>(cx, utf8, outlen);
 }
 
