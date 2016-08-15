@@ -1,0 +1,11 @@
+{
+  "addons": {
+    "test_overload@tests.mozilla.org": {
+      "updates": [
+        { "version": "3.0",
+          "update_link": "http://localhost:%PORT%/addons/test_overload_v3.xpi"
+        }
+      ]
+    }
+  }
+}
