@@ -527,7 +527,7 @@ bool AdjustWebSocketHost(relayBuffer& buffer, connection_info_t *ci)
   char newhost[40];
   PR_NetAddrToString(&inet_addr, newhost, sizeof(newhost));
   assert(strlen(newhost) < sizeof(newhost) - 7);
-  snprintf_literal(newhost, "%s:%d", newhost, PR_ntohs(inet_addr.inet.port));
+  SprintfLiteral(newhost, "%s:%d", newhost, PR_ntohs(inet_addr.inet.port));
 
   int diff = strlen(newhost) - (endhost-host);
   if (diff > 0)

@@ -6303,7 +6303,7 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
     aResult.Append(')');
   }
   char buf[40];
-  snprintf_literal(buf, "(%d)", ContentIndexInContainer(this));
+  SprintfLiteral(buf, "(%d)", ContentIndexInContainer(this));
   AppendASCIItoUTF16(buf, aResult);
   return NS_OK;
 }

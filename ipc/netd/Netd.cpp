@@ -70,9 +70,9 @@ InitRndisAddress()
     address[i % (kEthernetAddressLength - 1) + 1] ^= serialno[i];
   }
 
-  snprintf_literal(mac, "%02x:%02x:%02x:%02x:%02x:%02x",
-                   address[0], address[1], address[2],
-                   address[3], address[4], address[5]);
+  SprintfLiteral(mac, "%02x:%02x:%02x:%02x:%02x:%02x",
+                 address[0], address[1], address[2],
+                 address[3], address[4], address[5]);
   length = strlen(mac);
   ret = write(fd.get(), mac, length);
   if (ret != length) {

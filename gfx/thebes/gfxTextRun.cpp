@@ -1874,8 +1874,8 @@ gfxFontGroup::GetDefaultFont()
         char msg[256]; // CHECK buffer length if revising message below
         nsAutoString familiesString;
         mFamilyList.ToString(familiesString);
-        snprintf_literal(msg, "unable to find a usable font (%.220s)",
-                         NS_ConvertUTF16toUTF8(familiesString).get());
+        SprintfLiteral(msg, "unable to find a usable font (%.220s)",
+                       NS_ConvertUTF16toUTF8(familiesString).get());
         NS_RUNTIMEABORT(msg);
     }
 

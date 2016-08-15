@@ -1417,8 +1417,8 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
         char warnBuf[128];
         if (aByteLen > 64)
             aByteLen = 64;
-        snprintf_literal(warnBuf, "skipping font name, unknown charset %d:%d:%d for <%.*s>",
-                         aPlatformCode, aScriptCode, aLangCode, aByteLen, aNameData);
+        SprintfLiteral(warnBuf, "skipping font name, unknown charset %d:%d:%d for <%.*s>",
+                       aPlatformCode, aScriptCode, aLangCode, aByteLen, aNameData);
         NS_WARNING(warnBuf);
 #endif
         return false;

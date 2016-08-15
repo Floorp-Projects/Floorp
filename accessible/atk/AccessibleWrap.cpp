@@ -436,7 +436,7 @@ GetUniqueMaiAtkTypeName(uint16_t interfacesBits)
     static gchar namePrefix[] = "MaiAtkType";   /* size = 10 */
     static gchar name[MAI_ATK_TYPE_NAME_LEN + 1];
 
-    snprintf_literal(name, "%s%x", namePrefix, interfacesBits);
+    SprintfLiteral(name, "%s%x", namePrefix, interfacesBits);
     name[MAI_ATK_TYPE_NAME_LEN] = '\0';
 
     return name;

@@ -464,7 +464,7 @@ ThreadStackHelper::AppendJSEntry(const volatile StackEntry* aEntry,
       }
     }
 
-    size_t len = snprintf_literal(buffer, "%s:%u", basename, lineno);
+    size_t len = SprintfLiteral(buffer, "%s:%u", basename, lineno);
     if (len < sizeof(buffer)) {
       if (mStackToFill->IsSameAsEntry(aPrevLabel, buffer)) {
         return aPrevLabel;
