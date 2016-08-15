@@ -487,7 +487,7 @@ nsUrlClassifierUtils::CanonicalNum(const nsACString& num,
 
   while (bytes--) {
     char buf[20];
-    snprintf_literal(buf, "%u", val & 0xff);
+    SprintfLiteral(buf, "%u", val & 0xff);
     if (_retval.IsEmpty()) {
       _retval.Assign(buf);
     } else {

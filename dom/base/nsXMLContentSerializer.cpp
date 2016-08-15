@@ -608,7 +608,7 @@ nsXMLContentSerializer::GenerateNewPrefix(nsAString& aPrefix)
 {
   aPrefix.Assign('a');
   char buf[128];
-  snprintf_literal(buf, "%d", mPrefixIndex++);
+  SprintfLiteral(buf, "%d", mPrefixIndex++);
   AppendASCIItoUTF16(buf, aPrefix);
 }
 

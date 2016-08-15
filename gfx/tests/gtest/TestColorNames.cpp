@@ -68,9 +68,9 @@ void RunColorTests() {
     uint8_t a = NS_GET_A(rgb);
     char cbuf[50];
     if (a != UINT8_MAX) {
-      snprintf_literal(cbuf, "%02x%02x%02x%02x", r, g, b, a);
+      SprintfLiteral(cbuf, "%02x%02x%02x%02x", r, g, b, a);
     } else {
-      snprintf_literal(cbuf, "%02x%02x%02x", r, g, b);
+      SprintfLiteral(cbuf, "%02x%02x%02x", r, g, b);
     }
     nscolor hexrgb;
     ASSERT_TRUE(NS_HexToRGBA(NS_ConvertASCIItoUTF16(cbuf),

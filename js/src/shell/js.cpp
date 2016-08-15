@@ -1508,9 +1508,9 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         if (loadBytecode && assertEqBytecode) {
             if (saveLength != loadLength) {
                 char loadLengthStr[16];
-                snprintf_literal(loadLengthStr, "%" PRIu32, loadLength);
+                SprintfLiteral(loadLengthStr, "%" PRIu32, loadLength);
                 char saveLengthStr[16];
-                snprintf_literal(saveLengthStr,"%" PRIu32, saveLength);
+                SprintfLiteral(saveLengthStr,"%" PRIu32, saveLength);
 
                 JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
                                      loadLengthStr, saveLengthStr);

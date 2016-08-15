@@ -609,15 +609,15 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
         nsAutoString chars;
         AssignJSFlatString(chars, flat);
         NS_ConvertUTF16toUTF8 fname(chars);
-        snprintf_literal(name, "JS Object (Function - %s)", fname.get());
+        SprintfLiteral(name, "JS Object (Function - %s)", fname.get());
       } else {
-        snprintf_literal(name, "JS Object (Function)");
+        SprintfLiteral(name, "JS Object (Function)");
       }
     } else {
-      snprintf_literal(name, "JS Object (%s)", clasp->name);
+      SprintfLiteral(name, "JS Object (%s)", clasp->name);
     }
   } else {
-    snprintf_literal(name, "JS %s", JS::GCTraceKindToAscii(aThing.kind()));
+    SprintfLiteral(name, "JS %s", JS::GCTraceKindToAscii(aThing.kind()));
   }
 
   // Disable printing global for objects while we figure out ObjShrink fallout.

@@ -293,7 +293,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
     
     char pidstr[32];
     char sysinfobuf[SYS_INFO_BUFFER_LENGTH];
-    snprintf_literal(pidstr, "pid%d@", getpid());
+    SprintfLiteral(pidstr, "pid%d@", getpid());
     PRStatus status;
     status = PR_GetSystemInfo(PR_SI_HOSTNAME, sysinfobuf,
 			      SYS_INFO_BUFFER_LENGTH);

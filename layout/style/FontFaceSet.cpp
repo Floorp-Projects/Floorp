@@ -1214,7 +1214,7 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   if (weightKeywordString.Length() > 0) {
     weightKeyword = weightKeywordString.get();
   } else {
-    snprintf_literal(weightKeywordBuf, "%u", aUserFontEntry->Weight());
+    SprintfLiteral(weightKeywordBuf, "%u", aUserFontEntry->Weight());
     weightKeyword = weightKeywordBuf;
   }
 

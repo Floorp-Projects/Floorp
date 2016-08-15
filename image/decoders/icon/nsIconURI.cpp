@@ -94,7 +94,7 @@ nsMozIconURI::GetSpec(nsACString& aSpec)
     aSpec += kSizeStrings[mIconSize];
   } else {
     char buf[20];
-    snprintf_literal(buf, "%d", mSize);
+    SprintfLiteral(buf, "%d", mSize);
     aSpec.Append(buf);
   }
 
