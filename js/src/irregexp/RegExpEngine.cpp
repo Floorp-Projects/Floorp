@@ -1323,7 +1323,7 @@ LoopChoiceNode::FilterASCII(int depth, bool ignore_case, bool unicode)
 void
 Analysis::EnsureAnalyzed(RegExpNode* that)
 {
-    JS_CHECK_RECURSION(cx, fail("Stack overflow"); return);
+    JS_CHECK_RECURSION(cx, failASCII("Stack overflow"); return);
 
     if (that->info()->been_analyzed || that->info()->being_analyzed)
         return;
@@ -1872,7 +1872,7 @@ irregexp::CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData*
     Analysis analysis(cx, ignore_case, is_ascii, unicode);
     analysis.EnsureAnalyzed(node);
     if (analysis.has_failed()) {
-        JS_ReportError(cx, analysis.errorMessage());
+        JS_ReportErrorASCII(cx, analysis.errorMessage());
         return RegExpCode();
     }
 

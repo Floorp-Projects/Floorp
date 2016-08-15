@@ -379,7 +379,7 @@ js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 void
-js::ReportUsageError(JSContext* cx, HandleObject callee, const char* msg)
+js::ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg)
 {
     const char* usageStr = "usage";
     PropertyName* usageAtom = Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
@@ -394,7 +394,7 @@ js::ReportUsageError(JSContext* cx, HandleObject callee, const char* msg)
         return;
 
     if (!usage.isString()) {
-        JS_ReportError(cx, "%s", msg);
+        JS_ReportErrorASCII(cx, "%s", msg);
     } else {
         JSString* str = usage.toString();
         if (!str->ensureFlat(cx))
