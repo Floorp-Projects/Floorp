@@ -59,7 +59,7 @@ NS_SetThreadName(nsIThread* aThread, const char (&aName)[LEN])
  * @returns NS_ERROR_INVALID_ARG
  *   Indicates that the given name is not unique.
  */
-extern NS_METHOD
+extern nsresult
 NS_NewThread(nsIThread** aResult,
              nsIRunnable* aInitialEvent = nullptr,
              uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
@@ -68,7 +68,7 @@ NS_NewThread(nsIThread** aResult,
  * Creates a named thread, otherwise the same as NS_NewThread
  */
 template<size_t LEN>
-inline NS_METHOD
+inline nsresult
 NS_NewNamedThread(const char (&aName)[LEN],
                   nsIThread** aResult,
                   nsIRunnable* aInitialEvent = nullptr,
@@ -97,7 +97,7 @@ NS_NewNamedThread(const char (&aName)[LEN],
  * @param aResult
  *   The resulting nsIThread object.
  */
-extern NS_METHOD NS_GetCurrentThread(nsIThread** aResult);
+extern nsresult NS_GetCurrentThread(nsIThread** aResult);
 
 /**
  * Dispatch the given event to the current thread.
@@ -108,8 +108,8 @@ extern NS_METHOD NS_GetCurrentThread(nsIThread** aResult);
  * @returns NS_ERROR_INVALID_ARG
  *   If event is null.
  */
-extern NS_METHOD NS_DispatchToCurrentThread(nsIRunnable* aEvent);
-extern NS_METHOD
+extern nsresult NS_DispatchToCurrentThread(nsIRunnable* aEvent);
+extern nsresult
 NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent);
 
 /**
@@ -123,10 +123,10 @@ NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent);
  * @returns NS_ERROR_INVALID_ARG
  *   If event is null.
  */
-extern NS_METHOD
+extern nsresult
 NS_DispatchToMainThread(nsIRunnable* aEvent,
                         uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
-extern NS_METHOD
+extern nsresult
 NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent,
                         uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 
@@ -146,7 +146,7 @@ NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent,
  *   value is simply used to determine whether or not to process another event.
  *   Pass PR_INTERVAL_NO_TIMEOUT to specify no timeout.
  */
-extern NS_METHOD
+extern nsresult
 NS_ProcessPendingEvents(nsIThread* aThread,
                         PRIntervalTime aTimeout = PR_INTERVAL_NO_TIMEOUT);
 #endif
