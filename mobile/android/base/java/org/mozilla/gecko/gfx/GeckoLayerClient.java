@@ -150,11 +150,12 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mPanZoomController.setOverscrollHandler(listener);
     }
 
-    /** Attaches to root layer so that Gecko appears. */
-    /* package */ boolean isGeckoReady() {
+    @Override // PanZoomTarget
+    public boolean isGeckoReady() {
         return mGeckoIsReady;
     }
 
+    /** Attaches to root layer so that Gecko appears. */
     @WrapForJNI
     private void onGeckoReady() {
         mGeckoIsReady = true;
@@ -283,8 +284,11 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
 
         if (mView != null) {
-            mView.getGLController().onSizeChanged(mWindowSize.width, mWindowSize.height,
-                                                  mScreenSize.width, mScreenSize.height);
+            final GLController glController = mView.getGLController();
+            if (glController != null) {
+                glController.onSizeChanged(mWindowSize.width, mWindowSize.height,
+                                           mScreenSize.width, mScreenSize.height);
+            }
         }
 
         String json = "";
