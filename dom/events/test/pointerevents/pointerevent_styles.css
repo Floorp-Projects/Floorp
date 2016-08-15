@@ -1,3 +1,20 @@
+.spacer {
+height: 100px;
+}
+
+#square1 {
+background: black;
+top: 150px;
+left: 100px;
+}
+
+.square {
+height: 20px;
+width: 20px;
+position: absolute;
+padding: 0px;
+}
+
 #target0 {
 background: black;
 color: white;
@@ -12,6 +29,17 @@ color: white;
 white-space: nowrap;
 overflow-y: auto;
 overflow-x: auto;
+}
+
+.touchActionNone {
+touch-action: none;
+}
+
+#innerframe {
+width: 90%;
+margin: 10px;
+margin-left: 10%;
+height: 200px;
 }
 
 .scroller {
@@ -46,6 +74,10 @@ display: none;
 }
 
 #pointertype-log {
+font-weight: bold;
+}
+
+#event-log {
 font-weight: bold;
 }
 
