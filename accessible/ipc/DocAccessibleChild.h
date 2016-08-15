@@ -7,35 +7,57 @@
 #ifndef mozilla_a11y_DocAccessibleChild_h
 #define mozilla_a11y_DocAccessibleChild_h
 
-#include "mozilla/a11y/DocAccessibleChildBase.h"
+#include "mozilla/a11y/DocAccessible.h"
+#include "mozilla/a11y/PDocAccessibleChild.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace a11y {
-
 class Accessible;
 class HyperTextAccessible;
 class TextLeafAccessible;
 class ImageAccessible;
 class TableAccessible;
 class TableCellAccessible;
+class AccShowEvent;
 
-/*
- * These objects handle content side communication for an accessible document,
- * and their lifetime is the same as the document they represent.
- */
-class DocAccessibleChild : public DocAccessibleChildBase
+  /*
+   * These objects handle content side communication for an accessible document,
+   * and their lifetime is the same as the document they represent.
+   */
+class DocAccessibleChild : public PDocAccessibleChild
 {
 public:
-  explicit DocAccessibleChild(DocAccessible* aDoc)
-    : DocAccessibleChildBase(aDoc)
-  {
-    MOZ_COUNT_CTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
-  }
-
+  explicit DocAccessibleChild(DocAccessible* aDoc) :
+    mDoc(aDoc)
+  { MOZ_COUNT_CTOR(DocAccessibleChild); }
   ~DocAccessibleChild()
   {
-    MOZ_COUNT_DTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
+    // Shutdown() should have been called, but maybe it isn't if the process is
+    // killed?
+    MOZ_ASSERT(!mDoc);
+    if (mDoc)
+      mDoc->SetIPCDoc(nullptr);
+    MOZ_COUNT_DTOR(DocAccessibleChild);
   }
+
+  void Shutdown()
+  {
+    mDoc->SetIPCDoc(nullptr);
+    mDoc = nullptr;
+    SendShutdown();
+  }
+
+  virtual void ActorDestroy(ActorDestroyReason) override
+  {
+    if (!mDoc)
+      return;
+
+    mDoc->SetIPCDoc(nullptr);
+    mDoc = nullptr;
+  }
+
+  void ShowEvent(AccShowEvent* aShowEvent);
 
   /*
    * Return the state for the accessible with given ID.
@@ -474,6 +496,8 @@ private:
 
   bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
                                    nsTArray<Attribute>* aAttributes);
+
+  DocAccessible* mDoc;
 };
 
 }

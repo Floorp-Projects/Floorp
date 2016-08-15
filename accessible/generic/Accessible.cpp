@@ -855,11 +855,11 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
             ipcDoc->SendEvent(id, aEvent->GetEventType());
           break;
         case nsIAccessibleEvent::EVENT_STATE_CHANGE: {
-          AccStateChangeEvent* event = downcast_accEvent(aEvent);
-          ipcDoc->SendStateChangeEvent(id, event->GetState(),
-                                       event->IsStateEnabled());
-          break;
-        }
+                                                       AccStateChangeEvent* event = downcast_accEvent(aEvent);
+                                                       ipcDoc->SendStateChangeEvent(id, event->GetState(),
+                                                                                    event->IsStateEnabled());
+                                                       break;
+                                                     }
         case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
           AccCaretMoveEvent* event = downcast_accEvent(aEvent);
           ipcDoc->SendCaretMoveEvent(id, event->GetCaretOffset());
@@ -874,7 +874,7 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
                                       event->IsTextInserted(),
                                       event->IsFromUserInput());
           break;
-        }
+                                                     }
         case nsIAccessibleEvent::EVENT_SELECTION:
         case nsIAccessibleEvent::EVENT_SELECTION_ADD:
         case nsIAccessibleEvent::EVENT_SELECTION_REMOVE: {
@@ -883,9 +883,9 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
             reinterpret_cast<uintptr_t>(selEvent->Widget());
           ipcDoc->SendSelectionEvent(id, widgetID, aEvent->GetEventType());
           break;
-        }
+                                                         }
         default:
-          ipcDoc->SendEvent(id, aEvent->GetEventType());
+                                                         ipcDoc->SendEvent(id, aEvent->GetEventType());
       }
     }
   }
