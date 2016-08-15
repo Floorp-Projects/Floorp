@@ -40,14 +40,14 @@ var gFontsDialog = {
         preference.setAttribute("type", prefs[i].type);
         preferences.appendChild(preference);
       }
-      
+
       if (!prefs[i].element)
         continue;
-        
+
       var element = document.getElementById(prefs[i].element);
       if (element) {
         element.setAttribute("preference", preference.id);
-      
+
         if (prefs[i].fonttype)
           FontBuilder.buildFontList(aLanguageGroup, prefs[i].fonttype, element);
 
@@ -55,20 +55,20 @@ var gFontsDialog = {
       }
     }
   },
-  
+
   readFontLanguageGroup: function ()
   {
     var languagePref = document.getElementById("font.language.group");
     this._selectLanguageGroup(languagePref.value);
     return undefined;
   },
-  
+
   readUseDocumentFonts: function ()
   {
     var preference = document.getElementById("browser.display.use_document_fonts");
     return preference.value == 1;
   },
-  
+
   writeUseDocumentFonts: function ()
   {
     var useDocumentFonts = document.getElementById("useDocumentFonts");
@@ -77,11 +77,6 @@ var gFontsDialog = {
 
   onBeforeAccept: function ()
   {
-    // Only care in in-content prefs
-    if (!window.frameElement) {
-      return true;
-    }
-
     let preferences = document.querySelectorAll("preference[id*='font.minimum-size']");
     // It would be good if we could avoid touching languages the pref pages won't use, but
     // unfortunately the language group APIs (deducing language groups from language codes)
@@ -91,7 +86,7 @@ var gFontsDialog = {
       return prefEl.value > 24 && prefEl.value != prefEl.valueFromPreferences;
     });
     if (!preferences.length) {
-      return;
+      return true;
     }
 
     let strings = document.getElementById("bundlePreferences");

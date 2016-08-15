@@ -19,7 +19,6 @@ namespace mozilla {
 
 class PrefsHelper
     : public java::PrefsHelper::Natives<PrefsHelper>
-    , public UsesGeckoThreadProxy
 {
     PrefsHelper() = delete;
 

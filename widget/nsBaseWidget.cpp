@@ -61,7 +61,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Move.h"
 #include "mozilla/Services.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsRefPtrHashtable.h"
 #include "TouchEvents.h"
 #include "WritingModes.h"
@@ -72,6 +72,7 @@
 #endif
 #include "gfxConfig.h"
 #include "mozilla/layers/CompositorSession.h"
+#include "VRManagerChild.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -352,6 +353,7 @@ nsBaseWidget::OnRenderingDeviceReset()
     lf->IdentifyTextureHost(identifier);
   }
   ImageBridgeChild::IdentifyCompositorTextureHost(identifier);
+  gfx::VRManagerChild::IdentifyTextureHost(identifier);
 }
 
 void
@@ -1385,6 +1387,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   lf->SetShadowManager(shadowManager);
   lf->IdentifyTextureHost(textureFactoryIdentifier);
   ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
+  gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
   WindowUsesOMTC();
 
   mLayerManager = lm.forget();
@@ -3122,7 +3125,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     {
       char buf[32];
 
-      snprintf_literal(buf,"UNKNOWN: %d",aGuiEvent->mMessage);
+      SprintfLiteral(buf,"UNKNOWN: %d",aGuiEvent->mMessage);
 
       CopyASCIItoUTF16(buf, eventName);
     }

@@ -6,9 +6,10 @@
 
 "use strict";
 
-const { Ci, Cu, components } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { getStack, callFunctionWithAsyncStack } = require("devtools/shared/platform/stack");
 
 const promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
 
@@ -703,7 +704,7 @@ DebuggerClient.prototype = {
 
     let request = new Request(aRequest);
     request.format = "json";
-    request.stack = components.stack;
+    request.stack = getStack();
     if (aOnResponse) {
       request.on("json-reply", aOnResponse);
     }
@@ -1009,8 +1010,8 @@ DebuggerClient.prototype = {
     if (activeRequest) {
       let emitReply = () => activeRequest.emit("json-reply", aPacket);
       if (activeRequest.stack) {
-        Cu.callFunctionWithAsyncStack(emitReply, activeRequest.stack,
-                                      "DevTools RDP");
+        callFunctionWithAsyncStack(emitReply, activeRequest.stack,
+                                   "DevTools RDP");
       } else {
         emitReply();
       }

@@ -24,37 +24,42 @@ struct SeekTarget {
     Invalid,
     PrevSyncPoint,
     Accurate,
-    AccurateVideoOnly,
     NextFrame,
   };
   SeekTarget()
     : mEventVisibility(MediaDecoderEventVisibility::Observable)
     , mTime(media::TimeUnit::Invalid())
     , mType(SeekTarget::Invalid)
+    , mVideoOnly(false)
   {
   }
   SeekTarget(int64_t aTimeUsecs,
              Type aType,
              MediaDecoderEventVisibility aEventVisibility =
-               MediaDecoderEventVisibility::Observable)
+               MediaDecoderEventVisibility::Observable,
+             bool aVideoOnly = false)
     : mEventVisibility(aEventVisibility)
     , mTime(media::TimeUnit::FromMicroseconds(aTimeUsecs))
     , mType(aType)
+    , mVideoOnly(aVideoOnly)
   {
   }
   SeekTarget(const media::TimeUnit& aTime,
              Type aType,
              MediaDecoderEventVisibility aEventVisibility =
-               MediaDecoderEventVisibility::Observable)
+               MediaDecoderEventVisibility::Observable,
+             bool aVideoOnly = false)
     : mEventVisibility(aEventVisibility)
     , mTime(aTime)
     , mType(aType)
+    , mVideoOnly(aVideoOnly)
   {
   }
   SeekTarget(const SeekTarget& aOther)
     : mEventVisibility(aOther.mEventVisibility)
     , mTime(aOther.mTime)
     , mType(aOther.mType)
+    , mVideoOnly(aOther.mVideoOnly)
   {
   }
   bool IsValid() const {
@@ -63,6 +68,7 @@ struct SeekTarget {
   void Reset() {
     mTime = media::TimeUnit::Invalid();
     mType = SeekTarget::Invalid;
+    mVideoOnly = false;
   }
   media::TimeUnit GetTime() const {
     NS_ASSERTION(mTime.IsValid(), "Invalid SeekTarget");
@@ -75,17 +81,20 @@ struct SeekTarget {
   void SetType(Type aType) {
     mType = aType;
   }
+  void SetVideoOnly(bool aVideoOnly) {
+    mVideoOnly = aVideoOnly;
+  }
   bool IsFast() const {
     return mType == SeekTarget::Type::PrevSyncPoint;
   }
   bool IsAccurate() const {
     return mType == SeekTarget::Type::Accurate;
   }
-  bool IsVideoOnly() const {
-    return mType == SeekTarget::Type::AccurateVideoOnly;
-  }
   bool IsNextFrame() const {
     return mType == SeekTarget::Type::NextFrame;
+  }
+  bool IsVideoOnly() const {
+    return mVideoOnly;
   }
 
   MediaDecoderEventVisibility mEventVisibility;
@@ -97,6 +106,7 @@ private:
   // "Fast" seeks to the seek point preceding mTime, whereas
   // "Accurate" seeks as close as possible to mTime.
   Type mType;
+  bool mVideoOnly;
 };
 
 } // namespace mozilla

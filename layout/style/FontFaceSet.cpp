@@ -18,7 +18,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SizePrintfMacros.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
 #include "nsContentPolicyUtils.h"
@@ -1214,7 +1214,7 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   if (weightKeywordString.Length() > 0) {
     weightKeyword = weightKeywordString.get();
   } else {
-    snprintf_literal(weightKeywordBuf, "%u", aUserFontEntry->Weight());
+    SprintfLiteral(weightKeywordBuf, "%u", aUserFontEntry->Weight());
     weightKeyword = weightKeywordBuf;
   }
 

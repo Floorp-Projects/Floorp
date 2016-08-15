@@ -83,18 +83,6 @@ function setup() {
     gScript.sendAsyncMessage('trigger-on-session-request', receiverUrl);
   });
 
-  gScript.addMessageListener('offer-sent', function offerSentHandler() {
-    debug('Got message: offer-sent');
-    gScript.removeMessageListener('offer-sent', offerSentHandler);
-    gScript.sendAsyncMessage('trigger-on-offer');
-  });
-
-  gScript.addMessageListener('answer-sent', function answerSentHandler() {
-    debug('Got message: answer-sent');
-    gScript.removeMessageListener('answer-sent', answerSentHandler);
-    gScript.sendAsyncMessage('trigger-on-answer');
-  });
-
   return Promise.resolve();
 }
 
@@ -139,23 +127,31 @@ function testStartConnection() {
 }
 
 function testConnectionTerminate() {
-  return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testConnectionTerminate---');
-    gScript.addMessageListener('prepare-for-terminate', function prepareForTerminateHandler() {
-      debug('Got message: prepare-for-terminate');
-      gScript.removeMessageListener('prepare-for-terminate', prepareForTerminateHandler);
+  info('Sender: --- testConnectionTerminate---');
+  let promise = Promise.all([
+    new Promise(function(aResolve, aReject) {
       connection.onclose = function() {
         connection.onclose = null;
         is(connection.state, 'closed', 'Sender: Connection should be closed.');
+        aResolve();
       };
-      gScript.sendAsyncMessage('trigger-control-channel-error');
+    }),
+    new Promise(function(aResolve, aReject) {
       receiverIframe.addEventListener('mozbrowserclose', function() {
         ok(true, 'observe receiver page closing');
         aResolve();
       });
-      postMessageToIframe('ready-to-terminate');
-    });
+    })
+  ]);
+
+  gScript.addMessageListener('prepare-for-terminate', function prepareForTerminateHandler() {
+    debug('Got message: prepare-for-terminate');
+    gScript.removeMessageListener('prepare-for-terminate', prepareForTerminateHandler);
+    gScript.sendAsyncMessage('trigger-control-channel-error');
+    postMessageToIframe('ready-to-terminate');
   });
+
+  return promise;
 }
 
 function teardown() {

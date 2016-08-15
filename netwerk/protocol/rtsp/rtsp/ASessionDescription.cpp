@@ -19,7 +19,7 @@
 
 #include "ASessionDescription.h"
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include <media/stagefright/foundation/ADebug.h>
 #include <media/stagefright/foundation/AString.h>
@@ -216,7 +216,7 @@ bool ASessionDescription::getFormatType(
     *PT = x;
 
     char key[20];
-    snprintf_literal(key, "a=rtpmap:%lu", x);
+    SprintfLiteral(key, "a=rtpmap:%lu", x);
 
     if (!findAttribute(index, key, desc)) {
         // We only support dynamic payload type assignment for now.
@@ -225,7 +225,7 @@ bool ASessionDescription::getFormatType(
         return false;
     }
 
-    snprintf_literal(key, "a=fmtp:%lu", x);
+    SprintfLiteral(key, "a=fmtp:%lu", x);
     if (!findAttribute(index, key, params)) {
         params->clear();
     }
@@ -240,7 +240,7 @@ bool ASessionDescription::getDimensions(
     *height = 0;
 
     char key[20];
-    snprintf_literal(key, "a=framesize:%lu", PT);
+    SprintfLiteral(key, "a=framesize:%lu", PT);
     AString value;
     if (!findAttribute(index, key, &value)) {
         return false;

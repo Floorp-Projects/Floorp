@@ -35,7 +35,7 @@
 #include "nsTextNode.h"
 
 #include "PLDHashTable.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
@@ -91,8 +91,8 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericDOMDataNode)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[40];
-    snprintf_literal(name, "nsGenericDOMDataNode (len=%d)",
-                     tmp->mText.GetLength());
+    SprintfLiteral(name, "nsGenericDOMDataNode (len=%d)",
+                   tmp->mText.GetLength());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsGenericDOMDataNode, tmp->mRefCnt.get())
@@ -430,7 +430,7 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, int32_t aOffset,
         aBuf.AppendLiteral("&gt;");
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
-        snprintf_literal(buf, "\\u%04x", ch);
+        SprintfLiteral(buf, "\\u%04x", ch);
         AppendASCIItoUTF16(buf, aBuf);
       } else {
         aBuf.Append(ch);
@@ -450,7 +450,7 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, int32_t aOffset,
         aBuf.AppendLiteral("&gt;");
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
-        snprintf_literal(buf, "\\u%04x", ch);
+        SprintfLiteral(buf, "\\u%04x", ch);
         AppendASCIItoUTF16(buf, aBuf);
       } else {
         aBuf.Append(ch);

@@ -1,18 +1,7 @@
-<!DOCTYPE HTML>
-<!-- vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: -->
-<html>
-  <!-- Any copyright is dedicated to the Public Domain.
-    - http://creativecommons.org/publicdomain/zero/1.0/ -->
-  <head>
-    <meta charset="utf-8">
-    <title>Test for B2G Presentation API when sender and receiver at the same side</title>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  </head>
-  <body>
-    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1234492">
-      Test for B2G Presentation API when sender and receiver at the same side</a>
-    <script type="application/javascript;version=1.8">
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+* You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 'use strict';
 
@@ -54,6 +43,8 @@ function setup() {
     receiverIframe.setAttribute('src', receiverUrl);
     receiverIframe.setAttribute("mozbrowser", "true");
     receiverIframe.setAttribute("mozpresentation", receiverUrl);
+    var oop = location.pathname.indexOf('_inproc') == -1;
+    receiverIframe.setAttribute("remote", oop);
 
     // This event is triggered when the iframe calls "alert".
     receiverIframe.addEventListener("mozbrowsershowmodalprompt", function receiverListener(evt) {
@@ -88,18 +79,6 @@ function setup() {
     debug('Got message: promise-setup-ready');
     gScript.removeMessageListener('promise-setup-ready', promiseSetupReadyHandler);
     gScript.sendAsyncMessage('trigger-on-session-request', receiverUrl);
-  });
-
-  gScript.addMessageListener('offer-sent', function offerSentHandler() {
-    debug('Got message: offer-sent');
-    gScript.removeMessageListener('offer-sent', offerSentHandler);
-    gScript.sendAsyncMessage('trigger-on-offer');
-  });
-
-  gScript.addMessageListener('answer-sent', function answerSentHandler() {
-    debug('Got message: answer-sent');
-    gScript.removeMessageListener('answer-sent', answerSentHandler);
-    gScript.sendAsyncMessage('trigger-on-answer');
   });
 
   return Promise.resolve();
@@ -252,18 +231,6 @@ function testReconnect() {
       gScript.sendAsyncMessage('trigger-reconnected-acked', url);
     });
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler() {
-      debug('Got message: offer-sent');
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
-      gScript.sendAsyncMessage('trigger-on-offer');
-    });
-
-    gScript.addMessageListener('answer-sent', function answerSentHandler() {
-      debug('Got message: answer-sent');
-      gScript.removeMessageListener('answer-sent', answerSentHandler);
-      gScript.sendAsyncMessage('trigger-on-answer');
-    });
-
     gScript.addMessageListener('ready-to-reconnect', function onReadyToReconnect() {
       gScript.removeMessageListener('ready-to-reconnect', onReadyToReconnect);
       request.reconnect(presentationId).then((aConnection) => {
@@ -323,7 +290,3 @@ SpecialPowers.pushPermissions([
                                       ["dom.mozBrowserFramesEnabled", true]]},
                             runTests);
 });
-
-    </script>
-  </body>
-</html>

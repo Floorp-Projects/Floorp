@@ -18,7 +18,6 @@ struct DeviceInitData
 
   // Windows only.
   bool useD3D11;
-  bool useD3D11WARP;
   bool d3d11TextureSharingWorks;
   bool useD2D1;
   DxgiAdapterDesc adapter;

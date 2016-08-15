@@ -52,10 +52,10 @@ WindowSurfaceX11Image::Lock(const LayoutDeviceIntRegion& aRegion)
     return nullptr;
 
   unsigned char* data = (unsigned char*) mImage->data;
-  return gfxPlatform::GetPlatform()->CreateDrawTargetForData(data,
-                                                             size,
-                                                             mImage->bytes_per_line,
-                                                             mFormat);
+  return gfxPlatform::CreateDrawTargetForData(data,
+                                              size,
+                                              mImage->bytes_per_line,
+                                              mFormat);
 }
 
 void

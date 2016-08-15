@@ -141,12 +141,12 @@ private:
 
     ~nsManifestCheck() {}
 
-    static NS_METHOD ReadManifest(nsIInputStream *aInputStream,
-                                  void *aClosure,
-                                  const char *aFromSegment,
-                                  uint32_t aOffset,
-                                  uint32_t aCount,
-                                  uint32_t *aBytesConsumed);
+    static nsresult ReadManifest(nsIInputStream *aInputStream,
+                                 void *aClosure,
+                                 const char *aFromSegment,
+                                 uint32_t aOffset,
+                                 uint32_t aCount,
+                                 uint32_t *aBytesConsumed);
 
     RefPtr<nsOfflineCacheUpdate> mUpdate;
     nsCOMPtr<nsIURI> mURI;
@@ -206,8 +206,7 @@ nsManifestCheck::Begin()
 // nsManifestCheck <public>
 //-----------------------------------------------------------------------------
 
-/* static */
-NS_METHOD
+/* static */ nsresult
 nsManifestCheck::ReadManifest(nsIInputStream *aInputStream,
                               void *aClosure,
                               const char *aFromSegment,
@@ -706,7 +705,7 @@ nsOfflineManifestItem::~nsOfflineManifestItem()
 //-----------------------------------------------------------------------------
 
 /* static */
-NS_METHOD
+nsresult
 nsOfflineManifestItem::ReadManifest(nsIInputStream *aInputStream,
                                     void *aClosure,
                                     const char *aFromSegment,

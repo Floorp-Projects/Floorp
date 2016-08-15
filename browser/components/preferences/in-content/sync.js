@@ -364,6 +364,7 @@ var gSyncPane = {
         if (isVerified) {
           return fxAccounts.getSignedInUserProfile();
         }
+        return null;
       }).then(data => {
         let fxaLoginStatus = document.getElementById("fxaLoginStatus");
         if (data && profileInfoEnabled) {
@@ -422,7 +423,7 @@ var gSyncPane = {
   startOver: function (showDialog) {
     if (showDialog) {
       let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
-                  Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL + 
+                  Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
                   Services.prompt.BUTTON_POS_1_DEFAULT;
       let buttonChoice =
         Services.prompt.confirmEx(window,
@@ -548,13 +549,9 @@ var gSyncPane = {
   clickOrSpaceOrEnterPressed: function(event) {
     // Note: charCode is deprecated, but 'char' not yet implemented.
     // Replace charCode with char when implemented, see Bug 680830
-    if ((event.type == "click" && event.button == 0) ||    // button 0 = 'main button', typically left click.
-        (event.type == "keypress" &&
-        (event.charCode == KeyEvent.DOM_VK_SPACE || event.keyCode == KeyEvent.DOM_VK_RETURN))) {
-      return true;
-    } else {
-      return false;
-    }
+    return ((event.type == "click" && event.button == 0) ||
+            (event.type == "keypress" &&
+             (event.charCode == KeyEvent.DOM_VK_SPACE || event.keyCode == KeyEvent.DOM_VK_RETURN)));
   },
 
   openChangeProfileImage: function(event) {
@@ -651,11 +648,11 @@ var gSyncPane = {
   openAddDevice: function () {
     if (!Weave.Utils.ensureMPUnlocked())
       return;
-    
+
     let win = Services.wm.getMostRecentWindow("Sync:AddDevice");
     if (win)
       win.focus();
-    else 
+    else
       window.openDialog("chrome://browser/content/sync/addDevice.xul",
                         "syncAddDevice", "centerscreen,chrome,resizable=no");
   },

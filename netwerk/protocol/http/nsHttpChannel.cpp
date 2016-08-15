@@ -5460,6 +5460,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     NS_CompareLoadInfoAndLoadContext(this);
 
+#ifdef DEBUG
+    CheckPrivateBrowsing();
+#endif
+
     NS_ENSURE_ARG_POINTER(listener);
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
     NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);

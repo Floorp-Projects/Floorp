@@ -2633,6 +2633,19 @@ HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
   return shouldIntercept;
 }
 
+void HttpBaseChannel::CheckPrivateBrowsing()
+{
+  nsCOMPtr<nsILoadContext> loadContext;
+  NS_QueryNotificationCallbacks(this, loadContext);
+  // For addons it's possible that mLoadInfo is null.
+  if (mLoadInfo && loadContext) {
+      DocShellOriginAttributes docShellAttrs;
+      loadContext->GetOriginAttributes(docShellAttrs);
+      MOZ_ASSERT(mLoadInfo->GetOriginAttributes().mPrivateBrowsingId == docShellAttrs.mPrivateBrowsingId,
+                 "PrivateBrowsingId values are not the same between LoadInfo and LoadContext.");
+  }
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsITraceableChannel
 //-----------------------------------------------------------------------------

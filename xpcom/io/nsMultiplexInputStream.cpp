@@ -60,9 +60,9 @@ private:
     bool mDone;
   };
 
-  static NS_METHOD ReadSegCb(nsIInputStream* aIn, void* aClosure,
-                             const char* aFromRawSegment, uint32_t aToOffset,
-                             uint32_t aCount, uint32_t* aWriteCount);
+  static nsresult ReadSegCb(nsIInputStream* aIn, void* aClosure,
+                            const char* aFromRawSegment, uint32_t aToOffset,
+                            uint32_t aCount, uint32_t* aWriteCount);
 
   Mutex mLock; // Protects access to all data members.
   nsTArray<nsCOMPtr<nsIInputStream>> mStreams;
@@ -336,7 +336,7 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
   return state.mOffset ? NS_OK : rv;
 }
 
-NS_METHOD
+nsresult
 nsMultiplexInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                                   const char* aFromRawSegment,
                                   uint32_t aToOffset, uint32_t aCount,

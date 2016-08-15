@@ -18,7 +18,7 @@
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsIFile.h"                    // for nsIFile
 #include "nsDirectoryServiceDefs.h"     // for NS_OS_TMP_DIR
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "FPSCounter.h"
 
 namespace mozilla {
@@ -209,7 +209,7 @@ FPSCounter::WriteFrameTimeStamps(PRFileDesc* fd)
 {
   const int bufferSize = 256;
   char buffer[bufferSize];
-  int writtenCount = snprintf_literal(buffer, "FPS Data for: %s\n", mFPSName);
+  int writtenCount = SprintfLiteral(buffer, "FPS Data for: %s\n", mFPSName);
   MOZ_ASSERT(writtenCount >= 0);
   PR_Write(fd, buffer, writtenCount);
 
@@ -224,7 +224,7 @@ FPSCounter::WriteFrameTimeStamps(PRFileDesc* fd)
 
   while (HasNext(startTimeStamp)) {
     TimeDuration duration = previousSample - nextTimeStamp;
-    writtenCount = snprintf_literal(buffer, "%f,\n", duration.ToMilliseconds());
+    writtenCount = SprintfLiteral(buffer, "%f,\n", duration.ToMilliseconds());
 
     MOZ_ASSERT(writtenCount >= 0);
     PR_Write(fd, buffer, writtenCount);

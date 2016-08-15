@@ -169,6 +169,8 @@ FxAccountsPushService.prototype = {
       case ON_PASSWORD_RESET_NOTIFICATION:
         return this._onPasswordChanged();
         break;
+      case ON_COLLECTION_CHANGED_NOTIFICATION:
+        Services.obs.notifyObservers(null, ON_COLLECTION_CHANGED_NOTIFICATION, payload.data.collections);
       default:
         this.log.warn("FxA Push command unrecognized: " + payload.command);
     }

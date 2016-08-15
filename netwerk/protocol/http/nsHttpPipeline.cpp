@@ -585,7 +585,7 @@ nsHttpPipeline::Available()
     return result;
 }
 
-NS_METHOD
+nsresult
 nsHttpPipeline::ReadFromPipe(nsIInputStream *stream,
                              void *closure,
                              const char *buf,

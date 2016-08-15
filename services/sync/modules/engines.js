@@ -21,6 +21,9 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
+
 /*
  * Trackers are associated with a single engine and deal with
  * listening for changes to their particular data type.
@@ -1477,10 +1480,12 @@ SyncEngine.prototype = {
                           + failed_ids.join(", "));
 
         // Clear successfully uploaded objects.
-        for (let key in resp.obj.success) {
-          let id = resp.obj.success[key];
+        const succeeded_ids = Object.values(resp.obj.success);
+        for (let id of succeeded_ids) {
           delete this._modified[id];
         }
+
+        this._onRecordsWritten(succeeded_ids, failed_ids);
       }
 
       let postQueue = up.newPostQueue(this._log, handleResponse);
@@ -1509,6 +1514,11 @@ SyncEngine.prototype = {
       postQueue.flush();
       Observers.notify("weave:engine:sync:uploaded", counts, this.name);
     }
+  },
+
+  _onRecordsWritten(succeeded, failed) {
+    // Implement this method to take specific actions against successfully
+    // uploaded records and failed records.
   },
 
   // Any cleanup necessary.

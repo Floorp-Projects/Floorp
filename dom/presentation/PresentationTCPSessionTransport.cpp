@@ -328,6 +328,12 @@ NS_IMETHODIMP
 PresentationTCPSessionTransport::SetCallback(nsIPresentationSessionTransportCallback* aCallback)
 {
   mCallback = aCallback;
+
+  if (!!mCallback && ReadyState::OPEN == mReadyState) {
+    // Notify the transport channel is ready.
+    NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportReady()));
+  }
+
   return NS_OK;
 }
 

@@ -24,22 +24,27 @@ ConsoleApiCall.propTypes = {
 
 function ConsoleApiCall(props) {
   const { message } = props;
+  const {category, severity} = message;
 
   const messageBody = message.parameters ?
     message.parameters.map((grip) => GripMessageBody({grip})) :
     message.messageText;
 
-  const icon = MessageIcon({severity: message.severity});
+  const icon = MessageIcon({severity: severity});
   const repeat = MessageRepeat({repeat: message.repeat});
 
-  // @TODO Use of "is" is a temporary hack to get the category and severity
-  // attributes to be applied. There are targeted in webconsole's CSS rules,
-  // so if we remove this hack, we have to modify the CSS rules accordingly.
+  const classes = ["message", "cm-s-mozilla"];
+
+  if (category) {
+    classes.push(category);
+  }
+
+  if (severity) {
+    classes.push(severity);
+  }
+
   return dom.div({
-    class: "message cm-s-mozilla",
-    is: "fdt-message",
-    category: message.category,
-    severity: message.severity
+    className: classes.join(" ")
   },
     // @TODO add timestamp
     // @TODO add indent if necessary

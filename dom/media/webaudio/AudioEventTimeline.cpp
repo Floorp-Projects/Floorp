@@ -184,8 +184,10 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
         // Find the last event with the same time
         while (eventIndex < mEvents.Length() - 1 &&
                TimesEqual(aTime, TimeOf(mEvents[eventIndex + 1]))) {
+          mLastComputedValue = GetValueAtTimeOfEvent<TimeType>(&mEvents[eventIndex]);
           ++eventIndex;
         }
+
         timeMatchesEventIndex = true;
         break;
       }
@@ -196,31 +198,7 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
     if (timeMatchesEventIndex) {
       // The time matches one of the events exactly.
       MOZ_ASSERT(TimesEqual(aTime, TimeOf(mEvents[eventIndex])));
-
-      switch (mEvents[eventIndex].mType) {
-        case AudioTimelineEvent::SetTarget:
-          // SetTarget nodes can be handled no matter what their next node is
-          // (if they have one).
-          // Follow the curve, without regard to the next event, starting at
-          // the last value of the last event.
-          mComputedValue =
-            ExponentialApproach(TimeOf(mEvents[eventIndex]),
-                                mLastComputedValue, mEvents[eventIndex].mValue,
-                                mEvents[eventIndex].mTimeConstant, aTime);
-          break;
-        case AudioTimelineEvent::SetValueCurve:
-          // SetValueCurve events can be handled no matter what their event
-          // node is (if they have one)
-          mComputedValue =
-            ExtractValueFromCurve(TimeOf(mEvents[eventIndex]),
-                                  mEvents[eventIndex].mCurve,
-                                  mEvents[eventIndex].mCurveLength,
-                                  mEvents[eventIndex].mDuration, aTime);
-          break;
-        default:
-          // For other event types
-          mComputedValue = mEvents[eventIndex].mValue;
-      }
+      mComputedValue = GetValueAtTimeOfEvent<TimeType>(&mEvents[eventIndex]);
     } else {
       mComputedValue = GetValuesAtTimeHelperInternal(aTime, previous, next);
     }
@@ -234,6 +212,34 @@ AudioEventTimeline::GetValuesAtTimeHelper(double aTime, float* aBuffer,
 template void
 AudioEventTimeline::GetValuesAtTimeHelper(int64_t aTime, float* aBuffer,
                                           const size_t aSize);
+
+template<class TimeType> float
+AudioEventTimeline::GetValueAtTimeOfEvent(const AudioTimelineEvent* aNext)
+{
+  TimeType time = aNext->template Time<TimeType>();
+  switch (aNext->mType) {
+    case AudioTimelineEvent::SetTarget:
+      // SetTarget nodes can be handled no matter what their next node is
+      // (if they have one).
+      // Follow the curve, without regard to the next event, starting at
+      // the last value of the last event.
+      return ExponentialApproach(time,
+                                 mLastComputedValue, aNext->mValue,
+                                 aNext->mTimeConstant, time);
+      break;
+    case AudioTimelineEvent::SetValueCurve:
+      // SetValueCurve events can be handled no matter what their event
+      // node is (if they have one)
+      return ExtractValueFromCurve(time,
+                                   aNext->mCurve,
+                                   aNext->mCurveLength,
+                                   aNext->mDuration, time);
+      break;
+    default:
+      // For other event types
+      return aNext->mValue;
+  }
+}
 
 template<class TimeType> float
 AudioEventTimeline::GetValuesAtTimeHelperInternal(TimeType aTime,

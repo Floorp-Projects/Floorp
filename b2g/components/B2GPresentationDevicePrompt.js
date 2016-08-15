@@ -9,7 +9,7 @@ function debug(aMsg) {
   //dump("-*- B2GPresentationDevicePrompt: " + aMsg + "\n");
 }
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 const kB2GPRESENTATIONDEVICEPROMPT_CONTRACTID = "@mozilla.org/presentation-device/prompt;1";
 const kB2GPRESENTATIONDEVICEPROMPT_CID        = Components.ID("{4a300c26-e99b-4018-ab9b-c48cf9bc4de1}");

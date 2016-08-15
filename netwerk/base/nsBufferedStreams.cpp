@@ -669,7 +669,7 @@ nsBufferedOutputStream::Finish()
     return rv;
 }
 
-static NS_METHOD
+static nsresult
 nsReadFromInputStream(nsIOutputStream* outStr,
                       void* closure,
                       char* toRawSegment, 

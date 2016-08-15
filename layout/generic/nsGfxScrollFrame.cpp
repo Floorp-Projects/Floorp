@@ -2877,7 +2877,7 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
   AutoTArray<nsIFrame*, 3> scrollParts;
   for (nsIFrame* kid : mOuter->PrincipalChildList()) {
     if (kid == mScrolledFrame ||
-        (kid->IsAbsPosContaininingBlock() || overlayScrollbars) != aPositioned)
+        (kid->IsAbsPosContainingBlock() || overlayScrollbars) != aPositioned)
       continue;
 
     scrollParts.AppendElement(kid);

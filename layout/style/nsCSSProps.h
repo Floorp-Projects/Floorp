@@ -54,11 +54,10 @@
 #define VARIANT_ZERO_ANGLE    0x02000000  // unitless zero for angles
 #define VARIANT_CALC          0x04000000  // eCSSUnit_Calc
 #define VARIANT_ELEMENT       0x08000000  // eCSSUnit_Element
-#define VARIANT_POSITIVE_DIMENSION 0x10000000 // Only lengths greater than 0.0
-#define VARIANT_NONNEGATIVE_DIMENSION 0x20000000 // Only lengths greater than or equal to 0.0
+#define VARIANT_NONNEGATIVE_DIMENSION 0x10000000 // Only lengths greater than or equal to 0.0
 // Keyword used iff gfx.font_rendering.opentype_svg.enabled is true:
-#define VARIANT_OPENTYPE_SVG_KEYWORD 0x40000000
-#define VARIANT_ABSOLUTE_DIMENSION 0x80000000 // B Only lengths with absolute length unit
+#define VARIANT_OPENTYPE_SVG_KEYWORD 0x20000000
+#define VARIANT_ABSOLUTE_DIMENSION 0x40000000 // B Only lengths with absolute length unit
 
 // Variants that can consume more than one token
 #define VARIANT_MULTIPLE_TOKENS \

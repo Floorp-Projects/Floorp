@@ -375,7 +375,7 @@ EventSource::OnStartRequest(nsIRequest *aRequest,
 
 // this method parses the characters as they become available instead of
 // buffering them.
-NS_METHOD
+nsresult
 EventSource::StreamReaderFunc(nsIInputStream *aInputStream,
                               void *aClosure,
                               const char *aFromRawSegment,
