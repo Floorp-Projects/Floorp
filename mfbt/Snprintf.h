@@ -21,7 +21,7 @@ template <size_t N>
 #if defined(__GNUC__)
   __attribute__((format(printf, 2, 3)))
 #endif
-int snprintf_literal(char (&buffer)[N], const char* format, ...)
+int SprintfLiteral(char (&buffer)[N], const char* format, ...)
 {
   va_list args;
   va_start(args, format);

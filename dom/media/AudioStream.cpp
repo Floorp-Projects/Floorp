@@ -243,7 +243,7 @@ OpenDumpFile(uint32_t aChannels, uint32_t aRate)
   if (!getenv("MOZ_DUMP_AUDIO"))
     return nullptr;
   char buf[100];
-  snprintf_literal(buf, "dumped-audio-%d.wav", ++gDumpedAudioCount);
+  SprintfLiteral(buf, "dumped-audio-%d.wav", ++gDumpedAudioCount);
   FILE* f = fopen(buf, "wb");
   if (!f)
     return nullptr;

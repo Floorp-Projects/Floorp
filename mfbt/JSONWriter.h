@@ -389,7 +389,7 @@ public:
   void IntProperty(const char* aName, int64_t aInt)
   {
     char buf[64];
-    snprintf_literal(buf, "%" PRId64, aInt);
+    SprintfLiteral(buf, "%" PRId64, aInt);
     Scalar(aName, buf);
   }
 

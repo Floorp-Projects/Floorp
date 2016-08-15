@@ -1982,8 +1982,8 @@ MessageChannel::ReportConnectionError(const char* aChannelName, Message* aMsg) c
 
     if (aMsg) {
         char reason[512];
-        snprintf_literal(reason,"(msgtype=0x%X,name=%s) %s",
-                         aMsg->type(), aMsg->name(), errorMsg);
+        SprintfLiteral(reason,"(msgtype=0x%X,name=%s) %s",
+                       aMsg->type(), aMsg->name(), errorMsg);
 
         PrintErrorMessage(mSide, aChannelName, reason);
     } else {
@@ -2027,8 +2027,8 @@ MessageChannel::MaybeHandleError(Result code, const Message& aMsg, const char* c
     }
 
     char reason[512];
-    snprintf_literal(reason,"(msgtype=0x%X,name=%s) %s",
-                     aMsg.type(), aMsg.name(), errorMsg);
+    SprintfLiteral(reason,"(msgtype=0x%X,name=%s) %s",
+                   aMsg.type(), aMsg.name(), errorMsg);
 
     PrintErrorMessage(mSide, channelName, reason);
 
