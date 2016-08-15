@@ -568,6 +568,10 @@ struct nsStyleImageLayers {
 
     bool IsInitialValue(LayerType aType) const;
 
+    static float GetInitialValue(LayerType aType) {
+      return (aType == LayerType::Background) ? 0.0f : 0.5f;
+    }
+
     // Sets both mXPosition and mYPosition to the given percent value for the
     // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
     void SetInitialPercentValues(float aPercentVal);
