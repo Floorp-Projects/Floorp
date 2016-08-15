@@ -99,7 +99,7 @@ function WebRequestEventManager(context, eventName) {
 
 WebRequestEventManager.prototype = Object.create(SingletonEventManager.prototype);
 
-extensions.registerSchemaAPI("webRequest", (extension, context) => {
+extensions.registerSchemaAPI("webRequest", context => {
   return {
     webRequest: {
       onBeforeRequest: new WebRequestEventManager(context, "onBeforeRequest").api(),
