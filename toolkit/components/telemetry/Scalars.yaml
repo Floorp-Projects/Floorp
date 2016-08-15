@@ -91,7 +91,8 @@ browser.engagement:
       - 1271304
     description: >
       The count of tab open events per subsession, across all windows, after the
-      session has been restored. This includes tab open events from private windows.
+      session has been restored. This includes tab open events from private windows
+      and from manual session restorations (i.e. after crashes and from about:home).
     expires: "55"
     kind: uint
     notification_emails:
@@ -115,7 +116,8 @@ browser.engagement:
       - 1271304
     description: >
       The count of browser window open events per subsession, after the session
-      has been restored. The count includes the private windows.
+      has been restored. The count includes private windows and the ones from manual
+      session restorations (i.e. after crashes and from about:home).
     expires: "55"
     kind: uint
     notification_emails:

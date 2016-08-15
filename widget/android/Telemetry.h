@@ -17,7 +17,6 @@ namespace widget {
 
 class Telemetry final
     : public java::Telemetry::Natives<Telemetry>
-    , public UsesGeckoThreadProxy
 {
     Telemetry() = delete;
 

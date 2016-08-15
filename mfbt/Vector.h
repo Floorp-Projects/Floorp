@@ -17,6 +17,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
@@ -62,7 +63,7 @@ struct VectorImpl
   MOZ_NONNULL(1)
   static inline void new_(T* aDst, Args&&... aArgs)
   {
-    new(aDst) T(Forward<Args>(aArgs)...);
+    new(KnownNotNull, aDst) T(Forward<Args>(aArgs)...);
   }
 
   /* Destroys constructed objects in the range [aBegin, aEnd). */
@@ -819,7 +820,7 @@ Vector<T, N, AP>::operator=(Vector&& aRhs)
 {
   MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
   this->~Vector();
-  new(this) Vector(Move(aRhs));
+  new(KnownNotNull, this) Vector(Move(aRhs));
   return *this;
 }
 

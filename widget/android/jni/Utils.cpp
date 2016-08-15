@@ -7,6 +7,7 @@
 
 #include "AndroidBridge.h"
 #include "GeneratedJNIWrappers.h"
+#include "nsAppShell.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -143,7 +144,7 @@ bool HandleUncaughtException(JNIEnv* aEnv)
         return false;
     }
 
-#ifdef DEBUG
+#ifdef MOZ_CHECK_JNI
     aEnv->ExceptionDescribe();
 #endif
 
@@ -208,6 +209,27 @@ void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle)
 jclass GetClassGlobalRef(JNIEnv* aEnv, const char* aClassName)
 {
     return AndroidBridge::GetClassGlobalRef(aEnv, aClassName);
+}
+
+
+void DispatchToGeckoThread(UniquePtr<AbstractCall>&& aCall)
+{
+    class AbstractCallEvent : public nsAppShell::Event
+    {
+        UniquePtr<AbstractCall> mCall;
+
+    public:
+        AbstractCallEvent(UniquePtr<AbstractCall>&& aCall)
+            : mCall(Move(aCall))
+        {}
+
+        void Run() override
+        {
+            (*mCall)();
+        }
+    };
+
+    nsAppShell::PostEvent(MakeUnique<AbstractCallEvent>(Move(aCall)));
 }
 
 } // jni

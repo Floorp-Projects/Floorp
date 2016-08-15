@@ -58,12 +58,12 @@ protected:
 
   private:
     virtual ~ConvertedStreamListener();
-    static NS_METHOD AppendDataToString(nsIInputStream* inputStream,
-                                        void* closure,
-                                        const char* rawSegment,
-                                        uint32_t toOffset,
-                                        uint32_t count,
-                                        uint32_t* writeCount);
+    static nsresult AppendDataToString(nsIInputStream* inputStream,
+                                       void* closure,
+                                       const char* rawSegment,
+                                       uint32_t toOffset,
+                                       uint32_t count,
+                                       uint32_t* writeCount);
     nsUnknownDecoder *mDecoder;
   };
 

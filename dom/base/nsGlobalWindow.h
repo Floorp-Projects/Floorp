@@ -122,7 +122,8 @@ class RequestOrUSVString;
 class Selection;
 class SpeechSynthesis;
 class U2F;
-class VRDevice;
+class VRDisplay;
+class VREventObserver;
 class WakeLock;
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 class WindowOrientationObserver;
@@ -132,9 +133,6 @@ class CacheStorage;
 } // namespace cache
 class IDBFactory;
 } // namespace dom
-namespace gfx {
-class VRDeviceProxy;
-} // namespace gfx
 } // namespace mozilla
 
 extern already_AddRefed<nsIScriptTimeoutHandler>
@@ -491,8 +489,7 @@ public:
 
   // Outer windows only.
   virtual nsresult SetFullscreenInternal(
-    FullscreenReason aReason, bool aIsFullscreen,
-    mozilla::gfx::VRDeviceProxy *aHMD = nullptr) override final;
+    FullscreenReason aReason, bool aIsFullscreen) override final;
   virtual void FinishFullscreenChange(bool aIsFullscreen) override final;
   bool SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
                            nsIWidget* aWidget, nsIScreen* aScreen);
@@ -500,6 +497,8 @@ public:
 
   // Inner windows only.
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true) override;
+  void NotifyVREventListenerAdded();
+  virtual void EventListenerAdded(nsIAtom* aType) override;
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -805,8 +804,13 @@ public:
   void EnableGamepadUpdates();
   void DisableGamepadUpdates();
 
-  // Update the VR devices for this window
-  bool UpdateVRDevices(nsTArray<RefPtr<mozilla::dom::VRDevice>>& aDevices);
+  // Inner windows only.
+  // Enable/disable updates for VR
+  void EnableVRUpdates();
+  void DisableVRUpdates();
+
+  // Update the VR displays for this window
+  bool UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDisplays);
 
 #define EVENT(name_, id_, type_, struct_)                                     \
   mozilla::dom::EventHandlerNonNull* GetOn##name_()                           \
@@ -1770,6 +1774,10 @@ protected:
   // Inner windows only.
   // Indicates whether this window wants gamepad input events
   bool                   mHasGamepad : 1;
+
+  // Inner windows only.
+  // Indicates whether this window wants VR events
+  bool                   mHasVREvents : 1;
 #ifdef MOZ_GAMEPAD
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
@@ -1912,8 +1920,10 @@ protected:
   // This is the CC generation the last time we called CanSkip.
   uint32_t mCanSkipCCGeneration;
 
-  // The VRDevies for this window
-  nsTArray<RefPtr<mozilla::dom::VRDevice>> mVRDevices;
+  // The VR Displays for this window
+  nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
+
+  nsAutoPtr<mozilla::dom::VREventObserver> mVREventObserver;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

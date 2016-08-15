@@ -17,7 +17,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "LulCommonExt.h"
 #include "LulElfExt.h"
@@ -85,17 +85,17 @@ LExpr::ShowRule(const char* aNewReg) const
       res += "Unknown";
       break;
     case NODEREF:
-      snprintf_literal(buf, "%s+%d",
-                       NameOf_DW_REG(mReg), (int)mOffset);
+      SprintfLiteral(buf, "%s+%d",
+                     NameOf_DW_REG(mReg), (int)mOffset);
       res += buf;
       break;
     case DEREF:
-      snprintf_literal(buf, "*(%s+%d)",
-                       NameOf_DW_REG(mReg), (int)mOffset);
+      SprintfLiteral(buf, "*(%s+%d)",
+                     NameOf_DW_REG(mReg), (int)mOffset);
       res += buf;
       break;
     case PFXEXPR:
-      snprintf_literal(buf, "PfxExpr-at-%d", (int)mOffset);
+      SprintfLiteral(buf, "PfxExpr-at-%d", (int)mOffset);
       res += buf;
       break;
     default:
@@ -109,9 +109,9 @@ void
 RuleSet::Print(void(*aLog)(const char*)) const
 {
   char buf[96];
-  snprintf_literal(buf, "[%llx .. %llx]: let ",
-                   (unsigned long long int)mAddr,
-                   (unsigned long long int)(mAddr + mLen - 1));
+  SprintfLiteral(buf, "[%llx .. %llx]: let ",
+                 (unsigned long long int)mAddr,
+                 (unsigned long long int)(mAddr + mLen - 1));
   string res = string(buf);
   res += mCfaExpr.ShowRule("cfa");
   res += " in";
@@ -345,10 +345,10 @@ SecMap::PrepareRuleSets(uintptr_t aStart, size_t aLen)
     mSummaryMaxAddr = mRuleSets[n-1].mAddr + mRuleSets[n-1].mLen - 1;
   }
   char buf[150];
-  snprintf_literal(buf,
-                   "PrepareRuleSets: %d entries, smin/smax 0x%llx, 0x%llx\n",
-                   (int)n, (unsigned long long int)mSummaryMinAddr,
-                           (unsigned long long int)mSummaryMaxAddr);
+  SprintfLiteral(buf,
+                 "PrepareRuleSets: %d entries, smin/smax 0x%llx, 0x%llx\n",
+                 (int)n, (unsigned long long int)mSummaryMinAddr,
+                         (unsigned long long int)mSummaryMaxAddr);
   buf[sizeof(buf)-1] = 0;
   mLog(buf);
 
@@ -553,8 +553,8 @@ class PriMap {
       mSecMaps.insert(iter, aSecMap);
     }
     char buf[100];
-    snprintf_literal(buf, "AddSecMap: now have %d SecMaps\n",
-                     (int)mSecMaps.size());
+    SprintfLiteral(buf, "AddSecMap: now have %d SecMaps\n",
+                   (int)mSecMaps.size());
     buf[sizeof(buf)-1] = 0;
     mLog(buf);
   }
@@ -826,9 +826,9 @@ class PriMap {
 #define LUL_LOG(_str) \
   do { \
     char buf[200]; \
-    snprintf_literal(buf, \
-                     "LUL: pid %d tid %d lul-obj %p: %s", \
-                     getpid(), gettid(), this, (_str)); \
+    SprintfLiteral(buf, \
+                   "LUL: pid %d tid %d lul-obj %p: %s", \
+                   getpid(), gettid(), this, (_str));   \
     buf[sizeof(buf)-1] = 0; \
     mLog(buf); \
   } while (0)
@@ -870,10 +870,10 @@ LUL::MaybeShowStats()
     uint32_t n_new_Scanned = mStats.mScanned - mStatsPrevious.mScanned;
     mStatsPrevious = mStats;
     char buf[200];
-    snprintf_literal(buf,
-                     "LUL frame stats: TOTAL %5u"
-                     "    CTX %4u    CFI %4u    SCAN %4u",
-                     n_new, n_new_Context, n_new_CFI, n_new_Scanned);
+    SprintfLiteral(buf,
+                   "LUL frame stats: TOTAL %5u"
+                   "    CTX %4u    CFI %4u    SCAN %4u",
+                   n_new, n_new_Context, n_new_CFI, n_new_Scanned);
     buf[sizeof(buf)-1] = 0;
     mLog(buf);
   }
@@ -901,9 +901,9 @@ LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
 
   mLog(":\n");
   char buf[200];
-  snprintf_literal(buf, "NotifyMap %llx %llu %s\n",
-                   (unsigned long long int)aRXavma, (unsigned long long int)aSize,
-                   aFileName);
+  SprintfLiteral(buf, "NotifyMap %llx %llu %s\n",
+                 (unsigned long long int)aRXavma, (unsigned long long int)aSize,
+                 aFileName);
   buf[sizeof(buf)-1] = 0;
   mLog(buf);
 
@@ -929,8 +929,8 @@ LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
 
     smap->PrepareRuleSets(aRXavma, aSize);
 
-    snprintf_literal(buf,
-                     "NotifyMap got %lld entries\n", (long long int)smap->Size());
+    SprintfLiteral(buf,
+                   "NotifyMap got %lld entries\n", (long long int)smap->Size());
     buf[sizeof(buf)-1] = 0;
     mLog(buf);
 
@@ -952,7 +952,7 @@ LUL::NotifyExecutableArea(uintptr_t aRXavma, size_t aSize)
 
   mLog(":\n");
   char buf[200];
-  snprintf_literal(buf, "NotifyExecutableArea %llx %llu\n",
+  SprintfLiteral(buf, "NotifyExecutableArea %llx %llu\n",
                    (unsigned long long int)aRXavma, (unsigned long long int)aSize);
   buf[sizeof(buf)-1] = 0;
   mLog(buf);
@@ -974,9 +974,9 @@ LUL::NotifyBeforeUnmap(uintptr_t aRXavmaMin, uintptr_t aRXavmaMax)
 
   mLog(":\n");
   char buf[100];
-  snprintf_literal(buf, "NotifyUnmap %016llx-%016llx\n",
-                   (unsigned long long int)aRXavmaMin,
-                   (unsigned long long int)aRXavmaMax);
+  SprintfLiteral(buf, "NotifyUnmap %016llx-%016llx\n",
+                 (unsigned long long int)aRXavmaMin,
+                 (unsigned long long int)aRXavmaMax);
   buf[sizeof(buf)-1] = 0;
   mLog(buf);
 
@@ -990,8 +990,8 @@ LUL::NotifyBeforeUnmap(uintptr_t aRXavmaMin, uintptr_t aRXavmaMax)
   // contains valid code.
   mSegArray->add(aRXavmaMin, aRXavmaMax, false);
 
-  snprintf_literal(buf, "NotifyUnmap: now have %d SecMaps\n",
-                   (int)mPriMap->CountSecMaps());
+  SprintfLiteral(buf, "NotifyUnmap: now have %d SecMaps\n",
+                 (int)mPriMap->CountSecMaps());
   buf[sizeof(buf)-1] = 0;
   mLog(buf);
 }
@@ -1310,23 +1310,23 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
       char buf[300];
       mLog("\n");
 #if defined(LUL_ARCH_x64) || defined(LUL_ARCH_x86)
-      snprintf_literal(buf,
-                       "LoopTop: rip %d/%llx  rsp %d/%llx  rbp %d/%llx\n",
-                       (int)regs.xip.Valid(), (unsigned long long int)regs.xip.Value(),
-                       (int)regs.xsp.Valid(), (unsigned long long int)regs.xsp.Value(),
-                       (int)regs.xbp.Valid(), (unsigned long long int)regs.xbp.Value());
+      SprintfLiteral(buf,
+                     "LoopTop: rip %d/%llx  rsp %d/%llx  rbp %d/%llx\n",
+                     (int)regs.xip.Valid(), (unsigned long long int)regs.xip.Value(),
+                     (int)regs.xsp.Valid(), (unsigned long long int)regs.xsp.Value(),
+                     (int)regs.xbp.Valid(), (unsigned long long int)regs.xbp.Value());
       buf[sizeof(buf)-1] = 0;
       mLog(buf);
 #elif defined(LUL_ARCH_arm)
-      snprintf_literal(buf,
-                       "LoopTop: r15 %d/%llx  r7 %d/%llx  r11 %d/%llx"
-                       "  r12 %d/%llx  r13 %d/%llx  r14 %d/%llx\n",
-                       (int)regs.r15.Valid(), (unsigned long long int)regs.r15.Value(),
-                       (int)regs.r7.Valid(),  (unsigned long long int)regs.r7.Value(),
-                       (int)regs.r11.Valid(), (unsigned long long int)regs.r11.Value(),
-                       (int)regs.r12.Valid(), (unsigned long long int)regs.r12.Value(),
-                       (int)regs.r13.Valid(), (unsigned long long int)regs.r13.Value(),
-                       (int)regs.r14.Valid(), (unsigned long long int)regs.r14.Value());
+      SprintfLiteral(buf,
+                     "LoopTop: r15 %d/%llx  r7 %d/%llx  r11 %d/%llx"
+                     "  r12 %d/%llx  r13 %d/%llx  r14 %d/%llx\n",
+                     (int)regs.r15.Valid(), (unsigned long long int)regs.r15.Value(),
+                     (int)regs.r7.Valid(),  (unsigned long long int)regs.r7.Value(),
+                     (int)regs.r11.Valid(), (unsigned long long int)regs.r11.Value(),
+                     (int)regs.r12.Valid(), (unsigned long long int)regs.r12.Value(),
+                     (int)regs.r13.Valid(), (unsigned long long int)regs.r13.Value(),
+                     (int)regs.r14.Valid(), (unsigned long long int)regs.r14.Value());
       buf[sizeof(buf)-1] = 0;
       mLog(buf);
 #else
@@ -1395,8 +1395,8 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 
     if (DEBUG_MAIN) {
       char buf[100];
-      snprintf_literal(buf, "ruleset for 0x%llx = %p\n",
-                       (unsigned long long int)ia.Value(), ruleset);
+      SprintfLiteral(buf, "ruleset for 0x%llx = %p\n",
+                     (unsigned long long int)ia.Value(), ruleset);
       buf[sizeof(buf)-1] = 0;
       mLog(buf);
     }
@@ -1791,13 +1791,13 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
 
   // Show the results.
   char buf[200];
-  snprintf_literal(buf, "LULUnitTest:   dstring = %s\n", dstring);
+  SprintfLiteral(buf, "LULUnitTest:   dstring = %s\n", dstring);
   buf[sizeof(buf)-1] = 0;
   aLUL->mLog(buf);
-  snprintf_literal(buf,
-                   "LULUnitTest:     %d consistent, %d in dstring: %s\n",
-                   (int)nConsistent, (int)strlen(dstring),
-                   passed ? "PASS" : "FAIL");
+  SprintfLiteral(buf,
+                 "LULUnitTest:     %d consistent, %d in dstring: %s\n",
+                 (int)nConsistent, (int)strlen(dstring),
+                 passed ? "PASS" : "FAIL");
   buf[sizeof(buf)-1] = 0;
   aLUL->mLog(buf);
 

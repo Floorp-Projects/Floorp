@@ -157,11 +157,11 @@ public final class ThumbnailHelper {
         requestThumbnail(mBuffer, tab.getId(), mWidth, mHeight);
     }
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private static native void requestThumbnail(ByteBuffer data, int tabId, int width, int height);
 
     /* This method is invoked by JNI once the thumbnail data is ready. */
-    @WrapForJNI(stubName = "SendThumbnail")
+    @WrapForJNI(stubName = "SendThumbnail", calledFrom = "gecko")
     public static void notifyThumbnail(ByteBuffer data, int tabId, boolean success, boolean shouldStore) {
         Tab tab = Tabs.getInstance().getTab(tabId);
         ThumbnailHelper helper = ThumbnailHelper.getInstance();

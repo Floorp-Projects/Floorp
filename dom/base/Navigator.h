@@ -101,6 +101,7 @@ class InputPortManager;
 class DeviceStorageAreaListener;
 class Presentation;
 class LegacyMozTCPSocket;
+class VRDisplay;
 
 namespace time {
 class TimeManager;
@@ -260,8 +261,8 @@ public:
   void GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
   GamepadServiceTest* RequestGamepadServiceTest();
 #endif // MOZ_GAMEPAD
-  already_AddRefed<Promise> GetVRDevices(ErrorResult& aRv);
-  void NotifyVRDevicesUpdated();
+  already_AddRefed<Promise> GetVRDisplays(ErrorResult& aRv);
+  void NotifyVRDisplaysUpdated();
 #ifdef MOZ_B2G_FM
   FMRadio* GetMozFMRadio(ErrorResult& aRv);
 #endif
@@ -394,7 +395,7 @@ private:
 #ifdef MOZ_GAMEPAD
   RefPtr<GamepadServiceTest> mGamepadServiceTest;
 #endif
-  nsTArray<RefPtr<Promise> > mVRGetDevicesPromises;
+  nsTArray<RefPtr<Promise> > mVRGetDisplaysPromises;
   nsTArray<uint32_t> mRequestedVibrationPattern;
 };
 

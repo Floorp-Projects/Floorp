@@ -274,17 +274,17 @@ extensions.registerSchemaAPI("browserAction", (extension, context) => {
       }).api(),
 
       enable: function(tabId) {
-        let tab = tabId !== null ? TabManager.getTab(tabId) : null;
+        let tab = tabId !== null ? TabManager.getTab(tabId, context) : null;
         BrowserAction.for(extension).setProperty(tab, "enabled", true);
       },
 
       disable: function(tabId) {
-        let tab = tabId !== null ? TabManager.getTab(tabId) : null;
+        let tab = tabId !== null ? TabManager.getTab(tabId, context) : null;
         BrowserAction.for(extension).setProperty(tab, "enabled", false);
       },
 
       setTitle: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
 
         let title = details.title;
         // Clear the tab-specific title when given a null string.
@@ -295,31 +295,36 @@ extensions.registerSchemaAPI("browserAction", (extension, context) => {
       },
 
       getTitle: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+
         let title = BrowserAction.for(extension).getProperty(tab, "title");
         return Promise.resolve(title);
       },
 
       setIcon: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+
         let icon = IconDetails.normalize(details, extension, context);
         BrowserAction.for(extension).setProperty(tab, "icon", icon);
         return Promise.resolve();
       },
 
       setBadgeText: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+
         BrowserAction.for(extension).setProperty(tab, "badgeText", details.text);
       },
 
       getBadgeText: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+
         let text = BrowserAction.for(extension).getProperty(tab, "badgeText");
         return Promise.resolve(text);
       },
 
       setPopup: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+
         // Note: Chrome resolves arguments to setIcon relative to the calling
         // context, but resolves arguments to setPopup relative to the extension
         // root.
@@ -330,13 +335,14 @@ extensions.registerSchemaAPI("browserAction", (extension, context) => {
       },
 
       getPopup: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+
         let popup = BrowserAction.for(extension).getProperty(tab, "popup");
         return Promise.resolve(popup);
       },
 
       setBadgeBackgroundColor: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
         let color = details.color;
         if (!Array.isArray(color)) {
           let col = colorUtils.colorToRGBA(color);
@@ -346,7 +352,8 @@ extensions.registerSchemaAPI("browserAction", (extension, context) => {
       },
 
       getBadgeBackgroundColor: function(details, callback) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+
         let color = BrowserAction.for(extension).getProperty(tab, "badgeBackgroundColor");
         return Promise.resolve(color || [0xd9, 0, 0, 255]);
       },

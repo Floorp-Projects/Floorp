@@ -57,16 +57,6 @@ DeviceManagerD3D11::DeviceManagerD3D11()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
 }
 
-static inline bool
-IsWARPStable()
-{
-  // It seems like nvdxgiwrap makes a mess of WARP. See bug 1154703.
-  if (!IsWin8OrLater() || GetModuleHandleA("nvdxgiwrap.dll")) {
-    return false;
-  }
-  return true;
-}
-
 void
 DeviceManagerD3D11::CreateDevices()
 {
@@ -92,29 +82,13 @@ DeviceManagerD3D11::CreateDevices()
   }
 
   if (XRE_IsParentProcess()) {
-    if (!gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR)) {
+    if (!gfxPrefs::LayersD3D11ForceWARP()) {
       AttemptD3D11DeviceCreation(d3d11);
-      if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
-        return;
-      }
-
-      // If we failed to get a device, but WARP is allowed and might work,
-      // re-enable D3D11 and switch to WARP.
-      if (!mCompositorDevice && IsWARPStable() && !gfxPrefs::LayersD3D11DisableWARP()) {
-        gfxConfig::Reenable(Feature::D3D11_COMPOSITING, Fallback::USE_D3D11_WARP_COMPOSITOR);
-      }
-    }
-
-    // If that failed, see if we can use WARP.
-    if (gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR)) {
-      MOZ_ASSERT(d3d11.IsEnabled());
-      MOZ_ASSERT(!mCompositorDevice);
-      MOZ_ASSERT(IsWARPStable() || gfxPrefs::LayersD3D11ForceWARP());
-
+    } else {
       AttemptWARPDeviceCreation();
-      if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
-        return;
-      }
+    }
+    if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
+      return;
     }
 
     // If we still have no device by now, exit.
@@ -129,7 +103,7 @@ DeviceManagerD3D11::CreateDevices()
     // Child processes do not need a compositor, but they do need to know
     // whether the parent process is using WARP and whether or not texture
     // sharing works.
-    mIsWARP = gfxConfig::UseFallback(Fallback::USE_D3D11_WARP_COMPOSITOR);
+    mIsWARP = gfxPrefs::LayersD3D11ForceWARP();
     mTextureSharingWorks =
       gfxPlatform::GetPlatform()->GetParentDevicePrefs().d3d11TextureSharingWorks();
   }
@@ -211,8 +185,8 @@ DeviceManagerD3D11::GetDXGIAdapter()
 }
 
 bool
-DeviceManagerD3D11::AttemptD3D11DeviceCreationHelperInner(
-  IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice, HRESULT& aResOut)
+DeviceManagerD3D11::AttemptD3D11DeviceCreationHelper(
+  FeatureState& aD3d11, IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice)
 {
   // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
   // to prevent bug 1092260. IE 11 also uses this flag.
@@ -221,25 +195,9 @@ DeviceManagerD3D11::AttemptD3D11DeviceCreationHelperInner(
     flags |= D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
   }
 
-  MOZ_SEH_TRY {
-    aResOut =
-      sD3D11CreateDeviceFn(
-        aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr, flags,
-        mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
-  } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
-    return false;
-  }
-  return true;
-}
-
-bool
-DeviceManagerD3D11::AttemptD3D11DeviceCreationHelper(
-  FeatureState& aD3d11, IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice)
-{
   HRESULT hr;
   RefPtr<ID3D11Device> device;
-  if (!AttemptD3D11DeviceCreationHelperInner(aAdapter, aAttemptVideoSupport, device, hr)) {
+  if (!CreateDevice(aAdapter, D3D_DRIVER_TYPE_UNKNOWN, flags, hr, device)) {
     if (!aAttemptVideoSupport) {
       gfxCriticalError() << "Crash during D3D11 device creation";
       aD3d11.SetFailed(FeatureStatus::CrashedInHandler, "Crashed trying to acquire a D3D11 device",
@@ -318,22 +276,18 @@ DeviceManagerD3D11::AttemptD3D11DeviceCreation(FeatureState& d3d11)
 }
 
 bool
-DeviceManagerD3D11::AttemptWARPDeviceCreationHelper(
-  ScopedGfxFeatureReporter& aReporterWARP,
-  RefPtr<ID3D11Device>& aOutDevice,
-  HRESULT& aResOut)
+DeviceManagerD3D11::CreateDevice(IDXGIAdapter* aAdapter,
+                                 D3D_DRIVER_TYPE aDriverType,
+                                 UINT aFlags,
+                                 HRESULT& aResOut,
+                                 RefPtr<ID3D11Device>& aOutDevice)
 {
   MOZ_SEH_TRY {
-    aResOut =
-      sD3D11CreateDeviceFn(
-        nullptr, D3D_DRIVER_TYPE_WARP, nullptr,
-        // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
-        // to prevent bug 1092260. IE 11 also uses this flag.
-        D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-        mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
-
-    aReporterWARP.SetSuccessful();
+    aResOut = sD3D11CreateDeviceFn(
+      aAdapter, aDriverType, nullptr,
+      aFlags,
+      mFeatureLevels.Elements(), mFeatureLevels.Length(),
+      D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
   }
@@ -348,11 +302,14 @@ DeviceManagerD3D11::AttemptWARPDeviceCreation()
 
   HRESULT hr;
   RefPtr<ID3D11Device> device;
-  if (!AttemptWARPDeviceCreationHelper(reporterWARP, device, hr)) {
+
+  // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
+  // to prevent bug 1092260. IE 11 also uses this flag.
+  UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+  if (!CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, flags, hr, device)) {
     gfxCriticalError() << "Exception occurred initializing WARP D3D11 device!";
     d3d11.SetFailed(FeatureStatus::CrashedInHandler, "Crashed creating a D3D11 WARP device",
                      NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_WARP_DEVICE"));
-    return;
   }
 
   if (FAILED(hr) || !device) {
@@ -367,6 +324,7 @@ DeviceManagerD3D11::AttemptWARPDeviceCreation()
     MutexAutoLock lock(mDeviceLock);
     mCompositorDevice = device;
   }
+  reporterWARP.SetSuccessful();
 
   // Only test for texture sharing on Windows 8 since it puts the device into
   // an unusable state if used on Windows 7
@@ -375,24 +333,6 @@ DeviceManagerD3D11::AttemptWARPDeviceCreation()
   }
   mCompositorDevice->SetExceptionMode(0);
   mIsWARP = true;
-}
-
-bool
-DeviceManagerD3D11::AttemptD3D11ContentDeviceCreationHelper(
-  IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aOutDevice, HRESULT& aResOut)
-{
-  MOZ_SEH_TRY {
-    aResOut =
-      sD3D11CreateDeviceFn(
-        aAdapter, mIsWARP ? D3D_DRIVER_TYPE_WARP : D3D_DRIVER_TYPE_UNKNOWN,
-        nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-        mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
-
-  } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
-    return false;
-  }
-  return true;
 }
 
 FeatureStatus
@@ -408,7 +348,10 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
 
   HRESULT hr;
   RefPtr<ID3D11Device> device;
-  if (!AttemptD3D11ContentDeviceCreationHelper(adapter, device, hr)) {
+
+  UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+  D3D_DRIVER_TYPE type = mIsWARP ? D3D_DRIVER_TYPE_WARP : D3D_DRIVER_TYPE_UNKNOWN;
+  if (!CreateDevice(adapter, type, flags, hr, device)) {
     gfxCriticalNote << "Recovered from crash while creating a D3D11 content device";
     gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Content);
     return FeatureStatus::CrashedInHandler;
@@ -454,24 +397,6 @@ DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
   return FeatureStatus::Available;
 }
 
-bool
-DeviceManagerD3D11::CreateD3D11DecoderDeviceHelper(
-  IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice, HRESULT& aResOut)
-{
-  MOZ_SEH_TRY{
-    aResOut =
-      sD3D11CreateDeviceFn(
-        aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-        D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS | D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
-        mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(aDevice), nullptr, nullptr);
-
-  } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-    return false;
-  }
-  return true;
-}
-
 RefPtr<ID3D11Device>
 DeviceManagerD3D11::CreateDecoderDevice()
 {
@@ -500,10 +425,12 @@ DeviceManagerD3D11::CreateDecoderDevice()
     return nullptr;
   }
 
+  HRESULT hr;
   RefPtr<ID3D11Device> device;
 
-  HRESULT hr;
-  if (!CreateD3D11DecoderDeviceHelper(adapter, device, hr)) {
+  UINT flags = D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS |
+               D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
+  if (!CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, flags, hr, device)) {
     return nullptr;
   }
   if (FAILED(hr) || !device || !D3D11Checks::DoesDeviceWork()) {

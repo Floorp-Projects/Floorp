@@ -310,11 +310,11 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         Log.d(LOGTAG, "New network state: " + currentNetworkStatus + ", " + currentConnectionType + ", " + currentConnectionSubtype);
     }
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "gecko")
     private static native void onConnectionChanged(int type, String subType,
                                                    boolean isWifi, int DHCPGateway);
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "gecko")
     private static native void onStatusChanged(String status);
 
     /**

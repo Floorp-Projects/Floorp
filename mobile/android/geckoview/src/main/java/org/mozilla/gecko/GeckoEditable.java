@@ -94,7 +94,7 @@ final class GeckoEditable extends JNIObject
     private static final int IME_RANGE_BACKCOLOR = 4;
     private static final int IME_RANGE_LINECOLOR = 8;
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onKeyEvent(int action, int keyCode, int scanCode, int metaState,
                                    long time, int unicodeChar, int baseUnicodeChar,
                                    int domPrintableKeyValue, int repeatCount, int flags,
@@ -126,25 +126,25 @@ final class GeckoEditable extends JNIObject
                    event.getFlags(), isSynthesizedImeKey, event);
     }
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeSynchronize();
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeAcknowledgeFocus();
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeReplaceText(int start, int end, String text);
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeAddCompositionRange(int start, int end, int rangeType,
                                                  int rangeStyles, int rangeLineStyle,
                                                  boolean rangeBoldLine, int rangeForeColor,
                                                  int rangeBackColor, int rangeLineColor);
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeUpdateComposition(int start, int end);
 
-    @WrapForJNI
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeRequestCursorUpdates(int requestMode);
 
     /* An action that alters the Editable
@@ -394,7 +394,7 @@ final class GeckoEditable extends JNIObject
         }
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     GeckoEditable(final GeckoView v) {
         if (DEBUG) {
             // Called by nsWindow.
@@ -414,10 +414,10 @@ final class GeckoEditable extends JNIObject
         onViewChange(v);
     }
 
-    @WrapForJNI @Override
+    @WrapForJNI(dispatchTo = "proxy") @Override
     protected native void disposeNative();
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     /* package */ void onViewChange(final GeckoView v) {
         if (DEBUG) {
             // Called by nsWindow.
@@ -875,7 +875,7 @@ final class GeckoEditable extends JNIObject
         }
     }
 
-    @WrapForJNI @Override
+    @WrapForJNI(calledFrom = "gecko") @Override
     public void notifyIME(final int type) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
@@ -953,7 +953,7 @@ final class GeckoEditable extends JNIObject
         }
     }
 
-    @WrapForJNI @Override
+    @WrapForJNI(calledFrom = "gecko") @Override
     public void notifyIMEContext(final int state, final String typeHint,
                                  final String modeHint, final String actionHint) {
         if (DEBUG) {
@@ -974,7 +974,7 @@ final class GeckoEditable extends JNIObject
         });
     }
 
-    @WrapForJNI @Override
+    @WrapForJNI(calledFrom = "gecko") @Override
     public void onSelectionChange(int start, int end) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
@@ -1018,7 +1018,7 @@ final class GeckoEditable extends JNIObject
                TextUtils.regionMatches(mText, start, newText, 0, oldEnd - start);
     }
 
-    @WrapForJNI @Override
+    @WrapForJNI(calledFrom = "gecko") @Override
     public void onTextChange(final CharSequence text, final int start,
                              final int unboundedOldEnd, final int unboundedNewEnd) {
         if (DEBUG) {
@@ -1124,7 +1124,7 @@ final class GeckoEditable extends JNIObject
         });
     }
 
-    @WrapForJNI @Override
+    @WrapForJNI(calledFrom = "gecko") @Override
     public void onDefaultKeyEvent(final KeyEvent event) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
@@ -1149,7 +1149,7 @@ final class GeckoEditable extends JNIObject
         });
     }
 
-    @WrapForJNI @Override
+    @WrapForJNI(calledFrom = "gecko") @Override
     public void updateCompositionRects(final RectF[] aRects) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
