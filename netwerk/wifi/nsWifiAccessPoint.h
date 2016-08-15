@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef __nsWifiAccessPoint__
+#define __nsWifiAccessPoint__
+
 #include "nsWifiMonitor.h"
 #include "nsIWifiAccessPoint.h"
 
@@ -9,9 +12,7 @@
 #include "nsCOMArray.h"
 #include "mozilla/ArrayUtils.h" // ArrayLength
 #include "mozilla/Attributes.h"
-
-#ifndef __nsWifiAccessPoint__
-#define __nsWifiAccessPoint__
+#include "mozilla/Sprintf.h"
 
 class nsWifiAccessPoint final : public nsIWifiAccessPoint
 {
@@ -50,9 +51,9 @@ public:
 
     static const char *kMacFormatString = ("%02x-%02x-%02x-%02x-%02x-%02x");
 
-    sprintf(mMac, kMacFormatString,
-            mac_as_int[0], mac_as_int[1], mac_as_int[2],
-            mac_as_int[3], mac_as_int[4], mac_as_int[5]);
+    SprintfLiteral(mMac, kMacFormatString,
+                   mac_as_int[0], mac_as_int[1], mac_as_int[2],
+                   mac_as_int[3], mac_as_int[4], mac_as_int[5]);
 
     mMac[17] = 0;
   }
@@ -76,12 +77,9 @@ public:
   }
 };
 
-
-
 // Helper functions
 
 bool AccessPointsEqual(nsCOMArray<nsWifiAccessPoint>& a, nsCOMArray<nsWifiAccessPoint>& b);
 void ReplaceArray(nsCOMArray<nsWifiAccessPoint>& a, nsCOMArray<nsWifiAccessPoint>& b);
-
 
 #endif

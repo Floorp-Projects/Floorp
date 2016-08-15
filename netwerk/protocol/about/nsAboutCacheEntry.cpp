@@ -4,11 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAboutCacheEntry.h"
+
+#include "mozilla/Sprintf.h"
+
 #include "nsAboutCache.h"
 #include "nsICacheStorage.h"
 #include "CacheObserver.h"
 #include "nsNetUtil.h"
-#include "prprf.h"
 #include "nsEscape.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -30,7 +32,7 @@ HexDump(uint32_t *state, const char *buf, int32_t n, nsCString &result)
 
   const unsigned char *p;
   while (n) {
-    PR_snprintf(temp, sizeof(temp), "%08x:  ", *state);
+    SprintfLiteral(temp, "%08x:  ", *state);
     result.Append(temp);
     *state += HEXDUMP_MAX_ROWS;
 
@@ -40,7 +42,7 @@ HexDump(uint32_t *state, const char *buf, int32_t n, nsCString &result)
 
     // print hex codes:
     for (i = 0; i < row_max; ++i) {
-      PR_snprintf(temp, sizeof(temp), "%02x  ", *p++);
+      SprintfLiteral(temp, "%02x  ", *p++);
       result.Append(temp);
     }
     for (i = row_max; i < HEXDUMP_MAX_ROWS; ++i) {
