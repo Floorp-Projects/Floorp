@@ -147,7 +147,7 @@ public:
    * Paint non-SVG frame with SVG effects.
    */
   static DrawResult
-  PaintFramesWithEffects(const PaintFramesParams& aParams);
+  PaintMaskAndClipPath(const PaintFramesParams& aParams);
 
   static DrawResult
   PaintFilter(const PaintFramesParams& aParams);
