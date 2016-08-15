@@ -2,20 +2,16 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE html [
-<!ENTITY % animationinspectorDTD SYSTEM "chrome://devtools/locale/animationinspector.dtd" >
- %animationinspectorDTD;
-]>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>&animationInspectorTitle;</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="chrome://devtools/skin/animationinspector.css" type="text/css"/>
     <script type="application/javascript;version=1.8" src="chrome://devtools/content/shared/theme-switching.js"/>
   </head>
   <body class="theme-sidebar devtools-monospace" role="application" empty="true">
     <div id="global-toolbar" class="theme-toolbar">
-      <span class="label">&allAnimations;</span>
+      <span id="all-animations-label" class="label"></span>
       <button id="toggle-all" standalone="true" class="devtools-button pause-button"></button>
     </div>
     <div id="timeline-toolbar" class="theme-toolbar">
@@ -27,7 +23,7 @@
     <div id="players"></div>
     <div id="error-message">
       <p id="error-type"></p>
-      <p>&selectElement;</p>
+      <p id="error-hint"></p>
       <button id="element-picker" standalone="true" class="devtools-button"></button>
     </div>
     <script type="application/javascript;version=1.8" src="animation-controller.js"></script>
