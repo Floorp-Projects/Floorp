@@ -670,8 +670,8 @@ ArrayMetaTypeDescr::construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Expect two arguments. The first is a type object, the second is a length.
     if (args.length() < 2) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "ArrayType", "1", "");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "ArrayType", "1", "");
         return false;
     }
 

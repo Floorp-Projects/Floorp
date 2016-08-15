@@ -1078,7 +1078,8 @@ Version(JSContext* cx, unsigned argc, Value* vp)
                 v = fvi;
         }
         if (v < 0 || v > JSVERSION_LATEST) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "version");
+            JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                      "version");
             return false;
         }
         JS_SetVersionForCompartment(js::GetContextCompartment(cx), JSVersion(v));
@@ -1099,9 +1100,9 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1 || args.length() > 3) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
-                             "createMappedArrayBuffer");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                  args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+                                  "createMappedArrayBuffer");
         return false;
     }
 
@@ -1132,8 +1133,8 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
             return false;
         sizeGiven = true;
         if (offset > size) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE,
+                                      "2");
             return false;
         }
     }
@@ -1153,8 +1154,8 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
         if (st.st_size < off_t(offset)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
             return false;
         }
         size = st.st_size - offset;
@@ -1182,9 +1183,9 @@ AddPromiseReactions(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() != 3) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             args.length() < 3 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
-                             "addPromiseReactions");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                  args.length() < 3 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+                                  "addPromiseReactions");
         return false;
     }
 
@@ -1193,8 +1194,8 @@ AddPromiseReactions(JSContext* cx, unsigned argc, Value* vp)
         promise = &args[0].toObject();
 
     if (!promise || !JS::IsPromiseObject(promise)) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_INVALID_ARGS, "addPromiseReactions");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "addPromiseReactions");
         return false;
     }
 
@@ -1207,8 +1208,8 @@ AddPromiseReactions(JSContext* cx, unsigned argc, Value* vp)
         onReject = &args[2].toObject();
 
     if (!onResolve || !onResolve->is<JSFunction>() || !onReject || !onReject->is<JSFunction>()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_INVALID_ARGS, "addPromiseReactions");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "addPromiseReactions");
         return false;
     }
 
@@ -1289,7 +1290,8 @@ LoadScript(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
     for (unsigned i = 0; i < args.length(); i++) {
         str = JS::ToString(cx, args[i]);
         if (!str) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "load");
+            JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                      "load");
             return false;
         }
         str = ResolvePath(cx, str, scriptRelative ? ScriptRelative : RootRelative);
@@ -1434,7 +1436,8 @@ CacheEntry(JSContext* cx, unsigned argc, JS::Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() != 1 || !args[0].isString()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "CacheEntry");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "CacheEntry");
         return false;
     }
 
@@ -1499,9 +1502,9 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1 || args.length() > 2) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
-                             "evaluate");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                  args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+                                  "evaluate");
         return false;
     }
 
@@ -1515,7 +1518,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (!code || (args.length() == 2 && args[1].isPrimitive())) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "evaluate");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "evaluate");
         return false;
     }
 
@@ -1569,8 +1572,8 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
                     return false;
             }
             if (!global || !(JS_GetClass(global)->flags & JSCLASS_IS_GLOBAL)) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                                     "\"global\" passed to evaluate()", "not a global object");
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                          "\"global\" passed to evaluate()", "not a global object");
                 return false;
             }
         }
@@ -1599,8 +1602,8 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         // bytecode cache is stored.
         if (loadBytecode || saveBytecode) {
             if (!cacheEntry) {
-                JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                                     "evaluate");
+                JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                          "evaluate");
                 return false;
             }
         }
@@ -1800,7 +1803,7 @@ Run(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "run");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "run");
         return false;
     }
 
@@ -2102,8 +2105,8 @@ StartTimingMutator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() > 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_TOO_MANY_ARGS, "startTimingMutator");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_TOO_MANY_ARGS,
+                                  "startTimingMutator");
         return false;
     }
 
@@ -2121,8 +2124,8 @@ StopTimingMutator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() > 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_TOO_MANY_ARGS, "stopTimingMutator");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_TOO_MANY_ARGS,
+                                  "stopTimingMutator");
         return false;
     }
 
@@ -2159,13 +2162,13 @@ AssertEq(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!(args.length() == 2 || (args.length() == 3 && args[2].isString()))) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             (args.length() < 2)
-                             ? JSSMSG_NOT_ENOUGH_ARGS
-                             : (args.length() == 3)
-                             ? JSSMSG_INVALID_ARGS
-                             : JSSMSG_TOO_MANY_ARGS,
-                             "assertEq");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                  (args.length() < 2)
+                                  ? JSSMSG_NOT_ENOUGH_ARGS
+                                  : (args.length() == 3)
+                                  ? JSSMSG_INVALID_ARGS
+                                  : JSSMSG_TOO_MANY_ARGS,
+                                  "assertEq");
         return false;
     }
 
@@ -3810,8 +3813,8 @@ Compile(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "compile", "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "compile", "0", "s");
         return false;
     }
     if (!args[0].isString()) {
@@ -3846,8 +3849,8 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_MORE_ARGS_NEEDED, "parseModule", "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "parseModule", "0", "s");
         return false;
     }
 
@@ -3901,8 +3904,8 @@ SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_MORE_ARGS_NEEDED, "setModuleResolveHook", "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "setModuleResolveHook", "0", "s");
         return false;
     }
 
@@ -3935,8 +3938,8 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "parse", "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "parse", "0", "s");
         return false;
     }
     if (!args[0].isString()) {
@@ -3986,8 +3989,8 @@ SyntaxParse(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "parse", "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "parse", "0", "s");
         return false;
     }
     if (!args[0].isString()) {
@@ -4051,8 +4054,8 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "offThreadCompileScript", "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "offThreadCompileScript", "0", "s");
         return false;
     }
     if (!args[0].isString()) {
@@ -4068,7 +4071,8 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() >= 2) {
         if (args[1].isPrimitive()) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "evaluate");
+            JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                      "evaluate");
             return false;
         }
 
@@ -4159,8 +4163,8 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() != 1 || !args[0].isString()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                             "offThreadCompileModule");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "offThreadCompileModule");
         return false;
     }
 
@@ -4501,8 +4505,8 @@ WrapWithProto(JSContext* cx, unsigned argc, Value* vp)
         proto = args[1];
     }
     if (!obj.isObject() || !proto.isObjectOrNull()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                             "wrapWithProto");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "wrapWithProto");
         return false;
     }
 
@@ -4610,8 +4614,8 @@ GetSelfHostedValue(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() != 1 || !args[0].isString()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                             "getSelfHostedValue");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "getSelfHostedValue");
         return false;
     }
     RootedAtom srcAtom(cx, ToAtom<CanGC>(cx, args[0]));
@@ -6631,7 +6635,8 @@ dom_constructor(JSContext* cx, unsigned argc, JS::Value* vp)
         return false;
 
     if (!protov.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_PROTOTYPE, "FakeDOMObject");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_PROTOTYPE,
+                                  "FakeDOMObject");
         return false;
     }
 

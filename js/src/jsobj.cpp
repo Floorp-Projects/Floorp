@@ -2520,8 +2520,8 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
      * have a mutable [[Prototype]].
      */
     if (obj->is<ArrayBufferObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
-                             "incompatible ArrayBuffer");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
+                                  "incompatible ArrayBuffer");
         return false;
     }
 
@@ -2529,8 +2529,8 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
      * Disallow mutating the [[Prototype]] on Typed Objects, per the spec.
      */
     if (obj->is<TypedObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
-                             "incompatible TypedObject");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
+                                  "incompatible TypedObject");
         return false;
     }
 
@@ -3171,8 +3171,8 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
         if (reportScanStack) {
             ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, nullptr);
         } else {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                                 val.isNull() ? "null" : "undefined", "object");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                                      val.isNull() ? "null" : "undefined", "object");
         }
         return nullptr;
     }

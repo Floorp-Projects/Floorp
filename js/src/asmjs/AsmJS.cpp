@@ -8758,9 +8758,9 @@ js::IsAsmJSModuleLoadedFromCache(JSContext* cx, unsigned argc, Value* vp)
 
     JSFunction* fun = MaybeWrappedNativeFunction(args.get(0));
     if (!fun || !IsAsmJSModule(fun)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_USE_ASM_TYPE_FAIL,
-                             "argument passed to isAsmJSModuleLoadedFromCache is not a "
-                             "validated asm.js module");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_USE_ASM_TYPE_FAIL,
+                                  "argument passed to isAsmJSModuleLoadedFromCache is not a "
+                                  "validated asm.js module");
         return false;
     }
 
