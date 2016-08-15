@@ -227,7 +227,7 @@ nsAppFileLocationProvider::GetFile(const char* aProp, bool* aPersistent,
 }
 
 
-NS_METHOD
+nsresult
 nsAppFileLocationProvider::CloneMozBinDirectory(nsIFile** aLocalFile)
 {
   if (NS_WARN_IF(!aLocalFile)) {
@@ -275,7 +275,7 @@ nsAppFileLocationProvider::CloneMozBinDirectory(nsIFile** aLocalFile)
 // WIN    : <Application Data folder on user's machine>\Mozilla
 // Mac    : :Documents:Mozilla:
 //----------------------------------------------------------------------------------------
-NS_METHOD
+nsresult
 nsAppFileLocationProvider::GetProductDirectory(nsIFile** aLocalFile,
                                                bool aLocal)
 {
@@ -352,7 +352,7 @@ nsAppFileLocationProvider::GetProductDirectory(nsIFile** aLocalFile,
 // WIN    : <Application Data folder on user's machine>\Mozilla\Profiles
 // Mac    : :Documents:Mozilla:Profiles:
 //----------------------------------------------------------------------------------------
-NS_METHOD
+nsresult
 nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsIFile** aLocalFile,
                                                      bool aLocal)
 {
