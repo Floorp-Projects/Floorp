@@ -20,7 +20,7 @@ package org.mozilla.gecko.sqlite;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.AppConstants;
 
 import android.database.AbstractCursor;
@@ -56,7 +56,7 @@ public class MatrixBlobCursor extends AbstractCursor {
      *  determines column ordering elsewhere in this cursor
      * @param initialCapacity in rows
      */
-    @WrapForJNI
+    @JNITarget
     public MatrixBlobCursor(String[] columnNames, int initialCapacity) {
         this.columnNames = columnNames;
         this.columnCount = columnNames.length;
@@ -77,7 +77,7 @@ public class MatrixBlobCursor extends AbstractCursor {
      * @param columnNames names of the columns, the ordering of which
      *  determines column ordering elsewhere in this cursor
      */
-    @WrapForJNI
+    @JNITarget
     public MatrixBlobCursor(String[] columnNames) {
         this(columnNames, 16);
     }
@@ -132,7 +132,7 @@ public class MatrixBlobCursor extends AbstractCursor {
      * @param columnValues in the same order as the the column names specified
      *  at cursor construction time
      */
-    @WrapForJNI
+    @JNITarget
     public void addRow(Object[] columnValues) {
         if (columnValues.length != columnCount) {
             throw new IllegalArgumentException("columnNames.length = "
@@ -154,7 +154,7 @@ public class MatrixBlobCursor extends AbstractCursor {
      * @param columnValues in the same order as the the column names specified
      *  at cursor construction time
      */
-    @WrapForJNI
+    @JNITarget
     public void addRow(Iterable<?> columnValues) {
         final int start = rowCount * columnCount;
 
@@ -188,7 +188,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     }
 
     /** Optimization for {@link ArrayList}. */
-    @WrapForJNI
+    @JNITarget
     private void addRow(ArrayList<?> columnValues, int start) {
         final int size = columnValues.size();
         if (size != columnCount) {

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsILocaleService.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
@@ -114,7 +114,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
     // if mktime fails (e.g. year <= 1970), then try NSPR.
     PRTime prtime;
     char string[32];
-    snprintf_literal(string, "%.2d/%.2d/%d %.2d:%.2d:%.2d", month, day, year, hour, minute, second);
+    SprintfLiteral(string, "%.2d/%.2d/%d %.2d:%.2d:%.2d", month, day, year, hour, minute, second);
     if (PR_SUCCESS != PR_ParseTimeString(string, false, &prtime))
       return NS_ERROR_INVALID_ARG;
 

@@ -47,7 +47,7 @@
 #define KP_START_USEC p_ustart_usec
 #endif
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 #include <pthread.h>
 
@@ -270,7 +270,7 @@ ComputeProcessUptimeThread(void* aTime)
   }
 
   char threadStat[40];
-  snprintf_literal(threadStat, "/proc/self/task/%d/stat", (pid_t)syscall(__NR_gettid));
+  SprintfLiteral(threadStat, "/proc/self/task/%d/stat", (pid_t)syscall(__NR_gettid));
 
   uint64_t threadJiffies = JiffiesSinceBoot(threadStat);
   uint64_t selfJiffies = JiffiesSinceBoot("/proc/self/stat");

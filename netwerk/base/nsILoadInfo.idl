@@ -304,6 +304,8 @@ interface nsILoadInfo : nsISupports
 
   /**
    * If usePrivateBrowsing is true, private browsing will be used.
+   * This value equals to originAttributes.privateBrowsingId in *content*
+   * side.
    */
   [infallible] readonly attribute boolean usePrivateBrowsing;
 
@@ -417,6 +419,11 @@ interface nsILoadInfo : nsISupports
   /**
    * Customized NeckoOriginAttributes within LoadInfo to allow overwriting of the
    * default originAttributes from the loadingPrincipal.
+   *
+   * In chrome side, originAttributes.privateBrowsingId will always be 0 even if
+   * the usePrivateBrowsing is true, because chrome docshell won't set
+   * privateBrowsingId on origin attributes (See bug 1278664). This is to make
+   * sure nsILoadInfo and nsILoadContext have the same origin attributes.
    */
   [implicit_jscontext, binaryname(ScriptableOriginAttributes)]
   attribute jsval originAttributes;

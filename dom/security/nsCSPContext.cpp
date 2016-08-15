@@ -1375,7 +1375,7 @@ CSPViolationReportListener::~CSPViolationReportListener()
 {
 }
 
-NS_METHOD
+nsresult
 AppendSegmentToString(nsIInputStream* aInputStream,
                       void* aClosure,
                       const char* aRawSegment,

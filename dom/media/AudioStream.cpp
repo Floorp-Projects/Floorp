@@ -12,7 +12,7 @@
 #include "VideoUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include <algorithm>
 #include "mozilla/Telemetry.h"
 #include "CubebUtils.h"
@@ -243,7 +243,7 @@ OpenDumpFile(uint32_t aChannels, uint32_t aRate)
   if (!getenv("MOZ_DUMP_AUDIO"))
     return nullptr;
   char buf[100];
-  snprintf_literal(buf, "dumped-audio-%d.wav", ++gDumpedAudioCount);
+  SprintfLiteral(buf, "dumped-audio-%d.wav", ++gDumpedAudioCount);
   FILE* f = fopen(buf, "wb");
   if (!f)
     return nullptr;

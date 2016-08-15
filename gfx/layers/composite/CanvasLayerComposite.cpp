@@ -17,7 +17,6 @@
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsString.h"                   // for nsAutoCString
-#include "gfxVR.h"
 
 namespace mozilla {
 namespace layers {

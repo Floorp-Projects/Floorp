@@ -33,9 +33,11 @@ class CanvasLayer;
 class Image;
 class Layer;
 class LayerManager;
+class SharedSurfaceTextureClient;
 } // namespace layers
 namespace gfx {
 class SourceSurface;
+class VRLayerChild;
 } // namespace gfx
 
 namespace dom {
@@ -342,6 +344,10 @@ public:
   static void SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
   static void InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
 
+  void StartVRPresentation();
+  void StopVRPresentation();
+  already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
+
 protected:
   virtual ~HTMLCanvasElement();
 
@@ -375,6 +381,7 @@ protected:
   RefPtr<AsyncCanvasRenderer> mAsyncCanvasRenderer;
   RefPtr<OffscreenCanvas> mOffscreenCanvas;
   RefPtr<HTMLCanvasElementObserver> mContextObserver;
+  bool mVRPresentationActive;
 
 public:
   // Record whether this canvas should be write-only or not.

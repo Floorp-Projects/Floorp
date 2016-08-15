@@ -1086,19 +1086,22 @@ function cleanUpMozUpdaterDirs() {
 }
 
 /**
- * Removes the contents of the Updates Directory
+ * Removes the contents of the updates patch directory and rotates the update
+ * logs when present. If the update.log exists in the patch directory this will
+ * move the last-update.log if it exists to backup-update.log in the parent
+ * directory of the patch directory and then move the update.log in the patch
+ * directory to last-update.log in the parent directory of the patch directory.
  *
- * @param aBackgroundUpdate Whether the update has been performed in the
- *        background.  If this is true, we move the update log file to the
- *        updated directory, so that it survives replacing the directories
- *        later on.
+ * @param aRemovePatchFiles (optional, defaults to true)
+ *        When true the update's patch directory contents are removed.
  */
-function cleanUpUpdatesDir(aBackgroundUpdate) {
-  // Bail out if we don't have appropriate permissions
+function cleanUpUpdatesDir(aRemovePatchFiles = true) {
   let updateDir;
   try {
     updateDir = getUpdatesDir();
   } catch (e) {
+    LOG("cleanUpUpdatesDir - unable to get the updates patch directory. " +
+        "Exception: " + e);
     return;
   }
 
@@ -1126,7 +1129,7 @@ function cleanUpUpdatesDir(aBackgroundUpdate) {
     }
   }
 
-  if (!aBackgroundUpdate) {
+  if (aRemovePatchFiles) {
     let e = updateDir.directoryEntries;
     while (e.hasMoreElements()) {
       let f = e.getNext().QueryInterface(Ci.nsIFile);
@@ -2138,7 +2141,22 @@ UpdateService.prototype = {
       }
       update = new Update(null);
     }
-    update.state = status;
+
+    let parts = status.split(":");
+    update.state = parts[0];
+    if (update.state == STATE_FAILED && parts[1]) {
+      update.errorCode = parseInt(parts[1]);
+    }
+
+
+    if (status != STATE_SUCCEEDED) {
+      // Since the update didn't succeed save a copy of the active update's
+      // current state to the updates.xml so it is possible to track failures.
+      um.saveUpdates();
+      // Rotate the update logs so the update log isn't removed. By passing
+      // false the patch directory won't be removed.
+      cleanUpUpdatesDir(false);
+    }
 
     if (status == STATE_SUCCEEDED) {
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
@@ -2155,19 +2173,11 @@ UpdateService.prototype = {
       prompter.showUpdateElevationRequired();
       return;
     } else {
-      // If we hit an error, then the error code will be included in the status
-      // string following a colon and a space. If we had an I/O error, then we
-      // assume that the patch is not invalid, and we re-stage the patch so that
-      // it can be attempted again the next time we restart. This will leave a
-      // space at the beginning of the error code when there is a failure which
-      // will be removed by using parseInt below. This prevents panic which has
-      // occurred numerous times previously (see bug 569642 comment #9 for one
-      // example) when testing releases due to forgetting to include the space.
-      var ary = status.split(":");
-      update.state = ary[0];
-      if (update.state == STATE_FAILED && ary[1]) {
-        if (handleUpdateFailure(update, ary[1])) {
-          cleanUpUpdatesDir(true);
+      // If there was an I/O error it is assumed that the patch is not invalid
+      // and it is set to pending so an attempt to apply it again will happen
+      // when the application is restarted.
+      if (update.state == STATE_FAILED && update.errorCode) {
+        if (handleUpdateFailure(update, update.errorCode)) {
           return;
         }
       }
@@ -3119,7 +3129,13 @@ UpdateManager.prototype = {
     this._ensureUpdates();
     if (this._updates) {
       for (var i = 0; i < this._updates.length; ++i) {
-        if (this._updates[i] &&
+        // Keep all update entries with a state of STATE_FAILED and replace the
+        // first update entry that has the same application version and build ID
+        // if it exists. This allows the update history to only have one success
+        // entry for an update and entries for all failed updates.
+        if (update.state != STATE_FAILED &&
+            this._updates[i] &&
+            this._updates[i].state != STATE_FAILED &&
             this._updates[i].appVersion == update.appVersion &&
             this._updates[i].buildID == update.buildID) {
           // Replace the existing entry with the new value, updating
@@ -3196,7 +3212,7 @@ UpdateManager.prototype = {
         }
       }
 
-      this._writeUpdatesToXMLFile(updates.slice(0, 10),
+      this._writeUpdatesToXMLFile(updates.slice(0, 20),
                                   getUpdateFile([FILE_UPDATES_XML]));
     }
   },
@@ -3214,10 +3230,19 @@ UpdateManager.prototype = {
     pingStateAndStatusCodes(update, false, status);
     var parts = status.split(":");
     update.state = parts[0];
+    if (update.state == STATE_FAILED && parts[1]) {
+      update.errorCode = parseInt(parts[1]);
+    }
+    let um = Cc["@mozilla.org/updates/update-manager;1"].
+             getService(Ci.nsIUpdateManager);
+    // Save a copy of the active update's current state to the updates.xml so
+    // it is possible to track failures.
+    um.saveUpdates();
 
-    // Move the update log to the last update log so it isn't removed when
-    // falling back to a complete update.
-    cleanUpUpdatesDir(true);
+    // Rotate the update logs so the update log isn't removed if a complete
+    // update is downloaded. By passing false the patch directory won't be
+    // removed.
+    cleanUpUpdatesDir(false);
 
     if (update.state == STATE_FAILED && parts[1]) {
       updateSucceeded = false;
@@ -3227,17 +3252,6 @@ UpdateManager.prototype = {
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
       writeStatusFile(getUpdatesDir(), update.state = STATE_APPLIED_SERVICE);
-    }
-    var um = Cc["@mozilla.org/updates/update-manager;1"].
-             getService(Ci.nsIUpdateManager);
-    um.saveUpdates();
-
-    if (update.state != STATE_PENDING &&
-        update.state != STATE_PENDING_SERVICE &&
-        update.state != STATE_PENDING_ELEVATE) {
-      // If the update has not fallen back to a non staged update destroy the
-      // updates directory since a new update will be downloaded.
-      cleanUpUpdatesDir(updateSucceeded);
     }
 
     // Send an observer notification which the update wizard uses in
@@ -4197,69 +4211,67 @@ Downloader.prototype = {
         // Destroy the updates directory, since we're done with it.
         cleanUpUpdatesDir();
       }
-    } else {
-      if (status == Cr.NS_ERROR_OFFLINE) {
-        // Register an online observer to try again.
-        // The online observer will continue the incremental download by
-        // calling downloadUpdate on the active update which continues
-        // downloading the file from where it was.
-        LOG("Downloader:onStopRequest - offline, register online observer: true");
-        AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
-                                 AUSTLMY.DWNLD_RETRY_OFFLINE);
-        shouldRegisterOnlineObserver = true;
-        deleteActiveUpdate = false;
-      // Each of NS_ERROR_NET_TIMEOUT, ERROR_CONNECTION_REFUSED,
-      // NS_ERROR_NET_RESET and NS_ERROR_DOCUMENT_NOT_CACHED can be returned
-      // when disconnecting the internet while a download of a MAR is in
-      // progress.  There may be others but I have not encountered them during
-      // testing.
-      } else if ((status == Cr.NS_ERROR_NET_TIMEOUT ||
-                  status == Cr.NS_ERROR_CONNECTION_REFUSED ||
-                  status == Cr.NS_ERROR_NET_RESET ||
-                  status == Cr.NS_ERROR_DOCUMENT_NOT_CACHED) &&
-                 this.updateService._consecutiveSocketErrors < maxFail) {
-        LOG("Downloader:onStopRequest - socket error, shouldRetrySoon: true");
-        let dwnldCode = AUSTLMY.DWNLD_RETRY_CONNECTION_REFUSED;
-        if (status == Cr.NS_ERROR_NET_TIMEOUT) {
-          dwnldCode = AUSTLMY.DWNLD_RETRY_NET_TIMEOUT;
-        } else if (status == Cr.NS_ERROR_NET_RESET) {
-          dwnldCode = AUSTLMY.DWNLD_RETRY_NET_RESET;
-        } else if (status == Cr.NS_ERROR_DOCUMENT_NOT_CACHED) {
-          dwnldCode = AUSTLMY.DWNLD_ERR_DOCUMENT_NOT_CACHED;
-        }
-        AUSTLMY.pingDownloadCode(this.isCompleteUpdate, dwnldCode);
-        shouldRetrySoon = true;
-        deleteActiveUpdate = false;
-      } else if (status != Cr.NS_BINDING_ABORTED &&
-                 status != Cr.NS_ERROR_ABORT) {
-        LOG("Downloader:onStopRequest - non-verification failure");
-        let dwnldCode = AUSTLMY.DWNLD_ERR_BINDING_ABORTED;
-        if (status == Cr.NS_ERROR_ABORT) {
-          dwnldCode = AUSTLMY.DWNLD_ERR_ABORT;
-        }
-        AUSTLMY.pingDownloadCode(this.isCompleteUpdate, dwnldCode);
-
-        // Some sort of other failure, log this in the |statusText| property
-        state = STATE_DOWNLOAD_FAILED;
-
-        // XXXben - if |request| (The Incremental Download) provided a means
-        // for accessing the http channel we could do more here.
-
-        this._update.statusText = getStatusTextFromCode(status,
-                                                        Cr.NS_BINDING_FAILED);
-
-        if (AppConstants.platform == "gonk") {
-          // bug891009: On FirefoxOS, manaully retry OTA download will reuse
-          // the Update object. We need to remove selected patch so that download
-          // can be triggered again successfully.
-          this._update.selectedPatch.selected = false;
-        }
-
-        // Destroy the updates directory, since we're done with it.
-        cleanUpUpdatesDir();
-
-        deleteActiveUpdate = true;
+    } else if (status == Cr.NS_ERROR_OFFLINE) {
+      // Register an online observer to try again.
+      // The online observer will continue the incremental download by
+      // calling downloadUpdate on the active update which continues
+      // downloading the file from where it was.
+      LOG("Downloader:onStopRequest - offline, register online observer: true");
+      AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
+                               AUSTLMY.DWNLD_RETRY_OFFLINE);
+      shouldRegisterOnlineObserver = true;
+      deleteActiveUpdate = false;
+    // Each of NS_ERROR_NET_TIMEOUT, ERROR_CONNECTION_REFUSED,
+    // NS_ERROR_NET_RESET and NS_ERROR_DOCUMENT_NOT_CACHED can be returned
+    // when disconnecting the internet while a download of a MAR is in
+    // progress.  There may be others but I have not encountered them during
+    // testing.
+    } else if ((status == Cr.NS_ERROR_NET_TIMEOUT ||
+                status == Cr.NS_ERROR_CONNECTION_REFUSED ||
+                status == Cr.NS_ERROR_NET_RESET ||
+                status == Cr.NS_ERROR_DOCUMENT_NOT_CACHED) &&
+               this.updateService._consecutiveSocketErrors < maxFail) {
+      LOG("Downloader:onStopRequest - socket error, shouldRetrySoon: true");
+      let dwnldCode = AUSTLMY.DWNLD_RETRY_CONNECTION_REFUSED;
+      if (status == Cr.NS_ERROR_NET_TIMEOUT) {
+        dwnldCode = AUSTLMY.DWNLD_RETRY_NET_TIMEOUT;
+      } else if (status == Cr.NS_ERROR_NET_RESET) {
+        dwnldCode = AUSTLMY.DWNLD_RETRY_NET_RESET;
+      } else if (status == Cr.NS_ERROR_DOCUMENT_NOT_CACHED) {
+        dwnldCode = AUSTLMY.DWNLD_ERR_DOCUMENT_NOT_CACHED;
       }
+      AUSTLMY.pingDownloadCode(this.isCompleteUpdate, dwnldCode);
+      shouldRetrySoon = true;
+      deleteActiveUpdate = false;
+    } else if (status != Cr.NS_BINDING_ABORTED &&
+               status != Cr.NS_ERROR_ABORT) {
+      LOG("Downloader:onStopRequest - non-verification failure");
+      let dwnldCode = AUSTLMY.DWNLD_ERR_BINDING_ABORTED;
+      if (status == Cr.NS_ERROR_ABORT) {
+        dwnldCode = AUSTLMY.DWNLD_ERR_ABORT;
+      }
+      AUSTLMY.pingDownloadCode(this.isCompleteUpdate, dwnldCode);
+
+      // Some sort of other failure, log this in the |statusText| property
+      state = STATE_DOWNLOAD_FAILED;
+
+      // XXXben - if |request| (The Incremental Download) provided a means
+      // for accessing the http channel we could do more here.
+
+      this._update.statusText = getStatusTextFromCode(status,
+                                                      Cr.NS_BINDING_FAILED);
+
+      if (AppConstants.platform == "gonk") {
+        // bug891009: On FirefoxOS, manaully retry OTA download will reuse
+        // the Update object. We need to remove selected patch so that download
+        // can be triggered again successfully.
+        this._update.selectedPatch.selected = false;
+      }
+
+      // Destroy the updates directory, since we're done with it.
+      cleanUpUpdatesDir();
+
+      deleteActiveUpdate = true;
     }
     LOG("Downloader:onStopRequest - setting state to: " + state);
     this._patch.state = state;
@@ -4269,10 +4281,8 @@ Downloader.prototype = {
       this._update.installDate = (new Date()).getTime();
       um.activeUpdate = null;
     }
-    else {
-      if (um.activeUpdate) {
-        um.activeUpdate.state = state;
-      }
+    else if (um.activeUpdate) {
+      um.activeUpdate.state = state;
     }
     um.saveUpdates();
 

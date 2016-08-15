@@ -10,7 +10,7 @@
 
 #include "base64.h"
 #include "mozilla/Move.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nspr.h"
 #include "nss.h"
 #include "plarenas.h"

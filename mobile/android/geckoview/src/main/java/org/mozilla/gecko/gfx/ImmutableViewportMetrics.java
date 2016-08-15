@@ -51,7 +51,7 @@ public class ImmutableViewportMetrics {
     /** This constructor is used by native code in AndroidJavaWrappers.cpp, be
      * careful when modifying the signature.
      */
-    @WrapForJNI(allowMultithread = true)
+    @WrapForJNI(calledFrom = "gecko")
     public ImmutableViewportMetrics(float aPageRectLeft, float aPageRectTop,
         float aPageRectRight, float aPageRectBottom, float aCssPageRectLeft,
         float aCssPageRectTop, float aCssPageRectRight, float aCssPageRectBottom,

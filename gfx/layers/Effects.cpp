@@ -65,10 +65,3 @@ EffectColorMatrix::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   AppendToString(aStream, mColorMatrix, " [matrix=", "]");
 }
 
-void
-EffectVRDistortion::PrintInfo(std::stringstream& aStream, const char* aPrefix)
-{
-  aStream << aPrefix;
-  aStream << nsPrintfCString("EffectVRDistortion (0x%p) [hmd=%p] [render-target=%p] [texture=%p]",
-                             this, mHMD.get(), mRenderTarget.get(), mTexture).get();
-}

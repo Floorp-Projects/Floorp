@@ -15,7 +15,6 @@
 #include "mozilla/Services.h"
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsIObserverService.h"
-#include "nsThreadUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobilemessage;
@@ -47,16 +46,13 @@ SmsManager::NotifySmsReceived(int32_t aId,
     message.deliveryTimestamp() = aTimestamp;
     message.read() = false;
 
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=] () {
-        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        if (!obs) {
-            return;
-        }
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (!obs) {
+        return;
+    }
 
-        nsCOMPtr<nsISmsMessage> domMessage = new SmsMessageInternal(message);
-        obs->NotifyObservers(domMessage, kSmsReceivedObserverTopic, nullptr);
-    });
-    NS_DispatchToMainThread(runnable);
+    nsCOMPtr<nsISmsMessage> domMessage = new SmsMessageInternal(message);
+    obs->NotifyObservers(domMessage, kSmsReceivedObserverTopic, nullptr);
 }
 
 /*static*/
@@ -84,28 +80,25 @@ SmsManager::NotifySmsSent(int32_t aId,
     message.deliveryTimestamp() = aTimestamp;
     message.read() = true;
 
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        /*
-         * First, we are going to notify all SmsManager that a message has
-         * been sent. Then, we will notify the SmsRequest object about it.
-         */
-        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        if (!obs) {
-            return;
-        }
+    /*
+     * First, we are going to notify all SmsManager that a message has
+     * been sent. Then, we will notify the SmsRequest object about it.
+     */
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (!obs) {
+        return;
+    }
 
-        nsCOMPtr<nsISmsMessage> domMessage = new SmsMessageInternal(message);
-        obs->NotifyObservers(domMessage, kSmsSentObserverTopic, nullptr);
+    nsCOMPtr<nsISmsMessage> domMessage = new SmsMessageInternal(message);
+    obs->NotifyObservers(domMessage, kSmsSentObserverTopic, nullptr);
 
-        nsCOMPtr<nsIMobileMessageCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        request->NotifyMessageSent(domMessage);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyMessageSent(domMessage);
 }
 
 /*static*/
@@ -133,35 +126,29 @@ SmsManager::NotifySmsDelivery(int32_t aId,
     message.deliveryTimestamp() = aTimestamp;
     message.read() = true;
 
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        if (!obs) {
-            return;
-        }
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (!obs) {
+        return;
+    }
 
-        nsCOMPtr<nsISmsMessage> domMessage = new SmsMessageInternal(message);
-        const char* topic = (message.deliveryStatus() == eDeliveryStatus_Success)
-                            ? kSmsDeliverySuccessObserverTopic
-                            : kSmsDeliveryErrorObserverTopic;
-        obs->NotifyObservers(domMessage, topic, nullptr);
-    });
-    NS_DispatchToMainThread(runnable);
+    nsCOMPtr<nsISmsMessage> domMessage = new SmsMessageInternal(message);
+    const char* topic = (message.deliveryStatus() == eDeliveryStatus_Success)
+                        ? kSmsDeliverySuccessObserverTopic
+                        : kSmsDeliveryErrorObserverTopic;
+    obs->NotifyObservers(domMessage, topic, nullptr);
 }
 
 /*static*/
 void
 SmsManager::NotifySmsSendFailed(int32_t aError, int32_t aRequestId)
 {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
-        if(!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
+    if(!request) {
+        return;
+    }
 
-        request->NotifySendMessageFailed(aError, nullptr);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifySendMessageFailed(aError, nullptr);
 }
 
 /*static*/
@@ -196,83 +183,68 @@ SmsManager::NotifyGetSms(int32_t aId,
     message.deliveryTimestamp() = aTimestamp;
     message.read() = aRead;
 
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        nsCOMPtr<nsISmsMessage> domMessage = new SmsMessageInternal(message);
-        request->NotifyMessageGot(domMessage);
-    });
-    NS_DispatchToMainThread(runnable);
+    nsCOMPtr<nsISmsMessage> domMessage = new SmsMessageInternal(message);
+    request->NotifyMessageGot(domMessage);
 }
 
 /*static*/
 void
 SmsManager::NotifyGetSmsFailed(int32_t aError, int32_t aRequestId)
 {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        request->NotifyGetMessageFailed(aError);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyGetMessageFailed(aError);
 }
 
 /*static*/
 void
 SmsManager::NotifySmsDeleted(bool aDeleted, int32_t aRequestId)
 {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        // For android, we support only single SMS deletion.
-        bool deleted = aDeleted;
-        request->NotifyMessageDeleted(&deleted, 1);
-    });
-    NS_DispatchToMainThread(runnable);
+    // For android, we support only single SMS deletion.
+    bool deleted = aDeleted;
+    request->NotifyMessageDeleted(&deleted, 1);
 }
 
 /*static*/
 void
 SmsManager::NotifySmsDeleteFailed(int32_t aError, int32_t aRequestId)
 {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        request->NotifyDeleteMessageFailed(aError);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyDeleteMessageFailed(aError);
 }
 
 /*static*/
 void
 SmsManager::NotifyCursorError(int32_t aError, int32_t aRequestId)
 {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCursorCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsCursorRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCursorCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsCursorRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        request->NotifyCursorError(aError);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyCursorError(aError);
 }
 
 /*static*/
@@ -296,7 +268,7 @@ SmsManager::NotifyThreadCursorResult(int64_t aId,
     thread.timestamp() = aTimestamp;
     thread.lastMessageType() = eMessageType_SMS;
 
-    JNIEnv* const env = jni::GetEnvForThread();
+    JNIEnv* const env = jni::GetGeckoThreadEnv();
 
     jobjectArray participants = aParticipants.Get();
     jsize length = env->GetArrayLength(participants);
@@ -305,27 +277,25 @@ SmsManager::NotifyThreadCursorResult(int64_t aId,
             static_cast<jstring>(env->GetObjectArrayElement(participants, i));
         if (participant) {
             thread.participants().AppendElement(nsJNIString(participant, env));
+            env->DeleteLocalRef(participant);
         }
     }
 
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCursorCallback> request =
-            AndroidBridge::Bridge()->GetSmsCursorRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCursorCallback> request =
+        AndroidBridge::Bridge()->GetSmsCursorRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        nsCOMArray<nsIMobileMessageThread> arr;
-        arr.AppendElement(new MobileMessageThreadInternal(thread));
+    nsCOMArray<nsIMobileMessageThread> arr;
+    arr.AppendElement(new MobileMessageThreadInternal(thread));
 
-        nsIMobileMessageThread** elements;
-        int32_t size;
-        size = arr.Forget(&elements);
+    nsIMobileMessageThread** elements;
+    int32_t size;
+    size = arr.Forget(&elements);
 
-        request->NotifyCursorResult(reinterpret_cast<nsISupports**>(elements),
-                                    size);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyCursorResult(reinterpret_cast<nsISupports**>(elements),
+                                size);
 }
 
 /*static*/
@@ -360,72 +330,60 @@ SmsManager::NotifyMessageCursorResult(int32_t aMessageId,
     message.deliveryTimestamp() = aTimestamp;
     message.read() = aRead;
 
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCursorCallback> request =
-            AndroidBridge::Bridge()->GetSmsCursorRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCursorCallback> request =
+        AndroidBridge::Bridge()->GetSmsCursorRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        nsCOMArray<nsISmsMessage> arr;
-        arr.AppendElement(new SmsMessageInternal(message));
+    nsCOMArray<nsISmsMessage> arr;
+    arr.AppendElement(new SmsMessageInternal(message));
 
-        nsISmsMessage** elements;
-        int32_t size;
-        size = arr.Forget(&elements);
+    nsISmsMessage** elements;
+    int32_t size;
+    size = arr.Forget(&elements);
 
-        request->NotifyCursorResult(reinterpret_cast<nsISupports**>(elements),
-                                    size);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyCursorResult(reinterpret_cast<nsISupports**>(elements),
+                                size);
 }
 
 /*static*/
 void
 SmsManager::NotifyCursorDone(int32_t aRequestId)
 {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCursorCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsCursorRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCursorCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsCursorRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        request->NotifyCursorDone();
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyCursorDone();
 }
 
 /*static*/
 void
 SmsManager::NotifySmsMarkedAsRead(bool aMarkedAsRead, int32_t aRequestId)
 {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        request->NotifyMessageMarkedRead(aMarkedAsRead);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyMessageMarkedRead(aMarkedAsRead);
 }
 
 /*static*/
 void
 SmsManager::NotifySmsMarkAsReadFailed(int32_t aError, int32_t aRequestId)
 {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
-        nsCOMPtr<nsIMobileMessageCallback> request =
-            AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
-        if (!request) {
-            return;
-        }
+    nsCOMPtr<nsIMobileMessageCallback> request =
+        AndroidBridge::Bridge()->DequeueSmsRequest(aRequestId);
+    if (!request) {
+        return;
+    }
 
-        request->NotifyMarkMessageReadFailed(aError);
-    });
-    NS_DispatchToMainThread(runnable);
+    request->NotifyMarkMessageReadFailed(aError);
 }
 
 } // namespace

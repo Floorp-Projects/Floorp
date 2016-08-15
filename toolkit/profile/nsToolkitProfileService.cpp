@@ -41,7 +41,7 @@
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 using namespace mozilla;
 

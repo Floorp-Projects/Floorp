@@ -1962,6 +1962,11 @@ random-if(!winWidget) == 1273154-2.html 1273154-2-ref.html # depends on Windows 
 != 1276161-1b.html 1276161-1-notref.html
 != 1276161-1a.html 1276161-1b.html
 == 1275411-1.html 1275411-1-ref.html
+# Buttons in 2 pages have different position and the rendering result can be
+# different, but they should use the same button style and the background color
+# should be same.  |fuzzy()| here allows the difference in border, but not
+# background color.
+fuzzy(255,1000) skip-if(!cocoaWidget) == 1294102-1.html 1294102-1-ref.html
 
 HTTP == 652991-1a.html 652991-1-ref.html
 HTTP == 652991-1b.html 652991-1-ref.html

@@ -162,6 +162,10 @@ var gCallbackBinFile = "callback_app" + BIN_SUFFIX;
 var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
 var gPostUpdateBinFile = "postup_app" + BIN_SUFFIX;
 var gUseTestAppDir = true;
+// Some update staging failures can remove the update. This allows tests to
+// specify that the status file and the active update should not be checked
+// after an update is staged.
+var gStagingRemovedUpdate = false;
 
 var gTimeoutRuns = 0;
 
@@ -805,6 +809,37 @@ function setupTestCommon() {
 
   setDefaultPrefs();
 
+  // Don't attempt to show a prompt when an update finishes.
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, true);
+
+  gGREDirOrig = getGREDir();
+  gGREBinDirOrig = getGREBinDir();
+  gAppDirOrig = getAppBaseDir();
+
+  let applyDir = getApplyDirFile(null, true).parent;
+
+  // Try to remove the directory used to apply updates and the updates directory
+  // on platforms other than Windows. Since the test hasn't ran yet and the
+  // directory shouldn't exist finished this is non-fatal for the test.
+  if (applyDir.exists()) {
+    debugDump("attempting to remove directory. Path: " + applyDir.path);
+    try {
+      removeDirRecursive(applyDir);
+    } catch (e) {
+      logTestInfo("non-fatal error removing directory. Path: " +
+                  applyDir.path + ", Exception: " + e);
+      // When the application doesn't exit properly it can cause the test to
+      // fail again on the second run with an NS_ERROR_FILE_ACCESS_DENIED error
+      // along with no useful information in the test log. To prevent this use
+      // a different directory for the test when it isn't possible to remove the
+      // existing test directory (bug 1294196).
+      gTestID += "_new";
+      logTestInfo("using a new directory for the test by changing gTestID " +
+                  "since there is an existing test directory that can't be " +
+                  "removed, gTestID: " + gTestID);
+    }
+  }
+
   if (DEBUG_TEST_LOG) {
     let logFile = do_get_file(gTestID + ".log", true);
     if (logFile.exists()) {
@@ -827,28 +862,6 @@ function setupTestCommon() {
   if (IS_WIN) {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED,
                                IS_SERVICE_TEST ? true : false);
-  }
-
-  // Don't attempt to show a prompt when an update finishes.
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, true);
-
-  gGREDirOrig = getGREDir();
-  gGREBinDirOrig = getGREBinDir();
-  gAppDirOrig = getAppBaseDir();
-
-  let applyDir = getApplyDirFile(null, true).parent;
-
-  // Try to remove the directory used to apply updates and the updates directory
-  // on platforms other than Windows. Since the test hasn't ran yet and the
-  // directory shouldn't exist finished this is non-fatal for the test.
-  if (applyDir.exists()) {
-    debugDump("attempting to remove directory. Path: " + applyDir.path);
-    try {
-      removeDirRecursive(applyDir);
-    } catch (e) {
-      logTestInfo("non-fatal error removing directory. Path: " +
-                  applyDir.path + ", Exception: " + e);
-    }
   }
 
   // adjustGeneralPaths registers a cleanup function that calls end_test when
@@ -1787,14 +1800,12 @@ function runUpdateUsingUpdater(aExpectedStatus, aSwitchApp, aExpectedExitValue) 
   // nsIProcess doesn't have an API to pass a separate environment to the
   // subprocess, so we need to alter the environment of the current process
   // before launching the updater binary.
-  let env = Cc["@mozilla.org/process/environment;1"].
-            getService(Ci.nsIEnvironment);
   let asan_options = null;
-  if (env.exists("ASAN_OPTIONS")) {
-    asan_options = env.get("ASAN_OPTIONS");
-    env.set("ASAN_OPTIONS", asan_options + ":detect_leaks=0")
+  if (gEnv.exists("ASAN_OPTIONS")) {
+    asan_options = gEnv.get("ASAN_OPTIONS");
+    gEnv.set("ASAN_OPTIONS", asan_options + ":detect_leaks=0")
   } else {
-    env.set("ASAN_OPTIONS", "detect_leaks=0")
+    gEnv.set("ASAN_OPTIONS", "detect_leaks=0")
   }
 
   let process = Cc["@mozilla.org/process/util;1"].
@@ -1803,7 +1814,7 @@ function runUpdateUsingUpdater(aExpectedStatus, aSwitchApp, aExpectedExitValue) 
   process.run(true, args, args.length);
 
   // Restore previous ASAN_OPTIONS if there were any.
-  env.set("ASAN_OPTIONS", asan_options ? asan_options : "");
+  gEnv.set("ASAN_OPTIONS", asan_options ? asan_options : "");
 
   let status = readStatusFile();
   if (process.exitValue != aExpectedExitValue || status != aExpectedStatus) {
@@ -1966,11 +1977,18 @@ function checkUpdateStagedState(aUpdateState) {
   Assert.equal(aUpdateState, STATE_AFTER_STAGE,
                "the notified state" + MSG_SHOULD_EQUAL);
 
-  Assert.equal(gUpdateManager.activeUpdate.state, STATE_AFTER_STAGE,
-               "the update state" + MSG_SHOULD_EQUAL);
+  if (!gStagingRemovedUpdate) {
+    Assert.equal(readStatusState(), STATE_AFTER_STAGE,
+                 "the status file state" + MSG_SHOULD_EQUAL);
 
-  Assert.equal(readStatusState(), STATE_AFTER_STAGE,
-               "the status file state" + MSG_SHOULD_EQUAL);
+    Assert.equal(gUpdateManager.activeUpdate.state, STATE_AFTER_STAGE,
+                 "the update state" + MSG_SHOULD_EQUAL);
+  }
+
+  Assert.equal(gUpdateManager.updateCount, 1,
+               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_AFTER_STAGE,
+               "the update state" + MSG_SHOULD_EQUAL);
 
   let log = getUpdateLog(FILE_LAST_UPDATE_LOG);
   Assert.ok(log.exists(),
@@ -4307,15 +4325,13 @@ function resetEnvironment() {
         debugDump("removing DYLD_LIBRARY_PATH environment variable");
         gEnv.set("DYLD_LIBRARY_PATH", "");
       }
-    } else {
-      if (gEnvLdLibraryPath) {
-        debugDump("setting LD_LIBRARY_PATH environment variable value back " +
-                  "to " + gEnvLdLibraryPath);
-        gEnv.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
-      } else if (gEnvLdLibraryPath !== null) {
-        debugDump("removing LD_LIBRARY_PATH environment variable");
-        gEnv.set("LD_LIBRARY_PATH", "");
-      }
+    } else if (gEnvLdLibraryPath) {
+      debugDump("setting LD_LIBRARY_PATH environment variable value back " +
+                "to " + gEnvLdLibraryPath);
+      gEnv.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
+    } else if (gEnvLdLibraryPath !== null) {
+      debugDump("removing LD_LIBRARY_PATH environment variable");
+      gEnv.set("LD_LIBRARY_PATH", "");
     }
   }
 

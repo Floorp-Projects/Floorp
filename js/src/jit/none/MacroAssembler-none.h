@@ -84,7 +84,7 @@ static constexpr Register ABINonArgReturnReg1 = { Registers::invalid_reg };
 
 static constexpr Register WasmTableCallScratchReg = { Registers::invalid_reg };
 static constexpr Register WasmTableCallSigReg = { Registers::invalid_reg };
-static constexpr Register WasmTableCallIndexReg = { Register::invalid_reg };
+static constexpr Register WasmTableCallIndexReg = { Registers::invalid_reg };
 static constexpr Register WasmTlsReg = { Registers::invalid_reg };
 
 static constexpr uint32_t ABIStackAlignment = 4;

@@ -782,6 +782,10 @@
                        class="urlbar-icon"
                        hidden="true"
                        onclick="ReaderParent.buttonClick(event);"/>
+                <toolbarbutton id="urlbar-zoom-button"
+                       onclick="FullZoom.reset();"
+                       tooltiptext="&urlbar.zoomReset.tooltip;"
+                       hidden="true"/>
               </hbox>
               <hbox id="userContext-icons" hidden="true">
                 <label id="userContext-label"/>

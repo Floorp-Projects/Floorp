@@ -733,10 +733,10 @@ DXGITextureHostD3D11::GetCompositor()
 bool
 DXGITextureHostD3D11::Lock()
 {
-  if (!mCompositor) {
-    NS_WARNING("no suitable compositor");
-    return false;
-  }
+  /**
+   * Note: This function may be called when mCompositor is null
+   *       such as during WebVR frame submission.
+   **/
 
   if (!GetDevice()) {
     NS_WARNING("trying to lock a TextureHost without a D3D device");

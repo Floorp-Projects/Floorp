@@ -423,11 +423,9 @@ function dbCreateAsyncStatement(aQuery, aParams, aBindingArrays) {
       }
       bindingArray.addParams(bindingParams);
     }
-  } else {
-    if (aParams) {
-      for (let field in aParams) {
-        stmt.params[field] = aParams[field];
-      }
+  } else if (aParams) {
+    for (let field in aParams) {
+      stmt.params[field] = aParams[field];
     }
   }
 

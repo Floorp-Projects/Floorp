@@ -28,12 +28,12 @@ interface nsIInputStream;
  *
  * NOTE: returning NS_OK and (*aWriteCount = 0) has undefined behavior.
  */
-typedef NS_CALLBACK(nsWriteUnicharSegmentFun)(nsIUnicharInputStream *aInStream,
-                                              void *aClosure,
-                                              const char16_t *aFromSegment,
-                                              uint32_t aToOffset,
-                                              uint32_t aCount,
-                                              uint32_t *aWriteCount);
+typedef nsresult (*nsWriteUnicharSegmentFun)(nsIUnicharInputStream *aInStream,
+                                             void *aClosure,
+                                             const char16_t *aFromSegment,
+                                             uint32_t aToOffset,
+                                             uint32_t aCount,
+                                             uint32_t *aWriteCount);
 %}
 native nsWriteUnicharSegmentFun(nsWriteUnicharSegmentFun);
 

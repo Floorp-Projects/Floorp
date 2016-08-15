@@ -247,23 +247,12 @@ Element implements ParentNode;
 Element implements Animatable;
 Element implements GeometryUtils;
 
-// non-standard: allows passing options to Element.requestFullscreen
-dictionary RequestFullscreenOptions {
-  // Which HMDVRDevice to go full screen on; also enables VR rendering.
-  // If null, normal fullscreen is entered.
-  HMDVRDevice? vrDisplay = null;
-};
-
 // https://fullscreen.spec.whatwg.org/#api
 partial interface Element {
-  /**
-   * The options parameter is non-standard. In Gecko, it can be:
-   *  a RequestFullscreenOptions object
-   */
   [Throws, UnsafeInPrerendering, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
-  void requestFullscreen(optional any options);
+  void requestFullscreen();
   [Throws, UnsafeInPrerendering, BinaryName="requestFullscreen"]
-  void mozRequestFullScreen(optional any options);
+  void mozRequestFullScreen();
 };
 
 // https://w3c.github.io/pointerlock/#extensions-to-the-element-interface

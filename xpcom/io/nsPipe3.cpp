@@ -1719,7 +1719,7 @@ nsPipeOutputStream::WriteSegments(nsReadSegmentFun aReader,
   return rv;
 }
 
-static NS_METHOD
+static nsresult
 nsReadFromRawBuffer(nsIOutputStream* aOutStr,
                     void* aClosure,
                     char* aToRawSegment,
@@ -1748,7 +1748,7 @@ nsPipeOutputStream::Flush(void)
   return NS_OK;
 }
 
-static NS_METHOD
+static nsresult
 nsReadFromInputStream(nsIOutputStream* aOutStr,
                       void* aClosure,
                       char* aToRawSegment,

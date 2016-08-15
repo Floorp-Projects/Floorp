@@ -1526,7 +1526,7 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     mIsReused = true;
 }
 
-NS_METHOD
+nsresult
 nsHttpConnection::ReadFromStream(nsIInputStream *input,
                                  void *closure,
                                  const char *buf,

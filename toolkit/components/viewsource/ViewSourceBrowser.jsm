@@ -189,10 +189,8 @@ ViewSourceBrowser.prototype = {
       // If we're dealing with a remote browser, then the browser
       // for view source needs to be remote as well.
       this.updateBrowserRemoteness(browser.isRemoteBrowser);
-    } else {
-      if (outerWindowID) {
-        throw new Error("Must supply the browser if passing the outerWindowID");
-      }
+    } else if (outerWindowID) {
+      throw new Error("Must supply the browser if passing the outerWindowID");
     }
 
     this.sendAsyncMessage("ViewSource:LoadSource",

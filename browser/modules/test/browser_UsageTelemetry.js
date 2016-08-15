@@ -44,6 +44,15 @@ function browserLocationChanged(browser) {
   });
 }
 
+function promiseBrowserStateRestored() {
+  return new Promise(resolve => {
+     Services.obs.addObserver(function observer(aSubject, aTopic) {
+       Services.obs.removeObserver(observer, "sessionstore-browser-state-restored");
+       resolve();
+     }, "sessionstore-browser-state-restored", false);
+  });
+}
+
 /**
  * An helper that checks the value of a scalar if it's expected to be > 0,
  * otherwise makes sure that the scalar it's not reported.
@@ -265,4 +274,51 @@ add_task(function* test_privateMode() {
 
   // Clean up.
   yield BrowserTestUtils.closeWindow(privateWin);
+});
+
+add_task(function* test_sessionRestore() {
+  const PREF_RESTORE_ON_DEMAND = "browser.sessionstore.restore_on_demand";
+  Services.prefs.setBoolPref(PREF_RESTORE_ON_DEMAND, false);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(PREF_RESTORE_ON_DEMAND);
+  });
+
+  // Let's reset the counts.
+  Services.telemetry.clearScalars();
+
+  // The first window will be put into the already open window and the second
+  // window will be opened with _openWindowWithState, which is the source of the problem.
+  const state = {
+    windows: [
+      {
+        tabs: [
+          { entries: [{ url: "http://example.org" }], extData: { "uniq": 3785 } }
+        ],
+        selected: 1
+      }
+    ]
+  };
+
+  // Save the current session.
+  let SessionStore =
+    Cu.import("resource:///modules/sessionstore/SessionStore.jsm", {}).SessionStore;
+  let backupState = SessionStore.getBrowserState();
+
+  // Load the custom state and wait for SSTabRestored, as we want to make sure
+  // that the URI counting code was hit.
+  let tabRestored = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored");
+  SessionStore.setBrowserState(JSON.stringify(state));
+  yield tabRestored;
+
+  // Check that the URI is not recorded.
+  const scalars =
+    Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+
+  ok(!(TOTAL_URI_COUNT in scalars), "We should not track URIs from restored sessions.");
+  ok(!(UNIQUE_DOMAINS_COUNT in scalars), "We should not track unique domains from restored sessions.");
+
+  // Restore the original session and cleanup.
+  let sessionRestored = promiseBrowserStateRestored();
+  SessionStore.setBrowserState(JSON.stringify(state));
+  yield sessionRestored;
 });

@@ -13,7 +13,7 @@
 #include "mozilla/dom/RTCCertificateBinding.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include <cstdio>
 

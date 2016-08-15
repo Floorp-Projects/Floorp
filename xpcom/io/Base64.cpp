@@ -95,7 +95,7 @@ struct EncodeInputStream_State
 };
 
 template<typename T>
-NS_METHOD
+nsresult
 EncodeInputStream_Encoder(nsIInputStream* aStream,
                           void* aClosure,
                           const char* aFromSegment,

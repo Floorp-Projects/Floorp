@@ -4,7 +4,7 @@
 
 /* File locked partial MAR file staged patch apply failure test */
 
-const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_PENDING : STATE_APPLYING;
+const STATE_AFTER_STAGE = STATE_PENDING;
 
 function run_test() {
   if (!setupTestCommon()) {
@@ -54,6 +54,14 @@ function runUpdateFinished() {
  */
 function waitForHelperExitFinished() {
   standardInit();
+  Assert.equal(readStatusFile(), STATE_NONE,
+               "the status file failure code" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.updateCount, 2,
+               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_FAILED,
+               "the update state" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).errorCode, READ_ERROR,
+               "the update errorCode" + MSG_SHOULD_EQUAL);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_UNABLE_OPEN_DEST);

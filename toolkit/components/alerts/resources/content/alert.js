@@ -256,10 +256,8 @@ function onAlertBeforeUnload() {
           if (alertWindow.screenY > window.screenY) {
             alertWindow.moveTo(alertWindow.screenX, alertWindow.screenY - heightDelta);
           }
-        } else {
-          if (window.screenY > alertWindow.screenY) {
-            alertWindow.moveTo(alertWindow.screenX, alertWindow.screenY + heightDelta);
-          }
+        } else if (window.screenY > alertWindow.screenY) {
+          alertWindow.moveTo(alertWindow.screenX, alertWindow.screenY + heightDelta);
         }
       }
     }

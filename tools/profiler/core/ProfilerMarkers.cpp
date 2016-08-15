@@ -10,7 +10,7 @@
 #ifndef SPS_STANDALONE
 #include "gfxASurface.h"
 #include "Layers.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #endif
 
 ProfilerMarkerPayload::ProfilerMarkerPayload(ProfilerBacktrace* aStack)
@@ -174,7 +174,7 @@ LayerTranslationPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 {
   const size_t bufferSize = 32;
   char buffer[bufferSize];
-  snprintf_literal(buffer, "%p", mLayer);
+  SprintfLiteral(buffer, "%p", mLayer);
 
   aWriter.StringProperty("layer", buffer);
   aWriter.IntProperty("x", mPoint.x);

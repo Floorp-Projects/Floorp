@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRManagerParent.h"
+#include "ipc/VRLayerParent.h"
 #include "mozilla/gfx/PVRManagerParent.h"
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"       // for IToplevelProtocol
@@ -15,9 +16,12 @@
 #include "VRManager.h"
 
 namespace mozilla {
+using namespace layers;
 namespace gfx {
 
 VRManagerParent::VRManagerParent(ProcessId aChildProcessId)
+  : HostIPCAllocator()
+  , mHaveEventListener(false)
 {
   MOZ_COUNT_CTOR(VRManagerParent);
   MOZ_ASSERT(NS_IsMainThread());
@@ -27,21 +31,120 @@ VRManagerParent::VRManagerParent(ProcessId aChildProcessId)
 
 VRManagerParent::~VRManagerParent()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   MOZ_ASSERT(!mVRManagerHolder);
 
   MOZ_COUNT_DTOR(VRManagerParent);
 }
 
-void VRManagerParent::RegisterWithManager()
+PTextureParent*
+VRManagerParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                     const LayersBackend& aLayersBackend,
+                                     const TextureFlags& aFlags,
+                                     const uint64_t& aSerial)
+{
+  return layers::TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags, aSerial);
+}
+
+bool
+VRManagerParent::DeallocPTextureParent(PTextureParent* actor)
+{
+  return layers::TextureHost::DestroyIPDLActor(actor);
+}
+
+PVRLayerParent*
+VRManagerParent::AllocPVRLayerParent(const uint32_t& aDisplayID,
+                                     const float& aLeftEyeX,
+                                     const float& aLeftEyeY,
+                                     const float& aLeftEyeWidth,
+                                     const float& aLeftEyeHeight,
+                                     const float& aRightEyeX,
+                                     const float& aRightEyeY,
+                                     const float& aRightEyeWidth,
+                                     const float& aRightEyeHeight)
+{
+  RefPtr<VRLayerParent> layer;
+  layer = new VRLayerParent(aDisplayID,
+                            Rect(aLeftEyeX, aLeftEyeY, aLeftEyeWidth, aLeftEyeHeight),
+                            Rect(aRightEyeX, aRightEyeY, aRightEyeWidth, aRightEyeHeight));
+  VRManager* vm = VRManager::Get();
+  RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(aDisplayID);
+  if (display) {
+    display->AddLayer(layer);
+  }
+  return layer.forget().take();
+}
+
+bool
+VRManagerParent::DeallocPVRLayerParent(PVRLayerParent* actor)
+{
+  gfx::VRLayerParent* layer = static_cast<gfx::VRLayerParent*>(actor);
+
+  VRManager* vm = VRManager::Get();
+  RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(layer->GetDisplayID());
+  if (display) {
+    display->RemoveLayer(layer);
+  }
+
+  delete actor;
+  return true;
+}
+
+bool
+VRManagerParent::AllocShmem(size_t aSize,
+  ipc::SharedMemory::SharedMemoryType aType,
+  ipc::Shmem* aShmem)
+{
+  return PVRManagerParent::AllocShmem(aSize, aType, aShmem);
+}
+
+bool
+VRManagerParent::AllocUnsafeShmem(size_t aSize,
+  ipc::SharedMemory::SharedMemoryType aType,
+  ipc::Shmem* aShmem)
+{
+  return PVRManagerParent::AllocUnsafeShmem(aSize, aType, aShmem);
+}
+
+void
+VRManagerParent::DeallocShmem(ipc::Shmem& aShmem)
+{
+  PVRManagerParent::DeallocShmem(aShmem);
+}
+
+bool
+VRManagerParent::IsSameProcess() const
+{
+  return OtherPid() == base::GetCurrentProcId();
+}
+
+void
+VRManagerParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId)
+{
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+}
+
+void
+VRManagerParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
+{
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+}
+
+base::ProcessId
+VRManagerParent::GetChildProcessId()
+{
+  return OtherPid();
+}
+
+void
+VRManagerParent::RegisterWithManager()
 {
   VRManager* vm = VRManager::Get();
   vm->AddVRManagerParent(this);
   mVRManagerHolder = vm;
 }
 
-void VRManagerParent::UnregisterFromManager()
+void
+VRManagerParent::UnregisterFromManager()
 {
   VRManager* vm = VRManager::Get();
   vm->RemoveVRManagerParent(this);
@@ -130,49 +233,62 @@ VRManagerParent::OnChannelConnected(int32_t aPid)
 }
 
 bool
-VRManagerParent::RecvRefreshDevices()
+VRManagerParent::RecvRefreshDisplays()
 {
+  // This is called to refresh the VR Displays for Navigator.GetVRDevices().
+  // We must pass "true" to VRManager::RefreshVRDisplays()
+  // to ensure that the promise returned by Navigator.GetVRDevices
+  // can resolve even if there are no changes to the VR Displays.
   VRManager* vm = VRManager::Get();
-  vm->RefreshVRDevices();
+  vm->RefreshVRDisplays(true);
 
   return true;
 }
 
 bool
-VRManagerParent::RecvResetSensor(const uint32_t& aDeviceID)
+VRManagerParent::RecvResetSensor(const uint32_t& aDisplayID)
 {
   VRManager* vm = VRManager::Get();
-  RefPtr<gfx::VRHMDInfo> device = vm->GetDevice(aDeviceID);
-  if (device != nullptr) {
-    device->ZeroSensor();
+  RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(aDisplayID);
+  if (display != nullptr) {
+    display->ZeroSensor();
   }
 
   return true;
 }
 
 bool
-VRManagerParent::RecvKeepSensorTracking(const uint32_t& aDeviceID)
+VRManagerParent::RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState)
 {
   VRManager* vm = VRManager::Get();
-  RefPtr<gfx::VRHMDInfo> device = vm->GetDevice(aDeviceID);
-  if (device != nullptr) {
-    Unused << device->KeepSensorTracking();
+  RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(aDisplayID);
+  if (display != nullptr) {
+    *aState = display->GetSensorState();
   }
   return true;
 }
 
 bool
-VRManagerParent::RecvSetFOV(const uint32_t& aDeviceID,
-                            const VRFieldOfView& aFOVLeft,
-                            const VRFieldOfView& aFOVRight,
-                            const double& zNear,
-                            const double& zFar)
+VRManagerParent::RecvGetImmediateSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState)
 {
   VRManager* vm = VRManager::Get();
-  RefPtr<gfx::VRHMDInfo> device = vm->GetDevice(aDeviceID);
-  if (device != nullptr) {
-    device->SetFOV(aFOVLeft, aFOVRight, zNear, zFar);
+  RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(aDisplayID);
+  if (display != nullptr) {
+    *aState = display->GetImmediateSensorState();
   }
+  return true;
+}
+
+bool
+VRManagerParent::HaveEventListener()
+{
+  return mHaveEventListener;
+}
+
+bool
+VRManagerParent::RecvSetHaveEventListener(const bool& aHaveEventListener)
+{
+  mHaveEventListener = aHaveEventListener;
   return true;
 }
 

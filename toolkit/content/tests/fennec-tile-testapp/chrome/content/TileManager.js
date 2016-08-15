@@ -785,13 +785,10 @@ TileManager.Tile.prototype = {
       else
         this._dirtyTileCanvasRect.copyFrom(this.boundRect);
 
-    } else {
-
-      if (!this._dirtyTileCanvasRect)
-        this._dirtyTileCanvasRect = dirtyRect.intersect(this.boundRect);
-      else if (dirtyRect.intersects(this.boundRect))
-        this._dirtyTileCanvasRect.expandToContain(dirtyRect.intersect(this.boundRect));
-
+    } else if (!this._dirtyTileCanvasRect) {
+      this._dirtyTileCanvasRect = dirtyRect.intersect(this.boundRect);
+    } else if (dirtyRect.intersects(this.boundRect)) {
+      this._dirtyTileCanvasRect.expandToContain(dirtyRect.intersect(this.boundRect));
     }
 
     // TODO if after the above, the dirty rectangle is large enough,

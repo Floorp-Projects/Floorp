@@ -37,6 +37,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         timer.schedule(releaseLockTask, 5 * 1000);
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
     private static native void notifyAlarmFired();
 }
