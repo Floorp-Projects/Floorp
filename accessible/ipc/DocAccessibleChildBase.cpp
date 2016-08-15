@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/a11y/DocAccessibleChildBase.h"
+#include "mozilla/a11y/ProxyAccessibleBase.h"
 
 #include "Accessible-inl.h"
 
