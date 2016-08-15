@@ -685,6 +685,15 @@ global.TabManager = {
    * Returns the XUL <tab> element associated with the given tab ID. If no tab
    * with the given ID exists, and no default value is provided, an error is
    * raised, belonging to the scope of the given context.
+   *
+   * @param {integer} tabId
+   *        The ID of the tab to retrieve.
+   * @param {ExtensionContext} context
+   *        The context of the caller.
+   * @param {*} default_
+   *        The value to return if no tab exists with the given ID.
+   * @returns {Element<tab>}
+   *        A XUL <tab> element.
    */
   getTab(tabId, context, default_ = undefined) {
     // FIXME: Speed this up without leaking memory somehow.

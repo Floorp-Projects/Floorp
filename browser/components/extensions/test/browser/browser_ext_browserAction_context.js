@@ -60,7 +60,7 @@ function* runTests(options) {
         let checkError = e => {
           browser.test.assertTrue(e.message.includes(`Invalid tab ID: ${tabId}`),
                                   `Expected invalid tab ID error, got ${e}`);
-        }
+        };
         try {
           call().then(() => {
             browser.test.fail(`Expected call to fail: ${call}`);
