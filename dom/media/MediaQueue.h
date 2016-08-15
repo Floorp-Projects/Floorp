@@ -45,6 +45,7 @@ public:
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
+    MOZ_ASSERT(aItem->GetEndTime() >= aItem->mTime);
     nsDeque::Push(aItem);
     mPushEvent.Notify(RefPtr<T>(aItem));
   }
