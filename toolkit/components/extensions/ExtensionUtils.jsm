@@ -162,13 +162,14 @@ class SpreadArgs extends Array {
 let gContextId = 0;
 
 class BaseContext {
-  constructor(extensionId) {
+  constructor(extension) {
     this.onClose = new Set();
     this.checkedLastError = false;
     this._lastError = null;
     this.contextId = `${++gContextId}-${Services.appinfo.uniqueProcessID}`;
     this.unloaded = false;
-    this.extensionId = extensionId;
+    this.extension = extension;
+    this.extensionId = extension.id;
     this.jsonSandbox = null;
     this.active = true;
 

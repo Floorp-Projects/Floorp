@@ -386,7 +386,8 @@ function queryHelper(query) {
   });
 }
 
-extensions.registerSchemaAPI("downloads", (extension, context) => {
+extensions.registerSchemaAPI("downloads", context => {
+  let {extension} = context;
   return {
     downloads: {
       download(options) {
