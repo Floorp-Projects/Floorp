@@ -4982,7 +4982,7 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandleId id)
                errorNumber == JSMSG_BAD_CONST_ASSIGN);
     JSAutoByteString printable;
     if (ValueToPrintable(cx, IdToValue(id), &printable))
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber, printable.ptr());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, printable.ptr());
 }
 
 void
@@ -5025,8 +5025,8 @@ js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const cha
 {
     JSAutoByteString printable;
     if (AtomToPrintableString(cx, name, &printable)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
-                             redeclKind, printable.ptr());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
+                                   redeclKind, printable.ptr());
     }
 }
 
@@ -5078,11 +5078,11 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
             name = str.ptr();
         }
 
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
         return false;
     }
 
     MOZ_ASSERT(fun->isArrow());
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
     return false;
 }
