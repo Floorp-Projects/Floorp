@@ -355,7 +355,7 @@ StartupCache::PutBuffer(const char* id, const char* inbuf, uint32_t len)
   CacheEntry* entry; 
   
   if (mTable.Get(idStr)) {
-    NS_ASSERTION(false, "Existing entry in StartupCache.");
+    NS_WARNING("Existing entry in StartupCache.");
     // Double-caching is undesirable but not an error.
     return NS_OK;
   }
