@@ -400,7 +400,8 @@ Module::initSegments(JSContext* cx,
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
 
         if (offset > tableLength || tableLength - offset < seg.elemCodeRangeIndices.length()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT, "elem", "table");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
+                                      "elem", "table");
             return false;
         }
     }
@@ -411,7 +412,8 @@ Module::initSegments(JSContext* cx,
             uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
 
             if (offset > memoryLength || memoryLength - offset < seg.length) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT, "data", "memory");
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
+                                          "data", "memory");
                 return false;
             }
         }

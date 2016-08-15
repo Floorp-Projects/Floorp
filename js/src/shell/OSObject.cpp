@@ -232,14 +232,15 @@ ReadFile(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1 || args.length() > 2) {
-        JS_ReportErrorNumber(cx, js::shell::my_GetErrorMessage, nullptr,
-                             args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
-                             "snarf");
+        JS_ReportErrorNumberASCII(cx, js::shell::my_GetErrorMessage, nullptr,
+                                  args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+                                  "snarf");
         return false;
     }
 
     if (!args[0].isString() || (args.length() == 2 && !args[1].isString())) {
-        JS_ReportErrorNumber(cx, js::shell::my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "snarf");
+        JS_ReportErrorNumberASCII(cx, js::shell::my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "snarf");
         return false;
     }
 
@@ -292,8 +293,8 @@ osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc, Value* vp)
         !args[1].isObject() ||
         !args[1].toObject().is<TypedArrayObject>())
     {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_INVALID_ARGS, "writeTypedArrayToFile");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "writeTypedArrayToFile");
         return false;
     }
 
@@ -489,8 +490,8 @@ static bool
 Redirect(JSContext* cx, const CallArgs& args, RCFile** outFile)
 {
     if (args.length() > 1) {
-        JS_ReportErrorNumber(cx, js::shell::my_GetErrorMessage, nullptr,
-                             JSSMSG_INVALID_ARGS, "redirect");
+        JS_ReportErrorNumberASCII(cx, js::shell::my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "redirect");
         return false;
     }
 
@@ -559,8 +560,8 @@ osfile_close(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     if (!fileObj) {
-        JS_ReportErrorNumber(cx, js::shell::my_GetErrorMessage, nullptr,
-                             JSSMSG_INVALID_ARGS, "close");
+        JS_ReportErrorNumberASCII(cx, js::shell::my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "close");
         return false;
     }
 
@@ -612,7 +613,8 @@ ospath_isAbsolute(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() != 1 || !args[0].isString()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "isAbsolute");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "isAbsolute");
         return false;
     }
 
@@ -630,7 +632,7 @@ ospath_join(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "join");
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "join");
         return false;
     }
 

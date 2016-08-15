@@ -4036,8 +4036,8 @@ CASE(JSOP_SUPERBASE)
         goto error;
 
     if (!superBase) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                                "null", "object");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                                  "null", "object");
         goto error;
     }
     PUSH_OBJECT(*superBase);

@@ -734,8 +734,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             if (!ToInt32(cx, args[1], &byteOffset))
                 return nullptr;
             if (byteOffset < 0) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                     JSMSG_TYPED_ARRAY_NEGATIVE_ARG, "1");
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPED_ARRAY_NEGATIVE_ARG,
+                                          "1");
                 return nullptr;
             }
 
@@ -743,8 +744,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                 if (!ToInt32(cx, args[2], &length))
                     return nullptr;
                 if (length < 0) {
-                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                         JSMSG_TYPED_ARRAY_NEGATIVE_ARG, "2");
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                              JSMSG_TYPED_ARRAY_NEGATIVE_ARG,
+                                              "2");
                     return nullptr;
                 }
             }
@@ -888,8 +890,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                            MutableHandle<ArrayBufferObject*> buffer)
     {
         if (count >= INT32_MAX / unit) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_NEED_DIET, "size and count");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEED_DIET,
+                                      "size and count");
             return false;
         }
         uint32_t byteLength = count * unit;
@@ -1616,7 +1618,8 @@ DataViewObject::getAndCheckConstructorArgs(JSContext* cx, JSObject* bufobj, cons
         if (!ToUint32(cx, args[1], &byteOffset))
             return false;
         if (byteOffset > INT32_MAX) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE,
+                                      "1");
             return false;
         }
     }
@@ -1628,7 +1631,8 @@ DataViewObject::getAndCheckConstructorArgs(JSContext* cx, JSObject* bufobj, cons
 
     if (args.length() > 1) {
         if (byteOffset > byteLength) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE,
+                                      "1");
             return false;
         }
 
@@ -1638,16 +1642,16 @@ DataViewObject::getAndCheckConstructorArgs(JSContext* cx, JSObject* bufobj, cons
             if (!ToUint32(cx, args[2], &byteLength))
                 return false;
             if (byteLength > INT32_MAX) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                        JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
                 return false;
             }
 
             MOZ_ASSERT(byteOffset + byteLength >= byteOffset,
                        "can't overflow: both numbers are less than INT32_MAX");
             if (byteOffset + byteLength > buffer->byteLength()) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                     JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
                 return false;
             }
         }
@@ -1773,7 +1777,8 @@ DataViewObject::getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, doubl
 
     const size_t TypeSize = sizeof(NativeType);
     if (offset > UINT32_MAX - TypeSize || offset + TypeSize > obj->byteLength()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE,
+                                  "1");
         return nullptr;
     }
 

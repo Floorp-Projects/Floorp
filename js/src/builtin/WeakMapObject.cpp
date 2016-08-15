@@ -334,8 +334,8 @@ WeakMap_construct(JSContext* cx, unsigned argc, Value* vp)
 
             // Step 12f.
             if (!pairVal.isObject()) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                     JSMSG_INVALID_MAP_ITERABLE, "WeakMap");
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_MAP_ITERABLE,
+                                          "WeakMap");
                 return false;
             }
 
