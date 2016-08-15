@@ -128,6 +128,11 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    `swapBrowsersAndCloseOther`.
       gBrowser.swapBrowsersAndCloseOther(tab, contentTab);
       gBrowser = null;
+
+      // The focus manager seems to get a little dizzy after all this swapping.  If a
+      // content element had been focused inside the viewport before stopping, it will
+      // have lost focus.  Activate the frame to restore expected focus.
+      tab.linkedBrowser.frameLoader.activateRemoteFrame();
     },
 
   };

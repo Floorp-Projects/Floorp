@@ -38,7 +38,7 @@ WebSocketDebuggerTransport.prototype = {
   },
 
   close() {
-    this.emit("onClosed");
+    this.emit("close");
     this.active = false;
 
     this.socket.removeEventListener("message", this);
@@ -69,7 +69,7 @@ WebSocketDebuggerTransport.prototype = {
     }
 
     let object = JSON.parse(data);
-    this.emit("onPacket", object);
+    this.emit("packet", object);
     if (this.hooks) {
       this.hooks.onPacket(object);
     }

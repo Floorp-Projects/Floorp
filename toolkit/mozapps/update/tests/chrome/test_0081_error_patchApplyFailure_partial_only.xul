@@ -37,7 +37,7 @@ function runTest() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  writeStatusFile(STATE_FAILED + ": " + CRC_ERROR);
+  writeStatusFile(STATE_FAILED_CRC_ERROR);
   reloadUpdateManagerData();
 
   testPostUpdateProcessing();

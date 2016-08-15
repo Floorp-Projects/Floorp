@@ -1694,7 +1694,7 @@ GetNextChar(nsACString::const_iterator& aStart,
   return (++aStart != aEnd) ? *aStart : '\0';
 }
 
-static NS_METHOD
+static nsresult
 NoOpParserWriteFunc(nsIInputStream* in,
                 void* closure,
                 const char* fromRawSegment,
@@ -1719,7 +1719,7 @@ typedef struct {
  * of data in the underlying stream or pipe. Using ReadSegments
  * allows us to avoid copying data to read out of the stream.
  */
-static NS_METHOD
+static nsresult
 ParserWriteFunc(nsIInputStream* in,
                 void* closure,
                 const char* fromRawSegment,

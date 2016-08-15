@@ -96,23 +96,10 @@ StaticRefPtr<WakeLockListener> sWakeLockListener;
 
 class GeckoThreadSupport final
     : public java::GeckoThread::Natives<GeckoThreadSupport>
-    , public UsesGeckoThreadProxy
 {
     static uint32_t sPauseCount;
 
 public:
-    template<typename Functor>
-    static void OnNativeCall(Functor&& aCall)
-    {
-        if (aCall.IsTarget(&SpeculativeConnect) ||
-            aCall.IsTarget(&WaitOnGecko)) {
-
-            aCall();
-            return;
-        }
-        return UsesGeckoThreadProxy::OnNativeCall(aCall);
-    }
-
     static void SpeculativeConnect(jni::String::Param aUriStr)
     {
         if (!NS_IsMainThread()) {
@@ -201,6 +188,8 @@ public:
 
     static void CreateServices(jni::String::Param aCategory, jni::String::Param aData)
     {
+        MOZ_ASSERT(NS_IsMainThread());
+
         nsCString category(aCategory->ToCString());
 
         NS_CreateServicesFromCategory(
@@ -216,19 +205,8 @@ uint32_t GeckoThreadSupport::sPauseCount;
 
 class GeckoAppShellSupport final
     : public java::GeckoAppShell::Natives<GeckoAppShellSupport>
-    , public UsesGeckoThreadProxy
 {
 public:
-    template<typename Functor>
-    static void OnNativeCall(Functor&& aCall)
-    {
-        if (aCall.IsTarget(&SyncNotifyObservers)) {
-            aCall();
-            return;
-        }
-        return UsesGeckoThreadProxy::OnNativeCall(aCall);
-    }
-
     static void SyncNotifyObservers(jni::String::Param aTopic,
                                     jni::String::Param aData)
     {

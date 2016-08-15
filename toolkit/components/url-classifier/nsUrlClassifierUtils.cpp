@@ -11,7 +11,7 @@
 #include "plbase64.h"
 #include "nsPrintfCString.h"
 #include "safebrowsing.pb.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #define DEFAULT_PROTOCOL_VERSION "2.2"
 
@@ -487,7 +487,7 @@ nsUrlClassifierUtils::CanonicalNum(const nsACString& num,
 
   while (bytes--) {
     char buf[20];
-    snprintf_literal(buf, "%u", val & 0xff);
+    SprintfLiteral(buf, "%u", val & 0xff);
     if (_retval.IsEmpty()) {
       _retval.Assign(buf);
     } else {

@@ -34,7 +34,6 @@
 #include <stack>
 #include "TextRenderer.h"               // for TextRenderer
 #include <vector>
-#include "VRManager.h"                  // for VRManager
 #include "GeckoProfiler.h"              // for GeckoProfiler
 #ifdef MOZ_ENABLE_PROFILER_SPS
 #include "ProfilerMarkers.h"            // for ProfilerMarkers
@@ -118,227 +117,6 @@ struct PreparedLayer
   RenderTargetIntRect mClipRect;
 };
 
-
-template<class ContainerT> void
-ContainerRenderVR(ContainerT* aContainer,
-                  LayerManagerComposite* aManager,
-                  const gfx::IntRect& aClipRect,
-                  RefPtr<gfx::VRHMDInfo> aHMD)
-{
-  int32_t inputFrameID = -1;
-
-  RefPtr<CompositingRenderTarget> surface;
-
-  Compositor* compositor = aManager->GetCompositor();
-
-  RefPtr<CompositingRenderTarget> previousTarget = compositor->GetCurrentRenderTarget();
-
-  float opacity = aContainer->GetEffectiveOpacity();
-
-  // The size of each individual eye surface
-  gfx::IntSize eyeResolution = aHMD->GetDeviceInfo().SuggestedEyeResolution();
-  gfx::IntRect eyeRect[2];
-  eyeRect[0] = gfx::IntRect(0, 0, eyeResolution.width, eyeResolution.height);
-  eyeRect[1] = gfx::IntRect(eyeResolution.width, 0, eyeResolution.width, eyeResolution.height);
-
-  // The intermediate surface size; we're going to assume that we're not going to run
-  // into max texture size limits
-  gfx::IntRect surfaceRect = gfx::IntRect(0, 0, eyeResolution.width * 2, eyeResolution.height);
-
-  int32_t maxTextureSize = compositor->GetMaxTextureSize();
-  surfaceRect.width = std::min(maxTextureSize, surfaceRect.width);
-  surfaceRect.height = std::min(maxTextureSize, surfaceRect.height);
-
-  gfx::VRHMDRenderingSupport *vrRendering = aHMD->GetRenderingSupport();
-  if (gfxEnv::NoVRRendering()) vrRendering = nullptr;
-  if (vrRendering) {
-    if (!aContainer->mVRRenderTargetSet || aContainer->mVRRenderTargetSet->size != surfaceRect.Size()) {
-      aContainer->mVRRenderTargetSet = vrRendering->CreateRenderTargetSet(compositor, surfaceRect.Size());
-    }
-    if (!aContainer->mVRRenderTargetSet) {
-      NS_WARNING("CreateRenderTargetSet failed");
-      return;
-    }
-    surface = aContainer->mVRRenderTargetSet->GetNextRenderTarget();
-    if (!surface) {
-      NS_WARNING("GetNextRenderTarget failed");
-      return;
-    }
-  } else {
-    surface = compositor->CreateRenderTarget(surfaceRect, INIT_MODE_CLEAR);
-    if (!surface) {
-      return;
-    }
-  }
-
-  gfx::IntRect rtBounds = previousTarget->GetRect();
-  DUMP("eyeResolution: %d %d targetRT: %d %d %d %d\n", WH(eyeResolution), XYWH(rtBounds));
-
-  compositor->SetRenderTarget(surface);
-
-  AutoTArray<Layer*, 12> children;
-  aContainer->SortChildrenBy3DZOrder(children);
-
-  gfx::Matrix4x4 origTransform = aContainer->GetEffectiveTransform();
-
-  for (uint32_t i = 0; i < children.Length(); i++) {
-    LayerComposite* layerToRender = static_cast<LayerComposite*>(children.ElementAt(i)->ImplData());
-    Layer* layer = layerToRender->GetLayer();
-    uint32_t contentFlags = layer->GetContentFlags();
-
-    if (layer->IsBackfaceHidden()) {
-      continue;
-    }
-
-    if (!layer->IsVisible() && !layer->AsContainerLayer()) {
-      continue;
-    }
-    if (layerToRender->HasStaleCompositor()) {
-      continue;
-    }
-
-    // We flip between pre-rendered and Gecko-rendered VR based on
-    // whether the child layer of this VR container layer has
-    // CONTENT_EXTEND_3D_CONTEXT or not.
-    if ((contentFlags & Layer::CONTENT_EXTEND_3D_CONTEXT) == 0) {
-      // This layer is native VR
-      DUMP("%p Switching to pre-rendered VR\n", aContainer);
-
-      // XXX we still need depth test here, but we have no way of preserving
-      // depth anyway in native VR layers until we have a way to save them
-      // from WebGL (and maybe depth video?)
-      compositor->SetRenderTarget(surface);
-      aContainer->ReplaceEffectiveTransform(origTransform);
-
-      // If this native-VR child layer does not have sizes that match
-      // the eye resolution (that is, returned by the recommended
-      // render rect from the HMD device), then we need to scale it
-      // up/down.
-      Rect layerBounds;
-      // XXX this is a hack! Canvas layers aren't reporting the
-      // proper bounds here (visible region bounds are 0,0,0,0)
-      // and I'm not sure if this is the bounds we want anyway.
-      if (layer->GetType() == Layer::TYPE_CANVAS) {
-        layerBounds =
-          IntRectToRect(static_cast<CanvasLayer*>(layer)->GetBounds());
-      } else {
-        layerBounds =
-          IntRectToRect(layer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
-      }
-      const gfx::Matrix4x4 childTransform = layer->GetEffectiveTransform();
-      layerBounds = childTransform.TransformBounds(layerBounds);
-
-      DUMP("  layer %p [type %d] bounds [%f %f %f %f] surfaceRect [%d %d %d %d]\n", layer, (int) layer->GetType(),
-           XYWH(layerBounds), XYWH(surfaceRect));
-
-      bool restoreTransform = false;
-      if ((layerBounds.width != 0 && layerBounds.height != 0) &&
-          (layerBounds.width != surfaceRect.width ||
-           layerBounds.height != surfaceRect.height))
-      {
-        DUMP("  layer %p doesn't match, prescaling by %f %f\n", layer,
-             surfaceRect.width / float(layerBounds.width),
-             surfaceRect.height / float(layerBounds.height));
-        gfx::Matrix4x4 scaledChildTransform(childTransform);
-        scaledChildTransform.PreScale(surfaceRect.width / layerBounds.width,
-                                      surfaceRect.height / layerBounds.height,
-                                      1.0f);
-
-        layer->ReplaceEffectiveTransform(scaledChildTransform);
-        restoreTransform = true;
-      }
-
-      // XXX these are both clip rects, which end up as scissor rects in the compositor.  So we just
-      // pass the full target surface rect here.
-      layerToRender->Prepare(RenderTargetIntRect(surfaceRect.x, surfaceRect.y,
-                                                 surfaceRect.width, surfaceRect.height));
-      layerToRender->RenderLayer(surfaceRect);
-
-      // Search all children recursively until we find the canvas with
-      // an inputFrameID
-      std::stack<LayerComposite*> searchLayers;
-      searchLayers.push(layerToRender);
-      while (!searchLayers.empty() && inputFrameID == -1) {
-        LayerComposite* searchLayer = searchLayers.top();
-        searchLayers.pop();
-        if (searchLayer) {
-          searchLayers.push(searchLayer->GetFirstChildComposite());
-          Layer* sibling = searchLayer->GetLayer();
-          if (sibling) {
-            sibling = sibling->GetNextSibling();
-          }
-          if (sibling) {
-            searchLayers.push(sibling->AsLayerComposite());
-          }
-          CompositableHost *ch = searchLayer->GetCompositableHost();
-          if (ch) {
-            int32_t compositableInputFrameID = ch->GetLastInputFrameID();
-            if (compositableInputFrameID != -1) {
-              inputFrameID = compositableInputFrameID;
-            }
-          }
-        }
-      }
-
-      if (restoreTransform) {
-        layer->ReplaceEffectiveTransform(childTransform);
-      }
-    } else {
-      // Gecko-rendered CSS VR -- not supported yet, so just don't render this layer!
-    }
-  }
-
-  DUMP(" -- ContainerRenderVR [%p] after child layers\n", aContainer);
-
-  // Now put back the original transfom on this container
-  aContainer->ReplaceEffectiveTransform(origTransform);
-
-  // then bind the original target and draw with distortion
-  compositor->SetRenderTarget(previousTarget);
-
-  if (vrRendering) {
-    vrRendering->SubmitFrame(aContainer->mVRRenderTargetSet, inputFrameID);
-    DUMP("<<< ContainerRenderVR [used vrRendering] [%p]\n", aContainer);
-    if (!gfxPrefs::VRMirrorTextures()) {
-      return;
-    }
-  }
-
-  gfx::IntRect rect(surfaceRect.x, surfaceRect.y, surfaceRect.width, surfaceRect.height);
-  gfx::IntRect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-
-  // The VR geometry may not cover the entire area; we need to fill with a solid color
-  // first.
-  // XXX should DrawQuad handle this on its own?  Is there a time where we wouldn't want
-  // to do this? (e.g. something like Cardboard would not require distortion so will fill
-  // the entire rect)
-  EffectChain solidEffect(aContainer);
-  solidEffect.mPrimaryEffect = new EffectSolidColor(Color(0.0, 0.0, 0.0, 1.0));
-  aManager->GetCompositor()->DrawQuad(Rect(rect), rect, solidEffect, 1.0, gfx::Matrix4x4());
-
-  // draw the temporary surface with VR distortion to the original destination
-  EffectChain vrEffect(aContainer);
-  bool skipDistortion = vrRendering || gfxEnv::VRNoDistortion();
-  if (skipDistortion) {
-    vrEffect.mPrimaryEffect = new EffectRenderTarget(surface);
-  } else {
-    vrEffect.mPrimaryEffect = new EffectVRDistortion(aHMD, surface);
-  }
-
-  gfx::Matrix4x4 scaleTransform = aContainer->GetEffectiveTransform();
-  scaleTransform.PreScale(rtBounds.width / float(surfaceRect.width),
-                          rtBounds.height / float(surfaceRect.height),
-                          1.0f);
-
-  // XXX we shouldn't use visibleRect here -- the VR distortion needs to know the
-  // full rect, not just the visible one.  Luckily, right now, VR distortion is only
-  // rendered when the element is fullscreen, so the visibleRect will be right anyway.
-  aManager->GetCompositor()->DrawQuad(Rect(rect), clipRect, vrEffect, opacity,
-                                      scaleTransform);
-
-  DUMP("<<< ContainerRenderVR [%p]\n", aContainer);
-}
-
 /* all of the prepared data that we need in RenderLayer() */
 struct PreparedData
 {
@@ -355,15 +133,6 @@ ContainerPrepare(ContainerT* aContainer,
 {
   aContainer->mPrepared = MakeUnique<PreparedData>();
   aContainer->mPrepared->mNeedsSurfaceCopy = false;
-
-  RefPtr<gfx::VRHMDInfo> hmdInfo = gfx::VRManager::Get()->GetDevice(aContainer->GetVRDeviceID());
-  if (hmdInfo && hmdInfo->GetConfiguration().IsValid()) {
-    // we're not going to do anything here; instead, we'll do it all in ContainerRender.
-    // XXX fix this; we can win with the same optimizations.  Specifically, we
-    // want to render thebes layers only once and then composite the intermeidate surfaces
-    // with different transforms twice.
-    return;
-  }
 
   /**
    * Determine which layers to draw.
@@ -760,13 +529,6 @@ ContainerRender(ContainerT* aContainer,
 {
   MOZ_ASSERT(aContainer->mPrepared);
 
-  RefPtr<gfx::VRHMDInfo> hmdInfo = gfx::VRManager::Get()->GetDevice(aContainer->GetVRDeviceID());
-  if (hmdInfo && hmdInfo->GetConfiguration().IsValid()) {
-    ContainerRenderVR(aContainer, aManager, aClipRect, hmdInfo);
-    aContainer->mPrepared = nullptr;
-    return;
-  }
-
   if (aContainer->UseIntermediateSurface()) {
     RefPtr<CompositingRenderTarget> surface;
 
@@ -891,7 +653,6 @@ void
 ContainerLayerComposite::CleanupResources()
 {
   mLastIntermediateSurface = nullptr;
-  mVRRenderTargetSet = nullptr;
   mPrepared = nullptr;
 
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
@@ -944,7 +705,6 @@ void
 RefLayerComposite::CleanupResources()
 {
   mLastIntermediateSurface = nullptr;
-  mVRRenderTargetSet = nullptr;
   mPrepared = nullptr;
 }
 

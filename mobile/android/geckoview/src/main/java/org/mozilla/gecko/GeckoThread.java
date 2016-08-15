@@ -506,7 +506,7 @@ public class GeckoThread extends Thread {
         // above, because otherwise the JNI code hasn't been loaded yet.
         ThreadUtils.postToUiThread(new Runnable() {
             @Override public void run() {
-                GeckoAppShell.registerJavaUiThread();
+                registerUiThread();
             }
         });
 
@@ -546,7 +546,7 @@ public class GeckoThread extends Thread {
         }
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     private static boolean pumpMessageLoop(final Message msg) {
         final Handler geckoHandler = ThreadUtils.sGeckoHandler;
 
@@ -608,7 +608,7 @@ public class GeckoThread extends Thread {
         return sState.isBetween(minState, maxState);
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     private static void setState(final State newState) {
         ThreadUtils.assertOnGeckoThread();
         synchronized (QUEUED_CALLS) {
@@ -617,7 +617,7 @@ public class GeckoThread extends Thread {
         }
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     private static boolean checkAndSetState(final State currentState, final State newState) {
         synchronized (QUEUED_CALLS) {
             if (sState == currentState) {
@@ -644,7 +644,7 @@ public class GeckoThread extends Thread {
     @WrapForJNI @RobocopTarget
     public static native void waitOnGecko();
 
-    @WrapForJNI(stubName = "OnPause")
+    @WrapForJNI(stubName = "OnPause", dispatchTo = "gecko")
     private static native void nativeOnPause();
 
     public static void onPause() {
@@ -656,7 +656,7 @@ public class GeckoThread extends Thread {
         }
     }
 
-    @WrapForJNI(stubName = "OnResume")
+    @WrapForJNI(stubName = "OnResume", dispatchTo = "gecko")
     private static native void nativeOnResume();
 
     public static void onResume() {
@@ -668,7 +668,7 @@ public class GeckoThread extends Thread {
         }
     }
 
-    @WrapForJNI(stubName = "CreateServices")
+    @WrapForJNI(stubName = "CreateServices", dispatchTo = "gecko")
     private static native void nativeCreateServices(String category, String data);
 
     public static void createServices(final String category, final String data) {
@@ -679,4 +679,7 @@ public class GeckoThread extends Thread {
                                  String.class, category, String.class, data);
         }
     }
+
+    // Implemented in mozglue/android/APKOpen.cpp.
+    /* package */ static native void registerUiThread();
 }

@@ -9,14 +9,19 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
+#include "nsDataHashtable.h"
 #include "mozilla/TimeStamp.h"
 #include "gfxVR.h"
 
 namespace mozilla {
+namespace layers {
+class TextureHost;
+}
 namespace gfx {
 
+class VRLayerParent;
 class VRManagerParent;
-class VRHMDInfo;
+class VRDisplayHost;
 
 class VRManager
 {
@@ -30,32 +35,38 @@ public:
   void RemoveVRManagerParent(VRManagerParent* aVRManagerParent);
 
   void NotifyVsync(const TimeStamp& aVsyncTimestamp);
-  void RefreshVRDevices();
-  RefPtr<gfx::VRHMDInfo> GetDevice(const uint32_t& aDeviceID);
+  void NotifyVRVsync(const uint32_t& aDisplayID);
+  void RefreshVRDisplays(bool aMustDispatch = false);
+  RefPtr<gfx::VRDisplayHost> GetDisplay(const uint32_t& aDisplayID);
+
+  void SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
+                   layers::PTextureParent* aTexture, const gfx::Rect& aLeftEyeRect,
+                   const gfx::Rect& aRightEyeRect);
 
 protected:
   VRManager();
   ~VRManager();
 
 private:
+  RefPtr<layers::TextureHost> mLastFrame;
 
   void Init();
   void Destroy();
 
-  void DispatchVRDeviceInfoUpdate();
-  void DispatchVRDeviceSensorUpdate();
+  void DispatchVRDisplayInfoUpdate();
 
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
 
-  typedef nsTArray<RefPtr<VRHMDManager>> VRHMDManagerArray;
-  VRHMDManagerArray mManagers;
+  typedef nsTArray<RefPtr<VRDisplayManager>> VRDisplayManagerArray;
+  VRDisplayManagerArray mManagers;
 
-  typedef nsRefPtrHashtable<nsUint32HashKey, gfx::VRHMDInfo> VRHMDInfoHashMap;
-  VRHMDInfoHashMap mVRDevices;
+  typedef nsRefPtrHashtable<nsUint32HashKey, gfx::VRDisplayHost> VRDisplayHostHashMap;
+  VRDisplayHostHashMap mVRDisplays;
 
   Atomic<bool> mInitialized;
 
+  TimeStamp mLastRefreshTime;
 };
 
 } // namespace gfx

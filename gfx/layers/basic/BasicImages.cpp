@@ -146,10 +146,10 @@ BasicPlanarYCbCrImage::GetAsSourceSurface()
     // We create the target out of mDecodedBuffer, and get a snapshot from it.
     // The draw target is destroyed on scope exit and the surface owns the data.
     RefPtr<gfx::DrawTarget> drawTarget
-      = gfxPlatform::GetPlatform()->CreateDrawTargetForData(mDecodedBuffer.get(),
-                                                            mSize,
-                                                            mStride,
-                                                            gfx::ImageFormatToSurfaceFormat(format));
+      = gfxPlatform::CreateDrawTargetForData(mDecodedBuffer.get(),
+                                             mSize,
+                                             mStride,
+                                             gfx::ImageFormatToSurfaceFormat(format));
     if (!drawTarget) {
       return nullptr;
     }

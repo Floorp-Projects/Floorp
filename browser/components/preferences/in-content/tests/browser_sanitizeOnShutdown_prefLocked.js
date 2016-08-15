@@ -25,12 +25,12 @@ add_task(function setup() {
   });
 });
 
-add_task(function test_preference_enabled_when_unlocked() {
+add_task(function* test_preference_enabled_when_unlocked() {
   yield openPreferencesViaOpenPreferencesAPI("panePrivacy", undefined, {leaveOpen: true});
   testPrefStateMatchesLockedState();
 });
 
-add_task(function test_preference_disabled_when_locked() {
+add_task(function* test_preference_disabled_when_locked() {
   Services.prefs.lockPref("privacy.sanitize.sanitizeOnShutdown");
   yield openPreferencesViaOpenPreferencesAPI("panePrivacy", undefined, {leaveOpen: true});
   testPrefStateMatchesLockedState();

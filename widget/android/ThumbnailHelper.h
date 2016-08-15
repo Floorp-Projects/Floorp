@@ -29,7 +29,6 @@ namespace mozilla {
 class ThumbnailHelper final
     : public java::ThumbnailHelper::Natives<ThumbnailHelper>
     , public java::ZoomedView::Natives<ThumbnailHelper>
-    , public UsesGeckoThreadProxy
 {
     ThumbnailHelper() = delete;
 
@@ -202,11 +201,6 @@ public:
     template<class Functor>
     static void OnNativeCall(Functor&& aCall)
     {
-        if (!aCall.IsTarget(&RequestThumbnail)) {
-            UsesGeckoThreadProxy::OnNativeCall(Move(aCall));
-            return;
-        }
-
         class IdleEvent : public nsAppShell::LambdaEvent<Functor>
         {
             using Base = nsAppShell::LambdaEvent<Functor>;

@@ -106,11 +106,16 @@ var gSearchPane = {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "click":
-        if (aEvent.target.id != "engineChildren" && aEvent.target.id != "removeEngineButton") {
+        if (aEvent.target.id != "engineChildren" &&
+            !aEvent.target.classList.contains("searchEngineAction")) {
           let engineList = document.getElementById("engineList");
           // We don't want to toggle off selection while editing keyword
-          // so proceed only when the input field is hidden
-          if (engineList.inputField.hidden) {
+          // so proceed only when the input field is hidden.
+          // We need to check that engineList.view is defined here
+          // because the "click" event listener is on <window> and the
+          // view might have been destroyed if the pane has been navigated
+          // away from.
+          if (engineList.inputField.hidden && engineList.view) {
             let selection = engineList.view.selection;
             if (selection.count > 0) {
               selection.toggleSelect(selection.currentIndex);
@@ -530,9 +535,8 @@ EngineView.prototype = {
     if (dropIndex > sourceIndex) {
       if (orientation == nsITreeView.DROP_BEFORE)
         dropIndex--;
-    } else {
-      if (orientation == nsITreeView.DROP_AFTER)
-        dropIndex++;
+    } else if (orientation == nsITreeView.DROP_AFTER) {
+      dropIndex++;
     }
 
     this._engineStore.moveEngine(sourceEngine, dropIndex);

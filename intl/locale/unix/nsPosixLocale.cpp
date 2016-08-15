@@ -6,7 +6,7 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsPosixLocale.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "plstr.h"
 #include "nsReadableUtils.h"
 
@@ -31,18 +31,18 @@ nsPosixLocale::GetPlatformLocale(const nsAString& locale, nsACString& posixLocal
 
     if (*country_code) {
       if (*extra) {
-        snprintf_literal(posix_locale,"%s_%s.%s",lang_code,country_code,extra);
+        SprintfLiteral(posix_locale,"%s_%s.%s",lang_code,country_code,extra);
       }
       else {
-        snprintf_literal(posix_locale,"%s_%s",lang_code,country_code);
+        SprintfLiteral(posix_locale,"%s_%s",lang_code,country_code);
       }
     }
     else {
       if (*extra) {
-        snprintf_literal(posix_locale,"%s.%s",lang_code,extra);
+        SprintfLiteral(posix_locale,"%s.%s",lang_code,extra);
       }
       else {
-        snprintf_literal(posix_locale,"%s",lang_code);
+        SprintfLiteral(posix_locale,"%s",lang_code);
       }
     }
 
@@ -84,10 +84,10 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsAString& locale)
     }
 
     if (*country_code) {
-      snprintf_literal(posix_locale,"%s-%s",lang_code,country_code);
+      SprintfLiteral(posix_locale,"%s-%s",lang_code,country_code);
     } 
     else {
-      snprintf_literal(posix_locale,"%s",lang_code);
+      SprintfLiteral(posix_locale,"%s",lang_code);
     }
 
     CopyASCIItoUTF16(nsDependentCString(posix_locale), locale);

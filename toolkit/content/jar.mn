@@ -102,7 +102,7 @@ toolkit.jar:
    content/global/bindings/toolbar.xml         (widgets/toolbar.xml)
    content/global/bindings/toolbarbutton.xml   (widgets/toolbarbutton.xml)
 *  content/global/bindings/tree.xml            (widgets/tree.xml)
-*  content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
+   content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
    content/global/bindings/videocontrols.css   (widgets/videocontrols.css)
 *  content/global/bindings/wizard.xml          (widgets/wizard.xml)
 #ifdef XP_MACOSX

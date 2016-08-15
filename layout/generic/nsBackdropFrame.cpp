@@ -50,16 +50,6 @@ nsBackdropFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  // The WebVR specific render path in nsContainerLayerComposite
-  // results in an alternating frame strobing effect when an nsBackdropFrame is
-  // rendered.
-  // Currently, VR content is composed of a fullscreen canvas element that
-  // is expected to cover the entire viewport so a backdrop should not
-  // be necessary.
-  if (GetStateBits() & NS_FRAME_HAS_VR_CONTENT) {
-    return;
-  }
-
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 }
 

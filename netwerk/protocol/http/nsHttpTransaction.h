@@ -186,10 +186,10 @@ private:
     Classifier Classify();
     void       CancelPipeline(uint32_t reason);
 
-    static NS_METHOD ReadRequestSegment(nsIInputStream *, void *, const char *,
-                                        uint32_t, uint32_t, uint32_t *);
-    static NS_METHOD WritePipeSegment(nsIOutputStream *, void *, char *,
-                                      uint32_t, uint32_t, uint32_t *);
+    static nsresult ReadRequestSegment(nsIInputStream *, void *, const char *,
+                                       uint32_t, uint32_t, uint32_t *);
+    static nsresult WritePipeSegment(nsIOutputStream *, void *, char *,
+                                     uint32_t, uint32_t, uint32_t *);
 
     bool TimingEnabled() const { return mCaps & NS_HTTP_TIMING_ENABLED; }
 

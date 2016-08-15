@@ -34,7 +34,7 @@
 #include "nsURLHelper.h"
 #include "prnetdb.h"
 #include "sslt.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsSocketTransportService2.h"
 #include "nsNetUtil.h"
 

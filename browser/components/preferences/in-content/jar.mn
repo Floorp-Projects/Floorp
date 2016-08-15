@@ -7,10 +7,10 @@ browser.jar:
 *  content/browser/preferences/in-content/preferences.xul
    content/browser/preferences/in-content/subdialogs.js
 
-*  content/browser/preferences/in-content/main.js
+   content/browser/preferences/in-content/main.js
    content/browser/preferences/in-content/privacy.js
-*  content/browser/preferences/in-content/advanced.js
-*  content/browser/preferences/in-content/applications.js
+   content/browser/preferences/in-content/advanced.js
+   content/browser/preferences/in-content/applications.js
    content/browser/preferences/in-content/content.js
    content/browser/preferences/in-content/sync.js
    content/browser/preferences/in-content/security.js

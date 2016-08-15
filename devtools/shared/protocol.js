@@ -4,14 +4,13 @@
 
 "use strict";
 
-var { Cu, components } = require("chrome");
-var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var {Class} = require("sdk/core/heritage");
 var {EventTarget} = require("sdk/event/target");
 var events = require("sdk/event/core");
 var object = require("sdk/util/object");
+var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
 
 exports.emit = events.emit;
 
@@ -1206,7 +1205,7 @@ var Front = Class({
       deferred,
       to: to || this.actorID,
       type,
-      stack: components.stack,
+      stack: getStack(),
     });
     this.send(packet);
     return deferred.promise;
@@ -1252,7 +1251,7 @@ var Front = Class({
     }
 
     let { deferred, stack } = this._requests.shift();
-    Cu.callFunctionWithAsyncStack(() => {
+    callFunctionWithAsyncStack(() => {
       if (packet.error) {
         // "Protocol error" is here to avoid TBPL heuristics. See also
         // https://mxr.mozilla.org/webtools-central/source/tbpl/php/inc/GeneralErrorFilter.php

@@ -15,7 +15,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
  * This class is vastly copied from {@link android.widget.OverScroller} but decouples the time
  * from the app time so it can be specified manually.
  */
-@WrapForJNI(allowMultithread = true, catchException = true)
+@WrapForJNI(exceptionMode = "nsresult")
 public class StackScroller {
     private int mMode;
 

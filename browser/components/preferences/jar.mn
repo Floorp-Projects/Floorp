@@ -9,7 +9,7 @@ browser.jar:
     content/browser/preferences/blocklists.js
 *   content/browser/preferences/colors.xul
 *   content/browser/preferences/cookies.xul
-*   content/browser/preferences/cookies.js
+    content/browser/preferences/cookies.js
 *   content/browser/preferences/connection.xul
     content/browser/preferences/connection.js
     content/browser/preferences/donottrack.xul
@@ -20,7 +20,7 @@ browser.jar:
 *   content/browser/preferences/languages.xul
     content/browser/preferences/languages.js
     content/browser/preferences/permissions.xul
-*   content/browser/preferences/permissions.js
+    content/browser/preferences/permissions.js
     content/browser/preferences/sanitize.xul
     content/browser/preferences/sanitize.js
     content/browser/preferences/selectBookmark.xul

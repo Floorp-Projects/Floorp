@@ -60,13 +60,13 @@ function runTest(win, searchTerm, cookies, matches) {
 
 
     // number of cookies should match injected cookies
-    var cnt = 0,
-        enumerator = cm.enumerator;
-    while (enumerator.hasMoreElements()) {
-        cnt++;
-        enumerator.getNext();
+    var injectedCookies = 0,
+        injectedEnumerator = cm.enumerator;
+    while (injectedEnumerator.hasMoreElements()) {
+        injectedCookies++;
+        injectedEnumerator.getNext();
     }
-    is(cnt, cookies, "Number of cookies match injected cookies");
+    is(injectedCookies, cookies, "Number of cookies match injected cookies");
 
     // "delete all cookies" should be enabled
     isDisabled(win, false);
@@ -126,13 +126,13 @@ function runTest(win, searchTerm, cookies, matches) {
     is(win.gCookiesWindow._view.rowCount, 0, "Deleted all cookies");
 
     // check that datastore is also at 0
-    var cnt = 0,
-        enumerator = cm.enumerator;
-    while (enumerator.hasMoreElements()) {
-        cnt++;
-        enumerator.getNext();
+    var remainingCookies = 0,
+        remainingEnumerator = cm.enumerator;
+    while (remainingEnumerator.hasMoreElements()) {
+        remainingCookies++;
+        remainingEnumerator.getNext();
     }
-    is(cnt, 0, "Zero cookies remain");
+    is(remainingCookies, 0, "Zero cookies remain");
 
     // "delete all cookies" should be disabled
     isDisabled(win, true);

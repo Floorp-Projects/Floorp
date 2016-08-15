@@ -179,6 +179,8 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
     return NS_ERROR_FAILURE;
   }
 
+  // SetObjects() expects an nsIMutableArray, which is why we can't directly use
+  // |certList| and have to add an extra layer of indirection.
   nsCOMPtr<nsIMutableArray> paramBlockArray = nsArrayBase::Create();
   if (!paramBlockArray) {
     return NS_ERROR_FAILURE;

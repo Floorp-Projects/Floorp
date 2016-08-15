@@ -102,6 +102,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3'):
     DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3', 'cocoa'):
+    DEFINES['HAVE_SHELL_SERVICE'] = 1
+
 EXTRA_PP_JS_MODULES += [
     'AppConstants.jsm',
 ]
