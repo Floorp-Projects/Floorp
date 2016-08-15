@@ -256,7 +256,7 @@ static const uint32_t REPLACE_UTF8 = 0xFFFD;
 
 // If making changes to this algorithm, make sure to also update
 // LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
-template <InflateUTF8Action action>
+template <InflateUTF8Action Action>
 static bool
 InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, size_t* dstlenp,
                           bool* isAsciip)
@@ -271,7 +271,7 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
         uint32_t v = uint32_t(src[i]);
         if (!(v & 0x80)) {
             // ASCII code unit.  Simple copy.
-            if (action == Copy)
+            if (Action == Copy)
                 dst[j] = char16_t(v);
 
         } else {
@@ -283,14 +283,14 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
 
         #define INVALID(report, arg, n2)                                \
             do {                                                        \
-                if (action == CountAndReportInvalids) {                 \
+                if (Action == CountAndReportInvalids) {                 \
                     report(cx, arg);                                    \
                     return false;                                       \
                 } else {                                                \
-                    if (action == Copy)                                 \
+                    if (Action == Copy)                                 \
                         dst[j] = char16_t(REPLACE_UTF8);                \
                     else                                                \
-                        MOZ_ASSERT(action == CountAndIgnoreInvalids);   \
+                        MOZ_ASSERT(Action == CountAndIgnoreInvalids);   \
                     n = n2;                                             \
                     goto invalidMultiByteCodeUnit;                      \
                 }                                                       \
@@ -323,17 +323,17 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
             v = JS::Utf8ToOneUcs4Char((uint8_t*)&src[i], n);
             if (v < 0x10000) {
                 // The n-byte UTF8 code unit will fit in a single char16_t.
-                if (action == Copy)
+                if (Action == Copy)
                     dst[j] = char16_t(v);
 
             } else {
                 v -= 0x10000;
                 if (v <= 0xFFFFF) {
                     // The n-byte UTF8 code unit will fit in two char16_t units.
-                    if (action == Copy)
+                    if (Action == Copy)
                         dst[j] = char16_t((v >> 10) + 0xD800);
                     j++;
-                    if (action == Copy)
+                    if (Action == Copy)
                         dst[j] = char16_t((v & 0x3FF) + 0xDC00);
 
                 } else {
