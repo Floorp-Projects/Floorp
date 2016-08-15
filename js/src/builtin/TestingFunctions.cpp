@@ -1547,14 +1547,17 @@ DumpHeap(JSContext* cx, unsigned argc, Value* vp)
         Value v = args[i];
         if (v.isString()) {
             if (!fuzzingSafe) {
-                JSString* str = v.toString();
+                RootedString str(cx, v.toString());
                 JSAutoByteString fileNameBytes;
                 if (!fileNameBytes.encodeLatin1(cx, str))
                     return false;
                 const char* fileName = fileNameBytes.ptr();
                 dumpFile = fopen(fileName, "w");
                 if (!dumpFile) {
-                    JS_ReportError(cx, "can't open %s", fileName);
+                    fileNameBytes.clear();
+                    if (!fileNameBytes.encodeUtf8(cx, str))
+                        return false;
+                    JS_ReportErrorUTF8(cx, "can't open %s", fileNameBytes.ptr());
                     return false;
                 }
             }
