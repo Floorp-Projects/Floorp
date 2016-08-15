@@ -2195,7 +2195,7 @@ nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
 nsresult
 nsStyleImage::StartDecoding() const
 {
-  if ((mType == eStyleImageType_Image) && mImage) {
+  if (mType == eStyleImageType_Image) {
     return mImage->StartDecoding();
   }
   return NS_OK;
