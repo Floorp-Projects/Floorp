@@ -863,7 +863,7 @@ NS_WriteSegmentThunk(nsIInputStream* aInStr,
                      aCountWritten);
 }
 
-NS_METHOD
+nsresult
 NS_FillArray(FallibleTArray<char>& aDest, nsIInputStream* aInput,
              uint32_t aKeep, uint32_t* aNewBytes)
 {
