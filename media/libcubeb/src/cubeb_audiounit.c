@@ -50,12 +50,6 @@ typedef UInt32  AudioFormatFlags;
 #define AU_OUT_BUS    0
 #define AU_IN_BUS     1
 
-#if TARGET_OS_IPHONE
-#define CUBEB_AUDIOUNIT_SUBTYPE kAudioUnitSubType_RemoteIO
-#else
-#define CUBEB_AUDIOUNIT_SUBTYPE kAudioUnitSubType_HALOutput
-#endif
-
 //#define LOGGING_ENABLED
 #ifdef LOGGING_ENABLED
 #define LOG(...) do {                           \
@@ -829,9 +823,23 @@ audiounit_create_unit(AudioUnit * unit,
   AudioComponent comp;
   UInt32 enable;
   AudioDeviceID devid;
+  bool use_default_output = false;
 
   desc.componentType = kAudioUnitType_Output;
-  desc.componentSubType = CUBEB_AUDIOUNIT_SUBTYPE;
+#if TARGET_OS_IPHONE
+  desc.componentSubType = kAudioUnitSubType_RemoteIO;
+#else
+  // Use the DefaultOutputUnit for output when no device is specified
+  // so we retain automatic output device switching when the default
+  // changes.  Once we have complete support for device notifications
+  // and switching, we can use the AUHAL for everything.
+  use_default_output = device == NULL && !is_input;
+  if (use_default_output) {
+    desc.componentSubType = kAudioUnitSubType_DefaultOutput;
+  } else {
+    desc.componentSubType = kAudioUnitSubType_HALOutput;
+  }
+#endif
   desc.componentManufacturer = kAudioUnitManufacturer_Apple;
   desc.componentFlags = 0;
   desc.componentFlagsMask = 0;
@@ -844,32 +852,34 @@ audiounit_create_unit(AudioUnit * unit,
     return CUBEB_ERROR;
   }
 
-  enable = 1;
-  if (AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_EnableIO,
-        is_input ? kAudioUnitScope_Input : kAudioUnitScope_Output,
-        is_input ? AU_IN_BUS : AU_OUT_BUS, &enable, sizeof(UInt32)) != noErr) {
-    return CUBEB_ERROR;
-  }
+  if (!use_default_output) {
+    enable = 1;
+    if (AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_EnableIO,
+                             is_input ? kAudioUnitScope_Input : kAudioUnitScope_Output,
+                             is_input ? AU_IN_BUS : AU_OUT_BUS, &enable, sizeof(UInt32)) != noErr) {
+      return CUBEB_ERROR;
+    }
 
-  enable = 0;
-  if (AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_EnableIO,
-        is_input ? kAudioUnitScope_Output : kAudioUnitScope_Input,
-        is_input ? AU_OUT_BUS : AU_IN_BUS, &enable, sizeof(UInt32)) != noErr) {
-    return CUBEB_ERROR;
-  }
+    enable = 0;
+    if (AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_EnableIO,
+                             is_input ? kAudioUnitScope_Output : kAudioUnitScope_Input,
+                             is_input ? AU_OUT_BUS : AU_IN_BUS, &enable, sizeof(UInt32)) != noErr) {
+      return CUBEB_ERROR;
+    }
 
-  if (device == NULL) {
-    devid = audiounit_get_default_device_id(is_input ? CUBEB_DEVICE_TYPE_INPUT
-                                                     : CUBEB_DEVICE_TYPE_OUTPUT);
-  } else {
-    devid = (AudioDeviceID)device;
-  }
-  int err = AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_CurrentDevice,
-                                 kAudioUnitScope_Global,
-                                 is_input ? AU_IN_BUS : AU_OUT_BUS,
-                                 &devid, sizeof(AudioDeviceID));
-  if (err != noErr) {
-    return CUBEB_ERROR;
+    if (device == NULL) {
+      assert(is_input);
+      devid = audiounit_get_default_device_id(CUBEB_DEVICE_TYPE_INPUT);
+    } else {
+      devid = (AudioDeviceID)device;
+    }
+    int err = AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_CurrentDevice,
+                                   kAudioUnitScope_Global,
+                                   is_input ? AU_IN_BUS : AU_OUT_BUS,
+                                   &devid, sizeof(AudioDeviceID));
+    if (err != noErr) {
+      return CUBEB_ERROR;
+    }
   }
 
   return CUBEB_OK;
