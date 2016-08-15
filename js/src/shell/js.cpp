@@ -699,6 +699,9 @@ ForwardingPromiseRejectionTrackerCallback(JSContext* cx, JS::HandleObject promis
     args[0].setObject(*promise);
     args[1].setInt32(static_cast<int32_t>(state));
 
+    if (!JS_WrapValue(cx, args[0]))
+        return;
+
     RootedValue rval(cx);
     if (!Call(cx, callback, UndefinedHandleValue, args, &rval))
         JS_ClearPendingException(cx);
