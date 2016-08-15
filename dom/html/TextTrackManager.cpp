@@ -561,7 +561,7 @@ TextTrackManager::TimeMarchesOn()
   mTimeMarchesOnDispatched = false;
 
   // Early return if we don't have any TextTracks.
-  if (mTextTracks->Length() == 0) {
+  if (!mTextTracks || mTextTracks->Length() == 0) {
     return;
   }
 
