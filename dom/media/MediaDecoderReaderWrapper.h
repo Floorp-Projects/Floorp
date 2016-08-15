@@ -47,8 +47,7 @@ private:
   MediaCallbackExc<WaitCallbackData> mVideoWaitCallback;
 
 public:
-  MediaDecoderReaderWrapper(bool aIsRealTime,
-                            AbstractThread* aOwnerThread,
+  MediaDecoderReaderWrapper(AbstractThread* aOwnerThread,
                             MediaDecoderReader* aReader);
 
   media::TimeUnit StartTime() const;
