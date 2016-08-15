@@ -451,8 +451,9 @@ obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 
     /* Step 3. */
     if (!args[1].isObjectOrNull()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "Object.setPrototypeOf", "an object or null", InformalValueTypeName(args[1]));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "Object.setPrototypeOf", "an object or null",
+                                  InformalValueTypeName(args[1]));
         return false;
     }
 

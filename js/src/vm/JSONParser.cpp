@@ -95,8 +95,8 @@ JSONParser<CharT>::error(const char* msg)
         char lineNumber[MaxWidth];
         SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE,
-                             msg, lineNumber, columnNumber);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE,
+                                  msg, lineNumber, columnNumber);
     }
 }
 

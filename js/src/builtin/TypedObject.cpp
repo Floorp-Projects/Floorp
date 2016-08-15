@@ -50,8 +50,8 @@ static const JSFunctionSpec TypedObjectMethods[] = {
 static void
 ReportCannotConvertTo(JSContext* cx, HandleValue fromValue, const char* toType)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                         InformalValueTypeName(fromValue), toType);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                              InformalValueTypeName(fromValue), toType);
 }
 
 template<class T>
@@ -268,8 +268,8 @@ ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             args.callee().getClass()->name, "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  args.callee().getClass()->name, "0", "s");
         return false;
     }
 
@@ -379,9 +379,8 @@ js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
     Rooted<ReferenceTypeDescr*> descr(cx, &args.callee().as<ReferenceTypeDescr>());
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_MORE_ARGS_NEEDED,
-                             descr->typeName(), "0", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  descr->typeName(), "0", "s");
         return false;
     }
 
@@ -1591,14 +1590,12 @@ ReportTypedObjTypeError(JSContext* cx,
                         HandleTypedObject obj)
 {
     // Serialize type string of obj
-    char* typeReprStr = JS_EncodeString(cx, &obj->typeDescr().stringRepr());
+    RootedAtom typeReprAtom(cx, &obj->typeDescr().stringRepr());
+    UniqueChars typeReprStr(JS_EncodeStringToUTF8(cx, typeReprAtom));
     if (!typeReprStr)
         return false;
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                         errorNumber, typeReprStr);
-
-    JS_free(cx, (void*) typeReprStr);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, typeReprStr.get());
     return false;
 }
 
@@ -1700,14 +1697,11 @@ ReportPropertyError(JSContext* cx,
     if (!str)
         return false;
 
-    char* propName = JS_EncodeString(cx, str);
+    UniqueChars propName(JS_EncodeStringToUTF8(cx, str));
     if (!propName)
         return false;
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                         errorNumber, propName);
-
-    JS_free(cx, propName);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, propName.get());
     return false;
 }
 

@@ -1706,8 +1706,8 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
                 char saveLengthStr[16];
                 SprintfLiteral(saveLengthStr,"%" PRIu32, saveLength);
 
-                JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
-                                     loadLengthStr, saveLengthStr);
+                JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
+                                          loadLengthStr, saveLengthStr);
                 return false;
             }
 

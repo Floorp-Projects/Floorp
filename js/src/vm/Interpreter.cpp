@@ -4125,8 +4125,7 @@ DEFAULT()
 {
     char numBuf[12];
     SprintfLiteral(numBuf, "%d", *REGS.pc);
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                         JSMSG_BAD_BYTECODE, numBuf);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_BYTECODE, numBuf);
     goto error;
 }
 

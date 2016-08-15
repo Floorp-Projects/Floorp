@@ -122,8 +122,8 @@ JS::CallArgs::requireAtLeast(JSContext* cx, const char* fnname, unsigned require
     if (length() < required) {
         char numArgsStr[40];
         SprintfLiteral(numArgsStr, "%u", required - 1);
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             fnname, numArgsStr, required == 2 ? "" : "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  fnname, numArgsStr, required == 2 ? "" : "s");
         return false;
     }
 
@@ -1589,10 +1589,10 @@ JS_PUBLIC_API(bool)
 JS::GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args, JSType *result)
 {
     if (!args.get(0).isString()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "Symbol.toPrimitive",
-                             "\"string\", \"number\", or \"default\"",
-                             InformalValueTypeName(args.get(0)));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "Symbol.toPrimitive",
+                                  "\"string\", \"number\", or \"default\"",
+                                  InformalValueTypeName(args.get(0)));
         return false;
     }
 
@@ -1731,8 +1731,8 @@ JS_GetConstructor(JSContext* cx, HandleObject proto)
     if (!GetProperty(cx, proto, proto, cx->names().constructor, &cval))
         return nullptr;
     if (!IsFunctionObject(cval)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
-                             proto->getClass()->name);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
+                                  proto->getClass()->name);
         return nullptr;
     }
     return &cval.toObject();

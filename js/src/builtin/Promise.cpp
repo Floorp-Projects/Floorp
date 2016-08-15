@@ -593,7 +593,7 @@ CommonStaticResolveRejectImpl(JSContext* cx, unsigned argc, Value* vp, ResolveOr
         const char* msg = mode == ResolveMode
                           ? "Receiver of Promise.resolve call"
                           : "Receiver of Promise.reject call";
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, msg);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, msg);
         return false;
     }
     RootedValue cVal(cx, args.thisv());
