@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const { on, off } = require("sdk/event/core");
 const { DebuggerClient } = require("devtools/shared/client/main");
 
@@ -73,11 +75,11 @@ function onToolboxCreated(eventId, toolbox) {
   let transport = client._transport;
 
   transport.on("send", send1);
-  transport.on("onPacket", onPacket1);
+  transport.on("packet", onPacket1);
 
   client.addOneTimeListener("closed", event => {
     transport.off("send", send1);
-    transport.off("onPacket", onPacket1);
+    transport.off("packet", onPacket1);
   });
 }
 
@@ -97,10 +99,10 @@ function onDebuggerClientConnect(client) {
   let transport = client._transport;
 
   transport.on("send", send2);
-  transport.on("onPacket", onPacket2);
+  transport.on("packet", onPacket2);
 
   client.addOneTimeListener("closed", event => {
     transport.off("send", send2);
-    transport.off("onPacket", onPacket2);
+    transport.off("packet", onPacket2);
   });
 }

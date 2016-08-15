@@ -255,6 +255,9 @@ public:
   size_t SizeOfAudioQueue() const;
 
 private:
+  static const char* ToStateStr(State aState);
+  const char* ToStateStr();
+
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
   bool OnTaskQueue() const;

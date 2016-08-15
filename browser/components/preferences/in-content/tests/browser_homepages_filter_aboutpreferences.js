@@ -1,4 +1,4 @@
-add_task(function() {
+add_task(function*() {
   is(gBrowser.currentURI.spec, "about:blank", "Test starts with about:blank open");
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
   yield openPreferencesViaOpenPreferencesAPI("paneGeneral", null, {leaveOpen: true});

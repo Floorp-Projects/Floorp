@@ -24,7 +24,6 @@ devtools.jar:
     content/shared/theme-switching.js (shared/theme-switching.js)
     content/shared/frame-script-utils.js (shared/frame-script-utils.js)
     content/styleeditor/styleeditor.xul (styleeditor/styleeditor.xul)
-    content/styleeditor/styleeditor.css (styleeditor/styleeditor.css)
     content/storage/storage.xul (storage/storage.xul)
     content/inspector/fonts/fonts.js (inspector/fonts/fonts.js)
     content/inspector/layout/layout.js (inspector/layout/layout.js)

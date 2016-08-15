@@ -205,11 +205,6 @@ AndroidBridge::AndroidBridge()
     mMessageQueueMessages = jEnv->GetFieldID(
             msgQueueClass.Get(), "mMessages", "Landroid/os/Message;");
 
-    mOpenedGraphicsLibraries = false;
-    mHasNativeBitmapAccess = false;
-    mHasNativeWindowAccess = false;
-    mHasNativeWindowFallback = false;
-
 #ifdef MOZ_WEBSMS_BACKEND
     AutoJNIClass smsMessage(jEnv, "android/telephony/SmsMessage");
     mAndroidSmsMessageClass = smsMessage.getGlobalRef();
@@ -221,17 +216,6 @@ AndroidBridge::AndroidBridge()
 
     if (!GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &mAPIVersion, jEnv)) {
         ALOG_BRIDGE("Failed to find API version");
-    }
-
-    AutoJNIClass surface(jEnv, "android/view/Surface");
-    jSurfaceClass = surface.getGlobalRef();
-    if (mAPIVersion <= 8 /* Froyo */) {
-        jSurfacePointerField = surface.getField("mSurface", "I");
-    } else if (mAPIVersion > 8 && mAPIVersion < 19 /* KitKat */) {
-        jSurfacePointerField = surface.getField("mNativeSurface", "I");
-    } else {
-        // We don't know how to get this, just set it to 0
-        jSurfacePointerField = 0;
     }
 
     AutoJNIClass channels(jEnv, "java/nio/channels/Channels");
@@ -639,14 +623,6 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
 
     result.Assign(nsJNIString(jstr, jEnv));
     return true;
-}
-
-void*
-AndroidBridge::GetNativeSurface(JNIEnv* env, jobject surface) {
-    if (!env || !mHasNativeWindowFallback || !jSurfacePointerField)
-        return nullptr;
-
-    return (void*)env->GetIntField(surface, jSurfacePointerField);
 }
 
 namespace mozilla {

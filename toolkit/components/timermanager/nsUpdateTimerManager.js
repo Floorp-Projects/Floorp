@@ -271,9 +271,8 @@ TimerManager.prototype = {
       this._timer.initWithCallback(this, interval,
                                    Ci.nsITimer.TYPE_REPEATING_SLACK);
       this.lastTimerReset = Date.now();
-    } else {
-      if (Date.now() + interval < this.lastTimerReset + this._timer.delay)
-        this._timer.delay = Math.max(this.lastTimerReset + interval - Date.now(), 0);
+    } else if (Date.now() + interval < this.lastTimerReset + this._timer.delay) {
+      this._timer.delay = Math.max(this.lastTimerReset + interval - Date.now(), 0);
     }
   },
 

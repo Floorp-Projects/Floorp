@@ -40,7 +40,7 @@ function test() {
     }
     try {
       Services.ww.unregisterNotification(observer);
-    } catch(e) {
+    } catch (e) {
       // Do nothing, if the test was successful the above line should fail silently.
     }
   });

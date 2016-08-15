@@ -193,7 +193,7 @@ def docker_worker_setup(config, test, taskdesc):
 
     # assemble the command line
 
-    command = worker['command'] = ["bash", "/home/worker/bin/test.sh"]
+    command = ["bash", "/home/worker/bin/test.sh"]
     if mozharness.get('no-read-buildbot-config'):
         command.append("--no-read-buildbot-config")
     command.extend([
@@ -218,3 +218,5 @@ def docker_worker_setup(config, test, taskdesc):
         download_symbols = mozharness['download-symbols']
         download_symbols = {True: 'true', False: 'false'}.get(download_symbols, download_symbols)
         command.append('--download-symbols=' + download_symbols)
+
+    worker['command'] = command

@@ -55,19 +55,19 @@
 "filename": "genisoimage.tar.xz"
 },
 {
-"size": 60778437,
-"visibility": "public",
-"digest": "2d5d300dd0d829012953ca0dd70b0abfda4e848ff03450326cf0c10eac2a71e37275b824597641f0f536b97b754bc81b10f9dbbb73ff725412858a7c2b9df6a7",
+"version": "gecko rustc 1.10.0 (cfcb716cf 2016-07-03)",
+"size": 102276708,
+"digest": "8cc9ea8347fc7e6e6fdb15a8fd1faae977f1235a426b879b3f9128ec91d8f2b6268297ce80bf4eceb47738bd40bfeda13f143dc3fe85f1434b13adfbc095ab90",
 "algorithm": "sha512",
-"filename": "rust-std-lib.tar.bz2",
+"filename": "rustc.tar.xz",
 "unpack": true
 },
 {
-"size": 36038146,
+"size": 53754194,
 "visibility": "public",
-"digest": "b967ba81cb08ce4c3a18e3f8411365ee775861df1ba7f60bcaccd03f940732ee9c4c622cd3163198abb36b2124cde550c61b5d153f1ae8a9107b382ddf660895",
+"digest": "d861a8c857e5cbc98318951b009c82cd88cbf151f1f5ad83d140e5e662b92c1ae1250c71c5d4cd29ebbcb4efa360a2ed4a6eb4db6281ecfb313038b5487eb1d2",
 "algorithm": "sha512",
-"filename": "rustc-linux64.tar.bz2",
+"filename": "rust-std-lib-x86_64-apple-darwin.tar.bz2",
 "unpack": true
 }
 ]

@@ -59,17 +59,15 @@ function check_autoplay_audio_pause_state(expectedPauseState) {
     } else {
       ok(true, "Audio is resumed correctly.");
     }
+  } else if (expectedPauseState) {
+    autoPlay.onpause = function () {
+      autoPlay.onpause = null;
+      ok(true, "Audio is paused correctly, checking from onpause.");
+    }
   } else {
-    if (expectedPauseState) {
-      autoPlay.onpause = function () {
-        autoPlay.onpause = null;
-        ok(true, "Audio is paused correctly, checking from onpause.");
-      }
-    } else {
-      autoPlay.onplay = function () {
-        autoPlay.onplay = null;
-        ok(true, "Audio is resumed correctly, checking from onplay.");
-      }
+    autoPlay.onplay = function () {
+      autoPlay.onplay = null;
+      ok(true, "Audio is resumed correctly, checking from onplay.");
     }
   }
 }
