@@ -296,14 +296,20 @@ osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc, Value* vp)
         // Must opt in to use shared memory.  For now, don't.
         //
         // See further comments in FileAsTypedArray, above.
-        JS_ReportError(cx, "can't write %s: shared memory buffer", filename.ptr());
+        filename.clear();
+        if (!filename.encodeUtf8(cx, str))
+            return false;
+        JS_ReportErrorUTF8(cx, "can't write %s: shared memory buffer", filename.ptr());
         return false;
     }
     void* buf = obj->viewDataUnshared();
     if (fwrite(buf, obj->bytesPerElement(), obj->length(), file) != obj->length() ||
         !autoClose.release())
     {
-        JS_ReportError(cx, "can't write %s", filename.ptr());
+        filename.clear();
+        if (!filename.encodeUtf8(cx, str))
+            return false;
+        JS_ReportErrorUTF8(cx, "can't write %s", filename.ptr());
         return false;
     }
 

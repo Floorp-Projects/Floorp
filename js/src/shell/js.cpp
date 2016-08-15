@@ -1218,13 +1218,13 @@ Options(JSContext* cx, unsigned argc, Value* vp)
 
     JS::ContextOptions oldContextOptions = JS::ContextOptionsRef(cx);
     for (unsigned i = 0; i < args.length(); i++) {
-        JSString* str = JS::ToString(cx, args[i]);
+        RootedString str(cx, JS::ToString(cx, args[i]));
         if (!str)
             return false;
         args[i].setString(str);
 
-        JSAutoByteString opt(cx, str);
-        if (!opt)
+        JSAutoByteString opt;
+        if (!opt.encodeUtf8(cx, str))
             return false;
 
         if (strcmp(opt.ptr(), "strict") == 0)
@@ -1236,11 +1236,11 @@ Options(JSContext* cx, unsigned argc, Value* vp)
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
             JS::ContextOptionsRef(cx).toggleStrictMode();
         else {
-            JS_ReportError(cx,
-                           "unknown option name '%s'."
-                           " The valid names are strict,"
-                           " werror, and strict_mode.",
-                           opt.ptr());
+            JS_ReportErrorUTF8(cx,
+                               "unknown option name '%s'."
+                               " The valid names are strict,"
+                               " werror, and strict_mode.",
+                               opt.ptr());
             return false;
         }
     }

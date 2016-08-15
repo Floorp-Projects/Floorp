@@ -382,14 +382,11 @@ js::ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg)
     if (!usage.isString()) {
         JS_ReportErrorASCII(cx, "%s", msg);
     } else {
-        JSString* str = usage.toString();
-        if (!str->ensureFlat(cx))
+        RootedString usageStr(cx, usage.toString());
+        JSAutoByteString str;
+        if (!str.encodeUtf8(cx, usageStr))
             return;
-        AutoStableStringChars chars(cx);
-        if (!chars.initTwoByte(cx, str))
-            return;
-
-        JS_ReportError(cx, "%s. Usage: %hs", msg, chars.twoByteRange().start().get());
+        JS_ReportErrorUTF8(cx, "%s. Usage: %s", msg, str.ptr());
     }
 }
 
