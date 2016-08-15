@@ -7,6 +7,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
+#include "mozilla/unused.h"
 
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -491,7 +492,8 @@ public:
 
       nsAutoCString suffix;
       row->GetUTF8String(IDX_ORIGIN_ATTRIBUTES, suffix);
-      tuple->key.mOriginAttributes.PopulateFromSuffix(suffix);
+      DebugOnly<bool> success = tuple->key.mOriginAttributes.PopulateFromSuffix(suffix);
+      MOZ_ASSERT(success);
 
       tuple->cookie =
         gCookieService->GetCookieFromRow(row, tuple->key.mOriginAttributes);
@@ -864,7 +866,8 @@ SetAppIdFromOriginAttributesSQLFunction::OnFunctionCall(
 
   rv = aFunctionArguments->GetUTF8String(0, suffix);
   NS_ENSURE_SUCCESS(rv, rv);
-  attrs.PopulateFromSuffix(suffix);
+  bool success = attrs.PopulateFromSuffix(suffix);
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
   RefPtr<nsVariant> outVar(new nsVariant());
   rv = outVar->SetAsInt32(attrs.mAppId);
@@ -896,7 +899,8 @@ SetInBrowserFromOriginAttributesSQLFunction::OnFunctionCall(
 
   rv = aFunctionArguments->GetUTF8String(0, suffix);
   NS_ENSURE_SUCCESS(rv, rv);
-  attrs.PopulateFromSuffix(suffix);
+  bool success = attrs.PopulateFromSuffix(suffix);
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
   RefPtr<nsVariant> outVar(new nsVariant());
   rv = outVar->SetAsInt32(attrs.mInIsolatedMozBrowser);
@@ -2798,7 +2802,9 @@ nsCookieService::EnsureReadComplete()
     nsAutoCString suffix;
     NeckoOriginAttributes attrs;
     stmt->GetUTF8String(IDX_ORIGIN_ATTRIBUTES, suffix);
-    attrs.PopulateFromSuffix(suffix);
+    // If PopulateFromSuffix failed we just ignore the OA attributes
+    // that we don't support
+    Unused << attrs.PopulateFromSuffix(suffix);
 
     nsCookieKey key(baseDomain, attrs);
     if (mDefaultDBState->readSet.GetEntry(key))
