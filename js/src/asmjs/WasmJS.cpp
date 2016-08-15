@@ -185,7 +185,7 @@ ThrowBadImportArg(JSContext* cx)
 static bool
 ThrowBadImportField(JSContext* cx, const char* str)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD, str);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD, str);
     return false;
 }
 
@@ -361,8 +361,8 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     SharedModule module = Compile(*bytecode, compileArgs, &error);
     if (!module) {
         if (error) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
-                                 error.get());
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
+                                      error.get());
             return false;
         }
         ReportOutOfMemory(cx);
@@ -441,7 +441,8 @@ ToNonWrappingUint32(JSContext* cx, HandleValue v, uint32_t max, const char* kind
         return false;
 
     if (dbl < 0 || dbl > max) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
+                                  kind, noun);
         return false;
     }
 
@@ -482,8 +483,8 @@ GetResizableLimits(JSContext* cx, HandleObject obj, uint32_t max, const char* ki
             return false;
 
         if (limits->initial > *limits->maximum) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
-                                 kind, "maximum size");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
+                                      kind, "maximum size");
             return false;
         }
     }
@@ -597,8 +598,8 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     SharedModule module = Compile(*bytecode, compileArgs, &error);
     if (!module) {
         if (error) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
-                                 error.get());
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
+                                      error.get());
             return false;
         }
         ReportOutOfMemory(cx);

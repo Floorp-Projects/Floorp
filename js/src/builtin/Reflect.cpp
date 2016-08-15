@@ -328,9 +328,9 @@ Reflect_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 2.
     if (!args.get(1).isObjectOrNull()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "Reflect.setPrototypeOf", "an object or null",
-                             InformalValueTypeName(args.get(1)));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "Reflect.setPrototypeOf", "an object or null",
+                                  InformalValueTypeName(args.get(1)));
         return false;
     }
     RootedObject proto(cx, args.get(1).toObjectOrNull());

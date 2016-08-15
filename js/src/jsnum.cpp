@@ -887,7 +887,7 @@ ComputePrecisionInRange(JSContext* cx, int minPrecision, int maxPrecision, doubl
 
     ToCStringBuf cbuf;
     if (char* numStr = NumberToCString(cx, &cbuf, prec, 10))
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PRECISION_RANGE, numStr);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_PRECISION_RANGE, numStr);
     return false;
 }
 

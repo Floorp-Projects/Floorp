@@ -2791,7 +2791,7 @@ ToCodePoint(JSContext* cx, HandleValue code, uint32_t* codePoint)
     if (JS::ToInteger(nextCP) != nextCP || nextCP < 0 || nextCP > 0x10FFFF) {
         ToCStringBuf cbuf;
         if (char* numStr = NumberToCString(cx, &cbuf, nextCP))
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_A_CODEPOINT, numStr);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_A_CODEPOINT, numStr);
         return false;
     }
 

@@ -1349,8 +1349,8 @@ static bool
 ArgumentRangeMismatch(JSContext* cx, const char* arg, const char* func,
                      const char* range)
 {
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_ARG_RANGE_MISMATCH, arg, func, range);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_ARG_RANGE_MISMATCH, arg, func, range);
   return false;
 }
 
@@ -1358,16 +1358,16 @@ static bool
 ArgumentTypeMismatch(JSContext* cx, const char* arg, const char* func,
                      const char* type)
 {
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_ARG_TYPE_MISMATCH, arg, func, type);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_ARG_TYPE_MISMATCH, arg, func, type);
   return false;
 }
 
 static bool
 CannotConstructError(JSContext* cx, const char* type)
 {
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_CANNOT_CONSTRUCT, type);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_CANNOT_CONSTRUCT, type);
   return false;
 }
 
@@ -1387,8 +1387,8 @@ DuplicateFieldError(JSContext* cx, Handle<JSFlatString*> name)
 static bool
 EmptyFinalizerCallError(JSContext* cx, const char* funName)
 {
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_EMPTY_FIN_CALL, funName);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_EMPTY_FIN_CALL, funName);
   return false;
 }
 
@@ -1688,8 +1688,9 @@ IncompatibleThisProto(JSContext* cx, const char* funName, HandleValue actualVal)
 static bool
 IncompatibleThisType(JSContext* cx, const char* funName, const char* actualType)
 {
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_INCOMPATIBLE_THIS_TYPE, funName, actualType);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_INCOMPATIBLE_THIS_TYPE,
+                            funName, actualType);
   return false;
 }
 
@@ -1737,8 +1738,8 @@ InvalidIndexRangeError(JSContext* cx, size_t index, size_t length)
   char lengthStr[16];
   SprintfLiteral(lengthStr,"%" PRIuSIZE, length);
 
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_INVALID_RANGE, indexStr, lengthStr);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_INVALID_RANGE, indexStr, lengthStr);
   return false;
 }
 
@@ -1822,8 +1823,8 @@ PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
 static bool
 SizeOverflow(JSContext* cx, const char* name, const char* limit)
 {
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_SIZE_OVERFLOW, name, limit);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_SIZE_OVERFLOW, name, limit);
   return false;
 }
 

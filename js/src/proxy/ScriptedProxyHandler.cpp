@@ -1262,8 +1262,8 @@ ScriptedProxyHandler::className(JSContext* cx, HandleObject proxy) const
 JSString*
 ScriptedProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                         js_Function_str, js_toString_str, "object");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                              js_Function_str, js_toString_str, "object");
     return nullptr;
 }
 
@@ -1313,8 +1313,8 @@ static bool
 ProxyCreate(JSContext* cx, CallArgs& args, const char* callerName)
 {
     if (args.length() < 2) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             callerName, "1", "s");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  callerName, "1", "s");
         return false;
     }
 
