@@ -235,9 +235,9 @@ def test_parse_arg_socket_timeout_with_multiple_values(sock_timeout_value):
 
 def test_call_harness_with_no_args_yields_num_failures(runner_class):
     with patch(
-        'marionette.runtests.MarionetteHarness.parse_args'
+        'marionette.runtests.MarionetteHarness.parse_args',
+        return_value={'tests': []}
     ) as parse_args:
-        parse_args.return_value = {'tests': []}
         failed_or_crashed = MarionetteHarness(runner_class).run()
         assert parse_args.call_count == 1
     assert failed_or_crashed == 0
@@ -271,9 +271,9 @@ def test_parsing_testvars(mach_parsed_kwargs):
          "device": {"stuff": "buzz"}
     }
     with patch(
-        'marionette.runtests.MarionetteTestRunner._load_testvars'
+        'marionette.runtests.MarionetteTestRunner._load_testvars',
+        return_value=testvars_json_loads
     ) as load:
-        load.return_value = testvars_json_loads
         runner = MarionetteTestRunner(**mach_parsed_kwargs)
         assert runner.testvars == expected_dict
         assert load.call_count == 1
@@ -285,8 +285,7 @@ def test_load_testvars_throws_expected_errors(mach_parsed_kwargs):
     with pytest.raises(IOError) as io_exc:
         runner._load_testvars()
     assert 'does not exist' in io_exc.value.message
-    with patch('os.path.exists') as exists:
-        exists.return_value = True
+    with patch('os.path.exists', return_value=True):
         with patch('__builtin__.open', mock_open(read_data='[not {valid JSON]')):
             with pytest.raises(Exception) as json_exc:
                 runner._load_testvars()
@@ -308,7 +307,7 @@ def test_crash_is_recorded_as_error(empty_marionette_test,
     assert len(result.errors) == 0
     assert len(result.failures) == 0
     assert result.testsRun == 1
-    assert result.shouldStop == False
+    assert result.shouldStop is False
     result.stopTest(empty_marionette_test)
     assert result.shouldStop == has_crashed
     if has_crashed:
@@ -342,29 +341,26 @@ def test_add_test_module(runner):
     tests = ['test_something.py', 'testSomething.js', 'bad_test.py']
     assert len(runner.tests) == 0
     for test in tests:
-        with patch ('os.path.abspath') as abspath:
-            abspath.return_value = test
+        with patch('os.path.abspath', return_value=test) as abspath:
             runner.add_test(test)
         assert abspath.called
-        assert {'filepath': test,
-                'expected': 'pass',
-                'test_container': None} in runner.tests
+        expected = {'filepath': test, 'expected': 'pass', 'test_container': None}
+        assert expected in runner.tests
     # add_test doesn't validate module names; 'bad_test.py' gets through
     assert len(runner.tests) == 3
+
 
 def test_add_test_directory(runner):
     test_dir = 'path/to/tests'
     dir_contents = [
         (test_dir, ('subdir',), ('test_a.py', 'test_a.js', 'bad_test_a.py', 'bad_test_a.js')),
-        (test_dir + '/subdir', (), ('test_b.py', 'test_b.js', 'bad_test_a.py', 'bad_test_b.js')),
+        (test_dir + '/subdir', (), ('test_b.py', 'test_b.js', 'bad_test_b.py', 'bad_test_b.js')),
     ]
     tests = list(dir_contents[0][2] + dir_contents[1][2])
     assert len(runner.tests) == 0
-    with patch('os.path.isdir') as isdir:
-        # Need to use side effect to make isdir return True for test_dir and False for tests
-        isdir.side_effect = [True] + [False for i in tests]
-        with patch('os.walk') as walk:
-            walk.return_value = dir_contents
+    # Need to use side effect to make isdir return True for test_dir and False for tests
+    with patch('os.path.isdir', side_effect=[True] + [False for t in tests]) as isdir:
+        with patch('os.walk', return_value=dir_contents) as walk:
             runner.add_test(test_dir)
     assert isdir.called and walk.called
     for test in runner.tests:
