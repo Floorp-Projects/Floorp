@@ -356,6 +356,12 @@ class ProxyContext extends ExtensionContext {
 }
 
 function findPathInObject(obj, path) {
+  // Split any nested namespace (e.g devtools.inspectedWindow) element
+  // and concatenate them into a flatten array.
+  path = path.reduce((acc, el) => {
+    return acc.concat(el.split("."));
+  }, []);
+
   for (let elt of path) {
     obj = obj[elt] || undefined;
   }

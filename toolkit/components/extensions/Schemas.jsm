@@ -1651,8 +1651,33 @@ this.Schemas = {
         }
       }
 
+      // Remove the namespace object if it is empty
       if (!Object.keys(obj).length) {
         delete dest[namespace];
+        // process the next namespace.
+        continue;
+      }
+
+      // If the nested namespaced API object (e.g devtools.inspectedWindow) is not empty,
+      // then turn `dest["nested.namespace"]` into `dest["nested"]["namespace"]`.
+      if (namespace.includes(".")) {
+        let apiObj = dest[namespace];
+        delete dest[namespace];
+
+        let nsLevels = namespace.split(".");
+        let currentObj = dest;
+        for (let nsLevel of nsLevels.slice(0, -1)) {
+          if (!currentObj[nsLevel]) {
+            // Create the namespace level if it doesn't exist yet.
+            currentObj = Cu.createObjectIn(currentObj, {defineAs: nsLevel});
+          } else {
+            // Move currentObj to the nested object if it already exists.
+            currentObj = currentObj[nsLevel];
+          }
+        }
+
+        // Copy the apiObj as the final nested level.
+        currentObj[nsLevels.pop()] = apiObj;
       }
     }
   },
