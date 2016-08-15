@@ -163,8 +163,6 @@ public:
   nsresult CreatePlaceholderNode();
 
   mozilla::dom::Element* GetRootNode() {
-    if (!mRootNode)
-      CreateRootNode();
     return mRootNode;
   }
   mozilla::dom::Element* GetPlaceholderNode() {
