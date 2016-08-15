@@ -43,7 +43,7 @@ class nsACString;
  * call to NS_StringContainerInit.  The following example shows how to use
  * a string container to call a function that takes a |nsAString &| out-param.
  *
- *   NS_METHOD GetBlah(nsAString &aBlah);
+ *   nsresult GetBlah(nsAString &aBlah);
  *
  *   nsresult MyCode()
  *   {
@@ -71,7 +71,7 @@ class nsACString;
  * The following example show how to use a string container to pass a string
  * parameter to a function taking a |const nsAString &| in-param.
  *
- *   NS_METHOD SetBlah(const nsAString &aBlah);
+ *   nsresult SetBlah(const nsAString &aBlah);
  *
  *   nsresult MyCode()
  *   {

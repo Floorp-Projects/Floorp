@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-/* static */ NS_METHOD
+/* static */ nsresult
 DebuggerOnGCRunnable::Enqueue(JSContext* aCx, const JS::GCDescription& aDesc)
 {
   auto gcEvent = aDesc.toGCEvent(aCx);
