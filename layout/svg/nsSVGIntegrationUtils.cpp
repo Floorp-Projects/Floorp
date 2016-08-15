@@ -924,6 +924,77 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
   return result;
 }
 
+DrawResult
+nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
+{
+  nsIFrame* frame = aParams.frame;
+  DrawResult result = DrawResult::SUCCESS;
+  bool hasSVGLayout = (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
+  if (!ValidateSVGFrame(aParams, hasSVGLayout, &result)) {
+    return result;
+  }
+
+  float opacity = ComputeOpacity(aParams);
+  if (opacity == 0.0f) {
+    return DrawResult::SUCCESS;
+  }
+
+  gfxContext& context = aParams.ctx;
+  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(&context);
+  nsPoint offsetToBoundingBox;
+  nsPoint toUserSpace;
+  nsPoint offsetToUserSpace;
+  SetupContextMatrix(aParams, offsetToBoundingBox, toUserSpace,
+                     offsetToUserSpace);
+
+  /* Properties are added lazily and may have been removed by a restyle,
+     so make sure all applicable ones are set again. */
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+
+  if (!effectProperties.HasValidFilter()) {
+    return DrawResult::NOT_READY;
+  }
+
+  // These are used if we require a temporary surface for a custom blend mode.
+  IntPoint targetOffset;
+  RefPtr<gfxContext> target =
+    (aParams.frame->StyleEffects()->mMixBlendMode == NS_STYLE_BLEND_NORMAL)
+    ? RefPtr<gfxContext>(&aParams.ctx).forget()
+    : CreateBlendTarget(aParams, targetOffset);
+  if (!target) {
+    return DrawResult::TEMPORARY_ERROR;
+  }
+
+  /* Paint the child and apply filters */
+  if (!aParams.builder->IsForGenerateGlyphMask()) {
+    RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
+                                       offsetToUserSpace);
+
+    nsRegion dirtyRegion = aParams.dirtyRect - offsetToBoundingBox;
+    gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(frame);
+    nsFilterInstance::PaintFilteredFrame(frame, target->GetDrawTarget(),
+                                         tm, &callback, &dirtyRegion);
+  } else {
+    target->SetMatrix(matrixAutoSaveRestore.Matrix());
+    BasicLayerManager* basic = static_cast<BasicLayerManager*>(aParams.layerManager);
+    RefPtr<gfxContext> oldCtx = basic->GetTarget();
+    basic->SetTarget(target);
+    aParams.layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
+                                          aParams.builder);
+    basic->SetTarget(oldCtx);
+  }
+
+  if (aParams.frame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+    MOZ_ASSERT(target != &aParams.ctx);
+    BlendToTarget(aParams, target, targetOffset);
+  }
+
+  return result;
+}
+
 gfxMatrix
 nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame)
 {
