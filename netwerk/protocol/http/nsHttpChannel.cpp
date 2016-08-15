@@ -7,7 +7,11 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include <inttypes.h>
+
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/Sprintf.h"
+
 #include "nsHttp.h"
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
@@ -32,7 +36,6 @@
 #include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsIStreamTransportService.h"
-#include "prprf.h"
 #include "prnetdb.h"
 #include "nsEscape.h"
 #include "nsStreamUtils.h"
@@ -836,7 +839,7 @@ nsHttpChannel::SetupTransaction()
 
     if (mResuming) {
         char byteRange[32];
-        PR_snprintf(byteRange, sizeof(byteRange), "bytes=%llu-", mStartPos);
+        SprintfLiteral(byteRange, "bytes=%" PRIu64 "-", mStartPos);
         mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(byteRange));
 
         if (!mEntityID.IsEmpty()) {
@@ -2798,7 +2801,7 @@ nsHttpChannel::SetupByteRangeRequest(int64_t partialLen)
     }
 
     char buf[64];
-    PR_snprintf(buf, sizeof(buf), "bytes=%lld-", partialLen);
+    SprintfLiteral(buf, "bytes=%" PRId64 "-", partialLen);
 
     mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
     mRequestHead.SetHeader(nsHttp::If_Range, val);
@@ -4169,7 +4172,7 @@ nsHttpChannel::AssembleCacheKey(const char *spec, uint32_t postID,
 
     if (postID) {
         char buf[32];
-        PR_snprintf(buf, sizeof(buf), "id=%x&", postID);
+        SprintfLiteral(buf, "id=%x&", postID);
         cacheKey.Append(buf);
     }
 
