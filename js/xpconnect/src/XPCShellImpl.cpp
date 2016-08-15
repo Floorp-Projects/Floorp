@@ -928,9 +928,13 @@ Process(AutoJSAPI& jsapi, const char* filename, bool forceTTY)
     } else {
         file = fopen(filename, "r");
         if (!file) {
-            JS_ReportErrorNumber(jsapi.cx(), my_GetErrorMessage, nullptr,
-                                 JSSMSG_CANT_OPEN,
-                                 filename, strerror(errno));
+            /*
+             * Use Latin1 variant here because the encoding of the return value
+             * of strerror function can be non-UTF-8.
+             */
+            JS_ReportErrorNumberLatin1(jsapi.cx(), my_GetErrorMessage, nullptr,
+                                       JSSMSG_CANT_OPEN,
+                                       filename, strerror(errno));
             gExitCode = EXITCODE_FILE_NOT_FOUND;
             return false;
         }
