@@ -156,8 +156,7 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
 }
 
 
-// static
-NS_METHOD
+/* static */ nsresult
 nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const char *dataIn,
                                   uint32_t, uint32_t aAvail, uint32_t *countRead)
 {

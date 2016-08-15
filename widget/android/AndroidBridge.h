@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <pthread.h>
 
+#include "APKOpen.h"
+
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 
@@ -128,12 +130,8 @@ public:
         LAYER_CLIENT_TYPE_GL = 2            // AndroidGeckoGLLayerClient
     };
 
-    static void RegisterJavaUiThread() {
-        sJavaUiThread = pthread_self();
-    }
-
     static bool IsJavaUiThread() {
-        return pthread_equal(pthread_self(), sJavaUiThread);
+        return pthread_equal(pthread_self(), ::getJavaUiThread());
     }
 
     static void ConstructBridge();
@@ -297,7 +295,6 @@ public:
 protected:
     static nsDataHashtable<nsStringHashKey, nsString> sStoragePaths;
 
-    static pthread_t sJavaUiThread;
     static AndroidBridge* sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback>> mSmsRequests;
     nsTArray<nsCOMPtr<nsIMobileMessageCursorCallback>> mSmsCursorRequests;

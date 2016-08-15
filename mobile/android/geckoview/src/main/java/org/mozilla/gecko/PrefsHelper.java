@@ -48,15 +48,15 @@ public final class PrefsHelper {
     @WrapForJNI
     private static final int PREF_STRING = 3;
 
-    @WrapForJNI(stubName = "GetPrefs")
+    @WrapForJNI(stubName = "GetPrefs", dispatchTo = "gecko")
     private static native void nativeGetPrefs(String[] prefNames, PrefHandler handler);
-    @WrapForJNI(stubName = "SetPref")
+    @WrapForJNI(stubName = "SetPref", dispatchTo = "gecko")
     private static native void nativeSetPref(String prefName, boolean flush, int type,
                                              boolean boolVal, int intVal, String strVal);
-    @WrapForJNI(stubName = "AddObserver")
+    @WrapForJNI(stubName = "AddObserver", dispatchTo = "gecko")
     private static native void nativeAddObserver(String[] prefNames, PrefHandler handler,
                                                  String[] prefsToObserve);
-    @WrapForJNI(stubName = "RemoveObserver")
+    @WrapForJNI(stubName = "RemoveObserver", dispatchTo = "gecko")
     private static native void nativeRemoveObserver(String[] prefToUnobserve);
 
     @RobocopTarget
@@ -208,7 +208,7 @@ public final class PrefsHelper {
         }
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     private static void callPrefHandler(final PrefHandler handler, int type, final String pref,
                                         boolean boolVal, int intVal, String strVal) {
 
@@ -241,7 +241,7 @@ public final class PrefsHelper {
         throw new IllegalArgumentException();
     }
 
-    @WrapForJNI
+    @WrapForJNI(calledFrom = "gecko")
     private synchronized static void onPrefChange(final String pref, final int type,
                                                   final boolean boolVal, final int intVal,
                                                   final String strVal) {

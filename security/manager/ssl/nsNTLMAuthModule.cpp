@@ -15,7 +15,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"

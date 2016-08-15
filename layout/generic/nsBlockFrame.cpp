@@ -33,7 +33,7 @@
 #include "nsGkAtoms.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsFloatManager.h"
 #include "prenv.h"
 #include "plstr.h"
@@ -1447,9 +1447,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
     ListTag(stdout);
     char buf[400];
-    snprintf_literal(buf,
-                     ": %" PRId64 " elapsed (%" PRId64 " per line) (%d lines; %d new lines)",
-                     delta, perLineDelta, numLines, ectc - ctc);
+    SprintfLiteral(buf,
+                   ": %" PRId64 " elapsed (%" PRId64 " per line) (%d lines; %d new lines)",
+                   delta, perLineDelta, numLines, ectc - ctc);
     printf("%s\n", buf);
   }
 #endif
@@ -6625,10 +6625,10 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     ListTag(stdout);
     char buf[400];
-    snprintf_literal(buf,
-                     ": %" PRId64 " elapsed (%" PRId64 " per line) lines=%d drawn=%d skip=%d",
-                     delta, deltaPerLine,
-                     numLines, drawnLines, numLines - drawnLines);
+    SprintfLiteral(buf,
+                   ": %" PRId64 " elapsed (%" PRId64 " per line) lines=%d drawn=%d skip=%d",
+                   delta, deltaPerLine,
+                   numLines, drawnLines, numLines - drawnLines);
     printf("%s\n", buf);
   }
 #endif

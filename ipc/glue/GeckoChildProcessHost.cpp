@@ -19,7 +19,7 @@
 #endif
 
 #include "MainThreadUtils.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "prenv.h"
 #include "nsXPCOMPrivate.h"
 
@@ -711,7 +711,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // send the child the PID so that it can open a ProcessHandle back to us.
   // probably don't want to do this in the long run
   char pidstring[32];
-  snprintf_literal(pidstring,"%d", base::Process::Current().pid());
+  SprintfLiteral(pidstring,"%d", base::Process::Current().pid());
 
   const char* const childProcessType =
       XRE_ChildProcessTypeToString(mProcessType);

@@ -51,12 +51,6 @@ extern "C" {
  */
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread(JNIEnv *jenv, jclass jc)
-{
-    AndroidBridge::RegisterJavaUiThread();
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv *jenv, jclass jc, jobject event)
 {
     // poke the appshell

@@ -241,20 +241,17 @@ CommonDialog.prototype = {
                 this.ui.infoBody.focus();
             else
                 button.focus();
-        } else {
+        } else if (this.args.promptType == "promptPassword") {
             // When the prompt is initialized, focus and select the textbox
             // contents. Afterwards, only focus the textbox.
-            if (this.args.promptType == "promptPassword") {
-                if (isInitialLoad)
-                    this.ui.password1Textbox.select();
-                else
-                    this.ui.password1Textbox.focus();
-            } else {
-                if (isInitialLoad)
-                    this.ui.loginTextbox.select();
-                else
-                    this.ui.loginTextbox.focus();
-            }
+            if (isInitialLoad)
+                this.ui.password1Textbox.select();
+            else
+                this.ui.password1Textbox.focus();
+        } else if (isInitialLoad) {
+                this.ui.loginTextbox.select();
+        } else {
+                this.ui.loginTextbox.focus();
         }
     },
 

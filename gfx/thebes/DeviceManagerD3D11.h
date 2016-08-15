@@ -68,11 +68,6 @@ private:
   void DisableD3D11AfterCrash();
 
   void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
-  bool AttemptD3D11DeviceCreationHelperInner(
-      IDXGIAdapter1* aAdapter,
-      bool aAttemptVideoSupport,
-      RefPtr<ID3D11Device>& aOutDevice,
-      HRESULT& aResOut);
   bool AttemptD3D11DeviceCreationHelper(
       mozilla::gfx::FeatureState& aD3d11,
       IDXGIAdapter1* aAdapter,
@@ -80,21 +75,14 @@ private:
       RefPtr<ID3D11Device>& aOutDevice);
 
   void AttemptWARPDeviceCreation();
-  bool AttemptWARPDeviceCreationHelper(
-      mozilla::ScopedGfxFeatureReporter& aReporterWARP,
-      RefPtr<ID3D11Device>& aOutDevice,
-      HRESULT& aResOut);
 
   mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
-  bool AttemptD3D11ContentDeviceCreationHelper(
-      IDXGIAdapter1* aAdapter,
-      RefPtr<ID3D11Device>& aOutDevice,
-      HRESULT& aResOut);
 
-  // Create a D3D11 device to be used for DXVA decoding.
-  bool CreateD3D11DecoderDeviceHelper(
-      IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice,
-      HRESULT& aResOut);
+  bool CreateDevice(IDXGIAdapter* aAdapter,
+                    D3D_DRIVER_TYPE aDriverType,
+                    UINT aFlags,
+                    HRESULT& aResOut,
+                    RefPtr<ID3D11Device>& aOutDevice);
 
   bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 

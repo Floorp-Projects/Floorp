@@ -196,7 +196,7 @@ nsUnicharStreamLoader::DetermineCharset()
   return rv;
 }
 
-NS_METHOD
+nsresult
 nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *,
                                        void *aClosure,
                                        const char *aSegment,

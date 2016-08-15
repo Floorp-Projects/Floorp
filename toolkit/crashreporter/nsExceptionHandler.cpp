@@ -14,7 +14,7 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/unused.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
 
@@ -1798,7 +1798,7 @@ InitInstallTime(nsACString& aInstallTime)
 {
   time_t t = time(nullptr);
   char buf[16];
-  snprintf_literal(buf, "%ld", t);
+  SprintfLiteral(buf, "%ld", t);
   aInstallTime = buf;
 
   return NS_OK;

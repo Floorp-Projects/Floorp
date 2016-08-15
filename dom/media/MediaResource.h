@@ -668,12 +668,12 @@ protected:
 
   void DoNotifyDataReceived();
 
-  static NS_METHOD CopySegmentToCache(nsIInputStream *aInStream,
-                                      void *aClosure,
-                                      const char *aFromSegment,
-                                      uint32_t aToOffset,
-                                      uint32_t aCount,
-                                      uint32_t *aWriteCount);
+  static nsresult CopySegmentToCache(nsIInputStream *aInStream,
+                                     void *aClosure,
+                                     const char *aFromSegment,
+                                     uint32_t aToOffset,
+                                     uint32_t aCount,
+                                     uint32_t *aWriteCount);
 
   // Main thread access only
   int64_t            mOffset;

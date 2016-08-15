@@ -224,18 +224,5 @@ protected:
     nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
 };
 
-// Class that implement native JNI methods can inherit from
-// UsesGeckoThreadProxy to have the native call forwarded
-// automatically to the Gecko thread.
-class UsesGeckoThreadProxy : public mozilla::jni::UsesNativeCallProxy
-{
-public:
-    template<class Functor>
-    static void OnNativeCall(Functor&& call)
-    {
-        nsAppShell::PostEvent(mozilla::Move(call));
-    }
-};
-
 #endif // nsAppShell_h__
 

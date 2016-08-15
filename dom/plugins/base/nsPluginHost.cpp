@@ -73,7 +73,7 @@
 #include "nsIDOMWindow.h"
 
 #include "nsNetCID.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsThreadUtils.h"
 #include "nsIInputStreamTee.h"
 #include "nsQueryObject.h"

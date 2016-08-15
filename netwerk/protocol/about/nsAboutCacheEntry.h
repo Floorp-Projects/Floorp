@@ -64,7 +64,7 @@ private:
                           nsCString &enahnceID, nsIURI **cacheUri);
         void CloseContent();
 
-        static NS_METHOD
+        static nsresult
         PrintCacheData(nsIInputStream *aInStream,
                        void *aClosure,
                        const char *aFromSegment,

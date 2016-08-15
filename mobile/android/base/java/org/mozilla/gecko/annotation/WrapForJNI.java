@@ -10,46 +10,42 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is used to tag methods that are to have wrapper methods generated in the android
- * bridge. Such methods will be protected from destruction by Proguard, and allow us to avoid writing
- * by hand large amounts of boring boilerplate.
- * An annotated Java method will have a corresponding method generated in the android bridge.
- * By default, the name of the generated method will be the same as the name of the Java method, with
- * the first letter in upper case. The stubName property may be used to specify a custom name for the
- * generated method stub.
- *
- * allowMultithreaded should be used as sparingly as possible - the resulting code will allow the
- * Java method to be invoked from the C side from multiple threads. Often, this isn't what is wanted
- * and may lead to subtle bugs.
+ * This annotation is used to tag methods that are to have wrapper methods generated.
+ * Such methods will be protected from destruction by ProGuard, and allow us to avoid
+ * writing by hand large amounts of boring boilerplate.
  */
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WrapForJNI {
-    // Optional parameter specifying the name of the generated method stub. If omitted, the name
-    // of the Java method will be used.
+    /**
+     * Skip this member when generating wrappers for a whole class.
+     */
+    boolean skip() default false;
+
+    /**
+     * Optional parameter specifying the name of the generated method stub. If omitted,
+     * the capitalized name of the Java method will be used.
+     */
     String stubName() default "";
 
     /**
-     * If set, the generated method stub will support being called from any thread via the use of
-     * GetEnvForThread. This is forced to 'true' when the annotation is used on a class, but can
-     * be overridden for individual methods.
+     * Action to take if member access returns an exception.
+     * One of "abort", "ignore", or "nsresult". "nsresult" is not supported for native
+     * methods.
      */
-    boolean allowMultithread() default false;
+    String exceptionMode() default "abort";
 
     /**
-     * If set, the generated stub will not handle uncaught exceptions.
-     * Any exception must be handled or cleared by the code calling the stub.
+     * The thread that the method will be called from.
+     * One of "any", "gecko", or "ui". Not supported for fields.
      */
-    boolean noThrow() default false;
+    String calledFrom() default "any";
 
     /**
-     * If set, uses UTF-8 strings
+     * The thread that the method call will be dispatched to.
+     * One of "current", "gecko", or "proxy". Not supported for non-native methods,
+     * fields, and constructors. Only void-return methods are supported for anything other
+     * than current thread.
      */
-    boolean narrowChars() default false;
-
-    /**
-     * If set, the generated stub will catch any exception thrown and
-     * set a passed-in nsresult to NS_ERROR_FAILURE
-     */
-    boolean catchException() default false;
+    String dispatchTo() default "current";
 }

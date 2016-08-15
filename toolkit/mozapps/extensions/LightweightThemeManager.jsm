@@ -365,12 +365,10 @@ this.LightweightThemeManager = {
         AddonManagerPrivate.callAddonListeners("onOperationCancelled",
                                                new AddonWrapper(this.getUsedTheme(next)));
       }
-      else {
-        if (id == current.id) {
-          AddonManagerPrivate.callAddonListeners("onOperationCancelled",
-                                                 new AddonWrapper(current));
-          return;
-        }
+      else if (id == current.id) {
+        AddonManagerPrivate.callAddonListeners("onOperationCancelled",
+                                               new AddonWrapper(current));
+        return;
       }
     }
     catch (e) {

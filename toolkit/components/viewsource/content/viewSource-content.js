@@ -648,21 +648,19 @@ var ViewSourceContent = {
             break;
           }
 
-        } else {
-          if (curLine == lineNumber && !("range" in result)) {
-            result.range = content.document.createRange();
-            result.range.setStart(textNode, curPos);
+        } else if (curLine == lineNumber && !("range" in result)) {
+          result.range = content.document.createRange();
+          result.range.setStart(textNode, curPos);
 
-            // This will always be overridden later, except when we look for
-            // the very last line in the file (this is the only line that does
-            // not end with \n).
-            result.range.setEndAfter(pre.lastChild);
+          // This will always be overridden later, except when we look for
+          // the very last line in the file (this is the only line that does
+          // not end with \n).
+          result.range.setEndAfter(pre.lastChild);
 
-          } else if (curLine == lineNumber + 1) {
-            result.range.setEnd(textNode, curPos - 1);
-            found = true;
-            break;
-          }
+        } else if (curLine == lineNumber + 1) {
+          result.range.setEnd(textNode, curPos - 1);
+          found = true;
+          break;
         }
       }
     }

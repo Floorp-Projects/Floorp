@@ -27,7 +27,7 @@
 #include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #if defined(MOZ_WIDGET_GTK)
 #include "nsIImageToPixbuf.h"
 #endif

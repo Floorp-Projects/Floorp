@@ -111,12 +111,12 @@ public:
 
   EParserState GetState() { return mState; }
 
-  static NS_METHOD SegmentWriter(nsIUnicharInputStream* aStream,
-                                 void* aClosure,
-                                 const char16_t* aFromSegment,
-                                 uint32_t aToOffset,
-                                 uint32_t aCount,
-                                 uint32_t* aWriteCount);
+  static nsresult SegmentWriter(nsIUnicharInputStream* aStream,
+                                void* aClosure,
+                                const char16_t* aFromSegment,
+                                uint32_t aToOffset,
+                                uint32_t aCount,
+                                uint32_t* aWriteCount);
 
   nsresult ParseBuffer(const char16_t* aBuffer, uint32_t aBufferLength);
 
@@ -343,7 +343,7 @@ nsPropertiesParser::ParseValueCharacter(char16_t aChar, const char16_t* aCur,
   return true;
 }
 
-NS_METHOD
+nsresult
 nsPropertiesParser::SegmentWriter(nsIUnicharInputStream* aStream,
                                   void* aClosure,
                                   const char16_t* aFromSegment,

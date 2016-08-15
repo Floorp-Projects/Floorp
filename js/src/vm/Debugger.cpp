@@ -907,8 +907,11 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 Maybe<AutoCompartment> ac;
                 ac.emplace(cx, dbg->object);
 
+                RootedValue wrappedValue(cx, value);
                 RootedValue completion(cx);
-                if (!dbg->newCompletionValue(cx, status, value, &completion)) {
+                if (!dbg->wrapDebuggeeValue(cx, &wrappedValue) ||
+                    !dbg->newCompletionValue(cx, status, wrappedValue, &completion))
+                {
                     status = dbg->handleUncaughtException(ac, false);
                     break;
                 }
@@ -1416,6 +1419,7 @@ Debugger::newCompletionValue(JSContext* cx, JSTrapStatus status, Value value_,
      * to construct the completion value.
      */
     assertSameCompartment(cx, object.get());
+    assertSameCompartment(cx, value_);
 
     RootedId key(cx);
     RootedValue value(cx, value_);
@@ -1440,7 +1444,6 @@ Debugger::newCompletionValue(JSContext* cx, JSTrapStatus status, Value value_,
     /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj ||
-        !wrapDebuggeeValue(cx, &value) ||
         !NativeDefineProperty(cx, obj, key, value, nullptr, nullptr, JSPROP_ENUMERATE))
     {
         return false;
@@ -1461,7 +1464,8 @@ Debugger::receiveCompletionValue(Maybe<AutoCompartment>& ac, bool ok,
     RootedValue value(cx);
     resultToCompletion(cx, ok, val, &status, &value);
     ac.reset();
-    return newCompletionValue(cx, status, value, vp);
+    return wrapDebuggeeValue(cx, &value) &&
+           newCompletionValue(cx, status, value, vp);
 }
 
 static bool
@@ -7069,7 +7073,7 @@ DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject obj)
 DebuggerFrame::create(JSContext* cx, HandleObject proto, AbstractFramePtr referent,
                       const ScriptFrameIter* maybeIter, HandleNativeObject debugger)
 {
-  JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerFrame::class_, proto, TenuredObject);
+  JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerFrame::class_, proto);
   if (!obj)
     return nullptr;
 
@@ -7287,6 +7291,192 @@ DebuggerFrame::getImplementation(HandleDebuggerFrame frame)
     else if (referent.isRematerializedFrame())
         return DebuggerFrameImplementation::Ion;
     return DebuggerFrameImplementation::Interpreter;
+}
+
+/*
+ * Evaluate |chars[0..length-1]| in the environment |env|, treating that
+ * source as appearing starting at |lineno| in |filename|. Store the return
+ * value in |*rval|. Use |thisv| as the 'this' value.
+ *
+ * If |frame| is non-nullptr, evaluate as for a direct eval in that frame; |env|
+ * must be either |frame|'s DebugScopeObject, or some extension of that
+ * environment; either way, |frame|'s scope is where newly declared variables
+ * go. In this case, |frame| must have a computed 'this' value, equal to |thisv|.
+ */
+static bool
+EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
+              jsbytecode* pc, mozilla::Range<const char16_t> chars, const char* filename,
+              unsigned lineno, MutableHandleValue rval)
+{
+    assertSameCompartment(cx, env, frame);
+    MOZ_ASSERT_IF(frame, pc);
+
+    /*
+     * Pass in a StaticEvalScope *not* linked to env for evalStaticScope, as
+     * ScopeIter should stop at any non-ScopeObject or non-syntactic With
+     * boundaries, and we are putting a DebugScopeProxy or non-syntactic With on
+     * the scope chain.
+     */
+    Rooted<StaticScope*> enclosingStaticScope(cx);
+    if (!IsGlobalLexicalScope(env)) {
+        // If we are doing a global evalWithBindings, we will still need to
+        // link the static global lexical scope to the static non-syntactic
+        // scope.
+        if (IsGlobalLexicalScope(env->enclosingScope()))
+            enclosingStaticScope = &cx->global()->lexicalScope().staticBlock();
+        enclosingStaticScope = StaticNonSyntacticScope::create(cx, enclosingStaticScope);
+        if (!enclosingStaticScope)
+            return false;
+    } else {
+        enclosingStaticScope = &cx->global()->lexicalScope().staticBlock();
+    }
+
+    // Do not consider executeInGlobal{WithBindings} as an eval, but instead
+    // as executing a series of statements at the global level. This is to
+    // circumvent the fresh lexical scope that all eval have, so that the
+    // users of executeInGlobal, like the web console, may add new bindings to
+    // the global scope.
+    Rooted<StaticScope*> staticScope(cx);
+    if (frame) {
+        staticScope = StaticEvalScope::create(cx, enclosingStaticScope);
+        if (!staticScope)
+            return false;
+    } else {
+        staticScope = enclosingStaticScope;
+    }
+
+    CompileOptions options(cx);
+    options.setIsRunOnce(true)
+           .setForEval(true)
+           .setNoScriptRval(false)
+           .setFileAndLine(filename, lineno)
+           .setCanLazilyParse(false)
+           .setIntroductionType("debugger eval")
+           .maybeMakeStrictMode(frame ? frame.script()->strict() : false);
+    RootedScript callerScript(cx, frame ? frame.script() : nullptr);
+    SourceBufferHolder srcBuf(chars.start().get(), chars.length(), SourceBufferHolder::NoOwnership);
+    RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(), env, staticScope,
+                                                    callerScript, options, srcBuf,
+                                                    /* source = */ nullptr));
+    if (!script)
+        return false;
+
+    // Again, executeInGlobal is not considered eval.
+    if (frame) {
+        if (script->strict())
+            staticScope->as<StaticEvalScope>().setStrict();
+        script->setActiveEval();
+    }
+
+    return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
+}
+
+static bool
+DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
+                    HandleObject bindings, const EvalOptions& options,
+                    JSTrapStatus& status, MutableHandleValue value,
+                    Debugger* dbg, HandleObject scope, ScriptFrameIter* iter)
+{
+    /* Either we're specifying the frame, or a global. */
+    MOZ_ASSERT_IF(iter, !scope);
+    MOZ_ASSERT_IF(!iter, scope && IsGlobalLexicalScope(scope));
+
+    /*
+     * Gather keys and values of bindings, if any. This must be done in the
+     * debugger compartment, since that is where any exceptions must be
+     * thrown.
+     */
+    AutoIdVector keys(cx);
+    AutoValueVector values(cx);
+    if (bindings) {
+        if (!GetPropertyKeys(cx, bindings, JSITER_OWNONLY, &keys) ||
+            !values.growBy(keys.length()))
+        {
+            return false;
+        }
+        for (size_t i = 0; i < keys.length(); i++) {
+            MutableHandleValue valp = values[i];
+            if (!GetProperty(cx, bindings, bindings, keys[i], valp) ||
+                !dbg->unwrapDebuggeeValue(cx, valp))
+            {
+                return false;
+            }
+        }
+    }
+
+    Maybe<AutoCompartment> ac;
+    if (iter)
+        ac.emplace(cx, iter->scopeChain(cx));
+    else
+        ac.emplace(cx, scope);
+
+    Rooted<Env*> env(cx);
+    if (iter) {
+        env = GetDebugScopeForFrame(cx, iter->abstractFramePtr(), iter->pc());
+        if (!env)
+            return false;
+    } else {
+        env = scope;
+    }
+
+    /* If evalWithBindings, create the inner environment. */
+    if (bindings) {
+        RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+        if (!nenv)
+            return false;
+        RootedId id(cx);
+        for (size_t i = 0; i < keys.length(); i++) {
+            id = keys[i];
+            MutableHandleValue val = values[i];
+            if (!cx->compartment()->wrap(cx, val) ||
+                !NativeDefineProperty(cx, nenv, id, val, nullptr, nullptr, 0))
+            {
+                return false;
+            }
+        }
+
+        AutoObjectVector scopeChain(cx);
+        if (!scopeChain.append(nenv))
+            return false;
+
+        RootedObject dynamicScope(cx);
+        if (!CreateScopeObjectsForScopeChain(cx, scopeChain, env, &dynamicScope))
+            return false;
+
+        env = dynamicScope;
+    }
+
+    /* Run the code and produce the completion value. */
+    LeaveDebuggeeNoExecute nnx(cx);
+    RootedValue rval(cx);
+    AbstractFramePtr frame = iter ? iter->abstractFramePtr() : NullFramePtr();
+    jsbytecode* pc = iter ? iter->pc() : nullptr;
+
+    bool ok = EvaluateInEnv(cx, env, frame, pc, chars,
+                            options.filename() ? options.filename() : "debugger eval code",
+                            options.lineno(), &rval);
+    Debugger::resultToCompletion(cx, ok, rval, &status, value);
+    ac.reset();
+    return dbg->wrapDebuggeeValue(cx, value);
+}
+
+/* static */ bool
+DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame, mozilla::Range<const char16_t> chars,
+                    HandleObject bindings, const EvalOptions& options, JSTrapStatus& status,
+                    MutableHandleValue value)
+{
+    MOZ_ASSERT(frame->isLive());
+
+    Debugger* dbg = frame->owner();
+
+    Maybe<ScriptFrameIter> maybeIter;
+    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
+        return false;
+    ScriptFrameIter& iter = *maybeIter;
+
+    UpdateFrameIterPc(iter);
+
+    return DebuggerGenericEval(cx, chars, bindings, options, status, value, dbg, nullptr, &iter);
 }
 
 /* statuc */ bool
@@ -7839,178 +8029,12 @@ DebuggerFrame_setOnPop(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/*
- * Evaluate |chars[0..length-1]| in the environment |env|, treating that
- * source as appearing starting at |lineno| in |filename|. Store the return
- * value in |*rval|. Use |thisv| as the 'this' value.
- *
- * If |frame| is non-nullptr, evaluate as for a direct eval in that frame; |env|
- * must be either |frame|'s DebugScopeObject, or some extension of that
- * environment; either way, |frame|'s scope is where newly declared variables
- * go. In this case, |frame| must have a computed 'this' value, equal to |thisv|.
- */
-static bool
-EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
-              jsbytecode* pc, mozilla::Range<const char16_t> chars, const char* filename,
-              unsigned lineno, MutableHandleValue rval)
+/* static */ bool
+DebuggerFrame::evalMethod(JSContext* cx, unsigned argc, Value* vp)
 {
-    assertSameCompartment(cx, env, frame);
-    MOZ_ASSERT_IF(frame, pc);
-
-    /*
-     * Pass in a StaticEvalScope *not* linked to env for evalStaticScope, as
-     * ScopeIter should stop at any non-ScopeObject or non-syntactic With
-     * boundaries, and we are putting a DebugScopeProxy or non-syntactic With on
-     * the scope chain.
-     */
-    Rooted<StaticScope*> enclosingStaticScope(cx);
-    if (!IsGlobalLexicalScope(env)) {
-        // If we are doing a global evalWithBindings, we will still need to
-        // link the static global lexical scope to the static non-syntactic
-        // scope.
-        if (IsGlobalLexicalScope(env->enclosingScope()))
-            enclosingStaticScope = &cx->global()->lexicalScope().staticBlock();
-        enclosingStaticScope = StaticNonSyntacticScope::create(cx, enclosingStaticScope);
-        if (!enclosingStaticScope)
-            return false;
-    } else {
-        enclosingStaticScope = &cx->global()->lexicalScope().staticBlock();
-    }
-
-    // Do not consider executeInGlobal{WithBindings} as an eval, but instead
-    // as executing a series of statements at the global level. This is to
-    // circumvent the fresh lexical scope that all eval have, so that the
-    // users of executeInGlobal, like the web console, may add new bindings to
-    // the global scope.
-    Rooted<StaticScope*> staticScope(cx);
-    if (frame) {
-        staticScope = StaticEvalScope::create(cx, enclosingStaticScope);
-        if (!staticScope)
-            return false;
-    } else {
-        staticScope = enclosingStaticScope;
-    }
-
-    CompileOptions options(cx);
-    options.setIsRunOnce(true)
-           .setForEval(true)
-           .setNoScriptRval(false)
-           .setFileAndLine(filename, lineno)
-           .setCanLazilyParse(false)
-           .setIntroductionType("debugger eval")
-           .maybeMakeStrictMode(frame ? frame.script()->strict() : false);
-    RootedScript callerScript(cx, frame ? frame.script() : nullptr);
-    SourceBufferHolder srcBuf(chars.start().get(), chars.length(), SourceBufferHolder::NoOwnership);
-    RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(), env, staticScope,
-                                                    callerScript, options, srcBuf,
-                                                    /* source = */ nullptr));
-    if (!script)
-        return false;
-
-    // Again, executeInGlobal is not considered eval.
-    if (frame) {
-        if (script->strict())
-            staticScope->as<StaticEvalScope>().setStrict();
-        script->setActiveEval();
-    }
-
-    return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
-}
-
-static bool
-DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
-                    HandleObject bindings, const EvalOptions& options, MutableHandleValue vp,
-                    Debugger* dbg, HandleObject scope, ScriptFrameIter* iter)
-{
-    /* Either we're specifying the frame, or a global. */
-    MOZ_ASSERT_IF(iter, !scope);
-    MOZ_ASSERT_IF(!iter, scope && IsGlobalLexicalScope(scope));
-
-    /*
-     * Gather keys and values of bindings, if any. This must be done in the
-     * debugger compartment, since that is where any exceptions must be
-     * thrown.
-     */
-    AutoIdVector keys(cx);
-    AutoValueVector values(cx);
-    if (bindings) {
-        if (!GetPropertyKeys(cx, bindings, JSITER_OWNONLY, &keys) ||
-            !values.growBy(keys.length()))
-        {
-            return false;
-        }
-        for (size_t i = 0; i < keys.length(); i++) {
-            MutableHandleValue valp = values[i];
-            if (!GetProperty(cx, bindings, bindings, keys[i], valp) ||
-                !dbg->unwrapDebuggeeValue(cx, valp))
-            {
-                return false;
-            }
-        }
-    }
-
-    Maybe<AutoCompartment> ac;
-    if (iter)
-        ac.emplace(cx, iter->scopeChain(cx));
-    else
-        ac.emplace(cx, scope);
-
-    Rooted<Env*> env(cx);
-    if (iter) {
-        env = GetDebugScopeForFrame(cx, iter->abstractFramePtr(), iter->pc());
-        if (!env)
-            return false;
-    } else {
-        env = scope;
-    }
-
-    /* If evalWithBindings, create the inner environment. */
-    if (bindings) {
-        RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-        if (!nenv)
-            return false;
-        RootedId id(cx);
-        for (size_t i = 0; i < keys.length(); i++) {
-            id = keys[i];
-            MutableHandleValue val = values[i];
-            if (!cx->compartment()->wrap(cx, val) ||
-                !NativeDefineProperty(cx, nenv, id, val, nullptr, nullptr, 0))
-            {
-                return false;
-            }
-        }
-
-        AutoObjectVector scopeChain(cx);
-        if (!scopeChain.append(nenv))
-            return false;
-
-        RootedObject dynamicScope(cx);
-        if (!CreateScopeObjectsForScopeChain(cx, scopeChain, env, &dynamicScope))
-            return false;
-
-        env = dynamicScope;
-    }
-
-    /* Run the code and produce the completion value. */
-    LeaveDebuggeeNoExecute nnx(cx);
-    RootedValue rval(cx);
-    AbstractFramePtr frame = iter ? iter->abstractFramePtr() : NullFramePtr();
-    jsbytecode* pc = iter ? iter->pc() : nullptr;
-
-    bool ok = EvaluateInEnv(cx, env, frame, pc, chars,
-                            options.filename() ? options.filename() : "debugger eval code",
-                            options.lineno(), &rval);
-    return dbg->receiveCompletionValue(ac, ok, rval, vp);
-}
-
-static bool
-DebuggerFrame_eval(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_FRAME_ITER(cx, argc, vp, "eval", args, thisobj, _, iter);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "eval", args, frame);
     if (!args.requireAtLeast(cx, "Debugger.Frame.prototype.eval", 1))
         return false;
-    Debugger* dbg = Debugger::fromChildJSObject(thisobj);
-    UpdateFrameIterPc(iter);
 
     AutoStableStringChars stableChars(cx);
     if (!ValueToStableChars(cx, "Debugger.Frame.prototype.eval", args[0], stableChars))
@@ -8018,20 +8042,23 @@ DebuggerFrame_eval(JSContext* cx, unsigned argc, Value* vp)
     mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
 
     EvalOptions options;
-    if (!ParseEvalOptions(cx, args.get(1), options))
+   if (!ParseEvalOptions(cx, args.get(1), options))
         return false;
 
-    return DebuggerGenericEval(cx, chars, nullptr, options, args.rval(), dbg, nullptr, &iter);
+    JSTrapStatus status;
+    RootedValue value(cx);
+    if (!DebuggerFrame::eval(cx, frame, chars, nullptr, options, status, &value))
+        return false;
+
+    return frame->owner()->newCompletionValue(cx, status, value, args.rval());
 }
 
-static bool
-DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::evalWithBindingsMethod(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME_ITER(cx, argc, vp, "evalWithBindings", args, thisobj, _, iter);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "evalWithBindings", args, frame);
     if (!args.requireAtLeast(cx, "Debugger.Frame.prototype.evalWithBindings", 2))
         return false;
-    Debugger* dbg = Debugger::fromChildJSObject(thisobj);
-    UpdateFrameIterPc(iter);
 
     AutoStableStringChars stableChars(cx);
     if (!ValueToStableChars(cx, "Debugger.Frame.prototype.evalWithBindings", args[0],
@@ -8049,7 +8076,12 @@ DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
     if (!ParseEvalOptions(cx, args.get(2), options))
         return false;
 
-    return DebuggerGenericEval(cx, chars, bindings, options, args.rval(), dbg, nullptr, &iter);
+    JSTrapStatus status;
+    RootedValue value(cx);
+    if (!DebuggerFrame::eval(cx, frame, chars, bindings, options, status, &value))
+        return false;
+
+    return frame->owner()->newCompletionValue(cx, status, value, args.rval());
 }
 
 /* static */ bool
@@ -8079,8 +8111,8 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
 };
 
 const JSFunctionSpec DebuggerFrame::methods_[] = {
-    JS_FN("eval", DebuggerFrame_eval, 1, 0),
-    JS_FN("evalWithBindings", DebuggerFrame_evalWithBindings, 1, 0),
+    JS_FN("eval", DebuggerFrame::evalMethod, 1, 0),
+    JS_FN("evalWithBindings", DebuggerFrame::evalWithBindingsMethod, 1, 0),
     JS_FS_END
 };
 
@@ -9007,7 +9039,12 @@ DebuggerObject::executeInGlobalMethod(JSContext* cx, unsigned argc, Value* vp)
     if (!ParseEvalOptions(cx, args.get(1), options))
         return false;
 
-    return DebuggerObject::executeInGlobal(cx, object, chars, nullptr, options, args.rval());
+    JSTrapStatus status;
+    RootedValue value(cx);
+    if (!DebuggerObject::executeInGlobal(cx, object, chars, nullptr, options, status, &value))
+        return false;
+
+    return object->owner()->newCompletionValue(cx, status, value, args.rval());
 }
 
 /* static */ bool
@@ -9036,7 +9073,12 @@ DebuggerObject::executeInGlobalWithBindingsMethod(JSContext* cx, unsigned argc, 
     if (!ParseEvalOptions(cx, args.get(2), options))
         return false;
 
-    return DebuggerObject::executeInGlobal(cx, object, chars, bindings, options, args.rval());
+    JSTrapStatus status;
+    RootedValue value(cx);
+    if (!DebuggerObject::executeInGlobal(cx, object, chars, bindings, options, status, &value))
+        return false;
+
+    return object->owner()->newCompletionValue(cx, status, value, args.rval());
 }
 
 /* static */ bool
@@ -9775,7 +9817,8 @@ DebuggerObject::forceLexicalInitializationByName(JSContext* cx, HandleDebuggerOb
 /* static */ bool
 DebuggerObject::executeInGlobal(JSContext* cx, HandleDebuggerObject object,
                                 mozilla::Range<const char16_t> chars, HandleObject bindings,
-                                const EvalOptions& options, MutableHandleValue result)
+                                const EvalOptions& options, JSTrapStatus& status,
+                                MutableHandleValue value)
 {
     MOZ_ASSERT(object->isGlobal());
 
@@ -9783,7 +9826,7 @@ DebuggerObject::executeInGlobal(JSContext* cx, HandleDebuggerObject object,
     Debugger* dbg = object->owner();
 
     RootedObject globalLexical(cx, &referent->lexicalScope());
-    return DebuggerGenericEval(cx, chars, bindings, options, result, dbg, globalLexical,
+    return DebuggerGenericEval(cx, chars, bindings, options, status, value, dbg, globalLexical,
                                nullptr);
 }
 

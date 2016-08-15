@@ -125,12 +125,12 @@ public:
         { aManifestHash = mManifestHashValue; }
 
 private:
-    static NS_METHOD ReadManifest(nsIInputStream *aInputStream,
-                                  void *aClosure,
-                                  const char *aFromSegment,
-                                  uint32_t aOffset,
-                                  uint32_t aCount,
-                                  uint32_t *aBytesConsumed);
+    static nsresult ReadManifest(nsIInputStream *aInputStream,
+                                 void *aClosure,
+                                 const char *aFromSegment,
+                                 uint32_t aOffset,
+                                 uint32_t aCount,
+                                 uint32_t *aBytesConsumed);
 
     nsresult AddNamespace(uint32_t namespaceType,
                           const nsCString &namespaceSpec,

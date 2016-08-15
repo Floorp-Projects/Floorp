@@ -184,7 +184,6 @@ class nsWindow::GeckoViewSupport final
     : public GeckoView::Window::Natives<GeckoViewSupport>
     , public GeckoEditable::Natives<GeckoViewSupport>
     , public SupportsWeakPtr<GeckoViewSupport>
-    , public UsesGeckoThreadProxy
 {
     nsWindow& window;
 
@@ -880,7 +879,6 @@ public:
 class nsWindow::LayerViewSupport final
     : public LayerView::Compositor::Natives<LayerViewSupport>
     , public SupportsWeakPtr<LayerViewSupport>
-    , public UsesGeckoThreadProxy
 {
     nsWindow& window;
     LayerView::Compositor::GlobalRef mCompositor;
@@ -930,7 +928,6 @@ public:
     static void OnNativeCall(Functor&& aCall)
     {
         if (aCall.IsTarget(&LayerViewSupport::CreateCompositor)) {
-
             // This call is blocking.
             nsAppShell::SyncRunEvent(WindowEvent<Functor>(
                     mozilla::Move(aCall)), &LayerViewEvent::MakeEvent);
@@ -950,12 +947,6 @@ public:
                     mozilla::MakeUnique<WindowEvent<Functor>>(
                     mozilla::Move(aCall))));
             return;
-
-        } else if (aCall.IsTarget(
-                &LayerViewSupport::SyncInvalidateAndScheduleComposite) ||
-                aCall.IsTarget(&LayerViewSupport::SyncPauseCompositor)) {
-            // This call is synchronous.
-            return aCall();
         }
 
         // LayerViewEvent (i.e. prioritized event) applies to

@@ -1070,9 +1070,6 @@ pref("dom.webnotifications.serviceworker.enabled", true);
 // Retain at most 10 processes' layers buffers
 pref("layers.compositor-lru-size", 10);
 
-// Enable Cardboard VR on mobile, assuming VR at all is enabled
-pref("dom.vr.cardboard.enabled", true);
-
 // In B2G by deafult any AudioChannelAgent is muted when created.
 pref("dom.audiochannel.mutedByDefault", true);
 

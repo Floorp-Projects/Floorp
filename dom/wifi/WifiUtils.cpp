@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <cutils/properties.h>
 #include "prinit.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "js/CharacterEncoding.h"
 
 using namespace mozilla::dom;
@@ -369,10 +369,10 @@ public:
     char command[COMMAND_SIZE];
     if (!strcmp(iface, "p2p0")) {
       // Commands for p2p0 interface don't need prefix
-      snprintf_literal(command, "%s", cmd);
+      SprintfLiteral(command, "%s", cmd);
     }
     else {
-      snprintf_literal(command, "IFNAME=%s %s", iface, cmd);
+      SprintfLiteral(command, "IFNAME=%s %s", iface, cmd);
     }
     USE_DLFUNC(wifi_command)
     return wifi_command(command, buf, len);

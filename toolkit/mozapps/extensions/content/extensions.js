@@ -480,9 +480,8 @@ var gEventManager = {
                                                               : addonItem.mAddon.version);
         }
       }
-      else {
-        if (shouldShowVersionNumber(addonItem.mInstall))
-          tiptext += " " + addonItem.mInstall.version;
+      else if (shouldShowVersionNumber(addonItem.mInstall)) {
+        tiptext += " " + addonItem.mInstall.version;
       }
 
       addonTooltip.label = tiptext;
@@ -677,11 +676,10 @@ var gViewController = {
           gHistory.back();
         else
           gViewController.replaceView(gViewDefault);
+      } else if (gHistory.canGoForward) {
+        gHistory.forward();
       } else {
-        if (gHistory.canGoForward)
-          gHistory.forward();
-        else
-          gViewController.replaceView(gViewDefault);
+        gViewController.replaceView(gViewDefault);
       }
     }
   },

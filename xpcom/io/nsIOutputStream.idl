@@ -26,12 +26,12 @@ interface nsIInputStream;
  *
  * Errors are never passed to the caller of WriteSegments.
  */
-typedef NS_CALLBACK(nsReadSegmentFun)(nsIOutputStream *aOutStream,
-                                      void *aClosure,
-                                      char *aToSegment,
-                                      uint32_t aFromOffset,
-                                      uint32_t aCount,
-                                      uint32_t *aReadCount);
+typedef nsresult (*nsReadSegmentFun)(nsIOutputStream *aOutStream,
+                                     void *aClosure,
+                                     char *aToSegment,
+                                     uint32_t aFromOffset,
+                                     uint32_t aCount,
+                                     uint32_t *aReadCount);
 %}
 
 native nsReadSegmentFun(nsReadSegmentFun);

@@ -81,31 +81,38 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private volatile boolean mCompositorCreated;
 
 
-    @WrapForJNI(allowMultithread = true)
     protected class Compositor extends JNIObject {
         public Compositor() {
         }
 
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
         @Override protected native void disposeNative();
 
         // Gecko thread sets its Java instances; does not block UI thread.
+        @WrapForJNI(calledFrom = "any", dispatchTo = "proxy")
         /* package */ native void attachToJava(GeckoLayerClient layerClient,
                                                NativePanZoomController npzc);
 
+        @WrapForJNI(calledFrom = "any", dispatchTo = "proxy")
         /* package */ native void onSizeChanged(int windowWidth, int windowHeight,
                                                 int screenWidth, int screenHeight);
 
         // Gecko thread creates compositor; blocks UI thread.
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
         /* package */ native void createCompositor(int width, int height);
 
         // Gecko thread pauses compositor; blocks UI thread.
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
         /* package */ native void syncPauseCompositor();
 
         // UI thread resumes compositor and notifies Gecko thread; does not block UI thread.
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
         /* package */ native void syncResumeResizeCompositor(int width, int height);
 
+        @WrapForJNI(calledFrom = "any", dispatchTo = "current")
         /* package */ native void syncInvalidateAndScheduleComposite();
 
+        @WrapForJNI
         private synchronized Object getSurface() {
             if (LayerView.this.mServerSurfaceValid) {
                 return LayerView.this.getSurface();
@@ -113,6 +120,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             return null;
         }
 
+        @WrapForJNI(calledFrom = "gecko")
         private void destroy() {
             // The nsWindow has been closed. First mark our compositor as destroyed.
             LayerView.this.mCompositorCreated = false;
@@ -674,9 +682,9 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
       return null;
     }
 
-    //This method is called on the Gecko main thread.
-    @WrapForJNI(allowMultithread = true)
-    public static void updateZoomedView(ByteBuffer data) {
+    // This method is called on the Gecko main thread.
+    @WrapForJNI(calledFrom = "gecko")
+    private static void updateZoomedView(ByteBuffer data) {
         LayerView layerView = GeckoAppShell.getLayerView();
         if (layerView != null) {
             LayerRenderer layerRenderer = layerView.getRenderer();

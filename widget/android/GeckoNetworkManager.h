@@ -17,7 +17,6 @@ namespace mozilla {
 
 class GeckoNetworkManager final
     : public java::GeckoNetworkManager::Natives<GeckoNetworkManager>
-    , public UsesGeckoThreadProxy
 {
     GeckoNetworkManager() = delete;
 

@@ -64,9 +64,10 @@ Summariser::Entry(uintptr_t aAddress, uintptr_t aLength)
   aAddress += mTextBias;
   if (DEBUG_SUMMARISER) {
     char buf[100];
-    snprintf_literal(buf, "LUL Entry(%llx, %llu)\n",
-                     (unsigned long long int)aAddress,
-                     (unsigned long long int)aLength);
+    SprintfLiteral(buf,
+                   "LUL Entry(%llx, %llu)\n",
+                   (unsigned long long int)aAddress,
+                   (unsigned long long int)aLength);
     mLog(buf);
   }
   // This throws away any previous summary, that is, assumes
@@ -86,20 +87,20 @@ Summariser::Rule(uintptr_t aAddress, int aNewReg,
     char buf[100];
     if (how == NODEREF || how == DEREF) {
       bool deref = how == DEREF;
-      snprintf_literal(buf,
-                       "LUL  0x%llx  old-r%d = %sr%d + %lld%s\n",
-                       (unsigned long long int)aAddress, aNewReg,
-                       deref ? "*(" : "", (int)oldReg, (long long int)offset,
-                       deref ? ")" : "");
+      SprintfLiteral(buf,
+                     "LUL  0x%llx  old-r%d = %sr%d + %lld%s\n",
+                     (unsigned long long int)aAddress, aNewReg,
+                     deref ? "*(" : "", (int)oldReg, (long long int)offset,
+                     deref ? ")" : "");
     } else if (how == PFXEXPR) {
-      snprintf_literal(buf,
-                       "LUL  0x%llx  old-r%d = pfx-expr-at %lld\n",
-                       (unsigned long long int)aAddress, aNewReg,
-                       (long long int)offset);
+      SprintfLiteral(buf,
+                     "LUL  0x%llx  old-r%d = pfx-expr-at %lld\n",
+                     (unsigned long long int)aAddress, aNewReg,
+                     (long long int)offset);
     } else {
-      snprintf_literal(buf,
-                       "LUL  0x%llx  old-r%d = (invalid LExpr!)\n",
-                       (unsigned long long int)aAddress, aNewReg);
+      SprintfLiteral(buf,
+                     "LUL  0x%llx  old-r%d = (invalid LExpr!)\n",
+                     (unsigned long long int)aAddress, aNewReg);
     }
     mLog(buf);
   }
@@ -322,12 +323,12 @@ Summariser::Rule(uintptr_t aAddress, int aNewReg,
  cant_summarise:
   if (reason1 || reason2) {
     char buf[200];
-    snprintf_literal(buf, "LUL  can't summarise: "
-                     "SVMA=0x%llx: %s%s, expr=LExpr(%s,%u,%lld)\n",
-                     (unsigned long long int)(aAddress - mTextBias),
-                     reason1 ? reason1 : "", reason2 ? reason2 : "",
-                     NameOf_LExprHow(how),
-                     (unsigned int)oldReg, (long long int)offset);
+    SprintfLiteral(buf, "LUL  can't summarise: "
+                        "SVMA=0x%llx: %s%s, expr=LExpr(%s,%u,%lld)\n",
+                   (unsigned long long int)(aAddress - mTextBias),
+                   reason1 ? reason1 : "", reason2 ? reason2 : "",
+                   NameOf_LExprHow(how),
+                   (unsigned int)oldReg, (long long int)offset);
     mLog(buf);
   }
 }

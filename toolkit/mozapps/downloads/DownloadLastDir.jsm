@@ -186,11 +186,10 @@ DownloadLastDir.prototype = {
         gDownloadLastDirFile = aFile.clone();
       else
         gDownloadLastDirFile = null;
-    } else {
-      if (aFile instanceof Components.interfaces.nsIFile)
-        Services.prefs.setComplexValue(LAST_DIR_PREF, nsIFile, aFile);
-      else if (Services.prefs.prefHasUserValue(LAST_DIR_PREF))
-        Services.prefs.clearUserPref(LAST_DIR_PREF);
+    } else if (aFile instanceof Components.interfaces.nsIFile) {
+      Services.prefs.setComplexValue(LAST_DIR_PREF, nsIFile, aFile);
+    } else if (Services.prefs.prefHasUserValue(LAST_DIR_PREF)) {
+      Services.prefs.clearUserPref(LAST_DIR_PREF);
     }
   }
 };

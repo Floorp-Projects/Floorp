@@ -33,7 +33,7 @@
 #include <time.h> 
 #include <string.h>
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #ifdef WIN32
 #include <process.h>

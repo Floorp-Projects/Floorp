@@ -6,10 +6,12 @@
 
 EXPORTS += [
     'gfxVR.h',
+    'ipc/VRLayerChild.h',
     'ipc/VRManagerChild.h',
     'ipc/VRManagerParent.h',
     'ipc/VRMessageUtils.h',
-    'VRDeviceProxy.h',
+    'VRDisplayClient.h',
+    'VRDisplayPresentation.h',
     'VRManager.h',
 ]
 
@@ -19,21 +21,24 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     'gfxVR.cpp',
-    'gfxVRCardboard.cpp',
-    'gfxVROculus.cpp',
     'gfxVROSVR.cpp',
+    'ipc/VRLayerChild.cpp',
+    'ipc/VRLayerParent.cpp',
     'ipc/VRManagerChild.cpp',
     'ipc/VRManagerParent.cpp',
-    'VRDeviceProxy.cpp',
-    'VRDeviceProxyOrientationFallBack.cpp',
+    'VRDisplayClient.cpp',
+    'VRDisplayHost.cpp',
+    'VRDisplayPresentation.cpp',
     'VRManager.cpp',
 ]
 
-SOURCES += [
-    'gfxVROculus050.cpp',
-]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    SOURCES += [
+        'gfxVROculus.cpp',
+    ]
 
 IPDL_SOURCES = [
+    'ipc/PVRLayer.ipdl',
     'ipc/PVRManager.ipdl',
 ]
 

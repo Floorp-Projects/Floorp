@@ -19,6 +19,7 @@ var test404Path = "/test404" + suffix;
 // We attach this to channel when we want to test Private Browsing mode
 function LoadContext(usePrivateBrowsing) {
   this.usePrivateBrowsing = usePrivateBrowsing;
+  this.originAttributes.privateBrowsingId = usePrivateBrowsing ? 1 : 0;
 }
 
 LoadContext.prototype = {
@@ -54,6 +55,7 @@ function make_channel(url, flags, usePrivateBrowsing) {
   if (usePrivateBrowsing) {
     req.notificationCallbacks = PrivateBrowsingLoadContext;
   }
+  req.loadInfo.originAttributes = {privateBrowsingId: usePrivateBrowsing ? 1 : 0};
   return req;
 }
 

@@ -390,7 +390,7 @@ HttpServer::Connection::OnInputStreamReady(nsIAsyncInputStream* aStream)
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 HttpServer::Connection::ReadSegmentsFunc(nsIInputStream* aIn,
                                          void* aClosure,
                                          const char* aBuffer,
@@ -982,12 +982,12 @@ private:
     }
   ~StreamCopier() {}
 
-  static NS_METHOD FillOutputBufferHelper(nsIOutputStream* aOutStr,
-                                          void* aClosure,
-                                          char* aBuffer,
-                                          uint32_t aOffset,
-                                          uint32_t aCount,
-                                          uint32_t* aCountRead);
+  static nsresult FillOutputBufferHelper(nsIOutputStream* aOutStr,
+                                         void* aClosure,
+                                         char* aBuffer,
+                                         uint32_t aOffset,
+                                         uint32_t aCount,
+                                         uint32_t* aCountRead);
   nsresult FillOutputBuffer(char* aBuffer,
                             uint32_t aCount,
                             uint32_t* aCountRead);
@@ -1017,7 +1017,7 @@ struct WriteState
 
 // This function only exists to enable FillOutputBuffer to be a non-static
 // function where we can use member variables more easily.
-NS_METHOD
+nsresult
 StreamCopier::FillOutputBufferHelper(nsIOutputStream* aOutStr,
                                      void* aClosure,
                                      char* aBuffer,
@@ -1030,7 +1030,7 @@ StreamCopier::FillOutputBufferHelper(nsIOutputStream* aOutStr,
   return ws->sourceRv;
 }
 
-NS_METHOD
+nsresult
 CheckForEOF(nsIInputStream* aIn,
             void* aClosure,
             const char* aBuffer,
