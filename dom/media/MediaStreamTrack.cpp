@@ -212,7 +212,8 @@ MediaStreamTrack::SetEnabled(bool aEnabled)
                        this, aEnabled ? "Enabled" : "Disabled"));
 
   mEnabled = aEnabled;
-  GetOwnedStream()->SetTrackEnabled(mTrackID, aEnabled);
+  GetOwnedStream()->SetTrackEnabled(mTrackID, mEnabled ? DisabledTrackMode::ENABLED
+                                                       : DisabledTrackMode::SILENCE_BLACK);
 }
 
 void
