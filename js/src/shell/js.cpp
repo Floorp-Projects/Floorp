@@ -966,7 +966,11 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
             char* line = GetLine(in, startline == lineno ? "js> " : "");
             if (!line) {
                 if (errno) {
-                    JS_ReportError(cx, strerror(errno));
+                    /*
+                     * Use Latin1 variant here because the encoding of the
+                     * return value of strerror function can be non-UTF-8.
+                     */
+                    JS_ReportErrorLatin1(cx, "%s", strerror(errno));
                     return false;
                 }
                 hitEOF = true;
@@ -1721,38 +1725,58 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
 }
 
 JSString*
-js::shell::FileAsString(JSContext* cx, const char* pathname)
+js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
 {
+    JSAutoByteString pathname(cx, pathnameStr);
+    if (!pathname)
+        return nullptr;
+
     FILE* file;
     RootedString str(cx);
     size_t len, cc;
     char* buf;
 
-    file = fopen(pathname, "rb");
+    file = fopen(pathname.ptr(), "rb");
     if (!file) {
-        JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
+        /*
+         * Use Latin1 variant here because the encoding of the return value of
+         * strerror function can be non-UTF-8.
+         */
+        JS_ReportErrorLatin1(cx, "can't open %s: %s", pathname.ptr(), strerror(errno));
         return nullptr;
     }
     AutoCloseFile autoClose(file);
 
     if (fseek(file, 0, SEEK_END) != 0) {
-        JS_ReportError(cx, "can't seek end of %s", pathname);
+        pathname.clear();
+        if (!pathname.encodeUtf8(cx, pathnameStr))
+            return nullptr;
+        JS_ReportErrorUTF8(cx, "can't seek end of %s", pathname.ptr());
     } else {
         len = ftell(file);
         if (fseek(file, 0, SEEK_SET) != 0) {
-            JS_ReportError(cx, "can't seek start of %s", pathname);
+            pathname.clear();
+            if (!pathname.encodeUtf8(cx, pathnameStr))
+                return nullptr;
+            JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.ptr());
         } else {
             buf = (char*) JS_malloc(cx, len + 1);
             if (buf) {
                 cc = fread(buf, 1, len, file);
                 if (cc != len) {
-                    JS_ReportError(cx, "can't read %s: %s", pathname,
-                                   (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
+                    pathname.clear();
+                    if (!pathname.encodeUtf8(cx, pathnameStr))
+                        return nullptr;
+                    JS_ReportErrorUTF8(cx, "can't read %s: %s", pathname.ptr(),
+                                       (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
                 } else {
                     char16_t* ucbuf =
                         JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf, len), &len).get();
                     if (!ucbuf) {
-                        JS_ReportError(cx, "Invalid UTF-8 in file '%s'", pathname);
+                        pathname.clear();
+                        if (!pathname.encodeUtf8(cx, pathnameStr))
+                            return nullptr;
+                        JS_ReportErrorUTF8(cx, "Invalid UTF-8 in file '%s'", pathname.ptr());
                         return nullptr;
                     }
                     str = JS_NewUCStringCopyN(cx, ucbuf, len);
@@ -1784,11 +1808,8 @@ Run(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
     args[0].setString(str);
-    JSAutoByteString filename(cx, str);
-    if (!filename)
-        return false;
 
-    str = FileAsString(cx, filename.ptr());
+    str = FileAsString(cx, str);
     if (!str)
         return false;
 
@@ -1802,6 +1823,11 @@ Run(JSContext* cx, unsigned argc, Value* vp)
     RootedScript script(cx);
     int64_t startClock = PRMJ_Now();
     {
+        /* FIXME: This should use UTF-8 (bug 987069). */
+        JSAutoByteString filename(cx, str);
+        if (!filename)
+            return false;
+
         JS::CompileOptions options(cx);
         options.setIntroductionType("js shell run")
                .setFileAndLine(filename.ptr(), 1)
@@ -2839,7 +2865,8 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
         for (line1 = 0; line1 < line2 - 1; line1++) {
             char* tmp = fgets(linebuf, lineBufLen, file);
             if (!tmp) {
-                JS_ReportError(cx, "failed to read %s fully", script->filename());
+                /* FIXME: This should use UTF-8 (bug 987069). */
+                JS_ReportErrorLatin1(cx, "failed to read %s fully", script->filename());
                 return false;
             }
         }

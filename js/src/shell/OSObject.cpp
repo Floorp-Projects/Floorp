@@ -153,22 +153,36 @@ ResolvePath(JSContext* cx, HandleString filenameStr, PathResolutionMode resolveM
 }
 
 JSObject*
-FileAsTypedArray(JSContext* cx, const char* pathname)
+FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr)
 {
-    FILE* file = fopen(pathname, "rb");
+    JSAutoByteString pathname(cx, pathnameStr);
+    if (!pathname)
+        return nullptr;
+
+    FILE* file = fopen(pathname.ptr(), "rb");
     if (!file) {
-        JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
+        /*
+         * Use Latin1 variant here because the encoding of the return value of
+         * strerror function can be non-UTF-8.
+         */
+        JS_ReportErrorLatin1(cx, "can't open %s: %s", pathname.ptr(), strerror(errno));
         return nullptr;
     }
     AutoCloseFile autoClose(file);
 
     RootedObject obj(cx);
     if (fseek(file, 0, SEEK_END) != 0) {
-        JS_ReportError(cx, "can't seek end of %s", pathname);
+        pathname.clear();
+        if (!pathname.encodeUtf8(cx, pathnameStr))
+            return nullptr;
+        JS_ReportErrorUTF8(cx, "can't seek end of %s", pathname.ptr());
     } else {
         size_t len = ftell(file);
         if (fseek(file, 0, SEEK_SET) != 0) {
-            JS_ReportError(cx, "can't seek start of %s", pathname);
+            pathname.clear();
+            if (!pathname.encodeUtf8(cx, pathnameStr))
+                return nullptr;
+            JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.ptr());
         } else {
             obj = JS_NewUint8Array(cx, len);
             if (!obj)
@@ -184,14 +198,27 @@ FileAsTypedArray(JSContext* cx, const char* pathname)
                 // temporary buffer, read into that, and use a
                 // race-safe primitive to copy memory into the
                 // buffer.)
-                JS_ReportError(cx, "can't read %s: shared memory buffer", pathname);
+                pathname.clear();
+                if (!pathname.encodeUtf8(cx, pathnameStr))
+                    return nullptr;
+                JS_ReportErrorUTF8(cx, "can't read %s: shared memory buffer", pathname.ptr());
                 return nullptr;
             }
             char* buf = static_cast<char*>(ta.viewDataUnshared());
             size_t cc = fread(buf, 1, len, file);
             if (cc != len) {
-                JS_ReportError(cx, "can't read %s: %s", pathname,
-                               (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
+                if (ptrdiff_t(cc) < 0) {
+                    /*
+                     * Use Latin1 variant here because the encoding of the return
+                     * value of strerror function can be non-UTF-8.
+                     */
+                    JS_ReportErrorLatin1(cx, "can't read %s: %s", pathname.ptr(), strerror(errno));
+                } else {
+                    pathname.clear();
+                    if (!pathname.encodeUtf8(cx, pathnameStr))
+                        return nullptr;
+                    JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.ptr());
+                }
                 obj = nullptr;
             }
         }
@@ -221,10 +248,6 @@ ReadFile(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
     if (!str)
         return false;
 
-    JSAutoByteString filename(cx, str);
-    if (!filename)
-        return false;
-
     if (args.length() > 1) {
         JSString* opt = JS::ToString(cx, args[1]);
         if (!opt)
@@ -234,14 +257,14 @@ ReadFile(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
             return false;
         if (match) {
             JSObject* obj;
-            if (!(obj = FileAsTypedArray(cx, filename.ptr())))
+            if (!(obj = FileAsTypedArray(cx, str)))
                 return false;
             args.rval().setObject(*obj);
             return true;
         }
     }
 
-    if (!(str = FileAsString(cx, filename.ptr())))
+    if (!(str = FileAsString(cx, str)))
         return false;
     args.rval().setString(str);
     return true;
@@ -285,7 +308,11 @@ osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc, Value* vp)
 
     FILE* file = fopen(filename.ptr(), "wb");
     if (!file) {
-        JS_ReportError(cx, "can't open %s: %s", filename.ptr(), strerror(errno));
+        /*
+         * Use Latin1 variant here because the encoding of the return value of
+         * strerror function can be non-UTF-8.
+         */
+        JS_ReportErrorLatin1(cx, "can't open %s: %s", filename.ptr(), strerror(errno));
         return false;
     }
     AutoCloseFile autoClose(file);
@@ -434,7 +461,11 @@ redirect(JSContext* cx, HandleString relFilename, RCFile** globalFile)
         return nullptr;
     RCFile* file = RCFile::create(cx, filenameABS.ptr(), "wb");
     if (!file) {
-        JS_ReportError(cx, "cannot redirect to %s: %s", filenameABS.ptr(), strerror(errno));
+        /*
+         * Use Latin1 variant here because the encoding of the return value of
+         * strerror function can be non-UTF-8.
+         */
+        JS_ReportErrorLatin1(cx, "cannot redirect to %s: %s", filenameABS.ptr(), strerror(errno));
         return nullptr;
     }
 
@@ -731,7 +762,11 @@ ReportSysError(JSContext* cx, const char* prefix)
     }
 
     snprintf(final, nbytes, "%s: %s", prefix, errstr);
-    JS_ReportError(cx, final);
+    /*
+     * Use Latin1 variant here because the encoding of the return value of
+     * strerror_s and strerror_r function can be non-UTF-8.
+     */
+    JS_ReportErrorLatin1(cx, "%s", final);
     js_free(final);
 }
 
