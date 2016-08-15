@@ -127,14 +127,12 @@ this.InsecurePasswordUtils = {
       } else {
         passwordSafety = 2;
       }
+    } else if (isFormSubmitSecure) {
+      passwordSafety = 3;
+    } else if (isFormSubmitHTTP) {
+      passwordSafety = 4;
     } else {
-      if (isFormSubmitSecure) {
-        passwordSafety = 3;
-      } else if (isFormSubmitHTTP) {
-        passwordSafety = 4;
-      } else {
-        passwordSafety = 5;
-      }
+      passwordSafety = 5;
     }
 
     Services.telemetry.getHistogramById("PWMGR_LOGIN_PAGE_SAFETY").add(passwordSafety);

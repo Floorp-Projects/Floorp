@@ -539,11 +539,9 @@
               }
               i = i > edge ? edge : i;
 
-            } else {
-              if (c <= i) {
-                 i = c <= p ? 0 : c - p;
-                 this.treeBoxObject.ensureRowIsVisible(i);
-              }
+            } else if (c <= i) {
+               i = c <= p ? 0 : c - p;
+               this.treeBoxObject.ensureRowIsVisible(i);
             }
             this.view.selection.timedSelect(i, this._selectDelay);
           ]]>

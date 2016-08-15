@@ -1749,7 +1749,8 @@
           if (event.keyCode == KeyEvent.DOM_VK_TAB &&
               !event.altKey &&
               !event.ctrlKey &&
-              !event.metaKey) {
+              !event.metaKey &&
+              this.getAttribute("disabletab") != "true") {
             stopEvent = this.advanceSelection(!event.shiftKey, false, true);
           }
 
