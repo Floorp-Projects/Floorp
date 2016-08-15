@@ -392,8 +392,8 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
     size_t paramIndex = 0;
     for (;; paramIndex++) {
         if (paramIndex == ArrayLength(paramMap)) {
-            JS_ReportError(cx,
-                           "the first argument must be one of:" GC_PARAMETER_ARGS_LIST);
+            JS_ReportErrorASCII(cx,
+                                "the first argument must be one of:" GC_PARAMETER_ARGS_LIST);
             return false;
         }
         if (JS_FlatStringEqualsAscii(flatStr, paramMap[paramIndex].name))
@@ -410,7 +410,7 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (!info.writable) {
-        JS_ReportError(cx, "Attempt to change read-only parameter %s", info.name);
+        JS_ReportErrorASCII(cx, "Attempt to change read-only parameter %s", info.name);
         return false;
     }
 
@@ -524,7 +524,7 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args[0].isString()) {
-        ReportUsageError(cx, callee, "First argument must be a String");
+        ReportUsageErrorASCII(cx, callee, "First argument must be a String");
         return false;
     }
 
@@ -534,7 +534,7 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.hasDefined(1)) {
         if (!args[1].isString()) {
-            ReportUsageError(cx, callee, "Second argument, if present, must be a String");
+            ReportUsageErrorASCII(cx, callee, "Second argument, if present, must be a String");
             return false;
         }
     }
@@ -688,7 +688,7 @@ GCPreserveCode(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() != 0) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
@@ -706,7 +706,7 @@ GCZeal(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() > 2) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Too many arguments");
+        ReportUsageErrorASCII(cx, callee, "Too many arguments");
         return false;
     }
 
@@ -737,7 +737,7 @@ ScheduleGC(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() > 1) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Too many arguments");
+        ReportUsageErrorASCII(cx, callee, "Too many arguments");
         return false;
     }
 
@@ -794,7 +794,7 @@ VerifyPreBarriers(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() > 0) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Too many arguments");
+        ReportUsageErrorASCII(cx, callee, "Too many arguments");
         return false;
     }
 
@@ -810,7 +810,7 @@ VerifyPostBarriers(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length()) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Too many arguments");
+        ReportUsageErrorASCII(cx, callee, "Too many arguments");
         return false;
     }
     args.rval().setUndefined();
@@ -824,7 +824,7 @@ GCState(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() != 0) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Too many arguments");
+        ReportUsageErrorASCII(cx, callee, "Too many arguments");
         return false;
     }
 
@@ -843,7 +843,7 @@ DeterministicGC(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() != 1) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
@@ -860,7 +860,7 @@ StartGC(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() > 2) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
@@ -902,7 +902,7 @@ GCSlice(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() > 1) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
@@ -931,7 +931,7 @@ AbortGC(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() != 0) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
@@ -947,7 +947,7 @@ FullCompartmentChecks(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() != 1) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
 
@@ -963,7 +963,7 @@ NondeterministicGetWeakMapKeys(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() != 1) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
     if (!args[0].isObject()) {
@@ -1702,7 +1702,7 @@ DisplayName(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.get(0).isObject() || !args[0].toObject().is<JSFunction>()) {
         RootedObject arg(cx, &args.callee());
-        ReportUsageError(cx, arg, "Must have one function argument");
+        ReportUsageErrorASCII(cx, arg, "Must have one function argument");
         return false;
     }
 
@@ -1931,17 +1931,17 @@ SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp)
     RootedObject callee(cx, &args.callee());
 
     if (args.length() != 2) {
-        ReportUsageError(cx, callee, "Wrong number of arguments.");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments.");
         return false;
     }
 
     if (!args[0].isString()) {
-        ReportUsageError(cx, callee, "First argument must be a String.");
+        ReportUsageErrorASCII(cx, callee, "First argument must be a String.");
         return false;
     }
 
     if (!args[1].isInt32()) {
-        ReportUsageError(cx, callee, "Second argument must be an Int32.");
+        ReportUsageErrorASCII(cx, callee, "Second argument must be an Int32.");
         return false;
     }
 
@@ -1959,7 +1959,7 @@ SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp)
 #undef JIT_COMPILER_MATCH
 
     if (opt == JSJITCOMPILER_NOT_AN_OPTION) {
-        ReportUsageError(cx, callee, "First argument does not name a valid option (see jsapi.h).");
+        ReportUsageErrorASCII(cx, callee, "First argument does not name a valid option (see jsapi.h).");
         return false;
     }
 
@@ -2349,12 +2349,12 @@ ObjectAddress(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
     if (!args[0].isObject()) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Expected object");
+        ReportUsageErrorASCII(cx, callee, "Expected object");
         return false;
     }
 
@@ -2381,12 +2381,12 @@ SharedAddress(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
         return false;
     }
     if (!args[0].isObject()) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Expected object");
+        ReportUsageErrorASCII(cx, callee, "Expected object");
         return false;
     }
 
@@ -2438,7 +2438,7 @@ GetBacktrace(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.length() > 1) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Too many arguments");
+        ReportUsageErrorASCII(cx, callee, "Too many arguments");
         return false;
     }
 

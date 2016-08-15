@@ -1480,7 +1480,7 @@ OptionsBase::ParseBoolean(const char* name, bool* prop)
         return true;
 
     if (!value.isBoolean()) {
-        JS_ReportError(mCx, "Expected a boolean value for property %s", name);
+        JS_ReportErrorASCII(mCx, "Expected a boolean value for property %s", name);
         return false;
     }
 
@@ -1503,7 +1503,7 @@ OptionsBase::ParseObject(const char* name, MutableHandleObject prop)
         return true;
 
     if (!value.isObject()) {
-        JS_ReportError(mCx, "Expected an object value for property %s", name);
+        JS_ReportErrorASCII(mCx, "Expected an object value for property %s", name);
         return false;
     }
     prop.set(&value.toObject());
@@ -1525,7 +1525,7 @@ OptionsBase::ParseJSString(const char* name, MutableHandleString prop)
         return true;
 
     if (!value.isString()) {
-        JS_ReportError(mCx, "Expected a string value for property %s", name);
+        JS_ReportErrorASCII(mCx, "Expected a string value for property %s", name);
         return false;
     }
     prop.set(value.toString());
@@ -1547,7 +1547,7 @@ OptionsBase::ParseString(const char* name, nsCString& prop)
         return true;
 
     if (!value.isString()) {
-        JS_ReportError(mCx, "Expected a string value for property %s", name);
+        JS_ReportErrorASCII(mCx, "Expected a string value for property %s", name);
         return false;
     }
 
@@ -1573,7 +1573,7 @@ OptionsBase::ParseString(const char* name, nsString& prop)
         return true;
 
     if (!value.isString()) {
-        JS_ReportError(mCx, "Expected a string value for property %s", name);
+        JS_ReportErrorASCII(mCx, "Expected a string value for property %s", name);
         return false;
     }
 
@@ -1618,7 +1618,7 @@ OptionsBase::ParseUInt32(const char* name, uint32_t* prop)
         return true;
 
     if(!JS::ToUint32(mCx, value, prop)) {
-        JS_ReportError(mCx, "Expected a uint32_t value for property %s", name);
+        JS_ReportErrorASCII(mCx, "Expected a uint32_t value for property %s", name);
         return false;
     }
 
@@ -1661,6 +1661,7 @@ SandboxOptions::ParseGlobalProperties()
 bool
 SandboxOptions::Parse()
 {
+    /* All option names must be ASCII-only. */
     bool ok = ParseObject("sandboxPrototype", &proto) &&
               ParseBoolean("wantXrays", &wantXrays) &&
               ParseBoolean("allowWaivers", &allowWaivers) &&

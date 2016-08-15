@@ -196,9 +196,9 @@ struct RequiredStringArg {
         : mCx(cx), mBytes(nullptr)
     {
         if (args.length() <= argi) {
-            JS_ReportError(cx, "%s: not enough arguments", caller);
+            JS_ReportErrorASCII(cx, "%s: not enough arguments", caller);
         } else if (!args[argi].isString()) {
-            JS_ReportError(cx, "%s: invalid arguments (string expected)", caller);
+            JS_ReportErrorASCII(cx, "%s: invalid arguments (string expected)", caller);
         } else {
             mBytes = JS_EncodeString(cx, args[argi].toString());
         }
