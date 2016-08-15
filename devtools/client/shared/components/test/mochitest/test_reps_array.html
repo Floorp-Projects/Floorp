@@ -161,7 +161,7 @@ window.onload = Task.async(function* () {
   function testRecursiveArray() {
     let stub = [1];
     stub.push(stub);
-    const defaultOutput = `[ 1, […] ]`;
+    const defaultOutput = `[ 1, [2] ]`;
 
     const modeTests = [
       {
@@ -194,7 +194,7 @@ window.onload = Task.async(function* () {
         p4: "s4"
       }
     ];
-    const defaultOutput = `[ Object { p1: "s1", p3: "s3", p4: "s4", 1 more… } ]`;
+    const defaultOutput = `[ Object ]`;
 
     const modeTests = [
       {

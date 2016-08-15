@@ -96,7 +96,8 @@ define(function (require, exports, module) {
         return props;
       }
 
-      let mode = this.props.mode;
+      // Hardcode tiny mode to avoid recursive handling.
+      let mode = "tiny";
 
       try {
         for (let name in object) {
