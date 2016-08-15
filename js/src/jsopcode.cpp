@@ -13,7 +13,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include "mozilla/SizePrintfMacros.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include <algorithm>
 #include <ctype.h>

@@ -9,7 +9,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "nsIIOService.h"
 #include "nsIURL.h"

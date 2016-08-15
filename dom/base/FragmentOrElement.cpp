@@ -112,7 +112,7 @@
 
 #include "mozAutoDocUpdate.h"
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsDOMMutationObserver.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsCycleCollector.h"

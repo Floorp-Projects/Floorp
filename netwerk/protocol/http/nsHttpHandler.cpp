@@ -29,7 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "prprf.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"

@@ -6,7 +6,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerPrintfMacros.h" // this must pick up <stdint.h>
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include <stddef.h>
 #include <stdio.h>

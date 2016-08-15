@@ -20,7 +20,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/MemoryChecking.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #ifdef __GNUC__
 # pragma GCC diagnostic push

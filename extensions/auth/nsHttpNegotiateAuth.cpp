@@ -37,7 +37,7 @@
 #include "prmem.h"
 #include "prnetdb.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsIChannel.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"

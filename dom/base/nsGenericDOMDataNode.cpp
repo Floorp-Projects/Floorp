@@ -35,7 +35,7 @@
 #include "nsTextNode.h"
 
 #include "PLDHashTable.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;

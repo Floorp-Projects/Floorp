@@ -9,7 +9,7 @@
 #include "MediaData.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 extern mozilla::LogModule* GetSourceBufferResourceLog();
 

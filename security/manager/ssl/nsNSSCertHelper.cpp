@@ -8,7 +8,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"

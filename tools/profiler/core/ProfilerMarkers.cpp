@@ -10,7 +10,7 @@
 #ifndef SPS_STANDALONE
 #include "gfxASurface.h"
 #include "Layers.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #endif
 
 ProfilerMarkerPayload::ProfilerMarkerPayload(ProfilerBacktrace* aStack)

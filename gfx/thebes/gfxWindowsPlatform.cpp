@@ -16,7 +16,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"

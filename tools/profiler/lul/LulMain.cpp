@@ -17,7 +17,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "LulCommonExt.h"
 #include "LulElfExt.h"

@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <cutils/properties.h>
 #include "prinit.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "js/CharacterEncoding.h"
 
 using namespace mozilla::dom;

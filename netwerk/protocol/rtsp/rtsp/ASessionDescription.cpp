@@ -19,7 +19,7 @@
 
 #include "ASessionDescription.h"
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include <media/stagefright/foundation/ADebug.h>
 #include <media/stagefright/foundation/AString.h>

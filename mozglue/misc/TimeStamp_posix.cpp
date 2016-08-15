@@ -47,7 +47,7 @@
 #define KP_START_USEC p_ustart_usec
 #endif
 
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 #include <pthread.h>
 

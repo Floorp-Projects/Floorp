@@ -23,7 +23,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"

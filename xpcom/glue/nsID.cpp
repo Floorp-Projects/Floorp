@@ -6,7 +6,7 @@
 
 #include "nsID.h"
 #include "nsMemory.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 void nsID::Clear()
 {

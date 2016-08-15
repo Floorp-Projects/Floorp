@@ -19,7 +19,7 @@
 #endif
 
 #include "MainThreadUtils.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "prenv.h"
 #include "nsXPCOMPrivate.h"
 

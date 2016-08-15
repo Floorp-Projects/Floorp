@@ -27,7 +27,7 @@
 #include "nsISimpleEnumerator.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 #include "nsXPCOMStrings.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIPersistentProperties2.h"

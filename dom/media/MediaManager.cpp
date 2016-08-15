@@ -56,7 +56,7 @@
 #include "nsVariant.h"
 
 // For snprintf
-#include "mozilla/Snprintf.h"
+#include "mozilla/Sprintf.h"
 
 #include "nsJSUtils.h"
 #include "nsGlobalWindow.h"
