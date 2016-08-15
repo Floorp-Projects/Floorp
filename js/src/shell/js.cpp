@@ -967,8 +967,8 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
             if (!line) {
                 if (errno) {
                     /*
-                     * Use Latin1 variant here because the encoding of the
-                     * return value of strerror function can be non-UTF-8.
+                     * Use Latin1 variant here because strerror(errno)'s
+                     * encoding depends on the user's C locale.
                      */
                     JS_ReportErrorLatin1(cx, "%s", strerror(errno));
                     return false;
@@ -1024,6 +1024,23 @@ enum FileKind
     FileModule
 };
 
+static void
+ReportCantOpenErrorUnknownEncoding(JSContext* cx, const char* filename)
+{
+    /*
+     * Filenames are in some random system encoding.  *Probably* it's UTF-8,
+     * but no guarantees.
+     *
+     * strerror(errno)'s encoding, in contrast, depends on the user's C locale.
+     *
+     * Latin-1 is possibly wrong for both of these -- but at least if it's
+     * wrong it'll produce mojibake *safely*.  Run with Latin-1 til someone
+     * complains.
+     */
+    JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr, JSSMSG_CANT_OPEN,
+                               filename, strerror(errno));
+}
+
 static MOZ_MUST_USE bool
 Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = FileScript)
 {
@@ -1033,8 +1050,7 @@ Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = File
     } else {
         file = fopen(filename, "r");
         if (!file) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                                 JSSMSG_CANT_OPEN, filename, strerror(errno));
+            ReportCantOpenErrorUnknownEncoding(cx, filename);
             return false;
         }
     }
@@ -1141,8 +1157,7 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
 
     FILE* file = fopen(filename.ptr(), "r");
     if (!file) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_CANT_OPEN, filename.ptr(), strerror(errno));
+        ReportCantOpenErrorUnknownEncoding(cx, filename.ptr());
         return false;
     }
     AutoCloseFile autoClose(file);
@@ -1741,11 +1756,7 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
 
     file = fopen(pathname.ptr(), "rb");
     if (!file) {
-        /*
-         * Use Latin1 variant here because the encoding of the return value of
-         * strerror function can be non-UTF-8.
-         */
-        JS_ReportErrorLatin1(cx, "can't open %s: %s", pathname.ptr(), strerror(errno));
+        ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
         return nullptr;
     }
     AutoCloseFile autoClose(file);
@@ -1767,11 +1778,14 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
             if (buf) {
                 cc = fread(buf, 1, len, file);
                 if (cc != len) {
-                    pathname.clear();
-                    if (!pathname.encodeUtf8(cx, pathnameStr))
-                        return nullptr;
-                    JS_ReportErrorUTF8(cx, "can't read %s: %s", pathname.ptr(),
-                                       (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
+                    if (ptrdiff_t(cc) < 0) {
+                        ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
+                    } else {
+                        pathname.clear();
+                        if (!pathname.encodeUtf8(cx, pathnameStr))
+                            return nullptr;
+                        JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.ptr());
+                    }
                 } else {
                     char16_t* ucbuf =
                         JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf, len), &len).get();
@@ -2849,9 +2863,8 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
 
         FILE* file = fopen(script->filename(), "r");
         if (!file) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                                 JSSMSG_CANT_OPEN, script->filename(),
-                                 strerror(errno));
+            /* FIXME: script->filename() should become UTF-8 (bug 987069). */
+            ReportCantOpenErrorUnknownEncoding(cx, script->filename());
             return false;
         }
         auto closeFile = MakeScopeExit([file]() { fclose(file); });
