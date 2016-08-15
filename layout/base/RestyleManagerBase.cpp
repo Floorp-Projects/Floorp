@@ -153,7 +153,7 @@ RestyleManagerBase::ChangeHintToString(nsChangeHint aHint)
     "BorderStyleNoneChange", "UpdateTextPath", "SchedulePaint",
     "NeutralChange", "InvalidateRenderingObservers",
     "ReflowChangesSizeOrPosition", "UpdateComputedBSize",
-    "UpdateUsesOpacity"
+    "UpdateUsesOpacity", "UpdateBackgroundPosition"
   };
   uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
   uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
