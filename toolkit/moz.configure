@@ -488,5 +488,5 @@ option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
 def servo_target_dir(value):
     return value[0]
 
-set_define('MOZ_STYLO', depends_if(servo_target_dir)(lambda x: bool(x))
+set_define('MOZ_STYLO', depends_if(servo_target_dir)(lambda x: bool(x)))
 set_config('SERVO_TARGET_DIR', servo_target_dir)
