@@ -14,6 +14,7 @@
 #include "PresentationChild.h"
 #include "PresentationContentSessionInfo.h"
 #include "PresentationIPCService.h"
+#include "PresentationLog.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -391,11 +392,16 @@ NS_IMETHODIMP
 PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId,
                                            uint8_t aRole)
 {
+  PRES_DEBUG("content %s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(aSessionId).get(), aRole);
+
   if (nsIPresentationService::ROLE_RECEIVER == aRole) {
     // Terminate receiver page.
     uint64_t windowId;
     if (NS_SUCCEEDED(GetWindowIdBySessionIdInternal(aSessionId, &windowId))) {
       NS_DispatchToMainThread(NS_NewRunnableFunction([windowId]() -> void {
+        PRES_DEBUG("Attempt to close window[%d]\n", windowId);
+
         if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
           window->Close();
         }
