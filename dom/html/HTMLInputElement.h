@@ -1023,7 +1023,11 @@ protected:
   /**
    * Returns if the step attribute apply for the current type.
    */
-  bool DoesStepApply() const { return DoesMinMaxApply(); }
+  bool DoesStepApply() const
+  {
+    // TODO: this is temporary until bug 888316 is fixed.
+    return DoesMinMaxApply() && mType != NS_FORM_INPUT_WEEK;
+  }
 
   /**
    * Returns if stepDown and stepUp methods apply for the current type.
@@ -1033,7 +1037,11 @@ protected:
   /**
    * Returns if valueAsNumber attribute applies for the current type.
    */
-  bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
+  bool DoesValueAsNumberApply() const
+  {
+    // TODO: this is temporary until bug 888316 is fixed.
+    return DoesMinMaxApply() && mType != NS_FORM_INPUT_WEEK;
+  }
 
   /**
    * Returns if autocomplete attribute applies for the current type.
