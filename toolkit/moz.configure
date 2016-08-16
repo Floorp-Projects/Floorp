@@ -505,3 +505,23 @@ def ipc_fuzzer(value, target):
 
 set_config('MOZ_FAULTY', ipc_fuzzer)
 set_define('MOZ_FAULTY', ipc_fuzzer)
+
+# Printing
+# ==============================================================
+@depends(target)
+def ios_disable_printing(target):
+    if target.os == 'iOS':
+        return False
+
+imply_option('--enable-printing', ios_disable_printing, reason='--target')
+
+option('--disable-printing', help='Disable printing support')
+
+@depends('--disable-printing')
+def printing(value):
+    if value:
+        return True
+
+set_config('NS_PRINTING', printing)
+set_define('NS_PRINTING', printing)
+set_define('NS_PRINT_PREVIEW', printing)
