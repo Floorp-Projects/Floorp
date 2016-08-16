@@ -139,15 +139,11 @@ Finder.prototype = {
   },
 
   set caseSensitive(aSensitive) {
-    if (this._fastFind.caseSensitive === aSensitive)
-      return;
     this._fastFind.caseSensitive = aSensitive;
     this.iterator.reset();
   },
 
   set entireWord(aEntireWord) {
-    if (this._fastFind.entireWord === aEntireWord)
-      return;
     this._fastFind.entireWord = aEntireWord;
     this.iterator.reset();
   },
@@ -383,21 +379,12 @@ Finder.prototype = {
     }
   },
 
-  _notifyMatchesCount: function(result = this._currentMatchesCountResult) {
-    if (!result)
-      return;
-    // The `_currentFound` property is only used for internal bookkeeping.
-    delete result._currentFound;
-    if (result.total == this._currentMatchLimit)
-      result.total = -1;
-
+  _notifyMatchesCount: function(result) {
     for (let l of this._listeners) {
       try {
         l.onMatchesCountResult(result);
       } catch (ex) {}
     }
-
-    this._currentMatchesCountResult = null;
   },
 
   requestMatchesCount: function(aWord, aMatchLimit, aLinksOnly) {
@@ -411,14 +398,12 @@ Finder.prototype = {
     }
 
     let window = this._getWindow();
-    this._currentFoundRange = this._fastFind.getFoundRange();
-    this._currentMatchLimit = aMatchLimit;
-
-    this._currentMatchesCountResult = {
+    let result = {
       total: 0,
       current: 0,
       _currentFound: false
     };
+    let foundRange = this._fastFind.getFoundRange();
 
     this.iterator.start({
       caseSensitive: this._fastFind.caseSensitive,
@@ -426,37 +411,29 @@ Finder.prototype = {
       finder: this,
       limit: aMatchLimit,
       linksOnly: aLinksOnly,
-      listener: this,
+      onRange: range => {
+        ++result.total;
+        if (!result._currentFound) {
+          ++result.current;
+          result._currentFound = (foundRange &&
+            range.startContainer == foundRange.startContainer &&
+            range.startOffset == foundRange.startOffset &&
+            range.endContainer == foundRange.endContainer &&
+            range.endOffset == foundRange.endOffset);
+        }
+      },
       useCache: true,
       word: aWord
-    }).then(this._notifyMatchesCount.bind(this));
+    }).then(() => {
+      // The `_currentFound` property is only used for internal bookkeeping.
+      delete result._currentFound;
+
+      if (result.total == aMatchLimit)
+        result.total = -1;
+
+      this._notifyMatchesCount(result);
+    });
   },
-
-  // FinderIterator listener implementation
-
-  onIteratorBeforeRestart() {},
-
-  onIteratorRangeFound(range) {
-    let result = this._currentMatchesCountResult;
-    if (!result)
-      return;
-
-    ++result.total;
-    if (!result._currentFound) {
-      ++result.current;
-      result._currentFound = (this._currentFoundRange &&
-        range.startContainer == this._currentFoundRange.startContainer &&
-        range.startOffset == this._currentFoundRange.startOffset &&
-        range.endContainer == this._currentFoundRange.endContainer &&
-        range.endOffset == this._currentFoundRange.endOffset);
-    }
-  },
-
-  onIteratorReset() {},
-
-  onIteratorRestart({ word, linksOnly }) {
-    this.requestMatchesCount(word, this._currentMatchLimit, linksOnly);
-   },
 
   _getWindow: function () {
     return this._docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
