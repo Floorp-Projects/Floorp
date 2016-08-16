@@ -32,6 +32,7 @@ window.onload = Task.async(function* () {
     yield testMoreThanShortMaxProps();
     yield testMoreThanLongMaxProps();
     yield testRecursiveArray();
+    yield testPreviewLimit();
 
     yield testNamedNodeMap();
   } catch(e) {
@@ -190,6 +191,34 @@ window.onload = Task.async(function* () {
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
+  function testPreviewLimit() {
+    const testName = "testPreviewLimit";
+
+    const shortOutput = `Array[ 0, 1, 2, 8 more… ]`;
+    const defaultOutput = `Array[ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1 more… ]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: shortOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[11]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: shortOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
   function testNamedNodeMap() {
     const testName = "testNamedNodeMap";
 
@@ -310,6 +339,22 @@ window.onload = Task.async(function* () {
         }
 
         return longArrayGrip;
+
+      case "testPreviewLimit":
+        return {
+          "type": "object",
+          "class": "Array",
+          "actor": "server1.conn1.obj31",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 12,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 11,
+            "items": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+          }
+        };
 
       case "testRecursiveArray":
         return {
