@@ -345,8 +345,7 @@ nsDocLoader::Destroy()
   // Remove the document loader from the parent list of loaders...
   if (mParent)
   {
-    nsresult rv = mParent->RemoveChildLoader(this);
-    NS_WARN_IF(NS_FAILED(rv));
+    mParent->RemoveChildLoader(this);
   }
 
   // Release all the information about network requests...
@@ -377,8 +376,7 @@ nsDocLoader::DestroyChildren()
     if (loader) {
       // This is a safe cast, as we only put nsDocLoader objects into the
       // array
-      nsresult rv = static_cast<nsDocLoader*>(loader)->SetDocLoaderParent(nullptr);
-      NS_WARN_IF(NS_FAILED(rv));
+      static_cast<nsDocLoader*>(loader)->SetDocLoaderParent(nullptr);
     }
   }
   mChildList.Clear();
@@ -618,7 +616,7 @@ nsresult nsDocLoader::RemoveChildLoader(nsDocLoader* aChild)
 {
   nsresult rv = mChildList.RemoveElement(aChild) ? NS_OK : NS_ERROR_FAILURE;
   if (NS_SUCCEEDED(rv)) {
-    rv = aChild->SetDocLoaderParent(nullptr);
+    aChild->SetDocLoaderParent(nullptr);
   }
   return rv;
 }
@@ -627,7 +625,7 @@ nsresult nsDocLoader::AddChildLoader(nsDocLoader* aChild)
 {
   nsresult rv = mChildList.AppendElement(aChild) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   if (NS_SUCCEEDED(rv)) {
-    rv = aChild->SetDocLoaderParent(this);
+    aChild->SetDocLoaderParent(this);
   }
   return rv;
 }
