@@ -21,8 +21,10 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
 {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
   // Use a new MediaByteBuffer as the object will be modified during initialization.
-  mExtraData = new MediaByteBuffer;
-  mExtraData->AppendElements(*aConfig.mCodecSpecificConfig);
+  if (aConfig.mCodecSpecificConfig && aConfig.mCodecSpecificConfig->Length()) {
+    mExtraData = new MediaByteBuffer;
+    mExtraData->AppendElements(*aConfig.mCodecSpecificConfig);
+  }
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -139,6 +141,16 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 
     if (bytesConsumed < 0) {
       NS_WARNING("FFmpeg audio decoder error.");
+      return DecodeResult::DECODE_ERROR;
+    }
+
+    if (mFrame->format != AV_SAMPLE_FMT_FLT &&
+        mFrame->format != AV_SAMPLE_FMT_FLTP &&
+        mFrame->format != AV_SAMPLE_FMT_S16 &&
+        mFrame->format != AV_SAMPLE_FMT_S16P &&
+        mFrame->format != AV_SAMPLE_FMT_S32 &&
+        mFrame->format != AV_SAMPLE_FMT_S32P) {
+      NS_WARNING("FFmpeg audio decoder outputs unsupported audio format.");
       return DecodeResult::DECODE_ERROR;
     }
 
