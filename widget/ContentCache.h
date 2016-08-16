@@ -217,7 +217,7 @@ protected:
     }
     bool IsOverlappingWith(uint32_t aOffset, uint32_t aLength) const
     {
-      if (!IsValid() || aOffset == UINT32_MAX) {
+      if (!HasRects() || aOffset == UINT32_MAX || !aLength) {
         return false;
       }
       CheckedInt<uint32_t> endOffset =
@@ -225,7 +225,7 @@ protected:
       if (NS_WARN_IF(!endOffset.isValid())) {
         return false;
       }
-      return aOffset <= EndOffset() && endOffset.value() >= mStart;
+      return aOffset < EndOffset() && endOffset.value() > mStart;
     }
     LayoutDeviceIntRect GetRect(uint32_t aOffset) const;
     LayoutDeviceIntRect GetUnionRect(uint32_t aOffset, uint32_t aLength) const;
