@@ -46,6 +46,7 @@ public:
                                         const uint64_t& aInputBlockId,
                                         const nsTArray<ScrollableLayerGuid>& aTargets) = 0;
     virtual CompositorBridgeParentIPCAllocator* AsCompositorBridgeParentIPCAllocator() { return nullptr; }
+    virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) {}
 };
 
 } // namespace layers
