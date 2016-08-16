@@ -6,7 +6,7 @@ let events = [];
 function record(type, extensionContext) {
   let eventType = type == "page-load" ? "load" : "unload";
   let url = extensionContext.uri.spec;
-  let {extensionId} = extensionContext;
+  let extensionId = extensionContext.extension.id;
   events.push({eventType, url, extensionId});
 }
 

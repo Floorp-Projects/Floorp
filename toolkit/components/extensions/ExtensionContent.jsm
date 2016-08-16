@@ -75,13 +75,14 @@ var api = context => {
           connectInfo = extensionId;
           extensionId = null;
         }
+        extensionId = extensionId || context.extension.id;
         let name = connectInfo && connectInfo.name || "";
-        let recipient = extensionId ? {extensionId} : {extensionId: context.extensionId};
+        let recipient = {extensionId};
         return context.messenger.connect(context.messageManager, name, recipient);
       },
 
       get id() {
-        return context.extensionId;
+        return context.extension.id;
       },
 
       get lastError() {
@@ -110,8 +111,9 @@ var api = context => {
         } else {
           [extensionId, message, options, responseCallback] = args;
         }
+        extensionId = extensionId || context.extension.id;
 
-        let recipient = extensionId ? {extensionId} : {extensionId: context.extensionId};
+        let recipient = {extensionId};
         return context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);
       },
     },
@@ -336,7 +338,7 @@ class ExtensionContext extends BaseContext {
     // copy origin attributes from the content window origin attributes to
     // preserve the user context id. overwrite the addonId.
     let attrs = contentPrincipal.originAttributes;
-    attrs.addonId = this.extensionId;
+    attrs.addonId = this.extension.id;
     let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, attrs);
     Object.defineProperty(this, "principal",
                           {value: extensionPrincipal, enumerable: true, configurable: true});
@@ -350,7 +352,7 @@ class ExtensionContext extends BaseContext {
     }
 
     if (isExtensionPage) {
-      if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != this.extensionId) {
+      if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != this.extension.id) {
         throw new Error("Invalid target window for this extension context");
       }
       // This is an iframe with content script API enabled and its principal should be the
@@ -398,7 +400,7 @@ class ExtensionContext extends BaseContext {
     let sender = {id: this.extension.uuid, frameId, url};
     // Properties in |filter| must match those in the |recipient|
     // parameter of sendMessage.
-    let filter = {extensionId: this.extensionId, frameId};
+    let filter = {extensionId: this.extension.id, frameId};
     this.messenger = new Messenger(this, [mm], sender, filter, delegate);
 
     this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
@@ -703,7 +705,7 @@ DocumentManager = {
 
     // Clean up iframe extension page contexts on extension shutdown.
     for (let [winId, context] of this.extensionPageWindows) {
-      if (context.extensionId == extensionId) {
+      if (context.extension.id == extensionId) {
         context.close();
         this.extensionPageWindows.delete(winId);
       }
