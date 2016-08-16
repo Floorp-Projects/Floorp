@@ -1122,6 +1122,11 @@ class CallEntry extends Entry {
     if (this.allowAmbiguousOptionalArguments) {
       // When this option is set, it's up to the implementation to
       // parse arguments.
+      // The last argument for asynchronous methods is either a function or null.
+      // This is specifically done for runtime.sendMessage.
+      if (this.hasAsyncCallback && typeof(args[args.length - 1]) != "function") {
+        args.push(null);
+      }
       return args;
     }
     let success = check(0, 0);
@@ -1430,8 +1435,11 @@ this.Schemas = {
         if (parameters && parameters.length && parameters[parameters.length - 1].name == type.async) {
           hasAsyncCallback = true;
         }
-        if (type.returns || type.allowAmbiguousOptionalArguments) {
-          throw new Error(`Internal error: Async functions must not have return values or ambiguous arguments.`);
+        if (type.returns) {
+          throw new Error("Internal error: Async functions must not have return values.");
+        }
+        if (type.allowAmbiguousOptionalArguments && !hasAsyncCallback) {
+          throw new Error("Internal error: Async functions with ambiguous arguments must declare the callback as the last parameter");
         }
       }
 
