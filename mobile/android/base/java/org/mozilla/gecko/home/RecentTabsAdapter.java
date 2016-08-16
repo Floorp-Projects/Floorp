@@ -41,7 +41,7 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
     private static final int NAVIGATION_BACK_BUTTON_INDEX = 0;
 
     private static final String TELEMETRY_EXTRA_LAST_TIME = "recent_tabs_last_time";
-    private static final String TELEMETRY_EXTRA_RECENTY_CLOSED = "recent_closed_tabs";
+    private static final String TELEMETRY_EXTRA_RECENTLY_CLOSED = "recent_closed_tabs";
     private static final String TELEMETRY_EXTRA_MIXED = "recent_tabs_mixed";
 
     // Recently closed tabs from Gecko.
@@ -265,7 +265,7 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
         dataList.add(getClosedTabForPosition(position).data);
 
         final String telemetryExtra =
-                position > getLastRecentTabIndex() ? TELEMETRY_EXTRA_LAST_TIME : TELEMETRY_EXTRA_RECENTY_CLOSED;
+                position > getLastRecentTabIndex() ? TELEMETRY_EXTRA_LAST_TIME : TELEMETRY_EXTRA_RECENTLY_CLOSED;
 
         restoreSessionWithHistory(dataList);
 
@@ -282,7 +282,7 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
         addTabDataToList(dataList, lastSessionTabs);
 
         final String telemetryExtra = recentlyClosedTabs.length > 0 && lastSessionTabs.length > 0 ? TELEMETRY_EXTRA_MIXED :
-                recentlyClosedTabs.length > 0 ? TELEMETRY_EXTRA_RECENTY_CLOSED : TELEMETRY_EXTRA_LAST_TIME;
+                recentlyClosedTabs.length > 0 ? TELEMETRY_EXTRA_RECENTLY_CLOSED : TELEMETRY_EXTRA_LAST_TIME;
 
         restoreSessionWithHistory(dataList);
 
