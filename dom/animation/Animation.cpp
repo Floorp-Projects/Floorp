@@ -140,6 +140,9 @@ Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
     return;
   }
 
+  AutoMutationBatchForAnimation mb(*this);
+  bool wasRelevant = mIsRelevant;
+
   if (mEffect) {
     if (!aEffect) {
       // If the new effect is null, call ResetPendingTasks before clearing
@@ -148,10 +151,19 @@ Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
       ResetPendingTasks();
     }
 
+    // We need to notify observers now because once we set mEffect to null
+    // we won't be able to find the target element to notify.
+    if (mIsRelevant) {
+      nsNodeUtils::AnimationRemoved(this);
+    }
+
     // Break links with the old effect and then drop it.
     RefPtr<AnimationEffectReadOnly> oldEffect = mEffect;
     mEffect = nullptr;
     oldEffect->SetAnimation(nullptr);
+
+    // The following will not do any notification because mEffect is null.
+    UpdateRelevance();
   }
 
   if (aEffect) {
@@ -165,6 +177,14 @@ Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
     // Create links with the new effect.
     mEffect = newEffect;
     mEffect->SetAnimation(this);
+
+    // Update relevance and then notify possible add or change.
+    // If the target is different, the change notification will be ignored by
+    // AutoMutationBatchForAnimation.
+    UpdateRelevance();
+    if (wasRelevant && mIsRelevant) {
+      nsNodeUtils::AnimationChanged(this);
+    }
 
     // Reschedule pending pause or pending play tasks.
     // If we have a pending animation, it will either be registered
