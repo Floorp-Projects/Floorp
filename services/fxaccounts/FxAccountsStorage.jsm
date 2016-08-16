@@ -401,7 +401,7 @@ this.FxAccountsStorageManager.prototype = {
       accountData: this.cachedSecure,
     }
     try {
-      yield this.secureStorage.set(this.cachedPlain.email, toWriteSecure);
+      yield this.secureStorage.set(this.cachedPlain.uid, toWriteSecure);
     } catch (ex) {
       if (!ex instanceof this.secureStorage.STORAGE_LOCKED) {
         throw ex;
@@ -511,7 +511,7 @@ LoginManagerStorage.prototype = {
     }
   }),
 
-  set: Task.async(function* (email, contents) {
+  set: Task.async(function* (uid, contents) {
     if (!contents) {
       // Nuke it from the login manager.
       let cleared = yield this._clearLoginMgrData();
@@ -541,7 +541,7 @@ LoginManagerStorage.prototype = {
       let login = new loginInfo(FXA_PWDMGR_HOST,
                                 null, // aFormSubmitURL,
                                 FXA_PWDMGR_REALM, // aHttpRealm,
-                                email, // aUsername
+                                uid, // aUsername
                                 JSON.stringify(contents), // aPassword
                                 "", // aUsernameField
                                 "");// aPasswordField
@@ -583,9 +583,8 @@ LoginManagerStorage.prototype = {
         return null;
       }
       let login = logins[0];
-      // Support either the uid or the email as the username - we plan to move
-      // to storing the uid once Fx41 hits the release channel as the code below
-      // that handles either first landed in 41. Bug 1183951 is to store the uid.
+      // Support either the uid or the email as the username - as of bug 1183951
+      // we store the uid, but we support having either for b/w compat.
       if (login.username == uid || login.username == email) {
         return JSON.parse(login.password);
       }
