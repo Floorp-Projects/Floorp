@@ -30310,12 +30310,12 @@
         "url": "/vibration/silent-ignore.html"
       },
       {
-        "path": "web-animations/animation-model/animation-types/animation-types.html",
-        "url": "/web-animations/animation-model/animation-types/animation-types.html"
-      },
-      {
         "path": "web-animations/animation-model/animation-types/discrete-animation.html",
         "url": "/web-animations/animation-model/animation-types/discrete-animation.html"
+      },
+      {
+        "path": "web-animations/animation-model/animation-types/type-per-property.html",
+        "url": "/web-animations/animation-model/animation-types/type-per-property.html"
       },
       {
         "path": "web-animations/animation-model/keyframe-effects/effect-value-context.html",

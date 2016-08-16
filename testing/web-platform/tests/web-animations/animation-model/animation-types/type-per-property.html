@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Tests for animation types</title>
+<link rel="help" href="https://w3c.github.io/web-animations/#animation-types">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../../testcommon.js"></script>
+<link rel="stylesheet" href="/resources/testharness.css">
+<style>
+html {
+  font-size: 10px;
+}
+</style>
+<body>
+<div id="log"></div>
+<script>
+"use strict";
+
+var gCSSProperties = {
+  "align-content": [
+    // https://drafts.csswg.org/css-align/#propdef-align-content
+    discrete("flex-start", "flex-end")
+  ],
+  "align-items": [
+    // https://drafts.csswg.org/css-align/#propdef-align-items
+    discrete("flex-start", "flex-end")
+  ],
+  "align-self": [
+    // https://drafts.csswg.org/css-align/#propdef-align-self
+    discrete("flex-start", "flex-end")
+  ],
+  "flex-basis": [
+    // https://drafts.csswg.org/css-flexbox/#propdef-flex-basis
+    lengthPercentageOrCalc(),
+    discrete("auto", "10px")
+  ],
+  "flex-direction": [
+    // https://drafts.csswg.org/css-flexbox/#propdef-flex-direction
+    discrete("row", "row-reverse")
+  ],
+  "flex-grow": [
+    // https://drafts.csswg.org/css-flexbox/#flex-grow-property
+    positiveNumber()
+  ],
+  "flex-shrink": [
+    // https://drafts.csswg.org/css-flexbox/#propdef-flex-shrink
+    positiveNumber()
+  ],
+  "flex-wrap": [
+    // https://drafts.csswg.org/css-flexbox/#propdef-flex-wrap
+    discrete("nowrap", "wrap")
+  ],
+  "justify-content": [
+    // https://drafts.csswg.org/css-align/#propdef-justify-content
+    discrete("baseline", "last-baseline")
+  ],
+  "justify-items": [
+    // https://drafts.csswg.org/css-align/#propdef-justify-items
+    discrete("baseline", "last-baseline")
+  ],
+  "justify-self": [
+    // https://drafts.csswg.org/css-align/#propdef-justify-self
+    discrete("baseline", "last-baseline")
+  ],
+  "order": [
+    // https://drafts.csswg.org/css-flexbox/#propdef-order
+    integer()
+  ],
+}
+
+for (var property in gCSSProperties) {
+  if (!isSupported(property)) {
+    continue;
+  }
+  var testFunctions = gCSSProperties[property];
+  testFunctions.forEach(function(testFunction) {
+    testFunction(property);
+  });
+}
+
+function discrete(from, to) {
+  return function(property) {
+    var idlName = propertyToIDL(property);
+    test(function(t) {
+      var div = createDiv(t);
+      var keyframe = {};
+      keyframe[idlName] = [from, to];
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName, [{ time: 0,    expected: from },
+                                                { time: 499,  expected: from },
+                                                { time: 500,  expected: to },
+                                                { time: 1000, expected: to }]);
+    }, property + " uses discrete animation when animating between '"
+       + from + "' and '" + to + "' with linear easing");
+
+    test(function(t) {
+      var div = createDiv(t);
+      // Easing: http://cubic-bezier.com/#.68,0,1,.01
+      // With this curve, we don't reach the 50% point until about 95% of
+      // the time has expired.
+      var keyframe = {};
+      keyframe[idlName] = [from, to];
+      var animation = div.animate(keyframe,
+                                  { duration: 1000, fill: "both",
+                                    easing: "cubic-bezier(0.68,0,1,0.01)" });
+      testAnimationSamples(animation, idlName, [{ time: 0,    expected: from },
+                                                { time: 940,  expected: from },
+                                                { time: 960,  expected: to }]);
+    }, property + " uses discrete animation when animating between '"
+       + from + "' and '" + to + "' with effect easing");
+
+    test(function(t) {
+      var div = createDiv(t);
+      // Easing: http://cubic-bezier.com/#.68,0,1,.01
+      // With this curve, we don't reach the 50% point until about 95% of
+      // the time has expired.
+      var keyframe = {};
+      keyframe[idlName] = [from, to];
+      keyframe.easing = "cubic-bezier(0.68,0,1,0.01)";
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName, [{ time: 0,    expected: from },
+                                                { time: 940,  expected: from },
+                                                { time: 960,  expected: to }]);
+    }, property + " uses discrete animation when animating between '"
+       + from + "' and '" + to + "' with keyframe easing");
+  }
+}
+
+function length() {
+  return function(property) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = ["10px", "50px"];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "10px" },
+                            { time: 500,  expected: "30px" },
+                            { time: 1000, expected: "50px" }]);
+    }, property + " supports animating as a length");
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = ["1rem", "5rem"];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "10px" },
+                            { time: 500,  expected: "30px" },
+                            { time: 1000, expected: "50px" }]);
+    }, property + " supports animating as a length of rem");
+  }
+}
+
+function percentage() {
+  return function(property) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = ["10%", "50%"];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "10%" },
+                            { time: 500,  expected: "30%" },
+                            { time: 1000, expected: "50%" }]);
+    }, property + " supports animating as a percentage");
+  }
+}
+
+function integer() {
+  return function(property) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = [-2, 2];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName, [{ time: 0,    expected: "-2" },
+                                                { time: 500,  expected: "0" },
+                                                { time: 1000, expected: "2" }]);
+    }, property + " supports animating as an integer");
+  }
+}
+
+function positiveNumber() {
+  return function(property) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = [1.1, 1.5];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "1.1" },
+                            { time: 500,  expected: "1.3" },
+                            { time: 1000, expected: "1.5" }]);
+    }, property + " supports animating as a positive number");
+  }
+}
+
+function lengthPercentageOrCalc() {
+  return function(property) {
+    length()(property);
+    percentage()(property);
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = ["10px", "20%"];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "10px" },
+                            { time: 500,  expected: "calc(5px + 10%)" },
+                            { time: 1000, expected: "20%" }]);
+    }, property + " supports animating as combination units 'px' and '%'");
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = ["10%", "2em"];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "10%" },
+                            { time: 500,  expected: "calc(10px + 5%)" },
+                            { time: 1000, expected: "20px" }]);
+    }, property + " supports animating as combination units '%' and 'em'");
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = ["1em", "2rem"];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "10px" },
+                            { time: 500,  expected: "15px" },
+                            { time: 1000, expected: "20px" }]);
+    }, property + " supports animating as combination units 'em' and 'rem'");
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = ["10px", "calc(1em + 20%)"];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "10px" },
+                            { time: 500,  expected: "calc(10px + 10%)" },
+                            { time: 1000, expected: "calc(10px + 20%)" }]);
+    }, property + " supports animating as combination units 'px' and 'calc'");
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var keyframe = {};
+      keyframe[idlName] = ["calc(10px + 10%)", "calc(1em + 1rem + 20%)"];
+      var div = createDiv(t);
+      var animation = div.animate(keyframe, { duration: 1000, fill: "both" });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: "calc(10px + 10%)" },
+                            { time: 500,  expected: "calc(15px + 15%)" },
+                            { time: 1000, expected: "calc(20px + 20%)" }]);
+    }, property + " supports animating as a calc");
+  }
+}
+
+function testAnimationSamples(animation, idlName, testSamples) {
+  var target = animation.effect.target;
+  testSamples.forEach(function(testSample) {
+    animation.currentTime = testSample.time;
+    assert_equals(getComputedStyle(target)[idlName], testSample.expected,
+                  "The value should be " + testSample.expected +
+                  " at " + testSample.time + "ms");
+  });
+}
+
+function isSupported(property) {
+  var testKeyframe = new TestKeyframe(propertyToIDL(property));
+  try {
+    // Since TestKeyframe returns 'undefined' for |property|,
+    // the KeyframeEffect constructor will throw
+    // if the string "undefined" is not a valid value for the property.
+    new KeyframeEffect(null, testKeyframe);
+  } catch(e) {}
+  return testKeyframe.propAccessCount !== 0;
+}
+
+function TestKeyframe(testProp) {
+  var _propAccessCount = 0;
+
+  Object.defineProperty(this, testProp, {
+    get: function() { _propAccessCount++; },
+    enumerable: true
+  });
+
+  Object.defineProperty(this, 'propAccessCount', {
+    get: function() { return _propAccessCount; }
+  });
+}
+
+function propertyToIDL(property) {
+  // https://w3c.github.io/web-animations/#animation-property-name-to-idl-attribute-name
+  if (property === "float") {
+    return "cssFloat";
+  }
+  return property.replace(/-[a-z]/gi,
+                          function (str) {
+                            return str.substr(1).toUpperCase(); });
+}
+
+</script>
