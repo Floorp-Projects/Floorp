@@ -719,7 +719,7 @@ public:
         block->mNext = nullptr;
         mNextBlock = &block->mNext;
       }
-      return new (mNext++) PtrInfo(aPointer, aParticipant);
+      return new (mozilla::KnownNotNull, mNext++) PtrInfo(aPointer, aParticipant);
     }
   private:
     NodeBlock** mNextBlock;
