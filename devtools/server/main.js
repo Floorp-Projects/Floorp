@@ -569,11 +569,6 @@ var DebuggerServer = {
       constructor: "PerformanceEntriesActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/emulation", {
-      prefix: "emulation",
-      constructor: "EmulationActor",
-      type: { tab: true }
-    });
   },
 
   /**

@@ -4,22 +4,16 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
+const { TouchEventSimulator } = require("devtools/shared/touch/simulator");
 const { getOwnerWindow } = require("sdk/tabs/utils");
 const { startup } = require("sdk/window/helpers");
 const message = require("./utils/message");
 const { swapToInnerBrowser } = require("./browser/swap");
-const { EmulationFront } = require("devtools/shared/fronts/emulation");
 
 const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
-
-loader.lazyRequireGetter(this, "DebuggerClient",
-                         "devtools/shared/client/main", true);
-loader.lazyRequireGetter(this, "DebuggerServer",
-                         "devtools/server/main", true);
 
 /**
  * ResponsiveUIManager is the external API for the browser UI, etc. to use when
@@ -255,6 +249,11 @@ ResponsiveUI.prototype = {
   toolWindow: null,
 
   /**
+   * Touch event simulator.
+   */
+  touchEventSimulator: null,
+
+  /**
    * Open RDM while preserving the state of the page.  We use `swapFrameLoaders`
    * to ensure all in-page state is preserved, just like when you move a tab to
    * a new window.
@@ -285,8 +284,7 @@ ResponsiveUI.prototype = {
     // Notify the inner browser to start the frame script
     yield message.request(this.toolWindow, "start-frame-script");
 
-    // Get the protocol ready to speak with emulation actor
-    yield this.connectToServer();
+    this.touchEventSimulator = new TouchEventSimulator(this.getViewportBrowser());
   }),
 
   /**
@@ -317,11 +315,13 @@ ResponsiveUI.prototype = {
     this.tab.removeEventListener("TabClose", this);
     this.toolWindow.removeEventListener("message", this);
 
+    // Stop the touch event simulator if it was running
     if (!isTabClosing) {
-      // Stop the touch event simulator if it was running
-      yield this.emulationFront.clearTouchEventsOverride();
+      yield this.touchEventSimulator.stop();
+    }
 
-      // Notify the inner browser to stop the frame script
+    // Notify the inner browser to stop the frame script
+    if (!isTabClosing) {
       yield message.request(this.toolWindow, "stop-frame-script");
     }
 
@@ -331,15 +331,8 @@ ResponsiveUI.prototype = {
     this.tab = null;
     this.inited = null;
     this.toolWindow = null;
+    this.touchEventSimulator = null;
     this.swap = null;
-
-    if (!isTabClosing) {
-      // Close the debugger client used to speak with emulation actor
-      yield new Promise((resolve, reject) => {
-        this.client.close(resolve);
-        this.client = this.emulationFront = null;
-      });
-    }
 
     // Undo the swap and return the content back to a normal tab
     swap.stop();
@@ -347,17 +340,6 @@ ResponsiveUI.prototype = {
     this.destroyed = true;
 
     return true;
-  }),
-
-  connectToServer: Task.async(function* () {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
-    this.client = new DebuggerClient(DebuggerServer.connectPipe());
-    yield this.client.connect();
-    let { tab } = yield this.client.getTab();
-    this.emulationFront = EmulationFront(this.client, tab);
   }),
 
   handleEvent(event) {
@@ -402,14 +384,12 @@ ResponsiveUI.prototype = {
 
   updateTouchSimulation: Task.async(function* (enabled) {
     if (enabled) {
-      let reloadNeeded = yield this.emulationFront.setTouchEventsOverride(
-        Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
-      );
+      let reloadNeeded = yield this.touchEventSimulator.start();
       if (reloadNeeded) {
         this.getViewportBrowser().reload();
       }
     } else {
-      this.emulationFront.clearTouchEventsOverride();
+      this.touchEventSimulator.stop();
     }
   }),
 
