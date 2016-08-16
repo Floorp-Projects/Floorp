@@ -295,6 +295,16 @@ def nsis_version(nsis):
 
     return ver
 
+# And that makensis is 32-bit.
+@depends_if(nsis)
+@checking('for 32-bit NSIS')
+def nsis_binary_type(nsis):
+    bin_type = windows_binary_type(nsis)
+    if bin_type != 'win32':
+        raise FatalCheckError('%s is not a 32-bit Windows application' % nsis)
+
+    return 'yes'
+
 
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
