@@ -138,7 +138,7 @@ CoreLocationLocationProvider::MLSUpdate::NotifyError(uint16_t error)
 }
 class CoreLocationObjects {
 public:
-  NS_METHOD Init(CoreLocationLocationProvider* aProvider) {
+  nsresult Init(CoreLocationLocationProvider* aProvider) {
     mLocationManager = [[CLLocationManager alloc] init];
     NS_ENSURE_TRUE(mLocationManager, NS_ERROR_NOT_AVAILABLE);
 
