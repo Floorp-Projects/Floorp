@@ -394,7 +394,8 @@ static void DrawDigits(unsigned int aValue,
 
     Rect drawRect = Rect(aOffsetX + n * FontWidth, aOffsetY, FontWidth, FontHeight);
     IntRect clipRect = IntRect(0, 0, 300, 100);
-    aCompositor->DrawQuad(drawRect, clipRect, aEffectChain, opacity, transform);
+    aCompositor->DrawQuad(drawRect, clipRect,
+  aEffectChain, opacity, transform);
   }
 }
 
