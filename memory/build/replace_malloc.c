@@ -114,6 +114,11 @@ replace_malloc_init_funcs()
 #include "malloc_decls.h"
 
 #define MALLOC_DECL(name, return_type, ...) \
+  MFBT_API return_type name ## _impl(__VA_ARGS__);
+#define MALLOC_FUNCS MALLOC_FUNCS_EXTRA
+#include "malloc_decls.h"
+
+#define MALLOC_DECL(name, return_type, ...) \
   MOZ_JEMALLOC_API return_type name ## _impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
