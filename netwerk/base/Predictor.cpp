@@ -1632,7 +1632,7 @@ Predictor::LearnInternal(PredictorLearnReason reason, nsICacheEntry *entry,
 
           nsCOMPtr<nsIURI> uri;
           uint32_t hitCount, lastHit, flags;
-          if (!ParseMetaDataEntry(key, value, getter_AddRefs(uri), hitCount, lastHit, flags)) {
+          if (!ParseMetaDataEntry(nullptr, value, nullptr, hitCount, lastHit, flags)) {
             // This failed, get rid of it so we don't waste space
             entry->SetMetaDataElement(key, nullptr);
             continue;
@@ -1672,10 +1672,8 @@ Predictor::SpaceCleaner::OnMetaDataElement(const char *key, const char *value)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> parsedURI;
   uint32_t hitCount, lastHit, flags;
-  bool ok = mPredictor->ParseMetaDataEntry(key, value,
-                                           getter_AddRefs(parsedURI),
+  bool ok = mPredictor->ParseMetaDataEntry(nullptr, value, nullptr,
                                            hitCount, lastHit, flags);
 
   if (!ok) {
@@ -1686,11 +1684,9 @@ Predictor::SpaceCleaner::OnMetaDataElement(const char *key, const char *value)
     return NS_OK;
   }
 
-  nsCString uri;
-  nsresult rv = parsedURI->GetAsciiSpec(uri);
+  nsCString uri(key + (sizeof(META_DATA_PREFIX) - 1));
   uint32_t uriLength = uri.Length();
-  if (NS_SUCCEEDED(rv) &&
-      uriLength > mPredictor->mMaxURILength) {
+  if (uriLength > mPredictor->mMaxURILength) {
     // Default to getting rid of URIs that are too long and were put in before
     // we had our limit on URI length, in order to free up some space.
     nsCString nsKey;
