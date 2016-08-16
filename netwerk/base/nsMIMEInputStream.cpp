@@ -39,7 +39,7 @@ public:
     NS_DECL_NSISEEKABLESTREAM
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
-    NS_METHOD Init();
+    nsresult Init();
 
 private:
 
@@ -91,7 +91,7 @@ nsMIMEInputStream::~nsMIMEInputStream()
 {
 }
 
-NS_METHOD nsMIMEInputStream::Init()
+nsresult nsMIMEInputStream::Init()
 {
     nsresult rv = NS_OK;
     mStream = do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1",
