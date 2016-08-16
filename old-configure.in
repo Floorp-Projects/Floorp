@@ -2334,7 +2334,6 @@ MOZ_SCTP=
 MOZ_ANDROID_OMX=
 MOZ_OMX_PLUGIN=
 MOZ_VPX_ERROR_CONCEALMENT=
-MOZ_WEBSPEECH=1
 MOZ_WEBSPEECH_MODELS=
 MOZ_WEBSPEECH_TEST_BACKEND=1
 VPX_USE_YASM=
@@ -3005,20 +3004,6 @@ else
     AC_DEFINE(MOZ_SAMPLE_TYPE_FLOAT32)
     AC_SUBST(MOZ_SAMPLE_TYPE_FLOAT32)
 fi
-
-dnl ========================================================
-dnl = Disable Speech API code
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webspeech,
-[  --disable-webspeech        Disable support for HTML Speech API],
-    MOZ_WEBSPEECH=,
-    MOZ_WEBSPEECH=1)
-
-if test -n "$MOZ_WEBSPEECH"; then
-    AC_DEFINE(MOZ_WEBSPEECH)
-fi
-
-AC_SUBST(MOZ_WEBSPEECH)
 
 dnl ========================================================
 dnl = Disable Speech API test backend
