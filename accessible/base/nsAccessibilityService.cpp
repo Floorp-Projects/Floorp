@@ -1290,6 +1290,8 @@ nsAccessibilityService::Init()
   if (XRE_IsParentProcess())
     PlatformInit();
 
+  statistics::A11yInitialized();
+
   return true;
 }
 
