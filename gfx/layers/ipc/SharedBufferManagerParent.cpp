@@ -181,7 +181,7 @@ PSharedBufferManagerParent* SharedBufferManagerParent::Create(Transport* aTransp
 {
   base::Thread* thread = nullptr;
   char thrname[128];
-  base::snprintf(thrname, 128, "BufMgrParent#%d", aOtherPid);
+  SprintfLiteral(thrname, "BufMgrParent#%d", aOtherPid);
   thread = new base::Thread(thrname);
 
   SharedBufferManagerParent* manager = new SharedBufferManagerParent(aOtherPid, thread);

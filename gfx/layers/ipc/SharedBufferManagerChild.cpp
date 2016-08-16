@@ -10,9 +10,10 @@
 #include "mozilla/gfx/Logging.h"        // for gfxDebug
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
+#include "mozilla/Sprintf.h"            // for SprintfLiteral
 #include "mozilla/StaticPtr.h"          // for StaticRefPtr
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitor, etc
-#include "nsThreadUtils.h"              // fo NS_IsMainThread
+#include "nsThreadUtils.h"              // for NS_IsMainThread
 
 #ifdef MOZ_WIDGET_GONK
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, "SBMChild", ## args)
@@ -145,7 +146,7 @@ SharedBufferManagerChild::StartUpOnThread(base::Thread* aThread)
   }
   sSharedBufferManagerChildSingleton = new SharedBufferManagerChild();
   char thrname[128];
-  base::snprintf(thrname, 128, "BufMgrParent#%d", base::Process::Current().pid());
+  SprintfLiteral(thrname, "BufMgrParent#%d", base::Process::Current().pid());
   sSharedBufferManagerParentSingleton = new SharedBufferManagerParent(
     base::Process::Current().pid(), new base::Thread(thrname));
   sSharedBufferManagerChildSingleton->ConnectAsync(sSharedBufferManagerParentSingleton);
