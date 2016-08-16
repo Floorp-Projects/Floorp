@@ -310,7 +310,8 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     }
 
     AsmJSMetadata()
-      : cacheResult(CacheResult::Miss),
+      : Metadata(ModuleKind::AsmJS),
+        cacheResult(CacheResult::Miss),
         srcStart(0),
         srcBodyStart(0),
         strict(false)
