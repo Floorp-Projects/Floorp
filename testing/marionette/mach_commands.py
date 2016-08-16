@@ -150,11 +150,8 @@ class MachCommands(MachCommandBase):
                 tests.append(obj['file_relpath'])
             del kwargs['test_objects']
 
-        if conditions.is_firefox(self):
-            bin_path = self.get_binary_path('app')
-            if kwargs.get('binary') is not None:
-                print "Warning: ignoring '--binary' option, using binary at " + bin_path
-            kwargs['binary'] = bin_path
+        if not kwargs.get('binary') and conditions.is_firefox(self):
+            kwargs['binary'] = self.get_binary_path('app')
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
 
     @Command('session-test', category='testing',
@@ -169,5 +166,6 @@ class MachCommands(MachCommandBase):
                 tests.append(obj['file_relpath'])
             del kwargs['test_objects']
 
-        kwargs['binary'] = self.get_binary_path('app')
+        if not kwargs.get('binary') and conditions.is_firefox(self):
+            kwargs['binary'] = self.get_binary_path('app')
         return run_session(tests, topsrcdir=self.topsrcdir, **kwargs)
