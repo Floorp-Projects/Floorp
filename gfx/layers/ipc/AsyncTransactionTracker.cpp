@@ -8,6 +8,7 @@
 #include "AsyncTransactionTracker.h"
 
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
+#include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
 namespace layers {
@@ -36,7 +37,7 @@ AsyncTransactionWaiter::WaitComplete()
   }
 
   if (count == maxCount) {
-    gfxDevCrash(LogReason::AsyncTransactionTimeout) << "Bug 1244883: AsyncTransactionWaiter timed out.";
+    gfxDevCrash(gfx::LogReason::AsyncTransactionTimeout) << "Bug 1244883: AsyncTransactionWaiter timed out.";
   }
 }
 
