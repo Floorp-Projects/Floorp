@@ -19,7 +19,7 @@ function test() {
         "http://planet.mozilla.org/",
         "https://developer.mozilla.org/",
         "http://hg.mozilla.org/",
-        "http://mxr.mozilla.org/",
+        "http://dxr.mozilla.org/",
         "http://feeds.mozilla.org/",
     ];
     let users = [

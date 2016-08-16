@@ -303,7 +303,7 @@ protected:
           break;
         default:
           // XXX Bug NNNNNNN
-          // use http://mxr.mozilla.org/mozilla-central/source/content/media/omx/I420ColorConverterHelper.cpp
+          // use http://dxr.mozilla.org/mozilla-central/source/content/media/omx/I420ColorConverterHelper.cpp
           // to convert unknown types (OEM-specific) to I420
           MOZ_MTLOG(ML_ERROR, "Un-handled GRALLOC buffer type:" << pixelFormat);
           MOZ_CRASH();
