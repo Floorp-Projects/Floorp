@@ -92,7 +92,7 @@ public:
   // Animation interface methods
   static already_AddRefed<Animation>
   Constructor(const GlobalObject& aGlobal,
-              KeyframeEffectReadOnly* aEffect,
+              AnimationEffectReadOnly* aEffect,
               const Optional<AnimationTimeline*>& aTimeline,
               ErrorResult& aRv);
   void GetId(nsAString& aResult) const { aResult = mId; }
