@@ -79,7 +79,9 @@ public class TestFaviconGenerator {
 
     @Test
     public void testGeneratingFavicon() {
-        Bitmap bitmap = FaviconGenerator.generate(RuntimeEnvironment.application, "http://m.facebook.com");
+        final FaviconGenerator.IconWithColor iconWithColor = FaviconGenerator.generate(RuntimeEnvironment.application, "http://m.facebook.com");
+        final Bitmap bitmap = iconWithColor.bitmap;
+
         Assert.assertNotNull(bitmap);
 
         final int size = RuntimeEnvironment.application.getResources().getDimensionPixelSize(R.dimen.favicon_bg);

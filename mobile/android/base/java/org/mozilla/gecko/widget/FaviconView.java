@@ -213,7 +213,7 @@ public class FaviconView extends ImageView {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                final Bitmap favicon = FaviconGenerator.generate(getContext(), pageURL);
+                final Bitmap favicon = FaviconGenerator.generate(getContext(), pageURL).bitmap;
 
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
