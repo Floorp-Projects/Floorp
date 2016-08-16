@@ -541,11 +541,24 @@ option('--disable-synth-speechd', help='Disable speech-dispatcher support')
 set_config('MOZ_SYNTH_SPEECHD',
            depends_if('--disable-synth-speechd')(lambda _: True))
 
+# Speech API
+# ==============================================================
+option('--disable-webspeech', help='Disable support for HTML Speech API')
+
+@depends('--disable-webspeech')
+def webspeech(value):
+    if value:
+        return True
+
+set_config('MOZ_WEBSPEECH', webspeech)
+set_define('MOZ_WEBSPEECH', webspeech)
+add_old_configure_assignment('MOZ_WEBSPEECH', webspeech)
+
 # Speech API pocketsphinx backend
 # ==============================================================
-@depends(build_project, milestone)
-def webspeech_pocketsphinx(build_project, milestone):
-    if milestone.is_nightly and build_project == 'b2g':
+@depends(build_project, milestone, webspeech)
+def webspeech_pocketsphinx(build_project, milestone, webspeech):
+    if webspeech and milestone.is_nightly and build_project == 'b2g':
         return True
 
 set_config('MOZ_WEBSPEECH_POCKETSPHINX', webspeech_pocketsphinx)
