@@ -264,7 +264,7 @@ PackagedAppService::CacheEntryWriter::CopyHeadersFromChannel(nsIChannel *aChanne
   return httpChan->VisitResponseHeaders(headerCopier);
 }
 
-NS_METHOD
+nsresult
 PackagedAppService::CacheEntryWriter::ConsumeData(const char *aBuf,
                                                   uint32_t aCount,
                                                   uint32_t *aWriteCount)
