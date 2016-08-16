@@ -38,13 +38,13 @@ if CONFIG['ACCESSIBILITY']:
     EXPORTS.mozilla.a11y += [
         'DocAccessibleChildBase.h',
         'DocAccessibleParent.h',
-        'ProxyAccessible.h'
+        'ProxyAccessibleBase.h',
     ]
 
     UNIFIED_SOURCES += [
         'DocAccessibleChildBase.cpp',
         'DocAccessibleParent.cpp',
-        'ProxyAccessible.cpp'
+        'ProxyAccessibleBase.cpp',
     ]
 
     LOCAL_INCLUDES += [
