@@ -24,11 +24,13 @@
   transition: padding-left, padding-right;
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels {
   color: var(--identity-box-verified-color);
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon-labels {
   color: var(--identity-box-chrome-color);
 }
 
