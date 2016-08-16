@@ -14,6 +14,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 
@@ -391,7 +392,7 @@ nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable* aTable,
   EntryType* fromEntry =
     const_cast<EntryType*>(static_cast<const EntryType*>(aFrom));
 
-  new (aTo) EntryType(mozilla::Move(*fromEntry));
+  new (mozilla::KnownNotNull, aTo) EntryType(mozilla::Move(*fromEntry));
 
   fromEntry->~EntryType();
 }
@@ -409,7 +410,7 @@ void
 nsTHashtable<EntryType>::s_InitEntry(PLDHashEntryHdr* aEntry,
                                      const void* aKey)
 {
-  new (aEntry) EntryType(static_cast<KeyTypePointer>(aKey));
+  new (mozilla::KnownNotNull, aEntry) EntryType(static_cast<KeyTypePointer>(aKey));
 }
 
 class nsCycleCollectionTraversalCallback;

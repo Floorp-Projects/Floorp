@@ -18,6 +18,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/TypeTraits.h"
 
@@ -504,7 +505,7 @@ public:
     // ints.  We don't want that because it can be a performance issue
     // and people don't expect it; nsTArray should work like a regular
     // C/C++ array in this respect.
-    new (static_cast<void*>(aE)) E;
+    new (mozilla::KnownNotNull, static_cast<void*>(aE)) E;
   }
   // Invoke the copy-constructor in place.
   template<class A>
@@ -515,7 +516,7 @@ public:
     static_assert(!mozilla::IsSame<E_NoCV*, A_NoCV>::value,
                   "For safety, we disallow constructing nsTArray<E> elements "
                   "from E* pointers. See bug 960591.");
-    new (static_cast<void*>(aE)) E(mozilla::Forward<A>(aArg));
+    new (mozilla::KnownNotNull, static_cast<void*>(aE)) E(mozilla::Forward<A>(aArg));
   }
   // Invoke the destructor in place.
   static inline void Destruct(E* aE) { aE->~E(); }
