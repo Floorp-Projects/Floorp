@@ -2365,7 +2365,6 @@ if test -n "$MOZ_RTSP"; then
 fi
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
-MOZ_WEBSMS_BACKEND=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
 ACCESSIBILITY=1
@@ -2863,19 +2862,6 @@ then
     fi
 fi
 AC_SUBST(MOZ_ENABLE_DBUS)
-
-dnl ========================================================
-dnl = Disable WebSMS backend
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(websms-backend,
-[  --disable-websms-backend
-                           Disable WebSMS backend],
-    MOZ_WEBSMS_BACKEND=,
-    MOZ_WEBSMS_BACKEND=1)
-
-if test -n "$MOZ_WEBSMS_BACKEND"; then
-    AC_DEFINE(MOZ_WEBSMS_BACKEND)
-fi
 
 dnl =========================================================
 dnl = Whether to exclude hyphenations files in the build
@@ -5775,7 +5761,6 @@ AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 AC_SUBST(MOZ_D3DCOMPILER_XP_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
 
-AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
