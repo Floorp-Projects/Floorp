@@ -79,22 +79,22 @@ function run_test() {
     do_check_eq(cps.setPref(stringURI, "test.2", 2), undefined);
     do_check_eq(cps.setPref(uri, "test.1", 1), undefined);
 
-    enumerateAndCheck(cps.getPrefs(uri), 8, ["test.1","test.2","test.5"]);
-    enumerateAndCheck(cps.getPrefs(stringURI), 8, ["test.1","test.2","test.5"]);
-    enumerateAndCheck(cps.getPrefs(stringObjectURI), 8, ["test.1","test.2","test.5"]);
+    enumerateAndCheck(cps.getPrefs(uri), 8, ["test.1", "test.2", "test.5"]);
+    enumerateAndCheck(cps.getPrefs(stringURI), 8, ["test.1", "test.2", "test.5"]);
+    enumerateAndCheck(cps.getPrefs(stringObjectURI), 8, ["test.1", "test.2", "test.5"]);
 
     do_check_eq(cps.setPref(uri, "test.4", 4), undefined);
     do_check_eq(cps.setPref(stringObjectURI, "test.0", 0), undefined);
 
-    enumerateAndCheck(cps.getPrefs(uri), 12, ["test.0","test.1","test.2","test.4","test.5"]);
-    enumerateAndCheck(cps.getPrefs(stringURI), 12, ["test.0","test.1","test.2","test.4","test.5"]);
-    enumerateAndCheck(cps.getPrefs(stringObjectURI), 12, ["test.0","test.1","test.2","test.4","test.5"]);
+    enumerateAndCheck(cps.getPrefs(uri), 12, ["test.0", "test.1", "test.2", "test.4", "test.5"]);
+    enumerateAndCheck(cps.getPrefs(stringURI), 12, ["test.0", "test.1", "test.2", "test.4", "test.5"]);
+    enumerateAndCheck(cps.getPrefs(stringObjectURI), 12, ["test.0", "test.1", "test.2", "test.4", "test.5"]);
 
     do_check_eq(cps.setPref(stringURI, "test.3", 3), undefined);
 
-    enumerateAndCheck(cps.getPrefs(uri), 15, ["test.0","test.1","test.2","test.3","test.4","test.5"]);
-    enumerateAndCheck(cps.getPrefs(stringURI), 15, ["test.0","test.1","test.2","test.3","test.4","test.5"]);
-    enumerateAndCheck(cps.getPrefs(stringObjectURI), 15, ["test.0","test.1","test.2","test.3","test.4","test.5"]);
+    enumerateAndCheck(cps.getPrefs(uri), 15, ["test.0", "test.1", "test.2", "test.3", "test.4", "test.5"]);
+    enumerateAndCheck(cps.getPrefs(stringURI), 15, ["test.0", "test.1", "test.2", "test.3", "test.4", "test.5"]);
+    enumerateAndCheck(cps.getPrefs(stringObjectURI), 15, ["test.0", "test.1", "test.2", "test.3", "test.4", "test.5"]);
   }
 }
 

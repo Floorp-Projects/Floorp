@@ -34,8 +34,8 @@ function runQuery(aResultType) {
   for (let i = 0; i < cc; i++) {
     let node = root.getChild(i);
     // Check that all transition types but EMBED and FRAMED appear in results
-    do_check_neq(node.uri.substr(6,1), TRANSITION_EMBED);
-    do_check_neq(node.uri.substr(6,1), TRANSITION_FRAMED_LINK);
+    do_check_neq(node.uri.substr(6, 1), TRANSITION_EMBED);
+    do_check_neq(node.uri.substr(6, 1), TRANSITION_FRAMED_LINK);
   }
   root.containerOpen = false;
 }

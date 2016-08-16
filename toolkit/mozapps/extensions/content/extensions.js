@@ -686,7 +686,7 @@ var gViewController = {
 
   parseViewId: function(aViewId) {
     var matchRegex = /^addons:\/\/([^\/]+)\/(.*)$/;
-    var [,viewType, viewParam] = aViewId.match(matchRegex) || [];
+    var [, viewType, viewParam] = aViewId.match(matchRegex) || [];
     return {type: viewType, param: decodeURIComponent(viewParam)};
   },
 

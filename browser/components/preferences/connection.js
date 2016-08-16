@@ -20,7 +20,7 @@ var gConnectionsDialog = {
     var shareProxiesPref = document.getElementById("network.proxy.share_proxy_settings");
 
     // If the port is 0 and the proxy server is specified, focus on the port and cancel submission.
-    for (let prefName of ["http","ssl","ftp","socks"]) {
+    for (let prefName of ["http", "ssl", "ftp", "socks"]) {
       let proxyPortPref = document.getElementById("network.proxy." + prefName + "_port");
       let proxyPref = document.getElementById("network.proxy." + prefName);
       // Only worry about ports which are currently active. If the share option is on, then ignore

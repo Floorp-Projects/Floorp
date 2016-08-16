@@ -47,19 +47,19 @@ var gTests = [
   ["0: single result, that is also a tab match",
    "abc.com", [1]],
   ["1: two results, one tab match",
-   "abc", [1,2]],
+   "abc", [1, 2]],
   ["2: two results, both tab matches",
-   "abc", [1,3],
+   "abc", [1, 3],
    function() {
      addOpenPages(2, 1);
    }],
   ["3: two results, both tab matches, one has multiple tabs",
-   "abc", [1,3],
+   "abc", [1, 3],
    function() {
      addOpenPages(2, 5);
    }],
   ["4: two results, no tab matches",
-   "abc", [0,2],
+   "abc", [0, 2],
    function() {
      removeOpenPages(0, 1);
      removeOpenPages(2, 6);

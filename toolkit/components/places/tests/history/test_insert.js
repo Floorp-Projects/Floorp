@@ -115,7 +115,7 @@ add_task(function* test_history_insert() {
     let pageInfo = {
       title,
       visits: [
-        {transition: transition, referrer: referrer, date: date,}
+        {transition: transition, referrer: referrer, date: date, }
       ]
     };
 

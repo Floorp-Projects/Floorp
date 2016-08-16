@@ -838,7 +838,7 @@
               // If already opened, select the first child.
               // The getParentIndex test above ensures that the children
               // are already populated and ready.
-              if (cellSelType && !this.view.isSelectable(c , currentColumn)) {
+              if (cellSelType && !this.view.isSelectable(c, currentColumn)) {
                 let col = this._getNextColumn(c, false);
                 if (col) {
                   this.view.selection.currentColumn = col;
