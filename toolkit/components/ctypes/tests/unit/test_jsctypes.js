@@ -2652,7 +2652,7 @@ function run_single_closure_tests(library, abi, suffix)
   // mismatch with the cx stashed in the closure.
   try {
     var sb = Components.utils.Sandbox("http://www.example.com");
-    sb.fn = fn_v_t(function() {sb.foo = {};});
+    sb.fn = fn_v_t(function() { sb.foo = {}; });
     Components.utils.evalInSandbox("fn();", sb);
   } catch (e) {} // Components not available in workers.
 

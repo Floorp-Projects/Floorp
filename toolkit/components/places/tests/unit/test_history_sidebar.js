@@ -74,7 +74,7 @@ var containers = [
 ];
 
 var visibleContainers = containers.filter(
-  function(aContainer) {return aContainer.visible});
+  function(aContainer) { return aContainer.visible });
 
 /**
  * Asynchronous task that fills history and checks containers' labels.
