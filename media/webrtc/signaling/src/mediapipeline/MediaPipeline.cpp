@@ -54,6 +54,7 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/Sprintf.h"
 
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/interface/native_handle.h"
@@ -1075,11 +1076,11 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
   if (!NS_SUCCEEDED(res)) {
     char tmp[16];
 
-    PR_snprintf(tmp, sizeof(tmp), "%.2x %.2x %.2x %.2x",
-                inner_data[0],
-                inner_data[1],
-                inner_data[2],
-                inner_data[3]);
+    SprintfLiteral(tmp, "%.2x %.2x %.2x %.2x",
+                   inner_data[0],
+                   inner_data[1],
+                   inner_data[2],
+                   inner_data[3]);
 
     MOZ_MTLOG(ML_NOTICE, "Error unprotecting RTP in " << description_
               << "len= " << len << "[" << tmp << "...]");
