@@ -191,6 +191,13 @@ interface nsIUrlClassifierDBService : nsISupports
    * database, emptying all tables.  Mostly intended for use in unit tests.
    */
   void resetDatabase();
+
+  /**
+   * Reload he url-classifier database. This will empty all cache for
+   * completions from gethash, and reload it from database. Mostly intended
+   * for use in tests.
+   */
+  void reloadDatabase();
 };
 
 /**

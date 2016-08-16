@@ -37,7 +37,6 @@
 /* TODO: bug 1265759: should apply to .devtools-searchinput once all searchbox
    is converted to html*/
 #inspector-searchbox {
-  flex: 1;
   width: 100%;
 }
 

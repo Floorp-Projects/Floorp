@@ -182,17 +182,21 @@ InspectorPanel.prototype = {
     this._supportsScrollIntoView = false;
     this._supportsResolveRelativeURL = false;
 
-    return promise.all([
-      this._target.actorHasMethod("domwalker", "duplicateNode").then(value => {
-        this._supportsDuplicateNode = value;
-      }).catch(e => console.error(e)),
-      this._target.actorHasMethod("domnode", "scrollIntoView").then(value => {
-        this._supportsScrollIntoView = value;
-      }).catch(e => console.error(e)),
-      this._target.actorHasMethod("inspector", "resolveRelativeURL").then(value => {
-        this._supportsResolveRelativeURL = value;
-      }).catch(e => console.error(e)),
-    ]);
+    // Use getActorDescription first so that all actorHasMethod calls use
+    // a cached response from the server.
+    return this._target.getActorDescription("domwalker").then(desc => {
+      return promise.all([
+        this._target.actorHasMethod("domwalker", "duplicateNode").then(value => {
+          this._supportsDuplicateNode = value;
+        }).catch(e => console.error(e)),
+        this._target.actorHasMethod("domnode", "scrollIntoView").then(value => {
+          this._supportsScrollIntoView = value;
+        }).catch(e => console.error(e)),
+        this._target.actorHasMethod("inspector", "resolveRelativeURL").then(value => {
+          this._supportsResolveRelativeURL = value;
+        }).catch(e => console.error(e)),
+      ]);
+    });
   },
 
   _deferredOpen: function (defaultSelection) {
