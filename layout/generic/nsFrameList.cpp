@@ -25,7 +25,7 @@ const AlignedFrameListBytes gEmptyFrameListBytes = { 0 };
 } // namespace mozilla
 
 void*
-nsFrameList::operator new(size_t sz, nsIPresShell* aPresShell)
+nsFrameList::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
   return aPresShell->AllocateByObjectID(eArenaObjectID_nsFrameList, sz);
 }

@@ -57,7 +57,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
@@ -110,7 +109,7 @@ SpammyLayoutWarningsEnabled()
 #endif
 
 void*
-AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder)
+AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder) CPP_THROW_NEW
 {
   return aBuilder->Allocate(aSize);
 }
@@ -1109,7 +1108,7 @@ nsDisplayListBuilder::AllocateDisplayItemClip(const DisplayItemClip& aOriginal)
     return static_cast<DisplayItemClip*>(p);
   }
 
-  DisplayItemClip* c = new (KnownNotNull, p) DisplayItemClip(aOriginal);
+  DisplayItemClip* c = new (p) DisplayItemClip(aOriginal);
   mDisplayItemClipsToDestroy.AppendElement(c);
   return c;
 }
@@ -1122,8 +1121,7 @@ nsDisplayListBuilder::AllocateDisplayItemScrollClip(const DisplayItemScrollClip*
 {
   void* p = Allocate(sizeof(DisplayItemScrollClip));
   DisplayItemScrollClip* c =
-    new (KnownNotNull, p) DisplayItemScrollClip(aParent, aScrollableFrame,
-                                                aClip, aIsAsyncScrollable);
+    new (p) DisplayItemScrollClip(aParent, aScrollableFrame, aClip, aIsAsyncScrollable);
   mScrollClipsToDestroy.AppendElement(c);
   return c;
 }
