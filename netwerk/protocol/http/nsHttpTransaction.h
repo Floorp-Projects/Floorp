@@ -17,6 +17,7 @@
 #include "Http2Push.h"
 #include "mozilla/net/DNS.h"
 #include "ARefBase.h"
+#include "AlternateServices.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkInterface.h"
@@ -456,6 +457,10 @@ public:
 private:
     RefPtr<ASpdySession> mTunnelProvider;
 
+public:
+    void SetTransactionObserver(TransactionObserver *arg) { mTransactionObserver = arg; }
+private:
+    RefPtr<TransactionObserver> mTransactionObserver;
 public:
     void GetNetworkAddresses(NetAddr &self, NetAddr &peer);
 

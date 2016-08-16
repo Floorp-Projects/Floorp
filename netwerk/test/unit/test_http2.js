@@ -611,17 +611,17 @@ var altsvcClientListener = {
     var isHttp2Connection = checkIsHttp2(request.QueryInterface(Components.interfaces.nsIHttpChannel));
     if (!isHttp2Connection) {
       dump("/altsvc1 not over h2 yet - retry\n");
-      var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1")
+      var chan = makeChan("http://foo.example.com:" + httpserv.identity.primaryPort + "/altsvc1")
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
       // we use this header to tell the server to issue a altsvc frame for the
       // speficied origin we will use in the next part of the test
       chan.setRequestHeader("x-redirect-origin",
-                 "http://localhost:" + httpserv2.identity.primaryPort, false);
+                 "http://foo.example.com:" + httpserv2.identity.primaryPort, false);
       chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
       chan.asyncOpen2(altsvcClientListener);
     } else {
       do_check_true(isHttp2Connection);
-      var chan = makeChan("http://localhost:" + httpserv2.identity.primaryPort + "/altsvc2")
+      var chan = makeChan("http://foo.example.com:" + httpserv2.identity.primaryPort + "/altsvc2")
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
       chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
       chan.asyncOpen2(altsvcClientListener2);
@@ -642,7 +642,7 @@ var altsvcClientListener2 = {
     var isHttp2Connection = checkIsHttp2(request.QueryInterface(Components.interfaces.nsIHttpChannel));
     if (!isHttp2Connection) {
       dump("/altsvc2 not over h2 yet - retry\n");
-      var chan = makeChan("http://localhost:" + httpserv2.identity.primaryPort + "/altsvc2")
+      var chan = makeChan("http://foo.example.com:" + httpserv2.identity.primaryPort + "/altsvc2")
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
       chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
       chan.asyncOpen2(altsvcClientListener2);
@@ -663,6 +663,18 @@ function altsvcHttp1Server(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+function h1ServerWK(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/json", false);
+  response.setHeader("Connection", "close", false);
+  response.setHeader("Cache-Control", "no-cache", false);
+  response.setHeader("Access-Control-Allow-Origin", "*", false);
+  response.setHeader("Access-Control-Allow-Method", "GET", false);
+
+  var body = '{"http://foo.example.com:' + httpserv.identity.primaryPort + '": { "tls-ports": [' + serverPort + '] }}';
+  response.bodyOutputStream.write(body, body.length);
+}
+
 function altsvcHttp1Server2(metadata, response) {
 // this server should never be used thanks to an alt svc frame from the
 // h2 server.. but in case of some async lag in setting the alt svc route
@@ -674,8 +686,19 @@ function altsvcHttp1Server2(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+function h1ServerWK2(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/json", false);
+  response.setHeader("Connection", "close", false);
+  response.setHeader("Cache-Control", "no-cache", false);
+  response.setHeader("Access-Control-Allow-Origin", "*", false);
+  response.setHeader("Access-Control-Allow-Method", "GET", false);
+
+  var body = '{"http://foo.example.com:' + httpserv2.identity.primaryPort + '": { "tls-ports": [' + serverPort + '] }}';
+  response.bodyOutputStream.write(body, body.length);
+}
 function test_http2_altsvc() {
-  var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1")
+  var chan = makeChan("http://foo.example.com:" + httpserv.identity.primaryPort + "/altsvc1")
            .QueryInterface(Components.interfaces.nsIHttpChannel);
   chan.asyncOpen2(altsvcClientListener);
 }
@@ -1017,6 +1040,7 @@ function resetPrefs() {
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", tlspref);
   prefs.setBoolPref("network.http.altsvc.enabled", altsvcpref1);
   prefs.setBoolPref("network.http.altsvc.oe", altsvcpref2);
+  prefs.clearUserPref("network.dns.localDomains");
 }
 
 function run_test() {
@@ -1030,6 +1054,14 @@ function run_test() {
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   speculativeLimit = prefs.getIntPref("network.http.speculative-parallel-limit");
   prefs.setIntPref("network.http.speculative-parallel-limit", 0);
+
+  // The moz-http2 cert is for foo.example.com and is signed by CA.cert.der
+  // so add that cert to the trust list as a signing cert. Some older tests in
+  // this suite use localhost with a TOFU exception, but new ones should use
+  // foo.example.com
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
+                  .getService(Ci.nsIX509CertDB);
+  addCertFromFile(certdb, "CA.cert.der", "CTu,u,u");
 
   addCertOverride("localhost", serverPort,
                   Ci.nsICertOverrideService.ERROR_UNTRUSTED |
@@ -1051,17 +1083,37 @@ function run_test() {
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", false);
   prefs.setBoolPref("network.http.altsvc.enabled", true);
   prefs.setBoolPref("network.http.altsvc.oe", true);
+  prefs.setCharPref("network.dns.localDomains", "foo.example.com, bar.example.com");
 
   loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
 
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/altsvc1", altsvcHttp1Server);
+  httpserv.registerPathHandler("/.well-known/http-opportunistic", h1ServerWK);
   httpserv.start(-1);
+  httpserv.identity.setPrimary("http", "foo.example.com", httpserv.identity.primaryPort);
 
   httpserv2 = new HttpServer();
   httpserv2.registerPathHandler("/altsvc2", altsvcHttp1Server2);
+  httpserv2.registerPathHandler("/.well-known/http-opportunistic", h1ServerWK2);
   httpserv2.start(-1);
+  httpserv2.identity.setPrimary("http", "foo.example.com", httpserv2.identity.primaryPort);
 
   // And make go!
   run_next_test();
+}
+
+function readFile(file) {
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
+                  .createInstance(Ci.nsIFileInputStream);
+  fstream.init(file, -1, 0, 0);
+  let data = NetUtil.readInputStreamToString(fstream, fstream.available());
+  fstream.close();
+  return data;
+}
+
+function addCertFromFile(certdb, filename, trustString) {
+  let certFile = do_get_file(filename, false);
+  let der = readFile(certFile);
+  certdb.addCert(der, trustString, null);
 }

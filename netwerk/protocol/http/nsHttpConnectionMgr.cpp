@@ -432,6 +432,7 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
     NS_NewInterfaceRequestorAggregation(callbacks, nullptr, getter_AddRefs(wrappedCallbacks));
 
     caps |= ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
+    caps |= NS_HTTP_ERROR_SOFTLY;
     args->mTrans =
         nullTransaction ? nullTransaction : new NullHttpTransaction(ci, wrappedCallbacks, caps);
 
@@ -3001,19 +3002,9 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     nsresult rv;
     const char *socketTypes[1];
     uint32_t typeCount = 0;
-    bool bypassTLSAuth = false;
     const nsHttpConnectionInfo *ci = mEnt->mConnInfo;
     if (ci->FirstHopSSL()) {
         socketTypes[typeCount++] = "ssl";
-
-        if (ci->GetInsecureScheme()) { // http:// over tls
-            const nsCString &routedHost = ci->GetRoutedHost();
-            if (routedHost.Equals(ci->GetOrigin())) {
-                LOG(("nsHttpConnection::SetupSSL %p TLS-Relaxed "
-                     "with Same Host Auth Bypass", this));
-                bypassTLSAuth = true;
-            }
-        }
     } else {
         socketTypes[typeCount] = gHttpHandler->DefaultSocketType();
         if (socketTypes[typeCount]) {
@@ -3065,10 +3056,6 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
 
     if (ci->GetPrivate())
         tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
-
-    if (bypassTLSAuth) {
-        tmpFlags |= nsISocketTransport::MITM_OK;
-    }
 
     // For backup connections, we disable IPv6. That's because some users have
     // broken IPv6 connectivity (leading to very long timeouts), and disabling
