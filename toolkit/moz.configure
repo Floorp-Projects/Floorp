@@ -540,3 +540,19 @@ option('--disable-synth-speechd', help='Disable speech-dispatcher support')
 
 set_config('MOZ_SYNTH_SPEECHD',
            depends_if('--disable-synth-speechd')(lambda _: True))
+
+# WebSMS
+# ==============================================================
+@depends(build_project, '--help')
+def websms_default(build_project, _):
+    return build_project in ('b2g', 'b2g/graphene')
+
+option('--enable-websms-backend', default=websms_default,
+       help='Enable WebSMS backend')
+
+@depends_if('--enable-websms-backend')
+def websms_backend(value):
+    return True
+
+set_config('MOZ_WEBSMS_BACKEND', websms_backend)
+set_define('MOZ_WEBSMS_BACKEND', websms_backend)
