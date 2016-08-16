@@ -37,6 +37,9 @@ add_task(function*() {
   newFrameWin.location.reload();
   yield waitForEvent(newFrameWin, "load");
 
+  docshell = newFrameWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell);
   is(docshell.touchEventsOverride, Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_DISABLED,
     "New touchEventsOverride flag should persist across reloads");
 
