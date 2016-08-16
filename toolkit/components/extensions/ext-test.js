@@ -25,7 +25,7 @@ extensions.on("test-message", (type, extension, ...args) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("test", context => {
+function testApiFactory(context) {
   let {extension} = context;
   return {
     test: {
@@ -75,4 +75,6 @@ extensions.registerSchemaAPI("test", context => {
       }).api(),
     },
   };
-});
+}
+extensions.registerSchemaAPI("test", "addon_parent", testApiFactory);
+extensions.registerSchemaAPI("test", "content_parent", testApiFactory);

@@ -92,7 +92,7 @@ extensions.on("shutdown", (type, extension) => {
 
 var nextId = 0;
 
-extensions.registerSchemaAPI("notifications", context => {
+extensions.registerSchemaAPI("notifications", "addon_parent", context => {
   let {extension} = context;
   return {
     notifications: {

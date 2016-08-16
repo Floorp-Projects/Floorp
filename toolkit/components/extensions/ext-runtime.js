@@ -20,7 +20,7 @@ var {
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
                                   "resource://gre/modules/NativeMessaging.jsm");
 
-extensions.registerSchemaAPI("runtime", context => {
+extensions.registerSchemaAPI("runtime", "addon_parent", context => {
   let {extension} = context;
   return {
     runtime: {

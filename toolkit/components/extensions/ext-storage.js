@@ -10,7 +10,7 @@ var {
   EventManager,
 } = ExtensionUtils;
 
-extensions.registerSchemaAPI("storage", context => {
+function storageApiFactory(context) {
   let {extension} = context;
   return {
     storage: {
@@ -41,4 +41,6 @@ extensions.registerSchemaAPI("storage", context => {
       }).api(),
     },
   };
-});
+}
+extensions.registerSchemaAPI("storage", "addon_parent", storageApiFactory);
+extensions.registerSchemaAPI("storage", "content_parent", storageApiFactory);
