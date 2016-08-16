@@ -16,6 +16,12 @@
 #include "nsStyleStruct.h"
 #include "stdint.h"
 
+#define DEFINE_STRONG_REF_TYPE(name, T)                   \
+  struct MOZ_MUST_USE_TYPE name {                         \
+    T* mPtr;                                              \
+    already_AddRefed<T> Consume();                        \
+  }
+
 /*
  * API for Servo to access Gecko data structures. This file must compile as valid
  * C code in order for the binding generator to parse it.
@@ -45,6 +51,8 @@ typedef nsIDocument RawGeckoDocument;
 struct ServoNodeData;
 struct ServoComputedValues;
 struct RawServoStyleSheet;
+DEFINE_STRONG_REF_TYPE(ServoComputedValuesStrong, ServoComputedValues);
+DEFINE_STRONG_REF_TYPE(RawServoStyleSheetStrong, RawServoStyleSheet);
 struct RawServoStyleSet;
 class nsHTMLCSSStyleSheet;
 struct nsStyleList;
@@ -221,7 +229,7 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 //
 // TODO: Make these return already_AddRefed and UniquePtr when the binding
 // generator is smart enough to handle them.
-RawServoStyleSheet* Servo_StylesheetFromUTF8Bytes(
+RawServoStyleSheetStrong Servo_StylesheetFromUTF8Bytes(
     const uint8_t* bytes, uint32_t length,
     mozilla::css::SheetParsingMode parsing_mode,
     const uint8_t* base_bytes, uint32_t base_length,
@@ -255,16 +263,16 @@ bool Servo_CSSSupports(const uint8_t* name, uint32_t name_length,
                        const uint8_t* value, uint32_t value_length);
 
 // Computed style data.
-ServoComputedValues* Servo_GetComputedValues(RawGeckoNode* node);
-ServoComputedValues* Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
+ServoComputedValuesStrong Servo_GetComputedValues(RawGeckoNode* node);
+ServoComputedValuesStrong Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
                                                             nsIAtom* pseudoTag,
                                                             RawServoStyleSet* set);
-ServoComputedValues* Servo_GetComputedValuesForPseudoElement(ServoComputedValues* parent_style,
+ServoComputedValuesStrong Servo_GetComputedValuesForPseudoElement(ServoComputedValues* parent_style,
                                                              RawGeckoElement* match_element,
                                                              nsIAtom* pseudo_tag,
                                                              RawServoStyleSet* set,
                                                              bool is_probe);
-ServoComputedValues* Servo_InheritComputedValues(ServoComputedValues* parent_style);
+ServoComputedValuesStrong Servo_InheritComputedValues(ServoComputedValues* parent_style);
 void Servo_AddRefComputedValues(ServoComputedValues*);
 void Servo_ReleaseComputedValues(ServoComputedValues*);
 
