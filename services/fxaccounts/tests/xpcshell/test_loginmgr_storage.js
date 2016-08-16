@@ -87,7 +87,7 @@ add_task(function* test_simple() {
   Assert.ok(!("kB" in data.accountData), "kB not stored in clear text");
 
   let login = getLoginMgrData();
-  Assert.strictEqual(login.username, creds.email, "email used for username");
+  Assert.strictEqual(login.username, creds.uid, "uid used for username");
   let loginData = JSON.parse(login.password);
   Assert.strictEqual(loginData.version, data.version, "same version flag in both places");
   Assert.strictEqual(loginData.accountData.kA, creds.kA, "correct kA in the login mgr");
@@ -170,7 +170,7 @@ add_task(function* test_consistentWithMPEdgeCases() {
 
   // We should still have creds1 data in the login manager.
   let login = getLoginMgrData();
-  Assert.strictEqual(login.username, creds1.email);
+  Assert.strictEqual(login.username, creds1.uid);
   // and that we do have the first kA in the login manager.
   Assert.strictEqual(JSON.parse(login.password).accountData.kA, creds1.kA,
                      "stale data still in login mgr");
@@ -193,7 +193,7 @@ add_task(function* test_uidMigration() {
   setLoginMgrLoggedInState(true);
   Assert.strictEqual(getLoginMgrData(), null, "expect no logins at the start");
 
-  // create the login entry using uid as a key.
+  // create the login entry using email as a key.
   let contents = {kA: "kA"};
 
   let loginInfo = new Components.Constructor(
@@ -201,7 +201,7 @@ add_task(function* test_uidMigration() {
   let login = new loginInfo(FXA_PWDMGR_HOST,
                             null, // aFormSubmitURL,
                             FXA_PWDMGR_REALM, // aHttpRealm,
-                            "uid", // aUsername
+                            "foo@bar.com", // aUsername
                             JSON.stringify(contents), // aPassword
                             "", // aUsernameField
                             "");// aPasswordField
