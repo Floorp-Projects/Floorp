@@ -11,7 +11,6 @@
 #include "PLDHashTable.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/OperatorNewExtensions.h"
 #include "nsAlgorithm.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
@@ -318,7 +317,7 @@ PLDHashTable::ClearAndPrepareForLength(uint32_t aLength)
   uint32_t entrySize = mEntrySize;
 
   this->~PLDHashTable();
-  new (KnownNotNull, this) PLDHashTable(ops, entrySize, aLength);
+  new (this) PLDHashTable(ops, entrySize, aLength);
 }
 
 void
