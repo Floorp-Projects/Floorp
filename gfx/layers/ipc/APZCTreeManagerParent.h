@@ -19,7 +19,7 @@ class APZCTreeManagerParent
 {
 public:
 
-  explicit APZCTreeManagerParent(RefPtr<APZCTreeManager> aAPZCTreeManager);
+  explicit APZCTreeManagerParent(uint64_t aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager);
   virtual ~APZCTreeManagerParent() { }
 
   bool
@@ -133,6 +133,7 @@ public:
   ActorDestroy(ActorDestroyReason aWhy) override { }
 
 private:
+  uint64_t mLayersId;
   RefPtr<APZCTreeManager> mTreeManager;
 };
 
