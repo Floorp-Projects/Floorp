@@ -230,8 +230,15 @@ nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
   // Fire the appropriate DOM event.
   if (NS_SUCCEEDED(aStatus)) {
     FireEvent(NS_LITERAL_STRING("load"));
+
+    // Do not fire loadend event for multipart/x-mixed-replace image streams.
+    bool isMultipart;
+    if (NS_FAILED(aRequest->GetMultipart(&isMultipart)) || !isMultipart) {
+      FireEvent(NS_LITERAL_STRING("loadend"));
+    }
   } else {
     FireEvent(NS_LITERAL_STRING("error"));
+    FireEvent(NS_LITERAL_STRING("loadend"));
   }
 
   nsCOMPtr<nsINode> thisNode = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -628,7 +635,9 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
       aChannel->GetURI(getter_AddRefs(mCurrentURI));
+
     FireEvent(NS_LITERAL_STRING("error"));
+    FireEvent(NS_LITERAL_STRING("loadend"));
     aError.Throw(rv);
   }
   return listener.forget();
@@ -752,9 +761,10 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
   nsCOMPtr<nsIURI> imageURI;
   nsresult rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   if (NS_FAILED(rv)) {
-    // Cancel image requests and fire error event per spec
+    // Cancel image requests and then fire error and loadend events per spec
     CancelImageRequests(aNotify);
     FireEvent(NS_LITERAL_STRING("error"));
+    FireEvent(NS_LITERAL_STRING("loadend"));
     return NS_OK;
   }
 
@@ -793,6 +803,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     // XXX Why fire an error here? seems like the callers to SetLoadingEnabled
     // don't want/need it.
     FireEvent(NS_LITERAL_STRING("error"));
+    FireEvent(NS_LITERAL_STRING("loadend"));
     return NS_OK;
   }
 
@@ -849,6 +860,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                policyType);
   if (!NS_CP_ACCEPTED(cpDecision)) {
     FireEvent(NS_LITERAL_STRING("error"));
+    FireEvent(NS_LITERAL_STRING("loadend"));
     SetBlockedRequest(aNewURI, cpDecision);
     return NS_OK;
   }
@@ -921,7 +933,9 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
       mCurrentURI = aNewURI;
+
     FireEvent(NS_LITERAL_STRING("error"));
+    FireEvent(NS_LITERAL_STRING("loadend"));
     return NS_OK;
   }
 
