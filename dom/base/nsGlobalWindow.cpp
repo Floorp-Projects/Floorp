@@ -1734,6 +1734,8 @@ nsGlobalWindow::FreeInnerObjects()
 
   mIndexedDB = nullptr;
 
+  UnlinkHostObjectURIs();
+
   NotifyWindowIDDestroyed("inner-window-destroyed");
 
   CleanupCachedXBLHandlers(this);
