@@ -3,7 +3,6 @@
 
   "globals": {
     "AllWindowEvents": true,
-    "browserActionFor": true,
     "currentWindow": true,
     "EventEmitter": true,
     "IconDetails": true,
@@ -17,5 +16,3 @@
     "WindowManager": true,
   },
 }
-
-
