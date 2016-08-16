@@ -114,16 +114,16 @@ public:
     inline void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                              nsRestyleHint aRestyleHint);
     inline void ProcessPendingRestyles();
-    inline void ContentInserted(dom::Element* aContainer,
+    inline void ContentInserted(nsINode* aContainer,
                                 nsIContent* aChild);
-    inline void ContentAppended(dom::Element* aContainer,
+    inline void ContentAppended(nsIContent* aContainer,
                                 nsIContent* aFirstNewContent);
-    inline void ContentRemoved(dom::Element* aContainer,
+    inline void ContentRemoved(nsINode* aContainer,
                                nsIContent* aOldChild,
                                nsIContent* aFollowingSibling);
-    inline void RestyleForInsertOrChange(dom::Element* aContainer,
+    inline void RestyleForInsertOrChange(nsINode* aContainer,
                                          nsIContent* aChild);
-    inline void RestyleForAppend(dom::Element* aContainer,
+    inline void RestyleForAppend(nsIContent* aContainer,
                                  nsIContent* aFirstNewContent);
     inline nsresult ContentStateChanged(nsIContent* aContent,
                                         EventStates aStateMask);
