@@ -6,6 +6,7 @@
 // that aren't initialized outside of a XUL app environment like AddonManager
 // and the "@mozilla.org/xre/app-info;1" component.
 
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Troubleshoot.jsm");
 
@@ -439,19 +440,19 @@ const SNAPSHOT_SCHEMA = {
       type: "object",
       properties: {
         hasSeccompBPF: {
-          required: true,
+          required: AppConstants.platform == "linux",
           type: "boolean"
         },
         hasSeccompTSync: {
-          required: true,
+          required: AppConstants.platform == "linux",
           type: "boolean"
         },
         hasUserNamespaces: {
-          required: true,
+          required: AppConstants.platform == "linux",
           type: "boolean"
         },
         hasPrivilegedUserNamespaces: {
-          required: true,
+          required: AppConstants.platform == "linux",
           type: "boolean"
         },
         canSandboxContent: {
@@ -461,6 +462,10 @@ const SNAPSHOT_SCHEMA = {
         canSandboxMedia: {
           required: false,
           type: "boolean"
+        },
+        contentSandboxLevel: {
+          required: AppConstants.MOZ_CONTENT_SANDBOX,
+          type: "number"
         },
       },
     },
