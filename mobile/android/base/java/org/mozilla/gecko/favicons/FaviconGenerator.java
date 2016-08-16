@@ -53,6 +53,16 @@ public class FaviconGenerator {
 
     private static final int TEXT_SIZE_DP = 12;
 
+    public static class IconWithColor {
+        public final Bitmap bitmap;
+        public final int color;
+
+        private IconWithColor(Bitmap bitmap, int color) {
+            this.bitmap = bitmap;
+            this.color = color;
+        }
+    }
+
     /**
      * Asynchronously generate default favicon for the given page URL.
      */
@@ -60,7 +70,7 @@ public class FaviconGenerator {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                final Bitmap bitmap = generate(context, pageURL);
+                final Bitmap bitmap = generate(context, pageURL).bitmap;
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -74,7 +84,7 @@ public class FaviconGenerator {
     /**
      * Generate default favicon for the given page URL.
      */
-    public static Bitmap generate(Context context, String pageURL) {
+    public static IconWithColor generate(Context context, String pageURL) {
         final Resources resources = context.getResources();
         final int widthAndHeight = resources.getDimensionPixelSize(R.dimen.favicon_bg);
         final int roundedCorners = resources.getDimensionPixelOffset(R.dimen.favicon_corner_radius);
@@ -82,8 +92,10 @@ public class FaviconGenerator {
         final Bitmap favicon = Bitmap.createBitmap(widthAndHeight, widthAndHeight, Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(favicon);
 
+        final int color = pickColor(pageURL);
+
         final Paint paint = new Paint();
-        paint.setColor(pickColor(pageURL));
+        paint.setColor(color);
 
         canvas.drawRoundRect(new RectF(0, 0, widthAndHeight, widthAndHeight), roundedCorners, roundedCorners, paint);
 
@@ -102,7 +114,7 @@ public class FaviconGenerator {
                 (int) ((canvas.getHeight() / 2) - ((paint.descent() + paint.ascent()) / 2)),
                 paint);
 
-        return favicon;
+        return new IconWithColor(favicon, color);
     }
 
     /**

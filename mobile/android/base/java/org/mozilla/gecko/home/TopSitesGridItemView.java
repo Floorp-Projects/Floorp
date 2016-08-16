@@ -214,7 +214,7 @@ public class TopSitesGridItemView extends RelativeLayout {
     private void generateDefaultIcon() {
         ThreadUtils.assertOnBackgroundThread();
 
-        final Bitmap bitmap = FaviconGenerator.generate(getContext(), mUrl);
+        final Bitmap bitmap = FaviconGenerator.generate(getContext(), mUrl).bitmap;
         final int dominantColor = BitmapUtils.getDominantColor(bitmap);
 
         ThreadUtils.postToUiThread(new Runnable() {
