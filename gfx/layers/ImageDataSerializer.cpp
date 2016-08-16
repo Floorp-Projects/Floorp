@@ -218,6 +218,32 @@ DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aD
   return result.forget();
 }
 
+void
+ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
+                                   const YCbCrDescriptor& aDescriptor,
+                                   const gfx::SurfaceFormat& aDestFormat,
+                                   const gfx::IntSize& aDestSize,
+                                   unsigned char* aDestBuffer,
+                                   int32_t aStride)
+{
+  MOZ_ASSERT(aBuffer);
+  gfx::IntSize ySize = aDescriptor.ySize();
+  gfx::IntSize cbCrSize = aDescriptor.cbCrSize();
+  int32_t yStride = ySize.width;
+  int32_t cbCrStride = cbCrSize.width;
+
+  layers::PlanarYCbCrData ycbcrData;
+  ycbcrData.mYChannel     = GetYChannel(aBuffer, aDescriptor);
+  ycbcrData.mYStride      = yStride;
+  ycbcrData.mYSize        = ySize;
+  ycbcrData.mCbChannel    = GetCbChannel(aBuffer, aDescriptor);
+  ycbcrData.mCrChannel    = GetCrChannel(aBuffer, aDescriptor);
+  ycbcrData.mCbCrStride   = cbCrStride;
+  ycbcrData.mCbCrSize     = cbCrSize;
+  ycbcrData.mPicSize      = ySize;
+
+  gfx::ConvertYCbCrToRGB(ycbcrData, aDestFormat, aDestSize, aDestBuffer, aStride);
+}
 
 } // namespace ImageDataSerializer
 } // namespace layers
