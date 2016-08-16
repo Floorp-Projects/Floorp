@@ -303,7 +303,7 @@ private:
   LayerRefArray mKeepAlive;
 
   nsIWidget* mWidget;
-  
+
   /* PaintedLayer callbacks; valid at the end of a transaciton,
    * while rendering */
   DrawPaintedLayerCallback mPaintedLayerCallback;
@@ -321,6 +321,7 @@ private:
 
   RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
   uint64_t mLatestTransactionId;
+  TimeDuration mLastPaintTime;
 
   // Sometimes we draw to targets that don't natively support
   // landscape/portrait orientation.  When we need to implement that
