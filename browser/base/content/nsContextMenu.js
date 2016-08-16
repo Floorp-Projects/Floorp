@@ -1051,12 +1051,7 @@ nsContextMenu.prototype = {
   },
 
   reload: function(event) {
-    if (this.onSocial) {
-      // full reload of social provider
-      Social._getProviderFromOrigin(this.browser.getAttribute("origin")).reload();
-    } else {
-      BrowserReloadOrDuplicate(event);
-    }
+    BrowserReloadOrDuplicate(event);
   },
 
   // View Partial Source
@@ -1064,9 +1059,6 @@ nsContextMenu.prototype = {
     let inWindow = !Services.prefs.getBoolPref("view_source.tab");
     let openSelectionFn = inWindow ? null : function() {
       let tabBrowser = gBrowser;
-      // In the case of sidebars and chat windows, gBrowser is defined but null,
-      // because no #content element exists.  For these cases, we need to find
-      // the most recent browser window.
       // In the case of popups, we need to find a non-popup browser window.
       if (!tabBrowser || !window.toolbar.visible) {
         // This returns only non-popup browser windows by default.

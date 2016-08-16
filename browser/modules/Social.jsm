@@ -108,11 +108,6 @@ this.Social = {
     return !this._disabledForSafeMode && this.providers.length > 0;
   },
 
-  toggleNotifications: function SocialNotifications_toggle() {
-    let prefValue = Services.prefs.getBoolPref("social.toast-notifications.enabled");
-    Services.prefs.setBoolPref("social.toast-notifications.enabled", !prefValue);
-  },
-
   _getProviderFromOrigin: function (origin) {
     for (let p of this.providers) {
       if (p.origin == origin) {
@@ -141,10 +136,6 @@ this.Social = {
     SocialService.enableProvider(origin, callback);
   }
 };
-
-function schedule(callback) {
-  Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
-}
 
 function sizeSocialPanelToContent(panel, iframe, requestedSize) {
   let doc = iframe.contentDocument;

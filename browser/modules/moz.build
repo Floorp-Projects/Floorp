@@ -17,7 +17,6 @@ EXTRA_JS_MODULES += [
     'BrowserUsageTelemetry.jsm',
     'CaptivePortalWatcher.jsm',
     'CastingApps.jsm',
-    'Chat.jsm',
     'ContentClick.jsm',
     'ContentCrashHandlers.jsm',
     'ContentLinkHandler.jsm',
