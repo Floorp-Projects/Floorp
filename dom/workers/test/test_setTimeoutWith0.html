@@ -1,0 +1,20 @@
+<html>
+<head>
+  <title>Test for DOM Worker setTimeout and strings containing 0</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+
+var a = new Worker('worker_setTimeoutWith0.js');
+a.onmessage = function(e) {
+  is(e.data, 2, "We want to see 2 here");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>
+

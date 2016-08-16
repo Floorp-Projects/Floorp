@@ -12213,8 +12213,8 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
   RefPtr<Function> callback = handler->GetCallback();
   if (!callback) {
     // Evaluate the timeout expression.
-    const char16_t* script = handler->GetHandlerText();
-    NS_ASSERTION(script, "timeout has no script nor handler text!");
+    nsAutoString script;
+    handler->GetHandlerText(script);
 
     const char* filename = nullptr;
     uint32_t lineNo = 0, dummyColumn = 0;
@@ -12228,9 +12228,7 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     options.setFileAndLine(filename, lineNo)
            .setVersion(JSVERSION_DEFAULT);
     JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
-    nsresult rv =
-      nsJSUtils::EvaluateString(aes.cx(), nsDependentString(script),
-                                global, options);
+    nsresult rv = nsJSUtils::EvaluateString(aes.cx(), script, global, options);
     if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
       abortIntervalHandler = true;
     }
