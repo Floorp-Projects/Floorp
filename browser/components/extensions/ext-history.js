@@ -115,7 +115,7 @@ function getObserver() {
       onEndUpdateBatch: function() {},
       onTitleChanged: function() {},
       onClearHistory: function() {
-        this.emit("visitRemoved", {allHistory: true});
+        this.emit("visitRemoved", {allHistory: true, urls: []});
       },
       onPageChanged: function() {},
       onFrecencyChanged: function() {},
