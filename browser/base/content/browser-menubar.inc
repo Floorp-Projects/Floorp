@@ -220,9 +220,6 @@
                     <menuitem id="menu_tabsSidebar"
                               observes="viewTabsSidebar"
                               label="&syncedTabs.sidebar.label;"/>
-                    <!-- Service providers with sidebars are inserted between these two menuseperators -->
-                    <menuseparator hidden="true"/>
-                    <menuseparator class="social-provider-menu" hidden="true"/>
                   </menupopup>
                 </menu>
                 <menuseparator/>
