@@ -160,6 +160,15 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
          style->mMask.HasLayerWithImage();
 }
 
+bool
+nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(const nsIFrame* aFrame)
+{
+  const nsStyleSVGReset *style = aFrame->StyleSVGReset();
+  return style->HasClipPath() ||
+         style->mMask.HasLayerWithImage() ||
+         (aFrame->StyleEffects()->mOpacity != 1.0f);
+}
+
 // For non-SVG frames, this gives the offset to the frame's "user space".
 // For SVG frames, this returns a zero offset.
 static nsPoint

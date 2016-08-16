@@ -47,6 +47,12 @@ public:
   UsingEffectsForFrame(const nsIFrame* aFrame);
 
   /**
+   * Returns true if mask or clippath are currently applied to this frame.
+   */
+  static bool
+  UsingMaskOrClipPathForFrame(const nsIFrame* aFrame);
+
+  /**
    * Returns the size of the union of the border-box rects of all of
    * aNonSVGFrame's continuations.
    */
