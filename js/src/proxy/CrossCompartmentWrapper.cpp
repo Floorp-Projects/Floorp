@@ -117,6 +117,10 @@ CrossCompartmentWrapper::getPrototypeIfOrdinary(JSContext* cx, HandleObject wrap
         AutoCompartment call(cx, wrapped);
         if (!GetPrototypeIfOrdinary(cx, wrapped, isOrdinary, protop))
             return false;
+
+        if (!*isOrdinary)
+            return true;
+
         if (protop) {
             if (!protop->setDelegate(cx))
                 return false;
