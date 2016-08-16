@@ -33,6 +33,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "nsHashKeys.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
 
@@ -236,7 +237,7 @@ LangRuleTable_InitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   const nsString *lang = static_cast<const nsString*>(key);
 
-  LangRuleTableEntry *entry = new (hdr) LangRuleTableEntry();
+  LangRuleTableEntry *entry = new (KnownNotNull, hdr) LangRuleTableEntry();
 
   // Create the unique rule for this language
   entry->mRule = new nsHTMLStyleSheet::LangRule(*lang);
