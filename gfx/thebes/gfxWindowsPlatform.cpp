@@ -67,7 +67,6 @@
 #include "d3dkmtQueryStatistics.h"
 
 #include "base/thread.h"
-#include "SurfaceCache.h"
 #include "gfxPrefs.h"
 #include "gfxConfig.h"
 #include "VsyncSource.h"
