@@ -109,9 +109,6 @@ protected:
 
   virtual bool RecvShutdown() override;
 
-  virtual bool RecvPaintTime(const uint64_t& aTransactionId,
-                             const TimeDuration& aPaintTime) override;
-
   virtual bool RecvUpdate(EditArray&& cset,
                           OpDestroyArray&& aToDestroy,
                           const uint64_t& aFwdTransactionId,

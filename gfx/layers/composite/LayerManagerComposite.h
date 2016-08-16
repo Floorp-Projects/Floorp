@@ -62,7 +62,6 @@ class PaintedLayerComposite;
 class TextRenderer;
 class CompositingRenderTarget;
 struct FPSState;
-class PaintCounter;
 
 static const int kVisualWarningDuration = 150; // ms
 
@@ -332,8 +331,6 @@ public:
 
   void ForcePresent() { mCompositor->ForcePresent(); }
 
-  void SetPaintTime(const TimeDuration& aPaintTime) { mLastPaintTime = aPaintTime; }
-
 private:
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
@@ -354,11 +351,6 @@ private:
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
   void RenderToPresentationSurface();
 #endif
-
-  /**
-   * Render paint and composite times above the frame.
-   */
-  void DrawPaintTimes(Compositor* aCompositor);
 
   /**
    * We need to know our invalid region before we're ready to render.
@@ -417,9 +409,6 @@ private:
   bool mLastFrameMissedHWC;
 
   bool mWindowOverlayChanged;
-  RefPtr<PaintCounter> mPaintCounter;
-  TimeDuration mLastPaintTime;
-  TimeStamp mRenderStartTime;
 };
 
 /**
