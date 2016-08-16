@@ -51,6 +51,11 @@ import java.util.concurrent.Callable;
 
             prepareRequest(request);
 
+            if (request.shouldPrepareOnly()) {
+                // This request should only be prepared but not load an actual icon.
+                return null;
+            }
+
             final IconResponse response = loadIcon(request);
 
             if (response != null) {

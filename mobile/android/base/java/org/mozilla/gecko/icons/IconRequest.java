@@ -28,8 +28,9 @@ public class IconRequest {
     /* package-private */ boolean backgroundThread;
     /* package-private */ boolean skipDisk;
     /* package-private */ boolean skipMemory;
+    /* package-private */ int targetSize;
+    /* package-private */ boolean prepareOnly;
     private IconCallback callback;
-    private int targetSize;
 
     /* package-private */ IconRequest(Context context) {
         this.context = context.getApplicationContext();
@@ -41,6 +42,7 @@ public class IconRequest {
         this.skipDisk = false;
         this.skipNetwork = false;
         this.targetSize = context.getResources().getDimensionPixelSize(R.dimen.favicon_bg);
+        this.prepareOnly = false;
     }
 
     /**
@@ -165,4 +167,10 @@ public class IconRequest {
         icons.remove(getBestIcon());
     }
 
+    /**
+     * Should this request be prepared but not actually load an icon?
+     */
+    /* package-private */ boolean shouldPrepareOnly() {
+        return prepareOnly;
+    }
 }

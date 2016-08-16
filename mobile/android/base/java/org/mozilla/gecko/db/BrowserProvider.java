@@ -27,6 +27,7 @@ import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
+import org.mozilla.gecko.icons.IconsHelper;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -1692,7 +1693,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         // If no URL is provided, insert using the default one.
         if (TextUtils.isEmpty(faviconUrl) && !TextUtils.isEmpty(pageUrl)) {
-            values.put(Favicons.URL, org.mozilla.gecko.favicons.Favicons.guessDefaultFaviconURL(pageUrl));
+            values.put(Favicons.URL, IconsHelper.guessDefaultFaviconURL(pageUrl));
         }
 
         final long now = System.currentTimeMillis();
