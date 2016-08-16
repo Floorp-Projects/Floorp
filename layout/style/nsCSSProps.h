@@ -326,6 +326,9 @@ enum nsStyleAnimType {
   // RefPtr<nsCSSShadowArray> values
   eStyleAnimType_Shadow,
 
+  // discrete values
+  eStyleAnimType_Discrete,
+
   // property not animatable
   eStyleAnimType_None
 };
