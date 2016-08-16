@@ -386,7 +386,7 @@ function queryHelper(query) {
   });
 }
 
-extensions.registerSchemaAPI("downloads", context => {
+extensions.registerSchemaAPI("downloads", "addon_parent", context => {
   let {extension} = context;
   return {
     downloads: {
