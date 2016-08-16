@@ -31,6 +31,8 @@ assertEq(Module, moduleDesc.value);
 assertEq(Module.length, 1);
 assertEq(Module.name, "Module");
 assertErrorMessage(() => Module(), TypeError, /constructor without new is forbidden/);
+assertErrorMessage(() => new Module(), TypeError, /requires more than 0 arguments/);
+assertErrorMessage(() => new Module(undefined), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module(1), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module({}), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module(new Uint8Array()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
@@ -256,3 +258,38 @@ assertErrorMessage(() => set.call(tbl1, 0, Math.sin), TypeError, /second argumen
 assertErrorMessage(() => set.call(tbl1, {valueOf() { throw Error("hai") }}, null), Error, "hai");
 assertEq(set.call(tbl1, 0, null), undefined);
 assertEq(set.call(tbl1, 1, null), undefined);
+
+// 'WebAssembly.compile' property
+const compileDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'compile');
+assertEq(typeof compileDesc.value, "function");
+assertEq(compileDesc.writable, true);
+assertEq(compileDesc.enumerable, false);
+assertEq(compileDesc.configurable, true);
+
+// 'WebAssembly.compile' function
+const compile = WebAssembly.compile;
+assertEq(compile, compileDesc.value);
+assertEq(compile.length, 1);
+assertEq(compile.name, "compile");
+function assertCompileError(args, msg) {
+    var error = null;
+    compile(...args).catch(e => error = e);
+    drainJobQueue();
+    assertEq(error instanceof TypeError, true);
+    assertEq(Boolean(error.stack.match("jsapi.js")), true);
+    assertEq(Boolean(error.message.match(msg)), true);
+}
+assertCompileError([], /requires more than 0 arguments/);
+assertCompileError([undefined], /first argument must be an ArrayBuffer or typed array object/);
+assertCompileError([1], /first argument must be an ArrayBuffer or typed array object/);
+assertCompileError([{}], /first argument must be an ArrayBuffer or typed array object/);
+assertCompileError([new Uint8Array()], /compile error/);
+assertCompileError([new ArrayBuffer()], /compile error/);
+function assertCompileSuccess(bytes) {
+    var module = null;
+    compile(bytes).then(m => module = m);
+    drainJobQueue();
+    assertEq(module instanceof Module, true);
+}
+assertCompileSuccess(emptyModule);
+assertCompileSuccess(emptyModule.buffer);
