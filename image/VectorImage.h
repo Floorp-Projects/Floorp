@@ -78,14 +78,10 @@ protected:
   virtual nsresult StopAnimation() override;
   virtual bool     ShouldAnimate() override;
 
-private:
-  /// Attempt to find a cached surface matching @aParams in the SurfaceCache.
-  already_AddRefed<gfxDrawable>
-    LookupCachedSurface(const SVGDrawingParameters& aParams);
-
   void CreateSurfaceAndShow(const SVGDrawingParameters& aParams);
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
+private:
   nsresult Init(const char* aMimeType, uint32_t aFlags);
 
   /**
