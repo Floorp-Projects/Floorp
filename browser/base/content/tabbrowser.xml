@@ -1483,6 +1483,7 @@
             var aForceNotRemote;
             var aNoReferrer;
             var aUserContextId;
+            var aRelatedBrowser;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1500,6 +1501,7 @@
               aForceNotRemote       = params.forceNotRemote;
               aNoReferrer           = params.noReferrer;
               aUserContextId        = params.userContextId;
+              aRelatedBrowser       = params.relatedBrowser;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1518,7 +1520,8 @@
                                   allowMixedContent: aAllowMixedContent,
                                   forceNotRemote: aForceNotRemote,
                                   noReferrer: aNoReferrer,
-                                  userContextId: aUserContextId });
+                                  userContextId: aUserContextId,
+                                  relatedBrowser: aRelatedBrowser });
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -1814,6 +1817,10 @@
 
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
+            if (aParams.relatedBrowser) {
+              b.relatedBrowser = aParams.relatedBrowser;
+            }
+
             // Create the browserStack container
             var stack = document.createElementNS(NS_XUL, "stack");
             stack.className = "browserStack";
@@ -1892,7 +1899,8 @@
               browser = this._createBrowser({permanentKey: aTab.permanentKey,
                                              remote: remote,
                                              uriIsAboutBlank: uriIsAboutBlank,
-                                             userContextId: aParams.userContextId});
+                                             userContextId: aParams.userContextId,
+                                             relatedBrowser: aParams.relatedBrowser});
             }
 
             let notificationbox = this.getNotificationBox(browser);
@@ -1966,6 +1974,7 @@
             var aNoReferrer;
             var aUserContextId;
             var aEventDetail;
+            var aRelatedBrowser;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1984,6 +1993,7 @@
               aNoReferrer           = params.noReferrer;
               aUserContextId        = params.userContextId;
               aEventDetail          = params.eventDetail;
+              aRelatedBrowser       = params.relatedBrowser;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -2050,7 +2060,8 @@
             // of tab.linkedBrowser.
             let browserParams = {
               forceNotRemote: aForceNotRemote,
-              userContextId:  aUserContextId
+              userContextId:  aUserContextId,
+              relatedBrowser: aRelatedBrowser
             };
             let { usingPreloadedContent } = this._linkBrowserToTab(t, aURI, browserParams);
             let b = t.linkedBrowser;
