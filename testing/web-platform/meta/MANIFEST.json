@@ -30310,6 +30310,10 @@
         "url": "/vibration/silent-ignore.html"
       },
       {
+        "path": "web-animations/animation-model/animation-types/animation-types.html",
+        "url": "/web-animations/animation-model/animation-types/animation-types.html"
+      },
+      {
         "path": "web-animations/animation-model/animation-types/discrete-animation.html",
         "url": "/web-animations/animation-model/animation-types/discrete-animation.html"
       },
