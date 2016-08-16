@@ -562,7 +562,7 @@ var snapshotFormatters = {
   },
 
   sandbox: function sandbox(data) {
-    if (AppConstants.platform != "linux" || !AppConstants.MOZ_SANDBOX)
+    if (!AppConstants.MOZ_SANDBOX)
       return;
 
     let strings = stringBundle();
@@ -571,6 +571,14 @@ var snapshotFormatters = {
       // Simplify the display a little in the common case.
       if (key === "hasPrivilegedUserNamespaces" &&
           data[key] === data["hasUserNamespaces"]) {
+        continue;
+      }
+      // Hard code content sandbox label on Fx50 to prevent noise in l10n tools.
+      if (key === "contentSandboxLevel") {
+        tbody.appendChild($.new("tr", [
+          $.new("th", "Content Process Sandbox Level", "column"),
+          $.new("td", data[key])
+        ]));
         continue;
       }
       tbody.appendChild($.new("tr", [
