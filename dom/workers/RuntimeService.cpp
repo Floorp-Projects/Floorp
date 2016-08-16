@@ -760,7 +760,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSContext* aWorkerCx)
 
     if (!JS_SetDefaultLocale(aWorkerCx, defaultLocale.get())) {
       NS_WARNING("failed to set workerCx's default locale");
-      return nullptr;
+      return false;
     }
   }
 
