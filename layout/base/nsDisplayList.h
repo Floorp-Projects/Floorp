@@ -3801,8 +3801,6 @@ public:
     return mEffectsBounds + ToReferenceFrame();
   }
 
-  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                 nsRegion* aVisibleRegion) override;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
@@ -3817,7 +3815,6 @@ public:
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override;
-
 protected:
   bool ValidateSVGFrame();
 
@@ -3850,6 +3847,37 @@ public:
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
 
+  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                 nsRegion* aVisibleRegion) override;
+#ifdef MOZ_DUMP_PAINTING
+  void PrintEffects(nsACString& aTo);
+#endif
+
+  void PaintAsLayer(nsDisplayListBuilder* aBuilder,
+                    nsRenderingContext* aCtx,
+                    LayerManager* aManager);
+};
+
+class nsDisplayFilter : public nsDisplaySVGEffects {
+public:
+  nsDisplayFilter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                      nsDisplayList* aList, bool aOpacityItemCreated);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayFilter();
+#endif
+
+  NS_DISPLAY_DECL_NAME("Filter", TYPE_FILTER)
+
+  virtual bool TryMerge(nsDisplayItem* aItem) override;
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+
+  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                 nsRegion* aVisibleRegion) override;
 #ifdef MOZ_DUMP_PAINTING
   void PrintEffects(nsACString& aTo);
 #endif
