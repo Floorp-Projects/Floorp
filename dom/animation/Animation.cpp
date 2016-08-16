@@ -87,7 +87,7 @@ namespace {
 // ---------------------------------------------------------------------------
 /* static */ already_AddRefed<Animation>
 Animation::Constructor(const GlobalObject& aGlobal,
-                       KeyframeEffectReadOnly* aEffect,
+                       AnimationEffectReadOnly* aEffect,
                        const Optional<AnimationTimeline*>& aTimeline,
                        ErrorResult& aRv)
 {
