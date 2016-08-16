@@ -2865,21 +2865,6 @@ fi
 AC_SUBST(MOZ_ENABLE_DBUS)
 
 dnl ========================================================
-dnl = speech-dispatcher support
-dnl ========================================================
-
-if test "$MOZ_ENABLE_GTK"
-then
-    MOZ_SYNTH_SPEECHD=1
-
-    MOZ_ARG_DISABLE_BOOL(synth-speechd,
-    [  --disable-synth-speechd Disable speech-dispatcher support ],
-        MOZ_SYNTH_SPEECHD=,
-        MOZ_SYNTH_SPEECHD=1)
-fi
-AC_SUBST(MOZ_SYNTH_SPEECHD)
-
-dnl ========================================================
 dnl = Disable WebSMS backend
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(websms-backend,
