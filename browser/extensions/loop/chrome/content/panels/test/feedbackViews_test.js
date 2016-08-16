@@ -13,13 +13,13 @@ describe("loop.feedbackViews", function () {
   beforeEach(function () {
     sandbox = LoopMochaUtils.createSandbox();
     mozL10nGet = sandbox.stub(l10n, "get", function (x) {
-      return "translated:" + x;});});
-
-
+      return "translated:" + x;
+    });
+  });
 
   afterEach(function () {
-    sandbox.restore();});
-
+    sandbox.restore();
+  });
 
   describe("FeedbackView", function () {
     var openURLStub, getLoopPrefStub, feedbackReceivedStub, getAddonVersionStub;
@@ -28,13 +28,13 @@ describe("loop.feedbackViews", function () {
     var addonVersion = "1.3.0";
 
     function mountTestComponent(props) {
-      props = _.extend({ 
-        onAfterFeedbackReceived: feedbackReceivedStub }, 
+      props = _.extend({
+        onAfterFeedbackReceived: feedbackReceivedStub },
       props);
 
       return TestUtils.renderIntoDocument(
-      React.createElement(FeedbackView, props));}
-
+      React.createElement(FeedbackView, props));
+    }
 
     beforeEach(function () {
       openURLStub = sandbox.stub();
@@ -42,35 +42,35 @@ describe("loop.feedbackViews", function () {
       feedbackReceivedStub = sandbox.stub();
       getAddonVersionStub = sandbox.stub();
 
-      LoopMochaUtils.stubLoopRequest({ 
-        OpenURL: openURLStub, 
-        GetLoopPref: getLoopPrefStub, 
-        GetAddonVersion: getAddonVersionStub });});
+      LoopMochaUtils.stubLoopRequest({
+        OpenURL: openURLStub,
+        GetLoopPref: getLoopPrefStub,
+        GetAddonVersion: getAddonVersionStub });
 
-
+    });
 
     afterEach(function () {
       view = null;
-      LoopMochaUtils.restore();});
-
+      LoopMochaUtils.restore();
+    });
 
     it("should render a feedback view", function () {
       view = mountTestComponent();
 
-      TestUtils.findRenderedComponentWithType(view, FeedbackView);});
-
+      TestUtils.findRenderedComponentWithType(view, FeedbackView);
+    });
 
     it("should render a button with correct text", function () {
       view = mountTestComponent();
 
-      sinon.assert.calledWithExactly(mozL10nGet, "feedback_request_button");});
-
+      sinon.assert.calledWithExactly(mozL10nGet, "feedback_request_button");
+    });
 
     it("should render a header with correct text", function () {
       view = mountTestComponent();
 
-      sinon.assert.calledWithExactly(mozL10nGet, "feedback_window_heading");});
-
+      sinon.assert.calledWithExactly(mozL10nGet, "feedback_window_heading");
+    });
 
     it("should open a new page to the feedback form", function () {
       getLoopPrefStub.withArgs("feedback.formURL").returns(fakeURL);
@@ -80,8 +80,8 @@ describe("loop.feedbackViews", function () {
       TestUtils.Simulate.click(ReactDOM.findDOMNode(view.refs.feedbackFormBtn));
 
       sinon.assert.calledOnce(openURLStub);
-      sinon.assert.calledWithExactly(openURLStub, fakeURL);});
-
+      sinon.assert.calledWithExactly(openURLStub, fakeURL);
+    });
 
     it("should fetch the feedback form URL from the prefs", function () {
       getLoopPrefStub.withArgs("feedback.formURL").returns(fakeURL);
@@ -91,8 +91,8 @@ describe("loop.feedbackViews", function () {
       TestUtils.Simulate.click(ReactDOM.findDOMNode(view.refs.feedbackFormBtn));
 
       sinon.assert.calledOnce(getLoopPrefStub);
-      sinon.assert.calledWithExactly(getLoopPrefStub, "feedback.formURL");});
-
+      sinon.assert.calledWithExactly(getLoopPrefStub, "feedback.formURL");
+    });
 
     it("should fetch the addon version", function () {
       getLoopPrefStub.withArgs("feedback.formURL").returns(fakeURL);
@@ -102,8 +102,8 @@ describe("loop.feedbackViews", function () {
       TestUtils.Simulate.click(ReactDOM.findDOMNode(view.refs.feedbackFormBtn));
 
       sinon.assert.calledOnce(getAddonVersionStub);
-      sinon.assert.calledWithExactly(getAddonVersionStub);});
-
+      sinon.assert.calledWithExactly(getAddonVersionStub);
+    });
 
     it("should close the window after opening the form", function () {
       getLoopPrefStub.withArgs("feedback.formURL").returns(fakeURL);
@@ -112,4 +112,7 @@ describe("loop.feedbackViews", function () {
 
       TestUtils.Simulate.click(ReactDOM.findDOMNode(view.refs.feedbackFormBtn));
 
-      sinon.assert.calledOnce(feedbackReceivedStub);});});});
+      sinon.assert.calledOnce(feedbackReceivedStub);
+    });
+  });
+});

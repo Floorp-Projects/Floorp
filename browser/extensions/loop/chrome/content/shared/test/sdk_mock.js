@@ -3,21 +3,21 @@
                * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This file mocks the functions from the OT sdk that we use. This is to provide
- * an interface that tests can mock out, without needing to maintain a copy of
- * the sdk or load one from the network.
- */
+                                                                        * This file mocks the functions from the OT sdk that we use. This is to provide
+                                                                        * an interface that tests can mock out, without needing to maintain a copy of
+                                                                        * the sdk or load one from the network.
+                                                                        */
 (function (window) {
   "use strict";
 
   if (!window.OT) {
-    window.OT = {};}
-
+    window.OT = {};
+  }
 
   window.OT.checkSystemRequirements = function () {
-    return true;};
+    return true;
+  };
 
+  window.OT.setLogLevel = function () {};
 
-  window.OT.setLogLevel = function () {};})(
-
-window);
+})(window);

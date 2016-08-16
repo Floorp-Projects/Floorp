@@ -6,11 +6,11 @@
   "use strict";
 
   // Create fake Components to test chrome-privileged React components.
-  window.Components = { 
-    utils: { 
+  window.Components = {
+    utils: {
       import: function _import() {
-        return { 
-          LoopAPI: { 
+        return {
+          LoopAPI: {
             sendMessageToHandler: function sendMessageToHandler(_ref, callback) {var name = _ref.name;
               switch (name) {
                 case "GetLocale":
@@ -18,4 +18,12 @@
                 case "GetPluralRule":
                   return callback(1);
                 default:
-                  return callback();}} } };} } };})();
+                  return callback();}
+
+            } } };
+
+
+      } } };
+
+
+})();

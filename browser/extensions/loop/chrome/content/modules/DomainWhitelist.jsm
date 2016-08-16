@@ -7,10 +7,10 @@
 /* exported DomainWhitelist */
 this.EXPORTED_SYMBOLS = ["DomainWhitelist"];
 
-this.DomainWhitelist = Object.freeze({ 
+this.DomainWhitelist = Object.freeze({
   check: function check(domain) {
-    return gWhitelist.has(domain);} });
-
+    return gWhitelist.has(domain);
+  } });
 
 
 // Convert the multiline list of domains into a Set for lookup.
