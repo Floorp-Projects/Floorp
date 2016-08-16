@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test for Bug 1292522</title>
+    <script>
+      var check_var = function() {
+        opener.postMessage(document.getElementsByTagName('iframe')[0].contentWindow.testvar, "http://mochi.test:8888");
+      }
+    </script>
+  </head>
+  <body>
+    <iframe src="http://test2.example.org:80/tests/dom/html/test/bug1292522_iframe.html" onload="document.domain='example.org';check_var();"></iframe>
+  </body>
+</html>
