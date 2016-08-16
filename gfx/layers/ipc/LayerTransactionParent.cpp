@@ -229,14 +229,6 @@ private:
 };
 
 bool
-LayerTransactionParent::RecvPaintTime(const uint64_t& aTransactionId,
-                                      const TimeDuration& aPaintTime)
-{
-  mShadowLayersManager->UpdatePaintTime(this, aPaintTime);
-  return true;
-}
-
-bool
 LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
                                    InfallibleTArray<OpDestroy>&& aToDestroy,
                                    const uint64_t& aFwdTransactionId,

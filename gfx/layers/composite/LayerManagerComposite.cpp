@@ -12,7 +12,6 @@
 #include "CompositableHost.h"           // for CompositableHost
 #include "ContainerLayerComposite.h"    // for ContainerLayerComposite, etc
 #include "FPSCounter.h"                 // for FPSState, FPSCounter
-#include "PaintCounter.h"               // For PaintCounter
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "GeckoProfiler.h"              // for profiler_set_frame_number, etc
 #include "ImageLayerComposite.h"        // for ImageLayerComposite
@@ -128,8 +127,6 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 , mGeometryChanged(true)
 , mLastFrameMissedHWC(false)
 , mWindowOverlayChanged(false)
-, mLastPaintTime(TimeDuration::Forever())
-, mRenderStartTime(TimeStamp::Now())
 {
   mTextRenderer = new TextRenderer(aCompositor);
   MOZ_ASSERT(aCompositor);
@@ -151,7 +148,6 @@ LayerManagerComposite::Destroy()
     }
     mRoot = nullptr;
     mClonedLayerTreeProperties = nullptr;
-    mPaintCounter = nullptr;
     mDestroyed = true;
   }
 }
@@ -377,7 +373,6 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
   NS_ASSERTION(!(aFlags & END_NO_COMPOSITE),
                "Shouldn't get END_NO_COMPOSITE here");
   mInTransaction = false;
-  mRenderStartTime = TimeStamp::Now();
 
   if (!mIsCompositorReady) {
     return;
@@ -564,7 +559,6 @@ LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const
   bool drawFps = gfxPrefs::LayersDrawFPS();
   bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
-  bool drawPaintTimes = gfxPrefs::AlwaysPaint();
 
   if (drawFps || drawFrameCounter) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 256, 256));
@@ -572,20 +566,6 @@ LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const
   if (drawFrameColorBars) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 10, aBounds.height));
   }
-  if (drawPaintTimes) {
-    aInvalidRegion.Or(aInvalidRegion, nsIntRect(PaintCounter::GetPaintRect()));
-  }
-}
-
-void
-LayerManagerComposite::DrawPaintTimes(Compositor* aCompositor)
-{
-  if (!mPaintCounter) {
-    mPaintCounter = new PaintCounter();
-  }
-
-  TimeDuration compositeTime = TimeStamp::Now() - mRenderStartTime;
-  mPaintCounter->Draw(aCompositor, mLastPaintTime, compositeTime);
 }
 
 static uint16_t sFrameCount = 0;
@@ -595,7 +575,6 @@ LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
   bool drawFps = gfxPrefs::LayersDrawFPS();
   bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
-  bool drawPaintTimes = gfxPrefs::AlwaysPaint();
 
   TimeStamp now = TimeStamp::Now();
 
@@ -734,10 +713,6 @@ LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
   if (drawFrameColorBars || drawFrameCounter) {
     // We intentionally overflow at 2^16.
     sFrameCount++;
-  }
-
-  if (drawPaintTimes) {
-    DrawPaintTimes(mCompositor);
   }
 }
 
