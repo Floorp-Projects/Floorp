@@ -34,8 +34,6 @@ import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
 import org.mozilla.gecko.dlc.DownloadContentService;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedService;
@@ -55,6 +53,9 @@ import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.home.HomeScreen;
 import org.mozilla.gecko.home.SearchEngine;
+import org.mozilla.gecko.icons.IconCallback;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.javaaddons.JavaAddonManager;
 import org.mozilla.gecko.media.VideoPlayer;
 import org.mozilla.gecko.menu.GeckoMenu;
@@ -102,6 +103,7 @@ import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -1820,50 +1822,40 @@ public class BrowserApp extends GeckoApp
     }
 
     private void getFaviconFromCache(final EventCallback callback, final String url) {
-        final OnFaviconLoadedListener listener = new OnFaviconLoadedListener() {
-            @Override
-            public void onFaviconLoaded(final String url, final String faviconURL, final Bitmap favicon) {
-                ThreadUtils.assertOnUiThread();
-                // Convert Bitmap to Base64 data URI in background.
-                ThreadUtils.postToBackgroundThread(new Runnable() {
+        Icons.with(this)
+                .pageUrl(url)
+                .skipNetwork()
+                .executeCallbackOnBackgroundThread()
+                .build()
+                .execute(new IconCallback() {
                     @Override
-                    public void run() {
+                    public void onIconResponse(IconResponse response) {
                         ByteArrayOutputStream out = null;
                         Base64OutputStream b64 = null;
 
-                        // Failed to load favicon from local.
-                        if (favicon == null) {
-                            callback.sendError("Failed to get favicon from cache");
-                        } else {
+                        try {
+                            out = new ByteArrayOutputStream();
+                            out.write("data:image/png;base64,".getBytes());
+                            b64 = new Base64OutputStream(out, Base64.NO_WRAP);
+                            response.getBitmap().compress(Bitmap.CompressFormat.PNG, 100, b64);
+                            callback.sendSuccess(new String(out.toByteArray()));
+                        } catch (IOException e) {
+                            Log.w(LOGTAG, "Failed to convert to base64 data URI");
+                            callback.sendError("Failed to convert favicon to a base64 data URI");
+                        } finally {
                             try {
-                                out = new ByteArrayOutputStream();
-                                out.write("data:image/png;base64,".getBytes());
-                                b64 = new Base64OutputStream(out, Base64.NO_WRAP);
-                                favicon.compress(Bitmap.CompressFormat.PNG, 100, b64);
-                                callback.sendSuccess(new String(out.toByteArray()));
-                            } catch (IOException e) {
-                                Log.w(LOGTAG, "Failed to convert to base64 data URI");
-                                callback.sendError("Failed to convert favicon to a base64 data URI");
-                            } finally {
-                                try {
-                                    if (out != null) {
-                                        out.close();
-                                    }
-                                    if (b64 != null) {
-                                        b64.close();
-                                    }
-                                } catch (IOException e) {
-                                    Log.w(LOGTAG, "Failed to close the streams");
+                                if (out != null) {
+                                    out.close();
                                 }
+                                if (b64 != null) {
+                                    b64.close();
+                                }
+                            } catch (IOException e) {
+                                Log.w(LOGTAG, "Failed to close the streams");
                             }
                         }
                     }
                 });
-            }
-        };
-        Favicons.getSizedFaviconForPageFromLocal(getContext(),
-                url,
-                listener);
     }
 
     /**

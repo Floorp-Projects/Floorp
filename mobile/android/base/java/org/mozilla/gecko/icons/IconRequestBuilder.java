@@ -8,6 +8,8 @@ package org.mozilla.gecko.icons;
 import android.content.Context;
 import android.support.annotation.CheckResult;
 
+import org.mozilla.gecko.GeckoAppShell;
+
 import ch.boye.httpclientandroidlib.util.TextUtils;
 
 /**
@@ -84,12 +86,31 @@ public class IconRequestBuilder {
     }
 
     /**
+     * The icon will be used as (Android) launcher icon. The loaded icon will be scaled to the
+     * preferred Android launcher icon size.
+     */
+    public IconRequestBuilder forLauncherIcon() {
+        request.targetSize = GeckoAppShell.getPreferredIconSize();
+        return this;
+    }
+
+    /**
      * Execute the callback on the background thread. By default the callback is always executed on
      * the UI thread in order to add the loaded icon to a view easily.
      */
     @CheckResult
     public IconRequestBuilder executeCallbackOnBackgroundThread() {
         request.backgroundThread = true;
+        return this;
+    }
+
+    /**
+     * When executing the request then only prepare executing it but do not actually load an icon.
+     * This mode is only used for some legacy code that uses the icon URL and therefore needs to
+     * perform a lookup of the URL but doesn't want to load the icon yet.
+     */
+    public IconRequestBuilder prepareOnly() {
+        request.prepareOnly = true;
         return this;
     }
 
