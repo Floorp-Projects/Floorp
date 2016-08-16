@@ -2124,17 +2124,27 @@ gfxPlatform::InitAcceleration()
                                false);
 
   if (XRE_IsParentProcess()) {
+    FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
     if (gfxPrefs::GPUProcessDevEnabled()) {
       // We want to hide this from about:support, so only set a default if the
       // pref is known to be true.
-      gfxConfig::SetDefaultFromPref(
-        Feature::GPU_PROCESS,
+      gpuProc.SetDefaultFromPref(
         gfxPrefs::GetGPUProcessDevEnabledPrefName(),
         true,
         gfxPrefs::GetGPUProcessDevEnabledPrefDefault());
+
+      // We require E10S - otherwise, there is very little benefit to the GPU
+      // process, since the UI process must still use acceleration for
+      // performance.
+      if (!BrowserTabsRemoteAutostart()) {
+        gpuProc.Disable(
+          FeatureStatus::Unavailable,
+          "Multi-process mode is not enabled",
+          NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
+      }
     }
 
-    if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+    if (gpuProc.IsEnabled()) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
       gpu->EnableGPUProcess();
     }
