@@ -1,0 +1,53 @@
+---
+$inherits:
+  from: 'tasks/lint.yml'
+  variables:
+    build_product: 'lint'
+    build_name: 'sphinx'
+    build_type: 'opt'
+
+docker-image: lint
+task:
+  metadata:
+    name: '[TC] - Sphinx'
+    description: 'Sphinx in-tree docs'
+
+  payload:
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId:
+        task-reference: '<docker-image>'
+
+    command:
+      - /home/worker/bin/run-task
+      - '--vcs-checkout=/home/worker/checkouts/gecko'
+      - '--'
+      - bash
+      - -cx
+      - >
+        cd /home/worker/checkouts/gecko &&
+        ./mach doc --outdir docs-out --no-open &&
+        rm -rf docs-out/html/Mozilla_Source_Tree_Docs/_venv &&
+        mv docs-out/html/Mozilla_Source_Tree_Docs docs &&
+        tar -czf docs.tar.gz docs
+
+    artifacts:
+      'public/docs.tar.gz':
+        type: file
+        path: '/home/worker/checkouts/gecko/docs.tar.gz'
+        expires:
+          relative-datestamp: '1 year'
+
+  extra:
+    locations:
+      build: null
+      tests: null
+    treeherder:
+      machine:
+        platform: lint
+      groupSymbol: tc
+      symbol: 'Doc'
+    treeherderEnv:
+      - production
+      - staging
