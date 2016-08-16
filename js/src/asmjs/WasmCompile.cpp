@@ -1585,15 +1585,15 @@ DecodeUnknownSections(Decoder& d)
 }
 
 bool
-CompileArgs::initFromContext(ExclusiveContext* cx, UniqueChars f)
+CompileArgs::initFromContext(ExclusiveContext* cx, ScriptedCaller&& scriptedCaller)
 {
     alwaysBaseline = cx->options().wasmAlwaysBaseline();
-    filename = Move(f);
+    this->scriptedCaller = Move(scriptedCaller);
     return assumptions.initBuildIdFromContext(cx);
 }
 
 SharedModule
-wasm::Compile(const ShareableBytes& bytecode, CompileArgs&& args, UniqueChars* error)
+wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
 {
     bool newFormat = args.assumptions.newFormat;
 
@@ -1628,7 +1628,7 @@ wasm::Compile(const ShareableBytes& bytecode, CompileArgs&& args, UniqueChars* e
         return nullptr;
 
     ModuleGenerator mg(Move(imports));
-    if (!mg.init(Move(init), Move(args)))
+    if (!mg.init(Move(init), args))
         return nullptr;
 
     if (!DecodeExportSection(d, newFormat, memoryExported, mg))

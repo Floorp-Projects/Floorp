@@ -1764,15 +1764,16 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!dummyFunction_)
             return false;
 
-        UniqueChars filename;
+        ScriptedCaller scriptedCaller;
         if (parser_.ss->filename()) {
-            filename = DuplicateString(parser_.ss->filename());
-            if (!filename)
+            scriptedCaller.line = scriptedCaller.column = 0;  // unused
+            scriptedCaller.filename = DuplicateString(parser_.ss->filename());
+            if (!scriptedCaller.filename)
                 return false;
         }
 
         CompileArgs args;
-        if (!args.initFromContext(cx_, Move(filename)))
+        if (!args.initFromContext(cx_, Move(scriptedCaller)))
             return false;
 
         auto genData = MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal, ModuleKind::AsmJS);
@@ -1788,7 +1789,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         genData->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
 
-        if (!mg_.init(Move(genData), Move(args), asmJSMetadata_.get()))
+        if (!mg_.init(Move(genData), args, asmJSMetadata_.get()))
             return false;
 
         return true;
