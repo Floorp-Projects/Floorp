@@ -1,83 +1,56 @@
-from marionette_driver.by import By
-from marionette_driver.addons import Addons
-from marionette import MarionetteTestCase
+import unittest
 
 import os
 import sys
-import copy
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 from serversetup import LoopTestServers
-from config import FIREFOX_PREFERENCES
 from loopTestDriver import LoopTestDriver
 from config import CONTENT_SERVER_URL
 
 
-class Test2Linkclicker(LoopTestDriver, MarionetteTestCase):
+class Test2Linkclicker(LoopTestDriver, unittest.TestCase):
     # XXX Move this to setup class so it doesn't restart the server
     # after every test.
     def setUp(self):
         # start server
         self.loop_test_servers = LoopTestServers()
 
-        MarionetteTestCase.setUp(self)
-        LoopTestDriver.setUp(self, self.marionette)
-
+        # Set the standalone url for these tests.
         standalone_url = CONTENT_SERVER_URL + "/"
-        prefs = copy.copy(FIREFOX_PREFERENCES)
-        prefs["loop.linkClicker.url"] = standalone_url
-
-        # Although some of these preferences might require restart, we don't
-        # use enforce_gecko_prefs (which would restart), as we need to restart
-        # for the add-on installation anyway.
-        self.marionette.set_prefs(prefs)
-
-        xpi_file = os.environ.get("LOOP_XPI_FILE")
-
-        if xpi_file:
-            addons = Addons(self.marionette)
-            # XXX We should really use temp=True here, but due to the later
-            # restart to ensure the add-on is installed correctly, this won't work
-            # at the moment. What we need is a fully restartless add-on - bug 1229352
-            # at which point we should be able to make this install temporarily
-            # and after the restart.
-            addons.install(os.path.abspath(xpi_file))
+        LoopTestDriver.setUp(self, extra_prefs={
+            "loop.linkClicker.url": standalone_url,
+            "webchannel.allowObject.urlWhitelist": CONTENT_SERVER_URL
+        })
 
         self.e10s_enabled = os.environ.get("TEST_E10S") == "1"
 
-        # Restart the browser nicely, so the preferences and add-on installation
-        # take full effect.
-        self.marionette.restart(in_app=True)
-
         # this is browser chrome, kids, not the content window just yet
-        self.marionette.set_context("chrome")
+        self.driver.set_context("chrome")
 
     def navigate_to_standalone(self, url):
         self.switch_to_standalone()
-        self.marionette.navigate(url)
+        self.driver.get(url)
 
     def standalone_check_own_link_view(self):
-        view_container = self.wait_for_element_displayed(By.CSS_SELECTOR,
-                                                         ".handle-user-agent-view-scroller",
-                                                         30)
+        view_container = self.wait_for_element_displayed_by_css_selector(
+            ".handle-user-agent-view-scroller", 30)
         self.assertEqual(view_container.tag_name, "div", "expect a error container")
 
     def local_leave_room(self):
         self.open_panel()
         self.switch_to_panel()
-        button = self.marionette.find_element(By.CLASS_NAME, "stop-sharing-button")
+        button = self.driver.find_element_by_class_name("stop-sharing-button")
 
         button.click()
 
     def standalone_join_own_room(self):
-        button = self.wait_for_element_displayed(By.CLASS_NAME, "btn-info", 30)
+        button = self.wait_for_element_displayed_by_class_name("btn-info", 30)
 
         button.click()
 
     def standalone_check_error_text(self):
-        error_container = self.wait_for_element_displayed(By.CLASS_NAME,
-                                                          "failure",
-                                                          30)
+        error_container = self.wait_for_element_displayed_by_class_name("failure", 30)
         self.assertEqual(error_container.tag_name, "p", "expect a error container")
 
     def test_2_own_room_test(self):
@@ -119,4 +92,7 @@ class Test2Linkclicker(LoopTestDriver, MarionetteTestCase):
 
     def tearDown(self):
         self.loop_test_servers.shutdown()
-        MarionetteTestCase.tearDown(self)
+        self.driver.quit()
+
+if __name__ == "__main__":
+    unittest.main()

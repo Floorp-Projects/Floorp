@@ -9,38 +9,38 @@ loop.shared.views.LinkifiedTextView = function () {
   "use strict";
 
   /**
-   * Given a rawText property, renderer a version of that text with any
-   * links starting with http://, https://, or ftp:// as actual clickable
-   * links inside a <p> container.
-   */
-  var LinkifiedTextView = React.createClass({ displayName: "LinkifiedTextView", 
-    propTypes: { 
+                 * Given a rawText property, renderer a version of that text with any
+                 * links starting with http://, https://, or ftp:// as actual clickable
+                 * links inside a <p> container.
+                 */
+  var LinkifiedTextView = React.createClass({ displayName: "LinkifiedTextView",
+    propTypes: {
       // Call this instead of allowing the default <a> click semantics, if
       // given.  Also causes sendReferrer and suppressTarget attributes to be
       // ignored.
-      linkClickHandler: React.PropTypes.func, 
+      linkClickHandler: React.PropTypes.func,
       // The text to be linkified.
-      rawText: React.PropTypes.string.isRequired, 
+      rawText: React.PropTypes.string.isRequired,
       // Should the links send a referrer?  Defaults to false.
-      sendReferrer: React.PropTypes.bool, 
+      sendReferrer: React.PropTypes.bool,
       // Should we suppress target="_blank" on the link? Defaults to false.
       // Mostly for testing use.
-      suppressTarget: React.PropTypes.bool }, 
+      suppressTarget: React.PropTypes.bool },
 
 
     mixins: [
-    React.addons.PureRenderMixin], 
+    React.addons.PureRenderMixin],
 
 
     _handleClickEvent: function _handleClickEvent(e) {
       e.preventDefault();
       e.stopPropagation();
 
-      this.props.linkClickHandler(e.currentTarget.href);}, 
-
+      this.props.linkClickHandler(e.currentTarget.href);
+    },
 
     _generateLinkAttributes: function _generateLinkAttributes(href) {
-      var linkAttributes = { 
+      var linkAttributes = {
         href: href };
 
 
@@ -49,28 +49,28 @@ loop.shared.views.LinkifiedTextView = function () {
 
         // if this is specified, we short-circuit return to avoid unnecessarily
         // creating target and rel attributes.
-        return linkAttributes;}
-
+        return linkAttributes;
+      }
 
       if (!this.props.suppressTarget) {
-        linkAttributes.target = "_blank";}
-
+        linkAttributes.target = "_blank";
+      }
 
       if (!this.props.sendReferrer) {
-        linkAttributes.rel = "noreferrer";}
+        linkAttributes.rel = "noreferrer";
+      }
 
-
-      return linkAttributes;}, 
-
+      return linkAttributes;
+    },
 
     /**                                                              a
-     * Parse the given string into an array of strings and React <a> elements
-     * in the order in which they should be rendered (i.e. FIFO).
-     *
-     * @param {String} s the raw string to be parsed
-     *
-     * @returns {Array} of strings and React <a> elements in order.
-     */
+        * Parse the given string into an array of strings and React <a> elements
+        * in the order in which they should be rendered (i.e. FIFO).
+        *
+        * @param {String} s the raw string to be parsed
+        *
+        * @returns {Array} of strings and React <a> elements in order.
+        */
     parseStringToElements: function parseStringToElements(s) {
       var elements = [];
       var result = loop.shared.urlRegExps.fullUrlMatch.exec(s);
@@ -81,8 +81,8 @@ loop.shared.views.LinkifiedTextView = function () {
         // and update the string pointer.
         if (result.index) {
           elements.push(s.substr(0, result.index));
-          s = s.substr(result.index);}
-
+          s = s.substr(result.index);
+        }
 
         // Push the first link itself, and advance the string pointer again.
         // Bug 1196143 - formatURL sanitizes(decodes) the URL from IDN homographic attacks.
@@ -90,35 +90,37 @@ loop.shared.views.LinkifiedTextView = function () {
         if (sanitizeURL && sanitizeURL.location) {
           var linkAttributes = this._generateLinkAttributes(sanitizeURL.location);
           elements.push(
-          React.createElement("a", { href: linkAttributes.href, 
-            key: reactElementsCounter++, 
-            onClick: linkAttributes.onClick, 
-            rel: linkAttributes.rel, 
-            target: linkAttributes.target }, 
-          sanitizeURL.location));} else 
+          React.createElement("a", { href: linkAttributes.href,
+              key: reactElementsCounter++,
+              onClick: linkAttributes.onClick,
+              rel: linkAttributes.rel,
+              target: linkAttributes.target },
+            sanitizeURL.location));
 
 
-        {
-          elements.push(result[0]);}
-
+        } else {
+          elements.push(result[0]);
+        }
         s = s.substr(result[0].length);
 
         // Check for another link, and perhaps continue...
-        result = loop.shared.urlRegExps.fullUrlMatch.exec(s);}
-
+        result = loop.shared.urlRegExps.fullUrlMatch.exec(s);
+      }
 
       if (s) {
-        elements.push(s);}
+        elements.push(s);
+      }
 
-
-      return elements;}, 
-
+      return elements;
+    },
 
     render: function render() {
       return (
-        React.createElement("p", null, this.parseStringToElements(this.props.rawText)));} });
+        React.createElement("p", null, this.parseStringToElements(this.props.rawText)));
+
+    } });
 
 
+  return LinkifiedTextView;
 
-
-  return LinkifiedTextView;}();
+}();

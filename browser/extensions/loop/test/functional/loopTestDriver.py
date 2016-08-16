@@ -1,52 +1,90 @@
-# taken from https://github.com/mozilla-b2g/gaia/blob/master/tests/python/gaia-ui-tests/gaiatest/gaia_test.py#L858
-# XXX factor out into utility object for use by other tests
-from marionette_driver.by import By
-from marionette_driver.errors import NoSuchElementException, StaleElementException
-# noinspection PyUnresolvedReferences
-from marionette_driver import Wait
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
+import os
 
 import re
 import urlparse
 import time
+import pyperclip
 
 from serversetup import ROOMS_WEB_APP_URL_BASE
-from config import USE_LOCAL_STANDALONE
+from config import USE_LOCAL_STANDALONE, FIREFOX_PREFERENCES
+
+DEFAULT_WAIT_TIMEOUT = 10
 
 
 class LoopTestDriver():
-    def setUp(self, marionette):
-        self.marionette = marionette
+    def setUp(self, extra_prefs={}):
+        caps = DesiredCapabilities.FIREFOX
+
+        # Tell the Python bindings to use Marionette.
+        # This will not be necessary in the future,
+        # when Selenium will auto-detect what remote end
+        # it is talking to.
+        caps["marionette"] = True
+
+        # Path to Firefox DevEdition or Nightly.
+        # Firefox 47 (stable) is currently not supported,
+        # and may give you a suboptimal experience.
+        #
+        # On Mac OS you must point to the binary executable
+        # inside the application package, such as
+        # /Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin
+        caps["binary"] = os.environ.get("FIREFOX_EXE")
+
+        profile = webdriver.FirefoxProfile()
+
+        # Although some of these preferences might require restart, we don't
+        # use enforce_gecko_prefs (which would restart), as we need to restart
+        # for the add-on installation anyway.
+        for prefName, prefValue in FIREFOX_PREFERENCES.iteritems():
+            profile.set_preference(prefName, prefValue)
+
+        for prefName, prefValue in extra_prefs.iteritems():
+            profile.set_preference(prefName, prefValue)
+
+        profile.add_extension(os.environ.get("LOOP_XPI_FILE"))
+
+        self.driver = webdriver.Firefox(capabilities=caps, firefox_profile=profile)
 
     # XXX This should be unnecessary once bug 1254132 is fixed.
     def set_context(self, context):
         self.context = context
-        self.marionette.set_context(context)
+        self.driver.set_context(context)
 
-    def wait_for_element_displayed(self, by, locator, timeout=None):
-        Wait(self.marionette, timeout,
-             ignored_exceptions=[NoSuchElementException, StaleElementException])\
-            .until(lambda m: m.find_element(by, locator).is_displayed())
-        return self.marionette.find_element(by, locator)
+    def wait_for_element_displayed_by_class_name(self, locator, timeout=DEFAULT_WAIT_TIMEOUT):
+        message = u"Couldn't find elem matching %s" % (locator)
+        WebDriverWait(self.driver, timeout, poll_frequency=.25).until(
+            lambda _: self.driver.find_element_by_class_name(locator), message=message)
 
-    def wait_for_subelement_displayed(self, parent, by, locator, timeout=None):
-        Wait(self.marionette, timeout,
-             ignored_exceptions=[NoSuchElementException, StaleElementException])\
-            .until(lambda m: parent.find_element(by, locator).is_displayed())
-        return parent.find_element(by, locator)
+        return self.driver.find_element_by_class_name(locator)
+
+    def wait_for_element_displayed_by_css_selector(self, locator, timeout=DEFAULT_WAIT_TIMEOUT):
+        message = u"Couldn't find elem matching %s" % (locator)
+        WebDriverWait(self.driver, timeout, poll_frequency=.25).until(
+            lambda _: self.driver.find_element_by_css_selector(locator), message=message)
+
+        return self.driver.find_element_by_css_selector(locator)
 
     # XXX workaround for Marionette bug 1094246
-    def wait_for_element_exists(self, by, locator, timeout=None):
-        Wait(self.marionette, timeout,
-             ignored_exceptions=[NoSuchElementException, StaleElementException]) \
+    def wait_for_element_exists(self, by, locator, timeout=DEFAULT_WAIT_TIMEOUT):
+        WebDriverWait(self.driver, timeout,
+                      ignored_exceptions=[NoSuchElementException, StaleElementReferenceException]) \
             .until(lambda m: m.find_element(by, locator))
-        return self.marionette.find_element(by, locator)
+        return self.driver.find_element(by, locator)
 
-    def wait_for_element_enabled(self, element, timeout=10):
-        Wait(self.marionette, timeout) \
-            .until(lambda e: element.is_enabled(),
+    def wait_for_element_clickable(self, locator, timeout=DEFAULT_WAIT_TIMEOUT):
+        WebDriverWait(self.driver, timeout, poll_frequency=.25) \
+            .until(EC.element_to_be_clickable((By.CSS_SELECTOR, locator)),
                    message="Timed out waiting for element to be enabled")
 
-    def wait_for_element_property_to_be_false(self, element, property, timeout=10):
+    def wait_for_element_property_to_be_false(self, element, property, timeout=DEFAULT_WAIT_TIMEOUT):
+        # import time
+        # time.sleep(120)
         # XXX We have to switch between get_attribute and get_property here as the
         # content mode now required get_property for real properties of HTMLElements.
         # However, in some places (e.g. switch_to_chatbox), we're still operating in
@@ -56,17 +94,17 @@ class LoopTestDriver():
         def check_property(m):
             if self.context == "content":
                 return not element.get_property(property)
-
+            print element.get_attribute(property)
             return element.get_attribute(property) == "false"
 
-        Wait(self.marionette, timeout) \
+        WebDriverWait(self.driver, timeout, poll_frequency=.25) \
             .until(check_property,
                    message="Timeout out waiting for " + property + " to be false")
 
     def open_panel(self):
         self.set_context("chrome")
-        self.marionette.switch_to_frame()
-        button = self.marionette.find_element(By.ID, "loop-button")
+        self.driver.switch_to.default_content()
+        button = self.driver.find_element_by_id("loop-button")
 
         # click the element
         button.click()
@@ -74,12 +112,12 @@ class LoopTestDriver():
     def switch_to_panel(self):
         self.set_context("chrome")
         # switch to the frame
-        frame = self.marionette.find_element(By.ID, "loop-panel-iframe")
-        self.marionette.switch_to_frame(frame)
+        frame = self.driver.find_element_by_id("loop-panel-iframe")
+        self.driver.switch_to.frame(frame)
 
     def switch_to_chatbox(self):
         self.set_context("chrome")
-        self.marionette.switch_to_frame()
+        self.driver.switch_to.default_content()
 
         contentBox = "content"
         if self.e10s_enabled:
@@ -89,33 +127,36 @@ class LoopTestDriver():
         time.sleep(2)
         # XXX should be using wait_for_element_displayed, but need to wait
         # for Marionette bug 1094246 to be fixed.
-        chatbox = self.wait_for_element_exists(By.TAG_NAME, 'chatbox')
-        script = ("return document.getAnonymousElementByAttribute("
-                  "arguments[0], 'anonid', '" + contentBox + "');")
-        frame = self.marionette.execute_script(script, [chatbox])
-        self.marionette.switch_to_frame(frame)
+        self.wait_for_element_exists(By.TAG_NAME, 'chatbox')
+
+        script = ("var chatbox = document.getElementsByTagName('chatbox')[0];"
+                  "return document.getAnonymousElementByAttribute("
+                  "chatbox, 'anonid', '" + contentBox + "');")
+        frame = self.driver.execute_script(script)
+        self.driver.switch_to.frame(frame)
 
     def local_start_a_conversation(self):
-        button = self.wait_for_element_displayed(By.CSS_SELECTOR, ".new-room-view .btn-info")
+        button = self.wait_for_element_displayed_by_css_selector(".new-room-view .btn-info")
 
-        self.wait_for_element_enabled(button, 120)
+        self.wait_for_element_clickable(".new-room-view .btn-info", 120)
 
         button.click()
 
     def local_close_share_panel(self):
-        copyLink = self.wait_for_element_displayed(By.CLASS_NAME, "btn-copy")
+        copyLink = self.wait_for_element_displayed_by_class_name("btn-copy")
 
-        self.wait_for_element_enabled(copyLink, 120)
+        self.wait_for_element_clickable(".btn-copy", 120)
 
         copyLink.click()
 
     def switch_to_standalone(self):
         self.set_context("content")
+        self.driver.switch_to.default_content()
 
     def load_homepage(self):
         self.switch_to_standalone()
 
-        self.marionette.navigate("about:home")
+        self.driver.get("about:home")
 
     def adjust_url(self, room_url):
         if USE_LOCAL_STANDALONE != "1":
@@ -126,34 +167,11 @@ class LoopTestDriver():
         return re.sub("https?://.*/", ROOMS_WEB_APP_URL_BASE + "/", room_url)
 
     def get_text_from_clipboard(self):
-        """
-        This assumes we're already in the chrome context!
-        """
-        script = ("""
-var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
-                          .getService(Components.interfaces.nsIClipboard);
-var trans = Components.classes["@mozilla.org/widget/transferable;1"]
-                      .createInstance(Components.interfaces.nsITransferable);
-
-trans.init(null);
-trans.addDataFlavor("text/unicode");
-
-clipboard.getData(trans, clipboard.kGlobalClipboard);
-
-var str = new Object();
-var strLength = new Object();
-trans.getTransferData("text/unicode", str, strLength);
-
-if (str)
-  str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
-
-return str ? str.data.substring(0, strLength.value / 2) : "";
-""")
-        return self.marionette.execute_script(script, sandbox="system")
+        return pyperclip.paste()
 
     def local_get_and_verify_room_url(self):
         self.switch_to_chatbox()
-        button = self.wait_for_element_displayed(By.CLASS_NAME, "btn-copy")
+        button = self.wait_for_element_displayed_by_class_name("btn-copy")
 
         button.click()
 
@@ -169,25 +187,28 @@ return str ? str.data.substring(0, strLength.value / 2) : "";
 
     # Assumes the standalone or the conversation window is selected first.
     def check_video(self, selector):
-        video = self.wait_for_element_displayed(By.CSS_SELECTOR, selector, 30)
-        self.wait_for_element_property_to_be_false(video, "paused")
-        self.wait_for_element_property_to_be_false(video, "ended")
+        # XXX This needs re-enabling once selenium is fixed
+        # https://github.com/SeleniumHQ/selenium/issues/2301
+        # video =
+        self.wait_for_element_displayed_by_css_selector(selector, timeout=30)
+        # self.wait_for_element_property_to_be_false(video, "paused")
+        # self.wait_for_element_property_to_be_false(video, "ended")
 
     def local_check_room_self_video(self):
         self.switch_to_chatbox()
 
         # expect a video container on desktop side
-        media_container = self.wait_for_element_displayed(By.CLASS_NAME, "media-layout")
+        media_container = self.wait_for_element_displayed_by_class_name("media-layout")
         self.assertEqual(media_container.tag_name, "div", "expect a video container")
 
         self.check_video(".local-video")
 
     def standalone_load_and_join_room(self, url):
         self.switch_to_standalone()
-        self.marionette.navigate(url)
+        self.driver.get(url)
 
         # Join the room - the first time around, the tour will be displayed
         # so we look for its close button.
-        join_button = self.wait_for_element_displayed(By.CLASS_NAME, "button-got-it")
-        self.wait_for_element_enabled(join_button, 120)
+        join_button = self.wait_for_element_displayed_by_class_name("button-got-it")
+        self.wait_for_element_clickable(".button-got-it", 120)
         join_button.click()

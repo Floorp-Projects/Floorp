@@ -7,14 +7,16 @@
 /* global sendAsyncMessage */
 
 /**
- * This script runs in the content process and is attached to browsers when
- * they are created.
- */
+                               * This script runs in the content process and is attached to browsers when
+                               * they are created.
+                               */
 
 // Listen for when the title is changed and send a message back to the chrome
 // process.
 addEventListener("DOMTitleChanged", function (_ref) {var target = _ref.target;
-  sendAsyncMessage("loop@mozilla.org:DOMTitleChanged", { 
-    details: "titleChanged" }, 
-  { 
-    target: target });});
+  sendAsyncMessage("loop@mozilla.org:DOMTitleChanged", {
+    details: "titleChanged" },
+  {
+    target: target });
+
+});

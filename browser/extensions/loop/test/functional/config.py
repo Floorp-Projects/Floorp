@@ -50,3 +50,7 @@ FIREFOX_PREFERENCES = {
     "extensions.update.notifyUser": False,
     "xpinstall.signatures.required": False,
 }
+
+if environ.get("TEST_E10S") != "1":
+    FIREFOX_PREFERENCES["browser.tabs.remote.autostart.1"] = False
+    FIREFOX_PREFERENCES["browser.tabs.remote.autostart.2"] = False
