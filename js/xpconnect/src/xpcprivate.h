@@ -1426,40 +1426,33 @@ class XPCNativeSet final
 /***************************************************************************/
 // XPCNativeScriptableFlags is a wrapper class that holds the flags returned
 // from calls to nsIXPCScriptable::GetScriptableFlags(). It has convenience
-// methods to check for particular bitflags. Since we also use this class as
-// a member of the gc'd class XPCNativeScriptableShared, this class holds the
-// bit and exposes the inlined methods to support marking.
-
-#define XPC_WN_SJSFLAGS_MARK_FLAG JS_BIT(31) // only high bit of 32 is set
+// methods to check for particular bitflags.
 
 class XPCNativeScriptableFlags final
 {
-private:
-    uint32_t mFlags;
-
 public:
-
     explicit XPCNativeScriptableFlags(uint32_t flags = 0) : mFlags(flags) {}
 
-    uint32_t GetFlags() const {return mFlags & ~XPC_WN_SJSFLAGS_MARK_FLAG;}
-    void     SetFlags(uint32_t flags) {mFlags = flags;}
+    uint32_t GetFlags() const { return mFlags; }
+    void SetFlags(uint32_t flags) { mFlags = flags; }
 
-    operator uint32_t() const {return GetFlags();}
+    operator uint32_t() const { return GetFlags(); }
 
     XPCNativeScriptableFlags(const XPCNativeScriptableFlags& r)
-        {mFlags = r.GetFlags();}
+    {
+        mFlags = r.GetFlags();
+    }
 
     XPCNativeScriptableFlags& operator= (const XPCNativeScriptableFlags& r)
-        {mFlags = r.GetFlags(); return *this;}
-
-    void Mark()       {mFlags |= XPC_WN_SJSFLAGS_MARK_FLAG;}
-    void Unmark()     {mFlags &= ~XPC_WN_SJSFLAGS_MARK_FLAG;}
-    bool IsMarked() const {return 0 != (mFlags & XPC_WN_SJSFLAGS_MARK_FLAG);}
+    {
+        mFlags = r.GetFlags();
+        return *this;
+    }
 
 #ifdef GET_IT
 #undef GET_IT
 #endif
-#define GET_IT(f_) const {return 0 != (mFlags & nsIXPCScriptable:: f_ );}
+#define GET_IT(f_) const { return 0 != (mFlags & nsIXPCScriptable:: f_ ); }
 
     bool WantPreCreate()                GET_IT(WANT_PRECREATE)
     bool WantAddProperty()              GET_IT(WANT_ADDPROPERTY)
@@ -1484,6 +1477,9 @@ public:
     bool DontReflectInterfaceNames()    GET_IT(DONT_REFLECT_INTERFACE_NAMES)
 
 #undef GET_IT
+
+private:
+    uint32_t mFlags;
 };
 
 /***************************************************************************/
@@ -1512,10 +1508,6 @@ public:
         mJSClass.name = nullptr;
         return name;
     }
-
-    void Mark()   { mFlags.Mark(); }
-    void Unmark() { mFlags.Unmark(); }
-    bool IsMarked() const { return mFlags.IsMarked(); }
 
 private:
     ~XPCNativeScriptableShared();
@@ -1550,12 +1542,7 @@ public:
     void
     SetScriptableShared(already_AddRefed<XPCNativeScriptableShared>&& shared) { mShared = shared; }
 
-    void Mark()
-    {
-        if (mShared)
-            mShared->Mark();
-    }
-
+    void Mark() {}
     void TraceJS(JSTracer* trc) {}
     void AutoTrace(JSTracer* trc) {}
 
