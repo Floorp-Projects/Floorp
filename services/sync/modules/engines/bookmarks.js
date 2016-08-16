@@ -415,7 +415,9 @@ BookmarksEngine.prototype = {
     }
     let mapped = this._mapDupe(item);
     this._log.debug(item.id + " mapped to " + mapped);
-    return mapped;
+    // We must return a string, not an object, and the entries in the GUIDMap
+    // are created via "new String()" making them an object.
+    return mapped ? mapped.toString() : mapped;
   }
 };
 
