@@ -556,3 +556,10 @@ def websms_backend(value):
 
 set_config('MOZ_WEBSMS_BACKEND', websms_backend)
 set_define('MOZ_WEBSMS_BACKEND', websms_backend)
+
+# Enable IPDL's "expensive" unit tests
+# ==============================================================
+option('--enable-ipdl-tests', help='Enable expensive IPDL tests')
+
+set_config('MOZ_IPDL_TESTS',
+           depends_if('--enable-ipdl-tests')(lambda _: True))

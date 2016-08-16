@@ -2880,22 +2880,6 @@ if test -n "$MOZ_INSTALL_TRACKING"; then
 fi
 
 dnl ========================================================
-dnl = Enable IPDL's "expensive" unit tests
-dnl ========================================================
-MOZ_IPDL_TESTS=
-
-MOZ_ARG_ENABLE_BOOL(ipdl-tests,
-[  --enable-ipdl-tests     Enable expensive IPDL tests],
-    MOZ_IPDL_TESTS=1,
-    MOZ_IPDL_TESTS=)
-
-if test -n "$MOZ_IPDL_TESTS"; then
-    AC_DEFINE(MOZ_IPDL_TESTS)
-fi
-
-AC_SUBST(MOZ_IPDL_TESTS)
-
-dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,
