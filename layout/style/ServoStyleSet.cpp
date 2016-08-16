@@ -96,7 +96,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
                           nsIAtom* aPseudoTag,
                           CSSPseudoElementType aPseudoType)
 {
-  RefPtr<ServoComputedValues> computedValues = dont_AddRef(Servo_GetComputedValues(aContent));
+  RefPtr<ServoComputedValues> computedValues = Servo_GetComputedValues(aContent).Consume();
   MOZ_ASSERT(computedValues);
   return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
 }
@@ -145,7 +145,7 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
   // with the root of an anonymous subtree.
   ServoComputedValues* parent =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
-  RefPtr<ServoComputedValues> computedValues = dont_AddRef(Servo_InheritComputedValues(parent));
+  RefPtr<ServoComputedValues> computedValues = Servo_InheritComputedValues(parent).Consume();
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext,
@@ -167,9 +167,9 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    dont_AddRef(Servo_GetComputedValuesForPseudoElement(
+    Servo_GetComputedValuesForPseudoElement(
       aParentContext->StyleSource().AsServoComputedValues(),
-      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ false));
+      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ false).Consume();
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType);
@@ -191,8 +191,8 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues()
                    : nullptr;
   RefPtr<ServoComputedValues> computedValues =
-    dont_AddRef(Servo_GetComputedValuesForAnonymousBox(parentStyle, aPseudoTag,
-                                                       mRawSet.get()));
+    Servo_GetComputedValuesForAnonymousBox(parentStyle, aPseudoTag,
+                                                       mRawSet.get()).Consume();
 #ifdef DEBUG
   if (!computedValues) {
     nsString pseudo;
@@ -362,9 +362,9 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    dont_AddRef(Servo_GetComputedValuesForPseudoElement(
+    Servo_GetComputedValuesForPseudoElement(
       aParentContext->StyleSource().AsServoComputedValues(),
-      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ true));
+      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ true).Consume();
 
   if (!computedValues) {
     return nullptr;
