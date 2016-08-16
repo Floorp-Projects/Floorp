@@ -128,24 +128,29 @@ function extend(obj, ...args) {
   return obj;
 }
 
-/**
- * Similar to a WeakMap, but creates a new key with the given
- * constructor if one is not present.
- */
-class DefaultWeakMap extends WeakMap {
-  constructor(defaultConstructor, init) {
-    super(init);
-    this.defaultConstructor = defaultConstructor;
-  }
-
-  get(key) {
-    if (!this.has(key)) {
-      this.set(key, this.defaultConstructor());
-    }
-
-    return super.get(key);
-  }
+// Similar to a WeakMap, but returns a particular default value for
+// |get| if a key is not present.
+function DefaultWeakMap(defaultValue) {
+  this.defaultValue = defaultValue;
+  this.weakmap = new WeakMap();
 }
+
+DefaultWeakMap.prototype = {
+  get(key) {
+    if (this.weakmap.has(key)) {
+      return this.weakmap.get(key);
+    }
+    return this.defaultValue;
+  },
+
+  set(key, value) {
+    if (key) {
+      this.weakmap.set(key, value);
+    } else {
+      this.defaultValue = value;
+    }
+  },
+};
 
 class SpreadArgs extends Array {
   constructor(args) {

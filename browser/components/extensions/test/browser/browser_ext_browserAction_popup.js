@@ -2,13 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function getBrowserAction(extension) {
-  let {GlobalManager, browserActionFor} = Cu.import("resource://gre/modules/Extension.jsm", {});
-
-  let ext = GlobalManager.extensionMap.get(extension.id);
-  return browserActionFor(ext);
-}
-
 function* testInArea(area) {
   let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
@@ -32,7 +25,7 @@ function* testInArea(area) {
           browser.runtime.sendMessage("from-popup-a");
         };
         browser.runtime.onMessage.addListener(msg => {
-          if (msg == "close-popup-using-window.close") {
+          if (msg == "close-popup") {
             window.close();
           }
         });
@@ -49,67 +42,42 @@ function* testInArea(area) {
         let sendClick;
         let tests = [
           () => {
-            browser.test.log(`Click browser action, expect popup "a".`);
             sendClick({expectEvent: false, expectPopup: "a"});
           },
           () => {
-            browser.test.log(`Click browser action again, expect popup "a".`);
             sendClick({expectEvent: false, expectPopup: "a"});
           },
           () => {
-            browser.test.log(`Call triggerAction, expect popup "a" again. Leave popup open.`);
-            sendClick({expectEvent: false, expectPopup: "a", leaveOpen: true}, "trigger-action");
-          },
-          () => {
-            browser.test.log(`Call triggerAction again. Expect remaining popup closed.`);
-            sendClick({expectEvent: false, expectPopup: null}, "trigger-action");
-            browser.test.sendMessage("next-test", {waitUntilClosed: true});
-          },
-          () => {
-            browser.test.log(`Call triggerAction again. Expect popup "a" again.`);
-            sendClick({expectEvent: false, expectPopup: "a"}, "trigger-action");
-          },
-          () => {
-            browser.test.log(`Change popup URL. Click browser action. Expect popup "b".`);
             browser.browserAction.setPopup({popup: "popup-b.html"});
             sendClick({expectEvent: false, expectPopup: "b"});
           },
           () => {
-            browser.test.log(`Click browser action again. Expect popup "b" again.`);
             sendClick({expectEvent: false, expectPopup: "b"});
           },
           () => {
-            browser.test.log(`Clear popup URL. Click browser action. Expect click event.`);
             browser.browserAction.setPopup({popup: ""});
             sendClick({expectEvent: true, expectPopup: null});
           },
           () => {
-            browser.test.log(`Click browser action again. Expect another click event.`);
             sendClick({expectEvent: true, expectPopup: null});
           },
           () => {
-            browser.test.log(`Call triggerAction. Expect click event.`);
-            sendClick({expectEvent: true, expectPopup: null}, "trigger-action");
-          },
-          () => {
-            browser.test.log(`Change popup URL. Click browser action. Expect popup "a", and leave open.`);
             browser.browserAction.setPopup({popup: "/popup-a.html"});
-            sendClick({expectEvent: false, expectPopup: "a", leaveOpen: true});
+            sendClick({expectEvent: false, expectPopup: "a", runNextTest: true});
           },
           () => {
-            browser.test.log(`Call window.close(). Expect popup closed.`);
-            browser.test.sendMessage("next-test", {closePopupUsingWindow: true});
+            browser.test.sendMessage("next-test", {expectClosed: true});
           },
         ];
 
         let expect = {};
-        sendClick = ({expectEvent, expectPopup, runNextTest, waitUntilClosed, leaveOpen}, message = "send-click") => {
-          expect = {event: expectEvent, popup: expectPopup, runNextTest, waitUntilClosed, leaveOpen};
-          browser.test.sendMessage(message);
+        sendClick = ({expectEvent, expectPopup, runNextTest}) => {
+          expect = {event: expectEvent, popup: expectPopup, runNextTest};
+          browser.test.sendMessage("send-click");
         };
 
         browser.runtime.onMessage.addListener(msg => {
-          if (msg == "close-popup-using-window.close") {
+          if (msg == "close-popup") {
             return;
           } else if (expect.popup) {
             browser.test.assertEq(msg, `from-popup-${expect.popup}`,
@@ -119,7 +87,12 @@ function* testInArea(area) {
           }
 
           expect.popup = null;
-          browser.test.sendMessage("next-test", expect);
+          if (expect.runNextTest) {
+            expect.runNextTest = false;
+            tests.shift()();
+          } else {
+            browser.test.sendMessage("next-test");
+          }
         });
 
         browser.browserAction.onClicked.addListener(() => {
@@ -130,12 +103,12 @@ function* testInArea(area) {
           }
 
           expect.event = false;
-          browser.test.sendMessage("next-test", expect);
+          browser.test.sendMessage("next-test");
         });
 
         browser.test.onMessage.addListener((msg) => {
-          if (msg == "close-popup-using-window.close") {
-            browser.runtime.sendMessage("close-popup-using-window.close");
+          if (msg == "close-popup") {
+            browser.runtime.sendMessage("close-popup");
             return;
           }
 
@@ -160,31 +133,22 @@ function* testInArea(area) {
     clickBrowserAction(extension);
   });
 
-  extension.onMessage("trigger-action", () => {
-    getBrowserAction(extension).triggerAction(window);
-  });
-
   let widget;
   extension.onMessage("next-test", Task.async(function* (expecting = {}) {
     if (!widget) {
       widget = getBrowserActionWidget(extension);
       CustomizableUI.addWidgetToArea(widget.id, area);
     }
-    if (expecting.waitUntilClosed) {
-      let panel = getBrowserActionPopup(extension);
-      if (panel && panel.state != "closed") {
-        yield promisePopupHidden(panel);
-      }
-    } else if (expecting.closePopupUsingWindow) {
+    if (expecting.expectClosed) {
       let panel = getBrowserActionPopup(extension);
       ok(panel, "Expect panel to exist");
       yield promisePopupShown(panel);
 
-      extension.sendMessage("close-popup-using-window.close");
+      extension.sendMessage("close-popup");
 
       yield promisePopupHidden(panel);
       ok(true, "Panel is closed");
-    } else if (!expecting.leaveOpen) {
+    } else {
       yield closeBrowserAction(extension);
     }
 
