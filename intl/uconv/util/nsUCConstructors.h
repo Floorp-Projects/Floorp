@@ -14,18 +14,17 @@
 class nsISupports;
 
 // all the useful constructors
-NS_METHOD
+nsresult
 CreateMultiTableDecoder(int32_t aTableCount,
-                        const uRange * aRangeArray, 
+                        const uRange * aRangeArray,
                         uScanClassID * aScanClassArray,
                         uMappingTable ** aMappingTable,
                         uint32_t aMaxLengthFactor,
-                        
                         nsISupports* aOuter,
                         REFNSIID aIID,
                         void** aResult);
 
-NS_METHOD
+nsresult
 CreateMultiTableEncoder(int32_t aTableCount,
                         uScanClassID * aScanClassArray,
                         uShiftOutTable ** aShiftOutTable,
@@ -35,7 +34,7 @@ CreateMultiTableEncoder(int32_t aTableCount,
                         REFNSIID aIID,
                         void** aResult);
 
-NS_METHOD
+nsresult
 CreateTableEncoder(uScanClassID aScanClass,
                    uShiftOutTable * aShiftOutTable,
                    uMappingTable  * aMappingTable,
@@ -44,7 +43,7 @@ CreateTableEncoder(uScanClassID aScanClass,
                    REFNSIID aIID,
                    void** aResult);
 
-NS_METHOD
+nsresult
 CreateMultiTableEncoder(int32_t aTableCount,
                         uScanClassID * aScanClassArray,
                         uMappingTable  ** aMappingTable,
@@ -53,7 +52,7 @@ CreateMultiTableEncoder(int32_t aTableCount,
                         REFNSIID aIID,
                         void** aResult);
 
-NS_METHOD
+nsresult
 CreateTableEncoder(uScanClassID aScanClass,
                    uMappingTable  * aMappingTable,
                    uint32_t aMaxLengthFactor,
@@ -61,7 +60,7 @@ CreateTableEncoder(uScanClassID aScanClass,
                    REFNSIID aIID,
                    void** aResult);
 
-NS_METHOD
+nsresult
 CreateOneByteDecoder(uMappingTable * aMappingTable,
                      nsISupports* aOuter,
                      REFNSIID aIID,
