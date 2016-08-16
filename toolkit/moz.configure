@@ -541,6 +541,16 @@ option('--disable-synth-speechd', help='Disable speech-dispatcher support')
 set_config('MOZ_SYNTH_SPEECHD',
            depends_if('--disable-synth-speechd')(lambda _: True))
 
+# Speech API pocketsphinx backend
+# ==============================================================
+@depends(build_project, milestone)
+def webspeech_pocketsphinx(build_project, milestone):
+    if milestone.is_nightly and build_project == 'b2g':
+        return True
+
+set_config('MOZ_WEBSPEECH_POCKETSPHINX', webspeech_pocketsphinx)
+set_define('MOZ_WEBSPEECH_POCKETSPHINX', webspeech_pocketsphinx)
+
 # WebSMS
 # ==============================================================
 @depends(build_project, '--help')
