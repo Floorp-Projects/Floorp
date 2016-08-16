@@ -276,6 +276,7 @@ private:
     const char* mDescription;
     void ShutdownDecoder()
     {
+      mInitPromise.DisconnectIfExists();
       MonitorAutoLock mon(mMonitor);
       if (mDecoder) {
         mDecoder->Shutdown();
