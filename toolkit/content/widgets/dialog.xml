@@ -272,16 +272,16 @@
               else
                 switch (dlgtype) {
                   case "accept":
-                    button.setAttribute("icon","accept");
+                    button.setAttribute("icon", "accept");
                     break;
                   case "cancel":
-                    button.setAttribute("icon","cancel");
+                    button.setAttribute("icon", "cancel");
                     break;
                   case "disclosure":
-                    button.setAttribute("icon","properties");
+                    button.setAttribute("icon", "properties");
                     break;
                   case "help":
-                    button.setAttribute("icon","help");
+                    button.setAttribute("icon", "help");
                     break;
                   default:
                     break;

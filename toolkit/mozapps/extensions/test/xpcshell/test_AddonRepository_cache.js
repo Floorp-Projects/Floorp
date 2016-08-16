@@ -132,7 +132,7 @@ const REPOSITORY_ADDONS = [{
                             url:          BASE_URL + "/repo/2/firstFull.png",
                             thumbnailURL: BASE_URL + "/repo/2/firstThumbnail.png",
                             caption:      "Repo Add-on 2 - First Caption"
-                          } , {
+                          }, {
                             url:          BASE_URL + "/repo/2/secondFull.png",
                             thumbnailURL: BASE_URL + "/repo/2/secondThumbnail.png",
                             caption:      "Repo Add-on 2 - Second Caption"
@@ -160,7 +160,7 @@ const REPOSITORY_ADDONS = [{
                             url:          BASE_URL + "/repo/3/firstFull.png",
                             thumbnailURL: BASE_URL + "/repo/3/firstThumbnail.png",
                             caption:      "Repo Add-on 3 - First Caption"
-                          } , {
+                          }, {
                             url:          BASE_URL + "/repo/3/secondFull.png",
                             thumbnailURL: BASE_URL + "/repo/3/secondThumbnail.png",
                             caption:      "Repo Add-on 3 - Second Caption"
@@ -288,7 +288,7 @@ const WITH_CACHE = [{
                             url:          BASE_URL + "/repo/2/firstFull.png",
                             thumbnailURL: BASE_URL + "/repo/2/firstThumbnail.png",
                             caption:      "Repo Add-on 2 - First Caption"
-                          } , {
+                          }, {
                             url:          BASE_URL + "/repo/2/secondFull.png",
                             thumbnailURL: BASE_URL + "/repo/2/secondThumbnail.png",
                             caption:      "Repo Add-on 2 - Second Caption"
@@ -320,7 +320,7 @@ const WITH_CACHE = [{
                             url:          BASE_URL + "/repo/3/firstFull.png",
                             thumbnailURL: BASE_URL + "/repo/3/firstThumbnail.png",
                             caption:      "Repo Add-on 3 - First Caption"
-                          } , {
+                          }, {
                             url:          BASE_URL + "/repo/3/secondFull.png",
                             thumbnailURL: BASE_URL + "/repo/3/secondThumbnail.png",
                             caption:      "Repo Add-on 3 - Second Caption"

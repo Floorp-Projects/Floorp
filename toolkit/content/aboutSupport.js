@@ -161,7 +161,7 @@ var snapshotFormatters = {
         $.new("td", experiment.active),
         $.new("td", experiment.endDate),
         $.new("td", [
-          $.new("a", experiment.detailURL, null, {href : experiment.detailURL,})
+          $.new("a", experiment.detailURL, null, {href : experiment.detailURL, })
         ]),
         $.new("td", experiment.branch),
       ]);
@@ -301,7 +301,7 @@ var snapshotFormatters = {
           let assembled = assembleFromGraphicsFailure(i, data);
           combined.push(assembled);
         }
-        combined.sort(function(a,b) {
+        combined.sort(function(a, b) {
           if (a.index < b.index) return -1;
           if (a.index > b.index) return 1;
           return 0;

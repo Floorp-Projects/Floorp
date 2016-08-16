@@ -222,16 +222,16 @@ function checkPasswords()
       // was called with the intention to change the password.
       // The token currently uses an empty password.
       // We will not allow changing the password from empty to empty.
-      ok.setAttribute("disabled","true");
+      ok.setAttribute("disabled", "true");
       return;
     }
   }
 
   if (pw1 == pw2) {
-    ok.setAttribute("disabled","false");
+    ok.setAttribute("disabled", "false");
   } else
   {
-    ok.setAttribute("disabled","true");
+    ok.setAttribute("disabled", "true");
   }
 
 }

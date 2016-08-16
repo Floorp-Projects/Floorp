@@ -183,7 +183,7 @@ function call_sequentially() {
       do_throw("Too many calls: " + argString);
       return;
     }
-    funcs[numCalls].apply(funcs[numCalls],arguments);
+    funcs[numCalls].apply(funcs[numCalls], arguments);
     numCalls += 1;
   };
 }

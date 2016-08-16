@@ -52,7 +52,7 @@ add_task(function* asyncCleanup() {
   is(ZoomManager.zoom, 1, "Zoom level was restored");
   if (document.getElementById("zoom-controls")) {
     CustomizableUI.removeWidgetFromArea("zoom-controls", CustomizableUI.AREA_NAVBAR);
-    ok(!document.getElementById("zoom-controls"),"Customizable zoom widget removed from toolbar");
+    ok(!document.getElementById("zoom-controls"), "Customizable zoom widget removed from toolbar");
   }
 
 });

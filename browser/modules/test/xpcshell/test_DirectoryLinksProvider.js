@@ -30,7 +30,7 @@ do_get_profile();
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
 const DIRECTORY_FRECENCY = 1000;
 const SUGGESTED_FRECENCY = Infinity;
-const kURLData = {"directory": [{"url":"http://example.com","title":"LocalSource"}]};
+const kURLData = {"directory": [{"url":"http://example.com", "title":"LocalSource"}]};
 const kTestURL = 'data:application/json,' + JSON.stringify(kURLData);
 
 // DirectoryLinksProvider preferences
@@ -57,7 +57,7 @@ Services.prefs.setCharPref(kPingUrlPref, kPingUrl);
 Services.prefs.setBoolPref(kNewtabEnhancedPref, true);
 
 const kHttpHandlerData = {};
-kHttpHandlerData[kExamplePath] = {"directory": [{"url":"http://example.com","title":"RemoteSource"}]};
+kHttpHandlerData[kExamplePath] = {"directory": [{"url":"http://example.com", "title":"RemoteSource"}]};
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                               "nsIBinaryInputStream",
@@ -1829,7 +1829,7 @@ add_task(function* test_blockSuggestedTiles() {
   // block suggested tile in a regular way
   DirectoryLinksProvider.reportSitesAction([{
       isPinned: function() { return false; },
-      link: Object.assign({frecency: 1000},suggestedLink)
+      link: Object.assign({frecency: 1000}, suggestedLink)
   }], "block", 0);
 
   // suggested tile still must be recommended

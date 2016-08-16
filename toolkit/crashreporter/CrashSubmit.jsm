@@ -158,7 +158,7 @@ function pruneSavedDumps() {
     }
   }
 
-  entriesArray.sort(function(a,b) {
+  entriesArray.sort(function(a, b) {
     let dateA = a.lastModifiedTime;
     let dateB = b.lastModifiedTime;
     if (dateA < dateB)

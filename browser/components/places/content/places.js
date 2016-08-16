@@ -736,7 +736,7 @@ var PlacesOrganizer = {
     ctx.fillStyle = "GrayText";
     ctx.mozTextStyle = "12pt sans serif";
     var len = ctx.mozMeasureText(notAvailableText);
-    ctx.translate(-len/2,0);
+    ctx.translate(-len/2, 0);
     ctx.mozDrawText(notAvailableText);
     ctx.restore();
   },

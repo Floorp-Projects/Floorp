@@ -2734,9 +2734,9 @@ function run_variadic_tests(library) {
 
   do_check_eq(result.value, 3 + 5 + 7 + 11);
 
-  result = ctypes.int32_t.array(3)([1,1,1]),
-      v1 = ctypes.int32_t.array(4)([1,2,3,5]),
-      v2 = ctypes.int32_t.array(3)([7,11,13]),
+  result = ctypes.int32_t.array(3)([1, 1, 1]),
+      v1 = ctypes.int32_t.array(4)([1, 2, 3, 5]),
+      v2 = ctypes.int32_t.array(3)([7, 11, 13]),
       vector_add_va = library.declare("test_vector_add_va_cdecl",
                                       ctypes.default_abi, ctypes.int32_t.ptr,
                                       ctypes.uint8_t, ctypes.uint8_t, "..."),

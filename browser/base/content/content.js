@@ -1194,7 +1194,7 @@ var PageInfoListener = {
           // TODO: Reimplement once bug 714757 is fixed.
           let strVal = val.getStringValue();
           if (strVal.search(/^.*url\(\"?/) > -1) {
-            let url = strVal.replace(/^.*url\(\"?/,"").replace(/\"?\).*$/,"");
+            let url = strVal.replace(/^.*url\(\"?/, "").replace(/\"?\).*$/, "");
             addImage(url, label, strings.notSet, elem, true);
           }
         }

@@ -339,7 +339,7 @@ function loadDialog()
     if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_orientation"))
       gDialog.orientation.removeAttribute("disabled");
     else
-      gDialog.orientation.setAttribute("disabled","true");
+      gDialog.orientation.setAttribute("disabled", "true");
   }
 
   // Give initial focus to the orientation radio group.

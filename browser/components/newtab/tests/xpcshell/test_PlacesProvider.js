@@ -70,7 +70,7 @@ add_task(function test_LinkChecker_securityCheck() {
   ];
   for (let {url, expected} of urls) {
     let observed = PlacesProvider.LinkChecker.checkLoadURI(url);
-    equal(observed , expected, `can load "${url}"?`);
+    equal(observed, expected, `can load "${url}"?`);
   }
 });
 
