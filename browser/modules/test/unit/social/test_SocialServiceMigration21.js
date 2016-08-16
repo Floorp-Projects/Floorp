@@ -22,7 +22,7 @@ function run_test() {
   DEFAULT_PREFS.setCharPref(manifest.origin, JSON.stringify(manifest));
   Services.prefs.setBoolPref("social.active", true);
 
-  Cu.import("resource://gre/modules/SocialService.jsm");
+  Cu.import("resource:///modules/SocialService.jsm");
 
   let runner = new AsyncRunner();
   let next = runner.next.bind(runner);
