@@ -114,18 +114,23 @@ module.exports = createClass({
         src: target.icon
       }),
       dom.div({ className: "target" },
-        dom.div({ className: "target-name" }, target.name),
+        dom.div({ className: "target-name", title: target.name }, target.name),
         dom.ul({ className: "target-details" },
           (pushSubscription ?
             dom.li({ className: "target-detail" },
               dom.strong(null, Strings.GetStringFromName("pushService")),
-              dom.span({ className: "service-worker-push-url" },
-                pushSubscription.endpoint)) :
+              dom.span({
+                className: "service-worker-push-url",
+                title: pushSubscription.endpoint
+              }, pushSubscription.endpoint)) :
             null
           ),
           dom.li({ className: "target-detail" },
             dom.strong(null, Strings.GetStringFromName("scope")),
-            dom.span({ className: "service-worker-scope" }, target.scope),
+            dom.span({
+              className: "service-worker-scope",
+              title: target.scope
+            }, target.scope),
             dom.a({
               onClick: this.unregister,
               className: "unregister-link"
