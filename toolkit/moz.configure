@@ -525,3 +525,18 @@ def printing(value):
 set_config('NS_PRINTING', printing)
 set_define('NS_PRINTING', printing)
 set_define('NS_PRINT_PREVIEW', printing)
+
+# Speech-dispatcher support
+# ==============================================================
+@depends(toolkit)
+def no_speechd_on_non_gtk(toolkit):
+    if toolkit not in ('gtk2', 'gtk3'):
+        return False
+
+imply_option('--enable-synth-speechd', no_speechd_on_non_gtk,
+             reason='--enable-default-toolkit')
+
+option('--disable-synth-speechd', help='Disable speech-dispatcher support')
+
+set_config('MOZ_SYNTH_SPEECHD',
+           depends_if('--disable-synth-speechd')(lambda _: True))
