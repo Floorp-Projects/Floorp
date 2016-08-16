@@ -560,20 +560,28 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   }
 }
 
-if (AppConstants.platform == "linux" && AppConstants.MOZ_SANDBOX) {
+if (AppConstants.MOZ_SANDBOX) {
   dataProviders.sandbox = function sandbox(done) {
-    const keys = ["hasSeccompBPF", "hasSeccompTSync",
-                  "hasPrivilegedUserNamespaces", "hasUserNamespaces",
-                  "canSandboxContent", "canSandboxMedia"];
-
-    let sysInfo = Cc["@mozilla.org/system-info;1"].
-                  getService(Ci.nsIPropertyBag2);
     let data = {};
-    for (let key of keys) {
-      if (sysInfo.hasKey(key)) {
-        data[key] = sysInfo.getPropertyAsBool(key);
+    if (AppConstants.platform == "linux") {
+      const keys = ["hasSeccompBPF", "hasSeccompTSync",
+                    "hasPrivilegedUserNamespaces", "hasUserNamespaces",
+                    "canSandboxContent", "canSandboxMedia"];
+
+      let sysInfo = Cc["@mozilla.org/system-info;1"].
+                    getService(Ci.nsIPropertyBag2);
+      for (let key of keys) {
+        if (sysInfo.hasKey(key)) {
+          data[key] = sysInfo.getPropertyAsBool(key);
+        }
       }
     }
+
+    if (AppConstants.MOZ_CONTENT_SANDBOX) {
+      data.contentSandboxLevel =
+        Services.prefs.getIntPref("security.sandbox.content.level");
+    }
+
     done(data);
   }
 }
