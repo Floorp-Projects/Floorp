@@ -6,6 +6,7 @@
 
 #include "mozilla/KeyframeEffectParams.h"
 
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/RangedPtr.h"
 #include "nsReadableUtils.h"
@@ -110,6 +111,13 @@ KeyframeEffectParams::ParseSpacing(const nsAString& aSpacing,
                                    ErrorResult& aRv)
 {
   aInvalidPacedProperty.Truncate();
+
+  // Ignore spacing if the core API is not enabled since it is not yet ready to
+  // ship.
+  if (!AnimationUtils::IsCoreAPIEnabled()) {
+    aSpacingMode = SpacingMode::distribute;
+    return;
+  }
 
   // Parse spacing.
   // distribute | paced({ident})
