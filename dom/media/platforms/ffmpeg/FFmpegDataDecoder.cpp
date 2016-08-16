@@ -86,17 +86,6 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
     return NS_ERROR_FAILURE;
   }
 
-  if (mCodecContext->codec_type == AVMEDIA_TYPE_AUDIO &&
-      mCodecContext->sample_fmt != AV_SAMPLE_FMT_FLT &&
-      mCodecContext->sample_fmt != AV_SAMPLE_FMT_FLTP &&
-      mCodecContext->sample_fmt != AV_SAMPLE_FMT_S16 &&
-      mCodecContext->sample_fmt != AV_SAMPLE_FMT_S16P &&
-      mCodecContext->sample_fmt != AV_SAMPLE_FMT_S32 &&
-      mCodecContext->sample_fmt != AV_SAMPLE_FMT_S32P) {
-    NS_WARNING("FFmpeg audio decoder outputs unsupported audio format.");
-    return NS_ERROR_FAILURE;
-  }
-
   FFMPEG_LOG("FFmpeg init successful.");
   return NS_OK;
 }
