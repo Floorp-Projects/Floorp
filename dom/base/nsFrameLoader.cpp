@@ -31,6 +31,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIBaseWindow.h"
+#include "nsIBrowser.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsUnicharUtils.h"
@@ -2485,6 +2486,34 @@ nsFrameLoader::SetClampScrollPosition(bool aClamp)
   return NS_OK;
 }
 
+static
+ContentParent*
+GetContentParent(Element* aBrowser)
+{
+  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(aBrowser);
+  if (!browser) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMElement> related;
+  browser->GetRelatedBrowser(getter_AddRefs(related));
+
+  nsCOMPtr<nsIFrameLoaderOwner> otherOwner = do_QueryInterface(related);
+  if (!otherOwner) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFrameLoader> otherLoader = otherOwner->GetFrameLoader();
+  TabParent* tabParent = TabParent::GetFrom(otherLoader);
+  if (tabParent &&
+      tabParent->Manager() &&
+      tabParent->Manager()->IsContentParent()) {
+    return tabParent->Manager()->AsContentParent();
+  }
+
+  return nullptr;
+}
+
 bool
 nsFrameLoader::TryRemoteBrowser()
 {
@@ -2543,6 +2572,9 @@ nsFrameLoader::TryRemoteBrowser()
                           nsCaseInsensitiveStringComparator())) {
       return false;
     }
+
+    // Try to get the related content parent from our browser element.
+    openerContentParent = GetContentParent(mOwnerContent);
   }
 
   uint32_t chromeFlags = 0;
