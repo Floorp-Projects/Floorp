@@ -1571,6 +1571,14 @@ gfxWindowsPlatform::InitializeDevices()
 
   MOZ_ASSERT(!InSafeMode());
 
+  // If we're the UI process, and the GPU process is enabled, then we don't
+  // initialize any DirectX devices. We do leave them enabled in gfxConfig
+  // though. If the GPU process fails to create these devices it will send
+  // a message back and we'll update their status.
+  if (gfxConfig::IsEnabled(Feature::GPU_PROCESS) && XRE_IsParentProcess()) {
+    return;
+  }
+
   // If we previously crashed initializing devices, bail out now.
   D3D11LayersCrashGuard detectCrashes;
   if (detectCrashes.Crashed()) {
