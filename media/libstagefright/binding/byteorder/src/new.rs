@@ -1,6 +1,6 @@
 use std::io::{self, Result};
 
-use byteorder::ByteOrder;
+use ByteOrder;
 
 /// Extends `Read` with methods for reading numbers. (For `std::io`.)
 ///
