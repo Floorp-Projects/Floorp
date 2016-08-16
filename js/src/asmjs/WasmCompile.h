@@ -25,29 +25,43 @@
 namespace js {
 namespace wasm {
 
-// Compile the given WebAssembly bytecode with the given assumptions, settings
-// and filename into a wasm::Module.
+// Describes the JS scripted caller of a request to compile a wasm module.
+
+struct ScriptedCaller
+{
+    UniqueChars filename;
+    unsigned line;
+    unsigned column;
+};
+
+// Describes all the parameters that control wasm compilation.
 
 struct CompileArgs
 {
     Assumptions assumptions;
-    UniqueChars filename;
+    ScriptedCaller scriptedCaller;
     bool alwaysBaseline;
 
-    CompileArgs(Assumptions&& assumptions, UniqueChars filename)
+    CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
       : assumptions(Move(assumptions)),
-        filename(Move(filename)),
+        scriptedCaller(Move(scriptedCaller)),
         alwaysBaseline(false)
     {}
 
     // If CompileArgs is constructed without arguments, initFromContext() must
     // be called to complete initialization.
     CompileArgs() = default;
-    bool initFromContext(ExclusiveContext* cx, UniqueChars filename);
+    bool initFromContext(ExclusiveContext* cx, ScriptedCaller&& scriptedCaller);
 };
 
+// Compile the given WebAssembly bytecode with the given arguments into a
+// wasm::Module. On success, the Module is returned. On failure, the returned
+// SharedModule pointer is null and either:
+//  - *error points to a string description of the error
+//  - *error is null and the caller should report out-of-memory.
+
 SharedModule
-Compile(const ShareableBytes& bytecode, CompileArgs&& args, UniqueChars* error);
+Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

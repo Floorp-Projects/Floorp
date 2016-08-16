@@ -589,6 +589,15 @@ Assumptions::initBuildIdFromContext(ExclusiveContext* cx)
 }
 
 bool
+Assumptions::clone(const Assumptions& other)
+{
+    usesSignal = other.usesSignal;
+    cpuId = other.cpuId;
+    newFormat = other.newFormat;
+    return buildId.appendAll(other.buildId);
+}
+
+bool
 Assumptions::operator==(const Assumptions& rhs) const
 {
     return usesSignal == rhs.usesSignal &&
