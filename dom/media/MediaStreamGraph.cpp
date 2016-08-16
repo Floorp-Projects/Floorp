@@ -2792,12 +2792,7 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
       MediaStreamVideoSink* videoSink = listener->AsMediaStreamVideoSink();
       // Re-send missed VideoSegment to new added MediaStreamVideoSink.
       if (streamTrack->GetType() == MediaSegment::VIDEO && videoSink) {
-        VideoSegment videoSegment;
-        videoSegment.AppendSlice(*streamTrack->GetSegment(), mTracks.GetForgottenDuration(), streamTrack->GetSegment()->GetDuration());
-        if (found) {
-          videoSegment.AppendSlice(*data->mData, 0, data->mData->GetDuration());
-        }
-        videoSink->SetCurrentFrames(videoSegment);
+        videoSink->SetCurrentFrames(*(static_cast<VideoSegment*>(streamTrack->GetSegment())));
       }
     }
 
