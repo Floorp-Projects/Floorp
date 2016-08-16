@@ -310,6 +310,14 @@ tasks:
         - 'python/mozlint/**'
         - 'tools/lint/**'
         - 'testing/docker/lint/**'
+  sphinx:
+    task: tasks/tests/sphinx.yml
+    root: true
+    when:
+      file_patterns:
+        - '**/*.py'
+        - '**/*.rst'
+        - 'tools/docs/**'
   taskgraph-tests:
     task: tasks/tests/taskgraph-tests.yml
     root: true
