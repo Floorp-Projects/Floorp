@@ -4221,6 +4221,12 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
       return true;
     }
     case eStyleAnimType_Discrete: {
+      if (aProperty == eCSSProperty_visibility) {
+        aComputedValue.SetIntValue(
+          static_cast<const nsStyleVisibility*>(styleStruct)->mVisible,
+          eUnit_Visibility);
+        return true;
+      }
       auto cssValue = MakeUnique<nsCSSValue>(eCSSUnit_Unset);
       aStyleContext->RuleNode()->GetDiscretelyAnimatedCSSValue(aProperty,
                                                                cssValue.get());
