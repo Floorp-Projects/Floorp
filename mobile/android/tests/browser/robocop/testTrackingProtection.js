@@ -41,7 +41,7 @@ function promiseLoadEvent(browser, url, eventType="load", runBeforeLoad) {
 // tracking content is blocked (Bug 1063831)
 
 // Code is mostly stolen from:
-// http://mxr.mozilla.org/mozilla-central/source/browser/base/content/test/general/browser_trackingUI.js
+// http://dxr.mozilla.org/mozilla-central/source/browser/base/content/test/general/browser_trackingUI.js
 
 var TABLE = "urlclassifier.trackingTable";
 
