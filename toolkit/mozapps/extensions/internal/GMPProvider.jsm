@@ -173,14 +173,14 @@ GMPWrapper.prototype = {
   get isActive() {
     return !this.appDisabled &&
            !this.userDisabled &&
-           !GMPUtils.isPluginHidden(this._plugin.id);
+           !GMPUtils.isPluginHidden(this._plugin);
   },
   get appDisabled() {
     if (this._plugin.isEME && !GMPPrefs.get(GMPPrefs.KEY_EME_ENABLED, true)) {
       // If "media.eme.enabled" is false, all EME plugins are disabled.
       return true;
     }
-   return false;
+    return false;
   },
 
   get userDisabled() {
@@ -338,6 +338,9 @@ GMPWrapper.prototype = {
   },
 
   _handleEnabledChanged: function() {
+    this._log.info("_handleEnabledChanged() id=" +
+      this._plugin.id + " isActive=" + this.isActive);
+
     AddonManagerPrivate.callAddonListeners(this.isActive ?
                                            "onEnabling" : "onDisabling",
                                            this, false);
@@ -358,11 +361,17 @@ GMPWrapper.prototype = {
   },
 
   onPrefEMEGlobalEnabledChanged: function() {
+    this._log.info("onPrefEMEGlobalEnabledChanged() id=" + this._plugin.id +
+      " appDisabled=" + this.appDisabled + " isActive=" + this.isActive +
+      " hidden=" + GMPUtils.isPluginHidden(this._plugin));
+
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this,
                                            ["appDisabled"]);
+    // If EME or the GMP itself are disabled, uninstall the GMP.
+    // Otherwise, check for updates, so we download and install the GMP.
     if (this.appDisabled) {
       this.uninstallPlugin();
-    } else {
+    } else if (!GMPUtils.isPluginHidden(this._plugin)) {
       AddonManagerPrivate.callInstallListeners("onExternalInstall", null, this,
                                                null, false);
       AddonManagerPrivate.callAddonListeners("onInstalling", this, false);
