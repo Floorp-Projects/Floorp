@@ -235,6 +235,8 @@ void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 // destructors, otherwise we'd leak the images (though we still don't support
 // those), strings, and whatnot.
 void Gecko_ClearStyleContents(nsStyleContent* content);
+void Gecko_CopyStyleContentsFrom(nsStyleContent* content, const nsStyleContent* other);
+
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len);
 
 void Gecko_InitializeImageLayer(nsStyleImageLayers::Layer* layer,
