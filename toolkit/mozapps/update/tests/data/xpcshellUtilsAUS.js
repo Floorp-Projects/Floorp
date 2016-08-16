@@ -180,7 +180,7 @@ var gEnvLdLibraryPath;
 // Set to true to log additional information for debugging. To log additional
 // information for an individual test set DEBUG_AUS_TEST to true in the test's
 // run_test function.
-var DEBUG_AUS_TEST = false;
+var DEBUG_AUS_TEST = true;
 // Never set DEBUG_TEST_LOG to true except when running tests locally or on the
 // try server since this will force a test that failed a parallel run to fail
 // when the same test runs non-parallel so the log from parallel test run can
