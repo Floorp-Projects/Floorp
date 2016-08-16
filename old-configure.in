@@ -715,6 +715,18 @@ if test "$GNU_CC"; then
       if test "$result" = "yes"; then
           HAVE_X86_AVX2=1
       fi
+      ;;
+
+    ppc*)
+      AC_MSG_CHECKING([whether we can enable AltiVec support])
+      HAVE_ALTIVEC=
+      _SAVE_CFLAGS=$CFLAGS
+      CFLAGS="$CFLAGS -maltivec"
+      AC_TRY_COMPILE(,,AC_MSG_RESULT([yes])
+                       [HAVE_ALTIVEC=1],
+                       AC_MSG_RESULT([no]))
+      CFLAGS=$_SAVE_CFLAGS
+      ;;
     esac
 
     DSO_LDOPTS='-shared'
@@ -5966,6 +5978,7 @@ AC_SUBST(TARGET_XPCOM_ABI)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 AC_SUBST(HAVE_X86_AVX2)
+AC_SUBST(HAVE_ALTIVEC)
 AC_SUBST(GCC_USE_GNU_LD)
 
 AC_SUBST(WRAP_LDFLAGS)
