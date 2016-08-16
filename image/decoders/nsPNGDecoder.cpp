@@ -974,6 +974,11 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
                           png_get_next_frame_width(png_ptr, decoder->mInfo),
                           png_get_next_frame_height(png_ptr, decoder->mInfo));
 
+  if (frameRect.width == 0 || frameRect.height == 0)
+    png_error(png_ptr, "Frame width must not be 0");
+  if (frameRect.height == 0)
+    png_error(png_ptr, "Frame height must not be 0");
+
   const bool isInterlaced = bool(decoder->interlacebuf);
 
   decoder->mNextFrameInfo = Some(FrameInfo{ decoder->format,
