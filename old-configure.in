@@ -2335,7 +2335,6 @@ MOZ_ANDROID_OMX=
 MOZ_OMX_PLUGIN=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH_MODELS=
-MOZ_WEBSPEECH_TEST_BACKEND=1
 VPX_USE_YASM=
 VPX_ASFLAGS=
 VPX_AS_CONVERSION=
@@ -3004,24 +3003,6 @@ else
     AC_DEFINE(MOZ_SAMPLE_TYPE_FLOAT32)
     AC_SUBST(MOZ_SAMPLE_TYPE_FLOAT32)
 fi
-
-dnl ========================================================
-dnl = Disable Speech API test backend
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webspeechtestbackend,
-[  --disable-webspeechtestbackend        Disable support for HTML Speech API Test Backend],
-    MOZ_WEBSPEECH_TEST_BACKEND=,
-    MOZ_WEBSPEECH_TEST_BACKEND=1)
-
-if test -z "$MOZ_WEBSPEECH"; then
-MOZ_WEBSPEECH_TEST_BACKEND=
-fi
-
-if test -n "$MOZ_WEBSPEECH_TEST_BACKEND"; then
-    AC_DEFINE(MOZ_WEBSPEECH_TEST_BACKEND)
-fi
-
-AC_SUBST(MOZ_WEBSPEECH_TEST_BACKEND)
 
 dnl ========================================================
 dnl = Disable Speech API models
