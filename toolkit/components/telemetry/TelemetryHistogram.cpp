@@ -2165,6 +2165,11 @@ TelemetryHistogram::AccumulateChild(const nsTArray<Accumulation>& aAccumulations
     return;
   }
   for (uint32_t i = 0; i < aAccumulations.Length(); ++i) {
+    bool isValid = internal_IsHistogramEnumId(aAccumulations[i].mId);
+    MOZ_ASSERT(isValid);
+    if (!isValid) {
+      continue;
+    }
     internal_AccumulateChild(aAccumulations[i].mId, aAccumulations[i].mSample);
   }
 }
@@ -2178,6 +2183,11 @@ TelemetryHistogram::AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAcc
     return;
   }
   for (uint32_t i = 0; i < aAccumulations.Length(); ++i) {
+    bool isValid = internal_IsHistogramEnumId(aAccumulations[i].mId);
+    MOZ_ASSERT(isValid);
+    if (!isValid) {
+      continue;
+    }
     internal_AccumulateChildKeyed(aAccumulations[i].mId,
                                   aAccumulations[i].mKey,
                                   aAccumulations[i].mSample);
