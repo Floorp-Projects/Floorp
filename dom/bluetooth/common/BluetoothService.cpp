@@ -124,7 +124,7 @@ BluetoothService::ToggleBtAck::ToggleBtAck(bool aEnabled)
   : mEnabled(aEnabled)
 { }
 
-NS_METHOD
+NS_IMETHODIMP
 BluetoothService::ToggleBtAck::Run()
 {
   BluetoothService::AcknowledgeToggleBt(mEnabled);

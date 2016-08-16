@@ -1091,7 +1091,7 @@ PushMessageData::Blob(ErrorResult& aRv)
   return nullptr;
 }
 
-NS_METHOD
+nsresult
 PushMessageData::EnsureDecodedText()
 {
   if (mBytes.IsEmpty() || !mDecodedText.IsEmpty()) {
