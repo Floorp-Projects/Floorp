@@ -66,7 +66,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
     SessionStore.setWindowValue(window, "socialSidebar", "");
     for (let i = 0; i < manifests.length; i++) {
       let m = manifests[i];
-      for (let what of ['sidebarURL', 'iconURL', 'shareURL', 'markURL']) {
+      for (let what of ['sidebarURL', 'iconURL', 'shareURL']) {
         if (m[what]) {
           yield promiseSocialUrlNotRemembered(m[what]);
         }
@@ -231,42 +231,6 @@ function checkSocialUI(win) {
     _is(!!a, !!b, msg);
   }
   isbool(win.SocialSidebar.canShow, sidebarEnabled, "social sidebar active?");
-
-  let contextMenus = [
-    {
-      type: "link",
-      id: "context-marklinkMenu",
-      label: "social.marklinkMenu.label"
-    },
-    {
-      type: "page",
-      id: "context-markpageMenu",
-      label: "social.markpageMenu.label"
-    }
-  ];
-
-  for (let c of contextMenus) {
-    let leMenu = document.getElementById(c.id);
-    let parent, menus;
-    let markProviders = SocialMarks.getProviders();
-    if (markProviders.length > SocialMarks.MENU_LIMIT) {
-      // menus should be in a submenu, not in the top level of the context menu
-      parent = leMenu.firstChild;
-      menus = document.getElementsByClassName("context-mark" + c.type);
-      _is(menus.length, 0, "menu's are not in main context menu\n");
-      menus = parent.childNodes;
-      _is(menus.length, markProviders.length, c.id + " menu exists for each mark provider");
-    } else {
-      // menus should be in the top level of the context menu, not in a submenu
-      parent = leMenu.parentNode;
-      menus = document.getElementsByClassName("context-mark" + c.type);
-      _is(menus.length, markProviders.length, c.id + " menu exists for each mark provider");
-      menus = leMenu.firstChild.childNodes;
-      _is(menus.length, 0, "menu's are not in context submenu\n");
-    }
-    for (let m of menus)
-      _is(m.parentNode, parent, "menu has correct parent");
-  }
 
   // and for good measure, check all the social commands.
   isbool(!doc.getElementById("Social:ToggleSidebar").hidden, sidebarEnabled, "Social:ToggleSidebar visible?");
