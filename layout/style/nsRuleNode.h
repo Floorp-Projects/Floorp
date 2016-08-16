@@ -36,7 +36,7 @@ struct nsInheritedStyleData
                        nsStyleStructID_Inherited_Start,
                        nsStyleStructID_Inherited_Count> mStyleStructs;
 
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) {
     return aContext->PresShell()->
       AllocateByObjectID(mozilla::eArenaObjectID_nsInheritedStyleData, sz);
   }
@@ -84,7 +84,7 @@ struct nsResetStyleData
     }
   }
 
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) {
     return aContext->PresShell()->
       AllocateByObjectID(mozilla::eArenaObjectID_nsResetStyleData, sz);
   }
@@ -119,7 +119,7 @@ struct nsConditionalResetStyleData
           Entry* aNext)
       : mConditions(aConditions), mStyleStruct(aStyleStruct), mNext(aNext) {}
 
-    void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+    void* operator new(size_t sz, nsPresContext* aContext) {
       return aContext->PresShell()->AllocateByObjectID(
           mozilla::eArenaObjectID_nsConditionalResetStyleDataEntry, sz);
     }
@@ -148,7 +148,7 @@ struct nsConditionalResetStyleData
     mConditionalBits = 0;
   }
 
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) {
     return aContext->PresShell()->AllocateByObjectID(
         mozilla::eArenaObjectID_nsConditionalResetStyleData, sz);
   }
@@ -550,7 +550,7 @@ private:
 
 public:
   // Infallible overloaded new operator that allocates from a presShell arena.
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void* operator new(size_t sz, nsPresContext* aContext);
   void Destroy();
 
   // Implemented in nsStyleSet.h, since it needs to know about nsStyleSet.
