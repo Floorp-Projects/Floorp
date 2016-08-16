@@ -18,7 +18,6 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/unused.h"
 
 #include "mozilla/css/Declaration.h"
@@ -1521,7 +1520,7 @@ SetFactor(const nsCSSValue& aValue, float& aField, RuleNodeCacheConditions& aCon
 }
 
 void*
-nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext)
+nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
   return aPresContext->PresShell()->AllocateByObjectID(eArenaObjectID_nsRuleNode, sz);
@@ -2236,7 +2235,7 @@ struct AutoCSSValueArray {
     // for the count (on Windows!).
     mArray = static_cast<nsCSSValue*>(aStorage);
     for (size_t i = 0; i < mCount; ++i) {
-      new (KnownNotNull, mArray + i) nsCSSValue();
+      new (mArray + i) nsCSSValue();
     }
   }
 
