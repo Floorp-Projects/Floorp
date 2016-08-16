@@ -980,7 +980,7 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
-  void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
+  void* operator new(size_t sz, nsPresContext* aPresContext)
   {
     return aPresContext->PresShell()->AllocateByObjectID(
         eArenaObjectID_DependentBuiltinCounterStyle, sz);
@@ -1101,7 +1101,7 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
-  void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
+  void* operator new(size_t sz, nsPresContext* aPresContext)
   {
     return aPresContext->PresShell()->AllocateByObjectID(
         eArenaObjectID_CustomCounterStyle, sz);

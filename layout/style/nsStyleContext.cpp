@@ -1336,7 +1336,7 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void*
-nsStyleContext::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
+nsStyleContext::operator new(size_t sz, nsPresContext* aPresContext)
 {
   // Check the recycle list first.
   return aPresContext->PresShell()->
