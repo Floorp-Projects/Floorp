@@ -21,7 +21,7 @@
     // "comma-style": 2,
 
     // Don't require spaces around computed properties
-    // "computed-property-spacing": [2, "never"],
+    "computed-property-spacing": [2, "never"],
 
     // Functions must always return something or nothing
     "consistent-return": 2,
