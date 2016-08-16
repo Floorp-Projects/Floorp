@@ -941,14 +941,6 @@ Promise::MaybeReject(const RefPtr<MediaStreamError>& aArg) {
 }
 
 void
-Promise::MaybeRejectWithNull()
-{
-  NS_ASSERT_OWNINGTHREAD(Promise);
-
-  MaybeSomething(JS::NullHandleValue, &Promise::MaybeReject);
-}
-
-void
 Promise::MaybeRejectWithUndefined()
 {
   NS_ASSERT_OWNINGTHREAD(Promise);
