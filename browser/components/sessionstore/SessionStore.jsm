@@ -4217,7 +4217,6 @@ var SessionStoreInternal = {
     NS_ASSERT(aTab.linkedBrowser.__SS_restoreState,
               "given tab is not restoring");
 
-    let window = aTab.ownerGlobal;
     let browser = aTab.linkedBrowser;
 
     // Keep the tab's previous state for later in this method
