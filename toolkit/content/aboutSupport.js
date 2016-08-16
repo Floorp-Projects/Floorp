@@ -302,9 +302,9 @@ var snapshotFormatters = {
           combined.push(assembled);
         }
         combined.sort(function(a, b) {
-          if (a.index < b.index) return -1;
-          if (a.index > b.index) return 1;
-          return 0;
+            if (a.index < b.index) return -1;
+            if (a.index > b.index) return 1;
+            return 0;
         });
         $.append($("graphics-failures-tbody"),
                  combined.map(function(val) {

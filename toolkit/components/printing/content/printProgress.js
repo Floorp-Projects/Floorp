@@ -244,7 +244,7 @@ function onLoad() {
 
     // Set up dialog button callbacks.
     var object = this;
-    doSetOKCancel("", function () { return object.onCancel(); });
+    doSetOKCancel("", function () { return object.onCancel();});
 
     // Fill dialog.
     loadDialog();
@@ -278,7 +278,7 @@ function onCancel ()
    {
      printProgress.processCanceledByUser = true;
    }
-   catch ( exception ) { return true; }
+   catch ( exception ) {return true;}
 
   // don't Close up dialog by returning false, the backend will close the dialog when everything will be aborted.
   return false;

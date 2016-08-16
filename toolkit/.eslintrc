@@ -9,7 +9,7 @@
     "arrow-spacing": 2,
 
     // Always require spacing around a single line block
-    "block-spacing": 2,
+    // "block-spacing": 1,
 
     // No newline before open brace for a block
     // "brace-style": 2,
