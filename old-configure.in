@@ -2336,7 +2336,6 @@ MOZ_OMX_PLUGIN=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
 MOZ_WEBSPEECH_MODELS=
-MOZ_WEBSPEECH_POCKETSPHINX=
 MOZ_WEBSPEECH_TEST_BACKEND=1
 VPX_USE_YASM=
 VPX_ASFLAGS=
@@ -3006,15 +3005,6 @@ else
     AC_DEFINE(MOZ_SAMPLE_TYPE_FLOAT32)
     AC_SUBST(MOZ_SAMPLE_TYPE_FLOAT32)
 fi
-
-dnl ========================================================
-dnl = Disable Speech API pocketsphinx backend
-dnl ========================================================
-if test -n "$MOZ_WEBSPEECH_POCKETSPHINX"; then
-    AC_DEFINE(MOZ_WEBSPEECH_POCKETSPHINX)
-fi
-
-AC_SUBST(MOZ_WEBSPEECH_POCKETSPHINX)
 
 dnl ========================================================
 dnl = Disable Speech API code
