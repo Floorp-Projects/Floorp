@@ -684,6 +684,10 @@ internal_HistogramAddCategorical(mozilla::Telemetry::ID id, const nsCString& lab
 void
 internal_HistogramClear(Histogram& aHistogram, bool onlySubsession)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
   if (!onlySubsession) {
     aHistogram.Clear();
   }
@@ -1023,6 +1027,10 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample)
 void
 KeyedHistogram::Clear(bool onlySubsession)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
   for (auto iter = mSubsessionMap.Iter(); !iter.Done(); iter.Next()) {
     iter.Get()->mData->Clear();
