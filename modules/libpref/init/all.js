@@ -4421,7 +4421,7 @@ pref("webgl.disable-fail-if-major-performance-caveat", false);
 pref("webgl.disable-DOM-blit-uploads", false);
 pref("webgl.webgl2-compat-mode", false);
 
-pref("webgl.enable-webgl2", true);
+pref("webgl.enable-webgl2", false);
 
 #ifdef RELEASE_BUILD
 // Keep this disabled on Release and Beta for now. (see bug 1171228)
@@ -4437,7 +4437,7 @@ pref("webgl.vendor-string-override", "");
 pref("webgl.angle.try-d3d11", true);
 pref("webgl.angle.force-d3d11", false);
 pref("webgl.angle.force-warp", false);
-pref("webgl.dxgl.enabled", true);
+pref("webgl.dxgl.enabled", false);
 pref("webgl.dxgl.needs-finish", false);
 #endif
 
