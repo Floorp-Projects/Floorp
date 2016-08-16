@@ -188,8 +188,14 @@ def docker_worker_setup(config, test, taskdesc):
         ])
 
     # assemble the command line
+    command = [
+        '/home/worker/bin/run-task',
+        # The workspace cache/volume is default owned by root:root.
+        '--chown', '/home/worker/workspace',
+        '--',
+        '/home/worker/bin/test-linux.sh',
+    ]
 
-    command = ["bash", "/home/worker/bin/test.sh"]
     if mozharness.get('no-read-buildbot-config'):
         command.append("--no-read-buildbot-config")
     command.extend([
