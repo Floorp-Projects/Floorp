@@ -41,7 +41,6 @@ class nsIDocument;
 class nsIEventTarget;
 class nsIPrincipal;
 class nsIScriptContext;
-class nsIScriptTimeoutHandler;
 class nsISerializable;
 class nsIThread;
 class nsIThreadInternal;
@@ -1073,10 +1072,7 @@ public:
   ThawInternal();
 
   void
-  TraverseTimeouts(nsCycleCollectionTraversalCallback& aCallback);
-
-  void
-  UnlinkTimeouts();
+  TraceTimeouts(const TraceCallbacks& aCallbacks, void* aClosure) const;
 
   bool
   ModifyBusyCountFromWorker(bool aIncrease);
@@ -1129,8 +1125,12 @@ public:
   ReportErrorToConsole(const char* aMessage);
 
   int32_t
-  SetTimeout(JSContext* aCx, nsIScriptTimeoutHandler* aHandler,
-             int32_t aTimeout, bool aIsInterval,
+  SetTimeout(JSContext* aCx,
+             Function* aHandler,
+             const nsAString& aStringHandler,
+             int32_t aTimeout,
+             const Sequence<JS::Value>& aArguments,
+             bool aIsInterval,
              ErrorResult& aRv);
 
   void

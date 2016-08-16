@@ -32,7 +32,6 @@
 
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
-#include "nsIScriptTimeoutHandler.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -51,18 +50,6 @@
 #ifdef XP_WIN
 #undef PostMessage
 #endif
-
-extern already_AddRefed<nsIScriptTimeoutHandler>
-NS_CreateJSTimeoutHandler(JSContext* aCx,
-                          mozilla::dom::workers::WorkerPrivate* aWorkerPrivate,
-                          mozilla::dom::Function& aFunction,
-                          const mozilla::dom::Sequence<JS::Value>& aArguments,
-                          mozilla::ErrorResult& aError);
-
-extern already_AddRefed<nsIScriptTimeoutHandler>
-NS_CreateJSTimeoutHandler(JSContext* aCx,
-                          mozilla::dom::workers::WorkerPrivate* aWorkerPrivate,
-                          const nsAString& aExpression);
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -96,7 +83,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerGlobalScope,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
   tmp->TraverseHostObjectURIs(cb);
-  tmp->mWorkerPrivate->TraverseTimeouts(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerGlobalScope,
@@ -110,12 +96,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerGlobalScope,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheStorage)
   tmp->UnlinkHostObjectURIs();
-  tmp->mWorkerPrivate->UnlinkTimeouts();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WorkerGlobalScope,
                                                DOMEventTargetHelper)
   tmp->mWorkerPrivate->AssertIsOnWorkerThread();
+
+  tmp->mWorkerPrivate->TraceTimeouts(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_ADDREF_INHERITED(WorkerGlobalScope, DOMEventTargetHelper)
@@ -260,14 +247,8 @@ WorkerGlobalScope::SetTimeout(JSContext* aCx,
                               ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
-
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-    NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aArguments, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return 0;
-  }
-
-  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, false, aRv);
+  return mWorkerPrivate->SetTimeout(aCx, &aHandler, EmptyString(), aTimeout,
+                                    aArguments, false, aRv);
 }
 
 int32_t
@@ -278,10 +259,9 @@ WorkerGlobalScope::SetTimeout(JSContext* aCx,
                               ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
-
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-    NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler);
-  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, false, aRv);
+  Sequence<JS::Value> dummy;
+  return mWorkerPrivate->SetTimeout(aCx, nullptr, aHandler, aTimeout, dummy,
+                                    false, aRv);
 }
 
 void
@@ -303,13 +283,8 @@ WorkerGlobalScope::SetInterval(JSContext* aCx,
   bool isInterval = aTimeout.WasPassed();
   int32_t timeout = aTimeout.WasPassed() ? aTimeout.Value() : 0;
 
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-    NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aArguments, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return 0;
-  }
-
-  return mWorkerPrivate->SetTimeout(aCx, handler,  timeout, isInterval, aRv);
+  return mWorkerPrivate->SetTimeout(aCx, &aHandler, EmptyString(), timeout,
+                                    aArguments, isInterval, aRv);
 }
 
 int32_t
@@ -326,9 +301,8 @@ WorkerGlobalScope::SetInterval(JSContext* aCx,
   bool isInterval = aTimeout.WasPassed();
   int32_t timeout = aTimeout.WasPassed() ? aTimeout.Value() : 0;
 
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-    NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler);
-  return mWorkerPrivate->SetTimeout(aCx, handler, timeout, isInterval, aRv);
+  return mWorkerPrivate->SetTimeout(aCx, nullptr, aHandler, timeout, dummy,
+                                    isInterval, aRv);
 }
 
 void
