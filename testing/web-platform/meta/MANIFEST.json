@@ -37657,6 +37657,12 @@
             "path": "html/semantics/forms/the-form-element/form-submission-sandbox.html",
             "url": "/html/semantics/forms/the-form-element/form-submission-sandbox.html"
           }
+        ],
+        "web-animations/timing-model/animation-effects/phases-and-states.html": [
+          {
+            "path": "web-animations/timing-model/animation-effects/phases-and-states.html",
+            "url": "/web-animations/timing-model/animation-effects/phases-and-states.html"
+          }
         ]
       }
     },
