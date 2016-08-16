@@ -4139,14 +4139,6 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
       aComputedValue.SetCoordValue(*static_cast<const nscoord*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
       return true;
-    case eStyleAnimType_EnumU8:
-      aComputedValue.SetIntValue(*static_cast<const uint8_t*>(
-        StyleDataAtOffset(styleStruct, ssOffset)), eUnit_Enumerated);
-      if (aProperty == eCSSProperty_visibility) {
-        aComputedValue.SetIntValue(aComputedValue.GetIntValue(),
-                                   eUnit_Visibility);
-      }
-      return true;
     case eStyleAnimType_float:
       aComputedValue.SetFloatValue(*static_cast<const float*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
