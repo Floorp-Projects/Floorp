@@ -9,8 +9,8 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserProvider;
-import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.ImageLoader;
+import org.mozilla.gecko.icons.storage.MemoryStorage;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;
@@ -183,7 +183,7 @@ class MemoryMonitor extends BroadcastReceiver {
                 dispatchMemoryPressure();
             }
 
-            Favicons.clearMemCache();
+            MemoryStorage.get().evictAll();
             ImageLoader.clearLruCache();
             LocalBroadcastManager.getInstance(mAppContext)
                     .sendBroadcast(new Intent(BrowserProvider.ACTION_SHRINK_MEMORY));
