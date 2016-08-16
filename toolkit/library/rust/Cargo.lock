@@ -3,6 +3,7 @@ name = "gkrust"
 version = "0.1.0"
 dependencies = [
  "mp4parse 0.4.0",
+ "nsstring 0.1.0",
 ]
 
 [[package]]
@@ -15,4 +16,8 @@ version = "0.4.0"
 dependencies = [
  "byteorder 0.5.3",
 ]
+
+[[package]]
+name = "nsstring"
+version = "0.1.0"
 
