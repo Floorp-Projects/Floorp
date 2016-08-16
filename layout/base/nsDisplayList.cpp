@@ -6795,9 +6795,9 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  if (mFrame->StyleEffects()->mOpacity == 0.0f &&
-      !mOpacityItemCreated)
+  if (mFrame->StyleEffects()->mOpacity == 0.0f && !mOpacityItemCreated) {
     return nullptr;
+  }
 
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);

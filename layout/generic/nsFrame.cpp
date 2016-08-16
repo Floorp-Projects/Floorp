@@ -2446,9 +2446,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     }
     // Revert to the post-filter dirty rect.
     buildingDisplayList.SetDirtyRect(dirtyRectOutsideSVGEffects);
-    /* List now emptied, so add the new list to the top. */
-    resultList.AppendNewToTop(
-        new (aBuilder) nsDisplayMask(aBuilder, this, &resultList, useOpacity));
+
+    if (nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this)) {
+      /* List now emptied, so add the new list to the top. */
+      resultList.AppendNewToTop(
+          new (aBuilder) nsDisplayMask(aBuilder, this, &resultList, useOpacity));
+    }
+
     // Also add the hoisted scroll info items. We need those for APZ scrolling
     // because nsDisplayMask items can't build active layers.
     aBuilder->ExitSVGEffectsContents();
