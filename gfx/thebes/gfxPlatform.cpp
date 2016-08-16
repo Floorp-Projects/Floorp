@@ -16,7 +16,6 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
-#include "prprf.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
