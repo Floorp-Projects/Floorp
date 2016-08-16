@@ -354,13 +354,15 @@ var LoginManagerContent = {
       return;
     }
 
-    this.setupProgressListener(window);
-
     let pwField = event.target;
     if (pwField.form) {
-      // Handled by onDOMFormHasPassword which is already throttled.
+      // Fill is handled by onDOMFormHasPassword which is already throttled.
       return;
     }
+
+    // Only setup the listener for formless inputs.
+    // Capture within a <form> but without a submit event is bug 1287202.
+    this.setupProgressListener(window);
 
     let formLike = FormLikeFactory.createFromField(pwField);
     log("onDOMInputPasswordAdded:", pwField, formLike);
