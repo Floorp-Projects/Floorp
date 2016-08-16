@@ -16,6 +16,16 @@ gLibNameRE = re.compile("[0-9a-zA-Z_+\-\.]*$")
 # for symbolication. Also prevents loops.
 MAX_FORWARDED_REQUESTS = 3
 
+"""
+Symbolication is broken when using type 'str' in python 2.7, so we use 'basestring'.
+But for python 3.0 compatibility, 'basestring' isn't defined, but the 'str' type works.
+So we force 'basestring' to 'str'.
+"""
+try:
+    basestring
+except NameError:
+    basestring = str
+
 
 class ModuleV3:
 
@@ -25,11 +35,11 @@ class ModuleV3:
 
 
 def getModuleV3(libName, breakpadId):
-    if not isinstance(libName, str) or not gLibNameRE.match(libName):
+    if not isinstance(libName, basestring) or not gLibNameRE.match(libName):
         LogTrace("Bad library name: " + str(libName))
         return None
 
-    if not isinstance(breakpadId, str):
+    if not isinstance(breakpadId, basestring):
         LogTrace("Bad breakpad id: " + str(breakpadId))
         return None
 
