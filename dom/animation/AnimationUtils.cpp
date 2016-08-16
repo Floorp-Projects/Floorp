@@ -62,4 +62,19 @@ AnimationUtils::IsOffscreenThrottlingEnabled()
   return sOffscreenThrottlingEnabled;
 }
 
+/* static */ bool
+AnimationUtils::IsCoreAPIEnabled()
+{
+  static bool sCoreAPIEnabled;
+  static bool sPrefCached = false;
+
+  if (!sPrefCached) {
+    sPrefCached = true;
+    Preferences::AddBoolVarCache(&sCoreAPIEnabled,
+                                 "dom.animations-api.core.enabled");
+  }
+
+  return sCoreAPIEnabled;
+}
+
 } // namespace mozilla
