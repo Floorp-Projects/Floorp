@@ -162,7 +162,8 @@ class SpreadArgs extends Array {
 let gContextId = 0;
 
 class BaseContext {
-  constructor(extension) {
+  constructor(envType, extension) {
+    this.envType = envType;
     this.onClose = new Set();
     this.checkedLastError = false;
     this._lastError = null;

@@ -1,6 +1,6 @@
 "use strict";
 
-extensions.registerSchemaAPI("extension", context => {
+extensions.registerSchemaAPI("extension", "addon_parent", context => {
   let {extension} = context;
   return {
     extension: {

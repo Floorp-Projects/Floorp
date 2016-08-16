@@ -118,7 +118,12 @@ var ExtensionContext, GlobalManager;
 var Management = {
   initialized: null,
   scopes: [],
-  schemaApis: [],
+  schemaApis: {
+    addon_parent: [],
+    addon_child: [],
+    content_parent: [],
+    content_child: [],
+  },
   emitter: new EventEmitter(),
 
   // Loads all the ext-*.js scripts currently registered.
@@ -152,25 +157,38 @@ var Management = {
    * Called by an ext-*.js script to register an API.
    *
    * @param {string} namespace The API namespace.
-   *     Used to determine whether the API should be generated when the caller
-   *     requests a subset of the available APIs (e.g. in content scripts).
+   *     Intended to match the namespace of the generated API, but not used at
+   *     the moment - see bugzil.la/1295774.
+   * @param {string} envType Restricts the API to contexts that run in the
+   *    given environment. Must be one of the following:
+   *     - "addon_parent" - addon APIs that runs in the main process.
+   *     - "addon_child" - addon APIs that runs in an addon process.
+   *     - "content_parent" - content script APIs that runs in the main process.
+   *     - "content_child" - content script APIs that runs in a content process.
    * @param {function(BaseContext)} getAPI A function that returns an object
    *     that will be merged with |chrome| and |browser|. The next example adds
    *     the create, update and remove methods to the tabs API.
    *
-   *     registerSchemaAPI("tabs", (context) => ({
+   *     registerSchemaAPI("tabs", "addon_parent", (context) => ({
    *       tabs: { create, update },
    *     }));
-   *     registerSchemaAPI("tabs", (context) => ({
+   *     registerSchemaAPI("tabs", "addon_parent", (context) => ({
    *       tabs: { remove },
    *     }));
    */
-  registerSchemaAPI(namespace, getAPI) {
-    this.schemaApis.push({namespace, getAPI});
+  registerSchemaAPI(namespace, envType, getAPI) {
+    this.schemaApis[envType].push({namespace, getAPI});
+    if (envType === "addon_child") {
+      // TODO(robwu): Remove this. It is a temporary hack to ease the transition
+      // from ext-*.js running in the parent to APIs running in a child process.
+      // This can be removed once there is a dedicated ExtensionContext with type
+      // "addon_child".
+      this.schemaApis.addon_parent.push({namespace, getAPI});
+    }
   },
 
   // Mash together all the APIs from apis into obj.
-  generateAPIs(context, apis, obj, namespaces = null) {
+  generateAPIs(context, apis, obj) {
     // Recursively copy properties from source to dest.
     function copy(dest, source) {
       for (let prop in source) {
@@ -187,9 +205,6 @@ var Management = {
     }
 
     for (let api of apis) {
-      if (namespaces && !namespaces.includes(api.namespace)) {
-        continue;
-      }
       if (api.permission) {
         if (!context.extension.hasPermission(api.permission)) {
           continue;
@@ -229,7 +244,9 @@ var Management = {
 // |incognito| is the content running in a private context (default: false).
 ExtensionContext = class extends BaseContext {
   constructor(extension, params) {
-    super(extension);
+    // TODO(robwu): This should be addon_child once all ext- files are split.
+    // There should be a new ProxyContext instance with the "addon_parent" type.
+    super("addon_parent", extension);
 
     let {type, uri} = params;
     this.type = type;
@@ -305,11 +322,14 @@ class ProxyContext extends ExtensionContext {
     params.uri = NetUtil.newURI(params.url);
 
     super(extension, params);
+    // TODO(robwu): Get ProxyContext to inherit from BaseContext instead of
+    // ExtensionContext and let callers specify the environment type.
+    this.envType = "content_parent";
     this.messageManager = messageManager;
     this.principal_ = principal;
 
     this.apiObj = {};
-    GlobalManager.injectInObject(this, null, this.apiObj, ["storage", "test"]);
+    GlobalManager.injectInObject(this, null, this.apiObj);
 
     this.listenerProxies = new Map();
 
@@ -609,12 +629,12 @@ GlobalManager = {
     return this.extensionMap.get(extensionId);
   },
 
-  injectInObject(context, defaultCallback, dest, namespaces = null) {
+  injectInObject(context, defaultCallback, dest) {
     let apis = {
       extensionTypes: {},
     };
-    Management.generateAPIs(context, Management.schemaApis, apis, namespaces);
-    Management.generateAPIs(context, context.extension.apis, apis, namespaces);
+    Management.generateAPIs(context, Management.schemaApis[context.envType], apis);
+    Management.generateAPIs(context, context.extension.apis, apis);
 
     let schemaWrapper = {
       get principal() {
@@ -656,9 +676,6 @@ GlobalManager = {
       },
 
       shouldInject(namespace, name) {
-        if (namespaces && !namespaces.includes(namespace)) {
-          return false;
-        }
         return findPathInObject(apis, [namespace]) != null;
       },
 

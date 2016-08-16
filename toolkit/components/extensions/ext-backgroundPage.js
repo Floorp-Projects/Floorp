@@ -144,7 +144,7 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("extension", context => {
+extensions.registerSchemaAPI("extension", "addon_parent", context => {
   let {extension} = context;
   return {
     extension: {
