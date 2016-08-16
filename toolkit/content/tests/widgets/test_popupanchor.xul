@@ -88,6 +88,15 @@ function openPopup(position, callback) {
   _openPopup(position, callback);
 }
 
+function waitForPopupPositioned(actionFn, callback)
+{
+  panel.addEventListener("popuppositioned", function listener() {
+    panel.removeEventListener("popuppositioned", listener, false);
+    callback();
+  }, false);
+  actionFn();
+}
+
 function _openPopup(position, callback) {
   // this is very ugly: the panel CSS sets the arrow's list-style-image based
   // on the 'side' attribute.  If the setting of the 'side' attribute causes
@@ -200,13 +209,21 @@ var tests = [
       // and the anchor right - it can't fit with the panel on the left/arrow
       // on the right, so it must flip (arrow on the left, panel on the right)
       var offset = Math.floor(-anchorRight / 2);
-      panel.moveToAnchor(anchor, "after_end", offset, 0);
-      isArrowPositionedOn("left", offset); // should have flipped and have the offset.
-      // resize back to original and move to a zero offset - it should flip back.
-      panel.sizeTo(anchorRight - 10, 100);
-      panel.moveToAnchor(anchor, "after_end", 0, 0);
-      isArrowPositionedOn("right"); // should have flipped back and no offset
-      next();
+
+      waitForPopupPositioned(
+        () => panel.moveToAnchor(anchor, "after_end", offset, 0),
+        () => {
+          isArrowPositionedOn("left", offset); // should have flipped and have the offset.
+          // resize back to original and move to a zero offset - it should flip back.
+
+          panel.sizeTo(anchorRight - 10, 100);
+          waitForPopupPositioned(
+            () => panel.moveToAnchor(anchor, "after_end", 0, 0),
+            () => {
+              isArrowPositionedOn("right"); // should have flipped back and no offset
+              next();
+            });
+        });
     });
   }],
 
@@ -219,12 +236,20 @@ var tests = [
     openPopup("start_after", function() {
       isArrowPositionedOn("bottom");
       var offset = Math.floor(-anchorBottom / 2);
-      panel.moveToAnchor(anchor, "start_after", 0, offset);
-      isArrowPositionedOn("top", offset);
-      panel.sizeTo(100, anchorBottom - 10);
-      panel.moveToAnchor(anchor, "start_after", 0, 0);
-      isArrowPositionedOn("bottom");
-      next();
+
+      waitForPopupPositioned(
+        () => panel.moveToAnchor(anchor, "start_after", 0, offset),
+        () => {
+          isArrowPositionedOn("top", offset);
+          panel.sizeTo(100, anchorBottom - 10);
+
+          waitForPopupPositioned(
+            () => panel.moveToAnchor(anchor, "start_after", 0, 0),
+            () => {
+              isArrowPositionedOn("bottom");
+              next();
+            });
+        });
     });
   }],
 
@@ -379,10 +404,8 @@ SimpleTest.waitForExplicitFinish();
 addEventListener("load", function() {
   // anchor is set by the test runner above
   panel = document.getElementById("testPanel");
+
   arrow = SpecialPowers.wrap(document).getAnonymousElementByAttribute(panel, "anonid", "arrow");
-  // Cancel the arrow panel slide-in transition (bug 767133) so the size and
-  // position are "stable" enough to test without jumping through hoops...
-  arrow.style.transition = "none";
   runTests();
 });
 
