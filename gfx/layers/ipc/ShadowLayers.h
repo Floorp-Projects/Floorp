@@ -266,11 +266,6 @@ public:
 #endif
 
   /**
-   * Used for debugging to tell the compositor how long this frame took to paint.
-   */
-  void SendPaintTime(uint64_t aId, TimeDuration aPaintTime);
-
-  /**
    * End the current transaction and forward it to LayerManagerComposite.
    * |aReplies| are directions from the LayerManagerComposite to the
    * caller of EndTransaction().

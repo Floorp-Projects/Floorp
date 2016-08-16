@@ -589,15 +589,6 @@ ShadowLayerForwarder::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::
   }
 }
 
-void
-ShadowLayerForwarder::SendPaintTime(uint64_t aId, TimeDuration aPaintTime)
-{
-  if (!HasShadowManager() || !mShadowManager->IPCOpen() ||
-      !mShadowManager->SendPaintTime(aId, aPaintTime)) {
-    NS_WARNING("Could not send paint times over IPC");
-  }
-}
-
 bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
                                      const nsIntRegion& aRegionToClear,
