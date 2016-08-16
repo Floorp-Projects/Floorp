@@ -76,7 +76,7 @@ public:
   /**
    * Infallibly allocate a nsFrameList from the shell arena.
    */
-  void* operator new(size_t sz, nsIPresShell* aPresShell);
+  void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
 
   /**
    * Deallocate this list that was allocated from the shell arena.
