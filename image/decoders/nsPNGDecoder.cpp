@@ -943,6 +943,11 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   width = png_get_next_frame_width(png_ptr, decoder->mInfo);
   height = png_get_next_frame_height(png_ptr, decoder->mInfo);
 
+  if (width == 0)
+    png_error(png_ptr, "Frame width must not be 0");
+  if (height == 0)
+    png_error(png_ptr, "Frame height must not be 0");
+
   nsresult rv =
     decoder->CreateFrame(x_offset, y_offset, width, height, decoder->format);
   if (NS_FAILED(rv)) {
