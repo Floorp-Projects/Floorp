@@ -120,7 +120,6 @@ var ExtensionContext, GlobalManager;
 var Management = {
   initialized: null,
   scopes: [],
-  apis: [],
   schemaApis: [],
   emitter: new EventEmitter(),
 
@@ -162,27 +161,25 @@ var Management = {
     return this.initialized;
   },
 
-  // Called by an ext-*.js script to register an API. The |api|
-  // parameter should be an object of the form:
-  // {
-  //   tabs: {
-  //     create: ...,
-  //     onCreated: ...
-  //   }
-  // }
-  // This registers tabs.create and tabs.onCreated as part of the API.
-  registerAPI(api) {
-    this.apis.push({api});
-  },
-
-  // Same as above, but only register the API is the add-on has the
-  // given permission.
-  registerPrivilegedAPI(permission, api) {
-    this.apis.push({api, permission});
-  },
-
-  registerSchemaAPI(namespace, api) {
-    this.schemaApis.push({namespace, api});
+  /**
+   * Called by an ext-*.js script to register an API.
+   *
+   * @param {string} namespace The API namespace.
+   *     Used to determine whether the API should be generated when the caller
+   *     requests a subset of the available APIs (e.g. in content scripts).
+   * @param {function(BaseContext)} getAPI A function that returns an object
+   *     that will be merged with |chrome| and |browser|. The next example adds
+   *     the create, update and remove methods to the tabs API.
+   *
+   *     registerSchemaAPI("tabs", (context) => ({
+   *       tabs: { create, update },
+   *     }));
+   *     registerSchemaAPI("tabs", (context) => ({
+   *       tabs: { remove },
+   *     }));
+   */
+  registerSchemaAPI(namespace, getAPI) {
+    this.schemaApis.push({namespace, getAPI});
   },
 
   // Mash together into a single object all the APIs registered by the
@@ -215,14 +212,9 @@ var Management = {
         }
       }
 
-      api = api.api(context);
+      api = api.getAPI(context);
       copy(obj, api);
     }
-
-    for (let api of context.extension.apis) {
-      copy(obj, api.getAPI(context));
-    }
-
     return obj;
   },
 
@@ -635,9 +627,6 @@ GlobalManager = {
   },
 
   injectInObject(context, defaultCallback, dest, namespaces = null) {
-    let api = Management.generateAPIs(context, Management.apis, namespaces);
-    injectAPI(api, dest);
-
     let schemaApi = Management.generateAPIs(context, Management.schemaApis, namespaces);
 
     // Add in any extra API namespaces which do not have implementations
@@ -709,6 +698,9 @@ GlobalManager = {
       },
     };
     Schemas.inject(dest, schemaWrapper);
+
+    let experimentalApis = Management.generateAPIs(context, context.extension.apis, namespaces);
+    injectAPI(experimentalApis, dest);
   },
 
   observe(document, topic, data) {
