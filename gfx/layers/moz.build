@@ -334,6 +334,7 @@ UNIFIED_SOURCES += [
     'composite/ImageHost.cpp',
     'composite/ImageLayerComposite.cpp',
     'composite/LayerManagerComposite.cpp',
+    'composite/PaintCounter.cpp',
     'composite/PaintedLayerComposite.cpp',
     'composite/TextRenderer.cpp',
     'composite/TextureHost.cpp',
