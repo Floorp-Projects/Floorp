@@ -32,6 +32,7 @@ import org.mozilla.gecko.sync.stage.CompletedStage;
 import org.mozilla.gecko.sync.stage.EnsureCrypto5KeysStage;
 import org.mozilla.gecko.sync.stage.FennecTabsServerSyncStage;
 import org.mozilla.gecko.sync.stage.FetchInfoCollectionsStage;
+import org.mozilla.gecko.sync.stage.FetchInfoConfigurationStage;
 import org.mozilla.gecko.sync.stage.FetchMetaGlobalStage;
 import org.mozilla.gecko.sync.stage.FormHistoryServerSyncStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage;
@@ -177,6 +178,8 @@ public class GlobalSession implements HttpResponseObserver {
     stages.put(Stage.checkPreconditions,      new CheckPreconditionsStage());
     stages.put(Stage.fetchInfoCollections,    new FetchInfoCollectionsStage());
     stages.put(Stage.fetchMetaGlobal,         new FetchMetaGlobalStage());
+    stages.put(Stage.fetchInfoConfiguration,  new FetchInfoConfigurationStage(
+            config.infoConfigurationURL(), getAuthHeaderProvider()));
     stages.put(Stage.ensureKeysStage,         new EnsureCrypto5KeysStage());
 
     stages.put(Stage.syncClientsEngine,       new SyncClientsEngineStage());
