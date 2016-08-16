@@ -37,24 +37,19 @@ define(function (require, exports, module) {
 
           delim = (i == array.length - 1 ? "" : ", ");
 
-          if (value === array) {
-            items.push(Reference({
-              key: i,
-              object: value,
-              delim: delim
-            }));
-          } else {
-            items.push(ItemRep({
-              key: i,
-              object: value,
-              delim: delim
-            }));
-          }
+          items.push(ItemRep({
+            key: i,
+            object: value,
+            // Hardcode tiny mode to avoid recursive handling.
+            mode: "tiny",
+            delim: delim
+          }));
         } catch (exc) {
           items.push(ItemRep({
+            key: i,
             object: exc,
-            delim: delim,
-            key: i
+            mode: "tiny",
+            delim: delim
           }));
         }
       }
@@ -173,26 +168,12 @@ define(function (require, exports, module) {
 
       let object = this.props.object;
       let delim = this.props.delim;
+      let mode = this.props.mode;
       return (
         DOM.span({},
-          Rep({object: object}),
+          Rep({object: object, mode: mode}),
           delim
         )
-      );
-    }
-  }));
-
-  /**
-   * Renders cycle references in an array.
-   */
-  let Reference = React.createFactory(React.createClass({
-    displayName: "Reference",
-
-    render: function () {
-      let tooltip = "Circular reference";
-      return (
-        DOM.span({title: tooltip},
-          "[…]")
       );
     }
   }));
