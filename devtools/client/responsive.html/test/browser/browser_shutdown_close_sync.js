@@ -7,10 +7,18 @@
 
 const TEST_URL = "http://example.com/";
 
+function waitForClientClose(ui) {
+  return new Promise(resolve => {
+    info("RDM's debugger client is now closed");
+    ui.client.addOneTimeListener("closed", resolve);
+  });
+}
+
 add_task(function* () {
   let tab = yield addTab(TEST_URL);
 
   let { ui } = yield openRDM(tab);
+  let clientClosed = waitForClientClose(ui);
 
   closeRDM(tab, {
     reason: "TabClose",
@@ -21,6 +29,7 @@ add_task(function* () {
   // synchronously.
   is(ui.destroyed, true, "RDM closed synchronously");
 
+  yield clientClosed;
   yield removeTab(tab);
 });
 
@@ -28,6 +37,7 @@ add_task(function* () {
   let tab = yield addTab(TEST_URL);
 
   let { ui } = yield openRDM(tab);
+  let clientClosed = waitForClientClose(ui);
 
   yield removeTab(tab);
 
@@ -35,4 +45,6 @@ add_task(function* () {
   // yielding on `closeRDM` itself and only removing the tab, then we must have closed
   // synchronously in response to tab closing.
   is(ui.destroyed, true, "RDM closed synchronously");
+
+  yield clientClosed;
 });
