@@ -10364,6 +10364,21 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   return data;
 }
 
+void
+nsRuleNode::GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+                                          nsCSSValue* aValue)
+{
+  for (nsRuleNode* node = this; node; node = node->GetParent()) {
+    nsIStyleRule* rule = node->GetRule();
+    if (!rule) {
+      continue;
+    }
+    if (rule->GetDiscretelyAnimatedCSSValue(aProperty, aValue)) {
+      return;
+    }
+  }
+}
+
 /* static */ bool
 nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
                                     uint32_t ruleTypeMask,
