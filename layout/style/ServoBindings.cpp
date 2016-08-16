@@ -740,6 +740,18 @@ Gecko_ClearStyleContents(nsStyleContent* aContent)
 }
 
 void
+Gecko_CopyStyleContentsFrom(nsStyleContent* aContent, const nsStyleContent* aOther)
+{
+  uint32_t count = aOther->ContentCount();
+
+  aContent->AllocateContents(count);
+
+  for (uint32_t i = 0; i < count; ++i) {
+    aContent->ContentAt(i) = aOther->ContentAt(i);
+  }
+}
+
+void
 Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen)
 {
   aLayers->mLayers.EnsureLengthAtLeast(aLen);
