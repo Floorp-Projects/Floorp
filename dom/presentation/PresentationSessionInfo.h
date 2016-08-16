@@ -205,8 +205,11 @@ private:
 
   nsresult OnGetAddress(const nsACString& aAddress);
 
+  nsresult ContinueReconnect();
+
   nsCOMPtr<nsIServerSocket> mServerSocket;
   nsCOMPtr<nsIPresentationServiceCallback> mReconnectCallback;
+  bool mIsReconnecting = false;
 };
 
 // Session info with presenting browsing context (receiver side) behaviors.
