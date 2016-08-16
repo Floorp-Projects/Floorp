@@ -32,7 +32,7 @@ module.exports = createClass({
         src: target.icon
       }),
       dom.div({ className: "target" },
-        dom.div({ className: "target-name" }, target.name)
+        dom.div({ className: "target-name", title: target.name }, target.name)
       ),
       dom.button({
         className: "debug-button",
