@@ -56,7 +56,7 @@ const COMMENT_COLOR = "theme-comment";
  * highlighting.
  *
  * It uses the CSS tokenizer to generate a stream of CSS tokens.
- * https://mxr.mozilla.org/mozilla-central/source/dom/webidl/CSSLexer.webidl
+ * https://dxr.mozilla.org/mozilla-central/source/dom/webidl/CSSLexer.webidl
  * lists all the token types.
  *
  * - "whitespace", "comment", and "symbol" tokens are appended as TEXT nodes,

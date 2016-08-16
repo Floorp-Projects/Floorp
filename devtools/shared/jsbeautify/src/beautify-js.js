@@ -972,7 +972,7 @@ function Beautifier(js_source_text, options) {
 
             // Spidermonkey-specific sharp variables for circular references
             // https://developer.mozilla.org/En/Sharp_variables_in_JavaScript
-            // http://mxr.mozilla.org/mozilla-central/source/js/src/jsscan.cpp around line 1935
+            // http://dxr.mozilla.org/mozilla-central/source/js/src/jsscan.cpp around line 1935
             var sharp = '#';
             if (parser_pos < input_length && in_array(input.charAt(parser_pos), digits)) {
                 do {

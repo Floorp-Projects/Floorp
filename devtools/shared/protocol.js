@@ -1254,7 +1254,7 @@ var Front = Class({
     callFunctionWithAsyncStack(() => {
       if (packet.error) {
         // "Protocol error" is here to avoid TBPL heuristics. See also
-        // https://mxr.mozilla.org/webtools-central/source/tbpl/php/inc/GeneralErrorFilter.php
+        // https://dxr.mozilla.org/webtools-central/source/tbpl/php/inc/GeneralErrorFilter.php
         let message;
         if (packet.error && packet.message) {
           message = "Protocol error (" + packet.error + "): " + packet.message;
