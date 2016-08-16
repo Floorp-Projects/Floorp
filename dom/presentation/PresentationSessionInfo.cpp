@@ -592,6 +592,8 @@ PresentationControllingInfo::Shutdown(nsresult aReason)
     NS_WARN_IF(NS_FAILED(mServerSocket->Close()));
     mServerSocket = nullptr;
   }
+
+  mIsReconnecting = false;
 }
 
 nsresult
@@ -666,6 +668,13 @@ nsresult
 PresentationControllingInfo::OnGetAddress(const nsACString& aAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!mServerSocket)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_WARN_IF(!mControlChannel)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Prepare and send the offer.
   int32_t port;
@@ -742,6 +751,10 @@ PresentationControllingInfo::NotifyConnected()
 
   switch (mState) {
     case nsIPresentationSessionListener::STATE_CONNECTING: {
+      if (mIsReconnecting) {
+        return ContinueReconnect();
+      }
+
       nsresult rv = mControlChannel->Launch(GetSessionId(), GetUrl());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -766,11 +779,10 @@ PresentationControllingInfo::NotifyReconnected()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mReconnectCallback);
 
-  if (NS_WARN_IF(mState == nsIPresentationSessionListener::STATE_TERMINATED)) {
+  if (NS_WARN_IF(mState != nsIPresentationSessionListener::STATE_CONNECTING)) {
     return NS_ERROR_FAILURE;
   }
 
-  SetStateWithReason(nsIPresentationSessionListener::STATE_CONNECTING, NS_OK);
   return mReconnectCallback->NotifySuccess();
 }
 
@@ -910,6 +922,24 @@ PresentationControllingInfo::OnStopListening(nsIServerSocket* aServerSocket,
   return NS_OK;
 }
 
+/**
+ * The steps to reconnect a session are summarized below:
+ * 1. Change |mState| to CONNECTING.
+ * 2. Check whether |mControlChannel| is existed or not. Usually we have to
+ *    create a new control cahnnel.
+ * 3.1 |mControlChannel| is null, which means we have to create a new one.
+ *     |EstablishControlChannel| is called to create a new control channel.
+ *     At this point, |mControlChannel| is not able to use yet. Set
+ *     |mIsReconnecting| to true and wait until |NotifyConnected|.
+ * 3.2 |mControlChannel| is not null and is avaliable.
+ *     We can just call |ContinueReconnect| to send reconnect command.
+ * 4. |NotifyReconnected| of |nsIPresentationControlChannelListener| is called
+ *    to indicate the receiver is ready for reconnecting.
+ * 5. Once both step 3 and 4 are done, the rest is to build a new data
+ *    transport channel by following the same steps as starting a
+ *    new session.
+ */
+
 nsresult
 PresentationControllingInfo::Reconnect(nsIPresentationServiceCallback* aCallback)
 {
@@ -923,6 +953,8 @@ PresentationControllingInfo::Reconnect(nsIPresentationServiceCallback* aCallback
     return mReconnectCallback->NotifyError(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 
+  SetStateWithReason(nsIPresentationSessionListener::STATE_CONNECTING, NS_OK);
+
   nsresult rv = NS_OK;
   if (!mControlChannel) {
     nsCOMPtr<nsIPresentationControlChannel> ctrlChannel;
@@ -935,11 +967,26 @@ PresentationControllingInfo::Reconnect(nsIPresentationServiceCallback* aCallback
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return mReconnectCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
     }
+
+    mIsReconnecting = true;
+  } else {
+    return ContinueReconnect();
   }
 
-  rv = mControlChannel->Reconnect(mSessionId, GetUrl());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return mReconnectCallback->NotifyError(rv);
+  return NS_OK;
+}
+
+nsresult
+PresentationControllingInfo::ContinueReconnect()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mControlChannel);
+  MOZ_ASSERT(mReconnectCallback);
+
+  mIsReconnecting = false;
+  if (NS_WARN_IF(NS_FAILED(mControlChannel->Reconnect(mSessionId, GetUrl()))) &&
+      mReconnectCallback) {
+    return mReconnectCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
   return NS_OK;
