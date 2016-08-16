@@ -1553,7 +1553,11 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(nsRange* aRange)
   // include the last frame when its content isn't really in aRange.
   nsINode* nextNodeOfRangeEnd = nullptr;
   if (endNode->IsNodeOfType(nsINode::eTEXT)) {
-    if (!endOffset) {
+    // Don't set nextNodeOfRangeEnd to the start node of aRange because if
+    // endNode is same as start node of the range, the text node shouldn't be
+    // next of range end even if the offset is 0.  This could occur with empty
+    // text node.
+    if (!endOffset && aRange->GetStartParent() != endNode) {
       nextNodeOfRangeEnd = endNode;
     }
   } else if (endOffset < endNode->GetChildCount()) {
