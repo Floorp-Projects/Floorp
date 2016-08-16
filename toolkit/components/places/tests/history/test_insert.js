@@ -184,7 +184,7 @@ add_task(function* test_insert_multiple_error_cases() {
 
 add_task(function* test_history_insertMany() {
   const BAD_URLS = ["about:config", "chrome://browser/content/browser.xul"];
-  const GOOD_URLS = [1, 2, 3].map(x => {return `http://mozilla.com/${x}`;});
+  const GOOD_URLS = [1, 2, 3].map(x => { return `http://mozilla.com/${x}`; });
 
   let makePageInfos = Task.async(function*(urls, filter = x => x) {
     let pageInfos = [];
