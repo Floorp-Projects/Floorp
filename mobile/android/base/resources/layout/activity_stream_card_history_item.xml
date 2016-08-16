@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_marginRight="5dp"
     android:layout_marginEnd="5dp"
@@ -31,30 +32,15 @@
         </FrameLayout>
 
         <FrameLayout
-            android:id="@+id/frameLayout2"
-            android:layout_toRightOf="@id/frameLayout1"
-            android:layout_toEndOf="@id/frameLayout1"
-            android:layout_width="50dp"
-            android:layout_height="match_parent">
-
-            <ImageView
-                android:src="@drawable/tab_new"
-                android:alpha="0.5"
-                android:scaleType="fitCenter"
-                android:layout_gravity="center"
-                android:layout_width="15dp"
-                android:layout_height="15dp"/>
-        </FrameLayout>
-
-        <FrameLayout
             android:id="@+id/frameLayout3"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_toRightOf="@id/frameLayout2"
-            android:layout_toEndOf="@id/frameLayout2">
+            android:layout_toRightOf="@+id/imageView"
+            android:layout_toLeftOf="@+id/card_history_time_since">
 
             <TextView
                 android:id="@+id/card_history_label"
+                tools:text="Descriptive title of a page..."
                 android:gravity="center_vertical"
                 android:maxLines="2"
                 android:layout_width="match_parent"
@@ -62,25 +48,30 @@
 
         </FrameLayout>
 
-        <LinearLayout
-            android:id="@+id/linearLayout5"
-            android:orientation="vertical"
+        <TextView
+            android:id="@+id/card_history_time_since"
+            tools:text="20m"
+            android:textSize="12sp"
+            android:gravity="bottom|right"
+            android:paddingRight="4dp"
+            android:paddingEnd="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:layout_width="40dp"
-            android:layout_height="match_parent">
+            android:layout_alignParentTop="false"/>
 
-            <TextView
-                android:id="@+id/card_history_time_since"
-                android:text="20m"
-                android:textSize="12sp"
-                android:gravity="bottom|right"
-                android:paddingRight="4dp"
-                android:paddingEnd="4dp"
-                android:layout_margin="4dp"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-
-        </LinearLayout>
+        <ImageView
+            android:src="@drawable/tab_new"
+            android:alpha="0.5"
+            android:scaleType="fitCenter"
+            android:layout_gravity="center"
+            android:layout_width="50dp"
+            android:layout_height="15dp"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/frameLayout1"
+            android:layout_toEndOf="@+id/frameLayout1"
+            android:id="@+id/imageView"/>
     </RelativeLayout>
 </android.support.v7.widget.CardView>

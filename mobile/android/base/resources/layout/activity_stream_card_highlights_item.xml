@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_marginRight="5dp"
     android:layout_marginEnd="5dp"
     android:layout_marginTop="10dp"
     android:layout_marginBottom="10dp"
-    android:layout_width="180dp"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:baselineAligned="false"
         android:orientation="vertical">
 
@@ -30,13 +31,14 @@
         <RelativeLayout
             android:padding="3dp"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
 
             <TextView
                 android:id="@+id/card_highlights_label"
                 android:textSize="10sp"
                 android:maxLines="3"
                 android:ellipsize="end"
+                tools:text="FooBar"
                 android:textColor="@android:color/black"
                 android:layout_marginLeft="4dp"
                 android:layout_marginStart="4dp"
@@ -47,11 +49,11 @@
                 android:layout_toStartOf="@+id/card_highlights_time_since"
                 android:layout_toLeftOf="@+id/card_highlights_time_since"
                 android:layout_alignParentTop="true"
-                android:layout_above="@+id/linearLayout3"/>
+                android:layout_alignBottom="@+id/card_highlights_time_since"/>
 
             <TextView
                 android:id="@+id/card_highlights_time_since"
-                android:text="2h"
+                tools:text="2h"
                 android:textSize="10sp"
                 android:layout_marginEnd="4dp"
                 android:layout_marginRight="4dp"
@@ -61,29 +63,16 @@
                 android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true"/>
 
-            <LinearLayout
-                android:layout_marginTop="5dp"
-                android:orientation="horizontal"
+            <TextView
+                tools:text="Bookmarked"
+                android:textSize="10sp"
+                android:drawableLeft="@drawable/search_icon_active"
+                android:gravity="center_vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentStart="true"
+                android:layout_below="@+id/card_highlights_label"
                 android:layout_alignParentLeft="true"
-                android:id="@+id/linearLayout3">
-
-                <ImageView
-                    android:src="@drawable/search_icon_active"
-                    android:alpha="0.5"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"/>
-
-                <TextView
-                    android:text="Bookmarked"
-                    android:textSize="10sp"
-                    android:gravity="center_vertical"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"/>
-            </LinearLayout>
+                android:layout_alignParentStart="true"/>
         </RelativeLayout>
     </LinearLayout>
 </android.support.v7.widget.CardView>

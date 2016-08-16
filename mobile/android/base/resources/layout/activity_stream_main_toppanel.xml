@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+
+    <TextView
+        android:id="@+id/title_topsites"
+        android:text="@string/activity_stream_topsites"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:textStyle="bold"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/more_topsites"
+        android:layout_toStartOf="@+id/more_topsites"/>
+
+    <TextView
+        android:id="@+id/more_topsites"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:textAllCaps="true"
+        android:textColor="@android:color/holo_orange_dark"
+        android:textSize="14sp"
+        android:text="@string/activity_stream_more"
+        tools:text="More"
+        android:layout_alignBottom="@+id/title_topsites"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="115dp"
+        android:id="@+id/android.support.v7.widget.RecyclerView"
+        android:layout_below="@+id/title_topsites"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
+
+    <TextView
+        android:id="@+id/title_highlights"
+        android:text="@string/activity_stream_highlights"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:layout_below="@+id/android.support.v7.widget.RecyclerView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_toLeftOf="@+id/more_highlights"
+        android:layout_toStartOf="@+id/more_highlights"/>
+
+    <TextView
+        android:id="@+id/more_highlights"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAllCaps="true"
+        android:textColor="@android:color/holo_orange_dark"
+        android:textSize="14sp"
+        android:text="@string/activity_stream_more"
+        android:layout_alignTop="@+id/title_highlights"
+        android:layout_alignLeft="@+id/more_topsites"
+        android:layout_alignStart="@+id/more_topsites"/>
+
+
+</RelativeLayout>
