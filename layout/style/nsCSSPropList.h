@@ -334,7 +334,7 @@ CSS_PROP_POSITION(
     VARIANT_HK,
     kAutoCompletionAlignJustifyContent,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     align-items,
     align_items,
@@ -344,7 +344,7 @@ CSS_PROP_POSITION(
     VARIANT_HK,
     kAutoCompletionAlignItems,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     align-self,
     align_self,
@@ -354,7 +354,7 @@ CSS_PROP_POSITION(
     VARIANT_HK,
     kAutoCompletionAlignJustifySelf,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     all,
     all,
@@ -2358,7 +2358,7 @@ CSS_PROP_POSITION(
     VARIANT_HK,
     kAutoCompletionAlignJustifyContent,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     justify-items,
     justify_items,
@@ -2369,7 +2369,7 @@ CSS_PROP_POSITION(
     // for auto-completion we use same values as justify-self:
     kAutoCompletionAlignJustifySelf,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     justify-self,
     justify_self,
@@ -2379,7 +2379,7 @@ CSS_PROP_POSITION(
     VARIANT_HK,
     kAutoCompletionAlignJustifySelf,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #ifndef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_FONT(
