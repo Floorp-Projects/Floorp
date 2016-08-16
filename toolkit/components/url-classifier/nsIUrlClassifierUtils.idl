@@ -36,9 +36,10 @@ interface nsIUrlClassifierUtils : nsISupports
    *
    * @param Integer to indicate threat type.
    *
-   * @returns The list name.
+   * @returns The list names separated by ','. For example,
+   *          'goog-phish-proto,test-phish-proto'.
    */
-  ACString convertThreatTypeToListName(in uint32_t threatType);
+  ACString convertThreatTypeToListNames(in uint32_t threatType);
 
   /**
    * Convert list name to threat type.
