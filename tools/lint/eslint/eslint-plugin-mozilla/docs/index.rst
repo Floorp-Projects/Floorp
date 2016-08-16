@@ -75,13 +75,13 @@ Example configuration::
    :maxdepth: 1
 
    balanced-listeners
-   components-imports
-   import-globals-from
+   import-browserjs-globals
+   import-globals
    import-headjs-globals
    mark-test-function-used
    no-aArgs
    no-cpows-in-tests
+   no-single-arg-cu-import
    reject-importGlobalProperties
    reject-some-requires
-   this-top-level-scope
    var-only-at-top-level
