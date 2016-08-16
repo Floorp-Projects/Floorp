@@ -8,146 +8,147 @@ loop.store = loop.store || {};
 loop.store.createStore = function () {
   "use strict";
 
-  var baseStorePrototype = { 
+  var baseStorePrototype = {
     __registerActions: function __registerActions(actions) {
       // check that store methods are implemented
       actions.forEach(function (handler) {
         if (typeof this[handler] !== "function") {
-          throw new Error("Store should implement an action handler for " + 
-          handler);}}, 
-
-      this);
-      this.dispatcher.register(this, actions);}, 
-
+          throw new Error("Store should implement an action handler for " +
+          handler);
+        }
+      }, this);
+      this.dispatcher.register(this, actions);
+    },
 
     /**
-     * Proxy helper for dispatching an action from this store.
-     *
-     * @param  {sharedAction.Action} action The action to dispatch.
-     */
+        * Proxy helper for dispatching an action from this store.
+        *
+        * @param  {sharedAction.Action} action The action to dispatch.
+        */
     dispatchAction: function dispatchAction(action) {
-      this.dispatcher.dispatch(action);}, 
-
+      this.dispatcher.dispatch(action);
+    },
 
     /**
-     * Returns current store state. You can request a given state property by
-     * providing the `key` argument.
-     *
-     * @param  {String|undefined} key An optional state property name.
-     * @return {Mixed}
-     */
+        * Returns current store state. You can request a given state property by
+        * providing the `key` argument.
+        *
+        * @param  {String|undefined} key An optional state property name.
+        * @return {Mixed}
+        */
     getStoreState: function getStoreState(key) {
-      return key ? this._storeState[key] : this._storeState;}, 
-
+      return key ? this._storeState[key] : this._storeState;
+    },
 
     /**
-     * Updates store state and trigger a global "change" event, plus one for
-     * each provided newState property.
-     *
-     * @param {Object} newState The new store state object.
-     */
+        * Updates store state and trigger a global "change" event, plus one for
+        * each provided newState property.
+        *
+        * @param {Object} newState The new store state object.
+        */
     setStoreState: function setStoreState(newState) {
       Object.keys(newState).forEach(function (key) {
         this._storeState[key] = newState[key];
-        this.trigger("change:" + key);}.
-      bind(this));
-      this.trigger("change");}, 
-
+        this.trigger("change:" + key);
+      }.bind(this));
+      this.trigger("change");
+    },
 
     /**
-     * Resets the store state to the initially defined state.
-     */
+        * Resets the store state to the initially defined state.
+        */
     resetStoreState: function resetStoreState() {
       if (typeof this.getInitialStoreState === "function") {
-        this._storeState = this.getInitialStoreState();} else 
-      {
-        this._storeState = {};}} };
-
-
+        this._storeState = this.getInitialStoreState();
+      } else {
+        this._storeState = {};
+      }
+    } };
 
 
   /**
-   * Creates a new Store constructor.
-   *
-   * @param  {Object}   storeProto The store prototype.
-   * @return {Function}            A store constructor.
-   */
+          * Creates a new Store constructor.
+          *
+          * @param  {Object}   storeProto The store prototype.
+          * @return {Function}            A store constructor.
+          */
   function createStore(storeProto) {
     var BaseStore = function BaseStore(dispatcher, options) {
       options = options || {};
 
       if (!dispatcher) {
-        throw new Error("Missing required dispatcher");}
-
+        throw new Error("Missing required dispatcher");
+      }
       this.dispatcher = dispatcher;
       if (Array.isArray(this.actions)) {
-        this.__registerActions(this.actions);}
-
+        this.__registerActions(this.actions);
+      }
 
       if (typeof this.initialize === "function") {
-        this.initialize(options);}
-
+        this.initialize(options);
+      }
 
       if (typeof this.getInitialStoreState === "function") {
-        this._storeState = this.getInitialStoreState();} else 
-      {
-        this._storeState = {};}};
-
-
+        this._storeState = this.getInitialStoreState();
+      } else {
+        this._storeState = {};
+      }
+    };
     BaseStore.prototype = _.extend({}, // destination object
-    Backbone.Events, 
-    baseStorePrototype, 
+    Backbone.Events,
+    baseStorePrototype,
     storeProto);
-    return BaseStore;}
+    return BaseStore;
+  }
 
-
-  return createStore;}();
-
+  return createStore;
+}();
 
 /**
- * Store mixin generator. Usage:
- *
- *     StoreMixin.register({roomStore: new RoomStore(…)});
- *     var Comp = React.createClass({
- *       mixins: [StoreMixin("roomStore")]
- *     });
- */
+      * Store mixin generator. Usage:
+      *
+      *     StoreMixin.register({roomStore: new RoomStore(…)});
+      *     var Comp = React.createClass({
+      *       mixins: [StoreMixin("roomStore")]
+      *     });
+      */
 loop.store.StoreMixin = function () {
   "use strict";
 
   var _stores = {};
   function StoreMixin(id) {
-    return { 
+    return {
       getStore: function getStore() {
         // Allows the ui-showcase to override the specified store.
         if (id in this.props) {
-          return this.props[id];}
-
+          return this.props[id];
+        }
         if (!_stores[id]) {
-          throw new Error("Unavailable store " + id);}
-
-        return _stores[id];}, 
-
+          throw new Error("Unavailable store " + id);
+        }
+        return _stores[id];
+      },
       getStoreState: function getStoreState() {
-        return this.getStore().getStoreState();}, 
-
+        return this.getStore().getStoreState();
+      },
       componentWillMount: function componentWillMount() {
         this.getStore().on("change", function () {
-          this.setState(this.getStoreState());}, 
-        this);}, 
-
+          this.setState(this.getStoreState());
+        }, this);
+      },
       componentWillUnmount: function componentWillUnmount() {
-        this.getStore().off("change", null, this);} };}
+        this.getStore().off("change", null, this);
+      } };
 
-
-
+  }
   StoreMixin.register = function (stores) {
-    _.extend(_stores, stores);};
-
+    _.extend(_stores, stores);
+  };
   /**
-   * Used for test purposes, to clear the list of registered stores.
-   */
+      * Used for test purposes, to clear the list of registered stores.
+      */
   StoreMixin.clearRegisteredStores = function () {
-    _stores = {};};
-
-  return StoreMixin;}();
+    _stores = {};
+  };
+  return StoreMixin;
+}();

@@ -12,6 +12,7 @@ pref("loop.gettingStarted.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSI
 pref("loop.gettingStarted.resumeOnFirstJoin", false);
 pref("loop.legal.ToS_url", "https://www.mozilla.org/about/legal/terms/firefox-hello/");
 pref("loop.legal.privacy_url", "https://www.mozilla.org/privacy/firefox-hello/");
+pref("loop.legal.loop_deprecate_url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/hello-status");
 pref("loop.do_not_disturb", false);
 pref("loop.retry_delay.start", 60000);
 pref("loop.retry_delay.limit", 300000);

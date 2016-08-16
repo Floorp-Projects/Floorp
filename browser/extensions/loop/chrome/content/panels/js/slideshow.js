@@ -7,12 +7,12 @@ loop.slideshow = function (mozL10n) {
   "use strict";
 
   /**
-   * Slideshow initialisation.
-   */
+                 * Slideshow initialisation.
+                 */
   function init() {
     var requests = [
-    ["GetAllStrings"], 
-    ["GetLocale"], 
+    ["GetAllStrings"],
+    ["GetLocale"],
     ["GetPluralRule"]];
 
     return loop.requestMulti.apply(null, requests).then(function (results) {
@@ -24,18 +24,18 @@ loop.slideshow = function (mozL10n) {
       var stringBundle = results[requestIdx];
       var locale = results[++requestIdx];
       var pluralRule = results[++requestIdx];
-      mozL10n.initialize({ 
-        locale: locale, 
-        pluralRule: pluralRule, 
+      mozL10n.initialize({
+        locale: locale,
+        pluralRule: pluralRule,
         getStrings: function getStrings(key) {
           if (!(key in stringBundle)) {
-            return "{ textContent: '' }";}
+            return "{ textContent: '' }";
+          }
 
+          return JSON.stringify({
+            textContent: stringBundle[key] });
 
-          return JSON.stringify({ 
-            textContent: stringBundle[key] });} });
-
-
+        } });
 
 
       document.documentElement.setAttribute("lang", mozL10n.language.code);
@@ -43,49 +43,49 @@ loop.slideshow = function (mozL10n) {
       document.body.setAttribute("platform", loop.shared.utils.getPlatform());
       var clientSuperShortname = mozL10n.get("clientSuperShortname");
       var data = [
-      { 
-        id: "slide1", 
-        imageClass: "slide1-image", 
-        title: mozL10n.get("fte_slide_1_title"), 
-        text: mozL10n.get("fte_slide_1_copy", { 
-          clientShortname2: mozL10n.get("clientShortname2") }) }, 
+      {
+        id: "slide1",
+        imageClass: "slide1-image",
+        title: mozL10n.get("fte_slide_1_title"),
+        text: mozL10n.get("fte_slide_1_copy", {
+          clientShortname2: mozL10n.get("clientShortname2") }) },
 
 
-      { 
-        id: "slide2", 
-        imageClass: "slide2-image", 
-        title: mozL10n.get("fte_slide_2_title2"), 
-        text: mozL10n.get("fte_slide_2_copy2", { 
-          clientShortname2: mozL10n.get("clientShortname2") }) }, 
+      {
+        id: "slide2",
+        imageClass: "slide2-image",
+        title: mozL10n.get("fte_slide_2_title2"),
+        text: mozL10n.get("fte_slide_2_copy2", {
+          clientShortname2: mozL10n.get("clientShortname2") }) },
 
 
-      { 
-        id: "slide3", 
-        imageClass: "slide3-image", 
-        title: mozL10n.get("fte_slide_3_title"), 
-        text: mozL10n.get("fte_slide_3_copy", { 
-          clientSuperShortname: clientSuperShortname }) }, 
+      {
+        id: "slide3",
+        imageClass: "slide3-image",
+        title: mozL10n.get("fte_slide_3_title"),
+        text: mozL10n.get("fte_slide_3_copy", {
+          clientSuperShortname: clientSuperShortname }) },
 
 
-      { 
-        id: "slide4", 
-        imageClass: "slide4-image", 
-        title: mozL10n.get("fte_slide_4_title", { 
-          clientSuperShortname: clientSuperShortname }), 
+      {
+        id: "slide4",
+        imageClass: "slide4-image",
+        title: mozL10n.get("fte_slide_4_title", {
+          clientSuperShortname: clientSuperShortname }),
 
-        text: mozL10n.get("fte_slide_4_copy", { 
+        text: mozL10n.get("fte_slide_4_copy", {
           brandShortname: mozL10n.get("brandShortname") }) }];
 
 
 
 
-      loop.SimpleSlideshow.init("#main", data);});}
+      loop.SimpleSlideshow.init("#main", data);
+    });
+  }
 
+  return {
+    init: init };
 
-
-  return { 
-    init: init };}(
-
-document.mozL10n);
+}(document.mozL10n);
 
 document.addEventListener("DOMContentLoaded", loop.slideshow.init);

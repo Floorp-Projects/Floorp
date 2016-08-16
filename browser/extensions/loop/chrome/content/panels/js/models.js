@@ -8,25 +8,27 @@ loop.panel.models = function () {
   "use strict";
 
   /**
-   * Notification model.
-   */
-  var NotificationModel = Backbone.Model.extend({ 
-    defaults: { 
-      details: "", 
-      detailsButtonLabel: "", 
-      detailsButtonCallback: null, 
-      level: "info", 
+                 * Notification model.
+                 */
+  var NotificationModel = Backbone.Model.extend({
+    defaults: {
+      details: "",
+      detailsButtonLabel: "",
+      detailsButtonCallback: null,
+      level: "info",
       message: "" } });
 
 
 
   /**
-   * Notification collection
-   */
-  var NotificationCollection = Backbone.Collection.extend({ 
+                         * Notification collection
+                         */
+  var NotificationCollection = Backbone.Collection.extend({
     model: NotificationModel });
 
 
-  return { 
-    NotificationCollection: NotificationCollection, 
-    NotificationModel: NotificationModel };}();
+  return {
+    NotificationCollection: NotificationCollection,
+    NotificationModel: NotificationModel };
+
+}();

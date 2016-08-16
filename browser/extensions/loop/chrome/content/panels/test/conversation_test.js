@@ -9,70 +9,73 @@ describe("loop.conversation", function () {
   var expect = chai.expect;
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
-  var fakeWindow, sandbox, setLoopPrefStub, mozL10nGet, 
-  remoteCursorStore, dispatcher, requestStubs;
+  var fakeWindow, sandbox, setLoopPrefStub, mozL10nGet,
+  remoteCursorStore, dispatcher, requestStubs, clock;
 
   beforeEach(function () {
     sandbox = LoopMochaUtils.createSandbox();
+    // This ensures that the timers in ConversationToolbar are stubbed, as the
+    // get called when the AppControllerView is mounted.
+    clock = sandbox.useFakeTimers();
     setLoopPrefStub = sandbox.stub();
 
-    LoopMochaUtils.stubLoopRequest(requestStubs = { 
-      GetDoNotDisturb: function GetDoNotDisturb() {return true;}, 
+    LoopMochaUtils.stubLoopRequest(requestStubs = {
+      GetDoNotDisturb: function GetDoNotDisturb() {return true;},
       GetAllStrings: function GetAllStrings() {
-        return JSON.stringify({ textContent: "fakeText" });}, 
-
+        return JSON.stringify({ textContent: "fakeText" });
+      },
       GetLocale: function GetLocale() {
-        return "en-US";}, 
-
-      SetLoopPref: setLoopPrefStub, 
+        return "en-US";
+      },
+      SetLoopPref: setLoopPrefStub,
       GetLoopPref: function GetLoopPref(prefName) {
         switch (prefName) {
           case "debug.sdk":
           case "debug.dispatcher":
             return false;
           default:
-            return "http://fake";}}, 
+            return "http://fake";}
 
-
+      },
       GetAllConstants: function GetAllConstants() {
-        return { 
-          LOOP_SESSION_TYPE: { 
-            GUEST: 1, 
-            FXA: 2 }, 
+        return {
+          LOOP_SESSION_TYPE: {
+            GUEST: 1,
+            FXA: 2 },
 
-          LOOP_MAU_TYPE: { 
-            OPEN_PANEL: 0, 
-            OPEN_CONVERSATION: 1, 
-            ROOM_OPEN: 2, 
-            ROOM_SHARE: 3, 
-            ROOM_DELETE: 4 } };}, 
+          LOOP_MAU_TYPE: {
+            OPEN_PANEL: 0,
+            OPEN_CONVERSATION: 1,
+            ROOM_OPEN: 2,
+            ROOM_SHARE: 3,
+            ROOM_DELETE: 4 } };
 
 
-
-      EnsureRegistered: sinon.stub(), 
+      },
+      EnsureRegistered: sinon.stub(),
       GetAppVersionInfo: function GetAppVersionInfo() {
-        return { 
-          version: "42", 
-          channel: "test", 
-          platform: "test" };}, 
+        return {
+          version: "42",
+          channel: "test",
+          platform: "test" };
 
-
+      },
       GetAudioBlob: sinon.spy(function () {
-        return new Blob([new ArrayBuffer(10)], { type: "audio/ogg" });}), 
-
+        return new Blob([new ArrayBuffer(10)], { type: "audio/ogg" });
+      }),
       GetSelectedTabMetadata: function GetSelectedTabMetadata() {
-        return {};}, 
-
+        return {};
+      },
       GetConversationWindowData: function GetConversationWindowData() {
-        return {};}, 
-
+        return {};
+      },
       TelemetryAddValue: sinon.stub() });
 
 
-    fakeWindow = { 
-      close: sinon.stub(), 
-      document: {}, 
-      addEventListener: function addEventListener() {}, 
+    fakeWindow = {
+      close: sinon.stub(),
+      document: {},
+      addEventListener: function addEventListener() {},
       removeEventListener: function removeEventListener() {} };
 
     loop.shared.mixins.setRootObject(fakeWindow);
@@ -80,27 +83,28 @@ describe("loop.conversation", function () {
     // XXX These stubs should be hoisted in a common file
     // Bug 1040968
     mozL10nGet = sandbox.stub(document.mozL10n, "get", function (x) {
-      return x;});
-
-    document.mozL10n.initialize({ 
-      getStrings: function getStrings() {return JSON.stringify({ textContent: "fakeText" });}, 
+      return x;
+    });
+    document.mozL10n.initialize({
+      getStrings: function getStrings() {return JSON.stringify({ textContent: "fakeText" });},
       locale: "en_US" });
 
 
     dispatcher = new loop.Dispatcher();
 
-    remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, { 
+    remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, {
       sdkDriver: {} });
 
 
-    loop.store.StoreMixin.register({ remoteCursorStore: remoteCursorStore });});
-
+    loop.store.StoreMixin.register({ remoteCursorStore: remoteCursorStore });
+  });
 
   afterEach(function () {
     loop.shared.mixins.setRootObject(window);
+    clock.restore();
     sandbox.restore();
-    LoopMochaUtils.restore();});
-
+    LoopMochaUtils.restore();
+  });
 
   describe("#init", function () {
     var OTRestore;
@@ -110,165 +114,165 @@ describe("loop.conversation", function () {
 
       sandbox.stub(loop.Dispatcher.prototype, "dispatch");
 
-      sandbox.stub(loop.shared.utils, 
-      "locationData").returns({ 
-        hash: "#42", 
+      sandbox.stub(loop.shared.utils,
+      "locationData").returns({
+        hash: "#42",
         pathname: "/" });
 
 
       OTRestore = window.OT;
-      window.OT = { 
-        overrideGuidStorage: sinon.stub() };});
+      window.OT = {
+        overrideGuidStorage: sinon.stub() };
 
-
+    });
 
     afterEach(function () {
-      window.OT = OTRestore;});
-
+      window.OT = OTRestore;
+    });
 
     it("should initialize L10n", function () {
       loop.conversation.init();
 
       sinon.assert.calledOnce(document.mozL10n.initialize);
-      sinon.assert.calledWith(document.mozL10n.initialize, sinon.match({ locale: "en-US" }));});
-
+      sinon.assert.calledWith(document.mozL10n.initialize, sinon.match({ locale: "en-US" }));
+    });
 
     it("should create the AppControllerView", function () {
       loop.conversation.init();
 
       sinon.assert.calledOnce(ReactDOM.render);
-      sinon.assert.calledWith(ReactDOM.render, 
+      sinon.assert.calledWith(ReactDOM.render,
       sinon.match(function (value) {
-        return TestUtils.isCompositeComponentElement(value, 
-        loop.conversation.AppControllerView);}));});
-
-
+        return TestUtils.isCompositeComponentElement(value,
+        loop.conversation.AppControllerView);
+      }));
+    });
 
     it("should trigger a getWindowData action", function () {
       loop.conversation.init();
 
       sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
-      sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch, 
-      new loop.shared.actions.GetWindowData({ 
-        windowId: "42" }));});
+      sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
+      new loop.shared.actions.GetWindowData({
+        windowId: "42" }));
 
-
+    });
 
     it("should log a telemetry event when opening the conversation window", function () {
       var constants = requestStubs.GetAllConstants();
       loop.conversation.init();
 
       sinon.assert.calledOnce(requestStubs["TelemetryAddValue"]);
-      sinon.assert.calledWithExactly(requestStubs["TelemetryAddValue"], 
-      "LOOP_ACTIVITY_COUNTER", constants.LOOP_MAU_TYPE.OPEN_CONVERSATION);});});
-
-
+      sinon.assert.calledWithExactly(requestStubs["TelemetryAddValue"],
+      "LOOP_ACTIVITY_COUNTER", constants.LOOP_MAU_TYPE.OPEN_CONVERSATION);
+    });
+  });
 
   describe("AppControllerView", function () {
-    var activeRoomStore, 
-    ccView, 
-    addRemoteCursorStub, 
+    var activeRoomStore,
+    ccView,
+    addRemoteCursorStub,
     clickRemoteCursorStub;
-    var conversationAppStore, 
+    var conversationAppStore,
     roomStore;
     var ROOM_STATES = loop.store.ROOM_STATES;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
-      React.createElement(loop.conversation.AppControllerView, { 
-        cursorStore: remoteCursorStore, 
-        dispatcher: dispatcher, 
-        roomStore: roomStore }));}
+      React.createElement(loop.conversation.AppControllerView, {
+        cursorStore: remoteCursorStore,
+        dispatcher: dispatcher,
+        roomStore: roomStore }));
 
-
+    }
 
     beforeEach(function () {
-      activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, { 
-        mozLoop: {}, 
+      activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
+        mozLoop: {},
         sdkDriver: {} });
 
-      roomStore = new loop.store.RoomStore(dispatcher, { 
-        activeRoomStore: activeRoomStore, 
+      roomStore = new loop.store.RoomStore(dispatcher, {
+        activeRoomStore: activeRoomStore,
         constants: {} });
 
-      remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, { 
+      remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, {
         sdkDriver: {} });
 
-      conversationAppStore = new loop.store.ConversationAppStore(dispatcher, { 
-        activeRoomStore: activeRoomStore, 
-        feedbackPeriod: 42, 
-        feedbackTimestamp: 42, 
+      conversationAppStore = new loop.store.ConversationAppStore(dispatcher, {
+        activeRoomStore: activeRoomStore,
+        feedbackPeriod: 42,
+        feedbackTimestamp: 42,
         facebookEnabled: false });
 
 
-      loop.store.StoreMixin.register({ 
+      loop.store.StoreMixin.register({
         conversationAppStore: conversationAppStore });
 
 
       addRemoteCursorStub = sandbox.stub();
       clickRemoteCursorStub = sandbox.stub();
-      LoopMochaUtils.stubLoopRequest({ 
-        AddRemoteCursorOverlay: addRemoteCursorStub, 
+      LoopMochaUtils.stubLoopRequest({
+        AddRemoteCursorOverlay: addRemoteCursorStub,
         ClickRemoteCursor: clickRemoteCursorStub });
 
 
-      loop.config = { 
-        tilesIframeUrl: null, 
+      loop.config = {
+        tilesIframeUrl: null,
         tilesSupportUrl: null };
 
 
-      sinon.stub(dispatcher, "dispatch");});
-
+      sinon.stub(dispatcher, "dispatch");
+    });
 
     afterEach(function () {
-      ccView = undefined;});
-
+      ccView = undefined;
+    });
 
     it("should request AddRemoteCursorOverlay when cursor position changes", function () {
 
       mountTestComponent();
-      remoteCursorStore.setStoreState({ 
-        "remoteCursorPosition": { 
-          "ratioX": 10, 
+      remoteCursorStore.setStoreState({
+        "remoteCursorPosition": {
+          "ratioX": 10,
           "ratioY": 10 } });
 
 
 
-      sinon.assert.calledOnce(addRemoteCursorStub);});
-
+      sinon.assert.calledOnce(addRemoteCursorStub);
+    });
 
     it("should NOT request AddRemoteCursorOverlay when cursor position DOES NOT changes", function () {
 
       mountTestComponent();
-      remoteCursorStore.setStoreState({ 
-        "realVideoSize": { 
-          "height": 400, 
+      remoteCursorStore.setStoreState({
+        "realVideoSize": {
+          "height": 400,
           "width": 600 } });
 
 
 
-      sinon.assert.notCalled(addRemoteCursorStub);});
-
+      sinon.assert.notCalled(addRemoteCursorStub);
+    });
 
     it("should request ClickRemoteCursor when click event detected", function () {
 
       mountTestComponent();
-      remoteCursorStore.setStoreState({ 
+      remoteCursorStore.setStoreState({
         "remoteCursorClick": true });
 
 
-      sinon.assert.calledOnce(clickRemoteCursorStub);});
-
+      sinon.assert.calledOnce(clickRemoteCursorStub);
+    });
 
     it("should NOT request ClickRemoteCursor when reset click on store", function () {
 
       mountTestComponent();
-      remoteCursorStore.setStoreState({ 
+      remoteCursorStore.setStoreState({
         "remoteCursorClick": false });
 
 
-      sinon.assert.notCalled(clickRemoteCursorStub);});
-
+      sinon.assert.notCalled(clickRemoteCursorStub);
+    });
 
     it("should display the RoomView for rooms", function () {
       conversationAppStore.setStoreState({ windowType: "room" });
@@ -276,56 +280,56 @@ describe("loop.conversation", function () {
 
       ccView = mountTestComponent();
 
-      var desktopRoom = TestUtils.findRenderedComponentWithType(ccView, 
+      var desktopRoom = TestUtils.findRenderedComponentWithType(ccView,
       loop.roomViews.DesktopRoomConversationView);
 
-      expect(desktopRoom.props.facebookEnabled).to.eql(false);});
+      expect(desktopRoom.props.facebookEnabled).to.eql(false);
+    });
 
-
-    it("should pass the correct value of facebookEnabled to DesktopRoomConversationView", 
+    it("should pass the correct value of facebookEnabled to DesktopRoomConversationView",
     function () {
-      conversationAppStore.setStoreState({ 
-        windowType: "room", 
+      conversationAppStore.setStoreState({
+        windowType: "room",
         facebookEnabled: true });
 
       activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
       ccView = mountTestComponent();
 
-      var desktopRoom = TestUtils.findRenderedComponentWithType(ccView, 
+      var desktopRoom = TestUtils.findRenderedComponentWithType(ccView,
       loop.roomViews.DesktopRoomConversationView);
 
-      expect(desktopRoom.props.facebookEnabled).to.eql(true);});
-
+      expect(desktopRoom.props.facebookEnabled).to.eql(true);
+    });
 
     it("should display the RoomFailureView for failures", function () {
-      conversationAppStore.setStoreState({ 
-        outgoing: false, 
+      conversationAppStore.setStoreState({
+        outgoing: false,
         windowType: "failed" });
 
 
       ccView = mountTestComponent();
 
-      TestUtils.findRenderedComponentWithType(ccView, 
-      loop.roomViews.RoomFailureView);});
-
+      TestUtils.findRenderedComponentWithType(ccView,
+      loop.roomViews.RoomFailureView);
+    });
 
     it("should set the correct title when rendering feedback view", function () {
       conversationAppStore.setStoreState({ showFeedbackForm: true });
 
       ccView = mountTestComponent();
 
-      sinon.assert.calledWithExactly(mozL10nGet, "conversation_has_ended");});
+      sinon.assert.calledWithExactly(mozL10nGet, "conversation_has_ended");
+    });
 
-
-    it("should render FeedbackView if showFeedbackForm state is true", 
+    it("should render FeedbackView if showFeedbackForm state is true",
     function () {
       conversationAppStore.setStoreState({ showFeedbackForm: true });
 
       ccView = mountTestComponent();
 
-      TestUtils.findRenderedComponentWithType(ccView, FeedbackView);});
-
+      TestUtils.findRenderedComponentWithType(ccView, FeedbackView);
+    });
 
     it("should dispatch LeaveConversation when handleCallTerminated is called", function () {
       ccView = mountTestComponent();
@@ -333,5 +337,8 @@ describe("loop.conversation", function () {
       ccView.handleCallTerminated();
 
       sinon.assert.calledOnce(dispatcher.dispatch);
-      sinon.assert.calledWithExactly(dispatcher.dispatch, 
-      new sharedActions.LeaveConversation());});});});
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+      new sharedActions.LeaveConversation());
+    });
+  });
+});
