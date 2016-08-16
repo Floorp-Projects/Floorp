@@ -20,7 +20,7 @@ public:
                       const nsACString& aFileExt,
                       bool* aFound);
 
-    virtual MOZ_MUST_USE nsresult
+    virtual nsresult
     OSProtocolHandlerExists(const char* aScheme,
                             bool* aExists);
 
