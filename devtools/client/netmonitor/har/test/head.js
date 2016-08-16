@@ -6,8 +6,6 @@
 /* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
 /* import-globals-from ../../test/head.js */
 
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-
 // Load the NetMonitor head.js file to share its API.
 var netMonitorHead = "chrome://mochitests/content/browser/devtools/client/netmonitor/test/head.js";
 Services.scriptloader.loadSubScript(netMonitorHead, this);
