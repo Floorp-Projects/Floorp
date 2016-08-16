@@ -94,10 +94,6 @@ ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
 DEFINES += -DMOZ_SHARED_MOZGLUE=1
 endif
 
-ifneq (,$(filter rtsp,$(NECKO_PROTOCOLS)))
-DEFINES += -DMOZ_RTSP
-endif
-
 DEFINES += -DMOZ_ICU_VERSION=$(MOZ_ICU_VERSION)
 ifdef MOZ_SYSTEM_ICU
 DEFINES += -DMOZ_SYSTEM_ICU
