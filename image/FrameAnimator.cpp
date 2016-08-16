@@ -7,7 +7,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
-#include "mozilla/NotNull.h"
 #include "imgIContainer.h"
 #include "LookupResult.h"
 #include "MainThreadUtils.h"
@@ -302,9 +301,7 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
 
   // If we have a composited version of this frame, return that.
   if (mLastCompositedFrameIndex == int32_t(aFrameNum)) {
-    RefPtr<ISurfaceProvider> provider =
-      new SimpleSurfaceProvider(WrapNotNull(mCompositingFrame.get()));
-    return LookupResult(Move(provider), MatchType::EXACT);
+    return LookupResult(mCompositingFrame->DrawableRef(), MatchType::EXACT);
   }
 
   // Otherwise return the raw frame. DoBlend is required to ensure that we only
@@ -314,9 +311,7 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
                                           aFrameNum));
-  MOZ_ASSERT(!result ||
-             !result.Provider()->DrawableRef() ||
-             !result.Provider()->DrawableRef()->GetIsPaletted(),
+  MOZ_ASSERT(!result || !result.DrawableRef()->GetIsPaletted(),
              "About to return a paletted frame");
   return result;
 }
@@ -386,18 +381,8 @@ FrameAnimator::GetRawFrame(uint32_t aFrameNum) const
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
                                           aFrameNum));
-  if (!result) {
-    return RawAccessFrameRef();
-  }
-
-  DrawableFrameRef drawableRef = result.Provider()->DrawableRef();
-  if (!drawableRef) {
-    MOZ_ASSERT_UNREACHABLE("Animated image frames should be locked and "
-                           "in-memory; how did we lose one?");
-    return RawAccessFrameRef();
-  }
-
-  return drawableRef->RawAccessRef();
+  return result ? result.DrawableRef()->RawAccessRef()
+                : RawAccessFrameRef();
 }
 
 //******************************************************************************
