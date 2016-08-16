@@ -483,6 +483,9 @@ CssComputedView.prototype = {
           onItem: (propView) => {
             propView.refresh();
           },
+          onCancel: () => {
+            deferred.reject("_refreshProcess of computed view cancelled");
+          },
           onDone: () => {
             this._refreshProcess = null;
             this.noResults.hidden = this.numVisibleProperties > 0;

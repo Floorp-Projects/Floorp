@@ -28,9 +28,11 @@ var test = Task.async(function* () {
   ok(scope, "Should get the current function's scope.");
 
   let proxy;
-  [...scope].forEach(function([name, value]) {
-    if(name === "proxy") proxy = value;
-  });
+  for (let [name, value] of scope) {
+    if (name === "proxy") {
+      proxy = value;
+    }
+  }
   ok(proxy, "Should have found the proxy variable");
 
   info("Expanding variable 'proxy'");
@@ -52,16 +54,16 @@ var test = Task.async(function* () {
       }
     } else {
       is(property, "<handler>", "There shouldn't be properties other than <target> and <handler>");
-      for(let [subprop, subdata] of data) if(subprop === "name") {
-        is(subdata.value, "handler", "The value of '<handler>' should be the [[ProxyHandler]]");
-        foundHandler = true;
+      for (let [subprop, subdata] of data) {
+        if(subprop === "name") {
+          is(subdata.value, "handler", "The value of '<handler>' should be the [[ProxyHandler]]");
+          foundHandler = true;
+        }
       }
     }
   }
   ok(foundTarget, "Should have found the '<target>' property containing the [[ProxyTarget]]");
   ok(foundHandler, "Should have found the '<handler>' property containing the [[ProxyHandler]]");
-
-  debugger;
 
   resumeDebuggerThenCloseAndFinish(panel);
 });

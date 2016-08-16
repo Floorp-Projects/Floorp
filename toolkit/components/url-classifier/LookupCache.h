@@ -108,10 +108,13 @@ public:
   // This will Clear() the passed arrays when done.
   nsresult Build(AddPrefixArray& aAddPrefixes,
                  AddCompleteArray& aAddCompletes);
+  nsresult AddCompletionsToCache(AddCompleteArray& aAddCompletes);
   nsresult GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes);
-  void ClearCompleteCache();
+  void ClearUpdatedCompletions();
+  void ClearCache();
 
 #if DEBUG
+  void DumpCache();
   void Dump();
 #endif
   nsresult WriteFile();
@@ -122,28 +125,22 @@ public:
 private:
   void ClearAll();
   nsresult Reset();
-  void UpdateHeader();
-  nsresult ReadHeader(nsIInputStream* aInputStream);
-  nsresult ReadCompletions(nsIInputStream* aInputStream);
-  nsresult EnsureSizeConsistent();
+  nsresult ReadCompletions();
   nsresult LoadPrefixSet();
+  nsresult LoadCompletions();
   // Construct a Prefix Set with known prefixes.
   // This will Clear() aAddPrefixes when done.
   nsresult ConstructPrefixSet(AddPrefixArray& aAddPrefixes);
 
-  struct Header {
-    uint32_t magic;
-    uint32_t version;
-    uint32_t numCompletions;
-  };
-  Header mHeader;
-
   bool mPrimed;
   nsCString mTableName;
   nsCOMPtr<nsIFile> mStoreDirectory;
-  CompletionArray mCompletions;
   // Set of prefixes known to be in the database
   RefPtr<nsUrlClassifierPrefixSet> mPrefixSet;
+  // Full length hashes obtained in update request
+  CompletionArray mUpdateCompletions;
+  // Full length hashes obtained in gethash request
+  CompletionArray mGetHashCache;
 };
 
 } // namespace safebrowsing

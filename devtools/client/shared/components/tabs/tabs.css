@@ -35,7 +35,6 @@
   height: calc(100% - 24px);
 }
 
-.tabs .tab-panel-box,
 .tabs .tab-panel {
   height: 100%;
 }
