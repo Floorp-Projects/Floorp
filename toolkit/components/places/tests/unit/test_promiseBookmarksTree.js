@@ -135,7 +135,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
         compare_prop_to_value("tags", aNode.tags.replace(/, /g, ","), false);
 
       if (aNode.icon) {
-        let nodeIconData = aNode.icon.replace("moz-anno:favicon:","");
+        let nodeIconData = aNode.icon.replace("moz-anno:favicon:", "");
         compare_prop_to_value("iconuri", nodeIconData);
       }
       else {

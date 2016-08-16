@@ -60,6 +60,7 @@ function days_for_x_months_ago(aNowObj, aMonths) {
 var nowObj = new Date();
 // This test relies on en-US locale
 // Offset is number of days
+/* eslint-disable comma-spacing */
 var containers = [
   { label: "Today"               , offset: 0                                 , visible: true },
   { label: "Yesterday"           , offset: -1                                , visible: true },
@@ -72,6 +73,7 @@ var containers = [
   { label: ""                    , offset: -days_for_x_months_ago(nowObj, 4) , visible: true },
   { label: "Older than 6 months" , offset: -days_for_x_months_ago(nowObj, 5) , visible: true },
 ];
+/* eslint-enable comma-spacing */
 
 var visibleContainers = containers.filter(
   function(aContainer) { return aContainer.visible });

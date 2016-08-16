@@ -159,7 +159,7 @@ ChildManager._get = function(map, key) {
   let result = map.get(key);
   if (!result) {
     result = new ChildManager(map, key);
-    map.set(key ,result);
+    map.set(key, result);
   }
   return result;
 };

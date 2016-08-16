@@ -89,14 +89,14 @@ function test() {
     optionsURL: CHROMEROOT + "options.xul",
     optionsType: AddonManager.OPTIONS_TYPE_INLINE,
     operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_DISABLE,
-  },{
+  }, {
     id: "inlinesettings3@tests.mozilla.org",
     name: "Inline Settings (More Options)",
     description: "Tests for option types introduced after Mozilla 7.0",
     version: "1",
     optionsURL: CHROMEROOT + "more_options.xul",
     optionsType: AddonManager.OPTIONS_TYPE_INLINE
-  },{
+  }, {
     id: "noninlinesettings@tests.mozilla.org",
     name: "Non-Inline Settings",
     version: "1",

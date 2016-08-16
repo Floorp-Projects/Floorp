@@ -42,7 +42,7 @@ function init(aEvent)
   let version = Services.appinfo.version;
   if (/a\d+$/.test(version)) {
     let buildID = Services.appinfo.appBuildID;
-    let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) + "-" + buildID.slice(6,8);
+    let buildDate = buildID.slice(0, 4) + "-" + buildID.slice(4, 6) + "-" + buildID.slice(6, 8);
     document.getElementById("version").textContent += " (" + buildDate + ")";
     document.getElementById("experimental").hidden = false;
     document.getElementById("communityDesc").hidden = true;

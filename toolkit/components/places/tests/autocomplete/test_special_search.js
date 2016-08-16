@@ -50,9 +50,9 @@ addPageBook(11, 1, 1, [1]); // title and url
 
 // Remove pages from history to treat them as unvisited, so pages that do have
 // visits are 0,1,2,3,5,10
-removePages([4,6,7,8,9,11]);
+removePages([4, 6, 7, 8, 9, 11]);
 // Set some pages as typed
-markTyped([0,10], 0);
+markTyped([0, 10], 0);
 markTyped([3], 1);
 
 // Provide for each test: description; search terms; array of gPages indices of
@@ -60,85 +60,85 @@ markTyped([3], 1);
 var gTests = [
   // Test restricting searches
   ["0: History restrict",
-   "^", [0,1,2,3,5,10]],
+   "^", [0, 1, 2, 3, 5, 10]],
   ["1: Star restrict",
-   "*", [4,5,6,7,8,9,10,11]],
+   "*", [4, 5, 6, 7, 8, 9, 10, 11]],
   ["2: Tag restrict",
-   "+", [8,9,10,11]],
+   "+", [8, 9, 10, 11]],
 
   // Test specials as any word position
   ["3: Special as first word",
-   "^ foo bar", [1,2,3,5,10]],
+   "^ foo bar", [1, 2, 3, 5, 10]],
   ["4: Special as middle word",
-   "foo ^ bar", [1,2,3,5,10]],
+   "foo ^ bar", [1, 2, 3, 5, 10]],
   ["5: Special as last word",
-   "foo bar ^", [1,2,3,5,10]],
+   "foo bar ^", [1, 2, 3, 5, 10]],
 
   // Test restricting and matching searches with a term
   ["6.1: foo ^ -> history",
-   "foo ^", [1,2,3,5,10]],
+   "foo ^", [1, 2, 3, 5, 10]],
   ["6.2: foo | -> history (change pref)",
-   "foo |", [1,2,3,5,10], () => changeRestrict("history", "|")],
+   "foo |", [1, 2, 3, 5, 10], () => changeRestrict("history", "|")],
   ["7.1: foo * -> is star",
-   "foo *", [5,6,7,8,9,10,11], () => resetRestrict("history")],
+   "foo *", [5, 6, 7, 8, 9, 10, 11], () => resetRestrict("history")],
   ["7.2: foo | -> is star (change pref)",
-   "foo |", [5,6,7,8,9,10,11], () => changeRestrict("bookmark", "|")],
+   "foo |", [5, 6, 7, 8, 9, 10, 11], () => changeRestrict("bookmark", "|")],
   ["8.1: foo # -> in title",
-   "foo #", [1,3,5,7,8,9,10,11], () => resetRestrict("bookmark")],
+   "foo #", [1, 3, 5, 7, 8, 9, 10, 11], () => resetRestrict("bookmark")],
   ["8.2: foo | -> in title (change pref)",
-   "foo |", [1,3,5,7,8,9,10,11], () => changeRestrict("title", "|")],
+   "foo |", [1, 3, 5, 7, 8, 9, 10, 11], () => changeRestrict("title", "|")],
   ["9.1: foo @ -> in url",
-   "foo @", [2,3,6,7,10,11], () => resetRestrict("title")],
+   "foo @", [2, 3, 6, 7, 10, 11], () => resetRestrict("title")],
   ["9.2: foo | -> in url (change pref)",
-   "foo |", [2,3,6,7,10,11], () => changeRestrict("url", "|")],
+   "foo |", [2, 3, 6, 7, 10, 11], () => changeRestrict("url", "|")],
   ["10: foo + -> is tag",
-   "foo +", [8,9,10,11], () => resetRestrict("url")],
+   "foo +", [8, 9, 10, 11], () => resetRestrict("url")],
   ["10.2: foo | -> is tag (change pref)",
-   "foo |", [8,9,10,11], () => changeRestrict("tag", "|")],
+   "foo |", [8, 9, 10, 11], () => changeRestrict("tag", "|")],
   ["10.3: foo ~ -> is typed",
-   "foo ~", [3,10], () => resetRestrict("tag")],
+   "foo ~", [3, 10], () => resetRestrict("tag")],
   ["10.4: foo | -> is typed (change pref)",
-   "foo |", [3,10], () => changeRestrict("typed", "|")],
+   "foo |", [3, 10], () => changeRestrict("typed", "|")],
 
   // Test various pairs of special searches
   ["11: foo ^ * -> history, is star",
-   "foo ^ *", [5,10], () => resetRestrict("typed")],
+   "foo ^ *", [5, 10], () => resetRestrict("typed")],
   ["12: foo ^ # -> history, in title",
-   "foo ^ #", [1,3,5,10]],
+   "foo ^ #", [1, 3, 5, 10]],
   ["13: foo ^ @ -> history, in url",
-   "foo ^ @", [2,3,10]],
+   "foo ^ @", [2, 3, 10]],
   ["14: foo ^ + -> history, is tag",
    "foo ^ +", [10]],
   ["14.1: foo ^ ~ -> history, is typed",
-   "foo ^ ~", [3,10]],
+   "foo ^ ~", [3, 10]],
   ["15: foo * # -> is star, in title",
-   "foo * #", [5,7,8,9,10,11]],
+   "foo * #", [5, 7, 8, 9, 10, 11]],
   ["16: foo * @ -> is star, in url",
-   "foo * @", [6,7,10,11]],
+   "foo * @", [6, 7, 10, 11]],
   ["17: foo * + -> same as +",
-   "foo * +", [8,9,10,11]],
+   "foo * +", [8, 9, 10, 11]],
   ["17.1: foo * ~ -> is star, is typed",
    "foo * ~", [10]],
   ["18: foo # @ -> in title, in url",
-   "foo # @", [3,7,10,11]],
+   "foo # @", [3, 7, 10, 11]],
   ["19: foo # + -> in title, is tag",
-   "foo # +", [8,9,10,11]],
+   "foo # +", [8, 9, 10, 11]],
   ["19.1: foo # ~ -> in title, is typed",
-   "foo # ~", [3,10]],
+   "foo # ~", [3, 10]],
   ["20: foo @ + -> in url, is tag",
-   "foo @ +", [10,11]],
+   "foo @ +", [10, 11]],
   ["20.1: foo @ ~ -> in url, is typed",
-   "foo @ ~", [3,10]],
+   "foo @ ~", [3, 10]],
   ["20.2: foo + ~ -> is tag, is typed",
    "foo + ~", [10]],
 
   // Test default usage by setting certain bits of default.behavior to 1
   ["21: foo -> default history",
-   "foo", [1,2,3,5,10], function () { setPref({ history: true }); }],
+   "foo", [1, 2, 3, 5, 10], function () { setPref({ history: true }); }],
   ["22: foo -> default history or is star",
-   "foo", [1,2,3,5,6,7,8,9,10,11], () => setPref({ history: true, bookmark: true })],
+   "foo", [1, 2, 3, 5, 6, 7, 8, 9, 10, 11], () => setPref({ history: true, bookmark: true })],
   ["22.1: foo -> default history or is star, is typed",
-   "foo", [3,10], () => setPref({ history: true, bookmark: true, "history.onlyTyped": true })],
+   "foo", [3, 10], () => setPref({ history: true, bookmark: true, "history.onlyTyped": true })],
 
 ];
 

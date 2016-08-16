@@ -36,7 +36,7 @@ addPageBook(5, 0);
 addPageBook(6, 0);
 addPageBook(7, 0);
 
-var allSite = [0,1,2,3,4,5];
+var allSite = [0, 1, 2, 3, 4, 5];
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
@@ -49,9 +49,9 @@ var gTests = [
   ["5: https://site matches all site", "https://site", allSite],
   ["6: www.site matches all site", "www.site", allSite],
 
-  ["7: w matches none of www.", "w", [6,7]],
-  ["8: http://w matches none of www.", "w", [6,7]],
-  ["9: http://www.w matches none of www.", "w", [6,7]],
+  ["7: w matches none of www.", "w", [6, 7]],
+  ["8: http://w matches none of www.", "w", [6, 7]],
+  ["9: http://www.w matches none of www.", "w", [6, 7]],
 
   ["10: ww matches none of www.", "ww", [7]],
   ["11: http://ww matches none of www.", "http://ww", [7]],

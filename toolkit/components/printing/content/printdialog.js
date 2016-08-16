@@ -58,12 +58,12 @@ function checkInteger(element)
 {
   var value = element.value;
   if (value && value.length > 0) {
-    value = value.replace(/[^0-9]/g,"");
+    value = value.replace(/[^0-9]/g, "");
     if (!value) value = "";
     element.value = value;
   }
   if (!value || value < 1 || value > 999)
-    dialog.printButton.setAttribute("disabled","true");
+    dialog.printButton.setAttribute("disabled", "true");
   else
     dialog.printButton.removeAttribute("disabled");
 }
@@ -72,7 +72,7 @@ function checkInteger(element)
 function stripTrailingWhitespace(element)
 {
   var value = element.value;
-  value = value.replace(/\s+$/,"");
+  value = value.replace(/\s+$/, "");
   element.value = value;
 }
 
@@ -119,10 +119,10 @@ listElement.prototype =
                       .getString("noprinter"));
 
             this.listElement.setAttribute("disabled", "true");
-            dialog.printerLabel.setAttribute("disabled","true");
-            dialog.propertiesButton.setAttribute("disabled","true");
-            dialog.fileCheck.setAttribute("disabled","true");
-            dialog.printButton.setAttribute("disabled","true");
+            dialog.printerLabel.setAttribute("disabled", "true");
+            dialog.propertiesButton.setAttribute("disabled", "true");
+            dialog.fileCheck.setAttribute("disabled", "true");
+            dialog.printButton.setAttribute("disabled", "true");
           }
           else {
             // build popup menu from printer names
@@ -202,10 +202,10 @@ function doPrintRange(inx)
     dialog.topageInput.removeAttribute("disabled");
     dialog.topageLabel.removeAttribute("disabled");
   } else {
-    dialog.frompageInput.setAttribute("disabled","true");
-    dialog.frompageLabel.setAttribute("disabled","true");
-    dialog.topageInput.setAttribute("disabled","true");
-    dialog.topageLabel.setAttribute("disabled","true");
+    dialog.frompageInput.setAttribute("disabled", "true");
+    dialog.frompageLabel.setAttribute("disabled", "true");
+    dialog.topageInput.setAttribute("disabled", "true");
+    dialog.topageLabel.setAttribute("disabled", "true");
   }
 }
 
@@ -255,7 +255,7 @@ function loadDialog()
   if (print_selection_radio_enabled) {
     dialog.selectionRadio.removeAttribute("disabled");
   } else {
-    dialog.selectionRadio.setAttribute("disabled","true");
+    dialog.selectionRadio.setAttribute("disabled", "true");
   }
   doPrintRange(dialog.rangeRadio.selected);
   dialog.frompageInput.value  = 1;
@@ -280,7 +280,7 @@ function loadDialog()
   } else if (print_howToEnableUI == gPrintSetInterface.kFrameEnableAsIsAndEach) {
     dialog.aslaidoutRadio.removeAttribute("disabled");       //enable
 
-    dialog.selectedframeRadio.setAttribute("disabled","true"); // disable
+    dialog.selectedframeRadio.setAttribute("disabled", "true"); // disable
     dialog.eachframesepRadio.removeAttribute("disabled");       // enable
     dialog.printframeGroupLabel.removeAttribute("disabled");    // enable
 
@@ -288,10 +288,10 @@ function loadDialog()
     dialog.printframeGroup.selectedItem = dialog.eachframesepRadio;
 
   } else {
-    dialog.aslaidoutRadio.setAttribute("disabled","true");
-    dialog.selectedframeRadio.setAttribute("disabled","true");
-    dialog.eachframesepRadio.setAttribute("disabled","true");
-    dialog.printframeGroupLabel.setAttribute("disabled","true");
+    dialog.aslaidoutRadio.setAttribute("disabled", "true");
+    dialog.selectedframeRadio.setAttribute("disabled", "true");
+    dialog.eachframesepRadio.setAttribute("disabled", "true");
+    dialog.printframeGroupLabel.setAttribute("disabled", "true");
   }
 
   dialog.printButton.label = dialog.printName.getAttribute("label");

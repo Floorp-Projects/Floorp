@@ -31,8 +31,8 @@ RemoteFinder.prototype = {
     if (this._messageManager) {
       this._messageManager.removeMessageListener("Finder:Result", this);
       this._messageManager.removeMessageListener("Finder:MatchesResult", this);
-      this._messageManager.removeMessageListener("Finder:CurrentSelectionResult",this);
-      this._messageManager.removeMessageListener("Finder:HighlightFinished",this);
+      this._messageManager.removeMessageListener("Finder:CurrentSelectionResult", this);
+      this._messageManager.removeMessageListener("Finder:HighlightFinished", this);
     }
     this._listeners.clear();
     this._browser = this._messageManager = null;
@@ -42,8 +42,8 @@ RemoteFinder.prototype = {
     if (this._messageManager) {
       this._messageManager.removeMessageListener("Finder:Result", this);
       this._messageManager.removeMessageListener("Finder:MatchesResult", this);
-      this._messageManager.removeMessageListener("Finder:CurrentSelectionResult",this);
-      this._messageManager.removeMessageListener("Finder:HighlightFinished",this);
+      this._messageManager.removeMessageListener("Finder:CurrentSelectionResult", this);
+      this._messageManager.removeMessageListener("Finder:HighlightFinished", this);
     }
     else {
       aBrowser.messageManager.sendAsyncMessage("Finder:Initialize");

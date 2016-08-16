@@ -8,8 +8,8 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 add_task(function* testPermissionsListing() {
   Assert.deepEqual(SitePermissions.listPermissions().sort(),
-    ["camera","cookie","desktop-notification","geo","image",
-     "indexedDB","install","microphone","popup", "screen"],
+    ["camera", "cookie", "desktop-notification", "geo", "image",
+     "indexedDB", "install", "microphone", "popup", "screen"],
     "Correct list of all permissions");
 });
 
