@@ -282,13 +282,13 @@ private:
 
 public:
   // Handle ContentInserted notifications.
-  void ContentInserted(Element* aContainer, nsIContent* aChild)
+  void ContentInserted(nsINode* aContainer, nsIContent* aChild)
   {
     RestyleForInsertOrChange(aContainer, aChild);
   }
 
   // Handle ContentAppended notifications.
-  void ContentAppended(Element* aContainer, nsIContent* aFirstNewContent)
+  void ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewContent)
   {
     RestyleForAppend(aContainer, aFirstNewContent);
   }
@@ -300,18 +300,18 @@ public:
   // following sibling in addition to the old child.  |aContainer| must be
   // non-null; when the container is null, no work is needed.  aFollowingSibling
   // is the sibling that used to come after aOldChild before the removal.
-  void ContentRemoved(Element* aContainer, nsIContent* aOldChild,
+  void ContentRemoved(nsINode* aContainer, nsIContent* aOldChild,
                       nsIContent* aFollowingSibling);
 
   // Restyling for a ContentInserted (notification after insertion) or
   // for a CharacterDataChanged.  |aContainer| must be non-null; when
   // the container is null, no work is needed.
-  void RestyleForInsertOrChange(Element* aContainer, nsIContent* aChild);
+  void RestyleForInsertOrChange(nsINode* aContainer, nsIContent* aChild);
 
   // Restyling for a ContentAppended (notification after insertion) or
   // for a CharacterDataChanged.  |aContainer| must be non-null; when
   // the container is null, no work is needed.
-  void RestyleForAppend(Element* aContainer, nsIContent* aFirstNewContent);
+  void RestyleForAppend(nsIContent* aContainer, nsIContent* aFirstNewContent);
 
   // Process any pending restyles. This should be called after
   // CreateNeededFrames.

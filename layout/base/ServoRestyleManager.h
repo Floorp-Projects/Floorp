@@ -52,18 +52,17 @@ public:
                                     nsRestyleHint aRestyleHint);
   void ProcessPendingRestyles();
 
-  void ContentInserted(dom::Element* aContainer, nsIContent* aChild);
-  void ContentAppended(dom::Element* aContainer,
+  void ContentInserted(nsINode* aContainer, nsIContent* aChild);
+  void ContentAppended(nsIContent* aContainer,
                        nsIContent* aFirstNewContent);
-  void ContentRemoved(dom::Element* aContainer,
+  void ContentRemoved(nsINode* aContainer,
                       nsIContent* aOldChild,
                       nsIContent* aFollowingSibling);
 
-  void RestyleForInsertOrChange(dom::Element* aContainer,
+  void RestyleForInsertOrChange(nsINode* aContainer,
                                 nsIContent* aChild);
-  void RestyleForAppend(dom::Element* aContainer,
+  void RestyleForAppend(nsIContent* aContainer,
                         nsIContent* aFirstNewContent);
-
   nsresult ContentStateChanged(nsIContent* aContent,
                                EventStates aStateMask);
   void AttributeWillChange(dom::Element* aElement,
