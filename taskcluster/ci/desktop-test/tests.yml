@@ -292,6 +292,7 @@ mochitest-webgl:
     description: "Mochitest webgl run"
     suite: mochitest/mochitest-gl
     treeherder-symbol: tc-M(gl)
+    chunks: 3
     loopback-video: true
     mozharness:
         script: mozharness/scripts/desktop_unittest.py
