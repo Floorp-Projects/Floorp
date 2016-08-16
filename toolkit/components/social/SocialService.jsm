@@ -503,7 +503,7 @@ this.SocialService = {
   },
 
   _manifestFromData: function(type, data, installOrigin) {
-    let featureURLs = ['sidebarURL', 'shareURL', 'statusURL', 'markURL'];
+    let featureURLs = ['sidebarURL', 'shareURL'];
     let resolveURLs = featureURLs.concat(['postActivationURL']);
 
     if (type == 'directory' || type == 'internal') {
@@ -706,10 +706,6 @@ function SocialProvider(input) {
   this.icon64URL = input.icon64URL;
   this.sidebarURL = input.sidebarURL;
   this.shareURL = input.shareURL;
-  this.statusURL = input.statusURL;
-  this.markURL = input.markURL;
-  this.markedIcon = input.markedIcon;
-  this.unmarkedIcon = input.unmarkedIcon;
   this.postActivationURL = input.postActivationURL;
   this.origin = input.origin;
   let originUri = Services.io.newURI(input.origin, null, null);
