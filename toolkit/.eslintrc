@@ -6,7 +6,7 @@
     // "arrow-body-style": [2, "as-needed"],
 
     // Require spacing around =>
-    // "arrow-spacing": 2,
+    "arrow-spacing": 2,
 
     // Always require spacing around a single line block
     "block-spacing": 2,
