@@ -80,6 +80,7 @@ class EvalScriptGuard
     /* These fields are only valid if lookup_.str is non-nullptr. */
     EvalCacheLookup lookup_;
     EvalCache::AddPtr p_;
+    uint64_t originalGcNumber_;
 
     RootedLinearString lookupStr_;
 
@@ -93,7 +94,11 @@ class EvalScriptGuard
             EvalCacheEntry cacheEntry = {lookupStr_, script_, lookup_.callerScript, lookup_.pc};
             lookup_.str = lookupStr_;
             if (lookup_.str && IsEvalCacheCandidate(script_)) {
-                bool ok = cx_->caches.evalCache.relookupOrAdd(p_, lookup_, cacheEntry);
+                bool gcHappened = originalGcNumber_ != cx_->zone()->gcNumber();
+                auto& cache = cx_->caches.evalCache;
+                if (gcHappened)
+                    p_ = cache.lookupForAdd(lookup_);
+                bool ok = cache.relookupOrAdd(p_, lookup_, cacheEntry);
                 (void)ok; // Ignore failure to add cache entry.
             }
         }
@@ -107,6 +112,7 @@ class EvalScriptGuard
         lookup_.version = cx_->findVersion();
         lookup_.pc = pc;
         p_ = cx_->caches.evalCache.lookupForAdd(lookup_);
+        originalGcNumber_ = cx_->zone()->gcNumber();
         if (p_) {
             script_ = p_->script;
             cx_->caches.evalCache.remove(p_);
