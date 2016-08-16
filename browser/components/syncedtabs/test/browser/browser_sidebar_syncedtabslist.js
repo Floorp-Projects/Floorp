@@ -91,8 +91,8 @@ add_task(function* testSyncedTabsSidebarList() {
   SyncedTabs._internal = {
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
-    getTabClients() { return Promise.resolve([]) },
-    syncTabs() { return Promise.resolve(); },
+    getTabClients() { return Promise.resolve([])},
+    syncTabs() {return Promise.resolve();},
   };
 
   sinon.stub(syncedTabsDeckComponent, "_accountStatus", () => Promise.resolve(true));
@@ -144,8 +144,8 @@ add_task(function* testSyncedTabsSidebarFilteredList() {
   SyncedTabs._internal = {
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
-    getTabClients() { return Promise.resolve([]) },
-    syncTabs() { return Promise.resolve(); },
+    getTabClients() { return Promise.resolve([])},
+    syncTabs() {return Promise.resolve();},
   };
 
   sinon.stub(syncedTabsDeckComponent, "_accountStatus", () => Promise.resolve(true));
@@ -204,7 +204,7 @@ add_task(function* testSyncedTabsSidebarStatus() {
     isConfiguredToSyncTabs: false,
     hasSyncedThisSession: false,
     getTabClients() {},
-    syncTabs() { return Promise.resolve(); },
+    syncTabs() {return Promise.resolve();},
   };
 
   Assert.ok(syncedTabsDeckComponent, "component exists");
@@ -266,8 +266,8 @@ add_task(function* testSyncedTabsSidebarContextMenu() {
   SyncedTabs._internal = {
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
-    getTabClients() { return Promise.resolve([]) },
-    syncTabs() { return Promise.resolve(); },
+    getTabClients() { return Promise.resolve([])},
+    syncTabs() {return Promise.resolve();},
   };
 
   sinon.stub(syncedTabsDeckComponent, "_accountStatus", () => Promise.resolve(true));

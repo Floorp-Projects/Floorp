@@ -46,11 +46,7 @@ function initTest() {
                                 "Browser:Cookies", "", {});
 
     // when it has loaded, run actual tests
-    cmd.addEventListener("load", function() {
-        executeSoon(function() {
-            runTest(cmd, searchTerm, vals.length, matches);
-        });
-    }, false);
+    cmd.addEventListener("load", function() {executeSoon(function() {runTest(cmd, searchTerm, vals.length, matches);});}, false);
 }
 
 function isDisabled(win, expectation) {
