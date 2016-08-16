@@ -264,16 +264,13 @@ public:
   // (because it is not currently active and is not filling at this time).
   static ComputedTiming
   GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
-                      const TimingParams& aTiming);
+                      const TimingParams& aTiming,
+                      double aPlaybackRate);
 
   // Shortcut for that gets the computed timing using the current local time as
   // calculated from the timeline time.
   ComputedTiming
-  GetComputedTiming(const TimingParams* aTiming = nullptr) const
-  {
-    return GetComputedTimingAt(GetLocalTime(),
-                               aTiming ? *aTiming : SpecifiedTiming());
-  }
+  GetComputedTiming(const TimingParams* aTiming = nullptr) const;
 
   void
   GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const override;
