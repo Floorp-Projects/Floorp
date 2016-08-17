@@ -1021,18 +1021,18 @@ class TestTarFinder(MatchTestTemplate, TestWithTmpDir):
     def do_check(self, pattern, result):
         do_check(self, self.finder, pattern, result)
 
-    def test_jar_finder(self):
+    def test_tar_finder(self):
         self.tar = tarfile.open(name=self.tmppath('test.tar.bz2'),
                                 mode='w:bz2')
         self.prepare_match_test()
         self.tar.close()
-        tarreader = tarfile.open(name=self.tmppath('test.tar.bz2'),
-                                 mode='r:bz2')
-        self.finder = TarFinder(self.tmppath('test.tar.bz2'), tarreader)
-        self.do_match_test()
+        with tarfile.open(name=self.tmppath('test.tar.bz2'),
+                          mode='r:bz2') as tarreader:
+            self.finder = TarFinder(self.tmppath('test.tar.bz2'), tarreader)
+            self.do_match_test()
 
-        self.assertIsNone(self.finder.get('does-not-exist'))
-        self.assertIsInstance(self.finder.get('bar'), ExtractedTarFile)
+            self.assertIsNone(self.finder.get('does-not-exist'))
+            self.assertIsInstance(self.finder.get('bar'), ExtractedTarFile)
 
 
 class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
