@@ -9,7 +9,8 @@ js_option('--with-system-ffi',
 
 use_system_ffi = depends_if('--with-system-ffi')(lambda _: True)
 
-system_ffi = pkg_check_modules('MOZ_FFI', 'libffi > 3.0.9', use_system_ffi)
+system_ffi = pkg_check_modules('MOZ_FFI', 'libffi > 3.0.9',
+                               when=use_system_ffi)
 
 set_config('MOZ_SYSTEM_FFI', system_ffi)
 add_old_configure_assignment('MOZ_SYSTEM_FFI', system_ffi)
