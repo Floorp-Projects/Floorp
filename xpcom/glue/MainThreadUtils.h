@@ -17,7 +17,7 @@ class nsIThread;
  * @param aResult
  *   The resulting nsIThread object.
  */
-extern NS_METHOD NS_GetMainThread(nsIThread** aResult);
+extern nsresult NS_GetMainThread(nsIThread** aResult);
 
 #ifdef MOZILLA_INTERNAL_API
 // Fast access to the current thread.  Do not release the returned pointer!  If

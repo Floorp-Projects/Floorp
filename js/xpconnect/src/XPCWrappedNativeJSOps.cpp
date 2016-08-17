@@ -962,8 +962,6 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
                                                      bool aPopulate)
     : mFlags(aFlags)
 {
-    MOZ_COUNT_CTOR(XPCNativeScriptableShared);
-
     // Initialize the js::Class.
 
     memset(&mJSClass, 0, sizeof(mJSClass));
@@ -1057,6 +1055,21 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
 
     if (mFlags.WantNewEnumerate())
         mJSClass.oOps = &XPC_WN_ObjectOpsWithEnumerate;
+}
+
+XPCNativeScriptableShared::~XPCNativeScriptableShared()
+{
+    // mJSClass.cOps will be null if |this| was created with
+    // populate=false. Otherwise, it was created with populate=true
+    // and there is a weak reference in a global map that must be
+    // removed.
+
+    if (mJSClass.cOps) {
+        XPCJSRuntime::Get()->GetNativeScriptableSharedMap()->Remove(this);
+        free((void*)mJSClass.cOps);
+    }
+
+    free((void*)mJSClass.name);
 }
 
 /***************************************************************************/

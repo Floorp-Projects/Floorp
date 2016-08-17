@@ -260,7 +260,7 @@ struct MOZ_STACK_CLASS nsWriteSegmentThunk
  *        failed
  * @return the result from aInput->Read(...)
  */
-extern NS_METHOD
+extern nsresult
 NS_FillArray(FallibleTArray<char>& aDest, nsIInputStream* aInput,
              uint32_t aKeep, uint32_t* aNewBytes);
 

@@ -6702,21 +6702,15 @@ free_impl(void *ptr)
  * Begin non-standard functions.
  */
 
-#if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
-#  define MAYBE_MEMORY_API static inline
-#else
-#  define MAYBE_MEMORY_API MOZ_MEMORY_API
-#endif
-
 #ifdef MALLOC_PROTECTED_REGIONS
-MAYBE_MEMORY_API void
+MFBT_API void
 malloc_protect_impl(void *ptr, uint32_t *id)
 {
 	if (ptr)
 		create_protected_region(ptr, id);
 }
 
-MAYBE_MEMORY_API void
+MFBT_API void
 malloc_unprotect_impl(void *ptr, uint32_t *id)
 {
 	if (ptr)
@@ -6724,14 +6718,14 @@ malloc_unprotect_impl(void *ptr, uint32_t *id)
 	*id = 0;
 }
 #else /* !MALLOC_PROTECTED_REGIONS */
-MAYBE_MEMORY_API void
+MFBT_API void
 malloc_protect_impl(void *ptr, uint32_t *id)
 {
 	if (ptr)
 		*id = 1;
 }
 
-MAYBE_MEMORY_API void
+MFBT_API void
 malloc_unprotect_impl(void *ptr, uint32_t *id)
 {
 	*id = 0;
@@ -6739,7 +6733,12 @@ malloc_unprotect_impl(void *ptr, uint32_t *id)
 #endif /* MALLOC_PROTECTED_REGIONS */
 
 /* This was added by Mozilla for use by SQLite. */
-MAYBE_MEMORY_API size_t
+#if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
+static
+#else
+MOZ_MEMORY_API
+#endif
+size_t
 malloc_good_size_impl(size_t size)
 {
 	/*

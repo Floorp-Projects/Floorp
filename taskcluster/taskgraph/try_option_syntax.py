@@ -410,17 +410,9 @@ class TryOptionSyntax(object):
         seen_chunks = {}
         for test in tests:
             matches = TEST_CHUNK_SUFFIX.match(test['test'])
-
-            if not matches:
-                results.extend(self.handle_alias(test, all_tests))
-                continue
-
-            name = matches.group(1)
-            chunk = matches.group(2)
-            test['test'] = name
-
-            for test in self.handle_alias(test, all_tests):
-                name = test['test']
+            if matches:
+                name = matches.group(1)
+                chunk = matches.group(2)
                 if name in seen_chunks:
                     seen_chunks[name].add(chunk)
                 else:
@@ -428,6 +420,8 @@ class TryOptionSyntax(object):
                     test['test'] = name
                     test['only_chunks'] = seen_chunks[name]
                     results.append(test)
+            else:
+                results.extend(self.handle_alias(test, all_tests))
 
         # uniquify the results over the test names
         results = {test['test']: test for test in results}.values()

@@ -440,12 +440,13 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
     NS_PRECONDITION(name,"bad param");
     NS_PRECONDITION(si,"bad param");
 
-    XPCNativeScriptableShared key(flags, name, /* populate = */ false);
-    auto entry = static_cast<Entry*>(mTable.Add(&key, fallible));
+    RefPtr<XPCNativeScriptableShared> key =
+        new XPCNativeScriptableShared(flags, name, /* populate = */ false);
+    auto entry = static_cast<Entry*>(mTable.Add(key, fallible));
     if (!entry)
         return false;
 
-    XPCNativeScriptableShared* shared = entry->key;
+    RefPtr<XPCNativeScriptableShared> shared = entry->key;
 
     // XXX: this XPCNativeScriptableShared is heap-allocated, which means the
     // js::Class it contains is also heap-allocated. This causes problems for
@@ -457,11 +458,11 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
     // StatsCellCallback() should be reinstated.
     //
     if (!shared) {
-        entry->key = shared =
-            new XPCNativeScriptableShared(flags, key.TransferNameOwnership(),
-                                          /* populate = */ true);
+        shared = new XPCNativeScriptableShared(flags, key->TransferNameOwnership(),
+                                               /* populate = */ true);
+        entry->key = shared;
     }
-    si->SetScriptableShared(shared);
+    si->SetScriptableShared(shared.forget());
     return true;
 }
 

@@ -24,7 +24,7 @@ class DebuggerOnGCRunnable : public CancelableRunnable
   { }
 
 public:
-  static NS_METHOD Enqueue(JSContext* aCx, const JS::GCDescription& aDesc);
+  static nsresult Enqueue(JSContext* aCx, const JS::GCDescription& aDesc);
 
   NS_DECL_NSIRUNNABLE
   nsresult Cancel() override;
