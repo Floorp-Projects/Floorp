@@ -3399,11 +3399,7 @@ Checker.prototype = {
       return;
 
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                    createInstance(Ci.nsISupports);
-    // This is here to let unit test code override XHR
-    if (this._request.wrappedJSObject) {
-      this._request = this._request.wrappedJSObject;
-    }
+                    createInstance(Ci.nsIXMLHttpRequest);
     this._request.open("GET", url, true);
     var allowNonBuiltIn = !getPref("getBoolPref",
                                    PREF_APP_UPDATE_CERT_REQUIREBUILTIN, true);
