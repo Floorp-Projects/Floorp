@@ -6,9 +6,6 @@
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
-const {Cc, Ci} = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
 const {Task} = require("devtools/shared/task");
 const {InplaceEditor, editableItem} =
       require("devtools/client/shared/inplace-editor");
@@ -322,13 +319,6 @@ LayoutView.prototype = {
     }
 
     this.onNewNode();
-
-    // Mark document as RTL or LTR:
-    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                    .getService(Ci.nsIXULChromeRegistry);
-    let dir = chromeReg.isLocaleRTL("global");
-    let container = this.doc.getElementById("layout-container");
-    container.setAttribute("dir", dir ? "rtl" : "ltr");
 
     let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
     this.onGeometryButtonClick = this.onGeometryButtonClick.bind(this);
