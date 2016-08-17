@@ -147,7 +147,7 @@ nsLineBox::NoteFramesMovedFrom(nsLineBox* aFromLine)
 }
 
 void*
-nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
+nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell)
 {
   return aPresShell->AllocateByObjectID(eArenaObjectID_nsLineBox, sz);
 }
