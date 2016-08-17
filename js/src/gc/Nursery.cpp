@@ -566,6 +566,10 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
 
     startProfile(ProfileKey::Total);
 
+    // The hazard analysis thinks doCollection can invalidate pointers in
+    // tenureCounts below.
+    JS::AutoSuppressGCAnalysis nogc;
+
     TenureCountCache tenureCounts;
     double promotionRate = doCollection(rt, reason, tenureCounts);
 
