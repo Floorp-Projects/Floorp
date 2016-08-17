@@ -492,7 +492,7 @@ this.CrashSubmit = {
     let [dump, extra, mem] = getPendingMinidump(id);
     return OS.File.open(dump.path + ".ignore", {create: true},
                         {unixFlags: OS.Constants.libc.O_CREAT})
-      .then((file) => {file.close(); });
+      .then((file) => { file.close(); });
   },
 
   /**

@@ -168,7 +168,7 @@ function WebAPITask(apiRequest, apiArgs, processor) {
 
 Addon.prototype = {
   uninstall: WebAPITask("addonUninstall", function() { return [this.id]; }),
-  setEnabled: WebAPITask("addonSetEnabled", function(value) {return [this.id, value]; }),
+  setEnabled: WebAPITask("addonSetEnabled", function(value) { return [this.id, value]; }),
 };
 
 const INSTALL_EVENTS = [
