@@ -228,7 +228,7 @@ nsStyleUtil::AppendEscapedCSSFontFamilyList(
 
 
 /* static */ void
-nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
+nsStyleUtil::AppendBitmaskCSSValue(nsCSSPropertyID aProperty,
                                    int32_t aMaskedValue,
                                    int32_t aFirstMask,
                                    int32_t aLastMask,
