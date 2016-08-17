@@ -91,8 +91,7 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
                                          TimeStamp::Now(),
                                          mReplacedTransition->mStartTime,
                                          mReplacedTransition->mPlaybackRate),
-    mReplacedTransition->mTiming,
-    mReplacedTransition->mPlaybackRate);
+    mReplacedTransition->mTiming);
 
   if (!computedTiming.mProgress.IsNull()) {
     double valuePosition =
