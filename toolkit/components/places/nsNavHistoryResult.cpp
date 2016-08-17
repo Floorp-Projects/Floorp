@@ -2351,13 +2351,25 @@ nsNavHistoryQueryResultNode::RecursiveSort(
   }
 }
 
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::GetSkipTags(bool *aSkipTags)
+{
+  *aSkipTags = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::GetSkipDescendantsOnItemRemoval(bool *aSkipDescendantsOnItemRemoval)
+{
+  *aSkipDescendantsOnItemRemoval = false;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnBeginUpdateBatch()
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnEndUpdateBatch()
@@ -3520,6 +3532,19 @@ nsNavHistoryFolderResultNode::FindChildById(int64_t aItemId,
     return NS_OK; \
   }
 
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::GetSkipTags(bool *aSkipTags)
+{
+  *aSkipTags = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::GetSkipDescendantsOnItemRemoval(bool *aSkipDescendantsOnItemRemoval)
+{
+  *aSkipDescendantsOnItemRemoval = false;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnBeginUpdateBatch()
@@ -4399,6 +4424,20 @@ nsNavHistoryResult::requestRefresh(nsNavHistoryContainerResultNode* aContainer)
   ENUMERATE_LIST_OBSERVERS(ContainerObserverList, Refresh(), mRefreshParticipants, IsContainer()); \
   mRefreshParticipants.Clear(); \
   PR_END_MACRO
+
+NS_IMETHODIMP
+nsNavHistoryResult::GetSkipTags(bool *aSkipTags)
+{
+  *aSkipTags = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryResult::GetSkipDescendantsOnItemRemoval(bool *aSkipDescendantsOnItemRemoval)
+{
+  *aSkipDescendantsOnItemRemoval = false;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsNavHistoryResult::OnBeginUpdateBatch()

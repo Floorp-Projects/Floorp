@@ -13,9 +13,20 @@ interface nsINavHistoryBatchCallback;
 /**
  * Observer for bookmarks changes.
  */
-[scriptable, uuid(cff3efcc-e144-490d-9f23-8b6f6dd09e7f)]
+[scriptable, uuid(c06b4e7d-15b1-4d4f-bdf7-147d2be9084a)]
 interface nsINavBookmarkObserver : nsISupports
 {
+  /*
+   * This observer should not be called for items that are tags.
+   */
+  readonly attribute boolean skipTags;
+
+  /*
+   * This observer should not be called for descendants when the parent is removed.
+   * For example when revmoing a folder containing bookmarks.
+   */
+  readonly attribute boolean skipDescendantsOnItemRemoval;
+
   /**
    * Notifies that a batch transaction has started.
    * Other notifications will be sent during the batch, but the observer is
