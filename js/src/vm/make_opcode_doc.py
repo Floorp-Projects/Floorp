@@ -15,7 +15,7 @@ import re
 import sys
 from xml.sax.saxutils import escape
 
-SOURCE_BASE = 'http://mxr.mozilla.org/mozilla-central/source'
+SOURCE_BASE = 'http://dxr.mozilla.org/mozilla-central/source'
 
 def error(message):
     print("Error: {message}".format(message=message), file=sys.stderr)

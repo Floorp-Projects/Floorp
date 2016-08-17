@@ -19,7 +19,7 @@
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/FontFace.h"
 #include "nsAutoPtr.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsIDOMCSSConditionRule.h"

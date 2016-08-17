@@ -27,7 +27,7 @@
   on a standards track, any '-moz-' prefix is removed in 'id'. This
   lets us do nice things with the macros without having to copy/convert
   strings at runtime.  These are the names used for the enum values of
-  the nsCSSProperty enumeration defined in nsCSSProps.h.
+  the nsCSSPropertyID enumeration defined in nsCSSProps.h.
 
   -. 'method' is designed to be as input for CSS2Properties and similar
   callers.  It must always be the same as 'name' except it must use

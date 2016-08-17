@@ -158,6 +158,7 @@ private:
     nsTArray<nsEntry> mHeaders;
 
     friend struct IPC::ParamTraits<nsHttpHeaderArray>;
+    friend class nsHttpRequestHead;
 };
 
 

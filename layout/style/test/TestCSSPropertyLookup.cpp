@@ -24,8 +24,8 @@ static bool
 TestProps()
 {
   bool success = true;
-  nsCSSProperty id;
-  nsCSSProperty index;
+  nsCSSPropertyID id;
+  nsCSSPropertyID index;
 
   // Everything appears to assert if we don't do this first...
   nsCSSProps::AddRefTable();
@@ -40,7 +40,7 @@ TestProps()
   while (et < end) {
     char tagName[100];
     PL_strcpy(tagName, *et);
-    index = nsCSSProperty(int32_t(index) + 1);
+    index = nsCSSPropertyID(int32_t(index) + 1);
 
     id = nsCSSProps::LookupProperty(nsCString(tagName),
                                     CSSEnabledState::eIgnoreEnabledState);

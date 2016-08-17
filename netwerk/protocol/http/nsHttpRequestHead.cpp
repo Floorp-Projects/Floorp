@@ -6,6 +6,9 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 #include "nsHttpRequestHead.h"
 #include "nsIHttpHeaderVisitor.h"
 
@@ -46,6 +49,22 @@ void
 nsHttpRequestHead::SetHeaders(const nsHttpHeaderArray& aHeaders)
 {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+#ifdef MOZ_CRASHREPORTER
+    nsHttpAtom header;
+    if (mHeaders.Count() && !mHeaders.PeekHeaderAt(0, header)) {
+      nsAutoCString str;
+      const uint8_t* p = reinterpret_cast<uint8_t*>(mHeaders.mHeaders.Elements()) -
+                         sizeof(nsTArrayHeader);
+      for (int i = 0; i < 48; ++i, ++p) {
+        str.Append(nsPrintfCString("%02x ", *p));
+      }
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("HttpHeaderArray"), str);
+      if (header._val) {
+        CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("HttpHeaderArray[0].header"),
+                                           nsDependentCString(header._val));
+      }
+    }
+#endif
     mHeaders = aHeaders;
 }
 

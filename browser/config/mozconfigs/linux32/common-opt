@@ -2,7 +2,6 @@
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --with-google-api-keyfile=/builds/gapi.data
-ac_add_options --with-google-oauth-api-keyfile=/builds/google-oauth-api.key
 ac_add_options --with-mozilla-api-keyfile=/builds/mozilla-desktop-geoloc-api.key
 
 . $topsrcdir/build/unix/mozconfig.linux32

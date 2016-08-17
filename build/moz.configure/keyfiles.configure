@@ -1,0 +1,65 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+@template
+def keyfile(desc, help=None, callback=lambda x: x):
+    help = help or ('Use the secret key contained in the given keyfile '
+                    'for %s requests' % desc)
+    name = desc.lower().replace(' ', '-')
+    no_key = callback('no-%s-key' % name)
+
+    option('--with-%s-keyfile' % name, nargs=1, help=help)
+
+    @depends('--with-%s-keyfile' % name)
+    @checking('for the %s key' % desc, lambda x: x and x is not no_key)
+    @imports(_from='__builtin__', _import='open')
+    @imports(_from='__builtin__', _import='IOError')
+    def keyfile(value):
+        if value:
+            try:
+                with open(value[0]) as fh:
+                    result = fh.read().strip()
+                    if result:
+                        return callback(result)
+            except FatalCheckError:
+                raise
+            except IOError:
+                pass
+        return no_key
+
+    return keyfile
+
+
+@template
+def simple_keyfile(desc):
+    set_config('MOZ_%s_KEY' % desc.upper().replace(' ', '_'),
+               keyfile(desc))
+
+
+@template
+def id_and_secret_keyfile(desc):
+    def id_and_secret(value):
+        if value.startswith('no-') and value.endswith('-key'):
+            id = value[:-3] + 'clientid'
+            secret = value
+        elif ' ' in value:
+            id, secret = value.split(' ', 1)
+        else:
+            raise FatalCheckError('%s key file has an invalid format.' % desc)
+        return namespace(
+            id=id,
+            secret=secret,
+        )
+
+    content = keyfile(desc, help='Use the client id and secret key contained '
+                                 'in the given keyfile for %s requests' % desc,
+                      callback=id_and_secret)
+
+
+    name = desc.upper().replace(' ', '_')
+    set_config('MOZ_%s_CLIENTID' % name, delayed_getattr(content, 'id'))
+    set_config('MOZ_%s_KEY' % name, delayed_getattr(content, 'secret'))

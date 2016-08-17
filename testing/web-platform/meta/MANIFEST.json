@@ -11386,6 +11386,10 @@
         "url": "/IndexedDB/cursor-overloads.htm"
       },
       {
+        "path": "IndexedDB/idb_binary_key_conversion.htm",
+        "url": "/IndexedDB/idb_binary_key_conversion.htm"
+      },
+      {
         "path": "IndexedDB/idb_webworkers.htm",
         "url": "/IndexedDB/idb_webworkers.htm"
       },
@@ -11784,6 +11788,14 @@
       {
         "path": "IndexedDB/idbfactory_cmp2.htm",
         "url": "/IndexedDB/idbfactory_cmp2.htm"
+      },
+      {
+        "path": "IndexedDB/idbfactory_cmp3.htm",
+        "url": "/IndexedDB/idbfactory_cmp3.htm"
+      },
+      {
+        "path": "IndexedDB/idbfactory_cmp4.htm",
+        "url": "/IndexedDB/idbfactory_cmp4.htm"
       },
       {
         "path": "IndexedDB/idbfactory_deleteDatabase.htm",

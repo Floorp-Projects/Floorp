@@ -554,10 +554,7 @@ NS_LoadGroupMatchesPrincipal(nsILoadGroup *aLoadGroup,
     // If this is a null principal then the load group doesn't really matter.
     // The principal will not be allowed to perform any actions that actually
     // use the load group.  Unconditionally treat null principals as a match.
-    bool isNullPrincipal;
-    nsresult rv = aPrincipal->GetIsNullPrincipal(&isNullPrincipal);
-    NS_ENSURE_SUCCESS(rv, false);
-    if (isNullPrincipal) {
+    if (aPrincipal->GetIsNullPrincipal()) {
       return true;
     }
 
@@ -573,20 +570,13 @@ NS_LoadGroupMatchesPrincipal(nsILoadGroup *aLoadGroup,
     // Verify load context appId and browser flag match the principal
     uint32_t contextAppId;
     bool contextInIsolatedBrowser;
-    rv = loadContext->GetAppId(&contextAppId);
+    nsresult rv = loadContext->GetAppId(&contextAppId);
     NS_ENSURE_SUCCESS(rv, false);
     rv = loadContext->GetIsInIsolatedMozBrowserElement(&contextInIsolatedBrowser);
     NS_ENSURE_SUCCESS(rv, false);
 
-    uint32_t principalAppId;
-    bool principalInIsolatedBrowser;
-    rv = aPrincipal->GetAppId(&principalAppId);
-    NS_ENSURE_SUCCESS(rv, false);
-    rv = aPrincipal->GetIsInIsolatedMozBrowserElement(&principalInIsolatedBrowser);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    return contextAppId == principalAppId &&
-           contextInIsolatedBrowser == principalInIsolatedBrowser;
+    return contextAppId == aPrincipal->GetAppId() &&
+           contextInIsolatedBrowser == aPrincipal->GetIsInIsolatedMozBrowserElement();
 }
 
 nsresult
@@ -1534,8 +1524,7 @@ NS_IsAppOffline(nsIPrincipal *principal)
     if (!principal) {
         return NS_IsOffline();
     }
-    uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-    principal->GetAppId(&appId);
+    uint32_t appId = principal->GetAppId();
 
     return NS_IsAppOffline(appId);
 }
@@ -2455,11 +2444,7 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
   DocShellOriginAttributes originAttrsLoadContext;
   loadContext->GetOriginAttributes(originAttrsLoadContext);
 
-  bool loadInfoUsePB = false;
-  rv = loadInfo->GetUsePrivateBrowsing(&loadInfoUsePB);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  bool loadInfoUsePB = loadInfo->GetUsePrivateBrowsing();
   bool loadContextUsePB = false;
   rv = loadContext->GetUsePrivateBrowsing(&loadContextUsePB);
   if (NS_FAILED(rv)) {

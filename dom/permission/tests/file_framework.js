@@ -7,7 +7,7 @@
  * Fields in gData object
  * perms   (required) Array of Strings
  *         list of permissions that this test will need. See
- *         http://mxr.mozilla.org/mozilla-central/source/dom/apps/src/PermissionsTable.jsm
+ *         http://dxr.mozilla.org/mozilla-central/source/dom/apps/src/PermissionsTable.jsm
  *         These permissions are added after a sanity check and removed at
  *         test conclusion
  *

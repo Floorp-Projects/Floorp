@@ -99,7 +99,7 @@ exports.stderr = stdout;
  * Returns a path of the system's or application's special directory / file
  * associated with a given `id`. For list of possible `id`s please see:
  * https://developer.mozilla.org/en-US/docs/Code_snippets/File_I_O#Getting_files_in_special_directories
- * http://mxr.mozilla.org/mozilla-central/source/xpcom/io/nsAppDirectoryServiceDefs.h
+ * http://dxr.mozilla.org/mozilla-central/source/xpcom/io/nsAppDirectoryServiceDefs.h
  * @example
  *
  *    // get firefox profile path
