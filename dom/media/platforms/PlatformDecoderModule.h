@@ -108,7 +108,7 @@ public:
   virtual bool SupportsMimeType(const nsACString& aMimeType,
                                 DecoderDoctorDiagnostics* aDiagnostics) const = 0;
 
-  enum ConversionRequired {
+  enum class ConversionRequired : uint8_t {
     kNeedNone,
     kNeedAVCC,
     kNeedAnnexB,
@@ -154,7 +154,7 @@ protected:
   CreateAudioDecoder(const CreateDecoderParams& aParams) = 0;
 };
 
-enum MediaDataDecoderError {
+enum class MediaDataDecoderError : uint8_t{
   FATAL_ERROR,
   DECODE_ERROR
 };
@@ -206,7 +206,7 @@ protected:
   virtual ~MediaDataDecoder() {};
 
 public:
-  enum DecoderFailureReason {
+  enum class DecoderFailureReason : uint8_t {
     INIT_ERROR,
     CANCELED
   };
