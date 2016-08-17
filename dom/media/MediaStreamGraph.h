@@ -1372,10 +1372,9 @@ protected:
   TrackRate mSampleRate;
 
   /**
-   * Lifetime is controlled by OpenAudioInput/CloseAudioInput.  Destroying the listener
-   * without removing it is an error; callers should assert on that.
+   * CloseAudioInput is async, so hold a reference here.
    */
-  nsTArray<AudioDataListener *> mAudioInputs;
+  nsTArray<RefPtr<AudioDataListener>> mAudioInputs;
 };
 
 } // namespace mozilla
