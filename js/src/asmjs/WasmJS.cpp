@@ -1192,38 +1192,25 @@ Resolve(JSContext* cx, Module& module, Handle<PromiseObject*> promise)
     return promise->resolve(cx, resolutionValue);
 }
 
-struct CompileTask : JS::AsyncTask
+struct CompileTask : PromiseTask
 {
-    PersistentRooted<PromiseObject*> promise;
-    MutableBytes                     bytecode;
-    CompileArgs                      compileArgs;
-    UniqueChars                      error;
-    SharedModule                     module;
+    MutableBytes bytecode;
+    CompileArgs  compileArgs;
+    UniqueChars  error;
+    SharedModule module;
 
     CompileTask(JSContext* cx, Handle<PromiseObject*> promise)
-      : promise(cx, promise)
+      : PromiseTask(cx, promise)
     {}
 
-    ~CompileTask() {
-        MOZ_ASSERT(CurrentThreadCanAccessZone(promise->zone()));
+    void execute() override {
+        module = Compile(*bytecode, compileArgs, &error);
     }
 
-    void finish(JSContext* cx) override {
-        // We can't leave a pending exception when returning to the caller so do
-        // the same thing as Gecko, which is to ignore the error. This should
-        // only happen due to OOM or interruption.
-        if (module) {
-            if (!Resolve(cx, *module, promise))
-                cx->clearPendingException();
-        } else {
-            if (!Reject(cx, compileArgs, Move(error), promise))
-                cx->clearPendingException();
-        }
-        js_delete(this);
-    }
-
-    void cancel(JSContext* cx) override {
-        js_delete(this);
+    bool finishPromise(JSContext* cx, Handle<PromiseObject*> promise) override {
+        return module
+               ? Resolve(cx, *module, promise)
+               : Reject(cx, compileArgs, Move(error), promise);
     }
 };
 
@@ -1245,7 +1232,7 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
     if (!promise)
         return false;
 
-    UniquePtr<CompileTask> task = cx->make_unique<CompileTask>(cx, promise);
+    auto task = cx->make_unique<CompileTask>(cx, promise);
     if (!task)
         return false;
 
@@ -1264,22 +1251,13 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    // Per interface contract, after startAsyncTaskCallback succeeds,
-    // finishAsyncTaskCallback *must* be called on all paths.
-
-    if (!cx->startAsyncTaskCallback(cx, task.get())) {
-        ReportOutOfMemory(cx);
-        return false;
+    if (CanUseExtraThreads()) {
+        if (!StartPromiseTask(cx, Move(task)))
+            return false;
+    } else {
+        task->execute();
+        task->finishPromise(cx, promise);
     }
-
-    task->module = Compile(*task->bytecode, task->compileArgs, &task->error);
-
-    if (!cx->finishAsyncTaskCallback(task.get())) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    Unused << task.release();
 
     callArgs.rval().setObject(*promise);
     return true;
