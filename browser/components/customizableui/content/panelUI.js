@@ -320,6 +320,45 @@ const PanelUI = {
       this.multiView.showSubView(aViewId, aAnchor);
     } else if (!aAnchor.open) {
       aAnchor.open = true;
+
+      let tempPanel = document.createElement("panel");
+      tempPanel.setAttribute("type", "arrow");
+      tempPanel.setAttribute("id", "customizationui-widget-panel");
+      tempPanel.setAttribute("class", "cui-widget-panel");
+      tempPanel.setAttribute("viewId", aViewId);
+      if (this._disableAnimations) {
+        tempPanel.setAttribute("animate", "false");
+      }
+      tempPanel.setAttribute("context", "");
+      document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(tempPanel);
+      // If the view has a footer, set a convenience class on the panel.
+      tempPanel.classList.toggle("cui-widget-panelWithFooter",
+                                 viewNode.querySelector(".panel-subview-footer"));
+
+      let multiView = document.createElement("panelmultiview");
+      multiView.setAttribute("id", "customizationui-widget-multiview");
+      multiView.setAttribute("nosubviews", "true");
+      tempPanel.appendChild(multiView);
+      multiView.setAttribute("mainViewIsSubView", "true");
+      multiView.setMainView(viewNode);
+      viewNode.classList.add("cui-widget-panelview");
+
+      let viewShown = false;
+      let panelRemover = () => {
+        viewNode.classList.remove("cui-widget-panelview");
+        if (viewShown) {
+          CustomizableUI.removePanelCloseListeners(tempPanel);
+          tempPanel.removeEventListener("popuphidden", panelRemover);
+
+          let evt = new CustomEvent("ViewHiding", {detail: viewNode});
+          viewNode.dispatchEvent(evt);
+        }
+        aAnchor.open = false;
+
+        this.multiView.appendChild(viewNode);
+        tempPanel.remove();
+      };
+
       // Emit the ViewShowing event so that the widget definition has a chance
       // to lazily populate the subview with things.
       let detail = {
@@ -344,44 +383,12 @@ const PanelUI = {
       }
 
       if (cancel) {
-        aAnchor.open = false;
+        panelRemover();
         return;
       }
 
-      let tempPanel = document.createElement("panel");
-      tempPanel.setAttribute("type", "arrow");
-      tempPanel.setAttribute("id", "customizationui-widget-panel");
-      tempPanel.setAttribute("class", "cui-widget-panel");
-      tempPanel.setAttribute("viewId", aViewId);
-      if (this._disableAnimations) {
-        tempPanel.setAttribute("animate", "false");
-      }
-      tempPanel.setAttribute("context", "");
-      document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(tempPanel);
-      // If the view has a footer, set a convenience class on the panel.
-      tempPanel.classList.toggle("cui-widget-panelWithFooter",
-                                 viewNode.querySelector(".panel-subview-footer"));
-
-      let multiView = document.createElement("panelmultiview");
-      multiView.setAttribute("id", "customizationui-widget-multiview");
-      multiView.setAttribute("nosubviews", "true");
-      tempPanel.appendChild(multiView);
-      multiView.setAttribute("mainViewIsSubView", "true");
-      multiView.setMainView(viewNode);
-      viewNode.classList.add("cui-widget-panelview");
+      viewShown = true;
       CustomizableUI.addPanelCloseListeners(tempPanel);
-
-      let panelRemover = function() {
-        tempPanel.removeEventListener("popuphidden", panelRemover);
-        viewNode.classList.remove("cui-widget-panelview");
-        CustomizableUI.removePanelCloseListeners(tempPanel);
-        let evt = new CustomEvent("ViewHiding", {detail: viewNode});
-        viewNode.dispatchEvent(evt);
-        aAnchor.open = false;
-
-        this.multiView.appendChild(viewNode);
-        tempPanel.parentElement.removeChild(tempPanel);
-      }.bind(this);
       tempPanel.addEventListener("popuphidden", panelRemover);
 
       let iconAnchor =
