@@ -12,8 +12,8 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
-import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
-import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
+import org.mozilla.gecko.icons.decoders.FaviconDecoder;
+import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconResponse;
 
