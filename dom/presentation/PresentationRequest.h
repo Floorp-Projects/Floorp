@@ -56,6 +56,8 @@ private:
   void FindOrCreatePresentationConnection(const nsAString& aPresentationId,
                                           Promise* aPromise);
 
+  void FindOrCreatePresentationAvailability(RefPtr<Promise>& aPromise);
+
   // Implement https://w3c.github.io/webappsec-mixed-content/#categorize-settings-object
   bool IsProhibitMixedSecurityContexts(nsIDocument* aDocument);
 
