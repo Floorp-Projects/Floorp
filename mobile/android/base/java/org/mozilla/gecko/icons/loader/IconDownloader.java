@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.icons.loader;
 
+import android.content.Context;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
@@ -54,7 +55,7 @@ public class IconDownloader implements IconLoader {
         }
 
         try {
-            LoadFaviconResult result = downloadAndDecodeImage(iconUrl);
+            LoadFaviconResult result = downloadAndDecodeImage(request.getContext(), iconUrl);
             if (result == null) {
                 return null;
             }
@@ -83,7 +84,7 @@ public class IconDownloader implements IconLoader {
      *                            exception trying a fallback URL.
      */
     @VisibleForTesting
-    LoadFaviconResult downloadAndDecodeImage(String targetFaviconURL) throws IOException, URISyntaxException {
+    LoadFaviconResult downloadAndDecodeImage(Context context, String targetFaviconURL) throws IOException, URISyntaxException {
         // Try the URL we were given.
         HttpURLConnection connection = tryDownload(targetFaviconURL);
         if (connection == null) {
@@ -94,8 +95,7 @@ public class IconDownloader implements IconLoader {
 
         // Decode the image from the fetched response.
         try {
-            stream = connection.getInputStream();
-            return decodeImageFromResponse(connection.getInputStream(), connection.getHeaderFieldInt("Content-Length", -1));
+            return decodeImageFromResponse(context, connection.getInputStream(), connection.getHeaderFieldInt("Content-Length", -1));
         } finally {
             // Close the stream and free related resources.
             IOUtils.safeStreamClose(stream);
@@ -190,7 +190,7 @@ public class IconDownloader implements IconLoader {
      * @throws IOException If attempts to fully read the stream result in such an exception, such as
      *                     in the event of a transient connection failure.
      */
-    private LoadFaviconResult decodeImageFromResponse(InputStream stream, int contentLength) throws IOException {
+    private LoadFaviconResult decodeImageFromResponse(Context context, InputStream stream, int contentLength) throws IOException {
         // This may not be provided, but if it is, it's useful.
         int bufferSize;
         if (contentLength > 0) {
@@ -209,6 +209,6 @@ public class IconDownloader implements IconLoader {
         }
 
         // Having downloaded the image, decode it.
-        return FaviconDecoder.decodeFavicon(result.getData(), 0, result.consumedLength);
+        return FaviconDecoder.decodeFavicon(context, result.getData(), 0, result.consumedLength);
     }
 }

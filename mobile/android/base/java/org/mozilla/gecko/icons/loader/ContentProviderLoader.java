@@ -59,12 +59,12 @@ public class ContentProviderLoader implements IconLoader {
             }
 
             // Try the touch icon first. It has a higher resolution usually.
-            Bitmap icon = decodeFromCursor(cursor, PartnerBookmarksProviderProxy.PartnerContract.TOUCHICON, targetSize);
+            Bitmap icon = decodeFromCursor(request.getContext(), cursor, PartnerBookmarksProviderProxy.PartnerContract.TOUCHICON, targetSize);
             if (icon != null) {
                 return IconResponse.create(icon);
             }
 
-            icon = decodeFromCursor(cursor, PartnerBookmarksProviderProxy.PartnerContract.FAVICON, targetSize);
+            icon = decodeFromCursor(request.getContext(), cursor, PartnerBookmarksProviderProxy.PartnerContract.FAVICON, targetSize);
             if (icon != null) {
                 return IconResponse.create(icon);
             }
@@ -75,7 +75,7 @@ public class ContentProviderLoader implements IconLoader {
         return null;
     }
 
-    private Bitmap decodeFromCursor(Cursor cursor, String column, int targetWidthAndHeight) {
+    private Bitmap decodeFromCursor(Context context, Cursor cursor, String column, int targetWidthAndHeight) {
         final int index = cursor.getColumnIndex(column);
         if (index == -1) {
             return null;
@@ -86,7 +86,7 @@ public class ContentProviderLoader implements IconLoader {
         }
 
         final byte[] data = cursor.getBlob(index);
-        LoadFaviconResult result = FaviconDecoder.decodeFavicon(data, 0, data.length);
+        LoadFaviconResult result = FaviconDecoder.decodeFavicon(context, data, 0, data.length);
         if (result == null) {
             return null;
         }

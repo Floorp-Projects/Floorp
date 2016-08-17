@@ -8,33 +8,31 @@ package org.mozilla.gecko.home;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
-import org.mozilla.gecko.AboutPages;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
-import org.mozilla.gecko.icons.IconCallback;
-import org.mozilla.gecko.icons.IconDescriptor;
-import org.mozilla.gecko.icons.IconResponse;
-import org.mozilla.gecko.icons.Icons;
-import org.mozilla.gecko.reader.SavedReaderViewHelper;
-import org.mozilla.gecko.reader.ReaderModeUtils;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.URLColumns;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
-import org.mozilla.gecko.widget.FaviconView;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.widget.ImageView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
+import org.mozilla.gecko.icons.IconDescriptor;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.reader.ReaderModeUtils;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
+import org.mozilla.gecko.widget.FaviconView;
 
 public class TwoLinePageRow extends LinearLayout
                             implements Tabs.OnTabsChangedListener {

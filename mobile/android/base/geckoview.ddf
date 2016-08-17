@@ -59,8 +59,7 @@ show allResults
   org.mozilla.gecko.db.BrowserDB \
   org.mozilla.gecko.db.LocalBrowserDB \
   org.mozilla.gecko.distribution.Distribution \
-  org.mozilla.gecko.favicons.Favicons \
-  org.mozilla.gecko.favicons.OnFaviconLoadedListener
+  org.mozilla.gecko.icons.*
 
 [main] = org.mozilla.gecko.* excluding [lib] [middle]
 

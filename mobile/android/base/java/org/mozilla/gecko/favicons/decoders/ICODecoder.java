@@ -4,14 +4,15 @@
 
 package org.mozilla.gecko.favicons.decoders;
 
+import android.content.Context;
 import android.graphics.Bitmap;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.gfx.BitmapUtils;
-
 import android.util.SparseArray;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.R;
 
 /**
  * Utility class for determining the region of a provided array which contains the largest bitmap,
@@ -87,11 +88,14 @@ public class ICODecoder implements Iterable<Bitmap> {
     IconDirectoryEntry[] iconDirectory;
     private boolean isValid;
     private boolean hasDecoded;
+    private int largestFaviconSize;
 
-    public ICODecoder(byte[] decodand, int offset, int len) {
+    public ICODecoder(Context context, byte[] decodand, int offset, int len) {
         this.decodand = decodand;
         this.offset = offset;
         this.len = len;
+        this.largestFaviconSize = context.getResources()
+                .getDimensionPixelSize(R.dimen.favicon_largest_interesting_size);
     }
 
     /**
@@ -163,7 +167,7 @@ public class ICODecoder implements Iterable<Bitmap> {
                 continue;
             }
 
-            if (newEntry.width > Favicons.largestFaviconSize) {
+            if (newEntry.width > largestFaviconSize) {
                 // If we already have a smaller image larger than the maximum size of interest, we
                 // don't care about the new one which is larger than the smallest image larger than
                 // the maximum size.

@@ -51,7 +51,7 @@ public class LegacyLoader implements IconLoader {
             return null;
         }
 
-        final LoadFaviconResult result = db.getFaviconForUrl(context.getContentResolver(), legacyFaviconUrl);
+        final LoadFaviconResult result = db.getFaviconForUrl(context, context.getContentResolver(), legacyFaviconUrl);
         if (result == null) {
             return null;
         }
