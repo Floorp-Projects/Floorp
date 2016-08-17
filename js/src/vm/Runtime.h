@@ -639,6 +639,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSPromiseRejectionTrackerCallback promiseRejectionTrackerCallback;
     void* promiseRejectionTrackerCallbackData;
 
+    JS::StartAsyncTaskCallback startAsyncTaskCallback;
+    JS::FinishAsyncTaskCallback finishAsyncTaskCallback;
+
   private:
     /*
      * Lock taken when using per-runtime or per-zone data that could otherwise

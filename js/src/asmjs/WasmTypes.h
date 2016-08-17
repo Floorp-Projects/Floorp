@@ -25,6 +25,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/unused.h"
 
 #include "NamespaceImports.h"
 
@@ -78,6 +79,7 @@ using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::RefCounted;
 using mozilla::Some;
+using mozilla::Unused;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
