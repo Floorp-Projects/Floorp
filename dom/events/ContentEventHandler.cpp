@@ -1581,6 +1581,13 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(nsRange* aRange)
       } else {
         nodePosition.mOffset = node->Length();
       }
+      // If the text node is empty or the last node of the range but the index
+      // is 0, we should store current position but continue looking for
+      // previous node (If there are no nodes before it, we should use current
+      // node position for returning its frame).
+      if (!nodePosition.mOffset) {
+        continue;
+      }
       break;
     }
 
@@ -1616,10 +1623,10 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(nsRange* aRange)
   }
 
   // If the start offset in the node is same as the computed offset in the
-  // node, the frame shouldn't be added to the text rect.  So, this should
-  // return previous text frame and its last offset.
-  if (nodePosition.mOffset == start) {
-    MOZ_ASSERT(nodePosition.mOffset);
+  // node and it's not 0, the frame shouldn't be added to the text rect.  So,
+  // this should return previous text frame and its last offset if there is
+  // at least one text frame.
+  if (nodePosition.mOffset && nodePosition.mOffset == start) {
     GetFrameForTextRect(nodePosition.mNode, --nodePosition.mOffset,
                         true, &lastFrame);
     if (NS_WARN_IF(!lastFrame)) {
