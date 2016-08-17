@@ -2726,7 +2726,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR &&
     (lineStart.x == lineEnd.x) != (lineStart.y == lineEnd.y) &&
     aRepeatSize.width == aDest.width && aRepeatSize.height == aDest.height &&
-    !aGradient->mRepeating && !cellContainsFill;
+    !aGradient->mRepeating && !aSrc.IsEmpty() && !cellContainsFill;
 
   gfxMatrix matrix;
   if (forceRepeatToCoverTiles) {
