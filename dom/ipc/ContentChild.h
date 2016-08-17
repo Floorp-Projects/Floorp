@@ -375,6 +375,8 @@ public:
 
   virtual bool RecvNotifyGMPsChanged() override;
 
+  virtual bool RecvNotifyEmptyHTTPCache() override;
+
   virtual PSpeechSynthesisChild* AllocPSpeechSynthesisChild() override;
 
   virtual bool DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor) override;
