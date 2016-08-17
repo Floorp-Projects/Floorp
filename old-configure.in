@@ -2298,11 +2298,6 @@ fi # SKIP_LIBRARY_CHECKS
 AC_SUBST(MOZ_PNG_ARM_NEON)
 
 dnl ========================================================
-dnl system libffi Support
-dnl ========================================================
-MOZ_CONFIG_FFI()
-
-dnl ========================================================
 dnl =
 dnl = Application
 dnl =
