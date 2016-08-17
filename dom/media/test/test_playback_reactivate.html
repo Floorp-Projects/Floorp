@@ -63,7 +63,6 @@ function startTest(test, token) {
     is(test.name, v.name, test.name + ": Name should match #2");
     checkMetadata(test.name, v, test);
     is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
-    is(v.networkState, v.NETWORK_IDLE, test.name + " checking networkState");
     ok(v.ended, test.name + " checking playback has ended");
 
     finish();
