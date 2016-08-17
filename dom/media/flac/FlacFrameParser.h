@@ -11,6 +11,7 @@
 #include "nsAutoPtr.h"
 #include "MediaDecoder.h" // For MetadataTags
 #include "MediaInfo.h"
+#include "MediaResource.h"
 
 namespace mozilla
 {
@@ -27,6 +28,10 @@ public:
   FlacFrameParser();
 
   bool IsHeaderBlock(const uint8_t* aPacket, size_t aLength) const;
+  // Return the length of the block header (METADATA_BLOCK_HEADER+
+  // METADATA_BLOCK_DATA), aPacket must point to at least 4
+  // bytes and to a valid block header start (as determined by IsHeaderBlock).
+  uint32_t HeaderBlockLength(const uint8_t* aPacket) const;
   bool DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength);
   bool HasFullMetadata() const { return mFullMetadata; }
   // Return the duration in frames found in the block. -1 if error
