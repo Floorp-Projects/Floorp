@@ -280,15 +280,6 @@ StructuredCloneHolder::Write(JSContext* aCx,
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
-
-  if (mStructuredCloneScope != StructuredCloneScope::SameProcessSameThread) {
-    for (uint32_t i = 0, len = mBlobImplArray.Length(); i < len; ++i) {
-      if (!mBlobImplArray[i]->MayBeClonedToOtherThreads()) {
-        aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
-        return;
-      }
-    }
-  }
 }
 
 void
@@ -704,6 +695,11 @@ WriteBlob(JSStructuredCloneWriter* aWriter,
   MOZ_ASSERT(aWriter);
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aHolder);
+
+  if (JS_GetStructuredCloneScope(aWriter) != JS::StructuredCloneScope::SameProcessSameThread &&
+      !aBlob->Impl()->MayBeClonedToOtherThreads()) {
+    return false;
+  }
 
   ErrorResult rv;
   RefPtr<BlobImpl> blobImpl =
