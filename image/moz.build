@@ -46,8 +46,7 @@ EXPORTS += [
     'imgRequestProxy.h',
     'IProgressObserver.h',
     'Orientation.h',
-    'SurfaceCache.h',
-    'SurfaceFlags.h',
+    'SurfaceCacheUtils.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -73,6 +72,7 @@ UNIFIED_SOURCES += [
     'ShutdownTracker.cpp',
     'SourceBuffer.cpp',
     'SurfaceCache.cpp',
+    'SurfaceCacheUtils.cpp',
     'SurfacePipe.cpp',
     'SVGDocumentWrapper.cpp',
     'VectorImage.cpp',

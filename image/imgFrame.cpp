@@ -443,18 +443,17 @@ imgFrame::Optimize()
   }
 
   if (mOptSurface) {
+    // There's no reason to keep our volatile buffer around at all if we have an
+    // optimized surface. Release our reference to it. This will leave
+    // |mVBufPtr| and |mImageSurface| as the only things keeping it alive, so
+    // it'll get freed below.
     mVBuf = nullptr;
-    mVBufPtr = nullptr;
-    mImageSurface = nullptr;
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-  // On Android, free mImageSurface unconditionally if we're discardable. This
-  // allows the operating system to free our volatile buffer.
-  // XXX(seth): We'd eventually like to do this on all platforms, but right now
-  // converting raw memory to a SourceSurface is expensive on some backends.
+  // Release all strong references to our volatile buffer's memory. This will
+  // allow the operating system to free the memory if it needs to.
+  mVBufPtr = nullptr;
   mImageSurface = nullptr;
-#endif
 
   return NS_OK;
 }
@@ -789,14 +788,9 @@ imgFrame::UnlockImageData()
       return NS_OK;
     }
 
-    // Convert our data surface to a GPU surface if possible. We'll also try to
-    // release mImageSurface.
+    // Convert our data surface to a GPU surface if possible and release
+    // whatever memory we can.
     Optimize();
-
-    // Allow the OS to release our data surface. Note that mImageSurface also
-    // keeps our volatile buffer alive, so this doesn't actually work unless we
-    // released mImageSurface in Optimize().
-    mVBufPtr = nullptr;
   }
 
   mLockCount--;

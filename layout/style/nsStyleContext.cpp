@@ -1148,7 +1148,10 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
       const nsStyleOutline *thisVisOutline = thisVis->StyleOutline();
       const nsStyleOutline *otherVisOutline = otherVis->StyleOutline();
       bool haveColor;
-      nscolor thisColor, otherColor;
+      // Dummy initialisations to keep Valgrind/Memcheck happy.
+      // See bug 1289098 comment 1.
+      nscolor thisColor = NS_RGBA(0, 0, 0, 0);
+      nscolor otherColor = NS_RGBA(0, 0, 0, 0);
       if (thisVisOutline->GetOutlineInitialColor() !=
             otherVisOutline->GetOutlineInitialColor() ||
           (haveColor = thisVisOutline->GetOutlineColor(thisColor)) !=
@@ -1220,6 +1223,8 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     }
   }
 
+  MOZ_ASSERT(NS_IsHintSubset(hint, nsChangeHint_AllHints),
+             "Added a new hint without bumping AllHints?");
   return hint & ~nsChangeHint_NeutralChange;
 }
 
@@ -1394,7 +1399,7 @@ nsStyleContext::Arena()
 }
 
 static inline void
-ExtractAnimationValue(nsCSSProperty aProperty,
+ExtractAnimationValue(nsCSSPropertyID aProperty,
                       nsStyleContext* aStyleContext,
                       StyleAnimationValue& aResult)
 {
@@ -1406,7 +1411,7 @@ ExtractAnimationValue(nsCSSProperty aProperty,
 }
 
 static nscolor
-ExtractColor(nsCSSProperty aProperty,
+ExtractColor(nsCSSPropertyID aProperty,
              nsStyleContext *aStyleContext)
 {
   StyleAnimationValue val;
@@ -1416,7 +1421,7 @@ ExtractColor(nsCSSProperty aProperty,
 }
 
 static nscolor
-ExtractColorLenient(nsCSSProperty aProperty,
+ExtractColorLenient(nsCSSPropertyID aProperty,
                     nsStyleContext *aStyleContext)
 {
   StyleAnimationValue val;
@@ -1436,7 +1441,7 @@ struct ColorIndexSet {
 static const ColorIndexSet gVisitedIndices[2] = { { 0, 0 }, { 1, 0 } };
 
 nscolor
-nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
+nsStyleContext::GetVisitedDependentColor(nsCSSPropertyID aProperty)
 {
   NS_ASSERTION(aProperty == eCSSProperty_color ||
                aProperty == eCSSProperty_background_color ||

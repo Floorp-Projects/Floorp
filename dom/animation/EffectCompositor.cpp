@@ -18,7 +18,7 @@
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
@@ -61,7 +61,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EffectCompositor, Release)
 // Returns true if there are eligible animations, false otherwise.
 bool
 FindAnimationsForCompositor(const nsIFrame* aFrame,
-                            nsCSSProperty aProperty,
+                            nsCSSPropertyID aProperty,
                             nsTArray<RefPtr<dom::Animation>>* aMatches /*out*/)
 {
   MOZ_ASSERT(!aMatches || aMatches->IsEmpty(),
@@ -433,14 +433,14 @@ EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
 
 /* static */ bool
 EffectCompositor::HasAnimationsForCompositor(const nsIFrame* aFrame,
-                                             nsCSSProperty aProperty)
+                                             nsCSSPropertyID aProperty)
 {
   return FindAnimationsForCompositor(aFrame, aProperty, nullptr);
 }
 
 /* static */ nsTArray<RefPtr<dom::Animation>>
 EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
-                                             nsCSSProperty aProperty)
+                                             nsCSSPropertyID aProperty)
 {
   nsTArray<RefPtr<dom::Animation>> result;
 
@@ -456,7 +456,7 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
 
 /* static */ void
 EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame *aFrame,
-                                             nsCSSProperty aProperty)
+                                             nsCSSPropertyID aProperty)
 {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);
   if (!effects) {
@@ -598,7 +598,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
   // animation with the *highest* composite order wins.
   // As a result, we iterate from last animation to first and, if a
   // property has already been set, we don't change it.
-  nsCSSPropertySet properties;
+  nsCSSPropertyIDSet properties;
 
   for (KeyframeEffectReadOnly* effect : Reversed(sortedEffectList)) {
     effect->GetAnimation()->ComposeStyle(animationRule, properties);
@@ -613,12 +613,12 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
 /* static */ void
 EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
                                           EffectSet& aEffectSet,
-                                          nsCSSPropertySet&
+                                          nsCSSPropertyIDSet&
                                             aPropertiesOverridden)
 {
-  AutoTArray<nsCSSProperty, LayerAnimationInfo::kRecords> propertiesToTrack;
+  AutoTArray<nsCSSPropertyID, LayerAnimationInfo::kRecords> propertiesToTrack;
   {
-    nsCSSPropertySet propertiesToTrackAsSet;
+    nsCSSPropertyIDSet propertiesToTrackAsSet;
     for (KeyframeEffectReadOnly* effect : aEffectSet) {
       for (const AnimationProperty& property : effect->Properties()) {
         if (nsCSSProps::PropHasFlags(property.mProperty,
@@ -670,13 +670,13 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
   // We only do this for properties that we can animate on the compositor
   // since we will apply other properties on the main thread where the usual
   // cascade applies.
-  nsCSSPropertySet overriddenProperties;
+  nsCSSPropertyIDSet overriddenProperties;
   if (aStyleContext) {
     GetOverriddenProperties(aStyleContext, aEffectSet, overriddenProperties);
   }
 
   bool changed = false;
-  nsCSSPropertySet animatedProperties;
+  nsCSSPropertyIDSet animatedProperties;
 
   // Iterate from highest to lowest composite order.
   for (KeyframeEffectReadOnly* effect : Reversed(sortedEffectList)) {
@@ -748,7 +748,7 @@ EffectCompositor::GetPresContext(Element* aElement)
 /* static */ void
 EffectCompositor::SetPerformanceWarning(
   const nsIFrame *aFrame,
-  nsCSSProperty aProperty,
+  nsCSSPropertyID aProperty,
   const AnimationPerformanceWarning& aWarning)
 {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);

@@ -107,9 +107,7 @@ InitAndSealCTypesClass(JSContext* cx, JS::Handle<JSObject*> global)
       !SealObjectAndPrototype(cx, global, "Error"))
     return false;
 
-  // Finally, seal the global object, for good measure. (But not recursively;
-  // this breaks things.)
-  return JS_FreezeObject(cx, global);
+  return true;
 }
 
 NS_IMETHODIMP

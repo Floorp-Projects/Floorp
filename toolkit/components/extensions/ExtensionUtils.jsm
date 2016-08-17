@@ -166,7 +166,7 @@ class BaseContext {
     this.onClose = new Set();
     this.checkedLastError = false;
     this._lastError = null;
-    this.contextId = ++gContextId;
+    this.contextId = `${++gContextId}-${Services.appinfo.uniqueProcessID}`;
     this.unloaded = false;
     this.extensionId = extensionId;
     this.jsonSandbox = null;
@@ -876,7 +876,7 @@ LocaleData.prototype = {
 // hasListener methods. |context| is an add-on scope (either an
 // ExtensionContext in the chrome process or ExtensionContext in a
 // content process). |name| is for debugging. |register| is a function
-// to register the listener. |register| is only called once, event if
+// to register the listener. |register| is only called once, even if
 // multiple listeners are registered. |register| should return an
 // unregister function that will unregister the listener.
 function EventManager(context, name, register) {
@@ -1334,8 +1334,7 @@ Messenger.prototype = {
   },
 
   connect(messageManager, name, recipient) {
-    // TODO(robwu): Use a process ID instead of the process type. bugzil.la/1287626
-    let portId = `${gNextPortId++}-${Services.appinfo.processType}`;
+    let portId = `${gNextPortId++}-${Services.appinfo.uniqueProcessID}`;
     let port = new Port(this.context, messageManager, name, portId, null);
     let msg = {name, portId};
     this._sendMessage(messageManager, "Extension:Connect", msg, recipient)

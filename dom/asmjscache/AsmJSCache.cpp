@@ -1411,21 +1411,14 @@ ChildRunnable::Run()
     case eInitial: {
       MOZ_ASSERT(NS_IsMainThread());
 
-      bool nullPrincipal;
-      nsresult rv = mPrincipal->GetIsNullPrincipal(&nullPrincipal);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        Fail(JS::AsmJSCache_InternalError);
-        return NS_OK;
-      }
-
-      if (nullPrincipal) {
+      if (mPrincipal->GetIsNullPrincipal()) {
         NS_WARNING("AsmsJSCache not supported on null principal.");
         Fail(JS::AsmJSCache_InternalError);
         return NS_OK;
       }
 
       nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-      rv = PrincipalToPrincipalInfo(mPrincipal, principalInfo);
+      nsresult rv = PrincipalToPrincipalInfo(mPrincipal, principalInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         Fail(JS::AsmJSCache_InternalError);
         return NS_OK;

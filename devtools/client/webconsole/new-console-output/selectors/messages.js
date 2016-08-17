@@ -16,18 +16,18 @@ function getAllMessages(state) {
   return prune(
     search(
       filterSeverity(messages, filters),
-      filters.searchText
+      filters.text
     ),
     logLimit
   );
 }
 
 function filterSeverity(messages, filters) {
-  return messages.filter((message) => filters[message.severity] === true);
+  return messages.filter((message) => filters[message.level] === true);
 }
 
-function search(messages, searchText = "") {
-  if (searchText === "") {
+function search(messages, text = "") {
+  if (text === "") {
     return messages;
   }
 
@@ -39,7 +39,7 @@ function search(messages, searchText = "") {
     return message
       .parameters.join("")
       .toLocaleLowerCase()
-      .includes(searchText.toLocaleLowerCase());
+      .includes(text.toLocaleLowerCase());
   });
 }
 

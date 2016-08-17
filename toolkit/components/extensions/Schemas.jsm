@@ -1339,7 +1339,13 @@ this.Schemas = {
                             pattern,
                             format);
     } else if (type.type == "object" && "functions" in type) {
-      checkTypeProperties("functions");
+      // NOTE: "events" and "properties" are currently ignored, because they are used
+      // in the DevTools schema files, but they are not currently used by anything in the
+      // initial set of supported DevTools APIs. See Bug 1290901 for rationale.
+      // Introducing a complete support of "events" and "properties" in the SubModuleType
+      // will be re-evaluated as part of Bug 1293298 and Bug 1293301.
+
+      checkTypeProperties("functions", "events", "properties");
 
       // The path we pass in here is only used for error messages.
       let functions = type.functions.map(fun => this.parseFunction(path.concat(type.id), fun));
@@ -1651,8 +1657,33 @@ this.Schemas = {
         }
       }
 
+      // Remove the namespace object if it is empty
       if (!Object.keys(obj).length) {
         delete dest[namespace];
+        // process the next namespace.
+        continue;
+      }
+
+      // If the nested namespaced API object (e.g devtools.inspectedWindow) is not empty,
+      // then turn `dest["nested.namespace"]` into `dest["nested"]["namespace"]`.
+      if (namespace.includes(".")) {
+        let apiObj = dest[namespace];
+        delete dest[namespace];
+
+        let nsLevels = namespace.split(".");
+        let currentObj = dest;
+        for (let nsLevel of nsLevels.slice(0, -1)) {
+          if (!currentObj[nsLevel]) {
+            // Create the namespace level if it doesn't exist yet.
+            currentObj = Cu.createObjectIn(currentObj, {defineAs: nsLevel});
+          } else {
+            // Move currentObj to the nested object if it already exists.
+            currentObj = currentObj[nsLevel];
+          }
+        }
+
+        // Copy the apiObj as the final nested level.
+        currentObj[nsLevels.pop()] = apiObj;
       }
     }
   },

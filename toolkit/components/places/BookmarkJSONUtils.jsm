@@ -176,6 +176,10 @@ this.BookmarkJSONUtils = Object.freeze({
 
 function BookmarkImporter(aReplace) {
   this._replace = aReplace;
+  // The bookmark change source, used to determine the sync status and change
+  // counter.
+  this._source = aReplace ? PlacesUtils.bookmarks.SOURCE_IMPORT_REPLACE :
+                            PlacesUtils.bookmarks.SOURCE_IMPORT;
 }
 BookmarkImporter.prototype = {
   /**
@@ -288,9 +292,10 @@ BookmarkImporter.prototype = {
             for (let i = 0; i < childIds.length; i++) {
               let rootItemId = childIds[i];
               if (PlacesUtils.isRootItem(rootItemId)) {
-                PlacesUtils.bookmarks.removeFolderChildren(rootItemId);
+                PlacesUtils.bookmarks.removeFolderChildren(rootItemId,
+                                                           this._source);
               } else {
-                PlacesUtils.bookmarks.removeItem(rootItemId);
+                PlacesUtils.bookmarks.removeItem(rootItemId, this._source);
               }
             }
           }
@@ -341,7 +346,7 @@ BookmarkImporter.prototype = {
             let oldURI = PlacesUtils.bookmarks.getBookmarkURI(aId);
             let uri = fixupQuery(oldURI, folderIdMap);
             if (!uri.equals(oldURI)) {
-              PlacesUtils.bookmarks.changeBookmarkURI(aId, uri);
+              PlacesUtils.bookmarks.changeBookmarkURI(aId, uri, this._source);
             }
           });
 
@@ -387,7 +392,7 @@ BookmarkImporter.prototype = {
             aData.children.forEach(function(aChild) {
               try {
                 PlacesUtils.tagging.tagURI(
-                  NetUtil.newURI(aChild.uri), [aData.title]);
+                  NetUtil.newURI(aChild.uri), [aData.title], this._source);
               } catch (ex) {
                 // Invalid tag child, skip it
               }
@@ -420,19 +425,22 @@ BookmarkImporter.prototype = {
               index: aIndex,
               lastModified: aData.lastModified,
               siteURI: siteURI,
-              guid: aData.guid
-            }).then(function (aLivemark) {
+              guid: aData.guid,
+              source: this._source
+            }).then(aLivemark => {
               let id = aLivemark.id;
               if (aData.dateAdded)
-                PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
+                PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded,
+                                                       this._source);
               if (aData.annos && aData.annos.length)
-                PlacesUtils.setAnnotationsForItem(id, aData.annos);
+                PlacesUtils.setAnnotationsForItem(id, aData.annos,
+                                                  this._source);
             });
             this._importPromises.push(lmPromise);
           }
         } else {
           id = PlacesUtils.bookmarks.createFolder(
-                 aContainer, aData.title, aIndex, aData.guid);
+                 aContainer, aData.title, aIndex, aData.guid, this._source);
           folderIdMap[aData.id] = id;
           // Process children
           if (aData.children) {
@@ -451,7 +459,7 @@ BookmarkImporter.prototype = {
         break;
       case PlacesUtils.TYPE_X_MOZ_PLACE:
         id = PlacesUtils.bookmarks.insertBookmark(
-               aContainer, NetUtil.newURI(aData.uri), aIndex, aData.title, aData.guid);
+               aContainer, NetUtil.newURI(aData.uri), aIndex, aData.title, aData.guid, this._source);
         if (aData.keyword) {
           // POST data could be set in 2 ways:
           // 1. new backups have a postData property
@@ -461,7 +469,8 @@ BookmarkImporter.prototype = {
           let postData = aData.postData || (postDataAnno && postDataAnno.value);
           let kwPromise = PlacesUtils.keywords.insert({ keyword: aData.keyword,
                                                         url: aData.uri,
-                                                        postData });
+                                                        postData,
+                                                        source: this._source });
           this._importPromises.push(kwPromise);
         }
         if (aData.tags) {
@@ -469,7 +478,7 @@ BookmarkImporter.prototype = {
             aTag.length <= Ci.nsITaggingService.MAX_TAG_LENGTH);
           if (tags.length) {
             try {
-              PlacesUtils.tagging.tagURI(NetUtil.newURI(aData.uri), tags);
+              PlacesUtils.tagging.tagURI(NetUtil.newURI(aData.uri), tags, this._source);
             } catch (ex) {
               // Invalid tag child, skip it.
               Cu.reportError(`Unable to set tags "${tags.join(", ")}" for ${aData.uri}: ${ex}`);
@@ -510,7 +519,7 @@ BookmarkImporter.prototype = {
         }
         break;
       case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
-        id = PlacesUtils.bookmarks.insertSeparator(aContainer, aIndex, aData.guid);
+        id = PlacesUtils.bookmarks.insertSeparator(aContainer, aIndex, aData.guid, this._source);
         break;
       default:
         // Unknown node type
@@ -520,11 +529,13 @@ BookmarkImporter.prototype = {
     if (id != -1 && aContainer != PlacesUtils.tagsFolderId &&
         aGrandParentId != PlacesUtils.tagsFolderId) {
       if (aData.dateAdded)
-        PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
+        PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded,
+                                               this._source);
       if (aData.lastModified)
-        PlacesUtils.bookmarks.setItemLastModified(id, aData.lastModified);
+        PlacesUtils.bookmarks.setItemLastModified(id, aData.lastModified,
+                                                  this._source);
       if (aData.annos && aData.annos.length)
-        PlacesUtils.setAnnotationsForItem(id, aData.annos);
+        PlacesUtils.setAnnotationsForItem(id, aData.annos, this._source);
     }
 
     return [folderIdMap, searchIds];

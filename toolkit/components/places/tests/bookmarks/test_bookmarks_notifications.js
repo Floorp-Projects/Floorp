@@ -10,7 +10,8 @@ add_task(function* insert_separator_notification() {
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
                                   null, null, bm.dateAdded,
-                                  bm.guid, bm.parentGuid ] }
+                                  bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -24,7 +25,8 @@ add_task(function* insert_folder_notification() {
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
                                   null, bm.title, bm.dateAdded,
-                                  bm.guid, bm.parentGuid ] }
+                                  bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -37,7 +39,8 @@ add_task(function* insert_folder_notitle_notification() {
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
                                   null, null, bm.dateAdded,
-                                  bm.guid, bm.parentGuid ] }
+                                  bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -52,7 +55,8 @@ add_task(function* insert_bookmark_notification() {
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
                                   bm.url, bm.title, bm.dateAdded,
-                                  bm.guid, bm.parentGuid ] }
+                                  bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -66,7 +70,8 @@ add_task(function* insert_bookmark_notitle_notification() {
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
                                   bm.url, null, bm.dateAdded,
-                                  bm.guid, bm.parentGuid ] }
+                                  bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -90,11 +95,13 @@ add_task(function* insert_bookmark_tag_notification() {
   observer.check([ { name: "onItemAdded",
                      arguments: [ tagId, tagParentId, tag.index, tag.type,
                                   tag.url, null, tag.dateAdded,
-                                  tag.guid, tag.parentGuid ] },
+                                  tag.guid, tag.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemChanged",
                      arguments: [ itemId, "tags", false, "",
                                   bm.lastModified, bm.type, parentId,
-                                  bm.guid, bm.parentGuid, "" ] }
+                                  bm.guid, bm.parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -111,7 +118,8 @@ add_task(function* update_bookmark_lastModified() {
   observer.check([ { name: "onItemChanged",
                      arguments: [ itemId, "lastModified", false,
                                   `${bm.lastModified * 1000}`, bm.lastModified,
-                                  bm.type, parentId, bm.guid, bm.parentGuid, "" ] }
+                                  bm.type, parentId, bm.guid, bm.parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -128,7 +136,7 @@ add_task(function* update_bookmark_title() {
   observer.check([ { name: "onItemChanged",
                      arguments: [ itemId, "title", false, bm.title,
                                   bm.lastModified, bm.type, parentId, bm.guid,
-                                  bm.parentGuid, "" ] }
+                                  bm.parentGuid, "", Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -145,7 +153,8 @@ add_task(function* update_bookmark_uri() {
   observer.check([ { name: "onItemChanged",
                      arguments: [ itemId, "uri", false, bm.url.href,
                                   bm.lastModified, bm.type, parentId, bm.guid,
-                                  bm.parentGuid, "http://url.example.com/" ] }
+                                  bm.parentGuid, "http://url.example.com/",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -168,7 +177,8 @@ add_task(function* update_move_same_folder() {
   Assert.equal(bm.index, 0);
   observer.check([ { name: "onItemMoved",
                      arguments: [ bmItemId, bmParentId, bmOldIndex, bmParentId, bm.index,
-                                  bm.type, bm.guid, bm.parentGuid, bm.parentGuid ] }
+                                  bm.type, bm.guid, bm.parentGuid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 
   // Test that we get the right index for DEFAULT_INDEX input.
@@ -180,7 +190,8 @@ add_task(function* update_move_same_folder() {
   Assert.ok(bm.index > 0);
   observer.check([ { name: "onItemMoved",
                      arguments: [ bmItemId, bmParentId, bmOldIndex, bmParentId, bm.index,
-                                  bm.type, bm.guid, bm.parentGuid, bm.parentGuid ] }
+                                  bm.type, bm.guid, bm.parentGuid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -204,7 +215,8 @@ add_task(function* update_move_different_folder() {
                      arguments: [ bmItemId, bmOldParentId, bmOldIndex, bmNewParentId,
                                   bm.index, bm.type, bm.guid,
                                   PlacesUtils.bookmarks.unfiledGuid,
-                                  bm.parentGuid ] }
+                                  bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -221,7 +233,8 @@ add_task(function* remove_bookmark() {
   // annotations.
   observer.check([ { name: "onItemRemoved",
                      arguments: [ itemId, parentId, bm.index, bm.type, bm.url,
-                                  bm.guid, bm.parentGuid ] }
+                                  bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -235,7 +248,8 @@ add_task(function* remove_folder() {
   bm = yield PlacesUtils.bookmarks.remove(bm.guid);
   observer.check([ { name: "onItemRemoved",
                      arguments: [ itemId, parentId, bm.index, bm.type, null,
-                                  bm.guid, bm.parentGuid ] }
+                                  bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -260,11 +274,13 @@ add_task(function* remove_bookmark_tag_notification() {
 
   observer.check([ { name: "onItemRemoved",
                      arguments: [ tagId, tagParentId, tag.index, tag.type,
-                                  tag.url, tag.guid, tag.parentGuid ] },
+                                  tag.url, tag.guid, tag.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemChanged",
                      arguments: [ itemId, "tags", false, "",
                                   bm.lastModified, bm.type, parentId,
-                                  bm.guid, bm.parentGuid, "" ] }
+                                  bm.guid, bm.parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -293,18 +309,22 @@ add_task(function* remove_folder_notification() {
 
   observer.check([ { name: "onItemRemoved",
                      arguments: [ bm2ItemId, folder2Id, bm2.index, bm2.type,
-                                  bm2.url, bm2.guid, bm2.parentGuid ] },
+                                  bm2.url, bm2.guid, bm2.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemRemoved",
                      arguments: [ folder2Id, folder1Id, folder2.index,
                                   folder2.type, null, folder2.guid,
-                                  folder2.parentGuid ] },
+                                  folder2.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemRemoved",
                      arguments: [ bmItemId, folder1Id, bm.index, bm.type,
-                                  bm.url, bm.guid, bm.parentGuid ] },
+                                  bm.url, bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemRemoved",
                      arguments: [ folder1Id, folder1ParentId, folder1.index,
                                   folder1.type, null, folder1.guid,
-                                  folder1.parentGuid ] }
+                                  folder1.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -346,24 +366,29 @@ add_task(function* eraseEverything_notification() {
   observer.check([ { name: "onItemRemoved",
                      arguments: [ folder2Id, folder2ParentId, folder2.index,
                                   folder2.type, null, folder2.guid,
-                                  folder2.parentGuid ] },
+                                  folder2.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemRemoved",
                      arguments: [ itemId, parentId, bm.index, bm.type,
-                                  bm.url, bm.guid, bm.parentGuid ] },
+                                  bm.url, bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemRemoved",
                      arguments: [ folder1Id, folder1ParentId, folder1.index,
                                   folder1.type, null, folder1.guid,
-                                  folder1.parentGuid ] },
+                                  folder1.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemRemoved",
                      arguments: [ menuBmId, menuBmParentId,
                                   menuBm.index, menuBm.type,
                                   menuBm.url, menuBm.guid,
-                                  menuBm.parentGuid ] },
+                                  menuBm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemRemoved",
                      arguments: [ toolbarBmId, toolbarBmParentId,
                                   toolbarBm.index, toolbarBm.type,
                                   toolbarBm.url, toolbarBm.guid,
-                                  toolbarBm.parentGuid ] }
+                                  toolbarBm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
 
@@ -413,7 +438,8 @@ add_task(function* reorder_notification() {
                                               child.type,
                                               child.guid,
                                               child.parentGuid,
-                                              child.parentGuid
+                                              child.parentGuid,
+                                              Ci.nsINavBookmarksService.SOURCE_DEFAULT
                                             ] });
   }
   observer.check(expectedNotifications);

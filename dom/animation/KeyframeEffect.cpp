@@ -16,7 +16,7 @@
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
 #include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
@@ -492,7 +492,7 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
 }
 
 const AnimationProperty*
-KeyframeEffectReadOnly::GetAnimationOfProperty(nsCSSProperty aProperty) const
+KeyframeEffectReadOnly::GetAnimationOfProperty(nsCSSPropertyID aProperty) const
 {
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx) {
@@ -575,8 +575,8 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
   }
 
   // Preserve the state of mWinsInCascade and mIsRunningOnCompositor flags.
-  nsCSSPropertySet winningInCascadeProperties;
-  nsCSSPropertySet runningOnCompositorProperties;
+  nsCSSPropertyIDSet winningInCascadeProperties;
+  nsCSSPropertyIDSet runningOnCompositorProperties;
 
   for (const AnimationProperty& property : mProperties) {
     if (property.mWinsInCascade) {
@@ -611,7 +611,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
 void
 KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                                     nsCSSPropertySet& aSetProperties)
+                                     nsCSSPropertyIDSet& aSetProperties)
 {
   ComputedTiming computedTiming = GetComputedTiming();
   mProgressOnLastCompose = computedTiming.mProgress;
@@ -725,7 +725,7 @@ KeyframeEffectReadOnly::IsRunningOnCompositor() const
 }
 
 void
-KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSProperty aProperty,
+KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSPropertyID aProperty,
                                                  bool aIsRunning)
 {
   MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
@@ -1005,7 +1005,7 @@ KeyframeEffectReadOnly::GetTarget(
 }
 
 static void
-CreatePropertyValue(nsCSSProperty aProperty,
+CreatePropertyValue(nsCSSPropertyID aProperty,
                     float aOffset,
                     const Maybe<ComputedTimingFunction>& aTimingFunction,
                     const StyleAnimationValue& aValue,
@@ -1132,7 +1132,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
       // nsCSSValue::AppendToString does not accept shorthands properties but
       // works with token stream values if we pass eCSSProperty_UNKNOWN as
       // the property.
-      nsCSSProperty propertyForSerializing =
+      nsCSSPropertyID propertyForSerializing =
         nsCSSProps::IsShorthand(propertyValue.mProperty)
         ? eCSSProperty_UNKNOWN
         : propertyValue.mProperty;
@@ -1352,7 +1352,7 @@ KeyframeEffectReadOnly::GetPresContext() const
 
 /* static */ bool
 KeyframeEffectReadOnly::IsGeometricProperty(
-  const nsCSSProperty aProperty)
+  const nsCSSPropertyID aProperty)
 {
   switch (aProperty) {
     case eCSSProperty_bottom:
@@ -1438,7 +1438,7 @@ KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
 
 void
 KeyframeEffectReadOnly::SetPerformanceWarning(
-  nsCSSProperty aProperty,
+  nsCSSPropertyID aProperty,
   const AnimationPerformanceWarning& aWarning)
 {
   for (AnimationProperty& property : mProperties) {
@@ -1459,7 +1459,7 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
 }
 
 static already_AddRefed<nsStyleContext>
-CreateStyleContextForAnimationValue(nsCSSProperty aProperty,
+CreateStyleContextForAnimationValue(nsCSSPropertyID aProperty,
                                     StyleAnimationValue aValue,
                                     nsStyleContext* aBaseStyleContext)
 {

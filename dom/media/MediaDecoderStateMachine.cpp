@@ -1139,6 +1139,11 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     return;
   }
 
+  bool wasDormant = mState == DECODER_STATE_DORMANT;
+  if (wasDormant == aDormant) {
+    return;
+  }
+
   if (mMetadataRequest.Exists()) {
     mPendingDormant = aDormant;
     return;
@@ -1146,42 +1151,34 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
 
   DECODER_LOG("SetDormant=%d", aDormant);
 
+  // Enter dormant state.
   if (aDormant) {
     if (mState == DECODER_STATE_SEEKING) {
-      if (mQueuedSeek.Exists()) {
-        // Keep latest seek target
-      } else if (mCurrentSeek.Exists()) {
-        // Because both audio and video decoders are going to be reset in this
-        // method later, we treat a VideoOnly seek task as a normal Accurate
-        // seek task so that while it is resumed, both audio and video playback
-        // are handled.
-        if (mCurrentSeek.mTarget.IsVideoOnly()) {
-          mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
-          mCurrentSeek.mTarget.SetVideoOnly(false);
-        }
-        mQueuedSeek = Move(mCurrentSeek);
-        mSeekTaskRequest.DisconnectIfExists();
-      } else {
-        mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
-                                         SeekTarget::Accurate,
-                                         MediaDecoderEventVisibility::Suppressed);
-        // XXXbholley - Nobody is listening to this promise. Do we need to pass it
-        // back to MediaDecoder when we come out of dormant?
-        RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
+      MOZ_ASSERT(!mQueuedSeek.Exists());
+      MOZ_ASSERT(mCurrentSeek.Exists());
+      // Because both audio and video decoders are going to be reset in this
+      // method later, we treat a VideoOnly seek task as a normal Accurate
+      // seek task so that while it is resumed, both audio and video playback
+      // are handled.
+      if (mCurrentSeek.mTarget.IsVideoOnly()) {
+        mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
+        mCurrentSeek.mTarget.SetVideoOnly(false);
       }
+      mQueuedSeek = Move(mCurrentSeek);
     } else {
       mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
                                        SeekTarget::Accurate,
                                        MediaDecoderEventVisibility::Suppressed);
-      // XXXbholley - Nobody is listening to this promise. Do we need to pass it
-      // back to MediaDecoder when we come out of dormant?
+      // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
+      // need to create the promise even it is not used at all.
       RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
     }
+
+    SetState(DECODER_STATE_DORMANT);
 
     // Discard the current seek task.
     DiscardSeekTaskIfExist();
 
-    SetState(DECODER_STATE_DORMANT);
     if (IsPlaying()) {
       StopPlayback();
     }
@@ -1191,15 +1188,18 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     // Note that we do not wait for the decode task queue to go idle before
     // queuing the ReleaseMediaResources task - instead, we disconnect promises,
     // reset state, and put a ResetDecode in the decode task queue. Any tasks
-    // that run after ResetDecode are supposed to run with a clean slate. We rely
-    // on that in other places (i.e. seeking), so it seems reasonable to rely on
-    // it here as well.
+    // that run after ResetDecode are supposed to run with a clean slate. We
+    // rely on that in other places (i.e. seeking), so it seems reasonable to
+    // rely on it here as well.
     mReader->ReleaseMediaResources();
-  } else if (mState == DECODER_STATE_DORMANT) {
-    mDecodingFirstFrame = true;
-    SetState(DECODER_STATE_DECODING_METADATA);
-    ReadMetadata();
+
+    return;
   }
+
+  // Exit dormant state.
+  SetState(DECODER_STATE_DECODING_METADATA);
+  mDecodingFirstFrame = true;
+  ReadMetadata();
 }
 
 RefPtr<ShutdownPromise>
@@ -1383,10 +1383,16 @@ void MediaDecoderStateMachine::VisibilityChanged()
 
     // Start video-only seek to the current time...
     SeekJob seekJob;
+
+    const SeekTarget::Type type = HasAudio()
+                                  ? SeekTarget::Type::Accurate
+                                  : SeekTarget::Type::PrevSyncPoint;
+
     seekJob.mTarget = SeekTarget(GetMediaTime(),
-                                 SeekTarget::Type::Accurate,
+                                 type,
                                  MediaDecoderEventVisibility::Suppressed,
                                  true /* aVideoOnly */);
+
     InitiateSeek(Move(seekJob));
   }
 }
@@ -1608,6 +1614,7 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
            &MediaDecoderStateMachine::OnSeekTaskResolved,
            &MediaDecoderStateMachine::OnSeekTaskRejected));
 
+  MOZ_ASSERT(!mQueuedSeek.Exists());
   MOZ_ASSERT(!mCurrentSeek.Exists());
   mCurrentSeek = Move(aSeekJob);
   return mCurrentSeek.mPromise.Ensure(__func__);
