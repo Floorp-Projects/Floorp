@@ -1339,8 +1339,13 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
             RootedValue fval(cx, ObjectValue(*uncaughtExceptionHook));
             RootedValue rv(cx);
             if (js::Call(cx, fval, object, exc, &rv)) {
-                return vp ? parseResumptionValueHelper(ac, true, rv, thisVForCheck, frame, *vp, false)
-                          : JSTRAP_CONTINUE;
+                if (vp) {
+                    JSTrapStatus status = JSTRAP_CONTINUE;
+                    if (processResumptionValue(ac, frame, thisVForCheck, rv, &status, *vp))
+                        return status;
+                } else {
+                    return JSTRAP_CONTINUE;
+                }
             }
         }
 
