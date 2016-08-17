@@ -32,7 +32,7 @@ OmxDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 PlatformDecoderModule::ConversionRequired
 OmxDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
-  return kNeedNone;
+  return ConversionRequired::kNeedNone;
 }
 
 bool

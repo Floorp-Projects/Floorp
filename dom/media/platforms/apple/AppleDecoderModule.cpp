@@ -103,9 +103,9 @@ PlatformDecoderModule::ConversionRequired
 AppleDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
   if (aConfig.IsVideo()) {
-    return kNeedAVCC;
+    return ConversionRequired::kNeedAVCC;
   } else {
-    return kNeedNone;
+    return ConversionRequired::kNeedNone;
   }
 }
 
