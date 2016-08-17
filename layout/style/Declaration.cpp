@@ -35,6 +35,14 @@ ImportantStyleData::MightMapInheritedStyleData()
   return Declaration()->MapsImportantInheritedStyleData();
 }
 
+/* virtual */ bool
+ImportantStyleData::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
+                                                  nsCSSValue* aValue)
+{
+  return Declaration()->GetDiscretelyAnimatedCSSValue(aProperty, aValue);
+}
+
+
 #ifdef DEBUG
 /* virtual */ void
 ImportantStyleData::List(FILE* out, int32_t aIndent) const
@@ -110,6 +118,21 @@ Declaration::MightMapInheritedStyleData()
   }
   return mData->HasInheritedStyleData();
 }
+
+/* virtual */ bool
+Declaration::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
+                                           nsCSSValue* aValue)
+{
+  nsCSSCompressedDataBlock* data = GetValueIsImportant(aProperty)
+                                   ? mImportantData : mData;
+  const nsCSSValue* value = data->ValueFor(aProperty);
+  if (!value) {
+    return false;
+  }
+  *aValue = *value;
+  return true;
+}
+
 
 bool
 Declaration::MapsImportantInheritedStyleData() const

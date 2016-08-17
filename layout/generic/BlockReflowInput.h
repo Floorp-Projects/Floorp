@@ -16,68 +16,91 @@ class nsBlockFrame;
 class nsFrameList;
 class nsOverflowContinuationTracker;
 
-// Block reflow state flags.
-//
-// BRS_UNCONSTRAINEDBSIZE is set in the BlockReflowInput constructor when the
-// frame being reflowed has been given NS_UNCONSTRAINEDSIZE as its available
-// BSize in the ReflowInput. If set, NS_UNCONSTRAINEDSIZE is passed to
-// nsLineLayout as the available BSize.
-#define BRS_UNCONSTRAINEDBSIZE    0x00000001
-// BRS_ISBSTARTMARGINROOT is set in the BlockReflowInput constructor when
-// reflowing a "block margin root" frame (i.e. a frame with the
-// NS_BLOCK_MARGIN_ROOT flag set, for which margins apply by default).
-//
-// The flag is also set when reflowing a frame whose computed BStart border
-// padding is non-zero.
-#define BRS_ISBSTARTMARGINROOT    0x00000002
-// BRS_ISBENDMARGINROOT is set in the BlockReflowInput constructor when
-// reflowing a "block margin root" frame (i.e. a frame with the
-// NS_BLOCK_MARGIN_ROOT flag set, for which margins apply by default).
-//
-// The flag is also set when reflowing a frame whose computed BEnd border
-// padding is non-zero.
-#define BRS_ISBENDMARGINROOT      0x00000004
-// BRS_APPLYBSTARTMARGIN is set if the BStart margin should be considered when
-// placing a linebox that contains a block frame. It may be set as a side-effect
-// of calling nsBlockFrame::ShouldApplyBStartMargin(); once set,
-// ShouldApplyBStartMargin() uses it as a fast-path way to return whether the
-// BStart margin should apply.
-//
-// If the flag hasn't been set in the block reflow state, then
-// ShouldApplyBStartMargin() will crawl the line list to see if a block frame
-// precedes the specified frame. If so, the BStart margin should be applied, and
-// the flag is set to cache the result. (If not, the BStart margin will be
-// applied as a result of the generational margin collapsing logic in
-// nsBlockReflowContext::ComputeCollapsedBStartMargin(). In this case, the flag
-// won't be set, so subsequent calls to ShouldApplyBStartMargin() will continue
-// crawl the line list.)
-//
-// This flag is also set in the BlockReflowInput constructor if
-// BRS_ISBSTARTMARGINROOT is set; that is, the frame being reflowed is a margin
-// root by default.
-#define BRS_APPLYBSTARTMARGIN     0x00000008
-#define BRS_ISFIRSTINFLOW         0x00000010
-// Set when mLineAdjacentToTop is valid
-#define BRS_HAVELINEADJACENTTOTOP 0x00000020
-// Set when the block has the equivalent of NS_BLOCK_FLOAT_MGR
-#define BRS_FLOAT_MGR             0x00000040
-// Set when nsLineLayout::LineIsEmpty was true at the end of reflowing
-// the current line
-#define BRS_LINE_LAYOUT_EMPTY     0x00000080
-#define BRS_ISOVERFLOWCONTAINER   0x00000100
-// Our mPushedFloats list is stored on the blocks' proptable
-#define BRS_PROPTABLE_FLOATCLIST  0x00000200
-// Set when the pref layout.float-fragments-inside-column.enabled is true.
-#define BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED 0x00000400
-#define BRS_LASTFLAG              BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED
-
 namespace mozilla {
 
-// BlockReflowInput contains additional reflow state information that the
+// BlockReflowInput contains additional reflow input information that the
 // block frame uses along with ReflowInput. Like ReflowInput, this
 // is read-only data that is passed down from a parent frame to its children.
 class BlockReflowInput {
-  using ReflowInput = mozilla::ReflowInput;
+
+  // Block reflow input flags.
+  struct Flags {
+    Flags()
+      : mHasUnconstrainedBSize(false)
+      , mIsBStartMarginRoot(false)
+      , mIsBEndMarginRoot(false)
+      , mShouldApplyBStartMargin(false)
+      , mIsFirstInflow(false)
+      , mHasLineAdjacentToTop(false)
+      , mBlockNeedsFloatManager(false)
+      , mIsLineLayoutEmpty(false)
+      , mIsOverflowContainer(false)
+      , mIsFloatListInBlockPropertyTable(false)
+      , mFloatFragmentsInsideColumnEnabled(false)
+    {}
+
+    // Set in the BlockReflowInput constructor when the frame being reflowed has
+    // been given NS_UNCONSTRAINEDSIZE as its available BSize in the
+    // ReflowInput. If set, NS_UNCONSTRAINEDSIZE is passed to nsLineLayout as
+    // the available BSize.
+    bool mHasUnconstrainedBSize : 1;
+
+    // Set in the BlockReflowInput constructor when reflowing a "block margin
+    // root" frame (i.e. a frame with the NS_BLOCK_MARGIN_ROOT flag set, for
+    // which margins apply by default).
+    //
+    // The flag is also set when reflowing a frame whose computed BStart border
+    // padding is non-zero.
+    bool mIsBStartMarginRoot : 1;
+
+    // Set in the BlockReflowInput constructor when reflowing a "block margin
+    // root" frame (i.e. a frame with the NS_BLOCK_MARGIN_ROOT flag set, for
+    // which margins apply by default).
+    //
+    // The flag is also set when reflowing a frame whose computed BEnd border
+    // padding is non-zero.
+    bool mIsBEndMarginRoot : 1;
+
+    // Set if the BStart margin should be considered when placing a linebox that
+    // contains a block frame. It may be set as a side-effect of calling
+    // nsBlockFrame::ShouldApplyBStartMargin(); once set,
+    // ShouldApplyBStartMargin() uses it as a fast-path way to return whether
+    // the BStart margin should apply.
+    //
+    // If the flag hasn't been set in the block reflow input, then
+    // ShouldApplyBStartMargin() will crawl the line list to see if a block frame
+    // precedes the specified frame. If so, the BStart margin should be applied, and
+    // the flag is set to cache the result. (If not, the BStart margin will be
+    // applied as a result of the generational margin collapsing logic in
+    // nsBlockReflowContext::ComputeCollapsedBStartMargin(). In this case, the flag
+    // won't be set, so subsequent calls to ShouldApplyBStartMargin() will continue
+    // crawl the line list.)
+    //
+    // This flag is also set in the BlockReflowInput constructor if
+    // mIsBStartMarginRoot is set; that is, the frame being reflowed is a margin
+    // root by default.
+    bool mShouldApplyBStartMargin : 1;
+
+    bool mIsFirstInflow : 1;
+
+    // Set when mLineAdjacentToTop is valid.
+    bool mHasLineAdjacentToTop : 1;
+
+    // Set when the block has the equivalent of NS_BLOCK_FLOAT_MGR.
+    bool mBlockNeedsFloatManager : 1;
+
+    // Set when nsLineLayout::LineIsEmpty was true at the end of reflowing
+    // the current line.
+    bool mIsLineLayoutEmpty : 1;
+
+    bool mIsOverflowContainer : 1;
+
+    // Set when our mPushedFloats list is stored on the block's property table.
+    bool mIsFloatListInBlockPropertyTable : 1;
+
+    // Set when the pref layout.float-fragments-inside-column.enabled is true.
+    bool mFloatFragmentsInsideColumnEnabled : 1;
+  };
 
 public:
   BlockReflowInput(const ReflowInput& aReflowInput,
@@ -192,8 +215,8 @@ public:
   void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 
   void AdvanceToNextLine() {
-    if (GetFlag(BRS_LINE_LAYOUT_EMPTY)) {
-      SetFlag(BRS_LINE_LAYOUT_EMPTY, false);
+    if (mFlags.mIsLineLayoutEmpty) {
+      mFlags.mIsLineLayoutEmpty = false;
     } else {
       mLineNumber++;
     }
@@ -297,7 +320,7 @@ public:
   // If it is mBlock->end_lines(), then it is invalid.
   nsLineList::iterator mCurrentLine;
 
-  // When BRS_HAVELINEADJACENTTOTOP is set, this refers to a line
+  // When mHasLineAdjacentToTop is set, this refers to a line
   // which we know is adjacent to the top of the block (in other words,
   // all lines before it are empty and do not have clearance. This line is
   // always before the current line.
@@ -347,29 +370,12 @@ public:
 
   int32_t mLineNumber;
 
-  int16_t mFlags;
+  Flags mFlags;
 
   uint8_t mFloatBreakType;
 
   // The amount of computed block-direction size "consumed" by previous-in-flows.
   nscoord mConsumedBSize;
-
-  void SetFlag(uint32_t aFlag, bool aValue)
-  {
-    NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
-    if (aValue) { // set flag
-      mFlags |= aFlag;
-    }
-    else {        // unset flag
-      mFlags &= ~aFlag;
-    }
-  }
-
-  bool GetFlag(uint32_t aFlag) const
-  {
-    NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
-    return !!(mFlags & aFlag);
-  }
 
 private:
   bool CanPlaceFloat(nscoord aFloatISize,

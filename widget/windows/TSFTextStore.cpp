@@ -3618,9 +3618,11 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   // caller even if we return it.  It's converted to just E_FAIL.
   // However, this is fixed on Win 10.
 
+  bool dontReturnNoLayoutError = false;
+
   const TSFStaticSink* kSink = TSFStaticSink::GetInstance();
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
-      mContentForTSF.IsLayoutChangedAfter(acpEnd)) {
+      mContentForTSF.IsLayoutChangedAt(acpEnd)) {
     const Selection& selectionForTSF = SelectionForTSFRef();
     // The bug of Microsoft Office IME 2010 for Japanese is similar to
     // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
@@ -3644,14 +3646,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // available, we should use it as the result.
       if ((kIsMSOfficeJapaneseIME2010 ||
            sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar) &&
-          !mContentForTSF.IsLayoutChangedAfter(acpStart) &&
           acpStart < acpEnd) {
         acpEnd = acpStart;
-        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::GetTextExt() hacked the offsets "
-           "of the first character of changing range of the composition "
-           "string for TIP acpStart=%d, acpEnd=%d",
-           this, acpStart, acpEnd));
+        dontReturnNoLayoutError = true;
       }
       // Although, the condition is not clear, MS-IME sometimes retrieves the
       // caret rect immediately after modifying the composition string but
@@ -3662,11 +3659,18 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
                acpStart == acpEnd &&
                selectionForTSF.IsCollapsed() &&
                selectionForTSF.EndOffset() == acpEnd) {
-        acpEnd = acpStart = mContentForTSF.MinOffsetOfLayoutChanged();
-        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::GetTextExt() hacked the offsets "
-           "of the caret of the composition string for TIP acpStart=%d, "
-           "acpEnd=%d", this, acpStart, acpEnd));
+        if (mContentForTSF.MinOffsetOfLayoutChanged() > LONG_MAX) {
+          MOZ_LOG(sTextStoreLog, LogLevel::Error,
+            ("0x%p   TSFTextStore::GetTextExt(), FAILED due to the text "
+             "is too big for TSF (cannot treat modified offset as LONG), "
+             "mContentForTSF.MinOffsetOfLayoutChanged()=%u",
+             this, mContentForTSF.MinOffsetOfLayoutChanged()));
+          return E_FAIL;
+        }
+        int32_t minOffsetOfLayoutChanged =
+          static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
+        acpEnd = acpStart = std::max(minOffsetOfLayoutChanged - 1, 0);
+        dontReturnNoLayoutError = true;
       }
     }
     // Free ChangJie 2010 and Easy Changjei 1.0.12.0 doesn't handle
@@ -3679,9 +3683,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
               kSink->IsEasyChangjeiActive())) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
-      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-        ("0x%p   TSFTextStore::GetTextExt() hacked the offsets for "
-         "TIP acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+      dontReturnNoLayoutError = true;
     }
     // Some Chinese TIPs of Microsoft doesn't show candidate window in e10s
     // mode on Win8 or later.
@@ -3694,13 +3696,55 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
                  kSink->IsMSWubiActive())))) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
+      dontReturnNoLayoutError = true;
+    }
+
+    // If we hack the queried range for active TIP, that means we should not
+    // return TS_E_NOLAYOUT even if hacked offset is still modified.  So, as
+    // far as possible, we should adjust the offset.
+    if (dontReturnNoLayoutError) {
+      MOZ_ASSERT(mContentForTSF.IsLayoutChanged());
+      if (mContentForTSF.MinOffsetOfLayoutChanged() > LONG_MAX) {
+        MOZ_LOG(sTextStoreLog, LogLevel::Error,
+          ("0x%p   TSFTextStore::GetTextExt(), FAILED due to the text "
+           "is too big for TSF (cannot treat modified offset as LONG), "
+           "mContentForTSF.MinOffsetOfLayoutChanged()=%u",
+           this, mContentForTSF.MinOffsetOfLayoutChanged()));
+        return E_FAIL;
+      }
+      // Note that even if all characters in the editor or the composition
+      // string was modified, 0 or start offset of the composition string is
+      // useful because it may return caret rect or old character's rect which
+      // the user still see.  That must be useful information for TIP.
+      int32_t firstModifiedOffset =
+        static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
+      LONG lastUnmodifiedOffset = std::max(firstModifiedOffset - 1, 0);
+      if (mContentForTSF.IsLayoutChangedAt(acpStart)) {
+        // If TSF queries text rect in composition string, we should return
+        // rect at start of the composition even if its layout is changed.
+        if (acpStart >= mComposition.mStart) {
+          acpStart = mComposition.mStart;
+        }
+        // Otherwise, use first character's rect.  Even if there is no
+        // characters, the query event will return caret rect instead.
+        else {
+          acpStart = lastUnmodifiedOffset;
+        }
+        MOZ_ASSERT(acpStart <= acpEnd);
+      }
+      if (mContentForTSF.IsLayoutChangedAt(acpEnd)) {
+        // Use max larger offset of last unmodified offset or acpStart which
+        // may be the first character offset of the composition string.
+        acpEnd = std::max(acpStart, lastUnmodifiedOffset);
+      }
       MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-        ("0x%p   TSFTextStore::GetTextExt() hacked the offsets for "
-         "TIP acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+        ("0x%p   TSFTextStore::GetTextExt() hacked the queried range "
+         "for not returning TS_E_NOLAYOUT, new values are: "
+         "acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
     }
   }
 
-  if (mContentForTSF.IsLayoutChangedAfter(acpEnd)) {
+  if (!dontReturnNoLayoutError && mContentForTSF.IsLayoutChangedAt(acpEnd)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("0x%p   TSFTextStore::GetTextExt() returned TS_E_NOLAYOUT "
        "(acpEnd=%d)", this, acpEnd));
@@ -3738,7 +3782,14 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     options.mRelativeToInsertionPoint = true;
     startOffset -= mSelectionForTSF.StartOffset();
   }
-  event.InitForQueryTextRect(startOffset, acpEnd - acpStart, options);
+  // ContentEventHandler and ContentCache return actual caret rect when
+  // the queried range is collapsed and selection is collapsed at the
+  // queried range.  Then, its height (in horizontal layout, width in vertical
+  // layout) may be different from actual font height of the line.  In such
+  // case, users see "dancing" of candidate or suggest window of TIP.
+  // For preventing it, we should query text rect with at least 1 length.
+  uint32_t length = std::max(static_cast<int32_t>(acpEnd - acpStart), 1);
+  event.InitForQueryTextRect(startOffset, length, options);
 
   DispatchEvent(event);
   if (NS_WARN_IF(!event.mSucceeded)) {
@@ -3747,6 +3798,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
        "eQueryTextRect failure", this));
     return TS_E_INVALIDPOS; // but unexpected failure, maybe.
   }
+
   // IMEs don't like empty rects, fix here
   if (event.mReply.mRect.width <= 0)
     event.mReply.mRect.width = 1;

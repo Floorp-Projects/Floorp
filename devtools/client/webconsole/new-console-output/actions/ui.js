@@ -7,12 +7,12 @@
 "use strict";
 
 const {
-  FILTERBAR_TOGGLE,
+  FILTER_BAR_TOGGLE,
 } = require("../constants");
 
 function filterBarToggle(show) {
   return {
-    type: FILTERBAR_TOGGLE
+    type: FILTER_BAR_TOGGLE
   };
 }
 

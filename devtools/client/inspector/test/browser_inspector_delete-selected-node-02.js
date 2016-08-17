@@ -93,6 +93,7 @@ add_task(function* () {
 
   function* deleteNodeWithContextMenu(selector) {
     yield selectNode(selector, inspector);
+    let nodeToBeDeleted = inspector.selection.nodeFront;
 
     info("Getting the node container in the markup view.");
     let container = yield getContainerForSelector(selector, inspector);
@@ -111,6 +112,16 @@ add_task(function* () {
 
     info("Waiting for inspector to update.");
     yield inspector.once("inspector-updated");
+
+    // Since the mutations are sent asynchronously from the server, the
+    // inspector-updated event triggered by the deletion might happen before
+    // the mutation is received and the element is removed from the
+    // breadcrumbs. See bug 1284125.
+    if (inspector.breadcrumbs.indexOf(nodeToBeDeleted) > -1) {
+      info("Crumbs haven't seen deletion. Waiting for breadcrumbs-updated.");
+      yield inspector.once("breadcrumbs-updated");
+    }
+
     return menuItem;
   }
 

@@ -185,7 +185,7 @@ SessionStore.prototype = {
         this._clearDisk();
 
         // Clear all data about closed tabs
-        for (let [ssid, win] in Iterator(this._windows))
+        for (let [ssid, win] of Object.entries(this._windows))
           win.closedTabs = [];
 
         this._lastClosedTabIndex = -1;
@@ -300,7 +300,7 @@ SessionStore.prototype = {
         break;
       case "last-pb-context-exited":
         // Clear private closed tab data when we leave private browsing.
-        for (let [, window] in Iterator(this._windows)) {
+        for (let window of Object.values(this._windows)) {
           window.closedTabs = window.closedTabs.filter(tab => !tab.isPrivate);
         }
         this._lastClosedTabIndex = -1;

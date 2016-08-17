@@ -8,28 +8,21 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
-const {
-  SEVERITY_FILTER
-} = require("../constants");
+const actions = require("devtools/client/webconsole/new-console-output/actions/filters");
 
-const FilterToggleButton = createClass({
+const FilterButton = createClass({
 
-  displayName: "FilterToggleButton",
+  displayName: "FilterButton",
 
   propTypes: {
     label: PropTypes.string.isRequired,
-    filterType: PropTypes.string.isRequired,
     filterKey: PropTypes.string.isRequired,
     active: PropTypes.bool.isRequired,
     dispatch: PropTypes.func.isRequired,
   },
 
   onClick: function () {
-    if (this.props.filterType === SEVERITY_FILTER) {
-      this.props.dispatch(actions.severityFilter(
-        this.props.filterKey, !this.props.active));
-    }
+    this.props.dispatch(actions.filterToggle(this.props.filterKey));
   },
 
   render() {
@@ -47,4 +40,4 @@ const FilterToggleButton = createClass({
   }
 });
 
-exports.FilterToggleButton = FilterToggleButton;
+exports.FilterButton = FilterButton;

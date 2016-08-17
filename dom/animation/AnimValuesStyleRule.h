@@ -32,6 +32,8 @@ public:
   // nsIStyleRule implementation
   void MapRuleInfoInto(nsRuleData* aRuleData) override;
   bool MightMapInheritedStyleData() override;
+  bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
+                                     nsCSSValue* aValue) override;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif

@@ -43,6 +43,8 @@ Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestUtils",
+                                  "resource://testing-common/ExtensionXPCShellUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
                                   "resource://testing-common/httpd.js");
 XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
@@ -50,6 +52,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
 XPCOMUtils.defineLazyModuleGetter(this, "MockRegistry",
                                   "resource://testing-common/MockRegistry.jsm");
 
+// WebExtension wrapper for ease of testing
+ExtensionTestUtils.init(this);
 
 // We need some internal bits of AddonManager
 var AMscope = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});

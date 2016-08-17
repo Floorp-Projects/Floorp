@@ -4,30 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "secdert.h"
-#include "nspr.h"
-#include "nsNSSComponent.h" // for PIPNSS string bundle calls.
-#include "keyhi.h"
-#include "secder.h"
-#include "cryptohi.h"
 #include "base64.h"
-#include "secasn1.h"
+#include "cryptohi.h"
+#include "keyhi.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Telemetry.h"
+#include "nsIContent.h"
+#include "nsIDOMHTMLSelectElement.h"
+#include "nsIGenKeypairInfoDlg.h"
+#include "nsIServiceManager.h"
+#include "nsITokenDialogs.h"
 #include "nsKeygenHandler.h"
 #include "nsKeygenHandlerContent.h"
-#include "nsIServiceManager.h"
-#include "nsIDOMHTMLSelectElement.h"
-#include "nsIContent.h"
 #include "nsKeygenThread.h"
+#include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSHelper.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsCRT.h"
-#include "nsITokenDialogs.h"
-#include "nsIGenKeypairInfoDlg.h"
-#include "nsNSSShutDown.h"
 #include "nsXULAppAPI.h"
-
-#include "mozilla/Telemetry.h"
+#include "nspr.h"
+#include "secasn1.h"
+#include "secder.h"
+#include "secdert.h"
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
@@ -150,10 +148,9 @@ static CurveNameTagPair nameTagPair[] =
 
 };
 
-SECKEYECParams * 
-decode_ec_params(const char *curve)
+mozilla::UniqueSECItem
+DecodeECParams(const char* curve)
 {
-    SECKEYECParams *ecparams;
     SECOidData *oidData = nullptr;
     SECOidTag curveOidTag = SEC_OID_UNKNOWN; /* default */
     int i, numCurves;
@@ -173,10 +170,11 @@ decode_ec_params(const char *curve)
         return nullptr;
     }
 
-    ecparams = SECITEM_AllocItem(nullptr, nullptr, (2 + oidData->oid.len));
-
-    if (!ecparams)
-      return nullptr;
+    mozilla::UniqueSECItem ecparams(SECITEM_AllocItem(nullptr, nullptr,
+                                                      2 + oidData->oid.len));
+    if (!ecparams) {
+        return nullptr;
+    }
 
     /* 
      * ecparams->data needs to contain the ASN encoding of an object ID (OID)
@@ -414,7 +412,7 @@ GatherKeygenTelemetry(uint32_t keyGenMechanism, int keysize, char* curve)
     nsCString secp384r1 = NS_LITERAL_CSTRING("secp384r1");
     nsCString secp256r1 = NS_LITERAL_CSTRING("secp256r1");
 
-    SECKEYECParams* decoded = decode_ec_params(curve);
+    mozilla::UniqueSECItem decoded = DecodeECParams(curve);
     if (!decoded) {
       switch (keysize) {
         case 2048:
@@ -428,7 +426,6 @@ GatherKeygenTelemetry(uint32_t keyGenMechanism, int keysize, char* curve)
           break;
       }
     } else {
-      SECITEM_FreeItem(decoded, true);
       if (secp384r1.EqualsIgnoreCase(curve, secp384r1.Length())) {
           mozilla::Telemetry::Accumulate(
               mozilla::Telemetry::KEYGEN_GENERATED_KEY_TYPE, secp384r1);
@@ -464,9 +461,10 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
     uint32_t keyGenMechanism;
     PK11SlotInfo *slot = nullptr;
     PK11RSAGenParams rsaParams;
+    mozilla::UniqueSECItem ecParams;
     SECOidTag algTag;
     int keysize = 0;
-    void *params = nullptr;
+    void *params = nullptr; // Non-owning.
     SECKEYPrivateKey *privateKey = nullptr;
     SECKEYPublicKey *publicKey = nullptr;
     CERTSubjectPublicKeyInfo *spkInfo = nullptr;
@@ -545,7 +543,8 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
              * is silently ignored when a valid curve is presented
              * in keyparams.
              */
-            if ((params = decode_ec_params(keyparamsString)) == nullptr) {
+            ecParams = DecodeECParams(keyparamsString);
+            if (!ecParams) {
                 /* The keyparams attribute did not specify a valid
                  * curve name so use a curve based on the keysize.
                  * NOTE: Here keysize is used only as an indication of
@@ -555,14 +554,16 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
                  */
                 switch (keysize) {
                 case 2048:
-                    params = decode_ec_params("secp384r1");
+                    ecParams = DecodeECParams("secp384r1");
                     break;
                 case 1024:
                 case 512:
-                    params = decode_ec_params("secp256r1");
+                    ecParams = DecodeECParams("secp256r1");
                     break;
                 } 
             }
+            MOZ_ASSERT(ecParams);
+            params = ecParams.get();
             /* XXX The signature algorithm ought to choose the hashing
              * algorithm based on key size once ECDSA variations based
              * on SHA256 SHA384 and SHA512 are standardized.
@@ -710,12 +711,6 @@ loser:
     }
     if (pkac.challenge.data) {
         free(pkac.challenge.data);
-    }
-    // If params is non-null and doesn't point to rsaParams, it was allocated
-    // in decode_ec_params. We have to free this memory.
-    if (params && params != &rsaParams) {
-        SECITEM_FreeItem(static_cast<SECItem*>(params), true);
-        params = nullptr;
     }
     return rv;
 }

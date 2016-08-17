@@ -2291,8 +2291,8 @@ const KTableEntry nsCSSProps::kDominantBaselineKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kFillRuleKTable[] = {
-  { eCSSKeyword_nonzero, NS_STYLE_FILL_RULE_NONZERO },
-  { eCSSKeyword_evenodd, NS_STYLE_FILL_RULE_EVENODD },
+  { eCSSKeyword_nonzero, StyleFillRule::NonZero },
+  { eCSSKeyword_evenodd, StyleFillRule::EvenOdd },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

@@ -33,14 +33,14 @@ add_task(function* () {
         return awaitLoad(tabId);
       }).then(() => {
         return browser.tabs.executeScript(tabId, {code: "document.body.textContent"});
-      }).then(textContent => {
+      }).then(([textContent]) => {
         browser.test.assertEq("", textContent, "`textContent` should be empty when bypassCache=false");
         return browser.tabs.reload(tabId, {bypassCache: true});
       }).then(() => {
         return awaitLoad(tabId);
       }).then(() => {
         return browser.tabs.executeScript(tabId, {code: "document.body.textContent"});
-      }).then(textContent => {
+      }).then(([textContent]) => {
         let [pragma, cacheControl] = textContent.split(":");
         browser.test.assertEq("no-cache", pragma, "`pragma` should be set to `no-cache` when bypassCache is true");
         browser.test.assertEq("no-cache", cacheControl, "`cacheControl` should be set to `no-cache` when bypassCache is true");

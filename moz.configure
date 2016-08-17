@@ -251,9 +251,26 @@ set_config('MOZ_SYSTEM_HUNSPELL', system_hunspell)
 
 
 @depends(target)
+@imports('os')
 def makensis_progs(target):
-    if target.kernel == 'WINNT':
-        return ('makensis-3.0b3.exe', 'makensis-3.0b1.exe', 'makensis.exe', 'makensis')
+    if target.kernel != 'WINNT':
+        return
+
+    candidates = [
+        'makensis-3.0b3.exe',
+        'makensis-3.0b1.exe',
+        'makensis.exe',
+        'makensis',
+    ]
+
+    # Look for nsis installed by msys environment. But only the 32-bit version.
+    # We use an absolute path and insert as the first entry so it is preferred
+    # over a 64-bit exe that may be in PATH.
+    if 'MSYSTEM_PREFIX' in os.environ:
+        prefix = os.path.dirname(os.environ['MSYSTEM_PREFIX'])
+        candidates.insert(0, os.path.join(prefix, 'mingw32', 'bin', 'makensis.exe'))
+
+    return tuple(candidates)
 
 nsis = check_prog('MAKENSISU', makensis_progs)
 
@@ -277,6 +294,16 @@ def nsis_version(nsis):
                               % nsis_min_version)
 
     return ver
+
+# And that makensis is 32-bit.
+@depends_if(nsis)
+@checking('for 32-bit NSIS')
+def nsis_binary_type(nsis):
+    bin_type = windows_binary_type(nsis)
+    if bin_type != 'win32':
+        raise FatalCheckError('%s is not a 32-bit Windows application' % nsis)
+
+    return 'yes'
 
 
 # Fallthrough to autoconf-based configure

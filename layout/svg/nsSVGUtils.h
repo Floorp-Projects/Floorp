@@ -538,8 +538,8 @@ public:
    */
   static uint16_t GetGeometryHitTestFlags(nsIFrame* aFrame);
 
-  static FillRule ToFillRule(uint8_t aFillRule) {
-    return aFillRule == NS_STYLE_FILL_RULE_EVENODD ?
+  static FillRule ToFillRule(mozilla::StyleFillRule aFillRule) {
+    return aFillRule == mozilla::StyleFillRule::EvenOdd ?
              FillRule::FILL_EVEN_ODD : FillRule::FILL_WINDING;
   }
 

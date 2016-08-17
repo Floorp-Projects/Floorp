@@ -63,6 +63,11 @@ Endianness = EnumString.subclass(
     'little',
 )
 
+WindowsBinaryType = EnumString.subclass(
+    'win32',
+    'win64',
+)
+
 # The order of those checks matter
 CPU_preprocessor_checks = OrderedDict((
     ('x86', '__i386__ || _M_IX86'),

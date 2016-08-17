@@ -226,7 +226,7 @@ ScaledFontBase::GetGlyphDesignMetrics(const uint16_t* aGlyphs, uint32_t aNumGlyp
             aGlyphMetrics[i].mXBearing += 1.0f;
           }
         }
-#ifdef MOZ2D_HAS_MOZ_CAIRO
+#if defined(MOZ2D_HAS_MOZ_CAIRO) && defined(CAIRO_HAS_DWRITE_FONT)
         else if (cairo_scaled_font_get_type(mScaledFont) == CAIRO_FONT_TYPE_DWRITE) {
           if (aGlyphMetrics[i].mWidth > 0 && aGlyphMetrics[i].mHeight > 0) {
             aGlyphMetrics[i].mWidth -= 2.0f;

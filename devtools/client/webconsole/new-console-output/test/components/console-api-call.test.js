@@ -4,7 +4,6 @@
 
 const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
 const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
-const jsdom = require("mocha-jsdom");
 const expect = require("expect");
 
 const {
@@ -12,7 +11,6 @@ const {
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 describe("ConsoleAPICall component:", () => {
-  jsdom();
   describe("console.log", () => {
     it("renders string grips", () => {
       const message = stubConsoleMessages.get("console.log('foobar', 'test')");
