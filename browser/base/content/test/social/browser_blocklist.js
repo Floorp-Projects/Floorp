@@ -4,7 +4,7 @@
 
 // a place for miscellaneous social tests
 
-var SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 var blocklistURL = "http://example.com/browser/browser/base/content/test/social/blocklist.xml";
@@ -12,13 +12,13 @@ var blocklistURL = "http://example.com/browser/browser/base/content/test/social/
 var manifest = { // normal provider
   name: "provider ok",
   origin: "https://example.com",
-  shareURL: "https://example.com/browser/browser/base/content/test/social/social_share.html",
+  sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 var manifest_bad = { // normal provider
   name: "provider blocked",
   origin: "https://test1.example.com",
-  shareURL: "https://test1.example.com/browser/browser/base/content/test/social/social_share.html",
+  sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png"
 };
 

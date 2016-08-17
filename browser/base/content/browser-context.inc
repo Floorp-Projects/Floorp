@@ -93,6 +93,10 @@
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
                 oncommand="gContextMenu.saveLink();"/>
+      <menu id="context-marklinkMenu" label="&social.marklinkMenu.label;"
+            accesskey="&social.marklinkMenu.accesskey;">
+        <menupopup/>
+      </menu>
       <menuitem id="context-copyemail"
                 label="&copyEmailCmd.label;"
                 accesskey="&copyEmailCmd.accesskey;"
@@ -286,6 +290,10 @@
                 hidden="true">
         <menupopup id="context-sendpagetodevice-popup"
                    onpopupshowing="(() => { let browser = gBrowser || getPanelBrowser(); gFxAccounts.populateSendTabToDevicesMenu(event.target, browser.currentURI.spec, browser.contentTitle); })()"/>
+      </menu>
+      <menu id="context-markpageMenu" label="&social.markpageMenu.label;"
+            accesskey="&social.markpageMenu.accesskey;">
+        <menupopup/>
       </menu>
       <menuseparator id="context-sep-viewbgimage"/>
       <menuitem id="context-viewbgimage"

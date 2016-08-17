@@ -713,6 +713,10 @@ PageMetadataMessenger.init();
 
 addEventListener("ActivateSocialFeature", function (aEvent) {
   let document = content.document;
+  if (PrivateBrowsingUtils.isContentWindowPrivate(content)) {
+    Cu.reportError("cannot use social providers in private windows");
+    return;
+  }
   let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIDOMWindowUtils);
   if (!dwu.isHandlingUserInput) {

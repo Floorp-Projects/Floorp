@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link id="siteicon" rel="icon" href="./icon.png"/>
+    <title>Demo Mark Window</title>
+    <script type="text/javascript">
+
+    function updateTextNode(parent, text) {
+      var textNode = parent.childNodes[0];
+      if (textNode)
+        parent.removeChild(textNode);
+      textNode = document.createTextNode(text);
+      parent.appendChild(textNode);
+    }
+    function onLoad() {
+      updateTextNode(document.getElementById("shared"), location.search);
+      socialMarkUpdate(true);
+    }
+    function socialMarkUpdate(isMarked) {
+        var evt = document.createEvent("CustomEvent");
+        evt.initCustomEvent("socialMarkUpdate", true, true, JSON.stringify({marked: isMarked}));
+        document.documentElement.dispatchEvent(evt);
+    }
+    var shareData;
+    addEventListener("OpenGraphData", function(e) {
+      shareData = JSON.parse(e.detail);
+      updateTextNode(document.getElementById("shared"), shareData.url);
+      socialMarkUpdate(true);
+    });
+    </script>
+</head>
+
+<body onload="onLoad()">
+  <div id="content">
+    <h3>This window shows the mark data</h3>
+    <div>Page Marked: <div id="shared" class="textbox"></div></div>
+    <button id="unmark" onclick="socialMarkUpdate(false); window.close()">Unmark</button>
+    <button onclick="window.close();">Close</button>
+  </div>
+</body>
+</html>
