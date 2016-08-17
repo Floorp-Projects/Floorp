@@ -111,6 +111,9 @@ interface Element : Node {
   [Throws, Pref="dom.w3c_pointer_events.enabled"]
   void releasePointerCapture(long pointerId);
 
+  [Pref="dom.w3c_pointer_events.enabled"]
+  boolean hasPointerCapture(long pointerId);
+
   // Proprietary extensions
   /**
    * Set this during a mousedown event to grab and retarget all mouse events

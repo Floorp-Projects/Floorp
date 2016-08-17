@@ -8,13 +8,6 @@ ac_add_options --enable-profiling  # needed for --enable-dmd to work on Windows
 ac_add_options --enable-verify-mar
 ac_add_options --enable-require-all-d3dc-versions
 
-if [ -f /c/builds/google-oauth-api.key ]; then
-  _google_oauth_api_keyfile=/c/builds/google-oauth-api.key
-else
-  _google_oauth_api_keyfile=/e/builds/google-oauth-api.key
-fi
-ac_add_options --with-google-oauth-api-keyfile=${_google_oauth_api_keyfile}
-
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 

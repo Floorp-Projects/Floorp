@@ -15,8 +15,11 @@
 #include "nsIWorkerDebugger.h"
 #include "nsPIDOMWindow.h"
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsAutoPtr.h"
@@ -41,6 +44,7 @@ class nsIDocument;
 class nsIEventTarget;
 class nsIPrincipal;
 class nsIScriptContext;
+class nsIScriptTimeoutHandler;
 class nsISerializable;
 class nsIThread;
 class nsIThreadInternal;
@@ -938,6 +942,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // fired on the main thread if the worker script fails to load
   nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
 
+  JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
   TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;
   uint32_t mNextTimeoutId;
@@ -1049,6 +1054,15 @@ public:
     mDebugger = aDebugger;
   }
 
+  JS::UniqueChars
+  AdoptDefaultLocale()
+  {
+    MOZ_ASSERT(mDefaultLocale,
+               "the default locale must have been successfully set for anyone "
+               "to be trying to adopt it");
+    return Move(mDefaultLocale);
+  }
+
   void
   DoRunLoop(JSContext* aCx);
 
@@ -1072,7 +1086,10 @@ public:
   ThawInternal();
 
   void
-  TraceTimeouts(const TraceCallbacks& aCallbacks, void* aClosure) const;
+  TraverseTimeouts(nsCycleCollectionTraversalCallback& aCallback);
+
+  void
+  UnlinkTimeouts();
 
   bool
   ModifyBusyCountFromWorker(bool aIncrease);
@@ -1125,12 +1142,8 @@ public:
   ReportErrorToConsole(const char* aMessage);
 
   int32_t
-  SetTimeout(JSContext* aCx,
-             Function* aHandler,
-             const nsAString& aStringHandler,
-             int32_t aTimeout,
-             const Sequence<JS::Value>& aArguments,
-             bool aIsInterval,
+  SetTimeout(JSContext* aCx, nsIScriptTimeoutHandler* aHandler,
+             int32_t aTimeout, bool aIsInterval,
              ErrorResult& aRv);
 
   void

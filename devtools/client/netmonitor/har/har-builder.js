@@ -165,6 +165,7 @@ HarBuilder.prototype = {
     request.httpVersion = file.httpVersion || "";
 
     request.headers = this.buildHeaders(file.requestHeaders);
+    request.headers = this.appendHeadersPostData(request.headers, file);
     request.cookies = this.buildCookies(file.requestCookies);
 
     request.queryString = NetworkHelper.parseQueryString(
@@ -197,6 +198,33 @@ HarBuilder.prototype = {
     }
 
     return this.buildNameValuePairs(input.headers);
+  },
+
+  appendHeadersPostData: function (input = [], file) {
+    if (!file.requestPostData) {
+      return input;
+    }
+
+    this.fetchData(file.requestPostData.postData.text).then(value => {
+      let contentType = value.match(/Content-Type: ([^;\s]+)/);
+      let contentLength = value.match(/Content-Length: (.+)/);
+
+      if (contentType && contentType.length > 1) {
+        input.push({
+          name: "Content-Type",
+          value: contentType[1]
+        });
+      }
+
+      if (contentLength && contentLength.length > 1) {
+        input.push({
+          name: "Content-Length",
+          value: contentLength[1]
+        });
+      }
+    });
+
+    return input;
   },
 
   buildCookies: function (input) {

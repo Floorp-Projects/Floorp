@@ -10,7 +10,7 @@
 
     For more information, also see:
 
-      http://mxr.mozilla.org/mozilla/source/xpcom/glue/nsVersionComparator.cpp
+      http://dxr.mozilla.org/mozilla-central/source/xpcom/glue/nsVersionComparator.cpp
 '''
 
 import re

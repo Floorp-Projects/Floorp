@@ -137,7 +137,7 @@ BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInf
   nsIDocument* doc = GetOwner() ? GetOwner()->GetDoc() : nullptr;
   uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
   if (doc) {
-    doc->NodePrincipal()->GetAppStatus(&status);
+    status = doc->NodePrincipal()->GetAppStatus();
   }
 
   mCharging = aBatteryInfo.charging();

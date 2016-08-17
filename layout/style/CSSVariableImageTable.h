@@ -9,14 +9,14 @@
 #define mozilla_CSSVariableImageTable_h
 
 #include "nsClassHashtable.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 #include "nsStyleContext.h"
 #include "nsTArray.h"
 
 /**
  * CSSVariableImageTable maintains a global mapping
- *   (nsStyleContext, nsCSSProperty) -> nsTArray<ImageValue>
+ *   (nsStyleContext, nsCSSPropertyID) -> nsTArray<ImageValue>
  * which allows us to track the relationship between CSS property values
  * involving variables and any images they may reference.
  *
@@ -44,7 +44,7 @@ namespace CSSVariableImageTable {
 namespace detail {
 
 typedef nsTArray<RefPtr<css::ImageValue>> ImageValueArray;
-typedef nsClassHashtable<nsGenericHashKey<nsCSSProperty>, ImageValueArray>
+typedef nsClassHashtable<nsGenericHashKey<nsCSSPropertyID>, ImageValueArray>
         PerPropertyImageHashtable;
 typedef nsClassHashtable<nsPtrHashKey<nsStyleContext>, PerPropertyImageHashtable>
         CSSVariableImageHashtable;
@@ -67,7 +67,7 @@ inline bool& IsReplacing()
 
 /**
  * ReplaceAll() allows callers to replace the ImageValues associated with a
- * (nsStyleContext, nsCSSProperty) pair. The memory used by the previous list of
+ * (nsStyleContext, nsCSSPropertyID) pair. The memory used by the previous list of
  * ImageValues is automatically released.
  *
  * @param aContext The style context the ImageValues are associated with.
@@ -77,7 +77,7 @@ inline bool& IsReplacing()
  */
 template <typename Lambda>
 inline void ReplaceAll(nsStyleContext* aContext,
-                       nsCSSProperty aProp,
+                       nsCSSPropertyID aProp,
                        Lambda aFunc)
 {
   MOZ_ASSERT(aContext);
@@ -134,7 +134,7 @@ inline void ReplaceAll(nsStyleContext* aContext,
  * CSSVariableImageTable::ReplaceAll().
  */
 inline void
-Add(nsStyleContext* aContext, nsCSSProperty aProp, css::ImageValue* aValue)
+Add(nsStyleContext* aContext, nsCSSPropertyID aProp, css::ImageValue* aValue)
 {
   MOZ_ASSERT(aValue);
   MOZ_ASSERT(aContext);

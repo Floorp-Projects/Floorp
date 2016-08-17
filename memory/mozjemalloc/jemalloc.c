@@ -194,6 +194,15 @@
 #define MALLOC_VALIDATE
 
 /*
+ * MALLOC_PROTECTED_REGIONS enables the allocation of 'protected' regions,
+ * which can only be reallocated or deallocated using a unique ID. This
+ * may help trace a class of use-after-free bugs where a thread attempts
+ * to reallocate a region of memory it previously freed, which has since
+ * been allocated for use by another thread.
+ */
+#define MALLOC_PROTECTED_REGIONS
+
+/*
  * MALLOC_BALANCE enables monitoring of arena lock contention and dynamically
  * re-balances arena load if exponentially averaged contention exceeds a
  * certain threshold.
@@ -238,7 +247,7 @@
 
 #ifndef NO_TLS
 static unsigned long tlsIndex = 0xffffffff;
-#endif 
+#endif
 
 #define	__thread
 #define	_pthread_self() __threadid()
@@ -774,6 +783,28 @@ struct extent_node_s {
 };
 typedef rb_tree(extent_node_t) extent_tree_t;
 
+#ifdef MALLOC_PROTECTED_REGIONS
+/* Tree of protected memory regions. */
+typedef struct protected_node_s protected_node_t;
+struct protected_node_s {
+	/* Linkage for the address-ordered tree. */
+	rb_node(protected_node_t) link_ad;
+
+	/* Linkage for the ID-ordered tree. */
+	rb_node(protected_node_t) link_id;
+
+	/* The starting address of the region. */
+	uintptr_t	addr;
+
+	/* The size of the region. */
+	size_t		size;
+
+	/* The ID used to access the region. */
+	uint32_t	id;
+};
+typedef rb_tree(protected_node_t) protected_tree_t;
+#endif /* MALLOC_PROTECTED_REGIONS */
+
 /******************************************************************************/
 /*
  * Radix tree data structures.
@@ -1225,6 +1256,22 @@ static malloc_mutex_t	chunks_mtx;
  */
 static extent_tree_t	chunks_szad_mmap;
 static extent_tree_t	chunks_ad_mmap;
+
+#ifdef MALLOC_PROTECTED_REGIONS
+/* Stores unused protected nodes. */
+static protected_node_t	*protected_nodes;
+
+/* Protects access to the protected region trees. */
+static malloc_mutex_t	protected_tree_mtx;
+
+/*
+ * Trees of regions that were allocated using the protected allocation API.
+ * As with the extent trees, different tree orderings are needed depending on
+ * function, so there are two trees with the same contents.
+ */
+static protected_tree_t	protected_tree_ad;
+static protected_tree_t	protected_tree_id;
+#endif /* MALLOC_PROTECTED_REGIONS */
 
 /* Protects huge allocation-related data structures. */
 static malloc_mutex_t	huge_mtx;
@@ -1904,7 +1951,7 @@ pow2_ceil(size_t x)
 	return (x);
 }
 
-#ifdef MALLOC_BALANCE
+#if defined(MALLOC_BALANCE) || defined(MALLOC_PROTECTED_REGIONS)
 /*
  * Use a simple linear congruential pseudo-random number generator:
  *
@@ -1953,6 +2000,12 @@ prn_##suffix(uint32_t lg_range)						\
 static __thread uint32_t balance_x;
 PRN_DEFINE(balance, balance_x, 1297, 1301)
 #endif
+
+#ifdef MALLOC_PROTECTED_REGIONS
+/* Define the PRNG used for protected region ID assignment. */
+static uint32_t protected_id_x;
+PRN_DEFINE(protected_id, protected_id_x, 1297, 1301)
+#endif /* MALLOC_PROTECTED_REGIONS */
 
 #ifdef MALLOC_UTRACE
 static int
@@ -2361,6 +2414,36 @@ rb_wrap(static, extent_tree_ad_, extent_tree_t, extent_node_t, link_ad,
  */
 /******************************************************************************/
 /*
+ * Begin protected region tree code.
+ */
+
+#ifdef MALLOC_PROTECTED_REGIONS
+static inline int
+protected_ad_comp(protected_node_t *a, protected_node_t *b)
+{
+	return ((a->addr > b->addr) - (a->addr < b->addr));
+}
+
+/* Wrap red-black tree macros in functions. */
+rb_wrap(static, protected_tree_ad_, protected_tree_t, protected_node_t,
+	link_ad, protected_ad_comp)
+
+static inline int
+protected_id_comp(protected_node_t *a, protected_node_t *b)
+{
+	return ((a->id > b->id) - (a->id < b->id));
+}
+
+/* Wrap red-black tree macros in functions. */
+rb_wrap(static, protected_tree_id_, protected_tree_t, protected_node_t,
+	link_id, protected_id_comp)
+#endif /* MALLOC_PROTECTED_REGIONS */
+
+/*
+ * End protected region tree code.
+ */
+/******************************************************************************/
+/*
  * Begin chunk management functions.
  */
 
@@ -2420,10 +2503,10 @@ pages_map(void *addr, size_t size)
          * or the nearest available memory above that address, providing a near-guarantee
          * that those bits are clear. If they are not, we return NULL below to indicate
          * out-of-memory.
-         * 
-         * The addr is chosen as 0x0000070000000000, which still allows about 120TB of virtual 
+         *
+         * The addr is chosen as 0x0000070000000000, which still allows about 120TB of virtual
          * address space.
-         * 
+         *
          * See Bug 589735 for more information.
          */
 	bool check_placement = true;
@@ -2445,8 +2528,8 @@ pages_map(void *addr, size_t size)
 		ret = NULL;
 	}
 #if defined(__ia64__)
-        /* 
-         * If the allocated memory doesn't have its upper 17 bits clear, consider it 
+        /*
+         * If the allocated memory doesn't have its upper 17 bits clear, consider it
          * as out of memory.
         */
         else if ((long long)ret & 0xffff800000000000) {
@@ -4591,6 +4674,37 @@ isalloc(const void *ptr)
 	return (ret);
 }
 
+#ifdef MALLOC_PROTECTED_REGIONS
+static void
+assert_unprotected(void *p)
+{
+	uintptr_t addr;
+	protected_node_t key;
+	protected_node_t *node;
+
+	if (!p)
+		return;
+
+	addr = (uintptr_t)p;
+	key.addr = addr;
+
+	malloc_mutex_lock(&protected_tree_mtx);
+
+	node = protected_tree_ad_psearch(&protected_tree_ad, &key);
+	if (!node)
+		goto RETURN;
+
+	/* Crash if |addr| is within the region protected by |node|. */
+	if (addr >= node->addr && addr < node->addr + node->size)
+		jemalloc_crash();
+
+RETURN:
+	malloc_mutex_unlock(&protected_tree_mtx);
+}
+#else /* !MALLOC_PROTECTED_REGIONS */
+static inline void assert_unprotected(void *p) { }
+#endif /* MALLOC_PROTECTED_REGIONS */
+
 static inline void
 arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
     arena_chunk_map_t *mapelm)
@@ -4682,6 +4796,8 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 static void
 arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 {
+	assert_unprotected(ptr);
+
 	/* Large allocation. */
 	malloc_spin_lock(&arena->lock);
 
@@ -4941,6 +5057,9 @@ iralloc(void *ptr, size_t size)
 	assert(size != 0);
 
 	oldsize = isalloc(ptr);
+
+	if (oldsize > bin_maxclass)
+		assert_unprotected(ptr);
 
 	if (size <= arena_maxclass)
 		return (arena_ralloc(ptr, size, oldsize));
@@ -5260,6 +5379,8 @@ static void
 huge_dalloc(void *ptr)
 {
 	extent_node_t *node, key;
+
+	assert_unprotected(ptr);
 
 	malloc_mutex_lock(&huge_mtx);
 
@@ -5618,7 +5739,7 @@ malloc_init_hard(void)
 				"", "");
 		abort();
 	}
-#else	
+#else
 	pagesize = (size_t) result;
 	pagesize_mask = (size_t) result - 1;
 	pagesize_2pow = ffs((int)result) - 1;
@@ -5916,6 +6037,16 @@ MALLOC_OUT:
 	extent_tree_szad_new(&chunks_szad_mmap);
 	extent_tree_ad_new(&chunks_ad_mmap);
 
+#ifdef MALLOC_PROTECTED_REGIONS
+	/* Initialize protected region data. */
+	protected_nodes = NULL;
+	malloc_mutex_init(&protected_tree_mtx);
+	protected_tree_ad_new(&protected_tree_ad);
+	protected_tree_id_new(&protected_tree_id);
+	/* The seed doesn't really matter, so long as it's valid. */
+	SPRN(protected_id, 42);
+#endif /* MALLOC_PROTECTED_REGIONS */
+
 	/* Initialize huge allocation data. */
 	malloc_mutex_init(&huge_mtx);
 	extent_tree_ad_new(&huge);
@@ -6128,6 +6259,88 @@ malloc_shutdown()
 	malloc_print_stats();
 }
 #endif
+
+#ifdef MALLOC_PROTECTED_REGIONS
+static protected_node_t *
+protected_node_alloc()
+{
+	protected_node_t *ret;
+
+	if (protected_nodes) {
+		ret = protected_nodes;
+		protected_nodes = *(protected_node_t **)ret;
+	} else {
+		ret = (protected_node_t *)base_alloc(sizeof(protected_node_t));
+	}
+
+	return (ret);
+}
+
+/*
+ * Analogous to base_node_dealloc, we don't actually
+ * release tree nodes. Instead, we save them for later.
+ */
+static void
+protected_node_dealloc(protected_node_t *node)
+{
+	*(protected_node_t **)node = protected_nodes;
+	protected_nodes = node;
+}
+
+static void
+create_protected_region(void *p, uint32_t *id)
+{
+	protected_node_t *key;
+	protected_node_t *node;
+	size_t size = isalloc(p);
+	uintptr_t addr = (uintptr_t)p;
+
+	malloc_mutex_lock(&protected_tree_mtx);
+
+	key = protected_node_alloc();
+	key->addr = addr;
+	key->size = size;
+	key->id = PRN(protected_id, 32);
+
+	/* Ensure the current address isn't already protected. */
+	node = protected_tree_ad_search(&protected_tree_ad, key);
+	if (node)
+		jemalloc_crash();
+
+	/* Generate a unique, valid key. Reserve 1 for dummy implementations. */
+	while (key->id < 2 || protected_tree_id_search(&protected_tree_id, key))
+		key->id = PRN(protected_id, 32);
+
+	*id = key->id;
+	protected_tree_ad_insert(&protected_tree_ad, key);
+	protected_tree_id_insert(&protected_tree_id, key);
+
+	malloc_mutex_unlock(&protected_tree_mtx);
+}
+
+static void
+remove_protected_region(void *p, uint32_t *id)
+{
+	protected_node_t key;
+	protected_node_t *node;
+	uintptr_t addr = (uintptr_t)p;
+	key.addr = addr;
+
+	malloc_mutex_lock(&protected_tree_mtx);
+
+	node = protected_tree_ad_search(&protected_tree_ad, &key);
+
+	/* Ensure the node exists, and the right ID was passed in. */
+	if (!node || node->id != *id)
+		jemalloc_crash();
+
+	protected_tree_ad_remove(&protected_tree_ad, node);
+	protected_tree_id_remove(&protected_tree_id, node);
+	protected_node_dealloc(node);
+
+	malloc_mutex_unlock(&protected_tree_mtx);
+}
+#endif /* MALLOC_PROTECTED_REGIONS */
 
 /*
  * End general internal functions.
@@ -6464,7 +6677,7 @@ MOZ_MEMORY_API void
 free_impl(void *ptr)
 {
 	size_t offset;
-	
+
 	DARWIN_ONLY((szone->free)(szone, ptr); return);
 
 	UTRACE(ptr, 0, 0);
@@ -6489,13 +6702,44 @@ free_impl(void *ptr)
  * Begin non-standard functions.
  */
 
-/* This was added by Mozilla for use by SQLite. */
 #if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
-static
+#  define MAYBE_MEMORY_API static inline
 #else
-MOZ_MEMORY_API
+#  define MAYBE_MEMORY_API MOZ_MEMORY_API
 #endif
-size_t
+
+#ifdef MALLOC_PROTECTED_REGIONS
+MAYBE_MEMORY_API void
+malloc_protect_impl(void *ptr, uint32_t *id)
+{
+	if (ptr)
+		create_protected_region(ptr, id);
+}
+
+MAYBE_MEMORY_API void
+malloc_unprotect_impl(void *ptr, uint32_t *id)
+{
+	if (ptr)
+		remove_protected_region(ptr, id);
+	*id = 0;
+}
+#else /* !MALLOC_PROTECTED_REGIONS */
+MAYBE_MEMORY_API void
+malloc_protect_impl(void *ptr, uint32_t *id)
+{
+	if (ptr)
+		*id = 1;
+}
+
+MAYBE_MEMORY_API void
+malloc_unprotect_impl(void *ptr, uint32_t *id)
+{
+	*id = 0;
+}
+#endif /* MALLOC_PROTECTED_REGIONS */
+
+/* This was added by Mozilla for use by SQLite. */
+MAYBE_MEMORY_API size_t
 malloc_good_size_impl(size_t size)
 {
 	/*
@@ -7176,8 +7420,8 @@ MOZ_MEMORY_API void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIG
  * we need to initialize the heap at the first opportunity we get.
  * DLL_PROCESS_ATTACH in DllMain is that opportunity.
  */
-BOOL APIENTRY DllMain(HINSTANCE hModule, 
-                      DWORD reason, 
+BOOL APIENTRY DllMain(HINSTANCE hModule,
+                      DWORD reason,
                       LPVOID lpReserved)
 {
   switch (reason) {
@@ -7188,7 +7432,7 @@ BOOL APIENTRY DllMain(HINSTANCE hModule,
       /* Initialize the heap */
       malloc_init_hard();
       break;
-    
+
     case DLL_PROCESS_DETACH:
       break;
 

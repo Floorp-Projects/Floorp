@@ -172,6 +172,25 @@ public:
     mNeedsUpdate = true;
   }
 
+  void ConvertAndScale(const SurfaceFormat& aDestFormat,
+                       const IntSize& aDestSize,
+                       unsigned char* aDestBuffer,
+                       int32_t aStride)
+  {
+    MOZ_ASSERT(mTexture);
+    if (!mTexture) {
+      return;
+    }
+    MOZ_ASSERT(mTexture->GetBufferDescriptor().type() == BufferDescriptor::TYCbCrDescriptor);
+    MOZ_ASSERT(mTexture->GetSize() == mSize);
+    ImageDataSerializer::ConvertAndScaleFromYCbCrDescriptor(
+      mTexture->GetBuffer(),
+      mTexture->GetBufferDescriptor().get_YCbCrDescriptor(),
+      aDestFormat,
+      aDestSize,
+      aDestBuffer,
+      aStride);
+  }
 public:
   BufferTextureHost* mTexture;
   const gfx::IntSize mSize;
@@ -459,6 +478,63 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
     return false;
 }
 
+static bool
+AttemptVideoConvertAndScale(TextureSource* aSource, const SourceSurface* aSourceMask,
+                            gfx::Float aOpacity, CompositionOp aBlendMode,
+                            const TexturedEffect* aTexturedEffect,
+                            const Matrix& aNewTransform, const gfx::Rect& aRect,
+                            const gfx::Rect& aClipRect,
+                            DrawTarget* aDest, const DrawTarget* aBuffer)
+{
+  WrappingTextureSourceYCbCrBasic* wrappingSource = aSource->AsWrappingTextureSourceYCbCrBasic();
+  if (!wrappingSource)
+    return false;
+#ifdef MOZILLA_SSE_HAVE_CPUID_DETECTION
+  if (!mozilla::supports_ssse3()) // libyuv requests SSSE3 for fast YUV conversion.
+    return false;
+  if (aNewTransform.HasNonAxisAlignedTransform() || aNewTransform.HasNegativeScaling())
+      return false;
+  if (aSourceMask || aOpacity != 1.0f)
+    return false;
+  if (aBlendMode != CompositionOp::OP_OVER && aBlendMode != CompositionOp::OP_SOURCE)
+    return false;
+
+  IntRect dstRect;
+  // the compiler should know a lot about aNewTransform at this point
+  // maybe it can do some sophisticated optimization of the following
+  if (!aNewTransform.TransformBounds(aRect).ToIntRect(&dstRect))
+    return false;
+
+  IntRect clipRect;
+  if (!aClipRect.ToIntRect(&clipRect))
+    return false;
+
+  if (!(aTexturedEffect->mTextureCoords == Rect(0.0f, 0.0f, 1.0f, 1.0f)))
+    return false;
+  if (aDest->GetFormat() == SurfaceFormat::R5G6B5_UINT16)
+    return false;
+
+  if (aDest == aBuffer && !clipRect.Contains(dstRect))
+    return false;
+  if (!IntRect(IntPoint(0, 0), aDest->GetSize()).Contains(dstRect))
+    return false;
+
+  uint8_t* dstData;
+  IntSize dstSize;
+  int32_t dstStride;
+  SurfaceFormat dstFormat;
+  if (aDest->LockBits(&dstData, &dstSize, &dstStride, &dstFormat)) {
+    wrappingSource->ConvertAndScale(dstFormat,
+                                    dstRect.Size(),
+                                    dstData + ptrdiff_t(dstRect.x) * BytesPerPixel(dstFormat) + ptrdiff_t(dstRect.y) * dstStride,
+                                    dstStride);
+    aDest->ReleaseBits(dstData);
+    return true;
+  } else
+#endif // MOZILLA_SSE_HAVE_CPUID_DETECTION
+    return false;
+}
+
 void
 BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                           const gfx::IntRect& aClipRect,
@@ -553,6 +629,12 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       if (source && texturedEffect->mPremultiplied) {
         // we have a fast path for video here
         if (source->mFromYCBCR &&
+            AttemptVideoConvertAndScale(texturedEffect->mTexture, sourceMask, aOpacity, blendMode,
+                                        texturedEffect,
+                                        newTransform, aRect, transformedClipRect,
+                                        dest, buffer)) {
+          // we succeeded in convert and scaling
+        } else if (source->mFromYCBCR &&
             AttemptVideoScale(source, sourceMask, aOpacity, blendMode,
                               texturedEffect,
                               newTransform, aRect, transformedClipRect,

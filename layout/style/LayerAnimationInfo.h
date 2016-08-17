@@ -7,7 +7,7 @@
 #define mozilla_LayerAnimationInfo_h
 
 #include "nsChangeHint.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
 
 namespace mozilla {
@@ -19,7 +19,7 @@ struct LayerAnimationInfo {
   // For CSS properties that may be animated on a separate layer, represents
   // a record of the corresponding layer type and change hint.
   struct Record {
-    nsCSSProperty mProperty;
+    nsCSSPropertyID mProperty;
     nsDisplayItem::Type mLayerType;
     nsChangeHint mChangeHint;
   };

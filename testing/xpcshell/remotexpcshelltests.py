@@ -9,6 +9,7 @@ import sys, os
 import subprocess
 import runxpcshelltests as xpcshell
 import tempfile
+import time
 from zipfile import ZipFile
 from mozlog import commandline
 import shutil
@@ -203,7 +204,17 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.device.removeDir(dirname)
 
     def clearRemoteDir(self, remoteDir):
-        self.device.shellCheckOutput([self.remoteClearDirScript, remoteDir])
+        out = ""
+        try:
+            out = self.device.shellCheckOutput([self.remoteClearDirScript, remoteDir])
+        except mozdevice.DMError:
+            self.log.info("unable to delete %s: '%s'" % (remoteDir, str(out)))
+            self.log.info("retrying after 10 seconds...")
+            time.sleep(10)
+            try:
+                out = self.device.shellCheckOutput([self.remoteClearDirScript, remoteDir])
+            except mozdevice.DMError:
+                self.log.error("failed to delete %s: '%s'" % (remoteDir, str(out)))
 
     #TODO: consider creating a separate log dir.  We don't have the test file structure,
     #      so we use filename.log.  Would rather see ./logs/filename.log

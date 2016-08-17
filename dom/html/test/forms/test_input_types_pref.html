@@ -64,6 +64,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=764481
       prefs: [["dom.forms.datetime", true]],
       inputType: "month",
       expectedType: "month"
+    }, {
+      prefs: [["dom.forms.datetime", false]],
+      inputType: "week",
+      expectedType: "text"
+    }, {
+      prefs: [["dom.forms.datetime", true]],
+      inputType: "week",
+      expectedType: "week"
     }
   ];
 

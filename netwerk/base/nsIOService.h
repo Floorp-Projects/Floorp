@@ -170,7 +170,7 @@ private:
     nsCOMPtr<nsINetworkLinkService>      mNetworkLinkService;
     bool                                 mNetworkLinkServiceInitialized;
 
-    // Cached protocol handlers
+    // Cached protocol handlers, only accessed on the main thread
     nsWeakPtr                            mWeakHandler[NS_N(gScheme)];
 
     // cached categories

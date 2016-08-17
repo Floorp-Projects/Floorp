@@ -179,8 +179,9 @@ add_task(function* test_tel_email_url_number_input() {
   }
 });
 
-add_task(function* test_date_time_color_range_input() {
-  for (let selector of ["#input_date", "#input_time", "#input_color", "#input_range"]) {
+add_task(function* test_date_time_color_range_month_week_input() {
+  for (let selector of ["#input_date", "#input_time", "#input_color",
+                        "#input_range", "#input_month"]) {
     yield test_contextmenu(selector,
       ["context-navigation", null,
            ["context-back",         false,
@@ -219,8 +220,8 @@ add_task(function* test_search_input() {
   );
 });
 
-add_task(function* test_datetime_month_week_datetimelocal_input_todos() {
-  for (let type of ["datetime", "week", "datetime-local"]) {
+add_task(function* test_datetime_datetimelocal_input_todos() {
+  for (let type of ["datetime", "datetime-local"]) {
     let returnedType = yield ContentTask.spawn(gBrowser.selectedBrowser, type, function*(type) {
       let doc = content.document;
       let input = doc.getElementById("input_" + type);

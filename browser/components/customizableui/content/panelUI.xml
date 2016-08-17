@@ -318,7 +318,7 @@
               break;
             case "popuphidden":
               this.removeAttribute("panelopen");
-              this._mainView.style.removeProperty("height");
+              this._mainView.style.removeProperty("max-height");
               this.showMainView();
               this._mainViewObserver.disconnect();
               break;
@@ -346,7 +346,7 @@
           // Ignore the mutation that'll fire when we set the height of
           // the main view.
           this.ignoreMutations = true;
-          this._mainView.style.height =
+          this._mainView.style.maxHeight =
             this.getBoundingClientRect().height + "px";
           this.ignoreMutations = false;
         ]]></body>

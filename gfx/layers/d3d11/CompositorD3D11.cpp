@@ -1520,7 +1520,7 @@ CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
   }
 
   if (mDevice && DeviceManagerD3D11::Get()->GetCompositorDevice() != mDevice) {
-    gfxCriticalError() << "Out of sync D3D11 devices in HandleError, " << (int)mVerifyBuffersFailed;
+    gfxCriticalNote << "Out of sync D3D11 devices in HandleError, " << (int)mVerifyBuffersFailed;
   }
 
   HRESULT hrOnReset = S_OK;

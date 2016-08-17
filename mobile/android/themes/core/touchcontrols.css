@@ -217,9 +217,6 @@
 }
 
 .volumeStack,
-.controlBar[firstshow="true"] .muteButton,
-.controlBar[firstshow="true"] .scrubberStack,
-.controlBar[firstshow="true"] .durationBox,
 .timeLabel {
   display: none;
 }

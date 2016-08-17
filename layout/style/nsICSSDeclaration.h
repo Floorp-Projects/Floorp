@@ -14,14 +14,14 @@
 /**
  * This interface provides access to methods analogous to those of
  * nsIDOMCSSStyleDeclaration; the difference is that these use
- * nsCSSProperty enums for the prop names instead of using strings.
+ * nsCSSPropertyID enums for the prop names instead of using strings.
  * This is meant for use in performance-sensitive code only!  Most
  * consumers should continue to use nsIDOMCSSStyleDeclaration.
  */
 
 #include "mozilla/Attributes.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "CSSValue.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
@@ -47,7 +47,7 @@ public:
    * Method analogous to nsIDOMCSSStyleDeclaration::GetPropertyValue,
    * which obeys all the same restrictions.
    */
-  NS_IMETHOD GetPropertyValue(const nsCSSProperty aPropID,
+  NS_IMETHOD GetPropertyValue(const nsCSSPropertyID aPropID,
                               nsAString& aValue) = 0;
 
   NS_IMETHOD GetAuthoredPropertyValue(const nsAString& aPropName,
@@ -58,7 +58,7 @@ public:
    * method does NOT allow setting a priority (the priority will
    * always be set to default priority).
    */
-  NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,
+  NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,
                               const nsAString& aValue) = 0;
 
   virtual nsINode *GetParentObject() = 0;
@@ -153,11 +153,11 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
 
 #define NS_DECL_NSICSSDECLARATION                                   \
-  NS_IMETHOD GetPropertyValue(const nsCSSProperty aPropID,          \
+  NS_IMETHOD GetPropertyValue(const nsCSSPropertyID aPropID,          \
                               nsAString& aValue) override;          \
   NS_IMETHOD GetAuthoredPropertyValue(const nsAString& aPropName,   \
                                       nsAString& aValue) override;  \
-  NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,          \
+  NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,          \
                               const nsAString& aValue) override;
 
 #define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER \

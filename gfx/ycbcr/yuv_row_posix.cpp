@@ -427,6 +427,7 @@ void ScaleYUVToRGB32Row(const uint8* y_buf,
   if (mozilla::supports_sse()) {
     ScaleYUVToRGB32Row_SSE(y_buf, u_buf, v_buf, rgb_buf,
                            width, source_dx);
+    return;
   }
 
   ScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf,
@@ -558,6 +559,7 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
   if (mozilla::supports_sse()) {
     LinearScaleYUVToRGB32Row_SSE(y_buf, u_buf, v_buf, rgb_buf,
                                  width, source_dx);
+    return;
   }
 
   LinearScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf,

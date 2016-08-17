@@ -18,7 +18,7 @@
 #include "nsIPrincipal.h"
 #include "FrameMetrics.h"
 #include "nsIWidget.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
@@ -1556,7 +1556,7 @@ public:
                                     nsRenderingContext* aRenderingContext);
 
   // Get a suitable foreground color for painting aProperty for aFrame.
-  static nscolor GetColor(nsIFrame* aFrame, nsCSSProperty aProperty);
+  static nscolor GetColor(nsIFrame* aFrame, nsCSSPropertyID aProperty);
 
   // Get a baseline y position in app units that is snapped to device pixels.
   static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
@@ -2236,7 +2236,7 @@ public:
    * animations or transitions for the property.
    */
   static bool HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
-                                            nsCSSProperty aProperty);
+                                            nsCSSPropertyID aProperty);
 
   /**
    * Returns true if the frame has any current CSS transitions.
@@ -2251,7 +2251,7 @@ public:
    * property.
    */
   static bool HasRelevantAnimationOfProperty(const nsIFrame* aFrame,
-                                             nsCSSProperty aProperty);
+                                             nsCSSPropertyID aProperty);
 
   /**
    * Checks if off-main-thread animations are enabled.

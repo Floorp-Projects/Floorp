@@ -193,7 +193,7 @@ nsMappedAttributes::MightMapInheritedStyleData()
 }
 
 /* virtual */ bool
-nsMappedAttributes::GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+nsMappedAttributes::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                                   nsCSSValue* aValue)
 {
   MOZ_ASSERT(false, "GetDiscretelyAnimatedCSSValue is not implemented yet");

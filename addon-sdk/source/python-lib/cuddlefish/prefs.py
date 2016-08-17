@@ -124,7 +124,7 @@ DEFAULT_FIREFOX_PREFS = {
 
 # When launching a temporary new Thunderbird profile, use these preferences.
 # Note that these were taken from:
-# http://mxr.mozilla.org/comm-central/source/mail/test/mozmill/runtest.py
+# http://dxr.mozilla.org/comm-central/source/mail/test/mozmill/runtest.py
 DEFAULT_THUNDERBIRD_PREFS = {
     # say no to slow script warnings
     'dom.max_chrome_script_run_time': 200,

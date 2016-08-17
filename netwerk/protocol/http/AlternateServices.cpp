@@ -329,12 +329,9 @@ public:
     nsCOMPtr<nsISupports> secInfo;
     mConnection->GetSecurityInfo(getter_AddRefs(secInfo));
     nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(secInfo);
-    bool bypassAuth = false;
-
-    if (!socketControl ||
-        NS_FAILED(socketControl->GetBypassAuthentication(&bypassAuth))) {
-      bypassAuth = false;
-    }
+    bool bypassAuth = socketControl
+                    ? socketControl->GetBypassAuthentication()
+                    : false;
 
     LOG(("AltSvcTransaction::MaybeValidate() %p socketControl=%p bypass=%d",
          this, socketControl.get(), bypassAuth));

@@ -1473,6 +1473,7 @@
           var dataReq = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                               .createInstance(Components.interfaces.nsIXMLHttpRequest);
           dataReq.open("GET", aURI.spec, true);
+          dataReq.responseType = "document";
           dataReq.addEventListener("load", handleResponse, false);
           dataReq.addEventListener("error", handleError, false);
           dataReq.send(null);
@@ -1480,6 +1481,7 @@
           var styleReq = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                               .createInstance(Components.interfaces.nsIXMLHttpRequest);
           styleReq.open("GET", UPDATES_RELEASENOTES_TRANSFORMFILE, true);
+          styleReq.responseType = "document";
           styleReq.addEventListener("load", handleResponse, false);
           styleReq.addEventListener("error", handleError, false);
           styleReq.send(null);

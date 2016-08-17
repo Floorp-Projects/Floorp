@@ -19,7 +19,7 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsCSSKeywords.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsCSSProps.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -491,7 +491,7 @@ public:
    * Serialize |this| as a specified value for |aProperty| and append
    * it to |aResult|.
    */
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
                       Serialization aValueSerialization) const;
 
   nsCSSUnit GetUnit() const { return mUnit; }
@@ -800,12 +800,12 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   static void
-  AppendSidesShorthandToString(const nsCSSProperty aProperties[],
+  AppendSidesShorthandToString(const nsCSSPropertyID aProperties[],
                                const nsCSSValue* aValues[],
                                nsAString& aString,
                                Serialization aSerialization);
   static void
-  AppendBasicShapeRadiusToString(const nsCSSProperty aProperties[],
+  AppendBasicShapeRadiusToString(const nsCSSPropertyID aProperties[],
                                  const nsCSSValue* aValues[],
                                  nsAString& aResult,
                                  Serialization aValueSerialization);
@@ -817,20 +817,20 @@ private:
     return static_cast<char16_t*>(aBuffer->Data());
   }
 
-  void AppendPolygonToString(nsCSSProperty aProperty, nsAString& aResult,
+  void AppendPolygonToString(nsCSSPropertyID aProperty, nsAString& aResult,
                              Serialization aValueSerialization) const;
   void AppendPositionCoordinateToString(const nsCSSValue& aValue,
-                                        nsCSSProperty aProperty,
+                                        nsCSSPropertyID aProperty,
                                         nsAString& aResult,
                                         Serialization aSerialization) const;
   void AppendCircleOrEllipseToString(
            nsCSSKeyword aFunctionId,
-           nsCSSProperty aProperty, nsAString& aResult,
+           nsCSSPropertyID aProperty, nsAString& aResult,
            Serialization aValueSerialization) const;
   void AppendBasicShapePositionToString(
            nsAString& aResult,
            Serialization aValueSerialization) const;
-  void AppendInsetToString(nsCSSProperty aProperty, nsAString& aResult,
+  void AppendInsetToString(nsCSSPropertyID aProperty, nsAString& aResult,
                            Serialization aValueSerialization) const;
 protected:
   nsCSSUnit mUnit;
@@ -976,7 +976,7 @@ struct nsCSSValueList {
 
   nsCSSValueList* Clone() const;  // makes a deep copy. Infallible.
   void CloneInto(nsCSSValueList* aList) const; // makes a deep copy into aList
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
                       nsCSSValue::Serialization aValueSerialization) const;
 
   static bool Equal(const nsCSSValueList* aList1,
@@ -1041,7 +1041,7 @@ private:
 public:
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueSharedList)
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
                       nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(nsCSSValueSharedList const& aOther) const;
@@ -1082,7 +1082,7 @@ struct nsCSSRect {
   nsCSSRect(const nsCSSRect& aCopy);
   ~nsCSSRect();
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
                       nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(const nsCSSRect& aOther) const {
@@ -1224,7 +1224,7 @@ struct nsCSSValuePair {
            mYValue.GetUnit() != eCSSUnit_Null;
   }
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
                       nsCSSValue::Serialization aValueSerialization) const;
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -1316,7 +1316,7 @@ struct nsCSSValueTriplet {
                mZValue.GetUnit() != eCSSUnit_Null;
     }
 
-    void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+    void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
                         nsCSSValue::Serialization aValueSerialization) const;
 
     nsCSSValue mXValue;
@@ -1380,7 +1380,7 @@ struct nsCSSValuePairList {
   ~nsCSSValuePairList();
 
   nsCSSValuePairList* Clone() const; // makes a deep copy. Infallible.
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
                       nsCSSValue::Serialization aValueSerialization) const;
 
   static bool Equal(const nsCSSValuePairList* aList1,
@@ -1633,12 +1633,12 @@ public:
   // When a variable reference is used in a shorthand property, a
   // TokenStream value is stored as the specified value for each of its
   // component longhand properties.
-  nsCSSProperty mPropertyID;
+  nsCSSPropertyID mPropertyID;
 
   // The shorthand property that had a value with a variable reference,
   // which caused the longhand property identified by mPropertyID to have
   // a TokenStream value.
-  nsCSSProperty mShorthandPropertyID;
+  nsCSSPropertyID mShorthandPropertyID;
 
   // The unparsed CSS corresponding to the specified value of the property.
   // When the value of a shorthand property has a variable reference, the
