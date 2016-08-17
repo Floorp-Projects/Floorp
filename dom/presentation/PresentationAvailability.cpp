@@ -12,6 +12,7 @@
 #include "nsIPresentationDeviceManager.h"
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
+#include "PresentationLog.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -19,11 +20,11 @@ using namespace mozilla::dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(PresentationAvailability)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PresentationAvailability, DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromises)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PresentationAvailability, DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromises);
   tmp->Shutdown();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -36,17 +37,20 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /* static */ already_AddRefed<PresentationAvailability>
 PresentationAvailability::Create(nsPIDOMWindowInner* aWindow,
+                                 const nsAString& aUrl,
                                  RefPtr<Promise>& aPromise)
 {
   RefPtr<PresentationAvailability> availability =
-    new PresentationAvailability(aWindow);
+    new PresentationAvailability(aWindow, aUrl);
   return NS_WARN_IF(!availability->Init(aPromise)) ? nullptr
                                                    : availability.forget();
 }
 
-PresentationAvailability::PresentationAvailability(nsPIDOMWindowInner* aWindow)
+PresentationAvailability::PresentationAvailability(nsPIDOMWindowInner* aWindow,
+                                                   const nsAString& aUrl)
   : DOMEventTargetHelper(aWindow)
   , mIsAvailable(false)
+  , mUrl(aUrl)
 {
 }
 
@@ -73,13 +77,23 @@ PresentationAvailability::Init(RefPtr<Promise>& aPromise)
     return true;
   }
 
-  mPromise = aPromise;
+  EnqueuePromise(aPromise);
+
+  AvailabilityCollection* collection = AvailabilityCollection::GetSingleton();
+  if (collection) {
+    collection->Add(this);
+  }
 
   return true;
 }
 
 void PresentationAvailability::Shutdown()
 {
+  AvailabilityCollection* collection = AvailabilityCollection::GetSingleton();
+  if (collection ) {
+    collection->Remove(this);
+  }
+
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
@@ -105,6 +119,32 @@ PresentationAvailability::WrapObject(JSContext* aCx,
 }
 
 bool
+PresentationAvailability::Equals(const uint64_t aWindowID,
+                                 const nsAString& aUrl) const
+{
+  if (GetOwner() && GetOwner()->WindowID() == aWindowID &&
+      mUrl.Equals(aUrl)) {
+    return true;
+  }
+
+  return false;
+}
+
+bool
+PresentationAvailability::IsCachedValueReady()
+{
+  // All pending promises will be solved when cached value is ready and
+  // no promise should be enqueued afterward.
+  return mPromises.IsEmpty();
+}
+
+void
+PresentationAvailability::EnqueuePromise(RefPtr<Promise>& aPromise)
+{
+  mPromises.AppendElement(aPromise);
+}
+
+bool
 PresentationAvailability::Value() const
 {
   return mIsAvailable;
@@ -122,13 +162,22 @@ PresentationAvailability::NotifyAvailableChange(bool aIsAvailable)
 void
 PresentationAvailability::UpdateAvailabilityAndDispatchEvent(bool aIsAvailable)
 {
+  PRES_DEBUG("%s:id[%s]\n", __func__,
+             NS_ConvertUTF16toUTF8(mUrl).get());
   bool isChanged = (aIsAvailable != mIsAvailable);
 
   mIsAvailable = aIsAvailable;
 
-  if (mPromise) {
-    mPromise->MaybeResolve(this);
-    mPromise = nullptr;
+  if (!mPromises.IsEmpty()) {
+    // Use the first availability change notification to resolve promise.
+    do {
+      nsTArray<RefPtr<Promise>> promises = Move(mPromises);
+      for (auto& promise : promises) {
+        promise->MaybeResolve(this);
+      }
+      // more promises may have been added to mPromises, at least in theory
+    } while (!mPromises.IsEmpty());
+
     return;
   }
 
