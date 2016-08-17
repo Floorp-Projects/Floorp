@@ -5,10 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'FlacDemuxer.h',
     'FlacFrameParser.h',
 ]
 
 UNIFIED_SOURCES += [
+    'FlacDemuxer.cpp',
     'FlacFrameParser.cpp',
 ]
 
