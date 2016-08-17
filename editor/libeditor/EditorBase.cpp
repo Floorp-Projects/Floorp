@@ -219,7 +219,9 @@ EditorBase::Init(nsIDOMDocument* aDoc,
                  uint32_t aFlags,
                  const nsAString& aValue)
 {
-  NS_PRECONDITION(aDoc, "bad arg");
+  MOZ_ASSERT(mAction == EditAction::none,
+             "Initializing during an edit action is an error");
+  MOZ_ASSERT(aDoc);
   if (!aDoc)
     return NS_ERROR_NULL_POINTER;
 
