@@ -465,7 +465,7 @@ ClearDirtyBits(nsIContent* aContent)
     return;
   }
 
-  FlattenedChildIterator it(aContent);
+  StyleChildrenIterator it(aContent);
   for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
     ClearDirtyBits(n);
   }

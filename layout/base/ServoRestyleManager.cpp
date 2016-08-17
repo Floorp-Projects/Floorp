@@ -182,7 +182,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
     MOZ_ASSERT(primaryFrame,
                "Frame construction should be scheduled, and it takes the "
                "correct style for the children, so no need to be here.");
-    FlattenedChildIterator it(aContent);
+    StyleChildrenIterator it(aContent);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       RecreateStyleContexts(n, primaryFrame->StyleContext(),
                             aStyleSet, aChangeListToProcess);
@@ -194,7 +194,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
 static void
 MarkChildrenAsDirtyForServo(nsIContent* aContent)
 {
-  FlattenedChildIterator it(aContent);
+  StyleChildrenIterator it(aContent);
 
   nsIContent* n = it.GetNextChild();
   bool hadChildren = bool(n);
