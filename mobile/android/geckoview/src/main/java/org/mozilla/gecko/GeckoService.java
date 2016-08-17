@@ -147,12 +147,12 @@ public class GeckoService extends Service {
         final String profileName = intent.getStringExtra(INTENT_PROFILE_NAME);
         final String profileDir = intent.getStringExtra(INTENT_PROFILE_DIR);
 
-        if (profileName == null) {
+        if (profileName == null || profileDir == null) {
             throw new IllegalArgumentException("Intent must specify profile.");
         }
 
         if (!GeckoThread.initWithProfile(profileName != null ? profileName : "",
-                                         profileDir != null ? new File(profileDir) : null)) {
+                                         new File(profileDir))) {
             Log.w(LOGTAG, "Ignoring due to profile mismatch: " +
                           profileName + " [" + profileDir + ']');
 

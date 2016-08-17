@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -59,7 +58,6 @@ public final class EventDispatcher {
     private final Map<String, List<BundleEventListener>> mBackgroundThreadListeners =
         new HashMap<String, List<BundleEventListener>>(DEFAULT_BACKGROUND_EVENTS_COUNT);
 
-    @ReflectionTarget
     public static EventDispatcher getInstance() {
         return INSTANCE;
     }
@@ -162,7 +160,6 @@ public final class EventDispatcher {
                          mUiThreadListeners, listener, events);
     }
 
-    @ReflectionTarget
     public void registerBackgroundThreadListener(final BundleEventListener listener,
                                                  final String... events) {
         checkNotRegisteredElsewhere(mBackgroundThreadListeners, events);
