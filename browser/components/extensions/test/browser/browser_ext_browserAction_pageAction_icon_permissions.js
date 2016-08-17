@@ -70,8 +70,13 @@ add_task(function* testDefaultDetails() {
     "/foo/bar.png",
     {"19": "foo/bar.png"},
     {"38": "foo/bar.png"},
-    {"19": "foo/bar.png", "38": "baz/quux.png"},
   ];
+
+  if (window.devicePixelRatio > 1) {
+    icons.push({"19": "baz/quux.png", "38": "foo/bar.png"});
+  } else {
+    icons.push({"19": "foo/bar.png", "38": "baz/quux@2x.png"});
+  }
 
   let expectedURL = new RegExp(String.raw`^moz-extension://[^/]+/foo/bar\.png$`);
 
@@ -95,6 +100,7 @@ add_task(function* testDefaultDetails() {
       files: {
         "foo/bar.png": imageBuffer,
         "baz/quux.png": imageBuffer,
+        "baz/quux@2x.png": imageBuffer,
       },
     });
 

@@ -6194,6 +6194,7 @@ AddonInstall.prototype = {
             // it a way to resume.
             let callback = AddonManagerPrivate.getUpgradeListener(this.addon.id);
             callback({
+              version: this.version,
               install: () => {
                 switch (this.state) {
                   case AddonManager.STATE_INSTALLED:
@@ -7656,10 +7657,11 @@ AddonWrapper.prototype = {
   },
 
   /**
-   * Reloads the add-on as if one had uninstalled it then reinstalled it.
+   * Reloads the add-on.
    *
-   * Currently, only temporarily installed add-ons can be reloaded. Attempting
-   * to reload other kinds of add-ons will result in a rejected promise.
+   * For temporarily installed add-ons, this uninstalls and re-installs the
+   * add-on. Otherwise, the addon is disabled and then re-enabled, and the cache
+   * is flushed.
    *
    * @return Promise
    */
@@ -7667,14 +7669,18 @@ AddonWrapper.prototype = {
     return new Promise((resolve) => {
       const addon = addonFor(this);
 
-      if (!this.temporarilyInstalled) {
-        logger.debug(`Cannot reload add-on at ${addon._sourceBundle}`);
-        throw new Error("Only temporary add-ons can be reloaded");
-      }
-
       logger.debug(`reloading add-on ${addon.id}`);
-      // This function supports re-installing an existing add-on.
-      resolve(AddonManager.installTemporaryAddon(addon._sourceBundle));
+
+      if (!this.temporarilyInstalled) {
+        let addonFile = addon.getResourceURI;
+        XPIProvider.updateAddonDisabledState(addon, true);
+        Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
+        XPIProvider.updateAddonDisabledState(addon, false)
+        resolve();
+      } else {
+        // This function supports re-installing an existing add-on.
+        resolve(AddonManager.installTemporaryAddon(addon._sourceBundle));
+      }
     });
   },
 

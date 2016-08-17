@@ -809,11 +809,11 @@ extensions.registerSchemaAPI("tabs", (extension, context) => {
       },
 
       insertCSS: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "css", "insertCSS");
+        return self.tabs._execute(tabId, details, "css", "insertCSS").then(() => {});
       },
 
       removeCSS: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "css", "removeCSS");
+        return self.tabs._execute(tabId, details, "css", "removeCSS").then(() => {});
       },
 
       connect: function(tabId, connectInfo) {

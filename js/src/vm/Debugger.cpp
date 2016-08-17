@@ -3628,8 +3628,8 @@ Debugger::getNewestFrame(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "getNewestFrame", args, dbg);
 
-    /* Since there may be multiple contexts, use AllFramesIter. */
-    for (AllFramesIter i(cx); !i.done(); ++i) {
+    /* Since there may be multiple contexts, use AllScriptFramesIter. */
+    for (AllScriptFramesIter i(cx); !i.done(); ++i) {
         if (dbg->observesFrame(i)) {
             // Ensure that Ion frames are rematerialized. Only rematerialized
             // Ion frames may be used as AbstractFramePtrs.
@@ -6106,7 +6106,7 @@ Debugger::observesFrame(AbstractFramePtr frame) const
 }
 
 bool
-Debugger::observesFrame(const ScriptFrameIter& iter) const
+Debugger::observesFrame(const FrameIter& iter) const
 {
     // Skip frames not yet fully initialized during their prologue.
     if (iter.isInterp() && iter.isFunctionFrame()) {
@@ -6114,6 +6114,8 @@ Debugger::observesFrame(const ScriptFrameIter& iter) const
         if (thisVal.isMagic() && thisVal.whyMagic() == JS_IS_CONSTRUCTING)
             return false;;
     }
+    if (iter.isWasm())
+        return false;
     return observesScript(iter.script());
 }
 

@@ -35,8 +35,11 @@ define(function (require, exports, module) {
       let croppedString = this.props.cropLimit ?
         cropMultipleLines(text, this.props.cropLimit) : cropMultipleLines(text);
 
+      let formattedString = this.props.omitQuotes ?
+        croppedString : "\"" + croppedString + "\"";
+
       return (
-        span({className: "objectBox objectBox-string"}, "\"" + croppedString + "\""
+        span({className: "objectBox objectBox-string"}, formattedString
         )
       );
     },

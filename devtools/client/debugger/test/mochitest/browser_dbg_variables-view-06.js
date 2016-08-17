@@ -121,7 +121,5 @@ var test = Task.async(function* () {
     }
   }
 
-  debugger;
-
   resumeDebuggerThenCloseAndFinish(panel);
 });

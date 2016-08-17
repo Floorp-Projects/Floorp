@@ -465,7 +465,7 @@ FRAME_STATE_BIT(Block, 21, NS_BLOCK_HAS_PUSHED_FLOATS)
 // nsBlockFrame::IsMarginRoot().
 //
 // This causes the BlockReflowInput's constructor to set the
-// BRS_ISBSTARTMARGINROOT and BRS_ISBENDMARGINROOT flags.
+// mIsBStartMarginRoot and mIsBEndMarginRoot flags.
 FRAME_STATE_BIT(Block, 22, NS_BLOCK_MARGIN_ROOT)
 
 // This indicates that a block frame should create its own float manager. This

@@ -23,6 +23,9 @@ const SCROLL_REPEAT_MS = 100;
 const EventEmitter = require("devtools/shared/event-emitter");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
+// Some margin may be required for visible element detection.
+const SCROLL_MARGIN = 1;
+
 /**
  * Component to replicate functionality of XUL arrowscrollbox
  * for breadcrumbs
@@ -39,6 +42,9 @@ function ArrowScrollBox(win, container) {
 }
 
 ArrowScrollBox.prototype = {
+
+  // Scroll behavior, exposed for testing
+  scrollBehavior: "smooth",
 
   /**
    * Build the HTML, add to the DOM and start listening to
@@ -69,9 +75,25 @@ ArrowScrollBox.prototype = {
   },
 
   /**
+   * Determine whether the current text directionality is RTL
+   */
+  isRtl: function () {
+    return this.win.getComputedStyle(this.container).direction === "rtl";
+  },
+
+  /**
+   * Scroll to the specified element using the current scroll behavior
+   * @param {Element} element element to scroll
+   * @param {String} block desired alignment of element after scrolling
+   */
+  scrollToElement: function (element, block) {
+    element.scrollIntoView({ block: block, behavior: this.scrollBehavior });
+  },
+
+  /**
    * Call the given function once; then continuously
    * while the mouse button is held
-   * @param {repeatFn} the function to repeat while the button is held
+   * @param {Function} repeatFn the function to repeat while the button is held
    */
   clickOrHold: function (repeatFn) {
     let timer;
@@ -109,7 +131,7 @@ ArrowScrollBox.prototype = {
     }
 
     let element = this.inner.childNodes[0];
-    element.scrollIntoView({ block: "start", behavior: "smooth" });
+    this.scrollToElement(element, "start");
   },
 
   /**
@@ -122,7 +144,7 @@ ArrowScrollBox.prototype = {
     }
 
     let element = children[children.length - 1];
-    element.scrollIntoView({ block: "start", behavior: "smooth" });
+    this.scrollToElement(element, "start");
   },
 
   /**
@@ -135,7 +157,8 @@ ArrowScrollBox.prototype = {
         return;
       }
 
-      element.scrollIntoView({ block: "start", behavior: "smooth" });
+      let block = this.isRtl() ? "end" : "start";
+      this.scrollToElement(element, block);
     };
 
     this.clickOrHold(scrollToStart);
@@ -151,7 +174,8 @@ ArrowScrollBox.prototype = {
         return;
       }
 
-      element.scrollIntoView({ block: "end", behavior: "smooth" });
+      let block = this.isRtl() ? "start" : "end";
+      this.scrollToElement(element, block);
     };
 
     this.clickOrHold(scrollToEnd);
@@ -196,46 +220,72 @@ ArrowScrollBox.prototype = {
   },
 
   /**
+   * Check whether the element is to the left of its container but does
+   * not also span the entire container.
+   * @param {Number} left the left scroll point of the container
+   * @param {Number} right the right edge of the container
+   * @param {Number} elementLeft the left edge of the element
+   * @param {Number} elementRight the right edge of the element
+   */
+  elementLeftOfContainer: function (left, right, elementLeft, elementRight) {
+    return elementLeft < (left - SCROLL_MARGIN)
+           && elementRight < (right - SCROLL_MARGIN);
+  },
+
+  /**
+   * Check whether the element is to the right of its container but does
+   * not also span the entire container.
+   * @param {Number} left the left scroll point of the container
+   * @param {Number} right the right edge of the container
+   * @param {Number} elementLeft the left edge of the element
+   * @param {Number} elementRight the right edge of the element
+   */
+  elementRightOfContainer: function (left, right, elementLeft, elementRight) {
+    return elementLeft > (left + SCROLL_MARGIN)
+           && elementRight > (right + SCROLL_MARGIN);
+  },
+
+  /**
    * Get the first (i.e. furthest left for LTR)
-   * non visible element in the scroll box
+   * non or partly visible element in the scroll box
    */
   getFirstInvisibleElement: function () {
-    let start = this.inner.scrollLeft;
-    let end = this.inner.scrollLeft + this.inner.clientWidth;
-    let crumbs = this.inner.childNodes;
-    for (let i = crumbs.length - 1; i > -1; i--) {
-      let element = crumbs[i];
-      let elementRight = element.offsetLeft + element.offsetWidth;
-      if (element.offsetLeft < start) {
-        // edge case, check the element isn't already visible
-        if (elementRight >= end) {
-          continue;
-        }
-        return element;
-      }
-    }
+    let elementsList = Array.from(this.inner.childNodes).reverse();
 
-    return null;
+    let predicate = this.isRtl() ?
+      this.elementRightOfContainer : this.elementLeftOfContainer;
+    return this.findFirstWithBounds(elementsList, predicate);
   },
 
   /**
    * Get the last (i.e. furthest right for LTR)
-   * non-visible element in the scroll box
+   * non or partly visible element in the scroll box
    */
   getLastInvisibleElement: function () {
-    let end = this.inner.scrollLeft + this.inner.clientWidth;
-    let elementStart = 0;
-    for (let element of this.inner.childNodes) {
-      let elementEnd = elementStart + element.offsetWidth;
-      if (elementEnd > end) {
-        // Edge case: check the element isn't bigger than the
-        // container and thus already in view
-        if (elementStart > this.inner.scrollLeft) {
-          return element;
-        }
-      }
+    let predicate = this.isRtl() ?
+      this.elementLeftOfContainer : this.elementRightOfContainer;
+    return this.findFirstWithBounds(this.inner.childNodes, predicate);
+  },
 
-      elementStart = elementEnd;
+  /**
+   * Find the first element that matches the given predicate, called with bounds
+   * information
+   * @param {Array} elements an ordered list of elements
+   * @param {Function} predicate a function to be called with bounds
+   * information
+   */
+  findFirstWithBounds: function (elements, predicate) {
+    let left = this.inner.scrollLeft;
+    let right = left + this.inner.clientWidth;
+    for (let element of elements) {
+      let elementLeft = element.offsetLeft - element.parentElement.offsetLeft;
+      let elementRight = elementLeft + element.offsetWidth;
+
+      // Check that the starting edge of the element is out of the visible area
+      // and that the ending edge does not span the whole container
+      if (predicate(left, right, elementLeft, elementRight)) {
+        return element;
+      }
     }
 
     return null;
@@ -725,7 +775,7 @@ HTMLBreadcrumbs.prototype = {
     // FIXME bug 684352: make sure its immediate neighbors are visible too.
     if (!this.isDestroyed) {
       let element = this.nodeHierarchy[this.currentIndex].button;
-      element.scrollIntoView({ block: "end", behavior: "smooth" });
+      this.arrowScrollBox.scrollToElement(element, "end");
     }
   },
 
@@ -815,6 +865,7 @@ HTMLBreadcrumbs.prototype = {
     }
 
     // If this was an interesting deletion; then trim the breadcrumb trail
+    let trimmed = false;
     if (reason === "markupmutation") {
       for (let {type, removed} of mutations) {
         if (type !== "childList") {
@@ -825,6 +876,7 @@ HTMLBreadcrumbs.prototype = {
           let removedIndex = this.indexOf(node);
           if (removedIndex > -1) {
             this.cutAfter(removedIndex - 1);
+            trimmed = true;
           }
         }
       }
@@ -833,6 +885,10 @@ HTMLBreadcrumbs.prototype = {
     if (!this.selection.isElementNode()) {
       // no selection
       this.setCursor(-1);
+      if (trimmed) {
+        // Since something changed, notify the interested parties.
+        this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
+      }
       return;
     }
 

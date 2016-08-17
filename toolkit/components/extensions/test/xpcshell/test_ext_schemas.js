@@ -1176,3 +1176,90 @@ add_task(function* testPermissions() {
   equal(typeof root.fooPerm.noPerms, "function", "noPerms.noPerms method should exist");
   equal(typeof root.fooPerm.fooBarPerm, "function", "noPerms.fooBarPerm method should exist");
 });
+
+let nestedNamespaceJson = [
+  {
+    "namespace": "nested.namespace",
+    "types": [
+      {
+        "id": "CustomType",
+        "type": "object",
+        "events": [
+          {
+            "name": "onEvent",
+          },
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+          },
+        },
+        "functions": [
+          {
+            "name": "functionOnCustomType",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "title",
+                "type": "string",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    "properties": {
+      "instanceOfCustomType": {
+        "$ref": "CustomType",
+      },
+    },
+    "functions": [
+      {
+        "name": "create",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "title",
+            "type": "string",
+          },
+        ],
+      },
+    ],
+  },
+];
+
+add_task(function* testNestedNamespace() {
+  let url = "data:," + JSON.stringify(nestedNamespaceJson);
+
+  yield Schemas.load(url);
+
+  let root = {};
+  Schemas.inject(root, wrapper);
+
+  talliedErrors.length = 0;
+
+  ok(root.nested, "The root object contains the first namespace level");
+  ok(root.nested.namespace, "The first level object contains the second namespace level");
+
+  ok(root.nested.namespace.create, "Got the expected function in the nested namespace");
+  do_check_eq(typeof root.nested.namespace.create, "function",
+     "The property is a function as expected");
+
+  let {instanceOfCustomType} = root.nested.namespace;
+
+  ok(instanceOfCustomType,
+     "Got the expected instance of the CustomType defined in the schema");
+  ok(instanceOfCustomType.functionOnCustomType,
+     "Got the expected method in the CustomType instance");
+
+  // TODO: test support events and properties in a SubModuleType defined in the schema,
+  // once implemented, e.g.:
+  //
+  // ok(instanceOfCustomType.url,
+  //    "Got the expected property defined in the CustomType instance)
+  //
+  // ok(instanceOfCustomType.onEvent &&
+  //    instanceOfCustomType.onEvent.addListener &&
+  //    typeof instanceOfCustomType.onEvent.addListener == "function",
+  //    "Got the expected event defined in the CustomType instance");
+});

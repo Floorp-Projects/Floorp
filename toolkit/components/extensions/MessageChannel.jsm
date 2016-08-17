@@ -497,7 +497,7 @@ this.MessageChannel = {
     let recipient = options.recipient || {};
     let responseType = options.responseType || this.RESPONSE_SINGLE;
 
-    let channelId = gChannelId++;
+    let channelId = `${gChannelId++}-${Services.appinfo.uniqueProcessID}`;
     let message = {messageName, channelId, sender, recipient, data, responseType};
 
     let deferred = PromiseUtils.defer();
