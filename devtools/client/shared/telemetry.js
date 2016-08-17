@@ -42,7 +42,7 @@
 
 const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
 
-this.Telemetry = function () {
+function Telemetry() {
   // Bind pretty much all functions so that callers do not need to.
   this.toolOpened = this.toolOpened.bind(this);
   this.toolClosed = this.toolClosed.bind(this);
@@ -51,7 +51,7 @@ this.Telemetry = function () {
   this.destroy = this.destroy.bind(this);
 
   this._timers = new Map();
-};
+}
 
 module.exports = Telemetry;
 
