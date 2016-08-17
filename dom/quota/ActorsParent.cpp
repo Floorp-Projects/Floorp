@@ -6251,8 +6251,11 @@ OriginClearOp::DoInitOnMainThread()
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    mOriginScope.SetFromOrigin(origin);
+    if (params.clearAll()) {
+      mOriginScope.SetFromPrefix(origin);
+    } else {
+      mOriginScope.SetFromOrigin(origin);
+    }
   }
 
   return NS_OK;
@@ -6289,6 +6292,10 @@ OriginClearOp::DeleteFiles(QuotaManager* aQuotaManager,
     nsCString originSanitized(originScope.GetOrigin());
     SanitizeOriginString(originSanitized);
     originScope.SetOrigin(originSanitized);
+  } else if (originScope.IsPrefix()) {
+    nsCString prefixSanitized(originScope.GetPrefix());
+    SanitizeOriginString(prefixSanitized);
+    originScope.SetPrefix(prefixSanitized);
   }
 
   bool hasMore;
