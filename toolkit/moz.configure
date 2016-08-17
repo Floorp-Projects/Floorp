@@ -490,3 +490,123 @@ def servo_target_dir(value):
 
 set_define('MOZ_STYLO', depends_if(servo_target_dir)(lambda x: bool(x)))
 set_config('SERVO_TARGET_DIR', servo_target_dir)
+
+# Gecko integrated IPC fuzzer
+# ==============================================================
+option('--enable-ipc-fuzzer', env='MOZ_FAULTY',
+       help='Enable IPC fuzzer')
+
+@depends('--enable-ipc-fuzzer', target)
+def ipc_fuzzer(value, target):
+    if value:
+        if target.os == 'WINNT':
+            die('--enable-ipc-fuzzer is not supported on this platform.')
+        return bool(value)
+
+set_config('MOZ_FAULTY', ipc_fuzzer)
+set_define('MOZ_FAULTY', ipc_fuzzer)
+
+# Printing
+# ==============================================================
+@depends(target)
+def ios_disable_printing(target):
+    if target.os == 'iOS':
+        return False
+
+imply_option('--enable-printing', ios_disable_printing, reason='--target')
+
+option('--disable-printing', help='Disable printing support')
+
+@depends('--disable-printing')
+def printing(value):
+    if value:
+        return True
+
+set_config('NS_PRINTING', printing)
+set_define('NS_PRINTING', printing)
+set_define('NS_PRINT_PREVIEW', printing)
+
+# Speech-dispatcher support
+# ==============================================================
+@depends(toolkit)
+def no_speechd_on_non_gtk(toolkit):
+    if toolkit not in ('gtk2', 'gtk3'):
+        return False
+
+imply_option('--enable-synth-speechd', no_speechd_on_non_gtk,
+             reason='--enable-default-toolkit')
+
+option('--disable-synth-speechd', help='Disable speech-dispatcher support')
+
+set_config('MOZ_SYNTH_SPEECHD',
+           depends_if('--disable-synth-speechd')(lambda _: True))
+
+# Speech API
+# ==============================================================
+option('--disable-webspeech', help='Disable support for HTML Speech API')
+
+@depends('--disable-webspeech', '--help')
+def webspeech(value, _):
+    if value:
+        return True
+
+set_config('MOZ_WEBSPEECH', webspeech)
+set_define('MOZ_WEBSPEECH', webspeech)
+add_old_configure_assignment('MOZ_WEBSPEECH', webspeech)
+
+# Speech API pocketsphinx backend
+# ==============================================================
+@depends(build_project, milestone, webspeech)
+def webspeech_pocketsphinx(build_project, milestone, webspeech):
+    if webspeech and milestone.is_nightly and build_project == 'b2g':
+        return True
+
+set_config('MOZ_WEBSPEECH_POCKETSPHINX', webspeech_pocketsphinx)
+set_define('MOZ_WEBSPEECH_POCKETSPHINX', webspeech_pocketsphinx)
+
+# Speech API models
+# ==============================================================
+@depends(build_project, milestone, webspeech)
+def webspeech_models(build_project, milestone, webspeech):
+    if webspeech and milestone.is_nightly and build_project == 'b2g':
+        return True
+
+set_config('MOZ_WEBSPEECH_MODELS', webspeech_models)
+set_define('MOZ_WEBSPEECH_MODELS', webspeech_models)
+
+# Speech API test backend
+# ==============================================================
+option('--enable-webspeechtestbackend', default=webspeech,
+       help='Enable support for HTML Speech API Test Backend')
+
+@depends_if('--enable-webspeechtestbackend')
+def webspeech_test_backend(value):
+    return True
+
+set_config('MOZ_WEBSPEECH_TEST_BACKEND', webspeech_test_backend)
+set_define('MOZ_WEBSPEECH_TEST_BACKEND', webspeech_test_backend)
+
+# WebSMS
+# ==============================================================
+@depends(build_project, '--help')
+def websms_default(build_project, _):
+    return build_project in ('b2g', 'b2g/graphene')
+
+option('--enable-websms-backend', default=websms_default,
+       help='Enable WebSMS backend')
+
+@depends_if('--enable-websms-backend')
+def websms_backend(value):
+    return True
+
+set_config('MOZ_WEBSMS_BACKEND', websms_backend)
+set_define('MOZ_WEBSMS_BACKEND', websms_backend)
+
+# Enable IPDL's "expensive" unit tests
+# ==============================================================
+option('--enable-ipdl-tests', help='Enable expensive IPDL tests')
+
+set_config('MOZ_IPDL_TESTS',
+           depends_if('--enable-ipdl-tests')(lambda _: True))
+
+include('nss.configure')

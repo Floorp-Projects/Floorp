@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <inttypes.h>
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-
-#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
 #include "nsCache.h"
@@ -183,7 +183,7 @@ GetCacheDataFile(nsIFile *cacheDir, const char *key,
   file->AppendNative(nsPrintfCString("%X", dir2));
 
   char leaf[64];
-  PR_snprintf(leaf, sizeof(leaf), "%014llX-%X", hash, generation);
+  SprintfLiteral(leaf, "%014" PRIX64 "-%X", hash, generation);
   return file->AppendNative(nsDependentCString(leaf));
 }
 

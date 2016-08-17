@@ -93,7 +93,7 @@ class ServiceWorkerClientPostMessageRunnable final
 public:
   explicit ServiceWorkerClientPostMessageRunnable(uint64_t aWindowId)
     : StructuredCloneHolder(CloningSupported, TransferringSupported,
-                            SameProcessDifferentThread)
+                            StructuredCloneScope::SameProcessDifferentThread)
     , mWindowId(aWindowId)
   {}
 

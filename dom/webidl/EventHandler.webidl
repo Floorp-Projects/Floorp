@@ -60,6 +60,7 @@ interface GlobalEventHandlers {
            attribute EventHandler onload;
            attribute EventHandler onloadeddata;
            attribute EventHandler onloadedmetadata;
+           attribute EventHandler onloadend;
            attribute EventHandler onloadstart;
            attribute EventHandler onmousedown;
   [LenientThis] attribute EventHandler onmouseenter;

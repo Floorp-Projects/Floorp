@@ -1026,6 +1026,8 @@ struct Assumptions
     Assumptions();
     bool initBuildIdFromContext(ExclusiveContext* cx);
 
+    bool clone(const Assumptions& other);
+
     bool operator==(const Assumptions& rhs) const;
     bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }
 

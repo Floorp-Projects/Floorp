@@ -57,6 +57,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
@@ -109,7 +110,7 @@ SpammyLayoutWarningsEnabled()
 #endif
 
 void*
-AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder) CPP_THROW_NEW
+AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder)
 {
   return aBuilder->Allocate(aSize);
 }
@@ -1108,7 +1109,7 @@ nsDisplayListBuilder::AllocateDisplayItemClip(const DisplayItemClip& aOriginal)
     return static_cast<DisplayItemClip*>(p);
   }
 
-  DisplayItemClip* c = new (p) DisplayItemClip(aOriginal);
+  DisplayItemClip* c = new (KnownNotNull, p) DisplayItemClip(aOriginal);
   mDisplayItemClipsToDestroy.AppendElement(c);
   return c;
 }
@@ -1121,7 +1122,8 @@ nsDisplayListBuilder::AllocateDisplayItemScrollClip(const DisplayItemScrollClip*
 {
   void* p = Allocate(sizeof(DisplayItemScrollClip));
   DisplayItemScrollClip* c =
-    new (p) DisplayItemScrollClip(aParent, aScrollableFrame, aClip, aIsAsyncScrollable);
+    new (KnownNotNull, p) DisplayItemScrollClip(aParent, aScrollableFrame,
+                                                aClip, aIsAsyncScrollable);
   mScrollClipsToDestroy.AppendElement(c);
   return c;
 }
@@ -1763,6 +1765,11 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
       layerManager->BeginTransaction();
     }
   }
+
+  if (XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
+    FrameLayerBuilder::InvalidateAllLayers(layerManager);
+  }
+
   if (widgetTransaction) {
     layerBuilder->DidBeginRetainedLayerTransaction(layerManager);
   }
@@ -1841,9 +1848,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     // The only case we don't want to do this is in non-APZ fennec, where
     // we want the root xul document to get a null scroll id so that the root
     // content document gets the first non-null scroll id.
-#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
     content = document->GetDocumentElement();
-#endif
   }
 
 

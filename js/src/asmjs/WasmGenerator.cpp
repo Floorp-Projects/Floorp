@@ -97,9 +97,10 @@ ModuleGenerator::~ModuleGenerator()
 }
 
 bool
-ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
+ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
                       Metadata* maybeAsmJSMetadata)
 {
+    shared_ = Move(shared);
     alwaysBaseline_ = args.alwaysBaseline;
 
     if (!exportedFuncs_.init())
@@ -109,19 +110,23 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
 
     // asm.js passes in an AsmJSMetadata subclass to use instead.
     if (maybeAsmJSMetadata) {
-        MOZ_ASSERT(shared->kind == ModuleKind::AsmJS);
         metadata_ = maybeAsmJSMetadata;
+        MOZ_ASSERT(isAsmJS());
     } else {
         metadata_ = js_new<Metadata>();
         if (!metadata_)
             return false;
+        MOZ_ASSERT(!isAsmJS());
     }
 
-    metadata_->kind = shared->kind;
-    metadata_->filename = Move(args.filename);
-    metadata_->assumptions = Move(args.assumptions);
+    if (args.scriptedCaller.filename) {
+        metadata_->filename = DuplicateString(args.scriptedCaller.filename.get());
+        if (!metadata_->filename)
+            return false;
+    }
 
-    shared_ = Move(shared);
+    if (!metadata_->assumptions.clone(args.assumptions))
+        return false;
 
     // For asm.js, the Vectors in ModuleGeneratorData are max-sized reservations
     // and will be initialized in a linear order via init* functions as the

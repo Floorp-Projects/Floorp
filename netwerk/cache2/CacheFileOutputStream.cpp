@@ -45,16 +45,22 @@ NS_INTERFACE_MAP_BEGIN(CacheFileOutputStream)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 CacheFileOutputStream::CacheFileOutputStream(CacheFile *aFile,
-                                             CacheOutputCloseListener *aCloseListener)
+                                             CacheOutputCloseListener *aCloseListener,
+                                             bool aAlternativeData)
   : mFile(aFile)
   , mCloseListener(aCloseListener)
   , mPos(0)
   , mClosed(false)
+  , mAlternativeData(aAlternativeData)
   , mStatus(NS_OK)
   , mCallbackFlags(0)
 {
   LOG(("CacheFileOutputStream::CacheFileOutputStream() [this=%p]", this));
   MOZ_COUNT_CTOR(CacheFileOutputStream);
+
+  if (mAlternativeData) {
+    mPos = mFile->mAltDataOffset;
+  }
 }
 
 CacheFileOutputStream::~CacheFileOutputStream()
@@ -263,12 +269,19 @@ CacheFileOutputStream::Seek(int32_t whence, int64_t offset)
   int64_t newPos = offset;
   switch (whence) {
     case NS_SEEK_SET:
+      if (mAlternativeData) {
+        newPos += mFile->mAltDataOffset;
+      }
       break;
     case NS_SEEK_CUR:
       newPos += mPos;
       break;
     case NS_SEEK_END:
-      newPos += mFile->mDataSize;
+      if (mAlternativeData) {
+        newPos += mFile->mDataSize;
+      } else {
+        newPos += mFile->mAltDataOffset;
+      }
       break;
     default:
       NS_ERROR("invalid whence");
@@ -292,6 +305,10 @@ CacheFileOutputStream::Tell(int64_t *_retval)
   }
 
   *_retval = mPos;
+
+  if (mAlternativeData) {
+    *_retval -= mFile->mAltDataOffset;
+  }
 
   LOG(("CacheFileOutputStream::Tell() [this=%p, retval=%lld]", this, *_retval));
   return NS_OK;

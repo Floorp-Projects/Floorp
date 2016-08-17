@@ -11,6 +11,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/unused.h"
 
 #include "gc/Marking.h"
 #include "js/UbiNode.h"
@@ -1268,6 +1269,17 @@ NewStringCopyNDontDeflate<CanGC>(ExclusiveContext* cx, const Latin1Char* s, size
 
 template JSFlatString*
 NewStringCopyNDontDeflate<NoGC>(ExclusiveContext* cx, const Latin1Char* s, size_t n);
+
+JSFlatString*
+NewLatin1StringZ(ExclusiveContext* cx, UniqueChars chars)
+{
+    JSFlatString* str = NewString<CanGC>(cx, (Latin1Char*)chars.get(), strlen(chars.get()));
+    if (!str)
+        return nullptr;
+
+    mozilla::Unused << chars.release();
+    return str;
+}
 
 template <AllowGC allowGC, typename CharT>
 JSFlatString*

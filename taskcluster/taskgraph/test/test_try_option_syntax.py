@@ -224,14 +224,6 @@ class TestTryOptionSyntax(unittest.TestCase):
             {'test': 'gtest', 'platforms': ['linux', 'win32'], 'only_chunks': set('1')},
         ]))
 
-    def test_u_chunks_platform_alias(self):
-        "-u e10s-1[linux] selects the first chunk of every e10s test on linux"
-        tos = TryOptionSyntax('try: -u e10s-1[linux]', graph_with_jobs)
-        self.assertEqual(sorted(tos.unittests), sorted([
-            {'test': t, 'platforms': ['linux'], 'only_chunks': set('1')}
-            for t in unittest_tasks if 'e10s' in t
-        ]))
-
     def test_t_none(self):
         "-t none sets talos=[]"
         tos = TryOptionSyntax('try: -t none', graph_with_jobs)

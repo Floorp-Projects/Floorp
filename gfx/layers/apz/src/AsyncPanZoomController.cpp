@@ -74,9 +74,9 @@
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
 #include "ScrollSnap.h"                 // for ScrollSnapUtils
 #include "WheelScrollAnimation.h"
-#if defined(MOZ_ANDROID_APZ)
+#if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidAPZ.h"
-#endif // defined(MOZ_ANDROID_APZ)
+#endif // defined(MOZ_WIDGET_ANDROID)
 
 #define ENABLE_APZC_LOGGING 0
 // #define ENABLE_APZC_LOGGING 1
@@ -105,7 +105,7 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 using mozilla::gfx::PointTyped;
 
 // Choose between platform-specific implementations.
-#ifdef MOZ_ANDROID_APZ
+#ifdef MOZ_WIDGET_ANDROID
 typedef WidgetOverscrollEffect OverscrollEffect;
 typedef AndroidSpecificState PlatformSpecificState;
 typedef AndroidFlingAnimation FlingAnimation;

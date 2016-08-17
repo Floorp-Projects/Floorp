@@ -16,7 +16,6 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.Tab;
@@ -64,8 +63,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private View mFillerView;
 
     private Listener mListener;
-
-    private PointF mInitialTouchPoint;
 
     private float mSurfaceTranslation;
 
@@ -219,34 +216,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
                          (int)event.getToolMinor() / 2);
     }
 
-    private boolean sendEventToGecko(MotionEvent event) {
-        if (!mLayerClient.isGeckoReady()) {
-            return false;
-        }
-
-        int action = event.getActionMasked();
-        PointF point = new PointF(event.getX(), event.getY());
-        if (action == MotionEvent.ACTION_DOWN) {
-            mInitialTouchPoint = point;
-        }
-
-        if (mInitialTouchPoint != null && action == MotionEvent.ACTION_MOVE) {
-            Point p = getEventRadius(event);
-
-            if (PointUtils.subtract(point, mInitialTouchPoint).length() <
-                Math.max(PanZoomController.CLICK_THRESHOLD, Math.min(Math.min(p.x, p.y), PanZoomController.PAN_THRESHOLD))) {
-                // Don't send the touchmove event if if the users finger hasn't moved far.
-                // Necessary for Google Maps to work correctly. See bug 771099.
-                return true;
-            } else {
-                mInitialTouchPoint = null;
-            }
-        }
-
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event, false));
-        return true;
-    }
-
     public void showSurface() {
         // Fix this if TextureView support is turned back on above
         mSurfaceView.setVisibility(View.VISIBLE);
@@ -293,7 +262,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             }
             return true;
         }
-        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
+        if (!mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -301,7 +270,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (mPanZoomController != null && mPanZoomController.onTouchEvent(event)) {
             return true;
         }
-        return sendEventToGecko(event);
+        return false;
     }
 
     @Override
@@ -315,17 +284,15 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
         event.offsetLocation(0, -mSurfaceTranslation);
 
-        if (AppConstants.MOZ_ANDROID_APZ) {
-            if (!mLayerClient.isGeckoReady()) {
-                // If gecko isn't loaded yet, don't try sending events to the
-                // native code because it's just going to crash
-                return true;
-            } else if (mPanZoomController != null && mPanZoomController.onMotionEvent(event)) {
-                return true;
-            }
+        if (!mLayerClient.isGeckoReady()) {
+            // If gecko isn't loaded yet, don't try sending events to the
+            // native code because it's just going to crash
+            return true;
+        } else if (mPanZoomController != null && mPanZoomController.onMotionEvent(event)) {
+            return true;
         }
 
-        return sendEventToGecko(event);
+        return false;
     }
 
     @Override
@@ -335,7 +302,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (AndroidGamepadManager.handleMotionEvent(event)) {
             return true;
         }
-        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
+        if (!mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -452,7 +419,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
+        if (!mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -467,14 +434,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (mListener != null) {
             mListener.renderRequested();
         }
-    }
-
-    public void addLayer(Layer layer) {
-        mRenderer.addLayer(layer);
-    }
-
-    public void removeLayer(Layer layer) {
-        mRenderer.removeLayer(layer);
     }
 
     public void postRenderTask(RenderTask task) {
@@ -517,8 +476,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     }
 
     private void attachCompositor() {
-        final NativePanZoomController npzc = AppConstants.MOZ_ANDROID_APZ ?
-                (NativePanZoomController) mPanZoomController : null;
+        final NativePanZoomController npzc = (NativePanZoomController) mPanZoomController;
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             mCompositor.attachToJava(mLayerClient, npzc);
@@ -808,17 +766,10 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     @Override
     public void setOverScrollMode(int overscrollMode) {
         super.setOverScrollMode(overscrollMode);
-        if (mPanZoomController != null) {
-            mPanZoomController.setOverScrollMode(overscrollMode);
-        }
     }
 
     @Override
     public int getOverScrollMode() {
-        if (mPanZoomController != null) {
-            return mPanZoomController.getOverScrollMode();
-        }
-
         return super.getOverScrollMode();
     }
 
