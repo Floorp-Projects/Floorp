@@ -65,6 +65,9 @@ class EnterDebuggeeNoExecute;
 class TraceLoggerThread;
 #endif
 
+class PromiseTask;
+typedef Vector<PromiseTask*, 0, SystemAllocPolicy> PromiseTaskPtrVector;
+
 /* Thread Local Storage slot for storing the runtime for a thread. */
 extern MOZ_THREAD_LOCAL(PerThreadData*) TlsPerThreadData;
 
@@ -641,6 +644,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     JS::StartAsyncTaskCallback startAsyncTaskCallback;
     JS::FinishAsyncTaskCallback finishAsyncTaskCallback;
+    js::ExclusiveData<js::PromiseTaskPtrVector> promiseTasksToDestroy;
 
   private:
     /*
