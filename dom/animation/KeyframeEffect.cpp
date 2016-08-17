@@ -221,11 +221,9 @@ void
 KeyframeEffectReadOnly::GetComputedTimingAsDict(
     ComputedTimingProperties& aRetVal) const
 {
-  double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
   const Nullable<TimeDuration> currentTime = GetLocalTime();
   GetComputedTimingDictionary(GetComputedTimingAt(currentTime,
-                                                  SpecifiedTiming(),
-                                                  playbackRate),
+                                                  SpecifiedTiming()),
                               currentTime,
                               SpecifiedTiming(),
                               aRetVal);
@@ -234,8 +232,7 @@ KeyframeEffectReadOnly::GetComputedTimingAsDict(
 ComputedTiming
 KeyframeEffectReadOnly::GetComputedTimingAt(
     const Nullable<TimeDuration>& aLocalTime,
-    const TimingParams& aTiming,
-    double aPlaybackRate)
+    const TimingParams& aTiming)
 {
   const StickyTimeDuration zeroDuration;
 
@@ -274,15 +271,9 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   // Calculate the time within the active interval.
   // https://w3c.github.io/web-animations/#active-time
   StickyTimeDuration activeTime;
-
-  StickyTimeDuration beforeActiveBoundary =
-    std::min(StickyTimeDuration(aTiming.mDelay), result.mEndTime);
-  StickyTimeDuration activeAfterBoundary =
-    std::min(StickyTimeDuration(aTiming.mDelay + result.mActiveDuration),
-             result.mEndTime);
-
-  if (localTime > activeAfterBoundary ||
-      (aPlaybackRate >= 0 && localTime == activeAfterBoundary)) {
+  if (localTime >=
+        std::min(StickyTimeDuration(aTiming.mDelay + result.mActiveDuration),
+                 result.mEndTime)) {
     result.mPhase = ComputedTiming::AnimationPhase::After;
     if (!result.FillsForwards()) {
       // The animation isn't active or filling at this time.
@@ -291,8 +282,8 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     activeTime = std::max(std::min(result.mActiveDuration,
                                    result.mActiveDuration + aTiming.mEndDelay),
                           zeroDuration);
-  } else if (localTime < beforeActiveBoundary ||
-             (aPlaybackRate < 0 && localTime == beforeActiveBoundary)) {
+  } else if (localTime <
+               std::min(StickyTimeDuration(aTiming.mDelay), result.mEndTime)) {
     result.mPhase = ComputedTiming::AnimationPhase::Before;
     if (!result.FillsBackwards()) {
       // The animation isn't active or filling at this time.
@@ -398,15 +389,6 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   MOZ_ASSERT(IsFinite(progress), "Progress value should be finite");
   result.mProgress.SetValue(progress);
   return result;
-}
-
-ComputedTiming
-KeyframeEffectReadOnly::GetComputedTiming(const TimingParams* aTiming) const
-{
-  double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
-  return GetComputedTimingAt(GetLocalTime(),
-                             aTiming ? *aTiming : SpecifiedTiming(),
-                             playbackRate);
 }
 
 // https://w3c.github.io/web-animations/#in-play
