@@ -168,6 +168,7 @@ mochitest:
             - --mochitest-suite=plain-chunked
     # Bug 1281241: migrating to m3.large instances
     instance-size: legacy
+    allow-software-gl-layers: false
 
 mochitest-a11y:
     description: "Mochitest a11y run"
@@ -209,6 +210,7 @@ mochitest-browser-chrome:
             - --mochitest-suite=browser-chrome-chunked
     # Bug 1281241: migrating to m3.large instances
     instance-size: legacy
+    allow-software-gl-layers: false
 
 mochitest-chrome:
     description: "Mochitest chrome run"
@@ -273,6 +275,8 @@ mochitest-devtools-chrome:
             # Bug 1281241: migrating to m3.large instances
             linux64-asan/opt: legacy
             default: default
+    # Bug 1296086: high number of intermittents observed with software GL and large instances
+    allow-software-gl-layers: false
 
 mochitest-gpu:
     description: "Mochitest GPU run"
@@ -435,3 +439,4 @@ xpcshell:
             - --xpcshell-suite=xpcshell
     # Bug 1281241: migrating to m3.large instances
     instance-size: legacy
+    allow-software-gl-layers: false
