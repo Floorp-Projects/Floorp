@@ -22,12 +22,11 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DataTransferItemList);
 
-  DataTransferItemList(DataTransfer* aParent, bool aIsExternal,
-                       bool aIsCrossDomainSubFrameDrop)
-    : mParent(aParent)
-    , mIsCrossDomainSubFrameDrop(aIsCrossDomainSubFrameDrop)
+  DataTransferItemList(DataTransfer* aDataTransfer, bool aIsExternal)
+    : mDataTransfer(aDataTransfer)
     , mIsExternal(aIsExternal)
   {
+    MOZ_ASSERT(aDataTransfer);
     // We always allocate an index 0 in our DataTransferItemList. This is done
     // in order to maintain the invariants according to the spec. Mainly, within
     // the spec's list, there is intended to be a single copy of each mime type,
@@ -41,7 +40,7 @@ public:
     mIndexedItems.SetLength(1);
   }
 
-  already_AddRefed<DataTransferItemList> Clone(DataTransfer* aParent) const;
+  already_AddRefed<DataTransferItemList> Clone(DataTransfer* aDataTransfer) const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -60,17 +59,12 @@ public:
   DataTransferItem* IndexedGetter(uint32_t aIndex, bool& aFound,
                                   ErrorResult& aRv) const;
 
-  void Clear(ErrorResult& aRv);
-
   DataTransfer* GetParentObject() const
   {
-    return mParent;
+    return mDataTransfer;
   }
 
-  // Accessors for data from ParentObject
-  bool IsReadOnly() const;
-  int32_t ClipboardType() const;
-  EventMessage GetEventMessage() const;
+  void Clear(ErrorResult& aRv);
 
   already_AddRefed<DataTransferItem>
   SetDataWithPrincipal(const nsAString& aType, nsIVariant* aData,
@@ -103,8 +97,7 @@ private:
 
   ~DataTransferItemList() {}
 
-  RefPtr<DataTransfer> mParent;
-  bool mIsCrossDomainSubFrameDrop;
+  RefPtr<DataTransfer> mDataTransfer;
   bool mIsExternal;
   RefPtr<FileList> mFiles;
   nsTArray<RefPtr<DataTransferItem>> mItems;

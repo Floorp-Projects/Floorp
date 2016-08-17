@@ -195,15 +195,28 @@ public:
   nsresult GetDataAtNoSecurityCheck(const nsAString& aFormat, uint32_t aIndex,
                                     nsIVariant** aData);
 
+  DataTransferItemList* Items() const {
+    return mItems;
+  }
+
   // a readonly dataTransfer cannot have new data added or existing data
   // removed. Only the dropEffect and effectAllowed may be modified.
-  DataTransferItemList* Items() const { return mItems; }
+  bool IsReadOnly() const {
+    return mReadOnly;
+  }
+  void SetReadOnly() {
+    mReadOnly = true;
+  }
 
-  bool IsReadOnly() const { return mReadOnly; }
-  void SetReadOnly() { mReadOnly = true; }
-
-  int32_t ClipboardType() const { return mClipboardType; }
-  EventMessage GetEventMessage() const { return mEventMessage; }
+  int32_t ClipboardType() const {
+    return mClipboardType;
+  }
+  EventMessage GetEventMessage() const {
+    return mEventMessage;
+  }
+  bool IsCrossDomainSubFrameDrop() const {
+    return mIsCrossDomainSubFrameDrop;
+  }
 
   // converts the data into an array of nsITransferable objects to be used for
   // drag and drop or clipboard operations.

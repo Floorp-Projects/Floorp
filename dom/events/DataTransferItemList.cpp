@@ -22,7 +22,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DataTransferItemList, mParent, mItems,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DataTransferItemList, mDataTransfer, mItems,
                                       mIndexedItems, mFiles)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DataTransferItemList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DataTransferItemList)
@@ -40,10 +40,10 @@ DataTransferItemList::WrapObject(JSContext* aCx,
 }
 
 already_AddRefed<DataTransferItemList>
-DataTransferItemList::Clone(DataTransfer* aParent) const
+DataTransferItemList::Clone(DataTransfer* aDataTransfer) const
 {
   RefPtr<DataTransferItemList> list =
-    new DataTransferItemList(aParent, mIsExternal, mIsCrossDomainSubFrameDrop);
+    new DataTransferItemList(aDataTransfer, mIsExternal);
 
   // We need to clone the mItems and mIndexedItems lists while keeping the same
   // correspondences between the mIndexedItems and mItems lists (namely, if an
@@ -63,7 +63,7 @@ DataTransferItemList::Clone(DataTransfer* aParent) const
     nsTArray<RefPtr<DataTransferItem>>& newItems = list->mIndexedItems[i];
     newItems.SetLength(items.Length());
     for (uint32_t j = 0; j < items.Length(); j++) {
-      newItems[j] = items[j]->Clone(list);
+      newItems[j] = items[j]->Clone(aDataTransfer);
     }
   }
 
@@ -83,7 +83,7 @@ DataTransferItemList::Clone(DataTransfer* aParent) const
 void
 DataTransferItemList::Remove(uint32_t aIndex, ErrorResult& aRv)
 {
-  if (IsReadOnly()) {
+  if (mDataTransfer->IsReadOnly()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -104,63 +104,9 @@ DataTransferItemList::IndexedGetter(uint32_t aIndex, bool& aFound, ErrorResult& 
     return nullptr;
   }
 
-  RefPtr<DataTransferItem> item = mItems[aIndex];
-
-  // Check if the caller is allowed to access the drag data. Callers with
-  // chrome privileges can always read the data. During the
-  // drop event, allow retrieving the data except in the case where the
-  // source of the drag is in a child frame of the caller. In that case,
-  // we only allow access to data of the same principal. During other events,
-  // only allow access to the data with the same principal.
-  nsIPrincipal* principal = nullptr;
-  if (mIsCrossDomainSubFrameDrop) {
-    principal = nsContentUtils::SubjectPrincipal();
-  }
-
-  if (item->Principal() && principal &&
-      !principal->Subsumes(item->Principal())) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    aFound = false;
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIVariant> variantData = item->Data();
-  nsCOMPtr<nsISupports> data;
-  if (variantData &&
-      NS_SUCCEEDED(variantData->GetAsISupports(getter_AddRefs(data))) &&
-      data) {
-    // Make sure the code that is calling us is same-origin with the data.
-    nsCOMPtr<EventTarget> pt = do_QueryInterface(data);
-    if (pt) {
-      nsresult rv = NS_OK;
-      nsIScriptContext* c = pt->GetContextForEventHandlers(&rv);
-      if (NS_WARN_IF(NS_FAILED(rv) || !c)) {
-        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-        return nullptr;
-      }
-
-      nsIGlobalObject* go = c->GetGlobalObject();
-      if (NS_WARN_IF(!go)) {
-        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-        return nullptr;
-      }
-
-      nsCOMPtr<nsIScriptObjectPrincipal> sp = do_QueryInterface(go);
-      MOZ_ASSERT(sp, "This cannot fail on the main thread.");
-
-      nsIPrincipal* dataPrincipal = sp->GetPrincipal();
-      if (!principal) {
-        principal = nsContentUtils::SubjectPrincipal();
-      }
-      if (NS_WARN_IF(!dataPrincipal || !principal->Equals(dataPrincipal))) {
-        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-        return nullptr;
-      }
-    }
-  }
-
+  MOZ_ASSERT(mItems[aIndex]);
   aFound = true;
-  return item;
+  return mItems[aIndex];
 }
 
 uint32_t
@@ -178,7 +124,7 @@ DataTransferItemList::MozItemCount() const
 void
 DataTransferItemList::Clear(ErrorResult& aRv)
 {
-  if (NS_WARN_IF(IsReadOnly())) {
+  if (NS_WARN_IF(mDataTransfer->IsReadOnly())) {
     return;
   }
 
@@ -198,14 +144,14 @@ DataTransferItemList::Add(const nsAString& aData,
                           const nsAString& aType,
                           ErrorResult& aRv)
 {
-  if (NS_WARN_IF(IsReadOnly())) {
+  if (NS_WARN_IF(mDataTransfer->IsReadOnly())) {
     return nullptr;
   }
 
   nsCOMPtr<nsIVariant> data(new storage::TextVariant(aData));
 
   nsAutoString format;
-  mParent->GetRealFormat(aType, format);
+  mDataTransfer->GetRealFormat(aType, format);
 
   // We add the textual data to index 0. We set aInsertOnly to true, as we don't
   // want to update an existing entry if it is already present, as per the spec.
@@ -226,7 +172,7 @@ DataTransferItemList::Add(const nsAString& aData,
 DataTransferItem*
 DataTransferItemList::Add(File& aData, ErrorResult& aRv)
 {
-  if (IsReadOnly()) {
+  if (mDataTransfer->IsReadOnly()) {
     return nullptr;
   }
 
@@ -258,7 +204,7 @@ FileList*
 DataTransferItemList::Files()
 {
   if (!mFiles) {
-    mFiles = new FileList(static_cast<nsIDOMDataTransfer*>(mParent));
+    mFiles = new FileList(static_cast<nsIDOMDataTransfer*>(mDataTransfer));
     RegenerateFiles();
   }
 
@@ -270,7 +216,7 @@ DataTransferItemList::MozRemoveByTypeAt(const nsAString& aType,
                                         uint32_t aIndex,
                                         ErrorResult& aRv)
 {
-  if (NS_WARN_IF(IsReadOnly() ||
+  if (NS_WARN_IF(mDataTransfer->IsReadOnly() ||
                  aIndex >= mIndexedItems.Length())) {
     return;
   }
@@ -414,7 +360,7 @@ DataTransferItemList::AppendNewItem(uint32_t aIndex,
     MOZ_ASSERT(mIndexedItems.Length() == aIndex);
     mIndexedItems.AppendElement();
   }
-  RefPtr<DataTransferItem> item = new DataTransferItem(this, aType);
+  RefPtr<DataTransferItem> item = new DataTransferItem(mDataTransfer, aType);
   item->SetIndex(aIndex);
   item->SetPrincipal(aPrincipal);
   item->SetData(aData);
@@ -442,27 +388,6 @@ DataTransferItemList::MozItemsAt(uint32_t aIndex) // -- INDEXED
   }
 
   return &mIndexedItems[aIndex];
-}
-
-bool
-DataTransferItemList::IsReadOnly() const
-{
-  MOZ_ASSERT(mParent);
-  return mParent->IsReadOnly();
-}
-
-int32_t
-DataTransferItemList::ClipboardType() const
-{
-  MOZ_ASSERT(mParent);
-  return mParent->ClipboardType();
-}
-
-EventMessage
-DataTransferItemList::GetEventMessage() const
-{
-  MOZ_ASSERT(mParent);
-  return mParent->GetEventMessage();
 }
 
 void
@@ -501,7 +426,7 @@ DataTransferItemList::ClearDataHelper(DataTransferItem* aItem,
                                       ErrorResult& aRv)
 {
   MOZ_ASSERT(aItem);
-  if (NS_WARN_IF(IsReadOnly())) {
+  if (NS_WARN_IF(mDataTransfer->IsReadOnly())) {
     return;
   }
 
