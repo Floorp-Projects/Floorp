@@ -3398,6 +3398,12 @@ pref("intl.tsf.support_imm", true);
 
 // Whether creates native caret for ATOK or not.
 pref("intl.tsf.hack.atok.create_native_caret", true);
+// Whether use available composition string rect for result of
+// ITfContextView::GetTextExt() even if the specified range is same as the
+// range of composition string but some character rects of them are not
+// available.  Note that this is ignored if active ATOK is or older than 2016
+// and create_native_caret is true.
+pref("intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string", true);
 // Whether use composition start position for the result of
 // ITfContextView::GetTextExt() if the specified range is larger than
 // composition start offset.
