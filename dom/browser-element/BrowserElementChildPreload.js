@@ -4,7 +4,11 @@
 
 "use strict";
 
-dump("######################## BrowserElementChildPreload.js loaded\n");
+function debug(msg) {
+  // dump("BrowserElementChildPreload - " + msg + "\n");
+}
+
+debug("loaded");
 
 var BrowserElementIsReady = false;
 
@@ -29,10 +33,6 @@ var kLongestReturnedString = 128;
 const Timer = Components.Constructor("@mozilla.org/timer;1",
                                      "nsITimer",
                                      "initWithCallback");
-
-function debug(msg) {
-  //dump("BrowserElementChildPreload - " + msg + "\n");
-}
 
 function sendAsyncMsg(msg, data) {
   // Ensure that we don't send any messages before BrowserElementChild.js
