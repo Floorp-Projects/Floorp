@@ -790,6 +790,7 @@ js::Nursery::sweep()
     cellsWithUid_.clear();
 
     runSweepActions();
+    sweepDictionaryModeObjects();
 
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
@@ -970,4 +971,21 @@ js::Nursery::runSweepActions()
     for (auto action = sweepActions_; action; action = action->next)
         action->thunk(action->data);
     sweepActions_ = nullptr;
+}
+
+bool
+js::Nursery::queueDictionaryModeObjectToSweep(NativeObject* obj)
+{
+    MOZ_ASSERT(IsInsideNursery(obj));
+    return dictionaryModeObjects_.append(obj);
+}
+
+void
+js::Nursery::sweepDictionaryModeObjects()
+{
+    for (auto obj : dictionaryModeObjects_) {
+        if (!IsForwarded(obj))
+            obj->sweepDictionaryListPointer();
+    }
+    dictionaryModeObjects_.clear();
 }
