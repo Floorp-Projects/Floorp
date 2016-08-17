@@ -21,6 +21,7 @@ with Files('GetUserMedia*'):
 
 DIRS += [
     'encoder',
+    'flac',
     'gmp',
     'gmp-plugin',
     'gmp-plugin-openh264',
@@ -104,7 +105,6 @@ EXPORTS += [
     'DOMMediaStream.h',
     'EncodedBufferCache.h',
     'FileBlockCache.h',
-    'FlacFrameParser.h',
     'FrameStatistics.h',
     'Intervals.h',
     'Latency.h',
@@ -218,7 +218,6 @@ UNIFIED_SOURCES += [
     'DOMMediaStream.cpp',
     'EncodedBufferCache.cpp',
     'FileBlockCache.cpp',
-    'FlacFrameParser.cpp',
     'GetUserMediaRequest.cpp',
     'GraphDriver.cpp',
     'Latency.cpp',
